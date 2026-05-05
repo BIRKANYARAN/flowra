@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+body { background: #f4f4f5; color: #111827; }
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+input[type="number"] { -moz-appearance: textfield; }
+
+.scrollbar-thin::-webkit-scrollbar { width: 4px; height: 4px; }
+.scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+.scrollbar-thin::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 2px; }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Flowra design system additions — appended below existing directives.
+   ───────────────────────────────────────────────────────────────────────── */
+
+@layer base {
+  /* Tabular numerals on anything that looks like a number. */
+  .tabular-nums, .flowra-money, .flowra-kpi {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Tiny uppercase label — <span class="label-tiny">DAĞITILABILIR</span> */
+  .label-tiny {
+    font-size: 10px;
+    line-height: 14px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #9ca3af;
+  }
+
+  /* KPI value — big money numbers. */
+  .kpi-value {
+    font-size: 24px;
+    line-height: 1.1;
+    font-weight: 900;
+    letter-spacing: -0.01em;
+    color: #111827;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* "GENEL TOPLAM" — emphatic total. */
+  .total-emphatic {
+    font-size: 30px;
+    line-height: 1.1;
+    font-weight: 900;
+    letter-spacing: -0.01em;
+    color: #111827;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer components {
+  /* Standard card chrome */
+  .fl-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+  }
+
+  /* Focus ring for inputs */
+  .fl-focus {
+    outline: none;
+    border-color: #a78bfa;
+    box-shadow: 0 0 0 3px #ede9fe;
+  }
+}
