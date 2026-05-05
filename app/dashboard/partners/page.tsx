@@ -570,5 +570,3 @@ export default function PartnersPage() {
     </div>
   )
 }
-)
-}
