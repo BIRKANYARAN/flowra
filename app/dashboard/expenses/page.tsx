@@ -97,7 +97,10 @@ export default function ExpensesPage() {
 
     try {
       const res = await fetch('/api/recurring-expenses')
-      if (res.ok) setRecurring(await res.json())
+      if (res.ok) {
+        const data = await res.json()
+        setRecurring(Array.isArray(data) ? data : [])
+      }
       else setRecurringError('Tekrarlayan giderler yüklenemedi')
     } catch { setRecurringError('Tekrarlayan giderler yüklenemedi') }
 

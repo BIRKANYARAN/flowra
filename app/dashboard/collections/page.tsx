@@ -71,7 +71,8 @@ export default function CollectionsPage() {
         const body = await res.json().catch(() => ({}))
         throw new Error(body.error ?? `HTTP ${res.status}`)
       }
-      setRows(await res.json())
+      const data = await res.json()
+      setRows(Array.isArray(data) ? data : [])
     } catch {
       setError('Tahsilat verileri yüklenemedi. Lütfen sayfayı yenileyin.')
     } finally {

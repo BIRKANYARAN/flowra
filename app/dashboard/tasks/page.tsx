@@ -71,8 +71,8 @@ export default function TasksPage() {
     try {
       const res  = await fetch(`/api/tasks?status=${tab}&limit=100`)
       const data = await res.json()
-      if (!res.ok) { setError(data.error ?? 'Yükleme hatası'); setTasks([]) }
-      else setTasks(data)
+      if (!res.ok) { setError(data?.error ?? 'Yükleme hatası'); setTasks([]) }
+      else setTasks(Array.isArray(data) ? data : [])
     } catch { setError('Sunucu hatası') }
     finally  { setLoading(false) }
   }, [tab])
