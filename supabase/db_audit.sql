@@ -38,16 +38,17 @@ from sale_items si
 left join sales s on s.id = si.sale_id
 where s.id is null and si.deleted_at is null;
 
--- sale_item_allocations with no parent sale or stock_lot
-select 'sale_item_allocations → sales' as check, count(*) as orphan_count
+-- sale_item_allocations with no parent sale_item or stock_lot
+-- NOTE: sale_item_allocations has no deleted_at (hard-deleted table)
+select 'sale_item_allocations → sale_items' as check, count(*) as orphan_count
 from sale_item_allocations a
-left join sales s on s.id = a.sale_id
-where s.id is null and a.deleted_at is null;
+left join sale_items si on si.id = a.sale_item_id
+where si.id is null;
 
 select 'sale_item_allocations → stock_lots' as check, count(*) as orphan_count
 from sale_item_allocations a
-left join stock_lots l on l.id = a.stock_lot_id
-where l.id is null and a.deleted_at is null;
+left join stock_lots l on l.id = a.lot_id
+where l.id is null;
 
 -- stock_lots with no parent product
 select 'stock_lots → products' as check, count(*) as orphan_count
@@ -138,17 +139,18 @@ from stock_lots
 where qty_remaining < 0 and deleted_at is null;
 
 -- FIFO allocations that exceed lot quantities
+-- NOTE: sale_item_allocations has no deleted_at; column is lot_id not stock_lot_id
 select 'over-allocated lots' as check, count(*)
 from (
   select
-    a.stock_lot_id,
-    sum(a.qty_allocated)        as total_allocated,
-    l.qty_remaining + sum(a.qty_allocated) as original_qty  -- approximation
+    a.lot_id,
+    sum(a.qty_allocated) as total_allocated,
+    max(l.qty_initial)   as lot_initial
   from sale_item_allocations a
-  join stock_lots l on l.id = a.stock_lot_id
-  where a.deleted_at is null and l.deleted_at is null
-  group by a.stock_lot_id, l.qty_remaining
-  having l.qty_remaining < 0
+  join stock_lots l on l.id = a.lot_id
+  where l.deleted_at is null
+  group by a.lot_id
+  having sum(a.qty_allocated) > max(l.qty_initial)
 ) over_alloc;
 
 -- ═══════════════════════════════════════════════════════════════════════════════
