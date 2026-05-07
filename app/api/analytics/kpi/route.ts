@@ -107,11 +107,12 @@ export async function GET(req: NextRequest) {
       .is('deleted_at', null)
       .in('payment_status', ['unpaid', 'partial', 'overdue']),
 
-    // 4. Total expenses in period
+    // 4. Total operational expenses in period — paid only, excludes financing flows
     supabase
       .from('expenses')
-      .select('amount_try')
+      .select('amount_try, expense_type')
       .eq('company_id', companyId)
+      .eq('payment_status', 'paid')
       .is('deleted_at', null)
       .gte('expense_date', from)
       .lte('expense_date', to),
@@ -200,7 +201,11 @@ export async function GET(req: NextRequest) {
   const totalCogs               = (revenueRes.data                ?? []).reduce((s, r) => s + Number(r.cogs       ?? 0), 0)
   const totalCollected          = (collectedRes.data              ?? []).reduce((s, r) => s + Number(r.total_try  ?? 0), 0)
   const outstanding             = (outstandingRes.data            ?? []).reduce((s, r) => s + Number(r.total_try  ?? 0), 0)
-  const totalExpenses           = (expensesRes.data               ?? []).reduce((s, r) => s + Number(r.amount_try ?? 0), 0)
+  const totalExpenses           = (expensesRes.data               ?? []).reduce((s, r) => {
+    const expType = String((r as { expense_type?: string | null }).expense_type ?? '')
+    if (expType && CASH_EXCLUDED_EXPENSE_TYPES.has(expType)) return s
+    return s + Number(r.amount_try ?? 0)
+  }, 0)
   const allTimeCollected        = (allTimeCollectedRes.data       ?? []).reduce((s, r) => s + Number(r.total_try  ?? 0), 0)
   const allTimeExpenses         = (allTimeExpensesRes.data        ?? []).reduce((s, r) => {
     const expenseType = String((r as { expense_type?: string | null }).expense_type ?? '')

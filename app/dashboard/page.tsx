@@ -21,6 +21,7 @@ export const dynamic = 'force-dynamic'
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import { createClient }              from '@/lib/supabase-server'
+import { redirect }                  from 'next/navigation'
 import Link                          from 'next/link'
 import { cookies, headers }          from 'next/headers'
 import { FxWidget }                  from '@/components/layout/FxWidget'
@@ -247,16 +248,21 @@ export default async function DashboardPage() {
   let userId: string | null = null
   try {
     const { data, error } = await supabase.auth.getUser()
-    if (error || !data?.user) return null
+    if (error || !data?.user) redirect('/auth')
     userId = data.user.id
-  } catch { return null }
-  if (!userId) return null
+  } catch (e) {
+    if (e && typeof e === 'object' && 'digest' in e) throw e
+    redirect('/auth')
+  }
+  if (!userId) redirect('/auth')
 
   const uid                 = userId
   const { from, to, label } = currentMonthPeriod()
   let companyId: string
   try { companyId = await resolveCompanyId(uid, supabase) }
-  catch { return null }
+  catch {
+    redirect('/auth')
+  }
 
   // ── Internal API helper — forwards session cookies so Supabase auth works ────
   const cookieHeader = cookies().getAll().map(c => `${c.name}=${c.value}`).join('; ')

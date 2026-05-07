@@ -45,12 +45,12 @@ function round2(v: number): number {
 // ── Pure equalization kernel ──────────────────────────────────────────────────
 
 export interface EqualizationKernelInput {
-  /** Active partners with their total investment (equity + loans) in TRY */
+  /** Active partners with their equity capital contributions (capital_in only) in TRY */
   partners: Array<{
     partner_id:             string
     partner_name:           string
     share_ratio:            number
-    total_contributed_try:  number   // Phase 4: capital_in + loan_in + loan_to_company amounts
+    total_contributed_try:  number   // capital_in equity contributions only — NOT loans
   }>
   /**
    * Optional pool to distribute after equalization.
@@ -340,8 +340,10 @@ export class PartnerService {
         partner_id:            b.partner_id,
         partner_name:          b.partner_name,
         share_ratio:           b.share_ratio,
-        // Phase 4: total investment = equity (capital_in) + loans (loan_to_company / loan_in)
-        total_contributed_try: b.total_contributed_try,
+        // Equalization uses capital contributions (equity) ONLY — not loans.
+        // Loans are repayable debt; mixing them with equity distorts the
+        // per-unit baseline and can over-equalise partners who lent more.
+        total_contributed_try: b.total_capital_try,
       })),
       distributable: distributable ?? 0,
     })

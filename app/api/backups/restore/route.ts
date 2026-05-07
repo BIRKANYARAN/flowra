@@ -10,7 +10,10 @@ const BUCKET = 'backups'
 
 // Download order: parents first so child-table references resolve correctly
 // when the atomic restore_user_data() RPC inserts them.
+// partners must precede partner_transactions (FK dependency).
 const INSERT_ORDER = [
+  'partners',
+  'partner_transactions',
   'customers',
   'products',
   'expenses',
@@ -26,7 +29,10 @@ const INSERT_ORDER = [
 type BackupTable = typeof INSERT_ORDER[number]
 type BackupRow = Record<string, unknown>
 
+// Tables that have a company_id column and need it rewritten on restore.
 const COMPANY_TABLES = new Set<BackupTable>([
+  'partners',
+  'partner_transactions',
   'customers',
   'products',
   'expenses',
@@ -135,12 +141,23 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    const partnerIds  = rowIdSet(tableData.partners)
     const customerIds = rowIdSet(tableData.customers)
     const productIds = rowIdSet(tableData.products)
     const proformaIds = rowIdSet(tableData.proformas)
     const stockLotIds = rowIdSet(tableData.stock_lots)
     const saleIds = rowIdSet(tableData.sales)
     const saleItemIds = rowIdSet(tableData.sale_items)
+
+    const orphanPartnerTxs = (tableData.partner_transactions ?? []).filter(r => {
+      const partnerId = (r as BackupRow).partner_id as string | undefined
+      return partnerId && !partnerIds.has(partnerId)
+    })
+    if (orphanPartnerTxs.length > 0) {
+      validationErrors.push(
+        `partner_transactions: ${orphanPartnerTxs.length} satır bu yedekte bulunmayan partner_id referansı içeriyor`
+      )
+    }
 
     const orphanProformaItems = (tableData.proforma_items ?? []).filter(r => {
       const proformaId = (r as BackupRow).proforma_id as string | undefined
@@ -216,7 +233,54 @@ export async function POST(req: NextRequest) {
       tableData[table] = sanitizeRows(table, tableData[table] ?? [], uid, companyId)
     }
 
-    // 3. Atomic restore via DB function.
+    // 3. Restore partners + partner_transactions (direct upsert — not in the legacy RPC).
+    // Done BEFORE the main RPC so that partner FK references are satisfied.
+    // This step is not atomic with the main RPC, but partner data loss is worse than
+    // partial state — the main RPC rolls back on its own failures.
+    const partnersToRestore = tableData['partners'] ?? []
+    const partnerTxsToRestore = tableData['partner_transactions'] ?? []
+
+    if (partnersToRestore.length > 0) {
+      const { error: pDelErr } = await supabase
+        .from('partners')
+        .delete()
+        .eq('user_id', uid)
+        .eq('company_id', companyId)
+      if (pDelErr) console.warn('[restore] partners delete warning:', pDelErr.message)
+
+      const { error: pInsErr } = await supabase
+        .from('partners')
+        .insert(partnersToRestore as BackupRow[])
+      if (pInsErr) {
+        console.error('[restore] partners insert error:', pInsErr.message)
+        return NextResponse.json(
+          { error: 'Ortak verisi geri yüklenemedi: ' + pInsErr.message, success: false },
+          { status: 500 },
+        )
+      }
+    }
+
+    if (partnerTxsToRestore.length > 0) {
+      const { error: ptDelErr } = await supabase
+        .from('partner_transactions')
+        .delete()
+        .eq('user_id', uid)
+        .eq('company_id', companyId)
+      if (ptDelErr) console.warn('[restore] partner_transactions delete warning:', ptDelErr.message)
+
+      const { error: ptInsErr } = await supabase
+        .from('partner_transactions')
+        .insert(partnerTxsToRestore as BackupRow[])
+      if (ptInsErr) {
+        console.error('[restore] partner_transactions insert error:', ptInsErr.message)
+        return NextResponse.json(
+          { error: 'Ortak işlemleri geri yüklenemedi: ' + ptInsErr.message, success: false },
+          { status: 500 },
+        )
+      }
+    }
+
+    // 4. Atomic restore via DB function.
     // restore_user_data() runs delete + insert in a single PostgreSQL transaction.
     // Any error triggers automatic rollback — the original data is never partially
     // replaced. No in-memory snapshot needed; no compensating restore logic.
