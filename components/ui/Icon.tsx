@@ -14,7 +14,8 @@ import {
   Download, Upload, LogOut, Check, X, Mail, Phone, Trash2, Edit, Bell,
   Flame, Coins, TrendingUp, AlertTriangle, Info, ChevronRight,
   ChevronDown, ChevronUp, MoreHorizontal, Filter, Eye, EyeOff,
-  Shield, UserCog, ClipboardList, Database,
+  Shield, UserCog, ClipboardList, Database, Receipt, ShoppingCart,
+  Activity, Key, Crown, Wallet,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -36,6 +37,13 @@ const REGISTRY: Record<string, LucideIcon> = {
   shield:        Shield,         // admin: audit log
   tasks:         ClipboardList,  // task management
   backup:        Database,       // admin: backup/restore
+  cashflow:      Wallet,         // cash flow page
+  tax:           Receipt,        // tax centre
+  orders:        ShoppingCart,   // order operations
+  activity:      Activity,       // activity history
+  roles:         Key,            // authorization / roles
+  ceo:           Crown,          // CEO summary
+  alerts:        AlertTriangle,  // critical alerts
   'arrow-right': ArrowRight,
   'arrow-up':    ArrowUp,
   'arrow-down':  ArrowDown,

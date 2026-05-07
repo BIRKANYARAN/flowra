@@ -9,59 +9,78 @@ import type { MemberRole } from '@/types'
 
 // ── Nav structure — icons are Lucide keys (emoji fallback still works) ─────
 type NavItem  = { href: string; label: string; icon: string; exact?: boolean }
-type NavGroup = { group: string; items: NavItem[] }
+type NavGroup = { group: string; items: NavItem[]; adminOnly?: boolean }
 type NavEntry = NavItem | NavGroup
 
 function isGroup(e: NavEntry): e is NavGroup { return 'group' in e }
 
-// ── CEO/CFO-oriented nav — Phase 7 ──────────────────────────────────────────
-//   Genel Durum (flat, always first)
-//   Finans group   — financial visibility & planning
-//   Operasyon group — day-to-day operational records
-//   Araçlar group  — supporting tools (tasks, customers, products, flows)
-//   Ayarlar (flat, always last before admin)
+// ── Enterprise navigation — 6 sections, 3-click rule ────────────────────────
 const BASE_NAV: NavEntry[] = [
-  { href: '/dashboard', label: 'Genel Durum', icon: 'dashboard', exact: true },
+  // ── GENEL DURUM ────────────────────────────────────────────────────────────
+  {
+    group: 'Genel Durum',
+    items: [
+      { href: '/dashboard',        label: 'Dashboard',       icon: 'dashboard', exact: true },
+      { href: '/dashboard/ceo',    label: 'CEO Özeti',       icon: 'ceo'        },
+      { href: '/dashboard/alerts', label: 'Kritik Uyarılar', icon: 'alerts'     },
+    ],
+  },
+  // ── FİNANS ─────────────────────────────────────────────────────────────────
   {
     group: 'Finans',
     items: [
-      { href: '/dashboard/analytics',  label: 'Analitik',   icon: 'analytics'  },
-      { href: '/dashboard/partners',   label: 'Ortaklar',   icon: 'partners'   },
-      { href: '/dashboard/simulation', label: 'Simülasyon', icon: 'simulation' },
+      { href: '/dashboard/analytics',   label: 'Finansal Analitik', icon: 'analytics'   },
+      { href: '/dashboard/cashflow',    label: 'Nakit Akışı',       icon: 'cashflow'    },
+      { href: '/dashboard/collections', label: 'Tahsilatlar',       icon: 'collections' },
+      { href: '/dashboard/expenses',    label: 'Gider Yönetimi',    icon: 'expenses'    },
+      { href: '/dashboard/partners',    label: 'Ortaklar',          icon: 'partners'    },
+      { href: '/dashboard/simulation',  label: 'Simülasyon',        icon: 'simulation'  },
+      { href: '/dashboard/tax',         label: 'Vergi Merkezi',     icon: 'tax'         },
     ],
   },
+  // ── SATIŞ & GELİR ──────────────────────────────────────────────────────────
+  {
+    group: 'Satış & Gelir',
+    items: [
+      { href: '/dashboard/sales',       label: 'Satışlar',    icon: 'sales'        },
+      { href: '/dashboard/proformas',   label: 'Proformalar', icon: 'proformas'    },
+      { href: '/dashboard/customers',   label: 'Müşteriler',  icon: 'customers'    },
+      { href: '/dashboard/sales-flow',  label: 'Satış Akışı', icon: 'arrow-right'  },
+    ],
+  },
+  // ── OPERASYON ──────────────────────────────────────────────────────────────
   {
     group: 'Operasyon',
     items: [
-      { href: '/dashboard/sales',       label: 'Satışlar',    icon: 'sales'       },
-      { href: '/dashboard/collections', label: 'Tahsilatlar', icon: 'collections' },
-      { href: '/dashboard/expenses',    label: 'Giderler',    icon: 'expenses'    },
-      { href: '/dashboard/proformas',   label: 'Proformalar', icon: 'proformas'   },
-      { href: '/dashboard/stocks',      label: 'Stok',        icon: 'stocks'      },
+      { href: '/dashboard/stocks',   label: 'Stok',                 icon: 'stocks'  },
+      { href: '/dashboard/products', label: 'Ürünler',              icon: 'products'},
+      { href: '/dashboard/orders',   label: 'Sipariş Operasyonları',icon: 'orders'  },
     ],
   },
+  // ── ARAÇLAR ────────────────────────────────────────────────────────────────
   {
     group: 'Araçlar',
     items: [
-      { href: '/dashboard/tasks',      label: 'Görevler',   icon: 'tasks'       },
-      { href: '/dashboard/customers',  label: 'Müşteriler', icon: 'customers'   },
-      { href: '/dashboard/products',   label: 'Ürünler',    icon: 'products'    },
-      { href: '/dashboard/sales-flow', label: 'Satış Akışı',icon: 'arrow-right' },
+      { href: '/dashboard/tasks',        label: 'Görevler',         icon: 'tasks'    },
+      { href: '/dashboard/backups',      label: 'Yedekleme',        icon: 'backup'   },
+      { href: '/dashboard/admin/audit',  label: 'Denetim Kaydı',   icon: 'shield'   },
+      { href: '/dashboard/activity',     label: 'Aktivite Geçmişi', icon: 'activity' },
     ],
   },
-  { href: '/dashboard/settings', label: 'Ayarlar', icon: 'settings' },
+  // ── YÖNETİM — admin only ───────────────────────────────────────────────────
+  {
+    group: 'Yönetim',
+    adminOnly: true,
+    items: [
+      { href: '/dashboard/admin/users',  label: 'Ekip',          icon: 'users'    },
+      { href: '/dashboard/admin/roles',  label: 'Yetkilendirme', icon: 'roles'    },
+      { href: '/dashboard/settings',     label: 'Ayarlar',       icon: 'settings' },
+    ],
+  },
 ]
 
-// Admin-only nav group — only added when userRole === 'admin'
-// Phase 7: added Yedekleme so backup/restore is in the management area, not the main dashboard.
-const ADMIN_NAV_GROUP: NavGroup = {
-  group: 'Yönetim',
-  items: [
-    { href: '/dashboard/admin/users', label: 'Ekip',          icon: 'users'   },
-    { href: '/dashboard/admin/audit', label: 'Denetim Kaydı', icon: 'shield'  },
-    { href: '/dashboard/backups',     label: 'Yedekleme',     icon: 'backup'  },
-  ],
-}
+// Non-admin users still get Ayarlar, just not in the Yönetim group
+const SETTINGS_ITEM: NavItem = { href: '/dashboard/settings', label: 'Ayarlar', icon: 'settings' }
 
 interface Props {
   companyName:  string | null
@@ -78,10 +97,13 @@ export function Sidebar({ companyName, logoUrl, userInitials, userName, userEmai
   const router   = useRouter()
   const supabase = createClient()
 
-  // Build nav: append admin group only for admins
+  // Build nav: filter adminOnly groups for non-admins; non-admins get Ayarlar standalone
   const NAV: NavEntry[] = userRole === 'admin'
-    ? [...BASE_NAV, ADMIN_NAV_GROUP]
-    : BASE_NAV
+    ? BASE_NAV
+    : [
+        ...BASE_NAV.filter(e => !isGroup(e) || !e.adminOnly),
+        SETTINGS_ITEM,
+      ]
 
   function isActive(item: NavItem) {
     return item.exact ? pathname === item.href : pathname.startsWith(item.href)
@@ -95,10 +117,10 @@ export function Sidebar({ companyName, logoUrl, userInitials, userName, userEmai
   const displayName = companyName || 'Flowra'
 
   return (
-    <aside className="w-56 bg-white border-r border-gray-100 min-h-screen flex flex-col py-4 px-3 flex-shrink-0">
+    <aside className="w-56 bg-white border-r border-gray-100 min-h-screen flex flex-col py-3 px-2 flex-shrink-0">
 
       {/* Brand */}
-      <div className="px-3 mb-6">
+      <div className="px-3 mb-4">
         {companyName || logoUrl ? (
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-primary-600 flex items-center justify-center flex-shrink-0 overflow-hidden">
@@ -113,7 +135,7 @@ export function Sidebar({ companyName, logoUrl, userInitials, userName, userEmai
             </div>
             <div className="min-w-0">
               <div className="font-black text-sm leading-tight truncate">{displayName}</div>
-              <div className="text-xs text-gray-400">ERP</div>
+              <div className="text-[10px] text-gray-400 uppercase tracking-wide">ERP</div>
             </div>
           </div>
         ) : (
@@ -122,13 +144,13 @@ export function Sidebar({ companyName, logoUrl, userInitials, userName, userEmai
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-0.5">
+      <nav className="flex-1 overflow-y-auto space-y-0">
         {NAV.map((entry, i) => {
           if (isGroup(entry)) {
             return (
-              <div key={entry.group} className={i > 0 ? 'pt-3' : ''}>
-                <div className="px-3 pb-1">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-gray-300">
+              <div key={entry.group} className={i > 0 ? 'pt-2' : ''}>
+                <div className="px-3 pt-1 pb-0.5">
+                  <span className="text-[9px] font-black uppercase tracking-[0.12em] text-gray-400">
                     {entry.group}
                   </span>
                 </div>
@@ -184,14 +206,14 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
   return (
     <Link
       href={item.href}
-      className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm transition-colors ${
+      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[13px] transition-colors ${
         active
           ? 'bg-primary-600 text-white font-semibold'
           : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
       }`}
     >
-      <Icon name={item.icon} size={16} className="flex-shrink-0" />
-      {item.label}
+      <Icon name={item.icon} size={14} className="flex-shrink-0" />
+      <span className="truncate">{item.label}</span>
     </Link>
   )
 }
