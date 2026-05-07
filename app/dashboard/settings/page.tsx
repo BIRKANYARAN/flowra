@@ -48,10 +48,8 @@ export default function SettingsPage() {
   const [bankMsg,    setBankMsg]    = useState<Msg | null>(null)
 
   const [intRate,     setIntRate]     = useState('')
-  const [intSource,   setIntSource]   = useState<'manual' | 'ecb' | 'fed' | 'tcmb'>('manual')
   const [intSaving,   setIntSaving]   = useState(false)
   const [intHistory,  setIntHistory]  = useState<{ rate_date: string; annual_rate: number; source?: string }[]>([])
-  // Phase 6 — per-currency interest rate entry (TRY/USD/EUR)
   const [intCurrency, setIntCurrency] = useState<'TRY'|'USD'|'EUR'>('TRY')
 
   // ── Load ────────────────────────────────────────────────────────────────────
@@ -278,7 +276,7 @@ export default function SettingsPage() {
     const res = await fetch('/api/interest-rates', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ currency: intCurrency, rate_date, annual_rate, source: intSource }),
+      body:    JSON.stringify({ currency: intCurrency, rate_date, annual_rate, source: 'manual' }),
     })
     const json = await res.json().catch(() => ({})) as { error?: string }
 
@@ -644,54 +642,32 @@ export default function SettingsPage() {
           {/* Interest Rate */}
           <FlowraCard>
             <p className="font-bold text-sm border-b border-gray-100 pb-2 mb-3">Faiz Oranı</p>
+            <p className="text-[10px] text-gray-400 mb-3">
+              Simülasyon ve reel kâr hesabı için para birimi bazında yıllık oran
+            </p>
 
-            {/* Currency + Source in one row */}
-            <div className="flex items-center gap-3 mb-3 flex-wrap">
-              <div className="flex gap-1">
-                {(['TRY', 'USD', 'EUR'] as const).map(c => (
-                  <button
-                    key={c}
-                    type="button"
-                    onClick={() => { setIntCurrency(c); setIntRate('') }}
-                    className={`text-xs border rounded-md px-2.5 py-1 font-semibold transition-colors select-none ${
-                      intCurrency === c
-                        ? 'border-primary-500 bg-primary-500 text-white'
-                        : 'border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-800'
-                    }`}
-                  >
-                    {c}
-                  </button>
-                ))}
-              </div>
-              <div className="h-4 border-l border-gray-200" />
-              <div className="flex gap-1 flex-wrap">
-                {([
-                  { key: 'tcmb',   label: 'TCMB',   hint: 'Türkiye Merkez Bankası politika faizi' },
-                  { key: 'fed',    label: 'FED',     hint: 'ABD Merkez Bankası (USD)' },
-                  { key: 'ecb',    label: 'ECB',     hint: 'Avrupa Merkez Bankası (EUR)' },
-                  { key: 'manual', label: 'Manuel',  hint: 'Kendi belirlediğiniz oran' },
-                ] as { key: 'manual' | 'ecb' | 'fed' | 'tcmb'; label: string; hint: string }[]).map(s => (
-                  <button
-                    key={s.key}
-                    type="button"
-                    onClick={() => setIntSource(s.key)}
-                    title={s.hint}
-                    className={`text-xs border rounded-md px-2 py-1 transition-colors select-none ${
-                      intSource === s.key
-                        ? 'border-primary-400 bg-primary-50 text-primary-700 font-semibold'
-                        : 'border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-800'
-                    }`}
-                  >
-                    {s.label}
-                  </button>
-                ))}
-              </div>
+            {/* Currency selector */}
+            <div className="flex gap-1 mb-3">
+              {(['TRY', 'USD', 'EUR'] as const).map(c => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => { setIntCurrency(c); setIntRate('') }}
+                  className={`text-xs border rounded-md px-2.5 py-1 font-semibold transition-colors select-none ${
+                    intCurrency === c
+                      ? 'border-primary-500 bg-primary-500 text-white'
+                      : 'border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-800'
+                  }`}
+                >
+                  {c}
+                </button>
+              ))}
             </div>
 
             <div className="flex gap-2 items-end">
               <div className="flex-1">
                 <FlowraInput
-                  label={`Yıllık Faiz (%) — ${intCurrency}${intSource !== 'manual' ? ' · API yakında' : ''}`}
+                  label={`Yıllık Faiz (%) — ${intCurrency}`}
                   type="number"
                   min="0"
                   max="1000"

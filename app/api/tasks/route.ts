@@ -43,13 +43,13 @@ export async function GET(req: NextRequest) {
   const limit  = Math.min(Number(url.searchParams.get('limit') ?? 50), 200)
 
   try {
-    let query = supabase
+    // Build base query — try with customer join first (requires FK fk_tasks_customer)
+    const baseSelect = `id, user_id, company_id, title, due_date, status,
+      related_customer_id, related_sale_id, notes, created_at, updated_at`
+
+    let q = supabase
       .from('tasks')
-      .select(`
-        id, user_id, company_id, title, due_date, status,
-        related_customer_id, related_sale_id, notes, created_at, updated_at,
-        customers(name)
-      `)
+      .select(`${baseSelect}, customers(name)`)
       .eq('company_id', companyId)
       .is('deleted_at', null)
       .order('due_date', { ascending: true, nullsFirst: false })
@@ -57,16 +57,37 @@ export async function GET(req: NextRequest) {
       .limit(limit)
 
     if (status !== 'all' && VALID_STATUSES.includes(status as TaskStatus)) {
-      query = query.eq('status', status)
+      q = q.eq('status', status)
     }
 
-    const { data, error } = await query
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let { data, error } = await q as { data: any[] | null; error: any }
+
+    // FK join not yet applied (schema cache miss) — retry without embedded select
+    if (error && (error.message?.includes('relationship') || error.message?.includes('fk_tasks_customer'))) {
+      console.warn('[tasks GET] customers join unavailable, retrying without join:', error.message)
+      let q2 = supabase
+        .from('tasks')
+        .select(baseSelect)
+        .eq('company_id', companyId)
+        .is('deleted_at', null)
+        .order('due_date', { ascending: true, nullsFirst: false })
+        .order('created_at', { ascending: false })
+        .limit(limit)
+      if (status !== 'all' && VALID_STATUSES.includes(status as TaskStatus)) {
+        q2 = q2.eq('status', status)
+      }
+      const res2 = await q2
+      data  = res2.data
+      error = res2.error
+    }
+
     if (error) {
       console.error('[tasks GET] DB error:', error.message, '| code:', (error as { code?: string }).code)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    // Flatten customer name join
+    // Flatten customer name join (present only when FK exists)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const enriched = (data ?? []).map((t: any) => ({
       ...t,

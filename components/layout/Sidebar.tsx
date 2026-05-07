@@ -14,15 +14,14 @@ type NavEntry = NavItem | NavGroup
 
 function isGroup(e: NavEntry): e is NavGroup { return 'group' in e }
 
-// ── Enterprise navigation — 6 sections, 3-click rule ────────────────────────
+// ── Enterprise navigation — 5 sections, minimal depth ───────────────────────
 const BASE_NAV: NavEntry[] = [
   // ── GENEL DURUM ────────────────────────────────────────────────────────────
   {
     group: 'Genel Durum',
     items: [
-      { href: '/dashboard',        label: 'Dashboard',       icon: 'dashboard', exact: true },
-      { href: '/dashboard/ceo',    label: 'CEO Özeti',       icon: 'ceo'        },
-      { href: '/dashboard/alerts', label: 'Kritik Uyarılar', icon: 'alerts'     },
+      { href: '/dashboard',     label: 'Dashboard', icon: 'dashboard', exact: true },
+      { href: '/dashboard/ceo', label: 'CEO Özeti', icon: 'ceo'                    },
     ],
   },
   // ── FİNANS ─────────────────────────────────────────────────────────────────
@@ -30,41 +29,29 @@ const BASE_NAV: NavEntry[] = [
     group: 'Finans',
     items: [
       { href: '/dashboard/analytics',   label: 'Finansal Analitik', icon: 'analytics'   },
-      { href: '/dashboard/cashflow',    label: 'Nakit Akışı',       icon: 'cashflow'    },
       { href: '/dashboard/collections', label: 'Tahsilatlar',       icon: 'collections' },
-      { href: '/dashboard/expenses',    label: 'Gider Yönetimi',    icon: 'expenses'    },
+      { href: '/dashboard/expenses',    label: 'Giderler',          icon: 'expenses'    },
       { href: '/dashboard/partners',    label: 'Ortaklar',          icon: 'partners'    },
       { href: '/dashboard/simulation',  label: 'Simülasyon',        icon: 'simulation'  },
-      { href: '/dashboard/tax',         label: 'Vergi Merkezi',     icon: 'tax'         },
+      { href: '/dashboard/tax',         label: 'Vergi',             icon: 'tax'         },
     ],
   },
-  // ── SATIŞ & GELİR ──────────────────────────────────────────────────────────
+  // ── SATIŞ ──────────────────────────────────────────────────────────────────
   {
-    group: 'Satış & Gelir',
+    group: 'Satış',
     items: [
-      { href: '/dashboard/sales',       label: 'Satışlar',    icon: 'sales'        },
-      { href: '/dashboard/proformas',   label: 'Proformalar', icon: 'proformas'    },
-      { href: '/dashboard/customers',   label: 'Müşteriler',  icon: 'customers'    },
-      { href: '/dashboard/sales-flow',  label: 'Satış Akışı', icon: 'arrow-right'  },
+      { href: '/dashboard/sales',     label: 'Satışlar',    icon: 'sales'     },
+      { href: '/dashboard/proformas', label: 'Proformalar', icon: 'proformas' },
+      { href: '/dashboard/customers', label: 'Müşteriler',  icon: 'customers' },
     ],
   },
   // ── OPERASYON ──────────────────────────────────────────────────────────────
   {
     group: 'Operasyon',
     items: [
-      { href: '/dashboard/stocks',   label: 'Stok',                 icon: 'stocks'  },
-      { href: '/dashboard/products', label: 'Ürünler',              icon: 'products'},
-      { href: '/dashboard/orders',   label: 'Sipariş Operasyonları',icon: 'orders'  },
-    ],
-  },
-  // ── ARAÇLAR ────────────────────────────────────────────────────────────────
-  {
-    group: 'Araçlar',
-    items: [
-      { href: '/dashboard/tasks',        label: 'Görevler',         icon: 'tasks'    },
-      { href: '/dashboard/backups',      label: 'Yedekleme',        icon: 'backup'   },
-      { href: '/dashboard/admin/audit',  label: 'Denetim Kaydı',   icon: 'shield'   },
-      { href: '/dashboard/activity',     label: 'Aktivite Geçmişi', icon: 'activity' },
+      { href: '/dashboard/stocks',   label: 'Stok',    icon: 'stocks'   },
+      { href: '/dashboard/products', label: 'Ürünler', icon: 'products' },
+      { href: '/dashboard/tasks',    label: 'Görevler', icon: 'tasks'   },
     ],
   },
   // ── YÖNETİM — admin only ───────────────────────────────────────────────────
@@ -72,14 +59,15 @@ const BASE_NAV: NavEntry[] = [
     group: 'Yönetim',
     adminOnly: true,
     items: [
-      { href: '/dashboard/admin/users',  label: 'Ekip',          icon: 'users'    },
-      { href: '/dashboard/admin/roles',  label: 'Yetkilendirme', icon: 'roles'    },
-      { href: '/dashboard/settings',     label: 'Ayarlar',       icon: 'settings' },
+      { href: '/dashboard/admin/users',  label: 'Ekip',          icon: 'users'   },
+      { href: '/dashboard/admin/audit',  label: 'Denetim',       icon: 'shield'  },
+      { href: '/dashboard/backups',      label: 'Yedekleme',     icon: 'backup'  },
+      { href: '/dashboard/settings',     label: 'Ayarlar',       icon: 'settings'},
     ],
   },
 ]
 
-// Non-admin users still get Ayarlar, just not in the Yönetim group
+// Non-admin users still get Ayarlar
 const SETTINGS_ITEM: NavItem = { href: '/dashboard/settings', label: 'Ayarlar', icon: 'settings' }
 
 interface Props {

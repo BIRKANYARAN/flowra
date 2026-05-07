@@ -73,6 +73,57 @@ alter table partner_transactions
 alter table tasks
   add column if not exists due_date date;
 
+-- proformas: immutable FX snapshot columns (locked at creation time)
+alter table proformas
+  add column if not exists fx_usd          numeric(12,6);
+alter table proformas
+  add column if not exists fx_eur          numeric(12,6);
+alter table proformas
+  add column if not exists fx_try          numeric(12,6) default 1;
+alter table proformas
+  add column if not exists fx_source       text;
+alter table proformas
+  add column if not exists fx_rate_date    date;
+alter table proformas
+  add column if not exists fx_rate_try     numeric(12,6);
+
+-- proformas: company + customer data snapshots for deterministic PDF rendering
+alter table proformas
+  add column if not exists company_snapshot  jsonb;
+alter table proformas
+  add column if not exists customer_snapshot jsonb;
+
+-- proformas: internal notes (hidden from customer PDF)
+alter table proformas
+  add column if not exists internal_notes text;
+
+-- proformas: revision counter (incremented on each update)
+alter table proformas
+  add column if not exists revision_no integer not null default 1;
+
+-- proformas: bank reference for payment details in PDF
+alter table proformas
+  add column if not exists bank_id uuid;
+
+-- idempotency_keys: prevent duplicate critical writes (proforma creation, sale conversion)
+create table if not exists idempotency_keys (
+  id              uuid        primary key default gen_random_uuid(),
+  user_id         uuid        not null,
+  idempotency_key text        not null,
+  operation       text        not null,
+  status          text        not null default 'pending',
+  result_id       uuid,
+  result_data     jsonb,
+  request_hash    text,
+  expires_at      timestamptz not null,
+  created_at      timestamptz not null default now(),
+  constraint uq_idempotency_user_key unique (user_id, idempotency_key)
+);
+
+-- idempotency_keys: add request_hash column if table already exists without it
+alter table idempotency_keys
+  add column if not exists request_hash text;
+
 -- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 -- C. DATA MIGRATIONS — safe conditional backfills
 -- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -172,6 +223,22 @@ where payment_status is null
 -- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 -- D. CONSTRAINTS
 -- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+-- tasks → customers FK (enables PostgREST embedded selects: customers(name))
+do $$ begin
+  if not exists (
+    select 1 from pg_constraint
+    where conrelid = 'tasks'::regclass
+      and conname  = 'fk_tasks_customer'
+  ) then
+    alter table tasks
+      add constraint fk_tasks_customer
+        foreign key (related_customer_id)
+        references customers(id)
+        on delete set null;
+  end if;
+exception when others then null;
+end $$;
 
 do $$ begin
   if not exists (
@@ -411,9 +478,142 @@ begin
 end;
 $$;
 
+-- create_proforma_atomic
+-- Atomically inserts a proforma header + all line items in one transaction.
+-- Returns { id, proforma_no } as jsonb.
+-- SECURITY: validates auth.uid() = p_user_id and that the user belongs to p_company_id.
+create or replace function create_proforma_atomic(
+  p_user_id           uuid,
+  p_customer_id       uuid    default null,
+  p_bank_id           uuid    default null,
+  p_customer_name     text    default '',
+  p_currency          text    default 'TRY',
+  p_validity_days     integer default 30,
+  p_notes             text    default null,
+  p_internal_notes    text    default null,
+  p_total             numeric default 0,
+  p_fx_usd            numeric default null,
+  p_fx_eur            numeric default null,
+  p_fx_try            numeric default 1,
+  p_fx_source         text    default 'manual',
+  p_fx_rate_date      text    default null,
+  p_fx_rate_try       numeric default null,
+  p_company_snapshot  jsonb   default null,
+  p_customer_snapshot jsonb   default null,
+  p_items             jsonb   default '[]',
+  p_company_id        uuid    default null
+)
+returns jsonb language plpgsql security definer
+set search_path = public
+as $$
+declare
+  v_proforma_id  uuid;
+  v_proforma_no  text;
+  v_seq          bigint;
+  v_company_ok   boolean;
+  v_item         jsonb;
+  v_idx          integer := 0;
+begin
+  -- Caller must be the authenticated user
+  if auth.uid() is distinct from p_user_id then
+    raise exception 'create_proforma_atomic: unauthorized (uid mismatch)';
+  end if;
+
+  -- Validate company membership
+  select exists(
+    select 1
+    from company_members
+    where company_id = p_company_id
+      and user_id    = p_user_id
+      and deleted_at is null
+  ) into v_company_ok;
+
+  if not v_company_ok then
+    raise exception 'create_proforma_atomic: company not found or not authorized (id: %)', p_company_id;
+  end if;
+
+  -- Generate sequential proforma number within the company (year-scoped)
+  select coalesce(max(revision_no), 0) + 1
+  from   proformas
+  where  company_id = p_company_id
+    and  deleted_at is null
+    and  extract(year from created_at) = extract(year from now())
+  into v_seq;
+
+  v_proforma_no := 'PRF-' || to_char(now(), 'YYYY') || '-' || lpad(v_seq::text, 4, '0');
+
+  -- Insert proforma header
+  insert into proformas (
+    user_id, company_id, customer_id, bank_id,
+    customer_name, currency, validity_days,
+    notes, internal_notes, total,
+    fx_usd, fx_eur, fx_try, fx_source, fx_rate_date, fx_rate_try,
+    company_snapshot, customer_snapshot,
+    proforma_no, status, revision_no
+  ) values (
+    p_user_id, p_company_id, p_customer_id, p_bank_id,
+    p_customer_name, p_currency, p_validity_days,
+    p_notes, p_internal_notes, p_total,
+    p_fx_usd, p_fx_eur, p_fx_try, p_fx_source,
+    case when p_fx_rate_date is not null then p_fx_rate_date::date else null end,
+    p_fx_rate_try,
+    p_company_snapshot, p_customer_snapshot,
+    v_proforma_no, 'draft', 1
+  ) returning id into v_proforma_id;
+
+  -- Insert line items
+  for v_item in select * from jsonb_array_elements(p_items)
+  loop
+    insert into proforma_items (
+      proforma_id,
+      product_id,
+      name,
+      unit,
+      unit_cost,
+      price,
+      quantity,
+      discount_percent,
+      kdv,
+      currency,
+      sort_order
+    ) values (
+      v_proforma_id,
+      case when (v_item->>'product_id') is not null and (v_item->>'product_id') != ''
+           then (v_item->>'product_id')::uuid
+           else null end,
+      coalesce(v_item->>'name', ''),
+      coalesce(v_item->>'unit', 'adet'),
+      coalesce((v_item->>'unit_cost')::numeric, 0),
+      coalesce((v_item->>'price')::numeric, 0),
+      coalesce((v_item->>'quantity')::numeric, 1),
+      coalesce((v_item->>'discount_percent')::numeric, 0),
+      coalesce((v_item->>'kdv')::numeric, 0),
+      coalesce(v_item->>'currency', p_currency),
+      coalesce((v_item->>'sort_order')::integer, v_idx)
+    );
+    v_idx := v_idx + 1;
+  end loop;
+
+  return jsonb_build_object('id', v_proforma_id, 'proforma_no', v_proforma_no);
+end;
+$$;
+
 -- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 -- G. PERMISSIONS
 -- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 revoke execute on function create_partner_loan_expense from public;
+revoke execute on function create_proforma_atomic      from public;
+
+grant  execute on function create_partner_loan_expense to authenticated;
+grant  execute on function create_proforma_atomic      to authenticated;
+
+-- idempotency_keys: authenticated users can only read/write their own rows
+alter table idempotency_keys enable row level security;
+
+do $$ begin
+  create policy "idempotency_own_rows" on idempotency_keys
+    for all using (user_id = auth.uid());
+exception when duplicate_object then null;
+end $$;
 grant  execute on function create_partner_loan_expense to authenticated;
