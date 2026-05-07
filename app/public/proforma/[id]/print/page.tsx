@@ -86,14 +86,25 @@ export default async function PrintProformaPage({ params }: { params: { id: stri
   return (
     <div className="print-wrapper">
       <style dangerouslySetInnerHTML={{ __html: `
-        @page { size: A4; margin: 14mm; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+        @page { size: A4; margin: 10mm; }
         @media print {
-          body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-          .no-print { display: none !important; }
+          body {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+          }
+          .no-print, .print\\:hidden { display: none !important; }
+          .print-wrapper { padding: 0; }
         }
-        .print-wrapper { max-width: 210mm; margin: 0 auto; padding: 14mm; }
-        .print-btn { position: fixed; bottom: 20px; right: 20px; background: #4f46e5; color: white; border: none; padding: 12px 24px; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-        .print-btn:hover { background: #4338ca; }
+        * { box-sizing: border-box; }
+        body { margin: 0; background: white; }
+        .print-wrapper {
+          max-width: 210mm;
+          margin: 0 auto;
+          padding: 8mm;
+          background: white;
+        }
       `}} />
 
       <ProformaInvoice

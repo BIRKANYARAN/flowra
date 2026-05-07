@@ -117,10 +117,10 @@ export function Sidebar({ companyName, logoUrl, userInitials, userName, userEmai
   const displayName = companyName || 'Flowra'
 
   return (
-    <aside className="w-56 bg-white border-r border-gray-100 min-h-screen flex flex-col py-3 px-2 flex-shrink-0">
+    <aside className="w-52 bg-white border-r border-gray-100 h-screen sticky top-0 flex flex-col py-3 px-2 flex-shrink-0 overflow-y-auto">
 
       {/* Brand */}
-      <div className="px-3 mb-4">
+      <div className="px-2.5 mb-3">
         {companyName || logoUrl ? (
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-primary-600 flex items-center justify-center flex-shrink-0 overflow-hidden">
@@ -148,9 +148,9 @@ export function Sidebar({ companyName, logoUrl, userInitials, userName, userEmai
         {NAV.map((entry, i) => {
           if (isGroup(entry)) {
             return (
-              <div key={entry.group} className={i > 0 ? 'pt-2' : ''}>
-                <div className="px-3 pt-1 pb-0.5">
-                  <span className="text-[9px] font-black uppercase tracking-[0.12em] text-gray-400">
+              <div key={entry.group} className={i > 0 ? 'pt-1.5' : ''}>
+                <div className="px-2.5 pt-0.5 pb-0.5">
+                  <span className="text-[9px] font-black uppercase tracking-[0.1em] text-gray-300">
                     {entry.group}
                   </span>
                 </div>
@@ -206,13 +206,13 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
   return (
     <Link
       href={item.href}
-      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[13px] transition-colors ${
+      className={`flex items-center gap-2 px-2.5 py-1 rounded-md text-[12px] transition-colors ${
         active
           ? 'bg-primary-600 text-white font-semibold'
-          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+          : 'text-gray-500 hover:bg-gray-50 hover:text-gray-800'
       }`}
     >
-      <Icon name={item.icon} size={14} className="flex-shrink-0" />
+      <Icon name={item.icon} size={13} className={`flex-shrink-0 ${active ? 'text-white' : 'text-gray-400'}`} />
       <span className="truncate">{item.label}</span>
     </Link>
   )

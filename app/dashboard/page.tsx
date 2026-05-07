@@ -558,97 +558,70 @@ export default async function DashboardPage() {
 
   // ── Render ───────────────────────────────────────────────────────────────────
 
+  const topAlert = alerts[0] ?? null
+  const today = new Date().toISOString().slice(0, 10)
+
   return (
-    <div className="flex flex-col gap-2 max-w-5xl">
+    <div className="flex flex-col gap-1.5 max-w-6xl">
 
-      {/* Row 1 — Header */}
+      {/* ── Command Bar: title + status pills + quick actions ──────────────── */}
       <div className="flex items-center gap-2 flex-wrap">
-        <h1 className="text-lg font-black text-gray-900 tracking-tight">Genel Bakış</h1>
-
-        <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full font-semibold capitalize">
-          {label}
-        </span>
-
-        {alertCount > 0 && (
-          <span className="inline-flex items-center gap-1 text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-bold">
-            <span className="w-1.5 h-1.5 bg-red-500 rounded-full inline-block" />
-            {alertCount} uyarı
+        <div className="flex items-center gap-2 min-w-0">
+          <h1 className="text-sm font-black text-gray-900 tracking-tight uppercase">Genel Bakış</h1>
+          <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full font-semibold capitalize">
+            {label}
           </span>
-        )}
-        {vatStatus === 'payable' && fs.net_vat_try > 0 && (
-          <span className="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full font-bold">
-            ⬆ KDV {fmtFull(fs.net_vat_try)}
-          </span>
-        )}
-        {taskReminders.length > 0 && (
-          <Link
-            href="/dashboard/tasks"
-            className="inline-flex items-center gap-1 text-xs bg-violet-100 text-violet-700 px-2 py-0.5 rounded-full font-bold hover:bg-violet-200 transition-colors"
-          >
-            🗓 {taskReminders.length} görev yaklaşıyor
+          {alertCount > 0 && (
+            <Link href="/dashboard/alerts" className="inline-flex items-center gap-1 text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-bold hover:bg-red-200 transition-colors">
+              <span className="w-1.5 h-1.5 bg-red-500 rounded-full" />
+              {alertCount} uyarı
+            </Link>
+          )}
+          {vatStatus === 'payable' && fs.net_vat_try > 50 && (
+            <Link href="/dashboard/tax" className="text-[10px] bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full font-bold hover:bg-orange-200 transition-colors">
+              KDV {fmt(fs.net_vat_try)}
+            </Link>
+          )}
+          {taskReminders.length > 0 && (
+            <Link href="/dashboard/tasks" className="text-[10px] bg-violet-100 text-violet-700 px-2 py-0.5 rounded-full font-bold hover:bg-violet-200 transition-colors">
+              {taskReminders.filter(t => t.due_date < today).length > 0 && '⚠ '}
+              {taskReminders.length} görev
+            </Link>
+          )}
+        </div>
+        <div className="ml-auto flex items-center gap-1.5 flex-shrink-0">
+          <Link href="/dashboard/proformas/new" className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gray-900 text-white text-xs font-semibold hover:bg-gray-700 transition-colors">
+            + Proforma
           </Link>
-        )}
+          <Link href="/dashboard/sales" className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition-colors">
+            + Satış
+          </Link>
+          <Link href="/dashboard/collections" className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-primary-600 text-white text-xs font-semibold hover:bg-primary-700 transition-colors">
+            + Tahsilat
+          </Link>
+          <Link href="/dashboard/expenses" className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-orange-500 text-white text-xs font-semibold hover:bg-orange-600 transition-colors">
+            + Gider
+          </Link>
+        </div>
       </div>
 
-      {/* Row 1b — Task reminders (Phase 7) — open tasks due within 7 days */}
-      {taskReminders.length > 0 && (
-        <div className="flex flex-col gap-1">
-          {taskReminders.slice(0, 3).map(t => {
-            const today   = new Date().toISOString().slice(0, 10)
-            const overdue = t.due_date < today
-            const dueLabel = (() => {
-              try {
-                const d = new Date(t.due_date + 'T00:00:00Z')
-                return d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', timeZone: 'UTC' })
-              } catch { return t.due_date }
-            })()
-            return (
-              <Link
-                key={t.id}
-                href="/dashboard/tasks"
-                className={`flex items-center justify-between gap-3 px-3 py-2 rounded-xl border text-xs font-medium transition-colors hover:opacity-80 ${
-                  overdue
-                    ? 'bg-red-50 border-red-200 text-red-800'
-                    : 'bg-violet-50 border-violet-200 text-violet-800'
-                }`}
-              >
-                <span className="flex items-center gap-2 min-w-0">
-                  <span>{overdue ? '🔴' : '🟣'}</span>
-                  <span className="truncate">{t.title}</span>
-                </span>
-                <span className="shrink-0 font-semibold tabular-nums">
-                  {overdue ? `⚠ Gecikmiş` : `Son: ${dueLabel}`}
-                </span>
-              </Link>
-            )
-          })}
-        </div>
+      {/* ── Single critical alert — compact banner ─────────────────────────── */}
+      {topAlert && (
+        <Link
+          href={topAlert.href}
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors hover:opacity-90 ${topAlert.colorBg} ${topAlert.colorText}`}
+        >
+          <span className="flex-shrink-0">{topAlert.icon}</span>
+          <span className="font-bold">{topAlert.text}</span>
+          <span className="text-[10px] font-normal opacity-70 truncate hidden sm:block">— {topAlert.sub}</span>
+          {alerts.length > 1 && (
+            <span className="ml-auto flex-shrink-0 text-[10px] opacity-60">+{alerts.length - 1} daha</span>
+          )}
+        </Link>
       )}
 
-      {/* Row 1c — Critical alerts (max 2) using FlowraAlert */}
-      {alerts.slice(0, 2).length > 0 && (
-        <div className="flex flex-col gap-1">
-          {alerts.slice(0, 2).map((a, i) => {
-            const tone = a.colorBg.includes('orange') ? 'orange'
-              : a.colorBg.includes('red')    ? 'danger'
-              : a.colorBg.includes('amber')  ? 'warning'
-              : 'info'
-            return (
-              <FlowraAlert
-                key={i}
-                tone={tone as 'orange' | 'danger' | 'warning' | 'info'}
-                icon={a.icon}
-                text={a.text}
-                sub={a.sub}
-                href={a.href}
-              />
-            )
-          })}
-        </div>
-      )}
-
-      {/* Row 2 — KPI strip (5 cards) using FlowraKpiCard */}
-      <div className="grid grid-cols-5 gap-2">
+      {/* ── KPI strip — 6 metrics ──────────────────────────────────────────── */}
+      <div className="grid grid-cols-6 gap-1.5">
         <FlowraKpiCard
           label="Ciro"
           value={fs.revenue_try}
@@ -657,18 +630,26 @@ export default async function DashboardPage() {
           href="/dashboard/sales"
         />
         <FlowraKpiCard
+          label="Tahsil Edilen"
+          value={actuallyCollected}
+          rawValue={fmt(actuallyCollected)}
+          sub={`%${actuallyCollectedPct} oran`}
+          tone={actuallyCollectedPct >= 80 ? 'positive' : actuallyCollectedPct >= 50 ? 'neutral' : 'negative'}
+          href="/dashboard/collections"
+        />
+        <FlowraKpiCard
           label="Dağıtılabilir"
           value={cashDistributable}
           rawValue={cashDistributable > 0 ? fmt(cashDistributable) : '—'}
-          sub={cashDistributable > 0 ? 'Nakit bazlı' : 'Dağıtılacak yok'}
+          sub={cashDistributable > 0 ? 'Nakit bazlı' : 'Yok'}
           tone={cashDistributable > 0 ? 'positive' : 'neutral'}
           href="/dashboard/partners"
         />
         <FlowraKpiCard
-          label="Bekleyen Tahsilat"
+          label="Bekleyen"
           value={uncollectedSalesTotal}
           rawValue={uncollectedSalesTotal > 0 ? fmt(uncollectedSalesTotal) : '—'}
-          sub={uncollectedSalesTotal > 0 ? `${uncollectedSalesCount} satış bekliyor` : 'Tümü tahsil ✓'}
+          sub={uncollectedSalesTotal > 0 ? `${uncollectedSalesCount} satış` : 'Tümü tahsil ✓'}
           tone={uncollectedSalesTotal > 0 ? 'negative' : 'neutral'}
           href="/dashboard/collections"
         />
@@ -680,7 +661,7 @@ export default async function DashboardPage() {
           href="/dashboard/expenses"
         />
         <FlowraKpiCard
-          label="Stok Değeri"
+          label="Stok"
           value={stockValue}
           rawValue={fmt(stockValue)}
           sub="FIFO maliyet"
@@ -688,148 +669,127 @@ export default async function DashboardPage() {
         />
       </div>
 
-      {/* Row 3 — Main panel: waterfall (left 3/5) + tax/metrics (right 2/5) */}
-      <div className="grid grid-cols-5 gap-2">
+      {/* ── Main grid: Waterfall 7/12 | Tax/Metrics 5/12 ─────────────────── */}
+      <div className="grid grid-cols-12 gap-1.5">
 
-        {/* Waterfall panel */}
-        <div className="col-span-3 bg-white border border-gray-200 rounded-xl px-4 py-3">
-          <div className="flex items-center justify-between mb-2">
-            <Label>Nakit Akışı — Tahsil Edilenden Dağıtılabilire</Label>
-            <Link href="/dashboard/analytics" className="text-xs text-primary-600 font-semibold hover:text-primary-700">
-              Detaylı analiz →
+        {/* Waterfall cash bridge */}
+        <div className="col-span-7 bg-white border border-gray-200 rounded-xl px-4 py-2.5">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Nakit Köprüsü</span>
+            <Link href="/dashboard/analytics" className="text-[10px] text-primary-600 font-semibold hover:text-primary-700">
+              Analiz →
             </Link>
           </div>
 
-          <div className="space-y-1.5">
+          <div className="space-y-1">
             <WaterfallRow
               label="+ Tahsil Edilen"
               value={actuallyCollected}
-              sub={`${fmt(fs.revenue_try)} fatura · %${actuallyCollectedPct} tahsil edildi`}
+              sub={`${fmt(fs.revenue_try)} fatura · %${actuallyCollectedPct}`}
             />
             <WaterfallRow
               label="− Ödenmiş Giderler"
               value={-paidExpenses}
-              sub="gerçek ödeme durumu"
+              sub="ödenen"
             />
             <WaterfallRow
               label="− Açık Yükümlülükler"
               value={-outstandingObligations}
-              sub={`${fmt(unpaidExpenses)} ödenmemiş gider`}
+              sub={`${fmt(unpaidExpenses)} ödenmemiş`}
             />
-            <div className="border-t-2 border-gray-200 pt-2">
-              <WaterfallRow label="= Dağıtılabilir Nakit" value={cashDistributable} sub={`${fmt(cashBalance)} nakit bakiyesi`} isTotal />
+            <div className="border-t border-dashed border-gray-200 pt-1.5">
+              <WaterfallRow label="= Dağıtılabilir" value={cashDistributable} sub={`Nakit bakiye ${fmt(cashBalance)}`} isTotal />
             </div>
           </div>
 
-          {/* Per-partner distribution */}
-          {equalization.entries.length > 0 && cashDistributable > 0 && (
-            <div className="mt-3 pt-3 border-t border-gray-100">
-              <Label className="mb-2">Ortaklara Dağılım ({fmt(cashDistributable)} dağıtılıyor)</Label>
-              <div
-                className="grid gap-2"
-                style={{ gridTemplateColumns: `repeat(${Math.min(equalization.entries.length, 4)}, 1fr)` }}
-              >
-                {equalization.entries.slice(0, 4).map(e => (
-                  <div key={e.partner_id} className="bg-emerald-50 rounded-xl px-3 py-2 text-center">
-                    <div className="text-[10px] text-gray-500 font-semibold truncate">{e.partner_name}</div>
-                    <div className="text-sm font-black tabular-nums text-emerald-700 mt-0.5">
-                      {fmt(e.total_payout)}
-                    </div>
-                    <div className="text-[10px] text-gray-400">
-                      %{(e.share_ratio * 100).toFixed(0)} pay
-                      {e.equalization_amount > 0.01 && <span className="ml-1 text-amber-500">+eş.</span>}
-                    </div>
-                  </div>
-                ))}
-              </div>
+          {/* Compact partner distribution or no-cash warning */}
+          {cashDistributable === 0 ? (
+            <div className="mt-2 text-[10px] text-red-600 font-semibold bg-red-50 border border-red-200 rounded-lg px-3 py-1.5">
+              ⚠ Dağıtılacak nakit yok{uncollectedSalesTotal > 0 ? ` — ${fmt(uncollectedSalesTotal)} tahsilat bekliyor` : ''}
             </div>
-          )}
-
-          {/* No distributable cash */}
-          {cashDistributable === 0 && (
-            <div className="mt-3 text-xs text-red-600 font-semibold bg-red-50 border border-red-200 rounded-xl px-3 py-2">
-              ⚠ Dağıtılacak nakit yok
-              {uncollectedSalesTotal > 0
-                ? ` — ${fmt(uncollectedSalesTotal)} tahsilat bekliyor`
-                : ` — aylık ${fmt(monthlyExpenses)} gider eşiğini geçemiyor`}
+          ) : equalization.entries.length > 0 ? (
+            <div className="mt-2 pt-2 border-t border-gray-100 flex items-center gap-2 overflow-hidden">
+              <span className="text-[9px] font-bold uppercase tracking-widest text-gray-300 flex-shrink-0">Ortak</span>
+              {equalization.entries.slice(0, 4).map(e => (
+                <div key={e.partner_id} className="flex items-center gap-1.5 bg-emerald-50 rounded-lg px-2 py-1 min-w-0">
+                  <span className="text-[10px] text-gray-500 font-semibold truncate max-w-[60px]">{e.partner_name}</span>
+                  <span className="text-[11px] font-black tabular-nums text-emerald-700 flex-shrink-0">{fmt(e.total_payout)}</span>
+                </div>
+              ))}
             </div>
-          )}
+          ) : null}
         </div>
 
-        {/* Right column — KDV + KV + Aylık Net */}
-        <div className="col-span-2 space-y-2">
+        {/* Tax + metrics — 3 horizontal cells */}
+        <div className="col-span-5 grid grid-rows-3 gap-1.5">
 
-          {/* KDV card */}
-          <div className="bg-white border border-gray-200 rounded-xl px-4 py-3">
-            <div className="flex items-center justify-between mb-1">
-              <Label>KDV (Net)</Label>
-              <div className={`text-xs font-bold px-2 py-0.5 rounded-lg ${
-                vatStatus === 'payable' ? 'bg-orange-100 text-orange-700' : 'bg-emerald-100 text-emerald-700'
+          {/* KDV */}
+          <div className="bg-white border border-gray-200 rounded-xl px-3 py-2 flex items-center justify-between">
+            <div>
+              <div className="text-[9px] font-black uppercase tracking-widest text-gray-400">KDV (Net)</div>
+              <div className={`text-base font-black tabular-nums leading-tight mt-0.5 ${
+                fs.net_vat_try > 0 ? 'text-orange-600' : 'text-emerald-600'
               }`}>
-                {vatStatus === 'payable' ? '⬆ Ödenecek' : '⬇ Devredilecek'}
+                {fmtFull(Math.abs(fs.net_vat_try))}
+              </div>
+              <div className="text-[9px] text-gray-400 mt-0.5">
+                Sat: {fmt(fs.sales_vat_try)} · Alış: {fmt(fs.purchase_vat_try + fs.expense_vat_try)}
               </div>
             </div>
-            <div className={`text-xl font-black tabular-nums leading-none ${
-              fs.net_vat_try > 0 ? 'text-orange-600' : 'text-emerald-600'
+            <div className={`text-[10px] font-bold px-2 py-0.5 rounded-lg flex-shrink-0 ${
+              vatStatus === 'payable' ? 'bg-orange-100 text-orange-700' : 'bg-emerald-100 text-emerald-700'
             }`}>
-              {fmtFull(Math.abs(fs.net_vat_try))}
-            </div>
-            <div className="text-[10px] text-gray-400 mt-1 space-x-1.5">
-              <span>Satış: {fmtFull(fs.sales_vat_try)}</span>
-              <span>·</span>
-              <span>Alış: {fmtFull(fs.purchase_vat_try + fs.expense_vat_try)}</span>
+              {vatStatus === 'payable' ? '⬆ Ödenecek' : '⬇ Devir'}
             </div>
           </div>
 
           {/* Kurumlar Vergisi */}
-          <div className="bg-white border border-gray-200 rounded-xl px-4 py-3">
-            <div className="flex items-center justify-between mb-1">
-              <Label>Kurumlar Vergisi Est.</Label>
-              <div className="text-[10px] font-bold px-2 py-0.5 bg-gray-100 text-gray-500 rounded-lg">
-                %{fs.corporate_tax_rate} KV
+          <div className="bg-white border border-gray-200 rounded-xl px-3 py-2 flex items-center justify-between">
+            <div>
+              <div className="text-[9px] font-black uppercase tracking-widest text-gray-400">Kurumlar Vergisi</div>
+              <div className={`text-base font-black tabular-nums leading-tight mt-0.5 ${
+                fs.corporate_tax_try > 0 ? 'text-gray-900' : 'text-gray-400'
+              }`}>
+                {fmtFull(fs.corporate_tax_try)}
               </div>
+              <div className="text-[9px] text-gray-400 mt-0.5">Matrah: {fmt(fs.matrah_try)}</div>
             </div>
-            <div className={`text-xl font-black tabular-nums leading-none ${
-              fs.corporate_tax_try > 0 ? 'text-gray-900' : 'text-gray-400'
-            }`}>
-              {fmtFull(fs.corporate_tax_try)}
-            </div>
-            <div className="text-[10px] text-gray-400 mt-1">
-              Matrah: {fmtFull(fs.matrah_try)}
+            <div className="text-[10px] font-bold px-2 py-0.5 bg-gray-100 text-gray-500 rounded-lg flex-shrink-0">
+              %{fs.corporate_tax_rate}
             </div>
           </div>
 
           {/* Aylık Net */}
-          <div className={`rounded-xl px-4 py-3 border ${
+          <div className={`rounded-xl px-3 py-2 border flex items-center justify-between ${
             monthlyNet >= 0 ? 'bg-white border-gray-200' : 'bg-red-50 border-red-200'
           }`}>
-            <Label className="mb-1">Aylık Net</Label>
-            <div className={`text-xl font-black tabular-nums leading-none ${
-              monthlyNet >= 0 ? 'text-emerald-700' : 'text-red-600'
-            }`}>
-              {fmt(monthlyNet)}
-            </div>
-            {breakEvenRevenue !== null && (
-              <div className="text-[10px] text-gray-400 mt-1">
-                Başabaş: {fmt(breakEvenRevenue)}/ay
+            <div>
+              <div className="text-[9px] font-black uppercase tracking-widest text-gray-400">Aylık Net</div>
+              <div className={`text-base font-black tabular-nums leading-tight mt-0.5 ${
+                monthlyNet >= 0 ? 'text-emerald-700' : 'text-red-600'
+              }`}>
+                {fmt(monthlyNet)}
               </div>
-            )}
+              {breakEvenRevenue !== null && (
+                <div className="text-[9px] text-gray-400 mt-0.5">Başabaş: {fmt(breakEvenRevenue)}/ay</div>
+              )}
+            </div>
             {monthlyNet < 0 && (
-              <div className="text-[10px] text-red-600 font-semibold mt-0.5">
-                🔥 {fmt(Math.abs(monthlyNet))}/ay yakılıyor
+              <div className="text-[10px] text-red-600 font-bold px-2 py-0.5 bg-red-100 rounded-lg flex-shrink-0">
+                🔥 Zarar
               </div>
             )}
           </div>
 
         </div>
-      </div>{/* end grid grid-cols-5 */}
+      </div>
 
-      {/* Row 4 — Cashflow chart */}
-      <CashflowChart className="w-full" />
-
-      {/* Row 5 — FX rates + quick actions */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <div className="flex-1 min-w-0">
+      {/* ── Bottom row: Cashflow chart + FX widget ─────────────────────────── */}
+      <div className="grid grid-cols-12 gap-1.5">
+        <div className="col-span-8">
+          <CashflowChart className="w-full" />
+        </div>
+        <div className="col-span-4 flex flex-col gap-1.5">
           <FxWidget
             initialFx={{
               USD:        fxData.USD,
@@ -839,19 +799,18 @@ export default async function DashboardPage() {
               fetched_at: fxData.fetched_at,
             }}
           />
+          {/* Proforma pipeline */}
+          {outstanding > 0 && (
+            <Link
+              href="/dashboard/proformas"
+              className="bg-white border border-gray-200 rounded-xl px-3 py-2 hover:border-gray-300 transition-colors"
+            >
+              <div className="text-[9px] font-black uppercase tracking-widest text-gray-400">Açık Proformalar</div>
+              <div className="text-sm font-black tabular-nums text-primary-700 mt-0.5">{fmt(outstanding)}</div>
+              <div className="text-[9px] text-gray-400">{openProfs.length} adet bekliyor</div>
+            </Link>
+          )}
         </div>
-        <Link href="/dashboard/sales"
-          className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition-colors">
-          + Satış
-        </Link>
-        <Link href="/dashboard/collections"
-          className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary-600 text-white text-xs font-semibold hover:bg-primary-700 transition-colors">
-          + Tahsilat
-        </Link>
-        <Link href="/dashboard/expenses"
-          className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-orange-500 text-white text-xs font-semibold hover:bg-orange-600 transition-colors">
-          + Gider
-        </Link>
       </div>
 
     </div>
