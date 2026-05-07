@@ -234,11 +234,16 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. Restore partners + partner_transactions (direct upsert — not in the legacy RPC).
-    // Done BEFORE the main RPC so that partner FK references are satisfied.
-    // This step is not atomic with the main RPC, but partner data loss is worse than
-    // partial state — the main RPC rolls back on its own failures.
-    const partnersToRestore = tableData['partners'] ?? []
+    // Atomicity guard: snapshot current partner data BEFORE deleting so we can compensate
+    // if the main RPC (step 4) fails, preventing a partially-restored state.
+    const partnersToRestore   = tableData['partners']             ?? []
     const partnerTxsToRestore = tableData['partner_transactions'] ?? []
+
+    // Snapshot current partner data for rollback compensation
+    const [{ data: oldPartners }, { data: oldPartnerTxs }] = await Promise.all([
+      supabase.from('partners').select('*').eq('company_id', companyId).is('deleted_at', null),
+      supabase.from('partner_transactions').select('*').eq('company_id', companyId).is('deleted_at', null),
+    ])
 
     if (partnersToRestore.length > 0) {
       const { error: pDelErr } = await supabase
@@ -282,8 +287,8 @@ export async function POST(req: NextRequest) {
 
     // 4. Atomic restore via DB function.
     // restore_user_data() runs delete + insert in a single PostgreSQL transaction.
-    // Any error triggers automatic rollback — the original data is never partially
-    // replaced. No in-memory snapshot needed; no compensating restore logic.
+    // If it fails, we compensate by re-inserting the pre-restore partner snapshot so
+    // we don't leave partners in a new-data / everything-else-old-data split state.
     const { error: rpcError } = await supabase.rpc('restore_user_data', {
       p_uid:                   uid,
       p_company_id:            companyId,
@@ -301,6 +306,23 @@ export async function POST(req: NextRequest) {
 
     if (rpcError) {
       console.error('[restore] rpc error:', rpcError.message)
+
+      // Compensate: partners were already replaced — roll them back to pre-restore snapshot.
+      // Best-effort; log failures but don't mask the original error.
+      try {
+        await supabase.from('partner_transactions').delete().eq('company_id', companyId)
+        await supabase.from('partners').delete().eq('company_id', companyId)
+        if (oldPartners && oldPartners.length > 0) {
+          await supabase.from('partners').insert(oldPartners as BackupRow[])
+        }
+        if (oldPartnerTxs && oldPartnerTxs.length > 0) {
+          await supabase.from('partner_transactions').insert(oldPartnerTxs as BackupRow[])
+        }
+        console.warn('[restore] partner compensation applied after rpc failure')
+      } catch (compErr) {
+        console.error('[restore] partner compensation failed — manual review required:', compErr)
+      }
+
       return NextResponse.json(
         { error: 'Geri yükleme başarısız: ' + rpcError.message, success: false },
         { status: 500 },

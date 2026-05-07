@@ -53,6 +53,18 @@ alter table sales
 alter table sales
   add column if not exists payment_status text not null default 'unpaid';
 
+-- sales: due date for receivable aging (null → fall back to created_at)
+alter table sales
+  add column if not exists due_date date;
+
+-- sales: partial payment tracking (null = unpaid or fully paid via payment_status)
+alter table sales
+  add column if not exists amount_paid numeric(12,2);
+
+-- expenses: link back to originating recurring template (for double-count guard)
+alter table expenses
+  add column if not exists recurring_expense_id uuid;
+
 -- partner_transactions: company scoping (older rows may lack this)
 alter table partner_transactions
   add column if not exists company_id uuid;

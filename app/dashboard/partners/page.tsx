@@ -65,6 +65,39 @@ const ZERO_EQ: EqResult = {
   remaining_after_eq: 0, entries: [],
 }
 
+// ── Partner Ledger (from /api/partners/ledger) ─────────────────────────────────
+
+interface LedgerEntry {
+  partner_id:           string
+  partner_name:         string
+  share_ratio:          number
+  is_active:            boolean
+  equity_contributed:   number
+  loans_given:          number
+  loans_repaid:         number
+  net_loan_outstanding: number
+  dividends_received:   number
+  salary_received:      number
+  company_total_owed:   number
+}
+
+interface LedgerSummary {
+  total_equity_pool:      number
+  total_debt_to_partners: number
+  total_dividends:        number
+  total_salary_legacy:    number
+  debt_to_equity_ratio:   number | null
+  partner_count:          number
+  active_partner_count:   number
+}
+
+interface LedgerData {
+  entries: LedgerEntry[]
+  summary: LedgerSummary
+}
+
+// ── Tx history ─────────────────────────────────────────────────────────────────
+
 interface TxRow {
   id:         string
   tx_type:    string
@@ -143,6 +176,8 @@ interface EditForm { name: string; shareRatioPct: string }
 export default function PartnersPage() {
   const [partners,     setPartners]     = useState<PartnerRow[]>([])
   const [equalization, setEqualization] = useState<EqResult>(ZERO_EQ)
+  const [ledger,       setLedger]       = useState<LedgerData | null>(null)
+  const [ledgerTab,    setLedgerTab]    = useState(false)
   const [loading,      setLoading]      = useState(true)
   const [fetchError,   setFetchError]   = useState<string | null>(null)
 
@@ -162,10 +197,11 @@ export default function PartnersPage() {
 
     async function load() {
       try {
-        // Fetch partners + real distributable cash in parallel first
-        const [pRes, distRes] = await Promise.all([
+        // Fetch partners + real distributable cash + ledger in parallel first
+        const [pRes, distRes, ledgerRes] = await Promise.all([
           fetch('/api/partners'),
           fetch('/api/cash-distributable'),
+          fetch('/api/partners/ledger'),
         ])
         if (!pRes.ok) throw new Error(`Partner verisi alınamadı (${pRes.status})`)
 
@@ -191,9 +227,18 @@ export default function PartnersPage() {
         const pData = pJson as PartnerRow[]
         const eData = eJson as EqResult
 
+        let ledgerData: LedgerData | null = null
+        if (ledgerRes.ok) {
+          const lJson = await ledgerRes.json().catch(() => null)
+          if (lJson && typeof lJson === 'object' && Array.isArray(lJson.entries)) {
+            ledgerData = lJson as LedgerData
+          }
+        }
+
         if (!cancelled) {
           setPartners(pData)
           setEqualization(eData)
+          setLedger(ledgerData)
         }
       } catch (err) {
         if (!cancelled)
@@ -285,23 +330,111 @@ export default function PartnersPage() {
           <h1 className="text-xl font-black text-gray-900 tracking-tight">Ortaklar</h1>
           <p className="text-xs text-gray-400 mt-0.5">Sermaye, borç ve eşitleme durumu</p>
         </div>
-        <Link
-          href="/dashboard/partners/new"
-          className="text-sm font-bold bg-primary-600 text-white px-4 py-2 rounded-xl hover:bg-primary-700 transition-colors"
-        >
-          + Ortak Ekle
-        </Link>
+        <div className="flex items-center gap-2">
+          {/* View toggle */}
+          <div className="flex bg-gray-100 rounded-xl p-0.5">
+            <button
+              onClick={() => setLedgerTab(false)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${!ledgerTab ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
+            >
+              Ortaklar
+            </button>
+            <button
+              onClick={() => setLedgerTab(true)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${ledgerTab ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
+            >
+              Finansal Defter
+            </button>
+          </div>
+          <Link
+            href="/dashboard/partners/new"
+            className="text-sm font-bold bg-primary-600 text-white px-4 py-2 rounded-xl hover:bg-primary-700 transition-colors"
+          >
+            + Ortak Ekle
+          </Link>
+        </div>
       </div>
 
-      {/* ── Error banner ──────────────────────────────────────────────────────── */}
-      {fetchError && (
+      {/* ── Finansal Defter (ledger tab) ──────────────────────────────────────── */}
+      {ledgerTab && (
+        <div className="flex flex-col gap-3">
+          {loading ? (
+            <div className="bg-gray-100 rounded-xl h-40 animate-pulse" />
+          ) : !ledger ? (
+            <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-600">
+              Finansal defter yüklenemedi.
+            </div>
+          ) : (
+            <>
+              {/* Summary strip */}
+              <div className="grid grid-cols-4 gap-2">
+                {[
+                  { label: 'Toplam Özkaynak',   value: fmt(ledger.summary.total_equity_pool),      color: 'text-primary-600' },
+                  { label: 'Net Borç',           value: fmt(ledger.summary.total_debt_to_partners), color: ledger.summary.total_debt_to_partners > 0 ? 'text-amber-600' : 'text-gray-400' },
+                  { label: 'Toplam Temettü',     value: fmt(ledger.summary.total_dividends),        color: 'text-emerald-600' },
+                  { label: 'Borç/Özkaynak',      value: ledger.summary.debt_to_equity_ratio !== null ? ledger.summary.debt_to_equity_ratio.toFixed(2) + '×' : '—', color: 'text-gray-700' },
+                ].map(c => (
+                  <div key={c.label} className="bg-white border border-gray-200 rounded-xl px-4 py-3">
+                    <div className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${c.color}`}>{c.label}</div>
+                    <div className="text-lg font-black tabular-nums text-gray-900 leading-none">{c.value}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Per-partner ledger table */}
+              <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-gray-100 bg-gray-50">
+                      <th className="text-left px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-400">Ortak</th>
+                      <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-primary-400">Özkaynak</th>
+                      <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-amber-400">Verilen Borç</th>
+                      <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-400">Geri Ödenen</th>
+                      <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-amber-600">Net Borç</th>
+                      <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-emerald-500">Temettü</th>
+                      <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-400">Maaş/Huzur</th>
+                      <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-primary-700">Şirket Borcu</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {ledger.entries.map(e => (
+                      <tr key={e.partner_id} className={`hover:bg-gray-50/60 ${!e.is_active ? 'opacity-50' : ''}`}>
+                        <td className="px-4 py-3 font-semibold text-gray-900">
+                          {e.partner_name}
+                          {!e.is_active && <span className="ml-1.5 text-[9px] text-gray-400 font-normal">(pasif)</span>}
+                          <div className="text-[10px] text-gray-400 font-normal">{pct(e.share_ratio)}</div>
+                        </td>
+                        <td className="px-4 py-3 text-right font-mono text-primary-700 font-bold">{fmt(e.equity_contributed)}</td>
+                        <td className="px-4 py-3 text-right font-mono text-amber-600">{fmt(e.loans_given)}</td>
+                        <td className="px-4 py-3 text-right font-mono text-gray-500">{fmt(e.loans_repaid)}</td>
+                        <td className={`px-4 py-3 text-right font-mono font-bold ${e.net_loan_outstanding > 0 ? 'text-amber-700' : 'text-gray-400'}`}>
+                          {fmt(e.net_loan_outstanding)}
+                        </td>
+                        <td className="px-4 py-3 text-right font-mono text-emerald-600">{fmt(e.dividends_received)}</td>
+                        <td className="px-4 py-3 text-right font-mono text-gray-500">{fmt(e.salary_received)}</td>
+                        <td className="px-4 py-3 text-right font-mono font-black text-primary-800">{fmt(e.company_total_owed)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p className="text-[10px] text-gray-400 text-center leading-relaxed">
+                Şirket Borcu = Özkaynak + Net Borç. Özkaynak tasfiyede; borç talep üzerine ödenir.
+              </p>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* ── Partners view (hidden when showing ledger tab) ────────────────────── */}
+      {!ledgerTab && fetchError && (
         <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700 font-medium">
           ⚠ {fetchError}
         </div>
       )}
 
       {/* ── Summary strip ─────────────────────────────────────────────────────── */}
-      {loading ? <SummarySkeleton /> : (
+      {!ledgerTab && loading ? <SummarySkeleton /> : !ledgerTab && (
         <div className="grid grid-cols-3 gap-2">
           {[
             { label: 'Toplam Bakiye',     value: fmt(totalPartnerBalance),              color: 'text-primary-600'  },
@@ -321,9 +454,9 @@ export default function PartnersPage() {
       )}
 
       {/* ── Partner cards / Loading / Empty ───────────────────────────────────── */}
-      {loading && <CardSkeleton />}
+      {!ledgerTab && loading && <CardSkeleton />}
 
-      {!loading && !hasPartners && !fetchError && (
+      {!ledgerTab && !loading && !hasPartners && !fetchError && (
         <div className="bg-white border border-gray-200 rounded-xl px-6 py-12 text-center">
           <div className="text-3xl mb-3">🤝</div>
           <div className="text-sm font-semibold text-gray-500">Henüz ortak eklenmemiş</div>
@@ -333,7 +466,7 @@ export default function PartnersPage() {
         </div>
       )}
 
-      {!loading && hasPartners && (
+      {!ledgerTab && !loading && hasPartners && (
         <>
           {/* ── Per-partner cards ─────────────────────────────────────────────── */}
           <div className="flex flex-col gap-2">

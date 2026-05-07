@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
   try {
     let query = supabase
       .from('sales')
-      .select('id, customer_name, currency, total, total_try, nominal_profit, created_at, proforma_id, payment_status, paid_at, proformas(proforma_no)')
+      .select('id, customer_name, currency, total, total_try, nominal_profit, created_at, due_date, amount_paid, proforma_id, payment_status, paid_at, proformas(proforma_no)')
       .eq('company_id', companyId)
       .is('deleted_at', null)
       .order('created_at', { ascending: false })
@@ -78,7 +78,12 @@ export async function PATCH(req: NextRequest) {
 
   try {
     const body = await req.json()
-    const { id, payment_status } = body as { id?: string; payment_status?: string }
+    const { id, payment_status, amount_paid, due_date } = body as {
+      id?: string
+      payment_status?: string
+      amount_paid?: number | null
+      due_date?: string | null
+    }
 
     if (!id)
       return NextResponse.json({ error: 'id zorunludur' }, { status: 422 })
@@ -93,6 +98,10 @@ export async function PATCH(req: NextRequest) {
       // Set paid_at when marking as fully paid; clear it otherwise
       paid_at: payment_status === 'paid' ? now : null,
     }
+
+    // Optional fields — only write when explicitly provided
+    if (amount_paid !== undefined) patch.amount_paid = amount_paid
+    if (due_date !== undefined)    patch.due_date    = due_date
 
     const { error } = await supabase
       .from('sales')

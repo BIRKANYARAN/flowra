@@ -86,7 +86,7 @@ export async function GET(req: NextRequest) {
         .gte('expense_date', trail3).lte('expense_date', today)
         .in('expense_type', Array.from(BURN_EXPENSE_TYPES)),
 
-      supabase.from('sales').select('total_try, created_at')
+      supabase.from('sales').select('total_try, created_at, due_date, amount_paid')
         .eq('company_id', companyId).is('deleted_at', null)
         .in('payment_status', ['unpaid', 'partial', 'overdue']),
 
@@ -118,8 +118,10 @@ export async function GET(req: NextRequest) {
       periodInvoiced,
       periodCollected: periodReceived,
       outstanding: (outstandingRes.data ?? []).map(r => ({
-        amount_try: Number(r.total_try ?? 0),
-        created_at: String(r.created_at ?? ''),
+        amount_try:  Number(r.total_try ?? 0),
+        created_at:  String(r.created_at ?? ''),
+        due_date:    r.due_date ? String(r.due_date) : null,
+        amount_paid: r.amount_paid != null ? Number(r.amount_paid) : null,
       })),
       today,
     })

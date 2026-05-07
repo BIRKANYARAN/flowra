@@ -207,7 +207,7 @@ export class FinanceService {
     const [{ data: exps, error: e1 }, { data: recs, error: e2 }] = await Promise.all([
       supabase
         .from('expenses')
-        .select('id, category, expense_type, amount_try, kdv, is_deductible, expense_date')
+        .select('id, category, expense_type, amount_try, kdv, is_deductible, expense_date, recurring_expense_id')
         .eq('company_id', companyId)
         .is('deleted_at', null)
         .gte('expense_date', period.from)
@@ -231,6 +231,14 @@ export class FinanceService {
     }
 
     const lines: ExpenseLineComputed[] = []
+
+    // Build dedup set: recurring template occurrences already recorded as real expense rows.
+    // Key: `${recurring_expense_id}::${expense_date}` — skip these in the recurring loop below.
+    const realizedRecurring = new Set<string>()
+    for (const e of exps ?? []) {
+      const rid = (e as { recurring_expense_id?: string | null }).recurring_expense_id
+      if (rid) realizedRecurring.add(`${rid}::${String(e.expense_date)}`)
+    }
 
     for (const e of exps ?? []) {
       const cat       = String(e.category ?? 'general') as ExpenseCategory
@@ -270,6 +278,8 @@ export class FinanceService {
         period,
       )
       for (const date of occurrences) {
+        // Skip if a real expense row already exists for this template + date
+        if (realizedRecurring.has(`${r.id}::${date}`)) continue
         lines.push({
           source:          'recurring',
           source_id:       String(r.id),

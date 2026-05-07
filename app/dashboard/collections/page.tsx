@@ -11,6 +11,8 @@ interface CollectionRow {
   total_try: number
   nominal_profit: number
   created_at: string
+  due_date: string | null
+  amount_paid: number | null
   proforma_id: string | null
   payment_status: 'unpaid' | 'paid' | 'partial' | 'overdue'
   paid_at: string | null
@@ -191,7 +193,7 @@ export default function CollectionsPage() {
                 <th className="text-right px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Tutar</th>
                 <th className="text-right px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">TL Karşılığı</th>
                 <th className="text-center px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Durum</th>
-                <th className="text-left px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Tarih</th>
+                <th className="text-left px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Vade / Tarih</th>
                 <th className="text-left px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Proforma</th>
                 <th className="px-4 py-3" />
               </tr>
@@ -221,9 +223,15 @@ export default function CollectionsPage() {
                       <StatusBadge status={row.payment_status} />
                     </td>
 
-                    {/* Sale date */}
-                    <td className="px-4 py-3.5 text-gray-500 text-xs whitespace-nowrap">
-                      {fmtDate(row.created_at)}
+                    {/* Due date (falls back to invoice date) */}
+                    <td className="px-4 py-3.5 text-xs whitespace-nowrap">
+                      {row.due_date ? (
+                        <span className={`font-medium ${row.due_date < new Date().toISOString().slice(0,10) && row.payment_status !== 'paid' ? 'text-red-600' : 'text-gray-500'}`}>
+                          {fmtDate(row.due_date)}
+                        </span>
+                      ) : (
+                        <span className="text-gray-400">{fmtDate(row.created_at)}</span>
+                      )}
                     </td>
 
                     {/* Proforma link */}

@@ -148,7 +148,7 @@ export async function GET(req: NextRequest) {
       // 7. Outstanding receivables (unpaid/partial/overdue) with age
       supabase
         .from('sales')
-        .select('total_try, created_at')
+        .select('total_try, created_at, due_date, amount_paid')
         .eq('company_id', companyId)
         .is('deleted_at', null)
         .in('payment_status', ['unpaid', 'partial', 'overdue']),
@@ -289,6 +289,8 @@ export async function GET(req: NextRequest) {
       outstanding: (outstandingRes.data ?? []).map(r => ({
         amount_try: Number(r.total_try ?? 0),
         created_at: String(r.created_at ?? ''),
+        due_date:   r.due_date ? String(r.due_date) : null,
+        amount_paid: r.amount_paid != null ? Number(r.amount_paid) : null,
       })),
       today,
     })
