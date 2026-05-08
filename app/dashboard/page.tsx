@@ -558,8 +558,9 @@ export default async function DashboardPage() {
 
   // ── Render ───────────────────────────────────────────────────────────────────
 
-  const topAlert = alerts[0] ?? null
-  const today = new Date().toISOString().slice(0, 10)
+  const today           = new Date().toISOString().slice(0, 10)
+  const overdueTaskCount = taskReminders.filter(t => t.due_date < today).length
+  const visibleAlerts   = alerts.slice(0, 3)   // show up to 3 alerts
 
   return (
     <div className="flex flex-col gap-1.5 max-w-6xl">
@@ -578,14 +579,8 @@ export default async function DashboardPage() {
             </Link>
           )}
           {vatStatus === 'payable' && fs.net_vat_try > 50 && (
-            <Link href="/dashboard/tax" className="text-[10px] bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full font-bold hover:bg-orange-200 transition-colors">
+            <Link href="/dashboard/analytics" className="text-[10px] bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full font-bold hover:bg-orange-200 transition-colors">
               KDV {fmt(fs.net_vat_try)}
-            </Link>
-          )}
-          {taskReminders.length > 0 && (
-            <Link href="/dashboard/tasks" className="text-[10px] bg-violet-100 text-violet-700 px-2 py-0.5 rounded-full font-bold hover:bg-violet-200 transition-colors">
-              {taskReminders.filter(t => t.due_date < today).length > 0 && '⚠ '}
-              {taskReminders.length} görev
             </Link>
           )}
         </div>
@@ -593,31 +588,68 @@ export default async function DashboardPage() {
           <Link href="/dashboard/proformas/new" className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gray-900 text-white text-xs font-semibold hover:bg-gray-700 transition-colors">
             + Proforma
           </Link>
-          <Link href="/dashboard/sales" className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition-colors">
+          <Link href="/dashboard/sales/new" className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition-colors">
             + Satış
           </Link>
           <Link href="/dashboard/collections" className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-primary-600 text-white text-xs font-semibold hover:bg-primary-700 transition-colors">
             + Tahsilat
           </Link>
-          <Link href="/dashboard/expenses" className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-orange-500 text-white text-xs font-semibold hover:bg-orange-600 transition-colors">
+          <Link href="/dashboard/expenses/new" className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-orange-500 text-white text-xs font-semibold hover:bg-orange-600 transition-colors">
             + Gider
           </Link>
         </div>
       </div>
 
-      {/* ── Single critical alert — compact banner ─────────────────────────── */}
-      {topAlert && (
-        <Link
-          href={topAlert.href}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors hover:opacity-90 ${topAlert.colorBg} ${topAlert.colorText}`}
-        >
-          <span className="flex-shrink-0">{topAlert.icon}</span>
-          <span className="font-bold">{topAlert.text}</span>
-          <span className="text-[10px] font-normal opacity-70 truncate hidden sm:block">— {topAlert.sub}</span>
-          {alerts.length > 1 && (
-            <span className="ml-auto flex-shrink-0 text-[10px] opacity-60">+{alerts.length - 1} daha</span>
+      {/* ── Task reminders — due within 7 days ────────────────────────────── */}
+      {taskReminders.length > 0 && (
+        <div className="flex items-center gap-2 overflow-x-auto pb-0.5">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-gray-300 flex-shrink-0">Görevler</span>
+          {taskReminders.map(t => {
+            const isOverdue = t.due_date < today
+            return (
+              <Link
+                key={t.id}
+                href="/dashboard/tasks"
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-semibold flex-shrink-0 transition-colors ${
+                  isOverdue
+                    ? 'bg-red-50 border-red-200 text-red-700 hover:bg-red-100'
+                    : 'bg-violet-50 border-violet-200 text-violet-700 hover:bg-violet-100'
+                }`}
+              >
+                {isOverdue && <span className="text-[9px] font-black">GECİKTİ</span>}
+                <span className="truncate max-w-[120px]">{t.title}</span>
+                <span className="text-[10px] opacity-60 flex-shrink-0">
+                  {new Date(t.due_date + 'T00:00:00').toLocaleDateString('tr-TR', { day: '2-digit', month: 'short' })}
+                </span>
+              </Link>
+            )
+          })}
+          {overdueTaskCount > 0 && (
+            <span className="text-[10px] text-red-500 font-bold flex-shrink-0">
+              {overdueTaskCount} gecikmiş
+            </span>
           )}
-        </Link>
+        </div>
+      )}
+
+      {/* ── Alert band — up to 3 financial/operational alerts ─────────────── */}
+      {visibleAlerts.length > 0 && (
+        <div className="flex flex-col gap-1">
+          {visibleAlerts.map((a, i) => (
+            <Link
+              key={i}
+              href={a.href}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors hover:opacity-90 ${a.colorBg} ${a.colorText}`}
+            >
+              <span className="flex-shrink-0">{a.icon}</span>
+              <span className="font-bold">{a.text}</span>
+              <span className="text-[10px] font-normal opacity-70 truncate hidden sm:block">— {a.sub}</span>
+              {i === 0 && alerts.length > 3 && (
+                <span className="ml-auto flex-shrink-0 text-[10px] opacity-60">+{alerts.length - 3} daha</span>
+              )}
+            </Link>
+          ))}
+        </div>
       )}
 
       {/* ── KPI strip — 6 metrics ──────────────────────────────────────────── */}

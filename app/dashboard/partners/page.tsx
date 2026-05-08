@@ -77,7 +77,8 @@ interface LedgerEntry {
   loans_repaid:         number
   net_loan_outstanding: number
   dividends_received:   number
-  salary_received:      number
+  salary_received:      number   // salary + board_fee + huzur_hakki
+  equalization_paid:    number   // intra-partner balancing
   company_total_owed:   number
 }
 
@@ -119,6 +120,9 @@ const TX_TYPE_LABELS: Record<string, string> = {
   loan_out:        'Ödeme (Çıkış)',
   salary:          'Maaş',
   board_fee:       'Kurul Ücreti',
+  // Phase 7 — executive compensation & equalization
+  huzur_hakki:     'Huzur Hakkı',
+  equalization:    'Eşitleme',
 }
 
 // ── Formatters ─────────────────────────────────────────────────────────────────
@@ -659,7 +663,7 @@ export default function PartnersPage() {
                                 <div className="text-gray-400">{tx.tx_date?.slice(0, 10)}</div>
                               </div>
                               <span className={`shrink-0 font-black tabular-nums ml-4 ${
-                                ['loan_out','salary','board_fee','dividend'].includes(tx.tx_type)
+                                ['loan_out','salary','board_fee','dividend','huzur_hakki','equalization'].includes(tx.tx_type)
                                   ? 'text-red-600' : 'text-emerald-700'
                               }`}>
                                 {fmt(tx.amount_try)}

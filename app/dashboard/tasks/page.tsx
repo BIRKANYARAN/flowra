@@ -161,7 +161,7 @@ export default function TasksPage() {
 
       {/* Create form */}
       {showForm && (
-        <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-4">
+        <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
           <h2 className="text-sm font-bold text-gray-700">Yeni Görev</h2>
           {formError && <p className="text-xs text-red-600">{formError}</p>}
 
@@ -268,14 +268,14 @@ export default function TasksPage() {
       {loading ? (
         <div className="space-y-2">
           {[1, 2, 3].map(i => (
-            <div key={i} className="bg-white rounded-2xl border border-gray-100 p-4 animate-pulse">
+            <div key={i} className="bg-white rounded-xl border border-gray-200 p-4 animate-pulse">
               <div className="h-3.5 bg-gray-100 rounded w-2/3 mb-2" />
               <div className="h-2.5 bg-gray-50 rounded w-1/3" />
             </div>
           ))}
         </div>
       ) : tasks.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center">
+        <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
           <p className="text-sm text-gray-400">
             {tab === 'open' ? 'Açık görev yok.' : 'Bu durumda görev yok.'}
           </p>

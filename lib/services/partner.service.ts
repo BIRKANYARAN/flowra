@@ -438,15 +438,16 @@ export class PartnerService {
       throw new AppError('PARTNER_NOT_FOUND', 'Ortak bulunamadı', { partnerId })
     }
 
-    // Phase 4 canonical types + legacy types (backward compat)
+    // Phase 4 canonical types + legacy types + Phase 7 additions (backward compat)
     const VALID_TX_TYPES = new Set([
       'capital_in', 'loan_to_company', 'loan_repayment', 'dividend',  // Phase 4 canonical
       'loan_in', 'loan_out', 'salary', 'board_fee',                    // legacy
+      'huzur_hakki', 'equalization',                                   // Phase 7
     ])
     if (!VALID_TX_TYPES.has(input.tx_type)) {
       throw new AppError(
         'VALIDATION_ERROR',
-        'Geçersiz işlem tipi. Geçerli tipler: capital_in, loan_to_company, loan_repayment, dividend',
+        'Geçersiz işlem tipi. Geçerli tipler: capital_in, loan_to_company, loan_repayment, dividend, huzur_hakki, equalization',
         { received: input.tx_type },
       )
     }

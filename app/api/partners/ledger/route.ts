@@ -48,7 +48,8 @@ interface PartnerLedgerEntry {
   net_loan_outstanding:   number
   // Distributions
   dividends_received:     number
-  salary_received:        number   // legacy tx type
+  salary_received:        number   // salary + board_fee + huzur_hakki
+  equalization_paid:      number   // intra-partner balancing transfers
   // Obligations
   company_total_owed:     number   // equity + net_loan (wind-up liability)
   // Equalization basis (capital only)
@@ -105,10 +106,11 @@ export async function GET(req: NextRequest) {
     type Agg = {
       equity: number; loanIn: number; loanOut: number
       dividend: number; salary: number; boardFee: number
+      huzurHakki: number; equalization: number
     }
     const agg = new Map<string, Agg>()
     for (const p of partners) {
-      agg.set(p.id, { equity: 0, loanIn: 0, loanOut: 0, dividend: 0, salary: 0, boardFee: 0 })
+      agg.set(p.id, { equity: 0, loanIn: 0, loanOut: 0, dividend: 0, salary: 0, boardFee: 0, huzurHakki: 0, equalization: 0 })
     }
 
     for (const tx of txs) {
@@ -116,14 +118,16 @@ export async function GET(req: NextRequest) {
       if (!a) continue
       const amt = Number(tx.amount_try)
       switch (tx.tx_type) {
-        case 'capital_in':      a.equity   += amt; break
-        case 'loan_to_company': a.loanIn   += amt; break
-        case 'loan_in':         a.loanIn   += amt; break   // legacy
-        case 'loan_repayment':  a.loanOut  += amt; break
-        case 'loan_out':        a.loanOut  += amt; break   // legacy
-        case 'dividend':        a.dividend += amt; break
-        case 'salary':          a.salary   += amt; break
-        case 'board_fee':       a.boardFee += amt; break
+        case 'capital_in':      a.equity       += amt; break
+        case 'loan_to_company': a.loanIn       += amt; break
+        case 'loan_in':         a.loanIn       += amt; break   // legacy
+        case 'loan_repayment':  a.loanOut      += amt; break
+        case 'loan_out':        a.loanOut      += amt; break   // legacy
+        case 'dividend':        a.dividend     += amt; break
+        case 'salary':          a.salary       += amt; break
+        case 'board_fee':       a.boardFee     += amt; break
+        case 'huzur_hakki':     a.huzurHakki   += amt; break
+        case 'equalization':    a.equalization += amt; break
       }
     }
 
@@ -135,7 +139,10 @@ export async function GET(req: NextRequest) {
       const loansRepaid     = round2(a.loanOut)
       const netLoan         = round2(loansGiven - loansRepaid)
       const dividends       = round2(a.dividend)
-      const salary          = round2(a.salary + a.boardFee)
+      // salary_received aggregates salary + board_fee + huzur_hakki (all operational comp)
+      const salary          = round2(a.salary + a.boardFee + a.huzurHakki)
+      // equalization_paid — intra-partner balancing payments
+      const equalizationPaid = round2(a.equalization)
       const totalOwed       = round2(equity + netLoan)
 
       return {
@@ -149,6 +156,7 @@ export async function GET(req: NextRequest) {
         net_loan_outstanding: netLoan,
         dividends_received:   dividends,
         salary_received:      salary,
+        equalization_paid:    equalizationPaid,
         company_total_owed:   totalOwed,
         equalization_basis:   equity,   // capital only — NOT equity+loans
       }

@@ -39,10 +39,10 @@ function fmtDate(iso: string) {
 }
 
 const STATUS_META: Record<string, { label: string; bg: string; text: string; border: string }> = {
-  unpaid:  { label: 'Bekliyor',   bg: 'bg-orange-50', text: 'text-orange-600', border: 'border-orange-100' },
-  paid:    { label: 'Ödendi',     bg: 'bg-green-50',  text: 'text-green-600',  border: 'border-green-100'  },
-  partial: { label: 'Kısmi',      bg: 'bg-yellow-50', text: 'text-yellow-600', border: 'border-yellow-100' },
-  overdue: { label: 'Gecikmiş',   bg: 'bg-red-50',    text: 'text-red-600',    border: 'border-red-100'    },
+  unpaid:  { label: 'Bekliyor',  bg: 'bg-amber-50',   text: 'text-amber-700', border: 'border-amber-200' },
+  paid:    { label: 'Ödendi',    bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
+  partial: { label: 'Kısmi',     bg: 'bg-blue-50',    text: 'text-blue-700',  border: 'border-blue-200'   },
+  overdue: { label: 'Gecikmiş',  bg: 'bg-red-50',     text: 'text-red-700',   border: 'border-red-200'    },
 }
 
 // ── StatusBadge ───────────────────────────────────────────────────────────────
@@ -122,50 +122,48 @@ export default function CollectionsPage() {
   ]
 
   return (
-    <div className="max-w-5xl space-y-6">
+    <div className="max-w-5xl flex flex-col gap-4">
 
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      {/* Header + Tabs row */}
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-black text-gray-900">Tahsilat</h1>
-          <p className="text-sm text-gray-400 mt-0.5">Satış ödemelerini takip edin</p>
+          <h1 className="text-xl font-black text-gray-900 tracking-tight">Tahsilatlar</h1>
+          <p className="text-xs text-gray-400 mt-0.5">Satış ödemelerini takip edin</p>
+        </div>
+        <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
+          {TABS.map(t => (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors ${
+                tab === t.key
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
         </div>
       </div>
 
       {/* Summary strip */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="bg-white rounded-2xl border border-gray-100 px-5 py-4 shadow-sm">
-          <div className="text-xs text-gray-400 font-medium mb-1">Toplam (görünür)</div>
-          <div className="text-xl font-black text-gray-900">{loading ? '—' : fmtCurrency(totalVisible)}</div>
-          <div className="text-xs text-gray-400 mt-0.5">{rows.length} kayıt</div>
+      <div className="grid grid-cols-3 gap-2">
+        <div className="bg-white rounded-xl border border-gray-200 px-4 py-3">
+          <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1.5">Toplam</div>
+          <div className="text-xl font-black tabular-nums text-gray-900">{loading ? '—' : fmtCurrency(totalVisible)}</div>
+          <div className="text-[10px] text-gray-400 mt-0.5">{rows.length} kayıt</div>
         </div>
-        <div className="bg-white rounded-2xl border border-gray-100 px-5 py-4 shadow-sm">
-          <div className="text-xs text-gray-400 font-medium mb-1">Beklenen tahsilat</div>
-          <div className="text-xl font-black text-orange-500">{loading ? '—' : fmtCurrency(unpaidVisible)}</div>
-          <div className="text-xs text-gray-400 mt-0.5">{rows.filter(r => r.payment_status !== 'paid').length} satış</div>
+        <div className="bg-white rounded-xl border border-gray-200 px-4 py-3">
+          <div className="text-[10px] font-bold uppercase tracking-widest text-amber-500 mb-1.5">Bekliyor</div>
+          <div className="text-xl font-black tabular-nums text-amber-700">{loading ? '—' : fmtCurrency(unpaidVisible)}</div>
+          <div className="text-[10px] text-gray-400 mt-0.5">{rows.filter(r => r.payment_status !== 'paid').length} satış</div>
         </div>
-        <div className="bg-white rounded-2xl border border-gray-100 px-5 py-4 shadow-sm">
-          <div className="text-xs text-gray-400 font-medium mb-1">Tahsil edildi</div>
-          <div className="text-xl font-black text-green-500">{loading ? '—' : fmtCurrency(paidVisible)}</div>
-          <div className="text-xs text-gray-400 mt-0.5">{rows.filter(r => r.payment_status === 'paid').length} satış</div>
+        <div className="bg-white rounded-xl border border-gray-200 px-4 py-3">
+          <div className="text-[10px] font-bold uppercase tracking-widest text-emerald-500 mb-1.5">Tahsil Edildi</div>
+          <div className="text-xl font-black tabular-nums text-emerald-700">{loading ? '—' : fmtCurrency(paidVisible)}</div>
+          <div className="text-[10px] text-gray-400 mt-0.5">{rows.filter(r => r.payment_status === 'paid').length} satış</div>
         </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="flex gap-1 bg-gray-100 rounded-xl p-1 w-fit">
-        {TABS.map(t => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
-              tab === t.key
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
       </div>
 
       {/* Error */}
@@ -176,7 +174,7 @@ export default function CollectionsPage() {
       )}
 
       {/* Table */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         {loading ? (
           <div className="py-16 flex items-center justify-center">
             <div className="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
