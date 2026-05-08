@@ -282,18 +282,19 @@ do $$ begin
 exception when others then null;
 end $$;
 
+-- Drop + recreate constraint so new tx_types (huzur_hakki, equalization) are
+-- included on re-run even when the constraint already exists.
 do $$ begin
-  if not exists (
-    select 1 from pg_constraint
-    where conrelid = 'partner_transactions'::regclass
-      and conname  = 'chk_partner_tx_type'
-  ) then
-    alter table partner_transactions add constraint chk_partner_tx_type
-      check (tx_type in (
-        'capital_in', 'loan_to_company', 'loan_repayment', 'dividend',
-        'loan_in', 'loan_out', 'salary', 'board_fee'
-      ));
-  end if;
+  alter table partner_transactions drop constraint if exists chk_partner_tx_type;
+exception when others then null;
+end $$;
+do $$ begin
+  alter table partner_transactions add constraint chk_partner_tx_type
+    check (tx_type in (
+      'capital_in', 'loan_to_company', 'loan_repayment', 'dividend',
+      'loan_in', 'loan_out', 'salary', 'board_fee',
+      'huzur_hakki', 'equalization'
+    ));
 exception when others then null;
 end $$;
 
