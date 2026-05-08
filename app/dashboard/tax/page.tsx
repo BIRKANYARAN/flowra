@@ -61,7 +61,7 @@ export default async function TaxPage() {
       </div>
 
       {/* KDV panel */}
-      <div className="bg-white border border-gray-200 rounded-2xl p-5 space-y-3">
+      <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-bold text-gray-800">KDV Özeti</h2>
           <span className={`text-xs font-bold px-2 py-0.5 rounded-lg ${

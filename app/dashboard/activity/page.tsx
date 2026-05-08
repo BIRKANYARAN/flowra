@@ -57,12 +57,12 @@ export default async function ActivityPage() {
       </div>
 
       {(logs ?? []).length === 0 ? (
-        <div className="bg-white border border-gray-200 rounded-2xl p-8 text-center">
+        <div className="bg-white border border-gray-200 rounded-xl p-8 text-center">
           <div className="text-3xl mb-2">📋</div>
           <p className="text-sm text-gray-500">Henüz kayıt bulunmuyor.</p>
         </div>
       ) : (
-        <div className="bg-white border border-gray-200 rounded-2xl divide-y divide-gray-100">
+        <div className="bg-white border border-gray-200 rounded-xl divide-y divide-gray-100">
           {(logs as AuditLog[]).map((log) => (
             <div key={log.id} className="flex items-start gap-3 px-4 py-3">
               <span className={`mt-0.5 text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${

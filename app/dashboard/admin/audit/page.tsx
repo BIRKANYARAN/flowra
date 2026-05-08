@@ -84,7 +84,7 @@ export default function AdminAuditPage() {
   if (forbidden) {
     return (
       <div className="max-w-lg">
-        <div className="bg-red-50 border border-red-100 rounded-2xl p-6 text-center">
+        <div className="bg-red-50 border border-red-100 rounded-xl p-6 text-center">
           <div className="text-3xl mb-3">🔒</div>
           <h2 className="font-bold text-red-700 mb-1">Yetkisiz Erişim</h2>
           <p className="text-sm text-red-600">Bu sayfaya yalnızca yöneticiler erişebilir.</p>
@@ -107,7 +107,7 @@ export default function AdminAuditPage() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white border border-gray-200 rounded-2xl p-4 mb-5 flex flex-wrap gap-3 items-end">
+      <div className="bg-white border border-gray-200 rounded-xl p-4 mb-5 flex flex-wrap gap-3 items-end">
         <div>
           <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">İşlem</div>
           <select
@@ -168,7 +168,7 @@ export default function AdminAuditPage() {
       {/* Table */}
       {!loading && (
         <>
-          <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+          <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
             {logs.length === 0 ? (
               <div className="text-center py-16 text-gray-400">
                 <div className="text-4xl mb-2">📋</div>

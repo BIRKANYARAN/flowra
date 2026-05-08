@@ -90,7 +90,7 @@ export default async function ProformasPage() {
             }
           />
         ) : (
-          <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+          <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
             {/* Table header */}
             <div className="grid grid-cols-12 text-[10px] font-bold text-gray-400 uppercase tracking-widest px-5 py-3 border-b border-gray-100">
               <div className="col-span-3">No / Revizyon</div>

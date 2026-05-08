@@ -416,7 +416,7 @@ export default function CatalogPage() {
       )}
 
       {/* Table */}
-      <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
         {filtered.length === 0 ? (
           <div className="text-center py-16 text-gray-400">
             <p className="text-sm">

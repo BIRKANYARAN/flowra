@@ -287,7 +287,7 @@ export default function TasksPage() {
             return (
               <div
                 key={task.id}
-                className={`bg-white rounded-2xl border p-4 flex items-start gap-3 ${
+                className={`bg-white rounded-xl border p-4 flex items-start gap-3 ${
                   overdue ? 'border-red-200 bg-red-50' : 'border-gray-100'
                 }`}
               >

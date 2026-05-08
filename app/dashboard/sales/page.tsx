@@ -59,15 +59,15 @@ export default async function SalesPage() {
       </div>
 
       <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="bg-white border border-gray-200 rounded-2xl p-4">
+        <div className="bg-white border border-gray-200 rounded-xl p-4">
           <div className="text-xs text-gray-400 font-semibold uppercase tracking-widest mb-1">Toplam Satış</div>
           <div className="text-xl font-black">{list.length}</div>
         </div>
-        <div className="bg-white border border-gray-200 rounded-2xl p-4">
+        <div className="bg-white border border-gray-200 rounded-xl p-4">
           <div className="text-xs text-gray-400 font-semibold uppercase tracking-widest mb-1">TRY Ciro</div>
           <div className="text-xl font-black tabular-nums">{fmt(totalRev)}</div>
         </div>
-        <div className="bg-white border border-gray-200 rounded-2xl p-4">
+        <div className="bg-white border border-gray-200 rounded-xl p-4">
           <div className="text-xs text-gray-400 font-semibold uppercase tracking-widest mb-1">Nominal Kâr</div>
           <div className={`text-xl font-black tabular-nums ${totalPft >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
             {fmt(totalPft)}
@@ -76,13 +76,13 @@ export default async function SalesPage() {
       </div>
 
       {list.length === 0 ? (
-        <div className="bg-white border border-gray-200 rounded-2xl text-center py-16">
+        <div className="bg-white border border-gray-200 rounded-xl text-center py-16">
           <div className="text-5xl mb-3">💰</div>
           <p className="text-gray-500 font-medium mb-2">Henüz satış yok.</p>
           <p className="text-sm text-gray-400">Proformaları satışa dönüştürerek başlayın.</p>
         </div>
       ) : (
-        <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
           <div className="grid grid-cols-12 text-[10px] font-bold text-gray-400 px-5 py-3 border-b border-gray-100 uppercase tracking-widest">
             <div className="col-span-3">Müşteri</div>
             <div className="col-span-2">Proforma</div>

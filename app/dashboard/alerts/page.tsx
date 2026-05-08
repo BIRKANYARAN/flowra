@@ -42,7 +42,7 @@ export default async function AlertsPage() {
       </div>
 
       {(alerts ?? []).length === 0 ? (
-        <div className="bg-white border border-gray-200 rounded-2xl p-8 text-center">
+        <div className="bg-white border border-gray-200 rounded-xl p-8 text-center">
           <div className="text-3xl mb-2">✅</div>
           <p className="text-sm font-semibold text-gray-700">Tüm sistemler normal</p>
           <p className="text-xs text-gray-400 mt-1">Kritik uyarı bulunmuyor.</p>

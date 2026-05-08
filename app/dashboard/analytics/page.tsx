@@ -53,14 +53,14 @@ export default async function AnalyticsPage() {
           { label: 'Dönüşüm Oranı', value: '%' + convRate,            color: 'text-blue-600'   },
           { label: 'TRY Ciro',       value: fmt(a.total_revenue_try ?? 0), color: 'text-gray-700' },
         ].map(k => (
-          <div key={k.label} className="bg-white border border-gray-200 rounded-2xl p-5">
+          <div key={k.label} className="bg-white border border-gray-200 rounded-xl p-5">
             <div className={`text-xs font-semibold uppercase tracking-wide mb-1 ${k.color}`}>{k.label}</div>
             <div className="text-2xl font-black tabular-nums">{k.value}</div>
           </div>
         ))}
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-2xl p-6">
+      <div className="bg-white border border-gray-200 rounded-xl p-6">
         <h2 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4">Kâr Analizi</h2>
         <div className="grid grid-cols-3 gap-6">
           {[
@@ -86,7 +86,7 @@ export default async function AnalyticsPage() {
       </div>
 
       {monthly.length > 0 ? (
-        <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-100">
             <h2 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Aylık Satışlar</h2>
           </div>
@@ -114,7 +114,7 @@ export default async function AnalyticsPage() {
           </table>
         </div>
       ) : (
-        <div className="bg-white border border-gray-200 rounded-2xl text-center py-16">
+        <div className="bg-white border border-gray-200 rounded-xl text-center py-16">
           <div className="text-4xl mb-3">📊</div>
           <p className="text-gray-500 font-medium">Henüz satış verisi yok.</p>
         </div>

@@ -214,7 +214,7 @@ export default function ProductsPage() {
 
       {/* Create / Edit form */}
       {showForm && (
-        <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-5 space-y-4">
+        <div className="bg-white border border-gray-200 rounded-xl p-6 mb-5 space-y-4">
           <h3 className="font-bold text-sm border-b border-gray-100 pb-3">
             {editId ? 'Ürünü Düzenle' : 'Yeni Ürün'}
           </h3>
@@ -288,7 +288,7 @@ export default function ProductsPage() {
       )}
 
       {/* Products list */}
-      <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
         {list.length === 0 ? (
           <div className="text-center py-16 text-gray-400">
             <div className="text-4xl mb-2">🏷️</div>

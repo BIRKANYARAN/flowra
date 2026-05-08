@@ -146,7 +146,7 @@ export default function AdminUsersPage() {
   if (forbidden) {
     return (
       <div className="max-w-lg">
-        <div className="bg-red-50 border border-red-100 rounded-2xl p-6 text-center">
+        <div className="bg-red-50 border border-red-100 rounded-xl p-6 text-center">
           <div className="text-3xl mb-3">🔒</div>
           <h2 className="font-bold text-red-700 mb-1">Yetkisiz Erişim</h2>
           <p className="text-sm text-red-600">Bu sayfaya yalnızca yöneticiler erişebilir.</p>
@@ -188,7 +188,7 @@ export default function AdminUsersPage() {
 
       {/* Invite form */}
       {showInvite && (
-        <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-5 space-y-4">
+        <div className="bg-white border border-gray-200 rounded-xl p-6 mb-5 space-y-4">
           <h3 className="font-bold text-sm border-b border-gray-100 pb-3">Kullanıcı Davet Et</h3>
           <p className="text-xs text-gray-500">
             Davet edilecek kullanıcının Flowra hesabı olması gerekir.
@@ -248,7 +248,7 @@ export default function AdminUsersPage() {
       )}
 
       {/* Active members */}
-      <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden mb-5">
+      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden mb-5">
         <div className="px-5 py-3 border-b border-gray-100">
           <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Aktif Üyeler</span>
         </div>
@@ -331,7 +331,7 @@ export default function AdminUsersPage() {
 
       {/* Pending invitations */}
       {pendingMembers.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
           <div className="px-5 py-3 border-b border-gray-100">
             <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Bekleyen Davetler</span>
           </div>

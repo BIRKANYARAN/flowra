@@ -372,7 +372,7 @@ export default function SimulationPage() {
       </div>
 
       {/* ── ACTION PANEL: "Satış yaparsam ne olur?" ──────────────────────────── */}
-      <div className={`rounded-2xl border p-5 transition-colors ${
+      <div className={`rounded-xl border p-5 transition-colors ${
         !hasInputs         ? 'bg-gray-50 border-gray-200'
         : isViable         ? 'bg-emerald-50 border-emerald-200'
         : isBirimKarli     ? 'bg-amber-50 border-amber-200'
@@ -430,7 +430,7 @@ export default function SimulationPage() {
 
       {/* ── HERO METRICS: 4 key numbers ──────────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-white border border-gray-200 rounded-2xl p-4">
+        <div className="bg-white border border-gray-200 rounded-xl p-4">
           <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Birim Kâr</div>
           <div className={`text-2xl font-black tabular-nums leading-none ${
             !hasInputs ? 'text-gray-300' : effectiveProfitPU >= 0 ? 'text-emerald-700' : 'text-red-600'
@@ -441,14 +441,14 @@ export default function SimulationPage() {
               : 'Maliyet ve fiyat girin'}
           </div>
         </div>
-        <div className="bg-white border border-gray-200 rounded-2xl p-4">
+        <div className="bg-white border border-gray-200 rounded-xl p-4">
           <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Kâr Marjı</div>
           <div className={`text-2xl font-black tabular-nums leading-none ${
             !hasInputs ? 'text-gray-300' : effectiveMargin >= 0 ? 'text-primary-700' : 'text-red-600'
           }`}>{hasInputs ? pct(effectiveMargin) : '—'}</div>
           <div className="text-[11px] text-gray-400 mt-1.5">Kâr / Gelir</div>
         </div>
-        <div className="bg-white border border-gray-200 rounded-2xl p-4">
+        <div className="bg-white border border-gray-200 rounded-xl p-4">
           <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Yıllık Net</div>
           <div className={`text-2xl font-black tabular-nums leading-none ${
             !hasInputs ? 'text-gray-300' : yearly.totalNetProfit >= 0 ? 'text-emerald-700' : 'text-red-600'
@@ -457,7 +457,7 @@ export default function SimulationPage() {
             {hasInputs ? `${qty * 12} adet · gider dahil` : 'Parametreler girin'}
           </div>
         </div>
-        <div className="bg-white border border-gray-200 rounded-2xl p-4">
+        <div className="bg-white border border-gray-200 rounded-xl p-4">
           <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Başabaş</div>
           {yearly.breakEvenUnits > 0 ? (
             <>
@@ -476,7 +476,7 @@ export default function SimulationPage() {
       </div>
 
       {/* ── TAX EFFECT ───────────────────────────────────────────────────────── */}
-      <div className="bg-white border border-gray-200 rounded-2xl p-5">
+      <div className="bg-white border border-gray-200 rounded-xl p-5">
         <h2 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4">
           Vergi Etkisi — Yıllık Tahmin
         </h2>
@@ -526,7 +526,7 @@ export default function SimulationPage() {
 
       {/* ── PARTNER IMPACT ───────────────────────────────────────────────────── */}
       {partnerCount > 0 && yearly.totalNetProfit !== 0 && (
-        <div className={`border rounded-2xl p-5 ${
+        <div className={`border rounded-xl p-5 ${
           yearly.totalNetProfit > 0 ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'
         }`}>
           <div className="flex items-center justify-between mb-3">
@@ -588,7 +588,7 @@ export default function SimulationPage() {
       )}
 
       {/* ── INPUTS — below results ────────────────────────────────────────────── */}
-      <div className="bg-white border border-gray-200 rounded-2xl p-6 space-y-5">
+      <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-5">
         <div className="flex items-center justify-between">
           <h2 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Parametreler</h2>
           <span className="text-[10px] text-gray-400 italic">Sonuçlar yukarıda otomatik güncellenir ↑</span>
@@ -726,7 +726,7 @@ export default function SimulationPage() {
       {/* Summary cards removed — metrics now live in hero strip above */}
 
       {/* ── Monthly projection table ──────────────────────────────────────────── */}
-      <div className="bg-white border border-gray-200 rounded-2xl p-6">
+      <div className="bg-white border border-gray-200 rounded-xl p-6">
         <h2 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4">Aylık Projeksiyon (12 Ay)</h2>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -769,7 +769,7 @@ export default function SimulationPage() {
       </div>
 
       {/* ── Yearly totals ─────────────────────────────────────────────────────── */}
-      <div className="bg-white border border-gray-200 rounded-2xl p-6">
+      <div className="bg-white border border-gray-200 rounded-xl p-6">
         <h2 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4">Yıllık Toplam</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
           {[

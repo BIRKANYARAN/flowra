@@ -411,7 +411,7 @@ export default function ExpensesPage() {
         <>
           {/* ── One-off expenses ──────────────────────────────────────────────── */}
           {list.length > 0 && (
-            <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
               {/* Header row */}
               <div className="grid grid-cols-12 text-[10px] font-bold text-gray-400 uppercase tracking-widest px-5 py-3 border-b border-gray-100">
                 <div className="col-span-4">Açıklama</div>
@@ -470,7 +470,7 @@ export default function ExpensesPage() {
             <div>
               <Label className="mb-3">Tekrarlayan Giderler ({recurring.length})</Label>
 
-              <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+              <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                 <div className="grid grid-cols-12 text-[10px] font-bold text-gray-400 uppercase tracking-widest px-5 py-3 border-b border-gray-100">
                   <div className="col-span-4">Açıklama</div>
                   <div className="col-span-2">Kategori</div>

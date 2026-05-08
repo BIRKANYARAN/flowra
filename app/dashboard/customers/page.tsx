@@ -93,7 +93,7 @@ export default function CustomersPage() {
       </div>
 
       {showForm && (
-        <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-5 space-y-4">
+        <div className="bg-white border border-gray-200 rounded-xl p-6 mb-5 space-y-4">
           <h3 className="font-bold text-sm border-b border-gray-100 pb-3">{editId ? 'Düzenle' : 'Yeni Müşteri'}</h3>
           <div><label className={LAB}>Ad *</label><input className={IL} {...f('name')} autoFocus /></div>
           <div><label className={LAB}>Adres</label><textarea className={`${IL} resize-none`} rows={2} {...f('address')} /></div>
@@ -121,7 +121,7 @@ export default function CustomersPage() {
         </div>
       )}
 
-      <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
         {filtered.length === 0 ? (
           <div className="text-center py-16 text-gray-400">
             <div className="text-4xl mb-2">👥</div>
