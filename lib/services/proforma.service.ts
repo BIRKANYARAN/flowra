@@ -344,12 +344,15 @@ export class ProformaService {
     ctx:        RequestContext
   ): Promise<{ id: string; status: string }> {
     const TRANSITIONS: Record<string, string[]> = {
-      draft:    ['sent', 'draft'],
-      sent:     ['sent', 'accepted', 'approved', 'rejected', 'draft'],
-      approved: ['sent', 'draft', 'approved', 'accepted'],
-      rejected: ['sent', 'draft', 'rejected'],
+      draft:     ['sent', 'draft'],
+      sent:      ['sent', 'accepted', 'approved', 'rejected', 'draft'],
+      approved:  ['sent', 'draft', 'approved', 'accepted'],
+      rejected:  ['sent', 'draft', 'rejected'],
       // 'accepted' kept as alias for backward compatibility
-      accepted: ['sent', 'draft', 'accepted', 'approved'],
+      accepted:  ['sent', 'draft', 'accepted', 'approved'],
+      // 'converted' is a terminal state — no manual transitions allowed.
+      // Conversion is only via convert_proforma_to_sale RPC.
+      converted: [],
     }
 
     const supabase = createClient()

@@ -1,10 +1,13 @@
 'use client'
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// Flowra — Proforma Invoice (enterprise-grade, print-safe)
+// Flowra — Proforma Invoice  (premium corporate, print-safe)
 //
-// TABLE COLUMNS:
-//   Ürün / Hizmet | Birim | Adet | Birim Fiyat | İskonto % | Net Tutar | KDV | Satır Toplamı
+// Design language: financial-grade document typography
+//   — tight 11–12px body, 14–16px emphasis, never childish 20–24px
+//   — left-to-right information hierarchy
+//   — clean white + one accent color (gray-900 for stripes)
+//   — generous but measured A4-proportioned whitespace
 //
 // SAFETY: Never renders unit_cost, profit, internal_notes
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -19,10 +22,10 @@ function sym(c: string): string {
 }
 
 function currencyLabel(c: string): string {
-  if (c === 'USD') return 'ABD Doları ($)'
-  if (c === 'EUR') return 'Euro (€)'
-  if (c === 'GBP') return 'İngiliz Sterlini (£)'
-  return 'Türk Lirası (₺)'
+  if (c === 'USD') return 'ABD Doları'
+  if (c === 'EUR') return 'Euro'
+  if (c === 'GBP') return 'İngiliz Sterlini'
+  return 'Türk Lirası'
 }
 
 function fmtDate(d: string): string {
@@ -38,7 +41,7 @@ function addDays(d: string, n: number): string {
     const dt = new Date(d)
     dt.setDate(dt.getDate() + n)
     return dt.toLocaleDateString('tr-TR', {
-      day: '2-digit', month: 'long', year: 'numeric',
+      day: '2-digit', month: '2-digit', year: 'numeric',
     })
   } catch { return '' }
 }
@@ -95,6 +98,22 @@ interface ProformaInvoiceProps {
   showPrintButton?: boolean
 }
 
+// ── Micro-components ─────────────────────────────────────────────────────────
+
+function MetaRow({ label, value }: { label: string; value: string }) {
+  if (!value) return null
+  return (
+    <div className="flex items-baseline justify-between gap-3 py-0.5">
+      <span style={{ fontSize: '9px', color: '#9ca3af', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', flexShrink: 0 }}>
+        {label}
+      </span>
+      <span style={{ fontSize: '11px', color: '#374151', fontWeight: 600, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
+        {value}
+      </span>
+    </div>
+  )
+}
+
 // ── Component ────────────────────────────────────────────────────────────────
 
 export function ProformaInvoice({
@@ -105,187 +124,222 @@ export function ProformaInvoice({
   banks,
   showPrintButton = false,
 }: ProformaInvoiceProps) {
-  const S = sym(proforma.currency || 'TRY')
-  const no = proforma.proforma_no || ('PRF-' + proforma.id.slice(-8).toUpperCase())
-  const expiry = addDays(proforma.created_at, proforma.validity_days || 30)
+  const S    = sym(proforma.currency || 'TRY')
+  const no   = proforma.proforma_no || ('PRF-' + proforma.id.slice(-8).toUpperCase())
+  const expiry    = addDays(proforma.created_at, proforma.validity_days || 30)
   const issueDate = fmtDate(proforma.created_at)
 
   // ── Per-line calculations ─────────────────────────────────────────────────
   const computed = items.map((it) => {
     const line = calculateLine(it as LineInput)
     return {
-      price: line.price,
-      qty: line.quantity,
-      disc: line.discount_percent,
-      kdvPct: line.kdv,
-      netUnitPrice: line.discounted_unit_price,
+      price:        line.price,
+      qty:          line.quantity,
+      disc:         line.discount_percent,
+      kdvPct:       line.kdv,
       lineSubtotal: line.line_subtotal,
-      lineKdv: line.line_vat,
-      lineTotal: line.line_total,
+      lineKdv:      line.line_vat,
+      lineTotal:    line.line_total,
     }
   })
 
   // ── Totals ────────────────────────────────────────────────────────────────
-  const totals = calculateTotals(items as LineInput[])
+  const totals        = calculateTotals(items as LineInput[])
   const subtotal      = totals.subtotal
   const totalDiscount = totals.total_discount
   const kdvTotal      = totals.kdv_total
   const kdvMap        = totals.kdv_breakdown
   const grand         = totals.grand_total
-  const kdvRates = Object.keys(kdvMap)
-    .filter((k) => kdvMap[k] > 0)
-    .sort((a, b) => +a - +b)
+  const kdvRates      = Object.keys(kdvMap).filter((k) => kdvMap[k] > 0).sort((a, b) => +a - +b)
 
   return (
-    <div className="bg-white overflow-hidden" style={{ fontFamily: "'Inter', 'Helvetica Neue', Arial, sans-serif" }}>
+    <div
+      className="bg-white"
+      style={{
+        fontFamily: "'Inter', 'Helvetica Neue', Arial, sans-serif",
+        maxWidth: '794px',   // A4 width at 96dpi
+        margin: '0 auto',
+      }}
+    >
 
-      {/* ── Accent stripe + document type ────────────────────────────────── */}
-      <div className="bg-gray-900 px-8 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          {/* Company logo in stripe */}
-          {settings?.logo_url ? (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img
-              src={settings.logo_url}
-              alt={settings.company_name || 'Logo'}
-              className="h-9 w-auto object-contain max-w-[140px]"
-              style={{ filter: 'brightness(0) invert(1)' }}
-            />
-          ) : (
-            <div className="text-white font-black text-xl tracking-wide">
-              {settings?.company_name?.slice(0, 2).toUpperCase() || 'FL'}
-            </div>
-          )}
-          {settings?.company_name && (
-            <div className="text-white/60 text-sm font-medium">{settings.company_name}</div>
-          )}
-        </div>
-        <div className="text-right">
-          <div className="text-white/50 text-[10px] font-bold uppercase tracking-widest">Proforma Fatura</div>
-          <div className="text-white font-black text-lg tracking-wide">{no}</div>
-          <div className="inline-flex items-center gap-1 bg-white/10 text-white/80 text-[10px] font-semibold px-2 py-0.5 rounded-full mt-1">
-            {currencyLabel(proforma.currency || 'TRY')}
-          </div>
-        </div>
-      </div>
+      {/* ═══════════════════════════════════════════════════════════════════
+          HEADER — premium two-panel layout
+          LEFT:  logo + company legal identity
+          RIGHT: PROFORMA FATURA title + document number + dates
+      ═══════════════════════════════════════════════════════════════════ */}
+      <div style={{ padding: '28px 32px 20px', borderBottom: '1px solid #e5e7eb' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '24px' }}>
 
-      {/* ── Header: Company + Customer + Document Meta ────────────────────── */}
-      <div className="px-8 py-5">
-        <div className="grid grid-cols-3 gap-6">
-
-          {/* Satıcı */}
-          <div>
-            <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 pb-1 border-b border-gray-100">
-              Satıcı Bilgileri
-            </div>
-            <div className="font-bold text-sm text-gray-900 leading-tight">
-              {settings?.company_name || '—'}
-            </div>
-            {settings?.address && (
-              <div className="text-xs text-gray-500 mt-1 whitespace-pre-line leading-relaxed">
-                {settings.address}
+          {/* LEFT — Company identity */}
+          <div style={{ flex: 1 }}>
+            {/* Logo or monogram */}
+            {settings?.logo_url ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={settings.logo_url}
+                alt={settings.company_name || 'Logo'}
+                style={{ height: '40px', width: 'auto', objectFit: 'contain', marginBottom: '10px', maxWidth: '160px' }}
+              />
+            ) : (
+              <div style={{
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                width: '36px', height: '36px', borderRadius: '6px',
+                backgroundColor: '#1f2937', color: '#fff',
+                fontSize: '14px', fontWeight: 900, letterSpacing: '0.02em',
+                marginBottom: '10px',
+              }}>
+                {settings?.company_name?.slice(0, 2).toUpperCase() || 'FL'}
               </div>
             )}
-            <div className="mt-1.5 space-y-0.5">
-              {settings?.tax_number && (
-                <div className="text-[10px] text-gray-400">
-                  VKN: <span className="text-gray-600 font-medium">{settings.tax_number}</span>
-                  {settings.tax_office ? <span> · {settings.tax_office}</span> : ''}
+
+            {/* Company legal name */}
+            <div style={{ fontSize: '14px', fontWeight: 700, color: '#111827', lineHeight: 1.2, marginBottom: '6px' }}>
+              {settings?.company_name || '—'}
+            </div>
+
+            {/* Address, legal IDs */}
+            <div style={{ fontSize: '10px', color: '#6b7280', lineHeight: 1.6 }}>
+              {settings?.address && (
+                <div style={{ marginBottom: '2px', whiteSpace: 'pre-line' }}>{settings.address}</div>
+              )}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '3px' }}>
+                {settings?.phone && <span>T: {settings.phone}</span>}
+                {settings?.website && <span>{settings.website}</span>}
+              </div>
+              {(settings?.tax_number || settings?.tax_office) && (
+                <div style={{ marginTop: '3px', color: '#9ca3af' }}>
+                  {settings?.tax_number && <span>VKN: <strong style={{ color: '#6b7280' }}>{settings.tax_number}</strong></span>}
+                  {settings?.tax_office && <span style={{ marginLeft: '8px' }}>V.D.: <strong style={{ color: '#6b7280' }}>{settings.tax_office}</strong></span>}
                 </div>
               )}
               {settings?.mersis_no && (
-                <div className="text-[10px] text-gray-400">
-                  MERSİS: <span className="text-gray-600 font-medium">{settings.mersis_no}</span>
-                </div>
-              )}
-              {settings?.phone && (
-                <div className="text-[10px] text-gray-400">
-                  Tel: <span className="text-gray-600 font-medium">{settings.phone}</span>
-                </div>
-              )}
-              {settings?.website && (
-                <div className="text-[10px] text-gray-400">{settings.website}</div>
-              )}
-            </div>
-          </div>
-
-          {/* Alıcı */}
-          <div>
-            <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 pb-1 border-b border-gray-100">
-              Alıcı Bilgileri
-            </div>
-            <div className="font-bold text-sm text-gray-900 leading-tight">
-              {proforma.customer_name || customer?.name || '—'}
-            </div>
-            {customer?.address && (
-              <div className="text-xs text-gray-500 mt-1 whitespace-pre-line leading-relaxed">
-                {customer.address}
-              </div>
-            )}
-            <div className="mt-1.5 space-y-0.5">
-              {customer?.tax_number && (
-                <div className="text-[10px] text-gray-400">
-                  VKN: <span className="text-gray-600 font-medium">{customer.tax_number}</span>
-                  {customer.tax_office ? <span> · {customer.tax_office}</span> : ''}
-                </div>
-              )}
-              {customer?.email && (
-                <div className="text-[10px] text-gray-400">
-                  E-posta: <span className="text-gray-600 font-medium">{customer.email}</span>
-                </div>
-              )}
-              {customer?.phone && (
-                <div className="text-[10px] text-gray-400">
-                  Tel: <span className="text-gray-600 font-medium">{customer.phone}</span>
+                <div style={{ marginTop: '2px', color: '#9ca3af' }}>
+                  MERSİS: <strong style={{ color: '#6b7280' }}>{settings.mersis_no}</strong>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Belge Detayları */}
-          <div>
-            <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 pb-1 border-b border-gray-100">
-              Belge Bilgileri
+          {/* RIGHT — Document identity */}
+          <div style={{ textAlign: 'right', flexShrink: 0 }}>
+            {/* Document type — small caps */}
+            <div style={{
+              fontSize: '9px', fontWeight: 800, color: '#6b7280',
+              textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '4px',
+            }}>
+              Proforma Fatura
             </div>
-            <div className="space-y-1.5">
-              {[
-                { label: 'Belge No',       value: no },
-                { label: 'Düzenleme Tarihi', value: issueDate },
-                { label: 'Geçerlilik',      value: `${proforma.validity_days} gün` },
-                { label: 'Son Geçerlilik',  value: expiry },
-              ].map(({ label, value }) => (
-                <div key={label} className="flex justify-between items-baseline gap-2">
-                  <span className="text-[10px] text-gray-400">{label}</span>
-                  <span className="text-[11px] font-semibold text-gray-700 text-right">{value}</span>
-                </div>
-              ))}
+            {/* Document number — prominent but not oversized */}
+            <div style={{ fontSize: '16px', fontWeight: 900, color: '#111827', letterSpacing: '-0.01em', marginBottom: '10px' }}>
+              {no}
+            </div>
+            {/* Currency tag */}
+            <div style={{
+              display: 'inline-flex', alignItems: 'center',
+              padding: '2px 8px', borderRadius: '999px',
+              backgroundColor: '#f3f4f6', border: '1px solid #e5e7eb',
+              fontSize: '9px', fontWeight: 600, color: '#6b7280',
+              letterSpacing: '0.04em', marginBottom: '12px',
+            }}>
+              {currencyLabel(proforma.currency || 'TRY')} ({S})
+            </div>
+            {/* Dates */}
+            <div style={{ fontSize: '10px', color: '#9ca3af', lineHeight: 1.7 }}>
+              <div>Düzenleme: <strong style={{ color: '#374151' }}>{issueDate}</strong></div>
+              <div>Son Geçerlilik: <strong style={{ color: '#374151' }}>{expiry}</strong></div>
+              <div>Geçerlilik: <strong style={{ color: '#374151' }}>{proforma.validity_days} gün</strong></div>
             </div>
           </div>
-
         </div>
       </div>
 
-      {/* ── Items Table ───────────────────────────────────────────────────── */}
-      <div className="mx-6 rounded-lg overflow-hidden border border-gray-200">
-        <table className="w-full" style={{ borderCollapse: 'collapse' }}>
+      {/* ═══════════════════════════════════════════════════════════════════
+          PARTIES — Satıcı | Alıcı in two-column grid
+      ═══════════════════════════════════════════════════════════════════ */}
+      <div style={{ padding: '16px 32px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', borderBottom: '1px solid #e5e7eb', backgroundColor: '#fafafa' }}>
+
+        {/* Satıcı */}
+        <div>
+          <div style={{ fontSize: '9px', fontWeight: 800, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '6px', paddingBottom: '4px', borderBottom: '1px solid #e5e7eb' }}>
+            Satıcı
+          </div>
+          <div style={{ fontSize: '12px', fontWeight: 700, color: '#111827', marginBottom: '2px' }}>
+            {settings?.company_name || '—'}
+          </div>
+          {settings?.address && (
+            <div style={{ fontSize: '10px', color: '#6b7280', whiteSpace: 'pre-line', lineHeight: 1.5, marginBottom: '2px' }}>
+              {settings.address}
+            </div>
+          )}
+          {settings?.tax_number && (
+            <div style={{ fontSize: '10px', color: '#9ca3af' }}>
+              VKN: <span style={{ color: '#6b7280' }}>{settings.tax_number}</span>
+              {settings.tax_office && <span> · {settings.tax_office} V.D.</span>}
+            </div>
+          )}
+        </div>
+
+        {/* Alıcı */}
+        <div>
+          <div style={{ fontSize: '9px', fontWeight: 800, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '6px', paddingBottom: '4px', borderBottom: '1px solid #e5e7eb' }}>
+            Alıcı
+          </div>
+          <div style={{ fontSize: '12px', fontWeight: 700, color: '#111827', marginBottom: '2px' }}>
+            {proforma.customer_name || customer?.name || '—'}
+          </div>
+          {customer?.address && (
+            <div style={{ fontSize: '10px', color: '#6b7280', whiteSpace: 'pre-line', lineHeight: 1.5, marginBottom: '2px' }}>
+              {customer.address}
+            </div>
+          )}
+          {customer?.tax_number && (
+            <div style={{ fontSize: '10px', color: '#9ca3af' }}>
+              VKN: <span style={{ color: '#6b7280' }}>{customer.tax_number}</span>
+              {customer.tax_office && <span> · {customer.tax_office} V.D.</span>}
+            </div>
+          )}
+          {customer?.email && (
+            <div style={{ fontSize: '10px', color: '#9ca3af' }}>
+              E: <span style={{ color: '#6b7280' }}>{customer.email}</span>
+            </div>
+          )}
+          {customer?.phone && (
+            <div style={{ fontSize: '10px', color: '#9ca3af' }}>
+              T: <span style={{ color: '#6b7280' }}>{customer.phone}</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          ITEMS TABLE — dense, professional
+      ═══════════════════════════════════════════════════════════════════ */}
+      <div style={{ margin: '0 32px', marginTop: '16px', borderRadius: '6px', overflow: 'hidden', border: '1px solid #e5e7eb' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
           <thead>
             <tr style={{ backgroundColor: '#1f2937' }}>
-              <th className="text-left px-4 py-2.5 text-[10px] font-bold text-white/70 uppercase tracking-widest" style={{ width: '28%' }}>
+              <th style={{ textAlign: 'left', padding: '8px 12px', fontSize: '9px', fontWeight: 700, color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase', letterSpacing: '0.06em', width: '30%' }}>
                 Ürün / Hizmet
               </th>
-              <th className="text-center px-2 py-2.5 text-[10px] font-bold text-white/70 uppercase tracking-widest" style={{ width: '6%' }}>Birim</th>
-              <th className="text-center px-2 py-2.5 text-[10px] font-bold text-white/70 uppercase tracking-widest" style={{ width: '5%' }}>Adet</th>
-              <th className="text-right px-2 py-2.5 text-[10px] font-bold text-white/70 uppercase tracking-widest" style={{ width: '13%' }}>
-                Birim Fiyat ({S})
+              <th style={{ textAlign: 'center', padding: '8px 6px', fontSize: '9px', fontWeight: 700, color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase', letterSpacing: '0.06em', width: '6%' }}>
+                Birim
               </th>
-              <th className="text-center px-2 py-2.5 text-[10px] font-bold text-white/70 uppercase tracking-widest" style={{ width: '8%' }}>
-                İskonto
+              <th style={{ textAlign: 'center', padding: '8px 6px', fontSize: '9px', fontWeight: 700, color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase', letterSpacing: '0.06em', width: '6%' }}>
+                Adet
               </th>
-              <th className="text-right px-2 py-2.5 text-[10px] font-bold text-white/70 uppercase tracking-widest" style={{ width: '14%' }}>
-                Net Tutar ({S})
+              <th style={{ textAlign: 'right', padding: '8px 6px', fontSize: '9px', fontWeight: 700, color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase', letterSpacing: '0.06em', width: '14%' }}>
+                Birim Fiyat
               </th>
-              <th className="text-center px-2 py-2.5 text-[10px] font-bold text-white/70 uppercase tracking-widest" style={{ width: '7%' }}>KDV</th>
-              <th className="text-right px-4 py-2.5 text-[10px] font-bold text-white/70 uppercase tracking-widest" style={{ width: '15%' }}>
+              <th style={{ textAlign: 'center', padding: '8px 6px', fontSize: '9px', fontWeight: 700, color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase', letterSpacing: '0.06em', width: '8%' }}>
+                İsk.
+              </th>
+              <th style={{ textAlign: 'right', padding: '8px 6px', fontSize: '9px', fontWeight: 700, color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase', letterSpacing: '0.06em', width: '14%' }}>
+                Net Tutar
+              </th>
+              <th style={{ textAlign: 'center', padding: '8px 6px', fontSize: '9px', fontWeight: 700, color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase', letterSpacing: '0.06em', width: '7%' }}>
+                KDV
+              </th>
+              <th style={{ textAlign: 'right', padding: '8px 12px', fontSize: '9px', fontWeight: 700, color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase', letterSpacing: '0.06em', width: '15%' }}>
                 Toplam ({S})
               </th>
             </tr>
@@ -296,39 +350,41 @@ export function ProformaInvoice({
               return (
                 <tr
                   key={it.id}
-                  style={{ backgroundColor: i % 2 === 1 ? '#f9fafb' : '#ffffff', borderBottom: '1px solid #f3f4f6' }}
+                  style={{
+                    backgroundColor: i % 2 === 1 ? '#f9fafb' : '#ffffff',
+                    borderBottom: '1px solid #f3f4f6',
+                  }}
                 >
-                  <td className="px-4 py-2.5 font-medium text-gray-900 text-sm">
+                  <td style={{ padding: '7px 12px', fontWeight: 500, color: '#111827', fontSize: '11px' }}>
                     {it.name}
                   </td>
-                  <td className="px-2 py-2.5 text-center text-gray-500 text-xs">
+                  <td style={{ padding: '7px 6px', textAlign: 'center', color: '#6b7280', fontSize: '10px' }}>
                     {it.unit || 'adet'}
                   </td>
-                  <td className="px-2 py-2.5 text-center tabular-nums text-sm text-gray-700">
+                  <td style={{ padding: '7px 6px', textAlign: 'center', fontVariantNumeric: 'tabular-nums', color: '#374151', fontSize: '11px' }}>
                     {c.qty}
                   </td>
-                  <td className="px-2 py-2.5 text-right tabular-nums text-sm text-gray-700">
+                  <td style={{ padding: '7px 6px', textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: '#374151', fontSize: '11px' }}>
                     {money(c.price, S)}
                   </td>
-                  <td className="px-2 py-2.5 text-center text-gray-400 text-xs">
+                  <td style={{ padding: '7px 6px', textAlign: 'center', color: '#9ca3af', fontSize: '10px' }}>
                     {c.disc > 0 ? `%${c.disc}` : '—'}
                   </td>
-                  <td className="px-2 py-2.5 text-right tabular-nums text-sm text-gray-700">
+                  <td style={{ padding: '7px 6px', textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: '#374151', fontSize: '11px' }}>
                     {money(c.lineSubtotal, S)}
                   </td>
-                  <td className="px-2 py-2.5 text-center text-gray-400 text-xs">
+                  <td style={{ padding: '7px 6px', textAlign: 'center', color: '#9ca3af', fontSize: '10px' }}>
                     %{c.kdvPct}
                   </td>
-                  <td className="px-4 py-2.5 text-right font-semibold tabular-nums text-sm text-gray-900">
+                  <td style={{ padding: '7px 12px', textAlign: 'right', fontWeight: 600, fontVariantNumeric: 'tabular-nums', color: '#111827', fontSize: '11px' }}>
                     {money(c.lineTotal, S)}
                   </td>
                 </tr>
               )
             })}
-            {/* Empty row guard */}
             {items.length === 0 && (
               <tr>
-                <td colSpan={8} className="px-4 py-6 text-center text-sm text-gray-400">
+                <td colSpan={8} style={{ padding: '20px', textAlign: 'center', fontSize: '11px', color: '#9ca3af' }}>
                   — Ürün yok —
                 </td>
               </tr>
@@ -337,95 +393,102 @@ export function ProformaInvoice({
         </table>
       </div>
 
-      {/* ── Totals ────────────────────────────────────────────────────────── */}
-      <div className="px-6 py-5">
-        <div className="ml-auto w-80">
+      {/* ═══════════════════════════════════════════════════════════════════
+          TOTALS — right-aligned, professional hierarchy
+          subtotal → discount → KDV breakdown → grand total bar
+      ═══════════════════════════════════════════════════════════════════ */}
+      <div style={{ padding: '16px 32px 8px', display: 'flex', justifyContent: 'flex-end' }}>
+        <div style={{ width: '280px' }}>
 
           {/* Line items */}
-          <div className="space-y-1.5 border border-gray-200 rounded-t-xl px-5 py-3 bg-white">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Ara Toplam</span>
-              <span className="tabular-nums font-medium text-gray-800">{money(subtotal, S)}</span>
-            </div>
-
+          <div style={{ border: '1px solid #e5e7eb', borderRadius: '6px 6px 0 0', padding: '12px 14px', backgroundColor: '#fff' }}>
+            <MetaRow label="Ara Toplam" value={money(subtotal, S)} />
             {totalDiscount > 0 && (
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Toplam İskonto</span>
-                <span className="tabular-nums text-red-500 font-medium">− {money(totalDiscount, S)}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '2px 0' }}>
+                <span style={{ fontSize: '9px', color: '#9ca3af', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  İskonto
+                </span>
+                <span style={{ fontSize: '11px', color: '#dc2626', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
+                  − {money(totalDiscount, S)}
+                </span>
               </div>
             )}
-
             {kdvRates.map((rate) => (
-              <div key={rate} className="flex justify-between text-sm">
-                <span className="text-gray-400">KDV %{rate}</span>
-                <span className="tabular-nums text-gray-500">{money(kdvMap[rate], S)}</span>
-              </div>
+              <MetaRow key={rate} label={`KDV %${rate}`} value={money(kdvMap[rate], S)} />
             ))}
-
-            <div className="flex justify-between text-sm pt-1.5 border-t border-gray-100">
-              <span className="text-gray-600 font-medium">Toplam KDV</span>
-              <span className="tabular-nums font-semibold text-gray-700">{money(kdvTotal, S)}</span>
+            <div style={{ borderTop: '1px solid #f3f4f6', marginTop: '6px', paddingTop: '6px' }}>
+              <MetaRow label="Toplam KDV" value={money(kdvTotal, S)} />
             </div>
           </div>
 
-          {/* Grand total — high emphasis */}
-          <div className="bg-gray-900 text-white rounded-b-xl px-5 py-4 flex justify-between items-center">
+          {/* Grand total bar — dark, but with controlled proportions */}
+          <div style={{
+            backgroundColor: '#1f2937', borderRadius: '0 0 6px 6px',
+            padding: '10px 14px',
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          }}>
             <div>
-              <div className="text-white/50 text-[10px] font-bold uppercase tracking-widest">Genel Toplam</div>
-              <div className="text-white/60 text-[10px] mt-0.5">{currencyLabel(proforma.currency || 'TRY')}</div>
+              <div style={{ fontSize: '9px', fontWeight: 700, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                Genel Toplam
+              </div>
+              <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.35)', marginTop: '1px' }}>
+                {currencyLabel(proforma.currency || 'TRY')}
+              </div>
             </div>
-            <span className="font-black text-2xl tabular-nums tracking-tight">
+            {/* 16px max for grand total — professional, not childish */}
+            <span style={{ fontSize: '16px', fontWeight: 900, color: '#fff', fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.01em' }}>
               {money(grand, S)}
             </span>
           </div>
-
         </div>
       </div>
 
-      {/* ── Footer ────────────────────────────────────────────────────────── */}
-      <div className="mx-6 mb-6 border border-gray-200 rounded-xl overflow-hidden">
+      {/* ═══════════════════════════════════════════════════════════════════
+          FOOTER — validity note, banks, signature
+      ═══════════════════════════════════════════════════════════════════ */}
+      <div style={{ margin: '8px 32px 28px', border: '1px solid #e5e7eb', borderRadius: '6px', overflow: 'hidden' }}>
 
-        {/* Yazı ile tutar */}
-        <div className="px-5 py-3 bg-gray-50 border-b border-gray-200">
-          <span className="text-xs text-gray-500 font-medium">
-            Yalnız{' '}
-            <span className="text-gray-800 font-semibold">
-              {grand.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {currencyLabel(proforma.currency || 'TRY')}
-            </span>{' '}
-            tutarındadır.
-          </span>
+        {/* Written amount */}
+        <div style={{ padding: '10px 14px', backgroundColor: '#f9fafb', borderBottom: '1px solid #e5e7eb', fontSize: '10px', color: '#6b7280' }}>
+          Yalnız{' '}
+          <strong style={{ color: '#374151' }}>
+            {grand.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {currencyLabel(proforma.currency || 'TRY')}
+          </strong>{' '}
+          tutarındadır.
         </div>
 
         {/* Validity + Notes */}
-        <div className="px-5 py-3 grid grid-cols-2 gap-4 border-b border-gray-200">
-          <div className="text-xs text-gray-500 leading-relaxed">
-            Bu fiyat teklifi{' '}
-            <span className="font-semibold text-gray-700">{proforma.validity_days} gün</span>{' '}
-            geçerlidir. Son geçerlilik tarihi:{' '}
-            <span className="font-semibold text-gray-700">{expiry}</span>
-          </div>
-          {proforma.notes && (
-            <div className="text-xs text-gray-500 leading-relaxed">
-              <span className="font-semibold text-gray-400 block mb-0.5">Not:</span>
-              {proforma.notes}
+        {(proforma.validity_days || proforma.notes) && (
+          <div style={{ padding: '10px 14px', display: 'grid', gridTemplateColumns: proforma.notes ? '1fr 1fr' : '1fr', gap: '16px', borderBottom: '1px solid #e5e7eb', fontSize: '10px', color: '#6b7280', lineHeight: 1.6 }}>
+            <div>
+              Bu teklif <strong style={{ color: '#374151' }}>{proforma.validity_days} gün</strong> geçerlidir.
+              Son geçerlilik: <strong style={{ color: '#374151' }}>{expiry}</strong>
             </div>
-          )}
-        </div>
+            {proforma.notes && (
+              <div>
+                <span style={{ display: 'block', fontSize: '9px', fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '2px' }}>Not</span>
+                {proforma.notes}
+              </div>
+            )}
+          </div>
+        )}
 
-        {/* Bank info */}
+        {/* Bank / payment info */}
         {banks.length > 0 && (
-          <div className="px-5 py-3 border-b border-gray-200">
-            <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">Ödeme Bilgileri</div>
-            <div className="space-y-1.5">
+          <div style={{ padding: '10px 14px', borderBottom: '1px solid #e5e7eb' }}>
+            <div style={{ fontSize: '9px', fontWeight: 800, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '6px' }}>
+              Ödeme Bilgileri
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               {banks.map((b, i) => (
-                <div key={i} className="flex items-baseline justify-between gap-4">
-                  <span className="text-xs font-semibold text-gray-700">
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '12px' }}>
+                  <span style={{ fontSize: '10px', fontWeight: 600, color: '#374151' }}>
                     {b.bank_name}
                     {b.branch_name && (
-                      <span className="text-gray-400 font-normal"> · {b.branch_name}</span>
+                      <span style={{ color: '#9ca3af', fontWeight: 400 }}> / {b.branch_name}</span>
                     )}
                   </span>
-                  <span className="text-xs font-mono text-gray-600 tracking-wide tabular-nums">
+                  <span style={{ fontSize: '10px', fontFamily: 'monospace', color: '#6b7280', letterSpacing: '0.04em', fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>
                     {b.iban}
                   </span>
                 </div>
@@ -435,27 +498,30 @@ export function ProformaInvoice({
         )}
 
         {/* Signature area */}
-        <div className="px-5 py-4 grid grid-cols-2 gap-8">
-          <div>
-            <div className="text-[9px] font-black text-gray-300 uppercase tracking-widest mb-3">Satıcı Onayı</div>
-            <div className="h-12 border-b border-dashed border-gray-200" />
-            <div className="mt-1 text-[10px] text-gray-400">{settings?.company_name || ''}</div>
-          </div>
-          <div>
-            <div className="text-[9px] font-black text-gray-300 uppercase tracking-widest mb-3">Alıcı Onayı</div>
-            <div className="h-12 border-b border-dashed border-gray-200" />
-            <div className="mt-1 text-[10px] text-gray-400">{proforma.customer_name || ''}</div>
-          </div>
+        <div style={{ padding: '14px 14px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
+          {[
+            { label: 'Satıcı Onayı', name: settings?.company_name },
+            { label: 'Alıcı Onayı',  name: proforma.customer_name || customer?.name },
+          ].map(({ label, name }) => (
+            <div key={label}>
+              <div style={{ fontSize: '9px', fontWeight: 700, color: '#d1d5db', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>{label}</div>
+              <div style={{ height: '36px', borderBottom: '1px dashed #e5e7eb' }} />
+              <div style={{ marginTop: '4px', fontSize: '9px', color: '#9ca3af' }}>{name || ''}</div>
+            </div>
+          ))}
         </div>
-
       </div>
 
-      {/* ── Print button ──────────────────────────────────────────────────── */}
+      {/* ── Print button (hidden in print mode) ──────────────────────────── */}
       {showPrintButton && (
-        <div className="px-6 pb-6 print:hidden">
+        <div style={{ padding: '0 32px 24px' }} className="print:hidden">
           <button
             onClick={() => window.print()}
-            className="px-5 py-2.5 bg-gray-900 text-white text-sm font-semibold rounded-lg hover:bg-gray-800 transition-colors"
+            style={{
+              padding: '8px 20px', backgroundColor: '#1f2937', color: '#fff',
+              fontSize: '12px', fontWeight: 600, borderRadius: '6px',
+              border: 'none', cursor: 'pointer',
+            }}
           >
             Yazdır / PDF İndir
           </button>

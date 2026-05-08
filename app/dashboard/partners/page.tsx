@@ -97,6 +97,38 @@ interface LedgerData {
   summary: LedgerSummary
 }
 
+// ── Debt Burden (from /api/partners/debt-burden) ──────────────────────────────
+
+interface DebtBurdenEntry {
+  partner_id:             string
+  partner_name:           string
+  share_ratio:            number
+  equity_contributed:     number
+  loans_given:            number
+  loans_repaid:           number
+  net_loan:               number
+  per_unit_loan:          number
+  financing_multiple:     number
+  overfunding_ratio:      number
+  repayment_priority:     number
+  equalization_repayment: number
+}
+
+interface DebtBurdenSummary {
+  total_loans_given:       number
+  total_loans_repaid:      number
+  total_outstanding:       number
+  weighted_avg_per_unit:   number
+  is_balanced:             boolean
+  equalization_needed:     number
+  partner_count:           number
+}
+
+interface DebtBurdenData {
+  entries: DebtBurdenEntry[]
+  summary: DebtBurdenSummary
+}
+
 // ── Tx history ─────────────────────────────────────────────────────────────────
 
 interface TxRow {
@@ -177,13 +209,19 @@ function CardSkeleton() {
 // ── Edit/Delete state ─────────────────────────────────────────────────────────
 interface EditForm { name: string; shareRatioPct: string }
 
+type ActiveTab = 'partners' | 'ledger' | 'debt'
+
 export default function PartnersPage() {
   const [partners,     setPartners]     = useState<PartnerRow[]>([])
   const [equalization, setEqualization] = useState<EqResult>(ZERO_EQ)
   const [ledger,       setLedger]       = useState<LedgerData | null>(null)
-  const [ledgerTab,    setLedgerTab]    = useState(false)
+  const [debtBurden,   setDebtBurden]   = useState<DebtBurdenData | null>(null)
+  const [activeTab,    setActiveTab]    = useState<ActiveTab>('partners')
   const [loading,      setLoading]      = useState(true)
   const [fetchError,   setFetchError]   = useState<string | null>(null)
+
+  // Keep backward compat flags
+  const ledgerTab = activeTab === 'ledger'
 
   // Edit state
   const [editId,    setEditId]    = useState<string | null>(null)
@@ -201,11 +239,12 @@ export default function PartnersPage() {
 
     async function load() {
       try {
-        // Fetch partners + real distributable cash + ledger in parallel first
-        const [pRes, distRes, ledgerRes] = await Promise.all([
+        // Fetch partners + real distributable cash + ledger + debt burden in parallel
+        const [pRes, distRes, ledgerRes, debtRes] = await Promise.all([
           fetch('/api/partners'),
           fetch('/api/cash-distributable'),
           fetch('/api/partners/ledger'),
+          fetch('/api/partners/debt-burden'),
         ])
         if (!pRes.ok) throw new Error(`Partner verisi alınamadı (${pRes.status})`)
 
@@ -239,10 +278,19 @@ export default function PartnersPage() {
           }
         }
 
+        let debtBurdenData: DebtBurdenData | null = null
+        if (debtRes.ok) {
+          const dJson = await debtRes.json().catch(() => null)
+          if (dJson && typeof dJson === 'object' && Array.isArray(dJson.entries)) {
+            debtBurdenData = dJson as DebtBurdenData
+          }
+        }
+
         if (!cancelled) {
           setPartners(pData)
           setEqualization(eData)
           setLedger(ledgerData)
+          setDebtBurden(debtBurdenData)
         }
       } catch (err) {
         if (!cancelled)
@@ -335,20 +383,21 @@ export default function PartnersPage() {
           <p className="text-xs text-gray-400 mt-0.5">Sermaye, borç ve eşitleme durumu</p>
         </div>
         <div className="flex items-center gap-2">
-          {/* View toggle */}
+          {/* View toggle — 3 tabs */}
           <div className="flex bg-gray-100 rounded-xl p-0.5">
-            <button
-              onClick={() => setLedgerTab(false)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${!ledgerTab ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
-            >
-              Ortaklar
-            </button>
-            <button
-              onClick={() => setLedgerTab(true)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${ledgerTab ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
-            >
-              Finansal Defter
-            </button>
+            {([
+              { key: 'partners', label: 'Ortaklar'      },
+              { key: 'ledger',   label: 'Finansal Defter'},
+              { key: 'debt',     label: 'Borç Dengesi'  },
+            ] as const).map(t => (
+              <button
+                key={t.key}
+                onClick={() => setActiveTab(t.key)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${activeTab === t.key ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
+              >
+                {t.label}
+              </button>
+            ))}
           </div>
           <Link
             href="/dashboard/partners/new"
@@ -430,15 +479,120 @@ export default function PartnersPage() {
         </div>
       )}
 
+      {/* ── Borç Dengesi (debt burden tab) ───────────────────────────────────── */}
+      {activeTab === 'debt' && (
+        <div className="flex flex-col gap-3">
+          {loading ? (
+            <div className="bg-gray-100 rounded-xl h-40 animate-pulse" />
+          ) : !debtBurden ? (
+            <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-600">
+              Borç dengesi yüklenemedi.
+            </div>
+          ) : (
+            <>
+              {/* Summary strip */}
+              <div className="grid grid-cols-4 gap-2">
+                {[
+                  { label: 'Toplam Borç',    value: fmt(debtBurden.summary.total_loans_given),    color: 'text-amber-600' },
+                  { label: 'Toplam Ödenen',  value: fmt(debtBurden.summary.total_loans_repaid),   color: 'text-emerald-600' },
+                  { label: 'Kalan Borç',     value: fmt(debtBurden.summary.total_outstanding),    color: debtBurden.summary.total_outstanding > 0 ? 'text-red-600' : 'text-gray-400' },
+                  {
+                    label: 'Denge Durumu',
+                    value: debtBurden.summary.is_balanced ? 'Dengeli ✓' : `${fmt(debtBurden.summary.equalization_needed)} eşitleme`,
+                    color: debtBurden.summary.is_balanced ? 'text-emerald-600' : 'text-amber-600',
+                  },
+                ].map(c => (
+                  <div key={c.label} className="bg-white border border-gray-200 rounded-xl px-4 py-3">
+                    <div className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${c.color}`}>{c.label}</div>
+                    <div className="text-base font-black tabular-nums text-gray-900 leading-none">{c.value}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Burden info box */}
+              <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-xs text-blue-700 leading-relaxed">
+                <strong>Nasıl çalışır?</strong> Birim başına borç = Net borç ÷ Pay oranı.
+                Ağırlıklı ortalama ({fmt(debtBurden.summary.weighted_avg_per_unit)}/birim) üzerinde olan ortaklar
+                <strong> önce</strong> geri ödeme alır. Eşitleme tamamlandıktan sonra kalan ödemeler pay oranına göre paylaşılır.
+              </div>
+
+              {/* Per-partner debt burden table */}
+              <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-gray-100 bg-gray-50">
+                      <th className="text-left px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-400">Ortak</th>
+                      <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-amber-500">Net Borç</th>
+                      <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-400">Birim Başına</th>
+                      <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-400">Fin. Katsayı</th>
+                      <th className="text-center px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-400">Yük Oranı</th>
+                      <th className="text-center px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-primary-500">Öncelik</th>
+                      <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-amber-700">Eşitleme Ödemesi</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {debtBurden.entries
+                      .slice()
+                      .sort((a, b) => a.repayment_priority - b.repayment_priority)
+                      .map(e => {
+                        const isOver = e.overfunding_ratio > 1.05
+                        const isUnder = e.overfunding_ratio < 0.95
+                        return (
+                          <tr key={e.partner_id} className="hover:bg-gray-50/60">
+                            <td className="px-4 py-3 font-semibold text-gray-900">
+                              {e.partner_name}
+                              <div className="text-[10px] text-gray-400 font-normal">{pct(e.share_ratio)}</div>
+                            </td>
+                            <td className="px-4 py-3 text-right font-mono text-amber-700 font-bold">{fmt(e.net_loan)}</td>
+                            <td className="px-4 py-3 text-right font-mono text-gray-600">{fmt(e.per_unit_loan)}</td>
+                            <td className="px-4 py-3 text-right font-mono text-gray-500">
+                              {e.financing_multiple > 0 ? `${e.financing_multiple.toFixed(2)}×` : '—'}
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                isOver  ? 'bg-red-100 text-red-700'     :
+                                isUnder ? 'bg-blue-100 text-blue-700'   :
+                                          'bg-emerald-100 text-emerald-700'
+                              }`}>
+                                {isOver ? '▲ ' : isUnder ? '▼ ' : '= '}{e.overfunding_ratio.toFixed(2)}×
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                                e.repayment_priority === 1 ? 'bg-primary-100 text-primary-700' : 'bg-gray-100 text-gray-500'
+                              }`}>
+                                #{e.repayment_priority}
+                              </span>
+                            </td>
+                            <td className={`px-4 py-3 text-right font-mono font-bold ${
+                              e.equalization_repayment > 0 ? 'text-amber-700' : 'text-gray-300'
+                            }`}>
+                              {e.equalization_repayment > 0 ? fmt(e.equalization_repayment) : '—'}
+                            </td>
+                          </tr>
+                        )
+                      })}
+                  </tbody>
+                </table>
+              </div>
+              <p className="text-[10px] text-gray-400 text-center leading-relaxed">
+                Birim Başına = Net Borç ÷ Pay Oranı. Yük Oranı &gt;1 = ortalama üstünde; önce ödenir.
+                Eşitleme ödemesi: bu ortağı ağırlıklı ortalamaya getirmeye yetecek ödeme tutarı.
+              </p>
+            </>
+          )}
+        </div>
+      )}
+
       {/* ── Partners view (hidden when showing ledger tab) ────────────────────── */}
-      {!ledgerTab && fetchError && (
+      {activeTab === 'partners' && fetchError && (
         <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700 font-medium">
           ⚠ {fetchError}
         </div>
       )}
 
       {/* ── Summary strip ─────────────────────────────────────────────────────── */}
-      {!ledgerTab && loading ? <SummarySkeleton /> : !ledgerTab && (
+      {activeTab === 'partners' && loading ? <SummarySkeleton /> : activeTab === 'partners' && (
         <div className="grid grid-cols-3 gap-2">
           {[
             { label: 'Toplam Bakiye',     value: fmt(totalPartnerBalance),              color: 'text-primary-600'  },
@@ -458,9 +612,9 @@ export default function PartnersPage() {
       )}
 
       {/* ── Partner cards / Loading / Empty ───────────────────────────────────── */}
-      {!ledgerTab && loading && <CardSkeleton />}
+      {activeTab === 'partners' && loading && <CardSkeleton />}
 
-      {!ledgerTab && !loading && !hasPartners && !fetchError && (
+      {activeTab === 'partners' && !loading && !hasPartners && !fetchError && (
         <div className="bg-white border border-gray-200 rounded-xl px-6 py-12 text-center">
           <div className="text-3xl mb-3">🤝</div>
           <div className="text-sm font-semibold text-gray-500">Henüz ortak eklenmemiş</div>
@@ -470,7 +624,7 @@ export default function PartnersPage() {
         </div>
       )}
 
-      {!ledgerTab && !loading && hasPartners && (
+      {activeTab === 'partners' && !loading && hasPartners && (
         <>
           {/* ── Per-partner cards ─────────────────────────────────────────────── */}
           <div className="flex flex-col gap-2">

@@ -105,6 +105,7 @@ export interface Product {
 
 export interface CompanyBank {
   id:          string
+  company_id:  string
   user_id:     string
   bank_name:   string
   branch_name: string | null
@@ -262,8 +263,8 @@ export interface SaleItemAllocation {
   id:             string
   sale_id:        string
   sale_item_id:   string
-  stock_lot_id:   string
-  qty:            number
+  lot_id:         string    // production column name (was stock_lot_id in inferred schema)
+  qty_allocated:  number    // production column name (was qty in inferred schema)
   unit_cost:      number
   holding_days:   number
   interest_cost:  number

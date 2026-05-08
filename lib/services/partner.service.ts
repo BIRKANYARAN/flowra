@@ -195,6 +195,147 @@ export function computeEqualization(
   }
 }
 
+// ── Debt Burden Normalization Engine ─────────────────────────────────────────
+//
+// Ownership-normalized debt analysis for private-company treasury management.
+//
+// Problem: when partners contribute unequal debt relative to their ownership
+// stake, the repayment should FIRST reduce the over-burdened partner's exposure
+// to the company average before repaying proportionally.
+//
+// Algorithm:
+//   1. per_unit_loan_i  = net_loan_i / share_ratio_i  (normalized debt per share unit)
+//   2. weighted_avg     = Σ(net_loan_i) / Σ(share_ratio_i)  (company-wide average)
+//   3. overfunding_i    = per_unit_loan_i / weighted_avg  (>1 = over-burdened)
+//   4. Sort by per_unit_loan DESC → highest-burdened repaid first
+//   5. equalize_step: repay until all per_unit_loans equal the NEXT partner level
+//   6. repayment_recommendation_i = amount needed to bring this partner to weighted avg
+//
+// Example:
+//   A: 30% share, 600k net_loan → per_unit = 2M
+//   B: 70% share, 2.1M net_loan → per_unit = 3M
+//   weighted_avg = 2.7M / 1.0 = 2.7M
+//   A is under-burdened (2M < 2.7M → overfunding 0.74×)
+//   B is over-burdened  (3M > 2.7M → overfunding 1.11×)
+//   Repayment recommendation: repay B by (3M - 2M) × 0.7 = 700k to equalize
+
+export interface DebtBurdenEntry {
+  partner_id:                string
+  partner_name:              string
+  share_ratio:               number
+  equity_contributed:        number   // capital_in only
+  loans_given:               number   // total debt partner lent to company
+  loans_repaid:              number   // total repaid so far
+  net_loan:                  number   // outstanding (loans_given - loans_repaid)
+  per_unit_loan:             number   // net_loan / share_ratio
+  financing_multiple:        number   // net_loan / equity_contributed (0 if no equity)
+  overfunding_ratio:         number   // per_unit / weighted_avg (1.0 = balanced)
+  repayment_priority:        number   // 1 = first to be repaid
+  equalization_repayment:    number   // TRY to repay to reach company-wide per-unit avg
+}
+
+export interface DebtBurdenSummary {
+  total_loans_given:        number
+  total_loans_repaid:       number
+  total_outstanding:        number
+  weighted_avg_per_unit:    number   // company's normalized debt burden target
+  is_balanced:              boolean  // all partners within 5% of weighted avg
+  equalization_needed:      number   // Σ of equalization_repayment for over-burdened
+  partner_count:            number
+}
+
+export interface DebtBurdenResult {
+  entries: DebtBurdenEntry[]
+  summary: DebtBurdenSummary
+}
+
+export function computeDebtBurdenNormalization(input: {
+  partners: Array<{
+    partner_id:          string
+    partner_name:        string
+    share_ratio:         number
+    equity_contributed:  number
+    loans_given:         number
+    loans_repaid:        number
+  }>
+}): DebtBurdenResult {
+  const { partners } = input
+
+  if (partners.length === 0) {
+    return {
+      entries: [],
+      summary: {
+        total_loans_given: 0, total_loans_repaid: 0, total_outstanding: 0,
+        weighted_avg_per_unit: 0, is_balanced: true, equalization_needed: 0,
+        partner_count: 0,
+      },
+    }
+  }
+
+  const withNet = partners.map(p => ({
+    ...p,
+    net_loan: round2(Math.max(0, p.loans_given - p.loans_repaid)),
+  }))
+
+  const totalOutstanding = round2(withNet.reduce((s, p) => s + p.net_loan, 0))
+  const totalRatio       = withNet.reduce((s, p) => s + p.share_ratio, 0) || 1
+  const weightedAvg      = totalRatio > 0 ? round2(totalOutstanding / totalRatio) : 0
+
+  const withPerUnit = withNet.map(p => ({
+    ...p,
+    per_unit_loan: p.share_ratio > 0 ? round2(p.net_loan / p.share_ratio) : 0,
+    financing_multiple: p.equity_contributed > 0
+      ? round2(p.net_loan / p.equity_contributed)
+      : p.net_loan > 0 ? Infinity : 0,
+    overfunding_ratio: weightedAvg > 0
+      ? round2((p.share_ratio > 0 ? p.net_loan / p.share_ratio : 0) / weightedAvg)
+      : 0,
+  }))
+
+  // Sort by per_unit_loan DESC to determine repayment priority
+  const sorted = [...withPerUnit].sort((a, b) => b.per_unit_loan - a.per_unit_loan)
+  const priorityMap = new Map<string, number>()
+  sorted.forEach((p, i) => priorityMap.set(p.partner_id, i + 1))
+
+  let equalizationNeeded = 0
+  const entries: DebtBurdenEntry[] = withPerUnit.map(p => {
+    // Repayment recommendation: amount to pay back to bring per_unit to weighted avg
+    const excess = Math.max(0, p.per_unit_loan - weightedAvg) * p.share_ratio
+    const equalizationRepayment = round2(excess)
+    equalizationNeeded += equalizationRepayment
+
+    return {
+      partner_id:             p.partner_id,
+      partner_name:           p.partner_name,
+      share_ratio:            p.share_ratio,
+      equity_contributed:     p.equity_contributed,
+      loans_given:            p.loans_given,
+      loans_repaid:           p.loans_repaid,
+      net_loan:               p.net_loan,
+      per_unit_loan:          p.per_unit_loan,
+      financing_multiple:     isFinite(p.financing_multiple) ? p.financing_multiple : 0,
+      overfunding_ratio:      p.overfunding_ratio,
+      repayment_priority:     priorityMap.get(p.partner_id) ?? 1,
+      equalization_repayment: equalizationRepayment,
+    }
+  })
+
+  const balanced = entries.every(e => Math.abs(e.overfunding_ratio - 1.0) <= 0.05)
+
+  return {
+    entries,
+    summary: {
+      total_loans_given:    round2(withNet.reduce((s, p) => s + p.loans_given, 0)),
+      total_loans_repaid:   round2(withNet.reduce((s, p) => s + p.loans_repaid, 0)),
+      total_outstanding:    totalOutstanding,
+      weighted_avg_per_unit: weightedAvg,
+      is_balanced:          balanced,
+      equalization_needed:  round2(equalizationNeeded),
+      partner_count:        partners.length,
+    },
+  }
+}
+
 // ── DB-bound PartnerService ───────────────────────────────────────────────────
 
 type Ctx = ReturnType<typeof contextFromHeader>
@@ -346,6 +487,26 @@ export class PartnerService {
         total_contributed_try: b.total_capital_try,
       })),
       distributable: distributable ?? 0,
+    })
+  }
+
+  // ── calculateDebtBurden ─────────────────────────────────────────────────────
+  static async calculateDebtBurden(
+    userId:    string,
+    companyId: string,
+    ctx?:      Ctx,
+  ): Promise<DebtBurdenResult> {
+    const balances = await PartnerService.getPartnerBalances(userId, companyId, ctx)
+    const active   = balances.filter(b => b.is_active)
+    return computeDebtBurdenNormalization({
+      partners: active.map(b => ({
+        partner_id:         b.partner_id,
+        partner_name:       b.partner_name,
+        share_ratio:        b.share_ratio,
+        equity_contributed: b.total_capital_try,
+        loans_given:        b.total_loaned_try,
+        loans_repaid:       b.total_repaid_try,
+      })),
     })
   }
 
