@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase-client'
+import { useSupabase } from '@/lib/hooks/useSupabase'
 import { FlowraLogo } from '@/components/ui/FlowraLogo'
 import { Icon } from '@/components/ui/Icon'
 import type { MemberRole } from '@/types'
@@ -83,7 +83,7 @@ interface Props {
 export function Sidebar({ companyName, logoUrl, userInitials, userName, userEmail, userRole }: Props) {
   const pathname = usePathname()
   const router   = useRouter()
-  const supabase = createClient()
+  const supabase = useSupabase()
 
   // Build nav: filter adminOnly groups for non-admins; non-admins get Ayarlar standalone
   const NAV: NavEntry[] = userRole === 'admin'
