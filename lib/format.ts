@@ -17,3 +17,19 @@ const TRY_FMT = new Intl.NumberFormat('tr-TR', {
 export function formatTRY(value: number): string {
   return TRY_FMT.format(Number(value) || 0) + ' TL'
 }
+
+export function sym(c: string): string {
+  return c === 'USD' ? '$' : c === 'EUR' ? '€' : c === 'GBP' ? '£' : '₺'
+}
+
+export function fmtMoney(n: number, currency = 'TRY'): string {
+  const v = Number(n) || 0
+  return sym(currency) + v.toFixed(2)
+}
+
+export function fmtDate(d: string): string {
+  if (!d) return '—'
+  const dt = new Date(d)
+  if (isNaN(dt.getTime())) return '—'
+  return dt.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+}

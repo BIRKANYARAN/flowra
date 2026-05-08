@@ -2,7 +2,6 @@ export const dynamic = 'force-dynamic'
 
 import { createClient } from '@/lib/supabase-server'
 import { notFound } from 'next/navigation'
-import { fmtDate, sym } from '@/components/ui'
 import type { Proforma, ProformaItem, Customer, CompanyBank, UserSettings } from '@/types'
 import { ProformaDetailClient } from './client'
 import type { ClientItem, ClientPdfOpts } from './client'
@@ -102,7 +101,6 @@ export default async function ProformaDetailPage({ params }: PageProps) {
 
     // ── 5. Derived display values (all primitive, all guarded) ───────────────
     const currency     = safeStr(proforma.currency, 'TRY')
-    const S            = sym(currency)
     const safeId       = safeStr(proforma.id, id)
     const no           = safeStr(proforma.proforma_no) || ('PRF-' + safeId.slice(-8).toUpperCase())
     const validityDays = safeNum(proforma.validity_days, 30) || 30
