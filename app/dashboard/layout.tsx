@@ -81,9 +81,28 @@ export default async function DashboardLayout({ children }: { children: React.Re
             userEmail={user.email ?? ''}
             logoUrl={settings?.logo_url ?? null}
           />
-          <main className="flex-1 px-5 py-4 overflow-auto">
+          <main className="flex-1 px-4 md:px-5 py-4 pb-20 md:pb-4 overflow-auto">
             {children}
           </main>
+          {/* Mobile bottom nav — visible only on small screens */}
+          <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex items-center justify-around px-2 py-2 z-50">
+            {([
+              { href: '/dashboard', label: 'Genel', emoji: '🏠' },
+              { href: '/dashboard/sales-flow', label: 'Satış', emoji: '💰' },
+              { href: '/dashboard/collections', label: 'Tahsilat', emoji: '📥' },
+              { href: '/dashboard/expenses', label: 'Gider', emoji: '📤' },
+              { href: '/dashboard/proformas', label: 'Proforma', emoji: '📄' },
+            ] as const).map(item => (
+              <a
+                key={item.href}
+                href={item.href}
+                className="flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl text-gray-500 hover:text-primary-600 hover:bg-primary-50 transition-colors"
+              >
+                <span className="text-lg leading-none">{item.emoji}</span>
+                <span className="text-[10px] font-semibold">{item.label}</span>
+              </a>
+            ))}
+          </nav>
         </div>
       </div>
     )

@@ -105,7 +105,7 @@ export function Sidebar({ companyName, logoUrl, userInitials, userName, userEmai
   const displayName = companyName || 'Flowra'
 
   return (
-    <aside className="w-52 bg-white border-r border-gray-100 h-screen sticky top-0 flex flex-col py-3 px-2 flex-shrink-0 overflow-y-auto">
+    <aside className="hidden md:flex w-52 bg-white border-r border-gray-100 h-screen sticky top-0 flex-col py-3 px-2 flex-shrink-0 overflow-y-auto">
 
       {/* Brand */}
       <div className="px-2.5 mb-3">
