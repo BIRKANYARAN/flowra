@@ -152,9 +152,9 @@ export default function SimulationPage() {
 
     // Count partners (for showing the impact section)
     try {
-      const pRes = await fetch('/api/partners')
-      if (pRes.ok) {
-        const pData = await pRes.json()
+      const partnersRes = await fetch('/api/partners')
+      if (partnersRes.ok) {
+        const pData = await partnersRes.json()
         setPartnerCount(Array.isArray(pData) ? pData.length : 0)
       }
     } catch { /* non-fatal */ }

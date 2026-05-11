@@ -415,8 +415,10 @@ export class PartnerService {
         // Legacy types (backward compat)
         case 'loan_in':   a.total_loaned    += amt; break   // treated as debt (conservative)
         case 'loan_out':  a.total_repaid    += amt; break
-        case 'salary':    a.total_salary    += amt; break
-        case 'board_fee': a.total_board_fee += amt; break
+        case 'salary':      a.total_salary    += amt; break
+        case 'board_fee':   a.total_board_fee += amt; break
+        case 'huzur_hakki': a.total_salary    += amt; break  // operational comp = same bucket as salary
+        case 'equalization': a.total_dividend += amt; break  // capital equalization = same bucket as dividend
       }
     }
 

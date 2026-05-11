@@ -34,9 +34,13 @@ export async function GET(req: NextRequest) {
       .order('created_at', { ascending: false })
       .limit(200)
 
-    if (ALLOWED_STATUSES.includes(statusFilter as PaymentStatus)) {
+    // 'unpaid' tab = all non-paid rows: unpaid + partial + overdue
+    if (statusFilter === 'unpaid') {
+      query = query.in('payment_status', ['unpaid', 'partial', 'overdue'])
+    } else if (ALLOWED_STATUSES.includes(statusFilter as PaymentStatus)) {
       query = query.eq('payment_status', statusFilter)
     }
+    // statusFilter === 'all' → no filter, return everything
 
     const { data, error } = await query
 

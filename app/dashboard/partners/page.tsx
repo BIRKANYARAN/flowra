@@ -734,7 +734,7 @@ export default function PartnersPage() {
                             İsim
                           </label>
                           <input
-                            className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-40000"
+                            className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
                             value={editForm.name}
                             onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))}
                             autoFocus
@@ -746,7 +746,7 @@ export default function PartnersPage() {
                           </label>
                           <input
                             type="number" min="0.01" max="100" step="0.01"
-                            className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-40000"
+                            className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
                             value={editForm.shareRatioPct}
                             onChange={e => setEditForm(f => ({ ...f, shareRatioPct: e.target.value }))}
                           />

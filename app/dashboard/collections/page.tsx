@@ -169,6 +169,8 @@ export default function CollectionsPage() {
     await patch(row.id, 'partial', amt)
     setPartialId(null)
     setPartialAmt('')
+    // Re-fetch so the row's new status is reflected correctly in this tab
+    await load(tab)
   }
 
   // ── Derived / grouping ────────────────────────────────────────────────────────

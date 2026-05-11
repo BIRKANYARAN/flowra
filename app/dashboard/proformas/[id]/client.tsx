@@ -235,7 +235,11 @@ export function ProformaDetailClient({
     .map(it => ({ price: it.price, quantity: it.qty, discount_percent: it.discountPercent, kdv: it.kdv }))
   const modalTotal = calculateTotals(selectedForCalc).grand_total
 
-  const [shareUrl, setShareUrl] = useState('')
+  const [shareUrl, setShareUrl] = useState(() =>
+    typeof window !== 'undefined'
+      ? `${window.location.origin}/public/proforma/${id}`
+      : ''
+  )
   useEffect(() => {
     setShareUrl(`${window.location.origin}/public/proforma/${id}`)
   }, [id])
