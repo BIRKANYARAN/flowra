@@ -358,8 +358,11 @@ export class FinanceService {
     ])
 
     const rate   = options?.corporate_tax_rate ?? CORPORATE_TAX_RATE_TR
+    // KDV (VAT) is a pass-through liability — excluded from matrah (corporate tax base).
+    // gross.revenue_try is the VAT-inclusive grand total; subtract sales VAT to get net.
+    const netRevenue = round2(gross.revenue_try - vat.sales_vat_try)
     const corpTx = computeCorporateTax({
-      revenue_try:             gross.revenue_try,
+      revenue_try:             netRevenue,
       cost_try:                gross.cost_try,
       deductible_expenses_try: expenses.deductible_try,
       rate_percent:            rate,

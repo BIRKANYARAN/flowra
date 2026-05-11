@@ -155,6 +155,8 @@ export function computeSimulationKernel(k: SimulationKernelInput): SimulationRes
   const totalNonDeductible = round2(totalExpenses - totalDeductible)
 
   // ── Corporate tax (full period) ────────────────────────────────────────────
+  // totalRevenue is already net-of-VAT (effective_unit_price is ex-VAT).
+  // KDV is computed separately and added on top, so matrah = totalRevenue.
   const corpTax = computeCorporateTax({
     revenue_try:             totalRevenue,
     cost_try:                totalCost,
@@ -163,7 +165,7 @@ export function computeSimulationKernel(k: SimulationKernelInput): SimulationRes
   })
 
   // ── KDV ───────────────────────────────────────────────────────────────────
-  const salesVat = round2(totalRevenue * k.kdv_rate / 100)
+  const salesVat  = round2(totalRevenue * k.kdv_rate / 100)
   const kdvResult = computeKdv({
     sales_vat_try:    salesVat,
     purchase_vat_try: 0,           // no new purchases assumed

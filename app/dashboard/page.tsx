@@ -283,9 +283,11 @@ export default async function DashboardPage() {
     fxData,              // exchange rates (USD/EUR)
     uncollectedSalesData,// sales with payment_status != paid (for display / alerts)
     taskReminders,       // Phase 7 — open tasks due soon (≤7 days) for top-of-page reminders
-    collectedSalesData,  // PART 1 — paid sales where paid_at in current period (CASH BASIS)
-    paidExpensesData,    // paid expenses in current period, excluding financing flows in reducer
-    unpaidExpensesData,  // all unpaid expenses for outstanding obligations
+    collectedSalesData,     // PART 1 — paid sales where paid_at in current period (CASH BASIS)
+    paidExpensesData,       // paid expenses in current period, excluding financing flows in reducer
+    unpaidExpensesData,     // all unpaid expenses for outstanding obligations
+    allTimeCollectedData,   // ALL-TIME cash received — for true cash position
+    allTimePaidOpData,      // ALL-TIME paid operational expenses — for true cash position
   ] = await Promise.all([
 
     sq(async (): Promise<FinApiRes | null> => {
@@ -402,6 +404,28 @@ export default async function DashboardPage() {
         .is('deleted_at', null)
       return (data ?? []) as Array<{ amount_try: number }>
     }, [] as Array<{ amount_try: number }>),
+
+    // ALL-TIME cash received (true bank balance basis)
+    sq(async () => {
+      const { data } = await supabase
+        .from('sales')
+        .select('total_try')
+        .eq('company_id', companyId)
+        .eq('payment_status', 'paid')
+        .is('deleted_at', null)
+      return (data ?? []) as Array<{ total_try: number }>
+    }, [] as Array<{ total_try: number }>),
+
+    // ALL-TIME paid operational expenses (true bank balance basis)
+    sq(async () => {
+      const { data } = await supabase
+        .from('expenses')
+        .select('amount_try, expense_type')
+        .eq('company_id', companyId)
+        .eq('payment_status', 'paid')
+        .is('deleted_at', null)
+      return (data ?? []) as Array<{ amount_try: number; expense_type: string | null }>
+    }, [] as Array<{ amount_try: number; expense_type: string | null }>),
   ])
 
   // ── Map API responses → local fs shape (keeps all JSX references unchanged) ──
@@ -439,14 +463,22 @@ export default async function DashboardPage() {
     return sum + Number(row.amount_try ?? 0)
   }, 0)
   const unpaidExpenses = (unpaidExpensesData ?? []).reduce((sum, row) => sum + Number(row.amount_try ?? 0), 0)
+
+  // ALL-TIME figures for true cash position (matches runway engine logic)
+  const allTimeCollected = (allTimeCollectedData ?? []).reduce((s, r) => s + Number(r.total_try ?? 0), 0)
+  const allTimePaidOpExpenses = (allTimePaidOpData ?? []).reduce((sum, row) => {
+    if (row.expense_type && CASH_EXCLUDED_EXPENSE_TYPES.has(row.expense_type)) return sum
+    return sum + Number(row.amount_try ?? 0)
+  }, 0)
+
   const {
     cashBalance,
     outstandingObligations,
     cashDistributable,
   } = computeCashPosition({
-    paymentsReceived: actuallyCollected,
-    paidExpenses,
-    unpaidExpenses,
+    paymentsReceived: allTimeCollected,       // all-time received (true bank balance)
+    paidExpenses:     allTimePaidOpExpenses,  // all-time paid operational expenses
+    unpaidExpenses,                           // all outstanding obligations (already all-time)
   })
 
   // ── Partner equalization (uses cash-based distributable, not accounting profit) ──

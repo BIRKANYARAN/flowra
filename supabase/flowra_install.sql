@@ -533,8 +533,10 @@ begin
     raise exception 'create_proforma_atomic: company not found or not authorized (id: %)', p_company_id;
   end if;
 
-  -- Generate sequential proforma number within the company (year-scoped)
-  select coalesce(max(revision_no), 0) + 1
+  -- Generate sequential proforma number within the company (year-scoped).
+  -- Use count(*)+1 NOT max(revision_no)+1: revision_no is always 1 at creation
+  -- so max(revision_no) = 1 for every proforma, causing duplicate numbers.
+  select coalesce(count(*), 0) + 1
   from   proformas
   where  company_id = p_company_id
     and  deleted_at is null
