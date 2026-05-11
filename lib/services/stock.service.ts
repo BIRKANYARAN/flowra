@@ -391,20 +391,18 @@ export class StockService {
         let fxEurTry = 0
 
         try {
-          const { data: fxRows } = await supabase
-            .from('fx_rates')
-            .select('currency, buying')
-            .in('currency', ['USD', 'EUR'])
-            .lte('rate_date', entryDate)
-            .order('rate_date', { ascending: false })
-            .limit(4)
-
-          if (fxRows) {
-            const usdRow = fxRows.find(r => r.currency === 'USD')
-            const eurRow = fxRows.find(r => r.currency === 'EUR')
-            fxUsdTry = usdRow ? Number(usdRow.buying) : 0
-            fxEurTry = eurRow ? Number(eurRow.buying) : 0
-          }
+          // Run two separate queries (one per currency) to guarantee one row each.
+          // A single .in(['USD','EUR']).limit(4) can return 4 USD rows if EUR data is older.
+          const [{ data: usdRows }, { data: eurRows }] = await Promise.all([
+            supabase.from('fx_rates').select('buying')
+              .eq('currency', 'USD').lte('rate_date', entryDate)
+              .order('rate_date', { ascending: false }).limit(1),
+            supabase.from('fx_rates').select('buying')
+              .eq('currency', 'EUR').lte('rate_date', entryDate)
+              .order('rate_date', { ascending: false }).limit(1),
+          ])
+          fxUsdTry = usdRows?.[0] ? Number(usdRows[0].buying) : 0
+          fxEurTry = eurRows?.[0] ? Number(eurRows[0].buying) : 0
         } catch {
           // Non-fatal — snapshot will have zeros for unavailable currencies
         }

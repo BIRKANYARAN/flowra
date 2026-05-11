@@ -152,7 +152,7 @@ export default function NewProformaPage() {
           bank_id:       bankId || null,
           customer_name: cust?.name || '',
           currency,
-          validity_days: parseInt(validity) || 7,
+          validity_days: parseInt(validity) || 1,
           notes:         notes.trim() || null,
           items: validLines.map((l, i) => ({
             product_id: l.product_id,
@@ -321,7 +321,7 @@ export default function NewProformaPage() {
                                 {(() => {
                                   const salePrice = getSalePrice(p)
                                   const cost      = getLegacyProductCost(p)
-                                  if (salePrice == null || cost == null) return null
+                                  if (salePrice == null || cost == null || salePrice === 0) return null
                                   const m = round2(((salePrice - cost) / salePrice) * 100)
                                   return (
                                     <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${

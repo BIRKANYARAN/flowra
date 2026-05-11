@@ -226,7 +226,10 @@ export default async function CeoDashboardPage() {
     : m.receivables.overdue_30d > 2000 ? 'warn' : 'ok'
 
   const taxRisk = m.tax.total_fiscal_obligation > 10000 ? 'warn' : 'ok'
-  const partnerRisk = m.partner.total_loans > m.partner.total_equity * 0.5 ? 'warn' : 'ok'
+  // Infinite leverage (loans > 0 but equity = 0) is critical, not 'ok'
+  const partnerRisk = m.partner.total_equity === 0
+    ? (m.partner.total_loans > 0 ? 'critical' : 'ok')
+    : m.partner.total_loans > m.partner.total_equity * 0.5 ? 'warn' : 'ok'
   const stockRisk   = m.stock.coverage_months !== null && m.stock.coverage_months < 2 ? 'warn' : 'ok'
 
   // ── Runway chart (ASCII-style bar — no client JS needed) ───────────────────

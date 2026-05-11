@@ -57,7 +57,7 @@ export default async function PrintProformaPage({ params }: { params: { id: stri
           website: ss(settings.website),
           tax_number: ss(settings.tax_number),
           tax_office: ss(settings.tax_office),
-          logo_url: ss(settings.logo_url),
+          logo_url: ss(settings.logo_url) || null,
           mersis_no: ss(settings.mersis_no),
         }
       : null

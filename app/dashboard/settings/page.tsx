@@ -155,7 +155,11 @@ export default function SettingsPage() {
     setSaving(true)
     setMsg(null)
     const { data: authData, error: authError } = await supabase.auth.getUser()
-    if (authError || !authData?.user) return null
+    if (authError || !authData?.user) {
+      setSaving(false)
+      flash(setMsg, 'Oturum süresi doldu, lütfen yeniden giriş yapın.', 'error')
+      return
+    }
     const user = authData.user
     const companyId = await resolveCompanyId(user.id, supabase)
 
@@ -200,7 +204,11 @@ export default function SettingsPage() {
     setBankSaving(true)
     setBankMsg(null)
     const { data: authData, error: authError } = await supabase.auth.getUser()
-    if (authError || !authData?.user) return null
+    if (authError || !authData?.user) {
+      setBankSaving(false)
+      flash(setBankMsg, 'Oturum süresi doldu, lütfen yeniden giriş yapın.', 'error')
+      return
+    }
     const user = authData.user
     const companyId = await resolveCompanyId(user.id, supabase)
 

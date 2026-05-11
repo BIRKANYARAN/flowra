@@ -167,13 +167,15 @@ export async function PUT(req: NextRequest) {
       : null
 
     const result = await StockService.adjust(user.id, {
-      idempotency_key: body.idempotency_key,
-      product_id:      requireString(body.product_id, 'product_id'),
-      qty_change:      Number(body.qty_change),
-      reference_type:  body.reference_type ?? 'adjustment',
-      notes:           body.notes ?? null,
-      cost_price:      costPrice,
-      entry_date:      entryDate,
+      idempotency_key:  body.idempotency_key,
+      product_id:       requireString(body.product_id, 'product_id'),
+      qty_change:       Number(body.qty_change),
+      reference_type:   body.reference_type ?? 'adjustment',
+      notes:            body.notes ?? null,
+      cost_price:       costPrice,
+      entry_date:       entryDate,
+      cost_currency:    body.cost_currency ? sanitizeCurrency(body.cost_currency) : 'TRY',
+      fx_rate_at_entry: body.fx_rate_at_entry != null ? Number(body.fx_rate_at_entry) : undefined,
     }, companyId, ctx)
 
     return NextResponse.json(result, { status: result.cached ? 200 : 201, headers: { [REQUEST_ID_HEADER]: ctx.requestId } })
