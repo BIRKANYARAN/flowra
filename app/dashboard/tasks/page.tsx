@@ -127,7 +127,12 @@ export default function TasksPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status }),
     })
-    if (res.ok) loadTasks()
+    if (res.ok) {
+      loadTasks()
+    } else {
+      const d = await res.json().catch(() => ({}))
+      setError(d.error ?? 'Görev güncellenemedi')
+    }
   }
 
   // ── Delete task ─────────────────────────────────────────────────────────────
@@ -135,7 +140,12 @@ export default function TasksPage() {
   async function deleteTask(id: string) {
     if (!confirm('Bu görevi silmek istiyor musunuz?')) return
     const res = await fetch(`/api/tasks/${id}`, { method: 'DELETE' })
-    if (res.ok) loadTasks()
+    if (res.ok) {
+      loadTasks()
+    } else {
+      const d = await res.json().catch(() => ({}))
+      setError(d.error ?? 'Görev silinemedi')
+    }
   }
 
   // ── Render ──────────────────────────────────────────────────────────────────

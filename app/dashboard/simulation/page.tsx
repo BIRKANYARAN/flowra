@@ -166,8 +166,8 @@ export default function SimulationPage() {
   const [eqNetProfit, setEqNetProfit] = useState(0)
 
   useEffect(() => {
-    if (partnerCount === 0) return
-    const distributable = Math.max(0, eqNetProfit)
+    if (partnerCount === 0 || eqNetProfit <= 0) return
+    const distributable = eqNetProfit
     let cancelled = false
     fetch(`/api/partners/equalization?distributable=${distributable}`)
       .then(r => r.ok ? r.json() : ZERO_SIM_EQ)
