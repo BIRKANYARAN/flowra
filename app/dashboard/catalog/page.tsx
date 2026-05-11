@@ -418,12 +418,12 @@ export default function CatalogPage() {
       {/* Table */}
       <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
         {filtered.length === 0 ? (
-          <div className="text-center py-16 text-gray-400">
-            <p className="text-sm">
-              {products.length === 0
-                ? 'Henüz ürün eklenmedi.'
-                : 'Aramayla eşleşen ürün bulunamadı.'}
-            </p>
+          <div className="py-16 text-center">
+            <div className="text-4xl mb-3">{products.length === 0 ? '📦' : '🔍'}</div>
+            <div className="text-sm font-semibold text-gray-600 mb-1">
+              {products.length === 0 ? 'Henüz ürün eklenmedi.' : 'Aramayla eşleşen ürün bulunamadı.'}
+            </div>
+            {products.length === 0 && <p className="text-xs text-gray-400">Katalog oluşturmak için ürün ekleyin.</p>}
           </div>
         ) : (
           <>
@@ -675,7 +675,7 @@ export default function CatalogPage() {
           style={{ backgroundColor: 'rgba(0,0,0,0.45)' }}
           onClick={e => { if (e.target === e.currentTarget) setCostCalcId(null) }}
         >
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg">
             <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
               <div>
                 <h2 className="font-black text-lg">Maliyet Hesapla</h2>

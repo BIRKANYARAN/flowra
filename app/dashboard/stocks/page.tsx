@@ -140,7 +140,7 @@ export default function StocksPage() {
           <Label>Mevcut Stok</Label>
         </div>
         {products.length === 0 ? (
-          <div className="text-center py-10 text-gray-400 text-sm">Ürün bulunamadı.</div>
+          <div className="py-14 text-center"><div className="text-4xl mb-2">📦</div><div className="text-sm font-semibold text-gray-600">Ürün bulunamadı.</div></div>
         ) : (
           <div className="divide-y divide-gray-50">
             {products.map(p => {
@@ -263,7 +263,7 @@ export default function StocksPage() {
           <Label>Son Hareketler</Label>
         </div>
         {movements.length === 0 ? (
-          <div className="text-center py-10 text-gray-400 text-sm">Hareket bulunamadı.</div>
+          <div className="py-14 text-center"><div className="text-4xl mb-2">📋</div><div className="text-sm font-semibold text-gray-600">Hareket bulunamadı.</div></div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">

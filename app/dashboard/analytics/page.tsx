@@ -19,8 +19,10 @@ export default async function AnalyticsPage() {
   try {
     const { data } = await supabase.auth.getUser()
     user = data.user
-  } catch { return null }
-  if (!user) return null
+  } catch {
+    return <div className="py-16 text-center text-gray-400 text-sm">Oturum yüklenemedi. Sayfayı yenileyin.</div>
+  }
+  if (!user) return <div className="py-16 text-center text-gray-400 text-sm">Lütfen giriş yapın.</div>
 
   let a: NormalizedAnalytics = normalizeAnalytics(null)
   try {

@@ -77,7 +77,7 @@ const STATUS_COLOR: Record<ProformaStatus, string> = {
   sent:      'bg-blue-100 text-blue-700',
   accepted:  'bg-emerald-100 text-emerald-700',
   rejected:  'bg-red-100 text-red-600',
-  converted: 'bg-primary-100 text-primary-70000',
+  converted: 'bg-primary-100 text-primary-700',
 }
 const PAYMENT_COLOR: Record<string, string> = {
   unpaid:  'bg-orange-100 text-orange-600',
@@ -319,7 +319,9 @@ function TahsilatPanel({ sales }: { sales: Sale[] }) {
         <tbody className="divide-y divide-gray-50">
           {sales.slice(0, 15).map(s => (
             <tr key={s.id} className="hover:bg-gray-50/60">
-              <td className="px-4 py-2.5 font-medium text-gray-800">{s.customer_name ?? '—'}</td>
+              <td className="px-4 py-2.5 max-w-[180px]">
+                <span className="block font-medium text-gray-800 truncate">{s.customer_name ?? '—'}</span>
+              </td>
               <td className="px-4 py-2.5"><PayBadge status={s.payment_status} /></td>
               <td className="px-4 py-2.5 text-right tabular-nums font-semibold text-gray-700">
                 {fmt(Number(s.total_try ?? 0))}
@@ -390,7 +392,9 @@ function KarPanel({ sales }: { sales: Sale[] }) {
         <tbody className="divide-y divide-gray-50">
           {withProfit.slice(0, 10).map(s => (
             <tr key={s.id} className="hover:bg-gray-50/60">
-              <td className="px-4 py-2.5 font-medium text-gray-800 truncate max-w-[160px]">{s.customer_name ?? '—'}</td>
+              <td className="px-4 py-2.5 max-w-[160px]">
+                <span className="block font-medium text-gray-800 truncate">{s.customer_name ?? '—'}</span>
+              </td>
               <td className="px-4 py-2.5 text-right tabular-nums text-gray-700">{fmt(Number(s.total_try ?? 0))}</td>
               <td className="px-4 py-2.5 text-right tabular-nums text-gray-500">{fmt(Number(s.cost_try ?? 0))}</td>
               <td className={`px-4 py-2.5 text-right tabular-nums font-bold ${

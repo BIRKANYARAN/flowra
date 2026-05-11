@@ -123,9 +123,10 @@ export default function CustomersPage() {
 
       <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
         {filtered.length === 0 ? (
-          <div className="text-center py-16 text-gray-400">
-            <div className="text-4xl mb-2">👥</div>
-            <p className="text-sm">{search ? 'Sonuç bulunamadı.' : 'Henüz müşteri eklenmedi.'}</p>
+          <div className="py-16 text-center">
+            <div className="text-4xl mb-3">👥</div>
+            <div className="text-sm font-semibold text-gray-600 mb-1">{search ? 'Sonuç bulunamadı.' : 'Henüz müşteri eklenmedi.'}</div>
+            {!search && <p className="text-xs text-gray-400">Yeni müşteri eklemek için "Yeni Müşteri" butonuna tıklayın.</p>}
           </div>
         ) : (
           <div className="divide-y divide-gray-100">
