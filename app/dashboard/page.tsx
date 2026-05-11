@@ -590,292 +590,342 @@ export default async function DashboardPage() {
 
   // ── Render ───────────────────────────────────────────────────────────────────
 
-  const today           = new Date().toISOString().slice(0, 10)
-  const overdueTaskCount = taskReminders.filter(t => t.due_date < today).length
-  const visibleAlerts   = alerts.slice(0, 3)   // show up to 3 alerts
+  const today = new Date().toISOString().slice(0, 10)
 
   return (
-    <div className="flex flex-col gap-1.5 max-w-6xl">
+    <div className="flex flex-col gap-2 max-w-6xl">
 
-      {/* ── Command Bar: title + status pills + quick actions ──────────────── */}
+      {/* ── Command Bar ──────────────────────────────────────────────────────── */}
       <div className="flex items-center gap-2 flex-wrap">
-        <div className="flex items-center gap-2 min-w-0">
-          <h1 className="text-sm font-black text-gray-900 tracking-tight uppercase">Genel Bakış</h1>
-          <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full font-semibold capitalize">
-            {label}
-          </span>
-          {alertCount > 0 && (
-            <Link href="/dashboard/alerts" className="inline-flex items-center gap-1 text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-bold hover:bg-red-200 transition-colors">
-              <span className="w-1.5 h-1.5 bg-red-500 rounded-full" />
-              {alertCount} uyarı
-            </Link>
-          )}
-          {vatStatus === 'payable' && fs.net_vat_try > 50 && (
-            <Link href="/dashboard/analytics" className="text-[10px] bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full font-bold hover:bg-orange-200 transition-colors">
-              KDV {fmt(fs.net_vat_try)}
-            </Link>
-          )}
+
+        {/* Identity + period */}
+        <div>
+          <span className="text-[9px] font-bold uppercase tracking-widest text-gray-400">CFO Ekranı</span>
+          <div className="flex items-center gap-1.5 mt-0.5">
+            <h1 className="text-sm font-black text-gray-900 tracking-tight capitalize">{label}</h1>
+            {alertCount > 0 && (
+              <Link href="/dashboard/alerts"
+                className="inline-flex items-center gap-1 text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-bold hover:bg-red-200 transition-colors">
+                <span className="w-1.5 h-1.5 bg-red-500 rounded-full" />
+                {alertCount}
+              </Link>
+            )}
+            {vatStatus === 'payable' && fs.net_vat_try > 50 && (
+              <Link href="/dashboard/tax"
+                className="text-[10px] bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full font-bold hover:bg-orange-200 transition-colors">
+                KDV {fmt(fs.net_vat_try)}
+              </Link>
+            )}
+          </div>
         </div>
+
+        {/* Task reminder pills */}
+        {taskReminders.length > 0 && (
+          <div className="flex items-center gap-1.5 overflow-x-auto">
+            <span className="text-[9px] font-bold uppercase tracking-widest text-gray-300 flex-shrink-0">Görev</span>
+            {taskReminders.slice(0, 3).map(t => {
+              const isOverdue = t.due_date < today
+              return (
+                <Link key={t.id} href="/dashboard/tasks"
+                  className={`flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-semibold flex-shrink-0 transition-colors ${
+                    isOverdue
+                      ? 'bg-red-50 border-red-200 text-red-700 hover:bg-red-100'
+                      : 'bg-violet-50 border-violet-200 text-violet-700 hover:bg-violet-100'
+                  }`}>
+                  {isOverdue && <span className="font-black text-[8px]">!</span>}
+                  <span className="truncate max-w-[90px]">{t.title}</span>
+                </Link>
+              )
+            })}
+            {taskReminders.length > 3 && (
+              <Link href="/dashboard/tasks" className="text-[10px] text-gray-400 font-semibold flex-shrink-0">
+                +{taskReminders.length - 3}
+              </Link>
+            )}
+          </div>
+        )}
+
+        {/* Quick-action buttons */}
         <div className="ml-auto flex items-center gap-1.5 flex-shrink-0">
-          <Link href="/dashboard/proformas/new" className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gray-900 text-white text-xs font-semibold hover:bg-gray-700 transition-colors">
+          <Link href="/dashboard/proformas/new"
+            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gray-900 text-white text-xs font-semibold hover:bg-gray-700 transition-colors">
             + Proforma
           </Link>
-          <Link href="/dashboard/sales/new" className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition-colors">
+          <Link href="/dashboard/sales/new"
+            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition-colors">
             + Satış
           </Link>
-          <Link href="/dashboard/collections" className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-primary-600 text-white text-xs font-semibold hover:bg-primary-700 transition-colors">
+          <Link href="/dashboard/collections"
+            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-primary-600 text-white text-xs font-semibold hover:bg-primary-700 transition-colors">
             + Tahsilat
           </Link>
-          <Link href="/dashboard/expenses" className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-orange-500 text-white text-xs font-semibold hover:bg-orange-600 transition-colors">
+          <Link href="/dashboard/expenses"
+            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-orange-500 text-white text-xs font-semibold hover:bg-orange-600 transition-colors">
             + Gider
           </Link>
         </div>
       </div>
 
-      {/* ── Task reminders — due within 7 days ────────────────────────────── */}
-      {taskReminders.length > 0 && (
-        <div className="flex items-center gap-2 overflow-x-auto pb-0.5">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-gray-300 flex-shrink-0">Görevler</span>
-          {taskReminders.map(t => {
-            const isOverdue = t.due_date < today
-            return (
-              <Link
-                key={t.id}
-                href="/dashboard/tasks"
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-semibold flex-shrink-0 transition-colors ${
-                  isOverdue
-                    ? 'bg-red-50 border-red-200 text-red-700 hover:bg-red-100'
-                    : 'bg-violet-50 border-violet-200 text-violet-700 hover:bg-violet-100'
-                }`}
-              >
-                {isOverdue && <span className="text-[9px] font-black">GECİKTİ</span>}
-                <span className="truncate max-w-[120px]">{t.title}</span>
-                <span className="text-[10px] opacity-60 flex-shrink-0">
-                  {new Date(t.due_date + 'T00:00:00').toLocaleDateString('tr-TR', { day: '2-digit', month: 'short' })}
-                </span>
-              </Link>
-            )
-          })}
-          {overdueTaskCount > 0 && (
-            <span className="text-[10px] text-red-500 font-bold flex-shrink-0">
-              {overdueTaskCount} gecikmiş
-            </span>
-          )}
-        </div>
-      )}
+      {/* ── 5 CFO Decision KPIs ──────────────────────────────────────────────── */}
+      <div className="grid grid-cols-5 gap-2">
 
-      {/* ── Alert band — up to 3 financial/operational alerts ─────────────── */}
-      {visibleAlerts.length > 0 && (
-        <div className="flex flex-col gap-1">
-          {visibleAlerts.map((a, i) => (
-            <Link
-              key={i}
-              href={a.href}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors hover:opacity-90 ${a.colorBg} ${a.colorText}`}
-            >
-              <span className="flex-shrink-0">{a.icon}</span>
-              <span className="font-bold">{a.text}</span>
-              <span className="text-[10px] font-normal opacity-70 truncate hidden sm:block">— {a.sub}</span>
-              {i === 0 && alerts.length > 3 && (
-                <span className="ml-auto flex-shrink-0 text-[10px] opacity-60">+{alerts.length - 3} daha</span>
-              )}
-            </Link>
-          ))}
-        </div>
-      )}
-
-      {/* ── KPI strip — 6 metrics ──────────────────────────────────────────── */}
-      <div className="grid grid-cols-6 gap-1.5">
+        {/* 1 — Nakit Pozisyon: true bank balance (all-time received − paid) */}
         <FlowraKpiCard
-          label="Ciro"
-          value={fs.revenue_try}
-          rawValue={fmt(fs.revenue_try)}
-          sub={fs.revenue_try > 0 ? `Brüt marj ${pct(grossMarginPct)}` : 'Satış yok'}
-          href="/dashboard/sales"
+          label="Nakit Pozisyon"
+          value={cashBalance}
+          rawValue={fmt(cashBalance)}
+          sub={cashBalance >= 0
+            ? `${fmt(cashDistributable)} dağıtılabilir`
+            : 'Negatif bakiye ⚠'}
+          tone={cashBalance >= 0 ? 'positive' : 'negative'}
+          href="/dashboard/cashflow"
         />
+
+        {/* 2 — Runway: estimated days until cash runs out */}
         <FlowraKpiCard
-          label="Tahsil Edilen"
-          value={actuallyCollected}
-          rawValue={fmt(actuallyCollected)}
-          sub={`%${actuallyCollectedPct} oran`}
-          tone={actuallyCollectedPct >= 80 ? 'positive' : actuallyCollectedPct >= 50 ? 'neutral' : 'negative'}
+          label="Runway"
+          value={runwayDays ?? 9999}
+          rawValue={runwayDays !== null ? `${runwayDays} gün` : '∞'}
+          sub={runwayDays !== null
+            ? runwayDays <= 30  ? '🔥 Kritik nakit riski'
+            : runwayDays <= 90  ? '⚠ Dikkat gerekiyor'
+            : 'Sağlıklı görünüm'
+            : 'Zarar yok'}
+          tone={runwayDays !== null
+            ? runwayDays <= 30  ? 'negative'
+            : runwayDays <= 90  ? 'neutral'
+            : 'positive'
+            : 'positive'}
+          href="/dashboard/simulation"
+        />
+
+        {/* 3 — Geciken Tahsilat: overdue 30+ days */}
+        <FlowraKpiCard
+          label="Geciken (+30 gün)"
+          value={overdueTotal}
+          rawValue={overdueTotal > 0 ? fmt(overdueTotal) : '—'}
+          sub={overdueTotal > 0 ? `${overdueCount} satış gecikmeli` : 'Gecikme yok ✓'}
+          tone={overdueTotal > 0 ? 'negative' : 'positive'}
           href="/dashboard/collections"
         />
+
+        {/* 4 — Açık Yükümlülük: total unpaid expenses */}
+        <FlowraKpiCard
+          label="Açık Yükümlülük"
+          value={outstandingObligations}
+          rawValue={outstandingObligations > 0 ? fmt(outstandingObligations) : '—'}
+          sub={outstandingObligations > 0
+            ? `${fmt(uncollectedSalesTotal)} tahsilat bekleniyor`
+            : 'Borç yok ✓'}
+          tone={outstandingObligations > 0 ? 'negative' : 'neutral'}
+          href="/dashboard/expenses"
+        />
+
+        {/* 5 — Dağıtılabilir Nakit */}
         <FlowraKpiCard
           label="Dağıtılabilir"
           value={cashDistributable}
           rawValue={cashDistributable > 0 ? fmt(cashDistributable) : '—'}
-          sub={cashDistributable > 0 ? 'Nakit bazlı' : 'Yok'}
+          sub={cashDistributable > 0
+            ? equalization.entries.length > 0
+              ? `${equalization.entries.length} ortak bekliyor`
+              : 'Dağıtıma hazır'
+            : 'Henüz dağıtılamaz'}
           tone={cashDistributable > 0 ? 'positive' : 'neutral'}
           href="/dashboard/partners"
         />
-        <FlowraKpiCard
-          label="Bekleyen"
-          value={uncollectedSalesTotal}
-          rawValue={uncollectedSalesTotal > 0 ? fmt(uncollectedSalesTotal) : '—'}
-          sub={uncollectedSalesTotal > 0 ? `${uncollectedSalesCount} satış` : 'Tümü tahsil ✓'}
-          tone={uncollectedSalesTotal > 0 ? 'negative' : 'neutral'}
-          href="/dashboard/collections"
-        />
-        <FlowraKpiCard
-          label="Giderler"
-          value={fs.expenses_total_try}
-          rawValue={fmt(fs.expenses_total_try)}
-          sub={`~${fmt(monthlyExpenses)}/ay`}
-          href="/dashboard/expenses"
-        />
-        <FlowraKpiCard
-          label="Stok"
-          value={stockValue}
-          rawValue={fmt(stockValue)}
-          sub="FIFO maliyet"
-          href="/dashboard/stocks"
-        />
       </div>
 
-      {/* ── Main grid: Waterfall 7/12 | Tax/Metrics 5/12 ─────────────────── */}
-      <div className="grid grid-cols-12 gap-1.5">
+      {/* ── Acil Aksiyonlar — Decision Panel ─────────────────────────────────── */}
+      {alerts.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+              Acil Aksiyonlar
+            </span>
+            <span className="text-[9px] bg-red-100 text-red-600 font-bold px-1.5 py-0.5 rounded-full">
+              {alerts.length}
+            </span>
+          </div>
+          <div className={`grid gap-2 ${
+            alerts.length === 1 ? 'grid-cols-1'
+            : alerts.length === 2 ? 'grid-cols-2'
+            : 'grid-cols-3'
+          }`}>
+            {alerts.map((a, i) => (
+              <Link key={i} href={a.href}
+                className={`flex items-start gap-3 px-3.5 py-3 rounded-xl border transition-colors hover:opacity-90 ${a.colorBg} ${a.colorText}`}>
+                <span className="text-lg flex-shrink-0 leading-none mt-0.5">{a.icon}</span>
+                <div className="min-w-0 flex-1">
+                  <div className="text-xs font-bold leading-snug">{a.text}</div>
+                  <div className="text-[10px] font-normal opacity-70 mt-0.5 leading-snug">{a.sub}</div>
+                </div>
+                <span className="flex-shrink-0 text-[10px] font-bold opacity-50 pt-0.5">→</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
-        {/* Waterfall cash bridge */}
-        <div className="col-span-7 bg-white border border-gray-200 rounded-xl px-4 py-2.5">
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Nakit Köprüsü</span>
-            <Link href="/dashboard/analytics" className="text-[10px] text-primary-600 font-semibold hover:text-primary-700">
-              Analiz →
+      {/* ── Main grid: Cashflow (7) + Sidebar (5) ───────────────────────────── */}
+      <div className="grid grid-cols-12 gap-2">
+
+        {/* Cashflow chart */}
+        <div className="col-span-7 bg-white border border-gray-200 rounded-xl p-3 flex flex-col">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Nakit Akışı</span>
+            <Link href="/dashboard/cashflow" className="text-[10px] text-primary-600 font-semibold hover:text-primary-700">
+              Detay →
             </Link>
           </div>
-
-          <div className="space-y-1">
-            <WaterfallRow
-              label="+ Tahsil Edilen"
-              value={actuallyCollected}
-              sub={`${fmt(fs.revenue_try)} fatura · %${actuallyCollectedPct}`}
-            />
-            <WaterfallRow
-              label="− Ödenmiş Giderler"
-              value={-paidExpenses}
-              sub="ödenen"
-            />
-            <WaterfallRow
-              label="− Açık Yükümlülükler"
-              value={-outstandingObligations}
-              sub={`${fmt(unpaidExpenses)} ödenmemiş`}
-            />
-            <div className="border-t border-dashed border-gray-200 pt-1.5">
-              <WaterfallRow label="= Dağıtılabilir" value={cashDistributable} sub={`Nakit bakiye ${fmt(cashBalance)}`} isTotal />
-            </div>
-          </div>
-
-          {/* Compact partner distribution or no-cash warning */}
-          {cashDistributable === 0 ? (
-            <div className="mt-2 text-[10px] text-red-600 font-semibold bg-red-50 border border-red-200 rounded-lg px-3 py-1.5">
-              ⚠ Dağıtılacak nakit yok{uncollectedSalesTotal > 0 ? ` — ${fmt(uncollectedSalesTotal)} tahsilat bekliyor` : ''}
-            </div>
-          ) : equalization.entries.length > 0 ? (
-            <div className="mt-2 pt-2 border-t border-gray-100 flex items-center gap-2 overflow-hidden">
-              <span className="text-[9px] font-bold uppercase tracking-widest text-gray-300 flex-shrink-0">Ortak</span>
-              {equalization.entries.slice(0, 4).map(e => (
-                <div key={e.partner_id} className="flex items-center gap-1.5 bg-emerald-50 rounded-lg px-2 py-1 min-w-0">
-                  <span className="text-[10px] text-gray-500 font-semibold truncate max-w-[60px]">{e.partner_name}</span>
-                  <span className="text-[11px] font-black tabular-nums text-emerald-700 flex-shrink-0">{fmt(e.total_payout)}</span>
-                </div>
-              ))}
-            </div>
-          ) : null}
+          <CashflowChart className="w-full flex-1" />
         </div>
 
-        {/* Tax + metrics — 3 horizontal cells */}
-        <div className="col-span-5 grid grid-rows-3 gap-1.5">
+        {/* Sidebar */}
+        <div className="col-span-5 flex flex-col gap-2">
 
-          {/* KDV */}
-          <div className="bg-white border border-gray-200 rounded-xl px-3 py-2 flex items-center justify-between">
-            <div>
-              <div className="text-[9px] font-black uppercase tracking-widest text-gray-400">KDV (Net)</div>
-              <div className={`text-base font-black tabular-nums leading-tight mt-0.5 ${
-                fs.net_vat_try > 0 ? 'text-orange-600' : 'text-emerald-600'
-              }`}>
-                {fmtFull(Math.abs(fs.net_vat_try))}
-              </div>
-              <div className="text-[9px] text-gray-400 mt-0.5">
-                Sat: {fmt(fs.sales_vat_try)} · Alış: {fmt(fs.purchase_vat_try + fs.expense_vat_try)}
-              </div>
+          {/* Bu Ay Özeti — P&L waterfall */}
+          <div className="bg-white border border-gray-200 rounded-xl px-4 py-3">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Bu Ay</span>
+              <Link href="/dashboard/analytics" className="text-[10px] text-primary-600 font-semibold hover:text-primary-700">
+                Analiz →
+              </Link>
             </div>
-            <div className={`text-[10px] font-bold px-2 py-0.5 rounded-lg flex-shrink-0 ${
-              vatStatus === 'payable' ? 'bg-orange-100 text-orange-700' : 'bg-emerald-100 text-emerald-700'
-            }`}>
-              {vatStatus === 'payable' ? '⬆ Ödenecek' : '⬇ Devir'}
+            <div className="space-y-1.5">
+              <WaterfallRow
+                label="Ciro"
+                value={fs.revenue_try}
+                sub={fs.revenue_try > 0 ? `Brüt marj ${pct(grossMarginPct)}` : 'Satış yok'}
+              />
+              <WaterfallRow
+                label="Tahsilat"
+                value={actuallyCollected}
+                sub={`%${actuallyCollectedPct} tahsil oranı`}
+              />
+              <WaterfallRow
+                label="Giderler"
+                value={-fs.expenses_total_try}
+                sub={`~${fmt(monthlyExpenses)}/ay`}
+              />
+              <div className="border-t border-dashed border-gray-200 pt-1.5">
+                <WaterfallRow
+                  label="Net (vergi sonrası)"
+                  value={fs.net_after_tax_try}
+                  sub={breakEvenRevenue !== null ? `Başabaş: ${fmt(breakEvenRevenue)}/ay` : undefined}
+                  isTotal
+                />
+              </div>
             </div>
           </div>
 
-          {/* Kurumlar Vergisi */}
-          <div className="bg-white border border-gray-200 rounded-xl px-3 py-2 flex items-center justify-between">
-            <div>
-              <div className="text-[9px] font-black uppercase tracking-widest text-gray-400">Kurumlar Vergisi</div>
-              <div className={`text-base font-black tabular-nums leading-tight mt-0.5 ${
-                fs.corporate_tax_try > 0 ? 'text-gray-900' : 'text-gray-400'
-              }`}>
-                {fmtFull(fs.corporate_tax_try)}
+          {/* Vergi Durumu */}
+          <div className="bg-white border border-gray-200 rounded-xl px-4 py-3">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Vergi Durumu</span>
+              <Link href="/dashboard/tax" className="text-[10px] text-primary-600 font-semibold hover:text-primary-700">
+                Projeksiyon →
+              </Link>
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-[9px] text-gray-400 font-semibold uppercase tracking-wide">KDV Net</div>
+                <div className={`text-sm font-black tabular-nums ${
+                  fs.net_vat_try > 0 ? 'text-orange-600' : 'text-emerald-600'
+                }`}>
+                  {fmtFull(Math.abs(fs.net_vat_try))}
+                </div>
+                <div className="text-[9px] text-gray-400 mt-0.5">
+                  Sat: {fmt(fs.sales_vat_try)} · İnd: {fmt(fs.purchase_vat_try + fs.expense_vat_try)}
+                </div>
               </div>
-              <div className="text-[9px] text-gray-400 mt-0.5">Matrah: {fmt(fs.matrah_try)}</div>
-            </div>
-            <div className="text-[10px] font-bold px-2 py-0.5 bg-gray-100 text-gray-500 rounded-lg flex-shrink-0">
-              %{fs.corporate_tax_rate}
-            </div>
-          </div>
-
-          {/* Aylık Net */}
-          <div className={`rounded-xl px-3 py-2 border flex items-center justify-between ${
-            monthlyNet >= 0 ? 'bg-white border-gray-200' : 'bg-red-50 border-red-200'
-          }`}>
-            <div>
-              <div className="text-[9px] font-black uppercase tracking-widest text-gray-400">Aylık Net</div>
-              <div className={`text-base font-black tabular-nums leading-tight mt-0.5 ${
-                monthlyNet >= 0 ? 'text-emerald-700' : 'text-red-600'
+              <div className={`text-[10px] font-bold px-2 py-1 rounded-lg flex-shrink-0 ${
+                vatStatus === 'payable' ? 'bg-orange-100 text-orange-700' : 'bg-emerald-100 text-emerald-700'
               }`}>
-                {fmt(monthlyNet)}
+                {vatStatus === 'payable' ? '⬆ Ödenecek' : '⬇ Devir'}
               </div>
-              {breakEvenRevenue !== null && (
-                <div className="text-[9px] text-gray-400 mt-0.5">Başabaş: {fmt(breakEvenRevenue)}/ay</div>
-              )}
             </div>
-            {monthlyNet < 0 && (
-              <div className="text-[10px] text-red-600 font-bold px-2 py-0.5 bg-red-100 rounded-lg flex-shrink-0">
-                🔥 Zarar
+            {fs.corporate_tax_try > 0 && (
+              <div className="mt-2 pt-2 border-t border-gray-100 flex items-center justify-between">
+                <div>
+                  <div className="text-[9px] text-gray-400 font-semibold uppercase tracking-wide">Kurumlar Vergisi</div>
+                  <div className="text-sm font-black tabular-nums text-gray-800">
+                    {fmtFull(fs.corporate_tax_try)}
+                  </div>
+                  <div className="text-[9px] text-gray-400 mt-0.5">Matrah: {fmt(fs.matrah_try)}</div>
+                </div>
+                <div className="text-[10px] bg-gray-100 text-gray-500 px-2 py-1 rounded-lg font-bold flex-shrink-0">
+                  %{fs.corporate_tax_rate}
+                </div>
               </div>
             )}
           </div>
 
+          {/* Açık Proformalar */}
+          {outstanding > 0 && (
+            <Link href="/dashboard/proformas"
+              className="bg-white border border-gray-200 rounded-xl px-4 py-3 hover:border-gray-300 transition-colors block">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Açık Proformalar</span>
+                <span className="text-[9px] bg-primary-100 text-primary-700 font-bold px-1.5 py-0.5 rounded-full">
+                  {openProfs.length} adet
+                </span>
+              </div>
+              <div className="text-xl font-black tabular-nums text-primary-700">{fmt(outstanding)}</div>
+              <div className="text-[10px] text-gray-400 mt-0.5">Dönüşüm bekleniyor</div>
+            </Link>
+          )}
+
+          {/* Ortak Dağıtım (compact) */}
+          {cashDistributable > 0 && equalization.entries.length > 0 && (
+            <div className="bg-white border border-gray-200 rounded-xl px-4 py-3">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Ortak Dağıtım</span>
+                <Link href="/dashboard/partners" className="text-[10px] text-primary-600 font-semibold hover:text-primary-700">
+                  Detay →
+                </Link>
+              </div>
+              <div className="space-y-1">
+                {equalization.entries.slice(0, 3).map(e => (
+                  <div key={e.partner_id} className="flex items-center justify-between">
+                    <span className="text-xs text-gray-600 font-semibold truncate max-w-[100px]">
+                      {e.partner_name}
+                    </span>
+                    <span className="text-xs font-black tabular-nums text-emerald-700">
+                      {fmt(e.total_payout)}
+                    </span>
+                  </div>
+                ))}
+                {equalization.entries.length > 3 && (
+                  <div className="text-[10px] text-gray-400">
+                    +{equalization.entries.length - 3} ortak daha
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* No-cash warning (when distributable is zero) */}
+          {cashDistributable === 0 && (
+            <div className="text-[10px] text-red-600 font-semibold bg-red-50 border border-red-200 rounded-xl px-3 py-2">
+              ⚠ Dağıtılacak nakit yok
+              {uncollectedSalesTotal > 0 && ` — ${fmt(uncollectedSalesTotal)} tahsilat bekliyor`}
+            </div>
+          )}
+
         </div>
       </div>
 
-      {/* ── Bottom row: Cashflow chart + FX widget ─────────────────────────── */}
-      <div className="grid grid-cols-12 gap-1.5">
-        <div className="col-span-8">
-          <CashflowChart className="w-full" />
-        </div>
-        <div className="col-span-4 flex flex-col gap-1.5">
-          <FxWidget
-            initialFx={{
-              USD:        fxData.USD,
-              EUR:        fxData.EUR,
-              source:     fxData.source,
-              rate_date:  fxData.rate_date,
-              fetched_at: fxData.fetched_at,
-            }}
-          />
-          {/* Proforma pipeline */}
-          {outstanding > 0 && (
-            <Link
-              href="/dashboard/proformas"
-              className="bg-white border border-gray-200 rounded-xl px-3 py-2 hover:border-gray-300 transition-colors"
-            >
-              <div className="text-[9px] font-black uppercase tracking-widest text-gray-400">Açık Proformalar</div>
-              <div className="text-sm font-black tabular-nums text-primary-700 mt-0.5">{fmt(outstanding)}</div>
-              <div className="text-[9px] text-gray-400">{openProfs.length} adet bekliyor</div>
-            </Link>
-          )}
-        </div>
-      </div>
+      {/* ── FX Strip ─────────────────────────────────────────────────────────── */}
+      <FxWidget
+        initialFx={{
+          USD:        fxData.USD,
+          EUR:        fxData.EUR,
+          source:     fxData.source,
+          rate_date:  fxData.rate_date,
+          fetched_at: fxData.fetched_at,
+        }}
+      />
 
     </div>
   )
