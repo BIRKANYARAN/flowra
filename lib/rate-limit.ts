@@ -32,10 +32,12 @@ export interface RateLimitAdapter {
 // ── Built-in presets (shared across adapters) ─────────────────────────────────
 
 export const RATE_LIMIT_PRESETS: Record<string, RateLimitOptions> = {
-  auth:      { limit: 10,  windowMs: 60_000 },   // 10 req / min — brute force guard
-  pdf:       { limit: 20,  windowMs: 60_000 },   // 20 req / min — CPU-heavy
-  api_write: { limit: 60,  windowMs: 60_000 },   // 60 writes / min
-  api_read:  { limit: 300, windowMs: 60_000 },   // 300 reads / min
+  auth:      { limit: 10,  windowMs:  60_000 },   // 10 req / min — brute force guard
+  pdf:       { limit: 20,  windowMs:  60_000 },   // 20 req / min — CPU-heavy
+  api_write: { limit: 60,  windowMs:  60_000 },   // 60 writes / min
+  api_read:  { limit: 300, windowMs:  60_000 },   // 300 reads / min
+  export:    { limit: 3,   windowMs: 300_000 },   // 3 per 5 min — heavy JSON dump
+  backup:    { limit: 2,   windowMs: 300_000 },   // 2 per 5 min — storage write
 }
 
 // ── In-memory token bucket adapter (default) ─────────────────────────────────
@@ -84,6 +86,28 @@ let _adapter: RateLimitAdapter = new InMemoryAdapter()
  */
 export function setRateLimitAdapter(adapter: RateLimitAdapter): void {
   _adapter = adapter
+}
+
+// ── Helper: extract best-effort client identifier from a Next.js request ─────
+// Uses x-forwarded-for (set by Vercel's load balancer) as the primary key,
+// falling back to a per-user prefix when the userId is available.
+
+export function rateLimitKey(userId: string | null | undefined, req?: { headers: { get(name: string): string | null } }): string {
+  const ip = req?.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+  if (userId) return `u:${userId}`
+  if (ip)     return `ip:${ip}`
+  return 'anon'
+}
+
+// ── Helper: build a 429 Response body ────────────────────────────────────────
+export function rateLimitExceededResponse(result: RateLimitResult) {
+  return {
+    error:      'Too many requests',
+    code:       'RATE_LIMIT_EXCEEDED',
+    type:       'SECURITY',
+    reset_at:   new Date(result.resetAt).toISOString(),
+    remaining:  result.remaining,
+  }
 }
 
 // ── Public API (unchanged from callers' perspective) ─────────────────────────

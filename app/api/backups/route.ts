@@ -1,10 +1,12 @@
 // ── /api/backups — backup management (list & create) ──────────────────────────
+// POST is rate-limited: 2 backups per 5 minutes per user.
 
 export const dynamic = 'force-dynamic'
 
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
 import { resolveCompanyId } from '@/lib/resolve-company'
+import { rateLimit, rateLimitKey, rateLimitExceededResponse } from '@/lib/rate-limit'
 
 const BUCKET = 'backups'
 
@@ -24,7 +26,7 @@ const COMPANY_SCOPED_TABLES = [
 type CompanyScopedTable = typeof COMPANY_SCOPED_TABLES[number]
 
 // ── GET: list backup folders ──────────────────────────────────────────────────
-export async function GET() {
+export async function GET(_req: NextRequest) {
   try {
     const supabase = createClient()
     const { data: authData, error: authError } = await supabase.auth.getUser()
@@ -93,7 +95,7 @@ export async function GET() {
 }
 
 // ── POST: create a new backup ─────────────────────────────────────────────────
-export async function POST() {
+export async function POST(req: NextRequest) {
   try {
     const supabase = createClient()
     const { data: authData, error: authError } = await supabase.auth.getUser()
@@ -102,6 +104,16 @@ export async function POST() {
     }
 
     const uid = authData.user.id
+
+    // ── Rate limit: 2 backups per 5 minutes per user ──────────────────────────
+    const rl = rateLimit(rateLimitKey(uid, req), 'backup')
+    if (!rl.allowed) {
+      return NextResponse.json(rateLimitExceededResponse(rl), {
+        status: 429,
+        headers: { 'Retry-After': String(Math.ceil((rl.resetAt - Date.now()) / 1000)) },
+      })
+    }
+
     let companyId: string
     try { companyId = await resolveCompanyId(uid, supabase) }
     catch { return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED', type: 'SYSTEM' }, { status: 409 }) }

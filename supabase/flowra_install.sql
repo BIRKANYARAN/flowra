@@ -627,4 +627,269 @@ do $$ begin
     for all using (user_id = auth.uid());
 exception when duplicate_object then null;
 end $$;
-grant  execute on function create_partner_loan_expense to authenticated;
+
+-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+-- H. ROW LEVEL SECURITY — COMPANY ISOLATION
+-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+--
+-- DESIGN:
+--   • Every company-scoped table uses the same isolation pattern:
+--       company_id IN (SELECT company_id FROM company_members
+--                      WHERE user_id = auth.uid()
+--                        AND deleted_at IS NULL
+--                        AND accepted_at IS NOT NULL)
+--
+--   • A stable SECURITY DEFINER helper function is defined once and reused
+--     in all policies.  Postgres evaluates it once per query, not per row.
+--
+--   • Child tables (proforma_items, sale_items, etc.) are isolated by
+--     checking their parent row's company membership via EXISTS.
+--
+--   • All policy names are prefixed with "flowra_" to avoid collisions
+--     with any future Supabase auto-generated policies.
+--
+--   • All policy-create blocks use DO $$ BEGIN ... EXCEPTION WHEN
+--     duplicate_object THEN null; END $$; — safe to re-run (idempotent).
+--
+--   • company_members itself has a dual policy: a user may see all
+--     members of every company they belong to (needed for admin UI).
+-- ─────────────────────────────────────────────────────────────────────────────
+
+-- ── Helper: returns the set of company_ids accessible to the current user ────
+-- SECURITY DEFINER so it can read company_members without recursive RLS.
+-- stable = Postgres may cache the result within one query.
+create or replace function flowra_user_companies()
+  returns setof uuid
+  language sql
+  stable
+  security definer
+  set search_path = public
+as $$
+  select company_id
+  from   company_members
+  where  user_id      = auth.uid()
+    and  deleted_at   is null
+    and  accepted_at  is not null
+$$;
+
+grant execute on function flowra_user_companies to authenticated;
+
+-- ── Macro shorthand — used inline in each do-block below ─────────────────────
+-- Policy pattern for direct company_id column:
+--   USING (company_id IN (select flowra_user_companies()))
+-- Policy pattern for child tables (no direct company_id):
+--   USING (EXISTS (SELECT 1 FROM <parent> p WHERE p.id = <fk> AND p.company_id IN (select flowra_user_companies())))
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- DIRECT COMPANY-SCOPED TABLES
+-- ─────────────────────────────────────────────────────────────────────────────
+
+-- sales
+alter table sales enable row level security;
+do $$ begin
+  create policy "flowra_sales_company_isolation" on sales
+    for all using (company_id in (select flowra_user_companies()));
+exception when duplicate_object then null; end $$;
+
+-- expenses
+alter table expenses enable row level security;
+do $$ begin
+  create policy "flowra_expenses_company_isolation" on expenses
+    for all using (company_id in (select flowra_user_companies()));
+exception when duplicate_object then null; end $$;
+
+-- recurring_expenses
+alter table recurring_expenses enable row level security;
+do $$ begin
+  create policy "flowra_recurring_expenses_company_isolation" on recurring_expenses
+    for all using (company_id in (select flowra_user_companies()));
+exception when duplicate_object then null; end $$;
+
+-- products
+alter table products enable row level security;
+do $$ begin
+  create policy "flowra_products_company_isolation" on products
+    for all using (company_id in (select flowra_user_companies()));
+exception when duplicate_object then null; end $$;
+
+-- customers
+alter table customers enable row level security;
+do $$ begin
+  create policy "flowra_customers_company_isolation" on customers
+    for all using (company_id in (select flowra_user_companies()));
+exception when duplicate_object then null; end $$;
+
+-- stock_lots
+alter table stock_lots enable row level security;
+do $$ begin
+  create policy "flowra_stock_lots_company_isolation" on stock_lots
+    for all using (company_id in (select flowra_user_companies()));
+exception when duplicate_object then null; end $$;
+
+-- stock_movements
+alter table stock_movements enable row level security;
+do $$ begin
+  create policy "flowra_stock_movements_company_isolation" on stock_movements
+    for all using (company_id in (select flowra_user_companies()));
+exception when duplicate_object then null; end $$;
+
+-- proformas
+alter table proformas enable row level security;
+do $$ begin
+  create policy "flowra_proformas_company_isolation" on proformas
+    for all using (company_id in (select flowra_user_companies()));
+exception when duplicate_object then null; end $$;
+
+-- partners
+alter table partners enable row level security;
+do $$ begin
+  create policy "flowra_partners_company_isolation" on partners
+    for all using (company_id in (select flowra_user_companies()));
+exception when duplicate_object then null; end $$;
+
+-- partner_transactions
+alter table partner_transactions enable row level security;
+do $$ begin
+  create policy "flowra_partner_transactions_company_isolation" on partner_transactions
+    for all using (company_id in (select flowra_user_companies()));
+exception when duplicate_object then null; end $$;
+
+-- company_banks
+alter table company_banks enable row level security;
+do $$ begin
+  create policy "flowra_company_banks_company_isolation" on company_banks
+    for all using (company_id in (select flowra_user_companies()));
+exception when duplicate_object then null; end $$;
+
+-- tasks
+alter table tasks enable row level security;
+do $$ begin
+  create policy "flowra_tasks_company_isolation" on tasks
+    for all using (company_id in (select flowra_user_companies()));
+exception when duplicate_object then null; end $$;
+
+-- alerts
+alter table alerts enable row level security;
+do $$ begin
+  create policy "flowra_alerts_company_isolation" on alerts
+    for all using (company_id in (select flowra_user_companies()));
+exception when duplicate_object then null; end $$;
+
+-- audit_logs
+alter table audit_logs enable row level security;
+do $$ begin
+  create policy "flowra_audit_logs_company_isolation" on audit_logs
+    for all using (company_id in (select flowra_user_companies()));
+exception when duplicate_object then null; end $$;
+
+-- purchases
+alter table purchases enable row level security;
+do $$ begin
+  create policy "flowra_purchases_company_isolation" on purchases
+    for all using (company_id in (select flowra_user_companies()));
+exception when duplicate_object then null; end $$;
+
+-- user_settings (company-scoped configuration)
+alter table user_settings enable row level security;
+do $$ begin
+  create policy "flowra_user_settings_company_isolation" on user_settings
+    for all using (company_id in (select flowra_user_companies()));
+exception when duplicate_object then null; end $$;
+
+-- fx_rates (global but authenticated-only — prevent unauthenticated reads)
+alter table fx_rates enable row level security;
+do $$ begin
+  create policy "flowra_fx_rates_authenticated_read" on fx_rates
+    for select using (auth.uid() is not null);
+exception when duplicate_object then null; end $$;
+
+-- interest_rates (global reference data — authenticated read)
+alter table interest_rates enable row level security;
+do $$ begin
+  create policy "flowra_interest_rates_authenticated_read" on interest_rates
+    for select using (auth.uid() is not null);
+exception when duplicate_object then null; end $$;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- company_members — SPECIAL POLICY
+-- A user may see and manage all membership rows within any company they belong to.
+-- This enables the admin users page (/dashboard/admin/users).
+-- ─────────────────────────────────────────────────────────────────────────────
+alter table company_members enable row level security;
+do $$ begin
+  create policy "flowra_company_members_isolation" on company_members
+    for all using (
+      company_id in (select flowra_user_companies())
+      or user_id = auth.uid()   -- always see own memberships (even pending)
+    );
+exception when duplicate_object then null; end $$;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- CHILD TABLES — isolated via parent company membership
+-- These tables have no direct company_id; isolation is enforced by their parent.
+-- ─────────────────────────────────────────────────────────────────────────────
+
+-- sale_items → sales
+alter table sale_items enable row level security;
+do $$ begin
+  create policy "flowra_sale_items_company_isolation" on sale_items
+    for all using (
+      exists (
+        select 1 from sales s
+        where  s.id = sale_items.sale_id
+          and  s.company_id in (select flowra_user_companies())
+      )
+    );
+exception when duplicate_object then null; end $$;
+
+-- sale_item_allocations → sales
+alter table sale_item_allocations enable row level security;
+do $$ begin
+  create policy "flowra_sale_item_allocations_company_isolation" on sale_item_allocations
+    for all using (
+      exists (
+        select 1 from sales s
+        where  s.id = sale_item_allocations.sale_id
+          and  s.company_id in (select flowra_user_companies())
+      )
+    );
+exception when duplicate_object then null; end $$;
+
+-- proforma_items → proformas
+alter table proforma_items enable row level security;
+do $$ begin
+  create policy "flowra_proforma_items_company_isolation" on proforma_items
+    for all using (
+      exists (
+        select 1 from proformas p
+        where  p.id = proforma_items.proforma_id
+          and  p.company_id in (select flowra_user_companies())
+      )
+    );
+exception when duplicate_object then null; end $$;
+
+-- purchase_items → purchases
+alter table purchase_items enable row level security;
+do $$ begin
+  create policy "flowra_purchase_items_company_isolation" on purchase_items
+    for all using (
+      exists (
+        select 1 from purchases p
+        where  p.id = purchase_items.purchase_id
+          and  p.company_id in (select flowra_user_companies())
+      )
+    );
+exception when duplicate_object then null; end $$;
+
+-- purchase_costs → purchases
+alter table purchase_costs enable row level security;
+do $$ begin
+  create policy "flowra_purchase_costs_company_isolation" on purchase_costs
+    for all using (
+      exists (
+        select 1 from purchases p
+        where  p.id = purchase_costs.purchase_id
+          and  p.company_id in (select flowra_user_companies())
+      )
+    );
+exception when duplicate_object then null; end $$;

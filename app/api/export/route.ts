@@ -1,13 +1,15 @@
 // ── /api/export — full company data export as JSON ────────────────────────────
 // Returns a JSON blob the user can save as a backup.
+// Rate-limited: 3 requests per 5 minutes per user.
 
 export const dynamic = 'force-dynamic'
 
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
 import { resolveCompanyId } from '@/lib/resolve-company'
+import { rateLimit, rateLimitKey, rateLimitExceededResponse } from '@/lib/rate-limit'
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     const supabase = createClient()
     const { data: authData, error: authError } = await supabase.auth.getUser()
@@ -15,6 +17,15 @@ export async function GET() {
     const user = authData.user
 
     const uid = user.id
+
+    // ── Rate limit: 3 exports per 5 minutes per user ─────────────────────────
+    const rl = rateLimit(rateLimitKey(uid, req), 'export')
+    if (!rl.allowed) {
+      return NextResponse.json(rateLimitExceededResponse(rl), {
+        status: 429,
+        headers: { 'Retry-After': String(Math.ceil((rl.resetAt - Date.now()) / 1000)) },
+      })
+    }
 
     let companyId: string
     try { companyId = await resolveCompanyId(uid, supabase) }
