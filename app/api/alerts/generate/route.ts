@@ -107,14 +107,15 @@ export async function POST(_req: NextRequest) {
       .eq('is_active', true)
       .gt('stock_alert_qty', 0),
 
-    // D. Outstanding sales (unpaid/partial) — for cashflow projection input
+    // D. Outstanding sales (unpaid/partial) — reduced to total_try for sum only.
+    //    No display pagination needed; ceiling 2000 covers realistic company scale.
     supabase
       .from('sales')
       .select('total_try')
       .eq('company_id', companyId)
       .is('deleted_at', null)
       .in('payment_status', ['unpaid', 'partial'])
-      .limit(200),
+      .limit(2000),
 
     // E. Active recurring expenses — for monthly commitment (projected burn)
     //    monthly×1, quarterly×1/3, yearly×1/12

@@ -222,14 +222,25 @@ export async function getCashflowTimeline(
     if (m.receivable > 0 && m.collected === 0)
       reasons.push(`Tahsilat yok — ${_fmtPressure(m.receivable)} TL alacak bekliyor`)
 
-    const severity: PressureSignal['severity'] =
-      m.cumulative < 0 ? 'critical' : m.net < 0 ? 'warn' : 'ok'
+    const severity: PressureSignal['severity'] = cashflowPressureSeverity(m.net, m.cumulative)
 
     if (severity !== 'ok') pressureSignals.push({ month: m.month, severity, reasons })
     if (m.cumulative < 0 && !firstDangerMonth) firstDangerMonth = m.month
   }
 
   return { months: result, pressureSignals, firstDangerMonth, totalReceivables: r2(totalReceivables) }
+}
+
+/**
+ * Pure pressure severity rule:
+ *   cumulative < 0 → 'critical' (overall cash depleted)
+ *   net < 0        → 'warn'     (this month burns more than it earns)
+ *   otherwise      → 'ok'
+ */
+export function cashflowPressureSeverity(net: number, cumulative: number): PressureSignal['severity'] {
+  if (cumulative < 0) return 'critical'
+  if (net < 0)        return 'warn'
+  return 'ok'
 }
 
 function _fmtPressure(n: number): string {
@@ -708,13 +719,14 @@ export interface QuarterlyReportResult {
 const CORPORATE_TAX_RATE = 0.25
 
 /** Geçici Vergi due dates: Q1→May 17, Q2→Aug 17, Q3→Nov 17 */
-function geciciDueDate(year: number, q: 1 | 2 | 3): string {
+/** Turkish Geçici Vergi due date: Q1→May17, Q2→Aug17, Q3→Nov17 */
+export function geciciDueDate(year: number, q: 1 | 2 | 3): string {
   const monthStr = q === 1 ? '05' : q === 2 ? '08' : '11'
   return `${year}-${monthStr}-17`
 }
 
-/** Quarter period boundaries */
-function quarterPeriod(year: number, q: 1 | 2 | 3 | 4): CorePeriod {
+/** Quarter period boundaries — from first day to last day inclusive */
+export function quarterPeriod(year: number, q: 1 | 2 | 3 | 4): CorePeriod {
   const starts = ['01', '04', '07', '10']
   const ends   = ['03', '06', '09', '12']
   const lastDays: Record<string, string> = { '03': '31', '06': '30', '09': '30', '12': '31' }

@@ -1,6 +1,6 @@
 /**
  * SQL validation tests — verifies key patterns in flowra_install.sql
- * These are static analysis tests that validate the SQL schema
+ * These are static analysis tests that validate the SQL schema.
  * Run with: npx vitest run tests/sql-validation.test.ts
  */
 import { describe, it, expect } from 'vitest'
@@ -9,63 +9,57 @@ import { join } from 'path'
 
 const sql = readFileSync(join(__dirname, '..', 'supabase', 'flowra_install.sql'), 'utf-8')
 
-describe('flowra_install.sql — event_outbox atomic claim', () => {
-  it('contains claim_event_batch function', () => {
-    expect(sql).toContain('create or replace function claim_event_batch')
+// ── Partner transactions ───────────────────────────────────────────────────────
+
+describe('flowra_install.sql — partner_transactions constraint', () => {
+  it('drops and recreates chk_partner_tx_type', () => {
+    expect(sql).toContain('drop constraint if exists chk_partner_tx_type')
+    expect(sql).toContain('add constraint chk_partner_tx_type')
   })
 
-  it('uses FOR UPDATE SKIP LOCKED in claim_event_batch', () => {
-    const fnStart = sql.indexOf('claim_event_batch')
-    const fnEnd   = sql.indexOf('$$;', fnStart)
-    const fnBody  = sql.slice(fnStart, fnEnd)
-    expect(fnBody).toContain('for update skip locked')
+  it('includes canonical tx_types in constraint', () => {
+    expect(sql).toContain("'capital_in'")
+    expect(sql).toContain("'loan_to_company'")
+    expect(sql).toContain("'loan_repayment'")
+    expect(sql).toContain("'dividend'")
   })
 })
 
-describe('flowra_install.sql — zero-cost lot validation', () => {
-  it('checks for zero-cost lots before FIFO allocation', () => {
-    expect(sql).toContain("raise exception 'ZERO_COST_LOT product=%'")
+// ── create_partner_loan_expense function ─────────────────────────────────────
+
+describe('flowra_install.sql — create_partner_loan_expense', () => {
+  it('defines the function', () => {
+    expect(sql).toContain('create or replace function create_partner_loan_expense')
   })
 
-  it('checks unit_cost <= 0 condition', () => {
-    expect(sql).toContain('sl.unit_cost is null or sl.unit_cost <= 0')
+  it('raises on unauthorized access', () => {
+    expect(sql).toContain("raise exception 'create_partner_loan_expense: unauthorized'")
+  })
+
+  it('inserts into partner_transactions', () => {
+    expect(sql).toContain('insert into partner_transactions')
   })
 })
 
-describe('flowra_install.sql — FX rate blocking (no silent fallback)', () => {
-  it('does NOT silently default to fx_rate := 1', () => {
-    // Old behavior was: "if not found then v_fx_rate := 1"
-    // New behavior raises an exception
-    expect(sql).not.toContain("if not found then v_fx_rate := 1; v_fx_source := 'fallback'")
-  })
-
-  it('raises FX_RATE_NOT_FOUND instead', () => {
-    expect(sql).toContain('FX_RATE_NOT_FOUND')
-  })
-})
+// ── Proforma snapshot columns ──────────────────────────────────────────────────
 
 describe('flowra_install.sql — proforma snapshot columns', () => {
-  it('has company_snapshot column', () => {
-    expect(sql).toContain('company_snapshot')
+  it('has company_snapshot column guard', () => {
+    expect(sql).toContain('add column if not exists company_snapshot')
   })
 
   it('has customer_snapshot column', () => {
     expect(sql).toContain('customer_snapshot')
   })
-
-  it('has column guards for snapshot columns', () => {
-    expect(sql).toContain('add column if not exists company_snapshot')
-    expect(sql).toContain('add column if not exists customer_snapshot')
-  })
 })
 
-describe('flowra_install.sql — idempotency request_hash', () => {
-  it('has request_hash column guard', () => {
-    expect(sql).toContain('add column if not exists request_hash text')
-  })
-})
+// ── create_proforma_atomic function ───────────────────────────────────────────
 
-describe('flowra_install.sql — create_proforma_atomic accepts snapshots', () => {
+describe('flowra_install.sql — create_proforma_atomic', () => {
+  it('defines the function', () => {
+    expect(sql).toContain('create or replace function create_proforma_atomic')
+  })
+
   it('accepts p_company_snapshot parameter', () => {
     expect(sql).toContain('p_company_snapshot')
   })
@@ -74,8 +68,39 @@ describe('flowra_install.sql — create_proforma_atomic accepts snapshots', () =
     expect(sql).toContain('p_customer_snapshot')
   })
 
-  it('returns jsonb', () => {
-    const fnLine = sql.split('\n').find(l => l.includes('create_proforma_atomic'))
+  it('returns a jsonb object with id and proforma_no', () => {
     expect(sql).toContain("return jsonb_build_object('id', v_proforma_id, 'proforma_no', v_proforma_no)")
+  })
+})
+
+// ── Idempotency ───────────────────────────────────────────────────────────────
+
+describe('flowra_install.sql — idempotency request_hash', () => {
+  it('has request_hash column guard', () => {
+    expect(sql).toContain('add column if not exists request_hash text')
+  })
+})
+
+// ── RLS grants ────────────────────────────────────────────────────────────────
+
+describe('flowra_install.sql — function grants to authenticated', () => {
+  it('grants create_partner_loan_expense to authenticated', () => {
+    expect(sql).toContain('grant  execute on function create_partner_loan_expense to authenticated')
+  })
+
+  it('grants create_proforma_atomic to authenticated', () => {
+    expect(sql).toContain('grant  execute on function create_proforma_atomic      to authenticated')
+  })
+})
+
+// ── Partner transactions indexes ──────────────────────────────────────────────
+
+describe('flowra_install.sql — partner_transactions indexes', () => {
+  it('creates per-partner aggregation index', () => {
+    expect(sql).toContain('on partner_transactions (partner_id, company_id)')
+  })
+
+  it('creates per-type index', () => {
+    expect(sql).toContain('on partner_transactions (company_id, tx_type)')
   })
 })

@@ -32,7 +32,9 @@ export async function GET() {
       supabase.from('proformas').select('*, proforma_items(*)').eq('company_id', companyId).is('deleted_at', null),
       supabase.from('sales').select('*, sale_items(*)').eq('company_id', companyId).is('deleted_at', null),
       supabase.from('expenses').select('*').eq('company_id', companyId).is('deleted_at', null),
-      supabase.from('stock_movements').select('*').eq('company_id', companyId).order('created_at', { ascending: false }).limit(500),
+      // Full backup export — ceiling 2000 covers realistic company history.
+      // For very large inventories the user can run multiple exports by date range.
+      supabase.from('stock_movements').select('*').eq('company_id', companyId).order('created_at', { ascending: false }).limit(2000),
     ])
 
     const payload = {

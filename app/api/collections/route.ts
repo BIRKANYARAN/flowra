@@ -25,14 +25,20 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const statusFilter = searchParams.get('status') ?? 'all'
 
+  // ── Pagination params ────────────────────────────────────────────────────
+  const PAGE_SIZE = Math.min(Math.max(Number(searchParams.get('limit') ?? 50), 1), 200)
+  const page      = Math.max(Number(searchParams.get('page') ?? 1), 1)
+  const rangeFrom = (page - 1) * PAGE_SIZE
+  const rangeTo   = rangeFrom + PAGE_SIZE - 1
+
   try {
     let query = supabase
       .from('sales')
-      .select('id, customer_name, currency, total, total_try, nominal_profit, created_at, due_date, amount_paid, proforma_id, payment_status, paid_at, proformas(proforma_no)')
+      .select('id, customer_name, currency, total, total_try, nominal_profit, created_at, due_date, amount_paid, proforma_id, payment_status, paid_at, proformas(proforma_no)', { count: 'exact' })
       .eq('company_id', companyId)
       .is('deleted_at', null)
       .order('created_at', { ascending: false })
-      .limit(200)
+      .range(rangeFrom, rangeTo)
 
     // 'unpaid' tab = all non-paid rows: unpaid + partial + overdue
     if (statusFilter === 'unpaid') {
@@ -42,7 +48,7 @@ export async function GET(req: NextRequest) {
     }
     // statusFilter === 'all' → no filter, return everything
 
-    const { data, error } = await query
+    const { data, error, count } = await query
 
     if (error) {
       // payment_status column may not exist on older deployments — fall back
@@ -54,16 +60,17 @@ export async function GET(req: NextRequest) {
           .eq('company_id', companyId)
           .is('deleted_at', null)
           .order('created_at', { ascending: false })
-          .limit(200)
+          .range(rangeFrom, rangeTo)
 
-        return NextResponse.json(
-          (fallback ?? []).map(r => ({ ...r, payment_status: 'unpaid', paid_at: null }))
-        )
+        return NextResponse.json({
+          data: (fallback ?? []).map(r => ({ ...r, payment_status: 'unpaid', paid_at: null })),
+          page, page_size: PAGE_SIZE, total: null,
+        })
       }
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    return NextResponse.json(data ?? [])
+    return NextResponse.json({ data: data ?? [], page, page_size: PAGE_SIZE, total: count ?? null })
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 })
   }

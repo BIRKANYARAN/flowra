@@ -147,11 +147,16 @@ async function _middlewareInner(request: NextRequest): Promise<NextResponse> {
     'Strict-Transport-Security',
     'max-age=63072000; includeSubDomains; preload',
   )
+  const isDev = process.env.NODE_ENV === 'development'
   response.headers.set(
     'Content-Security-Policy',
     [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",   // Next.js requires unsafe-eval in dev
+      // 'unsafe-eval' is required only in development for Next.js hot-module reload.
+      // Production omits it — eval-based code execution is blocked.
+      isDev
+        ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
+        : "script-src 'self' 'unsafe-inline'",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "font-src 'self'",

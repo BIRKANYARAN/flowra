@@ -157,7 +157,7 @@ describe('computeCorporateTax()', () => {
       rate_percent: 25,
     })
     expect(r.tax_try).toBe(8333.33)
-    expect(r.net_after_tax_try).toBe(24999.99) // 33333.33 - 8333.33 - possible epsilon
+    expect(r.net_after_tax_try).toBe(25000) // round2(33333.33 - 8333.33) = round2(25000.00) = 25000
     // Verify: matrah - tax = net (no rounding gap larger than 0.01)
     expect(Math.abs(r.matrah_try - r.tax_try - r.net_after_tax_try)).toBeLessThanOrEqual(0.01)
   })
@@ -313,21 +313,21 @@ describe('resolveDeductibility()', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe('resolveExpenseType()', () => {
-  it('operating categories', () => {
+  it('operational categories', () => {
     for (const cat of ['general', 'rent', 'salary', 'utilities', 'marketing', 'logistics', 'software', 'other'] as const) {
-      expect(resolveExpenseType(cat)).toBe('operating')
+      expect(resolveExpenseType(cat)).toBe('operational')
     }
   })
   it('capital: equipment', () => { expect(resolveExpenseType('equipment')).toBe('capital') })
   it('tax: tax',           () => { expect(resolveExpenseType('tax')).toBe('tax') })
   it('financial: interest',() => { expect(resolveExpenseType('interest')).toBe('financial') })
-  it('distribution: dividend', () => { expect(resolveExpenseType('dividend')).toBe('distribution') })
-  it('loan: principal + partner_loan', () => {
-    expect(resolveExpenseType('principal')).toBe('loan')
-    expect(resolveExpenseType('partner_loan')).toBe('loan')
+  it('dividend: dividend', () => { expect(resolveExpenseType('dividend')).toBe('dividend') })
+  it('loan types: principal → loan_repayment, partner_loan → partner_financing', () => {
+    expect(resolveExpenseType('principal')).toBe('loan_repayment')
+    expect(resolveExpenseType('partner_loan')).toBe('partner_financing')
   })
-  it('unknown → defaults to operating', () => {
-    expect(resolveExpenseType('something_new')).toBe('operating')
+  it('unknown → defaults to operational', () => {
+    expect(resolveExpenseType('something_new')).toBe('operational')
   })
 })
 
