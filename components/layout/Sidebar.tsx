@@ -20,20 +20,20 @@ const BASE_NAV: NavEntry[] = [
   {
     group: 'Genel Durum',
     items: [
-      { href: '/dashboard',     label: 'Dashboard', icon: 'dashboard', exact: true },
-      { href: '/dashboard/ceo', label: 'CEO Özeti', icon: 'ceo'                    },
+      { href: '/dashboard', label: 'Dashboard', icon: 'dashboard', exact: true },
     ],
   },
   // ── FİNANS ─────────────────────────────────────────────────────────────────
   {
     group: 'Finans',
     items: [
+      // Finansal Analitik = FinanceNavTabs hub entry point
+      // (CEO Özeti, Cashflow, Vergi, Tahsilat Analizi, Ortak Finansmanı tabs are inside)
       { href: '/dashboard/analytics',   label: 'Finansal Analitik', icon: 'analytics'   },
       { href: '/dashboard/collections', label: 'Tahsilatlar',       icon: 'collections' },
       { href: '/dashboard/expenses',    label: 'Giderler',          icon: 'expenses'    },
       { href: '/dashboard/partners',    label: 'Ortaklar',          icon: 'partners'    },
       { href: '/dashboard/simulation',  label: 'Simülasyon',        icon: 'simulation'  },
-      { href: '/dashboard/tax',         label: 'Vergi',             icon: 'tax'         },
     ],
   },
   // ── SATIŞ ──────────────────────────────────────────────────────────────────
@@ -123,7 +123,7 @@ export function Sidebar({ companyName, logoUrl, userInitials, userName, userEmai
             </div>
             <div className="min-w-0">
               <div className="font-black text-sm leading-tight truncate">{displayName}</div>
-              <div className="text-[10px] text-gray-400 uppercase tracking-wide">ERP</div>
+              <div className="text-[10px] text-gray-400 uppercase tracking-wide">FOS</div>
             </div>
           </div>
         ) : (

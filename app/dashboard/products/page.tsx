@@ -208,12 +208,18 @@ export default function ProductsPage() {
           <h1 className="text-2xl font-black">Ürünler</h1>
           <p className="text-sm text-gray-500 mt-0.5">{list.length} ürün</p>
         </div>
-        {!showForm && (
-          <button onClick={openNew}
-            className="bg-primary-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-primary-700 transition-colors">
-            + Yeni Ürün
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          <a href="/dashboard/catalog"
+            className="border border-gray-200 text-gray-600 px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-colors">
+            Katalog Görünümü →
+          </a>
+          {!showForm && (
+            <button onClick={openNew}
+              className="bg-primary-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-primary-700 transition-colors">
+              + Yeni Ürün
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Create / Edit form */}

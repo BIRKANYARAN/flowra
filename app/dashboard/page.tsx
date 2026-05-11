@@ -332,7 +332,7 @@ export default async function DashboardPage() {
       const { count } = await supabase
         .from('alerts')
         .select('id', { count: 'exact', head: true })
-        .eq('actor_user_id', uid)
+        .eq('company_id', companyId)   // company-scoped, not per-user
         .eq('is_read', false)
       return count ?? 0
     }, 0),

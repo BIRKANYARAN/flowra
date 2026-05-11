@@ -66,12 +66,20 @@ export default async function ProformasPage() {
           title="Proformalar"
           sub={`${list.length} kayıt`}
           action={
-            <Link
-              href="/dashboard/proformas/new"
-              className="inline-flex items-center gap-1.5 bg-primary-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-primary-700 transition-colors"
-            >
-              + Yeni Proforma
-            </Link>
+            <div className="flex items-center gap-2">
+              <Link
+                href="/dashboard/sales-flow"
+                className="inline-flex items-center gap-1.5 border border-gray-200 text-gray-600 px-4 py-2 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-colors"
+              >
+                Pipeline →
+              </Link>
+              <Link
+                href="/dashboard/proformas/new"
+                className="inline-flex items-center gap-1.5 bg-primary-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-primary-700 transition-colors"
+              >
+                + Yeni Proforma
+              </Link>
+            </div>
           }
         />
 

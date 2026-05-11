@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { redirect } from 'next/navigation'
 
-// Sipariş Operasyonları is not yet implemented — redirect to stocks
+// /dashboard/orders has been removed. Redirect to the correct destination.
 export default function OrdersPage() {
   redirect('/dashboard/stocks')
 }
