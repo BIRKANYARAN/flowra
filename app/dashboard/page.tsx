@@ -23,7 +23,6 @@ export const dynamic = 'force-dynamic'
 import { createClient }              from '@/lib/supabase-server'
 import { redirect }                  from 'next/navigation'
 import Link                          from 'next/link'
-import { cookies, headers }          from 'next/headers'
 import { FxWidget }                  from '@/components/layout/FxWidget'
 import { CORPORATE_TAX_RATE_TR }     from '@/lib/services/finance-rules'
 import { fetchTcmbWithFallback }     from '@/lib/fx'
@@ -34,6 +33,9 @@ import { Label }                     from '@/components/ui'
 import { CashflowChart }             from '@/components/dashboard/CashflowChart'
 import { resolveCompanyId }          from '@/lib/resolve-company'
 import { safeSystemQuery }           from '@/lib/admin-db'
+import { FinanceService }            from '@/lib/services/finance.service'
+import { PartnerService }            from '@/lib/services/partner.service'
+import type { FinancialSummary }     from '@/types'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -77,30 +79,6 @@ const CASH_EXCLUDED_EXPENSE_TYPES = new Set([
   'dividend',
   'internal_transfer',
 ])
-
-// ── API response shapes ────────────────────────────────────────────────────────
-// /api/financial-summary flat response (field names differ from FinancialSummary)
-interface FinApiRes {
-  revenue:                 number
-  cost:                    number
-  gross_profit:            number
-  expenses_total:          number
-  deductible_expenses:     number
-  non_deductible_expenses: number
-  matrah:                  number
-  tax_rate:                number
-  tax:                     number
-  net_after_tax:           number
-}
-// /api/tax-summary nested response
-interface TaxApiRes {
-  vat: {
-    sales_vat:    number
-    purchase_vat: number
-    expense_vat:  number
-    net_vat:      number
-  }
-}
 
 // ── Safe wrapper ───────────────────────────────────────────────────────────────
 
@@ -264,19 +242,10 @@ export default async function DashboardPage() {
     redirect('/auth')
   }
 
-  // ── Internal API helper — forwards session cookies so Supabase auth works ────
-  const cookieHeader = cookies().getAll().map(c => `${c.name}=${c.value}`).join('; ')
-  const reqHeaders   = headers()
-  const host         = reqHeaders.get('x-forwarded-host') ?? reqHeaders.get('host') ?? 'localhost:3000'
-  const proto        = reqHeaders.get('x-forwarded-proto') ?? 'http'
-  const base         = `${proto}://${host}`
-  const apiFetch     = (path: string) =>
-    fetch(`${base}${path}`, { headers: { Cookie: cookieHeader }, cache: 'no-store' })
-
   // ── Parallel data fetching ────────────────────────────────────────────────────
+  // No self-HTTP calls — FinanceService and PartnerService are called directly.
   const [
-    finRes,              // /api/financial-summary — P&L
-    taxRes,              // /api/tax-summary       — VAT + corporate tax
+    finRes,              // FinancialSummary — P&L + VAT (single service call)
     openProfs,           // outstanding proformas (sent/accepted, not yet converted)
     stockValue,          // stock inventory value at FIFO cost
     alertCount,          // unread system alerts count
@@ -290,21 +259,11 @@ export default async function DashboardPage() {
     allTimePaidOpData,      // ALL-TIME paid operational expenses — for true cash position
   ] = await Promise.all([
 
-    sq(async (): Promise<FinApiRes | null> => {
-      const r = await apiFetch(`/api/financial-summary?from=${from}&to=${to}`)
-      if (!r.ok) throw new Error(`financial-summary ${r.status}`)
-      const d: unknown = await r.json()
-      if (!d || typeof d !== 'object') throw new Error('Invalid financial-summary response')
-      return d as FinApiRes
-    }, null),
-
-    sq(async (): Promise<TaxApiRes | null> => {
-      const r = await apiFetch(`/api/tax-summary?from=${from}&to=${to}`)
-      if (!r.ok) throw new Error(`tax-summary ${r.status}`)
-      const d: unknown = await r.json()
-      if (!d || typeof d !== 'object' || !('vat' in (d as object))) throw new Error('Invalid tax-summary response')
-      return d as TaxApiRes
-    }, null),
+    // FinancialSummary already includes VAT (sales_vat_try, net_vat_try, etc.)
+    // One service call replaces both /api/financial-summary and /api/tax-summary.
+    sq(() => FinanceService.getFinancialSummary(
+      uid, companyId, { from, to }, { corporate_tax_rate: CORPORATE_TAX_RATE_TR },
+    ), null as FinancialSummary | null),
 
     sq(async () => {
       const { data } = await supabase
@@ -428,22 +387,23 @@ export default async function DashboardPage() {
     }, [] as Array<{ amount_try: number; expense_type: string | null }>),
   ])
 
-  // ── Map API responses → local fs shape (keeps all JSX references unchanged) ──
+  // ── Map FinancialSummary → local fs shape ─────────────────────────────────────
+  // FinancialSummary now includes all P&L + VAT fields. No self-HTTP, no mapping.
   const fs = {
-    revenue_try:                 Number(finRes?.revenue                 ?? 0),
-    cost_try:                    Number(finRes?.cost                    ?? 0),
-    gross_profit_try:            Number(finRes?.gross_profit            ?? 0),
-    expenses_total_try:          Number(finRes?.expenses_total          ?? 0),
-    deductible_expenses_try:     Number(finRes?.deductible_expenses     ?? 0),
-    non_deductible_expenses_try: Number(finRes?.non_deductible_expenses ?? 0),
-    matrah_try:                  Number(finRes?.matrah                  ?? 0),
-    corporate_tax_rate:          Number(finRes?.tax_rate                ?? CORPORATE_TAX_RATE_TR),
-    corporate_tax_try:           Number(finRes?.tax                     ?? 0),
-    net_after_tax_try:           Number(finRes?.net_after_tax           ?? 0),
-    sales_vat_try:               Number(taxRes?.vat?.sales_vat          ?? 0),
-    purchase_vat_try:            Number(taxRes?.vat?.purchase_vat       ?? 0),
-    expense_vat_try:             Number(taxRes?.vat?.expense_vat        ?? 0),
-    net_vat_try:                 Number(taxRes?.vat?.net_vat            ?? 0),
+    revenue_try:                 Number(finRes?.revenue_try                 ?? 0),
+    cost_try:                    Number(finRes?.cost_try                    ?? 0),
+    gross_profit_try:            Number(finRes?.gross_profit_try            ?? 0),
+    expenses_total_try:          Number(finRes?.expenses_total_try          ?? 0),
+    deductible_expenses_try:     Number(finRes?.deductible_expenses_try     ?? 0),
+    non_deductible_expenses_try: Number(finRes?.non_deductible_expenses_try ?? 0),
+    matrah_try:                  Number(finRes?.matrah_try                  ?? 0),
+    corporate_tax_rate:          Number(finRes?.corporate_tax_rate          ?? CORPORATE_TAX_RATE_TR),
+    corporate_tax_try:           Number(finRes?.corporate_tax_try           ?? 0),
+    net_after_tax_try:           Number(finRes?.net_after_tax_try           ?? 0),
+    sales_vat_try:               Number(finRes?.sales_vat_try               ?? 0),
+    purchase_vat_try:            Number(finRes?.purchase_vat_try            ?? 0),
+    expense_vat_try:             Number(finRes?.expense_vat_try             ?? 0),
+    net_vat_try:                 Number(finRes?.net_vat_try                 ?? 0),
   }
 
   // ── Derived values ────────────────────────────────────────────────────────────
@@ -481,16 +441,13 @@ export default async function DashboardPage() {
     unpaidExpenses,                           // all outstanding obligations (already all-time)
   })
 
-  // ── Partner equalization (uses cash-based distributable, not accounting profit) ──
+  // ── Partner equalization (direct service call — no self-HTTP) ─────────────────
   const distributableAmount = cashDistributable
   let equalization: EqResult = ZERO_EQ
   try {
-    const eqRes = await apiFetch(`/api/partners/equalization?distributable=${distributableAmount}`)
-    if (eqRes.ok) {
-      const eqData: unknown = await eqRes.json()
-      if (eqData && typeof eqData === 'object' && Array.isArray((eqData as Record<string, unknown>).entries)) {
-        equalization = eqData as EqResult
-      }
+    const eqResult = await PartnerService.calculateEqualization(uid, companyId, distributableAmount)
+    if (eqResult && Array.isArray(eqResult.entries)) {
+      equalization = eqResult as EqResult
     }
   } catch {
     // non-fatal — equalization defaults to ZERO_EQ

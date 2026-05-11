@@ -10,73 +10,17 @@ export const dynamic = 'force-dynamic'
 //   4. Runway Forecast       — 12-month monthly cash projection bar chart
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { createClient }     from '@/lib/supabase-server'
-import { redirect }         from 'next/navigation'
-import { resolveCompanyId } from '@/lib/resolve-company'
-import { cookies, headers } from 'next/headers'
-import Link                 from 'next/link'
-import { FinanceNavTabs }   from '@/components/dashboard/FinanceNavTabs'
+import { createClient }       from '@/lib/supabase-server'
+import { redirect }           from 'next/navigation'
+import { resolveCompanyId }   from '@/lib/resolve-company'
+import Link                   from 'next/link'
+import { FinanceNavTabs }     from '@/components/dashboard/FinanceNavTabs'
+import { getCfoMetrics, getRunwayForecast } from '@/lib/finance/financial-core'
+import type { CfoMetrics }              from '@/lib/finance/cfo-metrics'
+import type { RunwayForecastResponse }  from '@/lib/finance/financial-core'
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-
-interface CfoMetrics {
-  cash: {
-    true_cash_position:   number
-    operational_cash:     number
-    restricted_cash:      number
-    distributable_cash:   number
-  }
-  burn: {
-    monthly_burn_rate:    number
-    runway_months:        number | null
-    runway_days:          number | null
-    cash_exhaustion_date: string | null
-  }
-  receivables: {
-    total_outstanding:    number
-    overdue_30d:          number
-    overdue_60d:          number
-    overdue_90d:          number
-    collection_rate_pct:  number
-  }
-  tax: {
-    kdv_net:                  number
-    corporate_tax_estimate:   number
-    total_fiscal_obligation:  number
-  }
-  partner: {
-    total_equity:   number
-    total_loans:    number
-    total_dividends: number
-    company_owes:   number
-  }
-  stock: {
-    fifo_value:      number
-    coverage_months: number | null
-  }
-}
-
-interface RunwayMonth {
-  month:        number
-  month_label:  string
-  cash_in:      number
-  cash_out:     number
-  end_cash:     number
-  is_exhausted: boolean
-}
-
-interface RunwayForecast {
-  months:           RunwayMonth[]
-  exhaustion_month: number | null
-  exhaustion_date:  string | null
-  safe_months:      number
-  inputs: {
-    starting_cash:     number
-    monthly_burn:      number
-    outstanding_total: number
-    horizon_months:    number
-  }
-}
+// CfoMetrics → @/lib/finance/cfo-metrics (canonical)
+// RunwayForecastResponse → @/lib/finance/financial-core (canonical)
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -168,23 +112,16 @@ export default async function CeoDashboardPage() {
     redirect('/auth')
   }
 
-  try { await resolveCompanyId(uid!, supabase) }
-  catch { redirect('/auth') }
-
   const now   = new Date()
   const today = now.toISOString().slice(0, 10)
   const year  = now.getFullYear()
   const mon   = String(now.getMonth() + 1).padStart(2, '0')
   const from  = `${year}-${mon}-01`
 
-  const cookieHeader = cookies().getAll().map(c => `${c.name}=${c.value}`).join('; ')
-  const reqHeaders   = headers()
-  const host         = reqHeaders.get('x-forwarded-host') ?? reqHeaders.get('host') ?? 'localhost:3000'
-  const proto        = reqHeaders.get('x-forwarded-proto') ?? 'http'
-  const base         = `${proto}://${host}`
-
-  const apiFetch = (path: string) =>
-    fetch(`${base}${path}`, { headers: { Cookie: cookieHeader }, cache: 'no-store' })
+  // ── Direct service calls — no self-HTTP, no cookie forwarding ────────────────
+  let companyId: string
+  try { companyId = await resolveCompanyId(uid!, supabase) }
+  catch { redirect('/auth') }
 
   const ZERO_METRICS: CfoMetrics = {
     cash:        { true_cash_position: 0, operational_cash: 0, restricted_cash: 0, distributable_cash: 0 },
@@ -194,23 +131,14 @@ export default async function CeoDashboardPage() {
     partner:     { total_equity: 0, total_loans: 0, total_dividends: 0, company_owes: 0 },
     stock:       { fifo_value: 0, coverage_months: null },
   }
-  const ZERO_RUNWAY: RunwayForecast = {
+  const ZERO_RUNWAY: RunwayForecastResponse = {
     months: [], exhaustion_month: null, exhaustion_date: null, safe_months: 0,
     inputs: { starting_cash: 0, monthly_burn: 0, outstanding_total: 0, horizon_months: 12 },
   }
 
   const [metrics, runway] = await Promise.all([
-    sq(async (): Promise<CfoMetrics> => {
-      const r = await apiFetch(`/api/cfo-metrics?from=${from}&to=${today}`)
-      if (!r.ok) throw new Error(`cfo-metrics ${r.status}`)
-      return r.json() as Promise<CfoMetrics>
-    }, ZERO_METRICS),
-
-    sq(async (): Promise<RunwayForecast> => {
-      const r = await apiFetch(`/api/simulation/runway?from=${from}&to=${today}&months=12`)
-      if (!r.ok) throw new Error(`simulation/runway ${r.status}`)
-      return r.json() as Promise<RunwayForecast>
-    }, ZERO_RUNWAY),
+    sq(() => getCfoMetrics(companyId, { from, to: today }), ZERO_METRICS),
+    sq(() => getRunwayForecast(companyId, { from, to: today, months: 12 }), ZERO_RUNWAY),
   ])
 
   const m = metrics

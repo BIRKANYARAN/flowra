@@ -3,14 +3,9 @@ export const dynamic = 'force-dynamic'
 import { createClient }     from '@/lib/supabase-server'
 import { redirect }         from 'next/navigation'
 import { resolveCompanyId } from '@/lib/resolve-company'
-import { cookies, headers } from 'next/headers'
 import Link                 from 'next/link'
 import { FinanceNavTabs }   from '@/components/dashboard/FinanceNavTabs'
-
-interface TaxSummary {
-  vat: { sales_vat: number; purchase_vat: number; expense_vat: number; net_vat: number }
-  corporate_tax?: { matrah: number; tax_rate: number; tax: number; net_after_tax: number }
-}
+import { FinanceService }   from '@/lib/services/finance.service'
 
 const TRY = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 function fmt(n: number) { return TRY.format(Number(n || 0)) + ' TL' }
@@ -27,30 +22,27 @@ export default async function TaxPage() {
     redirect('/auth')
   }
 
-  try { await resolveCompanyId(uid!, supabase) }
+  let companyId: string
+  try { companyId = await resolveCompanyId(uid!, supabase) }
   catch { redirect('/auth') }
 
-  const now   = new Date()
-  const year  = now.getFullYear()
-  const mon   = String(now.getMonth() + 1).padStart(2, '0')
-  const from  = `${year}-${mon}-01`
-  const to    = now.toISOString().slice(0, 10)
+  const now  = new Date()
+  const year = now.getFullYear()
+  const mon  = String(now.getMonth() + 1).padStart(2, '0')
+  const from = `${year}-${mon}-01`
+  const to   = now.toISOString().slice(0, 10)
 
-  const cookieHeader = cookies().getAll().map(c => `${c.name}=${c.value}`).join('; ')
-  const reqHeaders   = headers()
-  const host         = reqHeaders.get('x-forwarded-host') ?? reqHeaders.get('host') ?? 'localhost:3000'
-  const proto        = reqHeaders.get('x-forwarded-proto') ?? 'http'
-  const base         = `${proto}://${host}`
+  // ── Direct service call — no self-HTTP ──────────────────────────────────────
+  let finSummary = null
+  try { finSummary = await FinanceService.getFinancialSummary(uid!, companyId, { from, to }) }
+  catch { /* non-fatal */ }
 
-  let taxData: TaxSummary | null = null
-  try {
-    const r = await fetch(`${base}/api/tax-summary?from=${from}&to=${to}`, {
-      headers: { Cookie: cookieHeader }, cache: 'no-store'
-    })
-    if (r.ok) taxData = await r.json() as TaxSummary
-  } catch { /* non-fatal */ }
-
-  const vat = taxData?.vat ?? { sales_vat: 0, purchase_vat: 0, expense_vat: 0, net_vat: 0 }
+  const vat = {
+    sales_vat:    Number(finSummary?.sales_vat_try    ?? 0),
+    purchase_vat: Number(finSummary?.purchase_vat_try ?? 0),
+    expense_vat:  Number(finSummary?.expense_vat_try  ?? 0),
+    net_vat:      Number(finSummary?.net_vat_try      ?? 0),
+  }
 
   return (
     <div className="max-w-3xl space-y-4">
