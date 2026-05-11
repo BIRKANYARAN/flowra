@@ -66,6 +66,90 @@ function currentPeriod(): CorePeriod {
   }
 }
 
+// ── Distributable cash — matches /api/cash-distributable response shape ───────
+
+export interface DistributableCashResult {
+  cash_distributable: number
+  breakdown: {
+    payments_received:       number
+    paid_expenses:           number
+    cash_balance:            number
+    unpaid_expenses:         number
+    outstanding_obligations: number
+  }
+}
+
+const CASH_EXCLUDED_TYPES = new Set([
+  'loan_repayment', 'partner_financing', 'dividend', 'internal_transfer',
+])
+
+function r2(v: number) { return Math.round((v + Number.EPSILON) * 100) / 100 }
+
+export async function getDistributableCash(
+  companyId: string,
+  period?:   Partial<CorePeriod>,
+): Promise<DistributableCashResult> {
+  const p   = period ?? {}
+  const def = currentPeriod()
+  const from = p.from ?? def.from
+  const to   = p.to   ?? def.to
+
+  const supabase = createClient()
+
+  const [paidSalesRes, paidExpRes, unpaidExpRes] = await Promise.all([
+    supabase
+      .from('sales')
+      .select('total_try')
+      .eq('company_id', companyId)
+      .eq('payment_status', 'paid')
+      .is('deleted_at', null)
+      .not('paid_at', 'is', null)
+      .gte('paid_at', from + 'T00:00:00Z')
+      .lte('paid_at', to   + 'T23:59:59Z'),
+    supabase
+      .from('expenses')
+      .select('amount_try, expense_type')
+      .eq('company_id', companyId)
+      .eq('payment_status', 'paid')
+      .is('deleted_at', null)
+      .gte('expense_date', from)
+      .lte('expense_date', to),
+    supabase
+      .from('expenses')
+      .select('amount_try')
+      .eq('company_id', companyId)
+      .neq('payment_status', 'paid')
+      .is('deleted_at', null),
+  ])
+
+  const paymentsReceived = (paidSalesRes.data ?? []).reduce(
+    (s: number, row: { total_try: number }) => s + Number(row.total_try ?? 0), 0,
+  )
+  const paidExpenses = (paidExpRes.data ?? []).reduce(
+    (s: number, row: { amount_try: number; expense_type: string | null }) =>
+      CASH_EXCLUDED_TYPES.has(row.expense_type ?? '') ? s : s + Number(row.amount_try ?? 0),
+    0,
+  )
+  const unpaidExpenses = (unpaidExpRes.data ?? []).reduce(
+    (s: number, row: { amount_try: number }) => s + Number(row.amount_try ?? 0), 0,
+  )
+
+  const cashBalance            = r2(paymentsReceived - paidExpenses)
+  const outstandingObligations = r2(unpaidExpenses)
+  const cashDistributable      = r2(Math.max(0, cashBalance - outstandingObligations))
+
+  return {
+    cash_distributable: cashDistributable,
+    breakdown: {
+      payments_received:       r2(paymentsReceived),
+      paid_expenses:           r2(paidExpenses),
+      cash_balance:            cashBalance,
+      unpaid_expenses:         r2(unpaidExpenses),
+      outstanding_obligations: outstandingObligations,
+    },
+  }
+}
+
 // ── getCfoMetrics ─────────────────────────────────────────────────────────────
 //
 // Returns the full CfoMetrics snapshot for a given company + period.

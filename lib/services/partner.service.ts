@@ -336,6 +336,38 @@ export function computeDebtBurdenNormalization(input: {
   }
 }
 
+// ── Partner Ledger types ──────────────────────────────────────────────────────
+
+export interface PartnerLedgerEntry {
+  partner_id:           string
+  partner_name:         string
+  share_ratio:          number
+  is_active:            boolean
+  equity_contributed:   number
+  loans_given:          number
+  loans_repaid:         number
+  net_loan_outstanding: number
+  dividends_received:   number
+  salary_received:      number
+  equalization_paid:    number
+  company_total_owed:   number
+}
+
+export interface PartnerLedgerSummary {
+  total_equity_pool:      number
+  total_debt_to_partners: number
+  total_dividends:        number
+  total_salary_legacy:    number
+  debt_to_equity_ratio:   number | null
+  partner_count:          number
+  active_partner_count:   number
+}
+
+export interface PartnerLedgerResult {
+  entries: PartnerLedgerEntry[]
+  summary: PartnerLedgerSummary
+}
+
 // ── DB-bound PartnerService ───────────────────────────────────────────────────
 
 type Ctx = ReturnType<typeof contextFromHeader>
@@ -510,6 +542,112 @@ export class PartnerService {
         loans_repaid:       b.total_repaid_try,
       })),
     })
+  }
+
+  // ── getLedger ───────────────────────────────────────────────────────────────
+
+  static async getLedger(
+    userId:    string,
+    companyId: string,
+    ctx?:      Ctx,
+  ): Promise<PartnerLedgerResult> {
+    const supabase = createClient()
+
+    const [partnersRes, txRes] = await Promise.all([
+      supabase
+        .from('partners')
+        .select('id, name, share_ratio, is_active')
+        .eq('company_id', companyId)
+        .is('deleted_at', null)
+        .order('created_at', { ascending: true }),
+      supabase
+        .from('partner_transactions')
+        .select('partner_id, tx_type, amount_try')
+        .eq('company_id', companyId)
+        .is('deleted_at', null),
+    ])
+
+    if (partnersRes.error) {
+      if (ctx) void logger.error(ctx, 'partner_ledger_read_failed', { error: partnersRes.error })
+      throw new AppError('DB_READ_FAILED', 'Ortak defteri okunamadı', partnersRes.error)
+    }
+
+    const partners = partnersRes.data ?? []
+    const txs      = txRes.data ?? []
+
+    type Agg = {
+      equity: number; loanIn: number; loanOut: number
+      dividend: number; salary: number; boardFee: number
+      huzurHakki: number; equalization: number
+    }
+    const agg = new Map<string, Agg>()
+    for (const p of partners) {
+      agg.set(p.id, { equity: 0, loanIn: 0, loanOut: 0, dividend: 0, salary: 0, boardFee: 0, huzurHakki: 0, equalization: 0 })
+    }
+    for (const tx of txs) {
+      const a = agg.get(tx.partner_id)
+      if (!a) continue
+      const amt = Number(tx.amount_try)
+      switch (tx.tx_type) {
+        case 'capital_in':      a.equity       += amt; break
+        case 'loan_to_company': a.loanIn       += amt; break
+        case 'loan_in':         a.loanIn       += amt; break
+        case 'loan_repayment':  a.loanOut      += amt; break
+        case 'loan_out':        a.loanOut      += amt; break
+        case 'dividend':        a.dividend     += amt; break
+        case 'salary':          a.salary       += amt; break
+        case 'board_fee':       a.boardFee     += amt; break
+        case 'huzur_hakki':     a.huzurHakki   += amt; break
+        case 'equalization':    a.equalization += amt; break
+      }
+    }
+
+    function round2(v: number) { return Math.round((v + Number.EPSILON) * 100) / 100 }
+
+    const entries: PartnerLedgerEntry[] = partners.map(p => {
+      const a               = agg.get(p.id)!
+      const equity          = round2(a.equity)
+      const loansGiven      = round2(a.loanIn)
+      const loansRepaid     = round2(a.loanOut)
+      const netLoan         = round2(loansGiven - loansRepaid)
+      const dividends       = round2(a.dividend)
+      const salary          = round2(a.salary + a.boardFee + a.huzurHakki)
+      const equalizationPaid = round2(a.equalization)
+      const totalOwed       = round2(equity + netLoan)
+      return {
+        partner_id:           p.id,
+        partner_name:         p.name,
+        share_ratio:          Number(p.share_ratio),
+        is_active:            Boolean(p.is_active),
+        equity_contributed:   equity,
+        loans_given:          loansGiven,
+        loans_repaid:         loansRepaid,
+        net_loan_outstanding: netLoan,
+        dividends_received:   dividends,
+        salary_received:      salary,
+        equalization_paid:    equalizationPaid,
+        company_total_owed:   totalOwed,
+      }
+    })
+
+    const active         = entries.filter(e => e.is_active)
+    const totalEquity    = round2(active.reduce((s, e) => s + e.equity_contributed, 0))
+    const totalDebt      = round2(active.reduce((s, e) => s + e.net_loan_outstanding, 0))
+    const totalDividends = round2(entries.reduce((s, e) => s + e.dividends_received, 0))
+    const totalSalary    = round2(entries.reduce((s, e) => s + e.salary_received, 0))
+
+    return {
+      entries,
+      summary: {
+        total_equity_pool:      totalEquity,
+        total_debt_to_partners: totalDebt,
+        total_dividends:        totalDividends,
+        total_salary_legacy:    totalSalary,
+        debt_to_equity_ratio:   totalEquity > 0 ? round2(totalDebt / totalEquity) : null,
+        partner_count:          entries.length,
+        active_partner_count:   active.length,
+      },
+    }
   }
 
   // ── listPartners ────────────────────────────────────────────────────────────
