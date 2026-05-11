@@ -21,14 +21,14 @@ export default async function AlertsPage() {
   try { companyId = await resolveCompanyId(uid!, supabase) }
   catch { redirect('/auth') }
 
+  // Scope to company — all members of the same company see all company alerts.
+  // actor_user_id is for audit attribution only; the display scope is company-wide.
   const { data: alerts } = await supabase
     .from('alerts')
     .select('*')
-    .eq('actor_user_id', uid)
+    .eq('company_id', companyId)
     .order('created_at', { ascending: false })
     .limit(50)
-
-  void companyId
 
   return (
     <div className="max-w-3xl space-y-4">

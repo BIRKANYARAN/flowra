@@ -311,8 +311,8 @@ export function ProformaDetailClient({
               Yazdır
             </Btn>
 
-            {/* TASK 9: "Gönder" allowed from ANY non-converted state */}
-            {!isConverted && (
+            {/* "Gönder" — only when not converted and not rejected */}
+            {!isConverted && !isRejected && (
               <Btn onClick={() => updateStatus('sent')} variant="secondary" small disabled={statusLoading}>
                 {isSent ? 'Yeniden Gönder' : 'Gönderildi İşaretle'}
               </Btn>
@@ -330,8 +330,8 @@ export function ProformaDetailClient({
               </>
             )}
 
-            {/* Convert — any non-converted state */}
-            {!isConverted && (
+            {/* Convert — only when not converted and not rejected */}
+            {!isConverted && !isRejected && (
               <Btn onClick={openModal} variant="primary" small>
                 ✓ Satışa Dönüştür
               </Btn>
@@ -340,7 +340,8 @@ export function ProformaDetailClient({
         </div>
       </div>
 
-      {/* Share link bar */}
+      {/* Share link bar — only for active (non-rejected, non-converted) proformas */}
+      {!isRejected && !isConverted && (
       <div className="mt-4 mb-6 bg-primary-50 border border-primary-100 rounded-xl px-5 py-3 flex items-center justify-between gap-4">
         <div className="min-w-0">
           <div className="text-sm font-semibold text-primary-800">Paylaşılabilir Link</div>
@@ -350,6 +351,7 @@ export function ProformaDetailClient({
           {copied ? '✓' : 'Kopyala'}
         </Btn>
       </div>
+      )}
 
       {/* Convert modal — TASK 2: no manual holding days */}
       {showModal && (

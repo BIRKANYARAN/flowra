@@ -132,12 +132,16 @@ export default function ProductsPage() {
   async function del(id: string) {
     if (!confirm('Bu ürünü silmek istediğinizden emin misiniz?')) return
     const { data: authData, error: authError } = await supabase.auth.getUser()
-    if (authError || !authData?.user) return null
+    if (authError || !authData?.user) {
+      setFormErr('Oturum süresi doldu, lütfen yeniden giriş yapın.')
+      return
+    }
     const user = authData.user
     const companyId = await resolveCompanyId(user.id, supabase)
-    await supabase.from('products')
+    const { error } = await supabase.from('products')
       .update({ deleted_at: new Date().toISOString() })
       .eq('id', id).eq('company_id', companyId)
+    if (error) { setFormErr(error.message); return }
     load()
   }
 
