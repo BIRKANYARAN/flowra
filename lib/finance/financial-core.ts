@@ -667,3 +667,127 @@ export async function getRunwayForecast(
     },
   }
 }
+
+// ── Quarterly report — FAZ 4 Executive Reporting ─────────────────────────────
+
+export interface QuarterResult {
+  label:          string         // "Q1 2025"
+  period:         CorePeriod
+  revenue:        number
+  cost:           number
+  gross_profit:   number
+  expenses:       number
+  net_profit:     number         // gross_profit - expenses
+  matrah:         number         // taxable base
+  corporate_tax:  number         // 25% of matrah
+  net_after_tax:  number
+  gross_margin:   number         // gross_profit / revenue  (0–1)
+  net_margin:     number         // net_profit / revenue    (0–1)
+  // Geçici Vergi
+  gecici_vergi:     number       // provisional tax = 25% × matrah (per quarter)
+  gecici_due_date:  string       // due date YYYY-MM-DD
+  is_past_quarter:  boolean      // quarter already ended
+}
+
+export interface YtdSummary {
+  revenue:       number
+  gross_profit:  number
+  net_profit:    number
+  matrah:        number
+  corporate_tax: number
+  net_after_tax: number
+  total_gecici:  number
+}
+
+export interface QuarterlyReportResult {
+  year:     number
+  quarters: QuarterResult[]
+  ytd:      YtdSummary
+}
+
+const CORPORATE_TAX_RATE = 0.25
+
+/** Geçici Vergi due dates: Q1→May 17, Q2→Aug 17, Q3→Nov 17 */
+function geciciDueDate(year: number, q: 1 | 2 | 3): string {
+  const monthStr = q === 1 ? '05' : q === 2 ? '08' : '11'
+  return `${year}-${monthStr}-17`
+}
+
+/** Quarter period boundaries */
+function quarterPeriod(year: number, q: 1 | 2 | 3 | 4): CorePeriod {
+  const starts = ['01', '04', '07', '10']
+  const ends   = ['03', '06', '09', '12']
+  const lastDays: Record<string, string> = { '03': '31', '06': '30', '09': '30', '12': '31' }
+  const sm = starts[q - 1], em = ends[q - 1]
+  return { from: `${year}-${sm}-01`, to: `${year}-${em}-${lastDays[em]}` }
+}
+
+export async function getQuarterlyReport(
+  userId:    string,
+  companyId: string,
+  year?:     number,
+): Promise<QuarterlyReportResult> {
+  const { FinanceService } = await import('@/lib/services/finance.service')
+  const { CORPORATE_TAX_RATE_TR } = await import('@/lib/services/finance-rules')
+  const taxRate = CORPORATE_TAX_RATE_TR ?? CORPORATE_TAX_RATE
+
+  const targetYear = year ?? new Date().getFullYear()
+  const today      = new Date().toISOString().slice(0, 10)
+
+  // Fetch all 4 quarters in parallel
+  const qPeriods = ([1, 2, 3, 4] as const).map(q => quarterPeriod(targetYear, q))
+
+  const summaries = await Promise.all(
+    qPeriods.map(p => {
+      // Don't query future quarters — return null
+      if (p.from > today) return Promise.resolve(null)
+      return FinanceService.getFinancialSummary(
+        userId, companyId, p, { corporate_tax_rate: taxRate },
+      ).catch(() => null)
+    }),
+  )
+
+  const quarters: QuarterResult[] = summaries.map((s, i) => {
+    const q      = (i + 1) as 1 | 2 | 3 | 4
+    const period = qPeriods[i]
+    const rev    = s?.revenue_try            ?? 0
+    const cost   = s?.cost_try               ?? 0
+    const gross  = s?.gross_profit_try       ?? 0
+    const exp    = s?.expenses_total_try     ?? 0
+    const net    = r2(gross - exp)
+    const matrah = s?.matrah_try             ?? 0
+    const corTax = s?.corporate_tax_try      ?? 0
+    const netAt  = s?.net_after_tax_try      ?? 0
+    const gecici = r2(matrah * taxRate)
+
+    return {
+      label:           `Q${q} ${targetYear}`,
+      period,
+      revenue:         rev,
+      cost,
+      gross_profit:    gross,
+      expenses:        exp,
+      net_profit:      net,
+      matrah,
+      corporate_tax:   corTax,
+      net_after_tax:   netAt,
+      gross_margin:    rev > 0 ? r2(gross / rev) : 0,
+      net_margin:      rev > 0 ? r2(net   / rev) : 0,
+      gecici_vergi:    q < 4 ? gecici : 0,
+      gecici_due_date: q < 4 ? geciciDueDate(targetYear, q as 1 | 2 | 3) : '',
+      is_past_quarter: period.to <= today,
+    }
+  })
+
+  const ytd: YtdSummary = {
+    revenue:       r2(quarters.reduce((s, q) => s + q.revenue,       0)),
+    gross_profit:  r2(quarters.reduce((s, q) => s + q.gross_profit,  0)),
+    net_profit:    r2(quarters.reduce((s, q) => s + q.net_profit,    0)),
+    matrah:        r2(quarters.reduce((s, q) => s + q.matrah,        0)),
+    corporate_tax: r2(quarters.reduce((s, q) => s + q.corporate_tax, 0)),
+    net_after_tax: r2(quarters.reduce((s, q) => s + q.net_after_tax, 0)),
+    total_gecici:  r2(quarters.reduce((s, q) => s + q.gecici_vergi,  0)),
+  }
+
+  return { year: targetYear, quarters, ytd }
+}
