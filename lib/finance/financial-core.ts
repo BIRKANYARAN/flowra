@@ -66,6 +66,176 @@ function currentPeriod(): CorePeriod {
   }
 }
 
+// ── Cashflow timeline — matches /api/cashflow response shape ─────────────────
+
+export interface CashflowTimelineOpts {
+  pastMonths?:   number   // default 6, max 12
+  futureMonths?: number   // default 6, max 12
+}
+
+/** Pressure severity for a projected month */
+export interface PressureSignal {
+  month:    string
+  severity: 'critical' | 'warn' | 'ok'
+  reasons:  string[]
+}
+
+/** Extended cashflow result with pressure analysis */
+export interface CashflowTimelineResult {
+  months:          import('@/types').CashflowMonth[]
+  pressureSignals: PressureSignal[]
+  firstDangerMonth: string | null   // first future month where cumulative < 0
+  totalReceivables: number           // sum of all outstanding receivables in window
+}
+
+// ── Internal helpers ─────────────────────────────────────────────────────────
+
+function _toYM(d: Date | string): string {
+  const dt = typeof d === 'string' ? new Date(d.slice(0, 10) + 'T00:00:00Z') : d
+  return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth() + 1).padStart(2, '0')}`
+}
+function _addMonths(ym: string, n: number): string {
+  const [y, m] = ym.split('-').map(Number)
+  const total  = (y * 12 + (m - 1)) + n
+  return `${Math.floor(total / 12)}-${String((total % 12) + 1).padStart(2, '0')}`
+}
+function _monthDiff(ymA: string, ymB: string): number {
+  const [ya, ma] = ymA.split('-').map(Number)
+  const [yb, mb] = ymB.split('-').map(Number)
+  return (yb * 12 + mb) - (ya * 12 + ma)
+}
+function _ymStart(ym: string): string { return `${ym}-01` }
+function _ymEnd(ym: string): string {
+  const [y, m] = ym.split('-').map(Number)
+  return `${ym}-${String(new Date(Date.UTC(y, m, 0)).getUTCDate()).padStart(2, '0')}`
+}
+const _CASH_EXCLUDED = new Set([
+  'loan_repayment', 'partner_financing', 'dividend', 'internal_transfer',
+])
+
+export async function getCashflowTimeline(
+  companyId: string,
+  opts?: CashflowTimelineOpts,
+): Promise<CashflowTimelineResult> {
+  const pastMonths   = Math.min(Math.max(opts?.pastMonths   ?? 6, 1), 12)
+  const futureMonths = Math.min(Math.max(opts?.futureMonths ?? 6, 1), 12)
+  const nowYM        = _toYM(new Date())
+  const startYM      = _addMonths(nowYM, -pastMonths)
+  const endYM        = _addMonths(nowYM, futureMonths - 1)
+  const windowSize   = pastMonths + futureMonths
+
+  const supabase = createClient()
+
+  type MonthRow = {
+    month: string; invoiced: number; collected: number; receivable: number
+    expenses: number; net: number; cumulative: number; is_projected: boolean
+  }
+  const months = new Map<string, MonthRow>()
+  for (let i = 0; i < windowSize; i++) {
+    const ym = _addMonths(startYM, i)
+    months.set(ym, {
+      month: ym, invoiced: 0, collected: 0, receivable: 0,
+      expenses: 0, net: 0, cumulative: 0, is_projected: _monthDiff(nowYM, ym) > 0,
+    })
+  }
+
+  const [invoicedRes, receivablesRes, collectionsRes, expensesRes, recurringsRes] =
+    await Promise.all([
+      supabase.from('sales').select('total_try, created_at')
+        .eq('company_id', companyId).is('deleted_at', null)
+        .gte('created_at', _ymStart(startYM)).lte('created_at', _ymEnd(endYM) + 'T23:59:59Z'),
+      supabase.from('sales').select('total_try, created_at')
+        .eq('company_id', companyId).is('deleted_at', null)
+        .in('payment_status', ['unpaid', 'partial', 'overdue'])
+        .gte('created_at', _ymStart(startYM)).lte('created_at', _ymEnd(endYM) + 'T23:59:59Z'),
+      supabase.from('sales').select('total_try, paid_at')
+        .eq('company_id', companyId).eq('payment_status', 'paid')
+        .is('deleted_at', null).not('paid_at', 'is', null)
+        .gte('paid_at', _ymStart(startYM)).lte('paid_at', _ymEnd(endYM) + 'T23:59:59Z'),
+      supabase.from('expenses').select('amount_try, expense_date, expense_type')
+        .eq('company_id', companyId).eq('payment_status', 'paid')
+        .is('deleted_at', null)
+        .gte('expense_date', _ymStart(startYM)).lte('expense_date', _ymEnd(endYM)),
+      supabase.from('recurring_expenses')
+        .select('amount, fx_rate, frequency, start_date, end_date, expense_type')
+        .eq('company_id', companyId).eq('is_active', true).is('deleted_at', null),
+    ])
+
+  for (const s of invoicedRes.data ?? []) {
+    const row = months.get(_toYM(s.created_at as string))
+    if (row) row.invoiced += Number(s.total_try ?? 0)
+  }
+  for (const s of receivablesRes.data ?? []) {
+    const row = months.get(_toYM(s.created_at as string))
+    if (row) row.receivable += Number(s.total_try ?? 0)
+  }
+  for (const c of collectionsRes.data ?? []) {
+    const row = months.get(_toYM(c.paid_at as string))
+    if (row) row.collected += Number(c.total_try ?? 0)
+  }
+  for (const e of expensesRes.data ?? []) {
+    const et = String(e.expense_type ?? '')
+    if (et && _CASH_EXCLUDED.has(et)) continue
+    const row = months.get((e.expense_date as string).slice(0, 7))
+    if (row) row.expenses += Number(e.amount_try ?? 0)
+  }
+  for (const rec of recurringsRes.data ?? []) {
+    const et = String(rec.expense_type ?? '')
+    if (et && _CASH_EXCLUDED.has(et)) continue
+    const recStart = _toYM(rec.start_date as string)
+    const recEnd   = rec.end_date ? _toYM(rec.end_date as string) : null
+    const amtTry   = Number(rec.amount) * Number(rec.fx_rate)
+    const freq     = rec.frequency as 'monthly' | 'quarterly' | 'yearly'
+    const step     = freq === 'monthly' ? 1 : freq === 'quarterly' ? 3 : 12
+    for (const [ym, row] of months) {
+      if (!row.is_projected) continue
+      if (_monthDiff(recStart, ym) < 0) continue
+      if (recEnd && _monthDiff(ym, recEnd) < 0) continue
+      if (_monthDiff(recStart, ym) % step !== 0) continue
+      row.expenses += amtTry
+    }
+  }
+
+  // Net + cumulative
+  let cumulative = 0
+  const result: import('@/types').CashflowMonth[] = []
+  for (const ym of Array.from(months.keys()).sort()) {
+    const row  = months.get(ym)!
+    row.net    = r2(row.collected - row.expenses)
+    cumulative = r2(cumulative + row.net)
+    row.cumulative = cumulative
+    result.push(row as import('@/types').CashflowMonth)
+  }
+
+  // ── Pressure analysis — projected months only ─────────────────────────────
+  const pressureSignals: PressureSignal[] = []
+  let firstDangerMonth: string | null = null
+  let totalReceivables = 0
+
+  for (const m of result) {
+    totalReceivables += m.receivable
+    if (!m.is_projected) continue
+
+    const reasons: string[] = []
+    if (m.net < 0)           reasons.push(`Negatif nakit akışı (${_fmtPressure(m.net)} TL)`)
+    if (m.cumulative < 0)    reasons.push(`Kümülatif nakit ekside (${_fmtPressure(m.cumulative)} TL)`)
+    if (m.receivable > 0 && m.collected === 0)
+      reasons.push(`Tahsilat yok — ${_fmtPressure(m.receivable)} TL alacak bekliyor`)
+
+    const severity: PressureSignal['severity'] =
+      m.cumulative < 0 ? 'critical' : m.net < 0 ? 'warn' : 'ok'
+
+    if (severity !== 'ok') pressureSignals.push({ month: m.month, severity, reasons })
+    if (m.cumulative < 0 && !firstDangerMonth) firstDangerMonth = m.month
+  }
+
+  return { months: result, pressureSignals, firstDangerMonth, totalReceivables: r2(totalReceivables) }
+}
+
+function _fmtPressure(n: number): string {
+  return Math.abs(n).toLocaleString('tr-TR', { maximumFractionDigits: 0 })
+}
+
 // ── Distributable cash — matches /api/cash-distributable response shape ───────
 
 export interface DistributableCashResult {
