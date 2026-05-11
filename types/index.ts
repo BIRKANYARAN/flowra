@@ -145,7 +145,10 @@ export interface Proforma {
   converted_at:   string | null
   created_at:     string
   updated_at:     string
-  deleted_at:     string | null
+  deleted_at:       string | null
+  sales_rep_name?:  string | null
+  sales_rep_title?: string | null
+  sales_rep_phone?: string | null
 }
 
 export interface ProformaItem {

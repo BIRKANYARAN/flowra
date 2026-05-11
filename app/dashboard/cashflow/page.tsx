@@ -5,6 +5,7 @@ import { redirect }         from 'next/navigation'
 import { resolveCompanyId } from '@/lib/resolve-company'
 import { CashflowChart }    from '@/components/dashboard/CashflowChart'
 import Link                 from 'next/link'
+import { FinanceNavTabs }   from '@/components/dashboard/FinanceNavTabs'
 
 export default async function CashflowPage() {
   const supabase = createClient()
@@ -26,12 +27,9 @@ export default async function CashflowPage() {
 
   return (
     <div className="max-w-5xl space-y-4">
+      <FinanceNavTabs active="cashflow" />
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-black text-gray-900 tracking-tight">Nakit Akışı</h1>
-        <Link href="/dashboard/analytics"
-          className="text-xs text-primary-600 font-semibold hover:text-primary-700">
-          Finansal Analitik →
-        </Link>
       </div>
 
       <div className="bg-white border border-gray-200 rounded-xl p-4">

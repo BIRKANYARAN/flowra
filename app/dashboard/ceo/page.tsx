@@ -15,6 +15,7 @@ import { redirect }         from 'next/navigation'
 import { resolveCompanyId } from '@/lib/resolve-company'
 import { cookies, headers } from 'next/headers'
 import Link                 from 'next/link'
+import { FinanceNavTabs }   from '@/components/dashboard/FinanceNavTabs'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -240,6 +241,8 @@ export default async function CeoDashboardPage() {
 
   return (
     <div className="max-w-5xl space-y-3">
+
+      <FinanceNavTabs active="ceo" />
 
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-2">

@@ -72,6 +72,11 @@ export interface PdfOptions {
   notes?:       string
   fxUsd?:       number | null
   fxEur?:       number | null
+  salesRep?: {
+    name:  string
+    title: string
+    phone: string
+  } | null
 }
 
 // ── RGB type ──────────────────────────────────────────────────────────────────
@@ -758,6 +763,53 @@ export async function generatePdf(opts: PdfOptions): Promise<void> {
       curY += 12
       i += rb ? 2 : 1
     }
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════════
+  // G2. SALES REP + SIGNATURE BLOCK
+  // ══════════════════════════════════════════════════════════════════════════════
+  if (opts.salesRep?.name) {
+    ensureSpace(30)
+    hLine(curY, LX, RX, C.rule, 0.2)
+    curY += 5
+
+    setF('bold', 7, C.muted)
+    tL('SATICI / YETKİLİ BİLGİLERİ', LX, curY)
+    curY += 5
+
+    setF('bold', 9.5, C.ink)
+    tL(opts.salesRep.name, LX, curY)
+    curY += 5
+
+    if (opts.salesRep.title?.trim()) {
+      setF('normal', 8, C.mid)
+      tL(opts.salesRep.title, LX, curY)
+      curY += 4.5
+    }
+    if (opts.salesRep.phone?.trim()) {
+      setF('normal', 7.5, C.muted)
+      tL(opts.salesRep.phone, LX, curY)
+      curY += 4
+    }
+
+    // Signature box on the right
+    const sigX = RX - 45
+    const sigY = curY - 13.5  // align with name row
+    const sigW = 45
+    const sigH = 18
+    doc.setDrawColor(C.light[0], C.light[1], C.light[2])
+    doc.setLineWidth(0.3)
+    doc.rect(sigX, sigY, sigW, sigH)
+    setF('normal', 6.5, C.muted)
+    tC('İmza / Kaşe', sigX + sigW / 2, sigY + sigH / 2 + 1)
+
+    // Date line below signature box
+    const dateLineY = sigY + sigH + 6
+    hLine(dateLineY, sigX, sigX + sigW, C.rule, 0.2)
+    setF('normal', 6, C.muted)
+    tC('Tarih', sigX + sigW / 2, dateLineY + 3.5)
+
+    curY = Math.max(curY + 4, dateLineY + 8)
   }
 
   // ══════════════════════════════════════════════════════════════════════════════

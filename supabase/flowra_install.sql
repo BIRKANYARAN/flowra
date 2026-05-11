@@ -105,6 +105,14 @@ alter table proformas
 alter table proformas
   add column if not exists bank_id uuid;
 
+-- proformas: sales rep info shown in PDF signature block
+alter table proformas
+  add column if not exists sales_rep_name  text;
+alter table proformas
+  add column if not exists sales_rep_title text;
+alter table proformas
+  add column if not exists sales_rep_phone text;
+
 -- idempotency_keys: prevent duplicate critical writes (proforma creation, sale conversion)
 create table if not exists idempotency_keys (
   id              uuid        primary key default gen_random_uuid(),

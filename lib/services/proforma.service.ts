@@ -71,27 +71,33 @@ async function snapshotFxRates(): Promise<FxSnapshot> {
 // ── Interfaces ────────────────────────────────────────────────────────────────
 
 export interface CreateProformaInput {
-  idempotency_key: string
-  customer_id?:    string | null
-  bank_id?:        string | null
-  customer_name:   string
-  currency:        string
-  validity_days:   number
-  notes?:          string | null
-  internal_notes?: string | null
-  items:           unknown[]
+  idempotency_key:  string
+  customer_id?:     string | null
+  bank_id?:         string | null
+  customer_name:    string
+  currency:         string
+  validity_days:    number
+  notes?:           string | null
+  internal_notes?:  string | null
+  sales_rep_name?:  string | null
+  sales_rep_title?: string | null
+  sales_rep_phone?: string | null
+  items:            unknown[]
 }
 
 export interface UpdateProformaInput {
-  id:              string
-  customer_id?:    string | null
-  bank_id?:        string | null
-  customer_name:   string
-  currency:        string
-  validity_days:   number
-  notes?:          string | null
-  internal_notes?: string | null
-  items:           unknown[]
+  id:               string
+  customer_id?:     string | null
+  bank_id?:         string | null
+  customer_name:    string
+  currency:         string
+  validity_days:    number
+  notes?:           string | null
+  internal_notes?:  string | null
+  sales_rep_name?:  string | null
+  sales_rep_title?: string | null
+  sales_rep_phone?: string | null
+  items:            unknown[]
 }
 
 export interface ProformaResult {
@@ -150,6 +156,9 @@ export class ProformaService {
       const validity_days  = Math.max(1, Math.min(365, Number(input.validity_days ?? 1)))
       const notes          = optionalString(input.notes, 'notes', 2000)
       const internal_notes = optionalString(input.internal_notes, 'internal_notes', 2000)
+      const sales_rep_name  = optionalString(input.sales_rep_name,  'sales_rep_name',  200)
+      const sales_rep_title = optionalString(input.sales_rep_title, 'sales_rep_title', 200)
+      const sales_rep_phone = optionalString(input.sales_rep_phone, 'sales_rep_phone', 100)
 
       const rawItems = requireArray(input.items ?? [], 'items')
       if (rawItems.length === 0) throw new AppError('NO_ITEMS', 'En az bir ürün satırı zorunludur')
@@ -263,6 +272,13 @@ export class ProformaService {
       const prf = { id: result.id, proforma_no: result.proforma_no ?? null }
       await logger.info(ctx, 'proforma_create:success', { id: prf.id, proforma_no: prf.proforma_no })
 
+      // Persist sales rep fields (not part of the atomic RPC — safe to do after commit)
+      if (sales_rep_name || sales_rep_title || sales_rep_phone) {
+        await supabase.from('proformas')
+          .update({ sales_rep_name, sales_rep_title, sales_rep_phone })
+          .eq('id', prf.id)
+      }
+
       // 7. Commit idempotency
       await commitIdempotencyKey(userId, input.idempotency_key, 'proforma_create', prf.id, { proforma_no: prf.proforma_no })
 
@@ -302,6 +318,9 @@ export class ProformaService {
     const validity_days  = Math.max(1, Math.min(365, Number(input.validity_days ?? 1)))
     const notes          = optionalString(input.notes, 'notes', 2000)
     const internal_notes = optionalString(input.internal_notes, 'internal_notes', 2000)
+    const sales_rep_name  = optionalString(input.sales_rep_name,  'sales_rep_name',  200)
+    const sales_rep_title = optionalString(input.sales_rep_title, 'sales_rep_title', 200)
+    const sales_rep_phone = optionalString(input.sales_rep_phone, 'sales_rep_phone', 100)
 
     const rawItems = requireArray(input.items ?? [], 'items')
     if (rawItems.length === 0) throw new AppError('NO_ITEMS', 'En az bir ürün satırı zorunludur')
@@ -313,6 +332,7 @@ export class ProformaService {
     const { error: updErr } = await supabase.from('proformas')
       .update({
         customer_id, bank_id, customer_name, currency, validity_days, notes, internal_notes, total,
+        sales_rep_name, sales_rep_title, sales_rep_phone,
         status: 'draft', sent_at: null, approved_at: null, rejected_at: null,
       })
       .eq('id', proforma_id).eq('company_id', companyId)

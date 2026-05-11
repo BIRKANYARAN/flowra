@@ -140,3 +140,9 @@ create index if not exists idx_partner_tx_company
 grant usage on schema public to authenticated;
 grant select, insert, update, delete on all tables in schema public to authenticated;
 grant execute on all functions in schema public to authenticated;
+
+-- ── 12. Sales rep support on proformas ───────────────────────────────────────
+
+alter table proformas add column if not exists sales_rep_name  text;
+alter table proformas add column if not exists sales_rep_title text;
+alter table proformas add column if not exists sales_rep_phone text;

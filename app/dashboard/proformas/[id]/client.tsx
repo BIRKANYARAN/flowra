@@ -57,6 +57,11 @@ export interface ClientPdfOpts {
     phone:     string
   }
   bank:  ClientPdfBank | null   // single bank object or null
+  salesRep: {
+    name:  string
+    title: string
+    phone: string
+  } | null
   items: Array<{
     name:             string
     unit:             string
@@ -83,6 +88,7 @@ function toPdfOptions(opts: ClientPdfOpts): PdfOptions {
     banks: opts.bank
       ? [{ bankName: opts.bank.bankName, branchName: opts.bank.branchName, iban: opts.bank.iban }]
       : [],
+    salesRep: opts.salesRep ?? null,
     items: opts.items.map(it => ({
       name: it.name, unit: it.unit, quantity: it.quantity,
       price: it.price, kdv: it.kdv, currency: it.currency,

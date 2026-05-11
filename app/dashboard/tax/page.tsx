@@ -5,6 +5,7 @@ import { redirect }         from 'next/navigation'
 import { resolveCompanyId } from '@/lib/resolve-company'
 import { cookies, headers } from 'next/headers'
 import Link                 from 'next/link'
+import { FinanceNavTabs }   from '@/components/dashboard/FinanceNavTabs'
 
 interface TaxSummary {
   vat: { sales_vat: number; purchase_vat: number; expense_vat: number; net_vat: number }
@@ -53,8 +54,9 @@ export default async function TaxPage() {
 
   return (
     <div className="max-w-3xl space-y-4">
+      <FinanceNavTabs active="tax" />
       <div className="flex items-center gap-3">
-        <h1 className="text-lg font-black text-gray-900 tracking-tight">Vergi Merkezi</h1>
+        <h1 className="text-lg font-black text-gray-900 tracking-tight">Vergi Projeksiyonu</h1>
         <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full font-semibold capitalize">
           {now.toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })}
         </span>

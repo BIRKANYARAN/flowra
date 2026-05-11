@@ -192,6 +192,13 @@ export default async function ProformaDetailPage({ params }: PageProps) {
             iban:       safeStr(bank.iban),
           }
         : null,
+      salesRep: proforma.sales_rep_name
+        ? {
+            name:  safeStr(proforma.sales_rep_name),
+            title: safeStr(proforma.sales_rep_title),
+            phone: safeStr(proforma.sales_rep_phone),
+          }
+        : null,
       items: clientItems.map(it => ({
         name:     it.name,
         unit:     it.unit,

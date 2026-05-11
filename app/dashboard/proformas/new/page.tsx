@@ -43,7 +43,10 @@ export default function NewProformaPage() {
   const [bankId,    setBankId]    = useState('')
   const [currency,  setCurrency]  = useState('TRY')
   const [validity,  setValidity]  = useState('1')
-  const [notes,     setNotes]     = useState('')
+  const [notes,       setNotes]       = useState('')
+  const [salesRepName,  setSalesRepName]  = useState('')
+  const [salesRepTitle, setSalesRepTitle] = useState('')
+  const [salesRepPhone, setSalesRepPhone] = useState('')
   const [lines,     setLines]     = useState<Line[]>([emptyLine()])
   const [saving,    setSaving]    = useState(false)
   const [idempKey]  = useState(() => crypto.randomUUID())
@@ -153,7 +156,10 @@ export default function NewProformaPage() {
           customer_name: cust?.name || '',
           currency,
           validity_days: parseInt(validity) || 1,
-          notes:         notes.trim() || null,
+          notes:           notes.trim() || null,
+          sales_rep_name:  salesRepName.trim() || null,
+          sales_rep_title: salesRepTitle.trim() || null,
+          sales_rep_phone: salesRepPhone.trim() || null,
           items: validLines.map((l, i) => ({
             product_id: l.product_id,
             name:       l.name.trim(),
@@ -433,6 +439,48 @@ export default function NewProformaPage() {
               value={notes}
               onChange={e => setNotes(e.target.value)}
             />
+          </div>
+
+          {/* Step 4: Sales Rep (optional) */}
+          <div className="bg-white border border-gray-200 rounded-xl p-5">
+            <h2 className="font-bold text-sm mb-4 flex items-center gap-2">
+              <span className="w-5 h-5 bg-primary-600 text-white rounded-full text-xs flex items-center justify-center font-black">4</span>
+              Satış Temsilcisi <span className="text-gray-400 font-normal text-xs">(isteğe bağlı)</span>
+            </h2>
+            <div className="space-y-3">
+              <div>
+                <label className={LAB}>Satış Temsilcisi Adı</label>
+                <input
+                  type="text"
+                  className={IL}
+                  placeholder="Ad Soyad"
+                  value={salesRepName}
+                  onChange={e => setSalesRepName(e.target.value)}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={LAB}>Ünvan</label>
+                  <input
+                    type="text"
+                    className={IL}
+                    placeholder="Satış Müdürü"
+                    value={salesRepTitle}
+                    onChange={e => setSalesRepTitle(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className={LAB}>İletişim</label>
+                  <input
+                    type="text"
+                    className={IL}
+                    placeholder="+90 5xx xxx xx xx"
+                    value={salesRepPhone}
+                    onChange={e => setSalesRepPhone(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 

@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { createClient } from '@/lib/supabase-server'
 import { normalizeAnalytics, type NormalizedAnalytics } from '@/lib/normalize'
 import { resolveCompanyId } from '@/lib/resolve-company'
+import { FinanceNavTabs } from '@/components/dashboard/FinanceNavTabs'
 
 function fmt(n: number) {
   return '₺' + Number(n || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -43,8 +44,9 @@ export default async function AnalyticsPage() {
 
   return (
     <div className="max-w-4xl space-y-8">
+      <FinanceNavTabs active="analytics" />
       <div>
-        <h1 className="text-2xl font-black">Analitik</h1>
+        <h1 className="text-2xl font-black">Genel Finans</h1>
         <p className="text-sm text-gray-500 mt-1">Finansal performans özeti</p>
       </div>
 

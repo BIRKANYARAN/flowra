@@ -626,7 +626,7 @@ export default async function DashboardPage() {
           <Link href="/dashboard/collections" className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-primary-600 text-white text-xs font-semibold hover:bg-primary-700 transition-colors">
             + Tahsilat
           </Link>
-          <Link href="/dashboard/expenses/new" className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-orange-500 text-white text-xs font-semibold hover:bg-orange-600 transition-colors">
+          <Link href="/dashboard/expenses" className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-orange-500 text-white text-xs font-semibold hover:bg-orange-600 transition-colors">
             + Gider
           </Link>
         </div>
