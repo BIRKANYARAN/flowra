@@ -12,6 +12,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase-server'
 import { resolveCompanyId } from '@/lib/resolve-company'
 import CollectionsClient, { type CollectionRow } from './CollectionsClient'
+import { FinanceNavTabs } from '@/components/dashboard/FinanceNavTabs'
 
 export default async function CollectionsPage() {
   const supabase = createClient()
@@ -23,7 +24,12 @@ export default async function CollectionsPage() {
     companyId = await resolveCompanyId(authData.user.id, supabase)
   } catch {
     // Fall back to empty initial rows — client will retry via API
-    return <CollectionsClient initialRows={[]} />
+    return (
+      <div className="max-w-5xl">
+        <FinanceNavTabs active="collections" />
+        <CollectionsClient initialRows={[]} />
+      </div>
+    )
   }
 
   // Pre-fetch first page of "unpaid" rows (same query as /api/collections?status=unpaid)
@@ -51,5 +57,10 @@ export default async function CollectionsPage() {
     proformas:      (Array.isArray(r.proformas) ? r.proformas[0] ?? null : r.proformas) as CollectionRow['proformas'],
   }))
 
-  return <CollectionsClient initialRows={initialRows} />
+  return (
+    <div className="max-w-5xl">
+      <FinanceNavTabs active="collections" />
+      <CollectionsClient initialRows={initialRows} />
+    </div>
+  )
 }
