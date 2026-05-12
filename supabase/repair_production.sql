@@ -135,6 +135,15 @@ create index if not exists idx_expenses_company_date
 create index if not exists idx_partner_tx_company
   on partner_transactions (company_id, partner_id, tx_type);
 
+-- sale_item_allocations — drop legacy lot_id index, ensure stock_lot_id index exists
+drop index if exists idx_sia_lot_id;
+create index if not exists idx_sia_stock_lot_id on sale_item_allocations(stock_lot_id);
+
+-- tasks — indexes require deleted_at / status columns (added in section 8)
+create index if not exists idx_tasks_company_id on tasks(company_id) where deleted_at is null;
+create index if not exists idx_tasks_due_date   on tasks(company_id, due_date) where deleted_at is null;
+create index if not exists idx_tasks_status     on tasks(company_id, status)   where deleted_at is null;
+
 -- ── 11. RLS grants ────────────────────────────────────────────────────────────
 
 grant usage on schema public to authenticated;
@@ -146,3 +155,164 @@ grant execute on all functions in schema public to authenticated;
 alter table proformas add column if not exists sales_rep_name  text;
 alter table proformas add column if not exists sales_rep_title text;
 alter table proformas add column if not exists sales_rep_phone text;
+
+-- ── 13. company_id backfill — sale_item_allocations ──────────────────────────
+-- Uses dynamic SQL to handle both lot_id and stock_lot_id column names safely.
+
+do $$
+declare v_col text;
+begin
+  select column_name into v_col
+  from   information_schema.columns
+  where  table_schema = 'public'
+    and  table_name   = 'sale_item_allocations'
+    and  column_name  in ('stock_lot_id', 'lot_id')
+  order by case column_name when 'stock_lot_id' then 1 else 2 end
+  limit 1;
+
+  if v_col is null then
+    raise warning 'sale_item_allocations: neither stock_lot_id nor lot_id found — skipping backfill';
+    return;
+  end if;
+
+  execute format($q$
+    update sale_item_allocations sia
+    set    company_id = l.company_id
+    from   stock_lots l
+    where  sia.%I      = l.id
+      and  sia.company_id is null
+  $q$, v_col);
+
+  raise notice 'company_id backfill done (column: %)', v_col;
+end $$;
+
+-- ── 14. convert_proforma_to_sale — stock_lot_id fix ──────────────────────────
+-- Recreates the function using the canonical stock_lot_id column name.
+-- stock_movements.lot_id is intentionally kept as-is (different table, no rename).
+
+create or replace function public.convert_proforma_to_sale(
+  p_proforma_id    uuid,
+  p_user_id        uuid,
+  p_sale_date      date    default null,
+  p_due_date       date    default null,
+  p_bank_id        uuid    default null,
+  p_notes          text    default null,
+  p_internal_notes text    default null
+)
+returns jsonb language plpgsql security definer set search_path = public
+as $$
+declare
+  v_caller_id    uuid := auth.uid();
+  v_proforma     proformas%rowtype;
+  v_sale_id      uuid;
+  v_sale_no      text;
+  v_year         text := to_char(now(), 'YYYY');
+  v_seq          integer;
+  v_item         record;
+  v_sale_item_id uuid;
+  v_qty_needed   numeric;
+  v_lot          record;
+  v_alloc_qty    numeric;
+begin
+  if v_caller_id is null or v_caller_id <> p_user_id then
+    raise exception 'UNAUTHORIZED' using errcode = 'P0001';
+  end if;
+
+  select * into v_proforma from proformas where id = p_proforma_id;
+  if not found then raise exception 'PROFORMA_NOT_FOUND'; end if;
+  if v_proforma.status not in ('draft','sent','accepted') then
+    raise exception 'PROFORMA_INVALID_STATUS:%', v_proforma.status;
+  end if;
+  if not exists (
+    select 1 from company_members
+    where company_id = v_proforma.company_id and user_id = p_user_id
+  ) then raise exception 'FORBIDDEN'; end if;
+
+  select coalesce(max(
+    (regexp_match(sale_no, 'SAL-' || v_year || '-(\d+)'))[1]::integer
+  ), 0) + 1
+  into v_seq
+  from sales
+  where company_id = v_proforma.company_id and sale_no like 'SAL-' || v_year || '-%';
+
+  v_sale_no := 'SAL-' || v_year || '-' || lpad(v_seq::text, 4, '0');
+
+  insert into sales (
+    company_id, user_id, customer_id, bank_id, proforma_id,
+    sale_no, customer_name, currency, total, payment_status,
+    sale_date, due_date, notes, internal_notes,
+    fx_usd, fx_eur, fx_try, fx_source, fx_rate_date, fx_rate_try,
+    company_snapshot, customer_snapshot
+  )
+  values (
+    v_proforma.company_id, p_user_id, v_proforma.customer_id,
+    coalesce(p_bank_id, v_proforma.bank_id), p_proforma_id,
+    v_sale_no, v_proforma.customer_name, v_proforma.currency, v_proforma.total,
+    'pending',
+    coalesce(p_sale_date, now()::date), p_due_date, p_notes, p_internal_notes,
+    v_proforma.fx_usd, v_proforma.fx_eur, v_proforma.fx_try,
+    v_proforma.fx_source, v_proforma.fx_rate_date, v_proforma.fx_rate_try,
+    v_proforma.company_snapshot, v_proforma.customer_snapshot
+  )
+  returning id into v_sale_id;
+
+  for v_item in
+    select * from proforma_items where proforma_id = p_proforma_id order by sort_order
+  loop
+    insert into sale_items (
+      sale_id, company_id, product_id, product_name,
+      qty, unit_price, currency, discount_pct, line_total, notes, sort_order
+    )
+    values (
+      v_sale_id, v_proforma.company_id, v_item.product_id, v_item.product_name,
+      v_item.qty, v_item.unit_price, v_item.currency,
+      v_item.discount_pct, v_item.line_total, v_item.notes, v_item.sort_order
+    )
+    returning id into v_sale_item_id;
+
+    if v_item.product_id is not null then
+      v_qty_needed := v_item.qty;
+      for v_lot in
+        select * from stock_lots
+        where product_id  = v_item.product_id
+          and company_id  = v_proforma.company_id
+          and qty_remaining > 0
+          and deleted_at is null
+        order by coalesce(received_at, created_at::date), created_at
+      loop
+        exit when v_qty_needed <= 0;
+        v_alloc_qty := least(v_qty_needed, v_lot.qty_remaining);
+
+        -- sale_item_allocations uses stock_lot_id (renamed from lot_id)
+        insert into sale_item_allocations (
+          company_id, sale_item_id, stock_lot_id, qty_allocated, cost_price, cost_currency
+        )
+        values (
+          v_proforma.company_id, v_sale_item_id, v_lot.id,
+          v_alloc_qty, v_lot.cost_price, v_lot.cost_currency
+        );
+
+        update stock_lots
+        set qty_remaining = qty_remaining - v_alloc_qty, updated_at = now()
+        where id = v_lot.id;
+
+        -- stock_movements.lot_id is the correct name (no rename on this table)
+        insert into stock_movements (
+          company_id, product_id, lot_id, type, qty, unit_cost, currency, reference_id
+        )
+        values (
+          v_proforma.company_id, v_item.product_id, v_lot.id,
+          'sale_out', -v_alloc_qty, v_lot.cost_price, v_lot.cost_currency, v_sale_id
+        );
+
+        v_qty_needed := v_qty_needed - v_alloc_qty;
+      end loop;
+    end if;
+  end loop;
+
+  update proformas
+  set status = 'converted', converted_at = now(), updated_at = now()
+  where id = p_proforma_id;
+
+  return jsonb_build_object('sale_id', v_sale_id, 'sale_no', v_sale_no);
+end $$;
