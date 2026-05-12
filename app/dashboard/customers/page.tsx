@@ -1,154 +1,199 @@
-'use client'
+// ── /dashboard/customers — Müşteri Zekası (server component) ─────────────────
+//
+// FAZ 11: Converted from 'use client' to server component.
+//
+// Server-rendered sections (static, no JS):
+//   Zone 1 — KPI strip: total customers, total billed, outstanding, top customer
+//   Zone 2 — Top 5 customers by TRY revenue (CSS bar chart)
+//
+// Client island:
+//   CustomersClient — add/edit/delete form + searchable list
 
-import { useEffect, useState, useCallback, type ChangeEvent } from 'react'
-import { useRouter } from 'next/navigation'
-import { useSupabase } from '@/lib/hooks/useSupabase'
-import type { Customer } from '@/types'
+export const dynamic = 'force-dynamic'
+
+import { redirect }         from 'next/navigation'
+import { createClient }     from '@/lib/supabase-server'
 import { resolveCompanyId } from '@/lib/resolve-company'
+import type { Customer }    from '@/types'
+import CustomersClient      from './CustomersClient'
 
-const IL  = 'w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white transition-colors'
-const LAB = 'block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5'
+// ── Formatters ────────────────────────────────────────────────────────────────
 
-const EMPTY = { name:'', address:'', tax_number:'', tax_office:'', email:'', phone:'', website:'', notes:'' }
+const _TRY = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+function fmt(n: number): string {
+  const abs  = Math.abs(Number(n || 0))
+  const sign = n < 0 ? '−' : ''
+  if (abs >= 1_000_000) return `${sign}₺${(abs / 1_000_000).toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 2 })}M`
+  if (abs >= 10_000)    return `${sign}₺${(abs / 1_000).toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}K`
+  return `${sign}₺${_TRY.format(abs)}`
+}
 
-export default function CustomersPage() {
-  const supabase = useSupabase()
-  const router   = useRouter()
-  const [list,      setList]      = useState<Customer[]>([])
-  const [loading,   setLoading]   = useState(true)
-  const [showForm,  setShowForm]  = useState(false)
-  const [editId,    setEditId]    = useState<string|null>(null)
-  const [form,      setForm]      = useState({ ...EMPTY })
-  const [saving,    setSaving]    = useState(false)
-  const [err,       setErr]       = useState('')
-  const [search,    setSearch]    = useState('')
+// ── Analytics helpers (pure, tested in tests/customer-analytics.test.ts) ──────
 
-  const load = useCallback(async () => {
-    const { data: authData, error: authError } = await supabase.auth.getUser()
-    if (authError || !authData?.user) return null
-    const user = authData.user
-    const companyId = await resolveCompanyId(user.id, supabase)
-    const { data } = await supabase.from('customers').select('*')
-      .eq('company_id', companyId).is('deleted_at', null).order('name')
-    setList((data ?? []) as Customer[])
-    setLoading(false)
-  }, [supabase])
+interface SaleAgg { customer_name: string; total_try: number; payment_status: string }
 
-  useEffect(() => { load() }, [load])
+function totalBilled(sales: SaleAgg[]): number {
+  return sales.reduce((s, r) => s + Number(r.total_try ?? 0), 0)
+}
 
-  function openNew() { setForm({ ...EMPTY }); setEditId(null); setErr(''); setShowForm(true) }
-  function openEdit(c: Customer) {
-    setForm({ name: c.name, address: c.address||'', tax_number: c.tax_number||'',
-      tax_office: c.tax_office||'', email: c.email||'', phone: c.phone||'',
-      website: c.website||'', notes: c.notes||'' })
-    setEditId(c.id); setErr(''); setShowForm(true)
+function outstandingBalance(sales: SaleAgg[]): number {
+  return sales
+    .filter(r => r.payment_status !== 'paid')
+    .reduce((s, r) => s + Number(r.total_try ?? 0), 0)
+}
+
+function topCustomersByRevenue(
+  sales: SaleAgg[],
+  customers: Customer[],
+  n: number,
+): { name: string; total: number }[] {
+  const map = new Map<string, number>()
+  for (const s of sales) {
+    const key = s.customer_name ?? 'Bilinmiyor'
+    map.set(key, (map.get(key) ?? 0) + Number(s.total_try ?? 0))
   }
-  function closeForm() { setShowForm(false); setEditId(null); setForm({ ...EMPTY }); setErr('') }
+  return Array.from(map.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, n)
+    .map(([name, total]) => ({ name, total }))
+}
 
-  async function save() {
-    if (!form.name.trim()) { setErr('Müşteri adı zorunludur'); return }
-    setSaving(true); setErr('')
-    const method = editId ? 'PATCH' : 'POST'
-    const body   = editId ? { id: editId, ...form } : form
-    const res = await fetch('/api/customers', {
-      method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
-    })
-    const json = await res.json()
-    if (!res.ok) { setErr(json.error ?? 'Hata'); setSaving(false); return }
-    closeForm(); setSaving(false); load()
+// ── Page ──────────────────────────────────────────────────────────────────────
+
+export default async function CustomersPage() {
+  const supabase = createClient()
+  let uid: string
+  try {
+    const { data, error } = await supabase.auth.getUser()
+    if (error || !data?.user) redirect('/auth')
+    uid = data.user.id
+  } catch (e) {
+    if (e && typeof e === 'object' && 'digest' in e) throw e
+    redirect('/auth')
   }
 
-  async function del(id: string) {
-    if (!confirm('Silmek istediğinizden emin misiniz?')) return
-    await fetch(`/api/customers?id=${id}`, { method: 'DELETE' })
-    load()
-  }
+  let companyId: string
+  try { companyId = await resolveCompanyId(uid, supabase) }
+  catch { redirect('/auth') }
 
-  const f = (k: keyof typeof EMPTY) => ({
-    value: form[k],
-    onChange: (e: ChangeEvent<HTMLInputElement|HTMLTextAreaElement>) =>
-      setForm(p => ({ ...p, [k]: e.target.value })),
-  })
+  // ── Parallel fetch ─────────────────────────────────────────────────────────
+  const [customersRes, salesRes] = await Promise.all([
+    supabase
+      .from('customers')
+      .select('*')
+      .eq('company_id', companyId)
+      .is('deleted_at', null)
+      .order('name'),
 
-  const filtered = list.filter(c =>
-    !search.trim() ||
-    c.name.toLowerCase().includes(search.toLowerCase()) ||
-    (c.email ?? '').toLowerCase().includes(search.toLowerCase())
-  )
+    supabase
+      .from('sales')
+      .select('customer_name, total_try, payment_status')
+      .eq('company_id', companyId)
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false })
+      .limit(500),
+  ])
 
-  if (loading) return <div className="flex items-center justify-center h-40"><div className="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" /></div>
+  const customers = (customersRes.data ?? []) as Customer[]
+  const sales     = (salesRes.data     ?? []) as SaleAgg[]
+
+  // ── Server-side analytics ──────────────────────────────────────────────────
+  const billed      = totalBilled(sales)
+  const outstanding = outstandingBalance(sales)
+  const topCustomers = topCustomersByRevenue(sales, customers, 5)
+  const maxTopTotal  = topCustomers[0]?.total ?? 1
+  const paidCount    = customers.length > 0
+    ? sales.filter(s => s.payment_status === 'paid').length
+    : 0
+  const collectionRate = sales.length > 0
+    ? Math.round((paidCount / sales.length) * 100)
+    : 0
 
   return (
-    <div className="max-w-3xl">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-black">Müşteriler</h1>
-          <p className="text-sm text-gray-500 mt-0.5">{list.length} kayıt</p>
-        </div>
-        {!showForm && (
-          <button onClick={openNew} className="bg-primary-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-primary-700 transition-colors">
-            + Yeni Müşteri
-          </button>
-        )}
+    <div className="max-w-3xl space-y-6">
+
+      {/* ── Page header ───────────────────────────────────────────────────────── */}
+      <div>
+        <h1 className="text-xl font-black text-gray-900 tracking-tight">Müşteriler</h1>
+        <p className="text-xs text-gray-400 mt-0.5">{customers.length} kayıt · {sales.length} satış</p>
       </div>
 
-      {showForm && (
-        <div className="bg-white border border-gray-200 rounded-xl p-6 mb-5 space-y-4">
-          <h3 className="font-bold text-sm border-b border-gray-100 pb-3">{editId ? 'Düzenle' : 'Yeni Müşteri'}</h3>
-          <div><label className={LAB}>Ad *</label><input className={IL} {...f('name')} autoFocus /></div>
-          <div><label className={LAB}>Adres</label><textarea className={`${IL} resize-none`} rows={2} {...f('address')} /></div>
-          <div className="grid grid-cols-2 gap-4">
-            <div><label className={LAB}>Vergi No</label><input className={IL} {...f('tax_number')} /></div>
-            <div><label className={LAB}>Vergi Dairesi</label><input className={IL} {...f('tax_office')} /></div>
-            <div><label className={LAB}>E-posta</label><input type="email" className={IL} {...f('email')} /></div>
-            <div><label className={LAB}>Telefon</label><input className={IL} {...f('phone')} /></div>
-          </div>
-          <div><label className={LAB}>Notlar</label><textarea className={`${IL} resize-none`} rows={2} {...f('notes')} /></div>
-          {err && <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl px-3 py-2">{err}</div>}
-          <div className="flex gap-2">
-            <button onClick={save} disabled={saving || !form.name.trim()}
-              className="bg-primary-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-primary-700 disabled:opacity-40 transition-colors">
-              {saving ? 'Kaydediliyor...' : editId ? 'Güncelle' : 'Kaydet'}
-            </button>
-            <button onClick={closeForm} className="border border-gray-200 px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50/60 transition-colors">İptal</button>
-          </div>
+      {/* ── Zone 1: KPI Strip ────────────────────────────────────────────────── */}
+      {sales.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-gray-200 rounded-xl overflow-hidden">
+          {[
+            {
+              label: 'Toplam Müşteri',
+              value: String(customers.length),
+              sub:   `${sales.length} satış kaydı`,
+              color: 'text-gray-900',
+            },
+            {
+              label: 'Toplam Ciro',
+              value: billed > 0 ? fmt(billed) : '—',
+              sub:   'Tüm satışlar (TRY)',
+              color: 'text-primary-700',
+            },
+            {
+              label: 'Bekleyen Tahsilat',
+              value: outstanding > 0 ? fmt(outstanding) : '—',
+              sub:   outstanding > 0 ? 'Ödenmemiş + kısmi' : 'Tamamı tahsil edildi ✓',
+              color: outstanding > 0 ? 'text-red-600' : 'text-emerald-600',
+            },
+            {
+              label: 'Tahsilat Oranı',
+              value: sales.length > 0 ? `%${collectionRate}` : '—',
+              sub:   `${paidCount} / ${sales.length} satış ödendi`,
+              color: collectionRate >= 80 ? 'text-emerald-700' : collectionRate >= 50 ? 'text-amber-700' : 'text-red-600',
+            },
+          ].map((card, i) => (
+            <div key={card.label}
+              className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-gray-100' : ''}`}>
+              <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{card.label}</div>
+              <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
+              <div className="text-[10px] text-gray-400 mt-1">{card.sub}</div>
+            </div>
+          ))}
         </div>
       )}
 
-      {!showForm && list.length > 4 && (
-        <div className="mb-4">
-          <input className={IL} placeholder="Ara..." value={search} onChange={e => setSearch(e.target.value)} />
-        </div>
-      )}
-
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-        {filtered.length === 0 ? (
-          <div className="py-16 text-center">
-            <div className="text-4xl mb-3">👥</div>
-            <div className="text-sm font-semibold text-gray-600 mb-1">{search ? 'Sonuç bulunamadı.' : 'Henüz müşteri eklenmedi.'}</div>
-            {!search && <p className="text-xs text-gray-400">Yeni müşteri eklemek için "Yeni Müşteri" butonuna tıklayın.</p>}
-          </div>
-        ) : (
-          <div className="divide-y divide-gray-100">
-            {filtered.map(c => (
-              <div key={c.id} className="flex items-center justify-between px-5 py-4 hover:bg-gray-50/60 transition-colors">
-                <button
-                  onClick={() => router.push(`/dashboard/customers/${c.id}`)}
-                  className="min-w-0 text-left flex-1 mr-3"
-                >
-                  <div className="text-sm font-semibold truncate hover:text-primary-600 transition-colors">{c.name}</div>
-                  {c.tax_number && <div className="text-xs text-gray-400">Vergi No: {c.tax_number}{c.tax_office ? ' · ' + c.tax_office : ''}</div>}
-                  {c.email && <div className="text-xs text-gray-400">{c.email}</div>}
-                </button>
-                <div className="flex gap-1 flex-shrink-0">
-                  <button onClick={() => openEdit(c)} className="text-xs text-gray-400 hover:text-gray-900 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors">Düzenle</button>
-                  <button onClick={() => del(c.id)} className="text-xs text-gray-400 hover:text-red-500 px-2 py-1 rounded-lg hover:bg-red-50 transition-colors">Sil</button>
+      {/* ── Zone 2: Top Customers Bar Chart ──────────────────────────────────── */}
+      {topCustomers.length > 0 && billed > 0 && (
+        <div className="bg-white border border-gray-200 rounded-xl p-4">
+          <h2 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">
+            En Yüksek Cirolu Müşteriler
+          </h2>
+          <div className="space-y-2.5">
+            {topCustomers.map(tc => {
+              const barPct   = (tc.total / maxTopTotal) * 100
+              const sharePct = billed > 0 ? (tc.total / billed) * 100 : 0
+              return (
+                <div key={tc.name} className="flex items-center gap-3">
+                  <div className="w-36 text-xs text-gray-700 font-medium shrink-0 truncate" title={tc.name}>
+                    {tc.name}
+                  </div>
+                  <div className="flex-1 relative">
+                    <div className="h-5 bg-gray-100 rounded-lg overflow-hidden">
+                      <div
+                        className="h-5 bg-primary-400 rounded-lg transition-all"
+                        style={{ width: `${barPct}%` }}
+                      />
+                    </div>
+                  </div>
+                  <div className="w-28 text-right shrink-0">
+                    <span className="text-xs font-bold tabular-nums text-primary-700">{fmt(tc.total)}</span>
+                    <span className="text-[10px] text-gray-400 ml-1">%{sharePct.toFixed(0)}</span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* ── Client island: form + list ────────────────────────────────────────── */}
+      <CustomersClient initialCustomers={customers} />
+
     </div>
   )
 }
