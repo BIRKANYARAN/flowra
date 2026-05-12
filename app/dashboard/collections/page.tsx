@@ -1,17 +1,34 @@
 // ── /dashboard/collections — server component wrapper ─────────────────────────
 //
-// Pre-fetches the initial "unpaid" rows (first 50) server-side so the page
-// renders with data immediately — no loading spinner on first paint.
+// FAZ T3: Collections Intelligence — adds server-rendered command bar above
+// the interactive shell showing live AR metrics (outstanding, overdue, rate).
 //
-// The interactive shell (CollectionsClient) handles tab switching, mutations,
-// and optimistic updates client-side after hydration.
+// Layout:
+//   CollectionsCommandBar  — server RSC: AR KPIs + acil tahsilat strip
+//   CollectionsClient      — client: interactive list, tabs, mutations
 
 export const dynamic = 'force-dynamic'
 
-import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase-server'
+import { redirect }  from 'next/navigation'
+import { Suspense }  from 'react'
+import { createClient }   from '@/lib/supabase-server'
 import { resolveCompanyId } from '@/lib/resolve-company'
 import CollectionsClient, { type CollectionRow } from './CollectionsClient'
+import { CollectionsCommandBar } from './_components/CollectionsCommandBar'
+
+// ── Loading skeleton for command bar ──────────────────────────────────────────
+
+function CommandBarSkeleton() {
+  return (
+    <div className="flex items-center gap-2 animate-pulse">
+      {[...Array(4)].map((_, i) => (
+        <div key={i} className="h-8 w-28 bg-gray-100 rounded-xl" />
+      ))}
+    </div>
+  )
+}
+
+// ── Page ──────────────────────────────────────────────────────────────────────
 
 export default async function CollectionsPage() {
   const supabase = createClient()
@@ -22,9 +39,8 @@ export default async function CollectionsPage() {
   try {
     companyId = await resolveCompanyId(authData.user.id, supabase)
   } catch {
-    // Fall back to empty initial rows — client will retry via API
     return (
-      <div className="max-w-5xl">
+      <div className="max-w-5xl space-y-3">
         <CollectionsClient initialRows={[]} />
       </div>
     )
@@ -56,8 +72,16 @@ export default async function CollectionsPage() {
   }))
 
   return (
-    <div className="max-w-5xl">
+    <div className="max-w-5xl space-y-3">
+
+      {/* ── Intelligence strip ─────────────────────────────────────────────── */}
+      <Suspense fallback={<CommandBarSkeleton />}>
+        <CollectionsCommandBar companyId={companyId} />
+      </Suspense>
+
+      {/* ── Interactive list ───────────────────────────────────────────────── */}
       <CollectionsClient initialRows={initialRows} />
+
     </div>
   )
 }
