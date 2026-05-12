@@ -15,10 +15,24 @@
 export const dynamic = 'force-dynamic'
 
 import { redirect }         from 'next/navigation'
+import { Suspense }         from 'react'
 import { createClient }     from '@/lib/supabase-server'
 import { resolveCompanyId } from '@/lib/resolve-company'
 import type { Expense }     from '@/types'
 import ExpensesClient, { type RecurringRow } from './ExpensesClient'
+import { ExpensesCommandBar } from './_components/ExpensesCommandBar'
+
+// ── Loading skeleton for command bar ──────────────────────────────────────────
+
+function CommandBarSkeleton() {
+  return (
+    <div className="flex items-center gap-2 animate-pulse">
+      {[...Array(4)].map((_, i) => (
+        <div key={i} className="h-8 w-28 bg-gray-100 rounded-xl" />
+      ))}
+    </div>
+  )
+}
 
 // ── Formatters ────────────────────────────────────────────────────────────────
 
@@ -161,6 +175,11 @@ export default async function ExpensesPage() {
 
   return (
     <div className="max-w-4xl space-y-6">
+
+      {/* ── Intelligence strip ─────────────────────────────────────────────── */}
+      <Suspense fallback={<CommandBarSkeleton />}>
+        <ExpensesCommandBar companyId={companyId} />
+      </Suspense>
 
       {/* ── Page header ───────────────────────────────────────────────────────── */}
       <div>
