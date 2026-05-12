@@ -8,6 +8,7 @@ import { resolveUserRole }  from '@/lib/require-role'
 import type { UserSettings, MemberRole } from '@/types'
 import { resolveCompanyId } from '@/lib/resolve-company'
 import { safeSystemQuery }  from '@/lib/admin-db'
+import { MOBILE_NAV }       from '@/lib/nav-config'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   try {
@@ -84,15 +85,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <main className="flex-1 px-4 md:px-5 py-4 pb-20 md:pb-4 overflow-auto">
             {children}
           </main>
-          {/* Mobile bottom nav — visible only on small screens */}
+          {/* Mobile bottom nav — 5 strategic items from nav-config */}
           <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex items-center justify-around px-2 py-2 z-50">
-            {([
-              { href: '/dashboard', label: 'Genel', emoji: '🏠' },
-              { href: '/dashboard/sales-flow', label: 'Satış', emoji: '💰' },
-              { href: '/dashboard/collections', label: 'Tahsilat', emoji: '📥' },
-              { href: '/dashboard/expenses', label: 'Gider', emoji: '📤' },
-              { href: '/dashboard/proformas', label: 'Proforma', emoji: '📄' },
-            ] as const).map(item => (
+            {MOBILE_NAV.map(item => (
               <a
                 key={item.href}
                 href={item.href}
