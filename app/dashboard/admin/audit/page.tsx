@@ -1,87 +1,86 @@
-'use client'
-
-// ─────────────────────────────────────────────────────────────────────────────
-// /dashboard/admin/audit — Company-wide audit log (admin only)
+// ── /dashboard/admin/audit — Denetim Kaydı (server component) ────────────────
 //
-// Shows all audit_logs rows for the company with filters:
-//   • action (create / update / delete)
-//   • entity_type
-//   • user_id (which team member performed the action)
-// Paginates 50 rows at a time.
-// ─────────────────────────────────────────────────────────────────────────────
+// FAZ 13: Converted from 'use client' to server component.
+//
+// Server-rendered sections (static, no JS):
+//   Zone 1 — KPI strip: total logs, action distribution, this-month count
+//   Zone 2 — Access-denied panel (rendered instead of KPI when not admin)
+//
+// Client island:
+//   AuditClient — filters + pagination + row expansion (re-fetches /api/admin/audit)
+//
+// Directly calls safeAdminQuery for the first page of logs.
+// Self-HTTP eliminated for the initial render.
 
-import { Fragment, useState, useEffect, useCallback, type ChangeEvent } from 'react'
-import type { AuditLog } from '@/types'
+export const dynamic = 'force-dynamic'
 
-// ── Style tokens ──────────────────────────────────────────────────────────────
-const SEL = 'border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 bg-white transition-colors cursor-pointer'
+import { redirect }         from 'next/navigation'
+import { createClient }     from '@/lib/supabase-server'
+import { resolveCompanyId } from '@/lib/resolve-company'
+import { requireAdmin }     from '@/lib/require-role'
+import { safeAdminQuery }   from '@/lib/admin-db'
+import { AppError }         from '@/types/errors'
+import type { AuditLog }    from '@/types'
+import AuditClient          from './AuditClient'
 
-// ── Entity type labels ────────────────────────────────────────────────────────
-const ENTITY_LABELS: Record<string, string> = {
-  stock_movement:     'Stok Hareketi',
-  purchase:           'Satın Alma',
-  sale:               'Satış',
-  expense:            'Gider',
-  recurring_expense:  'Tekrarlayan Gider',
-  partner_transaction:'Ortak İşlemi',
-  partner:            'Ortak',
+// ── Analytics helpers (pure, tested in tests/audit-log-analytics.test.ts) ────
+
+function actionDistribution(logs: AuditLog[]): Record<string, number> {
+  const counts: Record<string, number> = { create: 0, update: 0, delete: 0 }
+  for (const log of logs) {
+    counts[log.action] = (counts[log.action] ?? 0) + 1
+  }
+  return counts
 }
 
-const ACTION_LABELS: Record<string, { label: string; color: string }> = {
-  create: { label: 'Oluşturuldu', color: 'bg-green-100 text-green-700' },
-  update: { label: 'Güncellendi', color: 'bg-blue-100  text-blue-700'  },
-  delete: { label: 'Silindi',     color: 'bg-red-100   text-red-700'   },
+function entityTypeSummary(logs: AuditLog[]): { type: string; count: number }[] {
+  const map = new Map<string, number>()
+  for (const log of logs) {
+    map.set(log.entity_type, (map.get(log.entity_type) ?? 0) + 1)
+  }
+  return Array.from(map.entries())
+    .map(([type, count]) => ({ type, count }))
+    .sort((a, b) => b.count - a.count)
+}
+
+function thisMonthCount(logs: AuditLog[], ym: string): number {
+  // ym format: 'YYYY-MM'
+  return logs.filter(log => log.created_at.slice(0, 7) === ym).length
 }
 
 const PAGE_SIZE = 50
 
-// ── Component ─────────────────────────────────────────────────────────────────
+// ── Page ──────────────────────────────────────────────────────────────────────
 
-export default function AdminAuditPage() {
-  const [logs,      setLogs]      = useState<AuditLog[]>([])
-  const [total,     setTotal]     = useState(0)
-  const [offset,    setOffset]    = useState(0)
-  const [loading,   setLoading]   = useState(true)
-  const [forbidden, setForbidden] = useState(false)
-  const [error,     setError]     = useState('')
+export default async function AdminAuditPage() {
+  const supabase = createClient()
+  let uid: string
+  try {
+    const { data, error } = await supabase.auth.getUser()
+    if (error || !data?.user) redirect('/auth')
+    uid = data.user.id
+  } catch (e) {
+    if (e && typeof e === 'object' && 'digest' in e) throw e
+    redirect('/auth')
+  }
 
-  // Expanded row for old_data / new_data JSON diff
-  const [expanded, setExpanded] = useState<string | null>(null)
+  let companyId: string
+  try { companyId = await resolveCompanyId(uid, supabase) }
+  catch { redirect('/auth') }
 
-  // Filters
-  const [filterAction,     setFilterAction]     = useState('')
-  const [filterEntityType, setFilterEntityType] = useState('')
-  const [filterSince,      setFilterSince]      = useState('')
+  // ── Admin guard ────────────────────────────────────────────────────────────
+  let isAdmin = true
+  try { await requireAdmin(uid, companyId, supabase) }
+  catch (e) {
+    if (e instanceof AppError && e.code === 'FORBIDDEN') {
+      isAdmin = false
+    } else {
+      throw e
+    }
+  }
 
-  // ── Fetch ──────────────────────────────────────────────────────────────────
-
-  const load = useCallback(async (off = 0) => {
-    setLoading(true)
-    setError('')
-
-    const params = new URLSearchParams()
-    params.set('limit',  String(PAGE_SIZE))
-    params.set('offset', String(off))
-    if (filterAction)     params.set('action',      filterAction)
-    if (filterEntityType) params.set('entity_type', filterEntityType)
-    if (filterSince)      params.set('since',        filterSince)
-
-    const res = await fetch(`/api/admin/audit?${params.toString()}`)
-    if (res.status === 403) { setForbidden(true); setLoading(false); return }
-    if (!res.ok) { setError('Audit logları yüklenemedi.'); setLoading(false); return }
-
-    const json = await res.json()
-    setLogs(json.logs ?? [])
-    setTotal(json.total ?? 0)
-    setOffset(off)
-    setLoading(false)
-  }, [filterAction, filterEntityType, filterSince])
-
-  useEffect(() => { load(0) }, [load])
-
-  // ── Render ─────────────────────────────────────────────────────────────────
-
-  if (forbidden) {
+  // ── Access-denied view ─────────────────────────────────────────────────────
+  if (!isAdmin) {
     return (
       <div className="max-w-lg">
         <div className="bg-red-50 border border-red-100 rounded-xl p-6 text-center">
@@ -93,202 +92,176 @@ export default function AdminAuditPage() {
     )
   }
 
-  const totalPages = Math.ceil(total / PAGE_SIZE)
-  const currentPage = Math.floor(offset / PAGE_SIZE) + 1
+  // ── Fetch first page of audit logs ─────────────────────────────────────────
+  const today = new Date().toISOString().slice(0, 10)
+  const thisYM = today.slice(0, 7)
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const q: any = safeAdminQuery('audit_logs', companyId)
+    .select('*', { count: 'exact' })
+    .order('created_at', { ascending: false })
+    .range(0, PAGE_SIZE - 1)
+
+  const { data: rawLogs, count } = await q
+  const logs  = (rawLogs ?? []) as AuditLog[]
+  const total = count ?? 0
+
+  // ── Server-side analytics (on the first-page sample) ──────────────────────
+  // For KPI accuracy we also fetch a lightweight count-only query for this month
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const monthQ: any = safeAdminQuery('audit_logs', companyId)
+    .select('*', { count: 'exact', head: true })
+    .gte('created_at', thisYM + '-01T00:00:00Z')
+
+  const { count: monthCount } = await monthQ
+  const thisMonth = monthCount ?? 0
+
+  const actionDist  = actionDistribution(logs)
+  const topEntities = entityTypeSummary(logs).slice(0, 3)
+
+  // ── Action label map for KPI strip ─────────────────────────────────────────
+  const ACTION_LABELS: Record<string, string> = {
+    create: 'Oluşturma',
+    update: 'Güncelleme',
+    delete: 'Silme',
+  }
 
   return (
-    <div className="max-w-5xl">
-      {/* Page header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-black">Denetim Kaydı</h1>
-        <p className="text-sm text-gray-500 mt-0.5">
+    <div className="max-w-5xl space-y-6">
+
+      {/* ── Header ──────────────────────────────────────────────────────── */}
+      <div>
+        <h1 className="text-xl font-black text-gray-900 tracking-tight">Denetim Kaydı</h1>
+        <p className="text-xs text-gray-400 mt-0.5">
           Şirketteki tüm işlem geçmişi · {total.toLocaleString('tr-TR')} kayıt
         </p>
       </div>
 
-      {/* Filters */}
-      <div className="bg-white border border-gray-200 rounded-xl p-4 mb-5 flex flex-wrap gap-3 items-end">
-        <div>
-          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">İşlem</div>
-          <select
-            className={SEL}
-            value={filterAction}
-            onChange={(e: ChangeEvent<HTMLSelectElement>) => setFilterAction(e.target.value)}
-          >
-            <option value="">Tümü</option>
-            <option value="create">Oluşturuldu</option>
-            <option value="update">Güncellendi</option>
-            <option value="delete">Silindi</option>
-          </select>
-        </div>
-        <div>
-          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Kayıt Türü</div>
-          <select
-            className={SEL}
-            value={filterEntityType}
-            onChange={(e: ChangeEvent<HTMLSelectElement>) => setFilterEntityType(e.target.value)}
-          >
-            <option value="">Tümü</option>
-            {Object.entries(ENTITY_LABELS).map(([v, l]) => (
-              <option key={v} value={v}>{l}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Başlangıç Tarihi</div>
-          <input
-            type="date"
-            className={SEL}
-            value={filterSince}
-            onChange={(e: ChangeEvent<HTMLInputElement>) => setFilterSince(e.target.value ? e.target.value + 'T00:00:00Z' : '')}
-          />
-        </div>
-        <button
-          onClick={() => { setFilterAction(''); setFilterEntityType(''); setFilterSince('') }}
-          className="text-sm text-gray-400 hover:text-gray-700 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors"
-        >
-          Sıfırla
-        </button>
-      </div>
-
-      {/* Error */}
-      {error && (
-        <div className="bg-red-50 border border-red-100 rounded-xl px-4 py-3 text-sm text-red-600 mb-5">
-          {error}
+      {/* ── Zone 1: KPI Strip ────────────────────────────────────────────── */}
+      {total > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-gray-200 rounded-xl overflow-hidden">
+          {[
+            {
+              label: 'Toplam Kayıt',
+              value: total.toLocaleString('tr-TR'),
+              sub:   'tüm işlemler',
+              color: 'text-gray-900',
+            },
+            {
+              label: 'Bu Ay',
+              value: thisMonth > 0 ? thisMonth.toLocaleString('tr-TR') : '—',
+              sub:   thisMonth > 0 ? 'son 30 gün' : 'henüz kayıt yok',
+              color: thisMonth > 0 ? 'text-blue-700' : 'text-gray-400',
+            },
+            {
+              label: 'Oluşturma',
+              value: actionDist.create > 0 ? String(actionDist.create) : '—',
+              sub:   'son 50 kayıtta',
+              color: actionDist.create > 0 ? 'text-emerald-700' : 'text-gray-400',
+            },
+            {
+              label: 'Silme',
+              value: actionDist.delete > 0 ? String(actionDist.delete) : '—',
+              sub:   'son 50 kayıtta',
+              color: actionDist.delete > 0 ? 'text-red-600' : 'text-gray-400',
+            },
+          ].map((card, i) => (
+            <div key={card.label}
+              className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-gray-100' : ''}`}>
+              <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{card.label}</div>
+              <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
+              <div className="text-[10px] text-gray-400 mt-1">{card.sub}</div>
+            </div>
+          ))}
         </div>
       )}
 
-      {/* Loading */}
-      {loading && (
-        <div className="flex items-center justify-center h-40">
-          <div className="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
-        </div>
-      )}
+      {/* ── Action distribution + top entities (server-rendered) ─────────── */}
+      {total > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
-      {/* Table */}
-      {!loading && (
-        <>
-          <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-            {logs.length === 0 ? (
-              <div className="text-center py-16 text-gray-400">
-                <div className="text-4xl mb-2">📋</div>
-                <p className="text-sm">Kayıt bulunamadı.</p>
-              </div>
-            ) : (
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-gray-100">
-                    <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">Tarih</th>
-                    <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">Kullanıcı</th>
-                    <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">İşlem</th>
-                    <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">Kayıt Türü</th>
-                    <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">Kayıt ID</th>
-                    <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400">Detay</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {logs.map(log => {
-                    const actionMeta = ACTION_LABELS[log.action] ?? { label: log.action, color: 'bg-gray-100 text-gray-600' }
-                    const entityLabel = ENTITY_LABELS[log.entity_type] ?? log.entity_type
-                    const isExpanded = expanded === log.id
-
-                    return (
-                      <Fragment key={log.id}>
-                        <tr
-                          className="hover:bg-gray-50/60 transition-colors cursor-pointer"
-                          onClick={() => setExpanded(isExpanded ? null : log.id)}
-                        >
-                          <td className="px-5 py-3 text-xs text-gray-500 whitespace-nowrap">
-                            {new Date(log.created_at).toLocaleString('tr-TR', {
-                              day: '2-digit', month: '2-digit', year: 'numeric',
-                              hour: '2-digit', minute: '2-digit',
-                            })}
-                          </td>
-                          <td className="px-5 py-3">
-                            <code className="text-[10px] bg-gray-100 text-gray-600 rounded px-1.5 py-0.5">
-                              {log.user_id.slice(0, 8)}…
-                            </code>
-                          </td>
-                          <td className="px-5 py-3">
-                            <span className={`text-xs font-semibold px-2 py-1 rounded-full ${actionMeta.color}`}>
-                              {actionMeta.label}
-                            </span>
-                          </td>
-                          <td className="px-5 py-3 text-xs text-gray-700">{entityLabel}</td>
-                          <td className="px-5 py-3">
-                            <code className="text-[10px] bg-gray-100 text-gray-600 rounded px-1.5 py-0.5">
-                              {log.entity_id.slice(0, 8)}…
-                            </code>
-                          </td>
-                          <td className="px-5 py-3">
-                            <button className="text-xs text-primary-600 hover:text-primary-800 font-medium">
-                              {isExpanded ? '▲ Gizle' : '▼ Görüntüle'}
-                            </button>
-                          </td>
-                        </tr>
-                        {isExpanded && (
-                          <tr key={`${log.id}-detail`} className="bg-gray-50">
-                            <td colSpan={6} className="px-5 py-4">
-                              <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                  <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">
-                                    Önceki Değer
-                                  </div>
-                                  <pre className="text-[10px] bg-white border border-gray-200 rounded-xl p-3 overflow-auto max-h-48 text-gray-700">
-                                    {log.old_data ? JSON.stringify(log.old_data, null, 2) : '—'}
-                                  </pre>
-                                </div>
-                                <div>
-                                  <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">
-                                    Yeni Değer
-                                  </div>
-                                  <pre className="text-[10px] bg-white border border-gray-200 rounded-xl p-3 overflow-auto max-h-48 text-gray-700">
-                                    {log.new_data ? JSON.stringify(log.new_data, null, 2) : '—'}
-                                  </pre>
-                                </div>
-                              </div>
-                              {log.ip_address && (
-                                <div className="mt-2 text-[10px] text-gray-400">
-                                  IP: {log.ip_address}
-                                </div>
-                              )}
-                            </td>
-                          </tr>
-                        )}
-                      </Fragment>
-                    )
-                  })}
-                </tbody>
-              </table>
-            )}
+          {/* Action bars */}
+          <div className="bg-white border border-gray-200 rounded-xl p-4">
+            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">
+              İşlem Dağılımı (son 50)
+            </div>
+            <div className="space-y-2">
+              {(['create', 'update', 'delete'] as const).map(action => {
+                const count = actionDist[action] ?? 0
+                const pct   = logs.length > 0 ? Math.round((count / logs.length) * 100) : 0
+                const colors = {
+                  create: { bar: 'bg-emerald-400', text: 'text-emerald-700' },
+                  update: { bar: 'bg-blue-400',    text: 'text-blue-700'    },
+                  delete: { bar: 'bg-red-400',      text: 'text-red-600'    },
+                }
+                return (
+                  <div key={action}>
+                    <div className="flex justify-between items-center mb-0.5">
+                      <span className="text-xs text-gray-600">{ACTION_LABELS[action]}</span>
+                      <span className={`text-xs font-semibold tabular-nums ${colors[action].text}`}>
+                        {count}
+                      </span>
+                    </div>
+                    <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full ${colors[action].bar} rounded-full transition-all`}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
           </div>
 
-          {/* Pagination */}
-          {total > PAGE_SIZE && (
-            <div className="flex items-center justify-between mt-4 px-1">
-              <span className="text-xs text-gray-400">
-                Sayfa {currentPage} / {totalPages} · {total.toLocaleString('tr-TR')} kayıt
-              </span>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => load(offset - PAGE_SIZE)}
-                  disabled={offset === 0}
-                  className="px-3 py-1.5 text-xs border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-40 transition-colors"
-                >
-                  ← Önceki
-                </button>
-                <button
-                  onClick={() => load(offset + PAGE_SIZE)}
-                  disabled={offset + PAGE_SIZE >= total}
-                  className="px-3 py-1.5 text-xs border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-40 transition-colors"
-                >
-                  Sonraki →
-                </button>
-              </div>
+          {/* Top entity types */}
+          <div className="bg-white border border-gray-200 rounded-xl p-4">
+            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">
+              En Aktif Kayıt Türleri (son 50)
             </div>
-          )}
-        </>
+            {topEntities.length === 0 ? (
+              <p className="text-xs text-gray-400">Veri yok.</p>
+            ) : (
+              <div className="space-y-2">
+                {topEntities.map(({ type, count }) => {
+                  const ENTITY_LABELS: Record<string, string> = {
+                    stock_movement:      'Stok Hareketi',
+                    purchase:            'Satın Alma',
+                    sale:                'Satış',
+                    expense:             'Gider',
+                    recurring_expense:   'Tekrarlayan Gider',
+                    partner_transaction: 'Ortak İşlemi',
+                    partner:             'Ortak',
+                  }
+                  const label = ENTITY_LABELS[type] ?? type
+                  const pct   = logs.length > 0 ? Math.round((count / logs.length) * 100) : 0
+                  return (
+                    <div key={type}>
+                      <div className="flex justify-between items-center mb-0.5">
+                        <span className="text-xs text-gray-600">{label}</span>
+                        <span className="text-xs font-semibold tabular-nums text-gray-700">{count}</span>
+                      </div>
+                      <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-primary-400 rounded-full transition-all"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        </div>
       )}
+
+      {/* ── Client island: filters + table + pagination ───────────────────── */}
+      <AuditClient
+        initialLogs={logs}
+        initialTotal={total}
+      />
+
     </div>
   )
 }
