@@ -6,7 +6,6 @@ export const dynamic = 'force-dynamic'
 // SERVER COMPONENT.
 //
 // Layout:
-//   FinanceNavTabs (hub nav — Genel Finans / CEO Özeti / … / Ortak Finansmanı)
 //   Inner tabs:
 //     Özet       — command strip, partner cards, debt burden, equalization, ledger
 //     Sermaye    — capital_in transactions + add form

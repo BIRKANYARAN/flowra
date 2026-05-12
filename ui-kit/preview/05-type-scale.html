@@ -1,0 +1,23 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="card.css">
+<style>
+  body { padding: 22px 28px; }
+  .stack { display: flex; flex-direction: column; gap: 16px; }
+  .specimen { display: flex; align-items: baseline; gap: 16px; }
+  .meta { font-size: 10px; color: var(--fg-4); font-family: ui-monospace, monospace; min-width: 120px; }
+  .h1 { font-size: 24px; font-weight: 900; letter-spacing: -.01em; line-height: 1.1; color: var(--fg-1); }
+  .h2 { font-size: 20px; font-weight: 900; letter-spacing: -.01em; color: var(--fg-1); }
+  .body { font-size: 14px; color: var(--fg-1); }
+  .meta-text { font-size: 12px; color: var(--fg-3); }
+  .tiny { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--fg-4); }
+</style></head><body>
+<div class="card">
+  <div class="stack">
+    <div class="specimen"><span class="meta">H1 · 24/900/-.01em</span><span class="h1">Genel Durum</span></div>
+    <div class="specimen"><span class="meta">H2 · 20/900/-.01em</span><span class="h2">Bekleyen Tahsilatlar</span></div>
+    <div class="specimen"><span class="meta">Body · 14/400</span><span class="body">3 satış tahsilat bekliyor: ₺92.000</span></div>
+    <div class="specimen"><span class="meta">Meta · 12/400 fg-3</span><span class="meta-text">Tahsilat sayfasından ödeme durumunu güncelleyin</span></div>
+    <div class="specimen"><span class="meta">Tiny · 10/700 widest</span><span class="tiny">DAĞITILABILIR</span></div>
+  </div>
+</div>
+</body></html>

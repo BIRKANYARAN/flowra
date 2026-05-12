@@ -1,0 +1,95 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="card.css">
+<template id="__bundler_thumbnail" data-bg-color="#f7f7f5">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect x="280" y="260" width="640" height="280" rx="36" fill="#ffffff" stroke="#e5e5e0" stroke-width="3"/>
+    <circle cx="370" cy="380" r="34" fill="#ecfdf5"/>
+    <text x="370" y="394" font-family="Inter, system-ui, sans-serif" font-size="34" font-weight="700" fill="#047857" text-anchor="middle">$</text>
+    <circle cx="370" cy="460" r="34" fill="#eff6ff"/>
+    <text x="370" y="474" font-family="Inter, system-ui, sans-serif" font-size="34" font-weight="700" fill="#1d4ed8" text-anchor="middle">€</text>
+    <text x="440" y="392" font-family="Inter, system-ui, sans-serif" font-size="28" font-weight="700" fill="#1f1f1c">34,72</text>
+    <text x="440" y="472" font-family="Inter, system-ui, sans-serif" font-size="28" font-weight="700" fill="#1f1f1c">37,15</text>
+    <circle cx="820" cy="380" r="6" fill="#10b981"/>
+    <circle cx="820" cy="460" r="6" fill="#b91c1c"/>
+  </svg>
+</template>
+<style>
+  body { padding: 18px 22px; background: var(--bg); display: flex; align-items: center; justify-content: center; }
+  .wrap { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+
+  .compact {
+    background: #fff; border: 1px solid var(--border); border-radius: 12px;
+    padding: 10px 12px; width: 240px;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .compact-head { display: flex; align-items: center; justify-content: space-between; }
+  .compact-head .ttl { font-size: 11px; font-weight: 700; color: var(--fg-2); display: inline-flex; align-items: center; gap: 5px; }
+  .compact-head .ttl .live { width: 5px; height: 5px; border-radius: 50%; background: var(--emerald-600); animation: pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.7)} }
+  .compact-head .src { font-size: 9px; color: var(--fg-4); font-family: ui-monospace, monospace; }
+
+  .compact-rows { display: flex; flex-direction: column; gap: 4px; }
+  .compact-row { display: flex; align-items: center; justify-content: space-between; font-size: 12px; }
+  .pair-lbl { font-weight: 600; color: var(--fg-3); display: inline-flex; align-items: center; gap: 5px; }
+  .sym {
+    width: 18px; height: 18px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 11px; line-height: 1;
+    flex-shrink: 0;
+  }
+  .sym.usd { background: #ecfdf5; color: #047857; }
+  .sym.eur { background: #eff6ff; color: #1d4ed8; }
+  .rate { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--fg-1); }
+  .delta { font-size: 10px; margin-left: 5px; font-variant-numeric: tabular-nums; font-weight: 700; }
+  .pos { color: var(--emerald-600); }
+  .neg { color: var(--danger-700); }
+
+  /* inline pill (header / topbar) */
+  .inline-pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: #fff; border: 1px solid var(--border); border-radius: 9999px;
+    padding: 4px 10px 4px 8px; font-size: 11px;
+  }
+  .inline-pill .live { width: 5px; height: 5px; border-radius: 50%; background: var(--emerald-600); animation: pulse 1.6s ease-in-out infinite; }
+  .inline-pill .seg { display: inline-flex; align-items: center; gap: 4px; font-variant-numeric: tabular-nums; }
+  .inline-pill .seg .code { font-size: 9px; font-weight: 700; letter-spacing: .08em; color: var(--fg-4); }
+  .inline-pill .seg .v { font-weight: 700; color: var(--fg-1); }
+  .inline-pill .seg .d { font-size: 10px; font-weight: 700; }
+  .inline-pill .div { width: 1px; height: 12px; background: var(--gray-200); }
+
+  .lbl-sec { font-size: 9px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--fg-4); margin-bottom: 6px; }
+</style></head><body>
+<div class="wrap">
+
+  <div>
+    <div class="lbl-sec">Sidebar widget</div>
+    <div class="compact">
+      <div class="compact-head">
+        <span class="ttl"><span class="live"></span>Güncel Kur</span>
+        <span class="src">TCMB · 09:14</span>
+      </div>
+      <div class="compact-rows">
+        <div class="compact-row">
+          <span class="pair-lbl"><span class="sym usd">$</span>USD</span>
+          <span><span class="rate">34,7218</span><span class="delta pos">▲ 0,12%</span></span>
+        </div>
+        <div class="compact-row">
+          <span class="pair-lbl"><span class="sym eur">€</span>EUR</span>
+          <span><span class="rate">37,1490</span><span class="delta neg">▼ 0,04%</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="lbl-sec">Topbar inline pill</div>
+    <span class="inline-pill">
+      <span class="live"></span>
+      <span class="seg"><span class="sym usd" style="width:14px;height:14px;font-size:9px">$</span><span class="v">34,72</span><span class="d pos">▲</span></span>
+      <span class="div"></span>
+      <span class="seg"><span class="sym eur" style="width:14px;height:14px;font-size:9px">€</span><span class="v">37,15</span><span class="d neg">▼</span></span>
+    </span>
+  </div>
+
+</div>
+</body></html>

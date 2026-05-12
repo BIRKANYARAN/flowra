@@ -1,0 +1,122 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="card.css">
+<style>
+  body { padding: 18px 22px; background: var(--bg); }
+  .wrap { display: flex; flex-direction: column; gap: 14px; }
+  .group { display: flex; flex-direction: column; gap: 7px; }
+  .lbl-sec { font-size: 9px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--fg-4); }
+  .row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 9px; border-radius: 8px;
+    font-size: 11px; font-weight: 600; line-height: 1.4;
+    white-space: nowrap;
+  }
+  .badge .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .badge .ic { width: 11px; height: 11px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* Proforma flow */
+  .b-draft     { background: var(--gray-100);     color: var(--gray-600); }
+  .b-sent      { background: var(--info-50);      color: var(--info-700); }
+  .b-accepted  { background: var(--emerald-50);   color: var(--emerald-700); }
+  .b-converted { background: var(--primary-50);   color: var(--primary-700); }
+  .b-rejected  { background: var(--danger-50);    color: var(--danger-700); }
+
+  /* Payment */
+  .b-pending { background: var(--warning-50); color: var(--warning-700); }
+  .b-partial { background: var(--orange-50);  color: var(--orange-700); }
+  .b-paid    { background: var(--emerald-50); color: var(--emerald-700); }
+  .b-overdue { background: var(--danger-50);  color: var(--danger-700); }
+  .b-cancelled { background: var(--gray-100); color: var(--gray-400); text-decoration: line-through; }
+
+  /* Stock */
+  .b-instock  { background: var(--emerald-50); color: var(--emerald-700); }
+  .b-low      { background: var(--orange-50);  color: var(--orange-700); }
+  .b-outstock { background: var(--danger-50);  color: var(--danger-700); }
+
+  /* Outline */
+  .b-out { background: transparent; border: 1px solid; }
+  .b-out.b-accepted { border-color: var(--emerald-200); color: var(--emerald-700); }
+  .b-out.b-pending  { border-color: var(--warning-200); color: var(--warning-700); }
+  .b-out.b-overdue  { border-color: var(--danger-200);  color: var(--danger-700); }
+
+  /* Role pills */
+  .pill {
+    font-size: 9px; font-weight: 700; letter-spacing: .06em;
+    padding: 2px 7px; border-radius: 9999px;
+  }
+  .p-admin  { background: var(--primary-100); color: var(--primary-700); }
+  .p-mgr    { background: var(--info-100);    color: var(--info-700); }
+  .p-viewer { background: var(--gray-100);    color: var(--gray-500); }
+  .p-owner  { background: #fde9e9;            color: #991b1b; }
+
+  /* Lifecycle row — labelled examples */
+  .seq { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .seq .arr { color: var(--gray-300); font-size: 12px; }
+  .ctx { font-size: 10px; color: var(--fg-4); margin-right: 4px; }
+</style></head><body>
+<div class="card">
+  <div class="wrap">
+
+    <div class="group">
+      <span class="lbl-sec">Proforma lifecycle — left → right</span>
+      <div class="seq">
+        <span class="badge b-draft"><span class="dot"></span>Taslak</span>
+        <span class="arr">→</span>
+        <span class="badge b-sent"><span class="dot"></span>Gönderildi</span>
+        <span class="arr">→</span>
+        <span class="badge b-accepted"><svg class="ic" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Onaylandı</span>
+        <span class="arr">→</span>
+        <span class="badge b-converted"><svg class="ic" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Dönüştürüldü</span>
+        <span style="margin-left: 12px"></span>
+        <span class="ctx">terminal:</span>
+        <span class="badge b-rejected"><svg class="ic" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Reddedildi</span>
+      </div>
+    </div>
+
+    <div class="group">
+      <span class="lbl-sec">Payment status — with context</span>
+      <div class="row">
+        <span class="badge b-pending"><span class="dot"></span>Bekliyor</span>
+        <span class="badge b-partial"><span class="dot"></span>Kısmi · ₺40K / 92K</span>
+        <span class="badge b-paid"><svg class="ic" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Ödendi</span>
+        <span class="badge b-overdue"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg>Gecikmiş · 14 gün</span>
+        <span class="badge b-cancelled">İptal</span>
+      </div>
+    </div>
+
+    <div class="group">
+      <span class="lbl-sec">Stock level</span>
+      <div class="row">
+        <span class="badge b-instock"><span class="dot"></span>Stokta · 248</span>
+        <span class="badge b-low"><span class="dot"></span>Az kaldı · 3</span>
+        <span class="badge b-outstock"><span class="dot"></span>Tükendi</span>
+      </div>
+    </div>
+
+    <div class="group">
+      <span class="lbl-sec">Outline variant — used in dense tables / trees</span>
+      <div class="row">
+        <span class="badge b-out b-accepted"><svg class="ic" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Onaylandı</span>
+        <span class="badge b-out b-pending"><span class="dot"></span>Bekliyor</span>
+        <span class="badge b-out b-overdue"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg>Gecikmiş</span>
+      </div>
+    </div>
+
+    <div class="group">
+      <span class="lbl-sec">Role pills · sidebar user · 3-char Turkish abbreviations</span>
+      <div class="row">
+        <span class="pill p-owner">SHB</span><span class="ctx">Sahip / Owner</span>
+        <span style="width:8px"></span>
+        <span class="pill p-admin">YNT</span><span class="ctx">Yönetici / Admin</span>
+        <span style="width:8px"></span>
+        <span class="pill p-mgr">SAT</span><span class="ctx">Satış / Manager</span>
+        <span style="width:8px"></span>
+        <span class="pill p-viewer">İZL</span><span class="ctx">İzleyici / Viewer</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+</body></html>

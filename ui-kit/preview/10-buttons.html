@@ -1,0 +1,92 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="card.css">
+<style>
+  body { padding: 18px 22px; background: var(--bg); }
+  .wrap { display: grid; grid-template-columns: auto 1fr; gap: 18px 22px; align-items: start; }
+  .lbl-sec { font-size: 9px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--fg-4); align-self: center; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    font-family: inherit; font-weight: 600; border-radius: 12px;
+    border: 1px solid transparent; cursor: pointer;
+    padding: 7px 14px; font-size: 13px; line-height: 1;
+    transition: all .15s;
+  }
+  .btn:active { transform: translateY(.5px); }
+  .btn.sm { padding: 5px 10px; font-size: 11px; border-radius: 10px; gap: 4px; }
+  .btn.lg { padding: 10px 18px; font-size: 14px; }
+  .btn.icon { padding: 7px; width: 30px; height: 30px; }
+
+  .btn.primary  { background: var(--primary-600); color: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+  .btn.primary:hover { background: var(--primary-700); }
+  .btn.secondary { background: #fff; color: var(--gray-700); border-color: var(--gray-200); }
+  .btn.ghost   { background: transparent; color: var(--gray-500); }
+  .btn.danger  { background: var(--danger-50); color: var(--danger-700); border-color: var(--danger-100); }
+  .btn.success { background: var(--emerald-600); color: #fff; }
+  .btn.link    { background: transparent; color: var(--primary-600); padding-left: 0; padding-right: 0; }
+
+  .btn.is-hover.primary { background: var(--primary-700); }
+  .btn.is-focus { outline: none; box-shadow: 0 0 0 3px var(--primary-100); }
+  .btn.disabled { opacity: .5; cursor: not-allowed; }
+  .btn.loading { color: transparent !important; position: relative; pointer-events: none; }
+  .btn.loading::after {
+    content: ""; position: absolute; left: 50%; top: 50%; width: 13px; height: 13px;
+    margin: -6.5px 0 0 -6.5px;
+    border: 2px solid rgba(255,255,255,.4); border-top-color: #fff;
+    border-radius: 50%; animation: spin .7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .icn { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+  .btn.lg .icn { width: 14px; height: 14px; }
+  .btn.sm .icn { width: 11px; height: 11px; }
+
+  .pair { display: inline-flex; align-items: center; gap: 5px; }
+  .cap { font-size: 9px; font-family: ui-monospace, monospace; color: var(--fg-4); }
+</style></head><body>
+<div class="card">
+  <div class="wrap">
+
+    <span class="lbl-sec">Variants</span>
+    <div class="row">
+      <button class="btn primary">Kaydet</button>
+      <button class="btn secondary">İptal</button>
+      <button class="btn ghost">Vazgeç</button>
+      <button class="btn danger">Sil</button>
+      <button class="btn success">Onayla</button>
+      <button class="btn link">Detay →</button>
+    </div>
+
+    <span class="lbl-sec">With icons</span>
+    <div class="row">
+      <button class="btn primary"><svg class="icn" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Yeni Proforma</button>
+      <button class="btn secondary"><svg class="icn" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>PDF</button>
+      <button class="btn secondary">Sonraki<svg class="icn" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+      <button class="btn primary icon"><svg class="icn" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+      <button class="btn secondary icon"><svg class="icn" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button>
+    </div>
+
+    <span class="lbl-sec">Sizes</span>
+    <div class="row">
+      <button class="btn primary sm">Küçük</button>
+      <button class="btn primary">Orta</button>
+      <button class="btn primary lg">Büyük</button>
+      <span style="width:6px"></span>
+      <button class="btn secondary sm">Küçük</button>
+      <button class="btn secondary">Orta</button>
+      <button class="btn secondary lg">Büyük</button>
+    </div>
+
+    <span class="lbl-sec">States</span>
+    <div class="row">
+      <span class="pair"><button class="btn primary">Default</button><span class="cap">:rest</span></span>
+      <span class="pair"><button class="btn primary is-hover">Hover</button><span class="cap">:hover</span></span>
+      <span class="pair"><button class="btn primary is-focus">Focus</button><span class="cap">:focus</span></span>
+      <span class="pair"><button class="btn primary disabled">Disabled</button><span class="cap">[disabled]</span></span>
+      <span class="pair"><button class="btn primary loading">Loading</button><span class="cap">aria-busy</span></span>
+    </div>
+
+  </div>
+</div>
+</body></html>

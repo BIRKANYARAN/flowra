@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <defs>
+    <linearGradient id="flowra-grad" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#8b5cf6"></stop>
+      <stop offset="100%" stop-color="#6d28d9"></stop>
+    </linearGradient>
+  </defs>
+  <rect width="24" height="24" rx="6" fill="url(#flowra-grad)"></rect>
+  <g transform="translate(4.8 4.8) scale(0.6)">
+    <path d="M12 3C7.03 3 3 7.03 3 12s4.03 9 9 9c1.66 0 3.22-.45 4.56-1.24l-1.46-1.46A6.97 6.97 0 0112 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7c0 1.05-.23 2.05-.65 2.95l1.52 1.52A8.96 8.96 0 0021 12c0-4.97-4.03-9-9-9z" fill="white" fill-opacity="0.9"></path>
+    <circle cx="12" cy="12" r="3" fill="white"></circle>
+  </g>
+</svg>

@@ -1,0 +1,262 @@
+/* =========================================================================
+   Flowra Design System — Colors & Typography
+   ERP & Sales Management — Turkish-first SaaS
+   ========================================================================= */
+
+/* ── Web fonts ──────────────────────────────────────────────────────────── */
+/* Inter is the de-facto system match for Tailwind's default sans-serif stack
+   that the codebase relies on. The codebase itself uses ui-sans-serif → system-ui
+   fallback (Tailwind default), so Inter is the closest hosted webfont match.
+   LiberationSans (in /fonts) is reserved for PDF generation, not the UI.       */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+:root {
+  /* ── Primary · Violet (the canonical Flowra brand color) ───────────────── */
+  --primary-50:  #f5f3ff;
+  --primary-100: #ede9fe;
+  --primary-200: #ddd6fe;
+  --primary-300: #c4b5fd;
+  --primary-400: #a78bfa;
+  --primary-500: #8b5cf6;
+  --primary-600: #7c3aed; /* FlowraLogo · active sidebar · primary CTA */
+  --primary-700: #6d28d9;
+  --primary-800: #5b21b6;
+  --primary-900: #4c1d95;
+
+  /* Brand gradient (used in FlowraLogo) */
+  --brand-gradient: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+
+  /* ── Foreground ramp (semantic text colors) ────────────────────────────── */
+  --fg-1: #111827; /* primary text — headings, body */
+  --fg-2: #374151; /* secondary text */
+  --fg-3: #6b7280; /* tertiary / metadata */
+  --fg-4: #9ca3af; /* muted / placeholder / labels */
+  --fg-5: #d1d5db; /* borders treated as text (separators) */
+
+  /* ── Surfaces ──────────────────────────────────────────────────────────── */
+  --surface:        #ffffff; /* cards, modals */
+  --surface-subtle: #f9fafb; /* page bg in dashboard areas */
+  --surface-muted:  #f3f4f6; /* hover, code, inert chips */
+  --page-bg:        #f4f4f5; /* root <body> */
+
+  /* ── Borders ───────────────────────────────────────────────────────────── */
+  --border-default: #e5e7eb; /* standard card / input border */
+  --border-subtle:  #f3f4f6; /* internal separators (table rows) */
+  --border-strong:  #d1d5db; /* hover / focused border */
+
+  /* ── Semantic state colors ─────────────────────────────────────────────── */
+  /* Success / positive · emerald */
+  --success-50:  #ecfdf5;
+  --success-100: #d1fae5;
+  --success-600: #059669;
+  --success-700: #047857;
+
+  /* Warning · amber */
+  --warning-50:  #fffbeb;
+  --warning-100: #fef3c7;
+  --warning-200: #fde68a;
+  --warning-600: #d97706;
+  --warning-700: #b45309;
+
+  /* Orange — distinct from warning, used for tax / KDV alerts */
+  --orange-50:   #fff7ed;
+  --orange-100:  #ffedd5;
+  --orange-200:  #fed7aa;
+  --orange-700:  #c2410c;
+
+  /* Danger · red */
+  --danger-50:   #fef2f2;
+  --danger-100:  #fee2e2;
+  --danger-200:  #fecaca;
+  --danger-300:  #fca5a5;
+  --danger-600:  #dc2626;
+  --danger-700:  #b91c1c;
+
+  /* Info · blue */
+  --info-50:     #eff6ff;
+  --info-100:    #dbeafe;
+  --info-200:    #bfdbfe;
+  --info-600:    #2563eb;
+  --info-700:    #1d4ed8;
+
+  /* Neutral / muted (for cancelled, draft, generic chips) */
+  --neutral-100: #f3f4f6;
+  --neutral-500: #6b7280;
+  --neutral-600: #4b5563;
+
+  /* ── Typography ────────────────────────────────────────────────────────── */
+  --font-sans:    'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono:    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  /* LiberationSans — reserved for PDF generation only (jsPDF embed) */
+
+  /* Type scale (Tailwind-aligned) */
+  --text-xxs:  10px;  /* tiny uppercase labels */
+  --text-xs:   12px;
+  --text-sm:   14px;  /* body default */
+  --text-base: 16px;
+  --text-lg:   18px;
+  --text-xl:   20px;
+  --text-2xl:  24px;  /* page H1 */
+  --text-3xl:  30px;  /* "GENEL TOPLAM" emphatic total */
+
+  /* Weights */
+  --weight-normal:   400;
+  --weight-medium:   500;
+  --weight-semibold: 600;
+  --weight-bold:     700;
+  --weight-black:    900;  /* HEADINGS — Flowra leans heavy */
+
+  /* Tracking */
+  --tracking-tight:    -0.01em;
+  --tracking-normal:   0;
+  --tracking-wide:     0.025em;
+  --tracking-widest:   0.1em;   /* tiny uppercase labels */
+
+  /* Line heights */
+  --leading-tight:  1.1;
+  --leading-snug:   1.25;
+  --leading-normal: 1.5;
+
+  /* ── Radii ─────────────────────────────────────────────────────────────── */
+  --radius-sm:  6px;
+  --radius-md:  8px;
+  --radius-lg:  12px; /* xl in tailwind config */
+  --radius-xl:  16px; /* 2xl in tailwind config — cards */
+  --radius-full: 9999px;
+
+  /* ── Shadows ───────────────────────────────────────────────────────────── */
+  --shadow-card:  0 1px 2px 0 rgba(17, 24, 39, 0.05),
+                  0 1px 3px 0 rgba(17, 24, 39, 0.06);
+  --shadow-pdf:   0 0 0 1px rgba(17, 24, 39, 0.04),
+                  0 8px 24px -8px rgba(17, 24, 39, 0.12);
+  --shadow-sm:    0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md:    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+                  0 2px 4px -2px rgba(0, 0, 0, 0.1);
+
+  /* Focus ring */
+  --focus-ring:   0 0 0 3px var(--primary-100);
+  --focus-border: var(--primary-400);
+
+  /* ── Spacing ───────────────────────────────────────────────────────────── */
+  --space-1:   4px;
+  --space-2:   8px;
+  --space-3:   12px;
+  --space-4:   16px;
+  --space-5:   20px;
+  --space-6:   24px;  /* page gutter (page-x / page-y in tailwind config) */
+  --space-8:   32px;
+  --space-10:  40px;
+  --space-12:  48px;
+  --space-16:  64px;
+
+  /* Layout */
+  --sidebar-width: 224px; /* w-56 */
+  --header-height: 56px;  /* h-14 */
+}
+
+/* =========================================================================
+   Semantic / element-level styles
+   ========================================================================= */
+
+html, body {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  color: var(--fg-1);
+  background: var(--page-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Headings — Flowra is HEAVY: font-black + tight tracking ─────────────── */
+h1, .h1 {
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-black);
+  letter-spacing: var(--tracking-tight);
+  color: var(--fg-1);
+  line-height: var(--leading-tight);
+}
+h2, .h2 {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-black);
+  letter-spacing: var(--tracking-tight);
+  color: var(--fg-1);
+}
+h3, .h3 {
+  font-size: var(--text-base);
+  font-weight: var(--weight-bold);
+  color: var(--fg-1);
+}
+h4, .h4 {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  color: var(--fg-1);
+}
+
+p, body, .p {
+  font-size: var(--text-sm);
+  color: var(--fg-1);
+  line-height: var(--leading-normal);
+}
+
+small, .small, .text-meta {
+  font-size: var(--text-xs);
+  color: var(--fg-3);
+}
+
+/* ── Tiny uppercase label — Flowra's signature (used everywhere) ─────────── */
+.label-tiny {
+  font-size: var(--text-xxs);
+  line-height: 14px;
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  color: var(--fg-4);
+}
+
+/* ── KPI value — big money numbers in dashboard tiles ────────────────────── */
+.kpi-value {
+  font-size: var(--text-2xl);
+  line-height: var(--leading-tight);
+  font-weight: var(--weight-black);
+  letter-spacing: var(--tracking-tight);
+  color: var(--fg-1);
+  font-variant-numeric: tabular-nums;
+}
+
+/* "GENEL TOPLAM" — the emphatic total at the bottom of a proforma */
+.total-emphatic {
+  font-size: var(--text-3xl);
+  line-height: var(--leading-tight);
+  font-weight: var(--weight-black);
+  letter-spacing: var(--tracking-tight);
+  color: var(--fg-1);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Tabular numerals — anything money-shaped ────────────────────────────── */
+.tabular-nums, .flowra-money, .flowra-kpi { font-variant-numeric: tabular-nums; }
+
+/* ── Code / mono ──────────────────────────────────────────────────────────── */
+code, .code {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  background: var(--surface-muted);
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  color: var(--fg-2);
+}
+
+/* ── Card chrome ──────────────────────────────────────────────────────────── */
+.fl-card {
+  background: var(--surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xl);
+}
+
+/* ── Focus ring — for inputs ──────────────────────────────────────────────── */
+.fl-focus {
+  outline: none;
+  border-color: var(--focus-border);
+  box-shadow: var(--focus-ring);
+}

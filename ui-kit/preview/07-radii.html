@@ -1,0 +1,31 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="card.css">
+<style>
+  body { padding: 18px 24px; }
+  .grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
+  .r { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+  .r .swatch { width: 100%; height: 36px; background: #fff; border: 1px solid var(--border); }
+  .r .px { font-size: 10px; color: var(--fg-3); font-family: ui-monospace, monospace; }
+  .r .name { font-size: 10px; color: var(--fg-1); font-weight: 600; }
+  .r4 .swatch { border-radius: 4px; }
+  .r6 .swatch { border-radius: 6px; }
+  .r8 .swatch { border-radius: 8px; }
+  .r12 .swatch { border-radius: 12px; }
+  .r16 .swatch { border-radius: 16px; }
+  .rfull .swatch { border-radius: 9999px; }
+  h3 { margin: 0 0 10px 0; font-weight: 900; font-size: 13px; letter-spacing: -.01em; }
+  .legend { font-size: 10px; color: var(--fg-3); margin-top: 10px; }
+</style></head><body>
+<div class="card">
+  <h3>Border radii</h3>
+  <div class="grid">
+    <div class="r r4"><div class="swatch"></div><span class="name">sm</span><span class="px">4px</span></div>
+    <div class="r r6"><div class="swatch"></div><span class="name">md</span><span class="px">6px</span></div>
+    <div class="r r8"><div class="swatch"></div><span class="name">lg</span><span class="px">8px</span></div>
+    <div class="r r12"><div class="swatch"></div><span class="name">xl</span><span class="px">12px</span></div>
+    <div class="r r16"><div class="swatch"></div><span class="name">2xl</span><span class="px">16px</span></div>
+    <div class="r rfull"><div class="swatch"></div><span class="name">full</span><span class="px">9999px</span></div>
+  </div>
+  <div class="legend">12px → buttons / inputs / nav · 16px → cards / alerts / modals · full → avatars / role pills</div>
+</div>
+</body></html>

@@ -1,0 +1,43 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="card.css">
+<script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  body { padding: 18px 24px; }
+  .grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 10px; }
+  .ic-cell {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    padding: 6px 0; border-radius: 8px;
+  }
+  .ic-cell svg { width: 20px; height: 20px; stroke: var(--gray-700); stroke-width: 1.5; }
+  .ic-cell .nm { font-size: 9px; color: var(--fg-4); font-family: ui-monospace, monospace; }
+  h3 { margin: 0 0 10px 0; font-weight: 900; font-size: 13px; letter-spacing: -.01em; }
+  .meta { font-size: 10px; color: var(--fg-3); margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border-subtle); }
+</style></head><body>
+<div class="card">
+  <h3>Iconography · Lucide stroke 1.5</h3>
+  <div class="grid">
+    <div class="ic-cell"><i data-lucide="layout-grid"></i><span class="nm">dashboard</span></div>
+    <div class="ic-cell"><i data-lucide="package"></i><span class="nm">stocks</span></div>
+    <div class="ic-cell"><i data-lucide="file-text"></i><span class="nm">proformas</span></div>
+    <div class="ic-cell"><i data-lucide="banknote"></i><span class="nm">sales</span></div>
+    <div class="ic-cell"><i data-lucide="landmark"></i><span class="nm">collections</span></div>
+    <div class="ic-cell"><i data-lucide="trending-down"></i><span class="nm">expenses</span></div>
+    <div class="ic-cell"><i data-lucide="handshake"></i><span class="nm">partners</span></div>
+    <div class="ic-cell"><i data-lucide="calculator"></i><span class="nm">simulation</span></div>
+    <div class="ic-cell"><i data-lucide="bar-chart-3"></i><span class="nm">analytics</span></div>
+    <div class="ic-cell"><i data-lucide="settings"></i><span class="nm">settings</span></div>
+    <div class="ic-cell"><i data-lucide="users"></i><span class="nm">customers</span></div>
+    <div class="ic-cell"><i data-lucide="tag"></i><span class="nm">products</span></div>
+    <div class="ic-cell"><i data-lucide="clipboard-list"></i><span class="nm">tasks</span></div>
+    <div class="ic-cell"><i data-lucide="shield"></i><span class="nm">shield</span></div>
+    <div class="ic-cell"><i data-lucide="database"></i><span class="nm">backup</span></div>
+    <div class="ic-cell"><i data-lucide="plus"></i><span class="nm">plus</span></div>
+    <div class="ic-cell"><i data-lucide="search"></i><span class="nm">search</span></div>
+    <div class="ic-cell"><i data-lucide="refresh-cw"></i><span class="nm">refresh</span></div>
+    <div class="ic-cell"><i data-lucide="bell"></i><span class="nm">bell</span></div>
+    <div class="ic-cell"><i data-lucide="log-out"></i><span class="nm">logout</span></div>
+  </div>
+  <div class="meta">~50 keyed icons · 14/16/18/20px sizes · emoji aliases retained as legacy fallback only</div>
+</div>
+<script>lucide.createIcons();</script>
+</body></html>

@@ -1,0 +1,153 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="card.css">
+<style>
+  body { padding: 14px 18px; background: var(--bg); }
+  .wrap { display: flex; flex-direction: column; gap: 10px; }
+
+  .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .toolbar .left { display: flex; gap: 6px; align-items: center; }
+  .search { position: relative; width: 200px; }
+  .search input { width: 100%; padding: 5px 10px 5px 26px; font-size: 12px; font-family: inherit; background: #fff; border: 1px solid var(--gray-200); border-radius: 8px; color: var(--fg-1); outline: none; }
+  .search .ic { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); width: 11px; height: 11px; stroke: var(--gray-400); fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+  .pill { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 9999px; font-size: 11px; font-weight: 600; background: var(--primary-50); color: var(--primary-700); border: 1px solid var(--primary-100); }
+  .pill .x { font-weight: 400; opacity: .7; cursor: pointer; margin-left: 2px; }
+  .toolbar .right { display: flex; gap: 6px; align-items: center; font-size: 11px; color: var(--fg-4); }
+  .btn-icn { width: 26px; height: 26px; border-radius: 8px; border: 1px solid var(--gray-200); background: #fff; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: var(--gray-500); }
+
+  .tbl { background: #fff; border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  thead th { font-size: 9px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--gray-400); text-align: left; padding: 9px 14px; border-bottom: 1px solid var(--border-subtle); background: var(--surface-subtle); }
+  thead th .sort { display: inline-block; margin-left: 3px; opacity: .8; color: var(--primary-600); }
+  td { padding: 10px 14px; border-top: 1px solid var(--gray-50); color: var(--fg-1); vertical-align: middle; }
+  tr:first-child td { border-top: 0; }
+  tbody tr { transition: background-color .1s; }
+  tbody tr:hover { background: rgba(249, 250, 251, .8); cursor: pointer; }
+  tbody tr.selected { background: var(--primary-50); }
+
+  .check { width: 14px; height: 14px; border: 1.5px solid var(--gray-300); border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; vertical-align: middle; }
+  .check.on { background: var(--primary-600); border-color: var(--primary-600); }
+  .check.on::after { content: ""; width: 8px; height: 4px; border-left: 1.5px solid #fff; border-bottom: 1.5px solid #fff; transform: rotate(-45deg) translate(0, -1px); }
+
+  .num { font-variant-numeric: tabular-nums; text-align: right; font-weight: 600; }
+  .num .cur { color: var(--fg-4); font-weight: 400; margin-right: 1px; }
+
+  .badge { display: inline-flex; padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: 600; }
+  .b-accepted  { background: var(--emerald-50); color: var(--emerald-700); }
+  .b-converted { background: var(--primary-50);  color: var(--primary-700); }
+  .b-pending   { background: var(--warning-50);  color: var(--warning-700); }
+  .b-overdue   { background: var(--danger-50);   color: var(--danger-700); }
+  .b-draft     { background: var(--gray-100);    color: var(--gray-500); }
+
+  .name { font-weight: 600; line-height: 1.25; color: var(--fg-1); }
+  .meta { font-size: 10px; color: var(--fg-4); margin-top: 1px; }
+  .ref  { font-family: ui-monospace, monospace; font-size: 10px; color: var(--fg-4); }
+
+  .row-actions { display: inline-flex; gap: 4px; opacity: 0; transition: opacity .15s; }
+  tr:hover .row-actions { opacity: 1; }
+  .row-actions button { width: 22px; height: 22px; border-radius: 6px; border: 0; background: transparent; cursor: pointer; color: var(--gray-400); display: inline-flex; align-items: center; justify-content: center; }
+  .row-actions button:hover { background: var(--gray-100); color: var(--fg-1); }
+  .row-actions svg { width: 11px; height: 11px; stroke: currentColor; fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+
+  .pager { display: flex; align-items: center; justify-content: space-between; padding: 8px 14px; background: var(--surface-subtle); border-top: 1px solid var(--border-subtle); font-size: 11px; color: var(--fg-4); }
+  .pager .pages { display: flex; gap: 4px; }
+  .pager .pg { width: 22px; height: 22px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-weight: 600; cursor: pointer; }
+  .pager .pg.active { background: var(--primary-600); color: #fff; }
+  .pager .pg:not(.active):hover { background: var(--gray-100); }
+</style></head><body>
+<div class="card">
+  <div class="wrap">
+
+    <div class="toolbar">
+      <div class="left">
+        <div class="search">
+          <svg class="ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input placeholder="Müşteri, no, tutar...">
+        </div>
+        <span class="pill">Bu ay <span class="x">×</span></span>
+        <span class="pill">Onaylandı <span class="x">×</span></span>
+      </div>
+      <div class="right">
+        <span>3 / 142 seçili</span>
+        <button class="btn-icn">⇅</button>
+        <button class="btn-icn">↓</button>
+      </div>
+    </div>
+
+    <div class="tbl">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:28px"><span class="check on"></span></th>
+            <th>Müşteri <span class="sort">↓</span></th>
+            <th>No</th>
+            <th>Tarih</th>
+            <th>Durum</th>
+            <th style="text-align:right">Tutar</th>
+            <th style="width:60px"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="selected">
+            <td><span class="check on"></span></td>
+            <td><div class="name">Demir İnşaat A.Ş.</div><div class="meta">VKN 1234567890</div></td>
+            <td><span class="ref">PRF-2026-0142</span></td>
+            <td>06 May 2026</td>
+            <td><span class="badge b-accepted">Onaylandı</span></td>
+            <td class="num"><span class="cur">₺</span>284.500,00</td>
+            <td><span class="row-actions">
+              <button><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+              <button><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>
+              <button><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg></button>
+            </span></td>
+          </tr>
+          <tr>
+            <td><span class="check on"></span></td>
+            <td><div class="name">Yıldız Tekstil</div><div class="meta">VKN 9876543210</div></td>
+            <td><span class="ref">PRF-2026-0141</span></td>
+            <td>05 May 2026</td>
+            <td><span class="badge b-converted">Dönüştürüldü</span></td>
+            <td class="num"><span class="cur">₺</span>92.180,40</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td><span class="check on"></span></td>
+            <td><div class="name">Akın Mobilya</div><div class="meta">VKN 5566778899</div></td>
+            <td><span class="ref">PRF-2026-0140</span></td>
+            <td>04 May 2026</td>
+            <td><span class="badge b-pending">Bekliyor</span></td>
+            <td class="num"><span class="cur">₺</span>14.220,00</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td><span class="check"></span></td>
+            <td><div class="name">Çelik Metal Ltd.</div><div class="meta">VKN 4433221100</div></td>
+            <td><span class="ref">PRF-2026-0139</span></td>
+            <td>02 May 2026</td>
+            <td><span class="badge b-overdue">Gecikmiş · 14g</span></td>
+            <td class="num" style="color: var(--danger-700)"><span class="cur">₺</span>48.600,00</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td><span class="check"></span></td>
+            <td><div class="name">Bahar Ticaret</div><div class="meta">VKN 1122334455</div></td>
+            <td><span class="ref">PRF-2026-0138</span></td>
+            <td>01 May 2026</td>
+            <td><span class="badge b-draft">Taslak</span></td>
+            <td class="num"><span class="cur">₺</span>3.420,00</td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="pager">
+        <span>1–5 / 142 kayıt</span>
+        <div class="pages">
+          <span class="pg">‹</span><span class="pg active">1</span><span class="pg">2</span><span class="pg">3</span><span class="pg">…</span><span class="pg">29</span><span class="pg">›</span>
+        </div>
+        <span>Sayfa başına 5</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+</body></html>

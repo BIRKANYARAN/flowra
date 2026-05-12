@@ -1,0 +1,49 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="card.css">
+<style>
+  body { padding: 18px 24px; }
+  h3 { margin: 0 0 12px 0; font-weight: 900; font-size: 13px; letter-spacing: -.01em; }
+  .row2 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+  .tone { display: flex; flex-direction: column; gap: 4px; }
+  .pair { display: flex; gap: 0; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); height: 36px; }
+  .pair > div { flex: 1; }
+  .name { font-size: 11px; color: var(--fg-1); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+  .pill { display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 6px; font-size: 11px; font-weight: 600; align-self: flex-start; }
+  .meta { font-size: 10px; color: var(--fg-4); font-family: ui-monospace, monospace; }
+</style></head><body>
+<div class="card">
+  <h3>Semantic state colors</h3>
+  <div class="row2">
+    <div class="tone">
+      <div class="pair"><div style="background:#ecfdf5"></div><div style="background:#d1fae5"></div><div style="background:#059669"></div></div>
+      <div class="name">Success</div>
+      <span class="pill" style="background:#ecfdf5;color:#047857">Onaylandı</span>
+      <div class="meta">emerald 50/100/600</div>
+    </div>
+    <div class="tone">
+      <div class="pair"><div style="background:#fffbeb"></div><div style="background:#fef3c7"></div><div style="background:#d97706"></div></div>
+      <div class="name">Warning</div>
+      <span class="pill" style="background:#fffbeb;color:#b45309">Bekliyor</span>
+      <div class="meta">amber 50/100/600</div>
+    </div>
+    <div class="tone">
+      <div class="pair"><div style="background:#fff7ed"></div><div style="background:#ffedd5"></div><div style="background:#ea580c"></div></div>
+      <div class="name">Orange</div>
+      <span class="pill" style="background:#fff7ed;color:#c2410c">KDV ödeme</span>
+      <div class="meta">orange 50/100/700</div>
+    </div>
+    <div class="tone">
+      <div class="pair"><div style="background:#fef2f2"></div><div style="background:#fee2e2"></div><div style="background:#dc2626"></div></div>
+      <div class="name">Danger</div>
+      <span class="pill" style="background:#fef2f2;color:#b91c1c">Gecikmiş</span>
+      <div class="meta">red 50/100/600</div>
+    </div>
+    <div class="tone">
+      <div class="pair"><div style="background:#eff6ff"></div><div style="background:#dbeafe"></div><div style="background:#2563eb"></div></div>
+      <div class="name">Info</div>
+      <span class="pill" style="background:#eff6ff;color:#1d4ed8">Gönderildi</span>
+      <div class="meta">blue 50/100/600</div>
+    </div>
+  </div>
+</div>
+</body></html>

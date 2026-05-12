@@ -1,0 +1,176 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="card.css">
+<style>
+  body { padding: 18px 22px; background: var(--bg); }
+  .wrap { display: flex; flex-direction: column; gap: 14px; }
+  .lbl-sec { font-size: 9px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--fg-4); }
+
+  /* HERO ROW: large invoice-style breakdown */
+  .hero {
+    display: grid; grid-template-columns: 1fr auto;
+    align-items: end; gap: 18px;
+    background: #fff; border: 1px solid var(--border); border-radius: 14px;
+    padding: 14px 18px;
+  }
+  .hero-left { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .breakdown {
+    display: grid; grid-template-columns: 1fr auto; gap: 2px 18px;
+    font-variant-numeric: tabular-nums;
+  }
+  .breakdown .k { font-size: 11px; color: var(--fg-4); font-weight: 500; }
+  .breakdown .v { font-size: 12px; color: var(--fg-2); font-weight: 600; text-align: right; }
+  .breakdown .div-row {
+    grid-column: 1 / -1; height: 1px; background: var(--gray-100); margin: 4px 0 2px;
+  }
+  .total-line { display: flex; align-items: baseline; justify-content: space-between; gap: 18px; padding-top: 4px; }
+  .total-line .lbl {
+    font-size: 9px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--fg-4);
+  }
+  .total {
+    font-weight: 700; font-variant-numeric: tabular-nums;
+    font-size: 30px; line-height: 1; letter-spacing: -.02em; color: var(--fg-1);
+  }
+  .total .cur { color: var(--fg-4); font-weight: 400; margin-right: 3px; font-size: 18px; vertical-align: 4px; }
+  .total .dec { color: var(--fg-3); font-weight: 500; font-size: 22px; }
+
+  .hero-right { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+  .hero-right .anno { font-size: 9px; font-family: ui-monospace, monospace; color: var(--fg-4); text-align: right; line-height: 1.4; }
+  .hero-right .anno b { color: var(--primary-700); font-weight: 700; }
+
+  /* TYPE-SCALE LADDER */
+  .ladder { display: flex; flex-direction: column; gap: 6px; }
+  .step { display: grid; grid-template-columns: 1fr auto; gap: 18px; align-items: baseline; padding: 4px 0; border-top: 1px dashed var(--gray-100); }
+  .step:first-child { border-top: 0; }
+  .step .left { display: flex; align-items: baseline; gap: 12px; }
+  .step .role { font-size: 9px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--fg-4); width: 70px; flex-shrink: 0; }
+  .step .sample { font-variant-numeric: tabular-nums; color: var(--fg-1); }
+  .step .spec { font-size: 9px; font-family: ui-monospace, monospace; color: var(--fg-4); text-align: right; }
+
+  .s-display { font-weight: 700; font-size: 26px; letter-spacing: -.02em; line-height: 1; }
+  .s-kpi     { font-weight: 700; font-size: 20px; letter-spacing: -.015em; line-height: 1.05; }
+  .s-body    { font-weight: 600; font-size: 14px; }
+  .s-meta    { font-weight: 500; font-size: 12px; color: var(--fg-3); }
+  .cur { color: var(--fg-4); font-weight: 400; margin-right: 1px; }
+
+  /* SIGNED + PERCENT + MULTICURRENCY */
+  .grid-2 { display: grid; grid-template-columns: 1.2fr 1fr; gap: 14px; }
+  .panel {
+    background: #fff; border: 1px solid var(--border); border-radius: 12px;
+    padding: 10px 12px; display: flex; flex-direction: column; gap: 8px;
+  }
+  .panel-head { font-size: 9px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--fg-4); }
+  .signed-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .pill { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 9999px; font-weight: 600; font-variant-numeric: tabular-nums; font-size: 12px; }
+  .pill.pos { background: var(--emerald-50); color: var(--emerald-700); }
+  .pill.neg { background: var(--danger-50);  color: var(--danger-700); }
+  .pill .lbl-fade { opacity: .7; font-weight: 600; }
+  .pct { font-weight: 600; font-variant-numeric: tabular-nums; font-size: 13px; color: var(--fg-2); }
+  .pct.pos { color: var(--emerald-600); }
+  .pct.neg { color: var(--danger-700); }
+
+  .cur-row { display: flex; gap: 6px; }
+  .cur-cell { flex: 1; display: flex; flex-direction: column; gap: 1px; padding: 6px 9px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-subtle); }
+  .cur-cell .lbl-c { font-size: 9px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--fg-4); }
+  .cur-cell .v { font-weight: 700; font-variant-numeric: tabular-nums; font-size: 14px; letter-spacing: -.01em; color: var(--fg-1); }
+  .cur-cell .rate-anno { font-size: 9px; color: var(--fg-4); font-variant-numeric: tabular-nums; }
+</style></head><body>
+<div class="card">
+  <div class="wrap">
+
+    <!-- HERO -->
+    <div>
+      <div class="lbl-sec" style="margin-bottom: 6px">Hero total · proforma footer</div>
+      <div class="hero">
+        <div class="hero-left">
+          <div class="breakdown">
+            <span class="k">Ara toplam</span><span class="v">₺237.083,33</span>
+            <span class="k">İndirim (%5)</span><span class="v" style="color: var(--danger-700)">−₺11.854,17</span>
+            <span class="k">KDV (%20)</span><span class="v">₺59.270,84</span>
+            <div class="div-row"></div>
+          </div>
+          <div class="total-line">
+            <span class="lbl">Genel Toplam</span>
+            <span class="total"><span class="cur">₺</span>284.500<span class="dec">,00</span></span>
+          </div>
+        </div>
+        <div class="hero-right">
+          <span class="anno"><b>30px / 700</b></span>
+          <span class="anno">tabular-nums · -.02em</span>
+          <span class="anno">decimals · weight-500</span>
+          <span class="anno">currency · weight-400</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- LADDER + SIGNED -->
+    <div class="grid-2">
+      <div class="panel">
+        <span class="panel-head">Type-scale ladder</span>
+        <div class="ladder">
+          <div class="step">
+            <div class="left">
+              <span class="role">Display</span>
+              <span class="sample s-display"><span class="cur">₺</span>284.500</span>
+            </div>
+            <span class="spec">26 · 700 · -.02em</span>
+          </div>
+          <div class="step">
+            <div class="left">
+              <span class="role">KPI</span>
+              <span class="sample s-kpi"><span class="cur">₺</span>1.248.000</span>
+            </div>
+            <span class="spec">20 · 700 · -.015em</span>
+          </div>
+          <div class="step">
+            <div class="left">
+              <span class="role">Body</span>
+              <span class="sample s-body"><span class="cur">₺</span>14.220,00</span>
+            </div>
+            <span class="spec">14 · 600</span>
+          </div>
+          <div class="step">
+            <div class="left">
+              <span class="role">Meta</span>
+              <span class="sample s-meta">PRF-2026-0142</span>
+            </div>
+            <span class="spec">12 · 500</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <span class="panel-head">Signed deltas · percent</span>
+        <div class="signed-row">
+          <span class="pill pos">▲ <span class="cur">₺</span>12.480 <span class="lbl-fade">+12,3%</span></span>
+          <span class="pill neg">▼ <span class="cur">₺</span>3.420 <span class="lbl-fade">−4,1%</span></span>
+        </div>
+        <div class="signed-row">
+          <span class="pct pos">+ %12,3</span>
+          <span class="pct neg">− %4,1</span>
+          <span class="pct">%42 brüt marj</span>
+        </div>
+
+        <span class="panel-head" style="margin-top: 4px">Multi-currency · ₺284.500 base</span>
+        <div class="cur-row">
+          <div class="cur-cell">
+            <span class="lbl-c">TRY</span>
+            <span class="v">₺284.500</span>
+            <span class="rate-anno">base</span>
+          </div>
+          <div class="cur-cell">
+            <span class="lbl-c">USD</span>
+            <span class="v">$8.190</span>
+            <span class="rate-anno">@ 34,7218</span>
+          </div>
+          <div class="cur-cell">
+            <span class="lbl-c">EUR</span>
+            <span class="v">€7.660</span>
+            <span class="rate-anno">@ 37,1490</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</body></html>
