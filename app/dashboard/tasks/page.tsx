@@ -1,378 +1,210 @@
-'use client'
-
-// ─────────────────────────────────────────────────────────────────────────────
-// /dashboard/tasks — Light CRM task management
+// ── /dashboard/tasks — Görev Yönetimi (server component) ─────────────────────
 //
-// Features:
-//   • List open / done / cancelled tasks for the company
-//   • Create new task (title, due_date, related customer, notes)
-//   • Mark task as done / cancelled inline
-//   • Delete task (soft-delete)
-//   • Filter by status tab
-// ─────────────────────────────────────────────────────────────────────────────
+// FAZ 12: Converted from 'use client' to server component.
+//
+// Server-rendered sections (static, no JS):
+//   Zone 1 — KPI strip: open, overdue, due this week, completion rate
+//   Zone 2 — Upcoming overdue alert banner (if any)
+//
+// Client island:
+//   TasksClient — full CRUD + local tab filtering (no API call on tab switch)
+//
+// Self-HTTP eliminated: data loaded directly via Supabase server client.
+// All tasks prefetched at once → client filters locally by status tab.
 
-import { useState, useEffect, useCallback, type ChangeEvent } from 'react'
-import type { Task, TaskStatus, Customer, Sale } from '@/types'
+export const dynamic = 'force-dynamic'
 
-// ── Style tokens ──────────────────────────────────────────────────────────────
-const IL  = 'w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white transition-colors'
-const LAB = 'block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5'
-const SEL = `${IL} cursor-pointer`
-const BTN = 'px-4 py-2 rounded-xl text-sm font-semibold transition-colors'
+import { redirect }         from 'next/navigation'
+import { createClient }     from '@/lib/supabase-server'
+import { resolveCompanyId } from '@/lib/resolve-company'
+import type { Task, Customer, Sale } from '@/types'
+import TasksClient          from './TasksClient'
 
-const STATUS_LABELS: Record<TaskStatus, string> = {
-  open:      'Açık',
-  done:      'Tamamlandı',
-  cancelled: 'İptal',
+// ── Analytics helpers (pure, tested in tests/task-analytics.test.ts) ──────────
+
+function overdueCount(tasks: Task[], today: string): number {
+  return tasks.filter(t => t.status === 'open' && t.due_date != null && t.due_date < today).length
 }
 
-const STATUS_COLORS: Record<TaskStatus, string> = {
-  open:      'bg-blue-100 text-blue-700',
-  done:      'bg-emerald-100 text-emerald-700',
-  cancelled: 'bg-gray-100 text-gray-500',
+function dueThisWeek(tasks: Task[], today: string): number {
+  const weekOut = addDays(today, 7)
+  return tasks.filter(t =>
+    t.status === 'open' &&
+    t.due_date != null &&
+    t.due_date >= today &&
+    t.due_date <= weekOut
+  ).length
 }
 
-function formatDate(d: string | null): string {
-  if (!d) return '—'
-  const dt = new Date(d + 'T00:00:00Z')
-  return dt.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })
+function completionRate(tasks: Task[]): number {
+  const closed = tasks.filter(t => t.status === 'done' || t.status === 'cancelled').length
+  return tasks.length > 0 ? Math.round((closed / tasks.length) * 100) : 0
 }
 
-function isOverdue(due: string | null, status: TaskStatus): boolean {
-  if (!due || status !== 'open') return false
-  return new Date(due + 'T00:00:00Z') < new Date(new Date().toISOString().slice(0, 10) + 'T00:00:00Z')
+function tasksByStatus(tasks: Task[]): Record<string, number> {
+  const counts: Record<string, number> = { open: 0, done: 0, cancelled: 0 }
+  for (const t of tasks) {
+    counts[t.status] = (counts[t.status] ?? 0) + 1
+  }
+  return counts
 }
 
-// ── Component ─────────────────────────────────────────────────────────────────
+function addDays(dateStr: string, n: number): string {
+  const [y, m, d] = dateStr.split('-').map(Number)
+  const date = new Date(Date.UTC(y, m - 1, d + n))
+  return date.toISOString().slice(0, 10)
+}
 
-export default function TasksPage() {
-  const [tasks,      setTasks]      = useState<Task[]>([])
-  const [customers,  setCustomers]  = useState<Customer[]>([])
-  const [sales,      setSales]      = useState<Pick<Sale, 'id' | 'customer_name' | 'total_try' | 'created_at'>[]>([])
-  const [tab,        setTab]        = useState<TaskStatus | 'all'>('open')
-  const [loading,    setLoading]    = useState(true)
-  const [error,      setError]      = useState('')
+// ── Page ──────────────────────────────────────────────────────────────────────
 
-  // Create form
-  const [showForm,   setShowForm]   = useState(false)
-  const [title,      setTitle]      = useState('')
-  const [dueDate,    setDueDate]    = useState('')
-  const [custId,     setCustId]     = useState('')
-  const [saleId,     setSaleId]     = useState('')
-  const [notes,      setNotes]      = useState('')
-  const [saving,     setSaving]     = useState(false)
-  const [formError,  setFormError]  = useState('')
-
-  // ── Fetch tasks ─────────────────────────────────────────────────────────────
-
-  const loadTasks = useCallback(async () => {
-    setLoading(true)
-    setError('')
-    try {
-      const res  = await fetch(`/api/tasks?status=${tab}&limit=100`)
-      const data = await res.json()
-      if (!res.ok) { setError(data?.error ?? 'Yükleme hatası'); setTasks([]) }
-      else setTasks(Array.isArray(data) ? data : [])
-    } catch { setError('Sunucu hatası') }
-    finally  { setLoading(false) }
-  }, [tab])
-
-  useEffect(() => { loadTasks() }, [loadTasks])
-
-  useEffect(() => {
-    fetch('/api/customers?limit=200')
-      .then(r => r.json())
-      .then(d => { if (Array.isArray(d)) setCustomers(d) })
-      .catch(() => {})
-  }, [])
-
-  useEffect(() => {
-    fetch('/api/sales?limit=100')
-      .then(r => r.json())
-      .then(d => { if (Array.isArray(d)) setSales(d) })
-      .catch(() => {})
-  }, [])
-
-  // ── Create task ─────────────────────────────────────────────────────────────
-
-  async function handleCreate() {
-    if (!title.trim()) { setFormError('Başlık zorunludur.'); return }
-    setSaving(true); setFormError('')
-    try {
-      const res  = await fetch('/api/tasks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: title.trim(),
-          due_date:            dueDate || null,
-          related_customer_id: custId  || null,
-          related_sale_id:     saleId  || null,
-          notes:               notes.trim() || null,
-        }),
-      })
-      const data = await res.json()
-      if (!res.ok) { setFormError(data.error ?? 'Hata'); return }
-      setTitle(''); setDueDate(''); setCustId(''); setSaleId(''); setNotes('')
-      setShowForm(false)
-      if (tab === 'open' || tab === 'all') loadTasks()
-    } catch { setFormError('Sunucu hatası') }
-    finally  { setSaving(false) }
+export default async function TasksPage() {
+  const supabase = createClient()
+  let uid: string
+  try {
+    const { data, error } = await supabase.auth.getUser()
+    if (error || !data?.user) redirect('/auth')
+    uid = data.user.id
+  } catch (e) {
+    if (e && typeof e === 'object' && 'digest' in e) throw e
+    redirect('/auth')
   }
 
-  // ── Update task status ──────────────────────────────────────────────────────
+  let companyId: string
+  try { companyId = await resolveCompanyId(uid, supabase) }
+  catch { redirect('/auth') }
 
-  async function updateStatus(id: string, status: TaskStatus) {
-    const res = await fetch(`/api/tasks/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status }),
-    })
-    if (res.ok) {
-      loadTasks()
-    } else {
-      const d = await res.json().catch(() => ({}))
-      setError(d.error ?? 'Görev güncellenemedi')
-    }
-  }
+  const today = new Date().toISOString().slice(0, 10)
 
-  // ── Delete task ─────────────────────────────────────────────────────────────
+  // ── Parallel fetch ─────────────────────────────────────────────────────────
+  const [tasksRes, customersRes, salesRes] = await Promise.all([
+    supabase
+      .from('tasks')
+      .select('*, customers(name)')
+      .eq('company_id', companyId)
+      .is('deleted_at', null)
+      .order('due_date', { ascending: true, nullsFirst: false })
+      .order('created_at', { ascending: false })
+      .limit(200),
 
-  async function deleteTask(id: string) {
-    if (!confirm('Bu görevi silmek istiyor musunuz?')) return
-    const res = await fetch(`/api/tasks/${id}`, { method: 'DELETE' })
-    if (res.ok) {
-      loadTasks()
-    } else {
-      const d = await res.json().catch(() => ({}))
-      setError(d.error ?? 'Görev silinemedi')
-    }
-  }
+    supabase
+      .from('customers')
+      .select('id, name')
+      .eq('company_id', companyId)
+      .is('deleted_at', null)
+      .order('name'),
 
-  // ── Render ──────────────────────────────────────────────────────────────────
+    supabase
+      .from('sales')
+      .select('id, customer_name, total_try, created_at')
+      .eq('company_id', companyId)
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false })
+      .limit(100),
+  ])
 
-  const tabs: Array<TaskStatus | 'all'> = ['open', 'done', 'cancelled', 'all']
+  // Normalize tasks: flatten joined customer name
+  const tasks = ((tasksRes.data ?? []) as (Task & { customers?: { name: string } | null })[])
+    .map(t => ({
+      ...t,
+      customer_name: t.customer_name ?? (
+        typeof t.customers === 'object' && t.customers !== null
+          ? (t.customers as { name: string }).name
+          : null
+      ),
+      customers: undefined,  // strip the join noise
+    })) as Task[]
+
+  const customers = (customersRes.data ?? []) as Pick<Customer, 'id' | 'name'>[]
+  const sales     = (salesRes.data     ?? []) as Pick<Sale, 'id' | 'customer_name' | 'total_try' | 'created_at'>[]
+
+  // ── Server-side analytics ──────────────────────────────────────────────────
+  const statusCounts = tasksByStatus(tasks)
+  const overdue      = overdueCount(tasks, today)
+  const thisWeek     = dueThisWeek(tasks, today)
+  const compRate     = completionRate(tasks)
+
+  // Overdue tasks for alert banner
+  const overdueTasks = tasks
+    .filter(t => t.status === 'open' && t.due_date != null && t.due_date < today)
+    .slice(0, 3)
 
   return (
-    <div className="max-w-3xl space-y-5">
+    <div className="max-w-3xl space-y-6">
 
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-black text-gray-900">Görevler</h1>
-          <p className="text-xs text-gray-400 mt-0.5">Hafif CRM — takip ve hatırlatma</p>
-        </div>
-        <button
-          onClick={() => { setShowForm(s => !s); setFormError('') }}
-          className={`${BTN} bg-primary-600 text-white hover:bg-primary-700`}
-        >
-          {showForm ? 'İptal' : '+ Yeni Görev'}
-        </button>
+      {/* ── Header ────────────────────────────────────────────────────────── */}
+      <div>
+        <h1 className="text-xl font-black text-gray-900 tracking-tight">Görevler</h1>
+        <p className="text-xs text-gray-400 mt-0.5">Hafif CRM — takip ve hatırlatma · {tasks.length} kayıt</p>
       </div>
 
-      {/* Create form */}
-      {showForm && (
-        <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
-          <h2 className="text-sm font-bold text-gray-700">Yeni Görev</h2>
-          {formError && <p className="text-xs text-red-600">{formError}</p>}
-
-          <div>
-            <label className={LAB}>Başlık *</label>
-            <input
-              className={IL}
-              placeholder="Görevi açıklayın…"
-              value={title}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={LAB}>Son Tarih</label>
-              <input
-                type="date"
-                className={IL}
-                value={dueDate}
-                onChange={(e: ChangeEvent<HTMLInputElement>) => setDueDate(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className={LAB}>İlgili Müşteri</label>
-              <select
-                className={SEL}
-                value={custId}
-                onChange={(e: ChangeEvent<HTMLSelectElement>) => setCustId(e.target.value)}
-              >
-                <option value="">— Seçiniz —</option>
-                {customers.map(c => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className={LAB}>İlgili Satış</label>
-            <select
-              className={SEL}
-              value={saleId}
-              onChange={(e: ChangeEvent<HTMLSelectElement>) => setSaleId(e.target.value)}
-            >
-              <option value="">— Seçiniz —</option>
-              {sales.map(s => (
-                <option key={s.id} value={s.id}>
-                  {s.customer_name} — ₺{Number(s.total_try).toLocaleString('tr-TR', { minimumFractionDigits: 0 })}
-                  {' '}({new Date(s.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })})
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className={LAB}>Notlar</label>
-            <textarea
-              className={`${IL} resize-none`}
-              rows={2}
-              placeholder="Ek notlar…"
-              value={notes}
-              onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value)}
-            />
-          </div>
-
-          <div className="flex justify-end gap-3">
-            <button
-              onClick={() => { setShowForm(false); setFormError('') }}
-              className={`${BTN} bg-gray-100 text-gray-600 hover:bg-gray-200`}
-            >
-              İptal
-            </button>
-            <button
-              onClick={handleCreate}
-              disabled={saving}
-              className={`${BTN} bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50`}
-            >
-              {saving ? 'Kaydediliyor…' : 'Kaydet'}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Status tabs */}
-      <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
-        {tabs.map(t => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
-              tab === t ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600'
-            }`}
-          >
-            {t === 'all' ? 'Tümü' : STATUS_LABELS[t]}
-          </button>
-        ))}
-      </div>
-
-      {/* Error */}
-      {error && <p className="text-sm text-red-600">{error}</p>}
-
-      {/* Task list */}
-      {loading ? (
-        <div className="space-y-2">
-          {[1, 2, 3].map(i => (
-            <div key={i} className="bg-white rounded-xl border border-gray-200 p-4 animate-pulse">
-              <div className="h-3.5 bg-gray-100 rounded w-2/3 mb-2" />
-              <div className="h-2.5 bg-gray-50 rounded w-1/3" />
+      {/* ── Zone 1: KPI Strip ────────────────────────────────────────────── */}
+      {tasks.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-gray-200 rounded-xl overflow-hidden">
+          {[
+            {
+              label: 'Açık Görev',
+              value: String(statusCounts.open ?? 0),
+              sub:   'bekliyor',
+              color: statusCounts.open > 0 ? 'text-blue-700' : 'text-gray-400',
+            },
+            {
+              label: 'Vadesi Geçmiş',
+              value: overdue > 0 ? String(overdue) : '—',
+              sub:   overdue > 0 ? 'hemen ele alınmalı' : 'gecikmiş yok ✓',
+              color: overdue > 0 ? 'text-red-600' : 'text-emerald-600',
+            },
+            {
+              label: 'Bu Hafta Vade',
+              value: thisWeek > 0 ? String(thisWeek) : '—',
+              sub:   thisWeek > 0 ? '7 gün içinde' : 'yaklaşan yok',
+              color: thisWeek > 0 ? 'text-amber-700' : 'text-gray-400',
+            },
+            {
+              label: 'Tamamlanma Oranı',
+              value: tasks.length > 0 ? `%${compRate}` : '—',
+              sub:   `${statusCounts.done ?? 0} tamamlandı · ${statusCounts.cancelled ?? 0} iptal`,
+              color: compRate >= 70 ? 'text-emerald-700' : compRate >= 40 ? 'text-amber-600' : 'text-gray-500',
+            },
+          ].map((card, i) => (
+            <div key={card.label}
+              className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-gray-100' : ''}`}>
+              <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{card.label}</div>
+              <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
+              <div className="text-[10px] text-gray-400 mt-1">{card.sub}</div>
             </div>
           ))}
         </div>
-      ) : tasks.length === 0 ? (
-        <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
-          <p className="text-sm text-gray-400">
-            {tab === 'open' ? 'Açık görev yok.' : 'Bu durumda görev yok.'}
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {tasks.map(task => {
-            const overdue = isOverdue(task.due_date, task.status)
-            return (
-              <div
-                key={task.id}
-                className={`bg-white rounded-xl border p-4 flex items-start gap-3 ${
-                  overdue ? 'border-red-200 bg-red-50' : 'border-gray-100'
-                }`}
-              >
-                {/* Status toggle checkbox */}
-                <button
-                  onClick={() => updateStatus(task.id, task.status === 'done' ? 'open' : 'done')}
-                  title={task.status === 'done' ? 'Yeniden Aç' : 'Tamamlandı İşaretle'}
-                  className={`mt-0.5 w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-colors ${
-                    task.status === 'done'
-                      ? 'bg-emerald-500 border-emerald-500 text-white'
-                      : 'border-gray-300 hover:border-emerald-400'
-                  }`}
-                >
-                  {task.status === 'done' && (
-                    <svg viewBox="0 0 10 8" className="w-3 h-3" fill="none">
-                      <path d="M1 4l3 3 5-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  )}
-                </button>
+      )}
 
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-2">
-                    <p className={`text-sm font-semibold ${
-                      task.status === 'done' ? 'line-through text-gray-400' : 'text-gray-800'
-                    }`}>
-                      {task.title}
-                    </p>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${STATUS_COLORS[task.status]}`}>
-                      {STATUS_LABELS[task.status]}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-3 mt-1 flex-wrap">
-                    {task.due_date && (
-                      <span className={`text-xs ${overdue ? 'text-red-600 font-semibold' : 'text-gray-400'}`}>
-                        📅 {formatDate(task.due_date)}{overdue && ' — GEÇMİŞ'}
-                      </span>
-                    )}
-                    {task.customer_name && (
-                      <span className="text-xs text-gray-400">
-                        🏢 {task.customer_name}
-                      </span>
-                    )}
-                  </div>
-
-                  {task.notes && (
-                    <p className="text-xs text-gray-400 mt-1 truncate">{task.notes}</p>
-                  )}
-                </div>
-
-                {/* Actions */}
-                <div className="flex items-center gap-1 flex-shrink-0">
-                  {task.status === 'open' && (
-                    <button
-                      onClick={() => updateStatus(task.id, 'cancelled')}
-                      title="İptal Et"
-                      className="text-[10px] text-gray-400 hover:text-orange-600 px-2 py-1 rounded-lg hover:bg-orange-50 transition-colors"
-                    >
-                      İptal
-                    </button>
-                  )}
-                  <button
-                    onClick={() => deleteTask(task.id)}
-                    title="Sil"
-                    className="text-[10px] text-gray-400 hover:text-red-600 px-2 py-1 rounded-lg hover:bg-red-50 transition-colors"
-                  >
-                    Sil
-                  </button>
-                </div>
+      {/* ── Zone 2: Overdue Alert ─────────────────────────────────────────── */}
+      {overdueTasks.length > 0 && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+          <h2 className="text-xs font-bold text-red-700 uppercase tracking-widest mb-2">
+            🔴 Vadesi Geçmiş Görevler ({overdue})
+          </h2>
+          <div className="space-y-1">
+            {overdueTasks.map(t => (
+              <div key={t.id} className="flex items-center gap-2 text-xs text-red-600">
+                <span className="font-semibold truncate">{t.title}</span>
+                <span className="text-red-400 shrink-0">
+                  — {t.due_date && new Date(t.due_date + 'T00:00:00Z').toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', timeZone: 'UTC' })}
+                </span>
               </div>
-            )
-          })}
+            ))}
+            {overdue > 3 && (
+              <div className="text-xs text-red-400 mt-1">+{overdue - 3} görev daha…</div>
+            )}
+          </div>
         </div>
       )}
+
+      {/* ── Client island: task list + CRUD ───────────────────────────────── */}
+      <TasksClient
+        initialTasks={tasks}
+        initialCustomers={customers}
+        initialSales={sales}
+      />
+
     </div>
   )
 }
