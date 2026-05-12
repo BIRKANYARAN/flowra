@@ -1,149 +1,78 @@
-'use client'
-
-// ─────────────────────────────────────────────────────────────────────────────
-// /dashboard/admin/users — Company member management (admin only)
+// ── /dashboard/admin/users — Ekip Yönetimi (server component) ────────────────
 //
-// Features:
-//   • List all company members with status (active / pending invite)
-//   • Invite an existing user by email
-//   • Change a member's role (admin / manager / viewer)
-//   • Remove a member from the company
+// FAZ 14: Converted from 'use client' to server component.
 //
-// Access: admin role only. Non-admins see a 403 message after the API returns.
-// ─────────────────────────────────────────────────────────────────────────────
+// Server-rendered sections (static, no JS):
+//   Zone 1 — KPI strip: total members, active, pending, role distribution
+//   Zone 2 — Access-denied panel (when not admin)
+//
+// Client island:
+//   UsersClient — invite form + role change + remove (re-fetches /api/admin/members)
+//
+// Self-HTTP eliminated for the initial render.
+// auth.users enrichment (email + display_name) done server-side via getAdminAuth().
 
-import { useState, useEffect, useCallback, type ChangeEvent } from 'react'
+export const dynamic = 'force-dynamic'
+
+import { redirect }         from 'next/navigation'
+import { createClient }     from '@/lib/supabase-server'
+import { resolveCompanyId } from '@/lib/resolve-company'
+import { requireAdmin }     from '@/lib/require-role'
+import { getAdminAuth }     from '@/lib/admin-db'
+import { AppError }         from '@/types/errors'
 import type { CompanyMember, MemberRole } from '@/types'
+import UsersClient          from './UsersClient'
 
-// ── Style tokens ──────────────────────────────────────────────────────────────
-const IL  = 'w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white transition-colors'
-const LAB = 'block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5'
-const SEL = `${IL} cursor-pointer`
+// ── Analytics helpers (pure, tested in tests/member-analytics.test.ts) ────────
 
-// ── Role labels ───────────────────────────────────────────────────────────────
-const ROLE_LABELS: Record<MemberRole, string> = {
-  admin:   'Yönetici',
-  manager: 'Satış Temsilcisi',
-  viewer:  'İzleyici',
+function activeMembers(members: CompanyMember[]): CompanyMember[] {
+  return members.filter(m => m.accepted_at !== null)
 }
 
-const ROLE_COLORS: Record<MemberRole, string> = {
-  admin:   'bg-primary-100 text-primary-700',
-  manager: 'bg-blue-100 text-blue-700',
-  viewer:  'bg-gray-100 text-gray-600',
+function pendingMembers(members: CompanyMember[]): CompanyMember[] {
+  return members.filter(m => m.accepted_at === null)
 }
 
-// ── Component ─────────────────────────────────────────────────────────────────
-
-export default function AdminUsersPage() {
-  const [members,    setMembers]    = useState<CompanyMember[]>([])
-  const [loading,    setLoading]    = useState(true)
-  const [forbidden,  setForbidden]  = useState(false)
-  const [error,      setError]      = useState('')
-
-  // Invite form state
-  const [showInvite, setShowInvite] = useState(false)
-  const [invEmail,   setInvEmail]   = useState('')
-  const [invRole,    setInvRole]    = useState<MemberRole>('viewer')
-  const [invSaving,  setInvSaving]  = useState(false)
-  const [invError,   setInvError]   = useState('')
-  const [invSuccess, setInvSuccess] = useState('')
-
-  // Inline role-edit state
-  const [editingId,   setEditingId]   = useState<string | null>(null)
-  const [editingRole, setEditingRole] = useState<MemberRole>('viewer')
-  const [roleSaving,  setRoleSaving]  = useState(false)
-
-  // ── Fetch members ──────────────────────────────────────────────────────────
-
-  const load = useCallback(async () => {
-    setLoading(true)
-    setError('')
-    const res = await fetch('/api/admin/members')
-    if (res.status === 403) { setForbidden(true); setLoading(false); return }
-    if (!res.ok) { setError('Üyeler yüklenemedi.'); setLoading(false); return }
-    const data = await res.json()
-    setMembers(Array.isArray(data) ? data : [])
-    setLoading(false)
-  }, [])
-
-  useEffect(() => { load() }, [load])
-
-  // ── Invite submit ──────────────────────────────────────────────────────────
-
-  async function submitInvite() {
-    if (!invEmail.trim()) { setInvError('E-posta adresi zorunludur.'); return }
-    setInvSaving(true); setInvError(''); setInvSuccess('')
-
-    const res = await fetch('/api/admin/members', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: invEmail.trim(), role: invRole }),
-    })
-    const json = await res.json()
-
-    if (!res.ok) {
-      setInvError(json.error ?? 'Davet gönderilemedi.')
-      setInvSaving(false)
-      return
+function roleDistribution(members: CompanyMember[]): Record<MemberRole, number> {
+  const counts: Record<MemberRole, number> = { admin: 0, manager: 0, viewer: 0 }
+  for (const m of members) {
+    if (m.accepted_at !== null) {          // only active members count
+      counts[m.role] = (counts[m.role] ?? 0) + 1
     }
+  }
+  return counts
+}
 
-    setInvSuccess(`${invEmail} başarıyla davet edildi.`)
-    setInvEmail('')
-    setInvRole('viewer')
-    setInvSaving(false)
-    load()
+// ── Page ──────────────────────────────────────────────────────────────────────
+
+export default async function AdminUsersPage() {
+  const supabase = createClient()
+  let uid: string
+  try {
+    const { data, error } = await supabase.auth.getUser()
+    if (error || !data?.user) redirect('/auth')
+    uid = data.user.id
+  } catch (e) {
+    if (e && typeof e === 'object' && 'digest' in e) throw e
+    redirect('/auth')
   }
 
-  // ── Role change ────────────────────────────────────────────────────────────
+  let companyId: string
+  try { companyId = await resolveCompanyId(uid, supabase) }
+  catch { redirect('/auth') }
 
-  function startEditRole(m: CompanyMember) {
-    setEditingId(m.id)
-    setEditingRole(m.role)
-  }
-
-  async function saveRole(memberId: string) {
-    setRoleSaving(true)
-    const res = await fetch(`/api/admin/members/${memberId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ role: editingRole }),
-    })
-    if (!res.ok) {
-      const json = await res.json()
-      alert(json.error ?? 'Rol güncellenemedi.')
+  // ── Admin guard ────────────────────────────────────────────────────────────
+  let isAdmin = true
+  try { await requireAdmin(uid, companyId, supabase) }
+  catch (e) {
+    if (e instanceof AppError && e.code === 'FORBIDDEN') {
+      isAdmin = false
+    } else {
+      throw e
     }
-    setEditingId(null)
-    setRoleSaving(false)
-    load()
   }
 
-  // ── Remove member ──────────────────────────────────────────────────────────
-
-  async function removeMember(m: CompanyMember) {
-    const label = m.display_name || m.email || m.user_id
-    if (!confirm(`${label} adlı kullanıcıyı şirketten çıkarmak istediğinizden emin misiniz?`)) return
-
-    const res = await fetch(`/api/admin/members/${m.id}`, { method: 'DELETE' })
-    if (!res.ok) {
-      const json = await res.json()
-      alert(json.error ?? 'Üye çıkarılamadı.')
-      return
-    }
-    load()
-  }
-
-  // ── Render ─────────────────────────────────────────────────────────────────
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-40">
-        <div className="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
-      </div>
-    )
-  }
-
-  if (forbidden) {
+  if (!isAdmin) {
     return (
       <div className="max-w-lg">
         <div className="bg-red-50 border border-red-100 rounded-xl p-6 text-center">
@@ -155,218 +84,163 @@ export default function AdminUsersPage() {
     )
   }
 
-  const activeMembers  = members.filter(m => m.accepted_at !== null)
-  const pendingMembers = members.filter(m => m.accepted_at === null)
+  // ── Fetch company members ──────────────────────────────────────────────────
+  const { data: rawMembers, error: membersError } = await supabase
+    .from('company_members')
+    .select('id, company_id, user_id, role, invited_by, accepted_at, created_at, deleted_at')
+    .eq('company_id', companyId)
+    .is('deleted_at', null)
+    .order('created_at', { ascending: true })
+
+  if (membersError) {
+    // Soft failure — render empty state rather than crashing
+    return (
+      <div className="max-w-3xl">
+        <div className="bg-red-50 border border-red-100 rounded-xl px-4 py-3 text-sm text-red-600">
+          Üyeler yüklenemedi: {membersError.message}
+        </div>
+      </div>
+    )
+  }
+
+  // ── Enrich with email + display_name from auth.users ──────────────────────
+  // Replicates /api/admin/members GET logic — direct auth.admin access avoids self-HTTP.
+  const adminAuth = getAdminAuth()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const userIds = (rawMembers ?? []).map((m: any) => m.user_id as string)
+
+  const authUserMap: Record<string, { email: string | null; display_name: string | null }> = {}
+  for (const userId of userIds) {
+    try {
+      const { data: authUser } = await adminAuth.getUserById(userId)
+      if (authUser?.user) {
+        const meta  = authUser.user.user_metadata ?? {}
+        const first = String(meta.first_name ?? '').trim()
+        const last  = String(meta.last_name  ?? '').trim()
+        authUserMap[userId] = {
+          email:        authUser.user.email ?? null,
+          display_name: [first, last].filter(Boolean).join(' ') || authUser.user.email?.split('@')[0] || null,
+        }
+      }
+    } catch {
+      authUserMap[userId] = { email: null, display_name: null }
+    }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const members: CompanyMember[] = (rawMembers ?? []).map((m: any) => ({
+    id:           m.id,
+    user_id:      m.user_id,
+    role:         m.role as MemberRole,
+    company_id:   m.company_id,
+    invited_by:   m.invited_by   ?? null,
+    accepted_at:  m.accepted_at  ?? null,
+    created_at:   m.created_at,
+    deleted_at:   m.deleted_at   ?? null,
+    email:        authUserMap[m.user_id]?.email        ?? null,
+    display_name: authUserMap[m.user_id]?.display_name ?? null,
+  }))
+
+  // ── Server-side analytics ──────────────────────────────────────────────────
+  const active  = activeMembers(members)
+  const pending = pendingMembers(members)
+  const roleDist = roleDistribution(members)
+
+  const ROLE_LABELS: Record<MemberRole, string> = {
+    admin:   'Yönetici',
+    manager: 'Satış Temsilcisi',
+    viewer:  'İzleyici',
+  }
 
   return (
-    <div className="max-w-3xl">
-      {/* Page header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-black">Ekip Yönetimi</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
-            {activeMembers.length} aktif üye
-            {pendingMembers.length > 0 ? `, ${pendingMembers.length} bekleyen davet` : ''}
-          </p>
-        </div>
-        {!showInvite && (
-          <button
-            onClick={() => { setShowInvite(true); setInvError(''); setInvSuccess('') }}
-            className="bg-primary-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-primary-700 transition-colors"
-          >
-            + Kullanıcı Davet Et
-          </button>
-        )}
+    <div className="max-w-3xl space-y-6">
+
+      {/* ── Header ──────────────────────────────────────────────────────── */}
+      <div>
+        <h1 className="text-xl font-black text-gray-900 tracking-tight">Ekip Yönetimi</h1>
+        <p className="text-xs text-gray-400 mt-0.5">
+          Şirket üyeleri ve davet yönetimi
+        </p>
       </div>
 
-      {/* Global error */}
-      {error && (
-        <div className="bg-red-50 border border-red-100 rounded-xl px-4 py-3 text-sm text-red-600 mb-5">
-          {error}
+      {/* ── Zone 1: KPI Strip ────────────────────────────────────────────── */}
+      {members.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-gray-200 rounded-xl overflow-hidden">
+          {[
+            {
+              label: 'Aktif Üye',
+              value: String(active.length),
+              sub:   active.length === 1 ? '1 kişi' : `${active.length} kişi`,
+              color: active.length > 0 ? 'text-gray-900' : 'text-gray-400',
+            },
+            {
+              label: 'Bekleyen Davet',
+              value: pending.length > 0 ? String(pending.length) : '—',
+              sub:   pending.length > 0 ? 'onay bekliyor' : 'davet yok',
+              color: pending.length > 0 ? 'text-amber-600' : 'text-gray-400',
+            },
+            {
+              label: 'Yönetici',
+              value: roleDist.admin > 0 ? String(roleDist.admin) : '—',
+              sub:   'tam yetki',
+              color: roleDist.admin > 0 ? 'text-primary-700' : 'text-gray-400',
+            },
+            {
+              label: 'Temsilci / İzleyici',
+              value: (roleDist.manager + roleDist.viewer) > 0
+                ? String(roleDist.manager + roleDist.viewer)
+                : '—',
+              sub:   `${roleDist.manager} temsilci · ${roleDist.viewer} izleyici`,
+              color: 'text-gray-700',
+            },
+          ].map((card, i) => (
+            <div key={card.label}
+              className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-gray-100' : ''}`}>
+              <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{card.label}</div>
+              <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
+              <div className="text-[10px] text-gray-400 mt-1">{card.sub}</div>
+            </div>
+          ))}
         </div>
       )}
 
-      {/* Invite form */}
-      {showInvite && (
-        <div className="bg-white border border-gray-200 rounded-xl p-6 mb-5 space-y-4">
-          <h3 className="font-bold text-sm border-b border-gray-100 pb-3">Kullanıcı Davet Et</h3>
-          <p className="text-xs text-gray-500">
-            Davet edilecek kullanıcının Flowra hesabı olması gerekir.
-            Henüz hesabı yoksa önce kayıt olmaları gerekir.
-          </p>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={LAB}>E-posta *</label>
-              <input
-                type="email"
-                className={IL}
-                placeholder="kullanici@ornek.com"
-                value={invEmail}
-                onChange={(e: ChangeEvent<HTMLInputElement>) => setInvEmail(e.target.value)}
-                autoFocus
-              />
-            </div>
-            <div>
-              <label className={LAB}>Rol</label>
-              <select
-                className={SEL}
-                value={invRole}
-                onChange={(e: ChangeEvent<HTMLSelectElement>) => setInvRole(e.target.value as MemberRole)}
-              >
-                <option value="viewer">İzleyici</option>
-                <option value="manager">Satış Temsilcisi</option>
-                <option value="admin">Yönetici</option>
-              </select>
-            </div>
+      {/* ── Role distribution bar (server-rendered) ───────────────────────── */}
+      {active.length > 0 && (
+        <div className="bg-white border border-gray-200 rounded-xl p-4">
+          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">
+            Rol Dağılımı
           </div>
-
-          <div className="bg-gray-50 rounded-xl p-3 text-xs text-gray-500 space-y-1">
-            <div><span className="font-semibold">İzleyici:</span> Tüm kayıtları okuyabilir, oluşturamaz veya düzenleyemez.</div>
-            <div><span className="font-semibold">Satış Temsilcisi:</span> Kendi oluşturduğu müşterileri ve satışları yönetir.</div>
-            <div><span className="font-semibold">Yönetici:</span> Tüm kayıtlara tam erişim ve ekip yönetimi.</div>
-          </div>
-
-          {invError   && <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl px-3 py-2">{invError}</div>}
-          {invSuccess && <div className="text-sm text-green-700 bg-green-50 border border-green-100 rounded-xl px-3 py-2">{invSuccess}</div>}
-
-          <div className="flex gap-2">
-            <button
-              onClick={submitInvite}
-              disabled={invSaving || !invEmail.trim()}
-              className="bg-primary-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-primary-700 disabled:opacity-40 transition-colors"
-            >
-              {invSaving ? 'Gönderiliyor...' : 'Davet Gönder'}
-            </button>
-            <button
-              onClick={() => { setShowInvite(false); setInvEmail(''); setInvError(''); setInvSuccess('') }}
-              className="border border-gray-200 px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50/60 transition-colors"
-            >
-              İptal
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Active members */}
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden mb-5">
-        <div className="px-5 py-3 border-b border-gray-100">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Aktif Üyeler</span>
-        </div>
-        {activeMembers.length === 0 ? (
-          <div className="text-center py-10 text-gray-400 text-sm">Aktif üye bulunamadı.</div>
-        ) : (
-          <div className="divide-y divide-gray-50">
-            {activeMembers.map(m => (
-              <div key={m.id} className="flex items-center justify-between px-5 py-4 hover:bg-gray-50/60 transition-colors">
-                {/* User info */}
-                <div className="min-w-0 flex-1 mr-4">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-primary-100 flex items-center justify-center flex-shrink-0">
-                      <span className="text-primary-700 font-bold text-xs">
-                        {(m.display_name || m.email || '?').slice(0, 2).toUpperCase()}
-                      </span>
-                    </div>
-                    <div className="min-w-0">
-                      <div className="text-sm font-semibold truncate">{m.display_name || m.email || m.user_id}</div>
-                      {m.display_name && m.email && (
-                        <div className="text-xs text-gray-400 truncate">{m.email}</div>
-                      )}
-                    </div>
+          <div className="space-y-2">
+            {(['admin', 'manager', 'viewer'] as MemberRole[]).map(role => {
+              const count = roleDist[role]
+              const pct   = active.length > 0 ? Math.round((count / active.length) * 100) : 0
+              const colors = {
+                admin:   { bar: 'bg-primary-400', text: 'text-primary-700' },
+                manager: { bar: 'bg-blue-400',    text: 'text-blue-700'    },
+                viewer:  { bar: 'bg-gray-300',    text: 'text-gray-600'    },
+              }
+              return (
+                <div key={role}>
+                  <div className="flex justify-between items-center mb-0.5">
+                    <span className="text-xs text-gray-600">{ROLE_LABELS[role]}</span>
+                    <span className={`text-xs font-semibold tabular-nums ${colors[role].text}`}>{count}</span>
+                  </div>
+                  <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full ${colors[role].bar} rounded-full transition-all`}
+                      style={{ width: `${pct}%` }}
+                    />
                   </div>
                 </div>
-
-                {/* Role / edit */}
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  {editingId === m.id ? (
-                    <>
-                      <select
-                        className="border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-primary-400"
-                        value={editingRole}
-                        onChange={(e: ChangeEvent<HTMLSelectElement>) => setEditingRole(e.target.value as MemberRole)}
-                        autoFocus
-                      >
-                        <option value="viewer">İzleyici</option>
-                        <option value="manager">Satış Temsilcisi</option>
-                        <option value="admin">Yönetici</option>
-                      </select>
-                      <button
-                        onClick={() => saveRole(m.id)}
-                        disabled={roleSaving}
-                        className="text-xs text-primary-600 font-semibold hover:text-primary-800 disabled:opacity-40 px-2 py-1 rounded-lg hover:bg-primary-50 transition-colors"
-                      >
-                        {roleSaving ? '...' : 'Kaydet'}
-                      </button>
-                      <button
-                        onClick={() => setEditingId(null)}
-                        className="text-xs text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors"
-                      >
-                        İptal
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${ROLE_COLORS[m.role]}`}>
-                        {ROLE_LABELS[m.role]}
-                      </span>
-                      <button
-                        onClick={() => startEditRole(m)}
-                        className="text-xs text-gray-400 hover:text-gray-700 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors"
-                      >
-                        Rol Değiştir
-                      </button>
-                      <button
-                        onClick={() => removeMember(m)}
-                        className="text-xs text-gray-400 hover:text-red-500 px-2 py-1 rounded-lg hover:bg-red-50 transition-colors"
-                      >
-                        Çıkar
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Pending invitations */}
-      {pendingMembers.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-          <div className="px-5 py-3 border-b border-gray-100">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Bekleyen Davetler</span>
-          </div>
-          <div className="divide-y divide-gray-50">
-            {pendingMembers.map(m => (
-              <div key={m.id} className="flex items-center justify-between px-5 py-4 hover:bg-gray-50/60 transition-colors">
-                <div className="min-w-0 flex-1 mr-4">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
-                      <span className="text-amber-600 font-bold text-xs">?</span>
-                    </div>
-                    <div className="min-w-0">
-                      <div className="text-sm font-semibold truncate text-gray-500">
-                        {m.email || m.user_id}
-                      </div>
-                      <div className="text-xs text-amber-600">Davet bekleniyor</div>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${ROLE_COLORS[m.role]}`}>
-                    {ROLE_LABELS[m.role]}
-                  </span>
-                  <button
-                    onClick={() => removeMember(m)}
-                    className="text-xs text-gray-400 hover:text-red-500 px-2 py-1 rounded-lg hover:bg-red-50 transition-colors"
-                  >
-                    İptal
-                  </button>
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       )}
+
+      {/* ── Client island: invite + role change + remove ──────────────────── */}
+      <UsersClient initialMembers={members} />
+
     </div>
   )
 }
