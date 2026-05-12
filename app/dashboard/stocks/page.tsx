@@ -1,160 +1,349 @@
-'use client'
+// ── /dashboard/stocks — Stok Zekası (server component) ───────────────────────
+//
+// FAZ 8: Converted from 'use client' to server component.
+//
+// Server-rendered sections (static, no JS):
+//   Zone 1 — Stok Özeti: total portfolio value + low-stock count
+//   Zone 2 — FIFO Lot Paneli: per-product open lots with holding days + cost
+//   Zone 3 — Mevcut Stok: current quantities per product
+//   Zone 4 — Son Hareketler: last 50 movements table
+//
+// Client island:
+//   StockAdjustClient — adjustment form (FX auto-fetch + POST /api/products)
+//
+// Self-HTTP eliminated: all reads go directly through Supabase server client.
 
-import { useEffect, useState, useCallback } from 'react'
-import { useSupabase } from '@/lib/hooks/useSupabase'
-import type { Product, StockMovement } from '@/types'
-import { PageHeader, Label } from '@/components/ui'
-import { FlowraCard, FlowraButton } from '@/components/ui-kit'
-import { resolveCompanyId } from '@/lib/resolve-company'
+export const dynamic = 'force-dynamic'
 
-const IL = 'w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white transition-colors'
-const LAB = 'block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5'
+import { redirect }          from 'next/navigation'
+import { createClient }      from '@/lib/supabase-server'
+import { resolveCompanyId }  from '@/lib/resolve-company'
+import type { StockMovement } from '@/types'
+import StockAdjustClient     from './StockAdjustClient'
 
-export default function StocksPage() {
-  const supabase = useSupabase()
-  const [products,  setProducts]  = useState<Product[]>([])
-  const [movements, setMovements] = useState<StockMovement[]>([])
-  const [loading,   setLoading]   = useState(true)
-  const [selProduct, setSelProduct] = useState<string>('')
-  const [adjQty,    setAdjQty]    = useState('0')
-  const [adjType,   setAdjType]   = useState('purchase')
-  const [adjNotes,  setAdjNotes]  = useState('')
-  // Cost fields — cost_price, entry_date, currency, fx_rate
-  const [costPrice,    setCostPrice]    = useState('')
-  const [entryDate,    setEntryDate]    = useState(() => new Date().toISOString().slice(0, 10))
-  const [costCurrency, setCostCurrency] = useState('TRY')
-  const [fxRate,       setFxRate]       = useState('1')
-  const [saving,       setSaving]       = useState(false)
-  const [err,          setErr]          = useState('')
+// ── Formatters ────────────────────────────────────────────────────────────────
 
-  // FX rate display state
-  const [fxRateDate, setFxRateDate] = useState<string | null>(null)
+function fmtTRY(n: number): string {
+  const abs = Math.abs(n)
+  const sign = n < 0 ? '−' : ''
+  if (abs >= 1_000_000)
+    return `${sign}₺${(abs / 1_000_000).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}M`
+  if (abs >= 1_000)
+    return `${sign}₺${(abs / 1_000).toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}K`
+  return `${sign}₺${abs.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+}
 
-  // Auto-fetch FX rate for the selected entry date and currency
-  // When entryDate or costCurrency changes, fetch the historical rate
-  useEffect(() => {
-    if (costCurrency === 'TRY') { setFxRate('1'); setFxRateDate(null); return }
-    ;(async () => {
-      try {
-        // Try to get rate for the specific entry date from DB
-        const { data: dbRates } = await supabase
-          .from('fx_rates')
-          .select('buying, rate_date')
-          .eq('currency', costCurrency)
-          .lte('rate_date', entryDate)
-          .order('rate_date', { ascending: false })
-          .limit(1)
-
-        if (dbRates && dbRates.length > 0 && Number(dbRates[0].buying) > 0) {
-          setFxRate(Number(dbRates[0].buying).toFixed(4))
-          setFxRateDate(dbRates[0].rate_date)
-          return
-        }
-
-        // Fallback: fetch current from /api/fx
-        const res = await fetch('/api/fx', { cache: 'no-store' })
-        const data = await res.json()
-        if (res.ok) {
-          const rate = costCurrency === 'USD' ? Number(data.USD) : Number(data.EUR)
-          if (rate > 0) {
-            setFxRate(rate.toFixed(4))
-            setFxRateDate(data.rate_date || null)
-          }
-        }
-      } catch { /* non-fatal */ }
-    })()
-  }, [costCurrency, entryDate, supabase])
-
-  const load = useCallback(async () => {
-    const { data: authData, error: authError } = await supabase.auth.getUser()
-    if (authError || !authData?.user) return null
-    const user = authData.user
-    const companyId = await resolveCompanyId(user.id, supabase)
-    const [pRes, mRes] = await Promise.all([
-      supabase.from('products').select('*').eq('company_id', companyId).is('deleted_at', null).eq('is_active', true).order('name'),
-      supabase.from('stock_movements').select('*').eq('company_id', companyId).order('created_at', { ascending: false }).limit(50),
-    ])
-    setProducts((pRes.data ?? []) as Product[])
-    setMovements((mRes.data ?? []) as StockMovement[])
-    setLoading(false)
-  }, [supabase])
-
-  useEffect(() => { load() }, [load])
-
-  const isStockIn = adjType === 'purchase' || adjType === 'return'
-
-  async function adjust() {
-    if (!selProduct) { setErr('Ürün seçin'); return }
-    const qty = parseFloat(adjQty)
-    if (!isFinite(qty) || qty === 0) { setErr('Geçerli bir miktar girin'); return }
-    // TASK 3: cost_price required for stock-in
-    const cost = parseFloat(costPrice) || 0
-    if (isStockIn && cost <= 0) { setErr('Alım hareketlerinde maliyet fiyatı zorunludur'); return }
-    // TASK 3: entry_date required for stock-in
-    if (isStockIn && !entryDate) { setErr('Alım hareketlerinde giriş tarihi zorunludur'); return }
-
-    setSaving(true); setErr('')
-    const res = await fetch('/api/products', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        idempotency_key: crypto.randomUUID(),
-        product_id: selProduct,
-        qty_change: qty,
-        reference_type: adjType,
-        notes: adjNotes || null,
-        cost_price: cost > 0 ? cost : null,
-        entry_date: entryDate || null,
-        cost_currency: costCurrency,
-        fx_rate_at_entry: parseFloat(fxRate) || 1,
-      }),
+function fmtDateShort(iso: string): string {
+  try {
+    return new Date(iso + 'T00:00:00').toLocaleDateString('tr-TR', {
+      day: '2-digit', month: '2-digit', year: 'numeric',
     })
-    const json = await res.json()
-    if (!res.ok) { setErr(json.error ?? 'Hata'); setSaving(false); return }
-    setAdjQty('0'); setAdjNotes(''); setCostPrice(''); setEntryDate(new Date().toISOString().slice(0, 10)); setCostCurrency('TRY'); setFxRate('1'); setSaving(false); load()
+  } catch { return iso }
+}
+
+function fmtDateTime(iso: string): string {
+  try {
+    return new Date(iso).toLocaleDateString('tr-TR', {
+      day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
+    })
+  } catch { return iso }
+}
+
+function holdingDays(entryDate: string): number {
+  const today = new Date()
+  const entry = new Date(entryDate + 'T00:00:00')
+  return Math.max(0, Math.round((today.getTime() - entry.getTime()) / 86_400_000))
+}
+
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+interface StockLotRow {
+  id:               string
+  product_id:       string
+  entry_date:       string
+  qty_remaining:    number
+  unit_cost:        number
+  cost_currency:    string
+  fx_rate_at_entry: number
+  entry_cost_try:   number | null
+}
+
+interface ProductRow {
+  id:              string
+  name:            string
+  sku:             string | null
+  unit:            string
+  stock_qty:       number
+  stock_alert_qty: number
+}
+
+const TYPE_LABELS: Record<string, string> = {
+  purchase:   'Alım',
+  adjustment: 'Düzeltme',
+  return:     'İade',
+  write_off:  'Fire',
+  sale:       'Satış',
+}
+
+// ── Page ─────────────────────────────────────────────────────────────────────
+
+export default async function StocksPage() {
+  const supabase = createClient()
+  let uid: string
+  try {
+    const { data, error } = await supabase.auth.getUser()
+    if (error || !data?.user) redirect('/auth')
+    uid = data.user.id
+  } catch (e) {
+    if (e && typeof e === 'object' && 'digest' in e) throw e
+    redirect('/auth')
   }
 
-  const TYPE_LABELS: Record<string, string> = {
-    purchase: 'Alım', adjustment: 'Düzeltme', return: 'İade', write_off: 'Fire', sale: 'Satış',
+  let companyId: string
+  try { companyId = await resolveCompanyId(uid, supabase) }
+  catch { redirect('/auth') }
+
+  // ── Parallel data fetch ─────────────────────────────────────────────────────
+  const [productsRes, movementsRes, lotsRes] = await Promise.all([
+    supabase
+      .from('products')
+      .select('id, name, sku, unit, stock_qty, stock_alert_qty')
+      .eq('company_id', companyId)
+      .is('deleted_at', null)
+      .eq('is_active', true)
+      .order('name'),
+
+    supabase
+      .from('stock_movements')
+      .select('*')
+      .eq('company_id', companyId)
+      .order('created_at', { ascending: false })
+      .limit(50),
+
+    supabase
+      .from('stock_lots')
+      .select('id, product_id, entry_date, qty_remaining, unit_cost, cost_currency, fx_rate_at_entry, entry_cost_try')
+      .eq('company_id', companyId)
+      .gt('qty_remaining', 0)
+      .is('deleted_at', null)
+      .order('entry_date', { ascending: true }),
+  ])
+
+  const products  = (productsRes.data  ?? []) as ProductRow[]
+  const movements = (movementsRes.data ?? []) as StockMovement[]
+  const lots      = (lotsRes.data      ?? []) as StockLotRow[]
+
+  // ── Compute portfolio metrics from FIFO lots ─────────────────────────────────
+  interface LotMeta extends StockLotRow { days: number; costTry: number }
+
+  const lotsByProduct = new Map<string, LotMeta[]>()
+  let portfolioValueTry   = 0
+  let portfolioQtyWeighted = 0
+
+  for (const lot of lots) {
+    const perUnitTry = lot.entry_cost_try != null && lot.entry_cost_try > 0
+      ? lot.entry_cost_try
+      : lot.unit_cost * (lot.fx_rate_at_entry || 1)
+    const days     = holdingDays(lot.entry_date)
+    const costTry  = lot.qty_remaining * perUnitTry
+    portfolioValueTry    += costTry
+    portfolioQtyWeighted += lot.qty_remaining
+
+    const meta: LotMeta = { ...lot, days, costTry }
+    if (!lotsByProduct.has(lot.product_id)) lotsByProduct.set(lot.product_id, [])
+    lotsByProduct.get(lot.product_id)!.push(meta)
   }
 
-  function fmtDate(d: string) {
-    try {
-      return new Date(d).toLocaleDateString('tr-TR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' })
-    } catch { return d || '—' }
-  }
+  const lowStockCount   = products.filter(p => p.stock_qty > 0 && p.stock_qty <= p.stock_alert_qty).length
+  const zeroStockCount  = products.filter(p => p.stock_qty <= 0).length
 
-  if (loading) return (
-    <div className="flex items-center justify-center h-40">
-      <div className="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
-    </div>
-  )
+  // Build lookup for movement → product name
+  const productMap = new Map(products.map(p => [p.id, p]))
 
   return (
     <div className="max-w-4xl space-y-6">
-      <PageHeader title="Stok Yönetimi" sub="Stok hareketi ekle ve geçmişi incele" />
 
-      {/* Stock levels */}
-      <FlowraCard padding="none">
+      {/* ── Page header ───────────────────────────────────────────────────────── */}
+      <div>
+        <h1 className="text-xl font-black text-gray-900 tracking-tight">Stok Zekası</h1>
+        <p className="text-xs text-gray-400 mt-0.5">FIFO lot değerlemesi · stok hareketleri · portföy özeti</p>
+      </div>
+
+      {/* ── Zone 1: Portfolio summary strip ──────────────────────────────────── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-gray-200 rounded-xl overflow-hidden">
+        {[
+          {
+            label: 'Toplam Stok Değeri',
+            value: fmtTRY(portfolioValueTry),
+            sub:   'FIFO lot maliyeti bazlı',
+            color: 'text-gray-900',
+          },
+          {
+            label: 'Ürün Sayısı',
+            value: String(products.length),
+            sub:   `${lots.length} açık lot`,
+            color: 'text-gray-900',
+          },
+          {
+            label: 'Düşük Stok',
+            value: String(lowStockCount),
+            sub:   'Eşik altı ürün',
+            color: lowStockCount > 0 ? 'text-amber-700' : 'text-gray-400',
+          },
+          {
+            label: 'Stok Tükenmiş',
+            value: String(zeroStockCount),
+            sub:   'Sıfır veya negatif',
+            color: zeroStockCount > 0 ? 'text-red-600' : 'text-gray-400',
+          },
+        ].map((card, i) => (
+          <div key={card.label}
+            className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-gray-100' : ''}`}>
+            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{card.label}</div>
+            <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
+            <div className="text-[10px] text-gray-400 mt-1">{card.sub}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Zone 2: FIFO Lot Panel ────────────────────────────────────────────── */}
+      {lots.length > 0 && (
+        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+            <div>
+              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">FIFO Lot Paneli</span>
+              <span className="ml-2 text-[10px] text-gray-400">— açık lotlar, tutma süresi ve maliyet</span>
+            </div>
+            <span className="text-[10px] text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+              {lots.length} lot · {fmtTRY(portfolioValueTry)}
+            </span>
+          </div>
+          <div className="divide-y divide-gray-50">
+            {products
+              .filter(p => lotsByProduct.has(p.id))
+              .map(product => {
+                const productLots = lotsByProduct.get(product.id) ?? []
+                const productValue = productLots.reduce((s, l) => s + l.costTry, 0)
+                const totalQty     = productLots.reduce((s, l) => s + l.qty_remaining, 0)
+                const oldestLot    = productLots[0]
+
+                return (
+                  <div key={product.id} className="px-5 py-3">
+                    {/* Product header row */}
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold text-gray-900">{product.name}</span>
+                        {product.sku && (
+                          <span className="text-[10px] font-mono text-gray-400">{product.sku}</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-4 text-right">
+                        <div>
+                          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Toplam Miktar</div>
+                          <div className="text-sm font-black tabular-nums text-gray-800">
+                            {totalQty.toLocaleString('tr-TR', { maximumFractionDigits: 3 })} {product.unit}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Lot Değeri</div>
+                          <div className="text-sm font-black tabular-nums text-primary-700">{fmtTRY(productValue)}</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Lot rows */}
+                    <div className="bg-gray-50 rounded-xl overflow-hidden">
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className="text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100">
+                            <th className="text-left px-3 py-2">Giriş Tarihi</th>
+                            <th className="text-right px-3 py-2">Kalan Adet</th>
+                            <th className="text-right px-3 py-2">Birim Maliyet</th>
+                            <th className="text-right px-3 py-2">Lot Değeri (₺)</th>
+                            <th className="text-right px-3 py-2">Tutma Süresi</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {productLots.map(lot => {
+                            const perUnitTry = lot.entry_cost_try != null && lot.entry_cost_try > 0
+                              ? lot.entry_cost_try
+                              : lot.unit_cost * (lot.fx_rate_at_entry || 1)
+                            const urgency = lot.days > 180 ? 'text-red-600' : lot.days > 90 ? 'text-amber-600' : 'text-gray-600'
+                            return (
+                              <tr key={lot.id} className="border-b border-gray-100 last:border-0">
+                                <td className="px-3 py-2 text-gray-700">{fmtDateShort(lot.entry_date)}</td>
+                                <td className="px-3 py-2 text-right tabular-nums font-semibold text-gray-800">
+                                  {lot.qty_remaining.toLocaleString('tr-TR', { maximumFractionDigits: 3 })}
+                                </td>
+                                <td className="px-3 py-2 text-right tabular-nums text-gray-600">
+                                  {lot.cost_currency !== 'TRY'
+                                    ? `${lot.unit_cost.toFixed(2)} ${lot.cost_currency} → ₺${perUnitTry.toFixed(2)}`
+                                    : `₺${perUnitTry.toFixed(2)}`}
+                                </td>
+                                <td className="px-3 py-2 text-right tabular-nums font-semibold text-primary-700">
+                                  {fmtTRY(lot.costTry)}
+                                </td>
+                                <td className={`px-3 py-2 text-right tabular-nums font-semibold ${urgency}`}>
+                                  {lot.days} gün
+                                  {lot.days > 180 && <span className="ml-1 text-[10px]">⚠</span>}
+                                </td>
+                              </tr>
+                            )
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Holding risk badge */}
+                    {oldestLot && oldestLot.days > 180 && (
+                      <div className="mt-2 text-[10px] text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-1.5 font-semibold">
+                        ⚠ En eski lot {oldestLot.days} gündür tutulmakta — finansman maliyeti yüksek
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+          </div>
+        </div>
+      )}
+
+      {/* ── Zone 3: Current stock levels ─────────────────────────────────────── */}
+      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-100">
-          <Label>Mevcut Stok</Label>
+          <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Mevcut Stok</span>
         </div>
         {products.length === 0 ? (
-          <div className="py-14 text-center"><div className="text-4xl mb-2">📦</div><div className="text-sm font-semibold text-gray-600">Ürün bulunamadı.</div></div>
+          <div className="py-14 text-center">
+            <div className="text-4xl mb-2">📦</div>
+            <div className="text-sm font-semibold text-gray-600">Ürün bulunamadı.</div>
+          </div>
         ) : (
           <div className="divide-y divide-gray-50">
             {products.map(p => {
-              const low = Number(p.stock_qty) <= Number(p.stock_alert_qty)
+              const stockNum  = Number(p.stock_qty)
+              const alertNum  = Number(p.stock_alert_qty)
+              const isLow     = stockNum > 0 && stockNum <= alertNum
+              const isZero    = stockNum <= 0
+              const lotValue  = (lotsByProduct.get(p.id) ?? []).reduce((s, l) => s + l.costTry, 0)
+
               return (
                 <div key={p.id} className="flex items-center justify-between px-5 py-3 hover:bg-gray-50/60">
                   <div>
-                    <span className="text-sm font-semibold">{p.name}</span>
+                    <span className="text-sm font-semibold text-gray-900">{p.name}</span>
                     {p.sku && <span className="text-xs text-gray-400 ml-2">{p.sku}</span>}
+                    {lotValue > 0 && (
+                      <div className="text-[10px] text-gray-400 mt-0.5">
+                        Lot değeri: <span className="font-semibold text-primary-600">{fmtTRY(lotValue)}</span>
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center gap-3">
-                    {low && <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-lg font-semibold">Düşük</span>}
-                    <span className={`text-sm font-bold tabular-nums ${low ? 'text-amber-700' : 'text-gray-900'}`}>
-                      {Number(p.stock_qty)} {p.unit}
+                    {isLow  && <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-lg font-semibold">Düşük</span>}
+                    {isZero && <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-lg font-semibold">Tükendi</span>}
+                    <span className={`text-sm font-bold tabular-nums ${
+                      isZero ? 'text-red-600' : isLow ? 'text-amber-700' : 'text-gray-900'
+                    }`}>
+                      {stockNum.toLocaleString('tr-TR', { maximumFractionDigits: 3 })} {p.unit}
                     </span>
                   </div>
                 </div>
@@ -162,143 +351,70 @@ export default function StocksPage() {
             })}
           </div>
         )}
-      </FlowraCard>
+      </div>
 
-      {/* Adjustment form — TASK 3: added cost_price + entry_date */}
-      <FlowraCard>
-        <Label className="border-b border-gray-100 pb-3 mb-4 block">Stok Hareketi Ekle</Label>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className={LAB}>Ürün *</label>
-            <select className={IL} value={selProduct} onChange={e => setSelProduct(e.target.value)}>
-              <option value="">— Ürün seçin —</option>
-              {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className={LAB}>Hareket Tipi</label>
-            <select className={IL} value={adjType} onChange={e => setAdjType(e.target.value)}>
-              <option value="purchase">Alım (+)</option>
-              <option value="adjustment">Düzeltme (+-)</option>
-              <option value="return">İade (+)</option>
-              <option value="write_off">Fire (-)</option>
-            </select>
-          </div>
-          <div>
-            <label className={LAB}>
-              Miktar {!isStockIn && '(negatif = çıkış)'}
-            </label>
-            <input type="number" step="0.001" className={IL} value={adjQty} onChange={e => setAdjQty(e.target.value)} />
-          </div>
-          <div>
-            <label className={LAB}>
-              Maliyet Fiyatı {isStockIn ? '*' : '(opsiyonel)'}
-            </label>
-            <input
-              type="number" step="0.01" min="0"
-              className={IL}
-              value={costPrice}
-              onChange={e => setCostPrice(e.target.value)}
-              placeholder={isStockIn ? 'Zorunlu' : 'Opsiyonel'}
-            />
-          </div>
-          <div>
-            <label className={LAB}>Maliyet Para Birimi</label>
-            <select className={IL} value={costCurrency} onChange={e => setCostCurrency(e.target.value)}>
-              <option value="TRY">TRY (₺)</option>
-              <option value="USD">USD ($)</option>
-              <option value="EUR">EUR (&euro;)</option>
-            </select>
-          </div>
-          {costCurrency !== 'TRY' && (
-            <div>
-              <label className={LAB}>
-                Kur ({costCurrency}/TRY)
-                {fxRateDate && (
-                  <span className="text-primary-500 normal-case font-normal ml-1">
-                    — {new Date(fxRateDate + 'T00:00:00').toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' })} tarihli
-                  </span>
-                )}
-              </label>
-              <input
-                type="number" step="0.0001" min="0"
-                className={IL}
-                value={fxRate}
-                onChange={e => { setFxRate(e.target.value); setFxRateDate(null) }}
-              />
-              {fxRateDate && fxRateDate !== entryDate && (
-                <p className="text-xs text-amber-600 mt-1">
-                  Seçilen tarih ({entryDate}) için kur bulunamadı, en yakın tarih kullanıldı.
-                </p>
-              )}
-            </div>
-          )}
-          <div>
-            <label className={LAB}>
-              Giriş Tarihi {isStockIn ? '*' : '(opsiyonel)'}
-            </label>
-            <input
-              type="date"
-              className={IL}
-              value={entryDate}
-              onChange={e => setEntryDate(e.target.value)}
-            />
-          </div>
-          <div>
-            <label className={LAB}>Not</label>
-            <input className={IL} value={adjNotes} onChange={e => setAdjNotes(e.target.value)} placeholder="Opsiyonel" />
-          </div>
-        </div>
-        {err && <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl px-3 py-2 mt-4">{err}</div>}
-        <div className="mt-4">
-          <FlowraButton variant="primary" loading={saving} onClick={adjust}>
-            Hareketi Kaydet
-          </FlowraButton>
-        </div>
-      </FlowraCard>
+      {/* ── Client island: adjustment form ────────────────────────────────────── */}
+      <StockAdjustClient
+        products={products.map(p => ({ id: p.id, name: p.name, unit: p.unit }))}
+      />
 
-      {/* Movement history */}
-      <FlowraCard padding="none">
+      {/* ── Zone 4: Movement history ──────────────────────────────────────────── */}
+      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-100">
-          <Label>Son Hareketler</Label>
+          <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+            Son Hareketler
+          </span>
+          <span className="ml-2 text-[10px] text-gray-400">— son 50 kayıt</span>
         </div>
         {movements.length === 0 ? (
-          <div className="py-14 text-center"><div className="text-4xl mb-2">📋</div><div className="text-sm font-semibold text-gray-600">Hareket bulunamadı.</div></div>
+          <div className="py-14 text-center">
+            <div className="text-4xl mb-2">📋</div>
+            <div className="text-sm font-semibold text-gray-600">Hareket bulunamadı.</div>
+          </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead><tr className="text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-gray-50 border-b border-gray-100">
-                <th className="text-left px-5 py-3">Ürün</th>
-                <th className="text-center px-3 py-3">Tip</th>
-                <th className="text-right px-3 py-3">Değişim</th>
-                <th className="text-right px-3 py-3">Maliyet</th>
-                <th className="text-center px-3 py-3">Giriş Tarihi</th>
-                <th className="text-right px-3 py-3">Sonrası</th>
-                <th className="text-right px-5 py-3">Tarih</th>
-              </tr></thead>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-gray-50 border-b border-gray-100">
+                  <th className="text-left px-5 py-3">Ürün</th>
+                  <th className="text-center px-3 py-3">Tip</th>
+                  <th className="text-right px-3 py-3">Değişim</th>
+                  <th className="text-right px-3 py-3">Maliyet/Birim</th>
+                  <th className="text-center px-3 py-3">Giriş Tarihi</th>
+                  <th className="text-right px-3 py-3">Sonrası</th>
+                  <th className="text-right px-5 py-3">Tarih</th>
+                </tr>
+              </thead>
               <tbody className="divide-y divide-gray-50">
                 {movements.map(m => {
-                  const prod = products.find(p => p.id === m.product_id)
+                  const prod = productMap.get(m.product_id)
                   const cost = Number(m.unit_cost || 0)
                   return (
-                    <tr key={m.id} className="hover:bg-gray-50/60 text-sm">
-                      <td className="px-5 py-3 font-medium">{prod?.name ?? '—'}</td>
+                    <tr key={m.id} className="hover:bg-gray-50/60">
+                      <td className="px-5 py-3 font-medium text-gray-900">
+                        {prod?.name ?? '—'}
+                        {prod?.sku && <span className="text-xs text-gray-400 ml-1">{prod.sku}</span>}
+                      </td>
                       <td className="px-3 py-3 text-center">
                         <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-lg">
                           {TYPE_LABELS[m.reference_type] ?? m.reference_type}
                         </span>
                       </td>
-                      <td className={`px-3 py-3 text-right font-bold tabular-nums ${Number(m.qty_change) >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
+                      <td className={`px-3 py-3 text-right font-bold tabular-nums ${
+                        Number(m.qty_change) >= 0 ? 'text-emerald-700' : 'text-red-600'
+                      }`}>
                         {Number(m.qty_change) > 0 ? '+' : ''}{Number(m.qty_change)}
                       </td>
-                      <td className="px-3 py-3 text-right tabular-nums text-gray-500">
+                      <td className="px-3 py-3 text-right tabular-nums text-gray-500 text-xs">
                         {cost > 0 ? `₺${cost.toFixed(2)}` : '—'}
                       </td>
                       <td className="px-3 py-3 text-center text-gray-500 text-xs tabular-nums">
-                        {m.entry_date ? new Date(m.entry_date + 'T00:00:00').toLocaleDateString('tr-TR', { day:'2-digit', month:'2-digit', year:'numeric' }) : '—'}
+                        {m.entry_date ? fmtDateShort(m.entry_date) : '—'}
                       </td>
-                      <td className="px-3 py-3 text-right tabular-nums text-gray-700">{Number(m.qty_after)}</td>
-                      <td className="px-5 py-3 text-right text-gray-400">{fmtDate(m.created_at)}</td>
+                      <td className="px-3 py-3 text-right tabular-nums text-gray-700">
+                        {Number(m.qty_after).toLocaleString('tr-TR', { maximumFractionDigits: 3 })}
+                      </td>
+                      <td className="px-5 py-3 text-right text-gray-400 text-xs">{fmtDateTime(m.created_at)}</td>
                     </tr>
                   )
                 })}
@@ -306,7 +422,8 @@ export default function StocksPage() {
             </table>
           </div>
         )}
-      </FlowraCard>
+      </div>
+
     </div>
   )
 }
