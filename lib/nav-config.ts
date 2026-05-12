@@ -1,23 +1,25 @@
 /**
- * nav-config.ts — Flowra navigation configuration (FAZ 21)
+ * nav-config.ts — Flowra navigation configuration (FAZ 21 rev-2)
  *
  * Single source of truth for:
- *   • Sidebar navigation  — 9 primary items, role-filtered
- *   • Mobile bottom nav   — 5 strategic items
+ *   • Sidebar navigation  — group-based, role-filtered, every real route included
+ *   • Mobile bottom nav   — 5 most-used items
  *   • Role-level hierarchy
  *
  * Pure functions only — no React, no DB, no side effects.
  * Fully importable in Vitest without DOM / Next.js setup.
+ *
+ * Design principles:
+ *   1. Every page.tsx that exists is reachable via the sidebar.
+ *   2. Groups provide visual hierarchy; role filtering hides unauthorized groups.
+ *   3. isActive uses exact-prefix matching (no /sales matching /sales-flow).
+ *   4. Icons are validated against Icon.tsx registry before use.
  */
 
 import type { MemberRole } from '@/types'
 
 // ── Role hierarchy ────────────────────────────────────────────────────────────
 
-/**
- * Numeric level for each role.
- * Higher number = more access.
- */
 export const ROLE_LEVEL: Record<MemberRole, number> = {
   viewer:  0,
   manager: 1,
@@ -26,57 +28,124 @@ export const ROLE_LEVEL: Record<MemberRole, number> = {
 
 /**
  * Returns true if `role` satisfies `required`.
- * null role is treated as viewer (most restrictive).
+ * null role → treated as viewer (most restrictive).
  */
 export function hasMinRole(role: MemberRole | null, required: MemberRole): boolean {
   const level = role ? ROLE_LEVEL[role] : 0
   return level >= ROLE_LEVEL[required]
 }
 
-// ── Nav item type ─────────────────────────────────────────────────────────────
+// ── Nav item & group types ────────────────────────────────────────────────────
 
 export interface NavItem {
-  href:     string
-  label:    string
-  icon:     string
-  exact?:   boolean
+  href:    string
+  label:   string
   /**
-   * Minimum role required to see this item.
-   * Undefined = visible to every role (including null/unauthenticated).
+   * Must be a valid key in Icon.tsx REGISTRY.
+   * Verified icons: dashboard, analytics, cashflow, tax, collections, expenses,
+   * simulation, partners, activity, sales, proformas, customers, products,
+   * stocks, tasks, users, shield, backup, settings.
    */
+  icon:    string
+  /** true = pathname must match exactly (prevents /dashboard matching /dashboard/x) */
+  exact?:  boolean
+  /** Minimum role required to see this item. undefined = all roles. */
   minRole?: MemberRole
 }
 
-// ── 9 primary sidebar items ───────────────────────────────────────────────────
-//
-// Each item maps to a hub page.  Sub-pages live in URL ?tab= inner tabs.
-//
-//  1  Komuta Merkezi   → /dashboard           (all roles)
-//  2  Finansal Analiz  → /dashboard/analytics (all roles, inner tabs: ceo/bilanço/cashflow/vergi)
-//  3  Ortaklar         → /dashboard/partners  (all roles, inner tabs: ozet/sermaye/borclanma/dagitim)
-//  4  Satış & Tahsilat → /dashboard/sales-flow (all roles, covers pipeline + satışlar + proformalar + müşteriler + tahsilatlar)
-//  5  Stok & Maliyet   → /dashboard/catalog   (all roles, inner tabs: katalog/stok/ürünler)
-//  6  Giderler         → /dashboard/expenses  (all roles)
-//  7  Simülasyon       → /dashboard/simulation (manager+)
-//  8  Raporlar         → /dashboard/reports   (manager+, FAZ 28 placeholder)
-//  9  Yönetim          → /dashboard/settings  (admin only)
+export interface NavGroup {
+  id:      string
+  /** Visual group header label. undefined = unlabeled (top group). */
+  label?:  string
+  items:   NavItem[]
+  /** If set, entire group is hidden below this role. */
+  minRole?: MemberRole
+}
 
-export const NAV_ITEMS: NavItem[] = [
-  { href: '/dashboard',            label: 'Komuta Merkezi',   icon: 'dashboard',  exact: true              },
-  { href: '/dashboard/analytics',  label: 'Finansal Analiz',  icon: 'analytics'                            },
-  { href: '/dashboard/partners',   label: 'Ortaklar',         icon: 'partners'                             },
-  { href: '/dashboard/sales-flow', label: 'Satış & Tahsilat', icon: 'sales'                                },
-  { href: '/dashboard/catalog',    label: 'Stok & Maliyet',   icon: 'stocks'                               },
-  { href: '/dashboard/expenses',   label: 'Giderler',         icon: 'expenses'                             },
-  { href: '/dashboard/simulation', label: 'Simülasyon',       icon: 'simulation', minRole: 'manager'       },
-  { href: '/dashboard/reports',    label: 'Raporlar',         icon: 'reports',    minRole: 'manager'       },
-  { href: '/dashboard/settings',   label: 'Yönetim',          icon: 'settings',   minRole: 'admin'         },
+// ── All navigation groups ─────────────────────────────────────────────────────
+//
+// Every real route under /app/dashboard is reachable from here.
+// Routes verified to have page.tsx as of FAZ 21 rev-2:
+//   dashboard, analytics, cashflow, tax, collections, expenses, simulation,
+//   partners, sales-flow (FAZ 18), sales, proformas, customers,
+//   catalog (FAZ 20), stocks, products, tasks,
+//   admin/users, admin/audit, backups, settings
+
+export const NAV_GROUPS: NavGroup[] = [
+
+  // ── GENEL ─────────────────────────────────────────────────────────────────
+  // Unlabeled top group — single entry point for the CEO cockpit
+  {
+    id: 'genel',
+    items: [
+      {
+        href:  '/dashboard',
+        label: 'Komuta Merkezi',
+        icon:  'dashboard',
+        exact: true,
+      },
+    ],
+  },
+
+  // ── FİNANS ────────────────────────────────────────────────────────────────
+  {
+    id:    'finans',
+    label: 'Finans',
+    items: [
+      { href: '/dashboard/analytics',   label: 'Finansal Analiz', icon: 'analytics'   },
+      { href: '/dashboard/cashflow',    label: 'Nakit Akışı',     icon: 'cashflow'    },
+      { href: '/dashboard/tax',         label: 'Vergi',           icon: 'tax'         },
+      { href: '/dashboard/collections', label: 'Tahsilatlar',     icon: 'collections' },
+      { href: '/dashboard/expenses',    label: 'Giderler',        icon: 'expenses'    },
+      { href: '/dashboard/simulation',  label: 'Simülasyon',      icon: 'simulation'  },
+      { href: '/dashboard/partners',    label: 'Ortaklar',        icon: 'partners'    },
+    ],
+  },
+
+  // ── SATIŞ ─────────────────────────────────────────────────────────────────
+  {
+    id:    'satis',
+    label: 'Satış',
+    items: [
+      // Satış Akışı (FAZ 18) — Kanban pipeline: tekliften tahsilata
+      { href: '/dashboard/sales-flow', label: 'Satış Akışı',  icon: 'activity'  },
+      // Satışlar — tamamlanmış/devam eden satış listesi ve kayıt formu
+      // exact: true prevents /dashboard/sales matching /dashboard/sales-flow
+      { href: '/dashboard/sales',      label: 'Satışlar',     icon: 'sales',    exact: true },
+      { href: '/dashboard/proformas',  label: 'Proformalar',  icon: 'proformas' },
+      { href: '/dashboard/customers',  label: 'Müşteriler',   icon: 'customers' },
+    ],
+  },
+
+  // ── OPERASYON ─────────────────────────────────────────────────────────────
+  {
+    id:    'operasyon',
+    label: 'Operasyon',
+    items: [
+      // Katalog (FAZ 20) — ürün fiyat + maliyet merkezi
+      { href: '/dashboard/catalog',   label: 'Katalog',   icon: 'products' },
+      { href: '/dashboard/stocks',    label: 'Stok',      icon: 'stocks'   },
+      { href: '/dashboard/products',  label: 'Ürünler',   icon: 'products' },
+      { href: '/dashboard/tasks',     label: 'Görevler',  icon: 'tasks'    },
+    ],
+  },
+
+  // ── YÖNETİM (admin only) ──────────────────────────────────────────────────
+  {
+    id:      'yonetim',
+    label:   'Yönetim',
+    minRole: 'admin',
+    items: [
+      { href: '/dashboard/admin/users', label: 'Ekip',      icon: 'users'   },
+      { href: '/dashboard/admin/audit', label: 'Denetim',   icon: 'shield'  },
+      { href: '/dashboard/backups',     label: 'Yedekleme', icon: 'backup'  },
+      { href: '/dashboard/settings',    label: 'Ayarlar',   icon: 'settings' },
+    ],
+  },
 ]
 
-// ── Fallback item for non-admin users ─────────────────────────────────────────
-//
-// Non-admin users don't see "Yönetim" (admin group) but still need access
-// to personal settings. This item is appended at the bottom for them.
+// ── Settings fallback for non-admin users ─────────────────────────────────────
+// Non-admin users don't see the Yönetim group but still need personal settings.
 
 export const SETTINGS_FALLBACK: NavItem = {
   href:  '/dashboard/settings',
@@ -87,53 +156,82 @@ export const SETTINGS_FALLBACK: NavItem = {
 // ── Role-based filtering ──────────────────────────────────────────────────────
 
 /**
- * Returns the subset of NAV_ITEMS the given role can see.
+ * Returns the NavGroups visible to the given role.
+ * Groups with minRole are excluded when role doesn't meet the requirement.
  * null role → viewer level (most restrictive).
  */
-export function getNavForRole(role: MemberRole | null): NavItem[] {
-  return NAV_ITEMS.filter(item => {
-    if (!item.minRole) return true
-    return hasMinRole(role, item.minRole)
+export function getGroupsForRole(role: MemberRole | null): NavGroup[] {
+  return NAV_GROUPS.filter(group => {
+    if (!group.minRole) return true
+    return hasMinRole(role, group.minRole)
   })
 }
 
 /**
- * Returns the full nav list for a role, including the settings fallback for
- * non-admin users who don't see the Yönetim item.
+ * Returns a flat list of all NavItems visible to the given role.
+ * Item-level minRole is also respected (for future per-item restrictions).
  */
-export function getFullNavForRole(role: MemberRole | null): NavItem[] {
-  const items = getNavForRole(role)
-  if (!hasMinRole(role, 'admin')) {
-    return [...items, SETTINGS_FALLBACK]
-  }
-  return items
+export function getAllItemsForRole(role: MemberRole | null): NavItem[] {
+  return getGroupsForRole(role).flatMap(group =>
+    group.items.filter(item => !item.minRole || hasMinRole(role, item.minRole)),
+  )
 }
 
-// ── Item counts per role ──────────────────────────────────────────────────────
-
 /**
- * Number of nav items visible to a given role (excluding settings fallback).
+ * Total number of nav items visible to a role (excluding settings fallback).
  */
 export function getNavCount(role: MemberRole | null): number {
-  return getNavForRole(role).length
+  return getAllItemsForRole(role).length
+}
+
+// ── isActive helper ───────────────────────────────────────────────────────────
+
+/**
+ * Determines whether a NavItem should appear active for a given pathname.
+ *
+ * Uses safe prefix matching: `/dashboard/sales` is active on `/dashboard/sales`
+ * and `/dashboard/sales/123` but NOT on `/dashboard/sales-flow` (hyphen check).
+ *
+ * @param item     The nav item to test.
+ * @param pathname The current Next.js pathname.
+ */
+export function isNavItemActive(item: NavItem, pathname: string): boolean {
+  if (item.exact) return pathname === item.href
+  // Match exact path OR any child path (href + '/')
+  // This prevents /sales from matching /sales-flow
+  return pathname === item.href || pathname.startsWith(item.href + '/')
 }
 
 // ── Nav item lookup ───────────────────────────────────────────────────────────
 
-/** Returns the NavItem for a given href, or undefined. */
+/**
+ * Returns the NavItem for a given href, searching all groups.
+ * Returns undefined if not found.
+ */
 export function findNavItem(href: string): NavItem | undefined {
-  return NAV_ITEMS.find(item => item.href === href)
+  for (const group of NAV_GROUPS) {
+    const found = group.items.find(item => item.href === href)
+    if (found) return found
+  }
+  return undefined
 }
 
-/** Returns true if the given href is one of the 9 primary nav items. */
-export function isPrimaryNavItem(href: string): boolean {
-  return NAV_ITEMS.some(item => item.href === href)
+/**
+ * Returns true if the given href belongs to any nav item in any group.
+ */
+export function isKnownNavHref(href: string): boolean {
+  return findNavItem(href) !== undefined
 }
 
 // ── Mobile bottom nav (5 items) ───────────────────────────────────────────────
 //
 // Strategic subset shown in the bottom tab bar on small screens.
-// Ordered by most frequent CEO/CFO daily action.
+// Ordered by most-frequent CEO/CFO daily action:
+//   1. Dashboard overview
+//   2. Sales pipeline (most common data entry)
+//   3. Collections (most common follow-up)
+//   4. Expenses (daily approval flow)
+//   5. Financial summary (CFO check)
 
 export interface MobileNavItem {
   href:  string
@@ -142,17 +240,17 @@ export interface MobileNavItem {
 }
 
 export const MOBILE_NAV: MobileNavItem[] = [
-  { href: '/dashboard',            label: 'Genel',  emoji: '🏠' },
-  { href: '/dashboard/sales-flow', label: 'Satış',  emoji: '💰' },
-  { href: '/dashboard/expenses',   label: 'Gider',  emoji: '📤' },
-  { href: '/dashboard/analytics',  label: 'Finans', emoji: '📊' },
-  { href: '/dashboard/catalog',    label: 'Stok',   emoji: '📦' },
+  { href: '/dashboard',             label: 'Genel',    emoji: '🏠' },
+  { href: '/dashboard/sales-flow',  label: 'Satış',    emoji: '💰' },
+  { href: '/dashboard/collections', label: 'Tahsilat', emoji: '📥' },
+  { href: '/dashboard/expenses',    label: 'Gider',    emoji: '📤' },
+  { href: '/dashboard/analytics',   label: 'Finans',   emoji: '📊' },
 ]
 
 /** Hrefs of the 5 mobile nav items (for quick membership check). */
 export const MOBILE_NAV_HREFS: readonly string[] = MOBILE_NAV.map(i => i.href)
 
-/** Returns true if the given href appears in the mobile bottom nav. */
+/** Returns true if the given href is in the mobile bottom nav. */
 export function isMobileNavItem(href: string): boolean {
   return (MOBILE_NAV_HREFS as string[]).includes(href)
 }
