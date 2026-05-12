@@ -14,6 +14,7 @@
 export const dynamic = 'force-dynamic'
 
 import { redirect }         from 'next/navigation'
+import { Suspense }         from 'react'
 import { createClient }     from '@/lib/supabase-server'
 import { resolveCompanyId } from '@/lib/resolve-company'
 import SalesFlowClient, {
@@ -21,6 +22,19 @@ import SalesFlowClient, {
   type Sale,
   type StockLot,
 } from './SalesFlowClient'
+import { SalesFlowCommandBar } from './_components/SalesFlowCommandBar'
+
+// ── Loading skeleton ──────────────────────────────────────────────────────────
+
+function CommandBarSkeleton() {
+  return (
+    <div className="flex items-center gap-2 animate-pulse">
+      {[...Array(4)].map((_, i) => (
+        <div key={i} className="h-8 w-28 bg-gray-100 rounded-xl" />
+      ))}
+    </div>
+  )
+}
 
 // ── Analytics helpers (pure, tested in tests/sales-flow-analytics.test.ts) ───
 
@@ -138,6 +152,11 @@ export default async function SalesFlowPage() {
 
   return (
     <div className="max-w-5xl space-y-6">
+
+      {/* ── Intelligence strip ─────────────────────────────────────────────── */}
+      <Suspense fallback={<CommandBarSkeleton />}>
+        <SalesFlowCommandBar companyId={companyId} />
+      </Suspense>
 
       {/* ── Header ──────────────────────────────────────────────────────── */}
       <div>
