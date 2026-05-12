@@ -1,0 +1,307 @@
+// ── OverviewTab — CEO Likidite Kokpiti ───────────────────────────────────────
+//
+// Content from /dashboard/ceo:
+//   Zone 1 — Liquidity Cockpit (4 KPIs)
+//   Zone 2 — Tahsilat Sağlığı + Risk Matrisi (5/5 col grid)
+//   Zone 3 — Finansal Özet (5 KPIs)
+//   Zone 4 — 12 Ay Nakit Projeksiyonu (bar chart)
+
+import Link from 'next/link'
+import { getCfoMetrics, getRunwayForecast } from '@/lib/finance/financial-core'
+import type { CfoMetrics }             from '@/lib/finance/cfo-metrics'
+import type { RunwayForecastResponse } from '@/lib/finance/financial-core'
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+const TRY_FMT = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+
+function fmt(n: number): string {
+  const abs  = Math.abs(Number(n || 0))
+  const sign = n < 0 ? '−' : ''
+  if (abs >= 1_000_000) return `${sign}₺${(abs / 1_000_000).toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 2 })}M`
+  if (abs >= 10_000)    return `${sign}₺${(abs / 1_000).toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}K`
+  return `${sign}₺${TRY_FMT.format(abs)}`
+}
+function fmtFull(n: number): string {
+  return (n < 0 ? '−' : '') + '₺' + TRY_FMT.format(Math.abs(n))
+}
+function runwayColor(months: number | null): string {
+  if (months === null) return 'text-gray-400'
+  if (months <= 2)     return 'text-red-600'
+  if (months <= 6)     return 'text-orange-600'
+  if (months <= 12)    return 'text-amber-600'
+  return 'text-emerald-600'
+}
+function sq<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
+  return fn().catch(() => fallback)
+}
+
+// ── Sub-components ────────────────────────────────────────────────────────────
+
+function KpiBlock({ label, value, sub, tone = 'neutral', href }: {
+  label: string; value: string; sub?: string
+  tone?: 'positive' | 'negative' | 'warning' | 'critical' | 'neutral'
+  href?: string
+}) {
+  const valueColor = {
+    positive: 'text-emerald-700', negative: 'text-red-600',
+    warning: 'text-amber-600', critical: 'text-red-700', neutral: 'text-gray-900',
+  }[tone]
+  const content = (
+    <div className="bg-white border border-gray-200 rounded-xl px-4 py-3 hover:border-gray-300 transition-colors">
+      <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">{label}</div>
+      <div className={`text-xl font-black tabular-nums leading-none ${valueColor}`}>{value}</div>
+      {sub && <div className="text-[10px] text-gray-400 mt-1 leading-tight">{sub}</div>}
+    </div>
+  )
+  return href ? <Link href={href}>{content}</Link> : content
+}
+
+function RiskPill({ label, value, level }: { label: string; value: string; level: 'ok' | 'warn' | 'critical' }) {
+  const colors = {
+    ok:       'bg-emerald-50 border-emerald-200 text-emerald-700',
+    warn:     'bg-amber-50 border-amber-200 text-amber-700',
+    critical: 'bg-red-50 border-red-200 text-red-700',
+  }[level]
+  const icons = { ok: '✓', warn: '⚠', critical: '🔴' }[level]
+  return (
+    <div className={`flex items-center justify-between px-3 py-2 rounded-xl border ${colors}`}>
+      <span className="text-xs font-semibold">{icons} {label}</span>
+      <span className="text-xs font-black tabular-nums">{value}</span>
+    </div>
+  )
+}
+
+// ── Component ─────────────────────────────────────────────────────────────────
+
+interface Props { userId: string; companyId: string }
+
+export async function OverviewTab({ userId: _userId, companyId }: Props) {
+  const now   = new Date()
+  const today = now.toISOString().slice(0, 10)
+  const year  = now.getFullYear()
+  const mon   = String(now.getMonth() + 1).padStart(2, '0')
+  const from  = `${year}-${mon}-01`
+
+  const ZERO_METRICS: CfoMetrics = {
+    cash:        { true_cash_position: 0, operational_cash: 0, restricted_cash: 0, distributable_cash: 0 },
+    burn:        { monthly_burn_rate: 0, runway_months: null, runway_days: null, cash_exhaustion_date: null },
+    receivables: { total_outstanding: 0, overdue_30d: 0, overdue_60d: 0, overdue_90d: 0, collection_rate_pct: 100 },
+    tax:         { kdv_net: 0, corporate_tax_estimate: 0, total_fiscal_obligation: 0 },
+    partner:     { total_equity: 0, total_loans: 0, total_dividends: 0, company_owes: 0 },
+    stock:       { fifo_value: 0, coverage_months: null },
+  }
+  const ZERO_RUNWAY: RunwayForecastResponse = {
+    months: [], exhaustion_month: null, exhaustion_date: null, safe_months: 0,
+    inputs: { starting_cash: 0, monthly_burn: 0, outstanding_total: 0, horizon_months: 12 },
+  }
+
+  const [metrics, runway] = await Promise.all([
+    sq(() => getCfoMetrics(companyId, { from, to: today }), ZERO_METRICS),
+    sq(() => getRunwayForecast(companyId, { from, to: today, months: 12 }), ZERO_RUNWAY),
+  ])
+
+  const m = metrics
+  const r = runway
+  const runwayMonths = m.burn.runway_months
+  const runwayTone   = runwayMonths === null ? 'neutral'
+    : runwayMonths <= 2  ? 'critical'
+    : runwayMonths <= 6  ? 'warning'
+    : 'positive'
+  const collectionRisk = m.receivables.overdue_60d > 5000 ? 'critical'
+    : m.receivables.overdue_30d > 2000 ? 'warn' : 'ok'
+  const taxRisk     = m.tax.total_fiscal_obligation > 10000 ? 'warn' : 'ok'
+  const partnerRisk = m.partner.total_equity === 0
+    ? (m.partner.total_loans > 0 ? 'critical' : 'ok')
+    : m.partner.total_loans > m.partner.total_equity * 0.5 ? 'warn' : 'ok'
+  const stockRisk   = m.stock.coverage_months !== null && m.stock.coverage_months < 2 ? 'warn' : 'ok'
+
+  const chartMonths = r.months.slice(0, 12)
+  const maxCash     = Math.max(1, ...chartMonths.map(mo => Math.max(0, mo.end_cash)))
+
+  return (
+    <div className="space-y-4">
+
+      {/* Kritik uyarı */}
+      {runwayTone === 'critical' && (
+        <div className="bg-red-50 border border-red-300 rounded-xl px-4 py-3 text-sm text-red-700 font-semibold flex items-center gap-2">
+          <span className="animate-pulse">🔴</span>
+          Kritik: Runway {runwayMonths?.toFixed(1)} ay — acil aksiyon gerekiyor.
+        </div>
+      )}
+
+      {/* Zone 1 — Likidite Kontrol Merkezi */}
+      <div>
+        <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1.5">Likidite Kontrol Merkezi</div>
+        <div className="grid grid-cols-4 gap-2">
+          <KpiBlock label="Nakit Pozisyonu" value={fmt(m.cash.true_cash_position)}
+            sub="Tahsilat − ödenen giderler"
+            tone={m.cash.true_cash_position > 0 ? 'positive' : 'critical'} />
+          <KpiBlock label="Dağıtılabilir Nakit"
+            value={m.cash.distributable_cash > 0 ? fmt(m.cash.distributable_cash) : '—'}
+            sub={m.cash.restricted_cash > 0 ? `${fmt(m.cash.restricted_cash)} taahhüt var` : 'Yükümlülük yok'}
+            tone={m.cash.distributable_cash > 0 ? 'positive' : 'negative'}
+            href="/dashboard/partners" />
+          <KpiBlock label="Aylık Burn"
+            value={m.burn.monthly_burn_rate > 0 ? fmt(m.burn.monthly_burn_rate) : '—'}
+            sub="3 aylık ortalama" tone="neutral" href="/dashboard/expenses" />
+          <div className={`rounded-xl px-4 py-3 border-2 ${
+            runwayTone === 'critical' ? 'bg-red-50 border-red-300' :
+            runwayTone === 'warning'  ? 'bg-amber-50 border-amber-300' :
+            runwayTone === 'positive' ? 'bg-emerald-50 border-emerald-200' :
+            'bg-gray-50 border-gray-200'
+          }`}>
+            <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Runway</div>
+            <div className={`text-xl font-black tabular-nums leading-none ${runwayColor(runwayMonths)}`}>
+              {runwayMonths !== null ? `${runwayMonths.toFixed(1)} ay` : '∞'}
+            </div>
+            {m.burn.cash_exhaustion_date && (
+              <div className="text-[10px] text-gray-500 mt-1">
+                {new Date(m.burn.cash_exhaustion_date + 'T00:00:00Z').toLocaleDateString('tr-TR', {
+                  day: 'numeric', month: 'short', year: 'numeric',
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Zone 2 — Tahsilat + Risk */}
+      <div className="grid grid-cols-5 gap-2">
+        <div className="col-span-3">
+          <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1.5">Tahsilat Sağlığı</div>
+          <div className="bg-white border border-gray-200 rounded-xl px-4 py-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-gray-600">Toplam Açık Alacak</span>
+              <span className="text-sm font-black tabular-nums text-gray-900">{fmt(m.receivables.total_outstanding)}</span>
+            </div>
+            {[
+              { label: '+30 gün (Risk)',        value: m.receivables.overdue_30d, color: 'bg-amber-400' },
+              { label: '+60 gün (Yüksek Risk)', value: m.receivables.overdue_60d, color: 'bg-orange-500' },
+              { label: '+90 gün (Kritik)',      value: m.receivables.overdue_90d, color: 'bg-red-600'   },
+            ].map(({ label, value, color }) => {
+              const pct = m.receivables.total_outstanding > 0
+                ? Math.min(100, (value / m.receivables.total_outstanding) * 100) : 0
+              return (
+                <div key={label}>
+                  <div className="flex items-center justify-between text-[10px] text-gray-500 mb-0.5">
+                    <span>{label}</span><span className="font-semibold tabular-nums">{fmt(value)}</span>
+                  </div>
+                  <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div className={`h-full ${color} rounded-full transition-all`} style={{ width: `${pct}%` }} />
+                  </div>
+                </div>
+              )
+            })}
+            <div className="flex items-center justify-between pt-1 border-t border-gray-100">
+              <span className="text-[10px] text-gray-500 font-semibold">Tahsilat Oranı</span>
+              <span className={`text-xs font-black tabular-nums ${
+                m.receivables.collection_rate_pct >= 80 ? 'text-emerald-600' :
+                m.receivables.collection_rate_pct >= 50 ? 'text-amber-600' : 'text-red-600'
+              }`}>%{m.receivables.collection_rate_pct.toFixed(1)}</span>
+            </div>
+          </div>
+        </div>
+        <div className="col-span-2">
+          <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1.5">Risk Matrisi</div>
+          <div className="space-y-1.5">
+            <RiskPill label="Runway"
+              value={runwayMonths !== null ? `${runwayMonths.toFixed(1)} ay` : '∞'}
+              level={runwayTone === 'critical' ? 'critical' : runwayTone === 'warning' ? 'warn' : 'ok'} />
+            <RiskPill label="Vadesi Geçmiş" value={fmt(m.receivables.overdue_30d)} level={collectionRisk} />
+            <RiskPill label="Vergi Yükümlülüğü" value={fmt(m.tax.total_fiscal_obligation)} level={taxRisk} />
+            <RiskPill label="Ortak Borç/Özsermaye"
+              value={m.partner.total_equity > 0
+                ? `%${Math.round((m.partner.total_loans / m.partner.total_equity) * 100)}` : '—'}
+              level={partnerRisk} />
+            <RiskPill label="Stok Karşılama"
+              value={m.stock.coverage_months !== null ? `${m.stock.coverage_months.toFixed(1)} ay` : '—'}
+              level={stockRisk} />
+          </div>
+        </div>
+      </div>
+
+      {/* Zone 3 — Finansal Özet */}
+      <div>
+        <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1.5">Finansal Özet</div>
+        <div className="grid grid-cols-5 gap-2">
+          <KpiBlock label="Özsermaye" value={fmt(m.partner.total_equity)}
+            sub="Toplam capital_in" href="/dashboard/partners" />
+          <KpiBlock label="Ortak Kredileri" value={fmt(m.partner.total_loans)}
+            sub="Net borç (ödenmemiş)" href="/dashboard/partners" />
+          <KpiBlock label="Stok Değeri (FIFO)" value={fmt(m.stock.fifo_value)}
+            sub={m.stock.coverage_months ? `${m.stock.coverage_months.toFixed(1)} ay karşılık` : undefined}
+            href="/dashboard/stocks" />
+          <KpiBlock label="KDV Net"
+            value={fmtFull(Math.abs(m.tax.kdv_net))}
+            sub={m.tax.kdv_net > 0 ? 'Ödenecek' : 'Devredilecek'}
+            tone={m.tax.kdv_net > 0 ? 'warning' : 'neutral'}
+            href="/dashboard/finance?tab=tax" />
+          <KpiBlock label="KV Tahmini"
+            value={fmt(m.tax.corporate_tax_estimate)}
+            sub="YTD kâr × %25"
+            tone={m.tax.corporate_tax_estimate > 0 ? 'warning' : 'neutral'}
+            href="/dashboard/finance?tab=quarterly" />
+        </div>
+      </div>
+
+      {/* Zone 4 — Runway Chart */}
+      {chartMonths.length > 0 && (
+        <div>
+          <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1.5">12 Aylık Nakit Projeksiyonu</div>
+          <div className="bg-white border border-gray-200 rounded-xl px-4 py-4">
+            <div className="flex items-end gap-1.5 h-24">
+              {chartMonths.map((mo) => {
+                const barH    = maxCash > 0 ? Math.max(2, Math.round((Math.max(0, mo.end_cash) / maxCash) * 100)) : 0
+                const isNeg   = mo.end_cash <= 0
+                const isLow   = !isNeg && mo.end_cash < maxCash * 0.2
+                const barColor = isNeg ? 'bg-red-400' : isLow ? 'bg-amber-400' : 'bg-emerald-400'
+                return (
+                  <div key={mo.month} className="flex-1 flex flex-col items-center gap-0.5 min-w-0">
+                    <div className="w-full flex items-end justify-center" style={{ height: '88px' }}>
+                      <div className={`w-full rounded-sm ${barColor} opacity-90`}
+                        style={{ height: `${isNeg ? 4 : barH}%` }}
+                        title={`${mo.month_label}: ${fmt(mo.end_cash)}`} />
+                    </div>
+                    <span className="text-[8px] text-gray-400 font-medium truncate w-full text-center leading-none">
+                      {mo.month_label.split(' ')[0]}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+            <div className="flex items-center justify-between mt-2 text-[10px] text-gray-400">
+              <span>Başlangıç: {fmt(r.inputs.starting_cash)}</span>
+              {r.exhaustion_month !== null ? (
+                <span className="text-red-500 font-semibold">⚠ Ay {r.exhaustion_month}&apos;de nakit tükenebilir</span>
+              ) : (
+                <span className="text-emerald-600 font-semibold">12 ay boyunca nakit sağlıklı</span>
+              )}
+              <span>Burn: {fmt(r.inputs.monthly_burn)}/ay</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Quick actions */}
+      <div className="flex flex-wrap gap-2 pt-1">
+        <Link href="/dashboard/collections"
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary-600 text-white text-xs font-semibold hover:bg-primary-700 transition-colors">
+          Tahsilat Yönet
+        </Link>
+        <Link href="/dashboard/expenses"
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-orange-500 text-white text-xs font-semibold hover:bg-orange-600 transition-colors">
+          Giderleri Gözden Geçir
+        </Link>
+        <Link href="/dashboard/partners"
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gray-100 text-gray-700 text-xs font-semibold hover:bg-gray-200 transition-colors">
+          Ortak Dengesi
+        </Link>
+        <Link href="/dashboard/finance?tab=forecast"
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gray-100 text-gray-700 text-xs font-semibold hover:bg-gray-200 transition-colors">
+          Senaryo Simülasyonu
+        </Link>
+      </div>
+    </div>
+  )
+}

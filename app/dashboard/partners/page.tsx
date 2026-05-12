@@ -23,7 +23,6 @@ import Link                   from 'next/link'
 import { PartnerService }     from '@/lib/services/partner.service'
 import { getDistributableCash } from '@/lib/finance/financial-core'
 import { PartnerActionsMenu } from '@/components/dashboard/partners/PartnerActionsMenu'
-import { FinanceNavTabs }     from '@/components/dashboard/FinanceNavTabs'
 import { PartnerTxPanel, type TxRow, type TxTypeOption } from './PartnerTxPanel'
 
 // ── Inner tab config ──────────────────────────────────────────────────────────
@@ -211,9 +210,6 @@ export default async function PartnersPage({
 
   return (
     <div className="max-w-5xl space-y-0">
-
-      {/* ── Finansal Analitik hub nav ────────────────────────────────────── */}
-      <FinanceNavTabs active="partners" />
 
       {/* ── Page header ──────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between flex-wrap gap-2 mb-4">

@@ -12,7 +12,6 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase-server'
 import { resolveCompanyId } from '@/lib/resolve-company'
 import CollectionsClient, { type CollectionRow } from './CollectionsClient'
-import { FinanceNavTabs } from '@/components/dashboard/FinanceNavTabs'
 
 export default async function CollectionsPage() {
   const supabase = createClient()
@@ -26,7 +25,6 @@ export default async function CollectionsPage() {
     // Fall back to empty initial rows — client will retry via API
     return (
       <div className="max-w-5xl">
-        <FinanceNavTabs active="collections" />
         <CollectionsClient initialRows={[]} />
       </div>
     )
@@ -59,7 +57,6 @@ export default async function CollectionsPage() {
 
   return (
     <div className="max-w-5xl">
-      <FinanceNavTabs active="collections" />
       <CollectionsClient initialRows={initialRows} />
     </div>
   )

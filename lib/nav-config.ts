@@ -65,11 +65,11 @@ export interface NavGroup {
 // ── All navigation groups ─────────────────────────────────────────────────────
 //
 // Every real route under /app/dashboard is reachable from here.
-// Routes verified to have page.tsx as of FAZ 21 rev-2:
-//   dashboard, analytics, cashflow, tax, collections, expenses, simulation,
-//   partners, sales-flow (FAZ 18), sales, proformas, customers,
-//   catalog (FAZ 20), stocks, products, tasks,
-//   admin/users, admin/audit, backups, settings
+// Routes verified to have page.tsx as of FAZ T2:
+//   dashboard, finance (hub: analytics/cashflow/tax/ceo merged), collections,
+//   expenses, simulation, partners, sales-flow, sales, proformas, customers,
+//   catalog, stocks, products, tasks, admin/users, admin/audit, backups, settings
+//   NOTE: analytics/cashflow/tax/ceo now redirect → /dashboard/finance?tab=*
 
 export const NAV_GROUPS: NavGroup[] = [
 
@@ -92,9 +92,9 @@ export const NAV_GROUPS: NavGroup[] = [
     id:    'finans',
     label: 'Finans',
     items: [
-      { href: '/dashboard/analytics',   label: 'Finansal Analiz', icon: 'analytics'   },
-      { href: '/dashboard/cashflow',    label: 'Nakit Akışı',     icon: 'cashflow'    },
-      { href: '/dashboard/tax',         label: 'Vergi',           icon: 'tax'         },
+      // Financial Intelligence Hub (FAZ T2) — 8-tab unified workspace
+      // replaces /analytics + /cashflow + /tax + /ceo
+      { href: '/dashboard/finance',     label: 'Finansal Analiz', icon: 'analytics'   },
       { href: '/dashboard/collections', label: 'Tahsilatlar',     icon: 'collections' },
       { href: '/dashboard/expenses',    label: 'Giderler',        icon: 'expenses'    },
       { href: '/dashboard/simulation',  label: 'Simülasyon',      icon: 'simulation'  },
@@ -244,7 +244,7 @@ export const MOBILE_NAV: MobileNavItem[] = [
   { href: '/dashboard/sales-flow',  label: 'Satış',    emoji: '💰' },
   { href: '/dashboard/collections', label: 'Tahsilat', emoji: '📥' },
   { href: '/dashboard/expenses',    label: 'Gider',    emoji: '📤' },
-  { href: '/dashboard/analytics',   label: 'Finans',   emoji: '📊' },
+  { href: '/dashboard/finance',     label: 'Finans',   emoji: '📊' },
 ]
 
 /** Hrefs of the 5 mobile nav items (for quick membership check). */
