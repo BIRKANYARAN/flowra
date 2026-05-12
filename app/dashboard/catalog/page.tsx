@@ -16,10 +16,22 @@
 export const dynamic = 'force-dynamic'
 
 import { redirect }         from 'next/navigation'
+import { Suspense }         from 'react'
 import { createClient }     from '@/lib/supabase-server'
 import { resolveCompanyId } from '@/lib/resolve-company'
 import type { Product }     from '@/types'
 import CatalogClient        from './CatalogClient'
+import { CatalogCommandBar } from './_components/CatalogCommandBar'
+
+function CommandBarSkeleton() {
+  return (
+    <div className="flex items-center gap-2 animate-pulse">
+      {[...Array(4)].map((_, i) => (
+        <div key={i} className="h-8 w-28 bg-gray-100 rounded-xl" />
+      ))}
+    </div>
+  )
+}
 
 export default async function CatalogPage() {
   const supabase = createClient()
@@ -68,11 +80,19 @@ export default async function CatalogPage() {
   })
 
   return (
-    <CatalogClient
-      initialProducts={products}
-      initialRealCosts={initialRealCosts}
-      userId={uid}
-      companyId={companyId}
-    />
+    <div className="space-y-4">
+      {/* ── Margin intelligence strip ─────────────────────────────────────── */}
+      <Suspense fallback={<CommandBarSkeleton />}>
+        <CatalogCommandBar companyId={companyId} />
+      </Suspense>
+
+      {/* ── Interactive catalog ───────────────────────────────────────────── */}
+      <CatalogClient
+        initialProducts={products}
+        initialRealCosts={initialRealCosts}
+        userId={uid}
+        companyId={companyId}
+      />
+    </div>
   )
 }
