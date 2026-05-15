@@ -71,28 +71,38 @@ export async function getRiskEngineResult(
   const supabase = createClient()
   const today    = new Date().toISOString().slice(0, 10)
 
-  // Outstanding sales: invoiced but not (fully) collected
-  // amount_outstanding_try = amount_try - collected_try
+  // Outstanding sales: unpaid/partial — compute outstanding in JS.
+  // due_date is used as the aging reference (days past due), not created_at.
+  // Bucket: current = not yet past due (daysPastDue ≤ 0), then 1-30, 31-60, 60+ days overdue.
   const { data: rows } = await supabase
     .from('sales')
     .select(`
       id,
       created_at,
-      amount_outstanding_try,
+      due_date,
+      total_try,
+      amount_paid,
+      payment_status,
       customer:customers ( id, name )
     `)
     .eq('company_id', companyId)
-    .gt('amount_outstanding_try', 0)
+    .neq('payment_status', 'paid')
+    .is('deleted_at', null)
     .order('created_at', { ascending: true })
 
   const byCustomer = new Map<string, CustomerAging>()
 
   for (const row of (rows ?? [])) {
-    const outstanding = Number(row.amount_outstanding_try ?? 0)
+    const totalTry  = Number(row.total_try ?? 0)
+    const paid      = Number(row.amount_paid ?? 0)
+    const outstanding = Math.max(0, totalTry - paid)
     if (outstanding <= 0) continue
 
-    const saleDate = String(row.created_at ?? '').slice(0, 10)
-    const age      = _daysBetween(saleDate, today)
+    const saleDate    = String(row.created_at ?? '').slice(0, 10)
+    // P0-7: use due_date for aging bucket; fall back to created_at when absent.
+    // daysPastDue ≤ 0 → current (not yet past due); >0 → overdue by that many days.
+    const dueRef      = row.due_date ? String(row.due_date).slice(0, 10) : saleDate
+    const daysPastDue = _daysBetween(dueRef, today)
     // Supabase may return array or single object for joins
     const custRaw  = row.customer as { id: string; name: string } | { id: string; name: string }[] | null
     const cust     = Array.isArray(custRaw) ? custRaw[0] ?? null : custRaw
@@ -115,10 +125,10 @@ export async function getRiskEngineResult(
     }
 
     entry.total_outstanding += outstanding
-    if (age < 30)        entry.current    += outstanding
-    else if (age < 60)   entry.overdue_30d += outstanding
-    else if (age < 90)   entry.overdue_60d += outstanding
-    else                 entry.overdue_90d += outstanding
+    if (daysPastDue <= 0)       entry.current     += outstanding
+    else if (daysPastDue <= 30) entry.overdue_30d  += outstanding
+    else if (daysPastDue <= 60) entry.overdue_60d  += outstanding
+    else                        entry.overdue_90d  += outstanding
 
     if (!entry.oldest_invoice_date || saleDate < entry.oldest_invoice_date) {
       entry.oldest_invoice_date = saleDate

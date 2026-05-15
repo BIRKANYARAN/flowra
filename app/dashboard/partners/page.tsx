@@ -19,6 +19,7 @@ import { createClient }       from '@/lib/supabase-server'
 import { redirect }           from 'next/navigation'
 import { resolveCompanyId }   from '@/lib/resolve-company'
 import Link                   from 'next/link'
+import { PageHeader }         from '@/components/ui'
 import { PartnerService }     from '@/lib/services/partner.service'
 import { getDistributableCash } from '@/lib/finance/financial-core'
 import { PartnerActionsMenu } from '@/components/dashboard/partners/PartnerActionsMenu'
@@ -26,13 +27,15 @@ import { PartnerTxPanel, type TxRow, type TxTypeOption } from './PartnerTxPanel'
 
 // ── Inner tab config ──────────────────────────────────────────────────────────
 
-type InnerTab = 'ozet' | 'sermaye' | 'borclar' | 'huzur'
+type InnerTab = 'ozet' | 'sermaye' | 'borclar' | 'huzur' | 'temettu' | 'duzeltme'
 
 const INNER_TABS: { key: InnerTab; label: string }[] = [
-  { key: 'ozet',    label: 'Genel Bakış'  },
-  { key: 'sermaye', label: 'Sermaye'      },
-  { key: 'borclar', label: 'Borç / Kredi' },
-  { key: 'huzur',   label: 'Huzur Hakkı'  },
+  { key: 'ozet',     label: 'Genel Bakış'  },
+  { key: 'sermaye',  label: 'Sermaye'      },
+  { key: 'borclar',  label: 'Borç / Kredi' },
+  { key: 'huzur',    label: 'Huzur Hakkı'  },
+  { key: 'temettu',  label: 'Temettü'      },
+  { key: 'duzeltme', label: 'Düzeltme'     },
 ]
 
 const SERMAYE_TYPES: TxTypeOption[] = [
@@ -48,6 +51,32 @@ const HUZUR_TYPES: TxTypeOption[] = [
   { value: 'board_fee', label: 'Huzur Hakkı', tone: 'neutral' },
   { value: 'salary',    label: 'Maaş/Ücret',  tone: 'neutral' },
 ]
+
+// FAZ 2 new tabs
+const TEMETTU_TYPES: TxTypeOption[] = [
+  { value: 'dividend',     label: 'Kâr Payı (Temettü)',   tone: 'positive' },
+  { value: 'equalization', label: 'Sermaye Eşitleme',      tone: 'positive' },
+]
+
+const DUZELTME_TYPES: TxTypeOption[] = [
+  { value: 'correction', label: 'Düzeltme / İptal', tone: 'correction' },
+]
+
+// ── TX type labels & tones for the Özet movement ledger ──────────────────────
+
+const TX_META: Record<string, { label: string; color: string }> = {
+  capital_in:      { label: 'Sermaye',       color: 'text-primary-700' },
+  loan_to_company: { label: 'Borç (Verdi)',  color: 'text-amber-700'   },
+  loan_in:         { label: 'Borç (Verdi)',  color: 'text-amber-700'   },
+  loan_repayment:  { label: 'Geri Ödeme',    color: 'text-emerald-700' },
+  loan_out:        { label: 'Geri Ödeme',    color: 'text-emerald-700' },
+  dividend:        { label: 'Temettü',       color: 'text-emerald-700' },
+  equalization:    { label: 'Eşitleme',      color: 'text-emerald-700' },
+  board_fee:       { label: 'Huzur Hakkı',  color: 'text-gray-600'    },
+  salary:          { label: 'Maaş',          color: 'text-gray-600'    },
+  huzur_hakki:     { label: 'Huzur Hakkı',  color: 'text-gray-600'    },
+  correction:      { label: 'Düzeltme',      color: 'text-orange-600'  },
+}
 
 // ── Formatters ────────────────────────────────────────────────────────────────
 
@@ -115,9 +144,11 @@ export default async function PartnersPage({
 }: {
   searchParams: { tab?: string }
 }) {
-  const tab: InnerTab = (['ozet', 'sermaye', 'borclar', 'huzur'].includes(searchParams.tab ?? '')
-    ? (searchParams.tab as InnerTab)
-    : 'ozet')
+  const tab: InnerTab = (
+    ['ozet', 'sermaye', 'borclar', 'huzur', 'temettu', 'duzeltme'].includes(searchParams.tab ?? '')
+      ? (searchParams.tab as InnerTab)
+      : 'ozet'
+  )
 
   const supabase = createClient()
   let uid: string
@@ -182,6 +213,8 @@ export default async function PartnersPage({
   let distCash   = { cash_distributable: 0, breakdown: { payments_received: 0, paid_expenses: 0, cash_balance: 0, unpaid_expenses: 0, outstanding_obligations: 0 } }
   let equalization = { baseline_per_unit: 0, total_equalization: 0, distributable: 0, remaining_after_eq: 0, entries: [] as { partner_id: string; partner_name: string; share_ratio: number; equalization_amount: number; pro_rata_share: number; total_payout: number }[] }
   let tabTxs: TxRow[] = []
+  // FAZ 2: chronological full movement ledger for Özet tab
+  let recentMovements: TxRow[] = []
 
   if (tab === 'ozet') {
     ;[debtBurden, ledger, distCash] = await Promise.all([
@@ -189,16 +222,27 @@ export default async function PartnersPage({
       sq(() => PartnerService.getLedger(uid!, companyId), ledger),
       sq(() => getDistributableCash(companyId), distCash),
     ])
-    equalization = await sq(
-      () => PartnerService.calculateEqualization(uid!, companyId, distCash.cash_distributable),
-      equalization,
-    )
+    ;[equalization, recentMovements] = await Promise.all([
+      sq(
+        () => PartnerService.calculateEqualization(uid!, companyId, distCash.cash_distributable),
+        equalization,
+      ),
+      sq(() => fetchTxs([
+        'capital_in', 'loan_to_company', 'loan_repayment', 'dividend',
+        'board_fee', 'salary', 'huzur_hakki', 'equalization',
+        'loan_in', 'loan_out', 'correction',
+      ]), []),
+    ])
   } else if (tab === 'sermaye') {
     tabTxs = await fetchTxs(['capital_in'])
   } else if (tab === 'borclar') {
     tabTxs = await fetchTxs(['loan_to_company', 'loan_repayment', 'loan_in', 'loan_out'])
   } else if (tab === 'huzur') {
-    tabTxs = await fetchTxs(['board_fee', 'salary'])
+    tabTxs = await fetchTxs(['board_fee', 'salary', 'huzur_hakki'])
+  } else if (tab === 'temettu') {
+    tabTxs = await fetchTxs(['dividend', 'equalization'])
+  } else if (tab === 'duzeltme') {
+    tabTxs = await fetchTxs(['correction'])
   }
 
   const ls = ledger.summary
@@ -210,19 +254,18 @@ export default async function PartnersPage({
   return (
     <div className="max-w-5xl space-y-0">
 
-      {/* ── Page header ──────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
-        <div>
-          <h1 className="text-xl font-black text-gray-900 tracking-tight">Ortak Finansmanı</h1>
-          <p className="text-xs text-gray-400 mt-0.5">Sermaye · Borç · Eşitleme · Huzur Hakkı</p>
-        </div>
-        <Link
-          href="/dashboard/partners/new"
-          className="text-sm font-bold bg-primary-600 text-white px-4 py-2 rounded-xl hover:bg-primary-700 transition-colors"
-        >
-          + Ortak Ekle
-        </Link>
-      </div>
+      <PageHeader
+        title="Ortak Finansmanı"
+        sub="Sermaye · Borç · Temettü · Eşitleme · Huzur Hakkı"
+        action={
+          <Link
+            href="/dashboard/partners/new"
+            className="text-sm font-bold bg-primary-600 text-white px-4 py-2 rounded-xl hover:bg-primary-700 transition-colors"
+          >
+            + Ortak Ekle
+          </Link>
+        }
+      />
 
       {/* ── Inner tab strip ──────────────────────────────────────────────── */}
       <PartnerInnerTabs active={tab} />
@@ -501,6 +544,60 @@ export default async function PartnersPage({
             </div>
           )}
 
+          {/* Zone 6: Chronological Movement Ledger (FAZ 2) */}
+          {recentMovements.length > 0 && (
+            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+              <div className="px-4 py-3 border-b border-gray-100">
+                <h2 className="text-sm font-black text-gray-800">Son Hareketler</h2>
+                <p className="text-[10px] text-gray-400 mt-0.5">
+                  Tüm işlem türleri · kronolojik sıra · son {Math.min(recentMovements.length, 200)} hareket
+                </p>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs min-w-[560px]">
+                  <thead>
+                    <tr className="bg-gray-50 border-b border-gray-100">
+                      <th className="text-left px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-400">Tarih</th>
+                      <th className="text-left px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-400">Ortak</th>
+                      <th className="text-left px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-400">Tür</th>
+                      <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-400">Tutar (TRY)</th>
+                      <th className="text-left px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-400">Not</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {recentMovements.map(tx => {
+                      const meta = TX_META[tx.tx_type] ?? { label: tx.tx_type, color: 'text-gray-600' }
+                      return (
+                        <tr key={tx.id} className="hover:bg-gray-50/60">
+                          <td className="px-4 py-2.5 text-gray-500 whitespace-nowrap">
+                            {new Date(tx.tx_date + 'T00:00:00Z').toLocaleDateString('tr-TR', {
+                              day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC',
+                            })}
+                          </td>
+                          <td className="px-4 py-2.5 font-semibold text-gray-900">{tx.partner_name}</td>
+                          <td className="px-4 py-2.5">
+                            <span className="px-2 py-0.5 rounded-full bg-gray-100 text-[10px] font-bold">
+                              {meta.label}
+                            </span>
+                          </td>
+                          <td className={`px-4 py-2.5 text-right font-mono font-bold ${tx.amount_try < 0 ? 'text-orange-600' : meta.color}`}>
+                            {fmt(tx.amount_try)}
+                            {tx.currency !== 'TRY' && (
+                              <span className="text-gray-400 font-normal ml-1 text-[10px]">
+                                ({tx.currency} {Math.abs(tx.amount).toLocaleString('tr-TR')})
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-4 py-2.5 text-gray-400 max-w-[160px] truncate">{tx.notes ?? '—'}</td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
         </div>
       )}
 
@@ -541,6 +638,40 @@ export default async function PartnersPage({
           description="Yönetim kurulu üyelerine ödenen huzur hakkı ve ücret kayıtları."
           emptyLabel="Henüz huzur hakkı / ücret kaydedilmemiş"
         />
+      )}
+
+      {/* ════════════════════════════════════════════════════════════════════
+          TAB: TEMETTÜ  (FAZ 2)
+      ════════════════════════════════════════════════════════════════════ */}
+      {tab === 'temettu' && (
+        <PartnerTxPanel
+          partners={partnersList}
+          transactions={tabTxs}
+          txTypes={TEMETTU_TYPES}
+          description="Ortaklara dağıtılan kâr payları ve sermaye eşitleme ödemeleri."
+          emptyLabel="Henüz temettü / kâr payı kaydedilmemiş"
+        />
+      )}
+
+      {/* ════════════════════════════════════════════════════════════════════
+          TAB: DÜZELTME  (FAZ 2 — immutable ledger)
+      ════════════════════════════════════════════════════════════════════ */}
+      {tab === 'duzeltme' && (
+        <div className="space-y-4">
+          <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-xs text-amber-800">
+            <strong>Değişmez Defter İlkesi:</strong> Yanlış kaydedilen işlemler silinmez —
+            bu sekmedeki düzeltme girişi yanlış tutarı negatif olarak kaydederek dengeyi düzeltir.
+            Her düzeltme notuna orijinal kayıt tarihini yazmanız önerilir.
+          </div>
+          <PartnerTxPanel
+            partners={partnersList}
+            transactions={tabTxs}
+            txTypes={DUZELTME_TYPES}
+            description="Yanlış kaydedilen işlemleri ters yönde düzeltir. Tutar negatif kaydedilir."
+            emptyLabel="Henüz düzeltme girişi yok"
+            negateAmount
+          />
+        </div>
       )}
 
     </div>

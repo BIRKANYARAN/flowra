@@ -3,9 +3,10 @@
 // ── ProductsClient — product CRUD + stock adjustment modal ────────────────────
 // Receives initialProducts + initialLotCosts from server component (no loading flash).
 // Mutations use /api/products (POST/PATCH/PUT). Delete soft-deletes via supabase client.
-// After every mutation: window.location.reload() — server component re-runs with fresh data.
+// After save/adjustment: router.refresh() re-runs the server component with fresh data.
 
 import { useState, type ChangeEvent } from 'react'
+import { useRouter } from 'next/navigation'
 import { useSupabase } from '@/lib/hooks/useSupabase'
 import { CURRENCIES_EXTENDED, type Product } from '@/types'
 import { getSalePrice, getSaleCurrency, getLegacyProductCost } from '@/lib/product-adapter'
@@ -39,8 +40,10 @@ interface Props {
 
 export default function ProductsClient({ initialProducts, initialLotCosts }: Props) {
   const supabase = useSupabase()
+  const router   = useRouter()
 
-  const [list,     setList]     = useState<Product[]>(initialProducts)
+  const [list,      setList]      = useState<Product[]>(initialProducts)
+  const [confirmId, setConfirmId] = useState<string | null>(null)
   const [lotCosts]              = useState<Record<string, LotCostEntry>>(initialLotCosts)
   const [showForm, setShowForm] = useState(false)
   const [editId,   setEditId]   = useState<string | null>(null)
@@ -104,12 +107,11 @@ export default function ProductsClient({ initialProducts, initialLotCosts }: Pro
     })
     const json = await res.json() as { error?: string }
     if (!res.ok) { setFormErr(json.error ?? 'Kayıt hatası'); setSaving(false); return }
-    window.location.reload()
+    router.refresh()
   }
 
   // ── Delete ───────────────────────────────────────────────────────────────────
   async function del(id: string) {
-    if (!confirm('Bu ürünü silmek istediğinizden emin misiniz?')) return
     const { data: authData, error: authError } = await supabase.auth.getUser()
     if (authError || !authData?.user) { setFormErr('Oturum süresi doldu.'); return }
     const companyId = await resolveCompanyId(authData.user.id, supabase)
@@ -117,8 +119,8 @@ export default function ProductsClient({ initialProducts, initialLotCosts }: Pro
       .update({ deleted_at: new Date().toISOString() })
       .eq('id', id).eq('company_id', companyId)
     if (error) { setFormErr(error.message); return }
-    // Optimistic removal from local list
     setList(prev => prev.filter(p => p.id !== id))
+    setConfirmId(null)
   }
 
   // ── Stock adjustment ─────────────────────────────────────────────────────────
@@ -147,7 +149,7 @@ export default function ProductsClient({ initialProducts, initialLotCosts }: Pro
     })
     const json = await res.json() as { error?: string }
     if (!res.ok) { setAdjErr(json.error ?? 'Stok güncellenemedi'); setAdjSaving(false); return }
-    window.location.reload()
+    router.refresh()
   }
 
   // ── Render ───────────────────────────────────────────────────────────────────
@@ -314,10 +316,23 @@ export default function ProductsClient({ initialProducts, initialLotCosts }: Pro
                         className="text-xs text-gray-400 hover:text-gray-700 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors">
                         Düzenle
                       </button>
-                      <button onClick={() => del(p.id)}
-                        className="text-xs text-gray-400 hover:text-red-500 px-2 py-1 rounded-lg hover:bg-red-50 transition-colors">
-                        Sil
-                      </button>
+                      {confirmId === p.id ? (
+                        <span className="flex items-center gap-1">
+                          <button onClick={() => del(p.id)}
+                            className="text-xs text-white bg-red-500 hover:bg-red-600 px-2 py-1 rounded-lg transition-colors font-semibold">
+                            Evet, sil
+                          </button>
+                          <button onClick={() => setConfirmId(null)}
+                            className="text-xs text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors">
+                            İptal
+                          </button>
+                        </span>
+                      ) : (
+                        <button onClick={() => setConfirmId(p.id)}
+                          className="text-xs text-gray-400 hover:text-red-500 px-2 py-1 rounded-lg hover:bg-red-50 transition-colors">
+                          Sil
+                        </button>
+                      )}
                     </div>
                   </div>
                 )

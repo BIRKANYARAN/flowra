@@ -46,6 +46,7 @@ const ALL_ITEMS_FLAT = NAV_GROUPS.flatMap(g => g.items)
 const VALID_ICONS = new Set([
   'dashboard', 'stocks', 'proformas', 'sales', 'collections', 'expenses',
   'partners', 'simulation', 'analytics', 'settings', 'customers', 'products',
+  'catalog',  // BookOpen — added FAZ 1 to distinguish Katalog from Ürünler
   'users', 'shield', 'tasks', 'backup', 'cashflow', 'tax', 'orders',
   'activity', 'roles', 'ceo', 'alerts', 'arrow-right', 'arrow-up',
   'arrow-down', 'chevron-right', 'chevron-down', 'chevron-up', 'more',
@@ -170,9 +171,7 @@ describe('Route coverage', () => {
   // Every page.tsx that exists under app/dashboard/
   const REAL_ROUTES = [
     '/dashboard',
-    '/dashboard/analytics',
-    '/dashboard/cashflow',
-    '/dashboard/tax',
+    '/dashboard/finance',       // consolidated hub (analytics + cashflow + tax + ceo)
     '/dashboard/collections',
     '/dashboard/expenses',
     '/dashboard/simulation',

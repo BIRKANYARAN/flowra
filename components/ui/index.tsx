@@ -231,16 +231,67 @@ export function StatCard({ label, value, sub, accent }: {
 }
 
 /* ── Page header ─────────────────────────────────────────────────────────── */
-export function PageHeader({ title, sub, action }: {
-  title: string; sub?: string; action?: ReactNode
+export function PageHeader({
+  title, sub, action, badge,
+}: {
+  title: string; sub?: string; action?: ReactNode; badge?: ReactNode
 }) {
   return (
     <div className="flex items-start justify-between mb-6">
       <div>
-        <h1 className="text-xl font-black text-gray-900 tracking-tight">{title}</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-xl font-black text-gray-900 tracking-tight leading-tight">{title}</h1>
+          {badge}
+        </div>
         {sub && <p className="text-sm text-gray-500 mt-0.5">{sub}</p>}
       </div>
       {action && <div className="flex-shrink-0">{action}</div>}
+    </div>
+  )
+}
+
+/* ── KpiStrip ─────────────────────────────────────────────────────────────── */
+// Standard 4-KPI divide-x strip. Replaces ad-hoc StatCard grids on every page.
+//
+// Usage:
+//   <KpiStrip items={[
+//     { label: 'Gelir', value: '₺1.2M', sub: 'YTD', tone: 'positive' },
+//     { label: 'Gider', value: '₺400K', tone: 'negative' },
+//     { label: 'Cari',  value: '₺800K' },
+//     { label: 'Oran',  value: '%66' },
+//   ]} />
+
+export interface KpiItem {
+  label:   string
+  value:   ReactNode
+  sub?:    string
+  tone?:   'neutral' | 'positive' | 'negative' | 'warning'
+}
+
+const KPI_TONE: Record<NonNullable<KpiItem['tone']>, string> = {
+  neutral:  'text-gray-900',
+  positive: 'text-emerald-700',
+  negative: 'text-red-600',
+  warning:  'text-amber-600',
+}
+
+export function KpiStrip({ items }: { items: KpiItem[] }) {
+  return (
+    <div className="bg-white border border-gray-200 rounded-2xl divide-x divide-gray-100 grid mb-6"
+      style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}>
+      {items.map((kpi, i) => (
+        <div key={i} className="px-5 py-4">
+          <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">
+            {kpi.label}
+          </div>
+          <div className={cn('text-xl font-black tabular-nums tracking-tight', KPI_TONE[kpi.tone ?? 'neutral'])}>
+            {kpi.value}
+          </div>
+          {kpi.sub && (
+            <div className="text-xs text-gray-400 mt-0.5">{kpi.sub}</div>
+          )}
+        </div>
+      ))}
     </div>
   )
 }

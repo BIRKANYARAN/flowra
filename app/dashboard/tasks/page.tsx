@@ -17,6 +17,7 @@ export const dynamic = 'force-dynamic'
 import { redirect }         from 'next/navigation'
 import { createClient }     from '@/lib/supabase-server'
 import { resolveCompanyId } from '@/lib/resolve-company'
+import { PageHeader }       from '@/components/ui'
 import type { Task, Customer, Sale } from '@/types'
 import TasksClient          from './TasksClient'
 
@@ -129,13 +130,12 @@ export default async function TasksPage() {
     .slice(0, 3)
 
   return (
-    <div className="max-w-3xl space-y-6">
+    <div className="max-w-5xl space-y-6">
 
-      {/* ── Header ────────────────────────────────────────────────────────── */}
-      <div>
-        <h1 className="text-xl font-black text-gray-900 tracking-tight">Görevler</h1>
-        <p className="text-xs text-gray-400 mt-0.5">Hafif CRM — takip ve hatırlatma · {tasks.length} kayıt</p>
-      </div>
+      <PageHeader
+        title="Görevler"
+        sub={`Hafif CRM — takip ve hatırlatma · ${tasks.length} kayıt`}
+      />
 
       {/* ── Zone 1: KPI Strip ────────────────────────────────────────────── */}
       {tasks.length > 0 && (

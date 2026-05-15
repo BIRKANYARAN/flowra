@@ -43,6 +43,7 @@ export interface UserSettings {
 export interface Customer {
   id:         string
   user_id:    string
+  company_id: string
   name:       string
   address:    string | null
   tax_number: string | null
@@ -172,6 +173,7 @@ export type ShipmentStatus = 'pending' | 'shipped' | 'delivered'
 export interface Sale {
   id:               string
   user_id:          string
+  company_id:       string
   proforma_id:      string | null
   customer_name:    string
   currency:         string
@@ -249,12 +251,15 @@ export type StockLotSourceType = 'purchase' | 'manual' | 'adjustment' | 'return'
 export interface StockLot {
   id:               string
   user_id:          string
+  company_id:       string
   product_id:       string
   qty_initial:      number
   qty_remaining:    number
   unit_cost:        number
   cost_currency:    string
   fx_rate_at_entry: number
+  /** Pre-converted TRY cost per unit at time of entry (unit_cost × fx_rate_at_entry). */
+  entry_cost_try:   number | null
   entry_date:       string
   source_type:      StockLotSourceType
   source_id:        string | null
@@ -266,8 +271,8 @@ export interface SaleItemAllocation {
   id:             string
   sale_id:        string
   sale_item_id:   string
-  lot_id:         string    // production column name (was stock_lot_id in inferred schema)
-  qty_allocated:  number    // production column name (was qty in inferred schema)
+  stock_lot_id:   string    // canonical column name (repair_production.sql section 10 confirmed)
+  qty_allocated:  number
   unit_cost:      number
   holding_days:   number
   interest_cost:  number
@@ -340,6 +345,7 @@ export interface SalesAnalytics {
 export interface Expense {
   id:           string
   user_id:      string
+  company_id:   string
   amount:       number
   currency:     string
   amount_try:   number

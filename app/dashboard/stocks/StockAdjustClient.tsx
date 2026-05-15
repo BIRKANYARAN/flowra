@@ -9,9 +9,10 @@
 //   • FX rate auto-fetch when currency or entry date changes
 //   • Form state for the 7 input fields
 //   • POST to /api/products on submit
-//   • Reload trigger: window.location.reload() after successful save
+//   • router.refresh() after successful save to re-run server component
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useSupabase } from '@/lib/hooks/useSupabase'
 
 const IL  = 'w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white transition-colors'
@@ -23,6 +24,7 @@ interface Props {
 
 export default function StockAdjustClient({ products }: Props) {
   const supabase = useSupabase()
+  const router   = useRouter()
 
   const [selProduct,    setSelProduct]    = useState('')
   const [adjQty,        setAdjQty]        = useState('0')
@@ -101,7 +103,7 @@ export default function StockAdjustClient({ products }: Props) {
     setSelProduct(''); setAdjQty('0'); setAdjNotes(''); setCostPrice('')
     setEntryDate(new Date().toISOString().slice(0, 10)); setCostCurrency('TRY'); setFxRate('1')
     setSaving(false); setSuccess(true)
-    setTimeout(() => { setSuccess(false); window.location.reload() }, 800)
+    setTimeout(() => { setSuccess(false); router.refresh() }, 800)
   }
 
   return (

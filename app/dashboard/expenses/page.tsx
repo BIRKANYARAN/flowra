@@ -18,6 +18,7 @@ import { redirect }         from 'next/navigation'
 import { Suspense }         from 'react'
 import { createClient }     from '@/lib/supabase-server'
 import { resolveCompanyId } from '@/lib/resolve-company'
+import { PageHeader }       from '@/components/ui'
 import type { Expense }     from '@/types'
 import ExpensesClient, { type RecurringRow } from './ExpensesClient'
 import { ExpensesCommandBar } from './_components/ExpensesCommandBar'
@@ -174,18 +175,17 @@ export default async function ExpensesPage() {
   const maxTrendTotal  = Math.max(...trend.map(t => t.total), 1)
 
   return (
-    <div className="max-w-4xl space-y-6">
+    <div className="max-w-5xl space-y-6">
 
       {/* ── Intelligence strip ─────────────────────────────────────────────── */}
       <Suspense fallback={<CommandBarSkeleton />}>
         <ExpensesCommandBar companyId={companyId} />
       </Suspense>
 
-      {/* ── Page header ───────────────────────────────────────────────────────── */}
-      <div>
-        <h1 className="text-xl font-black text-gray-900 tracking-tight">Gider Analizi</h1>
-        <p className="text-xs text-gray-400 mt-0.5">Son 6 ay · {expenses.length} kayıt</p>
-      </div>
+      <PageHeader
+        title="Gider Analizi"
+        sub={`Son 6 ay · ${expenses.length} kayıt`}
+      />
 
       {/* ── Zone 1: KPI strip ────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-gray-200 rounded-xl overflow-hidden">

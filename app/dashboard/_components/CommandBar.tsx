@@ -87,7 +87,7 @@ export function CommandBar({ periodLabel, alertCount, vatNet, taskReminders, cas
 
         {/* KDV payable badge */}
         {vatPayable && (
-          <Link href="/dashboard/analytics"
+          <Link href="/dashboard/finance?tab=tax"
             className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 border border-orange-200 hover:bg-orange-200 transition-colors">
             KDV {fmtVat(vatNet)} ⬆
           </Link>
@@ -126,7 +126,7 @@ export function CommandBar({ periodLabel, alertCount, vatNet, taskReminders, cas
           className="px-2.5 py-1.5 rounded-lg bg-gray-900 text-white text-[11px] font-bold hover:bg-gray-700 transition-colors">
           + Proforma
         </Link>
-        <Link href="/dashboard/sales/new"
+        <Link href="/dashboard/sales"
           className="px-2.5 py-1.5 rounded-lg bg-emerald-600 text-white text-[11px] font-bold hover:bg-emerald-700 transition-colors">
           + Satış
         </Link>

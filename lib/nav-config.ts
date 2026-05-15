@@ -123,7 +123,7 @@ export const NAV_GROUPS: NavGroup[] = [
     label: 'Operasyon',
     items: [
       // Katalog (FAZ 20) — ürün fiyat + maliyet merkezi
-      { href: '/dashboard/catalog',   label: 'Katalog',   icon: 'products' },
+      { href: '/dashboard/catalog',   label: 'Katalog',   icon: 'catalog'  },
       { href: '/dashboard/stocks',    label: 'Stok',      icon: 'stocks'   },
       { href: '/dashboard/products',  label: 'Ürünler',   icon: 'products' },
       { href: '/dashboard/tasks',     label: 'Görevler',  icon: 'tasks'    },

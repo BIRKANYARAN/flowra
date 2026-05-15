@@ -140,6 +140,10 @@ export default function SimulationClient({
   const [interestRate, setInterestRate] = useState(String(initialPolicyRates.TRY))
   const [saleDate,     setSaleDate]     = useState(new Date().toISOString().slice(0, 10))
 
+  /* scenario layers */
+  const [collectionDelay,  setCollectionDelay]  = useState('0')
+  const [extraPartnerDebt, setExtraPartnerDebt] = useState('')
+
   /* ── Fetch recurring projection ──────────────────────────────────────────── */
   const fetchRecurringProjection = useCallback(async () => {
     setRecurringLoading(true)
@@ -248,11 +252,13 @@ export default function SimulationClient({
   }, [selectedProduct, supabase, companyId, policyRates])
 
   /* ── Parsed numeric inputs ──────────────────────────────────────────────── */
-  const unitCost    = parseFloat(manualCost) || 0
-  const catPrice    = parseFloat(catalogPrice) || 0
-  const qty         = parseInt(monthlyQty, 10) || 0
-  const discountPct = parseFloat(discount) || 0
-  const annualRate  = parseFloat(interestRate) || 0
+  const unitCost           = parseFloat(manualCost) || 0
+  const catPrice           = parseFloat(catalogPrice) || 0
+  const qty                = parseInt(monthlyQty, 10) || 0
+  const discountPct        = parseFloat(discount) || 0
+  const annualRate         = parseFloat(interestRate) || 0
+  const collectionDelayPct = Math.min(50, Math.max(0, parseFloat(collectionDelay) || 0))
+  const extraDebtTRY       = parseFloat(extraPartnerDebt) || 0
 
   /* ── Holding time ───────────────────────────────────────────────────────── */
   const holdingDays = useMemo(() => {
@@ -350,6 +356,23 @@ export default function SimulationClient({
     setEqNetProfit(yearly.totalNetProfit)
   }, [yearly.totalNetProfit])
 
+  /* ── Scenario projection (collection delay reduces effective cashflow) ────── */
+  const scenarioProjection = useMemo(() => {
+    if (collectionDelayPct === 0) return projection
+    const mult = 1 - collectionDelayPct / 100
+    let cum = 0
+    return projection.map(r => {
+      const rev   = round2(r.revenue * mult)
+      const gross = round2(rev - r.cogs - r.holding)
+      const net   = round2(gross - r.expense)
+      cum = round2(cum + net)
+      return { ...r, revenue: rev, grossProfit: gross, netProfit: net, cumProfit: cum }
+    })
+  }, [projection, collectionDelayPct])
+
+  const hasScenario      = collectionDelayPct > 0 || extraDebtTRY > 0
+  const activeProjection = hasScenario ? scenarioProjection : projection
+
   /* ── Pre-compute verdict helpers ────────────────────────────────────────── */
   const hasInputs         = unitCost > 0 && catPrice > 0
   const isViable          = hasInputs && effectiveProfitPU > 0 && yearly.totalNetProfit > 0
@@ -368,11 +391,24 @@ export default function SimulationClient({
     ? Math.ceil(totalOutstanding / monthlyDistributable)
     : null
 
+  /* scenario-adjusted debt + runway forecast */
+  const adjustedOutstanding   = totalOutstanding + extraDebtTRY
+  const adjustedMonthsToClear = monthlyDistributable > 0
+    ? Math.ceil(adjustedOutstanding / monthlyDistributable)
+    : null
+
+  const firstPositiveCumIdx = activeProjection.findIndex(r => r.cumProfit > 0)
+  const turnsPositiveMonth  = firstPositiveCumIdx >= 0 ? firstPositiveCumIdx + 1 : null
+  const stableFromMonth     = firstPositiveCumIdx >= 0 &&
+    activeProjection.slice(firstPositiveCumIdx).every(r => r.cumProfit > 0)
+    ? firstPositiveCumIdx + 1
+    : null
+
   function debtStatus() {
-    if (totalOutstanding <= 0) return { label: 'Borç yok — tam dağıtım kapasitesi', color: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-200' }
+    if (adjustedOutstanding <= 0) return { label: 'Borç yok — tam dağıtım kapasitesi', color: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-200' }
     if (monthlyDistributable <= 0) return { label: 'Kritik nakit riski — borç ödenemez', color: 'text-red-700', bg: 'bg-red-50', border: 'border-red-200' }
-    if (monthsToClear !== null && monthsToClear > 24) return { label: 'Borç baskısı yüksek — 2 yıldan uzun', color: 'text-red-700', bg: 'bg-red-50', border: 'border-red-200' }
-    if (monthsToClear !== null && monthsToClear > 12) return { label: 'Borç baskısı azalıyor — 1-2 yıl', color: 'text-amber-700', bg: 'bg-amber-50', border: 'border-amber-200' }
+    if (adjustedMonthsToClear !== null && adjustedMonthsToClear > 24) return { label: 'Borç baskısı yüksek — 2 yıldan uzun', color: 'text-red-700', bg: 'bg-red-50', border: 'border-red-200' }
+    if (adjustedMonthsToClear !== null && adjustedMonthsToClear > 12) return { label: 'Borç baskısı azalıyor — 1-2 yıl', color: 'text-amber-700', bg: 'bg-amber-50', border: 'border-amber-200' }
     return { label: 'Güvenli dağıtım bölgesi — 12 ay içinde', color: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-200' }
   }
   const ds = debtStatus()
@@ -578,6 +614,54 @@ export default function SimulationClient({
               {!entryDate && productId && (
                 <span className="text-amber-600 ml-2">(stok lotu bulunamadı)</span>
               )}
+            </div>
+          </div>
+        </div>
+
+        {/* ── Senaryo Katmanları ──────────────────────────────────────────────── */}
+        <div className="pt-3 border-t border-dashed border-gray-200">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Senaryo Katmanları</span>
+            <span className="text-[10px] text-gray-400 font-normal">— isteğe bağlı · baskı haritasını etkiler</span>
+            {hasScenario && (
+              <span className="ml-auto text-[10px] bg-amber-100 text-amber-700 border border-amber-200 rounded-full px-2 py-0.5 font-bold">
+                Senaryo aktif
+              </span>
+            )}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className={LAB}>
+                Tahsilat Gecikmesi — %{collectionDelayPct}
+                {collectionDelayPct > 0 && (
+                  <span className="text-amber-500 normal-case font-normal ml-1">
+                    (gelirin %{collectionDelayPct}&apos;i gecikmeli)
+                  </span>
+                )}
+              </label>
+              <input
+                type="range" min="0" max="50" step="5"
+                className="w-full accent-amber-500 h-2 cursor-pointer"
+                value={collectionDelay}
+                onChange={e => setCollectionDelay(e.target.value)}
+              />
+              <div className="flex justify-between text-[10px] text-gray-400 mt-0.5">
+                <span>%0 (normal)</span>
+                <span>%50 (yarı tahsilat)</span>
+              </div>
+            </div>
+            <div>
+              <label className={LAB}>Ek Ortak Borcu (₺)</label>
+              <input
+                type="number" min="0" step="1000"
+                className={IL}
+                value={extraPartnerDebt}
+                onChange={e => setExtraPartnerDebt(e.target.value)}
+                placeholder="0"
+              />
+              <div className="text-[10px] text-gray-400 mt-0.5">
+                Hipotetik borç ekle — borç temizleme süresini etkiler
+              </div>
             </div>
           </div>
         </div>
@@ -832,65 +916,117 @@ export default function SimulationClient({
         </div>
       </div>
 
-      {/* ── Zone 4: Stress test — Finansal Baskı Zaman Çizelgesi ─────────────── */}
+      {/* ── Zone 4: Visual Pressure Timeline ─────────────────────────────────── */}
       <div className="bg-white border border-gray-200 rounded-xl p-4">
-        <h2 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">
-          Stres Testi — Finansal Baskı Çizelgesi
-        </h2>
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs">
-            <thead className="sticky top-0 bg-gray-50">
-              <tr className="border-b border-gray-100 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                <th className="py-1.5 pr-3">Ay</th>
-                <th className="py-1.5 pr-3 text-right">Gelir</th>
-                <th className="py-1.5 pr-3 text-right">Tekrarlı Giderler</th>
-                <th className="py-1.5 pr-3 text-right">Brüt Kâr</th>
-                <th className="py-1.5 pr-3 text-right">Net Kâr</th>
-                <th className="py-1.5 pr-3 text-right">Kümülatif Nakit</th>
-                <th className="py-1.5 text-right">Baskı</th>
-              </tr>
-            </thead>
-            <tbody>
-              {projection.map(r => {
-                let pressureLabel: string
-                let pressureClass: string
-                if (r.cumProfit < 0) {
-                  pressureLabel = 'Kritik'
-                  pressureClass = 'bg-red-100 text-red-700'
-                } else if (r.netProfit < 0) {
-                  pressureLabel = 'Dikkat'
-                  pressureClass = 'bg-amber-100 text-amber-700'
-                } else {
-                  pressureLabel = 'Güvenli'
-                  pressureClass = 'bg-emerald-100 text-emerald-700'
-                }
-
-                return (
-                  <tr key={r.ym} className="border-b border-gray-50 hover:bg-gray-50/50">
-                    <td className="py-1.5 pr-3 font-medium text-gray-600">{fmtMonth(r.ym)}</td>
-                    <td className="py-1.5 pr-3 text-right tabular-nums">{fmtC(toDisplay(r.revenue), S)}</td>
-                    <td className="py-1.5 pr-3 text-right tabular-nums text-red-600">{fmtC(toDisplay(r.expense), S)}</td>
-                    <td className={`py-1.5 pr-3 text-right tabular-nums font-semibold ${r.grossProfit >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
-                      {fmtC(toDisplay(r.grossProfit), S)}
-                    </td>
-                    <td className={`py-1.5 pr-3 text-right tabular-nums font-semibold ${r.netProfit >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
-                      {fmtC(toDisplay(r.netProfit), S)}
-                    </td>
-                    <td className={`py-1.5 pr-3 text-right tabular-nums font-semibold ${r.cumProfit >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
-                      {fmtC(toDisplay(r.cumProfit), S)}
-                    </td>
-                    <td className="py-1.5 text-right">
-                      <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold ${pressureClass}`}>
-                        {pressureLabel}
-                      </span>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+            Finansal Baskı Zaman Çizelgesi — 12 Ay
+          </h2>
+          {hasScenario && (
+            <span className="text-[10px] bg-amber-100 text-amber-700 border border-amber-200 rounded-full px-2 py-0.5 font-bold">
+              Senaryo aktif{collectionDelayPct > 0 ? ` · %${collectionDelayPct} gecikme` : ''}{extraDebtTRY > 0 ? ` · +${fmtC(extraDebtTRY, '₺')} borç` : ''}
+            </span>
+          )}
+        </div>
+        <div className="grid grid-cols-12 gap-1.5">
+          {activeProjection.map(r => {
+            const isKritik = r.cumProfit < 0
+            const isDikkat = !isKritik && r.netProfit < 0
+            const bg   = isKritik ? 'bg-red-100 border-red-200'     : isDikkat ? 'bg-amber-100 border-amber-200'     : 'bg-emerald-100 border-emerald-200'
+            const text = isKritik ? 'text-red-700'                   : isDikkat ? 'text-amber-700'                    : 'text-emerald-700'
+            const lbl  = isKritik ? 'Kritik'                         : isDikkat ? 'Dikkat'                            : 'Güvenli'
+            return (
+              <div key={r.ym}
+                className={`border rounded-lg p-1.5 flex flex-col items-center gap-0.5 group relative cursor-default ${bg}`}>
+                <div className={`text-[9px] font-bold leading-none ${text}`}>
+                  {fmtMonth(r.ym).slice(0, 3)}
+                </div>
+                <div className={`text-[8px] font-semibold leading-none ${text} opacity-80`}>{lbl}</div>
+                <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block z-10 bg-gray-900 text-white rounded-lg px-2 py-1.5 text-[10px] whitespace-nowrap shadow-lg pointer-events-none">
+                  <div className="font-bold mb-0.5">{fmtMonth(r.ym)}</div>
+                  <div>Gelir: {fmtC(toDisplay(r.revenue), S)}</div>
+                  <div className={r.netProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}>
+                    Net: {fmtC(toDisplay(r.netProfit), S)}
+                  </div>
+                  <div className={r.cumProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}>
+                    Kümülatif: {fmtC(toDisplay(r.cumProfit), S)}
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+        <div className="flex items-center gap-4 mt-3 text-[10px] text-gray-400">
+          <span className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-sm bg-emerald-100 border border-emerald-300 inline-block" />
+            Güvenli
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-sm bg-amber-100 border border-amber-300 inline-block" />
+            Dikkat
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-sm bg-red-100 border border-red-300 inline-block" />
+            Kritik
+          </span>
+          <span className="ml-auto text-[10px] text-gray-300">Hover = detay</span>
         </div>
       </div>
+
+      {/* ── Zone 4: Runway Forecast ───────────────────────────────────────────── */}
+      {hasInputs && (
+        <div className="bg-white border border-gray-200 rounded-xl p-4">
+          <h2 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">
+            Pist Tahmini — Güvenli Bölgeye Ne Zaman Ulaşılır?
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">İlk Kümülatif Kâr</div>
+              <div className={`text-xl font-black tabular-nums ${turnsPositiveMonth ? 'text-emerald-700' : 'text-red-600'}`}>
+                {turnsPositiveMonth ? `${turnsPositiveMonth}. Ay` : '12+ ay'}
+              </div>
+              <div className="text-[10px] text-gray-400 mt-0.5">Kümülatif nakit pozitife geçer</div>
+            </div>
+            <div>
+              <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">
+                {adjustedOutstanding > 0 ? 'Borç Temizlenir' : 'Borç Durumu'}
+              </div>
+              <div className={`text-xl font-black tabular-nums ${
+                adjustedOutstanding <= 0 ? 'text-emerald-700'
+                : adjustedMonthsToClear === null ? 'text-red-600'
+                : adjustedMonthsToClear > 24 ? 'text-red-600'
+                : adjustedMonthsToClear > 12 ? 'text-amber-600'
+                : 'text-emerald-700'
+              }`}>
+                {adjustedOutstanding <= 0 ? 'Borç yok'
+                  : adjustedMonthsToClear === null ? '∞'
+                  : `${adjustedMonthsToClear} ay`}
+              </div>
+              <div className="text-[10px] text-gray-400 mt-0.5">Dağıtım kapasitesine göre</div>
+            </div>
+            <div>
+              <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">12 Ay Sonu Kümülatif</div>
+              <div className={`text-xl font-black tabular-nums ${(activeProjection[11]?.cumProfit ?? 0) >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
+                {activeProjection[11] ? fmtC(toDisplay(activeProjection[11].cumProfit), S) : '—'}
+              </div>
+              <div className="text-[10px] text-gray-400 mt-0.5">Yıl sonu kümülatif nakit</div>
+            </div>
+          </div>
+          {stableFromMonth ? (
+            <div className="mt-3 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2 text-xs text-emerald-700 font-semibold">
+              ✓ {stableFromMonth}. aydan itibaren güvenli bölge — kümülatif nakit kalıcı olarak pozitif
+            </div>
+          ) : turnsPositiveMonth ? (
+            <div className="mt-3 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 text-xs text-amber-700 font-semibold">
+              ⚠ {turnsPositiveMonth}. ayda pozitife geçiyor ancak sonraki aylarda dalgalanma var
+            </div>
+          ) : (
+            <div className="mt-3 bg-red-50 border border-red-200 rounded-xl px-3 py-2 text-xs text-red-700 font-semibold">
+              ✗ 12 ay içinde kümülatif pozitife geçilemiyor — parametreleri gözden geçirin
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── Zone 4: Debt burden tracking ─────────────────────────────────────── */}
       <div className={`border rounded-xl p-4 ${ds.bg} ${ds.border}`}>
@@ -903,11 +1039,15 @@ export default function SimulationClient({
           <>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-3">
               <div>
-                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Toplam Borç</div>
-                <div className="text-lg font-black tabular-nums text-gray-800">
-                  {totalOutstanding > 0 ? fmtC(toDisplay(totalOutstanding), S) : '—'}
+                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">
+                  Toplam Borç{extraDebtTRY > 0 && <span className="text-amber-500 ml-1">(+senaryo)</span>}
                 </div>
-                <div className="text-[10px] text-gray-400">Ortaklara kalan</div>
+                <div className="text-lg font-black tabular-nums text-gray-800">
+                  {adjustedOutstanding > 0 ? fmtC(toDisplay(adjustedOutstanding), S) : '—'}
+                </div>
+                <div className="text-[10px] text-gray-400">
+                  Ortaklara kalan{extraDebtTRY > 0 && ` · +${fmtC(toDisplay(extraDebtTRY), S)} senaryo`}
+                </div>
               </div>
               <div>
                 <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Aylık Dağıtım Kapasitesi</div>
@@ -919,14 +1059,14 @@ export default function SimulationClient({
               <div>
                 <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Tahmini Temizlenme</div>
                 <div className={`text-lg font-black tabular-nums ${
-                  monthsToClear === null ? 'text-gray-300'
-                  : monthsToClear > 24 ? 'text-red-600'
-                  : monthsToClear > 12 ? 'text-amber-600'
+                  adjustedMonthsToClear === null ? 'text-gray-300'
+                  : adjustedMonthsToClear > 24 ? 'text-red-600'
+                  : adjustedMonthsToClear > 12 ? 'text-amber-600'
                   : 'text-emerald-700'
                 }`}>
-                  {totalOutstanding <= 0 ? '—'
-                    : monthsToClear === null ? '∞'
-                    : `${monthsToClear} ay`}
+                  {adjustedOutstanding <= 0 ? '—'
+                    : adjustedMonthsToClear === null ? '∞'
+                    : `${adjustedMonthsToClear} ay`}
                 </div>
                 <div className="text-[10px] text-gray-400">Borç / aylık kapasite</div>
               </div>

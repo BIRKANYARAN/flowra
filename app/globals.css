@@ -19,6 +19,23 @@ input[type="number"] { -moz-appearance: textfield; }
    ───────────────────────────────────────────────────────────────────────── */
 
 @layer base {
+  /*
+   * ── Flowra Typography Scale ──────────────────────────────────────────────
+   * Minimum body font: 11px (text-[11px] / text-xs-safe).
+   * Never use text-[8px], text-[9px], or text-[10px] for readable content.
+   * Labels / badges: 10px uppercase bold is the sole exception (label-tiny).
+   *
+   * Scale (Tailwind classes):
+   *   text-[10px]  — label-tiny only (ALL CAPS badge/label text)
+   *   text-[11px]  — minimum for readable text (secondary info in dense tables)
+   *   text-xs      — 12px  — supporting/metadata text
+   *   text-sm      — 14px  — standard body/table content
+   *   text-base    — 16px  — section descriptions
+   *   text-lg      — 18px  — sub-headings
+   *   text-xl      — 20px  — page titles (PageHeader)
+   *   text-2xl+    — 24px+ — KPI values (KpiStrip), dashboard numbers
+   * ─────────────────────────────────────────────────────────────────────── */
+
   /* Tabular numerals on anything that looks like a number. */
   .tabular-nums, .flowra-money, .flowra-kpi {
     font-variant-numeric: tabular-nums;

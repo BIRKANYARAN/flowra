@@ -439,18 +439,22 @@ export class PartnerService {
       if (!a) continue
       const amt = Number(tx.amount_try)
       switch (tx.tx_type) {
-        // Phase 4 canonical types
-        case 'capital_in':      a.total_capital += amt; break
-        case 'loan_to_company': a.total_loaned  += amt; break
-        case 'loan_repayment':  a.total_repaid  += amt; break
-        case 'dividend':        a.total_dividend  += amt; break
+        // Canonical types
+        case 'capital_in':      a.total_capital  += amt; break
+        case 'loan_to_company': a.total_loaned   += amt; break
+        case 'loan_repayment':  a.total_repaid   += amt; break
+        case 'dividend':        a.total_dividend += amt; break
+        // FAZ 2: correction — negative amount reverses the original entry.
+        // A correction row carries a negative amount_try to cancel out the
+        // wrong entry without mutating or deleting immutable ledger rows.
+        case 'correction':      a.total_capital  += amt; break  // net effect depends on signed amt
         // Legacy types (backward compat)
-        case 'loan_in':   a.total_loaned    += amt; break   // treated as debt (conservative)
-        case 'loan_out':  a.total_repaid    += amt; break
+        case 'loan_in':     a.total_loaned    += amt; break
+        case 'loan_out':    a.total_repaid    += amt; break
         case 'salary':      a.total_salary    += amt; break
         case 'board_fee':   a.total_board_fee += amt; break
-        case 'huzur_hakki': a.total_salary    += amt; break  // operational comp = same bucket as salary
-        case 'equalization': a.total_dividend += amt; break  // capital equalization = same bucket as dividend
+        case 'huzur_hakki': a.total_salary    += amt; break
+        case 'equalization': a.total_dividend += amt; break
       }
     }
 
@@ -599,6 +603,9 @@ export class PartnerService {
         case 'board_fee':       a.boardFee     += amt; break
         case 'huzur_hakki':     a.huzurHakki   += amt; break
         case 'equalization':    a.equalization += amt; break
+        // FAZ 2: correction carries a signed amount_try (negative to reverse).
+        // Applied to equity as a net adjustment — the signed value self-corrects.
+        case 'correction':      a.equity       += amt; break
       }
     }
 
@@ -739,16 +746,18 @@ export class PartnerService {
       throw new AppError('PARTNER_NOT_FOUND', 'Ortak bulunamadı', { partnerId })
     }
 
-    // Phase 4 canonical types + legacy types + Phase 7 additions (backward compat)
+    // FAZ 2 canonical types + legacy types (backward compat)
+    // 'correction' is for immutable ledger corrections — reverses a prior entry.
     const VALID_TX_TYPES = new Set([
-      'capital_in', 'loan_to_company', 'loan_repayment', 'dividend',  // Phase 4 canonical
+      'capital_in', 'loan_to_company', 'loan_repayment', 'dividend',  // canonical
+      'correction',                                                     // FAZ 2: immutable reversal
       'loan_in', 'loan_out', 'salary', 'board_fee',                    // legacy
-      'huzur_hakki', 'equalization',                                   // Phase 7
+      'huzur_hakki', 'equalization',                                   // legacy aliases
     ])
     if (!VALID_TX_TYPES.has(input.tx_type)) {
       throw new AppError(
         'VALIDATION_ERROR',
-        'Geçersiz işlem tipi. Geçerli tipler: capital_in, loan_to_company, loan_repayment, dividend, huzur_hakki, equalization',
+        'Geçersiz işlem tipi. Geçerli tipler: capital_in, loan_to_company, loan_repayment, dividend, correction, huzur_hakki, equalization',
         { received: input.tx_type },
       )
     }

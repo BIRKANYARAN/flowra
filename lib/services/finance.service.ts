@@ -133,7 +133,7 @@ export class FinanceService {
     const { data: allocs, error: aErr } = await supabase
       .from('sale_item_allocations')
       .select(`
-        sale_id, qty, unit_cost,
+        sale_id, qty_allocated, unit_cost,
         stock_lots ( entry_cost_try, unit_cost, fx_rate_at_entry )
       `)
       .in('sale_id', saleIds)
@@ -146,8 +146,9 @@ export class FinanceService {
     let cogs = 0
     const salesWithAllocs = new Set<string>()
     type AllocRow = {
-      sale_id: string | number
-      qty:     number | string
+      sale_id:       string | number
+      qty_allocated: number | string   // canonical column (was 'qty')
+      unit_cost:     number | string
       stock_lots:
         | { entry_cost_try: number | string | null; unit_cost: number | string; fx_rate_at_entry: number | string | null }
         | { entry_cost_try: number | string | null; unit_cost: number | string; fx_rate_at_entry: number | string | null }[]
@@ -160,7 +161,7 @@ export class FinanceService {
         lot.entry_cost_try != null && lot.entry_cost_try !== ''
           ? Number(lot.entry_cost_try)
           : Number(lot.unit_cost) * Number(lot.fx_rate_at_entry ?? 1)
-      cogs += Number(row.qty) * perUnitTry
+      cogs += Number(row.qty_allocated) * perUnitTry
       salesWithAllocs.add(String(row.sale_id))
     }
 

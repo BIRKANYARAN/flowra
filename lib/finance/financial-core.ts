@@ -368,7 +368,6 @@ export async function getCfoMetrics(
     outstandingRes,
     periodInvoicedRes,
     ytdRevenueRes,
-    ytdCogsRes,
     ytdExpensesRes,
     ytdSalesVatRes,
     ytdPurchaseVatRes,
@@ -415,16 +414,12 @@ export async function getCfoMetrics(
       .eq('company_id', companyId).is('deleted_at', null)
       .gte('created_at', from + 'T00:00:00Z').lte('created_at', to + 'T23:59:59Z'),
 
-    // 9. YTD revenue
-    supabase.from('sales').select('total_try')
+    // 9. YTD revenue — include id for P0-6 COGS phase-2 join
+    supabase.from('sales').select('total_try, id')
       .eq('company_id', companyId).is('deleted_at', null)
       .gte('created_at', ytdFrom + 'T00:00:00Z').lte('created_at', today + 'T23:59:59Z'),
 
-    // 10. YTD COGS (FIFO)
-    supabase.from('sale_item_allocations').select('qty_allocated, stock_lots!inner(entry_cost_try)')
-      .eq('company_id', companyId).is('deleted_at', null),
-
-    // 11. YTD operational expenses
+    // 10. YTD operational expenses
     supabase.from('expenses').select('amount_try, expense_type')
       .eq('company_id', companyId).is('deleted_at', null)
       .gte('expense_date', ytdFrom).lte('expense_date', today),
@@ -434,14 +429,17 @@ export async function getCfoMetrics(
       .eq('company_id', companyId).is('deleted_at', null)
       .gte('created_at', ytdFrom + 'T00:00:00Z').lte('created_at', today + 'T23:59:59Z'),
 
-    // 13. YTD purchase VAT
-    supabase.from('purchases').select('kdv_amount_try')
-      .eq('company_id', companyId).is('deleted_at', null)
-      .gte('purchase_date', ytdFrom).lte('purchase_date', today),
+    // 13. YTD purchase VAT — from purchase_costs where cost_type = 'tax'
+    // purchase_costs has no company_id; RLS restricts to caller's companies via purchases join
+    // purchases.kdv_amount_try column does not exist — use purchase_costs with cost_type='tax'
+    supabase.from('purchase_costs').select('amount_try')
+      .eq('cost_type', 'tax')
+      .gte('created_at', ytdFrom + 'T00:00:00Z').lte('created_at', today + 'T23:59:59Z'),
 
-    // 14. YTD expense VAT
-    supabase.from('expenses').select('kdv')
+    // 14. YTD expense VAT — kdv is the RATE (e.g. 18 for 18%), not TRY amount
+    supabase.from('expenses').select('amount_try, kdv')
       .eq('company_id', companyId).is('deleted_at', null)
+      .gt('kdv', 0)
       .gte('expense_date', ytdFrom).lte('expense_date', today),
 
     // 15. Partner transactions
@@ -452,6 +450,18 @@ export async function getCfoMetrics(
     supabase.from('stock_lots').select('qty_remaining, entry_cost_try')
       .eq('company_id', companyId).is('deleted_at', null).gt('qty_remaining', 0),
   ])
+
+  // P0-6: Phase-2 COGS — filtered by actual YTD sale IDs for financial-date correctness.
+  // Using allocation.created_at as a proxy would mis-bucket COGS for late-allocated stock.
+  const ytdSaleIds = (ytdRevenueRes.data ?? []).map((r: { id: string }) => r.id)
+  const ytdCogsRes = ytdSaleIds.length > 0
+    ? await supabase
+        .from('sale_item_allocations')
+        .select('qty_allocated, stock_lots!inner(entry_cost_try)')
+        .eq('company_id', companyId)
+        .is('deleted_at', null)
+        .in('sale_id', ytdSaleIds)
+    : { data: [] as { qty_allocated: number; stock_lots: { entry_cost_try: number } | null }[], error: null }
 
   // Log any query errors (degrade gracefully)
   const errs = [
@@ -483,8 +493,10 @@ export async function getCfoMetrics(
   const ytdProfit = ytdRevenue - ytdCogs - ytdOpExpenses
 
   const salesVat    = (ytdSalesVatRes.data ?? []).reduce((s, r) => s + Number(r.kdv_total ?? 0) * Number(r.fx_rate_try ?? 1), 0)
-  const purchaseVat = (ytdPurchaseVatRes.data ?? []).reduce((s, r) => s + Number(r.kdv_amount_try ?? 0), 0)
-  const expenseVat  = (ytdExpenseVatRes.data ?? []).reduce((s, r) => s + Number(r.kdv ?? 0), 0)
+  // purchase_costs.amount_try is already in TRY for 'tax' type entries
+  const purchaseVat = (ytdPurchaseVatRes.data ?? []).reduce((s, r) => s + Number(r.amount_try ?? 0), 0)
+  // expenses.kdv is a RATE (e.g. 18 for 18%); multiply by amount_try / 100 to get TRY VAT
+  const expenseVat  = (ytdExpenseVatRes.data ?? []).reduce((s, r) => s + Number(r.amount_try ?? 0) * Number(r.kdv ?? 0) / 100, 0)
   const kdvNet      = salesVat - purchaseVat - expenseVat
 
   // ── Compute sections ──────────────────────────────────────────────────────────

@@ -61,6 +61,25 @@ alter table sales
 alter table sales
   add column if not exists amount_paid numeric(12,2);
 
+-- sales: financing interest written by convert_proforma_to_sale
+alter table sales
+  add column if not exists interest_rate numeric(8,6),
+  add column if not exists interest_days integer;
+
+-- sales: line-item totals aggregated by convert_proforma_to_sale
+alter table sales
+  add column if not exists subtotal  numeric(14,2),
+  add column if not exists kdv_total numeric(14,2);
+
+-- sale_items: TRY equivalent of line_total (currency-converted)
+alter table sale_items
+  add column if not exists line_total_try numeric(14,2) not null default 0;
+
+-- sale_item_allocations: financing cost tracking per allocation slice
+alter table sale_item_allocations
+  add column if not exists holding_days  integer,
+  add column if not exists interest_cost numeric(14,2);
+
 -- expenses: link back to originating recurring template (for double-count guard)
 alter table expenses
   add column if not exists recurring_expense_id uuid;
@@ -290,8 +309,10 @@ do $$ begin
 exception when others then null;
 end $$;
 
--- Drop + recreate constraint so new tx_types (huzur_hakki, equalization) are
--- included on re-run even when the constraint already exists.
+-- Drop + recreate constraint so new tx_types are included on re-run even
+-- when the constraint already exists.
+-- FAZ 2: added 'correction' for immutable ledger (wrong entries reversed,
+-- never deleted).
 do $$ begin
   alter table partner_transactions drop constraint if exists chk_partner_tx_type;
 exception when others then null;
@@ -299,7 +320,10 @@ end $$;
 do $$ begin
   alter table partner_transactions add constraint chk_partner_tx_type
     check (tx_type in (
+      -- FAZ 2 canonical types
       'capital_in', 'loan_to_company', 'loan_repayment', 'dividend',
+      'correction',
+      -- legacy types (backward compat)
       'loan_in', 'loan_out', 'salary', 'board_fee',
       'huzur_hakki', 'equalization'
     ));
@@ -400,6 +424,13 @@ create index if not exists idx_company_members_user
 -- purchases: period VAT queries
 create index if not exists idx_purchases_company_date
   on purchases (company_id, purchase_date)
+  where deleted_at is null;
+
+-- Unique partial index: enforces exactly one live sale per proforma at DB level.
+-- convert_proforma_to_sale relies on this as a last-resort duplicate barrier.
+-- TypeScript SaleService catches the index name in error messages → ALREADY_CONVERTED.
+create unique index if not exists uq_sales_proforma_live
+  on sales (proforma_id)
   where deleted_at is null;
 
 -- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

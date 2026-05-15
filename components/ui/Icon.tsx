@@ -9,7 +9,7 @@
 import { type ReactElement } from 'react'
 import {
   LayoutGrid, Package, FileText, Banknote, Landmark, TrendingDown,
-  Handshake, Calculator, BarChart3, Settings, Users, Tag,
+  Handshake, Calculator, BarChart3, Settings, Users, Tag, BookOpen,
   ArrowRight, ArrowUp, ArrowDown, Plus, Search, RefreshCw,
   Download, Upload, LogOut, Check, X, Mail, Phone, Trash2, Edit, Bell,
   Flame, Coins, TrendingUp, AlertTriangle, Info, ChevronRight,
@@ -33,6 +33,7 @@ const REGISTRY: Record<string, LucideIcon> = {
   settings:      Settings,
   customers:     Users,
   products:      Tag,
+  catalog:       BookOpen,
   users:         UserCog,        // admin: team management
   shield:        Shield,         // admin: audit log
   tasks:         ClipboardList,  // task management

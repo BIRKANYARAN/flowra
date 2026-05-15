@@ -18,6 +18,7 @@ export const dynamic = 'force-dynamic'
 import { redirect }         from 'next/navigation'
 import { createClient }     from '@/lib/supabase-server'
 import { resolveCompanyId } from '@/lib/resolve-company'
+import { PageHeader }       from '@/components/ui'
 import type { Product }     from '@/types'
 import ProductsClient, { type LotCostEntry } from './ProductsClient'
 
@@ -114,15 +115,12 @@ export default async function ProductsPage() {
   const maxValue = topByValue[0]?.value ?? 1
 
   return (
-    <div className="max-w-4xl space-y-6">
+    <div className="max-w-5xl space-y-6">
 
-      {/* ── Header ──────────────────────────────────────────────────────── */}
-      <div>
-        <h1 className="text-xl font-black text-gray-900 tracking-tight">Ürünler</h1>
-        <p className="text-xs text-gray-400 mt-0.5">
-          Ürün kataloğu ve stok yönetimi · {products.length} ürün
-        </p>
-      </div>
+      <PageHeader
+        title="Ürünler"
+        sub={`Ürün kataloğu ve stok yönetimi · ${products.length} ürün`}
+      />
 
       {/* ── Zone 1: KPI Strip ────────────────────────────────────────────── */}
       {products.length > 0 && (

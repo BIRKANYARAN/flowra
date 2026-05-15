@@ -18,6 +18,7 @@ export const dynamic = 'force-dynamic'
 import { redirect }          from 'next/navigation'
 import { createClient }      from '@/lib/supabase-server'
 import { resolveCompanyId }  from '@/lib/resolve-company'
+import { PageHeader }        from '@/components/ui'
 import type { StockMovement } from '@/types'
 import StockAdjustClient     from './StockAdjustClient'
 
@@ -161,13 +162,12 @@ export default async function StocksPage() {
   const productMap = new Map(products.map(p => [p.id, p]))
 
   return (
-    <div className="max-w-4xl space-y-6">
+    <div className="max-w-5xl space-y-6">
 
-      {/* ── Page header ───────────────────────────────────────────────────────── */}
-      <div>
-        <h1 className="text-xl font-black text-gray-900 tracking-tight">Stok Zekası</h1>
-        <p className="text-xs text-gray-400 mt-0.5">FIFO lot değerlemesi · stok hareketleri · portföy özeti</p>
-      </div>
+      <PageHeader
+        title="Stok Zekası"
+        sub="FIFO lot değerlemesi · stok hareketleri · portföy özeti"
+      />
 
       {/* ── Zone 1: Portfolio summary strip ──────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-gray-200 rounded-xl overflow-hidden">

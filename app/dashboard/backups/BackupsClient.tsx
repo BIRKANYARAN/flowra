@@ -6,6 +6,7 @@
 // File download uses the browser Supabase storage client directly.
 
 import { useRef, useState, type ChangeEvent } from 'react'
+import { useRouter } from 'next/navigation'
 import { useSupabase } from '@/lib/hooks/useSupabase'
 import { Btn, EmptyState, ErrorBanner } from '@/components/ui'
 
@@ -58,6 +59,7 @@ interface Props {
 
 export default function BackupsClient({ initialBackups }: Props) {
   const supabase = useSupabase()
+  const router   = useRouter()
   const [backups,  setBackups]  = useState<BackupEntry[]>(initialBackups)
   const [error,    setError]    = useState('')
   const [creating, setCreating] = useState(false)
@@ -135,7 +137,7 @@ export default function BackupsClient({ initialBackups }: Props) {
         setError(json.error ?? 'Geri yükleme başarısız. Lütfen tekrar deneyin.')
       } else {
         closeRestoreModal()
-        window.location.reload()
+        router.refresh()
       }
     } catch {
       setError('Geri yükleme sırasında bir hata oluştu. Lütfen tekrar deneyin.')
@@ -185,7 +187,7 @@ export default function BackupsClient({ initialBackups }: Props) {
         setExportMsg(data.error ?? 'Yükleme başarısız')
       } else {
         setExportMsg('Yedek yüklendi ✓')
-        setTimeout(() => window.location.reload(), 1500)
+        setTimeout(() => router.refresh(), 1500)
       }
     } catch {
       setExportMsg('Dosya okunamadı')

@@ -6,6 +6,7 @@
 // Mutations go through /api/tasks and /api/tasks/[id].
 
 import { useState, type ChangeEvent } from 'react'
+import { useRouter } from 'next/navigation'
 import type { Task, TaskStatus, Customer, Sale } from '@/types'
 
 const IL  = 'w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white transition-colors'
@@ -43,9 +44,12 @@ interface Props {
 }
 
 export default function TasksClient({ initialTasks, initialCustomers, initialSales }: Props) {
+  const router = useRouter()
+
   const [tasks,     setTasks]     = useState<Task[]>(initialTasks)
   const [tab,       setTab]       = useState<TaskStatus | 'all'>('open')
   const [error,     setError]     = useState('')
+  const [confirmId, setConfirmId] = useState<string | null>(null)
 
   // Create form
   const [showForm,  setShowForm]  = useState(false)
@@ -110,13 +114,13 @@ export default function TasksClient({ initialTasks, initialCustomers, initialSal
 
   // ── Delete ──────────────────────────────────────────────────────────────────
   async function deleteTask(id: string) {
-    if (!confirm('Bu görevi silmek istiyor musunuz?')) return
     setTasks(prev => prev.filter(t => t.id !== id))
+    setConfirmId(null)
     const res = await fetch(`/api/tasks/${id}`, { method: 'DELETE' })
     if (!res.ok) {
       const d = await res.json().catch(() => ({})) as Record<string, unknown>
       setError((d.error as string | undefined) ?? 'Silme başarısız')
-      window.location.reload()  // reload to restore state
+      router.refresh()  // refresh to restore server state
     }
   }
 
@@ -324,12 +328,25 @@ export default function TasksClient({ initialTasks, initialCustomers, initialSal
                       İptal
                     </button>
                   )}
-                  <button
-                    onClick={() => deleteTask(task.id)}
-                    className="text-[10px] text-gray-400 hover:text-red-600 px-2 py-1 rounded-lg hover:bg-red-50 transition-colors"
-                  >
-                    Sil
-                  </button>
+                  {confirmId === task.id ? (
+                    <span className="flex items-center gap-1">
+                      <button onClick={() => deleteTask(task.id)}
+                        className="text-[10px] text-white bg-red-500 hover:bg-red-600 px-2 py-1 rounded-lg transition-colors font-semibold">
+                        Evet, sil
+                      </button>
+                      <button onClick={() => setConfirmId(null)}
+                        className="text-[10px] text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors">
+                        İptal
+                      </button>
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => setConfirmId(task.id)}
+                      className="text-[10px] text-gray-400 hover:text-red-600 px-2 py-1 rounded-lg hover:bg-red-50 transition-colors"
+                    >
+                      Sil
+                    </button>
+                  )}
                 </div>
               </div>
             )

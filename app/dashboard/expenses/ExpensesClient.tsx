@@ -72,15 +72,17 @@ export default function ExpensesClient({
   initialRecurring,
   initialPartners,
 }: Props) {
-  const [list,          setList]          = useState(initialExpenses)
-  const [recurring,     setRecurring]     = useState(initialRecurring)
-  const [partners,      setPartners]      = useState(initialPartners)
-  const [loading,       setLoading]       = useState(false)
-  const [error,         setError]         = useState('')
-  const [recurringError, setRecurringError] = useState('')
-  const [saving,        setSaving]        = useState(false)
-  const [formErr,       setFormErr]       = useState('')
-  const [showForm,      setShowForm]      = useState(false)
+  const [list,              setList]              = useState(initialExpenses)
+  const [recurring,         setRecurring]         = useState(initialRecurring)
+  const [partners,          setPartners]          = useState(initialPartners)
+  const [loading,           setLoading]           = useState(false)
+  const [error,             setError]             = useState('')
+  const [recurringError,    setRecurringError]    = useState('')
+  const [saving,            setSaving]            = useState(false)
+  const [formErr,           setFormErr]           = useState('')
+  const [showForm,          setShowForm]          = useState(false)
+  const [confirmExpId,      setConfirmExpId]      = useState<string | null>(null)
+  const [confirmRecId,      setConfirmRecId]      = useState<string | null>(null)
 
   const today = new Date().toISOString().slice(0, 10)
 
@@ -180,21 +182,20 @@ export default function ExpensesClient({
     }
 
     closeForm(); setSaving(false)
-    // Reload page to refresh server-rendered analytics sections
-    window.location.reload()
+    await refresh()
   }
 
   // ── Delete ────────────────────────────────────────────────────────────────
   async function del(id: string) {
-    if (!confirm('Bu gideri silmek istediğinizden emin misiniz?')) return
     await fetch(`/api/expenses?id=${id}`, { method: 'DELETE' })
-    window.location.reload()
+    setConfirmExpId(null)
+    await refresh()
   }
 
   async function delRecurring(id: string) {
-    if (!confirm('Bu tekrarlayan gideri durdurmak istediğinizden emin misiniz?')) return
     await fetch(`/api/recurring-expenses?id=${id}`, { method: 'DELETE' })
-    window.location.reload()
+    setConfirmRecId(null)
+    await refresh()
   }
 
   const totalTRY = list.reduce((s, e) => s + Number(e.amount_try), 0)
@@ -379,12 +380,25 @@ export default function ExpensesClient({
                       <span className="text-sm font-bold tabular-nums text-red-600">
                         {fmtMoney(Number(e.amount_try))}
                       </span>
-                      <button
-                        onClick={() => del(e.id)}
-                        className="opacity-0 group-hover:opacity-100 text-xs text-gray-400 hover:text-red-500 px-1.5 py-1 rounded-lg hover:bg-red-50 transition-all"
-                      >
-                        Sil
-                      </button>
+                      {confirmExpId === e.id ? (
+                        <span className="flex items-center gap-1">
+                          <button onClick={() => del(e.id)}
+                            className="text-xs text-white bg-red-500 hover:bg-red-600 px-2 py-0.5 rounded-lg transition-colors font-semibold">
+                            Evet
+                          </button>
+                          <button onClick={() => setConfirmExpId(null)}
+                            className="text-xs text-gray-400 px-1.5 py-0.5 rounded-lg hover:bg-gray-100 transition-colors">
+                            İptal
+                          </button>
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => setConfirmExpId(e.id)}
+                          className="opacity-0 group-hover:opacity-100 text-xs text-gray-400 hover:text-red-500 px-1.5 py-1 rounded-lg hover:bg-red-50 transition-all"
+                        >
+                          Sil
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -432,12 +446,25 @@ export default function ExpensesClient({
                         {sym(r.currency)}{Number(r.amount).toFixed(2)}
                       </div>
                       <div className="col-span-1 text-right">
-                        <button
-                          onClick={() => delRecurring(r.id)}
-                          className="opacity-0 group-hover:opacity-100 text-xs text-gray-400 hover:text-red-500 px-1.5 py-1 rounded-lg hover:bg-red-50 transition-all"
-                        >
-                          Durdur
-                        </button>
+                        {confirmRecId === r.id ? (
+                          <span className="flex items-center justify-end gap-1">
+                            <button onClick={() => delRecurring(r.id)}
+                              className="text-xs text-white bg-red-500 hover:bg-red-600 px-2 py-0.5 rounded-lg transition-colors font-semibold">
+                              Evet
+                            </button>
+                            <button onClick={() => setConfirmRecId(null)}
+                              className="text-xs text-gray-400 px-1.5 py-0.5 rounded-lg hover:bg-gray-100 transition-colors">
+                              İptal
+                            </button>
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => setConfirmRecId(r.id)}
+                            className="opacity-0 group-hover:opacity-100 text-xs text-gray-400 hover:text-red-500 px-1.5 py-1 rounded-lg hover:bg-red-50 transition-all"
+                          >
+                            Durdur
+                          </button>
+                        )}
                       </div>
                     </div>
                   ))}

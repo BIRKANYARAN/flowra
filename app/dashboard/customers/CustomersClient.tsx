@@ -3,7 +3,7 @@
 // ── CustomersClient — client island for customer list + CRUD ─────────────────
 // Receives initialCustomers from the server component.
 // Mutations go through /api/customers.
-// After add/edit/delete: window.location.reload() refreshes server KPI zone.
+// After add/edit: router.refresh() re-runs the server component with fresh data.
 
 import { useState, type ChangeEvent } from 'react'
 import { useRouter } from 'next/navigation'
@@ -33,6 +33,7 @@ export default function CustomersClient({ initialCustomers }: Props) {
   const [saving,    setSaving]    = useState(false)
   const [err,       setErr]       = useState('')
   const [search,    setSearch]    = useState('')
+  const [confirmId, setConfirmId] = useState<string | null>(null)
 
   function openNew() {
     setForm({ ...EMPTY }); setEditId(null); setErr(''); setShowForm(true)
@@ -60,13 +61,13 @@ export default function CustomersClient({ initialCustomers }: Props) {
     const json   = await res.json() as Record<string, unknown>
     if (!res.ok) { setErr((json.error as string | undefined) ?? 'Hata'); setSaving(false); return }
     closeForm(); setSaving(false)
-    window.location.reload()
+    router.refresh()
   }
 
   async function del(id: string) {
-    if (!confirm('Bu müşteriyi silmek istediğinizden emin misiniz?')) return
     await fetch(`/api/customers?id=${id}`, { method: 'DELETE' })
     setList(prev => prev.filter(c => c.id !== id))
+    setConfirmId(null)
   }
 
   const f = (k: keyof typeof EMPTY) => ({
@@ -195,12 +196,29 @@ export default function CustomersClient({ initialCustomers }: Props) {
                   >
                     Düzenle
                   </button>
-                  <button
-                    onClick={() => del(c.id)}
-                    className="text-xs text-gray-400 hover:text-red-500 px-2 py-1 rounded-lg hover:bg-red-50 transition-colors"
-                  >
-                    Sil
-                  </button>
+                  {confirmId === c.id ? (
+                    <span className="flex items-center gap-1">
+                      <button
+                        onClick={() => del(c.id)}
+                        className="text-xs text-white bg-red-500 hover:bg-red-600 px-2 py-1 rounded-lg transition-colors font-semibold"
+                      >
+                        Evet, sil
+                      </button>
+                      <button
+                        onClick={() => setConfirmId(null)}
+                        className="text-xs text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors"
+                      >
+                        İptal
+                      </button>
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => setConfirmId(c.id)}
+                      className="text-xs text-gray-400 hover:text-red-500 px-2 py-1 rounded-lg hover:bg-red-50 transition-colors"
+                    >
+                      Sil
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
