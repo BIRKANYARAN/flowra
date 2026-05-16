@@ -134,17 +134,25 @@ function pct(v: number): string { return `${(v * 100).toFixed(1).replace('.', ',
 export default async function DashboardPage() {
 
   // ── Auth ──────────────────────────────────────────────────────────────────
+  // layout.tsx is the single auth gate — it redirects unauthenticated users to
+  // /auth before this page renders. We do NOT redirect here; that would create
+  // an /auth ↔ /dashboard loop when getUser() fails transiently.
   const supabase = createClient()
   let userId: string | null = null
   try {
     const { data, error } = await supabase.auth.getUser()
-    if (error || !data?.user) redirect('/auth')
-    userId = data.user.id
+    if (!error && data?.user) userId = data.user.id
   } catch (e) {
     if (e && typeof e === 'object' && 'digest' in e) throw e
-    redirect('/auth')
+    // Transient Supabase error — fall through to error UI below
   }
-  if (!userId) redirect('/auth')
+  if (!userId) return (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-center px-4">
+      <div className="text-3xl">⚠️</div>
+      <p className="text-sm text-gray-500">Oturum bilgisi alınamadı. Lütfen sayfayı yenileyin.</p>
+      <a href="/dashboard" className="text-sm text-violet-600 font-semibold hover:underline">Yeniden Dene</a>
+    </div>
+  )
 
   const uid = userId
   const { from, to, label, year, month } = currentMonthPeriod()

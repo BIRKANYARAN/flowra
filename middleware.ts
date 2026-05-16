@@ -101,10 +101,26 @@ async function _middlewareInner(request: NextRequest): Promise<NextResponse> {
         // redirect to /auth even though the middleware successfully refreshed it —
         // causing an ERR_TOO_MANY_REDIRECTS loop.
         setAll(cookiesToSet: { name: string; value: string; options?: CookieOptions }[]) {
-          // Step 1: Mutate request cookies so next/headers cookies() sees them
+          // Step 1: Mutate the request cookie store
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-          // Step 2: Recreate response with the updated request (new Cookie header forwarded)
+          // Step 2: Rebuild the Cookie header from the NOW-MUTATED cookie store.
+          //
+          // CRITICAL: `request.headers` is immutable — `new Headers(request.headers)`
+          // snapshots the ORIGINAL Cookie header and does NOT include the mutations
+          // applied in Step 1 via request.cookies.set(). We must rebuild the Cookie
+          // header explicitly from request.cookies.getAll() so that downstream server
+          // components (layout, page) receive the refreshed access token.
+          //
+          // Without this, middleware refreshes the token, writes new cookies to the
+          // response (browser receives them), but the CURRENT request's Cookie header
+          // still carries the expired token → every server component's getUser() fails
+          // → redirect('/auth') → middleware sees authenticated user → redirect('/dashboard')
+          // → ERR_TOO_MANY_REDIRECTS.
           const updatedHeaders = new Headers(request.headers)
+          updatedHeaders.set(
+            'cookie',
+            request.cookies.getAll().map(c => `${c.name}=${c.value}`).join('; '),
+          )
           updatedHeaders.set(REQUEST_ID_HEADER, requestId)
           response = NextResponse.next({ request: { headers: updatedHeaders } })
           // Step 3: Write to response cookies so the browser stores the new tokens

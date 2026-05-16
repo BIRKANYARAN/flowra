@@ -92,22 +92,32 @@ interface PageProps {
 
 export default async function FinancePage({ searchParams }: PageProps) {
 
-  // ── Auth ──────────────────────────────────────────────────────────────────────
+  // ── Auth — layout.tsx is the single gate; no redirect here ────────────────────
   const supabase = createClient()
-  let userId: string
-
+  let userId: string | null = null
   try {
     const { data, error } = await supabase.auth.getUser()
-    if (error || !data?.user) redirect('/auth')
-    userId = data.user.id
+    if (!error && data?.user) userId = data.user.id
   } catch (e) {
     if (e && typeof e === 'object' && 'digest' in e) throw e
-    redirect('/auth')
   }
+  if (!userId) return (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-center px-4">
+      <div className="text-3xl">⚠️</div>
+      <p className="text-sm text-gray-500">Oturum bilgisi alınamadı. Lütfen sayfayı yenileyin.</p>
+      <a href="/dashboard/finance" className="text-sm text-violet-600 font-semibold hover:underline">Yeniden Dene</a>
+    </div>
+  )
 
-  let companyId: string
-  try { companyId = await resolveCompanyId(userId, supabase) }
-  catch { redirect('/auth') }
+  let companyId: string | null = null
+  try { companyId = await resolveCompanyId(userId, supabase) } catch { /* non-fatal */ }
+  if (!companyId) return (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-center px-4">
+      <div className="text-3xl">⚠️</div>
+      <p className="text-sm text-gray-500">Şirket bilgisi yüklenemedi. Lütfen sayfayı yenileyin.</p>
+      <a href="/dashboard/finance" className="text-sm text-violet-600 font-semibold hover:underline">Yeniden Dene</a>
+    </div>
+  )
 
   // ── Tab resolution ─────────────────────────────────────────────────────────
   const params    = await searchParams

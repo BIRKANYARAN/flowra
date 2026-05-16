@@ -7,21 +7,26 @@ import { fmtDate, fmtTRY }    from '@/lib/format'
 export const dynamic = 'force-dynamic'
 
 export default async function JournalEntriesPage() {
+  // Auth gate is layout.tsx — no redirect here to prevent /auth ↔ /dashboard loop.
   const supabase = createClient()
-
   let userId: string | null = null
   let companyId: string | null = null
-
   try {
     const { data: authData } = await supabase.auth.getUser()
-    if (!authData?.user) redirect('/auth')
-    userId    = authData.user.id
-    companyId = await resolveCompanyId(userId, supabase)
+    if (authData?.user) userId = authData.user.id
   } catch (e) {
     if (e && typeof e === 'object' && 'digest' in e) throw e
-    redirect('/auth')
   }
-
+  if (userId) {
+    try { companyId = await resolveCompanyId(userId, supabase) } catch { /* non-fatal */ }
+  }
+  if (!userId) return (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-center px-4">
+      <div className="text-3xl">⚠️</div>
+      <p className="text-sm text-gray-500">Oturum bilgisi alınamadı. Lütfen sayfayı yenileyin.</p>
+      <a href="/dashboard/cfo/journal-entries" className="text-sm text-violet-600 font-semibold hover:underline">Yeniden Dene</a>
+    </div>
+  )
   if (!companyId) return <div className="p-8 text-gray-500">Şirket bulunamadı.</div>
 
   const { data: entries } = await supabase

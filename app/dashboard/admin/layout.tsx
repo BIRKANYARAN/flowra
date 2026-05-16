@@ -19,9 +19,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const supabase = createClient()
 
   // ── 1. Verify authentication ───────────────────────────────────────────────
+  // Parent layout.tsx is the single auth gate. If getUser() fails here (transient),
+  // redirect to /dashboard (not /auth) to avoid /auth ↔ /dashboard loop.
   const { data: authData, error: authError } = await supabase.auth.getUser()
   if (authError || !authData?.user) {
-    redirect('/auth')
+    redirect('/dashboard')
   }
   const user = authData.user
 

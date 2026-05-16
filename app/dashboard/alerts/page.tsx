@@ -1,25 +1,36 @@
 export const dynamic = 'force-dynamic'
 
 import { createClient }     from '@/lib/supabase-server'
-import { redirect }         from 'next/navigation'
 import { resolveCompanyId } from '@/lib/resolve-company'
 import Link                 from 'next/link'
 
 export default async function AlertsPage() {
+  // Auth gate is layout.tsx — no redirect here to prevent /auth ↔ /dashboard loop.
   const supabase = createClient()
-  let uid: string
+  let uid: string | null = null
   try {
     const { data, error } = await supabase.auth.getUser()
-    if (error || !data?.user) redirect('/auth')
-    uid = data.user.id
+    if (!error && data?.user) uid = data.user.id
   } catch (e) {
     if (e && typeof e === 'object' && 'digest' in e) throw e
-    redirect('/auth')
   }
+  if (!uid) return (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-center px-4">
+      <div className="text-3xl">⚠️</div>
+      <p className="text-sm text-gray-500">Oturum bilgisi alınamadı. Lütfen sayfayı yenileyin.</p>
+      <a href="/dashboard/alerts" className="text-sm text-violet-600 font-semibold hover:underline">Yeniden Dene</a>
+    </div>
+  )
 
-  let companyId: string
-  try { companyId = await resolveCompanyId(uid!, supabase) }
-  catch { redirect('/auth') }
+  let companyId: string | null = null
+  try { companyId = await resolveCompanyId(uid, supabase) } catch { /* non-fatal */ }
+  if (!companyId) return (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-center px-4">
+      <div className="text-3xl">⚠️</div>
+      <p className="text-sm text-gray-500">Şirket bilgisi yüklenemedi. Lütfen sayfayı yenileyin.</p>
+      <a href="/dashboard/alerts" className="text-sm text-violet-600 font-semibold hover:underline">Yeniden Dene</a>
+    </div>
+  )
 
   const { data: alerts } = await supabase
     .from('alerts')
