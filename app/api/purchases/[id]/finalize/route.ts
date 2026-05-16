@@ -22,6 +22,9 @@ import { REQUEST_ID_HEADER } from '@/middleware'
 import { PurchaseService } from '@/lib/services/purchase.service'
 import { toErrorResponse } from '@/types/errors'
 import { resolveCompanyId } from '@/lib/resolve-company'
+import { checkPeriodGuard } from '@/lib/middleware/period-guard'
+import { dualWrite, resolvePeriodId } from '@/lib/services/ledger/dual-write.service'
+import { JournalEntryService } from '@/lib/services/ledger/journal-entry.service'
 
 interface Ctx { params: { id: string } }
 
@@ -40,8 +43,42 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   try { companyId = await resolveCompanyId(authData.user.id, supabase) }
   catch { return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED', type: 'SYSTEM' }, { status: 409 }) }
 
+  // Fetch purchase to get received_date for period guard
+  const { data: purchase } = await supabase
+    .from('purchases')
+    .select('id, received_date, total_cost_try, payment_status')
+    .eq('id', params.id)
+    .eq('company_id', companyId)
+    .maybeSingle()
+
+  if (purchase) {
+    const receiveDate = purchase.received_date ?? new Date().toISOString().slice(0, 10)
+    const guard = await checkPeriodGuard(companyId, receiveDate, supabase)
+    if (guard.blocked) {
+      return NextResponse.json({ error: guard.reason, code: 'PERIOD_LOCKED', type: 'BUSINESS' }, { status: 422 })
+    }
+  }
+
   try {
     const result = await PurchaseService.finalize(authData.user.id, params.id, companyId, ctx)
+
+    // Dual-write: inventory + COGS journal entries
+    if (purchase) {
+      const receiveDate = purchase.received_date ?? new Date().toISOString().slice(0, 10)
+      const periodId    = await resolvePeriodId(companyId, receiveDate, supabase)
+      const paidFromBank = purchase.payment_status === 'paid'
+
+      await dualWrite({
+        companyId, periodId, createdBy: authData.user.id, supabase,
+        buildEntry: () => JournalEntryService.buildPurchaseEntry({
+          id:             purchase.id,
+          received_date:  receiveDate,
+          cost_try:       Number(purchase.total_cost_try) || 0,
+          paid_from_bank: paidFromBank,
+        }),
+      })
+    }
+
     return NextResponse.json(result, { headers: { [REQUEST_ID_HEADER]: ctx.requestId } })
   } catch (err) {
     const { body, status } = toErrorResponse(err)

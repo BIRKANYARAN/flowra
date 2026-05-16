@@ -17,6 +17,7 @@ import { REQUEST_ID_HEADER } from '@/middleware'
 import { PurchaseService } from '@/lib/services/purchase.service'
 import { toErrorResponse } from '@/types/errors'
 import { resolveCompanyId } from '@/lib/resolve-company'
+import { checkPeriodGuard } from '@/lib/middleware/period-guard'
 import type { PurchaseStatus } from '@/types'
 
 const VALID_STATUS = new Set<PurchaseStatus>(['draft', 'finalized', 'cancelled'])
@@ -69,6 +70,14 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json().catch(() => ({} as Record<string, unknown>))
+    const txDate = typeof body.purchase_date === 'string' ? body.purchase_date : new Date().toISOString().slice(0, 10)
+    const guard = await checkPeriodGuard(companyId, txDate, supabase)
+    if (guard.blocked) {
+      return NextResponse.json(
+        { error: guard.reason, code: 'PERIOD_LOCKED', type: 'BUSINESS' },
+        { status: 409, headers: { [REQUEST_ID_HEADER]: ctx.requestId } }
+      )
+    }
     const result = await PurchaseService.createDraft(authData.user.id, {
       supplier_name: typeof body.supplier_name === 'string' ? body.supplier_name : '',
       purchase_date: typeof body.purchase_date === 'string' ? body.purchase_date : undefined,

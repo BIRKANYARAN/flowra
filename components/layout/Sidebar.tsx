@@ -1,97 +1,177 @@
 'use client'
+// ─────────────────────────────────────────────────────────────────────────────
+// Sidebar.tsx — Role-based workspace navigation (CEO / CFO / OPS)
+//
+// Navigation adapts to:
+//   CEO mode  → strategic view (cockpit, partners, simulation, reports)
+//   CFO mode  → financial accuracy view (accounting, tax, periods, audit)
+//   OPS mode  → operational view (sales, purchasing, inventory, tasks)
+//
+// Mode switching available to admin users via the mode switcher at the top.
+// ─────────────────────────────────────────────────────────────────────────────
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase-client'
 import { FlowraLogo } from '@/components/ui/FlowraLogo'
 import { Icon } from '@/components/ui/Icon'
-import type { MemberRole } from '@/types'
+import { useWorkspace } from '@/lib/workspace-context'
+import type { NavEntry, NavItem, NavGroup, NavMode } from '@/types/dto'
 
-// ── Nav structure — icons are Lucide keys (emoji fallback still works) ─────
-type NavItem  = { href: string; label: string; icon: string; exact?: boolean }
-type NavGroup = { group: string; items: NavItem[]; adminOnly?: boolean }
-type NavEntry = NavItem | NavGroup
+// ── Navigation definitions ────────────────────────────────────────────────────
 
 function isGroup(e: NavEntry): e is NavGroup { return 'group' in e }
 
-// ── Enterprise navigation — 5 sections, minimal depth ───────────────────────
-const BASE_NAV: NavEntry[] = [
-  // ── GENEL DURUM ────────────────────────────────────────────────────────────
+/** CEO Mode — strategic decision navigation */
+const CEO_NAV: NavEntry[] = [
   {
-    group: 'Genel Durum',
+    group: 'Yönetim',
+    modes: ['CEO'],
     items: [
-      { href: '/dashboard',     label: 'Dashboard', icon: 'dashboard', exact: true },
-      { href: '/dashboard/ceo', label: 'CEO Özeti', icon: 'ceo'                    },
+      { href: '/dashboard',          label: 'Executive Cockpit', icon: 'dashboard', exact: true },
+      { href: '/dashboard/ceo',      label: 'CEO Özeti',         icon: 'ceo'                    },
     ],
   },
-  // ── FİNANS ─────────────────────────────────────────────────────────────────
+  {
+    group: 'Strateji',
+    modes: ['CEO'],
+    items: [
+      { href: '/dashboard/simulation', label: 'Simülasyon',        icon: 'simulation' },
+      { href: '/dashboard/analytics',  label: 'Analitik',          icon: 'analytics'  },
+      { href: '/dashboard/insights',   label: 'AI İçgörüler',      icon: 'analytics'  },
+    ],
+  },
   {
     group: 'Finans',
+    modes: ['CEO'],
     items: [
-      { href: '/dashboard/analytics',   label: 'Finansal Analitik', icon: 'analytics'   },
-      { href: '/dashboard/collections', label: 'Tahsilatlar',       icon: 'collections' },
-      { href: '/dashboard/expenses',    label: 'Giderler',          icon: 'expenses'    },
-      { href: '/dashboard/partners',    label: 'Ortaklar',          icon: 'partners'    },
-      { href: '/dashboard/simulation',  label: 'Simülasyon',        icon: 'simulation'  },
-      { href: '/dashboard/tax',         label: 'Vergi',             icon: 'tax'         },
+      { href: '/dashboard/partners',    label: 'Ortaklar',    icon: 'partners'    },
+      { href: '/dashboard/cashflow',    label: 'Nakit Akışı', icon: 'cashflow'    },
+      { href: '/dashboard/collections', label: 'Tahsilatlar', icon: 'collections' },
     ],
   },
-  // ── SATIŞ ──────────────────────────────────────────────────────────────────
-  {
-    group: 'Satış',
-    items: [
-      { href: '/dashboard/sales',     label: 'Satışlar',    icon: 'sales'     },
-      { href: '/dashboard/proformas', label: 'Proformalar', icon: 'proformas' },
-      { href: '/dashboard/customers', label: 'Müşteriler',  icon: 'customers' },
-    ],
-  },
-  // ── OPERASYON ──────────────────────────────────────────────────────────────
-  {
-    group: 'Operasyon',
-    items: [
-      { href: '/dashboard/stocks',   label: 'Stok',    icon: 'stocks'   },
-      { href: '/dashboard/products', label: 'Ürünler', icon: 'products' },
-      { href: '/dashboard/tasks',    label: 'Görevler', icon: 'tasks'   },
-    ],
-  },
-  // ── YÖNETİM — admin only ───────────────────────────────────────────────────
   {
     group: 'Yönetim',
     adminOnly: true,
     items: [
-      { href: '/dashboard/admin/users',  label: 'Ekip',          icon: 'users'   },
-      { href: '/dashboard/admin/audit',  label: 'Denetim',       icon: 'shield'  },
-      { href: '/dashboard/backups',      label: 'Yedekleme',     icon: 'backup'  },
-      { href: '/dashboard/settings',     label: 'Ayarlar',       icon: 'settings'},
+      { href: '/dashboard/admin/users', label: 'Ekip',      icon: 'users'    },
+      { href: '/dashboard/admin/audit', label: 'Denetim',   icon: 'shield'   },
+      { href: '/dashboard/backups',     label: 'Yedekleme', icon: 'backup'   },
+      { href: '/dashboard/settings',    label: 'Ayarlar',   icon: 'settings' },
     ],
   },
 ]
 
-// Non-admin users still get Ayarlar
-const SETTINGS_ITEM: NavItem = { href: '/dashboard/settings', label: 'Ayarlar', icon: 'settings' }
+/** CFO Mode — financial accuracy + period management navigation */
+const CFO_NAV: NavEntry[] = [
+  {
+    group: 'CFO Paneli',
+    modes: ['CFO'],
+    items: [
+      { href: '/dashboard/cfo',       label: 'CFO Paneli',        icon: 'ceo',      exact: true },
+      { href: '/dashboard/analytics', label: 'Finansal Analitik', icon: 'analytics'             },
+    ],
+  },
+  {
+    group: 'Finansal Tablolar',
+    modes: ['CFO'],
+    items: [
+      { href: '/dashboard/cashflow', label: 'Nakit Akışı',   icon: 'cashflow' },
+      { href: '/dashboard/tax',      label: 'Vergi Merkezi', icon: 'tax'      },
+    ],
+  },
+  {
+    group: 'Operasyon İzleme',
+    modes: ['CFO'],
+    items: [
+      { href: '/dashboard/expenses',    label: 'Giderler',    icon: 'expenses'    },
+      { href: '/dashboard/collections', label: 'Tahsilatlar', icon: 'collections' },
+      { href: '/dashboard/partners',    label: 'Ortaklar',    icon: 'partners'    },
+    ],
+  },
+  {
+    group: 'Yönetim',
+    adminOnly: true,
+    items: [
+      { href: '/dashboard/admin/audit', label: 'Denetim',   icon: 'shield'   },
+      { href: '/dashboard/backups',     label: 'Yedekleme', icon: 'backup'   },
+      { href: '/dashboard/settings',    label: 'Ayarlar',   icon: 'settings' },
+    ],
+  },
+]
 
-interface Props {
-  companyName:  string | null
-  logoUrl:      string | null
-  userInitials: string
-  userName:     string
-  userEmail:    string
-  /** Role of the current user in their primary company. null = no active membership. */
-  userRole?:    MemberRole | null
+/** OPS Mode — sales & operations navigation */
+const OPS_NAV: NavEntry[] = [
+  {
+    group: 'Genel',
+    modes: ['OPS'],
+    items: [
+      { href: '/dashboard', label: 'Dashboard', icon: 'dashboard', exact: true },
+    ],
+  },
+  {
+    group: 'Satış Hattı',
+    modes: ['OPS'],
+    items: [
+      { href: '/dashboard/proformas', label: 'Proformalar', icon: 'proformas' },
+      { href: '/dashboard/sales',     label: 'Satışlar',    icon: 'sales'     },
+      { href: '/dashboard/customers', label: 'Müşteriler',  icon: 'customers' },
+      { href: '/dashboard/collections',label: 'Tahsilatlar', icon: 'collections' },
+    ],
+  },
+  {
+    group: 'Satın Alma & Stok',
+    modes: ['OPS'],
+    items: [
+      { href: '/dashboard/stocks',   label: 'Stok',    icon: 'stocks'   },
+      { href: '/dashboard/products', label: 'Ürünler', icon: 'products' },
+    ],
+  },
+  {
+    group: 'İşler',
+    modes: ['OPS'],
+    items: [
+      { href: '/dashboard/expenses', label: 'Giderler', icon: 'expenses' },
+      { href: '/dashboard/tasks',    label: 'Görevler', icon: 'tasks'    },
+    ],
+  },
+  {
+    group: 'Ayarlar',
+    items: [
+      { href: '/dashboard/settings', label: 'Ayarlar', icon: 'settings' },
+    ],
+  },
+]
+
+const NAV_BY_MODE: Record<NavMode, NavEntry[]> = {
+  CEO: CEO_NAV,
+  CFO: CFO_NAV,
+  OPS: OPS_NAV,
 }
 
-export function Sidebar({ companyName, logoUrl, userInitials, userName, userEmail, userRole }: Props) {
-  const pathname = usePathname()
-  const router   = useRouter()
-  const supabase = createClient()
+const MODE_LABELS: Record<NavMode, string> = {
+  CEO: 'CEO',
+  CFO: 'CFO',
+  OPS: 'OPS',
+}
 
-  // Build nav: filter adminOnly groups for non-admins; non-admins get Ayarlar standalone
-  const NAV: NavEntry[] = userRole === 'admin'
-    ? BASE_NAV
-    : [
-        ...BASE_NAV.filter(e => !isGroup(e) || !e.adminOnly),
-        SETTINGS_ITEM,
-      ]
+// ── Component ─────────────────────────────────────────────────────────────────
+
+export function Sidebar() {
+  const pathname  = usePathname()
+  const router    = useRouter()
+  const supabase  = createClient()
+  const ws        = useWorkspace()
+
+  const { companyName, logoUrl, userInitials, userName, userEmail, userRole, navMode, setNavMode, permissions } = ws
+
+  const isAdmin = userRole === 'admin'
+
+  // Build nav for current mode, filter adminOnly groups if not admin
+  const rawNav = NAV_BY_MODE[navMode] ?? OPS_NAV
+  const NAV: NavEntry[] = rawNav.filter(e =>
+    isGroup(e) ? (!e.adminOnly || isAdmin) : true
+  )
 
   function isActive(item: NavItem) {
     return item.exact ? pathname === item.href : pathname.startsWith(item.href)
@@ -108,7 +188,7 @@ export function Sidebar({ companyName, logoUrl, userInitials, userName, userEmai
     <aside className="w-52 bg-white border-r border-gray-100 h-screen sticky top-0 flex flex-col py-3 px-2 flex-shrink-0 overflow-y-auto">
 
       {/* Brand */}
-      <div className="px-2.5 mb-3">
+      <div className="px-2.5 mb-2">
         {companyName || logoUrl ? (
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-primary-600 flex items-center justify-center flex-shrink-0 overflow-hidden">
@@ -123,7 +203,7 @@ export function Sidebar({ companyName, logoUrl, userInitials, userName, userEmai
             </div>
             <div className="min-w-0">
               <div className="font-black text-sm leading-tight truncate">{displayName}</div>
-              <div className="text-[10px] text-gray-400 uppercase tracking-wide">ERP</div>
+              <div className="text-[10px] text-gray-400 uppercase tracking-wide">Financial OS</div>
             </div>
           </div>
         ) : (
@@ -131,12 +211,33 @@ export function Sidebar({ companyName, logoUrl, userInitials, userName, userEmai
         )}
       </div>
 
+      {/* Mode switcher — admin only */}
+      {isAdmin && (
+        <div className="px-2.5 mb-2">
+          <div className="flex gap-1 bg-gray-100 rounded-lg p-0.5">
+            {(['CEO', 'CFO', 'OPS'] as NavMode[]).map(mode => (
+              <button
+                key={mode}
+                onClick={() => setNavMode(mode)}
+                className={`flex-1 text-[10px] font-bold py-1 rounded-md transition-all ${
+                  navMode === mode
+                    ? 'bg-white text-primary-700 shadow-sm'
+                    : 'text-gray-400 hover:text-gray-600'
+                }`}
+              >
+                {MODE_LABELS[mode]}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto space-y-0">
         {NAV.map((entry, i) => {
           if (isGroup(entry)) {
             return (
-              <div key={entry.group} className={i > 0 ? 'pt-1.5' : ''}>
+              <div key={`${entry.group}-${i}`} className={i > 0 ? 'pt-1.5' : ''}>
                 <div className="px-2.5 pt-0.5 pb-0.5">
                   <span className="text-[9px] font-black uppercase tracking-[0.1em] text-gray-300">
                     {entry.group}
@@ -149,8 +250,8 @@ export function Sidebar({ companyName, logoUrl, userInitials, userName, userEmai
             )
           }
           return (
-            <div key={entry.href} className={i > 0 ? 'pt-0.5' : ''}>
-              <NavLink item={entry} active={isActive(entry)} />
+            <div key={(entry as NavItem).href} className={i > 0 ? 'pt-0.5' : ''}>
+              <NavLink item={entry as NavItem} active={isActive(entry as NavItem)} />
             </div>
           )
         })}
@@ -202,6 +303,13 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
     >
       <Icon name={item.icon} size={13} className={`flex-shrink-0 ${active ? 'text-white' : 'text-gray-400'}`} />
       <span className="truncate">{item.label}</span>
+      {item.badge !== undefined && (
+        <span className={`ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+          active ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'
+        }`}>
+          {item.badge}
+        </span>
+      )}
     </Link>
   )
 }

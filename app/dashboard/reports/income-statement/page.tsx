@@ -1,0 +1,151 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import { PrintButton } from '@/components/reports/PrintButton'
+
+interface PnL {
+  revenue_try:                 number
+  cost_try:                    number
+  gross_profit_try:            number
+  expenses_total_try:          number
+  deductible_expenses_try:     number
+  non_deductible_expenses_try: number
+  matrah_try:                  number
+  corporate_tax_rate:          number
+  corporate_tax_try:           number
+  net_after_tax_try:           number
+}
+
+const _fmt = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+function fmt(n: number) {
+  const v = Number(n) || 0
+  return (v < 0 ? '−' : '') + _fmt.format(Math.abs(v)) + ' TL'
+}
+function pct(n: number, d: number) {
+  if (!d) return '—'
+  return ((n / d) * 100).toFixed(1) + '%'
+}
+
+function currentPeriod() {
+  const now = new Date()
+  const from = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
+  const to   = now.toISOString().slice(0, 10)
+  return { from, to }
+}
+
+function Row({ label, value, sub, bold, indent, positive, negative }: {
+  label: string; value: string; sub?: string; bold?: boolean; indent?: boolean
+  positive?: boolean; negative?: boolean
+}) {
+  return (
+    <div className={`flex items-center justify-between py-1.5 border-b border-gray-50 last:border-0 ${indent ? 'pl-6' : ''}`}>
+      <div className="min-w-0">
+        <span className={`text-xs ${bold ? 'font-black text-gray-900' : 'font-medium text-gray-600'}`}>{label}</span>
+        {sub && <span className="text-[10px] text-gray-400 ml-2">{sub}</span>}
+      </div>
+      <span className={`tabular-nums text-sm shrink-0 ${bold ? 'font-black' : 'font-semibold'} ${
+        positive ? 'text-emerald-700' : negative ? 'text-red-600' : 'text-gray-900'
+      }`}>{value}</span>
+    </div>
+  )
+}
+
+export default function IncomeStatementPage() {
+  const [pnl,     setPnl]     = useState<PnL | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState<string | null>(null)
+  const [from,    setFrom]    = useState(currentPeriod().from)
+  const [to,      setTo]      = useState(currentPeriod().to)
+
+  useEffect(() => {
+    setLoading(true)
+    fetch(`/api/financial-summary?from=${from}&to=${to}`)
+      .then(r => r.json())
+      .then(d => setPnl(d as PnL))
+      .catch(() => setError('Veriler yüklenemedi'))
+      .finally(() => setLoading(false))
+  }, [from, to])
+
+  const grossMargin = pnl ? pct(pnl.gross_profit_try, pnl.revenue_try) : '—'
+  const ebitda      = pnl ? pnl.gross_profit_try - pnl.expenses_total_try : 0
+  const netMargin   = pnl ? pct(pnl.net_after_tax_try, pnl.revenue_try) : '—'
+
+  return (
+    <div className="flex flex-col gap-4 max-w-2xl print:max-w-none">
+      {/* Header */}
+      <div className="flex items-center justify-between print:hidden">
+        <div>
+          <h1 className="text-xl font-black text-gray-900 tracking-tight">Gelir Tablosu</h1>
+          <p className="text-xs text-gray-400 mt-0.5">Kâr / Zarar Özeti</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <input type="date" value={from} onChange={e => setFrom(e.target.value)}
+            className="border border-gray-200 rounded-lg px-2 py-1 text-xs" />
+          <span className="text-xs text-gray-400">—</span>
+          <input type="date" value={to} onChange={e => setTo(e.target.value)}
+            className="border border-gray-200 rounded-lg px-2 py-1 text-xs" />
+          <PrintButton label="PDF İndir" />
+          <Link href="/dashboard/cfo" className="text-xs text-gray-400 hover:text-primary-600 font-semibold">← CFO</Link>
+        </div>
+      </div>
+
+      {/* Print header */}
+      <div className="hidden print:block mb-4">
+        <h1 className="text-2xl font-black">Gelir Tablosu</h1>
+        <p className="text-sm text-gray-500">{from} — {to}</p>
+      </div>
+
+      {error && <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700">{error}</div>}
+      {loading && <div className="bg-gray-100 rounded-xl h-64 animate-pulse" />}
+
+      {pnl && !loading && (
+        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden print:border-none print:shadow-none">
+          {/* Revenue section */}
+          <div className="px-4 py-2 bg-gray-50 border-b border-gray-100">
+            <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Satışlar</div>
+          </div>
+          <div className="px-4">
+            <Row label="Satış Gelirleri"        value={fmt(pnl.revenue_try)} />
+            <Row label="Satılan Malın Maliyeti"  value={fmt(-pnl.cost_try)} indent negative={pnl.cost_try > 0} />
+            <Row label="Brüt Kâr"               value={fmt(pnl.gross_profit_try)}
+              bold sub={`Marj: ${grossMargin}`}
+              positive={pnl.gross_profit_try > 0} negative={pnl.gross_profit_try < 0} />
+          </div>
+
+          {/* OpEx section */}
+          <div className="px-4 py-2 bg-gray-50 border-b border-gray-100 border-t border-gray-100 mt-1">
+            <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Faaliyet Giderleri</div>
+          </div>
+          <div className="px-4">
+            <Row label="Toplam Giderler"         value={fmt(-pnl.expenses_total_try)} indent negative={pnl.expenses_total_try > 0} />
+            <Row label="  — İndirilebilir"       value={fmt(-pnl.deductible_expenses_try)} indent />
+            <Row label="  — İndirilemez"         value={fmt(-pnl.non_deductible_expenses_try)} indent />
+            <Row label="Faaliyet Kârı (EBITDA)"  value={fmt(ebitda)}
+              bold positive={ebitda > 0} negative={ebitda < 0} />
+          </div>
+
+          {/* Tax section */}
+          <div className="px-4 py-2 bg-gray-50 border-b border-gray-100 border-t border-gray-100 mt-1">
+            <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Vergi</div>
+          </div>
+          <div className="px-4">
+            <Row label="Kurumlar Vergisi Matrahı" value={fmt(pnl.matrah_try)} indent sub={`%${pnl.corporate_tax_rate} oran`} />
+            <Row label="Kurumlar Vergisi"          value={fmt(-pnl.corporate_tax_try)} indent negative={pnl.corporate_tax_try > 0} />
+          </div>
+
+          {/* Net income */}
+          <div className={`px-4 py-3 border-t-2 ${pnl.net_after_tax_try >= 0 ? 'border-emerald-200 bg-emerald-50' : 'border-red-200 bg-red-50'}`}>
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-black text-gray-900">Dönem Net Kârı</span>
+              <span className={`text-xl font-black tabular-nums ${pnl.net_after_tax_try >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
+                {fmt(pnl.net_after_tax_try)}
+              </span>
+            </div>
+            <div className="text-[10px] text-gray-500 mt-0.5">Net marj: {netMargin}</div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}

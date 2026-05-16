@@ -11,6 +11,9 @@ import { CURRENCIES_EXTENDED, type ExpenseType, type PaymentStatus } from '@/typ
 import { logAudit } from '@/lib/audit'
 import { resolveCompanyId } from '@/lib/resolve-company'
 import { resolveExpenseType } from '@/lib/services/finance-rules'
+import { checkPeriodGuard } from '@/lib/middleware/period-guard'
+import { dualWrite, resolvePeriodId } from '@/lib/services/ledger/dual-write.service'
+import { JournalEntryService } from '@/lib/services/ledger/journal-entry.service'
 
 const ALLOWED_CURRENCIES = CURRENCIES_EXTENDED as readonly string[]
 const ALLOWED_CATEGORIES = [
@@ -100,6 +103,12 @@ export async function POST(req: NextRequest) {
 
     const kdv = Math.min(100, Math.max(0, Number(body.kdv) || 0))
 
+    // Period guard — block writes to locked periods
+    const guard = await checkPeriodGuard(companyId, expense_date, supabase)
+    if (guard.blocked) {
+      return NextResponse.json({ error: guard.reason, code: 'PERIOD_LOCKED', type: 'BUSINESS' }, { status: 422 })
+    }
+
     // partner_id: only relevant when category = 'partner_loan'
     const partnerId = (category === 'partner_loan' && typeof body.partner_id === 'string')
       ? body.partner_id.trim()
@@ -186,6 +195,26 @@ export async function POST(req: NextRequest) {
       action:     'create',
       newData:    { amount, currency, amount_try, category, payment_status: paymentStatus, expense_type: expenseType, expense_date },
     })
+
+    // Dual-write: journal entry (mode-aware: shadow=skip, parallel=async, gl_primary=sync)
+    const periodId = guard.period_id ?? await resolvePeriodId(companyId, expense_date, supabase)
+    const paidFromBank = paymentStatus === 'paid'
+    await dualWrite({
+      companyId,
+      periodId,
+      createdBy: user.id,
+      supabase,
+      buildEntry: () => JournalEntryService.buildExpenseEntry({
+        id:              data.id,
+        expense_date,
+        expense_type:    category,
+        amount_try:      amount_try,
+        kdv_amount_try:  amount_try * (kdv / 100),
+        paid_from_bank:  paidFromBank,
+        description,
+      }),
+    })
+
     return NextResponse.json({ id: data.id }, { status: 201, headers: { [REQUEST_ID_HEADER]: ctx.requestId } })
 
   } catch (err) {

@@ -1,13 +1,15 @@
 export const dynamic = 'force-dynamic'
 
-import { createClient }     from '@/lib/supabase-server'
-import { redirect }         from 'next/navigation'
-import { Sidebar }          from '@/components/layout/Sidebar'
-import { Header }           from '@/components/layout/Header'
-import { resolveUserRole }  from '@/lib/require-role'
+import { createClient }            from '@/lib/supabase-server'
+import { redirect }                from 'next/navigation'
+import { Sidebar }                 from '@/components/layout/Sidebar'
+import { Header }                  from '@/components/layout/Header'
+import { resolveUserRole }         from '@/lib/require-role'
 import type { UserSettings, MemberRole } from '@/types'
-import { resolveCompanyId } from '@/lib/resolve-company'
-import { safeSystemQuery }  from '@/lib/admin-db'
+import { resolveCompanyId }        from '@/lib/resolve-company'
+import { safeSystemQuery }         from '@/lib/admin-db'
+import { WorkspaceProvider }       from '@/lib/workspace-context'
+import { QueryProvider }           from '@/lib/query-provider'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   try {
@@ -19,7 +21,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
       if (authError || !authData?.user) redirect('/auth')
       user = authData.user
     } catch (e) {
-      // redirect() throws internally — re-throw it
       if (e && typeof e === 'object' && 'digest' in e) throw e
       redirect('/auth')
     }
@@ -31,7 +32,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
       companyId = null
     }
 
-    // Load company settings for sidebar + header
     let settings: UserSettings | null = null
     try {
       if (companyId) {
@@ -48,7 +48,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
       // Non-fatal — render with defaults
     }
 
-    // Resolve user role for the primary company (used by Sidebar to show admin items)
     let userRole: MemberRole | null = null
     try {
       if (companyId) {
@@ -58,39 +57,56 @@ export default async function DashboardLayout({ children }: { children: React.Re
       // Non-fatal — sidebar renders without admin items
     }
 
-    const meta       = user.user_metadata ?? {}
-    const firstName  = (String(meta.first_name ?? '')).slice(0, 50)
-    const lastName   = (String(meta.last_name  ?? '')).slice(0, 50)
-    const userName   = [firstName, lastName].filter(Boolean).join(' ') || user.email?.split('@')[0] || 'Kullanıcı'
+    const meta         = user.user_metadata ?? {}
+    const firstName    = (String(meta.first_name ?? '')).slice(0, 50)
+    const lastName     = (String(meta.last_name  ?? '')).slice(0, 50)
+    const userName     = [firstName, lastName].filter(Boolean).join(' ') || user.email?.split('@')[0] || 'Kullanıcı'
     const userInitials = [firstName.slice(0,1), lastName.slice(0,1)].filter(Boolean).join('').toUpperCase() || 'K'
 
+    // Resolve logo URL (signed URL for private storage, or direct URL for public)
+    let logoUrl: string | null = settings?.logo_url ?? null
+    if (logoUrl && !logoUrl.startsWith('http')) {
+      try {
+        const { data: signed } = await supabase.storage
+          .from('logos')
+          .createSignedUrl(logoUrl, 3600)
+        logoUrl = signed?.signedUrl ?? null
+      } catch {
+        logoUrl = null
+      }
+    }
+
     return (
-      <div className="flex min-h-screen bg-gray-50">
-        <Sidebar
+      <QueryProvider>
+        <WorkspaceProvider
+          companyId={companyId}
           companyName={settings?.company_name ?? null}
-          logoUrl={settings?.logo_url ?? null}
-          userInitials={userInitials}
-          userName={userName}
-          userEmail={user.email ?? ''}
+          logoUrl={logoUrl}
           userRole={userRole}
-        />
-        <div className="flex-1 flex flex-col min-w-0">
-          <Header
-            companyName={settings?.company_name ?? null}
-            userName={userName}
-            userEmail={user.email ?? ''}
-            logoUrl={settings?.logo_url ?? null}
-          />
-          <main className="flex-1 px-5 py-4 overflow-auto">
-            {children}
-          </main>
-        </div>
-      </div>
+          userId={user.id}
+          userEmail={user.email ?? null}
+          userName={userName}
+          userInitials={userInitials}
+        >
+          <div className="flex min-h-screen bg-gray-50">
+            <Sidebar />
+            <div className="flex-1 flex flex-col min-w-0">
+              <Header
+                companyName={settings?.company_name ?? null}
+                userName={userName}
+                userEmail={user.email ?? ''}
+                logoUrl={logoUrl}
+              />
+              <main className="flex-1 px-5 py-4 overflow-auto">
+                {children}
+              </main>
+            </div>
+          </div>
+        </WorkspaceProvider>
+      </QueryProvider>
     )
   } catch (e) {
-    // Re-throw redirect errors (Next.js internal mechanism)
     if (e && typeof e === 'object' && 'digest' in e) throw e
-    // Any other error — log and render minimal shell
     console.error('[layout] CRASH:', e instanceof Error ? e.message : String(e))
     return (
       <div className="flex min-h-screen bg-gray-50">

@@ -1,6 +1,8 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import type { MultiScenarioResult, StrategicScenarioResult } from '@/lib/services/simulation-strategic.service'
+import { SEASONAL_WEIGHTS_DEFAULT } from '@/lib/services/simulation-strategic.service'
 import { useSupabase } from '@/lib/hooks/useSupabase'
 import { CURRENCIES, type Currency, type Product } from '@/types'
 import { round2 } from '@/lib/calc'
@@ -322,6 +324,41 @@ export default function SimulationPage() {
     setEqNetProfit(yearly.totalNetProfit)
   }, [yearly.totalNetProfit])
 
+  // ── Strategic simulation state ──────────────────────────────────────────
+  const [activeTab, setActiveTab]           = useState<'strategic' | 'product'>('strategic')
+  const [stratRevenue, setStratRevenue]     = useState('')
+  const [stratModel, setStratModel]         = useState<'uniform' | 'seasonal'>('uniform')
+  const [stratCompensation, setStratCompensation] = useState('')
+  const [stratIncludeDebt, setStratIncludeDebt]   = useState(true)
+  const [stratLoading, setStratLoading]     = useState(false)
+  const [stratResult, setStratResult]       = useState<MultiScenarioResult | null>(null)
+  const [stratError, setStratError]         = useState<string | null>(null)
+
+  async function runStrategicScenario() {
+    const rev = parseFloat(stratRevenue)
+    if (!rev || rev <= 0) { setStratError('Yıllık gelir hedefi giriniz'); return }
+    setStratLoading(true); setStratError(null)
+    try {
+      const res = await fetch('/api/simulation/strategic', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          scenario_name:         'Stratejik Senaryo',
+          revenue_model:         stratModel,
+          target_annual_revenue: rev,
+          monthly_weights:       stratModel === 'seasonal' ? SEASONAL_WEIGHTS_DEFAULT : undefined,
+          monthly_compensation:  parseFloat(stratCompensation) || 0,
+          include_debt:          stratIncludeDebt,
+          period_months:         12,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setStratError(data.error ?? 'Hata'); return }
+      setStratResult(data as MultiScenarioResult)
+    } catch { setStratError('Ağ hatası') }
+    finally { setStratLoading(false) }
+  }
+
   /* ── Render ─────────────────────────────────────────────────────────────── */
   if (loading) return (
     <div className="flex items-center justify-center h-40">
@@ -343,10 +380,108 @@ export default function SimulationPage() {
 
   return (
     <div className="max-w-5xl space-y-5">
-      {/* ── Header ───────────────────────────────────────────────────────────── */}
+      {/* ── Tab header ───────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-black">Simülasyon</h1>
+          <p className="text-sm text-gray-500 mt-0.5">Stratejik plan veya ürün bazlı analiz</p>
+        </div>
+        <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-xl px-1 py-1">
+          {(['strategic', 'product'] as const).map(t => (
+            <button key={t} onClick={() => setActiveTab(t)}
+              className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors ${activeTab === t ? 'bg-primary-600 text-white' : 'text-gray-500 hover:bg-gray-100'}`}>
+              {t === 'strategic' ? 'Stratejik' : 'Ürün'}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ══════════════════════════════════════════════════════════════════════ */}
+      {/* STRATEGIC SIMULATION TAB                                              */}
+      {/* ══════════════════════════════════════════════════════════════════════ */}
+      {activeTab === 'strategic' && (
+        <div className="space-y-4">
+
+          {/* Input Panel */}
+          <div className="bg-white border border-gray-200 rounded-2xl p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">
+                Yıllık Gelir Hedefi (TL)
+              </label>
+              <input
+                type="number" placeholder="e.g. 5000000"
+                value={stratRevenue}
+                onChange={e => setStratRevenue(e.target.value)}
+                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">
+                Gelir Modeli
+              </label>
+              <div className="flex gap-1 mt-1">
+                {(['uniform', 'seasonal'] as const).map(m => (
+                  <button key={m} onClick={() => setStratModel(m)}
+                    className={`flex-1 py-2 rounded-xl text-xs font-semibold border transition-colors ${stratModel === m ? 'bg-primary-600 border-primary-600 text-white' : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'}`}>
+                    {m === 'uniform' ? 'Düz' : 'Mevsimsel'}
+                  </button>
+                ))}
+              </div>
+              {stratModel === 'seasonal' && (
+                <p className="text-[10px] text-gray-400 mt-1">Türkiye Q4 pik ağırlıkları uygulanır</p>
+              )}
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">
+                Aylık Huzur Hakkı (TL)
+              </label>
+              <input
+                type="number" placeholder="0"
+                value={stratCompensation}
+                onChange={e => setStratCompensation(e.target.value)}
+                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
+              />
+            </div>
+            <div className="flex flex-col justify-end gap-3">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={stratIncludeDebt} onChange={e => setStratIncludeDebt(e.target.checked)} className="rounded" />
+                <span className="text-xs text-gray-600 font-semibold">Ortak borç dahil et</span>
+              </label>
+              <button
+                onClick={runStrategicScenario}
+                disabled={stratLoading}
+                className="w-full py-2.5 rounded-xl bg-primary-600 text-white text-sm font-bold hover:bg-primary-700 disabled:opacity-50 transition-colors"
+              >
+                {stratLoading ? 'Hesaplanıyor...' : 'Senaryo Çalıştır'}
+              </button>
+            </div>
+          </div>
+
+          {stratError && (
+            <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700">{stratError}</div>
+          )}
+
+          {stratResult && <StrategicResultPanel result={stratResult} />}
+
+          {!stratResult && !stratError && (
+            <div className="bg-gray-50 border border-gray-100 rounded-2xl px-6 py-10 text-center">
+              <div className="text-3xl mb-3">📊</div>
+              <div className="text-sm font-semibold text-gray-500">Yıllık gelir hedefini girin ve &quot;Senaryo Çalıştır&quot; butonuna tıklayın</div>
+              <div className="text-xs text-gray-400 mt-1">Kötümser / Baz / İyimser: 3 senaryo aynı anda hesaplanır</div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════════════ */}
+      {/* PRODUCT SIMULATION TAB — existing content preserved below             */}
+      {/* ══════════════════════════════════════════════════════════════════════ */}
+      {activeTab === 'product' && (
+      <div className="space-y-5">
+      {/* ── Header (product mode) ────────────────────────────────────────────── */}
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h2 className="text-xl font-black">Ürün Simülasyonu</h2>
           <p className="text-sm text-gray-500 mt-0.5">
             Parametreler aşağıda — sonuçlar hemen burada
           </p>
@@ -823,7 +958,168 @@ export default function SimulationPage() {
         </div>
       </div>
 
-      {/* Partner impact moved above inputs — see PARTNER IMPACT section */}
+      </div>
+      )}
+
+    </div>
+  )
+}
+
+// ── Strategic Result Panel (inline component) ─────────────────────────────────
+
+const PRESSURE_COLORS: Record<string, string> = {
+  healthy:  'bg-emerald-400',
+  strained: 'bg-amber-400',
+  critical: 'bg-orange-500',
+  insolvent:'bg-red-600',
+}
+
+const PRESSURE_LABELS: Record<string, string> = {
+  healthy:  'Sağlıklı',
+  strained: 'Gergin',
+  critical: 'Kritik',
+  insolvent:'İflas',
+}
+
+const SCENARIO_THEME: Record<string, { bg: string; border: string; text: string; badge: string }> = {
+  pessimistic: { bg: 'bg-red-50',     border: 'border-red-200',    text: 'text-red-700',    badge: 'bg-red-100 text-red-600' },
+  base:        { bg: 'bg-gray-50',    border: 'border-gray-200',   text: 'text-gray-700',   badge: 'bg-gray-100 text-gray-600' },
+  optimistic:  { bg: 'bg-emerald-50', border: 'border-emerald-200',text: 'text-emerald-700',badge: 'bg-emerald-100 text-emerald-600' },
+}
+
+const TRY_FMT = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+
+function fmtTRY(n: number): string {
+  const abs  = Math.abs(n)
+  const sign = n < 0 ? '−' : ''
+  if (abs >= 1_000_000) return `${sign}₺${(abs / 1_000_000).toFixed(1)}M`
+  if (abs >= 10_000)    return `${sign}₺${(abs / 1_000).toFixed(0)}K`
+  return `${sign}₺${TRY_FMT.format(abs)}`
+}
+
+function ScenarioCard({ label, s, isRecommended }: { label: string; s: StrategicScenarioResult; isRecommended: boolean }) {
+  const key = label === 'Kötümser' ? 'pessimistic' : label === 'İyimser' ? 'optimistic' : 'base'
+  const theme = SCENARIO_THEME[key]
+  return (
+    <div className={`rounded-2xl border p-4 ${theme.bg} ${theme.border} ${isRecommended ? 'ring-2 ring-primary-400' : ''}`}>
+      <div className="flex items-center justify-between mb-3">
+        <span className={`text-xs font-black uppercase tracking-wider ${theme.text}`}>{label}</span>
+        {isRecommended && (
+          <span className="text-[10px] font-bold bg-primary-100 text-primary-700 px-2 py-0.5 rounded-full">Önerilen</span>
+        )}
+      </div>
+      <div className={`text-2xl font-black tabular-nums ${theme.text}`}>{fmtTRY(s.total_net)}</div>
+      <div className="text-[10px] text-gray-400 mt-0.5">Yıllık Net Kâr</div>
+      <div className="mt-3 grid grid-cols-2 gap-2 text-[10px]">
+        <div><span className="text-gray-400">Gelir </span><span className="font-bold">{fmtTRY(s.total_revenue)}</span></div>
+        <div><span className="text-gray-400">Opex </span><span className="font-bold">{fmtTRY(s.total_opex)}</span></div>
+        <div><span className="text-gray-400">EBITDA </span><span className="font-bold">{fmtTRY(s.total_ebitda)}</span></div>
+        <div><span className="text-gray-400">Ort. DSR </span><span className="font-bold">%{(s.avg_dsr * 100).toFixed(0)}</span></div>
+      </div>
+      {s.runway_end_month && (
+        <div className="mt-2 text-[10px] font-semibold text-red-600 bg-red-50 border border-red-100 rounded-lg px-2 py-1">
+          ⚠ {s.runway_end_month}&apos;da nakit biter
+        </div>
+      )}
+    </div>
+  )
+}
+
+function StrategicResultPanel({ result }: { result: MultiScenarioResult }) {
+  const [showTable, setShowTable] = useState(false)
+  const baseMonths = result.base.months
+
+  return (
+    <div className="space-y-4">
+
+      {/* Recommendation banner */}
+      <div className="bg-primary-50 border border-primary-200 rounded-xl px-4 py-3">
+        <div className="text-[10px] font-black uppercase tracking-widest text-primary-500 mb-1">Öneri</div>
+        <div className="text-sm font-bold text-primary-800">{result.recommendation_reason}</div>
+      </div>
+
+      {/* 3 Scenario cards */}
+      <div className="grid grid-cols-3 gap-3">
+        <ScenarioCard label="Kötümser"  s={result.pessimistic} isRecommended={result.recommended === 'pessimistic'} />
+        <ScenarioCard label="Baz"       s={result.base}        isRecommended={result.recommended === 'base'} />
+        <ScenarioCard label="İyimser"   s={result.optimistic}  isRecommended={result.recommended === 'optimistic'} />
+      </div>
+
+      {/* Debt Pressure Timeline */}
+      {baseMonths.some(m => m.dsr > 0) && (
+        <div className="bg-white border border-gray-200 rounded-2xl p-4">
+          <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">Borç Baskı Takvimi (Baz Senaryo)</div>
+          <div className="flex items-end gap-1 h-10">
+            {baseMonths.map(m => {
+              const heightPct = Math.max(8, Math.min(100, m.dsr * 100 * 2))
+              return (
+                <div key={m.month} title={`${m.label}: DSR %${(m.dsr * 100).toFixed(0)} — ${PRESSURE_LABELS[m.pressure_status]}`}
+                  className="flex-1 flex flex-col items-center justify-end gap-0.5">
+                  <div className={`w-full rounded-sm ${PRESSURE_COLORS[m.pressure_status] ?? 'bg-gray-300'}`}
+                    style={{ height: `${heightPct}%` }} />
+                  <span className="text-[8px] text-gray-400 leading-none truncate w-full text-center">{m.label.split(' ')[0]}</span>
+                </div>
+              )
+            })}
+          </div>
+          <div className="flex items-center gap-3 mt-2">
+            {Object.entries(PRESSURE_LABELS).map(([k, v]) => (
+              <div key={k} className="flex items-center gap-1">
+                <span className={`w-2 h-2 rounded-sm ${PRESSURE_COLORS[k]}`} />
+                <span className="text-[9px] text-gray-400">{v}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Monthly table (collapsible) */}
+      <div className="bg-white border border-gray-200 rounded-2xl">
+        <button
+          onClick={() => setShowTable(t => !t)}
+          className="w-full flex items-center justify-between px-5 py-3 text-left"
+        >
+          <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Aylık Tablo (Baz Senaryo)</span>
+          <span className="text-xs text-gray-400 font-semibold">{showTable ? '▲ Gizle' : '▼ Göster'}</span>
+        </button>
+        {showTable && (
+          <div className="overflow-x-auto border-t border-gray-100">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-gray-50 text-left">
+                  {['Ay','Gelir','Opex','EBITDA','Faiz','Net','Borç Servis','DSR','Basınç'].map(h => (
+                    <th key={h} className="px-4 py-2 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right first:text-left whitespace-nowrap">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {baseMonths.map(m => (
+                  <tr key={m.month} className="hover:bg-gray-50/60">
+                    <td className="px-4 py-2 font-semibold text-gray-700 whitespace-nowrap">{m.label}</td>
+                    <td className="px-4 py-2 text-right tabular-nums">{fmtTRY(m.revenue)}</td>
+                    <td className="px-4 py-2 text-right tabular-nums text-red-600">{fmtTRY(m.opex)}</td>
+                    <td className={`px-4 py-2 text-right tabular-nums font-semibold ${m.ebitda >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>{fmtTRY(m.ebitda)}</td>
+                    <td className="px-4 py-2 text-right tabular-nums">{fmtTRY(m.interest)}</td>
+                    <td className={`px-4 py-2 text-right tabular-nums font-bold ${m.net_income >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>{fmtTRY(m.net_income)}</td>
+                    <td className="px-4 py-2 text-right tabular-nums">{fmtTRY(m.debt_service)}</td>
+                    <td className="px-4 py-2 text-right tabular-nums">{(m.dsr * 100).toFixed(0)}%</td>
+                    <td className="px-4 py-2 text-right">
+                      <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded ${
+                        m.pressure_status === 'healthy'   ? 'bg-emerald-50 text-emerald-700' :
+                        m.pressure_status === 'strained'  ? 'bg-amber-50 text-amber-700'     :
+                        m.pressure_status === 'critical'  ? 'bg-orange-50 text-orange-700'   :
+                                                            'bg-red-50 text-red-700'
+                      }`}>
+                        {PRESSURE_LABELS[m.pressure_status] ?? m.pressure_status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
     </div>
   )

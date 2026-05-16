@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/overdue-update",
+      "schedule": "30 0 * * *"
+    },
+    {
+      "path": "/api/cron/interest-accrual",
+      "schedule": "0 1 * * *"
+    }
+  ]
+}

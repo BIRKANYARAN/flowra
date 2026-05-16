@@ -3,6 +3,9 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
 import { resolveCompanyId } from '@/lib/resolve-company'
+import { checkPeriodGuard } from '@/lib/middleware/period-guard'
+import { dualWrite, resolvePeriodId } from '@/lib/services/ledger/dual-write.service'
+import { JournalEntryService } from '@/lib/services/ledger/journal-entry.service'
 
 const PAYMENT_STATUSES  = ['unpaid', 'paid', 'partial', 'overdue'] as const
 const SHIPMENT_STATUSES = ['pending', 'shipped', 'delivered'] as const
@@ -56,11 +59,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     }
 
     // ── Security: verify the record exists and belongs to this company ────────
-    // Without this check a successful UPDATE that matched 0 rows would still
-    // return { updated: true }, leaking which IDs exist across companies.
     const { data: existing, error: findErr } = await supabase
       .from('sales')
-      .select('id')
+      .select('id, sale_date, total_try, amount_paid_try, revenue_try, kdv_amount_try')
       .eq('id', id)
       .eq('company_id', companyId)
       .is('deleted_at', null)
@@ -71,9 +72,14 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 })
     }
     if (!existing) {
-      // Return 404 for both "not found" and "belongs to another company" —
-      // identical response prevents cross-company record enumeration.
       return NextResponse.json({ error: 'Satış bulunamadı' }, { status: 404 })
+    }
+
+    // Period guard — block writes to locked periods
+    const saleDate = (existing as { sale_date?: string }).sale_date ?? new Date().toISOString().slice(0, 10)
+    const guard = await checkPeriodGuard(companyId, saleDate, supabase)
+    if (guard.blocked) {
+      return NextResponse.json({ error: guard.reason, code: 'PERIOD_LOCKED', type: 'BUSINESS' }, { status: 422 })
     }
 
     // ── Apply update (scoped to company_id for defence-in-depth) ─────────────
@@ -86,6 +92,25 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     if (updateErr) {
       console.error('[sales PATCH] update error:', updateErr.message)
       return NextResponse.json({ error: updateErr.message }, { status: 500 })
+    }
+
+    // Dual-write: journal entry for payment (DR 102 Bankalar, CR 120 Alıcılar)
+    if (body.payment_status === 'paid' && body.amount_paid !== undefined) {
+      const amountPaid = Number(body.amount_paid) || 0
+      if (amountPaid > 0) {
+        const periodId = guard.period_id ?? await resolvePeriodId(companyId, saleDate, supabase)
+        await dualWrite({
+          companyId,
+          periodId,
+          createdBy: user.id,
+          supabase,
+          buildEntry: () => JournalEntryService.buildSalePaymentEntry({
+            sale_id:      id,
+            payment_date: new Date().toISOString().slice(0, 10),
+            amount_try:   amountPaid,
+          }),
+        })
+      }
     }
 
     return NextResponse.json({ updated: true })

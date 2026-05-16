@@ -1,0 +1,69 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient }     from '@/lib/supabase-server'
+import { resolveCompanyId } from '@/lib/resolve-company'
+import { requireRole }      from '@/lib/require-role'
+
+export const dynamic = 'force-dynamic'
+
+// POST /api/periods/[id]/lock — transition closed → locked
+// This is irreversible at API level. Only admin can lock. Explicit confirmation required.
+export async function POST(
+  req: NextRequest,
+  { params }: { params: { id: string } },
+) {
+  try {
+    const supabase = createClient()
+    const { data: authData } = await supabase.auth.getUser()
+    if (!authData?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const companyId = await resolveCompanyId(authData.user.id, supabase)
+    if (!companyId) return NextResponse.json({ error: 'No company' }, { status: 400 })
+
+    try { await requireRole(authData.user.id, companyId, 'admin', supabase) }
+    catch { return NextResponse.json({ error: 'Forbidden' }, { status: 403 }) }
+
+    // Require explicit confirmation body to prevent accidental locks
+    const body = await req.json().catch(() => ({})) as Record<string, unknown>
+    if (body.confirm !== true) {
+      return NextResponse.json({
+        error: 'Kilit işlemini onaylamak için { "confirm": true } gönderin.',
+        code:  'CONFIRMATION_REQUIRED',
+      }, { status: 422 })
+    }
+
+    const { data: period, error: periodErr } = await supabase
+      .from('accounting_periods')
+      .select('id, status')
+      .eq('id', params.id)
+      .eq('company_id', companyId)
+      .maybeSingle()
+
+    if (periodErr || !period) return NextResponse.json({ error: 'Dönem bulunamadı' }, { status: 404 })
+    if (period.status !== 'closed') {
+      return NextResponse.json({
+        error: `Sadece kapalı dönemler kilitlenebilir. Mevcut durum: ${period.status}`,
+        code:  'INVALID_STATUS_TRANSITION',
+      }, { status: 409 })
+    }
+
+    const { error: updateErr } = await supabase
+      .from('accounting_periods')
+      .update({
+        status:    'locked',
+        locked_at: new Date().toISOString(),
+        locked_by: authData.user.id,
+      })
+      .eq('id', params.id)
+      .eq('company_id', companyId)
+
+    if (updateErr) {
+      console.error('[periods/lock] update error:', updateErr)
+      return NextResponse.json({ error: updateErr.message }, { status: 500 })
+    }
+
+    return NextResponse.json({ locked: true, period_id: params.id })
+  } catch (e) {
+    console.error('[periods/lock] error:', e)
+    return NextResponse.json({ error: 'Internal error' }, { status: 500 })
+  }
+}
