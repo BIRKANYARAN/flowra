@@ -22,12 +22,12 @@ export interface CollectionRow {
   due_date: string | null
   amount_paid: number | null
   proforma_id: string | null
-  payment_status: 'unpaid' | 'paid' | 'partial' | 'overdue'
+  payment_status: 'pending' | 'paid' | 'partial' | 'overdue'
   paid_at: string | null
   proformas: { proforma_no: string } | null
 }
 
-type TabKey = 'unpaid' | 'paid' | 'all'
+type TabKey = 'pending' | 'paid' | 'all'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -86,7 +86,7 @@ export default function CollectionsClient({ initialRows }: Props) {
   const [rows,       setRows]       = useState<CollectionRow[]>(initialRows)
   // Start false: initial "unpaid" data comes from server
   const [loading,    setLoading]    = useState(false)
-  const [tab,        setTab]        = useState<TabKey>('unpaid')
+  const [tab,        setTab]        = useState<TabKey>('pending')
   const [patching,   setPatching]   = useState<string | null>(null)
   const [error,      setError]      = useState<string | null>(null)
 
@@ -118,7 +118,7 @@ export default function CollectionsClient({ initialRows }: Props) {
 
   // Only fetch when the user switches away from the initial "unpaid" tab
   useEffect(() => {
-    if (tab !== 'unpaid') {
+    if (tab !== 'pending') {
       load(tab)
     } else {
       // Refresh unpaid when returning to it (data may have changed via mutations)
@@ -152,7 +152,7 @@ export default function CollectionsClient({ initialRows }: Props) {
         } : r))
       } else {
         // Remove from filtered view if no longer belongs
-        if (tab === 'unpaid' && status === 'paid') {
+        if (tab === 'pending' && status === 'paid') {
           setRows(prev => prev.filter(r => r.id !== id))
         } else if (tab === 'paid' && status !== 'paid') {
           setRows(prev => prev.filter(r => r.id !== id))
@@ -200,7 +200,7 @@ export default function CollectionsClient({ initialRows }: Props) {
   const overdueTotal  = overdueRows.reduce((s, r) => s + (r.total_try ?? 0), 0)
 
   const TABS: { key: TabKey; label: string }[] = [
-    { key: 'unpaid', label: 'Bekleyenler' },
+    { key: 'pending', label: 'Bekleyenler' },
     { key: 'paid',   label: 'Ödenenler'   },
     { key: 'all',    label: 'Tümü'        },
   ]
@@ -314,7 +314,7 @@ export default function CollectionsClient({ initialRows }: Props) {
             {row.payment_status === 'paid' && (
               <button
                 disabled={isPending}
-                onClick={() => patch(row.id, 'unpaid')}
+                onClick={() => patch(row.id, 'pending')}
                 className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium bg-gray-50 text-gray-500 hover:bg-gray-100 border border-gray-200 transition-colors disabled:opacity-50"
               >
                 ↩ Geri Al
@@ -439,7 +439,7 @@ export default function CollectionsClient({ initialRows }: Props) {
           <div className="py-16 text-center">
             <div className="text-2xl mb-2">🎉</div>
             <div className="text-sm text-gray-400">
-              {tab === 'unpaid' ? 'Bekleyen tahsilat yok' : 'Bu filtrede kayıt yok'}
+              {tab === 'pending' ? 'Bekleyen tahsilat yok' : 'Bu filtrede kayıt yok'}
             </div>
           </div>
         ) : (

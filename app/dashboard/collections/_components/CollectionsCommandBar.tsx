@@ -44,7 +44,7 @@ export async function CollectionsCommandBar({ companyId }: Props) {
       .select('payment_status, total_try, amount_paid')
       .eq('company_id', companyId)
       .is('deleted_at', null)
-      .in('payment_status', ['unpaid', 'partial', 'overdue']),
+      .in('payment_status', ['pending', 'partial', 'overdue']),
 
     // Top urgent: oldest due_date first (max 3)
     supabase
@@ -52,7 +52,7 @@ export async function CollectionsCommandBar({ companyId }: Props) {
       .select('id, customer_name, total_try, amount_paid, due_date, payment_status')
       .eq('company_id', companyId)
       .is('deleted_at', null)
-      .in('payment_status', ['unpaid', 'partial', 'overdue'])
+      .in('payment_status', ['pending', 'partial', 'overdue'])
       .not('due_date', 'is', null)
       .lt('due_date', today)
       .order('due_date', { ascending: true })

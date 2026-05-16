@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
 import { resolveCompanyId } from '@/lib/resolve-company'
 
-const ALLOWED_STATUSES = ['unpaid', 'paid', 'partial', 'overdue'] as const
+const ALLOWED_STATUSES = ['pending', 'paid', 'partial', 'overdue', 'cancelled'] as const
 type PaymentStatus = typeof ALLOWED_STATUSES[number]
 
 // ── GET ───────────────────────────────────────────────────────────────────────
@@ -53,7 +53,7 @@ export async function GET(req: NextRequest) {
           .limit(200)
 
         return NextResponse.json(
-          (fallback ?? []).map(r => ({ ...r, payment_status: 'unpaid', paid_at: null }))
+          (fallback ?? []).map(r => ({ ...r, payment_status: 'pending', paid_at: null }))
         )
       }
       return NextResponse.json({ error: error.message }, { status: 500 })
@@ -89,7 +89,7 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: 'id zorunludur' }, { status: 422 })
 
     if (!payment_status || !ALLOWED_STATUSES.includes(payment_status as PaymentStatus))
-      return NextResponse.json({ error: 'Geçerli payment_status: unpaid | paid | partial | overdue' }, { status: 422 })
+      return NextResponse.json({ error: 'Geçerli payment_status: pending | paid | partial | overdue | cancelled' }, { status: 422 })
 
     const now = new Date().toISOString()
     const patch: Record<string, unknown> = {

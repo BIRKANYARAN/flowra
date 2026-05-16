@@ -93,7 +93,7 @@ export async function POST(_req: NextRequest) {
       .select('id, customer_name, total_try, payment_status, created_at')
       .eq('company_id', companyId)
       .is('deleted_at', null)
-      .in('payment_status', ['unpaid', 'partial', 'overdue'])
+      .in('payment_status', ['pending', 'partial', 'overdue'])
       .lt('created_at', thirtyDaysAgo)
       .order('created_at', { ascending: true })
       .limit(50),
@@ -113,7 +113,7 @@ export async function POST(_req: NextRequest) {
       .select('total_try')
       .eq('company_id', companyId)
       .is('deleted_at', null)
-      .in('payment_status', ['unpaid', 'partial'])
+      .in('payment_status', ['pending', 'partial'])
       .limit(200),
 
     // E. Active recurring expenses — for monthly commitment (projected burn)
@@ -132,7 +132,7 @@ export async function POST(_req: NextRequest) {
       .select('total_try, created_at')
       .eq('company_id', companyId)
       .is('deleted_at', null)
-      .in('payment_status', ['unpaid', 'partial', 'overdue'])
+      .in('payment_status', ['pending', 'partial', 'overdue'])
       .lt('created_at', new Date(Date.now() - 60 * 86_400_000).toISOString()),
   ])
 

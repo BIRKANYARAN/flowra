@@ -135,7 +135,7 @@ export async function GET(req: NextRequest) {
     .select('total_try, created_at')
     .eq('company_id', companyId)
     .is('deleted_at', null)
-    .in('payment_status', ['unpaid', 'partial', 'overdue'])
+    .in('payment_status', ['pending', 'partial', 'overdue'])
     .gte('created_at', ymStart(startYM))
     .lte('created_at', ymEnd(endYM) + 'T23:59:59Z')
 

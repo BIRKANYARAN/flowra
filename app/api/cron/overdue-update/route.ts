@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     const { data: stale, error: fetchErr } = await supabase
       .from('sales')
       .select('id, company_id, customer_name, total_try, due_date')
-      .in('payment_status', ['unpaid', 'partial'])
+      .in('payment_status', ['pending', 'partial'])
       .lt('due_date', today)
       .is('deleted_at', null)
       .not('due_date', 'is', null)
@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
       action:        'update',
       resource_type: 'sale',
       resource_id:   s.id,
-      old_values:    { payment_status: 'unpaid' },
+      old_values:    { payment_status: 'pending' },
       new_values:    { payment_status: 'overdue' },
       description:   `Otomatik gecikmiş işaretleme — vade ${s.due_date}`,
     }))

@@ -15,6 +15,18 @@ import { ExpensesContent } from './_tabs/ExpensesContent'
 import { CatalogContent }  from './_tabs/CatalogContent'
 import { StockContent }    from './_tabs/StockContent'
 
+function TabSkeleton() {
+  return (
+    <div className="space-y-3 animate-pulse">
+      <div className="grid grid-cols-4 gap-3">
+        {[...Array(4)].map((_, i) => <div key={i} className="bg-gray-100 rounded-xl h-16" />)}
+      </div>
+      <div className="bg-gray-100 rounded-xl h-48" />
+      <div className="bg-gray-100 rounded-xl h-32" />
+    </div>
+  )
+}
+
 const VALID_TABS = OPERATIONS_TABS.map(t => t.key) as string[]
 const TABS       = OPERATIONS_TABS.map(t => ({ key: t.key, label: t.label }))
 
@@ -46,7 +58,7 @@ export default async function OperationsPage({ searchParams }: PageProps) {
     <div className="max-w-5xl space-y-4">
       <HubTabNav tabs={TABS} activeTab={activeTab} basePath="/dashboard/operations" />
 
-      <Suspense fallback={<div className="p-8 text-sm text-gray-400">Yükleniyor…</div>}>
+      <Suspense fallback={<TabSkeleton />}>
         {activeTab === 'expenses' && <ExpensesContent companyId={companyId} />}
         {activeTab === 'catalog' && <CatalogContent companyId={companyId} userId={userId} />}
         {activeTab === 'stock'   && <StockContent   companyId={companyId} />}

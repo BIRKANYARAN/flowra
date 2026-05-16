@@ -146,7 +146,7 @@ export async function getCashflowTimeline(
         .gte('created_at', _ymStart(startYM)).lte('created_at', _ymEnd(endYM) + 'T23:59:59Z'),
       supabase.from('sales').select('total_try, created_at')
         .eq('company_id', companyId).is('deleted_at', null)
-        .in('payment_status', ['unpaid', 'partial', 'overdue'])
+        .in('payment_status', ['pending', 'partial', 'overdue'])
         .gte('created_at', _ymStart(startYM)).lte('created_at', _ymEnd(endYM) + 'T23:59:59Z'),
       supabase.from('sales').select('total_try, paid_at')
         .eq('company_id', companyId).eq('payment_status', 'paid')
@@ -407,7 +407,7 @@ export async function getCfoMetrics(
     // 7. Outstanding receivables with aging
     supabase.from('sales').select('total_try, created_at, due_date, amount_paid')
       .eq('company_id', companyId).is('deleted_at', null)
-      .in('payment_status', ['unpaid', 'partial', 'overdue']),
+      .in('payment_status', ['pending', 'partial', 'overdue']),
 
     // 8. Period invoiced
     supabase.from('sales').select('total_try')
@@ -609,7 +609,7 @@ export async function getRunwayForecast(
 
     supabase.from('sales').select('total_try, created_at, due_date, amount_paid')
       .eq('company_id', companyId).is('deleted_at', null)
-      .in('payment_status', ['unpaid', 'partial', 'overdue']),
+      .in('payment_status', ['pending', 'partial', 'overdue']),
 
     supabase.from('sales').select('total_try')
       .eq('company_id', companyId).is('deleted_at', null)

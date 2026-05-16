@@ -11,6 +11,18 @@ import { createClient } from '@/lib/supabase-server'
 import { resolveCompanyId } from '@/lib/resolve-company'
 import { HubTabNav } from '@/app/dashboard/_shared/HubTabNav'
 import { COMMERCIAL_TABS } from '@/lib/nav-config'
+
+function TabSkeleton() {
+  return (
+    <div className="space-y-3 animate-pulse">
+      <div className="grid grid-cols-4 gap-3">
+        {[...Array(4)].map((_, i) => <div key={i} className="bg-gray-100 rounded-xl h-16" />)}
+      </div>
+      <div className="bg-gray-100 rounded-xl h-48" />
+      <div className="bg-gray-100 rounded-xl h-32" />
+    </div>
+  )
+}
 import { PipelineContent }    from './_tabs/PipelineContent'
 import { ProformasContent }   from './_tabs/ProformasContent'
 import { SalesContent }       from './_tabs/SalesContent'
@@ -48,7 +60,7 @@ export default async function CommercialPage({ searchParams }: PageProps) {
     <div className="max-w-5xl space-y-4">
       <HubTabNav tabs={TABS} activeTab={activeTab} basePath="/dashboard/commercial" />
 
-      <Suspense fallback={<div className="p-8 text-sm text-gray-400">Yükleniyor…</div>}>
+      <Suspense fallback={<TabSkeleton />}>
         {activeTab === 'pipeline'    && <PipelineContent    companyId={companyId} />}
         {activeTab === 'proformas'   && <ProformasContent   companyId={companyId} />}
         {activeTab === 'sales'       && <SalesContent       companyId={companyId} />}

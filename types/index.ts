@@ -162,7 +162,7 @@ export interface ProformaItem {
   sort_order:       number
 }
 
-export type PaymentStatus  = 'unpaid' | 'paid' | 'partial' | 'overdue'
+export type PaymentStatus  = 'pending' | 'paid' | 'partial' | 'overdue' | 'cancelled'
 export type ShipmentStatus = 'pending' | 'shipped' | 'delivered'
 
 export interface Sale {

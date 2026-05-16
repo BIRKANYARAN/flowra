@@ -48,7 +48,7 @@ export async function GET() {
     .select('total_try, created_at')
     .eq('company_id', companyId)
     .is('deleted_at', null)
-    .in('payment_status', ['unpaid', 'partial', 'overdue'])
+    .in('payment_status', ['pending', 'partial', 'overdue'])
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })

@@ -21,7 +21,7 @@ const ALLOWED_CATEGORIES = [
   'interest','board_fee','principal','dividend','partner_loan',
   'other',
 ]
-const ALLOWED_PAYMENT_STATUSES: readonly PaymentStatus[] = ['unpaid', 'paid', 'partial', 'overdue']
+const ALLOWED_PAYMENT_STATUSES: readonly PaymentStatus[] = ['pending', 'paid', 'partial', 'overdue', 'cancelled']
 const ALLOWED_EXPENSE_TYPES: readonly ExpenseType[] = [
   'operational',
   'fixed',

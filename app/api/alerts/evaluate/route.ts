@@ -32,7 +32,7 @@ export async function GET(_req: NextRequest) {
       supabase.from('sales')
         .select('total_try, amount_paid, created_at')
         .eq('company_id', companyId)
-        .in('payment_status', ['unpaid', 'partial', 'overdue'])
+        .in('payment_status', ['pending', 'partial', 'overdue'])
         .is('deleted_at', null),
       supabase.from('accounting_periods')
         .select('status, period_end')

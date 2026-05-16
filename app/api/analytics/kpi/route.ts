@@ -105,7 +105,7 @@ export async function GET(req: NextRequest) {
       .select('total_try')
       .eq('company_id', companyId)
       .is('deleted_at', null)
-      .in('payment_status', ['unpaid', 'partial', 'overdue']),
+      .in('payment_status', ['pending', 'partial', 'overdue']),
 
     // 4. Total operational expenses in period — paid only, excludes financing flows
     supabase
@@ -159,7 +159,7 @@ export async function GET(req: NextRequest) {
       .select('total_try')
       .eq('company_id', companyId)
       .is('deleted_at', null)
-      .in('payment_status', ['unpaid', 'partial', 'overdue'])
+      .in('payment_status', ['pending', 'partial', 'overdue'])
       .lt('created_at', thirtyDaysAgo),
 
     // 10. Active recurring burn expenses for adjusted_burn_rate

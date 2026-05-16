@@ -7,7 +7,7 @@ import { checkPeriodGuard } from '@/lib/middleware/period-guard'
 import { dualWrite, resolvePeriodId } from '@/lib/services/ledger/dual-write.service'
 import { JournalEntryService } from '@/lib/services/ledger/journal-entry.service'
 
-const PAYMENT_STATUSES  = ['unpaid', 'paid', 'partial', 'overdue'] as const
+const PAYMENT_STATUSES  = ['pending', 'paid', 'partial', 'overdue', 'cancelled'] as const
 const SHIPMENT_STATUSES = ['pending', 'shipped', 'delivered'] as const
 
 // ── PATCH — update payment_status and/or shipment_status ─────────────────────

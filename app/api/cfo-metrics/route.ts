@@ -151,7 +151,7 @@ export async function GET(req: NextRequest) {
         .select('total_try, created_at, due_date, amount_paid')
         .eq('company_id', companyId)
         .is('deleted_at', null)
-        .in('payment_status', ['unpaid', 'partial', 'overdue']),
+        .in('payment_status', ['pending', 'partial', 'overdue']),
 
       // 8. Period invoiced (total_try for all sales in period by created_at)
       supabase

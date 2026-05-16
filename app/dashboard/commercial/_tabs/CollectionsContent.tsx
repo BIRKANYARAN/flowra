@@ -25,7 +25,7 @@ export async function CollectionsContent({ companyId }: Props) {
     .select('id, customer_name, currency, total, total_try, created_at, due_date, amount_paid, proforma_id, payment_status, paid_at, proformas(proforma_no)')
     .eq('company_id', companyId)
     .is('deleted_at', null)
-    .in('payment_status', ['unpaid', 'partial', 'overdue'])
+    .in('payment_status', ['pending', 'partial', 'overdue'])
     .order('created_at', { ascending: false })
     .range(0, 49)
 

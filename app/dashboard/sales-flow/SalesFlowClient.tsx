@@ -88,7 +88,7 @@ function PfBadge({ status }: { status: string }) {
 }
 
 function PayBadge({ status }: { status: string | null }) {
-  const s = status ?? 'unpaid'
+  const s = status ?? 'pending'
   return (
     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg ${PAYMENT_COLOR[s] ?? 'bg-gray-100 text-gray-500'}`}>
       {PAYMENT_LABEL[s] ?? s}

@@ -3,15 +3,11 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase-server'
 import { normalizeSaleRow, type NormalizedSaleRow } from '@/lib/normalize'
+import { formatTRY, fmtDate } from '@/lib/format'
 
 interface Props { companyId: string }
 
-const _salesFmt = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-function fmt(n: number) { return _salesFmt.format(Number(n) || 0) + ' TL' }
-function fmtDate(d: string) {
-  try { return new Date(d).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' }) }
-  catch { return d }
-}
+function fmt(n: number) { return formatTRY(Number(n) || 0) }
 
 export async function SalesContent({ companyId }: Props) {
   const supabase = createClient()

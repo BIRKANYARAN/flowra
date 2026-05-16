@@ -51,7 +51,7 @@ export class BalanceSheetService {
         .select('total_try, amount_paid')
         .eq('company_id', companyId)
         .is('deleted_at', null)
-        .in('payment_status', ['unpaid', 'partial', 'overdue'])
+        .in('payment_status', ['pending', 'partial', 'overdue'])
         .lte('created_at', asOfTs),
 
       // Inventory: FIFO stock value (qty_remaining × entry_cost_try)

@@ -261,7 +261,7 @@ export default function CustomerDetailPage() {
                     {/* Payment */}
                     <div className="flex items-center gap-1">
                       <span className="text-gray-400 mr-1">Ödeme:</span>
-                      {(['unpaid', 'partial', 'paid', 'overdue'] as const).map(st => (
+                      {(['pending', 'partial', 'paid', 'overdue'] as const).map(st => (
                         <button
                           key={st}
                           disabled={busy || s.payment_status === st}

@@ -145,6 +145,7 @@ const STATUS_MAP: Record<string, { label: string; cls: string }> = {
   paid:         { label: 'Ödendi',       cls: 'bg-emerald-50 text-emerald-700' },
   partial:      { label: 'Kısmi',        cls: 'bg-amber-50 text-amber-700' },
   unpaid:       { label: 'Bekliyor',     cls: 'bg-amber-50 text-amber-700' },
+  pending:      { label: 'Bekliyor',     cls: 'bg-amber-50 text-amber-700' },
   overdue:      { label: 'Gecikmiş',     cls: 'bg-red-50 text-red-700' },
   completed:    { label: 'Tamamlandı',   cls: 'bg-emerald-50 text-emerald-700' },
   cancelled:    { label: 'İptal',        cls: 'bg-gray-100 text-gray-500' },

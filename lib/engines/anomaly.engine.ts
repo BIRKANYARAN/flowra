@@ -215,7 +215,7 @@ export function scoreCustomerRisk(payments: CustomerPayment[]): CustomerRisk[] {
     let overdueCount= 0
 
     for (const t of txns) {
-      if (t.payment_status === 'overdue' || t.payment_status === 'unpaid') {
+      if (t.payment_status === 'overdue' || t.payment_status === 'pending') {
         overdueCount++
         overdueAmt += t.total_try
       }
