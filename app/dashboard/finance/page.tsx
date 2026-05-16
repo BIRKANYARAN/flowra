@@ -1,0 +1,149 @@
+export const dynamic = 'force-dynamic'
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// /dashboard/finance — Financial Intelligence Hub
+//
+// Route: /dashboard/finance?tab=[tab_id]
+//
+// Tabs:
+//   overview  → Genel Finans   — CEO liquidity cockpit
+//   pnl       → Kâr / Zarar   — Accrual P&L statement
+//   balance   → Bilanço        — Balance sheet
+//   cashflow  → Nakit Akışı   — Cashflow timeline + scenario
+//   tax       → Vergi          — KDV + geçici vergi calendar
+//   risks     → Riskler        — AR aging + concentration
+//   forecast  → Tahmin         — Runway projection
+//   quarterly → Çeyreklik      — YTD + quarter grid
+//   cfo       → CFO            — CFO cockpit + period management
+//
+// Data: each tab is a full RSC that loads its own data.
+// Auth: resolved once here, passed as props to all tabs.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+import { redirect }          from 'next/navigation'
+import { Suspense }          from 'react'
+import { createClient }      from '@/lib/supabase-server'
+import { resolveCompanyId }  from '@/lib/resolve-company'
+import { UnifiedTabNav }     from '@/app/dashboard/_shared/UnifiedTabNav'
+
+import { OverviewTab }   from './_tabs/OverviewTab'
+import { PnlTab }        from './_tabs/PnlTab'
+import { BalanceTab }    from './_tabs/BalanceTab'
+import { CashflowTab }   from './_tabs/CashflowTab'
+import { TaxTab }        from './_tabs/TaxTab'
+import { RisksTab }      from './_tabs/RisksTab'
+import { ForecastTab }   from './_tabs/ForecastTab'
+import { QuarterlyTab }  from './_tabs/QuarterlyTab'
+import { CFOTab }        from './_tabs/CFOTab'
+
+// ── Valid tabs ─────────────────────────────────────────────────────────────────
+
+type FinanceTab = 'overview' | 'pnl' | 'balance' | 'cashflow' | 'tax' | 'risks' | 'forecast' | 'quarterly' | 'cfo'
+
+const VALID_TABS: FinanceTab[] = [
+  'overview', 'pnl', 'balance', 'cashflow', 'tax', 'risks', 'forecast', 'quarterly', 'cfo',
+]
+
+const FINANCE_NAV_TABS = [
+  { key: 'overview',  label: 'Genel'      },
+  { key: 'pnl',       label: 'Kâr/Zarar'  },
+  { key: 'balance',   label: 'Bilanço'    },
+  { key: 'cashflow',  label: 'Nakit'      },
+  { key: 'tax',       label: 'Vergi'      },
+  { key: 'risks',     label: 'Riskler'    },
+  { key: 'forecast',  label: 'Tahmin'     },
+  { key: 'quarterly', label: 'Çeyreklik'  },
+  { key: 'cfo',       label: 'CFO'        },
+]
+
+const TAB_META: Record<FinanceTab, { title: string; sub: string }> = {
+  overview:  { title: 'Genel Finans',   sub: 'Likidite · Tahsilat · Risk Matrisi · Nakit Projeksiyonu' },
+  pnl:       { title: 'Kâr / Zarar',   sub: 'Ciro · Brüt Kâr · EBITDA · Vergi Sonrası Net' },
+  balance:   { title: 'Bilanço',        sub: 'Varlıklar · Yükümlülükler · Özsermaye' },
+  cashflow:  { title: 'Nakit Akışı',   sub: '12 aylık tahsilat · gider · baskı haritası · senaryo' },
+  tax:       { title: 'Vergi Merkezi',  sub: 'KDV · Geçici Vergi · Kurumlar Vergisi · Matrah Analizi' },
+  risks:     { title: 'Risk Analizi',   sub: 'Alacak yaşlandırma · Müşteri konsantrasyonu · HHI Endeksi' },
+  forecast:  { title: 'Nakit Tahmini', sub: 'Runway projeksiyonu · 12 ay nakit akışı · Senaryo analizi' },
+  quarterly: { title: 'Çeyreklik CFO', sub: 'YTD P&L · Çeyreklik performans · Vergi takvimi · Aylık detay' },
+  cfo:       { title: 'CFO Cockpit',   sub: 'Muhasebe doğruluğu · Dönem yönetimi · Mizan · Uzlaştırma' },
+}
+
+// ── Loading skeleton ───────────────────────────────────────────────────────────
+
+function TabSkeleton() {
+  return (
+    <div className="space-y-3 animate-pulse">
+      <div className="grid grid-cols-4 gap-3">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="bg-gray-100 rounded-xl h-16" />
+        ))}
+      </div>
+      <div className="bg-gray-100 rounded-xl h-48" />
+      <div className="bg-gray-100 rounded-xl h-32" />
+    </div>
+  )
+}
+
+// ── Page ──────────────────────────────────────────────────────────────────────
+
+interface PageProps {
+  searchParams: Promise<{ tab?: string }>
+}
+
+export default async function FinancePage({ searchParams }: PageProps) {
+
+  // ── Auth ──────────────────────────────────────────────────────────────────────
+  const supabase = createClient()
+  let userId: string
+
+  try {
+    const { data, error } = await supabase.auth.getUser()
+    if (error || !data?.user) redirect('/auth')
+    userId = data.user.id
+  } catch (e) {
+    if (e && typeof e === 'object' && 'digest' in e) throw e
+    redirect('/auth')
+  }
+
+  let companyId: string
+  try { companyId = await resolveCompanyId(userId, supabase) }
+  catch { redirect('/auth') }
+
+  // ── Tab resolution ─────────────────────────────────────────────────────────
+  const params    = await searchParams
+  const rawTab    = params.tab ?? 'overview'
+  const activeTab = (VALID_TABS.includes(rawTab as FinanceTab) ? rawTab : 'overview') as FinanceTab
+  const meta      = TAB_META[activeTab]
+  const tabProps  = { userId, companyId }
+
+  // ── Render ────────────────────────────────────────────────────────────────────
+  return (
+    <div className="flex flex-col gap-4 max-w-6xl">
+
+      {/* ── Tab navigation ────────────────────────────────────────────────────── */}
+      <UnifiedTabNav tabs={FINANCE_NAV_TABS} activeTab={activeTab} basePath="/dashboard/finance" />
+
+      {/* ── Tab header ────────────────────────────────────────────────────────── */}
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div>
+          <h1 className="text-lg font-black text-gray-900 tracking-tight">{meta.title}</h1>
+          <p className="text-xs text-gray-400 mt-0.5">{meta.sub}</p>
+        </div>
+      </div>
+
+      {/* ── Active tab content ────────────────────────────────────────────────── */}
+      <Suspense fallback={<TabSkeleton />}>
+        {activeTab === 'overview'  && <OverviewTab  {...tabProps} />}
+        {activeTab === 'pnl'       && <PnlTab       {...tabProps} />}
+        {activeTab === 'balance'   && <BalanceTab   {...tabProps} />}
+        {activeTab === 'cashflow'  && <CashflowTab  {...tabProps} />}
+        {activeTab === 'tax'       && <TaxTab       {...tabProps} />}
+        {activeTab === 'risks'     && <RisksTab     {...tabProps} />}
+        {activeTab === 'forecast'  && <ForecastTab  {...tabProps} />}
+        {activeTab === 'quarterly' && <QuarterlyTab {...tabProps} />}
+        {activeTab === 'cfo'       && <CFOTab       {...tabProps} />}
+      </Suspense>
+
+    </div>
+  )
+}

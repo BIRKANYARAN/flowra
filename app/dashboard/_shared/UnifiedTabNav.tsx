@@ -1,0 +1,62 @@
+// ── UnifiedTabNav — single tab navigation component for all hub centers ────────
+//
+// Used by: Finance, Commercial, Operations, Planning, Partners hubs.
+// Server component — no 'use client'. Uses <Link> for navigation.
+//
+// Props:
+//   tabs      — array of { key, label, badge? }
+//   activeTab — currently selected tab key (from server searchParams)
+//   basePath  — e.g. "/dashboard/finance" — href = basePath?tab=key
+
+import Link from 'next/link'
+
+export interface UnifiedTab {
+  key:    string
+  label:  string
+  badge?: number   // optional count badge (0 = hidden)
+}
+
+interface Props {
+  tabs:      UnifiedTab[]
+  activeTab: string
+  basePath:  string
+}
+
+export function UnifiedTabNav({ tabs, activeTab, basePath }: Props) {
+  return (
+    <div className="flex items-center gap-0.5 border-b border-gray-200 overflow-x-auto scrollbar-none">
+      {tabs.map(tab => {
+        const isActive  = tab.key === activeTab
+        const showBadge = tab.badge !== undefined && tab.badge > 0
+        return (
+          <Link
+            key={tab.key}
+            href={`${basePath}?tab=${tab.key}`}
+            className={`
+              relative flex items-center gap-1.5 px-3 py-2 text-xs font-semibold
+              transition-colors whitespace-nowrap flex-shrink-0
+              ${isActive
+                ? 'text-primary-700 border-b-2 border-primary-600 -mb-px'
+                : 'text-gray-500 hover:text-gray-800 rounded-t-md hover:bg-gray-50'
+              }
+            `}
+          >
+            {tab.label}
+            {showBadge && (
+              <span className={`
+                inline-flex items-center justify-center min-w-[16px] h-4 px-1
+                text-[9px] font-black rounded-full leading-none
+                ${isActive
+                  ? 'bg-primary-100 text-primary-700'
+                  : 'bg-gray-200 text-gray-600'
+                }
+              `}>
+                {tab.badge}
+              </span>
+            )}
+          </Link>
+        )
+      })}
+    </div>
+  )
+}
