@@ -33,7 +33,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       if (typeof body.payment_status !== 'string' ||
           !PAYMENT_STATUSES.includes(body.payment_status as typeof PAYMENT_STATUSES[number])) {
         return NextResponse.json(
-          { error: 'Geçerli payment_status: unpaid | paid | partial | overdue' },
+          { error: 'Geçerli payment_status: pending | paid | partial | overdue | cancelled' },
           { status: 422 },
         )
       }

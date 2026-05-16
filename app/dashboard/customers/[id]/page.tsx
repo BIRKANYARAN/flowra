@@ -66,10 +66,11 @@ const STATUS_PROFORMA: Record<string, { label: string; cls: string }> = {
 }
 
 const STATUS_PAYMENT: Record<string, { label: string; cls: string }> = {
-  unpaid:  { label: 'Ödenmedi', cls: 'bg-red-100 text-red-600' },
-  paid:    { label: 'Ödendi',   cls: 'bg-green-100 text-green-700' },
-  partial: { label: 'Kısmi',    cls: 'bg-yellow-100 text-yellow-700' },
-  overdue: { label: 'Gecikti',  cls: 'bg-orange-100 text-orange-700' },
+  pending:   { label: 'Bekliyor', cls: 'bg-amber-100 text-amber-700' },
+  paid:      { label: 'Ödendi',   cls: 'bg-green-100 text-green-700' },
+  partial:   { label: 'Kısmi',    cls: 'bg-yellow-100 text-yellow-700' },
+  overdue:   { label: 'Gecikti',  cls: 'bg-orange-100 text-orange-700' },
+  cancelled: { label: 'İptal',    cls: 'bg-gray-100 text-gray-500' },
 }
 
 const STATUS_SHIPMENT: Record<string, { label: string; cls: string }> = {

@@ -58,14 +58,15 @@ function isOverdue(row: CollectionRow): boolean {
 }
 
 const STATUS_META = {
-  unpaid:  { label: 'Bekliyor',  bg: 'bg-amber-50',   text: 'text-amber-700',  border: 'border-amber-200'  },
-  paid:    { label: 'Ödendi',    bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
-  partial: { label: 'Kısmi',     bg: 'bg-blue-50',    text: 'text-blue-700',   border: 'border-blue-200'   },
-  overdue: { label: 'Gecikmiş',  bg: 'bg-red-50',     text: 'text-red-700',    border: 'border-red-200'    },
+  pending:   { label: 'Bekliyor',  bg: 'bg-amber-50',   text: 'text-amber-700',  border: 'border-amber-200'  },
+  paid:      { label: 'Ödendi',    bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
+  partial:   { label: 'Kısmi',     bg: 'bg-blue-50',    text: 'text-blue-700',   border: 'border-blue-200'   },
+  overdue:   { label: 'Gecikmiş',  bg: 'bg-red-50',     text: 'text-red-700',    border: 'border-red-200'    },
+  cancelled: { label: 'İptal',     bg: 'bg-gray-50',    text: 'text-gray-500',   border: 'border-gray-200'   },
 } as const
 
 function StatusBadge({ status }: { status: string }) {
-  const m = STATUS_META[status as keyof typeof STATUS_META] ?? STATUS_META.unpaid
+  const m = STATUS_META[status as keyof typeof STATUS_META] ?? STATUS_META.pending
   return (
     <span className={`inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-bold border ${m.bg} ${m.text} ${m.border}`}>
       {m.label}

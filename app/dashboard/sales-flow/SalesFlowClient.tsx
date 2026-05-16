@@ -71,11 +71,12 @@ const STATUS_COLOR: Record<ProformaStatus, string> = {
   converted: 'bg-primary-100 text-primary-700',
 }
 const PAYMENT_COLOR: Record<string, string> = {
-  unpaid: 'bg-orange-100 text-orange-600', paid: 'bg-emerald-100 text-emerald-700',
+  pending: 'bg-amber-100 text-amber-700', paid: 'bg-emerald-100 text-emerald-700',
   partial: 'bg-yellow-100 text-yellow-700', overdue: 'bg-red-100 text-red-600',
+  cancelled: 'bg-gray-100 text-gray-500',
 }
 const PAYMENT_LABEL: Record<string, string> = {
-  unpaid: 'Bekliyor', paid: 'Ödendi', partial: 'Kısmi', overdue: 'Gecikmiş',
+  pending: 'Bekliyor', paid: 'Ödendi', partial: 'Kısmi', overdue: 'Gecikmiş', cancelled: 'İptal',
 }
 
 function PfBadge({ status }: { status: string }) {
