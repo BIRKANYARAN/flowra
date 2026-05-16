@@ -59,23 +59,15 @@ async function _middlewareInner(request: NextRequest): Promise<NextResponse> {
     ? existingId
     : generateRequestId()
 
-  // ── 2. Create response first — Supabase setAll() writes cookies onto it ───
-  // We forward the request ID header so server components and route handlers
-  // can read it via next/headers without us needing to mutate request.headers.
-  const response = NextResponse.next({
-    request: {
-      headers: (() => {
-        const h = new Headers(request.headers)
-        h.set(REQUEST_ID_HEADER, requestId)
-        return h
-      })(),
-    },
-  })
+  // ── 2. Build the initial forwarded response ────────────────────────────────
+  // `response` is declared `let` so that setAll() can recreate it with updated
+  // request cookies — the only way server components see refreshed tokens.
+  const baseHeaders = new Headers(request.headers)
+  baseHeaders.set(REQUEST_ID_HEADER, requestId)
+
+  let response = NextResponse.next({ request: { headers: baseHeaders } })
 
   // ── 3. Supabase session refresh ───────────────────────────────────────────
-  // Reads cookies from the incoming request.
-  // Writes any refreshed tokens ONLY onto response.cookies — never onto request headers.
-  //
   // If ENV vars are missing, skip session refresh — the request proceeds as
   // unauthenticated. Route-level auth checks will then reject protected requests
   // with a proper 401 rather than crashing the entire Edge worker.
@@ -101,10 +93,24 @@ async function _middlewareInner(request: NextRequest): Promise<NextResponse> {
         getAll() {
           return request.cookies.getAll()
         },
+        // CRITICAL: setAll must update BOTH request cookies (so server components
+        // in this request cycle see the refreshed tokens via next/headers cookies())
+        // AND the response cookies (so the browser stores the new tokens).
+        // Without updating request.cookies and recreating `response` with the updated
+        // request, server components call getUser() with the old expired token and
+        // redirect to /auth even though the middleware successfully refreshed it —
+        // causing an ERR_TOO_MANY_REDIRECTS loop.
         setAll(cookiesToSet: { name: string; value: string; options?: CookieOptions }[]) {
-          cookiesToSet.forEach(({ name, value, options }) => {
+          // Step 1: Mutate request cookies so next/headers cookies() sees them
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+          // Step 2: Recreate response with the updated request (new Cookie header forwarded)
+          const updatedHeaders = new Headers(request.headers)
+          updatedHeaders.set(REQUEST_ID_HEADER, requestId)
+          response = NextResponse.next({ request: { headers: updatedHeaders } })
+          // Step 3: Write to response cookies so the browser stores the new tokens
+          cookiesToSet.forEach(({ name, value, options }) =>
             response.cookies.set(name, value, options)
-          })
+          )
         },
       },
     }

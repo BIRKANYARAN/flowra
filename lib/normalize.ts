@@ -126,6 +126,8 @@ export interface NormalizedSaleRow {
   proforma_id:     string | null
   proforma_no:     string | null
   proforma_deleted: boolean
+  payment_status:  string
+  shipment_status: string | null
 }
 
 export function normalizeSaleRow(raw: unknown): NormalizedSaleRow | null {
@@ -157,6 +159,8 @@ export function normalizeSaleRow(raw: unknown): NormalizedSaleRow | null {
     proforma_id:     typeof r.proforma_id === 'string' ? r.proforma_id : null,
     proforma_no:     proformaNo,
     proforma_deleted: proformaDeleted,
+    payment_status:  safeStr(r.payment_status, 'pending'),
+    shipment_status: typeof r.shipment_status === 'string' ? r.shipment_status : null,
   }
 }
 

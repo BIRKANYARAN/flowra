@@ -150,7 +150,20 @@ export default async function DashboardPage() {
   const { from, to, label, year, month } = currentMonthPeriod()
   let companyId: string
   try { companyId = await resolveCompanyId(uid, supabase) }
-  catch { redirect('/auth') }
+  catch {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center px-4">
+        <div className="text-4xl">⚠️</div>
+        <h2 className="text-xl font-bold text-gray-900">Şirket bilgisi yüklenemedi</h2>
+        <p className="text-sm text-gray-500 max-w-sm">
+          Hesabınıza bağlı şirket bilgisi alınamadı. Lütfen sayfayı yenileyin veya destek ekibiyle iletişime geçin.
+        </p>
+        <a href="/dashboard" className="text-sm text-violet-600 font-semibold hover:underline">
+          Yeniden Dene
+        </a>
+      </div>
+    )
+  }
 
   const cookieHeader = cookies().getAll().map(c => `${c.name}=${c.value}`).join('; ')
   const reqHeaders   = headers()
@@ -410,8 +423,11 @@ export default async function DashboardPage() {
           </p>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
-          <div className={`text-[10px] font-black px-2 py-0.5 rounded-full ${situTheme.badge}`}>
-            Skor: {situation.composite}
+          <div
+            className={`text-[10px] font-black px-2 py-0.5 rounded-full cursor-help ${situTheme.badge}`}
+            title="Durum skoru: 80+ sağlıklı · 60–79 dikkat · 40–59 risk · 40 altı kritik"
+          >
+            {situation.composite} / 100
           </div>
           <span className={`text-[10px] font-black uppercase tracking-widest ${situTheme.text} opacity-60`}>
             {label}
@@ -442,15 +458,20 @@ export default async function DashboardPage() {
           )}
         </div>
         <div className="ml-auto flex items-center gap-1.5 flex-shrink-0">
-          <Link href="/dashboard/proformas/new" className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gray-900 text-white text-xs font-semibold hover:bg-gray-700 transition-colors">+ Proforma</Link>
-          <Link href="/dashboard/sales"         className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition-colors">+ Satış</Link>
-          <Link href="/dashboard/collections"   className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-primary-600 text-white text-xs font-semibold hover:bg-primary-700 transition-colors">+ Tahsilat</Link>
-          <Link href="/dashboard/expenses"      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-orange-500 text-white text-xs font-semibold hover:bg-orange-600 transition-colors">+ Gider</Link>
+          <Link href="/dashboard/commercial?tab=proformas" className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gray-900 text-white text-xs font-semibold hover:bg-gray-700 transition-colors">+ Proforma</Link>
+          <Link href="/dashboard/commercial?tab=sales"     className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition-colors">Satışlar</Link>
+          <Link href="/dashboard/commercial?tab=collections" className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-primary-600 text-white text-xs font-semibold hover:bg-primary-700 transition-colors">Tahsilat</Link>
+          <Link href="/dashboard/operations?tab=expenses"  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-orange-500 text-white text-xs font-semibold hover:bg-orange-600 transition-colors">+ Gider</Link>
         </div>
       </div>
 
       {/* ── Decision Alerts (top 3, compact) ─────────────────────────────── */}
-      {topAlerts.length > 0 && (
+      {topAlerts.length === 0 ? (
+        <div className="flex items-center gap-2 px-3 py-2 rounded-xl border border-emerald-200 bg-emerald-50">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
+          <span className="text-xs font-semibold text-emerald-700">Aktif uyarı yok — tüm eşikler normal</span>
+        </div>
+      ) : (
         <div className="flex flex-col gap-1">
           {topAlerts.slice(0, 3).map(alert => {
             const theme = ALERT_SEVERITY_THEME[alert.severity] ?? ALERT_SEVERITY_THEME.info
@@ -468,9 +489,9 @@ export default async function DashboardPage() {
             )
           })}
           {topAlerts.length > 3 && (
-            <div className="text-[10px] text-gray-400 font-semibold px-1">
-              +{topAlerts.length - 3} daha fazla uyarı
-            </div>
+            <Link href="/dashboard/commercial?tab=collections" className="text-[10px] text-amber-600 font-semibold px-1 hover:underline">
+              +{topAlerts.length - 3} daha fazla uyarı var →
+            </Link>
           )}
         </div>
       )}
@@ -559,7 +580,7 @@ export default async function DashboardPage() {
               )}
             </div>
             {monthlyNet < 0 && (
-              <div className="text-[10px] text-red-600 font-bold px-2 py-0.5 bg-red-100 rounded-lg flex-shrink-0">Zarar</div>
+              <div className="text-[10px] text-white font-bold px-2 py-0.5 bg-red-600 rounded-lg flex-shrink-0">Zarar</div>
             )}
           </div>
         </div>

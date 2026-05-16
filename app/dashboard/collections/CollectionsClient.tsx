@@ -10,7 +10,7 @@
 // Tab switching + mutations remain fully client-side via /api/collections.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useEffect, useState, useCallback, type ChangeEvent } from 'react'
+import { useEffect, useState, useCallback, useMemo, type ChangeEvent } from 'react'
 
 export interface CollectionRow {
   id: string
@@ -90,11 +90,19 @@ export default function CollectionsClient({ initialRows }: Props) {
   const [tab,        setTab]        = useState<TabKey>('pending')
   const [patching,   setPatching]   = useState<string | null>(null)
   const [error,      setError]      = useState<string | null>(null)
+  const [search,     setSearch]     = useState('')
 
   // Partial payment state — which row is expanded + the entered amount
   const [partialId,  setPartialId]  = useState<string | null>(null)
   const [partialAmt, setPartialAmt] = useState('')
   const [partialErr, setPartialErr] = useState('')
+
+  // ── Search filter (applied on top of tab rows, client-side only) ─────────────
+  const displayRows = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    if (!q) return rows
+    return rows.filter(r => r.customer_name.toLowerCase().includes(q))
+  }, [rows, search])
 
   // ── Data load ───────────────────────────────────────────────────────────────
   const load = useCallback(async (status: TabKey) => {
@@ -193,17 +201,21 @@ export default function CollectionsClient({ initialRows }: Props) {
   }
 
   // ── Derived / grouping ────────────────────────────────────────────────────────
-  const overdueRows   = rows.filter(r => isOverdue(r))
-  const regularRows   = rows.filter(r => !isOverdue(r))
+  const overdueRows   = displayRows.filter(r => isOverdue(r))
+  const regularRows   = displayRows.filter(r => !isOverdue(r))
 
-  const paidTotal     = rows.filter(r => r.payment_status === 'paid').reduce((s, r) => s + (r.total_try ?? 0), 0)
-  const unpaidTotal   = rows.filter(r => r.payment_status !== 'paid').reduce((s, r) => s + (r.total_try ?? 0), 0)
+  const paidTotal     = displayRows.filter(r => r.payment_status === 'paid').reduce((s, r) => s + (r.total_try ?? 0), 0)
+  const unpaidTotal   = displayRows.filter(r => r.payment_status !== 'paid').reduce((s, r) => s + (r.total_try ?? 0), 0)
   const overdueTotal  = overdueRows.reduce((s, r) => s + (r.total_try ?? 0), 0)
 
-  const TABS: { key: TabKey; label: string }[] = [
-    { key: 'pending', label: 'Bekleyenler' },
-    { key: 'paid',   label: 'Ödenenler'   },
-    { key: 'all',    label: 'Tümü'        },
+  // Tab counts shown on all tab (not filtered by search — shows what's in server data)
+  const pendingCount  = rows.filter(r => r.payment_status !== 'paid').length
+  const paidCount     = rows.filter(r => r.payment_status === 'paid').length
+
+  const TABS: { key: TabKey; label: string; count?: number }[] = [
+    { key: 'pending', label: 'Bekleyenler', count: pendingCount },
+    { key: 'paid',   label: 'Ödenenler',   count: paidCount    },
+    { key: 'all',    label: 'Tümü',        count: rows.length  },
   ]
 
   // ── Row renderer ─────────────────────────────────────────────────────────────
@@ -374,29 +386,60 @@ export default function CollectionsClient({ initialRows }: Props) {
           <h1 className="text-xl font-black text-gray-900 tracking-tight">Tahsilatlar</h1>
           <p className="text-xs text-gray-400 mt-0.5">Satış ödemelerini takip edin</p>
         </div>
-        <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
-          {TABS.map(t => (
-            <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
-              className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                tab === t.key ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Customer search */}
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm select-none">⌕</span>
+            <input
+              type="text"
+              placeholder="Müşteri ara…"
+              value={search}
+              onChange={e => { setSearch(e.target.value) }}
+              className="pl-8 pr-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-300 bg-white w-44"
+            />
+            {search && (
+              <button
+                onClick={() => setSearch('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+          {/* Tab switcher */}
+          <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
+            {TABS.map(t => (
+              <button
+                key={t.key}
+                onClick={() => setTab(t.key)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 ${
+                  tab === t.key ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                {t.label}
+                {t.count !== undefined && !loading && (
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                    tab === t.key ? 'bg-gray-100 text-gray-600' : 'bg-gray-200 text-gray-500'
+                  }`}>
+                    {t.count}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
       {/* Summary strip */}
       <div className="grid grid-cols-3 gap-2">
         <div className="bg-white rounded-xl border border-gray-200 px-4 py-3">
-          <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Toplam</div>
+          <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Gösterilen</div>
           <div className="text-xl font-black tabular-nums text-gray-900">
-            {loading ? '—' : fmtTRY(rows.reduce((s, r) => s + (r.total_try ?? 0), 0))}
+            {loading ? '—' : fmtTRY(displayRows.reduce((s, r) => s + (r.total_try ?? 0), 0))}
           </div>
-          <div className="text-[10px] text-gray-400 mt-0.5">{rows.length} kayıt</div>
+          <div className="text-[10px] text-gray-400 mt-0.5">
+            {search ? `${displayRows.length} / ${rows.length} kayıt` : `${rows.length} kayıt`}
+          </div>
         </div>
         <div className="bg-white rounded-xl border border-gray-200 px-4 py-3">
           <div className="text-[10px] font-bold uppercase tracking-widest text-amber-500 mb-1">Bekliyor</div>
@@ -407,7 +450,7 @@ export default function CollectionsClient({ initialRows }: Props) {
             {overdueRows.length > 0 && (
               <span className="text-red-600 font-semibold">{overdueRows.length} gecikmiş · </span>
             )}
-            {rows.filter(r => r.payment_status !== 'paid').length} satış
+            {displayRows.filter(r => r.payment_status !== 'paid').length} satış
           </div>
         </div>
         <div className="bg-white rounded-xl border border-gray-200 px-4 py-3">
@@ -416,7 +459,7 @@ export default function CollectionsClient({ initialRows }: Props) {
             {loading ? '—' : fmtTRY(paidTotal)}
           </div>
           <div className="text-[10px] text-gray-400 mt-0.5">
-            {rows.filter(r => r.payment_status === 'paid').length} satış
+            {displayRows.filter(r => r.payment_status === 'paid').length} satış
           </div>
         </div>
       </div>
@@ -436,12 +479,19 @@ export default function CollectionsClient({ initialRows }: Props) {
           <div className="py-16 flex items-center justify-center">
             <div className="w-5 h-5 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
           </div>
-        ) : rows.length === 0 ? (
+        ) : displayRows.length === 0 ? (
           <div className="py-16 text-center">
-            <div className="text-2xl mb-2">🎉</div>
+            <div className="text-2xl mb-2">{search ? '🔍' : '🎉'}</div>
             <div className="text-sm text-gray-400">
-              {tab === 'pending' ? 'Bekleyen tahsilat yok' : 'Bu filtrede kayıt yok'}
+              {search
+                ? `"${search}" için eşleşen kayıt bulunamadı`
+                : tab === 'pending' ? 'Bekleyen tahsilat yok' : 'Bu filtrede kayıt yok'}
             </div>
+            {search && (
+              <button onClick={() => setSearch('')} className="mt-2 text-xs text-primary-600 hover:underline">
+                Aramayı temizle
+              </button>
+            )}
           </div>
         ) : (
           <div>
@@ -480,7 +530,10 @@ export default function CollectionsClient({ initialRows }: Props) {
       {/* Footer note */}
       {!loading && rows.length > 0 && (
         <p className="text-[10px] text-gray-400 text-center">
-          Son 50 kayıt · Eski verilere Analitik sayfasından ulaşabilirsiniz.
+          {search
+            ? `${displayRows.length} sonuç gösteriliyor — toplam ${rows.length} kayıt`
+            : `${rows.length} kayıt`
+          }
         </p>
       )}
     </div>

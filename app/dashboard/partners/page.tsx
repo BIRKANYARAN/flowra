@@ -12,7 +12,7 @@
 //   6. Getiri         — per-partner ROI and capital return metrics
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -297,6 +297,14 @@ export default function PartnersPage() {
 
   // Tx history
   const [partnerTxs,   setPartnerTxs]   = useState<Record<string, TxRow[]>>({})
+
+  // Ledger sort
+  type LedgerSortCol = 'partner_name' | 'equity_contributed' | 'loans_given' | 'net_loan_outstanding' | 'dividends_received' | 'company_total_owed'
+  const [ledgerSort, setLedgerSort] = useState<{ col: LedgerSortCol; dir: 'asc' | 'desc' }>({ col: 'company_total_owed', dir: 'desc' })
+
+  function toggleLedgerSort(col: LedgerSortCol) {
+    setLedgerSort(prev => prev.col === col ? { col, dir: prev.dir === 'asc' ? 'desc' : 'asc' } : { col, dir: 'desc' })
+  }
   const [loadingTxId,  setLoadingTxId]  = useState<string | null>(null)
   const [expandedTxId, setExpandedTxId] = useState<string | null>(null)
 
@@ -327,65 +335,61 @@ export default function PartnersPage() {
     setDistribLoading(false)
   }, [])
 
+  const reloadAll = useCallback(async () => {
+    try {
+      const [pRes, distRes, ledgerRes] = await Promise.all([
+        fetch('/api/partners'),
+        fetch('/api/cash-distributable'),
+        fetch('/api/partners/ledger'),
+      ])
+      if (!pRes.ok) throw new Error(`Partner verisi alınamadı (${pRes.status})`)
+
+      let cashDistributable = 0
+      if (distRes.ok) {
+        const distJson = await distRes.json().catch(() => null)
+        if (distJson && typeof distJson.cash_distributable === 'number') {
+          cashDistributable = distJson.cash_distributable
+        }
+      }
+
+      const eRes = await fetch(`/api/partners/equalization?distributable=${cashDistributable}`)
+      if (!eRes.ok) throw new Error(`Eşitleme verisi alınamadı (${eRes.status})`)
+
+      const [pJson, eJson]: [unknown, unknown] = await Promise.all([pRes.json(), eRes.json()])
+      if (!Array.isArray(pJson)) throw new Error('Partner verisi beklenmedik formatta')
+
+      let ledgerData: LedgerData | null = null
+      if (ledgerRes.ok) {
+        const lJson = await ledgerRes.json().catch(() => null)
+        if (lJson && typeof lJson === 'object' && Array.isArray(lJson.entries)) {
+          ledgerData = lJson as LedgerData
+        }
+      }
+
+      setPartners(pJson as PartnerRow[])
+      setEqualization(eJson as EqResult)
+      setLedger(ledgerData)
+      setAvailCash(cashDistributable)
+
+      // Waterfall + returns
+      const wRes = await fetch(`/api/partners/waterfall?available_cash=${cashDistributable}`)
+      if (wRes.ok) {
+        const wJson = await wRes.json()
+        setWaterfall(wJson.waterfall ?? null)
+        setReturns(wJson.projections ?? [])
+      }
+    } catch (err) {
+      setFetchError(err instanceof Error ? err.message : 'Veri yüklenemedi')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
   useEffect(() => {
     let cancelled = false
-
-    async function load() {
-      try {
-        const [pRes, distRes, ledgerRes] = await Promise.all([
-          fetch('/api/partners'),
-          fetch('/api/cash-distributable'),
-          fetch('/api/partners/ledger'),
-        ])
-        if (!pRes.ok) throw new Error(`Partner verisi alınamadı (${pRes.status})`)
-
-        let cashDistributable = 0
-        if (distRes.ok) {
-          const distJson = await distRes.json().catch(() => null)
-          if (distJson && typeof distJson.cash_distributable === 'number') {
-            cashDistributable = distJson.cash_distributable
-          }
-        }
-
-        const eRes = await fetch(`/api/partners/equalization?distributable=${cashDistributable}`)
-        if (!eRes.ok) throw new Error(`Eşitleme verisi alınamadı (${eRes.status})`)
-
-        const [pJson, eJson]: [unknown, unknown] = await Promise.all([pRes.json(), eRes.json()])
-        if (!Array.isArray(pJson)) throw new Error('Partner verisi beklenmedik formatta')
-
-        let ledgerData: LedgerData | null = null
-        if (ledgerRes.ok) {
-          const lJson = await ledgerRes.json().catch(() => null)
-          if (lJson && typeof lJson === 'object' && Array.isArray(lJson.entries)) {
-            ledgerData = lJson as LedgerData
-          }
-        }
-
-        if (!cancelled) {
-          setPartners(pJson as PartnerRow[])
-          setEqualization(eJson as EqResult)
-          setLedger(ledgerData)
-          setAvailCash(cashDistributable)
-        }
-
-        // Waterfall + returns in parallel
-        const wRes = await fetch(`/api/partners/waterfall?available_cash=${cashDistributable}`)
-        if (wRes.ok && !cancelled) {
-          const wJson = await wRes.json()
-          setWaterfall(wJson.waterfall ?? null)
-          setReturns(wJson.projections ?? [])
-        }
-      } catch (err) {
-        if (!cancelled)
-          setFetchError(err instanceof Error ? err.message : 'Veri yüklenemedi')
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    }
-
-    load()
+    reloadAll().finally(() => { if (cancelled) setLoading(false) })
     return () => { cancelled = true }
-  }, [])
+  }, [reloadAll])
 
   // ── Edit / delete handlers ─────────────────────────────────────────────────────
 
@@ -412,8 +416,8 @@ export default function PartnersPage() {
       const data = await res.json()
       if (!res.ok) { setEditErr(data.error ?? 'Güncelleme hatası'); setEditSaving(false); return }
       setEditId(null)
-      const pRes = await fetch('/api/partners')
-      if (pRes.ok) setPartners(await pRes.json())
+      // Reload everything — share_ratio change affects equalization, waterfall, ledger
+      await reloadAll()
     } catch { setEditErr('Ağ hatası') }
     setEditSaving(false)
   }
@@ -436,6 +440,19 @@ export default function PartnersPage() {
   }
 
   // ── Derived ───────────────────────────────────────────────────────────────────
+
+  const sortedLedgerEntries = useMemo(() => {
+    if (!ledger) return []
+    return [...ledger.entries].sort((a, b) => {
+      const { col, dir } = ledgerSort
+      const av = col === 'partner_name' ? a[col] : (a[col] as number)
+      const bv = col === 'partner_name' ? b[col] : (b[col] as number)
+      if (typeof av === 'string' && typeof bv === 'string') {
+        return dir === 'asc' ? av.localeCompare(bv, 'tr') : bv.localeCompare(av, 'tr')
+      }
+      return dir === 'asc' ? (av as number) - (bv as number) : (bv as number) - (av as number)
+    })
+  }, [ledger, ledgerSort])
 
   const totalPartnerBalance = partners.reduce((s, p) => s + (p.balance?.partner_balance_try ?? 0), 0)
   const totalDistributed    = partners.reduce((s, p) => s + (p.balance?.total_distributed_try ?? 0), 0)
@@ -516,6 +533,21 @@ export default function PartnersPage() {
 
           {!loading && hasPartners && (
             <>
+              {/* Equalization context — always visible when there's data */}
+              {equalization.baseline_per_unit > 0 && (
+                <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-xs text-blue-700">
+                  <span className="text-base flex-shrink-0 mt-0.5">ℹ</span>
+                  <div>
+                    <span className="font-bold">Eşitleme nedir? </span>
+                    Ortaklar şirkete farklı tutarlarda sermaye koymuş olabilir. Eşitleme, en yüksek birim katkıyı baz alarak diğer ortakların bu seviyeye çıkması için öncelikli dağıtım almasını sağlar.
+                    {equalization.total_equalization > 0
+                      ? <span className="ml-1 font-semibold">{fmt(equalization.total_equalization)} eşitleme yapılana kadar dağıtım orantısız gerçekleşir.</span>
+                      : <span className="ml-1 text-emerald-600 font-semibold">Tüm ortaklar eşit seviyede — normal dağıtıma geçildi.</span>
+                    }
+                  </div>
+                </div>
+              )}
+
               <div className="flex flex-col gap-2">
                 {partners.map(p => {
                   const b        = p.balance
@@ -697,13 +729,33 @@ export default function PartnersPage() {
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="border-b border-gray-100 bg-gray-50">
-                      {['Ortak','Özkaynak','Verilen Borç','Geri Ödenen','Net Borç','Temettü','Maaş/Huzur','Şirket Borcu'].map(h => (
-                        <th key={h} className={`px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-400 ${h === 'Ortak' ? 'text-left' : 'text-right'}`}>{h}</th>
-                      ))}
+                      {([
+                        { col: 'partner_name',        label: 'Ortak',       align: 'left'  },
+                        { col: 'equity_contributed',   label: 'Özkaynak',    align: 'right' },
+                        { col: 'loans_given',          label: 'Verilen Borç',align: 'right' },
+                        { col: null,                   label: 'Geri Ödenen', align: 'right' },
+                        { col: 'net_loan_outstanding', label: 'Net Borç',    align: 'right' },
+                        { col: 'dividends_received',   label: 'Temettü',     align: 'right' },
+                        { col: null,                   label: 'Maaş/Huzur', align: 'right' },
+                        { col: 'company_total_owed',   label: 'Şirket Borcu',align: 'right' },
+                      ] as { col: string | null; label: string; align: string }[]).map(h => {
+                        const isSorted   = h.col && ledgerSort.col === h.col
+                        const isLeft     = h.align === 'left'
+                        return (
+                          <th
+                            key={h.label}
+                            className={`px-4 py-2.5 text-[10px] font-black uppercase tracking-widest ${isSorted ? 'text-primary-600' : 'text-gray-400'} ${isLeft ? 'text-left' : 'text-right'} ${h.col ? 'cursor-pointer select-none hover:text-gray-600' : ''}`}
+                            onClick={h.col ? () => toggleLedgerSort(h.col as Parameters<typeof toggleLedgerSort>[0]) : undefined}
+                          >
+                            {h.label}
+                            {isSorted && <span className="ml-0.5">{ledgerSort.dir === 'asc' ? ' ↑' : ' ↓'}</span>}
+                          </th>
+                        )
+                      })}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
-                    {ledger.entries.map(e => (
+                    {sortedLedgerEntries.map(e => (
                       <tr key={e.partner_id} className={`hover:bg-gray-50/60 ${!e.is_active ? 'opacity-50' : ''}`}>
                         <td className="px-4 py-3 font-semibold text-gray-900">
                           {e.partner_name}
