@@ -892,6 +892,7 @@ alter table alert_rules            enable row level security;
 alter table journal_entries        enable row level security;
 alter table journal_entry_lines    enable row level security;
 alter table backfill_runs          enable row level security;
+alter table job_runs               enable row level security;
 
 -- Helper functions
 create or replace function public.is_company_member(p_company_id uuid)
@@ -979,6 +980,20 @@ create policy event_outbox_member on event_outbox for all using (company_id is n
 
 drop policy if exists jobs_member on jobs;
 create policy jobs_member on jobs for all using (company_id is null or is_company_member(company_id));
+
+-- job_runs: company members read their own runs; admins read system-wide runs
+drop policy if exists job_runs_read_company  on job_runs;
+drop policy if exists job_runs_read_system   on job_runs;
+drop policy if exists job_runs_insert_service on job_runs;
+create policy job_runs_read_company on job_runs for select
+  using (company_id is not null and is_company_member(company_id));
+create policy job_runs_read_system on job_runs for select
+  using (company_id is null and is_company_admin((
+    select company_id from company_members
+    where company_members.user_id = auth.uid() limit 1
+  )));
+create policy job_runs_insert_service on job_runs for insert
+  with check (true);
 
 drop policy if exists monthly_metrics_member on monthly_metrics;
 create policy monthly_metrics_member on monthly_metrics for all using (is_company_member(company_id));

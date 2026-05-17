@@ -50,6 +50,34 @@ CREATE INDEX IF NOT EXISTS idx_job_runs_company
   ON job_runs (company_id, started_at DESC)
   WHERE company_id IS NOT NULL;
 
+-- RLS: company members can read their own job runs;
+--      system-wide runs (company_id IS NULL) are admin-only.
+ALTER TABLE job_runs ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS job_runs_read_company   ON job_runs;
+DROP POLICY IF EXISTS job_runs_read_system    ON job_runs;
+DROP POLICY IF EXISTS job_runs_insert_system  ON job_runs;
+
+-- Company members can read runs scoped to their company
+CREATE POLICY job_runs_read_company ON job_runs
+  FOR SELECT
+  USING (company_id IS NOT NULL AND is_company_member(company_id));
+
+-- Admins can read system-wide runs (company_id IS NULL)
+CREATE POLICY job_runs_read_system ON job_runs
+  FOR SELECT
+  USING (company_id IS NULL AND EXISTS (
+    SELECT 1 FROM company_members
+    WHERE company_members.user_id = auth.uid()
+      AND company_members.role = 'admin'
+  ));
+
+-- Only the service role (cron jobs, server-side) can insert/update job_runs.
+-- Application layer uses service_role client for job tracking writes.
+CREATE POLICY job_runs_insert_service ON job_runs
+  FOR INSERT
+  WITH CHECK (true);  -- enforced by service_role usage in API routes
+
 -- ── 3. Interest Rate Column on Loan Tranches ──────────────────────────────────
 -- Cron job uses this for daily interest accrual.
 

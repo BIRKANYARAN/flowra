@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
 import { resolveCompanyId } from '@/lib/resolve-company'
+import { requireAdmin } from '@/lib/require-role'
 
 const BUCKET = 'backups'
 
@@ -70,6 +71,10 @@ export async function POST(req: NextRequest) {
     let companyId: string
     try { companyId = await resolveCompanyId(uid, supabase) }
     catch { return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED', type: 'SYSTEM' }, { status: 409 }) }
+
+    // Backup restore is a destructive, irreversible operation — admin only.
+    try { await requireAdmin(uid, companyId, supabase) }
+    catch { return NextResponse.json({ error: 'Yedek geri yükleme için admin yetkisi gerekir', code: 'FORBIDDEN', type: 'SECURITY' }, { status: 403 }) }
 
     const body = await req.json()
     const backupPath = body.path as string
