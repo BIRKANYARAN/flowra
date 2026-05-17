@@ -122,6 +122,7 @@ export interface NormalizedSaleRow {
   cogs:            number
   holding_cost:    number
   nominal_profit:  number
+  paid_amount:     number
   /** Business invoice date (YYYY-MM-DD) — use for period attribution and display */
   sale_date:       string
   /** DB insertion timestamp — kept for backward compat; prefer sale_date for display */
@@ -158,6 +159,7 @@ export function normalizeSaleRow(raw: unknown): NormalizedSaleRow | null {
     cogs:            safeNum(r.cogs),
     holding_cost:    safeNum(r.holding_cost),
     nominal_profit:  safeNum(r.nominal_profit),
+    paid_amount:     safeNum(r.paid_amount),
     sale_date:       safeStr(r.sale_date).slice(0, 10) || safeStr(r.created_at).slice(0, 10),
     created_at:      safeStr(r.created_at),
     proforma_id:     typeof r.proforma_id === 'string' ? r.proforma_id : null,

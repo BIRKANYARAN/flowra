@@ -29,6 +29,7 @@ import { TranchesTab }    from '@/app/dashboard/partners/_components/TranchesTab
 import { DistributionTab } from '@/app/dashboard/partners/_components/DistributionTab'
 import { ReturnsTab }     from '@/app/dashboard/partners/_components/ReturnsTab'
 import { PartnersContextBar } from '@/app/dashboard/partners/_shared/PartnersContextBar'
+import { PartnerFinanceActions } from '@/app/dashboard/partners/_components/PartnerFinanceActions'
 
 interface EditForm { name: string; shareRatioPct: string }
 
@@ -334,6 +335,9 @@ export default function PartnersPage() {
         </div>
       )}
 
+      {/* ── Quick Finance Action Panel ────────────────────────────────────────── */}
+      <PartnerFinanceActions partners={partners} onRefresh={reloadAll} />
+
       {activeTab === 'partners' && (
         <PartnersTab
           loading={loading}
@@ -385,6 +389,8 @@ export default function PartnersPage() {
         <TranchesTab
           loading={loading}
           waterfall={waterfall}
+          partners={partners}
+          onRefresh={reloadAll}
         />
       )}
 

@@ -14,7 +14,7 @@ export async function SalesContent({ companyId }: Props) {
   try {
     const { data, error } = await supabase
       .from('sales')
-      .select('id, customer_name, currency, total_try:total, sale_date, created_at, proforma_id, payment_status, shipment_status, proformas(proforma_no, deleted_at)')
+      .select('id, customer_name, currency, total_try:total, sale_date, created_at, proforma_id, payment_status, shipment_status, paid_amount, proformas(proforma_no, deleted_at)')
       .eq('company_id', companyId)
       .is('deleted_at', null)
       .order('sale_date', { ascending: false })
@@ -38,15 +38,7 @@ export async function SalesContent({ companyId }: Props) {
         </Link>
       </div>
 
-      {list.length === 0 ? (
-        <div className="bg-white border border-gray-100 rounded-xl text-center py-16 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
-          <div className="text-5xl mb-3">💰</div>
-          <p className="text-gray-500 font-medium mb-2">Henüz satış yok.</p>
-          <p className="text-sm text-gray-400">Proformaları satışa dönüştürerek başlayın.</p>
-        </div>
-      ) : (
-        <SalesTable rows={list} />
-      )}
+      <SalesTable rows={list} />
     </div>
   )
 }
