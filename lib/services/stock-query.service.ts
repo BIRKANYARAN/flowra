@@ -97,15 +97,20 @@ type MovementRow = {
   id:             string
   product_id:     string
   reference_type: string
-  movement_type:  string | null
+  movement_type:  string | null  // mapped from 'type' column
   reference_id:   string | null
-  qty_change:     number | string   // numeric columns can come back as strings
-  qty_before:     number | string
-  qty_after:      number | string
+  qty_change:     number | string  // mapped from 'qty' column
+  qty_before:     number | string  // not in DB — derived
+  qty_after:      number | string  // not in DB — derived
   unit_cost:      number | string
   notes:          string | null
-  entry_date:     string | null
+  entry_date:     string | null    // not in DB — mapped from moved_at
   created_at:     string
+  // actual DB columns
+  type:           string | null
+  qty:            number | string
+  lot_id:         string | null
+  moved_at:       string
 }
 
 function num(v: number | string | null | undefined): number {
@@ -215,8 +220,9 @@ export class StockQueryService {
     const { data, error } = await supabase
       .from('stock_movements')
       .select(
-        'id, product_id, reference_type, movement_type, reference_id, ' +
-        'qty_change, qty_before, qty_after, unit_cost, notes, entry_date, created_at'
+        // Note: stock_movements actual columns: id, product_id, lot_id, type, qty, unit_cost, currency, notes, reference_id, moved_at, created_at
+        // qty_change/qty_before/qty_after/entry_date don't exist — selecting available equivalents
+        'id, product_id, lot_id, type, qty, unit_cost, notes, reference_id, moved_at, created_at'
       )
       .eq('company_id', companyId)
       .eq('product_id', productId)
@@ -230,21 +236,21 @@ export class StockQueryService {
 
     const rows = (data ?? []) as unknown as MovementRow[]
     return rows.map((r): StockHistoryEntry => {
-      const qtyChange = num(r.qty_change)
+      // Map actual DB columns (type, qty, moved_at) to expected shape
+      const qtyChange = num(r.qty ?? r.qty_change)
+      const mvType    = String(r.type ?? r.movement_type ?? '')
       return {
         id:             r.id,
         product_id:     r.product_id,
-        // History is a UI concern — display-direction is metadata.
-        // The source of truth for stock math remains `quantity` (qty_change).
-        movement_type:  displayDirection({ movement_type: r.movement_type, qty_change: qtyChange }),
-        reference_type: r.reference_type as ReferenceType,
+        movement_type:  displayDirection({ movement_type: mvType, qty_change: qtyChange }),
+        reference_type: (r.reference_type ?? null) as ReferenceType,
         source_id:      r.reference_id,
         quantity:       qtyChange,
-        qty_before:     num(r.qty_before),
-        qty_after:      num(r.qty_after),
+        qty_before:     0,   // not stored in DB
+        qty_after:      0,   // not stored in DB
         unit_cost:      num(r.unit_cost),
         notes:          r.notes,
-        entry_date:     r.entry_date,
+        entry_date:     r.moved_at ?? r.entry_date ?? null,
         created_at:     r.created_at,
       }
     })
@@ -288,7 +294,7 @@ export class StockQueryService {
     // ── Path 1: lot-based valuation (preferred) ─────────────────────────────
     const { data: lots, error: lotErr } = await supabase
       .from('stock_lots')
-      .select('qty_remaining, unit_cost, cost_currency, fx_rate_at_entry, entry_cost_try')
+      .select('qty_remaining, cost_price, cost_currency, cost_fx_rate, cost_price_try')
       .eq('company_id', companyId)
       .eq('product_id', productId)
       .gt('qty_remaining', 0)
@@ -305,10 +311,10 @@ export class StockQueryService {
       const currencies = new Set<string>()
 
       for (const lot of lots) {
-        const qtyRem  = num((lot as { qty_remaining: number | string }).qty_remaining)
-        const cost    = num((lot as { unit_cost:     number | string }).unit_cost)
-        const fx      = num((lot as { fx_rate_at_entry: number | string }).fx_rate_at_entry) || 1
-        const entryTry = num((lot as { entry_cost_try: number | string | null }).entry_cost_try)
+        const qtyRem  = num((lot as { qty_remaining:  number | string }).qty_remaining)
+        const cost    = num((lot as { cost_price:     number | string }).cost_price)
+        const fx      = num((lot as { cost_fx_rate:   number | string }).cost_fx_rate) || 1
+        const entryTry = num((lot as { cost_price_try: number | string | null }).cost_price_try)
         const cur     = String((lot as { cost_currency: string | null }).cost_currency || 'TRY')
 
         if (qtyRem <= 0) continue

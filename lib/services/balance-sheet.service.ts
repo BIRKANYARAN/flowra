@@ -55,15 +55,15 @@ export class BalanceSheetService {
         .in('payment_status', ['pending', 'partial', 'overdue'])
         .lte('sale_date', asOfDate),
 
-      // Inventory: FIFO stock value (qty_remaining × entry_cost_try).
-      // Filter by entry_date (stock lot creation date) not created_at.
+      // Inventory: FIFO stock value (qty_remaining × cost_price_try).
+      // Filter by received_at (stock lot receipt date).
       (supabase as SupabaseClient)
         .from('stock_lots')
-        .select('qty_remaining, entry_cost_try')
+        .select('qty_remaining, cost_price_try')
         .eq('company_id', companyId)
         .is('deleted_at', null)
         .gt('qty_remaining', 0)
-        .lte('entry_date', asOfDate),
+        .lte('received_at', asOfDate),
 
       // Cash in: all paid sales (collected cash) up to asOfDate.
       (supabase as SupabaseClient)
@@ -102,8 +102,8 @@ export class BalanceSheetService {
 
     // ── Compute inventory (FIFO) ──────────────────────────────────────────────
     const inventory_try = round2(
-      (inventoryResult.data ?? []).reduce((sum: number, lot: { qty_remaining: number; entry_cost_try: number }) =>
-        sum + (Number(lot.qty_remaining) || 0) * (Number(lot.entry_cost_try) || 0), 0
+      (inventoryResult.data ?? []).reduce((sum: number, lot: { qty_remaining: number; cost_price_try: number }) =>
+        sum + (Number(lot.qty_remaining) || 0) * (Number(lot.cost_price_try) || 0), 0
       )
     )
 
