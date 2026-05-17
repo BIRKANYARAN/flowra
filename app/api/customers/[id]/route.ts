@@ -77,7 +77,7 @@ export async function GET(
     //   • company_id scoping provides defence-in-depth on top of RLS
     const { data: saleRows, error: salesErr } = await supabase
       .from('sales')
-      .select('id, proforma_id, customer_name, currency, total, total_try, nominal_profit, payment_status, paid_at, shipment_status, created_at')
+      .select('id, proforma_id, customer_name, currency, total, total_try, amount_paid, nominal_profit, payment_status, paid_at, shipment_status, created_at')
       .eq('customer_id', id)
       .eq('company_id', companyId)
       .is('deleted_at', null)
@@ -92,10 +92,18 @@ export async function GET(
     const sales = (saleRows ?? []) as Record<string, unknown>[]
 
     // ── 4. Payment summary ─────────────────────────────────────────────────
+    // total_billed_try: sum of every sale's invoiced amount (KDV-inclusive)
+    // total_paid_try:   sum of payments actually received (amount_paid covers
+    //                   full and partial payments; capped to total_try as a guard)
+    // balance_try:      outstanding = billed − paid
     const totalBilledTry = sales.reduce((s, r) => s + Number(r.total_try ?? 0), 0)
-    const totalPaidTry   = sales
-      .filter(r => r.payment_status === 'paid')
-      .reduce((s, r) => s + Number(r.total_try ?? 0), 0)
+    const totalPaidTry   = sales.reduce(
+      (s, r) => s + Math.min(
+        Number(r.total_try  ?? 0),
+        Number(r.amount_paid ?? 0),
+      ),
+      0,
+    )
 
     const summary = {
       proforma_count:   (proformas ?? []).length,

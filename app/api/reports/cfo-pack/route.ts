@@ -39,8 +39,8 @@ export async function GET(req: NextRequest) {
       TaxService.getKdvNet(uid, companyId, { from, to }),
       BalanceSheetService.compute(uid, companyId, asOf, supabase),
       CashFlowStatementService.compute(uid, companyId, { from, to }, supabase),
-      // Receivables aging buckets
-      supabase.from('sales').select('total_try, amount_paid, created_at, payment_status, customer_name')
+      // Receivables aging buckets — use sale_date (business date) not created_at
+      supabase.from('sales').select('total_try, amount_paid, sale_date, payment_status, customer_name')
         .eq('company_id', companyId).neq('payment_status', 'paid').is('deleted_at', null),
       // Expense category breakdown
       supabase.from('expenses').select('expense_type, amount_try')
@@ -53,7 +53,8 @@ export async function GET(req: NextRequest) {
     const aging: Record<string, number> = { current: 0, overdue_30: 0, overdue_60: 0, overdue_90: 0 }
     if (receivables.status === 'fulfilled' && receivables.value.data) {
       for (const s of receivables.value.data) {
-        const daysDiff = Math.round((today.getTime() - new Date(s.created_at as string).getTime()) / 86_400_000)
+        if (!s.sale_date) continue  // guard against missing business date
+        const daysDiff = Math.round((today.getTime() - new Date(s.sale_date as string).getTime()) / 86_400_000)
         const amt = Math.max(0, Number(s.total_try ?? 0) - Number(s.amount_paid ?? 0))
         if (daysDiff <= 30)      aging.current    += amt
         else if (daysDiff <= 60) aging.overdue_30  += amt

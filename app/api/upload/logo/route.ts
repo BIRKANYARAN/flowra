@@ -18,23 +18,21 @@ export async function GET(req: NextRequest) {
   if (!auth.ok) return auth.response
   const { uid, companyId, supabase, ctx } = auth
 
-  const { data: settings } = await supabase
-    .from('user_settings')
+  // logo_url lives on companies, not user_settings
+  const { data: company } = await supabase
+    .from('companies')
     .select('logo_url')
-    .eq('company_id', companyId)
-    .is('deleted_at', null)
-    .order('updated_at', { ascending: false })
-    .limit(1)
+    .eq('id', companyId)
     .maybeSingle()
 
-  if (!settings?.logo_url) {
+  if (!company?.logo_url) {
     return NextResponse.json({ url: null, signed_url: null, path: null })
   }
 
-  const url = getLogoPublicUrl(settings.logo_url)
+  const url = getLogoPublicUrl(company.logo_url)
 
   // signed_url kept for any client code that still reads the old field name
-  return NextResponse.json({ url, signed_url: url, path: settings.logo_url })
+  return NextResponse.json({ url, signed_url: url, path: company.logo_url })
 }
 
 // ── POST — upload new logo ────────────────────────────────────────────────────
@@ -67,14 +65,12 @@ export async function POST(req: NextRequest) {
 
     const result = await uploadLogo(uid, buffer, mimeType)
 
-    // Persist the permanent public URL (not the storage path — paths can't be
-    // used directly as <img src> or in the PDF loader without re-signing).
+    // Persist the permanent public URL on the companies record.
+    // logo_url lives on companies (not user_settings — user_settings has no logo_url column).
     const { error: dbErr } = await supabase
-      .from('user_settings')
-      .upsert(
-        { user_id: uid, company_id: companyId, logo_url: result.publicUrl },
-        { onConflict: 'user_id' }
-      )
+      .from('companies')
+      .update({ logo_url: result.publicUrl })
+      .eq('id', companyId)
 
     if (dbErr) {
       // FIX: was only logging the error and returning 201 — caller saw success

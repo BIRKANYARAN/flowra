@@ -71,13 +71,25 @@ export async function POST(req: NextRequest) {
     const now = new Date().toISOString()
 
     // ── Soft-delete existing company data ─────────────────────────────────────
-    await Promise.all([
+    // Errors must be checked — a failed soft-delete means old rows stay active
+    // and new inserts below would create duplicates.
+    const deleteResults = await Promise.all([
       supabase.from('customers').update({ deleted_at: now }).eq('company_id', companyId).is('deleted_at', null),
       supabase.from('products').update({ deleted_at: now }).eq('company_id', companyId).is('deleted_at', null),
       supabase.from('company_banks').update({ deleted_at: now }).eq('company_id', companyId).is('deleted_at', null),
       supabase.from('proformas').update({ deleted_at: now }).eq('company_id', companyId).is('deleted_at', null),
       supabase.from('expenses').update({ deleted_at: now }).eq('company_id', companyId).is('deleted_at', null),
     ])
+    const deleteErrors = deleteResults
+      .map((r, i) => r.error ? `table[${i}]: ${r.error.message}` : null)
+      .filter(Boolean)
+    if (deleteErrors.length > 0) {
+      console.error('[import] soft-delete failed:', deleteErrors)
+      return NextResponse.json(
+        { error: 'Mevcut veri temizlenemedi — import iptal edildi', details: deleteErrors },
+        { status: 500 }
+      )
+    }
 
     // ── Re-insert in dependency order ─────────────────────────────────────────
     // Errors are collected — any failure is returned explicitly.

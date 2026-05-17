@@ -33,6 +33,11 @@ export async function GET() {
     const today    = new Date().toISOString().slice(0, 10)
 
     for (const [currency, value] of Object.entries(rates) as [string, number][]) {
+      // Guard against NaN/Infinity from malformed TCMB XML before persisting
+      if (!isFinite(value) || value <= 0) {
+        console.warn('[fx-rates] skipping invalid rate for', currency, ':', value)
+        continue
+      }
       await safeSystemQuery('fx_rates').upsert(
         {
           rate_date:  today,

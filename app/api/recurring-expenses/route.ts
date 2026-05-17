@@ -90,7 +90,11 @@ export async function POST(req: NextRequest) {
 
     const kdv = Math.min(100, Math.max(0, Number(body.kdv) || 0))
 
-    const fx = await getOrFetchFxRate(currency)
+    const fx     = await getOrFetchFxRate(currency)
+    const fxRate = (isFinite(fx.rate) && fx.rate > 0) ? fx.rate : 1
+    if (!isFinite(fx.rate) || fx.rate <= 0) {
+      console.warn('[recurring-expenses POST] FX rate unavailable for', currency, '— using 1')
+    }
 
     const { data, error } = await supabase
       .from('recurring_expenses')
@@ -99,7 +103,7 @@ export async function POST(req: NextRequest) {
         description,
         amount,
         currency,
-        fx_rate:       fx.rate,
+        fx_rate:       fxRate,
         category,
         expense_type:  expenseType,
         frequency,
@@ -107,7 +111,7 @@ export async function POST(req: NextRequest) {
         end_date,
         kdv,
         is_active:     true,
-        is_deductible: body.is_deductible !== false,
+        is_deductible: body.is_deductible !== false && body.is_deductible !== 'false',
         company_id:    companyId,
       })
       .select('id')

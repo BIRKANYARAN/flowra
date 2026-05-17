@@ -96,11 +96,13 @@ export async function DELETE(
   const { uid, companyId, supabase, ctx } = auth
 
   try {
+    // Enforce creator-only soft-delete as documented in the file header.
     const { error } = await supabase
       .from('tasks')
       .update({ deleted_at: new Date().toISOString() })
       .eq('id', taskId)
       .eq('company_id', companyId)
+      .eq('user_id', uid)   // only creator may delete
       .is('deleted_at', null)
 
     if (error) {

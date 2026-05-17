@@ -49,6 +49,7 @@ export async function POST(req: NextRequest) {
     amount: number
     currency: string
     fx_rate: number
+    amount_try: number   // frozen TRY snapshot = amount × fx_rate
     entry_date: string
   }> = []
 
@@ -70,13 +71,15 @@ export async function POST(req: NextRequest) {
 
     // Fetch FX rate for this currency
     const fx = await getOrFetchFxRate(currency)
+    const fxRate = (isFinite(fx.rate) && fx.rate > 0) ? fx.rate : 1
 
     entries.push({
       entry_type: entryType,
       description,
       amount,
       currency,
-      fx_rate: fx.rate,
+      fx_rate:    fxRate,
+      amount_try: Math.round(amount * fxRate * 100) / 100,  // frozen TRY snapshot
       entry_date: entryDate,
     })
   }

@@ -30,7 +30,8 @@ export async function GET(req: NextRequest) {
 
   const url    = new URL(req.url)
   const status = url.searchParams.get('status') ?? 'open'
-  const limit  = Math.min(Number(url.searchParams.get('limit') ?? 50), 200)
+  const rawLimit = Number(url.searchParams.get('limit') ?? 50)
+  const limit    = Math.min(isFinite(rawLimit) && rawLimit > 0 ? rawLimit : 50, 200)
 
   try {
     // Build base query — try with customer join first (requires FK fk_tasks_customer)

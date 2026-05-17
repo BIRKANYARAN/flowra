@@ -262,12 +262,13 @@ export async function allocateCosts(purchaseId: string): Promise<PurchaseAllocat
  * The numbers are the FROZEN snapshot stored at finalization. We never
  * recompute against current fx_rates; that would silently rewrite history.
  */
-export async function getCostBreakdown(productId: string): Promise<ProductCostBreakdownEntry[]> {
+export async function getCostBreakdown(productId: string, companyId?: string): Promise<ProductCostBreakdownEntry[]> {
   const supabase = createClient()
 
   // Fetch lots created via Phase 3. We pull purchase fields via a join so a
   // single round-trip suffices.
-  const { data: rows, error } = await supabase
+  // companyId filter provides defense-in-depth alongside Supabase RLS.
+  let query = supabase
     .from('stock_lots')
     .select(`
       qty_initial,
@@ -292,6 +293,12 @@ export async function getCostBreakdown(productId: string): Promise<ProductCostBr
     .not('purchase_item_id', 'is', null)
     .is('deleted_at', null)
     .order('entry_date', { ascending: false })
+
+  if (companyId) {
+    query = query.eq('company_id', companyId)
+  }
+
+  const { data: rows, error } = await query
 
   if (error) {
     throw new AppError('DB_READ_FAILED', 'Maliyet geçmişi okunamadı', { dbError: error.message })

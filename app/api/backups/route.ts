@@ -27,9 +27,10 @@ export async function GET(req: NextRequest) {
   try {
     const auth = await resolveApiAuth(req)
     if (!auth.ok) return auth.response
-    const { uid, supabase } = auth
+    const { uid, companyId, supabase } = auth
 
-    const prefix = `${uid}/`
+    // Include companyId in path so multi-company users see only their own backups
+    const prefix = `${uid}/${companyId}/`
 
     // List top-level folders for this user
     const { data: folders, error: listErr } = await supabase.storage
@@ -88,7 +89,7 @@ export async function POST(req: NextRequest) {
 
     const now = new Date()
     const folderName = now.toISOString().replace(/[-:]/g, '').replace('T', '_').slice(0, 15)
-    const folderPath = `${uid}/${folderName}`
+    const folderPath = `${uid}/${companyId}/${folderName}`
 
     const tableCounts: Record<string, number> = {}
     let uploadedFiles = 0

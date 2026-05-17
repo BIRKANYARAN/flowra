@@ -89,7 +89,7 @@ export async function GET(req: NextRequest) {
         .lte('expense_date', to),
       supabase
         .from('expenses')
-        .select('amount_try')
+        .select('amount_try, expense_type')   // need expense_type to filter excluded flows
         .eq('company_id', companyId)
         .neq('payment_status', 'paid')
         .is('deleted_at', null),
@@ -114,8 +114,15 @@ export async function GET(req: NextRequest) {
       },
       0,
     )
+    // Mirror the same excluded-type filter applied to paidExpenses:
+    // loan repayments, partner financing, dividends, and internal transfers are
+    // NOT operating cash obligations — excluding them keeps the signal clean.
     const unpaidExpenses = (unpaidExpensesRes.data ?? []).reduce(
-      (s: number, r: { amount_try: number }) => s + Number(r.amount_try ?? 0), 0,
+      (s: number, r: { amount_try: number; expense_type: string | null }) => {
+        if (r.expense_type && CASH_EXCLUDED_EXPENSE_TYPES.has(r.expense_type)) return s
+        return s + Number(r.amount_try ?? 0)
+      },
+      0,
     )
     const { cashBalance, outstandingObligations, cashDistributable } = computeCashPosition({
       paymentsReceived,
