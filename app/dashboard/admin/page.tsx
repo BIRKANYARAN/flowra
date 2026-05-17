@@ -106,7 +106,7 @@ export default async function AdminHubPage() {
       title:    'Roller & İzinler',
       subtitle: 'Rol yapılandırması',
       icon:     '🔐',
-      color:    'border-violet-100 hover:border-violet-200',
+      color:    'border-primary-100 hover:border-primary-200',
     },
     {
       href:     '/dashboard/admin/workflows',

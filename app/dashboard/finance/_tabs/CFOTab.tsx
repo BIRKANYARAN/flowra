@@ -531,7 +531,7 @@ export async function CFOTab({ userId, companyId }: Props) {
               title: 'Yönetici Özeti',
               desc:  '1 sayfa CEO raporu — PDF hazır',
               icon:  '📄',
-              color: 'hover:border-violet-300',
+              color: 'hover:border-primary-300',
             },
             {
               href:  '/dashboard/cfo/tax/kdv',

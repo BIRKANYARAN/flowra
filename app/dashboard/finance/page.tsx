@@ -106,7 +106,7 @@ export default async function FinancePage({ searchParams }: PageProps) {
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-center px-4">
       <div className="text-3xl">⚠️</div>
       <p className="text-sm text-gray-500">Oturum bilgisi alınamadı. Lütfen sayfayı yenileyin.</p>
-      <a href="/dashboard/finance" className="text-sm text-violet-600 font-semibold hover:underline">Yeniden Dene</a>
+      <a href="/dashboard/finance" className="text-sm text-primary-600 font-semibold hover:underline">Yeniden Dene</a>
     </div>
   )
 
@@ -116,7 +116,7 @@ export default async function FinancePage({ searchParams }: PageProps) {
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-center px-4">
       <div className="text-3xl">⚠️</div>
       <p className="text-sm text-gray-500">Şirket bilgisi yüklenemedi. Lütfen sayfayı yenileyin.</p>
-      <a href="/dashboard/finance" className="text-sm text-violet-600 font-semibold hover:underline">Yeniden Dene</a>
+      <a href="/dashboard/finance" className="text-sm text-primary-600 font-semibold hover:underline">Yeniden Dene</a>
     </div>
   )
 

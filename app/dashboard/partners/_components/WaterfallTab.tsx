@@ -28,7 +28,7 @@ export interface WaterfallTabProps {
 // ── Colour palette per partner index ─────────────────────────────────────────
 
 const PARTNER_COLORS = [
-  'bg-violet-500',
+  'bg-primary-500',
   'bg-blue-500',
   'bg-indigo-500',
   'bg-fuchsia-500',
@@ -37,7 +37,7 @@ const PARTNER_COLORS = [
 ]
 
 const PARTNER_COLORS_TEXT = [
-  'text-violet-700',
+  'text-primary-700',
   'text-blue-700',
   'text-indigo-700',
   'text-fuchsia-700',
@@ -46,7 +46,7 @@ const PARTNER_COLORS_TEXT = [
 ]
 
 const PARTNER_COLORS_BG_LIGHT = [
-  'bg-violet-50',
+  'bg-primary-50',
   'bg-blue-50',
   'bg-indigo-50',
   'bg-fuchsia-50',

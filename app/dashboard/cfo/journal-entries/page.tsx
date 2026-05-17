@@ -24,7 +24,7 @@ export default async function JournalEntriesPage() {
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-center px-4">
       <div className="text-3xl">⚠️</div>
       <p className="text-sm text-gray-500">Oturum bilgisi alınamadı. Lütfen sayfayı yenileyin.</p>
-      <a href="/dashboard/cfo/journal-entries" className="text-sm text-violet-600 font-semibold hover:underline">Yeniden Dene</a>
+      <a href="/dashboard/cfo/journal-entries" className="text-sm text-primary-600 font-semibold hover:underline">Yeniden Dene</a>
     </div>
   )
   if (!companyId) return <div className="p-8 text-gray-500">Şirket bulunamadı.</div>

@@ -94,7 +94,7 @@ function ErrorState({ href, label }: { href: string; label: string }) {
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-center px-4">
       <div className="text-3xl">⚠️</div>
       <p className="text-sm text-gray-500">{label}</p>
-      <a href={href} className="text-sm text-violet-600 font-semibold hover:underline">Yeniden Dene</a>
+      <a href={href} className="text-sm text-primary-600 font-semibold hover:underline">Yeniden Dene</a>
     </div>
   )
 }
@@ -254,7 +254,7 @@ export default async function CorporateTaxPage() {
               <div
                 key={q.label}
                 className={`grid grid-cols-[80px_1fr_1fr_1fr_110px] px-4 py-3 items-center ${
-                  isQ4 ? 'bg-violet-50' : ''
+                  isQ4 ? 'bg-primary-50' : ''
                 }`}
               >
                 {/* Quarter label */}
@@ -282,7 +282,7 @@ export default async function CorporateTaxPage() {
                 {/* Due date */}
                 <div className="text-right">
                   {isQ4 ? (
-                    <div className="text-xs text-violet-600 font-semibold">
+                    <div className="text-xs text-primary-600 font-semibold">
                       30 Nis {currentYear + 1}
                       <br />
                       <span className="text-[10px] text-gray-400 font-normal">(Yıllık Beyan)</span>
@@ -297,7 +297,7 @@ export default async function CorporateTaxPage() {
                 {/* Status badge */}
                 <div className="flex justify-end">
                   {isQ4 ? (
-                    <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-black uppercase tracking-wide rounded border bg-violet-100 text-violet-700 border-violet-200">
+                    <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-black uppercase tracking-wide rounded border bg-primary-100 text-primary-700 border-primary-200">
                       Yıllık KV
                     </span>
                   ) : (
