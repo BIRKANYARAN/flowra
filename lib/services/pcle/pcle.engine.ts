@@ -159,12 +159,14 @@ export class PCLEEngine {
     const today = new Date()
 
     // ── Estimate monthly debt service for DSR ──────────────────────────────────
-    // Sum all loan repayments across all partners, divide by months since first loan.
-    // This gives a trailing average monthly repayment rate.
+    // Primary: trailing average of actual repayments / months since first loan.
+    // Fallback: when no repayments yet, use outstanding principal × 1.5%/month
+    // (conservative 18% annual proxy) so DSR is never 0 when debt exists.
     const allFirstLoanDates = [...agg.values()]
       .map(a => a.firstLoanDate)
       .filter((d): d is string => !!d)
     const allRepaid = [...agg.values()].reduce((s, a) => s + a.repaid, 0)
+    const totalOutstanding = [...agg.values()].reduce((s, a) => s + Math.max(0, a.loaned - a.repaid), 0)
     let estimated_monthly_debt_service = 0
     if (allFirstLoanDates.length > 0 && allRepaid > 0) {
       const earliestLoan = allFirstLoanDates.reduce((a, b) => (a < b ? a : b))
@@ -173,6 +175,9 @@ export class PCLEEngine {
         (today.getTime() - new Date(earliestLoan).getTime()) / (30.44 * 86_400_000)
       )
       estimated_monthly_debt_service = round2(allRepaid / monthsSinceFirst)
+    } else if (totalOutstanding > 0) {
+      // No repayment history yet — use conservative 1.5%/month interest proxy
+      estimated_monthly_debt_service = round2(totalOutstanding * 0.015)
     }
 
     // ── Build positions ────────────────────────────────────────────────────────

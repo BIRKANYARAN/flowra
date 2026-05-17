@@ -111,6 +111,7 @@ function _ymEnd(ym: string): string {
 }
 const _CASH_EXCLUDED = new Set([
   'loan_repayment', 'partner_financing', 'dividend', 'internal_transfer',
+  'principal', 'partner_loan',
 ])
 
 export async function getCashflowTimeline(
@@ -264,6 +265,7 @@ export interface DistributableCashResult {
 
 const CASH_EXCLUDED_TYPES = new Set([
   'loan_repayment', 'partner_financing', 'dividend', 'internal_transfer',
+  'principal', 'partner_loan',
 ])
 
 function r2(v: number) { return Math.round((v + Number.EPSILON) * 100) / 100 }
