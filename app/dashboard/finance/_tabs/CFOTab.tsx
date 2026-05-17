@@ -17,12 +17,13 @@ import { BalanceSheetService }   from '@/lib/services/balance-sheet.service'
 import { TaxService }            from '@/lib/services/tax.service'
 import { FinanceService }        from '@/lib/services/finance.service'
 import { PartnerService }        from '@/lib/services/partner.service'
-import { getCfoMetrics }         from '@/lib/finance/financial-core'
+import { getCfoMetrics, getQuarterlyReport } from '@/lib/finance/financial-core'
 import { getRiskEngineResult }   from '@/lib/finance/risk-engine'
 import { createClient }          from '@/lib/supabase-server'
 import { fmtTRY, fmtPct, fmtDate, fmtCompact } from '@/lib/format'
 import { makeRequestContext }    from '@/lib/logger'
 import type { CfoMetrics }       from '@/lib/finance/cfo-metrics'
+import type { QuarterResult }    from '@/lib/finance/financial-core'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -128,7 +129,13 @@ export async function CFOTab({ userId, companyId }: Props) {
     stock:       { fifo_value: 0, coverage_months: null },
   }
 
-  const [balanceSheet, financialSummary, kdvResult, corporateTaxResult, partnerBalances, cfoMetrics, riskData] =
+  const ZERO_QUARTERLY = {
+    year: new Date().getFullYear(),
+    quarters: [] as QuarterResult[],
+    ytd: { revenue: 0, gross_profit: 0, net_profit: 0, matrah: 0, corporate_tax: 0, net_after_tax: 0, total_gecici: 0 },
+  }
+
+  const [balanceSheet, financialSummary, kdvResult, corporateTaxResult, partnerBalances, cfoMetrics, riskData, quarterlyReport] =
     await Promise.all([
       sq(BalanceSheetService.compute(userId, companyId, today, supabase)),
       sq(FinanceService.getFinancialSummary(userId, companyId, period, undefined, ctx)),
@@ -137,6 +144,7 @@ export async function CFOTab({ userId, companyId }: Props) {
       sq(PartnerService.getPartnerBalances(userId, companyId, ctx)),
       getCfoMetrics(companyId, { from, to: today }).catch(() => ZERO_METRICS),
       getRiskEngineResult(companyId).catch(() => null),
+      getQuarterlyReport(userId, companyId, new Date().getFullYear()).catch(() => ZERO_QUARTERLY),
     ])
 
   // ── Derived metrics ─────────────────────────────────────────────────────────
@@ -216,12 +224,6 @@ export async function CFOTab({ userId, companyId }: Props) {
           <p className="text-xs text-gray-400 mt-0.5">Finansal doğruluk ve dönem yönetimi — {fmtDate(today)}</p>
         </div>
         <div className="flex gap-2">
-          <Link
-            href="/dashboard/finance?tab=quarterly"
-            className="text-xs font-semibold text-gray-500 hover:text-gray-800 border border-gray-100 px-3 py-1.5 rounded-xl hover:bg-gray-50 transition-colors"
-          >
-            Finansal Analitik →
-          </Link>
           <Link
             href="/dashboard/finance?tab=tax"
             className="text-xs font-semibold text-gray-500 hover:text-gray-800 border border-gray-100 px-3 py-1.5 rounded-xl hover:bg-gray-50 transition-colors"
@@ -454,12 +456,123 @@ export async function CFOTab({ userId, companyId }: Props) {
           ))}
         </div>
         <Link
-          href="/dashboard/finance?tab=quarterly"
+          href="/dashboard/finance?tab=pnl"
           className="mt-3 block text-center text-xs font-semibold text-primary-600 hover:text-primary-700"
         >
           Detaylı P&L raporu →
         </Link>
       </div>
+
+      {/* Quarterly Performance section */}
+      {quarterlyReport && quarterlyReport.quarters.length > 0 && (() => {
+        const qs  = quarterlyReport.quarters
+        const ytd = quarterlyReport.ytd
+        const currentYear = quarterlyReport.year
+        function fmtPctQ(r: number): string {
+          return `%${(r * 100).toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}`
+        }
+        function deltaQ(curr: number, prev: number) {
+          if (prev === 0) return { text: '—', color: 'text-gray-400' }
+          const p = ((curr - prev) / Math.abs(prev)) * 100
+          return { text: `${p >= 0 ? '+' : ''}${p.toFixed(1)}%`, color: p >= 0 ? 'text-emerald-600' : 'text-red-600' }
+        }
+        const addDaysQ = (dateStr: string, n: number) => { const d = new Date(dateStr); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10) }
+        const fmtDateQ = (d: string) => { const [y, m, day] = d.split('-'); const months = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara']; return `${day} ${months[Number(m)-1]} ${y}` }
+
+        return (
+          <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+            <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+              <div>
+                <h2 className="text-sm font-black text-gray-800">Çeyreklik Analitik — {currentYear}</h2>
+                <p className="text-[10px] text-gray-400 mt-0.5">YTD P&L · Çeyreklik performans · Geçici vergi takvimi</p>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-right">
+                <div>
+                  <div className="text-[9px] font-bold uppercase tracking-widest text-gray-400">YTD Ciro</div>
+                  <div className="text-sm font-black text-gray-900 tabular-nums">{fmtTRY(ytd.revenue)}</div>
+                </div>
+                <div>
+                  <div className="text-[9px] font-bold uppercase tracking-widest text-gray-400">Net Kâr</div>
+                  <div className={`text-sm font-black tabular-nums ${ytd.net_after_tax >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>{fmtTRY(ytd.net_after_tax)}</div>
+                </div>
+              </div>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs min-w-[500px]">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-100">
+                    <th className="text-left px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-400">Çeyrek</th>
+                    <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-400">Ciro</th>
+                    <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-primary-400">Brüt Kâr</th>
+                    <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-emerald-400">Net Kâr</th>
+                    <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-400">Brüt Marj</th>
+                    <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-amber-400">KV Matrahı</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {qs.map((q: QuarterResult, i: number) => {
+                    const prev = i > 0 ? qs[i - 1] : null
+                    const revDelta = prev && prev.revenue > 0 ? deltaQ(q.revenue, prev.revenue) : null
+                    const isFuture = !q.is_past_quarter && q.period.from > today
+                    return (
+                      <tr key={q.label} className={`hover:bg-gray-50/60 ${isFuture ? 'opacity-40' : ''}`}>
+                        <td className="px-4 py-2.5 font-black text-gray-900 text-xs">{q.label}</td>
+                        <td className="px-4 py-2.5 text-right">
+                          <div className="font-mono font-bold text-gray-900">{fmtTRY(q.revenue)}</div>
+                          {revDelta && <div className={`text-[10px] font-semibold ${revDelta.color}`}>{revDelta.text}</div>}
+                        </td>
+                        <td className={`px-4 py-2.5 text-right font-mono font-bold ${q.gross_profit >= 0 ? 'text-primary-700' : 'text-red-600'}`}>{fmtTRY(q.gross_profit)}</td>
+                        <td className={`px-4 py-2.5 text-right font-mono font-bold ${q.net_profit >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>{fmtTRY(q.net_profit)}</td>
+                        <td className={`px-4 py-2.5 text-right font-mono ${q.gross_margin >= 0.3 ? 'text-emerald-600' : q.gross_margin >= 0.1 ? 'text-amber-600' : 'text-red-600'}`}>
+                          {q.revenue > 0 ? fmtPctQ(q.gross_margin) : '—'}
+                        </td>
+                        <td className={`px-4 py-2.5 text-right font-mono ${q.matrah > 0 ? 'text-amber-700' : 'text-gray-400'}`}>{q.matrah > 0 ? fmtTRY(q.matrah) : '—'}</td>
+                      </tr>
+                    )
+                  })}
+                  <tr className="bg-primary-50/40 font-black border-t-2 border-primary-100">
+                    <td className="px-4 py-2.5 text-primary-800 font-black text-xs">YTD Toplam</td>
+                    <td className="px-4 py-2.5 text-right font-mono font-black text-gray-900">{fmtTRY(ytd.revenue)}</td>
+                    <td className={`px-4 py-2.5 text-right font-mono font-black ${ytd.gross_profit >= 0 ? 'text-primary-700' : 'text-red-600'}`}>{fmtTRY(ytd.gross_profit)}</td>
+                    <td className={`px-4 py-2.5 text-right font-mono font-black ${ytd.net_profit >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>{fmtTRY(ytd.net_profit)}</td>
+                    <td className="px-4 py-2.5 text-right font-mono text-gray-500">{ytd.revenue > 0 ? fmtPctQ(ytd.gross_profit / ytd.revenue) : '—'}</td>
+                    <td className={`px-4 py-2.5 text-right font-mono font-black ${ytd.matrah > 0 ? 'text-amber-700' : 'text-gray-400'}`}>{ytd.matrah > 0 ? fmtTRY(ytd.matrah) : '—'}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            {/* Gecici vergi schedule if any */}
+            {qs.some((q: QuarterResult) => q.gecici_vergi > 0) && (
+              <div className="border-t border-gray-100">
+                <div className="px-4 py-3 flex items-center justify-between">
+                  <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Geçici Vergi Takvimi {currentYear}</div>
+                  <span className="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">Toplam {fmtTRY(ytd.total_gecici)}</span>
+                </div>
+                <div className="divide-y divide-gray-50">
+                  {qs.filter((q: QuarterResult) => q.gecici_vergi > 0 && q.gecici_due_date).map((q: QuarterResult) => {
+                    if (!q.gecici_due_date) return null
+                    const isPast   = q.gecici_due_date <= today
+                    const isUrgent = !isPast && q.gecici_due_date <= addDaysQ(today, 30)
+                    return (
+                      <div key={q.label} className={`px-4 py-2.5 flex items-center justify-between gap-4 ${isUrgent ? 'bg-amber-50/40' : ''}`}>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-gray-800">{q.label} Geçici Vergi</span>
+                            {isPast && <span className="text-[9px] bg-gray-100 text-gray-400 px-1.5 py-0.5 rounded-full">Geçti</span>}
+                            {isUrgent && !isPast && <span className="text-[9px] bg-amber-100 text-amber-700 font-bold px-1.5 py-0.5 rounded-full">30 gün içinde</span>}
+                          </div>
+                          <div className="text-[10px] text-gray-400 mt-0.5">Son ödeme: {fmtDateQ(q.gecici_due_date)} · Matrah: {fmtTRY(q.matrah)}</div>
+                        </div>
+                        <div className={`text-sm font-black tabular-nums ${isPast ? 'text-gray-400' : isUrgent ? 'text-amber-700' : 'text-amber-600'}`}>{fmtTRY(q.gecici_vergi)}</div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        )
+      })()}
 
       {/* GL Tools */}
       <div className="grid grid-cols-3 gap-2">

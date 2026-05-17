@@ -5,16 +5,18 @@ export const dynamic = 'force-dynamic'
 //
 // Route: /dashboard/finance?tab=[tab_id]
 //
-// Tabs:
-//   overview  → Genel Finans   — CEO liquidity cockpit
-//   pnl       → Kâr / Zarar   — Accrual P&L statement
-//   balance   → Bilanço        — Balance sheet
-//   cashflow  → Nakit Akışı   — Cashflow timeline + scenario
-//   tax       → Vergi          — KDV + geçici vergi calendar
-//   risks     → Riskler        — AR aging + concentration
-//   forecast  → Tahmin         — Runway projection
-//   quarterly → Çeyreklik      — YTD + quarter grid
-//   cfo       → CFO            — CFO cockpit + period management
+// Active tabs (6):
+//   pnl      → Kâr / Zarar   — Accrual P&L statement
+//   balance  → Bilanço        — Balance sheet
+//   cashflow → Nakit Akışı   — Cashflow + burn rate + runway + projection
+//   tax      → Vergi          — KDV + geçici vergi calendar
+//   risks    → Riskler        — AR aging + concentration
+//   cfo      → CFO            — CFO cockpit + quarterly + period management
+//
+// Legacy redirects (server-side, no flash):
+//   overview  → /dashboard
+//   forecast  → ?tab=cashflow
+//   quarterly → ?tab=cfo
 //
 // Data: each tab is a full RSC that loads its own data.
 // Auth: resolved once here, passed as props to all tabs.
@@ -26,47 +28,36 @@ import { createClient }      from '@/lib/supabase-server'
 import { resolveCompanyId }  from '@/lib/resolve-company'
 import { UnifiedTabNav }     from '@/app/dashboard/_shared/UnifiedTabNav'
 
-import { OverviewTab }   from './_tabs/OverviewTab'
 import { PnlTab }        from './_tabs/PnlTab'
 import { BalanceTab }    from './_tabs/BalanceTab'
 import { CashflowTab }   from './_tabs/CashflowTab'
 import { TaxTab }        from './_tabs/TaxTab'
 import { RisksTab }      from './_tabs/RisksTab'
-import { ForecastTab }   from './_tabs/ForecastTab'
-import { QuarterlyTab }  from './_tabs/QuarterlyTab'
 import { CFOTab }        from './_tabs/CFOTab'
 import { FinanceContextBar } from './_shared/FinanceContextBar'
 
 // ── Valid tabs ─────────────────────────────────────────────────────────────────
 
-type FinanceTab = 'overview' | 'pnl' | 'balance' | 'cashflow' | 'tax' | 'risks' | 'forecast' | 'quarterly' | 'cfo'
+type FinanceTab = 'pnl' | 'balance' | 'cashflow' | 'tax' | 'risks' | 'cfo'
 
-const VALID_TABS: FinanceTab[] = [
-  'overview', 'pnl', 'balance', 'cashflow', 'tax', 'risks', 'forecast', 'quarterly', 'cfo',
-]
+const VALID_TABS: FinanceTab[] = ['pnl', 'balance', 'cashflow', 'tax', 'risks', 'cfo']
 
 const FINANCE_NAV_TABS = [
-  { key: 'overview',  label: 'Genel'      },
-  { key: 'pnl',       label: 'Kâr/Zarar'  },
-  { key: 'balance',   label: 'Bilanço'    },
-  { key: 'cashflow',  label: 'Nakit'      },
-  { key: 'tax',       label: 'Vergi'      },
-  { key: 'risks',     label: 'Riskler'    },
-  { key: 'forecast',  label: 'Tahmin'     },
-  { key: 'quarterly', label: 'Çeyreklik'  },
-  { key: 'cfo',       label: 'CFO'        },
+  { key: 'pnl',      label: 'Kâr/Zarar' },
+  { key: 'balance',  label: 'Bilanço'   },
+  { key: 'cashflow', label: 'Nakit'     },
+  { key: 'tax',      label: 'Vergi'     },
+  { key: 'risks',    label: 'Riskler'   },
+  { key: 'cfo',      label: 'CFO'       },
 ]
 
 const TAB_META: Record<FinanceTab, { title: string; sub: string }> = {
-  overview:  { title: 'Genel Finans',   sub: 'Likidite · Tahsilat · Risk Matrisi · Nakit Projeksiyonu' },
-  pnl:       { title: 'Kâr / Zarar',   sub: 'Ciro · Brüt Kâr · Faaliyet Kârı · Vergi Sonrası Net' },
-  balance:   { title: 'Bilanço',        sub: 'Varlıklar · Yükümlülükler · Özsermaye' },
-  cashflow:  { title: 'Nakit Akışı',   sub: '12 aylık tahsilat · gider · baskı haritası · senaryo' },
-  tax:       { title: 'Vergi Merkezi',  sub: 'KDV · Geçici Vergi · Kurumlar Vergisi · Matrah Analizi' },
-  risks:     { title: 'Risk Analizi',   sub: 'Alacak yaşlandırma · Müşteri konsantrasyonu · HHI Endeksi' },
-  forecast:  { title: 'Nakit Tahmini', sub: 'Runway projeksiyonu · 12 ay nakit akışı · Senaryo analizi' },
-  quarterly: { title: 'Çeyreklik CFO', sub: 'YTD P&L · Çeyreklik performans · Vergi takvimi · Aylık detay' },
-  cfo:       { title: 'CFO Cockpit',   sub: 'Muhasebe doğruluğu · Dönem yönetimi · Mizan · Uzlaştırma' },
+  pnl:      { title: 'Kâr / Zarar',  sub: 'Ciro · Brüt Kâr · Faaliyet Kârı · Vergi Sonrası Net' },
+  balance:  { title: 'Bilanço',       sub: 'Varlıklar · Yükümlülükler · Özsermaye' },
+  cashflow: { title: 'Nakit Akışı',  sub: 'Burn rate · Runway · 12 ay projeksiyon · Baskı haritası' },
+  tax:      { title: 'Vergi Merkezi', sub: 'KDV · Geçici Vergi · Kurumlar Vergisi · Matrah Analizi' },
+  risks:    { title: 'Risk Analizi',  sub: 'Alacak yaşlandırma · Müşteri konsantrasyonu · HHI Endeksi' },
+  cfo:      { title: 'CFO Cockpit',  sub: 'Muhasebe doğruluğu · Çeyreklik · Dönem yönetimi · Mizan' },
 }
 
 // ── Loading skeleton ───────────────────────────────────────────────────────────
@@ -120,10 +111,16 @@ export default async function FinancePage({ searchParams }: PageProps) {
     </div>
   )
 
-  // ── Tab resolution ─────────────────────────────────────────────────────────
-  const params    = await searchParams
-  const rawTab    = params.tab ?? 'overview'
-  const activeTab = (VALID_TABS.includes(rawTab as FinanceTab) ? rawTab : 'overview') as FinanceTab
+  // ── Tab resolution — legacy redirects (server-side, no flash) ────────────────
+  const params = await searchParams
+  const rawTab = params.tab ?? 'pnl'
+
+  // Legacy tabs absorbed into other pages
+  if (rawTab === 'overview')  redirect('/dashboard')
+  if (rawTab === 'forecast')  redirect('/dashboard/finance?tab=cashflow')
+  if (rawTab === 'quarterly') redirect('/dashboard/finance?tab=cfo')
+
+  const activeTab = (VALID_TABS.includes(rawTab as FinanceTab) ? rawTab : 'pnl') as FinanceTab
   const meta      = TAB_META[activeTab]
   const tabProps  = { userId, companyId }
 
@@ -164,15 +161,12 @@ export default async function FinancePage({ searchParams }: PageProps) {
 
       {/* ── Active tab content ────────────────────────────────────────────────── */}
       <Suspense fallback={<div className="mt-5"><TabSkeleton /></div>}>
-        {activeTab === 'overview'  && <OverviewTab  {...tabProps} />}
-        {activeTab === 'pnl'       && <PnlTab       {...tabProps} />}
-        {activeTab === 'balance'   && <BalanceTab   {...tabProps} />}
-        {activeTab === 'cashflow'  && <CashflowTab  {...tabProps} />}
-        {activeTab === 'tax'       && <TaxTab       {...tabProps} />}
-        {activeTab === 'risks'     && <RisksTab     {...tabProps} />}
-        {activeTab === 'forecast'  && <ForecastTab  {...tabProps} />}
-        {activeTab === 'quarterly' && <QuarterlyTab {...tabProps} />}
-        {activeTab === 'cfo'       && <CFOTab       {...tabProps} />}
+        {activeTab === 'pnl'      && <PnlTab      {...tabProps} />}
+        {activeTab === 'balance'  && <BalanceTab  {...tabProps} />}
+        {activeTab === 'cashflow' && <CashflowTab {...tabProps} />}
+        {activeTab === 'tax'      && <TaxTab      {...tabProps} />}
+        {activeTab === 'risks'    && <RisksTab    {...tabProps} />}
+        {activeTab === 'cfo'      && <CFOTab      {...tabProps} />}
       </Suspense>
 
     </div>

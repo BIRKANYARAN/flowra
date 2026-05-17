@@ -278,7 +278,7 @@ export default async function DashboardPage() {
 
   // ── Derived values ─────────────────────────────────────────────────────────
   const outstanding          = openProfs.reduce((s, p) => s + Number(p.total_try ?? 0), 0)
-  const vatStatus            = fs.net_vat_try > 0 ? 'payable' : 'carry_forward'
+  // vatStatus removed — KDV card moved to Finance hub Tax tab
   const uncollectedSalesTotal = uncollectedSalesData.reduce((s, r) => s + Math.max(0, Number(r.total_try ?? 0) - Number(r.amount_paid ?? 0)), 0)
   const uncollectedSalesCount = uncollectedSalesData.length
   const actuallyCollected     = (collectedSalesData ?? []).reduce((s, r) => s + Number(r.total_try ?? 0), 0)
@@ -764,113 +764,68 @@ export default async function DashboardPage() {
         )}
       </div>
 
-      {/* ── FINANCIAL DETAIL GRID ──────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-
-        {/* NAKİT KÖPRÜSÜ */}
-        <div className="lg:col-span-7 bg-white border border-gray-100 rounded-xl shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
-          <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-50">
-            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Nakit Köprüsü</span>
-            <Link href="/dashboard/insights" className="text-[10px] text-primary-600 font-semibold hover:text-primary-700">Analiz →</Link>
-          </div>
-          <div className="px-5 py-3.5 space-y-2">
-            <WRow label="+ Tahsil Edilen" value={actuallyCollected} sub={`${fmt(fs.revenue_try)} fatura · %${actuallyCollectedPct}`} />
-            <WRow label="− Ödenmiş Giderler" value={-paidExpenses} sub="ödenen" />
-            <WRow label="− Açık Yükümlülükler" value={-outstandingObligations} sub={`${fmt(unpaidExpenses)} ödenmemiş`} />
-            <div className="border-t border-dashed border-gray-200 pt-2">
-              <WRow label="= Dağıtılabilir" value={cashDistributable} sub={`Nakit bakiye ${fmt(cashBalance)}`} isTotal />
-            </div>
-          </div>
-          {cashDistributable === 0 ? (
-            <div className="mx-5 mb-4 text-xs text-red-600 font-semibold bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-              Dağıtılacak nakit yok{uncollectedSalesTotal > 0 ? ` — ${fmt(uncollectedSalesTotal)} tahsilat bekliyor` : ''}
-            </div>
-          ) : equalization.entries.length > 0 ? (
-            <div className="px-5 pb-4 pt-2 border-t border-gray-50 flex items-center gap-2 overflow-hidden flex-wrap">
-              <span className="text-[9px] font-bold uppercase tracking-widest text-gray-300 flex-shrink-0">Paylaşım</span>
-              {equalization.entries.slice(0, 4).map(e => (
-                <div key={e.partner_id} className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-100 rounded-lg px-2.5 py-1 min-w-0">
-                  <span className="text-[10px] text-gray-600 font-semibold truncate max-w-[72px]">{e.partner_name}</span>
-                  <span className="text-[11px] font-black tabular-nums text-emerald-700 flex-shrink-0">{fmt(e.total_payout)}</span>
-                </div>
-              ))}
-            </div>
-          ) : null}
+      {/* ── NAKIT KÖPRÜSÜ — compact horizontal rail ───────────────────────── */}
+      <div className="bg-white border border-gray-100 rounded-xl shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+        <div className="flex items-center justify-between px-5 py-2.5 border-b border-gray-50">
+          <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Nakit Köprüsü</span>
+          <Link href="/dashboard/finance?tab=cashflow" className="text-[10px] text-primary-600 font-semibold hover:text-primary-700">Cashflow →</Link>
         </div>
-
-        {/* TAX + METRICS */}
-        <div className="lg:col-span-5 flex flex-col gap-3">
-          {/* KDV */}
-          <div className="bg-white border border-gray-100 rounded-xl px-4 py-3.5 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
-            <div className="flex items-start justify-between">
-              <div>
-                <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">KDV (Net)</div>
-                <div className={`text-xl font-black tabular-nums leading-none ${fs.net_vat_try > 0 ? 'text-orange-600' : 'text-emerald-600'}`}>
-                  <span className={`font-normal text-sm mr-0.5 ${fs.net_vat_try > 0 ? 'text-orange-300' : 'text-emerald-300'}`}>₺</span>
-                  {formatKpi(Math.abs(fs.net_vat_try))}
-                </div>
-                <div className="text-[10px] text-gray-400 mt-1">Sat: {fmt(fs.sales_vat_try)} · Alış: {fmt(fs.purchase_vat_try + fs.expense_vat_try)}</div>
-              </div>
-              <span className={`text-[10px] font-bold px-2 py-1 rounded-lg flex-shrink-0 ${vatStatus === 'payable' ? 'bg-orange-100 text-orange-700' : 'bg-emerald-100 text-emerald-700'}`}>
-                {vatStatus === 'payable' ? 'Ödenecek' : 'Devir'}
-              </span>
+        <div className="px-5 py-3 grid grid-cols-2 sm:grid-cols-4 gap-0 divide-x divide-gray-100">
+          {[
+            { label: '+ Tahsil Edilen',      value: actuallyCollected,       tone: 'text-emerald-700', sub: `%${actuallyCollectedPct} tahsilat` },
+            { label: '− Ödenen Giderler',    value: -paidExpenses,           tone: 'text-red-600',    sub: `${fmt(unpaidExpenses)} bekliyor` },
+            { label: '− Açık Yükümlülükler', value: -outstandingObligations, tone: 'text-amber-600',  sub: 'ödenmemiş' },
+            { label: '= Dağıtılabilir',       value: cashDistributable,       tone: cashDistributable >= 0 ? 'text-gray-900' : 'text-red-600', sub: `bakiye ${fmt(cashBalance)}` },
+          ].map(c => (
+            <div key={c.label} className="px-4 first:pl-0 last:pr-0">
+              <div className="text-[9px] font-bold uppercase tracking-widest text-gray-400 mb-1">{c.label}</div>
+              <div className={`text-lg font-black tabular-nums leading-none ${c.tone}`}>{fmt(c.value)}</div>
+              <div className="text-[9px] text-gray-400 mt-0.5">{c.sub}</div>
             </div>
-          </div>
-          {/* Kurumlar Vergisi */}
-          <div className="bg-white border border-gray-100 rounded-xl px-4 py-3.5 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
-            <div className="flex items-start justify-between">
-              <div>
-                <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">Kurumlar Vergisi</div>
-                <div className={`text-xl font-black tabular-nums leading-none ${fs.corporate_tax_try > 0 ? 'text-gray-900' : 'text-gray-400'}`}>
-                  <span className="text-gray-300 font-normal text-sm mr-0.5">₺</span>{formatKpi(fs.corporate_tax_try)}
-                </div>
-                <div className="text-[10px] text-gray-400 mt-1">Matrah: {fmt(fs.matrah_try)}</div>
-              </div>
-              <span className="text-[10px] font-bold px-2 py-1 bg-gray-100 text-gray-500 rounded-lg flex-shrink-0">
-                %{fs.corporate_tax_rate}
-              </span>
-            </div>
-          </div>
+          ))}
         </div>
+        {cashDistributable === 0 && uncollectedSalesTotal > 0 && (
+          <div className="mx-5 mb-3 text-xs text-red-600 font-semibold bg-red-50 border border-red-200 rounded-lg px-3 py-1.5">
+            {fmt(uncollectedSalesTotal)} tahsilat bekliyor — dağıtılabilir nakit yok
+          </div>
+        )}
+        {cashDistributable > 0 && equalization.entries.length > 0 && (
+          <div className="px-5 pb-3 pt-2 border-t border-gray-50 flex items-center gap-2 overflow-hidden flex-wrap">
+            <span className="text-[9px] font-bold uppercase tracking-widest text-gray-300 flex-shrink-0">Paylaşım</span>
+            {equalization.entries.slice(0, 4).map(e => (
+              <div key={e.partner_id} className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-100 rounded-lg px-2.5 py-1 min-w-0">
+                <span className="text-[10px] text-gray-600 font-semibold truncate max-w-[72px]">{e.partner_name}</span>
+                <span className="text-[11px] font-black tabular-nums text-emerald-700 flex-shrink-0">{fmt(e.total_payout)}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* ── SECONDARY ROW: Forecast + Giderler + Open Proformalar ────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
 
-        {/* 12-Month Forecast */}
+        {/* Runway summary — compressed single line */}
         <div className="lg:col-span-8 bg-white border border-gray-100 rounded-xl shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
-          <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-50">
-            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">12 Aylık Nakit Tahmini</span>
-            <Link href="/dashboard/planning?tab=cash-projection" className="text-[10px] text-primary-600 font-semibold hover:text-primary-700">Nakit Projeksiyonu →</Link>
+          <div className="flex items-center justify-between px-5 py-2.5 border-b border-gray-50">
+            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Nakit Pisti</span>
+            <Link href="/dashboard/planning?tab=cash-projection" className="text-[10px] text-primary-600 font-semibold hover:text-primary-700">Projeksiyon →</Link>
           </div>
-          <div className="px-5 py-4 grid grid-cols-3 gap-4">
+          <div className="px-5 py-3 grid grid-cols-3 gap-4 divide-x divide-gray-100">
             {([
-              { label: 'Kötümser', data: forecast.pessimistic, summary: forecast.summary.pessimistic, color: 'text-red-600', barColor: 'bg-red-200', barActive: 'bg-red-400' },
-              { label: 'Baz',      data: forecast.base,        summary: forecast.summary.base,        color: 'text-gray-700', barColor: 'bg-gray-100', barActive: 'bg-gray-400' },
-              { label: 'İyimser',  data: forecast.optimistic,  summary: forecast.summary.optimistic,  color: 'text-emerald-700', barColor: 'bg-emerald-100', barActive: 'bg-emerald-400' },
-            ] as const).map(({ label, data, summary, color, barColor, barActive }) => (
-              <div key={label} className="flex flex-col gap-2">
-                <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">{label}</div>
-                <div className="flex items-end gap-0.5 h-10">
-                  {data.slice(0, 12).map((m, i) => {
-                    const maxCash = Math.max(...data.map(x => Math.abs(x.cash)), 1)
-                    const height  = Math.max(3, Math.round((Math.abs(m.cash) / maxCash) * 40))
-                    return (
-                      <div key={i} title={`${m.label}: ${fmt(m.cash)}`}
-                        className={`flex-1 rounded-sm transition-colors ${m.cash >= 0 ? barActive : 'bg-red-300'}`}
-                        style={{ height: `${height}px` }}
-                      />
-                    )
-                  })}
-                </div>
-                <div className={`text-sm font-black tabular-nums ${color}`}>
-                  <span className="text-gray-300 font-normal text-xs mr-0.5">₺</span>{formatKpi(Math.abs(summary.endCash))}
-                </div>
-                <div className="text-[10px] text-gray-400 leading-snug">
+              { label: 'Kötümser', summary: forecast.summary.pessimistic, tone: 'text-red-600' },
+              { label: 'Baz',      summary: forecast.summary.base,        tone: 'text-gray-800' },
+              { label: 'İyimser',  summary: forecast.summary.optimistic,  tone: 'text-emerald-700' },
+            ] as const).map(({ label, summary, tone }) => (
+              <div key={label} className="pl-4 first:pl-0">
+                <div className="text-[9px] font-bold uppercase tracking-widest text-gray-400 mb-1">{label}</div>
+                <div className={`text-lg font-black tabular-nums leading-none ${tone}`}>
                   {summary.runwayEndMonth
-                    ? <span className="text-red-500 font-semibold">{summary.runwayEndMonth}&apos;da nakit biter</span>
-                    : <span>{summary.totalNet >= 0 ? `+${fmt(summary.totalNet)} net` : `${fmt(summary.totalNet)} zarar`}</span>
-                  }
+                    ? <span className="text-red-500">{summary.runwayEndMonth}</span>
+                    : fmt(summary.endCash)}
+                </div>
+                <div className="text-[9px] text-gray-400 mt-0.5">
+                  {summary.runwayEndMonth ? 'nakit biter' : summary.totalNet >= 0 ? `+${fmt(summary.totalNet)} net` : `${fmt(Math.abs(summary.totalNet))} zarar`}
                 </div>
               </div>
             ))}
