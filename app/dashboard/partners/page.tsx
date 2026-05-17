@@ -28,6 +28,7 @@ import { WaterfallTab }   from '@/app/dashboard/partners/_components/WaterfallTa
 import { TranchesTab }    from '@/app/dashboard/partners/_components/TranchesTab'
 import { DistributionTab } from '@/app/dashboard/partners/_components/DistributionTab'
 import { ReturnsTab }     from '@/app/dashboard/partners/_components/ReturnsTab'
+import { PartnersContextBar } from '@/app/dashboard/partners/_shared/PartnersContextBar'
 
 interface EditForm { name: string; shareRatioPct: string }
 
@@ -302,23 +303,28 @@ export default function PartnersPage() {
         </Link>
       </div>
 
-      {/* Sticky tab nav */}
-      <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm -mx-5 px-5 pt-1 border-b border-gray-100">
-        <div className="flex items-center gap-0.5 overflow-x-auto scrollbar-none">
-          {TABS.map(t => (
-            <button
-              key={t.id}
-              onClick={() => setActiveTab(t.id)}
-              className={[
-                'relative px-3 py-2.5 text-[13px] transition-colors whitespace-nowrap flex-shrink-0 bg-transparent border-0 cursor-pointer',
-                activeTab === t.id
-                  ? 'text-gray-900 font-semibold border-b-2 border-gray-900 -mb-px'
-                  : 'text-gray-400 hover:text-gray-600 font-medium',
-              ].join(' ')}
-            >
-              {t.label}
-            </button>
-          ))}
+      {/* Sticky tab nav + context bar */}
+      <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm -mx-5">
+        <div className="px-5 pt-1 border-b border-gray-100">
+          <div className="flex items-center gap-0.5 overflow-x-auto scrollbar-none">
+            {TABS.map(t => (
+              <button
+                key={t.id}
+                onClick={() => setActiveTab(t.id)}
+                className={[
+                  'relative px-3 py-2.5 text-[13px] transition-colors whitespace-nowrap flex-shrink-0 bg-transparent border-0 cursor-pointer',
+                  activeTab === t.id
+                    ? 'text-gray-900 font-semibold border-b-2 border-gray-900 -mb-px'
+                    : 'text-gray-400 hover:text-gray-600 font-medium',
+                ].join(' ')}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="px-5">
+          <PartnersContextBar />
         </div>
       </div>
 
