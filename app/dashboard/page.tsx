@@ -425,7 +425,7 @@ export default async function DashboardPage() {
   const situTheme  = SITUATION_THEME[situation.status]
 
   return (
-    <div className="flex flex-col gap-1.5 max-w-6xl">
+    <div className="flex flex-col gap-3 max-w-6xl">
 
       {/* ── Situation Band ────────────────────────────────────────────────── */}
       <div className={`flex items-center gap-3 px-4 py-2.5 rounded-xl border ${situTheme.bg} ${situTheme.border}`}>
@@ -473,10 +473,10 @@ export default async function DashboardPage() {
           )}
         </div>
         <div className="ml-auto flex items-center gap-1.5 flex-shrink-0">
-          <Link href="/dashboard/commercial?tab=proformas" className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gray-900 text-white text-xs font-semibold hover:bg-gray-700 transition-colors">+ Proforma</Link>
-          <Link href="/dashboard/commercial?tab=sales"     className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition-colors">Satışlar</Link>
-          <Link href="/dashboard/commercial?tab=collections" className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-primary-600 text-white text-xs font-semibold hover:bg-primary-700 transition-colors">Tahsilat</Link>
-          <Link href="/dashboard/operations?tab=expenses"  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-orange-500 text-white text-xs font-semibold hover:bg-orange-600 transition-colors">+ Gider</Link>
+          <Link href="/dashboard/commercial?tab=proformas" className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-gray-900 text-white text-xs font-semibold hover:bg-gray-700 transition-colors">+ Proforma</Link>
+          <Link href="/dashboard/commercial?tab=sales"     className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition-colors">Satışlar</Link>
+          <Link href="/dashboard/commercial?tab=collections" className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-primary-600 text-white text-xs font-semibold hover:bg-primary-700 transition-colors">Tahsilat</Link>
+          <Link href="/dashboard/operations?tab=expenses"  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-orange-500 text-white text-xs font-semibold hover:bg-orange-600 transition-colors">+ Gider</Link>
         </div>
       </div>
 
@@ -512,7 +512,7 @@ export default async function DashboardPage() {
       )}
 
       {/* ── KPI Strip ─────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1.5">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
         <FlowraKpiCard label="Ciro" value={fs.revenue_try} rawValue={fmt(fs.revenue_try)} sub={fs.revenue_try > 0 ? `Brüt marj ${pct(grossMarginPct)}` : 'Satış yok'} href="/dashboard/commercial?tab=sales" />
         <FlowraKpiCard label="Tahsil Edilen" value={actuallyCollected} rawValue={fmt(actuallyCollected)} sub={`%${actuallyCollectedPct} oran`} tone={actuallyCollectedPct >= 80 ? 'positive' : actuallyCollectedPct >= 50 ? 'neutral' : 'negative'} href="/dashboard/commercial?tab=collections" />
         <FlowraKpiCard label="Dağıtılabilir" value={cashDistributable} rawValue={cashDistributable > 0 ? fmt(cashDistributable) : '—'} sub={cashDistributable > 0 ? 'Nakit bazlı' : 'Yok'} tone={cashDistributable > 0 ? 'positive' : 'neutral'} href="/dashboard/partners" />
@@ -522,10 +522,10 @@ export default async function DashboardPage() {
       </div>
 
       {/* ── Main Grid: Waterfall 7/12 | Tax/Net 5/12 ─────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-1.5">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
 
         {/* Cash Waterfall */}
-        <div className="lg:col-span-7 bg-white border border-gray-200 rounded-xl px-4 py-2.5">
+        <div className="lg:col-span-7 bg-white border border-gray-100 rounded-xl px-4 py-2.5 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Nakit Köprüsü</span>
             <Link href="/dashboard/insights" className="text-[10px] text-primary-600 font-semibold hover:text-primary-700">Analiz →</Link>
@@ -558,7 +558,7 @@ export default async function DashboardPage() {
 
         {/* Tax + Net — 3 rows */}
         <div className="lg:col-span-5 grid grid-rows-3 gap-1.5">
-          <div className="bg-white border border-gray-200 rounded-xl px-3 py-2 flex items-center justify-between">
+          <div className="bg-white border border-gray-100 rounded-xl px-3 py-2 flex items-center justify-between shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
             <div>
               <div className="text-[9px] font-black uppercase tracking-widest text-gray-400">KDV (Net)</div>
               <div className={`text-base font-black tabular-nums leading-tight mt-0.5 ${fs.net_vat_try > 0 ? 'text-orange-600' : 'text-emerald-600'}`}>
@@ -571,7 +571,7 @@ export default async function DashboardPage() {
             </div>
           </div>
 
-          <div className="bg-white border border-gray-200 rounded-xl px-3 py-2 flex items-center justify-between">
+          <div className="bg-white border border-gray-100 rounded-xl px-3 py-2 flex items-center justify-between shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
             <div>
               <div className="text-[9px] font-black uppercase tracking-widest text-gray-400">Kurumlar Vergisi</div>
               <div className={`text-base font-black tabular-nums leading-tight mt-0.5 ${fs.corporate_tax_try > 0 ? 'text-gray-900' : 'text-gray-400'}`}>
@@ -584,7 +584,7 @@ export default async function DashboardPage() {
             </div>
           </div>
 
-          <div className={`rounded-xl px-3 py-2 border flex items-center justify-between ${monthlyNet >= 0 ? 'bg-white border-gray-200' : 'bg-red-50 border-red-200'}`}>
+          <div className={`rounded-xl px-3 py-2 border flex items-center justify-between shadow-[0_1px_2px_rgba(17,24,39,0.04)] ${monthlyNet >= 0 ? 'bg-white border-gray-100' : 'bg-red-50 border-red-200'}`}>
             <div>
               <div className="text-[9px] font-black uppercase tracking-widest text-gray-400">Aylık Net</div>
               <div className={`text-base font-black tabular-nums leading-tight mt-0.5 ${monthlyNet >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
@@ -602,7 +602,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* ── 12-Month Forecast Strip ───────────────────────────────────────── */}
-      <div className="bg-white border border-gray-200 rounded-xl px-4 py-2.5">
+      <div className="bg-white border border-gray-100 rounded-xl px-4 py-2.5 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
         <div className="flex items-center justify-between mb-2">
           <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">12 Aylık Tahmin</span>
           <Link href="/dashboard/simulation" className="text-[10px] text-primary-600 font-semibold hover:text-primary-700">Simülasyon →</Link>
@@ -644,14 +644,14 @@ export default async function DashboardPage() {
       </div>
 
       {/* ── Bottom Row: Chart + FX + Proforma ────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-1.5">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
         <div className="lg:col-span-8">
           <CashflowChart className="w-full" />
         </div>
-        <div className="lg:col-span-4 flex flex-col gap-1.5">
+        <div className="lg:col-span-4 flex flex-col gap-3">
           <FxWidget initialFx={{ USD: fxData.USD, EUR: fxData.EUR, source: fxData.source, rate_date: fxData.rate_date, fetched_at: fxData.fetched_at }} />
           {outstanding > 0 && (
-            <Link href="/dashboard/proformas" className="bg-white border border-gray-200 rounded-xl px-3 py-2 hover:border-gray-300 transition-colors">
+            <Link href="/dashboard/proformas" className="bg-white border border-gray-100 rounded-xl px-3 py-2 shadow-[0_1px_2px_rgba(17,24,39,0.04)] hover:shadow-[0_2px_4px_rgba(17,24,39,0.07)] transition-shadow">
               <div className="text-[9px] font-black uppercase tracking-widest text-gray-400">Açık Proformalar</div>
               <div className="text-sm font-black tabular-nums text-primary-700 mt-0.5">{fmt(outstanding)}</div>
               <div className="text-[9px] text-gray-400">{openProfs.length} adet bekliyor</div>

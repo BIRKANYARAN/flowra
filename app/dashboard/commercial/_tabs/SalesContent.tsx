@@ -28,21 +28,18 @@ export async function SalesContent({ companyId }: Props) {
 
   return (
     <div className="max-w-4xl">
-      <div className="flex items-center justify-between mb-5">
-        <div>
-          <h2 className="text-2xl font-black">Satışlar</h2>
-          <p className="text-sm text-gray-500 mt-0.5">{list.length} kayıt</p>
-        </div>
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-xs text-gray-400">{list.length} satış kaydı</p>
         <Link
           href="/dashboard/commercial?tab=collections"
-          className="border border-gray-200 px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50/60 transition-colors"
+          className="border border-gray-100 px-3.5 py-2 rounded-xl text-xs font-semibold text-gray-500 hover:bg-gray-50 hover:text-gray-800 transition-colors"
         >
           Tahsilatlar →
         </Link>
       </div>
 
       {list.length === 0 ? (
-        <div className="bg-white border border-gray-200 rounded-xl text-center py-16">
+        <div className="bg-white border border-gray-100 rounded-xl text-center py-16 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
           <div className="text-5xl mb-3">💰</div>
           <p className="text-gray-500 font-medium mb-2">Henüz satış yok.</p>
           <p className="text-sm text-gray-400">Proformaları satışa dönüştürerek başlayın.</p>

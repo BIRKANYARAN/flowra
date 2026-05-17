@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase-server'
-import { PageHeader, StatusBadge, EmptyState, ErrorBanner } from '@/components/ui'
+import { StatusBadge, EmptyState, ErrorBanner } from '@/components/ui'
 import { formatTRY, fmtDate, sym } from '@/lib/format'
 import { normalizeProformaRow, type NormalizedProformaRow } from '@/lib/normalize'
 
@@ -37,26 +37,23 @@ export async function ProformasContent({ companyId }: Props) {
 
   return (
     <div className="max-w-5xl">
-      <PageHeader
-        title="Proformalar"
-        sub={`${list.length} kayıt`}
-        action={
-          <div className="flex items-center gap-2">
-            <Link
-              href="/dashboard/commercial?tab=pipeline"
-              className="inline-flex items-center gap-1.5 border border-gray-200 text-gray-600 px-4 py-2 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-colors"
-            >
-              Pipeline →
-            </Link>
-            <Link
-              href="/dashboard/proformas/new"
-              className="inline-flex items-center gap-1.5 bg-primary-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-primary-700 transition-colors"
-            >
-              + Yeni Proforma
-            </Link>
-          </div>
-        }
-      />
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-xs text-gray-400">{list.length} proforma kaydı</p>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/dashboard/commercial?tab=pipeline"
+            className="inline-flex items-center gap-1.5 border border-gray-100 text-gray-500 px-3.5 py-2 rounded-xl text-xs font-semibold hover:bg-gray-50 hover:text-gray-800 transition-colors"
+          >
+            Pipeline →
+          </Link>
+          <Link
+            href="/dashboard/proformas/new"
+            className="inline-flex items-center gap-1.5 bg-primary-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-primary-700 transition-colors"
+          >
+            + Yeni Proforma
+          </Link>
+        </div>
+      </div>
 
       {list.length === 0 ? (
         <EmptyState
@@ -73,7 +70,7 @@ export async function ProformasContent({ companyId }: Props) {
           }
         />
       ) : (
-        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
           <div className="grid grid-cols-12 text-[10px] font-bold text-gray-400 uppercase tracking-widest px-5 py-3 border-b border-gray-100">
             <div className="col-span-3">No / Revizyon</div>
             <div className="col-span-3">Müşteri</div>

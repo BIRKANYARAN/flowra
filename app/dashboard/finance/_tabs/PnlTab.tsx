@@ -112,7 +112,7 @@ export async function PnlTab({ userId, companyId }: Props) {
       <div className="col-span-7 space-y-4">
 
         {/* Main waterfall */}
-        <div className="bg-white border border-gray-200 rounded-xl p-5">
+        <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
           <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4">
             Kâr / Zarar — {fmtMonth(currentYM)}
           </div>
@@ -136,7 +136,7 @@ export async function PnlTab({ userId, companyId }: Props) {
         </div>
 
         {/* KDV Özeti */}
-        <div className="bg-white border border-gray-200 rounded-xl p-4">
+        <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
           <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">KDV Özeti</div>
           <div className="grid grid-cols-3 gap-3">
             {[
@@ -177,7 +177,7 @@ export async function PnlTab({ userId, companyId }: Props) {
         </div>
 
         {/* 6-ay mini trend */}
-        <div className="bg-white border border-gray-200 rounded-xl p-4">
+        <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
           <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">6 Aylık Net Kâr Trendi</div>
           <div className="space-y-1.5">
             {monthYMs.map((ym, i) => {

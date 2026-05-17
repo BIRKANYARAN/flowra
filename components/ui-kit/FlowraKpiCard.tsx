@@ -41,7 +41,7 @@ export function FlowraKpiCard({
 
   const inner = (
     <div className={cn(
-      'bg-white border border-gray-200 rounded-xl px-3 py-2.5 flex flex-col gap-1',
+      'bg-white border border-gray-100 rounded-xl px-3.5 py-3 flex flex-col gap-1 shadow-[0_1px_2px_rgba(17,24,39,0.04)]',
       href && 'hover:border-gray-300 transition-colors',
       className,
     )}>
@@ -53,7 +53,7 @@ export function FlowraKpiCard({
       <div className="leading-none mt-0.5">
         {rawValue ? (
           <span className={cn(
-            'text-xl font-black tabular-nums',
+            'text-[22px] font-black tabular-nums leading-none',
             resolvedTone === 'negative' ? 'text-red-600' : 'text-gray-900',
           )}>
             {rawValue}

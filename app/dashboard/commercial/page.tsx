@@ -68,8 +68,23 @@ export default async function CommercialPage({ searchParams }: PageProps) {
   const activeTab = VALID_TABS.includes(rawTab) ? rawTab : 'pipeline'
 
   return (
-    <div className="max-w-5xl space-y-4">
-      <HubTabNav tabs={TABS} activeTab={activeTab} basePath="/dashboard/commercial" />
+    <div className="flex flex-col gap-4 max-w-5xl">
+      {/* Sticky tab nav */}
+      <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm -mx-5 px-5 pt-1 border-b border-gray-100">
+        <HubTabNav tabs={TABS} activeTab={activeTab} basePath="/dashboard/commercial" />
+      </div>
+
+      {/* Tab header */}
+      <div>
+        <h1 className="text-lg font-black text-gray-900 tracking-tight">Ticari Akış</h1>
+        <p className="text-xs text-gray-400 mt-0.5">
+          {activeTab === 'pipeline'    && 'Satış hattı · Açık teklifler · Kapanmaya yakın fırsatlar'}
+          {activeTab === 'proformas'   && 'Proforma teklifler · Bekleyen onaylar · Dönüşüm oranları'}
+          {activeTab === 'sales'       && 'Satış kayıtları · Fatura özeti · Ödeme durumu'}
+          {activeTab === 'collections' && 'Tahsilat takibi · Vadesi gelen ödemeler · Yaşlandırma'}
+          {activeTab === 'customers'   && 'Müşteri portföyü · İlişki geçmişi · Alacak durumu'}
+        </p>
+      </div>
 
       <Suspense fallback={<TabSkeleton />}>
         {activeTab === 'pipeline'    && <PipelineContent    companyId={companyId} />}

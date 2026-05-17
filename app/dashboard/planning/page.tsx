@@ -66,8 +66,24 @@ export default async function PlanningPage({ searchParams }: PageProps) {
   const activeTab = VALID_TABS.includes(rawTab) ? rawTab : 'unit-profit'
 
   return (
-    <div className="max-w-5xl space-y-4">
-      <HubTabNav tabs={TABS} activeTab={activeTab} basePath="/dashboard/planning" />
+    <div className="flex flex-col gap-4 max-w-5xl">
+      {/* Sticky tab nav */}
+      <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm -mx-5 px-5 pt-1 border-b border-gray-100">
+        <HubTabNav tabs={TABS} activeTab={activeTab} basePath="/dashboard/planning" />
+      </div>
+
+      {/* Tab header */}
+      <div>
+        <h1 className="text-lg font-black text-gray-900 tracking-tight">Planlama Merkezi</h1>
+        <p className="text-xs text-gray-400 mt-0.5">
+          {activeTab === 'unit-profit'     && 'Birim karlılık · Marj analizi · Fiyat optimizasyonu'}
+          {activeTab === 'cash-projection' && 'Nakit projeksiyonu · 12 ay görünümü · Senaryo bazlı'}
+          {activeTab === 'scenarios'       && 'Senaryo planlama · Duyarlılık analizi · Stres testleri'}
+          {activeTab === 'debt-pressure'   && 'Borç baskısı · Servis oranı · Tranche takvimi'}
+          {activeTab === 'partner-impact'  && 'Ortak etkisi · Eşitleme hesabı · Dağıtım analizi'}
+          {activeTab === 'tasks'           && 'Görev takibi · Vadesi yaklaşan · Öncelik sırası'}
+        </p>
+      </div>
 
       <Suspense fallback={<TabSkeleton />}>
         {SIM_TABS.includes(activeTab) && (

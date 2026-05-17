@@ -209,7 +209,7 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
       className={`
         flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[12px] transition-colors
         ${active
-          ? 'bg-primary-600 text-white font-semibold'
+          ? 'bg-primary-50 text-primary-700 font-semibold ring-1 ring-inset ring-primary-200/60'
           : 'text-gray-500 hover:bg-gray-50 hover:text-gray-800'
         }
       `}
@@ -218,12 +218,12 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
         name={item.icon}
         size={13}
         strokeWidth={active ? 2 : 1.5}
-        className={`flex-shrink-0 ${active ? 'text-white' : 'text-gray-400'}`}
+        className={`flex-shrink-0 ${active ? 'text-primary-600' : 'text-gray-400'}`}
       />
       <span className="truncate">{item.label}</span>
       {item.badge !== undefined && item.badge > 0 && (
         <span className={`ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-          active ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'
+          active ? 'bg-primary-100 text-primary-700' : 'bg-gray-100 text-gray-500'
         }`}>
           {item.badge}
         </span>

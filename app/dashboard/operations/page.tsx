@@ -67,8 +67,22 @@ export default async function OperationsPage({ searchParams }: PageProps) {
   const activeTab = VALID_TABS.includes(rawTab) ? rawTab : 'expenses'
 
   return (
-    <div className="max-w-5xl space-y-4">
-      <HubTabNav tabs={TABS} activeTab={activeTab} basePath="/dashboard/operations" />
+    <div className="flex flex-col gap-4 max-w-5xl">
+      {/* Sticky tab nav */}
+      <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm -mx-5 px-5 pt-1 border-b border-gray-100">
+        <HubTabNav tabs={TABS} activeTab={activeTab} basePath="/dashboard/operations" />
+      </div>
+
+      {/* Tab header */}
+      <div>
+        <h1 className="text-lg font-black text-gray-900 tracking-tight">Operasyon Merkezi</h1>
+        <p className="text-xs text-gray-400 mt-0.5">
+          {activeTab === 'expenses' && 'Gider yönetimi · Ödenmiş/bekleyen · Kategori analizi'}
+          {activeTab === 'catalog'  && 'Ürün kataloğu · Fiyat yönetimi · Stok seviyeleri'}
+          {activeTab === 'stock'    && 'Stok durumu · FIFO değerleme · Kritik seviyeler'}
+          {activeTab === 'orders'   && 'Sipariş takibi · Tedarikçi süreçleri · Teslimat durumu'}
+        </p>
+      </div>
 
       <Suspense fallback={<TabSkeleton />}>
         {activeTab === 'expenses' && <ExpensesContent companyId={companyId} />}

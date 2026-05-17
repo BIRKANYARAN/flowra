@@ -131,7 +131,7 @@ export default async function FinancePage({ searchParams }: PageProps) {
     <div className="flex flex-col gap-4 w-full">
 
       {/* ── Tab navigation (sticky) ───────────────────────────────────────────── */}
-      <div className="sticky top-0 z-20 bg-white -mx-4 px-4 pt-1 shadow-sm">
+      <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm -mx-5 px-5 pt-1 border-b border-gray-100">
         <UnifiedTabNav tabs={FINANCE_NAV_TABS} activeTab={activeTab} basePath="/dashboard/finance" />
       </div>
 

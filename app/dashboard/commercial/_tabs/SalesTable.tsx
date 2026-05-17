@@ -175,7 +175,7 @@ export function SalesTable({ rows }: Props) {
             color: totalPft >= 0 ? 'text-emerald-700' : 'text-red-600',
           },
         ].map(card => (
-          <div key={card.label} className="bg-white border border-gray-200 rounded-xl p-4">
+          <div key={card.label} className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
             <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">{card.label}</div>
             <div className={`text-xl font-black tabular-nums ${card.color}`}>{card.value}</div>
           </div>
@@ -184,7 +184,7 @@ export function SalesTable({ rows }: Props) {
 
       {/* ── Table ──────────────────────────────────────────────────────────── */}
       {filtered.length === 0 ? (
-        <div className="bg-white border border-gray-200 rounded-xl text-center py-14">
+        <div className="bg-white border border-gray-100 rounded-xl text-center py-14 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
           <div className="text-3xl mb-3">🔍</div>
           <p className="text-gray-500 font-medium text-sm">Eşleşen satış bulunamadı.</p>
           {isFiltered && (
@@ -197,7 +197,7 @@ export function SalesTable({ rows }: Props) {
           )}
         </div>
       ) : (
-        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
           {/* Header */}
           <div className="grid grid-cols-12 text-[10px] font-bold text-gray-400 px-5 py-3 border-b border-gray-100 uppercase tracking-widest">
             <div className="col-span-3">Müşteri</div>

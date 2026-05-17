@@ -24,7 +24,7 @@ interface Props {
 
 export function UnifiedTabNav({ tabs, activeTab, basePath }: Props) {
   return (
-    <div className="flex items-center gap-0.5 border-b border-gray-200 overflow-x-auto scrollbar-none">
+    <div className="flex items-center gap-0.5 border-b border-gray-100 overflow-x-auto scrollbar-none pb-0">
       {tabs.map(tab => {
         const isActive  = tab.key === activeTab
         const showBadge = tab.badge !== undefined && tab.badge > 0
@@ -33,11 +33,11 @@ export function UnifiedTabNav({ tabs, activeTab, basePath }: Props) {
             key={tab.key}
             href={`${basePath}?tab=${tab.key}`}
             className={`
-              relative flex items-center gap-1.5 px-3 py-2 text-xs font-semibold
-              transition-colors whitespace-nowrap flex-shrink-0
+              relative flex items-center gap-1.5 px-3 py-2.5 text-[13px]
+              transition-colors whitespace-nowrap flex-shrink-0 rounded-none
               ${isActive
-                ? 'text-primary-700 border-b-2 border-primary-600 -mb-px'
-                : 'text-gray-500 hover:text-gray-800 rounded-t-md hover:bg-gray-50'
+                ? 'text-gray-900 font-semibold border-b-2 border-gray-900 -mb-px'
+                : 'text-gray-400 hover:text-gray-600 font-medium'
               }
             `}
           >
@@ -47,8 +47,8 @@ export function UnifiedTabNav({ tabs, activeTab, basePath }: Props) {
                 inline-flex items-center justify-center min-w-[16px] h-4 px-1
                 text-[9px] font-black rounded-full leading-none
                 ${isActive
-                  ? 'bg-primary-100 text-primary-700'
-                  : 'bg-gray-200 text-gray-600'
+                  ? 'bg-gray-200 text-gray-700'
+                  : 'bg-gray-100 text-gray-500'
                 }
               `}>
                 {tab.badge}

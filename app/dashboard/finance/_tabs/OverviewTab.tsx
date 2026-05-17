@@ -41,7 +41,7 @@ function KpiBlock({ label, value, sub, tone = 'neutral', href }: {
     warning: 'text-amber-600', critical: 'text-red-700', neutral: 'text-gray-900',
   }[tone]
   const content = (
-    <div className="bg-white border border-gray-200 rounded-xl px-4 py-3 hover:border-gray-300 transition-colors">
+    <div className="bg-white border border-gray-100 rounded-xl px-4 py-3 shadow-[0_1px_2px_rgba(17,24,39,0.04)] hover:shadow-[0_2px_4px_rgba(17,24,39,0.07)] transition-shadow">
       <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">{label}</div>
       <div className={`text-xl font-black tabular-nums leading-none ${valueColor}`}>{value}</div>
       {sub && <div className="text-[10px] text-gray-400 mt-1 leading-tight">{sub}</div>}
