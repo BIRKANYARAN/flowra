@@ -14,8 +14,10 @@ export async function GET(req: NextRequest) {
 
     const params     = req.nextUrl.searchParams
     const partner_id = params.get('partner_id')
-    const limit      = Math.min(parseInt(params.get('limit')  ?? '50'), 200)
-    const offset     = parseInt(params.get('offset') ?? '0')
+    const rawLimit   = parseInt(params.get('limit')  ?? '50', 10)
+    const rawOffset  = parseInt(params.get('offset') ?? '0',  10)
+    const limit      = Math.min(isFinite(rawLimit)  ? Math.max(1, rawLimit)  : 50,  200)
+    const offset     = isFinite(rawOffset) ? Math.max(0, rawOffset) : 0
 
     let query = supabase
       .from('partner_finance_events')

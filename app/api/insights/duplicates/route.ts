@@ -16,7 +16,8 @@ export async function GET(req: NextRequest) {
     if (!auth.ok) return auth.response
     const { companyId, supabase } = auth
 
-    const days = Math.min(parseInt(req.nextUrl.searchParams.get('days') ?? '90'), 365)
+    const rawDays = parseInt(req.nextUrl.searchParams.get('days') ?? '90', 10)
+    const days    = Math.min(isFinite(rawDays) ? Math.max(1, rawDays) : 90, 365)
     const from = new Date(Date.now() - days * 86_400_000).toISOString().slice(0, 10)
 
     const { data, error } = await supabase

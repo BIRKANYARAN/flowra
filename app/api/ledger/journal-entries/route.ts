@@ -15,8 +15,10 @@ export async function GET(req: NextRequest) {
     const fromDate    = params.get('from_date')    ?? null
     const toDate      = params.get('to_date')      ?? null
     const sourceType  = params.get('source_type')  ?? null
-    const limit       = Math.min(parseInt(params.get('limit')  ?? '50'), 200)
-    const offset      = parseInt(params.get('offset') ?? '0')
+    const rawLimit    = parseInt(params.get('limit')  ?? '50', 10)
+    const rawOffset   = parseInt(params.get('offset') ?? '0',  10)
+    const limit       = Math.min(isFinite(rawLimit)  ? Math.max(1, rawLimit)  : 50,  200)
+    const offset      = isFinite(rawOffset) ? Math.max(0, rawOffset) : 0
 
     let query = supabase
       .from('journal_entries')
