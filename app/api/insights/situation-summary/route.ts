@@ -45,13 +45,15 @@ export async function GET(req: NextRequest) {
 
     // Compute situation inputs
     const nowMs = Date.now()
-    let ot30 = 0, ot60 = 0
+    let ot30 = 0, ot60 = 0, allOutstanding = 0
     for (const s of overdue) {
       const age  = Math.round((nowMs - new Date(s.created_at as string).getTime()) / 86_400_000)
-      const owed = Number(s.total_try ?? 0) - Number(s.amount_paid ?? 0)
+      const owed = Math.max(0, Number(s.total_try ?? 0) - Number(s.amount_paid ?? 0))
+      allOutstanding += owed
       if (age > 60) ot60 += owed; else if (age > 30) ot30 += owed
+      // age 0-30: counted in allOutstanding but not in ot30/ot60 buckets
     }
-    const totalOverdue = ot30 + ot60
+    const totalOverdue = ot30 + ot60  // aged receivables (30+ days)
     const totalRevenue = pnl?.revenue_try ?? 0
     const overdueRatio = totalRevenue > 0 ? totalOverdue / totalRevenue : 0
 
@@ -100,7 +102,7 @@ export async function GET(req: NextRequest) {
         return age > 60
       }).length,
       overdueTotal60:           ot60,
-      totalReceivables:         totalOverdue,
+      totalReceivables:         allOutstanding,  // all outstanding including < 30 days
       cashRunwayDays:           -1,
       monthlyNetIncome:         monthlyNet,
       maxBurdenScoreAbs:        0,
