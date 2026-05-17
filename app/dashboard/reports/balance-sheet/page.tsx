@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { PrintButton } from '@/components/reports/PrintButton'
+import { PdfExportButton } from '@/components/reports/PdfExportButton'
+import { useWorkspace } from '@/lib/workspace-context'
+import type { PdfReportOptions } from '@/lib/utils/pdf-report'
 
 // Mirrors the nested BalanceSheet shape returned by BalanceSheetService.compute()
 interface BSAssets {
@@ -73,6 +75,7 @@ export default function BalanceSheetPage() {
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState<string | null>(null)
   const [asOf,    setAsOf]    = useState(new Date().toISOString().slice(0, 10))
+  const ws = useWorkspace()
 
   useEffect(() => {
     setLoading(true)
@@ -95,7 +98,33 @@ export default function BalanceSheetPage() {
           <label className="text-xs text-gray-500">Tarih itibarıyla:</label>
           <input type="date" value={asOf} onChange={e => setAsOf(e.target.value)}
             className="border border-gray-200 rounded-lg px-2 py-1 text-xs" />
-          <PrintButton label="PDF İndir" />
+          {bs && <PdfExportButton opts={{
+            companyName: ws.companyName ?? 'Şirket',
+            reportTitle: 'Bilanço',
+            subtitle: `${asOf} itibarıyla`,
+            filename: `bilanco-${asOf}`,
+            sections: [
+              { title: 'Varlıklar', rows: [
+                { label: 'Kasa ve Bankalar', value: fmt(bs.assets.cash_try), indent: true },
+                { label: 'Alıcılar', value: fmt(bs.assets.receivables_try), indent: true },
+                { label: 'Stoklar', value: fmt(bs.assets.inventory_try), indent: true },
+                { label: 'Toplam Dönen', value: fmt(bs.assets.total_current_try), bold: true },
+                { label: 'Toplam Duran', value: fmt(bs.assets.total_non_current_try), bold: true },
+                { label: 'TOPLAM VARLIKLAR', value: fmt(bs.assets.total_assets_try), bold: true, tone: 'positive' },
+              ]},
+              { title: 'Kaynaklar', rows: [
+                { label: 'Ortak Borçları (KV)', value: fmt(bs.liabilities.partner_loans_try), indent: true },
+                { label: 'Vergi Borçları', value: fmt(bs.liabilities.tax_payable_try), indent: true },
+                { label: 'Toplam Kaynaklar', value: fmt(bs.liabilities.total_liabilities_try), bold: true },
+              ]},
+              { title: 'Özkaynak', rows: [
+                { label: 'Ortak Sermayesi', value: fmt(bs.equity.total_partner_capital_try), indent: true },
+                { label: 'Geçmiş Yıllar Kârları', value: fmt(bs.equity.retained_earnings_try), indent: true },
+                { label: 'Dönem Net Kârı', value: fmt(bs.equity.current_period_profit_try), indent: true },
+                { label: 'TOPLAM ÖZKAYNAK', value: fmt(bs.equity.total_equity_try), bold: true, tone: 'positive' },
+              ]},
+            ],
+          } as PdfReportOptions} label="PDF İndir" />}
           <Link href="/dashboard/cfo" className="text-xs text-gray-400 hover:text-primary-600 font-semibold">← CFO</Link>
         </div>
       </div>
