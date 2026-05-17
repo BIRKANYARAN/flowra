@@ -47,8 +47,7 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
       <div className="max-w-3xl">
         <Link href="/dashboard/sales" className="text-sm text-gray-400 hover:text-gray-900 mb-4 inline-block">← Satışlar</Link>
         <div className="bg-white border border-gray-100 rounded-2xl p-10 text-center">
-          <div className="text-4xl mb-3">🔍</div>
-          <p className="text-gray-500 font-medium">Satış bulunamadı.</p>
+          <p className="text-gray-400 text-sm">Satış bulunamadı veya silinmiş.</p>
         </div>
       </div>
     )

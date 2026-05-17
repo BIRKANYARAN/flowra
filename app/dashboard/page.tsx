@@ -562,7 +562,7 @@ export default async function DashboardPage() {
       {/* ── CAUSAL CONTEXT CHAIN — system cross-center intelligence ──────────── */}
       {ctxChain && (
         <Link href={ctxChain.href}
-          className="flex items-center gap-3 px-4 py-2.5 bg-white border border-gray-100 rounded-xl shadow-[0_1px_2px_rgba(17,24,39,0.04)] hover:border-gray-200 transition-all overflow-hidden group">
+          className="flex items-center gap-3 px-4 py-2.5 bg-white border border-gray-100 rounded-xl shadow-[0_1px_2px_rgba(17,24,39,0.04)] hover:border-gray-200 transition-colors overflow-hidden group">
           <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 flex-shrink-0">BAĞLAM</span>
           <div className="flex items-center gap-1 overflow-x-auto scrollbar-none flex-1 min-w-0">
             {ctxChain.nodes.map((node, i) => (
@@ -891,7 +891,7 @@ export default async function DashboardPage() {
           {/* Açık proformalar */}
           {outstanding > 0 && (
             <Link href="/dashboard/commercial?tab=proformas"
-              className="bg-white border border-gray-100 rounded-xl px-4 py-3.5 shadow-[0_1px_2px_rgba(17,24,39,0.04)] hover:border-gray-200 hover:shadow-[0_2px_6px_rgba(17,24,39,0.07)] transition-all">
+              className="bg-white border border-gray-100 rounded-xl px-4 py-3.5 shadow-[0_1px_2px_rgba(17,24,39,0.04)] hover:border-gray-200 transition-colors">
               <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">Açık Proformalar</div>
               <div className="text-xl font-black tabular-nums text-primary-700 leading-none">
                 <span className="text-primary-300 font-normal text-sm mr-0.5">₺</span>{formatKpi(outstanding)}
@@ -903,7 +903,7 @@ export default async function DashboardPage() {
           {/* Dönem kapanışı */}
           {openPeriodDaysOverdue > 10 && (
             <Link href="/dashboard/cfo/period-close"
-              className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3.5 hover:border-amber-300 hover:shadow-sm transition-all">
+              className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3.5 hover:border-amber-300 transition-colors">
               <div className="text-[10px] font-black uppercase tracking-widest text-amber-500 mb-1.5">Dönem Kapanışı</div>
               <div className="text-sm font-bold text-amber-700">{openPeriodDaysOverdue} gündür bekliyor</div>
               <div className="text-[10px] text-amber-500 mt-1">CFO Cockpit'e git →</div>

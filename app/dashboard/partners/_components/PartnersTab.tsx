@@ -77,8 +77,7 @@ export function PartnersTab({
 
       {!loading && !hasPartners && !fetchError && (
         <div className="bg-white border border-gray-100 rounded-xl px-6 py-12 text-center">
-          <div className="text-3xl mb-3">🤝</div>
-          <div className="text-sm font-semibold text-gray-500">Henüz ortak eklenmemiş</div>
+          <div className="text-sm text-gray-400">Henüz ortak eklenmemiş.</div>
         </div>
       )}
 

@@ -340,12 +340,11 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
       {/* ── Table ────────────────────────────────────────────────────── */}
       <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
         {filtered.length === 0 ? (
-          <div className="py-16 text-center">
-            <div className="text-4xl mb-3">{products.length === 0 ? '📦' : '🔍'}</div>
-            <div className="text-sm font-semibold text-gray-600 mb-1">
+          <div className="py-12 text-center">
+            <div className="text-sm text-gray-400">
               {products.length === 0 ? 'Henüz ürün eklenmedi.' : 'Aramayla eşleşen ürün bulunamadı.'}
             </div>
-            {products.length === 0 && <p className="text-xs text-gray-400">Katalog oluşturmak için ürün ekleyin.</p>}
+            {products.length === 0 && <p className="text-xs text-gray-400 mt-1">Katalog oluşturmak için ürün ekleyin.</p>}
           </div>
         ) : (
           <>

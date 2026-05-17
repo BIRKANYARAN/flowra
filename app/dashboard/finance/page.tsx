@@ -150,7 +150,7 @@ export default async function FinancePage({ searchParams }: PageProps) {
       </div>
 
       {/* ── Tab nav + persistent context bar (sticky together) ──────────────────── */}
-      <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm -mx-5">
+      <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm -mx-4">
         <div className="px-5 pt-1 border-b border-gray-100">
           <UnifiedTabNav tabs={FINANCE_NAV_TABS} activeTab={activeTab} basePath="/dashboard/finance" />
         </div>

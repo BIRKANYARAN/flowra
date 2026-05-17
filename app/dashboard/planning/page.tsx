@@ -95,7 +95,7 @@ export default async function PlanningPage({ searchParams }: PageProps) {
       </div>
 
       {/* Sticky tab nav + context bar */}
-      <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm -mx-5">
+      <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm -mx-4">
         <div className="px-5 pt-1 border-b border-gray-100">
           <HubTabNav tabs={TABS} activeTab={activeTab} basePath="/dashboard/planning" />
         </div>

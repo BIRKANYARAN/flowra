@@ -2,9 +2,8 @@
 // Header — Bloomberg-style topbar.
 // Left: company name breadcrumb (desktop)
 // Center: FxTicker compact strip (desktop)
-// Right: bell notification icon
+// Right: reserved (notifications wired in future phase)
 
-import { Icon }     from '@/components/ui/Icon'
 import { FxTicker } from '@/components/layout/FxTicker'
 
 interface Props {
@@ -39,15 +38,8 @@ export function Header({ companyName }: Props) {
         <FxTicker />
       </div>
 
-      {/* RIGHT — actions */}
-      <div className="flex items-center gap-2 ml-auto">
-        <button
-          className="relative p-1.5 rounded-lg text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-colors"
-          aria-label="Bildirimler"
-        >
-          <Icon name="bell" size={14} />
-        </button>
-      </div>
+      {/* RIGHT — placeholder (notifications wired in future) */}
+      <div className="w-8" />
 
     </header>
   )

@@ -4,7 +4,7 @@
 // Receives pre-fetched rows from the SalesContent server component.
 // All filtering is done client-side (no extra API calls).
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import type { NormalizedSaleRow } from '@/lib/normalize'
 import { formatTRY, fmtDate } from '@/lib/format'
@@ -58,6 +58,13 @@ function PaymentDrawer({ sale, onClose, onSuccess }: PaymentDrawerProps) {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Banka Havalesi')
   const [saving,        setSaving]        = useState(false)
   const [error,         setError]         = useState('')
+
+  // ESC key closes the drawer
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [onClose])
 
   const parsedAmount   = parseFloat(amount) || 0
   const totalAfterThis = alreadyPaid + parsedAmount
@@ -318,22 +325,11 @@ export function SalesTable({ rows }: Props) {
     <>
       <div className="space-y-4">
 
-        {/* ── Top action bar ──────────────────────────────────────────────────── */}
-        <div className="flex items-center justify-between gap-2">
-          <span />
-          <button
-            onClick={() => setShowCreate(true)}
-            className="inline-flex items-center gap-1.5 bg-primary-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-primary-700 transition-colors whitespace-nowrap"
-          >
-            + Satış Oluştur
-          </button>
-        </div>
-
-        {/* ── Filter bar ─────────────────────────────────────────────────────── */}
+        {/* ── Filter bar + action ─────────────────────────────────────────────── */}
         <div className="flex flex-wrap items-center gap-2">
           {/* Search */}
           <div className="relative flex-1 min-w-48">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm select-none">⌕</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm select-none pointer-events-none">⌕</span>
             <input
               type="text"
               placeholder="Müşteri ara…"
@@ -375,9 +371,17 @@ export function SalesTable({ rows }: Props) {
               onClick={clearFilters}
               className="text-xs font-semibold text-gray-400 hover:text-gray-700 px-2 py-1.5 rounded-lg hover:bg-gray-100 transition-colors"
             >
-              Filtreleri Temizle ✕
+              Temizle ✕
             </button>
           )}
+
+          {/* Create — stays in filter row, no orphan bar */}
+          <button
+            onClick={() => setShowCreate(true)}
+            className="ml-auto inline-flex items-center gap-1.5 bg-primary-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-primary-700 transition-colors whitespace-nowrap flex-shrink-0"
+          >
+            + Satış Oluştur
+          </button>
         </div>
 
         {/* ── KPI strip (live / filtered) ────────────────────────────────────── */}
@@ -408,15 +412,14 @@ export function SalesTable({ rows }: Props) {
 
         {/* ── Table ──────────────────────────────────────────────────────────── */}
         {filtered.length === 0 ? (
-          <div className="bg-white border border-gray-100 rounded-xl text-center py-14 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
-            <div className="text-3xl mb-3">🔍</div>
-            <p className="text-gray-500 font-medium text-sm">Eşleşen satış bulunamadı.</p>
+          <div className="bg-white border border-gray-100 rounded-xl text-center py-12 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+            <p className="text-gray-400 text-sm">{isFiltered ? 'Filtreyle eşleşen satış yok.' : 'Henüz satış kaydı yok.'}</p>
             {isFiltered && (
               <button
                 onClick={clearFilters}
-                className="mt-3 text-xs text-primary-600 hover:underline font-semibold"
+                className="mt-2 text-xs text-primary-600 hover:text-primary-700 font-semibold"
               >
-                Filtreleri temizle
+                Filtreleri temizle →
               </button>
             )}
           </div>
