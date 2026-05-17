@@ -6,7 +6,6 @@
 // cost calculator modal, search, currency toggle.
 
 import { useCallback, useEffect, useMemo, useState, type KeyboardEvent } from 'react'
-import { useSupabase } from '@/lib/hooks/useSupabase'
 import { CURRENCIES, type Currency, type Product, type StockLot } from '@/types'
 import { getSalePrice } from '@/lib/product-adapter'
 import { resolveCompanyId } from '@/lib/resolve-company'
@@ -82,8 +81,6 @@ interface Props {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function CatalogClient({ initialProducts, initialRealCosts, userId, companyId }: Props) {
-  const supabase = useSupabase()
-
   const [products,    setProducts]    = useState<Product[]>(initialProducts)
   const [search,      setSearch]      = useState('')
   const [currency,    setCurrency]    = useState<Currency>('TRY')
@@ -186,18 +183,16 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
     if (lots[productId]) return
 
     setLots(prev => ({ ...prev, [productId]: { loading: true, lots: [] } }))
-    const { data } = await supabase
-      .from('stock_lots')
-      .select('*')
-      .eq('product_id', productId)
-      .eq('company_id', companyId)
-      .is('deleted_at', null)
-      .order('entry_date', { ascending: false })
-
-    setLots(prev => ({
-      ...prev,
-      [productId]: { loading: false, lots: (data ?? []) as StockLot[] },
-    }))
+    try {
+      const res  = await fetch(`/api/products/lots?product_id=${encodeURIComponent(productId)}`)
+      const json = res.ok ? await res.json() : { lots: [] }
+      setLots(prev => ({
+        ...prev,
+        [productId]: { loading: false, lots: (json.lots ?? []) as StockLot[] },
+      }))
+    } catch {
+      setLots(prev => ({ ...prev, [productId]: { loading: false, lots: [] } }))
+    }
   }
 
   // ── Inline edit catalog_price ─────────────────────────────────────────────

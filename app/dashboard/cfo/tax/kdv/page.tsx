@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { PrintButton } from '@/components/reports/PrintButton'
+import { PdfExportButton } from '@/components/reports/PdfExportButton'
 
 interface KdvSummary {
   sales_vat_try:    number
@@ -70,7 +70,24 @@ export default function KdvPage() {
           <span className="text-xs text-gray-400">—</span>
           <input type="date" value={to} onChange={e => setTo(e.target.value)}
             className="border border-gray-200 rounded-lg px-2 py-1 text-xs" />
-          <PrintButton label="KDV PDF" />
+          <PdfExportButton
+            label="KDV PDF"
+            opts={{
+              companyName:  '',
+              reportTitle:  'KDV Beyan Özeti',
+              subtitle:     `${from} — ${to}`,
+              sections: [{
+                title: 'KDV Özeti',
+                rows: [
+                  { label: 'Satış KDV (Hesaplanan — 391)',      value: fmt(kdv?.sales_vat_try ?? 0) },
+                  { label: 'Alış KDV (İndirilecek — 191)',      value: fmt(kdv?.purchase_vat_try ?? 0) },
+                  { label: 'Gider KDV (İndirilecek — 191)',     value: fmt(kdv?.expense_vat_try ?? 0) },
+                  { label: 'Toplam İndirilecek KDV',            value: fmt((kdv?.purchase_vat_try ?? 0) + (kdv?.expense_vat_try ?? 0)) },
+                  { label: `Net KDV (${kdv?.vat_status === 'payable' ? 'Ödenecek' : 'Sonraki Dönem Devir'})`, value: fmt(Math.abs(kdv?.net_vat_try ?? 0)), bold: true },
+                ],
+              }],
+            }}
+          />
           <Link href="/dashboard/cfo" className="text-xs text-gray-400 hover:text-primary-600 font-semibold">← CFO</Link>
         </div>
       </div>

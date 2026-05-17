@@ -20,14 +20,14 @@ import { requireAdmin }      from '@/lib/require-role'
 import { AppError }          from '@/types/errors'
 import type { MemberRole }   from '@/types'
 import { resolveApiAuth } from '@/lib/api-auth'
+import type { SupabaseClient } from '@supabase/supabase-js'
 // Never use admin client without company_id filter — use safeAdminQuery() from admin-db.ts
 
 const VALID_ROLES: MemberRole[] = ['admin', 'manager', 'viewer']
 
 // ── Helper: count active admins for a company ─────────────────────────────────
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function countAdmins(companyId: string, supabase: any): Promise<number> {
+async function countAdmins(companyId: string, supabase: SupabaseClient): Promise<number> {
   const { count, error } = await supabase
     .from('company_members')
     .select('id', { count: 'exact', head: true })

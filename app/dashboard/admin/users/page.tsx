@@ -53,6 +53,10 @@ export default function AdminUsersPage() {
   const [editingId,   setEditingId]   = useState<string | null>(null)
   const [editingRole, setEditingRole] = useState<MemberRole>('viewer')
   const [roleSaving,  setRoleSaving]  = useState(false)
+  const [roleError,   setRoleError]   = useState('')
+
+  // Remove-member inline error
+  const [removeError, setRemoveError] = useState('')
 
   // ── Fetch members ──────────────────────────────────────────────────────────
 
@@ -104,6 +108,7 @@ export default function AdminUsersPage() {
 
   async function saveRole(memberId: string) {
     setRoleSaving(true)
+    setRoleError('')
     const res = await fetch(`/api/admin/members/${memberId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -111,7 +116,9 @@ export default function AdminUsersPage() {
     })
     if (!res.ok) {
       const json = await res.json()
-      alert(json.error ?? 'Rol güncellenemedi.')
+      setRoleError(json.error ?? 'Rol güncellenemedi.')
+      setRoleSaving(false)
+      return
     }
     setEditingId(null)
     setRoleSaving(false)
@@ -124,10 +131,11 @@ export default function AdminUsersPage() {
     const label = m.display_name || m.email || m.user_id
     if (!confirm(`${label} adlı kullanıcıyı şirketten çıkarmak istediğinizden emin misiniz?`)) return
 
+    setRemoveError('')
     const res = await fetch(`/api/admin/members/${m.id}`, { method: 'DELETE' })
     if (!res.ok) {
       const json = await res.json()
-      alert(json.error ?? 'Üye çıkarılamadı.')
+      setRemoveError(json.error ?? 'Üye çıkarılamadı.')
       return
     }
     load()
@@ -183,6 +191,22 @@ export default function AdminUsersPage() {
       {error && (
         <div className="bg-red-50 border border-red-100 rounded-xl px-4 py-3 text-sm text-red-600 mb-5">
           {error}
+        </div>
+      )}
+
+      {/* Role-save error */}
+      {roleError && (
+        <div className="bg-red-50 border border-red-100 rounded-xl px-4 py-3 text-sm text-red-600 mb-5 flex items-center justify-between">
+          <span>{roleError}</span>
+          <button onClick={() => setRoleError('')} className="ml-3 text-red-400 hover:text-red-600 font-bold text-base leading-none">×</button>
+        </div>
+      )}
+
+      {/* Remove-member error */}
+      {removeError && (
+        <div className="bg-red-50 border border-red-100 rounded-xl px-4 py-3 text-sm text-red-600 mb-5 flex items-center justify-between">
+          <span>{removeError}</span>
+          <button onClick={() => setRemoveError('')} className="ml-3 text-red-400 hover:text-red-600 font-bold text-base leading-none">×</button>
         </div>
       )}
 

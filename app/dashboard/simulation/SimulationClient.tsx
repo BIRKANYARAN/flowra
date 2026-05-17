@@ -16,7 +16,6 @@
 //   • partner equalization     — /api/partners/equalization (when net profit changes)
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useSupabase } from '@/lib/hooks/useSupabase'
 import { CURRENCIES, type Currency, type Product, type RecurringProjectionMonth } from '@/types'
 import { round2 } from '@/lib/calc'
 import { getSalePrice, getSaleCurrency, getLegacyProductCost } from '@/lib/product-adapter'
@@ -111,8 +110,6 @@ export default function SimulationClient({
   initialFxRates,
   initialPartnerCount,
 }: SimulationClientProps) {
-  const supabase = useSupabase()
-
   /* data — initialized from server-side props, no loading state needed */
   const [products,     setProducts]     = useState<Product[]>(initialProducts)
   const [policyRates,  setPolicyRates]  = useState(initialPolicyRates)
@@ -234,22 +231,26 @@ export default function SimulationClient({
 
       if (companyId) {
         ;(async () => {
-          const { data: lots } = await supabase
-            .from('stock_lots')
-            .select('entry_date')
-            .eq('product_id', selectedProduct.id)
-            .eq('company_id', companyId)
-            .gt('qty_remaining', 0)
-            .order('entry_date', { ascending: true })
-            .limit(1)
-          setEntryDate(lots?.[0]?.entry_date ?? null)
+          try {
+            const res = await fetch(
+              `/api/products/lots?product_id=${encodeURIComponent(selectedProduct.id)}&active=1&order=asc&limit=1`
+            )
+            if (res.ok) {
+              const json = await res.json()
+              setEntryDate((json.lots?.[0] as { entry_date?: string } | undefined)?.entry_date ?? null)
+            } else {
+              setEntryDate(null)
+            }
+          } catch {
+            setEntryDate(null)
+          }
         })()
       }
     } else {
       setEntryDate(null)
       setInterestRate(String(policyRates.TRY))
     }
-  }, [selectedProduct, supabase, companyId, policyRates])
+  }, [selectedProduct, companyId, policyRates])
 
   /* ── Parsed numeric inputs ──────────────────────────────────────────────── */
   const unitCost           = parseFloat(manualCost) || 0
@@ -285,21 +286,25 @@ export default function SimulationClient({
   /* ── Backend real cost fetch ─────────────────────────────────────────────── */
   const [backendRealCost, setBackendRealCost] = useState<number | null>(null)
   useEffect(() => {
-    if (!selectedProduct || !userId) { setBackendRealCost(null); return }
+    if (!selectedProduct) { setBackendRealCost(null); return }
     ;(async () => {
       try {
-        const { data } = await supabase.rpc('get_real_cost', {
-          p_user_id:    userId,
-          p_product_id: selectedProduct.id,
-        })
-        if (data && typeof data === 'object' && 'real_cost' in (data as Record<string, unknown>)) {
-          const rc = Number((data as Record<string, unknown>).real_cost)
-          if (rc > 0) { setBackendRealCost(rc); return }
+        const res = await fetch(
+          `/api/cost-breakdown?product_id=${encodeURIComponent(selectedProduct.id)}`
+        )
+        if (res.ok) {
+          const json = await res.json()
+          const entries: Array<{ final_unit_cost_try: number }> = json.entries ?? []
+          if (entries.length > 0) {
+            // entries are ordered by entry_date DESC — first entry = most recent lot cost
+            const rc = Number(entries[0].final_unit_cost_try)
+            if (rc > 0) { setBackendRealCost(rc); return }
+          }
         }
-      } catch { /* fallback */ }
+      } catch { /* fallback to manual cost */ }
       setBackendRealCost(null)
     })()
-  }, [selectedProduct, userId, supabase])
+  }, [selectedProduct])
 
   const effectiveRealCost  = backendRealCost !== null && selectedProduct ? backendRealCost : realCost
   const effectiveProfitPU  = round2(netPrice - effectiveRealCost)
