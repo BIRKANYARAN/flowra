@@ -89,7 +89,8 @@ export async function PATCH(req: NextRequest) {
     }
 
     // Optional fields — only write when explicitly provided
-    if (amount_paid !== undefined) patch.amount_paid = amount_paid
+    if (amount_paid !== undefined)
+      patch.amount_paid = amount_paid != null ? Math.max(0, Number(amount_paid) || 0) : null
     if (due_date !== undefined)    patch.due_date    = due_date
 
     const { error } = await supabase
