@@ -33,9 +33,7 @@ export const FINANCING_EXPENSE_TYPES = new Set([
 // Burn = only pure operational recurring costs; capex excluded from monthly avg
 export const BURN_EXPENSE_TYPES = new Set(['operational', 'fixed', 'variable', 'tax', 'financial'])
 
-function round2(v: number): number {
-  return Math.round((v + Number.EPSILON) * 100) / 100
-}
+import { round2 } from '@/lib/calc'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Input types

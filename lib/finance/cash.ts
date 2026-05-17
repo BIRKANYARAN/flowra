@@ -6,9 +6,7 @@
 // expenses whose own payment_status says they were actually paid.
 // ------------------------------------------------------------
 
-function round2(value: number): number {
-  return Math.round((value + Number.EPSILON) * 100) / 100
-}
+import { round2 } from '@/lib/calc'
 
 export interface CashPositionInput {
   paymentsReceived: number
