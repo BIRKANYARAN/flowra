@@ -291,7 +291,7 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
 
         <div className="flex items-center gap-3">
           {/* Currency selector */}
-          <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-xl px-1 py-1">
+          <div className="flex items-center gap-1 bg-white border border-gray-100 rounded-xl px-1 py-1">
             {CURRENCIES.map(c => (
               <button
                 key={c}
@@ -338,7 +338,7 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
       )}
 
       {/* ── Table ────────────────────────────────────────────────────── */}
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+      <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
         {filtered.length === 0 ? (
           <div className="py-16 text-center">
             <div className="text-4xl mb-3">{products.length === 0 ? '📦' : '🔍'}</div>
@@ -486,7 +486,7 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
                         ) : productLots.lots.length === 0 ? (
                           <p className="text-sm text-gray-400 py-2">Bu ürün için stok lotu bulunamadı.</p>
                         ) : (
-                          <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                          <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
                             <div className="grid text-[10px] font-bold text-gray-400 uppercase tracking-widest px-4 py-2 border-b border-gray-100" style={{ gridTemplateColumns: 'repeat(14, minmax(0, 1fr))' }}>
                               <div className="col-span-2">Giriş Tarihi</div>
                               <div className="col-span-2 text-right">Kalan Adet</div>

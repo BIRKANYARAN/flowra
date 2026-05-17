@@ -380,10 +380,6 @@ export default function CollectionsClient({ initialRows }: Props) {
 
       {/* Header + tabs */}
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-xl font-black text-gray-900 tracking-tight">Tahsilatlar</h1>
-          <p className="text-xs text-gray-400 mt-0.5">Satış ödemelerini takip edin</p>
-        </div>
         <div className="flex items-center gap-2 flex-wrap">
           {/* Customer search */}
           <div className="relative">
@@ -430,7 +426,7 @@ export default function CollectionsClient({ initialRows }: Props) {
 
       {/* Summary strip */}
       <div className="grid grid-cols-3 gap-2">
-        <div className="bg-white rounded-xl border border-gray-200 px-4 py-3">
+        <div className="bg-white rounded-xl border border-gray-100 px-4 py-3 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
           <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Gösterilen</div>
           <div className="text-xl font-black tabular-nums text-gray-900">
             {loading ? '—' : fmtTRY(displayRows.reduce((s, r) => s + (r.total_try ?? 0), 0))}
@@ -439,7 +435,7 @@ export default function CollectionsClient({ initialRows }: Props) {
             {search ? `${displayRows.length} / ${rows.length} kayıt` : `${rows.length} kayıt`}
           </div>
         </div>
-        <div className="bg-white rounded-xl border border-gray-200 px-4 py-3">
+        <div className="bg-white rounded-xl border border-gray-100 px-4 py-3 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
           <div className="text-[10px] font-bold uppercase tracking-widest text-amber-500 mb-1">Bekliyor</div>
           <div className="text-xl font-black tabular-nums text-amber-700">
             {loading ? '—' : fmtTRY(unpaidTotal)}
@@ -451,7 +447,7 @@ export default function CollectionsClient({ initialRows }: Props) {
             {displayRows.filter(r => r.payment_status !== 'paid').length} satış
           </div>
         </div>
-        <div className="bg-white rounded-xl border border-gray-200 px-4 py-3">
+        <div className="bg-white rounded-xl border border-gray-100 px-4 py-3 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
           <div className="text-[10px] font-bold uppercase tracking-widest text-emerald-500 mb-1">Tahsil Edildi</div>
           <div className="text-xl font-black tabular-nums text-emerald-700">
             {loading ? '—' : fmtTRY(paidTotal)}
@@ -471,7 +467,7 @@ export default function CollectionsClient({ initialRows }: Props) {
       )}
 
       {/* Main table */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
 
         {loading ? (
           <div className="py-16 flex items-center justify-center">

@@ -218,13 +218,13 @@ export async function CFOTab({ userId, companyId }: Props) {
         <div className="flex gap-2">
           <Link
             href="/dashboard/finance?tab=quarterly"
-            className="text-xs font-semibold text-gray-500 hover:text-gray-800 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors"
+            className="text-xs font-semibold text-gray-500 hover:text-gray-800 border border-gray-100 px-3 py-1.5 rounded-xl hover:bg-gray-50 transition-colors"
           >
             Finansal Analitik →
           </Link>
           <Link
             href="/dashboard/finance?tab=tax"
-            className="text-xs font-semibold text-gray-500 hover:text-gray-800 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors"
+            className="text-xs font-semibold text-gray-500 hover:text-gray-800 border border-gray-100 px-3 py-1.5 rounded-xl hover:bg-gray-50 transition-colors"
           >
             Vergi Merkezi →
           </Link>
@@ -250,7 +250,7 @@ export async function CFOTab({ userId, companyId }: Props) {
         </div>
 
         {/* Component scores */}
-        <div className="border border-gray-200 rounded-xl p-4 bg-white col-span-2">
+        <div className="border border-gray-100 rounded-xl p-4 bg-white col-span-2 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
           <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">
             Bileşen Skorları
           </div>
@@ -274,7 +274,7 @@ export async function CFOTab({ userId, companyId }: Props) {
       </div>
 
       {/* Row 2: Accounting Accuracy Checks */}
-      <div className="bg-white border border-gray-200 rounded-xl p-4">
+      <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
         <div className="flex items-center justify-between mb-3">
           <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">
             Muhasebe Doğruluk Kontrolleri
@@ -306,7 +306,7 @@ export async function CFOTab({ userId, companyId }: Props) {
       </div>
 
       {/* Row 3: Balance Sheet preview */}
-      <div className="bg-white border border-gray-200 rounded-xl p-4">
+      <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
         <div className="flex items-center justify-between mb-3">
           <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">
             Bilanço Özeti — {fmtDate(today)}
@@ -365,7 +365,7 @@ export async function CFOTab({ userId, companyId }: Props) {
       <div className="grid grid-cols-2 gap-3">
 
         {/* Tax */}
-        <div className="bg-white border border-gray-200 rounded-xl p-4">
+        <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
           <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">
             Vergi Yükümlülükleri ({today.slice(0, 4)})
           </div>
@@ -401,7 +401,7 @@ export async function CFOTab({ userId, companyId }: Props) {
         </div>
 
         {/* Receivable aging */}
-        <div className="bg-white border border-gray-200 rounded-xl p-4">
+        <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
           <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">
             Alacak Yaşlandırma
           </div>
@@ -431,7 +431,7 @@ export async function CFOTab({ userId, companyId }: Props) {
       </div>
 
       {/* Row 5: P&L Summary */}
-      <div className="bg-white border border-gray-200 rounded-xl p-4">
+      <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
         <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">
           Gelir Tablosu Özeti — {today.slice(0, 4)} YTD
         </div>

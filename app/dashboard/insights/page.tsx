@@ -148,7 +148,7 @@ export default function InsightsPage() {
                 Anlamlı gelir veya gider anomalisi tespit edilmedi
               </div>
             ) : (
-              <div className="bg-white border border-gray-200 rounded-xl overflow-hidden divide-y divide-gray-50">
+              <div className="bg-white border border-gray-100 rounded-xl overflow-hidden divide-y divide-gray-50">
                 {[...anomalies.revenue_anomalies, ...anomalies.expense_anomalies].map((a, i) => (
                   <div key={i} className="flex items-start gap-3 px-4 py-2.5">
                     <span className={`text-[10px] font-black px-1.5 py-0.5 rounded border shrink-0 mt-0.5 ${SEV[a.severity]}`}>
@@ -173,7 +173,7 @@ export default function InsightsPage() {
       {!loadingA && anomalies && anomalies.customer_risks.filter(r => r.risk_level !== 'low').length > 0 && (
         <div>
           <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Müşteri Risk Skoru</div>
-          <div className="bg-white border border-gray-200 rounded-xl overflow-hidden divide-y divide-gray-50">
+          <div className="bg-white border border-gray-100 rounded-xl overflow-hidden divide-y divide-gray-50">
             {anomalies.customer_risks
               .filter(r => r.risk_level !== 'low')
               .slice(0, 6)
@@ -220,7 +220,7 @@ export default function InsightsPage() {
                 Son 90 günde kopya masraf tespit edilmedi
               </div>
             ) : (
-              <div className="bg-white border border-gray-200 rounded-xl overflow-hidden divide-y divide-gray-50">
+              <div className="bg-white border border-gray-100 rounded-xl overflow-hidden divide-y divide-gray-50">
                 {duplicates.duplicates.slice(0, 8).map((d, i) => (
                   <div key={i} className="px-4 py-2.5 flex items-start gap-3">
                     <span className={`text-[10px] font-black px-1.5 py-0.5 rounded border shrink-0 mt-0.5 ${

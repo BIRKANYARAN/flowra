@@ -144,7 +144,7 @@ export default function TasksClient({ initialTasks, initialCustomers, initialSal
 
       {/* ── Create form ───────────────────────────────────────────────────── */}
       {showForm && (
-        <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
+        <div className="bg-white rounded-xl border border-gray-100 p-5 space-y-4">
           <h2 className="text-sm font-bold text-gray-700">Yeni Görev</h2>
           {formError && <p className="text-xs text-red-600">{formError}</p>}
           <div>
@@ -258,7 +258,7 @@ export default function TasksClient({ initialTasks, initialCustomers, initialSal
 
       {/* ── Task list ─────────────────────────────────────────────────────── */}
       {filtered.length === 0 ? (
-        <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
+        <div className="bg-white rounded-xl border border-gray-100 p-8 text-center">
           <p className="text-sm text-gray-400">
             {tab === 'open' ? 'Açık görev yok. ✓' : 'Bu durumda görev yok.'}
           </p>

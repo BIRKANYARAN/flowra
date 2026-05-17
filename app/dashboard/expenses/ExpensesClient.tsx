@@ -347,7 +347,7 @@ export default function ExpensesClient({
         <>
           {/* ── One-off expenses ──────────────────────────────────────────────── */}
           {list.length > 0 && (
-            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+            <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
               <div className="grid grid-cols-12 text-[10px] font-bold text-gray-400 uppercase tracking-widest px-5 py-3 border-b border-gray-100">
                 <div className="col-span-4">Açıklama</div>
                 <div className="col-span-2">Kategori</div>
@@ -412,7 +412,7 @@ export default function ExpensesClient({
           {recurring.length > 0 && (
             <div>
               <Label className="mb-3">Tekrarlayan Giderler ({recurring.length})</Label>
-              <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+              <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
                 <div className="grid grid-cols-12 text-[10px] font-bold text-gray-400 uppercase tracking-widest px-5 py-3 border-b border-gray-100">
                   <div className="col-span-4">Açıklama</div>
                   <div className="col-span-2">Kategori</div>

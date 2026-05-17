@@ -186,7 +186,7 @@ export default function CustomerDetailPage() {
             cls:   summary.balance_try > 0 ? 'text-red-600' : 'text-green-600',
           },
         ].map(c => (
-          <div key={c.label} className="bg-white border border-gray-200 rounded-2xl px-4 py-3">
+          <div key={c.label} className="bg-white border border-gray-100 rounded-2xl px-4 py-3">
             <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{c.label}</div>
             <div className={`text-lg font-black tabular-nums ${c.cls ?? ''}`}>{c.value}</div>
           </div>
@@ -194,7 +194,7 @@ export default function CustomerDetailPage() {
       </div>
 
       {/* ── Customer info ─────────────────────────────────────────────────── */}
-      <div className="bg-white border border-gray-200 rounded-2xl p-5">
+      <div className="bg-white border border-gray-100 rounded-2xl p-5">
         <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Müşteri Bilgileri</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2 text-sm">
           {customer.tax_number && (
@@ -225,7 +225,7 @@ export default function CustomerDetailPage() {
       </div>
 
       {/* ── Sales ─────────────────────────────────────────────────────────── */}
-      <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+      <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
           <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Satışlar</h2>
           <span className="text-xs text-gray-400">{summary.sale_count} kayıt</span>
@@ -308,7 +308,7 @@ export default function CustomerDetailPage() {
       </div>
 
       {/* ── Proformas ─────────────────────────────────────────────────────── */}
-      <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+      <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
           <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Proformalar</h2>
           <span className="text-xs text-gray-400">{summary.proforma_count} kayıt</span>
