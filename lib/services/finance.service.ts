@@ -213,14 +213,16 @@ export class FinanceService {
     const [{ data: exps, error: e1 }, { data: recs, error: e2 }] = await Promise.all([
       supabase
         .from('expenses')
-        .select('id, category, expense_type, amount_try, kdv, is_deductible, expense_date, recurring_expense_id')
+        // Note: is_deductible does not exist on expenses; deductibility is derived from category
+        .select('id, category, expense_type, amount_try, kdv, expense_date, recurring_expense_id')
         .eq('company_id', companyId)
         .is('deleted_at', null)
         .gte('expense_date', period.from)
         .lte('expense_date', period.to),
       supabase
         .from('recurring_expenses')
-        .select('id, category, expense_type, amount, fx_rate, kdv, is_deductible, frequency, start_date, end_date')
+        // Note: expense_type does not exist on recurring_expenses; derived from category
+        .select('id, category, amount, fx_rate, kdv, is_deductible, frequency, start_date, end_date')
         .eq('company_id', companyId)
         .eq('is_active', true)
         .is('deleted_at', null)
@@ -250,7 +252,7 @@ export class FinanceService {
       const cat       = String(e.category ?? 'general') as ExpenseCategory
       const amount    = Number(e.amount_try ?? 0)
       const kdv       = Number(e.kdv ?? 0)
-      const deductive = resolveDeductibility(cat, e.is_deductible as boolean | null)
+      const deductive = resolveDeductibility(cat, null)   // is_deductible not on expenses table
       const expenseType = e.expense_type
         ? String(e.expense_type) as ExpenseType
         : resolveExpenseType(cat)
@@ -272,9 +274,7 @@ export class FinanceService {
       const amountTry = Number(r.amount ?? 0) * Number(r.fx_rate ?? 1)
       const kdv       = Number(r.kdv ?? 0)
       const deductive = resolveDeductibility(cat, r.is_deductible as boolean | null)
-      const expenseType = r.expense_type
-        ? String(r.expense_type) as ExpenseType
-        : resolveExpenseType(cat)
+      const expenseType = resolveExpenseType(cat)   // expense_type not on recurring_expenses table
       const occurrences = materializeRecurring(
         {
           frequency:  String(r.frequency) as RecurrenceFrequency,
