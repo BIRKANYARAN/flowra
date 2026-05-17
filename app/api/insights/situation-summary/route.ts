@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
         .in('payment_status', ['pending', 'partial', 'overdue'])
         .is('deleted_at', null),
       supabase.from('partner_loan_tranches')
-        .select('outstanding_try, due_date, partner_id')
+        .select('outstanding_try, due_date, partner_id, annual_interest_rate')
         .eq('company_id', companyId)
         .eq('status', 'active'),
     ])
@@ -56,7 +56,12 @@ export async function GET(req: NextRequest) {
     const overdueRatio = totalRevenue > 0 ? totalOverdue / totalRevenue : 0
 
     const totalLoans = tranches.reduce((s, t) => s + Number(t.outstanding_try ?? 0), 0)
-    const monthlyDebtService = totalLoans * 0.015
+    // Use actual annual_interest_rate per tranche (decimal, 0.15=15%); proxy 1.5%/month for rate-free
+    const monthlyDebtService = tranches.reduce((s, t) => {
+      const principal = Number(t.outstanding_try ?? 0)
+      const rate      = Number(t.annual_interest_rate ?? 0)
+      return s + (rate > 0 ? principal * rate / 12 : principal * 0.015)
+    }, 0)
     const monthlyNet  = pnl?.net_after_tax_try ?? 0
     const monthlyRevM = pnl?.revenue_try ?? 0
     const dsr = monthlyNet > 0 ? monthlyDebtService / monthlyNet : 0
