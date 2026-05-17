@@ -144,7 +144,7 @@ export async function getCashflowTimeline(
       supabase.from('sales').select('total_try, created_at')
         .eq('company_id', companyId).is('deleted_at', null)
         .gte('created_at', _ymStart(startYM)).lte('created_at', _ymEnd(endYM) + 'T23:59:59Z'),
-      supabase.from('sales').select('total_try, created_at')
+      supabase.from('sales').select('total_try, amount_paid, created_at')
         .eq('company_id', companyId).is('deleted_at', null)
         .in('payment_status', ['pending', 'partial', 'overdue'])
         .gte('created_at', _ymStart(startYM)).lte('created_at', _ymEnd(endYM) + 'T23:59:59Z'),
@@ -167,7 +167,7 @@ export async function getCashflowTimeline(
   }
   for (const s of receivablesRes.data ?? []) {
     const row = months.get(_toYM(s.created_at as string))
-    if (row) row.receivable += Number(s.total_try ?? 0)
+    if (row) row.receivable += Math.max(0, Number(s.total_try ?? 0) - Number(s.amount_paid ?? 0))
   }
   for (const c of collectionsRes.data ?? []) {
     const row = months.get(_toYM(c.paid_at as string))
