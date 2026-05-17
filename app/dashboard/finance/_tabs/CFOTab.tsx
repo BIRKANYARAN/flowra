@@ -541,6 +541,13 @@ export async function CFOTab({ userId, companyId }: Props) {
               color: 'hover:border-orange-300',
             },
             {
+              href:  '/dashboard/cfo/tax/corporate',
+              title: 'Kurumlar Vergisi',
+              desc:  'Geçici vergi takvimi + YTD KV tahmini',
+              icon:  '🏛️',
+              color: 'hover:border-amber-300',
+            },
+            {
               href:  '/dashboard/insights',
               title: 'AI Analizler',
               desc:  'Anomali tespiti, kopya giderler, AI özeti',
