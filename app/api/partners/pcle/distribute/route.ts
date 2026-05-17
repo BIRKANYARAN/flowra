@@ -12,10 +12,10 @@ export async function GET(req: NextRequest) {
     const { companyId, supabase } = auth
 
     const params            = req.nextUrl.searchParams
-    const net_income        = parseFloat(params.get('net_income')         ?? '0')
-    const board_retained    = parseFloat(params.get('board_retained')     ?? '0')
-    const dividend_requested= parseFloat(params.get('dividend_requested') ?? '0')
-    const available_cash    = parseFloat(params.get('available_cash')     ?? '0')
+    const net_income        = parseFloat(params.get('net_income')         ?? '0') || 0
+    const board_retained    = parseFloat(params.get('board_retained')     ?? '0') || 0
+    const dividend_requested= parseFloat(params.get('dividend_requested') ?? '0') || 0
+    const available_cash    = parseFloat(params.get('available_cash')     ?? '0') || 0
 
     const state = await PCLEEngine.compute(companyId, supabase, {
       available_cash_try:     available_cash,

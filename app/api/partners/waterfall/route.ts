@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
     const { uid, companyId, supabase } = auth
 
     const params            = req.nextUrl.searchParams
-    const available_cash    = parseFloat(params.get('available_cash') ?? '0')
+    const available_cash    = parseFloat(params.get('available_cash') ?? '0') || 0
 
     const [waterfall, projections] = await Promise.all([
       WaterfallService.compute(uid, companyId, available_cash, supabase),
