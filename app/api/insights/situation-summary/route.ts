@@ -5,7 +5,8 @@ import { evaluateAlerts }                       from '@/lib/engines/alert.engine
 import { generateSituationSummary }             from '@/lib/services/ai-summary.service'
 import type { SituationInputs }                 from '@/lib/engines/situation.engine'
 import type { AlertInputs }                     from '@/lib/engines/alert.engine'
-import { resolveApiAuth } from '@/lib/api-auth'
+import { resolveApiAuth }                       from '@/lib/api-auth'
+import { getCfoMetrics }                        from '@/lib/finance/financial-core'
 
 export const dynamic = 'force-dynamic'
 
@@ -26,7 +27,7 @@ export async function GET(req: NextRequest) {
     const period  = now.toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })
 
     // Parallel data fetches
-    const [pnlRes, overdueRes, trancheRes] = await Promise.allSettled([
+    const [pnlRes, overdueRes, trancheRes, cfoRes] = await Promise.allSettled([
       FinanceService.getFinancialSummary(uid, companyId, { from, to }),
       supabase.from('sales')
         .select('total_try, amount_paid, sale_date')
@@ -37,11 +38,13 @@ export async function GET(req: NextRequest) {
         .select('outstanding_try, due_date, partner_id, annual_interest_rate')
         .eq('company_id', companyId)
         .eq('status', 'active'),
+      getCfoMetrics(companyId, { from, to }),
     ])
 
     const pnl     = pnlRes.status    === 'fulfilled' ? pnlRes.value : null
     const overdue = overdueRes.status === 'fulfilled' ? (overdueRes.value.data ?? []) : []
     const tranches= trancheRes.status === 'fulfilled' ? (trancheRes.value.data ?? []) : []
+    const cfo     = cfoRes.status     === 'fulfilled' ? cfoRes.value : null
 
     // Compute situation inputs
     const nowMs = Date.now()
@@ -81,9 +84,9 @@ export async function GET(req: NextRequest) {
     const loanConcentration = totalLoans > 0 ? maxPartnerLoan / totalLoans : 0
 
     const situationInputs: SituationInputs = {
-      cashRunwayMonths:   0,
+      cashRunwayMonths:   cfo?.burn.runway_months ?? 0,
       isProfitable:       monthlyNet >= 0,
-      netMarginPct:       monthlyRevM > 0 ? (monthlyNet / monthlyRevM) * 100 : 0,
+      netMarginPct:       monthlyRevM > 0 ? (monthlyNet / monthlyRevM) : 0,  // 0-1 scale, not %
       debtServiceRatio:   dsr,
       overdueRatioPct:    overdueRatio * 100,
       maxBurdenScoreAbs:  0,

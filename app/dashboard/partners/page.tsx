@@ -267,27 +267,29 @@ export default function PartnersPage() {
     <div className="flex flex-col gap-4 max-w-4xl">
 
       {/* ── Header ─────────────────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-xl font-black text-gray-900 tracking-tight">Ortak Finans Merkezi</h1>
           <p className="text-xs text-gray-400 mt-0.5">Sermaye · Borç · Eşitleme · Geri Dönüş</p>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="flex bg-gray-100 rounded-xl p-0.5">
-            {([
-              { id: 'partners',     label: 'Ortaklar'      },
-              { id: 'ledger',       label: 'Defter'         },
-              { id: 'waterfall',    label: 'Geri Ödeme'     },
-              { id: 'tranches',     label: 'Trancheler'     },
-              { id: 'distribution', label: 'Kâr Dağıtımı'  },
-              { id: 'returns',      label: 'Getiri'         },
-            ] as { id: TabId; label: string }[]).map(t => (
-              <TabBtn key={t.id} id={t.id} active={activeTab === t.id} label={t.label} onClick={setActiveTab} />
-            ))}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+          <div className="overflow-x-auto scrollbar-none w-full sm:w-auto">
+            <div className="flex bg-gray-100 rounded-xl p-0.5 min-w-max">
+              {([
+                { id: 'partners',     label: 'Ortaklar'      },
+                { id: 'ledger',       label: 'Defter'         },
+                { id: 'waterfall',    label: 'Geri Ödeme'     },
+                { id: 'tranches',     label: 'Trancheler'     },
+                { id: 'distribution', label: 'Kâr Dağıtımı'  },
+                { id: 'returns',      label: 'Getiri'         },
+              ] as { id: TabId; label: string }[]).map(t => (
+                <TabBtn key={t.id} id={t.id} active={activeTab === t.id} label={t.label} onClick={setActiveTab} />
+              ))}
+            </div>
           </div>
           <Link
             href="/dashboard/partners/new"
-            className="text-sm font-bold bg-primary-600 text-white px-4 py-2 rounded-xl hover:bg-primary-700 transition-colors"
+            className="text-sm font-bold bg-primary-600 text-white px-4 py-2 rounded-xl hover:bg-primary-700 transition-colors whitespace-nowrap"
           >
             + Ortak Ekle
           </Link>

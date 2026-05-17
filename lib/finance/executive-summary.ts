@@ -368,7 +368,11 @@ export async function getExecutiveSummary(
   const corporateTax     = Number(finRes?.corporate_tax_try    ?? 0)
   const matrah           = Number(finRes?.matrah_try           ?? 0)
   const grossMarginPct   = revenue > 0 ? grossProfit / revenue : 0
-  const monthlyBurn      = expensesTotal / monthsInPeriod
+  // Use 3-month trailing burn rate (stable) instead of current-period / partial-month
+  // (dividing by 0.1 months on day 3 of month inflates burn 10×).
+  // Fall back to period expense if trailing data isn't available yet.
+  const trailingBurn     = metrics.burn.monthly_burn_rate > 0 ? metrics.burn.monthly_burn_rate : null
+  const monthlyBurn      = trailingBurn ?? (monthsInPeriod >= 1 ? expensesTotal / monthsInPeriod : expensesTotal)
   const breakEvenRevenue = grossMarginPct > 0.001 ? monthlyBurn / grossMarginPct : null
 
   const pnl: ExecutiveSummary['pnl'] = {

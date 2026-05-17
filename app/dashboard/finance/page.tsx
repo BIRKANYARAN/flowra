@@ -128,10 +128,12 @@ export default async function FinancePage({ searchParams }: PageProps) {
 
   // ── Render ────────────────────────────────────────────────────────────────────
   return (
-    <div className="flex flex-col gap-4 max-w-6xl">
+    <div className="flex flex-col gap-4 w-full">
 
-      {/* ── Tab navigation ────────────────────────────────────────────────────── */}
-      <UnifiedTabNav tabs={FINANCE_NAV_TABS} activeTab={activeTab} basePath="/dashboard/finance" />
+      {/* ── Tab navigation (sticky) ───────────────────────────────────────────── */}
+      <div className="sticky top-0 z-20 bg-white -mx-4 px-4 pt-1 shadow-sm">
+        <UnifiedTabNav tabs={FINANCE_NAV_TABS} activeTab={activeTab} basePath="/dashboard/finance" />
+      </div>
 
       {/* ── Tab header ────────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between flex-wrap gap-2">

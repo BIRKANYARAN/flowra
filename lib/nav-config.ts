@@ -99,6 +99,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: '/dashboard/operations', label: 'Operasyon',        icon: 'products'   },
       { href: '/dashboard/partners',   label: 'Ortak Finansmanı', icon: 'partners'   },
       { href: '/dashboard/planning',   label: 'Planlama',         icon: 'simulation' },
+      { href: '/dashboard/insights',   label: 'AI Analiz',        icon: 'activity'   },
     ],
   },
 

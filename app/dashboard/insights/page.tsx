@@ -55,23 +55,30 @@ export default function InsightsPage() {
   const [loadingD, setLoadingD] = useState(true)
   const [loadingS, setLoadingS] = useState(true)
 
+  const [errorA, setErrorA] = useState<string | null>(null)
+  const [errorD, setErrorD] = useState<string | null>(null)
+  const [errorS, setErrorS] = useState<string | null>(null)
+
   useEffect(() => {
     const controller = new AbortController()
     const { signal } = controller
 
     fetch('/api/insights/anomalies', { signal })
-      .then(r => r.json()).then(d => setAnomalies(d))
-      .catch(e => { if (e.name !== 'AbortError') setLoadingA(false) })
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() })
+      .then((d: AnomalyData) => setAnomalies(d))
+      .catch(e => { if (e.name !== 'AbortError') setErrorA(e.message ?? 'Yüklenemedi') })
       .finally(() => setLoadingA(false))
 
     fetch('/api/insights/duplicates', { signal })
-      .then(r => r.json()).then(d => setDuplicates(d))
-      .catch(e => { if (e.name !== 'AbortError') setLoadingD(false) })
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() })
+      .then((d: DuplicateData) => setDuplicates(d))
+      .catch(e => { if (e.name !== 'AbortError') setErrorD(e.message ?? 'Yüklenemedi') })
       .finally(() => setLoadingD(false))
 
     fetch('/api/insights/situation-summary', { signal })
-      .then(r => r.json()).then(d => setSummary(d))
-      .catch(e => { if (e.name !== 'AbortError') setLoadingS(false) })
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() })
+      .then((d: SummaryData) => setSummary(d))
+      .catch(e => { if (e.name !== 'AbortError') setErrorS(e.message ?? 'Yüklenemedi') })
       .finally(() => setLoadingS(false))
 
     return () => controller.abort()
@@ -94,7 +101,10 @@ export default function InsightsPage() {
       <div>
         <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">AI Durum Özeti</div>
         {loadingS && <div className="bg-gray-100 rounded-xl h-32 animate-pulse" />}
-        {!loadingS && summary && (
+        {!loadingS && errorS && (
+          <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700">Durum özeti yüklenemedi: {errorS}</div>
+        )}
+        {!loadingS && !errorS && summary && (
           <div className={`rounded-xl border p-4 ${theme.band}`}>
             <div className="flex items-start gap-3">
               <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${theme.badge}`} />

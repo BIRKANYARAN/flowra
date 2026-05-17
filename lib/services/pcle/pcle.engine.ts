@@ -158,6 +158,23 @@ export class PCLEEngine {
 
     const today = new Date()
 
+    // ── Estimate monthly debt service for DSR ──────────────────────────────────
+    // Sum all loan repayments across all partners, divide by months since first loan.
+    // This gives a trailing average monthly repayment rate.
+    const allFirstLoanDates = [...agg.values()]
+      .map(a => a.firstLoanDate)
+      .filter((d): d is string => !!d)
+    const allRepaid = [...agg.values()].reduce((s, a) => s + a.repaid, 0)
+    let estimated_monthly_debt_service = 0
+    if (allFirstLoanDates.length > 0 && allRepaid > 0) {
+      const earliestLoan = allFirstLoanDates.reduce((a, b) => (a < b ? a : b))
+      const monthsSinceFirst = Math.max(
+        1,
+        (today.getTime() - new Date(earliestLoan).getTime()) / (30.44 * 86_400_000)
+      )
+      estimated_monthly_debt_service = round2(allRepaid / monthsSinceFirst)
+    }
+
     // ── Build positions ────────────────────────────────────────────────────────
     const positions: PartnerPosition[] = partners.map(p => {
       const a        = agg.get(p.id)!
@@ -274,7 +291,7 @@ export class PCLEEngine {
       partners:              riskParams,
       total_debt_try:        waterfallResult.total_debt_try,
       net_income_try:        net_income_try,
-      monthly_debt_service:  0,  // filled when interest tracking is available
+      monthly_debt_service:  estimated_monthly_debt_service,
       compliance_issue_count: new Map(),
     })
 

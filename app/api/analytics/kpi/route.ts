@@ -14,7 +14,7 @@
 //   outstanding_receivables — all-time unpaid/partial sales (total_try, not period-limited)
 //   total_expenses          — expenses (amount_try) in period
 //   net_profit              — revenue_try − cost_try − expenses (approximation from sales)
-//   stock_value             — current FIFO stock value (Σ qty_remaining × entry_cost_try)
+//   stock_value             — current FIFO stock value (Σ qty_remaining × cost_price_try)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export const dynamic = 'force-dynamic'
@@ -112,7 +112,7 @@ export async function GET(req: NextRequest) {
     // 5. Stock value: current FIFO value (all active lots)
     supabase
       .from('stock_lots')
-      .select('qty_remaining, entry_cost_try')
+      .select('qty_remaining, cost_price_try')
       .eq('company_id', companyId)
       .is('deleted_at', null)
       .gt('qty_remaining', 0),
@@ -210,7 +210,7 @@ export async function GET(req: NextRequest) {
   const overdueReceivables      = (overdueRes.data                ?? []).reduce((s, r) => s + Math.max(0, Number(r.total_try ?? 0) - Number((r as { amount_paid?: number | null }).amount_paid ?? 0)), 0)
 
   const stockValue = (stockRes.data ?? []).reduce(
-    (s, l) => s + Number(l.qty_remaining ?? 0) * Number(l.entry_cost_try ?? 0),
+    (s, l) => s + Number(l.qty_remaining ?? 0) * Number((l as { cost_price_try?: number | null }).cost_price_try ?? 0),
     0,
   )
 

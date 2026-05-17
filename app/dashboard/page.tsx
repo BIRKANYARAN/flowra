@@ -512,7 +512,7 @@ export default async function DashboardPage() {
       )}
 
       {/* ── KPI Strip ─────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-6 gap-1.5">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1.5">
         <FlowraKpiCard label="Ciro" value={fs.revenue_try} rawValue={fmt(fs.revenue_try)} sub={fs.revenue_try > 0 ? `Brüt marj ${pct(grossMarginPct)}` : 'Satış yok'} href="/dashboard/commercial?tab=sales" />
         <FlowraKpiCard label="Tahsil Edilen" value={actuallyCollected} rawValue={fmt(actuallyCollected)} sub={`%${actuallyCollectedPct} oran`} tone={actuallyCollectedPct >= 80 ? 'positive' : actuallyCollectedPct >= 50 ? 'neutral' : 'negative'} href="/dashboard/commercial?tab=collections" />
         <FlowraKpiCard label="Dağıtılabilir" value={cashDistributable} rawValue={cashDistributable > 0 ? fmt(cashDistributable) : '—'} sub={cashDistributable > 0 ? 'Nakit bazlı' : 'Yok'} tone={cashDistributable > 0 ? 'positive' : 'neutral'} href="/dashboard/partners" />
@@ -522,13 +522,13 @@ export default async function DashboardPage() {
       </div>
 
       {/* ── Main Grid: Waterfall 7/12 | Tax/Net 5/12 ─────────────────────── */}
-      <div className="grid grid-cols-12 gap-1.5">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-1.5">
 
         {/* Cash Waterfall */}
-        <div className="col-span-7 bg-white border border-gray-200 rounded-xl px-4 py-2.5">
+        <div className="lg:col-span-7 bg-white border border-gray-200 rounded-xl px-4 py-2.5">
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Nakit Köprüsü</span>
-            <Link href="/dashboard/analytics" className="text-[10px] text-primary-600 font-semibold hover:text-primary-700">Analiz →</Link>
+            <Link href="/dashboard/insights" className="text-[10px] text-primary-600 font-semibold hover:text-primary-700">Analiz →</Link>
           </div>
           <div className="space-y-1">
             <WRow label="+ Tahsil Edilen" value={actuallyCollected} sub={`${fmt(fs.revenue_try)} fatura · %${actuallyCollectedPct}`} />
@@ -557,7 +557,7 @@ export default async function DashboardPage() {
         </div>
 
         {/* Tax + Net — 3 rows */}
-        <div className="col-span-5 grid grid-rows-3 gap-1.5">
+        <div className="lg:col-span-5 grid grid-rows-3 gap-1.5">
           <div className="bg-white border border-gray-200 rounded-xl px-3 py-2 flex items-center justify-between">
             <div>
               <div className="text-[9px] font-black uppercase tracking-widest text-gray-400">KDV (Net)</div>
@@ -644,11 +644,11 @@ export default async function DashboardPage() {
       </div>
 
       {/* ── Bottom Row: Chart + FX + Proforma ────────────────────────────── */}
-      <div className="grid grid-cols-12 gap-1.5">
-        <div className="col-span-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-1.5">
+        <div className="lg:col-span-8">
           <CashflowChart className="w-full" />
         </div>
-        <div className="col-span-4 flex flex-col gap-1.5">
+        <div className="lg:col-span-4 flex flex-col gap-1.5">
           <FxWidget initialFx={{ USD: fxData.USD, EUR: fxData.EUR, source: fxData.source, rate_date: fxData.rate_date, fetched_at: fxData.fetched_at }} />
           {outstanding > 0 && (
             <Link href="/dashboard/proformas" className="bg-white border border-gray-200 rounded-xl px-3 py-2 hover:border-gray-300 transition-colors">

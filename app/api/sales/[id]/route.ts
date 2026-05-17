@@ -35,6 +35,12 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       patch.paid_at = body.payment_status === 'paid' ? new Date().toISOString() : null
     }
 
+    // Persist amount_paid when provided (partial or full payment)
+    if (body.amount_paid !== undefined) {
+      const ap = Number(body.amount_paid)
+      if (!isNaN(ap) && ap >= 0) patch.amount_paid = ap
+    }
+
     if (body.shipment_status !== undefined) {
       if (typeof body.shipment_status !== 'string' ||
           !SHIPMENT_STATUSES.includes(body.shipment_status as typeof SHIPMENT_STATUSES[number])) {
@@ -88,7 +94,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     }
 
     // Dual-write: journal entry for payment (DR 102 Bankalar, CR 120 Alıcılar)
-    if (body.payment_status === 'paid' && body.amount_paid !== undefined) {
+    // Fire for both 'paid' (full) and 'partial' payments
+    if ((body.payment_status === 'paid' || body.payment_status === 'partial') && body.amount_paid !== undefined) {
       const amountPaid = Number(body.amount_paid) || 0
       if (amountPaid > 0) {
         const periodId = guard.period_id ?? await resolvePeriodId(companyId, saleDate, supabase)

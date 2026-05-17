@@ -50,25 +50,34 @@ export async function POST(req: NextRequest) {
     // Initial stock movement via ledger (if qty > 0)
     if (payload.stock_qty > 0) {
       const { data: mvData } = await supabase.from('stock_movements').insert({
-        user_id: uid, product_id: data.id, reference_type: 'purchase',
-        qty_change: payload.stock_qty, qty_before: 0, qty_after: payload.stock_qty,
-        unit_cost: payload.unit_cost, notes: 'Başlangıç stok girişi',
+        user_id:    uid,
+        product_id: data.id,
         company_id: companyId,
+        type:       'initial',
+        qty:        payload.stock_qty,
+        unit_cost:  payload.unit_cost,
+        notes:      'Başlangıç stok girişi',
       }).select('id').single()
 
       // FIFO lot for initial stock
+      const costCurrency = payload.cost_currency ?? 'TRY'
+      const costFxRate   = Number(body.fx_rate_at_entry) || 1
+      const costPriceTry = costCurrency === 'TRY'
+        ? payload.unit_cost
+        : payload.unit_cost * costFxRate
+
       await supabase.from('stock_lots').insert({
-        user_id:          uid,
-        product_id:       data.id,
-        qty_initial:      payload.stock_qty,
-        qty_remaining:    payload.stock_qty,
-        unit_cost:        payload.unit_cost,
-        cost_currency:    payload.cost_currency,
-        fx_rate_at_entry: body.fx_rate_at_entry || 1,
-        entry_date:       body.entry_date || new Date().toISOString().slice(0, 10),
-        source_type:      'purchase',
-        source_id:        mvData?.id ?? null,
-        company_id:       companyId,
+        user_id:        uid,
+        product_id:     data.id,
+        company_id:     companyId,
+        qty_initial:    payload.stock_qty,
+        qty_remaining:  payload.stock_qty,
+        cost_price:     payload.unit_cost,
+        cost_currency:  costCurrency,
+        cost_fx_rate:   costFxRate,
+        cost_price_try: costPriceTry,
+        received_at:    body.entry_date || new Date().toISOString().slice(0, 10),
+        movement_id:    mvData?.id ?? null,
       })
     }
 
