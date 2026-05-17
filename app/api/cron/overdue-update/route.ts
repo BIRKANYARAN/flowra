@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient }              from '@/lib/supabase-server'
+import { getSystemAdminClient }      from '@/lib/admin-db'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,12 +14,16 @@ export const dynamic = 'force-dynamic'
 const CRON_SECRET = process.env.CRON_SECRET
 
 export async function POST(req: NextRequest) {
+  // Treat a missing CRON_SECRET as misconfiguration — deny access rather than
+  // leaving the endpoint open to unauthenticated callers.
   const authHeader = req.headers.get('authorization')
-  if (CRON_SECRET && authHeader !== `Bearer ${CRON_SECRET}`) {
+  if (!CRON_SECRET || authHeader !== `Bearer ${CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const supabase = createClient()
+  // Cron jobs run without an HTTP session — use the service-role client so that
+  // Supabase RLS (which requires auth.uid()) does not silently block every query.
+  const supabase = getSystemAdminClient()
   const today    = new Date().toISOString().slice(0, 10)
 
   try {
