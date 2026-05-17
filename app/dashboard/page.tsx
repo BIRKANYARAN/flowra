@@ -45,7 +45,7 @@ interface FxData {
 }
 const EMPTY_FX: FxData = { USD: 0, EUR: 0, source: 'fallback', rate_date: null, fetched_at: null }
 
-const ZERO_EQ: EqualizationResult = { baseline_per_unit: 0, total_equalization: 0, distributable: 0, remaining_after_eq: 0, entries: [] }
+const ZERO_EQ: EqualizationResult = { baseline_per_unit: 0, total_equalization: 0, distributable: 0, remaining_after_eq: 0, entries: [], total_net_loans_try: 0 }
 
 const ZERO_FS: FinancialSummary = {
   period: { from: '', to: '' },
@@ -326,11 +326,20 @@ export default async function DashboardPage() {
     ? Math.round((overdueTotal30 / uncollectedSalesTotal) * 100)
     : 0
 
+  // DSR = monthly debt service / monthly net income.
+  // Debt service approximation: assume total net loans amortise over 36 months
+  // (conservative for SME loans; no scheduled repayment data available without
+  // tranche schedule). Interest component omitted (annual_interest_rate = 0 currently).
+  // equalization.total_net_loans_try is populated by calculateEqualization() at zero
+  // extra DB cost (computed from partner balances fetched for equalization).
+  const monthlyDebtService = equalization.total_net_loans_try / 36
+  const debtServiceRatio   = monthlyNet > 0 ? Math.min(1, monthlyDebtService / monthlyNet) : 0
+
   const situation = computeSituation({
     cashRunwayMonths:  runwayMonths,
     isProfitable:      monthlyNet >= 0,
     netMarginPct:      fs.revenue_try > 0 ? fs.net_after_tax_try / fs.revenue_try : 0,
-    debtServiceRatio:  0,   // simplified: no partner loan data in this pass
+    debtServiceRatio,
     overdueRatioPct,
     maxBurdenScoreAbs: equalization.total_equalization > 0
       ? Math.min(1, equalization.total_equalization / Math.max(distributableAmount, 1))

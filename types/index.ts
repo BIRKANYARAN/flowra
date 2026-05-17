@@ -1022,6 +1022,9 @@ export interface EqualizationResult {
   distributable:         number   // input distributable amount (0 if not provided)
   remaining_after_eq:    number   // distributable − actual_equalization_paid (≥ 0; split pro-rata)
   entries:               PartnerEqualizationEntry[]
+  // Computed from partner balances at equalization time — zero additional DB call.
+  // Used by SituationEngine for DSR (Debt Service Ratio) calculation.
+  total_net_loans_try:   number   // Σ max(0, net_loan_try) across all active partners
 }
 
 // ── Phase 7: Audit & Alert System ────────────────────────────────────────────

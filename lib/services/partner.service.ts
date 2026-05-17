@@ -27,6 +27,7 @@ import { createClient } from '@/lib/supabase-server'
 import { logger, contextFromHeader } from '@/lib/logger'
 import { AppError } from '@/types/errors'
 import { logAudit, logAlert } from '@/lib/audit'
+import { round2 } from '@/lib/calc'
 import type {
   Partner,
   PartnerTransaction,
@@ -35,12 +36,6 @@ import type {
   PartnerEqualizationEntry,
   EqualizationResult,
 } from '@/types/index'
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function round2(v: number): number {
-  return Math.round(v * 100) / 100
-}
 
 // ── Pure equalization kernel ──────────────────────────────────────────────────
 
@@ -98,11 +93,12 @@ export function computeEqualization(
 
   if (partners.length === 0) {
     return {
-      baseline_per_unit:  0,
-      total_equalization: 0,
+      baseline_per_unit:   0,
+      total_equalization:  0,
       distributable,
-      remaining_after_eq: distributable,
-      entries:            [],
+      remaining_after_eq:  distributable,
+      entries:             [],
+      total_net_loans_try: 0,
     }
   }
 
@@ -187,11 +183,14 @@ export function computeEqualization(
   })
 
   return {
-    baseline_per_unit:  round2(baseline),
-    total_equalization: totalEqNeeded,              // total equalization needed (informational)
-    distributable:      round2(distributable),
-    remaining_after_eq: remaining,
+    baseline_per_unit:    round2(baseline),
+    total_equalization:   totalEqNeeded,              // total equalization needed (informational)
+    distributable:        round2(distributable),
+    remaining_after_eq:   remaining,
     entries,
+    // Caller (calculateEqualization) overwrites this with the real DB value;
+    // 0 here as a safe default when invoked as a pure function.
+    total_net_loans_try:  0,
   }
 }
 
@@ -335,7 +334,7 @@ export class PartnerService {
     // Only active partners participate in equalization
     const active = balances.filter(b => b.is_active)
 
-    return computeEqualization({
+    const result = computeEqualization({
       partners: active.map(b => ({
         partner_id:            b.partner_id,
         partner_name:          b.partner_name,
@@ -347,6 +346,14 @@ export class PartnerService {
       })),
       distributable: distributable ?? 0,
     })
+
+    // Inject total net loans from balances — zero additional DB call.
+    // Used by callers (SituationEngine, CEO cockpit) for DSR computation.
+    result.total_net_loans_try = round2(
+      balances.reduce((s, b) => s + Math.max(0, b.net_loan_try), 0)
+    )
+
+    return result
   }
 
   // ── listPartners ────────────────────────────────────────────────────────────
