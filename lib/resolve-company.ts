@@ -98,3 +98,78 @@ export async function resolveCompanyId(
 
   return companyId as string
 }
+
+// ── Multi-company support ──────────────────────────────────────────────────────
+
+export interface UserCompanyEntry {
+  companyId:   string
+  companyName: string | null
+  role:        string
+}
+
+/**
+ * List all companies a user belongs to (for multi-company switcher).
+ * Returns empty array if query fails — non-fatal.
+ */
+export async function listCompaniesForUser(
+  userId:   string,
+  supabase: AnySupabaseClient,
+): Promise<UserCompanyEntry[]> {
+  try {
+    const { data, error } = await supabase
+      .from('company_members')
+      .select('company_id, role, companies(name)')
+      .eq('user_id', userId)
+      .is('deleted_at', null)
+      .not('accepted_at', 'is', null)
+      .order('created_at', { ascending: true })
+
+    if (error || !data) return []
+
+    return (data as Array<{
+      company_id: string
+      role: string
+      companies: { name: string } | null
+    }>).map(row => ({
+      companyId:   row.company_id,
+      companyName: row.companies?.name ?? null,
+      role:        row.role ?? 'viewer',
+    }))
+  } catch {
+    return []
+  }
+}
+
+/** Cookie name for selected company preference */
+export const COMPANY_PREF_COOKIE = 'flowra_company_pref'
+
+/**
+ * Resolve company considering user's explicit preference cookie.
+ * Falls back to resolveCompanyId if:
+ *   - No preference cookie
+ *   - Preference cookie references a company the user doesn't belong to
+ */
+export async function resolveCompanyWithPref(
+  userId:    string,
+  supabase:  AnySupabaseClient,
+  prefCookieValue: string | undefined,
+): Promise<string> {
+  if (prefCookieValue) {
+    // Verify user is actually a member of the preferred company
+    try {
+      const { data } = await supabase
+        .from('company_members')
+        .select('company_id')
+        .eq('user_id', userId)
+        .eq('company_id', prefCookieValue)
+        .is('deleted_at', null)
+        .not('accepted_at', 'is', null)
+        .maybeSingle()
+
+      if (data?.company_id) return data.company_id as string
+    } catch {
+      // Fall through to default resolution
+    }
+  }
+  return resolveCompanyId(userId, supabase)
+}

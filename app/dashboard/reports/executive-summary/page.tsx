@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { PrintButton } from '@/components/reports/PrintButton'
+import { PdfExportButton } from '@/components/reports/PdfExportButton'
+import { useWorkspace }    from '@/lib/workspace-context'
+import type { PdfReportOptions } from '@/lib/utils/pdf-report'
 
 interface ExecSummary {
   from: string; to: string; as_of: string; computed_at: string
@@ -59,6 +61,7 @@ export default function ExecutiveSummaryPage() {
   const [error,   setError]   = useState<string | null>(null)
   const [from,    setFrom]    = useState(currentPeriod().from)
   const [to,      setTo]      = useState(currentPeriod().to)
+  const ws = useWorkspace()
 
   useEffect(() => {
     setLoading(true)
@@ -88,7 +91,51 @@ export default function ExecutiveSummaryPage() {
           <span className="text-xs text-gray-400">—</span>
           <input type="date" value={to} onChange={e => setTo(e.target.value)}
             className="border border-gray-200 rounded-lg px-2 py-1 text-xs" />
-          <PrintButton label="PDF İndir" />
+          {data && (
+            <PdfExportButton label="PDF İndir" opts={{
+              companyName: ws.companyName ?? 'Şirket',
+              reportTitle: 'Yönetici Özeti',
+              subtitle:    `${from} — ${to}`,
+              filename:    `yonetici-ozeti-${from}-${to}`,
+              sections: [
+                { title: 'Kâr / Zarar', rows: [
+                  { label: 'Satış Gelirleri',  value: fmt(is?.revenue ?? 0) },
+                  { label: 'Brüt Kâr',         value: fmt(is?.gross_profit ?? 0), indent: true,
+                    tone: is && is.gross_profit > 0 ? 'positive' : 'negative' },
+                  { label: 'Brüt Marj',         value: fmtPct(is?.gross_margin_pct ?? 0), indent: true },
+                  { label: 'Faaliyet Kârı (EBITDA)', value: fmt(is?.ebitda ?? 0), bold: true,
+                    tone: is && is.ebitda > 0 ? 'positive' : 'negative' },
+                  { label: 'Net Kâr',           value: fmt(is?.net_income ?? 0), bold: true,
+                    tone: is && is.net_income > 0 ? 'positive' : 'negative' },
+                  { label: 'Net Marj',          value: fmtPct(is?.net_margin_pct ?? 0), indent: true },
+                ]},
+                { title: 'Finansal Pozisyon', rows: [
+                  { label: 'Toplam Varlık',     value: fmt(bs?.total_assets ?? 0) },
+                  { label: 'Nakit',             value: fmt(bs?.cash_try ?? 0), indent: true, tone: 'positive' },
+                  { label: 'Alacaklar',         value: fmt(bs?.receivables_try ?? 0), indent: true },
+                  { label: 'Toplam Yükümlülük', value: fmt(bs?.total_liabilities ?? 0) },
+                  { label: 'Özkaynak',          value: fmt(bs?.total_equity ?? 0), bold: true,
+                    tone: bs && bs.total_equity > 0 ? 'positive' : 'negative' },
+                ]},
+                { title: 'Nakit Akışı', rows: [
+                  { label: 'Faaliyet Nakit Akışı',  value: fmt(cf?.operating ?? 0),
+                    tone: cf && cf.operating > 0 ? 'positive' : 'negative' },
+                  { label: 'Yatırım Nakit Akışı',   value: fmt(cf?.investing ?? 0) },
+                  { label: 'Finansman Nakit Akışı',  value: fmt(cf?.financing ?? 0) },
+                  { label: 'Net Nakit Değişimi',     value: fmt(cf?.net_change ?? 0), bold: true,
+                    tone: cf && cf.net_change > 0 ? 'positive' : 'negative' },
+                ]},
+                { title: 'Vergi Özeti', rows: [
+                  { label: 'Satış KDV',         value: fmt(tax?.sales_vat ?? 0) },
+                  { label: 'Alış KDV',          value: fmt(tax?.purchase_vat ?? 0), indent: true },
+                  { label: 'Gider KDV',         value: fmt(tax?.expense_vat ?? 0), indent: true },
+                  { label: 'Net KDV',           value: fmt(tax?.net_vat ?? 0), bold: true,
+                    tone: tax?.status === 'payable' ? 'negative' : 'positive' },
+                  { label: 'Kurumlar Vergisi',  value: fmt(is?.corporate_tax ?? 0), tone: 'negative' },
+                ]},
+              ],
+            } as PdfReportOptions} />
+          )}
           <Link href="/dashboard" className="text-xs text-gray-400 hover:text-primary-600 font-semibold">← Dashboard</Link>
         </div>
       </div>

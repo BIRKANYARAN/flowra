@@ -540,6 +540,13 @@ export async function CFOTab({ userId, companyId }: Props) {
               icon:  '🧾',
               color: 'hover:border-orange-300',
             },
+            {
+              href:  '/dashboard/insights',
+              title: 'AI Analizler',
+              desc:  'Anomali tespiti, kopya giderler, AI özeti',
+              icon:  '🤖',
+              color: 'hover:border-purple-300',
+            },
           ].map(item => (
             <Link
               key={item.href}

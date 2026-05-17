@@ -63,6 +63,13 @@ export function navModeFromRole(role: MemberRole | null): NavMode {
   return 'OPS'
 }
 
+/** A company the user is a member of */
+export interface CompanyEntry {
+  companyId:   string
+  companyName: string | null
+  role:        MemberRole
+}
+
 /** Full workspace context value (provided by WorkspaceContext) */
 export interface WorkspaceValue {
   companyId:    string | null
@@ -77,6 +84,10 @@ export interface WorkspaceValue {
   navMode:      NavMode
   /** Set by user preference (stored in localStorage) */
   setNavMode:   (mode: NavMode) => void
+  /** All companies the user belongs to (populated when > 1) */
+  companies:    CompanyEntry[]
+  /** Switch to a different company — sets cookie + full reload */
+  switchCompany: (companyId: string) => void
 }
 
 // ── Navigation ─────────────────────────────────────────────────────────────────
