@@ -424,6 +424,11 @@ export default async function DashboardPage() {
   // ── Render ────────────────────────────────────────────────────────────────
   const situTheme  = SITUATION_THEME[situation.status]
 
+  // Alert groups for Decision Queue
+  const critAlerts = topAlerts.filter(a => a.severity === 'critical')
+  const warnAlerts = topAlerts.filter(a => a.severity === 'warning')
+  const infoAlerts = topAlerts.filter(a => a.severity === 'info')
+
   // Delta: last month vs avg of trailing 5 for revenue indicator
   const lastMonthRev = trailing5.length > 0 ? trailing5[trailing5.length - 1]?.revenue ?? 0 : 0
   const prevMonthRev = trailing5.length > 1 ? trailing5[trailing5.length - 2]?.revenue ?? 0 : 0
@@ -470,111 +475,176 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* ── KPI RAIL — 4 primary metrics ──────────────────────────────────── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {/* Ciro */}
-        <Link href="/dashboard/commercial?tab=sales"
-          className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)] hover:border-gray-200 hover:shadow-[0_2px_6px_rgba(17,24,39,0.07)] transition-all">
-          <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Ciro</div>
-          <div className="text-[22px] font-black tabular-nums leading-none text-gray-900">
-            <span className="text-gray-300 font-normal text-sm mr-0.5">₺</span>{formatKpi(fs.revenue_try)}
-          </div>
-          <div className="text-[10px] text-gray-400 mt-1.5">{fs.revenue_try > 0 ? `Brüt marj ${pct(grossMarginPct)}` : 'Satış yok'}</div>
-          {revDeltaPct !== null && (
-            <div className={`text-[11px] font-semibold mt-1 tabular-nums ${revDeltaPct >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-              {revDeltaPct >= 0 ? '▲' : '▼'} {Math.abs(revDeltaPct).toFixed(1)}% <span className="text-gray-400 font-normal">geçen ay</span>
+      {/* ── FINANCIAL INSTRUMENT STRIP — unified state panel ─────────────── */}
+      <div className="bg-white border border-gray-100 rounded-xl shadow-[0_1px_2px_rgba(17,24,39,0.04)] overflow-hidden">
+        <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-gray-100">
+
+          {/* Ciro */}
+          <Link href="/dashboard/commercial?tab=sales" className="px-5 py-4 hover:bg-gray-50/70 transition-colors">
+            <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1.5">Ciro</div>
+            <div className="text-[22px] font-black tabular-nums leading-none text-gray-900">
+              <span className="text-gray-300 font-normal text-sm mr-0.5">₺</span>{formatKpi(fs.revenue_try)}
             </div>
-          )}
-        </Link>
-
-        {/* Net Kâr / Zarar */}
-        <Link href="/dashboard/finance?tab=pnl"
-          className={`border rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)] hover:shadow-[0_2px_6px_rgba(17,24,39,0.07)] transition-all ${monthlyNet >= 0 ? 'bg-white border-gray-100 hover:border-gray-200' : 'bg-red-50 border-red-100 hover:border-red-200'}`}>
-          <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Aylık Net</div>
-          <div className={`text-[22px] font-black tabular-nums leading-none ${monthlyNet >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
-            <span className="text-gray-300 font-normal text-sm mr-0.5">₺</span>{formatKpi(Math.abs(monthlyNet))}
-          </div>
-          <div className="text-[10px] text-gray-400 mt-1.5">{monthlyNet >= 0 ? 'Kârlı dönem' : 'Zarar'}</div>
-          {breakEvenRevenue !== null && (
-            <div className="text-[11px] text-gray-400 mt-1">Başabaş: {fmt(breakEvenRevenue)}/ay</div>
-          )}
-        </Link>
-
-        {/* Tahsilat Bekleyen */}
-        <Link href="/dashboard/commercial?tab=collections"
-          className={`border rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)] hover:shadow-[0_2px_6px_rgba(17,24,39,0.07)] transition-all ${uncollectedSalesTotal > 0 ? 'bg-amber-50 border-amber-100 hover:border-amber-200' : 'bg-white border-gray-100 hover:border-gray-200'}`}>
-          <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Bekleyen Tahsilat</div>
-          <div className={`text-[22px] font-black tabular-nums leading-none ${uncollectedSalesTotal > 0 ? 'text-amber-700' : 'text-emerald-700'}`}>
-            {uncollectedSalesTotal > 0 ? <><span className="text-amber-300 font-normal text-sm mr-0.5">₺</span>{formatKpi(uncollectedSalesTotal)}</> : <span className="text-emerald-600 text-base">Temiz ✓</span>}
-          </div>
-          <div className="text-[10px] text-gray-400 mt-1.5">
-            {uncollectedSalesTotal > 0 ? `${uncollectedSalesCount} satış · %${actuallyCollectedPct} tahsil` : 'Tümü tahsil edildi'}
-          </div>
-          {overdueTotal60 > 0 && (
-            <div className="text-[11px] font-semibold text-red-600 mt-1 tabular-nums">
-              {fmt(overdueTotal60)} 60+ gün gecikmiş
+            <div className="text-[10px] text-gray-400 mt-1.5">
+              {fs.revenue_try > 0 ? `Brüt marj ${pct(grossMarginPct)}` : 'Satış yok'}
             </div>
-          )}
-        </Link>
+            {revDeltaPct !== null && (
+              <div className={`text-[10px] font-semibold mt-0.5 tabular-nums ${revDeltaPct >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                {revDeltaPct >= 0 ? '▲' : '▼'} {Math.abs(revDeltaPct).toFixed(1)}% geçen ay
+              </div>
+            )}
+          </Link>
 
-        {/* Dağıtılabilir Nakit */}
-        <Link href="/dashboard/partners"
-          className={`border rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)] hover:shadow-[0_2px_6px_rgba(17,24,39,0.07)] transition-all ${cashDistributable > 0 ? 'bg-emerald-50 border-emerald-100 hover:border-emerald-200' : 'bg-white border-gray-100 hover:border-gray-200'}`}>
-          <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Dağıtılabilir</div>
-          <div className={`text-[22px] font-black tabular-nums leading-none ${cashDistributable > 0 ? 'text-emerald-700' : 'text-gray-400'}`}>
-            {cashDistributable > 0 ? <><span className="text-emerald-300 font-normal text-sm mr-0.5">₺</span>{formatKpi(cashDistributable)}</> : <span className="text-base">—</span>}
-          </div>
-          <div className="text-[10px] text-gray-400 mt-1.5">Nakit bazlı hesap</div>
-          {runwayDays >= 0 && runwayDays < 90 && (
-            <div className="text-[11px] font-semibold text-red-600 mt-1">{runwayDays} gün nakit ömrü</div>
-          )}
-          {runwayDays >= 90 && (
-            <div className="text-[11px] text-emerald-600 font-semibold mt-1">{Math.round(runwayMonths)} ay ömür</div>
-          )}
-        </Link>
+          {/* Aylık Net */}
+          <Link href="/dashboard/finance?tab=pnl" className={`px-5 py-4 hover:opacity-90 transition-opacity ${monthlyNet < 0 ? 'bg-red-50' : ''}`}>
+            <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1.5">Aylık Net</div>
+            <div className={`text-[22px] font-black tabular-nums leading-none ${monthlyNet >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
+              <span className={`font-normal text-sm mr-0.5 ${monthlyNet >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>₺</span>
+              {formatKpi(Math.abs(monthlyNet))}
+            </div>
+            <div className="text-[10px] text-gray-400 mt-1.5">{monthlyNet >= 0 ? 'Kârlı dönem' : 'Zarar'}</div>
+            {breakEvenRevenue !== null && (
+              <div className="text-[10px] text-gray-400 mt-0.5">Başabaş: {fmt(breakEvenRevenue)}</div>
+            )}
+          </Link>
+
+          {/* Bekleyen Tahsilat */}
+          <Link href="/dashboard/commercial?tab=collections" className={`px-5 py-4 hover:opacity-90 transition-opacity ${uncollectedSalesTotal > 0 ? 'bg-amber-50' : ''}`}>
+            <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1.5">Bekleyen</div>
+            <div className={`text-[22px] font-black tabular-nums leading-none ${uncollectedSalesTotal > 0 ? 'text-amber-700' : 'text-emerald-700'}`}>
+              {uncollectedSalesTotal > 0
+                ? <><span className="text-amber-300 font-normal text-sm mr-0.5">₺</span>{formatKpi(uncollectedSalesTotal)}</>
+                : <span className="text-lg">Temiz</span>}
+            </div>
+            <div className="text-[10px] text-gray-400 mt-1.5">
+              {uncollectedSalesTotal > 0 ? `${uncollectedSalesCount} satış · %${actuallyCollectedPct} tahsil` : 'Tümü tahsil edildi'}
+            </div>
+            {overdueTotal60 > 0 && (
+              <div className="text-[10px] font-semibold text-red-500 tabular-nums">{fmt(overdueTotal60)} 60+ gün</div>
+            )}
+          </Link>
+
+          {/* Nakit Ömrü */}
+          <Link href="/dashboard/planning?tab=cash-projection" className={`px-5 py-4 hover:opacity-90 transition-opacity ${runwayDays >= 0 && runwayDays < 90 ? 'bg-orange-50' : ''}`}>
+            <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1.5">Nakit Ömrü</div>
+            <div className={`text-[22px] font-black tabular-nums leading-none ${runwayDays < 0 ? 'text-gray-400' : runwayDays < 90 ? 'text-red-600' : 'text-emerald-700'}`}>
+              {runwayDays < 0
+                ? <span className="text-lg">—</span>
+                : runwayDays >= 365
+                  ? <>{Math.round(runwayMonths)}<span className="text-base font-semibold ml-0.5">ay</span></>
+                  : <>{runwayDays}<span className="text-base font-semibold ml-0.5">g</span></>
+              }
+            </div>
+            <div className="text-[10px] text-gray-400 mt-1.5">
+              {runwayDays < 0 ? 'Veri yok' : runwayDays < 30 ? '⚠ Kritik eşik' : runwayDays < 90 ? 'Baskı altında' : 'Sağlıklı'}
+            </div>
+            {cashDistributable > 0 && (
+              <div className="text-[10px] text-emerald-600 font-semibold mt-0.5">{fmt(cashDistributable)} dağıtılabilir</div>
+            )}
+          </Link>
+
+        </div>
       </div>
 
-      {/* ── KARAR SIRASI (Decision Queue) ────────────────────────────────── */}
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Karar Sırası</span>
-          {topAlerts.length > 3 && (
-            <Link href="/dashboard/alerts" className="text-[10px] text-primary-600 font-semibold hover:underline">
-              +{topAlerts.length - 3} daha →
-            </Link>
-          )}
+      {/* ── KARAR SIRASI — Operational Workflow Queue ─────────────────────── */}
+      <div className="bg-white border border-gray-100 rounded-xl shadow-[0_1px_2px_rgba(17,24,39,0.04)] overflow-hidden">
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-3 border-b border-gray-50">
+          <div className="flex items-center gap-2.5">
+            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Karar Sırası</span>
+            {critAlerts.length > 0 && (
+              <span className="inline-flex items-center text-[9px] font-black bg-red-500 text-white px-1.5 py-0.5 rounded-full leading-none">
+                {critAlerts.length} ACİL
+              </span>
+            )}
+          </div>
+          <span className="text-[10px] text-gray-400">{topAlerts.length} öğe bekliyor</span>
         </div>
+
         {topAlerts.length === 0 ? (
-          <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl border border-emerald-200 bg-emerald-50">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0" />
-            <span className="text-sm font-semibold text-emerald-700">Aktif uyarı yok — tüm eşikler normal</span>
+          <div className="flex items-center gap-3 px-5 py-4">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0" />
+            <span className="text-sm text-gray-500">Tüm sistemler normal · Bekleyen karar yok</span>
           </div>
         ) : (
-          <div className="flex flex-col gap-1.5">
-            {topAlerts.slice(0, 4).map(alert => {
-              const theme = ALERT_SEVERITY_THEME[alert.severity] ?? ALERT_SEVERITY_THEME.info
-              const icons: Record<string, string> = { critical: '●', warning: '◐', info: '○' }
-              return (
-                <Link
-                  key={alert.id}
-                  href={alert.actionHref}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl border transition-all hover:shadow-sm group ${theme.bg} ${theme.border}`}
-                >
-                  <span className={`text-sm flex-shrink-0 ${theme.text}`}>{icons[alert.severity] ?? '●'}</span>
-                  <div className="flex-1 min-w-0">
-                    <div className={`text-sm font-semibold leading-tight ${theme.text}`}>{alert.title}</div>
-                    <div className="text-[11px] text-gray-500 mt-0.5 truncate">{alert.detail}</div>
-                  </div>
-                  <span className={`flex-shrink-0 text-xs font-bold px-3 py-1.5 rounded-lg border transition-colors ${
-                    alert.severity === 'critical'
-                      ? 'bg-red-600 text-white border-red-600 group-hover:bg-red-700'
-                      : 'bg-white text-gray-700 border-gray-200 group-hover:border-gray-300'
-                  }`}>
-                    {alert.actionLabel} →
+          <div className="divide-y divide-gray-50">
+
+            {/* ── ACIL ─────────────────────────────────────────────────────── */}
+            {critAlerts.length > 0 && (
+              <div>
+                <div className="px-5 py-1.5 bg-red-50/60">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-red-500">
+                    ● Acil — {critAlerts.length} hareket gerekiyor
                   </span>
-                </Link>
-              )
-            })}
+                </div>
+                <div className="divide-y divide-gray-50">
+                  {critAlerts.map(alert => (
+                    <Link key={alert.id} href={alert.actionHref}
+                      className="flex items-center gap-4 px-5 py-3.5 border-l-[3px] border-red-400 hover:bg-red-50/30 transition-colors group">
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-semibold text-gray-900 leading-tight">{alert.title}</div>
+                        <div className="text-[11px] text-gray-500 mt-0.5 truncate">{alert.detail}</div>
+                      </div>
+                      <span className="flex-shrink-0 text-xs font-bold px-3 py-1.5 bg-red-600 text-white rounded-lg group-hover:bg-red-700 transition-colors whitespace-nowrap">
+                        {alert.actionLabel} →
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* ── YAKLAŞIYOR ───────────────────────────────────────────────── */}
+            {warnAlerts.length > 0 && (
+              <div>
+                <div className="px-5 py-1.5 bg-amber-50/60">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-amber-600">
+                    ◐ Yaklaşıyor — {warnAlerts.length} takip
+                  </span>
+                </div>
+                <div className="divide-y divide-gray-50">
+                  {warnAlerts.map(alert => (
+                    <Link key={alert.id} href={alert.actionHref}
+                      className="flex items-center gap-4 px-5 py-3.5 border-l-[3px] border-amber-300 hover:bg-amber-50/30 transition-colors group">
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium text-gray-800 leading-tight">{alert.title}</div>
+                        <div className="text-[11px] text-gray-500 mt-0.5 truncate">{alert.detail}</div>
+                      </div>
+                      <span className="flex-shrink-0 text-xs font-semibold px-3 py-1.5 border border-gray-200 text-gray-600 rounded-lg group-hover:bg-gray-50 transition-colors whitespace-nowrap">
+                        {alert.actionLabel} →
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* ── BİLGİ ────────────────────────────────────────────────────── */}
+            {infoAlerts.length > 0 && (
+              <div>
+                <div className="px-5 py-1.5 bg-gray-50/60">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">
+                    ○ Bilgi — {infoAlerts.length}
+                  </span>
+                </div>
+                <div className="divide-y divide-gray-50">
+                  {infoAlerts.map(alert => (
+                    <Link key={alert.id} href={alert.actionHref}
+                      className="flex items-center gap-4 px-5 py-3.5 border-l-[3px] border-gray-200 hover:bg-gray-50/60 transition-colors group">
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium text-gray-600 leading-tight">{alert.title}</div>
+                        <div className="text-[11px] text-gray-400 mt-0.5 truncate">{alert.detail}</div>
+                      </div>
+                      <span className="flex-shrink-0 text-xs text-gray-400 group-hover:text-gray-600 transition-colors whitespace-nowrap">
+                        {alert.actionLabel} →
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
           </div>
         )}
       </div>

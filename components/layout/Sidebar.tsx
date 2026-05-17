@@ -117,6 +117,22 @@ export function Sidebar() {
         )}
       </div>
 
+      {/* ── Command trigger ────────────────────────────────────────────────── */}
+      <button
+        onClick={() => window.dispatchEvent(new CustomEvent('flowra:cmd'))}
+        className="mx-1 mb-3 w-[calc(100%-0.5rem)] flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-100 bg-gray-50/60 hover:bg-gray-100 hover:border-gray-200 transition-colors text-left group"
+      >
+        <svg className="w-3.5 h-3.5 text-gray-400 flex-shrink-0 group-hover:text-gray-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        <span className="text-[11px] text-gray-400 flex-1 group-hover:text-gray-600 transition-colors">
+          Ara veya komut gir...
+        </span>
+        <kbd className="text-[9px] text-gray-300 bg-white border border-gray-200 px-1.5 py-0.5 rounded font-mono leading-tight flex-shrink-0">
+          ⌘K
+        </kbd>
+      </button>
+
       {/* ── Navigation ─────────────────────────────────────────────────────── */}
       <nav className="flex-1 overflow-y-auto">
         {groups.map((group, gi) => (

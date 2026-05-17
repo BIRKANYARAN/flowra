@@ -12,6 +12,7 @@ import { cookies }                from 'next/headers'
 import { safeSystemQuery }         from '@/lib/admin-db'
 import { WorkspaceProvider }       from '@/lib/workspace-context'
 import { QueryProvider }           from '@/lib/query-provider'
+import { CommandBar }              from '@/components/command/CommandBar'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   try {
@@ -101,6 +102,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           companies={companies}
         >
           <div className="flex min-h-screen bg-gray-50">
+            <CommandBar />
             <Sidebar />
             <div className="flex-1 flex flex-col min-w-0">
               <Header
