@@ -27,6 +27,7 @@ export interface AlertDeriveInput {
     id:              string
     customer_name:   string
     total_try:       number
+    amount_paid?:    number | null   // included to compute net outstanding for partial sales
     payment_status:  string
     created_at:      string
   }>
@@ -123,7 +124,9 @@ export function deriveAlerts(input: AlertDeriveInput): AlertSpec[] {
     if (ageDays <= 30) continue   // caller should pre-filter; guard here too
 
     const severity: AlertSpec['severity'] = ageDays > 60 ? 'critical' : 'warning'
-    const amtStr  = Number(sale.total_try).toLocaleString('tr-TR', { minimumFractionDigits: 0 })
+    // Show net outstanding (total_try - amount_paid) for partial payments
+    const outstanding = Math.max(0, Number(sale.total_try) - Number(sale.amount_paid ?? 0))
+    const amtStr  = outstanding.toLocaleString('tr-TR', { minimumFractionDigits: 0 })
 
     specs.push({
       entity_type: 'sale',

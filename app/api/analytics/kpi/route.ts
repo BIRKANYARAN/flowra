@@ -90,9 +90,10 @@ export async function GET(req: NextRequest) {
       .lte('paid_at', to   + 'T23:59:59Z'),
 
     // 3. Outstanding receivables — all-time unpaid/partial/overdue (not period-limited)
+    //    Includes amount_paid so partial payments are netted out correctly.
     supabase
       .from('sales')
-      .select('total_try')
+      .select('total_try, amount_paid')
       .eq('company_id', companyId)
       .is('deleted_at', null)
       .in('payment_status', ['pending', 'partial', 'overdue']),
@@ -144,9 +145,10 @@ export async function GET(req: NextRequest) {
       .in('expense_type', BURN_EXPENSE_TYPES),
 
     // 9. Overdue receivables — unpaid/partial/overdue AND older than 30 days
+    //    Includes amount_paid so partial payments are netted out correctly.
     supabase
       .from('sales')
-      .select('total_try')
+      .select('total_try, amount_paid')
       .eq('company_id', companyId)
       .is('deleted_at', null)
       .in('payment_status', ['pending', 'partial', 'overdue'])
@@ -190,7 +192,7 @@ export async function GET(req: NextRequest) {
   const totalRevenue            = (revenueRes.data                ?? []).reduce((s, r) => s + Number(r.total_try  ?? 0), 0)
   const totalCogs               = (revenueRes.data                ?? []).reduce((s, r) => s + Number(r.cogs       ?? 0), 0)
   const totalCollected          = (collectedRes.data              ?? []).reduce((s, r) => s + Number(r.total_try  ?? 0), 0)
-  const outstanding             = (outstandingRes.data            ?? []).reduce((s, r) => s + Number(r.total_try  ?? 0), 0)
+  const outstanding             = (outstandingRes.data            ?? []).reduce((s, r) => s + Math.max(0, Number(r.total_try ?? 0) - Number((r as { amount_paid?: number | null }).amount_paid ?? 0)), 0)
   const totalExpenses           = (expensesRes.data               ?? []).reduce((s, r) => {
     const expType = String((r as { expense_type?: string | null }).expense_type ?? '')
     if (expType && CASH_EXCLUDED_EXPENSE_TYPES.has(expType)) return s
@@ -203,7 +205,7 @@ export async function GET(req: NextRequest) {
     return s + Number(r.amount_try ?? 0)
   }, 0)
   const lastThreeMonthsExpenses = (lastThreeMonthsExpensesRes.data ?? []).reduce((s, r) => s + Number(r.amount_try ?? 0), 0)
-  const overdueReceivables      = (overdueRes.data                ?? []).reduce((s, r) => s + Number(r.total_try  ?? 0), 0)
+  const overdueReceivables      = (overdueRes.data                ?? []).reduce((s, r) => s + Math.max(0, Number(r.total_try ?? 0) - Number((r as { amount_paid?: number | null }).amount_paid ?? 0)), 0)
 
   const stockValue = (stockRes.data ?? []).reduce(
     (s, l) => s + Number(l.qty_remaining ?? 0) * Number(l.entry_cost_try ?? 0),

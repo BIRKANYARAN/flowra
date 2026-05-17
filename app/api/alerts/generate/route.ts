@@ -77,9 +77,10 @@ export async function POST(req: NextRequest) {
       .gte('created_at', sevenDaysAgo),
 
     // B. Overdue sales: unpaid/partial/overdue AND > 30 days old (max 50)
+    //    Includes amount_paid so alert messages show net outstanding for partial sales.
     supabase
       .from('sales')
-      .select('id, customer_name, total_try, payment_status, created_at')
+      .select('id, customer_name, total_try, amount_paid, payment_status, created_at')
       .eq('company_id', companyId)
       .is('deleted_at', null)
       .in('payment_status', ['pending', 'partial', 'overdue'])
@@ -97,9 +98,10 @@ export async function POST(req: NextRequest) {
       .gt('stock_alert_qty', 0),
 
     // D. Outstanding sales (unpaid/partial) — for cashflow projection input
+    //    Includes amount_paid so partial payments are netted out correctly.
     supabase
       .from('sales')
-      .select('total_try')
+      .select('total_try, amount_paid')
       .eq('company_id', companyId)
       .is('deleted_at', null)
       .in('payment_status', ['pending', 'partial'])
@@ -116,9 +118,10 @@ export async function POST(req: NextRequest) {
       .in('expense_type', BURN_EXPENSE_TYPES),
 
     // F. Receivable aging: 60+ day outstanding (for aged_60_plus alert)
+    //    Includes amount_paid so partial payments are netted out correctly.
     supabase
       .from('sales')
-      .select('total_try, created_at')
+      .select('total_try, amount_paid, created_at')
       .eq('company_id', companyId)
       .is('deleted_at', null)
       .in('payment_status', ['pending', 'partial', 'overdue'])
@@ -145,12 +148,16 @@ export async function POST(req: NextRequest) {
   }
 
   // ── Compute aged 60+ totals ────────────────────────────────────────────────
+  // Net outstanding: subtract partial payments already received.
   const aged60PlusRows  = receivableAgingRes.data ?? []
-  const aged60PlusTry   = aged60PlusRows.reduce((s, r) => s + Number(r.total_try ?? 0), 0)
+  const aged60PlusTry   = aged60PlusRows.reduce(
+    (s, r) => s + Math.max(0, Number(r.total_try ?? 0) - Number((r as { amount_paid?: number | null }).amount_paid ?? 0)),
+    0,
+  )
   const aged60PlusCount = aged60PlusRows.length
 
   const outstandingTotal = (outstandingRes.data ?? []).reduce(
-    (s, r) => s + Number(r.total_try ?? 0),
+    (s, r) => s + Math.max(0, Number(r.total_try ?? 0) - Number((r as { amount_paid?: number | null }).amount_paid ?? 0)),
     0,
   )
 
