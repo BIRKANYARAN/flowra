@@ -13,6 +13,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -275,7 +276,14 @@ function RoiBar({ pct: roiPct }: { pct: number }) {
 interface EditForm { name: string; shareRatioPct: string }
 
 export default function PartnersPage() {
-  const [activeTab,    setActiveTab]    = useState<TabId>('partners')
+  const searchParams = useSearchParams()
+  const router       = useRouter()
+  // Tab state is URL-driven (?tab=partners|ledger|waterfall|tranches|distribution|returns).
+  // URL = source of truth → deep-linkable, browser back/forward works, refresh persists tab.
+  const activeTab = (searchParams.get('tab') ?? 'partners') as TabId
+  function setActiveTab(id: TabId) {
+    router.replace(`/dashboard/partners?tab=${id}`, { scroll: false })
+  }
   const [partners,     setPartners]     = useState<PartnerRow[]>([])
   const [equalization, setEqualization] = useState<EqResult>(ZERO_EQ)
   const [ledger,       setLedger]       = useState<LedgerData | null>(null)
@@ -345,22 +353,24 @@ export default function PartnersPage() {
     setDividendError(null)
     try {
       const today = new Date().toISOString().slice(0, 10)
-      await Promise.all(
-        distrib.per_partner_distribution.map(p =>
-          fetch(`/api/partners/${p.partner_id}/transactions`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              tx_type:  'dividend',
-              amount:   p.net_entitlement_try,
-              currency: 'TRY',
-              fx_rate:  1,
-              tx_date:  today,
-              notes:    `Temettü beyanı — Brüt: ${p.gross_entitlement_try.toFixed(2)} TL, Stopaj: ${p.withholding_try.toFixed(2)} TL, Net: ${p.net_entitlement_try.toFixed(2)} TL`,
-            }),
-          }).then(r => { if (!r.ok) throw new Error(`${p.partner_name}: kayıt başarısız`) })
-        )
-      )
+      // Single server-side request — atomic orchestration (no N×parallel client POSTs).
+      const res = await fetch('/api/partners/dividend/declare', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          declarations: distrib.per_partner_distribution.map(p => ({
+            partner_id:      p.partner_id,
+            gross_try:       p.gross_entitlement_try,
+            withholding_try: p.withholding_try,
+            net_try:         p.net_entitlement_try,
+            tx_date:         today,
+          })),
+        }),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: 'Bilinmeyen hata' }))
+        throw new Error((err as { error?: string }).error ?? `HTTP ${res.status}`)
+      }
       setDividendConfirm(false)
       setDividendSuccess(true)
       setTimeout(() => setDividendSuccess(false), 4000)
