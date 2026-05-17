@@ -213,9 +213,10 @@ export const COMMERCIAL_TABS = [
 
 /** Operations center — /dashboard/operations?tab= */
 export const OPERATIONS_TABS = [
-  { key: 'expenses', label: 'Giderler' },
-  { key: 'catalog',  label: 'Katalog'  },
-  { key: 'stock',    label: 'Stok'     },
+  { key: 'expenses', label: 'Giderler'  },
+  { key: 'catalog',  label: 'Katalog'   },
+  { key: 'stock',    label: 'Stok'      },
+  { key: 'orders',   label: 'Siparişler' },
 ] as const
 
 /** Planning center — /dashboard/planning?tab= */
@@ -244,6 +245,7 @@ export const ROUTE_REDIRECTS: Record<string, string> = {
   '/dashboard/catalog':     '/dashboard/operations?tab=catalog',
   '/dashboard/products':    '/dashboard/operations?tab=catalog',
   '/dashboard/stocks':      '/dashboard/operations?tab=stock',
+  '/dashboard/orders':      '/dashboard/operations?tab=orders',
   '/dashboard/simulation':  '/dashboard/planning?tab=unit-profit',
   '/dashboard/tasks':       '/dashboard/planning?tab=tasks',
 }

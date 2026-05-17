@@ -1,8 +1,6 @@
-export const dynamic = 'force-dynamic'
-
 import { redirect } from 'next/navigation'
 
-// Sipariş Operasyonları is not yet implemented — redirect to stocks
+// /dashboard/orders → canonical location is operations hub orders tab
 export default function OrdersPage() {
-  redirect('/dashboard/stocks')
+  redirect('/dashboard/operations?tab=orders')
 }
