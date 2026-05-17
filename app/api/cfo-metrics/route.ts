@@ -29,7 +29,7 @@ import { resolveApiAuth } from '@/lib/api-auth'
 export async function GET(req: NextRequest) {
   const auth = await resolveApiAuth(req)
   if (!auth.ok) return auth.response
-  const { uid, companyId, supabase, ctx } = auth
+  const { companyId, supabase } = auth
 
   const url   = new URL(req.url)
   const now   = new Date()

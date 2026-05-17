@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
   try {
     const auth = await resolveApiAuth(req)
     if (!auth.ok) return auth.response
-    const { uid, companyId, supabase, ctx } = auth
+    const { uid, companyId, supabase } = auth
 
     // Enforce admin-only access
     try { await requireAdmin(uid, companyId, supabase) }

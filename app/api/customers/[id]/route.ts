@@ -35,7 +35,7 @@ export async function GET(
   try {
     const auth = await resolveApiAuth(req)
     if (!auth.ok) return auth.response
-    const { uid, companyId, supabase, ctx } = auth
+    const { companyId, supabase } = auth
 
     const { id } = params
 

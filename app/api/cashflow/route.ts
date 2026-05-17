@@ -71,7 +71,7 @@ function ymEnd(ym: string): string {
 export async function GET(req: NextRequest) {
   const auth = await resolveApiAuth(req)
   if (!auth.ok) return auth.response
-  const { uid, companyId, supabase, ctx } = auth
+  const { companyId, supabase } = auth
 
   const url          = new URL(req.url)
   const pastMonths   = Math.min(Math.max(Number(url.searchParams.get('past_months')   ?? 6), 1), 12)

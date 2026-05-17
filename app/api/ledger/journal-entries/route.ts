@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
   try {
     const auth = await resolveApiAuth(req)
     if (!auth.ok) return auth.response
-    const { uid, companyId, supabase, ctx } = auth
+    const { companyId, supabase } = auth
 
     const params      = req.nextUrl.searchParams
     const periodId    = params.get('period_id')   ?? null

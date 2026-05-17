@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
   try {
     const auth = await resolveApiAuth(req)
     if (!auth.ok) return auth.response
-    const { uid, companyId, supabase, ctx } = auth
+    const { uid, companyId, supabase } = auth
 
     const asOfDate = req.nextUrl.searchParams.get('as_of')
       ?? new Date().toISOString().slice(0, 10)

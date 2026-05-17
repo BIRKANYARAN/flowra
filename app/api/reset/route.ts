@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
   try {
     const auth = await resolveApiAuth(req)
     if (!auth.ok) return auth.response
-    const { uid, companyId, supabase, ctx } = auth
+    const { uid, companyId, supabase } = auth
     try { await requireAdmin(uid, companyId, supabase) }
     catch { return NextResponse.json({ error: 'Bu işlem için admin yetkisi gerekir', code: 'FORBIDDEN', type: 'SECURITY' }, { status: 403 }) }
 

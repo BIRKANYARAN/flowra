@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
   try {
     const auth = await resolveApiAuth(req)
     if (!auth.ok) return auth.response
-    const { uid, companyId, supabase, ctx } = auth
+    const { uid, companyId, supabase } = auth
 
     // Seed writes data — admin only (belt-and-suspenders; env guard is primary).
     try { await requireAdmin(uid, companyId, supabase) }

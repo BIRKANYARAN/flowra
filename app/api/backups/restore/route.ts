@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
   try {
     const auth = await resolveApiAuth(req)
     if (!auth.ok) return auth.response
-    const { uid, companyId, supabase, ctx } = auth
+    const { uid, companyId, supabase } = auth
 
     // Backup restore is a destructive, irreversible operation — admin only.
     try { await requireAdmin(uid, companyId, supabase) }

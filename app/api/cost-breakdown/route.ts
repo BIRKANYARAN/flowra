@@ -20,7 +20,7 @@ import { toErrorResponse } from '@/types/errors'
 export async function GET(req: NextRequest) {
   const auth = await resolveApiAuth(req)
   if (!auth.ok) return auth.response
-  const { uid, companyId, supabase, ctx } = auth
+  const { companyId, supabase, ctx } = auth
 
   try {
     const productId = new URL(req.url).searchParams.get('product_id') || ''

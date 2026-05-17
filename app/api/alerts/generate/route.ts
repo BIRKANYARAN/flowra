@@ -47,7 +47,7 @@ const BURN_EXPENSE_TYPES = ['operational', 'fixed', 'variable']
 export async function POST(req: NextRequest) {
   const auth = await resolveApiAuth(req)
   if (!auth.ok) return auth.response
-  const { uid, companyId, supabase, ctx } = auth
+  const { uid, companyId, supabase } = auth
 
   // ── PHASE 1: Fetch all required data in parallel ──────────────────────────
 

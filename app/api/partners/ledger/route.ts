@@ -66,7 +66,7 @@ interface LedgerSummary {
 export async function GET(req: NextRequest) {
   const auth = await resolveApiAuth(req)
   if (!auth.ok) return auth.response
-  const { uid, companyId, supabase, ctx } = auth
+  const { companyId, supabase, ctx } = auth
 
   try {
     // Fetch partners + all their transactions in parallel

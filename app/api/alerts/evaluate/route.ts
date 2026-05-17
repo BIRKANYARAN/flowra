@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
   try {
     const auth = await resolveApiAuth(req)
     if (!auth.ok) return auth.response
-    const { uid, companyId, supabase, ctx } = auth
+    const { uid, companyId, supabase } = auth
 
     const today   = new Date()
     const from    = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-01`

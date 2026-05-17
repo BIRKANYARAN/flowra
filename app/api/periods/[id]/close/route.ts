@@ -15,7 +15,7 @@ export async function POST(
   try {
     const auth = await resolveApiAuth(req)
     if (!auth.ok) return auth.response
-    const { uid, companyId, supabase, ctx } = auth
+    const { uid, companyId, supabase } = auth
 
     try { await requireRole(uid, companyId, 'admin', supabase) }
     catch { return NextResponse.json({ error: 'Forbidden' }, { status: 403 }) }

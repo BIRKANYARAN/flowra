@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
   try {
     const auth = await resolveApiAuth(req)
     if (!auth.ok) return auth.response
-    const { uid, companyId, supabase, ctx } = auth
+    const { uid, companyId, supabase } = auth
 
     const available_cash = parseFloat(req.nextUrl.searchParams.get('available_cash') ?? '0')
 

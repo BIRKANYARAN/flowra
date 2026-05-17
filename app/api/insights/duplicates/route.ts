@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
   try {
     const auth = await resolveApiAuth(req)
     if (!auth.ok) return auth.response
-    const { uid, companyId, supabase, ctx } = auth
+    const { companyId, supabase } = auth
 
     const days = Math.min(parseInt(req.nextUrl.searchParams.get('days') ?? '90'), 365)
     const from = new Date(Date.now() - days * 86_400_000).toISOString().slice(0, 10)
