@@ -85,11 +85,11 @@ export async function GET(req: NextRequest) {
       }
     }))
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const enriched: CompanyMember[] = (members ?? []).map((m: any) => ({
+    type RawMember = { id: string; user_id: string; role: string; company_id: string; invited_by?: string | null; accepted_at?: string | null; created_at: string; deleted_at?: string | null }
+    const enriched: CompanyMember[] = ((members ?? []) as RawMember[]).map((m) => ({
       id:           m.id,
       user_id:      m.user_id,
-      role:         m.role,
+      role:         (m.role as MemberRole),
       company_id:   m.company_id,
       invited_by:   m.invited_by   ?? null,
       accepted_at:  m.accepted_at  ?? null,

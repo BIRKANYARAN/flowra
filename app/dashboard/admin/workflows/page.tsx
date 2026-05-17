@@ -6,7 +6,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { fmtDate as fmt } from '@/lib/format'
+import { fmtDate as fmt, fmtTRY } from '@/lib/format'
 
 interface WorkflowInstance {
   id:            string
@@ -28,11 +28,7 @@ const TYPE_LABELS: Record<string, string> = {
   period_close:         'Dönem Kapanış',
 }
 
-function fmtMoney(n: unknown) {
-  const v = Number(n ?? 0)
-  if (isNaN(v)) return '—'
-  return '₺' + Math.round(v).toLocaleString('tr-TR')
-}
+const fmtMoney = (n: unknown) => fmtTRY(Number(n ?? 0) || 0, 0)
 
 function Skeleton() { return <div className="bg-gray-100 rounded-xl h-20 animate-pulse" /> }
 
