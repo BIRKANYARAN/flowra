@@ -69,14 +69,15 @@ export async function GET(req: NextRequest) {
     partnerCapitalRes,
   ] = await Promise.all([
 
-    // 1. Total revenue (invoiced) — by sale created_at
+    // 1. Total revenue (invoiced) — by sale_date (business invoice date)
+    // Use sale_date not created_at (DB insertion time) for correct period attribution.
     supabase
       .from('sales')
       .select('total_try, cogs')
       .eq('company_id', companyId)
       .is('deleted_at', null)
-      .gte('created_at', from + 'T00:00:00Z')
-      .lte('created_at', to   + 'T23:59:59Z'),
+      .gte('sale_date', from)
+      .lte('sale_date', to),
 
     // 2. Total collected (paid) — by paid_at date
     supabase
@@ -146,13 +147,14 @@ export async function GET(req: NextRequest) {
 
     // 9. Overdue receivables — unpaid/partial/overdue AND older than 30 days
     //    Includes amount_paid so partial payments are netted out correctly.
+    //    Use sale_date (business invoice date) for aging — not created_at.
     supabase
       .from('sales')
       .select('total_try, amount_paid')
       .eq('company_id', companyId)
       .is('deleted_at', null)
       .in('payment_status', ['pending', 'partial', 'overdue'])
-      .lt('created_at', thirtyDaysAgo),
+      .lt('sale_date', thirtyDaysAgo.slice(0, 10)),
 
     // 10. Active recurring burn expenses for adjusted_burn_rate
     //     Uses the same strict expense_type include-list as query 8.

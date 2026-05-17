@@ -103,7 +103,7 @@ export async function GET(req: NextRequest) {
     for (const tx of txs) {
       const a = agg.get(tx.partner_id)
       if (!a) continue
-      const amt = Number(tx.amount_try)
+      const amt = isFinite(Number(tx.amount_try)) ? Math.abs(Number(tx.amount_try)) : 0
       switch (tx.tx_type) {
         case 'capital_in':      a.equity   += amt; break
         case 'loan_to_company': a.loanIn   += amt; break
@@ -146,7 +146,8 @@ export async function GET(req: NextRequest) {
     // Company-level summary
     const active = entries.filter(e => e.is_active)
     const totalEquity   = round2(active.reduce((s, e) => s + e.equity_contributed, 0))
-    const totalDebt     = round2(active.reduce((s, e) => s + e.net_loan_outstanding, 0))
+    // Use Math.max(0, ...) per partner so over-repaid partners don't reduce company-level debt
+    const totalDebt     = round2(active.reduce((s, e) => s + Math.max(0, e.net_loan_outstanding), 0))
     const totalDividends = round2(entries.reduce((s, e) => s + e.dividends_received, 0))
     const totalSalary    = round2(entries.reduce((s, e) => s + e.salary_received, 0))
 

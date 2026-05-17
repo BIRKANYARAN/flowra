@@ -52,7 +52,7 @@ export interface CashInputs {
 export interface ReceivableInputs {
   periodInvoiced:  number
   periodCollected: number
-  outstanding:     Array<{ amount_try: number; created_at: string; due_date?: string | null; amount_paid?: number | null }>
+  outstanding:     Array<{ amount_try: number; sale_date: string; due_date?: string | null; amount_paid?: number | null }>
   today:           string  // ISO YYYY-MM-DD
 }
 
@@ -201,8 +201,8 @@ export function computeReceivableMetrics(i: ReceivableInputs): CfoMetrics['recei
     const amt = round2(Math.max(0, Number(r.amount_try) - Number(r.amount_paid ?? 0)))
     if (amt <= 0) continue
     total += amt
-    // Use due_date for aging if set; fall back to created_at (invoice date)
-    const agingDate = (r.due_date ? String(r.due_date) : String(r.created_at)).slice(0, 10)
+    // Use due_date for aging if set; fall back to sale_date (business invoice date)
+    const agingDate = (r.due_date ? String(r.due_date) : String(r.sale_date)).slice(0, 10)
     if (agingDate < iso30) over30 += amt
     if (agingDate < iso60) over60 += amt
     if (agingDate < iso90) over90 += amt

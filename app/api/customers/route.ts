@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { requireString, optionalString, ValidationError } from '@/lib/validation'
+import { requireString, requireUUID, optionalString, ValidationError } from '@/lib/validation'
 import { resolveApiAuth } from '@/lib/api-auth'
 
 export async function POST(req: NextRequest) {
@@ -95,14 +95,19 @@ export async function DELETE(req: NextRequest) {
     const { uid, companyId, supabase, ctx } = auth
 
     const { searchParams } = new URL(req.url)
-    const id = searchParams.get('id') ?? ''
-    if (!id) return NextResponse.json({ error: 'id zorunludur' }, { status: 422 })
+    let id: string
+    try {
+      id = requireUUID(searchParams.get('id'), 'id')
+    } catch {
+      return NextResponse.json({ error: 'id geçerli bir UUID olmalıdır' }, { status: 422 })
+    }
 
     const { error } = await supabase
       .from('customers')
       .update({ deleted_at: new Date().toISOString() })
       .eq('id', id)
       .eq('company_id', companyId)
+      .is('deleted_at', null)
 
     if (error) {
       console.error('[customers DELETE] Soft-delete error:', error.message)

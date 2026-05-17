@@ -23,9 +23,8 @@ export async function GET(req: NextRequest) {
   try {
     const url        = new URL(req.url)
     const unreadOnly = url.searchParams.get('unread_only') === 'true'
-    const limit      = url.searchParams.has('limit')
-      ? Math.min(Number(url.searchParams.get('limit')), 200)
-      : 100
+    const rawLimit   = Number(url.searchParams.get('limit') ?? 100)
+    const limit      = Math.min(isFinite(rawLimit) && rawLimit > 0 ? rawLimit : 100, 200)
 
     const alerts = await AuditService.listAlerts(uid, unreadOnly, limit)
     return NextResponse.json(alerts, { headers: { [REQUEST_ID_HEADER]: ctx.requestId } })

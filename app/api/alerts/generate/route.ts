@@ -70,22 +70,26 @@ export async function POST(req: NextRequest) {
   ] = await Promise.all([
 
     // A. Recent alerts (7-day de-dup window)
+    // Scope by both actor_user_id AND company_id — a user in multiple companies
+    // should receive alerts for each company independently.
     supabase
       .from('alerts')
       .select('entity_type, entity_id')
       .eq('actor_user_id', uid)
+      .eq('company_id', companyId)
       .gte('created_at', sevenDaysAgo),
 
     // B. Overdue sales: unpaid/partial/overdue AND > 30 days old (max 50)
     //    Includes amount_paid so alert messages show net outstanding for partial sales.
+    //    Use sale_date (business invoice date) for aging — not created_at (DB insertion time).
     supabase
       .from('sales')
-      .select('id, customer_name, total_try, amount_paid, payment_status, created_at')
+      .select('id, customer_name, total_try, amount_paid, payment_status, sale_date')
       .eq('company_id', companyId)
       .is('deleted_at', null)
       .in('payment_status', ['pending', 'partial', 'overdue'])
-      .lt('created_at', thirtyDaysAgo)
-      .order('created_at', { ascending: true })
+      .lt('sale_date', thirtyDaysAgo.slice(0, 10))
+      .order('sale_date', { ascending: true })
       .limit(50),
 
     // C. Active products with stock alert thresholds set
@@ -119,13 +123,14 @@ export async function POST(req: NextRequest) {
 
     // F. Receivable aging: 60+ day outstanding (for aged_60_plus alert)
     //    Includes amount_paid so partial payments are netted out correctly.
+    //    Use sale_date (business invoice date) for aging — not created_at.
     supabase
       .from('sales')
-      .select('total_try, amount_paid, created_at')
+      .select('total_try, amount_paid, sale_date')
       .eq('company_id', companyId)
       .is('deleted_at', null)
       .in('payment_status', ['pending', 'partial', 'overdue'])
-      .lt('created_at', new Date(Date.now() - 60 * 86_400_000).toISOString()),
+      .lt('sale_date', new Date(Date.now() - 60 * 86_400_000).toISOString().slice(0, 10)),
   ])
 
   // ── Build de-dup set ───────────────────────────────────────────────────────

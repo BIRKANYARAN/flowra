@@ -137,30 +137,32 @@ export async function GET(req: NextRequest) {
         .in('expense_type', Array.from(BURN_EXPENSE_TYPES)),
 
       // 7. Outstanding receivables (unpaid/partial/overdue) with age
+      // Use sale_date (business invoice date) for aging — not created_at (DB insertion time).
       supabase
         .from('sales')
-        .select('total_try, created_at, due_date, amount_paid')
+        .select('total_try, sale_date, due_date, amount_paid')
         .eq('company_id', companyId)
         .is('deleted_at', null)
         .in('payment_status', ['pending', 'partial', 'overdue']),
 
-      // 8. Period invoiced (total_try for all sales in period by created_at)
+      // 8. Period invoiced (total_try for all sales in period by sale_date)
+      // Use sale_date (business invoice date) not created_at (DB insertion time).
       supabase
         .from('sales')
         .select('total_try')
         .eq('company_id', companyId)
         .is('deleted_at', null)
-        .gte('created_at', from + 'T00:00:00Z')
-        .lte('created_at', to   + 'T23:59:59Z'),
+        .gte('sale_date', from)
+        .lte('sale_date', to),
 
-      // 9. YTD revenue
+      // 9. YTD revenue — use sale_date for period attribution
       supabase
         .from('sales')
         .select('total_try')
         .eq('company_id', companyId)
         .is('deleted_at', null)
-        .gte('created_at', ytdFrom + 'T00:00:00Z')
-        .lte('created_at', today + 'T23:59:59Z'),
+        .gte('sale_date', ytdFrom)
+        .lte('sale_date', today),
 
       // 10. YTD COGS (from sale_item_allocations — FIFO)
       supabase
@@ -178,14 +180,14 @@ export async function GET(req: NextRequest) {
         .gte('expense_date', ytdFrom)
         .lte('expense_date', today),
 
-      // 12. YTD sales VAT
+      // 12. YTD sales VAT — use sale_date for period attribution
       supabase
         .from('sales')
         .select('kdv_total, fx_rate_try')
         .eq('company_id', companyId)
         .is('deleted_at', null)
-        .gte('created_at', ytdFrom + 'T00:00:00Z')
-        .lte('created_at', today + 'T23:59:59Z'),
+        .gte('sale_date', ytdFrom)
+        .lte('sale_date', today),
 
       // 13. YTD finalized purchases — id + fx_rate for purchase VAT computation
       //     VAT is on purchase_items (qty × unit_price × kdv/100 × fx_rate).
@@ -299,7 +301,7 @@ export async function GET(req: NextRequest) {
       periodCollected: periodReceived,
       outstanding: (outstandingRes.data ?? []).map(r => ({
         amount_try: Number(r.total_try ?? 0),
-        created_at: String(r.created_at ?? ''),
+        sale_date: String(r.sale_date ?? ''),
         due_date:   r.due_date ? String(r.due_date) : null,
         amount_paid: r.amount_paid != null ? Number(r.amount_paid) : null,
       })),

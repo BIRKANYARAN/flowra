@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
         journal_entry_lines (
           id, account_code, account_name, debit_try, credit_try, description
         )
-      `)
+      `, { count: 'exact' })
       .eq('company_id', companyId)
       .order('entry_date', { ascending: false })
       .order('created_at', { ascending: false })
@@ -39,13 +39,15 @@ export async function GET(req: NextRequest) {
     if (fromDate)   query = query.gte('entry_date', fromDate)
     if (toDate)     query = query.lte('entry_date', toDate)
 
-    const { data, error } = await query
+    const { data, error, count } = await query
     if (error) {
       console.warn('[ledger/journal-entries] query error (table may not exist):', error.message)
       return NextResponse.json({ entries: [], total: 0 })
     }
 
-    return NextResponse.json({ entries: data ?? [], total: (data ?? []).length })
+    // `count` is the true total rows matching the filters (not the page size).
+    // Use it for proper pagination on the client side.
+    return NextResponse.json({ entries: data ?? [], total: count ?? (data ?? []).length })
   } catch (e) {
     console.error('[ledger/journal-entries] error:', e)
     return NextResponse.json({ error: 'Internal error' }, { status: 500 })

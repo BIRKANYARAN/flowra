@@ -45,32 +45,34 @@ export class BalanceSheetService {
       // Partner balances: capital, loans, repayments, dividends
       PartnerService.getPartnerBalances(userId, companyId).catch(() => []),
 
-      // Receivables: unpaid/partial/overdue sales up to asOfDate
+      // Receivables: unpaid/partial/overdue sales up to asOfDate.
+      // Use sale_date (business invoice date), not created_at (DB insertion time).
       (supabase as SupabaseClient)
         .from('sales')
         .select('total_try, amount_paid')
         .eq('company_id', companyId)
         .is('deleted_at', null)
         .in('payment_status', ['pending', 'partial', 'overdue'])
-        .lte('created_at', asOfTs),
+        .lte('sale_date', asOfDate),
 
-      // Inventory: FIFO stock value (qty_remaining × entry_cost_try)
+      // Inventory: FIFO stock value (qty_remaining × entry_cost_try).
+      // Filter by entry_date (stock lot creation date) not created_at.
       (supabase as SupabaseClient)
         .from('stock_lots')
         .select('qty_remaining, entry_cost_try')
         .eq('company_id', companyId)
         .is('deleted_at', null)
         .gt('qty_remaining', 0)
-        .lte('created_at', asOfTs),
+        .lte('entry_date', asOfDate),
 
-      // Cash in: all paid sales (collected cash)
+      // Cash in: all paid sales (collected cash) up to asOfDate.
       (supabase as SupabaseClient)
         .from('sales')
         .select('total_try, amount_paid, payment_status')
         .eq('company_id', companyId)
         .is('deleted_at', null)
         .in('payment_status', ['paid', 'partial'])
-        .lte('created_at', asOfTs),
+        .lte('sale_date', asOfDate),
 
       // Cash out: all paid expenses
       (supabase as SupabaseClient)
@@ -101,7 +103,7 @@ export class BalanceSheetService {
     // ── Compute inventory (FIFO) ──────────────────────────────────────────────
     const inventory_try = round2(
       (inventoryResult.data ?? []).reduce((sum: number, lot: { qty_remaining: number; entry_cost_try: number }) =>
-        sum + lot.qty_remaining * lot.entry_cost_try, 0
+        sum + (Number(lot.qty_remaining) || 0) * (Number(lot.entry_cost_try) || 0), 0
       )
     )
 

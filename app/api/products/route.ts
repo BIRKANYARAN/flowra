@@ -142,15 +142,21 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: 'idempotency_key zorunludur', code: 'IDEMPOTENCY_KEY_MISSING', type: 'BUSINESS' }, { status: 422 })
     }
 
-    const costPrice = body.cost_price != null ? Number(body.cost_price) : null
+    const rawCostPrice = body.cost_price != null ? Number(body.cost_price) : null
+    const costPrice = (rawCostPrice !== null && isFinite(rawCostPrice) && rawCostPrice >= 0) ? rawCostPrice : null
     const entryDate = typeof body.entry_date === 'string' && body.entry_date.length >= 10
       ? body.entry_date.slice(0, 10)
       : null
 
+    const rawQtyChange = Number(body.qty_change)
+    if (!isFinite(rawQtyChange) || rawQtyChange === 0) {
+      return NextResponse.json({ error: 'qty_change geçerli ve sıfırdan farklı bir sayı olmalıdır', code: 'VALIDATION_ERROR', type: 'BUSINESS' }, { status: 422 })
+    }
+
     const result = await StockService.adjust(uid, {
       idempotency_key: body.idempotency_key,
       product_id:      requireString(body.product_id, 'product_id'),
-      qty_change:      Number(body.qty_change),
+      qty_change:      rawQtyChange,
       reference_type:  body.reference_type ?? 'adjustment',
       notes:           body.notes ?? null,
       cost_price:      costPrice,

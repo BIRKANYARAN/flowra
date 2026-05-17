@@ -7,7 +7,7 @@
 //   payment_status = 'paid' → cash already received, excluded from receivables.
 //   payment_status = 'partial' → outstanding = total_try − amount_paid (not full total_try).
 //
-// Age = days since created_at (invoice date) to today (UTC).
+// Age = days since sale_date (business invoice date) to today (UTC).
 //
 // Buckets:
 //   current    — 0–30 days   : normal collection cycle
@@ -33,9 +33,11 @@ export async function GET(req: NextRequest) {
   const { companyId, supabase } = auth
 
   // Fetch all outstanding receivables (no date filter — want full aging picture)
+  // Use sale_date (business invoice date) for aging — not created_at (DB insertion time).
+  // A backdated invoice entered today should age from its sale_date, not today.
   const { data, error } = await supabase
     .from('sales')
-    .select('total_try, amount_paid, created_at')
+    .select('total_try, amount_paid, sale_date')
     .eq('company_id', companyId)
     .is('deleted_at', null)
     .in('payment_status', ['pending', 'partial', 'overdue'])
@@ -46,7 +48,7 @@ export async function GET(req: NextRequest) {
 
   // ── Bucket computation ─────────────────────────────────────────────────────
   //
-  // ageDays = floor((now_ms - created_at_ms) / 86_400_000)
+  // ageDays = floor((now_ms - sale_date_ms) / 86_400_000)
   //
   // current    : ageDays in [0, 30]    → 0–30 calendar days old
   // aged_30_60 : ageDays in [31, 60]   → 31–60 calendar days old
@@ -64,8 +66,9 @@ export async function GET(req: NextRequest) {
 
   for (const row of data ?? []) {
     const amtTry  = Math.max(0, Number(row.total_try ?? 0) - Number(row.amount_paid ?? 0))
-    const createdMs = new Date(row.created_at as string).getTime()
-    const ageDays   = Math.floor((nowMs - createdMs) / 86_400_000)
+    if (!row.sale_date) continue  // skip rows with no business date — can't age them
+    const saleDateMs = new Date(row.sale_date as string + 'T00:00:00Z').getTime()
+    const ageDays    = Math.floor((nowMs - saleDateMs) / 86_400_000)
 
     result.total.count     += 1
     result.total.total_try += amtTry

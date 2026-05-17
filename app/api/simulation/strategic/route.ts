@@ -49,10 +49,13 @@ export async function POST(req: NextRequest) {
     const from = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
     const to   = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10)
 
+    // Only use paid expenses as baseline — unpaid/pending expenses haven't been
+    // disbursed and should not be projected as ongoing commitments.
     const { data: expenseRows } = await supabase
       .from('expenses')
       .select('expense_type, amount_try')
       .eq('company_id', companyId)
+      .eq('payment_status', 'paid')
       .is('deleted_at', null)
       .gte('expense_date', from)
       .lte('expense_date', to)

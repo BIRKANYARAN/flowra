@@ -33,9 +33,10 @@ export async function GET(req: NextRequest) {
       action:      (url.searchParams.get('action') ?? undefined) as AuditAction | undefined,
       entity_id:   url.searchParams.get('entity_id')  ?? undefined,
       since:       url.searchParams.get('since')       ?? undefined,
-      limit:       url.searchParams.has('limit')
-        ? Math.min(Number(url.searchParams.get('limit')), 500)
-        : 200,
+      limit:       (() => {
+        const raw = Number(url.searchParams.get('limit') ?? 200)
+        return Math.min(isFinite(raw) && raw > 0 ? raw : 200, 500)
+      })(),
     }
 
     const logs = await AuditService.listLogs(uid, filters)

@@ -66,8 +66,24 @@ export async function POST(req: NextRequest) {
     if (!entry.partner_id || typeof entry.partner_id !== 'string') {
       return NextResponse.json({ error: 'partner_id eksik', code: 'VALIDATION_ERROR', type: 'BUSINESS' }, { status: 422 })
     }
-    if (typeof entry.net_try !== 'number' || entry.net_try <= 0) {
+    const gross = Number(entry.gross_try)
+    const withholding = Number(entry.withholding_try)
+    const net = Number(entry.net_try)
+    if (!isFinite(gross) || gross < 0) {
+      return NextResponse.json({ error: `${entry.partner_id}: gross_try geçersiz ya da negatif`, code: 'VALIDATION_ERROR', type: 'BUSINESS' }, { status: 422 })
+    }
+    if (!isFinite(withholding) || withholding < 0) {
+      return NextResponse.json({ error: `${entry.partner_id}: withholding_try geçersiz ya da negatif`, code: 'VALIDATION_ERROR', type: 'BUSINESS' }, { status: 422 })
+    }
+    if (!isFinite(net) || net <= 0) {
       return NextResponse.json({ error: `${entry.partner_id}: net_try sıfırdan büyük olmalı`, code: 'VALIDATION_ERROR', type: 'BUSINESS' }, { status: 422 })
+    }
+    // Invariant: gross - withholding must equal net (within 1 kuruş rounding tolerance)
+    if (Math.abs(gross - withholding - net) > 0.02) {
+      return NextResponse.json({
+        error: `${entry.partner_id}: gross_try (${gross}) − withholding_try (${withholding}) ≠ net_try (${net})`,
+        code: 'VALIDATION_ERROR', type: 'BUSINESS',
+      }, { status: 422 })
     }
     if (!/^\d{4}-\d{2}-\d{2}$/.test(entry.tx_date ?? '')) {
       return NextResponse.json({ error: `${entry.partner_id}: geçersiz tx_date formatı (YYYY-MM-DD bekleniyor)`, code: 'VALIDATION_ERROR', type: 'BUSINESS' }, { status: 422 })

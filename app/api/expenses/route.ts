@@ -42,8 +42,10 @@ export async function GET(req: NextRequest) {
   const { uid, companyId, supabase, ctx } = auth
 
   const { searchParams } = new URL(req.url)
-  const limit  = Math.min(100, Math.max(1, Number(searchParams.get('limit')  ?? 50)))
-  const offset = Math.max(0,              Number(searchParams.get('offset') ?? 0))
+  const rawLimit  = Number(searchParams.get('limit')  ?? 50)
+  const rawOffset = Number(searchParams.get('offset') ?? 0)
+  const limit  = Math.min(100, Math.max(1, isFinite(rawLimit)  && rawLimit  > 0 ? rawLimit  : 50))
+  const offset = isFinite(rawOffset) && rawOffset >= 0 ? Math.floor(rawOffset) : 0
 
   const { data, error } = await supabase
     .from('expenses')

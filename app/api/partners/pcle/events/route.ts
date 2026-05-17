@@ -64,6 +64,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'partner_id, event_type, amount_try required' }, { status: 400 })
     }
 
+    const amountTryNum = Number(amount_try)
+    if (!isFinite(amountTryNum) || amountTryNum <= 0) {
+      return NextResponse.json({ error: 'amount_try must be a positive finite number' }, { status: 400 })
+    }
+
     const txDate = typeof event_date === 'string' ? event_date : new Date().toISOString().slice(0, 10)
     const guard = await checkPeriodGuard(companyId, txDate, supabase)
     if (guard.blocked) {
@@ -76,7 +81,7 @@ export async function POST(req: NextRequest) {
         company_id:  companyId,
         partner_id,
         event_type,
-        amount_try:  Number(amount_try),
+        amount_try:  amountTryNum,
         event_date:  event_date ?? new Date().toISOString().slice(0, 10),
         reference:   reference ?? null,
         description: description ?? null,

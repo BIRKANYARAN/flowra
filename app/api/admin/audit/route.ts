@@ -43,8 +43,10 @@ export async function GET(req: NextRequest) {
     }
 
     const url     = new URL(req.url)
-    const limit   = Math.min(Number(url.searchParams.get('limit')  ?? 100), 500)
-    const offset  = Math.max(Number(url.searchParams.get('offset') ?? 0),   0)
+    const rawLimit  = Number(url.searchParams.get('limit')  ?? 100)
+    const rawOffset = Number(url.searchParams.get('offset') ?? 0)
+    const limit   = Math.min(isFinite(rawLimit)  && rawLimit  > 0 ? rawLimit  : 100, 500)
+    const offset  = isFinite(rawOffset) && rawOffset >= 0 ? Math.floor(rawOffset) : 0
     const filterEntityType = url.searchParams.get('entity_type') ?? undefined
     const filterAction     = url.searchParams.get('action')      ?? undefined
     const filterEntityId   = url.searchParams.get('entity_id')   ?? undefined
