@@ -28,6 +28,8 @@ interface SaleSummary {
   payment_status:  string
   paid_at:         string | null
   shipment_status: string | null
+  /** Business invoice date (YYYY-MM-DD) — preferred for display */
+  sale_date:       string
   created_at:      string
 }
 
@@ -249,7 +251,7 @@ export default function CustomerDetailPage() {
                           <span className="ml-2 text-gray-400 font-normal text-xs">(≈ ₺{fmt(s.total_try)})</span>
                         )}
                       </div>
-                      <div className="text-xs text-gray-400 mt-0.5">{fmtDate(s.created_at)}</div>
+                      <div className="text-xs text-gray-400 mt-0.5">{fmtDate(s.sale_date || s.created_at)}</div>
                     </div>
                     <div className="flex gap-1.5 flex-shrink-0 items-center">
                       <Badge map={STATUS_PAYMENT}  val={s.payment_status} />

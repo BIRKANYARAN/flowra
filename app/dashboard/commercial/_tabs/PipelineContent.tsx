@@ -57,10 +57,10 @@ export async function PipelineContent({ companyId }: Props) {
       .order('created_at', { ascending: false }),
     supabase
       .from('sales')
-      .select('id, customer_name, total_try, cogs, payment_status, created_at')
+      .select('id, customer_name, total_try, cogs, payment_status, sale_date, created_at')
       .eq('company_id', companyId)
       .is('deleted_at', null)
-      .order('created_at', { ascending: false }),
+      .order('sale_date', { ascending: false }),
     supabase
       .from('stock_lots')
       .select('qty_remaining, entry_cost_try, product_name, lot_no, created_at')
@@ -71,13 +71,14 @@ export async function PipelineContent({ companyId }: Props) {
 
   const proformas = (pfRes.data  ?? []) as Proforma[]
   const stockLots = (lotRes.data ?? []) as StockLot[]
-  const rawSales  = (salesRes.data ?? []) as (Omit<Sale, 'cost_try'> & { cogs?: number | null })[]
+  const rawSales  = (salesRes.data ?? []) as (Omit<Sale, 'cost_try'> & { cogs?: number | null; sale_date?: string | null })[]
   const sales: Sale[] = rawSales.map(r => ({
     id:             r.id,
     customer_name:  r.customer_name,
     total_try:      r.total_try,
     cost_try:       Number(r.cogs ?? 0),
     payment_status: r.payment_status,
+    sale_date:      r.sale_date ?? null,
     created_at:     r.created_at,
   }))
 

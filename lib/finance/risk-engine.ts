@@ -77,7 +77,7 @@ export async function getRiskEngineResult(
     .from('sales')
     .select(`
       id,
-      created_at,
+      sale_date,
       due_date,
       total_try,
       amount_paid,
@@ -87,7 +87,7 @@ export async function getRiskEngineResult(
     .eq('company_id', companyId)
     .neq('payment_status', 'paid')
     .is('deleted_at', null)
-    .order('created_at', { ascending: true })
+    .order('sale_date', { ascending: true })
 
   const byCustomer = new Map<string, CustomerAging>()
 
@@ -97,7 +97,7 @@ export async function getRiskEngineResult(
     const outstanding = Math.max(0, totalTry - paid)
     if (outstanding <= 0) continue
 
-    const saleDate    = String(row.created_at ?? '').slice(0, 10)
+    const saleDate    = String(row.sale_date ?? '').slice(0, 10)
     const dueRef      = row.due_date ? String(row.due_date).slice(0, 10) : saleDate
     const daysPastDue = _daysBetween(dueRef, today)
     const custRaw  = row.customer as { id: string; name: string } | { id: string; name: string }[] | null

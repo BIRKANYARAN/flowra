@@ -122,6 +122,9 @@ export interface NormalizedSaleRow {
   cogs:            number
   holding_cost:    number
   nominal_profit:  number
+  /** Business invoice date (YYYY-MM-DD) — use for period attribution and display */
+  sale_date:       string
+  /** DB insertion timestamp — kept for backward compat; prefer sale_date for display */
   created_at:      string
   proforma_id:     string | null
   proforma_no:     string | null
@@ -155,6 +158,7 @@ export function normalizeSaleRow(raw: unknown): NormalizedSaleRow | null {
     cogs:            safeNum(r.cogs),
     holding_cost:    safeNum(r.holding_cost),
     nominal_profit:  safeNum(r.nominal_profit),
+    sale_date:       safeStr(r.sale_date).slice(0, 10) || safeStr(r.created_at).slice(0, 10),
     created_at:      safeStr(r.created_at),
     proforma_id:     typeof r.proforma_id === 'string' ? r.proforma_id : null,
     proforma_no:     proformaNo,
@@ -182,6 +186,8 @@ export interface NormalizedSaleDetail {
   interest_rate:   number
   interest_days:   number
   fx_rate_source:  string | null
+  /** Business invoice date (YYYY-MM-DD) — preferred for display */
+  sale_date:       string
   created_at:      string
   proforma_id:     string | null
   proforma_no:     string | null
@@ -220,6 +226,7 @@ export function normalizeSaleDetail(raw: unknown): NormalizedSaleDetail | null {
     interest_rate:   safeNum(r.interest_rate),
     interest_days:   safeNum(r.interest_days),
     fx_rate_source:  typeof r.fx_rate_source === 'string' ? r.fx_rate_source : null,
+    sale_date:       safeStr(r.sale_date).slice(0, 10) || safeStr(r.created_at).slice(0, 10),
     created_at:      safeStr(r.created_at),
     proforma_id:     typeof r.proforma_id === 'string' ? r.proforma_id : null,
     proforma_no:     proformaNo,

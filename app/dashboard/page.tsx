@@ -207,13 +207,13 @@ export default async function DashboardPage() {
     sq(() => loadFxDirect(), EMPTY_FX),
 
     sq(async () => {
-      const { data } = await supabase.from('sales').select('id, total_try, amount_paid, payment_status, customer_name, created_at, due_date').eq('company_id', companyId).neq('payment_status', 'paid').is('deleted_at', null).order('created_at', { ascending: false }).limit(100)
-      return (data ?? []) as Array<{ id: string; total_try: number; amount_paid: number | null; payment_status: string; customer_name: string; created_at: string; due_date: string | null }>
-    }, [] as Array<{ id: string; total_try: number; amount_paid: number | null; payment_status: string; customer_name: string; created_at: string; due_date: string | null }>),
+      const { data } = await supabase.from('sales').select('id, total_try, amount_paid, payment_status, customer_name, sale_date, due_date').eq('company_id', companyId).neq('payment_status', 'paid').is('deleted_at', null).order('sale_date', { ascending: false }).limit(100)
+      return (data ?? []) as Array<{ id: string; total_try: number; amount_paid: number | null; payment_status: string; customer_name: string; sale_date: string; due_date: string | null }>
+    }, [] as Array<{ id: string; total_try: number; amount_paid: number | null; payment_status: string; customer_name: string; sale_date: string; due_date: string | null }>),
 
     sq(async () => {
       const in7days = new Date(Date.now() + 7 * 86_400_000).toISOString().slice(0, 10)
-      const { data } = await supabase.from('tasks').select('id, title, due_date, status').eq('status', 'open').is('deleted_at', null).not('due_date', 'is', null).lte('due_date', in7days).order('due_date', { ascending: true }).limit(5)
+      const { data } = await supabase.from('tasks').select('id, title, due_date, status').eq('company_id', companyId).eq('status', 'open').is('deleted_at', null).not('due_date', 'is', null).lte('due_date', in7days).order('due_date', { ascending: true }).limit(5)
       return (data ?? []) as Array<{ id: string; title: string; due_date: string; status: string }>
     }, [] as Array<{ id: string; title: string; due_date: string; status: string }>),
 
@@ -263,7 +263,7 @@ export default async function DashboardPage() {
         const mFrom = `${y}-${m}-01`
         const mTo   = new Date(y, d.getMonth() + 1, 0).toISOString().slice(0, 10)
         const [saleData, expData] = await Promise.all([
-          supabase.from('sales').select('total_try').eq('company_id', companyId).is('deleted_at', null).gte('created_at', mFrom).lte('created_at', mTo + 'T23:59:59Z'),
+          supabase.from('sales').select('total_try').eq('company_id', companyId).is('deleted_at', null).gte('sale_date', mFrom).lte('sale_date', mTo),
           supabase.from('expenses').select('amount_try').eq('company_id', companyId).is('deleted_at', null).gte('expense_date', mFrom).lte('expense_date', mTo),
         ])
         const rev = (saleData.data ?? []).reduce((s, r) => s + Number(r.total_try), 0)
@@ -300,10 +300,11 @@ export default async function DashboardPage() {
   const monthlyNet       = fs.net_after_tax_try / monthsInPeriod
 
   const todayISO         = new Date().toISOString().slice(0, 10)
-  const thirtyDaysAgoISO = new Date(Date.now() - 30 * 86_400_000).toISOString()
-  const sixtyDaysAgoISO  = new Date(Date.now() - 60 * 86_400_000).toISOString()
-  const overdueSales30   = uncollectedSalesData.filter(s => s.created_at < thirtyDaysAgoISO)
-  const overdueSales60   = uncollectedSalesData.filter(s => s.created_at < sixtyDaysAgoISO)
+  const thirtyDaysAgoISO = new Date(Date.now() - 30 * 86_400_000).toISOString().slice(0, 10)
+  const sixtyDaysAgoISO  = new Date(Date.now() - 60 * 86_400_000).toISOString().slice(0, 10)
+  // Use sale_date (business invoice date) for aging — comparing date strings directly (YYYY-MM-DD < YYYY-MM-DD)
+  const overdueSales30   = uncollectedSalesData.filter(s => s.sale_date < thirtyDaysAgoISO)
+  const overdueSales60   = uncollectedSalesData.filter(s => s.sale_date < sixtyDaysAgoISO)
   const overdueTotal30   = overdueSales30.reduce((s, r) => s + Math.max(0, Number(r.total_try ?? 0) - Number(r.amount_paid ?? 0)), 0)
   const overdueTotal60   = overdueSales60.reduce((s, r) => s + Math.max(0, Number(r.total_try ?? 0) - Number(r.amount_paid ?? 0)), 0)
   // Runway: use cashDistributable (operational cash, unpaid obligations deducted) as the base,

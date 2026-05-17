@@ -45,7 +45,8 @@ function getDateRangeCutoff(range: DateRange): string | null {
   if (range === 'month')  d.setDate(1)
   if (range === '30d')    d.setDate(d.getDate() - 30)
   if (range === '90d')    d.setDate(d.getDate() - 90)
-  return d.toISOString()
+  // Return YYYY-MM-DD — sale_date is a date column, not a timestamp
+  return d.toISOString().slice(0, 10)
 }
 
 const DATE_RANGE_LABELS: Record<DateRange, string> = {
@@ -83,7 +84,7 @@ export function SalesTable({ rows }: Props) {
 
     return rows.filter(r => {
       if (q && !r.customer_name.toLowerCase().includes(q)) return false
-      if (cutoff && r.created_at < cutoff) return false
+      if (cutoff && r.sale_date < cutoff) return false
       if (statusFilter !== 'all' && r.payment_status !== statusFilter) return false
       return true
     })
@@ -226,7 +227,7 @@ export function SalesTable({ rows }: Props) {
                 </div>
 
                 <div className="col-span-2 text-sm text-gray-500">
-                  {s.created_at ? fmtDate(s.created_at) : '—'}
+                  {s.sale_date ? fmtDate(s.sale_date) : '—'}
                 </div>
 
                 <div className="col-span-2 text-right text-sm tabular-nums">

@@ -347,6 +347,7 @@ export async function getExecutiveSummary(
       const in7days = new Date(Date.now() + 7 * 86_400_000).toISOString().slice(0, 10)
       const { data } = await supabase
         .from('tasks').select('id, title, due_date')
+        .eq('company_id', companyId)
         .eq('status', 'open').is('deleted_at', null)
         .not('due_date', 'is', null)
         .lte('due_date', in7days)
