@@ -124,25 +124,36 @@ export class ReconciliationService {
     const [salesRes, expensesRes] = await Promise.all([
       supabase
         .from('sales')
-        .select('total_try, amount_paid_try, kdv_amount_try, revenue_try')
+        // correct column names: kdv_total (sale currency), fx_rate_try (TRY rate),
+        // amount_paid (partial payment, added via migration), created_at (not sale_date).
+        .select('total_try, amount_paid, kdv_total, fx_rate_try')
         .eq('company_id', companyId)
         .is('deleted_at', null)
-        .lte('sale_date', asOf),
+        .lte('created_at', asOf + 'T23:59:59Z'),
       supabase
         .from('expenses')
-        .select('amount_try, paid_amount_try')
+        // expenses have no partial amount; use payment_status to determine unpaid
+        .select('amount_try, payment_status')
         .eq('company_id', companyId)
         .is('deleted_at', null)
         .lte('expense_date', asOf),
     ])
 
-    const sales    = (salesRes.data    ?? []) as Array<{ total_try: number; amount_paid_try: number; kdv_amount_try: number; revenue_try: number }>
-    const expenses = (expensesRes.data ?? []) as Array<{ amount_try: number; paid_amount_try: number }>
+    const sales    = (salesRes.data    ?? []) as Array<{ total_try: number; amount_paid: number | null; kdv_total: number; fx_rate_try: number | null }>
+    const expenses = (expensesRes.data ?? []) as Array<{ amount_try: number; payment_status: string | null }>
 
-    const totalRevenue     = round2(sales.reduce((s, r) => s + (Number(r.revenue_try) || 0), 0))
-    const totalOutputVat   = round2(sales.reduce((s, r) => s + (Number(r.kdv_amount_try) || 0), 0))
-    const unpaidSales      = round2(sales.reduce((s, r) => s + Math.max(0, (Number(r.total_try) || 0) - (Number(r.amount_paid_try) || 0)), 0))
-    const unpaidExpenses   = round2(expenses.reduce((s, r) => s + Math.max(0, (Number(r.amount_try) || 0) - (Number(r.paid_amount_try) || 0)), 0))
+    // revenue_try (net ex-KDV in TRY) = total_try − kdv_total × fx_rate_try
+    const totalRevenue   = round2(sales.reduce((s, r) => {
+      const kdvTry = (Number(r.kdv_total) || 0) * (Number(r.fx_rate_try) || 1)
+      return s + Math.max(0, (Number(r.total_try) || 0) - kdvTry)
+    }, 0))
+    const totalOutputVat = round2(sales.reduce((s, r) =>
+      s + (Number(r.kdv_total) || 0) * (Number(r.fx_rate_try) || 1), 0))
+    const unpaidSales    = round2(sales.reduce((s, r) =>
+      s + Math.max(0, (Number(r.total_try) || 0) - (Number(r.amount_paid) || 0)), 0))
+    // expenses: unpaid = all non-paid entries (no partial tracking for expenses)
+    const unpaidExpenses = round2(expenses.reduce((s, r) =>
+      r.payment_status === 'paid' ? s : s + (Number(r.amount_try) || 0), 0))
 
     return {
       total_revenue_try:    totalRevenue,
