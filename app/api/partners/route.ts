@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
     }
 
     const name        = typeof body.name === 'string' ? body.name.trim() : ''
-    const share_ratio = Number(body.share_ratio)
+    const share_ratio = Number(body.share_ratio) || 0
 
     if (!name) {
       return NextResponse.json(

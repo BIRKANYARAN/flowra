@@ -54,9 +54,9 @@ export async function POST(
       params.id,
       {
         tx_type:  String(body.tx_type ?? ''),
-        amount:   Number(body.amount),
+        amount:   Number(body.amount) || 0,
         currency: String(body.currency ?? 'TRY'),
-        fx_rate:  Number(body.fx_rate ?? 1),
+        fx_rate:  Number(body.fx_rate ?? 1) || 1,
         tx_date:  String(body.tx_date ?? ''),
         notes:    typeof body.notes === 'string' ? body.notes : undefined,
       },

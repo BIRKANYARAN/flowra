@@ -60,7 +60,8 @@ export async function GET(req: NextRequest) {
   try {
 
   const url      = new URL(req.url)
-  const months   = Math.min(Math.max(Number(url.searchParams.get('months') ?? 12), 1), 24)
+  const rawMonths = Number(url.searchParams.get('months') ?? 12)
+  const months    = Math.min(Math.max(Number.isFinite(rawMonths) ? rawMonths : 12, 1), 24)
 
   // Fetch all active recurring expenses for the company
   const { data: recurrings, error: fetchError } = await supabase
@@ -87,7 +88,7 @@ export async function GET(req: NextRequest) {
   for (const rec of recurrings ?? []) {
     const startYM  = toYM(rec.start_date as string)
     const endYM    = rec.end_date ? toYM(rec.end_date as string) : null
-    const amtTry   = Number(rec.amount) * Number(rec.fx_rate)
+    const amtTry   = (Number(rec.amount) || 0) * (Number(rec.fx_rate) || 1)
     const freq     = rec.frequency as 'monthly' | 'quarterly' | 'yearly'
     const step     = freq === 'monthly' ? 1 : freq === 'quarterly' ? 3 : 12
 
