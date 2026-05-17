@@ -66,22 +66,31 @@ export default async function OperationsPage({ searchParams }: PageProps) {
   const rawTab    = params.tab ?? 'expenses'
   const activeTab = VALID_TABS.includes(rawTab) ? rawTab : 'expenses'
 
+  const opTitles: Record<string, string> = {
+    expenses: 'Giderler', catalog: 'Katalog', stock: 'Stok', orders: 'Siparişler',
+  }
+  const opSubs: Record<string, string> = {
+    expenses: 'Gider yönetimi · Ödenmiş/bekleyen · Kategori analizi',
+    catalog:  'Ürün kataloğu · Fiyat yönetimi · Stok seviyeleri',
+    stock:    'Stok durumu · FIFO değerleme · Kritik seviyeler',
+    orders:   'Sipariş takibi · Tedarikçi süreçleri · Teslimat durumu',
+  }
+
   return (
-    <div className="flex flex-col gap-4 max-w-5xl">
+    <div className="flex flex-col gap-5 max-w-5xl">
+
+      {/* PAGE HERO */}
+      <div>
+        <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Operasyon Merkezi</div>
+        <h1 className="text-2xl font-black tracking-tight text-gray-900 leading-tight">
+          {opTitles[activeTab] ?? 'Operasyon'}
+        </h1>
+        <p className="text-sm text-gray-400 mt-1">{opSubs[activeTab] ?? ''}</p>
+      </div>
+
       {/* Sticky tab nav */}
       <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm -mx-5 px-5 pt-1 border-b border-gray-100">
         <HubTabNav tabs={TABS} activeTab={activeTab} basePath="/dashboard/operations" />
-      </div>
-
-      {/* Tab header */}
-      <div>
-        <h1 className="text-lg font-black text-gray-900 tracking-tight">Operasyon Merkezi</h1>
-        <p className="text-xs text-gray-400 mt-0.5">
-          {activeTab === 'expenses' && 'Gider yönetimi · Ödenmiş/bekleyen · Kategori analizi'}
-          {activeTab === 'catalog'  && 'Ürün kataloğu · Fiyat yönetimi · Stok seviyeleri'}
-          {activeTab === 'stock'    && 'Stok durumu · FIFO değerleme · Kritik seviyeler'}
-          {activeTab === 'orders'   && 'Sipariş takibi · Tedarikçi süreçleri · Teslimat durumu'}
-        </p>
       </div>
 
       <Suspense fallback={<TabSkeleton />}>

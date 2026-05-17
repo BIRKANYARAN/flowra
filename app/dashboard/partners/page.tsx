@@ -22,7 +22,6 @@ import {
   WaterfallData, CapitalReturn, TxRow, DistribState,
   ZERO_EQ,
 } from '@/app/dashboard/partners/_components/types'
-import { TabBtn } from '@/app/dashboard/partners/_components/ui'
 import { PartnersTab }    from '@/app/dashboard/partners/_components/PartnersTab'
 import { LedgerTab }      from '@/app/dashboard/partners/_components/LedgerTab'
 import { WaterfallTab }   from '@/app/dashboard/partners/_components/WaterfallTab'
@@ -261,43 +260,70 @@ export default function PartnersPage() {
   const hasPartners         = partners.length > 0
   const totalDebt           = waterfall?.total_debt_try ?? 0
 
+  // ── Tab metadata ──────────────────────────────────────────────────────────────
+
+  const TAB_META: Record<TabId, { title: string; sub: string }> = {
+    partners:     { title: 'Ortak Pozisyonları', sub: 'Sermaye · Pay oranı · Net bakiye · Eşitleme durumu' },
+    ledger:       { title: 'Finansal Defter',    sub: 'Sermaye · Borç · Dağıtım · Tüm hareketler' },
+    waterfall:    { title: 'Geri Ödeme',         sub: 'Normalleştirilmiş iki aşamalı waterfall · Borç baskısı' },
+    tranches:     { title: 'Borç Tranşeleri',    sub: 'Aktif trancheler · Faiz tahakkuku · Geri ödeme takvimi' },
+    distribution: { title: 'Kâr Dağıtımı',      sub: '4 katmanlı güvenlik · Yasal yedek · TTK 509 uyumu' },
+    returns:      { title: 'Getiri Analizi',     sub: 'ROI · Sermaye geri dönüşü · Ortak bazlı performans' },
+  }
+
+  const TABS: { id: TabId; label: string }[] = [
+    { id: 'partners',     label: 'Ortaklar'     },
+    { id: 'ledger',       label: 'Defter'       },
+    { id: 'waterfall',    label: 'Geri Ödeme'   },
+    { id: 'tranches',     label: 'Trancheler'   },
+    { id: 'distribution', label: 'Kâr Dağıtımı' },
+    { id: 'returns',      label: 'Getiri'       },
+  ]
+
   // ── Render ────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex flex-col gap-4 max-w-4xl">
+    <div className="flex flex-col gap-5 max-w-5xl">
 
-      {/* ── Header ─────────────────────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      {/* PAGE HERO */}
+      <div className="flex items-end justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-xl font-black text-gray-900 tracking-tight">Ortak Finans Merkezi</h1>
-          <p className="text-xs text-gray-400 mt-0.5">Sermaye · Borç · Eşitleme · Geri Dönüş</p>
+          <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Ortak Finans Merkezi</div>
+          <h1 className="text-2xl font-black tracking-tight text-gray-900 leading-tight">
+            {TAB_META[activeTab]?.title ?? 'Ortaklar'}
+          </h1>
+          <p className="text-sm text-gray-400 mt-1">{TAB_META[activeTab]?.sub ?? ''}</p>
         </div>
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-          <div className="overflow-x-auto scrollbar-none w-full sm:w-auto">
-            <div className="flex bg-gray-100 rounded-xl p-0.5 min-w-max">
-              {([
-                { id: 'partners',     label: 'Ortaklar'      },
-                { id: 'ledger',       label: 'Defter'         },
-                { id: 'waterfall',    label: 'Geri Ödeme'     },
-                { id: 'tranches',     label: 'Trancheler'     },
-                { id: 'distribution', label: 'Kâr Dağıtımı'  },
-                { id: 'returns',      label: 'Getiri'         },
-              ] as { id: TabId; label: string }[]).map(t => (
-                <TabBtn key={t.id} id={t.id} active={activeTab === t.id} label={t.label} onClick={setActiveTab} />
-              ))}
-            </div>
-          </div>
-          <Link
-            href="/dashboard/partners/new"
-            className="text-sm font-bold bg-primary-600 text-white px-4 py-2 rounded-xl hover:bg-primary-700 transition-colors whitespace-nowrap"
-          >
-            + Ortak Ekle
-          </Link>
+        <Link
+          href="/dashboard/partners/new"
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary-600 text-white text-xs font-semibold hover:bg-primary-700 transition-colors whitespace-nowrap"
+        >
+          + Ortak Ekle
+        </Link>
+      </div>
+
+      {/* Sticky tab nav */}
+      <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm -mx-5 px-5 pt-1 border-b border-gray-100">
+        <div className="flex items-center gap-0.5 overflow-x-auto scrollbar-none">
+          {TABS.map(t => (
+            <button
+              key={t.id}
+              onClick={() => setActiveTab(t.id)}
+              className={[
+                'relative px-3 py-2.5 text-[13px] transition-colors whitespace-nowrap flex-shrink-0 bg-transparent border-0 cursor-pointer',
+                activeTab === t.id
+                  ? 'text-gray-900 font-semibold border-b-2 border-gray-900 -mb-px'
+                  : 'text-gray-400 hover:text-gray-600 font-medium',
+              ].join(' ')}
+            >
+              {t.label}
+            </button>
+          ))}
         </div>
       </div>
 
       {fetchError && (
-        <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700 font-medium">
+        <div className="bg-red-50 border border-red-100 rounded-xl px-4 py-3 text-sm text-red-700 font-medium">
           {fetchError}
         </div>
       )}

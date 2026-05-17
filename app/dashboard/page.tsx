@@ -424,131 +424,188 @@ export default async function DashboardPage() {
   // ── Render ────────────────────────────────────────────────────────────────
   const situTheme  = SITUATION_THEME[situation.status]
 
+  // Delta: last month vs avg of trailing 5 for revenue indicator
+  const lastMonthRev = trailing5.length > 0 ? trailing5[trailing5.length - 1]?.revenue ?? 0 : 0
+  const prevMonthRev = trailing5.length > 1 ? trailing5[trailing5.length - 2]?.revenue ?? 0 : 0
+  const revDeltaPct  = prevMonthRev > 0 ? ((lastMonthRev - prevMonthRev) / prevMonthRev) * 100 : null
+  const lastMonthExp = trailing5.length > 0 ? trailing5[trailing5.length - 1]?.expenses ?? 0 : 0
+  const prevMonthExp = trailing5.length > 1 ? trailing5[trailing5.length - 2]?.expenses ?? 0 : 0
+  const expDeltaPct  = prevMonthExp > 0 ? ((lastMonthExp - prevMonthExp) / prevMonthExp) * 100 : null
+
   return (
-    <div className="flex flex-col gap-3 max-w-6xl">
+    <div className="flex flex-col gap-5 max-w-5xl">
 
-      {/* ── Situation Band ────────────────────────────────────────────────── */}
-      <div className={`flex items-center gap-3 px-4 py-2.5 rounded-xl border ${situTheme.bg} ${situTheme.border}`}>
-        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black flex-shrink-0 ${situTheme.badge}`}>
-          {situTheme.icon}
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className={`text-sm font-bold leading-tight truncate ${situTheme.text}`}>
-            {situation.situationLine}
-          </p>
-        </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <div
-            className={`text-[10px] font-black px-2 py-0.5 rounded-full cursor-help ${situTheme.badge}`}
-            title="Durum skoru: 80+ sağlıklı · 60–79 dikkat · 40–59 risk · 40 altı kritik"
-          >
-            {situation.composite} / 100
+      {/* ── PAGE HERO ─────────────────────────────────────────────────────── */}
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-black tracking-tight text-gray-900 leading-tight">CEO Komuta Merkezi</h1>
+          <div className="flex items-center gap-2.5 mt-1.5 flex-wrap">
+            <span className="text-sm text-gray-400">{label}</span>
+            <span className="text-gray-200">·</span>
+            <div className={`flex items-center gap-1.5 text-sm font-semibold ${situTheme.text}`}>
+              <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-black ${situTheme.badge}`}>
+                {situTheme.icon}
+              </span>
+              <span className="truncate max-w-xs">{situation.situationLine}</span>
+            </div>
+            <span className={`text-[10px] font-black px-2 py-0.5 rounded-full cursor-help ${situTheme.badge}`}
+              title="Durum skoru: 80+ sağlıklı · 60–79 dikkat · 40–59 risk · 40 altı kritik">
+              {situation.composite}/100
+            </span>
           </div>
-          <span className={`text-[10px] font-black uppercase tracking-widest ${situTheme.text} opacity-60`}>
-            {label}
-          </span>
+        </div>
+        <div className="flex items-center gap-1.5 flex-shrink-0 flex-wrap justify-end">
+          <Link href="/dashboard/commercial?tab=proformas"
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-gray-900 text-white text-xs font-semibold hover:bg-gray-700 transition-colors">
+            + Proforma
+          </Link>
+          <Link href="/dashboard/operations?tab=expenses"
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-gray-200 text-gray-700 text-xs font-semibold hover:bg-gray-50 transition-colors">
+            + Gider
+          </Link>
+          <Link href="/dashboard/commercial?tab=collections"
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-primary-600 text-white text-xs font-semibold hover:bg-primary-700 transition-colors">
+            Tahsilat
+          </Link>
         </div>
       </div>
 
-      {/* ── Command Bar ───────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <div className="flex items-center gap-2 min-w-0">
-          <h1 className="text-sm font-black text-gray-900 tracking-tight uppercase">CEO Cockpit</h1>
-          {alertCount > 0 && (
-            <Link href="/dashboard/alerts" className="inline-flex items-center gap-1 text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-bold hover:bg-red-200 transition-colors">
-              <span className="w-1.5 h-1.5 bg-red-500 rounded-full" />
-              {alertCount} uyarı
-            </Link>
+      {/* ── KPI RAIL — 4 primary metrics ──────────────────────────────────── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {/* Ciro */}
+        <Link href="/dashboard/commercial?tab=sales"
+          className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)] hover:border-gray-200 hover:shadow-[0_2px_6px_rgba(17,24,39,0.07)] transition-all">
+          <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Ciro</div>
+          <div className="text-[22px] font-black tabular-nums leading-none text-gray-900">
+            <span className="text-gray-300 font-normal text-sm mr-0.5">₺</span>{formatKpi(fs.revenue_try)}
+          </div>
+          <div className="text-[10px] text-gray-400 mt-1.5">{fs.revenue_try > 0 ? `Brüt marj ${pct(grossMarginPct)}` : 'Satış yok'}</div>
+          {revDeltaPct !== null && (
+            <div className={`text-[11px] font-semibold mt-1 tabular-nums ${revDeltaPct >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+              {revDeltaPct >= 0 ? '▲' : '▼'} {Math.abs(revDeltaPct).toFixed(1)}% <span className="text-gray-400 font-normal">geçen ay</span>
+            </div>
           )}
-          {vatStatus === 'payable' && fs.net_vat_try > 50 && (
-            <Link href="/dashboard/cfo" className="text-[10px] bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full font-bold hover:bg-orange-200 transition-colors">
-              KDV {fmt(fs.net_vat_try)}
-            </Link>
+        </Link>
+
+        {/* Net Kâr / Zarar */}
+        <Link href="/dashboard/finance?tab=pnl"
+          className={`border rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)] hover:shadow-[0_2px_6px_rgba(17,24,39,0.07)] transition-all ${monthlyNet >= 0 ? 'bg-white border-gray-100 hover:border-gray-200' : 'bg-red-50 border-red-100 hover:border-red-200'}`}>
+          <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Aylık Net</div>
+          <div className={`text-[22px] font-black tabular-nums leading-none ${monthlyNet >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
+            <span className="text-gray-300 font-normal text-sm mr-0.5">₺</span>{formatKpi(Math.abs(monthlyNet))}
+          </div>
+          <div className="text-[10px] text-gray-400 mt-1.5">{monthlyNet >= 0 ? 'Kârlı dönem' : 'Zarar'}</div>
+          {breakEvenRevenue !== null && (
+            <div className="text-[11px] text-gray-400 mt-1">Başabaş: {fmt(breakEvenRevenue)}/ay</div>
           )}
-          {taskReminders.length > 0 && (
-            <Link href="/dashboard/tasks" className="text-[10px] bg-violet-100 text-violet-700 px-2 py-0.5 rounded-full font-bold hover:bg-violet-200 transition-colors">
-              {taskReminders.filter(t => t.due_date < todayISO).length > 0 && '⚠ '}
-              {taskReminders.length} görev
-            </Link>
+        </Link>
+
+        {/* Tahsilat Bekleyen */}
+        <Link href="/dashboard/commercial?tab=collections"
+          className={`border rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)] hover:shadow-[0_2px_6px_rgba(17,24,39,0.07)] transition-all ${uncollectedSalesTotal > 0 ? 'bg-amber-50 border-amber-100 hover:border-amber-200' : 'bg-white border-gray-100 hover:border-gray-200'}`}>
+          <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Bekleyen Tahsilat</div>
+          <div className={`text-[22px] font-black tabular-nums leading-none ${uncollectedSalesTotal > 0 ? 'text-amber-700' : 'text-emerald-700'}`}>
+            {uncollectedSalesTotal > 0 ? <><span className="text-amber-300 font-normal text-sm mr-0.5">₺</span>{formatKpi(uncollectedSalesTotal)}</> : <span className="text-emerald-600 text-base">Temiz ✓</span>}
+          </div>
+          <div className="text-[10px] text-gray-400 mt-1.5">
+            {uncollectedSalesTotal > 0 ? `${uncollectedSalesCount} satış · %${actuallyCollectedPct} tahsil` : 'Tümü tahsil edildi'}
+          </div>
+          {overdueTotal60 > 0 && (
+            <div className="text-[11px] font-semibold text-red-600 mt-1 tabular-nums">
+              {fmt(overdueTotal60)} 60+ gün gecikmiş
+            </div>
           )}
-        </div>
-        <div className="ml-auto flex items-center gap-1.5 flex-shrink-0">
-          <Link href="/dashboard/commercial?tab=proformas" className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-gray-900 text-white text-xs font-semibold hover:bg-gray-700 transition-colors">+ Proforma</Link>
-          <Link href="/dashboard/commercial?tab=sales"     className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition-colors">Satışlar</Link>
-          <Link href="/dashboard/commercial?tab=collections" className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-primary-600 text-white text-xs font-semibold hover:bg-primary-700 transition-colors">Tahsilat</Link>
-          <Link href="/dashboard/operations?tab=expenses"  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-orange-500 text-white text-xs font-semibold hover:bg-orange-600 transition-colors">+ Gider</Link>
-        </div>
+        </Link>
+
+        {/* Dağıtılabilir Nakit */}
+        <Link href="/dashboard/partners"
+          className={`border rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)] hover:shadow-[0_2px_6px_rgba(17,24,39,0.07)] transition-all ${cashDistributable > 0 ? 'bg-emerald-50 border-emerald-100 hover:border-emerald-200' : 'bg-white border-gray-100 hover:border-gray-200'}`}>
+          <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Dağıtılabilir</div>
+          <div className={`text-[22px] font-black tabular-nums leading-none ${cashDistributable > 0 ? 'text-emerald-700' : 'text-gray-400'}`}>
+            {cashDistributable > 0 ? <><span className="text-emerald-300 font-normal text-sm mr-0.5">₺</span>{formatKpi(cashDistributable)}</> : <span className="text-base">—</span>}
+          </div>
+          <div className="text-[10px] text-gray-400 mt-1.5">Nakit bazlı hesap</div>
+          {runwayDays >= 0 && runwayDays < 90 && (
+            <div className="text-[11px] font-semibold text-red-600 mt-1">{runwayDays} gün nakit ömrü</div>
+          )}
+          {runwayDays >= 90 && (
+            <div className="text-[11px] text-emerald-600 font-semibold mt-1">{Math.round(runwayMonths)} ay ömür</div>
+          )}
+        </Link>
       </div>
 
-      {/* ── Decision Alerts (top 3, compact) ─────────────────────────────── */}
-      {topAlerts.length === 0 ? (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-xl border border-emerald-200 bg-emerald-50">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
-          <span className="text-xs font-semibold text-emerald-700">Aktif uyarı yok — tüm eşikler normal</span>
-        </div>
-      ) : (
-        <div className="flex flex-col gap-1">
-          {topAlerts.slice(0, 3).map(alert => {
-            const theme = ALERT_SEVERITY_THEME[alert.severity] ?? ALERT_SEVERITY_THEME.info
-            return (
-              <Link
-                key={alert.id}
-                href={alert.actionHref}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors hover:opacity-90 ${theme.bg} ${theme.border} ${theme.text}`}
-              >
-                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${theme.dot}`} />
-                <span className="font-bold truncate flex-1">{alert.title}</span>
-                <span className="text-[10px] font-normal opacity-70 truncate hidden sm:block">{alert.detail}</span>
-                <span className="ml-auto flex-shrink-0 text-[10px] font-bold opacity-80 hover:opacity-100">{alert.actionLabel} →</span>
-              </Link>
-            )
-          })}
+      {/* ── KARAR SIRASI (Decision Queue) ────────────────────────────────── */}
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Karar Sırası</span>
           {topAlerts.length > 3 && (
-            <Link href="/dashboard/commercial?tab=collections" className="text-[10px] text-amber-600 font-semibold px-1 hover:underline">
-              +{topAlerts.length - 3} daha fazla uyarı var →
+            <Link href="/dashboard/alerts" className="text-[10px] text-primary-600 font-semibold hover:underline">
+              +{topAlerts.length - 3} daha →
             </Link>
           )}
         </div>
-      )}
-
-      {/* ── KPI Strip ─────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
-        <FlowraKpiCard label="Ciro" value={fs.revenue_try} rawValue={fmt(fs.revenue_try)} sub={fs.revenue_try > 0 ? `Brüt marj ${pct(grossMarginPct)}` : 'Satış yok'} href="/dashboard/commercial?tab=sales" />
-        <FlowraKpiCard label="Tahsil Edilen" value={actuallyCollected} rawValue={fmt(actuallyCollected)} sub={`%${actuallyCollectedPct} oran`} tone={actuallyCollectedPct >= 80 ? 'positive' : actuallyCollectedPct >= 50 ? 'neutral' : 'negative'} href="/dashboard/commercial?tab=collections" />
-        <FlowraKpiCard label="Dağıtılabilir" value={cashDistributable} rawValue={cashDistributable > 0 ? fmt(cashDistributable) : '—'} sub={cashDistributable > 0 ? 'Nakit bazlı' : 'Yok'} tone={cashDistributable > 0 ? 'positive' : 'neutral'} href="/dashboard/partners" />
-        <FlowraKpiCard label="Bekleyen" value={uncollectedSalesTotal} rawValue={uncollectedSalesTotal > 0 ? fmt(uncollectedSalesTotal) : '—'} sub={uncollectedSalesTotal > 0 ? `${uncollectedSalesCount} satış` : 'Tümü tahsil ✓'} tone={uncollectedSalesTotal > 0 ? 'negative' : 'neutral'} href="/dashboard/commercial?tab=collections" />
-        <FlowraKpiCard label="Giderler" value={fs.expenses_total_try} rawValue={fmt(fs.expenses_total_try)} sub={`~${fmt(monthlyExpenses)}/ay`} href="/dashboard/operations?tab=expenses" />
-        <FlowraKpiCard label="Stok" value={stockValue} rawValue={fmt(stockValue)} sub="FIFO maliyet" href="/dashboard/stocks" />
+        {topAlerts.length === 0 ? (
+          <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl border border-emerald-200 bg-emerald-50">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0" />
+            <span className="text-sm font-semibold text-emerald-700">Aktif uyarı yok — tüm eşikler normal</span>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-1.5">
+            {topAlerts.slice(0, 4).map(alert => {
+              const theme = ALERT_SEVERITY_THEME[alert.severity] ?? ALERT_SEVERITY_THEME.info
+              const icons: Record<string, string> = { critical: '●', warning: '◐', info: '○' }
+              return (
+                <Link
+                  key={alert.id}
+                  href={alert.actionHref}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl border transition-all hover:shadow-sm group ${theme.bg} ${theme.border}`}
+                >
+                  <span className={`text-sm flex-shrink-0 ${theme.text}`}>{icons[alert.severity] ?? '●'}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className={`text-sm font-semibold leading-tight ${theme.text}`}>{alert.title}</div>
+                    <div className="text-[11px] text-gray-500 mt-0.5 truncate">{alert.detail}</div>
+                  </div>
+                  <span className={`flex-shrink-0 text-xs font-bold px-3 py-1.5 rounded-lg border transition-colors ${
+                    alert.severity === 'critical'
+                      ? 'bg-red-600 text-white border-red-600 group-hover:bg-red-700'
+                      : 'bg-white text-gray-700 border-gray-200 group-hover:border-gray-300'
+                  }`}>
+                    {alert.actionLabel} →
+                  </span>
+                </Link>
+              )
+            })}
+          </div>
+        )}
       </div>
 
-      {/* ── Main Grid: Waterfall 7/12 | Tax/Net 5/12 ─────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
+      {/* ── FINANCIAL DETAIL GRID ──────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
 
-        {/* Cash Waterfall */}
-        <div className="lg:col-span-7 bg-white border border-gray-100 rounded-xl px-4 py-2.5 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
-          <div className="flex items-center justify-between mb-1.5">
+        {/* NAKİT KÖPRÜSÜ */}
+        <div className="lg:col-span-7 bg-white border border-gray-100 rounded-xl shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+          <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-50">
             <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Nakit Köprüsü</span>
             <Link href="/dashboard/insights" className="text-[10px] text-primary-600 font-semibold hover:text-primary-700">Analiz →</Link>
           </div>
-          <div className="space-y-1">
+          <div className="px-5 py-3.5 space-y-2">
             <WRow label="+ Tahsil Edilen" value={actuallyCollected} sub={`${fmt(fs.revenue_try)} fatura · %${actuallyCollectedPct}`} />
             <WRow label="− Ödenmiş Giderler" value={-paidExpenses} sub="ödenen" />
             <WRow label="− Açık Yükümlülükler" value={-outstandingObligations} sub={`${fmt(unpaidExpenses)} ödenmemiş`} />
-            <div className="border-t border-dashed border-gray-200 pt-1.5">
+            <div className="border-t border-dashed border-gray-200 pt-2">
               <WRow label="= Dağıtılabilir" value={cashDistributable} sub={`Nakit bakiye ${fmt(cashBalance)}`} isTotal />
             </div>
           </div>
-
           {cashDistributable === 0 ? (
-            <div className="mt-2 text-[10px] text-red-600 font-semibold bg-red-50 border border-red-200 rounded-lg px-3 py-1.5">
-              ⚠ Dağıtılacak nakit yok{uncollectedSalesTotal > 0 ? ` — ${fmt(uncollectedSalesTotal)} tahsilat bekliyor` : ''}
+            <div className="mx-5 mb-4 text-xs text-red-600 font-semibold bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+              Dağıtılacak nakit yok{uncollectedSalesTotal > 0 ? ` — ${fmt(uncollectedSalesTotal)} tahsilat bekliyor` : ''}
             </div>
           ) : equalization.entries.length > 0 ? (
-            <div className="mt-2 pt-2 border-t border-gray-100 flex items-center gap-2 overflow-hidden">
-              <span className="text-[9px] font-bold uppercase tracking-widest text-gray-300 flex-shrink-0">Ortak</span>
+            <div className="px-5 pb-4 pt-2 border-t border-gray-50 flex items-center gap-2 overflow-hidden flex-wrap">
+              <span className="text-[9px] font-bold uppercase tracking-widest text-gray-300 flex-shrink-0">Paylaşım</span>
               {equalization.entries.slice(0, 4).map(e => (
-                <div key={e.partner_id} className="flex items-center gap-1.5 bg-emerald-50 rounded-lg px-2 py-1 min-w-0">
-                  <span className="text-[10px] text-gray-500 font-semibold truncate max-w-[60px]">{e.partner_name}</span>
+                <div key={e.partner_id} className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-100 rounded-lg px-2.5 py-1 min-w-0">
+                  <span className="text-[10px] text-gray-600 font-semibold truncate max-w-[72px]">{e.partner_name}</span>
                   <span className="text-[11px] font-black tabular-nums text-emerald-700 flex-shrink-0">{fmt(e.total_payout)}</span>
                 </div>
               ))}
@@ -556,115 +613,152 @@ export default async function DashboardPage() {
           ) : null}
         </div>
 
-        {/* Tax + Net — 3 rows */}
-        <div className="lg:col-span-5 grid grid-rows-3 gap-1.5">
-          <div className="bg-white border border-gray-100 rounded-xl px-3 py-2 flex items-center justify-between shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
-            <div>
-              <div className="text-[9px] font-black uppercase tracking-widest text-gray-400">KDV (Net)</div>
-              <div className={`text-base font-black tabular-nums leading-tight mt-0.5 ${fs.net_vat_try > 0 ? 'text-orange-600' : 'text-emerald-600'}`}>
-                {fmtFull(Math.abs(fs.net_vat_try))}
+        {/* TAX + METRICS */}
+        <div className="lg:col-span-5 flex flex-col gap-3">
+          {/* KDV */}
+          <div className="bg-white border border-gray-100 rounded-xl px-4 py-3.5 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">KDV (Net)</div>
+                <div className={`text-xl font-black tabular-nums leading-none ${fs.net_vat_try > 0 ? 'text-orange-600' : 'text-emerald-600'}`}>
+                  <span className={`font-normal text-sm mr-0.5 ${fs.net_vat_try > 0 ? 'text-orange-300' : 'text-emerald-300'}`}>₺</span>
+                  {formatKpi(Math.abs(fs.net_vat_try))}
+                </div>
+                <div className="text-[10px] text-gray-400 mt-1">Sat: {fmt(fs.sales_vat_try)} · Alış: {fmt(fs.purchase_vat_try + fs.expense_vat_try)}</div>
               </div>
-              <div className="text-[9px] text-gray-400 mt-0.5">Sat: {fmt(fs.sales_vat_try)} · Alış: {fmt(fs.purchase_vat_try + fs.expense_vat_try)}</div>
-            </div>
-            <div className={`text-[10px] font-bold px-2 py-0.5 rounded-lg flex-shrink-0 ${vatStatus === 'payable' ? 'bg-orange-100 text-orange-700' : 'bg-emerald-100 text-emerald-700'}`}>
-              {vatStatus === 'payable' ? '⬆ Ödenecek' : '⬇ Devir'}
+              <span className={`text-[10px] font-bold px-2 py-1 rounded-lg flex-shrink-0 ${vatStatus === 'payable' ? 'bg-orange-100 text-orange-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                {vatStatus === 'payable' ? 'Ödenecek' : 'Devir'}
+              </span>
             </div>
           </div>
-
-          <div className="bg-white border border-gray-100 rounded-xl px-3 py-2 flex items-center justify-between shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
-            <div>
-              <div className="text-[9px] font-black uppercase tracking-widest text-gray-400">Kurumlar Vergisi</div>
-              <div className={`text-base font-black tabular-nums leading-tight mt-0.5 ${fs.corporate_tax_try > 0 ? 'text-gray-900' : 'text-gray-400'}`}>
-                {fmtFull(fs.corporate_tax_try)}
+          {/* Kurumlar Vergisi */}
+          <div className="bg-white border border-gray-100 rounded-xl px-4 py-3.5 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">Kurumlar Vergisi</div>
+                <div className={`text-xl font-black tabular-nums leading-none ${fs.corporate_tax_try > 0 ? 'text-gray-900' : 'text-gray-400'}`}>
+                  <span className="text-gray-300 font-normal text-sm mr-0.5">₺</span>{formatKpi(fs.corporate_tax_try)}
+                </div>
+                <div className="text-[10px] text-gray-400 mt-1">Matrah: {fmt(fs.matrah_try)}</div>
               </div>
-              <div className="text-[9px] text-gray-400 mt-0.5">Matrah: {fmt(fs.matrah_try)}</div>
-            </div>
-            <div className="text-[10px] font-bold px-2 py-0.5 bg-gray-100 text-gray-500 rounded-lg flex-shrink-0">
-              %{fs.corporate_tax_rate}
+              <span className="text-[10px] font-bold px-2 py-1 bg-gray-100 text-gray-500 rounded-lg flex-shrink-0">
+                %{fs.corporate_tax_rate}
+              </span>
             </div>
           </div>
-
-          <div className={`rounded-xl px-3 py-2 border flex items-center justify-between shadow-[0_1px_2px_rgba(17,24,39,0.04)] ${monthlyNet >= 0 ? 'bg-white border-gray-100' : 'bg-red-50 border-red-200'}`}>
-            <div>
-              <div className="text-[9px] font-black uppercase tracking-widest text-gray-400">Aylık Net</div>
-              <div className={`text-base font-black tabular-nums leading-tight mt-0.5 ${monthlyNet >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
-                {fmt(monthlyNet)}
-              </div>
-              {breakEvenRevenue !== null && (
-                <div className="text-[9px] text-gray-400 mt-0.5">Başabaş: {fmt(breakEvenRevenue)}/ay</div>
-              )}
-            </div>
-            {monthlyNet < 0 && (
-              <div className="text-[10px] text-white font-bold px-2 py-0.5 bg-red-600 rounded-lg flex-shrink-0">Zarar</div>
-            )}
-          </div>
+          {/* FX */}
+          <FxWidget initialFx={{ USD: fxData.USD, EUR: fxData.EUR, source: fxData.source, rate_date: fxData.rate_date, fetched_at: fxData.fetched_at }} />
         </div>
       </div>
 
-      {/* ── 12-Month Forecast Strip ───────────────────────────────────────── */}
-      <div className="bg-white border border-gray-100 rounded-xl px-4 py-2.5 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">12 Aylık Tahmin</span>
-          <Link href="/dashboard/simulation" className="text-[10px] text-primary-600 font-semibold hover:text-primary-700">Simülasyon →</Link>
+      {/* ── SECONDARY ROW: Forecast + Giderler + Open Proformalar ────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+
+        {/* 12-Month Forecast */}
+        <div className="lg:col-span-8 bg-white border border-gray-100 rounded-xl shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+          <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-50">
+            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">12 Aylık Nakit Tahmini</span>
+            <Link href="/dashboard/planning?tab=simulation" className="text-[10px] text-primary-600 font-semibold hover:text-primary-700">Simülasyon →</Link>
+          </div>
+          <div className="px-5 py-4 grid grid-cols-3 gap-4">
+            {([
+              { label: 'Kötümser', data: forecast.pessimistic, summary: forecast.summary.pessimistic, color: 'text-red-600', barColor: 'bg-red-200', barActive: 'bg-red-400' },
+              { label: 'Baz',      data: forecast.base,        summary: forecast.summary.base,        color: 'text-gray-700', barColor: 'bg-gray-100', barActive: 'bg-gray-400' },
+              { label: 'İyimser',  data: forecast.optimistic,  summary: forecast.summary.optimistic,  color: 'text-emerald-700', barColor: 'bg-emerald-100', barActive: 'bg-emerald-400' },
+            ] as const).map(({ label, data, summary, color, barColor, barActive }) => (
+              <div key={label} className="flex flex-col gap-2">
+                <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">{label}</div>
+                <div className="flex items-end gap-0.5 h-10">
+                  {data.slice(0, 12).map((m, i) => {
+                    const maxCash = Math.max(...data.map(x => Math.abs(x.cash)), 1)
+                    const height  = Math.max(3, Math.round((Math.abs(m.cash) / maxCash) * 40))
+                    return (
+                      <div key={i} title={`${m.label}: ${fmt(m.cash)}`}
+                        className={`flex-1 rounded-sm transition-colors ${m.cash >= 0 ? barActive : 'bg-red-300'}`}
+                        style={{ height: `${height}px` }}
+                      />
+                    )
+                  })}
+                </div>
+                <div className={`text-sm font-black tabular-nums ${color}`}>
+                  <span className="text-gray-300 font-normal text-xs mr-0.5">₺</span>{formatKpi(Math.abs(summary.endCash))}
+                </div>
+                <div className="text-[10px] text-gray-400 leading-snug">
+                  {summary.runwayEndMonth
+                    ? <span className="text-red-500 font-semibold">{summary.runwayEndMonth}&apos;da nakit biter</span>
+                    : <span>{summary.totalNet >= 0 ? `+${fmt(summary.totalNet)} net` : `${fmt(summary.totalNet)} zarar`}</span>
+                  }
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="grid grid-cols-3 gap-3">
-          {([
-            { label: 'Kötümser', data: forecast.pessimistic, summary: forecast.summary.pessimistic, color: 'text-red-600', dotColor: 'bg-red-400' },
-            { label: 'Baz',      data: forecast.base,        summary: forecast.summary.base,        color: 'text-gray-700', dotColor: 'bg-gray-400' },
-            { label: 'İyimser',  data: forecast.optimistic,  summary: forecast.summary.optimistic,  color: 'text-emerald-700', dotColor: 'bg-emerald-400' },
-          ] as const).map(({ label, data, summary, color, dotColor }) => (
-            <div key={label} className="flex flex-col gap-1">
-              <div className="flex items-center gap-1.5">
-                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${dotColor}`} />
-                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">{label}</span>
+
+        {/* Right column: proformalar + dönem + giderler */}
+        <div className="lg:col-span-4 flex flex-col gap-3">
+          {/* Giderler breakdown */}
+          <div className="bg-white border border-gray-100 rounded-xl px-4 py-3.5 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+            <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">Giderler</div>
+            <div className="text-xl font-black tabular-nums text-gray-900 leading-none mb-1">
+              <span className="text-gray-300 font-normal text-sm mr-0.5">₺</span>{formatKpi(fs.expenses_total_try)}
+            </div>
+            <div className="text-[10px] text-gray-400 mb-2">~{fmt(monthlyExpenses)}/ay</div>
+            {expDeltaPct !== null && (
+              <div className={`text-[11px] font-semibold tabular-nums ${expDeltaPct > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                {expDeltaPct > 0 ? '▲' : '▼'} {Math.abs(expDeltaPct).toFixed(1)}% <span className="text-gray-400 font-normal">geçen ay</span>
               </div>
-              {/* Mini sparkline — cash positions as horizontal bar chart */}
-              <div className="flex items-end gap-0.5 h-6">
-                {data.slice(0, 12).map((m, i) => {
-                  const maxCash = Math.max(...data.map(x => Math.abs(x.cash)), 1)
-                  const height  = Math.max(2, Math.round((Math.abs(m.cash) / maxCash) * 24))
-                  return (
-                    <div key={i} title={`${m.label}: ${fmt(m.cash)}`}
-                      className={`flex-1 rounded-sm ${m.cash >= 0 ? 'bg-emerald-200' : 'bg-red-200'}`}
-                      style={{ height: `${height}px` }}
-                    />
-                  )
-                })}
+            )}
+            <Link href="/dashboard/operations?tab=expenses" className="block mt-2 text-[10px] text-primary-600 font-semibold hover:underline">
+              Gider detayı →
+            </Link>
+          </div>
+
+          {/* Açık proformalar */}
+          {outstanding > 0 && (
+            <Link href="/dashboard/commercial?tab=proformas"
+              className="bg-white border border-gray-100 rounded-xl px-4 py-3.5 shadow-[0_1px_2px_rgba(17,24,39,0.04)] hover:border-gray-200 hover:shadow-[0_2px_6px_rgba(17,24,39,0.07)] transition-all">
+              <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">Açık Proformalar</div>
+              <div className="text-xl font-black tabular-nums text-primary-700 leading-none">
+                <span className="text-primary-300 font-normal text-sm mr-0.5">₺</span>{formatKpi(outstanding)}
               </div>
-              <div className={`text-xs font-black tabular-nums ${color}`}>{fmt(summary.endCash)}</div>
-              <div className="text-[10px] text-gray-400 leading-tight">
-                {summary.runwayEndMonth
-                  ? <span className="text-red-500 font-semibold">{summary.runwayEndMonth}&apos;da nakit biter</span>
-                  : <span>{summary.totalNet >= 0 ? `+${fmt(summary.totalNet)} net` : `${fmt(summary.totalNet)} zarar`}</span>
+              <div className="text-[10px] text-gray-400 mt-1">{openProfs.length} adet onay bekliyor →</div>
+            </Link>
+          )}
+
+          {/* Dönem kapanışı */}
+          {openPeriodDaysOverdue > 10 && (
+            <Link href="/dashboard/cfo/period-close"
+              className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3.5 hover:border-amber-300 hover:shadow-sm transition-all">
+              <div className="text-[10px] font-black uppercase tracking-widest text-amber-500 mb-1.5">Dönem Kapanışı</div>
+              <div className="text-sm font-bold text-amber-700">{openPeriodDaysOverdue} gündür bekliyor</div>
+              <div className="text-[10px] text-amber-500 mt-1">CFO Cockpit'e git →</div>
+            </Link>
+          )}
+
+          {/* Tasks reminder */}
+          {taskReminders.length > 0 && (
+            <Link href="/dashboard/planning?tab=tasks"
+              className="bg-white border border-gray-100 rounded-xl px-4 py-3.5 shadow-[0_1px_2px_rgba(17,24,39,0.04)] hover:border-gray-200 transition-colors">
+              <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">Yaklaşan Görevler</div>
+              <div className="text-xl font-black text-primary-700">{taskReminders.length}</div>
+              <div className="text-[10px] text-gray-400 mt-1">
+                {taskReminders.filter(t => t.due_date < todayISO).length > 0
+                  ? `${taskReminders.filter(t => t.due_date < todayISO).length} gecikmiş`
+                  : '7 gün içinde vadeli'
                 }
               </div>
-            </div>
-          ))}
+            </Link>
+          )}
         </div>
       </div>
 
-      {/* ── Bottom Row: Chart + FX + Proforma ────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
-        <div className="lg:col-span-8">
-          <CashflowChart className="w-full" />
+      {/* ── CASHFLOW CHART ────────────────────────────────────────────────── */}
+      <div className="bg-white border border-gray-100 rounded-xl shadow-[0_1px_2px_rgba(17,24,39,0.04)] overflow-hidden">
+        <div className="px-5 py-3.5 border-b border-gray-50">
+          <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Nakit Akışı</span>
         </div>
-        <div className="lg:col-span-4 flex flex-col gap-3">
-          <FxWidget initialFx={{ USD: fxData.USD, EUR: fxData.EUR, source: fxData.source, rate_date: fxData.rate_date, fetched_at: fxData.fetched_at }} />
-          {outstanding > 0 && (
-            <Link href="/dashboard/proformas" className="bg-white border border-gray-100 rounded-xl px-3 py-2 shadow-[0_1px_2px_rgba(17,24,39,0.04)] hover:shadow-[0_2px_4px_rgba(17,24,39,0.07)] transition-shadow">
-              <div className="text-[9px] font-black uppercase tracking-widest text-gray-400">Açık Proformalar</div>
-              <div className="text-sm font-black tabular-nums text-primary-700 mt-0.5">{fmt(outstanding)}</div>
-              <div className="text-[9px] text-gray-400">{openProfs.length} adet bekliyor</div>
-            </Link>
-          )}
-          {/* CFO shortcut if period overdue */}
-          {openPeriodDaysOverdue > 10 && (
-            <Link href="/dashboard/cfo/period-close" className="bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 hover:border-amber-300 transition-colors">
-              <div className="text-[9px] font-black uppercase tracking-widest text-amber-600">Dönem Kapanışı</div>
-              <div className="text-xs font-bold text-amber-700 mt-0.5">{openPeriodDaysOverdue} gün bekliyor</div>
-              <div className="text-[9px] text-amber-500">CFO Cockpit →</div>
-            </Link>
-          )}
+        <div className="p-4">
+          <CashflowChart className="w-full" />
         </div>
       </div>
 
@@ -672,15 +766,27 @@ export default async function DashboardPage() {
   )
 }
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+const KPI_FMT = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+const KPI_FMT_K = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 1 })
+
+function formatKpi(n: number): string {
+  const abs = Math.abs(n)
+  if (abs >= 1_000_000) return KPI_FMT_K.format(n / 1_000_000) + 'M'
+  if (abs >= 10_000)    return KPI_FMT_K.format(n / 1_000) + 'K'
+  return KPI_FMT.format(n)
+}
+
 // ── Inline waterfall row ───────────────────────────────────────────────────────
 
 function WRow({ label, value, sub, isTotal = false }: { label: string; value: number; sub?: string; isTotal?: boolean }) {
-  const TRY_FMT = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-  const fmtV = (n: number) => (n < 0 ? '−' : '') + TRY_FMT.format(Math.abs(n)) + ' TL'
+  const TRY_FMT = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+  const fmtV = (n: number) => (n < 0 ? '−' : '') + '₺' + TRY_FMT.format(Math.abs(n))
   return (
     <div className="flex items-center justify-between gap-4">
       <div className="min-w-0">
-        <span className={`text-xs ${isTotal ? 'font-bold text-gray-900' : 'font-semibold text-gray-500'}`}>{label}</span>
+        <span className={`text-sm ${isTotal ? 'font-bold text-gray-900' : 'font-medium text-gray-500'}`}>{label}</span>
         {sub && <span className="text-[10px] text-gray-400 ml-1.5">{sub}</span>}
       </div>
       <span className={`tabular-nums shrink-0 font-black ${isTotal ? `text-base ${value >= 0 ? 'text-emerald-700' : 'text-red-600'}` : `text-sm ${value >= 0 ? 'text-gray-700' : 'text-red-600'}`}`}>

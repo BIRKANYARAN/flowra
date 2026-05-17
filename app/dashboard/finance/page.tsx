@@ -128,19 +128,32 @@ export default async function FinancePage({ searchParams }: PageProps) {
 
   // ── Render ────────────────────────────────────────────────────────────────────
   return (
-    <div className="flex flex-col gap-4 w-full">
+    <div className="flex flex-col gap-5 w-full">
+
+      {/* ── PAGE HERO ─────────────────────────────────────────────────────────── */}
+      <div className="flex items-end justify-between gap-4 flex-wrap">
+        <div>
+          <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Finans Merkezi</div>
+          <h1 className="text-2xl font-black tracking-tight text-gray-900 leading-tight">{meta.title}</h1>
+          <p className="text-sm text-gray-400 mt-1">{meta.sub}</p>
+        </div>
+        {activeTab === 'cfo' && (
+          <a href="/dashboard/cfo/period-close"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary-600 text-white text-xs font-semibold hover:bg-primary-700 transition-colors">
+            Dönem Kapat
+          </a>
+        )}
+        {activeTab === 'tax' && (
+          <a href="/dashboard/cfo/tax/kdv"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-gray-200 text-gray-700 text-xs font-semibold hover:bg-gray-50 transition-colors">
+            KDV Beyanı →
+          </a>
+        )}
+      </div>
 
       {/* ── Tab navigation (sticky) ───────────────────────────────────────────── */}
       <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm -mx-5 px-5 pt-1 border-b border-gray-100">
         <UnifiedTabNav tabs={FINANCE_NAV_TABS} activeTab={activeTab} basePath="/dashboard/finance" />
-      </div>
-
-      {/* ── Tab header ────────────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <div>
-          <h1 className="text-lg font-black text-gray-900 tracking-tight">{meta.title}</h1>
-          <p className="text-xs text-gray-400 mt-0.5">{meta.sub}</p>
-        </div>
       </div>
 
       {/* ── Active tab content ────────────────────────────────────────────────── */}

@@ -67,23 +67,33 @@ export default async function CommercialPage({ searchParams }: PageProps) {
   const rawTab    = params.tab ?? 'pipeline'
   const activeTab = VALID_TABS.includes(rawTab) ? rawTab : 'pipeline'
 
+  const tabSubtitles: Record<string, string> = {
+    pipeline:    'Satış hattı · Açık teklifler · Kapanmaya yakın fırsatlar',
+    proformas:   'Proforma teklifler · Bekleyen onaylar · Dönüşüm oranları',
+    sales:       'Satış kayıtları · Fatura özeti · Ödeme durumu',
+    collections: 'Tahsilat takibi · Vadesi gelen ödemeler · Yaşlandırma',
+    customers:   'Müşteri portföyü · İlişki geçmişi · Alacak durumu',
+  }
+  const tabTitles: Record<string, string> = {
+    pipeline: 'Satış Hattı', proformas: 'Proformalar', sales: 'Satışlar',
+    collections: 'Tahsilatlar', customers: 'Müşteriler',
+  }
+
   return (
-    <div className="flex flex-col gap-4 max-w-5xl">
+    <div className="flex flex-col gap-5 max-w-5xl">
+
+      {/* PAGE HERO */}
+      <div>
+        <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Ticari Akış Merkezi</div>
+        <h1 className="text-2xl font-black tracking-tight text-gray-900 leading-tight">
+          {tabTitles[activeTab] ?? 'Ticari Akış'}
+        </h1>
+        <p className="text-sm text-gray-400 mt-1">{tabSubtitles[activeTab] ?? ''}</p>
+      </div>
+
       {/* Sticky tab nav */}
       <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm -mx-5 px-5 pt-1 border-b border-gray-100">
         <HubTabNav tabs={TABS} activeTab={activeTab} basePath="/dashboard/commercial" />
-      </div>
-
-      {/* Tab header */}
-      <div>
-        <h1 className="text-lg font-black text-gray-900 tracking-tight">Ticari Akış</h1>
-        <p className="text-xs text-gray-400 mt-0.5">
-          {activeTab === 'pipeline'    && 'Satış hattı · Açık teklifler · Kapanmaya yakın fırsatlar'}
-          {activeTab === 'proformas'   && 'Proforma teklifler · Bekleyen onaylar · Dönüşüm oranları'}
-          {activeTab === 'sales'       && 'Satış kayıtları · Fatura özeti · Ödeme durumu'}
-          {activeTab === 'collections' && 'Tahsilat takibi · Vadesi gelen ödemeler · Yaşlandırma'}
-          {activeTab === 'customers'   && 'Müşteri portföyü · İlişki geçmişi · Alacak durumu'}
-        </p>
       </div>
 
       <Suspense fallback={<TabSkeleton />}>
