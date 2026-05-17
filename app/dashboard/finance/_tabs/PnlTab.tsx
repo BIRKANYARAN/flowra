@@ -129,7 +129,7 @@ export async function PnlTab({ userId, companyId }: Props) {
             <WRow label="Brüt Kâr" value={grossProfit}
               sub={`Marj: ${pct(grossProfit, revenue)}`} isTotal />
             <WRow label="− Operasyonel Giderler" value={expenses} isDeduction isSub />
-            <WRow label="EBITDA / Faaliyet Kârı" value={ebitda}
+            <WRow label="Faaliyet Kârı (EBIT)" value={ebitda}
               sub={ebitda >= 0 ? 'Operasyon kârlı' : 'Zarar eden operasyon'} isTotal />
             <WRow label="Vergi Matrahı" value={matrah}
               sub="Giderler düşüldü, sermaye hareketleri hariç" isSub />

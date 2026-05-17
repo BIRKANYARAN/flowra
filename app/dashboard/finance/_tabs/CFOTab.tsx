@@ -151,9 +151,9 @@ export async function CFOTab({ userId, companyId }: Props) {
   const totalEquity       = balanceSheet?.equity.total_equity_try ?? 0
   const debtToEquity      = totalEquity > 0 ? totalPartnerLoans / totalEquity : 0
 
-  const totalOutstanding  = cfoMetrics.receivables.total_outstanding
-  const totalCollected    = revenue - totalOutstanding
-  const collectionRate    = revenue > 0 ? Math.max(0, Math.min(100, (totalCollected / revenue) * 100)) : 100
+  // Use the canonical amount-based collection rate from cfoMetrics (period-filtered, amount-weighted).
+  // Do NOT recompute locally from revenue - outstanding, which conflates FX differences and period scope.
+  const collectionRate    = cfoMetrics.receivables.collection_rate_pct ?? 100
   const runwayMonths      = cfoMetrics.burn.runway_months
 
   const healthScore = computeHealthScore({
@@ -508,7 +508,7 @@ export async function CFOTab({ userId, companyId }: Props) {
             {
               href:  '/dashboard/reports/income-statement',
               title: 'Gelir Tablosu',
-              desc:  'P&L — Brüt kâr, EBITDA, net kâr',
+              desc:  'P&L — Brüt kâr, Faaliyet Kârı, net kâr',
               icon:  '📈',
               color: 'hover:border-emerald-300',
             },

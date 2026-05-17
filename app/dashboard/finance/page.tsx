@@ -58,7 +58,7 @@ const FINANCE_NAV_TABS = [
 
 const TAB_META: Record<FinanceTab, { title: string; sub: string }> = {
   overview:  { title: 'Genel Finans',   sub: 'Likidite · Tahsilat · Risk Matrisi · Nakit Projeksiyonu' },
-  pnl:       { title: 'Kâr / Zarar',   sub: 'Ciro · Brüt Kâr · EBITDA · Vergi Sonrası Net' },
+  pnl:       { title: 'Kâr / Zarar',   sub: 'Ciro · Brüt Kâr · Faaliyet Kârı · Vergi Sonrası Net' },
   balance:   { title: 'Bilanço',        sub: 'Varlıklar · Yükümlülükler · Özsermaye' },
   cashflow:  { title: 'Nakit Akışı',   sub: '12 aylık tahsilat · gider · baskı haritası · senaryo' },
   tax:       { title: 'Vergi Merkezi',  sub: 'KDV · Geçici Vergi · Kurumlar Vergisi · Matrah Analizi' },

@@ -48,10 +48,16 @@ export async function ForecastTab({ userId: _userId, companyId }: Props) {
     inputs: { starting_cash: 0, monthly_burn: 0, outstanding_total: 0, horizon_months: 12 },
   }
 
-  const [metrics, runway] = await Promise.all([
-    sq(() => getCfoMetrics(companyId, { from, to: today }), ZERO_METRICS),
-    sq(() => getRunwayForecast(companyId, { from, to: today, months: 12 }), ZERO_RUNWAY),
-  ])
+  // Sequential: runway forecast needs the tax obligation from cfoMetrics to correctly
+  // model the first-month cash outflow (corporate tax + KDV payable).
+  const metrics = await sq(() => getCfoMetrics(companyId, { from, to: today }), ZERO_METRICS)
+  const runway  = await sq(
+    () => getRunwayForecast(companyId, {
+      from, to: today, months: 12,
+      taxObligation: metrics.tax.total_fiscal_obligation,
+    }),
+    ZERO_RUNWAY,
+  )
 
   const m           = metrics
   const r           = runway

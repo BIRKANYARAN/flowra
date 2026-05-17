@@ -324,9 +324,13 @@ export default async function DashboardPage() {
   const overdueSales60   = uncollectedSalesData.filter(s => s.created_at < sixtyDaysAgoISO)
   const overdueTotal30   = overdueSales30.reduce((s, r) => s + Number(r.total_try ?? 0), 0)
   const overdueTotal60   = overdueSales60.reduce((s, r) => s + Number(r.total_try ?? 0), 0)
-  const dailyBurn        = monthlyNet < 0 ? Math.abs(monthlyNet) / 30 : 0
-  const liquidProxy      = outstanding + stockValue
-  const runwayDays       = dailyBurn > 0 ? Math.round(liquidProxy / dailyBurn) : -1
+  // Runway: use cashDistributable (operational cash, unpaid obligations deducted) as the base,
+  // and absolute monthlyNet loss as monthly burn. This aligns with getCfoMetrics().burn.runway_months.
+  // Previously used `liquidProxy = outstanding + stockValue` (open proformas + inventory) which
+  // overestimates available cash and is NOT cash on hand.
+  const monthlyBurn      = monthlyNet < 0 ? Math.abs(monthlyNet) : 0
+  const dailyBurn        = monthlyBurn / 30
+  const runwayDays       = monthlyBurn > 0 ? Math.round((cashDistributable / monthlyBurn) * 30) : -1
   const runwayMonths     = runwayDays >= 0 ? runwayDays / 30 : 999
 
   // ── Partner equalization ───────────────────────────────────────────────────

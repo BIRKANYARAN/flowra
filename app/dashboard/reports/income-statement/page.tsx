@@ -121,7 +121,7 @@ export default function IncomeStatementPage() {
             <Row label="Toplam Giderler"         value={fmt(-pnl.expenses_total_try)} indent negative={pnl.expenses_total_try > 0} />
             <Row label="  — İndirilebilir"       value={fmt(-pnl.deductible_expenses_try)} indent />
             <Row label="  — İndirilemez"         value={fmt(-pnl.non_deductible_expenses_try)} indent />
-            <Row label="Faaliyet Kârı (EBITDA)"  value={fmt(ebitda)}
+            <Row label="Faaliyet Kârı (EBIT)"     value={fmt(ebitda)}
               bold positive={ebitda > 0} negative={ebitda < 0} />
           </div>
 

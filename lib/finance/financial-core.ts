@@ -557,7 +557,7 @@ export async function getCfoMetrics(
 
 export async function getRunwayForecast(
   companyId: string,
-  opts?: { from?: string; to?: string; months?: number },
+  opts?: { from?: string; to?: string; months?: number; taxObligation?: number },
 ): Promise<RunwayForecastResponse> {
   const supabase = createClient()
   const now      = new Date()
@@ -664,7 +664,7 @@ export async function getRunwayForecast(
         (new Date(to).getTime() - new Date(from).getTime()) / (86_400_000 * 30.44)
       ),
       projectedCollectionRate: receivableMetrics.collection_rate_pct,
-      taxObligation: 0,
+      taxObligation: opts?.taxObligation ?? 0,
       months: horizon,
     },
     now,

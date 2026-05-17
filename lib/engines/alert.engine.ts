@@ -71,7 +71,7 @@ export function evaluateAlerts(inputs: AlertInputs): DecisionAlert[] {
       title:       `${inputs.overdueCount30} satış 30+ gün vadesi geçmiş`,
       detail:      `Toplam ${fmtK(inputs.overdueTotal30)} tahsil edilmemiş`,
       actionLabel: 'Tahsilat Sayfası',
-      actionHref:  '/dashboard/collections',
+      actionHref:  '/dashboard/commercial?tab=collections',
       amount:      inputs.overdueTotal30,
     })
   }
@@ -85,7 +85,7 @@ export function evaluateAlerts(inputs: AlertInputs): DecisionAlert[] {
       title:       `${inputs.overdueCount60} satış 60+ gün bekliyor`,
       detail:      `${fmtK(inputs.overdueTotal60)} kritik tahsilat riski`,
       actionLabel: 'Acil Tahsilat',
-      actionHref:  '/dashboard/collections',
+      actionHref:  '/dashboard/commercial?tab=collections',
       amount:      inputs.overdueTotal60,
     })
   }
@@ -99,7 +99,7 @@ export function evaluateAlerts(inputs: AlertInputs): DecisionAlert[] {
       title:       `Nakit yaklaşık ${inputs.cashRunwayDays} gün yeter`,
       detail:      `Aylık zarar ${fmtK(Math.abs(inputs.monthlyNetIncome))} — gelir artırın veya gider kesin`,
       actionLabel: 'Simülasyon Yap',
-      actionHref:  '/dashboard/simulation',
+      actionHref:  '/dashboard/planning?tab=cash-projection',
     })
   }
 
@@ -112,7 +112,7 @@ export function evaluateAlerts(inputs: AlertInputs): DecisionAlert[] {
       title:       `Kritik: nakit ${inputs.cashRunwayDays} günde tükeniyor`,
       detail:      `Aylık ${fmtK(Math.abs(inputs.monthlyNetIncome))} zarar — acil aksiyon gerekli`,
       actionLabel: 'Nakit Simülasyonu',
-      actionHref:  '/dashboard/simulation',
+      actionHref:  '/dashboard/planning?tab=cash-projection',
     })
   }
 

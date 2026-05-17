@@ -112,7 +112,7 @@ export default function ExecutiveSummaryPage() {
               <KpiCard label="Brüt Kâr"         value={fmt(is?.gross_profit ?? 0)}
                 sub={is ? `Marj: %${fmtPct(is.gross_margin_pct)}` : undefined}
                 tone={is && is.gross_profit > 0 ? 'positive' : 'negative'} />
-              <KpiCard label="EBITDA"            value={fmt(is?.ebitda ?? 0)}
+              <KpiCard label="Faaliyet Kârı"     value={fmt(is?.ebitda ?? 0)}
                 tone={is && is.ebitda > 0 ? 'positive' : 'negative'} />
               <KpiCard label="Net Kâr"           value={fmt(is?.net_income ?? 0)}
                 sub={is ? `Net marj: %${fmtPct(is.net_margin_pct)}` : undefined}
