@@ -52,12 +52,51 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
     ytd: { revenue: 0, gross_profit: 0, net_profit: 0, matrah: 0, corporate_tax: 0, net_after_tax: 0, total_gecici: 0 },
   }
 
-  const [report, analyticsRaw] = await Promise.all([
+  // Current month bounds for close readiness checks
+  const currentMonth = today.slice(0, 7)  // YYYY-MM
+  const monthStart   = `${currentMonth}-01`
+  const monthEnd     = today
+
+  const [report, analyticsRaw, overdueCount, missingCategoryCount, unconfirmedExpenses] = await Promise.all([
     sq(() => getQuarterlyReport(userId, companyId, currentYear), ZERO_REPORT),
     sq(async () => {
       const { data } = await supabase.rpc('get_sales_analytics', { p_user_id: userId, p_company_id: companyId })
       return data as unknown
     }, null as unknown),
+    // Check 1: How many sales are overdue/unpaid
+    sq(async () => {
+      const { count } = await supabase
+        .from('sales')
+        .select('*', { count: 'exact', head: true })
+        .eq('company_id', companyId)
+        .in('payment_status', ['unpaid', 'partial', 'overdue'])
+        .not('is_deleted', 'eq', true)
+      return count ?? 0
+    }, 0),
+    // Check 2: Expenses this month missing a category
+    sq(async () => {
+      const { count } = await supabase
+        .from('expenses')
+        .select('*', { count: 'exact', head: true })
+        .eq('company_id', companyId)
+        .gte('expense_date', monthStart)
+        .lte('expense_date', monthEnd)
+        .or('expense_type.is.null,expense_type.eq.')
+        .not('is_deleted', 'eq', true)
+      return count ?? 0
+    }, 0),
+    // Check 3: Expenses this month not yet marked paid
+    sq(async () => {
+      const { count } = await supabase
+        .from('expenses')
+        .select('*', { count: 'exact', head: true })
+        .eq('company_id', companyId)
+        .gte('expense_date', monthStart)
+        .lte('expense_date', monthEnd)
+        .neq('payment_status', 'paid')
+        .not('is_deleted', 'eq', true)
+      return count ?? 0
+    }, 0),
   ])
 
   const a       = normalizeAnalytics(analyticsRaw)
@@ -66,6 +105,70 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
   const qs      = report.quarters
   const convRate = a.total_proformas > 0
     ? Math.round((a.converted_proformas / a.total_proformas) * 100) : 0
+
+  // ── Period Close Readiness ─────────────────────────────────────────────────
+  const pastDueGecici = qs.filter((q: QuarterResult) => q.gecici_due_date && q.gecici_due_date < today && q.gecici_vergi > 0)
+
+  const closeChecks: Array<{
+    id:       string
+    label:    string
+    detail:   string
+    ok:       boolean
+    warning?: boolean
+  }> = [
+    {
+      id:     'overdue-sales',
+      label:  'Vadesi geçmiş tahsilat yok',
+      detail: overdueCount === 0
+        ? 'Tüm satışlar tahsil edildi veya vade içinde'
+        : `${overdueCount} satış hâlâ ödenmemiş — tahsilat başlatın`,
+      ok:     overdueCount === 0,
+      warning: overdueCount > 0 && overdueCount <= 3,
+    },
+    {
+      id:     'expense-categories',
+      label:  'Tüm masraflar kategorize edildi',
+      detail: missingCategoryCount === 0
+        ? `${currentMonth} masrafları kategorize edilmiş`
+        : `${missingCategoryCount} masrafın kategorisi eksik — gider türü atayın`,
+      ok:     missingCategoryCount === 0,
+    },
+    {
+      id:     'expenses-paid',
+      label:  'Ay içi masraflar ödendi',
+      detail: unconfirmedExpenses === 0
+        ? `${currentMonth} masraflarının tamamı kapatıldı`
+        : `${unconfirmedExpenses} masraf henüz ödenmedi olarak işaretli`,
+      ok:     unconfirmedExpenses === 0,
+      warning: true,
+    },
+    {
+      id:     'gecici-vergi',
+      label:  'Geçici vergi takvimi güncel',
+      detail: pastDueGecici.length === 0
+        ? 'Gecikmiş geçici vergi kaydı yok'
+        : `${pastDueGecici.length} geçici vergi dönemi geçti — beyan yapıldı mı?`,
+      ok:     pastDueGecici.length === 0,
+    },
+    {
+      id:     'ytd-revenue',
+      label:  'YTD ciro kaydı mevcut',
+      detail: ytd.revenue > 0
+        ? `${currentYear} YTD ciro: ${fmt(ytd.revenue)}`
+        : 'Bu yıl için henüz satış kaydı yok',
+      ok:     ytd.revenue > 0,
+      warning: true,
+    },
+  ]
+
+  const passCount = closeChecks.filter(c => c.ok).length
+  const readinessScore = Math.round((passCount / closeChecks.length) * 100)
+  const readinessLabel = readinessScore >= 100 ? 'Hazır' : readinessScore >= 60 ? 'Kısmen Hazır' : 'Eksikler Var'
+  const readinessBadgeClass = readinessScore >= 100
+    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+    : readinessScore >= 60
+    ? 'bg-amber-50 text-amber-700 border-amber-200'
+    : 'bg-red-50 text-red-700 border-red-200'
 
   return (
     <div className="space-y-4">
@@ -253,6 +356,61 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
           <p className="text-gray-500 font-medium">Henüz satış verisi yok.</p>
         </div>
       )}
+
+      {/* Zone 5 — Period Close Readiness */}
+      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+          <div>
+            <h2 className="text-sm font-black text-gray-800">Dönem Kapanış Kontrolü</h2>
+            <p className="text-[10px] text-gray-400 mt-0.5">Dönem kapatmadan önce kontrol edilmesi gereken kalemler</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs tabular-nums text-gray-500">{passCount}/{closeChecks.length}</span>
+            <span className={`text-xs font-bold border px-2.5 py-1 rounded-full ${readinessBadgeClass}`}>
+              {readinessLabel}
+            </span>
+          </div>
+        </div>
+
+        {/* Progress bar */}
+        <div className="h-1.5 bg-gray-100 w-full">
+          <div
+            className={`h-full transition-all duration-500 ${
+              readinessScore >= 100 ? 'bg-emerald-500' : readinessScore >= 60 ? 'bg-amber-400' : 'bg-red-400'
+            }`}
+            style={{ width: `${readinessScore}%` }}
+          />
+        </div>
+
+        <div className="divide-y divide-gray-50">
+          {closeChecks.map(check => {
+            const icon = check.ok
+              ? <span className="text-emerald-500 text-base leading-none">✓</span>
+              : check.warning
+              ? <span className="text-amber-500 text-base leading-none">⚠</span>
+              : <span className="text-red-500 text-base leading-none">✗</span>
+
+            const labelClass = check.ok ? 'text-gray-800' : check.warning ? 'text-amber-800' : 'text-red-800'
+            const detailClass = check.ok ? 'text-gray-400' : check.warning ? 'text-amber-600' : 'text-red-500'
+
+            return (
+              <div key={check.id} className={`px-4 py-3 flex items-start gap-3 ${!check.ok && !check.warning ? 'bg-red-50/30' : !check.ok ? 'bg-amber-50/30' : ''}`}>
+                <div className="mt-0.5 w-5 shrink-0 flex justify-center">{icon}</div>
+                <div className="min-w-0 flex-1">
+                  <div className={`text-xs font-bold ${labelClass}`}>{check.label}</div>
+                  <div className={`text-[10px] mt-0.5 ${detailClass}`}>{check.detail}</div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        {readinessScore >= 100 && (
+          <div className="px-4 py-3 bg-emerald-50/40 border-t border-emerald-100 text-center">
+            <p className="text-xs text-emerald-700 font-bold">✓ Tüm kontroller geçti — dönem kapatılabilir</p>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
