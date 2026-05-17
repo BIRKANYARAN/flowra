@@ -54,7 +54,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     // ── Security: verify the record exists and belongs to this company ────────
     const { data: existing, error: findErr } = await supabase
       .from('sales')
-      .select('id, sale_date, total_try, amount_paid, kdv_total, fx_rate_try')
+      .select('id, sale_date, total_try, amount_paid, kdv_amount_try')
       .eq('id', id)
       .eq('company_id', companyId)
       .is('deleted_at', null)

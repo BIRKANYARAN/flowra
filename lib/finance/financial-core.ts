@@ -426,8 +426,8 @@ export async function getCfoMetrics(
       .eq('company_id', companyId).is('deleted_at', null)
       .gte('expense_date', ytdFrom).lte('expense_date', today),
 
-    // 12. YTD sales VAT — use sale_date for period attribution
-    supabase.from('sales').select('kdv_total, fx_rate_try')
+    // 12. YTD sales VAT — kdv_amount_try is already in TRY, no FX conversion needed
+    supabase.from('sales').select('kdv_amount_try')
       .eq('company_id', companyId).is('deleted_at', null)
       .gte('sale_date', ytdFrom).lte('sale_date', today),
 
@@ -488,7 +488,7 @@ export async function getCfoMetrics(
   }, 0)
   const ytdProfit = ytdRevenue - ytdCogs - ytdOpExpenses
 
-  const salesVat    = (ytdSalesVatRes.data ?? []).reduce((s, r) => s + Number(r.kdv_total ?? 0) * Number(r.fx_rate_try ?? 1), 0)
+  const salesVat    = (ytdSalesVatRes.data ?? []).reduce((s, r) => s + Number(r.kdv_amount_try ?? 0), 0)
   const purchaseVat = (ytdPurchaseVatRes.data ?? []).reduce((s, r) => s + Number(r.amount_try ?? 0), 0)
   const expenseVat  = (ytdExpenseVatRes.data ?? []).reduce((s, r) => s + Number(r.amount_try ?? 0) * Number(r.kdv ?? 0) / 100, 0)
   const kdvNet      = salesVat - purchaseVat - expenseVat

@@ -180,10 +180,10 @@ export async function GET(req: NextRequest) {
         .gte('expense_date', ytdFrom)
         .lte('expense_date', today),
 
-      // 12. YTD sales VAT — use sale_date for period attribution
+      // 12. YTD sales VAT — kdv_amount_try is already in TRY
       supabase
         .from('sales')
-        .select('kdv_total, fx_rate_try')
+        .select('kdv_amount_try')
         .eq('company_id', companyId)
         .is('deleted_at', null)
         .gte('sale_date', ytdFrom)
@@ -260,7 +260,7 @@ export async function GET(req: NextRequest) {
     const ytdProfit = ytdRevenue - ytdCogs - ytdOpExpenses
 
     // VAT net — purchase VAT requires a second query over purchase_items
-    const salesVat   = (ytdSalesVatRes.data ?? []).reduce((s, r) => s + Number(r.kdv_total ?? 0) * Number(r.fx_rate_try ?? 1), 0)
+    const salesVat   = (ytdSalesVatRes.data ?? []).reduce((s, r) => s + Number(r.kdv_amount_try ?? 0), 0)
     const expenseVat = (ytdExpenseVatRes.data ?? []).reduce((s, r) => s + Number(r.kdv ?? 0), 0)
 
     // Step 2: fetch purchase_items for the finalized YTD purchases and compute input VAT

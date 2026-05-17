@@ -124,9 +124,8 @@ export class ReconciliationService {
     const [salesRes, expensesRes] = await Promise.all([
       supabase
         .from('sales')
-        // correct column names: kdv_total (sale currency), fx_rate_try (TRY rate),
-        // amount_paid (partial payment, added via migration), sale_date (business date).
-        .select('total_try, amount_paid, kdv_total, fx_rate_try')
+        // kdv_amount_try is already in TRY — no FX conversion needed
+        .select('total_try, amount_paid, kdv_amount_try')
         .eq('company_id', companyId)
         .is('deleted_at', null)
         .lte('sale_date', asOf),
@@ -139,16 +138,14 @@ export class ReconciliationService {
         .lte('expense_date', asOf),
     ])
 
-    const sales    = (salesRes.data    ?? []) as Array<{ total_try: number; amount_paid: number | null; kdv_total: number; fx_rate_try: number | null }>
+    const sales    = (salesRes.data    ?? []) as Array<{ total_try: number; amount_paid: number | null; kdv_amount_try: number }>
     const expenses = (expensesRes.data ?? []) as Array<{ amount_try: number; payment_status: string | null }>
 
-    // revenue_try (net ex-KDV in TRY) = total_try − kdv_total × fx_rate_try
-    const totalRevenue   = round2(sales.reduce((s, r) => {
-      const kdvTry = (Number(r.kdv_total) || 0) * (Number(r.fx_rate_try) || 1)
-      return s + Math.max(0, (Number(r.total_try) || 0) - kdvTry)
-    }, 0))
+    // revenue_try (net ex-KDV in TRY) = total_try − kdv_amount_try
+    const totalRevenue   = round2(sales.reduce((s, r) =>
+      s + Math.max(0, (Number(r.total_try) || 0) - (Number(r.kdv_amount_try) || 0)), 0))
     const totalOutputVat = round2(sales.reduce((s, r) =>
-      s + (Number(r.kdv_total) || 0) * (Number(r.fx_rate_try) || 1), 0))
+      s + (Number(r.kdv_amount_try) || 0), 0))
     const unpaidSales    = round2(sales.reduce((s, r) =>
       s + Math.max(0, (Number(r.total_try) || 0) - (Number(r.amount_paid) || 0)), 0))
     // expenses: unpaid = all non-paid entries (no partial tracking for expenses)

@@ -67,7 +67,7 @@ export class FinanceService {
 
     const { data, error } = await supabase
       .from('sales')
-      .select('total_try, kdv_total, fx_rate_try')
+      .select('total_try, kdv_amount_try')
       .eq('company_id', companyId)
       .is('deleted_at', null)
       // Use sale_date (business invoice date), not created_at (row insertion time),
@@ -84,8 +84,7 @@ export class FinanceService {
     let vat   = 0
     for (const r of data ?? []) {
       total += Number(r.total_try ?? 0)
-      const fx = Number(r.fx_rate_try ?? 1) || 1
-      vat += Number(r.kdv_total ?? 0) * fx
+      vat   += Number(r.kdv_amount_try ?? 0)   // already in TRY, no FX conversion needed
     }
 
     return {

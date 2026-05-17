@@ -106,7 +106,7 @@ export class TaxService {
     const supabase = createClient()
     const { data, error } = await supabase
       .from('sales')
-      .select('kdv_total, fx_rate_try')
+      .select('kdv_amount_try')
       .eq('company_id', companyId)
       .is('deleted_at', null)
       // Use sale_date (business invoice date) not created_at (DB insertion time)
@@ -120,8 +120,7 @@ export class TaxService {
 
     let v = 0
     for (const r of data ?? []) {
-      const fx = Number(r.fx_rate_try ?? 1) || 1
-      v += Number(r.kdv_total ?? 0) * fx
+      v += Number(r.kdv_amount_try ?? 0)   // already in TRY
     }
     return round2(v)
   }
