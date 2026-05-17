@@ -2,6 +2,9 @@
 // Edge-compatible: ONLY Supabase SSR session refresh + route protection.
 // Rate limiting has been moved to individual API route handlers.
 // This file must import NOTHING except @supabase/ssr and next/server.
+//
+// Route redirects: old flat routes → hub center routes (canonical URL map).
+// Handled here so the 16 stub page files can be deleted entirely.
 
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
@@ -37,6 +40,30 @@ function generateRequestId(): string {
   return `${hex()}-${hex().slice(0, 4)}-4${hex().slice(0, 3)}-${(8 + Math.floor(Math.random() * 4)).toString(16)}${hex().slice(0, 3)}-${hex()}${hex().slice(0, 4)}`
 }
 
+// ── Dashboard route redirect map ──────────────────────────────────────────────
+// Old flat routes → new hub center URLs (301 Permanent Redirect).
+// IMPORTANT: Only exact-match pathname → destination (no dynamic segments).
+// Detail routes (/sales/[id], /customers/[id], etc.) are NOT listed here —
+// they remain at their original paths.
+const DASHBOARD_REDIRECTS: Record<string, string> = {
+  '/dashboard/cashflow':    '/dashboard/finance?tab=cashflow',
+  '/dashboard/tax':         '/dashboard/finance?tab=tax',
+  '/dashboard/analytics':   '/dashboard/finance?tab=risks',
+  '/dashboard/cfo':         '/dashboard/finance?tab=cfo',
+  '/dashboard/sales-flow':  '/dashboard/commercial?tab=pipeline',
+  '/dashboard/proformas':   '/dashboard/commercial?tab=proformas',
+  '/dashboard/sales':       '/dashboard/commercial?tab=sales',
+  '/dashboard/collections': '/dashboard/commercial?tab=collections',
+  '/dashboard/customers':   '/dashboard/commercial?tab=customers',
+  '/dashboard/expenses':    '/dashboard/operations?tab=expenses',
+  '/dashboard/catalog':     '/dashboard/operations?tab=catalog',
+  '/dashboard/products':    '/dashboard/operations?tab=catalog',
+  '/dashboard/stocks':      '/dashboard/operations?tab=stock',
+  '/dashboard/orders':      '/dashboard/operations?tab=orders',
+  '/dashboard/simulation':  '/dashboard/planning?tab=unit-profit',
+  '/dashboard/tasks':       '/dashboard/planning?tab=tasks',
+}
+
 export async function middleware(request: NextRequest) {
   // ── Global try/catch — middleware must NEVER throw ───────────────────────
   // An uncaught error in middleware blocks ALL requests. We catch everything
@@ -52,6 +79,15 @@ export async function middleware(request: NextRequest) {
 
 async function _middlewareInner(request: NextRequest): Promise<NextResponse> {
   const { pathname } = request.nextUrl
+
+  // ── 0. Canonical route redirects ──────────────────────────────────────────
+  // Exact-match only — detail routes like /sales/[id] pass through unaffected.
+  if (DASHBOARD_REDIRECTS[pathname]) {
+    return NextResponse.redirect(
+      new URL(DASHBOARD_REDIRECTS[pathname], request.url),
+      { status: 301 },
+    )
+  }
 
   // ── 1. Request ID ─────────────────────────────────────────────────────────
   const existingId = request.headers.get(REQUEST_ID_HEADER)
