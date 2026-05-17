@@ -2,7 +2,6 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { resolveApiAuth } from '@/lib/api-auth'
-import { createClient } from '@/lib/supabase-server'
 import { safeSystemQuery } from '@/lib/admin-db'
 import { requireAdmin } from '@/lib/require-role'
 import { AppError } from '@/types/errors'
