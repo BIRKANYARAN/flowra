@@ -159,10 +159,12 @@ export default function SimulationClient({
       setInterestRate(String(rateForCurrency))
 
       if (companyId) {
+        const controller = new AbortController()
         ;(async () => {
           try {
             const res = await fetch(
-              `/api/products/lots?product_id=${encodeURIComponent(selectedProduct.id)}&active=1&order=asc&limit=1`
+              `/api/products/lots?product_id=${encodeURIComponent(selectedProduct.id)}&active=1&order=asc&limit=1`,
+              { signal: controller.signal },
             )
             if (res.ok) {
               const json = await res.json()
@@ -174,6 +176,7 @@ export default function SimulationClient({
             setEntryDate(null)
           }
         })()
+        return () => controller.abort()
       }
     } else {
       setEntryDate(null)
@@ -216,10 +219,12 @@ export default function SimulationClient({
   const [backendRealCost, setBackendRealCost] = useState<number | null>(null)
   useEffect(() => {
     if (!selectedProduct) { setBackendRealCost(null); return }
+    const controller = new AbortController()
     ;(async () => {
       try {
         const res = await fetch(
-          `/api/cost-breakdown?product_id=${encodeURIComponent(selectedProduct.id)}`
+          `/api/cost-breakdown?product_id=${encodeURIComponent(selectedProduct.id)}`,
+          { signal: controller.signal },
         )
         if (res.ok) {
           const json = await res.json()
@@ -230,9 +235,10 @@ export default function SimulationClient({
             if (rc > 0) { setBackendRealCost(rc); return }
           }
         }
-      } catch { /* fallback to manual cost */ }
+      } catch { /* fallback to manual cost — includes AbortError */ }
       setBackendRealCost(null)
     })()
+    return () => controller.abort()
   }, [selectedProduct])
 
   const effectiveRealCost  = backendRealCost !== null && selectedProduct ? backendRealCost : realCost
