@@ -142,7 +142,9 @@ export default function CollectionsClient({ initialRows }: Props) {
   }, [tab, load])
 
   // ── PATCH helper ─────────────────────────────────────────────────────────────
-  async function patch(id: string, status: CollectionRow['payment_status'], amountPaid?: number) {
+  // Returns true on success, false on failure — callers must check before
+  // closing forms or clearing state.
+  async function patch(id: string, status: CollectionRow['payment_status'], amountPaid?: number): Promise<boolean> {
     setPatching(id)
     try {
       const body: Record<string, unknown> = { id, payment_status: status }
@@ -179,8 +181,10 @@ export default function CollectionsClient({ initialRows }: Props) {
           } : r))
         }
       }
+      return true
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Güncelleme hatası')
+      return false
     } finally {
       setPatching(null)
     }
@@ -198,7 +202,9 @@ export default function CollectionsClient({ initialRows }: Props) {
       return
     }
     setPartialErr('')
-    await patch(row.id, 'partial', amt)
+    const ok = await patch(row.id, 'partial', amt)
+    // Only collapse the form on success — keep it open so the user can retry
+    if (!ok) return
     setPartialId(null)
     setPartialAmt('')
     // Re-fetch so the row's new status is reflected correctly in this tab

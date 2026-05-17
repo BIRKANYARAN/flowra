@@ -2,7 +2,7 @@
 
 // ── SaleCreateDrawer — slide-in drawer for creating a direct sale ─────────────
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { formatTRY } from '@/lib/format'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -46,6 +46,13 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
   const [items,        setItems]        = useState<LineItem[]>([{ ...EMPTY_ITEM }])
   const [saving,       setSaving]       = useState(false)
   const [error,        setError]        = useState('')
+
+  // ESC closes the drawer (mirrors PaymentDrawer behaviour)
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) { if (e.key === 'Escape' && !saving) onClose() }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [onClose, saving])
 
   // ── Item helpers ─────────────────────────────────────────────────────────────
 

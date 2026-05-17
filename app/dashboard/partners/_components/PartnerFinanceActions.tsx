@@ -3,7 +3,7 @@
 // ── PartnerFinanceActions — record capital, repayment, compensation transactions
 // Persistently visible collapsible panel in the Partners hub.
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import type { PartnerRow } from './types'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -53,6 +53,15 @@ export function PartnerFinanceActions({ partners, onRefresh }: PartnerFinanceAct
   const [saving,   setSaving]   = useState(false)
   const [error,    setError]    = useState<string | null>(null)
   const [success,  setSuccess]  = useState<string | null>(null)
+
+  const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Clear pending timer on unmount to prevent memory leak / setState-after-unmount
+  useEffect(() => {
+    return () => {
+      if (successTimerRef.current) clearTimeout(successTimerRef.current)
+    }
+  }, [])
 
   const activePartners = partners.filter(p => p.is_active)
 
@@ -114,8 +123,9 @@ export function PartnerFinanceActions({ partners, onRefresh }: PartnerFinanceAct
       setSuccess(`${actionLabel} başarıyla kaydedildi.`)
       resetForm()
       onRefresh()
-      // Auto-hide success after 5s
-      setTimeout(() => setSuccess(null), 5000)
+      // Auto-hide success after 5s — store ref for cleanup on unmount
+      if (successTimerRef.current) clearTimeout(successTimerRef.current)
+      successTimerRef.current = setTimeout(() => setSuccess(null), 5000)
     } catch {
       setError('Ağ hatası. Lütfen tekrar deneyin.')
     } finally {
