@@ -44,16 +44,20 @@ export default function WorkflowsPage() {
   const [notes,     setNotes]     = useState<Record<string, string>>({})
   const [feedback,  setFeedback]  = useState<Record<string, { ok: boolean; msg: string }>>({})
 
-  const load = useCallback(() => {
+  const load = useCallback((signal?: AbortSignal) => {
     setLoading(true)
-    fetch('/api/workflow')
+    fetch('/api/workflow', { signal })
       .then(r => r.json())
       .then(d => setWorkflows(d.workflows ?? []))
-      .catch(() => setError('Onay bekleyen işlemler yüklenemedi'))
+      .catch(err => { if (err.name !== 'AbortError') setError('Onay bekleyen işlemler yüklenemedi') })
       .finally(() => setLoading(false))
   }, [])
 
-  useEffect(() => { load() }, [load])
+  useEffect(() => {
+    const ctrl = new AbortController()
+    load(ctrl.signal)
+    return () => ctrl.abort()
+  }, [load])
 
   async function resolve(id: string, action: 'approve' | 'reject') {
     setWorking(id)
@@ -89,7 +93,7 @@ export default function WorkflowsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={load} className="text-xs text-gray-400 hover:text-primary-600 font-semibold">
+          <button onClick={() => load()} className="text-xs text-gray-400 hover:text-primary-600 font-semibold">
             ↺ Yenile
           </button>
           <Link href="/dashboard/admin" className="text-xs text-gray-400 hover:text-primary-600 font-semibold">
