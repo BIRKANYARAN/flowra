@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
     const [pnlRes, overdueRes, periodRes, trancheRes, rulesRes, commitRes, cashRes] = await Promise.allSettled([
       FinanceService.getFinancialSummary(uid, companyId, { from, to }),
       supabase.from('sales')
-        .select('total_try, amount_paid, created_at')
+        .select('total_try, amount_paid, sale_date')
         .eq('company_id', companyId)
         .in('payment_status', ['pending', 'partial', 'overdue'])
         .is('deleted_at', null),
@@ -77,7 +77,8 @@ export async function GET(req: NextRequest) {
     // Overdue aging buckets (30d, 60d)
     let oc30 = 0, ot30 = 0, oc60 = 0, ot60 = 0, allReceivables = 0
     for (const s of overdue) {
-      const age  = Math.round((nowMs - new Date(s.created_at as string).getTime()) / 86_400_000)
+      if (!s.sale_date) continue
+      const age  = Math.round((nowMs - new Date((s.sale_date as string) + 'T00:00:00Z').getTime()) / 86_400_000)
       const owed = Math.max(0, Number(s.total_try ?? 0) - Number(s.amount_paid ?? 0))
       allReceivables += owed
       if (age > 60) { oc60++; ot60 += owed }

@@ -33,12 +33,13 @@ export async function GET(req: NextRequest) {
     const to   = new Date().toISOString().slice(0, 10)
 
     const [salesRes, expensesRes, customerPaymentsRes] = await Promise.allSettled([
+      // Use sale_date (business invoice date) for monthly revenue bucketing.
       supabase.from('sales')
-        .select('total_try, created_at')
+        .select('total_try, sale_date')
         .eq('company_id', companyId)
         .is('deleted_at', null)
-        .gte('created_at', from + 'T00:00:00Z')
-        .lte('created_at', to   + 'T23:59:59Z'),
+        .gte('sale_date', from)
+        .lte('sale_date', to),
       supabase.from('expenses')
         .select('amount_try, expense_type, expense_date')
         .eq('company_id', companyId)
@@ -46,7 +47,7 @@ export async function GET(req: NextRequest) {
         .gte('expense_date', from)
         .lte('expense_date', to),
       supabase.from('sales')
-        .select('customer_name, created_at, paid_at, due_date, total_try, payment_status')
+        .select('customer_name, sale_date, paid_at, due_date, total_try, payment_status')
         .eq('company_id', companyId)
         .is('deleted_at', null),
     ])
@@ -56,7 +57,8 @@ export async function GET(req: NextRequest) {
     for (const m of months) revByMonth[m] = 0
     if (salesRes.status === 'fulfilled' && salesRes.value.data) {
       for (const s of salesRes.value.data) {
-        const m = (s.created_at as string).slice(0, 7)
+        const m = s.sale_date ? (s.sale_date as string).slice(0, 7) : ''
+        if (!m) continue
         revByMonth[m] = (revByMonth[m] ?? 0) + Number(s.total_try ?? 0)
       }
     }
@@ -87,7 +89,7 @@ export async function GET(req: NextRequest) {
       for (const s of customerPaymentsRes.value.data) {
         customerPayments.push({
           customer_name:  (s.customer_name as string) ?? 'Bilinmiyor',
-          sale_date:      (s.created_at as string).slice(0, 10),
+          sale_date:      s.sale_date ? (s.sale_date as string).slice(0, 10) : '',
           paid_date:      s.paid_at as string | null,
           due_date:       s.due_date as string | null,
           total_try:      Number(s.total_try ?? 0),

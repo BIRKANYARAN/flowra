@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
     const [pnlRes, overdueRes, trancheRes] = await Promise.allSettled([
       FinanceService.getFinancialSummary(uid, companyId, { from, to }),
       supabase.from('sales')
-        .select('total_try, amount_paid, created_at')
+        .select('total_try, amount_paid, sale_date')
         .eq('company_id', companyId)
         .in('payment_status', ['pending', 'partial', 'overdue'])
         .is('deleted_at', null),
@@ -47,7 +47,8 @@ export async function GET(req: NextRequest) {
     const nowMs = Date.now()
     let ot30 = 0, ot60 = 0, allOutstanding = 0
     for (const s of overdue) {
-      const age  = Math.round((nowMs - new Date(s.created_at as string).getTime()) / 86_400_000)
+      if (!s.sale_date) continue
+      const age  = Math.round((nowMs - new Date((s.sale_date as string) + 'T00:00:00Z').getTime()) / 86_400_000)
       const owed = Math.max(0, Number(s.total_try ?? 0) - Number(s.amount_paid ?? 0))
       allOutstanding += owed
       if (age > 60) ot60 += owed; else if (age > 30) ot30 += owed
@@ -93,12 +94,12 @@ export async function GET(req: NextRequest) {
     // Alert inputs
     const alertInputs: AlertInputs = {
       overdueCount30: overdue.filter(s => {
-        const age = Math.round((nowMs - new Date(s.created_at as string).getTime()) / 86_400_000)
+        const age = Math.round((nowMs - new Date(((s.sale_date as string) || '1970-01-01') + 'T00:00:00Z').getTime()) / 86_400_000)
         return age > 30 && age <= 60
       }).length,
       overdueTotal30:           ot30,
       overdueCount60:           overdue.filter(s => {
-        const age = Math.round((nowMs - new Date(s.created_at as string).getTime()) / 86_400_000)
+        const age = Math.round((nowMs - new Date(((s.sale_date as string) || '1970-01-01') + 'T00:00:00Z').getTime()) / 86_400_000)
         return age > 60
       }).length,
       overdueTotal60:           ot60,
