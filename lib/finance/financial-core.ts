@@ -457,18 +457,44 @@ export async function getCfoMetrics(
       .eq('company_id', companyId).is('deleted_at', null).gt('qty_remaining', 0),
   ])
 
-  // Phase-2 COGS — all allocations for company (sale_item_allocations has no sale_id or deleted_at)
-  // To get YTD-filtered COGS we'd need a 2-step join through sale_items; for now all-time COGS is used.
-  const ytdCogsRes = await supabase
-      .from('sale_item_allocations')
-      .select('qty_allocated, stock_lots!inner(cost_price_try)')
-      .eq('company_id', companyId)
+  // Phase-2 COGS — YTD-filtered via 2-step join: sale_items → sales (GAP 15 fix).
+  // Step 1: collect sale_item IDs belonging to YTD sales for this company.
+  // TODO: batch this query when sale_items count exceeds ~2000 rows per year.
+  const ytdSaleItemsRes = await supabase
+    .from('sale_items')
+    .select('id')
+    .eq('company_id', companyId)
+    .limit(2000)
+    .in('sale_id',
+      // Supabase JS v2 supports subquery via chained select on the same client
+      (await supabase
+        .from('sales')
+        .select('id')
+        .eq('company_id', companyId)
+        .is('deleted_at', null)
+        .gte('sale_date', ytdFrom)
+        .lte('sale_date', today)
+        .limit(2000)
+      ).data?.map((r: { id: string }) => r.id) ?? []
+    )
+
+  // Step 2: fetch allocations for those sale_items only.
+  // Prefer the denormalized cost_price_try on the allocation row (accounting_truth_v1
+  // migration populates it). Fall back to the stock_lots JOIN for pre-migration rows.
+  const ytdSaleItemIds = (ytdSaleItemsRes.data ?? []).map((r: { id: string }) => r.id)
+  const ytdCogsRes = ytdSaleItemIds.length > 0
+    ? await supabase
+        .from('sale_item_allocations')
+        .select('qty_allocated, cost_price_try, stock_lots!inner(cost_price_try)')
+        .eq('company_id', companyId)
+        .in('sale_item_id', ytdSaleItemIds)
+    : { data: [], error: null }
 
   const errs = [
     allTimeCollectedRes.error, allTimePaidExpensesRes.error, unpaidExpensesRes.error,
     periodCollectedRes.error, periodPaidExpensesRes.error, trailingBurnRes.error,
     outstandingRes.error, periodInvoicedRes.error, ytdRevenueRes.error,
-    ytdCogsRes.error, ytdExpensesRes.error, ytdSalesVatRes.error,
+    ytdSaleItemsRes.error, ytdCogsRes.error, ytdExpensesRes.error, ytdSalesVatRes.error,
     ytdPurchaseVatRes.error, ytdExpenseVatRes.error, partnerTxRes.error,
     stockRes.error,
   ].filter(Boolean)
@@ -480,8 +506,9 @@ export async function getCfoMetrics(
 
   const ytdRevenue = (ytdRevenueRes.data ?? []).reduce((s, r) => s + Number(r.total_try), 0)
   const ytdCogs    = (ytdCogsRes.data ?? []).reduce((s, r) => {
-    const lot = (r as { stock_lots?: { cost_price_try?: number } | null }).stock_lots
-    return s + Number(r.qty_allocated ?? 0) * Number(lot?.cost_price_try ?? 0)
+    const lot        = (r as { stock_lots?: { cost_price_try?: number } | null }).stock_lots
+    const costPerUnit = Number((r as { cost_price_try?: number }).cost_price_try ?? lot?.cost_price_try ?? 0)
+    return s + Number(r.qty_allocated ?? 0) * costPerUnit
   }, 0)
   const ytdOpExpenses = (ytdExpensesRes.data ?? []).reduce((s, r) => {
     const t = String((r as { expense_type?: string | null }).expense_type ?? '')
