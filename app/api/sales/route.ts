@@ -171,8 +171,7 @@ export async function POST(req: NextRequest) {
       currency,
       discount_pct: 0,
       line_total:   Math.round(item.quantity * item.unit_price * (1 + (item.kdv_rate ?? 20) / 100) * 100) / 100,
-      // Store kdv_rate in notes until a dedicated column is added (GAP 6 migration)
-      notes:        `kdv_rate:${item.kdv_rate ?? 20}`,
+      kdv_rate:     item.kdv_rate ?? 20,  // GAP 3: use dedicated column (added in accounting_truth_v1 migration)
       sort_order:   idx + 1,
     }))
 

@@ -19,6 +19,19 @@ comment on column sales.kdv_amount_try is 'KDV (VAT) portion of the sale total i
 alter table sale_item_allocations add column if not exists cost_price_try numeric(12,4);
 comment on column sale_item_allocations.cost_price_try is 'Frozen TRY cost per unit at allocation time (FIFO lot cost_price_try).';
 
+-- ── GAP 3: Add kdv_rate to sale_items and proforma_items ────────────────────
+-- Needed for:
+--   1. Precise revenue/KDV split in GL journal entries (no more blended 20% approximation).
+--   2. COGS completeness: sale_items.kdv_rate does not affect COGS directly but is required
+--      for the GL revenue entry to correctly record CR 600 Revenue vs CR 391 KDV per line.
+-- Default 20 = most common Turkish KDV rate. 0 and 10 are also valid.
+-- Direct-sale route populates this from user input. Proforma RPC copies from proforma_items.
+alter table sale_items add column if not exists kdv_rate numeric(5,2) not null default 20;
+comment on column sale_items.kdv_rate is 'KDV rate for this line (0, 10, or 20). Used for precise GL revenue/KDV split.';
+
+alter table proforma_items add column if not exists kdv_rate numeric(5,2) not null default 20;
+comment on column proforma_items.kdv_rate is 'KDV rate for this line (0, 10, or 20). Copied to sale_items.kdv_rate on conversion.';
+
 -- ── GAP 2: Add missing columns to stock_lots ────────────────────────────────
 -- purchase.service.ts stamps these columns after creating a lot.
 -- Without them, cost breakdown and purchase reconciliation silently fails.
@@ -59,15 +72,23 @@ create trigger trg_sync_stock_lot_aliases
   before insert or update on stock_lots
   for each row execute function fn_sync_stock_lot_aliases();
 
--- ── GAP 16: Change gl_mode default to 'parallel' ────────────────────────────
--- Default was 'shadow' which silently skips all journal entries.
--- 'parallel' writes journal entries while keeping operational tables as primary truth.
--- Only affects NEW companies. Existing companies stay as-is.
-alter table companies alter column gl_mode set default 'parallel';
-
--- Optional: flip existing companies from shadow → parallel.
--- Uncomment the line below if you want to activate GL for all existing companies:
--- update companies set gl_mode = 'parallel' where gl_mode = 'shadow';
+-- ── GAP 16: gl_mode default — INTENTIONALLY LEFT AS 'shadow' ────────────────
+-- RATIONALE: Activating 'parallel' (write journal entries) before the full GL
+-- chain is complete creates a false sense of accounting accuracy. The missing
+-- piece is GAP 3: the COGS journal entry (DR 620 / CR 153) has no call site yet.
+--
+-- If gl_mode is parallel and COGS entries are missing:
+--   • sale entry writes: DR 120 Alıcılar, CR 600 Revenue, CR 391 KDV  ← correct
+--   • COGS entry is ABSENT                                             ← WRONG
+--   • GL gross profit overstated, retained earnings wrong, balance sheet broken
+--
+-- ACTIVATION PLAN:
+--   Phase 1 (this migration): shadow — no GL writes, no false data
+--   Phase 2 (after GAP 3 is proven): Admin toggle in Settings → "GL Parallel Preview"
+--   Phase 3 (after 1 full period reconciles correctly): default = 'parallel'
+--
+-- DO NOT uncomment the line below until COGS journal entry is complete + tested:
+-- alter table companies alter column gl_mode set default 'parallel';
 
 -- ── GAP 17: Canonicalize partner_loan_tranches interest rate column ──────────
 -- Two columns exist for the same concept. annual_interest_rate added in Phase 7.
@@ -94,6 +115,9 @@ create trigger trg_sync_plt_interest_rate
 -- The RPC stored v_proforma.total (which may be USD/EUR) directly into sales.total.
 -- All downstream queries that read sales.total (aliased as total_try) got wrong values
 -- for non-TRY proformas.
+--
+-- Also incorporates GAP 3 fix: populate sale_items.kdv_rate from proforma_items.kdv_rate.
+-- proforma_items.kdv_rate defaults to 20 for rows predating this migration.
 create or replace function public.convert_proforma_to_sale(
   p_proforma_id    uuid,
   p_user_id        uuid,
@@ -173,12 +197,14 @@ begin
   loop
     insert into sale_items (
       sale_id, company_id, product_id, product_name,
-      qty, unit_price, currency, discount_pct, line_total, notes, sort_order
+      qty, unit_price, currency, discount_pct, line_total, notes, sort_order,
+      kdv_rate  -- ← GAP 3: freeze KDV rate from proforma_items (default 20 for legacy rows)
     ) values (
       v_sale_id, v_proforma.company_id, v_item.product_id, v_item.product_name,
       v_item.qty, v_item.unit_price, v_item.currency,
       coalesce(v_item.discount_pct, 0), v_item.line_total,
-      v_item.notes, v_item.sort_order
+      v_item.notes, v_item.sort_order,
+      coalesce(v_item.kdv_rate, 20)
     ) returning id into v_sale_item_id;
 
     -- FIFO allocation (only for inventory-linked items with a product_id)
@@ -302,5 +328,11 @@ update sales
 -- Run this in Supabase SQL Editor.
 -- After running: test by creating a direct sale and verifying
 --   sale_items are created, kdv_amount_try is populated,
---   and sales.total is in TRY.
+--   sale_items.kdv_rate is set per line, and sales.total is in TRY.
+--
+-- gl_mode ACTIVATION CHECKLIST (do not activate until ALL pass):
+--   [ ] GAP 3: COGS journal entry wired + tested (DR 620 / CR 153)
+--   [ ] One full accounting period reconciled: GL trial balance = manual P&L
+--   [ ] balance_sheet: assets = liabilities + equity (< 0.01 TRY tolerance)
+--   [ ] Admin toggle in Settings → "GL Parallel Preview" added to UI
 -- ════════════════════════════════════════════════════════════════════════════

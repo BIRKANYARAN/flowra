@@ -208,6 +208,67 @@ export class SaleService {
         })
       }
 
+      // ── GAP 3 fix: COGS journal entry for inventory-allocated items ─────────
+      // DR 620 Satılan Malın Maliyeti / CR 153 Ticari Mallar
+      // COGS = Σ (qty_allocated × cost_price_try) from sale_item_allocations.
+      // Only fires when allocations exist (product-linked proforma items with stock).
+      // Service-only proformas (no product_id on items) produce zero COGS — skipped.
+      // Requires: sale_item_allocations.cost_price_try (added in accounting_truth_v1 migration).
+      try {
+        const { dualWrite: dualWriteCogs, resolvePeriodId: resolvePeriodCogs } =
+          await import('@/lib/services/ledger/dual-write.service')
+        const { JournalEntryService: JES } =
+          await import('@/lib/services/ledger/journal-entry.service')
+
+        // Step 1: get sale_item IDs for this sale
+        const { data: saleItemRows } = await supabase
+          .from('sale_items')
+          .select('id')
+          .eq('sale_id', sale_id)
+
+        const saleItemIds = (saleItemRows ?? []).map((r: { id: string }) => r.id)
+
+        if (saleItemIds.length > 0) {
+          // Step 2: sum COGS from frozen cost_price_try (GAP 13 column).
+          // Falls back to 0 for rows predating the migration (no allocation rows).
+          const { data: allocRows } = await supabase
+            .from('sale_item_allocations')
+            .select('qty_allocated, cost_price_try')
+            .in('sale_item_id', saleItemIds)
+
+          const cogs_try = Math.round(
+            (allocRows ?? []).reduce(
+              (s: number, r: { qty_allocated?: unknown; cost_price_try?: unknown }) =>
+                s + Number(r.qty_allocated ?? 0) * Number(r.cost_price_try ?? 0),
+              0,
+            ) * 100,
+          ) / 100
+
+          if (cogs_try > 0) {
+            // Reuse sale_date from input (committed by RPC above)
+            const cogsDate   = input.sale_date ?? today
+            const cogsPeriod = await resolvePeriodCogs(companyId, cogsDate, supabase)
+            await dualWriteCogs({
+              companyId,
+              periodId:  cogsPeriod,
+              createdBy: userId,
+              supabase,
+              buildEntry: () => JES.buildCogsEntry({
+                id:        sale_id,
+                sale_date: cogsDate,
+                cogs_try,
+              }),
+            })
+          }
+        }
+      } catch (cogsErr) {
+        // Best-effort: COGS entry failure is non-fatal — sale and sale entry succeeded.
+        await logger.error(ctx, 'sale_convert:cogs_entry_failed', {
+          sale_id,
+          error: cogsErr instanceof Error ? cogsErr.message : String(cogsErr),
+        })
+      }
+
       try {
         const { EventService } = await import('@/lib/services/event.service')
         await EventService.emit(supabase, userId, 'sale.created', {
