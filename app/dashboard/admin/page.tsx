@@ -127,6 +127,13 @@ export default async function AdminHubPage() {
       icon:     '📋',
       color:    'border-gray-100 hover:border-gray-200',
     },
+    {
+      href:     '/dashboard/admin/governance',
+      title:    'Ortak Yönetişim',
+      subtitle: 'Aylık mutabakat & onay sistemi',
+      icon:     '🏛️',
+      color:    'border-violet-100 hover:border-violet-200',
+    },
   ]
 
   const SETTING_LINKS = [

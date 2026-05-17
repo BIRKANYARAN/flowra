@@ -3,7 +3,7 @@
 // All recalculation is pure client-side math (no API round-trips on slider move).
 // Baseline = current month actuals loaded server-side; sliders mutate it live.
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback, useEffect } from 'react'
 
 const FMT = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 })
 function fmt(n: number) {
@@ -26,6 +26,39 @@ interface Baseline {
   monthlyDebtService: number
 }
 
+interface SavedScenario {
+  id:          string
+  name:        string
+  savedAt:     string
+  sliders: {
+    revChange:      number
+    expChange:      number
+    cogsChange:     number
+    collDelay:      number
+    debtChange:     number
+    taxRateOverride: number
+  }
+  summary: {
+    netIncome:       number
+    grossMarginPct:  number
+    distributable:   number
+    runwayMonths:    number | null
+  }
+}
+
+const STORAGE_KEY = 'flowra_whatif_scenarios'
+const MAX_SAVED   = 4
+
+function loadSaved(): SavedScenario[] {
+  try {
+    const raw = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null
+    return raw ? (JSON.parse(raw) as SavedScenario[]) : []
+  } catch { return [] }
+}
+function persistSaved(scenarios: SavedScenario[]) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(scenarios)) } catch { /* quota */ }
+}
+
 interface Props {
   period:   string
   baseline: Baseline
@@ -40,6 +73,28 @@ export function WhatIfClient({ period, baseline }: Props) {
   const [collDelay,      setCollDelay]      = useState(0)      // 0 → 90 days
   const [debtChange,     setDebtChange]     = useState(0)      // −50 → +100 %
   const [taxRateOverride, setTaxRateOverride] = useState(25)   // 0 → 40 %
+
+  // ── Saved scenarios ───────────────────────────────────────────────────────
+  const [saved,       setSaved]       = useState<SavedScenario[]>([])
+  const [saveName,    setSaveName]    = useState('')
+  const [showSaveBox, setShowSaveBox] = useState(false)
+
+  useEffect(() => { setSaved(loadSaved()) }, [])
+
+  const deleteSaved = useCallback((id: string) => {
+    const updated = saved.filter(s => s.id !== id)
+    setSaved(updated)
+    persistSaved(updated)
+  }, [saved])
+
+  const restoreScenario = useCallback((s: SavedScenario) => {
+    setRevChange(s.sliders.revChange)
+    setExpChange(s.sliders.expChange)
+    setCogsChange(s.sliders.cogsChange)
+    setCollDelay(s.sliders.collDelay)
+    setDebtChange(s.sliders.debtChange)
+    setTaxRateOverride(s.sliders.taxRateOverride)
+  }, [])
 
   // ── Computed outputs (pure math, instant) ─────────────────────────────────
   const result = useMemo(() => {
@@ -83,6 +138,28 @@ export function WhatIfClient({ period, baseline }: Props) {
       vatNet, distributable, dividendWH, netDistrib,
     }
   }, [revChange, expChange, cogsChange, collDelay, debtChange, taxRateOverride, baseline])
+
+  // ── Save scenario — defined after `result` so it can reference it ────────
+  const saveScenario = useCallback(() => {
+    if (!saveName.trim()) return
+    const scenario: SavedScenario = {
+      id:      (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : `${Date.now()}`,
+      name:    saveName.trim(),
+      savedAt: new Date().toISOString(),
+      sliders: { revChange, expChange, cogsChange, collDelay, debtChange, taxRateOverride },
+      summary: {
+        netIncome:      result.netIncome,
+        grossMarginPct: result.grossMarginPct,
+        distributable:  result.distributable,
+        runwayMonths:   result.runwayMonths,
+      },
+    }
+    const updated = [scenario, ...saved].slice(0, MAX_SAVED)
+    setSaved(updated)
+    persistSaved(updated)
+    setSaveName('')
+    setShowSaveBox(false)
+  }, [saveName, saved, revChange, expChange, cogsChange, collDelay, debtChange, taxRateOverride, result])
 
   // ── Baseline helpers ──────────────────────────────────────────────────────
   const baseGross   = baseline.revenue - baseline.cogs
@@ -255,14 +332,91 @@ export function WhatIfClient({ period, baseline }: Props) {
             <div className="text-[9px] text-gray-400">Mevcut KVK oranı %25 · Bu tahminidir</div>
           </div>
 
-          {/* Reset button */}
-          {(revChange !== 0 || expChange !== 0 || cogsChange !== 0 || collDelay !== 0 || debtChange !== 0 || taxRateOverride !== 25) && (
+          {/* Reset + Save buttons */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {(revChange !== 0 || expChange !== 0 || cogsChange !== 0 || collDelay !== 0 || debtChange !== 0 || taxRateOverride !== 25) && (
+              <button
+                onClick={() => { setRevChange(0); setExpChange(0); setCogsChange(0); setCollDelay(0); setDebtChange(0); setTaxRateOverride(25) }}
+                className="text-xs font-semibold text-gray-500 hover:text-gray-700 border border-gray-200 px-3 py-1.5 rounded-lg hover:border-gray-300 transition-colors"
+              >
+                ↺ Bazı Sıfırla
+              </button>
+            )}
             <button
-              onClick={() => { setRevChange(0); setExpChange(0); setCogsChange(0); setCollDelay(0); setDebtChange(0); setTaxRateOverride(25) }}
-              className="text-xs font-semibold text-gray-500 hover:text-gray-700 border border-gray-200 px-3 py-1.5 rounded-lg hover:border-gray-300 transition-colors"
+              onClick={() => setShowSaveBox(v => !v)}
+              className="text-xs font-semibold text-primary-600 hover:text-primary-700 border border-primary-200 px-3 py-1.5 rounded-lg hover:border-primary-300 transition-colors"
             >
-              ↺ Bazı Sıfırla
+              {showSaveBox ? '✕ Kapat' : '＋ Kaydet'}
             </button>
+          </div>
+
+          {/* Save scenario inline form */}
+          {showSaveBox && (
+            <div className="bg-primary-50 border border-primary-100 rounded-xl px-3 py-3 space-y-2">
+              <div className="text-[9px] font-black uppercase tracking-widest text-primary-400">Senaryo Adı</div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={saveName}
+                  onChange={e => setSaveName(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') saveScenario() }}
+                  placeholder="Örn: Agresif büyüme, Q3 baskı…"
+                  className="flex-1 border border-primary-200 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary-400 bg-white"
+                />
+                <button
+                  onClick={saveScenario}
+                  disabled={!saveName.trim()}
+                  className="text-xs font-bold text-white bg-primary-600 hover:bg-primary-700 rounded-lg px-3 py-1.5 disabled:opacity-50 transition-colors"
+                >
+                  Kaydet
+                </button>
+              </div>
+              {saved.length >= MAX_SAVED && (
+                <div className="text-[9px] text-amber-600">Maksimum {MAX_SAVED} senaryo — eskisi silinecek.</div>
+              )}
+            </div>
+          )}
+
+          {/* Saved scenarios list */}
+          {saved.length > 0 && (
+            <div className="space-y-1.5">
+              <div className="text-[9px] font-black uppercase tracking-widest text-gray-400">Kayıtlı Senaryolar</div>
+              {saved.map(s => {
+                const netColor = s.summary.netIncome >= 0 ? 'text-emerald-700' : 'text-red-600'
+                return (
+                  <div key={s.id} className="bg-white border border-gray-100 rounded-xl px-3 py-2.5 flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="text-[11px] font-bold text-gray-800 truncate">{s.name}</div>
+                      <div className="text-[9px] text-gray-400 flex gap-2 mt-0.5 flex-wrap">
+                        <span className={netColor}>Net: {s.summary.netIncome >= 0 ? '+' : ''}₺{fmt(s.summary.netIncome)}</span>
+                        <span>Marj: {pct(s.summary.grossMarginPct)}</span>
+                        {s.summary.runwayMonths !== null && (
+                          <span className={s.summary.runwayMonths < 3 ? 'text-red-500' : 'text-gray-400'}>
+                            Runway: {s.summary.runwayMonths.toFixed(1)}ay
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      <button
+                        onClick={() => restoreScenario(s)}
+                        title="Bu senaryoyu yükle"
+                        className="text-[9px] font-bold text-primary-600 hover:text-primary-700 border border-primary-200 rounded-lg px-2 py-1 hover:bg-primary-50 transition-colors"
+                      >
+                        Yükle
+                      </button>
+                      <button
+                        onClick={() => deleteSaved(s.id)}
+                        title="Sil"
+                        className="text-[9px] text-gray-400 hover:text-red-500 border border-gray-100 rounded-lg px-1.5 py-1 hover:bg-red-50 transition-colors"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
           )}
         </div>
 
