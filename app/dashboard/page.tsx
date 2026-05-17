@@ -207,9 +207,9 @@ export default async function DashboardPage() {
     sq(() => loadFxDirect(), EMPTY_FX),
 
     sq(async () => {
-      const { data } = await supabase.from('sales').select('id, total_try, payment_status, customer_name, created_at, due_date').eq('company_id', companyId).neq('payment_status', 'paid').is('deleted_at', null).order('created_at', { ascending: false }).limit(100)
-      return (data ?? []) as Array<{ id: string; total_try: number; payment_status: string; customer_name: string; created_at: string; due_date: string | null }>
-    }, [] as Array<{ id: string; total_try: number; payment_status: string; customer_name: string; created_at: string; due_date: string | null }>),
+      const { data } = await supabase.from('sales').select('id, total_try, amount_paid, payment_status, customer_name, created_at, due_date').eq('company_id', companyId).neq('payment_status', 'paid').is('deleted_at', null).order('created_at', { ascending: false }).limit(100)
+      return (data ?? []) as Array<{ id: string; total_try: number; amount_paid: number | null; payment_status: string; customer_name: string; created_at: string; due_date: string | null }>
+    }, [] as Array<{ id: string; total_try: number; amount_paid: number | null; payment_status: string; customer_name: string; created_at: string; due_date: string | null }>),
 
     sq(async () => {
       const in7days = new Date(Date.now() + 7 * 86_400_000).toISOString().slice(0, 10)
@@ -281,7 +281,7 @@ export default async function DashboardPage() {
   // ── Derived values ─────────────────────────────────────────────────────────
   const outstanding          = openProfs.reduce((s, p) => s + Number(p.total_try ?? 0), 0)
   const vatStatus            = fs.net_vat_try > 0 ? 'payable' : 'carry_forward'
-  const uncollectedSalesTotal = uncollectedSalesData.reduce((s, r) => s + Number(r.total_try ?? 0), 0)
+  const uncollectedSalesTotal = uncollectedSalesData.reduce((s, r) => s + Math.max(0, Number(r.total_try ?? 0) - Number(r.amount_paid ?? 0)), 0)
   const uncollectedSalesCount = uncollectedSalesData.length
   const actuallyCollected     = (collectedSalesData ?? []).reduce((s, r) => s + Number(r.total_try ?? 0), 0)
   const actuallyCollectedPct  = fs.revenue_try > 0 ? Math.min(100, Math.round((actuallyCollected / fs.revenue_try) * 100)) : 100
@@ -304,8 +304,8 @@ export default async function DashboardPage() {
   const sixtyDaysAgoISO  = new Date(Date.now() - 60 * 86_400_000).toISOString()
   const overdueSales30   = uncollectedSalesData.filter(s => s.created_at < thirtyDaysAgoISO)
   const overdueSales60   = uncollectedSalesData.filter(s => s.created_at < sixtyDaysAgoISO)
-  const overdueTotal30   = overdueSales30.reduce((s, r) => s + Number(r.total_try ?? 0), 0)
-  const overdueTotal60   = overdueSales60.reduce((s, r) => s + Number(r.total_try ?? 0), 0)
+  const overdueTotal30   = overdueSales30.reduce((s, r) => s + Math.max(0, Number(r.total_try ?? 0) - Number(r.amount_paid ?? 0)), 0)
+  const overdueTotal60   = overdueSales60.reduce((s, r) => s + Math.max(0, Number(r.total_try ?? 0) - Number(r.amount_paid ?? 0)), 0)
   // Runway: use cashDistributable (operational cash, unpaid obligations deducted) as the base,
   // and absolute monthlyNet loss as monthly burn. This aligns with getCfoMetrics().burn.runway_months.
   // Previously used `liquidProxy = outstanding + stockValue` (open proformas + inventory) which
