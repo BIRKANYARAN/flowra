@@ -91,6 +91,82 @@ export function WhatIfClient({ period, baseline }: Props) {
 
   const hasBaseline = baseline.revenue > 0
 
+  // ── Cascade story — cause → chain reaction narrative ─────────────────────
+  // Only fires when total deviation is meaningful (any slider meaningfully moved)
+  const cascadeStory = useMemo(() => {
+    const anySignificant = Math.abs(revChange) >= 10 || Math.abs(expChange) >= 15
+      || Math.abs(cogsChange) >= 10 || collDelay >= 20 || Math.abs(debtChange) >= 20
+
+    if (!anySignificant) return null
+
+    const baseRunway = baseNet < 0 && baseline.expenses > 0
+      ? Math.max(0, (baseline.revenue / (baseline.expenses + baseline.monthlyDebtService)) * 30)
+      : null
+
+    const impacts: Array<{ label: string; delta: string; severity: 'ok' | 'warn' | 'critical' }> = []
+
+    // Gross margin change
+    const baseMarginPct = baseline.revenue > 0 ? (baseGross / baseline.revenue) * 100 : 0
+    const newMarginPct  = result.grossMarginPct * 100
+    const marginDelta   = newMarginPct - baseMarginPct
+    if (Math.abs(marginDelta) > 2) {
+      impacts.push({
+        label: 'Brüt Marj',
+        delta: `${baseMarginPct.toFixed(1)}% → ${newMarginPct.toFixed(1)}% (${marginDelta >= 0 ? '+' : ''}${marginDelta.toFixed(1)}pp)`,
+        severity: newMarginPct < 10 ? 'critical' : newMarginPct < 20 ? 'warn' : 'ok',
+      })
+    }
+
+    // Net income change
+    const netDelta = result.netIncome - baseNet
+    if (Math.abs(netDelta) > 100) {
+      impacts.push({
+        label: 'Net Kâr',
+        delta: `${baseNet >= 0 ? '+' : ''}${fmt(baseNet)} → ${result.netIncome >= 0 ? '+' : ''}${fmt(result.netIncome)}`,
+        severity: result.netIncome < -baseline.expenses * 0.2 ? 'critical' : result.netIncome < 0 ? 'warn' : 'ok',
+      })
+    }
+
+    // Runway change
+    if (result.runwayMonths !== null) {
+      const from = baseRunway !== null ? `${baseRunway.toFixed(1)} ay` : '∞'
+      impacts.push({
+        label: 'Runway',
+        delta: `${from} → ${result.runwayMonths.toFixed(1)} ay`,
+        severity: result.runwayMonths < 2 ? 'critical' : result.runwayMonths < 6 ? 'warn' : 'ok',
+      })
+    } else if (baseRunway !== null) {
+      impacts.push({
+        label: 'Runway',
+        delta: `${baseRunway.toFixed(1)} ay → ∞ (kârlı)`,
+        severity: 'ok',
+      })
+    }
+
+    // Distributable change
+    const baseDistrib = Math.max(0, baseNet * 0.95)
+    const distDelta   = result.distributable - baseDistrib
+    if (Math.abs(distDelta) > 500) {
+      impacts.push({
+        label: 'Dağıtılabilir',
+        delta: `${fmt(baseDistrib)} → ${result.distributable > 0 ? fmt(result.distributable) : '₺0 (sıfır)'}`,
+        severity: result.distributable <= 0 ? 'critical' : result.distributable < baseDistrib * 0.5 ? 'warn' : 'ok',
+      })
+    }
+
+    // Collection pressure
+    if (collDelay >= 20) {
+      const efficiencyLoss = Math.round(collDelay / 90 * 100)
+      impacts.push({
+        label: 'Tahsilat',
+        delta: `%${efficiencyLoss} daha az nakit giriyor bu ay`,
+        severity: collDelay >= 60 ? 'critical' : 'warn',
+      })
+    }
+
+    return impacts.length > 0 ? impacts : null
+  }, [revChange, expChange, cogsChange, collDelay, debtChange, taxRateOverride, result, baseline, baseGross, baseNet])
+
   return (
     <div className="space-y-5">
 
@@ -276,6 +352,36 @@ export function WhatIfClient({ period, baseline }: Props) {
               Bu kombinasyonda aylık <strong>₺{fmt(Math.abs(result.netIncome))}</strong> zarar edilir.
               {result.runwayMonths !== null && result.runwayMonths < 6 &&
                 ` Mevcut nakitin ${result.runwayMonths.toFixed(1)} ay yeteceği tahmin edilmektedir.`}
+            </div>
+          )}
+
+          {/* Cascade story — cause → chain reaction narrative */}
+          {cascadeStory && (
+            <div className="bg-gray-50 border border-gray-200 rounded-xl overflow-hidden">
+              <div className="px-4 py-2.5 border-b border-gray-100 flex items-center gap-2">
+                <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Bu Senaryo Zinciri</span>
+                <span className="text-[9px] text-gray-300">→ domino etkisi</span>
+              </div>
+              <div className="divide-y divide-gray-100">
+                {cascadeStory.map(impact => (
+                  <div key={impact.label} className={`px-4 py-2.5 flex items-center justify-between gap-3 ${
+                    impact.severity === 'critical' ? 'bg-red-50/40' :
+                    impact.severity === 'warn'     ? 'bg-amber-50/30' : ''
+                  }`}>
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                        impact.severity === 'critical' ? 'bg-red-400' :
+                        impact.severity === 'warn'     ? 'bg-amber-400' : 'bg-emerald-400'
+                      }`} />
+                      <span className="text-[10px] font-bold text-gray-600">{impact.label}</span>
+                    </div>
+                    <span className={`text-[10px] font-semibold tabular-nums text-right leading-snug ${
+                      impact.severity === 'critical' ? 'text-red-700' :
+                      impact.severity === 'warn'     ? 'text-amber-700' : 'text-emerald-700'
+                    }`}>{impact.delta}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
