@@ -10,18 +10,11 @@ import Link from 'next/link'
 import { getCfoMetrics, getRunwayForecast } from '@/lib/finance/financial-core'
 import type { CfoMetrics }             from '@/lib/finance/cfo-metrics'
 import type { RunwayForecastResponse } from '@/lib/finance/financial-core'
+import { fmtTRY as fmt }               from '@/lib/format'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const TRY_FMT = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
-
-function fmt(n: number): string {
-  const abs  = Math.abs(Number(n || 0))
-  const sign = n < 0 ? '−' : ''
-  if (abs >= 1_000_000) return `${sign}₺${(abs / 1_000_000).toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 2 })}M`
-  if (abs >= 10_000)    return `${sign}₺${(abs / 1_000).toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}K`
-  return `${sign}₺${TRY_FMT.format(abs)}`
-}
 function fmtFull(n: number): string {
   return (n < 0 ? '−' : '') + '₺' + TRY_FMT.format(Math.abs(n))
 }
@@ -96,10 +89,16 @@ export async function OverviewTab({ userId: _userId, companyId }: Props) {
     inputs: { starting_cash: 0, monthly_burn: 0, outstanding_total: 0, horizon_months: 12 },
   }
 
-  const [metrics, runway] = await Promise.all([
-    sq(() => getCfoMetrics(companyId, { from, to: today }), ZERO_METRICS),
-    sq(() => getRunwayForecast(companyId, { from, to: today, months: 12 }), ZERO_RUNWAY),
-  ])
+  // Sequential: runway forecast needs the tax obligation from cfoMetrics to correctly
+  // model the first-month cash outflow (corporate tax + KDV payable).
+  const metrics = await sq(() => getCfoMetrics(companyId, { from, to: today }), ZERO_METRICS)
+  const runway  = await sq(
+    () => getRunwayForecast(companyId, {
+      from, to: today, months: 12,
+      taxObligation: metrics.tax.total_fiscal_obligation,
+    }),
+    ZERO_RUNWAY,
+  )
 
   const m = metrics
   const r = runway
@@ -296,7 +295,7 @@ export async function OverviewTab({ userId: _userId, companyId }: Props) {
           className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gray-100 text-gray-700 text-xs font-semibold hover:bg-gray-200 transition-colors">
           Ortak Dengesi
         </Link>
-        <Link href="/dashboard/finance?tab=forecast"
+        <Link href="/dashboard/planning?tab=unit-profit"
           className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gray-100 text-gray-700 text-xs font-semibold hover:bg-gray-200 transition-colors">
           Senaryo Simülasyonu
         </Link>

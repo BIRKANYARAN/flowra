@@ -44,6 +44,8 @@ export default function StockAdjustClient({ products }: Props) {
   // ── Auto-fetch FX rate when currency or entry date changes ─────────────────
   useEffect(() => {
     if (costCurrency === 'TRY') { setFxRate('1'); setFxRateDate(null); return }
+    let cancelled = false
+    const controller = new AbortController()
     ;(async () => {
       try {
         const { data: dbRates } = await supabase
@@ -54,6 +56,7 @@ export default function StockAdjustClient({ products }: Props) {
           .order('rate_date', { ascending: false })
           .limit(1)
 
+        if (cancelled) return
         if (dbRates && dbRates.length > 0 && Number(dbRates[0].buying) > 0) {
           setFxRate(Number(dbRates[0].buying).toFixed(4))
           setFxRateDate(dbRates[0].rate_date)
@@ -61,14 +64,15 @@ export default function StockAdjustClient({ products }: Props) {
         }
 
         // Fallback: fetch current from /api/fx
-        const res  = await fetch('/api/fx', { cache: 'no-store' })
+        const res  = await fetch('/api/fx', { cache: 'no-store', signal: controller.signal })
         const data = await res.json()
-        if (res.ok) {
+        if (!cancelled && res.ok) {
           const rate = costCurrency === 'USD' ? Number(data.USD) : Number(data.EUR)
           if (rate > 0) { setFxRate(rate.toFixed(4)); setFxRateDate(data.rate_date || null) }
         }
-      } catch { /* non-fatal */ }
+      } catch { /* non-fatal — includes AbortError */ }
     })()
+    return () => { cancelled = true; controller.abort() }
   }, [costCurrency, entryDate, supabase])
 
   // ── Submit ────────────────────────────────────────────────────────────────

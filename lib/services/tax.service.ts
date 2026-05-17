@@ -109,8 +109,9 @@ export class TaxService {
       .select('kdv_total, fx_rate_try')
       .eq('company_id', companyId)
       .is('deleted_at', null)
-      .gte('created_at', startOfDayUTC(period.from))
-      .lte('created_at', endOfDayUTC(period.to))
+      // Use sale_date (business invoice date) not created_at (DB insertion time)
+      .gte('sale_date', period.from)
+      .lte('sale_date', period.to)
 
     if (error) {
       if (ctx) await logger.error(ctx, 'tax:sales_vat:db_error', { error: error.message })

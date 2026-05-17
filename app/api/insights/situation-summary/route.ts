@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse }           from 'next/server'
-import { createClient }                         from '@/lib/supabase-server'
-import { resolveCompanyId }                     from '@/lib/resolve-company'
 import { FinanceService }                       from '@/lib/services/finance.service'
 import { computeSituation }                     from '@/lib/engines/situation.engine'
 import { evaluateAlerts }                       from '@/lib/engines/alert.engine'
 import { generateSituationSummary }             from '@/lib/services/ai-summary.service'
 import type { SituationInputs }                 from '@/lib/engines/situation.engine'
 import type { AlertInputs }                     from '@/lib/engines/alert.engine'
+import { resolveApiAuth } from '@/lib/api-auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,14 +14,11 @@ export const dynamic = 'force-dynamic'
 // Returns an AI-generated (or rule-based) Turkish narrative situation summary.
 // Financial data is computed by rule-based engines; AI only writes the narrative.
 
-export async function GET(_req: NextRequest) {
+export async function GET(req: NextRequest) {
   try {
-    const supabase = createClient()
-    const { data: authData } = await supabase.auth.getUser()
-    if (!authData?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const companyId = await resolveCompanyId(authData.user.id, supabase)
-    if (!companyId) return NextResponse.json({ error: 'No company' }, { status: 400 })
+    const auth = await resolveApiAuth(req)
+    if (!auth.ok) return auth.response
+    const { uid, companyId, supabase } = auth
 
     const now     = new Date()
     const from    = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
@@ -31,14 +27,14 @@ export async function GET(_req: NextRequest) {
 
     // Parallel data fetches
     const [pnlRes, overdueRes, trancheRes] = await Promise.allSettled([
-      FinanceService.getFinancialSummary(authData.user.id, companyId, { from, to }),
+      FinanceService.getFinancialSummary(uid, companyId, { from, to }),
       supabase.from('sales')
-        .select('total_try, amount_paid, created_at')
+        .select('total_try, amount_paid, sale_date')
         .eq('company_id', companyId)
         .in('payment_status', ['pending', 'partial', 'overdue'])
         .is('deleted_at', null),
       supabase.from('partner_loan_tranches')
-        .select('outstanding_try, due_date, partner_id')
+        .select('outstanding_try, due_date, partner_id, annual_interest_rate')
         .eq('company_id', companyId)
         .eq('status', 'active'),
     ])
@@ -49,21 +45,40 @@ export async function GET(_req: NextRequest) {
 
     // Compute situation inputs
     const nowMs = Date.now()
-    let ot30 = 0, ot60 = 0
+    let ot30 = 0, ot60 = 0, allOutstanding = 0
     for (const s of overdue) {
-      const age  = Math.round((nowMs - new Date(s.created_at as string).getTime()) / 86_400_000)
-      const owed = Number(s.total_try ?? 0) - Number(s.amount_paid ?? 0)
+      if (!s.sale_date) continue
+      const age  = Math.round((nowMs - new Date((s.sale_date as string) + 'T00:00:00Z').getTime()) / 86_400_000)
+      const owed = Math.max(0, Number(s.total_try ?? 0) - Number(s.amount_paid ?? 0))
+      allOutstanding += owed
       if (age > 60) ot60 += owed; else if (age > 30) ot30 += owed
+      // age 0-30: counted in allOutstanding but not in ot30/ot60 buckets
     }
-    const totalOverdue = ot30 + ot60
+    const totalOverdue = ot30 + ot60  // aged receivables (30+ days)
     const totalRevenue = pnl?.revenue_try ?? 0
     const overdueRatio = totalRevenue > 0 ? totalOverdue / totalRevenue : 0
 
     const totalLoans = tranches.reduce((s, t) => s + Number(t.outstanding_try ?? 0), 0)
-    const monthlyDebtService = totalLoans * 0.015
+    // Use actual annual_interest_rate per tranche (decimal, 0.15=15%); proxy 1.5%/month for rate-free
+    const monthlyDebtService = tranches.reduce((s, t) => {
+      const principal = Number(t.outstanding_try ?? 0)
+      const rate      = Number(t.annual_interest_rate ?? 0)
+      return s + (rate > 0 ? principal * rate / 12 : principal * 0.015)
+    }, 0)
     const monthlyNet  = pnl?.net_after_tax_try ?? 0
     const monthlyRevM = pnl?.revenue_try ?? 0
     const dsr = monthlyNet > 0 ? monthlyDebtService / monthlyNet : 0
+
+    // Partner loan concentration: max single-partner outstanding / total outstanding
+    const loanByPartner = tranches.reduce((acc: Record<string, number>, t) => {
+      const pid = String(t.partner_id ?? 'unknown')
+      acc[pid] = (acc[pid] ?? 0) + Number(t.outstanding_try ?? 0)
+      return acc
+    }, {})
+    const maxPartnerLoan = totalLoans > 0
+      ? Math.max(0, ...Object.values(loanByPartner))
+      : 0
+    const loanConcentration = totalLoans > 0 ? maxPartnerLoan / totalLoans : 0
 
     const situationInputs: SituationInputs = {
       cashRunwayMonths:   0,
@@ -79,16 +94,16 @@ export async function GET(_req: NextRequest) {
     // Alert inputs
     const alertInputs: AlertInputs = {
       overdueCount30: overdue.filter(s => {
-        const age = Math.round((nowMs - new Date(s.created_at as string).getTime()) / 86_400_000)
+        const age = Math.round((nowMs - new Date(((s.sale_date as string) || '1970-01-01') + 'T00:00:00Z').getTime()) / 86_400_000)
         return age > 30 && age <= 60
       }).length,
       overdueTotal30:           ot30,
       overdueCount60:           overdue.filter(s => {
-        const age = Math.round((nowMs - new Date(s.created_at as string).getTime()) / 86_400_000)
+        const age = Math.round((nowMs - new Date(((s.sale_date as string) || '1970-01-01') + 'T00:00:00Z').getTime()) / 86_400_000)
         return age > 60
       }).length,
       overdueTotal60:           ot60,
-      totalReceivables:         totalOverdue,
+      totalReceivables:         allOutstanding,  // all outstanding including < 30 days
       cashRunwayDays:           -1,
       monthlyNetIncome:         monthlyNet,
       maxBurdenScoreAbs:        0,
@@ -102,7 +117,7 @@ export async function GET(_req: NextRequest) {
       equityGapTry:             0,
       equityCallOverdueDays:    -1,
       debtServiceRatio:         dsr,
-      partnerLoanConcentration: 0,
+      partnerLoanConcentration: loanConcentration,
     }
 
     const alerts  = evaluateAlerts(alertInputs)

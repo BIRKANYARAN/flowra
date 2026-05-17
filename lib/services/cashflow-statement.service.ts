@@ -41,7 +41,6 @@ export class CashFlowStatementService {
       partialResult,
       operatingExpensesResult,
       partnerTxResult,
-      purchasesResult,
     ] = await Promise.all([
       // 1. Fully paid sales in period (by paid_at)
       (supabase as SupabaseClient)
@@ -54,14 +53,17 @@ export class CashFlowStatementService {
         .lte('paid_at', toTs),
 
       // 2. Partial payments in period (amount_paid where payment_status=partial)
+      // Note: no per-payment timestamp exists for partial payments — using sale_date
+      // to approximate which period the partial invoice belongs to. This is conservative:
+      // a partial entered in month 2 on an invoice dated month 1 will appear in month 1.
       (supabase as SupabaseClient)
         .from('sales')
         .select('amount_paid')
         .eq('company_id', companyId)
         .eq('payment_status', 'partial')
         .is('deleted_at', null)
-        .gte('updated_at', from + 'T00:00:00Z')
-        .lte('updated_at', toTs),
+        .gte('sale_date', from)
+        .lte('sale_date', to),
 
       // 3. Paid operational expenses in period
       (supabase as SupabaseClient)
@@ -82,15 +84,6 @@ export class CashFlowStatementService {
         .gte('tx_date', from)
         .lte('tx_date', to),
 
-      // 5. Finalized purchases in period (cash paid for inventory)
-      (supabase as SupabaseClient)
-        .from('purchases')
-        .select('id')
-        .eq('company_id', companyId)
-        .eq('status', 'finalized')
-        .is('deleted_at', null)
-        .gte('purchase_date', from)
-        .lte('purchase_date', to),
     ])
 
     // ── OPERATING ─────────────────────────────────────────────────────────────

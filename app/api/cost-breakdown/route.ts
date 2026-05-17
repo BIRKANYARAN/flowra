@@ -12,22 +12,15 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase-server'
-import { contextFromHeader } from '@/lib/logger'
+import { resolveApiAuth } from '@/lib/api-auth'
 import { REQUEST_ID_HEADER } from '@/middleware'
 import { CostService } from '@/lib/services/cost.service'
 import { toErrorResponse } from '@/types/errors'
 
 export async function GET(req: NextRequest) {
-  const supabase = createClient()
-  const { data: authData, error: authError } = await supabase.auth.getUser()
-  if (authError || !authData?.user) {
-    return NextResponse.json(
-      { error: 'Unauthorized', code: 'UNAUTHORIZED', type: 'SECURITY' },
-      { status: 401 }
-    )
-  }
-  const ctx = contextFromHeader(req.headers.get(REQUEST_ID_HEADER), authData.user.id)
+  const auth = await resolveApiAuth(req)
+  if (!auth.ok) return auth.response
+  const { companyId, supabase, ctx } = auth
 
   try {
     const productId = new URL(req.url).searchParams.get('product_id') || ''
@@ -37,7 +30,7 @@ export async function GET(req: NextRequest) {
         { status: 422, headers: { [REQUEST_ID_HEADER]: ctx.requestId } }
       )
     }
-    const entries = await CostService.getCostBreakdown(productId)
+    const entries = await CostService.getCostBreakdown(productId, companyId)
     return NextResponse.json(
       { entries, count: entries.length },
       { headers: { [REQUEST_ID_HEADER]: ctx.requestId } }

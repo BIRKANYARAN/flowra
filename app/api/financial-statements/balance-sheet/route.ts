@@ -1,24 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient }              from '@/lib/supabase-server'
-import { resolveCompanyId }          from '@/lib/resolve-company'
 import { BalanceSheetService }       from '@/lib/services/balance-sheet.service'
+import { resolveApiAuth } from '@/lib/api-auth'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(req: NextRequest) {
   try {
-    const supabase  = createClient()
-    const { data: authData } = await supabase.auth.getUser()
-    if (!authData?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const companyId = await resolveCompanyId(authData.user.id, supabase)
-    if (!companyId) return NextResponse.json({ error: 'No company' }, { status: 400 })
+    const auth = await resolveApiAuth(req)
+    if (!auth.ok) return auth.response
+    const { uid, companyId, supabase } = auth
 
     const asOfDate = req.nextUrl.searchParams.get('as_of')
       ?? new Date().toISOString().slice(0, 10)
 
     const balanceSheet = await BalanceSheetService.compute(
-      authData.user.id, companyId, asOfDate, supabase
+      uid, companyId, asOfDate, supabase
     )
 
     return NextResponse.json(balanceSheet)

@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { PrintButton } from '@/components/reports/PrintButton'
+import { PdfExportButton } from '@/components/reports/PdfExportButton'
+import { formatTRY as fmt } from '@/lib/format'
 
 interface KdvSummary {
   sales_vat_try:    number
@@ -21,12 +22,6 @@ interface TaxApiRes {
   }
 }
 
-const _fmt = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-function fmt(n: number) {
-  const v = Number(n) || 0
-  return (v < 0 ? '−' : '') + _fmt.format(Math.abs(v)) + ' TL'
-}
-
 function currentPeriod() {
   const now  = new Date()
   const from = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
@@ -42,8 +37,10 @@ export default function KdvPage() {
   const [to,      setTo]      = useState(currentPeriod().to)
 
   useEffect(() => {
+    const ctrl = new AbortController()
     setLoading(true)
-    fetch(`/api/tax-summary?from=${from}&to=${to}`)
+    setError(null)
+    fetch(`/api/tax-summary?from=${from}&to=${to}`, { signal: ctrl.signal })
       .then(r => r.json())
       .then((d: TaxApiRes) => setKdv({
         sales_vat_try:    d.vat.sales_vat,
@@ -52,8 +49,9 @@ export default function KdvPage() {
         net_vat_try:      d.vat.net_vat,
         vat_status:       d.vat.net_vat > 0 ? 'payable' : 'carry_forward',
       }))
-      .catch(() => setError('KDV verileri yüklenemedi'))
+      .catch(err => { if (err.name !== 'AbortError') setError('KDV verileri yüklenemedi') })
       .finally(() => setLoading(false))
+    return () => ctrl.abort()
   }, [from, to])
 
   return (
@@ -70,7 +68,24 @@ export default function KdvPage() {
           <span className="text-xs text-gray-400">—</span>
           <input type="date" value={to} onChange={e => setTo(e.target.value)}
             className="border border-gray-200 rounded-lg px-2 py-1 text-xs" />
-          <PrintButton label="KDV PDF" />
+          <PdfExportButton
+            label="KDV PDF"
+            opts={{
+              companyName:  '',
+              reportTitle:  'KDV Beyan Özeti',
+              subtitle:     `${from} — ${to}`,
+              sections: [{
+                title: 'KDV Özeti',
+                rows: [
+                  { label: 'Satış KDV (Hesaplanan — 391)',      value: fmt(kdv?.sales_vat_try ?? 0) },
+                  { label: 'Alış KDV (İndirilecek — 191)',      value: fmt(kdv?.purchase_vat_try ?? 0) },
+                  { label: 'Gider KDV (İndirilecek — 191)',     value: fmt(kdv?.expense_vat_try ?? 0) },
+                  { label: 'Toplam İndirilecek KDV',            value: fmt((kdv?.purchase_vat_try ?? 0) + (kdv?.expense_vat_try ?? 0)) },
+                  { label: `Net KDV (${kdv?.vat_status === 'payable' ? 'Ödenecek' : 'Sonraki Dönem Devir'})`, value: fmt(Math.abs(kdv?.net_vat_try ?? 0)), bold: true },
+                ],
+              }],
+            }}
+          />
           <Link href="/dashboard/cfo" className="text-xs text-gray-400 hover:text-primary-600 font-semibold">← CFO</Link>
         </div>
       </div>

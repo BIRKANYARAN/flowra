@@ -9,17 +9,10 @@
 import { getQuarterlyReport, type QuarterResult } from '@/lib/finance/financial-core'
 import { normalizeAnalytics } from '@/lib/normalize'
 import { createClient }       from '@/lib/supabase-server'
+import { fmtTRY as fmt }     from '@/lib/format'
 
 // ── Formatters ────────────────────────────────────────────────────────────────
 
-const _TRY = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
-function fmt(n: number): string {
-  const abs  = Math.abs(Number(n || 0))
-  const sign = n < 0 ? '−' : ''
-  if (abs >= 1_000_000) return `${sign}₺${(abs / 1_000_000).toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 2 })}M`
-  if (abs >= 10_000)    return `${sign}₺${(abs / 1_000).toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}K`
-  return `${sign}₺${_TRY.format(abs)}`
-}
 function fmtPct(r: number): string {
   return `%${(r * 100).toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}`
 }

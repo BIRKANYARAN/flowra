@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { Customer } from '@/types'
+import { fmtNum as fmt } from '@/lib/format'
 
 // ── Local types for the detail API response ───────────────────────────────────
 
@@ -28,6 +29,8 @@ interface SaleSummary {
   payment_status:  string
   paid_at:         string | null
   shipment_status: string | null
+  /** Business invoice date (YYYY-MM-DD) — preferred for display */
+  sale_date:       string
   created_at:      string
 }
 
@@ -47,10 +50,6 @@ interface DetailData {
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-function fmt(n: number) {
-  return new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n)
-}
 
 function fmtDate(s: string) {
   return new Date(s).toLocaleDateString('tr-TR', { day: '2-digit', month: 'short', year: 'numeric' })
@@ -98,23 +97,27 @@ export default function CustomerDetailPage() {
   const [updatingSaleId, setUpdatingSaleId] = useState<string | null>(null)
   const [updateError,    setUpdateError]    = useState<string>('')
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (signal?: AbortSignal) => {
     setLoading(true)
     setError('')
     try {
-      const res = await fetch(`/api/customers/${id}`)
+      const res = await fetch(`/api/customers/${id}`, signal ? { signal } : undefined)
       if (res.status === 404) { setError('Müşteri bulunamadı.'); return }
       if (!res.ok) { setError('Veriler yüklenemedi.'); return }
       const json = await res.json()
       setData(json)
-    } catch {
-      setError('Ağ hatası. Sayfayı yenileyin.')
+    } catch (e) {
+      if ((e as { name?: string }).name !== 'AbortError') setError('Ağ hatası. Sayfayı yenileyin.')
     } finally {
       setLoading(false)
     }
   }, [id])
 
-  useEffect(() => { load() }, [load])
+  useEffect(() => {
+    const controller = new AbortController()
+    load(controller.signal)
+    return () => controller.abort()
+  }, [load])
 
   async function updateSale(saleId: string, patch: Record<string, string>) {
     setUpdatingSaleId(saleId)
@@ -249,7 +252,7 @@ export default function CustomerDetailPage() {
                           <span className="ml-2 text-gray-400 font-normal text-xs">(≈ ₺{fmt(s.total_try)})</span>
                         )}
                       </div>
-                      <div className="text-xs text-gray-400 mt-0.5">{fmtDate(s.created_at)}</div>
+                      <div className="text-xs text-gray-400 mt-0.5">{fmtDate(s.sale_date || s.created_at)}</div>
                     </div>
                     <div className="flex gap-1.5 flex-shrink-0 items-center">
                       <Badge map={STATUS_PAYMENT}  val={s.payment_status} />

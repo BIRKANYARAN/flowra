@@ -1,18 +1,14 @@
-import { NextResponse } from 'next/server'
-import { createClient }     from '@/lib/supabase-server'
-import { resolveCompanyId } from '@/lib/resolve-company'
+import { NextRequest, NextResponse } from 'next/server'
+import { resolveApiAuth } from '@/lib/api-auth'
 
 export const dynamic = 'force-dynamic'
 
 // GET /api/periods — list accounting periods for this company
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const supabase = createClient()
-    const { data: authData } = await supabase.auth.getUser()
-    if (!authData?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const companyId = await resolveCompanyId(authData.user.id, supabase)
-    if (!companyId) return NextResponse.json({ error: 'No company' }, { status: 400 })
+    const auth = await resolveApiAuth(req)
+    if (!auth.ok) return auth.response
+    const { companyId, supabase } = auth
 
     const { data, error } = await supabase
       .from('accounting_periods')

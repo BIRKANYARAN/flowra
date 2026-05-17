@@ -44,11 +44,13 @@ export default function AlertSettingsPage() {
   const [flash,   setFlash]   = useState<string | null>(null)
 
   useEffect(() => {
-    fetch('/api/settings/alerts')
+    const controller = new AbortController()
+    fetch('/api/settings/alerts', { signal: controller.signal })
       .then(r => r.json())
       .then(d => setRules(d.rules ?? []))
-      .catch(() => setError('Kurallar yüklenemedi'))
+      .catch(e => { if (e.name !== 'AbortError') setError('Kurallar yüklenemedi') })
       .finally(() => setLoading(false))
+    return () => controller.abort()
   }, [])
 
   async function saveRule(rule: AlertRule) {

@@ -6,7 +6,9 @@ import { Sidebar }                 from '@/components/layout/Sidebar'
 import { Header }                  from '@/components/layout/Header'
 import { resolveUserRole }         from '@/lib/require-role'
 import type { UserSettings, MemberRole } from '@/types'
-import { resolveCompanyId }        from '@/lib/resolve-company'
+import type { CompanyEntry }       from '@/types/dto'
+import { resolveCompanyWithPref, listCompaniesForUser, COMPANY_PREF_COOKIE } from '@/lib/resolve-company'
+import { cookies }                from 'next/headers'
 import { safeSystemQuery }         from '@/lib/admin-db'
 import { WorkspaceProvider }       from '@/lib/workspace-context'
 import { QueryProvider }           from '@/lib/query-provider'
@@ -27,10 +29,19 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
     let companyId: string | null = null
     try {
-      companyId = await resolveCompanyId(user.id, supabase)
+      const prefCookie = cookies().get(COMPANY_PREF_COOKIE)?.value
+      companyId = await resolveCompanyWithPref(user.id, supabase, prefCookie)
     } catch {
       companyId = null
     }
+
+    // Load all companies the user belongs to (for multi-company switcher)
+    const rawCompanies = companyId ? await listCompaniesForUser(user.id, supabase) : []
+    const companies: CompanyEntry[] = rawCompanies.map(c => ({
+      companyId:   c.companyId,
+      companyName: c.companyName,
+      role:        c.role as MemberRole,
+    }))
 
     let settings: UserSettings | null = null
     try {
@@ -87,6 +98,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           userEmail={user.email ?? null}
           userName={userName}
           userInitials={userInitials}
+          companies={companies}
         >
           <div className="flex min-h-screen bg-gray-50">
             <Sidebar />

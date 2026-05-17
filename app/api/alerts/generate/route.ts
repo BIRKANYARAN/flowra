@@ -26,12 +26,11 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient }     from '@/lib/supabase-server'
-import { resolveCompanyId } from '@/lib/resolve-company'
 import {
   deriveAlerts,
   type AlertDeriveInput,
 } from '@/lib/alerts/derive'
+import { resolveApiAuth } from '@/lib/api-auth'
 
 interface AlertInsert {
   actor_user_id: string
@@ -45,20 +44,10 @@ interface AlertInsert {
 
 const BURN_EXPENSE_TYPES = ['operational', 'fixed', 'variable']
 
-export async function POST(_req: NextRequest) {
-  const supabase = createClient()
-  const { data: authData, error: authError } = await supabase.auth.getUser()
-  if (authError || !authData?.user) {
-    return NextResponse.json(
-      { error: 'Unauthorized', code: 'UNAUTHORIZED', type: 'SECURITY' },
-      { status: 401 },
-    )
-  }
-  const userId = authData.user.id
-
-  let companyId: string
-  try { companyId = await resolveCompanyId(userId, supabase) }
-  catch { return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED' }, { status: 409 }) }
+export async function POST(req: NextRequest) {
+  const auth = await resolveApiAuth(req)
+  if (!auth.ok) return auth.response
+  const { uid, companyId, supabase } = auth
 
   // ── PHASE 1: Fetch all required data in parallel ──────────────────────────
 
@@ -81,21 +70,26 @@ export async function POST(_req: NextRequest) {
   ] = await Promise.all([
 
     // A. Recent alerts (7-day de-dup window)
+    // Scope by both actor_user_id AND company_id — a user in multiple companies
+    // should receive alerts for each company independently.
     supabase
       .from('alerts')
       .select('entity_type, entity_id')
-      .eq('actor_user_id', userId)
+      .eq('actor_user_id', uid)
+      .eq('company_id', companyId)
       .gte('created_at', sevenDaysAgo),
 
     // B. Overdue sales: unpaid/partial/overdue AND > 30 days old (max 50)
+    //    Includes amount_paid so alert messages show net outstanding for partial sales.
+    //    Use sale_date (business invoice date) for aging — not created_at (DB insertion time).
     supabase
       .from('sales')
-      .select('id, customer_name, total_try, payment_status, created_at')
+      .select('id, customer_name, total_try, amount_paid, payment_status, sale_date')
       .eq('company_id', companyId)
       .is('deleted_at', null)
       .in('payment_status', ['pending', 'partial', 'overdue'])
-      .lt('created_at', thirtyDaysAgo)
-      .order('created_at', { ascending: true })
+      .lt('sale_date', thirtyDaysAgo.slice(0, 10))
+      .order('sale_date', { ascending: true })
       .limit(50),
 
     // C. Active products with stock alert thresholds set
@@ -108,9 +102,10 @@ export async function POST(_req: NextRequest) {
       .gt('stock_alert_qty', 0),
 
     // D. Outstanding sales (unpaid/partial) — for cashflow projection input
+    //    Includes amount_paid so partial payments are netted out correctly.
     supabase
       .from('sales')
-      .select('total_try')
+      .select('total_try, amount_paid')
       .eq('company_id', companyId)
       .is('deleted_at', null)
       .in('payment_status', ['pending', 'partial'])
@@ -127,13 +122,15 @@ export async function POST(_req: NextRequest) {
       .in('expense_type', BURN_EXPENSE_TYPES),
 
     // F. Receivable aging: 60+ day outstanding (for aged_60_plus alert)
+    //    Includes amount_paid so partial payments are netted out correctly.
+    //    Use sale_date (business invoice date) for aging — not created_at.
     supabase
       .from('sales')
-      .select('total_try, created_at')
+      .select('total_try, amount_paid, sale_date')
       .eq('company_id', companyId)
       .is('deleted_at', null)
       .in('payment_status', ['pending', 'partial', 'overdue'])
-      .lt('created_at', new Date(Date.now() - 60 * 86_400_000).toISOString()),
+      .lt('sale_date', new Date(Date.now() - 60 * 86_400_000).toISOString().slice(0, 10)),
   ])
 
   // ── Build de-dup set ───────────────────────────────────────────────────────
@@ -156,12 +153,16 @@ export async function POST(_req: NextRequest) {
   }
 
   // ── Compute aged 60+ totals ────────────────────────────────────────────────
+  // Net outstanding: subtract partial payments already received.
   const aged60PlusRows  = receivableAgingRes.data ?? []
-  const aged60PlusTry   = aged60PlusRows.reduce((s, r) => s + Number(r.total_try ?? 0), 0)
+  const aged60PlusTry   = aged60PlusRows.reduce(
+    (s, r) => s + Math.max(0, Number(r.total_try ?? 0) - Number((r as { amount_paid?: number | null }).amount_paid ?? 0)),
+    0,
+  )
   const aged60PlusCount = aged60PlusRows.length
 
   const outstandingTotal = (outstandingRes.data ?? []).reduce(
-    (s, r) => s + Number(r.total_try ?? 0),
+    (s, r) => s + Math.max(0, Number(r.total_try ?? 0) - Number((r as { amount_paid?: number | null }).amount_paid ?? 0)),
     0,
   )
 
@@ -182,7 +183,7 @@ export async function POST(_req: NextRequest) {
   const toInsert: AlertInsert[] = specs
     .filter(s => !recentKeys.has(`${s.entity_type}::${s.entity_id}`))
     .map(s => ({
-      actor_user_id: userId,
+      actor_user_id: uid,
       company_id:    companyId,
       entity_type:   s.entity_type,
       entity_id:     s.entity_id,

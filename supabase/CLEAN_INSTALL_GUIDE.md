@@ -43,24 +43,49 @@ Beklenen sonuç: 36 tablo, 15 fonksiyon, 5 trigger, 3 view — tümü ✅
 
 ---
 
-## 2. Mevcut Veritabanını Güncelleme (Production Repair)
+## 2. Dosya Haritası — Hangi SQL Ne İşe Yarar?
+
+| Dosya | Açıklama | Ne zaman kullanılır |
+|-------|----------|---------------------|
+| `FLOWRA_FULL_INSTALL.sql` | **Temiz kurulum** — faz 1-9 birleştirilmiş (1935 satır) | Boş Supabase projesi |
+| `flowra_FULL_MIGRATION.sql` | **Toplu migration** — faz 1-9 artı job queue altyapısı (3199 satır) | Mevcut üretim veritabanı |
+| `flowra_install.sql` | Temel şema (orijinal, 619 satır) | Yalnızca baz tablo kurulumu |
+| `repair_production.sql` | Sütun eklemeleri, RPC yamalar, RLS düzeltmeleri | Prodüksiyon acil tamir |
+| `supabase/archive/flowra_phase*.sql` | Artımlı faz dosyaları — arşivlendi | Referans / tarih amaçlı |
+
+**Önemli:** `supabase/archive/` altındaki phase dosyaları artık standalone değil —
+`FLOWRA_FULL_INSTALL.sql` ve `flowra_FULL_MIGRATION.sql` içeriklerini kendi bünyesinde barındırıyor.
+
+---
+
+## 3. Mevcut Veritabanını Güncelleme (Production Repair)
 
 Mevcut Supabase projesini güncellemek için:
 
 ```
+1. flowra_FULL_MIGRATION.sql → çalıştır (faz 1-9 hepsini kapsar, idempotent)
+2. supabase/archive/flowra_phase14_orders.sql → çalıştır (purchase_orders tablosu)
+3. schema_verify.sql → doğrula
+```
+
+Ya da faz faz ilerlemek istiyorsanız (arşivden):
+
+```
 1. repair_production.sql → çalıştır (base schema patches)
-2. flowra_phase1_accounting.sql → çalıştır
-3. flowra_phase2_pcle.sql → çalıştır
-4. flowra_phase3_accounting.sql → çalıştır
-5. flowra_phase7_hardening.sql → çalıştır
-6. schema_verify.sql → doğrula
+2. archive/flowra_phase1_accounting.sql → çalıştır
+3. archive/flowra_phase2_pcle.sql → çalıştır
+4. archive/flowra_phase3_accounting.sql → çalıştır
+5. archive/flowra_phase7_hardening.sql → çalıştır
+6. archive/flowra_phase9_workflow.sql → çalıştır
+7. archive/flowra_phase14_orders.sql → çalıştır
+8. schema_verify.sql → doğrula
 ```
 
 Her dosya bağımsız olarak idempotent'tir (defalarca çalıştırılabilir).
 
 ---
 
-## 3. Manuel Sıfırlama (Veri Silme — Tehlikeli)
+## 4. Manuel Sıfırlama (Veri Silme — Tehlikeli)
 
 > ⛔ Bu işlem geri alınamaz. Tüm şirket verilerini siler.
 > Sadece test/staging ortamında yapın.
@@ -94,7 +119,7 @@ grant all on schema public to postgres;
 
 ---
 
-## 4. Environment Variables (Vercel)
+## 5. Environment Variables (Vercel)
 
 Kurulumdan sonra Vercel'de şu env var'ların set olduğunu kontrol edin:
 
@@ -108,7 +133,7 @@ SUPABASE_SERVICE_ROLE_KEY=eyJ...
 
 ---
 
-## 5. İlk Kullanıcı Kurulumu
+## 6. İlk Kullanıcı Kurulumu
 
 Kurulumdan sonra ilk kayıt olan kullanıcı otomatik olarak:
 1. Yeni bir şirket alır (`bootstrap_user_company` RPC)
@@ -119,7 +144,7 @@ Ek kullanıcılar: Settings → Team → Invite ile eklenebilir.
 
 ---
 
-## 6. Smoke Test Kontrol Listesi
+## 7. Smoke Test Kontrol Listesi
 
 Kurulum sonrası şu URL'leri sırayla test edin:
 
@@ -137,16 +162,18 @@ Kurulum sonrası şu URL'leri sırayla test edin:
 | 10 | `/dashboard/operations?tab=expenses` | Gider listesi |
 | 11 | `/dashboard/operations?tab=catalog` | Ürün kataloğu |
 | 12 | `/dashboard/operations?tab=stock` | Stok paneli |
-| 13 | `/dashboard/planning?tab=unit-profit` | Simülasyon UI |
-| 14 | `/dashboard/planning?tab=tasks` | Görev listesi |
-| 15 | `/dashboard/partners` | Ortak listesi |
-| 16 | `/dashboard/settings` | Ayarlar sayfası |
-| 17 | `/dashboard/cashflow` | → redirect `/dashboard/finance?tab=cashflow` |
-| 18 | `/dashboard/simulation` | → redirect `/dashboard/planning?tab=unit-profit` |
+| 13 | `/dashboard/operations?tab=orders` | Satın alma emirleri listesi |
+| 14 | `/dashboard/planning?tab=unit-profit` | Simülasyon UI |
+| 15 | `/dashboard/planning?tab=tasks` | Görev listesi |
+| 16 | `/dashboard/partners` | Ortak listesi |
+| 17 | `/dashboard/settings` | Ayarlar sayfası |
+| 18 | `/dashboard/cashflow` | → redirect `/dashboard/finance?tab=cashflow` (301) |
+| 19 | `/dashboard/simulation` | → redirect `/dashboard/planning?tab=unit-profit` (301) |
+| 20 | `/dashboard/orders` | → redirect `/dashboard/operations?tab=orders` (301) |
 
 ---
 
-## 7. Bilinen Sınırlamalar
+## 8. Bilinen Sınırlamalar
 
 - `purchases` tablosu mevcut şemada yoksa `trg_guard_period_purchases` trigger'ı sessizce atlanır (exception when undefined_table)
 - `audit_log` (eski, no-s) ve `audit_logs` (yeni, with-s) iki ayrı tablo. App kodu `audit_logs` kullanıyor.

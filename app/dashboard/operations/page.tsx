@@ -13,6 +13,7 @@ import { OPERATIONS_TABS } from '@/lib/nav-config'
 import { ExpensesContent } from './_tabs/ExpensesContent'
 import { CatalogContent }  from './_tabs/CatalogContent'
 import { StockContent }    from './_tabs/StockContent'
+import { OrdersContent }   from './_tabs/OrdersContent'
 
 function TabSkeleton() {
   return (
@@ -71,8 +72,9 @@ export default async function OperationsPage({ searchParams }: PageProps) {
 
       <Suspense fallback={<TabSkeleton />}>
         {activeTab === 'expenses' && <ExpensesContent companyId={companyId} />}
-        {activeTab === 'catalog' && <CatalogContent companyId={companyId} userId={userId} />}
-        {activeTab === 'stock'   && <StockContent   companyId={companyId} />}
+        {activeTab === 'catalog'  && <CatalogContent companyId={companyId} userId={userId} />}
+        {activeTab === 'stock'    && <StockContent   companyId={companyId} />}
+        {activeTab === 'orders'   && <OrdersContent  companyId={companyId} />}
       </Suspense>
     </div>
   )

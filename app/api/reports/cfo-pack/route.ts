@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse }  from 'next/server'
-import { createClient }               from '@/lib/supabase-server'
-import { resolveCompanyId }           from '@/lib/resolve-company'
 import { FinanceService }             from '@/lib/services/finance.service'
 import { TaxService }                 from '@/lib/services/tax.service'
 import { BalanceSheetService }        from '@/lib/services/balance-sheet.service'
 import { CashFlowStatementService }   from '@/lib/services/cashflow-statement.service'
+import { resolveApiAuth } from '@/lib/api-auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,12 +16,9 @@ export const dynamic = 'force-dynamic'
 
 export async function GET(req: NextRequest) {
   try {
-    const supabase   = createClient()
-    const { data: authData } = await supabase.auth.getUser()
-    if (!authData?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const companyId = await resolveCompanyId(authData.user.id, supabase)
-    if (!companyId) return NextResponse.json({ error: 'No company' }, { status: 400 })
+    const auth = await resolveApiAuth(req)
+    if (!auth.ok) return auth.response
+    const { uid, companyId, supabase } = auth
 
     const params = req.nextUrl.searchParams
     const now    = new Date()
@@ -39,12 +35,12 @@ export async function GET(req: NextRequest) {
     const companyName = companyRow?.name ?? 'Şirket'
 
     const [fs, taxSummary, balanceSheet, cashFlow, receivables, expenses] = await Promise.allSettled([
-      FinanceService.getFinancialSummary(authData.user.id, companyId, { from, to }),
-      TaxService.getKdvNet(authData.user.id, companyId, { from, to }),
-      BalanceSheetService.compute(authData.user.id, companyId, asOf, supabase),
-      CashFlowStatementService.compute(authData.user.id, companyId, { from, to }, supabase),
-      // Receivables aging buckets
-      supabase.from('sales').select('total_try, created_at, payment_status, customer_name')
+      FinanceService.getFinancialSummary(uid, companyId, { from, to }),
+      TaxService.getKdvNet(uid, companyId, { from, to }),
+      BalanceSheetService.compute(uid, companyId, asOf, supabase),
+      CashFlowStatementService.compute(uid, companyId, { from, to }, supabase),
+      // Receivables aging buckets — use sale_date (business date) not created_at
+      supabase.from('sales').select('total_try, amount_paid, sale_date, payment_status, customer_name')
         .eq('company_id', companyId).neq('payment_status', 'paid').is('deleted_at', null),
       // Expense category breakdown
       supabase.from('expenses').select('expense_type, amount_try')
@@ -57,8 +53,9 @@ export async function GET(req: NextRequest) {
     const aging: Record<string, number> = { current: 0, overdue_30: 0, overdue_60: 0, overdue_90: 0 }
     if (receivables.status === 'fulfilled' && receivables.value.data) {
       for (const s of receivables.value.data) {
-        const daysDiff = Math.round((today.getTime() - new Date(s.created_at as string).getTime()) / 86_400_000)
-        const amt = Number(s.total_try ?? 0)
+        if (!s.sale_date) continue  // guard against missing business date
+        const daysDiff = Math.round((today.getTime() - new Date(s.sale_date as string).getTime()) / 86_400_000)
+        const amt = Math.max(0, Number(s.total_try ?? 0) - Number(s.amount_paid ?? 0))
         if (daysDiff <= 30)      aging.current    += amt
         else if (daysDiff <= 60) aging.overdue_30  += amt
         else if (daysDiff <= 90) aging.overdue_60  += amt

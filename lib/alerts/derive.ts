@@ -22,13 +22,14 @@
 /** Data required to derive all alert types. All fields are pre-fetched by the caller. */
 export interface AlertDeriveInput {
   // ── Per-sale overdue payment checks ────────────────────────────────────────
-  /** Sales with payment_status in (unpaid, partial, overdue) AND created_at < 30 days ago */
+  /** Sales with payment_status in (unpaid, partial, overdue) AND sale_date < 30 days ago */
   overdueSales: Array<{
     id:              string
     customer_name:   string
     total_try:       number
+    amount_paid?:    number | null   // included to compute net outstanding for partial sales
     payment_status:  string
-    created_at:      string
+    sale_date:       string   // business invoice date — used for aging (not created_at)
   }>
 
   // ── Per-product low stock checks ───────────────────────────────────────────
@@ -119,11 +120,13 @@ export function deriveAlerts(input: AlertDeriveInput): AlertSpec[] {
 
   // ── 1. Overdue payment — per sale ─────────────────────────────────────────
   for (const sale of input.overdueSales) {
-    const ageDays = Math.floor((nowMs - new Date(sale.created_at).getTime()) / 86_400_000)
+    const ageDays = Math.floor((nowMs - new Date(sale.sale_date + 'T00:00:00Z').getTime()) / 86_400_000)
     if (ageDays <= 30) continue   // caller should pre-filter; guard here too
 
     const severity: AlertSpec['severity'] = ageDays > 60 ? 'critical' : 'warning'
-    const amtStr  = Number(sale.total_try).toLocaleString('tr-TR', { minimumFractionDigits: 0 })
+    // Show net outstanding (total_try - amount_paid) for partial payments
+    const outstanding = Math.max(0, Number(sale.total_try) - Number(sale.amount_paid ?? 0))
+    const amtStr  = outstanding.toLocaleString('tr-TR', { minimumFractionDigits: 0 })
 
     specs.push({
       entity_type: 'sale',

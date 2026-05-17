@@ -15,27 +15,18 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient }     from '@/lib/supabase-server'
-import { resolveCompanyId } from '@/lib/resolve-company'
 import {
   computeCashMetrics,
   computeReceivableMetrics,
   computeRunwayForecast,
   BURN_EXPENSE_TYPES,
 } from '@/lib/finance/cfo-metrics'
+import { resolveApiAuth } from '@/lib/api-auth'
 
 export async function GET(req: NextRequest) {
-  const supabase = createClient()
-  const { data: authData, error: authError } = await supabase.auth.getUser()
-  if (authError || !authData?.user) {
-    return NextResponse.json({ error: 'Unauthorized', code: 'UNAUTHORIZED' }, { status: 401 })
-  }
-
-  let companyId: string
-  try { companyId = await resolveCompanyId(authData.user.id, supabase) }
-  catch {
-    return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED' }, { status: 409 })
-  }
+  const auth = await resolveApiAuth(req)
+  if (!auth.ok) return auth.response
+  const { companyId, supabase } = auth
 
   const url     = new URL(req.url)
   const now     = new Date()
@@ -86,13 +77,14 @@ export async function GET(req: NextRequest) {
         .gte('expense_date', trail3).lte('expense_date', today)
         .in('expense_type', Array.from(BURN_EXPENSE_TYPES)),
 
-      supabase.from('sales').select('total_try, created_at, due_date, amount_paid')
+      supabase.from('sales').select('total_try, sale_date, due_date, amount_paid')
         .eq('company_id', companyId).is('deleted_at', null)
         .in('payment_status', ['pending', 'partial', 'overdue']),
 
+      // Use sale_date (business invoice date) not created_at (DB insertion time)
       supabase.from('sales').select('total_try')
         .eq('company_id', companyId).is('deleted_at', null)
-        .gte('created_at', from + 'T00:00:00Z').lte('created_at', to + 'T23:59:59Z'),
+        .gte('sale_date', from).lte('sale_date', to),
 
       // Active recurring burn expenses — for projected monthly commitment
       supabase.from('recurring_expenses').select('amount, fx_rate, frequency')
@@ -119,7 +111,7 @@ export async function GET(req: NextRequest) {
       periodCollected: periodReceived,
       outstanding: (outstandingRes.data ?? []).map(r => ({
         amount_try:  Number(r.total_try ?? 0),
-        created_at:  String(r.created_at ?? ''),
+        sale_date:   String(r.sale_date ?? ''),
         due_date:    r.due_date ? String(r.due_date) : null,
         amount_paid: r.amount_paid != null ? Number(r.amount_paid) : null,
       })),

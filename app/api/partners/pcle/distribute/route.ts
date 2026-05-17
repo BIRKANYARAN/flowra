@@ -1,25 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient }      from '@/lib/supabase-server'
-import { resolveCompanyId }  from '@/lib/resolve-company'
 import { PCLEEngine }        from '@/lib/services/pcle/pcle.engine'
+import { resolveApiAuth } from '@/lib/api-auth'
 
 export const dynamic = 'force-dynamic'
 
 // GET /api/partners/pcle/distribute?net_income=X&board_retained=X&dividend_requested=X
 export async function GET(req: NextRequest) {
   try {
-    const supabase = createClient()
-    const { data: authData } = await supabase.auth.getUser()
-    if (!authData?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const companyId = await resolveCompanyId(authData.user.id, supabase)
-    if (!companyId) return NextResponse.json({ error: 'No company' }, { status: 400 })
+    const auth = await resolveApiAuth(req)
+    if (!auth.ok) return auth.response
+    const { companyId, supabase } = auth
 
     const params            = req.nextUrl.searchParams
-    const net_income        = parseFloat(params.get('net_income')         ?? '0')
-    const board_retained    = parseFloat(params.get('board_retained')     ?? '0')
-    const dividend_requested= parseFloat(params.get('dividend_requested') ?? '0')
-    const available_cash    = parseFloat(params.get('available_cash')     ?? '0')
+    const net_income        = parseFloat(params.get('net_income')         ?? '0') || 0
+    const board_retained    = parseFloat(params.get('board_retained')     ?? '0') || 0
+    const dividend_requested= parseFloat(params.get('dividend_requested') ?? '0') || 0
+    const available_cash    = parseFloat(params.get('available_cash')     ?? '0') || 0
 
     const state = await PCLEEngine.compute(companyId, supabase, {
       available_cash_try:     available_cash,

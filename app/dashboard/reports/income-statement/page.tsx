@@ -2,7 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { PrintButton } from '@/components/reports/PrintButton'
+import { PdfExportButton } from '@/components/reports/PdfExportButton'
+import { useWorkspace } from '@/lib/workspace-context'
+import type { PdfReportOptions } from '@/lib/utils/pdf-report'
+import { formatTRY as fmt } from '@/lib/format'
 
 interface PnL {
   revenue_try:                 number
@@ -17,11 +20,6 @@ interface PnL {
   net_after_tax_try:           number
 }
 
-const _fmt = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-function fmt(n: number) {
-  const v = Number(n) || 0
-  return (v < 0 ? '−' : '') + _fmt.format(Math.abs(v)) + ' TL'
-}
 function pct(n: number, d: number) {
   if (!d) return '—'
   return ((n / d) * 100).toFixed(1) + '%'
@@ -57,19 +55,48 @@ export default function IncomeStatementPage() {
   const [error,   setError]   = useState<string | null>(null)
   const [from,    setFrom]    = useState(currentPeriod().from)
   const [to,      setTo]      = useState(currentPeriod().to)
+  const ws = useWorkspace()
 
   useEffect(() => {
+    const ctrl = new AbortController()
     setLoading(true)
-    fetch(`/api/financial-summary?from=${from}&to=${to}`)
+    setError(null)
+    fetch(`/api/financial-summary?from=${from}&to=${to}`, { signal: ctrl.signal })
       .then(r => r.json())
       .then(d => setPnl(d as PnL))
-      .catch(() => setError('Veriler yüklenemedi'))
+      .catch(err => { if (err.name !== 'AbortError') setError('Veriler yüklenemedi') })
       .finally(() => setLoading(false))
+    return () => ctrl.abort()
   }, [from, to])
 
   const grossMargin = pnl ? pct(pnl.gross_profit_try, pnl.revenue_try) : '—'
   const ebitda      = pnl ? pnl.gross_profit_try - pnl.expenses_total_try : 0
   const netMargin   = pnl ? pct(pnl.net_after_tax_try, pnl.revenue_try) : '—'
+
+  // Build PDF opts when data is available
+  const pdfOpts: PdfReportOptions | null = pnl ? {
+    companyName:  ws.companyName ?? 'Şirket',
+    reportTitle:  'Gelir Tablosu',
+    subtitle:     `${from} — ${to}`,
+    filename:     `gelir-tablosu-${from}-${to}`,
+    sections: [{
+      title: 'Gelir Tablosu',
+      rows: [
+        { label: 'Satış Gelirleri',            value: fmt(pnl.revenue_try),            bold: true, tone: 'positive' },
+        { label: 'Satılan Malın Maliyeti',     value: fmt(pnl.cost_try),               indent: true, tone: 'negative' },
+        { label: `Brüt Kâr (Marj: ${grossMargin})`, value: fmt(pnl.gross_profit_try), bold: true },
+        { divider: true, label: '', value: '' },
+        { label: 'Toplam Faaliyet Giderleri',  value: fmt(pnl.expenses_total_try),     indent: true, tone: 'negative' },
+        { label: '— İndirilebilir',            value: fmt(pnl.deductible_expenses_try),     indent: true },
+        { label: '— İndirilemez',              value: fmt(pnl.non_deductible_expenses_try), indent: true },
+        { label: 'Faaliyet Kârı (EBIT)',        value: fmt(ebitda),                     bold: true, tone: ebitda >= 0 ? 'positive' : 'negative' },
+        { divider: true, label: '', value: '' },
+        { label: `KV Matrahı`,                 value: fmt(pnl.matrah_try),             indent: true },
+        { label: `Kurumlar Vergisi (%${(pnl.corporate_tax_rate * 100).toFixed(0)})`, value: fmt(pnl.corporate_tax_try), indent: true, tone: 'negative' },
+        { label: `Dönem Net Kârı (Marj: ${netMargin})`, value: fmt(pnl.net_after_tax_try), bold: true, tone: pnl.net_after_tax_try >= 0 ? 'positive' : 'negative' },
+      ],
+    }],
+  } : null
 
   return (
     <div className="flex flex-col gap-4 max-w-2xl print:max-w-none">
@@ -85,7 +112,7 @@ export default function IncomeStatementPage() {
           <span className="text-xs text-gray-400">—</span>
           <input type="date" value={to} onChange={e => setTo(e.target.value)}
             className="border border-gray-200 rounded-lg px-2 py-1 text-xs" />
-          <PrintButton label="PDF İndir" />
+          {pdfOpts && <PdfExportButton opts={pdfOpts} label="PDF İndir" />}
           <Link href="/dashboard/cfo" className="text-xs text-gray-400 hover:text-primary-600 font-semibold">← CFO</Link>
         </div>
       </div>
@@ -121,7 +148,7 @@ export default function IncomeStatementPage() {
             <Row label="Toplam Giderler"         value={fmt(-pnl.expenses_total_try)} indent negative={pnl.expenses_total_try > 0} />
             <Row label="  — İndirilebilir"       value={fmt(-pnl.deductible_expenses_try)} indent />
             <Row label="  — İndirilemez"         value={fmt(-pnl.non_deductible_expenses_try)} indent />
-            <Row label="Faaliyet Kârı (EBITDA)"  value={fmt(ebitda)}
+            <Row label="Faaliyet Kârı (EBIT)"     value={fmt(ebitda)}
               bold positive={ebitda > 0} negative={ebitda < 0} />
           </div>
 

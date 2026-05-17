@@ -23,9 +23,8 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient }    from '@/lib/supabase-server'
-import { resolveCompanyId } from '@/lib/resolve-company'
 import type { RecurringProjectionMonth } from '@/types'
+import { resolveApiAuth } from '@/lib/api-auth'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -54,23 +53,15 @@ function monthDiff(ymA: string, ymB: string): number {
 // ── GET ───────────────────────────────────────────────────────────────────────
 
 export async function GET(req: NextRequest) {
-  const supabase = createClient()
-  const { data: authData, error: authError } = await supabase.auth.getUser()
-  if (authError || !authData?.user) {
-    return NextResponse.json(
-      { error: 'Unauthorized', code: 'UNAUTHORIZED', type: 'SECURITY' },
-      { status: 401 },
-    )
-  }
-
-  let companyId: string
-  try { companyId = await resolveCompanyId(authData.user.id, supabase) }
-  catch { return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED' }, { status: 409 }) }
+  const auth = await resolveApiAuth(req)
+  if (!auth.ok) return auth.response
+  const { companyId, supabase } = auth
 
   try {
 
   const url      = new URL(req.url)
-  const months   = Math.min(Math.max(Number(url.searchParams.get('months') ?? 12), 1), 24)
+  const rawMonths = Number(url.searchParams.get('months') ?? 12)
+  const months    = Math.min(Math.max(Number.isFinite(rawMonths) ? rawMonths : 12, 1), 24)
 
   // Fetch all active recurring expenses for the company
   const { data: recurrings, error: fetchError } = await supabase
@@ -97,7 +88,7 @@ export async function GET(req: NextRequest) {
   for (const rec of recurrings ?? []) {
     const startYM  = toYM(rec.start_date as string)
     const endYM    = rec.end_date ? toYM(rec.end_date as string) : null
-    const amtTry   = Number(rec.amount) * Number(rec.fx_rate)
+    const amtTry   = (Number(rec.amount) || 0) * (Number(rec.fx_rate) || 1)
     const freq     = rec.frequency as 'monthly' | 'quarterly' | 'yearly'
     const step     = freq === 'monthly' ? 1 : freq === 'quarterly' ? 3 : 12
 

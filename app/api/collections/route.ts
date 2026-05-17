@@ -5,22 +5,16 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase-server'
-import { resolveCompanyId } from '@/lib/resolve-company'
+import { resolveApiAuth } from '@/lib/api-auth'
 
 const ALLOWED_STATUSES = ['pending', 'paid', 'partial', 'overdue', 'cancelled'] as const
 type PaymentStatus = typeof ALLOWED_STATUSES[number]
 
 // ── GET ───────────────────────────────────────────────────────────────────────
 export async function GET(req: NextRequest) {
-  const supabase = createClient()
-  const { data: authData, error: authError } = await supabase.auth.getUser()
-  if (authError || !authData?.user)
-    return NextResponse.json({ error: 'Unauthorized', code: 'UNAUTHORIZED', type: 'SECURITY' }, { status: 401 })
-
-  let companyId: string
-  try { companyId = await resolveCompanyId(authData.user.id, supabase) }
-  catch { return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED', type: 'SYSTEM' }, { status: 409 }) }
+  const auth = await resolveApiAuth(req)
+  if (!auth.ok) return auth.response
+  const { uid, companyId, supabase, ctx } = auth
 
   const { searchParams } = new URL(req.url)
   const statusFilter = searchParams.get('status') ?? 'all'
@@ -28,10 +22,10 @@ export async function GET(req: NextRequest) {
   try {
     let query = supabase
       .from('sales')
-      .select('id, customer_name, currency, total, total_try, nominal_profit, created_at, due_date, amount_paid, proforma_id, payment_status, paid_at, proformas(proforma_no)')
+      .select('id, customer_name, currency, total, total_try, nominal_profit, sale_date, created_at, due_date, amount_paid, proforma_id, payment_status, paid_at, proformas(proforma_no)')
       .eq('company_id', companyId)
       .is('deleted_at', null)
-      .order('created_at', { ascending: false })
+      .order('sale_date', { ascending: false })
       .limit(200)
 
     if (ALLOWED_STATUSES.includes(statusFilter as PaymentStatus)) {
@@ -46,10 +40,10 @@ export async function GET(req: NextRequest) {
       if (error.message.includes('payment_status')) {
         const { data: fallback } = await supabase
           .from('sales')
-          .select('id, customer_name, currency, total, total_try, nominal_profit, created_at, proforma_id, proformas(proforma_no)')
+          .select('id, customer_name, currency, total, total_try, nominal_profit, sale_date, created_at, proforma_id, proformas(proforma_no)')
           .eq('company_id', companyId)
           .is('deleted_at', null)
-          .order('created_at', { ascending: false })
+          .order('sale_date', { ascending: false })
           .limit(200)
 
         return NextResponse.json(
@@ -67,14 +61,9 @@ export async function GET(req: NextRequest) {
 
 // ── PATCH ─────────────────────────────────────────────────────────────────────
 export async function PATCH(req: NextRequest) {
-  const supabase = createClient()
-  const { data: authData, error: authError } = await supabase.auth.getUser()
-  if (authError || !authData?.user)
-    return NextResponse.json({ error: 'Unauthorized', code: 'UNAUTHORIZED', type: 'SECURITY' }, { status: 401 })
-
-  let companyId: string
-  try { companyId = await resolveCompanyId(authData.user.id, supabase) }
-  catch { return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED', type: 'SYSTEM' }, { status: 409 }) }
+  const auth = await resolveApiAuth(req)
+  if (!auth.ok) return auth.response
+  const { uid, companyId, supabase, ctx } = auth
 
   try {
     const body = await req.json()
@@ -100,7 +89,8 @@ export async function PATCH(req: NextRequest) {
     }
 
     // Optional fields — only write when explicitly provided
-    if (amount_paid !== undefined) patch.amount_paid = amount_paid
+    if (amount_paid !== undefined)
+      patch.amount_paid = amount_paid != null ? Math.max(0, Number(amount_paid) || 0) : null
     if (due_date !== undefined)    patch.due_date    = due_date
 
     const { error } = await supabase

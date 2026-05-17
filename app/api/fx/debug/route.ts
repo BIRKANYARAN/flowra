@@ -4,9 +4,9 @@
 
 export const dynamic = 'force-dynamic'
 
-import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase-server'
+import { NextRequest, NextResponse } from 'next/server'
 import { fetchTcmbWithFallback } from '@/lib/fx'
+import { resolveApiAuth } from '@/lib/api-auth'
 
 interface StepResult {
   step:    string
@@ -16,14 +16,12 @@ interface StepResult {
   data?:   { usd?: number; eur?: number; source?: string; date?: string }
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const supabase = createClient()
-    const { data: authData, error: authErr } = await supabase.auth.getUser()
-    if (authErr || !authData?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-    const user = authData.user
+    const auth = await resolveApiAuth(req)
+    if (!auth.ok) return auth.response
+    const { uid, companyId, supabase } = auth
+    // (user info available via uid from auth)
 
     const steps: StepResult[] = []
     const now   = new Date().toISOString()

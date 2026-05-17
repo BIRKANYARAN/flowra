@@ -5,10 +5,8 @@ import Link from 'next/link'
 import { normalizeSaleDetail, normalizeSaleItem, type NormalizedSaleDetail, type NormalizedSaleItem } from '@/lib/normalize'
 import { calculateLine, type LineInput } from '@/lib/calc'
 import { resolveCompanyId } from '@/lib/resolve-company'
+import { fmtTRY as fmt } from '@/lib/format'
 
-function fmt(n: number) {
-  return '₺' + n.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-}
 function fmtDate(d: string) {
   try {
     return new Date(d).toLocaleDateString('tr-TR', { day:'2-digit', month:'2-digit', year:'numeric' })
@@ -73,7 +71,7 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
         <div>
           <Link href="/dashboard/sales" className="text-sm text-gray-400 hover:text-gray-900 mb-1 inline-block">← Satışlar</Link>
           <h1 className="text-2xl font-black">{s.customer_name}</h1>
-          <p className="text-sm text-gray-400 mt-0.5">{fmtDate(s.created_at)}</p>
+          <p className="text-sm text-gray-400 mt-0.5">{fmtDate(s.sale_date || s.created_at)}</p>
         </div>
         {s.proforma_no && s.proforma_id && s.proforma_exists ? (
           <Link href={`/dashboard/proformas/${s.proforma_id}`}

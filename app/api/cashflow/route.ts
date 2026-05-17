@@ -4,7 +4,7 @@
 // Monthly cashflow projection: 6 months historical + 6 months forward.
 //
 // CASH-BASIS MODEL — strict payment logic:
-//   invoiced     — context only: sales total_try by created_at month (NOT cash inflow)
+//   invoiced     — context only: sales total_try by sale_date month (NOT cash inflow)
 //   collected    — CASH inflow: paid sales total_try by paid_at month
 //                  ONLY payment_status='paid' counted; partial/unpaid → receivable
 //   receivable   — outstanding: invoiced this month still unpaid/partial/overdue
@@ -14,7 +14,7 @@
 //   cumulative   — running net from month[0]
 //   is_projected — false for past/current months; true for future months
 //
-// Partial payments: counted as full receivable (no amount_paid column in schema).
+// Partial payments: receivable = total_try − amount_paid (outstanding balance only).
 // When a partial is fully paid, it shifts from receivable→collected in the paid_at month.
 //
 // Query params:
@@ -25,9 +25,8 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient }    from '@/lib/supabase-server'
-import { resolveCompanyId } from '@/lib/resolve-company'
 import type { CashflowMonth } from '@/types'
+import { resolveApiAuth } from '@/lib/api-auth'
 
 const CASH_EXCLUDED_EXPENSE_TYPES = new Set([
   'loan_repayment',
@@ -70,22 +69,15 @@ function ymEnd(ym: string): string {
 // ── GET ───────────────────────────────────────────────────────────────────────
 
 export async function GET(req: NextRequest) {
-  const supabase = createClient()
-  const { data: authData, error: authError } = await supabase.auth.getUser()
-  if (authError || !authData?.user) {
-    return NextResponse.json(
-      { error: 'Unauthorized', code: 'UNAUTHORIZED', type: 'SECURITY' },
-      { status: 401 },
-    )
-  }
-
-  let companyId: string
-  try { companyId = await resolveCompanyId(authData.user.id, supabase) }
-  catch { return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED' }, { status: 409 }) }
+  const auth = await resolveApiAuth(req)
+  if (!auth.ok) return auth.response
+  const { companyId, supabase } = auth
 
   const url          = new URL(req.url)
-  const pastMonths   = Math.min(Math.max(Number(url.searchParams.get('past_months')   ?? 6), 1), 12)
-  const futureMonths = Math.min(Math.max(Number(url.searchParams.get('future_months') ?? 6), 1), 12)
+  const rawPast      = Number(url.searchParams.get('past_months')   ?? 6)
+  const rawFuture    = Number(url.searchParams.get('future_months') ?? 6)
+  const pastMonths   = Math.min(Math.max(isFinite(rawPast)   && rawPast   > 0 ? rawPast   : 6, 1), 12)
+  const futureMonths = Math.min(Math.max(isFinite(rawFuture) && rawFuture > 0 ? rawFuture : 6, 1), 12)
 
   const nowYM      = toYM(new Date())
   const startYM    = addMonths(nowYM, -pastMonths)
@@ -110,39 +102,44 @@ export async function GET(req: NextRequest) {
     })
   }
 
-  // ── 1. Invoiced context: sales by created_at month (NOT cash — context only) ─
+  // ── 1. Invoiced context: sales by sale_date month (NOT cash — context only) ──
+  // Use sale_date (business invoice date), not created_at (DB insertion time).
+  // A backdated invoice entered today belongs to its invoice month, not today.
   // This populates `invoiced` for display/analysis. It does NOT affect net or cumulative.
   // Net is strictly: collected − expenses.
   const { data: salesInvoiced } = await supabase
     .from('sales')
-    .select('total_try, created_at')
+    .select('total_try, sale_date')
     .eq('company_id', companyId)
     .is('deleted_at', null)
-    .gte('created_at', ymStart(startYM))
-    .lte('created_at', ymEnd(endYM) + 'T23:59:59Z')
+    .gte('sale_date', ymStart(startYM))
+    .lte('sale_date', ymEnd(endYM))
 
   for (const s of salesInvoiced ?? []) {
-    const ym  = toYM(s.created_at as string)
+    if (!s.sale_date) continue
+    const ym  = toYM(s.sale_date as string)
     const row = months.get(ym)
     if (row) row.invoiced += Number(s.total_try ?? 0)
   }
 
   // ── 1b. Receivables by invoice month (outstanding = invoiced but not yet paid) ─
   // Shows: of what was invoiced this month, how much is still unpaid/partial/overdue.
-  // Partial payments counted as full receivable (no amount_paid column in schema).
+  // Partial payments: outstanding = total_try − amount_paid (not the full invoice amount).
+  // Use sale_date (business invoice date) for bucketing.
   const { data: receivableRows } = await supabase
     .from('sales')
-    .select('total_try, created_at')
+    .select('total_try, amount_paid, sale_date')
     .eq('company_id', companyId)
     .is('deleted_at', null)
     .in('payment_status', ['pending', 'partial', 'overdue'])
-    .gte('created_at', ymStart(startYM))
-    .lte('created_at', ymEnd(endYM) + 'T23:59:59Z')
+    .gte('sale_date', ymStart(startYM))
+    .lte('sale_date', ymEnd(endYM))
 
   for (const s of receivableRows ?? []) {
-    const ym  = toYM(s.created_at as string)
+    if (!s.sale_date) continue
+    const ym  = toYM(s.sale_date as string)
     const row = months.get(ym)
-    if (row) row.receivable += Number(s.total_try ?? 0)
+    if (row) row.receivable += Math.max(0, Number(s.total_try ?? 0) - Number(s.amount_paid ?? 0))
   }
 
   // ── 2. Collections by payment month (paid_at) ──────────────────────────────
@@ -193,7 +190,7 @@ export async function GET(req: NextRequest) {
     if (expenseType && CASH_EXCLUDED_EXPENSE_TYPES.has(expenseType)) continue
     const recStartYM = toYM(rec.start_date as string)
     const recEndYM   = rec.end_date ? toYM(rec.end_date as string) : null
-    const amtTry     = Number(rec.amount) * Number(rec.fx_rate)
+    const amtTry     = Number(rec.amount ?? 0) * Number(rec.fx_rate ?? 1)
     const freq       = rec.frequency as 'monthly' | 'quarterly' | 'yearly'
     const step       = freq === 'monthly' ? 1 : freq === 'quarterly' ? 3 : 12
 

@@ -6,11 +6,10 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase-server'
 import { getOrFetchFxRate } from '@/lib/fx'
-import { resolveCompanyId } from '@/lib/resolve-company'
 import { resolveExpenseType } from '@/lib/services/finance-rules'
 import type { ExpenseType } from '@/types'
+import { resolveApiAuth } from '@/lib/api-auth'
 
 const ALLOWED_CATEGORIES  = [
   'general','rent','salary','utilities','marketing','logistics','software','equipment','tax',
@@ -33,15 +32,10 @@ const ALLOWED_EXPENSE_TYPES: readonly ExpenseType[] = [
 ]
 
 // ── GET ───────────────────────────────────────────────────────────────────────
-export async function GET(_req: NextRequest) {
-  const supabase = createClient()
-  const { data: authData, error: authError } = await supabase.auth.getUser()
-  if (authError || !authData?.user)
-    return NextResponse.json({ error: 'Unauthorized', code: 'UNAUTHORIZED', type: 'SECURITY' }, { status: 401 })
-
-  let companyId: string
-  try { companyId = await resolveCompanyId(authData.user.id, supabase) }
-  catch { return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED', type: 'SYSTEM' }, { status: 409 }) }
+export async function GET(req: NextRequest) {
+  const auth = await resolveApiAuth(req)
+  if (!auth.ok) return auth.response
+  const { uid, companyId, supabase, ctx } = auth
 
   const { data, error } = await supabase
     .from('recurring_expenses')
@@ -56,14 +50,9 @@ export async function GET(_req: NextRequest) {
 
 // ── POST ──────────────────────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
-  const supabase = createClient()
-  const { data: authData, error: authError } = await supabase.auth.getUser()
-  if (authError || !authData?.user)
-    return NextResponse.json({ error: 'Unauthorized', code: 'UNAUTHORIZED', type: 'SECURITY' }, { status: 401 })
-
-  let companyId: string
-  try { companyId = await resolveCompanyId(authData.user.id, supabase) }
-  catch { return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED', type: 'SYSTEM' }, { status: 409 }) }
+  const auth = await resolveApiAuth(req)
+  if (!auth.ok) return auth.response
+  const { uid, companyId, supabase, ctx } = auth
 
   try {
     const body = await req.json()
@@ -101,16 +90,20 @@ export async function POST(req: NextRequest) {
 
     const kdv = Math.min(100, Math.max(0, Number(body.kdv) || 0))
 
-    const fx = await getOrFetchFxRate(currency)
+    const fx     = await getOrFetchFxRate(currency)
+    const fxRate = (isFinite(fx.rate) && fx.rate > 0) ? fx.rate : 1
+    if (!isFinite(fx.rate) || fx.rate <= 0) {
+      console.warn('[recurring-expenses POST] FX rate unavailable for', currency, '— using 1')
+    }
 
     const { data, error } = await supabase
       .from('recurring_expenses')
       .insert({
-        user_id:       authData.user.id,
+        user_id:       uid,
         description,
         amount,
         currency,
-        fx_rate:       fx.rate,
+        fx_rate:       fxRate,
         category,
         expense_type:  expenseType,
         frequency,
@@ -118,7 +111,7 @@ export async function POST(req: NextRequest) {
         end_date,
         kdv,
         is_active:     true,
-        is_deductible: body.is_deductible !== false,
+        is_deductible: body.is_deductible !== false && body.is_deductible !== 'false',
         company_id:    companyId,
       })
       .select('id')
@@ -134,14 +127,9 @@ export async function POST(req: NextRequest) {
 
 // ── DELETE ────────────────────────────────────────────────────────────────────
 export async function DELETE(req: NextRequest) {
-  const supabase = createClient()
-  const { data: authData, error: authError } = await supabase.auth.getUser()
-  if (authError || !authData?.user)
-    return NextResponse.json({ error: 'Unauthorized', code: 'UNAUTHORIZED', type: 'SECURITY' }, { status: 401 })
-
-  let companyId: string
-  try { companyId = await resolveCompanyId(authData.user.id, supabase) }
-  catch { return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED', type: 'SYSTEM' }, { status: 409 }) }
+  const auth = await resolveApiAuth(req)
+  if (!auth.ok) return auth.response
+  const { uid, companyId, supabase, ctx } = auth
 
   const { searchParams } = new URL(req.url)
   const id = searchParams.get('id') ?? ''

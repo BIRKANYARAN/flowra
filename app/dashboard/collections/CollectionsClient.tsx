@@ -18,6 +18,8 @@ export interface CollectionRow {
   currency: string
   total: number
   total_try: number
+  /** Business invoice date (YYYY-MM-DD) — preferred for display/aging */
+  sale_date: string | null
   created_at: string
   due_date: string | null
   amount_paid: number | null
@@ -105,11 +107,11 @@ export default function CollectionsClient({ initialRows }: Props) {
   }, [rows, search])
 
   // ── Data load ───────────────────────────────────────────────────────────────
-  const load = useCallback(async (status: TabKey) => {
+  const load = useCallback(async (status: TabKey, signal?: AbortSignal) => {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch(`/api/collections?status=${status}`)
+      const res = await fetch(`/api/collections?status=${status}`, { signal })
       if (!res.ok) {
         const body = await res.json().catch(() => ({}))
         throw new Error(body.error ?? `HTTP ${res.status}`)
@@ -118,22 +120,18 @@ export default function CollectionsClient({ initialRows }: Props) {
       // API now returns { data, page, page_size, total } — handle both shapes
       const rows = Array.isArray(data) ? data : (data?.data ?? [])
       setRows(rows)
-    } catch {
+    } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') return
       setError('Tahsilat verileri yüklenemedi.')
     } finally {
       setLoading(false)
     }
   }, [])
 
-  // Only fetch when the user switches away from the initial "unpaid" tab
   useEffect(() => {
-    if (tab !== 'pending') {
-      load(tab)
-    } else {
-      // Refresh unpaid when returning to it (data may have changed via mutations)
-      // But only after the first mount — use a flag to skip initial render
-      load(tab)
-    }
+    const ctrl = new AbortController()
+    load(tab, ctrl.signal)
+    return () => ctrl.abort()
   }, [tab, load])
 
   // ── PATCH helper ─────────────────────────────────────────────────────────────
@@ -228,7 +226,7 @@ export default function CollectionsClient({ initialRows }: Props) {
       ? (isOD
         ? <span className="text-red-600 font-bold">{fmtDateShort(row.due_date)} GECİKTİ</span>
         : <span className="text-gray-500">{fmtDateShort(row.due_date)}</span>)
-      : <span className="text-gray-400">{fmtDateShort(row.created_at)}</span>
+      : <span className="text-gray-400">{fmtDateShort(row.sale_date || row.created_at)}</span>
 
     return (
       <div

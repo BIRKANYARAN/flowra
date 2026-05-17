@@ -6,10 +6,10 @@
 // cost calculator modal, search, currency toggle.
 
 import { useCallback, useEffect, useMemo, useState, type KeyboardEvent } from 'react'
-import { useSupabase } from '@/lib/hooks/useSupabase'
 import { CURRENCIES, type Currency, type Product, type StockLot } from '@/types'
 import { getSalePrice } from '@/lib/product-adapter'
 import { resolveCompanyId } from '@/lib/resolve-company'
+import { fmtNum as fmt, fmtDate } from '@/lib/format'
 
 // ── Pure helpers (tested in tests/catalog-analytics.test.ts) ─────────────────
 
@@ -46,18 +46,6 @@ export function toDisplayCurrency(
   return rate > 0 ? tryAmount / rate : 0
 }
 
-// ── Formatters ────────────────────────────────────────────────────────────────
-
-function fmt(n: number): string {
-  return n.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-}
-
-function fmtDate(d: string): string {
-  try {
-    return new Date(d).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' })
-  } catch { return d || '—' }
-}
-
 // ── Entry type map ────────────────────────────────────────────────────────────
 
 const ENTRY_TYPE_MAP: Record<string, string> = {
@@ -82,8 +70,6 @@ interface Props {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function CatalogClient({ initialProducts, initialRealCosts, userId, companyId }: Props) {
-  const supabase = useSupabase()
-
   const [products,    setProducts]    = useState<Product[]>(initialProducts)
   const [search,      setSearch]      = useState('')
   const [currency,    setCurrency]    = useState<Currency>('TRY')
@@ -96,10 +82,12 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
   const [fxRates, setFxRates] = useState<{ USD: number; EUR: number }>({ USD: 0, EUR: 0 })
 
   useEffect(() => {
-    fetch('/api/fx', { cache: 'no-store' })
+    const controller = new AbortController()
+    fetch('/api/fx', { cache: 'no-store', signal: controller.signal })
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d?.USD > 0 && d?.EUR > 0) setFxRates({ USD: Number(d.USD), EUR: Number(d.EUR) }) })
-      .catch(() => { /* FX failure is non-fatal — TRY still works */ })
+      .catch(() => { /* FX failure is non-fatal — includes AbortError */ })
+    return () => controller.abort()
   }, [])
 
   const conv = useCallback(
@@ -186,18 +174,16 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
     if (lots[productId]) return
 
     setLots(prev => ({ ...prev, [productId]: { loading: true, lots: [] } }))
-    const { data } = await supabase
-      .from('stock_lots')
-      .select('*')
-      .eq('product_id', productId)
-      .eq('company_id', companyId)
-      .is('deleted_at', null)
-      .order('entry_date', { ascending: false })
-
-    setLots(prev => ({
-      ...prev,
-      [productId]: { loading: false, lots: (data ?? []) as StockLot[] },
-    }))
+    try {
+      const res  = await fetch(`/api/products/lots?product_id=${encodeURIComponent(productId)}`)
+      const json = res.ok ? await res.json() : { lots: [] }
+      setLots(prev => ({
+        ...prev,
+        [productId]: { loading: false, lots: (json.lots ?? []) as StockLot[] },
+      }))
+    } catch {
+      setLots(prev => ({ ...prev, [productId]: { loading: false, lots: [] } }))
+    }
   }
 
   // ── Inline edit catalog_price ─────────────────────────────────────────────

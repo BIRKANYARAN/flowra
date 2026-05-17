@@ -2,9 +2,8 @@
 
 export const dynamic = 'force-dynamic'
 
-import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase-server'
-import { resolveCompanyId } from '@/lib/resolve-company'
+import { NextRequest, NextResponse } from 'next/server'
+import { resolveApiAuth } from '@/lib/api-auth'
 
 const BUCKET = 'backups'
 
@@ -24,16 +23,14 @@ const COMPANY_SCOPED_TABLES = [
 type CompanyScopedTable = typeof COMPANY_SCOPED_TABLES[number]
 
 // ── GET: list backup folders ──────────────────────────────────────────────────
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const supabase = createClient()
-    const { data: authData, error: authError } = await supabase.auth.getUser()
-    if (authError || !authData?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const auth = await resolveApiAuth(req)
+    if (!auth.ok) return auth.response
+    const { uid, companyId, supabase } = auth
 
-    const uid = authData.user.id
-    const prefix = `${uid}/`
+    // Include companyId in path so multi-company users see only their own backups
+    const prefix = `${uid}/${companyId}/`
 
     // List top-level folders for this user
     const { data: folders, error: listErr } = await supabase.storage
@@ -45,35 +42,26 @@ export async function GET() {
       return NextResponse.json({ error: 'Yedek listesi alınamadı' }, { status: 500 })
     }
 
-    // For each folder, read metadata.json if it exists
-    const backups = []
-    for (const folder of folders ?? []) {
-      if (!folder.name) continue
-
+    // Parallel: for each folder fetch metadata.json + file list concurrently
+    const validFolders = (folders ?? []).filter(f => f.name)
+    const backups = await Promise.all(validFolders.map(async folder => {
       const folderPath = `${prefix}${folder.name}`
 
-      // Try to get metadata
-      const { data: metaFile } = await supabase.storage
-        .from(BUCKET)
-        .download(`${folderPath}/metadata.json`)
+      const [{ data: metaFile }, { data: files }] = await Promise.all([
+        supabase.storage.from(BUCKET).download(`${folderPath}/metadata.json`),
+        supabase.storage.from(BUCKET).list(folderPath, { limit: 50 }),
+      ])
 
       let metadata: Record<string, unknown> = {}
       if (metaFile) {
-        try {
-          metadata = JSON.parse(await metaFile.text())
-        } catch { /* ignore parse errors */ }
+        try { metadata = JSON.parse(await metaFile.text()) } catch { /* ignore */ }
       }
-
-      // List files in this backup folder
-      const { data: files } = await supabase.storage
-        .from(BUCKET)
-        .list(folderPath, { limit: 50 })
 
       const totalSize = (files ?? []).reduce((sum, f) => sum + (f.metadata?.size ?? 0), 0)
 
-      backups.push({
-        name: folder.name,
-        path: folderPath,
+      return {
+        name:      folder.name,
+        path:      folderPath,
         fileCount: (files ?? []).length,
         totalSize,
         metadata,
@@ -82,8 +70,8 @@ export async function GET() {
           size: f.metadata?.size ?? 0,
           path: `${folderPath}/${f.name}`,
         })),
-      })
-    }
+      }
+    }))
 
     return NextResponse.json({ backups })
   } catch (err) {
@@ -93,22 +81,15 @@ export async function GET() {
 }
 
 // ── POST: create a new backup ─────────────────────────────────────────────────
-export async function POST() {
+export async function POST(req: NextRequest) {
   try {
-    const supabase = createClient()
-    const { data: authData, error: authError } = await supabase.auth.getUser()
-    if (authError || !authData?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const uid = authData.user.id
-    let companyId: string
-    try { companyId = await resolveCompanyId(uid, supabase) }
-    catch { return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED', type: 'SYSTEM' }, { status: 409 }) }
+    const auth = await resolveApiAuth(req)
+    if (!auth.ok) return auth.response
+    const { uid, companyId, supabase } = auth
 
     const now = new Date()
     const folderName = now.toISOString().replace(/[-:]/g, '').replace('T', '_').slice(0, 15)
-    const folderPath = `${uid}/${folderName}`
+    const folderPath = `${uid}/${companyId}/${folderName}`
 
     const tableCounts: Record<string, number> = {}
     let uploadedFiles = 0

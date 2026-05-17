@@ -30,7 +30,7 @@ async function sq<T>(p: Promise<T>): Promise<T | null> {
   try { return await p } catch { return null }
 }
 
-function fmt(n: number | null | undefined) { return fmtTRY(n ?? 0) }
+const fmt = (n: number | null | undefined) => fmtTRY(n ?? 0)
 function pct(n: number | null | undefined, d = 1) { return fmtPct(n ?? 0, d) }
 
 // ── Financial Health Score ────────────────────────────────────────────────────
@@ -151,9 +151,9 @@ export async function CFOTab({ userId, companyId }: Props) {
   const totalEquity       = balanceSheet?.equity.total_equity_try ?? 0
   const debtToEquity      = totalEquity > 0 ? totalPartnerLoans / totalEquity : 0
 
-  const totalOutstanding  = cfoMetrics.receivables.total_outstanding
-  const totalCollected    = revenue - totalOutstanding
-  const collectionRate    = revenue > 0 ? Math.max(0, Math.min(100, (totalCollected / revenue) * 100)) : 100
+  // Use the canonical amount-based collection rate from cfoMetrics (period-filtered, amount-weighted).
+  // Do NOT recompute locally from revenue - outstanding, which conflates FX differences and period scope.
+  const collectionRate    = cfoMetrics.receivables.collection_rate_pct ?? 100
   const runwayMonths      = cfoMetrics.burn.runway_months
 
   const healthScore = computeHealthScore({
@@ -408,8 +408,8 @@ export async function CFOTab({ userId, companyId }: Props) {
           <div className="space-y-2">
             {[
               { label: '0–30 gün (Cari)',    value: (riskData?.totalOutstanding ?? 0) - (riskData?.overdueTotal ?? 0), color: 'text-emerald-700' },
-              { label: '31–60 gün',          value: (riskData?.overdue30Total ?? 0) + (riskData?.overdue60Total ?? 0), color: 'text-amber-700'   },
-              { label: '60+ gün (Gecikmiş)', value: riskData?.overdue90Total ?? 0,  color: 'text-red-700'   },
+              { label: '31–60 gün',          value: riskData?.overdue30Total ?? 0,                                   color: 'text-amber-700'   },
+              { label: '60+ gün (Gecikmiş)', value: (riskData?.overdue60Total ?? 0) + (riskData?.overdue90Total ?? 0), color: 'text-red-700'   },
             ].map(row => (
               <div key={row.label} className="flex items-center justify-between text-sm">
                 <span className="text-gray-500">{row.label}</span>
@@ -508,7 +508,7 @@ export async function CFOTab({ userId, companyId }: Props) {
             {
               href:  '/dashboard/reports/income-statement',
               title: 'Gelir Tablosu',
-              desc:  'P&L — Brüt kâr, EBITDA, net kâr',
+              desc:  'P&L — Brüt kâr, Faaliyet Kârı, net kâr',
               icon:  '📈',
               color: 'hover:border-emerald-300',
             },
@@ -539,6 +539,20 @@ export async function CFOTab({ userId, companyId }: Props) {
               desc:  'Hesaplanan − İndirilecek = Net KDV',
               icon:  '🧾',
               color: 'hover:border-orange-300',
+            },
+            {
+              href:  '/dashboard/cfo/tax/corporate',
+              title: 'Kurumlar Vergisi',
+              desc:  'Geçici vergi takvimi + YTD KV tahmini',
+              icon:  '🏛️',
+              color: 'hover:border-amber-300',
+            },
+            {
+              href:  '/dashboard/insights',
+              title: 'AI Analizler',
+              desc:  'Anomali tespiti, kopya giderler, AI özeti',
+              icon:  '🤖',
+              color: 'hover:border-purple-300',
             },
           ].map(item => (
             <Link

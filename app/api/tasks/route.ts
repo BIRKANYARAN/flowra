@@ -16,31 +16,22 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient }    from '@/lib/supabase-server'
-import { resolveCompanyId } from '@/lib/resolve-company'
 import type { TaskStatus } from '@/types'
+import { resolveApiAuth } from '@/lib/api-auth'
 
 const VALID_STATUSES: TaskStatus[] = ['open', 'done', 'cancelled']
 
 // ── GET ───────────────────────────────────────────────────────────────────────
 
 export async function GET(req: NextRequest) {
-  const supabase = createClient()
-  const { data: authData, error: authError } = await supabase.auth.getUser()
-  if (authError || !authData?.user) {
-    return NextResponse.json(
-      { error: 'Unauthorized', code: 'UNAUTHORIZED', type: 'SECURITY' },
-      { status: 401 },
-    )
-  }
-
-  let companyId: string
-  try { companyId = await resolveCompanyId(authData.user.id, supabase) }
-  catch { return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED' }, { status: 409 }) }
+  const auth = await resolveApiAuth(req)
+  if (!auth.ok) return auth.response
+  const { uid, companyId, supabase, ctx } = auth
 
   const url    = new URL(req.url)
   const status = url.searchParams.get('status') ?? 'open'
-  const limit  = Math.min(Number(url.searchParams.get('limit') ?? 50), 200)
+  const rawLimit = Number(url.searchParams.get('limit') ?? 50)
+  const limit    = Math.min(isFinite(rawLimit) && rawLimit > 0 ? rawLimit : 50, 200)
 
   try {
     // Build base query — try with customer join first (requires FK fk_tasks_customer)
@@ -60,8 +51,8 @@ export async function GET(req: NextRequest) {
       q = q.eq('status', status)
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let { data, error } = await q as { data: any[] | null; error: any }
+    type TaskRow = Record<string, unknown> & { customers?: { name?: string } | null }
+    let { data, error } = await q as { data: TaskRow[] | null; error: { message?: string; code?: string } | null }
 
     // FK join not yet applied (schema cache miss) — retry without embedded select
     if (error && (error.message?.includes('relationship') || error.message?.includes('fk_tasks_customer'))) {
@@ -88,8 +79,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Flatten customer name join (present only when FK exists)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const enriched = (data ?? []).map((t: any) => ({
+    const enriched = (data ?? []).map((t) => ({
       ...t,
       customer_name: t.customers?.name ?? null,
       customers:     undefined,
@@ -105,19 +95,9 @@ export async function GET(req: NextRequest) {
 // ── POST ──────────────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
-  const supabase = createClient()
-  const { data: authData, error: authError } = await supabase.auth.getUser()
-  if (authError || !authData?.user) {
-    return NextResponse.json(
-      { error: 'Unauthorized', code: 'UNAUTHORIZED', type: 'SECURITY' },
-      { status: 401 },
-    )
-  }
-  const userId = authData.user.id
-
-  let companyId: string
-  try { companyId = await resolveCompanyId(userId, supabase) }
-  catch { return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED' }, { status: 409 }) }
+  const auth = await resolveApiAuth(req)
+  if (!auth.ok) return auth.response
+  const { uid, companyId, supabase, ctx } = auth
 
   try {
     const body = await req.json()
@@ -148,7 +128,7 @@ export async function POST(req: NextRequest) {
     const { data, error } = await supabase
       .from('tasks')
       .insert({
-        user_id:             userId,
+        user_id:             uid,
         company_id:          companyId,
         title,
         due_date,

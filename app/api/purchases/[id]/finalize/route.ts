@@ -16,32 +16,20 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase-server'
-import { contextFromHeader } from '@/lib/logger'
 import { REQUEST_ID_HEADER } from '@/middleware'
 import { PurchaseService } from '@/lib/services/purchase.service'
 import { toErrorResponse } from '@/types/errors'
-import { resolveCompanyId } from '@/lib/resolve-company'
 import { checkPeriodGuard } from '@/lib/middleware/period-guard'
 import { dualWrite, resolvePeriodId } from '@/lib/services/ledger/dual-write.service'
 import { JournalEntryService } from '@/lib/services/ledger/journal-entry.service'
+import { resolveApiAuth } from '@/lib/api-auth'
 
 interface Ctx { params: { id: string } }
 
 export async function POST(req: NextRequest, { params }: Ctx) {
-  const supabase = createClient()
-  const { data: authData, error: authError } = await supabase.auth.getUser()
-  if (authError || !authData?.user) {
-    return NextResponse.json(
-      { error: 'Unauthorized', code: 'UNAUTHORIZED', type: 'SECURITY' },
-      { status: 401 }
-    )
-  }
-  const ctx = contextFromHeader(req.headers.get(REQUEST_ID_HEADER), authData.user.id)
-
-  let companyId: string
-  try { companyId = await resolveCompanyId(authData.user.id, supabase) }
-  catch { return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED', type: 'SYSTEM' }, { status: 409 }) }
+  const auth = await resolveApiAuth(req)
+  if (!auth.ok) return auth.response
+  const { uid, companyId, supabase, ctx } = auth
 
   // Fetch purchase to get received_date for period guard
   const { data: purchase } = await supabase
@@ -60,7 +48,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   }
 
   try {
-    const result = await PurchaseService.finalize(authData.user.id, params.id, companyId, ctx)
+    const result = await PurchaseService.finalize(uid, params.id, companyId, ctx)
 
     // Dual-write: inventory + COGS journal entries
     if (purchase) {
@@ -69,7 +57,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
       const paidFromBank = purchase.payment_status === 'paid'
 
       await dualWrite({
-        companyId, periodId, createdBy: authData.user.id, supabase,
+        companyId, periodId, createdBy: uid, supabase,
         buildEntry: () => JournalEntryService.buildPurchaseEntry({
           id:             purchase.id,
           received_date:  receiveDate,

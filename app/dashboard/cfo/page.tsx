@@ -1,2 +1,8 @@
 import { redirect } from 'next/navigation'
-export default function CfoPage() { redirect('/dashboard/finance?tab=cfo') }
+
+export const dynamic = 'force-dynamic'
+
+// Canonical route is now /dashboard/finance?tab=cfo
+export default function RedirectPage() {
+  redirect('/dashboard/finance?tab=cfo')
+}

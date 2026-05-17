@@ -22,11 +22,11 @@ export async function CollectionsContent({ companyId }: Props) {
 
   const { data } = await supabase
     .from('sales')
-    .select('id, customer_name, currency, total, total_try, created_at, due_date, amount_paid, proforma_id, payment_status, paid_at, proformas(proforma_no)')
+    .select('id, customer_name, currency, total, total_try, sale_date, created_at, due_date, amount_paid, proforma_id, payment_status, paid_at, proformas(proforma_no)')
     .eq('company_id', companyId)
     .is('deleted_at', null)
     .in('payment_status', ['pending', 'partial', 'overdue'])
-    .order('created_at', { ascending: false })
+    .order('sale_date', { ascending: false })
     .range(0, 49)
 
   const initialRows: CollectionRow[] = (data ?? []).map(r => ({
@@ -35,6 +35,7 @@ export async function CollectionsContent({ companyId }: Props) {
     currency:       r.currency,
     total:          r.total,
     total_try:      r.total_try,
+    sale_date:      r.sale_date,
     created_at:     r.created_at,
     due_date:       r.due_date,
     amount_paid:    r.amount_paid,

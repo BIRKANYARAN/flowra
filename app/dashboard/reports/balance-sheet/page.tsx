@@ -2,7 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { PrintButton } from '@/components/reports/PrintButton'
+import { PdfExportButton } from '@/components/reports/PdfExportButton'
+import { useWorkspace } from '@/lib/workspace-context'
+import type { PdfReportOptions } from '@/lib/utils/pdf-report'
+import { formatTRY as fmt } from '@/lib/format'
 
 // Mirrors the nested BalanceSheet shape returned by BalanceSheetService.compute()
 interface BSAssets {
@@ -45,12 +48,6 @@ interface BalanceSheet {
   imbalance_try: number
 }
 
-const _fmt = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-function fmt(n: number) {
-  const v = Number(n) || 0
-  return (v < 0 ? '−' : '') + _fmt.format(Math.abs(v)) + ' TL'
-}
-
 function Section({ title }: { title: string }) {
   return (
     <div className="px-4 py-2 bg-gray-50 border-b border-gray-100">
@@ -73,14 +70,18 @@ export default function BalanceSheetPage() {
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState<string | null>(null)
   const [asOf,    setAsOf]    = useState(new Date().toISOString().slice(0, 10))
+  const ws = useWorkspace()
 
   useEffect(() => {
+    const ctrl = new AbortController()
     setLoading(true)
-    fetch(`/api/financial-statements/balance-sheet?as_of=${asOf}`)
+    setError(null)
+    fetch(`/api/financial-statements/balance-sheet?as_of=${asOf}`, { signal: ctrl.signal })
       .then(r => r.json())
       .then(d => setBs(d as BalanceSheet))
-      .catch(() => setError('Bilanço yüklenemedi'))
+      .catch(err => { if (err.name !== 'AbortError') setError('Bilanço yüklenemedi') })
       .finally(() => setLoading(false))
+    return () => ctrl.abort()
   }, [asOf])
 
   return (
@@ -95,7 +96,33 @@ export default function BalanceSheetPage() {
           <label className="text-xs text-gray-500">Tarih itibarıyla:</label>
           <input type="date" value={asOf} onChange={e => setAsOf(e.target.value)}
             className="border border-gray-200 rounded-lg px-2 py-1 text-xs" />
-          <PrintButton label="PDF İndir" />
+          {bs && <PdfExportButton opts={{
+            companyName: ws.companyName ?? 'Şirket',
+            reportTitle: 'Bilanço',
+            subtitle: `${asOf} itibarıyla`,
+            filename: `bilanco-${asOf}`,
+            sections: [
+              { title: 'Varlıklar', rows: [
+                { label: 'Kasa ve Bankalar', value: fmt(bs.assets.cash_try), indent: true },
+                { label: 'Alıcılar', value: fmt(bs.assets.receivables_try), indent: true },
+                { label: 'Stoklar', value: fmt(bs.assets.inventory_try), indent: true },
+                { label: 'Toplam Dönen', value: fmt(bs.assets.total_current_try), bold: true },
+                { label: 'Toplam Duran', value: fmt(bs.assets.total_non_current_try), bold: true },
+                { label: 'TOPLAM VARLIKLAR', value: fmt(bs.assets.total_assets_try), bold: true, tone: 'positive' },
+              ]},
+              { title: 'Kaynaklar', rows: [
+                { label: 'Ortak Borçları (KV)', value: fmt(bs.liabilities.partner_loans_try), indent: true },
+                { label: 'Vergi Borçları', value: fmt(bs.liabilities.tax_payable_try), indent: true },
+                { label: 'Toplam Kaynaklar', value: fmt(bs.liabilities.total_liabilities_try), bold: true },
+              ]},
+              { title: 'Özkaynak', rows: [
+                { label: 'Ortak Sermayesi', value: fmt(bs.equity.total_partner_capital_try), indent: true },
+                { label: 'Geçmiş Yıllar Kârları', value: fmt(bs.equity.retained_earnings_try), indent: true },
+                { label: 'Dönem Net Kârı', value: fmt(bs.equity.current_period_profit_try), indent: true },
+                { label: 'TOPLAM ÖZKAYNAK', value: fmt(bs.equity.total_equity_try), bold: true, tone: 'positive' },
+              ]},
+            ],
+          } as PdfReportOptions} label="PDF İndir" />}
           <Link href="/dashboard/cfo" className="text-xs text-gray-400 hover:text-primary-600 font-semibold">← CFO</Link>
         </div>
       </div>

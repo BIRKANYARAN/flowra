@@ -54,13 +54,20 @@ export async function GET() {
     const cachedEur = cached?.find(r => r.currency === 'EUR')
 
     if (cachedUsd && cachedEur) {
-      return NextResponse.json({
-        USD:        Number(cachedUsd.buying),
-        EUR:        Number(cachedEur.buying),
-        source:     'db',
-        rate_date:  today,
-        fetched_at: cachedUsd.fetched_at ?? today,
-      } satisfies FxApiResponse)
+      const usd = Number(cachedUsd.buying)
+      const eur = Number(cachedEur.buying)
+      // Guard against null/undefined buying columns producing NaN
+      if (isFinite(usd) && usd > 0 && isFinite(eur) && eur > 0) {
+        return NextResponse.json({
+          USD:        usd,
+          EUR:        eur,
+          source:     'db',
+          rate_date:  today,
+          fetched_at: cachedUsd.fetched_at ?? today,
+        } satisfies FxApiResponse)
+      }
+      // Stale/corrupt cache row — fall through to live fetch
+      console.warn('[/api/fx] DB cache has zero/NaN rates for today — falling back to TCMB')
     }
 
     // ── 2 + 3. Live TCMB (today → last business day up to 7 days) ─────────
@@ -125,13 +132,17 @@ export async function GET() {
     const latestEur = latestRates?.find(r => r.currency === 'EUR')
 
     if (latestUsd && latestEur) {
-      return NextResponse.json({
-        USD:        Number(latestUsd.buying),
-        EUR:        Number(latestEur.buying),
-        source:     'db',
-        rate_date:  latestUsd.rate_date ?? null,
-        fetched_at: latestUsd.fetched_at ?? latestUsd.rate_date,
-      } satisfies FxApiResponse)
+      const usd = Number(latestUsd.buying)
+      const eur = Number(latestEur.buying)
+      if (isFinite(usd) && usd > 0 && isFinite(eur) && eur > 0) {
+        return NextResponse.json({
+          USD:        usd,
+          EUR:        eur,
+          source:     'db',
+          rate_date:  latestUsd.rate_date ?? null,
+          fetched_at: latestUsd.fetched_at ?? latestUsd.rate_date,
+        } satisfies FxApiResponse)
+      }
     }
 
     // ── 5. Nothing available ───────────────────────────────────────────────

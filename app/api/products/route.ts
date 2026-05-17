@@ -1,8 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase-server'
-import { contextFromHeader, logger } from '@/lib/logger'
+import { logger } from '@/lib/logger'
 import { REQUEST_ID_HEADER } from '@/middleware'
 import { StockService } from '@/lib/services/stock.service'
 import {
@@ -10,25 +9,19 @@ import {
   sanitizeCurrency, ValidationError,
 } from '@/lib/validation'
 import { toErrorResponse } from '@/types/errors'
-import { resolveCompanyId } from '@/lib/resolve-company'
+import { resolveApiAuth } from '@/lib/api-auth'
 
 // ── POST — create product ────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
-  const supabase = createClient()
-  const { data: authData, error: authError } = await supabase.auth.getUser()
-    if (authError || !authData?.user) return NextResponse.json({ error: 'Unauthorized', code: 'UNAUTHORIZED', type: 'SECURITY' }, { status: 401 })
-    const user = authData.user
+  const auth = await resolveApiAuth(req)
+  if (!auth.ok) return auth.response
+  const { uid, companyId, supabase, ctx } = auth
 
-  let companyId: string
-  try { companyId = await resolveCompanyId(user.id, supabase) }
-  catch { return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED', type: 'SYSTEM' }, { status: 409 }) }
-
-  const ctx = contextFromHeader(req.headers.get(REQUEST_ID_HEADER), user.id)
 
   try {
     const body = await req.json()
     const payload = {
-      user_id:         user.id,
+      user_id:         uid,
       name:            requireString(body.name, 'name', 300),
       sku:             optionalString(body.sku, 'sku', 100),
       unit:            optionalString(body.unit, 'unit', 50) ?? 'adet',
@@ -57,7 +50,7 @@ export async function POST(req: NextRequest) {
     // Initial stock movement via ledger (if qty > 0)
     if (payload.stock_qty > 0) {
       const { data: mvData } = await supabase.from('stock_movements').insert({
-        user_id: user.id, product_id: data.id, reference_type: 'purchase',
+        user_id: uid, product_id: data.id, reference_type: 'purchase',
         qty_change: payload.stock_qty, qty_before: 0, qty_after: payload.stock_qty,
         unit_cost: payload.unit_cost, notes: 'Başlangıç stok girişi',
         company_id: companyId,
@@ -65,7 +58,7 @@ export async function POST(req: NextRequest) {
 
       // FIFO lot for initial stock
       await supabase.from('stock_lots').insert({
-        user_id:          user.id,
+        user_id:          uid,
         product_id:       data.id,
         qty_initial:      payload.stock_qty,
         qty_remaining:    payload.stock_qty,
@@ -80,7 +73,7 @@ export async function POST(req: NextRequest) {
     }
 
     const { EventService } = await import('@/lib/services/event.service')
-    await EventService.emit(supabase, user.id, 'product.created', {
+    await EventService.emit(supabase, uid, 'product.created', {
       product_id: data.id,
       product_name: payload.name,
     })
@@ -97,16 +90,10 @@ export async function POST(req: NextRequest) {
 
 // ── PATCH — update product metadata ─────────────────────────────────────────
 export async function PATCH(req: NextRequest) {
-  const supabase = createClient()
-  const { data: authData, error: authError } = await supabase.auth.getUser()
-    if (authError || !authData?.user) return NextResponse.json({ error: 'Unauthorized', code: 'UNAUTHORIZED', type: 'SECURITY' }, { status: 401 })
-    const user = authData.user
+  const auth = await resolveApiAuth(req)
+  if (!auth.ok) return auth.response
+  const { uid, companyId, supabase, ctx } = auth
 
-  let companyId: string
-  try { companyId = await resolveCompanyId(user.id, supabase) }
-  catch { return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED', type: 'SYSTEM' }, { status: 409 }) }
-
-  const ctx = contextFromHeader(req.headers.get(REQUEST_ID_HEADER), user.id)
 
   try {
     const body = await req.json()
@@ -144,16 +131,10 @@ export async function PATCH(req: NextRequest) {
 
 // ── PUT — stock adjustment (idempotent via StockService) ────────────────────
 export async function PUT(req: NextRequest) {
-  const supabase = createClient()
-  const { data: authData, error: authError } = await supabase.auth.getUser()
-    if (authError || !authData?.user) return NextResponse.json({ error: 'Unauthorized', code: 'UNAUTHORIZED', type: 'SECURITY' }, { status: 401 })
-    const user = authData.user
+  const auth = await resolveApiAuth(req)
+  if (!auth.ok) return auth.response
+  const { uid, companyId, supabase, ctx } = auth
 
-  let companyId: string
-  try { companyId = await resolveCompanyId(user.id, supabase) }
-  catch { return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED', type: 'SYSTEM' }, { status: 409 }) }
-
-  const ctx = contextFromHeader(req.headers.get(REQUEST_ID_HEADER), user.id)
 
   try {
     const body = await req.json()
@@ -161,15 +142,21 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: 'idempotency_key zorunludur', code: 'IDEMPOTENCY_KEY_MISSING', type: 'BUSINESS' }, { status: 422 })
     }
 
-    const costPrice = body.cost_price != null ? Number(body.cost_price) : null
+    const rawCostPrice = body.cost_price != null ? Number(body.cost_price) : null
+    const costPrice = (rawCostPrice !== null && isFinite(rawCostPrice) && rawCostPrice >= 0) ? rawCostPrice : null
     const entryDate = typeof body.entry_date === 'string' && body.entry_date.length >= 10
       ? body.entry_date.slice(0, 10)
       : null
 
-    const result = await StockService.adjust(user.id, {
+    const rawQtyChange = Number(body.qty_change)
+    if (!isFinite(rawQtyChange) || rawQtyChange === 0) {
+      return NextResponse.json({ error: 'qty_change geçerli ve sıfırdan farklı bir sayı olmalıdır', code: 'VALIDATION_ERROR', type: 'BUSINESS' }, { status: 422 })
+    }
+
+    const result = await StockService.adjust(uid, {
       idempotency_key: body.idempotency_key,
       product_id:      requireString(body.product_id, 'product_id'),
-      qty_change:      Number(body.qty_change),
+      qty_change:      rawQtyChange,
       reference_type:  body.reference_type ?? 'adjustment',
       notes:           body.notes ?? null,
       cost_price:      costPrice,

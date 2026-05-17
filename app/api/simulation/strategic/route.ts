@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse }    from 'next/server'
-import { createClient }                 from '@/lib/supabase-server'
-import { resolveCompanyId }             from '@/lib/resolve-company'
 import { computeMultiScenario }         from '@/lib/services/simulation-strategic.service'
 import type { BaseExpenseLine, DebtTranche, StrategicScenarioInput } from '@/lib/services/simulation-strategic.service'
 import { CORPORATE_TAX_RATE_TR }        from '@/lib/services/finance-rules'
+import { resolveApiAuth } from '@/lib/api-auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,12 +23,9 @@ export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
   try {
-    const supabase = createClient()
-    const { data: authData } = await supabase.auth.getUser()
-    if (!authData?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const companyId = await resolveCompanyId(authData.user.id, supabase)
-    if (!companyId) return NextResponse.json({ error: 'No company' }, { status: 400 })
+    const auth = await resolveApiAuth(req)
+    if (!auth.ok) return auth.response
+    const { companyId, supabase } = auth
 
     const body = await req.json()
 
@@ -53,10 +49,13 @@ export async function POST(req: NextRequest) {
     const from = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
     const to   = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10)
 
+    // Only use paid expenses as baseline — unpaid/pending expenses haven't been
+    // disbursed and should not be projected as ongoing commitments.
     const { data: expenseRows } = await supabase
       .from('expenses')
       .select('expense_type, amount_try')
       .eq('company_id', companyId)
+      .eq('payment_status', 'paid')
       .is('deleted_at', null)
       .gte('expense_date', from)
       .lte('expense_date', to)
@@ -79,14 +78,15 @@ export async function POST(req: NextRequest) {
       try {
         const { data: trancheRows } = await supabase
           .from('partner_loan_tranches')
-          .select('amount_try, interest_rate_annual, status, due_date')
+          .select('amount_try, annual_interest_rate, status, due_date')
           .eq('company_id', companyId)
           .eq('status', 'active')
 
         for (const t of trancheRows ?? []) {
           const principal      = Number(t.amount_try ?? 0)
-          const annualRate     = Number(t.interest_rate_annual ?? 0)
-          const monthlyInterest = principal * annualRate / 100 / 12
+          // annual_interest_rate is a decimal (0.15 = 15%) — do NOT divide by 100 again
+          const annualRate      = Number(t.annual_interest_rate ?? 0)
+          const monthlyInterest = principal * annualRate / 12
           // Remaining months from due_date
           const remainingMonths = t.due_date
             ? Math.max(0, Math.ceil((new Date(t.due_date as string).getTime() - Date.now()) / (30 * 86_400_000)))

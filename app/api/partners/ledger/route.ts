@@ -28,10 +28,8 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient }     from '@/lib/supabase-server'
-import { resolveCompanyId } from '@/lib/resolve-company'
-import { contextFromHeader } from '@/lib/logger'
 import { REQUEST_ID_HEADER } from '@/middleware'
+import { resolveApiAuth } from '@/lib/api-auth'
 
 function round2(v: number) { return Math.round((v + Number.EPSILON) * 100) / 100 }
 
@@ -66,18 +64,9 @@ interface LedgerSummary {
 }
 
 export async function GET(req: NextRequest) {
-  const supabase = createClient()
-  const { data: authData, error: authError } = await supabase.auth.getUser()
-  if (authError || !authData?.user) {
-    return NextResponse.json({ error: 'Unauthorized', code: 'UNAUTHORIZED' }, { status: 401 })
-  }
-  const ctx = contextFromHeader(req.headers.get(REQUEST_ID_HEADER), authData.user.id)
-
-  let companyId: string
-  try { companyId = await resolveCompanyId(authData.user.id, supabase) }
-  catch {
-    return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED' }, { status: 409 })
-  }
+  const auth = await resolveApiAuth(req)
+  if (!auth.ok) return auth.response
+  const { companyId, supabase, ctx } = auth
 
   try {
     // Fetch partners + all their transactions in parallel
@@ -114,7 +103,7 @@ export async function GET(req: NextRequest) {
     for (const tx of txs) {
       const a = agg.get(tx.partner_id)
       if (!a) continue
-      const amt = Number(tx.amount_try)
+      const amt = isFinite(Number(tx.amount_try)) ? Math.abs(Number(tx.amount_try)) : 0
       switch (tx.tx_type) {
         case 'capital_in':      a.equity   += amt; break
         case 'loan_to_company': a.loanIn   += amt; break
@@ -157,7 +146,8 @@ export async function GET(req: NextRequest) {
     // Company-level summary
     const active = entries.filter(e => e.is_active)
     const totalEquity   = round2(active.reduce((s, e) => s + e.equity_contributed, 0))
-    const totalDebt     = round2(active.reduce((s, e) => s + e.net_loan_outstanding, 0))
+    // Use Math.max(0, ...) per partner so over-repaid partners don't reduce company-level debt
+    const totalDebt     = round2(active.reduce((s, e) => s + Math.max(0, e.net_loan_outstanding), 0))
     const totalDividends = round2(entries.reduce((s, e) => s + e.dividends_received, 0))
     const totalSalary    = round2(entries.reduce((s, e) => s + e.salary_received, 0))
 

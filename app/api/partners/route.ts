@@ -6,32 +6,20 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase-server'
-import { contextFromHeader } from '@/lib/logger'
 import { REQUEST_ID_HEADER } from '@/middleware'
 import { PartnerService } from '@/lib/services/partner.service'
 import { toErrorResponse } from '@/types/errors'
-import { resolveCompanyId } from '@/lib/resolve-company'
+import { resolveApiAuth } from '@/lib/api-auth'
 
 export async function GET(req: NextRequest) {
-  const supabase = createClient()
-  const { data: authData, error: authError } = await supabase.auth.getUser()
-  if (authError || !authData?.user) {
-    return NextResponse.json(
-      { error: 'Unauthorized', code: 'UNAUTHORIZED', type: 'SECURITY' },
-      { status: 401 }
-    )
-  }
-  const ctx = contextFromHeader(req.headers.get(REQUEST_ID_HEADER), authData.user.id)
-
-  let companyId: string
-  try { companyId = await resolveCompanyId(authData.user.id, supabase) }
-  catch { return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED', type: 'SYSTEM' }, { status: 409 }) }
+  const auth = await resolveApiAuth(req)
+  if (!auth.ok) return auth.response
+  const { uid, companyId, supabase, ctx } = auth
 
   try {
     const [partners, balances] = await Promise.all([
-      PartnerService.listPartners(authData.user.id, companyId, ctx),
-      PartnerService.getPartnerBalances(authData.user.id, companyId, ctx),
+      PartnerService.listPartners(uid, companyId, ctx),
+      PartnerService.getPartnerBalances(uid, companyId, ctx),
     ])
 
     // Merge balance data into partner list
@@ -49,19 +37,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const supabase = createClient()
-  const { data: authData, error: authError } = await supabase.auth.getUser()
-  if (authError || !authData?.user) {
-    return NextResponse.json(
-      { error: 'Unauthorized', code: 'UNAUTHORIZED', type: 'SECURITY' },
-      { status: 401 }
-    )
-  }
-  const ctx = contextFromHeader(req.headers.get(REQUEST_ID_HEADER), authData.user.id)
-
-  let companyId: string
-  try { companyId = await resolveCompanyId(authData.user.id, supabase) }
-  catch { return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED', type: 'SYSTEM' }, { status: 409 }) }
+  const auth = await resolveApiAuth(req)
+  if (!auth.ok) return auth.response
+  const { uid, companyId, supabase, ctx } = auth
 
   try {
     let body: Record<string, unknown>
@@ -75,7 +53,7 @@ export async function POST(req: NextRequest) {
     }
 
     const name        = typeof body.name === 'string' ? body.name.trim() : ''
-    const share_ratio = Number(body.share_ratio)
+    const share_ratio = Number(body.share_ratio) || 0
 
     if (!name) {
       return NextResponse.json(
@@ -85,7 +63,7 @@ export async function POST(req: NextRequest) {
     }
 
     const partner = await PartnerService.createPartner(
-      authData.user.id,
+      uid,
       {
         name,
         share_ratio,

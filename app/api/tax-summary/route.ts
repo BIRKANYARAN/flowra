@@ -38,14 +38,12 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase-server'
-import { contextFromHeader } from '@/lib/logger'
 import { REQUEST_ID_HEADER } from '@/middleware'
 import { TaxService, computeCorporateTax } from '@/lib/services/tax.service'
 import { FinanceService } from '@/lib/services/finance.service'
 import { toErrorResponse } from '@/types/errors'
 import { CORPORATE_TAX_RATE_TR } from '@/lib/services/finance-rules'
-import { resolveCompanyId } from '@/lib/resolve-company'
+import { resolveApiAuth } from '@/lib/api-auth'
 
 function parseDate(s: string | null): string | null {
   if (!s || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return null
@@ -53,19 +51,9 @@ function parseDate(s: string | null): string | null {
 }
 
 export async function GET(req: NextRequest) {
-  const supabase = createClient()
-  const { data: authData, error: authError } = await supabase.auth.getUser()
-  if (authError || !authData?.user) {
-    return NextResponse.json(
-      { error: 'Unauthorized', code: 'UNAUTHORIZED', type: 'SECURITY' },
-      { status: 401 }
-    )
-  }
-  const ctx = contextFromHeader(req.headers.get(REQUEST_ID_HEADER), authData.user.id)
-
-  let companyId: string
-  try { companyId = await resolveCompanyId(authData.user.id, supabase) }
-  catch { return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED', type: 'SYSTEM' }, { status: 409 }) }
+  const auth = await resolveApiAuth(req)
+  if (!auth.ok) return auth.response
+  const { uid, companyId, supabase, ctx } = auth
 
   try {
     const url  = new URL(req.url)
@@ -100,9 +88,9 @@ export async function GET(req: NextRequest) {
 
     // Fire all three reads in parallel — no dependencies between them.
     const [kdvResult, gross, expResult] = await Promise.all([
-      TaxService.getKdvNet(authData.user.id, companyId, period, ctx),
-      FinanceService.getGrossProfit(authData.user.id, companyId, period, ctx),
-      FinanceService.getOperatingExpenses(authData.user.id, companyId, period, ctx),
+      TaxService.getKdvNet(uid, companyId, period, ctx),
+      FinanceService.getGrossProfit(uid, companyId, period, ctx),
+      FinanceService.getOperatingExpenses(uid, companyId, period, ctx),
     ])
 
     const corpTax = computeCorporateTax({

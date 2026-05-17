@@ -1,2 +1,8 @@
 import { redirect } from 'next/navigation'
-export default function ExpensesPage() { redirect('/dashboard/operations?tab=expenses') }
+
+export const dynamic = 'force-dynamic'
+
+// Canonical route is now /dashboard/operations?tab=expenses
+export default function RedirectPage() {
+  redirect('/dashboard/operations?tab=expenses')
+}

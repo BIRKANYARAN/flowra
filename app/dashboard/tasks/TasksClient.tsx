@@ -40,7 +40,7 @@ function isOverdue(due: string | null, status: TaskStatus): boolean {
 interface Props {
   initialTasks:     Task[]
   initialCustomers: Pick<Customer, 'id' | 'name'>[]
-  initialSales:     Pick<Sale, 'id' | 'customer_name' | 'total_try' | 'created_at'>[]
+  initialSales:     Pick<Sale, 'id' | 'customer_name' | 'total_try' | 'sale_date' | 'created_at'>[]
 }
 
 export default function TasksClient({ initialTasks, initialCustomers, initialSales }: Props) {
@@ -192,7 +192,7 @@ export default function TasksClient({ initialTasks, initialCustomers, initialSal
               {initialSales.map(s => (
                 <option key={s.id} value={s.id}>
                   {s.customer_name} — ₺{Number(s.total_try).toLocaleString('tr-TR', { minimumFractionDigits: 0 })}
-                  {' '}({new Date(s.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })})
+                  {' '}({new Date(s.sale_date || s.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })})
                 </option>
               ))}
             </select>

@@ -14,8 +14,6 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient }    from '@/lib/supabase-server'
-import { resolveCompanyId } from '@/lib/resolve-company'
 import { CORPORATE_TAX_RATE_TR } from '@/lib/services/finance-rules'
 import {
   computeCashMetrics,
@@ -26,19 +24,12 @@ import {
   computeStockMetrics,
   BURN_EXPENSE_TYPES,
 } from '@/lib/finance/cfo-metrics'
+import { resolveApiAuth } from '@/lib/api-auth'
 
 export async function GET(req: NextRequest) {
-  const supabase = createClient()
-  const { data: authData, error: authError } = await supabase.auth.getUser()
-  if (authError || !authData?.user) {
-    return NextResponse.json({ error: 'Unauthorized', code: 'UNAUTHORIZED' }, { status: 401 })
-  }
-
-  let companyId: string
-  try { companyId = await resolveCompanyId(authData.user.id, supabase) }
-  catch {
-    return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED' }, { status: 409 })
-  }
+  const auth = await resolveApiAuth(req)
+  if (!auth.ok) return auth.response
+  const { companyId, supabase } = auth
 
   const url   = new URL(req.url)
   const now   = new Date()
@@ -146,30 +137,32 @@ export async function GET(req: NextRequest) {
         .in('expense_type', Array.from(BURN_EXPENSE_TYPES)),
 
       // 7. Outstanding receivables (unpaid/partial/overdue) with age
+      // Use sale_date (business invoice date) for aging — not created_at (DB insertion time).
       supabase
         .from('sales')
-        .select('total_try, created_at, due_date, amount_paid')
+        .select('total_try, sale_date, due_date, amount_paid')
         .eq('company_id', companyId)
         .is('deleted_at', null)
         .in('payment_status', ['pending', 'partial', 'overdue']),
 
-      // 8. Period invoiced (total_try for all sales in period by created_at)
+      // 8. Period invoiced (total_try for all sales in period by sale_date)
+      // Use sale_date (business invoice date) not created_at (DB insertion time).
       supabase
         .from('sales')
         .select('total_try')
         .eq('company_id', companyId)
         .is('deleted_at', null)
-        .gte('created_at', from + 'T00:00:00Z')
-        .lte('created_at', to   + 'T23:59:59Z'),
+        .gte('sale_date', from)
+        .lte('sale_date', to),
 
-      // 9. YTD revenue
+      // 9. YTD revenue — use sale_date for period attribution
       supabase
         .from('sales')
         .select('total_try')
         .eq('company_id', companyId)
         .is('deleted_at', null)
-        .gte('created_at', ytdFrom + 'T00:00:00Z')
-        .lte('created_at', today + 'T23:59:59Z'),
+        .gte('sale_date', ytdFrom)
+        .lte('sale_date', today),
 
       // 10. YTD COGS (from sale_item_allocations — FIFO)
       supabase
@@ -187,20 +180,23 @@ export async function GET(req: NextRequest) {
         .gte('expense_date', ytdFrom)
         .lte('expense_date', today),
 
-      // 12. YTD sales VAT
+      // 12. YTD sales VAT — use sale_date for period attribution
       supabase
         .from('sales')
         .select('kdv_total, fx_rate_try')
         .eq('company_id', companyId)
         .is('deleted_at', null)
-        .gte('created_at', ytdFrom + 'T00:00:00Z')
-        .lte('created_at', today + 'T23:59:59Z'),
+        .gte('sale_date', ytdFrom)
+        .lte('sale_date', today),
 
-      // 13. YTD purchase VAT (from purchases)
+      // 13. YTD finalized purchases — id + fx_rate for purchase VAT computation
+      //     VAT is on purchase_items (qty × unit_price × kdv/100 × fx_rate).
+      //     We fetch headers here; items are fetched in a second pass below.
       supabase
         .from('purchases')
-        .select('kdv_amount_try')
+        .select('id, fx_rate')
         .eq('company_id', companyId)
+        .eq('status', 'finalized')
         .is('deleted_at', null)
         .gte('purchase_date', ytdFrom)
         .lte('purchase_date', today),
@@ -263,11 +259,28 @@ export async function GET(req: NextRequest) {
     }, 0)
     const ytdProfit = ytdRevenue - ytdCogs - ytdOpExpenses
 
-    // VAT net
-    const salesVat    = (ytdSalesVatRes.data ?? []).reduce((s, r) => s + Number(r.kdv_total ?? 0) * Number(r.fx_rate_try ?? 1), 0)
-    const purchaseVat = (ytdPurchaseVatRes.data ?? []).reduce((s, r) => s + Number(r.kdv_amount_try ?? 0), 0)
-    const expenseVat  = (ytdExpenseVatRes.data ?? []).reduce((s, r) => s + Number(r.kdv ?? 0), 0)
-    const kdvNet      = salesVat - purchaseVat - expenseVat
+    // VAT net — purchase VAT requires a second query over purchase_items
+    const salesVat   = (ytdSalesVatRes.data ?? []).reduce((s, r) => s + Number(r.kdv_total ?? 0) * Number(r.fx_rate_try ?? 1), 0)
+    const expenseVat = (ytdExpenseVatRes.data ?? []).reduce((s, r) => s + Number(r.kdv ?? 0), 0)
+
+    // Step 2: fetch purchase_items for the finalized YTD purchases and compute input VAT
+    let purchaseVat = 0
+    const purchaseHeaders = ytdPurchaseVatRes.data ?? []
+    if (purchaseHeaders.length > 0) {
+      const ids   = purchaseHeaders.map((p: { id: string }) => String(p.id))
+      const fxMap = new Map<string, number>(purchaseHeaders.map((p: { id: string; fx_rate?: number | null }) => [String(p.id), Number(p.fx_rate ?? 1) || 1]))
+      const { data: purchaseItems } = await supabase
+        .from('purchase_items')
+        .select('purchase_id, quantity, unit_price, kdv')
+        .in('purchase_id', ids)
+      for (const it of purchaseItems ?? []) {
+        const fx  = fxMap.get(String(it.purchase_id)) ?? 1
+        purchaseVat += Number(it.quantity ?? 0) * Number(it.unit_price ?? 0) * fx * Number(it.kdv ?? 0) / 100
+      }
+      purchaseVat = Math.round(purchaseVat * 100) / 100
+    }
+
+    const kdvNet = salesVat - purchaseVat - expenseVat
 
     // ── Compute metric sections ─────────────────────────────────────────────
 
@@ -288,7 +301,7 @@ export async function GET(req: NextRequest) {
       periodCollected: periodReceived,
       outstanding: (outstandingRes.data ?? []).map(r => ({
         amount_try: Number(r.total_try ?? 0),
-        created_at: String(r.created_at ?? ''),
+        sale_date: String(r.sale_date ?? ''),
         due_date:   r.due_date ? String(r.due_date) : null,
         amount_paid: r.amount_paid != null ? Number(r.amount_paid) : null,
       })),

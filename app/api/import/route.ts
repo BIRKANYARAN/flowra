@@ -4,8 +4,7 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase-server'
-import { resolveCompanyId } from '@/lib/resolve-company'
+import { resolveApiAuth } from '@/lib/api-auth'
 
 interface BackupPayload {
   version: string
@@ -50,16 +49,9 @@ function stripSettings(
 
 export async function POST(req: NextRequest) {
   try {
-    const supabase = createClient()
-    const { data: authData, error: authError } = await supabase.auth.getUser()
-    if (authError || !authData?.user) return NextResponse.json({ error: 'Unauthorized', code: 'UNAUTHORIZED', type: 'SECURITY' }, { status: 401 })
-    const user = authData.user
-    const uid = user.id
-
-    // Resolve company once — fail fast, never write NULL
-    let companyId: string
-    try { companyId = await resolveCompanyId(uid, supabase) }
-    catch { return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED', type: 'SYSTEM' }, { status: 409 }) }
+    const auth = await resolveApiAuth(req)
+    if (!auth.ok) return auth.response
+    const { uid, companyId, supabase } = auth
 
     let payload: BackupPayload
     try {
@@ -79,13 +71,25 @@ export async function POST(req: NextRequest) {
     const now = new Date().toISOString()
 
     // ── Soft-delete existing company data ─────────────────────────────────────
-    await Promise.all([
+    // Errors must be checked — a failed soft-delete means old rows stay active
+    // and new inserts below would create duplicates.
+    const deleteResults = await Promise.all([
       supabase.from('customers').update({ deleted_at: now }).eq('company_id', companyId).is('deleted_at', null),
       supabase.from('products').update({ deleted_at: now }).eq('company_id', companyId).is('deleted_at', null),
       supabase.from('company_banks').update({ deleted_at: now }).eq('company_id', companyId).is('deleted_at', null),
       supabase.from('proformas').update({ deleted_at: now }).eq('company_id', companyId).is('deleted_at', null),
       supabase.from('expenses').update({ deleted_at: now }).eq('company_id', companyId).is('deleted_at', null),
     ])
+    const deleteErrors = deleteResults
+      .map((r, i) => r.error ? `table[${i}]: ${r.error.message}` : null)
+      .filter(Boolean)
+    if (deleteErrors.length > 0) {
+      console.error('[import] soft-delete failed:', deleteErrors)
+      return NextResponse.json(
+        { error: 'Mevcut veri temizlenemedi — import iptal edildi', details: deleteErrors },
+        { status: 500 }
+      )
+    }
 
     // ── Re-insert in dependency order ─────────────────────────────────────────
     // Errors are collected — any failure is returned explicitly.

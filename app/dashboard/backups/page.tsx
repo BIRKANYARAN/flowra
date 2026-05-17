@@ -100,9 +100,9 @@ export default function BackupsPage() {
     if (importRef.current) importRef.current.value = ''
   }
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (signal?: AbortSignal) => {
     setError('')
-    const res = await fetch('/api/backups')
+    const res = await fetch('/api/backups', { signal })
     const json = await res.json()
     if (!res.ok) {
       setError(json.error ?? 'Yedek listesi alınamadı')
@@ -113,7 +113,11 @@ export default function BackupsPage() {
     setLoading(false)
   }, [])
 
-  useEffect(() => { load() }, [load])
+  useEffect(() => {
+    const ctrl = new AbortController()
+    load(ctrl.signal).catch(err => { if (err.name !== 'AbortError') setError('Yedek listesi alınamadı') })
+    return () => ctrl.abort()
+  }, [load])
 
   async function createBackup() {
     setCreating(true)

@@ -1,8 +1,9 @@
 /**
  * Design System Showcase — dev-only route at /dashboard/_ds
- * Not linked from navigation. Delete before shipping if not wanted.
+ * Not linked from navigation. Blocked in production.
  */
 'use client'
+
 
 import { Btn, Card, Label, SectionHeader, DSInput, StatusBadge, Money, cn } from '@/components/ui'
 import { Icon } from '@/components/ui/Icon'
@@ -24,6 +25,15 @@ const STATUSES = [
 ]
 
 export default function DesignSystemPage() {
+  // Block in production — this page is dev-only and not linked from navigation.
+  if (process.env.NODE_ENV === 'production') {
+    return (
+      <div className="flex items-center justify-center h-64 text-gray-400 text-sm">
+        Bu sayfa sadece geliştirme ortamında kullanılabilir.
+      </div>
+    )
+  }
+
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-10">
       <header>

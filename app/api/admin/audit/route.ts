@@ -20,32 +20,21 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient }   from '@/lib/supabase-server'
 import { safeAdminQuery } from '@/lib/admin-db'
-import { resolveCompanyId } from '@/lib/resolve-company'
 import { requireAdmin }   from '@/lib/require-role'
 import { AppError }       from '@/types/errors'
 import type { AuditLog }  from '@/types'
+import { resolveApiAuth } from '@/lib/api-auth'
 // Never use admin client without company_id filter — use safeAdminQuery() from admin-db.ts
 
 export async function GET(req: NextRequest) {
   try {
-    const supabase = createClient()
-    const { data: authData, error: authError } = await supabase.auth.getUser()
-    if (authError || !authData?.user) {
-      return NextResponse.json(
-        { error: 'Unauthorized', code: 'UNAUTHORIZED', type: 'SECURITY' },
-        { status: 401 },
-      )
-    }
-    const user = authData.user
-
-    let companyId: string
-    try { companyId = await resolveCompanyId(user.id, supabase) }
-    catch { return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED' }, { status: 409 }) }
+    const auth = await resolveApiAuth(req)
+    if (!auth.ok) return auth.response
+    const { uid, companyId, supabase } = auth
 
     // Enforce admin-only access
-    try { await requireAdmin(user.id, companyId, supabase) }
+    try { await requireAdmin(uid, companyId, supabase) }
     catch (e) {
       if (e instanceof AppError && e.code === 'FORBIDDEN') {
         return NextResponse.json({ error: e.message, code: 'FORBIDDEN' }, { status: 403 })
@@ -54,8 +43,10 @@ export async function GET(req: NextRequest) {
     }
 
     const url     = new URL(req.url)
-    const limit   = Math.min(Number(url.searchParams.get('limit')  ?? 100), 500)
-    const offset  = Math.max(Number(url.searchParams.get('offset') ?? 0),   0)
+    const rawLimit  = Number(url.searchParams.get('limit')  ?? 100)
+    const rawOffset = Number(url.searchParams.get('offset') ?? 0)
+    const limit   = Math.min(isFinite(rawLimit)  && rawLimit  > 0 ? rawLimit  : 100, 500)
+    const offset  = isFinite(rawOffset) && rawOffset >= 0 ? Math.floor(rawOffset) : 0
     const filterEntityType = url.searchParams.get('entity_type') ?? undefined
     const filterAction     = url.searchParams.get('action')      ?? undefined
     const filterEntityId   = url.searchParams.get('entity_id')   ?? undefined

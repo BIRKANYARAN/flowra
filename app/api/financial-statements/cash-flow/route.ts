@@ -1,18 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient }               from '@/lib/supabase-server'
-import { resolveCompanyId }           from '@/lib/resolve-company'
 import { CashFlowStatementService }   from '@/lib/services/cashflow-statement.service'
+import { resolveApiAuth } from '@/lib/api-auth'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(req: NextRequest) {
   try {
-    const supabase  = createClient()
-    const { data: authData } = await supabase.auth.getUser()
-    if (!authData?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const companyId = await resolveCompanyId(authData.user.id, supabase)
-    if (!companyId) return NextResponse.json({ error: 'No company' }, { status: 400 })
+    const auth = await resolveApiAuth(req)
+    if (!auth.ok) return auth.response
+    const { uid, companyId, supabase } = auth
 
     const params = req.nextUrl.searchParams
     const now    = new Date()
@@ -20,7 +16,7 @@ export async function GET(req: NextRequest) {
     const to     = params.get('to')   ?? now.toISOString().slice(0, 10)
 
     const statement = await CashFlowStatementService.compute(
-      authData.user.id, companyId, { from, to }, supabase
+      uid, companyId, { from, to }, supabase
     )
 
     return NextResponse.json(statement)

@@ -2,7 +2,7 @@
  * nav-config.ts — Flowra navigation configuration
  *
  * Single source of truth for:
- *   • Sidebar navigation  — 7 center-based items + Ayarlar
+ *   • Sidebar navigation  — 8 center-based items + Ayarlar
  *   • Mobile bottom nav   — 5 strategic items
  *   • Route redirect map  — old routes → new center URLs
  *   • Tab contract        — canonical tab keys per center
@@ -14,9 +14,10 @@
  * Inner tabs use ?tab= URL param via UnifiedTabNav.
  *
  *   Komuta Merkezi  /dashboard          (CEO cockpit)
- *   Finans Merkezi  /dashboard/finance  (finance hub — 8 tabs)
+ *   Finans Merkezi  /dashboard/finance  (finance hub — 9 tabs)
  *   Ticari Akış     /dashboard/commercial (5 tabs)
- *   Operasyon       /dashboard/operations (3 tabs)
+ *   OPS Komuta      /dashboard/ops      (daily command center)
+ *   Operasyon       /dashboard/operations (4 tabs)
  *   Ortak Fin.      /dashboard/partners
  *   Planlama        /dashboard/planning   (6 tabs)
  *   Yönetim         /dashboard/admin      (admin only)
@@ -94,6 +95,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: '/dashboard/finance',    label: 'Finans Merkezi',   icon: 'analytics'  },
       { href: '/dashboard/commercial', label: 'Ticari Akış',      icon: 'activity'   },
+      { href: '/dashboard/ops',        label: 'OPS Komuta',       icon: 'tasks'      },
       { href: '/dashboard/operations', label: 'Operasyon',        icon: 'products'   },
       { href: '/dashboard/partners',   label: 'Ortak Finansmanı', icon: 'partners'   },
       { href: '/dashboard/planning',   label: 'Planlama',         icon: 'simulation' },
@@ -106,8 +108,9 @@ export const NAV_GROUPS: NavGroup[] = [
     label:   'Yönetim',
     minRole: 'admin',
     items: [
-      { href: '/dashboard/admin',    label: 'Yönetim', icon: 'shield'   },
-      { href: '/dashboard/settings', label: 'Ayarlar', icon: 'settings' },
+      { href: '/dashboard/admin',              label: 'Yönetim',  icon: 'shield'   },
+      { href: '/dashboard/admin/workflows',    label: 'Onaylar',  icon: 'activity' },
+      { href: '/dashboard/settings',           label: 'Ayarlar',  icon: 'settings' },
     ],
   },
 ]
@@ -212,9 +215,10 @@ export const COMMERCIAL_TABS = [
 
 /** Operations center — /dashboard/operations?tab= */
 export const OPERATIONS_TABS = [
-  { key: 'expenses', label: 'Giderler' },
-  { key: 'catalog',  label: 'Katalog'  },
-  { key: 'stock',    label: 'Stok'     },
+  { key: 'expenses', label: 'Giderler'  },
+  { key: 'catalog',  label: 'Katalog'   },
+  { key: 'stock',    label: 'Stok'      },
+  { key: 'orders',   label: 'Siparişler' },
 ] as const
 
 /** Planning center — /dashboard/planning?tab= */
@@ -243,8 +247,10 @@ export const ROUTE_REDIRECTS: Record<string, string> = {
   '/dashboard/catalog':     '/dashboard/operations?tab=catalog',
   '/dashboard/products':    '/dashboard/operations?tab=catalog',
   '/dashboard/stocks':      '/dashboard/operations?tab=stock',
+  '/dashboard/orders':      '/dashboard/operations?tab=orders',
   '/dashboard/simulation':  '/dashboard/planning?tab=unit-profit',
   '/dashboard/tasks':       '/dashboard/planning?tab=tasks',
+  '/dashboard/activity':    '/dashboard/admin/audit',
 }
 
 // ── Mobile bottom nav (5 items) ───────────────────────────────────────────────
@@ -258,8 +264,8 @@ export interface MobileNavItem {
 export const MOBILE_NAV: MobileNavItem[] = [
   { href: '/dashboard',             label: 'Ana Sayfa', emoji: '🏠' },
   { href: '/dashboard/commercial',  label: 'Ticari',    emoji: '💰' },
+  { href: '/dashboard/ops',         label: 'OPS',       emoji: '⚡' },
   { href: '/dashboard/finance',     label: 'Finans',    emoji: '📊' },
-  { href: '/dashboard/operations',  label: 'Operasyon', emoji: '📦' },
   { href: '/dashboard/planning',    label: 'Planlama',  emoji: '📈' },
 ]
 

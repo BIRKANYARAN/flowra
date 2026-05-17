@@ -9,9 +9,11 @@
  *   • isNavItemActive() — safe prefix match (no /sales matching /sales-flow)
  *   • Non-admin users get standalone Ayarlar at bottom (SETTINGS_FALLBACK)
  *   • Width: w-56 (224 px)
+ *   • Multi-company: shows switcher when user belongs to >1 company
  */
 
 import Link from 'next/link'
+import { useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { useSupabase }   from '@/lib/hooks/useSupabase'
 import { FlowraLogo }   from '@/components/ui/FlowraLogo'
@@ -34,11 +36,13 @@ export function Sidebar() {
   const supabase = useSupabase()
   const ws       = useWorkspace()
 
-  const { companyName, logoUrl, userInitials, userName, userEmail, userRole } = ws
+  const { companyId, companyName, logoUrl, userInitials, userName, userEmail, userRole, companies, switchCompany } = ws
+  const [showSwitcher, setShowSwitcher] = useState(false)
 
-  const groups      = getGroupsForRole(userRole ?? null)
-  const isAdmin     = hasMinRole(userRole ?? null, 'admin')
-  const displayName = companyName || 'Flowra'
+  const groups         = getGroupsForRole(userRole ?? null)
+  const isAdmin        = hasMinRole(userRole ?? null, 'admin')
+  const displayName    = companyName || 'Flowra'
+  const hasMultiCompany = companies.length > 1
 
   async function logout() {
     await supabase.auth.signOut()
@@ -51,8 +55,12 @@ export function Sidebar() {
       {/* ── Brand ──────────────────────────────────────────────────────────── */}
       <div className="px-2.5 mb-3">
         {companyName || logoUrl ? (
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-primary-600 flex items-center justify-center flex-shrink-0 overflow-hidden">
+          <div
+            className={`flex items-center gap-2.5 ${hasMultiCompany ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
+            onClick={hasMultiCompany ? () => setShowSwitcher(s => !s) : undefined}
+            title={hasMultiCompany ? 'Şirket değiştir' : undefined}
+          >
+            <div className="w-8 h-8 rounded-lg bg-primary-600 flex items-center justify-center flex-shrink-0 overflow-hidden relative">
               {logoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={logoUrl} alt="logo" className="w-full h-full object-contain p-0.5" />
@@ -62,13 +70,50 @@ export function Sidebar() {
                 </span>
               )}
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <div className="font-black text-sm leading-tight truncate">{displayName}</div>
-              <div className="text-[10px] text-gray-400 uppercase tracking-wide">FOS</div>
+              <div className="text-[10px] text-gray-400 uppercase tracking-wide">
+                {hasMultiCompany ? `${companies.length} şirket ▾` : 'FOS'}
+              </div>
             </div>
           </div>
         ) : (
           <FlowraLogo size="md" />
+        )}
+
+        {/* ── Company switcher dropdown ──────────────────────────────────── */}
+        {hasMultiCompany && showSwitcher && (
+          <div className="mt-2 rounded-lg border border-gray-200 bg-white shadow-lg overflow-hidden">
+            <div className="px-3 py-1.5 bg-gray-50 border-b border-gray-100">
+              <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                Şirket Seç
+              </span>
+            </div>
+            {companies.map(c => {
+              const isActive = c.companyId === companyId
+              return (
+                <button
+                  key={c.companyId}
+                  onClick={() => { setShowSwitcher(false); if (!isActive) switchCompany(c.companyId) }}
+                  className={`w-full text-left flex items-center gap-2 px-3 py-2 text-xs transition-colors ${
+                    isActive
+                      ? 'bg-primary-50 text-primary-700 font-semibold'
+                      : 'text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  <div className="w-5 h-5 rounded bg-primary-100 flex items-center justify-center flex-shrink-0">
+                    <span className="text-[9px] font-black text-primary-600">
+                      {(c.companyName ?? 'Ş').slice(0, 2).toUpperCase()}
+                    </span>
+                  </div>
+                  <span className="truncate flex-1">{c.companyName ?? c.companyId.slice(0, 8)}</span>
+                  {isActive && (
+                    <span className="text-[9px] font-bold text-primary-500 flex-shrink-0">✓</span>
+                  )}
+                </button>
+              )
+            })}
+          </div>
         )}
       </div>
 

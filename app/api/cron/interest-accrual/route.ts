@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient }              from '@/lib/supabase-server'
+import { getSystemAdminClient }      from '@/lib/admin-db'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,13 +17,18 @@ export const dynamic = 'force-dynamic'
 const CRON_SECRET = process.env.CRON_SECRET
 
 export async function POST(req: NextRequest) {
-  // Verify Vercel Cron signature (or shared secret)
+  // Verify Vercel Cron signature (or shared secret).
+  // Treat a missing CRON_SECRET as misconfiguration — deny access rather than
+  // leaving the endpoint open to unauthenticated callers.
   const authHeader = req.headers.get('authorization')
-  if (CRON_SECRET && authHeader !== `Bearer ${CRON_SECRET}`) {
+  if (!CRON_SECRET || authHeader !== `Bearer ${CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const supabase = createClient()
+  // Cron jobs run without an HTTP session — use the service-role client so that
+  // Supabase RLS (which requires auth.uid()) does not silently block every query.
+  // company_id is always present on every row we touch, so no cross-company leak is possible.
+  const supabase = getSystemAdminClient()
   const today    = new Date().toISOString().slice(0, 10)
 
   try {
@@ -40,53 +45,56 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true, accrued: 0, message: 'No active interest-bearing tranches' })
     }
 
-    let accrued = 0
-    const errors: string[] = []
+    // ── Bulk idempotency check: one query for all tranches ────────────────
+    const trancheRefs = tranches.map(t => `tranche:${t.id}`)
+    const { data: alreadyDone } = await supabase
+      .from('partner_finance_events')
+      .select('reference')
+      .eq('event_type', 'LOAN_INTEREST_ACCRUAL')
+      .eq('event_date', today)
+      .in('reference', trancheRefs)
 
-    for (const t of tranches) {
-      // Idempotency: check if already accrued today for this tranche
-      const { data: existing } = await supabase
-        .from('partner_finance_events')
-        .select('id')
-        .eq('company_id', t.company_id)
-        .eq('partner_id',  t.partner_id)
-        .eq('event_type',  'LOAN_INTEREST_ACCRUAL')
-        .eq('event_date',  today)
-        .eq('reference',   `tranche:${t.id}`)
-        .limit(1)
-        .maybeSingle()
+    const doneSet = new Set((alreadyDone ?? []).map(r => r.reference as string))
 
-      if (existing) continue  // already done today
+    // ── Compute new accrual rows ───────────────────────────────────────────
+    const newRows = tranches
+      .filter(t => !doneSet.has(`tranche:${t.id}`))
+      .map(t => ({
+        // annual_interest_rate is a decimal (0.15 = 15%) — do NOT divide by 100 again
+        dailyInterest: Math.round(
+          (Number(t.outstanding_try) * (Number(t.annual_interest_rate) / 365)) * 100
+        ) / 100,
+        t,
+      }))
+      .filter(({ dailyInterest }) => dailyInterest >= 0.01)  // skip below ₺0.01
+      .map(({ dailyInterest, t }) => ({
+        company_id:  t.company_id,
+        partner_id:  t.partner_id,
+        event_type:  'LOAN_INTEREST_ACCRUAL',
+        amount_try:  dailyInterest,
+        event_date:  today,
+        reference:   `tranche:${t.id}`,
+        description: `Günlük faiz tahakkuku — ${today}`,
+      }))
 
-      const dailyInterest = Math.round(
-        (Number(t.outstanding_try) * (Number(t.annual_interest_rate) / 100 / 365)) * 100
-      ) / 100
+    if (!newRows.length) {
+      return NextResponse.json({ ok: true, accrued: 0, skipped: tranches.length, date: today })
+    }
 
-      if (dailyInterest < 0.01) continue  // below ₺0.01 — skip
+    // ── Single bulk insert ─────────────────────────────────────────────────
+    const { error: insErr } = await supabase
+      .from('partner_finance_events')
+      .insert(newRows)
 
-      const { error: insErr } = await supabase
-        .from('partner_finance_events')
-        .insert({
-          company_id:  t.company_id,
-          partner_id:  t.partner_id,
-          event_type:  'LOAN_INTEREST_ACCRUAL',
-          amount_try:  dailyInterest,
-          event_date:  today,
-          reference:   `tranche:${t.id}`,
-          description: `Günlük faiz tahakkuku — ${today}`,
-        })
-
-      if (insErr) {
-        errors.push(`tranche ${t.id}: ${insErr.message}`)
-      } else {
-        accrued++
-      }
+    if (insErr) {
+      console.error('[cron/interest-accrual] bulk insert error:', insErr.message)
+      return NextResponse.json({ error: insErr.message }, { status: 500 })
     }
 
     return NextResponse.json({
-      ok:      errors.length === 0,
-      accrued,
-      errors:  errors.length ? errors : undefined,
+      ok:      true,
+      accrued: newRows.length,
+      skipped: tranches.length - newRows.length,
       date:    today,
     })
   } catch (e) {

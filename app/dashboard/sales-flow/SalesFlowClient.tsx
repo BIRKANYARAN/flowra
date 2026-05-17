@@ -7,6 +7,7 @@
 import { useState } from 'react'
 import type { ReactNode } from 'react'
 import Link from 'next/link'
+import { fmtTRY as fmt } from '@/lib/format'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -37,20 +38,13 @@ export interface Sale {
   total_try:      number | null
   cost_try:       number | null
   payment_status: string | null
+  /** Business invoice date (YYYY-MM-DD) — preferred for display */
+  sale_date:      string | null
+  /** DB insertion timestamp — kept for backward compat */
   created_at:     string | null
 }
 
 // ── Formatters ────────────────────────────────────────────────────────────────
-
-export function fmt(n: number): string {
-  const abs  = Math.abs(n)
-  const sign = n < 0 ? '−' : ''
-  if (abs >= 1_000_000)
-    return `${sign}₺${(abs / 1_000_000).toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 2 })}M`
-  if (abs >= 10_000)
-    return `${sign}₺${(abs / 1_000).toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}K`
-  return `${sign}₺${abs.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
-}
 
 function fmtDate(d: string | null) {
   if (!d) return '—'
@@ -293,7 +287,7 @@ function TahsilatPanel({ sales }: { sales: Sale[] }) {
               </td>
               <td className="px-4 py-2.5"><PayBadge status={s.payment_status} /></td>
               <td className="px-4 py-2.5 text-right tabular-nums font-semibold text-gray-700">{fmt(Number(s.total_try ?? 0))}</td>
-              <td className="px-4 py-2.5 text-right text-gray-400">{fmtDate(s.created_at)}</td>
+              <td className="px-4 py-2.5 text-right text-gray-400">{fmtDate(s.sale_date ?? s.created_at)}</td>
             </tr>
           ))}
         </tbody>
@@ -353,7 +347,7 @@ function KarPanel({ sales }: { sales: Sale[] }) {
               <td className="px-4 py-2.5 text-right tabular-nums text-gray-700">{fmt(Number(s.total_try ?? 0))}</td>
               <td className="px-4 py-2.5 text-right tabular-nums text-gray-500">{fmt(Number(s.cost_try ?? 0))}</td>
               <td className={`px-4 py-2.5 text-right tabular-nums font-bold ${s.profit >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>{fmt(s.profit)}</td>
-              <td className="px-4 py-2.5 text-right text-gray-400">{fmtDate(s.created_at)}</td>
+              <td className="px-4 py-2.5 text-right text-gray-400">{fmtDate(s.sale_date ?? s.created_at)}</td>
             </tr>
           ))}
         </tbody>

@@ -3,17 +3,9 @@
 import { createClient } from '@/lib/supabase-server'
 import type { Customer } from '@/types'
 import CustomersClient from '@/app/dashboard/customers/CustomersClient'
+import { fmtTRY as fmt } from '@/lib/format'
 
 interface Props { companyId: string }
-
-const _TRY = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
-function fmt(n: number): string {
-  const abs  = Math.abs(Number(n || 0))
-  const sign = n < 0 ? '−' : ''
-  if (abs >= 1_000_000) return `${sign}₺${(abs / 1_000_000).toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 2 })}M`
-  if (abs >= 10_000)    return `${sign}₺${(abs / 1_000).toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}K`
-  return `${sign}₺${_TRY.format(abs)}`
-}
 
 interface SaleAgg { customer_name: string; total_try: number; payment_status: string }
 
@@ -41,8 +33,10 @@ export async function CustomersContent({ companyId }: Props) {
 
   const billed      = sales.reduce((s, r) => s + Number(r.total_try ?? 0), 0)
   const outstanding = sales.filter(r => r.payment_status !== 'paid').reduce((s, r) => s + Number(r.total_try ?? 0), 0)
-  const paidCount   = sales.filter(s => s.payment_status === 'paid').length
-  const collectionRate = sales.length > 0 ? Math.round((paidCount / sales.length) * 100) : 0
+  const paidTotal   = sales.filter(s => s.payment_status === 'paid').reduce((s, r) => s + Number(r.total_try ?? 0), 0)
+  // Amount-based collection rate (correct): paid TRY / total billed TRY.
+  // Count-based (paidCount / sales.length) is misleading when invoice sizes vary.
+  const collectionRate = billed > 0 ? Math.round((paidTotal / billed) * 100) : 0
 
   const topMap = new Map<string, number>()
   for (const s of sales) {
@@ -69,7 +63,7 @@ export async function CustomersContent({ companyId }: Props) {
             { label: 'Toplam Müşteri', value: String(customers.length), sub: `${sales.length} satış kaydı`,        color: 'text-gray-900' },
             { label: 'Toplam Ciro',    value: billed > 0 ? fmt(billed) : '—', sub: 'Tüm satışlar (TRY)',           color: 'text-primary-700' },
             { label: 'Bekleyen Tahsilat', value: outstanding > 0 ? fmt(outstanding) : '—', sub: outstanding > 0 ? 'Ödenmemiş + kısmi' : 'Tamamı tahsil edildi ✓', color: outstanding > 0 ? 'text-red-600' : 'text-emerald-600' },
-            { label: 'Tahsilat Oranı', value: sales.length > 0 ? `%${collectionRate}` : '—', sub: `${paidCount} / ${sales.length} satış ödendi`, color: collectionRate >= 80 ? 'text-emerald-700' : collectionRate >= 50 ? 'text-amber-700' : 'text-red-600' },
+            { label: 'Tahsilat Oranı', value: billed > 0 ? `%${collectionRate}` : '—', sub: billed > 0 ? `${fmt(paidTotal)} / ${fmt(billed)} tahsil edildi` : 'Satış yok', color: collectionRate >= 80 ? 'text-emerald-700' : collectionRate >= 50 ? 'text-amber-700' : 'text-red-600' },
           ].map((card, i) => (
             <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-gray-100' : ''}`}>
               <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{card.label}</div>

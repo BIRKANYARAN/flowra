@@ -1,2 +1,8 @@
 import { redirect } from 'next/navigation'
-export default function SalesFlowPage() { redirect('/dashboard/commercial?tab=pipeline') }
+
+export const dynamic = 'force-dynamic'
+
+// Canonical route is now /dashboard/commercial?tab=pipeline
+export default function RedirectPage() {
+  redirect('/dashboard/commercial?tab=pipeline')
+}

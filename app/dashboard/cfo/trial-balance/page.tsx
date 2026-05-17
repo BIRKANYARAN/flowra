@@ -6,6 +6,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { formatTRY as fmt } from '@/lib/format'
 
 interface GLAccount {
   account_code:   string
@@ -38,12 +39,6 @@ interface TBReport {
   computed_at:      string
 }
 
-const _fmt = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-function fmt(n: number) {
-  const v = Number(n) || 0
-  return (v < 0 ? '−' : '') + _fmt.format(Math.abs(v)) + ' TL'
-}
-
 const CLASS_LABELS: Record<string, string> = {
   current_asset:         'Dönen Varlıklar',
   non_current_asset:     'Duran Varlıklar',
@@ -66,11 +61,13 @@ export default function TrialBalancePage() {
   const [error,   setError]   = useState<string | null>(null)
 
   useEffect(() => {
-    fetch('/api/ledger/trial-balance')
+    const ctrl = new AbortController()
+    fetch('/api/ledger/trial-balance', { signal: ctrl.signal })
       .then(r => r.json())
       .then(d => setReport(d as TBReport))
-      .catch(() => setError('Trial balance yüklenemedi'))
+      .catch(err => { if (err.name !== 'AbortError') setError('Trial balance yüklenemedi') })
       .finally(() => setLoading(false))
+    return () => ctrl.abort()
   }, [])
 
   const tb    = report?.trial_balance

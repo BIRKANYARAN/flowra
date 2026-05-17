@@ -1,26 +1,18 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase-server'
-import { requireString, optionalString, ValidationError } from '@/lib/validation'
-import { resolveCompanyId } from '@/lib/resolve-company'
+import { requireString, requireUUID, optionalString, ValidationError } from '@/lib/validation'
+import { resolveApiAuth } from '@/lib/api-auth'
 
 export async function POST(req: NextRequest) {
   try {
-    const supabase = createClient()
-    const { data: authData, error: authError } = await supabase.auth.getUser()
-    if (authError || !authData?.user) {
-      return NextResponse.json({ error: 'Unauthorized', code: 'UNAUTHORIZED', type: 'SECURITY' }, { status: 401 })
-    }
-    const user = authData.user
-
-    let companyId: string
-    try { companyId = await resolveCompanyId(user.id, supabase) }
-    catch { return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED', type: 'SYSTEM' }, { status: 409 }) }
+    const auth = await resolveApiAuth(req)
+    if (!auth.ok) return auth.response
+    const { uid, companyId, supabase, ctx } = auth
 
     const body = await req.json()
     const payload = {
-      user_id:    user.id,
+      user_id:    uid,
       name:       requireString(body.name, 'name', 300),
       address:    optionalString(body.address,    'address',    1000),
       tax_number: optionalString(body.tax_number, 'tax_number', 50),
@@ -56,16 +48,9 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const supabase = createClient()
-    const { data: authData, error: authError } = await supabase.auth.getUser()
-    if (authError || !authData?.user) {
-      return NextResponse.json({ error: 'Unauthorized', code: 'UNAUTHORIZED', type: 'SECURITY' }, { status: 401 })
-    }
-    const user = authData.user
-
-    let companyId: string
-    try { companyId = await resolveCompanyId(user.id, supabase) }
-    catch { return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED', type: 'SYSTEM' }, { status: 409 }) }
+    const auth = await resolveApiAuth(req)
+    if (!auth.ok) return auth.response
+    const { uid, companyId, supabase, ctx } = auth
 
     const body = await req.json()
     const id   = requireString(body.id, 'id')
@@ -105,26 +90,24 @@ export async function PATCH(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const supabase = createClient()
-    const { data: authData, error: authError } = await supabase.auth.getUser()
-    if (authError || !authData?.user) {
-      return NextResponse.json({ error: 'Unauthorized', code: 'UNAUTHORIZED', type: 'SECURITY' }, { status: 401 })
-    }
-    const user = authData.user
-
-    let companyId: string
-    try { companyId = await resolveCompanyId(user.id, supabase) }
-    catch { return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED', type: 'SYSTEM' }, { status: 409 }) }
+    const auth = await resolveApiAuth(req)
+    if (!auth.ok) return auth.response
+    const { uid, companyId, supabase, ctx } = auth
 
     const { searchParams } = new URL(req.url)
-    const id = searchParams.get('id') ?? ''
-    if (!id) return NextResponse.json({ error: 'id zorunludur' }, { status: 422 })
+    let id: string
+    try {
+      id = requireUUID(searchParams.get('id'), 'id')
+    } catch {
+      return NextResponse.json({ error: 'id geçerli bir UUID olmalıdır' }, { status: 422 })
+    }
 
     const { error } = await supabase
       .from('customers')
       .update({ deleted_at: new Date().toISOString() })
       .eq('id', id)
       .eq('company_id', companyId)
+      .is('deleted_at', null)
 
     if (error) {
       console.error('[customers DELETE] Soft-delete error:', error.message)

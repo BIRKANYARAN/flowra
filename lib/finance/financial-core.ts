@@ -141,13 +141,13 @@ export async function getCashflowTimeline(
 
   const [invoicedRes, receivablesRes, collectionsRes, expensesRes, recurringsRes] =
     await Promise.all([
-      supabase.from('sales').select('total_try, created_at')
+      supabase.from('sales').select('total_try, sale_date')
         .eq('company_id', companyId).is('deleted_at', null)
-        .gte('created_at', _ymStart(startYM)).lte('created_at', _ymEnd(endYM) + 'T23:59:59Z'),
-      supabase.from('sales').select('total_try, created_at')
+        .gte('sale_date', _ymStart(startYM)).lte('sale_date', _ymEnd(endYM)),
+      supabase.from('sales').select('total_try, amount_paid, sale_date')
         .eq('company_id', companyId).is('deleted_at', null)
         .in('payment_status', ['pending', 'partial', 'overdue'])
-        .gte('created_at', _ymStart(startYM)).lte('created_at', _ymEnd(endYM) + 'T23:59:59Z'),
+        .gte('sale_date', _ymStart(startYM)).lte('sale_date', _ymEnd(endYM)),
       supabase.from('sales').select('total_try, paid_at')
         .eq('company_id', companyId).eq('payment_status', 'paid')
         .is('deleted_at', null).not('paid_at', 'is', null)
@@ -162,12 +162,14 @@ export async function getCashflowTimeline(
     ])
 
   for (const s of invoicedRes.data ?? []) {
-    const row = months.get(_toYM(s.created_at as string))
+    if (!s.sale_date) continue
+    const row = months.get(_toYM(s.sale_date as string))
     if (row) row.invoiced += Number(s.total_try ?? 0)
   }
   for (const s of receivablesRes.data ?? []) {
-    const row = months.get(_toYM(s.created_at as string))
-    if (row) row.receivable += Number(s.total_try ?? 0)
+    if (!s.sale_date) continue
+    const row = months.get(_toYM(s.sale_date as string))
+    if (row) row.receivable += Math.max(0, Number(s.total_try ?? 0) - Number(s.amount_paid ?? 0))
   }
   for (const c of collectionsRes.data ?? []) {
     const row = months.get(_toYM(c.paid_at as string))
@@ -404,32 +406,32 @@ export async function getCfoMetrics(
       .gte('expense_date', trail3).lte('expense_date', today)
       .in('expense_type', Array.from(BURN_EXPENSE_TYPES)),
 
-    // 7. Outstanding receivables with aging
-    supabase.from('sales').select('total_try, created_at, due_date, amount_paid')
+    // 7. Outstanding receivables with aging — use sale_date (business invoice date)
+    supabase.from('sales').select('total_try, sale_date, due_date, amount_paid')
       .eq('company_id', companyId).is('deleted_at', null)
       .in('payment_status', ['pending', 'partial', 'overdue']),
 
-    // 8. Period invoiced
+    // 8. Period invoiced — use sale_date for period attribution
     supabase.from('sales').select('total_try')
       .eq('company_id', companyId).is('deleted_at', null)
-      .gte('created_at', from + 'T00:00:00Z').lte('created_at', to + 'T23:59:59Z'),
+      .gte('sale_date', from).lte('sale_date', to),
 
-    // 9. YTD revenue
+    // 9. YTD revenue — use sale_date for period attribution
     supabase.from('sales').select('total_try, id')
       .eq('company_id', companyId).is('deleted_at', null)
-      .gte('created_at', ytdFrom + 'T00:00:00Z').lte('created_at', today + 'T23:59:59Z'),
+      .gte('sale_date', ytdFrom).lte('sale_date', today),
 
     // 10. YTD operational expenses
     supabase.from('expenses').select('amount_try, expense_type')
       .eq('company_id', companyId).is('deleted_at', null)
       .gte('expense_date', ytdFrom).lte('expense_date', today),
 
-    // 12. YTD sales VAT
+    // 12. YTD sales VAT — use sale_date for period attribution
     supabase.from('sales').select('kdv_total, fx_rate_try')
       .eq('company_id', companyId).is('deleted_at', null)
-      .gte('created_at', ytdFrom + 'T00:00:00Z').lte('created_at', today + 'T23:59:59Z'),
+      .gte('sale_date', ytdFrom).lte('sale_date', today),
 
-    // 13. YTD purchase VAT
+    // 13. YTD purchase VAT — purchase_costs uses created_at (no purchase_date equivalent)
     supabase.from('purchase_costs').select('amount_try')
       .eq('cost_type', 'tax')
       .gte('created_at', ytdFrom + 'T00:00:00Z').lte('created_at', today + 'T23:59:59Z'),
@@ -508,7 +510,7 @@ export async function getCfoMetrics(
     periodCollected: periodReceived,
     outstanding: (outstandingRes.data ?? []).map(r => ({
       amount_try:  Number(r.total_try ?? 0),
-      created_at:  String(r.created_at ?? ''),
+      sale_date:   String(r.sale_date ?? ''),
       due_date:    r.due_date ? String(r.due_date) : null,
       amount_paid: r.amount_paid != null ? Number(r.amount_paid) : null,
     })),
@@ -557,7 +559,7 @@ export async function getCfoMetrics(
 
 export async function getRunwayForecast(
   companyId: string,
-  opts?: { from?: string; to?: string; months?: number },
+  opts?: { from?: string; to?: string; months?: number; taxObligation?: number },
 ): Promise<RunwayForecastResponse> {
   const supabase = createClient()
   const now      = new Date()
@@ -607,13 +609,13 @@ export async function getRunwayForecast(
       .gte('expense_date', trail3).lte('expense_date', today)
       .in('expense_type', Array.from(BURN_EXPENSE_TYPES)),
 
-    supabase.from('sales').select('total_try, created_at, due_date, amount_paid')
+    supabase.from('sales').select('total_try, sale_date, due_date, amount_paid')
       .eq('company_id', companyId).is('deleted_at', null)
       .in('payment_status', ['pending', 'partial', 'overdue']),
 
     supabase.from('sales').select('total_try')
       .eq('company_id', companyId).is('deleted_at', null)
-      .gte('created_at', from + 'T00:00:00Z').lte('created_at', to + 'T23:59:59Z'),
+      .gte('sale_date', from).lte('sale_date', to),
 
     supabase.from('recurring_expenses').select('amount, fx_rate, frequency')
       .eq('company_id', companyId).eq('is_active', true).is('deleted_at', null)
@@ -639,7 +641,7 @@ export async function getRunwayForecast(
     periodCollected: periodReceived,
     outstanding: (outstandingRes.data ?? []).map(r => ({
       amount_try:  Number(r.total_try ?? 0),
-      created_at:  String(r.created_at ?? ''),
+      sale_date:   String(r.sale_date ?? ''),
       due_date:    r.due_date ? String(r.due_date) : null,
       amount_paid: r.amount_paid != null ? Number(r.amount_paid) : null,
     })),
@@ -664,7 +666,7 @@ export async function getRunwayForecast(
         (new Date(to).getTime() - new Date(from).getTime()) / (86_400_000 * 30.44)
       ),
       projectedCollectionRate: receivableMetrics.collection_rate_pct,
-      taxObligation: 0,
+      taxObligation: opts?.taxObligation ?? 0,
       months: horizon,
     },
     now,

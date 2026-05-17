@@ -33,9 +33,8 @@ export const FINANCING_EXPENSE_TYPES = new Set([
 // Burn = only pure operational recurring costs; capex excluded from monthly avg
 export const BURN_EXPENSE_TYPES = new Set(['operational', 'fixed', 'variable', 'tax', 'financial'])
 
-function round2(v: number): number {
-  return Math.round((v + Number.EPSILON) * 100) / 100
-}
+import { round2 } from '@/lib/calc'
+import { computeCorporateTax } from '@/lib/services/tax.service'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Input types
@@ -54,7 +53,7 @@ export interface CashInputs {
 export interface ReceivableInputs {
   periodInvoiced:  number
   periodCollected: number
-  outstanding:     Array<{ amount_try: number; created_at: string; due_date?: string | null; amount_paid?: number | null }>
+  outstanding:     Array<{ amount_try: number; sale_date: string; due_date?: string | null; amount_paid?: number | null }>
   today:           string  // ISO YYYY-MM-DD
 }
 
@@ -203,8 +202,8 @@ export function computeReceivableMetrics(i: ReceivableInputs): CfoMetrics['recei
     const amt = round2(Math.max(0, Number(r.amount_try) - Number(r.amount_paid ?? 0)))
     if (amt <= 0) continue
     total += amt
-    // Use due_date for aging if set; fall back to created_at (invoice date)
-    const agingDate = (r.due_date ? String(r.due_date) : String(r.created_at)).slice(0, 10)
+    // Use due_date for aging if set; fall back to sale_date (business invoice date)
+    const agingDate = (r.due_date ? String(r.due_date) : String(r.sale_date)).slice(0, 10)
     if (agingDate < iso30) over30 += amt
     if (agingDate < iso60) over60 += amt
     if (agingDate < iso90) over90 += amt
@@ -225,13 +224,21 @@ export function computeReceivableMetrics(i: ReceivableInputs): CfoMetrics['recei
 }
 
 export function computeTaxMetrics(i: TaxInputs): CfoMetrics['tax'] {
-  const taxEstimate = round2(Math.max(0, i.accountingProfit) * (i.taxRate / 100))
-  const kdvPayable  = round2(Math.max(0, i.kdvNet))
+  // Delegate to the canonical engine — single code path for corporate tax.
+  // accountingProfit is already (revenue - costs); we pass it as revenue
+  // with cost=0 so computeCorporateTax computes the same matrah.
+  const corpTax = computeCorporateTax({
+    revenue_try:             Math.max(0, i.accountingProfit),
+    cost_try:                0,
+    deductible_expenses_try: 0,
+    rate_percent:            i.taxRate,
+  })
+  const kdvPayable = round2(Math.max(0, i.kdvNet))
 
   return {
     kdv_net:                 round2(i.kdvNet),
-    corporate_tax_estimate:  taxEstimate,
-    total_fiscal_obligation: round2(kdvPayable + taxEstimate),
+    corporate_tax_estimate:  corpTax.tax_try,
+    total_fiscal_obligation: round2(kdvPayable + corpTax.tax_try),
   }
 }
 

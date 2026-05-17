@@ -70,8 +70,10 @@ export class FinanceService {
       .select('total_try, kdv_total, fx_rate_try')
       .eq('company_id', companyId)
       .is('deleted_at', null)
-      .gte('created_at', startOfDayUTC(period.from))
-      .lte('created_at', endOfDayUTC(period.to))
+      // Use sale_date (business invoice date), not created_at (row insertion time),
+      // so backdated entries are attributed to the correct period.
+      .gte('sale_date', period.from)
+      .lte('sale_date', period.to)
 
     if (error) {
       if (ctx) await logger.error(ctx, 'finance:revenue:db_error', { error: error.message })
@@ -115,8 +117,9 @@ export class FinanceService {
       .select('id, total_cost')
       .eq('company_id', companyId)
       .is('deleted_at', null)
-      .gte('created_at', startOfDayUTC(period.from))
-      .lte('created_at', endOfDayUTC(period.to))
+      // Use sale_date (business invoice date) not created_at (DB insertion time)
+      .gte('sale_date', period.from)
+      .lte('sale_date', period.to)
 
     if (sErr) {
       if (ctx) await logger.error(ctx, 'finance:cost:sales_error', { error: sErr.message })

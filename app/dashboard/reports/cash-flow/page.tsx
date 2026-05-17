@@ -2,7 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { PrintButton } from '@/components/reports/PrintButton'
+import { PdfExportButton } from '@/components/reports/PdfExportButton'
+import { useWorkspace }    from '@/lib/workspace-context'
+import type { PdfReportOptions } from '@/lib/utils/pdf-report'
+import { formatTRY as fmt } from '@/lib/format'
 
 // Mirrors CashFlowStatement returned by CashFlowStatementService.compute()
 interface CFLine { label: string; amount: number }
@@ -33,12 +36,6 @@ interface CashFlowStatement {
   net_change_try:      number
   opening_balance_try: number
   closing_balance_try: number
-}
-
-const _fmt = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-function fmt(n: number) {
-  const v = Number(n) || 0
-  return (v < 0 ? '−' : '') + _fmt.format(Math.abs(v)) + ' TL'
 }
 
 function currentPeriod() {
@@ -79,14 +76,18 @@ export default function CashFlowPage() {
   const [error,   setError]   = useState<string | null>(null)
   const [from,    setFrom]    = useState(currentPeriod().from)
   const [to,      setTo]      = useState(currentPeriod().to)
+  const ws = useWorkspace()
 
   useEffect(() => {
+    const ctrl = new AbortController()
     setLoading(true)
-    fetch(`/api/financial-statements/cash-flow?from=${from}&to=${to}`)
+    setError(null)
+    fetch(`/api/financial-statements/cash-flow?from=${from}&to=${to}`, { signal: ctrl.signal })
       .then(r => r.json())
       .then(d => setCf(d as CashFlowStatement))
-      .catch(() => setError('Nakit akışı yüklenemedi'))
+      .catch(err => { if (err.name !== 'AbortError') setError('Nakit akışı yüklenemedi') })
       .finally(() => setLoading(false))
+    return () => ctrl.abort()
   }, [from, to])
 
   return (
@@ -103,7 +104,39 @@ export default function CashFlowPage() {
           <span className="text-xs text-gray-400">—</span>
           <input type="date" value={to} onChange={e => setTo(e.target.value)}
             className="border border-gray-200 rounded-lg px-2 py-1 text-xs" />
-          <PrintButton label="PDF İndir" />
+          {cf && (
+            <PdfExportButton label="PDF İndir" opts={{
+              companyName: ws.companyName ?? 'Şirket',
+              reportTitle: 'Nakit Akış Tablosu',
+              subtitle:    `${from} — ${to}`,
+              filename:    `nakit-akis-${from}-${to}`,
+              sections: [
+                { title: 'Faaliyet Nakit Akışı', rows: [
+                  { label: 'Dönem Başı Nakit',        value: fmt(cf.opening_balance_try) },
+                  { label: 'Alacak Değişimi',         value: fmt(cf.operating.receivables_change_try), indent: true },
+                  { label: 'Stok Değişimi',           value: fmt(cf.operating.inventory_change_try), indent: true },
+                  { label: 'Borç Değişimi',           value: fmt(cf.operating.payables_change_try), indent: true },
+                  { label: 'Net Faaliyet Nakit',      value: fmt(cf.operating.net_operating_try), bold: true,
+                    tone: cf.operating.net_operating_try >= 0 ? 'positive' : 'negative' },
+                ]},
+                { title: 'Yatırım & Finansman', rows: [
+                  { label: 'Ekipman Alımları',        value: fmt(-cf.investing.equipment_purchases_try), indent: true, tone: 'negative' },
+                  { label: 'Net Yatırım',             value: fmt(cf.investing.net_investing_try), bold: true,
+                    tone: cf.investing.net_investing_try >= 0 ? 'positive' : 'negative' },
+                  { label: 'Ortak Borç Girişi',       value: fmt(cf.financing.partner_loans_received_try), indent: true },
+                  { label: 'Ortak Borç Ödemesi',      value: fmt(cf.financing.partner_loans_repaid_try), indent: true },
+                  { label: 'Temettü Ödemeleri',       value: fmt(cf.financing.dividends_paid_try), indent: true, tone: 'negative' },
+                  { label: 'Net Finansman',           value: fmt(cf.financing.net_financing_try), bold: true,
+                    tone: cf.financing.net_financing_try >= 0 ? 'positive' : 'negative' },
+                ]},
+                { title: 'Özet', rows: [
+                  { label: 'Net Nakit Değişim',       value: fmt(cf.net_change_try), bold: true,
+                    tone: cf.net_change_try >= 0 ? 'positive' : 'negative' },
+                  { label: 'Dönem Sonu Nakit',        value: fmt(cf.closing_balance_try), bold: true, tone: 'positive' },
+                ]},
+              ],
+            } as PdfReportOptions} />
+          )}
           <Link href="/dashboard/cfo" className="text-xs text-gray-400 hover:text-primary-600 font-semibold">← CFO</Link>
         </div>
       </div>

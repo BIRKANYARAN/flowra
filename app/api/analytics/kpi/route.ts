@@ -20,9 +20,8 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient }    from '@/lib/supabase-server'
-import { resolveCompanyId } from '@/lib/resolve-company'
 import type { KpiResult }  from '@/types'
+import { resolveApiAuth } from '@/lib/api-auth'
 
 const BURN_EXPENSE_TYPES = ['operational', 'fixed', 'variable']
 const CASH_EXCLUDED_EXPENSE_TYPES = new Set([
@@ -33,18 +32,9 @@ const CASH_EXCLUDED_EXPENSE_TYPES = new Set([
 ])
 
 export async function GET(req: NextRequest) {
-  const supabase = createClient()
-  const { data: authData, error: authError } = await supabase.auth.getUser()
-  if (authError || !authData?.user) {
-    return NextResponse.json(
-      { error: 'Unauthorized', code: 'UNAUTHORIZED', type: 'SECURITY' },
-      { status: 401 },
-    )
-  }
-
-  let companyId: string
-  try { companyId = await resolveCompanyId(authData.user.id, supabase) }
-  catch { return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED' }, { status: 409 }) }
+  const auth = await resolveApiAuth(req)
+  if (!auth.ok) return auth.response
+  const { companyId, supabase } = auth
 
   const url   = new URL(req.url)
   const now   = new Date()
@@ -79,14 +69,15 @@ export async function GET(req: NextRequest) {
     partnerCapitalRes,
   ] = await Promise.all([
 
-    // 1. Total revenue (invoiced) — by sale created_at
+    // 1. Total revenue (invoiced) — by sale_date (business invoice date)
+    // Use sale_date not created_at (DB insertion time) for correct period attribution.
     supabase
       .from('sales')
       .select('total_try, cogs')
       .eq('company_id', companyId)
       .is('deleted_at', null)
-      .gte('created_at', from + 'T00:00:00Z')
-      .lte('created_at', to   + 'T23:59:59Z'),
+      .gte('sale_date', from)
+      .lte('sale_date', to),
 
     // 2. Total collected (paid) — by paid_at date
     supabase
@@ -100,9 +91,10 @@ export async function GET(req: NextRequest) {
       .lte('paid_at', to   + 'T23:59:59Z'),
 
     // 3. Outstanding receivables — all-time unpaid/partial/overdue (not period-limited)
+    //    Includes amount_paid so partial payments are netted out correctly.
     supabase
       .from('sales')
-      .select('total_try')
+      .select('total_try, amount_paid')
       .eq('company_id', companyId)
       .is('deleted_at', null)
       .in('payment_status', ['pending', 'partial', 'overdue']),
@@ -154,13 +146,15 @@ export async function GET(req: NextRequest) {
       .in('expense_type', BURN_EXPENSE_TYPES),
 
     // 9. Overdue receivables — unpaid/partial/overdue AND older than 30 days
+    //    Includes amount_paid so partial payments are netted out correctly.
+    //    Use sale_date (business invoice date) for aging — not created_at.
     supabase
       .from('sales')
-      .select('total_try')
+      .select('total_try, amount_paid')
       .eq('company_id', companyId)
       .is('deleted_at', null)
       .in('payment_status', ['pending', 'partial', 'overdue'])
-      .lt('created_at', thirtyDaysAgo),
+      .lt('sale_date', thirtyDaysAgo.slice(0, 10)),
 
     // 10. Active recurring burn expenses for adjusted_burn_rate
     //     Uses the same strict expense_type include-list as query 8.
@@ -200,7 +194,7 @@ export async function GET(req: NextRequest) {
   const totalRevenue            = (revenueRes.data                ?? []).reduce((s, r) => s + Number(r.total_try  ?? 0), 0)
   const totalCogs               = (revenueRes.data                ?? []).reduce((s, r) => s + Number(r.cogs       ?? 0), 0)
   const totalCollected          = (collectedRes.data              ?? []).reduce((s, r) => s + Number(r.total_try  ?? 0), 0)
-  const outstanding             = (outstandingRes.data            ?? []).reduce((s, r) => s + Number(r.total_try  ?? 0), 0)
+  const outstanding             = (outstandingRes.data            ?? []).reduce((s, r) => s + Math.max(0, Number(r.total_try ?? 0) - Number((r as { amount_paid?: number | null }).amount_paid ?? 0)), 0)
   const totalExpenses           = (expensesRes.data               ?? []).reduce((s, r) => {
     const expType = String((r as { expense_type?: string | null }).expense_type ?? '')
     if (expType && CASH_EXCLUDED_EXPENSE_TYPES.has(expType)) return s
@@ -213,7 +207,7 @@ export async function GET(req: NextRequest) {
     return s + Number(r.amount_try ?? 0)
   }, 0)
   const lastThreeMonthsExpenses = (lastThreeMonthsExpensesRes.data ?? []).reduce((s, r) => s + Number(r.amount_try ?? 0), 0)
-  const overdueReceivables      = (overdueRes.data                ?? []).reduce((s, r) => s + Number(r.total_try  ?? 0), 0)
+  const overdueReceivables      = (overdueRes.data                ?? []).reduce((s, r) => s + Math.max(0, Number(r.total_try ?? 0) - Number((r as { amount_paid?: number | null }).amount_paid ?? 0)), 0)
 
   const stockValue = (stockRes.data ?? []).reduce(
     (s, l) => s + Number(l.qty_remaining ?? 0) * Number(l.entry_cost_try ?? 0),

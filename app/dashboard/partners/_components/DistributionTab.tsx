@@ -1,0 +1,221 @@
+'use client'
+
+import {
+  DistribState,
+  pct, fmt,
+} from '@/app/dashboard/partners/_components/types'
+
+export interface DistributionTabProps {
+  distrib: DistribState | null
+  distribLoading: boolean
+  netIncomeInput: string
+  boardRetainedInput: string
+  dividendConfirm: boolean
+  dividendLoading: boolean
+  dividendError: string | null
+  dividendSuccess: boolean
+  onNetIncomeChange: (v: string) => void
+  onBoardRetainedChange: (v: string) => void
+  onLoadDistribution: (netIncome: number, boardRetained: number) => void
+  onSetDividendConfirm: (v: boolean) => void
+  onDeclareDividend: () => void
+}
+
+export function DistributionTab({
+  distrib,
+  distribLoading,
+  netIncomeInput,
+  boardRetainedInput,
+  dividendConfirm,
+  dividendLoading,
+  dividendError,
+  dividendSuccess,
+  onNetIncomeChange,
+  onBoardRetainedChange,
+  onLoadDistribution,
+  onSetDividendConfirm,
+  onDeclareDividend,
+}: DistributionTabProps) {
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="bg-white border border-gray-200 rounded-xl px-5 py-4">
+        <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3">Dağıtım Parametreleri</div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">
+              Dönem Net Gelir (TL)
+            </label>
+            <input
+              type="number"
+              min="0"
+              placeholder="örn. 500000"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
+              value={netIncomeInput}
+              onChange={e => onNetIncomeChange(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="block text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">
+              Yönetim Kurulu Alıkoyması (TL)
+            </label>
+            <input
+              type="number"
+              min="0"
+              placeholder="örn. 0"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
+              value={boardRetainedInput}
+              onChange={e => onBoardRetainedChange(e.target.value)}
+            />
+          </div>
+        </div>
+        <button
+          onClick={() => onLoadDistribution(
+            parseFloat(netIncomeInput) || 0,
+            parseFloat(boardRetainedInput) || 0,
+          )}
+          disabled={distribLoading}
+          className="mt-3 text-xs font-bold px-4 py-2 rounded-lg bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50 transition-colors"
+        >
+          {distribLoading ? 'Hesaplanıyor...' : 'Dağıtım Hesapla'}
+        </button>
+      </div>
+
+      {distrib && (
+        <>
+          {/* 4-Layer Distribution Breakdown */}
+          <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+            <div className="px-4 py-2.5 border-b border-gray-100 bg-gray-50">
+              <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">4 Katmanlı Dağıtım Güvenlik Hesabı</div>
+            </div>
+            <div className="divide-y divide-gray-50">
+              {[
+                { label: 'Brüt Net Gelir',        value: distrib.distribution_layers.gross_net_income_try,    color: 'text-gray-900',    sign: '' },
+                { label: '(−) Yasal Yedek (TTK 519 %5)', value: distrib.distribution_layers.legal_reserve_try, color: 'text-amber-600', sign: '−' },
+                { label: '(−) YK Alıkoyması',      value: distrib.distribution_layers.board_retained_try,     color: 'text-amber-600',   sign: '−' },
+                { label: '(−) Ödenmemiş Huzur H.', value: distrib.distribution_layers.unpaid_compensation_try,color: 'text-amber-600',   sign: '−' },
+                { label: 'Brüt Dağıtılabilir',     value: distrib.distribution_layers.distributable_gross_try,color: 'text-primary-700', sign: '=' },
+                { label: '(−) Stopaj (%10 GVK 94)',value: distrib.distribution_layers.withholding_tax_try,    color: 'text-red-600',     sign: '−' },
+                { label: 'Net Dağıtılabilir',       value: distrib.distribution_layers.distributable_net_try,  color: distrib.distribution_layers.is_distributable ? 'text-emerald-700' : 'text-red-700', sign: '=' },
+              ].map(row => (
+                <div key={row.label} className={`flex items-center justify-between px-4 py-3 ${row.sign === '=' ? 'bg-gray-50' : ''}`}>
+                  <div className="text-xs text-gray-600">{row.label}</div>
+                  <div className={`text-sm font-black tabular-nums font-mono ${row.color}`}>
+                    {row.sign && row.sign !== '=' ? row.sign + ' ' : ''}{fmt(row.value)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Block reason / distribute status */}
+          {distrib.distribution_layers.is_distributable ? (
+            <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 space-y-3">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <div className="text-sm font-bold text-emerald-800">Dağıtım yapılabilir</div>
+                  <div className="text-xs text-emerald-700 mt-0.5">
+                    Net dağıtılabilir: <span className="font-black">{fmt(distrib.distribution_layers.distributable_net_try)}</span>
+                  </div>
+                </div>
+                {dividendSuccess ? (
+                  <span className="text-xs font-bold text-emerald-700 px-3 py-2">✓ Temettü kaydedildi</span>
+                ) : dividendConfirm ? (
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={onDeclareDividend}
+                      disabled={dividendLoading}
+                      className="text-xs font-bold px-3 py-2 rounded-lg bg-emerald-700 text-white hover:bg-emerald-800 disabled:opacity-50 transition-colors"
+                    >
+                      {dividendLoading ? 'Kaydediliyor…' : 'Onayla'}
+                    </button>
+                    <button
+                      onClick={() => { onSetDividendConfirm(false) }}
+                      disabled={dividendLoading}
+                      className="text-xs font-bold px-3 py-2 rounded-lg border border-emerald-300 text-emerald-800 hover:bg-emerald-100 disabled:opacity-50 transition-colors"
+                    >
+                      İptal
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => { onSetDividendConfirm(true) }}
+                    className="text-xs font-bold px-4 py-2 rounded-lg bg-emerald-700 text-white hover:bg-emerald-800 transition-colors shrink-0"
+                  >
+                    Temettü Beyan Et
+                  </button>
+                )}
+              </div>
+              {dividendConfirm && !dividendLoading && (
+                <div className="text-xs text-emerald-700 border-t border-emerald-200 pt-2">
+                  {distrib.per_partner_distribution.length} ortak için net temettü kaydedilecek. Bu işlem geri alınamaz.
+                </div>
+              )}
+              {dividendError && (
+                <div className="text-xs text-red-600 border-t border-emerald-200 pt-2">{dividendError}</div>
+              )}
+            </div>
+          ) : (
+            <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+              <div className="text-sm font-bold text-red-700">Dağıtım engellenmiştir</div>
+              <div className="text-xs text-red-600 mt-0.5">{distrib.distribution_layers.block_reason ?? 'Dağıtılabilir net gelir yetersiz (TTK 509).'}</div>
+            </div>
+          )}
+
+          {/* Per-partner entitlements */}
+          {distrib.per_partner_distribution.length > 0 && (
+            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+              <div className="px-4 py-2.5 border-b border-gray-100 bg-gray-50">
+                <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Ortak Bazında Hak Edilenler</div>
+              </div>
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-gray-100">
+                    {['Ortak', 'Pay', 'Brüt Hak', 'Stopaj', 'Net Hak'].map(h => (
+                      <th key={h} className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest text-gray-400 ${h === 'Ortak' ? 'text-left' : 'text-right'}`}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {distrib.per_partner_distribution.map(p => (
+                    <tr key={p.partner_id} className="hover:bg-gray-50/60">
+                      <td className="px-4 py-3 font-semibold text-gray-900">{p.partner_name}</td>
+                      <td className="px-4 py-3 text-right text-gray-500">{pct(p.share_ratio)}</td>
+                      <td className="px-4 py-3 text-right font-mono text-gray-700">{fmt(p.gross_entitlement_try)}</td>
+                      <td className="px-4 py-3 text-right font-mono text-red-500">{fmt(p.withholding_try)}</td>
+                      <td className="px-4 py-3 text-right font-mono font-bold text-emerald-700">{fmt(p.net_entitlement_try)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Compliance warnings */}
+          {distrib.compliance_warnings.length > 0 && (
+            <div className="flex flex-col gap-2">
+              {distrib.compliance_warnings.map((w, i) => {
+                const cls = w.severity === 'error'
+                  ? 'bg-red-50 border-red-200 text-red-700'
+                  : w.severity === 'warning'
+                  ? 'bg-amber-50 border-amber-200 text-amber-700'
+                  : 'bg-blue-50 border-blue-200 text-blue-700'
+                return (
+                  <div key={i} className={`border rounded-xl px-4 py-3 text-xs ${cls}`}>
+                    <span className="font-bold uppercase tracking-wide">[{w.type}]</span>{' '}{w.message}
+                    {w.amount != null && <span className="font-black ml-1">{fmt(w.amount)}</span>}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </>
+      )}
+
+      {!distrib && !distribLoading && (
+        <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-8 text-center text-sm text-gray-400">
+          Dönem net gelirini girin ve hesapla butonuna basın.
+        </div>
+      )}
+    </div>
+  )
+}

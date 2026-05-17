@@ -13,17 +13,7 @@
 
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase-server'
-
-// ── Formatters ─────────────────────────────────────────────────────────────────
-
-const TRY = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
-function fmt(n: number): string {
-  const abs  = Math.abs(Number(n || 0))
-  const sign = n < 0 ? '−' : ''
-  if (abs >= 1_000_000) return `${sign}₺${(abs / 1_000_000).toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 2 })}M`
-  if (abs >= 10_000)    return `${sign}₺${(abs / 1_000).toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}K`
-  return `${sign}₺${TRY.format(abs)}`
-}
+import { fmtTRY as fmt } from '@/lib/format'
 
 function daysBetween(a: string, b: string): number {
   return Math.floor((new Date(b).getTime() - new Date(a).getTime()) / 86_400_000)
@@ -53,13 +43,13 @@ export async function SalesFlowCommandBar({ companyId }: Props) {
       .eq('company_id', companyId)
       .is('deleted_at', null),
 
-    // MTD sales: closed this month
+    // MTD sales: invoiced this month (by sale_date — business invoice date, not DB insertion time)
     supabase
       .from('sales')
       .select('total_try')
       .eq('company_id', companyId)
       .is('deleted_at', null)
-      .gte('created_at', mtdFrom),
+      .gte('sale_date', mtdFrom),
 
     // Stale sent proformas: sent > 15 days ago, not yet converted/accepted/rejected
     supabase

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient }              from '@/lib/supabase-server'
+import { getSystemAdminClient }      from '@/lib/admin-db'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,19 +14,23 @@ export const dynamic = 'force-dynamic'
 const CRON_SECRET = process.env.CRON_SECRET
 
 export async function POST(req: NextRequest) {
+  // Treat a missing CRON_SECRET as misconfiguration — deny access rather than
+  // leaving the endpoint open to unauthenticated callers.
   const authHeader = req.headers.get('authorization')
-  if (CRON_SECRET && authHeader !== `Bearer ${CRON_SECRET}`) {
+  if (!CRON_SECRET || authHeader !== `Bearer ${CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const supabase = createClient()
+  // Cron jobs run without an HTTP session — use the service-role client so that
+  // Supabase RLS (which requires auth.uid()) does not silently block every query.
+  const supabase = getSystemAdminClient()
   const today    = new Date().toISOString().slice(0, 10)
 
   try {
     // Find all unpaid/partial sales whose due_date has passed
     const { data: stale, error: fetchErr } = await supabase
       .from('sales')
-      .select('id, company_id, customer_name, total_try, due_date')
+      .select('id, company_id, customer_name, total_try, due_date, payment_status')
       .in('payment_status', ['pending', 'partial'])
       .lt('due_date', today)
       .is('deleted_at', null)
@@ -53,13 +57,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: updateErr.message }, { status: 500 })
     }
 
-    // Audit log for each newly overdue sale
+    // Audit log for each newly overdue sale — use actual prior status (may be 'partial')
     const auditRows = stale.map(s => ({
       company_id:    s.company_id,
       action:        'update',
       resource_type: 'sale',
       resource_id:   s.id,
-      old_values:    { payment_status: 'pending' },
+      old_values:    { payment_status: s.payment_status },
       new_values:    { payment_status: 'overdue' },
       description:   `Otomatik gecikmiş işaretleme — vade ${s.due_date}`,
     }))

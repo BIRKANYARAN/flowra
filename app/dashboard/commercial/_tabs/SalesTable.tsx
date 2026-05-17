@@ -45,7 +45,8 @@ function getDateRangeCutoff(range: DateRange): string | null {
   if (range === 'month')  d.setDate(1)
   if (range === '30d')    d.setDate(d.getDate() - 30)
   if (range === '90d')    d.setDate(d.getDate() - 90)
-  return d.toISOString()
+  // Return YYYY-MM-DD — sale_date is a date column, not a timestamp
+  return d.toISOString().slice(0, 10)
 }
 
 const DATE_RANGE_LABELS: Record<DateRange, string> = {
@@ -83,7 +84,7 @@ export function SalesTable({ rows }: Props) {
 
     return rows.filter(r => {
       if (q && !r.customer_name.toLowerCase().includes(q)) return false
-      if (cutoff && r.created_at < cutoff) return false
+      if (cutoff && r.sale_date < cutoff) return false
       if (statusFilter !== 'all' && r.payment_status !== statusFilter) return false
       return true
     })
@@ -94,8 +95,6 @@ export function SalesTable({ rows }: Props) {
   // ── Filtered KPIs ─────────────────────────────────────────────────────────────
   const totalRev = filtered.reduce((s, r) => s + r.total_try, 0)
   const totalPft = filtered.reduce((s, r) => s + r.nominal_profit, 0)
-
-  const fmt = (n: number) => formatTRY(n)
 
   function clearFilters() {
     setSearch('')
@@ -167,12 +166,12 @@ export function SalesTable({ rows }: Props) {
           },
           {
             label: 'TRY Ciro',
-            value: fmt(totalRev),
+            value: formatTRY(totalRev),
             color: 'text-gray-900',
           },
           {
             label: 'Nominal Kâr',
-            value: fmt(totalPft),
+            value: formatTRY(totalPft),
             color: totalPft >= 0 ? 'text-emerald-700' : 'text-red-600',
           },
         ].map(card => (
@@ -226,20 +225,20 @@ export function SalesTable({ rows }: Props) {
                 </div>
 
                 <div className="col-span-2 text-sm text-gray-500">
-                  {s.created_at ? fmtDate(s.created_at) : '—'}
+                  {s.sale_date ? fmtDate(s.sale_date) : '—'}
                 </div>
 
                 <div className="col-span-2 text-right text-sm tabular-nums">
                   {s.currency !== 'TRY' ? (
                     <span>
                       <span className="font-medium">{s.currency} {s.total.toFixed(2)}</span>
-                      <span className="block text-[10px] text-gray-400">≈ {fmt(s.total_try)}</span>
+                      <span className="block text-[10px] text-gray-400">≈ {formatTRY(s.total_try)}</span>
                     </span>
-                  ) : fmt(s.total)}
+                  ) : formatTRY(s.total)}
                 </div>
 
                 <div className={`col-span-1 text-right text-xs font-bold tabular-nums ${s.nominal_profit >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
-                  {fmt(s.nominal_profit)}
+                  {formatTRY(s.nominal_profit)}
                 </div>
 
                 <div className="col-span-2 flex justify-center gap-1 flex-wrap">

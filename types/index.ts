@@ -188,6 +188,8 @@ export interface Sale {
   paid_at:          string | null
   shipment_status:  ShipmentStatus | null
   notes:            string | null
+  /** Business invoice date (YYYY-MM-DD) — canonical for period attribution */
+  sale_date:        string
   created_at:       string
   updated_at:       string
   deleted_at:       string | null
@@ -946,6 +948,33 @@ export interface PartnerBalance {
 }
 
 /**
+ * DB row from partner_loan_tranches table.
+ *
+ * Each tranche represents one discrete loan event from a partner to the company
+ * (e.g. a specific bank transfer or agreed loan tranche).
+ *
+ *   status lifecycle: active → partially_repaid → repaid | overdue
+ *   outstanding_try: starts at amount_try, decremented by loan_repayment transactions
+ *   annual_interest_rate: decimal (0.15 = 15%); NULL = interest-free
+ *   due_date: expected repayment date; NULL = open-ended
+ */
+export interface PartnerLoanTranche {
+  id:                    string
+  company_id:            string
+  partner_id:            string
+  amount_try:            number          // original tranche size (frozen at creation)
+  outstanding_try:       number          // remaining principal (decremented on repayment)
+  status:                'active' | 'partially_repaid' | 'repaid' | 'overdue'
+  annual_interest_rate:  number | null   // decimal; null = interest-free
+  due_date:              string | null   // YYYY-MM-DD; null = open-ended
+  disbursement_date:     string | null   // YYYY-MM-DD; date the loan was received
+  notes:                 string | null
+  created_at:            string
+  updated_at:            string
+  deleted_at:            string | null
+}
+
+/**
  * Loan summary for a single partner — subset of PartnerBalance.
  */
 export interface LoanStatus {
@@ -995,6 +1024,10 @@ export interface EqualizationResult {
   distributable:         number   // input distributable amount (0 if not provided)
   remaining_after_eq:    number   // distributable − actual_equalization_paid (≥ 0; split pro-rata)
   entries:               PartnerEqualizationEntry[]
+  // Computed from partner balances at equalization time — zero additional DB call.
+  // Used by SituationEngine for DSR and AlertEngine for concentration calculations.
+  total_net_loans_try:   number   // Σ max(0, net_loan_try) across all active partners
+  max_partner_net_loan_try: number // largest single-partner net loan (for concentration ratio)
 }
 
 // ── Phase 7: Audit & Alert System ────────────────────────────────────────────

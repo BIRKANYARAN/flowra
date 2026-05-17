@@ -33,9 +33,8 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase-server'
+import { resolveApiAuth } from '@/lib/api-auth'
 import { computeCashPosition } from '@/lib/finance/cash'
-import { resolveCompanyId } from '@/lib/resolve-company'
 
 const CASH_EXCLUDED_EXPENSE_TYPES = new Set([
   'loan_repayment',
@@ -60,24 +59,14 @@ function parseDate(s: string | null): string | null {
 }
 
 export async function GET(req: NextRequest) {
-  const supabase = createClient()
-  const { data: authData, error: authError } = await supabase.auth.getUser()
-  if (authError || !authData?.user) {
-    return NextResponse.json(
-      { error: 'Unauthorized', code: 'UNAUTHORIZED', type: 'SECURITY' },
-      { status: 401 },
-    )
-  }
+  const auth = await resolveApiAuth(req)
+  if (!auth.ok) return auth.response
+  const { companyId, supabase } = auth
 
-  const uid = authData.user.id
   const url = new URL(req.url)
   const defaultPeriod = currentMonthRange()
   const from = parseDate(url.searchParams.get('from')) ?? defaultPeriod.from
   const to   = parseDate(url.searchParams.get('to'))   ?? defaultPeriod.to
-
-  let companyId: string
-  try { companyId = await resolveCompanyId(uid, supabase) }
-  catch { return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED', type: 'SYSTEM' }, { status: 409 }) }
 
   try {
     const [paidSalesRes, paidExpensesRes, unpaidExpensesRes] = await Promise.all([
@@ -100,7 +89,7 @@ export async function GET(req: NextRequest) {
         .lte('expense_date', to),
       supabase
         .from('expenses')
-        .select('amount_try')
+        .select('amount_try, expense_type')   // need expense_type to filter excluded flows
         .eq('company_id', companyId)
         .neq('payment_status', 'paid')
         .is('deleted_at', null),
@@ -125,8 +114,15 @@ export async function GET(req: NextRequest) {
       },
       0,
     )
+    // Mirror the same excluded-type filter applied to paidExpenses:
+    // loan repayments, partner financing, dividends, and internal transfers are
+    // NOT operating cash obligations — excluding them keeps the signal clean.
     const unpaidExpenses = (unpaidExpensesRes.data ?? []).reduce(
-      (s: number, r: { amount_try: number }) => s + Number(r.amount_try ?? 0), 0,
+      (s: number, r: { amount_try: number; expense_type: string | null }) => {
+        if (r.expense_type && CASH_EXCLUDED_EXPENSE_TYPES.has(r.expense_type)) return s
+        return s + Number(r.amount_try ?? 0)
+      },
+      0,
     )
     const { cashBalance, outstandingObligations, cashDistributable } = computeCashPosition({
       paymentsReceived,

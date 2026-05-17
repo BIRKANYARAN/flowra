@@ -9,14 +9,15 @@
 --   Supabase SQL Editor → paste entire file → Run
 --   Or: psql $DATABASE_URL -f FLOWRA_FULL_INSTALL.sql
 --
--- SOURCES (in dependency order):
+-- SOURCES (in dependency order, all now merged inline):
 --   repair_production.sql     — base tables, column patches, RPCs, RLS
---   flowra_phase1_accounting  — accounting_periods, simulation_scenarios
---   flowra_phase2_pcle        — partner_finance_events, partner_loan_tranches, alert_rules
---   flowra_phase3_accounting  — journal_entries, gl_mode, period lock triggers
---   flowra_phase7_hardening   — job_runs, audit hash chain, annual_interest_rate
+--   archive/flowra_phase1     — accounting_periods, simulation_scenarios
+--   archive/flowra_phase2     — partner_finance_events, partner_loan_tranches, alert_rules
+--   archive/flowra_phase3     — journal_entries, gl_mode, period lock triggers
+--   archive/flowra_phase7     — job_runs, audit hash chain, annual_interest_rate
+--   archive/flowra_phase14    — purchase_orders, purchase_order_items
 --
--- RESULT: 30+ tables, 25+ indexes, 10+ RPCs, full RLS, all triggers
+-- RESULT: 32+ tables, 52+ indexes, 15+ RPCs, full RLS, all triggers
 -- IDEMPOTENT: Every statement uses IF NOT EXISTS / OR REPLACE / ON CONFLICT
 -- ═══════════════════════════════════════════════════════════════════════════════
 
@@ -892,6 +893,7 @@ alter table alert_rules            enable row level security;
 alter table journal_entries        enable row level security;
 alter table journal_entry_lines    enable row level security;
 alter table backfill_runs          enable row level security;
+alter table job_runs               enable row level security;
 
 -- Helper functions
 create or replace function public.is_company_member(p_company_id uuid)
@@ -979,6 +981,20 @@ create policy event_outbox_member on event_outbox for all using (company_id is n
 
 drop policy if exists jobs_member on jobs;
 create policy jobs_member on jobs for all using (company_id is null or is_company_member(company_id));
+
+-- job_runs: company members read their own runs; admins read system-wide runs
+drop policy if exists job_runs_read_company  on job_runs;
+drop policy if exists job_runs_read_system   on job_runs;
+drop policy if exists job_runs_insert_service on job_runs;
+create policy job_runs_read_company on job_runs for select
+  using (company_id is not null and is_company_member(company_id));
+create policy job_runs_read_system on job_runs for select
+  using (company_id is null and is_company_admin((
+    select company_id from company_members
+    where company_members.user_id = auth.uid() limit 1
+  )));
+create policy job_runs_insert_service on job_runs for insert
+  with check (true);
 
 drop policy if exists monthly_metrics_member on monthly_metrics;
 create policy monthly_metrics_member on monthly_metrics for all using (is_company_member(company_id));
@@ -1522,6 +1538,12 @@ begin
     raise exception 'FORBIDDEN';
   end if;
 
+  -- FX guard: non-TRY sales must have a valid FX rate stored on the proforma.
+  -- Silently defaulting to 1.0 produces wrong TRY totals and revenue figures.
+  if v_proforma.currency <> 'TRY' and coalesce(v_proforma.fx_rate_try, 0) <= 0 then
+    raise exception 'FX_RATE_NOT_FOUND currency=% proforma=%', v_proforma.currency, p_proforma_id;
+  end if;
+
   select coalesce(max(
     (regexp_match(sale_no, 'SAL-' || v_year || '-(\d+)'))[1]::integer
   ), 0) + 1
@@ -1568,6 +1590,11 @@ begin
         order by coalesce(received_at, created_at::date), created_at
       loop
         exit when v_qty_needed <= 0;
+        -- Zero-cost lot guard: prevent silent COGS misvaluation.
+        -- A stock lot with no cost price means FIFO hasn't been finalized.
+        if v_lot.cost_price is null or v_lot.cost_price <= 0 then
+          raise exception 'ZERO_COST_LOT product=% lot=%', v_item.product_id, v_lot.id;
+        end if;
         v_alloc_qty := least(v_qty_needed, v_lot.qty_remaining);
         insert into sale_item_allocations (
           company_id, sale_item_id, lot_id, qty_allocated, cost_price, cost_currency
@@ -1895,6 +1922,75 @@ cross join (values
 where c.deleted_at is null
 on conflict (company_id, rule_type) do nothing;
 
+-- ─────────────────────────────────────────────────────────────────────────────
+-- SECTION 12 — PURCHASE ORDERS (Phase 14)
+-- Lightweight supplier order tracking: draft → ordered → received → cancelled
+-- When received, user creates a Purchase (FIFO stock lot entry).
+-- ─────────────────────────────────────────────────────────────────────────────
+
+create table if not exists purchase_orders (
+  id            uuid primary key default gen_random_uuid(),
+  company_id    uuid not null references companies(id) on delete cascade,
+  user_id       uuid not null references auth.users(id),
+  supplier_name text not null,
+  order_date    date not null default current_date,
+  expected_date date,
+  status        text not null default 'draft'
+                  check (status in ('draft', 'ordered', 'received', 'cancelled')),
+  currency      text not null default 'TRY',
+  total_try     numeric(15,2) not null default 0,
+  notes         text,
+  created_at    timestamptz not null default now(),
+  updated_at    timestamptz not null default now(),
+  deleted_at    timestamptz
+);
+
+create table if not exists purchase_order_items (
+  id                uuid primary key default gen_random_uuid(),
+  purchase_order_id uuid not null references purchase_orders(id) on delete cascade,
+  product_id        uuid references products(id) on delete set null,
+  name              text not null,
+  unit              text not null default 'adet',
+  quantity          numeric(10,3) not null check (quantity > 0),
+  unit_price        numeric(15,2) not null check (unit_price >= 0),
+  currency          text not null default 'TRY',
+  sort_order        int not null default 0,
+  created_at        timestamptz not null default now()
+);
+
+create index if not exists idx_purchase_orders_company   on purchase_orders(company_id, deleted_at);
+create index if not exists idx_purchase_orders_status    on purchase_orders(company_id, status)    where deleted_at is null;
+create index if not exists idx_purchase_order_items_ord  on purchase_order_items(purchase_order_id);
+
+alter table purchase_orders      enable row level security;
+alter table purchase_order_items enable row level security;
+
+create policy "po_company_member_rw" on purchase_orders
+  for all using (
+    company_id in (
+      select company_id from company_members where user_id = auth.uid()
+    )
+  );
+
+create policy "poi_company_member_rw" on purchase_order_items
+  for all using (
+    purchase_order_id in (
+      select po.id from purchase_orders po
+      join company_members cm on cm.company_id = po.company_id
+      where cm.user_id = auth.uid() and po.deleted_at is null
+    )
+  );
+
+create or replace function fn_touch_purchase_orders()
+returns trigger language plpgsql as $$
+begin new.updated_at := now(); return new; end;
+$$;
+
+drop trigger if exists trg_touch_purchase_orders on purchase_orders;
+create trigger trg_touch_purchase_orders
+  before update on purchase_orders
+  for each row execute function fn_touch_purchase_orders();
+
 -- ═══════════════════════════════════════════════════════════════════════════════
 -- END OF FLOWRA_FULL_INSTALL.sql
 --
@@ -1902,8 +1998,8 @@ on conflict (company_id, rule_type) do nothing;
 --   \i supabase/schema_verify.sql
 --   OR paste schema_verify.sql into SQL Editor
 --
--- Tables created: 30+
+-- Tables created: 32+ (includes purchase_orders, purchase_order_items)
 -- RPCs created:   15+
--- Indexes:        50+
--- RLS policies:   60+
+-- Indexes:        52+
+-- RLS policies:   62+
 -- ═══════════════════════════════════════════════════════════════════════════════

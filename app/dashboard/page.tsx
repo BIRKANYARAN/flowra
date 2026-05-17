@@ -17,7 +17,6 @@ export const dynamic = 'force-dynamic'
 import { createClient }              from '@/lib/supabase-server'
 import { redirect }                  from 'next/navigation'
 import Link                          from 'next/link'
-import { cookies, headers }          from 'next/headers'
 import { FxWidget }                  from '@/components/layout/FxWidget'
 import { CORPORATE_TAX_RATE_TR }     from '@/lib/services/finance-rules'
 import { fetchTcmbWithFallback }     from '@/lib/fx'
@@ -31,6 +30,10 @@ import { evaluateAlerts }            from '@/lib/engines/alert.engine'
 import { computeForecast }           from '@/lib/engines/forecast.engine'
 import type { AlertInputs }          from '@/lib/engines/alert.engine'
 import type { SituationStatus }      from '@/lib/engines/situation.engine'
+import { FinanceService }            from '@/lib/services/finance.service'
+import { PartnerService }            from '@/lib/services/partner.service'
+import type { FinancialSummary, EqualizationResult } from '@/types'
+import { fmtTRY as fmt } from '@/lib/format'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -43,16 +46,15 @@ interface FxData {
 }
 const EMPTY_FX: FxData = { USD: 0, EUR: 0, source: 'fallback', rate_date: null, fetched_at: null }
 
-interface EqEntry { partner_id: string; partner_name: string; share_ratio: number; equalization_amount: number; pro_rata_share: number; total_payout: number }
-interface EqResult { baseline_per_unit: number; total_equalization: number; distributable: number; remaining_after_eq: number; entries: EqEntry[] }
-const ZERO_EQ: EqResult = { baseline_per_unit: 0, total_equalization: 0, distributable: 0, remaining_after_eq: 0, entries: [] }
+const ZERO_EQ: EqualizationResult = { baseline_per_unit: 0, total_equalization: 0, distributable: 0, remaining_after_eq: 0, entries: [], total_net_loans_try: 0, max_partner_net_loan_try: 0 }
 
-interface FinApiRes {
-  revenue: number; cost: number; gross_profit: number; expenses_total: number
-  deductible_expenses: number; non_deductible_expenses: number
-  matrah: number; tax_rate: number; tax: number; net_after_tax: number
+const ZERO_FS: FinancialSummary = {
+  period: { from: '', to: '' },
+  revenue_try: 0, cost_try: 0, gross_profit_try: 0, expenses_total_try: 0,
+  deductible_expenses_try: 0, non_deductible_expenses_try: 0,
+  matrah_try: 0, corporate_tax_rate: CORPORATE_TAX_RATE_TR, corporate_tax_try: 0, net_after_tax_try: 0,
+  sales_vat_try: 0, purchase_vat_try: 0, expense_vat_try: 0, net_vat_try: 0,
 }
-interface TaxApiRes { vat: { sales_vat: number; purchase_vat: number; expense_vat: number; net_vat: number } }
 
 const CASH_EXCLUDED_EXPENSE_TYPES = new Set(['loan_repayment','partner_financing','dividend','internal_transfer'])
 
@@ -118,13 +120,6 @@ function currentMonthPeriod() {
   return { from, to, label, year, month: now.getMonth() + 1 }
 }
 
-function fmt(n: number): string {
-  const raw = Number(n || 0); const abs = Math.abs(raw); const sign = raw < 0 ? '−' : ''
-  if (abs >= 1_000_000) return `${sign}₺${(abs / 1_000_000).toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 2 })}M`
-  if (abs >= 10_000)    return `${sign}₺${(abs / 1_000).toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}K`
-  return `${sign}₺${abs.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
-}
-
 const TRY_FULL_FMT = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 function fmtFull(n: number): string { const raw = Number(n || 0); return (raw < 0 ? '−' : '') + TRY_FULL_FMT.format(Math.abs(raw)) + ' TL' }
 function pct(v: number): string { return `${(v * 100).toFixed(1).replace('.', ',')}%` }
@@ -173,35 +168,20 @@ export default async function DashboardPage() {
     )
   }
 
-  const cookieHeader = cookies().getAll().map(c => `${c.name}=${c.value}`).join('; ')
-  const reqHeaders   = headers()
-  const host         = reqHeaders.get('x-forwarded-host') ?? reqHeaders.get('host') ?? 'localhost:3000'
-  const proto        = reqHeaders.get('x-forwarded-proto') ?? 'http'
-  const base         = `${proto}://${host}`
-  const apiFetch     = (path: string) => fetch(`${base}${path}`, { headers: { Cookie: cookieHeader }, cache: 'no-store' })
-
   // ── Parallel data fetching ─────────────────────────────────────────────────
+  // Financial summary is fetched via direct service call (no HTTP round-trip).
   const [
-    finRes, taxRes, openProfs, stockValue, alertCount, fxData,
+    finSummary, openProfs, stockValue, alertCount, fxData,
     uncollectedSalesData, taskReminders, collectedSalesData,
     paidExpensesData, unpaidExpensesData,
-    // NEW in Faz 4: period status, next tranche, trailing 5-month actuals for forecast
-    openPeriodData, nextTrancheData, trailing5,
+    // Faz 4: period status, next tranche, trailing 5-month actuals for forecast
+    openPeriodData, nextTrancheData,
+    // Faz 5: equity commitment gap (TTK 588 / AlertEngine EQUITY_GAP_OVERDUE rule)
+    equityCommitments,
+    trailing5,
   ] = await Promise.all([
 
-    sq(async (): Promise<FinApiRes | null> => {
-      const r = await apiFetch(`/api/financial-summary?from=${from}&to=${to}`)
-      if (!r.ok) throw new Error(`financial-summary ${r.status}`)
-      return (await r.json()) as FinApiRes
-    }, null),
-
-    sq(async (): Promise<TaxApiRes | null> => {
-      const r = await apiFetch(`/api/tax-summary?from=${from}&to=${to}`)
-      if (!r.ok) throw new Error(`tax-summary ${r.status}`)
-      const d: unknown = await r.json()
-      if (!d || typeof d !== 'object' || !('vat' in (d as object))) throw new Error('invalid tax-summary')
-      return d as TaxApiRes
-    }, null),
+    sq(() => FinanceService.getFinancialSummary(uid, companyId, { from, to }), ZERO_FS),
 
     sq(async () => {
       const { data } = await supabase.from('proformas').select('id, total_try').eq('company_id', companyId).in('status', ['sent','accepted']).is('deleted_at', null)
@@ -221,13 +201,13 @@ export default async function DashboardPage() {
     sq(() => loadFxDirect(), EMPTY_FX),
 
     sq(async () => {
-      const { data } = await supabase.from('sales').select('id, total_try, payment_status, customer_name, created_at, due_date').eq('company_id', companyId).neq('payment_status', 'paid').is('deleted_at', null).order('created_at', { ascending: false }).limit(100)
-      return (data ?? []) as Array<{ id: string; total_try: number; payment_status: string; customer_name: string; created_at: string; due_date: string | null }>
-    }, [] as Array<{ id: string; total_try: number; payment_status: string; customer_name: string; created_at: string; due_date: string | null }>),
+      const { data } = await supabase.from('sales').select('id, total_try, amount_paid, payment_status, customer_name, sale_date, due_date').eq('company_id', companyId).neq('payment_status', 'paid').is('deleted_at', null).order('sale_date', { ascending: false }).limit(100)
+      return (data ?? []) as Array<{ id: string; total_try: number; amount_paid: number | null; payment_status: string; customer_name: string; sale_date: string; due_date: string | null }>
+    }, [] as Array<{ id: string; total_try: number; amount_paid: number | null; payment_status: string; customer_name: string; sale_date: string; due_date: string | null }>),
 
     sq(async () => {
       const in7days = new Date(Date.now() + 7 * 86_400_000).toISOString().slice(0, 10)
-      const { data } = await supabase.from('tasks').select('id, title, due_date, status').eq('status', 'open').is('deleted_at', null).not('due_date', 'is', null).lte('due_date', in7days).order('due_date', { ascending: true }).limit(5)
+      const { data } = await supabase.from('tasks').select('id, title, due_date, status').eq('company_id', companyId).eq('status', 'open').is('deleted_at', null).not('due_date', 'is', null).lte('due_date', in7days).order('due_date', { ascending: true }).limit(5)
       return (data ?? []) as Array<{ id: string; title: string; due_date: string; status: string }>
     }, [] as Array<{ id: string; title: string; due_date: string; status: string }>),
 
@@ -252,11 +232,26 @@ export default async function DashboardPage() {
       return (data ?? []) as Array<{ id: string; period_end: string; status: string }>
     }, [] as Array<{ id: string; period_end: string; status: string }>),
 
+    // All active tranches — used for both next-due display AND DSR calculation.
+    // outstanding_try × annual_interest_rate / 12 = monthly interest service per tranche.
     sq(async () => {
-      const today = new Date().toISOString().slice(0, 10)
-      const { data } = await supabase.from('partner_loan_tranches').select('due_date, amount_try').eq('company_id', companyId).eq('status', 'active').not('due_date', 'is', null).gte('due_date', today).order('due_date', { ascending: true }).limit(1)
-      return (data ?? []) as Array<{ due_date: string; amount_try: number }>
-    }, [] as Array<{ due_date: string; amount_try: number }>),
+      const { data } = await supabase.from('partner_loan_tranches')
+        .select('due_date, amount_try, outstanding_try, annual_interest_rate')
+        .eq('company_id', companyId)
+        .eq('status', 'active')
+        .order('due_date', { ascending: true, nullsFirst: false })
+      return (data ?? []) as Array<{ due_date: string | null; amount_try: number; outstanding_try: number; annual_interest_rate: number | null }>
+    }, [] as Array<{ due_date: string | null; amount_try: number; outstanding_try: number; annual_interest_rate: number | null }>),
+
+    // Equity commitment gap: TTK 588 — unpaid committed capital
+    sq(async () => {
+      const { data } = await supabase
+        .from('partner_capital_commitments')
+        .select('committed_try, paid_try, due_date')
+        .eq('company_id', companyId)
+        .is('deleted_at', null)
+      return (data ?? []) as Array<{ committed_try: number; paid_try: number; due_date: string | null }>
+    }, [] as Array<{ committed_try: number; paid_try: number; due_date: string | null }>),
 
     // Trailing months for forecast: last 5 complete months revenue + expenses
     sq(async () => {
@@ -267,7 +262,7 @@ export default async function DashboardPage() {
         const mFrom = `${y}-${m}-01`
         const mTo   = new Date(y, d.getMonth() + 1, 0).toISOString().slice(0, 10)
         const [saleData, expData] = await Promise.all([
-          supabase.from('sales').select('total_try').eq('company_id', companyId).is('deleted_at', null).gte('created_at', mFrom).lte('created_at', mTo + 'T23:59:59Z'),
+          supabase.from('sales').select('total_try').eq('company_id', companyId).is('deleted_at', null).gte('sale_date', mFrom).lte('sale_date', mTo),
           supabase.from('expenses').select('amount_try').eq('company_id', companyId).is('deleted_at', null).gte('expense_date', mFrom).lte('expense_date', mTo),
         ])
         const rev = (saleData.data ?? []).reduce((s, r) => s + Number(r.total_try), 0)
@@ -278,28 +273,14 @@ export default async function DashboardPage() {
     }, [] as Array<{ revenue: number; expenses: number }>),
   ])
 
-  // ── Map API responses ──────────────────────────────────────────────────────
-  const fs = {
-    revenue_try:                 Number(finRes?.revenue                 ?? 0),
-    cost_try:                    Number(finRes?.cost                    ?? 0),
-    gross_profit_try:            Number(finRes?.gross_profit            ?? 0),
-    expenses_total_try:          Number(finRes?.expenses_total          ?? 0),
-    deductible_expenses_try:     Number(finRes?.deductible_expenses     ?? 0),
-    non_deductible_expenses_try: Number(finRes?.non_deductible_expenses ?? 0),
-    matrah_try:                  Number(finRes?.matrah                  ?? 0),
-    corporate_tax_rate:          Number(finRes?.tax_rate                ?? CORPORATE_TAX_RATE_TR),
-    corporate_tax_try:           Number(finRes?.tax                     ?? 0),
-    net_after_tax_try:           Number(finRes?.net_after_tax           ?? 0),
-    sales_vat_try:               Number(taxRes?.vat?.sales_vat          ?? 0),
-    purchase_vat_try:            Number(taxRes?.vat?.purchase_vat       ?? 0),
-    expense_vat_try:             Number(taxRes?.vat?.expense_vat        ?? 0),
-    net_vat_try:                 Number(taxRes?.vat?.net_vat            ?? 0),
-  }
+  // FinancialSummary already carries the canonical field names (revenue_try, cost_try, etc.)
+  // No remapping needed — just use it directly via the ZERO_FS fallback.
+  const fs = finSummary
 
   // ── Derived values ─────────────────────────────────────────────────────────
   const outstanding          = openProfs.reduce((s, p) => s + Number(p.total_try ?? 0), 0)
   const vatStatus            = fs.net_vat_try > 0 ? 'payable' : 'carry_forward'
-  const uncollectedSalesTotal = uncollectedSalesData.reduce((s, r) => s + Number(r.total_try ?? 0), 0)
+  const uncollectedSalesTotal = uncollectedSalesData.reduce((s, r) => s + Math.max(0, Number(r.total_try ?? 0) - Number(r.amount_paid ?? 0)), 0)
   const uncollectedSalesCount = uncollectedSalesData.length
   const actuallyCollected     = (collectedSalesData ?? []).reduce((s, r) => s + Number(r.total_try ?? 0), 0)
   const actuallyCollectedPct  = fs.revenue_try > 0 ? Math.min(100, Math.round((actuallyCollected / fs.revenue_try) * 100)) : 100
@@ -318,29 +299,28 @@ export default async function DashboardPage() {
   const monthlyNet       = fs.net_after_tax_try / monthsInPeriod
 
   const todayISO         = new Date().toISOString().slice(0, 10)
-  const thirtyDaysAgoISO = new Date(Date.now() - 30 * 86_400_000).toISOString()
-  const sixtyDaysAgoISO  = new Date(Date.now() - 60 * 86_400_000).toISOString()
-  const overdueSales30   = uncollectedSalesData.filter(s => s.created_at < thirtyDaysAgoISO)
-  const overdueSales60   = uncollectedSalesData.filter(s => s.created_at < sixtyDaysAgoISO)
-  const overdueTotal30   = overdueSales30.reduce((s, r) => s + Number(r.total_try ?? 0), 0)
-  const overdueTotal60   = overdueSales60.reduce((s, r) => s + Number(r.total_try ?? 0), 0)
-  const dailyBurn        = monthlyNet < 0 ? Math.abs(monthlyNet) / 30 : 0
-  const liquidProxy      = outstanding + stockValue
-  const runwayDays       = dailyBurn > 0 ? Math.round(liquidProxy / dailyBurn) : -1
+  const thirtyDaysAgoISO = new Date(Date.now() - 30 * 86_400_000).toISOString().slice(0, 10)
+  const sixtyDaysAgoISO  = new Date(Date.now() - 60 * 86_400_000).toISOString().slice(0, 10)
+  // Use sale_date (business invoice date) for aging — comparing date strings directly (YYYY-MM-DD < YYYY-MM-DD)
+  const overdueSales30   = uncollectedSalesData.filter(s => s.sale_date < thirtyDaysAgoISO)
+  const overdueSales60   = uncollectedSalesData.filter(s => s.sale_date < sixtyDaysAgoISO)
+  const overdueTotal30   = overdueSales30.reduce((s, r) => s + Math.max(0, Number(r.total_try ?? 0) - Number(r.amount_paid ?? 0)), 0)
+  const overdueTotal60   = overdueSales60.reduce((s, r) => s + Math.max(0, Number(r.total_try ?? 0) - Number(r.amount_paid ?? 0)), 0)
+  // Runway: use cashDistributable (operational cash, unpaid obligations deducted) as the base,
+  // and absolute monthlyNet loss as monthly burn. This aligns with getCfoMetrics().burn.runway_months.
+  // Previously used `liquidProxy = outstanding + stockValue` (open proformas + inventory) which
+  // overestimates available cash and is NOT cash on hand.
+  const monthlyBurn      = monthlyNet < 0 ? Math.abs(monthlyNet) : 0
+  const dailyBurn        = monthlyBurn / 30
+  const runwayDays       = monthlyBurn > 0 ? Math.round((cashDistributable / monthlyBurn) * 30) : -1
   const runwayMonths     = runwayDays >= 0 ? runwayDays / 30 : 999
 
   // ── Partner equalization ───────────────────────────────────────────────────
   const distributableAmount = cashDistributable
-  let equalization: EqResult = ZERO_EQ
+  let equalization: EqualizationResult = ZERO_EQ
   try {
-    const eqRes = await apiFetch(`/api/partners/equalization?distributable=${distributableAmount}`)
-    if (eqRes.ok) {
-      const eqData: unknown = await eqRes.json()
-      if (eqData && typeof eqData === 'object' && Array.isArray((eqData as Record<string, unknown>).entries)) {
-        equalization = eqData as EqResult
-      }
-    }
-  } catch { /* non-fatal */ }
+    equalization = await PartnerService.calculateEqualization(uid, companyId, distributableAmount)
+  } catch { /* non-fatal: missing partners or DB error */ }
 
   // ── Period overdue check ───────────────────────────────────────────────────
   const openPeriod = openPeriodData[0] ?? null
@@ -349,8 +329,9 @@ export default async function DashboardPage() {
     : -1
 
   // ── Next tranche due ───────────────────────────────────────────────────────
-  const nextTranche = nextTrancheData[0] ?? null
-  const nextTrancheDueDays = nextTranche
+  // Next upcoming tranche: first active tranche with due_date >= today
+  const nextTranche = nextTrancheData.find(t => t.due_date != null && t.due_date >= todayISO) ?? null
+  const nextTrancheDueDays = nextTranche?.due_date
     ? Math.max(0, Math.round((new Date(nextTranche.due_date).getTime() - Date.now()) / 86_400_000))
     : -1
 
@@ -359,11 +340,22 @@ export default async function DashboardPage() {
     ? Math.round((overdueTotal30 / uncollectedSalesTotal) * 100)
     : 0
 
+  // DSR = monthly debt service / monthly net income.
+  // Debt service: principal × annual_rate / 12 per active tranche.
+  // For interest-free tranches (rate = 0 or null) use 1.5%/month conservative proxy
+  // — same calculation as alerts/evaluate route for consistency.
+  const monthlyDebtService = nextTrancheData.reduce((s, t) => {
+    const principal = Number(t.outstanding_try ?? 0)
+    const rate      = Number(t.annual_interest_rate ?? 0)
+    return s + (rate > 0 ? principal * rate / 12 : principal * 0.015)
+  }, 0)
+  const debtServiceRatio = monthlyNet > 0 ? Math.min(1, monthlyDebtService / monthlyNet) : 0
+
   const situation = computeSituation({
     cashRunwayMonths:  runwayMonths,
     isProfitable:      monthlyNet >= 0,
     netMarginPct:      fs.revenue_try > 0 ? fs.net_after_tax_try / fs.revenue_try : 0,
-    debtServiceRatio:  0,   // simplified: no partner loan data in this pass
+    debtServiceRatio,
     overdueRatioPct,
     maxBurdenScoreAbs: equalization.total_equalization > 0
       ? Math.min(1, equalization.total_equalization / Math.max(distributableAmount, 1))
@@ -384,13 +376,28 @@ export default async function DashboardPage() {
     nextTrancheAmount:       nextTranche ? Number(nextTranche.amount_try) : 0,
     openPeriodDaysOverdue,
     kdvPayable:              fs.net_vat_try,
-    taxDueDays:              -1,    // not computed in this pass
+    // KDV beyanı Türkiye'de takip eden ayın 24'üne kadardır.
+    // Mevcut dönemin ayı (month) bilindiğinden due date hesaplanabilir.
+    taxDueDays: fs.net_vat_try > 0 ? (() => {
+      const dueMonth = month === 12 ? 1 : month + 1
+      const dueYear  = month === 12 ? year + 1 : year
+      const dueDate  = new Date(`${dueYear}-${String(dueMonth).padStart(2, '0')}-24`)
+      return Math.round((dueDate.getTime() - Date.now()) / 86_400_000)
+    })() : -1,
     bsImbalanceTry:          0,     // graceful: requires GL (shadow mode)
     legalReserveDeficit:     0,     // graceful: requires period close
-    equityGapTry:            0,     // graceful
-    equityCallOverdueDays:   -1,
-    debtServiceRatio:        0,
-    partnerLoanConcentration:0,
+    equityGapTry:            equityCommitments.reduce((s, c) => s + Math.max(0, Number(c.committed_try) - Number(c.paid_try)), 0),
+    equityCallOverdueDays:   (() => {
+      const overdue = equityCommitments
+        .filter(c => Number(c.committed_try) > Number(c.paid_try) && c.due_date && c.due_date < todayISO)
+      if (overdue.length === 0) return -1
+      const oldest = overdue.reduce((min, c) => c.due_date! < min ? c.due_date! : min, overdue[0].due_date!)
+      return Math.round((Date.now() - new Date(oldest).getTime()) / 86_400_000)
+    })(),
+    debtServiceRatio,
+    partnerLoanConcentration: equalization.total_net_loans_try > 0
+      ? equalization.max_partner_net_loan_try / equalization.total_net_loans_try
+      : 0,
   }
   const decisionAlerts = evaluateAlerts(alertInputs)
   const topAlerts      = decisionAlerts.slice(0, 5)
@@ -407,7 +414,7 @@ export default async function DashboardPage() {
     avgMonthlyRevenue:       avgRev > 0 ? avgRev : fs.revenue_try,
     avgMonthlyExpenses:      avgExp > 0 ? avgExp : fs.expenses_total_try,
     currentCash:             cashBalance,
-    monthlyDebtService:      0,
+    monthlyDebtService,
     optimisticGrowthFactor:  0.15,
     pessimisticStressFactor: 0.20,
     startYear:               nextYear,
@@ -506,11 +513,11 @@ export default async function DashboardPage() {
 
       {/* ── KPI Strip ─────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-6 gap-1.5">
-        <FlowraKpiCard label="Ciro" value={fs.revenue_try} rawValue={fmt(fs.revenue_try)} sub={fs.revenue_try > 0 ? `Brüt marj ${pct(grossMarginPct)}` : 'Satış yok'} href="/dashboard/sales" />
-        <FlowraKpiCard label="Tahsil Edilen" value={actuallyCollected} rawValue={fmt(actuallyCollected)} sub={`%${actuallyCollectedPct} oran`} tone={actuallyCollectedPct >= 80 ? 'positive' : actuallyCollectedPct >= 50 ? 'neutral' : 'negative'} href="/dashboard/collections" />
+        <FlowraKpiCard label="Ciro" value={fs.revenue_try} rawValue={fmt(fs.revenue_try)} sub={fs.revenue_try > 0 ? `Brüt marj ${pct(grossMarginPct)}` : 'Satış yok'} href="/dashboard/commercial?tab=sales" />
+        <FlowraKpiCard label="Tahsil Edilen" value={actuallyCollected} rawValue={fmt(actuallyCollected)} sub={`%${actuallyCollectedPct} oran`} tone={actuallyCollectedPct >= 80 ? 'positive' : actuallyCollectedPct >= 50 ? 'neutral' : 'negative'} href="/dashboard/commercial?tab=collections" />
         <FlowraKpiCard label="Dağıtılabilir" value={cashDistributable} rawValue={cashDistributable > 0 ? fmt(cashDistributable) : '—'} sub={cashDistributable > 0 ? 'Nakit bazlı' : 'Yok'} tone={cashDistributable > 0 ? 'positive' : 'neutral'} href="/dashboard/partners" />
-        <FlowraKpiCard label="Bekleyen" value={uncollectedSalesTotal} rawValue={uncollectedSalesTotal > 0 ? fmt(uncollectedSalesTotal) : '—'} sub={uncollectedSalesTotal > 0 ? `${uncollectedSalesCount} satış` : 'Tümü tahsil ✓'} tone={uncollectedSalesTotal > 0 ? 'negative' : 'neutral'} href="/dashboard/collections" />
-        <FlowraKpiCard label="Giderler" value={fs.expenses_total_try} rawValue={fmt(fs.expenses_total_try)} sub={`~${fmt(monthlyExpenses)}/ay`} href="/dashboard/expenses" />
+        <FlowraKpiCard label="Bekleyen" value={uncollectedSalesTotal} rawValue={uncollectedSalesTotal > 0 ? fmt(uncollectedSalesTotal) : '—'} sub={uncollectedSalesTotal > 0 ? `${uncollectedSalesCount} satış` : 'Tümü tahsil ✓'} tone={uncollectedSalesTotal > 0 ? 'negative' : 'neutral'} href="/dashboard/commercial?tab=collections" />
+        <FlowraKpiCard label="Giderler" value={fs.expenses_total_try} rawValue={fmt(fs.expenses_total_try)} sub={`~${fmt(monthlyExpenses)}/ay`} href="/dashboard/operations?tab=expenses" />
         <FlowraKpiCard label="Stok" value={stockValue} rawValue={fmt(stockValue)} sub="FIFO maliyet" href="/dashboard/stocks" />
       </div>
 

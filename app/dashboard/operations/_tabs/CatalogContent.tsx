@@ -31,20 +31,29 @@ export async function CatalogContent({ companyId, userId }: Props) {
 
   const products = (prodData ?? []) as Product[]
 
-  const realCostResults = await Promise.allSettled(
-    products.map(async p => {
-      const { data: rpc } = await supabase.rpc('get_real_cost', {
-        p_product_id: p.id,
-        p_user_id:    userId,
-      })
-      return { id: p.id, cost: (rpc as { real_cost?: number | null } | null)?.real_cost ?? null }
-    })
-  )
+  // Batch FIFO cost: one query for all products instead of N×RPC.
+  // real_cost = weighted average entry_cost_try weighted by qty_remaining.
+  const { data: lotData } = await supabase
+    .from('stock_lots')
+    .select('product_id, entry_cost_try, qty_remaining')
+    .eq('company_id', companyId)
+    .is('deleted_at', null)
+    .gt('qty_remaining', 0)
 
   const initialRealCosts: Record<string, number | null> = {}
-  realCostResults.forEach(r => {
-    if (r.status === 'fulfilled') initialRealCosts[r.value.id] = r.value.cost
-  })
+  const lotSums: Record<string, { costQty: number; qty: number }> = {}
+  for (const lot of lotData ?? []) {
+    const pid = String(lot.product_id ?? '')
+    if (!pid) continue
+    const prev = lotSums[pid] ?? { costQty: 0, qty: 0 }
+    lotSums[pid] = {
+      costQty: prev.costQty + Number(lot.entry_cost_try ?? 0) * Number(lot.qty_remaining ?? 0),
+      qty:     prev.qty     + Number(lot.qty_remaining ?? 0),
+    }
+  }
+  for (const [pid, { costQty, qty }] of Object.entries(lotSums)) {
+    initialRealCosts[pid] = qty > 0 ? costQty / qty : null
+  }
 
   return (
     <div className="space-y-4">
