@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse }    from 'next/server'
-import { createClient }                 from '@/lib/supabase-server'
 import { resolveCompanyId }             from '@/lib/resolve-company'
 import { computeMultiScenario }         from '@/lib/services/simulation-strategic.service'
 import type { BaseExpenseLine, DebtTranche, StrategicScenarioInput } from '@/lib/services/simulation-strategic.service'
 import { CORPORATE_TAX_RATE_TR }        from '@/lib/services/finance-rules'
+import { resolveApiAuth } from '@/lib/api-auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,12 +24,9 @@ export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
   try {
-    const supabase = createClient()
-    const { data: authData } = await supabase.auth.getUser()
-    if (!authData?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const companyId = await resolveCompanyId(authData.user.id, supabase)
-    if (!companyId) return NextResponse.json({ error: 'No company' }, { status: 400 })
+    const auth = await resolveApiAuth(req)
+    if (!auth.ok) return auth.response
+    const { uid, companyId, supabase, ctx } = auth
 
     const body = await req.json()
 

@@ -15,27 +15,18 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient }     from '@/lib/supabase-server'
-import { resolveCompanyId } from '@/lib/resolve-company'
 import {
   computeCashMetrics,
   computeReceivableMetrics,
   computeRunwayForecast,
   BURN_EXPENSE_TYPES,
 } from '@/lib/finance/cfo-metrics'
+import { resolveApiAuth } from '@/lib/api-auth'
 
 export async function GET(req: NextRequest) {
-  const supabase = createClient()
-  const { data: authData, error: authError } = await supabase.auth.getUser()
-  if (authError || !authData?.user) {
-    return NextResponse.json({ error: 'Unauthorized', code: 'UNAUTHORIZED' }, { status: 401 })
-  }
-
-  let companyId: string
-  try { companyId = await resolveCompanyId(authData.user.id, supabase) }
-  catch {
-    return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED' }, { status: 409 })
-  }
+  const auth = await resolveApiAuth(req)
+  if (!auth.ok) return auth.response
+  const { uid, companyId, supabase, ctx } = auth
 
   const url     = new URL(req.url)
   const now     = new Date()

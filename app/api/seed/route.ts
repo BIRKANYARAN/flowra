@@ -6,12 +6,11 @@
 
 export const dynamic = 'force-dynamic'
 
-import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase-server'
-import { resolveCompanyId } from '@/lib/resolve-company'
+import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/require-role'
+import { resolveApiAuth } from '@/lib/api-auth'
 
-export async function POST() {
+export async function POST(req: NextRequest) {
   // Feature flag guard
   if (process.env.ENABLE_SEED !== 'true') {
     return NextResponse.json(
@@ -21,19 +20,12 @@ export async function POST() {
   }
 
   try {
-    const supabase = createClient()
-    const { data: authData, error: authError } = await supabase.auth.getUser()
-    if (authError || !authData?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-    const user = authData.user
-
-    let companyId: string
-    try { companyId = await resolveCompanyId(user.id, supabase) }
-    catch { return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED', type: 'SYSTEM' }, { status: 409 }) }
+    const auth = await resolveApiAuth(req)
+    if (!auth.ok) return auth.response
+    const { uid, companyId, supabase, ctx } = auth
 
     // Seed writes data — admin only (belt-and-suspenders; env guard is primary).
-    try { await requireAdmin(user.id, companyId, supabase) }
+    try { await requireAdmin(uid, companyId, supabase) }
     catch { return NextResponse.json({ error: 'Demo veri yükleme için admin yetkisi gerekir', code: 'FORBIDDEN', type: 'SECURITY' }, { status: 403 }) }
 
     // Guard: check BOTH customers and products — prevents partial re-seed
@@ -67,7 +59,7 @@ export async function POST() {
       .from('customers')
       .insert([
         {
-          user_id:    user.id,
+          user_id:    uid,
           company_id: companyId,
           name:       'ABC Teknoloji A.Ş.',
           email:      'info@abc.com',
@@ -77,7 +69,7 @@ export async function POST() {
           address:    'Bağdat Cad. No:1 Kadıköy/İstanbul',
         },
         {
-          user_id:    user.id,
+          user_id:    uid,
           company_id: companyId,
           name:       'XYZ Lojistik Ltd.',
           email:      'info@xyz.com',
@@ -87,21 +79,21 @@ export async function POST() {
           address:    'Çırağan Cad. No:2 Beşiktaş/İstanbul',
         },
         {
-          user_id:    user.id,
+          user_id:    uid,
           company_id: companyId,
           name:       'Demo Müşteri A',
           email:      'demo@ornek.com',
           phone:      '+90 532 333 3333',
         },
         {
-          user_id:    user.id,
+          user_id:    uid,
           company_id: companyId,
           name:       'Örnek Şirket B',
           email:      'ornek@sirket.com',
           phone:      '+90 532 444 4444',
         },
         {
-          user_id:    user.id,
+          user_id:    uid,
           company_id: companyId,
           name:       'Test Müşteri C',
           email:      'test@test.com',
@@ -121,7 +113,7 @@ export async function POST() {
     // ── Company banks ─────────────────────────────────────────────────────────
     const { data: banks, error: bankErr } = await supabase.from('company_banks').insert([
       {
-        user_id:     user.id,
+        user_id:     uid,
         company_id:  companyId,
         bank_name:   'Akbank',
         branch_name: 'Merkez Şubesi',
@@ -129,7 +121,7 @@ export async function POST() {
         is_default:  true,
       },
       {
-        user_id:     user.id,
+        user_id:     uid,
         company_id:  companyId,
         bank_name:   'İş Bankası',
         branch_name: 'Kadıköy Şubesi',
@@ -144,16 +136,16 @@ export async function POST() {
     const { data: products, error: prodErr } = await supabase
       .from('products')
       .insert([
-        { user_id: user.id, company_id: companyId, name: 'Web Geliştirme Hizmeti', unit: 'saat',  unit_cost: 150, cost_currency: 'TRY', stock_qty: 0,   stock_alert_qty: 0 },
-        { user_id: user.id, company_id: companyId, name: 'Mobil Uygulama Lisansı', unit: 'adet',  unit_cost: 800, cost_currency: 'TRY', stock_qty: 50,  stock_alert_qty: 5 },
-        { user_id: user.id, company_id: companyId, name: 'Yıllık Destek Paketi',   unit: 'yıl',   unit_cost: 300, cost_currency: 'TRY', stock_qty: 100, stock_alert_qty: 10 },
-        { user_id: user.id, company_id: companyId, name: 'Sunucu Bakım Hizmeti',   unit: 'ay',    unit_cost: 200, cost_currency: 'TRY', stock_qty: 0,   stock_alert_qty: 0 },
-        { user_id: user.id, company_id: companyId, name: 'Eğitim Paketi',          unit: 'gün',   unit_cost: 500, cost_currency: 'TRY', stock_qty: 50,  stock_alert_qty: 5 },
-        { user_id: user.id, company_id: companyId, name: 'API Entegrasyon Modülü', unit: 'adet',  unit_cost: 400, cost_currency: 'TRY', stock_qty: 30,  stock_alert_qty: 5 },
-        { user_id: user.id, company_id: companyId, name: 'Veri Analitik Raporu',   unit: 'rapor', unit_cost: 250, cost_currency: 'TRY', stock_qty: 50,  stock_alert_qty: 5 },
-        { user_id: user.id, company_id: companyId, name: 'Bulut Depolama (1 TB)',  unit: 'ay',    unit_cost: 50,  cost_currency: 'TRY', stock_qty: 200, stock_alert_qty: 20 },
-        { user_id: user.id, company_id: companyId, name: 'SSL Sertifikası',        unit: 'yıl',   unit_cost: 30,  cost_currency: 'TRY', stock_qty: 100, stock_alert_qty: 10 },
-        { user_id: user.id, company_id: companyId, name: 'Logo Tasarım Paketi',    unit: 'proje', unit_cost: 600, cost_currency: 'TRY', stock_qty: 0,   stock_alert_qty: 0 },
+        { user_id: uid, company_id: companyId, name: 'Web Geliştirme Hizmeti', unit: 'saat',  unit_cost: 150, cost_currency: 'TRY', stock_qty: 0,   stock_alert_qty: 0 },
+        { user_id: uid, company_id: companyId, name: 'Mobil Uygulama Lisansı', unit: 'adet',  unit_cost: 800, cost_currency: 'TRY', stock_qty: 50,  stock_alert_qty: 5 },
+        { user_id: uid, company_id: companyId, name: 'Yıllık Destek Paketi',   unit: 'yıl',   unit_cost: 300, cost_currency: 'TRY', stock_qty: 100, stock_alert_qty: 10 },
+        { user_id: uid, company_id: companyId, name: 'Sunucu Bakım Hizmeti',   unit: 'ay',    unit_cost: 200, cost_currency: 'TRY', stock_qty: 0,   stock_alert_qty: 0 },
+        { user_id: uid, company_id: companyId, name: 'Eğitim Paketi',          unit: 'gün',   unit_cost: 500, cost_currency: 'TRY', stock_qty: 50,  stock_alert_qty: 5 },
+        { user_id: uid, company_id: companyId, name: 'API Entegrasyon Modülü', unit: 'adet',  unit_cost: 400, cost_currency: 'TRY', stock_qty: 30,  stock_alert_qty: 5 },
+        { user_id: uid, company_id: companyId, name: 'Veri Analitik Raporu',   unit: 'rapor', unit_cost: 250, cost_currency: 'TRY', stock_qty: 50,  stock_alert_qty: 5 },
+        { user_id: uid, company_id: companyId, name: 'Bulut Depolama (1 TB)',  unit: 'ay',    unit_cost: 50,  cost_currency: 'TRY', stock_qty: 200, stock_alert_qty: 20 },
+        { user_id: uid, company_id: companyId, name: 'SSL Sertifikası',        unit: 'yıl',   unit_cost: 30,  cost_currency: 'TRY', stock_qty: 100, stock_alert_qty: 10 },
+        { user_id: uid, company_id: companyId, name: 'Logo Tasarım Paketi',    unit: 'proje', unit_cost: 600, cost_currency: 'TRY', stock_qty: 0,   stock_alert_qty: 0 },
       ])
       .select('id')
 
@@ -164,9 +156,9 @@ export async function POST() {
     // ── Expenses ──────────────────────────────────────────────────────────────
     const today = new Date().toISOString().slice(0, 10)
     await supabase.from('expenses').insert([
-      { user_id: user.id, company_id: companyId, amount: 5000, currency: 'TRY', amount_try: 5000, fx_rate: 1, fx_source: 'identity', description: 'Ofis kirası - Ocak',  category: 'rent',      expense_date: today },
-      { user_id: user.id, company_id: companyId, amount: 2500, currency: 'TRY', amount_try: 2500, fx_rate: 1, fx_source: 'identity', description: 'Elektrik ve internet', category: 'utilities', expense_date: today },
-      { user_id: user.id, company_id: companyId, amount: 1200, currency: 'TRY', amount_try: 1200, fx_rate: 1, fx_source: 'identity', description: 'Yazılım lisansları',   category: 'software',  expense_date: today },
+      { user_id: uid, company_id: companyId, amount: 5000, currency: 'TRY', amount_try: 5000, fx_rate: 1, fx_source: 'identity', description: 'Ofis kirası - Ocak',  category: 'rent',      expense_date: today },
+      { user_id: uid, company_id: companyId, amount: 2500, currency: 'TRY', amount_try: 2500, fx_rate: 1, fx_source: 'identity', description: 'Elektrik ve internet', category: 'utilities', expense_date: today },
+      { user_id: uid, company_id: companyId, amount: 1200, currency: 'TRY', amount_try: 1200, fx_rate: 1, fx_source: 'identity', description: 'Yazılım lisansları',   category: 'software',  expense_date: today },
     ])
 
     // ── Proformas + items ─────────────────────────────────────────────────────
@@ -195,7 +187,7 @@ export async function POST() {
       const { data: prf1, error: p1Err } = await supabase
         .from('proformas')
         .insert({
-          user_id:       user.id,
+          user_id:       uid,
           company_id:    companyId,
           customer_id:   customers[0].id,
           bank_id:       defaultBankId,
@@ -268,7 +260,7 @@ export async function POST() {
       const { data: prf2, error: p2Err } = await supabase
         .from('proformas')
         .insert({
-          user_id:       user.id,
+          user_id:       uid,
           company_id:    companyId,
           customer_id:   customers[1].id,
           bank_id:       defaultBankId,
@@ -329,7 +321,7 @@ export async function POST() {
       const { data: prf3, error: p3Err } = await supabase
         .from('proformas')
         .insert({
-          user_id:       user.id,
+          user_id:       uid,
           company_id:    companyId,
           customer_id:   customers[2].id,
           bank_id:       defaultBankId,
@@ -384,7 +376,7 @@ export async function POST() {
       }
     }
 
-    console.log('[seed] completed for user', user.id)
+    console.log('[seed] completed for user', uid)
     return NextResponse.json({ message: 'seeded', seeded: true })
 
   } catch (err) {

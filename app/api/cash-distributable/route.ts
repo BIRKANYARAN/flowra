@@ -33,9 +33,8 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase-server'
+import { resolveApiAuth } from '@/lib/api-auth'
 import { computeCashPosition } from '@/lib/finance/cash'
-import { resolveCompanyId } from '@/lib/resolve-company'
 
 const CASH_EXCLUDED_EXPENSE_TYPES = new Set([
   'loan_repayment',
@@ -60,24 +59,14 @@ function parseDate(s: string | null): string | null {
 }
 
 export async function GET(req: NextRequest) {
-  const supabase = createClient()
-  const { data: authData, error: authError } = await supabase.auth.getUser()
-  if (authError || !authData?.user) {
-    return NextResponse.json(
-      { error: 'Unauthorized', code: 'UNAUTHORIZED', type: 'SECURITY' },
-      { status: 401 },
-    )
-  }
+  const auth = await resolveApiAuth(req)
+  if (!auth.ok) return auth.response
+  const { companyId, supabase } = auth
 
-  const uid = authData.user.id
   const url = new URL(req.url)
   const defaultPeriod = currentMonthRange()
   const from = parseDate(url.searchParams.get('from')) ?? defaultPeriod.from
   const to   = parseDate(url.searchParams.get('to'))   ?? defaultPeriod.to
-
-  let companyId: string
-  try { companyId = await resolveCompanyId(uid, supabase) }
-  catch { return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED', type: 'SYSTEM' }, { status: 409 }) }
 
   try {
     const [paidSalesRes, paidExpensesRes, unpaidExpensesRes] = await Promise.all([

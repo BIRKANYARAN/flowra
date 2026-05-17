@@ -1,7 +1,6 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase-server'
 import { contextFromHeader, logger } from '@/lib/logger'
 import { REQUEST_ID_HEADER } from '@/middleware'
 import { getOrFetchFxRate } from '@/lib/fx'
@@ -9,11 +8,11 @@ import { requireString, requirePositiveNumber, ValidationError } from '@/lib/val
 import { toErrorResponse } from '@/types/errors'
 import { CURRENCIES_EXTENDED, type ExpenseType, type PaymentStatus } from '@/types'
 import { logAudit } from '@/lib/audit'
-import { resolveCompanyId } from '@/lib/resolve-company'
 import { resolveExpenseType } from '@/lib/services/finance-rules'
 import { checkPeriodGuard } from '@/lib/middleware/period-guard'
 import { dualWrite, resolvePeriodId } from '@/lib/services/ledger/dual-write.service'
 import { JournalEntryService } from '@/lib/services/ledger/journal-entry.service'
+import { resolveApiAuth } from '@/lib/api-auth'
 
 const ALLOWED_CURRENCIES = CURRENCIES_EXTENDED as readonly string[]
 const ALLOWED_CATEGORIES = [
@@ -38,14 +37,9 @@ const ALLOWED_EXPENSE_TYPES: readonly ExpenseType[] = [
 
 // ── GET — list expenses ───────────────────────────────────────────────────────
 export async function GET(req: NextRequest) {
-  const supabase = createClient()
-  const { data: authData, error: authError } = await supabase.auth.getUser()
-    if (authError || !authData?.user) return NextResponse.json({ error: 'Unauthorized', code: 'UNAUTHORIZED', type: 'SECURITY' }, { status: 401 })
-    const user = authData.user
-
-  let companyId: string
-  try { companyId = await resolveCompanyId(user.id, supabase) }
-  catch { return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED', type: 'SYSTEM' }, { status: 409 }) }
+  const auth = await resolveApiAuth(req)
+  if (!auth.ok) return auth.response
+  const { uid, companyId, supabase, ctx } = auth
 
   const { searchParams } = new URL(req.url)
   const limit  = Math.min(100, Math.max(1, Number(searchParams.get('limit')  ?? 50)))
@@ -66,17 +60,10 @@ export async function GET(req: NextRequest) {
 
 // ── POST — create expense ─────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
-  const supabase = createClient()
-  const { data: authData, error: authError } = await supabase.auth.getUser()
-    if (authError || !authData?.user) return NextResponse.json({ error: 'Unauthorized', code: 'UNAUTHORIZED', type: 'SECURITY' }, { status: 401 })
-    const user = authData.user
+  const auth = await resolveApiAuth(req)
+  if (!auth.ok) return auth.response
+  const { uid, companyId, supabase, ctx } = auth
 
-  // Resolve company once — fail fast, never write NULL
-  let companyId: string
-  try { companyId = await resolveCompanyId(user.id, supabase) }
-  catch { return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED', type: 'SYSTEM' }, { status: 409 }) }
-
-  const ctx = contextFromHeader(req.headers.get(REQUEST_ID_HEADER), user.id)
 
   try {
     const body = await req.json()
@@ -124,7 +111,7 @@ export async function POST(req: NextRequest) {
     // No compensating rollback needed; concurrency is safe.
     if (partnerId) {
       const { data: rpcData, error: rpcError } = await supabase.rpc('create_partner_loan_expense', {
-        p_uid:          user.id,
+        p_uid:          uid,
         p_partner_id:   partnerId,
         p_amount:       amount,
         p_currency:     currency,
@@ -150,7 +137,7 @@ export async function POST(req: NextRequest) {
       const expenseId = (rpcData as { expense_id: string } | null)?.expense_id ?? ''
       await logger.info(ctx, 'expense_create:success', { id: expenseId, amount_try, partner_id: partnerId })
       logAudit({
-        userId:     user.id,
+        userId:     uid,
         companyId,
         entityType: 'expense',
         entityId:   expenseId,
@@ -164,7 +151,7 @@ export async function POST(req: NextRequest) {
     const { data, error } = await supabase
       .from('expenses')
       .insert({
-        user_id:      user.id,
+        user_id:      uid,
         amount,
         currency,
         amount_try,
@@ -188,7 +175,7 @@ export async function POST(req: NextRequest) {
 
     await logger.info(ctx, 'expense_create:success', { id: data.id, amount_try })
     logAudit({
-      userId:     user.id,
+      userId:     uid,
       companyId,
       entityType: 'expense',
       entityId:   data.id,
@@ -202,7 +189,7 @@ export async function POST(req: NextRequest) {
     await dualWrite({
       companyId,
       periodId,
-      createdBy: user.id,
+      createdBy: uid,
       supabase,
       buildEntry: () => JournalEntryService.buildExpenseEntry({
         id:              data.id,
@@ -228,14 +215,9 @@ export async function POST(req: NextRequest) {
 
 // ── DELETE — soft delete ──────────────────────────────────────────────────────
 export async function DELETE(req: NextRequest) {
-  const supabase = createClient()
-  const { data: authData, error: authError } = await supabase.auth.getUser()
-    if (authError || !authData?.user) return NextResponse.json({ error: 'Unauthorized', code: 'UNAUTHORIZED', type: 'SECURITY' }, { status: 401 })
-    const user = authData.user
-
-  let companyId: string
-  try { companyId = await resolveCompanyId(user.id, supabase) }
-  catch { return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED', type: 'SYSTEM' }, { status: 409 }) }
+  const auth = await resolveApiAuth(req)
+  if (!auth.ok) return auth.response
+  const { uid, companyId, supabase, ctx } = auth
 
   try {
     const { searchParams } = new URL(req.url)
@@ -263,7 +245,7 @@ export async function DELETE(req: NextRequest) {
       .eq('company_id', companyId)
 
     logAudit({
-      userId:     user.id,
+      userId:     uid,
       companyId,
       entityType: 'expense',
       entityId:   id,

@@ -7,12 +7,11 @@
 
 export const dynamic = 'force-dynamic'
 
-import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase-server'
-import { resolveCompanyId } from '@/lib/resolve-company'
+import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/require-role'
+import { resolveApiAuth } from '@/lib/api-auth'
 
-export async function POST() {
+export async function POST(req: NextRequest) {
   // Feature flag guard — must be explicitly enabled per environment
   if (process.env.ENABLE_RESET !== 'true') {
     return NextResponse.json(
@@ -22,16 +21,9 @@ export async function POST() {
   }
 
   try {
-    const supabase = createClient()
-    const { data: authData, error: authError } = await supabase.auth.getUser()
-    if (authError || !authData?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-    const uid = authData.user.id
-
-    let companyId: string
-    try { companyId = await resolveCompanyId(uid, supabase) }
-    catch { return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED', type: 'SYSTEM' }, { status: 409 }) }
+    const auth = await resolveApiAuth(req)
+    if (!auth.ok) return auth.response
+    const { uid, companyId, supabase, ctx } = auth
     try { await requireAdmin(uid, companyId, supabase) }
     catch { return NextResponse.json({ error: 'Bu işlem için admin yetkisi gerekir', code: 'FORBIDDEN', type: 'SECURITY' }, { status: 403 }) }
 

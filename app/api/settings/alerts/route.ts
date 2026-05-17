@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient }              from '@/lib/supabase-server'
 import { resolveCompanyId }          from '@/lib/resolve-company'
 import { requireRole }               from '@/lib/require-role'
+import { resolveApiAuth } from '@/lib/api-auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,14 +24,11 @@ const SYSTEM_DEFAULTS: Array<{ rule_type: string; threshold_value: number; sever
   { rule_type: 'CONCENTRATION',     threshold_value: 0.80, severity: 'warning'  },
 ]
 
-export async function GET(_req: NextRequest) {
+export async function GET(req: NextRequest) {
   try {
-    const supabase = createClient()
-    const { data: authData } = await supabase.auth.getUser()
-    if (!authData?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const companyId = await resolveCompanyId(authData.user.id, supabase)
-    if (!companyId) return NextResponse.json({ error: 'No company' }, { status: 400 })
+    const auth = await resolveApiAuth(req)
+    if (!auth.ok) return auth.response
+    const { uid, companyId, supabase, ctx } = auth
 
     const { data, error } = await supabase
       .from('alert_rules')
@@ -60,14 +57,11 @@ export async function GET(_req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
-    const supabase = createClient()
-    const { data: authData } = await supabase.auth.getUser()
-    if (!authData?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const auth = await resolveApiAuth(req)
+    if (!auth.ok) return auth.response
+    const { uid, companyId, supabase, ctx } = auth
 
-    const companyId = await resolveCompanyId(authData.user.id, supabase)
-    if (!companyId) return NextResponse.json({ error: 'No company' }, { status: 400 })
-
-    await requireRole(authData.user.id, companyId, 'admin', supabase)
+    await requireRole(uid, companyId, 'admin', supabase)
 
     const body = await req.json()
     const { rule_type, threshold_value, severity, is_active } = body

@@ -23,24 +23,14 @@
 
 export const dynamic = 'force-dynamic'
 
-import { NextResponse }     from 'next/server'
-import { createClient }     from '@/lib/supabase-server'
-import { resolveCompanyId } from '@/lib/resolve-company'
+import { NextRequest, NextResponse } from 'next/server'
 import type { ReceivableAging } from '@/types'
+import { resolveApiAuth } from '@/lib/api-auth'
 
-export async function GET() {
-  const supabase = createClient()
-  const { data: authData, error: authError } = await supabase.auth.getUser()
-  if (authError || !authData?.user) {
-    return NextResponse.json(
-      { error: 'Unauthorized', code: 'UNAUTHORIZED', type: 'SECURITY' },
-      { status: 401 },
-    )
-  }
-
-  let companyId: string
-  try { companyId = await resolveCompanyId(authData.user.id, supabase) }
-  catch { return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED' }, { status: 409 }) }
+export async function GET(req: NextRequest) {
+  const auth = await resolveApiAuth(req)
+  if (!auth.ok) return auth.response
+  const { uid, companyId, supabase, ctx } = auth
 
   // Fetch all outstanding receivables (no date filter — want full aging picture)
   const { data, error } = await supabase

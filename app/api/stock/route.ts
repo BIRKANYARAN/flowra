@@ -21,30 +21,17 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase-server'
-import { contextFromHeader } from '@/lib/logger'
 import { REQUEST_ID_HEADER } from '@/middleware'
 import { StockQueryService } from '@/lib/services/stock-query.service'
 import { toErrorResponse } from '@/types/errors'
-import { resolveCompanyId } from '@/lib/resolve-company'
+import { resolveApiAuth } from '@/lib/api-auth'
 
 const VALID_VIEWS = new Set(['current', 'history', 'value', 'consistency', 'inconsistent'])
 
 export async function GET(req: NextRequest) {
-  const supabase = createClient()
-  const { data: authData, error: authError } = await supabase.auth.getUser()
-  if (authError || !authData?.user) {
-    return NextResponse.json(
-      { error: 'Unauthorized', code: 'UNAUTHORIZED', type: 'SECURITY' },
-      { status: 401 }
-    )
-  }
-  const user = authData.user
-  const ctx  = contextFromHeader(req.headers.get(REQUEST_ID_HEADER), user.id)
-
-  let companyId: string
-  try { companyId = await resolveCompanyId(user.id, supabase) }
-  catch { return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED', type: 'SYSTEM' }, { status: 409 }) }
+  const auth = await resolveApiAuth(req)
+  if (!auth.ok) return auth.response
+  const { uid, companyId, supabase, ctx } = auth
 
   const url       = new URL(req.url)
   const view      = (url.searchParams.get('view') || 'current').toLowerCase()
@@ -60,7 +47,7 @@ export async function GET(req: NextRequest) {
   try {
     // "inconsistent" — bulk drift report; doesn't need product_id
     if (view === 'inconsistent') {
-      const reports = await StockQueryService.listInconsistentProducts(user.id, companyId, ctx)
+      const reports = await StockQueryService.listInconsistentProducts(uid, companyId, ctx)
       return NextResponse.json(
         { reports, count: reports.length },
         { headers: { [REQUEST_ID_HEADER]: ctx.requestId } }
@@ -76,24 +63,24 @@ export async function GET(req: NextRequest) {
 
     switch (view) {
       case 'current': {
-        const snap = await StockQueryService.getCurrentStock(user.id, companyId, productId, ctx)
+        const snap = await StockQueryService.getCurrentStock(uid, companyId, productId, ctx)
         return NextResponse.json(snap, { headers: { [REQUEST_ID_HEADER]: ctx.requestId } })
       }
       case 'history': {
         const limit  = Number(url.searchParams.get('limit')  ?? '') || undefined
         const offset = Number(url.searchParams.get('offset') ?? '') || undefined
-        const entries = await StockQueryService.getStockHistory(user.id, companyId, productId, { limit, offset }, ctx)
+        const entries = await StockQueryService.getStockHistory(uid, companyId, productId, { limit, offset }, ctx)
         return NextResponse.json(
           { entries, count: entries.length },
           { headers: { [REQUEST_ID_HEADER]: ctx.requestId } }
         )
       }
       case 'value': {
-        const val = await StockQueryService.calculateStockValue(user.id, companyId, productId, ctx)
+        const val = await StockQueryService.calculateStockValue(uid, companyId, productId, ctx)
         return NextResponse.json(val, { headers: { [REQUEST_ID_HEADER]: ctx.requestId } })
       }
       case 'consistency': {
-        const rep = await StockQueryService.checkConsistency(user.id, companyId, productId, ctx)
+        const rep = await StockQueryService.checkConsistency(uid, companyId, productId, ctx)
         return NextResponse.json(rep, { headers: { [REQUEST_ID_HEADER]: ctx.requestId } })
       }
     }

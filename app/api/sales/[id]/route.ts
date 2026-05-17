@@ -1,11 +1,10 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase-server'
-import { resolveCompanyId } from '@/lib/resolve-company'
 import { checkPeriodGuard } from '@/lib/middleware/period-guard'
 import { dualWrite, resolvePeriodId } from '@/lib/services/ledger/dual-write.service'
 import { JournalEntryService } from '@/lib/services/ledger/journal-entry.service'
+import { resolveApiAuth } from '@/lib/api-auth'
 
 const PAYMENT_STATUSES  = ['pending', 'paid', 'partial', 'overdue', 'cancelled'] as const
 const SHIPMENT_STATUSES = ['pending', 'shipped', 'delivered'] as const
@@ -13,15 +12,9 @@ const SHIPMENT_STATUSES = ['pending', 'shipped', 'delivered'] as const
 // ── PATCH — update payment_status and/or shipment_status ─────────────────────
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const supabase = createClient()
-    const { data: authData, error: authError } = await supabase.auth.getUser()
-    if (authError || !authData?.user)
-      return NextResponse.json({ error: 'Unauthorized', code: 'UNAUTHORIZED', type: 'SECURITY' }, { status: 401 })
-    const user = authData.user
-
-    let companyId: string
-    try { companyId = await resolveCompanyId(user.id, supabase) }
-    catch { return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED', type: 'SYSTEM' }, { status: 409 }) }
+    const auth = await resolveApiAuth(req)
+    if (!auth.ok) return auth.response
+    const { uid, companyId, supabase, ctx } = auth
 
     const { id } = params
     const body = await req.json() as Record<string, unknown>
@@ -102,7 +95,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         await dualWrite({
           companyId,
           periodId,
-          createdBy: user.id,
+          createdBy: uid,
           supabase,
           buildEntry: () => JournalEntryService.buildSalePaymentEntry({
             sale_id:      id,
@@ -123,14 +116,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 // ── DELETE — soft-delete a sale ───────────────────────────────────────────────
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const supabase = createClient()
-    const { data: authData, error: authError } = await supabase.auth.getUser()
-    if (authError || !authData?.user) return NextResponse.json({ error: 'Unauthorized', code: 'UNAUTHORIZED', type: 'SECURITY' }, { status: 401 })
-    const user = authData.user
-
-    let companyId: string
-    try { companyId = await resolveCompanyId(user.id, supabase) }
-    catch { return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED', type: 'SYSTEM' }, { status: 409 }) }
+    const auth = await resolveApiAuth(req)
+    if (!auth.ok) return auth.response
+    const { uid, companyId, supabase, ctx } = auth
 
     const { id } = params
 

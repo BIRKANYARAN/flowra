@@ -10,22 +10,16 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient }              from '@/lib/supabase-server'
+import { resolveApiAuth } from '@/lib/api-auth'
 import { contextFromHeader }         from '@/lib/logger'
 import { REQUEST_ID_HEADER }         from '@/middleware'
 import { AuditService }              from '@/lib/audit'
 import { toErrorResponse }           from '@/types/errors'
 
 export async function GET(req: NextRequest) {
-  const supabase = createClient()
-  const { data: authData, error: authError } = await supabase.auth.getUser()
-  if (authError || !authData?.user) {
-    return NextResponse.json(
-      { error: 'Unauthorized', code: 'UNAUTHORIZED', type: 'SECURITY' },
-      { status: 401 }
-    )
-  }
-  const ctx = contextFromHeader(req.headers.get(REQUEST_ID_HEADER), authData.user.id)
+  const auth = await resolveApiAuth(req)
+  if (!auth.ok) return auth.response
+  const { uid, companyId, supabase, ctx } = auth
 
   try {
     const url        = new URL(req.url)
@@ -34,7 +28,7 @@ export async function GET(req: NextRequest) {
       ? Math.min(Number(url.searchParams.get('limit')), 200)
       : 100
 
-    const alerts = await AuditService.listAlerts(authData.user.id, unreadOnly, limit)
+    const alerts = await AuditService.listAlerts(uid, unreadOnly, limit)
     return NextResponse.json(alerts, { headers: { [REQUEST_ID_HEADER]: ctx.requestId } })
   } catch (err) {
     const { body, status } = toErrorResponse(err)

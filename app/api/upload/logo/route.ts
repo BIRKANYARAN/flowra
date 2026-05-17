@@ -5,24 +5,18 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase-server'
-import { contextFromHeader, logger } from '@/lib/logger'
+import { logger } from '@/lib/logger'
 import { REQUEST_ID_HEADER } from '@/middleware'
 import { uploadLogo, getLogoPublicUrl, StorageError } from '@/lib/storage'
-import { resolveCompanyId } from '@/lib/resolve-company'
+import { resolveApiAuth } from '@/lib/api-auth'
 
 // ── GET — return the logo's public URL ───────────────────────────────────────
 // After migration: logo_url in DB is the full public URL.
 // Legacy: logo_url might be a bare storage path — getLogoPublicUrl handles both.
 export async function GET(req: NextRequest) {
-  const supabase = createClient()
-  const { data: authData, error: authError } = await supabase.auth.getUser()
-    if (authError || !authData?.user) return NextResponse.json({ error: 'Unauthorized', code: 'UNAUTHORIZED', type: 'SECURITY' }, { status: 401 })
-    const user = authData.user
-
-  let companyId: string
-  try { companyId = await resolveCompanyId(user.id, supabase) }
-  catch { return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED', type: 'SYSTEM' }, { status: 409 }) }
+  const auth = await resolveApiAuth(req)
+  if (!auth.ok) return auth.response
+  const { uid, companyId, supabase, ctx } = auth
 
   const { data: settings } = await supabase
     .from('user_settings')
@@ -45,16 +39,9 @@ export async function GET(req: NextRequest) {
 
 // ── POST — upload new logo ────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
-  const supabase = createClient()
-  const { data: authData, error: authError } = await supabase.auth.getUser()
-    if (authError || !authData?.user) return NextResponse.json({ error: 'Unauthorized', code: 'UNAUTHORIZED', type: 'SECURITY' }, { status: 401 })
-    const user = authData.user
-
-  const ctx = contextFromHeader(req.headers.get(REQUEST_ID_HEADER), user.id)
-
-  let companyId: string
-  try { companyId = await resolveCompanyId(user.id, supabase) }
-  catch { return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED', type: 'SYSTEM' }, { status: 409 }) }
+  const auth = await resolveApiAuth(req)
+  if (!auth.ok) return auth.response
+  const { uid, companyId, supabase, ctx } = auth
 
   try {
     const contentType = req.headers.get('content-type') ?? ''
@@ -78,14 +65,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Dosya boş olamaz' }, { status: 422 })
     }
 
-    const result = await uploadLogo(user.id, buffer, mimeType)
+    const result = await uploadLogo(uid, buffer, mimeType)
 
     // Persist the permanent public URL (not the storage path — paths can't be
     // used directly as <img src> or in the PDF loader without re-signing).
     const { error: dbErr } = await supabase
       .from('user_settings')
       .upsert(
-        { user_id: user.id, company_id: companyId, logo_url: result.publicUrl },
+        { user_id: uid, company_id: companyId, logo_url: result.publicUrl },
         { onConflict: 'user_id' }
       )
 

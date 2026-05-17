@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse }   from 'next/server'
-import { createClient }                from '@/lib/supabase-server'
 import { resolveCompanyId }            from '@/lib/resolve-company'
 import {
   detectRevenueAnomalies,
@@ -9,6 +8,7 @@ import {
   type MonthlyExpense,
   type CustomerPayment,
 } from '@/lib/engines/anomaly.engine'
+import { resolveApiAuth } from '@/lib/api-auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,14 +17,11 @@ export const dynamic = 'force-dynamic'
 // Returns revenue anomalies, expense anomalies, and customer risk scores
 // for the trailing 6 months. All computations are statistical (no LLM).
 
-export async function GET(_req: NextRequest) {
+export async function GET(req: NextRequest) {
   try {
-    const supabase = createClient()
-    const { data: authData } = await supabase.auth.getUser()
-    if (!authData?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const companyId = await resolveCompanyId(authData.user.id, supabase)
-    if (!companyId) return NextResponse.json({ error: 'No company' }, { status: 400 })
+    const auth = await resolveApiAuth(req)
+    if (!auth.ok) return auth.response
+    const { uid, companyId, supabase, ctx } = auth
 
     // Last 7 months of data (6 baseline + 1 current)
     const months: string[] = []

@@ -2,9 +2,8 @@
 
 export const dynamic = 'force-dynamic'
 
-import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase-server'
-import { resolveCompanyId } from '@/lib/resolve-company'
+import { NextRequest, NextResponse } from 'next/server'
+import { resolveApiAuth } from '@/lib/api-auth'
 
 const BUCKET = 'backups'
 
@@ -24,15 +23,12 @@ const COMPANY_SCOPED_TABLES = [
 type CompanyScopedTable = typeof COMPANY_SCOPED_TABLES[number]
 
 // ── GET: list backup folders ──────────────────────────────────────────────────
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const supabase = createClient()
-    const { data: authData, error: authError } = await supabase.auth.getUser()
-    if (authError || !authData?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const auth = await resolveApiAuth(req)
+    if (!auth.ok) return auth.response
+    const { uid, supabase } = auth
 
-    const uid = authData.user.id
     const prefix = `${uid}/`
 
     // List top-level folders for this user
@@ -93,18 +89,11 @@ export async function GET() {
 }
 
 // ── POST: create a new backup ─────────────────────────────────────────────────
-export async function POST() {
+export async function POST(req: NextRequest) {
   try {
-    const supabase = createClient()
-    const { data: authData, error: authError } = await supabase.auth.getUser()
-    if (authError || !authData?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const uid = authData.user.id
-    let companyId: string
-    try { companyId = await resolveCompanyId(uid, supabase) }
-    catch { return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED', type: 'SYSTEM' }, { status: 409 }) }
+    const auth = await resolveApiAuth(req)
+    if (!auth.ok) return auth.response
+    const { uid, companyId, supabase } = auth
 
     const now = new Date()
     const folderName = now.toISOString().replace(/[-:]/g, '').replace('T', '_').slice(0, 15)

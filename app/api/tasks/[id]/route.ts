@@ -9,9 +9,8 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient }    from '@/lib/supabase-server'
-import { resolveCompanyId } from '@/lib/resolve-company'
 import type { TaskStatus } from '@/types'
+import { resolveApiAuth } from '@/lib/api-auth'
 
 const VALID_STATUSES: TaskStatus[] = ['open', 'done', 'cancelled']
 
@@ -24,18 +23,9 @@ export async function PATCH(
   const taskId = params.id
   if (!taskId) return NextResponse.json({ error: 'id zorunludur' }, { status: 422 })
 
-  const supabase = createClient()
-  const { data: authData, error: authError } = await supabase.auth.getUser()
-  if (authError || !authData?.user) {
-    return NextResponse.json(
-      { error: 'Unauthorized', code: 'UNAUTHORIZED', type: 'SECURITY' },
-      { status: 401 },
-    )
-  }
-
-  let companyId: string
-  try { companyId = await resolveCompanyId(authData.user.id, supabase) }
-  catch { return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED' }, { status: 409 }) }
+  const auth = await resolveApiAuth(req)
+  if (!auth.ok) return auth.response
+  const { uid, companyId, supabase, ctx } = auth
 
   try {
     const body  = await req.json()
@@ -95,24 +85,15 @@ export async function PATCH(
 // ── DELETE ────────────────────────────────────────────────────────────────────
 
 export async function DELETE(
-  _req:    NextRequest,
+  req:     NextRequest,
   { params }: { params: { id: string } },
 ) {
   const taskId = params.id
   if (!taskId) return NextResponse.json({ error: 'id zorunludur' }, { status: 422 })
 
-  const supabase = createClient()
-  const { data: authData, error: authError } = await supabase.auth.getUser()
-  if (authError || !authData?.user) {
-    return NextResponse.json(
-      { error: 'Unauthorized', code: 'UNAUTHORIZED', type: 'SECURITY' },
-      { status: 401 },
-    )
-  }
-
-  let companyId: string
-  try { companyId = await resolveCompanyId(authData.user.id, supabase) }
-  catch { return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED' }, { status: 409 }) }
+  const auth = await resolveApiAuth(req)
+  if (!auth.ok) return auth.response
+  const { uid, companyId, supabase, ctx } = auth
 
   try {
     const { error } = await supabase

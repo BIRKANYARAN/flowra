@@ -1,20 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient }      from '@/lib/supabase-server'
 import { resolveCompanyId }  from '@/lib/resolve-company'
 import { requireRole }       from '@/lib/require-role'
 import { checkPeriodGuard }  from '@/lib/middleware/period-guard'
+import { resolveApiAuth } from '@/lib/api-auth'
 
 export const dynamic = 'force-dynamic'
 
 // GET /api/partners/pcle/events?partner_id=X&limit=50&offset=0
 export async function GET(req: NextRequest) {
   try {
-    const supabase = createClient()
-    const { data: authData } = await supabase.auth.getUser()
-    if (!authData?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const companyId = await resolveCompanyId(authData.user.id, supabase)
-    if (!companyId) return NextResponse.json({ error: 'No company' }, { status: 400 })
+    const auth = await resolveApiAuth(req)
+    if (!auth.ok) return auth.response
+    const { uid, companyId, supabase, ctx } = auth
 
     const params     = req.nextUrl.searchParams
     const partner_id = params.get('partner_id')
@@ -49,15 +46,12 @@ export async function GET(req: NextRequest) {
 // POST /api/partners/pcle/events — record a new PCLE event (admin only)
 export async function POST(req: NextRequest) {
   try {
-    const supabase = createClient()
-    const { data: authData } = await supabase.auth.getUser()
-    if (!authData?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const companyId = await resolveCompanyId(authData.user.id, supabase)
-    if (!companyId) return NextResponse.json({ error: 'No company' }, { status: 400 })
+    const auth = await resolveApiAuth(req)
+    if (!auth.ok) return auth.response
+    const { uid, companyId, supabase, ctx } = auth
 
     try {
-      await requireRole(authData.user.id, companyId, 'admin', supabase)
+      await requireRole(uid, companyId, 'admin', supabase)
     } catch {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
@@ -86,7 +80,7 @@ export async function POST(req: NextRequest) {
         reference:   reference ?? null,
         description: description ?? null,
         metadata:    metadata ?? null,
-        created_by:  authData.user.id,
+        created_by:  uid,
       })
       .select('id')
       .single()

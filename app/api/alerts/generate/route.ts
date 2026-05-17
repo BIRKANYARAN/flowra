@@ -26,12 +26,11 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient }     from '@/lib/supabase-server'
-import { resolveCompanyId } from '@/lib/resolve-company'
 import {
   deriveAlerts,
   type AlertDeriveInput,
 } from '@/lib/alerts/derive'
+import { resolveApiAuth } from '@/lib/api-auth'
 
 interface AlertInsert {
   actor_user_id: string
@@ -45,20 +44,10 @@ interface AlertInsert {
 
 const BURN_EXPENSE_TYPES = ['operational', 'fixed', 'variable']
 
-export async function POST(_req: NextRequest) {
-  const supabase = createClient()
-  const { data: authData, error: authError } = await supabase.auth.getUser()
-  if (authError || !authData?.user) {
-    return NextResponse.json(
-      { error: 'Unauthorized', code: 'UNAUTHORIZED', type: 'SECURITY' },
-      { status: 401 },
-    )
-  }
-  const userId = authData.user.id
-
-  let companyId: string
-  try { companyId = await resolveCompanyId(userId, supabase) }
-  catch { return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED' }, { status: 409 }) }
+export async function POST(req: NextRequest) {
+  const auth = await resolveApiAuth(req)
+  if (!auth.ok) return auth.response
+  const { uid, companyId, supabase, ctx } = auth
 
   // ── PHASE 1: Fetch all required data in parallel ──────────────────────────
 
@@ -84,7 +73,7 @@ export async function POST(_req: NextRequest) {
     supabase
       .from('alerts')
       .select('entity_type, entity_id')
-      .eq('actor_user_id', userId)
+      .eq('actor_user_id', uid)
       .gte('created_at', sevenDaysAgo),
 
     // B. Overdue sales: unpaid/partial/overdue AND > 30 days old (max 50)
@@ -182,7 +171,7 @@ export async function POST(_req: NextRequest) {
   const toInsert: AlertInsert[] = specs
     .filter(s => !recentKeys.has(`${s.entity_type}::${s.entity_id}`))
     .map(s => ({
-      actor_user_id: userId,
+      actor_user_id: uid,
       company_id:    companyId,
       entity_type:   s.entity_type,
       entity_id:     s.entity_id,

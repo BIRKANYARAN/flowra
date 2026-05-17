@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient }              from '@/lib/supabase-server'
 import { resolveCompanyId }          from '@/lib/resolve-company'
 import { detectDuplicates }          from '@/lib/engines/duplicate-detector'
 import type { ExpenseRow }           from '@/lib/engines/duplicate-detector'
+import { resolveApiAuth } from '@/lib/api-auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,12 +13,9 @@ export const dynamic = 'force-dynamic'
 
 export async function GET(req: NextRequest) {
   try {
-    const supabase = createClient()
-    const { data: authData } = await supabase.auth.getUser()
-    if (!authData?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const companyId = await resolveCompanyId(authData.user.id, supabase)
-    if (!companyId) return NextResponse.json({ error: 'No company' }, { status: 400 })
+    const auth = await resolveApiAuth(req)
+    if (!auth.ok) return auth.response
+    const { uid, companyId, supabase, ctx } = auth
 
     const days = Math.min(parseInt(req.nextUrl.searchParams.get('days') ?? '90'), 365)
     const from = new Date(Date.now() - days * 86_400_000).toISOString().slice(0, 10)

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient }              from '@/lib/supabase-server'
 import { resolveCompanyId }          from '@/lib/resolve-company'
 import { FinanceService }            from '@/lib/services/finance.service'
 import { evaluateAlerts }            from '@/lib/engines/alert.engine'
 import type { AlertInputs }          from '@/lib/engines/alert.engine'
+import { resolveApiAuth } from '@/lib/api-auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,14 +13,11 @@ export const dynamic = 'force-dynamic'
 // DB alert_rules table supplies threshold overrides where present.
 // Returns { alerts: DecisionAlert[], count: number }
 
-export async function GET(_req: NextRequest) {
+export async function GET(req: NextRequest) {
   try {
-    const supabase = createClient()
-    const { data: authData } = await supabase.auth.getUser()
-    if (!authData?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const companyId = await resolveCompanyId(authData.user.id, supabase)
-    if (!companyId) return NextResponse.json({ error: 'No company' }, { status: 400 })
+    const auth = await resolveApiAuth(req)
+    if (!auth.ok) return auth.response
+    const { uid, companyId, supabase, ctx } = auth
 
     const today   = new Date()
     const from    = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-01`
@@ -28,7 +25,7 @@ export async function GET(_req: NextRequest) {
     const nowMs   = today.getTime()
 
     const [pnlRes, overdueRes, periodRes, trancheRes, rulesRes] = await Promise.allSettled([
-      FinanceService.getFinancialSummary(authData.user.id, companyId, { from, to }),
+      FinanceService.getFinancialSummary(uid, companyId, { from, to }),
       supabase.from('sales')
         .select('total_try, amount_paid, created_at')
         .eq('company_id', companyId)

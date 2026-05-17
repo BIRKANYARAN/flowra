@@ -30,12 +30,10 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase-server'
-import { resolveCompanyId } from '@/lib/resolve-company'
 import { requireAdmin } from '@/lib/require-role'
 import { PartnerService } from '@/lib/services/partner.service'
-import { contextFromHeader } from '@/lib/logger'
 import { REQUEST_ID_HEADER } from '@/middleware'
+import { resolveApiAuth } from '@/lib/api-auth'
 
 interface DeclareEntry {
   partner_id:      string
@@ -46,18 +44,9 @@ interface DeclareEntry {
 }
 
 export async function POST(req: NextRequest) {
-  const supabase = createClient()
-  const { data: authData, error: authError } = await supabase.auth.getUser()
-  if (authError || !authData?.user) {
-    return NextResponse.json({ error: 'Unauthorized', code: 'UNAUTHORIZED', type: 'SECURITY' }, { status: 401 })
-  }
-
-  const uid = authData.user.id
-  const ctx = contextFromHeader(req.headers.get(REQUEST_ID_HEADER), uid)
-
-  let companyId: string
-  try { companyId = await resolveCompanyId(uid, supabase) }
-  catch { return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED', type: 'SYSTEM' }, { status: 409 }) }
+  const auth = await resolveApiAuth(req)
+  if (!auth.ok) return auth.response
+  const { uid, companyId, supabase, ctx } = auth
 
   // Dividend declaration is a financial event — admin only.
   try { await requireAdmin(uid, companyId, supabase) }

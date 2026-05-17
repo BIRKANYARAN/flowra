@@ -1,30 +1,23 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase-server'
+import { resolveApiAuth } from '@/lib/api-auth'
 import { CURRENCIES_EXTENDED } from '@/types'
 import { getOrFetchFxRate } from '@/lib/fx'
-import { resolveCompanyId } from '@/lib/resolve-company'
 
 const ALLOWED_CURRENCIES = CURRENCIES_EXTENDED as readonly string[]
 const ALLOWED_TYPES = ['purchase', 'customs', 'tax', 'shipping', 'other'] as const
 
 // ── GET — list cost entries for a product ────────────────────────────────────
 export async function GET(req: NextRequest) {
-  const supabase = createClient()
-  const { data: authData, error: authError } = await supabase.auth.getUser()
-  if (authError || !authData?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const auth = await resolveApiAuth(req)
+  if (!auth.ok) return auth.response
+  const { companyId, supabase } = auth
 
   const productId = new URL(req.url).searchParams.get('product_id')
   if (!productId) {
     return NextResponse.json({ error: 'product_id is required' }, { status: 422 })
   }
-
-  let companyId: string
-  try { companyId = await resolveCompanyId(authData.user.id, supabase) }
-  catch { return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED', type: 'SYSTEM' }, { status: 409 }) }
 
   const { data, error } = await supabase
     .from('product_cost_entries')
@@ -40,16 +33,9 @@ export async function GET(req: NextRequest) {
 
 // ── POST — create or bulk-upsert cost entries ────────────────────────────────
 export async function POST(req: NextRequest) {
-  const supabase = createClient()
-  const { data: authData, error: authError } = await supabase.auth.getUser()
-  if (authError || !authData?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-  const userId = authData.user.id
-
-  let companyId: string
-  try { companyId = await resolveCompanyId(userId, supabase) }
-  catch { return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED', type: 'SYSTEM' }, { status: 409 }) }
+  const auth = await resolveApiAuth(req)
+  if (!auth.ok) return auth.response
+  const { uid, companyId, supabase } = auth
 
   const body = await req.json()
   const productId = body.product_id
@@ -108,7 +94,7 @@ export async function POST(req: NextRequest) {
   const { data, error } = await supabase
     .from('product_cost_entries')
     .insert(entries.map(e => ({
-      user_id:    userId,
+      user_id:    uid,
       company_id: companyId,
       product_id: productId,
       ...e,
@@ -121,20 +107,14 @@ export async function POST(req: NextRequest) {
 
 // ── DELETE — soft delete a cost entry ────────────────────────────────────────
 export async function DELETE(req: NextRequest) {
-  const supabase = createClient()
-  const { data: authData, error: authError } = await supabase.auth.getUser()
-  if (authError || !authData?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const auth = await resolveApiAuth(req)
+  if (!auth.ok) return auth.response
+  const { companyId, supabase } = auth
 
   const entryId = new URL(req.url).searchParams.get('id')
   if (!entryId) {
     return NextResponse.json({ error: 'id is required' }, { status: 422 })
   }
-
-  let companyId: string
-  try { companyId = await resolveCompanyId(authData.user.id, supabase) }
-  catch { return NextResponse.json({ error: 'Şirket bilgisi alınamadı', code: 'COMPANY_NOT_RESOLVED', type: 'SYSTEM' }, { status: 409 }) }
 
   const { error } = await supabase
     .from('product_cost_entries')

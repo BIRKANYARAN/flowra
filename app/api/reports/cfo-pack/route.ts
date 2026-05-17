@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse }  from 'next/server'
-import { createClient }               from '@/lib/supabase-server'
 import { resolveCompanyId }           from '@/lib/resolve-company'
 import { FinanceService }             from '@/lib/services/finance.service'
 import { TaxService }                 from '@/lib/services/tax.service'
 import { BalanceSheetService }        from '@/lib/services/balance-sheet.service'
 import { CashFlowStatementService }   from '@/lib/services/cashflow-statement.service'
+import { resolveApiAuth } from '@/lib/api-auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,12 +17,9 @@ export const dynamic = 'force-dynamic'
 
 export async function GET(req: NextRequest) {
   try {
-    const supabase   = createClient()
-    const { data: authData } = await supabase.auth.getUser()
-    if (!authData?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const companyId = await resolveCompanyId(authData.user.id, supabase)
-    if (!companyId) return NextResponse.json({ error: 'No company' }, { status: 400 })
+    const auth = await resolveApiAuth(req)
+    if (!auth.ok) return auth.response
+    const { uid, companyId, supabase, ctx } = auth
 
     const params = req.nextUrl.searchParams
     const now    = new Date()
@@ -39,10 +36,10 @@ export async function GET(req: NextRequest) {
     const companyName = companyRow?.name ?? 'Şirket'
 
     const [fs, taxSummary, balanceSheet, cashFlow, receivables, expenses] = await Promise.allSettled([
-      FinanceService.getFinancialSummary(authData.user.id, companyId, { from, to }),
-      TaxService.getKdvNet(authData.user.id, companyId, { from, to }),
-      BalanceSheetService.compute(authData.user.id, companyId, asOf, supabase),
-      CashFlowStatementService.compute(authData.user.id, companyId, { from, to }, supabase),
+      FinanceService.getFinancialSummary(uid, companyId, { from, to }),
+      TaxService.getKdvNet(uid, companyId, { from, to }),
+      BalanceSheetService.compute(uid, companyId, asOf, supabase),
+      CashFlowStatementService.compute(uid, companyId, { from, to }, supabase),
       // Receivables aging buckets
       supabase.from('sales').select('total_try, created_at, payment_status, customer_name')
         .eq('company_id', companyId).neq('payment_status', 'paid').is('deleted_at', null),
