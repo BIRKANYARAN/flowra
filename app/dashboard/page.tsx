@@ -429,6 +429,51 @@ export default async function DashboardPage() {
   const warnAlerts = topAlerts.filter(a => a.severity === 'warning')
   const infoAlerts = topAlerts.filter(a => a.severity === 'info')
 
+  // ── Adaptive pressure mode ─────────────────────────────────────────────────
+  type PressureMode = 'cash_crisis' | 'collections' | 'tax' | 'healthy'
+  const pressureMode: PressureMode =
+    runwayDays >= 0 && runwayDays < 45 ? 'cash_crisis'
+    : overdueTotal60 > 50_000 && overdueTotal60 > fs.revenue_try * 0.12 ? 'collections'
+    : fs.net_vat_try > 100_000 && cashDistributable < fs.net_vat_try * 2 ? 'tax'
+    : 'healthy'
+
+  // ── Causal context chain — deterministic system intelligence ──────────────
+  interface CtxNode  { label: string; severity: 'ok' | 'warn' | 'critical' }
+  interface CtxChain { nodes: CtxNode[]; conclusion: string; href: string }
+  let ctxChain: CtxChain | null = null
+
+  if (uncollectedSalesTotal > 10_000 && runwayDays >= 0 && runwayDays < 150) {
+    ctxChain = {
+      nodes: [
+        { label: `${fmt(uncollectedSalesTotal)} alacak bekleniyor`, severity: 'warn' },
+        { label: runwayDays < 60 ? `nakit ömrü ${runwayDays}g (kritik)` : `runway ${runwayDays}g`, severity: runwayDays < 60 ? 'critical' : 'warn' },
+        { label: 'dağıtım kapasitesi daralıyor', severity: 'warn' },
+      ],
+      conclusion: 'Tahsil → runway uzar',
+      href: '/dashboard/commercial?tab=collections',
+    }
+  } else if (fs.net_vat_try > 50_000 && cashDistributable < fs.net_vat_try * 2) {
+    ctxChain = {
+      nodes: [
+        { label: `${fmt(fs.net_vat_try)} KDV borcu`, severity: 'warn' },
+        { label: `${fmt(cashDistributable)} dağıtılabilir`, severity: cashDistributable < fs.net_vat_try ? 'critical' : 'ok' },
+        { label: 'nakit rezervi azalıyor', severity: 'warn' },
+      ],
+      conclusion: 'KDV öncesi dağıtım yapma',
+      href: '/dashboard/cfo/tax/kdv',
+    }
+  } else if (monthlyNet < 0 && runwayDays >= 0 && runwayDays < 180) {
+    ctxChain = {
+      nodes: [
+        { label: `${fmt(Math.abs(monthlyNet))} aylık zarar`, severity: 'critical' },
+        { label: `${fmt(monthlyExpenses)}/ay gider`, severity: 'warn' },
+        { label: `${runwayDays}g kaldı`, severity: runwayDays < 90 ? 'critical' : 'warn' },
+      ],
+      conclusion: 'Gider optimizasyonu kritik',
+      href: '/dashboard/operations?tab=expenses',
+    }
+  }
+
   // Delta: last month vs avg of trailing 5 for revenue indicator
   const lastMonthRev = trailing5.length > 0 ? trailing5[trailing5.length - 1]?.revenue ?? 0 : 0
   const prevMonthRev = trailing5.length > 1 ? trailing5[trailing5.length - 2]?.revenue ?? 0 : 0
@@ -474,6 +519,77 @@ export default async function DashboardPage() {
           </Link>
         </div>
       </div>
+
+      {/* ── ADAPTIVE PRESSURE BANNER — only renders when system detects crisis ── */}
+      {pressureMode === 'cash_crisis' && (
+        <div className="flex items-center justify-between gap-3 px-5 py-3 rounded-xl border border-red-200 bg-red-50">
+          <div className="flex items-center gap-3 min-w-0">
+            <span className="text-[9px] font-black uppercase tracking-widest text-red-600 flex-shrink-0">⚠ NAKİT KRİZİ</span>
+            <span className="text-sm text-red-700 font-medium truncate">
+              {runwayDays}g nakit ömrü — acil eylem gerekiyor
+            </span>
+          </div>
+          <Link href="/dashboard/planning?tab=cash-projection"
+            className="flex-shrink-0 text-xs font-bold text-red-700 bg-red-100 hover:bg-red-200 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap">
+            Eylem Planı →
+          </Link>
+        </div>
+      )}
+      {pressureMode === 'collections' && (
+        <div className="flex items-center justify-between gap-3 px-5 py-3 rounded-xl border border-amber-200 bg-amber-50">
+          <div className="flex items-center gap-3 min-w-0">
+            <span className="text-[9px] font-black uppercase tracking-widest text-amber-700 flex-shrink-0">TAHSİLAT BASKI</span>
+            <span className="text-sm text-amber-800 font-medium truncate">
+              {fmt(overdueTotal60)} 60+ gün gecikmiş — nakit dönüşü yavaş
+            </span>
+          </div>
+          <Link href="/dashboard/commercial?tab=collections"
+            className="flex-shrink-0 text-xs font-bold text-amber-800 bg-amber-100 hover:bg-amber-200 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap">
+            Tahsilatı Hızlandır →
+          </Link>
+        </div>
+      )}
+      {pressureMode === 'tax' && (
+        <div className="flex items-center justify-between gap-3 px-5 py-3 rounded-xl border border-orange-200 bg-orange-50">
+          <div className="flex items-center gap-3 min-w-0">
+            <span className="text-[9px] font-black uppercase tracking-widest text-orange-700 flex-shrink-0">VERGİ YÜKÜMLÜLÜĞÜ</span>
+            <span className="text-sm text-orange-800 font-medium truncate">
+              {fmt(fs.net_vat_try)} KDV ödenecek — dağıtım öncesi rezerv ayır
+            </span>
+          </div>
+          <Link href="/dashboard/cfo/tax/kdv"
+            className="flex-shrink-0 text-xs font-bold text-orange-800 bg-orange-100 hover:bg-orange-200 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap">
+            Vergi Planla →
+          </Link>
+        </div>
+      )}
+
+      {/* ── CAUSAL CONTEXT CHAIN — system cross-center intelligence ──────────── */}
+      {ctxChain && (
+        <Link href={ctxChain.href}
+          className="flex items-center gap-3 px-4 py-2.5 bg-white border border-gray-100 rounded-xl shadow-[0_1px_2px_rgba(17,24,39,0.04)] hover:border-gray-200 transition-all overflow-hidden group">
+          <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 flex-shrink-0">BAĞLAM</span>
+          <div className="flex items-center gap-1 overflow-x-auto scrollbar-none flex-1 min-w-0">
+            {ctxChain.nodes.map((node, i) => (
+              <span key={i} className="flex items-center gap-1 flex-shrink-0">
+                {i > 0 && <span className="text-gray-300 text-xs mx-0.5">→</span>}
+                <span className={`text-[11px] px-2 py-0.5 rounded-md font-medium ${
+                  node.severity === 'critical' ? 'bg-red-50 text-red-700 border border-red-100' :
+                  node.severity === 'warn'     ? 'bg-amber-50 text-amber-700 border border-amber-100' :
+                  'bg-gray-50 text-gray-600 border border-gray-100'
+                }`}>
+                  {node.label}
+                </span>
+              </span>
+            ))}
+            <span className="text-gray-300 text-xs mx-1 flex-shrink-0">→</span>
+            <span className="text-[11px] text-gray-500 italic flex-shrink-0">{ctxChain.conclusion}</span>
+          </div>
+          <span className="flex-shrink-0 text-[10px] font-semibold text-primary-600 group-hover:text-primary-700 whitespace-nowrap">
+            Analiz →
+          </span>
+        </Link>
+      )}
 
       {/* ── FINANCIAL INSTRUMENT STRIP — unified state panel ─────────────── */}
       <div className="bg-white border border-gray-100 rounded-xl shadow-[0_1px_2px_rgba(17,24,39,0.04)] overflow-hidden">

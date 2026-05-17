@@ -35,6 +35,7 @@ import { RisksTab }      from './_tabs/RisksTab'
 import { ForecastTab }   from './_tabs/ForecastTab'
 import { QuarterlyTab }  from './_tabs/QuarterlyTab'
 import { CFOTab }        from './_tabs/CFOTab'
+import { FinanceContextBar } from './_shared/FinanceContextBar'
 
 // ── Valid tabs ─────────────────────────────────────────────────────────────────
 
@@ -151,13 +152,18 @@ export default async function FinancePage({ searchParams }: PageProps) {
         )}
       </div>
 
-      {/* ── Tab navigation (sticky) ───────────────────────────────────────────── */}
-      <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm -mx-5 px-5 pt-1 border-b border-gray-100">
-        <UnifiedTabNav tabs={FINANCE_NAV_TABS} activeTab={activeTab} basePath="/dashboard/finance" />
+      {/* ── Tab nav + persistent context bar (sticky together) ──────────────────── */}
+      <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm -mx-5">
+        <div className="px-5 pt-1 border-b border-gray-100">
+          <UnifiedTabNav tabs={FINANCE_NAV_TABS} activeTab={activeTab} basePath="/dashboard/finance" />
+        </div>
+        <div className="px-5">
+          <FinanceContextBar companyId={companyId} />
+        </div>
       </div>
 
       {/* ── Active tab content ────────────────────────────────────────────────── */}
-      <Suspense fallback={<TabSkeleton />}>
+      <Suspense fallback={<div className="mt-5"><TabSkeleton /></div>}>
         {activeTab === 'overview'  && <OverviewTab  {...tabProps} />}
         {activeTab === 'pnl'       && <PnlTab       {...tabProps} />}
         {activeTab === 'balance'   && <BalanceTab   {...tabProps} />}
