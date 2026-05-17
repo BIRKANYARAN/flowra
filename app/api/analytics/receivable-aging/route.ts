@@ -5,7 +5,7 @@
 //
 // CASH-BASIS RULE: Only unpaid/partial/overdue sales are counted.
 //   payment_status = 'paid' → cash already received, excluded from receivables.
-//   payment_status = 'partial' → full total_try treated as receivable (no amount_paid column).
+//   payment_status = 'partial' → outstanding = total_try − amount_paid (not full total_try).
 //
 // Age = days since created_at (invoice date) to today (UTC).
 //
@@ -30,12 +30,12 @@ import { resolveApiAuth } from '@/lib/api-auth'
 export async function GET(req: NextRequest) {
   const auth = await resolveApiAuth(req)
   if (!auth.ok) return auth.response
-  const { uid, companyId, supabase, ctx } = auth
+  const { companyId, supabase } = auth
 
   // Fetch all outstanding receivables (no date filter — want full aging picture)
   const { data, error } = await supabase
     .from('sales')
-    .select('total_try, created_at')
+    .select('total_try, amount_paid, created_at')
     .eq('company_id', companyId)
     .is('deleted_at', null)
     .in('payment_status', ['pending', 'partial', 'overdue'])
@@ -63,7 +63,7 @@ export async function GET(req: NextRequest) {
   }
 
   for (const row of data ?? []) {
-    const amtTry  = Number(row.total_try  ?? 0)
+    const amtTry  = Math.max(0, Number(row.total_try ?? 0) - Number(row.amount_paid ?? 0))
     const createdMs = new Date(row.created_at as string).getTime()
     const ageDays   = Math.floor((nowMs - createdMs) / 86_400_000)
 

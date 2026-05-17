@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
   try {
     const auth = await resolveApiAuth(req)
     if (!auth.ok) return auth.response
-    const { uid, companyId, supabase, ctx } = auth
+    const { uid, companyId, supabase } = auth
 
     const params = req.nextUrl.searchParams
     const now    = new Date()
@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
       BalanceSheetService.compute(uid, companyId, asOf, supabase),
       CashFlowStatementService.compute(uid, companyId, { from, to }, supabase),
       // Receivables aging buckets
-      supabase.from('sales').select('total_try, created_at, payment_status, customer_name')
+      supabase.from('sales').select('total_try, amount_paid, created_at, payment_status, customer_name')
         .eq('company_id', companyId).neq('payment_status', 'paid').is('deleted_at', null),
       // Expense category breakdown
       supabase.from('expenses').select('expense_type, amount_try')
@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
     if (receivables.status === 'fulfilled' && receivables.value.data) {
       for (const s of receivables.value.data) {
         const daysDiff = Math.round((today.getTime() - new Date(s.created_at as string).getTime()) / 86_400_000)
-        const amt = Number(s.total_try ?? 0)
+        const amt = Math.max(0, Number(s.total_try ?? 0) - Number(s.amount_paid ?? 0))
         if (daysDiff <= 30)      aging.current    += amt
         else if (daysDiff <= 60) aging.overdue_30  += amt
         else if (daysDiff <= 90) aging.overdue_60  += amt
