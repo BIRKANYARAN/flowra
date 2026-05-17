@@ -41,7 +41,7 @@ export async function CatalogCommandBar({ companyId }: Props) {
     // We sum up cost to get a weighted average for TRY-lot products
     supabase
       .from('stock_lots')
-      .select('product_id, qty_remaining, entry_cost_try')
+      .select('product_id, qty_remaining, cost_price_try')
       .eq('company_id', companyId)
       .is('deleted_at', null)
       .gt('qty_remaining', 0),
@@ -68,7 +68,7 @@ export async function CatalogCommandBar({ companyId }: Props) {
     const pid = lot.product_id
     if (!pid) continue
     const qty  = Number(lot.qty_remaining ?? 0)
-    const cost = Number(lot.entry_cost_try ?? 0)
+    const cost = Number((lot as { cost_price_try?: number | null }).cost_price_try ?? 0)
     if (qty <= 0) continue
     const prev = productCostMap.get(pid) ?? { totalQty: 0, totalCostTRY: 0 }
     productCostMap.set(pid, {

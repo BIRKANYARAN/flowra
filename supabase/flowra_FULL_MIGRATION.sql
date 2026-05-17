@@ -1326,21 +1326,22 @@ create or replace function fn_guard_period_write()
 returns trigger
 language plpgsql as $$
 declare
-  v_status text;
+  v_status  text;
   v_tx_date date;
+  v_row     jsonb;
 begin
-  -- Determine the transaction date from whichever column exists
+  v_row := to_jsonb(new);
   v_tx_date := coalesce(
-    (new::jsonb->>'sale_date')::date,
-    (new::jsonb->>'expense_date')::date,
-    (new::jsonb->>'entry_date')::date,
-    (new::jsonb->>'tx_date')::date,
+    (v_row->>'sale_date')::date,
+    (v_row->>'expense_date')::date,
+    (v_row->>'entry_date')::date,
+    (v_row->>'tx_date')::date,
     current_date
   );
 
   select status::text into v_status
   from accounting_periods
-  where company_id = (new::jsonb->>'company_id')::uuid
+  where company_id = (v_row->>'company_id')::uuid
     and period_start <= v_tx_date
     and period_end   >= v_tx_date
   limit 1;

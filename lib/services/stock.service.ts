@@ -339,21 +339,16 @@ export class StockService {
         })
       }
 
+      // Map to actual stock_movements DB column names
       const movementPayload: Record<string, unknown> = {
-        user_id:        userId,
-        product_id:     input.product_id,
-        reference_type: input.reference_type,
-        movement_type:  movementType,
-        qty_change:     input.qty_change,
-        qty_before:      committedQtyBefore,
-        qty_after:       committedQtyAfter,
-        unit_cost:      effectiveCost,
-        notes:          input.notes ?? null,
-        company_id:     companyId,
-      }
-      // Add entry_date if provided (stock-in date for holding-time calculations)
-      if (input.entry_date) {
-        movementPayload.entry_date = input.entry_date
+        user_id:    userId,
+        product_id: input.product_id,
+        company_id: companyId,
+        type:       input.reference_type,  // actual column: type (purchase/return/adjustment/write_off)
+        qty:        input.qty_change,       // actual column: qty
+        unit_cost:  effectiveCost,          // unit_cost ✓
+        notes:      input.notes ?? null,
+        moved_at:   input.entry_date || new Date().toISOString().slice(0, 10), // actual column: moved_at
       }
 
       const { data: movement, error: mvErr } = await supabase
@@ -415,23 +410,18 @@ export class StockService {
         const entryCostEur = fxEurTry > 0 ? round2(entryCostTry / fxEurTry) : 0
 
         const lotPayload: Record<string, unknown> = {
-          user_id:          userId,
-          company_id:       companyId,
-          product_id:       input.product_id,
-          qty_initial:      input.qty_change,
-          qty_remaining:    input.qty_change,
-          unit_cost:        effectiveCost,
-          cost_currency:    costCurrency,
-          fx_rate_at_entry: fxRateAtEntry,
-          entry_date:       entryDate,
-          source_type:      input.reference_type as string,
-          source_id:        movement?.id ?? null,
-          // Multi-currency cost snapshot (frozen at entry date)
-          entry_cost_try:   entryCostTry,
-          entry_cost_usd:   entryCostUsd > 0 ? entryCostUsd : null,
-          entry_cost_eur:   entryCostEur > 0 ? entryCostEur : null,
-          entry_fx_usd_try: fxUsdTry > 0 ? fxUsdTry : null,
-          entry_fx_eur_try: fxEurTry > 0 ? fxEurTry : null,
+          user_id:        userId,
+          company_id:     companyId,
+          product_id:     input.product_id,
+          qty_initial:    input.qty_change,
+          qty_remaining:  input.qty_change,
+          cost_price:     effectiveCost,        // actual column name
+          cost_currency:  costCurrency,
+          cost_fx_rate:   fxRateAtEntry,        // actual column name
+          received_at:    entryDate,            // actual column name
+          movement_id:    movement?.id ?? null, // actual column name
+          // Frozen TRY cost snapshot
+          cost_price_try: entryCostTry,         // actual column name
         }
         const { error: lotErr } = await supabase
           .from('stock_lots')

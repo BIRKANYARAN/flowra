@@ -189,8 +189,8 @@ export default async function DashboardPage() {
     }, [] as Array<{ id: string; total_try: number | null }>),
 
     sq(async () => {
-      const { data } = await supabase.from('stock_lots').select('qty_remaining, entry_cost_try').eq('company_id', companyId).gt('qty_remaining', 0)
-      return (data ?? []).reduce((sum, l) => sum + Number(l.qty_remaining) * Number(l.entry_cost_try), 0)
+      const { data } = await supabase.from('stock_lots').select('qty_remaining, cost_price_try').eq('company_id', companyId).gt('qty_remaining', 0).is('deleted_at', null)
+      return (data ?? []).reduce((sum, l) => sum + Number(l.qty_remaining) * Number((l as { cost_price_try?: number | null }).cost_price_try ?? 0), 0)
     }, 0),
 
     sq(async () => {

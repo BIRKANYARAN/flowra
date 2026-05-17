@@ -299,7 +299,7 @@ export async function getDistributableCash(
       .lte('expense_date', to),
     supabase
       .from('expenses')
-      .select('amount_try')
+      .select('amount_try, expense_type')   // include expense_type for filtering
       .eq('company_id', companyId)
       .neq('payment_status', 'paid')
       .is('deleted_at', null),
@@ -313,8 +313,12 @@ export async function getDistributableCash(
       CASH_EXCLUDED_TYPES.has(row.expense_type ?? '') ? s : s + Number(row.amount_try ?? 0),
     0,
   )
+  // Only count operational unpaid expenses as obligations — exclude financing flows
+  // (partner loan repayments, dividends etc. are not operational obligations)
   const unpaidExpenses = (unpaidExpRes.data ?? []).reduce(
-    (s: number, row: { amount_try: number }) => s + Number(row.amount_try ?? 0), 0,
+    (s: number, row: { amount_try: number; expense_type?: string | null }) =>
+      CASH_EXCLUDED_TYPES.has(row.expense_type ?? '') ? s : s + Number(row.amount_try ?? 0),
+    0,
   )
 
   const cashBalance            = r2(paymentsReceived - paidExpenses)

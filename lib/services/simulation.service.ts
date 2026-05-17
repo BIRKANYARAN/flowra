@@ -333,12 +333,12 @@ export class SimulationService {
     // ── 1. Product cost: WAC of remaining stock ────────────────────────────
     const { data: lots, error: lotsErr } = await supabase
       .from('stock_lots')
-      .select('qty_remaining, unit_cost, fx_rate_at_entry, entry_cost_try')
+      .select('qty_remaining, cost_price, cost_fx_rate, cost_price_try')
       .eq('product_id', input.product_id)
       .eq('company_id', companyId)
       .gt('qty_remaining', 0)
       .is('deleted_at', null)
-      .order('entry_date', { ascending: true })   // FIFO order for transparency
+      .order('received_at', { ascending: true })   // FIFO order for transparency
 
     if (lotsErr) {
       if (ctx) await logger.error(ctx, 'simulation:lots_error', { error: lotsErr.message })
@@ -349,11 +349,13 @@ export class SimulationService {
     let totalStockVal = 0
     for (const lot of lots ?? []) {
       const qty = Number(lot.qty_remaining ?? 0)
-      // entry_cost_try is the Phase 3 frozen TRY snapshot (preferred)
+      // cost_price_try is the frozen TRY snapshot (preferred)
       const perUnitTry =
-        lot.entry_cost_try != null && lot.entry_cost_try !== '' && Number(lot.entry_cost_try) > 0
-          ? Number(lot.entry_cost_try)
-          : Number(lot.unit_cost ?? 0) * Number(lot.fx_rate_at_entry ?? 1)
+        (lot as { cost_price_try?: number | null }).cost_price_try != null &&
+        Number((lot as { cost_price_try?: number | null }).cost_price_try) > 0
+          ? Number((lot as { cost_price_try?: number | null }).cost_price_try)
+          : Number((lot as { cost_price?: number | null }).cost_price ?? 0) *
+            Number((lot as { cost_fx_rate?: number | null }).cost_fx_rate ?? 1)
       totalStockQty += qty
       totalStockVal += qty * perUnitTry
     }
