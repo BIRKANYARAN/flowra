@@ -106,7 +106,8 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
         {!success && <span />}
         <button
           onClick={showForm ? closeForm : openForm}
-          className="inline-flex items-center gap-1.5 bg-primary-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-primary-700 transition-colors"
+          disabled={saving}
+          className="inline-flex items-center gap-1.5 bg-primary-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-primary-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {showForm ? '✕ Kapat' : '+ Yeni Tranche'}
         </button>

@@ -227,8 +227,17 @@ export default function PartnersPage() {
 
   async function deletePartner(partnerId: string, name: string) {
     if (!confirm(`"${name}" ortağını silmek istediğinizden emin misiniz?`)) return
-    const res = await fetch(`/api/partners/${partnerId}`, { method: 'DELETE' })
-    if (res.ok) setPartners(prev => prev.filter(p => p.id !== partnerId))
+    try {
+      const res = await fetch(`/api/partners/${partnerId}`, { method: 'DELETE' })
+      if (res.ok) {
+        setPartners(prev => prev.filter(p => p.id !== partnerId))
+      } else {
+        const d = await res.json().catch(() => ({})) as { error?: string }
+        setFetchError(d.error ?? `Ortak silinemedi (HTTP ${res.status})`)
+      }
+    } catch {
+      setFetchError('Ağ hatası — ortak silinemedi. Lütfen tekrar deneyin.')
+    }
   }
 
   async function toggleTxHistory(partnerId: string) {

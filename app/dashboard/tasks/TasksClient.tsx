@@ -96,7 +96,9 @@ export default function TasksClient({ initialTasks, initialCustomers, initialSal
 
   // ── Update status ────────────────────────────────────────────────────────────
   async function updateStatus(id: string, status: TaskStatus) {
-    // Optimistic update
+    // Capture old status BEFORE the optimistic update — the rollback needs this
+    // value, not the post-update value that `t.status` would refer to later.
+    const prevStatus = tasks.find(t => t.id === id)?.status
     setTasks(prev => prev.map(t => t.id === id ? { ...t, status } : t))
     setError('')
     const res = await fetch(`/api/tasks/${id}`, {
@@ -107,8 +109,10 @@ export default function TasksClient({ initialTasks, initialCustomers, initialSal
     if (!res.ok) {
       const d = await res.json().catch(() => ({})) as Record<string, unknown>
       setError((d.error as string | undefined) ?? 'Güncelleme başarısız')
-      // Revert optimistic update
-      setTasks(prev => prev.map(t => t.id === id ? { ...t, status: t.status } : t))
+      // Revert to the pre-optimistic status (prevStatus was captured above)
+      if (prevStatus !== undefined) {
+        setTasks(prev => prev.map(t => t.id === id ? { ...t, status: prevStatus } : t))
+      }
     }
   }
 

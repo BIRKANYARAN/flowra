@@ -79,6 +79,7 @@ export default function ExpensesClient({
   const [error,             setError]             = useState('')
   const [recurringError,    setRecurringError]    = useState('')
   const [saving,            setSaving]            = useState(false)
+  const [deleting,          setDeleting]          = useState<string | null>(null)
   const [formErr,           setFormErr]           = useState('')
   const [showForm,          setShowForm]          = useState(false)
   const [confirmExpId,      setConfirmExpId]      = useState<string | null>(null)
@@ -183,21 +184,55 @@ export default function ExpensesClient({
       if (!res.ok) { setFormErr(json.error ?? 'Kayıt hatası'); setSaving(false); return }
     }
 
-    closeForm(); setSaving(false)
-    await refresh()
+    // Keep saving=true until refresh completes so the button stays disabled
+    // and the user can't re-submit while the list is re-fetching.
+    try {
+      closeForm()
+      await refresh()
+    } finally {
+      setSaving(false)
+    }
   }
 
   // ── Delete ────────────────────────────────────────────────────────────────
   async function del(id: string) {
-    await fetch(`/api/expenses?id=${id}`, { method: 'DELETE' })
-    setConfirmExpId(null)
-    await refresh()
+    if (deleting) return                     // prevent double-click / concurrent deletes
+    setDeleting(id)
+    setError('')
+    try {
+      const res = await fetch(`/api/expenses?id=${id}`, { method: 'DELETE' })
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({})) as Record<string, unknown>
+        setError((d.error as string | undefined) ?? 'Silinemedi — lütfen tekrar deneyin.')
+        return
+      }
+      setConfirmExpId(null)
+      await refresh()
+    } catch {
+      setError('Ağ hatası. Lütfen tekrar deneyin.')
+    } finally {
+      setDeleting(null)
+    }
   }
 
   async function delRecurring(id: string) {
-    await fetch(`/api/recurring-expenses?id=${id}`, { method: 'DELETE' })
-    setConfirmRecId(null)
-    await refresh()
+    if (deleting) return
+    setDeleting(id)
+    setRecurringError('')
+    try {
+      const res = await fetch(`/api/recurring-expenses?id=${id}`, { method: 'DELETE' })
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({})) as Record<string, unknown>
+        setRecurringError((d.error as string | undefined) ?? 'Silinemedi — lütfen tekrar deneyin.')
+        return
+      }
+      setConfirmRecId(null)
+      await refresh()
+    } catch {
+      setRecurringError('Ağ hatası. Lütfen tekrar deneyin.')
+    } finally {
+      setDeleting(null)
+    }
   }
 
   const totalTRY = list.reduce((s, e) => s + Number(e.amount_try), 0)
@@ -384,12 +419,18 @@ export default function ExpensesClient({
                       </span>
                       {confirmExpId === e.id ? (
                         <span className="flex items-center gap-1">
-                          <button onClick={() => del(e.id)}
-                            className="text-xs text-white bg-red-500 hover:bg-red-600 px-2 py-0.5 rounded-lg transition-colors font-semibold">
-                            Evet
+                          <button
+                            onClick={() => del(e.id)}
+                            disabled={deleting === e.id}
+                            className="text-xs text-white bg-red-500 hover:bg-red-600 px-2 py-0.5 rounded-lg transition-colors font-semibold disabled:opacity-50"
+                          >
+                            {deleting === e.id ? '…' : 'Evet'}
                           </button>
-                          <button onClick={() => setConfirmExpId(null)}
-                            className="text-xs text-gray-400 px-1.5 py-0.5 rounded-lg hover:bg-gray-100 transition-colors">
+                          <button
+                            onClick={() => setConfirmExpId(null)}
+                            disabled={deleting === e.id}
+                            className="text-xs text-gray-400 px-1.5 py-0.5 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50"
+                          >
                             İptal
                           </button>
                         </span>
@@ -450,12 +491,18 @@ export default function ExpensesClient({
                       <div className="col-span-1 text-right">
                         {confirmRecId === r.id ? (
                           <span className="flex items-center justify-end gap-1">
-                            <button onClick={() => delRecurring(r.id)}
-                              className="text-xs text-white bg-red-500 hover:bg-red-600 px-2 py-0.5 rounded-lg transition-colors font-semibold">
-                              Evet
+                            <button
+                              onClick={() => delRecurring(r.id)}
+                              disabled={deleting === r.id}
+                              className="text-xs text-white bg-red-500 hover:bg-red-600 px-2 py-0.5 rounded-lg transition-colors font-semibold disabled:opacity-50"
+                            >
+                              {deleting === r.id ? '…' : 'Evet'}
                             </button>
-                            <button onClick={() => setConfirmRecId(null)}
-                              className="text-xs text-gray-400 px-1.5 py-0.5 rounded-lg hover:bg-gray-100 transition-colors">
+                            <button
+                              onClick={() => setConfirmRecId(null)}
+                              disabled={deleting === r.id}
+                              className="text-xs text-gray-400 px-1.5 py-0.5 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50"
+                            >
                               İptal
                             </button>
                           </span>

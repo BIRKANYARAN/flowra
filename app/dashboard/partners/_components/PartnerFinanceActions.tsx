@@ -138,11 +138,12 @@ export function PartnerFinanceActions({ partners, onRefresh }: PartnerFinanceAct
   return (
     <div className="bg-white border border-gray-100 rounded-xl shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
 
-      {/* Collapsed header / toggle */}
+      {/* Collapsed header / toggle — disabled while save is in flight */}
       <button
         type="button"
-        onClick={() => { setOpen(prev => !prev); setError(null); setSuccess(null) }}
-        className="w-full flex items-center justify-between px-5 py-4 text-left group"
+        onClick={() => { if (!saving) { setOpen(prev => !prev); setError(null); setSuccess(null) } }}
+        disabled={saving}
+        className="w-full flex items-center justify-between px-5 py-4 text-left group disabled:cursor-not-allowed"
       >
         <div className="flex items-center gap-2">
           <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">
