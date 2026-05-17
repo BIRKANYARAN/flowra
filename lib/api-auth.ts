@@ -57,7 +57,26 @@ export type ApiAuthResult = ApiAuthSuccess | ApiAuthFailure
 export async function resolveApiAuth(req: NextRequest): Promise<ApiAuthResult> {
   const supabase = createClient()
 
-  const { data: authData, error: authError } = await supabase.auth.getUser()
+  // Support both cookie-based (SSR) and Bearer token (API client) auth.
+  // The Supabase SSR client reads cookies by default; we supplement it with
+  // the Authorization header so API clients (curl, mobile, etc.) also work.
+  const authHeader = req.headers.get('authorization') ?? ''
+  const bearerToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null
+
+  let authData: { user: { id: string } | null }
+  let authError: unknown
+
+  if (bearerToken) {
+    // Validate the JWT using Supabase's getUser(token) API
+    const result = await supabase.auth.getUser(bearerToken)
+    authData  = result.data
+    authError = result.error
+  } else {
+    const result = await supabase.auth.getUser()
+    authData  = result.data
+    authError = result.error
+  }
+
   if (authError || !authData?.user) {
     return {
       ok: false,
