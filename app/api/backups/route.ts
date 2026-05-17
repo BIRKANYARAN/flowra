@@ -41,35 +41,26 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Yedek listesi alınamadı' }, { status: 500 })
     }
 
-    // For each folder, read metadata.json if it exists
-    const backups = []
-    for (const folder of folders ?? []) {
-      if (!folder.name) continue
-
+    // Parallel: for each folder fetch metadata.json + file list concurrently
+    const validFolders = (folders ?? []).filter(f => f.name)
+    const backups = await Promise.all(validFolders.map(async folder => {
       const folderPath = `${prefix}${folder.name}`
 
-      // Try to get metadata
-      const { data: metaFile } = await supabase.storage
-        .from(BUCKET)
-        .download(`${folderPath}/metadata.json`)
+      const [{ data: metaFile }, { data: files }] = await Promise.all([
+        supabase.storage.from(BUCKET).download(`${folderPath}/metadata.json`),
+        supabase.storage.from(BUCKET).list(folderPath, { limit: 50 }),
+      ])
 
       let metadata: Record<string, unknown> = {}
       if (metaFile) {
-        try {
-          metadata = JSON.parse(await metaFile.text())
-        } catch { /* ignore parse errors */ }
+        try { metadata = JSON.parse(await metaFile.text()) } catch { /* ignore */ }
       }
-
-      // List files in this backup folder
-      const { data: files } = await supabase.storage
-        .from(BUCKET)
-        .list(folderPath, { limit: 50 })
 
       const totalSize = (files ?? []).reduce((sum, f) => sum + (f.metadata?.size ?? 0), 0)
 
-      backups.push({
-        name: folder.name,
-        path: folderPath,
+      return {
+        name:      folder.name,
+        path:      folderPath,
         fileCount: (files ?? []).length,
         totalSize,
         metadata,
@@ -78,8 +69,8 @@ export async function GET(req: NextRequest) {
           size: f.metadata?.size ?? 0,
           path: `${folderPath}/${f.name}`,
         })),
-      })
-    }
+      }
+    }))
 
     return NextResponse.json({ backups })
   } catch (err) {
