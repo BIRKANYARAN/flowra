@@ -45,3 +45,24 @@ export {
 // ── Layout atoms ──────────────────────────────────────────────────────────────
 export { FlowraLogo } from '@/components/ui/FlowraLogo'
 export { Icon }       from '@/components/ui/Icon'
+
+// ── OS Shell — canonical layout primitives (use for all new screens) ──────────
+export {
+  TOKENS,
+  PageShell,
+  PageHero,
+  SectionLabel,
+  Panel,
+  PanelHeader,
+  KpiStrip,
+  KpiCell,
+  PressureBanner,
+  EmptySlate,
+  Skeleton,
+  SkeletonPanel,
+  SkeletonKpiStrip,
+  DataTable,
+  DataTh,
+  DataTd,
+  AlertRow,
+} from '@/components/ds/shell'

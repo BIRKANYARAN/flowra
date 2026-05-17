@@ -10,6 +10,7 @@ import { createClient } from '@/lib/supabase-server'
 import { resolveCompanyId } from '@/lib/resolve-company'
 import { HubTabNav } from '@/app/dashboard/_shared/HubTabNav'
 import { COMMERCIAL_TABS } from '@/lib/nav-config'
+import { CommercialContextBar } from './_shared/CommercialContextBar'
 
 function TabSkeleton() {
   return (
@@ -91,9 +92,12 @@ export default async function CommercialPage({ searchParams }: PageProps) {
         <p className="text-sm text-gray-400 mt-1">{tabSubtitles[activeTab] ?? ''}</p>
       </div>
 
-      {/* Sticky tab nav */}
-      <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm -mx-5 px-5 pt-1 border-b border-gray-100">
-        <HubTabNav tabs={TABS} activeTab={activeTab} basePath="/dashboard/commercial" />
+      {/* Sticky tab nav + context bar */}
+      <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm -mx-5">
+        <div className="px-5 pt-1 border-b border-gray-100">
+          <HubTabNav tabs={TABS} activeTab={activeTab} basePath="/dashboard/commercial" />
+        </div>
+        <CommercialContextBar companyId={companyId} />
       </div>
 
       <Suspense fallback={<TabSkeleton />}>

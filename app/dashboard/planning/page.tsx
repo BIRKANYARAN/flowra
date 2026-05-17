@@ -10,6 +10,7 @@ import { createClient } from '@/lib/supabase-server'
 import { resolveCompanyId } from '@/lib/resolve-company'
 import { HubTabNav } from '@/app/dashboard/_shared/HubTabNav'
 import { PLANNING_TABS } from '@/lib/nav-config'
+import { PlanningContextBar } from './_shared/PlanningContextBar'
 import { SimulationContent } from './_tabs/SimulationContent'
 import { TasksContent }      from './_tabs/TasksContent'
 
@@ -91,9 +92,12 @@ export default async function PlanningPage({ searchParams }: PageProps) {
         <p className="text-sm text-gray-400 mt-1">{planSubs[activeTab] ?? ''}</p>
       </div>
 
-      {/* Sticky tab nav */}
-      <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm -mx-5 px-5 pt-1 border-b border-gray-100">
-        <HubTabNav tabs={TABS} activeTab={activeTab} basePath="/dashboard/planning" />
+      {/* Sticky tab nav + context bar */}
+      <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm -mx-5">
+        <div className="px-5 pt-1 border-b border-gray-100">
+          <HubTabNav tabs={TABS} activeTab={activeTab} basePath="/dashboard/planning" />
+        </div>
+        <PlanningContextBar companyId={companyId} />
       </div>
 
       <Suspense fallback={<TabSkeleton />}>

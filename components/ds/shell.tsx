@@ -1,0 +1,524 @@
+'use client'
+
+// ─────────────────────────────────────────────────────────────────────────────
+// components/ds/shell.tsx — Flowra OS Shell Primitives
+//
+// THE canonical set of layout and content primitives for Flowra's executive
+// operating system. Every new screen MUST use these instead of ad-hoc divs.
+//
+// GOVERNANCE RULES:
+//
+//   PageShell      → wraps every dashboard page    (max-w-5xl, gap-5)
+//   Panel          → every content block            (white, gray-100 border, rounded-xl, subtle shadow)
+//   PanelHeader    → panel title row                (border-b, px-5 py-3.5)
+//   KpiStrip       → horizontal instrument bar      (divide-x, single container)
+//   KpiCell        → individual reading in a strip  (px-5 py-3.5)
+//   SectionLabel   → uppercase category label       (text-[10px] font-black uppercase tracking-widest)
+//   PageHero       → page title + subtitle + CTA
+//   PressureBanner → adaptive pressure mode banner  (severity-aware colors)
+//   EmptySlate     → empty state inside a panel
+//   Skeleton       → loading placeholder            (animate-pulse)
+//   DataTable      → canonical table wrapper
+//   DataRow        → canonical table row (hover state, divide-y)
+// ─────────────────────────────────────────────────────────────────────────────
+
+import { ReactNode } from 'react'
+import React from 'react'
+import Link from 'next/link'
+import { cn } from '@/components/ui'
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TOKENS (canonical values — never deviate from these)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const TOKENS = {
+  // Card / Panel
+  panel:         'bg-white border border-gray-100 rounded-xl shadow-[0_1px_2px_rgba(17,24,39,0.04)]',
+  panelHover:    'hover:shadow-[0_2px_6px_rgba(17,24,39,0.07)] hover:border-gray-200 transition-all',
+  panelCritical: 'bg-red-50   border border-red-200   rounded-xl',
+  panelWarn:     'bg-amber-50 border border-amber-200 rounded-xl',
+  panelOk:       'bg-emerald-50 border border-emerald-200 rounded-xl',
+
+  // Section label (inner, above a block)
+  label: 'text-[10px] font-black uppercase tracking-widest text-gray-400 leading-none',
+
+  // Page-level section divider label
+  pageLabel: 'text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1.5',
+
+  // Page hero title
+  heroTitle: 'text-2xl font-black tracking-tight text-gray-900 leading-tight',
+  heroSub:   'text-sm text-gray-400 mt-1',
+  heroSuper: 'text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1',
+
+  // Typography
+  valueXl:  'text-xl font-black tabular-nums leading-none',
+  value2xl: 'text-[22px] font-black tabular-nums leading-none',
+  valueSm:  'text-sm font-black tabular-nums',
+  mono:     'font-mono tabular-nums',
+
+  // Status colors
+  ok:       'text-emerald-700',
+  warn:     'text-amber-700',
+  critical: 'text-red-600',
+  neutral:  'text-gray-900',
+
+  // Layout
+  page:       'flex flex-col gap-5 max-w-5xl',
+  pageNarrow: 'flex flex-col gap-5 max-w-3xl',
+  pageWide:   'flex flex-col gap-5',
+} as const
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PageShell
+// ─────────────────────────────────────────────────────────────────────────────
+
+export function PageShell({
+  children,
+  width = 'default',
+  className,
+}: {
+  children: ReactNode
+  width?: 'narrow' | 'default' | 'wide'
+  className?: string
+}) {
+  const w = width === 'narrow' ? TOKENS.pageNarrow : width === 'wide' ? TOKENS.pageWide : TOKENS.page
+  return <div className={cn(w, className)}>{children}</div>
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PageHero — canonical page title block
+// ─────────────────────────────────────────────────────────────────────────────
+
+export function PageHero({
+  super: superLabel,
+  title,
+  sub,
+  cta,
+}: {
+  super?: string
+  title: string
+  sub?: string
+  cta?: ReactNode
+}) {
+  return (
+    <div className="flex items-end justify-between gap-4 flex-wrap">
+      <div>
+        {superLabel && (
+          <div className={TOKENS.heroSuper}>{superLabel}</div>
+        )}
+        <h1 className={TOKENS.heroTitle}>{title}</h1>
+        {sub && <p className={TOKENS.heroSub}>{sub}</p>}
+      </div>
+      {cta && <div className="flex items-center gap-2 flex-shrink-0">{cta}</div>}
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SectionLabel — uppercase 10px category label
+// ─────────────────────────────────────────────────────────────────────────────
+
+export function SectionLabel({
+  children,
+  className,
+}: {
+  children: ReactNode
+  className?: string
+}) {
+  return <div className={cn(TOKENS.label, className)}>{children}</div>
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Panel — canonical content block
+// ─────────────────────────────────────────────────────────────────────────────
+
+export function Panel({
+  children,
+  className,
+  tone,
+  as,
+  href,
+  onClick,
+}: {
+  children: ReactNode
+  className?: string
+  tone?: 'default' | 'critical' | 'warn' | 'ok'
+  as?: string
+  href?: string
+  onClick?: () => void
+}) {
+  const toneClass =
+    tone === 'critical' ? TOKENS.panelCritical :
+    tone === 'warn'     ? TOKENS.panelWarn     :
+    tone === 'ok'       ? TOKENS.panelOk       :
+    TOKENS.panel
+
+  const isInteractive = !!(href || onClick)
+
+  if (href) {
+    return (
+      <Link
+        href={href}
+        className={cn(toneClass, TOKENS.panelHover, 'block overflow-hidden', className)}
+      >
+        {children}
+      </Link>
+    )
+  }
+
+  const DivEl = (as ?? 'div') as React.ElementType
+  return (
+    <DivEl
+      className={cn(toneClass, isInteractive && TOKENS.panelHover, 'overflow-hidden', className)}
+      onClick={onClick}
+    >
+      {children}
+    </DivEl>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PanelHeader — panel title row with optional action
+// ─────────────────────────────────────────────────────────────────────────────
+
+export function PanelHeader({
+  label,
+  sub,
+  action,
+  tight = false,
+}: {
+  label: string
+  sub?: string
+  action?: ReactNode
+  tight?: boolean
+}) {
+  return (
+    <div className={cn(
+      'flex items-center justify-between border-b border-gray-50',
+      tight ? 'px-4 py-2.5' : 'px-5 py-3.5'
+    )}>
+      <div>
+        <div className={TOKENS.label}>{label}</div>
+        {sub && <div className="text-[10px] text-gray-400 mt-0.5">{sub}</div>}
+      </div>
+      {action}
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// KpiStrip — horizontal instrument bar (Bloomberg-style)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export function KpiStrip({
+  children,
+  cols,
+  className,
+}: {
+  children: ReactNode
+  cols?: 2 | 3 | 4 | 5 | 6
+  className?: string
+}) {
+  const colClass = cols ? {
+    2: 'grid-cols-2',
+    3: 'grid-cols-3',
+    4: 'grid-cols-4',
+    5: 'grid-cols-5',
+    6: 'grid-cols-6',
+  }[cols] : undefined
+
+  return (
+    <div className={cn(
+      TOKENS.panel,
+      'overflow-hidden',
+      className
+    )}>
+      <div className={cn(
+        colClass ? `grid ${colClass} divide-x divide-gray-100` : 'flex items-stretch divide-x divide-gray-100 overflow-x-auto scrollbar-none',
+      )}>
+        {children}
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// KpiCell — individual reading inside a KpiStrip
+// ─────────────────────────────────────────────────────────────────────────────
+
+export function KpiCell({
+  label,
+  value,
+  sub,
+  tone = 'neutral',
+  href,
+  compact = false,
+}: {
+  label: string
+  value: string | ReactNode
+  sub?: string
+  tone?: 'neutral' | 'ok' | 'warn' | 'critical'
+  href?: string
+  compact?: boolean
+}) {
+  const valueColor =
+    tone === 'ok'       ? TOKENS.ok       :
+    tone === 'warn'     ? TOKENS.warn      :
+    tone === 'critical' ? TOKENS.critical  :
+    TOKENS.neutral
+
+  const content = (
+    <div className={cn('flex flex-col flex-shrink-0', compact ? 'px-4 py-3' : 'px-5 py-3.5')}>
+      <span className={cn(TOKENS.label, 'mb-1.5')}>{label}</span>
+      <span className={cn(TOKENS.value2xl, valueColor)}>{value}</span>
+      {sub && <span className="text-[10px] text-gray-400 mt-1 leading-tight">{sub}</span>}
+    </div>
+  )
+
+  if (href) {
+    return (
+      <Link href={href} className="hover:bg-gray-50/70 transition-colors">
+        {content}
+      </Link>
+    )
+  }
+  return content
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PressureBanner — adaptive pressure mode banner
+// ─────────────────────────────────────────────────────────────────────────────
+
+export function PressureBanner({
+  severity,
+  tag,
+  message,
+  actionLabel,
+  actionHref,
+}: {
+  severity: 'critical' | 'warn' | 'info'
+  tag: string
+  message: string
+  actionLabel?: string
+  actionHref?: string
+}) {
+  const theme = {
+    critical: {
+      wrap:   'border border-red-200 bg-red-50',
+      tag:    'text-[9px] font-black uppercase tracking-widest text-red-600',
+      msg:    'text-sm text-red-700 font-medium',
+      btn:    'text-xs font-bold text-red-700 bg-red-100 hover:bg-red-200',
+    },
+    warn: {
+      wrap:   'border border-amber-200 bg-amber-50',
+      tag:    'text-[9px] font-black uppercase tracking-widest text-amber-700',
+      msg:    'text-sm text-amber-800 font-medium',
+      btn:    'text-xs font-bold text-amber-800 bg-amber-100 hover:bg-amber-200',
+    },
+    info: {
+      wrap:   'border border-blue-200 bg-blue-50',
+      tag:    'text-[9px] font-black uppercase tracking-widest text-blue-700',
+      msg:    'text-sm text-blue-800 font-medium',
+      btn:    'text-xs font-bold text-blue-800 bg-blue-100 hover:bg-blue-200',
+    },
+  }[severity]
+
+  return (
+    <div className={cn('flex items-center justify-between gap-3 px-5 py-3 rounded-xl', theme.wrap)}>
+      <div className="flex items-center gap-3 min-w-0">
+        <span className={cn(theme.tag, 'flex-shrink-0')}>{tag}</span>
+        <span className={cn(theme.msg, 'truncate')}>{message}</span>
+      </div>
+      {actionLabel && actionHref && (
+        <Link
+          href={actionHref}
+          className={cn(theme.btn, 'flex-shrink-0 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap')}
+        >
+          {actionLabel} →
+        </Link>
+      )}
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// EmptySlate — canonical empty state inside a panel
+// ─────────────────────────────────────────────────────────────────────────────
+
+export function EmptySlate({
+  icon,
+  title,
+  sub,
+  action,
+}: {
+  icon?: string
+  title: string
+  sub?: string
+  action?: ReactNode
+}) {
+  return (
+    <div className="text-center py-14 px-6">
+      {icon && <div className="text-3xl mb-3">{icon}</div>}
+      <div className="text-sm font-black text-gray-900 mb-1">{title}</div>
+      {sub && <div className="text-xs text-gray-400 mb-4">{sub}</div>}
+      {action}
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Skeleton — consistent loading placeholder
+// ─────────────────────────────────────────────────────────────────────────────
+
+export function Skeleton({
+  height = 'h-12',
+  className,
+}: {
+  height?: string
+  className?: string
+}) {
+  return (
+    <div className={cn('bg-gray-100 rounded-xl animate-pulse', height, className)} />
+  )
+}
+
+export function SkeletonPanel({ rows = 3 }: { rows?: number }) {
+  return (
+    <div className={cn(TOKENS.panel, 'p-5 space-y-3 animate-pulse')}>
+      {Array.from({ length: rows }).map((_, i) => (
+        <div key={i} className="h-3 bg-gray-100 rounded-full" style={{ width: `${65 + (i % 3) * 15}%` }} />
+      ))}
+    </div>
+  )
+}
+
+export function SkeletonKpiStrip({ cells = 4 }: { cells?: number }) {
+  return (
+    <div className={cn(TOKENS.panel, 'overflow-hidden')}>
+      <div className={`grid grid-cols-${cells} divide-x divide-gray-100`}>
+        {Array.from({ length: cells }).map((_, i) => (
+          <div key={i} className="px-5 py-3.5 animate-pulse space-y-2">
+            <div className="h-2 bg-gray-100 rounded-full w-16" />
+            <div className="h-5 bg-gray-100 rounded-full w-24" />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DataTable — canonical table wrapper
+// ─────────────────────────────────────────────────────────────────────────────
+
+export function DataTable({
+  children,
+  minWidth,
+}: {
+  children: ReactNode
+  minWidth?: string
+}) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-xs" style={minWidth ? { minWidth } : undefined}>
+        {children}
+      </table>
+    </div>
+  )
+}
+
+export function DataTh({
+  children,
+  align = 'left',
+  first = false,
+}: {
+  children: ReactNode
+  align?: 'left' | 'right' | 'center'
+  first?: boolean
+}) {
+  return (
+    <th className={cn(
+      'px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 bg-gray-50/60 border-b border-gray-100',
+      align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left',
+      first && 'pl-5',
+    )}>
+      {children}
+    </th>
+  )
+}
+
+export function DataTd({
+  children,
+  align = 'left',
+  className,
+  first = false,
+}: {
+  children: ReactNode
+  align?: 'left' | 'right' | 'center'
+  className?: string
+  first?: boolean
+}) {
+  return (
+    <td className={cn(
+      'px-4 py-3 border-b border-gray-50',
+      align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left',
+      first && 'pl-5',
+      className,
+    )}>
+      {children}
+    </td>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AlertRow — canonical workflow queue row (Decision Queue pattern)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export function AlertRow({
+  severity,
+  title,
+  detail,
+  actionLabel,
+  actionHref,
+}: {
+  severity: 'critical' | 'warning' | 'info'
+  title: string
+  detail?: string
+  actionLabel: string
+  actionHref: string
+}) {
+  const accentColor =
+    severity === 'critical' ? 'border-red-400 hover:bg-red-50/30' :
+    severity === 'warning'  ? 'border-amber-300 hover:bg-amber-50/30' :
+    'border-gray-200 hover:bg-gray-50/60'
+
+  const btnClass =
+    severity === 'critical'
+      ? 'bg-red-600 text-white hover:bg-red-700'
+      : 'border border-gray-200 text-gray-600 hover:bg-gray-50'
+
+  return (
+    <Link
+      href={actionHref}
+      className={cn(
+        'flex items-center gap-4 px-5 py-3.5 border-l-[3px] transition-colors group',
+        accentColor,
+      )}
+    >
+      <div className="flex-1 min-w-0">
+        <div className={cn('text-sm leading-tight', severity === 'critical' ? 'font-semibold text-gray-900' : 'font-medium text-gray-800')}>
+          {title}
+        </div>
+        {detail && (
+          <div className="text-[11px] text-gray-500 mt-0.5 truncate">{detail}</div>
+        )}
+      </div>
+      <span className={cn(
+        'flex-shrink-0 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap',
+        btnClass,
+      )}>
+        {actionLabel} →
+      </span>
+    </Link>
+  )
+}
