@@ -938,6 +938,99 @@ export default async function DashboardPage() {
         </div>
       </div>
 
+      {/* ── RISK RADAR — cross-center intelligence surface ───────────────── */}
+      <div className="bg-white border border-gray-100 rounded-xl shadow-[0_1px_2px_rgba(17,24,39,0.04)] overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-50">
+          <div className="flex items-center gap-3">
+            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Risk Radar</span>
+            <span className={`text-[9px] font-black px-2 py-0.5 rounded-full ${situTheme.badge}`}>
+              {situation.composite}/100
+            </span>
+          </div>
+          <span className="text-[10px] text-gray-400">{situation.criticalFactor}</span>
+        </div>
+        <div className="px-5 py-4 grid grid-cols-1 sm:grid-cols-5 gap-4">
+          {([
+            {
+              key:    'cash',
+              label:  'Nakit / Runway',
+              score:  situation.scores.cash,
+              href:   '/dashboard/finance?tab=cashflow',
+              detail: runwayDays < 0 ? 'Burn yok' : `${runwayDays < 365 ? runwayDays + 'g' : Math.round(runwayMonths) + 'ay'} ömür`,
+            },
+            {
+              key:    'profit',
+              label:  'Kârlılık',
+              score:  situation.scores.profit,
+              href:   '/dashboard/finance?tab=pnl',
+              detail: fs.revenue_try > 0
+                ? `%${(fs.net_after_tax_try / fs.revenue_try * 100).toFixed(1)} net marj`
+                : 'Satış yok',
+            },
+            {
+              key:    'debt',
+              label:  'Borç Servisi',
+              score:  situation.scores.debt,
+              href:   '/dashboard/partners?tab=tranches',
+              detail: debtServiceRatio > 0 ? `%${(debtServiceRatio * 100).toFixed(0)} DSR` : 'Borç yok',
+            },
+            {
+              key:    'receivables',
+              label:  'Alacak Sağlığı',
+              score:  situation.scores.receivables,
+              href:   '/dashboard/commercial?tab=collections',
+              detail: overdueTotal30 > 0 ? `${fmt(overdueTotal30)} gecikmiş` : 'Temiz',
+            },
+            {
+              key:    'partner',
+              label:  'Ortak Dengesi',
+              score:  situation.scores.partner,
+              href:   '/dashboard/partners',
+              detail: equalization.total_equalization > 0 ? `${fmt(equalization.total_equalization)} eşitleme` : 'Dengeli',
+            },
+          ] as const).map(dim => {
+            const scoreColor =
+              dim.score >= 80 ? 'text-emerald-700' :
+              dim.score >= 60 ? 'text-amber-700'   :
+              dim.score >= 40 ? 'text-orange-600'  :
+              'text-red-600'
+            const barColor =
+              dim.score >= 80 ? 'bg-emerald-400' :
+              dim.score >= 60 ? 'bg-amber-400'   :
+              dim.score >= 40 ? 'bg-orange-400'  :
+              'bg-red-400'
+            const statusLabel =
+              dim.score >= 80 ? 'Sağlıklı' :
+              dim.score >= 60 ? 'Dikkat'   :
+              dim.score >= 40 ? 'Risk'     :
+              'Kritik'
+            return (
+              <Link key={dim.key} href={dim.href}
+                className="flex flex-col gap-2 group hover:bg-gray-50/60 rounded-xl p-3 -m-1 transition-colors">
+                <div className="flex items-center justify-between">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">{dim.label}</span>
+                  <span className={`text-[9px] font-bold ${scoreColor}`}>{statusLabel}</span>
+                </div>
+                {/* Score number */}
+                <div className={`text-2xl font-black tabular-nums leading-none ${scoreColor}`}>
+                  {dim.score}
+                  <span className="text-sm font-semibold text-gray-300 ml-0.5">/100</span>
+                </div>
+                {/* Progress bar */}
+                <div className="bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                  <div
+                    className={`${barColor} h-full rounded-full transition-all`}
+                    style={{ width: `${dim.score}%` }}
+                  />
+                </div>
+                {/* Detail */}
+                <div className={`text-[10px] tabular-nums ${scoreColor}`}>{dim.detail}</div>
+              </Link>
+            )
+          })}
+        </div>
+      </div>
+
       {/* ── CASHFLOW CHART ────────────────────────────────────────────────── */}
       <div className="bg-white border border-gray-100 rounded-xl shadow-[0_1px_2px_rgba(17,24,39,0.04)] overflow-hidden">
         <div className="px-5 py-3.5 border-b border-gray-50">
