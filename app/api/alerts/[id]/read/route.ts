@@ -7,7 +7,6 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { resolveApiAuth } from '@/lib/api-auth'
-import { contextFromHeader }         from '@/lib/logger'
 import { REQUEST_ID_HEADER }         from '@/middleware'
 import { AuditService }              from '@/lib/audit'
 import { toErrorResponse }           from '@/types/errors'

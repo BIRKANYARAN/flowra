@@ -45,7 +45,7 @@ interface FxData {
 }
 const EMPTY_FX: FxData = { USD: 0, EUR: 0, source: 'fallback', rate_date: null, fetched_at: null }
 
-const ZERO_EQ: EqualizationResult = { baseline_per_unit: 0, total_equalization: 0, distributable: 0, remaining_after_eq: 0, entries: [], total_net_loans_try: 0 }
+const ZERO_EQ: EqualizationResult = { baseline_per_unit: 0, total_equalization: 0, distributable: 0, remaining_after_eq: 0, entries: [], total_net_loans_try: 0, max_partner_net_loan_try: 0 }
 
 const ZERO_FS: FinancialSummary = {
   period: { from: '', to: '' },
@@ -365,8 +365,10 @@ export default async function DashboardPage() {
     legalReserveDeficit:     0,     // graceful: requires period close
     equityGapTry:            0,     // graceful
     equityCallOverdueDays:   -1,
-    debtServiceRatio:        0,
-    partnerLoanConcentration:0,
+    debtServiceRatio,
+    partnerLoanConcentration: equalization.total_net_loans_try > 0
+      ? equalization.max_partner_net_loan_try / equalization.total_net_loans_try
+      : 0,
   }
   const decisionAlerts = evaluateAlerts(alertInputs)
   const topAlerts      = decisionAlerts.slice(0, 5)

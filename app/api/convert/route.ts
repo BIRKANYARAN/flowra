@@ -1,7 +1,6 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { contextFromHeader } from '@/lib/logger'
 import { REQUEST_ID_HEADER } from '@/middleware'
 import { SaleService } from '@/lib/services/sale.service'
 import { requireUUID, requireArray, ValidationError } from '@/lib/validation'

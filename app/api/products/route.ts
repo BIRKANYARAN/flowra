@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { contextFromHeader, logger } from '@/lib/logger'
+import { logger } from '@/lib/logger'
 import { REQUEST_ID_HEADER } from '@/middleware'
 import { StockService } from '@/lib/services/stock.service'
 import {

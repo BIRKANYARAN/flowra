@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse }   from 'next/server'
-import { resolveCompanyId }            from '@/lib/resolve-company'
 import {
   detectRevenueAnomalies,
   detectExpenseAnomalies,

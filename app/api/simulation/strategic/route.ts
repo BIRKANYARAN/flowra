@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse }    from 'next/server'
-import { resolveCompanyId }             from '@/lib/resolve-company'
 import { computeMultiScenario }         from '@/lib/services/simulation-strategic.service'
 import type { BaseExpenseLine, DebtTranche, StrategicScenarioInput } from '@/lib/services/simulation-strategic.service'
 import { CORPORATE_TAX_RATE_TR }        from '@/lib/services/finance-rules'

@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse }           from 'next/server'
-import { resolveCompanyId }                     from '@/lib/resolve-company'
 import { FinanceService }                       from '@/lib/services/finance.service'
 import { computeSituation }                     from '@/lib/engines/situation.engine'
 import { evaluateAlerts }                       from '@/lib/engines/alert.engine'
@@ -62,6 +61,17 @@ export async function GET(req: NextRequest) {
     const monthlyRevM = pnl?.revenue_try ?? 0
     const dsr = monthlyNet > 0 ? monthlyDebtService / monthlyNet : 0
 
+    // Partner loan concentration: max single-partner outstanding / total outstanding
+    const loanByPartner = tranches.reduce((acc: Record<string, number>, t) => {
+      const pid = String(t.partner_id ?? 'unknown')
+      acc[pid] = (acc[pid] ?? 0) + Number(t.outstanding_try ?? 0)
+      return acc
+    }, {})
+    const maxPartnerLoan = totalLoans > 0
+      ? Math.max(0, ...Object.values(loanByPartner))
+      : 0
+    const loanConcentration = totalLoans > 0 ? maxPartnerLoan / totalLoans : 0
+
     const situationInputs: SituationInputs = {
       cashRunwayMonths:   0,
       isProfitable:       monthlyNet >= 0,
@@ -99,7 +109,7 @@ export async function GET(req: NextRequest) {
       equityGapTry:             0,
       equityCallOverdueDays:    -1,
       debtServiceRatio:         dsr,
-      partnerLoanConcentration: 0,
+      partnerLoanConcentration: loanConcentration,
     }
 
     const alerts  = evaluateAlerts(alertInputs)

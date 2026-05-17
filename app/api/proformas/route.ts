@@ -1,7 +1,6 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { contextFromHeader } from '@/lib/logger'
 import { REQUEST_ID_HEADER } from '@/middleware'
 import { ProformaService, ValidationError } from '@/lib/services/proforma.service'
 import { toErrorResponse } from '@/types/errors'

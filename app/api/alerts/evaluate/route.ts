@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { resolveCompanyId }          from '@/lib/resolve-company'
 import { FinanceService }            from '@/lib/services/finance.service'
 import { evaluateAlerts }            from '@/lib/engines/alert.engine'
 import type { AlertInputs }          from '@/lib/engines/alert.engine'

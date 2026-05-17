@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { resolveCompanyId }           from '@/lib/resolve-company'
 import { CashFlowStatementService }   from '@/lib/services/cashflow-statement.service'
 import { resolveApiAuth } from '@/lib/api-auth'
 

@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse }  from 'next/server'
-import { resolveCompanyId }           from '@/lib/resolve-company'
 import { FinanceService }             from '@/lib/services/finance.service'
 import { TaxService }                 from '@/lib/services/tax.service'
 import { BalanceSheetService }        from '@/lib/services/balance-sheet.service'

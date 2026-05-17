@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { resolveCompanyId }          from '@/lib/resolve-company'
 import { detectDuplicates }          from '@/lib/engines/duplicate-detector'
 import type { ExpenseRow }           from '@/lib/engines/duplicate-detector'
 import { resolveApiAuth } from '@/lib/api-auth'

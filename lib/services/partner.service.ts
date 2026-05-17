@@ -98,7 +98,8 @@ export function computeEqualization(
       distributable,
       remaining_after_eq:  distributable,
       entries:             [],
-      total_net_loans_try: 0,
+      total_net_loans_try:      0,
+      max_partner_net_loan_try: 0,
     }
   }
 
@@ -188,9 +189,10 @@ export function computeEqualization(
     distributable:        round2(distributable),
     remaining_after_eq:   remaining,
     entries,
-    // Caller (calculateEqualization) overwrites this with the real DB value;
+    // Caller (calculateEqualization) overwrites these with real DB values;
     // 0 here as a safe default when invoked as a pure function.
-    total_net_loans_try:  0,
+    total_net_loans_try:      0,
+    max_partner_net_loan_try: 0,
   }
 }
 
@@ -347,11 +349,11 @@ export class PartnerService {
       distributable: distributable ?? 0,
     })
 
-    // Inject total net loans from balances — zero additional DB call.
-    // Used by callers (SituationEngine, CEO cockpit) for DSR computation.
-    result.total_net_loans_try = round2(
-      balances.reduce((s, b) => s + Math.max(0, b.net_loan_try), 0)
-    )
+    // Inject per-partner loan aggregates — zero additional DB call.
+    // Used by SituationEngine (DSR) and AlertEngine (concentration ratio).
+    const partnerLoans = balances.map(b => Math.max(0, b.net_loan_try))
+    result.total_net_loans_try      = round2(partnerLoans.reduce((s, v) => s + v, 0))
+    result.max_partner_net_loan_try = round2(Math.max(0, ...partnerLoans))
 
     return result
   }

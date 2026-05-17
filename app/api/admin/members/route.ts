@@ -21,7 +21,6 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { safeAdminQuery, getAdminAuth } from '@/lib/admin-db'
-import { resolveCompanyId }          from '@/lib/resolve-company'
 import { requireAdmin }              from '@/lib/require-role'
 import { AppError }                  from '@/types/errors'
 import type { CompanyMember, MemberRole } from '@/types'

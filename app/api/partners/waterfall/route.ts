@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { resolveCompanyId }     from '@/lib/resolve-company'
 import { WaterfallService }     from '@/lib/services/waterfall.service'
 import { resolveApiAuth } from '@/lib/api-auth'
 
