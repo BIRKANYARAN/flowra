@@ -35,7 +35,7 @@ export async function CatalogContent({ companyId, userId }: Props) {
   // real_cost = weighted average entry_cost_try weighted by qty_remaining.
   const { data: lotData } = await supabase
     .from('stock_lots')
-    .select('product_id, entry_cost_try, qty_remaining')
+    .select('product_id, cost_price_try, qty_remaining')
     .eq('company_id', companyId)
     .is('deleted_at', null)
     .gt('qty_remaining', 0)
@@ -47,7 +47,7 @@ export async function CatalogContent({ companyId, userId }: Props) {
     if (!pid) continue
     const prev = lotSums[pid] ?? { costQty: 0, qty: 0 }
     lotSums[pid] = {
-      costQty: prev.costQty + Number(lot.entry_cost_try ?? 0) * Number(lot.qty_remaining ?? 0),
+      costQty: prev.costQty + Number((lot as { cost_price_try?: number | null }).cost_price_try ?? 0) * Number(lot.qty_remaining ?? 0),
       qty:     prev.qty     + Number(lot.qty_remaining ?? 0),
     }
   }

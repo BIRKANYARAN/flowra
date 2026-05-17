@@ -498,15 +498,19 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
                             </div>
                             <div className="divide-y divide-gray-50">
                               {productLots.lots.map(lot => {
-                                const lotCostTry = lot.unit_cost * lot.fx_rate_at_entry
+                                const unitCost   = Number(lot.cost_price ?? lot.unit_cost ?? 0)
+                                const fxRate     = Number(lot.cost_fx_rate ?? lot.fx_rate_at_entry ?? 1) || 1
+                                const lotCostTry = lot.cost_price_try != null && Number(lot.cost_price_try) > 0
+                                  ? Number(lot.cost_price_try)
+                                  : unitCost * fxRate
                                 const lotValue   = lotCostTry * Number(lot.qty_remaining)
                                 return (
                                   <div key={lot.id} className="items-center px-4 py-2.5 text-sm grid" style={{ gridTemplateColumns: 'repeat(14, minmax(0, 1fr))' }}>
-                                    <div className="col-span-2 text-gray-600">{fmtDate(lot.entry_date)}</div>
+                                    <div className="col-span-2 text-gray-600">{fmtDate(lot.received_at ?? lot.entry_date ?? '')}</div>
                                     <div className="col-span-2 text-right tabular-nums font-medium text-gray-800">{Number(lot.qty_remaining).toFixed(2)}</div>
-                                    <div className="col-span-2 text-right tabular-nums text-gray-700">{currencySym(lot.cost_currency)}{fmt(lot.unit_cost)}</div>
-                                    <div className="col-span-2 text-center text-gray-500">{lot.cost_currency}</div>
-                                    <div className="col-span-2 text-right tabular-nums text-gray-500">{Number(lot.fx_rate_at_entry).toFixed(4)}</div>
+                                    <div className="col-span-2 text-right tabular-nums text-gray-700">{currencySym(lot.cost_currency ?? 'TRY')}{fmt(unitCost)}</div>
+                                    <div className="col-span-2 text-center text-gray-500">{lot.cost_currency ?? 'TRY'}</div>
+                                    <div className="col-span-2 text-right tabular-nums text-gray-500">{fxRate.toFixed(4)}</div>
                                     <div className="col-span-2 text-right tabular-nums font-medium text-gray-800">₺{fmt(lotCostTry)}</div>
                                     <div className="col-span-2 text-right tabular-nums font-bold text-primary-700">₺{fmt(lotValue)}</div>
                                   </div>

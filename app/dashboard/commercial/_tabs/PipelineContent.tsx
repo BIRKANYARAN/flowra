@@ -63,14 +63,14 @@ export async function PipelineContent({ companyId }: Props) {
       .order('sale_date', { ascending: false }),
     supabase
       .from('stock_lots')
-      .select('qty_remaining, entry_cost_try, product_name, lot_no, created_at')
+      .select('qty_remaining, cost_price_try, product_name, lot_no, created_at')
       .eq('company_id', companyId)
       .is('deleted_at', null)
       .gt('qty_remaining', 0),
   ])
 
   const proformas = (pfRes.data  ?? []) as Proforma[]
-  const stockLots = (lotRes.data ?? []) as StockLot[]
+  const stockLots = (lotRes.data ?? []) as unknown as StockLot[]
   const rawSales  = (salesRes.data ?? []) as (Omit<Sale, 'cost_try'> & { cogs?: number | null; sale_date?: string | null })[]
   const sales: Sale[] = rawSales.map(r => ({
     id:             r.id,
@@ -82,7 +82,7 @@ export async function PipelineContent({ companyId }: Props) {
     created_at:     r.created_at,
   }))
 
-  const stockValue   = stockLots.reduce((s, l) => s + (Number(l.qty_remaining) || 0) * (Number(l.entry_cost_try) || 0), 0)
+  const stockValue   = stockLots.reduce((s, l) => s + (Number(l.qty_remaining) || 0) * (Number((l as { cost_price_try?: number | null }).cost_price_try) || 0), 0)
   const pipelineVal  = proformas.filter(p => p.status === 'sent' || p.status === 'accepted').reduce((s, p) => s + (Number(p.total) || 0) * (Number((p as ProformaWithFx).fx_try) || 1), 0)
   const totalRevenue = sales.reduce((s, r) => s + (Number(r.total_try) || 0), 0)
   const totalCogs    = sales.reduce((s, r) => s + (Number(r.cost_try)  || 0), 0)

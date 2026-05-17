@@ -16,7 +16,7 @@ const TYPE_LABELS: Record<string, string> = {
 }
 
 interface ProductRow { id: string; name: string; sku: string; unit: string; stock_qty: number; stock_alert_qty: number }
-interface StockLotRow { id: string; product_id: string; entry_date: string; qty_remaining: number; unit_cost: number; cost_currency: string; fx_rate_at_entry: number; entry_cost_try: number }
+interface StockLotRow { id: string; product_id: string; received_at: string; qty_remaining: number; cost_price: number; cost_currency: string; cost_fx_rate: number; cost_price_try: number }
 
 interface Props { companyId: string }
 
@@ -39,11 +39,11 @@ export async function StockContent({ companyId }: Props) {
       .limit(50),
     supabase
       .from('stock_lots')
-      .select('id, product_id, entry_date, qty_remaining, unit_cost, cost_currency, fx_rate_at_entry, entry_cost_try')
+      .select('id, product_id, received_at, qty_remaining, cost_price, cost_currency, cost_fx_rate, cost_price_try')
       .eq('company_id', companyId)
       .gt('qty_remaining', 0)
       .is('deleted_at', null)
-      .order('entry_date', { ascending: true }),
+      .order('received_at', { ascending: true }),
   ])
 
   const products  = (productsRes.data  ?? []) as ProductRow[]
@@ -56,10 +56,10 @@ export async function StockContent({ companyId }: Props) {
   let portfolioValueTry = 0
 
   for (const lot of lots) {
-    const perUnitTry = lot.entry_cost_try != null && lot.entry_cost_try > 0
-      ? lot.entry_cost_try
-      : lot.unit_cost * (lot.fx_rate_at_entry || 1)
-    const days    = holdingDays(lot.entry_date)
+    const perUnitTry = lot.cost_price_try != null && lot.cost_price_try > 0
+      ? lot.cost_price_try
+      : lot.cost_price * (lot.cost_fx_rate || 1)
+    const days    = holdingDays(lot.received_at)
     const costTry = lot.qty_remaining * perUnitTry
     portfolioValueTry += costTry
     const meta: LotMeta = { ...lot, days, costTry }
@@ -145,18 +145,18 @@ export async function StockContent({ companyId }: Props) {
                       </thead>
                       <tbody>
                         {productLots.map(lot => {
-                          const perUnitTry = lot.entry_cost_try != null && lot.entry_cost_try > 0
-                            ? lot.entry_cost_try : lot.unit_cost * (lot.fx_rate_at_entry || 1)
+                          const perUnitTry = lot.cost_price_try != null && lot.cost_price_try > 0
+                            ? lot.cost_price_try : lot.cost_price * (lot.cost_fx_rate || 1)
                           const urgency = lot.days > 180 ? 'text-red-600' : lot.days > 90 ? 'text-amber-600' : 'text-gray-600'
                           return (
                             <tr key={lot.id} className="border-b border-gray-100 last:border-0">
-                              <td className="px-3 py-2 text-gray-700">{fmtDateShort(lot.entry_date)}</td>
+                              <td className="px-3 py-2 text-gray-700">{fmtDateShort(lot.received_at)}</td>
                               <td className="px-3 py-2 text-right tabular-nums font-semibold text-gray-800">
                                 {lot.qty_remaining.toLocaleString('tr-TR', { maximumFractionDigits: 3 })}
                               </td>
                               <td className="px-3 py-2 text-right tabular-nums text-gray-600">
                                 {lot.cost_currency !== 'TRY'
-                                  ? `${lot.unit_cost.toFixed(2)} ${lot.cost_currency} → ₺${perUnitTry.toFixed(2)}`
+                                  ? `${lot.cost_price.toFixed(2)} ${lot.cost_currency} → ₺${perUnitTry.toFixed(2)}`
                                   : `₺${perUnitTry.toFixed(2)}`}
                               </td>
                               <td className="px-3 py-2 text-right tabular-nums font-semibold text-primary-700">{fmtTRY(lot.costTry)}</td>

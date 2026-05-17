@@ -245,19 +245,29 @@ export interface StockMovement {
 export type StockLotSourceType = 'purchase' | 'manual' | 'adjustment' | 'return'
 
 export interface StockLot {
-  id:               string
-  user_id:          string
-  product_id:       string
-  qty_initial:      number
-  qty_remaining:    number
-  unit_cost:        number
-  cost_currency:    string
-  fx_rate_at_entry: number
-  entry_date:       string
-  source_type:      StockLotSourceType
-  source_id:        string | null
-  created_at:       string
-  deleted_at:       string | null
+  id:             string
+  user_id?:       string
+  product_id:     string
+  product_name?:  string | null   // denormalized, from products join
+  lot_no?:        string | null
+  qty_initial?:   number
+  qty_remaining:  number
+  // Actual DB column names (post-migration)
+  cost_price?:    number          // unit cost in cost_currency
+  cost_currency?: string
+  cost_fx_rate?:  number          // FX rate at entry (cost_currency → TRY)
+  cost_price_try?: number         // frozen TRY snapshot
+  received_at?:   string          // stock receipt date
+  movement_id?:   string | null   // originating stock_movement.id
+  created_at?:    string
+  deleted_at?:    string | null
+  // Legacy aliases (kept for backward compat, may be null in actual DB)
+  entry_cost_try?:  number | null
+  unit_cost?:       number | null
+  fx_rate_at_entry?: number | null
+  entry_date?:      string | null
+  source_type?:     StockLotSourceType
+  source_id?:       string | null
 }
 
 export interface SaleItemAllocation {
