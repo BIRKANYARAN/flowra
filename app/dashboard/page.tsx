@@ -238,11 +238,16 @@ export default async function DashboardPage() {
       return (data ?? []) as Array<{ id: string; period_end: string; status: string }>
     }, [] as Array<{ id: string; period_end: string; status: string }>),
 
+    // All active tranches — used for both next-due display AND DSR calculation.
+    // outstanding_try × annual_interest_rate / 12 = monthly interest service per tranche.
     sq(async () => {
-      const today = new Date().toISOString().slice(0, 10)
-      const { data } = await supabase.from('partner_loan_tranches').select('due_date, amount_try').eq('company_id', companyId).eq('status', 'active').not('due_date', 'is', null).gte('due_date', today).order('due_date', { ascending: true }).limit(1)
-      return (data ?? []) as Array<{ due_date: string; amount_try: number }>
-    }, [] as Array<{ due_date: string; amount_try: number }>),
+      const { data } = await supabase.from('partner_loan_tranches')
+        .select('due_date, amount_try, outstanding_try, annual_interest_rate')
+        .eq('company_id', companyId)
+        .eq('status', 'active')
+        .order('due_date', { ascending: true, nullsFirst: false })
+      return (data ?? []) as Array<{ due_date: string | null; amount_try: number; outstanding_try: number; annual_interest_rate: number | null }>
+    }, [] as Array<{ due_date: string | null; amount_try: number; outstanding_try: number; annual_interest_rate: number | null }>),
 
     // Equity commitment gap: TTK 588 — unpaid committed capital
     sq(async () => {
@@ -330,8 +335,9 @@ export default async function DashboardPage() {
     : -1
 
   // ── Next tranche due ───────────────────────────────────────────────────────
-  const nextTranche = nextTrancheData[0] ?? null
-  const nextTrancheDueDays = nextTranche
+  // Next upcoming tranche: first active tranche with due_date >= today
+  const nextTranche = nextTrancheData.find(t => t.due_date != null && t.due_date >= todayISO) ?? null
+  const nextTrancheDueDays = nextTranche?.due_date
     ? Math.max(0, Math.round((new Date(nextTranche.due_date).getTime() - Date.now()) / 86_400_000))
     : -1
 
@@ -341,13 +347,15 @@ export default async function DashboardPage() {
     : 0
 
   // DSR = monthly debt service / monthly net income.
-  // Debt service approximation: assume total net loans amortise over 36 months
-  // (conservative for SME loans; no scheduled repayment data available without
-  // tranche schedule). Interest component omitted (annual_interest_rate = 0 currently).
-  // equalization.total_net_loans_try is populated by calculateEqualization() at zero
-  // extra DB cost (computed from partner balances fetched for equalization).
-  const monthlyDebtService = equalization.total_net_loans_try / 36
-  const debtServiceRatio   = monthlyNet > 0 ? Math.min(1, monthlyDebtService / monthlyNet) : 0
+  // Debt service: principal × annual_rate / 12 per active tranche.
+  // For interest-free tranches (rate = 0 or null) use 1.5%/month conservative proxy
+  // — same calculation as alerts/evaluate route for consistency.
+  const monthlyDebtService = nextTrancheData.reduce((s, t) => {
+    const principal = Number(t.outstanding_try ?? 0)
+    const rate      = Number(t.annual_interest_rate ?? 0)
+    return s + (rate > 0 ? principal * rate / 12 : principal * 0.015)
+  }, 0)
+  const debtServiceRatio = monthlyNet > 0 ? Math.min(1, monthlyDebtService / monthlyNet) : 0
 
   const situation = computeSituation({
     cashRunwayMonths:  runwayMonths,
@@ -412,7 +420,7 @@ export default async function DashboardPage() {
     avgMonthlyRevenue:       avgRev > 0 ? avgRev : fs.revenue_try,
     avgMonthlyExpenses:      avgExp > 0 ? avgExp : fs.expenses_total_try,
     currentCash:             cashBalance,
-    monthlyDebtService:      0,
+    monthlyDebtService,
     optimisticGrowthFactor:  0.15,
     pessimisticStressFactor: 0.20,
     startYear:               nextYear,
