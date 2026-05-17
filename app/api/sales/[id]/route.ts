@@ -54,7 +54,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     // ── Security: verify the record exists and belongs to this company ────────
     const { data: existing, error: findErr } = await supabase
       .from('sales')
-      .select('id, sale_date, total_try, amount_paid_try, revenue_try, kdv_amount_try')
+      .select('id, sale_date, total_try, amount_paid, kdv_total, fx_rate_try')
       .eq('id', id)
       .eq('company_id', companyId)
       .is('deleted_at', null)
@@ -68,7 +68,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       return NextResponse.json({ error: 'Satış bulunamadı' }, { status: 404 })
     }
 
-    // Period guard — block writes to locked periods
+    // Period guard — block writes to locked periods using sale_date (business date)
     const saleDate = (existing as { sale_date?: string }).sale_date ?? new Date().toISOString().slice(0, 10)
     const guard = await checkPeriodGuard(companyId, saleDate, supabase)
     if (guard.blocked) {

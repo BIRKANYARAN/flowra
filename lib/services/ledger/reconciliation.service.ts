@@ -125,11 +125,11 @@ export class ReconciliationService {
       supabase
         .from('sales')
         // correct column names: kdv_total (sale currency), fx_rate_try (TRY rate),
-        // amount_paid (partial payment, added via migration), created_at (not sale_date).
+        // amount_paid (partial payment, added via migration), sale_date (business date).
         .select('total_try, amount_paid, kdv_total, fx_rate_try')
         .eq('company_id', companyId)
         .is('deleted_at', null)
-        .lte('created_at', asOf + 'T23:59:59Z'),
+        .lte('sale_date', asOf),
       supabase
         .from('expenses')
         // expenses have no partial amount; use payment_status to determine unpaid

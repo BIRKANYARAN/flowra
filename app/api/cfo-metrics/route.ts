@@ -187,11 +187,14 @@ export async function GET(req: NextRequest) {
         .gte('created_at', ytdFrom + 'T00:00:00Z')
         .lte('created_at', today + 'T23:59:59Z'),
 
-      // 13. YTD purchase VAT (from purchases)
+      // 13. YTD finalized purchases — id + fx_rate for purchase VAT computation
+      //     VAT is on purchase_items (qty × unit_price × kdv/100 × fx_rate).
+      //     We fetch headers here; items are fetched in a second pass below.
       supabase
         .from('purchases')
-        .select('kdv_amount_try')
+        .select('id, fx_rate')
         .eq('company_id', companyId)
+        .eq('status', 'finalized')
         .is('deleted_at', null)
         .gte('purchase_date', ytdFrom)
         .lte('purchase_date', today),
@@ -254,11 +257,28 @@ export async function GET(req: NextRequest) {
     }, 0)
     const ytdProfit = ytdRevenue - ytdCogs - ytdOpExpenses
 
-    // VAT net
-    const salesVat    = (ytdSalesVatRes.data ?? []).reduce((s, r) => s + Number(r.kdv_total ?? 0) * Number(r.fx_rate_try ?? 1), 0)
-    const purchaseVat = (ytdPurchaseVatRes.data ?? []).reduce((s, r) => s + Number(r.kdv_amount_try ?? 0), 0)
-    const expenseVat  = (ytdExpenseVatRes.data ?? []).reduce((s, r) => s + Number(r.kdv ?? 0), 0)
-    const kdvNet      = salesVat - purchaseVat - expenseVat
+    // VAT net — purchase VAT requires a second query over purchase_items
+    const salesVat   = (ytdSalesVatRes.data ?? []).reduce((s, r) => s + Number(r.kdv_total ?? 0) * Number(r.fx_rate_try ?? 1), 0)
+    const expenseVat = (ytdExpenseVatRes.data ?? []).reduce((s, r) => s + Number(r.kdv ?? 0), 0)
+
+    // Step 2: fetch purchase_items for the finalized YTD purchases and compute input VAT
+    let purchaseVat = 0
+    const purchaseHeaders = ytdPurchaseVatRes.data ?? []
+    if (purchaseHeaders.length > 0) {
+      const ids   = purchaseHeaders.map((p: { id: string }) => String(p.id))
+      const fxMap = new Map<string, number>(purchaseHeaders.map((p: { id: string; fx_rate?: number | null }) => [String(p.id), Number(p.fx_rate ?? 1) || 1]))
+      const { data: purchaseItems } = await supabase
+        .from('purchase_items')
+        .select('purchase_id, quantity, unit_price, kdv')
+        .in('purchase_id', ids)
+      for (const it of purchaseItems ?? []) {
+        const fx  = fxMap.get(String(it.purchase_id)) ?? 1
+        purchaseVat += Number(it.quantity ?? 0) * Number(it.unit_price ?? 0) * fx * Number(it.kdv ?? 0) / 100
+      }
+      purchaseVat = Math.round(purchaseVat * 100) / 100
+    }
+
+    const kdvNet = salesVat - purchaseVat - expenseVat
 
     // ── Compute metric sections ─────────────────────────────────────────────
 
