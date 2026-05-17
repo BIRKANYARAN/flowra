@@ -358,9 +358,8 @@ export function WhatIfClient({ period, baseline }: Props) {
           {/* Cascade story — cause → chain reaction narrative */}
           {cascadeStory && (
             <div className="bg-gray-50 border border-gray-200 rounded-xl overflow-hidden">
-              <div className="px-4 py-2.5 border-b border-gray-100 flex items-center gap-2">
+              <div className="px-4 py-2.5 border-b border-gray-100">
                 <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Bu Senaryo Zinciri</span>
-                <span className="text-[9px] text-gray-300">→ domino etkisi</span>
               </div>
               <div className="divide-y divide-gray-100">
                 {cascadeStory.map(impact => (

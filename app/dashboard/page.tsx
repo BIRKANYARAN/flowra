@@ -437,14 +437,11 @@ export default async function DashboardPage() {
     return `${Math.round(days / 30)} ay kaldı`
   }
 
-  // Per-card size classes: dominant card gets larger value text, others slightly smaller
-  function kpiValueSize(key: typeof dominantKpi): string {
+  // Per-card size: dominant gets subtly larger — 26px vs 21px (calm differential, not violent jump).
+  // No padding shift — layout never moves. Spatial stability = executive trust.
+  function kpiValueSize(key: 'runway' | 'receivables' | 'net' | 'revenue'): string {
     if (dominantKpi === 'none') return 'text-[22px]'
-    return key === dominantKpi ? 'text-[28px]' : 'text-[18px]'
-  }
-  function kpiPadding(key: typeof dominantKpi): string {
-    if (dominantKpi === 'none') return 'py-4'
-    return key === dominantKpi ? 'py-5' : 'py-3.5'
+    return key === dominantKpi ? 'text-[26px]' : 'text-[21px]'
   }
 
   // ── Adaptive pressure mode ─────────────────────────────────────────────────
@@ -500,13 +497,12 @@ export default async function DashboardPage() {
   const prevMonthExp = trailing5.length > 1 ? trailing5[trailing5.length - 2]?.expenses ?? 0 : 0
   const expDeltaPct  = prevMonthExp > 0 ? ((lastMonthExp - prevMonthExp) / prevMonthExp) * 100 : null
 
-  // ── Behavioral dominance — one KPI earns the dominant visual slot ────────────
-  // Priority: runway crisis > 60d overdue surge > sustained loss > revenue collapse
-  const dominantKpi: 'runway' | 'receivables' | 'net' | 'revenue' | 'none' =
+  // ── Behavioral dominance — only genuine crises earn visual priority ─────────
+  // Fires on 2 conditions only: imminent cash crisis or severe receivable surge.
+  // Net loss and revenue dip are communicated by color alone — they don't shift layout.
+  const dominantKpi: 'runway' | 'receivables' | 'none' =
     runwayDays >= 0 && runwayDays < 30                                          ? 'runway'      :
-    overdueTotal60 > 30_000 && overdueTotal60 > uncollectedSalesTotal * 0.4     ? 'receivables' :
-    monthlyNet < -(monthlyExpenses * 0.15)                                      ? 'net'         :
-    revDeltaPct !== null && revDeltaPct < -20                                   ? 'revenue'     :
+    overdueTotal60 > 50_000 && overdueTotal60 > uncollectedSalesTotal * 0.5     ? 'receivables' :
     'none'
 
   return (
@@ -562,34 +558,6 @@ export default async function DashboardPage() {
           </Link>
         </div>
       )}
-      {pressureMode === 'collections' && (
-        <div className="flex items-center justify-between gap-3 px-5 py-3 rounded-xl border border-amber-200 bg-amber-50">
-          <div className="flex items-center gap-3 min-w-0">
-            <span className="text-[9px] font-black uppercase tracking-widest text-amber-700 flex-shrink-0">TAHSİLAT BASKI</span>
-            <span className="text-sm text-amber-800 font-medium truncate">
-              {fmt(overdueTotal60)} 60+ gün gecikmiş — nakit dönüşü yavaş
-            </span>
-          </div>
-          <Link href="/dashboard/commercial?tab=collections"
-            className="flex-shrink-0 text-xs font-bold text-amber-800 bg-amber-100 hover:bg-amber-200 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap">
-            Tahsilatı Hızlandır →
-          </Link>
-        </div>
-      )}
-      {pressureMode === 'tax' && (
-        <div className="flex items-center justify-between gap-3 px-5 py-3 rounded-xl border border-orange-200 bg-orange-50">
-          <div className="flex items-center gap-3 min-w-0">
-            <span className="text-[9px] font-black uppercase tracking-widest text-orange-700 flex-shrink-0">VERGİ YÜKÜMLÜLÜĞÜ</span>
-            <span className="text-sm text-orange-800 font-medium truncate">
-              {fmt(fs.net_vat_try)} KDV ödenecek — dağıtım öncesi rezerv ayır
-            </span>
-          </div>
-          <Link href="/dashboard/cfo/tax/kdv"
-            className="flex-shrink-0 text-xs font-bold text-orange-800 bg-orange-100 hover:bg-orange-200 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap">
-            Vergi Planla →
-          </Link>
-        </div>
-      )}
 
       {/* ── CAUSAL CONTEXT CHAIN — system cross-center intelligence ──────────── */}
       {ctxChain && (
@@ -618,20 +586,20 @@ export default async function DashboardPage() {
         </Link>
       )}
 
-      {/* ── FINANCIAL INSTRUMENT STRIP — state-weighted, dominant signal expands ─ */}
-      <div className={`bg-white rounded-xl shadow-[0_1px_2px_rgba(17,24,39,0.04)] overflow-hidden border transition-colors duration-150 ${
-        dominantKpi === 'runway'      ? 'border-red-200'    :
-        dominantKpi === 'receivables' ? 'border-amber-200'  :
-        dominantKpi === 'net'         ? 'border-red-200'    :
-        dominantKpi === 'revenue'     ? 'border-amber-100'  : 'border-gray-100'
+      {/* ── FINANCIAL INSTRUMENT STRIP ─────────────────────────────────────────── */}
+      {/* One container border tint when a genuine crisis signal is active. No cell animations. */}
+      {/* Size differential: dominant 26px vs 21px — felt, not shouted. Layout never shifts.  */}
+      <div className={`bg-white rounded-xl shadow-[0_1px_2px_rgba(17,24,39,0.04)] overflow-hidden border ${
+        dominantKpi === 'runway'      ? 'border-red-200'   :
+        dominantKpi === 'receivables' ? 'border-amber-200' : 'border-gray-100'
       }`}>
         <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-gray-100">
 
           {/* Ciro */}
           <Link href="/dashboard/commercial?tab=sales"
-            className={`px-5 ${kpiPadding('revenue')} hover:bg-gray-50/70 transition-colors ${dominantKpi === 'revenue' ? 'bg-amber-50/40' : ''}`}>
-            <div className={`text-[9px] font-black uppercase tracking-widest mb-1.5 ${dominantKpi === 'revenue' ? 'text-amber-600' : 'text-gray-400'}`}>Ciro</div>
-            <div className={`${kpiValueSize('revenue')} font-black tabular-nums leading-none text-gray-900 transition-all duration-150`}>
+            className="px-5 py-4 hover:bg-gray-50/60 transition-colors">
+            <div className="text-[9px] font-black uppercase tracking-widest mb-1.5 text-gray-400">Ciro</div>
+            <div className={`${kpiValueSize('revenue')} font-black tabular-nums leading-none text-gray-900`}>
               <span className="text-gray-300 font-normal text-sm mr-0.5">₺</span>{formatKpi(fs.revenue_try)}
             </div>
             <div className="text-[10px] text-gray-400 mt-1.5">
@@ -646,13 +614,9 @@ export default async function DashboardPage() {
 
           {/* Aylık Net */}
           <Link href="/dashboard/finance?tab=pnl"
-            className={`px-5 ${kpiPadding('net')} hover:opacity-90 transition-all ${
-              dominantKpi === 'net' ? 'bg-red-50' : monthlyNet < 0 ? 'bg-red-50/50' : ''
-            }`}>
-            <div className={`text-[9px] font-black uppercase tracking-widest mb-1.5 ${dominantKpi === 'net' ? 'text-red-600' : 'text-gray-400'}`}>
-              Aylık Net{dominantKpi === 'net' ? ' ↓' : ''}
-            </div>
-            <div className={`${kpiValueSize('net')} font-black tabular-nums leading-none transition-all duration-150 ${monthlyNet >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
+            className={`px-5 py-4 hover:bg-gray-50/60 transition-colors ${monthlyNet < 0 ? 'bg-red-50/25' : ''}`}>
+            <div className="text-[9px] font-black uppercase tracking-widest mb-1.5 text-gray-400">Aylık Net</div>
+            <div className={`${kpiValueSize('net')} font-black tabular-nums leading-none ${monthlyNet >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
               <span className={`font-normal text-sm mr-0.5 ${monthlyNet >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>₺</span>
               {formatKpi(Math.abs(monthlyNet))}
             </div>
@@ -664,13 +628,11 @@ export default async function DashboardPage() {
 
           {/* Bekleyen Tahsilat */}
           <Link href="/dashboard/commercial?tab=collections"
-            className={`px-5 ${kpiPadding('receivables')} hover:opacity-90 transition-all ${
-              dominantKpi === 'receivables' ? 'bg-amber-50' : uncollectedSalesTotal > 0 ? 'bg-amber-50/40' : ''
-            }`}>
+            className={`px-5 py-4 hover:bg-gray-50/60 transition-colors ${dominantKpi === 'receivables' ? 'bg-amber-50/40' : ''}`}>
             <div className={`text-[9px] font-black uppercase tracking-widest mb-1.5 ${dominantKpi === 'receivables' ? 'text-amber-700' : 'text-gray-400'}`}>
-              Bekleyen{dominantKpi === 'receivables' ? ' ⚠' : ''}
+              Bekleyen
             </div>
-            <div className={`${kpiValueSize('receivables')} font-black tabular-nums leading-none transition-all duration-150 ${uncollectedSalesTotal > 0 ? 'text-amber-700' : 'text-emerald-700'}`}>
+            <div className={`${kpiValueSize('receivables')} font-black tabular-nums leading-none ${uncollectedSalesTotal > 0 ? 'text-amber-700' : 'text-emerald-700'}`}>
               {uncollectedSalesTotal > 0
                 ? <><span className="text-amber-300 font-normal text-sm mr-0.5">₺</span>{formatKpi(uncollectedSalesTotal)}</>
                 : <span className="text-lg">Temiz</span>}
@@ -679,23 +641,19 @@ export default async function DashboardPage() {
               {uncollectedSalesTotal > 0 ? `${uncollectedSalesCount} satış · %${actuallyCollectedPct} tahsil` : 'Tümü tahsil edildi'}
             </div>
             {overdueTotal60 > 0 && (
-              <div className={`text-[10px] font-semibold tabular-nums ${dominantKpi === 'receivables' ? 'text-red-600' : 'text-red-500'}`}>
-                {fmt(overdueTotal60)} · 60+ gün bekliyor
+              <div className="text-[10px] font-semibold tabular-nums text-red-500">
+                {fmt(overdueTotal60)} · 60+ gün
               </div>
             )}
           </Link>
 
           {/* Nakit Ömrü */}
           <Link href="/dashboard/planning?tab=cash-projection"
-            className={`px-5 ${kpiPadding('runway')} hover:opacity-90 transition-all ${
-              dominantKpi === 'runway' ? 'bg-red-50' : runwayDays >= 0 && runwayDays < 90 ? 'bg-orange-50/50' : ''
-            }`}>
-            <div className={`text-[9px] font-black uppercase tracking-widest mb-1.5 ${
-              dominantKpi === 'runway' ? 'text-red-600' : 'text-gray-400'
-            } ${dominantKpi === 'runway' && runwayDays < 15 ? 'animate-pulse' : ''}`}>
-              Nakit Ömrü{dominantKpi === 'runway' ? ' ↓' : ''}
+            className={`px-5 py-4 hover:bg-gray-50/60 transition-colors ${dominantKpi === 'runway' ? 'bg-red-50/40' : ''}`}>
+            <div className={`text-[9px] font-black uppercase tracking-widest mb-1.5 ${dominantKpi === 'runway' ? 'text-red-600' : 'text-gray-400'}`}>
+              Nakit Ömrü
             </div>
-            <div className={`${kpiValueSize('runway')} font-black tabular-nums leading-none transition-all duration-150 ${
+            <div className={`${kpiValueSize('runway')} font-black tabular-nums leading-none ${
               runwayDays < 0 ? 'text-gray-400' : runwayDays < 90 ? 'text-red-600' : 'text-emerald-700'
             }`}>
               {runwayDays < 0
@@ -706,9 +664,9 @@ export default async function DashboardPage() {
               }
             </div>
             <div className="text-[10px] text-gray-400 mt-1.5">
-              {runwayDays < 0   ? 'Veri yok'
-               : runwayDays < 30  ? daysLeft(runwayDays)
-               : runwayDays < 90  ? `${daysLeft(runwayDays)} · baskı altında`
+              {runwayDays < 0  ? 'Veri yok'
+               : runwayDays < 30 ? daysLeft(runwayDays)
+               : runwayDays < 90 ? daysLeft(runwayDays)
                : 'Sağlıklı'}
             </div>
             {monthlyBurn > 0 && runwayDays >= 0 && runwayDays < 180 && (
@@ -855,11 +813,6 @@ export default async function DashboardPage() {
             <div className="text-[9px] text-gray-400 mt-0.5">bakiye {fmt(cashBalance)}</div>
           </div>
         </div>
-        {cashDistributable === 0 && uncollectedSalesTotal > 0 && (
-          <div className="mx-5 mb-3 text-xs text-red-600 font-semibold bg-red-50 border border-red-200 rounded-lg px-3 py-1.5">
-            {fmt(uncollectedSalesTotal)} tahsilat bekliyor — dağıtılabilir nakit yok
-          </div>
-        )}
         {cashDistributable > 0 && equalization.entries.length > 0 && (
           <div className="px-5 pb-3 pt-2 border-t border-gray-50 flex items-center gap-2 overflow-hidden flex-wrap">
             <span className="text-[9px] font-bold uppercase tracking-widest text-gray-300 flex-shrink-0">Paylaşım</span>
@@ -882,7 +835,7 @@ export default async function DashboardPage() {
             <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Nakit Pisti</span>
             <Link href="/dashboard/planning?tab=cash-projection" className="text-[10px] text-primary-600 font-semibold hover:text-primary-700">Projeksiyon →</Link>
           </div>
-          {/* Scenario hierarchy: base danger → base dominates; all healthy → equal */}
+          {/* Scenario strip: calm equal weight. Base gets slightly larger when in danger — no opacity tricks. */}
           {(() => {
             const baseDanger = !!forecast.summary.base.runwayEndMonth
             const scenarios = [
@@ -893,16 +846,14 @@ export default async function DashboardPage() {
             return (
               <div className="px-5 py-3 grid grid-cols-3 gap-4 divide-x divide-gray-100 items-end">
                 {scenarios.map(({ key, label, summary, tone }) => {
-                  const isDominant = baseDanger && key === 'base'
-                  const isSubordinate = baseDanger && key !== 'base'
+                  const isBase    = key === 'base'
+                  const isDanger  = baseDanger && isBase
                   return (
-                    <div key={key} className={`pl-4 first:pl-0 transition-all duration-150 ${isDominant ? 'pb-1' : isSubordinate ? 'opacity-60' : ''}`}>
-                      <div className={`text-[9px] font-bold uppercase tracking-widest mb-1 ${isDominant ? 'text-red-600' : 'text-gray-400'}`}>
-                        {label}{isDominant ? ' !' : ''}
+                    <div key={key} className="pl-4 first:pl-0">
+                      <div className={`text-[9px] font-bold uppercase tracking-widest mb-1 ${isDanger ? 'text-red-600' : 'text-gray-400'}`}>
+                        {label}
                       </div>
-                      <div className={`font-black tabular-nums leading-none transition-all duration-150 ${
-                        isDominant ? 'text-[22px]' : isSubordinate ? 'text-sm' : 'text-lg'
-                      } ${tone}`}>
+                      <div className={`font-black tabular-nums leading-none ${isDanger ? 'text-[19px]' : 'text-base'} ${tone}`}>
                         {summary.runwayEndMonth
                           ? <span className="text-red-500">{summary.runwayEndMonth}</span>
                           : fmt(summary.endCash)}
