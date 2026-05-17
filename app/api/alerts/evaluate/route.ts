@@ -23,7 +23,9 @@ export async function GET(req: NextRequest) {
     const to      = today.toISOString().slice(0, 10)
     const nowMs   = today.getTime()
 
-    const [pnlRes, overdueRes, periodRes, trancheRes, rulesRes] = await Promise.allSettled([
+    const todayISO = today.toISOString().slice(0, 10)
+
+    const [pnlRes, overdueRes, periodRes, trancheRes, rulesRes, commitRes, cashRes] = await Promise.allSettled([
       FinanceService.getFinancialSummary(uid, companyId, { from, to }),
       supabase.from('sales')
         .select('total_try, amount_paid, created_at')
@@ -44,13 +46,27 @@ export async function GET(req: NextRequest) {
       supabase.from('alert_rules')
         .select('rule_type, threshold_value, is_active')
         .eq('company_id', companyId),
+      supabase.from('partner_capital_commitments')
+        .select('committed_try, paid_try, due_date')
+        .eq('company_id', companyId)
+        .is('deleted_at', null),
+      // Cash proxy: payments received this month minus paid expenses
+      supabase.from('sales')
+        .select('total_try')
+        .eq('company_id', companyId)
+        .eq('payment_status', 'paid')
+        .is('deleted_at', null)
+        .gte('paid_at', from + 'T00:00:00Z')
+        .lte('paid_at', to + 'T23:59:59Z'),
     ])
 
-    const pnl     = pnlRes.status    === 'fulfilled' ? pnlRes.value    : null
-    const overdue = overdueRes.status === 'fulfilled' ? (overdueRes.value.data ?? []) : []
-    const period  = periodRes.status  === 'fulfilled' ? periodRes.value.data : null
-    const tranches= trancheRes.status === 'fulfilled' ? (trancheRes.value.data ?? []) : []
-    const rules   = rulesRes.status   === 'fulfilled' ? (rulesRes.value.data ?? []) : []
+    const pnl      = pnlRes.status     === 'fulfilled' ? pnlRes.value         : null
+    const overdue  = overdueRes.status  === 'fulfilled' ? (overdueRes.value.data  ?? []) : []
+    const period   = periodRes.status   === 'fulfilled' ? periodRes.value.data  : null
+    const tranches = trancheRes.status  === 'fulfilled' ? (trancheRes.value.data  ?? []) : []
+    const rules    = rulesRes.status    === 'fulfilled' ? (rulesRes.value.data    ?? []) : []
+    const commits  = commitRes.status   === 'fulfilled' ? (commitRes.value.data   ?? []) : []
+    const cashPaid = cashRes.status     === 'fulfilled' ? (cashRes.value.data     ?? []) : []
 
     // DB threshold overrides: rule_type → numeric threshold
     const thresh: Record<string, number> = {}
@@ -89,14 +105,45 @@ export async function GET(req: NextRequest) {
       if (d > 0) periodOverdue = d
     }
 
-    // DSR estimate
-    const monthlyDebtService = tranches.reduce((s, t) => s + Number(t.outstanding_try ?? 0) * 0.015, 0)
+    // DSR estimate (1.5%/month = ~18% annual as conservative proxy for interest-free loans)
+    const totalLoansForDsr   = tranches.reduce((s, t) => s + Number(t.outstanding_try ?? 0), 0)
+    const monthlyDebtService = totalLoansForDsr * 0.015
     const monthlyNet         = pnl?.net_after_tax_try ?? 0
     const dsr                = monthlyNet > 0 ? monthlyDebtService / monthlyNet : 0
 
-    // Cash runway
-    const monthlyCost = pnl?.expenses_total_try ?? 0
-    const runwayDays  = monthlyCost > 0 && monthlyNet < 0 ? Math.round((0 / monthlyCost) * 30) : -1
+    // Cash runway: use cash received this month as proxy for operating cash
+    const cashReceivedMTD = cashPaid.reduce((s, r) => s + Number((r as { total_try: number }).total_try ?? 0), 0)
+    const monthlyCost     = pnl?.expenses_total_try ?? 0
+    const runwayDays      = monthlyCost > 0 && monthlyNet < 0
+      ? Math.round((cashReceivedMTD / (monthlyCost / 30)))
+      : -1
+
+    // KDV: due on the 24th of the following month (KDVK)
+    const kdvPayable = pnl?.net_vat_try ?? 0
+    const taxDueDays = kdvPayable > 0 ? (() => {
+      const curMonth = today.getMonth() + 1  // 1-12
+      const curYear  = today.getFullYear()
+      const dueMonth = curMonth === 12 ? 1   : curMonth + 1
+      const dueYear  = curMonth === 12 ? curYear + 1 : curYear
+      const dueDate  = new Date(`${dueYear}-${String(dueMonth).padStart(2, '0')}-24`)
+      return Math.round((dueDate.getTime() - nowMs) / 86_400_000)
+    })() : -1
+
+    // Equity commitment gap (TTK 588)
+    const equityGapTry = commits.reduce((s, c) => {
+      return s + Math.max(0, Number((c as { committed_try: number; paid_try: number }).committed_try) - Number((c as { committed_try: number; paid_try: number }).paid_try))
+    }, 0)
+    const overdueCommits = commits.filter(c => {
+      const com = c as { committed_try: number; paid_try: number; due_date: string | null }
+      return Number(com.committed_try) > Number(com.paid_try) && com.due_date && com.due_date < todayISO
+    })
+    const equityCallOverdueDays = overdueCommits.length > 0 ? (() => {
+      const oldest = overdueCommits.reduce((min, c) => {
+        const com = c as { due_date: string }
+        return com.due_date < min ? com.due_date : min
+      }, (overdueCommits[0] as { due_date: string }).due_date)
+      return Math.round((nowMs - new Date(oldest).getTime()) / 86_400_000)
+    })() : -1
 
     const inputs: AlertInputs = {
       overdueCount30:           oc30,
@@ -110,12 +157,12 @@ export async function GET(req: NextRequest) {
       nextTrancheDueDays:       nextDueDays,
       nextTrancheAmount:        nextAmt,
       openPeriodDaysOverdue:    periodOverdue,
-      kdvPayable:               0,
-      taxDueDays:               -1,
-      bsImbalanceTry:           0,
-      legalReserveDeficit:      0,
-      equityGapTry:             0,
-      equityCallOverdueDays:    -1,
+      kdvPayable,
+      taxDueDays,
+      bsImbalanceTry:           0,     // graceful: requires GL (shadow mode)
+      legalReserveDeficit:      0,     // graceful: requires period close
+      equityGapTry,
+      equityCallOverdueDays,
       debtServiceRatio:         dsr,
       partnerLoanConcentration: concentration,
     }

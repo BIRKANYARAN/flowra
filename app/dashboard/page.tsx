@@ -373,7 +373,14 @@ export default async function DashboardPage() {
     nextTrancheAmount:       nextTranche ? Number(nextTranche.amount_try) : 0,
     openPeriodDaysOverdue,
     kdvPayable:              fs.net_vat_try,
-    taxDueDays:              -1,    // not computed in this pass
+    // KDV beyanı Türkiye'de takip eden ayın 24'üne kadardır.
+    // Mevcut dönemin ayı (month) bilindiğinden due date hesaplanabilir.
+    taxDueDays: fs.net_vat_try > 0 ? (() => {
+      const dueMonth = month === 12 ? 1 : month + 1
+      const dueYear  = month === 12 ? year + 1 : year
+      const dueDate  = new Date(`${dueYear}-${String(dueMonth).padStart(2, '0')}-24`)
+      return Math.round((dueDate.getTime() - Date.now()) / 86_400_000)
+    })() : -1,
     bsImbalanceTry:          0,     // graceful: requires GL (shadow mode)
     legalReserveDeficit:     0,     // graceful: requires period close
     equityGapTry:            equityCommitments.reduce((s, c) => s + Math.max(0, Number(c.committed_try) - Number(c.paid_try)), 0),
