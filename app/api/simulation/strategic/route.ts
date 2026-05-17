@@ -75,14 +75,15 @@ export async function POST(req: NextRequest) {
       try {
         const { data: trancheRows } = await supabase
           .from('partner_loan_tranches')
-          .select('amount_try, interest_rate_annual, status, due_date')
+          .select('amount_try, annual_interest_rate, status, due_date')
           .eq('company_id', companyId)
           .eq('status', 'active')
 
         for (const t of trancheRows ?? []) {
           const principal      = Number(t.amount_try ?? 0)
-          const annualRate     = Number(t.interest_rate_annual ?? 0)
-          const monthlyInterest = principal * annualRate / 100 / 12
+          // annual_interest_rate is a decimal (0.15 = 15%) — do NOT divide by 100 again
+          const annualRate      = Number(t.annual_interest_rate ?? 0)
+          const monthlyInterest = principal * annualRate / 12
           // Remaining months from due_date
           const remainingMonths = t.due_date
             ? Math.max(0, Math.ceil((new Date(t.due_date as string).getTime() - Date.now()) / (30 * 86_400_000)))

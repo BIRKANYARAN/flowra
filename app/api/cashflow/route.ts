@@ -14,7 +14,7 @@
 //   cumulative   — running net from month[0]
 //   is_projected — false for past/current months; true for future months
 //
-// Partial payments: counted as full receivable (no amount_paid column in schema).
+// Partial payments: receivable = total_try − amount_paid (outstanding balance only).
 // When a partial is fully paid, it shifts from receivable→collected in the paid_at month.
 //
 // Query params:
@@ -119,10 +119,10 @@ export async function GET(req: NextRequest) {
 
   // ── 1b. Receivables by invoice month (outstanding = invoiced but not yet paid) ─
   // Shows: of what was invoiced this month, how much is still unpaid/partial/overdue.
-  // Partial payments counted as full receivable (no amount_paid column in schema).
+  // Partial payments: outstanding = total_try − amount_paid (not the full invoice amount).
   const { data: receivableRows } = await supabase
     .from('sales')
-    .select('total_try, created_at')
+    .select('total_try, amount_paid, created_at')
     .eq('company_id', companyId)
     .is('deleted_at', null)
     .in('payment_status', ['pending', 'partial', 'overdue'])
@@ -132,7 +132,7 @@ export async function GET(req: NextRequest) {
   for (const s of receivableRows ?? []) {
     const ym  = toYM(s.created_at as string)
     const row = months.get(ym)
-    if (row) row.receivable += Number(s.total_try ?? 0)
+    if (row) row.receivable += Math.max(0, Number(s.total_try ?? 0) - Number(s.amount_paid ?? 0))
   }
 
   // ── 2. Collections by payment month (paid_at) ──────────────────────────────

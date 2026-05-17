@@ -63,24 +63,27 @@ export async function GET(req: NextRequest) {
     const adminAuth = getAdminAuth()
     const userIds = (members ?? []).map((m: { user_id: string }) => m.user_id)
 
+    // Parallel auth lookups — one Supabase Admin API call per user, all concurrent
     const authUserMap: Record<string, { email: string | null; display_name: string | null }> = {}
-    for (const uid of userIds) {
+    await Promise.all(userIds.map(async (userId) => {
       try {
-        const { data: authUser } = await adminAuth.getUserById(uid)
+        const { data: authUser } = await adminAuth.getUserById(userId)
         if (authUser?.user) {
           const meta  = authUser.user.user_metadata ?? {}
           const first = String(meta.first_name ?? '').trim()
           const last  = String(meta.last_name  ?? '').trim()
-          authUserMap[uid] = {
+          authUserMap[userId] = {
             email:        authUser.user.email ?? null,
             display_name: [first, last].filter(Boolean).join(' ') || authUser.user.email?.split('@')[0] || null,
           }
+        } else {
+          authUserMap[userId] = { email: null, display_name: null }
         }
       } catch {
         // Non-fatal — user row may have been deleted from auth
-        authUserMap[uid] = { email: null, display_name: null }
+        authUserMap[userId] = { email: null, display_name: null }
       }
-    }
+    }))
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const enriched: CompanyMember[] = (members ?? []).map((m: any) => ({

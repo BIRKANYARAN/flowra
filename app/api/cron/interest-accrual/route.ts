@@ -55,8 +55,9 @@ export async function POST(req: NextRequest) {
     const newRows = tranches
       .filter(t => !doneSet.has(`tranche:${t.id}`))
       .map(t => ({
+        // annual_interest_rate is a decimal (0.15 = 15%) — do NOT divide by 100 again
         dailyInterest: Math.round(
-          (Number(t.outstanding_try) * (Number(t.annual_interest_rate) / 100 / 365)) * 100
+          (Number(t.outstanding_try) * (Number(t.annual_interest_rate) / 365)) * 100
         ) / 100,
         t,
       }))
