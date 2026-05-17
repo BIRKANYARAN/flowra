@@ -181,7 +181,10 @@ export default async function DashboardPage() {
     uncollectedSalesData, taskReminders, collectedSalesData,
     paidExpensesData, unpaidExpensesData,
     // Faz 4: period status, next tranche, trailing 5-month actuals for forecast
-    openPeriodData, nextTrancheData, trailing5,
+    openPeriodData, nextTrancheData,
+    // Faz 5: equity commitment gap (TTK 588 / AlertEngine EQUITY_GAP_OVERDUE rule)
+    equityCommitments,
+    trailing5,
   ] = await Promise.all([
 
     sq(() => FinanceService.getFinancialSummary(uid, companyId, { from, to }), ZERO_FS),
@@ -240,6 +243,16 @@ export default async function DashboardPage() {
       const { data } = await supabase.from('partner_loan_tranches').select('due_date, amount_try').eq('company_id', companyId).eq('status', 'active').not('due_date', 'is', null).gte('due_date', today).order('due_date', { ascending: true }).limit(1)
       return (data ?? []) as Array<{ due_date: string; amount_try: number }>
     }, [] as Array<{ due_date: string; amount_try: number }>),
+
+    // Equity commitment gap: TTK 588 — unpaid committed capital
+    sq(async () => {
+      const { data } = await supabase
+        .from('partner_capital_commitments')
+        .select('committed_try, paid_try, due_date')
+        .eq('company_id', companyId)
+        .is('deleted_at', null)
+      return (data ?? []) as Array<{ committed_try: number; paid_try: number; due_date: string | null }>
+    }, [] as Array<{ committed_try: number; paid_try: number; due_date: string | null }>),
 
     // Trailing months for forecast: last 5 complete months revenue + expenses
     sq(async () => {
@@ -363,8 +376,14 @@ export default async function DashboardPage() {
     taxDueDays:              -1,    // not computed in this pass
     bsImbalanceTry:          0,     // graceful: requires GL (shadow mode)
     legalReserveDeficit:     0,     // graceful: requires period close
-    equityGapTry:            0,     // graceful
-    equityCallOverdueDays:   -1,
+    equityGapTry:            equityCommitments.reduce((s, c) => s + Math.max(0, Number(c.committed_try) - Number(c.paid_try)), 0),
+    equityCallOverdueDays:   (() => {
+      const overdue = equityCommitments
+        .filter(c => Number(c.committed_try) > Number(c.paid_try) && c.due_date && c.due_date < todayISO)
+      if (overdue.length === 0) return -1
+      const oldest = overdue.reduce((min, c) => c.due_date! < min ? c.due_date! : min, overdue[0].due_date!)
+      return Math.round((Date.now() - new Date(oldest).getTime()) / 86_400_000)
+    })(),
     debtServiceRatio,
     partnerLoanConcentration: equalization.total_net_loans_try > 0
       ? equalization.max_partner_net_loan_try / equalization.total_net_loans_try
