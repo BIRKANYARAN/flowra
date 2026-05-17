@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { PdfExportButton } from '@/components/reports/PdfExportButton'
 import { useWorkspace } from '@/lib/workspace-context'
 import type { PdfReportOptions } from '@/lib/utils/pdf-report'
+import { formatTRY as fmt } from '@/lib/format'
 
 interface PnL {
   revenue_try:                 number
@@ -19,11 +20,6 @@ interface PnL {
   net_after_tax_try:           number
 }
 
-const _fmt = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-function fmt(n: number) {
-  const v = Number(n) || 0
-  return (v < 0 ? '−' : '') + _fmt.format(Math.abs(v)) + ' TL'
-}
 function pct(n: number, d: number) {
   if (!d) return '—'
   return ((n / d) * 100).toFixed(1) + '%'

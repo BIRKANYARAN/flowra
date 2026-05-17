@@ -5,10 +5,8 @@ import Link from 'next/link'
 import { normalizeSaleDetail, normalizeSaleItem, type NormalizedSaleDetail, type NormalizedSaleItem } from '@/lib/normalize'
 import { calculateLine, type LineInput } from '@/lib/calc'
 import { resolveCompanyId } from '@/lib/resolve-company'
+import { fmtTRY as fmt } from '@/lib/format'
 
-function fmt(n: number) {
-  return '₺' + n.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-}
 function fmtDate(d: string) {
   try {
     return new Date(d).toLocaleDateString('tr-TR', { day:'2-digit', month:'2-digit', year:'numeric' })

@@ -7,6 +7,7 @@ import type { DuplicateGroup }              from '@/lib/engines/duplicate-detect
 import type { AISummaryResult }             from '@/lib/services/ai-summary.service'
 import type { SituationResult }             from '@/lib/engines/situation.engine'
 import type { DecisionAlert }               from '@/lib/engines/alert.engine'
+import { fmtCompact as fmtTRY }             from '@/lib/format'
 
 // ── Types for API responses ────────────────────────────────────────────────
 
@@ -26,16 +27,6 @@ interface SummaryData {
   situation: SituationResult
   alerts:    DecisionAlert[]
   summary:   AISummaryResult
-}
-
-// ── Formatters ────────────────────────────────────────────────────────────
-
-const _fmt = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
-function fmtTRY(n: number) {
-  const abs = Math.abs(n)
-  if (abs >= 1_000_000) return `₺${(abs / 1_000_000).toFixed(1)}M`
-  if (abs >= 1_000)     return `₺${(abs / 1_000).toFixed(0)}K`
-  return '₺' + _fmt.format(abs)
 }
 
 // ── Severity colours ───────────────────────────────────────────────────────
@@ -65,17 +56,25 @@ export default function InsightsPage() {
   const [loadingS, setLoadingS] = useState(true)
 
   useEffect(() => {
-    fetch('/api/insights/anomalies')
+    const controller = new AbortController()
+    const { signal } = controller
+
+    fetch('/api/insights/anomalies', { signal })
       .then(r => r.json()).then(d => setAnomalies(d))
+      .catch(e => { if (e.name !== 'AbortError') setLoadingA(false) })
       .finally(() => setLoadingA(false))
 
-    fetch('/api/insights/duplicates')
+    fetch('/api/insights/duplicates', { signal })
       .then(r => r.json()).then(d => setDuplicates(d))
+      .catch(e => { if (e.name !== 'AbortError') setLoadingD(false) })
       .finally(() => setLoadingD(false))
 
-    fetch('/api/insights/situation-summary')
+    fetch('/api/insights/situation-summary', { signal })
       .then(r => r.json()).then(d => setSummary(d))
+      .catch(e => { if (e.name !== 'AbortError') setLoadingS(false) })
       .finally(() => setLoadingS(false))
+
+    return () => controller.abort()
   }, [])
 
   const theme = STATUS_THEME[summary?.situation?.status ?? 'caution']

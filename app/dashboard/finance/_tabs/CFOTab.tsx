@@ -30,7 +30,7 @@ async function sq<T>(p: Promise<T>): Promise<T | null> {
   try { return await p } catch { return null }
 }
 
-function fmt(n: number | null | undefined) { return fmtTRY(n ?? 0) }
+const fmt = (n: number | null | undefined) => fmtTRY(n ?? 0)
 function pct(n: number | null | undefined, d = 1) { return fmtPct(n ?? 0, d) }
 
 // ── Financial Health Score ────────────────────────────────────────────────────

@@ -34,6 +34,7 @@ export const FINANCING_EXPENSE_TYPES = new Set([
 export const BURN_EXPENSE_TYPES = new Set(['operational', 'fixed', 'variable', 'tax', 'financial'])
 
 import { round2 } from '@/lib/calc'
+import { computeCorporateTax } from '@/lib/services/tax.service'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Input types
@@ -223,13 +224,21 @@ export function computeReceivableMetrics(i: ReceivableInputs): CfoMetrics['recei
 }
 
 export function computeTaxMetrics(i: TaxInputs): CfoMetrics['tax'] {
-  const taxEstimate = round2(Math.max(0, i.accountingProfit) * (i.taxRate / 100))
-  const kdvPayable  = round2(Math.max(0, i.kdvNet))
+  // Delegate to the canonical engine — single code path for corporate tax.
+  // accountingProfit is already (revenue - costs); we pass it as revenue
+  // with cost=0 so computeCorporateTax computes the same matrah.
+  const corpTax = computeCorporateTax({
+    revenue_try:             Math.max(0, i.accountingProfit),
+    cost_try:                0,
+    deductible_expenses_try: 0,
+    rate_percent:            i.taxRate,
+  })
+  const kdvPayable = round2(Math.max(0, i.kdvNet))
 
   return {
     kdv_net:                 round2(i.kdvNet),
-    corporate_tax_estimate:  taxEstimate,
-    total_fiscal_obligation: round2(kdvPayable + taxEstimate),
+    corporate_tax_estimate:  corpTax.tax_try,
+    total_fiscal_obligation: round2(kdvPayable + corpTax.tax_try),
   }
 }
 

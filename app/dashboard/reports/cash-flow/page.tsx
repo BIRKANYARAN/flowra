@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { PdfExportButton } from '@/components/reports/PdfExportButton'
 import { useWorkspace }    from '@/lib/workspace-context'
 import type { PdfReportOptions } from '@/lib/utils/pdf-report'
+import { formatTRY as fmt } from '@/lib/format'
 
 // Mirrors CashFlowStatement returned by CashFlowStatementService.compute()
 interface CFLine { label: string; amount: number }
@@ -35,12 +36,6 @@ interface CashFlowStatement {
   net_change_try:      number
   opening_balance_try: number
   closing_balance_try: number
-}
-
-const _fmt = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-function fmt(n: number) {
-  const v = Number(n) || 0
-  return (v < 0 ? '−' : '') + _fmt.format(Math.abs(v)) + ' TL'
 }
 
 function currentPeriod() {

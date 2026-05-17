@@ -77,17 +77,11 @@ interface RunwayForecast {
   }
 }
 
+import { fmtTRY as fmt } from '@/lib/format'
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const TRY_FMT = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
-
-function fmt(n: number): string {
-  const abs = Math.abs(Number(n || 0))
-  const sign = n < 0 ? '−' : ''
-  if (abs >= 1_000_000) return `${sign}₺${(abs / 1_000_000).toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 2 })}M`
-  if (abs >= 10_000)    return `${sign}₺${(abs / 1_000).toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}K`
-  return `${sign}₺${TRY_FMT.format(abs)}`
-}
 
 function fmtFull(n: number): string {
   const abs = Math.abs(Number(n || 0))

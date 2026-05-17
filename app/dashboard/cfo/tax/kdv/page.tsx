@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { PdfExportButton } from '@/components/reports/PdfExportButton'
+import { formatTRY as fmt } from '@/lib/format'
 
 interface KdvSummary {
   sales_vat_try:    number
@@ -19,12 +20,6 @@ interface TaxApiRes {
     expense_vat:  number
     net_vat:      number
   }
-}
-
-const _fmt = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-function fmt(n: number) {
-  const v = Number(n) || 0
-  return (v < 0 ? '−' : '') + _fmt.format(Math.abs(v)) + ' TL'
 }
 
 function currentPeriod() {

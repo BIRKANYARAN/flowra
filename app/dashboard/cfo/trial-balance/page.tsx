@@ -6,6 +6,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { formatTRY as fmt } from '@/lib/format'
 
 interface GLAccount {
   account_code:   string
@@ -36,12 +37,6 @@ interface TBReport {
   all_passed:       boolean
   can_close_period: boolean
   computed_at:      string
-}
-
-const _fmt = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-function fmt(n: number) {
-  const v = Number(n) || 0
-  return (v < 0 ? '−' : '') + _fmt.format(Math.abs(v)) + ' TL'
 }
 
 const CLASS_LABELS: Record<string, string> = {

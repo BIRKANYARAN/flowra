@@ -191,14 +191,9 @@ const ZERO_EQ: EqResult = {
   remaining_after_eq: 0, entries: [],
 }
 
+import { formatTRY as fmt } from '@/lib/format'
+
 // ── Formatters ─────────────────────────────────────────────────────────────────
-
-const _tryFmt = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-
-function fmt(n: number) {
-  const raw = Number(n) || 0
-  return (raw < 0 ? '−' : '') + _tryFmt.format(Math.abs(raw)) + ' TL'
-}
 
 function pct(r: number) {
   return `%${(r * 100).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`

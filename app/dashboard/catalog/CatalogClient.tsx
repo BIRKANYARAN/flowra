@@ -9,6 +9,7 @@ import { useCallback, useEffect, useMemo, useState, type KeyboardEvent } from 'r
 import { CURRENCIES, type Currency, type Product, type StockLot } from '@/types'
 import { getSalePrice } from '@/lib/product-adapter'
 import { resolveCompanyId } from '@/lib/resolve-company'
+import { fmtNum as fmt, fmtDate } from '@/lib/format'
 
 // ── Pure helpers (tested in tests/catalog-analytics.test.ts) ─────────────────
 
@@ -43,18 +44,6 @@ export function toDisplayCurrency(
   if (currency === 'TRY') return tryAmount
   const rate = currency === 'USD' ? fxRates.USD : fxRates.EUR
   return rate > 0 ? tryAmount / rate : 0
-}
-
-// ── Formatters ────────────────────────────────────────────────────────────────
-
-function fmt(n: number): string {
-  return n.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-}
-
-function fmtDate(d: string): string {
-  try {
-    return new Date(d).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' })
-  } catch { return d || '—' }
 }
 
 // ── Entry type map ────────────────────────────────────────────────────────────

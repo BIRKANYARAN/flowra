@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { PdfExportButton } from '@/components/reports/PdfExportButton'
 import { useWorkspace } from '@/lib/workspace-context'
 import type { PdfReportOptions } from '@/lib/utils/pdf-report'
+import { formatTRY as fmt } from '@/lib/format'
 
 // Mirrors the nested BalanceSheet shape returned by BalanceSheetService.compute()
 interface BSAssets {
@@ -45,12 +46,6 @@ interface BalanceSheet {
   equity:        BSEquity
   balanced:      boolean
   imbalance_try: number
-}
-
-const _fmt = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-function fmt(n: number) {
-  const v = Number(n) || 0
-  return (v < 0 ? '−' : '') + _fmt.format(Math.abs(v)) + ' TL'
 }
 
 function Section({ title }: { title: string }) {

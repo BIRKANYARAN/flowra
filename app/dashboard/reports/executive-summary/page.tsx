@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { PdfExportButton } from '@/components/reports/PdfExportButton'
 import { useWorkspace }    from '@/lib/workspace-context'
 import type { PdfReportOptions } from '@/lib/utils/pdf-report'
+import { fmtCompact as fmt } from '@/lib/format'
 
 interface ExecSummary {
   from: string; to: string; as_of: string; computed_at: string
@@ -24,14 +25,6 @@ interface ExecSummary {
   cash_flow: { operating: number; investing: number; financing: number; net_change: number } | null
 }
 
-const _fmt = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-function fmt(n: number) {
-  const v = Number(n) || 0; if (!v) return '₺0'
-  const abs = Math.abs(v)
-  if (abs >= 1_000_000) return `${v < 0 ? '−' : ''}₺${(abs / 1_000_000).toFixed(1)}M`
-  if (abs >= 10_000)    return `${v < 0 ? '−' : ''}₺${(abs / 1_000).toFixed(0)}K`
-  return (v < 0 ? '−' : '') + '₺' + _fmt.format(abs)
-}
 function fmtPct(n: number) { return n.toFixed(1) + '%' }
 
 function KpiCard({ label, value, sub, tone = 'neutral' }: {

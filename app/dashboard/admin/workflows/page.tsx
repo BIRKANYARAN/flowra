@@ -6,6 +6,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import { fmtDate as fmt } from '@/lib/format'
 
 interface WorkflowInstance {
   id:            string
@@ -25,11 +26,6 @@ const TYPE_LABELS: Record<string, string> = {
   partner_loan:         'Ortak Borç',
   dividend_declaration: 'Temettü Beyanı',
   period_close:         'Dönem Kapanış',
-}
-
-function fmt(d: string | null) {
-  if (!d) return '—'
-  return new Date(d).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
 function fmtMoney(n: unknown) {

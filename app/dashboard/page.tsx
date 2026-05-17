@@ -33,6 +33,7 @@ import type { SituationStatus }      from '@/lib/engines/situation.engine'
 import { FinanceService }            from '@/lib/services/finance.service'
 import { PartnerService }            from '@/lib/services/partner.service'
 import type { FinancialSummary, EqualizationResult } from '@/types'
+import { fmtTRY as fmt } from '@/lib/format'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -117,13 +118,6 @@ function currentMonthPeriod() {
   const to   = now.toISOString().slice(0, 10)
   const label = now.toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })
   return { from, to, label, year, month: now.getMonth() + 1 }
-}
-
-function fmt(n: number): string {
-  const raw = Number(n || 0); const abs = Math.abs(raw); const sign = raw < 0 ? '−' : ''
-  if (abs >= 1_000_000) return `${sign}₺${(abs / 1_000_000).toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 2 })}M`
-  if (abs >= 10_000)    return `${sign}₺${(abs / 1_000).toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}K`
-  return `${sign}₺${abs.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
 }
 
 const TRY_FULL_FMT = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })

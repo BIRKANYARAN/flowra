@@ -5,6 +5,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { fmtDate as fmt } from '@/lib/format'
 
 interface Period {
   id:           string
@@ -44,10 +45,6 @@ const STATUS_COLOR: Record<Period['status'], string> = {
   pre_close: 'bg-amber-50 text-amber-700',
   closed:    'bg-emerald-50 text-emerald-700',
   locked:    'bg-gray-100 text-gray-500',
-}
-
-function fmt(d: string) {
-  return new Date(d).toLocaleDateString('tr-TR', { year: 'numeric', month: 'long', day: 'numeric' })
 }
 
 function Skeleton() { return <div className="bg-gray-100 rounded-xl h-16 animate-pulse" /> }

@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { Customer } from '@/types'
+import { fmtNum as fmt } from '@/lib/format'
 
 // ── Local types for the detail API response ───────────────────────────────────
 
@@ -49,10 +50,6 @@ interface DetailData {
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-function fmt(n: number) {
-  return new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n)
-}
 
 function fmtDate(s: string) {
   return new Date(s).toLocaleDateString('tr-TR', { day: '2-digit', month: 'short', year: 'numeric' })
@@ -100,23 +97,27 @@ export default function CustomerDetailPage() {
   const [updatingSaleId, setUpdatingSaleId] = useState<string | null>(null)
   const [updateError,    setUpdateError]    = useState<string>('')
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (signal?: AbortSignal) => {
     setLoading(true)
     setError('')
     try {
-      const res = await fetch(`/api/customers/${id}`)
+      const res = await fetch(`/api/customers/${id}`, signal ? { signal } : undefined)
       if (res.status === 404) { setError('Müşteri bulunamadı.'); return }
       if (!res.ok) { setError('Veriler yüklenemedi.'); return }
       const json = await res.json()
       setData(json)
-    } catch {
-      setError('Ağ hatası. Sayfayı yenileyin.')
+    } catch (e) {
+      if ((e as { name?: string }).name !== 'AbortError') setError('Ağ hatası. Sayfayı yenileyin.')
     } finally {
       setLoading(false)
     }
   }, [id])
 
-  useEffect(() => { load() }, [load])
+  useEffect(() => {
+    const controller = new AbortController()
+    load(controller.signal)
+    return () => controller.abort()
+  }, [load])
 
   async function updateSale(saleId: string, patch: Record<string, string>) {
     setUpdatingSaleId(saleId)

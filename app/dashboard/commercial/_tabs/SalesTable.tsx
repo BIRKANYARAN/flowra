@@ -96,8 +96,6 @@ export function SalesTable({ rows }: Props) {
   const totalRev = filtered.reduce((s, r) => s + r.total_try, 0)
   const totalPft = filtered.reduce((s, r) => s + r.nominal_profit, 0)
 
-  const fmt = (n: number) => formatTRY(n)
-
   function clearFilters() {
     setSearch('')
     setDateRange('all')
@@ -168,12 +166,12 @@ export function SalesTable({ rows }: Props) {
           },
           {
             label: 'TRY Ciro',
-            value: fmt(totalRev),
+            value: formatTRY(totalRev),
             color: 'text-gray-900',
           },
           {
             label: 'Nominal Kâr',
-            value: fmt(totalPft),
+            value: formatTRY(totalPft),
             color: totalPft >= 0 ? 'text-emerald-700' : 'text-red-600',
           },
         ].map(card => (
@@ -234,13 +232,13 @@ export function SalesTable({ rows }: Props) {
                   {s.currency !== 'TRY' ? (
                     <span>
                       <span className="font-medium">{s.currency} {s.total.toFixed(2)}</span>
-                      <span className="block text-[10px] text-gray-400">≈ {fmt(s.total_try)}</span>
+                      <span className="block text-[10px] text-gray-400">≈ {formatTRY(s.total_try)}</span>
                     </span>
-                  ) : fmt(s.total)}
+                  ) : formatTRY(s.total)}
                 </div>
 
                 <div className={`col-span-1 text-right text-xs font-bold tabular-nums ${s.nominal_profit >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
-                  {fmt(s.nominal_profit)}
+                  {formatTRY(s.nominal_profit)}
                 </div>
 
                 <div className="col-span-2 flex justify-center gap-1 flex-wrap">

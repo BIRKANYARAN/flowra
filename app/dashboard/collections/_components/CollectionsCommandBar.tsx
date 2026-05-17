@@ -11,17 +11,8 @@
 
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase-server'
+import { fmtCompact as fmt } from '@/lib/format'
 
-// ── Formatters ─────────────────────────────────────────────────────────────────
-
-const TRY = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
-function fmt(n: number): string {
-  const abs  = Math.abs(Number(n || 0))
-  const sign = n < 0 ? '−' : ''
-  if (abs >= 1_000_000) return `${sign}₺${(abs / 1_000_000).toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 2 })}M`
-  if (abs >= 10_000)    return `${sign}₺${(abs / 1_000).toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}K`
-  return `${sign}₺${TRY.format(abs)}`
-}
 function daysBetween(a: string, b: string): number {
   return Math.floor((new Date(b).getTime() - new Date(a).getTime()) / 86_400_000)
 }

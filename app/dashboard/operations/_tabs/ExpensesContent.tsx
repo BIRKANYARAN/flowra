@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase-server'
 import type { Expense } from '@/types'
 import ExpensesClient, { type RecurringRow } from '@/app/dashboard/expenses/ExpensesClient'
 import { ExpensesCommandBar } from '@/app/dashboard/expenses/_components/ExpensesCommandBar'
+import { fmtTRY as fmt }      from '@/lib/format'
 
 function CommandBarSkeleton() {
   return (
@@ -16,14 +17,6 @@ function CommandBarSkeleton() {
   )
 }
 
-const TRY_FMT = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
-function fmt(n: number): string {
-  const abs = Math.abs(n)
-  const sign = n < 0 ? '−' : ''
-  if (abs >= 1_000_000) return `${sign}₺${(abs / 1_000_000).toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 2 })}M`
-  if (abs >= 10_000)    return `${sign}₺${(abs / 1_000).toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}K`
-  return `${sign}₺${TRY_FMT.format(abs)}`
-}
 
 function fmtMonth(ym: string): string {
   const [y, m] = ym.split('-').map(Number)
