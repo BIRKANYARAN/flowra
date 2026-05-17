@@ -70,22 +70,27 @@ export function OrdersContent(_props: Props) {
   const [formSaving,    setFormSaving]    = useState(false)
   const [formError,     setFormError]     = useState<string | null>(null)
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (signal?: AbortSignal) => {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch('/api/purchase-orders')
+      const res = await fetch('/api/purchase-orders', signal ? { signal } : undefined)
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const json = await res.json()
       setOrders(json.orders ?? [])
     } catch (e) {
+      if (e instanceof DOMException && e.name === 'AbortError') return
       setError(e instanceof Error ? e.message : 'Yükleme hatası')
     } finally {
       setLoading(false)
     }
   }, [])
 
-  useEffect(() => { load() }, [load])
+  useEffect(() => {
+    const controller = new AbortController()
+    load(controller.signal)
+    return () => controller.abort()
+  }, [load])
 
   async function advanceStatus(order: Order) {
     const next = NEXT_STATUS[order.status]

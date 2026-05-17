@@ -128,10 +128,12 @@ export default function ExpensesClient({
   // ── Lazy-load partners when partner_loan category selected ────────────────
   useEffect(() => {
     if (form.category !== 'partner_loan' || partners.length > 0) return
-    fetch('/api/partners')
+    const controller = new AbortController()
+    fetch('/api/partners', { signal: controller.signal })
       .then(r => r.ok ? r.json() : [])
       .then((data: { id: string; name: string }[]) => setPartners(data ?? []))
-      .catch(() => { /* non-fatal */ })
+      .catch(() => { /* non-fatal — includes AbortError */ })
+    return () => controller.abort()
   }, [form.category, partners.length])
 
   // ── Form helpers ──────────────────────────────────────────────────────────

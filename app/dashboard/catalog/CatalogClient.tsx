@@ -82,10 +82,12 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
   const [fxRates, setFxRates] = useState<{ USD: number; EUR: number }>({ USD: 0, EUR: 0 })
 
   useEffect(() => {
-    fetch('/api/fx', { cache: 'no-store' })
+    const controller = new AbortController()
+    fetch('/api/fx', { cache: 'no-store', signal: controller.signal })
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d?.USD > 0 && d?.EUR > 0) setFxRates({ USD: Number(d.USD), EUR: Number(d.EUR) }) })
-      .catch(() => { /* FX failure is non-fatal — TRY still works */ })
+      .catch(() => { /* FX failure is non-fatal — includes AbortError */ })
+    return () => controller.abort()
   }, [])
 
   const conv = useCallback(
