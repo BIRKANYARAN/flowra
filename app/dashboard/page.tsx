@@ -17,7 +17,6 @@ export const dynamic = 'force-dynamic'
 import { createClient }              from '@/lib/supabase-server'
 import { redirect }                  from 'next/navigation'
 import Link                          from 'next/link'
-import { FxWidget }                  from '@/components/layout/FxWidget'
 import { CORPORATE_TAX_RATE_TR }     from '@/lib/services/finance-rules'
 import { fetchTcmbWithFallback }     from '@/lib/fx'
 import { computeCashPosition }       from '@/lib/finance/cash'
@@ -483,7 +482,7 @@ export default async function DashboardPage() {
   const expDeltaPct  = prevMonthExp > 0 ? ((lastMonthExp - prevMonthExp) / prevMonthExp) * 100 : null
 
   return (
-    <div className="flex flex-col gap-5 max-w-5xl">
+    <div className="flex flex-col gap-4">
 
       {/* ── PAGE HERO ─────────────────────────────────────────────────────── */}
       <div className="flex items-start justify-between gap-4">
@@ -832,8 +831,6 @@ export default async function DashboardPage() {
               </span>
             </div>
           </div>
-          {/* FX */}
-          <FxWidget initialFx={{ USD: fxData.USD, EUR: fxData.EUR, source: fxData.source, rate_date: fxData.rate_date, fetched_at: fxData.fetched_at }} />
         </div>
       </div>
 
@@ -844,7 +841,7 @@ export default async function DashboardPage() {
         <div className="lg:col-span-8 bg-white border border-gray-100 rounded-xl shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
           <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-50">
             <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">12 Aylık Nakit Tahmini</span>
-            <Link href="/dashboard/planning?tab=simulation" className="text-[10px] text-primary-600 font-semibold hover:text-primary-700">Simülasyon →</Link>
+            <Link href="/dashboard/planning?tab=cash-projection" className="text-[10px] text-primary-600 font-semibold hover:text-primary-700">Nakit Projeksiyonu →</Link>
           </div>
           <div className="px-5 py-4 grid grid-cols-3 gap-4">
             {([

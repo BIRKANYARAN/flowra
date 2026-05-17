@@ -11,8 +11,11 @@ import { resolveCompanyId } from '@/lib/resolve-company'
 import { HubTabNav } from '@/app/dashboard/_shared/HubTabNav'
 import { PLANNING_TABS } from '@/lib/nav-config'
 import { PlanningContextBar } from './_shared/PlanningContextBar'
-import { SimulationContent } from './_tabs/SimulationContent'
-import { TasksContent }      from './_tabs/TasksContent'
+import { SimulationContent }  from './_tabs/SimulationContent'
+import { TasksContent }       from './_tabs/TasksContent'
+import { CashProjectionTab }  from './_tabs/CashProjectionTab'
+import { WhatIfTab }          from './_tabs/WhatIfTab'
+import { DebtPressureTab }    from './_tabs/DebtPressureTab'
 
 function TabSkeleton() {
   return (
@@ -28,7 +31,6 @@ function TabSkeleton() {
 
 const VALID_TABS = PLANNING_TABS.map(t => t.key) as string[]
 const TABS       = PLANNING_TABS.map(t => ({ key: t.key, label: t.label }))
-const SIM_TABS   = ['unit-profit', 'cash-projection', 'scenarios', 'debt-pressure', 'partner-impact']
 
 interface PageProps {
   searchParams: Promise<{ tab?: string }>
@@ -101,8 +103,21 @@ export default async function PlanningPage({ searchParams }: PageProps) {
       </div>
 
       <Suspense fallback={<TabSkeleton />}>
-        {SIM_TABS.includes(activeTab) && (
-          <SimulationContent companyId={companyId} userId={userId} activeTab={activeTab as 'unit-profit' | 'cash-projection' | 'scenarios' | 'debt-pressure' | 'partner-impact'} />
+        {/* unit-profit + partner-impact: full simulation engine */}
+        {(activeTab === 'unit-profit' || activeTab === 'partner-impact') && (
+          <SimulationContent companyId={companyId} userId={userId} activeTab={activeTab as 'unit-profit' | 'partner-impact'} />
+        )}
+        {/* cash-projection: 12-month trailing-based cash forecast */}
+        {activeTab === 'cash-projection' && (
+          <CashProjectionTab companyId={companyId} />
+        )}
+        {/* scenarios: interactive what-if slider engine */}
+        {activeTab === 'scenarios' && (
+          <WhatIfTab companyId={companyId} userId={userId} />
+        )}
+        {/* debt-pressure: tranche ladder + DSR + concentration */}
+        {activeTab === 'debt-pressure' && (
+          <DebtPressureTab companyId={companyId} userId={userId} />
         )}
         {activeTab === 'tasks' && <TasksContent companyId={companyId} />}
       </Suspense>

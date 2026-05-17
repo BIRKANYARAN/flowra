@@ -111,7 +111,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
                 userEmail={user.email ?? ''}
                 logoUrl={logoUrl}
               />
-              <main className="flex-1 px-5 py-4 overflow-auto">
+              <main className="flex-1 px-4 py-3 overflow-auto">
                 {children}
               </main>
             </div>

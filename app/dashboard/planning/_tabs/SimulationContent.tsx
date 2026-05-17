@@ -17,19 +17,20 @@ function ContextSkeleton() {
   )
 }
 
-type SimTab = 'unit-profit' | 'cash-projection' | 'scenarios' | 'debt-pressure' | 'partner-impact'
+// cash-projection, scenarios, debt-pressure are now separate components.
+// SimulationContent only handles unit-profit + partner-impact.
+type SimTab = 'unit-profit' | 'partner-impact'
 
 const TAB_CONTEXT: Record<SimTab, { title: string; focus: string }> = {
-  'unit-profit':     { title: 'Birim Kâr Analizi',      focus: 'WAC · Satış fiyatı · Brüt marj · Başabaş noktası' },
-  'cash-projection': { title: 'Nakit Projeksiyonu',      focus: '12 aylık nakit akışı · Tahsilat gecikmesi · Kümülatif pozisyon' },
-  'scenarios':       { title: 'Senaryo Karşılaştırması', focus: 'Fiyat · Maliyet · Hacim · İndirim · Duyarlılık analizi' },
-  'debt-pressure':   { title: 'Borç Baskısı & Runway',   focus: 'Ortak borç temizleme · Nakit tükenme tarihi · Baskı haritası' },
-  'partner-impact':  { title: 'Ortak Etkisi',            focus: 'Dağıtılabilir kâr · Eşitleme hesabı · Dağıtım zaman planı' },
+  'unit-profit':    { title: 'Birim Kâr Analizi', focus: 'WAC · Satış fiyatı · Brüt marj · Başabaş noktası' },
+  'partner-impact': { title: 'Ortak Etkisi',      focus: 'Dağıtılabilir kâr · Eşitleme hesabı · Dağıtım zaman planı' },
 }
 
 interface Props { companyId: string; userId: string; activeTab?: SimTab }
 
 export async function SimulationContent({ companyId, userId, activeTab = 'unit-profit' }: Props) {
+  // Guard: only render for tabs this component owns
+  if (activeTab !== 'unit-profit' && activeTab !== 'partner-impact') return null
   const ctx = TAB_CONTEXT[activeTab]
   const supabase = createClient()
   const today    = new Date().toISOString().slice(0, 10)
