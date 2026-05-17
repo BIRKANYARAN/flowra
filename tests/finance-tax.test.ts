@@ -157,7 +157,8 @@ describe('computeCorporateTax()', () => {
       rate_percent: 25,
     })
     expect(r.tax_try).toBe(8333.33)
-    expect(r.net_after_tax_try).toBe(24999.99) // 33333.33 - 8333.33 - possible epsilon
+    // 33333.33 - 8333.33 = 25000.00 (exact IEEE 754 — no epsilon gap here)
+    expect(r.net_after_tax_try).toBe(25000)
     // Verify: matrah - tax = net (no rounding gap larger than 0.01)
     expect(Math.abs(r.matrah_try - r.tax_try - r.net_after_tax_try)).toBeLessThanOrEqual(0.01)
   })
@@ -313,21 +314,26 @@ describe('resolveDeductibility()', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe('resolveExpenseType()', () => {
-  it('operating categories', () => {
+  // Enterprise canonical type names (types/index.ts ExpenseType union)
+  it('operating categories → operational', () => {
     for (const cat of ['general', 'rent', 'salary', 'utilities', 'marketing', 'logistics', 'software', 'other'] as const) {
-      expect(resolveExpenseType(cat)).toBe('operating')
+      expect(resolveExpenseType(cat)).toBe('operational')
     }
   })
   it('capital: equipment', () => { expect(resolveExpenseType('equipment')).toBe('capital') })
   it('tax: tax',           () => { expect(resolveExpenseType('tax')).toBe('tax') })
   it('financial: interest',() => { expect(resolveExpenseType('interest')).toBe('financial') })
-  it('distribution: dividend', () => { expect(resolveExpenseType('dividend')).toBe('distribution') })
-  it('loan: principal + partner_loan', () => {
-    expect(resolveExpenseType('principal')).toBe('loan')
-    expect(resolveExpenseType('partner_loan')).toBe('loan')
+  it('distribution: dividend → dividend', () => { expect(resolveExpenseType('dividend')).toBe('dividend') })
+  it('loan: principal → loan_repayment', () => {
+    expect(resolveExpenseType('principal')).toBe('loan_repayment')
   })
-  it('unknown → defaults to operating', () => {
-    expect(resolveExpenseType('something_new')).toBe('operating')
+  it('partner_loan → partner_financing (@deprecated category)', () => {
+    // partner_loan is a legacy category — maps to partner_financing in enterprise,
+    // not loan_repayment. Use partner_transactions for actual loan tracking.
+    expect(resolveExpenseType('partner_loan')).toBe('partner_financing')
+  })
+  it('unknown → defaults to operational', () => {
+    expect(resolveExpenseType('something_new')).toBe('operational')
   })
 })
 

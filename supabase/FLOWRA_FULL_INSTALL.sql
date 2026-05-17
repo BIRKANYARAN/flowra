@@ -1537,6 +1537,12 @@ begin
     raise exception 'FORBIDDEN';
   end if;
 
+  -- FX guard: non-TRY sales must have a valid FX rate stored on the proforma.
+  -- Silently defaulting to 1.0 produces wrong TRY totals and revenue figures.
+  if v_proforma.currency <> 'TRY' and coalesce(v_proforma.fx_rate_try, 0) <= 0 then
+    raise exception 'FX_RATE_NOT_FOUND currency=% proforma=%', v_proforma.currency, p_proforma_id;
+  end if;
+
   select coalesce(max(
     (regexp_match(sale_no, 'SAL-' || v_year || '-(\d+)'))[1]::integer
   ), 0) + 1
@@ -1583,6 +1589,11 @@ begin
         order by coalesce(received_at, created_at::date), created_at
       loop
         exit when v_qty_needed <= 0;
+        -- Zero-cost lot guard: prevent silent COGS misvaluation.
+        -- A stock lot with no cost price means FIFO hasn't been finalized.
+        if v_lot.cost_price is null or v_lot.cost_price <= 0 then
+          raise exception 'ZERO_COST_LOT product=% lot=%', v_item.product_id, v_lot.id;
+        end if;
         v_alloc_qty := least(v_qty_needed, v_lot.qty_remaining);
         insert into sale_item_allocations (
           company_id, sale_item_id, lot_id, qty_allocated, cost_price, cost_currency
