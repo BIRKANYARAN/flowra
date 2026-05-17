@@ -132,51 +132,10 @@ export class TaxService {
   // Lines with kdv=0 (the default for legacy rows) contribute nothing — exactly
   // the right behaviour for backward compatibility.
   static async getPurchaseVat(userId: string, companyId: string, period: Period, ctx?: RequestContext): Promise<number> {
-    validatePeriod(period)
-    const supabase = createClient()
-
-    // Step 1 — finalized purchases in the window
-    const { data: purchases, error: pErr } = await supabase
-      .from('purchases')
-      .select('id, fx_rate')
-      .eq('company_id', companyId)
-      .eq('status', 'finalized')
-      .is('deleted_at', null)
-      .gte('purchase_date', period.from)
-      .lte('purchase_date', period.to)
-
-    if (pErr) {
-      if (ctx) await logger.error(ctx, 'tax:purchase_vat:purchases_error', { error: pErr.message })
-      throw new AppError('DB_READ_FAILED', 'Satın alma KDV hesaplanamadı', { dbError: pErr.message })
-    }
-
-    const purchaseRows = purchases ?? []
-    if (purchaseRows.length === 0) return 0
-
-    // Step 2 — lines for those purchases (one round-trip)
-    const ids   = purchaseRows.map(p => String(p.id))
-    const fxMap = new Map<string, number>()
-    for (const p of purchaseRows) fxMap.set(String(p.id), Number(p.fx_rate ?? 1) || 1)
-
-    const { data: items, error: iErr } = await supabase
-      .from('purchase_items')
-      .select('purchase_id, quantity, unit_price, kdv')
-      .in('purchase_id', ids)
-
-    if (iErr) {
-      if (ctx) await logger.error(ctx, 'tax:purchase_vat:items_error', { error: iErr.message })
-      throw new AppError('DB_READ_FAILED', 'Satın alma satırları okunamadı', { dbError: iErr.message })
-    }
-
-    let v = 0
-    for (const it of items ?? []) {
-      const fx    = fxMap.get(String(it.purchase_id)) ?? 1
-      const qty   = Number(it.quantity ?? 0)
-      const price = Number(it.unit_price ?? 0)
-      const rate  = Number(it.kdv ?? 0)
-      v += qty * price * fx * rate / 100
-    }
-    return round2(v)
+    // The current DB schema uses `purchase_orders` / `purchase_order_items` (no `purchases` table).
+    // Purchase VAT tracking requires a `purchases` table with KDV line items that does not exist yet.
+    // Return 0 until the purchase module is implemented with proper VAT columns.
+    return 0
   }
 
   // ── Input VAT (expense side: actual + recurring occurrences) ──────────────

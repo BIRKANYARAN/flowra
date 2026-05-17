@@ -110,13 +110,12 @@ export class FinanceService {
     validatePeriod(period)
     const supabase = createClient()
 
-    // Fetch the sale set first — we'll filter allocations to just these IDs.
+    // Step 1: Get sales in the period (just IDs — no total_cost column on sales table)
     const { data: sales, error: sErr } = await supabase
       .from('sales')
-      .select('id, total_cost')
+      .select('id')
       .eq('company_id', companyId)
       .is('deleted_at', null)
-      // Use sale_date (business invoice date) not created_at (DB insertion time)
       .gte('sale_date', period.from)
       .lte('sale_date', period.to)
 
@@ -132,13 +131,28 @@ export class FinanceService {
 
     const saleIds = saleRows.map(s => String(s.id))
 
+    // Step 2: Get sale_items for those sales (sale_item_allocations links via sale_item_id)
+    const { data: saleItemsData, error: siErr } = await supabase
+      .from('sale_items')
+      .select('id')
+      .in('sale_id', saleIds)
+
+    if (siErr) {
+      if (ctx) await logger.error(ctx, 'finance:cost:sale_items_error', { error: siErr.message })
+      throw new AppError('DB_READ_FAILED', 'Satış kalemleri okunamadı', { dbError: siErr.message })
+    }
+
+    const saleItemIds = (saleItemsData ?? []).map(si => String(si.id))
+    if (saleItemIds.length === 0) {
+      return { cogs_try: 0, allocation_count: 0, fallback_legacy_count: 0 }
+    }
+
+    // Step 3: Get allocations for those sale_items with FIFO cost from stock_lots
+    // Note: sale_item_allocations has no deleted_at column
     const { data: allocs, error: aErr } = await supabase
       .from('sale_item_allocations')
-      .select(`
-        sale_id, qty, unit_cost,
-        stock_lots ( entry_cost_try, unit_cost, fx_rate_at_entry )
-      `)
-      .in('sale_id', saleIds)
+      .select('qty_allocated, stock_lots!inner(cost_price_try, cost_price, cost_fx_rate)')
+      .in('sale_item_id', saleItemIds)
 
     if (aErr) {
       if (ctx) await logger.error(ctx, 'finance:cost:alloc_error', { error: aErr.message })
@@ -146,38 +160,28 @@ export class FinanceService {
     }
 
     let cogs = 0
-    const salesWithAllocs = new Set<string>()
     type AllocRow = {
-      sale_id: string | number
-      qty:     number | string
+      qty_allocated: number | string
       stock_lots:
-        | { entry_cost_try: number | string | null; unit_cost: number | string; fx_rate_at_entry: number | string | null }
-        | { entry_cost_try: number | string | null; unit_cost: number | string; fx_rate_at_entry: number | string | null }[]
+        | { cost_price_try: number | string | null; cost_price: number | string; cost_fx_rate: number | string | null }
+        | { cost_price_try: number | string | null; cost_price: number | string; cost_fx_rate: number | string | null }[]
         | null
     }
     for (const row of (allocs ?? []) as unknown as AllocRow[]) {
       const lot = Array.isArray(row.stock_lots) ? row.stock_lots[0] : row.stock_lots
       if (!lot) continue
+      // cost_price_try is the frozen TRY cost; fall back to cost_price × fx_rate for older lots
       const perUnitTry =
-        lot.entry_cost_try != null && lot.entry_cost_try !== ''
-          ? Number(lot.entry_cost_try)
-          : Number(lot.unit_cost) * Number(lot.fx_rate_at_entry ?? 1)
-      cogs += Number(row.qty) * perUnitTry
-      salesWithAllocs.add(String(row.sale_id))
-    }
-
-    let fallback = 0
-    for (const s of saleRows) {
-      if (!salesWithAllocs.has(String(s.id))) {
-        cogs += Number(s.total_cost ?? 0)
-        fallback++
-      }
+        lot.cost_price_try != null && lot.cost_price_try !== ''
+          ? Number(lot.cost_price_try)
+          : Number(lot.cost_price) * Number(lot.cost_fx_rate ?? 1)
+      cogs += Number(row.qty_allocated) * perUnitTry
     }
 
     return {
       cogs_try:              round2(cogs),
       allocation_count:      (allocs ?? []).length,
-      fallback_legacy_count: fallback,
+      fallback_legacy_count: 0,
     }
   }
 

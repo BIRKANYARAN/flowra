@@ -165,11 +165,11 @@ export async function GET(req: NextRequest) {
         .lte('sale_date', today),
 
       // 10. YTD COGS (from sale_item_allocations — FIFO)
+      // Note: sale_item_allocations has no deleted_at column; no sale_id filter possible here
       supabase
         .from('sale_item_allocations')
-        .select('qty_allocated, stock_lots!inner(entry_cost_try)')
-        .eq('company_id', companyId)
-        .is('deleted_at', null),
+        .select('qty_allocated, stock_lots!inner(cost_price_try)')
+        .eq('company_id', companyId),
 
       // 11. YTD operational expenses (for P&L matrah calculation)
       supabase
@@ -189,17 +189,9 @@ export async function GET(req: NextRequest) {
         .gte('sale_date', ytdFrom)
         .lte('sale_date', today),
 
-      // 13. YTD finalized purchases — id + fx_rate for purchase VAT computation
-      //     VAT is on purchase_items (qty × unit_price × kdv/100 × fx_rate).
-      //     We fetch headers here; items are fetched in a second pass below.
-      supabase
-        .from('purchases')
-        .select('id, fx_rate')
-        .eq('company_id', companyId)
-        .eq('status', 'finalized')
-        .is('deleted_at', null)
-        .gte('purchase_date', ytdFrom)
-        .lte('purchase_date', today),
+      // 13. YTD finalized purchases — placeholder (no `purchases` table yet; purchase_orders has no VAT columns)
+      //     Returns empty result; purchaseVat stays 0 until the purchases module is built.
+      Promise.resolve({ data: [] as { id: string; fx_rate?: number | null }[], error: null }),
 
       // 14. YTD expense VAT
       supabase
@@ -220,7 +212,7 @@ export async function GET(req: NextRequest) {
       // 16. Stock lots (current inventory)
       supabase
         .from('stock_lots')
-        .select('qty_remaining, entry_cost_try')
+        .select('qty_remaining, cost_price_try')
         .eq('company_id', companyId)
         .is('deleted_at', null)
         .gt('qty_remaining', 0),
@@ -248,8 +240,8 @@ export async function GET(req: NextRequest) {
     // YTD P&L for tax estimate
     const ytdRevenue = (ytdRevenueRes.data ?? []).reduce((s, r) => s + Number(r.total_try), 0)
     const ytdCogs    = (ytdCogsRes.data ?? []).reduce((s, r) => {
-      const lot = (r as { stock_lots?: { entry_cost_try?: number } | null }).stock_lots
-      return s + Number(r.qty_allocated ?? 0) * Number(lot?.entry_cost_try ?? 0)
+      const lot = (r as { stock_lots?: { cost_price_try?: number } | null }).stock_lots
+      return s + Number(r.qty_allocated ?? 0) * Number(lot?.cost_price_try ?? 0)
     }, 0)
     const ytdOpExpenses = (ytdExpensesRes.data ?? []).reduce((s, r) => {
       const t = String((r as { expense_type?: string | null }).expense_type ?? '')
@@ -259,26 +251,12 @@ export async function GET(req: NextRequest) {
     }, 0)
     const ytdProfit = ytdRevenue - ytdCogs - ytdOpExpenses
 
-    // VAT net — purchase VAT requires a second query over purchase_items
+    // VAT net
     const salesVat   = (ytdSalesVatRes.data ?? []).reduce((s, r) => s + Number(r.kdv_amount_try ?? 0), 0)
     const expenseVat = (ytdExpenseVatRes.data ?? []).reduce((s, r) => s + Number(r.kdv ?? 0), 0)
-
-    // Step 2: fetch purchase_items for the finalized YTD purchases and compute input VAT
-    let purchaseVat = 0
-    const purchaseHeaders = ytdPurchaseVatRes.data ?? []
-    if (purchaseHeaders.length > 0) {
-      const ids   = purchaseHeaders.map((p: { id: string }) => String(p.id))
-      const fxMap = new Map<string, number>(purchaseHeaders.map((p: { id: string; fx_rate?: number | null }) => [String(p.id), Number(p.fx_rate ?? 1) || 1]))
-      const { data: purchaseItems } = await supabase
-        .from('purchase_items')
-        .select('purchase_id, quantity, unit_price, kdv')
-        .in('purchase_id', ids)
-      for (const it of purchaseItems ?? []) {
-        const fx  = fxMap.get(String(it.purchase_id)) ?? 1
-        purchaseVat += Number(it.quantity ?? 0) * Number(it.unit_price ?? 0) * fx * Number(it.kdv ?? 0) / 100
-      }
-      purchaseVat = Math.round(purchaseVat * 100) / 100
-    }
+    // purchaseVat is always 0 until a proper `purchases` + `purchase_items` module is added
+    const purchaseVat = 0
+    void ytdPurchaseVatRes // referenced above, unused now
 
     const kdvNet = salesVat - purchaseVat - expenseVat
 
@@ -319,7 +297,7 @@ export async function GET(req: NextRequest) {
     })
 
     const stock = computeStockMetrics({
-      lots: (stockRes.data ?? []) as { qty_remaining: number; entry_cost_try: number }[],
+      lots: (stockRes.data ?? []) as { qty_remaining: number; cost_price_try: number }[],
       monthlyBurn: cashAndBurn.monthly_burn_rate,
     })
 

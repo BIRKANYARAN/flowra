@@ -68,7 +68,7 @@ export interface PartnerInputs {
 }
 
 export interface StockInputs {
-  lots: Array<{ qty_remaining: number; entry_cost_try: number }>
+  lots: Array<{ qty_remaining: number; cost_price_try: number }>
   monthlyBurn: number  // for coverage ratio
 }
 
@@ -270,7 +270,7 @@ export function computePartnerMetrics(i: PartnerInputs): CfoMetrics['partner'] {
 
 export function computeStockMetrics(i: StockInputs): CfoMetrics['stock'] {
   const fifoValue = i.lots.reduce(
-    (s, l) => s + Number(l.qty_remaining) * Number(l.entry_cost_try), 0
+    (s, l) => s + Number(l.qty_remaining) * Number(l.cost_price_try), 0
   )
   const coverage = i.monthlyBurn > 0
     ? round2(fifoValue / i.monthlyBurn)

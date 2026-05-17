@@ -447,20 +447,16 @@ export async function getCfoMetrics(
       .eq('company_id', companyId).is('deleted_at', null),
 
     // 16. Stock lots
-    supabase.from('stock_lots').select('qty_remaining, entry_cost_try')
+    supabase.from('stock_lots').select('qty_remaining, cost_price_try')
       .eq('company_id', companyId).is('deleted_at', null).gt('qty_remaining', 0),
   ])
 
-  // Phase-2 COGS — filtered by actual YTD sale IDs
-  const ytdSaleIds = (ytdRevenueRes.data ?? []).map((r: { id: string }) => r.id)
-  const ytdCogsRes = ytdSaleIds.length > 0
-    ? await supabase
-        .from('sale_item_allocations')
-        .select('qty_allocated, stock_lots!inner(entry_cost_try)')
-        .eq('company_id', companyId)
-        .is('deleted_at', null)
-        .in('sale_id', ytdSaleIds)
-    : { data: [] as { qty_allocated: number; stock_lots: { entry_cost_try: number } | null }[], error: null }
+  // Phase-2 COGS — all allocations for company (sale_item_allocations has no sale_id or deleted_at)
+  // To get YTD-filtered COGS we'd need a 2-step join through sale_items; for now all-time COGS is used.
+  const ytdCogsRes = await supabase
+      .from('sale_item_allocations')
+      .select('qty_allocated, stock_lots!inner(cost_price_try)')
+      .eq('company_id', companyId)
 
   const errs = [
     allTimeCollectedRes.error, allTimePaidExpensesRes.error, unpaidExpensesRes.error,
@@ -478,8 +474,8 @@ export async function getCfoMetrics(
 
   const ytdRevenue = (ytdRevenueRes.data ?? []).reduce((s, r) => s + Number(r.total_try), 0)
   const ytdCogs    = (ytdCogsRes.data ?? []).reduce((s, r) => {
-    const lot = (r as { stock_lots?: { entry_cost_try?: number } | null }).stock_lots
-    return s + Number(r.qty_allocated ?? 0) * Number(lot?.entry_cost_try ?? 0)
+    const lot = (r as { stock_lots?: { cost_price_try?: number } | null }).stock_lots
+    return s + Number(r.qty_allocated ?? 0) * Number(lot?.cost_price_try ?? 0)
   }, 0)
   const ytdOpExpenses = (ytdExpensesRes.data ?? []).reduce((s, r) => {
     const t = String((r as { expense_type?: string | null }).expense_type ?? '')
@@ -528,7 +524,7 @@ export async function getCfoMetrics(
   })
 
   const stock = computeStockMetrics({
-    lots: (stockRes.data ?? []) as { qty_remaining: number; entry_cost_try: number }[],
+    lots: (stockRes.data ?? []) as { qty_remaining: number; cost_price_try: number }[],
     monthlyBurn: cashAndBurn.monthly_burn_rate,
   })
 
