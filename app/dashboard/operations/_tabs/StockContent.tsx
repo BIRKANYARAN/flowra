@@ -1,26 +1,9 @@
 // ── StockContent — Operations hub / stock tab ─────────────────────────────────
 
-import { createClient } from '@/lib/supabase-server'
-import type { StockMovement } from '@/types'
-import StockAdjustClient from '@/app/dashboard/stocks/StockAdjustClient'
-
-function fmtTRY(n: number): string {
-  const abs = Math.abs(n)
-  const sign = n < 0 ? '−' : ''
-  if (abs >= 1_000_000) return `${sign}₺${(abs / 1_000_000).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}M`
-  if (abs >= 1_000)     return `${sign}₺${(abs / 1_000).toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}K`
-  return `${sign}₺${abs.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-}
-
-function fmtDateShort(iso: string): string {
-  try { return new Date(iso + 'T00:00:00').toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' }) }
-  catch { return iso }
-}
-
-function fmtDateTime(iso: string): string {
-  try { return new Date(iso).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) }
-  catch { return iso }
-}
+import { createClient }                             from '@/lib/supabase-server'
+import { fmtTRY, fmtDate as fmtDateShort, fmtDatetime as fmtDateTime } from '@/lib/format'
+import type { StockMovement }                       from '@/types'
+import StockAdjustClient                            from '@/app/dashboard/stocks/StockAdjustClient'
 
 function holdingDays(entryDate: string): number {
   const today = new Date()

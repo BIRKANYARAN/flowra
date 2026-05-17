@@ -4,7 +4,7 @@
 // Client component: lists purchase orders, allows status updates + new order form.
 
 import { useState, useEffect, useCallback } from 'react'
-import { formatTRY as fmt } from '@/lib/format'
+import { formatTRY as fmt, fmtDate } from '@/lib/format'
 
 type OrderStatus = 'draft' | 'ordered' | 'received' | 'cancelled'
 
@@ -28,10 +28,6 @@ interface Order {
   notes:         string | null
   created_at:    string
   purchase_order_items: OrderItem[]
-}
-
-function fmtDate(iso: string) {
-  return new Date(iso + 'T00:00:00').toLocaleDateString('tr-TR', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
 const STATUS_META: Record<OrderStatus, { label: string; cls: string }> = {
