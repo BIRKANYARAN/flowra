@@ -19,87 +19,16 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { CURRENCIES, type Currency, type Product, type RecurringProjectionMonth } from '@/types'
 import { round2 } from '@/lib/calc'
 import { getSalePrice, getSaleCurrency, getLegacyProductCost } from '@/lib/product-adapter'
+import {
+  currSym, fmtC, pct, fmtMonth,
+  ZERO_SIM_EQ,
+  type SimEqResult, type DebtBurdenResult, type SimulationClientProps,
+} from './_components/types'
+import { MiniBar } from './_components/MiniBar'
+import { InputPanel } from './_components/InputPanel'
+import { ProjectionTable } from './_components/ProjectionTable'
 
-/* ── Style tokens ───────────────────────────────────────────────────────────── */
-const IL  = 'w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white transition-colors'
-const LAB = 'block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5'
-
-function currSym(c: string): string {
-  return c === 'USD' ? '$' : c === 'EUR' ? '€' : '₺'
-}
-
-function fmtC(n: number, sym: string) {
-  return sym + Number(n || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-}
-
-function pct(n: number) {
-  return '%' + Number(n || 0).toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
-}
-
-/** Format YYYY-MM as Turkish short month name + year */
-function fmtMonth(ym: string): string {
-  const [y, m] = ym.split('-').map(Number)
-  const names = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara']
-  return `${names[m - 1] ?? ym} ${y}`
-}
-
-/* ── Partner equalization types ─────────────────────────────────────────────── */
-interface SimEqEntry {
-  partner_id:          string
-  partner_name:        string
-  share_ratio:         number
-  equalization_amount: number
-  pro_rata_share:      number
-  total_payout:        number
-}
-interface SimEqResult {
-  baseline_per_unit:  number
-  total_equalization: number
-  distributable:      number
-  remaining_after_eq: number
-  entries:            SimEqEntry[]
-}
-const ZERO_SIM_EQ: SimEqResult = {
-  baseline_per_unit: 0, total_equalization: 0, distributable: 0,
-  remaining_after_eq: 0, entries: [],
-}
-
-/* ── Debt burden types ─────────────────────────────────────────────────────── */
-interface DebtBurdenSummary {
-  total_outstanding:     number
-  total_loans_given:     number
-  total_loans_repaid:    number
-  weighted_avg_per_unit: number
-  is_balanced:           boolean
-  equalization_needed:   number
-  partner_count:         number
-}
-interface DebtBurdenResult {
-  entries: unknown[]
-  summary: DebtBurdenSummary
-}
-
-/* ── Props ──────────────────────────────────────────────────────────────────── */
-export interface SimulationClientProps {
-  userId:             string
-  companyId:          string | null
-  initialProducts:    Product[]
-  initialPolicyRates: { TRY: number; USD: number; EUR: number }
-  initialFxRates:     { USD: number; EUR: number }
-  initialPartnerCount: number
-}
-
-/* ── Inline mini bar chart for monthly projection ───────────────────────────── */
-function MiniBar({ value, max, color }: { value: number; max: number; color: string }) {
-  const pct = max > 0 ? Math.max(0, Math.min(100, (value / max) * 100)) : 0
-  return (
-    <div className="flex items-center gap-1.5 mt-1">
-      <div className="flex-1 h-1 bg-gray-100 rounded-full overflow-hidden">
-        <div className={`h-1 rounded-full transition-all ${color}`} style={{ width: `${pct}%` }} />
-      </div>
-    </div>
-  )
-}
+export type { SimulationClientProps }
 
 /* ── Component ──────────────────────────────────────────────────────────────── */
 export default function SimulationClient({
@@ -421,6 +350,17 @@ export default function SimulationClient({
   /* ── Max values for mini bar chart ─────────────────────────────────────── */
   const maxRevenue = Math.max(...projection.map(r => r.revenue), 1)
 
+  /* ── InputPanel handler: clear product when manual cost changes ─────────── */
+  const handleManualCostChange = (v: string) => {
+    setManualCost(v)
+    if (productId) setProductId('')
+  }
+
+  const handleProductChange = (id: string) => {
+    setProductId(id)
+    if (!id) { setManualCost(''); setCatalogPrice('') }
+  }
+
   return (
     <div className="max-w-5xl space-y-4">
 
@@ -503,174 +443,38 @@ export default function SimulationClient({
       </div>
 
       {/* ── Zone 1: Input panel ───────────────────────────────────────────────── */}
-      <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Parametreler</h2>
-          <span className="text-[10px] text-gray-400 italic">Sonuçlar yukarıda otomatik güncellenir ↑</span>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div>
-            <label className={LAB}>Ürün Seç (opsiyonel)</label>
-            <select
-              className={IL}
-              value={productId}
-              onChange={e => {
-                setProductId(e.target.value)
-                if (!e.target.value) { setManualCost(''); setCatalogPrice('') }
-              }}
-            >
-              <option value="">-- Manuel giris --</option>
-              {products.map(p => (
-                <option key={p.id} value={p.id}>{p.name} ({p.sku || '-'})</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className={LAB}>Birim Maliyet</label>
-            <input
-              type="number" min="0" step="0.01"
-              className={IL}
-              value={manualCost}
-              onChange={e => { setManualCost(e.target.value); if (productId) setProductId('') }}
-              placeholder="0.00"
-            />
-          </div>
-
-          <div>
-            <label className={LAB}>Katalog Fiyatı</label>
-            <input
-              type="number" min="0" step="0.01"
-              className={IL}
-              value={catalogPrice}
-              onChange={e => setCatalogPrice(e.target.value)}
-              placeholder="0.00"
-            />
-          </div>
-
-          <div>
-            <label className={LAB}>Aylık Satış Adedi</label>
-            <input
-              type="number" min="0" step="1"
-              className={IL}
-              value={monthlyQty}
-              onChange={e => setMonthlyQty(e.target.value)}
-              placeholder="100"
-            />
-          </div>
-
-          <div>
-            <label className={LAB}>İskonto (%)</label>
-            <input
-              type="number" min="0" max="100" step="0.1"
-              className={IL}
-              value={discount}
-              onChange={e => setDiscount(e.target.value)}
-              placeholder="0"
-            />
-          </div>
-
-          <div>
-            <label className={LAB}>
-              Yıllık Faiz Oranı (%)
-              {selectedProduct && (
-                <span className="text-primary-500 normal-case font-normal ml-1">
-                  — {getSaleCurrency(selectedProduct) ?? 'TRY'}
-                </span>
-              )}
-            </label>
-            <input
-              type="number" min="0" step="0.1"
-              className={IL}
-              value={interestRate}
-              onChange={e => setInterestRate(e.target.value)}
-              placeholder={String(policyRates.TRY)}
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className={LAB}>Satış Tarihi</label>
-            <input
-              type="date"
-              className={IL}
-              value={saleDate}
-              onChange={e => setSaleDate(e.target.value)}
-            />
-          </div>
-          <div className="flex items-end">
-            <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-2.5 text-xs text-blue-700 w-full">
-              ℹ Giderler tekrarlı gider planından otomatik hesaplanır
-              {recurringLoading && <span className="ml-2 opacity-60">yükleniyor…</span>}
-            </div>
-          </div>
-          <div className="flex items-end">
-            <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-xs w-full">
-              <span className="text-gray-400 uppercase tracking-wide font-semibold block mb-0.5">Stok Tutma Süresi</span>
-              <span className="font-bold text-gray-700">
-                {holdingDays} gün
-                {holdingDays >= 30 && <span className="text-gray-400 font-normal"> ({(holdingDays / 30).toFixed(1)} ay)</span>}
-              </span>
-              {!entryDate && !productId && (
-                <span className="text-amber-600 ml-2">(varsayılan 30 gün)</span>
-              )}
-              {!entryDate && productId && (
-                <span className="text-amber-600 ml-2">(stok lotu bulunamadı)</span>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* ── Senaryo Katmanları ──────────────────────────────────────────────── */}
-        <div className="pt-3 border-t border-dashed border-gray-200">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Senaryo Katmanları</span>
-            <span className="text-[10px] text-gray-400 font-normal">— isteğe bağlı · baskı haritasını etkiler</span>
-            {hasScenario && (
-              <span className="ml-auto text-[10px] bg-amber-100 text-amber-700 border border-amber-200 rounded-full px-2 py-0.5 font-bold">
-                Senaryo aktif
-              </span>
-            )}
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className={LAB}>
-                Tahsilat Gecikmesi — %{collectionDelayPct}
-                {collectionDelayPct > 0 && (
-                  <span className="text-amber-500 normal-case font-normal ml-1">
-                    (gelirin %{collectionDelayPct}&apos;i gecikmeli)
-                  </span>
-                )}
-              </label>
-              <input
-                type="range" min="0" max="50" step="5"
-                className="w-full accent-amber-500 h-2 cursor-pointer"
-                value={collectionDelay}
-                onChange={e => setCollectionDelay(e.target.value)}
-              />
-              <div className="flex justify-between text-[10px] text-gray-400 mt-0.5">
-                <span>%0 (normal)</span>
-                <span>%50 (yarı tahsilat)</span>
-              </div>
-            </div>
-            <div>
-              <label className={LAB}>Ek Ortak Borcu (₺)</label>
-              <input
-                type="number" min="0" step="1000"
-                className={IL}
-                value={extraPartnerDebt}
-                onChange={e => setExtraPartnerDebt(e.target.value)}
-                placeholder="0"
-              />
-              <div className="text-[10px] text-gray-400 mt-0.5">
-                Hipotetik borç ekle — borç temizleme süresini etkiler
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <InputPanel
+        products={products}
+        productId={productId}
+        manualCost={manualCost}
+        catalogPrice={catalogPrice}
+        monthlyQty={monthlyQty}
+        discount={discount}
+        interestRate={interestRate}
+        saleDate={saleDate}
+        displayCurrency={displayCurrency}
+        collectionDelay={collectionDelay}
+        extraPartnerDebt={extraPartnerDebt}
+        fxRates={fxRates}
+        policyRates={policyRates}
+        selectedProduct={selectedProduct}
+        backendRealCost={backendRealCost}
+        recurringLoading={recurringLoading}
+        holdingDays={holdingDays}
+        entryDate={entryDate}
+        collectionDelayPct={collectionDelayPct}
+        hasScenario={hasScenario}
+        onProductChange={handleProductChange}
+        onManualCostChange={handleManualCostChange}
+        onCatalogPriceChange={setCatalogPrice}
+        onMonthlyQtyChange={setMonthlyQty}
+        onDiscountChange={setDiscount}
+        onInterestRateChange={setInterestRate}
+        onSaleDateChange={setSaleDate}
+        onDisplayCurrencyChange={setDisplayCurrency}
+        onCollectionDelayChange={setCollectionDelay}
+        onExtraPartnerDebtChange={setExtraPartnerDebt}
+      />
 
       {/* ── Zone 2: Revenue timeline chart (CSS bars) ─────────────────────────── */}
       {hasInputs && (
@@ -827,48 +631,12 @@ export default function SimulationClient({
       )}
 
       {/* ── Zone 3: Monthly projection table ─────────────────────────────────── */}
-      <div className="bg-white border border-gray-200 rounded-xl p-4">
-        <h2 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Aylık Projeksiyon (12 Ay)</h2>
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs">
-            <thead className="sticky top-0 bg-gray-50">
-              <tr className="border-b border-gray-100 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                <th className="py-1.5 pr-3">Ay</th>
-                <th className="py-1.5 pr-3 text-right">Gelir</th>
-                <th className="py-1.5 pr-3 text-right">SMM</th>
-                <th className="py-1.5 pr-3 text-right">Finansman</th>
-                <th className="py-1.5 pr-3 text-right">Brüt Kâr</th>
-                <th className="py-1.5 pr-3 text-right">Tekrarlı Gider</th>
-                <th className="py-1.5 pr-3 text-right">Net Kâr</th>
-                <th className="py-1.5 text-right">Kümülatif</th>
-              </tr>
-            </thead>
-            <tbody>
-              {projection.map(r => (
-                <tr key={r.month} className="border-b border-gray-50 hover:bg-gray-50/50">
-                  <td className="py-1.5 pr-3 font-medium text-gray-600">{r.month}. Ay</td>
-                  <td className="py-1.5 pr-3 text-right tabular-nums">
-                    {fmtC(toDisplay(r.revenue), S)}
-                    <MiniBar value={r.revenue} max={maxRevenue} color="bg-blue-200" />
-                  </td>
-                  <td className="py-1.5 pr-3 text-right tabular-nums text-gray-500">{fmtC(toDisplay(r.cogs), S)}</td>
-                  <td className="py-1.5 pr-3 text-right tabular-nums text-gray-500">{fmtC(toDisplay(r.holding), S)}</td>
-                  <td className={`py-1.5 pr-3 text-right tabular-nums font-semibold ${r.grossProfit >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
-                    {fmtC(toDisplay(r.grossProfit), S)}
-                  </td>
-                  <td className="py-1.5 pr-3 text-right tabular-nums text-red-600">{fmtC(toDisplay(r.expense), S)}</td>
-                  <td className={`py-1.5 pr-3 text-right tabular-nums font-semibold ${r.netProfit >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
-                    {fmtC(toDisplay(r.netProfit), S)}
-                  </td>
-                  <td className={`py-1.5 text-right tabular-nums font-semibold ${r.cumProfit >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
-                    {fmtC(toDisplay(r.cumProfit), S)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <ProjectionTable
+        projection={projection}
+        toDisplay={toDisplay}
+        S={S}
+        hasInputs={hasInputs}
+      />
 
       {/* ── Zone 3: Yearly totals ─────────────────────────────────────────────── */}
       <div className="bg-white border border-gray-200 rounded-xl p-4">
