@@ -117,7 +117,9 @@ export async function GET(req: NextRequest) {
       return s + (rate > 0 ? principal * rate / 12 : principal * 0.015)
     }, 0)
     const monthlyNet = pnl?.net_after_tax_try ?? 0
-    const dsr        = monthlyNet > 0 ? monthlyDebtService / monthlyNet : 0
+    const dsr        = monthlyNet > 0
+      ? Math.min(1, monthlyDebtService / monthlyNet)
+      : (monthlyDebtService > 0 ? 1.0 : 0)
 
     // Cash runway: use cash received this month as proxy for operating cash
     const cashReceivedMTD = cashPaid.reduce((s, r) => s + Number((r as { total_try: number }).total_try ?? 0), 0)

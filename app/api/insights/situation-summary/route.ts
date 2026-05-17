@@ -70,7 +70,11 @@ export async function GET(req: NextRequest) {
     }, 0)
     const monthlyNet  = pnl?.net_after_tax_try ?? 0
     const monthlyRevM = pnl?.revenue_try ?? 0
-    const dsr = monthlyNet > 0 ? monthlyDebtService / monthlyNet : 0
+    // When company is unprofitable, DSR is treated as max-stress (1.0) if there's
+    // any debt service obligation, rather than 0 (which would incorrectly signal "no stress").
+    const dsr = monthlyNet > 0
+      ? Math.min(1, monthlyDebtService / monthlyNet)
+      : (monthlyDebtService > 0 ? 1.0 : 0)
 
     // Partner loan concentration: max single-partner outstanding / total outstanding
     const loanByPartner = tranches.reduce((acc: Record<string, number>, t) => {

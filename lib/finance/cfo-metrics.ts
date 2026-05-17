@@ -28,6 +28,8 @@ export const FINANCING_EXPENSE_TYPES = new Set([
   'loan_repayment',
   'dividend',
   'internal_transfer',
+  'principal',
+  'partner_loan',
 ])
 
 // Burn = only pure operational recurring costs; capex excluded from monthly avg

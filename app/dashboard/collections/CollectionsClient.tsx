@@ -55,8 +55,15 @@ const TODAY = new Date().toISOString().slice(0, 10)
 
 function isOverdue(row: CollectionRow): boolean {
   if (row.payment_status === 'paid') return false
-  if (!row.due_date) return false
-  return row.due_date < TODAY
+  // If a due_date is set, use it as the primary signal
+  if (row.due_date) return row.due_date < TODAY
+  // No due_date: fall back to sale_date — sales older than 30 days without a due date
+  // are considered overdue (matches situation-summary aging logic)
+  if (row.sale_date) {
+    const saleAge = (new Date(TODAY).getTime() - new Date(row.sale_date).getTime()) / 86_400_000
+    return saleAge > 30
+  }
+  return false
 }
 
 const STATUS_META = {
