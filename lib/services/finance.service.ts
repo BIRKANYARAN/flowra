@@ -25,6 +25,10 @@
 import { createClient } from '@/lib/supabase-server'
 import { logger, type RequestContext } from '@/lib/logger'
 import { AppError } from '@/types/errors'
+import type { SupabaseClient } from '@supabase/supabase-js'
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyClient = SupabaseClient<any>
 import {
   CORPORATE_TAX_RATE_TR,
   materializeRecurring,
@@ -61,13 +65,13 @@ export class FinanceService {
   //
   // sales.kdv_total is in the SALE's currency. Convert to TRY using the
   // sale's frozen fx_rate_try (defaults to 1 for TRY-native sales).
-  static async getRevenue(userId: string, companyId: string, period: Period, ctx?: RequestContext): Promise<RevenueResult> {
+  static async getRevenue(userId: string, companyId: string, period: Period, ctx?: RequestContext, clientOverride?: AnyClient): Promise<RevenueResult> {
     validatePeriod(period)
-    const supabase = createClient()
+    const supabase = clientOverride ?? createClient()
 
     const { data, error } = await supabase
       .from('sales')
-      .select('total_try:total')
+      .select('total_try:total, kdv_amount_try')
       .eq('company_id', companyId)
       .is('deleted_at', null)
       // Use sale_date (business invoice date), not created_at (row insertion time),
@@ -84,7 +88,7 @@ export class FinanceService {
     let vat   = 0
     for (const r of data ?? []) {
       total += Number(r.total_try ?? 0)
-      vat   += 0   // kdv_amount_try column does not exist on live DB; sales_vat_try = 0
+      vat   += Number(r.kdv_amount_try ?? 0)
     }
 
     return {
@@ -106,9 +110,9 @@ export class FinanceService {
   // We deliberately do NOT trust sales.cogs / sales.total_cost when
   // allocations exist, because those legacy fields can disagree with the
   // FIFO consumption (especially after stock corrections).
-  static async getCost(userId: string, companyId: string, period: Period, ctx?: RequestContext): Promise<CostResult> {
+  static async getCost(userId: string, companyId: string, period: Period, ctx?: RequestContext, clientOverride?: AnyClient): Promise<CostResult> {
     validatePeriod(period)
-    const supabase = createClient()
+    const supabase = clientOverride ?? createClient()
 
     // Step 1: Get sales in the period (just IDs — no total_cost column on sales table)
     const { data: sales, error: sErr } = await supabase
@@ -186,10 +190,10 @@ export class FinanceService {
   }
 
   // ── Gross profit (Revenue - COGS) ─────────────────────────────────────────
-  static async getGrossProfit(userId: string, companyId: string, period: Period, ctx?: RequestContext) {
+  static async getGrossProfit(userId: string, companyId: string, period: Period, ctx?: RequestContext, clientOverride?: AnyClient) {
     const [rev, cost] = await Promise.all([
-      this.getRevenue(userId, companyId, period, ctx),
-      this.getCost(userId, companyId, period, ctx),
+      this.getRevenue(userId, companyId, period, ctx, clientOverride),
+      this.getCost(userId, companyId, period, ctx, clientOverride),
     ])
     return {
       revenue_try:      rev.total_try,
@@ -206,9 +210,9 @@ export class FinanceService {
   // Recurring rows are NEVER persisted into the expenses table here — the
   // template is the source of truth. If the user wants real expense rows
   // (e.g. for invoice tracking), they create them via the regular expenses API.
-  static async listExpenseLines(userId: string, companyId: string, period: Period, ctx?: RequestContext): Promise<ExpenseLineComputed[]> {
+  static async listExpenseLines(userId: string, companyId: string, period: Period, ctx?: RequestContext, clientOverride?: AnyClient): Promise<ExpenseLineComputed[]> {
     validatePeriod(period)
-    const supabase = createClient()
+    const supabase = clientOverride ?? createClient()
 
     const [{ data: exps, error: e1 }, { data: recs, error: e2 }] = await Promise.all([
       supabase
@@ -303,8 +307,8 @@ export class FinanceService {
     return lines
   }
 
-  static async getOperatingExpenses(userId: string, companyId: string, period: Period, ctx?: RequestContext): Promise<OperatingExpenseResult> {
-    const lines = await this.listExpenseLines(userId, companyId, period, ctx)
+  static async getOperatingExpenses(userId: string, companyId: string, period: Period, ctx?: RequestContext, clientOverride?: AnyClient): Promise<OperatingExpenseResult> {
+    const lines = await this.listExpenseLines(userId, companyId, period, ctx, clientOverride)
     let total = 0, deductible = 0, nonDeductible = 0
     for (const l of lines) {
       total += l.amount_try
@@ -327,10 +331,10 @@ export class FinanceService {
    *   net_profit  = revenue - cost - all_expenses     (cash-basis-ish view)
    *   matrah      = revenue - cost - deductible_only  (tax base)
    */
-  static async getNetProfit(userId: string, companyId: string, period: Period, ctx?: RequestContext) {
+  static async getNetProfit(userId: string, companyId: string, period: Period, ctx?: RequestContext, clientOverride?: AnyClient) {
     const [gross, exp] = await Promise.all([
-      this.getGrossProfit(userId, companyId, period, ctx),
-      this.getOperatingExpenses(userId, companyId, period, ctx),
+      this.getGrossProfit(userId, companyId, period, ctx, clientOverride),
+      this.getOperatingExpenses(userId, companyId, period, ctx, clientOverride),
     ])
     return {
       revenue_try:                 gross.revenue_try,
@@ -353,14 +357,15 @@ export class FinanceService {
     period:    Period,
     options?: { corporate_tax_rate?: number },
     ctx?:    RequestContext,
+    clientOverride?: AnyClient,
   ): Promise<FinancialSummary> {
     // Lazy import breaks the static cycle FinanceService ↔ TaxService.
     const { TaxService, computeCorporateTax } = await import('@/lib/services/tax.service')
 
     const [gross, expenses, vat] = await Promise.all([
-      this.getGrossProfit(userId, companyId, period, ctx),
-      this.getOperatingExpenses(userId, companyId, period, ctx),
-      TaxService.getKdvNet(userId, companyId, period, ctx),
+      this.getGrossProfit(userId, companyId, period, ctx, clientOverride),
+      this.getOperatingExpenses(userId, companyId, period, ctx, clientOverride),
+      TaxService.getKdvNet(userId, companyId, period, ctx, clientOverride),
     ])
 
     const rate   = options?.corporate_tax_rate ?? CORPORATE_TAX_RATE_TR

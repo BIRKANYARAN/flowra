@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
     const todayISO = today.toISOString().slice(0, 10)
 
     const [pnlRes, overdueRes, periodRes, trancheRes, rulesRes, commitRes, cashRes] = await Promise.allSettled([
-      FinanceService.getFinancialSummary(uid, companyId, { from, to }),
+      FinanceService.getFinancialSummary(uid, companyId, { from, to }, undefined, undefined, supabase),
       supabase.from('sales')
         .select('total_try:total, amount_paid:paid_amount, sale_date')
         .eq('company_id', companyId)

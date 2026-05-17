@@ -128,17 +128,18 @@ create or replace function public.convert_proforma_to_sale(
   p_internal_notes text    default null
 ) returns jsonb language plpgsql security definer as $$
 declare
-  v_proforma      proformas%rowtype;
-  v_item          proforma_items%rowtype;
-  v_sale_id       uuid;
-  v_sale_no       text;
-  v_year          text;
-  v_seq           int;
-  v_lot           stock_lots%rowtype;
-  v_qty_needed    numeric;
-  v_qty_from_lot  numeric;
-  v_sale_item_id  uuid;
-  v_total_try     numeric;
+  v_proforma        proformas%rowtype;
+  v_item            proforma_items%rowtype;
+  v_sale_id         uuid;
+  v_sale_no         text;
+  v_year            text;
+  v_seq             int;
+  v_lot             stock_lots%rowtype;
+  v_qty_needed      numeric;
+  v_qty_from_lot    numeric;
+  v_sale_item_id    uuid;
+  v_total_try       numeric;
+  v_kdv_amount_try  numeric(12,2) := 0;
 begin
   -- 1. Lock + validate proforma
   select * into v_proforma
@@ -172,10 +173,22 @@ begin
   -- 3. Compute TRY total (GAP 1 fix: multiply by fx_rate_try for non-TRY proformas)
   v_total_try := round(v_proforma.total * coalesce(v_proforma.fx_rate_try, 1), 2);
 
+  -- 3b. Compute KDV amount in TRY (GAP 6 fix for proforma path).
+  -- Each line's KDV portion = line_total × kdv_rate / (100 + kdv_rate).
+  -- line_total is in native currency → multiply by fx_rate_try to get TRY.
+  select round(
+    coalesce(sum(
+      pi.line_total * coalesce(pi.kdv_rate, 20) / (100 + coalesce(pi.kdv_rate, 20))
+    ), 0) * coalesce(v_proforma.fx_rate_try, 1)
+  , 2)
+  into v_kdv_amount_try
+  from proforma_items pi
+  where pi.proforma_id = p_proforma_id;
+
   -- 4. Insert sale row (total is now always in TRY)
   insert into sales (
     company_id, user_id, customer_id, bank_id, proforma_id,
-    sale_no, customer_name, currency, total, payment_status,
+    sale_no, customer_name, currency, total, kdv_amount_try, payment_status,
     sale_date, due_date, notes, internal_notes,
     fx_usd, fx_eur, fx_try, fx_source, fx_rate_date, fx_rate_try,
     company_snapshot, customer_snapshot
@@ -183,7 +196,8 @@ begin
     v_proforma.company_id, p_user_id, v_proforma.customer_id,
     coalesce(p_bank_id, v_proforma.bank_id), p_proforma_id,
     v_sale_no, v_proforma.customer_name, v_proforma.currency,
-    v_total_try,   -- ← GAP 1 fixed: TRY total, not native currency total
+    v_total_try,         -- ← GAP 1 fixed: TRY total, not native currency total
+    v_kdv_amount_try,    -- ← GAP 6 fixed: KDV portion in TRY
     'pending',
     coalesce(p_sale_date, now()::date), p_due_date, p_notes, p_internal_notes,
     v_proforma.fx_usd, v_proforma.fx_eur, v_proforma.fx_try,

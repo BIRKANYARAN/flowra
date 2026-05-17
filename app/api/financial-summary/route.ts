@@ -87,6 +87,7 @@ export async function GET(req: NextRequest) {
       { from, to },
       { corporate_tax_rate: taxRate },
       ctx,
+      supabase,
     )
 
     // ── Flat response shape (as spec'd by caller) ──────────────────────────

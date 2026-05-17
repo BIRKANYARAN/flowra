@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
 
     // Parallel data fetches
     const [pnlRes, overdueRes, trancheRes, cfoRes] = await Promise.allSettled([
-      FinanceService.getFinancialSummary(uid, companyId, { from, to }),
+      FinanceService.getFinancialSummary(uid, companyId, { from, to }, undefined, undefined, supabase),
       supabase.from('sales')
         .select('total_try:total, amount_paid:paid_amount, sale_date')
         .eq('company_id', companyId)

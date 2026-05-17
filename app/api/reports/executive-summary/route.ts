@@ -25,8 +25,8 @@ export async function GET(req: NextRequest) {
     const asOf   = params.get('as_of') ?? to
 
     const [fs, taxSummary, balanceSheet, cashFlow] = await Promise.allSettled([
-      FinanceService.getFinancialSummary(uid, companyId, { from, to }),
-      TaxService.getKdvNet(uid, companyId, { from, to }),
+      FinanceService.getFinancialSummary(uid, companyId, { from, to }, undefined, undefined, supabase),
+      TaxService.getKdvNet(uid, companyId, { from, to }, undefined, supabase),
       BalanceSheetService.compute(uid, companyId, asOf, supabase),
       CashFlowStatementService.compute(uid, companyId, { from, to }, supabase),
     ])

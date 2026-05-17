@@ -33,6 +33,10 @@
 import { createClient } from '@/lib/supabase-server'
 import { logger, type RequestContext } from '@/lib/logger'
 import { AppError } from '@/types/errors'
+import type { SupabaseClient } from '@supabase/supabase-js'
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyClient = SupabaseClient<any>
 import {
   CORPORATE_TAX_RATE_TR,
   materializeRecurring,
@@ -101,9 +105,9 @@ export class TaxService {
   // ── Output VAT (sales side) ────────────────────────────────────────────────
   // sales.kdv_total is in the SALE's currency. Convert with fx_rate_try.
   // For TRY-native sales, fx_rate_try is null/1 → no-op.
-  static async getSalesVat(userId: string, companyId: string, period: Period, ctx?: RequestContext): Promise<number> {
+  static async getSalesVat(userId: string, companyId: string, period: Period, ctx?: RequestContext, clientOverride?: AnyClient): Promise<number> {
     validatePeriod(period)
-    const supabase = createClient()
+    const supabase = clientOverride ?? createClient()
     // kdv_amount_try is now stored on the sales row (accounting_truth_v1 migration).
     // For legacy rows that predate the column, kdv_amount_try defaults to 0.
     const { data, error } = await supabase
@@ -129,7 +133,7 @@ export class TaxService {
   //
   // Lines with kdv=0 (the default for legacy rows) contribute nothing — exactly
   // the right behaviour for backward compatibility.
-  static async getPurchaseVat(userId: string, companyId: string, period: Period, ctx?: RequestContext): Promise<number> {
+  static async getPurchaseVat(userId: string, companyId: string, period: Period, ctx?: RequestContext, clientOverride?: AnyClient): Promise<number> {
     // The current DB schema uses `purchase_orders` / `purchase_order_items` (no `purchases` table).
     // Purchase VAT tracking requires a `purchases` table with KDV line items that does not exist yet.
     // Return 0 until the purchase module is implemented with proper VAT columns.
@@ -137,9 +141,9 @@ export class TaxService {
   }
 
   // ── Input VAT (expense side: actual + recurring occurrences) ──────────────
-  static async getExpenseVat(userId: string, companyId: string, period: Period, ctx?: RequestContext): Promise<number> {
+  static async getExpenseVat(userId: string, companyId: string, period: Period, ctx?: RequestContext, clientOverride?: AnyClient): Promise<number> {
     validatePeriod(period)
-    const supabase = createClient()
+    const supabase = clientOverride ?? createClient()
 
     const [{ data: exps, error: e1 }, { data: recs, error: e2 }] = await Promise.all([
       supabase
@@ -190,11 +194,11 @@ export class TaxService {
   }
 
   // ── KDV net (sales − purchase − expense) ──────────────────────────────────
-  static async getKdvNet(userId: string, companyId: string, period: Period, ctx?: RequestContext): Promise<KdvResult> {
+  static async getKdvNet(userId: string, companyId: string, period: Period, ctx?: RequestContext, clientOverride?: AnyClient): Promise<KdvResult> {
     const [sv, pv, ev] = await Promise.all([
-      this.getSalesVat(userId, companyId, period, ctx),
-      this.getPurchaseVat(userId, companyId, period, ctx),
-      this.getExpenseVat(userId, companyId, period, ctx),
+      this.getSalesVat(userId, companyId, period, ctx, clientOverride),
+      this.getPurchaseVat(userId, companyId, period, ctx, clientOverride),
+      this.getExpenseVat(userId, companyId, period, ctx, clientOverride),
     ])
     return computeKdv({ sales_vat_try: sv, purchase_vat_try: pv, expense_vat_try: ev })
   }
@@ -207,11 +211,12 @@ export class TaxService {
     period:    Period,
     rate?:     number,
     ctx?:      RequestContext,
+    clientOverride?: AnyClient,
   ): Promise<CorporateTaxResult> {
     const { FinanceService } = await import('@/lib/services/finance.service')
     const [gross, exp] = await Promise.all([
-      FinanceService.getGrossProfit(userId, companyId, period, ctx),
-      FinanceService.getOperatingExpenses(userId, companyId, period, ctx),
+      FinanceService.getGrossProfit(userId, companyId, period, ctx, clientOverride),
+      FinanceService.getOperatingExpenses(userId, companyId, period, ctx, clientOverride),
     ])
     return computeCorporateTax({
       revenue_try:             gross.revenue_try,

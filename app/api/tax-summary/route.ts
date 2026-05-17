@@ -88,9 +88,9 @@ export async function GET(req: NextRequest) {
 
     // Fire all three reads in parallel — no dependencies between them.
     const [kdvResult, gross, expResult] = await Promise.all([
-      TaxService.getKdvNet(uid, companyId, period, ctx),
-      FinanceService.getGrossProfit(uid, companyId, period, ctx),
-      FinanceService.getOperatingExpenses(uid, companyId, period, ctx),
+      TaxService.getKdvNet(uid, companyId, period, ctx, supabase),
+      FinanceService.getGrossProfit(uid, companyId, period, ctx, supabase),
+      FinanceService.getOperatingExpenses(uid, companyId, period, ctx, supabase),
     ])
 
     const corpTax = computeCorporateTax({
