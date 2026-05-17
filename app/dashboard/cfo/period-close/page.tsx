@@ -1,7 +1,7 @@
 'use client'
 
 // /dashboard/cfo/period-close — Dönem Kapanış Workflow
-// Lists accounting periods and allows close + lock transitions.
+// Lists accounting periods, shows pre-close checklist, allows close + lock transitions.
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
@@ -14,6 +14,23 @@ interface Period {
   closed_at?:   string | null
   locked_at?:   string | null
 }
+
+// ── Pre-close checklist definition ───────────────────────────────────────────
+// required = true → must be checked before Close button activates
+const CHECKLIST = [
+  { key: 'trial_balance',       label: 'Mizan dengesi kontrol edildi',  required: true,  hint: 'Mizan görünümünden tüm hesapların dengeli olduğunu doğrulayın.' },
+  { key: 'bank_reconciliation', label: 'Banka mutabakatı tamamlandı',   required: true,  hint: 'Bankadaki bakiye ile sistemdeki 102 hesap bakiyesi eşleşiyor.' },
+  { key: 'all_sales_entered',   label: 'Tüm satış faturaları girildi',  required: true,  hint: 'Dönem içindeki tüm satış faturaları sisteme yüklendi.' },
+  { key: 'all_expenses_entered',label: 'Tüm masraflar girildi',         required: true,  hint: 'Dönem içindeki tüm masraflar (faturalar dahil) kayıt altına alındı.' },
+  { key: 'kdv_calculated',      label: 'KDV beyanı hesaplandı',         required: true,  hint: 'Hesaplanan KDV - İndirilecek KDV = Beyanname tutarı doğrulandı.' },
+  { key: 'stock_counted',       label: 'Stok sayımı yapıldı',           required: false, hint: 'Fiziksel stok, sistemdeki stok ile karşılaştırıldı.' },
+  { key: 'compensation_paid',   label: 'Ortak huzur hakkı işlendi',     required: false, hint: 'Dönem huzur hakları masraf olarak girildi (TTK 394).' },
+  { key: 'interest_accrued',    label: 'Faiz tahakkukları hesaplandı',  required: false, hint: 'Ortak borçlarına ait faiz tahakkukları işlendi.' },
+] as const
+
+type ChecklistKey = typeof CHECKLIST[number]['key']
+
+// ── Status helpers ────────────────────────────────────────────────────────────
 
 const STATUS_LABEL: Record<Period['status'], string> = {
   open:      'Açık',
@@ -35,22 +52,46 @@ function fmt(d: string) {
 
 function Skeleton() { return <div className="bg-gray-100 rounded-xl h-16 animate-pulse" /> }
 
+// ── Page ──────────────────────────────────────────────────────────────────────
+
 export default function PeriodClosePage() {
-  const [periods,  setPeriods]  = useState<Period[]>([])
-  const [loading,  setLoading]  = useState(true)
-  const [error,    setError]    = useState<string | null>(null)
-  const [working,  setWorking]  = useState<string | null>(null)  // period id being acted on
-  const [feedback, setFeedback] = useState<Record<string, string>>({})
+  const [periods,   setPeriods]   = useState<Period[]>([])
+  const [loading,   setLoading]   = useState(true)
+  const [error,     setError]     = useState<string | null>(null)
+  const [working,   setWorking]   = useState<string | null>(null)
+  const [feedback,  setFeedback]  = useState<Record<string, string>>({})
+  const [expanded,  setExpanded]  = useState<string | null>(null)
+  const [checklist, setChecklist] = useState<Record<string, Set<ChecklistKey>>>({})
 
   useEffect(() => {
     fetch('/api/periods')
       .then(r => r.json())
-      .then(d => setPeriods(Array.isArray(d) ? d : d.periods ?? []))
+      .then(d => {
+        const list: Period[] = Array.isArray(d) ? d : d.periods ?? []
+        setPeriods(list)
+        // Auto-expand the first open/pre_close period
+        const first = list.find(p => p.status === 'open' || p.status === 'pre_close')
+        if (first) setExpanded(first.id)
+      })
       .catch(() => setError('Dönemler yüklenemedi'))
       .finally(() => setLoading(false))
   }, [])
 
+  function toggleChecklistItem(periodId: string, key: ChecklistKey) {
+    setChecklist(prev => {
+      const current = new Set(prev[periodId] ?? [])
+      if (current.has(key)) current.delete(key); else current.add(key)
+      return { ...prev, [periodId]: current }
+    })
+  }
+
+  function isCloseEnabled(periodId: string): boolean {
+    const checked = checklist[periodId] ?? new Set()
+    return CHECKLIST.filter(i => i.required).every(i => checked.has(i.key))
+  }
+
   async function closePeriod(periodId: string) {
+    if (!isCloseEnabled(periodId)) return
     setWorking(periodId)
     setFeedback(f => ({ ...f, [periodId]: '' }))
     try {
@@ -60,7 +101,8 @@ export default function PeriodClosePage() {
         setFeedback(f => ({ ...f, [periodId]: data.error ?? 'Dönem kapatılamadı' }))
       } else {
         setPeriods(prev => prev.map(p => p.id === periodId ? { ...p, status: 'closed', closed_at: new Date().toISOString() } : p))
-        setFeedback(f => ({ ...f, [periodId]: 'Dönem kapatıldı.' }))
+        setFeedback(f => ({ ...f, [periodId]: '✓ Dönem kapatıldı.' }))
+        setExpanded(null)
       }
     } catch {
       setFeedback(f => ({ ...f, [periodId]: 'Ağ hatası.' }))
@@ -83,7 +125,7 @@ export default function PeriodClosePage() {
         setFeedback(f => ({ ...f, [periodId]: data.error ?? 'Dönem kilitlenemedi' }))
       } else {
         setPeriods(prev => prev.map(p => p.id === periodId ? { ...p, status: 'locked', locked_at: new Date().toISOString() } : p))
-        setFeedback(f => ({ ...f, [periodId]: 'Dönem kilitlendi.' }))
+        setFeedback(f => ({ ...f, [periodId]: '✓ Dönem kilitlendi.' }))
       }
     } catch {
       setFeedback(f => ({ ...f, [periodId]: 'Ağ hatası.' }))
@@ -91,12 +133,18 @@ export default function PeriodClosePage() {
     setWorking(null)
   }
 
+  const requiredCount = CHECKLIST.filter(i => i.required).length
+
   return (
     <div className="flex flex-col gap-4 max-w-3xl">
+
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-black text-gray-900 tracking-tight">Dönem Kapanış Yönetimi</h1>
-          <p className="text-xs text-gray-400 mt-0.5">Muhasebe dönemlerini kapat ve kilitle</p>
+          <p className="text-xs text-gray-400 mt-0.5">
+            Muhasebe dönemlerini kapat ve kilitle — kapanış için {requiredCount} zorunlu kontrol
+          </p>
         </div>
         <Link href="/dashboard/cfo" className="text-xs text-gray-400 hover:text-primary-600 font-semibold">
           ← CFO Cockpit
@@ -119,64 +167,154 @@ export default function PeriodClosePage() {
         </div>
       )}
 
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-3">
         {periods.map(p => {
-          const isWorking = working === p.id
-          const msg = feedback[p.id]
+          const isWorking  = working === p.id
+          const msg        = feedback[p.id]
+          const isOpen     = p.status === 'open' || p.status === 'pre_close'
+          const isExpanded = expanded === p.id && isOpen
+          const checked    = checklist[p.id] ?? new Set<ChecklistKey>()
+          const reqChecked = CHECKLIST.filter(i => i.required && checked.has(i.key)).length
+          const canClose   = isCloseEnabled(p.id)
 
           return (
-            <div key={p.id} className="bg-white border border-gray-200 rounded-xl px-5 py-4">
-              <div className="flex items-center justify-between gap-4 flex-wrap">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-sm font-bold text-gray-900">
-                      {fmt(p.period_start)} — {fmt(p.period_end)}
-                    </span>
-                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${STATUS_COLOR[p.status]}`}>
-                      {STATUS_LABEL[p.status]}
-                    </span>
-                  </div>
-                  {p.closed_at && (
-                    <div className="text-[10px] text-gray-400">
-                      Kapatıldı: {fmt(p.closed_at)}
-                      {p.locked_at && ` · Kilitlendi: ${fmt(p.locked_at)}`}
+            <div key={p.id} className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+
+              {/* Period header row */}
+              <div className="px-5 py-4">
+                <div className="flex items-center justify-between gap-4 flex-wrap">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <span className="text-sm font-bold text-gray-900">
+                        {fmt(p.period_start)} — {fmt(p.period_end)}
+                      </span>
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${STATUS_COLOR[p.status]}`}>
+                        {STATUS_LABEL[p.status]}
+                      </span>
+                      {isOpen && (
+                        <span className="text-[10px] text-gray-400">
+                          {reqChecked}/{requiredCount} zorunlu kontrol
+                        </span>
+                      )}
                     </div>
-                  )}
+                    {p.closed_at && (
+                      <div className="text-[10px] text-gray-400">
+                        Kapatıldı: {fmt(p.closed_at)}
+                        {p.locked_at && ` · Kilitlendi: ${fmt(p.locked_at)}`}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                    {isOpen && (
+                      <button
+                        onClick={() => setExpanded(isExpanded ? null : p.id)}
+                        className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
+                          isExpanded
+                            ? 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
+                        }`}
+                      >
+                        {isExpanded ? 'Kapat ▲' : 'Kontrol Listesi ▼'}
+                      </button>
+                    )}
+
+                    {isOpen ? (
+                      <button
+                        onClick={() => closePeriod(p.id)}
+                        disabled={isWorking || !canClose}
+                        title={canClose ? 'Dönemi kapat' : `Kapamak için ${requiredCount} zorunlu kontrolü tamamlayın`}
+                        className="text-xs font-bold px-3 py-1.5 rounded-lg bg-amber-600 text-white hover:bg-amber-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                      >
+                        {isWorking ? 'İşleniyor...' : 'Dönemi Kapat'}
+                      </button>
+                    ) : p.status === 'closed' ? (
+                      <button
+                        onClick={() => lockPeriod(p.id)}
+                        disabled={isWorking}
+                        className="text-xs font-bold px-3 py-1.5 rounded-lg bg-gray-800 text-white hover:bg-gray-900 disabled:opacity-50 transition-colors"
+                      >
+                        {isWorking ? 'Kilitleniyor...' : 'Kilitle'}
+                      </button>
+                    ) : (
+                      <span className="text-xs text-gray-400 font-semibold">Kilitli — salt okunur</span>
+                    )}
+
+                    <Link
+                      href={`/dashboard/cfo/trial-balance?period_id=${p.id}`}
+                      className="text-xs text-primary-600 hover:text-primary-700 font-semibold px-2 py-1.5 rounded-lg hover:bg-primary-50 transition-colors"
+                    >
+                      Mizan →
+                    </Link>
+                  </div>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0">
-                  {p.status === 'open' || p.status === 'pre_close' ? (
-                    <button
-                      onClick={() => closePeriod(p.id)}
-                      disabled={isWorking}
-                      className="text-xs font-bold px-3 py-1.5 rounded-lg bg-amber-600 text-white hover:bg-amber-700 disabled:opacity-50 transition-colors"
-                    >
-                      {isWorking ? 'İşleniyor...' : 'Dönemi Kapat'}
-                    </button>
-                  ) : p.status === 'closed' ? (
-                    <button
-                      onClick={() => lockPeriod(p.id)}
-                      disabled={isWorking}
-                      className="text-xs font-bold px-3 py-1.5 rounded-lg bg-gray-800 text-white hover:bg-gray-900 disabled:opacity-50 transition-colors"
-                    >
-                      {isWorking ? 'Kilitleniyor...' : 'Kilitle'}
-                    </button>
-                  ) : (
-                    <span className="text-xs text-gray-400 font-semibold">Kilitli — salt okunur</span>
-                  )}
-
-                  <Link
-                    href={`/dashboard/cfo/trial-balance?period_id=${p.id}`}
-                    className="text-xs text-primary-600 hover:text-primary-700 font-semibold px-2 py-1.5 rounded-lg hover:bg-primary-50 transition-colors"
-                  >
-                    Mizan →
-                  </Link>
-                </div>
+                {msg && (
+                  <div className={`mt-2 text-xs px-3 py-2 rounded-lg ${
+                    msg.startsWith('✓') ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'
+                  }`}>
+                    {msg}
+                  </div>
+                )}
               </div>
 
-              {msg && (
-                <div className={`mt-2 text-xs px-3 py-2 rounded-lg ${msg.includes('Dönem kapatıldı') || msg.includes('kilitlendi') ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'}`}>
-                  {msg}
+              {/* Checklist panel */}
+              {isExpanded && (
+                <div className="border-t border-gray-100 px-5 py-4 bg-gray-50/60">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">
+                    Kapanış Kontrol Listesi — {reqChecked}/{requiredCount} zorunlu tamamlandı
+                  </p>
+
+                  <div className="space-y-2">
+                    {CHECKLIST.map(item => {
+                      const isDone = checked.has(item.key)
+                      return (
+                        <label
+                          key={item.key}
+                          className={`flex items-start gap-3 p-2.5 rounded-lg cursor-pointer transition-colors group ${
+                            isDone ? 'bg-emerald-50' : 'bg-white hover:bg-gray-50'
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isDone}
+                            onChange={() => toggleChecklistItem(p.id, item.key)}
+                            className="mt-0.5 w-4 h-4 rounded text-emerald-500 border-gray-300 cursor-pointer"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className={`text-xs font-semibold ${isDone ? 'text-emerald-700 line-through' : 'text-gray-800'}`}>
+                              {item.label}
+                              {item.required
+                                ? <span className="ml-1.5 text-[9px] font-bold text-red-500 uppercase tracking-widest">Zorunlu</span>
+                                : <span className="ml-1.5 text-[9px] font-bold text-gray-400 uppercase tracking-widest">İsteğe Bağlı</span>
+                              }
+                            </div>
+                            <div className="text-[10px] text-gray-400 mt-0.5">{item.hint}</div>
+                          </div>
+                          {item.key === 'trial_balance' && (
+                            <Link
+                              href={`/dashboard/cfo/trial-balance?period_id=${p.id}`}
+                              onClick={e => e.stopPropagation()}
+                              className="text-[10px] text-primary-600 font-semibold hover:underline shrink-0"
+                            >
+                              Mizan →
+                            </Link>
+                          )}
+                        </label>
+                      )
+                    })}
+                  </div>
+
+                  {!canClose && reqChecked < requiredCount && (
+                    <div className="mt-3 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-700">
+                      ⚠️ Dönemi kapatmak için {requiredCount - reqChecked} zorunlu kontrol daha tamamlanmalı.
+                    </div>
+                  )}
+                  {canClose && (
+                    <div className="mt-3 px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg text-xs text-emerald-700 font-semibold">
+                      ✓ Tüm zorunlu kontroller tamamlandı — dönem kapatılabilir.
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -185,7 +323,7 @@ export default function PeriodClosePage() {
       </div>
 
       <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-xs text-blue-700 leading-relaxed">
-        <span className="font-bold">Not:</span> Dönem kapatma için mizan dengeli ve mutabakat kritik uyuşmazlık içermemelidir.
+        <span className="font-bold">Not:</span> API ayrıca mizan dengesi ve mutabakat uyuşmazlıklarını otomatik denetler.
         Kilit işlemi geri alınamaz — tüm finansal yazma işlemleri bu dönem için engellenir.
       </div>
     </div>
