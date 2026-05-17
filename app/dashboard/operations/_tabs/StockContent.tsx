@@ -79,7 +79,7 @@ export async function StockContent({ companyId }: Props) {
       </div>
 
       {/* Portfolio summary strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-gray-200 rounded-xl overflow-hidden">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
         {[
           { label: 'Toplam Stok Değeri', value: fmtTRY(portfolioValueTry), sub: 'FIFO lot maliyeti bazlı',  color: 'text-gray-900' },
           { label: 'Ürün Sayısı',        value: String(products.length),   sub: `${lots.length} açık lot`, color: 'text-gray-900' },
@@ -96,7 +96,7 @@ export async function StockContent({ companyId }: Props) {
 
       {/* FIFO Lot Panel */}
       {lots.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
           <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
             <div>
               <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">FIFO Lot Paneli</span>
@@ -182,7 +182,7 @@ export async function StockContent({ companyId }: Props) {
       )}
 
       {/* Current stock levels */}
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+      <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
         <div className="px-5 py-4 border-b border-gray-100">
           <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Mevcut Stok</span>
         </div>
@@ -227,7 +227,7 @@ export async function StockContent({ companyId }: Props) {
       <StockAdjustClient products={products.map(p => ({ id: p.id, name: p.name, unit: p.unit }))} />
 
       {/* Movement history */}
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+      <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
         <div className="px-5 py-4 border-b border-gray-100">
           <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Son Hareketler</span>
           <span className="ml-2 text-[10px] text-gray-400">— son 50 kayıt</span>

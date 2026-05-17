@@ -117,7 +117,7 @@ export async function CatalogCommandBar({ companyId }: Props) {
       <div className="flex items-center gap-2 flex-wrap">
 
         {/* Total products */}
-        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-xl">
+        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-100 rounded-xl">
           <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Ürünler</span>
           <span className="text-sm font-black tabular-nums text-gray-900">{totalProducts}</span>
           <span className="text-[9px] text-gray-400">aktif</span>

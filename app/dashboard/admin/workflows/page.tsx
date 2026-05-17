@@ -121,7 +121,7 @@ export default function WorkflowsPage() {
           const payload = w.payload ?? {}
 
           return (
-            <div key={w.id} className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+            <div key={w.id} className="bg-white border border-gray-100 rounded-xl overflow-hidden">
               {/* Main row */}
               <div className="px-5 py-4">
                 <div className="flex items-start justify-between gap-3 flex-wrap">

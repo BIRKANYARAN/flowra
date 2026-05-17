@@ -31,7 +31,7 @@ function KpiCard({ label, value, sub, tone = 'neutral' }: {
   label: string; value: string; sub?: string; tone?: 'positive' | 'negative' | 'neutral'
 }) {
   return (
-    <div className="bg-white border border-gray-200 rounded-xl px-4 py-3">
+    <div className="bg-white border border-gray-100 rounded-xl px-4 py-3">
       <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">{label}</div>
       <div className={`text-lg font-black tabular-nums leading-tight ${
         tone === 'positive' ? 'text-emerald-700' : tone === 'negative' ? 'text-red-600' : 'text-gray-900'
@@ -179,7 +179,7 @@ export default function ExecutiveSummaryPage() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Nakit Akışı</div>
-              <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+              <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
                 {[
                   { label: 'Faaliyet Nakit Akışı',   value: cf?.operating  ?? 0 },
                   { label: 'Yatırım Nakit Akışı',    value: cf?.investing  ?? 0 },
@@ -197,7 +197,7 @@ export default function ExecutiveSummaryPage() {
             </div>
             <div>
               <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Vergi Özeti</div>
-              <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+              <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
                 {[
                   { label: 'Satış KDV',     value: tax?.sales_vat    ?? 0 },
                   { label: 'Alış KDV',      value: -(tax?.purchase_vat ?? 0) },

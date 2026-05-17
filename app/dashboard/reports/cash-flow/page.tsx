@@ -49,7 +49,7 @@ function CFSection({ title, total, children }: {
   title: string; total: number; children?: React.ReactNode
 }) {
   return (
-    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+    <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
       <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
         <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">{title}</span>
         <span className={`text-sm font-black tabular-nums ${
@@ -153,7 +153,7 @@ export default function CashFlowPage() {
       {cf && !loading && (
         <>
           {/* Opening balance */}
-          <div className="bg-white border border-gray-200 rounded-xl px-4 py-3 flex items-center justify-between">
+          <div className="bg-white border border-gray-100 rounded-xl px-4 py-3 flex items-center justify-between">
             <span className="text-xs font-semibold text-gray-600">Dönem Başı Nakit</span>
             <span className="tabular-nums text-sm font-black text-gray-900">{fmt(cf.opening_balance_try)}</span>
           </div>
@@ -205,17 +205,17 @@ export default function CashFlowPage() {
 
           {/* Summary */}
           <div className="grid grid-cols-3 gap-2">
-            <div className="bg-white border border-gray-200 rounded-xl px-4 py-3">
+            <div className="bg-white border border-gray-100 rounded-xl px-4 py-3 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
               <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Net Nakit Değişim</div>
               <div className={`text-lg font-black tabular-nums ${cf.net_change_try >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
                 {fmt(cf.net_change_try)}
               </div>
             </div>
-            <div className="bg-white border border-gray-200 rounded-xl px-4 py-3">
+            <div className="bg-white border border-gray-100 rounded-xl px-4 py-3 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
               <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Dönem Sonu Nakit</div>
               <div className="text-lg font-black tabular-nums text-gray-900">{fmt(cf.closing_balance_try)}</div>
             </div>
-            <div className="bg-white border border-gray-200 rounded-xl px-4 py-3">
+            <div className="bg-white border border-gray-100 rounded-xl px-4 py-3 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
               <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Faaliyet Nakit</div>
               <div className={`text-lg font-black tabular-nums ${cf.operating.net_operating_try >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
                 {fmt(cf.operating.net_operating_try)}

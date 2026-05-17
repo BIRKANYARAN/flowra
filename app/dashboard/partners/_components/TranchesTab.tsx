@@ -29,13 +29,13 @@ export function TranchesTab({ loading, waterfall }: TranchesTabProps) {
               <div className="text-[10px] font-bold uppercase tracking-widest text-amber-500 mb-1">Toplam Açık Borç</div>
               <div className="text-2xl font-black tabular-nums text-amber-700">{fmt(waterfall.total_debt_try)}</div>
             </div>
-            <div className="bg-white border border-gray-200 rounded-xl px-4 py-3">
+            <div className="bg-white border border-gray-100 rounded-xl px-4 py-3 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
               <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Aktif Tranche Sayısı</div>
               <div className="text-2xl font-black tabular-nums text-gray-900">
                 {waterfall.tranches.filter(t => t.status !== 'repaid').length}
               </div>
             </div>
-            <div className="bg-white border border-gray-200 rounded-xl px-4 py-3">
+            <div className="bg-white border border-gray-100 rounded-xl px-4 py-3 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
               <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Kapanma Tahmini</div>
               <div className={`text-2xl font-black tabular-nums ${
                 (waterfall.debt_clearance_months ?? 0) > 0
@@ -54,7 +54,7 @@ export function TranchesTab({ loading, waterfall }: TranchesTabProps) {
               const repaidPct = t.principal_try > 0 ? (t.actual_repaid_try / t.principal_try) * 100 : 0
               const progressColor = t.status === 'repaid' ? 'bg-emerald-500' : t.status === 'overdue' ? 'bg-red-500' : 'bg-primary-500'
               return (
-                <div key={t.id} className="bg-white border border-gray-200 rounded-xl px-5 py-4">
+                <div key={t.id} className="bg-white border border-gray-100 rounded-xl px-5 py-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
                   <div className="flex items-start justify-between gap-4 mb-3">
                     <div>
                       <div className="flex items-center gap-2">

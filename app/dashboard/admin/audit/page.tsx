@@ -111,7 +111,7 @@ export default function AdminAuditPage() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white border border-gray-200 rounded-2xl p-4 mb-5 flex flex-wrap gap-3 items-end">
+      <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)] mb-5 flex flex-wrap gap-3 items-end">
         <div>
           <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">İşlem</div>
           <select
@@ -172,7 +172,7 @@ export default function AdminAuditPage() {
       {/* Table */}
       {!loading && (
         <>
-          <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+          <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
             {logs.length === 0 ? (
               <div className="text-center py-16 text-gray-400">
                 <div className="text-4xl mb-2">📋</div>
@@ -238,7 +238,7 @@ export default function AdminAuditPage() {
                                   <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">
                                     Önceki Değer
                                   </div>
-                                  <pre className="text-[10px] bg-white border border-gray-200 rounded-xl p-3 overflow-auto max-h-48 text-gray-700">
+                                  <pre className="text-[10px] bg-white border border-gray-100 rounded-xl p-3 overflow-auto max-h-48 text-gray-700">
                                     {log.old_data ? JSON.stringify(log.old_data, null, 2) : '—'}
                                   </pre>
                                 </div>
@@ -246,7 +246,7 @@ export default function AdminAuditPage() {
                                   <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">
                                     Yeni Değer
                                   </div>
-                                  <pre className="text-[10px] bg-white border border-gray-200 rounded-xl p-3 overflow-auto max-h-48 text-gray-700">
+                                  <pre className="text-[10px] bg-white border border-gray-100 rounded-xl p-3 overflow-auto max-h-48 text-gray-700">
                                     {log.new_data ? JSON.stringify(log.new_data, null, 2) : '—'}
                                   </pre>
                                 </div>

@@ -207,7 +207,7 @@ export default function NewProformaPage() {
         <div className="col-span-2 space-y-5">
 
           {/* Step 1: Customer */}
-          <div className="bg-white border border-gray-200 rounded-2xl p-5">
+          <div className="bg-white border border-gray-100 rounded-2xl p-5">
             <h2 className="font-bold text-sm mb-4 flex items-center gap-2">
               <span className="w-5 h-5 bg-primary-600 text-white rounded-full text-xs flex items-center justify-center font-black">1</span>
               Müşteri Bilgileri &amp; Seçenekler
@@ -267,7 +267,7 @@ export default function NewProformaPage() {
           </div>
 
           {/* Step 2: Items */}
-          <div className="bg-white border border-gray-200 rounded-2xl p-5">
+          <div className="bg-white border border-gray-100 rounded-2xl p-5">
             <h2 className="font-bold text-sm mb-4 flex items-center gap-2">
               <span className="w-5 h-5 bg-primary-600 text-white rounded-full text-xs flex items-center justify-center font-black">2</span>
               Ürünler / Hizmetler
@@ -308,7 +308,7 @@ export default function NewProformaPage() {
                         onFocus={() => setSearch({ idx: i, q: line.name, open: true })}
                       />
                       {isOpen && opts.length > 0 && (
-                        <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                        <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-gray-100 rounded-xl shadow-lg max-h-48 overflow-y-auto">
                           {opts.map(p => (
                             <button
                               key={p.id}
@@ -424,7 +424,7 @@ export default function NewProformaPage() {
           </div>
 
           {/* Step 3: Notes */}
-          <div className="bg-white border border-gray-200 rounded-2xl p-5">
+          <div className="bg-white border border-gray-100 rounded-2xl p-5">
             <label className={LAB}>Notlar</label>
             <textarea
               className={`${IL} resize-none`}
@@ -438,7 +438,7 @@ export default function NewProformaPage() {
 
         {/* Right: Summary */}
         <div className="space-y-5">
-          <div className="bg-white border border-gray-200 rounded-2xl p-5 sticky top-20">
+          <div className="bg-white border border-gray-100 rounded-2xl p-5 sticky top-20">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Fiyat Özeti</h2>
               <span className="text-xs font-bold text-primary-600 bg-primary-50 px-2.5 py-0.5 rounded-full">{currency}</span>

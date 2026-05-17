@@ -34,13 +34,13 @@ export function LedgerTab({
               { label: 'Toplam Temettü',    value: fmt(ledger.summary.total_dividends),        color: 'text-emerald-600' },
               { label: 'Borç/Özkaynak',     value: ledger.summary.debt_to_equity_ratio !== null ? ledger.summary.debt_to_equity_ratio.toFixed(2) + '×' : '—', color: 'text-gray-700' },
             ].map(c => (
-              <div key={c.label} className="bg-white border border-gray-200 rounded-xl px-4 py-3">
+              <div key={c.label} className="bg-white border border-gray-100 rounded-xl px-4 py-3 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
                 <div className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${c.color}`}>{c.label}</div>
                 <div className="text-lg font-black tabular-nums text-gray-900 leading-none">{c.value}</div>
               </div>
             ))}
           </div>
-          <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+          <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b border-gray-100 bg-gray-50">

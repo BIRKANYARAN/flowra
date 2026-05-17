@@ -75,7 +75,7 @@ export default async function JournalEntriesPage() {
             const balanced    = Math.abs(totalDebit - totalCredit) < 0.01
 
             return (
-              <div key={entry.id as string} className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+              <div key={entry.id as string} className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
                 <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50 border-b border-gray-100">
                   <div className="flex items-center gap-3">
                     <span className="text-xs font-black text-gray-500">{fmtDate(entry.entry_date as string)}</span>

@@ -194,7 +194,7 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
           { label: 'Vergi Sonrası Net',  value: fmt(ytd.net_after_tax), tone: ytd.net_after_tax >= 0 ? 'text-emerald-700' : 'text-red-600' },
           { label: 'Tahmini KV',         value: fmt(ytd.corporate_tax), tone: ytd.corporate_tax > 0 ? 'text-amber-600' : 'text-gray-400' },
         ].map(c => (
-          <div key={c.label} className="bg-white border border-gray-200 rounded-xl px-4 py-3">
+          <div key={c.label} className="bg-white border border-gray-100 rounded-xl px-4 py-3 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
             <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">{c.label}</div>
             <div className={`text-xl font-black tabular-nums leading-none ${c.tone}`}>{c.value}</div>
           </div>
@@ -203,7 +203,7 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
 
       {/* Zone 2 — Quarter grid */}
       {qs.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
           <div className="px-4 py-3 border-b border-gray-100">
             <h2 className="text-sm font-black text-gray-800">Çeyreklik Performans</h2>
             <p className="text-[10px] text-gray-400 mt-0.5">Ciro · Brüt Kâr · Net Kâr · Marjlar</p>
@@ -276,7 +276,7 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
 
       {/* Zone 3 — Gecici vergi schedule */}
       {qs.some((q: QuarterResult) => q.gecici_vergi > 0) && (
-        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
           <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
             <div>
               <h2 className="text-sm font-black text-gray-800">Geçici Vergi Takvimi {currentYear}</h2>
@@ -322,7 +322,7 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
 
       {/* Zone 4 — Monthly breakdown */}
       {monthly.length > 0 ? (
-        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
           <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
             <h2 className="text-sm font-black text-gray-800">Aylık Satış Detayı</h2>
             <span className="text-[10px] text-gray-400">{a.total_sales} satış · {a.total_proformas} teklif</span>
@@ -351,14 +351,14 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
           </table>
         </div>
       ) : (
-        <div className="bg-white border border-gray-200 rounded-xl text-center py-16">
+        <div className="bg-white border border-gray-100 rounded-xl text-center py-16 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
           <div className="text-4xl mb-3">📊</div>
           <p className="text-gray-500 font-medium">Henüz satış verisi yok.</p>
         </div>
       )}
 
       {/* Zone 5 — Period Close Readiness */}
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+      <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
         <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
           <div>
             <h2 className="text-sm font-black text-gray-800">Dönem Kapanış Kontrolü</h2>

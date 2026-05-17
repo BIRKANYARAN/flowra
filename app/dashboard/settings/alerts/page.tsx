@@ -101,7 +101,7 @@ export default function AlertSettingsPage() {
       {loading && <div className="bg-gray-100 rounded-xl h-64 animate-pulse" />}
 
       {!loading && (
-        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
           <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-100">
             <div className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-3 text-[10px] font-black uppercase tracking-widest text-gray-400">
               <span>Kural</span>

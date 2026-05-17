@@ -85,7 +85,7 @@ export async function PnlTab({ userId, companyId }: Props) {
   const s = currentSummary
   if (!s) {
     return (
-      <div className="bg-white border border-gray-200 rounded-xl text-center py-16">
+      <div className="bg-white border border-gray-100 rounded-xl text-center py-16 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
         <div className="text-3xl mb-2">📊</div>
         <p className="text-gray-500 font-medium text-sm">Bu dönem için finansal veri bulunamadı.</p>
       </div>

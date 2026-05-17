@@ -54,7 +54,7 @@ export default async function RolesPage() {
         </Link>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+      <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
         <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
           <h2 className="text-xs font-bold text-gray-600 uppercase tracking-wide">
             Şirket Üyeleri ve Roller

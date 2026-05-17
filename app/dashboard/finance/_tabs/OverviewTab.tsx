@@ -168,7 +168,7 @@ export async function OverviewTab({ userId: _userId, companyId }: Props) {
       <div className="grid grid-cols-5 gap-2">
         <div className="col-span-3">
           <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1.5">Tahsilat Sağlığı</div>
-          <div className="bg-white border border-gray-200 rounded-xl px-4 py-3 space-y-2">
+          <div className="bg-white border border-gray-100 rounded-xl px-4 py-3 space-y-2 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-gray-600">Toplam Açık Alacak</span>
               <span className="text-sm font-black tabular-nums text-gray-900">{fmt(m.receivables.total_outstanding)}</span>
@@ -247,7 +247,7 @@ export async function OverviewTab({ userId: _userId, companyId }: Props) {
       {chartMonths.length > 0 && (
         <div>
           <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1.5">12 Aylık Nakit Projeksiyonu</div>
-          <div className="bg-white border border-gray-200 rounded-xl px-4 py-4">
+          <div className="bg-white border border-gray-100 rounded-xl px-4 py-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
             <div className="flex items-end gap-1.5 h-24">
               {chartMonths.map((mo) => {
                 const barH    = maxCash > 0 ? Math.max(2, Math.round((Math.max(0, mo.end_cash) / maxCash) * 100)) : 0

@@ -58,7 +58,7 @@ export async function CustomersContent({ companyId }: Props) {
 
       {/* KPI Strip */}
       {sales.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-gray-100 rounded-xl overflow-hidden">
           {[
             { label: 'Toplam Müşteri', value: String(customers.length), sub: `${sales.length} satış kaydı`,        color: 'text-gray-900' },
             { label: 'Toplam Ciro',    value: billed > 0 ? fmt(billed) : '—', sub: 'Tüm satışlar (TRY)',           color: 'text-primary-700' },
@@ -76,7 +76,7 @@ export async function CustomersContent({ companyId }: Props) {
 
       {/* Top customers bar chart */}
       {topCustomers.length > 0 && billed > 0 && (
-        <div className="bg-white border border-gray-200 rounded-xl p-4">
+        <div className="bg-white border border-gray-100 rounded-xl p-4">
           <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">En Yüksek Cirolu Müşteriler</h3>
           <div className="space-y-2.5">
             {topCustomers.map(tc => {

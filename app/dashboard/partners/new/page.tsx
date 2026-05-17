@@ -109,7 +109,7 @@ export default function NewPartnerPage() {
 
       {/* ── Form ────────────────────────────────────────────────────────────── */}
       <form onSubmit={handleSubmit} noValidate>
-        <div className="bg-white border border-gray-200 rounded-2xl p-6 space-y-5">
+        <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-[0_1px_2px_rgba(17,24,39,0.04)] space-y-5">
 
           {/* Name */}
           <div>

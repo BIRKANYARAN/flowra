@@ -177,7 +177,7 @@ export default function PeriodClosePage() {
           const canClose   = isCloseEnabled(p.id)
 
           return (
-            <div key={p.id} className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+            <div key={p.id} className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
 
               {/* Period header row */}
               <div className="px-5 py-4">

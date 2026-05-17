@@ -20,7 +20,7 @@ export function ReturnsTab({ loading, returns }: ReturnsTabProps) {
         </div>
       ) : (
         <>
-          <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+          <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
             <div className="px-4 py-2.5 border-b border-gray-100 bg-gray-50">
               <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Ortak Bazında Sermaye Getirisi</div>
             </div>

@@ -216,7 +216,7 @@ export default function AdminUsersPage() {
 
       {/* Invite form */}
       {showInvite && (
-        <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-5 space-y-4">
+        <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-[0_1px_2px_rgba(17,24,39,0.04)] mb-5 space-y-4">
           <h3 className="font-bold text-sm border-b border-gray-100 pb-3">Kullanıcı Davet Et</h3>
           <p className="text-xs text-gray-500">
             Davet edilecek kullanıcının Flowra hesabı olması gerekir.
@@ -276,7 +276,7 @@ export default function AdminUsersPage() {
       )}
 
       {/* Active members */}
-      <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden mb-5">
+      <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden mb-5">
         <div className="px-5 py-3 border-b border-gray-100">
           <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Aktif Üyeler</span>
         </div>
@@ -359,7 +359,7 @@ export default function AdminUsersPage() {
 
       {/* Pending invitations */}
       {pendingMembers.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+        <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
           <div className="px-5 py-3 border-b border-gray-100">
             <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Bekleyen Davetler</span>
           </div>

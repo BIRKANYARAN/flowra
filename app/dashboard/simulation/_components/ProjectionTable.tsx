@@ -26,7 +26,7 @@ export function ProjectionTable({ projection, toDisplay, S, hasInputs }: Project
   const maxRevenue = Math.max(...projection.map(r => r.revenue), 1)
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-4">
+    <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
       <h2 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Aylık Projeksiyon (12 Ay)</h2>
       <div className="overflow-x-auto">
         <table className="w-full text-xs">

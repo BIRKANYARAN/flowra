@@ -177,7 +177,7 @@ export function OrdersContent(_props: Props) {
           { label: 'Sipariş Verildi', value: totalOrdered,  cls: 'text-blue-700' },
           { label: 'Teslim Alındı',   value: totalReceived, cls: 'text-emerald-700' },
         ].map(s => (
-          <div key={s.label} className="bg-white border border-gray-200 rounded-xl px-4 py-3">
+          <div key={s.label} className="bg-white border border-gray-100 rounded-xl px-4 py-3 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
             <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{s.label}</div>
             <div className={`text-xl font-black tabular-nums ${s.cls}`}>{s.value}</div>
           </div>
@@ -197,7 +197,7 @@ export function OrdersContent(_props: Props) {
 
       {/* ── New order form ─────────────────────────────────────────────── */}
       {showForm && (
-        <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-4">
+        <div className="bg-white border border-gray-100 rounded-xl p-5 space-y-4">
           <h3 className="text-sm font-bold text-gray-700">Yeni Satın Alma Siparişi</h3>
           {formError && (
             <div className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{formError}</div>
@@ -296,7 +296,7 @@ export function OrdersContent(_props: Props) {
           Henüz satın alma siparişi yok.
         </div>
       ) : (
-        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
           <div className="divide-y divide-gray-100">
             {orders.map(order => {
               const meta  = STATUS_META[order.status]

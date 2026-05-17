@@ -106,7 +106,7 @@ export default function TrialBalancePage() {
 
       {/* Accounting checks */}
       {!loading && checks.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
           <div className="px-4 py-2.5 border-b border-gray-100 bg-gray-50">
             <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Muhasebe Doğruluk Kontrolleri</div>
           </div>
@@ -134,11 +134,11 @@ export default function TrialBalancePage() {
       {/* Summary row */}
       {!loading && tb && (
         <div className="grid grid-cols-3 gap-2">
-          <div className="bg-white border border-gray-200 rounded-xl px-4 py-3">
+          <div className="bg-white border border-gray-100 rounded-xl px-4 py-3 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
             <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Toplam Borç</div>
             <div className="text-xl font-black tabular-nums text-gray-900">{fmt(tb.total_debit_try)}</div>
           </div>
-          <div className="bg-white border border-gray-200 rounded-xl px-4 py-3">
+          <div className="bg-white border border-gray-100 rounded-xl px-4 py-3 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
             <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Toplam Alacak</div>
             <div className="text-xl font-black tabular-nums text-gray-900">{fmt(tb.total_credit_try)}</div>
           </div>
@@ -176,7 +176,7 @@ export default function TrialBalancePage() {
             const accounts = (grouped.get(cls) ?? []).filter(a => a.debit_try > 0 || a.credit_try > 0)
             if (accounts.length === 0) return null
             return (
-              <div key={cls} className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+              <div key={cls} className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
                 <div className="px-4 py-2.5 border-b border-gray-100 bg-gray-50">
                   <div className="text-[10px] font-black uppercase tracking-widest text-gray-500">
                     {CLASS_LABELS[cls] ?? cls}

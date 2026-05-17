@@ -89,7 +89,7 @@ function KpiCard({
   }[tone]
 
   const inner = (
-    <div className="bg-white border border-gray-200 rounded-xl px-4 py-3 hover:border-violet-300 transition-colors">
+    <div className="bg-white border border-gray-100 rounded-xl px-4 py-3 hover:border-violet-300 transition-colors">
       <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">{label}</div>
       <div className={`text-xl font-black tabular-nums leading-none ${valueColor}`}>{value}</div>
       {sub && <div className="text-[10px] text-gray-400 mt-1">{sub}</div>}
@@ -306,7 +306,7 @@ export default async function OpsCommandPage() {
       <div className="grid grid-cols-2 gap-4">
 
         {/* LEFT: Overdue collections */}
-        <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+        <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
           <div className="px-4 pt-4 pb-2">
             <SectionTitle
               label="Vadesi Geçmiş Tahsilatlar"
@@ -349,7 +349,7 @@ export default async function OpsCommandPage() {
         </div>
 
         {/* RIGHT: Critical stock */}
-        <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+        <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
           <div className="px-4 pt-4 pb-2">
             <SectionTitle
               label="Kritik Stok Seviyeleri"
@@ -394,7 +394,7 @@ export default async function OpsCommandPage() {
       </div>
 
       {/* ── Open purchase orders ─────────────────────────────────────────── */}
-      <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+      <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
         <div className="px-4 pt-4 pb-2">
           <SectionTitle
             label="Açık Satın Alma Emirleri"
@@ -472,7 +472,7 @@ export default async function OpsCommandPage() {
           { label: 'Müşteri Listesi',   href: '/dashboard/commercial?tab=customers',  emoji: '👥' },
         ].map(({ label, href, emoji }) => (
           <Link key={href} href={href}
-            className="bg-white border border-gray-200 rounded-xl px-4 py-3 hover:border-violet-300 hover:bg-violet-50 transition-colors flex items-center gap-2">
+            className="bg-white border border-gray-100 rounded-xl px-4 py-3 hover:border-violet-300 hover:bg-violet-50 transition-colors flex items-center gap-2">
             <span className="text-lg">{emoji}</span>
             <span className="text-xs font-semibold text-gray-700">{label}</span>
           </Link>

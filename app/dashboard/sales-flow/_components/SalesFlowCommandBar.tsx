@@ -120,7 +120,7 @@ export async function SalesFlowCommandBar({ companyId }: Props) {
       <div className="flex items-center gap-2 flex-wrap">
 
         {/* Açık Pipeline */}
-        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-xl">
+        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-100 rounded-xl">
           <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Açık Pipeline</span>
           {openPipelineValue > 0
             ? <span className="text-sm font-black tabular-nums text-blue-700">{fmt(openPipelineValue)}</span>
@@ -130,7 +130,7 @@ export async function SalesFlowCommandBar({ companyId }: Props) {
         </div>
 
         {/* MTD Satış */}
-        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-xl">
+        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-100 rounded-xl">
           <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Bu Ay</span>
           {mtdRevenue > 0
             ? <span className="text-sm font-black tabular-nums text-emerald-700">{fmt(mtdRevenue)}</span>
@@ -159,7 +159,7 @@ export async function SalesFlowCommandBar({ companyId }: Props) {
 
         {/* Dönüşüm */}
         {conversionRate !== null && (
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-xl">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-100 rounded-xl">
             <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Dönüşüm</span>
             <span className="text-sm font-black tabular-nums text-gray-700">%{conversionRate.toFixed(0)}</span>
             <span className="text-[9px] text-gray-400">{funnel.converted}/{total}</span>

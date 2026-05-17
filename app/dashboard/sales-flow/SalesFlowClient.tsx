@@ -411,7 +411,7 @@ export default function SalesFlowClient({ initialProformas, initialSales, initia
       tahsilat: 'Tahsilat Durumu', kar: 'Kâr Analizi',
     }
     return (
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+      <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
         <div className="px-4 py-2 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
           <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{titles[selected]}</span>
           <button onClick={() => setSelected(null)} className="text-gray-400 hover:text-gray-700 text-lg leading-none">×</button>
@@ -460,7 +460,7 @@ export default function SalesFlowClient({ initialProformas, initialSales, initia
 
       {/* ── Conversion rate strip ────────────────────────────────────────── */}
       {proformas.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-xl px-5 py-3">
+        <div className="bg-white border border-gray-100 rounded-xl px-5 py-3">
           <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3">Dönüşüm Oranları</div>
           <div className="grid grid-cols-4 gap-4 text-center">
             {[

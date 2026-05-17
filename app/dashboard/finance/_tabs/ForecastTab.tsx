@@ -91,7 +91,7 @@ export async function ForecastTab({ userId: _userId, companyId }: Props) {
             sub:   r.exhaustion_month !== null ? `Ay ${r.exhaustion_month}'de tükenebilir` : 'Tehlike sinyali yok',
           },
         ].map(c => (
-          <div key={c.label} className="bg-white border border-gray-200 rounded-xl px-4 py-3">
+          <div key={c.label} className="bg-white border border-gray-100 rounded-xl px-4 py-3 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
             <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">{c.label}</div>
             <div className={`text-xl font-black tabular-nums leading-none ${c.tone}`}>{c.value}</div>
             <div className="text-[10px] text-gray-400 mt-1">{c.sub}</div>
@@ -101,7 +101,7 @@ export async function ForecastTab({ userId: _userId, companyId }: Props) {
 
       {/* Zone 2 — Bar chart */}
       {chartMonths.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-xl px-4 py-4">
+        <div className="bg-white border border-gray-100 rounded-xl px-4 py-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
           <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">12 Aylık Nakit Projeksiyonu</div>
           <div className="flex items-end gap-1.5 h-32">
             {chartMonths.map((mo) => {
@@ -132,7 +132,7 @@ export async function ForecastTab({ userId: _userId, companyId }: Props) {
 
       {/* Zone 3 — Monthly table */}
       {chartMonths.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
           <div className="px-4 py-3 border-b border-gray-100">
             <h2 className="text-sm font-black text-gray-800">Aylık Projeksiyon Detayı</h2>
           </div>

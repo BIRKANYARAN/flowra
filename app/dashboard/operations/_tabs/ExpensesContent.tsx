@@ -113,13 +113,10 @@ export async function ExpensesContent({ companyId }: Props) {
         <ExpensesCommandBar companyId={companyId} />
       </Suspense>
 
-      <div>
-        <h2 className="text-xl font-black text-gray-900 tracking-tight">Gider Analizi</h2>
-        <p className="text-xs text-gray-400 mt-0.5">Son 6 ay · {expenses.length} kayıt</p>
-      </div>
+      <p className="text-xs text-gray-400">Son 6 ay · {expenses.length} kayıt</p>
 
       {/* KPI Strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-gray-200 rounded-xl overflow-hidden">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
         {[
           { label: 'Toplam Gider',    value: fmt(totalTRY),        sub: 'Son 6 ay (TRY)',                    color: 'text-red-600' },
           { label: 'Tek Seferlik',    value: String(expenses.length), sub: 'kayıt',                          color: 'text-gray-900' },
@@ -136,7 +133,7 @@ export async function ExpensesContent({ companyId }: Props) {
 
       {/* Category breakdown */}
       {categories.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-xl p-4">
+        <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
           <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Kategori Analizi — Son 6 Ay</h3>
           <div className="space-y-2.5">
             {categories.map(cat => {
@@ -163,7 +160,7 @@ export async function ExpensesContent({ companyId }: Props) {
 
       {/* Monthly trend */}
       {trend.length > 1 && (
-        <div className="bg-white border border-gray-200 rounded-xl p-4">
+        <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
           <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Aylık Gider Trendi</h3>
           <div className="flex items-end gap-2 h-20">
             {trend.map(t => {

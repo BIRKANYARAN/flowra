@@ -103,7 +103,7 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
                    risk.concentration.hhi < 2500 ? 'text-amber-700' : 'text-red-600',
           },
         ].map(c => (
-          <div key={c.label} className="bg-white border border-gray-200 rounded-xl px-4 py-3">
+          <div key={c.label} className="bg-white border border-gray-100 rounded-xl px-4 py-3 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
             <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">{c.label}</div>
             <div className={`text-xl font-black tabular-nums leading-none ${c.tone}`}>{c.value}</div>
             <div className="text-[10px] text-gray-400 mt-1">{c.sub}</div>
@@ -112,7 +112,7 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
       </div>
 
       {/* Zone 2 — Konsantrasyon */}
-      <div className="bg-white border border-gray-200 rounded-xl p-4">
+      <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
         <div className="flex items-center justify-between mb-3">
           <div>
             <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Konsantrasyon Analizi</div>
@@ -155,7 +155,7 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
       </div>
 
       {/* Zone 3 — Aging table */}
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+      <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
         <div className="px-4 py-3 border-b border-gray-100">
           <h2 className="text-sm font-black text-gray-800">Müşteri Yaşlandırma Analizi</h2>
           <p className="text-[10px] text-gray-400 mt-0.5">Alacakların vade kırılımı</p>
@@ -213,7 +213,7 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
       </div>
 
       {/* Zone 4 — Guidance */}
-      <div className="bg-white border border-gray-200 rounded-xl p-4">
+      <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
         <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">CFO Tavsiyesi</div>
         <ul className="space-y-1.5">
           {guidance.map((g, i) => (

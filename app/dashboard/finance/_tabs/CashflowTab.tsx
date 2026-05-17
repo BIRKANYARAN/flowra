@@ -67,7 +67,7 @@ export async function CashflowTab({ userId: _userId, companyId }: Props) {
             tone: timeline.firstDangerMonth ? 'text-red-600' : 'text-emerald-700',
           },
         ].map(c => (
-          <div key={c.label} className="bg-white border border-gray-200 rounded-xl px-4 py-3">
+          <div key={c.label} className="bg-white border border-gray-100 rounded-xl px-4 py-3 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
             <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">{c.label}</div>
             <div className={`text-xl font-black tabular-nums leading-none ${c.tone}`}>{c.value}</div>
           </div>
@@ -83,13 +83,13 @@ export async function CashflowTab({ userId: _userId, companyId }: Props) {
       )}
 
       {/* Zone 2 — Chart */}
-      <div className="bg-white border border-gray-200 rounded-xl p-4">
+      <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
         <CashflowChart className="w-full" />
       </div>
 
       {/* Zone 3 — Pressure timeline */}
       {timeline.pressureSignals.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
           <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
             <div>
               <h2 className="text-sm font-black text-gray-800">Baskı Haritası</h2>

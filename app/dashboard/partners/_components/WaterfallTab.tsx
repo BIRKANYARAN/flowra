@@ -28,7 +28,7 @@ export function WaterfallTab({
         <>
           {/* Summary row */}
           <div className="grid grid-cols-3 gap-2">
-            <div className="bg-white border border-gray-200 rounded-xl px-4 py-3">
+            <div className="bg-white border border-gray-100 rounded-xl px-4 py-3 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
               <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Mevcut Nakit</div>
               <div className="text-2xl font-black tabular-nums text-gray-900">{fmt(waterfall.available_cash_try)}</div>
             </div>
@@ -64,7 +64,7 @@ export function WaterfallTab({
 
           {/* Debt tranches table */}
           {waterfall.tranches.filter(t => t.principal_try > 0).length > 0 && (
-            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+            <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
               <div className="px-4 py-2.5 border-b border-gray-100 bg-gray-50">
                 <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Ortak Borç Pozisyonları</div>
               </div>
@@ -94,7 +94,7 @@ export function WaterfallTab({
 
           {/* Allocation steps */}
           {waterfall.steps.length > 0 && (
-            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+            <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
               <div className="px-4 py-2.5 border-b border-gray-100 bg-gray-50">
                 <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Dağıtım Adımları (Öncelik Sırası)</div>
               </div>

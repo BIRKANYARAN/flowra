@@ -139,7 +139,7 @@ export default function BalanceSheetPage() {
       {bs && !loading && (
         <div className="grid grid-cols-2 gap-4">
           {/* Left: Assets */}
-          <div className="bg-white border border-gray-200 rounded-xl overflow-hidden print:border-gray-300">
+          <div className="bg-white border border-gray-100 rounded-xl overflow-hidden print:border-gray-300">
             <div className="px-4 py-3 bg-blue-50 border-b border-blue-100">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-black uppercase tracking-widest text-blue-600">Varlıklar</span>
@@ -169,7 +169,7 @@ export default function BalanceSheetPage() {
           {/* Right: Liabilities + Equity */}
           <div className="flex flex-col gap-4">
             {/* Liabilities */}
-            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden print:border-gray-300">
+            <div className="bg-white border border-gray-100 rounded-xl overflow-hidden print:border-gray-300">
               <div className="px-4 py-3 bg-orange-50 border-b border-orange-100">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-black uppercase tracking-widest text-orange-600">Kaynaklar</span>
@@ -197,7 +197,7 @@ export default function BalanceSheetPage() {
             </div>
 
             {/* Equity */}
-            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden print:border-gray-300">
+            <div className="bg-white border border-gray-100 rounded-xl overflow-hidden print:border-gray-300">
               <div className="px-4 py-3 bg-emerald-50 border-b border-emerald-100">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-black uppercase tracking-widest text-emerald-600">Özkaynak</span>

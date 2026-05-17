@@ -116,7 +116,7 @@ export async function TaxTab({ userId, companyId }: Props) {
     <div className="space-y-6">
 
       {/* ── Zone 1: KPI Strip ────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-4 gap-0 bg-white border border-gray-200 rounded-xl overflow-hidden">
+      <div className="grid grid-cols-4 gap-0 bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
         {[
           {
             label: 'Net KDV (Bu Ay)',
@@ -155,7 +155,7 @@ export async function TaxTab({ userId, companyId }: Props) {
       </div>
 
       {/* ── Zone 2: Aylık KDV Geçmişi ───────────────────────────────────────── */}
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+      <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
         <div className="px-4 py-3 border-b border-gray-100">
           <h2 className="text-sm font-black text-gray-800">Aylık KDV Geçmişi</h2>
           <p className="text-[10px] text-gray-400 mt-0.5">Son 6 ay · Satış KDV − İndirim = Net KDV</p>
@@ -207,7 +207,7 @@ export async function TaxTab({ userId, companyId }: Props) {
       </div>
 
       {/* ── Zone 3: Geçici Vergi Takvimi ─────────────────────────────────────── */}
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+      <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
         <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
           <div>
             <h2 className="text-sm font-black text-gray-800">Geçici Vergi Takvimi {currentYear}</h2>
@@ -279,7 +279,7 @@ export async function TaxTab({ userId, companyId }: Props) {
 
       {/* ── Zone 4: Matrah Analizi ───────────────────────────────────────────── */}
       {ytd.revenue > 0 && (
-        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
           <div className="px-4 py-3 border-b border-gray-100">
             <h2 className="text-sm font-black text-gray-800">Matrah Analizi — YTD {currentYear}</h2>
             <p className="text-[10px] text-gray-400 mt-0.5">

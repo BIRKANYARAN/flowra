@@ -140,7 +140,7 @@ export default function ReportsHubPage() {
       <div className="grid grid-cols-2 gap-4">
         {REPORTS.map(r => (
           <Link key={r.href} href={r.href}
-            className="bg-white border border-gray-200 rounded-xl p-4 hover:border-primary-200 hover:shadow-sm transition-all group"
+            className="bg-white border border-gray-100 rounded-xl p-4 hover:border-primary-200 hover:shadow-sm transition-all group"
           >
             <div className="flex items-start gap-3">
               <span className="text-2xl flex-shrink-0">{r.icon}</span>

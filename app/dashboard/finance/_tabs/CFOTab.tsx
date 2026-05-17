@@ -489,7 +489,7 @@ export async function CFOTab({ userId, companyId }: Props) {
           <Link
             key={item.href}
             href={item.href}
-            className={`bg-white border border-gray-200 rounded-xl px-4 py-3 flex items-start gap-3 transition-colors ${item.color}`}
+            className={`bg-white border border-gray-100 rounded-xl px-4 py-3 flex items-start gap-3 transition-colors ${item.color}`}
           >
             <span className="text-xl mt-0.5">{item.icon}</span>
             <div>
@@ -558,7 +558,7 @@ export async function CFOTab({ userId, companyId }: Props) {
             <Link
               key={item.href}
               href={item.href}
-              className={`bg-white border border-gray-200 rounded-xl px-4 py-3 flex items-start gap-3 transition-colors ${item.color}`}
+              className={`bg-white border border-gray-100 rounded-xl px-4 py-3 flex items-start gap-3 transition-colors ${item.color}`}
             >
               <span className="text-xl mt-0.5">{item.icon}</span>
               <div>

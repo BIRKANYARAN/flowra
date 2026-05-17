@@ -105,7 +105,7 @@ export async function PipelineContent({ companyId }: Props) {
       </div>
 
       {/* KPI Strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-gray-200 rounded-xl overflow-hidden">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-gray-100 rounded-xl overflow-hidden">
         {[
           { label: 'Stok Değeri',  value: serverFmt(stockValue),   sub: `${stockLots.length} aktif lot`,                color: 'text-gray-900' },
           { label: 'Pipeline',     value: pipelineVal > 0 ? serverFmt(pipelineVal) : '—', sub: 'bekleyen teklifler', color: 'text-blue-700' },
@@ -122,7 +122,7 @@ export async function PipelineContent({ companyId }: Props) {
 
       {/* Recent proformas */}
       {recentPf.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
           <div className="px-4 py-2 border-b border-gray-100">
             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Son Teklifler</span>
           </div>

@@ -127,7 +127,7 @@ export default function IncomeStatementPage() {
       {loading && <div className="bg-gray-100 rounded-xl h-64 animate-pulse" />}
 
       {pnl && !loading && (
-        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden print:border-none print:shadow-none">
+        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden print:border-none print:shadow-none">
           {/* Revenue section */}
           <div className="px-4 py-2 bg-gray-50 border-b border-gray-100">
             <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Satışlar</div>

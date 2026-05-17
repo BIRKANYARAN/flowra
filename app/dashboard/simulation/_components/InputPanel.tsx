@@ -66,7 +66,7 @@ export function InputPanel({
   onExtraPartnerDebtChange,
 }: InputPanelProps) {
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-4">
+    <div className="bg-white border border-gray-100 rounded-xl p-5 space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Parametreler</h2>
         <span className="text-[10px] text-gray-400 italic">Sonuçlar yukarıda otomatik güncellenir ↑</span>

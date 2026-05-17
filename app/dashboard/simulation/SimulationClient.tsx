@@ -412,7 +412,7 @@ export default function SimulationClient({
       </div>
 
       {/* ── Zone 1: Hero KPI cards ────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-gray-200 rounded-xl overflow-hidden">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
         {[
           {
             label: 'Birim Kâr',
@@ -484,7 +484,7 @@ export default function SimulationClient({
 
       {/* ── Zone 2: Revenue timeline chart (CSS bars) ─────────────────────────── */}
       {hasInputs && (
-        <div className="bg-white border border-gray-200 rounded-xl p-4">
+        <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
           <h2 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">
             Gelir Çizelgesi — 12 Ay
           </h2>
@@ -525,7 +525,7 @@ export default function SimulationClient({
       )}
 
       {/* ── Zone 2: Tax effect ───────────────────────────────────────────────── */}
-      <div className="bg-white border border-gray-200 rounded-xl p-4">
+      <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
         <h2 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3">
           Vergi Etkisi — Yıllık Tahmin
         </h2>
@@ -645,7 +645,7 @@ export default function SimulationClient({
       />
 
       {/* ── Zone 3: Yearly totals ─────────────────────────────────────────────── */}
-      <div className="bg-white border border-gray-200 rounded-xl p-4">
+      <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
         <h2 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Yıllık Toplam</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {[
@@ -696,7 +696,7 @@ export default function SimulationClient({
       </div>
 
       {/* ── Zone 4: Visual Pressure Timeline ─────────────────────────────────── */}
-      <div className="bg-white border border-gray-200 rounded-xl p-4">
+      <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
             Finansal Baskı Zaman Çizelgesi — 12 Ay
@@ -754,7 +754,7 @@ export default function SimulationClient({
 
       {/* ── Zone 4: Runway Forecast ───────────────────────────────────────────── */}
       {hasInputs && (
-        <div className="bg-white border border-gray-200 rounded-xl p-4">
+        <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
           <h2 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">
             Pist Tahmini — Güvenli Bölgeye Ne Zaman Ulaşılır?
           </h2>

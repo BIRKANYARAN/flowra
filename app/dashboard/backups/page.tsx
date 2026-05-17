@@ -229,13 +229,13 @@ export default function BackupsPage() {
       {/* Summary */}
       {backups.length > 0 && (
         <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="bg-white border border-gray-200 rounded-2xl p-5">
+          <div className="bg-white border border-gray-100 rounded-2xl p-5">
             <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">
               Toplam Yedek
             </div>
             <div className="text-2xl font-black tabular-nums">{backups.length}</div>
           </div>
-          <div className="bg-white border border-gray-200 rounded-2xl p-5">
+          <div className="bg-white border border-gray-100 rounded-2xl p-5">
             <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">
               Son Yedek
             </div>
@@ -263,7 +263,7 @@ export default function BackupsPage() {
           {backups.map(backup => (
             <div
               key={backup.name}
-              className="bg-white border border-gray-200 rounded-2xl p-5"
+              className="bg-white border border-gray-100 rounded-2xl p-5"
             >
               {/* Header row */}
               <div className="flex items-start justify-between mb-3">

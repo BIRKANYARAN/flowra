@@ -23,7 +23,7 @@ function BSColumn({ title, rows }: {
   rows: { label: string; amount: number; indent?: boolean; isTotal?: boolean; sub?: string }[]
 }) {
   return (
-    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden flex flex-col">
+    <div className="bg-white border border-gray-100 rounded-xl overflow-hidden flex flex-col">
       <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
         <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">{title}</span>
       </div>
@@ -99,7 +99,7 @@ export async function BalanceTab({ userId: _userId, companyId }: Props) {
           { label: 'Toplam Yükümlülükler', value: fmt(bs.totalLiabilities), color: bs.totalLiabilities > 0 ? 'text-amber-700' : 'text-gray-400' },
           { label: 'Özsermaye',           value: fmt(bs.equity.total),      color: bs.equity.total >= 0 ? 'text-emerald-700' : 'text-red-600' },
         ].map(c => (
-          <div key={c.label} className="bg-white border border-gray-200 rounded-xl px-4 py-3">
+          <div key={c.label} className="bg-white border border-gray-100 rounded-xl px-4 py-3 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
             <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">{c.label}</div>
             <div className={`text-xl font-black tabular-nums leading-none ${c.color}`}>{c.value}</div>
           </div>
