@@ -143,6 +143,7 @@ export async function POST(req: NextRequest) {
         customer_name:  customerName,
         currency,
         total,
+        kdv_amount_try: Math.round((total - subtotalNoKdv) * 100) / 100,  // GAP 6 fix
         fx_rate_try:    fxRate !== 1 ? fxRate : null,
         sale_date:      saleDate,
         due_date:       dueDate,
@@ -157,6 +158,33 @@ export async function POST(req: NextRequest) {
     if (insertErr || !data) {
       console.error('[sales POST] insert error:', insertErr?.message)
       return NextResponse.json({ error: 'Satış kaydedilemedi' }, { status: 500 })
+    }
+
+    // ── Insert sale_items (line-level records for reporting + COGS) ─────────
+    // line_total is in the sale's native currency (unit_price × qty × KDV multiplier)
+    const saleItemsPayload = items.map((item, idx) => ({
+      sale_id:      data.id,
+      company_id:   companyId,
+      product_name: item.description,
+      qty:          item.quantity,
+      unit_price:   item.unit_price,
+      currency,
+      discount_pct: 0,
+      line_total:   Math.round(item.quantity * item.unit_price * (1 + (item.kdv_rate ?? 20) / 100) * 100) / 100,
+      // Store kdv_rate in notes until a dedicated column is added (GAP 6 migration)
+      notes:        `kdv_rate:${item.kdv_rate ?? 20}`,
+      sort_order:   idx + 1,
+    }))
+
+    const { error: itemsErr } = await supabase
+      .from('sale_items')
+      .insert(saleItemsPayload)
+
+    if (itemsErr) {
+      // Fatal for accounting integrity: roll back the sale and return error
+      console.error('[sales POST] sale_items insert failed:', itemsErr.message)
+      await supabase.from('sales').update({ deleted_at: new Date().toISOString() }).eq('id', data.id)
+      return NextResponse.json({ error: 'Satış kalemleri kaydedilemedi' }, { status: 500 })
     }
 
     // ── Dual-write journal entry for new sale (AR debit, Revenue credit) ───

@@ -432,8 +432,8 @@ export async function getCfoMetrics(
       .eq('company_id', companyId).is('deleted_at', null)
       .gte('expense_date', ytdFrom).lte('expense_date', today),
 
-    // 12. YTD sales VAT — kdv_amount_try column does not exist on live DB; salesVat = 0
-    supabase.from('sales').select('total_try:total')
+    // 12. YTD sales VAT — kdv_amount_try now populated via accounting_truth_v1 migration
+    supabase.from('sales').select('kdv_amount_try')
       .eq('company_id', companyId).is('deleted_at', null)
       .gte('sale_date', ytdFrom).lte('sale_date', today),
 
@@ -490,8 +490,9 @@ export async function getCfoMetrics(
   }, 0)
   const ytdProfit = ytdRevenue - ytdCogs - ytdOpExpenses
 
-  const salesVat    = 0 // kdv_amount_try column does not exist on live DB
-  void ytdSalesVatRes // fetched for query health monitoring only
+  // salesVat from kdv_amount_try (populated by accounting_truth_v1 migration).
+  // Rows without the column (pre-migration) default to 0 — safe graceful degradation.
+  const salesVat    = Math.round((ytdSalesVatRes.data ?? []).reduce((s, r) => s + Number((r as { kdv_amount_try?: number }).kdv_amount_try ?? 0), 0) * 100) / 100
   const purchaseVat = (ytdPurchaseVatRes.data ?? []).reduce((s, r) => s + Number(r.amount_try ?? 0), 0)
   const expenseVat  = (ytdExpenseVatRes.data ?? []).reduce((s, r) => s + Number(r.amount_try ?? 0) * Number(r.kdv ?? 0) / 100, 0)
   const kdvNet      = salesVat - purchaseVat - expenseVat

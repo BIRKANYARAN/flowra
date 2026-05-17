@@ -31,8 +31,14 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         )
       }
       patch.payment_status = body.payment_status
-      // paid_at: stamp only when fully paid; clear for every other status
-      patch.paid_at = body.payment_status === 'paid' ? new Date().toISOString() : null
+      // paid_at: stamp when ANY cash received (partial OR full) so partial payments
+      // are visible in cash-flow, runway, and distributable-cash computations (GAP 5 fix).
+      // Clear only when reverting to pending / overdue / cancelled.
+      if (body.payment_status === 'paid' || body.payment_status === 'partial') {
+        patch.paid_at = new Date().toISOString()
+      } else {
+        patch.paid_at = null
+      }
     }
 
     // Persist amount_paid when provided (partial or full payment)

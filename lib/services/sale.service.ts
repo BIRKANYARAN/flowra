@@ -165,6 +165,49 @@ export class SaleService {
       await commitIdempotencyKey(userId, input.idempotency_key, 'sale_convert', sale_id, { proforma_id: input.proforma_id, sale_no: result.sale_no })
       await logger.info(ctx, 'sale_convert:success', { sale_id, sale_no: result.sale_no, proforma_id: input.proforma_id })
 
+      // ── GAP 9 fix: dual-write journal entry for the converted sale ──────────
+      // DR 120 Alıcılar = total_try, CR 600 Revenue = net, CR 391 KDV = kdv_amount_try
+      // KDV split approximated from total (exact split requires sale_items.kdv_rate column).
+      try {
+        const { dualWrite, resolvePeriodId } = await import('@/lib/services/ledger/dual-write.service')
+        const { JournalEntryService } = await import('@/lib/services/ledger/journal-entry.service')
+
+        const { data: saleRow } = await supabase
+          .from('sales')
+          .select('total, sale_date')
+          .eq('id', sale_id)
+          .maybeSingle()
+
+        if (saleRow) {
+          const total_try  = Math.round(Number(saleRow.total ?? 0) * 100) / 100
+          const saleDate   = (saleRow.sale_date as string | null) ?? (input.sale_date ?? today)
+          const periodId   = await resolvePeriodId(companyId, saleDate, supabase)
+          // Approximate revenue/KDV split assuming blended 20% KDV (most common Turkish rate).
+          // Exact split requires a kdv_rate column on sale_items (planned schema addition).
+          const revenue_try    = Math.round(total_try / 1.2 * 100) / 100
+          const kdv_amount_try = Math.round((total_try - revenue_try) * 100) / 100
+          await dualWrite({
+            companyId,
+            periodId,
+            createdBy: userId,
+            supabase,
+            buildEntry: () => JournalEntryService.buildSaleEntry({
+              id:             sale_id,
+              sale_date:      saleDate,
+              revenue_try,
+              kdv_amount_try,
+              total_try,
+            }),
+          })
+        }
+      } catch (jeErr) {
+        // Best-effort: sale is committed, journal entry failure is non-fatal
+        await logger.error(ctx, 'sale_convert:journal_entry_failed', {
+          sale_id,
+          error: jeErr instanceof Error ? jeErr.message : String(jeErr),
+        })
+      }
+
       try {
         const { EventService } = await import('@/lib/services/event.service')
         await EventService.emit(supabase, userId, 'sale.created', {

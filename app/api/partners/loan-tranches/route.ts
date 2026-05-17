@@ -7,6 +7,8 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { resolveApiAuth } from '@/lib/api-auth'
 import { REQUEST_ID_HEADER } from '@/middleware'
+import { dualWrite, resolvePeriodId } from '@/lib/services/ledger/dual-write.service'
+import { JournalEntryService } from '@/lib/services/ledger/journal-entry.service'
 
 export async function POST(req: NextRequest) {
   const auth = await resolveApiAuth(req)
@@ -74,6 +76,39 @@ export async function POST(req: NextRequest) {
       { error: 'Tranche kaydedilemedi', code: 'DB_ERROR', type: 'INTERNAL' },
       { status: 500, headers: { [REQUEST_ID_HEADER]: ctx.requestId } }
     )
+  }
+
+  // ── GAP 7 fix: dual-write journal entry (DR 102 Bankalar, CR 321/421 Borç) ─
+  // is_long_term: if expected_repayment_date is >12 months away or not set → long term (421)
+  try {
+    const isLongTerm = expected_repayment_date
+      ? (new Date(expected_repayment_date).getTime() - Date.now()) > 365 * 24 * 60 * 60 * 1000
+      : true  // No repayment date → conservative: long-term liability
+
+    // Fetch partner name for the journal entry description
+    const { data: partner } = await supabase
+      .from('partners')
+      .select('name')
+      .eq('id', partner_id)
+      .maybeSingle()
+
+    const periodId = await resolvePeriodId(companyId, disbursement_date, supabase)
+    await dualWrite({
+      companyId,
+      periodId,
+      createdBy: uid,
+      supabase,
+      buildEntry: () => JournalEntryService.buildPartnerLoanEntry({
+        partner_transaction_id: data.id,   // tranche ID used as source_id
+        tx_date:                disbursement_date,
+        amount_try:             principal_try,
+        partner_name:           (partner?.name as string | null) ?? 'Ortak',
+        is_long_term:           isLongTerm,
+      }),
+    })
+  } catch (jeErr) {
+    // Best-effort: tranche created successfully, journal entry failure is non-fatal
+    console.warn('[partners/loan-tranches] journal entry failed (non-fatal):', jeErr instanceof Error ? jeErr.message : String(jeErr))
   }
 
   return NextResponse.json(data, {

@@ -104,23 +104,23 @@ export class TaxService {
   static async getSalesVat(userId: string, companyId: string, period: Period, ctx?: RequestContext): Promise<number> {
     validatePeriod(period)
     const supabase = createClient()
+    // kdv_amount_try is now stored on the sales row (accounting_truth_v1 migration).
+    // For legacy rows that predate the column, kdv_amount_try defaults to 0.
     const { data, error } = await supabase
       .from('sales')
-      .select('id')
+      .select('kdv_amount_try')
       .eq('company_id', companyId)
       .is('deleted_at', null)
-      // Use sale_date (business invoice date) not created_at (DB insertion time)
       .gte('sale_date', period.from)
       .lte('sale_date', period.to)
 
     if (error) {
       if (ctx) await logger.error(ctx, 'tax:sales_vat:db_error', { error: error.message })
-      throw new AppError('DB_READ_FAILED', 'Satış KDV hesaplanamadı', { dbError: error.message })
+      // Graceful fallback if column not yet added: return 0
+      return 0
     }
 
-    // kdv_amount_try column does not exist on live DB; sales VAT = 0 until column is added
-    void data
-    return 0
+    return Math.round((data ?? []).reduce((s, r) => s + Number(r.kdv_amount_try ?? 0), 0) * 100) / 100
   }
 
   // ── Input VAT (purchase side) ──────────────────────────────────────────────
