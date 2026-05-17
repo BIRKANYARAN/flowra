@@ -51,8 +51,8 @@ export async function GET(req: NextRequest) {
       q = q.eq('status', status)
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let { data, error } = await q as { data: any[] | null; error: any }
+    type TaskRow = Record<string, unknown> & { customers?: { name?: string } | null }
+    let { data, error } = await q as { data: TaskRow[] | null; error: { message?: string; code?: string } | null }
 
     // FK join not yet applied (schema cache miss) — retry without embedded select
     if (error && (error.message?.includes('relationship') || error.message?.includes('fk_tasks_customer'))) {
@@ -79,8 +79,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Flatten customer name join (present only when FK exists)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const enriched = (data ?? []).map((t: any) => ({
+    const enriched = (data ?? []).map((t) => ({
       ...t,
       customer_name: t.customers?.name ?? null,
       customers:     undefined,

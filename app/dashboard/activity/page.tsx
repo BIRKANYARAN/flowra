@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { createClient }     from '@/lib/supabase-server'
 import { resolveCompanyId } from '@/lib/resolve-company'
+import { fmtDatetime }      from '@/lib/format'
 import Link                 from 'next/link'
 
 interface AuditLog {
@@ -83,10 +84,7 @@ export default async function ActivityPage() {
                   {ENTITY_LABEL[log.entity_type] ?? log.entity_type}
                 </div>
                 <div className="text-xs text-gray-400 mt-0.5">
-                  {new Date(log.created_at).toLocaleDateString('tr-TR', {
-                    day: 'numeric', month: 'short', year: 'numeric',
-                    hour: '2-digit', minute: '2-digit',
-                  })}
+                  {fmtDatetime(log.created_at)}
                 </div>
               </div>
             </div>
