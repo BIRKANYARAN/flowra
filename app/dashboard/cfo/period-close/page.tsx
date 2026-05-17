@@ -61,7 +61,8 @@ export default function PeriodClosePage() {
   const [checklist, setChecklist] = useState<Record<string, Set<ChecklistKey>>>({})
 
   useEffect(() => {
-    fetch('/api/periods')
+    const ctrl = new AbortController()
+    fetch('/api/periods', { signal: ctrl.signal })
       .then(r => r.json())
       .then(d => {
         const list: Period[] = Array.isArray(d) ? d : d.periods ?? []
@@ -70,8 +71,9 @@ export default function PeriodClosePage() {
         const first = list.find(p => p.status === 'open' || p.status === 'pre_close')
         if (first) setExpanded(first.id)
       })
-      .catch(() => setError('Dönemler yüklenemedi'))
+      .catch(err => { if (err.name !== 'AbortError') setError('Dönemler yüklenemedi') })
       .finally(() => setLoading(false))
+    return () => ctrl.abort()
   }, [])
 
   function toggleChecklistItem(periodId: string, key: ChecklistKey) {

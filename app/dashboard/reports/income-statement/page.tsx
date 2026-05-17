@@ -58,12 +58,15 @@ export default function IncomeStatementPage() {
   const ws = useWorkspace()
 
   useEffect(() => {
+    const ctrl = new AbortController()
     setLoading(true)
-    fetch(`/api/financial-summary?from=${from}&to=${to}`)
+    setError(null)
+    fetch(`/api/financial-summary?from=${from}&to=${to}`, { signal: ctrl.signal })
       .then(r => r.json())
       .then(d => setPnl(d as PnL))
-      .catch(() => setError('Veriler yüklenemedi'))
+      .catch(err => { if (err.name !== 'AbortError') setError('Veriler yüklenemedi') })
       .finally(() => setLoading(false))
+    return () => ctrl.abort()
   }, [from, to])
 
   const grossMargin = pnl ? pct(pnl.gross_profit_try, pnl.revenue_try) : '—'

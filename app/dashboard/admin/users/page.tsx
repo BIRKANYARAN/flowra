@@ -60,10 +60,10 @@ export default function AdminUsersPage() {
 
   // ── Fetch members ──────────────────────────────────────────────────────────
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (signal?: AbortSignal) => {
     setLoading(true)
     setError('')
-    const res = await fetch('/api/admin/members')
+    const res = await fetch('/api/admin/members', { signal })
     if (res.status === 403) { setForbidden(true); setLoading(false); return }
     if (!res.ok) { setError('Üyeler yüklenemedi.'); setLoading(false); return }
     const data = await res.json()
@@ -71,7 +71,11 @@ export default function AdminUsersPage() {
     setLoading(false)
   }, [])
 
-  useEffect(() => { load() }, [load])
+  useEffect(() => {
+    const ctrl = new AbortController()
+    load(ctrl.signal).catch(err => { if (err.name !== 'AbortError') setError('Üyeler yüklenemedi.') })
+    return () => ctrl.abort()
+  }, [load])
 
   // ── Invite submit ──────────────────────────────────────────────────────────
 

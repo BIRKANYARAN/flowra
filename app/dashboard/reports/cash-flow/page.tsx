@@ -79,12 +79,15 @@ export default function CashFlowPage() {
   const ws = useWorkspace()
 
   useEffect(() => {
+    const ctrl = new AbortController()
     setLoading(true)
-    fetch(`/api/financial-statements/cash-flow?from=${from}&to=${to}`)
+    setError(null)
+    fetch(`/api/financial-statements/cash-flow?from=${from}&to=${to}`, { signal: ctrl.signal })
       .then(r => r.json())
       .then(d => setCf(d as CashFlowStatement))
-      .catch(() => setError('Nakit akışı yüklenemedi'))
+      .catch(err => { if (err.name !== 'AbortError') setError('Nakit akışı yüklenemedi') })
       .finally(() => setLoading(false))
+    return () => ctrl.abort()
   }, [from, to])
 
   return (

@@ -55,7 +55,7 @@ export default function AdminAuditPage() {
 
   // ── Fetch ──────────────────────────────────────────────────────────────────
 
-  const load = useCallback(async (off = 0) => {
+  const load = useCallback(async (off = 0, signal?: AbortSignal) => {
     setLoading(true)
     setError('')
 
@@ -66,7 +66,7 @@ export default function AdminAuditPage() {
     if (filterEntityType) params.set('entity_type', filterEntityType)
     if (filterSince)      params.set('since',        filterSince)
 
-    const res = await fetch(`/api/admin/audit?${params.toString()}`)
+    const res = await fetch(`/api/admin/audit?${params.toString()}`, { signal })
     if (res.status === 403) { setForbidden(true); setLoading(false); return }
     if (!res.ok) { setError('Audit logları yüklenemedi.'); setLoading(false); return }
 
@@ -77,7 +77,11 @@ export default function AdminAuditPage() {
     setLoading(false)
   }, [filterAction, filterEntityType, filterSince])
 
-  useEffect(() => { load(0) }, [load])
+  useEffect(() => {
+    const ctrl = new AbortController()
+    load(0, ctrl.signal).catch(err => { if (err.name !== 'AbortError') setError('Audit logları yüklenemedi.') })
+    return () => ctrl.abort()
+  }, [load])
 
   // ── Render ─────────────────────────────────────────────────────────────────
 

@@ -73,12 +73,15 @@ export default function BalanceSheetPage() {
   const ws = useWorkspace()
 
   useEffect(() => {
+    const ctrl = new AbortController()
     setLoading(true)
-    fetch(`/api/financial-statements/balance-sheet?as_of=${asOf}`)
+    setError(null)
+    fetch(`/api/financial-statements/balance-sheet?as_of=${asOf}`, { signal: ctrl.signal })
       .then(r => r.json())
       .then(d => setBs(d as BalanceSheet))
-      .catch(() => setError('Bilanço yüklenemedi'))
+      .catch(err => { if (err.name !== 'AbortError') setError('Bilanço yüklenemedi') })
       .finally(() => setLoading(false))
+    return () => ctrl.abort()
   }, [asOf])
 
   return (

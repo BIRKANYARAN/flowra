@@ -37,8 +37,10 @@ export default function KdvPage() {
   const [to,      setTo]      = useState(currentPeriod().to)
 
   useEffect(() => {
+    const ctrl = new AbortController()
     setLoading(true)
-    fetch(`/api/tax-summary?from=${from}&to=${to}`)
+    setError(null)
+    fetch(`/api/tax-summary?from=${from}&to=${to}`, { signal: ctrl.signal })
       .then(r => r.json())
       .then((d: TaxApiRes) => setKdv({
         sales_vat_try:    d.vat.sales_vat,
@@ -47,8 +49,9 @@ export default function KdvPage() {
         net_vat_try:      d.vat.net_vat,
         vat_status:       d.vat.net_vat > 0 ? 'payable' : 'carry_forward',
       }))
-      .catch(() => setError('KDV verileri yüklenemedi'))
+      .catch(err => { if (err.name !== 'AbortError') setError('KDV verileri yüklenemedi') })
       .finally(() => setLoading(false))
+    return () => ctrl.abort()
   }, [from, to])
 
   return (

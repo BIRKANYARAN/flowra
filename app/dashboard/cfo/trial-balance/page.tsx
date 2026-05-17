@@ -61,11 +61,13 @@ export default function TrialBalancePage() {
   const [error,   setError]   = useState<string | null>(null)
 
   useEffect(() => {
-    fetch('/api/ledger/trial-balance')
+    const ctrl = new AbortController()
+    fetch('/api/ledger/trial-balance', { signal: ctrl.signal })
       .then(r => r.json())
       .then(d => setReport(d as TBReport))
-      .catch(() => setError('Trial balance yüklenemedi'))
+      .catch(err => { if (err.name !== 'AbortError') setError('Trial balance yüklenemedi') })
       .finally(() => setLoading(false))
+    return () => ctrl.abort()
   }, [])
 
   const tb    = report?.trial_balance

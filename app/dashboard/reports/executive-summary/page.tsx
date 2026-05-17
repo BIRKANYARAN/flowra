@@ -57,12 +57,15 @@ export default function ExecutiveSummaryPage() {
   const ws = useWorkspace()
 
   useEffect(() => {
+    const ctrl = new AbortController()
     setLoading(true)
-    fetch(`/api/reports/executive-summary?from=${from}&to=${to}&as_of=${to}`)
+    setError(null)
+    fetch(`/api/reports/executive-summary?from=${from}&to=${to}&as_of=${to}`, { signal: ctrl.signal })
       .then(r => r.json())
       .then(d => setData(d as ExecSummary))
-      .catch(() => setError('Veriler yüklenemedi'))
+      .catch(err => { if (err.name !== 'AbortError') setError('Veriler yüklenemedi') })
       .finally(() => setLoading(false))
+    return () => ctrl.abort()
   }, [from, to])
 
   const is  = data?.income_statement
