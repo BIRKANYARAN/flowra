@@ -1870,6 +1870,20 @@ $$;
 -- SECTION 10 — PERMISSIONS
 -- ─────────────────────────────────────────────────────────────────────────────
 
+-- Table-level grants for PostgREST roles (required for all tables in schema)
+grant usage on schema public to anon, authenticated, service_role;
+grant all on all tables    in schema public to anon, authenticated, service_role;
+grant all on all sequences in schema public to anon, authenticated, service_role;
+grant all on all routines  in schema public to anon, authenticated, service_role;
+
+-- Ensure future tables also inherit these grants automatically
+alter default privileges in schema public
+  grant all on tables    to anon, authenticated, service_role;
+alter default privileges in schema public
+  grant all on sequences to anon, authenticated, service_role;
+alter default privileges in schema public
+  grant all on routines  to anon, authenticated, service_role;
+
 revoke execute on function public.bootstrap_user_company(uuid, uuid, text)       from public;
 revoke execute on function public.claim_event_batch(text, integer)               from public;
 revoke execute on function public.purge_expired_idempotency_keys()               from public;
