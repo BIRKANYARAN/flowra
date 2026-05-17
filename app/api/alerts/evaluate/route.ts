@@ -75,12 +75,14 @@ export async function GET(req: NextRequest) {
     }
 
     // Overdue aging buckets (30d, 60d)
-    let oc30 = 0, ot30 = 0, oc60 = 0, ot60 = 0
+    let oc30 = 0, ot30 = 0, oc60 = 0, ot60 = 0, allReceivables = 0
     for (const s of overdue) {
       const age  = Math.round((nowMs - new Date(s.created_at as string).getTime()) / 86_400_000)
-      const owed = Number(s.total_try ?? 0) - Number(s.amount_paid ?? 0)
+      const owed = Math.max(0, Number(s.total_try ?? 0) - Number(s.amount_paid ?? 0))
+      allReceivables += owed
       if (age > 60) { oc60++; ot60 += owed }
       else if (age > (thresh['RECEIVABLE_30'] ?? 30)) { oc30++; ot30 += owed }
+      // age 0-30: counted in allReceivables but not in aging buckets
     }
 
     // Tranche analysis
@@ -155,7 +157,7 @@ export async function GET(req: NextRequest) {
       overdueTotal30:           ot30,
       overdueCount60:           oc60,
       overdueTotal60:           ot60,
-      totalReceivables:         ot30 + ot60,
+      totalReceivables:         allReceivables,   // all outstanding, not just 30+ days aged
       cashRunwayDays:           runwayDays,
       monthlyNetIncome:         monthlyNet,
       maxBurdenScoreAbs:        0,
