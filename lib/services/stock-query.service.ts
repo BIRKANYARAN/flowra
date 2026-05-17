@@ -146,7 +146,7 @@ export class StockQueryService {
     const supabase = createClient()
     const { data, error } = await supabase
       .from('stock_movements')
-      .select('qty_change, movement_type, created_at')
+      .select('qty, type, created_at')
       .eq('company_id', companyId)
       .eq('product_id', productId)
       .order('created_at', { ascending: true })
@@ -156,13 +156,13 @@ export class StockQueryService {
       throw new AppError('DB_QUERY_FAILED', 'Stok sorgulanamadı', { dbError: error.message })
     }
 
-    const rows = (data ?? []) as Array<Pick<MovementRow, 'qty_change' | 'movement_type' | 'created_at'>>
+    const rows = (data ?? []) as Array<{ qty: number | string; type: string | null; created_at: string }>
     let qty = 0, totalIn = 0, totalOut = 0
     let lastAt: string | null = null
     let anomalyCount = 0
 
     for (const r of rows) {
-      const delta = num(r.qty_change)
+      const delta = num(r.qty)
 
       // ── The ONLY arithmetic rule ────────────────────────────────────────
       qty += delta
@@ -172,7 +172,7 @@ export class StockQueryService {
       lastAt = r.created_at
 
       // Soft guardrail — count (don't alter results)
-      if (findRowAnomaly({ movement_type: r.movement_type, qty_change: delta })) {
+      if (findRowAnomaly({ movement_type: r.type ?? null, qty_change: delta })) {
         anomalyCount += 1
       }
     }
@@ -345,7 +345,7 @@ export class StockQueryService {
     // ── Path 2: movement-based weighted average (fallback) ─────────────────
     const { data, error } = await supabase
       .from('stock_movements')
-      .select('qty_change, unit_cost, movement_type')
+      .select('qty, unit_cost, type')
       .eq('company_id', companyId)
       .eq('product_id', productId)
 
@@ -354,7 +354,7 @@ export class StockQueryService {
       throw new AppError('DB_QUERY_FAILED', 'Stok değeri hesaplanamadı', { dbError: error.message })
     }
 
-    const rows = (data ?? []) as Array<Pick<MovementRow, 'qty_change' | 'unit_cost' | 'movement_type'>>
+    const rows = (data ?? []) as Array<{ qty: number | string; unit_cost: number | string; type: string | null }>
 
     let qtyOnHand    = 0
     let weightedQty  = 0   // Σ qty_in for cost-bearing rows
@@ -362,12 +362,12 @@ export class StockQueryService {
     let anomalyCount = 0
 
     for (const r of rows) {
-      const delta = num(r.qty_change)
+      const delta = num(r.qty)
       const cost  = num(r.unit_cost)
 
       qtyOnHand += delta
 
-      // HARDENING: direction comes from sign(qty_change) ONLY.
+      // HARDENING: direction comes from sign(qty) ONLY.
       // Anything with a positive delta and a real unit_cost is a cost-bearing
       // incoming row, regardless of reference_type or movement_type.
       if (delta > 0 && cost > 0) {
@@ -375,7 +375,7 @@ export class StockQueryService {
         weightedCost += delta * cost
       }
 
-      if (findRowAnomaly({ movement_type: r.movement_type, qty_change: delta })) {
+      if (findRowAnomaly({ movement_type: r.type ?? null, qty_change: delta })) {
         anomalyCount += 1
       }
     }
@@ -440,7 +440,7 @@ export class StockQueryService {
     const [mvRes, prodRes] = await Promise.all([
       supabase
         .from('stock_movements')
-        .select('qty_change')
+        .select('qty')
         .eq('company_id', companyId)
         .eq('product_id', productId),
       supabase
@@ -462,7 +462,7 @@ export class StockQueryService {
     }
 
     const computed = round2(
-      (mvRes.data ?? []).reduce((s, r) => s + num((r as { qty_change: number | string }).qty_change), 0)
+      (mvRes.data ?? []).reduce((s, r) => s + num((r as { qty: number | string }).qty), 0)
     )
     const legacy = round2(num(prodRes.data?.stock_qty))
     const drift  = round2(computed - legacy)
@@ -505,7 +505,7 @@ export class StockQueryService {
 
     const { data: movements, error: mvErr } = await supabase
       .from('stock_movements')
-      .select('product_id, qty_change')
+      .select('product_id, qty')
       .eq('company_id', companyId)
 
     if (mvErr) {
@@ -513,11 +513,11 @@ export class StockQueryService {
       throw new AppError('DB_QUERY_FAILED', 'Hareketler okunamadı', { dbError: mvErr.message })
     }
 
-    // Aggregate qty_change per product in JS (one pass, no N+1).
+    // Aggregate qty per product in JS (one pass, no N+1).
     const sumByProduct = new Map<string, number>()
     for (const m of (movements ?? [])) {
-      const row = m as { product_id: string; qty_change: number | string }
-      sumByProduct.set(row.product_id, (sumByProduct.get(row.product_id) ?? 0) + num(row.qty_change))
+      const row = m as { product_id: string; qty: number | string }
+      sumByProduct.set(row.product_id, (sumByProduct.get(row.product_id) ?? 0) + num(row.qty))
     }
 
     const reports: StockConsistencyReport[] = []

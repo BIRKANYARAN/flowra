@@ -15,11 +15,13 @@ export type ProformaStatus = 'draft' | 'sent' | 'accepted' | 'rejected' | 'conve
 export type StageKey = 'stok' | 'teklif' | 'satis' | 'tahsilat' | 'kar'
 
 export interface StockLot {
-  qty_remaining:  number
-  entry_cost_try: number
-  product_name?:  string | null
-  lot_no?:        string | null
-  created_at?:    string | null
+  qty_remaining:   number
+  cost_price_try?: number | null
+  /** Legacy alias kept for backward compat — prefer cost_price_try */
+  entry_cost_try?: number | null
+  product_name?:   string | null
+  lot_no?:         string | null
+  created_at?:     string | null
 }
 
 export interface Proforma {
@@ -123,7 +125,7 @@ function PanelEmpty({ msg }: { msg: string }) {
 
 function StokPanel({ lots }: { lots: StockLot[] }) {
   if (lots.length === 0) return <PanelEmpty msg="Stok kaydı yok" />
-  const total = lots.reduce((s, l) => s + l.qty_remaining * l.entry_cost_try, 0)
+  const total = lots.reduce((s, l) => s + l.qty_remaining * Number(l.cost_price_try ?? l.entry_cost_try ?? 0), 0)
   return (
     <div>
       <table className="w-full text-sm">
@@ -143,8 +145,8 @@ function StokPanel({ lots }: { lots: StockLot[] }) {
                 {l.product_name ?? (l.lot_no ? `Lot ${l.lot_no}` : `#${i + 1}`)}
               </td>
               <td className="px-4 py-2.5 text-right tabular-nums">{l.qty_remaining.toLocaleString('tr-TR')}</td>
-              <td className="px-4 py-2.5 text-right tabular-nums text-gray-500">{fmt(l.entry_cost_try)}</td>
-              <td className="px-4 py-2.5 text-right tabular-nums font-bold text-gray-800">{fmt(l.qty_remaining * l.entry_cost_try)}</td>
+              <td className="px-4 py-2.5 text-right tabular-nums text-gray-500">{fmt(Number(l.cost_price_try ?? l.entry_cost_try ?? 0))}</td>
+              <td className="px-4 py-2.5 text-right tabular-nums font-bold text-gray-800">{fmt(l.qty_remaining * Number(l.cost_price_try ?? l.entry_cost_try ?? 0))}</td>
               <td className="px-4 py-2.5 text-right text-gray-400">{fmtDate(l.created_at ?? null)}</td>
             </tr>
           ))}
@@ -386,7 +388,7 @@ export default function SalesFlowClient({ initialProformas, initialSales, initia
   const converted    = byStatus('converted')
   const rejected     = byStatus('rejected')
   const sumTotal     = (rows: Proforma[]) => rows.reduce((s, p) => s + Number(p.total ?? 0), 0)
-  const stockValue   = stockLots.reduce((s, l) => s + l.qty_remaining * l.entry_cost_try, 0)
+  const stockValue   = stockLots.reduce((s, l) => s + l.qty_remaining * Number(l.cost_price_try ?? l.entry_cost_try ?? 0), 0)
   const pipelineVal  = sumTotal(sent) + sumTotal(accepted)
   const totalRevenue = sales.reduce((s, r) => s + Number(r.total_try ?? 0), 0)
   const totalCogs    = sales.reduce((s, r) => s + Number(r.cost_try ?? 0), 0)

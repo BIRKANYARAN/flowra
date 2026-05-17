@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
       .eq('product_id', productId)
       .eq('company_id', companyId)
       .is('deleted_at', null)
-      .order('entry_date', { ascending: order })
+      .order('received_at', { ascending: order })
 
     if (active) {
       query = query.gt('qty_remaining', 0)
