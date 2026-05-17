@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 
 export const dynamic = 'force-dynamic'
 
-// CEO cockpit is now at /dashboard (the main Komuta Merkezi)
+// Canonical route is now /dashboard/operations?tab=stock
 export default function RedirectPage() {
-  redirect('/dashboard')
+  redirect('/dashboard/operations?tab=stock')
 }
