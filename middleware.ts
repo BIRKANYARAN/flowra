@@ -62,6 +62,9 @@ const DASHBOARD_REDIRECTS: Record<string, string> = {
   '/dashboard/orders':      '/dashboard/operations?tab=orders',
   '/dashboard/simulation':  '/dashboard/planning?tab=unit-profit',
   '/dashboard/tasks':       '/dashboard/planning?tab=tasks',
+  // Legacy pages retired — redirect to canonical equivalents
+  '/dashboard/ceo':         '/dashboard',
+  '/dashboard/cfo/tax':     '/dashboard/cfo/tax/kdv',
 }
 
 export async function middleware(request: NextRequest) {
