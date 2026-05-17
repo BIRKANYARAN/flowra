@@ -16,6 +16,7 @@ import { TasksContent }       from './_tabs/TasksContent'
 import { CashProjectionTab }  from './_tabs/CashProjectionTab'
 import { WhatIfTab }          from './_tabs/WhatIfTab'
 import { DebtPressureTab }    from './_tabs/DebtPressureTab'
+import { PartnerImpactTab }   from './_tabs/PartnerImpactTab'
 
 function TabSkeleton() {
   return (
@@ -103,9 +104,13 @@ export default async function PlanningPage({ searchParams }: PageProps) {
       </div>
 
       <Suspense fallback={<TabSkeleton />}>
-        {/* unit-profit + partner-impact: full simulation engine */}
-        {(activeTab === 'unit-profit' || activeTab === 'partner-impact') && (
-          <SimulationContent companyId={companyId} userId={userId} activeTab={activeTab as 'unit-profit' | 'partner-impact'} />
+        {/* unit-profit: product simulation engine */}
+        {activeTab === 'unit-profit' && (
+          <SimulationContent companyId={companyId} userId={userId} activeTab="unit-profit" />
+        )}
+        {/* partner-impact: distribution planning + loan status */}
+        {activeTab === 'partner-impact' && (
+          <PartnerImpactTab companyId={companyId} userId={userId} />
         )}
         {/* cash-projection: 12-month trailing-based cash forecast */}
         {activeTab === 'cash-projection' && (

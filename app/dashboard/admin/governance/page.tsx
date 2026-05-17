@@ -11,6 +11,17 @@
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 
+// Print styles injected via a <style> tag so we don't need a global CSS file.
+// This hides the sidebar and UI chrome when the user prints / saves as PDF.
+const PRINT_STYLE = `
+@media print {
+  body { background: white !important; }
+  [data-print-hide]  { display: none !important; }
+  [data-print-show]  { display: block !important; }
+  .print\\:text-black { color: #000 !important; }
+}
+`
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface PartnerBalance {
@@ -134,8 +145,8 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
     <div className="flex flex-col gap-6">
 
       {/* Header strip */}
-      <div className={`rounded-xl border px-5 py-4 ${theme.bg} ${theme.border} flex items-center justify-between`}>
-        <div>
+      <div className={`rounded-xl border px-5 py-4 ${theme.bg} ${theme.border} flex items-start justify-between gap-4`}>
+        <div className="min-w-0">
           <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">{snap.period_label} · Yönetişim Raporu</div>
           <div className={`text-lg font-black mt-0.5 ${theme.text}`}>
             {theme.label} · Skor {Math.round(snap.composite_score ?? 0)}/100
@@ -145,8 +156,21 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
             {report.is_finalized && ` · Sonuçlandırıldı: ${fmtDateTime(report.finalized_at!)}`}
           </div>
         </div>
-        <div className={`text-2xl font-black tabular-nums ${theme.text}`}>
-          {Math.round(snap.composite_score ?? 0)}<span className="text-sm font-semibold">/100</span>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <button
+            onClick={() => window.print()}
+            data-print-hide
+            title="Bu raporu PDF olarak kaydet veya yazdır"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 bg-white text-xs font-semibold text-gray-600 hover:border-gray-300 hover:bg-gray-50 transition-colors shadow-sm"
+          >
+            <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.75 19.5m10.56-5.671L17.25 19.5M4.5 4.227v.227a49.94 49.94 0 0111 0v-.227c0-.995-.717-1.825-1.703-1.98l-2.088-.337a49.72 49.72 0 00-4.218 0l-2.088.337C5.217 2.402 4.5 3.232 4.5 4.227zm12 4.023H3.5" />
+            </svg>
+            Yazdır / PDF
+          </button>
+          <div className={`text-2xl font-black tabular-nums ${theme.text}`}>
+            {Math.round(snap.composite_score ?? 0)}<span className="text-sm font-semibold">/100</span>
+          </div>
         </div>
       </div>
 
@@ -269,7 +293,7 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
 
       {/* Finalize action */}
       {!report.is_finalized && (
-        <div className={`rounded-xl border px-5 py-4 ${allPartnersSigned ? 'bg-emerald-50 border-emerald-200' : 'bg-gray-50 border-gray-100'} flex items-center justify-between gap-4`}>
+        <div data-print-hide className={`rounded-xl border px-5 py-4 ${allPartnersSigned ? 'bg-emerald-50 border-emerald-200' : 'bg-gray-50 border-gray-100'} flex items-center justify-between gap-4`}>
           <div>
             <div className="text-sm font-bold text-gray-900">Raporu Sonuçlandır</div>
             <div className="text-xs text-gray-500 mt-0.5">
@@ -414,8 +438,11 @@ export default function GovernancePage() {
   return (
     <div className="flex flex-col gap-6 max-w-5xl">
 
+      {/* Print styles */}
+      <style dangerouslySetInnerHTML={{ __html: PRINT_STYLE }} />
+
       {/* Page header */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex items-start justify-between gap-4" data-print-hide>
         <div>
           <div className="flex items-center gap-2">
             <Link href="/dashboard/admin" className="text-xs text-gray-400 hover:text-gray-600">← Yönetim</Link>
@@ -435,7 +462,7 @@ export default function GovernancePage() {
 
       {/* Generate form */}
       {showGenForm && (
-        <div className="bg-white border border-gray-100 rounded-xl px-5 py-5 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+        <div data-print-hide className="bg-white border border-gray-100 rounded-xl px-5 py-5 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
           <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4">Yeni Yönetişim Raporu Oluştur</div>
           <div className="grid grid-cols-3 gap-3 mb-4">
             <div>
@@ -490,7 +517,7 @@ export default function GovernancePage() {
 
       {/* Error */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700 flex items-center justify-between">
+        <div data-print-hide className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700 flex items-center justify-between">
           <span>{error}</span>
           <button onClick={() => setError(null)} className="text-red-400 font-bold text-base ml-3">✕</button>
         </div>
@@ -520,7 +547,7 @@ export default function GovernancePage() {
         <div className="grid grid-cols-[260px_1fr] gap-5 items-start">
 
           {/* Report list */}
-          <div className="flex flex-col gap-2">
+          <div data-print-hide className="flex flex-col gap-2">
             <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 px-1 mb-1">
               {reports.length} Rapor
             </div>
@@ -582,7 +609,7 @@ export default function GovernancePage() {
       )}
 
       {/* Info footer */}
-      <div className="bg-gray-50 border border-gray-100 rounded-xl px-5 py-4 text-xs text-gray-500 leading-relaxed">
+      <div data-print-hide className="bg-gray-50 border border-gray-100 rounded-xl px-5 py-4 text-xs text-gray-500 leading-relaxed">
         <span className="font-semibold text-gray-700">Yönetişim Kaydı Hakkında:</span>{' '}
         Her rapor, o ay için şirketin finansal pozisyonunun anlık görüntüsüdür.
         Ortaklar kendi paylarını ve bakiyelerini görür, dijital onay verir.

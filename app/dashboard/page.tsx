@@ -496,6 +496,10 @@ export default async function DashboardPage() {
   const lastMonthExp = trailing5.length > 0 ? trailing5[trailing5.length - 1]?.expenses ?? 0 : 0
   const prevMonthExp = trailing5.length > 1 ? trailing5[trailing5.length - 2]?.expenses ?? 0 : 0
   const expDeltaPct  = prevMonthExp > 0 ? ((lastMonthExp - prevMonthExp) / prevMonthExp) * 100 : null
+  // Net income delta: (rev - exp) for last two complete trailing months
+  const lastMonthNet_ = lastMonthRev - lastMonthExp
+  const prevMonthNet_ = prevMonthRev - prevMonthExp
+  const netDeltaPct   = prevMonthNet_ !== 0 ? ((lastMonthNet_ - prevMonthNet_) / Math.abs(prevMonthNet_)) * 100 : null
 
   // ── Behavioral dominance — only genuine crises earn visual priority ─────────
   // Fires on 2 conditions only: imminent cash crisis or severe receivable surge.
@@ -621,6 +625,11 @@ export default async function DashboardPage() {
               {formatKpi(Math.abs(monthlyNet))}
             </div>
             <div className="text-[10px] text-gray-400 mt-1.5">{monthlyNet >= 0 ? 'Kârlı dönem' : 'Zarar'}</div>
+            {netDeltaPct !== null && (
+              <div className={`text-[10px] font-semibold mt-0.5 tabular-nums ${netDeltaPct >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                {netDeltaPct >= 0 ? '▲' : '▼'} {Math.abs(netDeltaPct).toFixed(1)}% geçen ay
+              </div>
+            )}
             {breakEvenRevenue !== null && (
               <div className="text-[10px] text-gray-400 mt-0.5">Başabaş: {fmt(breakEvenRevenue)}</div>
             )}
