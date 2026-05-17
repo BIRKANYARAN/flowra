@@ -139,18 +139,16 @@ export async function POST(req: NextRequest) {
       .from('sales')
       .insert({
         company_id:     companyId,
+        user_id:        uid,
         customer_name:  customerName,
         currency,
         total,
-        cogs:           0,
-        nominal_profit: total,
-        holding_cost:   0,
+        fx_rate_try:    fxRate !== 1 ? fxRate : null,
         sale_date:      saleDate,
         due_date:       dueDate,
         proforma_id:    null,
         payment_status: 'pending',
         paid_amount:    0,
-        created_by:     uid,
         notes:          notes || null,
       })
       .select('id')
