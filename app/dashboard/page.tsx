@@ -506,11 +506,11 @@ export default async function DashboardPage() {
 
       {/* ── KPI Strip ─────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-6 gap-1.5">
-        <FlowraKpiCard label="Ciro" value={fs.revenue_try} rawValue={fmt(fs.revenue_try)} sub={fs.revenue_try > 0 ? `Brüt marj ${pct(grossMarginPct)}` : 'Satış yok'} href="/dashboard/sales" />
-        <FlowraKpiCard label="Tahsil Edilen" value={actuallyCollected} rawValue={fmt(actuallyCollected)} sub={`%${actuallyCollectedPct} oran`} tone={actuallyCollectedPct >= 80 ? 'positive' : actuallyCollectedPct >= 50 ? 'neutral' : 'negative'} href="/dashboard/collections" />
+        <FlowraKpiCard label="Ciro" value={fs.revenue_try} rawValue={fmt(fs.revenue_try)} sub={fs.revenue_try > 0 ? `Brüt marj ${pct(grossMarginPct)}` : 'Satış yok'} href="/dashboard/commercial?tab=sales" />
+        <FlowraKpiCard label="Tahsil Edilen" value={actuallyCollected} rawValue={fmt(actuallyCollected)} sub={`%${actuallyCollectedPct} oran`} tone={actuallyCollectedPct >= 80 ? 'positive' : actuallyCollectedPct >= 50 ? 'neutral' : 'negative'} href="/dashboard/commercial?tab=collections" />
         <FlowraKpiCard label="Dağıtılabilir" value={cashDistributable} rawValue={cashDistributable > 0 ? fmt(cashDistributable) : '—'} sub={cashDistributable > 0 ? 'Nakit bazlı' : 'Yok'} tone={cashDistributable > 0 ? 'positive' : 'neutral'} href="/dashboard/partners" />
-        <FlowraKpiCard label="Bekleyen" value={uncollectedSalesTotal} rawValue={uncollectedSalesTotal > 0 ? fmt(uncollectedSalesTotal) : '—'} sub={uncollectedSalesTotal > 0 ? `${uncollectedSalesCount} satış` : 'Tümü tahsil ✓'} tone={uncollectedSalesTotal > 0 ? 'negative' : 'neutral'} href="/dashboard/collections" />
-        <FlowraKpiCard label="Giderler" value={fs.expenses_total_try} rawValue={fmt(fs.expenses_total_try)} sub={`~${fmt(monthlyExpenses)}/ay`} href="/dashboard/expenses" />
+        <FlowraKpiCard label="Bekleyen" value={uncollectedSalesTotal} rawValue={uncollectedSalesTotal > 0 ? fmt(uncollectedSalesTotal) : '—'} sub={uncollectedSalesTotal > 0 ? `${uncollectedSalesCount} satış` : 'Tümü tahsil ✓'} tone={uncollectedSalesTotal > 0 ? 'negative' : 'neutral'} href="/dashboard/commercial?tab=collections" />
+        <FlowraKpiCard label="Giderler" value={fs.expenses_total_try} rawValue={fmt(fs.expenses_total_try)} sub={`~${fmt(monthlyExpenses)}/ay`} href="/dashboard/operations?tab=expenses" />
         <FlowraKpiCard label="Stok" value={stockValue} rawValue={fmt(stockValue)} sub="FIFO maliyet" href="/dashboard/stocks" />
       </div>
 

@@ -296,7 +296,7 @@ export async function OverviewTab({ userId: _userId, companyId }: Props) {
           className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gray-100 text-gray-700 text-xs font-semibold hover:bg-gray-200 transition-colors">
           Ortak Dengesi
         </Link>
-        <Link href="/dashboard/finance?tab=forecast"
+        <Link href="/dashboard/planning?tab=unit-profit"
           className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gray-100 text-gray-700 text-xs font-semibold hover:bg-gray-200 transition-colors">
           Senaryo Simülasyonu
         </Link>

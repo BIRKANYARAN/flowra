@@ -408,8 +408,8 @@ export async function CFOTab({ userId, companyId }: Props) {
           <div className="space-y-2">
             {[
               { label: '0–30 gün (Cari)',    value: (riskData?.totalOutstanding ?? 0) - (riskData?.overdueTotal ?? 0), color: 'text-emerald-700' },
-              { label: '31–60 gün',          value: (riskData?.overdue30Total ?? 0) + (riskData?.overdue60Total ?? 0), color: 'text-amber-700'   },
-              { label: '60+ gün (Gecikmiş)', value: riskData?.overdue90Total ?? 0,  color: 'text-red-700'   },
+              { label: '31–60 gün',          value: riskData?.overdue30Total ?? 0,                                   color: 'text-amber-700'   },
+              { label: '60+ gün (Gecikmiş)', value: (riskData?.overdue60Total ?? 0) + (riskData?.overdue90Total ?? 0), color: 'text-red-700'   },
             ].map(row => (
               <div key={row.label} className="flex items-center justify-between text-sm">
                 <span className="text-gray-500">{row.label}</span>

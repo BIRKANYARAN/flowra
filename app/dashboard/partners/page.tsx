@@ -285,6 +285,10 @@ export default function PartnersPage() {
   const [distribLoading, setDistribLoading] = useState(false)
   const [netIncomeInput, setNetIncomeInput] = useState('')
   const [boardRetainedInput, setBoardRetainedInput] = useState('')
+  const [dividendConfirm, setDividendConfirm] = useState(false)
+  const [dividendLoading, setDividendLoading] = useState(false)
+  const [dividendError,   setDividendError]   = useState<string | null>(null)
+  const [dividendSuccess, setDividendSuccess] = useState(false)
   const [loading,      setLoading]      = useState(true)
   const [fetchError,   setFetchError]   = useState<string | null>(null)
   const [availCash,    setAvailCash]    = useState(0)
@@ -334,6 +338,37 @@ export default function PartnersPage() {
     } catch { /* silent */ }
     setDistribLoading(false)
   }, [])
+
+  const handleDeclareDividend = useCallback(async () => {
+    if (!distrib) return
+    setDividendLoading(true)
+    setDividendError(null)
+    try {
+      const today = new Date().toISOString().slice(0, 10)
+      await Promise.all(
+        distrib.per_partner_distribution.map(p =>
+          fetch(`/api/partners/${p.partner_id}/transactions`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              tx_type:  'dividend',
+              amount:   p.net_entitlement_try,
+              currency: 'TRY',
+              fx_rate:  1,
+              tx_date:  today,
+              notes:    `Temettü beyanı — Brüt: ${p.gross_entitlement_try.toFixed(2)} TL, Stopaj: ${p.withholding_try.toFixed(2)} TL, Net: ${p.net_entitlement_try.toFixed(2)} TL`,
+            }),
+          }).then(r => { if (!r.ok) throw new Error(`${p.partner_name}: kayıt başarısız`) })
+        )
+      )
+      setDividendConfirm(false)
+      setDividendSuccess(true)
+      setTimeout(() => setDividendSuccess(false), 4000)
+    } catch (err) {
+      setDividendError(err instanceof Error ? err.message : 'Temettü kaydedilemedi')
+    }
+    setDividendLoading(false)
+  }, [distrib])
 
   const reloadAll = useCallback(async () => {
     try {
@@ -1069,16 +1104,50 @@ export default function PartnersPage() {
 
               {/* Block reason / distribute status */}
               {distrib.distribution_layers.is_distributable ? (
-                <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 flex items-center justify-between gap-4">
-                  <div>
-                    <div className="text-sm font-bold text-emerald-800">Dağıtım yapılabilir</div>
-                    <div className="text-xs text-emerald-700 mt-0.5">
-                      Net dağıtılabilir: <span className="font-black">{fmt(distrib.distribution_layers.distributable_net_try)}</span>
+                <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 space-y-3">
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <div className="text-sm font-bold text-emerald-800">Dağıtım yapılabilir</div>
+                      <div className="text-xs text-emerald-700 mt-0.5">
+                        Net dağıtılabilir: <span className="font-black">{fmt(distrib.distribution_layers.distributable_net_try)}</span>
+                      </div>
                     </div>
+                    {dividendSuccess ? (
+                      <span className="text-xs font-bold text-emerald-700 px-3 py-2">✓ Temettü kaydedildi</span>
+                    ) : dividendConfirm ? (
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          onClick={handleDeclareDividend}
+                          disabled={dividendLoading}
+                          className="text-xs font-bold px-3 py-2 rounded-lg bg-emerald-700 text-white hover:bg-emerald-800 disabled:opacity-50 transition-colors"
+                        >
+                          {dividendLoading ? 'Kaydediliyor…' : 'Onayla'}
+                        </button>
+                        <button
+                          onClick={() => { setDividendConfirm(false); setDividendError(null) }}
+                          disabled={dividendLoading}
+                          className="text-xs font-bold px-3 py-2 rounded-lg border border-emerald-300 text-emerald-800 hover:bg-emerald-100 disabled:opacity-50 transition-colors"
+                        >
+                          İptal
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => { setDividendConfirm(true); setDividendError(null) }}
+                        className="text-xs font-bold px-4 py-2 rounded-lg bg-emerald-700 text-white hover:bg-emerald-800 transition-colors shrink-0"
+                      >
+                        Temettü Beyan Et
+                      </button>
+                    )}
                   </div>
-                  <button className="text-xs font-bold px-4 py-2 rounded-lg bg-emerald-700 text-white hover:bg-emerald-800 transition-colors shrink-0">
-                    Temettü Beyan Et
-                  </button>
+                  {dividendConfirm && !dividendLoading && (
+                    <div className="text-xs text-emerald-700 border-t border-emerald-200 pt-2">
+                      {distrib.per_partner_distribution.length} ortak için net temettü kaydedilecek. Bu işlem geri alınamaz.
+                    </div>
+                  )}
+                  {dividendError && (
+                    <div className="text-xs text-red-600 border-t border-emerald-200 pt-2">{dividendError}</div>
+                  )}
                 </div>
               ) : (
                 <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3">

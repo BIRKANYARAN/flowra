@@ -55,8 +55,13 @@ export default async function JournalEntriesPage() {
         <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-6 text-sm text-amber-700 text-center">
           <div className="font-bold mb-1">Journal kaydı bulunamadı</div>
           <div className="text-xs text-amber-600">
-            GL modu shadow olarak çalışıyorsa kayıtlar otomatik oluşturulmaz.
-            Aktif etmek için şirket ayarlarında <code className="bg-amber-100 px-1 rounded">gl_mode = &apos;parallel&apos;</code> olarak güncelleyin.
+            GL modu <strong>shadow</strong> modunda çalışıyorsa journal kayıtları otomatik oluşturulmaz.
+            Kayıt oluşturmaya başlamak için{' '}
+            <Link href="/dashboard/admin/settings" className="underline font-semibold hover:text-amber-800">
+              Şirket Ayarları
+            </Link>{' '}
+            sayfasından <code className="bg-amber-100 px-1 rounded">gl_mode</code> değerini{' '}
+            <code className="bg-amber-100 px-1 rounded">parallel</code> olarak güncelleyin.
           </div>
         </div>
       ) : (

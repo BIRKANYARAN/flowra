@@ -41,6 +41,8 @@ const STATUS_COLOR: Record<string, string> = {
   converted: 'bg-primary-100 text-primary-700',
 }
 
+type ProformaWithFx = Proforma & { fx_try?: number | null }
+
 interface Props { companyId: string }
 
 export async function PipelineContent({ companyId }: Props) {
@@ -49,7 +51,7 @@ export async function PipelineContent({ companyId }: Props) {
   const [pfRes, salesRes, lotRes] = await Promise.all([
     supabase
       .from('proformas')
-      .select('id, customer_name, status, total, currency, created_at, updated_at')
+      .select('id, customer_name, status, total, fx_try, currency, created_at, updated_at')
       .eq('company_id', companyId)
       .is('deleted_at', null)
       .order('created_at', { ascending: false }),
@@ -80,7 +82,7 @@ export async function PipelineContent({ companyId }: Props) {
   }))
 
   const stockValue   = stockLots.reduce((s, l) => s + (Number(l.qty_remaining) || 0) * (Number(l.entry_cost_try) || 0), 0)
-  const pipelineVal  = proformas.filter(p => p.status === 'sent' || p.status === 'accepted').reduce((s, p) => s + (Number(p.total) || 0), 0)
+  const pipelineVal  = proformas.filter(p => p.status === 'sent' || p.status === 'accepted').reduce((s, p) => s + (Number(p.total) || 0) * (Number((p as ProformaWithFx).fx_try) || 1), 0)
   const totalRevenue = sales.reduce((s, r) => s + (Number(r.total_try) || 0), 0)
   const totalCogs    = sales.reduce((s, r) => s + (Number(r.cost_try)  || 0), 0)
   const grossProfit  = totalRevenue - totalCogs
