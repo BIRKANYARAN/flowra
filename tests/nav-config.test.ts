@@ -248,10 +248,11 @@ describe('ROUTE_REDIRECTS', () => {
     expect(ROUTE_REDIRECTS['/dashboard/simulation']).toBe('/dashboard/planning?tab=unit-profit')
     expect(ROUTE_REDIRECTS['/dashboard/stocks']).toBe('/dashboard/operations?tab=stock')
     expect(ROUTE_REDIRECTS['/dashboard/orders']).toBe('/dashboard/operations?tab=orders')
+    expect(ROUTE_REDIRECTS['/dashboard/activity']).toBe('/dashboard/admin/audit')
   })
 
-  it('has 16 redirect entries', () => {
-    expect(Object.keys(ROUTE_REDIRECTS).length).toBe(16)
+  it('has 17 redirect entries', () => {
+    expect(Object.keys(ROUTE_REDIRECTS).length).toBe(17)
   })
 
   it('all destinations start with /dashboard/', () => {

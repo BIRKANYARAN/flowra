@@ -250,6 +250,7 @@ export const ROUTE_REDIRECTS: Record<string, string> = {
   '/dashboard/orders':      '/dashboard/operations?tab=orders',
   '/dashboard/simulation':  '/dashboard/planning?tab=unit-profit',
   '/dashboard/tasks':       '/dashboard/planning?tab=tasks',
+  '/dashboard/activity':    '/dashboard/admin/audit',
 }
 
 // ── Mobile bottom nav (5 items) ───────────────────────────────────────────────
