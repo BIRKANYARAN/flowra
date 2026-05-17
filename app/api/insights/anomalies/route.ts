@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
     const [salesRes, expensesRes, customerPaymentsRes] = await Promise.allSettled([
       // Use sale_date (business invoice date) for monthly revenue bucketing.
       supabase.from('sales')
-        .select('total_try, sale_date')
+        .select('total_try:total, sale_date')
         .eq('company_id', companyId)
         .is('deleted_at', null)
         .gte('sale_date', from)
@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
         .gte('expense_date', from)
         .lte('expense_date', to),
       supabase.from('sales')
-        .select('customer_name, sale_date, paid_at, due_date, total_try, payment_status')
+        .select('customer_name, sale_date, paid_at, due_date, total_try:total, payment_status')
         .eq('company_id', companyId)
         .is('deleted_at', null),
     ])

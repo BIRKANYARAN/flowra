@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     // Find all unpaid/partial sales whose due_date has passed
     const { data: stale, error: fetchErr } = await supabase
       .from('sales')
-      .select('id, company_id, customer_name, total_try, due_date, payment_status')
+      .select('id, company_id, customer_name, total_try:total, due_date, payment_status')
       .in('payment_status', ['pending', 'partial'])
       .lt('due_date', today)
       .is('deleted_at', null)

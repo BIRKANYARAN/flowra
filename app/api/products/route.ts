@@ -49,15 +49,22 @@ export async function POST(req: NextRequest) {
 
     // Initial stock movement via ledger (if qty > 0)
     if (payload.stock_qty > 0) {
-      const { data: mvData } = await supabase.from('stock_movements').insert({
-        user_id:    uid,
-        product_id: data.id,
-        company_id: companyId,
-        type:       'initial',
-        qty:        payload.stock_qty,
-        unit_cost:  payload.unit_cost,
-        notes:      'Başlangıç stok girişi',
+      const entryDate = body.entry_date || new Date().toISOString().slice(0, 10)
+      const { data: mvData, error: mvErr } = await supabase.from('stock_movements').insert({
+        // Note: stock_movements has no user_id column
+        product_id:  data.id,
+        company_id:  companyId,
+        type:        'initial',
+        qty:         payload.stock_qty,
+        unit_cost:   payload.unit_cost,
+        notes:       'Başlangıç stok girişi',
+        moved_at:    entryDate,
       }).select('id').single()
+
+      if (mvErr) {
+        await logger.error(ctx, 'product_create:movement_error', { error: mvErr.message, product_id: data.id })
+        // Non-fatal: product is created, stock movement failed — log and continue
+      }
 
       // FIFO lot for initial stock
       const costCurrency = payload.cost_currency ?? 'TRY'
@@ -66,8 +73,8 @@ export async function POST(req: NextRequest) {
         ? payload.unit_cost
         : payload.unit_cost * costFxRate
 
-      await supabase.from('stock_lots').insert({
-        user_id:        uid,
+      const { error: lotErr } = await supabase.from('stock_lots').insert({
+        // Note: stock_lots has no user_id or movement_id column
         product_id:     data.id,
         company_id:     companyId,
         qty_initial:    payload.stock_qty,
@@ -76,9 +83,14 @@ export async function POST(req: NextRequest) {
         cost_currency:  costCurrency,
         cost_fx_rate:   costFxRate,
         cost_price_try: costPriceTry,
-        received_at:    body.entry_date || new Date().toISOString().slice(0, 10),
-        movement_id:    mvData?.id ?? null,
+        received_at:    entryDate,
+        notes:          mvData?.id ? `movement_id:${mvData.id}` : null,
       })
+
+      if (lotErr) {
+        await logger.error(ctx, 'product_create:lot_error', { error: lotErr.message, product_id: data.id })
+        // Non-fatal: product is created, lot failed — log and continue
+      }
     }
 
     const { EventService } = await import('@/lib/services/event.service')

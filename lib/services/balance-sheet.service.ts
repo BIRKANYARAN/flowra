@@ -49,7 +49,7 @@ export class BalanceSheetService {
       // Use sale_date (business invoice date), not created_at (DB insertion time).
       (supabase as SupabaseClient)
         .from('sales')
-        .select('total_try, amount_paid')
+        .select('total_try:total, amount_paid:paid_amount')
         .eq('company_id', companyId)
         .is('deleted_at', null)
         .in('payment_status', ['pending', 'partial', 'overdue'])
@@ -68,7 +68,7 @@ export class BalanceSheetService {
       // Cash in: all paid sales (collected cash) up to asOfDate.
       (supabase as SupabaseClient)
         .from('sales')
-        .select('total_try, amount_paid, payment_status')
+        .select('total_try:total, amount_paid:paid_amount, payment_status')
         .eq('company_id', companyId)
         .is('deleted_at', null)
         .in('payment_status', ['paid', 'partial'])

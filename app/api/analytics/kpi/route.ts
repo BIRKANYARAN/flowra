@@ -73,7 +73,7 @@ export async function GET(req: NextRequest) {
     // Use sale_date not created_at (DB insertion time) for correct period attribution.
     supabase
       .from('sales')
-      .select('total_try, cogs')
+      .select('total_try:total')
       .eq('company_id', companyId)
       .is('deleted_at', null)
       .gte('sale_date', from)
@@ -82,7 +82,7 @@ export async function GET(req: NextRequest) {
     // 2. Total collected (paid) — by paid_at date
     supabase
       .from('sales')
-      .select('total_try')
+      .select('total_try:total')
       .eq('company_id', companyId)
       .eq('payment_status', 'paid')
       .is('deleted_at', null)
@@ -94,7 +94,7 @@ export async function GET(req: NextRequest) {
     //    Includes amount_paid so partial payments are netted out correctly.
     supabase
       .from('sales')
-      .select('total_try, amount_paid')
+      .select('total_try:total, amount_paid:paid_amount')
       .eq('company_id', companyId)
       .is('deleted_at', null)
       .in('payment_status', ['pending', 'partial', 'overdue']),
@@ -120,7 +120,7 @@ export async function GET(req: NextRequest) {
     // 6. All-time cash collected (for cash_position) — no date filter
     supabase
       .from('sales')
-      .select('total_try')
+      .select('total_try:total')
       .eq('company_id', companyId)
       .eq('payment_status', 'paid')
       .is('deleted_at', null)
@@ -150,7 +150,7 @@ export async function GET(req: NextRequest) {
     //    Use sale_date (business invoice date) for aging — not created_at.
     supabase
       .from('sales')
-      .select('total_try, amount_paid')
+      .select('total_try:total, amount_paid:paid_amount')
       .eq('company_id', companyId)
       .is('deleted_at', null)
       .in('payment_status', ['pending', 'partial', 'overdue'])
@@ -192,7 +192,7 @@ export async function GET(req: NextRequest) {
   // ── Aggregate ──────────────────────────────────────────────────────────────
 
   const totalRevenue            = (revenueRes.data                ?? []).reduce((s, r) => s + Number(r.total_try  ?? 0), 0)
-  const totalCogs               = (revenueRes.data                ?? []).reduce((s, r) => s + Number(r.cogs       ?? 0), 0)
+  const totalCogs               = 0 // cogs column does not exist on live DB
   const totalCollected          = (collectedRes.data              ?? []).reduce((s, r) => s + Number(r.total_try  ?? 0), 0)
   const outstanding             = (outstandingRes.data            ?? []).reduce((s, r) => s + Math.max(0, Number(r.total_try ?? 0) - Number((r as { amount_paid?: number | null }).amount_paid ?? 0)), 0)
   const totalExpenses           = (expensesRes.data               ?? []).reduce((s, r) => {

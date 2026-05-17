@@ -19,6 +19,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { resolveCompanyId } from '@/lib/resolve-company'
 import { contextFromHeader, type RequestContext } from '@/lib/logger'
 import { REQUEST_ID_HEADER } from '@/middleware'
@@ -55,23 +56,30 @@ export type ApiAuthResult = ApiAuthSuccess | ApiAuthFailure
  *   const { uid, companyId, supabase, ctx } = auth
  */
 export async function resolveApiAuth(req: NextRequest): Promise<ApiAuthResult> {
-  const supabase = createClient()
-
   // Support both cookie-based (SSR) and Bearer token (API client) auth.
-  // The Supabase SSR client reads cookies by default; we supplement it with
-  // the Authorization header so API clients (curl, mobile, etc.) also work.
   const authHeader = req.headers.get('authorization') ?? ''
   const bearerToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null
 
   let authData: { user: { id: string } | null }
   let authError: unknown
+  let supabase: AnySupabase
 
   if (bearerToken) {
-    // Validate the JWT using Supabase's getUser(token) API
+    // Bearer token path: create a Supabase client that uses the token for
+    // BOTH auth validation AND DB queries. This ensures RLS's auth.uid()
+    // resolves correctly for all subsequent DB operations in the handler.
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL!
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    supabase = createSupabaseClient(url, key, {
+      global: { headers: { Authorization: `Bearer ${bearerToken}` } },
+      auth:   { persistSession: false },
+    })
     const result = await supabase.auth.getUser(bearerToken)
     authData  = result.data
     authError = result.error
   } else {
+    // Cookie-based SSR path (browser / Next.js server components)
+    supabase = createClient()
     const result = await supabase.auth.getUser()
     authData  = result.data
     authError = result.error

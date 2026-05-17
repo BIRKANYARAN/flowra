@@ -106,7 +106,7 @@ export class TaxService {
     const supabase = createClient()
     const { data, error } = await supabase
       .from('sales')
-      .select('kdv_amount_try')
+      .select('id')
       .eq('company_id', companyId)
       .is('deleted_at', null)
       // Use sale_date (business invoice date) not created_at (DB insertion time)
@@ -118,11 +118,9 @@ export class TaxService {
       throw new AppError('DB_READ_FAILED', 'Satış KDV hesaplanamadı', { dbError: error.message })
     }
 
-    let v = 0
-    for (const r of data ?? []) {
-      v += Number(r.kdv_amount_try ?? 0)   // already in TRY
-    }
-    return round2(v)
+    // kdv_amount_try column does not exist on live DB; sales VAT = 0 until column is added
+    void data
+    return 0
   }
 
   // ── Input VAT (purchase side) ──────────────────────────────────────────────

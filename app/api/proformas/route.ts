@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     if (!body.idempotency_key || typeof body.idempotency_key !== 'string') {
       return NextResponse.json({ error: 'idempotency_key zorunludur', code: 'IDEMPOTENCY_KEY_MISSING', type: 'BUSINESS' }, { status: 422 })
     }
-    const result = await ProformaService.create(uid, body, companyId, ctx)
+    const result = await ProformaService.create(uid, body, companyId, ctx, supabase)
     return NextResponse.json(
       { id: result.id, proforma_no: result.proforma_no, cached: result.cached ?? false },
       { status: result.cached ? 200 : 201, headers: { [REQUEST_ID_HEADER]: ctx.requestId } }

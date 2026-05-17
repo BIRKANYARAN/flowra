@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
     const [pnlRes, overdueRes, trancheRes, cfoRes] = await Promise.allSettled([
       FinanceService.getFinancialSummary(uid, companyId, { from, to }),
       supabase.from('sales')
-        .select('total_try, amount_paid, sale_date')
+        .select('total_try:total, amount_paid:paid_amount, sale_date')
         .eq('company_id', companyId)
         .in('payment_status', ['pending', 'partial', 'overdue'])
         .is('deleted_at', null),

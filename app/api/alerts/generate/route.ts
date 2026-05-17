@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
     //    Use sale_date (business invoice date) for aging — not created_at (DB insertion time).
     supabase
       .from('sales')
-      .select('id, customer_name, total_try, amount_paid, payment_status, sale_date')
+      .select('id, customer_name, total_try:total, amount_paid:paid_amount, payment_status, sale_date')
       .eq('company_id', companyId)
       .is('deleted_at', null)
       .in('payment_status', ['pending', 'partial', 'overdue'])
@@ -105,7 +105,7 @@ export async function POST(req: NextRequest) {
     //    Includes amount_paid so partial payments are netted out correctly.
     supabase
       .from('sales')
-      .select('total_try, amount_paid')
+      .select('total_try:total, amount_paid:paid_amount')
       .eq('company_id', companyId)
       .is('deleted_at', null)
       .in('payment_status', ['pending', 'partial'])
@@ -126,7 +126,7 @@ export async function POST(req: NextRequest) {
     //    Use sale_date (business invoice date) for aging — not created_at.
     supabase
       .from('sales')
-      .select('total_try, amount_paid, sale_date')
+      .select('total_try:total, amount_paid:paid_amount, sale_date')
       .eq('company_id', companyId)
       .is('deleted_at', null)
       .in('payment_status', ['pending', 'partial', 'overdue'])

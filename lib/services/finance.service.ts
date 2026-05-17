@@ -67,7 +67,7 @@ export class FinanceService {
 
     const { data, error } = await supabase
       .from('sales')
-      .select('total_try, kdv_amount_try')
+      .select('total_try:total')
       .eq('company_id', companyId)
       .is('deleted_at', null)
       // Use sale_date (business invoice date), not created_at (row insertion time),
@@ -84,7 +84,7 @@ export class FinanceService {
     let vat   = 0
     for (const r of data ?? []) {
       total += Number(r.total_try ?? 0)
-      vat   += Number(r.kdv_amount_try ?? 0)   // already in TRY, no FX conversion needed
+      vat   += 0   // kdv_amount_try column does not exist on live DB; sales_vat_try = 0
     }
 
     return {

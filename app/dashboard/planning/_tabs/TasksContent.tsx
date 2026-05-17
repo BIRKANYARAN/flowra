@@ -54,7 +54,7 @@ export async function TasksContent({ companyId }: Props) {
       .order('name'),
     supabase
       .from('sales')
-      .select('id, customer_name, total_try, sale_date, created_at')
+      .select('id, customer_name, total_try:total, sale_date, created_at')
       .eq('company_id', companyId)
       .is('deleted_at', null)
       .order('sale_date', { ascending: false })

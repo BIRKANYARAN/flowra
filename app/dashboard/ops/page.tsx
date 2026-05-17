@@ -168,7 +168,7 @@ export default async function OpsCommandPage() {
     // Overdue / unpaid collections (top 5 most urgent)
     supabase
       .from('sales')
-      .select('id, total_try, amount_paid, payment_status, due_date, sale_date, customers(name)')
+      .select('id, total_try:total, amount_paid:paid_amount, payment_status, due_date, sale_date, customers(name)')
       .eq('company_id', companyId)
       .in('payment_status', ['unpaid', 'partial', 'overdue'])
       .is('deleted_at', null)
@@ -178,7 +178,7 @@ export default async function OpsCommandPage() {
     // Today's confirmed sales
     supabase
       .from('sales')
-      .select('id, total_try, payment_status')
+      .select('id, total_try:total, payment_status')
       .eq('company_id', companyId)
       .gte('sale_date', todayISO)
       .is('deleted_at', null),

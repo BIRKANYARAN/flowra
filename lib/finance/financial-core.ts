@@ -141,14 +141,14 @@ export async function getCashflowTimeline(
 
   const [invoicedRes, receivablesRes, collectionsRes, expensesRes, recurringsRes] =
     await Promise.all([
-      supabase.from('sales').select('total_try, sale_date')
+      supabase.from('sales').select('total_try:total, sale_date')
         .eq('company_id', companyId).is('deleted_at', null)
         .gte('sale_date', _ymStart(startYM)).lte('sale_date', _ymEnd(endYM)),
-      supabase.from('sales').select('total_try, amount_paid, sale_date')
+      supabase.from('sales').select('total_try:total, amount_paid:paid_amount, sale_date')
         .eq('company_id', companyId).is('deleted_at', null)
         .in('payment_status', ['pending', 'partial', 'overdue'])
         .gte('sale_date', _ymStart(startYM)).lte('sale_date', _ymEnd(endYM)),
-      supabase.from('sales').select('total_try, paid_at')
+      supabase.from('sales').select('total_try:total, paid_at')
         .eq('company_id', companyId).eq('payment_status', 'paid')
         .is('deleted_at', null).not('paid_at', 'is', null)
         .gte('paid_at', _ymStart(startYM)).lte('paid_at', _ymEnd(endYM) + 'T23:59:59Z'),
@@ -282,7 +282,7 @@ export async function getDistributableCash(
   const [paidSalesRes, paidExpRes, unpaidExpRes] = await Promise.all([
     supabase
       .from('sales')
-      .select('total_try')
+      .select('total_try:total')
       .eq('company_id', companyId)
       .eq('payment_status', 'paid')
       .is('deleted_at', null)
@@ -382,7 +382,7 @@ export async function getCfoMetrics(
     stockRes,
   ] = await Promise.all([
     // 1. All-time collected
-    supabase.from('sales').select('total_try')
+    supabase.from('sales').select('total_try:total')
       .eq('company_id', companyId).eq('payment_status', 'paid').is('deleted_at', null),
 
     // 2. All-time paid expenses
@@ -394,7 +394,7 @@ export async function getCfoMetrics(
       .eq('company_id', companyId).neq('payment_status', 'paid').is('deleted_at', null),
 
     // 4. Period collected
-    supabase.from('sales').select('total_try')
+    supabase.from('sales').select('total_try:total')
       .eq('company_id', companyId).eq('payment_status', 'paid').is('deleted_at', null)
       .not('paid_at', 'is', null)
       .gte('paid_at', from + 'T00:00:00Z').lte('paid_at', to + 'T23:59:59Z'),
@@ -411,17 +411,17 @@ export async function getCfoMetrics(
       .in('expense_type', Array.from(BURN_EXPENSE_TYPES)),
 
     // 7. Outstanding receivables with aging — use sale_date (business invoice date)
-    supabase.from('sales').select('total_try, sale_date, due_date, amount_paid')
+    supabase.from('sales').select('total_try:total, sale_date, due_date, amount_paid:paid_amount')
       .eq('company_id', companyId).is('deleted_at', null)
       .in('payment_status', ['pending', 'partial', 'overdue']),
 
     // 8. Period invoiced — use sale_date for period attribution
-    supabase.from('sales').select('total_try')
+    supabase.from('sales').select('total_try:total')
       .eq('company_id', companyId).is('deleted_at', null)
       .gte('sale_date', from).lte('sale_date', to),
 
     // 9. YTD revenue — use sale_date for period attribution
-    supabase.from('sales').select('total_try, id')
+    supabase.from('sales').select('total_try:total, id')
       .eq('company_id', companyId).is('deleted_at', null)
       .gte('sale_date', ytdFrom).lte('sale_date', today),
 
@@ -430,8 +430,8 @@ export async function getCfoMetrics(
       .eq('company_id', companyId).is('deleted_at', null)
       .gte('expense_date', ytdFrom).lte('expense_date', today),
 
-    // 12. YTD sales VAT — kdv_amount_try is already in TRY, no FX conversion needed
-    supabase.from('sales').select('kdv_amount_try')
+    // 12. YTD sales VAT — kdv_amount_try column does not exist on live DB; salesVat = 0
+    supabase.from('sales').select('total_try:total')
       .eq('company_id', companyId).is('deleted_at', null)
       .gte('sale_date', ytdFrom).lte('sale_date', today),
 
@@ -488,7 +488,8 @@ export async function getCfoMetrics(
   }, 0)
   const ytdProfit = ytdRevenue - ytdCogs - ytdOpExpenses
 
-  const salesVat    = (ytdSalesVatRes.data ?? []).reduce((s, r) => s + Number(r.kdv_amount_try ?? 0), 0)
+  const salesVat    = 0 // kdv_amount_try column does not exist on live DB
+  void ytdSalesVatRes // fetched for query health monitoring only
   const purchaseVat = (ytdPurchaseVatRes.data ?? []).reduce((s, r) => s + Number(r.amount_try ?? 0), 0)
   const expenseVat  = (ytdExpenseVatRes.data ?? []).reduce((s, r) => s + Number(r.amount_try ?? 0) * Number(r.kdv ?? 0) / 100, 0)
   const kdvNet      = salesVat - purchaseVat - expenseVat
@@ -586,7 +587,7 @@ export async function getRunwayForecast(
     periodInvoicedRes,
     recurringActiveRes,
   ] = await Promise.all([
-    supabase.from('sales').select('total_try')
+    supabase.from('sales').select('total_try:total')
       .eq('company_id', companyId).eq('payment_status', 'paid').is('deleted_at', null),
 
     supabase.from('expenses').select('amount_try, expense_type')
@@ -595,7 +596,7 @@ export async function getRunwayForecast(
     supabase.from('expenses').select('amount_try, expense_type')
       .eq('company_id', companyId).neq('payment_status', 'paid').is('deleted_at', null),
 
-    supabase.from('sales').select('total_try')
+    supabase.from('sales').select('total_try:total')
       .eq('company_id', companyId).eq('payment_status', 'paid').is('deleted_at', null)
       .not('paid_at', 'is', null)
       .gte('paid_at', from + 'T00:00:00Z').lte('paid_at', to + 'T23:59:59Z'),
@@ -609,11 +610,11 @@ export async function getRunwayForecast(
       .gte('expense_date', trail3).lte('expense_date', today)
       .in('expense_type', Array.from(BURN_EXPENSE_TYPES)),
 
-    supabase.from('sales').select('total_try, sale_date, due_date, amount_paid')
+    supabase.from('sales').select('total_try:total, sale_date, due_date, amount_paid:paid_amount')
       .eq('company_id', companyId).is('deleted_at', null)
       .in('payment_status', ['pending', 'partial', 'overdue']),
 
-    supabase.from('sales').select('total_try')
+    supabase.from('sales').select('total_try:total')
       .eq('company_id', companyId).is('deleted_at', null)
       .gte('sale_date', from).lte('sale_date', to),
 

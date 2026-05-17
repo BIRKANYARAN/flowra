@@ -14,7 +14,7 @@ export async function SalesContent({ companyId }: Props) {
   try {
     const { data, error } = await supabase
       .from('sales')
-      .select('id, customer_name, currency, total, total_try, nominal_profit, sale_date, created_at, proforma_id, payment_status, shipment_status, proformas(proforma_no, deleted_at)')
+      .select('id, customer_name, currency, total_try:total, sale_date, created_at, proforma_id, payment_status, shipment_status, proformas(proforma_no, deleted_at)')
       .eq('company_id', companyId)
       .is('deleted_at', null)
       .order('sale_date', { ascending: false })

@@ -38,7 +38,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     // Persist amount_paid when provided (partial or full payment)
     if (body.amount_paid !== undefined) {
       const ap = Number(body.amount_paid)
-      if (!isNaN(ap) && ap >= 0) patch.amount_paid = ap
+      if (!isNaN(ap) && ap >= 0) patch.paid_amount = ap
     }
 
     if (body.shipment_status !== undefined) {
@@ -60,7 +60,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     // ── Security: verify the record exists and belongs to this company ────────
     const { data: existing, error: findErr } = await supabase
       .from('sales')
-      .select('id, sale_date, total_try, amount_paid, kdv_amount_try')
+      .select('id, sale_date, total_try:total, amount_paid:paid_amount')
       .eq('id', id)
       .eq('company_id', companyId)
       .is('deleted_at', null)

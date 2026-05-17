@@ -77,7 +77,7 @@ export async function GET(
     //   • company_id scoping provides defence-in-depth on top of RLS
     const { data: saleRows, error: salesErr } = await supabase
       .from('sales')
-      .select('id, proforma_id, customer_name, currency, total, total_try, amount_paid, nominal_profit, payment_status, paid_at, shipment_status, sale_date, created_at')
+      .select('id, proforma_id, customer_name, currency, total_try:total, amount_paid:paid_amount, payment_status, paid_at, shipment_status, sale_date, created_at')
       .eq('customer_id', id)
       .eq('company_id', companyId)
       .is('deleted_at', null)

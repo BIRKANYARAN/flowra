@@ -124,8 +124,8 @@ export class ReconciliationService {
     const [salesRes, expensesRes] = await Promise.all([
       supabase
         .from('sales')
-        // kdv_amount_try is already in TRY — no FX conversion needed
-        .select('total_try, amount_paid, kdv_amount_try')
+        // kdv_amount_try column does not exist on live DB; output VAT = 0
+        .select('total_try:total, amount_paid:paid_amount')
         .eq('company_id', companyId)
         .is('deleted_at', null)
         .lte('sale_date', asOf),
@@ -138,14 +138,12 @@ export class ReconciliationService {
         .lte('expense_date', asOf),
     ])
 
-    const sales    = (salesRes.data    ?? []) as Array<{ total_try: number; amount_paid: number | null; kdv_amount_try: number }>
+    const sales    = (salesRes.data    ?? []) as Array<{ total_try: number; amount_paid: number | null }>
     const expenses = (expensesRes.data ?? []) as Array<{ amount_try: number; payment_status: string | null }>
 
-    // revenue_try (net ex-KDV in TRY) = total_try − kdv_amount_try
-    const totalRevenue   = round2(sales.reduce((s, r) =>
-      s + Math.max(0, (Number(r.total_try) || 0) - (Number(r.kdv_amount_try) || 0)), 0))
-    const totalOutputVat = round2(sales.reduce((s, r) =>
-      s + (Number(r.kdv_amount_try) || 0), 0))
+    // revenue_try = total_try (kdv_amount_try column does not exist on live DB; output VAT = 0)
+    const totalRevenue   = round2(sales.reduce((s, r) => s + (Number(r.total_try) || 0), 0))
+    const totalOutputVat = 0 // kdv_amount_try column does not exist on live DB
     const unpaidSales    = round2(sales.reduce((s, r) =>
       s + Math.max(0, (Number(r.total_try) || 0) - (Number(r.amount_paid) || 0)), 0))
     // expenses: unpaid = all non-paid entries (no partial tracking for expenses)

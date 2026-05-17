@@ -109,7 +109,7 @@ export async function GET(req: NextRequest) {
   // Net is strictly: collected − expenses.
   const { data: salesInvoiced } = await supabase
     .from('sales')
-    .select('total_try, sale_date')
+    .select('total_try:total, sale_date')
     .eq('company_id', companyId)
     .is('deleted_at', null)
     .gte('sale_date', ymStart(startYM))
@@ -128,7 +128,7 @@ export async function GET(req: NextRequest) {
   // Use sale_date (business invoice date) for bucketing.
   const { data: receivableRows } = await supabase
     .from('sales')
-    .select('total_try, amount_paid, sale_date')
+    .select('total_try:total, amount_paid:paid_amount, sale_date')
     .eq('company_id', companyId)
     .is('deleted_at', null)
     .in('payment_status', ['pending', 'partial', 'overdue'])
@@ -145,7 +145,7 @@ export async function GET(req: NextRequest) {
   // ── 2. Collections by payment month (paid_at) ──────────────────────────────
   const { data: collections } = await supabase
     .from('sales')
-    .select('total_try, paid_at')
+    .select('total_try:total, paid_at')
     .eq('company_id', companyId)
     .eq('payment_status', 'paid')
     .is('deleted_at', null)

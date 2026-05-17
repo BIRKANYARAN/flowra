@@ -105,11 +105,13 @@ export interface ProformaResult {
 export class ProformaService {
 
   // ── Create ───────────────────────────────────────────────────────────────
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static async create(
     userId:    string,
     input:     CreateProformaInput,
     companyId: string,
     ctx:       RequestContext,
+    clientOverride?: any,  // Optional: caller-provided authenticated Supabase client
   ): Promise<ProformaResult> {
 
     // 1. Compute payload hash for idempotency validation
@@ -154,7 +156,10 @@ export class ProformaService {
       const rawItems = requireArray(input.items ?? [], 'items')
       if (rawItems.length === 0) throw new AppError('NO_ITEMS', 'En az bir ürün satırı zorunludur')
       const items = rawItems.map((l, i) => validateProformaLine(l, i))
-      const total = calculateTotals(items as LineInput[]).grand_total
+      const totalsResult = calculateTotals(items as LineInput[])
+      const total = totalsResult.grand_total
+      // Per-line calculated totals (line_total = subtotal + vat)
+      const lineResults = totalsResult.lines
 
       // 4. Snapshot FX rates at creation time
       //    These values are stored immutably — old proformas always use their
@@ -167,7 +172,7 @@ export class ProformaService {
         fx_rate_date: fxSnapshot.fx_rate_date,
       })
 
-      const supabase = createClient()
+      const supabase = clientOverride ?? createClient()
 
       // 5. Snapshot company + customer data for deterministic PDF rendering
       //    Even if company/customer details change later, this proforma's PDF
@@ -215,7 +220,32 @@ export class ProformaService {
         : { name: customer_name, address: '', tax_number: '', tax_office: '', email: '', phone: '' }
 
       // 6. Build payloads (log before insert for debugging)
-      const itemPayloads = items.map(l => ({ ...l }))
+      // Map validated field names to the live DB column names used by create_proforma_atomic.
+      // The live RPC function uses product_name/qty/unit_price/discount_pct (not name/quantity/price/discount_percent).
+      // Also include line_total (computed) so convert_proforma_to_sale can correctly build sale totals.
+      const itemPayloads = items.map((l, idx) => {
+        const lineCalc = lineResults[idx]
+        return {
+          product_id:       l.product_id,
+          product_name:     l.name,           // DB column: product_name
+          unit:             l.unit,
+          unit_cost:        l.unit_cost,
+          unit_price:       l.price,          // DB column: unit_price
+          qty:              l.quantity,       // DB column: qty
+          discount_pct:     l.discount_percent, // DB column: discount_pct
+          currency:         l.currency,
+          sort_order:       l.sort_order,
+          line_total:       lineCalc?.line_total ?? 0,       // computed: qty × unit_price × (1+kdv%)
+          line_subtotal:    lineCalc?.line_subtotal ?? 0,
+          vat_amount:       lineCalc?.line_vat ?? 0,
+          // Legacy aliases: keep for backward compat in case old function version is deployed
+          name:             l.name,
+          price:            l.price,
+          quantity:         l.quantity,
+          discount_percent: l.discount_percent,
+          kdv:              l.kdv,
+        }
+      })
       // fx_rate_try: the rate for THIS proforma's currency (backward compat)
       const fxRateTry = currency === 'USD' ? fxSnapshot.fx_usd
                       : currency === 'EUR' ? fxSnapshot.fx_eur

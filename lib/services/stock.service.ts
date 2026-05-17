@@ -340,8 +340,8 @@ export class StockService {
       }
 
       // Map to actual stock_movements DB column names
+      // Note: stock_movements has no user_id column
       const movementPayload: Record<string, unknown> = {
-        user_id:    userId,
         product_id: input.product_id,
         company_id: companyId,
         type:       input.reference_type,  // actual column: type (purchase/return/adjustment/write_off)
@@ -409,8 +409,8 @@ export class StockService {
         const entryCostUsd = fxUsdTry > 0 ? round2(entryCostTry / fxUsdTry) : 0
         const entryCostEur = fxEurTry > 0 ? round2(entryCostTry / fxEurTry) : 0
 
+        // Note: stock_lots has no user_id or movement_id column
         const lotPayload: Record<string, unknown> = {
-          user_id:        userId,
           company_id:     companyId,
           product_id:     input.product_id,
           qty_initial:    input.qty_change,
@@ -419,7 +419,8 @@ export class StockService {
           cost_currency:  costCurrency,
           cost_fx_rate:   fxRateAtEntry,        // actual column name
           received_at:    entryDate,            // actual column name
-          movement_id:    movement?.id ?? null, // actual column name
+          // Store movement reference in notes (DB has no movement_id FK)
+          notes:          movement?.id ? `movement_id:${movement.id}` : null,
           // Frozen TRY cost snapshot
           cost_price_try: entryCostTry,         // actual column name
         }

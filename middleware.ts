@@ -183,11 +183,17 @@ async function _middlewareInner(request: NextRequest): Promise<NextResponse> {
   const isHealthApi = pathname.startsWith('/api/health')
   const isPublicApi = isFxApi || isHealthApi
 
+  // API routes with a Bearer token in the Authorization header pass through
+  // even when the cookie session is absent — the route handler's resolveApiAuth()
+  // will validate the JWT independently. This is the correct design: middleware
+  // only handles cookie sessions; Bearer token validation stays in the handler.
+  const hasBearerToken = request.headers.get('authorization')?.startsWith('Bearer ') ?? false
+
   if (isDashboard && !user) {
     return NextResponse.redirect(new URL('/auth', request.url))
   }
 
-  if (isApiRoute && !isPublicApi && !user) {
+  if (isApiRoute && !isPublicApi && !user && !hasBearerToken) {
     return NextResponse.json(
       { error: 'Unauthorized', code: 'UNAUTHORIZED', type: 'SECURITY' },
       { status: 401, headers: { [REQUEST_ID_HEADER]: requestId } }

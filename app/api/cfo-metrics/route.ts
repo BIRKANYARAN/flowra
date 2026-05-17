@@ -83,7 +83,7 @@ export async function GET(req: NextRequest) {
       // 1. All-time collected
       supabase
         .from('sales')
-        .select('total_try')
+        .select('total_try:total')
         .eq('company_id', companyId)
         .eq('payment_status', 'paid')
         .is('deleted_at', null),
@@ -107,7 +107,7 @@ export async function GET(req: NextRequest) {
       // 4. Period collected
       supabase
         .from('sales')
-        .select('total_try')
+        .select('total_try:total')
         .eq('company_id', companyId)
         .eq('payment_status', 'paid')
         .is('deleted_at', null)
@@ -140,7 +140,7 @@ export async function GET(req: NextRequest) {
       // Use sale_date (business invoice date) for aging — not created_at (DB insertion time).
       supabase
         .from('sales')
-        .select('total_try, sale_date, due_date, amount_paid')
+        .select('total_try:total, sale_date, due_date, amount_paid:paid_amount')
         .eq('company_id', companyId)
         .is('deleted_at', null)
         .in('payment_status', ['pending', 'partial', 'overdue']),
@@ -149,7 +149,7 @@ export async function GET(req: NextRequest) {
       // Use sale_date (business invoice date) not created_at (DB insertion time).
       supabase
         .from('sales')
-        .select('total_try')
+        .select('total_try:total')
         .eq('company_id', companyId)
         .is('deleted_at', null)
         .gte('sale_date', from)
@@ -158,7 +158,7 @@ export async function GET(req: NextRequest) {
       // 9. YTD revenue — use sale_date for period attribution
       supabase
         .from('sales')
-        .select('total_try')
+        .select('total_try:total')
         .eq('company_id', companyId)
         .is('deleted_at', null)
         .gte('sale_date', ytdFrom)
@@ -180,10 +180,10 @@ export async function GET(req: NextRequest) {
         .gte('expense_date', ytdFrom)
         .lte('expense_date', today),
 
-      // 12. YTD sales VAT — kdv_amount_try is already in TRY
+      // 12. YTD sales VAT — kdv_amount_try column does not exist on live DB; salesVat = 0
       supabase
         .from('sales')
-        .select('kdv_amount_try')
+        .select('total_try:total')
         .eq('company_id', companyId)
         .is('deleted_at', null)
         .gte('sale_date', ytdFrom)
@@ -251,8 +251,9 @@ export async function GET(req: NextRequest) {
     }, 0)
     const ytdProfit = ytdRevenue - ytdCogs - ytdOpExpenses
 
-    // VAT net
-    const salesVat   = (ytdSalesVatRes.data ?? []).reduce((s, r) => s + Number(r.kdv_amount_try ?? 0), 0)
+    // VAT net — kdv_amount_try does not exist on live DB; salesVat is 0 until a VAT column is added
+    const salesVat   = 0
+    void ytdSalesVatRes // fetched for query health monitoring only
     const expenseVat = (ytdExpenseVatRes.data ?? []).reduce((s, r) => s + Number(r.kdv ?? 0), 0)
     // purchaseVat is always 0 until a proper `purchases` + `purchase_items` module is added
     const purchaseVat = 0

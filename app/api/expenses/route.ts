@@ -74,7 +74,13 @@ export async function POST(req: NextRequest) {
     const amount       = requirePositiveNumber(body.amount, 'amount')
     const rawCurrency  = (body.currency ?? 'TRY').toString().toUpperCase()
     const currency     = ALLOWED_CURRENCIES.includes(rawCurrency) ? rawCurrency : 'TRY'
-    const description  = requireString(body.description, 'description', 500)
+    // title is the required expense title; description is optional notes
+    const title       = (typeof body.title === 'string' && body.title.trim())
+      ? body.title.trim().slice(0, 300)
+      : (typeof body.description === 'string' ? body.description.trim().slice(0, 300) : 'Gider')
+    const description  = typeof body.description === 'string'
+      ? body.description.trim().slice(0, 500)
+      : (typeof body.notes === 'string' ? body.notes.trim().slice(0, 500) : '')
     const rawCategory  = (body.category ?? 'general').toString().toLowerCase()
     const category     = ALLOWED_CATEGORIES.includes(rawCategory) ? rawCategory : 'general'
     const rawPaymentStatus = String(body.payment_status ?? 'paid').toLowerCase()
@@ -129,6 +135,7 @@ export async function POST(req: NextRequest) {
             .from('expenses')
             .insert({
               user_id:        uid,
+              title,
               amount,
               currency,
               amount_try,
@@ -221,6 +228,7 @@ export async function POST(req: NextRequest) {
       .from('expenses')
       .insert({
         user_id:      uid,
+        title,
         amount,
         currency,
         amount_try,

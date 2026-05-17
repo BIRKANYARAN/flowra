@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
       BalanceSheetService.compute(uid, companyId, asOf, supabase),
       CashFlowStatementService.compute(uid, companyId, { from, to }, supabase),
       // Receivables aging buckets — use sale_date (business date) not created_at
-      supabase.from('sales').select('total_try, amount_paid, sale_date, payment_status, customer_name')
+      supabase.from('sales').select('total_try:total, amount_paid:paid_amount, sale_date, payment_status, customer_name')
         .eq('company_id', companyId).neq('payment_status', 'paid').is('deleted_at', null),
       // Expense category breakdown
       supabase.from('expenses').select('expense_type, amount_try')

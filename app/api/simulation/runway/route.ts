@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
       periodInvoicedRes,
       recurringActiveRes,
     ] = await Promise.all([
-      supabase.from('sales').select('total_try')
+      supabase.from('sales').select('total_try:total')
         .eq('company_id', companyId).eq('payment_status', 'paid').is('deleted_at', null),
 
       supabase.from('expenses').select('amount_try, expense_type')
@@ -63,7 +63,7 @@ export async function GET(req: NextRequest) {
       supabase.from('expenses').select('amount_try, expense_type')
         .eq('company_id', companyId).neq('payment_status', 'paid').is('deleted_at', null),
 
-      supabase.from('sales').select('total_try')
+      supabase.from('sales').select('total_try:total')
         .eq('company_id', companyId).eq('payment_status', 'paid').is('deleted_at', null)
         .not('paid_at', 'is', null)
         .gte('paid_at', from + 'T00:00:00Z').lte('paid_at', to + 'T23:59:59Z'),
@@ -77,12 +77,12 @@ export async function GET(req: NextRequest) {
         .gte('expense_date', trail3).lte('expense_date', today)
         .in('expense_type', Array.from(BURN_EXPENSE_TYPES)),
 
-      supabase.from('sales').select('total_try, sale_date, due_date, amount_paid')
+      supabase.from('sales').select('total_try:total, sale_date, due_date, amount_paid:paid_amount')
         .eq('company_id', companyId).is('deleted_at', null)
         .in('payment_status', ['pending', 'partial', 'overdue']),
 
       // Use sale_date (business invoice date) not created_at (DB insertion time)
-      supabase.from('sales').select('total_try')
+      supabase.from('sales').select('total_try:total')
         .eq('company_id', companyId).is('deleted_at', null)
         .gte('sale_date', from).lte('sale_date', to),
 

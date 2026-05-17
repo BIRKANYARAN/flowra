@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
   try {
     let query = supabase
       .from('sales')
-      .select('id, customer_name, currency, total, total_try, nominal_profit, sale_date, created_at, due_date, amount_paid, proforma_id, payment_status, paid_at, proformas(proforma_no)')
+      .select('id, customer_name, currency, total_try:total, sale_date, created_at, due_date, amount_paid:paid_amount, proforma_id, payment_status, paid_at, proformas(proforma_no)')
       .eq('company_id', companyId)
       .is('deleted_at', null)
       .order('sale_date', { ascending: false })
@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
       if (error.message.includes('payment_status')) {
         const { data: fallback } = await supabase
           .from('sales')
-          .select('id, customer_name, currency, total, total_try, nominal_profit, sale_date, created_at, proforma_id, proformas(proforma_no)')
+          .select('id, customer_name, currency, total_try:total, sale_date, created_at, proforma_id, proformas(proforma_no)')
           .eq('company_id', companyId)
           .is('deleted_at', null)
           .order('sale_date', { ascending: false })
@@ -90,7 +90,7 @@ export async function PATCH(req: NextRequest) {
 
     // Optional fields — only write when explicitly provided
     if (amount_paid !== undefined)
-      patch.amount_paid = amount_paid != null ? Math.max(0, Number(amount_paid) || 0) : null
+      patch.paid_amount = amount_paid != null ? Math.max(0, Number(amount_paid) || 0) : null
     if (due_date !== undefined)    patch.due_date    = due_date
 
     const { error } = await supabase

@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
   // A backdated invoice entered today should age from its sale_date, not today.
   const { data, error } = await supabase
     .from('sales')
-    .select('total_try, amount_paid, sale_date')
+    .select('total_try:total, amount_paid:paid_amount, sale_date')
     .eq('company_id', companyId)
     .is('deleted_at', null)
     .in('payment_status', ['pending', 'partial', 'overdue'])

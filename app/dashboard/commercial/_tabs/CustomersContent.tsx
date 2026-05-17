@@ -21,7 +21,7 @@ export async function CustomersContent({ companyId }: Props) {
       .order('name'),
     supabase
       .from('sales')
-      .select('customer_name, total_try, payment_status')
+      .select('customer_name, total_try:total, payment_status')
       .eq('company_id', companyId)
       .is('deleted_at', null)
       .order('created_at', { ascending: false })

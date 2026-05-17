@@ -201,7 +201,7 @@ export default async function DashboardPage() {
     sq(() => loadFxDirect(), EMPTY_FX),
 
     sq(async () => {
-      const { data } = await supabase.from('sales').select('id, total_try, amount_paid, payment_status, customer_name, sale_date, due_date').eq('company_id', companyId).neq('payment_status', 'paid').is('deleted_at', null).order('sale_date', { ascending: false }).limit(100)
+      const { data } = await supabase.from('sales').select('id, total_try:total, amount_paid:paid_amount, payment_status, customer_name, sale_date, due_date').eq('company_id', companyId).neq('payment_status', 'paid').is('deleted_at', null).order('sale_date', { ascending: false }).limit(100)
       return (data ?? []) as Array<{ id: string; total_try: number; amount_paid: number | null; payment_status: string; customer_name: string; sale_date: string; due_date: string | null }>
     }, [] as Array<{ id: string; total_try: number; amount_paid: number | null; payment_status: string; customer_name: string; sale_date: string; due_date: string | null }>),
 
@@ -212,7 +212,7 @@ export default async function DashboardPage() {
     }, [] as Array<{ id: string; title: string; due_date: string; status: string }>),
 
     sq(async () => {
-      const { data } = await supabase.from('sales').select('total_try').eq('company_id', companyId).eq('payment_status', 'paid').is('deleted_at', null).not('paid_at', 'is', null).gte('paid_at', from + 'T00:00:00Z').lte('paid_at', to + 'T23:59:59Z')
+      const { data } = await supabase.from('sales').select('total_try:total').eq('company_id', companyId).eq('payment_status', 'paid').is('deleted_at', null).not('paid_at', 'is', null).gte('paid_at', from + 'T00:00:00Z').lte('paid_at', to + 'T23:59:59Z')
       return (data ?? []) as Array<{ total_try: number }>
     }, [] as Array<{ total_try: number }>),
 
@@ -262,7 +262,7 @@ export default async function DashboardPage() {
         const mFrom = `${y}-${m}-01`
         const mTo   = new Date(y, d.getMonth() + 1, 0).toISOString().slice(0, 10)
         const [saleData, expData] = await Promise.all([
-          supabase.from('sales').select('total_try').eq('company_id', companyId).is('deleted_at', null).gte('sale_date', mFrom).lte('sale_date', mTo),
+          supabase.from('sales').select('total_try:total').eq('company_id', companyId).is('deleted_at', null).gte('sale_date', mFrom).lte('sale_date', mTo),
           supabase.from('expenses').select('amount_try').eq('company_id', companyId).is('deleted_at', null).gte('expense_date', mFrom).lte('expense_date', mTo),
         ])
         const rev = (saleData.data ?? []).reduce((s, r) => s + Number(r.total_try), 0)
