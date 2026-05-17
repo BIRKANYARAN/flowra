@@ -188,6 +188,8 @@ export interface Sale {
   paid_at:          string | null
   shipment_status:  ShipmentStatus | null
   notes:            string | null
+  /** Business invoice date (YYYY-MM-DD) — canonical for period attribution */
+  sale_date:        string
   created_at:       string
   updated_at:       string
   deleted_at:       string | null

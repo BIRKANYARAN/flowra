@@ -54,10 +54,10 @@ export async function TasksContent({ companyId }: Props) {
       .order('name'),
     supabase
       .from('sales')
-      .select('id, customer_name, total_try, created_at')
+      .select('id, customer_name, total_try, sale_date, created_at')
       .eq('company_id', companyId)
       .is('deleted_at', null)
-      .order('created_at', { ascending: false })
+      .order('sale_date', { ascending: false })
       .limit(100),
   ])
 
@@ -73,7 +73,7 @@ export async function TasksContent({ companyId }: Props) {
     })) as Task[]
 
   const customers    = (customersRes.data ?? []) as Pick<Customer, 'id' | 'name'>[]
-  const sales        = (salesRes.data     ?? []) as Pick<Sale, 'id' | 'customer_name' | 'total_try' | 'created_at'>[]
+  const sales        = (salesRes.data     ?? []) as Pick<Sale, 'id' | 'customer_name' | 'total_try' | 'sale_date' | 'created_at'>[]
   const statusCounts = tasksByStatus(tasks)
   const overdue      = overdueCount(tasks, today)
   const thisWeek     = dueThisWeek(tasks, today)

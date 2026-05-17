@@ -18,6 +18,8 @@ export interface CollectionRow {
   currency: string
   total: number
   total_try: number
+  /** Business invoice date (YYYY-MM-DD) — preferred for display/aging */
+  sale_date: string | null
   created_at: string
   due_date: string | null
   amount_paid: number | null
@@ -228,7 +230,7 @@ export default function CollectionsClient({ initialRows }: Props) {
       ? (isOD
         ? <span className="text-red-600 font-bold">{fmtDateShort(row.due_date)} GECİKTİ</span>
         : <span className="text-gray-500">{fmtDateShort(row.due_date)}</span>)
-      : <span className="text-gray-400">{fmtDateShort(row.created_at)}</span>
+      : <span className="text-gray-400">{fmtDateShort(row.sale_date || row.created_at)}</span>
 
     return (
       <div

@@ -22,10 +22,10 @@ export async function GET(req: NextRequest) {
   try {
     let query = supabase
       .from('sales')
-      .select('id, customer_name, currency, total, total_try, nominal_profit, created_at, due_date, amount_paid, proforma_id, payment_status, paid_at, proformas(proforma_no)')
+      .select('id, customer_name, currency, total, total_try, nominal_profit, sale_date, created_at, due_date, amount_paid, proforma_id, payment_status, paid_at, proformas(proforma_no)')
       .eq('company_id', companyId)
       .is('deleted_at', null)
-      .order('created_at', { ascending: false })
+      .order('sale_date', { ascending: false })
       .limit(200)
 
     if (ALLOWED_STATUSES.includes(statusFilter as PaymentStatus)) {
@@ -40,10 +40,10 @@ export async function GET(req: NextRequest) {
       if (error.message.includes('payment_status')) {
         const { data: fallback } = await supabase
           .from('sales')
-          .select('id, customer_name, currency, total, total_try, nominal_profit, created_at, proforma_id, proformas(proforma_no)')
+          .select('id, customer_name, currency, total, total_try, nominal_profit, sale_date, created_at, proforma_id, proformas(proforma_no)')
           .eq('company_id', companyId)
           .is('deleted_at', null)
-          .order('created_at', { ascending: false })
+          .order('sale_date', { ascending: false })
           .limit(200)
 
         return NextResponse.json(

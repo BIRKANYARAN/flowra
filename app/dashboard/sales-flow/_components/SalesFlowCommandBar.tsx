@@ -53,13 +53,13 @@ export async function SalesFlowCommandBar({ companyId }: Props) {
       .eq('company_id', companyId)
       .is('deleted_at', null),
 
-    // MTD sales: closed this month
+    // MTD sales: invoiced this month (by sale_date — business invoice date, not DB insertion time)
     supabase
       .from('sales')
       .select('total_try')
       .eq('company_id', companyId)
       .is('deleted_at', null)
-      .gte('created_at', mtdFrom),
+      .gte('sale_date', mtdFrom),
 
     // Stale sent proformas: sent > 15 days ago, not yet converted/accepted/rejected
     supabase
