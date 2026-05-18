@@ -218,6 +218,22 @@ export default function WorkflowsPage() {
           )
         })}
       </div>
+
+      {/* Cross-navigation */}
+      <div className="flex items-center justify-between px-1">
+        <p className="text-[10px] text-gray-400 leading-relaxed">
+          Onay bekleyen işlemler denetim izinde kayıt altına alınır.
+        </p>
+        <div className="flex items-center gap-2 shrink-0 ml-4">
+          <Link href="/dashboard/admin/audit" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Denetim İzi →
+          </Link>
+          <span className="text-gray-200">|</span>
+          <Link href="/dashboard/operations?tab=expenses" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Giderler →
+          </Link>
+        </div>
+      </div>
     </div>
   )
 }

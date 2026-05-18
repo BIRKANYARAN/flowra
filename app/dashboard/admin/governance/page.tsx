@@ -615,6 +615,26 @@ export default function GovernancePage() {
         Ortaklar kendi paylarını ve bakiyelerini görür, dijital onay verir.
         Sonuçlandırılan raporlar değiştirilemez — yasal uyumluluk için kalıcı kayıt oluşturulur.
       </div>
+
+      {/* Cross-navigation */}
+      <div data-print-hide className="flex items-center justify-between px-1">
+        <p className="text-[10px] text-gray-400 leading-relaxed">
+          Yönetişim raporları denetim izi ve ortak dağıtım verisiyle birlikte değerlendirilmeli.
+        </p>
+        <div className="flex items-center gap-2 shrink-0 ml-4">
+          <Link href="/dashboard/admin/audit" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Denetim İzi →
+          </Link>
+          <span className="text-gray-200">|</span>
+          <Link href="/dashboard/partners?tab=distribution" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Kâr Dağıtımı →
+          </Link>
+          <span className="text-gray-200">|</span>
+          <Link href="/dashboard/finance?tab=pnl" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            P&amp;L →
+          </Link>
+        </div>
+      </div>
     </div>
   )
 }

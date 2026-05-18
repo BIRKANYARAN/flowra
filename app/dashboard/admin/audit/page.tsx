@@ -11,6 +11,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { Fragment, useState, useEffect, useCallback, type ChangeEvent } from 'react'
+import Link from 'next/link'
 import type { AuditLog } from '@/types'
 
 // ── Style tokens ──────────────────────────────────────────────────────────────
@@ -407,6 +408,26 @@ export default function AdminAuditPage() {
           )}
         </>
       )}
+
+      {/* Cross-navigation */}
+      <div className="flex items-center justify-between px-1">
+        <p className="text-[10px] text-gray-400 leading-relaxed">
+          Denetim izi tüm değişikliklerin yasal kaydıdır — silinmez.
+        </p>
+        <div className="flex items-center gap-2 shrink-0 ml-4">
+          <Link href="/dashboard/admin/governance" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Yönetişim →
+          </Link>
+          <span className="text-gray-200">|</span>
+          <Link href="/dashboard/admin/users" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Kullanıcılar →
+          </Link>
+          <span className="text-gray-200">|</span>
+          <Link href="/dashboard/cfo/journal-entries" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Journal Kayıtları →
+          </Link>
+        </div>
+      </div>
     </div>
   )
 }

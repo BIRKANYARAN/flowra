@@ -13,6 +13,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect, useCallback, type ChangeEvent } from 'react'
+import Link from 'next/link'
 import type { CompanyMember, MemberRole } from '@/types'
 
 // ── Style tokens ──────────────────────────────────────────────────────────────
@@ -395,6 +396,22 @@ export default function AdminUsersPage() {
           </div>
         </div>
       )}
+
+      {/* Cross-navigation */}
+      <div className="flex items-center justify-between px-1">
+        <p className="text-[10px] text-gray-400 leading-relaxed">
+          Kullanıcı ve rol yönetimi yönetişim sistemiyle birlikte çalışır.
+        </p>
+        <div className="flex items-center gap-2 shrink-0 ml-4">
+          <Link href="/dashboard/admin/audit" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Denetim İzi →
+          </Link>
+          <span className="text-gray-200">|</span>
+          <Link href="/dashboard/admin/governance" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Yönetişim →
+          </Link>
+        </div>
+      </div>
     </div>
   )
 }
