@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import {
   CapitalReturn,
   fmt, fmtPct,
@@ -52,6 +53,22 @@ export function ReturnsTab({ loading, returns }: ReturnsTabProps) {
             <span className="font-bold">Not:</span> ROI = (Geri Alınan / Yatırılan) × 100.
             Geri alınan = geri ödemeler + temettü + maaş/huzur. %100 üzeri tam geri dönüş anlamına gelir.
             Faiz izleme ve IRR hesaplaması için gelişmiş borç takibi gereklidir.
+          </div>
+
+          {/* Cross-navigation */}
+          <div className="flex items-center justify-between px-1">
+            <p className="text-[10px] text-gray-400 leading-relaxed">
+              Sermaye getirisi kâr dağıtımı ve borç trancheleriyle bütünleşik izlenebilir.
+            </p>
+            <div className="flex items-center gap-2 shrink-0 ml-4">
+              <Link href="/dashboard/partners?tab=distribution" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+                Kâr Dağıtımı →
+              </Link>
+              <span className="text-gray-200">|</span>
+              <Link href="/dashboard/partners?tab=tranches" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+                Trancheler →
+              </Link>
+            </div>
           </div>
         </>
       )}
