@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { createClient } from '@/lib/supabase-server'
 import { notFound } from 'next/navigation'
-import { fmtDate, sym } from '@/components/ui'
+import { fmtDate, sym } from '@/lib/format'
 import type { Proforma, ProformaItem, Customer, CompanyBank, UserSettings } from '@/types'
 import { ProformaDetailClient } from './client'
 import type { ClientItem, ClientPdfOpts } from './client'
