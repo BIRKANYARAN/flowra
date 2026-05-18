@@ -147,6 +147,58 @@ export default function ExecutiveSummaryPage() {
 
       {data && !loading && (
         <>
+          {/* ── Intelligence Alerts ─────────────────────────────────────────── */}
+          {is && is.net_income < 0 && (
+            <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 flex items-start gap-3">
+              <span className="text-base mt-0.5">🔴</span>
+              <div className="flex-1">
+                <div className="text-[11px] font-black uppercase tracking-wide text-red-800">
+                  Dönem Zararı — {fmt(Math.abs(is.net_income))}
+                </div>
+                <div className="text-xs text-red-700 mt-0.5">
+                  Bu dönem net zarar ile kapanıyor. Gider yapısı ve brüt marj incelenmeli.
+                </div>
+              </div>
+              <Link href="/dashboard/reports/income-statement" className="text-[10px] font-bold text-red-700 hover:text-red-800 underline underline-offset-2 shrink-0 mt-0.5">
+                Gelir Tablosu →
+              </Link>
+            </div>
+          )}
+
+          {bs && bs.total_equity < 0 && (
+            <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 flex items-start gap-3">
+              <span className="text-base mt-0.5">🔴</span>
+              <div className="flex-1">
+                <div className="text-[11px] font-black uppercase tracking-wide text-red-800">
+                  Negatif Özkaynak — Teknik İflas Riski
+                </div>
+                <div className="text-xs text-red-700 mt-0.5">
+                  Toplam yükümlülükler varlıkları aşıyor. TTK kapsamında ek sermaye yükümlülüğü doğabilir.
+                </div>
+              </div>
+              <Link href="/dashboard/reports/balance-sheet" className="text-[10px] font-bold text-red-700 hover:text-red-800 underline underline-offset-2 shrink-0 mt-0.5">
+                Bilanço →
+              </Link>
+            </div>
+          )}
+
+          {cf && cf.operating < 0 && is && is.net_income > 0 && (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-start gap-3">
+              <span className="text-base mt-0.5">⚠</span>
+              <div className="flex-1">
+                <div className="text-[11px] font-black uppercase tracking-wide text-amber-800">
+                  Negatif Faaliyet Nakit Akışı
+                </div>
+                <div className="text-xs text-amber-700 mt-0.5">
+                  Dönem kârlı olmasına rağmen faaliyet nakit akışı negatif. Tahsilat ve alacak yönetimi gözden geçirilmeli.
+                </div>
+              </div>
+              <Link href="/dashboard/reports/cash-flow" className="text-[10px] font-bold text-amber-700 hover:text-amber-800 underline underline-offset-2 shrink-0 mt-0.5">
+                Nakit Akışı →
+              </Link>
+            </div>
+          )}
+
           {/* P&L Summary */}
           <div>
             <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Kâr / Zarar</div>
@@ -216,19 +268,28 @@ export default function ExecutiveSummaryPage() {
             </div>
           </div>
 
-          {/* Quick links */}
-          <div className="flex items-center gap-2 print:hidden">
-            {[
-              { href: '/dashboard/reports/income-statement', label: 'Gelir Tablosu' },
-              { href: '/dashboard/reports/balance-sheet',    label: 'Bilanço' },
-              { href: '/dashboard/reports/cash-flow',        label: 'Nakit Akışı' },
-              { href: '/dashboard/cfo/trial-balance',        label: 'Mizan' },
-            ].map(l => (
-              <Link key={l.href} href={l.href}
-                className="text-xs text-primary-600 hover:text-primary-700 font-semibold px-2 py-1.5 rounded-lg hover:bg-primary-50 transition-colors">
-                {l.label} →
+          {/* Cross-navigation */}
+          <div className="flex items-center justify-between px-1 print:hidden">
+            <p className="text-[10px] text-gray-400 leading-relaxed">
+              Yönetici özeti tüm raporlarla birlikte değerlendirilmeli.
+            </p>
+            <div className="flex items-center gap-2 shrink-0 ml-4">
+              <Link href="/dashboard/reports/income-statement" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+                Gelir Tablosu →
               </Link>
-            ))}
+              <span className="text-gray-200">|</span>
+              <Link href="/dashboard/reports/balance-sheet" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+                Bilanço →
+              </Link>
+              <span className="text-gray-200">|</span>
+              <Link href="/dashboard/reports/cash-flow" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+                Nakit Akışı →
+              </Link>
+              <span className="text-gray-200">|</span>
+              <Link href="/dashboard/cfo/trial-balance" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+                Mizan →
+              </Link>
+            </div>
           </div>
         </>
       )}
