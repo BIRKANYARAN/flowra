@@ -51,14 +51,20 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
     quarters: [] as QuarterResult[],
     ytd: { revenue: 0, gross_profit: 0, net_profit: 0, matrah: 0, corporate_tax: 0, net_after_tax: 0, total_gecici: 0 },
   }
+  const ZERO_PREV = {
+    year: currentYear - 1,
+    quarters: [] as QuarterResult[],
+    ytd: { revenue: 0, gross_profit: 0, net_profit: 0, matrah: 0, corporate_tax: 0, net_after_tax: 0, total_gecici: 0 },
+  }
 
   // Current month bounds for close readiness checks
   const currentMonth = today.slice(0, 7)  // YYYY-MM
   const monthStart   = `${currentMonth}-01`
   const monthEnd     = today
 
-  const [report, analyticsRaw, overdueCount, missingCategoryCount, unconfirmedExpenses] = await Promise.all([
+  const [report, prevReport, analyticsRaw, overdueCount, missingCategoryCount, unconfirmedExpenses] = await Promise.all([
     sq(() => getQuarterlyReport(userId, companyId, currentYear), ZERO_REPORT),
+    sq(() => getQuarterlyReport(userId, companyId, currentYear - 1), ZERO_PREV),
     sq(async () => {
       const { data } = await supabase.rpc('get_sales_analytics', { p_user_id: userId, p_company_id: companyId })
       return data as unknown
@@ -103,8 +109,18 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
   const monthly = a.monthly_sales
   const ytd     = report.ytd
   const qs      = report.quarters
+  const prevQs  = prevReport.quarters
+  const prevYtd = prevReport.ytd
   const convRate = a.total_proformas > 0
     ? Math.round((a.converted_proformas / a.total_proformas) * 100) : 0
+
+  // YoY helper: same-index quarter from prior year
+  const yoyRevDelta = (qIdx: number) => {
+    const prev = prevQs[qIdx]
+    if (!prev || prev.revenue === 0) return null
+    return delta(qs[qIdx]?.revenue ?? 0, prev.revenue)
+  }
+  const ytdYoY = prevYtd.revenue > 0 ? delta(ytd.revenue, prevYtd.revenue) : null
 
   // ── Period Close Readiness ─────────────────────────────────────────────────
   const pastDueGecici = qs.filter((q: QuarterResult) => q.gecici_due_date && q.gecici_due_date < today && q.gecici_vergi > 0)
@@ -189,14 +205,29 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
       {/* Zone 1 — YTD strip */}
       <div className="grid grid-cols-4 gap-3">
         {[
-          { label: 'YTD Ciro',          value: fmt(ytd.revenue),       tone: 'text-gray-900' },
-          { label: 'Brüt Kâr',          value: fmt(ytd.gross_profit),  tone: ytd.gross_profit >= 0 ? 'text-emerald-700' : 'text-red-600' },
-          { label: 'Vergi Sonrası Net',  value: fmt(ytd.net_after_tax), tone: ytd.net_after_tax >= 0 ? 'text-emerald-700' : 'text-red-600' },
-          { label: 'Tahmini KV',         value: fmt(ytd.corporate_tax), tone: ytd.corporate_tax > 0 ? 'text-amber-600' : 'text-gray-400' },
+          {
+            label: 'YTD Ciro', value: fmt(ytd.revenue), tone: 'text-gray-900',
+            sub: ytdYoY ? ytdYoY.text + ' yıllık' : undefined, subColor: ytdYoY?.color,
+          },
+          {
+            label: 'Brüt Kâr', value: fmt(ytd.gross_profit),
+            tone: ytd.gross_profit >= 0 ? 'text-emerald-700' : 'text-red-600',
+          },
+          {
+            label: 'Vergi Sonrası Net', value: fmt(ytd.net_after_tax),
+            tone: ytd.net_after_tax >= 0 ? 'text-emerald-700' : 'text-red-600',
+          },
+          {
+            label: 'Tahmini KV', value: fmt(ytd.corporate_tax),
+            tone: ytd.corporate_tax > 0 ? 'text-amber-600' : 'text-gray-400',
+          },
         ].map(c => (
           <div key={c.label} className="bg-white border border-gray-100 rounded-xl px-4 py-3 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
             <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">{c.label}</div>
             <div className={`text-xl font-black tabular-nums leading-none ${c.tone}`}>{c.value}</div>
+            {'sub' in c && c.sub && (
+              <div className={`text-[10px] font-semibold mt-1 leading-none ${c.subColor ?? 'text-gray-400'}`}>{c.sub}</div>
+            )}
           </div>
         ))}
       </div>
@@ -209,11 +240,12 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
             <p className="text-[10px] text-gray-400 mt-0.5">Ciro · Brüt Kâr · Net Kâr · Marjlar</p>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-xs min-w-[540px]">
+            <table className="w-full text-xs min-w-[620px]">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-100">
                   <th className="text-left px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-400">Çeyrek</th>
                   <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-400">Ciro</th>
+                  <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-violet-400">YoY</th>
                   <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-primary-400">Brüt Kâr</th>
                   <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-emerald-400">Net Kâr</th>
                   <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-400">Brüt Marj</th>
@@ -225,6 +257,7 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
                 {qs.map((q: QuarterResult, i: number) => {
                   const prev = i > 0 ? qs[i - 1] : null
                   const revDelta = prev && prev.revenue > 0 ? delta(q.revenue, prev.revenue) : null
+                  const yoy      = yoyRevDelta(i)
                   const isFuture = !q.is_past_quarter && q.period.from > today
                   return (
                     <tr key={q.label} className={`hover:bg-gray-50/60 ${isFuture ? 'opacity-40' : ''}`}>
@@ -234,7 +267,12 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
                       </td>
                       <td className="px-4 py-3 text-right">
                         <div className="font-mono font-bold text-gray-900">{fmt(q.revenue)}</div>
-                        {revDelta && <div className={`text-[10px] font-semibold ${revDelta.color}`}>{revDelta.text}</div>}
+                        {revDelta && <div className={`text-[10px] font-semibold ${revDelta.color}`}>{revDelta.text} QoQ</div>}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        {yoy
+                          ? <span className={`text-xs font-black tabular-nums ${yoy.color}`}>{yoy.text}</span>
+                          : <span className="text-gray-300 text-xs">—</span>}
                       </td>
                       <td className={`px-4 py-3 text-right font-mono font-bold ${q.gross_profit >= 0 ? 'text-primary-700' : 'text-red-600'}`}>
                         {fmt(q.gross_profit)}
@@ -258,6 +296,11 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
                 <tr className="bg-primary-50/40 font-black border-t-2 border-primary-100">
                   <td className="px-4 py-3 text-primary-800 font-black text-xs">YTD Toplam</td>
                   <td className="px-4 py-3 text-right font-mono font-black text-gray-900">{fmt(ytd.revenue)}</td>
+                  <td className="px-4 py-3 text-right">
+                    {ytdYoY
+                      ? <span className={`text-xs font-black ${ytdYoY.color}`}>{ytdYoY.text}</span>
+                      : <span className="text-gray-300 text-xs">—</span>}
+                  </td>
                   <td className={`px-4 py-3 text-right font-mono font-black ${ytd.gross_profit >= 0 ? 'text-primary-700' : 'text-red-600'}`}>{fmt(ytd.gross_profit)}</td>
                   <td className={`px-4 py-3 text-right font-mono font-black ${ytd.net_profit >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>{fmt(ytd.net_profit)}</td>
                   <td className="px-4 py-3 text-right font-mono text-gray-500">
