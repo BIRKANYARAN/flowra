@@ -378,11 +378,11 @@ describe('computePartnerMetrics', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe('computeStockMetrics', () => {
-  it('fifo_value = Σ (qty_remaining × entry_cost_try)', () => {
+  it('fifo_value = Σ (qty_remaining × cost_price_try)', () => {
     const input: StockInputs = {
       lots: [
-        { qty_remaining: 100, entry_cost_try: 50 },
-        { qty_remaining:  50, entry_cost_try: 80 },
+        { qty_remaining: 100, cost_price_try: 50 },
+        { qty_remaining:  50, cost_price_try: 80 },
       ],
       monthlyBurn: 10_000,
     }
@@ -392,7 +392,7 @@ describe('computeStockMetrics', () => {
 
   it('coverage_months = fifo_value / monthlyBurn', () => {
     const input: StockInputs = {
-      lots: [{ qty_remaining: 200, entry_cost_try: 100 }],
+      lots: [{ qty_remaining: 200, cost_price_try: 100 }],
       monthlyBurn: 5_000,
     }
     const result = computeStockMetrics(input)
@@ -402,7 +402,7 @@ describe('computeStockMetrics', () => {
 
   it('coverage_months = null if burn = 0', () => {
     const input: StockInputs = {
-      lots: [{ qty_remaining: 100, entry_cost_try: 50 }],
+      lots: [{ qty_remaining: 100, cost_price_try: 50 }],
       monthlyBurn: 0,
     }
     const result = computeStockMetrics(input)
