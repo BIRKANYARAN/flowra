@@ -157,9 +157,13 @@ export function allocate(
  *   • allocateCosts() public API — same data path, different framing
  *
  * Reads via the request-scoped Supabase client so RLS is enforced.
+ * Pass `clientOverride` when calling from a Bearer-token context (API routes
+ * that use resolveApiAuth) so the same authenticated client is reused — the
+ * default createClient() uses cookies and will be unauthenticated in those paths.
  */
-export async function calculateUnitCost(purchaseId: string): Promise<PurchaseAllocationResult> {
-  const supabase = createClient()
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function calculateUnitCost(purchaseId: string, clientOverride?: any): Promise<PurchaseAllocationResult> {
+  const supabase = clientOverride ?? createClient()
 
   const { data: purchase, error: pErr } = await supabase
     .from('purchases')
@@ -246,8 +250,9 @@ export async function calculateUnitCost(purchaseId: string): Promise<PurchaseAll
  * caller-intent ("allocate the costs of this purchase") rather than the
  * computed quantity. Kept as a separate symbol so the call sites read well.
  */
-export async function allocateCosts(purchaseId: string): Promise<PurchaseAllocationResult> {
-  return calculateUnitCost(purchaseId)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function allocateCosts(purchaseId: string, clientOverride?: any): Promise<PurchaseAllocationResult> {
+  return calculateUnitCost(purchaseId, clientOverride)
 }
 
 /**

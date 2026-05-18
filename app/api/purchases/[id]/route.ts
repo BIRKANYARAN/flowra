@@ -30,7 +30,7 @@ export async function GET(req: NextRequest, { params }: Ctx) {
     // surface this so the detail screen can reconcile.
     let allocation = null
     try {
-      allocation = await CostService.calculateUnitCost(params.id)
+      allocation = await CostService.calculateUnitCost(params.id, supabase)
     } catch {
       // empty draft — allocation is meaningless, return null and move on
     }

@@ -272,7 +272,8 @@ export class PurchaseService {
     }
 
     // 2. Compute the allocation (CostService is the SoT for unit-cost math)
-    const allocation = await CostService.calculateUnitCost(purchaseId)
+    // Pass clientOverride so RLS auth context is preserved in Bearer-token paths.
+    const allocation = await CostService.calculateUnitCost(purchaseId, clientOverride)
 
     // 3. For each line: stock-in via StockService.adjust() at the FINAL cost
     let lotsCreated = 0
