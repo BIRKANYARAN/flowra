@@ -5,6 +5,7 @@
 // estimated tax payable, current-period P&L, and balanced invariant check.
 // Two-column layout: Varlıklar (Assets) | Kaynaklar (Liabilities + Equity)
 
+import Link                     from 'next/link'
 import { createClient }        from '@/lib/supabase-server'
 import { BalanceSheetService } from '@/lib/services/balance-sheet.service'
 import { fmtTRY as fmt }       from '@/lib/format'
@@ -198,11 +199,19 @@ export async function BalanceTab({ userId, companyId }: Props) {
         )}
       </div>
 
-      {/* Disclaimer */}
-      <p className="text-[10px] text-gray-400 leading-relaxed">
-        Bilanço tarihi: {bs.as_of_date} · Duran varlıklar ve uzun vadeli tahakkuklar henüz izlenmemektedir.
-        Resmi bildirimlerde muhasebeciye danışınız.
-      </p>
+      {/* Disclaimer + cross-link to formal report */}
+      <div className="flex items-center justify-between px-1">
+        <p className="text-[10px] text-gray-400 leading-relaxed">
+          Bilanço tarihi: {bs.as_of_date} · Duran varlıklar ve uzun vadeli tahakkuklar henüz izlenmemektedir.
+          Resmi bildirimlerde muhasebeciye danışınız.
+        </p>
+        <Link
+          href="/dashboard/reports/balance-sheet"
+          className="shrink-0 ml-4 text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap"
+        >
+          Bilanço Raporu →
+        </Link>
+      </div>
     </div>
   )
 }
