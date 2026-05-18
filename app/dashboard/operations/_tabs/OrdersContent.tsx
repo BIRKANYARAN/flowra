@@ -4,6 +4,7 @@
 // Client component: lists purchase orders, allows status updates + new order form.
 
 import { useState, useEffect, useCallback } from 'react'
+import Link from 'next/link'
 import { formatTRY as fmt, fmtDate } from '@/lib/format'
 
 type OrderStatus = 'draft' | 'ordered' | 'received' | 'cancelled'
@@ -382,6 +383,26 @@ export function OrdersContent(_props: Props) {
           </div>
         </div>
       )}
+
+      {/* Cross-navigation */}
+      <div className="flex items-center justify-between px-1">
+        <p className="text-[10px] text-gray-400 leading-relaxed">
+          Satın alma siparişleri stok ve giderlerle birlikte yönetilmeli.
+        </p>
+        <div className="flex items-center gap-2 shrink-0 ml-4">
+          <Link href="/dashboard/operations?tab=stock" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Stok →
+          </Link>
+          <span className="text-gray-200">|</span>
+          <Link href="/dashboard/operations?tab=expenses" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Giderler →
+          </Link>
+          <span className="text-gray-200">|</span>
+          <Link href="/dashboard/finance?tab=pnl" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            P&amp;L →
+          </Link>
+        </div>
+      </div>
     </div>
   )
 }
