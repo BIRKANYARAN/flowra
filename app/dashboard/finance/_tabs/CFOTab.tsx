@@ -19,6 +19,7 @@ import { FinanceService }        from '@/lib/services/finance.service'
 import { PartnerService }        from '@/lib/services/partner.service'
 import { getCfoMetrics, getQuarterlyReport } from '@/lib/finance/financial-core'
 import { getRiskEngineResult }   from '@/lib/finance/risk-engine'
+import { detectDuplicates }      from '@/lib/engines/duplicate-detector'
 import { createClient }          from '@/lib/supabase-server'
 import { fmtTRY, fmtPct, fmtDate, fmtCompact } from '@/lib/format'
 import { makeRequestContext }    from '@/lib/logger'
@@ -135,7 +136,10 @@ export async function CFOTab({ userId, companyId }: Props) {
     ytd: { revenue: 0, gross_profit: 0, net_profit: 0, matrah: 0, corporate_tax: 0, net_after_tax: 0, total_gecici: 0 },
   }
 
-  const [balanceSheet, financialSummary, kdvResult, corporateTaxResult, partnerBalances, cfoMetrics, riskData, quarterlyReport] =
+  // Last 3 months for duplicate detection (wider window catches cross-month dupes)
+  const dupFrom = (() => { const d = new Date(); d.setMonth(d.getMonth() - 3); return d.toISOString().slice(0, 10) })()
+
+  const [balanceSheet, financialSummary, kdvResult, corporateTaxResult, partnerBalances, cfoMetrics, riskData, quarterlyReport, dupExpenses] =
     await Promise.all([
       sq(BalanceSheetService.compute(userId, companyId, today, supabase)),
       sq(FinanceService.getFinancialSummary(userId, companyId, period, undefined, ctx)),
@@ -145,7 +149,20 @@ export async function CFOTab({ userId, companyId }: Props) {
       getCfoMetrics(companyId, { from, to: today }).catch(() => ZERO_METRICS),
       getRiskEngineResult(companyId).catch(() => null),
       getQuarterlyReport(userId, companyId, new Date().getFullYear()).catch(() => ZERO_QUARTERLY),
+      supabase
+        .from('expenses')
+        .select('id, expense_date, expense_type, amount_try, vendor_name, description')
+        .eq('company_id', companyId)
+        .is('deleted_at', null)
+        .gte('expense_date', dupFrom)
+        .neq('payment_status', 'cancelled')
+        .then(r => r.data ?? []),
     ])
+
+  const duplicates = detectDuplicates(
+    (dupExpenses as Array<{ id: string; expense_date: string; expense_type: string; amount_try: number; vendor_name?: string | null; description?: string | null }>)
+      .map(e => ({ ...e, amount_try: Number(e.amount_try ?? 0) }))
+  ).slice(0, 5) // cap at 5 warnings
 
   // ── Derived metrics ─────────────────────────────────────────────────────────
 
@@ -306,6 +323,50 @@ export async function CFOTab({ userId, companyId }: Props) {
           ))}
         </div>
       </div>
+
+      {/* Kopya Masraf Uyarıları — only shown when potential duplicates are found */}
+      {duplicates.length > 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <div className="text-[10px] font-black uppercase tracking-widest text-amber-600">Kopya Masraf Uyarıları</div>
+              <div className="text-[10px] text-amber-500 mt-0.5">Son 3 ay — istatistiksel tespit · CFO onayı gerekli</div>
+            </div>
+            <span className="text-[9px] font-black uppercase tracking-wide bg-amber-100 text-amber-700 px-2 py-0.5 rounded-lg border border-amber-200">
+              {duplicates.filter(d => d.confidence === 'high').length} yüksek · {duplicates.filter(d => d.confidence === 'medium').length} orta
+            </span>
+          </div>
+          <div className="space-y-2">
+            {duplicates.map((d, i) => (
+              <div key={i} className={`rounded-lg px-3 py-2.5 border text-xs ${
+                d.confidence === 'high'
+                  ? 'bg-red-50 border-red-200'
+                  : 'bg-amber-50 border-amber-200'
+              }`}>
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <span className="font-black tabular-nums text-gray-900">{fmtTRY(d.amount_try)}</span>
+                    <span className="text-gray-400">·</span>
+                    <span className="font-semibold text-gray-700">{d.expense_type}</span>
+                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md ${
+                      d.confidence === 'high'
+                        ? 'bg-red-100 text-red-700'
+                        : 'bg-amber-100 text-amber-700'
+                    }`}>
+                      {d.confidence === 'high' ? '⚠️ Yüksek' : '🔍 Orta'}
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-gray-500">{d.rows.map(r => r.expense_date).join(' · ')}</span>
+                </div>
+                <div className="text-[10px] text-gray-600 mt-1">{d.reason}</div>
+              </div>
+            ))}
+          </div>
+          <div className="text-[9px] text-amber-600 mt-2">
+            → <a href="/dashboard/operations?tab=expenses" className="font-semibold underline underline-offset-2">Masrafları incele</a> · Duplikasyonları manuel olarak onaylayın veya silin
+          </div>
+        </div>
+      )}
 
       {/* Row 3: Balance Sheet preview */}
       <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
