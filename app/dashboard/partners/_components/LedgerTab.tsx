@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import {
   LedgerData, LedgerEntry, LedgerSortCol,
   pct, fmt,
@@ -91,6 +92,22 @@ export function LedgerTab({
           </div>
         </>
       )}
+
+      {/* Cross-navigation */}
+      <div className="flex items-center justify-between px-1 pt-1">
+        <p className="text-[10px] text-gray-400 leading-relaxed">
+          Ortak defter özkaynaklar ve bilanço ile uyumlu olmalıdır.
+        </p>
+        <div className="flex items-center gap-2 shrink-0 ml-4">
+          <Link href="/dashboard/finance?tab=balance" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Bilanço →
+          </Link>
+          <span className="text-gray-200">|</span>
+          <Link href="/dashboard/partners?tab=tranches" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Trancheler →
+          </Link>
+        </div>
+      </div>
     </div>
   )
 }
