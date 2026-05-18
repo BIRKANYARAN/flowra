@@ -101,6 +101,31 @@ export async function CustomersContent({ companyId }: Props) {
         </div>
       )}
 
+      {/* Revenue concentration alert — top customer > 40% of total billed */}
+      {topCustomers.length > 0 && billed > 0 && topCustomers[0].total / billed > 0.4 && (
+        <div className={`rounded-xl border px-4 py-3 flex items-start gap-3 ${
+          topCustomers[0].total / billed > 0.6
+            ? 'bg-red-50 border-red-200'
+            : 'bg-amber-50 border-amber-200'
+        }`}>
+          <span className="text-base mt-0.5">⚠</span>
+          <div className="flex-1">
+            <div className={`text-[11px] font-black uppercase tracking-wide ${
+              topCustomers[0].total / billed > 0.6 ? 'text-red-800' : 'text-amber-800'
+            }`}>
+              Yüksek Müşteri Konsantrasyonu
+            </div>
+            <div className={`text-xs mt-0.5 ${
+              topCustomers[0].total / billed > 0.6 ? 'text-red-700' : 'text-amber-700'
+            }`}>
+              <strong>{topCustomers[0].name}</strong> toplam cironun{' '}
+              <strong>%{Math.round((topCustomers[0].total / billed) * 100)}&apos;ini</strong>{' '}
+              oluşturuyor ({fmt(topCustomers[0].total)}). Bu müşterinin kaybı ciddi gelir riski yaratır.
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Top customers bar chart */}
       {topCustomers.length > 0 && billed > 0 && (
         <div className="bg-white border border-gray-100 rounded-xl p-4">
