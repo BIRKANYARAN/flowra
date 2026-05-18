@@ -15,7 +15,7 @@ import {
 } from '@/lib/validation'
 import { AppError } from '@/types/errors'
 import { fetchTcmbWithFallback } from '@/lib/fx'
-import { calculateTotals, type LineInput } from '@/lib/calc'
+import { calculateTotals, calculateLine, type LineInput } from '@/lib/calc'
 import { safeSystemQuery } from '@/lib/admin-db'
 
 export { ValidationError }
@@ -227,18 +227,17 @@ export class ProformaService {
         const lineCalc = lineResults[idx]
         return {
           product_id:       l.product_id,
-          product_name:     l.name,           // DB column: product_name
-          unit:             l.unit,
-          unit_cost:        l.unit_cost,
-          unit_price:       l.price,          // DB column: unit_price
-          qty:              l.quantity,       // DB column: qty
+          product_name:     l.name,             // DB column: product_name
+          unit_price:       l.price,            // DB column: unit_price
+          qty:              l.quantity,         // DB column: qty
           discount_pct:     l.discount_percent, // DB column: discount_pct
+          kdv_rate:         l.kdv,              // DB column: kdv_rate (primary)
           currency:         l.currency,
           sort_order:       l.sort_order,
-          line_total:       lineCalc?.line_total ?? 0,       // computed: qty × unit_price × (1+kdv%)
+          line_total:       lineCalc?.line_total ?? 0,
           line_subtotal:    lineCalc?.line_subtotal ?? 0,
           vat_amount:       lineCalc?.line_vat ?? 0,
-          // Legacy aliases: keep for backward compat in case old function version is deployed
+          // Legacy aliases: RPC reads kdv_rate || kdv — keep kdv for old deployed versions
           name:             l.name,
           price:            l.price,
           quantity:         l.quantity,
@@ -351,7 +350,24 @@ export class ProformaService {
 
     await supabase.from('proforma_items').delete().eq('proforma_id', proforma_id)
     const { error: iErr } = await supabase.from('proforma_items')
-      .insert(items.map(l => ({ ...l, proforma_id })))
+      .insert(items.map((l, idx) => {
+        const calc = calculateLine(l as LineInput)
+        return {
+          proforma_id,
+          company_id:      companyId,
+          product_id:      l.product_id   ?? null,
+          product_name:    l.name,
+          unit:            l.unit          ?? 'adet',
+          unit_cost:       l.unit_cost     ?? 0,
+          unit_price:      l.price,
+          qty:             l.quantity,
+          discount_pct:    l.discount_percent ?? 0,
+          kdv_rate:        l.kdv           ?? 0,
+          line_total:      calc.line_total,
+          currency:        l.currency      ?? currency,
+          sort_order:      l.sort_order    ?? idx,
+        }
+      }))
     if (iErr) throw new AppError('DB_INSERT_FAILED', 'Ürün satırları güncellenemedi', { dbError: iErr.message })
 
     await logger.info(ctx, 'proforma_update:success', { id: proforma_id })

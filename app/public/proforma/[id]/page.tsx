@@ -33,13 +33,14 @@ export default async function PublicProformaPage({ params }: { params: { id: str
 
   const mappedItems = items.map(it => ({
     id: it.id ?? '',
-    name: it.name ?? '',
-    unit: it.unit ?? 'adet',
-    price: Number(it.price) || 0,
-    quantity: Number(it.quantity) || 1,
-    discount_percent: Number(it.discount_percent) || 0,
-    kdv: Number(it.kdv) || 0,
-    currency: it.currency ?? proforma.currency ?? 'TRY',
+    // DB canonical names first (current schema), legacy aliases as fallback
+    name:             String(it.product_name ?? it.name ?? ''),
+    unit:             it.unit ?? 'adet',
+    price:            Number(it.unit_price   ?? it.price)            || 0,
+    quantity:         Number(it.qty          ?? it.quantity)         || 1,
+    discount_percent: Number(it.discount_pct ?? it.discount_percent) || 0,
+    kdv:              Number(it.kdv_rate     ?? it.kdv)              || 0,
+    currency:         it.currency ?? proforma.currency ?? 'TRY',
   }))
 
   // Prefer frozen snapshot → fall back to live data for pre-snapshot proformas

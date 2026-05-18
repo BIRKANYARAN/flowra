@@ -1492,7 +1492,7 @@ begin
   loop
     insert into proforma_items (
       proforma_id, company_id, product_id, product_name,
-      qty, unit_price, currency, discount_pct, line_total, notes, sort_order
+      qty, unit_price, currency, discount_pct, kdv_rate, line_total, notes, sort_order
     ) values (
       v_proforma_id, v_company_id,
       nullif((v_item->>'product_id')::text, '')::uuid,
@@ -1501,6 +1501,7 @@ begin
       coalesce((v_item->>'unit_price')::numeric, 0),
       coalesce(v_item->>'currency', p_currency),
       coalesce((v_item->>'discount_pct')::numeric, 0),
+      coalesce((v_item->>'kdv_rate')::numeric, (v_item->>'kdv')::numeric, 20),
       coalesce((v_item->>'line_total')::numeric, 0),
       v_item->>'notes', v_sort
     );

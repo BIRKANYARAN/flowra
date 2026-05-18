@@ -120,13 +120,14 @@ export default async function ProformaDetailPage({ params }: PageProps) {
       try {
         clientItems.push({
           id:       safeStr(it.id),
-          name:     safeStr(it.name, '—'),
-          price:    safeNum(it.price),
-          kdv:      safeNum(it.kdv),
-          quantity: safeNum(it.quantity, 1) || 1,
+          // DB canonical names first, legacy aliases as fallback for old rows
+          name:     safeStr(it.product_name ?? it.name, '—'),
+          price:    safeNum(it.unit_price   ?? it.price),
+          kdv:      safeNum(it.kdv_rate     ?? it.kdv),
+          quantity: safeNum(it.qty          ?? it.quantity, 1) || 1,
           unit:     safeStr(it.unit, 'adet'),
           currency: safeStr(it.currency, currency),
-          discount_percent: safeNum(it.discount_percent),
+          discount_percent: safeNum(it.discount_pct ?? it.discount_percent),
         })
       } catch {
         // Item failed normalization — skip it, continue with remaining items

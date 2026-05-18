@@ -151,13 +151,21 @@ export interface ProformaItem {
   id:               string
   proforma_id:      string
   product_id:       string | null
-  name:             string
+  // DB canonical column names (current schema)
+  product_name?:    string
+  unit_price?:      number
+  qty?:             number
+  discount_pct?:    number
+  kdv_rate?:        number
+  // Legacy aliases (old column names — kept for backward compat with pre-migration rows)
+  name?:            string
+  price?:           number
+  quantity?:        number
+  discount_percent?: number
+  kdv?:             number
   unit:             string
   unit_cost:        number
-  price:            number
-  quantity:         number
-  discount_percent: number
-  kdv:              number
+  line_total?:      number
   currency:         string
   sort_order:       number
 }
