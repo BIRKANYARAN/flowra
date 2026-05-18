@@ -833,7 +833,10 @@ export async function getQuarterlyReport(
     const matrah = s?.matrah_try             ?? 0
     const corTax = s?.corporate_tax_try      ?? 0
     const netAt  = s?.net_after_tax_try      ?? 0
-    const gecici = r2(matrah * taxRate)
+    // gecici vergi = quarterly corporate tax (already computed correctly by
+    // computeCorporateTax with rate_percent/100). Re-multiplying by taxRate
+    // (which is 25, not 0.25) would give 25× the correct amount.
+    const gecici = corTax
 
     return {
       label:           `Q${q} ${targetYear}`,
