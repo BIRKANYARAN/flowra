@@ -10,6 +10,7 @@
 //   4. Trancheler     — debt tranche detail + repayment progress
 //   5. Kâr Dağıtımı  — 4-layer distribution safety + Turkish compliance
 //   6. Getiri         — per-partner ROI and capital return metrics
+//   7. Risk           — 6-dimension PCLE risk scoring + compliance warnings
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
@@ -28,6 +29,7 @@ import { WaterfallTab }   from '@/app/dashboard/partners/_components/WaterfallTa
 import { TranchesTab }    from '@/app/dashboard/partners/_components/TranchesTab'
 import { DistributionTab } from '@/app/dashboard/partners/_components/DistributionTab'
 import { ReturnsTab }     from '@/app/dashboard/partners/_components/ReturnsTab'
+import { RiskTab }        from '@/app/dashboard/partners/_components/RiskTab'
 import { PartnersContextBar } from '@/app/dashboard/partners/_shared/PartnersContextBar'
 import { PartnerFinanceActions } from '@/app/dashboard/partners/_components/PartnerFinanceActions'
 
@@ -280,6 +282,7 @@ export default function PartnersPage() {
     tranches:     { title: 'Borç Tranşeleri',    sub: 'Aktif trancheler · Faiz tahakkuku · Geri ödeme takvimi' },
     distribution: { title: 'Kâr Dağıtımı',      sub: '4 katmanlı güvenlik · Yasal yedek · TTK 509 uyumu' },
     returns:      { title: 'Getiri Analizi',     sub: 'ROI · Sermaye geri dönüşü · Ortak bazlı performans' },
+    risk:         { title: 'Risk Haritası',      sub: '6 boyutlu PCLE risk skoru · Yasal uyum · Öneriler' },
   }
 
   const TABS: { id: TabId; label: string }[] = [
@@ -289,6 +292,7 @@ export default function PartnersPage() {
     { id: 'tranches',     label: 'Trancheler'   },
     { id: 'distribution', label: 'Kâr Dağıtımı' },
     { id: 'returns',      label: 'Getiri'       },
+    { id: 'risk',         label: 'Risk'         },
   ]
 
   // ── Render ────────────────────────────────────────────────────────────────────
@@ -435,6 +439,10 @@ export default function PartnersPage() {
           loading={loading}
           returns={returns}
         />
+      )}
+
+      {activeTab === 'risk' && (
+        <RiskTab loading={loading} />
       )}
 
     </div>
