@@ -90,6 +90,11 @@ function deriveCriticalFactor(
   inputs: SituationInputs,
   scores: SituationResult['scores'],
 ): string {
+  // If overall health is excellent, don't report a false "critical" factor —
+  // pick the most positive signal instead.
+  const allHigh = Object.values(scores).every(s => s >= 90)
+  if (allHigh) return 'Tüm metrikler sağlıklı — büyüme fırsatlarını değerlendirin'
+
   const dims = [
     { key: 'cash',        score: scores.cash,        weight: WEIGHTS.cash },
     { key: 'profit',      score: scores.profit,      weight: WEIGHTS.profit },
@@ -97,25 +102,35 @@ function deriveCriticalFactor(
     { key: 'receivables', score: scores.receivables, weight: WEIGHTS.receivables },
     { key: 'partner',     score: scores.partner,     weight: WEIGHTS.partner },
   ]
-  const worst = dims.sort((a, b) => (a.score * a.weight) - (b.score * b.weight))[0]
+  // Only consider dimensions that are actually below 90 — otherwise "worst"
+  // can be a perfectly healthy dimension that just scores lowest by coincidence.
+  const problematic = dims.filter(d => d.score < 90)
+  const worst = (problematic.length > 0 ? problematic : dims)
+    .sort((a, b) => (a.score * a.weight) - (b.score * b.weight))[0]
 
   switch (worst.key) {
     case 'cash':
       return inputs.isProfitable
-        ? 'Nakit pozisyonu güçlü'
+        ? 'Dönem net kârı pozitif — büyüme fırsatları değerlendirilebilir'
         : `Nakit yaklaşık ${Math.round(inputs.cashRunwayMonths)} ay yeter`
     case 'profit':
       return inputs.netMarginPct < 0
         ? `Zarar marjı: %${Math.abs(round2(inputs.netMarginPct * 100))}`
-        : `Net marj düşük: %${round2(inputs.netMarginPct * 100)}`
+        : `Net marj: %${round2(inputs.netMarginPct * 100)}`
     case 'debt':
-      return `Borç servis oranı yüksek: ${round2(inputs.debtServiceRatio * 100)}%`
+      return inputs.debtServiceRatio <= 0
+        ? 'Aktif ortak borcu yok'
+        : `Borç servis oranı: ${round2(inputs.debtServiceRatio * 100)}%`
     case 'receivables':
-      return `Vadesi geçmiş alacak oranı: %${round2(inputs.overdueRatioPct)}`
+      return inputs.overdueRatioPct <= 0
+        ? 'Vadesi geçmiş alacak yok'
+        : `Vadesi geçmiş alacak: %${round2(inputs.overdueRatioPct)}`
     case 'partner':
-      return `Ortak dengesizliği: skor ${round2(inputs.maxBurdenScoreAbs * 100)}`
+      return inputs.maxBurdenScoreAbs <= 0.01
+        ? 'Ortak dengeleri eşit'
+        : `Ortak borç dengesi bozuk: %${round2(inputs.maxBurdenScoreAbs * 100)} sapma`
     default:
-      return 'Genel finansal sağlık'
+      return 'Genel finansal sağlık iyi'
   }
 }
 

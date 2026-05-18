@@ -135,7 +135,9 @@ const C: Record<string, RGB> = {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function sym(c: string): string {
-  return c === 'USD' ? '$' : c === 'EUR' ? '€' : c === 'GBP' ? '£' : '₺'
+  // Note: ₺ (U+20BA) is not in embedded jsPDF fonts (Helvetica / LiberationSans).
+  // Use 'TL' for TRY so the symbol always renders correctly in the PDF.
+  return c === 'USD' ? '$' : c === 'EUR' ? '€' : c === 'GBP' ? '£' : 'TL'
 }
 
 function n(v: unknown): number {
@@ -148,10 +150,10 @@ function money(v: unknown, symbol = ''): string {
 }
 
 function currencyLabel(c: string): string {
-  if (c === 'USD') return 'ABD Doları ($)'
-  if (c === 'EUR') return 'Euro (€)'
-  if (c === 'GBP') return 'İngiliz Sterlini (£)'
-  return 'Türk Lirası (₺)'
+  if (c === 'USD') return 'ABD Dolari ($)'
+  if (c === 'EUR') return 'Euro (EUR)'
+  if (c === 'GBP') return 'Ingiliz Sterlini (GBP)'
+  return 'Turk Lirasi (TL)'
 }
 
 function fmtDate(iso: string): string {
@@ -406,27 +408,49 @@ export async function generatePdf(opts: PdfOptions): Promise<void> {
   }
 
   // ══════════════════════════════════════════════════════════════════════════════
-  // A. HEADER — LEFT: Company info  |  CENTER: Title  |  RIGHT: Doc metadata
+  // A. HEADER — Accent stripe + LEFT: Company info | RIGHT: Doc metadata
   // ══════════════════════════════════════════════════════════════════════════════
+
+  // ── Accent stripe (violet) ────────────────────────────────────────────────
+  const STRIPE_H: number = 14
+  fillR(0, 0, PAGE.W, STRIPE_H, C.accent)
+
+  // Logo in stripe (inverted white)
+  let stripeLogoEnd = LX
+  if (logo) {
+    const { w, h } = logoDims(logo.pxW, logo.pxH)
+    const lh = Math.min(h, STRIPE_H - 3)
+    const lw = w * (lh / h)
+    try {
+      doc.addImage(logo.b64, 'PNG', LX, (STRIPE_H - lh) / 2, lw, lh)
+      stripeLogoEnd = LX + lw + 4
+    } catch { stripeLogoEnd = LX }
+  }
+
+  // Company name in stripe
+  setF('bold', 9, C.white)
+  const stripeNameY = STRIPE_H / 2 + 3
+  tL(company.name || '', stripeLogoEnd, stripeNameY)
+
+  // Document type right-aligned in stripe
+  setF('bold', 7, [200, 195, 240])
+  tR('PROFORMA FATURA', RX, STRIPE_H / 2 + 1)
+  setF('normal', 6.5, [200, 195, 240])
+  tR(currencyLabel(currency), RX, STRIPE_H / 2 + 5.5)
+
+  curY = STRIPE_H + 7
+
   const COL_LEFT_W:  number = 70
   const COL_RIGHT_W: number = 56
 
   let leftY  = curY
   let rightY = curY
 
-  // LEFT: Company logo + company info
-  if (logo) {
-    const { w, h } = logoDims(logo.pxW, logo.pxH)
-    try {
-      doc.addImage(logo.b64, 'PNG', LX, leftY, w, h)
-      leftY += h + 3
-    } catch { /* skip broken image — PDF continues */ }
-  }
-
-  setF('bold', 10, C.black)
+  // LEFT: Company info block (below stripe)
+  setF('bold', 9, C.black)
   const nameLines = doc.splitTextToSize(company.name || '', COL_LEFT_W) as string[]
   nameLines.forEach(l => { tL(l, LX, leftY); leftY += 5 })
-  leftY += 1
+  leftY += 0.5
 
   setF('normal', 7.5, C.dark)
   if (company.address?.trim()) {
@@ -436,7 +460,7 @@ export async function generatePdf(opts: PdfOptions): Promise<void> {
   }
 
   const taxStr = [
-    company.taxNumber ? 'Vergi Numarası: ' + company.taxNumber : '',
+    company.taxNumber ? 'Vergi No: ' + company.taxNumber : '',
     company.taxOffice ? 'Vergi Dairesi: ' + company.taxOffice : '',
   ].filter(Boolean).join('  ·  ')
   if (taxStr) {
@@ -446,7 +470,7 @@ export async function generatePdf(opts: PdfOptions): Promise<void> {
 
   if (company.mersisNo?.trim()) {
     setF('normal', 7, C.mid)
-    tL('MERSİS No: ' + company.mersisNo.trim(), LX, leftY); leftY += 4
+    tL('MERSIS No: ' + company.mersisNo.trim(), LX, leftY); leftY += 4
   }
 
   const contactStr = [company.phone, company.website].filter(Boolean).join('   ')
@@ -455,22 +479,24 @@ export async function generatePdf(opts: PdfOptions): Promise<void> {
     tL(contactStr, LX, leftY); leftY += 4
   }
 
-  // CENTER: Title
-  setF('bold', 15, C.black)
-  tC('PROFORMA FATURA', CX, curY + 6)
+  // RIGHT: Document metadata — boxed panel
+  const META_W:  number = 58
+  const META_X:  number = RX - META_W
+  const META_PAD: number = 3
+  // Draw a subtle border box
+  doc.setDrawColor(C.accent[0], C.accent[1], C.accent[2])
+  doc.setLineWidth(0.4)
+  doc.roundedRect(META_X, rightY - 1, META_W, 22, 1.5, 1.5, 'S')
+
+  setF('bold', 11, C.accent)
+  tR(proformaNo, RX - META_PAD, rightY + 6); rightY += 8
+
+  setF('normal', 7.5, C.mid)
+  tR('Tarih: ' + fmtDate(createdAt), RX - META_PAD, rightY); rightY += 4.5
+  tR('Son Gecerlilik: ' + addDays(createdAt, validityDays), RX - META_PAD, rightY); rightY += 4.5
+
   setF('normal', 7, C.muted)
-  tC(currencyLabel(currency), CX, curY + 12)
-
-  // RIGHT: Document metadata
-  setF('bold', 11, C.black)
-  tR(proformaNo, RX, rightY); rightY += 6
-
-  setF('normal', 8, C.mid)
-  tR('Tarih: ' + fmtDate(createdAt), RX, rightY); rightY += 5
-  tR('Son Geçerlilik: ' + addDays(createdAt, validityDays), RX, rightY); rightY += 5
-
-  setF('normal', 7.5, C.muted)
-  tR('Geçerlilik: ' + validityDays + ' gün', RX, rightY); rightY += 5
+  tR('Gecerlilik: ' + validityDays + ' gun', RX - META_PAD, rightY); rightY += 5
 
   curY = Math.max(leftY, rightY) + 4
   hLine(curY, LX, RX, C.hrule, 0.6)
@@ -528,11 +554,14 @@ export async function generatePdf(opts: PdfOptions): Promise<void> {
   }
 
   function drawTableHeader() {
-    fillR(TABLE_X, curY, TABLE_W, THEAD_H, C.thead)
-    hLine(curY,           TABLE_X, TABLE_X + TABLE_W, C.hrule, 0.4)
-    hLine(curY + THEAD_H, TABLE_X, TABLE_X + TABLE_W, C.hrule, 0.4)
+    // Violet-tinted header (very light accent)
+    fillR(TABLE_X, curY, TABLE_W, THEAD_H, [237, 234, 254])
+    // Left accent bar
+    fillR(TABLE_X, curY, 1.5, THEAD_H, C.accent)
+    hLine(curY,           TABLE_X, TABLE_X + TABLE_W, [200, 195, 240], 0.5)
+    hLine(curY + THEAD_H, TABLE_X, TABLE_X + TABLE_W, [200, 195, 240], 0.5)
 
-    setF('bold', 6, C.dark)
+    setF('bold', 6, [55, 45, 160])
     const ty = curY + THEAD_H / 2 + 2.8
     tL('ÜRÜN / HİZMET',           COL_X.NAME      + CP, ty)
     tC('BİRİM',                   COL_X.UNIT      + COL.UNIT      / 2, ty)
@@ -652,7 +681,7 @@ export async function generatePdf(opts: PdfOptions): Promise<void> {
   curY += 3
 
   const GT_H: number = 14
-  fillR(TXL - 2, curY, TW + 4, GT_H, C.total)
+  fillR(TXL - 2, curY, TW + 4, GT_H, C.accent)
   setF('bold', 10, C.white)
   tL('GENEL TOPLAM', TXL + 3, curY + 8.5)
   setF('bold', 14, C.white)
@@ -679,8 +708,8 @@ export async function generatePdf(opts: PdfOptions): Promise<void> {
   // E. FX footnote
   // ══════════════════════════════════════════════════════════════════════════════
   const fxParts: string[] = []
-  if (fxUsd > 0) fxParts.push('1 USD = ₺' + fxUsd.toFixed(4))
-  if (fxEur > 0) fxParts.push('1 EUR = ₺' + fxEur.toFixed(4))
+  if (fxUsd > 0) fxParts.push('1 USD = ' + fxUsd.toFixed(4) + ' TL')
+  if (fxEur > 0) fxParts.push('1 EUR = ' + fxEur.toFixed(4) + ' TL')
   if (fxParts.length > 0) {
     ensureSpace(7)
     setF('normal', 7, C.muted)

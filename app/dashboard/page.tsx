@@ -718,7 +718,7 @@ export default async function DashboardPage() {
               }
             </div>
             <div className="text-[10px] text-gray-400 mt-1.5">
-              {runwayDays < 0  ? 'Veri yok'
+              {runwayDays < 0  ? 'Banka bakiyesi girin'
                : runwayDays < 30 ? daysLeft(runwayDays)
                : runwayDays < 90 ? daysLeft(runwayDays)
                : 'Sağlıklı'}
