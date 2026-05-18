@@ -2017,11 +2017,82 @@ create trigger trg_touch_purchase_orders
   for each row execute function fn_touch_purchase_orders();
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- SECTION 13 — PURCHASE COSTS TABLE
--- Overhead cost lines attached to a purchase (customs, freight, insurance, tax).
--- Used by purchase.service.ts and cost.service.ts.
+-- SECTION 13 — PURCHASES, PURCHASE_ITEMS, PURCHASE_COSTS TABLES
+-- FIFO stock purchase lifecycle: draft → finalized (immutable).
+-- Used by purchase.service.ts, cost.service.ts, CostService.calculateUnitCost()
 -- ─────────────────────────────────────────────────────────────────────────────
 
+create table if not exists purchases (
+  id            uuid        primary key default gen_random_uuid(),
+  company_id    uuid        not null references companies(id) on delete cascade,
+  user_id       uuid        not null references auth.users(id),
+  supplier_name text        not null default '',
+  purchase_date date        not null default current_date,
+  currency      text        not null default 'TRY',
+  fx_rate       numeric(12,6) not null default 1,
+  status        text        not null default 'draft'
+                check (status in ('draft','finalized','cancelled')),
+  notes         text,
+  finalized_at  timestamptz,
+  deleted_at    timestamptz,
+  created_at    timestamptz not null default now(),
+  updated_at    timestamptz not null default now()
+);
+
+create index if not exists idx_purchases_company on purchases(company_id, deleted_at);
+create index if not exists idx_purchases_status  on purchases(company_id, status) where deleted_at is null;
+create index if not exists idx_purchases_date    on purchases(company_id, purchase_date) where deleted_at is null;
+
+alter table purchases enable row level security;
+
+drop policy if exists purchases_company_member on purchases;
+create policy purchases_company_member on purchases
+  for all using (
+    company_id in (
+      select company_id from company_members
+      where user_id = auth.uid() and deleted_at is null
+    )
+  );
+
+grant all on purchases to authenticated, service_role;
+
+create table if not exists purchase_items (
+  id          uuid        primary key default gen_random_uuid(),
+  purchase_id uuid        not null references purchases(id) on delete cascade,
+  product_id  uuid        references products(id) on delete set null,
+  quantity    numeric(10,3) not null check (quantity > 0),
+  unit_price  numeric(15,4) not null check (unit_price >= 0),
+  sort_order  int         not null default 0,
+  created_at  timestamptz not null default now()
+);
+
+create index if not exists idx_purchase_items_purchase on purchase_items(purchase_id);
+
+alter table purchase_items enable row level security;
+
+drop policy if exists purchase_items_company_member on purchase_items;
+create policy purchase_items_company_member on purchase_items
+  for all using (
+    purchase_id in (
+      select p.id from purchases p
+      join company_members cm on cm.company_id = p.company_id
+      where cm.user_id = auth.uid() and p.deleted_at is null
+    )
+  );
+
+grant all on purchase_items to authenticated, service_role;
+
+create or replace function fn_touch_purchases()
+returns trigger language plpgsql as $$
+begin new.updated_at := now(); return new; end;
+$$;
+
+drop trigger if exists trg_touch_purchases on purchases;
+create trigger trg_touch_purchases
+  before update on purchases
+  for each row execute function fn_touch_purchases();
+
+-- purchase_costs: overhead cost lines (customs, freight, insurance, tax)
 create table if not exists purchase_costs (
   id                uuid primary key default gen_random_uuid(),
   purchase_id       uuid not null references purchases(id) on delete cascade,
@@ -2041,6 +2112,7 @@ create index if not exists idx_purchase_costs_purchase on purchase_costs(purchas
 
 alter table purchase_costs enable row level security;
 
+drop policy if exists "purchase_costs_company_member_rw" on purchase_costs;
 create policy "purchase_costs_company_member_rw" on purchase_costs
   for all using (
     purchase_id in (
