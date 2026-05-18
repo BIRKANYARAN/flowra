@@ -16,33 +16,43 @@ function CommandBarSkeleton() {
   )
 }
 
+const FMT = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 })
+function fmtTRY(n: number): string {
+  const abs = Math.abs(n)
+  if (abs >= 1_000_000) return `₺${(n / 1_000_000).toFixed(2)}M`
+  if (abs >= 1_000)     return `₺${(n / 1_000).toFixed(1)}K`
+  return `₺${FMT.format(Math.round(n))}`
+}
+
 interface Props { companyId: string; userId: string }
 
 export async function CatalogContent({ companyId, userId }: Props) {
   const supabase = createClient()
 
-  const { data: prodData } = await supabase
-    .from('products')
-    .select('*')
-    .eq('company_id', companyId)
-    .is('deleted_at', null)
-    .eq('is_active', true)
-    .order('name')
+  const [prodRes, lotRes] = await Promise.all([
+    supabase
+      .from('products')
+      .select('*')
+      .eq('company_id', companyId)
+      .is('deleted_at', null)
+      .eq('is_active', true)
+      .order('name'),
 
-  const products = (prodData ?? []) as Product[]
+    // Batch FIFO cost: one query for all products instead of N×RPC.
+    // real_cost = weighted average entry_cost_try weighted by qty_remaining.
+    supabase
+      .from('stock_lots')
+      .select('product_id, cost_price_try, qty_remaining')
+      .eq('company_id', companyId)
+      .is('deleted_at', null)
+      .gt('qty_remaining', 0),
+  ])
 
-  // Batch FIFO cost: one query for all products instead of N×RPC.
-  // real_cost = weighted average entry_cost_try weighted by qty_remaining.
-  const { data: lotData } = await supabase
-    .from('stock_lots')
-    .select('product_id, cost_price_try, qty_remaining')
-    .eq('company_id', companyId)
-    .is('deleted_at', null)
-    .gt('qty_remaining', 0)
+  const products = (prodRes.data ?? []) as Product[]
 
   const initialRealCosts: Record<string, number | null> = {}
   const lotSums: Record<string, { costQty: number; qty: number }> = {}
-  for (const lot of lotData ?? []) {
+  for (const lot of lotRes.data ?? []) {
     const pid = String(lot.product_id ?? '')
     if (!pid) continue
     const prev = lotSums[pid] ?? { costQty: 0, qty: 0 }
@@ -55,11 +65,101 @@ export async function CatalogContent({ companyId, userId }: Props) {
     initialRealCosts[pid] = qty > 0 ? costQty / qty : null
   }
 
+  // ── Catalog analytics ─────────────────────────────────────────────────────────
+  const totalListValue    = products.reduce((s, p) => s + Number(p.default_sale_price ?? 0), 0)
+  const productsWithStock = products.filter(p => Number(p.stock_qty ?? 0) > 0)
+  const lowStockProducts  = products.filter(p => {
+    const qty   = Number(p.stock_qty ?? 0)
+    const alert = Number(p.stock_alert_qty ?? 0)
+    return qty > 0 && alert > 0 && qty <= alert
+  })
+  const zeroStockProducts = products.filter(p => Number(p.stock_qty ?? 0) <= 0)
+
+  // Products with a real FIFO cost — compute margin quality
+  const withMargin: Array<{ name: string; margin: number }> = []
+  for (const p of products) {
+    const listPrice = Number(p.default_sale_price ?? 0)
+    const fifoCost  = initialRealCosts[p.id]
+    if (listPrice > 0 && fifoCost != null && fifoCost > 0) {
+      withMargin.push({ name: p.name, margin: (listPrice - fifoCost) / listPrice })
+    }
+  }
+  const lowMarginProducts = withMargin.filter(m => m.margin < 0.15).slice(0, 5)
+  const avgMargin = withMargin.length > 0
+    ? withMargin.reduce((s, m) => s + m.margin, 0) / withMargin.length
+    : null
+
   return (
     <div className="space-y-4">
       <Suspense fallback={<CommandBarSkeleton />}>
         <CatalogCommandBar companyId={companyId} />
       </Suspense>
+
+      {/* ── Catalog KPI strip ─────────────────────────────────────────────── */}
+      {products.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+          {[
+            {
+              label: 'Aktif Ürün',
+              value: String(products.length),
+              sub:   `${productsWithStock.length} stokta · ${zeroStockProducts.length} tükenmiş`,
+              color: 'text-gray-900',
+            },
+            {
+              label: 'Katalog Liste Değeri',
+              value: totalListValue > 0 ? fmtTRY(totalListValue) : '—',
+              sub:   'Toplam liste fiyatı toplamı',
+              color: 'text-gray-900',
+            },
+            {
+              label: 'Ort. Brüt Marj',
+              value: avgMargin !== null ? `%${(avgMargin * 100).toFixed(1)}` : '—',
+              sub:   avgMargin !== null
+                ? `${withMargin.length} ürün FIFO maliyetiyle`
+                : 'FIFO maliyet verisi yok',
+              color: avgMargin === null ? 'text-gray-400'
+                : avgMargin >= 0.30 ? 'text-emerald-700'
+                : avgMargin >= 0.15 ? 'text-amber-700'
+                : 'text-red-600',
+            },
+            {
+              label: 'Düşük Stok Uyarısı',
+              value: lowStockProducts.length > 0 ? String(lowStockProducts.length) : '—',
+              sub:   lowStockProducts.length > 0
+                ? `${lowStockProducts.map(p => p.name).slice(0, 2).join(', ')}${lowStockProducts.length > 2 ? '…' : ''}`
+                : 'Tüm ürünler eşik üstünde',
+              color: lowStockProducts.length > 0 ? 'text-amber-700' : 'text-emerald-700',
+            },
+          ].map((card, i) => (
+            <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-gray-100' : ''}`}>
+              <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{card.label}</div>
+              <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
+              <div className="text-[10px] text-gray-400 mt-1 truncate" title={card.sub}>{card.sub}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── Low margin alert ─────────────────────────────────────────────────── */}
+      {lowMarginProducts.length > 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="text-[10px] font-black uppercase tracking-widest text-amber-700">⚠ Düşük Marjlı Ürünler</span>
+            <span className="text-[9px] text-amber-600">({lowMarginProducts.length} ürün &lt;%15 brüt marj)</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {lowMarginProducts.map(p => (
+              <span key={p.name} className="text-[10px] bg-amber-100 text-amber-800 font-semibold px-2 py-0.5 rounded-lg">
+                {p.name} · %{(p.margin * 100).toFixed(1)}
+              </span>
+            ))}
+          </div>
+          <div className="text-[10px] text-amber-600 mt-1.5">
+            Liste fiyatını artırın veya tedarik maliyetini düşürün.
+          </div>
+        </div>
+      )}
+
       <CatalogClient
         initialProducts={products}
         initialRealCosts={initialRealCosts}
