@@ -7,11 +7,15 @@
 //   4. Scenario panel (client island)
 
 import Link                                 from 'next/link'
+import { createClient }                    from '@/lib/supabase-server'
 import { getCfoMetrics, getRunwayForecast } from '@/lib/finance/financial-core'
+import { computeForecast, buildForecastInputs } from '@/lib/engines/forecast.engine'
 import { ScenarioPanel }                    from '@/components/dashboard/ScenarioPanel'
 import type { CfoMetrics }                  from '@/lib/finance/cfo-metrics'
 import type { RunwayForecastResponse }      from '@/lib/finance/financial-core'
+import type { ForecastResult }             from '@/lib/engines/forecast.engine'
 import { fmtTRY as fmt }                   from '@/lib/format'
+import { fmtCompact }                      from '@/lib/format'
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -21,8 +25,10 @@ export async function ForecastTab({ userId: _userId, companyId }: Props) {
   const now   = new Date()
   const today = now.toISOString().slice(0, 10)
   const year  = now.getFullYear()
-  const mon   = String(now.getMonth() + 1).padStart(2, '0')
+  const month = now.getMonth() + 1  // 1-12
+  const mon   = String(month).padStart(2, '0')
   const from  = `${year}-${mon}-01`
+  const supabase = createClient()
 
   function sq<T>(fn: () => Promise<T>, fb: T): Promise<T> { return fn().catch(() => fb) }
 
@@ -39,9 +45,26 @@ export async function ForecastTab({ userId: _userId, companyId }: Props) {
     inputs: { starting_cash: 0, monthly_burn: 0, outstanding_total: 0, horizon_months: 12 },
   }
 
+  // Trailing 6 months for 3-scenario forecast
+  const trailingStart = new Date(year, month - 1 - 6, 1)
+  const trailingFrom  = trailingStart.toISOString().slice(0, 10)
+  const trailingEnd   = new Date(year, month - 1, 0)
+  const trailingTo    = trailingEnd.toISOString().slice(0, 10)
+
   // Sequential: runway forecast needs the tax obligation from cfoMetrics to correctly
   // model the first-month cash outflow (corporate tax + KDV payable).
-  const metrics = await sq(() => getCfoMetrics(companyId, { from, to: today }), ZERO_METRICS)
+  const [metrics, salesTrailingRes, expTrailingRes] = await Promise.all([
+    sq(() => getCfoMetrics(companyId, { from, to: today }), ZERO_METRICS),
+    sq(async () => {
+      const { data } = await supabase.from('sales').select('total_try:total, sale_date').eq('company_id', companyId).is('deleted_at', null).gte('sale_date', trailingFrom).lte('sale_date', trailingTo)
+      return (data ?? []) as Array<{ total_try: number; sale_date: string | null }>
+    }, [] as Array<{ total_try: number; sale_date: string | null }>),
+    sq(async () => {
+      const { data } = await supabase.from('expenses').select('amount_try, expense_date').eq('company_id', companyId).is('deleted_at', null).gte('expense_date', trailingFrom).lte('expense_date', trailingTo)
+      return (data ?? []) as Array<{ amount_try: number; expense_date: string | null }>
+    }, [] as Array<{ amount_try: number; expense_date: string | null }>),
+  ])
+
   const runway  = await sq(
     () => getRunwayForecast(companyId, {
       from, to: today, months: 12,
@@ -49,6 +72,33 @@ export async function ForecastTab({ userId: _userId, companyId }: Props) {
     }),
     ZERO_RUNWAY,
   )
+
+  // ── 3-scenario forecast ──────────────────────────────────────────────────────
+  const revenueByMonth = new Map<string, number>()
+  const expenseByMonth = new Map<string, number>()
+  for (const r of salesTrailingRes) {
+    const ym = (r.sale_date ?? '').slice(0, 7)
+    if (ym) revenueByMonth.set(ym, (revenueByMonth.get(ym) ?? 0) + Number(r.total_try ?? 0))
+  }
+  for (const e of expTrailingRes) {
+    const ym = (e.expense_date ?? '').slice(0, 7)
+    if (ym) expenseByMonth.set(ym, (expenseByMonth.get(ym) ?? 0) + Number(e.amount_try ?? 0))
+  }
+  const trailing6: Array<{ revenue: number; expenses: number }> = []
+  for (let i = 6; i >= 1; i--) {
+    const d  = new Date(year, month - 1 - i, 1)
+    const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    trailing6.push({ revenue: revenueByMonth.get(ym) ?? 0, expenses: expenseByMonth.get(ym) ?? 0 })
+  }
+  // Monthly debt service from burn rate proxy (conservative: burn ≈ opex + debt service)
+  const monthlyDebtService = 0  // no separate tranche query here; included in burn
+  const nextMon = month === 12 ? 1 : month + 1
+  const nextYear = month === 12 ? year + 1 : year
+  let forecast: ForecastResult | null = null
+  try {
+    const inputs = buildForecastInputs(trailing6, metrics.cash.true_cash_position, monthlyDebtService, nextYear, nextMon)
+    forecast = computeForecast(inputs)
+  } catch { /* graceful degradation */ }
 
   const m           = metrics
   const r           = runway
@@ -171,6 +221,50 @@ export async function ForecastTab({ userId: _userId, companyId }: Props) {
               })}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Zone 3.5 — 3-Scenario Strategic Summary */}
+      {forecast && (
+        <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+          <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">12 Aylık Senaryo Analizi</div>
+          <div className="grid grid-cols-3 gap-3">
+            {([
+              { key: 'pessimistic' as const, label: '📉 Muhafazakâr',  bg: 'bg-red-50',     border: 'border-red-200',    netColor: 'text-red-600',    cashColor: 'text-red-700'    },
+              { key: 'base'        as const, label: '📊 Baz Senaryo',  bg: 'bg-gray-50',    border: 'border-gray-200',   netColor: 'text-gray-800',   cashColor: 'text-gray-900'   },
+              { key: 'optimistic'  as const, label: '📈 İyimser',       bg: 'bg-emerald-50', border: 'border-emerald-200',netColor: 'text-emerald-700',cashColor: 'text-emerald-800'},
+            ] as const).map(sc => {
+              const s = forecast!.summary[sc.key]
+              return (
+                <div key={sc.key} className={`rounded-xl p-3 border ${sc.bg} ${sc.border}`}>
+                  <div className="text-[10px] font-bold text-gray-500 mb-2">{sc.label}</div>
+                  <div className="space-y-1.5">
+                    <div>
+                      <div className="text-[9px] text-gray-400 uppercase tracking-wide">12A Toplam Gelir</div>
+                      <div className="text-sm font-black tabular-nums text-gray-900">{fmtCompact(s.totalRevenue)}</div>
+                    </div>
+                    <div>
+                      <div className="text-[9px] text-gray-400 uppercase tracking-wide">Net Kâr</div>
+                      <div className={`text-sm font-black tabular-nums ${sc.netColor}`}>{fmtCompact(Math.abs(s.totalNet))}{s.totalNet < 0 ? ' (zarar)' : ''}</div>
+                    </div>
+                    <div>
+                      <div className="text-[9px] text-gray-400 uppercase tracking-wide">Dönem Sonu Nakit</div>
+                      <div className={`text-sm font-black tabular-nums ${sc.cashColor}`}>{fmtCompact(Math.abs(s.endCash))}{s.endCash < 0 ? ' (—)' : ''}</div>
+                    </div>
+                    {s.runwayEndMonth && (
+                      <div className="text-[9px] text-red-600 font-semibold mt-1">⚠ {s.runwayEndMonth}&apos;de nakit tükeniyor</div>
+                    )}
+                    {!s.runwayEndMonth && (
+                      <div className="text-[9px] text-emerald-600 font-semibold mt-1">✓ 12 ay boyunca nakit pozitif</div>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+          <div className="mt-2 text-[10px] text-gray-400">
+            Baz senaryo: son 6 ay ortalaması · İyimser: +%15 gelir büyümesi · Muhafazakâr: -%20 gelir baskısı
+          </div>
         </div>
       )}
 
