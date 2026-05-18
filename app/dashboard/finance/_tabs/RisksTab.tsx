@@ -1,15 +1,23 @@
 // ── RisksTab — Alacak Riski ve Konsantrasyon Analizi ─────────────────────────
 //
-// Powered by lib/finance/risk-engine.ts
+// Powered by lib/finance/risk-engine.ts + lib/engines/anomaly.engine.ts
 //
 // Zones:
 //   1. Risk özeti (4 KPIs: total, overdue, concentration, HHI)
 //   2. Konsantrasyon sinyali (top 5 + bar)
 //   3. Müşteri yaşlandırma tablosu
-//   4. CFO tavsiyesi
+//   4. Anormallik Tespiti (statistical revenue + expense anomalies)
+//   5. CFO tavsiyesi
 
-import { getRiskEngineResult } from '@/lib/finance/risk-engine'
-import { fmtTRY as fmt }       from '@/lib/format'
+import { getRiskEngineResult }   from '@/lib/finance/risk-engine'
+import {
+  detectRevenueAnomalies,
+  detectExpenseAnomalies,
+  type MonthlyRevenue,
+  type MonthlyExpense,
+} from '@/lib/engines/anomaly.engine'
+import { createClient }          from '@/lib/supabase-server'
+import { fmtTRY as fmt }         from '@/lib/format'
 function pct(v: number): string {
   return `%${(v * 100).toFixed(1).replace('.', ',')}`
 }
@@ -25,15 +33,92 @@ const RISK_COLORS = {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
+const SEVERITY_CFG = {
+  high:   { cls: 'bg-red-50 border-red-200 text-red-700',    icon: '🔴', label: 'Yüksek' },
+  medium: { cls: 'bg-amber-50 border-amber-200 text-amber-700', icon: '🟡', label: 'Orta'  },
+  low:    { cls: 'bg-gray-50 border-gray-200 text-gray-600',  icon: '⚪', label: 'Düşük' },
+} as const
+
+const CATEGORY_LABELS: Record<string, string> = {
+  general: 'Genel', rent: 'Kira', salary: 'Maaş', utilities: 'Faturalar',
+  marketing: 'Pazarlama', logistics: 'Lojistik', software: 'Yazılım',
+  equipment: 'Ekipman', tax: 'Vergi', interest: 'Faiz', other: 'Diğer',
+}
+
 interface Props { userId: string; companyId: string }
 
 export async function RisksTab({ userId: _userId, companyId }: Props) {
-  const risk = await getRiskEngineResult(companyId).catch(() => ({
-    asOf: new Date().toISOString().slice(0, 10),
-    totalOutstanding: 0, customerCount: 0, aging: [],
-    concentration: { top1_pct: 0, top3_pct: 0, hhi: 0, risk_level: 'low' as const },
-    overdueTotal: 0, overdue30Total: 0, overdue60Total: 0, overdue90Total: 0,
-  }))
+  const supabase = createClient()
+
+  // Build trailing 7-month range for anomaly engine
+  const anomalyMonths: string[] = []
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(); d.setMonth(d.getMonth() - i)
+    anomalyMonths.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`)
+  }
+  const anomalyFrom = anomalyMonths[0] + '-01'
+  const anomalyTo   = new Date().toISOString().slice(0, 10)
+
+  const [risk, salesAnomalyRes, expAnomalyRes] = await Promise.all([
+    getRiskEngineResult(companyId).catch(() => ({
+      asOf: new Date().toISOString().slice(0, 10),
+      totalOutstanding: 0, customerCount: 0, aging: [],
+      concentration: { top1_pct: 0, top3_pct: 0, hhi: 0, risk_level: 'low' as const },
+      overdueTotal: 0, overdue30Total: 0, overdue60Total: 0, overdue90Total: 0,
+    })),
+    // Revenue by month for anomaly engine
+    supabase.from('sales')
+      .select('total_try:total, sale_date')
+      .eq('company_id', companyId)
+      .is('deleted_at', null)
+      .gte('sale_date', anomalyFrom)
+      .lte('sale_date', anomalyTo)
+      .then(r => r.data ?? []),
+    // Expenses by category+month for anomaly engine
+    supabase.from('expenses')
+      .select('amount_try, expense_type, expense_date')
+      .eq('company_id', companyId)
+      .is('deleted_at', null)
+      .gte('expense_date', anomalyFrom)
+      .lte('expense_date', anomalyTo)
+      .then(r => r.data ?? []),
+  ])
+
+  // Build MonthlyRevenue input
+  const revByMonth: Record<string, number> = {}
+  for (const m of anomalyMonths) revByMonth[m] = 0
+  for (const s of salesAnomalyRes) {
+    const m = (s.sale_date as string | null)?.slice(0, 7) ?? ''
+    if (m) revByMonth[m] = (revByMonth[m] ?? 0) + Number(s.total_try ?? 0)
+  }
+  const monthlyRevenue: MonthlyRevenue[] = Object.entries(revByMonth)
+    .map(([month, revenue]) => ({ month, revenue }))
+    .sort((a, b) => a.month.localeCompare(b.month))
+
+  // Build MonthlyExpense input
+  const expMap: Record<string, Record<string, number>> = {}
+  for (const e of expAnomalyRes) {
+    const m   = (e.expense_date as string)?.slice(0, 7)
+    const cat = (e.expense_type as string) ?? 'general'
+    if (!m) continue
+    if (!expMap[cat]) expMap[cat] = {}
+    expMap[cat][m] = (expMap[cat][m] ?? 0) + Number(e.amount_try ?? 0)
+  }
+  const monthlyExpenses: MonthlyExpense[] = []
+  for (const [category, byMonth] of Object.entries(expMap)) {
+    for (const [month, amount] of Object.entries(byMonth)) {
+      monthlyExpenses.push({ month, category, amount })
+    }
+  }
+
+  const revenueAnomalies = detectRevenueAnomalies(monthlyRevenue)
+  const expenseAnomalies = detectExpenseAnomalies(monthlyExpenses)
+  const allAnomalies     = [...revenueAnomalies, ...expenseAnomalies]
+    .sort((a, b) => {
+      const rank = { high: 0, medium: 1, low: 2 }
+      return rank[a.severity] - rank[b.severity]
+    })
+    .slice(0, 8) // cap at 8 signals
 
   const riskCfg = RISK_COLORS[risk.concentration.risk_level]
   const overdueRate = risk.totalOutstanding > 0
@@ -212,7 +297,57 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
         </div>
       </div>
 
-      {/* Zone 4 — Guidance */}
+      {/* Zone 4 — Anomaly Detection */}
+      {allAnomalies.length > 0 && (
+        <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Anormallik Tespiti</div>
+              <div className="text-[10px] text-gray-400 mt-0.5">Son 6 ay istatistiksel sapma analizi · ±2σ eşiği</div>
+            </div>
+            <span className="text-[9px] font-black uppercase tracking-wide bg-violet-100 text-violet-700 px-2 py-0.5 rounded-lg">
+              {allAnomalies.filter(a => a.severity === 'high').length} yüksek · {allAnomalies.filter(a => a.severity === 'medium').length} orta
+            </span>
+          </div>
+          <div className="space-y-2">
+            {allAnomalies.map((a, i) => {
+              const cfg = SEVERITY_CFG[a.severity]
+              const typeLabel = a.type === 'revenue' ? 'Gelir' : `Gider — ${CATEGORY_LABELS[(a as { category?: string }).category ?? ''] ?? (a as { category?: string }).category ?? ''}`
+              const monthLabel = (() => {
+                const m = a.month
+                const [y, mo] = m.split('-').map(Number)
+                const names = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara']
+                return `${names[mo - 1]} ${String(y).slice(2)}`
+              })()
+              return (
+                <div key={i} className={`flex items-start gap-3 border rounded-xl px-3 py-2.5 ${cfg.cls}`}>
+                  <span className="flex-shrink-0 text-sm mt-0.5">{cfg.icon}</span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[10px] font-black uppercase tracking-wide">{typeLabel}</span>
+                      <span className="text-[9px] font-semibold opacity-60">{monthLabel}</span>
+                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md ${
+                        a.direction === 'spike'
+                          ? 'bg-orange-100 text-orange-700'
+                          : 'bg-blue-100 text-blue-700'
+                      }`}>
+                        {a.direction === 'spike' ? '▲ Ani Artış' : '▼ Ani Düşüş'}
+                        {' '}{Math.abs(a.deviation_pct).toFixed(0)}%
+                      </span>
+                    </div>
+                    <div className="text-[10px] text-gray-700 mt-0.5 leading-snug">{a.message}</div>
+                    <div className="text-[9px] text-gray-500 mt-0.5">
+                      Gerçekleşen: <strong>{fmt(a.actual)}</strong> · Beklenen ort.: {fmt(a.mean)}
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Zone 5 — Guidance */}
       <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
         <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">CFO Tavsiyesi</div>
         <ul className="space-y-1.5">
