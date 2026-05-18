@@ -2224,6 +2224,7 @@ declare
   v_qty_from_lot    numeric;
   v_sale_item_id    uuid;
   v_total_try       numeric;
+  v_revenue_try     numeric;
   v_kdv_amount_try  numeric(12,2) := 0;
 begin
   select * into v_proforma
@@ -2260,9 +2261,12 @@ begin
   from proforma_items pi
   where pi.proforma_id = p_proforma_id;
 
+  -- Revenue (net, excl KDV) in TRY
+  v_revenue_try := round(v_total_try - v_kdv_amount_try, 2);
+
   insert into sales (
     company_id, user_id, customer_id, bank_id, proforma_id,
-    sale_no, customer_name, currency, total, kdv_amount_try, payment_status,
+    sale_no, customer_name, currency, total, total_try, revenue_try, kdv_amount_try, payment_status,
     sale_date, due_date, notes, internal_notes,
     fx_usd, fx_eur, fx_try, fx_source, fx_rate_date, fx_rate_try,
     company_snapshot, customer_snapshot
@@ -2270,7 +2274,7 @@ begin
     v_proforma.company_id, p_user_id, v_proforma.customer_id,
     coalesce(p_bank_id, v_proforma.bank_id), p_proforma_id,
     v_sale_no, v_proforma.customer_name, v_proforma.currency,
-    v_total_try, v_kdv_amount_try, 'pending',
+    v_total_try, v_total_try, v_revenue_try, v_kdv_amount_try, 'pending',
     coalesce(p_sale_date, now()::date), p_due_date, p_notes, p_internal_notes,
     v_proforma.fx_usd, v_proforma.fx_eur, v_proforma.fx_try,
     v_proforma.fx_source, v_proforma.fx_rate_date, v_proforma.fx_rate_try,

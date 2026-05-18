@@ -96,18 +96,19 @@ export class SaleService {
         throw new AppError('RPC_FAILED', 'Dönüşüm hatası: sale_id alınamadı')
       }
 
-      // Post-conversion: if sale total_try is 0, compute from sale_items.line_total and patch.
-      // The live convert_proforma_to_sale function may not aggregate totals (schema mismatch).
-      // line_total in sale_items already includes KDV (it's copied from proforma_items.line_total).
+      // Post-conversion: ensure total, total_try, and revenue_try are populated.
+      // The RPC now sets these directly, but this guard handles legacy proformas where
+      // proforma.total was 0 (e.g. proformas created before the RPC fix).
+      // line_total in sale_items already includes KDV.
       try {
         const { data: saleCheck } = await supabase
           .from('sales')
-          .select('total_try:total, fx_rate_try')
+          .select('total, total_try, kdv_amount_try, fx_try')
           .eq('id', result.sale_id)
           .maybeSingle()
 
         if (saleCheck && (Number(saleCheck.total_try) === 0)) {
-          const fxRate = Number(saleCheck.fx_rate_try ?? 1) || 1
+          const fxRate = Number(saleCheck.fx_try ?? 1) || 1
 
           const { data: saleItemsFull } = await supabase
             .from('sale_items')
@@ -115,7 +116,7 @@ export class SaleService {
             .eq('sale_id', result.sale_id)
 
           if (saleItemsFull && saleItemsFull.length > 0) {
-            let total = 0
+            let lineSum = 0
             const patchOps: Promise<unknown>[] = []
 
             for (const item of saleItemsFull) {
@@ -132,25 +133,22 @@ export class SaleService {
                   )
                 }
               }
-              total += lineTotal
+              lineSum += lineTotal
             }
 
-            const total_try = Math.round(total * fxRate * 100) / 100
+            const total_try   = Math.round(lineSum * fxRate * 100) / 100
+            const kdv_try     = Number(saleCheck.kdv_amount_try ?? 0)
+            const revenue_try = Math.round((total_try - kdv_try) * 100) / 100
 
-            // Compute KDV amount (line_total includes KDV; subtract net subtotal to get KDV portion)
-            // Approximate: KDV = total - (total / 1.2) for 20% — but we don't know the rate per line.
-            // Use the total directly: kdv_amount_try = total_try - sum(qty*unit_price*(1-disc)) × fxRate
-            // For simplicity, patch only total_try; kdv_amount_try can remain 0 or computed later.
-
-            // Run line_total patches + sale total_try patch in parallel
+            // Patch total, total_try, and revenue_try — all three must be consistent
             await Promise.all([
               ...patchOps,
               supabase.from('sales')
-                .update({ total: total_try })   // use actual column name 'total' (not 'total_try')
+                .update({ total: total_try, total_try, revenue_try })
                 .eq('id', result.sale_id),
             ])
 
-            await logger.info(ctx, 'sale_convert:total_patched', { sale_id: result.sale_id, total_try })
+            await logger.info(ctx, 'sale_convert:total_patched', { sale_id: result.sale_id, total_try, revenue_try })
           }
         }
       } catch (patchErr) {
