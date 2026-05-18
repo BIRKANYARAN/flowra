@@ -101,6 +101,26 @@ async function deleteDBScenario(id: string): Promise<void> {
   } catch { /* non-fatal */ }
 }
 
+// ── Pure scenario compute (no React state — usable outside component) ─────────
+function computeScenario(sliders: SavedScenario['sliders'], baseline: Baseline) {
+  const revenue  = Math.max(0, baseline.revenue  * (1 + sliders.revChange  / 100))
+  const cogs     = Math.max(0, baseline.cogs     * (1 + sliders.cogsChange / 100))
+  const expenses = Math.max(0, baseline.expenses * (1 + sliders.expChange  / 100))
+  const debtSvc  = Math.max(0, baseline.monthlyDebtService * (1 + sliders.debtChange / 100))
+  const grossProfit    = revenue - cogs
+  const grossMarginPct = revenue > 0 ? grossProfit / revenue : 0
+  const ebitda         = grossProfit - expenses
+  const ebt            = ebitda - debtSvc
+  const tax            = ebt > 0 ? ebt * sliders.taxRateOverride / 100 : 0
+  const netIncome      = ebt - tax
+  const distributable  = Math.max(0, netIncome * 0.95) // after 5% legal reserve
+  const monthlyBurn    = expenses + debtSvc
+  const runwayMonths   = netIncome < 0 && monthlyBurn > 0
+    ? Math.max(0, revenue / monthlyBurn)
+    : null
+  return { revenue, cogs, grossProfit, grossMarginPct, expenses, debtSvc, ebitda, ebt, tax, netIncome, distributable, runwayMonths }
+}
+
 interface Props {
   period:   string
   baseline: Baseline
@@ -122,6 +142,19 @@ export function WhatIfClient({ period, baseline }: Props) {
   const [showSaveBox,  setShowSaveBox]  = useState(false)
   const [scenariosLoading, setScenariosLoading] = useState(true)
   const [saving,       setSaving]       = useState(false)
+
+  // ── Compare mode ──────────────────────────────────────────────────────────
+  const [compareMode,      setCompareMode]      = useState(false)
+  const [compareSelected,  setCompareSelected]  = useState<Set<string>>(new Set())
+
+  const toggleCompareSelect = useCallback((id: string) => {
+    setCompareSelected(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) { next.delete(id) }
+      else if (next.size < 5) { next.add(id) }
+      return next
+    })
+  }, [])
 
   // Load: try DB first, fall back to localStorage
   useEffect(() => {
@@ -458,16 +491,55 @@ export function WhatIfClient({ period, baseline }: Props) {
           {/* Saved scenarios list */}
           {(scenariosLoading || saved.length > 0) && (
             <div className="space-y-1.5">
-              <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 flex items-center gap-1.5">
-                Kayıtlı Senaryolar
-                {scenariosLoading && <span className="inline-block w-3 h-3 border border-gray-300 border-t-gray-500 rounded-full animate-spin" />}
-                {!scenariosLoading && saved.length > 0 && <span className="font-normal text-gray-300">({saved.length})</span>}
+              <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  Kayıtlı Senaryolar
+                  {scenariosLoading && <span className="inline-block w-3 h-3 border border-gray-300 border-t-gray-500 rounded-full animate-spin" />}
+                  {!scenariosLoading && saved.length > 0 && <span className="font-normal text-gray-300">({saved.length})</span>}
+                </div>
+                {!scenariosLoading && saved.length >= 2 && (
+                  <button
+                    onClick={() => { setCompareMode(v => !v); setCompareSelected(new Set()) }}
+                    className={`text-[9px] font-bold px-2 py-0.5 rounded-lg border transition-colors ${
+                      compareMode
+                        ? 'bg-primary-600 text-white border-primary-600'
+                        : 'border-gray-200 text-gray-500 hover:border-primary-300 hover:text-primary-600'
+                    }`}
+                  >
+                    {compareMode ? '✕ Kapat' : '⇄ Karşılaştır'}
+                  </button>
+                )}
               </div>
+
+              {compareMode && (
+                <div className="bg-primary-50 border border-primary-100 rounded-xl px-3 py-2 text-[9px] text-primary-600">
+                  Karşılaştırmak istediğiniz senaryoları seçin (maks. 5) → sağ panelde tablo görünür.
+                </div>
+              )}
+
               {saved.map(s => {
-                const netColor = s.summary.netIncome >= 0 ? 'text-emerald-700' : 'text-red-600'
+                const netColor    = s.summary.netIncome >= 0 ? 'text-emerald-700' : 'text-red-600'
+                const isSelected  = compareSelected.has(s.id)
+                const canSelect   = compareSelected.size < 5 || isSelected
                 return (
-                  <div key={s.id} className="bg-white border border-gray-100 rounded-xl px-3 py-2.5 flex items-center justify-between gap-2">
-                    <div className="min-w-0">
+                  <div key={s.id} className={`bg-white border rounded-xl px-3 py-2.5 flex items-center justify-between gap-2 transition-colors ${
+                    compareMode && isSelected ? 'border-primary-300 bg-primary-50/40' : 'border-gray-100'
+                  }`}>
+                    {compareMode && (
+                      <button
+                        onClick={() => canSelect && toggleCompareSelect(s.id)}
+                        className={`flex-shrink-0 w-4 h-4 rounded border transition-colors ${
+                          isSelected
+                            ? 'bg-primary-600 border-primary-600 text-white'
+                            : canSelect
+                              ? 'border-gray-300 hover:border-primary-400'
+                              : 'border-gray-200 opacity-40 cursor-not-allowed'
+                        }`}
+                      >
+                        {isSelected && <svg viewBox="0 0 12 12" fill="none" className="w-4 h-4 -m-px"><path d="M2 6l3 3 5-5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                      </button>
+                    )}
+                    <div className="min-w-0 flex-1">
                       <div className="text-[11px] font-bold text-gray-800 truncate">{s.name}</div>
                       <div className="text-[9px] text-gray-400 flex gap-2 mt-0.5 flex-wrap">
                         <span className={netColor}>Net: {s.summary.netIncome >= 0 ? '+' : ''}₺{fmt(s.summary.netIncome)}</span>
@@ -479,22 +551,24 @@ export function WhatIfClient({ period, baseline }: Props) {
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-1.5 flex-shrink-0">
-                      <button
-                        onClick={() => restoreScenario(s)}
-                        title="Bu senaryoyu yükle"
-                        className="text-[9px] font-bold text-primary-600 hover:text-primary-700 border border-primary-200 rounded-lg px-2 py-1 hover:bg-primary-50 transition-colors"
-                      >
-                        Yükle
-                      </button>
-                      <button
-                        onClick={() => deleteSaved(s.id)}
-                        title="Sil"
-                        className="text-[9px] text-gray-400 hover:text-red-500 border border-gray-100 rounded-lg px-1.5 py-1 hover:bg-red-50 transition-colors"
-                      >
-                        ✕
-                      </button>
-                    </div>
+                    {!compareMode && (
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        <button
+                          onClick={() => restoreScenario(s)}
+                          title="Bu senaryoyu yükle"
+                          className="text-[9px] font-bold text-primary-600 hover:text-primary-700 border border-primary-200 rounded-lg px-2 py-1 hover:bg-primary-50 transition-colors"
+                        >
+                          Yükle
+                        </button>
+                        <button
+                          onClick={() => deleteSaved(s.id)}
+                          title="Sil"
+                          className="text-[9px] text-gray-400 hover:text-red-500 border border-gray-100 rounded-lg px-1.5 py-1 hover:bg-red-50 transition-colors"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )
               })}
@@ -504,8 +578,99 @@ export function WhatIfClient({ period, baseline }: Props) {
 
         {/* ── RIGHT: OUTPUT ───────────────────────────────────────────────── */}
         <div className="space-y-3">
-          <div className="text-[9px] font-black uppercase tracking-widest text-gray-400">Sonuçlar</div>
+          <div className="text-[9px] font-black uppercase tracking-widest text-gray-400">
+            {compareMode && compareSelected.size >= 2 ? 'Senaryo Karşılaştırması' : 'Sonuçlar'}
+          </div>
 
+          {/* ── COMPARE TABLE (shown when compare mode active + ≥2 selected) ─ */}
+          {compareMode && compareSelected.size >= 2 && (() => {
+            const cols = saved.filter(s => compareSelected.has(s.id))
+            const computed = cols.map(s => computeScenario(s.sliders, baseline))
+
+            // For each metric: find best index (highest for income/margin/distributable, lowest for debt/tax/cogs)
+            const bestIdx = (vals: number[], higherIsBetter: boolean) => {
+              let bestI = 0
+              vals.forEach((v, i) => {
+                if (higherIsBetter ? v > vals[bestI] : v < vals[bestI]) bestI = i
+              })
+              return bestI
+            }
+
+            const rowDef: Array<{ label: string; get: (r: ReturnType<typeof computeScenario>) => number; fmt: (v: number) => string; higherIsBetter: boolean; divider?: boolean }> = [
+              { label: 'Gelir',       get: r => r.revenue,        fmt: v => `₺${fmt(v)}`,       higherIsBetter: true  },
+              { label: 'Brüt Kâr',   get: r => r.grossProfit,    fmt: v => `₺${fmt(v)}`,       higherIsBetter: true  },
+              { label: 'Brüt Marj',  get: r => r.grossMarginPct, fmt: v => pct(v),              higherIsBetter: true, divider: true },
+              { label: 'Giderler',   get: r => r.expenses,        fmt: v => `₺${fmt(v)}`,       higherIsBetter: false },
+              { label: 'EBITDA',     get: r => r.ebitda,          fmt: v => `₺${fmt(v)}`,       higherIsBetter: true  },
+              { label: 'Borç Srv.',  get: r => r.debtSvc,         fmt: v => `₺${fmt(v)}`,       higherIsBetter: false },
+              { label: 'Vergi',      get: r => r.tax,             fmt: v => `₺${fmt(v)}`,       higherIsBetter: false, divider: true },
+              { label: 'Net Kâr',    get: r => r.netIncome,       fmt: v => `₺${fmt(v)}`,       higherIsBetter: true  },
+              { label: 'Dağıtım',   get: r => r.distributable,   fmt: v => `₺${fmt(v)}`,       higherIsBetter: true  },
+            ]
+            const hasRunway = computed.some(r => r.runwayMonths !== null)
+
+            return (
+              <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+                {/* Header row */}
+                <div className="px-3 py-2 bg-gray-50/60 border-b border-gray-100 grid gap-1" style={{ gridTemplateColumns: `5rem repeat(${cols.length}, 1fr)` }}>
+                  <div />
+                  {cols.map((s, i) => (
+                    <div key={s.id} className="text-center">
+                      <div className="text-[9px] font-black text-gray-700 truncate leading-tight" title={s.name}>{s.name}</div>
+                      <div className="text-[8px] text-gray-400">{i === bestIdx(computed.map(r => r.netIncome), true) ? '🏆 en iyi' : ''}</div>
+                    </div>
+                  ))}
+                </div>
+                {/* Metric rows */}
+                <div className="divide-y divide-gray-50">
+                  {rowDef.map(row => {
+                    const vals = computed.map(row.get)
+                    const best = bestIdx(vals, row.higherIsBetter)
+                    return (
+                      <div key={row.label} className={`grid gap-1 px-3 py-2 items-center ${row.divider ? 'border-t border-gray-100 bg-gray-50/30' : ''}`} style={{ gridTemplateColumns: `5rem repeat(${cols.length}, 1fr)` }}>
+                        <div className="text-[9px] font-semibold text-gray-500">{row.label}</div>
+                        {vals.map((v, i) => (
+                          <div key={i} className={`text-center text-[10px] font-black tabular-nums rounded-lg py-0.5 ${
+                            i === best
+                              ? row.higherIsBetter
+                                ? 'text-emerald-700 bg-emerald-50'
+                                : 'text-emerald-700 bg-emerald-50'
+                              : v < 0 ? 'text-red-600' : 'text-gray-700'
+                          }`}>
+                            {row.fmt(v)}
+                          </div>
+                        ))}
+                      </div>
+                    )
+                  })}
+                  {hasRunway && (
+                    <div className="grid gap-1 px-3 py-2 items-center" style={{ gridTemplateColumns: `5rem repeat(${cols.length}, 1fr)` }}>
+                      <div className="text-[9px] font-semibold text-gray-500">Runway</div>
+                      {computed.map((r, i) => (
+                        <div key={i} className={`text-center text-[10px] font-black tabular-nums ${r.runwayMonths === null ? 'text-emerald-600' : r.runwayMonths < 3 ? 'text-red-600' : 'text-amber-600'}`}>
+                          {r.runwayMonths === null ? '∞' : `${r.runwayMonths.toFixed(1)}ay`}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {/* Load best scenario CTA */}
+                <div className="px-3 py-2 border-t border-gray-100 bg-gray-50/40 flex items-center justify-between">
+                  <span className="text-[9px] text-gray-400">En iyi Net Kâr: <strong className="text-gray-700">{cols[bestIdx(computed.map(r => r.netIncome), true)]?.name}</strong></span>
+                  <button
+                    onClick={() => restoreScenario(cols[bestIdx(computed.map(r => r.netIncome), true)]!)}
+                    className="text-[9px] font-bold text-primary-600 border border-primary-200 px-2 py-1 rounded-lg hover:bg-primary-50 transition-colors"
+                  >
+                    Yükle →
+                  </button>
+                </div>
+              </div>
+            )
+          })()}
+
+          {/* Normal P&L (hidden in compare mode when table shown) */}
+          {!(compareMode && compareSelected.size >= 2) && (
+          <>
           {/* P&L Summary */}
           <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
             <div className="px-4 py-2.5 bg-gray-50/60 border-b border-gray-100">
@@ -591,7 +756,7 @@ export function WhatIfClient({ period, baseline }: Props) {
             </div>
           )}
 
-          {/* Cascade story — cause → chain reaction narrative */}
+          {/* Cascade story — cause → chain reaction narrative (only in normal mode) */}
           {cascadeStory && (
             <div className="bg-gray-50 border border-gray-200 rounded-xl overflow-hidden">
               <div className="px-4 py-2.5 border-b border-gray-100">
@@ -618,6 +783,8 @@ export function WhatIfClient({ period, baseline }: Props) {
                 ))}
               </div>
             </div>
+          )}
+          </> /* end normal mode output */
           )}
         </div>
       </div>
