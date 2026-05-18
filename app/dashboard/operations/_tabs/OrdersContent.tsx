@@ -283,6 +283,50 @@ export function OrdersContent(_props: Props) {
         </div>
       )}
 
+      {/* ── Intelligence Alerts ───────────────────────────────────────── */}
+      {!loading && orders.length > 0 && (() => {
+        const todayISO = new Date().toISOString().slice(0, 10)
+        const overdueOrders = orders.filter(o =>
+          o.status === 'ordered' && o.expected_date && o.expected_date < todayISO
+        )
+        const pendingTotal  = orders
+          .filter(o => o.status === 'ordered' || o.status === 'draft')
+          .reduce((s, o) => s + Number(o.total_try ?? 0), 0)
+
+        return (
+          <>
+            {overdueOrders.length > 0 && (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-start gap-3">
+                <span className="text-base mt-0.5">⚠</span>
+                <div className="flex-1">
+                  <div className="text-[11px] font-black uppercase tracking-wide text-amber-800">
+                    {overdueOrders.length} Sipariş Gecikmiş
+                  </div>
+                  <div className="text-xs text-amber-700 mt-0.5">
+                    Beklenen tarih geçti ama henüz teslim alınmadı:{' '}
+                    {overdueOrders.slice(0, 2).map(o => o.supplier_name).join(', ')}
+                    {overdueOrders.length > 2 ? ` ve ${overdueOrders.length - 2} diğer` : ''}.
+                  </div>
+                </div>
+              </div>
+            )}
+            {pendingTotal > 100_000 && (
+              <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 flex items-start gap-3">
+                <span className="text-base mt-0.5">ℹ</span>
+                <div className="flex-1">
+                  <div className="text-[11px] font-black uppercase tracking-wide text-blue-800">
+                    Büyük Bekleyen Sipariş Hacmi
+                  </div>
+                  <div className="text-xs text-blue-700 mt-0.5">
+                    Bekleyen (taslak + sipariş) toplam: {fmt(pendingTotal)}. Nakit akışı planlamasına dahil edilmeli.
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
+        )
+      })()}
+
       {/* ── List ──────────────────────────────────────────────────────── */}
       {error && (
         <div className="bg-red-50 border border-red-100 rounded-xl px-4 py-3 text-sm text-red-600">{error}</div>
