@@ -6,6 +6,7 @@ import type { Expense } from '@/types'
 import ExpensesClient, { type RecurringRow } from '@/app/dashboard/expenses/ExpensesClient'
 import { ExpensesCommandBar } from '@/app/dashboard/expenses/_components/ExpensesCommandBar'
 import { fmtTRY as fmt }      from '@/lib/format'
+import { detectExpenseAnomalies, type MonthlyExpense } from '@/lib/engines/anomaly.engine'
 
 function CommandBarSkeleton() {
   return (
@@ -107,6 +108,25 @@ export async function ExpensesContent({ companyId }: Props) {
     return rate <= 0 ? sum : sum + Number(e.amount_try) * rate / 100
   }, 0)
 
+  // ── Expense anomaly detection ──────────────────────────────────────────────
+  const anomalyExpMap: Record<string, Record<string, number>> = {}
+  for (const e of expenses) {
+    const ym  = (e.expense_date ?? e.created_at ?? '').slice(0, 7)
+    const cat = (e.category as string) ?? 'other'
+    if (!ym) continue
+    if (!anomalyExpMap[cat]) anomalyExpMap[cat] = {}
+    anomalyExpMap[cat][ym] = (anomalyExpMap[cat][ym] ?? 0) + Number(e.amount_try)
+  }
+  const monthlyExpenses: MonthlyExpense[] = []
+  for (const [category, byMonth] of Object.entries(anomalyExpMap)) {
+    for (const [month, amount] of Object.entries(byMonth)) {
+      monthlyExpenses.push({ month, category, amount })
+    }
+  }
+  const expenseAnomalies = detectExpenseAnomalies(monthlyExpenses)
+    .filter(a => a.severity === 'high')
+    .slice(0, 3)
+
   return (
     <div className="max-w-4xl space-y-6">
       <Suspense fallback={<CommandBarSkeleton />}>
@@ -130,6 +150,29 @@ export async function ExpensesContent({ companyId }: Props) {
           </div>
         ))}
       </div>
+
+      {/* Expense anomaly alerts */}
+      {expenseAnomalies.length > 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="text-[10px] font-black uppercase tracking-widest text-amber-700">⚠ Anormal Gider Artışı</span>
+            <span className="text-[9px] text-amber-600">(istatistiksel eşik aşıldı)</span>
+          </div>
+          <div className="space-y-1">
+            {expenseAnomalies.map((a, i) => (
+              <div key={i} className="flex items-start gap-2">
+                <span className="text-[11px] bg-amber-100 text-amber-800 font-semibold px-2 py-0.5 rounded-lg shrink-0">
+                  {CATEGORY_LABELS[a.category] ?? a.category}
+                </span>
+                <span className="text-[10px] text-amber-700">{a.message}</span>
+              </div>
+            ))}
+          </div>
+          <div className="text-[10px] text-amber-600 mt-1.5">
+            Detaylı analiz için Finans → Risk sekmesini inceleyin.
+          </div>
+        </div>
+      )}
 
       {/* Category breakdown */}
       {categories.length > 0 && (
