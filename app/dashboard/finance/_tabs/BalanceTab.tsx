@@ -163,8 +163,77 @@ export async function BalanceTab({ userId, companyId }: Props) {
   const liabEqRows  = buildLiabEquityRows(bs)
   const diff        = Math.abs(bs.imbalance_try)
 
+  // ── Financial health ratios ───────────────────────────────────────────────
+  const totalAssets      = bs.assets.total_assets_try
+  const totalLiabilities = bs.liabilities.total_liabilities_try
+  const currentLiab      = bs.liabilities.total_current_try
+  const equity           = bs.equity.total_equity_try
+  const cash             = bs.assets.cash_try
+  const currentAssets    = bs.assets.total_current_try
+
+  const leverageRatio    = totalAssets > 0 ? totalLiabilities / totalAssets : 0
+  const currentRatio     = currentLiab > 0 ? currentAssets / currentLiab : null
+  const negativeEquity   = equity < 0 && totalAssets > 0
+
   return (
     <div className="space-y-4">
+
+      {/* Negative equity — critical solvency alert */}
+      {negativeEquity && (
+        <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 flex items-start gap-3">
+          <span className="text-base mt-0.5">🔴</span>
+          <div className="flex-1">
+            <div className="text-[11px] font-black uppercase tracking-wide text-red-800">
+              Negatif Özsermaye — Teknik İflas Riski
+            </div>
+            <div className="text-xs text-red-700 mt-0.5">
+              Özsermaye <strong>{fmt(equity)}</strong>. Toplam yükümlülükler varlıkları aşıyor.
+              Sermaye artırımı veya borç yeniden yapılandırması değerlendirilmeli.
+            </div>
+          </div>
+          <Link href="/dashboard/partners" className="text-[10px] font-bold text-red-700 hover:text-red-800 underline underline-offset-2 shrink-0 mt-0.5 whitespace-nowrap">
+            Ortak Sermayesi →
+          </Link>
+        </div>
+      )}
+
+      {/* High leverage warning */}
+      {!negativeEquity && leverageRatio > 0.65 && totalLiabilities > 0 && (
+        <div className={`rounded-xl border px-4 py-3 flex items-start gap-3 ${
+          leverageRatio > 0.80 ? 'bg-red-50 border-red-200' : 'bg-amber-50 border-amber-200'
+        }`}>
+          <span className="text-base mt-0.5">⚠</span>
+          <div className="flex-1">
+            <div className={`text-[11px] font-black uppercase tracking-wide ${leverageRatio > 0.80 ? 'text-red-800' : 'text-amber-800'}`}>
+              {leverageRatio > 0.80 ? 'Yüksek Finansal Kaldıraç' : 'Kaldıraç Oranı Dikkat Sınırında'}
+            </div>
+            <div className={`text-xs mt-0.5 ${leverageRatio > 0.80 ? 'text-red-700' : 'text-amber-700'}`}>
+              Toplam borç/varlık oranı <strong>%{(leverageRatio * 100).toFixed(0)}</strong>.
+              Yabancı kaynaklar: {fmt(totalLiabilities)} · Özsermaye: {fmt(equity)}.
+              {leverageRatio > 0.80 ? ' Kredi kapasitesi sınırlı.' : ' Borç yönetimine dikkat.'}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Low current ratio warning */}
+      {currentRatio !== null && currentRatio < 1.0 && currentLiab > 10_000 && (
+        <div className="bg-orange-50 border border-orange-300 rounded-xl px-4 py-3 flex items-start gap-3">
+          <span className="text-base mt-0.5">⚠</span>
+          <div className="flex-1">
+            <div className="text-[11px] font-black uppercase tracking-wide text-orange-800">
+              Düşük Likidite — Cari Oran {currentRatio.toFixed(2)}
+            </div>
+            <div className="text-xs text-orange-700 mt-0.5">
+              Dönen varlıklar ({fmt(currentAssets)}) kısa vadeli borçları ({fmt(currentLiab)}) karşılamıyor.
+              Nakit: {fmt(cash)} · Alacaklar: {fmt(bs.assets.receivables_try)}.
+            </div>
+          </div>
+          <Link href="/dashboard/finance?tab=cashflow" className="text-[10px] font-bold text-orange-700 hover:text-orange-800 underline underline-offset-2 shrink-0 mt-0.5 whitespace-nowrap">
+            Nakit Akışı →
+          </Link>
+        </div>
+      )}
 
       {/* Header KPI strip */}
       <div className="grid grid-cols-3 gap-3">
