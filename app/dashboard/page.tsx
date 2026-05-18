@@ -32,6 +32,7 @@ import { FinanceService }            from '@/lib/services/finance.service'
 import { PartnerService }            from '@/lib/services/partner.service'
 import type { FinancialSummary, EqualizationResult } from '@/types'
 import { fmtTRY as fmt } from '@/lib/format'
+import { generateSituationSummary } from '@/lib/services/ai-summary.service'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -398,6 +399,17 @@ export default async function DashboardPage() {
   const decisionAlerts = evaluateAlerts(alertInputs)
   const topAlerts      = decisionAlerts.slice(0, 5)
 
+  // ── AI Situation Summary ───────────────────────────────────────────────────
+  // Rule-based fallback always fires when ANTHROPIC_API_KEY is absent.
+  const aiSummary = await generateSituationSummary({
+    situation,
+    topAlerts,
+    period:      label,
+    revenue:     fs.revenue_try,
+    netIncome:   fs.net_after_tax_try,
+    cashBalance,
+  })
+
   // ── Forecast Engine ───────────────────────────────────────────────────────
   const trailingData = trailing5.length > 0 ? trailing5 : [{ revenue: fs.revenue_try, expenses: fs.expenses_total_try }]
   const n = trailingData.length
@@ -596,6 +608,32 @@ export default async function DashboardPage() {
           </span>
         </Link>
       )}
+
+      {/* ── SİSTEM YORUMU — AI / rule-based narrative panel ──────────────────── */}
+      <div className="bg-white border border-gray-100 rounded-xl px-5 py-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Sistem Yorumu</span>
+          <span className={`text-[8px] font-semibold px-2 py-0.5 rounded-full ${
+            aiSummary.generated_by === 'ai'
+              ? 'bg-violet-50 text-violet-600'
+              : 'bg-gray-100 text-gray-400'
+          }`}>
+            {aiSummary.generated_by === 'ai' ? `AI · ${aiSummary.model_version ?? 'claude'}` : 'kural tabanlı'}
+          </span>
+        </div>
+        <p className="text-sm text-gray-700 leading-relaxed mb-3">{aiSummary.summary_tr}</p>
+        <div className="flex flex-wrap gap-1.5 mb-3">
+          {aiSummary.key_factors.map((f, i) => (
+            <span key={i} className="text-[10px] bg-gray-50 border border-gray-100 text-gray-600 px-2 py-1 rounded-lg">
+              {f}
+            </span>
+          ))}
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-[9px] font-black uppercase tracking-widest text-primary-600">Öneri</span>
+          <span className="text-[11px] text-primary-700 font-medium">{aiSummary.recommendation}</span>
+        </div>
+      </div>
 
       {/* ── FINANCIAL INSTRUMENT STRIP ─────────────────────────────────────────── */}
       {/* One container border tint when a genuine crisis signal is active. No cell animations. */}
