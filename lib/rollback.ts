@@ -19,8 +19,10 @@
 // POST /api/rollback { entity_type, entity_id, reason }
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { createClient } from '@/lib/supabase-server'
+import { requireAuthContext } from '@/lib/auth-context'
 import { AppError }     from '@/types/errors'
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnySupabase = any
 import { logAudit, logAlert } from '@/lib/audit'
 import { StockService } from '@/lib/services/stock.service'
 import type { RequestContext } from '@/lib/logger'
@@ -70,8 +72,9 @@ export class RollbackService {
     movementId: string,
     reason:     string,
     ctx:        RequestContext,
+    clientOverride?: AnySupabase,
   ): Promise<RollbackResult> {
-    const supabase = createClient()
+    const supabase = requireAuthContext(clientOverride, 'RollbackService.reverseStockMovement')
 
     // 1. Fetch original movement in the resolved company scope.
     const { data: orig, error: fetchErr } = await supabase
@@ -141,8 +144,9 @@ export class RollbackService {
     companyId: string,
     expenseId: string,
     reason:    string,
+    clientOverride?: AnySupabase,
   ): Promise<RollbackResult> {
-    const supabase = createClient()
+    const supabase = requireAuthContext(clientOverride, 'RollbackService.reverseExpense')
 
     // 1. Fetch original (must be alive)
     const { data: orig, error: fetchErr } = await supabase
@@ -212,8 +216,9 @@ export class RollbackService {
     companyId: string,
     txId:   string,
     reason: string,
+    clientOverride?: AnySupabase,
   ): Promise<RollbackResult> {
-    const supabase = createClient()
+    const supabase = requireAuthContext(clientOverride, 'RollbackService.reversePartnerTransaction')
 
     // 1. Fetch original
     const { data: orig, error: fetchErr } = await supabase
@@ -299,18 +304,19 @@ export class RollbackService {
    * Routes to the right reversal method by entity_type.
    */
   static async dispatch(
-    userId: string,
-    companyId: string,
-    input:  RollbackInput,
-    ctx:    RequestContext,
+    userId:     string,
+    companyId:  string,
+    input:      RollbackInput,
+    ctx:        RequestContext,
+    clientOverride?: AnySupabase,
   ): Promise<RollbackResult> {
     switch (input.entityType) {
       case 'stock_movement':
-        return RollbackService.reverseStockMovement(userId, companyId, input.entityId, input.reason, ctx)
+        return RollbackService.reverseStockMovement(userId, companyId, input.entityId, input.reason, ctx, clientOverride)
       case 'expense':
-        return RollbackService.reverseExpense(userId, companyId, input.entityId, input.reason)
+        return RollbackService.reverseExpense(userId, companyId, input.entityId, input.reason, clientOverride)
       case 'partner_transaction':
-        return RollbackService.reversePartnerTransaction(userId, companyId, input.entityId, input.reason)
+        return RollbackService.reversePartnerTransaction(userId, companyId, input.entityId, input.reason, clientOverride)
       default:
         throw new AppError(
           'ROLLBACK_NOT_SUPPORTED',

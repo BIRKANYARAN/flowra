@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
         .select('outstanding_try, due_date, partner_id, annual_interest_rate')
         .eq('company_id', companyId)
         .eq('status', 'active'),
-      getCfoMetrics(companyId, { from, to }),
+      getCfoMetrics(companyId, { from, to }, supabase),
     ])
 
     const pnl     = pnlRes.status    === 'fulfilled' ? pnlRes.value : null

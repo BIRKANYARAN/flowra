@@ -4,13 +4,15 @@
 // Partner transaction methods.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { createClient } from '@/lib/supabase-server'
+import { requireAuthContext } from '@/lib/auth-context'
 import { logger, contextFromHeader } from '@/lib/logger'
 import { AppError } from '@/types/errors'
 import { logAudit, logAlert } from '@/lib/audit'
 import { round2 } from '@/lib/calc'
 import type { PartnerTransaction } from '@/types/index'
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnySupabase = any
 type Ctx = ReturnType<typeof contextFromHeader>
 
 export class PartnerTransactionService {
@@ -28,11 +30,12 @@ export class PartnerTransactionService {
     },
     companyId: string,
     ctx?:      Ctx,
+    supabase?: AnySupabase,
   ): Promise<PartnerTransaction> {
-    const supabase = createClient()
+    const db = requireAuthContext(supabase, 'PartnerTransactionService.addTransaction')
 
     // Verify partner belongs to this company
-    const { data: partner, error: pErr } = await supabase
+    const { data: partner, error: pErr } = await db
       .from('partners')
       .select('id')
       .eq('id', partnerId)
@@ -67,7 +70,7 @@ export class PartnerTransactionService {
 
     const amount_try = round2(input.amount * input.fx_rate)
 
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('partner_transactions')
       .insert({
         partner_id:  partnerId,
@@ -118,11 +121,12 @@ export class PartnerTransactionService {
     companyId: string,
     partnerId: string,
     ctx?:      Ctx,
+    supabase?: AnySupabase,
   ): Promise<PartnerTransaction[]> {
-    const supabase = createClient()
+    const db = requireAuthContext(supabase, 'PartnerTransactionService.listTransactions')
 
     // Verify partner belongs to this company
-    const { data: partner, error: pErr } = await supabase
+    const { data: partner, error: pErr } = await db
       .from('partners')
       .select('id')
       .eq('id', partnerId)
@@ -134,7 +138,7 @@ export class PartnerTransactionService {
       throw new AppError('PARTNER_NOT_FOUND', 'Ortak bulunamadı', { partnerId })
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('partner_transactions')
       .select('*')
       .eq('partner_id', partnerId)

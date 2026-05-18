@@ -34,7 +34,7 @@
 //   • product.stock_qty writes  — legacy write path owns this column
 // ═══════════════════════════════════════════════════════════════════════════════
 
-import { createClient } from '@/lib/supabase-server'
+import { requireAuthContext } from '@/lib/auth-context'
 import { logger, type RequestContext } from '@/lib/logger'
 import { AppError } from '@/types/errors'
 import { round2 } from '@/lib/calc'
@@ -133,17 +133,19 @@ export class StockQueryService {
    *
    * movement_type is NOT used in arithmetic — only in the anomaly log.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static async getCurrentStock(
     userId:    string,
     companyId: string,
     productId: string,
-    ctx?:      RequestContext
+    ctx?:      RequestContext,
+    clientOverride?: any,
   ): Promise<StockSnapshot> {
     if (!userId || !productId) {
       throw new AppError('INVALID_INPUT', 'userId ve productId zorunludur')
     }
 
-    const supabase = createClient()
+    const supabase = requireAuthContext(clientOverride, 'StockQueryService.getCurrentStock')
     const { data, error } = await supabase
       .from('stock_movements')
       .select('qty, type, created_at')
@@ -202,12 +204,14 @@ export class StockQueryService {
    * `source_id` (= reference_id) so the UI can render a timeline without
    * having to know legacy field names.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static async getStockHistory(
     userId:    string,
     companyId: string,
     productId: string,
     opts:      { limit?: number; offset?: number } = {},
-    ctx?:      RequestContext
+    ctx?:      RequestContext,
+    clientOverride?: any,
   ): Promise<StockHistoryEntry[]> {
     if (!userId || !productId) {
       throw new AppError('INVALID_INPUT', 'userId ve productId zorunludur')
@@ -216,7 +220,7 @@ export class StockQueryService {
     const limit  = Math.min(Math.max(1, opts.limit  ?? DEFAULT_HISTORY_LIMIT), MAX_HISTORY_LIMIT)
     const offset = Math.max(0, opts.offset ?? 0)
 
-    const supabase = createClient()
+    const supabase = requireAuthContext(clientOverride, 'StockQueryService.getStockHistory')
     const { data, error } = await supabase
       .from('stock_movements')
       .select(
@@ -279,17 +283,19 @@ export class StockQueryService {
    * see which path ran. If you need both in one call, run both methods and
    * compare — that's exactly what `checkConsistency` does for qty.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static async calculateStockValue(
     userId:    string,
     companyId: string,
     productId: string,
-    ctx?:      RequestContext
+    ctx?:      RequestContext,
+    clientOverride?: any,
   ): Promise<StockValuation> {
     if (!userId || !productId) {
       throw new AppError('INVALID_INPUT', 'userId ve productId zorunludur')
     }
 
-    const supabase = createClient()
+    const supabase = requireAuthContext(clientOverride, 'StockQueryService.calculateStockValue')
 
     // ── Path 1: lot-based valuation (preferred) ─────────────────────────────
     const { data: lots, error: lotErr } = await supabase
@@ -425,17 +431,19 @@ export class StockQueryService {
    *   • Historic bug that wrote a movement but skipped the product update
    *     (or vice-versa).
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static async checkConsistency(
     userId:    string,
     companyId: string,
     productId: string,
-    ctx?:      RequestContext
+    ctx?:      RequestContext,
+    clientOverride?: any,
   ): Promise<StockConsistencyReport> {
     if (!userId || !productId) {
       throw new AppError('INVALID_INPUT', 'userId ve productId zorunludur')
     }
 
-    const supabase = createClient()
+    const supabase = requireAuthContext(clientOverride, 'StockQueryService.checkConsistency')
 
     const [mvRes, prodRes] = await Promise.all([
       supabase
@@ -462,7 +470,8 @@ export class StockQueryService {
     }
 
     const computed = round2(
-      (mvRes.data ?? []).reduce((s, r) => s + num((r as { qty: number | string }).qty), 0)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (mvRes.data ?? []).reduce((s: number, r: any) => s + num((r as { qty: number | string }).qty), 0)
     )
     const legacy = round2(num(prodRes.data?.stock_qty))
     const drift  = round2(computed - legacy)
@@ -484,14 +493,16 @@ export class StockQueryService {
    * and returns only the ones with drift. Keep batch size sane; RLS + index
    * on (user_id, product_id) keep this O(N rows) for one user.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static async listInconsistentProducts(
     userId:    string,
     companyId: string,
-    ctx?:      RequestContext
+    ctx?:      RequestContext,
+    clientOverride?: any,
   ): Promise<StockConsistencyReport[]> {
     if (!userId) throw new AppError('INVALID_INPUT', 'userId zorunludur')
 
-    const supabase = createClient()
+    const supabase = requireAuthContext(clientOverride, 'StockQueryService.listInconsistentProducts')
     const { data: products, error: prodErr } = await supabase
       .from('products')
       .select('id, stock_qty')

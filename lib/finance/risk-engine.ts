@@ -5,7 +5,10 @@
 // Data source: sales table (outstanding = not fully collected)
 // Output: customer-level aging buckets + concentration signals.
 
-import { createClient } from '@/lib/supabase-server'
+import { requireAuthContext } from '@/lib/auth-context'
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnySupabase = any
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -67,8 +70,9 @@ function _concentration(amounts: number[], total: number): ConcentrationSignal {
 
 export async function getRiskEngineResult(
   companyId: string,
+  clientOverride?: AnySupabase,
 ): Promise<RiskEngineResult> {
-  const supabase = createClient()
+  const supabase = requireAuthContext(clientOverride, 'getRiskEngineResult')
   const today    = new Date().toISOString().slice(0, 10)
 
   // Outstanding sales: unpaid/partial — compute outstanding in JS.

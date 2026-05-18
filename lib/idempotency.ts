@@ -12,7 +12,9 @@
 // Payload hash: when provided, the request body hash is stored alongside the key.
 // On cache hit, if the hash doesn't match the original, a 409 is signaled.
 
-import { createClient } from '@/lib/supabase-server'
+import { requireAuthContext } from '@/lib/auth-context'
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnySupabase = any
 import { AppError }     from '@/types/errors'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -82,9 +84,10 @@ export async function checkIdempotency(
   userId:       string,
   key:          string,
   operation:    IdempotencyOperation,
-  requestHash?: string    // if provided, mismatch with stored hash → 409
+  requestHash?: string,    // if provided, mismatch with stored hash → 409
+  clientOverride?: AnySupabase,
 ): Promise<IdempotencyRecord | null> {
-  const supabase = createClient()
+  const supabase = requireAuthContext(clientOverride, 'checkIdempotency')
   const { data } = await supabase
     .from('idempotency_keys')
     .select('status, result_id, result_data, request_hash')
@@ -125,9 +128,10 @@ export async function reserveIdempotencyKey(
   key:          string,
   operation:    IdempotencyOperation,
   ttlHours:     number = DEFAULT_TTL_HOURS,
-  requestHash?: string
+  requestHash?: string,
+  clientOverride?: AnySupabase,
 ): Promise<void> {
-  const supabase = createClient()
+  const supabase = requireAuthContext(clientOverride, 'reserveIdempotencyKey')
   await supabase
     .from('idempotency_keys')
     .upsert(
@@ -149,9 +153,10 @@ export async function commitIdempotencyKey(
   key:         string,
   operation:   IdempotencyOperation,
   resultId:    string,
-  resultData?: Record<string, unknown>
+  resultData?: Record<string, unknown>,
+  clientOverride?: AnySupabase,
 ): Promise<void> {
-  const supabase = createClient()
+  const supabase = requireAuthContext(clientOverride, 'commitIdempotencyKey')
   await supabase
     .from('idempotency_keys')
     .update({
@@ -168,9 +173,10 @@ export async function commitIdempotencyKey(
 export async function failIdempotencyKey(
   userId:    string,
   key:       string,
-  operation: IdempotencyOperation
+  operation: IdempotencyOperation,
+  clientOverride?: AnySupabase,
 ): Promise<void> {
-  const supabase = createClient()
+  const supabase = requireAuthContext(clientOverride, 'failIdempotencyKey')
   await supabase
     .from('idempotency_keys')
     .update({ status: 'error' })

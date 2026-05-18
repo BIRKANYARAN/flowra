@@ -4,11 +4,13 @@
 // Partner CRUD / management methods.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { createClient } from '@/lib/supabase-server'
+import { requireAuthContext } from '@/lib/auth-context'
 import { logger, contextFromHeader } from '@/lib/logger'
 import { AppError } from '@/types/errors'
 import type { Partner } from '@/types/index'
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnySupabase = any
 type Ctx = ReturnType<typeof contextFromHeader>
 
 export class PartnerCrudService {
@@ -17,9 +19,10 @@ export class PartnerCrudService {
     userId:    string,
     companyId: string,
     ctx?:      Ctx,
+    supabase?: AnySupabase,
   ): Promise<Partner[]> {
-    const supabase = createClient()
-    const { data, error } = await supabase
+    const db = requireAuthContext(supabase, 'PartnerCrudService.listPartners')
+    const { data, error } = await db
       .from('partners')
       .select('*')
       .eq('company_id', companyId)
@@ -40,6 +43,7 @@ export class PartnerCrudService {
     input: { name: string; share_ratio: number; is_active?: boolean; notes?: string },
     companyId: string,
     ctx?:      Ctx,
+    supabase?: AnySupabase,
   ): Promise<Partner> {
     if (input.share_ratio <= 0 || input.share_ratio > 1) {
       throw new AppError(
@@ -49,8 +53,8 @@ export class PartnerCrudService {
       )
     }
 
-    const supabase = createClient()
-    const { data, error } = await supabase
+    const db = requireAuthContext(supabase, 'PartnerCrudService.createPartner')
+    const { data, error } = await db
       .from('partners')
       .insert({
         user_id:     userId,

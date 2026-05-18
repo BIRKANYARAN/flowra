@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
       entityType: entity_type as RollbackEntityType,
       entityId:   entity_id,
       reason,
-    }, ctx)
+    }, ctx, supabase)
 
     return NextResponse.json(result, {
       status:  201,

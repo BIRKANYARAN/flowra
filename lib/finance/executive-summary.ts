@@ -12,6 +12,9 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import { createClient }            from '@/lib/supabase-server'
+import { requireAuthContext }      from '@/lib/auth-context'
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnySupabase = any
 import { safeSystemQuery }         from '@/lib/admin-db'
 import { getCfoMetrics }           from './financial-core'
 import { FinanceService }          from '@/lib/services/finance.service'
@@ -230,9 +233,9 @@ function currentMonthPeriod() {
 
 // ── FX loader ─────────────────────────────────────────────────────────────────
 
-async function loadFx(): Promise<FxSnapshot> {
+async function loadFx(clientOverride?: AnySupabase): Promise<FxSnapshot> {
   try {
-    const supabase = createClient()
+    const supabase = requireAuthContext(clientOverride, 'loadFx')
     const today    = new Date().toISOString().slice(0, 10)
     const now      = new Date().toISOString()
 
@@ -240,8 +243,10 @@ async function loadFx(): Promise<FxSnapshot> {
       .from('fx_rates').select('currency, buying, fetched_at')
       .in('currency', ['USD', 'EUR']).eq('rate_date', today)
 
-    const cu = (cached ?? []).find(r => r.currency === 'USD')
-    const ce = (cached ?? []).find(r => r.currency === 'EUR')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const cu = (cached ?? []).find((r: any) => r.currency === 'USD')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const ce = (cached ?? []).find((r: any) => r.currency === 'EUR')
     if (cu?.buying && ce?.buying) {
       return {
         USD: Number(cu.buying), EUR: Number(ce.buying), source: 'db',
@@ -265,8 +270,10 @@ async function loadFx(): Promise<FxSnapshot> {
     const { data: latest } = await supabase
       .from('fx_rates').select('currency, buying, rate_date, fetched_at')
       .in('currency', ['USD', 'EUR']).order('rate_date', { ascending: false }).limit(4)
-    const lu = (latest ?? []).find(r => r.currency === 'USD')
-    const le = (latest ?? []).find(r => r.currency === 'EUR')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const lu = (latest ?? []).find((r: any) => r.currency === 'USD')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const le = (latest ?? []).find((r: any) => r.currency === 'EUR')
     if (lu?.buying && le?.buying) {
       return {
         USD: Number(lu.buying), EUR: Number(le.buying), source: 'db',
@@ -304,8 +311,9 @@ const ZERO_METRICS: CfoMetrics = {
 export async function getExecutiveSummary(
   uid:       string,
   companyId: string,
+  clientOverride?: AnySupabase,
 ): Promise<ExecutiveSummary> {
-  const supabase          = createClient()
+  const supabase = requireAuthContext(clientOverride, 'getExecutiveSummary')
   const period            = currentMonthPeriod()
   const { from, to }      = period
   const daysInPeriod      = Math.max((new Date(to).getTime() - new Date(from).getTime()) / 86_400_000 + 1, 1)
@@ -320,7 +328,7 @@ export async function getExecutiveSummary(
     fxData,
   ] = await Promise.all([
 
-    sq(() => getCfoMetrics(companyId, { from, to }), null as CfoMetrics | null),
+    sq(() => getCfoMetrics(companyId, { from, to }, clientOverride), null as CfoMetrics | null),
 
     sq(() => FinanceService.getFinancialSummary(
       uid, companyId, { from, to },
@@ -355,7 +363,7 @@ export async function getExecutiveSummary(
       return (data ?? []) as TaskReminder[]
     }, [] as TaskReminder[]),
 
-    sq(() => loadFx(), EMPTY_FX),
+    sq(() => loadFx(clientOverride), EMPTY_FX),
   ])
 
   const metrics = rawMetrics ?? ZERO_METRICS

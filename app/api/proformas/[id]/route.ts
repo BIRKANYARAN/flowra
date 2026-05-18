@@ -15,7 +15,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   try {
     const body   = await req.json()
     const status = requireString(body.status, 'status')
-    const result = await ProformaService.updateStatus(uid, companyId, params.id, status, ctx)
+    const result = await ProformaService.updateStatus(uid, companyId, params.id, status, ctx, supabase)
     return NextResponse.json(result, { headers: { [REQUEST_ID_HEADER]: ctx.requestId } })
   } catch (err) {
     if (err instanceof ValidationError) {
@@ -32,7 +32,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   const { uid, companyId, supabase, ctx } = auth
 
   try {
-    await ProformaService.softDelete(uid, companyId, params.id, ctx)
+    await ProformaService.softDelete(uid, companyId, params.id, ctx, supabase)
     return NextResponse.json({ deleted: true }, { headers: { [REQUEST_ID_HEADER]: ctx.requestId } })
   } catch (err) {
     const { body, status } = toErrorResponse(err)

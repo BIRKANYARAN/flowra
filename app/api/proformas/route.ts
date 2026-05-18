@@ -39,7 +39,7 @@ export async function PATCH(req: NextRequest) {
 
   try {
     const body   = await req.json()
-    const result = await ProformaService.update(uid, companyId, body, ctx)
+    const result = await ProformaService.update(uid, companyId, body, ctx, supabase)
     return NextResponse.json(result, { headers: { [REQUEST_ID_HEADER]: ctx.requestId } })
   } catch (err) {
     if (err instanceof ValidationError) {

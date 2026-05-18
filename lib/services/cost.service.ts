@@ -267,8 +267,9 @@ export async function allocateCosts(purchaseId: string, clientOverride?: any): P
  * The numbers are the FROZEN snapshot stored at finalization. We never
  * recompute against current fx_rates; that would silently rewrite history.
  */
-export async function getCostBreakdown(productId: string, companyId?: string): Promise<ProductCostBreakdownEntry[]> {
-  const supabase = createClient()
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function getCostBreakdown(productId: string, companyId?: string, clientOverride?: any): Promise<ProductCostBreakdownEntry[]> {
+  const supabase = clientOverride ?? createClient()
 
   // Fetch lots created via Phase 3. We pull purchase fields via a join so a
   // single round-trip suffices.

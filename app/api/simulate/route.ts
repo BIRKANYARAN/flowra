@@ -101,6 +101,7 @@ export async function POST(req: NextRequest) {
       companyId,
       input,
       ctx,
+      supabase,
     )
 
     return NextResponse.json(

@@ -22,6 +22,9 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import { createClient } from '@/lib/supabase-server'
+import { requireAuthContext } from '@/lib/auth-context'
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnySupabase = any
 import {
   computeCashMetrics,
   computeBurnMetrics,
@@ -117,6 +120,7 @@ const _CASH_EXCLUDED = new Set([
 export async function getCashflowTimeline(
   companyId: string,
   opts?: CashflowTimelineOpts,
+  clientOverride?: AnySupabase,
 ): Promise<CashflowTimelineResult> {
   const pastMonths   = Math.min(Math.max(opts?.pastMonths   ?? 6, 1), 12)
   const futureMonths = Math.min(Math.max(opts?.futureMonths ?? 6, 1), 12)
@@ -125,7 +129,7 @@ export async function getCashflowTimeline(
   const endYM        = _addMonths(nowYM, futureMonths - 1)
   const windowSize   = pastMonths + futureMonths
 
-  const supabase = createClient()
+  const supabase = requireAuthContext(clientOverride, 'getCashflowTimeline')
 
   type MonthRow = {
     month: string; invoiced: number; collected: number; receivable: number
@@ -273,13 +277,14 @@ function r2(v: number) { return Math.round((v + Number.EPSILON) * 100) / 100 }
 export async function getDistributableCash(
   companyId: string,
   period?:   Partial<CorePeriod>,
+  clientOverride?: AnySupabase,
 ): Promise<DistributableCashResult> {
   const p   = period ?? {}
   const def = currentPeriod()
   const from = p.from ?? def.from
   const to   = p.to   ?? def.to
 
-  const supabase = createClient()
+  const supabase = requireAuthContext(clientOverride, 'getDistributableCash')
 
   const [paidSalesRes, paidExpRes, unpaidExpRes] = await Promise.all([
     supabase
@@ -349,8 +354,9 @@ export async function getDistributableCash(
 export async function getCfoMetrics(
   companyId: string,
   period?: Partial<CorePeriod>,
+  clientOverride?: AnySupabase,
 ): Promise<CfoMetrics> {
-  const supabase = createClient()
+  const supabase = requireAuthContext(clientOverride, 'getCfoMetrics')
   const now      = new Date()
   const today    = now.toISOString().slice(0, 10)
   const year     = now.getFullYear()
@@ -510,17 +516,23 @@ export async function getCfoMetrics(
   })
   if (errs.length > 0) errs.forEach(e => console.error('[financial-core/cfo]', (e as { message?: string }).message))
 
-  const allTimeReceived = (allTimeCollectedRes.data ?? []).reduce((s, r) => s + Number(r.total_try), 0)
-  const periodReceived  = (periodCollectedRes.data  ?? []).reduce((s, r) => s + Number(r.total_try), 0)
-  const periodInvoiced  = (periodInvoicedRes.data   ?? []).reduce((s, r) => s + Number(r.total_try), 0)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const allTimeReceived = (allTimeCollectedRes.data ?? []).reduce((s: number, r: any) => s + Number(r.total_try), 0)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const periodReceived  = (periodCollectedRes.data  ?? []).reduce((s: number, r: any) => s + Number(r.total_try), 0)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const periodInvoiced  = (periodInvoicedRes.data   ?? []).reduce((s: number, r: any) => s + Number(r.total_try), 0)
 
-  const ytdRevenue = (ytdRevenueRes.data ?? []).reduce((s, r) => s + Number(r.total_try), 0)
-  const ytdCogs    = (ytdCogsRes.data ?? []).reduce((s, r) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const ytdRevenue = (ytdRevenueRes.data ?? []).reduce((s: number, r: any) => s + Number(r.total_try), 0)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const ytdCogs    = (ytdCogsRes.data ?? []).reduce((s: number, r: any) => {
     const lot        = (r as { stock_lots?: { cost_price_try?: number } | null }).stock_lots
     const costPerUnit = Number((r as { cost_price_try?: number }).cost_price_try ?? lot?.cost_price_try ?? 0)
     return s + Number(r.qty_allocated ?? 0) * costPerUnit
   }, 0)
-  const ytdOpExpenses = (ytdExpensesRes.data ?? []).reduce((s, r) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const ytdOpExpenses = (ytdExpensesRes.data ?? []).reduce((s: number, r: any) => {
     const t = String((r as { expense_type?: string | null }).expense_type ?? '')
     if (t === 'partner_financing' || t === 'loan_repayment' || t === 'dividend' || t === 'internal_transfer') return s
     return s + Number(r.amount_try)
@@ -529,9 +541,12 @@ export async function getCfoMetrics(
 
   // salesVat from kdv_amount_try (populated by accounting_truth_v1 migration).
   // Rows without the column (pre-migration) default to 0 — safe graceful degradation.
-  const salesVat    = Math.round((ytdSalesVatRes.data ?? []).reduce((s, r) => s + Number((r as { kdv_amount_try?: number }).kdv_amount_try ?? 0), 0) * 100) / 100
-  const purchaseVat = (ytdPurchaseVatRes.data ?? []).reduce((s, r) => s + Number(r.amount_try ?? 0), 0)
-  const expenseVat  = (ytdExpenseVatRes.data ?? []).reduce((s, r) => s + Number(r.amount_try ?? 0) * Number(r.kdv ?? 0) / 100, 0)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const salesVat    = Math.round((ytdSalesVatRes.data ?? []).reduce((s: number, r: any) => s + Number((r as { kdv_amount_try?: number }).kdv_amount_try ?? 0), 0) * 100) / 100
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const purchaseVat = (ytdPurchaseVatRes.data ?? []).reduce((s: number, r: any) => s + Number(r.amount_try ?? 0), 0)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const expenseVat  = (ytdExpenseVatRes.data ?? []).reduce((s: number, r: any) => s + Number(r.amount_try ?? 0) * Number(r.kdv ?? 0) / 100, 0)
   const kdvNet      = salesVat - purchaseVat - expenseVat
 
   const cashAndBurn = computeCashMetrics({
@@ -549,7 +564,8 @@ export async function getCfoMetrics(
   const receivables = computeReceivableMetrics({
     periodInvoiced,
     periodCollected: periodReceived,
-    outstanding: (outstandingRes.data ?? []).map(r => ({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    outstanding: (outstandingRes.data ?? []).map((r: any) => ({
       amount_try:  Number(r.total_try ?? 0),
       sale_date:   String(r.sale_date ?? ''),
       due_date:    r.due_date ? String(r.due_date) : null,
@@ -601,8 +617,9 @@ export async function getCfoMetrics(
 export async function getRunwayForecast(
   companyId: string,
   opts?: { from?: string; to?: string; months?: number; taxObligation?: number },
+  clientOverride?: AnySupabase,
 ): Promise<RunwayForecastResponse> {
-  const supabase = createClient()
+  const supabase = requireAuthContext(clientOverride, 'getRunwayForecast')
   const now      = new Date()
   const today    = now.toISOString().slice(0, 10)
   const year     = now.getFullYear()
@@ -663,9 +680,12 @@ export async function getRunwayForecast(
       .in('expense_type', Array.from(BURN_EXPENSE_TYPES)),
   ])
 
-  const allTimeReceived = (allTimeCollectedRes.data ?? []).reduce((s, r) => s + Number(r.total_try), 0)
-  const periodReceived  = (periodCollectedRes.data  ?? []).reduce((s, r) => s + Number(r.total_try), 0)
-  const periodInvoiced  = (periodInvoicedRes.data   ?? []).reduce((s, r) => s + Number(r.total_try), 0)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const allTimeReceived = (allTimeCollectedRes.data ?? []).reduce((s: number, r: any) => s + Number(r.total_try), 0)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const periodReceived  = (periodCollectedRes.data  ?? []).reduce((s: number, r: any) => s + Number(r.total_try), 0)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const periodInvoiced  = (periodInvoicedRes.data   ?? []).reduce((s: number, r: any) => s + Number(r.total_try), 0)
 
   const cashMetrics = computeCashMetrics({
     allTimeReceived,
@@ -680,7 +700,8 @@ export async function getRunwayForecast(
   const receivableMetrics = computeReceivableMetrics({
     periodInvoiced,
     periodCollected: periodReceived,
-    outstanding: (outstandingRes.data ?? []).map(r => ({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    outstanding: (outstandingRes.data ?? []).map((r: any) => ({
       amount_try:  Number(r.total_try ?? 0),
       sale_date:   String(r.sale_date ?? ''),
       due_date:    r.due_date ? String(r.due_date) : null,
@@ -690,7 +711,8 @@ export async function getRunwayForecast(
   })
 
   const FREQ_FACTOR: Record<string, number> = { monthly: 1, quarterly: 1 / 3, yearly: 1 / 12 }
-  const recurringMonthlyCommit = (recurringActiveRes.data ?? []).reduce((s, r) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const recurringMonthlyCommit = (recurringActiveRes.data ?? []).reduce((s: number, r: any) => {
     const amtTry = Number(r.amount ?? 0) * Number(r.fx_rate ?? 1)
     return s + amtTry * (FREQ_FACTOR[r.frequency as string] ?? 0)
   }, 0)

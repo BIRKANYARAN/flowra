@@ -22,7 +22,7 @@ export async function GET(
   const { uid, companyId, supabase, ctx } = auth
 
   try {
-    const txs = await PartnerService.listTransactions(uid, companyId, params.id, ctx)
+    const txs = await PartnerService.listTransactions(uid, companyId, params.id, ctx, supabase)
     return NextResponse.json(txs, { headers: { [REQUEST_ID_HEADER]: ctx.requestId } })
   } catch (err) {
     const { body, status } = toErrorResponse(err)
@@ -62,6 +62,7 @@ export async function POST(
       },
       companyId,
       ctx,
+      supabase,
     )
 
     return NextResponse.json(tx, {

@@ -3,6 +3,7 @@
 // All proforma business logic lives here. Routes are thin callers only.
 
 import { createClient } from '@/lib/supabase-server'
+import { requireAuthContext } from '@/lib/auth-context'
 import { logger, type RequestContext } from '@/lib/logger'
 import {
   checkIdempotency, reserveIdempotencyKey,
@@ -308,13 +309,15 @@ export class ProformaService {
   // ── Update (draft-only gate) ─────────────────────────────────────────────
   // NOTE: FX snapshot is NOT refreshed on update — it was locked at creation.
   // Only content fields (customer, items, notes) can change.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static async update(
     userId:    string,
     companyId: string,
     input:     UpdateProformaInput,
-    ctx:       RequestContext
+    ctx:       RequestContext,
+    clientOverride?: any,
   ): Promise<{ id: string }> {
-    const supabase    = createClient()
+    const supabase    = requireAuthContext(clientOverride, 'ProformaService.update')
     const proforma_id = requireString(input.id, 'id')
 
     const { data: existing } = await supabase
@@ -382,12 +385,14 @@ export class ProformaService {
   //   sent     → sent (idempotent), draft, accepted, rejected
   //   accepted → sent, draft
   //   rejected → sent, draft
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static async updateStatus(
     userId:     string,
     companyId:  string,
     proformaId: string,
     newStatus:  string,
-    ctx:        RequestContext
+    ctx:        RequestContext,
+    clientOverride?: any,
   ): Promise<{ id: string; status: string }> {
     const TRANSITIONS: Record<string, string[]> = {
       draft:    ['sent', 'draft'],
@@ -398,7 +403,7 @@ export class ProformaService {
       accepted: ['sent', 'draft', 'accepted', 'approved'],
     }
 
-    const supabase = createClient()
+    const supabase = requireAuthContext(clientOverride, 'ProformaService.updateStatus')
     const { data: prf } = await supabase
       .from('proformas').select('id, status')
       .eq('id', proformaId).eq('company_id', companyId).is('deleted_at', null).maybeSingle()
@@ -447,8 +452,9 @@ export class ProformaService {
   }
 
   // ── Soft delete ───────────────────────────────────────────────────────────
-  static async softDelete(userId: string, companyId: string, proformaId: string, ctx: RequestContext): Promise<void> {
-    const supabase = createClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  static async softDelete(userId: string, companyId: string, proformaId: string, ctx: RequestContext, clientOverride?: any): Promise<void> {
+    const supabase = requireAuthContext(clientOverride, 'ProformaService.softDelete')
     const { data: prf } = await supabase
       .from('proformas').select('id, status')
       .eq('id', proformaId).eq('company_id', companyId).is('deleted_at', null).maybeSingle()

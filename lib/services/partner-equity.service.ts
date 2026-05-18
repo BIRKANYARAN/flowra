@@ -4,7 +4,7 @@
 // Pure equalization kernel + equity/balance DB-bound methods.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { createClient } from '@/lib/supabase-server'
+import { requireAuthContext } from '@/lib/auth-context'
 import { logger, contextFromHeader } from '@/lib/logger'
 import { AppError } from '@/types/errors'
 import { round2 } from '@/lib/calc'
@@ -154,6 +154,8 @@ export function computeEqualization(
 
 // ── DB-bound equity/balance methods ──────────────────────────────────────────
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnySupabase = any
 type Ctx = ReturnType<typeof contextFromHeader>
 
 export class PartnerEquityService {
@@ -162,10 +164,11 @@ export class PartnerEquityService {
     userId:    string,
     companyId: string,
     ctx?:      Ctx,
+    supabase?: AnySupabase,
   ): Promise<PartnerBalance[]> {
-    const supabase = createClient()
+    const db = requireAuthContext(supabase, 'PartnerEquityService.getPartnerBalances')
 
-    const { data: partners, error: pErr } = await supabase
+    const { data: partners, error: pErr } = await db
       .from('partners')
       .select('id, name, share_ratio, is_active')
       .eq('company_id', companyId)
@@ -179,9 +182,10 @@ export class PartnerEquityService {
 
     if (!partners || partners.length === 0) return []
 
-    const partnerIds = partners.map(p => p.id)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const partnerIds = partners.map((p: any) => p.id)
 
-    const { data: txs, error: txErr } = await supabase
+    const { data: txs, error: txErr } = await db
       .from('partner_transactions')
       .select('partner_id, tx_type, amount_try')
       .eq('company_id', companyId)
@@ -229,7 +233,8 @@ export class PartnerEquityService {
       }
     }
 
-    return partners.map(p => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return partners.map((p: any) => {
       const a = agg.get(p.id)!
       const net_loan           = round2(a.total_loaned - a.total_repaid)
       const total_distributed  = round2(a.total_salary + a.total_board_fee + a.total_dividend)
@@ -258,8 +263,9 @@ export class PartnerEquityService {
     userId:    string,
     companyId: string,
     ctx?:      Ctx,
+    supabase?: AnySupabase,
   ): Promise<LoanStatus[]> {
-    const balances = await PartnerEquityService.getPartnerBalances(userId, companyId, ctx)
+    const balances = await PartnerEquityService.getPartnerBalances(userId, companyId, ctx, supabase)
     return balances.map(b => ({
       partner_id:       b.partner_id,
       partner_name:     b.partner_name,
@@ -276,8 +282,9 @@ export class PartnerEquityService {
     companyId:      string,
     distributable?: number,
     ctx?:           Ctx,
+    supabase?:      AnySupabase,
   ): Promise<EqualizationResult> {
-    const balances = await PartnerEquityService.getPartnerBalances(userId, companyId, ctx)
+    const balances = await PartnerEquityService.getPartnerBalances(userId, companyId, ctx, supabase)
 
     const active = balances.filter(b => b.is_active)
 

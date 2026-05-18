@@ -47,6 +47,7 @@ export async function GET(req: NextRequest) {
       companyId,
       distributable,
       ctx,
+      supabase,
     )
 
     return NextResponse.json(result, { headers: { [REQUEST_ID_HEADER]: ctx.requestId } })

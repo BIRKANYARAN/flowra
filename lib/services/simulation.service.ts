@@ -35,7 +35,7 @@
 //     filtered out of the simulation. Only operating economics are modelled.
 // ═══════════════════════════════════════════════════════════════════════════════
 
-import { createClient } from '@/lib/supabase-server'
+import { requireAuthContext } from '@/lib/auth-context'
 import { logger, type RequestContext } from '@/lib/logger'
 import { AppError } from '@/types/errors'
 import {
@@ -308,11 +308,13 @@ export class SimulationService {
    *
    * No DB writes ever.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static async simulateScenario(
     userId:    string,
     companyId: string,
     input:     SimulationInput,
     ctx?:      RequestContext,
+    clientOverride?: any,
   ): Promise<SimulationResult> {
 
     // Validate first so we never hit the DB on garbage input
@@ -328,7 +330,7 @@ export class SimulationService {
     const effectivePrice = round4(input.sale_price * (1 - input.discount_rate / 100))
     const period         = buildSimulationPeriod(startMon, input.period_months)
 
-    const supabase = createClient()
+    const supabase = requireAuthContext(clientOverride, 'SimulationService.simulateScenario')
 
     // ── 1. Product cost: WAC of remaining stock ────────────────────────────
     const { data: lots, error: lotsErr } = await supabase

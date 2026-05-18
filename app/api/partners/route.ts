@@ -18,8 +18,8 @@ export async function GET(req: NextRequest) {
 
   try {
     const [partners, balances] = await Promise.all([
-      PartnerService.listPartners(uid, companyId, ctx),
-      PartnerService.getPartnerBalances(uid, companyId, ctx),
+      PartnerService.listPartners(uid, companyId, ctx, supabase),
+      PartnerService.getPartnerBalances(uid, companyId, ctx, supabase),
     ])
 
     // Merge balance data into partner list
@@ -72,6 +72,7 @@ export async function POST(req: NextRequest) {
       },
       companyId,
       ctx,
+      supabase,
     )
 
     return NextResponse.json(partner, {
