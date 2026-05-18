@@ -51,10 +51,10 @@ export async function CollectionsContent({ companyId }: Props) {
       .order('sale_date', { ascending: false })
       .range(0, 49),
 
-    // Full dataset for aging — lightweight select
+    // Full dataset for aging + debtor ranking — lightweight select
     supabase
       .from('sales')
-      .select('total:total, paid_amount, due_date, sale_date')
+      .select('customer_name, total:total, paid_amount, due_date, sale_date')
       .eq('company_id', companyId)
       .is('deleted_at', null)
       .in('payment_status', ['pending', 'partial', 'overdue']),
@@ -110,6 +110,29 @@ export async function CollectionsContent({ companyId }: Props) {
     sub:   b.count > 0 ? `${b.count} fatura` : 'Yok',
   }))
 
+  // ── Top outstanding debtors ────────────────────────────────────────────────
+  const debtorMap = new Map<string, { total: number; count: number; maxDays: number }>()
+  for (const row of (agingRes.data ?? [])) {
+    const remaining = Math.max(0, Number(row.total ?? 0) - Number(row.paid_amount ?? 0))
+    if (remaining <= 0) continue
+    const name = ((row as { customer_name?: string | null }).customer_name) ?? 'Bilinmiyor'
+    const refDate = (((row as { due_date?: string | null }).due_date ?? (row as { sale_date?: string | null }).sale_date) ?? '') as string
+    const daysOverdue = refDate
+      ? Math.max(0, Math.round((new Date(today).getTime() - new Date(refDate.slice(0, 10)).getTime()) / 86_400_000))
+      : 0
+    const prev = debtorMap.get(name) ?? { total: 0, count: 0, maxDays: 0 }
+    debtorMap.set(name, {
+      total: prev.total + remaining,
+      count: prev.count + 1,
+      maxDays: Math.max(prev.maxDays, daysOverdue),
+    })
+  }
+  const topDebtors = Array.from(debtorMap.entries())
+    .map(([name, d]) => ({ name, ...d }))
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 5)
+  const maxDebtorTotal = topDebtors[0]?.total ?? 1
+
   return (
     <div className="max-w-5xl space-y-3">
       <Suspense fallback={<CommandBarSkeleton />}>
@@ -118,6 +141,43 @@ export async function CollectionsContent({ companyId }: Props) {
 
       {/* Aging KPI strip */}
       <AgingStrip buckets={agingBuckets} grandTotal={grandTotal} />
+
+      {/* Top outstanding debtors */}
+      {topDebtors.length > 0 && grandTotal > 0 && (
+        <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+          <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4">En Yüksek Bakiyeli Müşteriler</div>
+          <div className="space-y-2.5">
+            {topDebtors.map(d => {
+              const barPct   = (d.total / maxDebtorTotal) * 100
+              const sharePct = grandTotal > 0 ? (d.total / grandTotal) * 100 : 0
+              const urgency  = d.maxDays > 60 ? 'text-red-600' : d.maxDays > 30 ? 'text-amber-600' : 'text-gray-400'
+              return (
+                <div key={d.name} className="flex items-center gap-3">
+                  <div className="w-32 text-xs text-gray-700 font-medium shrink-0 truncate" title={d.name}>{d.name}</div>
+                  <div className="flex-1">
+                    <div className="h-5 bg-gray-100 rounded-lg overflow-hidden">
+                      <div
+                        className={`h-5 rounded-lg ${d.maxDays > 60 ? 'bg-red-400' : d.maxDays > 30 ? 'bg-amber-400' : 'bg-primary-400'}`}
+                        style={{ width: `${barPct}%` }}
+                      />
+                    </div>
+                  </div>
+                  <div className="w-36 text-right shrink-0">
+                    <span className="text-xs font-bold tabular-nums text-gray-800">{fmt(d.total)}</span>
+                    <span className="text-[10px] text-gray-400 ml-1">%{sharePct.toFixed(0)}</span>
+                    {d.maxDays > 0 && (
+                      <span className={`text-[9px] ml-1 font-semibold ${urgency}`}>{d.maxDays}g</span>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+          <div className="mt-3 text-[9px] text-gray-300">
+            Bar rengi: kırmızı = 60+ gün · sarı = 30–60 gün · mavi = güncel
+          </div>
+        </div>
+      )}
 
       <CollectionsClient initialRows={initialRows} />
     </div>
