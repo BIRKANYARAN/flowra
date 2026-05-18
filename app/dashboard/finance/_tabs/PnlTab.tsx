@@ -151,7 +151,47 @@ export async function PnlTab({ userId, companyId }: Props) {
   const netVat       = salesVat - purchaseVat - expenseVat
   const ebitda       = grossProfit - expenses
 
+  // Month-over-month margin trend — historySummaries[4] = prior month, [5] = current
+  const priorSummary    = historySummaries[historySummaries.length - 2] ?? null
+  const priorRevenue    = Number(priorSummary?.revenue_try    ?? 0)
+  const priorGrossProfit = Number(priorSummary?.gross_profit_try ?? 0)
+  const currentMargin   = revenue > 0 ? grossProfit / revenue   : null
+  const priorMargin     = priorRevenue > 0 ? priorGrossProfit / priorRevenue : null
+  const marginDrop      = currentMargin !== null && priorMargin !== null && priorMargin > 0
+    ? priorMargin - currentMargin
+    : null
+
   return (
+    <div className="space-y-4">
+
+      {/* Month-over-month margin deterioration alert */}
+      {marginDrop !== null && marginDrop > 0.10 && (
+        <div className={`rounded-xl border px-4 py-3 flex items-start gap-3 ${
+          marginDrop > 0.20 ? 'bg-red-50 border-red-200' : 'bg-amber-50 border-amber-200'
+        }`}>
+          <span className="text-base mt-0.5">{marginDrop > 0.20 ? '🔴' : '⚠'}</span>
+          <div className="flex-1">
+            <div className={`text-[11px] font-black uppercase tracking-wide ${
+              marginDrop > 0.20 ? 'text-red-800' : 'text-amber-800'
+            }`}>
+              Brüt Marj Düşüşü — Geçen Aya Göre
+            </div>
+            <div className={`text-xs mt-0.5 ${marginDrop > 0.20 ? 'text-red-700' : 'text-amber-700'}`}>
+              Bu ay: <strong>%{((currentMargin ?? 0) * 100).toFixed(1)}</strong>{' '}
+              → Geçen ay: <strong>%{(priorMargin! * 100).toFixed(1)}</strong>{' '}
+              ({marginDrop > 0 ? '−' : '+'}{(Math.abs(marginDrop) * 100).toFixed(1)} puan).{' '}
+              SMM artışı veya fiyat baskısı olabilir.
+            </div>
+          </div>
+          <Link href="/dashboard/operations?tab=expenses"
+            className={`text-[10px] font-bold underline underline-offset-2 shrink-0 mt-0.5 whitespace-nowrap ${
+              marginDrop > 0.20 ? 'text-red-700 hover:text-red-800' : 'text-amber-700 hover:text-amber-800'
+            }`}>
+            Giderler →
+          </Link>
+        </div>
+      )}
+
     <div className="grid grid-cols-12 gap-4">
 
       {/* ── Left: P&L Waterfall ─────────────────────────────────────────────── */}
@@ -277,6 +317,7 @@ export async function PnlTab({ userId, companyId }: Props) {
           </Link>
         </div>
       </div>
+    </div>
     </div>
   )
 }
