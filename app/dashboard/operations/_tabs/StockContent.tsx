@@ -4,6 +4,7 @@ import { createClient }                             from '@/lib/supabase-server'
 import { fmtTRY, fmtDate as fmtDateShort, fmtDatetime as fmtDateTime } from '@/lib/format'
 import type { StockMovement }                       from '@/types'
 import StockAdjustClient                            from '@/app/dashboard/stocks/StockAdjustClient'
+import { StockQueryService }                        from '@/lib/services/stock-query.service'
 
 function holdingDays(entryDate: string): number {
   const today = new Date()
@@ -18,12 +19,12 @@ const TYPE_LABELS: Record<string, string> = {
 interface ProductRow { id: string; name: string; sku: string; unit: string; stock_qty: number; stock_alert_qty: number }
 interface StockLotRow { id: string; product_id: string; received_at: string; qty_remaining: number; cost_price: number; cost_currency: string; cost_fx_rate: number; cost_price_try: number }
 
-interface Props { companyId: string }
+interface Props { companyId: string; userId: string }
 
-export async function StockContent({ companyId }: Props) {
+export async function StockContent({ companyId, userId }: Props) {
   const supabase = createClient()
 
-  const [productsRes, movementsRes, lotsRes] = await Promise.all([
+  const [productsRes, movementsRes, lotsRes, inconsistencies] = await Promise.all([
     supabase
       .from('products')
       .select('id, name, sku, unit, stock_qty, stock_alert_qty')
@@ -44,11 +45,14 @@ export async function StockContent({ companyId }: Props) {
       .gt('qty_remaining', 0)
       .is('deleted_at', null)
       .order('received_at', { ascending: true }),
+    StockQueryService.listInconsistentProducts(userId, companyId).catch(() => []),
   ])
 
   const products  = (productsRes.data  ?? []) as ProductRow[]
   const movements = (movementsRes.data ?? []) as StockMovement[]
   const lots      = (lotsRes.data      ?? []) as StockLotRow[]
+  // inconsistencies: products where stock_qty (legacy counter) ≠ Σ stock_movements.qty
+  const inconsistentItems = inconsistencies
 
   interface LotMeta extends StockLotRow { days: number; costTry: number }
 
@@ -81,10 +85,15 @@ export async function StockContent({ companyId }: Props) {
       {/* Portfolio summary strip */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
         {[
-          { label: 'Toplam Stok Değeri', value: fmtTRY(portfolioValueTry), sub: 'FIFO lot maliyeti bazlı',  color: 'text-gray-900' },
-          { label: 'Ürün Sayısı',        value: String(products.length),   sub: `${lots.length} açık lot`, color: 'text-gray-900' },
-          { label: 'Düşük Stok',         value: String(lowStockCount),     sub: 'Eşik altı ürün',           color: lowStockCount > 0 ? 'text-amber-700' : 'text-gray-400' },
-          { label: 'Stok Tükenmiş',      value: String(zeroStockCount),    sub: 'Sıfır veya negatif',       color: zeroStockCount > 0 ? 'text-red-600' : 'text-gray-400' },
+          { label: 'Toplam Stok Değeri', value: fmtTRY(portfolioValueTry),      sub: 'FIFO lot maliyeti bazlı',  color: 'text-gray-900' },
+          { label: 'Ürün Sayısı',        value: String(products.length),         sub: `${lots.length} açık lot`, color: 'text-gray-900' },
+          { label: 'Düşük Stok',         value: String(lowStockCount),           sub: 'Eşik altı ürün',           color: lowStockCount > 0 ? 'text-amber-700' : 'text-gray-400' },
+          {
+            label: 'Tutarsız Kayıt',
+            value: String(inconsistentItems.length),
+            sub:   inconsistentItems.length > 0 ? 'Hareket ≠ stok sayacı' : 'Tutarlı ✓',
+            color: inconsistentItems.length > 0 ? 'text-red-600' : 'text-gray-400',
+          },
         ].map((card, i) => (
           <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-gray-100' : ''}`}>
             <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{card.label}</div>
@@ -93,6 +102,39 @@ export async function StockContent({ companyId }: Props) {
           </div>
         ))}
       </div>
+
+      {/* Stock consistency warning — only shown when stock_qty counter diverges from movement sum */}
+      {inconsistentItems.length > 0 && (
+        <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+          <div className="text-[10px] font-black uppercase tracking-widest text-red-700 mb-2">
+            ⚠ Stok Tutarsızlığı — {inconsistentItems.length} Ürün
+          </div>
+          <div className="space-y-1.5">
+            {inconsistentItems.map(item => (
+              <div key={item.product_id} className="flex items-start gap-2 text-[11px] text-red-800">
+                <span className="shrink-0 mt-px">•</span>
+                <span>
+                  <span className="font-bold">
+                    {products.find(p => p.id === item.product_id)?.name ?? item.product_id}
+                  </span>
+                  {' '}— Hareket toplamı:{' '}
+                  <span className="font-semibold">{item.computed_qty.toLocaleString('tr-TR', { maximumFractionDigits: 3 })}</span>
+                  {' '}· Stok sayacı:{' '}
+                  <span className="font-semibold">{item.legacy_qty.toLocaleString('tr-TR', { maximumFractionDigits: 3 })}</span>
+                  {' '}· Fark:{' '}
+                  <span className={`font-black ${item.drift > 0 ? 'text-emerald-700' : 'text-red-700'}`}>
+                    {item.drift > 0 ? '+' : ''}{item.drift.toLocaleString('tr-TR', { maximumFractionDigits: 3 })}
+                  </span>
+                </span>
+              </div>
+            ))}
+          </div>
+          <p className="mt-2 text-[10px] text-red-600">
+            Stok sayacı ile hareket geçmişi arasındaki fark FIFO maliyet hesaplamalarını etkileyebilir.
+            Manuel düzeltme için Stok Düzeltme aracını kullanın.
+          </p>
+        </div>
+      )}
 
       {/* FIFO Lot Panel */}
       {lots.length > 0 && (

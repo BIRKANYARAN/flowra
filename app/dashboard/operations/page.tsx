@@ -100,7 +100,7 @@ export default async function OperationsPage({ searchParams }: PageProps) {
       <Suspense fallback={<TabSkeleton />}>
         {activeTab === 'expenses' && <ExpensesContent companyId={companyId} />}
         {activeTab === 'catalog'  && <CatalogContent companyId={companyId} userId={userId} />}
-        {activeTab === 'stock'    && <StockContent   companyId={companyId} />}
+        {activeTab === 'stock'    && <StockContent   companyId={companyId} userId={userId} />}
         {activeTab === 'orders'   && <OrdersContent  companyId={companyId} />}
       </Suspense>
     </div>
