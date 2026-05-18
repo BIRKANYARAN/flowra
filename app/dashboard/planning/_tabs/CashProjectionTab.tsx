@@ -24,24 +24,51 @@ export async function CashProjectionTab({ companyId }: Props) {
   const year  = now.getFullYear()
   const month = now.getMonth() + 1  // 1-12
 
-  // ── Trailing 6 months actuals ──────────────────────────────────────────────
+  // ── Trailing 6 months actuals — 2 parallel queries (not 12 sequential) ───────
+  // Compute date range: from the start of (current month - 6) to end of last month.
+  const trailingStart = new Date(year, month - 1 - 6, 1)
+  const trailingFrom  = trailingStart.toISOString().slice(0, 10)
+  const trailingEnd   = new Date(year, month - 1, 0)  // last day of prior month
+  const trailingTo    = trailingEnd.toISOString().slice(0, 10)
+
+  const [salesRangeRes, expRangeRes] = await Promise.all([
+    supabase
+      .from('sales')
+      .select('total_try:total, sale_date')
+      .eq('company_id', companyId)
+      .is('deleted_at', null)
+      .gte('sale_date', trailingFrom)
+      .lte('sale_date', trailingTo),
+    supabase
+      .from('expenses')
+      .select('amount_try, expense_date')
+      .eq('company_id', companyId)
+      .is('deleted_at', null)
+      .gte('expense_date', trailingFrom)
+      .lte('expense_date', trailingTo),
+  ])
+
+  // Group by YYYY-MM in JS for the 6 months (oldest first)
+  const revenueByMonth  = new Map<string, number>()
+  const expenseByMonth  = new Map<string, number>()
+  for (const r of (salesRangeRes.data ?? [])) {
+    const ym = (r.sale_date as string).slice(0, 7)
+    revenueByMonth.set(ym, (revenueByMonth.get(ym) ?? 0) + Number(r.total_try ?? 0))
+  }
+  for (const r of (expRangeRes.data ?? [])) {
+    const ym = (r.expense_date as string).slice(0, 7)
+    expenseByMonth.set(ym, (expenseByMonth.get(ym) ?? 0) + Number(r.amount_try ?? 0))
+  }
+
+  // Build trailing array (6 complete months, oldest first)
   const trailing: Array<{ revenue: number; expenses: number }> = []
-  for (let i = 1; i <= 6; i++) {
-    const d     = new Date(year, month - 1 - i, 1)
-    const y     = d.getFullYear()
-    const m     = String(d.getMonth() + 1).padStart(2, '0')
-    const mFrom = `${y}-${m}-01`
-    const mTo   = new Date(y, d.getMonth() + 1, 0).toISOString().slice(0, 10)
-    try {
-      const [sRes, eRes] = await Promise.all([
-        supabase.from('sales').select('total_try:total').eq('company_id', companyId).is('deleted_at', null).gte('sale_date', mFrom).lte('sale_date', mTo),
-        supabase.from('expenses').select('amount_try').eq('company_id', companyId).is('deleted_at', null).gte('expense_date', mFrom).lte('expense_date', mTo),
-      ])
-      trailing.push({
-        revenue:  (sRes.data ?? []).reduce((s, r) => s + Number(r.total_try ?? 0), 0),
-        expenses: (eRes.data ?? []).reduce((s, r) => s + Number(r.amount_try ?? 0), 0),
-      })
-    } catch { trailing.push({ revenue: 0, expenses: 0 }) }
+  for (let i = 6; i >= 1; i--) {
+    const d  = new Date(year, month - 1 - i, 1)
+    const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    trailing.push({
+      revenue:  revenueByMonth.get(ym)  ?? 0,
+      expenses: expenseByMonth.get(ym)  ?? 0,
+    })
   }
 
   // ── Current month cash proxy (collected sales) ─────────────────────────────
