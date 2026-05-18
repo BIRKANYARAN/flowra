@@ -134,11 +134,71 @@ export async function CollectionsContent({ companyId }: Props) {
     .slice(0, 5)
   const maxDebtorTotal = topDebtors[0]?.total ?? 1
 
+  // ── Alert thresholds ─────────────────────────────────────────────────────────
+  const overdue90Total      = agingBuckets[3]?.total ?? 0
+  const overdue90Count      = agingBuckets[3]?.count ?? 0
+  const topDebtorShare      = grandTotal > 0 && topDebtors.length > 0 ? topDebtors[0].total / grandTotal : 0
+  const overdue60PlusTotal  = (agingBuckets[2]?.total ?? 0) + overdue90Total
+  const criticalRate        = grandTotal > 0 ? overdue60PlusTotal / grandTotal : 0
+
   return (
     <div className="max-w-5xl space-y-3">
       <Suspense fallback={<CommandBarSkeleton />}>
         <CollectionsCommandBar companyId={companyId} />
       </Suspense>
+
+      {/* 90+ day overdue critical alert */}
+      {overdue90Total > 0 && (
+        <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 flex items-start gap-3">
+          <span className="text-base mt-0.5">🔴</span>
+          <div className="flex-1">
+            <div className="text-[11px] font-black uppercase tracking-wide text-red-800">
+              90+ Gün Vadesi Geçmiş — {overdue90Count} Fatura
+            </div>
+            <div className="text-xs text-red-700 mt-0.5">
+              <strong>{fmt(overdue90Total)}</strong> tutarında alacak 90 günü aşmış.
+              Hukuki süreç veya şüpheli alacak karşılığı değerlendirilmeli.
+            </div>
+          </div>
+          <Link href="/dashboard/finance?tab=risks" className="text-[10px] font-bold text-red-700 hover:text-red-800 underline underline-offset-2 shrink-0 mt-0.5 whitespace-nowrap">
+            Risk Analizi →
+          </Link>
+        </div>
+      )}
+
+      {/* High debtor concentration alert (top debtor > 40% of total outstanding) */}
+      {topDebtorShare > 0.40 && grandTotal > 0 && (
+        <div className={`rounded-xl border px-4 py-3 flex items-start gap-3 ${
+          topDebtorShare > 0.60 ? 'bg-red-50 border-red-200' : 'bg-amber-50 border-amber-200'
+        }`}>
+          <span className="text-base mt-0.5">⚠</span>
+          <div className="flex-1">
+            <div className={`text-[11px] font-black uppercase tracking-wide ${topDebtorShare > 0.60 ? 'text-red-800' : 'text-amber-800'}`}>
+              Tahsilat Konsantrasyonu — {topDebtors[0].name}
+            </div>
+            <div className={`text-xs mt-0.5 ${topDebtorShare > 0.60 ? 'text-red-700' : 'text-amber-700'}`}>
+              Bu müşteri toplam açık alacağın <strong>%{Math.round(topDebtorShare * 100)}'ini</strong> oluşturuyor ({fmt(topDebtors[0].total)}).
+              {topDebtors[0].maxDays > 60 && ` ${topDebtors[0].maxDays} gündür ödeme bekliyor.`}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 60+ day overdue rate warning (only if no 90+ critical already shown) */}
+      {overdue90Total === 0 && criticalRate > 0.30 && grandTotal > 0 && (
+        <div className="bg-orange-50 border border-orange-300 rounded-xl px-4 py-3 flex items-start gap-3">
+          <span className="text-base mt-0.5">⚠</span>
+          <div className="flex-1">
+            <div className="text-[11px] font-black uppercase tracking-wide text-orange-800">
+              Tahsilat Yaşlanıyor — %{Math.round(criticalRate * 100)} Gecikmiş
+            </div>
+            <div className="text-xs text-orange-700 mt-0.5">
+              Açık alacakların {fmt(overdue60PlusTotal)} tutarındaki kısmı 60 günü aşmış.
+              Tahsilat sürecini hızlandırın.
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Aging KPI strip */}
       <AgingStrip buckets={agingBuckets} grandTotal={grandTotal} />
