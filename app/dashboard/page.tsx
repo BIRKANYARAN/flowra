@@ -309,7 +309,17 @@ export default async function DashboardPage() {
   // overestimates available cash and is NOT cash on hand.
   const monthlyBurn      = monthlyNet < 0 ? Math.abs(monthlyNet) : 0
   const dailyBurn        = monthlyBurn / 30
-  const runwayDays       = monthlyBurn > 0 ? Math.round((cashDistributable / monthlyBurn) * 30) : -1
+  // Runway when LOSING money: cashDistributable / monthlyBurn
+  // Runway when PROFITABLE: still show cash coverage in months (cashDistributable / monthly expenses)
+  // so the CEO can see "7 months of expenses covered" even when P&L is positive.
+  // runwayDays = -1 is ONLY used when cashDistributable < 0 (no distributable cash at all).
+  const runwayDays = (() => {
+    if (cashDistributable <= 0) return -1                          // no cash
+    if (monthlyBurn > 0)        return Math.round((cashDistributable / monthlyBurn) * 30) // burning
+    // Profitable: show cash-to-expenses coverage (how many months expenses are covered by cash)
+    const mExp = monthlyExpenses > 0 ? monthlyExpenses : null
+    return mExp ? Math.round((cashDistributable / mExp) * 30) : -1
+  })()
   const runwayMonths     = runwayDays >= 0 ? runwayDays / 30 : 999
 
   // ── Partner equalization ───────────────────────────────────────────────────
@@ -721,7 +731,7 @@ export default async function DashboardPage() {
               {runwayDays < 0  ? 'Banka bakiyesi girin'
                : runwayDays < 30 ? daysLeft(runwayDays)
                : runwayDays < 90 ? daysLeft(runwayDays)
-               : 'Sağlıklı'}
+               : monthlyBurn === 0 ? 'gider karşılığı' : 'Sağlıklı'}
             </div>
             {monthlyBurn > 0 && runwayDays >= 0 && runwayDays < 180 && (
               <div className="text-[10px] text-gray-400 mt-0.5">{fmt(monthlyBurn)}/ay eriyor</div>

@@ -123,6 +123,14 @@ export async function CFOTab({ userId, companyId }: Props) {
   const period    = { from: yearStart, to: today }
   const ctx       = makeRequestContext(userId)
 
+  // ── Error tracking — replaces silent sq() swallower ─────────────────────────
+  // sqt() wraps sq() and records which services failed so the UI can show a
+  // visible warning instead of silently rendering ₺0 everywhere.
+  const loadErrors: string[] = []
+  function sqt<T>(label: string, p: Promise<T>): Promise<T | null> {
+    return p.catch(() => { loadErrors.push(label); return null })
+  }
+
   const ZERO_METRICS: CfoMetrics = {
     cash:        { true_cash_position: 0, operational_cash: 0, restricted_cash: 0, distributable_cash: 0 },
     burn:        { monthly_burn_rate: 0, runway_months: null, runway_days: null, cash_exhaustion_date: null },
@@ -142,7 +150,7 @@ export async function CFOTab({ userId, companyId }: Props) {
   const dupFrom = (() => { const d = new Date(); d.setMonth(d.getMonth() - 3); return d.toISOString().slice(0, 10) })()
 
   // Period close status — sequential (checklist needs period object)
-  const periodData = await sq((async (): Promise<{ period: AccountingPeriod; checklist: PeriodCloseChecklist } | null> => {
+  const periodData = await sqt('Dönem Durumu', (async (): Promise<{ period: AccountingPeriod; checklist: PeriodCloseChecklist } | null> => {
     const period = await PeriodService.getCurrent(companyId, supabase)
     if (!period) return null
     const checklist = await PeriodService.buildCloseChecklist(userId, companyId, period, supabase)
@@ -151,11 +159,11 @@ export async function CFOTab({ userId, companyId }: Props) {
 
   const [balanceSheet, financialSummary, kdvResult, corporateTaxResult, partnerBalances, cfoMetrics, riskData, quarterlyReport, dupExpenses] =
     await Promise.all([
-      sq(BalanceSheetService.compute(userId, companyId, today, supabase)),
-      sq(FinanceService.getFinancialSummary(userId, companyId, period, undefined, ctx)),
-      sq(TaxService.getKdvNet(userId, companyId, period, ctx)),
-      sq(TaxService.getCorporateTax(userId, companyId, period, undefined, ctx)),
-      sq(PartnerService.getPartnerBalances(userId, companyId, ctx)),
+      sqt('Bilanço',          BalanceSheetService.compute(userId, companyId, today, supabase)),
+      sqt('Gelir Tablosu',    FinanceService.getFinancialSummary(userId, companyId, period, undefined, ctx)),
+      sqt('KDV',              TaxService.getKdvNet(userId, companyId, period, ctx)),
+      sqt('Kurumlar Vergisi', TaxService.getCorporateTax(userId, companyId, period, undefined, ctx)),
+      sqt('Ortak Bakiyeleri', PartnerService.getPartnerBalances(userId, companyId, ctx)),
       getCfoMetrics(companyId, { from, to: today }).catch(() => ZERO_METRICS),
       getRiskEngineResult(companyId).catch(() => null),
       getQuarterlyReport(userId, companyId, new Date().getFullYear()).catch(() => ZERO_QUARTERLY),
@@ -244,6 +252,26 @@ export async function CFOTab({ userId, companyId }: Props) {
 
   return (
     <div className="space-y-4">
+
+      {/* ── Veri yükleme hatası banner — yalnızca servis çağrıları başarısız olduğunda görünür ── */}
+      {loadErrors.length > 0 && (
+        <div className="flex items-start gap-2.5 px-3.5 py-2.5 bg-red-50 border border-red-200 rounded-xl text-xs">
+          <span className="text-red-500 text-base leading-none mt-0.5 shrink-0">⚠</span>
+          <div className="flex-1 min-w-0">
+            <span className="font-bold text-red-800">Bazı veriler yüklenemedi</span>
+            <span className="text-red-600 ml-2">
+              — {loadErrors.join(', ')} {loadErrors.length === 1 ? 'servisi' : 'servisleri'} yanıt vermedi.
+              Gösterilen değerler eksik veya ₺0 olabilir.
+            </span>
+          </div>
+          <a
+            href="/dashboard/finance?tab=cfo"
+            className="shrink-0 text-red-700 font-semibold hover:underline whitespace-nowrap"
+          >
+            Yenile →
+          </a>
+        </div>
+      )}
 
       {/* Header */}
       <div className="flex items-center justify-between">

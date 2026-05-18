@@ -782,8 +782,6 @@ export interface QuarterlyReportResult {
   ytd:      YtdSummary
 }
 
-const CORPORATE_TAX_RATE = 0.25
-
 /** Turkish Geçici Vergi due date: Q1→May17, Q2→Aug17, Q3→Nov17 */
 export function geciciDueDate(year: number, q: 1 | 2 | 3): string {
   const monthStr = q === 1 ? '05' : q === 2 ? '08' : '11'
@@ -806,7 +804,7 @@ export async function getQuarterlyReport(
 ): Promise<QuarterlyReportResult> {
   const { FinanceService } = await import('@/lib/services/finance.service')
   const { CORPORATE_TAX_RATE_TR } = await import('@/lib/services/finance-rules')
-  const taxRate = CORPORATE_TAX_RATE_TR ?? CORPORATE_TAX_RATE
+  const taxRate = CORPORATE_TAX_RATE_TR
 
   const targetYear = year ?? new Date().getFullYear()
   const today      = new Date().toISOString().slice(0, 10)

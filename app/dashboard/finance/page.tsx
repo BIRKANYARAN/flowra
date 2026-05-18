@@ -27,6 +27,7 @@ import { Suspense }          from 'react'
 import { createClient }      from '@/lib/supabase-server'
 import { resolveCompanyId }  from '@/lib/resolve-company'
 import { UnifiedTabNav }     from '@/app/dashboard/_shared/UnifiedTabNav'
+import { getGlMode }         from '@/lib/middleware/period-guard'
 
 import { PnlTab }        from './_tabs/PnlTab'
 import { BalanceTab }    from './_tabs/BalanceTab'
@@ -124,6 +125,10 @@ export default async function FinancePage({ searchParams }: PageProps) {
   const meta      = TAB_META[activeTab]
   const tabProps  = { userId, companyId }
 
+  // ── GL mode — show data source indicator ─────────────────────────────────
+  let glMode: string = 'shadow'
+  try { glMode = await getGlMode(companyId, supabase) } catch { /* non-fatal */ }
+
   // ── Render ────────────────────────────────────────────────────────────────────
   return (
     <div className="flex flex-col gap-5 w-full">
@@ -158,6 +163,28 @@ export default async function FinancePage({ searchParams }: PageProps) {
           <FinanceContextBar companyId={companyId} />
         </div>
       </div>
+
+      {/* ── GL mode indicator ─────────────────────────────────────────────────── */}
+      {glMode === 'shadow' && (
+        <div className="flex items-center gap-2.5 px-3.5 py-2.5 bg-amber-50 border border-amber-200 rounded-xl text-xs">
+          <span className="text-amber-500 text-base leading-none">⚠</span>
+          <div>
+            <span className="font-bold text-amber-800">Muhasebe kaynağı: Operasyonel tablolar</span>
+            <span className="text-amber-600 ml-2">— Çift taraflı muhasebe (GL) henüz aktif değil. Bilanço ve mizan boş görünebilir.</span>
+          </div>
+          <a href="/dashboard/cfo/reconciliation"
+            className="ml-auto shrink-0 text-amber-700 font-semibold hover:underline whitespace-nowrap">
+            GL Aktive Et →
+          </a>
+        </div>
+      )}
+      {glMode === 'parallel' && (
+        <div className="flex items-center gap-2.5 px-3.5 py-2.5 bg-blue-50 border border-blue-100 rounded-xl text-xs">
+          <span className="text-blue-400 text-base leading-none">ℹ</span>
+          <span className="font-bold text-blue-700">Muhasebe kaynağı: Paralel mod</span>
+          <span className="text-blue-500 ml-1">— GL journal yazılıyor ancak raporlama hâlâ operasyonel tablolardan.</span>
+        </div>
+      )}
 
       {/* ── Active tab content ────────────────────────────────────────────────── */}
       <Suspense fallback={<div className="mt-5"><TabSkeleton /></div>}>
