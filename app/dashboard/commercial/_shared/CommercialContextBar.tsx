@@ -12,6 +12,11 @@ interface CommercialPeek {
   cash: { true_cash_position: number }
 }
 
+interface ProformaSummary {
+  open_count:        number
+  pending_value_try: number
+}
+
 const TRY = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 })
 
 function fmtK(n: number): string {
@@ -50,18 +55,18 @@ function Reading({ label, value, sub, status, border }: ReadingProps) {
 }
 
 export function CommercialContextBar({ companyId }: { companyId: string }) {
-  const [data, setData]     = useState<CommercialPeek | null>(null)
-  const [proformaCount, setProformaCount] = useState<number | null>(null)
+  const [data,    setData]    = useState<CommercialPeek | null>(null)
+  const [pfSummary, setPfSummary] = useState<ProformaSummary | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     setLoading(true)
     Promise.all([
-      fetch('/api/cfo-metrics').then(r => r.ok ? r.json() : null),
+      fetch('/api/cfo-metrics').then(r => r.ok ? r.json() : null).catch(() => null),
       fetch('/api/proformas/summary').then(r => r.ok ? r.json() : null).catch(() => null),
-    ]).then(([metrics, proformaSummary]) => {
+    ]).then(([metrics, pf]) => {
       if (metrics) setData(metrics as CommercialPeek)
-      if (proformaSummary?.open_count != null) setProformaCount(proformaSummary.open_count)
+      if (pf?.open_count != null) setPfSummary(pf as ProformaSummary)
     }).catch(() => {}).finally(() => setLoading(false))
   }, [companyId])
 
@@ -100,8 +105,10 @@ export function CommercialContextBar({ companyId }: { companyId: string }) {
     },
     {
       label:  'PROFORMA',
-      value:  proformaCount != null ? String(proformaCount) : '—',
-      sub:    proformaCount != null ? 'açık teklif' : undefined,
+      value:  pfSummary != null ? String(pfSummary.open_count) : '—',
+      sub:    pfSummary != null && pfSummary.pending_value_try > 0
+        ? `${fmtK(pfSummary.pending_value_try)} beklemede`
+        : pfSummary != null ? 'açık teklif' : undefined,
       status: 'ok',
       border: true,
     },
