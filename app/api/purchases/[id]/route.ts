@@ -22,7 +22,7 @@ export async function GET(req: NextRequest, { params }: Ctx) {
   const { uid, companyId, supabase, ctx } = auth
 
   try {
-    const detail = await PurchaseService.getById(uid, companyId, params.id)
+    const detail = await PurchaseService.getById(uid, companyId, params.id, supabase)
 
     // Allocation is recomputed on read for drafts (lets the UI see the live
     // preview as the user edits). For finalized rows it's computed from the
@@ -51,7 +51,7 @@ export async function DELETE(req: NextRequest, { params }: Ctx) {
   const { uid, companyId, supabase, ctx } = auth
 
   try {
-    await PurchaseService.cancel(uid, params.id, companyId, ctx)
+    await PurchaseService.cancel(uid, params.id, companyId, ctx, supabase)
     return NextResponse.json({ ok: true }, { headers: { [REQUEST_ID_HEADER]: ctx.requestId } })
   } catch (err) {
     const { body, status } = toErrorResponse(err)

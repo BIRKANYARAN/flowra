@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
     const status = url.searchParams.get('status') as PurchaseStatus | null
     const filter = status && VALID_STATUS.has(status) ? status : undefined
 
-    const purchases = await PurchaseService.list(uid, companyId, filter)
+    const purchases = await PurchaseService.list(uid, companyId, filter, supabase)
     return NextResponse.json(
       { purchases, count: purchases.length },
       { headers: { [REQUEST_ID_HEADER]: ctx.requestId } }
@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
       notes:         typeof body.notes === 'string' ? body.notes : null,
       lines:         Array.isArray(body.lines) ? body.lines : [],
       costs:         Array.isArray(body.costs) ? body.costs : [],
-    }, companyId, ctx)
+    }, companyId, ctx, supabase)
 
     return NextResponse.json(result, { status: 201, headers: { [REQUEST_ID_HEADER]: ctx.requestId } })
   } catch (err) {

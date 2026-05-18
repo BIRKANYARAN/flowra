@@ -36,6 +36,8 @@ import type {
   PurchaseCostType,
   PurchaseStatus,
 } from '@/types'
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnySupabase = any
 
 const ALLOWED_CURRENCIES   = CURRENCIES_EXTENDED as readonly string[]
 const ALLOWED_COST_TYPES   = ['shipping','customs','tax','insurance','other'] as const
@@ -110,6 +112,7 @@ export class PurchaseService {
     input:     CreatePurchaseInput,
     companyId: string,
     ctx:       RequestContext,
+    clientOverride?: AnySupabase,
   ): Promise<{ purchase_id: string }> {
 
     if (!Array.isArray(input.lines) || input.lines.length === 0) {
@@ -122,7 +125,7 @@ export class PurchaseService {
       ? input.purchase_date
       : new Date().toISOString().slice(0, 10)
 
-    const supabase = createClient()
+    const supabase = clientOverride ?? createClient()
 
     // 1. Header
     const { data: header, error: hErr } = await supabase
@@ -202,8 +205,8 @@ export class PurchaseService {
    * Refuses if already finalized — the trigger would block us anyway, but a
    * clean error message is friendlier than a CHECK violation.
    */
-  static async cancel(userId: string, purchaseId: string, companyId: string, ctx: RequestContext): Promise<void> {
-    const supabase = createClient()
+  static async cancel(userId: string, purchaseId: string, companyId: string, ctx: RequestContext, clientOverride?: AnySupabase): Promise<void> {
+    const supabase = clientOverride ?? createClient()
     const { data: cur } = await supabase
       .from('purchases')
       .select('status')
@@ -247,9 +250,10 @@ export class PurchaseService {
     purchaseId: string,
     companyId:  string,
     ctx:        RequestContext,
+    clientOverride?: AnySupabase,
   ): Promise<{ purchase_id: string; allocation: PurchaseAllocationResult; lots_created: number }> {
 
-    const supabase = createClient()
+    const supabase = clientOverride ?? createClient()
 
     // 1. Verify it's a draft we own
     const { data: header, error: hErr } = await supabase
@@ -295,6 +299,7 @@ export class PurchaseService {
         },
         companyId,
         ctx,
+        clientOverride,
       )
 
       // 4. Stamp the new lot with purchase_item_id + allocated_cost_try.
@@ -360,8 +365,8 @@ export class PurchaseService {
    * List purchases for the current user. Lightweight — no embedded children;
    * the detail view refetches via getById().
    */
-  static async list(userId: string, companyId: string, status?: PurchaseStatus): Promise<Purchase[]> {
-    const supabase = createClient()
+  static async list(userId: string, companyId: string, status?: PurchaseStatus, clientOverride?: AnySupabase): Promise<Purchase[]> {
+    const supabase = clientOverride ?? createClient()
     let q = supabase
       .from('purchases')
       .select('*')
@@ -377,8 +382,8 @@ export class PurchaseService {
     return (data ?? []) as Purchase[]
   }
 
-  static async getById(userId: string, companyId: string, purchaseId: string) {
-    const supabase = createClient()
+  static async getById(userId: string, companyId: string, purchaseId: string, clientOverride?: AnySupabase) {
+    const supabase = clientOverride ?? createClient()
     const [{ data: purchase, error: pErr }, { data: items, error: iErr }, { data: costs, error: cErr }] =
       await Promise.all([
         supabase.from('purchases').select('*').eq('id', purchaseId).eq('company_id', companyId).maybeSingle(),

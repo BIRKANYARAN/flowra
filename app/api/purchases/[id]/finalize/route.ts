@@ -31,38 +31,39 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   if (!auth.ok) return auth.response
   const { uid, companyId, supabase, ctx } = auth
 
-  // Fetch purchase to get received_date for period guard
+  // Fetch purchase to get purchase_date for period guard
+  // NOTE: purchases table uses purchase_date (not received_date)
   const { data: purchase } = await supabase
     .from('purchases')
-    .select('id, received_date, total_cost_try, payment_status')
+    .select('id, purchase_date, currency, fx_rate')
     .eq('id', params.id)
     .eq('company_id', companyId)
     .maybeSingle()
 
   if (purchase) {
-    const receiveDate = purchase.received_date ?? new Date().toISOString().slice(0, 10)
-    const guard = await checkPeriodGuard(companyId, receiveDate, supabase)
+    const purchaseDate = purchase.purchase_date ?? new Date().toISOString().slice(0, 10)
+    const guard = await checkPeriodGuard(companyId, purchaseDate, supabase)
     if (guard.blocked) {
       return NextResponse.json({ error: guard.reason, code: 'PERIOD_LOCKED', type: 'BUSINESS' }, { status: 422 })
     }
   }
 
   try {
-    const result = await PurchaseService.finalize(uid, params.id, companyId, ctx)
+    const result = await PurchaseService.finalize(uid, params.id, companyId, ctx, supabase)
 
-    // Dual-write: inventory + COGS journal entries
-    if (purchase) {
-      const receiveDate = purchase.received_date ?? new Date().toISOString().slice(0, 10)
-      const periodId    = await resolvePeriodId(companyId, receiveDate, supabase)
-      const paidFromBank = purchase.payment_status === 'paid'
+    // Dual-write: inventory journal entry (DR 153 Ticari Mallar, CR 102 Bankalar / 320 Satıcılar)
+    // total cost comes from the allocation result (CostService computed it)
+    if (purchase && result.allocation.grand_total_try > 0) {
+      const purchaseDate = purchase.purchase_date ?? new Date().toISOString().slice(0, 10)
+      const periodId     = await resolvePeriodId(companyId, purchaseDate, supabase)
 
       await dualWrite({
         companyId, periodId, createdBy: uid, supabase,
         buildEntry: () => JournalEntryService.buildPurchaseEntry({
           id:             purchase.id,
-          received_date:  receiveDate,
-          cost_try:       Number(purchase.total_cost_try) || 0,
-          paid_from_bank: paidFromBank,
+          received_date:  purchaseDate,
+          cost_try:       result.allocation.grand_total_try,
+          paid_from_bank: false,  // assume payable until paid; can be overridden
         }),
       })
     }

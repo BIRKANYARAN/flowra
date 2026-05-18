@@ -161,11 +161,13 @@ export interface StockAdjustResult {
 
 export class StockService {
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static async adjust(
     userId:    string,
     input:     StockAdjustInput,
     companyId: string,
     ctx:       RequestContext,
+    clientOverride?: any,
   ): Promise<StockAdjustResult> {
 
     // 1. Idempotency
@@ -206,7 +208,7 @@ export class StockService {
         // We use lte (on-or-before) to handle weekends / public holidays when
         // TCMB doesn't publish. No live-rate call: historical rate must come from
         // the rate_date index to keep the cost snapshot frozen at the entry date.
-        const fxSupabase = createClient()
+        const fxSupabase = clientOverride ?? createClient()
         const { data: fxRow } = await fxSupabase
           .from('fx_rates')
           .select('buying')
@@ -233,7 +235,7 @@ export class StockService {
     await reserveIdempotencyKey(userId, input.idempotency_key, 'stock_adjust')
 
     try {
-      const supabase = createClient()
+      const supabase = clientOverride ?? createClient()
 
       // 2. Read current stock (scoped to company)
       const { data: product, error: fetchErr } = await supabase
@@ -395,8 +397,10 @@ export class StockService {
             .limit(4)
 
           if (fxRows) {
-            const usdRow = fxRows.find(r => r.currency === 'USD')
-            const eurRow = fxRows.find(r => r.currency === 'EUR')
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const usdRow = fxRows.find((r: any) => r.currency === 'USD')
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const eurRow = fxRows.find((r: any) => r.currency === 'EUR')
             fxUsdTry = usdRow ? Number(usdRow.buying) : 0
             fxEurTry = eurRow ? Number(eurRow.buying) : 0
           }
