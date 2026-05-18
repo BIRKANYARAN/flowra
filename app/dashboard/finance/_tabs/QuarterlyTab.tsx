@@ -6,6 +6,7 @@
 //   3. Geçici vergi schedule
 //   4. Monthly sales breakdown
 
+import Link                                         from 'next/link'
 import { getQuarterlyReport, type QuarterResult } from '@/lib/finance/financial-core'
 import { normalizeAnalytics } from '@/lib/normalize'
 import { createClient }       from '@/lib/supabase-server'
@@ -453,6 +454,19 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
             <p className="text-xs text-emerald-700 font-bold">✓ Tüm kontroller geçti — dönem kapatılabilir</p>
           </div>
         )}
+      </div>
+
+      {/* Cross-link → formal income statement report */}
+      <div className="flex items-center justify-between px-1">
+        <p className="text-[10px] text-gray-400 leading-relaxed">
+          Çeyreklik gelir, matrah ve geçici vergi özeti. Gelir tablosu ve P&amp;L detayı için resmi raporu inceleyin.
+        </p>
+        <Link
+          href="/dashboard/reports/income-statement"
+          className="shrink-0 ml-4 text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap"
+        >
+          Gelir Tablosu →
+        </Link>
       </div>
     </div>
   )

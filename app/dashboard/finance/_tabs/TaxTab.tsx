@@ -6,6 +6,7 @@
 //   Zone 3 — Geçici Vergi Takvimi (Q1-Q3 + year-end)
 //   Zone 4 — Matrah Analizi waterfall
 
+import Link               from 'next/link'
 import { FinanceService }   from '@/lib/services/finance.service'
 import { periodForMonth }   from '@/lib/services/finance-rules'
 import {
@@ -310,6 +311,26 @@ export async function TaxTab({ userId, companyId }: Props) {
           </div>
         </div>
       )}
+
+      {/* Cross-links → detailed CFO tax pages */}
+      <div className="grid grid-cols-2 gap-3">
+        <Link
+          href="/dashboard/cfo/tax/kdv"
+          className="bg-white border border-gray-100 rounded-xl px-4 py-3 hover:border-orange-200 transition-colors shadow-[0_1px_2px_rgba(17,24,39,0.04)]"
+        >
+          <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">KDV Detayı</div>
+          <div className="text-xs font-bold text-gray-900">KDV Özeti →</div>
+          <div className="text-[10px] text-gray-400 mt-0.5">Hesaplanan − İndirilecek = Net KDV · Beyanname hazırlığı</div>
+        </Link>
+        <Link
+          href="/dashboard/cfo/tax/corporate"
+          className="bg-white border border-gray-100 rounded-xl px-4 py-3 hover:border-amber-200 transition-colors shadow-[0_1px_2px_rgba(17,24,39,0.04)]"
+        >
+          <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Kurumlar Vergisi</div>
+          <div className="text-xs font-bold text-gray-900">KV Raporu →</div>
+          <div className="text-[10px] text-gray-400 mt-0.5">Geçici vergi takvimi · YTD kurumlar vergisi tahmini</div>
+        </Link>
+      </div>
     </div>
   )
 }
