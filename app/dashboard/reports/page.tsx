@@ -158,6 +158,44 @@ export default function ReportsHubPage() {
         ))}
       </div>
 
+      {/* Accountant CSV Export */}
+      <div className="bg-white border border-gray-100 rounded-xl p-4">
+        <div className="flex items-start gap-3 mb-3">
+          <span className="text-2xl flex-shrink-0">📋</span>
+          <div>
+            <div className="text-sm font-bold text-gray-900">Muhasebeci için CSV Aktarımı</div>
+            <div className="text-xs text-gray-400 mt-0.5">
+              Excel'de açılmaya hazır, noktalı virgülle ayrılmış · UTF-8 · Türkçe format · Dönem: {from} — {to}
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-3 flex-wrap">
+          <a
+            href={`/api/export/sales?from=${from}&to=${to}`}
+            download
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-xs font-semibold text-gray-700 hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 transition-colors"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M12 16l-4-4h3V4h2v8h3l-4 4z" />
+              <path d="M20 18H4v2h16v-2z" />
+            </svg>
+            Satış Listesi (.csv)
+          </a>
+          <a
+            href={`/api/export/expenses?from=${from}&to=${to}`}
+            download
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-xs font-semibold text-gray-700 hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 transition-colors"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M12 16l-4-4h3V4h2v8h3l-4 4z" />
+              <path d="M20 18H4v2h16v-2z" />
+            </svg>
+            Masraf Listesi (.csv)
+          </a>
+          <span className="text-[10px] text-gray-300 italic">Tarih aralığı değiştirmek için URL parametrelerini düzenleyin</span>
+        </div>
+      </div>
+
       {/* Quick links */}
       <div className="text-xs text-gray-400 flex items-center gap-4">
         <Link href="/dashboard/cfo" className="hover:text-primary-600 font-semibold">← CFO Cockpit</Link>
