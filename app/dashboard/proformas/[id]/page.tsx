@@ -8,7 +8,7 @@ import { ProformaDetailClient } from './client'
 import type { ClientItem, ClientPdfOpts } from './client'
 import { safeNum, safeStr } from '@/lib/normalize'
 import { calculateTotals } from '@/lib/calc'
-import { ProformaInvoice } from '@/components/pdf/ProformaInvoice'
+import { InvoiceSection } from './InvoiceSection'
 import { resolveCompanyId } from '@/lib/resolve-company'
 import { safeSystemQuery } from '@/lib/admin-db'
 
@@ -225,8 +225,8 @@ export default async function ProformaDetailPage({ params }: PageProps) {
           items={clientItems}
         />
 
-        {/* Invoice card — shared component */}
-        <ProformaInvoice
+        {/* Invoice card — client-only (ssr:false) to prevent SSR crash */}
+        <InvoiceSection
           proforma={{
             id: safeId,
             proforma_no: no,
