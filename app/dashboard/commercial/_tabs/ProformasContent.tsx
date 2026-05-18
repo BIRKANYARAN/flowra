@@ -13,10 +13,17 @@ export async function ProformasContent({ companyId }: Props) {
   let list: NormalizedProformaRow[] = []
   let fetchError = ''
 
+  // Pipeline aggregates
+  let pipelineValueTRY = 0
+  let sentCount        = 0
+  let acceptedCount    = 0
+  let convertedCount   = 0
+  let draftCount       = 0
+
   try {
     const { data, error } = await supabase
       .from('proformas')
-      .select('id, proforma_no, customer_name, total, currency, status, revision_no, created_at')
+      .select('id, proforma_no, customer_name, total, currency, fx_try, status, revision_no, created_at')
       .eq('company_id', companyId)
       .is('deleted_at', null)
       .order('created_at', { ascending: false })
@@ -27,6 +34,15 @@ export async function ProformasContent({ companyId }: Props) {
       for (const row of (data ?? [])) {
         const normalized = normalizeProformaRow(row)
         if (normalized) list.push(normalized)
+        // Aggregates
+        const valueTRY = row.currency === 'TRY'
+          ? Number(row.total ?? 0)
+          : Number(row.total ?? 0) * (Number((row as { fx_try?: number | null }).fx_try) || 1)
+        const s = row.status ?? 'draft'
+        if (s === 'sent')      { sentCount++;     pipelineValueTRY += valueTRY }
+        if (s === 'accepted')  { acceptedCount++; pipelineValueTRY += valueTRY }
+        if (s === 'converted') convertedCount++
+        if (s === 'draft')     draftCount++
       }
     }
   } catch {
@@ -35,9 +51,29 @@ export async function ProformasContent({ companyId }: Props) {
 
   if (fetchError) return <ErrorBanner msg={fetchError} />
 
+  const openCount = sentCount + acceptedCount
+
   return (
-    <div className="max-w-5xl">
-      <div className="flex items-center justify-between mb-4">
+    <div className="max-w-5xl space-y-4">
+      {/* KPI strip */}
+      {list.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+          {[
+            { label: 'Toplam Teklif',    value: String(list.length),   sub: 'tüm zamanlar',                         color: 'text-gray-900' },
+            { label: 'Pipeline Değeri',  value: openCount > 0 ? formatTRY(pipelineValueTRY) : '—', sub: `${openCount} açık teklif (gönderildi/onaylandı)`, color: openCount > 0 ? 'text-blue-700' : 'text-gray-400' },
+            { label: 'Satışa Döndü',     value: String(convertedCount), sub: convertedCount > 0 ? 'onaylı dönüşüm' : 'Henüz yok', color: convertedCount > 0 ? 'text-emerald-700' : 'text-gray-400' },
+            { label: 'Dönüşüm Oranı',   value: list.length > 0 ? `%${Math.round((convertedCount / list.length) * 100)}` : '—', sub: `${draftCount} taslak`, color: 'text-gray-700' },
+          ].map((card, i) => (
+            <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-gray-100' : ''}`}>
+              <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{card.label}</div>
+              <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
+              <div className="text-[10px] text-gray-400 mt-1 leading-tight">{card.sub}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="flex items-center justify-between">
         <p className="text-xs text-gray-400">{list.length} proforma kaydı</p>
         <div className="flex items-center gap-2">
           <Link
