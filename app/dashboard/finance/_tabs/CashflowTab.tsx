@@ -7,6 +7,7 @@
 //   4 — 12-month projection bar chart + monthly table
 //   5 — Scenario panel (client island)
 
+import Link              from 'next/link'
 import { CashflowChart }   from '@/components/dashboard/CashflowChart'
 import { ScenarioPanel }   from '@/components/dashboard/ScenarioPanel'
 import { getCashflowTimeline, getRunwayForecast, getCfoMetrics } from '@/lib/finance/financial-core'
@@ -244,6 +245,20 @@ export async function CashflowTab({ userId: _userId, companyId }: Props) {
         inputs={runway.inputs}
         baseRunwayMonths={runway.safe_months > 0 ? runway.safe_months : null}
       />
+
+      {/* Cross-link → formal 3-section cash flow statement */}
+      <div className="flex items-center justify-between px-1">
+        <p className="text-[10px] text-gray-400 leading-relaxed">
+          Bu görünüm nakit baskı ve runway analizini gösterir.
+          Muhasebe uyumlu nakit akış tablosu için resmi raporu inceleyin.
+        </p>
+        <Link
+          href="/dashboard/reports/cash-flow"
+          className="shrink-0 ml-4 text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap"
+        >
+          Nakit Akış Tablosu →
+        </Link>
+      </div>
     </div>
   )
 }

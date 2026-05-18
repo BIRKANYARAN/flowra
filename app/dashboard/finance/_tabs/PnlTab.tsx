@@ -6,6 +6,7 @@
 //   • Tahsilat vs fatura delta
 //   • Geçen aylar mini-trend (son 6 ay sparkline row)
 
+import Link                  from 'next/link'
 import { FinanceService }   from '@/lib/services/finance.service'
 import { periodForMonth }   from '@/lib/services/finance-rules'
 import { fmtTRY as fmt }   from '@/lib/format'
@@ -254,6 +255,20 @@ export async function PnlTab({ userId, companyId }: Props) {
             })}
           </div>
         </div>
+      </div>
+
+      {/* Cross-link → formal income statement report */}
+      <div className="flex items-center justify-between px-1 pt-1">
+        <p className="text-[10px] text-gray-400 leading-relaxed">
+          Bu görünüm cari ay tahakkuk bazlı P&amp;L&apos;i gösterir.
+          PDF dışa aktarım ve dönem karşılaştırması için resmi raporu inceleyin.
+        </p>
+        <Link
+          href="/dashboard/reports/income-statement"
+          className="shrink-0 ml-4 text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap"
+        >
+          Gelir Tablosu →
+        </Link>
       </div>
     </div>
   )
