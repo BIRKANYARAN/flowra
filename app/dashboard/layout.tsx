@@ -69,6 +69,32 @@ export default async function DashboardLayout({ children }: { children: React.Re
       // Non-fatal — sidebar renders without admin items
     }
 
+    // ── Live nav badges (pending approvals + critical alerts) ──────────────
+    // Fetched only for admin — lightweight COUNT queries, graceful on failure.
+    const navBadges: Record<string, number> = {}
+    if (companyId && userRole === 'admin') {
+      try {
+        const [workflowRes, alertRes] = await Promise.allSettled([
+          supabase
+            .from('workflow_instances')
+            .select('id', { count: 'exact', head: true })
+            .eq('company_id', companyId)
+            .eq('status', 'pending'),
+          supabase
+            .from('sales')
+            .select('id', { count: 'exact', head: true })
+            .eq('company_id', companyId)
+            .is('deleted_at', null)
+            .in('payment_status', ['overdue'])
+            .lt('due_date', new Date().toISOString().slice(0, 10)),
+        ])
+        const pendingApprovals = workflowRes.status === 'fulfilled' ? (workflowRes.value.count ?? 0) : 0
+        const overdueCount     = alertRes.status     === 'fulfilled' ? (alertRes.value.count     ?? 0) : 0
+        if (pendingApprovals > 0) navBadges['/dashboard/admin']   = pendingApprovals
+        if (overdueCount > 0)     navBadges['/dashboard/commercial'] = overdueCount
+      } catch { /* non-fatal — nav renders without badges */ }
+    }
+
     const meta         = user.user_metadata ?? {}
     const firstName    = (String(meta.first_name ?? '')).slice(0, 50)
     const lastName     = (String(meta.last_name  ?? '')).slice(0, 50)
@@ -103,7 +129,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         >
           <div className="flex min-h-screen bg-gray-50">
             <CommandBar />
-            <Sidebar />
+            <Sidebar navBadges={navBadges} />
             <div className="flex-1 flex flex-col min-w-0">
               <Header
                 companyName={settings?.company_name ?? null}

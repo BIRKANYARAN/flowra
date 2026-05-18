@@ -8,6 +8,15 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { formatTRY as fmt } from '@/lib/format'
 
+const PRINT_STYLE = `
+@media print {
+  body { background: white !important; -webkit-print-color-adjust: exact; }
+  [data-print-hide] { display: none !important; }
+  .shadow-\\[0_1px_2px_rgba\\(17\\,24\\,39\\,0\\.04\\)\\] { box-shadow: none !important; }
+  table { page-break-inside: avoid; }
+}
+`
+
 interface GLAccount {
   account_code:   string
   account_name_tr: string
@@ -90,14 +99,33 @@ export default function TrialBalancePage() {
 
   return (
     <div className="flex flex-col gap-4 max-w-4xl">
-      <div className="flex items-center justify-between">
+      <style dangerouslySetInnerHTML={{ __html: PRINT_STYLE }} />
+      <div className="flex items-center justify-between" data-print-hide>
         <div>
           <h1 className="text-xl font-black text-gray-900 tracking-tight">Mizan</h1>
           <p className="text-xs text-gray-400 mt-0.5">Genel Muhasebe Hesap Bakiyeleri</p>
         </div>
-        <Link href="/dashboard/cfo" className="text-xs text-gray-400 hover:text-primary-600 font-semibold">
-          ← CFO Cockpit
-        </Link>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => window.print()}
+            title="Mizanı PDF olarak kaydet veya yazdır"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 bg-white text-xs font-semibold text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-colors"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+            </svg>
+            Yazdır / PDF
+          </button>
+          <Link href="/dashboard/cfo" className="text-xs text-gray-400 hover:text-primary-600 font-semibold">
+            ← CFO Cockpit
+          </Link>
+        </div>
+      </div>
+      {/* Print-only header */}
+      <div className="hidden print:block mb-4">
+        <div className="text-[10px] uppercase tracking-widest text-gray-400 font-black">Flowra — Muhasebe Raporu</div>
+        <h1 className="text-2xl font-black text-gray-900">Mizan</h1>
+        <p className="text-xs text-gray-500 mt-0.5">Genel Muhasebe Hesap Bakiyeleri · {new Date().toLocaleDateString('tr-TR', { day:'2-digit', month:'long', year:'numeric' })}</p>
       </div>
 
       {error && (

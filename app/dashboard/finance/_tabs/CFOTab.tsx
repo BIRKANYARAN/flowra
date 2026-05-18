@@ -575,7 +575,7 @@ export async function CFOTab({ userId, companyId }: Props) {
       })()}
 
       {/* GL Tools */}
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-4 gap-2">
         {[
           {
             href:  '/dashboard/cfo/trial-balance',
@@ -597,6 +597,13 @@ export async function CFOTab({ userId, companyId }: Props) {
             desc:  'Çift taraflı muhasebe denetim izi',
             icon:  '📋',
             color: 'hover:border-emerald-300',
+          },
+          {
+            href:  '/dashboard/cfo/reconciliation',
+            title: 'GL Mutabakat',
+            desc:  'GL vs operasyonel tablo karşılaştırması',
+            icon:  '⚖️',
+            color: 'hover:border-blue-300',
           },
         ].map(item => (
           <Link

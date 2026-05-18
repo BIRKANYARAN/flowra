@@ -30,7 +30,13 @@ import {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export function Sidebar() {
+export interface SidebarProps {
+  /** Server-computed live badge counts keyed by nav item href.
+   *  Merges with any static badge values defined in nav-config.ts. */
+  navBadges?: Record<string, number>
+}
+
+export function Sidebar({ navBadges = {} }: SidebarProps) {
   const pathname = usePathname()
   const router   = useRouter()
   const supabase = useSupabase()
@@ -141,6 +147,7 @@ export function Sidebar() {
             group={group}
             pathname={pathname}
             isFirst={gi === 0}
+            navBadges={navBadges}
           />
         ))}
 
@@ -151,6 +158,7 @@ export function Sidebar() {
             <NavLink
               item={SETTINGS_FALLBACK}
               active={isNavItemActive(SETTINGS_FALLBACK, pathname)}
+              liveBadge={navBadges[SETTINGS_FALLBACK.href]}
             />
           </>
         )}
@@ -189,10 +197,12 @@ function NavGroupBlock({
   group,
   pathname,
   isFirst,
+  navBadges = {},
 }: {
-  group:    NavGroup
-  pathname: string
-  isFirst:  boolean
+  group:     NavGroup
+  pathname:  string
+  isFirst:   boolean
+  navBadges?: Record<string, number>
 }) {
   return (
     <div className={isFirst ? '' : 'mt-2'}>
@@ -209,6 +219,7 @@ function NavGroupBlock({
             key={item.href}
             item={item}
             active={isNavItemActive(item, pathname)}
+            liveBadge={navBadges[item.href]}
           />
         ))}
       </div>
@@ -218,7 +229,9 @@ function NavGroupBlock({
 
 // ── NavLink ───────────────────────────────────────────────────────────────────
 
-function NavLink({ item, active }: { item: NavItem; active: boolean }) {
+function NavLink({ item, active, liveBadge }: { item: NavItem; active: boolean; liveBadge?: number }) {
+  // liveBadge overrides item.badge — live server count takes precedence over static config
+  const badge = liveBadge ?? item.badge
   return (
     <Link
       href={item.href}
@@ -237,11 +250,11 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
         className={`flex-shrink-0 ${active ? 'text-white' : 'text-gray-400'}`}
       />
       <span className="truncate">{item.label}</span>
-      {item.badge !== undefined && item.badge > 0 && (
-        <span className={`ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-          active ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'
+      {badge !== undefined && badge > 0 && (
+        <span className={`ml-auto min-w-[18px] text-center text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+          active ? 'bg-white/20 text-white' : 'bg-red-500 text-white'
         }`}>
-          {item.badge}
+          {badge > 99 ? '99+' : badge}
         </span>
       )}
     </Link>

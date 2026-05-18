@@ -1,0 +1,269 @@
+'use client'
+
+// /dashboard/cfo/reconciliation — GL vs Operasyonel Mutabakat
+//
+// Compares GL-derived account balances with operational table totals.
+// Surfaces drift between double-entry ledger and sales/expenses tables.
+// Essential before period close — CFO must clear all critical items.
+
+import { useState, useEffect, useCallback } from 'react'
+import Link from 'next/link'
+import { formatTRY as fmt } from '@/lib/format'
+
+interface ReconciliationItem {
+  name:        string
+  gl_value:    number
+  operational: number
+  diff:        number
+  passed:      boolean
+  severity:    'ok' | 'warning' | 'critical'
+}
+
+interface ReconciliationReport {
+  company_id:    string
+  period_id:     string | null
+  items:         ReconciliationItem[]
+  is_reconciled: boolean
+  checked_at:    string
+}
+
+const SEV_CONFIG = {
+  ok:       { cls: 'bg-emerald-100 text-emerald-700 border-emerald-200', icon: '✓', label: 'Tamam'    },
+  warning:  { cls: 'bg-amber-100 text-amber-700 border-amber-200',       icon: '!', label: 'Uyarı'    },
+  critical: { cls: 'bg-red-100 text-red-700 border-red-200',             icon: '✗', label: 'Kritik'   },
+}
+
+const PRINT_STYLE = `
+@media print {
+  body { background: white !important; -webkit-print-color-adjust: exact; }
+  [data-print-hide] { display: none !important; }
+  .print\\:block { display: block !important; }
+}
+`
+
+function StatusBanner({ report }: { report: ReconciliationReport }) {
+  const criticalCount = report.items.filter(i => i.severity === 'critical').length
+  const warnCount     = report.items.filter(i => i.severity === 'warning').length
+
+  if (report.is_reconciled && criticalCount === 0 && warnCount === 0) {
+    return (
+      <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 flex items-center gap-3">
+        <div className="w-8 h-8 rounded-full bg-emerald-200 flex items-center justify-center text-emerald-700 font-black text-sm shrink-0">✓</div>
+        <div>
+          <div className="text-sm font-black text-emerald-800">Mutabakat Tamamlandı</div>
+          <div className="text-xs text-emerald-600 mt-0.5">Tüm GL hesapları operasyonel tablolarla uyuşuyor. Dönem kapanışına hazır.</div>
+        </div>
+      </div>
+    )
+  }
+
+  if (criticalCount > 0) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 flex items-center gap-3">
+        <div className="w-8 h-8 rounded-full bg-red-200 flex items-center justify-center text-red-700 font-black text-sm shrink-0">✗</div>
+        <div>
+          <div className="text-sm font-black text-red-800">Kritik Farklar Mevcut — Dönem Kapatılamaz</div>
+          <div className="text-xs text-red-600 mt-0.5">
+            {criticalCount} kritik, {warnCount} uyarı. 100 TRY üzerindeki farklar giderilmeden dönem kapanışı engellenilir.
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-center gap-3">
+      <div className="w-8 h-8 rounded-full bg-amber-200 flex items-center justify-center text-amber-700 font-black text-sm shrink-0">!</div>
+      <div>
+        <div className="text-sm font-black text-amber-800">Küçük Farklar Var</div>
+        <div className="text-xs text-amber-600 mt-0.5">
+          {warnCount} uyarı (1–99 TRY arası). Dönem kapatılabilir ancak araştırılması önerilir.
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default function ReconciliationPage() {
+  const [report,   setReport]   = useState<ReconciliationReport | null>(null)
+  const [loading,  setLoading]  = useState(true)
+  const [error,    setError]    = useState<string | null>(null)
+  const [lastRun,  setLastRun]  = useState<string | null>(null)
+
+  const runCheck = useCallback(() => {
+    setLoading(true)
+    setError(null)
+    const asOf = new Date().toISOString().slice(0, 10)
+    fetch(`/api/reconciliation?as_of=${asOf}`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.error) throw new Error(d.error)
+        setReport(d as ReconciliationReport)
+        setLastRun(new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }))
+      })
+      .catch(err => setError(err.message ?? 'Mutabakat yüklenemedi'))
+      .finally(() => setLoading(false))
+  }, [])
+
+  useEffect(() => { runCheck() }, [runCheck])
+
+  const criticalCount = report?.items.filter(i => i.severity === 'critical').length ?? 0
+  const warnCount     = report?.items.filter(i => i.severity === 'warning').length ?? 0
+  const okCount       = report?.items.filter(i => i.severity === 'ok').length ?? 0
+
+  return (
+    <div className="flex flex-col gap-4 max-w-4xl">
+      <style dangerouslySetInnerHTML={{ __html: PRINT_STYLE }} />
+
+      {/* Header */}
+      <div className="flex items-center justify-between" data-print-hide>
+        <div>
+          <h1 className="text-xl font-black text-gray-900 tracking-tight">GL Mutabakat</h1>
+          <p className="text-xs text-gray-400 mt-0.5">
+            GL hesap bakiyeleri · Operasyonel tablo karşılaştırması
+            {lastRun && <span className="ml-1 text-gray-300">· {lastRun} itibarıyla</span>}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={runCheck}
+            disabled={loading}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 bg-white text-xs font-semibold text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-colors disabled:opacity-50"
+          >
+            <svg className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            {loading ? 'Kontrol ediliyor…' : 'Yenile'}
+          </button>
+          <button
+            onClick={() => window.print()}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 bg-white text-xs font-semibold text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-colors"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+            </svg>
+            PDF
+          </button>
+          <Link href="/dashboard/cfo" className="text-xs text-gray-400 hover:text-primary-600 font-semibold">
+            ← CFO Cockpit
+          </Link>
+        </div>
+      </div>
+
+      {/* Print-only header */}
+      <div className="hidden print:block mb-2">
+        <div className="text-[10px] uppercase tracking-widest text-gray-400 font-black">Flowra — CFO Raporu</div>
+        <h1 className="text-2xl font-black text-gray-900">GL Mutabakat Raporu</h1>
+        <p className="text-xs text-gray-500 mt-0.5">
+          {new Date().toLocaleDateString('tr-TR', { day:'2-digit', month:'long', year:'numeric' })} itibarıyla
+        </p>
+      </div>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700">{error}</div>
+      )}
+
+      {loading && !report && (
+        <div className="flex flex-col gap-3">
+          {[1,2,3,4].map(i => (
+            <div key={i} className="bg-gray-100 rounded-xl h-14 animate-pulse" />
+          ))}
+        </div>
+      )}
+
+      {report && (
+        <>
+          {/* Status banner */}
+          <StatusBanner report={report} />
+
+          {/* Summary chips */}
+          <div className="grid grid-cols-3 gap-2">
+            <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 text-center">
+              <div className="text-2xl font-black text-emerald-700 tabular-nums">{okCount}</div>
+              <div className="text-[10px] font-black uppercase tracking-widest text-emerald-600 mt-0.5">Tamam</div>
+            </div>
+            <div className={`border rounded-xl px-4 py-3 text-center ${warnCount > 0 ? 'bg-amber-50 border-amber-200' : 'bg-gray-50 border-gray-200'}`}>
+              <div className={`text-2xl font-black tabular-nums ${warnCount > 0 ? 'text-amber-700' : 'text-gray-400'}`}>{warnCount}</div>
+              <div className={`text-[10px] font-black uppercase tracking-widest mt-0.5 ${warnCount > 0 ? 'text-amber-600' : 'text-gray-400'}`}>Uyarı</div>
+            </div>
+            <div className={`border rounded-xl px-4 py-3 text-center ${criticalCount > 0 ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-200'}`}>
+              <div className={`text-2xl font-black tabular-nums ${criticalCount > 0 ? 'text-red-700' : 'text-gray-400'}`}>{criticalCount}</div>
+              <div className={`text-[10px] font-black uppercase tracking-widest mt-0.5 ${criticalCount > 0 ? 'text-red-600' : 'text-gray-400'}`}>Kritik</div>
+            </div>
+          </div>
+
+          {/* Reconciliation items table */}
+          <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+            <div className="px-4 py-2.5 border-b border-gray-100 bg-gray-50">
+              <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Hesap Karşılaştırması</div>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-gray-100">
+                    <th className="px-4 py-2.5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Hesap / Kontrol</th>
+                    <th className="px-4 py-2.5 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">GL Değeri</th>
+                    <th className="px-4 py-2.5 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Operasyonel</th>
+                    <th className="px-4 py-2.5 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Fark</th>
+                    <th className="px-4 py-2.5 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">Durum</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {report.items.map((item, i) => {
+                    const cfg = SEV_CONFIG[item.severity]
+                    return (
+                      <tr key={i} className={`${item.severity !== 'ok' ? 'bg-opacity-30' : ''} hover:bg-gray-50/60`}>
+                        <td className="px-4 py-3">
+                          <div className="font-semibold text-gray-800">{item.name}</div>
+                        </td>
+                        <td className="px-4 py-3 text-right font-mono text-gray-700 tabular-nums">
+                          {fmt(item.gl_value)}
+                        </td>
+                        <td className="px-4 py-3 text-right font-mono text-gray-700 tabular-nums">
+                          {fmt(item.operational)}
+                        </td>
+                        <td className="px-4 py-3 text-right font-mono tabular-nums">
+                          <span className={item.diff > 0 ? (item.severity === 'critical' ? 'text-red-600 font-bold' : 'text-amber-600 font-semibold') : 'text-gray-400'}>
+                            {item.diff > 0 ? fmt(item.diff) : '—'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${cfg.cls}`}>
+                            {cfg.icon} {cfg.label}
+                          </span>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Guidance */}
+          <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs text-gray-500 space-y-1" data-print-hide>
+            <div className="font-semibold text-gray-700 mb-1.5">Ne anlama geliyor?</div>
+            <div className="flex gap-2"><span className="text-emerald-600 font-bold shrink-0">✓ Tamam</span><span>GL ve operasyonel değer arasında {`<`}1 TRY fark var. Yuvarlama sapması.</span></div>
+            <div className="flex gap-2"><span className="text-amber-600 font-bold shrink-0">! Uyarı</span><span>1–99 TRY arası fark. Muhtemelen zamanlama farkı (dönem sonu kesilmemiş işlem). İncelenmesi önerilir.</span></div>
+            <div className="flex gap-2"><span className="text-red-600 font-bold shrink-0">✗ Kritik</span><span>100+ TRY fark. GL ile operasyonel tablolar uyuşmuyor. Dönem kapanışı bu durum giderilmeden engellenilir.</span></div>
+          </div>
+
+          {/* Footer links */}
+          <div className="flex items-center justify-between text-xs text-gray-400" data-print-hide>
+            <div>
+              <span>Sonuçlar her çalıştırmada canlı hesaplanır. </span>
+              <Link href="/dashboard/cfo/trial-balance" className="text-primary-600 hover:underline font-semibold">Mizan</Link>
+              <span className="mx-1.5">·</span>
+              <Link href="/dashboard/cfo/journal-entries" className="text-primary-600 hover:underline font-semibold">Journal Kayıtları</Link>
+              <span className="mx-1.5">·</span>
+              <Link href="/dashboard/cfo/period-close" className="text-primary-600 hover:underline font-semibold">Dönem Kapat</Link>
+            </div>
+            {report.checked_at && (
+              <div className="tabular-nums">{new Date(report.checked_at).toLocaleString('tr-TR')}</div>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
