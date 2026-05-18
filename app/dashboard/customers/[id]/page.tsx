@@ -335,6 +335,26 @@ export default function CustomerDetailPage() {
         )}
       </div>
 
+      {/* Cross-navigation */}
+      <div className="flex items-center justify-between px-1">
+        <p className="text-[10px] text-gray-400 leading-relaxed">
+          Müşteri detayı tahsilat ve satış pipeline ile birlikte değerlendirilmeli.
+        </p>
+        <div className="flex items-center gap-2 shrink-0 ml-4">
+          <Link href="/dashboard/commercial?tab=customers" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Müşteriler →
+          </Link>
+          <span className="text-gray-200">|</span>
+          <Link href="/dashboard/commercial?tab=collections" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Tahsilat →
+          </Link>
+          <span className="text-gray-200">|</span>
+          <Link href="/dashboard/commercial?tab=pipeline" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Pipeline →
+          </Link>
+        </div>
+      </div>
+
     </div>
   )
 }
