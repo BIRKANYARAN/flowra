@@ -16,9 +16,13 @@
 --   archive/flowra_phase3     — journal_entries, gl_mode, period lock triggers
 --   archive/flowra_phase7     — job_runs, audit hash chain, annual_interest_rate
 --   archive/flowra_phase14    — purchase_orders, purchase_order_items
+--   accounting_truth_v1.sql   — kdv_amount_try, cost_price_try, kdv_rate, alias cols,
+--                                updated convert_proforma_to_sale, partner_transactions
+--   governance.sql            — governance_reports, governance_signoffs
 --
--- RESULT: 32+ tables, 52+ indexes, 15+ RPCs, full RLS, all triggers
+-- RESULT: 34+ tables, 56+ indexes, 15+ RPCs, full RLS, all triggers
 -- IDEMPOTENT: Every statement uses IF NOT EXISTS / OR REPLACE / ON CONFLICT
+-- VERSION: 2 (2026-05-18)
 -- ═══════════════════════════════════════════════════════════════════════════════
 
 set search_path = public;
@@ -2012,15 +2016,340 @@ create trigger trg_touch_purchase_orders
   before update on purchase_orders
   for each row execute function fn_touch_purchase_orders();
 
+-- ─────────────────────────────────────────────────────────────────────────────
+-- SECTION 13 — ACCOUNTING TRUTH V1 (2026-05-18)
+-- Column additions, alias sync triggers, updated convert_proforma_to_sale RPC,
+-- partner_transactions table. Safe to run on both clean and existing installs.
+-- ─────────────────────────────────────────────────────────────────────────────
+
+-- GAP 6: kdv_amount_try on sales — freeze KDV in TRY at sale creation time
+alter table sales add column if not exists kdv_amount_try numeric(12,2) not null default 0;
+comment on column sales.kdv_amount_try is 'KDV (VAT) portion of the sale total in TRY, frozen at sale creation time.';
+
+-- GAP 13: cost_price_try on sale_item_allocations — makes COGS computable without JOIN
+alter table sale_item_allocations add column if not exists cost_price_try numeric(12,4);
+comment on column sale_item_allocations.cost_price_try is 'Frozen TRY cost per unit at allocation time (FIFO lot cost_price_try).';
+
+-- GAP 3: kdv_rate on sale_items and proforma_items — precise GL revenue/KDV split
+alter table sale_items     add column if not exists kdv_rate numeric(5,2) not null default 20;
+alter table proforma_items add column if not exists kdv_rate numeric(5,2) not null default 20;
+comment on column sale_items.kdv_rate     is 'KDV rate for this line (0, 10, or 20).';
+comment on column proforma_items.kdv_rate is 'KDV rate for this line (0, 10, or 20). Copied to sale_items.kdv_rate on conversion.';
+
+-- GAP 2: alias columns on stock_lots for legacy code compatibility
+alter table stock_lots add column if not exists source_id           uuid references stock_movements(id) on delete set null;
+alter table stock_lots add column if not exists purchase_item_id    uuid;
+alter table stock_lots add column if not exists allocated_cost_try  numeric(12,4);
+alter table stock_lots add column if not exists entry_cost_try      numeric(12,4);
+alter table stock_lots add column if not exists fx_rate_at_entry    numeric(12,6);
+alter table stock_lots add column if not exists unit_cost           numeric(12,4);
+comment on column stock_lots.entry_cost_try   is 'Alias for cost_price_try (kept for legacy code compatibility).';
+comment on column stock_lots.fx_rate_at_entry is 'Alias for cost_fx_rate (kept for legacy code compatibility).';
+comment on column stock_lots.unit_cost        is 'Alias for cost_price (kept for legacy code compatibility).';
+
+-- Keep alias columns in sync with canonical columns
+create or replace function fn_sync_stock_lot_aliases()
+returns trigger language plpgsql as $$
+begin
+  if new.cost_price_try is not null and new.entry_cost_try is null then
+    new.entry_cost_try := new.cost_price_try;
+  end if;
+  if new.entry_cost_try is not null and new.cost_price_try is null then
+    new.cost_price_try := new.entry_cost_try;
+  end if;
+  if new.cost_fx_rate is not null and new.fx_rate_at_entry is null then
+    new.fx_rate_at_entry := new.cost_fx_rate;
+  end if;
+  if new.cost_price is not null and new.unit_cost is null then
+    new.unit_cost := new.cost_price;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_sync_stock_lot_aliases on stock_lots;
+create trigger trg_sync_stock_lot_aliases
+  before insert or update on stock_lots
+  for each row execute function fn_sync_stock_lot_aliases();
+
+-- Keep partner_loan_tranches interest rate columns in sync
+create or replace function fn_sync_plt_interest_rate()
+returns trigger language plpgsql as $$
+begin
+  if new.annual_interest_rate is not null and new.interest_rate_annual_pct = 0 then
+    new.interest_rate_annual_pct := new.annual_interest_rate::numeric(6,3);
+  end if;
+  if new.interest_rate_annual_pct > 0 and new.annual_interest_rate is null then
+    new.annual_interest_rate := new.interest_rate_annual_pct::numeric(6,4);
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_sync_plt_interest_rate on partner_loan_tranches;
+create trigger trg_sync_plt_interest_rate
+  before insert or update on partner_loan_tranches
+  for each row execute function fn_sync_plt_interest_rate();
+
+-- GAP 1 + GAP 3 + GAP 6: Updated convert_proforma_to_sale
+-- Fixes: stores TRY total (not native currency), populates kdv_amount_try,
+--        copies kdv_rate per line, populates cost_price_try on allocations.
+create or replace function public.convert_proforma_to_sale(
+  p_proforma_id    uuid,
+  p_user_id        uuid,
+  p_sale_date      date    default null,
+  p_due_date       date    default null,
+  p_bank_id        uuid    default null,
+  p_notes          text    default null,
+  p_internal_notes text    default null
+) returns jsonb language plpgsql security definer as $$
+declare
+  v_proforma        proformas%rowtype;
+  v_item            proforma_items%rowtype;
+  v_sale_id         uuid;
+  v_sale_no         text;
+  v_year            text;
+  v_seq             int;
+  v_lot             stock_lots%rowtype;
+  v_qty_needed      numeric;
+  v_qty_from_lot    numeric;
+  v_sale_item_id    uuid;
+  v_total_try       numeric;
+  v_kdv_amount_try  numeric(12,2) := 0;
+begin
+  select * into v_proforma
+    from proformas
+    where id = p_proforma_id and deleted_at is null
+    for update;
+  if not found then raise exception 'PROFORMA_NOT_FOUND: %', p_proforma_id; end if;
+  if v_proforma.status = 'converted' then raise exception 'ALREADY_CONVERTED: %', p_proforma_id; end if;
+  if not exists (select 1 from proforma_items where proforma_id = p_proforma_id) then
+    raise exception 'NO_ITEMS: proforma has no items';
+  end if;
+  if v_proforma.currency != 'TRY' and coalesce(v_proforma.fx_rate_try, 0) <= 0 then
+    raise exception 'FX_RATE_NOT_FOUND: non-TRY proforma has no fx_rate_try';
+  end if;
+
+  v_year := to_char(coalesce(p_sale_date, now()::date), 'YYYY');
+  select coalesce(max(
+    (regexp_match(sale_no, 'SAL-' || v_year || '-(\d+)'))[1]::integer
+  ), 0) + 1
+  into v_seq
+  from sales where company_id = v_proforma.company_id and sale_no like 'SAL-' || v_year || '-%';
+  v_sale_no := 'SAL-' || v_year || '-' || lpad(v_seq::text, 4, '0');
+
+  -- GAP 1 fix: TRY total (not native currency total)
+  v_total_try := round(v_proforma.total * coalesce(v_proforma.fx_rate_try, 1), 2);
+
+  -- GAP 6 fix: compute KDV amount in TRY
+  select round(
+    coalesce(sum(
+      pi.line_total * coalesce(pi.kdv_rate, 20) / (100 + coalesce(pi.kdv_rate, 20))
+    ), 0) * coalesce(v_proforma.fx_rate_try, 1)
+  , 2)
+  into v_kdv_amount_try
+  from proforma_items pi
+  where pi.proforma_id = p_proforma_id;
+
+  insert into sales (
+    company_id, user_id, customer_id, bank_id, proforma_id,
+    sale_no, customer_name, currency, total, kdv_amount_try, payment_status,
+    sale_date, due_date, notes, internal_notes,
+    fx_usd, fx_eur, fx_try, fx_source, fx_rate_date, fx_rate_try,
+    company_snapshot, customer_snapshot
+  ) values (
+    v_proforma.company_id, p_user_id, v_proforma.customer_id,
+    coalesce(p_bank_id, v_proforma.bank_id), p_proforma_id,
+    v_sale_no, v_proforma.customer_name, v_proforma.currency,
+    v_total_try, v_kdv_amount_try, 'pending',
+    coalesce(p_sale_date, now()::date), p_due_date, p_notes, p_internal_notes,
+    v_proforma.fx_usd, v_proforma.fx_eur, v_proforma.fx_try,
+    v_proforma.fx_source, v_proforma.fx_rate_date, v_proforma.fx_rate_try,
+    v_proforma.company_snapshot, v_proforma.customer_snapshot
+  ) returning id into v_sale_id;
+
+  for v_item in
+    select * from proforma_items where proforma_id = p_proforma_id order by sort_order
+  loop
+    insert into sale_items (
+      sale_id, company_id, product_id, product_name,
+      qty, unit_price, currency, discount_pct, line_total, notes, sort_order,
+      kdv_rate  -- GAP 3 fix: freeze KDV rate from proforma_items
+    ) values (
+      v_sale_id, v_proforma.company_id, v_item.product_id, v_item.product_name,
+      v_item.qty, v_item.unit_price, v_item.currency,
+      coalesce(v_item.discount_pct, 0), v_item.line_total,
+      v_item.notes, v_item.sort_order,
+      coalesce(v_item.kdv_rate, 20)
+    ) returning id into v_sale_item_id;
+
+    if v_item.product_id is not null then
+      v_qty_needed := v_item.qty;
+      for v_lot in
+        select * from stock_lots
+        where company_id = v_proforma.company_id
+          and product_id = v_item.product_id
+          and qty_remaining > 0
+          and deleted_at is null
+        order by received_at, created_at
+      loop
+        exit when v_qty_needed <= 0;
+        if v_lot.cost_price_try is null or v_lot.cost_price_try = 0 then
+          raise exception 'ZERO_COST_LOT: lot % has no cost_price_try', v_lot.id;
+        end if;
+        v_qty_from_lot := least(v_qty_needed, v_lot.qty_remaining);
+        insert into sale_item_allocations (
+          company_id, sale_item_id, lot_id,
+          qty_allocated, cost_price, cost_currency, cost_price_try  -- GAP 13 fix
+        ) values (
+          v_proforma.company_id, v_sale_item_id, v_lot.id,
+          v_qty_from_lot, v_lot.cost_price, v_lot.cost_currency, v_lot.cost_price_try
+        );
+        update stock_lots
+          set qty_remaining = qty_remaining - v_qty_from_lot, updated_at = now()
+          where id = v_lot.id;
+        insert into stock_movements (
+          company_id, product_id, lot_id, type, qty,
+          unit_cost, currency, reference_id, moved_at
+        ) values (
+          v_proforma.company_id, v_item.product_id, v_lot.id,
+          'sale_out', -v_qty_from_lot,
+          v_lot.cost_price, v_lot.cost_currency, v_sale_id, now()
+        );
+        v_qty_needed := v_qty_needed - v_qty_from_lot;
+      end loop;
+      if v_qty_needed > 0 then
+        raise exception 'INSUFFICIENT_STOCK: product % needs % more units', v_item.product_id, v_qty_needed;
+      end if;
+    end if;
+  end loop;
+
+  update proformas set status = 'converted', converted_at = now(), updated_at = now()
+    where id = p_proforma_id;
+
+  return jsonb_build_object('sale_id', v_sale_id, 'sale_no', v_sale_no);
+end;
+$$;
+
+grant execute on function public.convert_proforma_to_sale(uuid, uuid, date, date, uuid, text, text) to authenticated;
+
+-- GAP 10: partner_transactions table (bridge table, used throughout app)
+create table if not exists partner_transactions (
+  id              uuid primary key default gen_random_uuid(),
+  company_id      uuid not null references companies(id) on delete cascade,
+  partner_id      uuid references partners(id) on delete set null,
+  user_id         uuid references auth.users(id) on delete set null,
+  tx_type         text not null,
+  amount          numeric(15,2) not null check (amount > 0),
+  currency        text not null default 'TRY',
+  fx_rate         numeric(12,6) not null default 1,
+  amount_try      numeric(15,2) not null,
+  gross_try       numeric(15,2),
+  withholding_try numeric(15,2),
+  tx_date         date not null,
+  notes           text,
+  reference_id    uuid,
+  deleted_at      timestamptz,
+  created_at      timestamptz not null default now(),
+  updated_at      timestamptz not null default now()
+);
+
+create index if not exists idx_partner_tx_company on partner_transactions(company_id) where deleted_at is null;
+create index if not exists idx_partner_tx_partner on partner_transactions(company_id, partner_id) where deleted_at is null;
+create index if not exists idx_partner_tx_date    on partner_transactions(company_id, tx_date) where deleted_at is null;
+
+alter table partner_transactions enable row level security;
+
+drop policy if exists partner_tx_member on partner_transactions;
+create policy partner_tx_member on partner_transactions
+  for all using (is_company_member(company_id));
+
+grant all on partner_transactions to authenticated, service_role;
+
+-- Backfill: approximate KDV for historical direct sales (blended 20% rate)
+update sales
+  set kdv_amount_try = round(total - (total / 1.2), 2)
+  where kdv_amount_try = 0
+    and total > 0
+    and proforma_id is null
+    and deleted_at is null;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- SECTION 14 — SHAREHOLDER GOVERNANCE (2026-05-18)
+-- Monthly immutable snapshots + per-partner signoff workflow.
+-- ─────────────────────────────────────────────────────────────────────────────
+
+create table if not exists governance_reports (
+  id             uuid        primary key default gen_random_uuid(),
+  company_id     uuid        not null references companies(id) on delete cascade,
+  period_label   text        not null,
+  period_start   date        not null,
+  period_end     date        not null,
+  snapshot       jsonb       not null default '{}',
+  generated_by   uuid        references auth.users(id),
+  generated_at   timestamptz not null default now(),
+  is_finalized   boolean     not null default false,
+  finalized_at   timestamptz,
+  finalized_by   uuid        references auth.users(id),
+  notes          text,
+  unique(company_id, period_start)
+);
+
+create index if not exists idx_governance_reports_company
+  on governance_reports(company_id, period_start desc);
+
+alter table governance_reports enable row level security;
+
+drop policy if exists governance_reports_company_access on governance_reports;
+create policy governance_reports_company_access on governance_reports
+  for all using (
+    company_id in (
+      select company_id from company_members
+      where user_id = auth.uid() and deleted_at is null
+    )
+  );
+
+create table if not exists governance_signoffs (
+  id           uuid        primary key default gen_random_uuid(),
+  report_id    uuid        not null references governance_reports(id) on delete cascade,
+  company_id   uuid        not null references companies(id) on delete cascade,
+  partner_id   uuid        not null references partners(id) on delete cascade,
+  partner_name text        not null,
+  signed_by    uuid        references auth.users(id),
+  signed_at    timestamptz not null default now(),
+  notes        text,
+  ip_hash      text,
+  unique(report_id, partner_id)
+);
+
+create index if not exists idx_governance_signoffs_report  on governance_signoffs(report_id);
+create index if not exists idx_governance_signoffs_company on governance_signoffs(company_id, signed_at desc);
+
+alter table governance_signoffs enable row level security;
+
+drop policy if exists governance_signoffs_company_access on governance_signoffs;
+create policy governance_signoffs_company_access on governance_signoffs
+  for all using (
+    company_id in (
+      select company_id from company_members
+      where user_id = auth.uid() and deleted_at is null
+    )
+  );
+
+grant all on governance_reports  to authenticated, service_role;
+grant all on governance_signoffs to authenticated, service_role;
+
 -- ═══════════════════════════════════════════════════════════════════════════════
--- END OF FLOWRA_FULL_INSTALL.sql
+-- END OF FLOWRA_FULL_INSTALL.sql  (v2 — 2026-05-18)
 --
 -- After running, verify with:
 --   \i supabase/schema_verify.sql
 --   OR paste schema_verify.sql into SQL Editor
 --
--- Tables created: 32+ (includes purchase_orders, purchase_order_items)
--- RPCs created:   15+
--- Indexes:        52+
--- RLS policies:   62+
+-- Tables created: 34+ (includes governance_reports, governance_signoffs,
+--                        partner_transactions, purchase_orders, purchase_order_items)
+-- RPCs created:   15+ (convert_proforma_to_sale updated with Accounting Truth v1 fixes)
+-- Indexes:        56+
+-- RLS policies:   66+
+-- IDEMPOTENT:     Yes — safe to run on clean installs AND existing databases
 -- ═══════════════════════════════════════════════════════════════════════════════
