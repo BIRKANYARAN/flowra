@@ -5,6 +5,7 @@
 
 import { createClient }        from '@/lib/supabase-server'
 import { computeForecast, buildForecastInputs } from '@/lib/engines/forecast.engine'
+import { StrategicScenarioSection } from './StrategicScenarioSection'
 import Link                    from 'next/link'
 
 const FMT = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 })
@@ -237,6 +238,9 @@ export async function CashProjectionTab({ companyId }: Props) {
         <div>• İyimser: +%15 gelir büyümesi · Kötümser: −%20 gelir streji · Borç servisi her senaryoda sabit</div>
         <div>• Mevsimsellik, yeni ürün ve büyük gider dalgalanmaları bu modele dahil değildir</div>
       </div>
+
+      {/* ── STRATEGIC P&L PROJECTION — computeMultiScenario ──────────────── */}
+      <StrategicScenarioSection companyId={companyId} />
 
     </div>
   )
