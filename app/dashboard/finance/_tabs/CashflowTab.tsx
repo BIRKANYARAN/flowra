@@ -356,12 +356,19 @@ export async function CashflowTab({ userId, companyId }: Props) {
           Bu görünüm nakit baskı ve runway analizini gösterir.
           Muhasebe uyumlu nakit akış tablosu için resmi raporu inceleyin.
         </p>
-        <Link
-          href="/dashboard/reports/cash-flow"
-          className="shrink-0 ml-4 text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap"
-        >
-          Nakit Akış Tablosu →
-        </Link>
+        <div className="flex items-center gap-2 shrink-0 ml-4">
+          <Link href="/dashboard/commercial?tab=collections" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Tahsilat →
+          </Link>
+          <span className="text-gray-200">|</span>
+          <Link href="/dashboard/planning?tab=cash-projection" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Nakit Projeksiyonu →
+          </Link>
+          <span className="text-gray-200">|</span>
+          <Link href="/dashboard/reports/cash-flow" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Nakit Akış Tablosu →
+          </Link>
+        </div>
       </div>
     </div>
   )

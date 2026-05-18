@@ -257,18 +257,25 @@ export async function PnlTab({ userId, companyId }: Props) {
         </div>
       </div>
 
-      {/* Cross-link → formal income statement report */}
+      {/* Cross-navigation */}
       <div className="flex items-center justify-between px-1 pt-1">
         <p className="text-[10px] text-gray-400 leading-relaxed">
           Bu görünüm cari ay tahakkuk bazlı P&amp;L&apos;i gösterir.
-          PDF dışa aktarım ve dönem karşılaştırması için resmi raporu inceleyin.
+          PDF dışa aktarım için resmi raporu inceleyin.
         </p>
-        <Link
-          href="/dashboard/reports/income-statement"
-          className="shrink-0 ml-4 text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap"
-        >
-          Gelir Tablosu →
-        </Link>
+        <div className="flex items-center gap-2 shrink-0 ml-4">
+          <Link href="/dashboard/commercial?tab=sales" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Satışlar →
+          </Link>
+          <span className="text-gray-200">|</span>
+          <Link href="/dashboard/operations?tab=expenses" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Giderler →
+          </Link>
+          <span className="text-gray-200">|</span>
+          <Link href="/dashboard/reports/income-statement" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Gelir Tablosu →
+          </Link>
+        </div>
       </div>
     </div>
   )

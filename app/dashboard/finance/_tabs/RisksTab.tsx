@@ -9,6 +9,7 @@
 //   4. Anormallik Tespiti (statistical revenue + expense anomalies)
 //   5. CFO tavsiyesi
 
+import Link                      from 'next/link'
 import { getRiskEngineResult }   from '@/lib/finance/risk-engine'
 import {
   detectRevenueAnomalies,
@@ -358,6 +359,35 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
             </li>
           ))}
         </ul>
+      </div>
+
+      {/* Cross-navigation */}
+      <div className="flex items-center justify-between px-1">
+        <p className="text-[10px] text-gray-400 leading-relaxed">
+          Risk analizi tahsilat ve müşteri skorlarıyla birlikte değerlendirilmeli.
+        </p>
+        <div className="flex items-center gap-2 shrink-0 ml-4">
+          <Link
+            href="/dashboard/commercial?tab=collections"
+            className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap"
+          >
+            Tahsilat →
+          </Link>
+          <span className="text-gray-200">|</span>
+          <Link
+            href="/dashboard/commercial?tab=customers"
+            className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap"
+          >
+            Müşteri Riskleri →
+          </Link>
+          <span className="text-gray-200">|</span>
+          <Link
+            href="/dashboard/operations?tab=expenses"
+            className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap"
+          >
+            Giderler →
+          </Link>
+        </div>
       </div>
     </div>
   )
