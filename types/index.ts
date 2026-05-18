@@ -1068,6 +1068,7 @@ export type AuditEntityType =
   | 'user_settings'       // company profile / logo updates
   | 'company_bank'        // bank account CRUD events
   | 'product'             // product CRUD events
+  | 'period'              // accounting period state transitions
 
 /** Immutable audit trail row — never updated after insert. */
 export interface AuditLog {

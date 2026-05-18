@@ -89,7 +89,8 @@ export async function POST(req: NextRequest) {
           .eq('company_id', companyId)
           .neq('status', 'repaid'),
         supabase.from('sales')
-          .select('total_try, amount_paid, due_date, payment_status')
+          // FIX: alias paid_amount (active column) as amount_paid — stale dual column avoided
+          .select('total_try, amount_paid:paid_amount, due_date, payment_status')
           .eq('company_id', companyId)
           .in('payment_status', ['unpaid', 'partial', 'overdue']),
         supabase.from('expenses')

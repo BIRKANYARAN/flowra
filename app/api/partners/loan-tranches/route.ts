@@ -61,7 +61,12 @@ export async function POST(req: NextRequest) {
       company_id: companyId,
       partner_id,
       principal_try,
+      // Write to BOTH columns while the schema has two names for the same value.
+      // All SELECT queries read `annual_interest_rate` (legacy canonical).
+      // `interest_rate_annual_pct` is the new canonical name (pending DB column unification).
+      // Without this dual-write, new tranches silently get 0% interest in all calculations.
       interest_rate_annual_pct,
+      annual_interest_rate: interest_rate_annual_pct,  // DRIFT FIX: keep both columns in sync
       disbursement_date,
       expected_repayment_date,
       notes,

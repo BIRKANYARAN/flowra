@@ -52,13 +52,14 @@ export class CashFlowStatementService {
         .gte('paid_at', from + 'T00:00:00Z')
         .lte('paid_at', toTs),
 
-      // 2. Partial payments in period (amount_paid where payment_status=partial)
+      // 2. Partial payments in period (paid_amount where payment_status=partial)
       // Note: no per-payment timestamp exists for partial payments — using sale_date
       // to approximate which period the partial invoice belongs to. This is conservative:
       // a partial entered in month 2 on an invoice dated month 1 will appear in month 1.
+      // FIX: alias paid_amount (active column) as amount_paid for downstream reduce()
       (supabase as SupabaseClient)
         .from('sales')
-        .select('amount_paid')
+        .select('amount_paid:paid_amount')
         .eq('company_id', companyId)
         .eq('payment_status', 'partial')
         .is('deleted_at', null)

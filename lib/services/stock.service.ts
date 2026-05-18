@@ -415,14 +415,20 @@ export class StockService {
           product_id:     input.product_id,
           qty_initial:    input.qty_change,
           qty_remaining:  input.qty_change,
-          cost_price:     effectiveCost,        // actual column name
+          // Canonical column names (written by new code):
+          cost_price:     effectiveCost,
           cost_currency:  costCurrency,
-          cost_fx_rate:   fxRateAtEntry,        // actual column name
-          received_at:    entryDate,            // actual column name
+          cost_fx_rate:   fxRateAtEntry,
+          received_at:    entryDate,
+          // Frozen TRY cost snapshot (canonical name)
+          cost_price_try: entryCostTry,
+          // DRIFT FIX: dual-write legacy alias columns (read by cost.service.ts + FIFO engine)
+          // Both sets of columns exist in the DB until the schema is unified.
+          unit_cost:        effectiveCost,      // alias for cost_price
+          entry_cost_try:   entryCostTry,       // alias for cost_price_try
+          fx_rate_at_entry: fxRateAtEntry,      // alias for cost_fx_rate
           // Store movement reference in notes (DB has no movement_id FK)
           notes:          movement?.id ? `movement_id:${movement.id}` : null,
-          // Frozen TRY cost snapshot
-          cost_price_try: entryCostTry,         // actual column name
         }
         const { error: lotErr } = await supabase
           .from('stock_lots')
