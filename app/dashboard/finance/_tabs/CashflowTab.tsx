@@ -11,8 +11,11 @@ import Link              from 'next/link'
 import { CashflowChart }   from '@/components/dashboard/CashflowChart'
 import { ScenarioPanel }   from '@/components/dashboard/ScenarioPanel'
 import { getCashflowTimeline, getRunwayForecast, getCfoMetrics } from '@/lib/finance/financial-core'
+import { CashFlowStatementService } from '@/lib/services/cashflow-statement.service'
+import { createClient }             from '@/lib/supabase-server'
 import { fmtTRY as fmt }  from '@/lib/format'
 import type { CfoMetrics } from '@/lib/finance/cfo-metrics'
+import type { CashFlowStatement } from '@/types/dto'
 
 function fmtMonth(ym: string): string {
   const [y, m] = ym.split('-').map(Number)
@@ -24,7 +27,7 @@ function fmtMonth(ym: string): string {
 
 interface Props { userId: string; companyId: string }
 
-export async function CashflowTab({ userId: _userId, companyId }: Props) {
+export async function CashflowTab({ userId, companyId }: Props) {
   function sq<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
     return fn().catch(() => fallback)
   }
@@ -41,19 +44,28 @@ export async function CashflowTab({ userId: _userId, companyId }: Props) {
     partner:     { total_equity: 0, total_loans: 0, total_dividends: 0, company_owes: 0 },
     stock:       { fifo_value: 0, coverage_months: null },
   }
+  const ZERO_CF: CashFlowStatement = {
+    period: { from: '', to: '' },
+    operating: { net_income_try: 0, receivables_change_try: 0, inventory_change_try: 0, payables_change_try: 0, other_adjustments: [], net_operating_try: 0 },
+    investing: { equipment_purchases_try: 0, other: [], net_investing_try: 0 },
+    financing: { partner_loans_received_try: 0, partner_loans_repaid_try: 0, dividends_paid_try: 0, capital_injected_try: 0, other: [], net_financing_try: 0 },
+    net_change_try: 0, opening_balance_try: 0, closing_balance_try: 0,
+  }
 
   const now   = new Date()
   const year  = now.getFullYear()
   const mon   = String(now.getMonth() + 1).padStart(2, '0')
   const from  = `${year}-${mon}-01`
   const today = now.toISOString().slice(0, 10)
+  const supabase = createClient()
 
-  const [timeline, runway, metrics] = await Promise.all([
+  const [timeline, runway, metrics, cashflowStatement] = await Promise.all([
     sq(() => getCashflowTimeline(companyId, { pastMonths: 6, futureMonths: 6 }), {
       months: [], pressureSignals: [], firstDangerMonth: null, totalReceivables: 0,
     }),
     sq(() => getRunwayForecast(companyId, { months: 12 }), ZERO_RUNWAY),
     sq(() => getCfoMetrics(companyId, { from, to: today }), ZERO_METRICS),
+    sq(() => CashFlowStatementService.compute(userId, companyId, { from, to: today }, supabase), ZERO_CF),
   ])
 
   const lastMonth     = timeline.months[timeline.months.length - 1]
@@ -165,6 +177,98 @@ export async function CashflowTab({ userId: _userId, companyId }: Props) {
           ✓ Önümüzdeki 6 ayda nakit baskı sinyali tespit edilmedi.
         </div>
       )}
+
+      {/* Zone 3.5 — 3-Section Cash Flow Statement Strip */}
+      <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+        <div className="px-4 py-3 border-b border-gray-100">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-black text-gray-800">Nakit Akış Tablosu (Dönem Özeti)</h2>
+              <p className="text-[10px] text-gray-400 mt-0.5">
+                {from} – {today} · Faaliyet / Yatırım / Finansman
+              </p>
+            </div>
+            <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+              cashflowStatement.net_change_try >= 0
+                ? 'bg-emerald-100 text-emerald-700'
+                : 'bg-red-100 text-red-700'
+            }`}>
+              Net {fmt(cashflowStatement.net_change_try)}
+            </span>
+          </div>
+        </div>
+        <div className="grid grid-cols-3 divide-x divide-gray-100">
+          {[
+            {
+              key:    'operating',
+              label:  'Faaliyet Nakiti',
+              value:  cashflowStatement.operating.net_operating_try,
+              sub:    'Tahsilat − Giderler',
+              icon:   '🔄',
+            },
+            {
+              key:    'investing',
+              label:  'Yatırım Nakiti',
+              value:  cashflowStatement.investing.net_investing_try,
+              sub:    'Ekipman ve varlık alımları',
+              icon:   '🏗️',
+            },
+            {
+              key:    'financing',
+              label:  'Finansman Nakiti',
+              value:  cashflowStatement.financing.net_financing_try,
+              sub:    'Ortak borç + sermaye + temettü',
+              icon:   '🤝',
+            },
+          ].map(section => {
+            const tone = section.value === 0
+              ? 'text-gray-400'
+              : section.value > 0
+                ? 'text-emerald-700'
+                : 'text-red-600'
+            return (
+              <div key={section.key} className="px-4 py-3">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <span className="text-base">{section.icon}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">{section.label}</span>
+                </div>
+                <div className={`text-lg font-black tabular-nums leading-none ${tone}`}>
+                  {fmt(section.value)}
+                </div>
+                <div className="text-[10px] text-gray-400 mt-0.5">{section.sub}</div>
+              </div>
+            )
+          })}
+        </div>
+        {/* Financing detail if non-zero */}
+        {(cashflowStatement.financing.partner_loans_received_try !== 0 ||
+          cashflowStatement.financing.partner_loans_repaid_try !== 0 ||
+          cashflowStatement.financing.capital_injected_try !== 0 ||
+          cashflowStatement.financing.dividends_paid_try !== 0) && (
+          <div className="border-t border-gray-100 px-4 py-2.5 flex flex-wrap gap-3">
+            {cashflowStatement.financing.partner_loans_received_try > 0 && (
+              <span className="text-[10px] text-emerald-700 font-semibold">
+                + {fmt(cashflowStatement.financing.partner_loans_received_try)} ortak borç girişi
+              </span>
+            )}
+            {cashflowStatement.financing.partner_loans_repaid_try !== 0 && (
+              <span className="text-[10px] text-red-600 font-semibold">
+                {fmt(cashflowStatement.financing.partner_loans_repaid_try)} borç geri ödeme
+              </span>
+            )}
+            {cashflowStatement.financing.capital_injected_try > 0 && (
+              <span className="text-[10px] text-emerald-700 font-semibold">
+                + {fmt(cashflowStatement.financing.capital_injected_try)} sermaye girişi
+              </span>
+            )}
+            {cashflowStatement.financing.dividends_paid_try !== 0 && (
+              <span className="text-[10px] text-red-600 font-semibold">
+                {fmt(cashflowStatement.financing.dividends_paid_try)} temettü ödemesi
+              </span>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* Zone 4 — 12-month projection bar chart */}
       {chartMonths.length > 0 && (

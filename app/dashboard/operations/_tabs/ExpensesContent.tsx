@@ -7,6 +7,7 @@ import ExpensesClient, { type RecurringRow } from '@/app/dashboard/expenses/Expe
 import { ExpensesCommandBar } from '@/app/dashboard/expenses/_components/ExpensesCommandBar'
 import { fmtTRY as fmt }      from '@/lib/format'
 import { detectExpenseAnomalies, type MonthlyExpense } from '@/lib/engines/anomaly.engine'
+import { detectDuplicates, type ExpenseRow as DupExpenseRow } from '@/lib/engines/duplicate-detector'
 
 function CommandBarSkeleton() {
   return (
@@ -127,6 +128,20 @@ export async function ExpensesContent({ companyId }: Props) {
     .filter(a => a.severity === 'high')
     .slice(0, 3)
 
+  // ── Duplicate expense detection (last 90 days) ────────────────────────────
+  const ninetyDaysAgo = new Date(Date.now() - 90 * 86_400_000).toISOString().slice(0, 10)
+  const dupCandidates: DupExpenseRow[] = expenses
+    .filter(e => (e.expense_date ?? '') >= ninetyDaysAgo)
+    .map(e => ({
+      id:           e.id,
+      expense_date: e.expense_date ?? '',
+      expense_type: (e.expense_type as string) ?? 'general',
+      amount_try:   Number(e.amount_try),
+      vendor_name:  (e as unknown as { vendor_name?: string | null }).vendor_name ?? null,
+      description:  e.description ?? null,
+    }))
+  const duplicateGroups = detectDuplicates(dupCandidates).filter(d => d.confidence === 'high')
+
   return (
     <div className="max-w-4xl space-y-6">
       <Suspense fallback={<CommandBarSkeleton />}>
@@ -170,6 +185,32 @@ export async function ExpensesContent({ companyId }: Props) {
           </div>
           <div className="text-[10px] text-amber-600 mt-1.5">
             Detaylı analiz için Finans → Risk sekmesini inceleyin.
+          </div>
+        </div>
+      )}
+
+      {/* Duplicate expense alerts */}
+      {duplicateGroups.length > 0 && (
+        <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="text-[10px] font-black uppercase tracking-widest text-red-700">⚠ Olası Kopya Gider — {duplicateGroups.length} Grup</span>
+            <span className="text-[9px] text-red-500">son 90 gün · yüksek güven</span>
+          </div>
+          <div className="space-y-1.5">
+            {duplicateGroups.map((grp, i) => (
+              <div key={i} className="flex items-start gap-2">
+                <span className="text-[11px] bg-red-100 text-red-800 font-semibold px-2 py-0.5 rounded-lg shrink-0">
+                  {CATEGORY_LABELS[grp.expense_type] ?? grp.expense_type}
+                </span>
+                <span className="text-[10px] text-red-700 flex-1">{grp.message}</span>
+                <span className="text-[10px] font-bold text-red-700 shrink-0 tabular-nums">
+                  {grp.rows.map(r => r.expense_date).join(' · ')}
+                </span>
+              </div>
+            ))}
+          </div>
+          <div className="text-[10px] text-red-600 mt-1.5">
+            Finans → CFO sekmesinde gider denetimini tamamlayın.
           </div>
         </div>
       )}
