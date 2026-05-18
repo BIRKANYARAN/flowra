@@ -315,7 +315,7 @@ export default async function OpsCommandPage() {
             />
           </div>
           {(overdue ?? []).length === 0 ? (
-            <EmptyRow message="Gecikmiş tahsilat yok 🎉" />
+            <EmptyRow message="Gecikmiş tahsilat yok" />
           ) : (
             <div className="divide-y divide-gray-100">
               {(overdue as OverdueSale[]).map(s => {
@@ -358,7 +358,7 @@ export default async function OpsCommandPage() {
             />
           </div>
           {lowStock.length === 0 ? (
-            <EmptyRow message="Tüm ürünlerde yeterli stok var 🎉" />
+            <EmptyRow message="Tüm ürünlerde yeterli stok mevcut" />
           ) : (
             <div className="divide-y divide-gray-100">
               {lowStock.map(p => (

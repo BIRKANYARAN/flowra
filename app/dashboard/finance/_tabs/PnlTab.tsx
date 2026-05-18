@@ -132,8 +132,11 @@ export async function PnlTab({ userId, companyId }: Props) {
   if (!s) {
     return (
       <div className="bg-white border border-gray-100 rounded-xl text-center py-16 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
-        <div className="text-3xl mb-2">📊</div>
+        <div className="w-8 h-8 rounded-full bg-gray-100 mx-auto mb-3 flex items-center justify-center">
+          <span className="text-gray-400 text-sm font-bold">—</span>
+        </div>
         <p className="text-gray-500 font-medium text-sm">Bu dönem için finansal veri bulunamadı.</p>
+        <p className="text-gray-400 text-xs mt-1">Satış veya gider eklendiğinde gelir tablosu otomatik hesaplanır.</p>
       </div>
     )
   }

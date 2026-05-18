@@ -230,9 +230,9 @@ export async function ForecastTab({ userId: _userId, companyId }: Props) {
           <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">12 Aylık Senaryo Analizi</div>
           <div className="grid grid-cols-3 gap-3">
             {([
-              { key: 'pessimistic' as const, label: '📉 Muhafazakâr',  bg: 'bg-red-50',     border: 'border-red-200',    netColor: 'text-red-600',    cashColor: 'text-red-700'    },
-              { key: 'base'        as const, label: '📊 Baz Senaryo',  bg: 'bg-gray-50',    border: 'border-gray-200',   netColor: 'text-gray-800',   cashColor: 'text-gray-900'   },
-              { key: 'optimistic'  as const, label: '📈 İyimser',       bg: 'bg-emerald-50', border: 'border-emerald-200',netColor: 'text-emerald-700',cashColor: 'text-emerald-800'},
+              { key: 'pessimistic' as const, label: 'Muhafazakâr',  bg: 'bg-red-50',     border: 'border-red-200',    netColor: 'text-red-600',    cashColor: 'text-red-700'    },
+              { key: 'base'        as const, label: 'Baz Senaryo',  bg: 'bg-gray-50',    border: 'border-gray-200',   netColor: 'text-gray-800',   cashColor: 'text-gray-900'   },
+              { key: 'optimistic'  as const, label: 'İyimser',       bg: 'bg-emerald-50', border: 'border-emerald-200',netColor: 'text-emerald-700',cashColor: 'text-emerald-800'},
             ] as const).map(sc => {
               const s = forecast!.summary[sc.key]
               return (

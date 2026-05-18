@@ -289,7 +289,7 @@ export default function PartnersPage() {
     { id: 'partners',     label: 'Ortaklar'     },
     { id: 'ledger',       label: 'Defter'       },
     { id: 'waterfall',    label: 'Geri Ödeme'   },
-    { id: 'tranches',     label: 'Trancheler'   },
+    { id: 'tranches',     label: 'Borç Dilimleri' },
     { id: 'distribution', label: 'Kâr Dağıtımı' },
     { id: 'returns',      label: 'Getiri'       },
     { id: 'risk',         label: 'Risk'         },

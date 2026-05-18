@@ -89,11 +89,11 @@ export async function SimulationContext({ companyId }: Props) {
             tone:  'gray',
           },
           {
-            label: 'Runway',
+            label: 'Nakit Ömrü',
             value: runwayMonths !== null ? `${runwayMonths.toFixed(1)} ay` : '∞',
             sub:   runwayMonths === null ? 'Zarar yok' :
-                   runwayMonths <= 2 ? '🔥 Kritik' :
-                   runwayMonths <= 6 ? '⚠ Yakın takip' : 'Sağlıklı',
+                   runwayMonths <= 2 ? 'Kritik' :
+                   runwayMonths <= 6 ? 'Yakın takip' : 'Sağlıklı',
             tone:  runwayMonths === null ? 'emerald' :
                    runwayMonths <= 2 ? 'red' :
                    runwayMonths <= 6 ? 'amber' : 'emerald',

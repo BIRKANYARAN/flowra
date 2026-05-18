@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "flowra-dev",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "--", "--port", "3001"],
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["--yes", "next", "dev", "--port", "3001"],
       "port": 3001
     }
   ]

@@ -249,7 +249,7 @@ export function WaterfallTab({
                 {waterfall.debt_clearance_months > 12 && ' — borç yükü kritik seviyede.'}
               </span>
               <span className="text-[10px] font-black opacity-60">
-                {waterfall.debt_clearance_months <= 3 ? '✓' : waterfall.debt_clearance_months <= 12 ? '⚠' : '⚡'}
+                {waterfall.debt_clearance_months <= 3 ? '✓' : waterfall.debt_clearance_months <= 12 ? '⚠' : '!'}
               </span>
             </div>
           )}

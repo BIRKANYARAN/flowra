@@ -291,6 +291,7 @@ create table if not exists proformas (
   customer_snapshot   jsonb,
   sent_at             timestamptz,
   accepted_at         timestamptz,
+  approved_at         timestamptz,   -- alias: set when status → accepted or approved
   rejected_at         timestamptz,
   converted_at        timestamptz,
   created_at          timestamptz not null default now(),
@@ -306,11 +307,16 @@ create table if not exists proforma_items (
   company_id      uuid        not null references companies(id) on delete cascade,
   product_id      uuid        references products(id) on delete set null,
   product_name    text        not null default '',
-  qty             numeric(12,3) not null default 1,
+  unit            text        not null default 'adet',   -- unit of measure (e.g. adet, kg, saat)
   unit_price      numeric(12,4) not null default 0,
-  currency        text        not null default 'TRY',
+  unit_cost       numeric(12,4),                         -- FIFO cost at proforma time (informational)
+  qty             numeric(12,3) not null default 1,
   discount_pct    numeric(5,2) not null default 0,
-  line_total      numeric(12,2) not null default 0,
+  kdv_rate        numeric(5,2) not null default 20,      -- VAT rate in %
+  line_subtotal   numeric(12,2) not null default 0,      -- qty × unit_price × (1 - discount_pct/100)
+  vat_amount      numeric(12,2) not null default 0,      -- line_subtotal × kdv_rate / 100
+  line_total      numeric(12,2) not null default 0,      -- line_subtotal + vat_amount
+  currency        text        not null default 'TRY',
   notes           text,
   sort_order      integer     not null default 0,
   created_at      timestamptz not null default now()
@@ -328,11 +334,15 @@ create table if not exists sales (
   customer_name       text        not null default '',
   currency            text        not null default 'TRY',
   total               numeric(12,2) not null default 0,
+  total_try           numeric(15,2) not null default 0,   -- TRY total frozen at sale time (FX-converted)
+  revenue_try         numeric(15,2) not null default 0,   -- total_try minus kdv (net revenue in TRY)
+  kdv_amount_try      numeric(12,2) not null default 0,   -- VAT portion frozen at sale time
   paid_amount         numeric(12,2) not null default 0,
   payment_status      text        not null default 'pending',
   shipment_status     text        not null default 'pending',
   sale_date           date,
   due_date            date,
+  paid_at             timestamptz,
   notes               text,
   internal_notes      text,
   fx_usd              numeric(12,6),
@@ -2134,6 +2144,28 @@ grant all on purchase_costs to authenticated, service_role;
 -- GAP 6: kdv_amount_try on sales — freeze KDV in TRY at sale creation time
 alter table sales add column if not exists kdv_amount_try numeric(12,2) not null default 0;
 comment on column sales.kdv_amount_try is 'KDV (VAT) portion of the sale total in TRY, frozen at sale creation time.';
+
+-- GAP 6b: total_try and revenue_try on sales — used by RPC + SaleService
+alter table sales add column if not exists total_try   numeric(15,2) not null default 0;
+alter table sales add column if not exists revenue_try numeric(15,2) not null default 0;
+alter table sales add column if not exists paid_at     timestamptz;
+comment on column sales.total_try   is 'Total in TRY, frozen at sale creation time (FX-converted).';
+comment on column sales.revenue_try is 'Net revenue in TRY excluding VAT (total_try - kdv_amount_try).';
+comment on column sales.paid_at     is 'Timestamp when any payment was first received (partial or full).';
+
+-- GAP 14: proformas.approved_at — written by ProformaService.updateStatus() on accepted/approved
+alter table proformas add column if not exists approved_at timestamptz;
+comment on column proformas.approved_at is 'Set when status transitions to accepted or approved. Alias for accepted_at.';
+
+-- GAP 15: proforma_items additional columns — written by ProformaService.update() upsert path
+alter table proforma_items add column if not exists unit         text         not null default 'adet';
+alter table proforma_items add column if not exists unit_cost    numeric(12,4);
+alter table proforma_items add column if not exists line_subtotal numeric(12,2) not null default 0;
+alter table proforma_items add column if not exists vat_amount   numeric(12,2) not null default 0;
+comment on column proforma_items.unit         is 'Unit of measure (adet, kg, saat, m², etc.).';
+comment on column proforma_items.unit_cost    is 'FIFO cost at proforma time — informational, not used for pricing.';
+comment on column proforma_items.line_subtotal is 'qty × unit_price × (1 − discount_pct/100), excludes VAT.';
+comment on column proforma_items.vat_amount   is 'line_subtotal × kdv_rate / 100.';
 
 -- GAP 13: cost_price_try on sale_item_allocations — makes COGS computable without JOIN
 alter table sale_item_allocations add column if not exists cost_price_try numeric(12,4);

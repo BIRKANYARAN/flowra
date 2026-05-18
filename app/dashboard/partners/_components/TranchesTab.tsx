@@ -101,7 +101,7 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
       <div className="flex items-center justify-between gap-3 min-h-[32px]">
         {success && (
           <span className="text-xs text-emerald-700 font-semibold bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-1">
-            Tranche başarıyla eklendi.
+            Borç dilimi başarıyla eklendi.
           </span>
         )}
         {!success && <span />}
@@ -110,7 +110,7 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
           disabled={saving}
           className="inline-flex items-center gap-1.5 bg-primary-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-primary-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          {showForm ? '✕ Kapat' : '+ Yeni Tranche'}
+          {showForm ? '✕ Kapat' : '+ Yeni Borç Dilimi'}
         </button>
       </div>
 
@@ -246,7 +246,7 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
       {/* Existing tranches display */}
       {loading ? <Skeleton h="h-32" /> : !waterfall ? (
         <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-6 text-center text-sm text-gray-400">
-          Tranche verisi yüklenemedi.
+          Borç dilimi verisi yüklenemedi.
         </div>
       ) : waterfall.tranches.filter(t => t.principal_try > 0).length === 0 ? (
         <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-6 text-center text-sm text-emerald-700 font-semibold">
@@ -260,7 +260,7 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
               <div className="text-2xl font-black tabular-nums text-amber-700">{fmt(waterfall.total_debt_try)}</div>
             </div>
             <div className="bg-white border border-gray-100 rounded-xl px-4 py-3 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
-              <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Aktif Tranche Sayısı</div>
+              <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Aktif Borç Dilimi</div>
               <div className="text-2xl font-black tabular-nums text-gray-900">
                 {waterfall.tranches.filter(t => t.status !== 'repaid').length}
               </div>
@@ -336,7 +336,7 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
       {/* Cross-navigation */}
       <div className="flex items-center justify-between px-1 pt-2">
         <p className="text-[10px] text-gray-400 leading-relaxed">
-          Tranche detayları borç baskısı ve geri ödeme simülasyonuyla birlikte inceleyin.
+          Borç dilimleri, borç baskısı ve geri ödeme simülasyonuyla birlikte inceleyin.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
           <Link href="/dashboard/planning?tab=debt-pressure" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">

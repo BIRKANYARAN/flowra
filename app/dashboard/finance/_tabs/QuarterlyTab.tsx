@@ -396,8 +396,8 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
         </div>
       ) : (
         <div className="bg-white border border-gray-100 rounded-xl text-center py-16 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
-          <div className="text-4xl mb-3">📊</div>
-          <p className="text-gray-500 font-medium">Henüz satış verisi yok.</p>
+          <p className="text-gray-500 font-medium text-sm">Henüz satış verisi yok.</p>
+          <p className="text-gray-400 text-xs mt-1">Satış kaydedildiğinde çeyreklik analiz otomatik hesaplanır.</p>
         </div>
       )}
 

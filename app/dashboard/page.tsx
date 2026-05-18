@@ -483,7 +483,7 @@ export default async function DashboardPage() {
         { label: runwayDays < 60 ? `nakit ömrü ${runwayDays}g (kritik)` : `runway ${runwayDays}g`, severity: runwayDays < 60 ? 'critical' : 'warn' },
         { label: 'dağıtım kapasitesi daralıyor', severity: 'warn' },
       ],
-      conclusion: 'Tahsil → runway uzar',
+      conclusion: 'Tahsilat yapılırsa nakit ömrü uzar',
       href: '/dashboard/commercial?tab=collections',
     }
   } else if (fs.net_vat_try > 50_000 && cashDistributable < fs.net_vat_try * 2) {
@@ -1012,10 +1012,10 @@ export default async function DashboardPage() {
           {([
             {
               key:    'cash',
-              label:  'Nakit / Runway',
+              label:  'Nakit / Ömür',
               score:  situation.scores.cash,
               href:   '/dashboard/finance?tab=cashflow',
-              detail: runwayDays < 0 ? 'Burn yok' : `${runwayDays < 365 ? runwayDays + 'g' : Math.round(runwayMonths) + 'ay'} ömür`,
+              detail: runwayDays < 0 ? 'Nakit akışı sağlıklı' : `${runwayDays < 365 ? runwayDays + 'g' : Math.round(runwayMonths) + 'ay'} ömür`,
             },
             {
               key:    'profit',
