@@ -47,16 +47,58 @@ interface SavedScenario {
 }
 
 const STORAGE_KEY = 'flowra_whatif_scenarios'
-const MAX_SAVED   = 4
+const MAX_SAVED   = 20
 
-function loadSaved(): SavedScenario[] {
+// ── localStorage helpers (offline / optimistic fallback) ──────────────────────
+function loadLocal(): SavedScenario[] {
   try {
     const raw = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null
     return raw ? (JSON.parse(raw) as SavedScenario[]) : []
   } catch { return [] }
 }
-function persistSaved(scenarios: SavedScenario[]) {
+function persistLocal(scenarios: SavedScenario[]) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(scenarios)) } catch { /* quota */ }
+}
+
+// ── DB helpers — best-effort, errors are non-fatal ────────────────────────────
+async function fetchDBScenarios(): Promise<SavedScenario[]> {
+  try {
+    const res  = await fetch('/api/simulation/scenarios', { cache: 'no-store' })
+    if (!res.ok) return []
+    const json = await res.json() as { scenarios?: Array<{ id: string; name: string; inputs: { sliders: SavedScenario['sliders'] }; summary: SavedScenario['summary']; created_at: string }> }
+    return (json.scenarios ?? []).map(r => ({
+      id:      r.id,
+      name:    r.name,
+      savedAt: r.created_at,
+      sliders: r.inputs?.sliders ?? { revChange: 0, expChange: 0, cogsChange: 0, collDelay: 0, debtChange: 0, taxRateOverride: 25 },
+      summary: r.summary ?? { netIncome: 0, grossMarginPct: 0, distributable: 0, runwayMonths: null },
+    }))
+  } catch { return [] }
+}
+
+async function saveDBScenario(
+  name: string,
+  sliders: SavedScenario['sliders'],
+  summary: SavedScenario['summary'],
+): Promise<string | null> {
+  try {
+    const res  = await fetch('/api/simulation/scenarios', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ name, inputs: { sliders }, summary }),
+    })
+    if (!res.ok) return null
+    const json = await res.json() as { scenario?: { id: string } }
+    return json.scenario?.id ?? null
+  } catch { return null }
+}
+
+async function deleteDBScenario(id: string): Promise<void> {
+  // UUIDs from DB; skip for local-only IDs (timestamp strings)
+  if (!id.includes('-')) return
+  try {
+    await fetch(`/api/simulation/scenarios/${id}`, { method: 'DELETE' })
+  } catch { /* non-fatal */ }
 }
 
 interface Props {
@@ -75,16 +117,33 @@ export function WhatIfClient({ period, baseline }: Props) {
   const [taxRateOverride, setTaxRateOverride] = useState(25)   // 0 → 40 %
 
   // ── Saved scenarios ───────────────────────────────────────────────────────
-  const [saved,       setSaved]       = useState<SavedScenario[]>([])
-  const [saveName,    setSaveName]    = useState('')
-  const [showSaveBox, setShowSaveBox] = useState(false)
+  const [saved,        setSaved]        = useState<SavedScenario[]>([])
+  const [saveName,     setSaveName]     = useState('')
+  const [showSaveBox,  setShowSaveBox]  = useState(false)
+  const [scenariosLoading, setScenariosLoading] = useState(true)
+  const [saving,       setSaving]       = useState(false)
 
-  useEffect(() => { setSaved(loadSaved()) }, [])
+  // Load: try DB first, fall back to localStorage
+  useEffect(() => {
+    setScenariosLoading(true)
+    fetchDBScenarios()
+      .then(dbRows => {
+        if (dbRows.length > 0) {
+          setSaved(dbRows)
+          persistLocal(dbRows) // sync localStorage cache
+        } else {
+          setSaved(loadLocal())
+        }
+      })
+      .catch(() => setSaved(loadLocal()))
+      .finally(() => setScenariosLoading(false))
+  }, [])
 
-  const deleteSaved = useCallback((id: string) => {
+  const deleteSaved = useCallback(async (id: string) => {
     const updated = saved.filter(s => s.id !== id)
     setSaved(updated)
-    persistSaved(updated)
+    persistLocal(updated)
+    await deleteDBScenario(id)        // best-effort — non-fatal
   }, [saved])
 
   const restoreScenario = useCallback((s: SavedScenario) => {
@@ -140,25 +199,38 @@ export function WhatIfClient({ period, baseline }: Props) {
   }, [revChange, expChange, cogsChange, collDelay, debtChange, taxRateOverride, baseline])
 
   // ── Save scenario — defined after `result` so it can reference it ────────
-  const saveScenario = useCallback(() => {
-    if (!saveName.trim()) return
-    const scenario: SavedScenario = {
-      id:      (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : `${Date.now()}`,
-      name:    saveName.trim(),
-      savedAt: new Date().toISOString(),
-      sliders: { revChange, expChange, cogsChange, collDelay, debtChange, taxRateOverride },
-      summary: {
-        netIncome:      result.netIncome,
-        grossMarginPct: result.grossMarginPct,
-        distributable:  result.distributable,
-        runwayMonths:   result.runwayMonths,
-      },
+  const saveScenario = useCallback(async () => {
+    const name = saveName.trim()
+    if (!name) return
+    setSaving(true)
+
+    const sliders = { revChange, expChange, cogsChange, collDelay, debtChange, taxRateOverride }
+    const summary = {
+      netIncome:      result.netIncome,
+      grossMarginPct: result.grossMarginPct,
+      distributable:  result.distributable,
+      runwayMonths:   result.runwayMonths,
     }
-    const updated = [scenario, ...saved].slice(0, MAX_SAVED)
+
+    // Optimistic local update first (instant UX)
+    const localId  = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : `${Date.now()}`
+    const scenario: SavedScenario = { id: localId, name, savedAt: new Date().toISOString(), sliders, summary }
+    const updated  = [scenario, ...saved].slice(0, MAX_SAVED)
     setSaved(updated)
-    persistSaved(updated)
+    persistLocal(updated)
     setSaveName('')
     setShowSaveBox(false)
+
+    // Best-effort DB persist (replace local ID with DB ID on success)
+    const dbId = await saveDBScenario(name, sliders, summary)
+    if (dbId) {
+      setSaved(prev => {
+        const next = prev.map(s => s.id === localId ? { ...s, id: dbId } : s)
+        persistLocal(next)
+        return next
+      })
+    }
+    setSaving(false)
   }, [saveName, saved, revChange, expChange, cogsChange, collDelay, debtChange, taxRateOverride, result])
 
   // ── Baseline helpers ──────────────────────────────────────────────────────
@@ -365,22 +437,32 @@ export function WhatIfClient({ period, baseline }: Props) {
                 />
                 <button
                   onClick={saveScenario}
-                  disabled={!saveName.trim()}
-                  className="text-xs font-bold text-white bg-primary-600 hover:bg-primary-700 rounded-lg px-3 py-1.5 disabled:opacity-50 transition-colors"
+                  disabled={!saveName.trim() || saving}
+                  className="text-xs font-bold text-white bg-primary-600 hover:bg-primary-700 rounded-lg px-3 py-1.5 disabled:opacity-50 transition-colors flex items-center gap-1"
                 >
+                  {saving ? (
+                    <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                  ) : null}
                   Kaydet
                 </button>
               </div>
-              {saved.length >= MAX_SAVED && (
-                <div className="text-[9px] text-amber-600">Maksimum {MAX_SAVED} senaryo — eskisi silinecek.</div>
-              )}
+              <div className="text-[9px] text-gray-400 flex items-center gap-1">
+                <span>☁</span>
+                <span>Buluta kaydedilir · tüm cihazlarda erişilebilir</span>
+              </div>
             </div>
           )}
 
           {/* Saved scenarios list */}
-          {saved.length > 0 && (
+          {(scenariosLoading || saved.length > 0) && (
             <div className="space-y-1.5">
-              <div className="text-[9px] font-black uppercase tracking-widest text-gray-400">Kayıtlı Senaryolar</div>
+              <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 flex items-center gap-1.5">
+                Kayıtlı Senaryolar
+                {scenariosLoading && <span className="inline-block w-3 h-3 border border-gray-300 border-t-gray-500 rounded-full animate-spin" />}
+                {!scenariosLoading && saved.length > 0 && <span className="font-normal text-gray-300">({saved.length})</span>}
+              </div>
               {saved.map(s => {
                 const netColor = s.summary.netIncome >= 0 ? 'text-emerald-700' : 'text-red-600'
                 return (
