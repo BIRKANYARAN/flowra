@@ -2,6 +2,7 @@
 // Server wrapper loads current-month baseline financials.
 // Client island renders sliders + live P&L recalculation (zero API calls on slide).
 
+import Link               from 'next/link'
 import { createClient }     from '@/lib/supabase-server'
 import { FinanceService }   from '@/lib/services/finance.service'
 import { WhatIfClient }     from './_whatif/WhatIfClient'
@@ -41,9 +42,26 @@ export async function WhatIfTab({ companyId, userId }: Props) {
   } catch { /* zero */ }
 
   return (
-    <WhatIfClient
-      period={period}
-      baseline={{ revenue, cogs, expenses, salesVat, purchaseVat, monthlyDebtService }}
-    />
+    <div className="space-y-4">
+      <WhatIfClient
+        period={period}
+        baseline={{ revenue, cogs, expenses, salesVat, purchaseVat, monthlyDebtService }}
+      />
+      {/* Cross-navigation */}
+      <div className="flex items-center justify-between px-1">
+        <p className="text-[10px] text-gray-400 leading-relaxed">
+          What-if sonuçlarını 12-ay projeksiyonuyla ve gerçek finansallarla karşılaştırın.
+        </p>
+        <div className="flex items-center gap-2 shrink-0 ml-4">
+          <Link href="/dashboard/planning?tab=cash-projection" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Nakit Projeksiyonu →
+          </Link>
+          <span className="text-gray-200">|</span>
+          <Link href="/dashboard/finance?tab=pnl" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Gerçek P&amp;L →
+          </Link>
+        </div>
+      </div>
+    </div>
   )
 }

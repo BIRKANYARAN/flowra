@@ -1,5 +1,6 @@
 // ── TasksContent — Planning hub / tasks tab ───────────────────────────────────
 
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase-server'
 import type { Task, Customer, Sale } from '@/types'
 import TasksClient from '@/app/dashboard/tasks/TasksClient'
@@ -124,6 +125,22 @@ export async function TasksContent({ companyId }: Props) {
       )}
 
       <TasksClient initialTasks={tasks} initialCustomers={customers} initialSales={sales} />
+
+      {/* Cross-navigation */}
+      <div className="flex items-center justify-between px-1">
+        <p className="text-[10px] text-gray-400 leading-relaxed">
+          Görevler tahsilat ve satış akışıyla koordineli yönetilmeli.
+        </p>
+        <div className="flex items-center gap-2 shrink-0 ml-4">
+          <Link href="/dashboard/commercial?tab=collections" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Tahsilat →
+          </Link>
+          <span className="text-gray-200">|</span>
+          <Link href="/dashboard/commercial?tab=pipeline" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Satış Akışı →
+          </Link>
+        </div>
+      </div>
     </div>
   )
 }
