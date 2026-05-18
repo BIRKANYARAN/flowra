@@ -1,5 +1,6 @@
 // ── CustomersContent — Commercial hub / customers tab ─────────────────────────
 
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase-server'
 import type { Customer } from '@/types'
 import CustomersClient from '@/app/dashboard/customers/CustomersClient'
@@ -197,6 +198,28 @@ export async function CustomersContent({ companyId }: Props) {
       )}
 
       <CustomersClient initialCustomers={customers} />
+
+      {/* Cross-navigation */}
+      <div className="flex items-center justify-between px-1">
+        <p className="text-[10px] text-gray-400 leading-relaxed">
+          Müşteri risk skoru geç ödeme geçmişine dayanır. Tahsilat ve alacak analizi için ilgili sekmelere geçin.
+        </p>
+        <div className="flex items-center gap-2 shrink-0 ml-4">
+          <Link
+            href="/dashboard/commercial?tab=collections"
+            className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap"
+          >
+            Tahsilat →
+          </Link>
+          <span className="text-gray-200">|</span>
+          <Link
+            href="/dashboard/finance?tab=risks"
+            className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap"
+          >
+            Alacak Risk Analizi →
+          </Link>
+        </div>
+      </div>
     </div>
   )
 }
