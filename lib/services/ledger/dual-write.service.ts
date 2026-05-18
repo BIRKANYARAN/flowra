@@ -11,6 +11,29 @@ import { JournalEntryService } from './journal-entry.service'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnySupabaseClient = any
 
+// ── gl_mode in-process cache ───────────────────────────────────────────────────
+// Prevents an N+1 DB query on every dualWrite() call.
+// gl_mode is an admin-only setting that rarely changes; 60 s staleness is fine.
+const _glModeCache = new Map<string, { mode: string; expiresAt: number }>()
+const GL_MODE_TTL_MS = 60_000
+
+async function _cachedGlMode(
+  companyId: string,
+  supabase:  AnySupabaseClient,
+): Promise<string> {
+  const hit = _glModeCache.get(companyId)
+  if (hit && hit.expiresAt > Date.now()) return hit.mode
+  const mode = await getGlMode(companyId, supabase)
+  _glModeCache.set(companyId, { mode, expiresAt: Date.now() + GL_MODE_TTL_MS })
+  return mode
+}
+
+// ── Public cache-bust helper — call after admin changes gl_mode ───────────────
+export function invalidateGlModeCache(companyId?: string): void {
+  if (companyId) _glModeCache.delete(companyId)
+  else           _glModeCache.clear()
+}
+
 type JournalEntryBuilder = () => ReturnType<typeof JournalEntryService.buildSaleEntry>
 
 export interface DualWriteParams {
@@ -23,7 +46,7 @@ export interface DualWriteParams {
 
 export async function dualWrite(params: DualWriteParams): Promise<string | null> {
   const { companyId, periodId, createdBy, supabase, buildEntry } = params
-  const glMode = await getGlMode(companyId, supabase)
+  const glMode = await _cachedGlMode(companyId, supabase)
 
   if (glMode === 'shadow') return null
 
