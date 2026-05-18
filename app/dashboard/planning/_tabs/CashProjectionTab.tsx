@@ -242,6 +242,21 @@ export async function CashProjectionTab({ companyId }: Props) {
       {/* ── STRATEGIC P&L PROJECTION — computeMultiScenario ──────────────── */}
       <StrategicScenarioSection companyId={companyId} />
 
+      {/* Cross-navigation */}
+      <div className="flex items-center justify-between px-1">
+        <p className="text-[10px] text-gray-400 leading-relaxed">
+          Nakit projeksiyonu gerçek finansallarla ve borç baskısıyla birlikte değerlendirilmeli.
+        </p>
+        <div className="flex items-center gap-2 shrink-0 ml-4">
+          <Link href="/dashboard/finance?tab=cashflow" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Nakit Akışı →
+          </Link>
+          <span className="text-gray-200">|</span>
+          <Link href="/dashboard/planning?tab=debt-pressure" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Borç Baskısı →
+          </Link>
+        </div>
+      </div>
     </div>
   )
 }
