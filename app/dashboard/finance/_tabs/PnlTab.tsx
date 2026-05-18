@@ -9,6 +9,7 @@
 import { FinanceService }   from '@/lib/services/finance.service'
 import { periodForMonth }   from '@/lib/services/finance-rules'
 import { fmtTRY as fmt }   from '@/lib/format'
+import { createClient }     from '@/lib/supabase-server'
 
 // ── Formatters ────────────────────────────────────────────────────────────────
 
@@ -64,6 +65,26 @@ function WRow({ label, value, sub, isTotal, isDeduction, isSub }: {
   )
 }
 
+// ── Expense category labels ────────────────────────────────────────────────────
+
+const CATEGORY_LABELS: Record<string, string> = {
+  general:       'Genel Giderler',
+  rent:          'Kira',
+  salary:        'Maaş / Bordro',
+  utilities:     'Faturalar (Elektrik/Su/Gaz)',
+  marketing:     'Pazarlama',
+  logistics:     'Lojistik / Kargo',
+  software:      'Yazılım / Abonelik',
+  equipment:     'Ekipman / Donanım',
+  tax:           'Vergi / Resmi Ücret',
+  interest:      'Faiz Gideri',
+  board_fee:     'Yönetim Kurulu Ücreti',
+  principal:     'Anapara Geri Ödemesi',
+  dividend:      'Kâr Payı',
+  partner_loan:  'Ortak Finansmanı',
+  other:         'Diğer',
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 interface Props { userId: string; companyId: string }
@@ -72,15 +93,39 @@ export async function PnlTab({ userId, companyId }: Props) {
   const now  = new Date()
   const currentYM = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
   const monthYMs  = lastNMonths(6, now)
+  const supabase  = createClient()
+
+  const { from: monthFrom, to: monthTo } = periodForMonth(currentYM)
 
   function sq<T>(fn: () => Promise<T>, fb: T): Promise<T> { return fn().catch(() => fb) }
 
-  const [currentSummary, ...historySummaries] = await Promise.all([
+  const [currentSummary, expenseCatRaw, ...historySummaries] = await Promise.all([
     sq(() => FinanceService.getFinancialSummary(userId, companyId, periodForMonth(currentYM)), null),
+    sq(async () => {
+      const { data } = await supabase
+        .from('expenses')
+        .select('category, amount_try')
+        .eq('company_id', companyId)
+        .is('deleted_at', null)
+        .gte('expense_date', monthFrom)
+        .lte('expense_date', monthTo)
+        .neq('payment_status', 'cancelled')
+      return (data ?? []) as Array<{ category: string | null; amount_try: number | null }>
+    }, [] as Array<{ category: string | null; amount_try: number | null }>),
     ...lastNMonths(6, now).map(ym =>
       sq(() => FinanceService.getFinancialSummary(userId, companyId, periodForMonth(ym)), null)
     ),
   ])
+
+  // Group expense rows by category
+  const catMap = new Map<string, number>()
+  for (const e of expenseCatRaw) {
+    const key = e.category ?? 'other'
+    catMap.set(key, (catMap.get(key) ?? 0) + Number(e.amount_try ?? 0))
+  }
+  const expenseByCategory = Array.from(catMap.entries())
+    .sort((a, b) => b[1] - a[1])
+    .map(([cat, total]) => ({ cat, label: CATEGORY_LABELS[cat] ?? cat, total }))
 
   const s = currentSummary
   if (!s) {
@@ -123,6 +168,14 @@ export async function PnlTab({ userId, companyId }: Props) {
             <WRow label="Brüt Kâr" value={grossProfit}
               sub={`Marj: ${pct(grossProfit, revenue)}`} isTotal />
             <WRow label="− Operasyonel Giderler" value={expenses} isDeduction isSub />
+            {expenseByCategory.length > 0 && expenseByCategory.map(({ cat, label, total }) => (
+              <div key={cat} className="flex items-center justify-between gap-2 py-1 pl-6">
+                <span className="text-[10px] text-gray-400 font-medium truncate">{label}</span>
+                <span className="text-[10px] tabular-nums text-gray-500 font-semibold shrink-0">
+                  ({fmtFull(total)})
+                </span>
+              </div>
+            ))}
             <WRow label="Faaliyet Kârı (EBIT)" value={ebitda}
               sub={ebitda >= 0 ? 'Operasyon kârlı' : 'Zarar eden operasyon'} isTotal />
             <WRow label="Vergi Matrahı" value={matrah}
