@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import {
   DistribState,
   pct, fmt,
@@ -216,6 +217,26 @@ export function DistributionTab({
           Dönem net gelirini girin ve hesapla butonuna basın.
         </div>
       )}
+
+      {/* Cross-navigation */}
+      <div className="flex items-center justify-between px-1 pt-2">
+        <p className="text-[10px] text-gray-400 leading-relaxed">
+          Kâr dağıtımı P&amp;L ve geçici vergi ile uyumlu olmalı.
+        </p>
+        <div className="flex items-center gap-2 shrink-0 ml-4">
+          <Link href="/dashboard/finance?tab=pnl" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            P&amp;L Analizi →
+          </Link>
+          <span className="text-gray-200">|</span>
+          <Link href="/dashboard/finance?tab=quarterly" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Geçici Vergi →
+          </Link>
+          <span className="text-gray-200">|</span>
+          <Link href="/dashboard/finance?tab=balance" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Bilanço →
+          </Link>
+        </div>
+      </div>
     </div>
   )
 }

@@ -9,6 +9,7 @@
 //   • Recommended actions per partner
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import type { RiskGrade }      from '@/lib/services/pcle/pcle.risk'
 
 // ── Types (mirrors pcle.risk.ts output shape) ─────────────────────────────────
@@ -275,6 +276,26 @@ export function RiskTab({ loading }: RiskTabProps) {
       <div className="text-[10px] text-gray-400 px-1 leading-relaxed">
         6 boyutlu skor: Konsantrasyon · Süre · Yük dengesi · Teminat · Likidite · Yasal uyum.
         Her boyut 0–100 puan · A ≥ 90 · B ≥ 75 · C ≥ 60 · D ≥ 40 · F &lt; 40
+      </div>
+
+      {/* Cross-navigation */}
+      <div className="flex items-center justify-between px-1 pt-2">
+        <p className="text-[10px] text-gray-400 leading-relaxed">
+          Ortak riski bilanço ve müşteri riski ile bütünleşik değerlendirilmeli.
+        </p>
+        <div className="flex items-center gap-2 shrink-0 ml-4">
+          <Link href="/dashboard/finance?tab=risks" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Alacak Riskleri →
+          </Link>
+          <span className="text-gray-200">|</span>
+          <Link href="/dashboard/finance?tab=balance" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Bilanço →
+          </Link>
+          <span className="text-gray-200">|</span>
+          <Link href="/dashboard/planning?tab=debt-pressure" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Borç Baskısı →
+          </Link>
+        </div>
       </div>
     </div>
   )

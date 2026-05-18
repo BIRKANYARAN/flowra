@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import {
   WaterfallData, PartnerRow,
   fmt, fmtPct,
@@ -331,6 +332,26 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
           </div>
         </>
       )}
+
+      {/* Cross-navigation */}
+      <div className="flex items-center justify-between px-1 pt-2">
+        <p className="text-[10px] text-gray-400 leading-relaxed">
+          Tranche detayları borç baskısı ve geri ödeme simülasyonuyla birlikte inceleyin.
+        </p>
+        <div className="flex items-center gap-2 shrink-0 ml-4">
+          <Link href="/dashboard/planning?tab=debt-pressure" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Borç Baskısı →
+          </Link>
+          <span className="text-gray-200">|</span>
+          <Link href="/dashboard/partners?tab=waterfall" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Geri Ödeme →
+          </Link>
+          <span className="text-gray-200">|</span>
+          <Link href="/dashboard/finance?tab=balance" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Bilanço →
+          </Link>
+        </div>
+      </div>
     </div>
   )
 }

@@ -9,6 +9,7 @@
 //   4. Allocation steps list (numbered waterfall)
 //   5. Tranche detail table
 
+import Link from 'next/link'
 import {
   WaterfallData,
   DebtTranche,
@@ -353,6 +354,26 @@ export function WaterfallTab({
           )}
         </>
       )}
+
+      {/* Cross-navigation */}
+      <div className="flex items-center justify-between px-1 pt-2">
+        <p className="text-[10px] text-gray-400 leading-relaxed">
+          Geri ödeme planı nakit akışı ve borç baskısıyla birlikte değerlendirilmeli.
+        </p>
+        <div className="flex items-center gap-2 shrink-0 ml-4">
+          <Link href="/dashboard/planning?tab=debt-pressure" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Borç Baskısı →
+          </Link>
+          <span className="text-gray-200">|</span>
+          <Link href="/dashboard/finance?tab=cashflow" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Nakit Akışı →
+          </Link>
+          <span className="text-gray-200">|</span>
+          <Link href="/dashboard/finance?tab=balance" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Bilanço →
+          </Link>
+        </div>
+      </div>
     </div>
   )
 }
