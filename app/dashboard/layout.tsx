@@ -13,6 +13,7 @@ import { safeSystemQuery }         from '@/lib/admin-db'
 import { WorkspaceProvider }       from '@/lib/workspace-context'
 import { QueryProvider }           from '@/lib/query-provider'
 import { CommandBar }              from '@/components/command/CommandBar'
+import { MobileBottomNav }         from '@/components/layout/MobileBottomNav'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   try {
@@ -137,10 +138,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
                 userEmail={user.email ?? ''}
                 logoUrl={logoUrl}
               />
-              <main className="flex-1 px-4 py-3 overflow-auto">
+              <main className="flex-1 px-4 py-3 overflow-auto pb-20 md:pb-3">
                 {children}
               </main>
             </div>
+            <MobileBottomNav navBadges={navBadges} />
           </div>
         </WorkspaceProvider>
       </QueryProvider>
