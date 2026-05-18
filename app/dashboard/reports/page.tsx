@@ -192,6 +192,28 @@ export default function ReportsHubPage() {
             </svg>
             Masraf Listesi (.csv)
           </a>
+          <a
+            href={`/api/export/purchases?from=${from}&to=${to}`}
+            download
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-xs font-semibold text-gray-700 hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 transition-colors"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M12 16l-4-4h3V4h2v8h3l-4 4z" />
+              <path d="M20 18H4v2h16v-2z" />
+            </svg>
+            Satın Alma Listesi (.csv)
+          </a>
+          <a
+            href="/api/export/stock"
+            download
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-xs font-semibold text-gray-700 hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 transition-colors"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M12 16l-4-4h3V4h2v8h3l-4 4z" />
+              <path d="M20 18H4v2h16v-2z" />
+            </svg>
+            Stok Durum (.csv)
+          </a>
           <span className="text-[10px] text-gray-300 italic">Tarih aralığı değiştirmek için URL parametrelerini düzenleyin</span>
         </div>
       </div>
