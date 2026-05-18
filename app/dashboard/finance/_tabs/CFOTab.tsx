@@ -17,6 +17,7 @@ import { BalanceSheetService }   from '@/lib/services/balance-sheet.service'
 import { TaxService }            from '@/lib/services/tax.service'
 import { FinanceService }        from '@/lib/services/finance.service'
 import { PartnerService }        from '@/lib/services/partner.service'
+import { PeriodService }         from '@/lib/services/period.service'
 import { getCfoMetrics, getQuarterlyReport } from '@/lib/finance/financial-core'
 import { getRiskEngineResult }   from '@/lib/finance/risk-engine'
 import { detectDuplicates }      from '@/lib/engines/duplicate-detector'
@@ -25,6 +26,7 @@ import { fmtTRY, fmtPct, fmtDate, fmtCompact } from '@/lib/format'
 import { makeRequestContext }    from '@/lib/logger'
 import type { CfoMetrics }       from '@/lib/finance/cfo-metrics'
 import type { QuarterResult }    from '@/lib/finance/financial-core'
+import type { AccountingPeriod, PeriodCloseChecklist } from '@/types/dto'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -138,6 +140,14 @@ export async function CFOTab({ userId, companyId }: Props) {
 
   // Last 3 months for duplicate detection (wider window catches cross-month dupes)
   const dupFrom = (() => { const d = new Date(); d.setMonth(d.getMonth() - 3); return d.toISOString().slice(0, 10) })()
+
+  // Period close status — sequential (checklist needs period object)
+  const periodData = await sq((async (): Promise<{ period: AccountingPeriod; checklist: PeriodCloseChecklist } | null> => {
+    const period = await PeriodService.getCurrent(companyId, supabase)
+    if (!period) return null
+    const checklist = await PeriodService.buildCloseChecklist(userId, companyId, period, supabase)
+    return { period, checklist }
+  })())
 
   const [balanceSheet, financialSummary, kdvResult, corporateTaxResult, partnerBalances, cfoMetrics, riskData, quarterlyReport, dupExpenses] =
     await Promise.all([
@@ -322,6 +332,88 @@ export async function CFOTab({ userId, companyId }: Props) {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Period Close Status */}
+      <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+        <div className="flex items-center justify-between mb-3">
+          <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Dönem Kapanış Durumu</div>
+          {periodData ? (
+            <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${
+              periodData.period.status === 'locked' ? 'bg-gray-100 text-gray-500' :
+              periodData.period.status === 'closed' ? 'bg-blue-50 text-blue-700' :
+              periodData.checklist.ready_to_close  ? 'bg-emerald-50 text-emerald-700' :
+              'bg-amber-50 text-amber-700'
+            }`}>
+              {periodData.period.status === 'locked' ? 'KİLİTLİ' :
+               periodData.period.status === 'closed' ? 'KAPALI' :
+               periodData.checklist.ready_to_close   ? 'KAPATMAYA HAZIR' :
+               'AKTİF DÖNEM'}
+            </span>
+          ) : (
+            <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-gray-100 text-gray-400">DÖNEM YOK</span>
+          )}
+        </div>
+
+        {periodData ? (
+          <>
+            <div className="flex items-center gap-3 mb-3 px-1">
+              <div className="text-xs text-gray-500">
+                <span className="font-semibold text-gray-700">
+                  {new Date(periodData.period.period_start + 'T00:00:00').toLocaleDateString('tr-TR', { day: '2-digit', month: 'short', year: 'numeric' })}
+                </span>
+                <span className="mx-1.5 text-gray-300">—</span>
+                <span className="font-semibold text-gray-700">
+                  {new Date(periodData.period.period_end + 'T00:00:00').toLocaleDateString('tr-TR', { day: '2-digit', month: 'short', year: 'numeric' })}
+                </span>
+              </div>
+              <span className="text-[10px] text-gray-300">·</span>
+              <span className="text-[10px] text-gray-400 tabular-nums">
+                Dönem Kârı: <span className={`font-bold ${periodData.period.period_profit_try >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>{fmtTRY(periodData.period.period_profit_try)}</span>
+              </span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {[
+                { key: 'bank_reconciled',        label: 'Banka Mutabakatı',   passed: periodData.checklist.bank_reconciled },
+                { key: 'expenses_complete',      label: 'Giderler Tamamlandı', passed: periodData.checklist.expenses_complete },
+                { key: 'tax_summary_approved',   label: 'Vergi Tipi Ataması', passed: periodData.checklist.tax_summary_approved },
+                { key: 'balance_sheet_balanced', label: 'Bilanço Dengeli',    passed: periodData.checklist.balance_sheet_balanced },
+              ].map(item => (
+                <div key={item.key} className={`rounded-xl px-3 py-2.5 border text-xs text-center ${
+                  item.passed
+                    ? 'bg-emerald-50 border-emerald-200'
+                    : 'bg-amber-50 border-amber-200'
+                }`}>
+                  <div className="text-lg mb-0.5">{item.passed ? '✓' : '✗'}</div>
+                  <div className={`font-semibold text-[11px] ${item.passed ? 'text-emerald-700' : 'text-amber-700'}`}>{item.label}</div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-3 flex items-center justify-between">
+              <span className={`text-[11px] font-semibold ${
+                periodData.checklist.ready_to_close ? 'text-emerald-700' : 'text-amber-700'
+              }`}>
+                {periodData.checklist.ready_to_close
+                  ? '✓ Tüm kontroller geçti — dönem kapatılmaya hazır'
+                  : `${[periodData.checklist.bank_reconciled, periodData.checklist.expenses_complete, periodData.checklist.tax_summary_approved, periodData.checklist.balance_sheet_balanced].filter(Boolean).length}/4 kontrol geçti`
+                }
+              </span>
+              <Link
+                href="/dashboard/cfo/period-close"
+                className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2"
+              >
+                Dönem Kapat →
+              </Link>
+            </div>
+          </>
+        ) : (
+          <div className="text-xs text-gray-400 text-center py-3">
+            Aktif muhasebe dönemi bulunamadı.{' '}
+            <Link href="/dashboard/cfo/period-close" className="font-semibold text-primary-600 hover:text-primary-700 underline underline-offset-2">
+              Yeni dönem aç →
+            </Link>
+          </div>
+        )}
       </div>
 
       {/* Kopya Masraf Uyarıları — only shown when potential duplicates are found */}

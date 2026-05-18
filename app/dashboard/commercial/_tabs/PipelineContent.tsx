@@ -8,6 +8,7 @@ import SalesFlowClient, {
   type StockLot,
 } from '@/app/dashboard/sales-flow/SalesFlowClient'
 import { SalesFlowCommandBar } from '@/app/dashboard/sales-flow/_components/SalesFlowCommandBar'
+import { detectRevenueAnomalies, type MonthlyRevenue } from '@/lib/engines/anomaly.engine'
 
 function CommandBarSkeleton() {
   return (
@@ -17,6 +18,12 @@ function CommandBarSkeleton() {
       ))}
     </div>
   )
+}
+
+function fmtMonth(ym: string): string {
+  const [y, m] = ym.split('-').map(Number)
+  const names = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara']
+  return `${names[m - 1] ?? ym} ${String(y).slice(2)}`
 }
 
 function serverFmt(n: number): string {
@@ -91,6 +98,23 @@ export async function PipelineContent({ companyId }: Props) {
   const unpaidTotal  = sales.filter(s => s.payment_status !== 'paid').reduce((s, r) => s + (Number(r.total_try) || 0), 0)
   const recentPf     = proformas.slice(0, 5)
 
+  // ── Monthly revenue trend + anomaly detection ─────────────────────────────
+  const revByMonth = new Map<string, number>()
+  for (const s of sales) {
+    const ym = ((s.sale_date ?? s.created_at) ?? '').slice(0, 7)
+    if (!ym) continue
+    revByMonth.set(ym, (revByMonth.get(ym) ?? 0) + (Number(s.total_try) || 0))
+  }
+  const monthlyRevenues: MonthlyRevenue[] = Array.from(revByMonth.entries())
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([month, revenue]) => ({ month, revenue }))
+  const recentMonths = monthlyRevenues.slice(-6)
+  const maxRevMonth  = Math.max(...recentMonths.map(m => m.revenue), 1)
+
+  const revenueAnomalies = detectRevenueAnomalies(monthlyRevenues)
+    .filter(a => a.severity === 'high')
+    .slice(0, 3)
+
   return (
     <div className="space-y-6">
       <Suspense fallback={<CommandBarSkeleton />}>
@@ -155,6 +179,57 @@ export async function PipelineContent({ companyId }: Props) {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Revenue anomaly alerts */}
+      {revenueAnomalies.length > 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="text-[10px] font-black uppercase tracking-widest text-amber-700">⚠ Anormal Gelir Hareketi</span>
+            <span className="text-[9px] text-amber-600">(istatistiksel eşik aşıldı)</span>
+          </div>
+          <div className="space-y-1">
+            {revenueAnomalies.map((a, i) => (
+              <div key={i} className="flex items-start gap-2">
+                <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-lg shrink-0 ${
+                  a.direction === 'drop' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800'
+                }`}>
+                  {fmtMonth(a.month)}
+                </span>
+                <span className="text-[10px] text-amber-700">{a.message}</span>
+              </div>
+            ))}
+          </div>
+          <div className="text-[10px] text-amber-600 mt-1.5">
+            Detaylı analiz için Finans → Risk sekmesini inceleyin.
+          </div>
+        </div>
+      )}
+
+      {/* Monthly revenue trend */}
+      {recentMonths.length > 1 && (
+        <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+          <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Aylık Ciro Trendi</h3>
+          <div className="flex items-end gap-2 h-20">
+            {recentMonths.map(m => {
+              const heightPct = Math.max(4, (m.revenue / maxRevMonth) * 100)
+              return (
+                <div key={m.month} className="flex-1 flex flex-col items-center gap-1 group relative">
+                  <div className="w-full bg-primary-300 group-hover:bg-primary-400 rounded-t transition-all" style={{ height: `${heightPct}%` }} />
+                  <div className="text-[9px] text-gray-400 font-semibold">{fmtMonth(m.month)}</div>
+                  <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block z-10 bg-gray-900 text-white rounded-lg px-2 py-1 text-[10px] whitespace-nowrap shadow-lg">
+                    <div className="font-bold">{fmtMonth(m.month)}</div>
+                    <div className="text-primary-300">{serverFmt(m.revenue)}</div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+          <div className="flex items-center justify-between mt-2 text-[10px] text-gray-400">
+            <span>En düşük: {serverFmt(Math.min(...recentMonths.map(m => m.revenue)))}</span>
+            <span>En yüksek: {serverFmt(Math.max(...recentMonths.map(m => m.revenue)))}</span>
+          </div>
         </div>
       )}
 
