@@ -248,19 +248,26 @@ export default function ReconciliationPage() {
             <div className="flex gap-2"><span className="text-red-600 font-bold shrink-0">✗ Kritik</span><span>100+ TRY fark. GL ile operasyonel tablolar uyuşmuyor. Dönem kapanışı bu durum giderilmeden engellenilir.</span></div>
           </div>
 
-          {/* Footer links */}
-          <div className="flex items-center justify-between text-xs text-gray-400" data-print-hide>
-            <div>
-              <span>Sonuçlar her çalıştırmada canlı hesaplanır. </span>
-              <Link href="/dashboard/cfo/trial-balance" className="text-primary-600 hover:underline font-semibold">Mizan</Link>
-              <span className="mx-1.5">·</span>
-              <Link href="/dashboard/cfo/journal-entries" className="text-primary-600 hover:underline font-semibold">Journal Kayıtları</Link>
-              <span className="mx-1.5">·</span>
-              <Link href="/dashboard/cfo/period-close" className="text-primary-600 hover:underline font-semibold">Dönem Kapat</Link>
+          {/* Cross-navigation */}
+          <div className="flex items-center justify-between px-1" data-print-hide>
+            <p className="text-[10px] text-gray-400 leading-relaxed">
+              {report.checked_at
+                ? `Son kontrol: ${new Date(report.checked_at).toLocaleString('tr-TR')}`
+                : 'Sonuçlar her çalıştırmada canlı hesaplanır.'}
+            </p>
+            <div className="flex items-center gap-2 shrink-0 ml-4">
+              <Link href="/dashboard/cfo/trial-balance" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+                Mizan →
+              </Link>
+              <span className="text-gray-200">|</span>
+              <Link href="/dashboard/cfo/journal-entries" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+                Journal Kayıtları →
+              </Link>
+              <span className="text-gray-200">|</span>
+              <Link href="/dashboard/cfo/period-close" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+                Dönem Kapat →
+              </Link>
             </div>
-            {report.checked_at && (
-              <div className="tabular-nums">{new Date(report.checked_at).toLocaleString('tr-TR')}</div>
-            )}
           </div>
         </>
       )}
