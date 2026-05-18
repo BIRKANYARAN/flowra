@@ -5,6 +5,7 @@ import { checkPeriodGuard } from '@/lib/middleware/period-guard'
 import { dualWrite, resolvePeriodId } from '@/lib/services/ledger/dual-write.service'
 import { JournalEntryService } from '@/lib/services/ledger/journal-entry.service'
 import { resolveApiAuth } from '@/lib/api-auth'
+import { auditSaleMutation } from '@/lib/db/mutation-audit'
 
 const VALID_CURRENCIES = ['TRY', 'USD', 'EUR', 'GBP'] as const
 const VALID_KDV_RATES  = [0, 10, 20] as const
@@ -209,6 +210,16 @@ export async function POST(req: NextRequest) {
       // Journal entry is best-effort; sale was already created
       console.warn('[sales POST] dual-write failed (non-fatal)')
     }
+
+    auditSaleMutation({
+      userId:    uid,
+      companyId,
+      entityId:  data.id,
+      action:    'create',
+      oldData:   null,
+      newData:   { sale_id: data.id, customer_name: customerName, total_try: total, sale_date: saleDate },
+      source:    'api/sales',
+    })
 
     return NextResponse.json({ id: data.id }, { status: 201 })
   } catch (err) {

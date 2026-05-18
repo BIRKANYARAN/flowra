@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { resolveApiAuth } from '@/lib/api-auth'
+import { auditPaymentApplied } from '@/lib/db/mutation-audit'
 
 const ALLOWED_STATUSES = ['pending', 'paid', 'partial', 'overdue', 'cancelled'] as const
 type PaymentStatus = typeof ALLOWED_STATUSES[number]
@@ -80,6 +81,15 @@ export async function PATCH(req: NextRequest) {
     if (!payment_status || !ALLOWED_STATUSES.includes(payment_status as PaymentStatus))
       return NextResponse.json({ error: 'Geçerli payment_status: pending | paid | partial | overdue | cancelled' }, { status: 422 })
 
+    // Fetch current row BEFORE update — needed for audit trail old_data
+    const { data: existingRow } = await supabase
+      .from('sales')
+      .select('paid_amount, payment_status')
+      .eq('id', id)
+      .eq('company_id', companyId)
+      .is('deleted_at', null)
+      .maybeSingle()
+
     const now = new Date().toISOString()
     const patch: Record<string, unknown> = {
       payment_status,
@@ -101,6 +111,17 @@ export async function PATCH(req: NextRequest) {
       .is('deleted_at', null)
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+    // Fire-and-forget audit trail — payment mutations must be traceable
+    auditPaymentApplied({
+      userId:              uid,
+      companyId,
+      saleId:              id,
+      previousPaidAmount:  Number(existingRow?.paid_amount ?? 0),
+      newPaidAmount:       Number(patch.paid_amount ?? existingRow?.paid_amount ?? 0),
+      paymentStatus:       payment_status,
+      source:              'api/collections',
+    })
 
     return NextResponse.json({ updated: true })
   } catch (err) {

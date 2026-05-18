@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole }      from '@/lib/require-role'
 import { resolveApiAuth } from '@/lib/api-auth'
+import { auditPeriodTransition } from '@/lib/db/mutation-audit'
 
 export const dynamic = 'force-dynamic'
 
@@ -56,6 +57,16 @@ export async function POST(
       console.error('[periods/lock] update error:', updateErr)
       return NextResponse.json({ error: updateErr.message }, { status: 500 })
     }
+
+    // Audit trail — lock is irreversible; must have a traceable record
+    auditPeriodTransition({
+      userId:     uid,
+      companyId,
+      periodId:   params.id,
+      fromStatus: 'closed',
+      toStatus:   'locked',
+      source:     'api/periods/lock',
+    })
 
     return NextResponse.json({ locked: true, period_id: params.id })
   } catch (e) {

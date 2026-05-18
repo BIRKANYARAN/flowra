@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { resolveApiAuth } from '@/lib/api-auth'
+import { auditFinancialMutation } from '@/lib/db/mutation-audit'
 
 const VALID_STATUSES = new Set(['draft', 'ordered', 'received', 'cancelled'])
 
@@ -39,7 +40,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await resolveApiAuth(req)
   if (!auth.ok) return auth.response
-  const { companyId, supabase } = auth
+  const { uid, companyId, supabase } = auth
   const { id } = await params
 
   let body: Record<string, unknown>
@@ -61,13 +62,23 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     .is('deleted_at', null)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  auditFinancialMutation('purchase', {
+    userId:    uid,
+    companyId,
+    entityId:  id,
+    action:    'update',
+    newData:   patch,
+    source:    'api/purchase-orders/[id]',
+  })
+
   return NextResponse.json({ ok: true })
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await resolveApiAuth(req)
   if (!auth.ok) return auth.response
-  const { companyId, supabase } = auth
+  const { uid, companyId, supabase } = auth
   const { id } = await params
 
   const { error } = await supabase
@@ -78,5 +89,15 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     .is('deleted_at', null)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  auditFinancialMutation('purchase', {
+    userId:    uid,
+    companyId,
+    entityId:  id,
+    action:    'delete',
+    newData:   null,
+    source:    'api/purchase-orders/[id]',
+  })
+
   return NextResponse.json({ ok: true })
 }

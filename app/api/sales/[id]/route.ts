@@ -5,6 +5,7 @@ import { checkPeriodGuard } from '@/lib/middleware/period-guard'
 import { dualWrite, resolvePeriodId } from '@/lib/services/ledger/dual-write.service'
 import { JournalEntryService } from '@/lib/services/ledger/journal-entry.service'
 import { resolveApiAuth } from '@/lib/api-auth'
+import { auditSaleMutation, auditPaymentApplied } from '@/lib/db/mutation-audit'
 
 const PAYMENT_STATUSES  = ['pending', 'paid', 'partial', 'overdue', 'cancelled'] as const
 const SHIPMENT_STATUSES = ['pending', 'shipped', 'delivered'] as const
@@ -119,6 +120,29 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       }
     }
 
+    // Audit trail — payment status changes must be traceable
+    if (body.amount_paid !== undefined || body.payment_status !== undefined) {
+      auditPaymentApplied({
+        userId:             uid,
+        companyId,
+        saleId:             id,
+        previousPaidAmount: Number((existing as { amount_paid?: unknown }).amount_paid ?? 0),
+        newPaidAmount:      Number(patch.paid_amount ?? (existing as { amount_paid?: unknown }).amount_paid ?? 0),
+        paymentStatus:      String(patch.payment_status ?? body.payment_status ?? 'pending'),
+        source:             'api/sales/[id]',
+      })
+    } else {
+      auditSaleMutation({
+        userId:    uid,
+        companyId,
+        entityId:  id,
+        action:    'update',
+        oldData:   existing as Record<string, unknown>,
+        newData:   patch,
+        source:    'api/sales/[id]',
+      })
+    }
+
     return NextResponse.json({ updated: true })
   } catch (err) {
     console.error('[sales PATCH] unexpected:', err instanceof Error ? err.message : String(err))
@@ -159,6 +183,16 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
       console.error('[sales DELETE] update error:', delErr.message)
       return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 })
     }
+
+    auditSaleMutation({
+      userId:    uid,
+      companyId,
+      entityId:  id,
+      action:    'delete',
+      oldData:   { id },
+      newData:   null,
+      source:    'api/sales/[id]',
+    })
 
     return NextResponse.json({ deleted: true })
   } catch (err) {

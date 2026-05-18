@@ -3,6 +3,7 @@ import { requireRole }      from '@/lib/require-role'
 import { TrialBalanceService } from '@/lib/services/ledger/trial-balance.service'
 import { ReconciliationService } from '@/lib/services/ledger/reconciliation.service'
 import { resolveApiAuth } from '@/lib/api-auth'
+import { auditPeriodTransition } from '@/lib/db/mutation-audit'
 
 export const dynamic = 'force-dynamic'
 
@@ -69,6 +70,16 @@ export async function POST(
       console.error('[periods/close] update error:', updateErr)
       return NextResponse.json({ error: updateErr.message }, { status: 500 })
     }
+
+    // Audit trail — period state transitions are immutable and must be traceable
+    auditPeriodTransition({
+      userId:     uid,
+      companyId,
+      periodId:   params.id,
+      fromStatus: period.status,
+      toStatus:   'closed',
+      source:     'api/periods/close',
+    })
 
     return NextResponse.json({
       closed:          true,
