@@ -113,8 +113,59 @@ export async function TaxTab({ userId, companyId }: Props) {
   const monthsElapsed = now.getMonth() + 1
   const projectedMatrah = monthsElapsed > 0 ? (ytd.matrah / monthsElapsed) * 12 : 0
 
+  // Urgency check for all quarters (overdue or urgent)
+  const overdueQuarters = quarters.filter(q =>
+    q.gecici_due_date && q.gecici_vergi > 0 && geciciStatus(q.gecici_due_date, today) === 'overdue'
+  )
+  const urgentQuarters = quarters.filter(q =>
+    q.gecici_due_date && q.gecici_vergi > 0 && geciciStatus(q.gecici_due_date, today) === 'urgent'
+  )
+
   return (
     <div className="space-y-6">
+
+      {/* ── Tax urgency banner ────────────────────────────────────────────────── */}
+      {overdueQuarters.length > 0 && (
+        <div className="bg-red-50 border border-red-300 rounded-xl px-4 py-3 flex items-start gap-3">
+          <span className="text-base animate-pulse">🔴</span>
+          <div className="flex-1">
+            <div className="text-[11px] font-black uppercase tracking-wide text-red-800">
+              Vadesi Geçmiş Geçici Vergi
+            </div>
+            <div className="text-xs text-red-700 mt-0.5">
+              {overdueQuarters.map(q => (
+                <span key={q.label} className="mr-3">
+                  {q.label}: <strong>{fmt(q.gecici_vergi)}</strong> — {fmtDate(q.gecici_due_date)} vadesi geçti
+                </span>
+              ))}
+            </div>
+          </div>
+          <a href="/dashboard/cfo/tax/corporate" className="text-[10px] font-bold text-red-700 hover:text-red-800 underline underline-offset-2 shrink-0 mt-0.5">
+            KV Detayı →
+          </a>
+        </div>
+      )}
+
+      {overdueQuarters.length === 0 && urgentQuarters.length > 0 && (
+        <div className="bg-amber-50 border border-amber-300 rounded-xl px-4 py-3 flex items-start gap-3">
+          <span className="text-base">⚠</span>
+          <div className="flex-1">
+            <div className="text-[11px] font-black uppercase tracking-wide text-amber-800">
+              Yaklaşan Geçici Vergi Ödemesi — 14 Gün İçinde
+            </div>
+            <div className="text-xs text-amber-700 mt-0.5">
+              {urgentQuarters.map(q => (
+                <span key={q.label} className="mr-3">
+                  {q.label}: <strong>{fmt(q.gecici_vergi)}</strong> — son ödeme {fmtDate(q.gecici_due_date)}
+                </span>
+              ))}
+            </div>
+          </div>
+          <a href="/dashboard/cfo/tax/corporate" className="text-[10px] font-bold text-amber-700 hover:text-amber-800 underline underline-offset-2 shrink-0 mt-0.5">
+            KV Detayı →
+          </a>
+        </div>
+      )}
 
       {/* ── Zone 1: KPI Strip ────────────────────────────────────────────────── */}
       <div className="grid grid-cols-4 gap-0 bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">

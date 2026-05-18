@@ -106,16 +106,38 @@ export async function PartnerImpactTab({ companyId, userId }: Props) {
     [0] ?? null
 
   return (
-    <PartnerImpactClient
-      cashDistributable={cashDistributable}
-      cashBalance={cashBalance}
-      netIncome={netIncome}
-      legalReserve={legalReserve}
-      entries={enrichedEntries}
-      totalLoanBalance={totalLoanBalance}
-      nextDue={nextDue ? { due_date: nextDue.due_date!, outstanding_try: Number(nextDue.outstanding_try ?? 0) } : null}
-      partnerCount={enrichedEntries.length}
-      baselinePerUnit={eq?.baseline_per_unit ?? 0}
-    />
+    <div className="space-y-4">
+      <PartnerImpactClient
+        cashDistributable={cashDistributable}
+        cashBalance={cashBalance}
+        netIncome={netIncome}
+        legalReserve={legalReserve}
+        entries={enrichedEntries}
+        totalLoanBalance={totalLoanBalance}
+        nextDue={nextDue ? { due_date: nextDue.due_date!, outstanding_try: Number(nextDue.outstanding_try ?? 0) } : null}
+        partnerCount={enrichedEntries.length}
+        baselinePerUnit={eq?.baseline_per_unit ?? 0}
+      />
+
+      {/* Cross-navigation */}
+      <div className="flex items-center justify-between px-1">
+        <p className="text-[10px] text-gray-400 leading-relaxed">
+          Ortak etki simülasyonu gerçek PCLE dağıtımıyla karşılaştırılmalı.
+        </p>
+        <div className="flex items-center gap-2 shrink-0 ml-4">
+          <Link href="/dashboard/partners?tab=distribution" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Kâr Dağıtımı →
+          </Link>
+          <span className="text-gray-200">|</span>
+          <Link href="/dashboard/partners?tab=waterfall" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Geri Ödeme Planı →
+          </Link>
+          <span className="text-gray-200">|</span>
+          <Link href="/dashboard/finance?tab=overview" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Finansal Özet →
+          </Link>
+        </div>
+      </div>
+    </div>
   )
 }

@@ -324,6 +324,26 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
           )}
         </>
       )}
+
+      {/* Cross-navigation */}
+      <div className="flex items-center justify-between px-1">
+        <p className="text-[10px] text-gray-400 leading-relaxed">
+          Borç baskısı ortak dengesi ve nakit projeksiyonuyla birlikte değerlendirilmeli.
+        </p>
+        <div className="flex items-center gap-2 shrink-0 ml-4">
+          <Link href="/dashboard/partners?tab=tranches" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Trancheler →
+          </Link>
+          <span className="text-gray-200">|</span>
+          <Link href="/dashboard/planning?tab=cash-projection" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Nakit Projeksiyonu →
+          </Link>
+          <span className="text-gray-200">|</span>
+          <Link href="/dashboard/finance?tab=risks" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Risk Analizi →
+          </Link>
+        </div>
+      </div>
     </div>
   )
 }

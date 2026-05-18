@@ -281,18 +281,25 @@ export async function ForecastTab({ userId: _userId, companyId }: Props) {
         </div>
       )}
 
-      {/* Cross-link → Planning hub 3-scenario strategic forecast */}
+      {/* Cross-navigation */}
       <div className="flex items-center justify-between px-1 pt-1">
         <p className="text-[10px] text-gray-400 leading-relaxed">
           Bu görünüm burn-rate bazlı runway projeksiyonunu gösterir.
           Büyüme/stres senaryolarını ve gelir kırılım analizini Planlama Merkezi&apos;nde inceleyin.
         </p>
-        <Link
-          href="/dashboard/planning?tab=cash-projection"
-          className="shrink-0 ml-4 text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap"
-        >
-          Stratejik Tahmin →
-        </Link>
+        <div className="flex items-center gap-2 shrink-0 ml-4">
+          <Link href="/dashboard/planning?tab=cash-projection" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Stratejik Tahmin →
+          </Link>
+          <span className="text-gray-200">|</span>
+          <Link href="/dashboard/finance?tab=cashflow" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Nakit Akışı →
+          </Link>
+          <span className="text-gray-200">|</span>
+          <Link href="/dashboard/finance?tab=quarterly" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Geçici Vergi →
+          </Link>
+        </div>
       </div>
     </div>
   )
