@@ -6,6 +6,7 @@
 //   3. Monthly projection table
 //   4. Scenario panel (client island)
 
+import Link                                 from 'next/link'
 import { getCfoMetrics, getRunwayForecast } from '@/lib/finance/financial-core'
 import { ScenarioPanel }                    from '@/components/dashboard/ScenarioPanel'
 import type { CfoMetrics }                  from '@/lib/finance/cfo-metrics'
@@ -185,6 +186,20 @@ export async function ForecastTab({ userId: _userId, companyId }: Props) {
           🔴 Kritik Runway — 2 aydan az nakit kaldı. Hemen aksiyon alın: yeni gelir getirin veya giderleri kısın.
         </div>
       )}
+
+      {/* Cross-link → Planning hub 3-scenario strategic forecast */}
+      <div className="flex items-center justify-between px-1 pt-1">
+        <p className="text-[10px] text-gray-400 leading-relaxed">
+          Bu görünüm burn-rate bazlı runway projeksiyonunu gösterir.
+          Büyüme/stres senaryolarını ve gelir kırılım analizini Planlama Merkezi&apos;nde inceleyin.
+        </p>
+        <Link
+          href="/dashboard/planning?tab=cash-projection"
+          className="shrink-0 ml-4 text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap"
+        >
+          Stratejik Tahmin →
+        </Link>
+      </div>
     </div>
   )
 }
