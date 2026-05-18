@@ -1082,12 +1082,26 @@ export default async function DashboardPage() {
 
       {/* ── CASHFLOW CHART ────────────────────────────────────────────────── */}
       <div className="bg-white border border-gray-100 rounded-xl shadow-[0_1px_2px_rgba(17,24,39,0.04)] overflow-hidden">
-        <div className="px-5 py-3.5 border-b border-gray-50">
+        <div className="px-5 py-3.5 border-b border-gray-50 flex items-center justify-between">
           <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Nakit Akışı</span>
+          <Link href="/dashboard/finance?tab=cashflow" className="text-[10px] text-primary-600 font-semibold hover:text-primary-700">Detay →</Link>
         </div>
         <div className="p-4">
           <CashflowChart className="w-full" />
         </div>
+      </div>
+
+      {/* ── QUICK REPORTS FOOTER ────────────────────────────────────────── */}
+      <div className="flex items-center justify-between px-1 pt-1">
+        <div className="text-[10px] text-gray-400">
+          Tüm finansal tablolar, PDF dışa aktarım ve CFO paketi için:
+        </div>
+        <Link
+          href="/dashboard/reports"
+          className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap ml-4"
+        >
+          Raporlar →
+        </Link>
       </div>
 
     </div>
