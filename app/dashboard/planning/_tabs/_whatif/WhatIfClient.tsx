@@ -30,6 +30,7 @@ interface SavedScenario {
   id:          string
   name:        string
   savedAt:     string
+  is_baseline?: boolean
   sliders: {
     revChange:      number
     expChange:      number
@@ -65,11 +66,12 @@ async function fetchDBScenarios(): Promise<SavedScenario[]> {
   try {
     const res  = await fetch('/api/simulation/scenarios', { cache: 'no-store' })
     if (!res.ok) return []
-    const json = await res.json() as { scenarios?: Array<{ id: string; name: string; inputs: { sliders: SavedScenario['sliders'] }; summary: SavedScenario['summary']; created_at: string }> }
+    const json = await res.json() as { scenarios?: Array<{ id: string; name: string; is_baseline: boolean; inputs: { sliders: SavedScenario['sliders'] }; summary: SavedScenario['summary']; created_at: string }> }
     return (json.scenarios ?? []).map(r => ({
-      id:      r.id,
-      name:    r.name,
-      savedAt: r.created_at,
+      id:          r.id,
+      name:        r.name,
+      savedAt:     r.created_at,
+      is_baseline: r.is_baseline ?? false,
       sliders: r.inputs?.sliders ?? { revChange: 0, expChange: 0, cogsChange: 0, collDelay: 0, debtChange: 0, taxRateOverride: 25 },
       summary: r.summary ?? { netIncome: 0, grossMarginPct: 0, distributable: 0, runwayMonths: null },
     }))
@@ -99,6 +101,18 @@ async function deleteDBScenario(id: string): Promise<void> {
   try {
     await fetch(`/api/simulation/scenarios/${id}`, { method: 'DELETE' })
   } catch { /* non-fatal */ }
+}
+
+async function markDBBaseline(id: string): Promise<boolean> {
+  if (!id.includes('-')) return false
+  try {
+    const res = await fetch(`/api/simulation/scenarios/${id}`, {
+      method:  'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ is_baseline: true }),
+    })
+    return res.ok
+  } catch { return false }
 }
 
 // ── Pure scenario compute (no React state — usable outside component) ─────────
@@ -186,6 +200,22 @@ export function WhatIfClient({ period, baseline }: Props) {
     setCollDelay(s.sliders.collDelay)
     setDebtChange(s.sliders.debtChange)
     setTaxRateOverride(s.sliders.taxRateOverride)
+  }, [])
+
+  const markAsBaseline = useCallback(async (id: string) => {
+    // Optimistic update — mark locally first
+    setSaved(prev => {
+      const next = prev.map(s => ({ ...s, is_baseline: s.id === id }))
+      persistLocal(next)
+      return next
+    })
+    await markDBBaseline(id)
+    // Re-fetch to confirm server state
+    const fresh = await fetchDBScenarios()
+    if (fresh.length > 0) {
+      setSaved(fresh)
+      persistLocal(fresh)
+    }
   }, [])
 
   // ── Computed outputs (pure math, instant) ─────────────────────────────────
@@ -521,9 +551,14 @@ export function WhatIfClient({ period, baseline }: Props) {
                 const netColor    = s.summary.netIncome >= 0 ? 'text-emerald-700' : 'text-red-600'
                 const isSelected  = compareSelected.has(s.id)
                 const canSelect   = compareSelected.size < 5 || isSelected
+                const isBaseline  = s.is_baseline === true
                 return (
                   <div key={s.id} className={`bg-white border rounded-xl px-3 py-2.5 flex items-center justify-between gap-2 transition-colors ${
-                    compareMode && isSelected ? 'border-primary-300 bg-primary-50/40' : 'border-gray-100'
+                    isBaseline
+                      ? 'border-violet-200 bg-violet-50/30'
+                      : compareMode && isSelected
+                        ? 'border-primary-300 bg-primary-50/40'
+                        : 'border-gray-100'
                   }`}>
                     {compareMode && (
                       <button
@@ -540,7 +575,14 @@ export function WhatIfClient({ period, baseline }: Props) {
                       </button>
                     )}
                     <div className="min-w-0 flex-1">
-                      <div className="text-[11px] font-bold text-gray-800 truncate">{s.name}</div>
+                      <div className="flex items-center gap-1.5">
+                        <div className="text-[11px] font-bold text-gray-800 truncate">{s.name}</div>
+                        {isBaseline && (
+                          <span className="flex-shrink-0 text-[8px] font-black uppercase tracking-wide bg-violet-100 text-violet-700 px-1.5 py-0.5 rounded-md">
+                            ⭐ Referans
+                          </span>
+                        )}
+                      </div>
                       <div className="text-[9px] text-gray-400 flex gap-2 mt-0.5 flex-wrap">
                         <span className={netColor}>Net: {s.summary.netIncome >= 0 ? '+' : ''}₺{fmt(s.summary.netIncome)}</span>
                         <span>Marj: {pct(s.summary.grossMarginPct)}</span>
@@ -553,6 +595,15 @@ export function WhatIfClient({ period, baseline }: Props) {
                     </div>
                     {!compareMode && (
                       <div className="flex items-center gap-1.5 flex-shrink-0">
+                        {!isBaseline && s.id.includes('-') && (
+                          <button
+                            onClick={() => markAsBaseline(s.id)}
+                            title="Referans senaryo olarak ayarla"
+                            className="text-[9px] font-bold text-violet-600 hover:text-violet-700 border border-violet-200 rounded-lg px-2 py-1 hover:bg-violet-50 transition-colors"
+                          >
+                            Referans →
+                          </button>
+                        )}
                         <button
                           onClick={() => restoreScenario(s)}
                           title="Bu senaryoyu yükle"
