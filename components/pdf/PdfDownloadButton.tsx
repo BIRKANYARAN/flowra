@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { Btn } from '@/components/ui'
-import { generatePdf } from '@/components/pdf/generatePdf'
 import type { PdfOptions } from '@/components/pdf/generatePdf'
 
 interface Props {
@@ -16,6 +15,7 @@ export function PdfDownloadButton({ opts }: Props) {
   async function download() {
     setLoading(true); setError('')
     try {
+      const { generatePdf } = await import('@/components/pdf/generatePdf')
       await generatePdf(opts)
     } catch (err) {
       console.error('PDF error:', err)
