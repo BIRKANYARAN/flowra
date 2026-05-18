@@ -325,6 +325,26 @@ export default function PeriodClosePage() {
         <span className="font-bold">Not:</span> API ayrıca mizan dengesi ve mutabakat uyuşmazlıklarını otomatik denetler.
         Kilit işlemi geri alınamaz — tüm finansal yazma işlemleri bu dönem için engellenir.
       </div>
+
+      {/* Cross-navigation */}
+      <div className="flex items-center justify-between px-1">
+        <p className="text-[10px] text-gray-400 leading-relaxed">
+          Dönem kapanışı mizan ve mutabakat kontrolü tamamlandıktan sonra yapılmalı.
+        </p>
+        <div className="flex items-center gap-2 shrink-0 ml-4">
+          <Link href="/dashboard/cfo/trial-balance" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Mizan →
+          </Link>
+          <span className="text-gray-200">|</span>
+          <Link href="/dashboard/cfo/reconciliation" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Mutabakat →
+          </Link>
+          <span className="text-gray-200">|</span>
+          <Link href="/dashboard/cfo/journal-entries" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Journal Kayıtları →
+          </Link>
+        </div>
+      </div>
     </div>
   )
 }

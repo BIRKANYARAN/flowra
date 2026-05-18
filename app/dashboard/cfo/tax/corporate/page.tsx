@@ -393,6 +393,26 @@ export default async function CorporateTaxPage() {
         Yıllık KV beyannamesi → 30 Nisan.
       </div>
 
+      {/* Cross-navigation */}
+      <div className="flex items-center justify-between px-1">
+        <p className="text-[10px] text-gray-400 leading-relaxed">
+          Kurumlar vergisi gelir tablosu ve KDV beyanıyla birlikte değerlendirilmeli.
+        </p>
+        <div className="flex items-center gap-2 shrink-0 ml-4">
+          <Link href="/dashboard/cfo/tax/kdv" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            KDV Beyanı →
+          </Link>
+          <span className="text-gray-200">|</span>
+          <Link href="/dashboard/finance?tab=quarterly" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Geçici Vergi →
+          </Link>
+          <span className="text-gray-200">|</span>
+          <Link href="/dashboard/reports/income-statement" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Gelir Tablosu →
+          </Link>
+        </div>
+      </div>
+
     </div>
   )
 }
