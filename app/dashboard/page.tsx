@@ -20,7 +20,6 @@ import Link                          from 'next/link'
 import { CORPORATE_TAX_RATE_TR }     from '@/lib/services/finance-rules'
 import { fetchTcmbWithFallback }     from '@/lib/fx'
 import { computeCashPosition }       from '@/lib/finance/cash'
-import { FlowraKpiCard }             from '@/components/ui-kit/FlowraKpiCard'
 import { CashflowChart }             from '@/components/dashboard/CashflowChart'
 import { resolveCompanyId }          from '@/lib/resolve-company'
 import { safeSystemQuery }           from '@/lib/admin-db'
@@ -170,7 +169,7 @@ export default async function DashboardPage() {
   // ── Parallel data fetching ─────────────────────────────────────────────────
   // Financial summary is fetched via direct service call (no HTTP round-trip).
   const [
-    finSummary, openProfs, stockValue, alertCount, fxData,
+    finSummary, openProfs, stockValue, fxData,
     uncollectedSalesData, taskReminders, collectedSalesData,
     paidExpensesData, unpaidExpensesData,
     // Faz 4: period status, next tranche, trailing 5-month actuals for forecast
@@ -190,11 +189,6 @@ export default async function DashboardPage() {
     sq(async () => {
       const { data } = await supabase.from('stock_lots').select('qty_remaining, cost_price_try').eq('company_id', companyId).gt('qty_remaining', 0).is('deleted_at', null)
       return (data ?? []).reduce((sum, l) => sum + Number(l.qty_remaining) * Number((l as { cost_price_try?: number | null }).cost_price_try ?? 0), 0)
-    }, 0),
-
-    sq(async () => {
-      const { count } = await supabase.from('alerts').select('id', { count: 'exact', head: true }).eq('actor_user_id', uid).eq('is_read', false)
-      return count ?? 0
     }, 0),
 
     sq(() => loadFxDirect(), EMPTY_FX),
@@ -518,6 +512,16 @@ export default async function DashboardPage() {
           <h1 className="text-2xl font-black tracking-tight text-gray-900 leading-tight">CEO Komuta Merkezi</h1>
           <div className="flex items-center gap-2.5 mt-1.5 flex-wrap">
             <span className="text-sm text-gray-400">{label}</span>
+            {fxData.USD > 0 && (
+              <>
+                <span className="text-gray-200">·</span>
+                <span className="text-[11px] text-gray-400 tabular-nums font-mono">
+                  <span className="text-gray-300">$</span>{fxData.USD.toFixed(2)}
+                  <span className="mx-1.5 text-gray-200">·</span>
+                  <span className="text-gray-300">€</span>{fxData.EUR.toFixed(2)}
+                </span>
+              </>
+            )}
             <span className="text-gray-200">·</span>
             <div className={`flex items-center gap-1.5 text-sm font-semibold ${situTheme.text}`}>
               <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-black ${situTheme.badge}`}>
@@ -822,8 +826,14 @@ export default async function DashboardPage() {
             <div className="text-[9px] text-gray-400 mt-0.5">bakiye {fmt(cashBalance)}</div>
           </div>
         </div>
+        {stockValue > 0 && (
+          <div className="px-5 pb-2 pt-2 border-t border-gray-50 flex items-center gap-2">
+            <span className="text-[9px] font-bold uppercase tracking-widest text-gray-300 flex-shrink-0">Stok</span>
+            <span className="text-[10px] text-gray-400 tabular-nums">{fmt(stockValue)} maliyet bedeliyle stokta bekliyor</span>
+          </div>
+        )}
         {cashDistributable > 0 && equalization.entries.length > 0 && (
-          <div className="px-5 pb-3 pt-2 border-t border-gray-50 flex items-center gap-2 overflow-hidden flex-wrap">
+          <div className={`px-5 pb-3 pt-2 flex items-center gap-2 overflow-hidden flex-wrap ${stockValue > 0 ? '' : 'border-t border-gray-50'}`}>
             <span className="text-[9px] font-bold uppercase tracking-widest text-gray-300 flex-shrink-0">Paylaşım</span>
             {equalization.entries.slice(0, 4).map(e => (
               <div key={e.partner_id} className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-100 rounded-lg px-2.5 py-1 min-w-0">
@@ -1055,20 +1065,3 @@ function formatKpi(n: number): string {
   return KPI_FMT.format(n)
 }
 
-// ── Inline waterfall row ───────────────────────────────────────────────────────
-
-function WRow({ label, value, sub, isTotal = false }: { label: string; value: number; sub?: string; isTotal?: boolean }) {
-  const TRY_FMT = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
-  const fmtV = (n: number) => (n < 0 ? '−' : '') + '₺' + TRY_FMT.format(Math.abs(n))
-  return (
-    <div className="flex items-center justify-between gap-4">
-      <div className="min-w-0">
-        <span className={`text-sm ${isTotal ? 'font-bold text-gray-900' : 'font-medium text-gray-500'}`}>{label}</span>
-        {sub && <span className="text-[10px] text-gray-400 ml-1.5">{sub}</span>}
-      </div>
-      <span className={`tabular-nums shrink-0 font-black ${isTotal ? `text-base ${value >= 0 ? 'text-emerald-700' : 'text-red-600'}` : `text-sm ${value >= 0 ? 'text-gray-700' : 'text-red-600'}`}`}>
-        {fmtV(value)}
-      </span>
-    </div>
-  )
-}
