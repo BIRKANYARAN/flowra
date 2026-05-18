@@ -2017,7 +2017,43 @@ create trigger trg_touch_purchase_orders
   for each row execute function fn_touch_purchase_orders();
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- SECTION 13 — ACCOUNTING TRUTH V1 (2026-05-18)
+-- SECTION 13 — PURCHASE COSTS TABLE
+-- Overhead cost lines attached to a purchase (customs, freight, insurance, tax).
+-- Used by purchase.service.ts and cost.service.ts.
+-- ─────────────────────────────────────────────────────────────────────────────
+
+create table if not exists purchase_costs (
+  id                uuid primary key default gen_random_uuid(),
+  purchase_id       uuid not null references purchases(id) on delete cascade,
+  cost_type         text not null default 'other'
+                    check (cost_type in ('customs', 'freight', 'insurance', 'tax', 'other')),
+  description       text,
+  amount            numeric(15,2) not null check (amount >= 0),
+  currency          text not null default 'TRY',
+  fx_rate           numeric(12,6) not null default 1,
+  amount_try        numeric(15,2) not null,  -- frozen at insert time
+  allocation_method text not null default 'by_value'
+                    check (allocation_method in ('by_quantity', 'by_value')),
+  created_at        timestamptz not null default now()
+);
+
+create index if not exists idx_purchase_costs_purchase on purchase_costs(purchase_id);
+
+alter table purchase_costs enable row level security;
+
+create policy "purchase_costs_company_member_rw" on purchase_costs
+  for all using (
+    purchase_id in (
+      select p.id from purchases p
+      join company_members cm on cm.company_id = p.company_id
+      where cm.user_id = auth.uid() and p.deleted_at is null
+    )
+  );
+
+grant all on purchase_costs to authenticated, service_role;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- SECTION 13b — ACCOUNTING TRUTH V1 (2026-05-18)
 -- Column additions, alias sync triggers, updated convert_proforma_to_sale RPC,
 -- partner_transactions table. Safe to run on both clean and existing installs.
 -- ─────────────────────────────────────────────────────────────────────────────

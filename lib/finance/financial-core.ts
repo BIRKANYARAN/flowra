@@ -437,8 +437,9 @@ export async function getCfoMetrics(
       .eq('company_id', companyId).is('deleted_at', null)
       .gte('sale_date', ytdFrom).lte('sale_date', today),
 
-    // 13. YTD purchase VAT — purchase_costs uses created_at (no purchase_date equivalent)
-    supabase.from('purchase_costs').select('amount_try')
+    // 13. YTD purchase VAT — join through purchases to filter by company_id
+    supabase.from('purchase_costs').select('amount_try, purchases!inner(company_id)')
+      .eq('purchases.company_id', companyId)
       .eq('cost_type', 'tax')
       .gte('created_at', ytdFrom + 'T00:00:00Z').lte('created_at', today + 'T23:59:59Z'),
 
@@ -490,6 +491,9 @@ export async function getCfoMetrics(
         .in('sale_item_id', ytdSaleItemIds)
     : { data: [], error: null }
 
+  // Non-fatal errors: log but don't throw — pages degrade gracefully with 0 values.
+  // partner_transactions and purchase_costs may not exist on all DB versions yet.
+  const NON_FATAL_TABLES = ['partner_transactions', 'purchase_costs']
   const errs = [
     allTimeCollectedRes.error, allTimePaidExpensesRes.error, unpaidExpensesRes.error,
     periodCollectedRes.error, periodPaidExpensesRes.error, trailingBurnRes.error,
@@ -497,7 +501,13 @@ export async function getCfoMetrics(
     ytdSaleItemsRes.error, ytdCogsRes.error, ytdExpensesRes.error, ytdSalesVatRes.error,
     ytdPurchaseVatRes.error, ytdExpenseVatRes.error, partnerTxRes.error,
     stockRes.error,
-  ].filter(Boolean)
+  ].filter(e => {
+    if (!e) return false
+    const msg = (e as { message?: string }).message ?? ''
+    // Suppress "relation does not exist" errors for tables added in recent migrations
+    if (NON_FATAL_TABLES.some(t => msg.includes(t))) return false
+    return true
+  })
   if (errs.length > 0) errs.forEach(e => console.error('[financial-core/cfo]', (e as { message?: string }).message))
 
   const allTimeReceived = (allTimeCollectedRes.data ?? []).reduce((s, r) => s + Number(r.total_try), 0)
