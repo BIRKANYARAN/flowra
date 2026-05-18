@@ -79,6 +79,51 @@ export async function ProformasContent({ companyId }: Props) {
         </div>
       )}
 
+      {/* Low win-rate alert — only when enough decisions to be statistically meaningful */}
+      {winRate !== null && decided >= 5 && winRate < 30 && (
+        <div className={`rounded-xl border px-4 py-3 flex items-start gap-3 ${
+          winRate < 15 ? 'bg-red-50 border-red-200' : 'bg-amber-50 border-amber-200'
+        }`}>
+          <span className="text-base mt-0.5">⚠</span>
+          <div className="flex-1">
+            <div className={`text-[11px] font-black uppercase tracking-wide ${winRate < 15 ? 'text-red-800' : 'text-amber-800'}`}>
+              Düşük Teklif Dönüşüm Oranı — %{winRate}
+            </div>
+            <div className={`text-xs mt-0.5 ${winRate < 15 ? 'text-red-700' : 'text-amber-700'}`}>
+              {decided} karar verilen tekliften sadece {convertedCount} tanesi satışa dönmüş.
+              Fiyatlandırma, teklif içeriği veya takip sürecini gözden geçirin.
+            </div>
+          </div>
+          <Link href="/dashboard/commercial?tab=pipeline" className={`text-[10px] font-bold underline underline-offset-2 shrink-0 mt-0.5 whitespace-nowrap ${winRate < 15 ? 'text-red-700 hover:text-red-800' : 'text-amber-700 hover:text-amber-800'}`}>
+            Pipeline →
+          </Link>
+        </div>
+      )}
+
+      {/* High open pipeline aging — more than 5 proformas open > 14 days */}
+      {(() => {
+        const twoWeeksAgo = new Date(); twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14)
+        const staleOpen = list.filter(p =>
+          (p.status === 'sent' || p.status === 'accepted') &&
+          p.created_at && new Date(p.created_at) < twoWeeksAgo
+        )
+        if (staleOpen.length < 3) return null
+        return (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-start gap-3">
+            <span className="text-base mt-0.5">⚠</span>
+            <div className="flex-1">
+              <div className="text-[11px] font-black uppercase tracking-wide text-amber-800">
+                {staleOpen.length} Açık Teklif 14+ Gün Yanıt Bekliyor
+              </div>
+              <div className="text-xs text-amber-700 mt-0.5">
+                Yanıt bekleyen teklifler pipeline değerini şişirir.
+                Müşteri takibi yapın veya teklifleri güncelleyin.
+              </div>
+            </div>
+          </div>
+        )
+      })()}
+
       {/* ── Proforma Status Funnel ────────────────────────────────────── */}
       {list.length > 2 && totalNonDraft > 0 && (
         <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
