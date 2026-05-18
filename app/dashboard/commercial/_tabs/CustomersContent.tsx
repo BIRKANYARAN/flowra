@@ -4,10 +4,24 @@ import { createClient } from '@/lib/supabase-server'
 import type { Customer } from '@/types'
 import CustomersClient from '@/app/dashboard/customers/CustomersClient'
 import { fmtTRY as fmt } from '@/lib/format'
+import { scoreCustomerRisk, type CustomerPayment } from '@/lib/engines/anomaly.engine'
 
 interface Props { companyId: string }
 
-interface SaleAgg { customer_name: string; total_try: number; payment_status: string }
+interface SaleAgg {
+  customer_name:  string
+  total_try:      number
+  payment_status: string
+  sale_date:      string | null
+  paid_at:        string | null
+  due_date:       string | null
+}
+
+const RISK_CFG = {
+  high:   { label: 'Yüksek Risk',  bg: 'bg-red-50',    border: 'border-red-200',    text: 'text-red-700',    badge: 'bg-red-100 text-red-700'    },
+  medium: { label: 'Orta Risk',    bg: 'bg-amber-50',  border: 'border-amber-200',  text: 'text-amber-700',  badge: 'bg-amber-100 text-amber-700'  },
+  low:    { label: 'Düşük Risk',   bg: 'bg-emerald-50',border: 'border-emerald-200',text: 'text-emerald-700',badge: 'bg-emerald-100 text-emerald-700'},
+} as const
 
 export async function CustomersContent({ companyId }: Props) {
   const supabase = createClient()
@@ -21,7 +35,7 @@ export async function CustomersContent({ companyId }: Props) {
       .order('name'),
     supabase
       .from('sales')
-      .select('customer_name, total_try:total, payment_status')
+      .select('customer_name, total_try:total, payment_status, sale_date, paid_at, due_date')
       .eq('company_id', companyId)
       .is('deleted_at', null)
       .order('created_at', { ascending: false })
@@ -48,6 +62,18 @@ export async function CustomersContent({ companyId }: Props) {
     .slice(0, 5)
     .map(([name, total]) => ({ name, total }))
   const maxTopTotal = topCustomers[0]?.total ?? 1
+
+  // ── Customer payment risk scoring ──────────────────────────────────────────
+  const payments: CustomerPayment[] = sales.map(s => ({
+    customer_name:  s.customer_name ?? 'Bilinmiyor',
+    sale_date:      s.sale_date ?? new Date().toISOString().slice(0, 10),
+    paid_date:      s.paid_at   ?? null,
+    due_date:       s.due_date  ?? null,
+    total_try:      Number(s.total_try ?? 0),
+    payment_status: s.payment_status ?? 'pending',
+  }))
+  const riskScores     = scoreCustomerRisk(payments)
+  const atRiskCustomers = riskScores.filter(r => r.risk_level !== 'low').slice(0, 8)
 
   return (
     <div className="max-w-3xl space-y-6">
@@ -98,6 +124,75 @@ export async function CustomersContent({ companyId }: Props) {
               )
             })}
           </div>
+        </div>
+      )}
+
+      {/* ── Customer Payment Risk Panel ──────────────────────────────────── */}
+      {atRiskCustomers.length > 0 && (
+        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-50">
+            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+              Müşteri Ödeme Riski
+            </span>
+            <span className="text-[9px] text-gray-400">
+              {atRiskCustomers.filter(r => r.risk_level === 'high').length > 0 && (
+                <span className="text-red-600 font-semibold">{atRiskCustomers.filter(r => r.risk_level === 'high').length} yüksek</span>
+              )}
+              {atRiskCustomers.filter(r => r.risk_level === 'high').length > 0 && atRiskCustomers.filter(r => r.risk_level === 'medium').length > 0 && ' · '}
+              {atRiskCustomers.filter(r => r.risk_level === 'medium').length > 0 && (
+                <span className="text-amber-600">{atRiskCustomers.filter(r => r.risk_level === 'medium').length} orta</span>
+              )}
+            </span>
+          </div>
+          <div className="divide-y divide-gray-50">
+            {atRiskCustomers.map(r => {
+              const cfg = RISK_CFG[r.risk_level]
+              return (
+                <div key={r.customer_name} className="flex items-center gap-4 px-5 py-3 hover:bg-gray-50/40">
+                  {/* Risk score ring */}
+                  <div className="flex-shrink-0 w-10 h-10 rounded-full border-2 flex items-center justify-center"
+                    style={{ borderColor: r.risk_level === 'high' ? '#f87171' : r.risk_level === 'medium' ? '#fb923c' : '#34d399' }}>
+                    <span className={`text-[11px] font-black tabular-nums ${cfg.text}`}>{r.risk_score}</span>
+                  </div>
+
+                  {/* Customer info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-gray-800 truncate">{r.customer_name}</span>
+                      <span className={`text-[9px] font-black uppercase tracking-wide px-1.5 py-0.5 rounded ${cfg.badge}`}>
+                        {cfg.label}
+                      </span>
+                    </div>
+                    <div className="text-[10px] text-gray-400 mt-0.5 flex items-center gap-3">
+                      {r.overdue_count > 0 && (
+                        <span>{r.overdue_count} gecikmiş işlem</span>
+                      )}
+                      {r.avg_days_late > 0 && (
+                        <span>ort. {Math.round(r.avg_days_late)}g geç ödeme</span>
+                      )}
+                      {r.total_overdue > 0 && (
+                        <span className="text-red-500 font-semibold">{fmt(r.total_overdue)} vadesi geçmiş</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Score bar */}
+                  <div className="w-20 flex-shrink-0 hidden sm:block">
+                    <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                      <div className={`h-full rounded-full ${r.risk_level === 'high' ? 'bg-red-400' : r.risk_level === 'medium' ? 'bg-amber-400' : 'bg-emerald-400'}`}
+                        style={{ width: `${r.risk_score}%` }} />
+                    </div>
+                    <div className={`text-[9px] font-semibold mt-0.5 text-right ${cfg.text}`}>{r.risk_score}/100</div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+          {riskScores.filter(r => r.risk_level !== 'low').length > 8 && (
+            <div className="px-5 py-2.5 text-[10px] text-gray-400 border-t border-gray-50">
+              +{riskScores.filter(r => r.risk_level !== 'low').length - 8} daha · Tüm risk analizi tahsilat sekmesinde
+            </div>
+          )}
         </div>
       )}
 
