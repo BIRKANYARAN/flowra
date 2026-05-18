@@ -128,6 +128,28 @@ export async function OverviewTab({ userId: _userId, companyId }: Props) {
         </div>
       )}
 
+      {/* High overdue receivables alert — fires when 60d+ overdue exceeds 20% of total outstanding */}
+      {m.receivables.total_outstanding > 0 &&
+       m.receivables.overdue_60d + m.receivables.overdue_90d > m.receivables.total_outstanding * 0.2 && (
+        <div className="bg-orange-50 border border-orange-300 rounded-xl px-4 py-3 flex items-start gap-3">
+          <span className="text-base mt-0.5">⚠</span>
+          <div className="flex-1">
+            <div className="text-[11px] font-black uppercase tracking-wide text-orange-800">
+              Alacak Yaşlanması Yüksek
+            </div>
+            <div className="text-xs text-orange-700 mt-0.5">
+              60+ gün vadesi geçmiş: <strong>{fmt(m.receivables.overdue_60d + m.receivables.overdue_90d)}</strong>{' '}
+              (toplam alacağın %{Math.round(((m.receivables.overdue_60d + m.receivables.overdue_90d) / m.receivables.total_outstanding) * 100)}&apos;i).
+              Tahsilat baskısı nakit pozisyonunu olumsuz etkiliyor.
+            </div>
+          </div>
+          <Link href="/dashboard/commercial?tab=collections"
+            className="text-[10px] font-bold text-orange-700 hover:text-orange-800 underline underline-offset-2 shrink-0 mt-0.5 whitespace-nowrap">
+            Tahsilat →
+          </Link>
+        </div>
+      )}
+
       {/* Zone 1 — Likidite Kontrol Merkezi */}
       <div>
         <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1.5">Likidite Kontrol Merkezi</div>

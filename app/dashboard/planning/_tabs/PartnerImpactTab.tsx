@@ -125,8 +125,8 @@ export async function PartnerImpactTab({ companyId, userId }: Props) {
           Ortak etki simülasyonu gerçek PCLE dağıtımıyla karşılaştırılmalı.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
-          <Link href="/dashboard/partners?tab=distribution" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
-            Kâr Dağıtımı →
+          <Link href="/dashboard/planning?tab=debt-pressure" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Borç Baskısı →
           </Link>
           <span className="text-gray-200">|</span>
           <Link href="/dashboard/partners?tab=waterfall" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">

@@ -104,6 +104,29 @@ export async function StockContent({ companyId, userId }: Props) {
         ))}
       </div>
 
+      {/* Zero-stock alert — products completely out of stock */}
+      {zeroStockCount > 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-start gap-3">
+          <span className="text-base mt-0.5">⚠</span>
+          <div className="flex-1">
+            <div className="text-[10px] font-black uppercase tracking-widest text-amber-800 mb-1">
+              Stok Tükendi — {zeroStockCount} Ürün
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {products.filter(p => p.stock_qty <= 0).slice(0, 6).map(p => (
+                <span key={p.id} className="text-[10px] bg-amber-100 text-amber-800 font-semibold px-2 py-0.5 rounded-lg">
+                  {p.name}
+                </span>
+              ))}
+              {zeroStockCount > 6 && (
+                <span className="text-[10px] text-amber-600 font-semibold">+{zeroStockCount - 6} ürün daha</span>
+              )}
+            </div>
+            <p className="text-[10px] text-amber-700 mt-1">Satış öncesi stok alımı yapılmalı.</p>
+          </div>
+        </div>
+      )}
+
       {/* Stock consistency warning — only shown when stock_qty counter diverges from movement sum */}
       {inconsistentItems.length > 0 && (
         <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3">

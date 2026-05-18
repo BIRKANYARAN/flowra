@@ -258,7 +258,7 @@ export async function PnlTab({ userId, companyId }: Props) {
       </div>
 
       {/* Cross-navigation */}
-      <div className="flex items-center justify-between px-1 pt-1">
+      <div className="col-span-12 flex items-center justify-between px-1 pt-1">
         <p className="text-[10px] text-gray-400 leading-relaxed">
           Bu görünüm cari ay tahakkuk bazlı P&amp;L&apos;i gösterir.
           PDF dışa aktarım için resmi raporu inceleyin.
