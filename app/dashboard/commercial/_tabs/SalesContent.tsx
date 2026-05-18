@@ -177,7 +177,61 @@ export async function SalesContent({ companyId }: Props) {
         </Link>
       </div>
 
+      {/* ── MTD vs Prior Month Alert ──────────────────────────────────── */}
+      {momDelta && prevRevenue > 0 && (() => {
+        const pctChange = ((mtdRevenue - prevRevenue) / prevRevenue) * 100
+        const dayOfMonth = new Date().getDate()
+        // Only alert if we're past day 10 (early month skew less likely)
+        if (dayOfMonth < 10 || Math.abs(pctChange) < 15) return null
+        const isDown = pctChange < 0
+        return (
+          <div className={`rounded-xl border px-4 py-3 flex items-start gap-3 ${
+            isDown ? 'bg-amber-50 border-amber-200' : 'bg-emerald-50 border-emerald-200'
+          }`}>
+            <span className="text-base mt-0.5">{isDown ? '⚠' : '↗'}</span>
+            <div className="flex-1">
+              <div className={`text-[11px] font-black uppercase tracking-wide ${isDown ? 'text-amber-800' : 'text-emerald-800'}`}>
+                {isDown ? 'Aylık Ciro Düşüşü' : 'Aylık Ciro Artışı'}
+              </div>
+              <div className={`text-xs mt-0.5 ${isDown ? 'text-amber-700' : 'text-emerald-700'}`}>
+                Bu ay {fmt(mtdRevenue)} — geçen aya ({fmt(prevRevenue)}) göre{' '}
+                <span className="font-bold">{momDelta.text}</span>.
+                {isDown && ` Ay ${dayOfMonth}. günü itibarıyla talep düşüşü gözlemleniyor.`}
+              </div>
+            </div>
+            <Link
+              href="/dashboard/finance?tab=pnl"
+              className={`text-[10px] font-bold underline underline-offset-2 shrink-0 mt-0.5 ${isDown ? 'text-amber-700' : 'text-emerald-700'}`}
+            >
+              P&amp;L Analizi →
+            </Link>
+          </div>
+        )
+      })()}
+
       <SalesTable rows={list} />
+
+      {/* Cross-navigation */}
+      <div className="flex items-center justify-between px-1">
+        <p className="text-[10px] text-gray-400 leading-relaxed">
+          Satış verisi P&amp;L ve nakit akışı hesaplamalarının temelidir.
+        </p>
+        <div className="flex items-center gap-2 shrink-0 ml-4">
+          <Link
+            href="/dashboard/finance?tab=pnl"
+            className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap"
+          >
+            P&amp;L Analizi →
+          </Link>
+          <span className="text-gray-200">|</span>
+          <Link
+            href="/dashboard/commercial?tab=pipeline"
+            className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap"
+          >
+            Satış Akışı →
+          </Link>
+        </div>
+      </div>
     </div>
   )
 }

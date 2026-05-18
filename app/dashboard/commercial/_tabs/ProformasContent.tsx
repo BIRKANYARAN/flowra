@@ -51,7 +51,13 @@ export async function ProformasContent({ companyId }: Props) {
 
   if (fetchError) return <ErrorBanner msg={fetchError} />
 
-  const openCount = sentCount + acceptedCount
+  const openCount      = sentCount + acceptedCount
+  const rejectedCount  = list.filter(p => p.status === 'rejected').length
+  const totalNonDraft  = list.length - draftCount
+
+  // Win rate: converted / (converted + rejected) — among decided proformas
+  const decided   = convertedCount + rejectedCount
+  const winRate   = decided > 0 ? Math.round((convertedCount / decided) * 100) : null
 
   return (
     <div className="max-w-5xl space-y-4">
@@ -70,6 +76,45 @@ export async function ProformasContent({ companyId }: Props) {
               <div className="text-[10px] text-gray-400 mt-1 leading-tight">{card.sub}</div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* ── Proforma Status Funnel ────────────────────────────────────── */}
+      {list.length > 2 && totalNonDraft > 0 && (
+        <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+          <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">Teklif Dönüşüm Hunisi</div>
+          <div className="flex items-stretch gap-1">
+            {[
+              { label: 'Taslak',    count: draftCount,     color: 'bg-gray-200',    textColor: 'text-gray-600'    },
+              { label: 'Gönderildi', count: sentCount,     color: 'bg-blue-300',    textColor: 'text-blue-800'    },
+              { label: 'Onaylandı', count: acceptedCount,  color: 'bg-emerald-300', textColor: 'text-emerald-800' },
+              { label: 'Dönüştü',  count: convertedCount,  color: 'bg-primary-400', textColor: 'text-primary-800' },
+              { label: 'Reddedildi', count: rejectedCount, color: 'bg-red-200',     textColor: 'text-red-700'     },
+            ].map((step, i) => {
+              if (step.count === 0) return null
+              const widthPct = list.length > 0 ? Math.max(6, Math.round((step.count / list.length) * 100)) : 6
+              return (
+                <div key={step.label} className="flex-1 min-w-0">
+                  <div className={`h-8 rounded-lg flex items-center justify-center ${step.color}`}
+                    style={{ minWidth: `${widthPct}%` }}>
+                    <span className={`text-[10px] font-black tabular-nums ${step.textColor}`}>{step.count}</span>
+                  </div>
+                  <div className={`text-[9px] mt-1 text-center font-semibold ${step.textColor}`}>{step.label}</div>
+                </div>
+              )
+            })}
+          </div>
+          {winRate !== null && (
+            <div className="mt-3 flex items-center gap-3 text-[10px] text-gray-500 border-t border-gray-50 pt-2.5">
+              <span>Karar verilen teklifler: {decided}</span>
+              <span className={`font-black ${winRate >= 60 ? 'text-emerald-700' : winRate >= 40 ? 'text-amber-700' : 'text-red-600'}`}>
+                Kazanma Oranı: %{winRate}
+              </span>
+              {openCount > 0 && (
+                <span className="text-blue-600 font-semibold">{openCount} aktif pipeline</span>
+              )}
+            </div>
+          )}
         </div>
       )}
 
