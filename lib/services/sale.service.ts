@@ -167,25 +167,52 @@ export class SaleService {
 
       // ── GAP 9 fix: dual-write journal entry for the converted sale ──────────
       // DR 120 Alıcılar = total_try, CR 600 Revenue = net, CR 391 KDV = kdv_amount_try
-      // KDV split approximated from total (exact split requires sale_items.kdv_rate column).
+      // Exact KDV split from sale_items.kdv_rate (per-line rate, not blended approximation).
       try {
         const { dualWrite, resolvePeriodId } = await import('@/lib/services/ledger/dual-write.service')
         const { JournalEntryService } = await import('@/lib/services/ledger/journal-entry.service')
 
-        const { data: saleRow } = await supabase
-          .from('sales')
-          .select('total, sale_date')
-          .eq('id', sale_id)
-          .maybeSingle()
+        const [saleRes, saleItemsRes] = await Promise.all([
+          supabase.from('sales')
+            .select('total, kdv_amount_try, sale_date')
+            .eq('id', sale_id)
+            .maybeSingle(),
+          supabase.from('sale_items')
+            .select('qty, unit_price, discount_pct, kdv_rate, line_total')
+            .eq('sale_id', sale_id),
+        ])
 
+        const saleRow = saleRes.data
         if (saleRow) {
-          const total_try  = Math.round(Number(saleRow.total ?? 0) * 100) / 100
-          const saleDate   = (saleRow.sale_date as string | null) ?? (input.sale_date ?? today)
-          const periodId   = await resolvePeriodId(companyId, saleDate, supabase)
-          // Approximate revenue/KDV split assuming blended 20% KDV (most common Turkish rate).
-          // Exact split requires a kdv_rate column on sale_items (planned schema addition).
-          const revenue_try    = Math.round(total_try / 1.2 * 100) / 100
-          const kdv_amount_try = Math.round((total_try - revenue_try) * 100) / 100
+          const total_try = Math.round(Number(saleRow.total ?? 0) * 100) / 100
+          const saleDate  = (saleRow.sale_date as string | null) ?? (input.sale_date ?? today)
+          const periodId  = await resolvePeriodId(companyId, saleDate, supabase)
+
+          // Prefer persisted kdv_amount_try (from RPC), then compute from sale_items.kdv_rate,
+          // finally fall back to blended 20% approximation for legacy rows.
+          let kdv_amount_try: number
+          const persistedKdv = Number(saleRow.kdv_amount_try ?? 0)
+          if (persistedKdv > 0) {
+            kdv_amount_try = persistedKdv
+          } else if (saleItemsRes.data && saleItemsRes.data.length > 0) {
+            // Exact: sum KDV per line using line-level kdv_rate
+            kdv_amount_try = Math.round(
+              saleItemsRes.data.reduce((sum: number, item: { line_total: unknown; kdv_rate: unknown }) => {
+                const lineTotal = Number(item.line_total ?? 0)
+                if (lineTotal > 0 && Number(item.kdv_rate) > 0) {
+                  const kdvMultiplier = 1 + Number(item.kdv_rate) / 100
+                  const netLine = lineTotal / kdvMultiplier
+                  return sum + (lineTotal - netLine)
+                }
+                return sum
+              }, 0) * 100,
+            ) / 100
+          } else {
+            // Fallback: blended 20% (will be wrong for 0% or 10% items, but rare path)
+            kdv_amount_try = Math.round((total_try - total_try / 1.2) * 100) / 100
+          }
+          const revenue_try = Math.round((total_try - kdv_amount_try) * 100) / 100
+
           await dualWrite({
             companyId,
             periodId,
