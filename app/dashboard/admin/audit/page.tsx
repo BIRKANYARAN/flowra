@@ -35,6 +35,17 @@ const ACTION_LABELS: Record<string, { label: string; color: string }> = {
 
 const PAGE_SIZE = 50
 
+// ── Chain verify result type (mirrors ChainVerifyResult from audit-chain.service) ────
+interface ChainResult {
+  is_supported:  boolean
+  total_checked: number
+  broken_links:  number
+  first_broken?: { id: string; created_at: string; expected_hash: string; actual_hash: string }
+  ok:            boolean
+  from:          string
+  to:            string
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function AdminAuditPage() {
@@ -52,6 +63,28 @@ export default function AdminAuditPage() {
   const [filterAction,     setFilterAction]     = useState('')
   const [filterEntityType, setFilterEntityType] = useState('')
   const [filterSince,      setFilterSince]      = useState('')
+
+  // ── Audit chain integrity ──────────────────────────────────────────────────
+  const [chainResult,  setChainResult]  = useState<ChainResult | null>(null)
+  const [chainLoading, setChainLoading] = useState(false)
+  const [chainError,   setChainError]   = useState('')
+
+  const verifyChain = useCallback(async () => {
+    setChainLoading(true)
+    setChainError('')
+    setChainResult(null)
+    try {
+      const today  = new Date().toISOString().slice(0, 10)
+      const dfl30  = new Date(Date.now() - 30 * 86_400_000).toISOString().slice(0, 10)
+      const res    = await fetch(`/api/admin/audit/chain?from=${dfl30}&to=${today}`)
+      if (!res.ok) { setChainError('Zincir doğrulama başarısız.'); return }
+      setChainResult(await res.json())
+    } catch {
+      setChainError('Bağlantı hatası.')
+    } finally {
+      setChainLoading(false)
+    }
+  }, [])
 
   // ── Fetch ──────────────────────────────────────────────────────────────────
 
@@ -108,6 +141,87 @@ export default function AdminAuditPage() {
         <p className="text-sm text-gray-500 mt-0.5">
           Şirketteki tüm işlem geçmişi · {total.toLocaleString('tr-TR')} kayıt
         </p>
+      </div>
+
+      {/* ── Audit Chain Integrity ─────────────────────────────────────────── */}
+      <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)] mb-5">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Denetim Zinciri Bütünlüğü</div>
+            <div className="text-[10px] text-gray-400 mt-0.5">SHA-256 hash zinciri — son 30 gün</div>
+          </div>
+          <button
+            onClick={verifyChain}
+            disabled={chainLoading}
+            className="text-xs font-semibold px-3 py-1.5 bg-primary-600 text-white rounded-xl hover:bg-primary-700 disabled:opacity-50 transition-colors"
+          >
+            {chainLoading ? 'Doğrulanıyor…' : 'Zinciri Doğrula'}
+          </button>
+        </div>
+
+        {chainError && (
+          <div className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-xl px-3 py-2">
+            {chainError}
+          </div>
+        )}
+
+        {chainResult && !chainError && (
+          <div className="mt-2">
+            {!chainResult.is_supported ? (
+              <div className="flex items-center gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2">
+                <span className="text-sm">⚠</span>
+                <span>Hash kolonları bu veritabanında henüz aktif değil (migrasyon bekleniyor).</span>
+              </div>
+            ) : chainResult.total_checked === 0 ? (
+              <div className="flex items-center gap-2 text-xs text-gray-500 bg-gray-50 border border-gray-100 rounded-xl px-3 py-2">
+                <span>Seçili aralıkta denetim kaydı bulunamadı.</span>
+              </div>
+            ) : chainResult.ok ? (
+              <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-3">
+                <span className="text-lg">✓</span>
+                <div>
+                  <div className="text-xs font-bold text-emerald-700">Zincir bütün — müdahale tespit edilmedi</div>
+                  <div className="text-[10px] text-emerald-600 mt-0.5">
+                    {chainResult.total_checked.toLocaleString('tr-TR')} kayıt doğrulandı · {chainResult.from} – {chainResult.to}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-sm">⛔</span>
+                  <div className="text-xs font-bold text-red-700">
+                    Zincir kırık — {chainResult.broken_links} bozuk bağlantı tespit edildi
+                  </div>
+                </div>
+                <div className="text-[10px] text-red-600 mb-2">
+                  {chainResult.total_checked} kayıttan {chainResult.broken_links} tanesi doğrulanamadı. Kayıtlar değiştirilmiş olabilir.
+                </div>
+                {chainResult.first_broken && (
+                  <div className="bg-white border border-red-100 rounded-xl p-3 space-y-1">
+                    <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">İlk Bozuk Kayıt</div>
+                    <div className="text-[10px] text-gray-700">
+                      <span className="text-gray-400">ID:</span>{' '}
+                      <code className="bg-red-50 px-1 rounded">{chainResult.first_broken.id}</code>
+                    </div>
+                    <div className="text-[10px] text-gray-700">
+                      <span className="text-gray-400">Tarih:</span>{' '}
+                      {new Date(chainResult.first_broken.created_at).toLocaleString('tr-TR')}
+                    </div>
+                    <div className="text-[10px] text-gray-700 truncate">
+                      <span className="text-gray-400">Beklenen:</span>{' '}
+                      <code className="text-emerald-700">{chainResult.first_broken.expected_hash.slice(0, 24)}…</code>
+                    </div>
+                    <div className="text-[10px] text-gray-700 truncate">
+                      <span className="text-gray-400">Gerçek:</span>{' '}
+                      <code className="text-red-600">{chainResult.first_broken.actual_hash.slice(0, 24)}…</code>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Filters */}
