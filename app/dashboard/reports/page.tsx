@@ -229,11 +229,24 @@ export default function ReportsHubPage() {
         </div>
       </div>
 
-      {/* Quick links */}
-      <div className="text-xs text-gray-400 flex items-center gap-4">
-        <Link href="/dashboard/cfo" className="hover:text-primary-600 font-semibold">← CFO Cockpit</Link>
-        <Link href="/dashboard/cfo/trial-balance" className="hover:text-primary-600">Mizan</Link>
-        <Link href="/dashboard/cfo/period-close" className="hover:text-primary-600">Dönem Kapanışı</Link>
+      {/* Cross-navigation */}
+      <div className="flex items-center justify-between px-1">
+        <p className="text-[10px] text-gray-400 leading-relaxed">
+          Raporlar CFO cockpit ve dönem kapanış süreciyle birlikte değerlendirilmeli.
+        </p>
+        <div className="flex items-center gap-2 shrink-0 ml-4">
+          <Link href="/dashboard/finance?tab=cfo" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            CFO Cockpit →
+          </Link>
+          <span className="text-gray-200">|</span>
+          <Link href="/dashboard/cfo/trial-balance" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Mizan →
+          </Link>
+          <span className="text-gray-200">|</span>
+          <Link href="/dashboard/cfo/period-close" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Dönem Kapanışı →
+          </Link>
+        </div>
       </div>
     </div>
   )
