@@ -246,21 +246,24 @@ export default async function DashboardPage() {
       return (data ?? []) as Array<{ committed_try: number; paid_try: number; due_date: string | null }>
     }, [] as Array<{ committed_try: number; paid_try: number; due_date: string | null }>),
 
-    // Trailing months for forecast: last 5 complete months revenue + expenses
+    // Trailing months for forecast: last 5 complete months — 2 parallel range queries
     sq(async () => {
+      const t5Start  = new Date(year, month - 1 - 5, 1)
+      const t5From   = t5Start.toISOString().slice(0, 10)
+      const t5To     = new Date(year, month - 1, 0).toISOString().slice(0, 10)
+      const [saleRange, expRange] = await Promise.all([
+        supabase.from('sales').select('total_try:total, sale_date').eq('company_id', companyId).is('deleted_at', null).gte('sale_date', t5From).lte('sale_date', t5To),
+        supabase.from('expenses').select('amount_try, expense_date').eq('company_id', companyId).is('deleted_at', null).gte('expense_date', t5From).lte('expense_date', t5To),
+      ])
+      const revMap = new Map<string, number>()
+      const expMap = new Map<string, number>()
+      for (const r of (saleRange.data ?? [])) { const ym = (r.sale_date as string).slice(0, 7); revMap.set(ym, (revMap.get(ym) ?? 0) + Number(r.total_try ?? 0)) }
+      for (const r of (expRange.data  ?? [])) { const ym = (r.expense_date as string).slice(0, 7); expMap.set(ym, (expMap.get(ym) ?? 0) + Number(r.amount_try ?? 0)) }
       const results: Array<{ revenue: number; expenses: number }> = []
-      for (let i = 1; i <= 5; i++) {
-        const d = new Date(year, month - 1 - i, 1)
-        const y = d.getFullYear(); const m = String(d.getMonth() + 1).padStart(2, '0')
-        const mFrom = `${y}-${m}-01`
-        const mTo   = new Date(y, d.getMonth() + 1, 0).toISOString().slice(0, 10)
-        const [saleData, expData] = await Promise.all([
-          supabase.from('sales').select('total_try:total').eq('company_id', companyId).is('deleted_at', null).gte('sale_date', mFrom).lte('sale_date', mTo),
-          supabase.from('expenses').select('amount_try').eq('company_id', companyId).is('deleted_at', null).gte('expense_date', mFrom).lte('expense_date', mTo),
-        ])
-        const rev = (saleData.data ?? []).reduce((s, r) => s + Number(r.total_try), 0)
-        const exp = (expData.data ?? []).reduce((s, r) => s + Number(r.amount_try), 0)
-        results.push({ revenue: rev, expenses: exp })
+      for (let i = 5; i >= 1; i--) {
+        const d  = new Date(year, month - 1 - i, 1)
+        const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+        results.push({ revenue: revMap.get(ym) ?? 0, expenses: expMap.get(ym) ?? 0 })
       }
       return results
     }, [] as Array<{ revenue: number; expenses: number }>),
