@@ -456,17 +456,24 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
         )}
       </div>
 
-      {/* Cross-link → formal income statement report */}
+      {/* Cross-navigation */}
       <div className="flex items-center justify-between px-1">
         <p className="text-[10px] text-gray-400 leading-relaxed">
-          Çeyreklik gelir, matrah ve geçici vergi özeti. Gelir tablosu ve P&amp;L detayı için resmi raporu inceleyin.
+          Çeyreklik gelir, matrah ve geçici vergi özeti.
         </p>
-        <Link
-          href="/dashboard/reports/income-statement"
-          className="shrink-0 ml-4 text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap"
-        >
-          Gelir Tablosu →
-        </Link>
+        <div className="flex items-center gap-2 shrink-0 ml-4">
+          <Link href="/dashboard/finance?tab=pnl" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Aylık P&amp;L →
+          </Link>
+          <span className="text-gray-200">|</span>
+          <Link href="/dashboard/finance?tab=tax" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            KDV/KV →
+          </Link>
+          <span className="text-gray-200">|</span>
+          <Link href="/dashboard/reports/income-statement" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+            Gelir Tablosu →
+          </Link>
+        </div>
       </div>
     </div>
   )

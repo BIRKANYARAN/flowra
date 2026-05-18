@@ -1,5 +1,6 @@
 // ── CatalogContent — Operations hub / catalog tab ─────────────────────────────
 
+import Link from 'next/link'
 import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase-server'
 import type { Product } from '@/types'
@@ -166,6 +167,35 @@ export async function CatalogContent({ companyId, userId }: Props) {
         userId={userId}
         companyId={companyId}
       />
+
+      {/* Cross-navigation */}
+      <div className="flex items-center justify-between px-1">
+        <p className="text-[10px] text-gray-400 leading-relaxed">
+          Ürün marjları P&amp;L&apos;i etkiler. Stok seviyesi ve simülasyon için ilgili sekmelere geçin.
+        </p>
+        <div className="flex items-center gap-2 shrink-0 ml-4">
+          <Link
+            href="/dashboard/operations?tab=stock"
+            className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap"
+          >
+            Stok →
+          </Link>
+          <span className="text-gray-200">|</span>
+          <Link
+            href="/dashboard/finance?tab=pnl"
+            className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap"
+          >
+            P&amp;L Analizi →
+          </Link>
+          <span className="text-gray-200">|</span>
+          <Link
+            href="/dashboard/planning?tab=what-if"
+            className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap"
+          >
+            What-If Simülasyon →
+          </Link>
+        </div>
+      </div>
     </div>
   )
 }

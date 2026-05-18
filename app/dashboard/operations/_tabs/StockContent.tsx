@@ -1,5 +1,6 @@
 // ── StockContent — Operations hub / stock tab ─────────────────────────────────
 
+import Link                                         from 'next/link'
 import { createClient }                             from '@/lib/supabase-server'
 import { fmtTRY, fmtDate as fmtDateShort, fmtDatetime as fmtDateTime } from '@/lib/format'
 import type { StockMovement }                       from '@/types'
@@ -328,6 +329,28 @@ export async function StockContent({ companyId, userId }: Props) {
             </table>
           </div>
         )}
+      </div>
+
+      {/* Cross-navigation */}
+      <div className="flex items-center justify-between px-1">
+        <p className="text-[10px] text-gray-400 leading-relaxed">
+          FIFO stok maliyetleri satış marjlarını ve P&amp;L&apos;i doğrudan etkiler.
+        </p>
+        <div className="flex items-center gap-2 shrink-0 ml-4">
+          <Link
+            href="/dashboard/operations?tab=catalog"
+            className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap"
+          >
+            Katalog →
+          </Link>
+          <span className="text-gray-200">|</span>
+          <Link
+            href="/dashboard/finance?tab=pnl"
+            className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap"
+          >
+            P&amp;L Analizi →
+          </Link>
+        </div>
       </div>
     </div>
   )
