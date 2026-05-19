@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { NarrativeFooter } from '@/components/ds'
 import {
   PartnerRow, EqResult, TxRow,
   pct, fmt, TX_TYPE_LABELS,
@@ -252,24 +253,15 @@ export function PartnersTab({
       )}
 
       {/* Cross-navigation */}
-      <div className="flex items-center justify-between px-1 pt-2">
-        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
-          Ortak durumu sermaye, borç ve dağıtım sekmeleriyle birlikte izleyin.
-        </p>
-        <div className="flex items-center gap-2 shrink-0 ml-4">
-          <Link href="/dashboard/partners?tab=tranches" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            Borç Dilimleri →
-          </Link>
-          <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/partners?tab=distribution" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            Kâr Dağıtımı →
-          </Link>
-          <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/partners?tab=risk" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            Risk Skoru →
-          </Link>
-        </div>
-      </div>
+      <NarrativeFooter
+        className="pt-2"
+        narrative="Ortak durumu sermaye, borç ve dağıtım sekmeleriyle birlikte izleyin."
+        links={[
+          { label: 'Borç Dilimleri', href: '/dashboard/partners?tab=tranches' },
+          { label: 'Kâr Dağıtımı',  href: '/dashboard/partners?tab=distribution' },
+          { label: 'Risk Skoru',     href: '/dashboard/partners?tab=risk' },
+        ]}
+      />
     </>
   )
 }

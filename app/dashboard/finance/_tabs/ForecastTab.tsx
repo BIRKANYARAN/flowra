@@ -7,6 +7,7 @@
 //   4. Scenario panel (client island)
 
 import Link                                 from 'next/link'
+import { NarrativeFooter }                 from '@/components/ds'
 import { createClient }                    from '@/lib/supabase-server'
 import { getCfoMetrics, getRunwayForecast } from '@/lib/finance/financial-core'
 import { computeForecast, buildForecastInputs } from '@/lib/engines/forecast.engine'
@@ -282,24 +283,15 @@ export async function ForecastTab({ userId: _userId, companyId }: Props) {
       )}
 
       {/* Cross-navigation */}
-      <div className="flex items-center justify-between px-1 pt-1">
-        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
-          Runway tahmin değil, mevcut burn rate&apos;in doğal sonucudur — gelir artmadan veya gider düşmeden projeksiyon değişmez.
-        </p>
-        <div className="flex items-center gap-2 shrink-0 ml-4">
-          <Link href="/dashboard/planning?tab=cash-projection" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            Stratejik Tahmin →
-          </Link>
-          <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/finance?tab=cashflow" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            Nakit Akışı →
-          </Link>
-          <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/finance?tab=quarterly" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            Geçici Vergi →
-          </Link>
-        </div>
-      </div>
+      <NarrativeFooter
+        className="pt-1"
+        narrative="Runway tahmin değil, mevcut burn rate'in doğal sonucudur — gelir artmadan veya gider düşmeden projeksiyon değişmez."
+        links={[
+          { label: 'Stratejik Tahmin', href: '/dashboard/planning?tab=cash-projection' },
+          { label: 'Nakit Akışı',      href: '/dashboard/finance?tab=cashflow' },
+          { label: 'Geçici Vergi',     href: '/dashboard/finance?tab=quarterly' },
+        ]}
+      />
     </div>
   )
 }

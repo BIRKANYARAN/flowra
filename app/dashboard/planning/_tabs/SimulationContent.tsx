@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { Suspense } from 'react'
+import { NarrativeFooter } from '@/components/ds'
 import { createClient } from '@/lib/supabase-server'
 import type { Product } from '@/types'
 import SimulationClient from '@/app/dashboard/simulation/SimulationClient'
@@ -107,24 +108,14 @@ export async function SimulationContent({ companyId, userId, activeTab = 'unit-p
       />
 
       {/* Cross-navigation */}
-      <div className="flex items-center justify-between px-1">
-        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
-          Simülasyon varsayımları gerçekleşmezse nakit pozisyonu ve runway planlaması sapabilir — gerçek P&amp;L ile düzenli karşılaştırın.
-        </p>
-        <div className="flex items-center gap-2 shrink-0 ml-4">
-          <Link href="/dashboard/planning?tab=cash-projection" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            Nakit Projeksiyonu →
-          </Link>
-          <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/planning?tab=what-if" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            What-If →
-          </Link>
-          <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/finance?tab=overview" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            Finansal Durum →
-          </Link>
-        </div>
-      </div>
+      <NarrativeFooter
+        narrative="Simülasyon varsayımları gerçekleşmezse nakit pozisyonu ve runway planlaması sapabilir — gerçek P&L ile düzenli karşılaştırın."
+        links={[
+          { label: 'Nakit Projeksiyonu', href: '/dashboard/planning?tab=cash-projection' },
+          { label: 'What-If',            href: '/dashboard/planning?tab=what-if' },
+          { label: 'Finansal Durum',     href: '/dashboard/finance?tab=overview' },
+        ]}
+      />
     </div>
   )
 }

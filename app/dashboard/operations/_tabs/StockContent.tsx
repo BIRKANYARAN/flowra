@@ -1,6 +1,7 @@
 // ── StockContent — Operations hub / stock tab ─────────────────────────────────
 
 import Link                                         from 'next/link'
+import { NarrativeFooter }                          from '@/components/ds'
 import { createClient }                             from '@/lib/supabase-server'
 import { fmtTRY, fmtDate as fmtDateShort, fmtDatetime as fmtDateTime } from '@/lib/format'
 import type { StockMovement }                       from '@/types'
@@ -355,26 +356,13 @@ export async function StockContent({ companyId, userId }: Props) {
       </div>
 
       {/* Cross-navigation */}
-      <div className="flex items-center justify-between px-1">
-        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
-          Stok yaşı arttıkça FIFO maliyeti yükselir — eski lot satışı marjı ve P&amp;L&apos;i doğrudan etkiler.
-        </p>
-        <div className="flex items-center gap-2 shrink-0 ml-4">
-          <Link
-            href="/dashboard/operations?tab=catalog"
-            className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap"
-          >
-            Katalog →
-          </Link>
-          <span className="text-[#e2e8f0]">|</span>
-          <Link
-            href="/dashboard/finance?tab=pnl"
-            className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap"
-          >
-            P&amp;L Analizi →
-          </Link>
-        </div>
-      </div>
+      <NarrativeFooter
+        narrative="Stok yaşı arttıkça FIFO maliyeti yükselir — eski lot satışı marjı ve P&L'i doğrudan etkiler."
+        links={[
+          { label: 'Katalog',     href: '/dashboard/operations?tab=catalog' },
+          { label: 'P&L Analizi', href: '/dashboard/finance?tab=pnl' },
+        ]}
+      />
     </div>
   )
 }

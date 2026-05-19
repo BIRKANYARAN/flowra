@@ -5,6 +5,7 @@
 import { createClient }    from '@/lib/supabase-server'
 import { FinanceService }  from '@/lib/services/finance.service'
 import Link                from 'next/link'
+import { NarrativeFooter } from '@/components/ds'
 
 const FMT = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 })
 function fmt(n: number) {
@@ -328,24 +329,14 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
       )}
 
       {/* Cross-navigation */}
-      <div className="flex items-center justify-between px-1">
-        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
-          Borç servisi nakit dışına çıkınca runway direkt kısalır — borç baskısı ve nakit projeksiyonu aynı anda izlenmeli.
-        </p>
-        <div className="flex items-center gap-2 shrink-0 ml-4">
-          <Link href="/dashboard/partners?tab=tranches" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            Borç Dilimleri →
-          </Link>
-          <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/planning?tab=cash-projection" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            Nakit Projeksiyonu →
-          </Link>
-          <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/finance?tab=risks" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            Risk Analizi →
-          </Link>
-        </div>
-      </div>
+      <NarrativeFooter
+        narrative="Borç servisi nakit dışına çıkınca runway direkt kısalır — borç baskısı ve nakit projeksiyonu aynı anda izlenmeli."
+        links={[
+          { label: 'Borç Dilimleri',     href: '/dashboard/partners?tab=tranches' },
+          { label: 'Nakit Projeksiyonu', href: '/dashboard/planning?tab=cash-projection' },
+          { label: 'Risk Analizi',       href: '/dashboard/finance?tab=risks' },
+        ]}
+      />
     </div>
   )
 }

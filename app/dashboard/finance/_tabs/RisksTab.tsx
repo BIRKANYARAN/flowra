@@ -10,6 +10,7 @@
 //   5. CFO tavsiyesi
 
 import Link                      from 'next/link'
+import { NarrativeFooter }       from '@/components/ds'
 import { getRiskEngineResult }   from '@/lib/finance/risk-engine'
 import {
   detectRevenueAnomalies,
@@ -361,33 +362,14 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
       </div>
 
       {/* Cross-navigation */}
-      <div className="flex items-center justify-between px-1">
-        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
-          60+ gün gecikme doğrudan nakit pozisyonunu baskılar — alacak riski ve tahsilat gecikmesi birlikte değerlendirilmeli.
-        </p>
-        <div className="flex items-center gap-2 shrink-0 ml-4">
-          <Link
-            href="/dashboard/commercial?tab=collections"
-            className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap"
-          >
-            Tahsilat →
-          </Link>
-          <span className="text-[#e2e8f0]">|</span>
-          <Link
-            href="/dashboard/commercial?tab=customers"
-            className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap"
-          >
-            Müşteri Riskleri →
-          </Link>
-          <span className="text-[#e2e8f0]">|</span>
-          <Link
-            href="/dashboard/operations?tab=expenses"
-            className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap"
-          >
-            Giderler →
-          </Link>
-        </div>
-      </div>
+      <NarrativeFooter
+        narrative="60+ gün gecikme doğrudan nakit pozisyonunu baskılar — alacak riski ve tahsilat gecikmesi birlikte değerlendirilmeli."
+        links={[
+          { label: 'Tahsilat',         href: '/dashboard/commercial?tab=collections' },
+          { label: 'Müşteri Riskleri', href: '/dashboard/commercial?tab=customers' },
+          { label: 'Giderler',         href: '/dashboard/operations?tab=expenses' },
+        ]}
+      />
     </div>
   )
 }

@@ -7,6 +7,7 @@ import { createClient }        from '@/lib/supabase-server'
 import { computeForecast, buildForecastInputs } from '@/lib/engines/forecast.engine'
 import { StrategicScenarioSection } from './StrategicScenarioSection'
 import Link                    from 'next/link'
+import { NarrativeFooter }     from '@/components/ds'
 
 const FMT = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 })
 function fmt(n: number) { return FMT.format(Math.round(n)) }
@@ -243,20 +244,13 @@ export async function CashProjectionTab({ companyId }: Props) {
       <StrategicScenarioSection companyId={companyId} />
 
       {/* Cross-navigation */}
-      <div className="flex items-center justify-between px-1">
-        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
-          Projeksiyon bir tahmin — gerçekleşen satış ve tahsilat takvimiyle hizalayarak güncel tutun.
-        </p>
-        <div className="flex items-center gap-2 shrink-0 ml-4">
-          <Link href="/dashboard/finance?tab=cashflow" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            Nakit Akışı →
-          </Link>
-          <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/planning?tab=debt-pressure" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            Borç Baskısı →
-          </Link>
-        </div>
-      </div>
+      <NarrativeFooter
+        narrative="Projeksiyon bir tahmin — gerçekleşen satış ve tahsilat takvimiyle hizalayarak güncel tutun."
+        links={[
+          { label: 'Nakit Akışı',  href: '/dashboard/finance?tab=cashflow' },
+          { label: 'Borç Baskısı', href: '/dashboard/planning?tab=debt-pressure' },
+        ]}
+      />
     </div>
   )
 }

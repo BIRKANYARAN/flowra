@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { NarrativeFooter } from '@/components/ds'
 import {
   LedgerData, LedgerEntry, LedgerSortCol,
   pct, fmt,
@@ -94,20 +95,14 @@ export function LedgerTab({
       )}
 
       {/* Cross-navigation */}
-      <div className="flex items-center justify-between px-1 pt-1">
-        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
-          Ortak defter özkaynaklar ve bilanço ile uyumlu olmalıdır.
-        </p>
-        <div className="flex items-center gap-2 shrink-0 ml-4">
-          <Link href="/dashboard/finance?tab=balance" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            Bilanço →
-          </Link>
-          <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/partners?tab=tranches" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            Borç Dilimleri →
-          </Link>
-        </div>
-      </div>
+      <NarrativeFooter
+        className="pt-1"
+        narrative="Ortak defter özkaynaklar ve bilanço ile uyumlu olmalıdır."
+        links={[
+          { label: 'Bilanço',       href: '/dashboard/finance?tab=balance' },
+          { label: 'Borç Dilimleri', href: '/dashboard/partners?tab=tranches' },
+        ]}
+      />
     </div>
   )
 }

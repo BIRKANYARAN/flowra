@@ -1,6 +1,7 @@
 // ── CustomersContent — Commercial hub / customers tab ─────────────────────────
 
 import Link from 'next/link'
+import { NarrativeFooter } from '@/components/ds'
 import { createClient } from '@/lib/supabase-server'
 import type { Customer } from '@/types'
 import CustomersClient from '@/app/dashboard/customers/CustomersClient'
@@ -226,26 +227,13 @@ export async function CustomersContent({ companyId }: Props) {
       <CustomersClient initialCustomers={customers} />
 
       {/* Cross-navigation */}
-      <div className="flex items-center justify-between px-1">
-        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
-          Risk skoru geç ödeme geçmişi ve konsantrasyon baskısına dayanır — tahsilat gecikmesi doğrudan nakit pozisyonunu etkiler.
-        </p>
-        <div className="flex items-center gap-2 shrink-0 ml-4">
-          <Link
-            href="/dashboard/commercial?tab=collections"
-            className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap"
-          >
-            Tahsilat →
-          </Link>
-          <span className="text-[#e2e8f0]">|</span>
-          <Link
-            href="/dashboard/finance?tab=risks"
-            className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap"
-          >
-            Alacak Risk Analizi →
-          </Link>
-        </div>
-      </div>
+      <NarrativeFooter
+        narrative="Risk skoru geç ödeme geçmişi ve konsantrasyon baskısına dayanır — tahsilat gecikmesi doğrudan nakit pozisyonunu etkiler."
+        links={[
+          { label: 'Tahsilat',            href: '/dashboard/commercial?tab=collections' },
+          { label: 'Alacak Risk Analizi', href: '/dashboard/finance?tab=risks' },
+        ]}
+      />
     </div>
   )
 }

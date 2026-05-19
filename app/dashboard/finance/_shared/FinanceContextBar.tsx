@@ -2,11 +2,12 @@
 
 // ── FinanceContextBar — Persistent financial state strip for Finance Hub ──────
 //
-// Always-visible Bloomberg-style status bar showing 5 key readings.
+// Always-visible Bloomberg-style status bar showing 6 key readings.
 // Sits between the sticky tab nav and the tab content area.
 // Loads independently via /api/cfo-metrics.
 
 import { useState, useEffect } from 'react'
+import { ContextReading } from '@/components/ds'
 
 interface CfoPeek {
   cash:        { true_cash_position: number; distributable_cash: number }
@@ -29,34 +30,6 @@ function prefixed(n: number): string {
   return (n < 0 ? '−' : '') + '₺' + TRY.format(Math.abs(n))
 }
 
-interface ReadingProps {
-  label:  string
-  value:  string
-  sub?:   string
-  status: 'ok' | 'warn' | 'critical'
-  border: boolean
-}
-
-function Reading({ label, value, sub, status, border }: ReadingProps) {
-  const valueCls =
-    status === 'critical' ? 'text-neg' :
-    status === 'warn'     ? 'text-warn-text' :
-    'text-[#0f172a]'
-  return (
-    <div className={`flex flex-col gap-0 flex-shrink-0 px-4 py-2.5 ${border ? 'border-l border-[#e2e8f0]' : ''}`}>
-      <span className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8] leading-none mb-1">
-        {label}
-      </span>
-      <span className={`text-[13px] font-black tabular-nums leading-none ${valueCls}`}>
-        {value}
-      </span>
-      {sub && (
-        <span className="text-[9px] text-[#94a3b8] leading-none mt-0.5">{sub}</span>
-      )}
-    </div>
-  )
-}
-
 export function FinanceContextBar({ companyId }: { companyId: string }) {
   const [data, setData]     = useState<CfoPeek | null>(null)
   const [loading, setLoading] = useState(true)
@@ -70,7 +43,6 @@ export function FinanceContextBar({ companyId }: { companyId: string }) {
       .finally(() => setLoading(false))
   }, [companyId])
 
-  // Loading state — thin shimmer
   if (loading) {
     return (
       <div className="h-[52px] bg-[#f8fafc]/60 border-b border-[#e2e8f0] animate-pulse" />
@@ -83,62 +55,43 @@ export function FinanceContextBar({ companyId }: { companyId: string }) {
   const kdv    = data.tax.kdv_net
   const cash   = data.cash.true_cash_position
 
-  const readings: ReadingProps[] = [
-    {
-      label:  'NAKİT',
-      value:  fmtK(cash),
-      sub:    data.cash.distributable_cash > 0
-                ? fmtK(data.cash.distributable_cash) + ' dağıtılabilir'
-                : undefined,
-      status: cash < 50_000 ? 'critical' : cash < 200_000 ? 'warn' : 'ok',
-      border: false,
-    },
-    {
-      label:  'RUNWAY',
-      value:  runway < 0
-                ? '—'
-                : runway >= 365
-                ? Math.round(data.burn.runway_months ?? 12) + 'ay'
-                : runway + 'g',
-      sub:    runway >= 0 && runway < 90 ? (runway < 30 ? 'Kritik' : 'Baskı altında') : undefined,
-      status: runway >= 0 && runway < 30 ? 'critical' : runway >= 0 && runway < 90 ? 'warn' : 'ok',
-      border: true,
-    },
-    {
-      label:  'ALACAK',
-      value:  fmtK(data.receivables.total_outstanding),
-      sub:    data.receivables.overdue_60d > 0
-                ? fmtK(data.receivables.overdue_60d) + ' 60g+'
-                : 'Güncel',
-      status: data.receivables.overdue_60d > 50_000 ? 'critical' : data.receivables.overdue_60d > 0 ? 'warn' : 'ok',
-      border: true,
-    },
-    {
-      label:  'KDV NET',
-      value:  prefixed(kdv),
-      sub:    kdv > 0 ? 'Ödenecek' : kdv < 0 ? 'Devir' : 'Sıfır',
-      status: kdv > 100_000 ? 'critical' : kdv > 50_000 ? 'warn' : 'ok',
-      border: true,
-    },
-    {
-      label:  'K.VERGİSİ',
-      value:  fmtK(data.tax.corporate_tax_estimate),
-      status: data.tax.corporate_tax_estimate > 200_000 ? 'warn' : 'ok',
-      border: true,
-    },
-    {
-      label:  'ORTAK BORÇ',
-      value:  fmtK(data.partner.total_loans),
-      status: data.partner.total_loans > 500_000 ? 'warn' : 'ok',
-      border: true,
-    },
-  ]
-
   return (
     <div className="flex items-center gap-0 bg-[#f8fafc]/40 border-b border-[#e2e8f0] overflow-x-auto scrollbar-none">
-      {readings.map(r => (
-        <Reading key={r.label} {...r} />
-      ))}
+      <ContextReading
+        label="NAKİT"
+        value={fmtK(cash)}
+        sub={data.cash.distributable_cash > 0 ? fmtK(data.cash.distributable_cash) + ' dağıtılabilir' : undefined}
+        status={cash < 50_000 ? 'critical' : cash < 200_000 ? 'warn' : 'ok'}
+        border={false}
+      />
+      <ContextReading
+        label="RUNWAY"
+        value={runway < 0 ? '—' : runway >= 365 ? Math.round(data.burn.runway_months ?? 12) + 'ay' : runway + 'g'}
+        sub={runway >= 0 && runway < 90 ? (runway < 30 ? 'Kritik' : 'Baskı altında') : undefined}
+        status={runway >= 0 && runway < 30 ? 'critical' : runway >= 0 && runway < 90 ? 'warn' : 'ok'}
+      />
+      <ContextReading
+        label="ALACAK"
+        value={fmtK(data.receivables.total_outstanding)}
+        sub={data.receivables.overdue_60d > 0 ? fmtK(data.receivables.overdue_60d) + ' 60g+' : 'Güncel'}
+        status={data.receivables.overdue_60d > 50_000 ? 'critical' : data.receivables.overdue_60d > 0 ? 'warn' : 'ok'}
+      />
+      <ContextReading
+        label="KDV NET"
+        value={prefixed(kdv)}
+        sub={kdv > 0 ? 'Ödenecek' : kdv < 0 ? 'Devir' : 'Sıfır'}
+        status={kdv > 100_000 ? 'critical' : kdv > 50_000 ? 'warn' : 'ok'}
+      />
+      <ContextReading
+        label="K.VERGİSİ"
+        value={fmtK(data.tax.corporate_tax_estimate)}
+        status={data.tax.corporate_tax_estimate > 200_000 ? 'warn' : 'ok'}
+      />
+      <ContextReading
+        label="ORTAK BORÇ"
+        value={fmtK(data.partner.total_loans)}
+        status={data.partner.total_loans > 500_000 ? 'warn' : 'ok'}
+      />
     </div>
   )
 }

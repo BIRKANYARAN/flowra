@@ -65,4 +65,6 @@ export {
   DataTh,
   DataTd,
   AlertRow,
+  NarrativeFooter,
+  ContextReading,
 } from '@/components/ds/shell'

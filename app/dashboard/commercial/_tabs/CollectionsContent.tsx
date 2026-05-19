@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { Suspense } from 'react'
+import { NarrativeFooter } from '@/components/ds'
 import { createClient } from '@/lib/supabase-server'
 import CollectionsClient, { type CollectionRow } from '@/app/dashboard/collections/CollectionsClient'
 import { CollectionsCommandBar } from '@/app/dashboard/collections/_components/CollectionsCommandBar'
@@ -234,26 +235,13 @@ export async function CollectionsContent({ companyId }: Props) {
       <CollectionsClient initialRows={initialRows} />
 
       {/* Cross-navigation */}
-      <div className="flex items-center justify-between px-1">
-        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
-          60+ gün geciken alacaklar nakit pozisyonunu doğrudan baskılar — runway hesabı bu rakamlara dayanır.
-        </p>
-        <div className="flex items-center gap-2 shrink-0 ml-4">
-          <Link
-            href="/dashboard/commercial?tab=customers"
-            className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap"
-          >
-            Müşteri Riskleri →
-          </Link>
-          <span className="text-[#e2e8f0]">|</span>
-          <Link
-            href="/dashboard/finance?tab=risks"
-            className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap"
-          >
-            Alacak Risk Analizi →
-          </Link>
-        </div>
-      </div>
+      <NarrativeFooter
+        narrative="60+ gün geciken alacaklar nakit pozisyonunu doğrudan baskılar — runway hesabı bu rakamlara dayanır."
+        links={[
+          { label: 'Müşteri Riskleri',    href: '/dashboard/commercial?tab=customers' },
+          { label: 'Alacak Risk Analizi', href: '/dashboard/finance?tab=risks' },
+        ]}
+      />
     </div>
   )
 }

@@ -6,6 +6,7 @@
 // Shows expenses, stock, and burn rate at a glance.
 
 import { useState, useEffect } from 'react'
+import { ContextReading } from '@/components/ds'
 
 interface OpsPeek {
   burn:  { monthly_burn_rate: number; runway_months: number | null }
@@ -22,38 +23,10 @@ function fmtK(n: number): string {
   return '₺' + TRY.format(n)
 }
 
-interface ReadingProps {
-  label:  string
-  value:  string
-  sub?:   string
-  status: 'ok' | 'warn' | 'critical'
-  border: boolean
-}
-
-function Reading({ label, value, sub, status, border }: ReadingProps) {
-  const valueCls =
-    status === 'critical' ? 'text-neg' :
-    status === 'warn'     ? 'text-warn-text' :
-    'text-[#0f172a]'
-  return (
-    <div className={`flex flex-col gap-0 flex-shrink-0 px-4 py-2.5 ${border ? 'border-l border-[#e2e8f0]' : ''}`}>
-      <span className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8] leading-none mb-1">
-        {label}
-      </span>
-      <span className={`text-[13px] font-black tabular-nums leading-none ${valueCls}`}>
-        {value}
-      </span>
-      {sub && (
-        <span className="text-[9px] text-[#94a3b8] leading-none mt-0.5">{sub}</span>
-      )}
-    </div>
-  )
-}
-
 export function OperationsContextBar({ companyId }: { companyId: string }) {
-  const [data, setData]     = useState<OpsPeek | null>(null)
+  const [data, setData]             = useState<OpsPeek | null>(null)
   const [pendingExpenses, setPendingExpenses] = useState<number | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading]       = useState(true)
 
   useEffect(() => {
     setLoading(true)
@@ -71,67 +44,52 @@ export function OperationsContextBar({ companyId }: { companyId: string }) {
   }
   if (!data) return null
 
-  const burn    = data.burn.monthly_burn_rate
-  const stock   = data.stock.fifo_value
+  const burn     = data.burn.monthly_burn_rate
+  const stock    = data.stock.fifo_value
   const coverage = data.stock.coverage_months
-
-  const readings: ReadingProps[] = [
-    {
-      label:  'AYLIK BURN',
-      value:  burn > 0 ? fmtK(burn) : '—',
-      sub:    burn > 0 ? 'aylık gider' : 'Zarar yok',
-      status: burn > 500_000 ? 'warn' : 'ok',
-      border: false,
-    },
-    {
-      label:  'ÖDENECEK GİDER',
-      value:  pendingExpenses != null && pendingExpenses > 0 ? fmtK(pendingExpenses) : '—',
-      sub:    pendingExpenses != null && pendingExpenses > 0 ? 'ödeme bekliyor' : 'Yok',
-      status: pendingExpenses != null && pendingExpenses > 100_000 ? 'warn' : 'ok',
-      border: true,
-    },
-    {
-      label:  'STOK DEĞERİ',
-      value:  stock > 0 ? fmtK(stock) : '—',
-      sub:    stock > 0 ? 'FIFO değeri' : 'Boş',
-      status: 'ok',
-      border: true,
-    },
-    {
-      label:  'STOK KARŞILAMA',
-      value:  coverage != null ? `${coverage.toFixed(1)}ay` : '—',
-      sub:    coverage != null
-                ? coverage < 1 ? 'Kritik düşük'
-                : coverage < 2 ? 'Baskı'
-                : 'Yeterli'
-                : undefined,
-      status: coverage == null ? 'ok'
-            : coverage < 1 ? 'critical'
-            : coverage < 2 ? 'warn'
-            : 'ok',
-      border: true,
-    },
-    {
-      label:  'RUNWAY',
-      value:  data.burn.runway_months != null
-                ? data.burn.runway_months >= 12
-                  ? `${Math.round(data.burn.runway_months)}ay`
-                  : `${Math.round(data.burn.runway_months * 30)}g`
-                : '—',
-      sub:    data.burn.runway_months != null && data.burn.runway_months < 3 ? 'Kritik' : undefined,
-      status: data.burn.runway_months == null ? 'ok'
-            : data.burn.runway_months < 2 ? 'critical'
-            : data.burn.runway_months < 6 ? 'warn'
-            : 'ok',
-      border: true,
-    },
-  ]
 
   return (
     <div className="flex items-center gap-0 bg-[#f8fafc]/40 border-b border-[#e2e8f0] overflow-x-auto scrollbar-none">
-      {readings.map(r => (
-        <Reading key={r.label} {...r} />
-      ))}
+      <ContextReading
+        label="AYLIK BURN"
+        value={burn > 0 ? fmtK(burn) : '—'}
+        sub={burn > 0 ? 'aylık gider' : 'Zarar yok'}
+        status={burn > 500_000 ? 'warn' : 'ok'}
+        border={false}
+      />
+      <ContextReading
+        label="ÖDENECEK GİDER"
+        value={pendingExpenses != null && pendingExpenses > 0 ? fmtK(pendingExpenses) : '—'}
+        sub={pendingExpenses != null && pendingExpenses > 0 ? 'ödeme bekliyor' : 'Yok'}
+        status={pendingExpenses != null && pendingExpenses > 100_000 ? 'warn' : 'ok'}
+      />
+      <ContextReading
+        label="STOK DEĞERİ"
+        value={stock > 0 ? fmtK(stock) : '—'}
+        sub={stock > 0 ? 'FIFO değeri' : 'Boş'}
+        status="ok"
+      />
+      <ContextReading
+        label="STOK KARŞILAMA"
+        value={coverage != null ? `${coverage.toFixed(1)}ay` : '—'}
+        sub={coverage != null
+          ? coverage < 1 ? 'Kritik düşük' : coverage < 2 ? 'Baskı' : 'Yeterli'
+          : undefined}
+        status={coverage == null ? 'ok' : coverage < 1 ? 'critical' : coverage < 2 ? 'warn' : 'ok'}
+      />
+      <ContextReading
+        label="RUNWAY"
+        value={data.burn.runway_months != null
+          ? data.burn.runway_months >= 12
+            ? `${Math.round(data.burn.runway_months)}ay`
+            : `${Math.round(data.burn.runway_months * 30)}g`
+          : '—'}
+        sub={data.burn.runway_months != null && data.burn.runway_months < 3 ? 'Kritik' : undefined}
+        status={data.burn.runway_months == null ? 'ok'
+              : data.burn.runway_months < 2 ? 'critical'
+              : data.burn.runway_months < 6 ? 'warn'
+              : 'ok'}
+      />
     </div>
   )
 }

@@ -10,6 +10,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { NarrativeFooter } from '@/components/ds'
 import type { RiskGrade }      from '@/lib/services/pcle/pcle.risk'
 
 // ── Types (mirrors pcle.risk.ts output shape) ─────────────────────────────────
@@ -279,24 +280,15 @@ export function RiskTab({ loading }: RiskTabProps) {
       </div>
 
       {/* Cross-navigation */}
-      <div className="flex items-center justify-between px-1 pt-2">
-        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
-          Ortak riski bilanço ve müşteri riski ile bütünleşik değerlendirilmeli.
-        </p>
-        <div className="flex items-center gap-2 shrink-0 ml-4">
-          <Link href="/dashboard/finance?tab=risks" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            Alacak Riskleri →
-          </Link>
-          <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/finance?tab=balance" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            Bilanço →
-          </Link>
-          <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/planning?tab=debt-pressure" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            Borç Baskısı →
-          </Link>
-        </div>
-      </div>
+      <NarrativeFooter
+        className="pt-2"
+        narrative="Ortak riski bilanço ve müşteri riski ile bütünleşik değerlendirilmeli."
+        links={[
+          { label: 'Alacak Riskleri', href: '/dashboard/finance?tab=risks' },
+          { label: 'Bilanço',         href: '/dashboard/finance?tab=balance' },
+          { label: 'Borç Baskısı',    href: '/dashboard/planning?tab=debt-pressure' },
+        ]}
+      />
     </div>
   )
 }

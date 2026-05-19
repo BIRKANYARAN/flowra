@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { Suspense } from 'react'
+import { NarrativeFooter } from '@/components/ds'
 import { createClient } from '@/lib/supabase-server'
 import type { Expense } from '@/types'
 import ExpensesClient, { type RecurringRow } from '@/app/dashboard/expenses/ExpensesClient'
@@ -276,26 +277,13 @@ export async function ExpensesContent({ companyId }: Props) {
       />
 
       {/* Cross-navigation */}
-      <div className="flex items-center justify-between px-1">
-        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
-          Gider artışı brüt marjı düşürür ve runway&apos;ı kısaltır — gider trendi satış hızıyla birlikte değerlendirilmeli.
-        </p>
-        <div className="flex items-center gap-2 shrink-0 ml-4">
-          <Link
-            href="/dashboard/finance?tab=pnl"
-            className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap"
-          >
-            P&amp;L Analizi →
-          </Link>
-          <span className="text-[#e2e8f0]">|</span>
-          <Link
-            href="/dashboard/finance?tab=risks"
-            className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap"
-          >
-            Risk Analizi →
-          </Link>
-        </div>
-      </div>
+      <NarrativeFooter
+        narrative="Gider artışı brüt marjı düşürür ve runway'ı kısaltır — gider trendi satış hızıyla birlikte değerlendirilmeli."
+        links={[
+          { label: 'P&L Analizi',   href: '/dashboard/finance?tab=pnl' },
+          { label: 'Risk Analizi',  href: '/dashboard/finance?tab=risks' },
+        ]}
+      />
     </div>
   )
 }

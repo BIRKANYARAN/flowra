@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { NarrativeFooter } from '@/components/ds'
 import {
   DistribState,
   pct, fmt,
@@ -219,24 +220,15 @@ export function DistributionTab({
       )}
 
       {/* Cross-navigation */}
-      <div className="flex items-center justify-between px-1 pt-2">
-        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
-          Kâr dağıtımı P&amp;L ve geçici vergi ile uyumlu olmalı.
-        </p>
-        <div className="flex items-center gap-2 shrink-0 ml-4">
-          <Link href="/dashboard/finance?tab=pnl" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            P&amp;L Analizi →
-          </Link>
-          <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/finance?tab=quarterly" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            Geçici Vergi →
-          </Link>
-          <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/finance?tab=balance" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            Bilanço →
-          </Link>
-        </div>
-      </div>
+      <NarrativeFooter
+        className="pt-2"
+        narrative="Kâr dağıtımı P&L ve geçici vergi ile uyumlu olmalı."
+        links={[
+          { label: 'P&L Analizi',  href: '/dashboard/finance?tab=pnl' },
+          { label: 'Geçici Vergi', href: '/dashboard/finance?tab=quarterly' },
+          { label: 'Bilanço',      href: '/dashboard/finance?tab=balance' },
+        ]}
+      />
     </div>
   )
 }

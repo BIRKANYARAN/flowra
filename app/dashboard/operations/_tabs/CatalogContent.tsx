@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { Suspense } from 'react'
+import { NarrativeFooter } from '@/components/ds'
 import { createClient } from '@/lib/supabase-server'
 import type { Product } from '@/types'
 import CatalogClient from '@/app/dashboard/catalog/CatalogClient'
@@ -169,33 +170,14 @@ export async function CatalogContent({ companyId, userId }: Props) {
       />
 
       {/* Cross-navigation */}
-      <div className="flex items-center justify-between px-1">
-        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
-          Düşük marjlı ürün hacmi ciro üretir ama kâr değil — her ürünün birim kârını satış hacmiyle birlikte takip edin.
-        </p>
-        <div className="flex items-center gap-2 shrink-0 ml-4">
-          <Link
-            href="/dashboard/operations?tab=stock"
-            className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap"
-          >
-            Stok →
-          </Link>
-          <span className="text-[#e2e8f0]">|</span>
-          <Link
-            href="/dashboard/finance?tab=pnl"
-            className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap"
-          >
-            P&amp;L Analizi →
-          </Link>
-          <span className="text-[#e2e8f0]">|</span>
-          <Link
-            href="/dashboard/planning?tab=what-if"
-            className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap"
-          >
-            What-If Simülasyon →
-          </Link>
-        </div>
-      </div>
+      <NarrativeFooter
+        narrative="Düşük marjlı ürün hacmi ciro üretir ama kâr değil — her ürünün birim kârını satış hacmiyle birlikte takip edin."
+        links={[
+          { label: 'Stok',               href: '/dashboard/operations?tab=stock' },
+          { label: 'P&L Analizi',        href: '/dashboard/finance?tab=pnl' },
+          { label: 'What-If Simülasyon', href: '/dashboard/planning?tab=what-if' },
+        ]}
+      />
     </div>
   )
 }

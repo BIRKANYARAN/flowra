@@ -8,6 +8,7 @@
 //   5 — Scenario panel (client island)
 
 import Link              from 'next/link'
+import { NarrativeFooter } from '@/components/ds'
 import { CashflowChart }   from '@/components/dashboard/CashflowChart'
 import { ScenarioPanel }   from '@/components/dashboard/ScenarioPanel'
 import { getCashflowTimeline, getRunwayForecast, getCfoMetrics } from '@/lib/finance/financial-core'
@@ -351,24 +352,14 @@ export async function CashflowTab({ userId, companyId }: Props) {
       />
 
       {/* Cross-link → formal 3-section cash flow statement */}
-      <div className="flex items-center justify-between px-1">
-        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
-          Nakit baskısı tahsilat gecikmesi ve gider seviyesinin kesişiminden kaynaklanır — bu iki faktörü ayrı ayrı yönetin.
-        </p>
-        <div className="flex items-center gap-2 shrink-0 ml-4">
-          <Link href="/dashboard/commercial?tab=collections" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            Tahsilat →
-          </Link>
-          <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/planning?tab=cash-projection" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            Nakit Projeksiyonu →
-          </Link>
-          <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/reports/cash-flow" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            Nakit Akış Tablosu →
-          </Link>
-        </div>
-      </div>
+      <NarrativeFooter
+        narrative="Nakit baskısı tahsilat gecikmesi ve gider seviyesinin kesişiminden kaynaklanır — bu iki faktörü ayrı ayrı yönetin."
+        links={[
+          { label: 'Tahsilat',           href: '/dashboard/commercial?tab=collections' },
+          { label: 'Nakit Projeksiyonu', href: '/dashboard/planning?tab=cash-projection' },
+          { label: 'Nakit Akış Tablosu', href: '/dashboard/reports/cash-flow' },
+        ]}
+      />
     </div>
   )
 }

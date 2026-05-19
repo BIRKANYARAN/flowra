@@ -7,6 +7,7 @@
 //   4. Monthly sales breakdown
 
 import Link                                         from 'next/link'
+import { NarrativeFooter }                         from '@/components/ds'
 import { getQuarterlyReport, type QuarterResult } from '@/lib/finance/financial-core'
 import { normalizeAnalytics } from '@/lib/normalize'
 import { createClient }       from '@/lib/supabase-server'
@@ -457,24 +458,14 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
       </div>
 
       {/* Cross-navigation */}
-      <div className="flex items-center justify-between px-1">
-        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
-          Geçici vergi nakit planlamasını doğrudan etkiler — çeyrek matrahı büyüyorsa nakit rezervi buna göre ayrılmalı.
-        </p>
-        <div className="flex items-center gap-2 shrink-0 ml-4">
-          <Link href="/dashboard/finance?tab=pnl" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            Aylık P&amp;L →
-          </Link>
-          <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/finance?tab=tax" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            KDV/KV →
-          </Link>
-          <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/reports/income-statement" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            Gelir Tablosu →
-          </Link>
-        </div>
-      </div>
+      <NarrativeFooter
+        narrative="Geçici vergi nakit planlamasını doğrudan etkiler — çeyrek matrahı büyüyorsa nakit rezervi buna göre ayrılmalı."
+        links={[
+          { label: 'Aylık P&L',     href: '/dashboard/finance?tab=pnl' },
+          { label: 'KDV/KV',        href: '/dashboard/finance?tab=tax' },
+          { label: 'Gelir Tablosu', href: '/dashboard/reports/income-statement' },
+        ]}
+      />
     </div>
   )
 }

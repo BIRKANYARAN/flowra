@@ -5,6 +5,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import { NarrativeFooter } from '@/components/ds'
 import { formatTRY as fmt, fmtDate } from '@/lib/format'
 
 type OrderStatus = 'draft' | 'ordered' | 'received' | 'cancelled'
@@ -429,24 +430,14 @@ export function OrdersContent(_props: Props) {
       )}
 
       {/* Cross-navigation */}
-      <div className="flex items-center justify-between px-1">
-        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
-          Satın alma maliyeti FIFO&apos;ya girer ve COGS üzerinden P&amp;L&apos;e yansır — alım zamanlaması ve marj birlikte değerlendirilmeli.
-        </p>
-        <div className="flex items-center gap-2 shrink-0 ml-4">
-          <Link href="/dashboard/operations?tab=stock" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            Stok →
-          </Link>
-          <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/operations?tab=expenses" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            Giderler →
-          </Link>
-          <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/finance?tab=pnl" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            P&amp;L →
-          </Link>
-        </div>
-      </div>
+      <NarrativeFooter
+        narrative="Satın alma maliyeti FIFO'ya girer ve COGS üzerinden P&L'e yansır — alım zamanlaması ve marj birlikte değerlendirilmeli."
+        links={[
+          { label: 'Stok',    href: '/dashboard/operations?tab=stock' },
+          { label: 'Giderler', href: '/dashboard/operations?tab=expenses' },
+          { label: 'P&L',     href: '/dashboard/finance?tab=pnl' },
+        ]}
+      />
     </div>
   )
 }

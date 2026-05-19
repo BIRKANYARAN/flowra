@@ -11,6 +11,7 @@ import { FinanceService }   from '@/lib/services/finance.service'
 import { periodForMonth }   from '@/lib/services/finance-rules'
 import { fmtTRY as fmt }   from '@/lib/format'
 import { createClient }     from '@/lib/supabase-server'
+import { NarrativeFooter }  from '@/components/ds'
 
 // ── Formatters ────────────────────────────────────────────────────────────────
 
@@ -301,24 +302,15 @@ export async function PnlTab({ userId, companyId }: Props) {
       </div>
 
       {/* Cross-navigation */}
-      <div className="col-span-12 flex items-center justify-between px-1 pt-1">
-        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
-          Tahakkuk kârı gerçek nakit değildir — tahsilat hızı P&amp;L ile nakit pozisyonu arasındaki açığı belirler.
-        </p>
-        <div className="flex items-center gap-2 shrink-0 ml-4">
-          <Link href="/dashboard/commercial?tab=sales" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            Satışlar →
-          </Link>
-          <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/operations?tab=expenses" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            Giderler →
-          </Link>
-          <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/reports/income-statement" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            Gelir Tablosu →
-          </Link>
-        </div>
-      </div>
+      <NarrativeFooter
+        className="col-span-12 pt-1"
+        narrative="Tahakkuk kârı gerçek nakit değildir — tahsilat hızı P&L ile nakit pozisyonu arasındaki açığı belirler."
+        links={[
+          { label: 'Satışlar',      href: '/dashboard/commercial?tab=sales' },
+          { label: 'Giderler',      href: '/dashboard/operations?tab=expenses' },
+          { label: 'Gelir Tablosu', href: '/dashboard/reports/income-statement' },
+        ]}
+      />
     </div>
     </div>
   )

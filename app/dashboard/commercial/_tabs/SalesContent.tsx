@@ -4,6 +4,7 @@
 // Table: SalesTable client island (search, filter, sort, status update)
 
 import Link         from 'next/link'
+import { NarrativeFooter } from '@/components/ds'
 import { createClient }    from '@/lib/supabase-server'
 import { normalizeSaleRow } from '@/lib/normalize'
 import { fmtTRY as fmt }   from '@/lib/format'
@@ -209,26 +210,13 @@ export async function SalesContent({ companyId }: Props) {
       <SalesTable rows={list} />
 
       {/* Cross-navigation */}
-      <div className="flex items-center justify-between px-1">
-        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
-          MTD ciro tahsil edildiğinde nakit pozisyonuna girer — tahsilat hızı runway'ı doğrudan belirler.
-        </p>
-        <div className="flex items-center gap-2 shrink-0 ml-4">
-          <Link
-            href="/dashboard/finance?tab=pnl"
-            className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap"
-          >
-            P&amp;L Analizi →
-          </Link>
-          <span className="text-[#e2e8f0]">|</span>
-          <Link
-            href="/dashboard/commercial?tab=pipeline"
-            className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap"
-          >
-            Satış Akışı →
-          </Link>
-        </div>
-      </div>
+      <NarrativeFooter
+        narrative="MTD ciro tahsil edildiğinde nakit pozisyonuna girer — tahsilat hızı runway'ı doğrudan belirler."
+        links={[
+          { label: 'P&L Analizi', href: '/dashboard/finance?tab=pnl' },
+          { label: 'Satış Akışı', href: '/dashboard/commercial?tab=pipeline' },
+        ]}
+      />
     </div>
   )
 }

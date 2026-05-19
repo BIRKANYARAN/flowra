@@ -6,6 +6,7 @@
 // Shows key receivables, proformas, and collections state at a glance.
 
 import { useState, useEffect } from 'react'
+import { ContextReading } from '@/components/ds'
 
 interface CommercialPeek {
   receivables: { total_outstanding: number; overdue_60d: number }
@@ -24,34 +25,6 @@ function fmtK(n: number): string {
   if (abs >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M'
   if (abs >= 100_000)   return Math.round(n / 1_000) + 'K'
   return '₺' + TRY.format(n)
-}
-
-interface ReadingProps {
-  label:  string
-  value:  string
-  sub?:   string
-  status: 'ok' | 'warn' | 'critical'
-  border: boolean
-}
-
-function Reading({ label, value, sub, status, border }: ReadingProps) {
-  const valueCls =
-    status === 'critical' ? 'text-neg' :
-    status === 'warn'     ? 'text-warn-text' :
-    'text-[#0f172a]'
-  return (
-    <div className={`flex flex-col gap-0 flex-shrink-0 px-4 py-2.5 ${border ? 'border-l border-[#e2e8f0]' : ''}`}>
-      <span className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8] leading-none mb-1">
-        {label}
-      </span>
-      <span className={`text-[13px] font-black tabular-nums leading-none ${valueCls}`}>
-        {value}
-      </span>
-      {sub && (
-        <span className="text-[9px] text-[#94a3b8] leading-none mt-0.5">{sub}</span>
-      )}
-    </div>
-  )
 }
 
 export function CommercialContextBar({ companyId }: { companyId: string }) {
@@ -75,58 +48,48 @@ export function CommercialContextBar({ companyId }: { companyId: string }) {
   }
   if (!data) return null
 
-  const overdue60  = data.receivables.overdue_60d
+  const overdue60   = data.receivables.overdue_60d
   const outstanding = data.receivables.total_outstanding
   const collectionRatePct = outstanding > 0
     ? Math.round(((outstanding - overdue60) / outstanding) * 100)
     : 100
 
-  const readings: ReadingProps[] = [
-    {
-      label:  'AÇIK ALACAK',
-      value:  outstanding > 0 ? fmtK(outstanding) : '—',
-      sub:    outstanding > 0 ? 'toplam bekleyen' : 'Temiz',
-      status: outstanding > 200_000 ? 'warn' : 'ok',
-      border: false,
-    },
-    {
-      label:  '60G+ GECİKMİŞ',
-      value:  overdue60 > 0 ? fmtK(overdue60) : '—',
-      sub:    overdue60 > 0 ? 'kritik risk' : 'Yok',
-      status: overdue60 > 50_000 ? 'critical' : overdue60 > 0 ? 'warn' : 'ok',
-      border: true,
-    },
-    {
-      label:  'TAHSİLAT ORANI',
-      value:  `%${collectionRatePct}`,
-      sub:    collectionRatePct >= 80 ? 'Sağlıklı' : collectionRatePct >= 50 ? 'Orta' : 'Zayıf',
-      status: collectionRatePct >= 80 ? 'ok' : collectionRatePct >= 50 ? 'warn' : 'critical',
-      border: true,
-    },
-    {
-      label:  'PROFORMA',
-      value:  pfSummary != null ? String(pfSummary.open_count) : '—',
-      sub:    pfSummary != null && pfSummary.pending_value_try > 0
-        ? `${fmtK(pfSummary.pending_value_try)} beklemede`
-        : pfSummary != null ? 'açık teklif' : undefined,
-      status: 'ok',
-      border: true,
-    },
-    {
-      label:  'NAKİT',
-      value:  fmtK(data.cash.true_cash_position),
-      sub:    'mevcut pozisyon',
-      status: data.cash.true_cash_position < 50_000 ? 'critical'
-            : data.cash.true_cash_position < 200_000 ? 'warn' : 'ok',
-      border: true,
-    },
-  ]
-
   return (
     <div className="flex items-center gap-0 bg-[#f8fafc]/40 border-b border-[#e2e8f0] overflow-x-auto scrollbar-none">
-      {readings.map(r => (
-        <Reading key={r.label} {...r} />
-      ))}
+      <ContextReading
+        label="AÇIK ALACAK"
+        value={outstanding > 0 ? fmtK(outstanding) : '—'}
+        sub={outstanding > 0 ? 'toplam bekleyen' : 'Temiz'}
+        status={outstanding > 200_000 ? 'warn' : 'ok'}
+        border={false}
+      />
+      <ContextReading
+        label="60G+ GECİKMİŞ"
+        value={overdue60 > 0 ? fmtK(overdue60) : '—'}
+        sub={overdue60 > 0 ? 'kritik risk' : 'Yok'}
+        status={overdue60 > 50_000 ? 'critical' : overdue60 > 0 ? 'warn' : 'ok'}
+      />
+      <ContextReading
+        label="TAHSİLAT ORANI"
+        value={`%${collectionRatePct}`}
+        sub={collectionRatePct >= 80 ? 'Sağlıklı' : collectionRatePct >= 50 ? 'Orta' : 'Zayıf'}
+        status={collectionRatePct >= 80 ? 'ok' : collectionRatePct >= 50 ? 'warn' : 'critical'}
+      />
+      <ContextReading
+        label="PROFORMA"
+        value={pfSummary != null ? String(pfSummary.open_count) : '—'}
+        sub={pfSummary != null && pfSummary.pending_value_try > 0
+          ? `${fmtK(pfSummary.pending_value_try)} beklemede`
+          : pfSummary != null ? 'açık teklif' : undefined}
+        status="ok"
+      />
+      <ContextReading
+        label="NAKİT"
+        value={fmtK(data.cash.true_cash_position)}
+        sub="mevcut pozisyon"
+        status={data.cash.true_cash_position < 50_000 ? 'critical'
+              : data.cash.true_cash_position < 200_000 ? 'warn' : 'ok'}
+      />
     </div>
   )
 }

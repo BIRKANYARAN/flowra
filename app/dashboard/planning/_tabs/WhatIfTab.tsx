@@ -3,6 +3,7 @@
 // Client island renders sliders + live P&L recalculation (zero API calls on slide).
 
 import Link               from 'next/link'
+import { NarrativeFooter } from '@/components/ds'
 import { createClient }     from '@/lib/supabase-server'
 import { FinanceService }   from '@/lib/services/finance.service'
 import { WhatIfClient }     from './_whatif/WhatIfClient'
@@ -48,20 +49,13 @@ export async function WhatIfTab({ companyId, userId }: Props) {
         baseline={{ revenue, cogs, expenses, salesVat, purchaseVat, monthlyDebtService }}
       />
       {/* Cross-navigation */}
-      <div className="flex items-center justify-between px-1">
-        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
-          What-if sonuçlarını 12-ay projeksiyonuyla ve gerçek finansallarla karşılaştırın.
-        </p>
-        <div className="flex items-center gap-2 shrink-0 ml-4">
-          <Link href="/dashboard/planning?tab=cash-projection" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            Nakit Projeksiyonu →
-          </Link>
-          <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/finance?tab=pnl" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            Gerçek P&amp;L →
-          </Link>
-        </div>
-      </div>
+      <NarrativeFooter
+        narrative="What-if sonuçlarını 12-ay projeksiyonuyla ve gerçek finansallarla karşılaştırın."
+        links={[
+          { label: 'Nakit Projeksiyonu', href: '/dashboard/planning?tab=cash-projection' },
+          { label: 'Gerçek P&L',         href: '/dashboard/finance?tab=pnl' },
+        ]}
+      />
     </div>
   )
 }

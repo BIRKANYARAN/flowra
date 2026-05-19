@@ -522,3 +522,83 @@ export function AlertRow({
     </Link>
   )
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// NarrativeFooter — causal chain footer at bottom of panels / tab content
+//
+// Canonical cross-hub navigation + financial causality text.
+// Appears at the bottom of every hub tab content block.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export function NarrativeFooter({
+  narrative,
+  links,
+  className,
+}: {
+  narrative: string
+  links: Array<{ label: string; href: string }>
+  className?: string
+}) {
+  return (
+    <div className={cn('flex items-center justify-between px-1', className)}>
+      <p className="text-[10px] text-[#94a3b8] leading-relaxed">{narrative}</p>
+      {links.length > 0 && (
+        <div className="flex items-center gap-2 shrink-0 ml-4">
+          {links.map((link, i) => (
+            <React.Fragment key={link.href}>
+              {i > 0 && <span className="text-[#e2e8f0]">|</span>}
+              <Link
+                href={link.href}
+                className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap"
+              >
+                {link.label} →
+              </Link>
+            </React.Fragment>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ContextReading — individual reading cell inside a ContextBar
+//
+// Bloomberg-style micro-instrument: label / value / sub.
+// Used by Finance, Commercial, Operations, Partners, Planning context bars.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export function ContextReading({
+  label,
+  value,
+  sub,
+  status = 'neutral',
+  border = true,
+}: {
+  label: string
+  value: string
+  sub?: string
+  status?: 'ok' | 'warn' | 'critical' | 'neutral'
+  border?: boolean
+}) {
+  const valueCls =
+    status === 'critical' ? 'text-neg' :
+    status === 'warn'     ? 'text-warn-text' :
+    'text-[#0f172a]'
+  return (
+    <div className={cn(
+      'flex flex-col gap-0 flex-shrink-0 px-4 py-2.5',
+      border && 'border-l border-[#e2e8f0]',
+    )}>
+      <span className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8] leading-none mb-1">
+        {label}
+      </span>
+      <span className={cn('text-[13px] font-black tabular-nums leading-none', valueCls)}>
+        {value}
+      </span>
+      {sub && (
+        <span className="text-[9px] text-[#94a3b8] leading-none mt-0.5">{sub}</span>
+      )}
+    </div>
+  )
+}

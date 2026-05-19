@@ -1,6 +1,7 @@
 // ── ProformasContent — Commercial hub / proformas tab ────────────────────────
 
 import Link from 'next/link'
+import { NarrativeFooter } from '@/components/ds'
 import { createClient } from '@/lib/supabase-server'
 import { StatusBadge, EmptyState, ErrorBanner } from '@/components/ui'
 import { formatTRY, fmtDate, sym } from '@/lib/format'
@@ -229,24 +230,14 @@ export async function ProformasContent({ companyId }: Props) {
       )}
 
       {/* Cross-navigation */}
-      <div className="flex items-center justify-between px-1">
-        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
-          Teklif → Satış → Tahsilat zinciri kapanmadan nakit etkisi olmaz — dönüşüm hızını takip edin.
-        </p>
-        <div className="flex items-center gap-2 shrink-0 ml-4">
-          <Link href="/dashboard/commercial?tab=pipeline" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            Pipeline →
-          </Link>
-          <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/commercial?tab=sales" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            Satışlar →
-          </Link>
-          <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/commercial?tab=collections" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            Tahsilat →
-          </Link>
-        </div>
-      </div>
+      <NarrativeFooter
+        narrative="Teklif → Satış → Tahsilat zinciri kapanmadan nakit etkisi olmaz — dönüşüm hızını takip edin."
+        links={[
+          { label: 'Pipeline', href: '/dashboard/commercial?tab=pipeline' },
+          { label: 'Satışlar', href: '/dashboard/commercial?tab=sales' },
+          { label: 'Tahsilat', href: '/dashboard/commercial?tab=collections' },
+        ]}
+      />
     </div>
   )
 }

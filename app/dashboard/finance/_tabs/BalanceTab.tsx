@@ -10,6 +10,7 @@ import { createClient }        from '@/lib/supabase-server'
 import { BalanceSheetService } from '@/lib/services/balance-sheet.service'
 import { fmtTRY as fmt }       from '@/lib/format'
 import type { BalanceSheet }   from '@/types/dto'
+import { NarrativeFooter }     from '@/components/ds'
 
 // ── Formatters ────────────────────────────────────────────────────────────────
 
@@ -269,24 +270,14 @@ export async function BalanceTab({ userId, companyId }: Props) {
       </div>
 
       {/* Cross-navigation */}
-      <div className="flex items-center justify-between px-1">
-        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
-          Bilanço tarihi: {bs.as_of_date} · Duran varlıklar ve uzun vadeli tahakkuklar henüz izlenmemektedir.
-        </p>
-        <div className="flex items-center gap-2 shrink-0 ml-4">
-          <Link href="/dashboard/partners" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            Ortak Özkaynakları →
-          </Link>
-          <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/finance?tab=cashflow" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            Nakit →
-          </Link>
-          <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/reports/balance-sheet" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            Bilanço Raporu →
-          </Link>
-        </div>
-      </div>
+      <NarrativeFooter
+        narrative={`Bilanço tarihi: ${bs.as_of_date} · Duran varlıklar ve uzun vadeli tahakkuklar henüz izlenmemektedir.`}
+        links={[
+          { label: 'Ortak Özkaynakları', href: '/dashboard/partners' },
+          { label: 'Nakit',              href: '/dashboard/finance?tab=cashflow' },
+          { label: 'Bilanço Raporu',     href: '/dashboard/reports/balance-sheet' },
+        ]}
+      />
     </div>
   )
 }

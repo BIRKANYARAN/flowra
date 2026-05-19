@@ -1,6 +1,7 @@
 // ── TasksContent — Planning hub / tasks tab ───────────────────────────────────
 
 import Link from 'next/link'
+import { NarrativeFooter } from '@/components/ds'
 import { createClient } from '@/lib/supabase-server'
 import type { Task, Customer, Sale } from '@/types'
 import TasksClient from '@/app/dashboard/tasks/TasksClient'
@@ -127,20 +128,13 @@ export async function TasksContent({ companyId }: Props) {
       <TasksClient initialTasks={tasks} initialCustomers={customers} initialSales={sales} />
 
       {/* Cross-navigation */}
-      <div className="flex items-center justify-between px-1">
-        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
-          Kritik görev gecikmeleri tahsilat ve teklif dönüşümü hızını doğrudan etkiler — öncelikli görevleri ticari akışla koordineli takip edin.
-        </p>
-        <div className="flex items-center gap-2 shrink-0 ml-4">
-          <Link href="/dashboard/commercial?tab=collections" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            Tahsilat →
-          </Link>
-          <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/commercial?tab=pipeline" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            Satış Akışı →
-          </Link>
-        </div>
-      </div>
+      <NarrativeFooter
+        narrative="Kritik görev gecikmeleri tahsilat ve teklif dönüşümü hızını doğrudan etkiler — öncelikli görevleri ticari akışla koordineli takip edin."
+        links={[
+          { label: 'Tahsilat',    href: '/dashboard/commercial?tab=collections' },
+          { label: 'Satış Akışı', href: '/dashboard/commercial?tab=pipeline' },
+        ]}
+      />
     </div>
   )
 }

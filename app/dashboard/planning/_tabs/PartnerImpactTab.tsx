@@ -11,6 +11,7 @@ import { FinanceService }  from '@/lib/services/finance.service'
 import { PartnerService }  from '@/lib/services/partner.service'
 import { computeCashPosition } from '@/lib/finance/cash'
 import Link                from 'next/link'
+import { NarrativeFooter }    from '@/components/ds'
 import { PartnerImpactClient } from './_partner-impact/PartnerImpactClient'
 
 interface Props { companyId: string; userId: string }
@@ -170,24 +171,14 @@ export async function PartnerImpactTab({ companyId, userId }: Props) {
       />
 
       {/* Cross-navigation */}
-      <div className="flex items-center justify-between px-1">
-        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
-          Ortak etki simülasyonu gerçek PCLE dağıtımıyla karşılaştırılmalı.
-        </p>
-        <div className="flex items-center gap-2 shrink-0 ml-4">
-          <Link href="/dashboard/planning?tab=debt-pressure" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            Borç Baskısı →
-          </Link>
-          <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/partners?tab=waterfall" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            Geri Ödeme Planı →
-          </Link>
-          <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/finance?tab=overview" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            Finansal Özet →
-          </Link>
-        </div>
-      </div>
+      <NarrativeFooter
+        narrative="Ortak etki simülasyonu gerçek PCLE dağıtımıyla karşılaştırılmalı."
+        links={[
+          { label: 'Borç Baskısı',     href: '/dashboard/planning?tab=debt-pressure' },
+          { label: 'Geri Ödeme Planı', href: '/dashboard/partners?tab=waterfall' },
+          { label: 'Finansal Özet',    href: '/dashboard/finance?tab=overview' },
+        ]}
+      />
     </div>
   )
 }
