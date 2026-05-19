@@ -43,19 +43,24 @@ export async function POST(
       }, { status: 409 })
     }
 
-    const { error: updateErr } = await supabase
+    // D5: CAS-like update — predicate ensures only one concurrent lock request wins
+    const { error: updateErr, count } = await supabase
       .from('accounting_periods')
       .update({
         status:    'locked',
         locked_at: new Date().toISOString(),
         locked_by: uid,
-      })
+      }, { count: 'exact' })
       .eq('id', params.id)
       .eq('company_id', companyId)
+      .eq('status', 'closed')  // only transition from 'closed' state
 
     if (updateErr) {
       console.error('[periods/lock] update error:', updateErr)
       return NextResponse.json({ error: updateErr.message }, { status: 500 })
+    }
+    if (count === 0) {
+      return NextResponse.json({ error: 'Dönem zaten kilitli veya kapatılmamış', code: 'CONCURRENT_TRANSITION' }, { status: 409 })
     }
 
     // Audit trail — lock is irreversible; must have a traceable record

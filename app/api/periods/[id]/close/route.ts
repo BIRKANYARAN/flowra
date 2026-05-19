@@ -57,20 +57,28 @@ export async function POST(
       }, { status: 422 })
     }
 
-    // Transition to closed
-    const { error: updateErr } = await supabase
+    // Transition to closed — conditional on current status to prevent concurrent
+    // double-close race (two admins simultaneously passing the pre-check).
+    // .neq('status','closed') ensures only one request wins the CAS-like update.
+    const { error: updateErr, count } = await supabase
       .from('accounting_periods')
       .update({
         status:    'closed',
         closed_at: new Date().toISOString(),
         closed_by: uid,
-      })
+      }, { count: 'exact' })
       .eq('id', params.id)
       .eq('company_id', companyId)
+      .neq('status', 'closed')
+      .neq('status', 'locked')
 
     if (updateErr) {
       console.error('[periods/close] update error:', updateErr)
       return NextResponse.json({ error: updateErr.message }, { status: 500 })
+    }
+    if (count === 0) {
+      // Another request already closed this period between our read and write
+      return NextResponse.json({ error: 'Dönem zaten kapalı veya kilitlendi', code: 'CONCURRENT_TRANSITION' }, { status: 409 })
     }
 
     // Audit trail — period state transitions are immutable and must be traceable
