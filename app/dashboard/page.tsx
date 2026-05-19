@@ -30,7 +30,7 @@ import type { SituationStatus }      from '@/lib/engines/situation.engine'
 import { FinanceService }            from '@/lib/services/finance.service'
 import { PartnerService }            from '@/lib/services/partner.service'
 import type { FinancialSummary, EqualizationResult } from '@/types'
-import { fmtTRY as fmt, fmtPct, fmtKpi } from '@/lib/format'
+import { fmtTRY as fmt, fmtPct, fmtKpi, fmtCompact } from '@/lib/format'
 import { generateSituationSummary } from '@/lib/services/ai-summary.service'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -522,6 +522,48 @@ export default async function DashboardPage() {
     runwayDays >= 0 && runwayDays < 30                                          ? 'runway'      :
     overdueTotal60 > 50_000 && overdueTotal60 > uncollectedSalesTotal * 0.5     ? 'receivables' :
     'none'
+
+  // ── C10: TYPE C Cross-Domain Synthesis ──────────────────────────────────────
+  // Composes intelligence from C3 (treasury), C9 (receivables), C4 (governance),
+  // C7 (forecast) into a 4-cell executive pulse strip.
+  type SynthSeverity = 'ok' | 'warn' | 'critical'
+  const synthDomains: Array<{ label: string; text: string; severity: SynthSeverity; href: string }> = [
+
+    // Treasury (C3) — DSR + annualized service pressure
+    (() => {
+      if (monthlyDebtService === 0) return { label: 'Hazine', text: 'Aktif borç servisi yok — finansman gideri oluşmuyor', severity: 'ok' as SynthSeverity, href: '/dashboard/planning?tab=debt-pressure' }
+      const annual = monthlyDebtService * 12
+      if (debtServiceRatio > 0.60) return { label: 'Hazine', text: `DSR %${(debtServiceRatio * 100).toFixed(0)} — borç servisi nakit üretiminin büyük bölümünü tüketiyor; acil yapılandırma değerlendirilebilir`, severity: 'critical' as SynthSeverity, href: '/dashboard/planning?tab=debt-pressure' }
+      if (debtServiceRatio > 0.30) return { label: 'Hazine', text: `DSR %${(debtServiceRatio * 100).toFixed(0)} — aylık ${fmt(monthlyDebtService)} / yıllık ${fmtCompact(annual)} servis; büyüme ve temettü kapasitesi daralıyor`, severity: 'warn' as SynthSeverity, href: '/dashboard/planning?tab=debt-pressure' }
+      return { label: 'Hazine', text: `DSR %${(debtServiceRatio * 100).toFixed(0)} — aylık ${fmt(monthlyDebtService)} borç servisi; sürdürülebilir düzeyde`, severity: 'ok' as SynthSeverity, href: '/dashboard/planning?tab=debt-pressure' }
+    })(),
+
+    // Receivables cascade (C9) — aging bucket forward pressure
+    (() => {
+      if (overdueTotal60 > 0) return { label: 'Alacak', text: `${fmt(overdueTotal60)} alacak 60 gün bandında — 30 gün içinde 90+ dilimine geçer; şüpheli alacak karşılığı gerekebilir`, severity: 'critical' as SynthSeverity, href: '/dashboard/finance?tab=risks' }
+      if (overdueTotal30 > 0) return { label: 'Alacak', text: `${fmt(overdueTotal30)} alacak 30 gün bandında — tahsilat yapılmazsa bir ay içinde 60 gün dilimine geçer`, severity: 'warn' as SynthSeverity, href: '/dashboard/commercial?tab=collections' }
+      if (uncollectedSalesTotal === 0) return { label: 'Alacak', text: 'Tüm alacaklar tahsil edildi — alacak baskısı yok', severity: 'ok' as SynthSeverity, href: '/dashboard/finance?tab=risks' }
+      return { label: 'Alacak', text: `${fmt(uncollectedSalesTotal)} açık alacak — vadeler içinde; takip önerilir`, severity: 'ok' as SynthSeverity, href: '/dashboard/finance?tab=risks' }
+    })(),
+
+    // Governance (C4) — period close + accounting integrity
+    (() => {
+      if (openPeriodDaysOverdue > 30) return { label: 'Yönetişim', text: `Dönem ${openPeriodDaysOverdue} gündür açık — kapanış gecikmesi muhasebe doğruluğunu ve denetim zincirini zayıflatıyor`, severity: 'critical' as SynthSeverity, href: '/dashboard/cfo/period-close' }
+      if (openPeriodDaysOverdue > 10) return { label: 'Yönetişim', text: `Dönem ${openPeriodDaysOverdue} gün gecikmiş — yakında kapatılmalı; gecikme denetim kalitesini düşürür`, severity: 'warn' as SynthSeverity, href: '/dashboard/cfo/period-close' }
+      if (openPeriodDaysOverdue === 0) return { label: 'Yönetişim', text: 'Dönem aktif — kapanış zamanında; muhasebe bütünlüğü korunuyor', severity: 'ok' as SynthSeverity, href: '/dashboard/finance?tab=cfo' }
+      return { label: 'Yönetişim', text: 'Dönem kapalı — muhasebe döngüsü tamamlandı', severity: 'ok' as SynthSeverity, href: '/dashboard/finance?tab=cfo' }
+    })(),
+
+    // Forecast (C7) — scenario spread driver
+    (() => {
+      const base = forecast.summary.base
+      const spread = forecast.summary.optimistic.endCash - forecast.summary.pessimistic.endCash
+      const spreadStr = spread > 0 ? fmtCompact(Math.abs(spread)) : fmt(0)
+      if (base.runwayEndMonth) return { label: 'Projeksiyon', text: `Baz senaryoda nakit ${base.runwayEndMonth}'de tükeniyor — ${spreadStr} senaryo aralığı; gelir varsayımı kritik`, severity: 'critical' as SynthSeverity, href: '/dashboard/finance?tab=forecast' }
+      if (base.totalNet < 0) return { label: 'Projeksiyon', text: `Baz senaryo 12 aylık zarar — ${fmtCompact(Math.abs(base.totalNet))} kümülatif; senaryo aralığı ${spreadStr}`, severity: 'warn' as SynthSeverity, href: '/dashboard/finance?tab=forecast' }
+      return { label: 'Projeksiyon', text: `Baz senaryo 12 aylık +${fmtCompact(base.totalNet)} net — senaryo aralığı ${spreadStr}; gelir momentumu belirleyici`, severity: 'ok' as SynthSeverity, href: '/dashboard/finance?tab=forecast' }
+    })(),
+  ]
 
   return (
     <div className="flex flex-col gap-4">
@@ -1055,6 +1097,34 @@ export default async function DashboardPage() {
         </div>
       </div>
 
+
+      {/* ── C10: CROSS-DOMAIN SYNTHESIS — autonomous TYPE C operating pulse ─── */}
+      <div className="grid grid-cols-2 gap-3">
+        {synthDomains.map(domain => {
+          const borderClass =
+            domain.severity === 'critical' ? 'border-neg-light' :
+            domain.severity === 'warn'     ? 'border-warn-light' :
+            'border-[#e2e8f0]'
+          const labelClass =
+            domain.severity === 'critical' ? 'text-neg'       :
+            domain.severity === 'warn'     ? 'text-warn-text' :
+            'text-[#94a3b8]'
+          const dotClass =
+            domain.severity === 'critical' ? 'bg-neg'   :
+            domain.severity === 'warn'     ? 'bg-warn'  :
+            'bg-pos'
+          return (
+            <Link key={domain.label} href={domain.href}
+              className={`bg-white border rounded px-4 py-3 shadow-sm hover:bg-[#f8fafc]/60 transition-colors ${borderClass}`}>
+              <div className={`flex items-center gap-1.5 mb-1.5`}>
+                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${dotClass}`} />
+                <span className={`text-[0.65rem] font-black uppercase tracking-widest ${labelClass}`}>{domain.label}</span>
+              </div>
+              <p className="text-[11px] text-[#334155] leading-snug">{domain.text}</p>
+            </Link>
+          )
+        })}
+      </div>
 
       {/* ── QUICK REPORTS FOOTER ────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-1 pt-1">
