@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRole }       from '@/lib/require-role'
 import { checkPeriodGuard }  from '@/lib/middleware/period-guard'
 import { resolveApiAuth } from '@/lib/api-auth'
+import { logAudit } from '@/lib/audit'
 
 export const dynamic = 'force-dynamic'
 
@@ -95,6 +96,16 @@ export async function POST(req: NextRequest) {
       console.error('[partners/pcle/events POST] error:', error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
+
+    // Audit trail — PCLE events are immutable financial records, must be traceable
+    logAudit({
+      userId:     uid,
+      companyId,
+      entityType: 'partner_finance_event',
+      entityId:   data.id,
+      action:     'create',
+      newData:    { partner_id, event_type, amount_try: amountTryNum, event_date: txDate, reference },
+    }).catch(auditErr => console.warn('[pcle/events] audit write failed:', auditErr instanceof Error ? auditErr.message : String(auditErr)))
 
     return NextResponse.json({ id: data.id }, { status: 201 })
   } catch (e) {

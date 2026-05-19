@@ -9,6 +9,7 @@ import { resolveApiAuth } from '@/lib/api-auth'
 import { REQUEST_ID_HEADER } from '@/middleware'
 import { dualWrite, resolvePeriodId } from '@/lib/services/ledger/dual-write.service'
 import { JournalEntryService } from '@/lib/services/ledger/journal-entry.service'
+import { logAudit } from '@/lib/audit'
 
 export async function POST(req: NextRequest) {
   const auth = await resolveApiAuth(req)
@@ -115,6 +116,16 @@ export async function POST(req: NextRequest) {
     // Best-effort: tranche created successfully, journal entry failure is non-fatal
     console.warn('[partners/loan-tranches] journal entry failed (non-fatal):', jeErr instanceof Error ? jeErr.message : String(jeErr))
   }
+
+  // Audit trail — loan tranche creation is a high-value financial event
+  logAudit({
+    userId:     uid,
+    companyId,
+    entityType: 'partner_loan_tranche',
+    entityId:   data.id,
+    action:     'create',
+    newData:    { partner_id, principal_try, interest_rate_annual_pct, disbursement_date, expected_repayment_date },
+  }).catch(err => console.warn('[loan-tranches] audit write failed:', err instanceof Error ? err.message : String(err)))
 
   return NextResponse.json(data, {
     status: 201,

@@ -207,9 +207,9 @@ export async function POST(req: NextRequest) {
           total_try:      total,
         }),
       })
-    } catch {
-      // Journal entry is best-effort; sale was already created
-      console.warn('[sales POST] dual-write failed (non-fatal)')
+    } catch (jeErr) {
+      // Journal entry is best-effort; sale was already created (shadow mode safe)
+      console.warn('[sales POST] dual-write failed (non-fatal):', jeErr instanceof Error ? jeErr.message : String(jeErr))
     }
 
     auditSaleMutation({

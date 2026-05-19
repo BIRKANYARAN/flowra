@@ -1069,6 +1069,8 @@ export type AuditEntityType =
   | 'company_bank'        // bank account CRUD events
   | 'product'             // product CRUD events
   | 'period'              // accounting period state transitions
+  | 'partner_loan_tranche'  // partner loan tranche create/update
+  | 'partner_finance_event' // PCLE immutable event log
 
 /** Immutable audit trail row — never updated after insert. */
 export interface AuditLog {

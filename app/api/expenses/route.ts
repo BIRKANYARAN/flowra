@@ -344,7 +344,8 @@ export async function DELETE(req: NextRequest) {
     })
 
     return NextResponse.json({ deleted: true })
-  } catch {
+  } catch (err) {
+    console.error('[expenses DELETE] unexpected error:', err instanceof Error ? err.message : String(err))
     return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 })
   }
 }
