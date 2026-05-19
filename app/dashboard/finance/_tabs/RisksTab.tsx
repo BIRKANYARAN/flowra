@@ -19,10 +19,8 @@ import {
   type MonthlyExpense,
 } from '@/lib/engines/anomaly.engine'
 import { createClient }          from '@/lib/supabase-server'
-import { fmtTRY as fmt }         from '@/lib/format'
-function pct(v: number): string {
-  return `%${(v * 100).toFixed(1).replace('.', ',')}`
-}
+import { fmtTRY as fmt, fmtPct } from '@/lib/format'
+function pct(v: number): string { return fmtPct(v * 100) }
 
 // ── Risk level helpers ────────────────────────────────────────────────────────
 
@@ -132,7 +130,7 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
     guidance.push('Tek bir müşteri alacaklarınızın %60\'ından fazlasını oluşturuyor — kritik konsantrasyon riski.')
     guidance.push('Bu müşteri ile ödeme planı müzakere edin ve yeni müşteri kazanımını hızlandırın.')
   } else if (risk.concentration.risk_level === 'high') {
-    guidance.push('Alacak konsantrasyonu yüksek. En büyük 3 müşteri portföyünüzün %' + (risk.concentration.top3_pct * 100).toFixed(0) + '\'ini oluşturuyor.')
+    guidance.push(`Alacak konsantrasyonu yüksek. En büyük 3 müşteri portföyünüzün ${fmtPct(risk.concentration.top3_pct * 100, 0)}'ini oluşturuyor.`)
   }
   if (risk.overdue90Total > 0) {
     guidance.push(`${fmt(risk.overdue90Total)} tutarında alacak 90+ gün vadesi geçmiş — hukuki süreç veya karşılık ayrılması düşünülmeli.`)
@@ -298,13 +296,13 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
         </div>
       </div>
 
-      {/* Zone 4 — Anomaly Detection */}
+      {/* Zone 4 — Operational Deviation Signals */}
       {allAnomalies.length > 0 && (
         <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Anormallik Tespiti</div>
-              <div className="text-[10px] text-[#94a3b8] mt-0.5">Son 6 ay istatistiksel sapma analizi · ±2σ eşiği</div>
+              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Operasyonel Sapma Sinyalleri</div>
+              <div className="text-[10px] text-[#94a3b8] mt-0.5">Kural tabanlı · Son 6 ay istatistiksel sapma · ±2σ eşiği</div>
             </div>
             <span className="text-[9px] font-black uppercase tracking-wide bg-[#f8fafc] border border-[#e2e8f0] text-[#64748b] px-2 py-0.5 rounded">
               {allAnomalies.filter(a => a.severity === 'high').length} yüksek · {allAnomalies.filter(a => a.severity === 'medium').length} orta
@@ -313,13 +311,24 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
           <div className="space-y-2">
             {allAnomalies.map((a, i) => {
               const cfg = SEVERITY_CFG[a.severity]
-              const typeLabel = a.type === 'revenue' ? 'Gelir' : `Gider — ${CATEGORY_LABELS[(a as { category?: string }).category ?? ''] ?? (a as { category?: string }).category ?? ''}`
+              const category = (a as { category?: string }).category ?? ''
+              const typeLabel = a.type === 'revenue' ? 'Gelir' : `Gider — ${CATEGORY_LABELS[category] ?? category}`
               const monthLabel = (() => {
-                const m = a.month
-                const [y, mo] = m.split('-').map(Number)
+                const [y, mo] = a.month.split('-').map(Number)
                 const names = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara']
                 return `${names[mo - 1]} ${String(y).slice(2)}`
               })()
+              // Causal pressure framing: what does this deviation mean downstream?
+              const pressureLine =
+                a.type === 'revenue' && a.direction === 'drop'
+                  ? 'Tahsilat baskısı ve nakit ömrü kısalması riski'
+                  : a.type === 'revenue' && a.direction === 'spike'
+                  ? 'Alacak birikimi artabilir — tahsilat süreçlerini izle'
+                  : a.type === 'expense' && a.direction === 'spike'
+                  ? 'Brüt marj daralması ve nakit çıkışı baskısı'
+                  : a.type === 'expense' && a.direction === 'drop'
+                  ? 'Azalan gider — sürdürülebilirliği doğrula'
+                  : null
               return (
                 <div key={i} className={`flex items-start gap-3 border rounded px-3 py-2.5 ${cfg.cls}`}>
                   <span className={`w-1.5 h-1.5 rounded-full shrink-0 mt-1.5 ${cfg.dot}`} />
@@ -332,13 +341,13 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
                           ? 'bg-warn-light text-warn-text'
                           : 'bg-info-light text-info-text'
                       }`}>
-                        {a.direction === 'spike' ? '▲ Ani Artış' : '▼ Ani Düşüş'}
-                        {' '}{Math.abs(a.deviation_pct).toFixed(0)}%
+                        {a.direction === 'spike' ? '▲' : '▼'} {Math.abs(a.deviation_pct).toFixed(0)}%
                       </span>
                     </div>
                     <div className="text-[10px] text-[#334155] mt-0.5 leading-snug">{a.message}</div>
                     <div className="text-[9px] text-[#64748b] mt-0.5">
-                      Gerçekleşen: <strong>{fmt(a.actual)}</strong> · Beklenen ort.: {fmt(a.mean)}
+                      Gerçekleşen: <strong>{fmt(a.actual)}</strong> · Beklenen: {fmt(a.mean)}
+                      {pressureLine && <span className="ml-2 text-[#94a3b8]">· {pressureLine}</span>}
                     </div>
                   </div>
                 </div>
@@ -348,13 +357,13 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
         </div>
       )}
 
-      {/* Zone 5 — Guidance */}
+      {/* Zone 5 — Pressure Assessment */}
       <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">CFO Tavsiyesi</div>
+        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">Baskı Değerlendirmesi</div>
         <ul className="space-y-1.5">
           {guidance.map((g, i) => (
-            <li key={i} className="text-xs text-[#334155] leading-relaxed flex items-start gap-2">
-              <span className="mt-0.5 shrink-0 text-[10px]">→</span>
+            <li key={i} className="text-[11px] text-[#334155] leading-relaxed flex items-start gap-2">
+              <span className="mt-0.5 shrink-0 text-[#cbd5e1]">—</span>
               <span>{g}</span>
             </li>
           ))}
