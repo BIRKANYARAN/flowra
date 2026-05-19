@@ -13,6 +13,7 @@ import { checkPeriodGuard } from '@/lib/middleware/period-guard'
 import { dualWrite, resolvePeriodId } from '@/lib/services/ledger/dual-write.service'
 import { JournalEntryService } from '@/lib/services/ledger/journal-entry.service'
 import { resolveApiAuth } from '@/lib/api-auth'
+import { round2 } from '@/lib/calc'
 import { WorkflowService } from '@/lib/services/workflow.service'
 
 const ALLOWED_CURRENCIES = CURRENCIES_EXTENDED as readonly string[]
@@ -110,9 +111,9 @@ export async function POST(req: NextRequest) {
       ? body.partner_id.trim()
       : ''
 
-    // Snapshot FX rate at creation time
+    // Snapshot FX rate at creation time — round2() prevents IEEE 754 edge cases in KDV computation
     const fx         = await getOrFetchFxRate(currency)
-    const amount_try = amount * fx.rate
+    const amount_try = round2(amount * fx.rate)
 
     // ── Workflow approval check (non-admin + amount > threshold) ─────────────
     // If a manager creates an expense over the approval threshold, the expense is
@@ -273,7 +274,7 @@ export async function POST(req: NextRequest) {
         expense_date,
         expense_type:    category,
         amount_try:      amount_try,
-        kdv_amount_try:  amount_try * (kdv / 100),
+        kdv_amount_try:  round2(amount_try * (kdv / 100)),
         paid_from_bank:  paidFromBank,
         description,
       }),

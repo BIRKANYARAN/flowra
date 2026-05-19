@@ -81,6 +81,19 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       return NextResponse.json({ error: 'Satış bulunamadı' }, { status: 404 })
     }
 
+    // D2: Financial consistency guard — amount_paid must never exceed sale total
+    // Prevents journal entry inconsistency (DR 102 > CR 120 in accounting layer)
+    if (body.amount_paid !== undefined) {
+      const saleTotal = Number((existing as { total_try?: unknown }).total_try ?? 0)
+      const ap = Number(body.amount_paid)
+      if (ap > saleTotal + 0.01) {  // 0.01 tolerance for floating-point edge cases
+        return NextResponse.json(
+          { error: `Ödeme tutarı (${ap}) satış toplamını (${saleTotal}) aşamaz` },
+          { status: 422 },
+        )
+      }
+    }
+
     // Period guard — block writes to locked periods using sale_date (business date)
     const saleDate = (existing as { sale_date?: string }).sale_date ?? new Date().toISOString().slice(0, 10)
     const guard = await checkPeriodGuard(companyId, saleDate, supabase)

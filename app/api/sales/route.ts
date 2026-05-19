@@ -6,6 +6,7 @@ import { dualWrite, resolvePeriodId } from '@/lib/services/ledger/dual-write.ser
 import { JournalEntryService } from '@/lib/services/ledger/journal-entry.service'
 import { resolveApiAuth } from '@/lib/api-auth'
 import { auditSaleMutation } from '@/lib/db/mutation-audit'
+import { round2 } from '@/lib/calc'
 
 const VALID_CURRENCIES = ['TRY', 'USD', 'EUR', 'GBP'] as const
 const VALID_KDV_RATES  = [0, 10, 20] as const
@@ -122,9 +123,9 @@ export async function POST(req: NextRequest) {
       subtotalNoKdv += lineNet
       total += lineNet * kdvMultiplier
     }
-    // Round to 2 decimals
-    total = Math.round(total * 100) / 100
-    subtotalNoKdv = Math.round(subtotalNoKdv * 100) / 100
+    // Round to 2 decimals — use round2() (adds Number.EPSILON before rounding to prevent IEEE 754 edge cases)
+    total = round2(total)
+    subtotalNoKdv = round2(subtotalNoKdv)
 
     // ── Period guard ────────────────────────────────────────────────────────
     const guard = await checkPeriodGuard(companyId, saleDate, supabase)
@@ -144,7 +145,7 @@ export async function POST(req: NextRequest) {
         customer_name:  customerName,
         currency,
         total,
-        kdv_amount_try: Math.round((total - subtotalNoKdv) * 100) / 100,  // GAP 6 fix
+        kdv_amount_try: round2(total - subtotalNoKdv),  // GAP 6 fix
         fx_rate_try:    fxRate !== 1 ? fxRate : null,
         sale_date:      saleDate,
         due_date:       dueDate,
@@ -171,7 +172,7 @@ export async function POST(req: NextRequest) {
       unit_price:   item.unit_price,
       currency,
       discount_pct: 0,
-      line_total:   Math.round(item.quantity * item.unit_price * (1 + (item.kdv_rate ?? 20) / 100) * 100) / 100,
+      line_total:   round2(item.quantity * item.unit_price * (1 + (item.kdv_rate ?? 20) / 100)),
       kdv_rate:     item.kdv_rate ?? 20,  // GAP 3: use dedicated column (added in accounting_truth_v1 migration)
       sort_order:   idx + 1,
     }))
@@ -191,8 +192,8 @@ export async function POST(req: NextRequest) {
     try {
       const periodId = guard.period_id ?? await resolvePeriodId(companyId, saleDate, supabase)
       // Compute revenue (excl. KDV) and KDV from total
-      const kdvAmount  = Math.round((total - subtotalNoKdv) * 100) / 100
-      const revenue    = Math.round(subtotalNoKdv * 100) / 100
+      const kdvAmount  = round2(total - subtotalNoKdv)
+      const revenue    = round2(subtotalNoKdv)
       await dualWrite({
         companyId,
         periodId,
