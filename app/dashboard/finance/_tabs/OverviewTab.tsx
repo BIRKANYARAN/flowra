@@ -21,7 +21,7 @@ function fmtFull(n: number): string {
 function runwayColor(months: number | null): string {
   if (months === null) return 'text-[#94a3b8]'
   if (months <= 2)     return 'text-neg'
-  if (months <= 6)     return 'text-orange-600'
+  if (months <= 6)     return 'text-warn'
   if (months <= 12)    return 'text-warn-text'
   return 'text-pos-text'
 }
@@ -123,7 +123,7 @@ export async function OverviewTab({ userId: _userId, companyId }: Props) {
 
       {runwayTone === 'critical' && (
         <div className="bg-neg-light border border-neg rounded px-4 py-3 text-sm text-neg-text font-semibold flex items-center gap-2">
-          <span className="animate-pulse">🔴</span>
+          <span className="w-1.5 h-1.5 rounded-full bg-neg shrink-0 animate-pulse" />
           Kritik: Runway {runwayMonths?.toFixed(1)} ay — acil aksiyon gerekiyor.
         </div>
       )}
@@ -131,20 +131,20 @@ export async function OverviewTab({ userId: _userId, companyId }: Props) {
       {/* High overdue receivables alert — fires when 60d+ overdue exceeds 20% of total outstanding */}
       {m.receivables.total_outstanding > 0 &&
        m.receivables.overdue_60d + m.receivables.overdue_90d > m.receivables.total_outstanding * 0.2 && (
-        <div className="bg-orange-50 border border-orange-300 rounded px-4 py-3 flex items-start gap-3">
+        <div className="bg-warn-light border border-warn/30 rounded px-4 py-3 flex items-start gap-3">
           <span className="text-base mt-0.5">⚠</span>
           <div className="flex-1">
-            <div className="text-[11px] font-black uppercase tracking-wide text-orange-800">
+            <div className="text-[11px] font-black uppercase tracking-wide text-warn-text">
               Alacak Yaşlanması Yüksek
             </div>
-            <div className="text-xs text-orange-700 mt-0.5">
+            <div className="text-xs text-warn-text mt-0.5">
               60+ gün vadesi geçmiş: <strong>{fmt(m.receivables.overdue_60d + m.receivables.overdue_90d)}</strong>{' '}
               (toplam alacağın %{Math.round(((m.receivables.overdue_60d + m.receivables.overdue_90d) / m.receivables.total_outstanding) * 100)}&apos;i).
               Tahsilat baskısı nakit pozisyonunu olumsuz etkiliyor.
             </div>
           </div>
           <Link href="/dashboard/commercial?tab=collections"
-            className="text-[10px] font-bold text-orange-700 hover:text-orange-800 underline underline-offset-2 shrink-0 mt-0.5 whitespace-nowrap">
+            className="text-[10px] font-bold text-warn-text hover:text-warn-text underline underline-offset-2 shrink-0 mt-0.5 whitespace-nowrap">
             Tahsilat →
           </Link>
         </div>
@@ -197,7 +197,7 @@ export async function OverviewTab({ userId: _userId, companyId }: Props) {
             </div>
             {[
               { label: '+30 gün (Risk)',        value: m.receivables.overdue_30d, color: 'bg-warn' },
-              { label: '+60 gün (Yüksek Risk)', value: m.receivables.overdue_60d, color: 'bg-orange-500' },
+              { label: '+60 gün (Yüksek Risk)', value: m.receivables.overdue_60d, color: 'bg-warn' },
               { label: '+90 gün (Kritik)',      value: m.receivables.overdue_90d, color: 'bg-neg'   },
             ].map(({ label, value, color }) => {
               const pct = m.receivables.total_outstanding > 0
@@ -310,7 +310,7 @@ export async function OverviewTab({ userId: _userId, companyId }: Props) {
           Tahsilat Yönet
         </Link>
         <Link href="/dashboard/operations?tab=expenses"
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded bg-orange-500 text-white text-xs font-semibold hover:bg-orange-600 transition-colors">
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded bg-[#f1f5f9] text-[#334155] text-xs font-semibold hover:bg-[#e2e8f0] transition-colors">
           Giderleri Gözden Geçir
         </Link>
         <Link href="/dashboard/partners"

@@ -180,22 +180,22 @@ export default function ReconciliationPage() {
           <div className="grid grid-cols-3 gap-2">
             <div className="bg-pos-light border border-pos-light rounded px-4 py-3 text-center">
               <div className="text-2xl font-black text-pos-text tabular-nums">{okCount}</div>
-              <div className="text-[10px] font-black uppercase tracking-widest text-pos-text mt-0.5">Tamam</div>
+              <div className="text-[0.65rem] font-black uppercase tracking-widest text-pos-text mt-0.5">Tamam</div>
             </div>
             <div className={`border rounded px-4 py-3 text-center ${warnCount > 0 ? 'bg-warn-light border-warn-light' : 'bg-[#f8fafc] border-[#e2e8f0]'}`}>
               <div className={`text-2xl font-black tabular-nums ${warnCount > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>{warnCount}</div>
-              <div className={`text-[10px] font-black uppercase tracking-widest mt-0.5 ${warnCount > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>Uyarı</div>
+              <div className={`text-[0.65rem] font-black uppercase tracking-widest mt-0.5 ${warnCount > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>Uyarı</div>
             </div>
             <div className={`border rounded px-4 py-3 text-center ${criticalCount > 0 ? 'bg-neg-light border-neg-light' : 'bg-[#f8fafc] border-[#e2e8f0]'}`}>
               <div className={`text-2xl font-black tabular-nums ${criticalCount > 0 ? 'text-neg-text' : 'text-[#94a3b8]'}`}>{criticalCount}</div>
-              <div className={`text-[10px] font-black uppercase tracking-widest mt-0.5 ${criticalCount > 0 ? 'text-neg' : 'text-[#94a3b8]'}`}>Kritik</div>
+              <div className={`text-[0.65rem] font-black uppercase tracking-widest mt-0.5 ${criticalCount > 0 ? 'text-neg' : 'text-[#94a3b8]'}`}>Kritik</div>
             </div>
           </div>
 
           {/* Reconciliation items table */}
           <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
             <div className="px-4 py-2.5 border-b border-[#e2e8f0] bg-[#f8fafc]">
-              <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Hesap Karşılaştırması</div>
+              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Hesap Karşılaştırması</div>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-xs">

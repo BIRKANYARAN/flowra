@@ -118,7 +118,7 @@ function PaymentDrawer({ sale, onClose, onSuccess }: PaymentDrawerProps) {
         {/* Drawer header */}
         <div className="flex items-start justify-between px-5 py-4 border-b border-[#e2e8f0]">
           <div>
-            <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] leading-none">
+            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] leading-none">
               Ödeme Kaydet
             </div>
             <div className="text-sm font-semibold text-[#0f172a] mt-1">{sale.customer_name}</div>
@@ -147,7 +147,7 @@ function PaymentDrawer({ sale, onClose, onSuccess }: PaymentDrawerProps) {
           <div>
             <label
               htmlFor="payment-amount"
-              className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] block mb-1.5 leading-none"
+              className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] block mb-1.5 leading-none"
             >
               Ödeme Tutarı (TRY)
             </label>
@@ -158,7 +158,7 @@ function PaymentDrawer({ sale, onClose, onSuccess }: PaymentDrawerProps) {
               min="0.01"
               value={amount}
               onChange={e => setAmount(e.target.value)}
-              className="w-full border border-[#e2e8f0] rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300 font-mono tabular-nums"
+              className="w-full border border-[#e2e8f0] rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 font-mono tabular-nums"
               required
               autoFocus
             />
@@ -179,7 +179,7 @@ function PaymentDrawer({ sale, onClose, onSuccess }: PaymentDrawerProps) {
           <div>
             <label
               htmlFor="payment-method"
-              className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] block mb-1.5 leading-none"
+              className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] block mb-1.5 leading-none"
             >
               Ödeme Yöntemi
             </label>
@@ -187,7 +187,7 @@ function PaymentDrawer({ sale, onClose, onSuccess }: PaymentDrawerProps) {
               id="payment-method"
               value={paymentMethod}
               onChange={e => setPaymentMethod(e.target.value as PaymentMethod)}
-              className="w-full border border-[#e2e8f0] rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
+              className="w-full border border-[#e2e8f0] rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
             >
               {PAYMENT_METHODS.map(m => (
                 <option key={m} value={m}>{m}</option>
@@ -199,7 +199,7 @@ function PaymentDrawer({ sale, onClose, onSuccess }: PaymentDrawerProps) {
           <div>
             <label
               htmlFor="payment-date"
-              className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] block mb-1.5 leading-none"
+              className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] block mb-1.5 leading-none"
             >
               Ödeme Tarihi
             </label>
@@ -208,7 +208,7 @@ function PaymentDrawer({ sale, onClose, onSuccess }: PaymentDrawerProps) {
               type="date"
               value={date}
               onChange={e => setDate(e.target.value)}
-              className="w-full border border-[#e2e8f0] rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
+              className="w-full border border-[#e2e8f0] rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
               required
             />
           </div>
@@ -335,7 +335,7 @@ export function SalesTable({ rows }: Props) {
               placeholder="Müşteri ara…"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full pl-8 pr-3 py-2 text-sm border border-[#e2e8f0] rounded focus:outline-none focus:ring-2 focus:ring-primary-300 bg-white"
+              className="w-full pl-8 pr-3 py-2 text-sm border border-[#e2e8f0] rounded focus:outline-none focus:ring-2 focus:ring-brand/30 bg-white"
             />
           </div>
 
@@ -358,7 +358,7 @@ export function SalesTable({ rows }: Props) {
           <select
             value={statusFilter}
             onChange={e => setStatusFilter(e.target.value)}
-            className="border border-[#e2e8f0] rounded px-3 py-2 text-xs font-medium bg-white focus:outline-none focus:ring-2 focus:ring-primary-300"
+            className="border border-[#e2e8f0] rounded px-3 py-2 text-xs font-medium bg-white focus:outline-none focus:ring-2 focus:ring-brand/30"
           >
             {PAYMENT_FILTER_OPTIONS.map(o => (
               <option key={o.value} value={o.value}>{o.label}</option>

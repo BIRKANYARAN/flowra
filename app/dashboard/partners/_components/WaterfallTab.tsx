@@ -82,7 +82,7 @@ function AllocationBar({ waterfall, totalDebt }: { waterfall: WaterfallData; tot
 
   return (
     <div className="bg-white border border-[#e2e8f0] rounded px-5 py-4 shadow-sm">
-      <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
+      <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
         Nakit Dağılım Haritası
       </div>
 
@@ -271,7 +271,7 @@ export function WaterfallTab({
           {waterfall.steps.length > 0 && (
             <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
               <div className="px-4 py-2.5 border-b border-[#e2e8f0] bg-[#f8fafc]/60">
-                <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Öncelik Sırası</div>
+                <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Öncelik Sırası</div>
                 <div className="text-[10px] text-[#94a3b8] mt-0.5">Normalleştirilmiş iki aşamalı waterfall</div>
               </div>
               <div className="divide-y divide-[#f1f5f9]">
@@ -306,7 +306,7 @@ export function WaterfallTab({
             <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
               <div className="px-4 py-2.5 border-b border-[#e2e8f0] bg-[#f8fafc]/60 flex items-center justify-between">
                 <div>
-                  <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Borç Pozisyonları</div>
+                  <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Borç Pozisyonları</div>
                   <div className="text-[10px] text-[#94a3b8] mt-0.5">{waterfall.tranches.filter(t => t.principal_try > 0).length} aktif tranche</div>
                 </div>
               </div>

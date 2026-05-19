@@ -128,7 +128,7 @@ export async function CashProjectionTab({ companyId }: Props) {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <Metric label="Ort. Aylık Gelir"   value={`₺${fmtK(avgRevenue)}`}    sub="6 ay ortalama"                                            color={avgRevenue > 0 ? 'text-pos-text' : 'text-[#94a3b8]'} />
         <Metric label="Ort. Aylık Gider"   value={`₺${fmtK(avgExpenses)}`}   sub="6 ay ortalama"                                            color="text-[#334155]" />
-        <Metric label="Borç Servisi/Ay"    value={hasTranches ? `₺${fmtK(monthlyDebtService)}` : '—'} sub="faiz tahmini" color={hasTranches ? 'text-orange-600' : 'text-[#94a3b8]'} />
+        <Metric label="Borç Servisi/Ay"    value={hasTranches ? `₺${fmtK(monthlyDebtService)}` : '—'} sub="faiz tahmini" color={hasTranches ? 'text-warn' : 'text-[#94a3b8]'} />
         <Metric label="Ort. Net/Ay"        value={`₺${fmtK(avgNet)}`}         sub="gelir − gider − borç"                                    color={avgNet >= 0 ? 'text-pos-text' : 'text-neg'} />
       </div>
 
@@ -172,7 +172,7 @@ export async function CashProjectionTab({ companyId }: Props) {
       <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#f1f5f9]">
           <div>
-            <span className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Baz Senaryo — Aylık Nakit Pozisyonu</span>
+            <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Baz Senaryo — Aylık Nakit Pozisyonu</span>
             <span className="ml-2 text-[9px] text-[#94a3b8]">({startYear} projeksiyonu)</span>
           </div>
           <Link href="/dashboard/planning?tab=scenarios" className="text-[10px] text-primary-600 font-semibold hover:underline">

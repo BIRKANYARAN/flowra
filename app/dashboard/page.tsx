@@ -61,7 +61,7 @@ const CASH_EXCLUDED_EXPENSE_TYPES = new Set(['loan_repayment','partner_financing
 const SITUATION_THEME: Record<SituationStatus, { bg: string; border: string; text: string; badge: string; icon: string }> = {
   healthy:  { bg: 'bg-pos-light',  border: 'border-pos-light', text: 'text-pos-text', badge: 'bg-pos-light text-pos-text', icon: '✓' },
   caution:  { bg: 'bg-warn-light',    border: 'border-warn-light',   text: 'text-warn-text',   badge: 'bg-warn-light text-warn-text',   icon: '⚠' },
-  'at-risk':{ bg: 'bg-orange-50',   border: 'border-orange-200',  text: 'text-orange-800',  badge: 'bg-orange-100 text-orange-700', icon: '!' },
+  'at-risk':{ bg: 'bg-warn-light',   border: 'border-warn/20',  text: 'text-warn-text',  badge: 'bg-warn-light text-warn-text', icon: '!' },
   critical: { bg: 'bg-neg-light',      border: 'border-neg-light',     text: 'text-neg-text',     badge: 'bg-neg-light text-neg-text',       icon: '✗' },
 }
 
@@ -722,7 +722,7 @@ export default async function DashboardPage() {
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-3 border-b border-[#f1f5f9]">
           <div className="flex items-center gap-2.5">
-            <span className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Karar Sırası</span>
+            <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Karar Sırası</span>
             {critAlerts.length > 0 && (
               <span className="inline-flex items-center text-[9px] font-black bg-neg-light text-white px-1.5 py-0.5 rounded leading-none">
                 {critAlerts.length} ACİL
@@ -824,7 +824,7 @@ export default async function DashboardPage() {
         cashDistributable < 0 ? 'border-neg-light' : cashDistributable > 0 ? 'border-[#e2e8f0]' : 'border-[#e2e8f0]'
       }`}>
         <div className="flex items-center justify-between px-5 py-2.5 border-b border-[#f1f5f9]">
-          <span className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Nakit Köprüsü</span>
+          <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Nakit Köprüsü</span>
           <Link href="/dashboard/finance?tab=cashflow" className="text-[10px] text-primary-600 font-semibold hover:text-primary-700">Cashflow →</Link>
         </div>
         {/* Rail: first 3 items normal, "= Dağıtılabilir" is the decision node — always dominant */}
@@ -877,7 +877,7 @@ export default async function DashboardPage() {
         {/* Runway summary — compressed single line */}
         <div className="lg:col-span-8 bg-white border border-[#e2e8f0] rounded shadow-sm">
           <div className="flex items-center justify-between px-5 py-2.5 border-b border-[#f1f5f9]">
-            <span className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Nakit Pisti</span>
+            <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Nakit Pisti</span>
             <Link href="/dashboard/planning?tab=cash-projection" className="text-[10px] text-primary-600 font-semibold hover:text-primary-700">Projeksiyon →</Link>
           </div>
           {/* Scenario strip: calm equal weight. Base gets slightly larger when in danger — no opacity tricks. */}
@@ -918,7 +918,7 @@ export default async function DashboardPage() {
         <div className="lg:col-span-4 flex flex-col gap-3">
           {/* Giderler breakdown */}
           <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3.5 shadow-sm">
-            <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Giderler</div>
+            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Giderler</div>
             <div className="text-xl font-black tabular-nums text-[#0f172a] leading-none mb-1">
               <span className="text-[#cbd5e1] font-normal text-sm mr-0.5">₺</span>{formatKpi(fs.expenses_total_try)}
             </div>
@@ -937,7 +937,7 @@ export default async function DashboardPage() {
           {outstanding > 0 && (
             <Link href="/dashboard/commercial?tab=proformas"
               className="bg-white border border-[#e2e8f0] rounded px-4 py-3.5 shadow-sm hover:border-[#e2e8f0] transition-colors">
-              <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">Açık Proformalar</div>
+              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">Açık Proformalar</div>
               <div className="text-xl font-black tabular-nums text-primary-700 leading-none">
                 <span className="text-primary-300 font-normal text-sm mr-0.5">₺</span>{formatKpi(outstanding)}
               </div>
@@ -949,7 +949,7 @@ export default async function DashboardPage() {
           {openPeriodDaysOverdue > 10 && (
             <Link href="/dashboard/cfo/period-close"
               className="bg-warn-light border border-warn-light rounded px-4 py-3.5 hover:border-warn transition-colors">
-              <div className="text-[10px] font-black uppercase tracking-widest text-warn mb-1.5">Dönem Kapanışı</div>
+              <div className="text-[0.65rem] font-black uppercase tracking-widest text-warn mb-1.5">Dönem Kapanışı</div>
               <div className="text-sm font-bold text-warn-text">{openPeriodDaysOverdue} gündür bekliyor</div>
               <div className="text-[10px] text-warn mt-1">CFO Cockpit'e git →</div>
             </Link>
@@ -959,7 +959,7 @@ export default async function DashboardPage() {
           {taskReminders.length > 0 && (
             <Link href="/dashboard/planning?tab=tasks"
               className="bg-white border border-[#e2e8f0] rounded px-4 py-3.5 shadow-sm hover:border-[#e2e8f0] transition-colors">
-              <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">Yaklaşan Görevler</div>
+              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">Yaklaşan Görevler</div>
               <div className="text-xl font-black text-primary-700">{taskReminders.length}</div>
               <div className="text-[10px] text-[#94a3b8] mt-1">
                 {taskReminders.filter(t => t.due_date < todayISO).length > 0
@@ -976,7 +976,7 @@ export default async function DashboardPage() {
       <div className="bg-white border border-[#e2e8f0] rounded shadow-sm overflow-hidden">
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#f1f5f9]">
           <div className="flex items-center gap-3">
-            <span className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Risk Radar</span>
+            <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Risk Radar</span>
             <span className={`text-[9px] font-black px-2 py-0.5 rounded ${situTheme.badge}`}>
               {situation.composite}/100
             </span>
@@ -1026,12 +1026,12 @@ export default async function DashboardPage() {
             const scoreColor =
               dim.score >= 80 ? 'text-pos-text' :
               dim.score >= 60 ? 'text-warn-text'   :
-              dim.score >= 40 ? 'text-orange-600'  :
+              dim.score >= 40 ? 'text-warn'  :
               'text-neg'
             const barColor =
               dim.score >= 80 ? 'bg-pos' :
               dim.score >= 60 ? 'bg-warn'   :
-              dim.score >= 40 ? 'bg-orange-400'  :
+              dim.score >= 40 ? 'bg-warn'  :
               'bg-neg'
             const statusLabel =
               dim.score >= 80 ? 'Sağlıklı' :

@@ -146,7 +146,7 @@ export function PartnerFinanceActions({ partners, onRefresh }: PartnerFinanceAct
         className="w-full flex items-center justify-between px-5 py-4 text-left group disabled:cursor-not-allowed"
       >
         <div className="flex items-center gap-2">
-          <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">
+          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
             Finansal İşlem Kaydet
           </div>
           {success && (
@@ -166,7 +166,7 @@ export function PartnerFinanceActions({ partners, onRefresh }: PartnerFinanceAct
 
           {/* Action type selector */}
           <div className="mb-5">
-            <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
+            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
               İşlem Türü
             </div>
             <div className="flex flex-wrap gap-2">
@@ -178,7 +178,7 @@ export function PartnerFinanceActions({ partners, onRefresh }: PartnerFinanceAct
                   className={[
                     'px-3 py-1.5 rounded text-xs font-semibold border transition-colors',
                     txType === action.tx_type
-                      ? 'bg-primary-50 text-primary-700 border-primary-200'
+                      ? 'bg-primary-50 text-primary-700 border-[#e2e8f0]'
                       : 'bg-white text-[#64748b] border-[#e2e8f0] hover:bg-[#f8fafc]',
                   ].join(' ')}
                   title={action.desc}
@@ -199,7 +199,7 @@ export function PartnerFinanceActions({ partners, onRefresh }: PartnerFinanceAct
             <div>
               <label
                 htmlFor="pfa-partner"
-                className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] block mb-1.5 leading-none"
+                className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] block mb-1.5 leading-none"
               >
                 Ortak <span className="text-neg">*</span>
               </label>
@@ -207,7 +207,7 @@ export function PartnerFinanceActions({ partners, onRefresh }: PartnerFinanceAct
                 id="pfa-partner"
                 value={form.partner_id}
                 onChange={e => field('partner_id', e.target.value)}
-                className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
+                className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                 required
               >
                 <option value="">— Ortak seçin —</option>
@@ -222,7 +222,7 @@ export function PartnerFinanceActions({ partners, onRefresh }: PartnerFinanceAct
               <div>
                 <label
                   htmlFor="pfa-amount"
-                  className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] block mb-1.5 leading-none"
+                  className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] block mb-1.5 leading-none"
                 >
                   Tutar (₺) <span className="text-neg">*</span>
                 </label>
@@ -234,14 +234,14 @@ export function PartnerFinanceActions({ partners, onRefresh }: PartnerFinanceAct
                   placeholder="0.00"
                   value={form.amount}
                   onChange={e => field('amount', e.target.value)}
-                  className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary-300"
+                  className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand/30"
                   required
                 />
               </div>
               <div>
                 <label
                   htmlFor="pfa-date"
-                  className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] block mb-1.5 leading-none"
+                  className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] block mb-1.5 leading-none"
                 >
                   Tarih <span className="text-neg">*</span>
                 </label>
@@ -250,7 +250,7 @@ export function PartnerFinanceActions({ partners, onRefresh }: PartnerFinanceAct
                   type="date"
                   value={form.tx_date}
                   onChange={e => field('tx_date', e.target.value)}
-                  className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
+                  className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                   required
                 />
               </div>
@@ -260,7 +260,7 @@ export function PartnerFinanceActions({ partners, onRefresh }: PartnerFinanceAct
             <div>
               <label
                 htmlFor="pfa-notes"
-                className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] block mb-1.5 leading-none"
+                className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] block mb-1.5 leading-none"
               >
                 Notlar
               </label>
@@ -270,7 +270,7 @@ export function PartnerFinanceActions({ partners, onRefresh }: PartnerFinanceAct
                 onChange={e => field('notes', e.target.value)}
                 rows={2}
                 placeholder="İsteğe bağlı açıklama…"
-                className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300 resize-none"
+                className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 resize-none"
               />
             </div>
 

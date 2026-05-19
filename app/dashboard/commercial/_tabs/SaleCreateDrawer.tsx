@@ -171,7 +171,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
         {/* Header */}
         <div className="flex items-start justify-between px-5 py-4 border-b border-[#e2e8f0] flex-shrink-0">
           <div>
-            <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] leading-none">
+            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] leading-none">
               Ticari
             </div>
             <div className="text-base font-black text-[#0f172a] mt-1">Yeni Satış</div>
@@ -190,14 +190,14 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
 
           {/* ── Section 1: Müşteri ─────────────────────────────────────────── */}
           <div>
-            <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
+            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
               Müşteri Bilgileri
             </div>
             <div className="space-y-3">
               <div>
                 <label
                   htmlFor="sc-customer"
-                  className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] block mb-1.5 leading-none"
+                  className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] block mb-1.5 leading-none"
                 >
                   Müşteri Adı <span className="text-neg">*</span>
                 </label>
@@ -207,7 +207,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
                   value={customerName}
                   onChange={e => { setCustomerName(e.target.value); setError('') }}
                   placeholder="Müşteri veya firma adı"
-                  className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
+                  className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                   required
                   autoFocus
                 />
@@ -217,7 +217,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
                 <div>
                   <label
                     htmlFor="sc-sale-date"
-                    className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] block mb-1.5 leading-none"
+                    className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] block mb-1.5 leading-none"
                   >
                     Satış Tarihi <span className="text-neg">*</span>
                   </label>
@@ -226,14 +226,14 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
                     type="date"
                     value={saleDate}
                     onChange={e => { setSaleDate(e.target.value); setError('') }}
-                    className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
+                    className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                     required
                   />
                 </div>
                 <div>
                   <label
                     htmlFor="sc-due-date"
-                    className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] block mb-1.5 leading-none"
+                    className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] block mb-1.5 leading-none"
                   >
                     Ödeme Vadesi
                   </label>
@@ -242,7 +242,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
                     type="date"
                     value={dueDate}
                     onChange={e => setDueDate(e.target.value)}
-                    className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
+                    className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                   />
                 </div>
               </div>
@@ -252,7 +252,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
           {/* ── Section 2: Kalemler ─────────────────────────────────────────── */}
           <div>
             <div className="flex items-center justify-between mb-3">
-              <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">
+              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
                 Kalemler
               </div>
               <button
@@ -277,7 +277,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
                       placeholder="Açıklama (ürün/hizmet)"
                       value={item.description}
                       onChange={e => updateItem(idx, 'description', e.target.value)}
-                      className="flex-1 border border-[#e2e8f0] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300 bg-white"
+                      className="flex-1 border border-[#e2e8f0] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 bg-white"
                     />
                     {items.length > 1 && (
                       <button
@@ -304,7 +304,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
                         placeholder="1"
                         value={item.quantity}
                         onChange={e => updateItem(idx, 'quantity', e.target.value)}
-                        className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary-300 bg-white"
+                        className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand/30 bg-white"
                       />
                     </div>
                     <div>
@@ -318,7 +318,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
                         placeholder="0.00"
                         value={item.unit_price}
                         onChange={e => updateItem(idx, 'unit_price', e.target.value)}
-                        className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary-300 bg-white"
+                        className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand/30 bg-white"
                       />
                     </div>
                     <div>
@@ -328,7 +328,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
                       <select
                         value={item.kdv_rate}
                         onChange={e => updateItem(idx, 'kdv_rate', Number(e.target.value))}
-                        className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300 bg-white"
+                        className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 bg-white"
                       >
                         <option value={0}>%0</option>
                         <option value={10}>%10</option>
@@ -370,7 +370,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
           <div>
             <label
               htmlFor="sc-notes"
-              className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] block mb-1.5 leading-none"
+              className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] block mb-1.5 leading-none"
             >
               Notlar
             </label>
@@ -380,7 +380,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
               onChange={e => setNotes(e.target.value)}
               rows={3}
               placeholder="İsteğe bağlı açıklama…"
-              className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300 resize-none"
+              className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 resize-none"
             />
           </div>
 

@@ -10,7 +10,7 @@ import type { CompanyBank, UserSettings } from '@/types'
 import { resolveCompanyId } from '@/lib/resolve-company'
 
 // DS-aligned style tokens (primary instead of indigo, consistent radius)
-const IL  = 'w-full border border-[#e2e8f0] rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400 transition-colors'
+const IL  = 'w-full border border-[#e2e8f0] rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-colors'
 const LAB = 'block text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5'
 
 type Msg = { text: string; kind: 'success' | 'error' | 'info' }
@@ -340,7 +340,7 @@ export default function SettingsPage() {
   // ── Render ─────────────────────────────────────────────────────────────────
   if (loading) return (
     <div className="flex items-center justify-center h-40">
-      <div className="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+      <div className="w-6 h-6 border-2 border-brand border-t-transparent rounded-full animate-spin" />
     </div>
   )
 
@@ -400,7 +400,7 @@ export default function SettingsPage() {
                 )}
                 {uploading && (
                   <div className="absolute inset-0 bg-white/80 flex items-center justify-center rounded pointer-events-none">
-                    <div className="w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+                    <div className="w-4 h-4 border-2 border-brand border-t-transparent rounded-full animate-spin" />
                   </div>
                 )}
               </label>
@@ -598,7 +598,7 @@ export default function SettingsPage() {
                     key={b.id}
                     className={`flex items-center justify-between rounded px-3 py-2 border transition-colors ${
                       b.is_default
-                        ? 'border-primary-200 bg-primary-50'
+                        ? 'border-[#e2e8f0] bg-primary-50'
                         : 'border-[#e2e8f0] hover:bg-[#f8fafc]'
                     }`}
                   >
@@ -734,7 +734,7 @@ export default function SettingsPage() {
                 onClick={loadDemo}
                 loading={demoLoading === 'seed'}
                 disabled={demoLoading !== false}
-                className="border-primary-200 text-primary-700 bg-primary-50 hover:bg-primary-100"
+                className="border-[#e2e8f0] text-primary-700 bg-primary-50 hover:bg-primary-100"
               >
                 {demoLoading === 'seed' ? 'Yükleniyor...' : 'Demo Veri Yükle'}
               </FlowraButton>
@@ -756,7 +756,7 @@ export default function SettingsPage() {
       {/* ── Quick Links ─────────────────────────────────────────────────── */}
       <div className="flex items-center gap-3">
         <a href="/dashboard/settings/alerts"
-          className="text-xs font-semibold text-primary-600 hover:text-primary-700 px-3 py-2 rounded hover:bg-primary-50 border border-primary-200 transition-colors">
+          className="text-xs font-semibold text-primary-600 hover:text-primary-700 px-3 py-2 rounded hover:bg-primary-50 border border-[#e2e8f0] transition-colors">
           Uyarı Kuralları →
         </a>
       </div>

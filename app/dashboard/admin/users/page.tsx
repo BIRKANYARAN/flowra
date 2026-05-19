@@ -17,7 +17,7 @@ import Link from 'next/link'
 import type { CompanyMember, MemberRole } from '@/types'
 
 // ── Style tokens ──────────────────────────────────────────────────────────────
-const IL  = 'w-full border border-[#e2e8f0] rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white transition-colors'
+const IL  = 'w-full border border-[#e2e8f0] rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand bg-white transition-colors'
 const LAB = 'block text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5'
 const SEL = `${IL} cursor-pointer`
 
@@ -151,7 +151,7 @@ export default function AdminUsersPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-40">
-        <div className="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-6 h-6 border-2 border-brand border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
@@ -309,7 +309,7 @@ export default function AdminUsersPage() {
                   {editingId === m.id ? (
                     <>
                       <select
-                        className="border border-[#e2e8f0] rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-primary-400"
+                        className="border border-[#e2e8f0] rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-brand/30"
                         value={editingRole}
                         onChange={(e: ChangeEvent<HTMLSelectElement>) => setEditingRole(e.target.value as MemberRole)}
                         autoFocus

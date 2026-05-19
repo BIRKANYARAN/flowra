@@ -51,7 +51,7 @@ interface BalanceSheet {
 function Section({ title }: { title: string }) {
   return (
     <div className="px-4 py-2 bg-[#f8fafc] border-b border-[#e2e8f0]">
-      <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">{title}</div>
+      <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">{title}</div>
     </div>
   )
 }
@@ -170,10 +170,10 @@ export default function BalanceSheetPage() {
           <div className="flex flex-col gap-4">
             {/* Liabilities */}
             <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden print:border-[#e2e8f0]">
-              <div className="px-4 py-3 bg-orange-50 border-b border-orange-100">
+              <div className="px-4 py-3 bg-warn-light border-b border-warn/10">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-black uppercase tracking-widest text-orange-600">Kaynaklar</span>
-                  <span className="text-sm font-black tabular-nums text-orange-700">{fmt(bs.liabilities.total_liabilities_try)}</span>
+                  <span className="text-xs font-black uppercase tracking-widest text-warn">Kaynaklar</span>
+                  <span className="text-sm font-black tabular-nums text-warn-text">{fmt(bs.liabilities.total_liabilities_try)}</span>
                 </div>
               </div>
               <Section title="Kısa Vadeli" />

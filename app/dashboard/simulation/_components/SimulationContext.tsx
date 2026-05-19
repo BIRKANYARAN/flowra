@@ -117,7 +117,7 @@ export async function SimulationContext({ companyId }: Props) {
             emerald: 'text-pos-text',
             red:     'text-neg',
             amber:   'text-warn-text',
-            orange:  'text-orange-700',
+            orange:  'text-warn-text',
             gray:    'text-[#0f172a]',
           }
           return (

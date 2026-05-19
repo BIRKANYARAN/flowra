@@ -402,7 +402,7 @@ export default function CollectionsClient({ initialRows }: Props) {
               placeholder="Müşteri ara…"
               value={search}
               onChange={e => { setSearch(e.target.value) }}
-              className="pl-8 pr-3 py-1.5 text-xs border border-[#e2e8f0] rounded focus:outline-none focus:ring-2 focus:ring-primary-300 bg-white w-44"
+              className="pl-8 pr-3 py-1.5 text-xs border border-[#e2e8f0] rounded focus:outline-none focus:ring-2 focus:ring-brand/30 bg-white w-44"
             />
             {search && (
               <button
@@ -484,18 +484,20 @@ export default function CollectionsClient({ initialRows }: Props) {
 
         {loading ? (
           <div className="py-16 flex items-center justify-center">
-            <div className="w-5 h-5 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+            <div className="w-5 h-5 border-2 border-brand border-t-transparent rounded-full animate-spin" />
           </div>
         ) : displayRows.length === 0 ? (
-          <div className="py-16 text-center">
-            <div className="text-2xl mb-2">{search ? '🔍' : '🎉'}</div>
-            <div className="text-sm text-[#94a3b8]">
+          <div className="py-12 text-center">
+            <div className="text-xs font-medium text-[#334155] mb-1">
               {search
-                ? `"${search}" için eşleşen kayıt bulunamadı`
+                ? 'Eşleşen kayıt bulunamadı'
                 : tab === 'pending' ? 'Bekleyen tahsilat yok' : 'Bu filtrede kayıt yok'}
             </div>
+            <div className="text-[0.65rem] text-[#94a3b8]">
+              {search ? `"${search}" araması için sonuç yok` : 'Tüm tahsilatlar bu görünümde gösterilir'}
+            </div>
             {search && (
-              <button onClick={() => setSearch('')} className="mt-2 text-xs text-primary-600 hover:underline">
+              <button onClick={() => setSearch('')} className="mt-3 text-xs font-semibold text-brand hover:text-brand-light">
                 Aramayı temizle
               </button>
             )}
@@ -506,7 +508,7 @@ export default function CollectionsClient({ initialRows }: Props) {
             {overdueRows.length > 0 && (
               <div>
                 <div className="flex items-center gap-2 px-4 py-2 bg-neg-light border-b border-neg-light">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-neg">
+                  <span className="text-[0.65rem] font-black uppercase tracking-widest text-neg">
                     Vadesi Geçmiş
                   </span>
                   <span className="text-[10px] font-bold bg-neg-light text-neg-text px-1.5 py-0.5 rounded">
@@ -522,7 +524,7 @@ export default function CollectionsClient({ initialRows }: Props) {
               <div>
                 {overdueRows.length > 0 && regularRows.length > 0 && (
                   <div className="px-4 py-2 bg-[#f8fafc] border-b border-[#e2e8f0]">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">
+                    <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
                       Diğer Kayıtlar
                     </span>
                   </div>

@@ -103,7 +103,7 @@ function fmtDateTime(iso: string): string {
 const STATUS_THEME = {
   healthy:  { bg: 'bg-pos-light', border: 'border-pos-light', text: 'text-pos-text', label: 'Sağlıklı' },
   caution:  { bg: 'bg-warn-light',   border: 'border-warn-light',   text: 'text-warn-text',   label: 'Dikkat' },
-  'at-risk':{ bg: 'bg-orange-50',  border: 'border-orange-200',  text: 'text-orange-700',  label: 'Risk' },
+  'at-risk':{ bg: 'bg-warn-light',  border: 'border-warn/20',  text: 'text-warn-text',  label: 'Risk' },
   critical: { bg: 'bg-neg-light',     border: 'border-neg-light',     text: 'text-neg-text',     label: 'Kritik' },
 } as const
 
@@ -111,8 +111,8 @@ const STATUS_THEME = {
 
 function MetricCard({ label, value, sub, highlight = false }: { label: string; value: string; sub?: string; highlight?: boolean }) {
   return (
-    <div className={`rounded border px-4 py-3 ${highlight ? 'border-primary-200 bg-primary-50/50' : 'border-[#e2e8f0] bg-white'}`}>
-      <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{label}</div>
+    <div className={`rounded border px-4 py-3 ${highlight ? 'border-[#e2e8f0] bg-primary-50/50' : 'border-[#e2e8f0] bg-white'}`}>
+      <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{label}</div>
       <div className={`text-xl font-black tabular-nums ${highlight ? 'text-primary-700' : 'text-[#0f172a]'}`}>{value}</div>
       {sub && <div className="text-[10px] text-[#94a3b8] mt-0.5">{sub}</div>}
     </div>
@@ -147,7 +147,7 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
       {/* Header strip */}
       <div className={`rounded border px-5 py-4 ${theme.bg} ${theme.border} flex items-start justify-between gap-4`}>
         <div className="min-w-0">
-          <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">{snap.period_label} · Yönetişim Raporu</div>
+          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">{snap.period_label} · Yönetişim Raporu</div>
           <div className={`text-lg font-black mt-0.5 ${theme.text}`}>
             {theme.label} · Skor {Math.round(snap.composite_score ?? 0)}/100
           </div>
@@ -176,7 +176,7 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
 
       {/* P&L snapshot */}
       <section>
-        <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Dönem Gelir Tablosu</div>
+        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Dönem Gelir Tablosu</div>
         <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
           <MetricCard label="Gelir"      value={fmt(snap.revenue_try)} />
           <MetricCard label="SMMM"       value={fmt(snap.cogs_try)} />
@@ -188,7 +188,7 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
 
       {/* Balance sheet */}
       <section>
-        <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Bilanço Özeti</div>
+        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Bilanço Özeti</div>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           <MetricCard label="Toplam Varlık"  value={fmt(snap.total_assets_try)} />
           <MetricCard label="Toplam Borç"    value={fmt(snap.total_liabilities_try)} />
@@ -199,7 +199,7 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
 
       {/* Operational metrics */}
       <section>
-        <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Operasyonel Metrikler</div>
+        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Operasyonel Metrikler</div>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           <MetricCard
             label="Nakit Pisti"
@@ -226,15 +226,15 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
       {/* Partner positions */}
       {snap.partner_balances.length > 0 && (
         <section>
-          <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Ortak Pozisyonları</div>
+          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Ortak Pozisyonları</div>
           <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[#e2e8f0] bg-[#f8fafc]">
-                  <th className="text-left px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Ortak</th>
-                  <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Pay</th>
-                  <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Borç Bakiyesi</th>
-                  <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">İmza</th>
+                  <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ortak</th>
+                  <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Pay</th>
+                  <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Borç Bakiyesi</th>
+                  <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">İmza</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#f1f5f9]">
@@ -260,7 +260,7 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
                               placeholder="Not (isteğe bağlı)"
                               value={signNotes[pb.partner_id] ?? ''}
                               onChange={e => setSignNotes(prev => ({ ...prev, [pb.partner_id]: e.target.value }))}
-                              className="text-xs border border-[#e2e8f0] rounded px-2 py-1 w-32 focus:outline-none focus:ring-1 focus:ring-primary-400"
+                              className="text-xs border border-[#e2e8f0] rounded px-2 py-1 w-32 focus:outline-none focus:ring-2 focus:ring-brand/30"
                             />
                             <button
                               onClick={() => onSignoff(report.id, pb.partner_id, pb.partner_name, signNotes[pb.partner_id] ?? '')}
@@ -286,7 +286,7 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
       {/* Notes */}
       {report.notes && (
         <section>
-          <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-2">Notlar</div>
+          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">Notlar</div>
           <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-3 text-sm text-[#334155]">{report.notes}</div>
         </section>
       )}
@@ -463,14 +463,14 @@ export default function GovernancePage() {
       {/* Generate form */}
       {showGenForm && (
         <div data-print-hide className="bg-white border border-[#e2e8f0] rounded px-5 py-5 shadow-sm">
-          <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-4">Yeni Yönetişim Raporu Oluştur</div>
+          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">Yeni Yönetişim Raporu Oluştur</div>
           <div className="grid grid-cols-3 gap-3 mb-4">
             <div>
               <label className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] block mb-1">Yıl</label>
               <select
                 value={genYear}
                 onChange={e => setGenYear(Number(e.target.value))}
-                className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
+                className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
               >
                 {[now.getFullYear() - 1, now.getFullYear()].map(y => (
                   <option key={y} value={y}>{y}</option>
@@ -482,7 +482,7 @@ export default function GovernancePage() {
               <select
                 value={genMonth}
                 onChange={e => setGenMonth(Number(e.target.value))}
-                className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
+                className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
               >
                 {MONTHS.map((m, i) => (
                   <option key={i + 1} value={i + 1}>{m}</option>
@@ -496,7 +496,7 @@ export default function GovernancePage() {
                 value={genNotes}
                 onChange={e => setGenNotes(e.target.value)}
                 placeholder="Yönetim kurulu notu…"
-                className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
+                className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
               />
             </div>
           </div>
@@ -530,8 +530,7 @@ export default function GovernancePage() {
         </div>
       ) : reports.length === 0 ? (
         <div className="bg-white border border-[#e2e8f0] rounded p-10 text-center">
-          <div className="text-3xl mb-3">📋</div>
-          <div className="text-sm font-semibold text-[#334155] mb-1">Henüz yönetişim raporu yok</div>
+          <div className="text-xs font-medium text-[#334155] mb-1">Henüz yönetişim raporu yok</div>
           <div className="text-xs text-[#94a3b8] mb-5">
             İlk aylık raporu oluşturarak ortak onay sürecini başlatın.
             <br />Raporlar şirketin o ayki finansal pozisyonunun kalıcı kaydıdır.
@@ -548,7 +547,7 @@ export default function GovernancePage() {
 
           {/* Report list */}
           <div data-print-hide className="flex flex-col gap-2">
-            <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] px-1 mb-1">
+            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] px-1 mb-1">
               {reports.length} Rapor
             </div>
             {reports.map(r => {
@@ -562,7 +561,7 @@ export default function GovernancePage() {
                   onClick={() => setSelectedId(r.id)}
                   className={`w-full text-left rounded border px-4 py-3 transition-all ${
                     selectedId === r.id
-                      ? 'border-primary-300 bg-primary-50/50 shadow-sm'
+                      ? 'border-[#e2e8f0] bg-primary-50/50 shadow-sm'
                       : 'border-[#e2e8f0] bg-white hover:border-[#e2e8f0]'
                   }`}
                 >

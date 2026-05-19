@@ -311,7 +311,7 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
             placeholder="Ürün ara..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="border border-[#e2e8f0] rounded px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 w-56"
+            className="border border-[#e2e8f0] rounded px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 w-56"
           />
         </div>
       </div>
@@ -428,7 +428,7 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
                             onBlur={() => savePrice(p.id)}
                             onKeyDown={e => handlePriceKeyDown(e, p.id)}
                             disabled={savingPrice}
-                            className="w-28 ml-auto text-right border border-primary-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
+                            className="w-28 ml-auto text-right border border-[#e2e8f0] rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                           />
                         ) : (
                           <button
@@ -585,7 +585,7 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
                     <label className="block text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">Adet</label>
                     <input
                       type="number" min="1" step="1"
-                      className="w-full border border-[#e2e8f0] rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
+                      className="w-full border border-[#e2e8f0] rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                       value={costCalcQty}
                       onChange={e => setCostCalcQty(e.target.value)}
                     />
@@ -595,7 +595,7 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
                     <div key={i} className="space-y-1.5 p-3 bg-[#f8fafc] rounded">
                       <div className="flex items-center gap-2">
                         <input
-                          className="flex-1 border border-[#e2e8f0] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 bg-white"
+                          className="flex-1 border border-[#e2e8f0] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 bg-white"
                           value={row.label}
                           onChange={e => setCostRows(rs => rs.map((r, j) => j === i ? { ...r, label: e.target.value } : r))}
                           placeholder="Kalem adı"
@@ -610,13 +610,13 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
                       <div className="flex items-center gap-2">
                         <input
                           type="number" min="0" step="0.01"
-                          className="flex-1 border border-[#e2e8f0] rounded px-3 py-2 text-sm text-right focus:outline-none focus:ring-2 focus:ring-primary-400 bg-white"
+                          className="flex-1 border border-[#e2e8f0] rounded px-3 py-2 text-sm text-right focus:outline-none focus:ring-2 focus:ring-brand/30 bg-white"
                           value={row.amount}
                           onChange={e => setCostRows(rs => rs.map((r, j) => j === i ? { ...r, amount: e.target.value } : r))}
                           placeholder="0.00"
                         />
                         <select
-                          className="border border-[#e2e8f0] rounded px-2 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-400"
+                          className="border border-[#e2e8f0] rounded px-2 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand/30"
                           value={row.currency}
                           onChange={e => setCostRows(rs => rs.map((r, j) => j === i ? { ...r, currency: e.target.value as Currency } : r))}
                         >
@@ -624,7 +624,7 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
                         </select>
                         <input
                           type="date"
-                          className="border border-[#e2e8f0] rounded px-2 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-400"
+                          className="border border-[#e2e8f0] rounded px-2 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand/30"
                           value={row.entry_date}
                           onChange={e => setCostRows(rs => rs.map((r, j) => j === i ? { ...r, entry_date: e.target.value } : r))}
                         />

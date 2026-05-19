@@ -128,7 +128,7 @@ export default function WorkflowsPage() {
                   <div className="flex-1 min-w-0">
                     {/* Type badge */}
                     <div className="flex items-center gap-2 mb-1.5">
-                      <span className="text-[10px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded bg-warn-light text-warn-text">
+                      <span className="text-[0.65rem] font-black uppercase tracking-widest px-1.5 py-0.5 rounded bg-warn-light text-warn-text">
                         {TYPE_LABELS[w.workflow_type] ?? w.workflow_type}
                       </span>
                       {w.expires_at && (
@@ -178,7 +178,7 @@ export default function WorkflowsPage() {
                     placeholder="Not (opsiyonel)…"
                     value={notes[w.id] ?? ''}
                     onChange={e => setNotes(n => ({ ...n, [w.id]: e.target.value }))}
-                    className="w-full border border-[#e2e8f0] rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary-400 bg-[#f8fafc]"
+                    className="w-full border border-[#e2e8f0] rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-brand/30 bg-[#f8fafc]"
                   />
                 </div>
 

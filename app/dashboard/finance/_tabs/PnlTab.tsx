@@ -202,7 +202,7 @@ export async function PnlTab({ userId, companyId }: Props) {
 
         {/* Main waterfall */}
         <div className="bg-white border border-[#e2e8f0] rounded p-5 shadow-sm">
-          <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-4">
+          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">
             Kâr / Zarar — {fmtMonth(currentYM)}
           </div>
           <div className="space-y-0">
@@ -234,18 +234,18 @@ export async function PnlTab({ userId, companyId }: Props) {
 
         {/* KDV Özeti */}
         <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
-          <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-3">KDV Özeti</div>
+          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">KDV Özeti</div>
           <div className="grid grid-cols-3 gap-3">
             {[
               { label: 'Hesaplanan KDV',   value: salesVat,    color: 'text-pos-text' },
               { label: '− İndirilecek KDV', value: purchaseVat + expenseVat, color: 'text-neg' },
-              { label: 'Net KDV',           value: netVat,      color: netVat > 0 ? 'text-orange-700' : 'text-pos-text' },
+              { label: 'Net KDV',           value: netVat,      color: netVat > 0 ? 'text-warn-text' : 'text-pos-text' },
             ].map(c => (
               <div key={c.label} className="text-center">
                 <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{c.label}</div>
                 <div className={`text-sm font-black tabular-nums ${c.color}`}>{fmtFull(Math.abs(c.value))}</div>
                 {c.label === 'Net KDV' && (
-                  <div className={`text-[9px] mt-0.5 font-semibold ${netVat > 0 ? 'text-orange-600' : 'text-pos-text'}`}>
+                  <div className={`text-[9px] mt-0.5 font-semibold ${netVat > 0 ? 'text-warn' : 'text-pos-text'}`}>
                     {netVat > 0 ? '⬆ Ödenecek' : netVat < 0 ? '⬇ Devir' : 'Sıfır'}
                   </div>
                 )}
@@ -275,7 +275,7 @@ export async function PnlTab({ userId, companyId }: Props) {
 
         {/* 6-ay mini trend */}
         <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
-          <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-3">6 Aylık Net Kâr Trendi</div>
+          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">6 Aylık Net Kâr Trendi</div>
           <div className="space-y-1.5">
             {monthYMs.map((ym, i) => {
               const ms      = historySummaries[i]

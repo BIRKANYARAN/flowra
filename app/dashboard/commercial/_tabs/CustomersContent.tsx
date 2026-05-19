@@ -157,7 +157,7 @@ export async function CustomersContent({ companyId }: Props) {
       {atRiskCustomers.length > 0 && (
         <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
           <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#f1f5f9]">
-            <span className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">
+            <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
               Müşteri Ödeme Riski
             </span>
             <span className="text-[9px] text-[#94a3b8]">

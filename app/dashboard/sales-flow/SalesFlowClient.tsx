@@ -103,7 +103,7 @@ function Stage({ stageKey, step, label, count, value, color, sub, selected, onCl
     <button type="button" onClick={onClick}
       className={`flex-1 min-w-0 text-left transition-all group focus:outline-none ${selected ? 'scale-[1.02]' : ''}`}>
       <div className={`border-2 rounded px-4 py-4 h-full transition-all ${color} ${
-        selected ? 'shadow-sm ring-2 ring-offset-1 ring-primary-400' : 'group-hover:shadow-sm group-hover:border-primary-300'
+        selected ? 'shadow-sm ring-2 ring-offset-1 ring-primary-400' : 'group-hover:shadow-sm group-hover:border-[#e2e8f0]'
       }`}>
         <div className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-0.5">{step}</div>
         <div className="font-black text-base leading-tight mb-2">{label}</div>
@@ -439,7 +439,7 @@ export default function SalesFlowClient({ initialProformas, initialSales, initia
         <div className="flex items-center self-center text-[#cbd5e1] text-xl font-black select-none px-0.5">→</div>
         <Stage stageKey="satis" step="3. Satış" label="Faturalanan"
           count={converted.length} value={sumTotal(converted)}
-          color="bg-primary-50 border-primary-200 text-primary-900" sub="proforma → satış"
+          color="bg-primary-50 border-[#e2e8f0] text-primary-900" sub="proforma → satış"
           selected={selected === 'satis'} onClick={() => toggle('satis')} />
         <div className="flex items-center self-center text-[#cbd5e1] text-xl font-black select-none px-0.5">→</div>
         <Stage stageKey="tahsilat" step="4. Tahsilat" label="Nakit Girişi"

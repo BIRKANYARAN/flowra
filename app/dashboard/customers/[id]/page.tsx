@@ -68,7 +68,7 @@ const STATUS_PAYMENT: Record<string, { label: string; cls: string }> = {
   pending:   { label: 'Bekliyor', cls: 'bg-warn-light text-warn-text' },
   paid:      { label: 'Ödendi',   cls: 'bg-pos-light text-pos-text' },
   partial:   { label: 'Kısmi',    cls: 'bg-yellow-100 text-yellow-700' },
-  overdue:   { label: 'Gecikti',  cls: 'bg-orange-100 text-orange-700' },
+  overdue:   { label: 'Gecikti',  cls: 'bg-warn-light text-warn-text' },
   cancelled: { label: 'İptal',    cls: 'bg-[#f1f5f9] text-[#64748b]' },
 }
 
@@ -146,7 +146,7 @@ export default function CustomerDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-40">
-        <div className="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-6 h-6 border-2 border-brand border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }

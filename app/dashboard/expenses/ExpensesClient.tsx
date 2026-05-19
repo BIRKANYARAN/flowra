@@ -17,7 +17,7 @@ import { FlowraCard }   from '@/components/ui-kit/FlowraCard'
 import { FlowraInput }  from '@/components/ui-kit/FlowraInput'
 import { CURRENCIES_EXTENDED, EXPENSE_CATEGORIES, type Expense } from '@/types'
 
-const IL  = 'w-full border border-[#e2e8f0] rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400 transition-colors bg-white'
+const IL  = 'w-full border border-[#e2e8f0] rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-colors bg-white'
 const LAB = 'block text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5'
 
 export const CATEGORY_LABELS: Record<string, string> = {
@@ -279,7 +279,7 @@ export default function ExpensesClient({
                     onChange={e => setForm(f => ({ ...f, amount: e.target.value }))}
                   />
                   <select
-                    className="border border-[#e2e8f0] rounded px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 bg-white transition-colors"
+                    className="border border-[#e2e8f0] rounded px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 bg-white transition-colors"
                     value={form.currency}
                     onChange={e => setForm(f => ({ ...f, currency: e.target.value }))}
                   >
@@ -336,7 +336,7 @@ export default function ExpensesClient({
             </label>
 
             {form.is_recurring ? (
-              <div className="grid grid-cols-3 gap-4 pl-3 border-l-2 border-primary-200">
+              <div className="grid grid-cols-3 gap-4 pl-3 border-l-2 border-[#e2e8f0]">
                 <div>
                   <label className={LAB}>Sıklık</label>
                   <select className={IL} value={form.frequency}

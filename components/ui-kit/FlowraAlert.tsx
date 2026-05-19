@@ -14,7 +14,7 @@ const PALETTE: Record<Tone, { bg: string; fg: string; icon: string }> = {
   danger:  { bg: 'bg-neg-light border-neg-light',       fg: 'text-neg-text',    icon: 'flame'      },
   info:    { bg: 'bg-info-light border-info-light',     fg: 'text-info-text',   icon: 'info'       },
   success: { bg: 'bg-pos-light border-pos-light', fg: 'text-pos-text', icon: 'check'  },
-  orange:  { bg: 'bg-orange-50 border-orange-200', fg: 'text-orange-700', icon: 'alert'      },
+  orange:  { bg: 'bg-warn-light border-warn/20', fg: 'text-warn-text', icon: 'alert'      },
 }
 
 interface FlowraAlertProps {

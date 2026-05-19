@@ -73,14 +73,14 @@ const GRADE_COLORS: Record<RiskGrade, string> = {
   A: 'bg-pos-light border-pos-light text-pos-text',
   B: 'bg-info-light border-info-light text-info-text',
   C: 'bg-warn-light border-warn-light text-warn-text',
-  D: 'bg-orange-50 border-orange-200 text-orange-800',
+  D: 'bg-warn-light border-warn/20 text-warn-text',
   F: 'bg-neg-light border-neg-light text-neg-text',
 }
 const GRADE_DOT: Record<RiskGrade, string> = {
-  A: 'bg-pos-light', B: 'bg-info-light0', C: 'bg-warn-light', D: 'bg-orange-500', F: 'bg-neg-light',
+  A: 'bg-pos-light', B: 'bg-info-light0', C: 'bg-warn-light', D: 'bg-warn', F: 'bg-neg-light',
 }
 const GRADE_BAR: Record<RiskGrade, string> = {
-  A: 'bg-pos', B: 'bg-info', C: 'bg-warn', D: 'bg-orange-400', F: 'bg-neg',
+  A: 'bg-pos', B: 'bg-info', C: 'bg-warn', D: 'bg-warn', F: 'bg-neg',
 }
 
 const FMT = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 })
@@ -198,7 +198,7 @@ export function RiskTab({ loading }: RiskTabProps) {
       {/* ── Compliance Warnings ─────────────────────────────────────────────── */}
       {cw.length > 0 && (
         <div className="bg-warn-light border border-warn-light rounded px-4 py-3">
-          <div className="text-[10px] font-black uppercase tracking-widest text-warn-text mb-2">
+          <div className="text-[0.65rem] font-black uppercase tracking-widest text-warn-text mb-2">
             ⚠ Yasal Uyum Uyarıları
           </div>
           <div className="space-y-1.5">

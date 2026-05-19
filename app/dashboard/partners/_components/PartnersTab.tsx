@@ -166,7 +166,7 @@ export function PartnersTab({
                         <div>
                           <label className="block text-[10px] font-semibold text-[#94a3b8] uppercase tracking-wide mb-1">İsim</label>
                           <input
-                            className="w-full border border-[#e2e8f0] rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
+                            className="w-full border border-[#e2e8f0] rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                             value={editForm.name}
                             onChange={e => onEditFormChange({ ...editForm, name: e.target.value })}
                             autoFocus
@@ -176,7 +176,7 @@ export function PartnersTab({
                           <label className="block text-[10px] font-semibold text-[#94a3b8] uppercase tracking-wide mb-1">Pay Oranı (%)</label>
                           <input
                             type="number" min="0.01" max="100" step="0.01"
-                            className="w-full border border-[#e2e8f0] rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
+                            className="w-full border border-[#e2e8f0] rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                             value={editForm.shareRatioPct}
                             onChange={e => onEditFormChange({ ...editForm, shareRatioPct: e.target.value })}
                           />

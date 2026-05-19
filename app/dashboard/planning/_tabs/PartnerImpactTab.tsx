@@ -140,18 +140,18 @@ export async function PartnerImpactTab({ companyId, userId }: Props) {
 
       {/* Negative distributable cash warning */}
       {cashDistributable <= 0 && netIncome > 0 && (
-        <div className="bg-orange-50 border border-orange-300 rounded px-4 py-3 flex items-start gap-3">
+        <div className="bg-warn-light border border-warn/30 rounded px-4 py-3 flex items-start gap-3">
           <span className="text-base mt-0.5">⚠</span>
           <div className="flex-1">
-            <div className="text-[11px] font-black uppercase tracking-wide text-orange-800">
+            <div className="text-[11px] font-black uppercase tracking-wide text-warn-text">
               Dağıtılabilir Nakit Yok
             </div>
-            <div className="text-xs text-orange-700 mt-0.5">
+            <div className="text-xs text-warn-text mt-0.5">
               Dönem kârlı olsa da ödenmemiş yükümlülükler nakit dağıtımını engelliyor.
               Tahsilat tamamlanmadan dağıtım yapılamaz.
             </div>
           </div>
-          <Link href="/dashboard/commercial?tab=collections" className="text-[10px] font-bold text-orange-700 hover:text-orange-800 underline underline-offset-2 shrink-0 mt-0.5 whitespace-nowrap">
+          <Link href="/dashboard/commercial?tab=collections" className="text-[10px] font-bold text-warn-text hover:text-warn-text underline underline-offset-2 shrink-0 mt-0.5 whitespace-nowrap">
             Tahsilat →
           </Link>
         </div>

@@ -479,7 +479,7 @@ export function WhatIfClient({ period, baseline }: Props) {
             )}
             <button
               onClick={() => setShowSaveBox(v => !v)}
-              className="text-xs font-semibold text-primary-600 hover:text-primary-700 border border-primary-200 px-3 py-1.5 rounded hover:border-primary-300 transition-colors"
+              className="text-xs font-semibold text-primary-600 hover:text-primary-700 border border-[#e2e8f0] px-3 py-1.5 rounded hover:border-[#e2e8f0] transition-colors"
             >
               {showSaveBox ? '✕ Kapat' : '＋ Kaydet'}
             </button>
@@ -496,7 +496,7 @@ export function WhatIfClient({ period, baseline }: Props) {
                   onChange={e => setSaveName(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') saveScenario() }}
                   placeholder="Örn: Agresif büyüme, Q3 baskı…"
-                  className="flex-1 border border-primary-200 rounded px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary-400 bg-white"
+                  className="flex-1 border border-[#e2e8f0] rounded px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-brand/30 bg-white"
                 />
                 <button
                   onClick={saveScenario}
@@ -533,7 +533,7 @@ export function WhatIfClient({ period, baseline }: Props) {
                     className={`text-[9px] font-bold px-2 py-0.5 rounded border transition-colors ${
                       compareMode
                         ? 'bg-primary-600 text-white border-primary-600'
-                        : 'border-[#e2e8f0] text-[#64748b] hover:border-primary-300 hover:text-primary-600'
+                        : 'border-[#e2e8f0] text-[#64748b] hover:border-[#e2e8f0] hover:text-primary-600'
                     }`}
                   >
                     {compareMode ? '✕ Kapat' : '⇄ Karşılaştır'}
@@ -557,7 +557,7 @@ export function WhatIfClient({ period, baseline }: Props) {
                     isBaseline
                       ? 'border-brand-subtle bg-brand-subtle/20'
                       : compareMode && isSelected
-                        ? 'border-primary-300 bg-primary-50/40'
+                        ? 'border-[#e2e8f0] bg-primary-50/40'
                         : 'border-[#e2e8f0]'
                   }`}>
                     {compareMode && (
@@ -607,7 +607,7 @@ export function WhatIfClient({ period, baseline }: Props) {
                         <button
                           onClick={() => restoreScenario(s)}
                           title="Bu senaryoyu yükle"
-                          className="text-[9px] font-bold text-primary-600 hover:text-primary-700 border border-primary-200 rounded px-2 py-1 hover:bg-primary-50 transition-colors"
+                          className="text-[9px] font-bold text-primary-600 hover:text-primary-700 border border-[#e2e8f0] rounded px-2 py-1 hover:bg-primary-50 transition-colors"
                         >
                           Yükle
                         </button>
@@ -710,7 +710,7 @@ export function WhatIfClient({ period, baseline }: Props) {
                   <span className="text-[9px] text-[#94a3b8]">En iyi Net Kâr: <strong className="text-[#334155]">{cols[bestIdx(computed.map(r => r.netIncome), true)]?.name}</strong></span>
                   <button
                     onClick={() => restoreScenario(cols[bestIdx(computed.map(r => r.netIncome), true)]!)}
-                    className="text-[9px] font-bold text-primary-600 border border-primary-200 px-2 py-1 rounded hover:bg-primary-50 transition-colors"
+                    className="text-[9px] font-bold text-primary-600 border border-[#e2e8f0] px-2 py-1 rounded hover:bg-primary-50 transition-colors"
                   >
                     Yükle →
                   </button>
@@ -749,7 +749,7 @@ export function WhatIfClient({ period, baseline }: Props) {
             </div>
             <div className="bg-white border border-[#e2e8f0] rounded px-3 py-2.5">
               <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">KDV Net</div>
-              <div className={`text-lg font-black tabular-nums ${result.vatNet > 0 ? 'text-orange-600' : 'text-pos-text'}`}>
+              <div className={`text-lg font-black tabular-nums ${result.vatNet > 0 ? 'text-warn' : 'text-pos-text'}`}>
                 {result.vatNet > 0 ? '+' : ''}₺{fmt(result.vatNet)}
               </div>
               <div className="text-[9px] text-[#94a3b8] mt-0.5">{result.vatNet > 0 ? 'ödenecek' : 'devreden'}</div>

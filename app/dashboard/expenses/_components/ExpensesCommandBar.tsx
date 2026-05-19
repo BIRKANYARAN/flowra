@@ -150,7 +150,7 @@ export async function ExpensesCommandBar({ companyId }: Props) {
         {dailyRate > 0 && (
           <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#e2e8f0] rounded">
             <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Günlük</span>
-            <span className="text-sm font-black tabular-nums text-orange-700">{fmt(dailyRate)}</span>
+            <span className="text-sm font-black tabular-nums text-warn-text">{fmt(dailyRate)}</span>
             <span className="text-[9px] text-[#94a3b8]">/gün</span>
           </div>
         )}
@@ -194,7 +194,7 @@ export async function ExpensesCommandBar({ companyId }: Props) {
               <span className="text-[10px] font-bold text-[#334155]">
                 {CATEGORY_LABELS[topCat[0]] ?? topCat[0]}
               </span>
-              <span className="text-[10px] font-black text-orange-700 tabular-nums">
+              <span className="text-[10px] font-black text-warn-text tabular-nums">
                 {fmt(topCat[1])}
               </span>
               <span className="text-[10px] text-[#94a3b8]">

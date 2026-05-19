@@ -175,7 +175,7 @@ export function ScenarioPanel({ inputs, baseRunwayMonths }: Props) {
           const months = s.runway
           const tone = months === null ? 'text-[#94a3b8]'
             : months <= 2  ? 'text-neg'
-            : months <= 6  ? 'text-orange-600'
+            : months <= 6  ? 'text-warn'
             : months <= 12 ? 'text-warn-text'
             : 'text-pos-text'
           return (

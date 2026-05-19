@@ -74,7 +74,7 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
         </div>
         {s.proforma_no && s.proforma_id && s.proforma_exists ? (
           <Link href={`/dashboard/proformas/${s.proforma_id}`}
-            className="text-xs font-mono text-primary-700 bg-primary-50 border border-primary-200 px-3 py-1.5 rounded hover:bg-primary-100 transition-colors">
+            className="text-xs font-mono text-primary-700 bg-primary-50 border border-[#e2e8f0] px-3 py-1.5 rounded hover:bg-primary-100 transition-colors">
             {s.proforma_no} →
           </Link>
         ) : s.proforma_no ? (

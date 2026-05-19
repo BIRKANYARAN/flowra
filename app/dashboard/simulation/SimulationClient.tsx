@@ -540,7 +540,7 @@ export default function SimulationClient({
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">
               Kurumlar Vergisi (%{CORP_TAX_RATE})
             </div>
-            <div className="text-lg font-black tabular-nums text-orange-600">
+            <div className="text-lg font-black tabular-nums text-warn">
               {estimatedCorpTax > 0 ? `−${fmtC(toDisplay(estimatedCorpTax), S)}` : '—'}
             </div>
             <div className="text-[10px] text-[#94a3b8] mt-0.5">Tahmini KV</div>
@@ -557,11 +557,11 @@ export default function SimulationClient({
           <>
             <div className="flex rounded-full h-1.5 overflow-hidden bg-[#f1f5f9]">
               <div className="bg-pos h-1.5" style={{ width: `${100 - CORP_TAX_RATE}%` }} />
-              <div className="bg-orange-300 h-1.5" style={{ width: `${CORP_TAX_RATE}%` }} />
+              <div className="bg-warn-light h-1.5" style={{ width: `${CORP_TAX_RATE}%` }} />
             </div>
             <div className="flex justify-between mt-0.5">
               <span className="text-[10px] text-pos-text font-semibold">%{100 - CORP_TAX_RATE} size kalır</span>
-              <span className="text-[10px] text-orange-500 font-semibold">%{CORP_TAX_RATE} kurumlar vergisi</span>
+              <span className="text-[10px] text-warn font-semibold">%{CORP_TAX_RATE} kurumlar vergisi</span>
             </div>
           </>
         )}

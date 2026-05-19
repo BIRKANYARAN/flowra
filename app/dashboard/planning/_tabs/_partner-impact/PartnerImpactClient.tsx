@@ -129,8 +129,7 @@ export function PartnerImpactClient({
   if (partnerCount === 0) {
     return (
       <div className="bg-white border border-[#e2e8f0] rounded p-10 text-center">
-        <div className="text-3xl mb-3">👥</div>
-        <div className="text-sm font-semibold text-[#334155] mb-1">Ortak bulunamadı</div>
+        <div className="text-xs font-medium text-[#334155] mb-1">Ortak bulunamadı</div>
         <div className="text-xs text-[#94a3b8] mb-4">
           Dağıtım analizi için önce ortak eklemeniz gerekiyor.
         </div>
@@ -204,7 +203,7 @@ export function PartnerImpactClient({
       <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
         <div className="flex items-center justify-between px-5 py-3 border-b border-[#f1f5f9]">
           <div>
-            <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Dağıtım Simülatörü</div>
+            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Dağıtım Simülatörü</div>
             <div className="text-[10px] text-[#94a3b8] mt-0.5">
               Kaydırıcıyla dağıtılacak tutarı değiştirin, payları canlı görün
             </div>
@@ -352,7 +351,7 @@ export function PartnerImpactClient({
       {totalLoanBalance > 0 && (
         <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
           <div className="flex items-center justify-between px-5 py-3 border-b border-[#f1f5f9]">
-            <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Ortak Borç Pozisyonları</div>
+            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ortak Borç Pozisyonları</div>
             <Link href="/dashboard/partners?tab=tranches" className="text-[10px] font-semibold text-primary-600 hover:text-primary-700">
               Tranche detayı →
             </Link>

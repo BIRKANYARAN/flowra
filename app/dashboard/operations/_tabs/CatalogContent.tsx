@@ -145,7 +145,7 @@ export async function CatalogContent({ companyId, userId }: Props) {
       {lowMarginProducts.length > 0 && (
         <div className="bg-warn-light border border-warn-light rounded px-4 py-3">
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="text-[10px] font-black uppercase tracking-widest text-warn-text">⚠ Düşük Marjlı Ürünler</span>
+            <span className="text-[0.65rem] font-black uppercase tracking-widest text-warn-text">⚠ Düşük Marjlı Ürünler</span>
             <span className="text-[9px] text-warn-text">({lowMarginProducts.length} ürün &lt;%15 brüt marj)</span>
           </div>
           <div className="flex flex-wrap gap-2">

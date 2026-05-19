@@ -60,7 +60,7 @@ export function LedgerTab({
                     return (
                       <th
                         key={h.label}
-                        className={`px-4 py-2.5 text-[10px] font-black uppercase tracking-widest ${isSorted ? 'text-primary-600' : 'text-[#94a3b8]'} ${isLeft ? 'text-left' : 'text-right'} ${h.col ? 'cursor-pointer select-none hover:text-[#64748b]' : ''}`}
+                        className={`px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest ${isSorted ? 'text-primary-600' : 'text-[#94a3b8]'} ${isLeft ? 'text-left' : 'text-right'} ${h.col ? 'cursor-pointer select-none hover:text-[#64748b]' : ''}`}
                         onClick={h.col ? () => onToggleSort(h.col as LedgerSortCol) : undefined}
                       >
                         {h.label}

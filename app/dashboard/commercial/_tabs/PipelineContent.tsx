@@ -187,7 +187,7 @@ export async function PipelineContent({ companyId }: Props) {
       {revenueAnomalies.length > 0 && (
         <div className="bg-warn-light border border-warn-light rounded px-4 py-3">
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="text-[10px] font-black uppercase tracking-widest text-warn-text">⚠ Anormal Gelir Hareketi</span>
+            <span className="text-[0.65rem] font-black uppercase tracking-widest text-warn-text">⚠ Anormal Gelir Hareketi</span>
             <span className="text-[9px] text-warn-text">(istatistiksel eşik aşıldı)</span>
           </div>
           <div className="space-y-1">

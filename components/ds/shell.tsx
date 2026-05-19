@@ -13,7 +13,7 @@
 //   PanelHeader    → panel title row                (border-b, px-5 py-3.5)
 //   KpiStrip       → horizontal instrument bar      (divide-x, single container)
 //   KpiCell        → individual reading in a strip  (px-5 py-3.5)
-//   SectionLabel   → uppercase category label       (text-[10px] font-black uppercase tracking-widest)
+//   SectionLabel   → uppercase category label       (text-[0.65rem] font-black uppercase tracking-widest)
 //   PageHero       → page title + subtitle + CTA
 //   PressureBanner → adaptive pressure mode banner  (severity-aware colors)
 //   EmptySlate     → empty state inside a panel
@@ -40,7 +40,7 @@ export const TOKENS = {
   panelOk:       'bg-pos-light border border-pos-light rounded',
 
   // Section label (inner, above a block)
-  label: 'text-[10px] font-black uppercase tracking-widest text-[#94a3b8] leading-none',
+  label: 'text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] leading-none',
 
   // Page-level section divider label
   pageLabel: 'text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5',
@@ -48,7 +48,7 @@ export const TOKENS = {
   // Page hero title
   heroTitle: 'text-2xl font-black tracking-tight text-[#0f172a] leading-tight',
   heroSub:   'text-sm text-[#94a3b8] mt-1',
-  heroSuper: 'text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-1',
+  heroSuper: 'text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1',
 
   // Typography
   valueXl:  'text-xl font-black tabular-nums leading-none',

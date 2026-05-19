@@ -156,7 +156,7 @@ export async function ExpensesContent({ companyId }: Props) {
         {[
           { label: 'Toplam Gider',    value: fmt(totalTRY),        sub: 'Son 6 ay (TRY)',                    color: 'text-neg' },
           { label: 'Tek Seferlik',    value: String(expenses.length), sub: 'kayıt',                          color: 'text-[#0f172a]' },
-          { label: 'Aylık Sabit Yük', value: monthlyBurden > 0 ? fmt(monthlyBurden) : '—', sub: `${recurring.length} tekrarlayan şablon`, color: monthlyBurden > 0 ? 'text-orange-700' : 'text-[#94a3b8]' },
+          { label: 'Aylık Sabit Yük', value: monthlyBurden > 0 ? fmt(monthlyBurden) : '—', sub: `${recurring.length} tekrarlayan şablon`, color: monthlyBurden > 0 ? 'text-warn-text' : 'text-[#94a3b8]' },
           { label: 'KDV İndirimi',    value: kdvDeductible > 0 ? fmt(kdvDeductible) : '—', sub: 'Tahmini indirilecek KDV', color: kdvDeductible > 0 ? 'text-pos-text' : 'text-[#94a3b8]' },
         ].map((card, i) => (
           <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e2e8f0]' : ''}`}>
@@ -171,7 +171,7 @@ export async function ExpensesContent({ companyId }: Props) {
       {expenseAnomalies.length > 0 && (
         <div className="bg-warn-light border border-warn-light rounded px-4 py-3">
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="text-[10px] font-black uppercase tracking-widest text-warn-text">⚠ Anormal Gider Artışı</span>
+            <span className="text-[0.65rem] font-black uppercase tracking-widest text-warn-text">⚠ Anormal Gider Artışı</span>
             <span className="text-[9px] text-warn-text">(istatistiksel eşik aşıldı)</span>
           </div>
           <div className="space-y-1">
@@ -194,7 +194,7 @@ export async function ExpensesContent({ companyId }: Props) {
       {duplicateGroups.length > 0 && (
         <div className="bg-neg-light border border-neg-light rounded px-4 py-3">
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="text-[10px] font-black uppercase tracking-widest text-neg-text">⚠ Olası Kopya Gider — {duplicateGroups.length} Grup</span>
+            <span className="text-[0.65rem] font-black uppercase tracking-widest text-neg-text">⚠ Olası Kopya Gider — {duplicateGroups.length} Grup</span>
             <span className="text-[9px] text-neg">son 90 gün · yüksek güven</span>
           </div>
           <div className="space-y-1.5">

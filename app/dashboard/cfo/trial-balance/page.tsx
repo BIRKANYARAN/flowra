@@ -136,7 +136,7 @@ export default function TrialBalancePage() {
       {!loading && checks.length > 0 && (
         <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
           <div className="px-4 py-2.5 border-b border-[#e2e8f0] bg-[#f8fafc]">
-            <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Muhasebe Doğruluk Kontrolleri</div>
+            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Muhasebe Doğruluk Kontrolleri</div>
           </div>
           <div className="divide-y divide-[#f1f5f9]">
             {checks.map((c, i) => (
@@ -189,8 +189,7 @@ export default function TrialBalancePage() {
 
       {!loading && !hasData && !error && (
         <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-10 text-center">
-          <div className="text-2xl mb-2">📒</div>
-          <div className="text-sm font-semibold text-[#64748b]">Henüz journal entry yok</div>
+          <div className="text-xs font-medium text-[#334155] mb-1">Henüz muhasebe kaydı yok</div>
           <div className="text-xs text-[#94a3b8] mt-1">
             GL modu aktifleştirildikten sonra muhasebe kayıtları burada görünür.
           </div>
@@ -206,7 +205,7 @@ export default function TrialBalancePage() {
             return (
               <div key={cls} className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
                 <div className="px-4 py-2.5 border-b border-[#e2e8f0] bg-[#f8fafc]">
-                  <div className="text-[10px] font-black uppercase tracking-widest text-[#64748b]">
+                  <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#64748b]">
                     {CLASS_LABELS[cls] ?? cls}
                   </div>
                 </div>

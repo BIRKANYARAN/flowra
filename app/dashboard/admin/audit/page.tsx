@@ -15,7 +15,7 @@ import Link from 'next/link'
 import type { AuditLog } from '@/types'
 
 // ── Style tokens ──────────────────────────────────────────────────────────────
-const SEL = 'border border-[#e2e8f0] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 bg-white transition-colors cursor-pointer'
+const SEL = 'border border-[#e2e8f0] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 bg-white transition-colors cursor-pointer'
 
 // ── Entity type labels ────────────────────────────────────────────────────────
 const ENTITY_LABELS: Record<string, string> = {
@@ -148,7 +148,7 @@ export default function AdminAuditPage() {
       <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm mb-5">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Denetim Zinciri Bütünlüğü</div>
+            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Denetim Zinciri Bütünlüğü</div>
             <div className="text-[10px] text-[#94a3b8] mt-0.5">SHA-256 hash zinciri — son 30 gün</div>
           </div>
           <button
@@ -280,7 +280,7 @@ export default function AdminAuditPage() {
       {/* Loading */}
       {loading && (
         <div className="flex items-center justify-center h-40">
-          <div className="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+          <div className="w-6 h-6 border-2 border-brand border-t-transparent rounded-full animate-spin" />
         </div>
       )}
 
@@ -289,9 +289,9 @@ export default function AdminAuditPage() {
         <>
           <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
             {logs.length === 0 ? (
-              <div className="text-center py-16 text-[#94a3b8]">
-                <div className="text-4xl mb-2">📋</div>
-                <p className="text-sm">Kayıt bulunamadı.</p>
+              <div className="text-center py-12">
+                <div className="text-xs font-medium text-[#334155] mb-1">Kayıt bulunamadı</div>
+                <div className="text-[0.65rem] text-[#94a3b8]">Seçili aralıkta denetim faaliyeti yok</div>
               </div>
             ) : (
               <table className="w-full text-sm">

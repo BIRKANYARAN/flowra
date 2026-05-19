@@ -417,7 +417,7 @@ export function ProformaDetailClient({
                           const v = parseFloat(e.target.value)
                           if (v > 0) setSelItems(s => s.map(x => x.id === it.id ? { ...x, qty: v } : x))
                         }}
-                        className="w-14 text-center text-sm border border-[#e2e8f0] rounded py-1 focus:outline-none focus:ring-2 focus:ring-primary-400 disabled:opacity-30"
+                        className="w-14 text-center text-sm border border-[#e2e8f0] rounded py-1 focus:outline-none focus:ring-2 focus:ring-brand/30 disabled:opacity-30"
                       />
                       <button
                         type="button"

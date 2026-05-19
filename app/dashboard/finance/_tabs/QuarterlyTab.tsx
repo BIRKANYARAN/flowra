@@ -244,14 +244,14 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
             <table className="w-full text-xs min-w-[620px]">
               <thead>
                 <tr className="bg-[#f8fafc] border-b border-[#e2e8f0]">
-                  <th className="text-left px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Çeyrek</th>
-                  <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Ciro</th>
-                  <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">YoY</th>
-                  <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-primary-400">Brüt Kâr</th>
-                  <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-pos">Net Kâr</th>
-                  <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Brüt Marj</th>
-                  <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Net Marj</th>
-                  <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-warn">KV Matrahı</th>
+                  <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Çeyrek</th>
+                  <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ciro</th>
+                  <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">YoY</th>
+                  <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-primary-400">Brüt Kâr</th>
+                  <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-pos">Net Kâr</th>
+                  <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Brüt Marj</th>
+                  <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Net Marj</th>
+                  <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-warn">KV Matrahı</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#f1f5f9]">
@@ -374,10 +374,10 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
           <table className="w-full text-xs">
             <thead>
               <tr className="bg-[#f8fafc] border-b border-[#e2e8f0]">
-                <th className="text-left px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Ay</th>
-                <th className="text-center px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Satış</th>
-                <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Ciro (TRY)</th>
-                <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-pos">Kâr (TRY)</th>
+                <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ay</th>
+                <th className="text-center px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Satış</th>
+                <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ciro (TRY)</th>
+                <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-pos">Kâr (TRY)</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#f1f5f9]">

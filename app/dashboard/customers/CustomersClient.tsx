@@ -11,7 +11,7 @@ import type { Customer } from '@/types'
 
 export type { Customer }
 
-const IL  = 'w-full border border-[#e2e8f0] rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white transition-colors'
+const IL  = 'w-full border border-[#e2e8f0] rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand bg-white transition-colors'
 const LAB = 'block text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5'
 
 const EMPTY = {
@@ -160,10 +160,9 @@ export default function CustomersClient({ initialCustomers }: Props) {
       {/* ── Customer List ─────────────────────────────────────────────────── */}
       <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
         {filtered.length === 0 ? (
-          <div className="py-16 text-center">
-            <div className="text-4xl mb-3">👥</div>
-            <div className="text-sm font-semibold text-[#64748b] mb-1">
-              {search ? 'Sonuç bulunamadı.' : 'Henüz müşteri eklenmedi.'}
+          <div className="py-12 text-center">
+            <div className="text-xs font-medium text-[#334155] mb-1">
+              {search ? 'Eşleşen müşteri bulunamadı' : 'Henüz müşteri eklenmedi'}
             </div>
             {!search && (
               <p className="text-xs text-[#94a3b8]">

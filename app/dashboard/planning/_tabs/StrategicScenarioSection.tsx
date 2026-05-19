@@ -131,7 +131,7 @@ export async function StrategicScenarioSection({ companyId }: Props) {
     return (
       <div className="space-y-4 pt-4 border-t border-[#e2e8f0]">
         <div className="flex items-center justify-between">
-          <span className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">
+          <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
             Stratejik P&amp;L Projeksiyonu (12 Ay)
           </span>
           <span className="text-[9px] text-[#cbd5e1]">6 aylık ortalama gider + yıllık gelir bazında</span>
@@ -172,7 +172,7 @@ export async function StrategicScenarioSection({ companyId }: Props) {
         </div>
 
         {/* Recommendation */}
-        <div className="px-4 py-3 bg-primary-50 border border-primary-200 rounded text-xs text-primary-800">
+        <div className="px-4 py-3 bg-primary-50 border border-[#e2e8f0] rounded text-xs text-primary-800">
           <span className="font-black uppercase tracking-wide text-[9px] text-primary-600 mr-2">Öneri</span>
           {result.recommendation_reason}
         </div>

@@ -86,7 +86,7 @@ export default async function JournalEntriesPage() {
                     )}
                     <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
                       entry.source_type === 'sale'     ? 'bg-info-light text-info-text'    :
-                      entry.source_type === 'expense'  ? 'bg-orange-100 text-orange-700' :
+                      entry.source_type === 'expense'  ? 'bg-warn-light text-warn-text' :
                       entry.source_type === 'purchase' ? 'bg-purple-100 text-purple-700' :
                       'bg-[#f1f5f9] text-[#64748b]'
                     }`}>
@@ -108,10 +108,10 @@ export default async function JournalEntriesPage() {
                   <table className="w-full text-xs">
                     <thead>
                       <tr className="border-b border-[#e2e8f0]">
-                        <th className="text-left px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-[#94a3b8] w-16">Hesap</th>
-                        <th className="text-left px-2 py-1.5 text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Hesap Adı</th>
-                        <th className="text-right px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-[#94a3b8] w-32">Borç (DR)</th>
-                        <th className="text-right px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-[#94a3b8] w-32">Alacak (CR)</th>
+                        <th className="text-left px-4 py-1.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] w-16">Hesap</th>
+                        <th className="text-left px-2 py-1.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Hesap Adı</th>
+                        <th className="text-right px-4 py-1.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] w-32">Borç (DR)</th>
+                        <th className="text-right px-4 py-1.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] w-32">Alacak (CR)</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#f1f5f9]">

@@ -160,8 +160,7 @@ export default function PeriodClosePage() {
 
       {!loading && periods.length === 0 && !error && (
         <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-10 text-center">
-          <div className="text-2xl mb-2">📅</div>
-          <div className="text-sm font-semibold text-[#64748b]">Muhasebe dönemi bulunamadı</div>
+          <div className="text-xs font-medium text-[#334155] mb-1">Muhasebe dönemi bulunamadı</div>
           <div className="text-xs text-[#94a3b8] mt-1">Dönem oluşturmak için Ayarlar → Dönem Yönetimi kullanın.</div>
         </div>
       )}
@@ -260,7 +259,7 @@ export default function PeriodClosePage() {
               {/* Checklist panel */}
               {isExpanded && (
                 <div className="border-t border-[#e2e8f0] px-5 py-4 bg-[#f8fafc]/60">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
+                  <p className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
                     Kapanış Kontrol Listesi — {reqChecked}/{requiredCount} zorunlu tamamlandı
                   </p>
 

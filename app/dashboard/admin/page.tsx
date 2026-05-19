@@ -106,7 +106,7 @@ export default async function AdminHubPage() {
       title:    'Roller & İzinler',
       subtitle: 'Rol yapılandırması',
       icon:     '🔐',
-      color:    'border-primary-100 hover:border-primary-200',
+      color:    'border-primary-100 hover:border-[#e2e8f0]',
     },
     {
       href:     '/dashboard/admin/workflows',
@@ -186,11 +186,11 @@ export default async function AdminHubPage() {
 
       {/* Settings quick-links */}
       <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded p-4">
-        <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Hızlı Ayarlar</div>
+        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Hızlı Ayarlar</div>
         <div className="flex flex-wrap gap-2">
           {SETTING_LINKS.map(s => (
             <Link key={s.href} href={s.href}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-white border border-[#e2e8f0] text-xs font-semibold text-[#334155] hover:border-primary-200 hover:text-primary-700 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-white border border-[#e2e8f0] text-xs font-semibold text-[#334155] hover:border-[#e2e8f0] hover:text-primary-700 transition-colors"
             >
               <span>{s.icon}</span>
               {s.label}
@@ -203,7 +203,7 @@ export default async function AdminHubPage() {
       {summary.recentLogs.length > 0 && (
         <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
           <div className="px-4 py-3 bg-[#f8fafc] border-b border-[#e2e8f0] flex items-center justify-between">
-            <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Son Aktivite</div>
+            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Son Aktivite</div>
             <Link href="/dashboard/admin/audit"
               className="text-[10px] font-semibold text-primary-600 hover:underline"
             >

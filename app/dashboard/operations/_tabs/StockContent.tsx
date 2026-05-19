@@ -109,7 +109,7 @@ export async function StockContent({ companyId, userId }: Props) {
         <div className="bg-warn-light border border-warn-light rounded px-4 py-3 flex items-start gap-3">
           <span className="text-base mt-0.5">⚠</span>
           <div className="flex-1">
-            <div className="text-[10px] font-black uppercase tracking-widest text-warn-text mb-1">
+            <div className="text-[0.65rem] font-black uppercase tracking-widest text-warn-text mb-1">
               Stok Tükendi — {zeroStockCount} Ürün
             </div>
             <div className="flex flex-wrap gap-2">
@@ -130,7 +130,7 @@ export async function StockContent({ companyId, userId }: Props) {
       {/* Stock consistency warning — only shown when stock_qty counter diverges from movement sum */}
       {inconsistentItems.length > 0 && (
         <div className="bg-neg-light border border-neg-light rounded px-4 py-3">
-          <div className="text-[10px] font-black uppercase tracking-widest text-neg-text mb-2">
+          <div className="text-[0.65rem] font-black uppercase tracking-widest text-neg-text mb-2">
             ⚠ Stok Tutarsızlığı — {inconsistentItems.length} Ürün
           </div>
           <div className="space-y-1.5">
@@ -253,9 +253,9 @@ export async function StockContent({ companyId, userId }: Props) {
           <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Mevcut Stok</span>
         </div>
         {products.length === 0 ? (
-          <div className="py-14 text-center">
-            <div className="text-4xl mb-2">📦</div>
-            <div className="text-sm font-semibold text-[#64748b]">Ürün bulunamadı.</div>
+          <div className="py-10 text-center">
+            <div className="text-xs font-medium text-[#334155] mb-1">Ürün bulunamadı</div>
+            <div className="text-[0.65rem] text-[#94a3b8]">Katalogda henüz ürün yok</div>
           </div>
         ) : (
           <div className="divide-y divide-[#f1f5f9]">
@@ -299,9 +299,9 @@ export async function StockContent({ companyId, userId }: Props) {
           <span className="ml-2 text-[10px] text-[#94a3b8]">— son 50 kayıt</span>
         </div>
         {movements.length === 0 ? (
-          <div className="py-14 text-center">
-            <div className="text-4xl mb-2">📋</div>
-            <div className="text-sm font-semibold text-[#64748b]">Hareket bulunamadı.</div>
+          <div className="py-10 text-center">
+            <div className="text-xs font-medium text-[#334155] mb-1">Hareket bulunamadı</div>
+            <div className="text-[0.65rem] text-[#94a3b8]">Bu döneme ait stok hareketi yok</div>
           </div>
         ) : (
           <div className="overflow-x-auto">

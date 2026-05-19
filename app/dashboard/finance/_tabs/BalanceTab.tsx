@@ -36,7 +36,7 @@ function BSColumn({ title, rows }: { title: string; rows: Row[] }) {
   return (
     <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden flex flex-col">
       <div className="px-4 py-3 border-b border-[#e2e8f0] bg-[#f8fafc]">
-        <span className="text-[10px] font-black uppercase tracking-widest text-[#64748b]">{title}</span>
+        <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#64748b]">{title}</span>
       </div>
       <div className="flex-1 divide-y divide-[#f1f5f9] px-4 py-2">
         {rows.map((row, i) => (
@@ -218,18 +218,18 @@ export async function BalanceTab({ userId, companyId }: Props) {
 
       {/* Low current ratio warning */}
       {currentRatio !== null && currentRatio < 1.0 && currentLiab > 10_000 && (
-        <div className="bg-orange-50 border border-orange-300 rounded px-4 py-3 flex items-start gap-3">
+        <div className="bg-warn-light border border-warn/30 rounded px-4 py-3 flex items-start gap-3">
           <span className="text-base mt-0.5">⚠</span>
           <div className="flex-1">
-            <div className="text-[11px] font-black uppercase tracking-wide text-orange-800">
+            <div className="text-[11px] font-black uppercase tracking-wide text-warn-text">
               Düşük Likidite — Cari Oran {currentRatio.toFixed(2)}
             </div>
-            <div className="text-xs text-orange-700 mt-0.5">
+            <div className="text-xs text-warn-text mt-0.5">
               Dönen varlıklar ({fmt(currentAssets)}) kısa vadeli borçları ({fmt(currentLiab)}) karşılamıyor.
               Nakit: {fmt(cash)} · Alacaklar: {fmt(bs.assets.receivables_try)}.
             </div>
           </div>
-          <Link href="/dashboard/finance?tab=cashflow" className="text-[10px] font-bold text-orange-700 hover:text-orange-800 underline underline-offset-2 shrink-0 mt-0.5 whitespace-nowrap">
+          <Link href="/dashboard/finance?tab=cashflow" className="text-[10px] font-bold text-warn-text hover:text-warn-text underline underline-offset-2 shrink-0 mt-0.5 whitespace-nowrap">
             Nakit Akışı →
           </Link>
         </div>

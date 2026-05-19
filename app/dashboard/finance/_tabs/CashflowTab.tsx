@@ -273,7 +273,7 @@ export async function CashflowTab({ userId, companyId }: Props) {
       {/* Zone 4 — 12-month projection bar chart */}
       {chartMonths.length > 0 && (
         <div className="bg-white border border-[#e2e8f0] rounded px-4 py-4 shadow-sm">
-          <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-3">12 Aylık Nakit Projeksiyonu</div>
+          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">12 Aylık Nakit Projeksiyonu</div>
           <div className="flex items-end gap-1.5 h-32">
             {chartMonths.map((mo) => {
               const barH     = maxCash > 0 ? Math.max(2, Math.round((Math.max(0, mo.end_cash) / maxCash) * 100)) : 0
@@ -310,11 +310,11 @@ export async function CashflowTab({ userId, companyId }: Props) {
           <table className="w-full text-xs">
             <thead>
               <tr className="bg-[#f8fafc] border-b border-[#e2e8f0]">
-                <th className="text-left px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Ay</th>
-                <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-pos">Gelen</th>
-                <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-neg">Giden</th>
-                <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Net</th>
-                <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-primary-400">Nakit Sonu</th>
+                <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ay</th>
+                <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-pos">Gelen</th>
+                <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-neg">Giden</th>
+                <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Net</th>
+                <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-primary-400">Nakit Sonu</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#f1f5f9]">

@@ -114,7 +114,7 @@ export const DSInput = forwardRef<HTMLInputElement, DSInputProps>(
           ref={ref}
           className={cn(
             'w-full bg-white border rounded px-3 py-2 text-sm text-[#0f172a] placeholder-[#94a3b8] transition-colors',
-            'focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100',
+            'focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/30',
             prefix && 'pl-8',
             suffix && 'pr-10',
             error ? 'border-neg' : 'border-[#e2e8f0]',
@@ -219,7 +219,7 @@ export function StatCard({ label, value, sub, accent }: {
   label: string; value: string | number; sub?: string; accent?: boolean
 }) {
   return (
-    <div className={`bg-white border rounded p-5 ${accent ? 'border-primary-200 bg-primary-50' : 'border-[#e2e8f0]'}`}>
+    <div className={`bg-white border rounded p-5 ${accent ? 'border-[#e2e8f0] bg-primary-50' : 'border-[#e2e8f0]'}`}>
       <div className={`text-xs font-semibold uppercase tracking-wide mb-1 ${accent ? 'text-primary-500' : 'text-[#94a3b8]'}`}>
         {label}
       </div>
@@ -264,7 +264,7 @@ export function EmptyState({ icon, title, sub, action }: {
 export function LoadingSpinner() {
   return (
     <div className="flex items-center justify-center h-40">
-      <div className="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+      <div className="w-6 h-6 border-2 border-brand border-t-transparent rounded-full animate-spin" />
     </div>
   )
 }
@@ -310,7 +310,7 @@ export const DSSelect = forwardRef<HTMLSelectElement, DSSelectProps>(
         ref={ref}
         className={cn(
           'w-full bg-white border rounded px-3 py-2 text-sm text-[#0f172a] transition-colors',
-          'focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100',
+          'focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/30',
           error ? 'border-neg' : 'border-[#e2e8f0]',
         )}
         {...rest}

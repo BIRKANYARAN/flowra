@@ -147,7 +147,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
 
         <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
           <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Aylık Borç Servisi</div>
-          <div className={`text-lg font-black tabular-nums ${monthlyService > 0 ? 'text-orange-600' : 'text-[#94a3b8]'}`}>
+          <div className={`text-lg font-black tabular-nums ${monthlyService > 0 ? 'text-warn' : 'text-[#94a3b8]'}`}>
             {monthlyService > 0 ? fmt(monthlyService) : '—'}
           </div>
           <div className="text-[9px] text-[#94a3b8] mt-0.5">faiz tahmini / ay</div>
@@ -184,11 +184,10 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
       {/* ── EMPTY STATE ───────────────────────────────────────────────────── */}
       {!hasTranches && (
         <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-6 py-10 text-center">
-          <div className="text-2xl mb-2">🏦</div>
-          <div className="text-sm font-semibold text-[#334155] mb-1">Aktif ortak borcu yok</div>
+          <div className="text-xs font-medium text-[#334155] mb-1">Aktif ortak borcu yok</div>
           <div className="text-xs text-[#94a3b8] mb-4">Ortak borçları Ortaklar → Trancheler bölümünden girilir.</div>
           <Link href="/dashboard/partners?tab=tranches"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary-600 hover:text-primary-700 border border-primary-200 px-3 py-1.5 rounded hover:bg-primary-50 transition-colors">
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary-600 hover:text-primary-700 border border-[#e2e8f0] px-3 py-1.5 rounded hover:bg-primary-50 transition-colors">
             Tranche Ekle →
           </Link>
         </div>
@@ -199,7 +198,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
           {/* ── 12-MONTH SERVICE SCHEDULE ──────────────────────────────────── */}
           <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
             <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#f1f5f9]">
-              <span className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">12 Aylık Faiz Yük Takvimi</span>
+              <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">12 Aylık Faiz Yük Takvimi</span>
               <span className="text-[9px] text-[#94a3b8]">Outstanding × yıllık faiz / 12</span>
             </div>
             <div className="px-5 pt-4 pb-3">
@@ -210,7 +209,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
                   return (
                     <div key={i} className="flex-1 flex flex-col items-center gap-0.5">
                       <div
-                        className={`w-full rounded-t-sm ${isPast ? 'bg-primary-400' : 'bg-orange-200'}`}
+                        className={`w-full rounded-t-sm ${isPast ? 'bg-primary-400' : 'bg-warn-light'}`}
                         style={{ height: `${h}px` }}
                         title={`${s.label}: ${fmt(s.interest)}`}
                       />
@@ -228,7 +227,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
           {/* ── TRANCHE TABLE ─────────────────────────────────────────────── */}
           <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
             <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#f1f5f9]">
-              <span className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Aktif Trancheler</span>
+              <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Aktif Trancheler</span>
               <Link href="/dashboard/partners?tab=tranches"
                 className="text-[10px] text-primary-600 font-semibold hover:underline">
                 Yönet →
@@ -263,7 +262,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
                         <td className="px-3 py-2.5 text-right tabular-nums text-[#64748b]">
                           {rate > 0 ? `%${(rate * 100).toFixed(1)}` : <span className="text-warn-text font-semibold">Faizsiz*</span>}
                         </td>
-                        <td className="px-3 py-2.5 text-right tabular-nums text-orange-600 font-semibold hidden sm:table-cell">
+                        <td className="px-3 py-2.5 text-right tabular-nums text-warn font-semibold hidden sm:table-cell">
                           {fmt(monthly)}
                         </td>
                         <td className="px-5 py-2.5 text-right whitespace-nowrap">

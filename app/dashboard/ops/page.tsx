@@ -89,8 +89,8 @@ function KpiCard({
   }[tone]
 
   const inner = (
-    <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 hover:border-primary-300 transition-colors">
-      <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{label}</div>
+    <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 hover:border-[#e2e8f0] transition-colors">
+      <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{label}</div>
       <div className={`text-xl font-black tabular-nums leading-none ${valueColor}`}>{value}</div>
       {sub && <div className="text-[10px] text-[#94a3b8] mt-1">{sub}</div>}
     </div>
@@ -372,7 +372,7 @@ export default async function OpsCommandPage() {
                   </div>
                   <div className="ml-3 text-right">
                     <span className={`text-sm font-black tabular-nums ${
-                      p.qty === 0 ? 'text-neg' : p.qty <= 2 ? 'text-orange-600' : 'text-warn-text'
+                      p.qty === 0 ? 'text-neg' : p.qty <= 2 ? 'text-warn' : 'text-warn-text'
                     }`}>
                       {p.qty} {p.unit}
                     </span>
@@ -472,7 +472,7 @@ export default async function OpsCommandPage() {
           { label: 'Müşteri Listesi',   href: '/dashboard/commercial?tab=customers',  emoji: '👥' },
         ].map(({ label, href, emoji }) => (
           <Link key={href} href={href}
-            className="bg-white border border-[#e2e8f0] rounded px-4 py-3 hover:border-primary-300 hover:bg-primary-50 transition-colors flex items-center gap-2">
+            className="bg-white border border-[#e2e8f0] rounded px-4 py-3 hover:border-[#e2e8f0] hover:bg-primary-50 transition-colors flex items-center gap-2">
             <span className="text-lg">{emoji}</span>
             <span className="text-xs font-semibold text-[#334155]">{label}</span>
           </Link>

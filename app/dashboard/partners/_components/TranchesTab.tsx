@@ -120,7 +120,7 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
           onSubmit={handleSubmit}
           className="bg-white border border-[#e2e8f0] rounded px-5 py-5 shadow-sm flex flex-col gap-4"
         >
-          <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">
+          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
             Yeni Borç Tranşı
           </div>
 
@@ -132,7 +132,7 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
             <select
               value={form.partner_id}
               onChange={e => field('partner_id', e.target.value)}
-              className="border border-[#e2e8f0] rounded px-3 py-2 text-sm text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="border border-[#e2e8f0] rounded px-3 py-2 text-sm text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-transparent"
               required
             >
               <option value="">— Ortak seçin —</option>
@@ -155,7 +155,7 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
                 value={form.amount_try}
                 onChange={e => field('amount_try', e.target.value)}
                 placeholder="0.00"
-                className="border border-[#e2e8f0] rounded px-3 py-2 text-sm font-mono text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="border border-[#e2e8f0] rounded px-3 py-2 text-sm font-mono text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-transparent"
                 required
               />
             </div>
@@ -171,7 +171,7 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
                 value={form.annual_interest_rate}
                 onChange={e => field('annual_interest_rate', e.target.value)}
                 placeholder="0"
-                className="border border-[#e2e8f0] rounded px-3 py-2 text-sm font-mono text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="border border-[#e2e8f0] rounded px-3 py-2 text-sm font-mono text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-transparent"
               />
             </div>
           </div>
@@ -186,7 +186,7 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
                 type="date"
                 value={form.disbursement_date}
                 onChange={e => field('disbursement_date', e.target.value)}
-                className="border border-[#e2e8f0] rounded px-3 py-2 text-sm text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="border border-[#e2e8f0] rounded px-3 py-2 text-sm text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-transparent"
                 required
               />
             </div>
@@ -198,7 +198,7 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
                 type="date"
                 value={form.expected_repayment_date}
                 onChange={e => field('expected_repayment_date', e.target.value)}
-                className="border border-[#e2e8f0] rounded px-3 py-2 text-sm text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="border border-[#e2e8f0] rounded px-3 py-2 text-sm text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-transparent"
               />
             </div>
           </div>
@@ -213,7 +213,7 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
               onChange={e => field('notes', e.target.value)}
               rows={2}
               placeholder="İsteğe bağlı açıklama..."
-              className="border border-[#e2e8f0] rounded px-3 py-2 text-sm text-[#0f172a] resize-none focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="border border-[#e2e8f0] rounded px-3 py-2 text-sm text-[#0f172a] resize-none focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-transparent"
             />
           </div>
 

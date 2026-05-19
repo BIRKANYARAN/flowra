@@ -80,7 +80,7 @@ export async function CollectionsContent({ companyId }: Props) {
   // ── Aging computation ──────────────────────────────────────────────────────
   const bucketData = [
     { label: 'Güncel (0-30g)',    maxDays: 30,  count: 0, total: 0, color: 'text-warn-text',   sub: '' },
-    { label: '31-60 Gün',         maxDays: 60,  count: 0, total: 0, color: 'text-orange-700',  sub: '' },
+    { label: '31-60 Gün',         maxDays: 60,  count: 0, total: 0, color: 'text-warn-text',  sub: '' },
     { label: '61-90 Gün',         maxDays: 90,  count: 0, total: 0, color: 'text-neg',     sub: '' },
     { label: '90+ Gün (Kritik)',  maxDays: Infinity, count: 0, total: 0, color: 'text-neg-text font-black', sub: '' },
   ]
@@ -186,13 +186,13 @@ export async function CollectionsContent({ companyId }: Props) {
 
       {/* 60+ day overdue rate warning (only if no 90+ critical already shown) */}
       {overdue90Total === 0 && criticalRate > 0.30 && grandTotal > 0 && (
-        <div className="bg-orange-50 border border-orange-300 rounded px-4 py-3 flex items-start gap-3">
+        <div className="bg-warn-light border border-warn/30 rounded px-4 py-3 flex items-start gap-3">
           <span className="text-base mt-0.5">⚠</span>
           <div className="flex-1">
-            <div className="text-[11px] font-black uppercase tracking-wide text-orange-800">
+            <div className="text-[11px] font-black uppercase tracking-wide text-warn-text">
               Tahsilat Yaşlanıyor — %{Math.round(criticalRate * 100)} Gecikmiş
             </div>
-            <div className="text-xs text-orange-700 mt-0.5">
+            <div className="text-xs text-warn-text mt-0.5">
               Açık alacakların {fmt(overdue60PlusTotal)} tutarındaki kısmı 60 günü aşmış.
               Tahsilat sürecini hızlandırın.
             </div>
@@ -206,7 +206,7 @@ export async function CollectionsContent({ companyId }: Props) {
       {/* Top outstanding debtors */}
       {topDebtors.length > 0 && grandTotal > 0 && (
         <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
-          <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-4">En Yüksek Bakiyeli Müşteriler</div>
+          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">En Yüksek Bakiyeli Müşteriler</div>
           <div className="space-y-2.5">
             {topDebtors.map(d => {
               const barPct   = (d.total / maxDebtorTotal) * 100
