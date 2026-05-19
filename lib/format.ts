@@ -81,6 +81,16 @@ export function fmtDense(value: number): string {
   return '₺' + TRY_FMT_0.format(value)
 }
 
+/** KPI strip raw format — no ₺ prefix, for JSX where ₺ is a separate styled span.
+ *  ≥1M → "X,XM" | ≥10K → "X,XK" | else → integer.
+ *  Use with <span className="...">₺</span>{fmtKpi(n)} pattern. */
+export function fmtKpi(n: number): string {
+  const abs = Math.abs(n)
+  if (abs >= 1_000_000) return PCT_FMT.format(n / 1_000_000) + 'M'
+  if (abs >= 10_000)    return PCT_FMT.format(n / 1_000) + 'K'
+  return TRY_FMT_0.format(n)
+}
+
 // ── Date formatters ───────────────────────────────────────────────────────────
 
 /** "15.05.2025" — Turkish short date */

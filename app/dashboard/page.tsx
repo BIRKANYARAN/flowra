@@ -30,7 +30,7 @@ import type { SituationStatus }      from '@/lib/engines/situation.engine'
 import { FinanceService }            from '@/lib/services/finance.service'
 import { PartnerService }            from '@/lib/services/partner.service'
 import type { FinancialSummary, EqualizationResult } from '@/types'
-import { fmtTRY as fmt } from '@/lib/format'
+import { fmtTRY as fmt, fmtPct, fmtKpi } from '@/lib/format'
 import { generateSituationSummary } from '@/lib/services/ai-summary.service'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -118,9 +118,7 @@ function currentMonthPeriod() {
   return { from, to, label, year, month: now.getMonth() + 1 }
 }
 
-const TRY_FULL_FMT = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-function fmtFull(n: number): string { const raw = Number(n || 0); return (raw < 0 ? '−' : '') + TRY_FULL_FMT.format(Math.abs(raw)) + ' TL' }
-function pct(v: number): string { return `${(v * 100).toFixed(1).replace('.', ',')}%` }
+function pct(v: number): string { return fmtPct(v * 100) }
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
@@ -592,25 +590,23 @@ export default async function DashboardPage() {
         </Link>
       )}
 
-      {/* ── SİSTEM YORUMU — AI / rule-based narrative panel ──────────────────── */}
+      {/* ── DÖNEM BRİEFİNG — executive treasury-style situational brief ──────── */}
       <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Sistem Yorumu</span>
-          <span className="text-[8px] font-semibold px-2 py-0.5 rounded bg-[#f1f5f9] text-[#94a3b8]">
-            {aiSummary.generated_by === 'ai' ? 'Otomatik' : 'Kural Tabanlı'}
-          </span>
+        <div className="flex items-center justify-between mb-2.5">
+          <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Dönem Briefing</span>
+          <span className="text-[9px] text-[#94a3b8] tabular-nums">{label}</span>
         </div>
-        <p className="text-xs text-[#334155] leading-relaxed mb-3">{aiSummary.summary_tr}</p>
-        <div className="flex flex-wrap gap-1.5 mb-3">
+        <p className="text-xs text-[#334155] leading-relaxed mb-2.5">{aiSummary.summary_tr}</p>
+        <div className="space-y-0.5 mb-2.5">
           {aiSummary.key_factors.map((f, i) => (
-            <span key={i} className="text-[10px] bg-[#f8fafc] border border-[#e2e8f0] text-[#64748b] px-2 py-1 rounded">
-              {f}
-            </span>
+            <div key={i} className="text-[11px] text-[#64748b] leading-snug">
+              <span className="text-[#cbd5e1] mr-1.5">—</span>{f}
+            </div>
           ))}
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-[9px] font-black uppercase tracking-widest text-brand-light">Öneri</span>
-          <span className="text-[11px] text-brand font-medium">{aiSummary.recommendation}</span>
+        <div className="pt-2 border-t border-[#f1f5f9] flex items-start gap-2">
+          <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mt-0.5 flex-shrink-0">Eylem</span>
+          <span className="text-[11px] text-[#334155] font-medium leading-snug">{aiSummary.recommendation}</span>
         </div>
       </div>
 
@@ -628,7 +624,7 @@ export default async function DashboardPage() {
             className="px-4 py-3 hover:bg-[#f8fafc]/60 transition-colors">
             <div className="text-[9px] font-black uppercase tracking-widest mb-1.5 text-[#94a3b8]">Ciro</div>
             <div className={`${kpiValueSize('revenue')} font-black tabular-nums leading-none text-[#0f172a]`}>
-              <span className="text-[#cbd5e1] font-normal text-sm mr-0.5">₺</span>{formatKpi(fs.revenue_try)}
+              <span className="text-[#cbd5e1] font-normal text-sm mr-0.5">₺</span>{fmtKpi(fs.revenue_try)}
             </div>
             <div className="text-[10px] text-[#94a3b8] mt-1.5">
               {fs.revenue_try > 0 ? `Brüt marj ${pct(grossMarginPct)}` : 'Satış yok'}
@@ -646,7 +642,7 @@ export default async function DashboardPage() {
             <div className="text-[9px] font-black uppercase tracking-widest mb-1.5 text-[#94a3b8]">Aylık Net</div>
             <div className={`${kpiValueSize('net')} font-black tabular-nums leading-none ${monthlyNet >= 0 ? 'text-pos-text' : 'text-neg'}`}>
               <span className={`font-normal text-sm mr-0.5 ${monthlyNet >= 0 ? 'text-pos/70' : 'text-neg/70'}`}>₺</span>
-              {formatKpi(Math.abs(monthlyNet))}
+              {fmtKpi(Math.abs(monthlyNet))}
             </div>
             <div className="text-[10px] text-[#94a3b8] mt-1.5">{monthlyNet >= 0 ? 'Kârlı dönem' : 'Zarar'}</div>
             {netDeltaPct !== null && (
@@ -667,7 +663,7 @@ export default async function DashboardPage() {
             </div>
             <div className={`${kpiValueSize('receivables')} font-black tabular-nums leading-none ${uncollectedSalesTotal > 0 ? 'text-warn-text' : 'text-pos-text'}`}>
               {uncollectedSalesTotal > 0
-                ? <><span className="text-warn/70 font-normal text-sm mr-0.5">₺</span>{formatKpi(uncollectedSalesTotal)}</>
+                ? <><span className="text-warn/70 font-normal text-sm mr-0.5">₺</span>{fmtKpi(uncollectedSalesTotal)}</>
                 : <span className="text-lg">Temiz</span>}
             </div>
             <div className="text-[10px] text-[#94a3b8] mt-1.5">
@@ -914,7 +910,7 @@ export default async function DashboardPage() {
           <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3.5 shadow-sm">
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Giderler</div>
             <div className="text-xl font-black tabular-nums text-[#0f172a] leading-none mb-1">
-              <span className="text-[#cbd5e1] font-normal text-sm mr-0.5">₺</span>{formatKpi(fs.expenses_total_try)}
+              <span className="text-[#cbd5e1] font-normal text-sm mr-0.5">₺</span>{fmtKpi(fs.expenses_total_try)}
             </div>
             <div className="text-[10px] text-[#94a3b8] mb-2">~{fmt(monthlyExpenses)}/ay</div>
             {expDeltaPct !== null && (
@@ -933,7 +929,7 @@ export default async function DashboardPage() {
               className="bg-white border border-[#e2e8f0] rounded px-4 py-3.5 shadow-sm hover:border-[#e2e8f0] transition-colors">
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">Açık Proformalar</div>
               <div className="text-xl font-black tabular-nums text-brand leading-none">
-                <span className="text-brand-light font-normal text-sm mr-0.5">₺</span>{formatKpi(outstanding)}
+                <span className="text-brand-light font-normal text-sm mr-0.5">₺</span>{fmtKpi(outstanding)}
               </div>
               <div className="text-[10px] text-[#94a3b8] mt-1">{openProfs.length} adet onay bekliyor →</div>
             </Link>
@@ -1077,15 +1073,4 @@ export default async function DashboardPage() {
   )
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-const KPI_FMT = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
-const KPI_FMT_K = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 1 })
-
-function formatKpi(n: number): string {
-  const abs = Math.abs(n)
-  if (abs >= 1_000_000) return KPI_FMT_K.format(n / 1_000_000) + 'M'
-  if (abs >= 10_000)    return KPI_FMT_K.format(n / 1_000) + 'K'
-  return KPI_FMT.format(n)
-}
 
