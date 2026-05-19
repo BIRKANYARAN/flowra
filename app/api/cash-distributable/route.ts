@@ -35,6 +35,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { resolveApiAuth } from '@/lib/api-auth'
 import { computeCashPosition } from '@/lib/finance/cash'
+import { round2 } from '@/lib/calc'
 
 const CASH_EXCLUDED_EXPENSE_TYPES = new Set([
   'loan_repayment',
@@ -134,10 +135,10 @@ export async function GET(req: NextRequest) {
       cash_distributable: cashDistributable,
       period: { from, to },
       breakdown: {
-        payments_received:       Math.round(paymentsReceived * 100) / 100,
-        paid_expenses:           Math.round(paidExpenses * 100) / 100,
+        payments_received:       round2(paymentsReceived),
+        paid_expenses:           round2(paidExpenses),
         cash_balance:            cashBalance,
-        unpaid_expenses:         Math.round(unpaidExpenses * 100) / 100,
+        unpaid_expenses:         round2(unpaidExpenses),
         outstanding_obligations: outstandingObligations,
       },
     })

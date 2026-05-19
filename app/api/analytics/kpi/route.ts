@@ -22,6 +22,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import type { KpiResult }  from '@/types'
 import { resolveApiAuth } from '@/lib/api-auth'
+import { round2 } from '@/lib/calc'
 
 const BURN_EXPENSE_TYPES = ['operational', 'fixed', 'variable']
 const CASH_EXCLUDED_EXPENSE_TYPES = new Set([
@@ -266,17 +267,17 @@ export async function GET(req: NextRequest) {
     : null
 
   const result: KpiResult = {
-    total_revenue:           Math.round(totalRevenue              * 100) / 100,
-    total_collected:         Math.round(totalCollected            * 100) / 100,
-    outstanding_receivables: Math.round(outstanding               * 100) / 100,
-    overdue_receivables:     Math.round(overdueReceivables        * 100) / 100,
-    total_expenses:          Math.round(totalExpenses             * 100) / 100,
-    net_profit:              Math.round(netProfit                 * 100) / 100,
-    stock_value:             Math.round(stockValue                * 100) / 100,
+    total_revenue:           round2(totalRevenue),
+    total_collected:         round2(totalCollected),
+    outstanding_receivables: round2(outstanding),
+    overdue_receivables:     round2(overdueReceivables),
+    total_expenses:          round2(totalExpenses),
+    net_profit:              round2(netProfit),
+    stock_value:             round2(stockValue),
     stock_coverage_ratio:    stockCoverageRatio,
-    cash_position:           Math.round(cashPosition              * 100) / 100,
-    monthly_burn_rate:       Math.round(monthlyBurnRate           * 100) / 100,
-    adjusted_burn_rate:      Math.round(adjustedBurnRate          * 100) / 100,
+    cash_position:           round2(cashPosition),
+    monthly_burn_rate:       round2(monthlyBurnRate),
+    adjusted_burn_rate:      round2(adjustedBurnRate),
     runway_months:           runwayMonths,
     period_from:             from,
     period_to:               to,

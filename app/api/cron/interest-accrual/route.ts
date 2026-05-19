@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSystemAdminClient }      from '@/lib/admin-db'
+import { round2 } from '@/lib/calc'
 
 export const dynamic = 'force-dynamic'
 
@@ -61,9 +62,8 @@ export async function POST(req: NextRequest) {
       .filter(t => !doneSet.has(`tranche:${t.id}`))
       .map(t => ({
         // annual_interest_rate is a decimal (0.15 = 15%) — do NOT divide by 100 again
-        dailyInterest: Math.round(
-          (Number(t.outstanding_try) * (Number(t.annual_interest_rate) / 365)) * 100
-        ) / 100,
+        // round2() prevents IEEE 754 edge cases in daily interest computation
+        dailyInterest: round2(Number(t.outstanding_try) * (Number(t.annual_interest_rate) / 365)),
         t,
       }))
       .filter(({ dailyInterest }) => dailyInterest >= 0.01)  // skip below ₺0.01

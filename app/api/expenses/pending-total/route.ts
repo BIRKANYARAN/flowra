@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { resolveApiAuth }            from '@/lib/api-auth'
+import { round2 }                    from '@/lib/calc'
 
 export async function GET(req: NextRequest) {
   const auth = await resolveApiAuth(req)
@@ -37,7 +38,7 @@ export async function GET(req: NextRequest) {
   }
 
   return NextResponse.json({
-    total:         Math.round(total),
+    total:         round2(total),   // preserve cent precision; previously truncated to integer
     count:         rows.length,
     overdue_count: overdueCount,
   })
