@@ -553,7 +553,7 @@ export default async function DashboardPage() {
       {pressureMode === 'cash_crisis' && (
         <div className="flex items-center justify-between gap-3 px-4 py-2.5 rounded border border-neg-light bg-neg-light">
           <div className="flex items-center gap-3 min-w-0">
-            <span className="text-[9px] font-black uppercase tracking-widest text-neg flex-shrink-0">⚠ NAKİT KRİZİ</span>
+            <span className="text-[9px] font-black uppercase tracking-widest text-neg flex-shrink-0">NAKİT KRİZİ</span>
             <span className="text-xs text-neg-text font-medium truncate">
               {runwayDays}g nakit ömrü — acil eylem gerekiyor
             </span>
@@ -596,12 +596,8 @@ export default async function DashboardPage() {
       <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
         <div className="flex items-center justify-between mb-3">
           <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Sistem Yorumu</span>
-          <span className={`text-[8px] font-semibold px-2 py-0.5 rounded ${
-            aiSummary.generated_by === 'ai'
-              ? 'bg-brand-subtle text-brand'
-              : 'bg-[#f1f5f9] text-[#94a3b8]'
-          }`}>
-            {aiSummary.generated_by === 'ai' ? `AI · ${aiSummary.model_version ?? 'claude'}` : 'kural tabanlı'}
+          <span className="text-[8px] font-semibold px-2 py-0.5 rounded bg-[#f1f5f9] text-[#94a3b8]">
+            {aiSummary.generated_by === 'ai' ? 'Otomatik' : 'Kural Tabanlı'}
           </span>
         </div>
         <p className="text-xs text-[#334155] leading-relaxed mb-3">{aiSummary.summary_tr}</p>

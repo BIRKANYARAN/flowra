@@ -128,7 +128,7 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
   // Guidance generation
   const guidance: string[] = []
   if (risk.concentration.risk_level === 'critical') {
-    guidance.push('⚠ Tek bir müşteri alacaklarınızın %60\'ından fazlasını oluşturuyor — bu kritik bir konsantrasyon riskidir.')
+    guidance.push('Tek bir müşteri alacaklarınızın %60\'ından fazlasını oluşturuyor — kritik konsantrasyon riski.')
     guidance.push('Bu müşteri ile ödeme planı müzakere edin ve yeni müşteri kazanımını hızlandırın.')
   } else if (risk.concentration.risk_level === 'high') {
     guidance.push('Alacak konsantrasyonu yüksek. En büyük 3 müşteri portföyünüzün %' + (risk.concentration.top3_pct * 100).toFixed(0) + '\'ini oluşturuyor.')
@@ -140,9 +140,9 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
     guidance.push('Toplam alacaklarınızın yarısından fazlası vadesi geçmiş. Tahsilat süreçleri acilen güçlendirilmeli.')
   }
   if (guidance.length === 0 && risk.totalOutstanding === 0) {
-    guidance.push('✓ Bekleyen alacak bulunmuyor.')
+    guidance.push('Bekleyen alacak bulunmuyor — tüm faturalar tahsil edilmiş.')
   } else if (guidance.length === 0) {
-    guidance.push('✓ Konsantrasyon riski düşük ve alacaklar zamanında tahsil ediliyor.')
+    guidance.push('Konsantrasyon riski düşük. Alacaklar zamanında tahsil ediliyor.')
   }
 
   if (risk.totalOutstanding === 0) {
@@ -305,7 +305,7 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Anormallik Tespiti</div>
               <div className="text-[10px] text-[#94a3b8] mt-0.5">Son 6 ay istatistiksel sapma analizi · ±2σ eşiği</div>
             </div>
-            <span className="text-[9px] font-black uppercase tracking-wide bg-brand-subtle text-brand px-2 py-0.5 rounded">
+            <span className="text-[9px] font-black uppercase tracking-wide bg-[#f8fafc] border border-[#e2e8f0] text-[#64748b] px-2 py-0.5 rounded">
               {allAnomalies.filter(a => a.severity === 'high').length} yüksek · {allAnomalies.filter(a => a.severity === 'medium').length} orta
             </span>
           </div>
@@ -363,7 +363,7 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
       {/* Cross-navigation */}
       <div className="flex items-center justify-between px-1">
         <p className="text-[10px] text-[#94a3b8] leading-relaxed">
-          Risk analizi tahsilat ve müşteri skorlarıyla birlikte değerlendirilmeli.
+          60+ gün gecikme doğrudan nakit pozisyonunu baskılar — alacak riski ve tahsilat gecikmesi birlikte değerlendirilmeli.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
           <Link

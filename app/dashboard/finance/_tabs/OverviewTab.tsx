@@ -56,10 +56,9 @@ function RiskPill({ label, value, level }: { label: string; value: string; level
     warn:     'bg-warn-light border-warn-light text-warn-text',
     critical: 'bg-neg-light border-neg-light text-neg-text',
   }[level]
-  const icons = { ok: '✓', warn: '⚠', critical: '🔴' }[level]
   return (
     <div className={`flex items-center justify-between px-3 py-2 rounded border ${colors}`}>
-      <span className="text-xs font-semibold">{icons} {label}</span>
+      <span className="text-xs font-semibold">{label}</span>
       <span className="text-xs font-black tabular-nums">{value}</span>
     </div>
   )
