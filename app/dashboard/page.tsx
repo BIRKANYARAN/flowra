@@ -20,7 +20,6 @@ import Link                          from 'next/link'
 import { CORPORATE_TAX_RATE_TR }     from '@/lib/services/finance-rules'
 import { fetchTcmbWithFallback }     from '@/lib/fx'
 import { computeCashPosition }       from '@/lib/finance/cash'
-import { CashflowChart }             from '@/components/dashboard/CashflowChart'
 import { resolveCompanyId }          from '@/lib/resolve-company'
 import { safeSystemQuery }           from '@/lib/admin-db'
 import { computeSituation }          from '@/lib/engines/situation.engine'
@@ -1066,16 +1065,6 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* ── CASHFLOW CHART ────────────────────────────────────────────────── */}
-      <div className="bg-white border border-gray-100 rounded-xl shadow-[0_1px_2px_rgba(17,24,39,0.04)] overflow-hidden">
-        <div className="px-5 py-3.5 border-b border-gray-50 flex items-center justify-between">
-          <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Nakit Akışı</span>
-          <Link href="/dashboard/finance?tab=cashflow" className="text-[10px] text-primary-600 font-semibold hover:text-primary-700">Detay →</Link>
-        </div>
-        <div className="p-4">
-          <CashflowChart className="w-full" />
-        </div>
-      </div>
 
       {/* ── QUICK REPORTS FOOTER ────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-1 pt-1">
