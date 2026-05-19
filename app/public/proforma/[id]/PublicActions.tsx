@@ -20,9 +20,10 @@ interface PublicActionsProps {
   } | null
   banks: Array<{ bank_name: string; branch_name: string | null; iban: string }>
   currency: string
+  preparer?: { name: string; title: string } | null
 }
 
-export function PublicActions({ proformaNo, proformaId, items, settings, customer, banks, currency }: PublicActionsProps) {
+export function PublicActions({ proformaNo, proformaId, items, settings, customer, banks, currency, preparer }: PublicActionsProps) {
   const [downloading, setDownloading] = useState(false)
 
   const handleDownload = async () => {
@@ -57,6 +58,7 @@ export function PublicActions({ proformaNo, proformaId, items, settings, custome
           branchName: b.branch_name ?? '',
           iban:       b.iban,
         })),
+        preparer: preparer ?? undefined,
         items: items.map(it => ({
           name:             it.name,
           unit:             it.unit,

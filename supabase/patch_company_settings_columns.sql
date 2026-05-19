@@ -15,9 +15,20 @@
 ALTER TABLE companies ADD COLUMN IF NOT EXISTS tax_office text;
 ALTER TABLE companies ADD COLUMN IF NOT EXISTS mersis_no  text;
 
--- Verify
+-- Proforma preparer fields (ad soyad + ünvan — PDF signature block)
+ALTER TABLE proformas ADD COLUMN IF NOT EXISTS preparer_name  text;
+ALTER TABLE proformas ADD COLUMN IF NOT EXISTS preparer_title text;
+
+-- Verify companies
 SELECT column_name
 FROM information_schema.columns
 WHERE table_name = 'companies'
   AND column_name IN ('name','address','phone','website','logo_url','tax_id','tax_office','mersis_no')
+ORDER BY column_name;
+
+-- Verify proformas
+SELECT column_name
+FROM information_schema.columns
+WHERE table_name = 'proformas'
+  AND column_name IN ('preparer_name','preparer_title')
 ORDER BY column_name;

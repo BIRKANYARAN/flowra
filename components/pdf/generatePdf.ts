@@ -1,36 +1,38 @@
 import { calculateLine, calculateTotals, type LineInput } from '@/lib/calc'
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// Flowra PDF Engine v4 — Institutional Turkish B2B Proforma
+// Flowra PDF Engine v5 — Kurumsal Türk Ticari Proforma
 //
-// Design principles:
-//   • Corporate letterhead, NOT SaaS dashboard
-//   • No bright accent stripe — clean white document with subtle structure
-//   • Company identity dominant: logo large, name prominent
-//   • Document number in a clean bordered box (right side of header)
-//   • Table: minimal color — light gray header, alternating white/near-white rows
-//   • Totals: right-aligned block, GENEL TOPLAM in dark (not violet)
-//   • "Yalnız" amount-in-words in a light gray box — formal Turkish standard
-//   • Signature/approval area at bottom
-//   • Footer: company · page N/M · doc no
+// Tasarım ilkeleri:
+//   • Üst tam-genişlik lacivert şerit — kurumsal antetli kağıt duygusu
+//   • Şirket adı baskın (16pt bold) — belgede en önemli kimlik
+//   • Koyu lacivert tablo başlığı (beyaz metin) — ERP değil, kurumsal evrak
+//   • Ara toplam satırları arka plansız, sade hizalı
+//   • GENEL TOPLAM: lacivert blok, tek görsel çapa
+//   • YALNIZ: tam genişlik, çerçeveli, resmi
+//   • İmza alanı: Proformayı Düzenleyen (ad, ünvan)
+//   • Dil: %100 Türkçe
 //
-// Layout (A4 portrait, 15mm margins):
-//   LETTERHEAD: Logo + company block LEFT | Doc metadata box RIGHT
-//   THIN RULE (double)
-//   CUSTOMER block (lightly shaded)
-//   THIN RULE
-//   PRODUCT TABLE
-//   TOTALS block (right) + YALNIZ (left, in gray box)
-//   FX footnote (compact, muted)
-//   LEGAL NOTE + VALIDITY
-//   BANK INFO
-//   SIGNATURE AREA
-//   PAGE FOOTER
+// Sayfa geometrisi — A4 dikey, 15mm kenar boşlukları:
+//   LACIVERT ŞERİT (tam genişlik, 3mm)
+//   ANTET: Logo + Şirket bloğu SOL | Belge kimliği SAĞ
+//   ÇIZGI
+//   ALICI bloğu (lacivert sol kenar, açık arkaplan)
+//   ÇIZGI
+//   ÜRÜN TABLOSU (koyu lacivert başlık)
+//   TOPLAM bloğu (sağ hizalı)
+//   YALNIZ (tam genişlik)
+//   KUR notu (küçük, soluk)
+//   NOTLAR
+//   YASAL NOT + GEÇERLİLİK
+//   ÖDEME BİLGİLERİ
+//   PROFORMAYI DÜZENLEYEN + İMZA ALANLARI
+//   SAYFA ALTI
 //
-// SAFETY:
-//   • Logo: 6 s timeout + onerror fallback — PDF never fails due to logo
-//   • All numeric inputs guarded with Number() / toFixed()
-//   • Works with empty / partial data
+// Güvenlik:
+//   • Logo: 6sn timeout + hata yakalama — logo yüzünden PDF asla başarısız olmaz
+//   • Tüm sayısal girdiler Number() ile korunuyor
+//   • Boş / eksik verilerle çalışıyor
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export interface PdfCompany {
@@ -71,6 +73,11 @@ export interface PdfItem {
   discount_percent: number
 }
 
+export interface PdfPreparer {
+  name:  string   // Ad Soyad
+  title: string   // Ünvan
+}
+
 export interface PdfOptions {
   proformaNo:   string
   createdAt:    string
@@ -80,77 +87,75 @@ export interface PdfOptions {
   customer:     PdfCustomer
   banks:        PdfBank[]
   items:        PdfItem[]
+  preparer?:    PdfPreparer
   notes?:       string
   fxUsd?:       number | null
   fxEur?:       number | null
 }
 
-// ── RGB type ──────────────────────────────────────────────────────────────────
+// ── RGB ───────────────────────────────────────────────────────────────────────
 type RGB = [number, number, number]
 
-// ── Page geometry ─────────────────────────────────────────────────────────────
-const PAGE = { W: 210, H: 297, ML: 15, MR: 15, MT: 15, MB: 18 }
+// ── Sayfa geometrisi ──────────────────────────────────────────────────────────
+const PAGE = { W: 210, H: 297, ML: 15, MR: 15, MT: 18, MB: 18 }
 const BODY_W: number = PAGE.W - PAGE.ML - PAGE.MR   // 180 mm
 const LX:     number = PAGE.ML
 const RX:     number = PAGE.W - PAGE.MR             // 195 mm
 const CX:     number = PAGE.W / 2
 
-// Table column widths (mm) — 8 columns summing to 180
+// Tablo sütun genişlikleri (mm)
+// Sıra(8) + Ürün(46) + Birim(10) + Miktar(12) + BirimFiyat(24) + İsk(10) + NetTutar(22) + KDV(10) + Toplam(38) = 180
 const COL = {
-  NAME:      50,
-  UNIT:      12,
+  SEQ:       8,
+  NAME:      46,
+  UNIT:      10,
   QTY:       12,
   PRICE:     24,
-  DISC:      12,
-  DISCPRICE: 24,
-  KDV:       12,
-  TOTAL:     34,
+  DISC:      10,
+  DISCPRICE: 22,
+  KDV:       10,
+  TOTAL:     38,
 }
-// 50+12+12+24+12+24+12+34 = 180 ✓
 const TABLE_W: number = BODY_W
 const TABLE_X: number = LX
-const ROW_H:   number = 7.5
-const THEAD_H: number = 8.5
+const ROW_H:   number = 8
+const THEAD_H: number = 9
 
-// Cell padding
-const CP: number = 2
+// Hücre dolgusu
+const CP: number = 2.5
 
-// DPI for logo px→mm conversion
-const DPI: number       = 96 / 25.4
-const LOGO_MAX_W: number = 48
-const LOGO_MAX_H: number = 22
+// Logo için DPI → mm dönüşümü
+const DPI: number        = 96 / 25.4
+const LOGO_MAX_W: number = 38
+const LOGO_MAX_H: number = 18
 
-// Fonts
+// Fontlar
 const FONT_REG  = '/fonts/LiberationSans-Regular.ttf'
 const FONT_BOLD = '/fonts/LiberationSans-Bold.ttf'
 
-// ── Color palette — minimal, professional ─────────────────────────────────────
-// Primary: very dark charcoal (near-black), not pure black
-// Accent: dark navy blue — dignified, not violet/purple
-// Grays: structural hierarchy
+// ── Renk paleti — kurumsal, minimal ──────────────────────────────────────────
+// Sadece lacivert + siyah + gri tonları. Hiç renk yok.
 const C: Record<string, RGB> = {
-  black:    [15,  15,  20],     // near-black text
-  ink:      [30,  30,  40],     // body text
-  dark:     [60,  60,  70],     // secondary text
-  mid:      [110, 110, 120],    // labels, muted
-  muted:    [160, 160, 170],    // footnotes
-  light:    [210, 210, 215],    // light borders
-  rule:     [220, 220, 224],    // table rules
-  hrule:    [180, 180, 188],    // section rules
-  accent:   [20,  46,  100],    // dark navy — doc number, table header label
-  accentBg: [236, 240, 250],    // very light navy — customer block, table header
-  totBg:    [24,  36,  72],     // total block background (dark navy)
-  thead:    [240, 241, 244],    // table header background (neutral light gray)
-  alt:      [250, 250, 252],    // alternating row (barely visible)
-  yalniz:   [245, 246, 248],    // yalniz box background
+  navy:     [20,  40,  90],     // ana lacivert — şerit, tablo başlığı, TOPLAM
+  navyDeep: [14,  28,  66],     // koyu lacivert — GENEL TOPLAM
+  black:    [16,  16,  22],     // yakın-siyah — şirket adı, vurgu
+  ink:      [35,  35,  45],     // gövde metni
+  dark:     [65,  65,  78],     // ikincil metin
+  mid:      [115, 115, 128],    // etiketler, soluk
+  muted:    [160, 160, 172],    // dipnotlar, sayfa altı
+  border:   [185, 190, 200],    // orta kenarlıklar
+  rule:     [210, 212, 218],    // ince çizgiler
+  thead:    [218, 220, 228],    // (yedek — kullanılmıyor)
+  rowAlt:   [247, 248, 250],    // çok hafif satır zebra
+  custBg:   [244, 245, 249],    // alıcı bloğu arkaplan
+  yalnizBg: [245, 246, 248],    // yalnız bloğu arkaplan
+  sigLine:  [155, 158, 168],    // imza çizgisi
   white:    [255, 255, 255],
-  sigLine:  [140, 140, 148],    // signature line color
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ── Yardımcılar ───────────────────────────────────────────────────────────────
 
 function sym(c: string): string {
-  // ₺ (U+20BA) not in LiberationSans — use 'TL' for TRY
   return c === 'USD' ? '$' : c === 'EUR' ? '€' : c === 'GBP' ? '£' : 'TL'
 }
 
@@ -164,11 +169,11 @@ function money(v: unknown, symbol = ''): string {
     (symbol ? ' ' + symbol : '')
 }
 
-function currencyLong(c: string): string {
-  if (c === 'USD') return 'ABD Dolari ($)'
+function currencyLabel(c: string): string {
+  if (c === 'USD') return 'ABD Dolari (USD)'
   if (c === 'EUR') return 'Euro (EUR)'
   if (c === 'GBP') return 'Ingiliz Sterlini (GBP)'
-  return 'Turk Lirasi (TL)'
+  return 'Turk Lirasi (TRY)'
 }
 
 function fmtDate(iso: string): string {
@@ -191,7 +196,7 @@ function toWordsTR(total: number, currency: string): string {
   if (!Number.isFinite(total) || total < 0) return ''
   if (currency !== 'TRY') {
     return n(total).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) +
-      ' ' + currencyLong(currency)
+      ' ' + currencyLabel(currency)
   }
 
   const ones = ['','Bir','Iki','Uc','Dort','Bes','Alti','Yedi','Sekiz','Dokuz']
@@ -222,7 +227,7 @@ function toWordsTR(total: number, currency: string): string {
   return lira + ' Turk Lirasi' + (dNum > 0 ? ' ' + cvt(dNum) + ' Kurus' : '')
 }
 
-// ── Logo loading ──────────────────────────────────────────────────────────────
+// ── Logo yükleme ──────────────────────────────────────────────────────────────
 
 interface LogoData { b64: string; pxW: number; pxH: number }
 
@@ -238,11 +243,11 @@ async function loadLogo(url: string): Promise<LogoData | null> {
   const src = resolveLogoUrl(url.trim())
   const fetchUrl = src + (src.includes('?') ? '&' : '?') + '_cb=' + Date.now()
   const controller = new AbortController()
-  const timer = setTimeout(() => { controller.abort(); console.warn('[PDF_LOGO_TIMEOUT]', url) }, 6000)
+  const timer = setTimeout(() => { controller.abort() }, 6000)
   try {
     const res = await fetch(fetchUrl, { signal: controller.signal })
     clearTimeout(timer)
-    if (!res.ok) { console.warn('[PDF_LOGO_FAIL]', url, `HTTP ${res.status}`); return null }
+    if (!res.ok) return null
     const blob = await res.blob()
     const blobUrl = URL.createObjectURL(blob)
     return await new Promise<LogoData | null>(resolve => {
@@ -265,7 +270,7 @@ async function loadLogo(url: string): Promise<LogoData | null> {
     })
   } catch (err) {
     clearTimeout(timer)
-    if ((err as { name?: string }).name !== 'AbortError') console.warn('[PDF_LOGO_FAIL]', url, err)
+    void err
     return null
   }
 }
@@ -277,7 +282,7 @@ function logoDims(pxW: number, pxH: number): { w: number; h: number } {
   return { w: mmW * scale, h: mmH * scale }
 }
 
-// ── Font fetch ────────────────────────────────────────────────────────────────
+// ── Font yükleme ──────────────────────────────────────────────────────────────
 
 async function fetchFontB64(path: string): Promise<string | null> {
   try {
@@ -295,7 +300,7 @@ async function fetchFontB64(path: string): Promise<string | null> {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// MAIN EXPORT
+// ANA FONKSİYON
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export async function generatePdf(opts: PdfOptions): Promise<void> {
@@ -308,6 +313,7 @@ export async function generatePdf(opts: PdfOptions): Promise<void> {
   const banks        = Array.isArray(opts.banks) ? opts.banks : []
   const items        = Array.isArray(opts.items) ? opts.items.filter(Boolean) : []
   const notes        = opts.notes || ''
+  const preparer     = opts.preparer
   const fxUsd        = n(opts.fxUsd)
   const fxEur        = n(opts.fxEur)
   const S            = sym(currency)
@@ -327,7 +333,7 @@ export async function generatePdf(opts: PdfOptions): Promise<void> {
     } catch { FONT = 'helvetica' }
   }
 
-  // ── Drawing helpers ───────────────────────────────────────────────────────
+  // ── Çizim yardımcıları ────────────────────────────────────────────────────
 
   function setF(style: 'normal' | 'bold', size: number, col: RGB = C.ink) {
     doc.setFont(FONT, style)
@@ -339,13 +345,13 @@ export async function generatePdf(opts: PdfOptions): Promise<void> {
   function tR(t: string, x: number, y: number)  { doc.text(t, x, y, { align: 'right' }) }
   function tC(t: string, x: number, y: number)  { doc.text(t, x, y, { align: 'center' }) }
 
-  function hLine(y: number, x1 = LX, x2 = RX, col: RGB = C.rule, lw = 0.3) {
+  function hLine(y: number, x1 = LX, x2 = RX, col: RGB = C.rule, lw = 0.25) {
     doc.setDrawColor(col[0], col[1], col[2])
     doc.setLineWidth(lw)
     doc.line(x1, y, x2, y)
   }
 
-  function vLine(x: number, y1: number, y2: number, col: RGB = C.rule, lw = 0.18) {
+  function vLine(x: number, y1: number, y2: number, col: RGB = C.rule, lw = 0.15) {
     doc.setDrawColor(col[0], col[1], col[2])
     doc.setLineWidth(lw)
     doc.line(x, y1, x, y2)
@@ -362,14 +368,25 @@ export async function generatePdf(opts: PdfOptions): Promise<void> {
     doc.rect(x, y, w, h, 'S')
   }
 
-  let curY        = PAGE.MT
+  // ── Üst lacivert şerit (tam sayfa genişliği, bleed) ──────────────────────
+  // Her sayfada tekrarlanır — addPage() öncesinde ayrıca çizilmez;
+  // sayfa altı döngüsünde eklenir.
+  const STRIP_H = 3.0
+  fillR(0, 0, PAGE.W, STRIP_H, C.navy)
+
+  let curY = PAGE.MT
   const CONTENT_B = PAGE.H - PAGE.MB
 
   function ensureSpace(needed: number) {
-    if (curY + needed > CONTENT_B) { doc.addPage(); curY = PAGE.MT }
+    if (curY + needed > CONTENT_B) {
+      doc.addPage()
+      // Yeni sayfada şerit çiz
+      fillR(0, 0, PAGE.W, STRIP_H, C.navy)
+      curY = PAGE.MT
+    }
   }
 
-  // ── Pre-calculate totals ──────────────────────────────────────────────────
+  // ── Toplamları hesapla ────────────────────────────────────────────────────
   const totals   = calculateTotals(items as LineInput[])
   const subtotal = totals.subtotal
   const kdvTotal = totals.kdv_total
@@ -377,20 +394,20 @@ export async function generatePdf(opts: PdfOptions): Promise<void> {
   const grand    = totals.grand_total
   const kdvRates = Object.keys(kdvMap).filter(k => kdvMap[k] > 0).sort((a,b) => +a - +b)
 
-  // ── Load logo ─────────────────────────────────────────────────────────────
+  // ── Logo yükle ────────────────────────────────────────────────────────────
   let logo: LogoData | null = null
   if (company.logoUrl?.trim()) {
     try { logo = await loadLogo(company.logoUrl.trim()) } catch { logo = null }
   }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // A. LETTERHEAD
-  //    LEFT:  Logo (if available) + Company name + company details
-  //    RIGHT: Bordered box with document number, type, dates
+  // A. ANTET
+  //    SOL:  Logo + Şirket adı + Şirket bilgileri
+  //    SAĞ:  Belge kimliği (tip, no, tarih)
   // ══════════════════════════════════════════════════════════════════════════
 
-  const HDR_LEFT_W  = 110   // mm
-  const HDR_RIGHT_W = 62    // mm — right metadata box
+  const HDR_LEFT_W  = 112
+  const HDR_RIGHT_W = 60
   const HDR_RIGHT_X = RX - HDR_RIGHT_W
 
   let leftY  = curY
@@ -403,96 +420,109 @@ export async function generatePdf(opts: PdfOptions): Promise<void> {
     const lw = w * (lh / h)
     try {
       doc.addImage(logo.b64, 'PNG', LX, leftY, lw, lh)
-      leftY += lh + 2
-    } catch { /* logo failed — continue without */ }
+      leftY += lh + 3
+    } catch { /* logo başarısız — devam */ }
   }
 
-  // Company name — large and prominent
-  setF('bold', 11, C.black)
+  // Şirket adı — belgede en baskın unsur
+  setF('bold', 15, C.black)
   const nameLines = doc.splitTextToSize(company.name?.trim() || '', HDR_LEFT_W) as string[]
-  nameLines.forEach(l => { tL(l, LX, leftY); leftY += 5.5 })
-  leftY += 1
+  nameLines.forEach(l => { tL(l, LX, leftY); leftY += 6.5 })
+  leftY += 1.5
 
-  // Address
+  // Adres
   if (company.address?.trim()) {
     setF('normal', 7.5, C.dark)
     const aLines = doc.splitTextToSize(company.address.trim(), HDR_LEFT_W) as string[]
     aLines.forEach(l => { tL(l, LX, leftY); leftY += 3.8 })
-    leftY += 1
+    leftY += 1.5
   }
 
-  // Tax info
-  const taxParts: string[] = []
-  if (company.taxNumber?.trim()) taxParts.push('Vergi No: ' + company.taxNumber.trim())
-  if (company.taxOffice?.trim()) taxParts.push('Vergi Dairesi: ' + company.taxOffice.trim())
-  if (taxParts.length > 0) {
+  // Vergi bilgisi — her parça ayrı satırda, temiz
+  if (company.taxNumber?.trim() || company.taxOffice?.trim()) {
     setF('normal', 7, C.mid)
-    tL(taxParts.join('   |   '), LX, leftY); leftY += 4
+    const taxLine: string[] = []
+    if (company.taxNumber?.trim()) taxLine.push('Vergi No: ' + company.taxNumber.trim())
+    if (company.taxOffice?.trim()) taxLine.push('Vergi Dairesi: ' + company.taxOffice.trim())
+    tL(taxLine.join('   '), LX, leftY); leftY += 3.8
   }
 
   if (company.mersisNo?.trim()) {
     setF('normal', 7, C.mid)
-    tL('MERSİS: ' + company.mersisNo.trim(), LX, leftY); leftY += 4
+    tL('MERSIS: ' + company.mersisNo.trim(), LX, leftY); leftY += 3.8
   }
 
-  // Contact
+  // İletişim
   const contactParts = [company.phone?.trim(), company.email?.trim(), company.website?.trim()].filter(Boolean)
   if (contactParts.length > 0) {
     setF('normal', 7, C.mid)
-    tL(contactParts.join('   '), LX, leftY); leftY += 4
+    tL(contactParts.join('   '), LX, leftY); leftY += 3.8
   }
 
-  // ── Right: Document metadata box ──────────────────────────────────────────
-  const META_H = 32
-  // Outer box with dark navy border
-  doc.setDrawColor(C.accent[0], C.accent[1], C.accent[2])
-  doc.setLineWidth(0.5)
+  // ── Sağ: Belge kimlik kutusu ──────────────────────────────────────────────
+  // Dış çerçeve (lacivert kenarlık)
+  const META_H = 38
+  doc.setDrawColor(C.navy[0], C.navy[1], C.navy[2])
+  doc.setLineWidth(0.4)
   doc.rect(HDR_RIGHT_X, rightY, HDR_RIGHT_W, META_H, 'S')
 
-  // Dark navy header strip inside box
-  fillR(HDR_RIGHT_X, rightY, HDR_RIGHT_W, 10, C.accent)
+  // İç üst şerit — koyu lacivert, beyaz etiket
+  fillR(HDR_RIGHT_X, rightY, HDR_RIGHT_W, 9, C.navy)
   setF('bold', 8, C.white)
-  tC('PROFORMA FATURA', HDR_RIGHT_X + HDR_RIGHT_W/2, rightY + 6.5)
+  tC('PROFORMA FATURA', HDR_RIGHT_X + HDR_RIGHT_W / 2, rightY + 6)
 
-  // Doc number
-  const MX = HDR_RIGHT_X + HDR_RIGHT_W / 2
-  const MP = 2.5
-  setF('bold', 13, C.accent)
-  tC(proformaNo, MX, rightY + 18)
+  // Belge numarası — ortalı, büyük, koyu
+  const numY = rightY + 18
+  setF('bold', 14, C.black)
+  tC(proformaNo, HDR_RIGHT_X + HDR_RIGHT_W / 2, numY)
 
-  // Dates
-  setF('normal', 7, C.dark)
-  tL('Tarih:', HDR_RIGHT_X + MP, rightY + 24)
-  tR(fmtDate(createdAt), HDR_RIGHT_X + HDR_RIGHT_W - MP, rightY + 24)
+  // İnce ayırıcı çizgi
+  hLine(rightY + 21, HDR_RIGHT_X + 3, HDR_RIGHT_X + HDR_RIGHT_W - 3, C.rule, 0.3)
 
-  setF('normal', 7, C.dark)
-  tL('Gecerlilik:', HDR_RIGHT_X + MP, rightY + 29)
-  tR(addDays(createdAt, validityDays), HDR_RIGHT_X + HDR_RIGHT_W - MP, rightY + 29)
+  // Tarih satırları
+  const MP = 3
+  const colR = HDR_RIGHT_X + HDR_RIGHT_W - MP
+  const rowY1 = rightY + 26
+  const rowY2 = rightY + 31.5
 
-  rightY += META_H + 2
+  setF('normal', 7, C.mid)
+  tL('Tarih', HDR_RIGHT_X + MP, rowY1)
+  setF('bold', 7, C.ink)
+  tR(fmtDate(createdAt), colR, rowY1)
 
-  // Currency line below box (compact)
+  setF('normal', 7, C.mid)
+  tL('Gecerlilik', HDR_RIGHT_X + MP, rowY2)
+  setF('bold', 7, C.ink)
+  tR(addDays(createdAt, validityDays), colR, rowY2)
+
+  // Para birimi — sağ hizalı, küçük, altında
+  const rowY3 = rightY + 36
   setF('normal', 6.5, C.mid)
-  tR(currencyLong(currency), HDR_RIGHT_X + HDR_RIGHT_W, rightY)
-  rightY += 4
+  tL('Para Birimi', HDR_RIGHT_X + MP, rowY3)
+  setF('normal', 6.5, C.dark)
+  tR(currencyLabel(currency), colR, rowY3)
 
-  // Section separator — double rule
-  curY = Math.max(leftY, rightY) + 5
-  hLine(curY, LX, RX, C.hrule, 0.6)
-  hLine(curY + 1.2, LX, RX, C.hrule, 0.2)
+  rightY += META_H + 4
+
+  // ── Bölüm ayırıcısı ──────────────────────────────────────────────────────
+  curY = Math.max(leftY, rightY) + 6
+  hLine(curY, LX, RX, C.border, 0.5)
   curY += 7
 
   // ══════════════════════════════════════════════════════════════════════════
-  // B. CUSTOMER BLOCK — lightly shaded background
+  // B. ALICI BLOĞU
+  //    Sol kenar: 3mm lacivert çizgi (kurumsal ayırıcı)
+  //    Açık gri arkaplan
   // ══════════════════════════════════════════════════════════════════════════
 
   const CUST_PAD_V = 4
-  const CUST_PAD_H = 5
+  const CUST_PAD_H = 7
   const CUST_LABEL_H = 4.5
+  const LEFT_ACCENT = 3  // sol kenar çizgi genişliği (mm)
 
   const custNameStr = customer.name?.trim() || '—'
   const custAddrLines = customer.address?.trim()
-    ? (doc.splitTextToSize(customer.address.trim(), BODY_W * 0.7) as string[])
+    ? (doc.splitTextToSize(customer.address.trim(), BODY_W * 0.75) as string[])
     : []
   const custTaxParts: string[] = []
   if (customer.taxNumber?.trim()) custTaxParts.push('Vergi No: ' + customer.taxNumber.trim())
@@ -500,7 +530,7 @@ export async function generatePdf(opts: PdfOptions): Promise<void> {
   const custContact = [customer.phone?.trim(), customer.email?.trim()].filter(Boolean)
 
   const custBlockH = CUST_LABEL_H + CUST_PAD_V
-    + 7                              // customer name
+    + 7.5
     + custAddrLines.length * 3.8
     + (custTaxParts.length ? 4 : 0)
     + (custContact.length ? 4 : 0)
@@ -508,70 +538,87 @@ export async function generatePdf(opts: PdfOptions): Promise<void> {
 
   ensureSpace(custBlockH + 4)
 
-  // Light shaded box
-  fillR(LX, curY, BODY_W, custBlockH, C.accentBg)
-  strokeR(LX, curY, BODY_W, custBlockH, C.light, 0.3)
+  // Arkaplan
+  fillR(LX, curY, BODY_W, custBlockH, C.custBg)
+  // Sol lacivert kenar çizgisi
+  fillR(LX, curY, LEFT_ACCENT, custBlockH, C.navy)
+  // Alt ince çizgi
+  hLine(curY + custBlockH, LX, RX, C.border, 0.3)
 
-  // "FATURA ALICISI" label inside box
   let cy = curY + CUST_PAD_V
-  setF('bold', 6.5, C.accent)
-  tL('FATURA ALICISI', LX + CUST_PAD_H, cy)
+
+  // "ALICI" etiketi
+  setF('bold', 6.5, C.navy)
+  tL('ALICI', LX + CUST_PAD_H, cy)
   cy += CUST_LABEL_H
 
-  setF('bold', 10, C.black)
+  // Müşteri adı — baskın
+  setF('bold', 10.5, C.black)
   const cnLines = doc.splitTextToSize(custNameStr, BODY_W - CUST_PAD_H * 2) as string[]
-  cnLines.forEach(l => { tL(l, LX + CUST_PAD_H, cy); cy += 5 })
-  cy += 1
+  cnLines.forEach(l => { tL(l, LX + CUST_PAD_H, cy); cy += 5.5 })
 
-  setF('normal', 7.5, C.dark)
-  custAddrLines.forEach(l => { tL(l, LX + CUST_PAD_H, cy); cy += 3.8 })
+  // Adres
+  if (custAddrLines.length > 0) {
+    setF('normal', 7.5, C.dark)
+    custAddrLines.forEach(l => { tL(l, LX + CUST_PAD_H, cy); cy += 3.8 })
+    cy += 0.5
+  }
 
+  // Vergi bilgisi
   if (custTaxParts.length > 0) {
     setF('normal', 7, C.mid)
-    tL(custTaxParts.join('   |   '), LX + CUST_PAD_H, cy); cy += 4
+    tL(custTaxParts.join('   '), LX + CUST_PAD_H, cy); cy += 4
   }
+
+  // İletişim
   if (custContact.length > 0) {
     setF('normal', 7, C.mid)
     tL(custContact.join('   '), LX + CUST_PAD_H, cy)
   }
 
-  curY += custBlockH + 8
+  curY += custBlockH + 9
 
   // ══════════════════════════════════════════════════════════════════════════
-  // C. PRODUCT TABLE
+  // C. ÜRÜN TABLOSU
+  //    Tablo başlığı: koyu lacivert arkaplan, beyaz metin
+  //    Bu tek değişim bile ERP görünümünü kurumsal evraka dönüştürür
   // ══════════════════════════════════════════════════════════════════════════
 
   const COL_X: Record<string, number> = {
-    NAME:      TABLE_X,
-    UNIT:      TABLE_X + COL.NAME,
-    QTY:       TABLE_X + COL.NAME + COL.UNIT,
-    PRICE:     TABLE_X + COL.NAME + COL.UNIT + COL.QTY,
-    DISC:      TABLE_X + COL.NAME + COL.UNIT + COL.QTY + COL.PRICE,
-    DISCPRICE: TABLE_X + COL.NAME + COL.UNIT + COL.QTY + COL.PRICE + COL.DISC,
-    KDV:       TABLE_X + COL.NAME + COL.UNIT + COL.QTY + COL.PRICE + COL.DISC + COL.DISCPRICE,
-    TOTAL:     TABLE_X + COL.NAME + COL.UNIT + COL.QTY + COL.PRICE + COL.DISC + COL.DISCPRICE + COL.KDV,
+    SEQ:       TABLE_X,
+    NAME:      TABLE_X + COL.SEQ,
+    UNIT:      TABLE_X + COL.SEQ + COL.NAME,
+    QTY:       TABLE_X + COL.SEQ + COL.NAME + COL.UNIT,
+    PRICE:     TABLE_X + COL.SEQ + COL.NAME + COL.UNIT + COL.QTY,
+    DISC:      TABLE_X + COL.SEQ + COL.NAME + COL.UNIT + COL.QTY + COL.PRICE,
+    DISCPRICE: TABLE_X + COL.SEQ + COL.NAME + COL.UNIT + COL.QTY + COL.PRICE + COL.DISC,
+    KDV:       TABLE_X + COL.SEQ + COL.NAME + COL.UNIT + COL.QTY + COL.PRICE + COL.DISC + COL.DISCPRICE,
+    TOTAL:     TABLE_X + COL.SEQ + COL.NAME + COL.UNIT + COL.QTY + COL.PRICE + COL.DISC + COL.DISCPRICE + COL.KDV,
   }
 
   function drawTableHeader() {
-    // Light neutral gray background for header
-    fillR(TABLE_X, curY, TABLE_W, THEAD_H, C.thead)
-    // Top + bottom rule for header
-    hLine(curY,           TABLE_X, TABLE_X + TABLE_W, C.hrule, 0.5)
-    hLine(curY + THEAD_H, TABLE_X, TABLE_X + TABLE_W, C.hrule, 0.5)
+    // Koyu lacivert arkaplan — kurumsal tablo kimliği
+    fillR(TABLE_X, curY, TABLE_W, THEAD_H, C.navy)
 
-    // Left accent bar (dark navy — connects to letterhead language)
-    fillR(TABLE_X, curY, 2, THEAD_H, C.accent)
-
-    setF('bold', 6, C.accent)
+    // Beyaz başlık metinleri — 6.5pt bold
+    setF('bold', 6.5, C.white)
     const ty = curY + THEAD_H / 2 + 2.5
-    tL('ÜRÜN / HİZMET',            COL_X.NAME      + CP + 2, ty)
-    tC('BİRİM',                    COL_X.UNIT      + COL.UNIT      / 2, ty)
-    tC('ADET',                     COL_X.QTY       + COL.QTY       / 2, ty)
-    tR('BİRİM FİYAT',              COL_X.PRICE     + COL.PRICE     - CP, ty)
-    tC('İSK.%',                    COL_X.DISC      + COL.DISC      / 2, ty)
-    tR('NET TUTAR',                COL_X.DISCPRICE + COL.DISCPRICE - CP, ty)
-    tC('KDV%',                     COL_X.KDV       + COL.KDV       / 2, ty)
-    tR('SATIR TOPLAMI (' + S + ')', COL_X.TOTAL     + COL.TOTAL     - CP, ty)
+
+    tC('No',                              COL_X.SEQ       + COL.SEQ       / 2, ty)
+    tL('URUN / HIZMET',                   COL_X.NAME      + CP + 1,            ty)
+    tC('BIRIM',                           COL_X.UNIT      + COL.UNIT      / 2, ty)
+    tC('MIKTAR',                          COL_X.QTY       + COL.QTY       / 2, ty)
+    tR('BIRIM FIYAT',                     COL_X.PRICE     + COL.PRICE     - CP, ty)
+    tC('ISK.%',                           COL_X.DISC      + COL.DISC      / 2, ty)
+    tR('NET TUTAR',                       COL_X.DISCPRICE + COL.DISCPRICE - CP, ty)
+    tC('KDV%',                            COL_X.KDV       + COL.KDV       / 2, ty)
+    tR('SATIR TOPLAMI (' + S + ')',        COL_X.TOTAL     + COL.TOTAL     - CP, ty)
+
+    // Çok ince beyaz dikey ayırıcılar başlıkta
+    doc.setDrawColor(255, 255, 255)
+    doc.setLineWidth(0.12)
+    const cols = [COL_X.NAME, COL_X.UNIT, COL_X.QTY, COL_X.PRICE, COL_X.DISC, COL_X.DISCPRICE, COL_X.KDV, COL_X.TOTAL]
+    cols.forEach(cx => doc.line(cx, curY, cx, curY + THEAD_H))
 
     curY += THEAD_H
   }
@@ -580,84 +627,99 @@ export async function generatePdf(opts: PdfOptions): Promise<void> {
   drawTableHeader()
 
   for (let i = 0; i < items.length; i++) {
-    const it        = items[i]
-    const line      = calculateLine(it as LineInput)
-    const qty       = line.quantity
-    const price     = line.price
-    const disc      = line.discount_percent
-    const lineSub   = line.line_subtotal
-    const kdvPct    = line.kdv
-    const rowTotal  = line.line_total
+    const it       = items[i]
+    const line     = calculateLine(it as LineInput)
+    const qty      = line.quantity
+    const price    = line.price
+    const disc     = line.discount_percent
+    const lineSub  = line.line_subtotal
+    const kdvPct   = line.kdv
+    const rowTotal = line.line_total
 
     doc.setFontSize(8)
-    const nLines  = doc.splitTextToSize(it.name?.trim() || '—', COL.NAME - CP * 2 - 2) as string[]
+    const nLines   = doc.splitTextToSize(it.name?.trim() || '—', COL.NAME - CP * 2) as string[]
     const descLines = it.description?.trim()
-      ? (doc.splitTextToSize(it.description.trim(), COL.NAME - CP * 2 - 2) as string[])
+      ? (doc.splitTextToSize(it.description.trim(), COL.NAME - CP * 2) as string[])
       : []
     const textRows  = nLines.length + descLines.length
-    const rowH      = Math.max(ROW_H, textRows * 4 + CP * 2 + 1.5)
+    const rowH      = Math.max(ROW_H, textRows * 4.2 + CP * 2 + 1)
 
     if (curY + rowH > CONTENT_B) {
-      doc.addPage(); curY = PAGE.MT; drawTableHeader()
+      doc.addPage()
+      fillR(0, 0, PAGE.W, STRIP_H, C.navy)
+      curY = PAGE.MT
+      drawTableHeader()
     }
 
-    if (i % 2 === 1) fillR(TABLE_X, curY, TABLE_W, rowH, C.alt)
+    // Zebra — çok hafif
+    if (i % 2 === 1) fillR(TABLE_X, curY, TABLE_W, rowH, C.rowAlt)
 
-    // Product name
+    // Ürün adı (bold)
     setF('bold', 8, C.ink)
-    let ny = curY + CP + 3.5
-    nLines.forEach(l => { tL(l, COL_X.NAME + CP + 2, ny); ny += 4 })
-    // Description (slightly smaller, muted)
+    let ny = curY + CP + 3.8
+    nLines.forEach(l => { tL(l, COL_X.NAME + CP + 1, ny); ny += 4.2 })
+
+    // Açıklama (normal, soluk)
     if (descLines.length > 0) {
-      setF('normal', 7, C.mid)
-      descLines.forEach(l => { tL(l, COL_X.NAME + CP + 2, ny); ny += 3.5 })
+      setF('normal', 6.5, C.mid)
+      descLines.forEach(l => { tL(l, COL_X.NAME + CP + 1, ny); ny += 3.5 })
     }
 
     const midY = curY + rowH / 2 + 2.5
-    setF('normal', 8, C.ink)
-    tC(it.unit || 'adet',                    COL_X.UNIT      + COL.UNIT      / 2, midY)
-    tC(qty.toString(),                        COL_X.QTY       + COL.QTY       / 2, midY)
-    tR(money(price),                          COL_X.PRICE     + COL.PRICE     - CP, midY)
-    tC(disc > 0 ? disc + '%' : '—',           COL_X.DISC      + COL.DISC      / 2, midY)
-    tR(money(lineSub),                        COL_X.DISCPRICE + COL.DISCPRICE - CP, midY)
-    tC('%' + kdvPct,                          COL_X.KDV       + COL.KDV       / 2, midY)
-    setF('bold', 8, C.black)
-    tR(money(rowTotal, S),                    COL_X.TOTAL     + COL.TOTAL     - CP, midY)
 
-    hLine(curY + rowH, TABLE_X, TABLE_X + TABLE_W, C.rule, 0.15)
-    vLine(COL_X.UNIT,      curY, curY + rowH, C.rule)
-    vLine(COL_X.QTY,       curY, curY + rowH, C.rule)
-    vLine(COL_X.PRICE,     curY, curY + rowH, C.rule)
-    vLine(COL_X.DISC,      curY, curY + rowH, C.rule)
-    vLine(COL_X.DISCPRICE, curY, curY + rowH, C.rule)
-    vLine(COL_X.KDV,       curY, curY + rowH, C.rule)
-    vLine(COL_X.TOTAL,     curY, curY + rowH, C.rule)
+    setF('normal', 8, C.dark)
+    tC(String(i + 1),                     COL_X.SEQ       + COL.SEQ       / 2, midY)
+
+    setF('normal', 8, C.ink)
+    tC(it.unit || 'adet',                 COL_X.UNIT      + COL.UNIT      / 2, midY)
+    tC(qty.toString(),                    COL_X.QTY       + COL.QTY       / 2, midY)
+    tR(money(price),                      COL_X.PRICE     + COL.PRICE     - CP, midY)
+    tC(disc > 0 ? '%' + disc : '—',       COL_X.DISC      + COL.DISC      / 2, midY)
+    tR(money(lineSub),                    COL_X.DISCPRICE + COL.DISCPRICE - CP, midY)
+    tC('%' + kdvPct,                      COL_X.KDV       + COL.KDV       / 2, midY)
+
+    // Satır toplamı — bold, baskın
+    setF('bold', 8.5, C.black)
+    tR(money(rowTotal, S),                COL_X.TOTAL + COL.TOTAL - CP, midY)
+
+    // Yatay çizgi (çok ince)
+    hLine(curY + rowH, TABLE_X, TABLE_X + TABLE_W, C.rule, 0.12)
+
+    // Dikey ayırıcılar (çok ince, gri)
+    const colsV = [COL_X.NAME, COL_X.UNIT, COL_X.QTY, COL_X.PRICE,
+                   COL_X.DISC, COL_X.DISCPRICE, COL_X.KDV, COL_X.TOTAL]
+    colsV.forEach(cx => vLine(cx, curY, curY + rowH, C.rule))
+
     curY += rowH
   }
 
-  hLine(curY, TABLE_X, TABLE_X + TABLE_W, C.hrule, 0.5)
-  curY += 10
+  // Tablo kapanış çizgisi
+  hLine(curY, TABLE_X, TABLE_X + TABLE_W, C.border, 0.5)
+  curY += 12
 
   // ══════════════════════════════════════════════════════════════════════════
-  // D. TOTALS (right) + YALNIZ (left)
+  // D. TOPLAM BLOĞU — sağ hizalı, sade yapı
+  //    Subtotal satırları arkaplan yok — sadece GENEL TOPLAM lacivert blok
   // ══════════════════════════════════════════════════════════════════════════
 
-  const TW:  number = 72
+  const TW:  number = 78
   const TXL: number = RX - TW
 
-  const totH = kdvRates.length * 4.5 + 5.5 + (totals.total_discount > 0 ? 5.5 : 0) + 5.5 + 16 + 4
-  ensureSpace(totH + 28)
+  const totLines = kdvRates.length + (totals.total_discount > 0 ? 3 : 2) + 1
+  const totH = totLines * 5.5 + 18 + 4
+  ensureSpace(totH + 35)
 
-  const totStartY = curY
-
-  // KDV breakdown lines
-  setF('normal', 7.5, C.mid)
-  for (const rate of kdvRates) {
-    tL('KDV %' + rate + ':',  TXL, curY)
-    tR(money(kdvMap[rate], S), RX,  curY)
-    curY += 4.5
+  // KDV dağılımı (küçük, soluk)
+  if (kdvRates.length > 0) {
+    setF('normal', 7, C.mid)
+    for (const rate of kdvRates) {
+      tL('KDV %' + rate + ' matrah:',  TXL, curY)
+      tR(money(kdvMap[rate], S),        RX,  curY)
+      curY += 4.5
+    }
+    hLine(curY, TXL, RX, C.rule, 0.2)
+    curY += 3
   }
-  if (kdvRates.length > 0) { hLine(curY, TXL, RX, C.rule, 0.25); curY += 2 }
 
   // Ara Toplam
   setF('normal', 8.5, C.dark)
@@ -666,12 +728,12 @@ export async function generatePdf(opts: PdfOptions): Promise<void> {
   tR(money(subtotal, S), RX, curY)
   curY += 5.5
 
-  // Discount (if any)
+  // İskonto (varsa)
   if (totals.total_discount > 0) {
     setF('normal', 8, C.dark)
-    tL('Toplam İskonto:', TXL, curY)
-    setF('bold', 8, C.accent)
-    tR('-' + money(totals.total_discount, S), RX, curY)
+    tL('Toplam Iskonto:', TXL, curY)
+    setF('bold', 8, C.ink)
+    tR('- ' + money(totals.total_discount, S), RX, curY)
     curY += 5.5
   }
 
@@ -682,94 +744,111 @@ export async function generatePdf(opts: PdfOptions): Promise<void> {
   tR(money(kdvTotal, S), RX, curY)
   curY += 5.5
 
-  hLine(curY, TXL, RX, C.hrule, 0.4)
-  curY += 2
+  // Ayırıcı (ince çizgi)
+  hLine(curY, TXL, RX, C.border, 0.4)
+  curY += 3
 
-  // GENEL TOPLAM — dark navy block
-  const GT_H: number = 16
-  fillR(TXL - 2, curY, TW + 4, GT_H, C.totBg)
-  setF('bold', 8, C.white)
-  tL('GENEL TOPLAM', TXL + 3, curY + 7)
+  // GENEL TOPLAM — lacivert blok, belgede tek dolgu vurgusu
+  const GT_H: number = 14
+  fillR(TXL - 2, curY, TW + 4, GT_H, C.navyDeep)
+
+  setF('bold', 7.5, C.white)
+  tL('GENEL TOPLAM', TXL + CP, curY + GT_H / 2 + 1.5)
+
   setF('bold', 14, C.white)
-  tR(money(grand, S), RX - 3, curY + 10.5)
-  curY += GT_H + 6
+  tR(money(grand, S), RX - CP, curY + GT_H / 2 + 3.5)
 
-  // ── YALNIZ — amount in words in a clean gray box ──────────────────────────
+  curY += GT_H + 9
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // E. YALNIZ — tam genişlik, resmi çerçeveli blok
+  //    Bankanın dekont kutusu gibi hissettirmeli
+  // ══════════════════════════════════════════════════════════════════════════
+
   if (grand > 0) {
     const yText = toWordsTR(grand, currency)
     if (yText) {
-      const YALNIZ_W: number = TXL - LX - 6
-      const yLines = doc.splitTextToSize(yText, YALNIZ_W - 8) as string[]
-      const yBoxH  = yLines.length * 4 + 10
+      const yLines = doc.splitTextToSize(yText, BODY_W - 28) as string[]
+      const yBoxH  = Math.max(12, yLines.length * 4.5 + 10)
 
       ensureSpace(yBoxH + 4)
 
-      // Draw yalniz box flush with totStartY area (left of totals)
-      const yBoxY = totStartY
-      fillR(LX, yBoxY, YALNIZ_W, yBoxH, C.yalniz)
-      strokeR(LX, yBoxY, YALNIZ_W, yBoxH, C.light, 0.3)
+      fillR(LX, curY, BODY_W, yBoxH, C.yalnizBg)
+      strokeR(LX, curY, BODY_W, yBoxH, C.border, 0.3)
 
-      setF('bold', 6.5, C.accent)
-      tL('YALNIZ', LX + 4, yBoxY + 5)
+      // Sol ince lacivert çizgi — aynı dil ALICI bloğuyla
+      fillR(LX, curY, 2, yBoxH, C.navy)
 
-      setF('normal', 7.5, C.dark)
-      let yy = yBoxY + 5 + 4.5
-      yLines.forEach(l => { tL(l, LX + 4, yy); yy += 4 })
+      // Etiket
+      setF('bold', 6.5, C.navy)
+      tL('YALNIZ', LX + 5, curY + 5)
+
+      // İki nokta üst üste ve metin
+      setF('normal', 8, C.ink)
+      let yy = curY + 5
+      yLines.forEach(l => { tL(l, LX + 24, yy); yy += 4.5 })
+
+      curY += yBoxH + 8
     }
   }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // E. FX FOOTNOTE (compact, muted — below totals block)
+  // F. KUR NOTU — küçük, soluk, tek satır
   // ══════════════════════════════════════════════════════════════════════════
+
   const fxParts: string[] = []
   if (fxUsd > 0) fxParts.push('1 USD = ' + fxUsd.toFixed(4) + ' TL')
   if (fxEur > 0) fxParts.push('1 EUR = ' + fxEur.toFixed(4) + ' TL')
   if (fxParts.length > 0) {
     ensureSpace(6)
-    setF('normal', 6.5, C.muted)
+    setF('normal', 6, C.muted)
     tL('Referans Kur (' + fmtDate(createdAt) + '): ' + fxParts.join('   '), LX, curY)
     curY += 5
   }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // F. NOTES
+  // G. NOTLAR
   // ══════════════════════════════════════════════════════════════════════════
+
   if (notes?.trim()) {
-    ensureSpace(16)
-    hLine(curY, LX, RX, C.rule, 0.25)
+    ensureSpace(14)
+    hLine(curY, LX, RX, C.rule, 0.2)
     curY += 5
-    setF('bold', 7.5, C.dark)
+    setF('bold', 7, C.dark)
     tL('Notlar:', LX, curY)
-    curY += 4.5
-    setF('normal', 8, C.dark)
+    curY += 4
+    setF('normal', 7.5, C.dark)
     const nl = doc.splitTextToSize(notes.trim(), BODY_W) as string[]
     nl.forEach(l => { ensureSpace(4); tL(l, LX, curY); curY += 4 })
     curY += 3
   }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // G. LEGAL NOTE + VALIDITY
+  // H. YASAL NOT + GEÇERLİLİK
   // ══════════════════════════════════════════════════════════════════════════
-  ensureSpace(16)
+
+  ensureSpace(14)
   hLine(curY, LX, RX, C.rule, 0.25)
   curY += 5
 
-  setF('normal', 7, C.mid)
-  tL('Bu belge proforma faturadır ve resmi vergi faturası yerine geçmez.', LX, curY)
-  tR('Gecerlilik: ' + validityDays + ' gun  |  Son tarih: ' + addDays(createdAt, validityDays), RX, curY)
-  curY += 5
+  setF('normal', 6.5, C.mid)
+  tL('Bu proforma fatura bilgi amacli olup resmi vergi faturasi yerine gecmez.', LX, curY)
+  setF('normal', 6.5, C.mid)
+  tR('Son Gecerlilik: ' + addDays(createdAt, validityDays) + '  (' + validityDays + ' gun)', RX, curY)
+  curY += 6
 
   // ══════════════════════════════════════════════════════════════════════════
-  // H. BANK INFORMATION
+  // I. ÖDEME BİLGİLERİ
   // ══════════════════════════════════════════════════════════════════════════
+
   if (banks.length > 0) {
-    ensureSpace(24)
+    ensureSpace(22)
     hLine(curY, LX, RX, C.rule, 0.25)
     curY += 5
 
-    setF('bold', 7.5, C.accent)
-    tL('ÖDEME BİLGİLERİ', LX, curY)
-    curY += 5.5
+    setF('bold', 7, C.navy)
+    tL('ODEME BILGILERI', LX, curY)
+    curY += 5
 
     const BCOLS: number = banks.length >= 2 ? 2 : 1
     const GAP:   number = 8
@@ -777,11 +856,10 @@ export async function generatePdf(opts: PdfOptions): Promise<void> {
     const BCX: number[] = Array.from({ length: BCOLS }, (_, i) => PAGE.ML + i * (BCW + GAP))
 
     for (let i = 0; i < banks.length;) {
-      ensureSpace(14)
+      ensureSpace(16)
       const lb = banks[i]
       const rb = BCOLS === 2 && i + 1 < banks.length ? banks[i + 1] : null
 
-      // Left bank
       setF('bold', 8, C.ink)
       tL([lb.bankName, lb.branchName].filter(Boolean).join(' / '), BCX[0], curY)
       doc.setFont('courier', 'normal')
@@ -801,47 +879,75 @@ export async function generatePdf(opts: PdfOptions): Promise<void> {
       }
 
       doc.setFont(FONT, 'normal')
-      curY += 12
+      curY += 13
       i += rb ? 2 : 1
     }
   }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // I. SIGNATURE / APPROVAL AREA
+  // J. PROFORMAYI DÜZENLEYEN + İMZA ALANLARI
+  //    Sol: Proformayı Düzenleyen (ad, ünvan, imza çizgisi + şirket)
+  //    Sağ: Alıcı Onayı (imza çizgisi + müşteri adı)
   // ══════════════════════════════════════════════════════════════════════════
-  ensureSpace(26)
+
+  ensureSpace(36)
   hLine(curY, LX, RX, C.rule, 0.25)
   curY += 8
 
-  // Two signature blocks: left = seller, right = buyer
-  const SIG_W  = 72
-  const SIG_GAP = BODY_W - SIG_W * 2
+  const SIG_W   = 75
   const SIG_LX  = LX
   const SIG_RX  = RX - SIG_W
 
-  setF('normal', 6.5, C.mid)
-  tC('Düzenleyen / Authorized by', SIG_LX + SIG_W / 2, curY)
-  tC('Onaylayan / Approved by',    SIG_RX + SIG_W / 2, curY)
-  curY += 12
+  // Sol: Düzenleyen
+  setF('bold', 6.5, C.navy)
+  tL('PROFORMAYI DUZENLEYEN', SIG_LX, curY)
 
-  // Signature lines
-  hLine(curY, SIG_LX, SIG_LX + SIG_W, C.sigLine, 0.3)
-  hLine(curY, SIG_RX, SIG_RX + SIG_W, C.sigLine, 0.3)
+  if (preparer?.name?.trim()) {
+    curY += 5
+    setF('bold', 9, C.black)
+    tL(preparer.name.trim(), SIG_LX, curY)
+    if (preparer.title?.trim()) {
+      curY += 4.5
+      setF('normal', 7.5, C.dark)
+      tL(preparer.title.trim(), SIG_LX, curY)
+    }
+    curY += 5
+  } else {
+    curY += 14  // Boş alan — imza için yer
+  }
+
+  // İmza çizgisi sol
+  hLine(curY, SIG_LX, SIG_LX + SIG_W, C.sigLine, 0.35)
   curY += 4
 
   setF('normal', 6.5, C.mid)
-  tC(company.name?.trim() || '', SIG_LX + SIG_W / 2, curY)
-  tC(customer.name?.trim() || '', SIG_RX + SIG_W / 2, curY)
+  tL(company.name?.trim() || '', SIG_LX, curY)
+
+  // Sağ: Alıcı onayı — simetrik
+  const sigRightTopY = curY - 30   // Aynı üst hizaya dön
+
+  setF('bold', 6.5, C.navy)
+  tL('ALICI ONAYI', SIG_RX, sigRightTopY + 0)
+
+  // Boş imza alanı
+  hLine(sigRightTopY + 22, SIG_RX, SIG_RX + SIG_W, C.sigLine, 0.35)
+  setF('normal', 6.5, C.mid)
+  tL(customer.name?.trim() || '', SIG_RX, sigRightTopY + 26)
+
+  curY += 8
 
   // ══════════════════════════════════════════════════════════════════════════
-  // J. PAGE FOOTER (all pages)
+  // K. SAYFA ALTI (tüm sayfalar)
   // ══════════════════════════════════════════════════════════════════════════
+
   const totalPages = doc.getNumberOfPages()
   for (let p = 1; p <= totalPages; p++) {
     doc.setPage(p)
+
     const fy: number = PAGE.H - PAGE.MB + 3
-    hLine(fy, LX, RX, C.rule, 0.3)
-    setF('normal', 6.5, C.muted)
+    hLine(fy, LX, RX, C.rule, 0.25)
+
+    setF('normal', 6, C.muted)
     tL(company.name?.trim() || '', LX, fy + 4)
     tC('Sayfa ' + p + ' / ' + totalPages, CX, fy + 4)
     tR(proformaNo + '  ·  ' + fmtDate(createdAt), RX, fy + 4)

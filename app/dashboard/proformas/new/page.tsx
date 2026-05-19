@@ -43,7 +43,9 @@ export default function NewProformaPage() {
   const [bankId,    setBankId]    = useState('')
   const [currency,  setCurrency]  = useState('TRY')
   const [validity,  setValidity]  = useState('1')
-  const [notes,     setNotes]     = useState('')
+  const [notes,          setNotes]          = useState('')
+  const [preparerName,   setPreparerName]   = useState('')
+  const [preparerTitle,  setPreparerTitle]  = useState('')
   const [lines,     setLines]     = useState<Line[]>([emptyLine()])
   const [saving,    setSaving]    = useState(false)
   const [idempKey]  = useState(() => crypto.randomUUID())
@@ -152,8 +154,10 @@ export default function NewProformaPage() {
           bank_id:       bankId || null,
           customer_name: cust?.name || '',
           currency,
-          validity_days: parseInt(validity) || 7,
-          notes:         notes.trim() || null,
+          validity_days:  parseInt(validity) || 7,
+          notes:          notes.trim() || null,
+          preparer_name:  preparerName.trim() || null,
+          preparer_title: preparerTitle.trim() || null,
           items: validLines.map((l, i) => ({
             product_id: l.product_id,
             name:       l.name.trim(),
@@ -423,16 +427,46 @@ export default function NewProformaPage() {
             </button>
           </div>
 
-          {/* Step 3: Notes */}
-          <div className="bg-white border border-[#e2e8f0] rounded p-5">
-            <label className={LAB}>Notlar</label>
-            <textarea
-              className={`${IL} resize-none`}
-              rows={2}
-              placeholder="Müşteriye iletmek istediğiniz not..."
-              value={notes}
-              onChange={e => setNotes(e.target.value)}
-            />
+          {/* Step 3: Notes + Preparer */}
+          <div className="bg-white border border-[#e2e8f0] rounded p-5 space-y-4">
+            <div>
+              <label className={LAB}>Notlar</label>
+              <textarea
+                className={`${IL} resize-none`}
+                rows={2}
+                placeholder="Müşteriye iletmek istediğiniz not..."
+                value={notes}
+                onChange={e => setNotes(e.target.value)}
+              />
+            </div>
+
+            {/* Proformayı Düzenleyen — PDF imza alanında görünür */}
+            <div>
+              <p className={LAB}>Proformayı Düzenleyen</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[0.6rem] text-[#94a3b8] mb-1">Ad Soyad</label>
+                  <input
+                    type="text"
+                    className={IL}
+                    placeholder="Ahmet Yilmaz"
+                    value={preparerName}
+                    onChange={e => setPreparerName(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[0.6rem] text-[#94a3b8] mb-1">Unvan</label>
+                  <input
+                    type="text"
+                    className={IL}
+                    placeholder="Finans Direktoru"
+                    value={preparerTitle}
+                    onChange={e => setPreparerTitle(e.target.value)}
+                  />
+                </div>
+              </div>
+              <p className="text-[0.6rem] text-[#94a3b8] mt-1.5">PDF&apos;te imza alanında gösterilir.</p>
+            </div>
           </div>
         </div>
 

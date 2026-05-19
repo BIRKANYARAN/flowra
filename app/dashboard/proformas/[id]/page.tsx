@@ -149,6 +149,9 @@ export default async function ProformaDetailPage({ params }: PageProps) {
       fxUsd:        safeNum(proforma.fx_usd) || null,
       fxEur:        safeNum(proforma.fx_eur) || null,
       notes,
+      preparer: (proforma.preparer_name?.trim())
+        ? { name: safeStr(proforma.preparer_name), title: safeStr(proforma.preparer_title) }
+        : null,
       // Prefer frozen snapshot → fall back to live data for pre-snapshot proformas
       company: proforma.company_snapshot
         ? {

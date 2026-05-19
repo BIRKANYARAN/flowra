@@ -291,6 +291,8 @@ create table if not exists proformas (
   fx_rate_try         numeric(12,6),
   company_snapshot    jsonb,
   customer_snapshot   jsonb,
+  preparer_name       text,     -- Proformayı Düzenleyen: Ad Soyad
+  preparer_title      text,     -- Proformayı Düzenleyen: Ünvan
   sent_at             timestamptz,
   accepted_at         timestamptz,
   approved_at         timestamptz,   -- alias: set when status → accepted or approved

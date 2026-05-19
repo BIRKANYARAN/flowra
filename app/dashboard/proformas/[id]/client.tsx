@@ -29,6 +29,12 @@ export interface ClientPdfBank {
   iban:       string
 }
 
+/** Proformayı Düzenleyen bilgisi — PDF imza alanında gösterilir */
+export interface ClientPreparer {
+  name:  string
+  title: string
+}
+
 /** Fully serializable PDF options — no undefined anywhere. */
 export interface ClientPdfOpts {
   proformaNo:   string
@@ -38,6 +44,7 @@ export interface ClientPdfOpts {
   fxUsd:        number | null
   fxEur:        number | null
   notes:        string          // empty string when null — never undefined
+  preparer:     ClientPreparer | null
   company: {
     name:      string
     address:   string
@@ -78,6 +85,7 @@ function toPdfOptions(opts: ClientPdfOpts): PdfOptions {
     fxUsd:        opts.fxUsd,
     fxEur:        opts.fxEur,
     notes:        opts.notes.length > 0 ? opts.notes : undefined,
+    preparer:     opts.preparer ?? undefined,
     company: { ...opts.company },
     customer: { ...opts.customer },
     banks: opts.bank

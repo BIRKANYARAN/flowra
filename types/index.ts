@@ -132,6 +132,8 @@ export interface Proforma {
   fx_rate_date:       string | null   // YYYY-MM-DD — date the FX rate applies to
   company_snapshot:   Record<string, unknown> | null   // frozen company info at creation
   customer_snapshot:  Record<string, unknown> | null   // frozen customer info at creation
+  preparer_name:      string | null   // Proformayı Düzenleyen: Ad Soyad
+  preparer_title:     string | null   // Proformayı Düzenleyen: Ünvan
   status:             ProformaStatus
   revision_no:    number
   parent_id:      string | null
