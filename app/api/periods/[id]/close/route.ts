@@ -33,6 +33,21 @@ export async function POST(
     if (period.status === 'closed')  return NextResponse.json({ error: 'Dönem zaten kapalı' }, { status: 409 })
     if (period.status === 'locked')  return NextResponse.json({ error: 'Dönem kilitlenmiş, kapatılamaz' }, { status: 409 })
 
+    // Guard: period must have ended before it can be closed.
+    // Closing a future period would freeze accounting entries before the period ends,
+    // preventing legitimate transactions from being recorded (period guard rejects them).
+    // This protects the CFO from accidentally closing March on March 15 and then
+    // being unable to record the remaining 16 days of transactions.
+    const today = new Date().toISOString().slice(0, 10)
+    if (period.period_end > today) {
+      return NextResponse.json({
+        error:      `Bu dönem henüz sona ermedi. Dönem bitiş tarihi: ${period.period_end}`,
+        detail:     `Dönemi kapatmak için ${period.period_end} tarihini beklemelisiniz.`,
+        code:       'PERIOD_NOT_YET_ENDED',
+        period_end: period.period_end,
+      }, { status: 422 })
+    }
+
     // Run accounting checks before allowing close
     const [tbReport, reconciliation] = await Promise.all([
       TrialBalanceService.compute(companyId, supabase, { periodId: params.id }),

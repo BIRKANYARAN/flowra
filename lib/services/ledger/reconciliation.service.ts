@@ -114,6 +114,14 @@ export class ReconciliationService {
     }
   }
 
+  // Financing expense types are balance-sheet flows (321/335 accounts), not trade payables (320).
+  // Excluding them from the 320 reconciliation prevents false critical mismatches
+  // when partners have outstanding loan repayments or pending dividend distributions.
+  private static readonly FINANCING_EXPENSE_TYPES = new Set([
+    'partner_financing', 'loan_repayment', 'dividend',
+    'internal_transfer', 'principal', 'partner_loan',
+  ])
+
   private static async fetchOperationalTotals(
     companyId: string,
     supabase:  AnySupabaseClient,
@@ -124,31 +132,35 @@ export class ReconciliationService {
     const [salesRes, expensesRes] = await Promise.all([
       supabase
         .from('sales')
-        // kdv_amount_try column does not exist on live DB; output VAT = 0
-        .select('total_try:total, amount_paid:paid_amount')
+        // kdv_amount_try: frozen at sale creation time (added in accounting_truth_v1.sql,
+        //   NOT NULL DEFAULT 0). Pre-migration rows contribute 0 — KDV is never overstated.
+        .select('total_try:total, amount_paid:paid_amount, kdv_amount_try')
         .eq('company_id', companyId)
         .is('deleted_at', null)
         .lte('sale_date', asOf),
       supabase
         .from('expenses')
-        // expenses have no partial amount; use payment_status to determine unpaid
-        .select('amount_try, payment_status')
+        .select('amount_try, payment_status, expense_type')
         .eq('company_id', companyId)
         .is('deleted_at', null)
         .lte('expense_date', asOf),
     ])
 
-    const sales    = (salesRes.data    ?? []) as Array<{ total_try: number; amount_paid: number | null }>
-    const expenses = (expensesRes.data ?? []) as Array<{ amount_try: number; payment_status: string | null }>
+    const sales    = (salesRes.data    ?? []) as Array<{ total_try: number; amount_paid: number | null; kdv_amount_try?: number | null }>
+    const expenses = (expensesRes.data ?? []) as Array<{ amount_try: number; payment_status: string | null; expense_type?: string | null }>
 
-    // revenue_try = total_try (kdv_amount_try column does not exist on live DB; output VAT = 0)
     const totalRevenue   = round2(sales.reduce((s, r) => s + (Number(r.total_try) || 0), 0))
-    const totalOutputVat = 0 // kdv_amount_try column does not exist on live DB
+    // Output VAT from kdv_amount_try (frozen at sale creation — 0 for pre-migration rows)
+    const totalOutputVat = round2(sales.reduce((s, r) => s + (Number(r.kdv_amount_try) || 0), 0))
     const unpaidSales    = round2(sales.reduce((s, r) =>
       s + Math.max(0, (Number(r.total_try) || 0) - (Number(r.amount_paid) || 0)), 0))
-    // expenses: unpaid = all non-paid entries (no partial tracking for expenses)
-    const unpaidExpenses = round2(expenses.reduce((s, r) =>
-      r.payment_status === 'paid' ? s : s + (Number(r.amount_try) || 0), 0))
+    // Trade payables (GL 320): only operational expenses — exclude financing flows which
+    // belong on 321 (partner loans) or 335 (payroll), not 320 (trade payables).
+    const unpaidExpenses = round2(expenses.reduce((s, r) => {
+      if (r.payment_status === 'paid') return s
+      if (r.expense_type && ReconciliationService.FINANCING_EXPENSE_TYPES.has(r.expense_type)) return s
+      return s + (Number(r.amount_try) || 0)
+    }, 0))
 
     return {
       total_revenue_try:    totalRevenue,
