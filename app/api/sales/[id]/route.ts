@@ -174,7 +174,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
 
     const { data: sale, error: findErr } = await supabase
       .from('sales')
-      .select('id')
+      .select('id, sale_date, payment_status')
       .eq('id', id)
       .eq('company_id', companyId)
       .is('deleted_at', null)
@@ -185,6 +185,23 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
       return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 })
     }
     if (!sale) return NextResponse.json({ error: 'Satış bulunamadı' }, { status: 404 })
+
+    // D4: Period guard — do not allow soft-delete of a sale in a locked/closed period
+    const saleDate = (sale as { sale_date?: string }).sale_date ?? new Date().toISOString().slice(0, 10)
+    const guard = await checkPeriodGuard(companyId, saleDate, supabase)
+    if (guard.blocked) {
+      return NextResponse.json({ error: guard.reason, code: 'PERIOD_LOCKED', type: 'BUSINESS' }, { status: 422 })
+    }
+
+    // D4: Block deletion of paid sales to prevent orphaned journal entries
+    const ps = (sale as { payment_status?: string }).payment_status
+    if (ps === 'paid') {
+      return NextResponse.json({
+        error: 'Ödenmiş satışlar silinemez. Önce ödemeyi geri alın.',
+        code:  'SALE_PAID_DELETE_BLOCKED',
+        type:  'BUSINESS',
+      }, { status: 422 })
+    }
 
     const { error: delErr } = await supabase
       .from('sales')

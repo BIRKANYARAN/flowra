@@ -304,7 +304,7 @@ export async function DELETE(req: NextRequest) {
 
     const { data: existing, error: findErr } = await supabase
       .from('expenses')
-      .select('id')
+      .select('id, expense_date, payment_status')
       .eq('id', id)
       .eq('company_id', companyId)
       .is('deleted_at', null)
@@ -316,11 +316,23 @@ export async function DELETE(req: NextRequest) {
 
     if (!existing) return NextResponse.json({ error: 'Gider bulunamadı', code: 'EXPENSE_NOT_FOUND', type: 'BUSINESS' }, { status: 404 })
 
-    await supabase
+    // D4: Period guard — block delete of expense in locked/closed period
+    const expDate = (existing as { expense_date?: string }).expense_date ?? new Date().toISOString().slice(0, 10)
+    const guard = await checkPeriodGuard(companyId, expDate, supabase)
+    if (guard.blocked) {
+      return NextResponse.json({ error: guard.reason, code: 'PERIOD_LOCKED', type: 'BUSINESS' }, { status: 422 })
+    }
+
+    const { error: delErr } = await supabase
       .from('expenses')
       .update({ deleted_at: new Date().toISOString() })
       .eq('id', id)
       .eq('company_id', companyId)
+
+    if (delErr) {
+      console.error('[expenses DELETE] update error:', delErr.message)
+      return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 })
+    }
 
     logAudit({
       userId:     uid,
