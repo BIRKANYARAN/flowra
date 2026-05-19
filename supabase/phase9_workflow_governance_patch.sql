@@ -203,12 +203,124 @@ end $$;
 grant all on governance_reports  to authenticated, service_role;
 grant all on governance_signoffs to authenticated, service_role;
 
+-- ─────────────────────────────────────────────────────────────────────────────
+-- SECTION O — FX RATES CACHE
+-- Per-day TCMB buying/selling rates for TRY, USD, EUR currencies.
+-- Populated by /api/fx-rates cron; upserted on every proforma creation.
+-- ─────────────────────────────────────────────────────────────────────────────
+
+create table if not exists fx_rates (
+  id         uuid        primary key default gen_random_uuid(),
+  rate_date  date        not null,
+  currency   text        not null,            -- 'USD' | 'EUR' | 'GBP' etc.
+  buying     numeric(14,6) not null,           -- TCMB buying rate (TRY per unit)
+  selling    numeric(14,6) not null,
+  source     text        not null default 'tcmb',
+  fetched_at timestamptz not null default now(),
+  constraint fx_rates_date_currency_uq unique (rate_date, currency)
+);
+
+create index if not exists idx_fx_rates_date_currency
+  on fx_rates (rate_date desc, currency);
+
+alter table fx_rates enable row level security;
+
+-- fx_rates is a global reference table (no company scope) — public read, service_role write
+do $$
+begin
+  if not exists (
+    select 1 from pg_policies where tablename = 'fx_rates' and policyname = 'fx_rates_read_all'
+  ) then
+    create policy fx_rates_read_all on fx_rates
+      for select using (true);
+  end if;
+end $$;
+
+grant select on fx_rates to authenticated, anon;
+grant all    on fx_rates to service_role;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- SECTION P — COMPANY BANKS
+-- Per-company bank account details shown on proformas/invoices.
+-- Distinct from the `banks` table (which tracks operational cash balances).
+-- ─────────────────────────────────────────────────────────────────────────────
+
+create table if not exists company_banks (
+  id          uuid        primary key default gen_random_uuid(),
+  company_id  uuid        not null references companies(id) on delete cascade,
+  user_id     uuid        references auth.users(id) on delete set null,
+  bank_name   text        not null,
+  branch_name text,
+  iban        text,
+  is_default  boolean     not null default false,
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now(),
+  deleted_at  timestamptz
+);
+
+create index if not exists idx_company_banks_company
+  on company_banks (company_id) where deleted_at is null;
+
+alter table company_banks enable row level security;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_policies where tablename = 'company_banks' and policyname = 'company_banks_member'
+  ) then
+    create policy company_banks_member on company_banks
+      for all using (
+        company_id in (
+          select company_id from company_members where user_id = auth.uid()
+        )
+      );
+  end if;
+end $$;
+
+grant all on company_banks to authenticated, service_role;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- SECTION Q — POLICY RATES
+-- Central bank policy rates (TCMB/FED/ECB) for carrying cost calculation.
+-- Global reference table — no company scope.
+-- ─────────────────────────────────────────────────────────────────────────────
+
+create table if not exists policy_rates (
+  id          uuid        primary key default gen_random_uuid(),
+  currency    text        not null,            -- 'TRY' | 'USD' | 'EUR'
+  rate_date   date        not null,
+  annual_rate numeric(8,4) not null,           -- decimal (0.40 = 40% TCMB rate)
+  source      text        not null default 'manual', -- 'tcmb' | 'fed' | 'ecb' | 'manual'
+  notes       text,
+  created_at  timestamptz not null default now(),
+  constraint policy_rates_currency_date_uq unique (currency, rate_date)
+);
+
+create index if not exists idx_policy_rates_currency_date
+  on policy_rates (currency, rate_date desc);
+
+alter table policy_rates enable row level security;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_policies where tablename = 'policy_rates' and policyname = 'policy_rates_read_all'
+  ) then
+    create policy policy_rates_read_all on policy_rates
+      for select using (true);
+  end if;
+end $$;
+
+grant select on policy_rates to authenticated, anon;
+grant all    on policy_rates to service_role;
+
 -- ═══════════════════════════════════════════════════════════════════════════════
 -- VERIFY after running:
 --   select table_name from information_schema.tables
 --   where table_schema = 'public'
 --     and table_name in ('workflow_instances','workflow_instance_items',
---                        'governance_reports','governance_signoffs')
+--                        'governance_reports','governance_signoffs',
+--                        'fx_rates','company_banks','policy_rates')
 --   order by table_name;
--- Expected: 4 rows
+-- Expected: 7 rows
 -- ═══════════════════════════════════════════════════════════════════════════════

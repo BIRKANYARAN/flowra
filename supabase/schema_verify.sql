@@ -50,7 +50,10 @@ FROM (VALUES
   ('workflow_instances'),
   ('workflow_instance_items'),
   ('governance_reports'),
-  ('governance_signoffs')
+  ('governance_signoffs'),
+  ('fx_rates'),
+  ('company_banks'),
+  ('policy_rates')
 ) t(table_name)
 
 UNION ALL
