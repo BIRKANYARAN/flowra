@@ -250,6 +250,49 @@ export async function CFOTab({ userId, companyId }: Props) {
     F: 'text-neg-text bg-neg-light border-neg-light',
   }[healthScore.grade]
 
+  // ── C4: Governance Confidence Narrative ────────────────────────────────────
+  const governanceLines: string[] = []
+  const failedChecks = checks.filter(c => !c.passed)
+
+  if (checksPassedCount === checks.length && duplicates.length === 0) {
+    governanceLines.push(
+      'Tüm muhasebe kontrolleri geçti ve kopya masraf sinyali yok — bu dönemin verileri güvenilir.'
+    )
+  } else {
+    if (failedChecks.length > 0) {
+      governanceLines.push(
+        `${failedChecks.length} muhasebe kontrolü başarısız: ${failedChecks.map(f => f.name).join(', ')} — finansal tablolar onaylanmadan dönemi kapatmayın.`
+      )
+    }
+    if (duplicates.length > 0) {
+      const highConf = duplicates.filter(d => d.confidence === 'high').length
+      governanceLines.push(
+        `${duplicates.length} potansiyel kopya masraf${highConf > 0 ? ` (${highConf} yüksek güven)` : ''} — gider doğruluğu teyit edilmeden dönem kârı kesinleştirilmemeli.`
+      )
+    }
+  }
+
+  if (periodData) {
+    const endMs    = new Date(periodData.period.period_end + 'T00:00:00').getTime()
+    const daysOver = Math.round((Date.now() - endMs) / 86_400_000)
+    if (daysOver > 0 && periodData.period.status === 'open') {
+      governanceLines.push(
+        `Dönem ${daysOver} gün önce bitmesine rağmen hâlâ açık — kapanış gecikmesi denetim sürekliliğini zayıflatır.`
+      )
+    }
+    if (periodData.period.status === 'locked') {
+      governanceLines.push(
+        'Dönem kilitlenmiş — denetim zinciri bu dönem için tamamlandı.'
+      )
+    }
+  }
+
+  if (loadErrors.length > 0) {
+    governanceLines.push(
+      `${loadErrors.join(', ')} ${loadErrors.length === 1 ? 'servisi' : 'servisleri'} yanıt vermedi — gösterilen değerler eksik olabilir, güven düzeyi düşük.`
+    )
+  }
+
   return (
     <div className="space-y-4">
 
@@ -360,6 +403,23 @@ export async function CFOTab({ userId, companyId }: Props) {
           ))}
         </div>
       </div>
+
+      {/* C4: Dönem Güvence Değerlendirmesi */}
+      {governanceLines.length > 0 && (
+        <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
+          <div className="flex items-center justify-between mb-2.5">
+            <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Dönem Güvence Değerlendirmesi</span>
+            <span className="text-[9px] text-[#94a3b8]">Muhasebe bütünlüğü · Dönem süresi · Denetim sürekliliği</span>
+          </div>
+          <div className="space-y-0.5">
+            {governanceLines.map((line, i) => (
+              <div key={i} className="text-[11px] text-[#64748b] leading-snug">
+                <span className="text-[#cbd5e1] mr-1.5">—</span>{line}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Period Close Status */}
       <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
