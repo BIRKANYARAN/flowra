@@ -78,8 +78,11 @@ export class TrialBalanceService {
       detail: hasEntries ? 'En az bir kayıt mevcut' : 'Dönem için hiç journal entry yok',
     })
 
-    const allPassed      = checks.every(c => c.passed)
-    const canClosePeriod = tb.is_balanced && checks[1].passed  // balance + no abnormal
+    const allPassed = checks.every(c => c.passed)
+    // canClosePeriod: requires balance + no abnormal balances + at least one entry
+    // (empty trial balance is trivially balanced — must not allow phantom period close)
+    const noAbnormalAccounts = suspiciousAccounts.length === 0
+    const canClosePeriod     = tb.is_balanced && noAbnormalAccounts && hasEntries
 
     return {
       trial_balance:    tb,

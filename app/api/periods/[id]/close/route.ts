@@ -38,10 +38,12 @@ export async function POST(
       ReconciliationService.check(companyId, supabase, { periodId: params.id }),
     ])
 
-    if (!tbReport.trial_balance.is_balanced) {
+    // Use canClosePeriod from TrialBalanceService — requires balance + no abnormal + entries
+    if (!tbReport.can_close_period) {
+      const failedChecks = tbReport.checks.filter(c => !c.passed).map(c => c.name).join(', ')
       return NextResponse.json({
-        error:   'Mizan dengeli değil. Dönem kapatılamaz.',
-        detail:  `Fark: ${tbReport.trial_balance.imbalance_try.toFixed(2)} TL`,
+        error:   'Muhasebe kontrolleri geçilemedi. Dönem kapatılamaz.',
+        detail:  failedChecks || 'Mizan dengeli değil veya journal kayıt yok.',
         code:    'TRIAL_BALANCE_UNBALANCED',
       }, { status: 422 })
     }
