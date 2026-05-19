@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSystemAdminClient }      from '@/lib/admin-db'
 import { round2 } from '@/lib/calc'
+import { makeRequestContext } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,9 +19,10 @@ export const dynamic = 'force-dynamic'
 const CRON_SECRET = process.env.CRON_SECRET
 
 export async function POST(req: NextRequest) {
-  // Verify Vercel Cron signature (or shared secret).
-  // Treat a missing CRON_SECRET as misconfiguration — deny access rather than
-  // leaving the endpoint open to unauthenticated callers.
+  // Generate a run ID at the very start so every log line and the final response
+  // share a correlation ID — critical for tracing cron failures in Vercel logs.
+  const { requestId: runId } = makeRequestContext()
+
   const authHeader = req.headers.get('authorization')
   if (!CRON_SECRET || authHeader !== `Bearer ${CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -87,18 +89,20 @@ export async function POST(req: NextRequest) {
       .insert(newRows)
 
     if (insErr) {
-      console.error('[cron/interest-accrual] bulk insert error:', insErr.message)
-      return NextResponse.json({ error: insErr.message }, { status: 500 })
+      console.error('[cron/interest-accrual] bulk insert error:', insErr.message, { runId })
+      return NextResponse.json({ error: insErr.message, code: 'DB_INSERT_FAILED', run_id: runId }, { status: 500 })
     }
 
+    console.info('[cron/interest-accrual]', { runId, accrued: newRows.length, skipped: tranches.length - newRows.length, date: today })
     return NextResponse.json({
       ok:      true,
       accrued: newRows.length,
       skipped: tranches.length - newRows.length,
       date:    today,
+      run_id:  runId,
     })
   } catch (e) {
-    console.error('[cron/interest-accrual]', e)
-    return NextResponse.json({ error: 'Internal error' }, { status: 500 })
+    console.error('[cron/interest-accrual]', e, { runId })
+    return NextResponse.json({ error: 'Internal error', code: 'SYSTEM_ERROR', run_id: runId }, { status: 500 })
   }
 }

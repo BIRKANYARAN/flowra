@@ -25,8 +25,10 @@ import {
   BURN_EXPENSE_TYPES,
 } from '@/lib/finance/cfo-metrics'
 import { resolveApiAuth } from '@/lib/api-auth'
+import { reqCtx, apiError } from '@/lib/api-utils'
 
 export async function GET(req: NextRequest) {
+  const ctx = reqCtx(req)
   const auth = await resolveApiAuth(req)
   if (!auth.ok) return auth.response
   const { companyId, supabase } = auth
@@ -324,6 +326,6 @@ export async function GET(req: NextRequest) {
     })
   } catch (err) {
     console.error('[cfo-metrics] error:', err instanceof Error ? err.message : String(err))
-    return NextResponse.json({ error: 'CFO metrikleri alınamadı', code: 'INTERNAL_ERROR' }, { status: 500 })
+    return apiError(ctx, 'CFO metrikleri alınamadı', 500, 'DB_READ_FAILED')
   }
 }

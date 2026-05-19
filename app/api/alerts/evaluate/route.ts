@@ -3,6 +3,7 @@ import { FinanceService }            from '@/lib/services/finance.service'
 import { evaluateAlerts }            from '@/lib/engines/alert.engine'
 import type { AlertInputs }          from '@/lib/engines/alert.engine'
 import { resolveApiAuth } from '@/lib/api-auth'
+import { reqCtx, apiError } from '@/lib/api-utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,6 +14,7 @@ export const dynamic = 'force-dynamic'
 // Returns { alerts: DecisionAlert[], count: number }
 
 export async function GET(req: NextRequest) {
+  const ctx = reqCtx(req)
   try {
     const auth = await resolveApiAuth(req)
     if (!auth.ok) return auth.response
@@ -181,6 +183,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ alerts, count: alerts.length })
   } catch (e) {
     console.error('[alerts/evaluate]', e)
-    return NextResponse.json({ error: 'Internal error' }, { status: 500 })
+    return apiError(ctx, 'Alert değerlendirmesi başarısız', 500, 'DB_READ_FAILED')
   }
 }

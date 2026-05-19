@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSystemAdminClient }      from '@/lib/admin-db'
+import { makeRequestContext } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,8 +15,8 @@ export const dynamic = 'force-dynamic'
 const CRON_SECRET = process.env.CRON_SECRET
 
 export async function POST(req: NextRequest) {
-  // Treat a missing CRON_SECRET as misconfiguration — deny access rather than
-  // leaving the endpoint open to unauthenticated callers.
+  const { requestId: runId } = makeRequestContext()
+
   const authHeader = req.headers.get('authorization')
   if (!CRON_SECRET || authHeader !== `Bearer ${CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -42,7 +43,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (!stale?.length) {
-      return NextResponse.json({ ok: true, updated: 0, date: today })
+      return NextResponse.json({ ok: true, updated: 0, date: today, run_id: runId })
     }
 
     const ids = stale.map(s => s.id)
@@ -53,8 +54,8 @@ export async function POST(req: NextRequest) {
       .in('id', ids)
 
     if (updateErr) {
-      console.error('[cron/overdue-update] update error:', updateErr)
-      return NextResponse.json({ error: updateErr.message }, { status: 500 })
+      console.error('[cron/overdue-update] update error:', updateErr, { runId })
+      return NextResponse.json({ error: updateErr.message, code: 'DB_UPDATE_FAILED', run_id: runId }, { status: 500 })
     }
 
     // Audit log for each newly overdue sale — use actual prior status (may be 'partial')
@@ -70,13 +71,15 @@ export async function POST(req: NextRequest) {
 
     await supabase.from('audit_logs').insert(auditRows)
 
+    console.info('[cron/overdue-update]', { runId, updated: count ?? stale.length, date: today })
     return NextResponse.json({
       ok:      true,
       updated: count ?? stale.length,
       date:    today,
+      run_id:  runId,
     })
   } catch (e) {
-    console.error('[cron/overdue-update]', e)
-    return NextResponse.json({ error: 'Internal error' }, { status: 500 })
+    console.error('[cron/overdue-update]', e, { runId })
+    return NextResponse.json({ error: 'Internal error', code: 'SYSTEM_ERROR', run_id: runId }, { status: 500 })
   }
 }

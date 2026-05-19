@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { BalanceSheetService }       from '@/lib/services/balance-sheet.service'
 import { resolveApiAuth } from '@/lib/api-auth'
+import { reqCtx, apiError } from '@/lib/api-utils'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(req: NextRequest) {
+  // Resolve request context before auth so catch block always has a traceable ID
+  const ctx = reqCtx(req)
   try {
     const auth = await resolveApiAuth(req)
     if (!auth.ok) return auth.response
@@ -20,6 +23,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(balanceSheet)
   } catch (e) {
     console.error('[balance-sheet] error:', e)
-    return NextResponse.json({ error: 'Internal error' }, { status: 500 })
+    return apiError(ctx, 'Bilanço hesaplanamadı', 500, 'DB_READ_FAILED')
   }
 }

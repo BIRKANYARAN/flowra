@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { CashFlowStatementService }   from '@/lib/services/cashflow-statement.service'
 import { resolveApiAuth } from '@/lib/api-auth'
+import { reqCtx, apiError } from '@/lib/api-utils'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(req: NextRequest) {
+  const ctx = reqCtx(req)
   try {
     const auth = await resolveApiAuth(req)
     if (!auth.ok) return auth.response
@@ -22,6 +24,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(statement)
   } catch (e) {
     console.error('[cash-flow-statement] error:', e)
-    return NextResponse.json({ error: 'Internal error' }, { status: 500 })
+    return apiError(ctx, 'Nakit akış tablosu hesaplanamadı', 500, 'DB_READ_FAILED')
   }
 }
