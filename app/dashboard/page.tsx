@@ -142,7 +142,7 @@ export default async function DashboardPage() {
   if (!userId) return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-center px-4">
       <div className="text-3xl">⚠️</div>
-      <p className="text-sm text-gray-500">Oturum bilgisi alınamadı. Lütfen sayfayı yenileyin.</p>
+      <p className="text-sm text-[#64748b]">Oturum bilgisi alınamadı. Lütfen sayfayı yenileyin.</p>
       <a href="/dashboard" className="text-sm text-primary-600 font-semibold hover:underline">Yeniden Dene</a>
     </div>
   )
@@ -155,8 +155,8 @@ export default async function DashboardPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center px-4">
         <div className="text-4xl">⚠️</div>
-        <h2 className="text-xl font-bold text-gray-900">Şirket bilgisi yüklenemedi</h2>
-        <p className="text-sm text-gray-500 max-w-sm">
+        <h2 className="text-xl font-bold text-[#0f172a]">Şirket bilgisi yüklenemedi</h2>
+        <p className="text-sm text-[#64748b] max-w-sm">
           Hesabınıza bağlı şirket bilgisi alınamadı. Lütfen sayfayı yenileyin veya destek ekibiyle iletişime geçin.
         </p>
         <a href="/dashboard" className="text-sm text-primary-600 font-semibold hover:underline">
@@ -532,16 +532,16 @@ export default async function DashboardPage() {
 
       {/* ── PAGE HERO ─────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-black tracking-tight text-gray-900 leading-tight">CEO Komuta Merkezi</h1>
+        <h1 className="text-2xl font-black tracking-tight text-[#0f172a] leading-tight">CEO Komuta Merkezi</h1>
         <div className="flex items-center gap-2 flex-shrink-0">
-          <span className="text-sm text-gray-400 tabular-nums">{label}</span>
-          <span className="text-gray-200 text-sm">·</span>
+          <span className="text-sm text-[#94a3b8] tabular-nums">{label}</span>
+          <span className="text-[#e2e8f0] text-sm">·</span>
           <Link href="/dashboard/commercial?tab=proformas"
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded bg-gray-900 text-white text-xs font-semibold hover:bg-gray-700 transition-colors">
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded bg-[#0f172a] text-white text-xs font-semibold hover:bg-[#334155] transition-colors">
             + Proforma
           </Link>
           <Link href="/dashboard/operations?tab=expenses"
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded border border-[#e2e8f0] text-gray-700 text-xs font-semibold hover:bg-[#f8fafc] transition-colors">
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded border border-[#e2e8f0] text-[#334155] text-xs font-semibold hover:bg-[#f8fafc] transition-colors">
             + Gider
           </Link>
           <Link href="/dashboard/commercial?tab=collections"
@@ -575,18 +575,18 @@ export default async function DashboardPage() {
           <div className="flex items-center gap-1 overflow-x-auto scrollbar-none flex-1 min-w-0">
             {ctxChain.nodes.map((node, i) => (
               <span key={i} className="flex items-center gap-1 flex-shrink-0">
-                {i > 0 && <span className="text-gray-300 text-xs mx-0.5">→</span>}
+                {i > 0 && <span className="text-[#cbd5e1] text-xs mx-0.5">→</span>}
                 <span className={`text-[11px] px-2 py-0.5 rounded-md font-medium ${
                   node.severity === 'critical' ? 'bg-neg-light text-neg-text border border-neg-light' :
                   node.severity === 'warn'     ? 'bg-warn-light text-warn-text border border-warn-light' :
-                  'bg-[#f8fafc] text-gray-600 border border-[#e2e8f0]'
+                  'bg-[#f8fafc] text-[#64748b] border border-[#e2e8f0]'
                 }`}>
                   {node.label}
                 </span>
               </span>
             ))}
-            <span className="text-gray-300 text-xs mx-1 flex-shrink-0">→</span>
-            <span className="text-[11px] text-gray-500 italic flex-shrink-0">{ctxChain.conclusion}</span>
+            <span className="text-[#cbd5e1] text-xs mx-1 flex-shrink-0">→</span>
+            <span className="text-[11px] text-[#64748b] italic flex-shrink-0">{ctxChain.conclusion}</span>
           </div>
           <span className="flex-shrink-0 text-[10px] font-semibold text-primary-600 group-hover:text-primary-700 whitespace-nowrap">
             Analiz →
@@ -601,15 +601,15 @@ export default async function DashboardPage() {
           <span className={`text-[8px] font-semibold px-2 py-0.5 rounded ${
             aiSummary.generated_by === 'ai'
               ? 'bg-brand-subtle text-brand'
-              : 'bg-gray-100 text-gray-400'
+              : 'bg-[#f1f5f9] text-[#94a3b8]'
           }`}>
             {aiSummary.generated_by === 'ai' ? `AI · ${aiSummary.model_version ?? 'claude'}` : 'kural tabanlı'}
           </span>
         </div>
-        <p className="text-sm text-gray-700 leading-relaxed mb-3">{aiSummary.summary_tr}</p>
+        <p className="text-sm text-[#334155] leading-relaxed mb-3">{aiSummary.summary_tr}</p>
         <div className="flex flex-wrap gap-1.5 mb-3">
           {aiSummary.key_factors.map((f, i) => (
-            <span key={i} className="text-[10px] bg-[#f8fafc] border border-[#e2e8f0] text-gray-600 px-2 py-1 rounded">
+            <span key={i} className="text-[10px] bg-[#f8fafc] border border-[#e2e8f0] text-[#64748b] px-2 py-1 rounded">
               {f}
             </span>
           ))}
@@ -632,11 +632,11 @@ export default async function DashboardPage() {
           {/* Ciro */}
           <Link href="/dashboard/commercial?tab=sales"
             className="px-5 py-4 hover:bg-[#f8fafc]/60 transition-colors">
-            <div className="text-[9px] font-black uppercase tracking-widest mb-1.5 text-gray-400">Ciro</div>
-            <div className={`${kpiValueSize('revenue')} font-black tabular-nums leading-none text-gray-900`}>
-              <span className="text-gray-300 font-normal text-sm mr-0.5">₺</span>{formatKpi(fs.revenue_try)}
+            <div className="text-[9px] font-black uppercase tracking-widest mb-1.5 text-[#94a3b8]">Ciro</div>
+            <div className={`${kpiValueSize('revenue')} font-black tabular-nums leading-none text-[#0f172a]`}>
+              <span className="text-[#cbd5e1] font-normal text-sm mr-0.5">₺</span>{formatKpi(fs.revenue_try)}
             </div>
-            <div className="text-[10px] text-gray-400 mt-1.5">
+            <div className="text-[10px] text-[#94a3b8] mt-1.5">
               {fs.revenue_try > 0 ? `Brüt marj ${pct(grossMarginPct)}` : 'Satış yok'}
             </div>
             {revDeltaPct !== null && (
@@ -649,26 +649,26 @@ export default async function DashboardPage() {
           {/* Aylık Net */}
           <Link href="/dashboard/finance?tab=pnl"
             className={`px-5 py-4 hover:bg-[#f8fafc]/60 transition-colors ${monthlyNet < 0 ? 'bg-neg-light/25' : ''}`}>
-            <div className="text-[9px] font-black uppercase tracking-widest mb-1.5 text-gray-400">Aylık Net</div>
+            <div className="text-[9px] font-black uppercase tracking-widest mb-1.5 text-[#94a3b8]">Aylık Net</div>
             <div className={`${kpiValueSize('net')} font-black tabular-nums leading-none ${monthlyNet >= 0 ? 'text-pos-text' : 'text-neg'}`}>
               <span className={`font-normal text-sm mr-0.5 ${monthlyNet >= 0 ? 'text-pos/70' : 'text-neg/70'}`}>₺</span>
               {formatKpi(Math.abs(monthlyNet))}
             </div>
-            <div className="text-[10px] text-gray-400 mt-1.5">{monthlyNet >= 0 ? 'Kârlı dönem' : 'Zarar'}</div>
+            <div className="text-[10px] text-[#94a3b8] mt-1.5">{monthlyNet >= 0 ? 'Kârlı dönem' : 'Zarar'}</div>
             {netDeltaPct !== null && (
               <div className={`text-[10px] font-semibold mt-0.5 tabular-nums ${netDeltaPct >= 0 ? 'text-pos-text' : 'text-neg'}`}>
                 {netDeltaPct >= 0 ? '▲' : '▼'} {Math.abs(netDeltaPct).toFixed(1)}% geçen ay
               </div>
             )}
             {breakEvenRevenue !== null && (
-              <div className="text-[10px] text-gray-400 mt-0.5">Başabaş: {fmt(breakEvenRevenue)}</div>
+              <div className="text-[10px] text-[#94a3b8] mt-0.5">Başabaş: {fmt(breakEvenRevenue)}</div>
             )}
           </Link>
 
           {/* Bekleyen Tahsilat */}
           <Link href="/dashboard/commercial?tab=collections"
             className={`px-5 py-4 hover:bg-[#f8fafc]/60 transition-colors ${dominantKpi === 'receivables' ? 'bg-warn-light/40' : ''}`}>
-            <div className={`text-[9px] font-black uppercase tracking-widest mb-1.5 ${dominantKpi === 'receivables' ? 'text-warn-text' : 'text-gray-400'}`}>
+            <div className={`text-[9px] font-black uppercase tracking-widest mb-1.5 ${dominantKpi === 'receivables' ? 'text-warn-text' : 'text-[#94a3b8]'}`}>
               Bekleyen
             </div>
             <div className={`${kpiValueSize('receivables')} font-black tabular-nums leading-none ${uncollectedSalesTotal > 0 ? 'text-warn-text' : 'text-pos-text'}`}>
@@ -676,7 +676,7 @@ export default async function DashboardPage() {
                 ? <><span className="text-warn/70 font-normal text-sm mr-0.5">₺</span>{formatKpi(uncollectedSalesTotal)}</>
                 : <span className="text-lg">Temiz</span>}
             </div>
-            <div className="text-[10px] text-gray-400 mt-1.5">
+            <div className="text-[10px] text-[#94a3b8] mt-1.5">
               {uncollectedSalesTotal > 0 ? `${uncollectedSalesCount} satış · %${actuallyCollectedPct} tahsil` : 'Tümü tahsil edildi'}
             </div>
             {overdueTotal60 > 0 && (
@@ -689,11 +689,11 @@ export default async function DashboardPage() {
           {/* Nakit Ömrü */}
           <Link href="/dashboard/planning?tab=cash-projection"
             className={`px-5 py-4 hover:bg-[#f8fafc]/60 transition-colors ${dominantKpi === 'runway' ? 'bg-neg-light/40' : ''}`}>
-            <div className={`text-[9px] font-black uppercase tracking-widest mb-1.5 ${dominantKpi === 'runway' ? 'text-neg' : 'text-gray-400'}`}>
+            <div className={`text-[9px] font-black uppercase tracking-widest mb-1.5 ${dominantKpi === 'runway' ? 'text-neg' : 'text-[#94a3b8]'}`}>
               Nakit Ömrü
             </div>
             <div className={`${kpiValueSize('runway')} font-black tabular-nums leading-none ${
-              runwayDays < 0 ? 'text-gray-400' : runwayDays < 90 ? 'text-neg' : 'text-pos-text'
+              runwayDays < 0 ? 'text-[#94a3b8]' : runwayDays < 90 ? 'text-neg' : 'text-pos-text'
             }`}>
               {runwayDays < 0
                 ? <span className="text-lg">—</span>
@@ -702,14 +702,14 @@ export default async function DashboardPage() {
                   : <>{runwayDays}<span className="text-base font-semibold ml-0.5">g</span></>
               }
             </div>
-            <div className="text-[10px] text-gray-400 mt-1.5">
+            <div className="text-[10px] text-[#94a3b8] mt-1.5">
               {runwayDays < 0  ? 'Banka bakiyesi girin'
                : runwayDays < 30 ? daysLeft(runwayDays)
                : runwayDays < 90 ? daysLeft(runwayDays)
                : monthlyBurn === 0 ? 'gider karşılığı' : 'Sağlıklı'}
             </div>
             {monthlyBurn > 0 && runwayDays >= 0 && runwayDays < 180 && (
-              <div className="text-[10px] text-gray-400 mt-0.5">{fmt(monthlyBurn)}/ay eriyor</div>
+              <div className="text-[10px] text-[#94a3b8] mt-0.5">{fmt(monthlyBurn)}/ay eriyor</div>
             )}
           </Link>
 
@@ -729,13 +729,13 @@ export default async function DashboardPage() {
               </span>
             )}
           </div>
-          <span className="text-[10px] text-gray-400">{topAlerts.length} öğe bekliyor</span>
+          <span className="text-[10px] text-[#94a3b8]">{topAlerts.length} öğe bekliyor</span>
         </div>
 
         {topAlerts.length === 0 ? (
           <div className="flex items-center gap-3 px-5 py-4">
             <span className="w-2 h-2 rounded-full bg-pos flex-shrink-0" />
-            <span className="text-sm text-gray-500">Tüm sistemler normal · Bekleyen karar yok</span>
+            <span className="text-sm text-[#64748b]">Tüm sistemler normal · Bekleyen karar yok</span>
           </div>
         ) : (
           <div className="divide-y divide-[#f1f5f9]">
@@ -753,8 +753,8 @@ export default async function DashboardPage() {
                     <Link key={alert.id} href={alert.actionHref}
                       className="flex items-center gap-4 px-5 py-4 border-l-[3px] border-neg hover:bg-neg-light/30 transition-colors group">
                       <div className="flex-1 min-w-0">
-                        <div className="text-[13px] font-bold text-gray-900 leading-tight">{alert.title}</div>
-                        <div className="text-[11px] text-gray-500 mt-0.5">{alert.detail}</div>
+                        <div className="text-[13px] font-bold text-[#0f172a] leading-tight">{alert.title}</div>
+                        <div className="text-[11px] text-[#64748b] mt-0.5">{alert.detail}</div>
                       </div>
                       <span className="flex-shrink-0 text-xs font-bold px-3 py-1.5 bg-neg text-white rounded group-hover:bg-neg transition-colors whitespace-nowrap">
                         {alert.actionLabel} →
@@ -778,10 +778,10 @@ export default async function DashboardPage() {
                     <Link key={alert.id} href={alert.actionHref}
                       className="flex items-center gap-4 px-5 py-3.5 border-l-[3px] border-warn hover:bg-warn-light/30 transition-colors group">
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium text-gray-800 leading-tight">{alert.title}</div>
-                        <div className="text-[11px] text-gray-500 mt-0.5 truncate">{alert.detail}</div>
+                        <div className="text-sm font-medium text-[#1e293b] leading-tight">{alert.title}</div>
+                        <div className="text-[11px] text-[#64748b] mt-0.5 truncate">{alert.detail}</div>
                       </div>
-                      <span className="flex-shrink-0 text-xs font-semibold px-3 py-1.5 border border-[#e2e8f0] text-gray-600 rounded group-hover:bg-[#f8fafc] transition-colors whitespace-nowrap">
+                      <span className="flex-shrink-0 text-xs font-semibold px-3 py-1.5 border border-[#e2e8f0] text-[#64748b] rounded group-hover:bg-[#f8fafc] transition-colors whitespace-nowrap">
                         {alert.actionLabel} →
                       </span>
                     </Link>
@@ -803,10 +803,10 @@ export default async function DashboardPage() {
                     <Link key={alert.id} href={alert.actionHref}
                       className="flex items-center gap-4 px-5 py-2.5 border-l-[3px] border-[#e2e8f0] hover:bg-[#f8fafc]/60 transition-colors group">
                       <div className="flex-1 min-w-0">
-                        <div className="text-[11px] font-medium text-gray-600 leading-tight">{alert.title}</div>
-                        <div className="text-[10px] text-gray-400 mt-0.5 truncate">{alert.detail}</div>
+                        <div className="text-[11px] font-medium text-[#64748b] leading-tight">{alert.title}</div>
+                        <div className="text-[10px] text-[#94a3b8] mt-0.5 truncate">{alert.detail}</div>
                       </div>
-                      <span className="flex-shrink-0 text-[10px] text-gray-400 group-hover:text-gray-600 transition-colors whitespace-nowrap">
+                      <span className="flex-shrink-0 text-[10px] text-[#94a3b8] group-hover:text-[#64748b] transition-colors whitespace-nowrap">
                         {alert.actionLabel} →
                       </span>
                     </Link>
@@ -836,34 +836,34 @@ export default async function DashboardPage() {
             { label: '− Açık Yükümlülükler', value: -outstandingObligations, tone: 'text-warn-text',  sub: 'ödenmemiş' },
           ].map(c => (
             <div key={c.label} className="px-4 first:pl-0">
-              <div className="text-[9px] font-bold uppercase tracking-widest text-gray-400 mb-1">{c.label}</div>
+              <div className="text-[9px] font-bold uppercase tracking-widest text-[#94a3b8] mb-1">{c.label}</div>
               <div className={`text-base font-black tabular-nums leading-none ${c.tone}`}>{fmt(c.value)}</div>
-              <div className="text-[9px] text-gray-400 mt-0.5">{c.sub}</div>
+              <div className="text-[9px] text-[#94a3b8] mt-0.5">{c.sub}</div>
             </div>
           ))}
           {/* Decision node — Dağıtılabilir always dominates visually */}
           <div className={`pl-4 pr-0 pb-1 border-l border-[#e2e8f0] ${cashDistributable < 0 ? 'bg-neg-light/40 -mx-0 rounded-br-xl' : ''}`}>
-            <div className={`text-[9px] font-black uppercase tracking-widest mb-1 ${cashDistributable >= 0 ? 'text-gray-500' : 'text-neg'}`}>
+            <div className={`text-[9px] font-black uppercase tracking-widest mb-1 ${cashDistributable >= 0 ? 'text-[#64748b]' : 'text-neg'}`}>
               = Dağıtılabilir
             </div>
-            <div className={`text-2xl font-black tabular-nums leading-none ${cashDistributable >= 0 ? 'text-gray-900' : 'text-neg-text'}`}>
+            <div className={`text-2xl font-black tabular-nums leading-none ${cashDistributable >= 0 ? 'text-[#0f172a]' : 'text-neg-text'}`}>
               {fmt(cashDistributable)}
             </div>
-            <div className="text-[9px] text-gray-400 mt-0.5">bakiye {fmt(cashBalance)}</div>
+            <div className="text-[9px] text-[#94a3b8] mt-0.5">bakiye {fmt(cashBalance)}</div>
           </div>
         </div>
         {stockValue > 0 && (
           <div className="px-5 pb-2 pt-2 border-t border-[#f1f5f9] flex items-center gap-2">
-            <span className="text-[9px] font-bold uppercase tracking-widest text-gray-300 flex-shrink-0">Stok</span>
-            <span className="text-[10px] text-gray-400 tabular-nums">{fmt(stockValue)} maliyet bedeliyle stokta bekliyor</span>
+            <span className="text-[9px] font-bold uppercase tracking-widest text-[#cbd5e1] flex-shrink-0">Stok</span>
+            <span className="text-[10px] text-[#94a3b8] tabular-nums">{fmt(stockValue)} maliyet bedeliyle stokta bekliyor</span>
           </div>
         )}
         {cashDistributable > 0 && equalization.entries.length > 0 && (
           <div className={`px-5 pb-3 pt-2 flex items-center gap-2 overflow-hidden flex-wrap ${stockValue > 0 ? '' : 'border-t border-[#f1f5f9]'}`}>
-            <span className="text-[9px] font-bold uppercase tracking-widest text-gray-300 flex-shrink-0">Paylaşım</span>
+            <span className="text-[9px] font-bold uppercase tracking-widest text-[#cbd5e1] flex-shrink-0">Paylaşım</span>
             {equalization.entries.slice(0, 4).map(e => (
               <div key={e.partner_id} className="flex items-center gap-1.5 bg-pos-light border border-pos-light rounded px-2.5 py-1 min-w-0">
-                <span className="text-[10px] text-gray-600 font-semibold truncate max-w-[72px]">{e.partner_name}</span>
+                <span className="text-[10px] text-[#64748b] font-semibold truncate max-w-[72px]">{e.partner_name}</span>
                 <span className="text-[11px] font-black tabular-nums text-pos-text flex-shrink-0">{fmt(e.total_payout)}</span>
               </div>
             ))}
@@ -885,7 +885,7 @@ export default async function DashboardPage() {
             const baseDanger = !!forecast.summary.base.runwayEndMonth
             const scenarios = [
               { key: 'pessimistic' as const, label: 'Kötümser', summary: forecast.summary.pessimistic, tone: 'text-neg' },
-              { key: 'base'        as const, label: 'Baz',      summary: forecast.summary.base,        tone: baseDanger ? 'text-neg-text' : 'text-gray-800' },
+              { key: 'base'        as const, label: 'Baz',      summary: forecast.summary.base,        tone: baseDanger ? 'text-neg-text' : 'text-[#1e293b]' },
               { key: 'optimistic'  as const, label: 'İyimser',  summary: forecast.summary.optimistic,  tone: 'text-pos-text' },
             ]
             return (
@@ -895,7 +895,7 @@ export default async function DashboardPage() {
                   const isDanger  = baseDanger && isBase
                   return (
                     <div key={key} className="pl-4 first:pl-0">
-                      <div className={`text-[9px] font-bold uppercase tracking-widest mb-1 ${isDanger ? 'text-neg' : 'text-gray-400'}`}>
+                      <div className={`text-[9px] font-bold uppercase tracking-widest mb-1 ${isDanger ? 'text-neg' : 'text-[#94a3b8]'}`}>
                         {label}
                       </div>
                       <div className={`font-black tabular-nums leading-none ${isDanger ? 'text-[19px]' : 'text-base'} ${tone}`}>
@@ -903,7 +903,7 @@ export default async function DashboardPage() {
                           ? <span className="text-neg">{summary.runwayEndMonth}</span>
                           : fmt(summary.endCash)}
                       </div>
-                      <div className="text-[9px] text-gray-400 mt-0.5">
+                      <div className="text-[9px] text-[#94a3b8] mt-0.5">
                         {summary.runwayEndMonth ? 'nakit biter' : summary.totalNet >= 0 ? `+${fmt(summary.totalNet)} net` : `${fmt(Math.abs(summary.totalNet))} zarar`}
                       </div>
                     </div>
@@ -919,13 +919,13 @@ export default async function DashboardPage() {
           {/* Giderler breakdown */}
           <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3.5 shadow-sm">
             <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Giderler</div>
-            <div className="text-xl font-black tabular-nums text-gray-900 leading-none mb-1">
-              <span className="text-gray-300 font-normal text-sm mr-0.5">₺</span>{formatKpi(fs.expenses_total_try)}
+            <div className="text-xl font-black tabular-nums text-[#0f172a] leading-none mb-1">
+              <span className="text-[#cbd5e1] font-normal text-sm mr-0.5">₺</span>{formatKpi(fs.expenses_total_try)}
             </div>
-            <div className="text-[10px] text-gray-400 mb-2">~{fmt(monthlyExpenses)}/ay</div>
+            <div className="text-[10px] text-[#94a3b8] mb-2">~{fmt(monthlyExpenses)}/ay</div>
             {expDeltaPct !== null && (
               <div className={`text-[11px] font-semibold tabular-nums ${expDeltaPct > 0 ? 'text-neg' : 'text-pos-text'}`}>
-                {expDeltaPct > 0 ? '▲' : '▼'} {Math.abs(expDeltaPct).toFixed(1)}% <span className="text-gray-400 font-normal">geçen ay</span>
+                {expDeltaPct > 0 ? '▲' : '▼'} {Math.abs(expDeltaPct).toFixed(1)}% <span className="text-[#94a3b8] font-normal">geçen ay</span>
               </div>
             )}
             <Link href="/dashboard/operations?tab=expenses" className="block mt-2 text-[10px] text-primary-600 font-semibold hover:underline">
@@ -941,7 +941,7 @@ export default async function DashboardPage() {
               <div className="text-xl font-black tabular-nums text-primary-700 leading-none">
                 <span className="text-primary-300 font-normal text-sm mr-0.5">₺</span>{formatKpi(outstanding)}
               </div>
-              <div className="text-[10px] text-gray-400 mt-1">{openProfs.length} adet onay bekliyor →</div>
+              <div className="text-[10px] text-[#94a3b8] mt-1">{openProfs.length} adet onay bekliyor →</div>
             </Link>
           )}
 
@@ -961,7 +961,7 @@ export default async function DashboardPage() {
               className="bg-white border border-[#e2e8f0] rounded px-4 py-3.5 shadow-sm hover:border-[#e2e8f0] transition-colors">
               <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">Yaklaşan Görevler</div>
               <div className="text-xl font-black text-primary-700">{taskReminders.length}</div>
-              <div className="text-[10px] text-gray-400 mt-1">
+              <div className="text-[10px] text-[#94a3b8] mt-1">
                 {taskReminders.filter(t => t.due_date < todayISO).length > 0
                   ? `${taskReminders.filter(t => t.due_date < todayISO).length} gecikmiş`
                   : '7 gün içinde vadeli'
@@ -981,7 +981,7 @@ export default async function DashboardPage() {
               {situation.composite}/100
             </span>
           </div>
-          <span className="text-[10px] text-gray-400">{situation.criticalFactor}</span>
+          <span className="text-[10px] text-[#94a3b8]">{situation.criticalFactor}</span>
         </div>
         <div className="px-5 py-4 grid grid-cols-1 sm:grid-cols-5 gap-4">
           {([
@@ -1048,10 +1048,10 @@ export default async function DashboardPage() {
                 {/* Score number */}
                 <div className={`text-2xl font-black tabular-nums leading-none ${scoreColor}`}>
                   {dim.score}
-                  <span className="text-sm font-semibold text-gray-300 ml-0.5">/100</span>
+                  <span className="text-sm font-semibold text-[#cbd5e1] ml-0.5">/100</span>
                 </div>
                 {/* Progress bar */}
-                <div className="bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                <div className="bg-[#f1f5f9] rounded-full h-1.5 overflow-hidden">
                   <div
                     className={`${barColor} h-full rounded-full transition-all`}
                     style={{ width: `${dim.score}%` }}
@@ -1068,7 +1068,7 @@ export default async function DashboardPage() {
 
       {/* ── QUICK REPORTS FOOTER ────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-1 pt-1">
-        <div className="text-[10px] text-gray-400">
+        <div className="text-[10px] text-[#94a3b8]">
           Tüm finansal tablolar, PDF dışa aktarım ve CFO paketi için:
         </div>
         <Link

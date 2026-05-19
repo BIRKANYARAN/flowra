@@ -117,14 +117,14 @@ export async function ForecastTab({ userId: _userId, companyId }: Props) {
           {
             label: 'Runway',
             value: runwayMonths !== null ? `${runwayMonths.toFixed(1)} ay` : '∞',
-            tone:  runwayMonths === null ? 'text-gray-400' :
+            tone:  runwayMonths === null ? 'text-[#94a3b8]' :
                    runwayMonths <= 2 ? 'text-neg' : runwayMonths <= 6 ? 'text-warn-text' : 'text-pos-text',
             sub:   runwayMonths !== null && runwayMonths <= 6 ? '⚠ Kritik eşik yakın' : 'Mevcut burn rate ile',
           },
           {
             label: 'Aylık Burn',
             value: m.burn.monthly_burn_rate > 0 ? fmt(m.burn.monthly_burn_rate) : '—',
-            tone:  'text-gray-900',
+            tone:  'text-[#0f172a]',
             sub:   '3 aylık ortalama gider',
           },
           {
@@ -145,7 +145,7 @@ export async function ForecastTab({ userId: _userId, companyId }: Props) {
           <div key={c.label} className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{c.label}</div>
             <div className={`text-xl font-black tabular-nums leading-none ${c.tone}`}>{c.value}</div>
-            <div className="text-[10px] text-gray-400 mt-1">{c.sub}</div>
+            <div className="text-[10px] text-[#94a3b8] mt-1">{c.sub}</div>
           </div>
         ))}
       </div>
@@ -167,14 +167,14 @@ export async function ForecastTab({ userId: _userId, companyId }: Props) {
                       style={{ height: `${isNeg ? 4 : barH}%` }}
                       title={`${mo.month_label}: ${fmt(mo.end_cash)}`} />
                   </div>
-                  <span className="text-[8px] text-gray-400 font-medium truncate w-full text-center leading-none">
+                  <span className="text-[8px] text-[#94a3b8] font-medium truncate w-full text-center leading-none">
                     {mo.month_label.split(' ')[0]}
                   </span>
                 </div>
               )
             })}
           </div>
-          <div className="flex items-center justify-between mt-2 text-[10px] text-gray-400">
+          <div className="flex items-center justify-between mt-2 text-[10px] text-[#94a3b8]">
             <span>Başlangıç: {fmt(r.inputs.starting_cash)}</span>
             <span>Burn: {fmt(r.inputs.monthly_burn)}/ay</span>
           </div>
@@ -185,7 +185,7 @@ export async function ForecastTab({ userId: _userId, companyId }: Props) {
       {chartMonths.length > 0 && (
         <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
           <div className="px-4 py-3 border-b border-[#e2e8f0]">
-            <h2 className="text-sm font-black text-gray-800">Aylık Projeksiyon Detayı</h2>
+            <h2 className="text-sm font-black text-[#1e293b]">Aylık Projeksiyon Detayı</h2>
           </div>
           <table className="w-full text-xs">
             <thead>
@@ -203,17 +203,17 @@ export async function ForecastTab({ userId: _userId, companyId }: Props) {
                 const net   = mo.cash_in - mo.cash_out
                 return (
                   <tr key={mo.month} className={`hover:bg-[#f8fafc]/60 ${isNeg ? 'bg-neg-light/30' : ''}`}>
-                    <td className="px-4 py-2.5 font-semibold text-gray-700">{mo.month_label}</td>
+                    <td className="px-4 py-2.5 font-semibold text-[#334155]">{mo.month_label}</td>
                     <td className="px-4 py-2.5 text-right font-mono text-pos-text tabular-nums">
-                      {mo.cash_in > 0 ? fmt(mo.cash_in) : <span className="text-gray-300">—</span>}
+                      {mo.cash_in > 0 ? fmt(mo.cash_in) : <span className="text-[#cbd5e1]">—</span>}
                     </td>
                     <td className="px-4 py-2.5 text-right font-mono text-neg tabular-nums">
-                      {mo.cash_out > 0 ? fmt(mo.cash_out) : <span className="text-gray-300">—</span>}
+                      {mo.cash_out > 0 ? fmt(mo.cash_out) : <span className="text-[#cbd5e1]">—</span>}
                     </td>
-                    <td className={`px-4 py-2.5 text-right font-mono font-bold tabular-nums ${net >= 0 ? 'text-gray-700' : 'text-neg'}`}>
+                    <td className={`px-4 py-2.5 text-right font-mono font-bold tabular-nums ${net >= 0 ? 'text-[#334155]' : 'text-neg'}`}>
                       {fmt(net)}
                     </td>
-                    <td className={`px-4 py-2.5 text-right font-black tabular-nums ${isNeg ? 'text-neg-text' : 'text-gray-900'}`}>
+                    <td className={`px-4 py-2.5 text-right font-black tabular-nums ${isNeg ? 'text-neg-text' : 'text-[#0f172a]'}`}>
                       {fmt(mo.end_cash)}
                     </td>
                   </tr>
@@ -231,24 +231,24 @@ export async function ForecastTab({ userId: _userId, companyId }: Props) {
           <div className="grid grid-cols-3 gap-3">
             {([
               { key: 'pessimistic' as const, label: 'Muhafazakâr',  bg: 'bg-neg-light',     border: 'border-neg-light',    netColor: 'text-neg',    cashColor: 'text-neg-text'    },
-              { key: 'base'        as const, label: 'Baz Senaryo',  bg: 'bg-[#f8fafc]',    border: 'border-[#e2e8f0]',   netColor: 'text-gray-800',   cashColor: 'text-gray-900'   },
+              { key: 'base'        as const, label: 'Baz Senaryo',  bg: 'bg-[#f8fafc]',    border: 'border-[#e2e8f0]',   netColor: 'text-[#1e293b]',   cashColor: 'text-[#0f172a]'   },
               { key: 'optimistic'  as const, label: 'İyimser',       bg: 'bg-pos-light', border: 'border-pos-light',netColor: 'text-pos-text',cashColor: 'text-pos-text'},
             ] as const).map(sc => {
               const s = forecast!.summary[sc.key]
               return (
                 <div key={sc.key} className={`rounded p-3 border ${sc.bg} ${sc.border}`}>
-                  <div className="text-[10px] font-bold text-gray-500 mb-2">{sc.label}</div>
+                  <div className="text-[10px] font-bold text-[#64748b] mb-2">{sc.label}</div>
                   <div className="space-y-1.5">
                     <div>
-                      <div className="text-[9px] text-gray-400 uppercase tracking-wide">12A Toplam Gelir</div>
-                      <div className="text-sm font-black tabular-nums text-gray-900">{fmtCompact(s.totalRevenue)}</div>
+                      <div className="text-[9px] text-[#94a3b8] uppercase tracking-wide">12A Toplam Gelir</div>
+                      <div className="text-sm font-black tabular-nums text-[#0f172a]">{fmtCompact(s.totalRevenue)}</div>
                     </div>
                     <div>
-                      <div className="text-[9px] text-gray-400 uppercase tracking-wide">Net Kâr</div>
+                      <div className="text-[9px] text-[#94a3b8] uppercase tracking-wide">Net Kâr</div>
                       <div className={`text-sm font-black tabular-nums ${sc.netColor}`}>{fmtCompact(Math.abs(s.totalNet))}{s.totalNet < 0 ? ' (zarar)' : ''}</div>
                     </div>
                     <div>
-                      <div className="text-[9px] text-gray-400 uppercase tracking-wide">Dönem Sonu Nakit</div>
+                      <div className="text-[9px] text-[#94a3b8] uppercase tracking-wide">Dönem Sonu Nakit</div>
                       <div className={`text-sm font-black tabular-nums ${sc.cashColor}`}>{fmtCompact(Math.abs(s.endCash))}{s.endCash < 0 ? ' (—)' : ''}</div>
                     </div>
                     {s.runwayEndMonth && (
@@ -262,7 +262,7 @@ export async function ForecastTab({ userId: _userId, companyId }: Props) {
               )
             })}
           </div>
-          <div className="mt-2 text-[10px] text-gray-400">
+          <div className="mt-2 text-[10px] text-[#94a3b8]">
             Baz senaryo: son 6 ay ortalaması · İyimser: +%15 gelir büyümesi · Muhafazakâr: -%20 gelir baskısı
           </div>
         </div>
@@ -283,7 +283,7 @@ export async function ForecastTab({ userId: _userId, companyId }: Props) {
 
       {/* Cross-navigation */}
       <div className="flex items-center justify-between px-1 pt-1">
-        <p className="text-[10px] text-gray-400 leading-relaxed">
+        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
           Bu görünüm burn-rate bazlı runway projeksiyonunu gösterir.
           Büyüme/stres senaryolarını ve gelir kırılım analizini Planlama Merkezi&apos;nde inceleyin.
         </p>
@@ -291,11 +291,11 @@ export async function ForecastTab({ userId: _userId, companyId }: Props) {
           <Link href="/dashboard/planning?tab=cash-projection" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Stratejik Tahmin →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/finance?tab=cashflow" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Nakit Akışı →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/finance?tab=quarterly" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Geçici Vergi →
           </Link>

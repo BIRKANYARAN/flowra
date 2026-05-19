@@ -97,7 +97,7 @@ const DIM_KEYS: Array<keyof PartnerRiskProfile['dimensions']> = [
 
 function ScoreBar({ score, grade }: { score: number; grade: RiskGrade }) {
   return (
-    <div className="h-1 bg-gray-100 rounded-full overflow-hidden mt-0.5">
+    <div className="h-1 bg-[#f1f5f9] rounded-full overflow-hidden mt-0.5">
       <div
         className={`h-1 rounded-full transition-all ${GRADE_BAR[grade]}`}
         style={{ width: `${Math.min(100, score)}%` }}
@@ -135,9 +135,9 @@ export function RiskTab({ loading }: RiskTabProps) {
   if (loading || !fetchDone) {
     return (
       <div className="space-y-3 animate-pulse">
-        <div className="h-20 bg-gray-100 rounded" />
-        <div className="h-48 bg-gray-100 rounded" />
-        <div className="h-48 bg-gray-100 rounded" />
+        <div className="h-20 bg-[#f1f5f9] rounded" />
+        <div className="h-48 bg-[#f1f5f9] rounded" />
+        <div className="h-48 bg-[#f1f5f9] rounded" />
       </div>
     )
   }
@@ -155,7 +155,7 @@ export function RiskTab({ loading }: RiskTabProps) {
 
   if (!rs || rs.partner_profiles.length === 0) {
     return (
-      <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-8 text-center text-sm text-gray-400">
+      <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-8 text-center text-sm text-[#94a3b8]">
         Ortak borç kaydı bulunamadı — risk skoru hesaplanamadı.
       </div>
     )
@@ -227,35 +227,35 @@ export function RiskTab({ loading }: RiskTabProps) {
             <div className="flex items-center gap-2.5">
               <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${GRADE_DOT[p.composite_grade]}`} />
               <div>
-                <div className="text-sm font-bold text-gray-900">{p.partner_name}</div>
-                <div className="text-[10px] text-gray-400">
+                <div className="text-sm font-bold text-[#0f172a]">{p.partner_name}</div>
+                <div className="text-[10px] text-[#94a3b8]">
                   %{(p.share_ratio * 100).toFixed(0)} pay · {fmt(p.net_loan)} net borç
                 </div>
               </div>
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <div className="text-right hidden sm:block">
-                <div className="text-[9px] text-gray-400 uppercase tracking-widest">Kompozit</div>
-                <div className="text-xs font-black text-gray-700">{p.composite_score.toFixed(0)}/100</div>
+                <div className="text-[9px] text-[#94a3b8] uppercase tracking-widest">Kompozit</div>
+                <div className="text-xs font-black text-[#334155]">{p.composite_score.toFixed(0)}/100</div>
               </div>
               <GradeBadge grade={p.composite_grade} />
             </div>
           </div>
 
           {/* 6-Dimension grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-px bg-gray-100">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-px bg-[#f1f5f9]">
             {DIM_KEYS.map(key => {
               const dim = p.dimensions[key]
               return (
                 <div key={key} className="bg-white px-3 py-2.5">
                   <div className="flex items-center justify-between gap-1 mb-0.5">
-                    <div className="text-[9px] font-bold text-gray-400 uppercase tracking-widest truncate">
+                    <div className="text-[9px] font-bold text-[#94a3b8] uppercase tracking-widest truncate">
                       {dim.name}
                     </div>
                     <GradeBadge grade={dim.grade} />
                   </div>
                   <ScoreBar score={dim.score} grade={dim.grade} />
-                  <div className="text-[10px] text-gray-500 mt-1.5 leading-tight line-clamp-2">
+                  <div className="text-[10px] text-[#64748b] mt-1.5 leading-tight line-clamp-2">
                     {dim.detail}
                   </div>
                 </div>
@@ -267,31 +267,31 @@ export function RiskTab({ loading }: RiskTabProps) {
           {p.recommended_action && (
             <div className="px-4 py-2 bg-[#f8fafc] border-t border-[#e2e8f0] flex items-center gap-2">
               <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] shrink-0">Öneri</span>
-              <span className="text-[11px] text-gray-600">{p.recommended_action}</span>
+              <span className="text-[11px] text-[#64748b]">{p.recommended_action}</span>
             </div>
           )}
         </div>
       ))}
 
-      <div className="text-[10px] text-gray-400 px-1 leading-relaxed">
+      <div className="text-[10px] text-[#94a3b8] px-1 leading-relaxed">
         6 boyutlu skor: Konsantrasyon · Süre · Yük dengesi · Teminat · Likidite · Yasal uyum.
         Her boyut 0–100 puan · A ≥ 90 · B ≥ 75 · C ≥ 60 · D ≥ 40 · F &lt; 40
       </div>
 
       {/* Cross-navigation */}
       <div className="flex items-center justify-between px-1 pt-2">
-        <p className="text-[10px] text-gray-400 leading-relaxed">
+        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
           Ortak riski bilanço ve müşteri riski ile bütünleşik değerlendirilmeli.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
           <Link href="/dashboard/finance?tab=risks" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Alacak Riskleri →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/finance?tab=balance" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Bilanço →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/planning?tab=debt-pressure" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Borç Baskısı →
           </Link>

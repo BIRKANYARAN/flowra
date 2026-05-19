@@ -17,11 +17,11 @@ const PAYMENT_META: Record<string, { label: string; cls: string }> = {
   paid:      { label: 'Ödendi',   cls: 'bg-pos-light text-pos-text border-pos-light' },
   partial:   { label: 'Kısmi',    cls: 'bg-info-light text-info-text border-info-light' },
   overdue:   { label: 'Gecikmiş', cls: 'bg-neg-light text-neg border-neg-light' },
-  cancelled: { label: 'İptal',    cls: 'bg-[#f8fafc] text-gray-400 border-[#e2e8f0]' },
+  cancelled: { label: 'İptal',    cls: 'bg-[#f8fafc] text-[#94a3b8] border-[#e2e8f0]' },
 }
 
 const SHIPMENT_META: Record<string, { label: string; cls: string }> = {
-  pending:   { label: 'Hazırlanıyor', cls: 'bg-[#f8fafc] text-gray-500 border-[#e2e8f0]' },
+  pending:   { label: 'Hazırlanıyor', cls: 'bg-[#f8fafc] text-[#64748b] border-[#e2e8f0]' },
   shipped:   { label: 'Kargoda',      cls: 'bg-info-light text-info-text border-info-light' },
   delivered: { label: 'Teslim',       cls: 'bg-pos-light text-pos-text border-pos-light' },
 }
@@ -30,7 +30,7 @@ const ACTIONABLE_STATUSES = new Set(['pending', 'partial', 'overdue'])
 
 function StatusBadge({ map, val }: { map: Record<string, { label: string; cls: string }>; val: string | null }) {
   if (!val) return null
-  const m = map[val] ?? { label: val, cls: 'bg-[#f8fafc] text-gray-400 border-[#e2e8f0]' }
+  const m = map[val] ?? { label: val, cls: 'bg-[#f8fafc] text-[#94a3b8] border-[#e2e8f0]' }
   return (
     <span className={`inline-flex items-center px-1.5 py-0.5 rounded border text-[10px] font-bold ${m.cls}`}>
       {m.label}
@@ -103,7 +103,7 @@ function PaymentDrawer({ sale, onClose, onSuccess }: PaymentDrawerProps) {
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-gray-900/30 z-40"
+        className="fixed inset-0 bg-[#0f172a]/30 z-40"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -121,8 +121,8 @@ function PaymentDrawer({ sale, onClose, onSuccess }: PaymentDrawerProps) {
             <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] leading-none">
               Ödeme Kaydet
             </div>
-            <div className="text-sm font-semibold text-gray-900 mt-1">{sale.customer_name}</div>
-            <div className="text-[10px] text-gray-400 mt-0.5 font-mono">
+            <div className="text-sm font-semibold text-[#0f172a] mt-1">{sale.customer_name}</div>
+            <div className="text-[10px] text-[#94a3b8] mt-0.5 font-mono">
               Toplam: {formatTRY(sale.total_try)}
             </div>
             {alreadyPaid > 0 && (
@@ -133,7 +133,7 @@ function PaymentDrawer({ sale, onClose, onSuccess }: PaymentDrawerProps) {
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-700 transition-colors p-1 -mr-1 leading-none text-lg"
+            className="text-[#94a3b8] hover:text-[#334155] transition-colors p-1 -mr-1 leading-none text-lg"
             aria-label="Kapat"
           >
             ✕
@@ -163,7 +163,7 @@ function PaymentDrawer({ sale, onClose, onSuccess }: PaymentDrawerProps) {
               autoFocus
             />
             {parsedAmount > 0 && (
-              <p className="mt-1 text-[10px] text-gray-400">
+              <p className="mt-1 text-[10px] text-[#94a3b8]">
                 {isFullPayment ? (
                   <span className="text-pos-text font-semibold">Tam ödeme olarak işlenecek</span>
                 ) : (
@@ -223,7 +223,7 @@ function PaymentDrawer({ sale, onClose, onSuccess }: PaymentDrawerProps) {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 border border-[#e2e8f0] text-gray-500 py-2.5 rounded text-sm font-semibold hover:bg-[#f8fafc] transition-colors"
+              className="flex-1 border border-[#e2e8f0] text-[#64748b] py-2.5 rounded text-sm font-semibold hover:bg-[#f8fafc] transition-colors"
             >
               İptal
             </button>
@@ -329,7 +329,7 @@ export function SalesTable({ rows }: Props) {
         <div className="flex flex-wrap items-center gap-2">
           {/* Search */}
           <div className="relative flex-1 min-w-48">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm select-none pointer-events-none">⌕</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94a3b8] text-sm select-none pointer-events-none">⌕</span>
             <input
               type="text"
               placeholder="Müşteri ara…"
@@ -340,13 +340,13 @@ export function SalesTable({ rows }: Props) {
           </div>
 
           {/* Date range */}
-          <div className="flex gap-1 bg-gray-100 rounded p-1">
+          <div className="flex gap-1 bg-[#f1f5f9] rounded p-1">
             {(Object.keys(DATE_RANGE_LABELS) as DateRange[]).map(k => (
               <button
                 key={k}
                 onClick={() => setDateRange(k)}
                 className={`px-3 py-1.5 rounded text-xs font-semibold transition-colors ${
-                  dateRange === k ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                  dateRange === k ? 'bg-white text-[#0f172a] shadow-sm' : 'text-[#64748b] hover:text-[#334155]'
                 }`}
               >
                 {DATE_RANGE_LABELS[k]}
@@ -369,7 +369,7 @@ export function SalesTable({ rows }: Props) {
           {isFiltered && (
             <button
               onClick={clearFilters}
-              className="text-xs font-semibold text-gray-400 hover:text-gray-700 px-2 py-1.5 rounded hover:bg-gray-100 transition-colors"
+              className="text-xs font-semibold text-[#94a3b8] hover:text-[#334155] px-2 py-1.5 rounded hover:bg-[#f1f5f9] transition-colors"
             >
               Temizle ✕
             </button>
@@ -390,12 +390,12 @@ export function SalesTable({ rows }: Props) {
             {
               label: isFiltered ? `Gösterilen Satış` : 'Toplam Satış',
               value: `${filtered.length}${isFiltered ? ' / ' + rows.length : ''}`,
-              color: 'text-gray-900',
+              color: 'text-[#0f172a]',
             },
             {
               label: 'TRY Ciro',
               value: formatTRY(totalRev),
-              color: 'text-gray-900',
+              color: 'text-[#0f172a]',
             },
             {
               label: 'Nominal Kâr',
@@ -413,7 +413,7 @@ export function SalesTable({ rows }: Props) {
         {/* ── Table ──────────────────────────────────────────────────────────── */}
         {filtered.length === 0 ? (
           <div className="bg-white border border-[#e2e8f0] rounded text-center py-12 shadow-sm">
-            <p className="text-gray-400 text-sm">{isFiltered ? 'Filtreyle eşleşen satış yok.' : 'Henüz satış kaydı yok.'}</p>
+            <p className="text-[#94a3b8] text-sm">{isFiltered ? 'Filtreyle eşleşen satış yok.' : 'Henüz satış kaydı yok.'}</p>
             {isFiltered && (
               <button
                 onClick={clearFilters}
@@ -445,13 +445,13 @@ export function SalesTable({ rows }: Props) {
                 >
                   <div className="col-span-3 text-sm font-semibold truncate">{s.customer_name}</div>
 
-                  <div className="col-span-2 text-xs font-mono text-gray-500">
+                  <div className="col-span-2 text-xs font-mono text-[#64748b]">
                     {s.proforma_no
-                      ? (s.proforma_deleted ? <span className="line-through text-gray-400">{s.proforma_no}</span> : s.proforma_no)
+                      ? (s.proforma_deleted ? <span className="line-through text-[#94a3b8]">{s.proforma_no}</span> : s.proforma_no)
                       : '—'}
                   </div>
 
-                  <div className="col-span-2 text-sm text-gray-500">
+                  <div className="col-span-2 text-sm text-[#64748b]">
                     {s.sale_date ? fmtDate(s.sale_date) : '—'}
                   </div>
 
@@ -459,7 +459,7 @@ export function SalesTable({ rows }: Props) {
                     {s.currency !== 'TRY' ? (
                       <span>
                         <span className="font-medium">{s.currency} {s.total.toFixed(2)}</span>
-                        <span className="block text-[10px] text-gray-400">≈ {formatTRY(s.total_try)}</span>
+                        <span className="block text-[10px] text-[#94a3b8]">≈ {formatTRY(s.total_try)}</span>
                       </span>
                     ) : formatTRY(s.total)}
                   </div>
@@ -489,7 +489,7 @@ export function SalesTable({ rows }: Props) {
             {/* Footer count */}
             {isFiltered && (
               <div className="px-5 py-2 border-t border-[#e2e8f0] bg-[#f8fafc]/60">
-                <span className="text-[10px] text-gray-400">
+                <span className="text-[10px] text-[#94a3b8]">
                   {filtered.length} gösteriliyor · toplam {rows.length} satış
                 </span>
               </div>

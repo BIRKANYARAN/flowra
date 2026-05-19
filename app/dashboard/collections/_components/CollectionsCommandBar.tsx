@@ -91,8 +91,8 @@ export async function CollectionsCommandBar({ companyId }: Props) {
         {/* Açık Alacak */}
         <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#e2e8f0] rounded">
           <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Açık Alacak</span>
-          <span className="text-sm font-black tabular-nums text-gray-900">{fmt(totalOutstanding)}</span>
-          <span className="text-[9px] text-gray-400">{openCount} fatura</span>
+          <span className="text-sm font-black tabular-nums text-[#0f172a]">{fmt(totalOutstanding)}</span>
+          <span className="text-[9px] text-[#94a3b8]">{openCount} fatura</span>
         </div>
 
         {/* Gecikmiş */}
@@ -120,14 +120,14 @@ export async function CollectionsCommandBar({ companyId }: Props) {
             ? 'bg-warn-light border-warn-light'
             : 'bg-neg-light border-neg-light'
         }`}>
-          <span className="text-[9px] font-black uppercase tracking-widest text-gray-500">Tahsilat</span>
+          <span className="text-[9px] font-black uppercase tracking-widest text-[#64748b]">Tahsilat</span>
           <span className={`text-sm font-black tabular-nums ${
             collectionRate >= 80 ? 'text-pos-text' :
             collectionRate >= 50 ? 'text-warn-text' : 'text-neg-text'
           }`}>
             %{collectionRate.toFixed(0)}
           </span>
-          <span className="text-[9px] text-gray-400">{fmt(totalPaid)} alındı</span>
+          <span className="text-[9px] text-[#94a3b8]">{fmt(totalPaid)} alındı</span>
         </div>
 
         {/* Link to risk tab for full aging */}
@@ -151,7 +151,7 @@ export async function CollectionsCommandBar({ companyId }: Props) {
               return (
                 <div key={r.id} className="px-3 py-2 flex items-center justify-between gap-3">
                   <div className="min-w-0 flex-1">
-                    <span className="text-xs font-bold text-gray-900 truncate block">
+                    <span className="text-xs font-bold text-[#0f172a] truncate block">
                       {r.customer_name}
                     </span>
                     <span className="text-[10px] text-neg font-semibold">

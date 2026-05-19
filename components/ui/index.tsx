@@ -16,8 +16,8 @@ const btn = cva(
     variants: {
       variant: {
         primary:   'bg-primary-600 hover:bg-primary-700 text-white shadow-sm',
-        secondary: 'bg-white hover:bg-[#f8fafc] text-gray-700 border border-[#e2e8f0]',
-        ghost:     'text-gray-500 hover:text-gray-900 hover:bg-[#f8fafc]',
+        secondary: 'bg-white hover:bg-[#f8fafc] text-[#334155] border border-[#e2e8f0]',
+        ghost:     'text-[#64748b] hover:text-[#0f172a] hover:bg-[#f8fafc]',
         danger:    'bg-neg-light hover:bg-neg-light text-neg-text border border-neg-light',
         success:   'bg-pos hover:bg-pos text-white',
       },
@@ -103,17 +103,17 @@ type DSInputProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'prefix' | 'suff
 export const DSInput = forwardRef<HTMLInputElement, DSInputProps>(
   ({ label, prefix, suffix, error, className, ...rest }, ref) => (
     <div className={className}>
-      {label && <div className="text-xs font-semibold text-gray-700 mb-1.5">{label}</div>}
+      {label && <div className="text-xs font-semibold text-[#334155] mb-1.5">{label}</div>}
       <div className="relative">
         {prefix && (
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94a3b8] pointer-events-none">
             {prefix}
           </span>
         )}
         <input
           ref={ref}
           className={cn(
-            'w-full bg-white border rounded px-3 py-2 text-sm text-gray-900 placeholder-gray-400 transition-colors',
+            'w-full bg-white border rounded px-3 py-2 text-sm text-[#0f172a] placeholder-[#94a3b8] transition-colors',
             'focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100',
             prefix && 'pl-8',
             suffix && 'pr-10',
@@ -122,7 +122,7 @@ export const DSInput = forwardRef<HTMLInputElement, DSInputProps>(
           {...rest}
         />
         {suffix && (
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8] text-xs">
             {suffix}
           </span>
         )}
@@ -162,7 +162,7 @@ const STATUS_MAP: Record<string, { label: string; cls: string }> = {
 }
 
 export function StatusBadge({ status }: { status: string }) {
-  const s = STATUS_MAP[status] ?? { label: status, cls: 'bg-gray-100 text-gray-500' }
+  const s = STATUS_MAP[status] ?? { label: status, cls: 'bg-[#f1f5f9] text-[#64748b]' }
   return (
     <span className={cn('inline-flex items-center px-2.5 py-0.5 rounded text-xs font-semibold', s.cls)}>
       {s.label}
@@ -206,7 +206,7 @@ export function Money({
   return (
     <span className={cn('tabular-nums', emph, toneCls, className)}>
       {sign}
-      <span className="mr-0.5 text-gray-400 font-normal">{currency}</span>
+      <span className="mr-0.5 text-[#94a3b8] font-normal">{currency}</span>
       {formatMoney(abs, decimals)}
     </span>
   )
@@ -220,13 +220,13 @@ export function StatCard({ label, value, sub, accent }: {
 }) {
   return (
     <div className={`bg-white border rounded p-5 ${accent ? 'border-primary-200 bg-primary-50' : 'border-[#e2e8f0]'}`}>
-      <div className={`text-xs font-semibold uppercase tracking-wide mb-1 ${accent ? 'text-primary-500' : 'text-gray-400'}`}>
+      <div className={`text-xs font-semibold uppercase tracking-wide mb-1 ${accent ? 'text-primary-500' : 'text-[#94a3b8]'}`}>
         {label}
       </div>
-      <div className={`text-2xl font-black tabular-nums ${accent ? 'text-primary-700' : 'text-gray-900'}`}>
+      <div className={`text-2xl font-black tabular-nums ${accent ? 'text-primary-700' : 'text-[#0f172a]'}`}>
         {value}
       </div>
-      {sub && <div className="text-xs text-gray-400 mt-1">{sub}</div>}
+      {sub && <div className="text-xs text-[#94a3b8] mt-1">{sub}</div>}
     </div>
   )
 }
@@ -238,8 +238,8 @@ export function PageHeader({ title, sub, action }: {
   return (
     <div className="flex items-start justify-between mb-6">
       <div>
-        <h1 className="text-xl font-black text-gray-900 tracking-tight">{title}</h1>
-        {sub && <p className="text-sm text-gray-500 mt-0.5">{sub}</p>}
+        <h1 className="text-xl font-black text-[#0f172a] tracking-tight">{title}</h1>
+        {sub && <p className="text-sm text-[#64748b] mt-0.5">{sub}</p>}
       </div>
       {action && <div className="flex-shrink-0">{action}</div>}
     </div>
@@ -253,8 +253,8 @@ export function EmptyState({ icon, title, sub, action }: {
   return (
     <div className="bg-white border border-[#e2e8f0] rounded text-center py-16 px-6">
       <div className="text-5xl mb-3">{icon}</div>
-      <p className="font-semibold text-gray-700 mb-1">{title}</p>
-      {sub && <p className="text-sm text-gray-400 mb-5">{sub}</p>}
+      <p className="font-semibold text-[#334155] mb-1">{title}</p>
+      {sub && <p className="text-sm text-[#94a3b8] mb-5">{sub}</p>}
       {action}
     </div>
   )
@@ -305,11 +305,11 @@ type DSSelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
 export const DSSelect = forwardRef<HTMLSelectElement, DSSelectProps>(
   ({ label, error, className, children, ...rest }, ref) => (
     <div className={className}>
-      {label && <div className="text-xs font-semibold text-gray-700 mb-1.5">{label}</div>}
+      {label && <div className="text-xs font-semibold text-[#334155] mb-1.5">{label}</div>}
       <select
         ref={ref}
         className={cn(
-          'w-full bg-white border rounded px-3 py-2 text-sm text-gray-900 transition-colors',
+          'w-full bg-white border rounded px-3 py-2 text-sm text-[#0f172a] transition-colors',
           'focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100',
           error ? 'border-neg' : 'border-[#e2e8f0]',
         )}

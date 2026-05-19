@@ -16,7 +16,7 @@ export function ReturnsTab({ loading, returns }: ReturnsTabProps) {
   return (
     <div className="flex flex-col gap-4">
       {loading ? <Skeleton h="h-32" /> : returns.length === 0 ? (
-        <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-6 text-center text-sm text-gray-400">
+        <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-6 text-center text-sm text-[#94a3b8]">
           Getiri verisi hesaplanamadı.
         </div>
       ) : (
@@ -30,9 +30,9 @@ export function ReturnsTab({ loading, returns }: ReturnsTabProps) {
                 <div key={r.partner_id} className="px-4 py-4">
                   <div className="flex items-start justify-between gap-4 mb-2">
                     <div>
-                      <div className="text-sm font-bold text-gray-900">{r.partner_name}</div>
-                      <div className="text-[10px] text-gray-400 mt-0.5">
-                        Yatırılan: <span className="font-semibold text-gray-600">{fmt(r.total_invested_try)}</span>
+                      <div className="text-sm font-bold text-[#0f172a]">{r.partner_name}</div>
+                      <div className="text-[10px] text-[#94a3b8] mt-0.5">
+                        Yatırılan: <span className="font-semibold text-[#64748b]">{fmt(r.total_invested_try)}</span>
                         {' '}· Geri alınan: <span className="font-semibold text-pos-text">{fmt(r.total_returned_try)}</span>
                       </div>
                     </div>
@@ -40,7 +40,7 @@ export function ReturnsTab({ loading, returns }: ReturnsTabProps) {
                       <div className={`text-lg font-black tabular-nums ${r.roi_to_date_pct >= 100 ? 'text-pos-text' : r.roi_to_date_pct >= 50 ? 'text-warn-text' : 'text-neg'}`}>
                         {fmtPct(r.roi_to_date_pct)}
                       </div>
-                      <div className="text-[10px] text-gray-400">ROI</div>
+                      <div className="text-[10px] text-[#94a3b8]">ROI</div>
                     </div>
                   </div>
                   <RoiBar pct={r.roi_to_date_pct} />
@@ -57,14 +57,14 @@ export function ReturnsTab({ loading, returns }: ReturnsTabProps) {
 
           {/* Cross-navigation */}
           <div className="flex items-center justify-between px-1">
-            <p className="text-[10px] text-gray-400 leading-relaxed">
+            <p className="text-[10px] text-[#94a3b8] leading-relaxed">
               Sermaye getirisi kâr dağıtımı ve borç trancheleriyle bütünleşik izlenebilir.
             </p>
             <div className="flex items-center gap-2 shrink-0 ml-4">
               <Link href="/dashboard/partners?tab=distribution" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
                 Kâr Dağıtımı →
               </Link>
-              <span className="text-gray-200">|</span>
+              <span className="text-[#e2e8f0]">|</span>
               <Link href="/dashboard/partners?tab=tranches" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
                 Borç Dilimleri →
               </Link>

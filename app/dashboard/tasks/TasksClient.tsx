@@ -22,7 +22,7 @@ const STATUS_LABELS: Record<TaskStatus, string> = {
 const STATUS_COLORS: Record<TaskStatus, string> = {
   open:      'bg-info-light text-info-text',
   done:      'bg-pos-light text-pos-text',
-  cancelled: 'bg-gray-100 text-gray-500',
+  cancelled: 'bg-[#f1f5f9] text-[#64748b]',
 }
 
 function formatDate(d: string | null): string {
@@ -149,7 +149,7 @@ export default function TasksClient({ initialTasks, initialCustomers, initialSal
       {/* ── Create form ───────────────────────────────────────────────────── */}
       {showForm && (
         <div className="bg-white rounded border border-[#e2e8f0] p-5 space-y-4">
-          <h2 className="text-sm font-bold text-gray-700">Yeni Görev</h2>
+          <h2 className="text-sm font-bold text-[#334155]">Yeni Görev</h2>
           {formError && <p className="text-xs text-neg">{formError}</p>}
           <div>
             <label className={LAB}>Başlık *</label>
@@ -214,7 +214,7 @@ export default function TasksClient({ initialTasks, initialCustomers, initialSal
           <div className="flex justify-end gap-3">
             <button
               onClick={() => { setShowForm(false); setFormError('') }}
-              className={`${BTN} bg-gray-100 text-gray-600 hover:bg-gray-200`}
+              className={`${BTN} bg-[#f1f5f9] text-[#64748b] hover:bg-[#e2e8f0]`}
             >
               İptal
             </button>
@@ -230,7 +230,7 @@ export default function TasksClient({ initialTasks, initialCustomers, initialSal
       )}
 
       {/* ── Status tabs ───────────────────────────────────────────────────── */}
-      <div className="flex gap-1 bg-gray-100 rounded p-1">
+      <div className="flex gap-1 bg-[#f1f5f9] rounded p-1">
         {tabs.map(t => {
           const count = t === 'all'
             ? tasks.length
@@ -240,12 +240,12 @@ export default function TasksClient({ initialTasks, initialCustomers, initialSal
               key={t}
               onClick={() => setTab(t)}
               className={`flex-1 py-1.5 text-xs font-semibold rounded transition-colors ${
-                tab === t ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600'
+                tab === t ? 'bg-white text-[#0f172a] shadow-sm' : 'text-[#94a3b8] hover:text-[#64748b]'
               }`}
             >
               {t === 'all' ? 'Tümü' : STATUS_LABELS[t]}
               {count > 0 && (
-                <span className="ml-1 text-[9px] text-gray-400">({count})</span>
+                <span className="ml-1 text-[9px] text-[#94a3b8]">({count})</span>
               )}
             </button>
           )
@@ -263,7 +263,7 @@ export default function TasksClient({ initialTasks, initialCustomers, initialSal
       {/* ── Task list ─────────────────────────────────────────────────────── */}
       {filtered.length === 0 ? (
         <div className="bg-white rounded border border-[#e2e8f0] p-8 text-center">
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-[#94a3b8]">
             {tab === 'open' ? 'Açık görev yok. ✓' : 'Bu durumda görev yok.'}
           </p>
         </div>
@@ -299,7 +299,7 @@ export default function TasksClient({ initialTasks, initialCustomers, initialSal
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
                     <p className={`text-sm font-semibold ${
-                      task.status === 'done' ? 'line-through text-gray-400' : 'text-gray-800'
+                      task.status === 'done' ? 'line-through text-[#94a3b8]' : 'text-[#1e293b]'
                     }`}>
                       {task.title}
                     </p>
@@ -309,16 +309,16 @@ export default function TasksClient({ initialTasks, initialCustomers, initialSal
                   </div>
                   <div className="flex items-center gap-3 mt-1 flex-wrap">
                     {task.due_date && (
-                      <span className={`text-xs ${overdue ? 'text-neg font-semibold' : 'text-gray-400'}`}>
+                      <span className={`text-xs ${overdue ? 'text-neg font-semibold' : 'text-[#94a3b8]'}`}>
                         📅 {formatDate(task.due_date)}{overdue && ' — GEÇMİŞ'}
                       </span>
                     )}
                     {task.customer_name && (
-                      <span className="text-xs text-gray-400">🏢 {task.customer_name}</span>
+                      <span className="text-xs text-[#94a3b8]">🏢 {task.customer_name}</span>
                     )}
                   </div>
                   {task.notes && (
-                    <p className="text-xs text-gray-400 mt-1 truncate">{task.notes}</p>
+                    <p className="text-xs text-[#94a3b8] mt-1 truncate">{task.notes}</p>
                   )}
                 </div>
 
@@ -327,7 +327,7 @@ export default function TasksClient({ initialTasks, initialCustomers, initialSal
                   {task.status === 'open' && (
                     <button
                       onClick={() => updateStatus(task.id, 'cancelled')}
-                      className="text-[10px] text-gray-400 hover:text-orange-600 px-2 py-1 rounded hover:bg-orange-50 transition-colors"
+                      className="text-[10px] text-[#94a3b8] hover:text-orange-600 px-2 py-1 rounded hover:bg-orange-50 transition-colors"
                     >
                       İptal
                     </button>
@@ -339,14 +339,14 @@ export default function TasksClient({ initialTasks, initialCustomers, initialSal
                         Evet, sil
                       </button>
                       <button onClick={() => setConfirmId(null)}
-                        className="text-[10px] text-gray-400 px-2 py-1 rounded hover:bg-gray-100 transition-colors">
+                        className="text-[10px] text-[#94a3b8] px-2 py-1 rounded hover:bg-[#f1f5f9] transition-colors">
                         İptal
                       </button>
                     </span>
                   ) : (
                     <button
                       onClick={() => setConfirmId(task.id)}
-                      className="text-[10px] text-gray-400 hover:text-neg px-2 py-1 rounded hover:bg-neg-light transition-colors"
+                      className="text-[10px] text-[#94a3b8] hover:text-neg px-2 py-1 rounded hover:bg-neg-light transition-colors"
                     >
                       Sil
                     </button>

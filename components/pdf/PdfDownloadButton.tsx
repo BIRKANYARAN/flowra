@@ -28,7 +28,7 @@ export function PdfDownloadButton({ opts }: Props) {
     <div className="flex flex-col items-end gap-1">
       <Btn onClick={download} disabled={loading} variant="secondary" small>
         {loading
-          ? <><span className="w-3 h-3 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" /> Hazırlanıyor...</>
+          ? <><span className="w-3 h-3 border-2 border-[#94a3b8] border-t-transparent rounded-full animate-spin" /> Hazırlanıyor...</>
           : '↓ PDF İndir'
         }
       </Btn>

@@ -61,7 +61,7 @@ const CLASS_LABELS: Record<string, string> = {
 }
 
 function Skeleton() {
-  return <div className="bg-gray-100 rounded h-12 animate-pulse" />
+  return <div className="bg-[#f1f5f9] rounded h-12 animate-pulse" />
 }
 
 export default function TrialBalancePage() {
@@ -102,30 +102,30 @@ export default function TrialBalancePage() {
       <style dangerouslySetInnerHTML={{ __html: PRINT_STYLE }} />
       <div className="flex items-center justify-between" data-print-hide>
         <div>
-          <h1 className="text-xl font-black text-gray-900 tracking-tight">Mizan</h1>
-          <p className="text-xs text-gray-400 mt-0.5">Genel Muhasebe Hesap Bakiyeleri</p>
+          <h1 className="text-xl font-black text-[#0f172a] tracking-tight">Mizan</h1>
+          <p className="text-xs text-[#94a3b8] mt-0.5">Genel Muhasebe Hesap Bakiyeleri</p>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => window.print()}
             title="Mizanı PDF olarak kaydet veya yazdır"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-[#e2e8f0] bg-white text-xs font-semibold text-gray-600 hover:bg-[#f8fafc] hover:border-[#e2e8f0] transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-[#e2e8f0] bg-white text-xs font-semibold text-[#64748b] hover:bg-[#f8fafc] hover:border-[#e2e8f0] transition-colors"
           >
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
             </svg>
             Yazdır / PDF
           </button>
-          <Link href="/dashboard/cfo" className="text-xs text-gray-400 hover:text-primary-600 font-semibold">
+          <Link href="/dashboard/cfo" className="text-xs text-[#94a3b8] hover:text-primary-600 font-semibold">
             ← CFO Cockpit
           </Link>
         </div>
       </div>
       {/* Print-only header */}
       <div className="hidden print:block mb-4">
-        <div className="text-[10px] uppercase tracking-widest text-gray-400 font-black">Flowra — Muhasebe Raporu</div>
-        <h1 className="text-2xl font-black text-gray-900">Mizan</h1>
-        <p className="text-xs text-gray-500 mt-0.5">Genel Muhasebe Hesap Bakiyeleri · {new Date().toLocaleDateString('tr-TR', { day:'2-digit', month:'long', year:'numeric' })}</p>
+        <div className="text-[10px] uppercase tracking-widest text-[#94a3b8] font-black">Flowra — Muhasebe Raporu</div>
+        <h1 className="text-2xl font-black text-[#0f172a]">Mizan</h1>
+        <p className="text-xs text-[#64748b] mt-0.5">Genel Muhasebe Hesap Bakiyeleri · {new Date().toLocaleDateString('tr-TR', { day:'2-digit', month:'long', year:'numeric' })}</p>
       </div>
 
       {error && (
@@ -146,8 +146,8 @@ export default function TrialBalancePage() {
                     {c.passed ? '✓' : '✗'}
                   </div>
                   <div className="min-w-0">
-                    <div className="text-xs font-semibold text-gray-800">{c.name}</div>
-                    {c.detail && <div className="text-[10px] text-gray-400 truncate">{c.detail}</div>}
+                    <div className="text-xs font-semibold text-[#1e293b]">{c.name}</div>
+                    {c.detail && <div className="text-[10px] text-[#94a3b8] truncate">{c.detail}</div>}
                   </div>
                 </div>
                 {c.amount != null && (
@@ -164,11 +164,11 @@ export default function TrialBalancePage() {
         <div className="grid grid-cols-3 gap-2">
           <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Toplam Borç</div>
-            <div className="text-xl font-black tabular-nums text-gray-900">{fmt(tb.total_debit_try)}</div>
+            <div className="text-xl font-black tabular-nums text-[#0f172a]">{fmt(tb.total_debit_try)}</div>
           </div>
           <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Toplam Alacak</div>
-            <div className="text-xl font-black tabular-nums text-gray-900">{fmt(tb.total_credit_try)}</div>
+            <div className="text-xl font-black tabular-nums text-[#0f172a]">{fmt(tb.total_credit_try)}</div>
           </div>
           <div className={`border rounded px-4 py-3 ${tb.is_balanced ? 'bg-pos-light border-pos-light' : 'bg-neg-light border-neg-light'}`}>
             <div className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${tb.is_balanced ? 'text-pos-text' : 'text-neg'}`}>
@@ -190,8 +190,8 @@ export default function TrialBalancePage() {
       {!loading && !hasData && !error && (
         <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-10 text-center">
           <div className="text-2xl mb-2">📒</div>
-          <div className="text-sm font-semibold text-gray-500">Henüz journal entry yok</div>
-          <div className="text-xs text-gray-400 mt-1">
+          <div className="text-sm font-semibold text-[#64748b]">Henüz journal entry yok</div>
+          <div className="text-xs text-[#94a3b8] mt-1">
             GL modu aktifleştirildikten sonra muhasebe kayıtları burada görünür.
           </div>
         </div>
@@ -206,29 +206,29 @@ export default function TrialBalancePage() {
             return (
               <div key={cls} className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
                 <div className="px-4 py-2.5 border-b border-[#e2e8f0] bg-[#f8fafc]">
-                  <div className="text-[10px] font-black uppercase tracking-widest text-gray-500">
+                  <div className="text-[10px] font-black uppercase tracking-widest text-[#64748b]">
                     {CLASS_LABELS[cls] ?? cls}
                   </div>
                 </div>
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="border-b border-[#f1f5f9]">
-                      <th className="px-4 py-2 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Hesap</th>
-                      <th className="px-4 py-2 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Borç</th>
-                      <th className="px-4 py-2 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Alacak</th>
-                      <th className="px-4 py-2 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Bakiye</th>
+                      <th className="px-4 py-2 text-left text-[10px] font-black text-[#94a3b8] uppercase tracking-widest">Hesap</th>
+                      <th className="px-4 py-2 text-right text-[10px] font-black text-[#94a3b8] uppercase tracking-widest">Borç</th>
+                      <th className="px-4 py-2 text-right text-[10px] font-black text-[#94a3b8] uppercase tracking-widest">Alacak</th>
+                      <th className="px-4 py-2 text-right text-[10px] font-black text-[#94a3b8] uppercase tracking-widest">Bakiye</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#f1f5f9]">
                     {accounts.map(a => (
                       <tr key={a.account_code} className="hover:bg-[#f8fafc]/60">
                         <td className="px-4 py-2">
-                          <span className="font-mono font-semibold text-gray-500 mr-2">{a.account_code}</span>
-                          <span className="text-gray-800">{a.account_name_tr}</span>
+                          <span className="font-mono font-semibold text-[#64748b] mr-2">{a.account_code}</span>
+                          <span className="text-[#1e293b]">{a.account_name_tr}</span>
                         </td>
-                        <td className="px-4 py-2 text-right font-mono text-gray-600">{a.debit_try > 0 ? fmt(a.debit_try) : '—'}</td>
-                        <td className="px-4 py-2 text-right font-mono text-gray-600">{a.credit_try > 0 ? fmt(a.credit_try) : '—'}</td>
-                        <td className={`px-4 py-2 text-right font-mono font-bold ${a.balance_try > 0 ? 'text-gray-900' : a.balance_try < 0 ? 'text-neg' : 'text-gray-400'}`}>
+                        <td className="px-4 py-2 text-right font-mono text-[#64748b]">{a.debit_try > 0 ? fmt(a.debit_try) : '—'}</td>
+                        <td className="px-4 py-2 text-right font-mono text-[#64748b]">{a.credit_try > 0 ? fmt(a.credit_try) : '—'}</td>
+                        <td className={`px-4 py-2 text-right font-mono font-bold ${a.balance_try > 0 ? 'text-[#0f172a]' : a.balance_try < 0 ? 'text-neg' : 'text-[#94a3b8]'}`}>
                           {fmt(a.balance_try)}
                         </td>
                       </tr>
@@ -243,18 +243,18 @@ export default function TrialBalancePage() {
 
       {/* Cross-navigation */}
       <div className="flex items-center justify-between px-1 pt-1">
-        <p className="text-[10px] text-gray-400 leading-relaxed">
+        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
           Mizan dengesi bilanço ve journal entries ile doğrulanmalı.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
           <Link href="/dashboard/finance?tab=balance" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Bilanço →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/cfo/journal-entries" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Journal Entries →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/finance?tab=pnl" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             P&amp;L →
           </Link>

@@ -11,7 +11,7 @@ function CommandBarSkeleton() {
   return (
     <div className="flex items-center gap-2 animate-pulse">
       {[...Array(4)].map((_, i) => (
-        <div key={i} className="h-8 w-28 bg-gray-100 rounded" />
+        <div key={i} className="h-8 w-28 bg-[#f1f5f9] rounded" />
       ))}
     </div>
   )
@@ -29,7 +29,7 @@ function AgingStrip({ buckets, grandTotal }: { buckets: AgingBucket[]; grandTota
           <div className={`text-lg font-black tabular-nums leading-none ${b.color}`}>
             {b.total > 0 ? fmt(b.total) : '—'}
           </div>
-          <div className="text-[10px] text-gray-400 mt-1">{b.sub}</div>
+          <div className="text-[10px] text-[#94a3b8] mt-1">{b.sub}</div>
         </div>
       ))}
     </div>
@@ -211,12 +211,12 @@ export async function CollectionsContent({ companyId }: Props) {
             {topDebtors.map(d => {
               const barPct   = (d.total / maxDebtorTotal) * 100
               const sharePct = grandTotal > 0 ? (d.total / grandTotal) * 100 : 0
-              const urgency  = d.maxDays > 60 ? 'text-neg' : d.maxDays > 30 ? 'text-warn-text' : 'text-gray-400'
+              const urgency  = d.maxDays > 60 ? 'text-neg' : d.maxDays > 30 ? 'text-warn-text' : 'text-[#94a3b8]'
               return (
                 <div key={d.name} className="flex items-center gap-3">
-                  <div className="w-32 text-xs text-gray-700 font-medium shrink-0 truncate" title={d.name}>{d.name}</div>
+                  <div className="w-32 text-xs text-[#334155] font-medium shrink-0 truncate" title={d.name}>{d.name}</div>
                   <div className="flex-1">
-                    <div className="h-5 bg-gray-100 rounded overflow-hidden">
+                    <div className="h-5 bg-[#f1f5f9] rounded overflow-hidden">
                       <div
                         className={`h-5 rounded ${d.maxDays > 60 ? 'bg-neg' : d.maxDays > 30 ? 'bg-warn' : 'bg-primary-400'}`}
                         style={{ width: `${barPct}%` }}
@@ -224,8 +224,8 @@ export async function CollectionsContent({ companyId }: Props) {
                     </div>
                   </div>
                   <div className="w-36 text-right shrink-0">
-                    <span className="text-xs font-bold tabular-nums text-gray-800">{fmt(d.total)}</span>
-                    <span className="text-[10px] text-gray-400 ml-1">%{sharePct.toFixed(0)}</span>
+                    <span className="text-xs font-bold tabular-nums text-[#1e293b]">{fmt(d.total)}</span>
+                    <span className="text-[10px] text-[#94a3b8] ml-1">%{sharePct.toFixed(0)}</span>
                     {d.maxDays > 0 && (
                       <span className={`text-[9px] ml-1 font-semibold ${urgency}`}>{d.maxDays}g</span>
                     )}
@@ -234,7 +234,7 @@ export async function CollectionsContent({ companyId }: Props) {
               )
             })}
           </div>
-          <div className="mt-3 text-[9px] text-gray-300">
+          <div className="mt-3 text-[9px] text-[#cbd5e1]">
             Bar rengi: kırmızı = 60+ gün · sarı = 30–60 gün · mavi = güncel
           </div>
         </div>
@@ -244,7 +244,7 @@ export async function CollectionsContent({ companyId }: Props) {
 
       {/* Cross-navigation */}
       <div className="flex items-center justify-between px-1">
-        <p className="text-[10px] text-gray-400 leading-relaxed">
+        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
           Tahsilat yaşlandırması alacak risk analizinin temelini oluşturur.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
@@ -254,7 +254,7 @@ export async function CollectionsContent({ companyId }: Props) {
           >
             Müşteri Riskleri →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link
             href="/dashboard/finance?tab=risks"
             className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap"

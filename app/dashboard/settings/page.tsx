@@ -394,8 +394,8 @@ export default function SettingsPage() {
                   />
                 ) : (
                   <div className="text-center pointer-events-none">
-                    <div className="text-xl text-gray-300">↑</div>
-                    <div className="text-[10px] text-gray-400">Logo</div>
+                    <div className="text-xl text-[#cbd5e1]">↑</div>
+                    <div className="text-[10px] text-[#94a3b8]">Logo</div>
                   </div>
                 )}
                 {uploading && (
@@ -411,13 +411,13 @@ export default function SettingsPage() {
                   htmlFor="logo-file-input"
                   className={`inline-flex items-center justify-center px-3 py-1.5 rounded border text-xs font-semibold transition-colors select-none ${
                     uploading
-                      ? 'opacity-50 cursor-default bg-[#f8fafc] border-[#e2e8f0] text-gray-400'
-                      : 'cursor-pointer bg-white border-[#e2e8f0] text-gray-700 hover:bg-[#f8fafc] hover:border-[#e2e8f0]'
+                      ? 'opacity-50 cursor-default bg-[#f8fafc] border-[#e2e8f0] text-[#94a3b8]'
+                      : 'cursor-pointer bg-white border-[#e2e8f0] text-[#334155] hover:bg-[#f8fafc] hover:border-[#e2e8f0]'
                   }`}
                 >
                   {uploading ? 'Yükleniyor...' : signedPreview ? 'Değiştir' : 'Logo Seç'}
                 </label>
-                <p className="text-[10px] text-gray-400">PNG, JPG, WebP, SVG — maks 2MB</p>
+                <p className="text-[10px] text-[#94a3b8]">PNG, JPG, WebP, SVG — maks 2MB</p>
                 {signedPreview && (
                   <button
                     type="button"
@@ -518,7 +518,7 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between border-b border-[#e2e8f0] pb-2 mb-3">
               <div>
                 <p className="font-bold text-sm">Banka Hesapları</p>
-                <p className="text-[10px] text-gray-400 mt-0.5">PDF&apos;de ve proforma sayfasında gösterilir</p>
+                <p className="text-[10px] text-[#94a3b8] mt-0.5">PDF&apos;de ve proforma sayfasında gösterilir</p>
               </div>
               {!addBank && (
                 <FlowraButton variant="secondary" size="sm" onClick={openNewBank}>
@@ -588,7 +588,7 @@ export default function SettingsPage() {
             )}
 
             {banks.length === 0 ? (
-              <p className="text-xs text-gray-400 text-center py-4">
+              <p className="text-xs text-[#94a3b8] text-center py-4">
                 Henüz banka hesabı eklenmedi.
               </p>
             ) : (
@@ -613,7 +613,7 @@ export default function SettingsPage() {
                           </span>
                         )}
                       </div>
-                      <div className="text-[10px] font-mono text-gray-500 mt-0.5 truncate">{b.iban}</div>
+                      <div className="text-[10px] font-mono text-[#64748b] mt-0.5 truncate">{b.iban}</div>
                     </div>
 
                     <div className="flex gap-1 ml-2 flex-shrink-0">
@@ -621,7 +621,7 @@ export default function SettingsPage() {
                         <button
                           onClick={() => setDefaultBank(b.id)}
                           title="Varsayılan yap"
-                          className="text-xs text-gray-400 hover:text-primary-600 px-1.5 py-1 rounded hover:bg-primary-50 transition-colors"
+                          className="text-xs text-[#94a3b8] hover:text-primary-600 px-1.5 py-1 rounded hover:bg-primary-50 transition-colors"
                         >
                           ☆
                         </button>
@@ -642,7 +642,7 @@ export default function SettingsPage() {
           {/* Interest Rate */}
           <FlowraCard>
             <p className="font-bold text-sm border-b border-[#e2e8f0] pb-2 mb-3">Faiz Oranı</p>
-            <p className="text-[10px] text-gray-400 mb-3">
+            <p className="text-[10px] text-[#94a3b8] mb-3">
               Simülasyon ve reel kâr hesabı için para birimi bazında yıllık oran
             </p>
 
@@ -656,7 +656,7 @@ export default function SettingsPage() {
                   className={`text-xs border rounded-md px-2.5 py-1 font-semibold transition-colors select-none ${
                     intCurrency === c
                       ? 'border-primary-500 bg-primary-500 text-white'
-                      : 'border-[#e2e8f0] text-gray-500 hover:bg-[#f8fafc] hover:text-gray-800'
+                      : 'border-[#e2e8f0] text-[#64748b] hover:bg-[#f8fafc] hover:text-[#1e293b]'
                   }`}
                 >
                   {c}
@@ -695,9 +695,9 @@ export default function SettingsPage() {
                 {intHistory.map(r => (
                   <div key={r.rate_date} className="flex justify-between text-xs">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-gray-500">{r.rate_date}</span>
+                      <span className="text-[#64748b]">{r.rate_date}</span>
                       {r.source && r.source !== 'manual' && (
-                        <span className="text-[9px] bg-gray-100 text-gray-400 px-1 rounded uppercase">
+                        <span className="text-[9px] bg-[#f1f5f9] text-[#94a3b8] px-1 rounded uppercase">
                           {r.source}
                         </span>
                       )}
@@ -716,7 +716,7 @@ export default function SettingsPage() {
         <div className="flex items-center justify-between">
           <div>
             <p className="font-bold text-sm">Demo Yönetimi</p>
-            <p className="text-xs text-gray-400 mt-0.5">
+            <p className="text-xs text-[#94a3b8] mt-0.5">
               Örnek veri yükle veya sıfırla — müşteriler, proformalar, banka hesapları
             </p>
           </div>

@@ -97,7 +97,7 @@ export async function SalesFlowCommandBar({ companyId }: Props) {
   // ── Empty state ─────────────────────────────────────────────────────────────
   if (total === 0) {
     return (
-      <div className="flex items-center gap-2 px-4 py-2.5 bg-[#f8fafc] border border-[#e2e8f0] rounded text-xs text-gray-400">
+      <div className="flex items-center gap-2 px-4 py-2.5 bg-[#f8fafc] border border-[#e2e8f0] rounded text-xs text-[#94a3b8]">
         Henüz teklif kaydı yok — pipeline boş.
       </div>
     )
@@ -107,7 +107,7 @@ export async function SalesFlowCommandBar({ companyId }: Props) {
   const funnelMax = Math.max(funnel.draft, funnel.sent, funnel.accepted + funnel.converted + funnel.rejected, 1)
 
   const funnelSteps = [
-    { label: 'Taslak',    count: funnel.draft,     color: 'bg-gray-300'     },
+    { label: 'Taslak',    count: funnel.draft,     color: 'bg-[#e2e8f0]'     },
     { label: 'Gönderildi', count: funnel.sent,     color: 'bg-info'     },
     { label: 'Onaylandı',  count: funnel.accepted, color: 'bg-pos'  },
     { label: 'Satıldı',    count: funnel.converted, color: 'bg-primary-500' },
@@ -124,9 +124,9 @@ export async function SalesFlowCommandBar({ companyId }: Props) {
           <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Açık Pipeline</span>
           {openPipelineValue > 0
             ? <span className="text-sm font-black tabular-nums text-info-text">{fmt(openPipelineValue)}</span>
-            : <span className="text-sm font-black text-gray-400">—</span>
+            : <span className="text-sm font-black text-[#94a3b8]">—</span>
           }
-          <span className="text-[9px] text-gray-400">{openPipelineCount} teklif</span>
+          <span className="text-[9px] text-[#94a3b8]">{openPipelineCount} teklif</span>
         </div>
 
         {/* MTD Satış */}
@@ -134,9 +134,9 @@ export async function SalesFlowCommandBar({ companyId }: Props) {
           <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Bu Ay</span>
           {mtdRevenue > 0
             ? <span className="text-sm font-black tabular-nums text-pos-text">{fmt(mtdRevenue)}</span>
-            : <span className="text-sm font-black text-gray-400">—</span>
+            : <span className="text-sm font-black text-[#94a3b8]">—</span>
           }
-          <span className="text-[9px] text-gray-400">{salesMtd.length} satış</span>
+          <span className="text-[9px] text-[#94a3b8]">{salesMtd.length} satış</span>
         </div>
 
         {/* Kazanma Oranı */}
@@ -146,14 +146,14 @@ export async function SalesFlowCommandBar({ companyId }: Props) {
             winRate >= 35 ? 'bg-warn-light border-warn-light'    :
                             'bg-neg-light border-neg-light'
           }`}>
-            <span className="text-[9px] font-black uppercase tracking-widest text-gray-500">Kazanma</span>
+            <span className="text-[9px] font-black uppercase tracking-widest text-[#64748b]">Kazanma</span>
             <span className={`text-sm font-black tabular-nums ${
               winRate >= 60 ? 'text-pos-text' :
               winRate >= 35 ? 'text-warn-text'   : 'text-neg'
             }`}>
               %{winRate.toFixed(0)}
             </span>
-            <span className="text-[9px] text-gray-400">{funnel.converted}/{decided} karar</span>
+            <span className="text-[9px] text-[#94a3b8]">{funnel.converted}/{decided} karar</span>
           </div>
         )}
 
@@ -161,8 +161,8 @@ export async function SalesFlowCommandBar({ companyId }: Props) {
         {conversionRate !== null && (
           <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#e2e8f0] rounded">
             <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Dönüşüm</span>
-            <span className="text-sm font-black tabular-nums text-gray-700">%{conversionRate.toFixed(0)}</span>
-            <span className="text-[9px] text-gray-400">{funnel.converted}/{total}</span>
+            <span className="text-sm font-black tabular-nums text-[#334155]">%{conversionRate.toFixed(0)}</span>
+            <span className="text-[9px] text-[#94a3b8]">{funnel.converted}/{total}</span>
           </div>
         )}
 
@@ -190,7 +190,7 @@ export async function SalesFlowCommandBar({ companyId }: Props) {
                   />
                   {/* Tooltip */}
                   <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:flex flex-col items-center z-10">
-                    <div className="bg-gray-900 text-white rounded px-2 py-1 text-[10px] whitespace-nowrap">
+                    <div className="bg-[#0f172a] text-white rounded px-2 py-1 text-[10px] whitespace-nowrap">
                       {step.label}: {step.count}
                     </div>
                   </div>
@@ -198,7 +198,7 @@ export async function SalesFlowCommandBar({ companyId }: Props) {
               )
             })}
           </div>
-          <div className="flex items-center gap-3 text-[9px] text-gray-400">
+          <div className="flex items-center gap-3 text-[9px] text-[#94a3b8]">
             {funnelSteps.map(s => (
               <span key={s.label} className="tabular-nums">
                 {s.count} {s.label.toLowerCase()}
@@ -230,7 +230,7 @@ export async function SalesFlowCommandBar({ companyId }: Props) {
               return (
                 <div key={p.id} className="px-3 py-2 flex items-center justify-between gap-3">
                   <div className="min-w-0 flex-1">
-                    <span className="text-xs font-bold text-gray-900 truncate block">
+                    <span className="text-xs font-bold text-[#0f172a] truncate block">
                       {p.customer_name ?? '—'}
                     </span>
                     <span className="text-[10px] text-warn-text font-semibold">
@@ -239,7 +239,7 @@ export async function SalesFlowCommandBar({ companyId }: Props) {
                   </div>
                   <div className="text-sm font-black tabular-nums text-warn-text shrink-0">
                     {fmt(Number(p.total ?? 0))}
-                    <span className="text-[10px] font-normal text-gray-400 ml-1">{p.currency}</span>
+                    <span className="text-[10px] font-normal text-[#94a3b8] ml-1">{p.currency}</span>
                   </div>
                 </div>
               )

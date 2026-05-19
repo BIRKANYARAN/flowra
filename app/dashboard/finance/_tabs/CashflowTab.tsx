@@ -88,17 +88,17 @@ export async function CashflowTab({ userId, companyId }: Props) {
           {
             label: 'Toplam Alacak',
             value: fmt(timeline.totalReceivables),
-            tone: timeline.totalReceivables > 0 ? 'text-warn-text' : 'text-gray-400',
+            tone: timeline.totalReceivables > 0 ? 'text-warn-text' : 'text-[#94a3b8]',
           },
           {
             label: 'Aylık Burn',
             value: metrics.burn.monthly_burn_rate > 0 ? fmt(metrics.burn.monthly_burn_rate) : '—',
-            tone: 'text-gray-900',
+            tone: 'text-[#0f172a]',
           },
           {
             label: 'Runway',
             value: runwayMonths !== null ? `${runwayMonths.toFixed(1)} ay` : '∞',
-            tone: runwayMonths === null ? 'text-gray-400' : runwayMonths <= 2 ? 'text-neg' : runwayMonths <= 6 ? 'text-warn-text' : 'text-pos-text',
+            tone: runwayMonths === null ? 'text-[#94a3b8]' : runwayMonths <= 2 ? 'text-neg' : runwayMonths <= 6 ? 'text-warn-text' : 'text-pos-text',
           },
           {
             label: timeline.firstDangerMonth ? 'İlk Tehlike Ayı' : 'Nakit Durumu',
@@ -138,8 +138,8 @@ export async function CashflowTab({ userId, companyId }: Props) {
         <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
           <div className="px-4 py-3 border-b border-[#e2e8f0] flex items-center justify-between">
             <div>
-              <h2 className="text-sm font-black text-gray-800">Baskı Haritası</h2>
-              <p className="text-[10px] text-gray-400 mt-0.5">Negatif nakit akışı veya kümülatif tehlike olan gelecek aylar</p>
+              <h2 className="text-sm font-black text-[#1e293b]">Baskı Haritası</h2>
+              <p className="text-[10px] text-[#94a3b8] mt-0.5">Negatif nakit akışı veya kümülatif tehlike olan gelecek aylar</p>
             </div>
             <span className={`text-xs font-bold px-2.5 py-1 rounded ${
               timeline.pressureSignals.some(s => s.severity === 'critical')
@@ -161,7 +161,7 @@ export async function CashflowTab({ userId, companyId }: Props) {
                     </div>
                     <ul className="mt-0.5 space-y-0.5">
                       {sig.reasons.map((r, i) => (
-                        <li key={i} className="text-[11px] text-gray-600">{r}</li>
+                        <li key={i} className="text-[11px] text-[#64748b]">{r}</li>
                       ))}
                     </ul>
                   </div>
@@ -183,8 +183,8 @@ export async function CashflowTab({ userId, companyId }: Props) {
         <div className="px-4 py-3 border-b border-[#e2e8f0]">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-sm font-black text-gray-800">Nakit Akış Tablosu (Dönem Özeti)</h2>
-              <p className="text-[10px] text-gray-400 mt-0.5">
+              <h2 className="text-sm font-black text-[#1e293b]">Nakit Akış Tablosu (Dönem Özeti)</h2>
+              <p className="text-[10px] text-[#94a3b8] mt-0.5">
                 {from} – {today} · Faaliyet / Yatırım / Finansman
               </p>
             </div>
@@ -222,7 +222,7 @@ export async function CashflowTab({ userId, companyId }: Props) {
             },
           ].map(section => {
             const tone = section.value === 0
-              ? 'text-gray-400'
+              ? 'text-[#94a3b8]'
               : section.value > 0
                 ? 'text-pos-text'
                 : 'text-neg'
@@ -235,7 +235,7 @@ export async function CashflowTab({ userId, companyId }: Props) {
                 <div className={`text-lg font-black tabular-nums leading-none ${tone}`}>
                   {fmt(section.value)}
                 </div>
-                <div className="text-[10px] text-gray-400 mt-0.5">{section.sub}</div>
+                <div className="text-[10px] text-[#94a3b8] mt-0.5">{section.sub}</div>
               </div>
             )
           })}
@@ -287,14 +287,14 @@ export async function CashflowTab({ userId, companyId }: Props) {
                       style={{ height: `${isNeg ? 4 : barH}%` }}
                       title={`${mo.month_label}: ${fmt(mo.end_cash)}`} />
                   </div>
-                  <span className="text-[8px] text-gray-400 font-medium truncate w-full text-center leading-none">
+                  <span className="text-[8px] text-[#94a3b8] font-medium truncate w-full text-center leading-none">
                     {mo.month_label.split(' ')[0]}
                   </span>
                 </div>
               )
             })}
           </div>
-          <div className="flex items-center justify-between mt-2 text-[10px] text-gray-400">
+          <div className="flex items-center justify-between mt-2 text-[10px] text-[#94a3b8]">
             <span>Başlangıç: {fmt(runway.inputs.starting_cash)}</span>
             <span>Burn: {fmt(runway.inputs.monthly_burn)}/ay</span>
           </div>
@@ -305,7 +305,7 @@ export async function CashflowTab({ userId, companyId }: Props) {
       {chartMonths.length > 0 && (
         <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
           <div className="px-4 py-3 border-b border-[#e2e8f0]">
-            <h2 className="text-sm font-black text-gray-800">Aylık Projeksiyon Detayı</h2>
+            <h2 className="text-sm font-black text-[#1e293b]">Aylık Projeksiyon Detayı</h2>
           </div>
           <table className="w-full text-xs">
             <thead>
@@ -323,17 +323,17 @@ export async function CashflowTab({ userId, companyId }: Props) {
                 const net   = mo.cash_in - mo.cash_out
                 return (
                   <tr key={mo.month} className={`hover:bg-[#f8fafc]/60 ${isNeg ? 'bg-neg-light/30' : ''}`}>
-                    <td className="px-4 py-2.5 font-semibold text-gray-700">{mo.month_label}</td>
+                    <td className="px-4 py-2.5 font-semibold text-[#334155]">{mo.month_label}</td>
                     <td className="px-4 py-2.5 text-right font-mono text-pos-text tabular-nums">
-                      {mo.cash_in > 0 ? fmt(mo.cash_in) : <span className="text-gray-300">—</span>}
+                      {mo.cash_in > 0 ? fmt(mo.cash_in) : <span className="text-[#cbd5e1]">—</span>}
                     </td>
                     <td className="px-4 py-2.5 text-right font-mono text-neg tabular-nums">
-                      {mo.cash_out > 0 ? fmt(mo.cash_out) : <span className="text-gray-300">—</span>}
+                      {mo.cash_out > 0 ? fmt(mo.cash_out) : <span className="text-[#cbd5e1]">—</span>}
                     </td>
-                    <td className={`px-4 py-2.5 text-right font-mono font-bold tabular-nums ${net >= 0 ? 'text-gray-700' : 'text-neg'}`}>
+                    <td className={`px-4 py-2.5 text-right font-mono font-bold tabular-nums ${net >= 0 ? 'text-[#334155]' : 'text-neg'}`}>
                       {fmt(net)}
                     </td>
-                    <td className={`px-4 py-2.5 text-right font-black tabular-nums ${isNeg ? 'text-neg-text' : 'text-gray-900'}`}>
+                    <td className={`px-4 py-2.5 text-right font-black tabular-nums ${isNeg ? 'text-neg-text' : 'text-[#0f172a]'}`}>
                       {fmt(mo.end_cash)}
                     </td>
                   </tr>
@@ -352,7 +352,7 @@ export async function CashflowTab({ userId, companyId }: Props) {
 
       {/* Cross-link → formal 3-section cash flow statement */}
       <div className="flex items-center justify-between px-1">
-        <p className="text-[10px] text-gray-400 leading-relaxed">
+        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
           Bu görünüm nakit baskı ve runway analizini gösterir.
           Muhasebe uyumlu nakit akış tablosu için resmi raporu inceleyin.
         </p>
@@ -360,11 +360,11 @@ export async function CashflowTab({ userId, companyId }: Props) {
           <Link href="/dashboard/commercial?tab=collections" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Tahsilat →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/planning?tab=cash-projection" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Nakit Projeksiyonu →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/reports/cash-flow" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Nakit Akış Tablosu →
           </Link>

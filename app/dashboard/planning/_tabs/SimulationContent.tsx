@@ -11,9 +11,9 @@ function ContextSkeleton() {
   return (
     <div className="space-y-2 animate-pulse">
       <div className="grid grid-cols-5 gap-2">
-        {[...Array(5)].map((_, i) => <div key={i} className="h-16 bg-gray-100 rounded" />)}
+        {[...Array(5)].map((_, i) => <div key={i} className="h-16 bg-[#f1f5f9] rounded" />)}
       </div>
-      <div className="h-9 bg-gray-100 rounded" />
+      <div className="h-9 bg-[#f1f5f9] rounded" />
     </div>
   )
 }
@@ -93,7 +93,7 @@ export async function SimulationContent({ companyId, userId, activeTab = 'unit-p
 
       <div className="flex items-center gap-3">
         <div className="flex-1 border-t border-dashed border-[#e2e8f0]" />
-        <span className="text-[9px] font-black uppercase tracking-widest text-gray-300">Simülasyon Motoru</span>
+        <span className="text-[9px] font-black uppercase tracking-widest text-[#cbd5e1]">Simülasyon Motoru</span>
         <div className="flex-1 border-t border-dashed border-[#e2e8f0]" />
       </div>
 
@@ -108,18 +108,18 @@ export async function SimulationContent({ companyId, userId, activeTab = 'unit-p
 
       {/* Cross-navigation */}
       <div className="flex items-center justify-between px-1">
-        <p className="text-[10px] text-gray-400 leading-relaxed">
+        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
           Simülasyon sonuçlarını nakit projeksiyonu ve gerçek P&amp;L ile karşılaştırın.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
           <Link href="/dashboard/planning?tab=cash-projection" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Nakit Projeksiyonu →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/planning?tab=what-if" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             What-If →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/finance?tab=overview" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Finansal Durum →
           </Link>

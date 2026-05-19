@@ -19,7 +19,7 @@ function fmtFull(n: number): string {
   return (n < 0 ? '−' : '') + '₺' + TRY_FMT.format(Math.abs(n))
 }
 function runwayColor(months: number | null): string {
-  if (months === null) return 'text-gray-400'
+  if (months === null) return 'text-[#94a3b8]'
   if (months <= 2)     return 'text-neg'
   if (months <= 6)     return 'text-orange-600'
   if (months <= 12)    return 'text-warn-text'
@@ -38,13 +38,13 @@ function KpiBlock({ label, value, sub, tone = 'neutral', href }: {
 }) {
   const valueColor = {
     positive: 'text-pos-text', negative: 'text-neg',
-    warning: 'text-warn-text', critical: 'text-neg-text', neutral: 'text-gray-900',
+    warning: 'text-warn-text', critical: 'text-neg-text', neutral: 'text-[#0f172a]',
   }[tone]
   const content = (
     <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm hover:shadow-[0_2px_4px_rgba(17,24,39,0.07)] transition-shadow">
       <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{label}</div>
       <div className={`text-xl font-black tabular-nums leading-none ${valueColor}`}>{value}</div>
-      {sub && <div className="text-[10px] text-gray-400 mt-1 leading-tight">{sub}</div>}
+      {sub && <div className="text-[10px] text-[#94a3b8] mt-1 leading-tight">{sub}</div>}
     </div>
   )
   return href ? <Link href={href}>{content}</Link> : content
@@ -176,7 +176,7 @@ export async function OverviewTab({ userId: _userId, companyId }: Props) {
               {runwayMonths !== null ? `${runwayMonths.toFixed(1)} ay` : '∞'}
             </div>
             {m.burn.cash_exhaustion_date && (
-              <div className="text-[10px] text-gray-500 mt-1">
+              <div className="text-[10px] text-[#64748b] mt-1">
                 {new Date(m.burn.cash_exhaustion_date + 'T00:00:00Z').toLocaleDateString('tr-TR', {
                   day: 'numeric', month: 'short', year: 'numeric',
                 })}
@@ -192,8 +192,8 @@ export async function OverviewTab({ userId: _userId, companyId }: Props) {
           <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">Tahsilat Sağlığı</div>
           <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 space-y-2 shadow-sm">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-gray-600">Toplam Açık Alacak</span>
-              <span className="text-sm font-black tabular-nums text-gray-900">{fmt(m.receivables.total_outstanding)}</span>
+              <span className="text-xs font-semibold text-[#64748b]">Toplam Açık Alacak</span>
+              <span className="text-sm font-black tabular-nums text-[#0f172a]">{fmt(m.receivables.total_outstanding)}</span>
             </div>
             {[
               { label: '+30 gün (Risk)',        value: m.receivables.overdue_30d, color: 'bg-warn' },
@@ -204,17 +204,17 @@ export async function OverviewTab({ userId: _userId, companyId }: Props) {
                 ? Math.min(100, (value / m.receivables.total_outstanding) * 100) : 0
               return (
                 <div key={label}>
-                  <div className="flex items-center justify-between text-[10px] text-gray-500 mb-0.5">
+                  <div className="flex items-center justify-between text-[10px] text-[#64748b] mb-0.5">
                     <span>{label}</span><span className="font-semibold tabular-nums">{fmt(value)}</span>
                   </div>
-                  <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="h-1.5 bg-[#f1f5f9] rounded-full overflow-hidden">
                     <div className={`h-full ${color} rounded-full transition-all`} style={{ width: `${pct}%` }} />
                   </div>
                 </div>
               )
             })}
             <div className="flex items-center justify-between pt-1 border-t border-[#e2e8f0]">
-              <span className="text-[10px] text-gray-500 font-semibold">Tahsilat Oranı</span>
+              <span className="text-[10px] text-[#64748b] font-semibold">Tahsilat Oranı</span>
               <span className={`text-xs font-black tabular-nums ${
                 m.receivables.collection_rate_pct >= 80 ? 'text-pos-text' :
                 m.receivables.collection_rate_pct >= 50 ? 'text-warn-text' : 'text-neg'
@@ -283,14 +283,14 @@ export async function OverviewTab({ userId: _userId, companyId }: Props) {
                         style={{ height: `${isNeg ? 4 : barH}%` }}
                         title={`${mo.month_label}: ${fmt(mo.end_cash)}`} />
                     </div>
-                    <span className="text-[8px] text-gray-400 font-medium truncate w-full text-center leading-none">
+                    <span className="text-[8px] text-[#94a3b8] font-medium truncate w-full text-center leading-none">
                       {mo.month_label.split(' ')[0]}
                     </span>
                   </div>
                 )
               })}
             </div>
-            <div className="flex items-center justify-between mt-2 text-[10px] text-gray-400">
+            <div className="flex items-center justify-between mt-2 text-[10px] text-[#94a3b8]">
               <span>Başlangıç: {fmt(r.inputs.starting_cash)}</span>
               {r.exhaustion_month !== null ? (
                 <span className="text-neg font-semibold">⚠ Ay {r.exhaustion_month}&apos;de nakit tükenebilir</span>
@@ -314,11 +314,11 @@ export async function OverviewTab({ userId: _userId, companyId }: Props) {
           Giderleri Gözden Geçir
         </Link>
         <Link href="/dashboard/partners"
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded bg-gray-100 text-gray-700 text-xs font-semibold hover:bg-gray-200 transition-colors">
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded bg-[#f1f5f9] text-[#334155] text-xs font-semibold hover:bg-[#e2e8f0] transition-colors">
           Ortak Dengesi
         </Link>
         <Link href="/dashboard/planning?tab=unit-profit"
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded bg-gray-100 text-gray-700 text-xs font-semibold hover:bg-gray-200 transition-colors">
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded bg-[#f1f5f9] text-[#334155] text-xs font-semibold hover:bg-[#e2e8f0] transition-colors">
           Senaryo Simülasyonu
         </Link>
       </div>

@@ -59,8 +59,8 @@ function Section({ title }: { title: string }) {
 function Row({ label, value, bold, indent }: { label: string; value: string; bold?: boolean; indent?: boolean }) {
   return (
     <div className={`flex items-center justify-between py-1.5 border-b border-[#f1f5f9] last:border-0 ${indent ? 'pl-6' : ''}`}>
-      <span className={`text-xs ${bold ? 'font-black text-gray-900' : 'font-medium text-gray-600'}`}>{label}</span>
-      <span className={`tabular-nums text-sm shrink-0 ${bold ? 'font-black text-gray-900' : 'font-semibold text-gray-700'}`}>{value}</span>
+      <span className={`text-xs ${bold ? 'font-black text-[#0f172a]' : 'font-medium text-[#64748b]'}`}>{label}</span>
+      <span className={`tabular-nums text-sm shrink-0 ${bold ? 'font-black text-[#0f172a]' : 'font-semibold text-[#334155]'}`}>{value}</span>
     </div>
   )
 }
@@ -89,11 +89,11 @@ export default function BalanceSheetPage() {
       {/* Header */}
       <div className="flex items-center justify-between print:hidden">
         <div>
-          <h1 className="text-xl font-black text-gray-900 tracking-tight">Bilanço</h1>
-          <p className="text-xs text-gray-400 mt-0.5">Varlıklar = Kaynaklar + Özkaynak</p>
+          <h1 className="text-xl font-black text-[#0f172a] tracking-tight">Bilanço</h1>
+          <p className="text-xs text-[#94a3b8] mt-0.5">Varlıklar = Kaynaklar + Özkaynak</p>
         </div>
         <div className="flex items-center gap-2">
-          <label className="text-xs text-gray-500">Tarih itibarıyla:</label>
+          <label className="text-xs text-[#64748b]">Tarih itibarıyla:</label>
           <input type="date" value={asOf} onChange={e => setAsOf(e.target.value)}
             className="border border-[#e2e8f0] rounded px-2 py-1 text-xs" />
           {bs && <PdfExportButton opts={{
@@ -123,18 +123,18 @@ export default function BalanceSheetPage() {
               ]},
             ],
           } as PdfReportOptions} label="PDF İndir" />}
-          <Link href="/dashboard/cfo" className="text-xs text-gray-400 hover:text-primary-600 font-semibold">← CFO</Link>
+          <Link href="/dashboard/cfo" className="text-xs text-[#94a3b8] hover:text-primary-600 font-semibold">← CFO</Link>
         </div>
       </div>
 
       {/* Print header */}
       <div className="hidden print:block mb-4">
         <h1 className="text-2xl font-black">Bilanço</h1>
-        <p className="text-sm text-gray-500">{asOf} itibarıyla</p>
+        <p className="text-sm text-[#64748b]">{asOf} itibarıyla</p>
       </div>
 
       {error && <div className="bg-neg-light border border-neg-light rounded px-4 py-3 text-sm text-neg-text">{error}</div>}
-      {loading && <div className="bg-gray-100 rounded h-64 animate-pulse" />}
+      {loading && <div className="bg-[#f1f5f9] rounded h-64 animate-pulse" />}
 
       {bs && !loading && (
         <div className="grid grid-cols-2 gap-4">
@@ -233,18 +233,18 @@ export default function BalanceSheetPage() {
 
       {/* Cross-navigation */}
       <div className="flex items-center justify-between px-1 pt-1">
-        <p className="text-[10px] text-gray-400 leading-relaxed">
+        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
           Bilanço nakit akışı ve P&amp;L ile entegre olarak değerlendirilmeli.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
           <Link href="/dashboard/finance?tab=cashflow" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Nakit Akışı →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/finance?tab=pnl" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             P&amp;L →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/partners" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Ortak Özkaynakları →
           </Link>

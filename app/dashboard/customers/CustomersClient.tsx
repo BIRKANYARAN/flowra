@@ -162,11 +162,11 @@ export default function CustomersClient({ initialCustomers }: Props) {
         {filtered.length === 0 ? (
           <div className="py-16 text-center">
             <div className="text-4xl mb-3">👥</div>
-            <div className="text-sm font-semibold text-gray-600 mb-1">
+            <div className="text-sm font-semibold text-[#64748b] mb-1">
               {search ? 'Sonuç bulunamadı.' : 'Henüz müşteri eklenmedi.'}
             </div>
             {!search && (
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-[#94a3b8]">
                 Yeni müşteri eklemek için &quot;Yeni Müşteri&quot; butonuna tıklayın.
               </p>
             )}
@@ -183,16 +183,16 @@ export default function CustomersClient({ initialCustomers }: Props) {
                     {c.name}
                   </div>
                   {c.tax_number && (
-                    <div className="text-xs text-gray-400">
+                    <div className="text-xs text-[#94a3b8]">
                       Vergi No: {c.tax_number}{c.tax_office ? ' · ' + c.tax_office : ''}
                     </div>
                   )}
-                  {c.email && <div className="text-xs text-gray-400">{c.email}</div>}
+                  {c.email && <div className="text-xs text-[#94a3b8]">{c.email}</div>}
                 </button>
                 <div className="flex gap-1 flex-shrink-0">
                   <button
                     onClick={() => openEdit(c)}
-                    className="text-xs text-gray-400 hover:text-gray-900 px-2 py-1 rounded hover:bg-gray-100 transition-colors"
+                    className="text-xs text-[#94a3b8] hover:text-[#0f172a] px-2 py-1 rounded hover:bg-[#f1f5f9] transition-colors"
                   >
                     Düzenle
                   </button>
@@ -206,7 +206,7 @@ export default function CustomersClient({ initialCustomers }: Props) {
                       </button>
                       <button
                         onClick={() => setConfirmId(null)}
-                        className="text-xs text-gray-400 px-2 py-1 rounded hover:bg-gray-100 transition-colors"
+                        className="text-xs text-[#94a3b8] px-2 py-1 rounded hover:bg-[#f1f5f9] transition-colors"
                       >
                         İptal
                       </button>
@@ -214,7 +214,7 @@ export default function CustomersClient({ initialCustomers }: Props) {
                   ) : (
                     <button
                       onClick={() => setConfirmId(c.id)}
-                      className="text-xs text-gray-400 hover:text-neg px-2 py-1 rounded hover:bg-neg-light transition-colors"
+                      className="text-xs text-[#94a3b8] hover:text-neg px-2 py-1 rounded hover:bg-neg-light transition-colors"
                     >
                       Sil
                     </button>

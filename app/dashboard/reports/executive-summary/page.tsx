@@ -34,9 +34,9 @@ function KpiCard({ label, value, sub, tone = 'neutral' }: {
     <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
       <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{label}</div>
       <div className={`text-lg font-black tabular-nums leading-tight ${
-        tone === 'positive' ? 'text-pos-text' : tone === 'negative' ? 'text-neg' : 'text-gray-900'
+        tone === 'positive' ? 'text-pos-text' : tone === 'negative' ? 'text-neg' : 'text-[#0f172a]'
       }`}>{value}</div>
-      {sub && <div className="text-[10px] text-gray-400 mt-0.5">{sub}</div>}
+      {sub && <div className="text-[10px] text-[#94a3b8] mt-0.5">{sub}</div>}
     </div>
   )
 }
@@ -78,13 +78,13 @@ export default function ExecutiveSummaryPage() {
       {/* Header */}
       <div className="flex items-center justify-between print:hidden">
         <div>
-          <h1 className="text-xl font-black text-gray-900 tracking-tight">Yönetici Özeti</h1>
-          <p className="text-xs text-gray-400 mt-0.5">1 Sayfa CEO Raporu</p>
+          <h1 className="text-xl font-black text-[#0f172a] tracking-tight">Yönetici Özeti</h1>
+          <p className="text-xs text-[#94a3b8] mt-0.5">1 Sayfa CEO Raporu</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <input type="date" value={from} onChange={e => setFrom(e.target.value)}
             className="border border-[#e2e8f0] rounded px-2 py-1 text-xs" />
-          <span className="text-xs text-gray-400">—</span>
+          <span className="text-xs text-[#94a3b8]">—</span>
           <input type="date" value={to} onChange={e => setTo(e.target.value)}
             className="border border-[#e2e8f0] rounded px-2 py-1 text-xs" />
           {data && (
@@ -132,18 +132,18 @@ export default function ExecutiveSummaryPage() {
               ],
             } as PdfReportOptions} />
           )}
-          <Link href="/dashboard" className="text-xs text-gray-400 hover:text-primary-600 font-semibold">← Dashboard</Link>
+          <Link href="/dashboard" className="text-xs text-[#94a3b8] hover:text-primary-600 font-semibold">← Dashboard</Link>
         </div>
       </div>
 
       {/* Print header */}
       <div className="hidden print:block mb-6 border-b pb-4">
         <h1 className="text-3xl font-black">Yönetici Özeti</h1>
-        <p className="text-sm text-gray-500 mt-1">{from} — {to}</p>
+        <p className="text-sm text-[#64748b] mt-1">{from} — {to}</p>
       </div>
 
       {error && <div className="bg-neg-light border border-neg-light rounded px-4 py-3 text-sm text-neg-text">{error}</div>}
-      {loading && <div className="bg-gray-100 rounded h-48 animate-pulse" />}
+      {loading && <div className="bg-[#f1f5f9] rounded h-48 animate-pulse" />}
 
       {data && !loading && (
         <>
@@ -239,8 +239,8 @@ export default function ExecutiveSummaryPage() {
                   { label: 'Net Nakit Değişimi',     value: cf?.net_change ?? 0, bold: true },
                 ].map(row => (
                   <div key={row.label} className={`flex items-center justify-between px-4 py-2 border-b border-[#f1f5f9] last:border-0 ${row.bold ? 'bg-[#f8fafc]' : ''}`}>
-                    <span className={`text-xs ${row.bold ? 'font-black text-gray-900' : 'text-gray-600'}`}>{row.label}</span>
-                    <span className={`tabular-nums text-xs font-semibold ${row.value > 0 ? 'text-pos-text' : row.value < 0 ? 'text-neg' : 'text-gray-500'}`}>
+                    <span className={`text-xs ${row.bold ? 'font-black text-[#0f172a]' : 'text-[#64748b]'}`}>{row.label}</span>
+                    <span className={`tabular-nums text-xs font-semibold ${row.value > 0 ? 'text-pos-text' : row.value < 0 ? 'text-neg' : 'text-[#64748b]'}`}>
                       {fmt(row.value)}
                     </span>
                   </div>
@@ -258,8 +258,8 @@ export default function ExecutiveSummaryPage() {
                   { label: 'Kurumlar Verg.',value: -(is?.corporate_tax ?? 0) },
                 ].map(row => (
                   <div key={row.label} className={`flex items-center justify-between px-4 py-2 border-b border-[#f1f5f9] last:border-0 ${row.bold ? 'bg-[#f8fafc]' : ''}`}>
-                    <span className={`text-xs ${row.bold ? 'font-black text-gray-900' : 'text-gray-600'}`}>{row.label}</span>
-                    <span className={`tabular-nums text-xs font-semibold ${row.value > 0 ? 'text-orange-600' : row.value < 0 ? 'text-gray-600' : 'text-gray-400'}`}>
+                    <span className={`text-xs ${row.bold ? 'font-black text-[#0f172a]' : 'text-[#64748b]'}`}>{row.label}</span>
+                    <span className={`tabular-nums text-xs font-semibold ${row.value > 0 ? 'text-orange-600' : row.value < 0 ? 'text-[#64748b]' : 'text-[#94a3b8]'}`}>
                       {fmt(Math.abs(row.value))} {row.bold && tax ? (tax.status === 'payable' ? '⬆ Ödenecek' : '⬇ Devir') : ''}
                     </span>
                   </div>
@@ -270,22 +270,22 @@ export default function ExecutiveSummaryPage() {
 
           {/* Cross-navigation */}
           <div className="flex items-center justify-between px-1 print:hidden">
-            <p className="text-[10px] text-gray-400 leading-relaxed">
+            <p className="text-[10px] text-[#94a3b8] leading-relaxed">
               Yönetici özeti tüm raporlarla birlikte değerlendirilmeli.
             </p>
             <div className="flex items-center gap-2 shrink-0 ml-4">
               <Link href="/dashboard/reports/income-statement" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
                 Gelir Tablosu →
               </Link>
-              <span className="text-gray-200">|</span>
+              <span className="text-[#e2e8f0]">|</span>
               <Link href="/dashboard/reports/balance-sheet" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
                 Bilanço →
               </Link>
-              <span className="text-gray-200">|</span>
+              <span className="text-[#e2e8f0]">|</span>
               <Link href="/dashboard/reports/cash-flow" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
                 Nakit Akışı →
               </Link>
-              <span className="text-gray-200">|</span>
+              <span className="text-[#e2e8f0]">|</span>
               <Link href="/dashboard/cfo/trial-balance" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
                 Mizan →
               </Link>

@@ -99,12 +99,12 @@ export default function NewPartnerPage() {
       <div className="flex items-center gap-2 mb-6">
         <Link
           href="/dashboard/partners"
-          className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
+          className="text-sm text-[#94a3b8] hover:text-[#64748b] transition-colors"
         >
           ← Ortaklar
         </Link>
-        <span className="text-gray-200">/</span>
-        <h1 className="text-xl font-black text-gray-900 tracking-tight">Yeni Ortak</h1>
+        <span className="text-[#e2e8f0]">/</span>
+        <h1 className="text-xl font-black text-[#0f172a] tracking-tight">Yeni Ortak</h1>
       </div>
 
       {/* ── Form ────────────────────────────────────────────────────────────── */}
@@ -138,11 +138,11 @@ export default function NewPartnerPage() {
                 value={shareRatioPct}
                 onChange={e => setShareRatioPct(e.target.value)}
               />
-              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-sm text-gray-400 pointer-events-none">
+              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-sm text-[#94a3b8] pointer-events-none">
                 %
               </span>
             </div>
-            <p className="text-[11px] text-gray-400 mt-1.5">
+            <p className="text-[11px] text-[#94a3b8] mt-1.5">
               Örn: iki eşit ortak için her birine 50 girin.
             </p>
           </div>
@@ -151,7 +151,7 @@ export default function NewPartnerPage() {
           <div>
             <label className={LAB}>Başlangıç Sermayesi (₺)</label>
             <div className="relative">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-gray-400 pointer-events-none">
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-[#94a3b8] pointer-events-none">
                 ₺
               </span>
               <input
@@ -164,7 +164,7 @@ export default function NewPartnerPage() {
                 onChange={e => setInitialCapital(e.target.value)}
               />
             </div>
-            <p className="text-[11px] text-gray-400 mt-1.5">
+            <p className="text-[11px] text-[#94a3b8] mt-1.5">
               Opsiyonel. "Borç Girişi" olarak kaydedilir ve sermaye hesabına yansır.
             </p>
           </div>
@@ -188,7 +188,7 @@ export default function NewPartnerPage() {
             </button>
             <Link
               href="/dashboard/partners"
-              className="inline-flex items-center px-4 py-2.5 text-sm font-semibold rounded border border-[#e2e8f0] text-gray-600 hover:bg-[#f8fafc] transition-colors"
+              className="inline-flex items-center px-4 py-2.5 text-sm font-semibold rounded border border-[#e2e8f0] text-[#64748b] hover:bg-[#f8fafc] transition-colors"
             >
               İptal
             </Link>

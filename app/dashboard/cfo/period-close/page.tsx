@@ -44,10 +44,10 @@ const STATUS_COLOR: Record<Period['status'], string> = {
   open:      'bg-info-light text-info-text',
   pre_close: 'bg-warn-light text-warn-text',
   closed:    'bg-pos-light text-pos-text',
-  locked:    'bg-gray-100 text-gray-500',
+  locked:    'bg-[#f1f5f9] text-[#64748b]',
 }
 
-function Skeleton() { return <div className="bg-gray-100 rounded h-16 animate-pulse" /> }
+function Skeleton() { return <div className="bg-[#f1f5f9] rounded h-16 animate-pulse" /> }
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
@@ -140,12 +140,12 @@ export default function PeriodClosePage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-black text-gray-900 tracking-tight">Dönem Kapanış Yönetimi</h1>
-          <p className="text-xs text-gray-400 mt-0.5">
+          <h1 className="text-xl font-black text-[#0f172a] tracking-tight">Dönem Kapanış Yönetimi</h1>
+          <p className="text-xs text-[#94a3b8] mt-0.5">
             Muhasebe dönemlerini kapat ve kilitle — kapanış için {requiredCount} zorunlu kontrol
           </p>
         </div>
-        <Link href="/dashboard/cfo" className="text-xs text-gray-400 hover:text-primary-600 font-semibold">
+        <Link href="/dashboard/cfo" className="text-xs text-[#94a3b8] hover:text-primary-600 font-semibold">
           ← CFO Cockpit
         </Link>
       </div>
@@ -161,8 +161,8 @@ export default function PeriodClosePage() {
       {!loading && periods.length === 0 && !error && (
         <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-10 text-center">
           <div className="text-2xl mb-2">📅</div>
-          <div className="text-sm font-semibold text-gray-500">Muhasebe dönemi bulunamadı</div>
-          <div className="text-xs text-gray-400 mt-1">Dönem oluşturmak için Ayarlar → Dönem Yönetimi kullanın.</div>
+          <div className="text-sm font-semibold text-[#64748b]">Muhasebe dönemi bulunamadı</div>
+          <div className="text-xs text-[#94a3b8] mt-1">Dönem oluşturmak için Ayarlar → Dönem Yönetimi kullanın.</div>
         </div>
       )}
 
@@ -184,20 +184,20 @@ export default function PeriodClosePage() {
                 <div className="flex items-center justify-between gap-4 flex-wrap">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <span className="text-sm font-bold text-gray-900">
+                      <span className="text-sm font-bold text-[#0f172a]">
                         {fmt(p.period_start)} — {fmt(p.period_end)}
                       </span>
                       <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${STATUS_COLOR[p.status]}`}>
                         {STATUS_LABEL[p.status]}
                       </span>
                       {isOpen && (
-                        <span className="text-[10px] text-gray-400">
+                        <span className="text-[10px] text-[#94a3b8]">
                           {reqChecked}/{requiredCount} zorunlu kontrol
                         </span>
                       )}
                     </div>
                     {p.closed_at && (
-                      <div className="text-[10px] text-gray-400">
+                      <div className="text-[10px] text-[#94a3b8]">
                         Kapatıldı: {fmt(p.closed_at)}
                         {p.locked_at && ` · Kilitlendi: ${fmt(p.locked_at)}`}
                       </div>
@@ -210,7 +210,7 @@ export default function PeriodClosePage() {
                         onClick={() => setExpanded(isExpanded ? null : p.id)}
                         className={`text-xs font-semibold px-3 py-1.5 rounded transition-colors ${
                           isExpanded
-                            ? 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            ? 'bg-[#f1f5f9] text-[#64748b] hover:bg-[#e2e8f0]'
                             : 'bg-info-light text-info-text hover:bg-info-light'
                         }`}
                       >
@@ -231,12 +231,12 @@ export default function PeriodClosePage() {
                       <button
                         onClick={() => lockPeriod(p.id)}
                         disabled={isWorking}
-                        className="text-xs font-bold px-3 py-1.5 rounded bg-gray-800 text-white hover:bg-gray-900 disabled:opacity-50 transition-colors"
+                        className="text-xs font-bold px-3 py-1.5 rounded bg-[#1e293b] text-white hover:bg-[#0f172a] disabled:opacity-50 transition-colors"
                       >
                         {isWorking ? 'Kilitleniyor...' : 'Kilitle'}
                       </button>
                     ) : (
-                      <span className="text-xs text-gray-400 font-semibold">Kilitli — salt okunur</span>
+                      <span className="text-xs text-[#94a3b8] font-semibold">Kilitli — salt okunur</span>
                     )}
 
                     <Link
@@ -281,14 +281,14 @@ export default function PeriodClosePage() {
                             className="mt-0.5 w-4 h-4 rounded text-pos border-[#e2e8f0] cursor-pointer"
                           />
                           <div className="flex-1 min-w-0">
-                            <div className={`text-xs font-semibold ${isDone ? 'text-pos-text line-through' : 'text-gray-800'}`}>
+                            <div className={`text-xs font-semibold ${isDone ? 'text-pos-text line-through' : 'text-[#1e293b]'}`}>
                               {item.label}
                               {item.required
                                 ? <span className="ml-1.5 text-[9px] font-bold text-neg uppercase tracking-widest">Zorunlu</span>
-                                : <span className="ml-1.5 text-[9px] font-bold text-gray-400 uppercase tracking-widest">İsteğe Bağlı</span>
+                                : <span className="ml-1.5 text-[9px] font-bold text-[#94a3b8] uppercase tracking-widest">İsteğe Bağlı</span>
                               }
                             </div>
-                            <div className="text-[10px] text-gray-400 mt-0.5">{item.hint}</div>
+                            <div className="text-[10px] text-[#94a3b8] mt-0.5">{item.hint}</div>
                           </div>
                           {item.key === 'trial_balance' && (
                             <Link
@@ -328,18 +328,18 @@ export default function PeriodClosePage() {
 
       {/* Cross-navigation */}
       <div className="flex items-center justify-between px-1">
-        <p className="text-[10px] text-gray-400 leading-relaxed">
+        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
           Dönem kapanışı mizan ve mutabakat kontrolü tamamlandıktan sonra yapılmalı.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
           <Link href="/dashboard/cfo/trial-balance" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Mizan →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/cfo/reconciliation" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Mutabakat →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/cfo/journal-entries" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Journal Kayıtları →
           </Link>

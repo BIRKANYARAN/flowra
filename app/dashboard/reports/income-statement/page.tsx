@@ -39,11 +39,11 @@ function Row({ label, value, sub, bold, indent, positive, negative }: {
   return (
     <div className={`flex items-center justify-between py-1.5 border-b border-[#f1f5f9] last:border-0 ${indent ? 'pl-6' : ''}`}>
       <div className="min-w-0">
-        <span className={`text-xs ${bold ? 'font-black text-gray-900' : 'font-medium text-gray-600'}`}>{label}</span>
-        {sub && <span className="text-[10px] text-gray-400 ml-2">{sub}</span>}
+        <span className={`text-xs ${bold ? 'font-black text-[#0f172a]' : 'font-medium text-[#64748b]'}`}>{label}</span>
+        {sub && <span className="text-[10px] text-[#94a3b8] ml-2">{sub}</span>}
       </div>
       <span className={`tabular-nums text-sm shrink-0 ${bold ? 'font-black' : 'font-semibold'} ${
-        positive ? 'text-pos-text' : negative ? 'text-neg' : 'text-gray-900'
+        positive ? 'text-pos-text' : negative ? 'text-neg' : 'text-[#0f172a]'
       }`}>{value}</span>
     </div>
   )
@@ -103,28 +103,28 @@ export default function IncomeStatementPage() {
       {/* Header */}
       <div className="flex items-center justify-between print:hidden">
         <div>
-          <h1 className="text-xl font-black text-gray-900 tracking-tight">Gelir Tablosu</h1>
-          <p className="text-xs text-gray-400 mt-0.5">Kâr / Zarar Özeti</p>
+          <h1 className="text-xl font-black text-[#0f172a] tracking-tight">Gelir Tablosu</h1>
+          <p className="text-xs text-[#94a3b8] mt-0.5">Kâr / Zarar Özeti</p>
         </div>
         <div className="flex items-center gap-2">
           <input type="date" value={from} onChange={e => setFrom(e.target.value)}
             className="border border-[#e2e8f0] rounded px-2 py-1 text-xs" />
-          <span className="text-xs text-gray-400">—</span>
+          <span className="text-xs text-[#94a3b8]">—</span>
           <input type="date" value={to} onChange={e => setTo(e.target.value)}
             className="border border-[#e2e8f0] rounded px-2 py-1 text-xs" />
           {pdfOpts && <PdfExportButton opts={pdfOpts} label="PDF İndir" />}
-          <Link href="/dashboard/cfo" className="text-xs text-gray-400 hover:text-primary-600 font-semibold">← CFO</Link>
+          <Link href="/dashboard/cfo" className="text-xs text-[#94a3b8] hover:text-primary-600 font-semibold">← CFO</Link>
         </div>
       </div>
 
       {/* Print header */}
       <div className="hidden print:block mb-4">
         <h1 className="text-2xl font-black">Gelir Tablosu</h1>
-        <p className="text-sm text-gray-500">{from} — {to}</p>
+        <p className="text-sm text-[#64748b]">{from} — {to}</p>
       </div>
 
       {error && <div className="bg-neg-light border border-neg-light rounded px-4 py-3 text-sm text-neg-text">{error}</div>}
-      {loading && <div className="bg-gray-100 rounded h-64 animate-pulse" />}
+      {loading && <div className="bg-[#f1f5f9] rounded h-64 animate-pulse" />}
 
       {pnl && !loading && (
         <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden print:border-none print:shadow-none">
@@ -164,30 +164,30 @@ export default function IncomeStatementPage() {
           {/* Net income */}
           <div className={`px-4 py-3 border-t-2 ${pnl.net_after_tax_try >= 0 ? 'border-pos-light bg-pos-light' : 'border-neg-light bg-neg-light'}`}>
             <div className="flex items-center justify-between">
-              <span className="text-sm font-black text-gray-900">Dönem Net Kârı</span>
+              <span className="text-sm font-black text-[#0f172a]">Dönem Net Kârı</span>
               <span className={`text-xl font-black tabular-nums ${pnl.net_after_tax_try >= 0 ? 'text-pos-text' : 'text-neg'}`}>
                 {fmt(pnl.net_after_tax_try)}
               </span>
             </div>
-            <div className="text-[10px] text-gray-500 mt-0.5">Net marj: {netMargin}</div>
+            <div className="text-[10px] text-[#64748b] mt-0.5">Net marj: {netMargin}</div>
           </div>
         </div>
       )}
 
       {/* Cross-navigation */}
       <div className="flex items-center justify-between px-1 pt-1">
-        <p className="text-[10px] text-gray-400 leading-relaxed">
+        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
           Gelir tablosu P&amp;L analizi ve satışlarla birlikte değerlendirilmeli.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
           <Link href="/dashboard/finance?tab=pnl" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             P&amp;L Analizi →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/finance?tab=quarterly" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Geçici Vergi →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/commercial?tab=sales" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Satışlar →
           </Link>

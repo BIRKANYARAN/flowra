@@ -98,7 +98,7 @@ export async function ExpensesCommandBar({ companyId }: Props) {
   // ── Empty state ─────────────────────────────────────────────────────────────
   if (curTotal === 0 && prevTotal === 0) {
     return (
-      <div className="flex items-center gap-2 px-4 py-2.5 bg-[#f8fafc] border border-[#e2e8f0] rounded text-xs text-gray-400">
+      <div className="flex items-center gap-2 px-4 py-2.5 bg-[#f8fafc] border border-[#e2e8f0] rounded text-xs text-[#94a3b8]">
         Bu ay henüz gider kaydı yok.
       </div>
     )
@@ -113,15 +113,15 @@ export async function ExpensesCommandBar({ companyId }: Props) {
         {/* Bu Ay */}
         <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#e2e8f0] rounded">
           <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Bu Ay</span>
-          <span className="text-sm font-black tabular-nums text-gray-900">{fmt(curTotal)}</span>
-          <span className="text-[9px] text-gray-400">{dayOfMonth}. gün</span>
+          <span className="text-sm font-black tabular-nums text-[#0f172a]">{fmt(curTotal)}</span>
+          <span className="text-[9px] text-[#94a3b8]">{dayOfMonth}. gün</span>
         </div>
 
         {/* Geçen Ay */}
         {prevTotal > 0 && (
           <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#e2e8f0] rounded">
             <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Geçen Ay</span>
-            <span className="text-sm font-black tabular-nums text-gray-500">{fmt(prevTotal)}</span>
+            <span className="text-sm font-black tabular-nums text-[#64748b]">{fmt(prevTotal)}</span>
           </div>
         )}
 
@@ -134,13 +134,13 @@ export async function ExpensesCommandBar({ companyId }: Props) {
               ? 'bg-pos-light border-pos-light'
               : 'bg-white border-[#e2e8f0]'
           }`}>
-            <span className="text-[9px] font-black uppercase tracking-widest text-gray-500">MoM</span>
+            <span className="text-[9px] font-black uppercase tracking-widest text-[#64748b]">MoM</span>
             <span className={`text-sm font-black tabular-nums ${
-              accelerating ? 'text-neg' : decelerating ? 'text-pos-text' : 'text-gray-700'
+              accelerating ? 'text-neg' : decelerating ? 'text-pos-text' : 'text-[#334155]'
             }`}>
               {momDelta >= 0 ? '+' : ''}{momDeltaPct.toFixed(0)}%
             </span>
-            <span className="text-[9px] text-gray-400">
+            <span className="text-[9px] text-[#94a3b8]">
               {momDelta >= 0 ? '↑' : '↓'} {fmt(Math.abs(momDelta))}
             </span>
           </div>
@@ -151,7 +151,7 @@ export async function ExpensesCommandBar({ companyId }: Props) {
           <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#e2e8f0] rounded">
             <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Günlük</span>
             <span className="text-sm font-black tabular-nums text-orange-700">{fmt(dailyRate)}</span>
-            <span className="text-[9px] text-gray-400">/gün</span>
+            <span className="text-[9px] text-[#94a3b8]">/gün</span>
           </div>
         )}
 
@@ -173,14 +173,14 @@ export async function ExpensesCommandBar({ companyId }: Props) {
           {/* Left: projection */}
           {projected > 0 && (
             <div className="flex items-center gap-3">
-              <span className="text-[9px] font-black uppercase tracking-widest text-gray-500">
+              <span className="text-[9px] font-black uppercase tracking-widest text-[#64748b]">
                 Ay Sonu Tahmini
               </span>
-              <span className="text-sm font-black text-gray-900 tabular-nums">
+              <span className="text-sm font-black text-[#0f172a] tabular-nums">
                 {fmt(projected)}
               </span>
               {prevTotal > 0 && (
-                <span className="text-[10px] text-gray-400">
+                <span className="text-[10px] text-[#94a3b8]">
                   ({daysLeft} gün kaldı · {fmt(dailyRate)}/gün)
                 </span>
               )}
@@ -190,14 +190,14 @@ export async function ExpensesCommandBar({ companyId }: Props) {
           {/* Right: top category */}
           {topCat && (
             <div className="flex items-center gap-2">
-              <span className="text-[10px] text-gray-500">En büyük kalem:</span>
-              <span className="text-[10px] font-bold text-gray-700">
+              <span className="text-[10px] text-[#64748b]">En büyük kalem:</span>
+              <span className="text-[10px] font-bold text-[#334155]">
                 {CATEGORY_LABELS[topCat[0]] ?? topCat[0]}
               </span>
               <span className="text-[10px] font-black text-orange-700 tabular-nums">
                 {fmt(topCat[1])}
               </span>
-              <span className="text-[10px] text-gray-400">
+              <span className="text-[10px] text-[#94a3b8]">
                 (%{topCatPct.toFixed(0)})
               </span>
             </div>

@@ -30,7 +30,7 @@ const TYPE_LABELS: Record<string, string> = {
 
 const fmtMoney = (n: unknown) => fmtTRY(Number(n ?? 0) || 0, 0)
 
-function Skeleton() { return <div className="bg-gray-100 rounded h-20 animate-pulse" /> }
+function Skeleton() { return <div className="bg-[#f1f5f9] rounded h-20 animate-pulse" /> }
 
 export default function WorkflowsPage() {
   const [workflows, setWorkflows] = useState<WorkflowInstance[]>([])
@@ -83,16 +83,16 @@ export default function WorkflowsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-black text-gray-900 tracking-tight">Onay Bekleyen İşlemler</h1>
-          <p className="text-xs text-gray-400 mt-0.5">
+          <h1 className="text-xl font-black text-[#0f172a] tracking-tight">Onay Bekleyen İşlemler</h1>
+          <p className="text-xs text-[#94a3b8] mt-0.5">
             {loading ? 'Yükleniyor…' : `${workflows.length} işlem onay bekliyor`}
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={() => load()} className="text-xs text-gray-400 hover:text-primary-600 font-semibold">
+          <button onClick={() => load()} className="text-xs text-[#94a3b8] hover:text-primary-600 font-semibold">
             ↺ Yenile
           </button>
-          <Link href="/dashboard/admin" className="text-xs text-gray-400 hover:text-primary-600 font-semibold">
+          <Link href="/dashboard/admin" className="text-xs text-[#94a3b8] hover:text-primary-600 font-semibold">
             ← Yönetim
           </Link>
         </div>
@@ -109,8 +109,8 @@ export default function WorkflowsPage() {
       {!loading && workflows.length === 0 && !error && (
         <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-12 text-center">
           <div className="text-2xl mb-2">✓</div>
-          <div className="text-sm font-semibold text-gray-500">Onay bekleyen işlem yok</div>
-          <div className="text-xs text-gray-400 mt-1">Tüm işlemler onaylandı veya henüz onay gerektiren işlem oluşturulmadı.</div>
+          <div className="text-sm font-semibold text-[#64748b]">Onay bekleyen işlem yok</div>
+          <div className="text-xs text-[#94a3b8] mt-1">Tüm işlemler onaylandı veya henüz onay gerektiren işlem oluşturulmadı.</div>
         </div>
       )}
 
@@ -132,7 +132,7 @@ export default function WorkflowsPage() {
                         {TYPE_LABELS[w.workflow_type] ?? w.workflow_type}
                       </span>
                       {w.expires_at && (
-                        <span className="text-[10px] text-gray-400">
+                        <span className="text-[10px] text-[#94a3b8]">
                           Son: {fmt(w.expires_at)}
                         </span>
                       )}
@@ -141,16 +141,16 @@ export default function WorkflowsPage() {
                     {/* Expense details */}
                     {w.workflow_type === 'expense_approval' && (
                       <div className="space-y-0.5">
-                        <div className="text-sm font-bold text-gray-900">
+                        <div className="text-sm font-bold text-[#0f172a]">
                           {fmtMoney(payload.amount_try)}
-                          <span className="text-xs font-normal text-gray-400 ml-1.5">
+                          <span className="text-xs font-normal text-[#94a3b8] ml-1.5">
                             ({String(payload.currency ?? 'TRY')} {Number(payload.amount ?? 0).toLocaleString('tr-TR')} @ kur)
                           </span>
                         </div>
-                        <div className="text-xs text-gray-500 truncate">
+                        <div className="text-xs text-[#64748b] truncate">
                           {String(payload.description ?? '—')}
                         </div>
-                        <div className="flex gap-3 text-[10px] text-gray-400 mt-1">
+                        <div className="flex gap-3 text-[10px] text-[#94a3b8] mt-1">
                           <span>Kategori: {String(payload.category ?? '—')}</span>
                           <span>Tarih: {String(payload.expense_date ?? '—')}</span>
                           <span>Eşik: {fmtMoney(payload.threshold)}</span>
@@ -160,12 +160,12 @@ export default function WorkflowsPage() {
 
                     {/* Generic payload for other types */}
                     {w.workflow_type !== 'expense_approval' && (
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-[#64748b]">
                         {JSON.stringify(payload).slice(0, 120)}…
                       </div>
                     )}
 
-                    <div className="text-[10px] text-gray-400 mt-1.5">
+                    <div className="text-[10px] text-[#94a3b8] mt-1.5">
                       Başlatıldı: {fmt(w.initiated_at)}
                     </div>
                   </div>
@@ -221,14 +221,14 @@ export default function WorkflowsPage() {
 
       {/* Cross-navigation */}
       <div className="flex items-center justify-between px-1">
-        <p className="text-[10px] text-gray-400 leading-relaxed">
+        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
           Onay bekleyen işlemler denetim izinde kayıt altına alınır.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
           <Link href="/dashboard/admin/audit" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Denetim İzi →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/operations?tab=expenses" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Giderler →
           </Link>

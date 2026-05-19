@@ -139,7 +139,7 @@ export default function AdminAuditPage() {
       {/* Page header */}
       <div className="mb-6">
         <h1 className="text-2xl font-black">Denetim Kaydı</h1>
-        <p className="text-sm text-gray-500 mt-0.5">
+        <p className="text-sm text-[#64748b] mt-0.5">
           Şirketteki tüm işlem geçmişi · {total.toLocaleString('tr-TR')} kayıt
         </p>
       </div>
@@ -149,7 +149,7 @@ export default function AdminAuditPage() {
         <div className="flex items-center justify-between mb-3">
           <div>
             <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Denetim Zinciri Bütünlüğü</div>
-            <div className="text-[10px] text-gray-400 mt-0.5">SHA-256 hash zinciri — son 30 gün</div>
+            <div className="text-[10px] text-[#94a3b8] mt-0.5">SHA-256 hash zinciri — son 30 gün</div>
           </div>
           <button
             onClick={verifyChain}
@@ -174,7 +174,7 @@ export default function AdminAuditPage() {
                 <span>Hash kolonları bu veritabanında henüz aktif değil (migrasyon bekleniyor).</span>
               </div>
             ) : chainResult.total_checked === 0 ? (
-              <div className="flex items-center gap-2 text-xs text-gray-500 bg-[#f8fafc] border border-[#e2e8f0] rounded px-3 py-2">
+              <div className="flex items-center gap-2 text-xs text-[#64748b] bg-[#f8fafc] border border-[#e2e8f0] rounded px-3 py-2">
                 <span>Seçili aralıkta denetim kaydı bulunamadı.</span>
               </div>
             ) : chainResult.ok ? (
@@ -201,20 +201,20 @@ export default function AdminAuditPage() {
                 {chainResult.first_broken && (
                   <div className="bg-white border border-neg-light rounded p-3 space-y-1">
                     <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">İlk Bozuk Kayıt</div>
-                    <div className="text-[10px] text-gray-700">
-                      <span className="text-gray-400">ID:</span>{' '}
+                    <div className="text-[10px] text-[#334155]">
+                      <span className="text-[#94a3b8]">ID:</span>{' '}
                       <code className="bg-neg-light px-1 rounded">{chainResult.first_broken.id}</code>
                     </div>
-                    <div className="text-[10px] text-gray-700">
-                      <span className="text-gray-400">Tarih:</span>{' '}
+                    <div className="text-[10px] text-[#334155]">
+                      <span className="text-[#94a3b8]">Tarih:</span>{' '}
                       {new Date(chainResult.first_broken.created_at).toLocaleString('tr-TR')}
                     </div>
-                    <div className="text-[10px] text-gray-700 truncate">
-                      <span className="text-gray-400">Beklenen:</span>{' '}
+                    <div className="text-[10px] text-[#334155] truncate">
+                      <span className="text-[#94a3b8]">Beklenen:</span>{' '}
                       <code className="text-pos-text">{chainResult.first_broken.expected_hash.slice(0, 24)}…</code>
                     </div>
-                    <div className="text-[10px] text-gray-700 truncate">
-                      <span className="text-gray-400">Gerçek:</span>{' '}
+                    <div className="text-[10px] text-[#334155] truncate">
+                      <span className="text-[#94a3b8]">Gerçek:</span>{' '}
                       <code className="text-neg">{chainResult.first_broken.actual_hash.slice(0, 24)}…</code>
                     </div>
                   </div>
@@ -264,7 +264,7 @@ export default function AdminAuditPage() {
         </div>
         <button
           onClick={() => { setFilterAction(''); setFilterEntityType(''); setFilterSince('') }}
-          className="text-sm text-gray-400 hover:text-gray-700 px-3 py-2 rounded hover:bg-[#f8fafc] transition-colors"
+          className="text-sm text-[#94a3b8] hover:text-[#334155] px-3 py-2 rounded hover:bg-[#f8fafc] transition-colors"
         >
           Sıfırla
         </button>
@@ -289,7 +289,7 @@ export default function AdminAuditPage() {
         <>
           <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
             {logs.length === 0 ? (
-              <div className="text-center py-16 text-gray-400">
+              <div className="text-center py-16 text-[#94a3b8]">
                 <div className="text-4xl mb-2">📋</div>
                 <p className="text-sm">Kayıt bulunamadı.</p>
               </div>
@@ -307,7 +307,7 @@ export default function AdminAuditPage() {
                 </thead>
                 <tbody className="divide-y divide-[#f1f5f9]">
                   {logs.map(log => {
-                    const actionMeta = ACTION_LABELS[log.action] ?? { label: log.action, color: 'bg-gray-100 text-gray-600' }
+                    const actionMeta = ACTION_LABELS[log.action] ?? { label: log.action, color: 'bg-[#f1f5f9] text-[#64748b]' }
                     const entityLabel = ENTITY_LABELS[log.entity_type] ?? log.entity_type
                     const isExpanded = expanded === log.id
 
@@ -317,14 +317,14 @@ export default function AdminAuditPage() {
                           className="hover:bg-[#f8fafc]/60 transition-colors cursor-pointer"
                           onClick={() => setExpanded(isExpanded ? null : log.id)}
                         >
-                          <td className="px-4 py-2 text-xs text-gray-500 whitespace-nowrap">
+                          <td className="px-4 py-2 text-xs text-[#64748b] whitespace-nowrap">
                             {new Date(log.created_at).toLocaleString('tr-TR', {
                               day: '2-digit', month: '2-digit', year: 'numeric',
                               hour: '2-digit', minute: '2-digit',
                             })}
                           </td>
                           <td className="px-4 py-2">
-                            <code className="text-[10px] bg-gray-100 text-gray-600 rounded px-1.5 py-0.5">
+                            <code className="text-[10px] bg-[#f1f5f9] text-[#64748b] rounded px-1.5 py-0.5">
                               {log.user_id.slice(0, 8)}…
                             </code>
                           </td>
@@ -333,9 +333,9 @@ export default function AdminAuditPage() {
                               {actionMeta.label}
                             </span>
                           </td>
-                          <td className="px-4 py-2 text-xs text-gray-700">{entityLabel}</td>
+                          <td className="px-4 py-2 text-xs text-[#334155]">{entityLabel}</td>
                           <td className="px-4 py-2">
-                            <code className="text-[10px] bg-gray-100 text-gray-600 rounded px-1.5 py-0.5">
+                            <code className="text-[10px] bg-[#f1f5f9] text-[#64748b] rounded px-1.5 py-0.5">
                               {log.entity_id.slice(0, 8)}…
                             </code>
                           </td>
@@ -353,7 +353,7 @@ export default function AdminAuditPage() {
                                   <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
                                     Önceki Değer
                                   </div>
-                                  <pre className="text-[10px] bg-white border border-[#e2e8f0] rounded p-3 overflow-auto max-h-48 text-gray-700">
+                                  <pre className="text-[10px] bg-white border border-[#e2e8f0] rounded p-3 overflow-auto max-h-48 text-[#334155]">
                                     {log.old_data ? JSON.stringify(log.old_data, null, 2) : '—'}
                                   </pre>
                                 </div>
@@ -361,13 +361,13 @@ export default function AdminAuditPage() {
                                   <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
                                     Yeni Değer
                                   </div>
-                                  <pre className="text-[10px] bg-white border border-[#e2e8f0] rounded p-3 overflow-auto max-h-48 text-gray-700">
+                                  <pre className="text-[10px] bg-white border border-[#e2e8f0] rounded p-3 overflow-auto max-h-48 text-[#334155]">
                                     {log.new_data ? JSON.stringify(log.new_data, null, 2) : '—'}
                                   </pre>
                                 </div>
                               </div>
                               {log.ip_address && (
-                                <div className="mt-2 text-[10px] text-gray-400">
+                                <div className="mt-2 text-[10px] text-[#94a3b8]">
                                   IP: {log.ip_address}
                                 </div>
                               )}
@@ -385,7 +385,7 @@ export default function AdminAuditPage() {
           {/* Pagination */}
           {total > PAGE_SIZE && (
             <div className="flex items-center justify-between mt-4 px-1">
-              <span className="text-xs text-gray-400">
+              <span className="text-xs text-[#94a3b8]">
                 Sayfa {currentPage} / {totalPages} · {total.toLocaleString('tr-TR')} kayıt
               </span>
               <div className="flex gap-2">
@@ -411,18 +411,18 @@ export default function AdminAuditPage() {
 
       {/* Cross-navigation */}
       <div className="flex items-center justify-between px-1">
-        <p className="text-[10px] text-gray-400 leading-relaxed">
+        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
           Denetim izi tüm değişikliklerin yasal kaydıdır — silinmez.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
           <Link href="/dashboard/admin/governance" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Yönetişim →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/admin/users" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Kullanıcılar →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/cfo/journal-entries" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Journal Kayıtları →
           </Link>

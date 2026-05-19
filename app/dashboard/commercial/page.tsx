@@ -16,10 +16,10 @@ function TabSkeleton() {
   return (
     <div className="space-y-3 animate-pulse">
       <div className="grid grid-cols-4 gap-3">
-        {[...Array(4)].map((_, i) => <div key={i} className="bg-gray-100 rounded h-16" />)}
+        {[...Array(4)].map((_, i) => <div key={i} className="bg-[#f1f5f9] rounded h-16" />)}
       </div>
-      <div className="bg-gray-100 rounded h-48" />
-      <div className="bg-gray-100 rounded h-32" />
+      <div className="bg-[#f1f5f9] rounded h-48" />
+      <div className="bg-[#f1f5f9] rounded h-32" />
     </div>
   )
 }
@@ -49,7 +49,7 @@ export default async function CommercialPage({ searchParams }: PageProps) {
   if (!userId) return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-center px-4">
       <div className="text-3xl">⚠️</div>
-      <p className="text-sm text-gray-500">Oturum bilgisi alınamadı. Lütfen sayfayı yenileyin.</p>
+      <p className="text-sm text-[#64748b]">Oturum bilgisi alınamadı. Lütfen sayfayı yenileyin.</p>
       <a href="/dashboard/commercial" className="text-sm text-primary-600 font-semibold hover:underline">Yeniden Dene</a>
     </div>
   )
@@ -59,7 +59,7 @@ export default async function CommercialPage({ searchParams }: PageProps) {
   if (!companyId) return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-center px-4">
       <div className="text-3xl">⚠️</div>
-      <p className="text-sm text-gray-500">Şirket bilgisi yüklenemedi. Lütfen sayfayı yenileyin.</p>
+      <p className="text-sm text-[#64748b]">Şirket bilgisi yüklenemedi. Lütfen sayfayı yenileyin.</p>
       <a href="/dashboard/commercial" className="text-sm text-primary-600 font-semibold hover:underline">Yeniden Dene</a>
     </div>
   )
@@ -86,10 +86,10 @@ export default async function CommercialPage({ searchParams }: PageProps) {
       {/* PAGE HERO */}
       <div>
         <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Ticari Akış Merkezi</div>
-        <h1 className="text-2xl font-black tracking-tight text-gray-900 leading-tight">
+        <h1 className="text-2xl font-black tracking-tight text-[#0f172a] leading-tight">
           {tabTitles[activeTab] ?? 'Ticari Akış'}
         </h1>
-        <p className="text-sm text-gray-400 mt-1">{tabSubtitles[activeTab] ?? ''}</p>
+        <p className="text-sm text-[#94a3b8] mt-1">{tabSubtitles[activeTab] ?? ''}</p>
       </div>
 
       {/* Sticky tab nav + context bar */}

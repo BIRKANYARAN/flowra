@@ -115,8 +115,8 @@ export async function StrategicScenarioSection({ companyId }: Props) {
         label:   'Baz',
         data:    result.base,
         accent:  'border-[#e2e8f0] bg-white',
-        text:    'text-gray-900',
-        sub:     'text-gray-400',
+        text:    'text-[#0f172a]',
+        sub:     'text-[#94a3b8]',
       },
       {
         key:     'optimistic' as const,
@@ -134,7 +134,7 @@ export async function StrategicScenarioSection({ companyId }: Props) {
           <span className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">
             Stratejik P&amp;L Projeksiyonu (12 Ay)
           </span>
-          <span className="text-[9px] text-gray-300">6 aylık ortalama gider + yıllık gelir bazında</span>
+          <span className="text-[9px] text-[#cbd5e1]">6 aylık ortalama gider + yıllık gelir bazında</span>
         </div>
 
         {/* 3-scenario summary cards */}
@@ -146,15 +146,15 @@ export async function StrategicScenarioSection({ companyId }: Props) {
                 <div className="text-[8px] font-bold text-primary-600 mb-1.5 uppercase tracking-wide">★ Önerilen</div>
               )}
               <div className={`text-xl font-black tabular-nums leading-none ${s.text}`}>
-                <span className="text-gray-300 text-sm font-normal mr-0.5">₺</span>
+                <span className="text-[#cbd5e1] text-sm font-normal mr-0.5">₺</span>
                 {fmtK(Math.abs(s.data.total_net))}
                 {s.data.total_net < 0 && <span className="text-sm ml-1 font-normal">(−)</span>}
               </div>
               <div className={`text-[10px] mt-1 ${s.sub}`}>12 ay net kâr</div>
-              <div className="text-[10px] mt-1.5 text-gray-400">
+              <div className="text-[10px] mt-1.5 text-[#94a3b8]">
                 EBITDA: ₺{fmtK(s.data.total_ebitda)}
               </div>
-              <div className="text-[10px] text-gray-400">
+              <div className="text-[10px] text-[#94a3b8]">
                 Faiz: ₺{fmtK(s.data.total_interest)} · Vergi: ₺{fmtK(s.data.total_tax)}
               </div>
               {s.data.avg_dsr > 0 && (
@@ -186,34 +186,34 @@ export async function StrategicScenarioSection({ companyId }: Props) {
             <table className="w-full text-[10px]">
               <thead>
                 <tr className="bg-[#f8fafc]/60">
-                  <th className="text-left px-4 py-2 font-black text-gray-400 whitespace-nowrap">Ay</th>
-                  <th className="text-right px-3 py-2 font-black text-gray-400 whitespace-nowrap">Gelir</th>
-                  <th className="text-right px-3 py-2 font-black text-gray-400 whitespace-nowrap">EBITDA</th>
-                  <th className="text-right px-3 py-2 font-black text-gray-400 whitespace-nowrap">Faiz</th>
-                  <th className="text-right px-3 py-2 font-black text-gray-400 whitespace-nowrap">Vergi</th>
-                  <th className="text-right px-4 py-2 font-black text-gray-400 whitespace-nowrap">Net</th>
-                  <th className="text-right px-4 py-2 font-black text-gray-400 whitespace-nowrap">DSR</th>
+                  <th className="text-left px-4 py-2 font-black text-[#94a3b8] whitespace-nowrap">Ay</th>
+                  <th className="text-right px-3 py-2 font-black text-[#94a3b8] whitespace-nowrap">Gelir</th>
+                  <th className="text-right px-3 py-2 font-black text-[#94a3b8] whitespace-nowrap">EBITDA</th>
+                  <th className="text-right px-3 py-2 font-black text-[#94a3b8] whitespace-nowrap">Faiz</th>
+                  <th className="text-right px-3 py-2 font-black text-[#94a3b8] whitespace-nowrap">Vergi</th>
+                  <th className="text-right px-4 py-2 font-black text-[#94a3b8] whitespace-nowrap">Net</th>
+                  <th className="text-right px-4 py-2 font-black text-[#94a3b8] whitespace-nowrap">DSR</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#f1f5f9]">
                 {result.base.months.map((m, i) => (
                   <tr key={i} className="hover:bg-[#f8fafc]/40">
-                    <td className="px-4 py-1.5 font-semibold text-gray-700 whitespace-nowrap">{m.label}</td>
-                    <td className="px-3 py-1.5 text-right tabular-nums text-gray-600">₺{fmtK(m.revenue)}</td>
+                    <td className="px-4 py-1.5 font-semibold text-[#334155] whitespace-nowrap">{m.label}</td>
+                    <td className="px-3 py-1.5 text-right tabular-nums text-[#64748b]">₺{fmtK(m.revenue)}</td>
                     <td className={`px-3 py-1.5 text-right tabular-nums font-semibold ${m.ebitda >= 0 ? 'text-pos-text' : 'text-neg'}`}>
                       {m.ebitda >= 0 ? '' : '−'}₺{fmtK(Math.abs(m.ebitda))}
                     </td>
-                    <td className="px-3 py-1.5 text-right tabular-nums text-gray-500">
+                    <td className="px-3 py-1.5 text-right tabular-nums text-[#64748b]">
                       {m.interest > 0 ? `₺${fmtK(m.interest)}` : '—'}
                     </td>
-                    <td className="px-3 py-1.5 text-right tabular-nums text-gray-500">
+                    <td className="px-3 py-1.5 text-right tabular-nums text-[#64748b]">
                       {m.tax > 0 ? `₺${fmtK(m.tax)}` : '—'}
                     </td>
-                    <td className={`px-4 py-1.5 text-right tabular-nums font-black ${m.net_income >= 0 ? 'text-gray-900' : 'text-neg'}`}>
+                    <td className={`px-4 py-1.5 text-right tabular-nums font-black ${m.net_income >= 0 ? 'text-[#0f172a]' : 'text-neg'}`}>
                       {m.net_income < 0 ? '−' : ''}₺{fmtK(Math.abs(m.net_income))}
                     </td>
                     <td className={`px-4 py-1.5 text-right tabular-nums text-[9px] font-semibold ${
-                      m.dsr === 0 ? 'text-gray-300'
+                      m.dsr === 0 ? 'text-[#cbd5e1]'
                       : m.dsr > 0.5 ? 'text-neg'
                       : m.dsr > 0.3 ? 'text-warn-text'
                       : 'text-pos-text'
@@ -227,7 +227,7 @@ export async function StrategicScenarioSection({ companyId }: Props) {
           </div>
         </div>
 
-        <div className="text-[9px] text-gray-300 px-1">
+        <div className="text-[9px] text-[#cbd5e1] px-1">
           Son 6 ay ortalaması baz alındı · DSR = borç servisi / aylık gelir · İyimser +%15 / Kötümser −%20 gelir
         </div>
       </div>

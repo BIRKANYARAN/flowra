@@ -37,7 +37,7 @@ const RISK_COLORS = {
 const SEVERITY_CFG = {
   high:   { cls: 'bg-neg-light border-neg-light text-neg-text',    icon: '🔴', label: 'Yüksek' },
   medium: { cls: 'bg-warn-light border-warn-light text-warn-text', icon: '🟡', label: 'Orta'  },
-  low:    { cls: 'bg-[#f8fafc] border-[#e2e8f0] text-gray-600',  icon: '⚪', label: 'Düşük' },
+  low:    { cls: 'bg-[#f8fafc] border-[#e2e8f0] text-[#64748b]',  icon: '⚪', label: 'Düşük' },
 } as const
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -149,8 +149,8 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
     return (
       <div className="bg-white border border-[#e2e8f0] rounded text-center py-16">
         <div className="text-4xl mb-3">✅</div>
-        <div className="text-sm font-black text-gray-900 mb-1">Açık Alacak Yok</div>
-        <div className="text-xs text-gray-400">Tüm faturalar tahsil edilmiş görünüyor.</div>
+        <div className="text-sm font-black text-[#0f172a] mb-1">Açık Alacak Yok</div>
+        <div className="text-xs text-[#94a3b8]">Tüm faturalar tahsil edilmiş görünüyor.</div>
       </div>
     )
   }
@@ -165,13 +165,13 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
             label: 'Toplam Açık Alacak',
             value: fmt(risk.totalOutstanding),
             sub:   `${risk.customerCount} müşteri`,
-            tone:  'text-gray-900',
+            tone:  'text-[#0f172a]',
           },
           {
             label: 'Vadesi Geçmiş',
             value: fmt(risk.overdueTotal),
             sub:   `${pct(overdueRate)} vadesi aştı`,
-            tone:  overdueRate > 0.3 ? 'text-neg' : overdueRate > 0 ? 'text-warn-text' : 'text-gray-400',
+            tone:  overdueRate > 0.3 ? 'text-neg' : overdueRate > 0 ? 'text-warn-text' : 'text-[#94a3b8]',
           },
           {
             label: 'Konsantrasyon (Top 1)',
@@ -192,7 +192,7 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
           <div key={c.label} className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{c.label}</div>
             <div className={`text-xl font-black tabular-nums leading-none ${c.tone}`}>{c.value}</div>
-            <div className="text-[10px] text-gray-400 mt-1">{c.sub}</div>
+            <div className="text-[10px] text-[#94a3b8] mt-1">{c.sub}</div>
           </div>
         ))}
       </div>
@@ -202,7 +202,7 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
         <div className="flex items-center justify-between mb-3">
           <div>
             <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Konsantrasyon Analizi</div>
-            <div className="text-[10px] text-gray-400 mt-0.5">Top müşterilerin toplam alacak içindeki payı</div>
+            <div className="text-[10px] text-[#94a3b8] mt-0.5">Top müşterilerin toplam alacak içindeki payı</div>
           </div>
           <span className={`text-[10px] font-bold px-2.5 py-1 rounded border ${riskCfg.bg} ${riskCfg.text} ${riskCfg.border}`}>
             {riskCfg.label}
@@ -214,14 +214,14 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
             return (
               <div key={c.customer_id}>
                 <div className="flex items-center justify-between text-[11px] mb-0.5">
-                  <span className="font-semibold text-gray-700 truncate max-w-[200px]">
+                  <span className="font-semibold text-[#334155] truncate max-w-[200px]">
                     {i === 0 ? '🔝 ' : ''}{c.customer_name}
                   </span>
-                  <span className="font-bold text-gray-600 tabular-nums">
+                  <span className="font-bold text-[#64748b] tabular-nums">
                     {fmt(c.total_outstanding)} · {pct(share)}
                   </span>
                 </div>
-                <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-2 bg-[#f1f5f9] rounded-full overflow-hidden">
                   <div
                     className={`h-full rounded-full ${
                       share > 0.4 ? 'bg-neg' : share > 0.2 ? 'bg-warn' : 'bg-primary-400'
@@ -233,7 +233,7 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
             )
           })}
           {risk.aging.length > 5 && (
-            <div className="text-[10px] text-gray-400 pt-1">
+            <div className="text-[10px] text-[#94a3b8] pt-1">
               +{risk.aging.length - 5} müşteri daha ({fmt(risk.aging.slice(5).reduce((s, c) => s + c.total_outstanding, 0))})
             </div>
           )}
@@ -243,8 +243,8 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
       {/* Zone 3 — Aging table */}
       <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
         <div className="px-4 py-3 border-b border-[#e2e8f0]">
-          <h2 className="text-sm font-black text-gray-800">Müşteri Yaşlandırma Analizi</h2>
-          <p className="text-[10px] text-gray-400 mt-0.5">Alacakların vade kırılımı</p>
+          <h2 className="text-sm font-black text-[#1e293b]">Müşteri Yaşlandırma Analizi</h2>
+          <p className="text-[10px] text-[#94a3b8] mt-0.5">Alacakların vade kırılımı</p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-xs min-w-[600px]">
@@ -262,30 +262,30 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
               {risk.aging.map(c => (
                 <tr key={c.customer_id} className="hover:bg-[#f8fafc]/60 transition-colors">
                   <td className="px-4 py-3">
-                    <div className="font-semibold text-gray-800 truncate max-w-[160px]">{c.customer_name}</div>
+                    <div className="font-semibold text-[#1e293b] truncate max-w-[160px]">{c.customer_name}</div>
                     {c.oldest_invoice_date && (
-                      <div className="text-[9px] text-gray-400">İlk: {c.oldest_invoice_date}</div>
+                      <div className="text-[9px] text-[#94a3b8]">İlk: {c.oldest_invoice_date}</div>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-right font-black tabular-nums text-gray-900">{fmt(c.total_outstanding)}</td>
+                  <td className="px-4 py-3 text-right font-black tabular-nums text-[#0f172a]">{fmt(c.total_outstanding)}</td>
                   <td className="px-4 py-3 text-right font-mono tabular-nums text-pos-text">
-                    {c.current > 0 ? fmt(c.current) : <span className="text-gray-200">—</span>}
+                    {c.current > 0 ? fmt(c.current) : <span className="text-[#e2e8f0]">—</span>}
                   </td>
                   <td className="px-4 py-3 text-right font-mono tabular-nums text-warn-text">
-                    {c.overdue_30d > 0 ? fmt(c.overdue_30d) : <span className="text-gray-200">—</span>}
+                    {c.overdue_30d > 0 ? fmt(c.overdue_30d) : <span className="text-[#e2e8f0]">—</span>}
                   </td>
                   <td className="px-4 py-3 text-right font-mono tabular-nums text-orange-700">
-                    {c.overdue_60d > 0 ? fmt(c.overdue_60d) : <span className="text-gray-200">—</span>}
+                    {c.overdue_60d > 0 ? fmt(c.overdue_60d) : <span className="text-[#e2e8f0]">—</span>}
                   </td>
                   <td className="px-4 py-3 text-right font-mono font-bold tabular-nums text-neg-text">
-                    {c.overdue_90d > 0 ? fmt(c.overdue_90d) : <span className="text-gray-200">—</span>}
+                    {c.overdue_90d > 0 ? fmt(c.overdue_90d) : <span className="text-[#e2e8f0]">—</span>}
                   </td>
                 </tr>
               ))}
               {/* Totals row */}
               <tr className="bg-[#f8fafc] font-black border-t-2 border-[#e2e8f0]">
-                <td className="px-4 py-3 text-xs font-black text-gray-700">Toplam</td>
-                <td className="px-4 py-3 text-right font-black tabular-nums text-gray-900">{fmt(risk.totalOutstanding)}</td>
+                <td className="px-4 py-3 text-xs font-black text-[#334155]">Toplam</td>
+                <td className="px-4 py-3 text-right font-black tabular-nums text-[#0f172a]">{fmt(risk.totalOutstanding)}</td>
                 <td className="px-4 py-3 text-right font-black tabular-nums text-pos-text">
                   {fmt(risk.totalOutstanding - risk.overdueTotal)}
                 </td>
@@ -304,7 +304,7 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
           <div className="flex items-center justify-between mb-3">
             <div>
               <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Anormallik Tespiti</div>
-              <div className="text-[10px] text-gray-400 mt-0.5">Son 6 ay istatistiksel sapma analizi · ±2σ eşiği</div>
+              <div className="text-[10px] text-[#94a3b8] mt-0.5">Son 6 ay istatistiksel sapma analizi · ±2σ eşiği</div>
             </div>
             <span className="text-[9px] font-black uppercase tracking-wide bg-brand-subtle text-brand px-2 py-0.5 rounded">
               {allAnomalies.filter(a => a.severity === 'high').length} yüksek · {allAnomalies.filter(a => a.severity === 'medium').length} orta
@@ -336,8 +336,8 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
                         {' '}{Math.abs(a.deviation_pct).toFixed(0)}%
                       </span>
                     </div>
-                    <div className="text-[10px] text-gray-700 mt-0.5 leading-snug">{a.message}</div>
-                    <div className="text-[9px] text-gray-500 mt-0.5">
+                    <div className="text-[10px] text-[#334155] mt-0.5 leading-snug">{a.message}</div>
+                    <div className="text-[9px] text-[#64748b] mt-0.5">
                       Gerçekleşen: <strong>{fmt(a.actual)}</strong> · Beklenen ort.: {fmt(a.mean)}
                     </div>
                   </div>
@@ -353,7 +353,7 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
         <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-2">CFO Tavsiyesi</div>
         <ul className="space-y-1.5">
           {guidance.map((g, i) => (
-            <li key={i} className="text-xs text-gray-700 leading-relaxed flex items-start gap-2">
+            <li key={i} className="text-xs text-[#334155] leading-relaxed flex items-start gap-2">
               <span className="mt-0.5 shrink-0 text-[10px]">→</span>
               <span>{g}</span>
             </li>
@@ -363,7 +363,7 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
 
       {/* Cross-navigation */}
       <div className="flex items-center justify-between px-1">
-        <p className="text-[10px] text-gray-400 leading-relaxed">
+        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
           Risk analizi tahsilat ve müşteri skorlarıyla birlikte değerlendirilmeli.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
@@ -373,14 +373,14 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
           >
             Tahsilat →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link
             href="/dashboard/commercial?tab=customers"
             className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap"
           >
             Müşteri Riskleri →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link
             href="/dashboard/operations?tab=expenses"
             className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap"

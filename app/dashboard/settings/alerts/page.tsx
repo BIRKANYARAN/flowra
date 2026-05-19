@@ -33,7 +33,7 @@ const SEVERITY_OPTS: Array<{ value: string; label: string; cls: string }> = [
 ]
 
 function severityCls(s: string) {
-  return SEVERITY_OPTS.find(o => o.value === s)?.cls ?? 'bg-gray-100 text-gray-600'
+  return SEVERITY_OPTS.find(o => o.value === s)?.cls ?? 'bg-[#f1f5f9] text-[#64748b]'
 }
 
 export default function AlertSettingsPage() {
@@ -85,10 +85,10 @@ export default function AlertSettingsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-black text-gray-900 tracking-tight">Uyarı Kuralları</h1>
-          <p className="text-xs text-gray-400 mt-0.5">Her kural için eşik değerini ve ciddiyetini yapılandırın</p>
+          <h1 className="text-xl font-black text-[#0f172a] tracking-tight">Uyarı Kuralları</h1>
+          <p className="text-xs text-[#94a3b8] mt-0.5">Her kural için eşik değerini ve ciddiyetini yapılandırın</p>
         </div>
-        <Link href="/dashboard/settings" className="text-xs text-gray-400 hover:text-primary-600 font-semibold">← Ayarlar</Link>
+        <Link href="/dashboard/settings" className="text-xs text-[#94a3b8] hover:text-primary-600 font-semibold">← Ayarlar</Link>
       </div>
 
       {error && (
@@ -98,7 +98,7 @@ export default function AlertSettingsPage() {
         <div className="bg-pos-light border border-pos-light rounded px-4 py-3 text-sm text-pos-text">{flash}</div>
       )}
 
-      {loading && <div className="bg-gray-100 rounded h-64 animate-pulse" />}
+      {loading && <div className="bg-[#f1f5f9] rounded h-64 animate-pulse" />}
 
       {!loading && (
         <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
@@ -121,8 +121,8 @@ export default function AlertSettingsPage() {
                   <div className="flex items-start gap-2">
                     <span className="text-base mt-0.5">{meta.icon}</span>
                     <div>
-                      <div className="text-xs font-semibold text-gray-900">{meta.label}</div>
-                      <div className="text-[10px] text-gray-400">{meta.desc}</div>
+                      <div className="text-xs font-semibold text-[#0f172a]">{meta.label}</div>
+                      <div className="text-[10px] text-[#94a3b8]">{meta.desc}</div>
                     </div>
                   </div>
 
@@ -136,7 +136,7 @@ export default function AlertSettingsPage() {
                       onChange={e => updateRule(rule.rule_type, { threshold_value: e.target.value === '' ? null : Number(e.target.value) })}
                       className="w-full border border-[#e2e8f0] rounded px-2 py-1 text-xs text-right"
                     />
-                    {meta.unit && <span className="text-[10px] text-gray-400 shrink-0">{meta.unit}</span>}
+                    {meta.unit && <span className="text-[10px] text-[#94a3b8] shrink-0">{meta.unit}</span>}
                   </div>
 
                   {/* Severity */}
@@ -154,7 +154,7 @@ export default function AlertSettingsPage() {
                   <div className="flex justify-center">
                     <button
                       onClick={() => updateRule(rule.rule_type, { is_active: !rule.is_active })}
-                      className={`w-8 h-4 rounded-full transition-colors relative ${rule.is_active ? 'bg-pos-light' : 'bg-gray-300'}`}
+                      className={`w-8 h-4 rounded-full transition-colors relative ${rule.is_active ? 'bg-pos-light' : 'bg-[#e2e8f0]'}`}
                     >
                       <span className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow transition-transform ${rule.is_active ? 'translate-x-4' : 'translate-x-0.5'}`} />
                     </button>
@@ -166,7 +166,7 @@ export default function AlertSettingsPage() {
                     disabled={saving === rule.rule_type}
                     className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded transition-colors ${
                       saving === rule.rule_type
-                        ? 'bg-gray-100 text-gray-400 cursor-wait'
+                        ? 'bg-[#f1f5f9] text-[#94a3b8] cursor-wait'
                         : 'bg-primary-600 text-white hover:bg-primary-700'
                     }`}
                   >

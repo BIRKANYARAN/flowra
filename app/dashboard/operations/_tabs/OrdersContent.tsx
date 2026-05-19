@@ -32,7 +32,7 @@ interface Order {
 }
 
 const STATUS_META: Record<OrderStatus, { label: string; cls: string }> = {
-  draft:     { label: 'Taslak',     cls: 'bg-gray-100 text-gray-500' },
+  draft:     { label: 'Taslak',     cls: 'bg-[#f1f5f9] text-[#64748b]' },
   ordered:   { label: 'Sipariş Verildi', cls: 'bg-info-light text-info-text' },
   received:  { label: 'Teslim Alındı',   cls: 'bg-pos-light text-pos-text' },
   cancelled: { label: 'İptal',      cls: 'bg-neg-light text-neg' },
@@ -173,8 +173,8 @@ export function OrdersContent(_props: Props) {
       {/* ── Summary strip ─────────────────────────────────────────────────── */}
       <div className="grid grid-cols-4 gap-3">
         {[
-          { label: 'Toplam',          value: total,         cls: 'text-gray-700' },
-          { label: 'Taslak',          value: totalDraft,    cls: 'text-gray-500' },
+          { label: 'Toplam',          value: total,         cls: 'text-[#334155]' },
+          { label: 'Taslak',          value: totalDraft,    cls: 'text-[#64748b]' },
           { label: 'Sipariş Verildi', value: totalOrdered,  cls: 'text-info-text' },
           { label: 'Teslim Alındı',   value: totalReceived, cls: 'text-pos-text' },
         ].map(s => (
@@ -199,7 +199,7 @@ export function OrdersContent(_props: Props) {
       {/* ── New order form ─────────────────────────────────────────────── */}
       {showForm && (
         <div className="bg-white border border-[#e2e8f0] rounded p-5 space-y-4">
-          <h3 className="text-sm font-bold text-gray-700">Yeni Satın Alma Siparişi</h3>
+          <h3 className="text-sm font-bold text-[#334155]">Yeni Satın Alma Siparişi</h3>
           {formError && (
             <div className="text-xs text-neg bg-neg-light border border-neg-light rounded px-3 py-2">{formError}</div>
           )}
@@ -261,7 +261,7 @@ export function OrdersContent(_props: Props) {
                 />
                 <button
                   onClick={() => setFormItems(prev => prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev)}
-                  className="text-gray-400 hover:text-neg text-sm font-bold"
+                  className="text-[#94a3b8] hover:text-neg text-sm font-bold"
                 >✕</button>
               </div>
             ))}
@@ -272,7 +272,7 @@ export function OrdersContent(_props: Props) {
           </div>
 
           <div className="flex justify-end gap-2">
-            <button onClick={() => setShowForm(false)} className="text-xs text-gray-500 hover:text-gray-700 px-4 py-2">İptal</button>
+            <button onClick={() => setShowForm(false)} className="text-xs text-[#64748b] hover:text-[#334155] px-4 py-2">İptal</button>
             <button
               onClick={submitForm} disabled={formSaving}
               className="text-xs font-bold bg-primary-600 text-white px-5 py-2 rounded hover:bg-primary-700 disabled:opacity-50 transition-colors"
@@ -334,10 +334,10 @@ export function OrdersContent(_props: Props) {
 
       {loading ? (
         <div className="space-y-2">
-          {[1, 2, 3].map(i => <div key={i} className="bg-gray-100 rounded h-16 animate-pulse" />)}
+          {[1, 2, 3].map(i => <div key={i} className="bg-[#f1f5f9] rounded h-16 animate-pulse" />)}
         </div>
       ) : orders.length === 0 ? (
-        <div className="text-center py-12 text-gray-400 text-sm">
+        <div className="text-center py-12 text-[#94a3b8] text-sm">
           Henüz satın alma siparişi yok.
         </div>
       ) : (
@@ -360,7 +360,7 @@ export function OrdersContent(_props: Props) {
                         <span className="text-sm font-semibold">{order.supplier_name}</span>
                         <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded ${meta.cls}`}>{meta.label}</span>
                       </div>
-                      <div className="text-xs text-gray-400 mt-0.5">
+                      <div className="text-xs text-[#94a3b8] mt-0.5">
                         {fmtDate(order.order_date)}
                         {order.expected_date && ` → Beklenen: ${fmtDate(order.expected_date)}`}
                         {order.purchase_order_items.length > 0 && ` · ${order.purchase_order_items.length} kalem`}
@@ -368,7 +368,7 @@ export function OrdersContent(_props: Props) {
                     </div>
 
                     {/* Amount */}
-                    <div className="text-sm font-bold tabular-nums text-gray-800">{fmt(order.total_try)}</div>
+                    <div className="text-sm font-bold tabular-nums text-[#1e293b]">{fmt(order.total_try)}</div>
 
                     {/* Actions */}
                     <div className="flex items-center gap-1.5 flex-shrink-0" onClick={e => e.stopPropagation()}>
@@ -385,7 +385,7 @@ export function OrdersContent(_props: Props) {
                         <button
                           disabled={busy}
                           onClick={() => cancelOrder(order.id)}
-                          className="text-[10px] font-bold px-2 py-1 border border-[#e2e8f0] text-gray-500 rounded hover:border-neg hover:text-neg disabled:opacity-50"
+                          className="text-[10px] font-bold px-2 py-1 border border-[#e2e8f0] text-[#64748b] rounded hover:border-neg hover:text-neg disabled:opacity-50"
                         >İptal</button>
                       )}
                     </div>
@@ -408,16 +408,16 @@ export function OrdersContent(_props: Props) {
                             .sort((a, b) => (a as unknown as { sort_order: number }).sort_order - (b as unknown as { sort_order: number }).sort_order)
                             .map(it => (
                             <tr key={it.id} className="border-b border-[#f1f5f9] last:border-0">
-                              <td className="py-1.5 text-gray-700">{it.name} <span className="text-gray-400">({it.unit})</span></td>
-                              <td className="py-1.5 text-right tabular-nums text-gray-600">{it.quantity}</td>
-                              <td className="py-1.5 text-right tabular-nums text-gray-600">{fmt(it.unit_price)}</td>
+                              <td className="py-1.5 text-[#334155]">{it.name} <span className="text-[#94a3b8]">({it.unit})</span></td>
+                              <td className="py-1.5 text-right tabular-nums text-[#64748b]">{it.quantity}</td>
+                              <td className="py-1.5 text-right tabular-nums text-[#64748b]">{fmt(it.unit_price)}</td>
                               <td className="py-1.5 text-right tabular-nums font-semibold">{fmt(it.quantity * it.unit_price)}</td>
                             </tr>
                           ))}
                         </tbody>
                       </table>
                       {order.notes && (
-                        <p className="text-xs text-gray-400 mt-2 italic">{order.notes}</p>
+                        <p className="text-xs text-[#94a3b8] mt-2 italic">{order.notes}</p>
                       )}
                     </div>
                   )}
@@ -430,18 +430,18 @@ export function OrdersContent(_props: Props) {
 
       {/* Cross-navigation */}
       <div className="flex items-center justify-between px-1">
-        <p className="text-[10px] text-gray-400 leading-relaxed">
+        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
           Satın alma siparişleri stok ve giderlerle birlikte yönetilmeli.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
           <Link href="/dashboard/operations?tab=stock" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Stok →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/operations?tab=expenses" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Giderler →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/finance?tab=pnl" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             P&amp;L →
           </Link>

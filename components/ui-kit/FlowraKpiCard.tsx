@@ -54,7 +54,7 @@ export function FlowraKpiCard({
         {rawValue ? (
           <span className={cn(
             'text-[22px] font-black tabular-nums leading-none',
-            resolvedTone === 'negative' ? 'text-neg' : 'text-gray-900',
+            resolvedTone === 'negative' ? 'text-neg' : 'text-[#0f172a]',
           )}>
             {rawValue}
           </span>
@@ -70,7 +70,7 @@ export function FlowraKpiCard({
       </div>
 
       {sub && (
-        <div className="text-[10px] text-gray-400 leading-tight truncate">{sub}</div>
+        <div className="text-[10px] text-[#94a3b8] leading-tight truncate">{sub}</div>
       )}
 
       {delta !== undefined && (
@@ -79,7 +79,7 @@ export function FlowraKpiCard({
           delta >= 0 ? 'text-pos-text' : 'text-neg',
         )}>
           {delta >= 0 ? '▲' : '▼'} {Math.abs(delta).toFixed(1)}%
-          <span className="text-gray-400 font-normal"> geçen ay</span>
+          <span className="text-[#94a3b8] font-normal"> geçen ay</span>
         </div>
       )}
     </div>

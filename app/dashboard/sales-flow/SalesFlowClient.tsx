@@ -60,7 +60,7 @@ const STATUS_LABEL: Record<ProformaStatus, string> = {
   rejected: 'Reddedildi', converted: 'Satışa Döndü',
 }
 const STATUS_COLOR: Record<ProformaStatus, string> = {
-  draft:     'bg-gray-100 text-gray-500',
+  draft:     'bg-[#f1f5f9] text-[#64748b]',
   sent:      'bg-info-light text-info-text',
   accepted:  'bg-pos-light text-pos-text',
   rejected:  'bg-neg-light text-neg',
@@ -69,7 +69,7 @@ const STATUS_COLOR: Record<ProformaStatus, string> = {
 const PAYMENT_COLOR: Record<string, string> = {
   pending: 'bg-warn-light text-warn-text', paid: 'bg-pos-light text-pos-text',
   partial: 'bg-yellow-100 text-yellow-700', overdue: 'bg-neg-light text-neg',
-  cancelled: 'bg-gray-100 text-gray-500',
+  cancelled: 'bg-[#f1f5f9] text-[#64748b]',
 }
 const PAYMENT_LABEL: Record<string, string> = {
   pending: 'Bekliyor', paid: 'Ödendi', partial: 'Kısmi', overdue: 'Gecikmiş', cancelled: 'İptal',
@@ -78,7 +78,7 @@ const PAYMENT_LABEL: Record<string, string> = {
 function PfBadge({ status }: { status: string }) {
   const s = status as ProformaStatus
   return (
-    <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${STATUS_COLOR[s] ?? 'bg-gray-100 text-gray-500'}`}>
+    <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${STATUS_COLOR[s] ?? 'bg-[#f1f5f9] text-[#64748b]'}`}>
       {STATUS_LABEL[s] ?? status}
     </span>
   )
@@ -87,7 +87,7 @@ function PfBadge({ status }: { status: string }) {
 function PayBadge({ status }: { status: string | null }) {
   const s = status ?? 'pending'
   return (
-    <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${PAYMENT_COLOR[s] ?? 'bg-gray-100 text-gray-500'}`}>
+    <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${PAYMENT_COLOR[s] ?? 'bg-[#f1f5f9] text-[#64748b]'}`}>
       {PAYMENT_LABEL[s] ?? s}
     </span>
   )
@@ -120,7 +120,7 @@ function Stage({ stageKey, step, label, count, value, color, sub, selected, onCl
 // ── Detail panels ─────────────────────────────────────────────────────────────
 
 function PanelEmpty({ msg }: { msg: string }) {
-  return <div className="py-6 text-center text-sm text-gray-400">{msg}</div>
+  return <div className="py-6 text-center text-sm text-[#94a3b8]">{msg}</div>
 }
 
 function StokPanel({ lots }: { lots: StockLot[] }) {
@@ -130,7 +130,7 @@ function StokPanel({ lots }: { lots: StockLot[] }) {
     <div>
       <table className="w-full text-sm">
         <thead>
-          <tr className="text-[10px] font-bold uppercase text-gray-400 border-b border-[#e2e8f0]">
+          <tr className="text-[10px] font-bold uppercase text-[#94a3b8] border-b border-[#e2e8f0]">
             <th className="text-left px-4 py-2">Lot / Ürün</th>
             <th className="text-right px-4 py-2">Adet</th>
             <th className="text-right px-4 py-2">Birim Maliyet</th>
@@ -141,20 +141,20 @@ function StokPanel({ lots }: { lots: StockLot[] }) {
         <tbody className="divide-y divide-[#f1f5f9]">
           {lots.map((l, i) => (
             <tr key={i} className="hover:bg-[#f8fafc]/60">
-              <td className="px-4 py-2.5 text-gray-700 font-medium">
+              <td className="px-4 py-2.5 text-[#334155] font-medium">
                 {l.product_name ?? (l.lot_no ? `Lot ${l.lot_no}` : `#${i + 1}`)}
               </td>
               <td className="px-4 py-2.5 text-right tabular-nums">{l.qty_remaining.toLocaleString('tr-TR')}</td>
-              <td className="px-4 py-2.5 text-right tabular-nums text-gray-500">{fmt(Number(l.cost_price_try ?? l.entry_cost_try ?? 0))}</td>
-              <td className="px-4 py-2.5 text-right tabular-nums font-bold text-gray-800">{fmt(l.qty_remaining * Number(l.cost_price_try ?? l.entry_cost_try ?? 0))}</td>
-              <td className="px-4 py-2.5 text-right text-gray-400">{fmtDate(l.created_at ?? null)}</td>
+              <td className="px-4 py-2.5 text-right tabular-nums text-[#64748b]">{fmt(Number(l.cost_price_try ?? l.entry_cost_try ?? 0))}</td>
+              <td className="px-4 py-2.5 text-right tabular-nums font-bold text-[#1e293b]">{fmt(l.qty_remaining * Number(l.cost_price_try ?? l.entry_cost_try ?? 0))}</td>
+              <td className="px-4 py-2.5 text-right text-[#94a3b8]">{fmtDate(l.created_at ?? null)}</td>
             </tr>
           ))}
         </tbody>
         <tfoot>
           <tr className="border-t-2 border-[#e2e8f0]">
-            <td className="px-4 py-2 text-xs font-bold text-gray-500" colSpan={3}>Toplam FIFO maliyet</td>
-            <td className="px-4 py-2 text-right font-black tabular-nums text-gray-900">{fmt(total)}</td>
+            <td className="px-4 py-2 text-xs font-bold text-[#64748b]" colSpan={3}>Toplam FIFO maliyet</td>
+            <td className="px-4 py-2 text-right font-black tabular-nums text-[#0f172a]">{fmt(total)}</td>
             <td />
           </tr>
         </tfoot>
@@ -173,7 +173,7 @@ function TeklifPanel({ proformas }: { proformas: Proforma[] }) {
     <div>
       <table className="w-full text-sm">
         <thead>
-          <tr className="text-[10px] font-bold uppercase text-gray-400 border-b border-[#e2e8f0]">
+          <tr className="text-[10px] font-bold uppercase text-[#94a3b8] border-b border-[#e2e8f0]">
             <th className="text-left px-4 py-2">Müşteri</th>
             <th className="text-left px-4 py-2">Durum</th>
             <th className="text-right px-4 py-2">Tutar</th>
@@ -185,15 +185,15 @@ function TeklifPanel({ proformas }: { proformas: Proforma[] }) {
             <tr key={p.id} className="hover:bg-[#f8fafc]/60">
               <td className="px-4 py-2.5">
                 <Link href={`/dashboard/proformas/${p.id}`}
-                  className="font-semibold text-gray-800 hover:text-primary-600 truncate block max-w-[200px]">
+                  className="font-semibold text-[#1e293b] hover:text-primary-600 truncate block max-w-[200px]">
                   {p.customer_name ?? '—'}
                 </Link>
               </td>
               <td className="px-4 py-2.5"><PfBadge status={p.status} /></td>
-              <td className="px-4 py-2.5 text-right tabular-nums font-semibold text-gray-700">
-                {fmt(Number(p.total ?? 0))}<span className="text-[10px] text-gray-400 ml-1">{p.currency}</span>
+              <td className="px-4 py-2.5 text-right tabular-nums font-semibold text-[#334155]">
+                {fmt(Number(p.total ?? 0))}<span className="text-[10px] text-[#94a3b8] ml-1">{p.currency}</span>
               </td>
-              <td className="px-4 py-2.5 text-right text-gray-400">{fmtDate(p.created_at)}</td>
+              <td className="px-4 py-2.5 text-right text-[#94a3b8]">{fmtDate(p.created_at)}</td>
             </tr>
           ))}
         </tbody>
@@ -213,7 +213,7 @@ function SatisPanel({ proformas }: { proformas: Proforma[] }) {
     <div>
       <table className="w-full text-sm">
         <thead>
-          <tr className="text-[10px] font-bold uppercase text-gray-400 border-b border-[#e2e8f0]">
+          <tr className="text-[10px] font-bold uppercase text-[#94a3b8] border-b border-[#e2e8f0]">
             <th className="text-left px-4 py-2">Müşteri</th>
             <th className="text-right px-4 py-2">Tutar</th>
             <th className="text-right px-4 py-2">Para Birimi</th>
@@ -225,19 +225,19 @@ function SatisPanel({ proformas }: { proformas: Proforma[] }) {
             <tr key={p.id} className="hover:bg-[#f8fafc]/60">
               <td className="px-4 py-2.5">
                 <Link href={`/dashboard/proformas/${p.id}`}
-                  className="font-semibold text-gray-800 hover:text-primary-600 truncate block max-w-[200px]">
+                  className="font-semibold text-[#1e293b] hover:text-primary-600 truncate block max-w-[200px]">
                   {p.customer_name ?? '—'}
                 </Link>
               </td>
               <td className="px-4 py-2.5 text-right tabular-nums font-semibold text-primary-700">{fmt(Number(p.total ?? 0))}</td>
-              <td className="px-4 py-2.5 text-right text-gray-400 text-xs">{p.currency}</td>
-              <td className="px-4 py-2.5 text-right text-gray-400">{fmtDate(p.updated_at)}</td>
+              <td className="px-4 py-2.5 text-right text-[#94a3b8] text-xs">{p.currency}</td>
+              <td className="px-4 py-2.5 text-right text-[#94a3b8]">{fmtDate(p.updated_at)}</td>
             </tr>
           ))}
         </tbody>
         <tfoot>
           <tr className="border-t-2 border-[#e2e8f0]">
-            <td className="px-4 py-2 text-xs font-bold text-gray-500">Toplam</td>
+            <td className="px-4 py-2 text-xs font-bold text-[#64748b]">Toplam</td>
             <td className="px-4 py-2 text-right font-black tabular-nums text-primary-700">{fmt(total)}</td>
             <td colSpan={2} />
           </tr>
@@ -274,7 +274,7 @@ function TahsilatPanel({ sales }: { sales: Sale[] }) {
       </div>
       <table className="w-full text-sm">
         <thead>
-          <tr className="text-[10px] font-bold uppercase text-gray-400 border-b border-[#e2e8f0]">
+          <tr className="text-[10px] font-bold uppercase text-[#94a3b8] border-b border-[#e2e8f0]">
             <th className="text-left px-4 py-2">Müşteri</th>
             <th className="text-left px-4 py-2">Ödeme</th>
             <th className="text-right px-4 py-2">Tutar (TL)</th>
@@ -285,17 +285,17 @@ function TahsilatPanel({ sales }: { sales: Sale[] }) {
           {sales.slice(0, 15).map(s => (
             <tr key={s.id} className="hover:bg-[#f8fafc]/60">
               <td className="px-4 py-2.5 max-w-[180px]">
-                <span className="block font-medium text-gray-800 truncate">{s.customer_name ?? '—'}</span>
+                <span className="block font-medium text-[#1e293b] truncate">{s.customer_name ?? '—'}</span>
               </td>
               <td className="px-4 py-2.5"><PayBadge status={s.payment_status} /></td>
-              <td className="px-4 py-2.5 text-right tabular-nums font-semibold text-gray-700">{fmt(Number(s.total_try ?? 0))}</td>
-              <td className="px-4 py-2.5 text-right text-gray-400">{fmtDate(s.sale_date ?? s.created_at)}</td>
+              <td className="px-4 py-2.5 text-right tabular-nums font-semibold text-[#334155]">{fmt(Number(s.total_try ?? 0))}</td>
+              <td className="px-4 py-2.5 text-right text-[#94a3b8]">{fmtDate(s.sale_date ?? s.created_at)}</td>
             </tr>
           ))}
         </tbody>
       </table>
       <div className="px-4 py-2 flex items-center justify-between">
-        {sales.length > 15 && <span className="text-[10px] text-gray-400">İlk 15 gösteriliyor</span>}
+        {sales.length > 15 && <span className="text-[10px] text-[#94a3b8]">İlk 15 gösteriliyor</span>}
         <Link href="/dashboard/collections" className="text-xs text-primary-600 font-semibold hover:underline ml-auto">
           Tahsilat sayfasına git →
         </Link>
@@ -317,22 +317,22 @@ function KarPanel({ sales }: { sales: Sale[] }) {
     <div>
       <div className="flex gap-3 px-4 py-3 border-b border-[#e2e8f0]">
         <div className="flex items-center gap-1.5 bg-[#f8fafc] rounded px-3 py-1.5">
-          <span className="text-xs text-gray-500">Ciro</span>
-          <span className="text-xs font-black tabular-nums text-gray-800">{fmt(totalRevenue)}</span>
+          <span className="text-xs text-[#64748b]">Ciro</span>
+          <span className="text-xs font-black tabular-nums text-[#1e293b]">{fmt(totalRevenue)}</span>
         </div>
         <div className="flex items-center gap-1.5 bg-[#f8fafc] rounded px-3 py-1.5">
-          <span className="text-xs text-gray-500">SMM</span>
+          <span className="text-xs text-[#64748b]">SMM</span>
           <span className="text-xs font-black tabular-nums text-neg">{fmt(totalCogs)}</span>
         </div>
         <div className={`flex items-center gap-1.5 rounded px-3 py-1.5 ${grossProfit >= 0 ? 'bg-pos-light' : 'bg-neg-light'}`}>
-          <span className="text-xs text-gray-500">Brüt Kâr</span>
+          <span className="text-xs text-[#64748b]">Brüt Kâr</span>
           <span className={`text-xs font-black tabular-nums ${grossProfit >= 0 ? 'text-pos-text' : 'text-neg'}`}>{fmt(grossProfit)}</span>
-          <span className="text-[10px] text-gray-400">%{margin.toFixed(1)}</span>
+          <span className="text-[10px] text-[#94a3b8]">%{margin.toFixed(1)}</span>
         </div>
       </div>
       <table className="w-full text-sm">
         <thead>
-          <tr className="text-[10px] font-bold uppercase text-gray-400 border-b border-[#e2e8f0]">
+          <tr className="text-[10px] font-bold uppercase text-[#94a3b8] border-b border-[#e2e8f0]">
             <th className="text-left px-4 py-2">Müşteri</th>
             <th className="text-right px-4 py-2">Ciro</th>
             <th className="text-right px-4 py-2">SMM</th>
@@ -344,12 +344,12 @@ function KarPanel({ sales }: { sales: Sale[] }) {
           {withProfit.slice(0, 10).map(s => (
             <tr key={s.id} className="hover:bg-[#f8fafc]/60">
               <td className="px-4 py-2.5 max-w-[160px]">
-                <span className="block font-medium text-gray-800 truncate">{s.customer_name ?? '—'}</span>
+                <span className="block font-medium text-[#1e293b] truncate">{s.customer_name ?? '—'}</span>
               </td>
-              <td className="px-4 py-2.5 text-right tabular-nums text-gray-700">{fmt(Number(s.total_try ?? 0))}</td>
-              <td className="px-4 py-2.5 text-right tabular-nums text-gray-500">{fmt(Number(s.cost_try ?? 0))}</td>
+              <td className="px-4 py-2.5 text-right tabular-nums text-[#334155]">{fmt(Number(s.total_try ?? 0))}</td>
+              <td className="px-4 py-2.5 text-right tabular-nums text-[#64748b]">{fmt(Number(s.cost_try ?? 0))}</td>
               <td className={`px-4 py-2.5 text-right tabular-nums font-bold ${s.profit >= 0 ? 'text-pos-text' : 'text-neg'}`}>{fmt(s.profit)}</td>
-              <td className="px-4 py-2.5 text-right text-gray-400">{fmtDate(s.sale_date ?? s.created_at)}</td>
+              <td className="px-4 py-2.5 text-right text-[#94a3b8]">{fmtDate(s.sale_date ?? s.created_at)}</td>
             </tr>
           ))}
         </tbody>
@@ -414,7 +414,7 @@ export default function SalesFlowClient({ initialProformas, initialSales, initia
       <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
         <div className="px-4 py-2 border-b border-[#e2e8f0] bg-[#f8fafc] flex items-center justify-between">
           <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">{titles[selected]}</span>
-          <button onClick={() => setSelected(null)} className="text-gray-400 hover:text-gray-700 text-lg leading-none">×</button>
+          <button onClick={() => setSelected(null)} className="text-[#94a3b8] hover:text-[#334155] text-lg leading-none">×</button>
         </div>
         {panels[selected]}
       </div>
@@ -429,25 +429,25 @@ export default function SalesFlowClient({ initialProformas, initialSales, initia
       <div className="flex items-stretch gap-1">
         <Stage stageKey="stok" step="1. Stok" label="Envanter"
           count={stockLots.length} value={stockValue}
-          color="bg-[#f8fafc] border-[#e2e8f0] text-gray-800" sub="FIFO maliyet"
+          color="bg-[#f8fafc] border-[#e2e8f0] text-[#1e293b]" sub="FIFO maliyet"
           selected={selected === 'stok'} onClick={() => toggle('stok')} />
-        <div className="flex items-center self-center text-gray-300 text-xl font-black select-none px-0.5">→</div>
+        <div className="flex items-center self-center text-[#cbd5e1] text-xl font-black select-none px-0.5">→</div>
         <Stage stageKey="teklif" step="2. Teklif" label="Açık Teklifler"
           count={sent.length + accepted.length} value={pipelineVal}
           color="bg-info-light border-info-light text-info-text" sub="gönderildi + onay"
           selected={selected === 'teklif'} onClick={() => toggle('teklif')} />
-        <div className="flex items-center self-center text-gray-300 text-xl font-black select-none px-0.5">→</div>
+        <div className="flex items-center self-center text-[#cbd5e1] text-xl font-black select-none px-0.5">→</div>
         <Stage stageKey="satis" step="3. Satış" label="Faturalanan"
           count={converted.length} value={sumTotal(converted)}
           color="bg-primary-50 border-primary-200 text-primary-900" sub="proforma → satış"
           selected={selected === 'satis'} onClick={() => toggle('satis')} />
-        <div className="flex items-center self-center text-gray-300 text-xl font-black select-none px-0.5">→</div>
+        <div className="flex items-center self-center text-[#cbd5e1] text-xl font-black select-none px-0.5">→</div>
         <Stage stageKey="tahsilat" step="4. Tahsilat" label="Nakit Girişi"
           count={sales.length} value={totalRevenue}
           color={unpaidTotal > 0 ? 'bg-warn-light border-warn-light text-warn-text' : 'bg-teal-50 border-teal-200 text-teal-900'}
           sub={unpaidTotal > 0 ? `${fmt(unpaidTotal)} bekliyor` : 'Tahsilat güncel'}
           selected={selected === 'tahsilat'} onClick={() => toggle('tahsilat')} />
-        <div className="flex items-center self-center text-gray-300 text-xl font-black select-none px-0.5">→</div>
+        <div className="flex items-center self-center text-[#cbd5e1] text-xl font-black select-none px-0.5">→</div>
         <Stage stageKey="kar" step="5. Kâr" label="Brüt Kâr"
           count={sales.length} value={grossProfit}
           color={grossProfit >= 0 ? 'bg-pos-light border-pos-light text-pos-text' : 'bg-neg-light border-neg-light text-neg-text'}
@@ -464,7 +464,7 @@ export default function SalesFlowClient({ initialProformas, initialSales, initia
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Dönüşüm Oranları</div>
           <div className="grid grid-cols-4 gap-4 text-center">
             {[
-              { label: 'Taslak',       count: drafts.length,    color: 'text-gray-500',    stage: null         },
+              { label: 'Taslak',       count: drafts.length,    color: 'text-[#64748b]',    stage: null         },
               { label: 'Gönderildi',   count: sent.length,      color: 'text-info-text',    stage: 'teklif' as StageKey },
               { label: 'Onaylandı',    count: accepted.length,  color: 'text-pos-text', stage: 'teklif' as StageKey },
               { label: 'Satışa Döndü', count: converted.length, color: 'text-primary-600', stage: 'satis'  as StageKey },
@@ -474,8 +474,8 @@ export default function SalesFlowClient({ initialProformas, initialSales, initia
                 <div className={`text-2xl font-black tabular-nums ${c.color} group-hover:underline`}>
                   {`%${((c.count / proformas.length) * 100).toFixed(0)}`}
                 </div>
-                <div className="text-[11px] text-gray-400 mt-0.5">{c.label}</div>
-                <div className="text-[10px] text-gray-300">{c.count} adet</div>
+                <div className="text-[11px] text-[#94a3b8] mt-0.5">{c.label}</div>
+                <div className="text-[10px] text-[#cbd5e1]">{c.count} adet</div>
               </button>
             ))}
           </div>

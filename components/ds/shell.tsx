@@ -46,8 +46,8 @@ export const TOKENS = {
   pageLabel: 'text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5',
 
   // Page hero title
-  heroTitle: 'text-2xl font-black tracking-tight text-gray-900 leading-tight',
-  heroSub:   'text-sm text-gray-400 mt-1',
+  heroTitle: 'text-2xl font-black tracking-tight text-[#0f172a] leading-tight',
+  heroSub:   'text-sm text-[#94a3b8] mt-1',
   heroSuper: 'text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-1',
 
   // Typography
@@ -60,7 +60,7 @@ export const TOKENS = {
   ok:       'text-pos-text',
   warn:     'text-warn-text',
   critical: 'text-neg',
-  neutral:  'text-gray-900',
+  neutral:  'text-[#0f172a]',
 
   // Layout
   page:       'flex flex-col gap-5 max-w-5xl',
@@ -199,7 +199,7 @@ export function PanelHeader({
     )}>
       <div>
         <div className={TOKENS.label}>{label}</div>
-        {sub && <div className="text-[10px] text-gray-400 mt-0.5">{sub}</div>}
+        {sub && <div className="text-[10px] text-[#94a3b8] mt-0.5">{sub}</div>}
       </div>
       {action}
     </div>
@@ -271,7 +271,7 @@ export function KpiCell({
     <div className={cn('flex flex-col flex-shrink-0', compact ? 'px-4 py-3' : 'px-5 py-3.5')}>
       <span className={cn(TOKENS.label, 'mb-1.5')}>{label}</span>
       <span className={cn(TOKENS.value2xl, valueColor)}>{value}</span>
-      {sub && <span className="text-[10px] text-gray-400 mt-1 leading-tight">{sub}</span>}
+      {sub && <span className="text-[10px] text-[#94a3b8] mt-1 leading-tight">{sub}</span>}
     </div>
   )
 
@@ -359,8 +359,8 @@ export function EmptySlate({
   return (
     <div className="text-center py-14 px-6">
       {icon && <div className="text-3xl mb-3">{icon}</div>}
-      <div className="text-sm font-black text-gray-900 mb-1">{title}</div>
-      {sub && <div className="text-xs text-gray-400 mb-4">{sub}</div>}
+      <div className="text-sm font-black text-[#0f172a] mb-1">{title}</div>
+      {sub && <div className="text-xs text-[#94a3b8] mb-4">{sub}</div>}
       {action}
     </div>
   )
@@ -378,7 +378,7 @@ export function Skeleton({
   className?: string
 }) {
   return (
-    <div className={cn('bg-gray-100 rounded animate-pulse', height, className)} />
+    <div className={cn('bg-[#f1f5f9] rounded animate-pulse', height, className)} />
   )
 }
 
@@ -386,7 +386,7 @@ export function SkeletonPanel({ rows = 3 }: { rows?: number }) {
   return (
     <div className={cn(TOKENS.panel, 'p-5 space-y-3 animate-pulse')}>
       {Array.from({ length: rows }).map((_, i) => (
-        <div key={i} className="h-3 bg-gray-100 rounded-full" style={{ width: `${65 + (i % 3) * 15}%` }} />
+        <div key={i} className="h-3 bg-[#f1f5f9] rounded-full" style={{ width: `${65 + (i % 3) * 15}%` }} />
       ))}
     </div>
   )
@@ -398,8 +398,8 @@ export function SkeletonKpiStrip({ cells = 4 }: { cells?: number }) {
       <div className={`grid grid-cols-${cells} divide-x divide-[#e2e8f0]`}>
         {Array.from({ length: cells }).map((_, i) => (
           <div key={i} className="px-5 py-3.5 animate-pulse space-y-2">
-            <div className="h-2 bg-gray-100 rounded-full w-16" />
-            <div className="h-5 bg-gray-100 rounded-full w-24" />
+            <div className="h-2 bg-[#f1f5f9] rounded-full w-16" />
+            <div className="h-5 bg-[#f1f5f9] rounded-full w-24" />
           </div>
         ))}
       </div>
@@ -495,7 +495,7 @@ export function AlertRow({
   const btnClass =
     severity === 'critical'
       ? 'bg-neg text-white hover:bg-neg'
-      : 'border border-[#e2e8f0] text-gray-600 hover:bg-[#f8fafc]'
+      : 'border border-[#e2e8f0] text-[#64748b] hover:bg-[#f8fafc]'
 
   return (
     <Link
@@ -506,11 +506,11 @@ export function AlertRow({
       )}
     >
       <div className="flex-1 min-w-0">
-        <div className={cn('text-sm leading-tight', severity === 'critical' ? 'font-semibold text-gray-900' : 'font-medium text-gray-800')}>
+        <div className={cn('text-sm leading-tight', severity === 'critical' ? 'font-semibold text-[#0f172a]' : 'font-medium text-[#1e293b]')}>
           {title}
         </div>
         {detail && (
-          <div className="text-[11px] text-gray-500 mt-0.5 truncate">{detail}</div>
+          <div className="text-[11px] text-[#64748b] mt-0.5 truncate">{detail}</div>
         )}
       </div>
       <span className={cn(

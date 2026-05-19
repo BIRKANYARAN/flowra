@@ -15,7 +15,7 @@ function CommandBarSkeleton() {
   return (
     <div className="flex items-center gap-2 animate-pulse">
       {[...Array(4)].map((_, i) => (
-        <div key={i} className="h-8 w-28 bg-gray-100 rounded" />
+        <div key={i} className="h-8 w-28 bg-[#f1f5f9] rounded" />
       ))}
     </div>
   )
@@ -42,7 +42,7 @@ const STATUS_LABEL: Record<string, string> = {
   rejected: 'Reddedildi', converted: 'Satışa Döndü',
 }
 const STATUS_COLOR: Record<string, string> = {
-  draft:     'bg-gray-100 text-gray-500',
+  draft:     'bg-[#f1f5f9] text-[#64748b]',
   sent:      'bg-info-light text-info-text',
   accepted:  'bg-pos-light text-pos-text',
   rejected:  'bg-neg-light text-neg',
@@ -123,8 +123,8 @@ export async function PipelineContent({ companyId }: Props) {
       </Suspense>
 
       <div>
-        <h2 className="text-xl font-black text-gray-900 tracking-tight">Satış Akışı</h2>
-        <p className="text-xs text-gray-400 mt-0.5">
+        <h2 className="text-xl font-black text-[#0f172a] tracking-tight">Satış Akışı</h2>
+        <p className="text-xs text-[#94a3b8] mt-0.5">
           Pipeline görünümü · {proformas.length} teklif · {sales.length} satış
         </p>
       </div>
@@ -132,15 +132,15 @@ export async function PipelineContent({ companyId }: Props) {
       {/* KPI Strip */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded overflow-hidden">
         {[
-          { label: 'Stok Değeri',  value: serverFmt(stockValue),   sub: `${stockLots.length} aktif lot`,                color: 'text-gray-900' },
+          { label: 'Stok Değeri',  value: serverFmt(stockValue),   sub: `${stockLots.length} aktif lot`,                color: 'text-[#0f172a]' },
           { label: 'Pipeline',     value: pipelineVal > 0 ? serverFmt(pipelineVal) : '—', sub: 'bekleyen teklifler', color: 'text-info-text' },
-          { label: 'Toplam Ciro',  value: totalRevenue > 0 ? serverFmt(totalRevenue) : '—', sub: unpaidTotal > 0 ? `${serverFmt(unpaidTotal)} bekliyor` : 'tamamı tahsil', color: 'text-gray-900' },
+          { label: 'Toplam Ciro',  value: totalRevenue > 0 ? serverFmt(totalRevenue) : '—', sub: unpaidTotal > 0 ? `${serverFmt(unpaidTotal)} bekliyor` : 'tamamı tahsil', color: 'text-[#0f172a]' },
           { label: 'Brüt Kâr',    value: totalRevenue > 0 ? serverFmt(grossProfit) : '—', sub: totalRevenue > 0 ? `%${grossMargin.toFixed(1)} marj` : 'veri yok', color: grossProfit >= 0 ? 'text-pos-text' : 'text-neg' },
         ].map((card, i) => (
           <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e2e8f0]' : ''}`}>
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
             <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
-            <div className="text-[10px] text-gray-400 mt-1">{card.sub}</div>
+            <div className="text-[10px] text-[#94a3b8] mt-1">{card.sub}</div>
           </div>
         ))}
       </div>
@@ -153,7 +153,7 @@ export async function PipelineContent({ companyId }: Props) {
           </div>
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-[10px] font-bold uppercase text-gray-400 border-b border-[#e2e8f0]">
+              <tr className="text-[10px] font-bold uppercase text-[#94a3b8] border-b border-[#e2e8f0]">
                 <th className="text-left px-4 py-2">Müşteri</th>
                 <th className="text-left px-4 py-2">Durum</th>
                 <th className="text-right px-4 py-2">Tutar</th>
@@ -163,17 +163,17 @@ export async function PipelineContent({ companyId }: Props) {
             <tbody className="divide-y divide-[#f1f5f9]">
               {recentPf.map(p => (
                 <tr key={p.id}>
-                  <td className="px-4 py-2.5 font-medium text-gray-800 max-w-[200px] truncate">{p.customer_name ?? '—'}</td>
+                  <td className="px-4 py-2.5 font-medium text-[#1e293b] max-w-[200px] truncate">{p.customer_name ?? '—'}</td>
                   <td className="px-4 py-2.5">
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${STATUS_COLOR[p.status] ?? 'bg-gray-100 text-gray-500'}`}>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${STATUS_COLOR[p.status] ?? 'bg-[#f1f5f9] text-[#64748b]'}`}>
                       {STATUS_LABEL[p.status] ?? p.status}
                     </span>
                   </td>
-                  <td className="px-4 py-2.5 text-right tabular-nums font-semibold text-gray-700">
+                  <td className="px-4 py-2.5 text-right tabular-nums font-semibold text-[#334155]">
                     {serverFmt(Number(p.total ?? 0))}
-                    <span className="text-[10px] text-gray-400 ml-1">{p.currency}</span>
+                    <span className="text-[10px] text-[#94a3b8] ml-1">{p.currency}</span>
                   </td>
-                  <td className="px-4 py-2.5 text-right text-gray-400">
+                  <td className="px-4 py-2.5 text-right text-[#94a3b8]">
                     {p.created_at ? new Date(p.created_at).toLocaleDateString('tr-TR', { day: '2-digit', month: 'short' }) : '—'}
                   </td>
                 </tr>
@@ -218,8 +218,8 @@ export async function PipelineContent({ companyId }: Props) {
               return (
                 <div key={m.month} className="flex-1 flex flex-col items-center gap-1 group relative">
                   <div className="w-full bg-primary-300 group-hover:bg-primary-400 rounded-t transition-all" style={{ height: `${heightPct}%` }} />
-                  <div className="text-[9px] text-gray-400 font-semibold">{fmtMonth(m.month)}</div>
-                  <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block z-10 bg-gray-900 text-white rounded px-2 py-1 text-[10px] whitespace-nowrap">
+                  <div className="text-[9px] text-[#94a3b8] font-semibold">{fmtMonth(m.month)}</div>
+                  <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block z-10 bg-[#0f172a] text-white rounded px-2 py-1 text-[10px] whitespace-nowrap">
                     <div className="font-bold">{fmtMonth(m.month)}</div>
                     <div className="text-primary-300">{serverFmt(m.revenue)}</div>
                   </div>
@@ -227,7 +227,7 @@ export async function PipelineContent({ companyId }: Props) {
               )
             })}
           </div>
-          <div className="flex items-center justify-between mt-2 text-[10px] text-gray-400">
+          <div className="flex items-center justify-between mt-2 text-[10px] text-[#94a3b8]">
             <span>En düşük: {serverFmt(Math.min(...recentMonths.map(m => m.revenue)))}</span>
             <span>En yüksek: {serverFmt(Math.max(...recentMonths.map(m => m.revenue)))}</span>
           </div>
@@ -243,18 +243,18 @@ export async function PipelineContent({ companyId }: Props) {
 
       {/* Cross-navigation */}
       <div className="flex items-center justify-between px-1">
-        <p className="text-[10px] text-gray-400 leading-relaxed">
+        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
           Satış akışı tahsilat ve müşteri riskiyle birlikte yönetilmeli.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
           <Link href="/dashboard/commercial?tab=collections" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Tahsilat →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/commercial?tab=customers" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Müşteri Riskleri →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/finance?tab=pnl" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             P&amp;L Analizi →
           </Link>

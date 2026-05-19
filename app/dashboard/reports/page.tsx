@@ -93,8 +93,8 @@ export default function ReportsHubPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-black text-gray-900 tracking-tight">Finansal Raporlar</h1>
-          <p className="text-xs text-gray-400 mt-0.5">Tüm tablolar ve PDF indirme</p>
+          <h1 className="text-xl font-black text-[#0f172a] tracking-tight">Finansal Raporlar</h1>
+          <p className="text-xs text-[#94a3b8] mt-0.5">Tüm tablolar ve PDF indirme</p>
         </div>
         <button
           onClick={downloadCfoPack}
@@ -145,10 +145,10 @@ export default function ReportsHubPage() {
             <div className="flex items-start gap-3">
               <span className="text-2xl flex-shrink-0">{r.icon}</span>
               <div className="min-w-0">
-                <div className="font-bold text-sm text-gray-900 group-hover:text-primary-700 transition-colors">
+                <div className="font-bold text-sm text-[#0f172a] group-hover:text-primary-700 transition-colors">
                   {r.title}
                 </div>
-                <div className="text-xs text-gray-400 mt-0.5">{r.subtitle}</div>
+                <div className="text-xs text-[#94a3b8] mt-0.5">{r.subtitle}</div>
               </div>
             </div>
             <div className="mt-3 flex items-center gap-1 text-[10px] font-semibold text-primary-600">
@@ -163,8 +163,8 @@ export default function ReportsHubPage() {
         <div className="flex items-start gap-3 mb-3">
           <span className="text-2xl flex-shrink-0">📋</span>
           <div>
-            <div className="text-sm font-bold text-gray-900">Muhasebeci için CSV Aktarımı</div>
-            <div className="text-xs text-gray-400 mt-0.5">
+            <div className="text-sm font-bold text-[#0f172a]">Muhasebeci için CSV Aktarımı</div>
+            <div className="text-xs text-[#94a3b8] mt-0.5">
               Excel'de açılmaya hazır, noktalı virgülle ayrılmış · UTF-8 · Türkçe format · Dönem: {from} — {to}
             </div>
           </div>
@@ -173,7 +173,7 @@ export default function ReportsHubPage() {
           <a
             href={`/api/export/sales?from=${from}&to=${to}`}
             download
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-[#e2e8f0] bg-[#f8fafc] text-xs font-semibold text-gray-700 hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 transition-colors"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-[#e2e8f0] bg-[#f8fafc] text-xs font-semibold text-[#334155] hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 transition-colors"
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M12 16l-4-4h3V4h2v8h3l-4 4z" />
@@ -184,7 +184,7 @@ export default function ReportsHubPage() {
           <a
             href={`/api/export/expenses?from=${from}&to=${to}`}
             download
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-[#e2e8f0] bg-[#f8fafc] text-xs font-semibold text-gray-700 hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 transition-colors"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-[#e2e8f0] bg-[#f8fafc] text-xs font-semibold text-[#334155] hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 transition-colors"
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M12 16l-4-4h3V4h2v8h3l-4 4z" />
@@ -195,7 +195,7 @@ export default function ReportsHubPage() {
           <a
             href={`/api/export/purchases?from=${from}&to=${to}`}
             download
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-[#e2e8f0] bg-[#f8fafc] text-xs font-semibold text-gray-700 hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 transition-colors"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-[#e2e8f0] bg-[#f8fafc] text-xs font-semibold text-[#334155] hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 transition-colors"
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M12 16l-4-4h3V4h2v8h3l-4 4z" />
@@ -206,7 +206,7 @@ export default function ReportsHubPage() {
           <a
             href="/api/export/stock"
             download
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-[#e2e8f0] bg-[#f8fafc] text-xs font-semibold text-gray-700 hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 transition-colors"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-[#e2e8f0] bg-[#f8fafc] text-xs font-semibold text-[#334155] hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 transition-colors"
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M12 16l-4-4h3V4h2v8h3l-4 4z" />
@@ -217,7 +217,7 @@ export default function ReportsHubPage() {
           <a
             href="/api/export/customers"
             download
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-[#e2e8f0] bg-[#f8fafc] text-xs font-semibold text-gray-700 hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 transition-colors"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-[#e2e8f0] bg-[#f8fafc] text-xs font-semibold text-[#334155] hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 transition-colors"
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M12 16l-4-4h3V4h2v8h3l-4 4z" />
@@ -225,24 +225,24 @@ export default function ReportsHubPage() {
             </svg>
             Müşteri Listesi (.csv)
           </a>
-          <span className="text-[10px] text-gray-300 italic">Tarih aralığı değiştirmek için URL parametrelerini düzenleyin</span>
+          <span className="text-[10px] text-[#cbd5e1] italic">Tarih aralığı değiştirmek için URL parametrelerini düzenleyin</span>
         </div>
       </div>
 
       {/* Cross-navigation */}
       <div className="flex items-center justify-between px-1">
-        <p className="text-[10px] text-gray-400 leading-relaxed">
+        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
           Raporlar CFO cockpit ve dönem kapanış süreciyle birlikte değerlendirilmeli.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
           <Link href="/dashboard/finance?tab=cfo" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             CFO Cockpit →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/cfo/trial-balance" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Mizan →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/cfo/period-close" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Dönem Kapanışı →
           </Link>

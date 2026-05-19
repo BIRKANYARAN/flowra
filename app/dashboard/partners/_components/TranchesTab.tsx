@@ -132,7 +132,7 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
             <select
               value={form.partner_id}
               onChange={e => field('partner_id', e.target.value)}
-              className="border border-[#e2e8f0] rounded px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="border border-[#e2e8f0] rounded px-3 py-2 text-sm text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               required
             >
               <option value="">— Ortak seçin —</option>
@@ -155,7 +155,7 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
                 value={form.amount_try}
                 onChange={e => field('amount_try', e.target.value)}
                 placeholder="0.00"
-                className="border border-[#e2e8f0] rounded px-3 py-2 text-sm font-mono text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="border border-[#e2e8f0] rounded px-3 py-2 text-sm font-mono text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 required
               />
             </div>
@@ -171,7 +171,7 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
                 value={form.annual_interest_rate}
                 onChange={e => field('annual_interest_rate', e.target.value)}
                 placeholder="0"
-                className="border border-[#e2e8f0] rounded px-3 py-2 text-sm font-mono text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="border border-[#e2e8f0] rounded px-3 py-2 text-sm font-mono text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
           </div>
@@ -186,7 +186,7 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
                 type="date"
                 value={form.disbursement_date}
                 onChange={e => field('disbursement_date', e.target.value)}
-                className="border border-[#e2e8f0] rounded px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="border border-[#e2e8f0] rounded px-3 py-2 text-sm text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 required
               />
             </div>
@@ -198,7 +198,7 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
                 type="date"
                 value={form.expected_repayment_date}
                 onChange={e => field('expected_repayment_date', e.target.value)}
-                className="border border-[#e2e8f0] rounded px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="border border-[#e2e8f0] rounded px-3 py-2 text-sm text-[#0f172a] focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
           </div>
@@ -213,7 +213,7 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
               onChange={e => field('notes', e.target.value)}
               rows={2}
               placeholder="İsteğe bağlı açıklama..."
-              className="border border-[#e2e8f0] rounded px-3 py-2 text-sm text-gray-900 resize-none focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="border border-[#e2e8f0] rounded px-3 py-2 text-sm text-[#0f172a] resize-none focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
           </div>
 
@@ -228,7 +228,7 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
               type="button"
               onClick={closeForm}
               disabled={saving}
-              className="px-4 py-2 rounded border border-[#e2e8f0] text-sm font-semibold text-gray-600 hover:bg-[#f8fafc] transition-colors disabled:opacity-50"
+              className="px-4 py-2 rounded border border-[#e2e8f0] text-sm font-semibold text-[#64748b] hover:bg-[#f8fafc] transition-colors disabled:opacity-50"
             >
               Vazgeç
             </button>
@@ -245,7 +245,7 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
 
       {/* Existing tranches display */}
       {loading ? <Skeleton h="h-32" /> : !waterfall ? (
-        <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-6 text-center text-sm text-gray-400">
+        <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-6 text-center text-sm text-[#94a3b8]">
           Borç dilimi verisi yüklenemedi.
         </div>
       ) : waterfall.tranches.filter(t => t.principal_try > 0).length === 0 ? (
@@ -261,7 +261,7 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
             </div>
             <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Aktif Borç Dilimi</div>
-              <div className="text-2xl font-black tabular-nums text-gray-900">
+              <div className="text-2xl font-black tabular-nums text-[#0f172a]">
                 {waterfall.tranches.filter(t => t.status !== 'repaid').length}
               </div>
             </div>
@@ -270,7 +270,7 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
               <div className={`text-2xl font-black tabular-nums ${
                 (waterfall.debt_clearance_months ?? 0) > 0
                   ? waterfall.debt_clearance_months! <= 3 ? 'text-pos-text' : waterfall.debt_clearance_months! <= 12 ? 'text-warn-text' : 'text-neg-text'
-                  : 'text-gray-400'
+                  : 'text-[#94a3b8]'
               }`}>
                 {waterfall.debt_clearance_months != null && waterfall.total_debt_try > 0
                   ? `${waterfall.debt_clearance_months} ay`
@@ -288,21 +288,21 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
                   <div className="flex items-start justify-between gap-4 mb-3">
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold text-gray-900">{t.partner_name}</span>
+                        <span className="text-sm font-bold text-[#0f172a]">{t.partner_name}</span>
                         <StatusPill status={t.status} />
                       </div>
-                      <div className="text-[10px] text-gray-400 mt-0.5">{t.days_outstanding} gündür açık</div>
+                      <div className="text-[10px] text-[#94a3b8] mt-0.5">{t.days_outstanding} gündür açık</div>
                     </div>
                     <div className="text-right shrink-0">
                       <div className="text-lg font-black tabular-nums text-warn-text">{fmt(t.remaining_principal_try)}</div>
-                      <div className="text-[10px] text-gray-400">kalan</div>
+                      <div className="text-[10px] text-[#94a3b8]">kalan</div>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-3 gap-4 mb-3 text-xs">
                     <div>
                       <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Toplam Borç</div>
-                      <div className="font-mono font-bold text-gray-700">{fmt(t.principal_try)}</div>
+                      <div className="font-mono font-bold text-[#334155]">{fmt(t.principal_try)}</div>
                     </div>
                     <div>
                       <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Ödenen</div>
@@ -310,16 +310,16 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
                     </div>
                     <div>
                       <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Geri Ödeme</div>
-                      <div className="font-mono font-bold text-gray-700">{fmtPct(repaidPct)}</div>
+                      <div className="font-mono font-bold text-[#334155]">{fmtPct(repaidPct)}</div>
                     </div>
                   </div>
 
                   <div>
-                    <div className="flex justify-between text-[10px] text-gray-400 mb-1">
+                    <div className="flex justify-between text-[10px] text-[#94a3b8] mb-1">
                       <span>Geri ödeme ilerleme</span>
                       <span>{fmtPct(repaidPct)}</span>
                     </div>
-                    <div className="bg-gray-100 rounded-full h-2">
+                    <div className="bg-[#f1f5f9] rounded-full h-2">
                       <div
                         className={`${progressColor} h-2 rounded-full transition-all`}
                         style={{ width: `${Math.min(100, repaidPct)}%` }}
@@ -335,18 +335,18 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
 
       {/* Cross-navigation */}
       <div className="flex items-center justify-between px-1 pt-2">
-        <p className="text-[10px] text-gray-400 leading-relaxed">
+        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
           Borç dilimleri, borç baskısı ve geri ödeme simülasyonuyla birlikte inceleyin.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
           <Link href="/dashboard/planning?tab=debt-pressure" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Borç Baskısı →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/partners?tab=waterfall" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Geri Ödeme →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/finance?tab=balance" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Bilanço →
           </Link>

@@ -116,13 +116,13 @@ export async function SalesContent({ companyId }: Props) {
               sub:   momDelta
                 ? <span className={`font-semibold ${momDelta.color}`}>{momDelta.text} geçen ay</span>
                 : `${mtdCount} fatura`,
-              color: 'text-gray-900',
+              color: 'text-[#0f172a]',
             },
             {
               label: 'Tahsil Edildi',
               value: mtdPaid > 0 ? fmt(mtdPaid) : '—',
               sub:   `%${collRatePct} tahsilat oranı · ${mtdPaidCount} fatura`,
-              color: collRatePct >= 80 ? 'text-pos-text' : collRatePct >= 50 ? 'text-warn-text' : 'text-gray-900',
+              color: collRatePct >= 80 ? 'text-pos-text' : collRatePct >= 50 ? 'text-warn-text' : 'text-[#0f172a]',
             },
             {
               label: 'Bekleyen Tahsilat',
@@ -136,13 +136,13 @@ export async function SalesContent({ companyId }: Props) {
               label: 'Toplam Satış',
               value: fmt(lifetimeRevenue),
               sub:   `${list.length} kayıt · tüm dönemler`,
-              color: 'text-gray-900',
+              color: 'text-[#0f172a]',
             },
           ].map((card, i) => (
             <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e2e8f0]' : ''}`}>
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
               <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
-              <div className="text-[10px] text-gray-400 mt-1 flex items-center gap-1">{card.sub}</div>
+              <div className="text-[10px] text-[#94a3b8] mt-1 flex items-center gap-1">{card.sub}</div>
             </div>
           ))}
         </div>
@@ -155,10 +155,10 @@ export async function SalesContent({ companyId }: Props) {
           <div className="flex gap-4 flex-wrap">
             {topCurrencies.map(([cur, total]) => (
               <div key={cur} className="flex items-center gap-2">
-                <span className="text-[9px] font-black uppercase tracking-wide bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">{cur}</span>
-                <span className="text-xs font-bold tabular-nums text-gray-800">{fmt(total)}</span>
+                <span className="text-[9px] font-black uppercase tracking-wide bg-[#f1f5f9] text-[#64748b] px-1.5 py-0.5 rounded">{cur}</span>
+                <span className="text-xs font-bold tabular-nums text-[#1e293b]">{fmt(total)}</span>
                 {mtdRevenue > 0 && (
-                  <span className="text-[10px] text-gray-400">%{Math.round((total / mtdRevenue) * 100)}</span>
+                  <span className="text-[10px] text-[#94a3b8]">%{Math.round((total / mtdRevenue) * 100)}</span>
                 )}
               </div>
             ))}
@@ -168,10 +168,10 @@ export async function SalesContent({ companyId }: Props) {
 
       {/* ── Table header row ─────────────────────────────────────────────── */}
       <div className="flex items-center justify-between">
-        <p className="text-xs text-gray-400">{list.length} satış kaydı · tüm dönemler</p>
+        <p className="text-xs text-[#94a3b8]">{list.length} satış kaydı · tüm dönemler</p>
         <Link
           href="/dashboard/commercial?tab=collections"
-          className="border border-[#e2e8f0] px-3.5 py-2 rounded text-xs font-semibold text-gray-500 hover:bg-[#f8fafc] hover:text-gray-800 transition-colors"
+          className="border border-[#e2e8f0] px-3.5 py-2 rounded text-xs font-semibold text-[#64748b] hover:bg-[#f8fafc] hover:text-[#1e293b] transition-colors"
         >
           Tahsilatlar →
         </Link>
@@ -213,7 +213,7 @@ export async function SalesContent({ companyId }: Props) {
 
       {/* Cross-navigation */}
       <div className="flex items-center justify-between px-1">
-        <p className="text-[10px] text-gray-400 leading-relaxed">
+        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
           Satış verisi P&amp;L ve nakit akışı hesaplamalarının temelidir.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
@@ -223,7 +223,7 @@ export async function SalesContent({ companyId }: Props) {
           >
             P&amp;L Analizi →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link
             href="/dashboard/commercial?tab=pipeline"
             className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap"

@@ -68,11 +68,11 @@ function TabSkeleton() {
     <div className="space-y-3 animate-pulse">
       <div className="grid grid-cols-4 gap-3">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="bg-gray-100 rounded h-16" />
+          <div key={i} className="bg-[#f1f5f9] rounded h-16" />
         ))}
       </div>
-      <div className="bg-gray-100 rounded h-48" />
-      <div className="bg-gray-100 rounded h-32" />
+      <div className="bg-[#f1f5f9] rounded h-48" />
+      <div className="bg-[#f1f5f9] rounded h-32" />
     </div>
   )
 }
@@ -97,7 +97,7 @@ export default async function FinancePage({ searchParams }: PageProps) {
   if (!userId) return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-center px-4">
       <div className="text-3xl">⚠️</div>
-      <p className="text-sm text-gray-500">Oturum bilgisi alınamadı. Lütfen sayfayı yenileyin.</p>
+      <p className="text-sm text-[#64748b]">Oturum bilgisi alınamadı. Lütfen sayfayı yenileyin.</p>
       <a href="/dashboard/finance" className="text-sm text-primary-600 font-semibold hover:underline">Yeniden Dene</a>
     </div>
   )
@@ -107,7 +107,7 @@ export default async function FinancePage({ searchParams }: PageProps) {
   if (!companyId) return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-center px-4">
       <div className="text-3xl">⚠️</div>
-      <p className="text-sm text-gray-500">Şirket bilgisi yüklenemedi. Lütfen sayfayı yenileyin.</p>
+      <p className="text-sm text-[#64748b]">Şirket bilgisi yüklenemedi. Lütfen sayfayı yenileyin.</p>
       <a href="/dashboard/finance" className="text-sm text-primary-600 font-semibold hover:underline">Yeniden Dene</a>
     </div>
   )
@@ -137,8 +137,8 @@ export default async function FinancePage({ searchParams }: PageProps) {
       <div className="flex items-end justify-between gap-4 flex-wrap">
         <div>
           <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Finans Merkezi</div>
-          <h1 className="text-2xl font-black tracking-tight text-gray-900 leading-tight">{meta.title}</h1>
-          <p className="text-sm text-gray-400 mt-1">{meta.sub}</p>
+          <h1 className="text-2xl font-black tracking-tight text-[#0f172a] leading-tight">{meta.title}</h1>
+          <p className="text-sm text-[#94a3b8] mt-1">{meta.sub}</p>
         </div>
         {activeTab === 'cfo' && (
           <a href="/dashboard/cfo/period-close"
@@ -148,7 +148,7 @@ export default async function FinancePage({ searchParams }: PageProps) {
         )}
         {activeTab === 'tax' && (
           <a href="/dashboard/cfo/tax/kdv"
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded border border-[#e2e8f0] text-gray-700 text-xs font-semibold hover:bg-[#f8fafc] transition-colors">
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded border border-[#e2e8f0] text-[#334155] text-xs font-semibold hover:bg-[#f8fafc] transition-colors">
             KDV Beyanı →
           </a>
         )}

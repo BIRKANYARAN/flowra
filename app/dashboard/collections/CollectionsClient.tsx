@@ -71,7 +71,7 @@ const STATUS_META = {
   paid:      { label: 'Ödendi',    bg: 'bg-pos-light', text: 'text-pos-text', border: 'border-pos-light' },
   partial:   { label: 'Kısmi',     bg: 'bg-info-light',    text: 'text-info-text',   border: 'border-info-light'   },
   overdue:   { label: 'Gecikmiş',  bg: 'bg-neg-light',     text: 'text-neg-text',    border: 'border-neg-light'    },
-  cancelled: { label: 'İptal',     bg: 'bg-[#f8fafc]',    text: 'text-gray-500',   border: 'border-[#e2e8f0]'   },
+  cancelled: { label: 'İptal',     bg: 'bg-[#f8fafc]',    text: 'text-[#64748b]',   border: 'border-[#e2e8f0]'   },
 } as const
 
 function StatusBadge({ status }: { status: string }) {
@@ -238,8 +238,8 @@ export default function CollectionsClient({ initialRows }: Props) {
     const dueDateStr    = row.due_date
       ? (isOD
         ? <span className="text-neg font-bold">{fmtDateShort(row.due_date)} GECİKTİ</span>
-        : <span className="text-gray-500">{fmtDateShort(row.due_date)}</span>)
-      : <span className="text-gray-400">{fmtDateShort(row.sale_date || row.created_at)}</span>
+        : <span className="text-[#64748b]">{fmtDateShort(row.due_date)}</span>)
+      : <span className="text-[#94a3b8]">{fmtDateShort(row.sale_date || row.created_at)}</span>
 
     return (
       <div
@@ -251,7 +251,7 @@ export default function CollectionsClient({ initialRows }: Props) {
 
           {/* Customer + proforma */}
           <div className="flex-1 min-w-0">
-            <div className="text-xs font-semibold text-gray-900 truncate">
+            <div className="text-xs font-semibold text-[#0f172a] truncate">
               {row.customer_name || '—'}
             </div>
             <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
@@ -271,13 +271,13 @@ export default function CollectionsClient({ initialRows }: Props) {
 
           {/* Amounts */}
           <div className="text-right shrink-0">
-            <div className="text-xs font-black tabular-nums text-gray-900">
+            <div className="text-xs font-black tabular-nums text-[#0f172a]">
               {row.currency !== 'TRY'
                 ? fmtForeign(row.total, row.currency)
                 : fmtTRY(row.total_try)}
             </div>
             {row.currency !== 'TRY' && (
-              <div className="text-[10px] text-gray-400 tabular-nums">
+              <div className="text-[10px] text-[#94a3b8] tabular-nums">
                 ≈ {fmtTRY(row.total_try)}
               </div>
             )}
@@ -339,7 +339,7 @@ export default function CollectionsClient({ initialRows }: Props) {
               <button
                 disabled={isPending}
                 onClick={() => patch(row.id, 'pending')}
-                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded text-[11px] font-medium bg-[#f8fafc] text-gray-500 hover:bg-gray-100 border border-[#e2e8f0] transition-colors disabled:opacity-50"
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded text-[11px] font-medium bg-[#f8fafc] text-[#64748b] hover:bg-[#f1f5f9] border border-[#e2e8f0] transition-colors disabled:opacity-50"
               >
                 ↩ Geri Al
               </button>
@@ -377,7 +377,7 @@ export default function CollectionsClient({ initialRows }: Props) {
             </button>
             <button
               onClick={() => { setPartialId(null); setPartialAmt(''); setPartialErr('') }}
-              className="px-2.5 py-1.5 rounded text-[11px] font-semibold text-gray-500 hover:bg-gray-100 transition-colors shrink-0"
+              className="px-2.5 py-1.5 rounded text-[11px] font-semibold text-[#64748b] hover:bg-[#f1f5f9] transition-colors shrink-0"
             >
               İptal
             </button>
@@ -396,7 +396,7 @@ export default function CollectionsClient({ initialRows }: Props) {
         <div className="flex items-center gap-2 flex-wrap">
           {/* Customer search */}
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm select-none">⌕</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94a3b8] text-sm select-none">⌕</span>
             <input
               type="text"
               placeholder="Müşteri ara…"
@@ -407,26 +407,26 @@ export default function CollectionsClient({ initialRows }: Props) {
             {search && (
               <button
                 onClick={() => setSearch('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#94a3b8] hover:text-[#64748b]"
               >
                 ✕
               </button>
             )}
           </div>
           {/* Tab switcher */}
-          <div className="flex gap-1 bg-gray-100 rounded p-1">
+          <div className="flex gap-1 bg-[#f1f5f9] rounded p-1">
             {TABS.map(t => (
               <button
                 key={t.key}
                 onClick={() => setTab(t.key)}
                 className={`px-3 py-1.5 rounded text-xs font-semibold transition-colors flex items-center gap-1.5 ${
-                  tab === t.key ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                  tab === t.key ? 'bg-white text-[#0f172a] shadow-sm' : 'text-[#64748b] hover:text-[#334155]'
                 }`}
               >
                 {t.label}
                 {t.count !== undefined && !loading && (
                   <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                    tab === t.key ? 'bg-gray-100 text-gray-600' : 'bg-gray-200 text-gray-500'
+                    tab === t.key ? 'bg-[#f1f5f9] text-[#64748b]' : 'bg-[#e2e8f0] text-[#64748b]'
                   }`}>
                     {t.count}
                   </span>
@@ -441,10 +441,10 @@ export default function CollectionsClient({ initialRows }: Props) {
       <div className="grid grid-cols-3 gap-2">
         <div className="bg-white rounded border border-[#e2e8f0] px-4 py-3 shadow-sm">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Gösterilen</div>
-          <div className="text-xl font-black tabular-nums text-gray-900">
+          <div className="text-xl font-black tabular-nums text-[#0f172a]">
             {loading ? '—' : fmtTRY(displayRows.reduce((s, r) => s + (r.total_try ?? 0), 0))}
           </div>
-          <div className="text-[10px] text-gray-400 mt-0.5">
+          <div className="text-[10px] text-[#94a3b8] mt-0.5">
             {search ? `${displayRows.length} / ${rows.length} kayıt` : `${rows.length} kayıt`}
           </div>
         </div>
@@ -453,7 +453,7 @@ export default function CollectionsClient({ initialRows }: Props) {
           <div className="text-xl font-black tabular-nums text-warn-text">
             {loading ? '—' : fmtTRY(unpaidTotal)}
           </div>
-          <div className="text-[10px] text-gray-400 mt-0.5">
+          <div className="text-[10px] text-[#94a3b8] mt-0.5">
             {overdueRows.length > 0 && (
               <span className="text-neg font-semibold">{overdueRows.length} gecikmiş · </span>
             )}
@@ -465,7 +465,7 @@ export default function CollectionsClient({ initialRows }: Props) {
           <div className="text-xl font-black tabular-nums text-pos-text">
             {loading ? '—' : fmtTRY(paidTotal)}
           </div>
-          <div className="text-[10px] text-gray-400 mt-0.5">
+          <div className="text-[10px] text-[#94a3b8] mt-0.5">
             {displayRows.filter(r => r.payment_status === 'paid').length} satış
           </div>
         </div>
@@ -489,7 +489,7 @@ export default function CollectionsClient({ initialRows }: Props) {
         ) : displayRows.length === 0 ? (
           <div className="py-16 text-center">
             <div className="text-2xl mb-2">{search ? '🔍' : '🎉'}</div>
-            <div className="text-sm text-gray-400">
+            <div className="text-sm text-[#94a3b8]">
               {search
                 ? `"${search}" için eşleşen kayıt bulunamadı`
                 : tab === 'pending' ? 'Bekleyen tahsilat yok' : 'Bu filtrede kayıt yok'}
@@ -536,7 +536,7 @@ export default function CollectionsClient({ initialRows }: Props) {
 
       {/* Footer note */}
       {!loading && rows.length > 0 && (
-        <p className="text-[10px] text-gray-400 text-center">
+        <p className="text-[10px] text-[#94a3b8] text-center">
           {search
             ? `${displayRows.length} sonuç gösteriliyor — toplam ${rows.length} kayıt`
             : `${rows.length} kayıt`

@@ -84,23 +84,23 @@ export async function TasksContent({ companyId }: Props) {
   return (
     <div className="max-w-3xl space-y-6">
       <div>
-        <h2 className="text-xl font-black text-gray-900 tracking-tight">Görevler</h2>
-        <p className="text-xs text-gray-400 mt-0.5">Hafif CRM — takip ve hatırlatma · {tasks.length} kayıt</p>
+        <h2 className="text-xl font-black text-[#0f172a] tracking-tight">Görevler</h2>
+        <p className="text-xs text-[#94a3b8] mt-0.5">Hafif CRM — takip ve hatırlatma · {tasks.length} kayıt</p>
       </div>
 
       {/* KPI Strip */}
       {tasks.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
           {[
-            { label: 'Açık Görev',       value: String(statusCounts.open ?? 0),   sub: 'bekliyor',          color: statusCounts.open > 0 ? 'text-info-text' : 'text-gray-400' },
+            { label: 'Açık Görev',       value: String(statusCounts.open ?? 0),   sub: 'bekliyor',          color: statusCounts.open > 0 ? 'text-info-text' : 'text-[#94a3b8]' },
             { label: 'Vadesi Geçmiş',    value: overdue > 0 ? String(overdue) : '—', sub: overdue > 0 ? 'hemen ele alınmalı' : 'gecikmiş yok ✓', color: overdue > 0 ? 'text-neg' : 'text-pos-text' },
-            { label: 'Bu Hafta Vade',    value: thisWeek > 0 ? String(thisWeek) : '—', sub: thisWeek > 0 ? '7 gün içinde' : 'yaklaşan yok', color: thisWeek > 0 ? 'text-warn-text' : 'text-gray-400' },
-            { label: 'Tamamlanma Oranı', value: tasks.length > 0 ? `%${compRate}` : '—', sub: `${statusCounts.done ?? 0} tamamlandı · ${statusCounts.cancelled ?? 0} iptal`, color: compRate >= 70 ? 'text-pos-text' : compRate >= 40 ? 'text-warn-text' : 'text-gray-500' },
+            { label: 'Bu Hafta Vade',    value: thisWeek > 0 ? String(thisWeek) : '—', sub: thisWeek > 0 ? '7 gün içinde' : 'yaklaşan yok', color: thisWeek > 0 ? 'text-warn-text' : 'text-[#94a3b8]' },
+            { label: 'Tamamlanma Oranı', value: tasks.length > 0 ? `%${compRate}` : '—', sub: `${statusCounts.done ?? 0} tamamlandı · ${statusCounts.cancelled ?? 0} iptal`, color: compRate >= 70 ? 'text-pos-text' : compRate >= 40 ? 'text-warn-text' : 'text-[#64748b]' },
           ].map((card, i) => (
             <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e2e8f0]' : ''}`}>
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
               <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
-              <div className="text-[10px] text-gray-400 mt-1">{card.sub}</div>
+              <div className="text-[10px] text-[#94a3b8] mt-1">{card.sub}</div>
             </div>
           ))}
         </div>
@@ -128,14 +128,14 @@ export async function TasksContent({ companyId }: Props) {
 
       {/* Cross-navigation */}
       <div className="flex items-center justify-between px-1">
-        <p className="text-[10px] text-gray-400 leading-relaxed">
+        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
           Görevler tahsilat ve satış akışıyla koordineli yönetilmeli.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
           <Link href="/dashboard/commercial?tab=collections" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Tahsilat →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/commercial?tab=pipeline" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Satış Akışı →
           </Link>

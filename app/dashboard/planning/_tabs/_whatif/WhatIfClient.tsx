@@ -455,16 +455,16 @@ export function WhatIfClient({ period, baseline }: Props) {
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-gray-700">Kurumlar Vergisi Oranı</span>
-              <span className="text-xs font-black tabular-nums text-gray-900">%{taxRateOverride}</span>
+              <span className="text-xs font-semibold text-[#334155]">Kurumlar Vergisi Oranı</span>
+              <span className="text-xs font-black tabular-nums text-[#0f172a]">%{taxRateOverride}</span>
             </div>
             <input
               type="range" min={0} max={40} step={1}
               value={taxRateOverride}
               onChange={e => setTaxRateOverride(Number(e.target.value))}
-              className="w-full h-1.5 appearance-none rounded-full bg-gray-200 accent-primary-600 cursor-pointer"
+              className="w-full h-1.5 appearance-none rounded-full bg-[#e2e8f0] accent-primary-600 cursor-pointer"
             />
-            <div className="text-[9px] text-gray-400">Mevcut KVK oranı %25 · Bu tahminidir</div>
+            <div className="text-[9px] text-[#94a3b8]">Mevcut KVK oranı %25 · Bu tahminidir</div>
           </div>
 
           {/* Reset + Save buttons */}
@@ -472,7 +472,7 @@ export function WhatIfClient({ period, baseline }: Props) {
             {(revChange !== 0 || expChange !== 0 || cogsChange !== 0 || collDelay !== 0 || debtChange !== 0 || taxRateOverride !== 25) && (
               <button
                 onClick={() => { setRevChange(0); setExpChange(0); setCogsChange(0); setCollDelay(0); setDebtChange(0); setTaxRateOverride(25) }}
-                className="text-xs font-semibold text-gray-500 hover:text-gray-700 border border-[#e2e8f0] px-3 py-1.5 rounded hover:border-[#e2e8f0] transition-colors"
+                className="text-xs font-semibold text-[#64748b] hover:text-[#334155] border border-[#e2e8f0] px-3 py-1.5 rounded hover:border-[#e2e8f0] transition-colors"
               >
                 ↺ Bazı Sıfırla
               </button>
@@ -511,7 +511,7 @@ export function WhatIfClient({ period, baseline }: Props) {
                   Kaydet
                 </button>
               </div>
-              <div className="text-[9px] text-gray-400 flex items-center gap-1">
+              <div className="text-[9px] text-[#94a3b8] flex items-center gap-1">
                 <span>☁</span>
                 <span>Buluta kaydedilir · tüm cihazlarda erişilebilir</span>
               </div>
@@ -524,8 +524,8 @@ export function WhatIfClient({ period, baseline }: Props) {
               <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
                   Kayıtlı Senaryolar
-                  {scenariosLoading && <span className="inline-block w-3 h-3 border border-[#e2e8f0] border-t-gray-500 rounded-full animate-spin" />}
-                  {!scenariosLoading && saved.length > 0 && <span className="font-normal text-gray-300">({saved.length})</span>}
+                  {scenariosLoading && <span className="inline-block w-3 h-3 border border-[#e2e8f0] border-t-[#64748b] rounded-full animate-spin" />}
+                  {!scenariosLoading && saved.length > 0 && <span className="font-normal text-[#cbd5e1]">({saved.length})</span>}
                 </div>
                 {!scenariosLoading && saved.length >= 2 && (
                   <button
@@ -533,7 +533,7 @@ export function WhatIfClient({ period, baseline }: Props) {
                     className={`text-[9px] font-bold px-2 py-0.5 rounded border transition-colors ${
                       compareMode
                         ? 'bg-primary-600 text-white border-primary-600'
-                        : 'border-[#e2e8f0] text-gray-500 hover:border-primary-300 hover:text-primary-600'
+                        : 'border-[#e2e8f0] text-[#64748b] hover:border-primary-300 hover:text-primary-600'
                     }`}
                   >
                     {compareMode ? '✕ Kapat' : '⇄ Karşılaştır'}
@@ -576,18 +576,18 @@ export function WhatIfClient({ period, baseline }: Props) {
                     )}
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5">
-                        <div className="text-[11px] font-bold text-gray-800 truncate">{s.name}</div>
+                        <div className="text-[11px] font-bold text-[#1e293b] truncate">{s.name}</div>
                         {isBaseline && (
                           <span className="flex-shrink-0 text-[8px] font-black uppercase tracking-wide bg-brand-subtle text-brand px-1.5 py-0.5 rounded">
                             ★ Referans
                           </span>
                         )}
                       </div>
-                      <div className="text-[9px] text-gray-400 flex gap-2 mt-0.5 flex-wrap">
+                      <div className="text-[9px] text-[#94a3b8] flex gap-2 mt-0.5 flex-wrap">
                         <span className={netColor}>Net: {s.summary.netIncome >= 0 ? '+' : ''}₺{fmt(s.summary.netIncome)}</span>
                         <span>Marj: {pct(s.summary.grossMarginPct)}</span>
                         {s.summary.runwayMonths !== null && (
-                          <span className={s.summary.runwayMonths < 3 ? 'text-neg' : 'text-gray-400'}>
+                          <span className={s.summary.runwayMonths < 3 ? 'text-neg' : 'text-[#94a3b8]'}>
                             Runway: {s.summary.runwayMonths.toFixed(1)}ay
                           </span>
                         )}
@@ -614,7 +614,7 @@ export function WhatIfClient({ period, baseline }: Props) {
                         <button
                           onClick={() => deleteSaved(s.id)}
                           title="Sil"
-                          className="text-[9px] text-gray-400 hover:text-neg border border-[#e2e8f0] rounded px-1.5 py-1 hover:bg-neg-light transition-colors"
+                          className="text-[9px] text-[#94a3b8] hover:text-neg border border-[#e2e8f0] rounded px-1.5 py-1 hover:bg-neg-light transition-colors"
                         >
                           ✕
                         </button>
@@ -667,8 +667,8 @@ export function WhatIfClient({ period, baseline }: Props) {
                   <div />
                   {cols.map((s, i) => (
                     <div key={s.id} className="text-center">
-                      <div className="text-[9px] font-black text-gray-700 truncate leading-tight" title={s.name}>{s.name}</div>
-                      <div className="text-[8px] text-gray-400">{i === bestIdx(computed.map(r => r.netIncome), true) ? '🏆 en iyi' : ''}</div>
+                      <div className="text-[9px] font-black text-[#334155] truncate leading-tight" title={s.name}>{s.name}</div>
+                      <div className="text-[8px] text-[#94a3b8]">{i === bestIdx(computed.map(r => r.netIncome), true) ? '🏆 en iyi' : ''}</div>
                     </div>
                   ))}
                 </div>
@@ -679,14 +679,14 @@ export function WhatIfClient({ period, baseline }: Props) {
                     const best = bestIdx(vals, row.higherIsBetter)
                     return (
                       <div key={row.label} className={`grid gap-1 px-3 py-2 items-center ${row.divider ? 'border-t border-[#e2e8f0] bg-[#f8fafc]/30' : ''}`} style={{ gridTemplateColumns: `5rem repeat(${cols.length}, 1fr)` }}>
-                        <div className="text-[9px] font-semibold text-gray-500">{row.label}</div>
+                        <div className="text-[9px] font-semibold text-[#64748b]">{row.label}</div>
                         {vals.map((v, i) => (
                           <div key={i} className={`text-center text-[10px] font-black tabular-nums rounded py-0.5 ${
                             i === best
                               ? row.higherIsBetter
                                 ? 'text-pos-text bg-pos-light'
                                 : 'text-pos-text bg-pos-light'
-                              : v < 0 ? 'text-neg' : 'text-gray-700'
+                              : v < 0 ? 'text-neg' : 'text-[#334155]'
                           }`}>
                             {row.fmt(v)}
                           </div>
@@ -696,7 +696,7 @@ export function WhatIfClient({ period, baseline }: Props) {
                   })}
                   {hasRunway && (
                     <div className="grid gap-1 px-3 py-2 items-center" style={{ gridTemplateColumns: `5rem repeat(${cols.length}, 1fr)` }}>
-                      <div className="text-[9px] font-semibold text-gray-500">Runway</div>
+                      <div className="text-[9px] font-semibold text-[#64748b]">Runway</div>
                       {computed.map((r, i) => (
                         <div key={i} className={`text-center text-[10px] font-black tabular-nums ${r.runwayMonths === null ? 'text-pos-text' : r.runwayMonths < 3 ? 'text-neg' : 'text-warn-text'}`}>
                           {r.runwayMonths === null ? '∞' : `${r.runwayMonths.toFixed(1)}ay`}
@@ -707,7 +707,7 @@ export function WhatIfClient({ period, baseline }: Props) {
                 </div>
                 {/* Load best scenario CTA */}
                 <div className="px-3 py-2 border-t border-[#e2e8f0] bg-[#f8fafc]/40 flex items-center justify-between">
-                  <span className="text-[9px] text-gray-400">En iyi Net Kâr: <strong className="text-gray-700">{cols[bestIdx(computed.map(r => r.netIncome), true)]?.name}</strong></span>
+                  <span className="text-[9px] text-[#94a3b8]">En iyi Net Kâr: <strong className="text-[#334155]">{cols[bestIdx(computed.map(r => r.netIncome), true)]?.name}</strong></span>
                   <button
                     onClick={() => restoreScenario(cols[bestIdx(computed.map(r => r.netIncome), true)]!)}
                     className="text-[9px] font-bold text-primary-600 border border-primary-200 px-2 py-1 rounded hover:bg-primary-50 transition-colors"
@@ -752,7 +752,7 @@ export function WhatIfClient({ period, baseline }: Props) {
               <div className={`text-lg font-black tabular-nums ${result.vatNet > 0 ? 'text-orange-600' : 'text-pos-text'}`}>
                 {result.vatNet > 0 ? '+' : ''}₺{fmt(result.vatNet)}
               </div>
-              <div className="text-[9px] text-gray-400 mt-0.5">{result.vatNet > 0 ? 'ödenecek' : 'devreden'}</div>
+              <div className="text-[9px] text-[#94a3b8] mt-0.5">{result.vatNet > 0 ? 'ödenecek' : 'devreden'}</div>
             </div>
           </div>
 
@@ -763,12 +763,12 @@ export function WhatIfClient({ period, baseline }: Props) {
             </div>
             <div className="px-4 py-3 space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] text-gray-500">Tahsil edilen (bu ay)</span>
-                <span className="text-[11px] font-black tabular-nums text-gray-800">₺{fmtFull(result.cashCollected)}</span>
+                <span className="text-[10px] text-[#64748b]">Tahsil edilen (bu ay)</span>
+                <span className="text-[11px] font-black tabular-nums text-[#1e293b]">₺{fmtFull(result.cashCollected)}</span>
               </div>
               {result.runwayMonths !== null && (
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-gray-500">Tahmini runway</span>
+                  <span className="text-[10px] text-[#64748b]">Tahmini runway</span>
                   <span className={`text-[11px] font-black tabular-nums ${result.runwayMonths < 3 ? 'text-neg' : 'text-warn-text'}`}>
                     {result.runwayMonths.toFixed(1)} ay
                   </span>
@@ -776,20 +776,20 @@ export function WhatIfClient({ period, baseline }: Props) {
               )}
               <div className="border-t border-[#f1f5f9] pt-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-gray-500">Dağıtılabilir (brüt)</span>
-                  <span className={`text-[11px] font-black tabular-nums ${result.distributable > 0 ? 'text-pos-text' : 'text-gray-400'}`}>
+                  <span className="text-[10px] text-[#64748b]">Dağıtılabilir (brüt)</span>
+                  <span className={`text-[11px] font-black tabular-nums ${result.distributable > 0 ? 'text-pos-text' : 'text-[#94a3b8]'}`}>
                     {result.distributable > 0 ? `₺${fmtFull(result.distributable)}` : '—'}
                   </span>
                 </div>
                 <div className="flex items-center justify-between mt-1">
-                  <span className="text-[10px] text-gray-500">− Stopaj (%10)</span>
-                  <span className="text-[11px] tabular-nums text-gray-500">
+                  <span className="text-[10px] text-[#64748b]">− Stopaj (%10)</span>
+                  <span className="text-[11px] tabular-nums text-[#64748b]">
                     {result.distributable > 0 ? `−₺${fmtFull(result.dividendWH ?? 0)}` : '—'}
                   </span>
                 </div>
                 <div className="flex items-center justify-between mt-1">
-                  <span className="text-[10px] font-semibold text-gray-700">Net Dağıtım</span>
-                  <span className={`text-[12px] font-black tabular-nums ${result.netDistrib > 0 ? 'text-pos-text' : 'text-gray-400'}`}>
+                  <span className="text-[10px] font-semibold text-[#334155]">Net Dağıtım</span>
+                  <span className={`text-[12px] font-black tabular-nums ${result.netDistrib > 0 ? 'text-pos-text' : 'text-[#94a3b8]'}`}>
                     {result.netDistrib > 0 ? `₺${fmtFull(result.netDistrib)}` : '—'}
                   </span>
                 </div>
@@ -824,7 +824,7 @@ export function WhatIfClient({ period, baseline }: Props) {
                         impact.severity === 'critical' ? 'bg-neg' :
                         impact.severity === 'warn'     ? 'bg-warn' : 'bg-pos'
                       }`} />
-                      <span className="text-[10px] font-bold text-gray-600">{impact.label}</span>
+                      <span className="text-[10px] font-bold text-[#64748b]">{impact.label}</span>
                     </div>
                     <span className={`text-[10px] font-semibold tabular-nums text-right leading-snug ${
                       impact.severity === 'critical' ? 'text-neg-text' :
@@ -860,21 +860,21 @@ function SliderRow({
 }) {
   const isChanged = value !== 0
   const isGood    = positiveGood ? value > 0 : value < 0
-  const valueColor = !isChanged ? 'text-gray-500' : isGood ? 'text-pos-text' : 'text-neg'
+  const valueColor = !isChanged ? 'text-[#64748b]' : isGood ? 'text-pos-text' : 'text-neg'
 
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-gray-700">{label}</span>
+        <span className="text-xs font-semibold text-[#334155]">{label}</span>
         <span className={`text-xs font-black tabular-nums ${valueColor}`}>{display}</span>
       </div>
       <input
         type="range" min={min} max={max} step={step}
         value={value}
         onChange={e => onChange(Number(e.target.value))}
-        className="w-full h-1.5 appearance-none rounded-full bg-gray-200 accent-primary-600 cursor-pointer"
+        className="w-full h-1.5 appearance-none rounded-full bg-[#e2e8f0] accent-primary-600 cursor-pointer"
       />
-      <div className="text-[9px] text-gray-400">{sub}</div>
+      <div className="text-[9px] text-[#94a3b8]">{sub}</div>
     </div>
   )
 }
@@ -895,12 +895,12 @@ function PnlRow({
   const deltaColor = changed
     ? (positive ? (value > base ? 'text-pos-text' : 'text-neg')
                 : (value < base ? 'text-pos-text' : 'text-neg'))
-    : 'text-gray-300'
+    : 'text-[#cbd5e1]'
 
   return (
     <div className={`flex items-center justify-between px-4 py-2 ${accent ? 'bg-[#f8fafc]/60' : ''}`}
          style={{ paddingLeft: `${16 + indent * 12}px` }}>
-      <span className={`text-[10px] ${bold ? 'font-black text-gray-800' : 'text-gray-500'}`}>{label}</span>
+      <span className={`text-[10px] ${bold ? 'font-black text-[#1e293b]' : 'text-[#64748b]'}`}>{label}</span>
       <div className="flex items-center gap-2">
         {changed && (
           <span className={`text-[9px] font-semibold tabular-nums ${deltaColor}`}>
@@ -911,7 +911,7 @@ function PnlRow({
         )}
         <span className={`text-[11px] tabular-nums ${bold ? 'font-black' : 'font-semibold'} ${
           accent ? (value >= 0 ? 'text-pos-text' : 'text-neg')
-                 : (value >= 0 ? 'text-gray-800'    : 'text-neg')
+                 : (value >= 0 ? 'text-[#1e293b]'    : 'text-neg')
         }`}>
           {value >= 0 ? '' : '−'}₺{fmt(Math.abs(value))}
         </span>

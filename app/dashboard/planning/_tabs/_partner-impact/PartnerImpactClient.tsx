@@ -130,8 +130,8 @@ export function PartnerImpactClient({
     return (
       <div className="bg-white border border-[#e2e8f0] rounded p-10 text-center">
         <div className="text-3xl mb-3">👥</div>
-        <div className="text-sm font-semibold text-gray-700 mb-1">Ortak bulunamadı</div>
-        <div className="text-xs text-gray-400 mb-4">
+        <div className="text-sm font-semibold text-[#334155] mb-1">Ortak bulunamadı</div>
+        <div className="text-xs text-[#94a3b8] mb-4">
           Dağıtım analizi için önce ortak eklemeniz gerekiyor.
         </div>
         <Link
@@ -151,34 +151,34 @@ export function PartnerImpactClient({
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
           <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Nakit Bakiye</div>
-          <div className={`text-lg font-black tabular-nums ${cashBalance >= 0 ? 'text-gray-900' : 'text-neg'}`}>
+          <div className={`text-lg font-black tabular-nums ${cashBalance >= 0 ? 'text-[#0f172a]' : 'text-neg'}`}>
             {fmt(cashBalance)}
           </div>
-          <div className="text-[10px] text-gray-400 mt-0.5">tahsil − ödenen</div>
+          <div className="text-[10px] text-[#94a3b8] mt-0.5">tahsil − ödenen</div>
         </div>
 
         <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
           <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Dağıtılabilir</div>
-          <div className={`text-lg font-black tabular-nums ${cashDistributable > 0 ? 'text-pos-text' : 'text-gray-400'}`}>
+          <div className={`text-lg font-black tabular-nums ${cashDistributable > 0 ? 'text-pos-text' : 'text-[#94a3b8]'}`}>
             {cashDistributable > 0 ? fmt(cashDistributable) : '—'}
           </div>
-          <div className="text-[10px] text-gray-400 mt-0.5">yükümlülükler düşülmüş</div>
+          <div className="text-[10px] text-[#94a3b8] mt-0.5">yükümlülükler düşülmüş</div>
         </div>
 
         <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
           <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Net Gelir (Tahakkuk)</div>
-          <div className={`text-lg font-black tabular-nums ${netIncome >= 0 ? 'text-gray-900' : 'text-neg'}`}>
+          <div className={`text-lg font-black tabular-nums ${netIncome >= 0 ? 'text-[#0f172a]' : 'text-neg'}`}>
             {fmt(netIncome)}
           </div>
-          <div className="text-[10px] text-gray-400 mt-0.5">vergi sonrası</div>
+          <div className="text-[10px] text-[#94a3b8] mt-0.5">vergi sonrası</div>
         </div>
 
         <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
           <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Toplam Ortak Borcu</div>
-          <div className={`text-lg font-black tabular-nums ${totalLoanBalance > 0 ? 'text-warn-text' : 'text-gray-400'}`}>
+          <div className={`text-lg font-black tabular-nums ${totalLoanBalance > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>
             {totalLoanBalance > 0 ? fmt(totalLoanBalance) : 'Yok'}
           </div>
-          <div className="text-[10px] text-gray-400 mt-0.5">{partnerCount} aktif ortak</div>
+          <div className="text-[10px] text-[#94a3b8] mt-0.5">{partnerCount} aktif ortak</div>
         </div>
       </div>
 
@@ -205,7 +205,7 @@ export function PartnerImpactClient({
         <div className="flex items-center justify-between px-5 py-3 border-b border-[#f1f5f9]">
           <div>
             <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Dağıtım Simülatörü</div>
-            <div className="text-[10px] text-gray-400 mt-0.5">
+            <div className="text-[10px] text-[#94a3b8] mt-0.5">
               Kaydırıcıyla dağıtılacak tutarı değiştirin, payları canlı görün
             </div>
           </div>
@@ -213,12 +213,12 @@ export function PartnerImpactClient({
             {sliderActive && (
               <button
                 onClick={() => { setSimAmount(Math.max(0, Math.round(cashDistributable))); setSliderActive(false) }}
-                className="text-[10px] font-semibold text-gray-500 hover:text-gray-700 px-2 py-1 rounded border border-[#e2e8f0] hover:bg-[#f8fafc]"
+                className="text-[10px] font-semibold text-[#64748b] hover:text-[#334155] px-2 py-1 rounded border border-[#e2e8f0] hover:bg-[#f8fafc]"
               >
                 Sıfırla
               </button>
             )}
-            <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${sliderActive ? 'bg-primary-100 text-primary-700' : 'bg-gray-100 text-gray-500'}`}>
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${sliderActive ? 'bg-primary-100 text-primary-700' : 'bg-[#f1f5f9] text-[#64748b]'}`}>
               {sliderActive ? 'Simülasyon' : 'Canlı'}
             </span>
           </div>
@@ -235,19 +235,19 @@ export function PartnerImpactClient({
                 step={Math.round(maxSlider / 200)}
                 value={Math.round(displayAmount)}
                 onChange={e => { setSimAmount(Number(e.target.value)); setSliderActive(true) }}
-                className="w-full h-2 rounded-full appearance-none bg-gray-200 accent-primary-600 cursor-pointer"
+                className="w-full h-2 rounded-full appearance-none bg-[#e2e8f0] accent-primary-600 cursor-pointer"
               />
-              <div className="flex justify-between text-[9px] text-gray-400 mt-1">
+              <div className="flex justify-between text-[9px] text-[#94a3b8] mt-1">
                 <span>₺0</span>
                 <span>{fmt(maxSlider / 2)}</span>
                 <span>{fmt(maxSlider)}</span>
               </div>
             </div>
             <div className="flex-shrink-0 text-right">
-              <div className={`text-xl font-black tabular-nums ${displayAmount > 0 ? 'text-primary-700' : 'text-gray-400'}`}>
+              <div className={`text-xl font-black tabular-nums ${displayAmount > 0 ? 'text-primary-700' : 'text-[#94a3b8]'}`}>
                 {fmt(displayAmount)}
               </div>
-              <div className="text-[9px] text-gray-400">dağıtılacak</div>
+              <div className="text-[9px] text-[#94a3b8]">dağıtılacak</div>
             </div>
           </div>
 
@@ -291,10 +291,10 @@ export function PartnerImpactClient({
                 {displayEntries.map(e => (
                   <tr key={e.partner_id} className="hover:bg-[#f8fafc]/50">
                     <td className="px-5 py-3">
-                      <div className="font-semibold text-gray-900">{e.partner_name}</div>
-                      <div className="text-[10px] text-gray-400">{pct(e.share_ratio)} hisse</div>
+                      <div className="font-semibold text-[#0f172a]">{e.partner_name}</div>
+                      <div className="text-[10px] text-[#94a3b8]">{pct(e.share_ratio)} hisse</div>
                     </td>
-                    <td className="px-4 py-3 text-right font-mono text-[11px] text-gray-500">
+                    <td className="px-4 py-3 text-right font-mono text-[11px] text-[#64748b]">
                       {pct(e.share_ratio)}
                     </td>
                     {hasEqualization && (
@@ -302,12 +302,12 @@ export function PartnerImpactClient({
                         {e.equalization_amount > 0 ? (
                           <span className="font-mono text-[11px] text-info-text">{fmt(e.equalization_amount)}</span>
                         ) : (
-                          <span className="text-[10px] text-gray-300">—</span>
+                          <span className="text-[10px] text-[#cbd5e1]">—</span>
                         )}
                       </td>
                     )}
-                    <td className="px-4 py-3 text-right font-mono text-[11px] text-gray-600">
-                      {e.pro_rata_share > 0 ? fmt(e.pro_rata_share) : <span className="text-gray-300">—</span>}
+                    <td className="px-4 py-3 text-right font-mono text-[11px] text-[#64748b]">
+                      {e.pro_rata_share > 0 ? fmt(e.pro_rata_share) : <span className="text-[#cbd5e1]">—</span>}
                     </td>
                     <td className="px-5 py-3 text-right">
                       <span className="font-black text-[13px] text-pos-text tabular-nums">{fmt(e.total_payout)}</span>
@@ -339,11 +339,11 @@ export function PartnerImpactClient({
           </div>
         ) : displayAmount <= 0 ? (
           <div className="px-5 py-6 text-center">
-            <div className="text-sm text-gray-400">Kaydırıcıyı hareket ettirerek dağıtım senaryosunu simüle edin</div>
+            <div className="text-sm text-[#94a3b8]">Kaydırıcıyı hareket ettirerek dağıtım senaryosunu simüle edin</div>
           </div>
         ) : (
           <div className="px-5 py-6 text-center">
-            <div className="text-sm text-gray-400">Ortak verisi yükleniyor…</div>
+            <div className="text-sm text-[#94a3b8]">Ortak verisi yükleniyor…</div>
           </div>
         )}
       </div>
@@ -364,20 +364,20 @@ export function PartnerImpactClient({
                 <div key={e.partner_id} className="px-5 py-3 flex items-center gap-4">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2 mb-1">
-                      <span className="text-sm font-semibold text-gray-900">{e.partner_name}</span>
-                      <span className={`text-sm font-black tabular-nums ${e.loan_balance_try > 0 ? 'text-warn-text' : 'text-gray-400'}`}>
+                      <span className="text-sm font-semibold text-[#0f172a]">{e.partner_name}</span>
+                      <span className={`text-sm font-black tabular-nums ${e.loan_balance_try > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>
                         {e.loan_balance_try > 0 ? fmt(e.loan_balance_try) : 'Yok'}
                       </span>
                     </div>
                     {e.loan_balance_try > 0 && (
                       <div className="flex items-center gap-2">
-                        <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                        <div className="flex-1 h-1.5 bg-[#f1f5f9] rounded-full overflow-hidden">
                           <div
                             className="h-full bg-warn rounded-full"
                             style={{ width: `${Math.min(100, loanPct)}%` }}
                           />
                         </div>
-                        <span className="text-[9px] text-gray-400 flex-shrink-0 tabular-nums">
+                        <span className="text-[9px] text-[#94a3b8] flex-shrink-0 tabular-nums">
                           %{loanPct.toFixed(0)} payı
                         </span>
                       </div>
@@ -391,7 +391,7 @@ export function PartnerImpactClient({
       )}
 
       {/* ── Footer: go deeper ─────────────────────────────────────────────── */}
-      <div className="flex items-center gap-3 text-[11px] text-gray-400 flex-wrap">
+      <div className="flex items-center gap-3 text-[11px] text-[#94a3b8] flex-wrap">
         <span>Daha ayrıntılı analiz için:</span>
         <Link href="/dashboard/partners" className="text-primary-600 font-semibold hover:underline">
           Ortak Merkezi →

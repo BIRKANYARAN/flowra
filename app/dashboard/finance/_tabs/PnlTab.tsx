@@ -44,20 +44,20 @@ function WRow({ label, value, sub, isTotal, isDeduction, isSub }: {
   isTotal?: boolean; isDeduction?: boolean; isSub?: boolean
 }) {
   const labelClass = isTotal
-    ? 'text-xs font-black text-gray-900'
-    : isSub ? 'text-[11px] font-medium text-gray-400 pl-4'
-    : 'text-xs font-semibold text-gray-600'
+    ? 'text-xs font-black text-[#0f172a]'
+    : isSub ? 'text-[11px] font-medium text-[#94a3b8] pl-4'
+    : 'text-xs font-semibold text-[#64748b]'
   const valueClass = isTotal
     ? `text-sm font-black ${value >= 0 ? 'text-pos-text' : 'text-neg'}`
     : isDeduction
     ? 'text-xs font-bold text-neg'
-    : `text-xs font-bold ${value >= 0 ? 'text-gray-800' : 'text-neg'}`
+    : `text-xs font-bold ${value >= 0 ? 'text-[#1e293b]' : 'text-neg'}`
 
   return (
     <div className={`flex items-center justify-between gap-2 py-1.5 ${isTotal ? 'border-t border-dashed border-[#e2e8f0] mt-1' : ''}`}>
       <div className="min-w-0">
         <span className={labelClass}>{label}</span>
-        {sub && <span className="text-[9px] text-gray-400 ml-1.5">{sub}</span>}
+        {sub && <span className="text-[9px] text-[#94a3b8] ml-1.5">{sub}</span>}
       </div>
       <span className={`tabular-nums shrink-0 ${valueClass}`}>
         {isDeduction ? `(${fmtFull(Math.abs(value))})` : fmtFull(value)}
@@ -132,11 +132,11 @@ export async function PnlTab({ userId, companyId }: Props) {
   if (!s) {
     return (
       <div className="bg-white border border-[#e2e8f0] rounded text-center py-16 shadow-sm">
-        <div className="w-8 h-8 rounded-full bg-gray-100 mx-auto mb-3 flex items-center justify-center">
-          <span className="text-gray-400 text-sm font-bold">—</span>
+        <div className="w-8 h-8 rounded-full bg-[#f1f5f9] mx-auto mb-3 flex items-center justify-center">
+          <span className="text-[#94a3b8] text-sm font-bold">—</span>
         </div>
-        <p className="text-gray-500 font-medium text-sm">Bu dönem için finansal veri bulunamadı.</p>
-        <p className="text-gray-400 text-xs mt-1">Satış veya gider eklendiğinde gelir tablosu otomatik hesaplanır.</p>
+        <p className="text-[#64748b] font-medium text-sm">Bu dönem için finansal veri bulunamadı.</p>
+        <p className="text-[#94a3b8] text-xs mt-1">Satış veya gider eklendiğinde gelir tablosu otomatik hesaplanır.</p>
       </div>
     )
   }
@@ -214,8 +214,8 @@ export async function PnlTab({ userId, companyId }: Props) {
             <WRow label="− Operasyonel Giderler" value={expenses} isDeduction isSub />
             {expenseByCategory.length > 0 && expenseByCategory.map(({ cat, label, total }) => (
               <div key={cat} className="flex items-center justify-between gap-2 py-1 pl-6">
-                <span className="text-[10px] text-gray-400 font-medium truncate">{label}</span>
-                <span className="text-[10px] tabular-nums text-gray-500 font-semibold shrink-0">
+                <span className="text-[10px] text-[#94a3b8] font-medium truncate">{label}</span>
+                <span className="text-[10px] tabular-nums text-[#64748b] font-semibold shrink-0">
                   ({fmtFull(total)})
                 </span>
               </div>
@@ -242,7 +242,7 @@ export async function PnlTab({ userId, companyId }: Props) {
               { label: 'Net KDV',           value: netVat,      color: netVat > 0 ? 'text-orange-700' : 'text-pos-text' },
             ].map(c => (
               <div key={c.label} className="text-center">
-                <div className="text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1">{c.label}</div>
+                <div className="text-[9px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">{c.label}</div>
                 <div className={`text-sm font-black tabular-nums ${c.color}`}>{fmtFull(Math.abs(c.value))}</div>
                 {c.label === 'Net KDV' && (
                   <div className={`text-[9px] mt-0.5 font-semibold ${netVat > 0 ? 'text-orange-600' : 'text-pos-text'}`}>
@@ -267,8 +267,8 @@ export async function PnlTab({ userId, companyId }: Props) {
           ].map(k => (
             <div key={k.label} className={`bg-white border border-l-4 border-[#e2e8f0] ${k.color} rounded px-4 py-3`}>
               <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">{k.label}</div>
-              <div className="text-[10px] text-gray-400">{k.sub}</div>
-              <div className="text-lg font-black tabular-nums text-gray-900 mt-1">{k.value}</div>
+              <div className="text-[10px] text-[#94a3b8]">{k.sub}</div>
+              <div className="text-lg font-black tabular-nums text-[#0f172a] mt-1">{k.value}</div>
             </div>
           ))}
         </div>
@@ -285,8 +285,8 @@ export async function PnlTab({ userId, companyId }: Props) {
               const barW    = rev > 0 ? Math.min(100, Math.abs(net / rev) * 100) : 0
               return (
                 <div key={ym} className={`flex items-center gap-2 ${isCur ? 'font-bold' : ''}`}>
-                  <span className="text-[10px] text-gray-400 w-12 shrink-0">{fmtMonth(ym)}</span>
-                  <div className="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden">
+                  <span className="text-[10px] text-[#94a3b8] w-12 shrink-0">{fmtMonth(ym)}</span>
+                  <div className="flex-1 h-3 bg-[#f1f5f9] rounded-full overflow-hidden">
                     <div className={`h-full rounded-full ${net >= 0 ? 'bg-pos' : 'bg-neg'}`}
                       style={{ width: `${barW}%` }} />
                   </div>
@@ -302,7 +302,7 @@ export async function PnlTab({ userId, companyId }: Props) {
 
       {/* Cross-navigation */}
       <div className="col-span-12 flex items-center justify-between px-1 pt-1">
-        <p className="text-[10px] text-gray-400 leading-relaxed">
+        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
           Bu görünüm cari ay tahakkuk bazlı P&amp;L&apos;i gösterir.
           PDF dışa aktarım için resmi raporu inceleyin.
         </p>
@@ -310,11 +310,11 @@ export async function PnlTab({ userId, companyId }: Props) {
           <Link href="/dashboard/commercial?tab=sales" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Satışlar →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/operations?tab=expenses" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Giderler →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/reports/income-statement" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Gelir Tablosu →
           </Link>

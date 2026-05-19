@@ -47,8 +47,8 @@ export function UnifiedTabNav({ tabs, activeTab, basePath }: Props) {
                 inline-flex items-center justify-center min-w-[16px] h-4 px-1
                 text-[9px] font-black rounded-full leading-none
                 ${isActive
-                  ? 'bg-gray-200 text-gray-700'
-                  : 'bg-gray-100 text-gray-500'
+                  ? 'bg-[#e2e8f0] text-[#334155]'
+                  : 'bg-[#f1f5f9] text-[#64748b]'
                 }
               `}>
                 {tab.badge}

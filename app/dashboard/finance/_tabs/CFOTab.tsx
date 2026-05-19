@@ -84,7 +84,7 @@ function BalanceLine({ label, value, bold, negative }: {
   label: string; value: number; bold?: boolean; negative?: boolean
 }) {
   return (
-    <div className={`flex items-center justify-between ${bold ? 'font-bold text-gray-900' : 'text-gray-600'}`}>
+    <div className={`flex items-center justify-between ${bold ? 'font-bold text-[#0f172a]' : 'text-[#64748b]'}`}>
       <span className="text-xs">{label}</span>
       <span className={`tabular-nums text-xs ${negative && value > 0 ? 'text-neg-text' : value < 0 ? 'text-neg-text' : ''}`}>
         {fmtTRY(value)}
@@ -99,8 +99,8 @@ function TaxRow({ label, amount, sign, detail, bold }: {
   return (
     <div className={`flex items-start justify-between ${bold ? 'font-bold' : ''}`}>
       <div>
-        <div className={`text-sm ${bold ? 'text-gray-900' : 'text-gray-700'}`}>{label}</div>
-        <div className="text-[11px] text-gray-400">{detail}</div>
+        <div className={`text-sm ${bold ? 'text-[#0f172a]' : 'text-[#334155]'}`}>{label}</div>
+        <div className="text-[11px] text-[#94a3b8]">{detail}</div>
       </div>
       <div className={`text-sm font-bold tabular-nums ${sign > 0 ? 'text-neg-text' : 'text-pos-text'}`}>
         {fmtTRY(amount)}
@@ -276,12 +276,12 @@ export async function CFOTab({ userId, companyId }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xs text-gray-400 mt-0.5">Finansal doğruluk ve dönem yönetimi — {fmtDate(today)}</p>
+          <p className="text-xs text-[#94a3b8] mt-0.5">Finansal doğruluk ve dönem yönetimi — {fmtDate(today)}</p>
         </div>
         <div className="flex gap-2">
           <Link
             href="/dashboard/finance?tab=tax"
-            className="text-xs font-semibold text-gray-500 hover:text-gray-800 border border-[#e2e8f0] px-3 py-1.5 rounded hover:bg-[#f8fafc] transition-colors"
+            className="text-xs font-semibold text-[#64748b] hover:text-[#1e293b] border border-[#e2e8f0] px-3 py-1.5 rounded hover:bg-[#f8fafc] transition-colors"
           >
             Vergi Merkezi →
           </Link>
@@ -320,7 +320,7 @@ export async function CFOTab({ userId, companyId }: Props) {
               { label: 'Tahsilat Oranı', value: pct(collectionRate, 0), ok: collectionRate >= 60 },
             ].map(row => (
               <div key={row.label} className="flex items-center justify-between text-sm">
-                <span className="text-gray-600">{row.label}</span>
+                <span className="text-[#64748b]">{row.label}</span>
                 <span className={`font-bold ${row.ok ? 'text-pos-text' : 'text-neg'}`}>
                   {row.ok ? '✓' : '!'} {row.value}
                 </span>
@@ -368,7 +368,7 @@ export async function CFOTab({ userId, companyId }: Props) {
           <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Dönem Kapanış Durumu</div>
           {periodData ? (
             <span className={`text-[10px] font-bold px-2 py-1 rounded ${
-              periodData.period.status === 'locked' ? 'bg-gray-100 text-gray-500' :
+              periodData.period.status === 'locked' ? 'bg-[#f1f5f9] text-[#64748b]' :
               periodData.period.status === 'closed' ? 'bg-info-light text-info-text' :
               periodData.checklist.ready_to_close  ? 'bg-pos-light text-pos-text' :
               'bg-warn-light text-warn-text'
@@ -379,24 +379,24 @@ export async function CFOTab({ userId, companyId }: Props) {
                'AKTİF DÖNEM'}
             </span>
           ) : (
-            <span className="text-[10px] font-bold px-2 py-1 rounded bg-gray-100 text-gray-400">DÖNEM YOK</span>
+            <span className="text-[10px] font-bold px-2 py-1 rounded bg-[#f1f5f9] text-[#94a3b8]">DÖNEM YOK</span>
           )}
         </div>
 
         {periodData ? (
           <>
             <div className="flex items-center gap-3 mb-3 px-1">
-              <div className="text-xs text-gray-500">
-                <span className="font-semibold text-gray-700">
+              <div className="text-xs text-[#64748b]">
+                <span className="font-semibold text-[#334155]">
                   {new Date(periodData.period.period_start + 'T00:00:00').toLocaleDateString('tr-TR', { day: '2-digit', month: 'short', year: 'numeric' })}
                 </span>
-                <span className="mx-1.5 text-gray-300">—</span>
-                <span className="font-semibold text-gray-700">
+                <span className="mx-1.5 text-[#cbd5e1]">—</span>
+                <span className="font-semibold text-[#334155]">
                   {new Date(periodData.period.period_end + 'T00:00:00').toLocaleDateString('tr-TR', { day: '2-digit', month: 'short', year: 'numeric' })}
                 </span>
               </div>
-              <span className="text-[10px] text-gray-300">·</span>
-              <span className="text-[10px] text-gray-400 tabular-nums">
+              <span className="text-[10px] text-[#cbd5e1]">·</span>
+              <span className="text-[10px] text-[#94a3b8] tabular-nums">
                 Dönem Kârı: <span className={`font-bold ${periodData.period.period_profit_try >= 0 ? 'text-pos-text' : 'text-neg'}`}>{fmtTRY(periodData.period.period_profit_try)}</span>
               </span>
             </div>
@@ -435,7 +435,7 @@ export async function CFOTab({ userId, companyId }: Props) {
             </div>
           </>
         ) : (
-          <div className="text-xs text-gray-400 text-center py-3">
+          <div className="text-xs text-[#94a3b8] text-center py-3">
             Aktif muhasebe dönemi bulunamadı.{' '}
             <Link href="/dashboard/cfo/period-close" className="font-semibold text-primary-600 hover:text-primary-700 underline underline-offset-2">
               Yeni dönem aç →
@@ -465,9 +465,9 @@ export async function CFOTab({ userId, companyId }: Props) {
               }`}>
                 <div className="flex items-center justify-between gap-2 flex-wrap">
                   <div className="flex items-center gap-2">
-                    <span className="font-black tabular-nums text-gray-900">{fmtTRY(d.amount_try)}</span>
-                    <span className="text-gray-400">·</span>
-                    <span className="font-semibold text-gray-700">{d.expense_type}</span>
+                    <span className="font-black tabular-nums text-[#0f172a]">{fmtTRY(d.amount_try)}</span>
+                    <span className="text-[#94a3b8]">·</span>
+                    <span className="font-semibold text-[#334155]">{d.expense_type}</span>
                     <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md ${
                       d.confidence === 'high'
                         ? 'bg-neg-light text-neg-text'
@@ -476,9 +476,9 @@ export async function CFOTab({ userId, companyId }: Props) {
                       {d.confidence === 'high' ? '⚠️ Yüksek' : '🔍 Orta'}
                     </span>
                   </div>
-                  <span className="text-[10px] text-gray-500">{d.rows.map(r => r.expense_date).join(' · ')}</span>
+                  <span className="text-[10px] text-[#64748b]">{d.rows.map(r => r.expense_date).join(' · ')}</span>
                 </div>
-                <div className="text-[10px] text-gray-600 mt-1">{d.reason}</div>
+                <div className="text-[10px] text-[#64748b] mt-1">{d.reason}</div>
               </div>
             ))}
           </div>
@@ -503,7 +503,7 @@ export async function CFOTab({ userId, companyId }: Props) {
         <div className="grid grid-cols-3 gap-4">
           {/* Assets */}
           <div>
-            <div className="text-xs font-bold text-gray-500 mb-2">AKTİFLER</div>
+            <div className="text-xs font-bold text-[#64748b] mb-2">AKTİFLER</div>
             <div className="space-y-1.5 text-sm">
               <BalanceLine label="Nakit"      value={balanceSheet?.assets.cash_try ?? 0} />
               <BalanceLine label="Alacaklar"  value={balanceSheet?.assets.receivables_try ?? 0} />
@@ -515,7 +515,7 @@ export async function CFOTab({ userId, companyId }: Props) {
           </div>
           {/* Liabilities */}
           <div>
-            <div className="text-xs font-bold text-gray-500 mb-2">PASİFLER</div>
+            <div className="text-xs font-bold text-[#64748b] mb-2">PASİFLER</div>
             <div className="space-y-1.5 text-sm">
               <BalanceLine label="Ortak Borçları"  value={balanceSheet?.liabilities.partner_loans_try ?? 0} negative />
               <BalanceLine label="Vergi Borcu"     value={balanceSheet?.liabilities.tax_payable_try ?? 0} negative />
@@ -526,7 +526,7 @@ export async function CFOTab({ userId, companyId }: Props) {
           </div>
           {/* Equity */}
           <div>
-            <div className="text-xs font-bold text-gray-500 mb-2">ÖZKAYNAK</div>
+            <div className="text-xs font-bold text-[#64748b] mb-2">ÖZKAYNAK</div>
             <div className="space-y-1.5 text-sm">
               <BalanceLine label="Ortak Sermayesi"  value={balanceSheet?.equity.total_partner_capital_try ?? 0} />
               <BalanceLine label="Geçmiş Yıl Karı"  value={balanceSheet?.equity.retained_earnings_try ?? 0} />
@@ -595,13 +595,13 @@ export async function CFOTab({ userId, companyId }: Props) {
               { label: '60+ gün (Gecikmiş)', value: (riskData?.overdue60Total ?? 0) + (riskData?.overdue90Total ?? 0), color: 'text-neg-text'   },
             ].map(row => (
               <div key={row.label} className="flex items-center justify-between text-sm">
-                <span className="text-gray-500">{row.label}</span>
+                <span className="text-[#64748b]">{row.label}</span>
                 <span className={`font-bold ${row.color}`}>{fmt(row.value)}</span>
               </div>
             ))}
             <div className="pt-2 border-t border-[#e2e8f0] flex items-center justify-between text-sm font-bold">
-              <span className="text-gray-700">Toplam Alacak</span>
-              <span className="text-gray-900">{fmt(riskData?.totalOutstanding ?? 0)}</span>
+              <span className="text-[#334155]">Toplam Alacak</span>
+              <span className="text-[#0f172a]">{fmt(riskData?.totalOutstanding ?? 0)}</span>
             </div>
           </div>
           <Link
@@ -620,7 +620,7 @@ export async function CFOTab({ userId, companyId }: Props) {
         </div>
         <div className="grid grid-cols-4 gap-3">
           {[
-            { label: 'Satış Geliri',  value: revenue,                         color: 'text-gray-900' },
+            { label: 'Satış Geliri',  value: revenue,                         color: 'text-[#0f172a]' },
             { label: 'SMST',          value: -(financialSummary?.cost_try ?? 0), color: 'text-neg-text' },
             { label: 'Brüt Kâr',     value: grossProfit,                     color: grossProfit >= 0 ? 'text-pos-text' : 'text-neg-text' },
             { label: 'Net Kâr (VD)', value: netAfterTax,                     color: netAfterTax >= 0 ? 'text-pos-text' : 'text-neg-text' },
@@ -631,7 +631,7 @@ export async function CFOTab({ userId, companyId }: Props) {
                 {fmtCompact(Math.abs(k.value))}
               </div>
               {k.label !== 'Satış Geliri' && (
-                <div className="text-[10px] text-gray-400">{fmt(Math.abs(k.value))}</div>
+                <div className="text-[10px] text-[#94a3b8]">{fmt(Math.abs(k.value))}</div>
               )}
             </div>
           ))}
@@ -653,7 +653,7 @@ export async function CFOTab({ userId, companyId }: Props) {
           return `%${(r * 100).toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}`
         }
         function deltaQ(curr: number, prev: number) {
-          if (prev === 0) return { text: '—', color: 'text-gray-400' }
+          if (prev === 0) return { text: '—', color: 'text-[#94a3b8]' }
           const p = ((curr - prev) / Math.abs(prev)) * 100
           return { text: `${p >= 0 ? '+' : ''}${p.toFixed(1)}%`, color: p >= 0 ? 'text-pos-text' : 'text-neg' }
         }
@@ -664,16 +664,16 @@ export async function CFOTab({ userId, companyId }: Props) {
           <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
             <div className="px-4 py-3 border-b border-[#e2e8f0] flex items-center justify-between">
               <div>
-                <h2 className="text-sm font-black text-gray-800">Çeyreklik Analitik — {currentYear}</h2>
-                <p className="text-[10px] text-gray-400 mt-0.5">YTD P&L · Çeyreklik performans · Geçici vergi takvimi</p>
+                <h2 className="text-sm font-black text-[#1e293b]">Çeyreklik Analitik — {currentYear}</h2>
+                <p className="text-[10px] text-[#94a3b8] mt-0.5">YTD P&L · Çeyreklik performans · Geçici vergi takvimi</p>
               </div>
               <div className="grid grid-cols-2 gap-2 text-right">
                 <div>
-                  <div className="text-[9px] font-bold uppercase tracking-widest text-gray-400">YTD Ciro</div>
-                  <div className="text-sm font-black text-gray-900 tabular-nums">{fmtTRY(ytd.revenue)}</div>
+                  <div className="text-[9px] font-bold uppercase tracking-widest text-[#94a3b8]">YTD Ciro</div>
+                  <div className="text-sm font-black text-[#0f172a] tabular-nums">{fmtTRY(ytd.revenue)}</div>
                 </div>
                 <div>
-                  <div className="text-[9px] font-bold uppercase tracking-widest text-gray-400">Net Kâr</div>
+                  <div className="text-[9px] font-bold uppercase tracking-widest text-[#94a3b8]">Net Kâr</div>
                   <div className={`text-sm font-black tabular-nums ${ytd.net_after_tax >= 0 ? 'text-pos-text' : 'text-neg'}`}>{fmtTRY(ytd.net_after_tax)}</div>
                 </div>
               </div>
@@ -697,9 +697,9 @@ export async function CFOTab({ userId, companyId }: Props) {
                     const isFuture = !q.is_past_quarter && q.period.from > today
                     return (
                       <tr key={q.label} className={`hover:bg-[#f8fafc]/60 ${isFuture ? 'opacity-40' : ''}`}>
-                        <td className="px-4 py-2.5 font-black text-gray-900 text-xs">{q.label}</td>
+                        <td className="px-4 py-2.5 font-black text-[#0f172a] text-xs">{q.label}</td>
                         <td className="px-4 py-2.5 text-right">
-                          <div className="font-mono font-bold text-gray-900">{fmtTRY(q.revenue)}</div>
+                          <div className="font-mono font-bold text-[#0f172a]">{fmtTRY(q.revenue)}</div>
                           {revDelta && <div className={`text-[10px] font-semibold ${revDelta.color}`}>{revDelta.text}</div>}
                         </td>
                         <td className={`px-4 py-2.5 text-right font-mono font-bold ${q.gross_profit >= 0 ? 'text-primary-700' : 'text-neg'}`}>{fmtTRY(q.gross_profit)}</td>
@@ -707,17 +707,17 @@ export async function CFOTab({ userId, companyId }: Props) {
                         <td className={`px-4 py-2.5 text-right font-mono ${q.gross_margin >= 0.3 ? 'text-pos-text' : q.gross_margin >= 0.1 ? 'text-warn-text' : 'text-neg'}`}>
                           {q.revenue > 0 ? fmtPctQ(q.gross_margin) : '—'}
                         </td>
-                        <td className={`px-4 py-2.5 text-right font-mono ${q.matrah > 0 ? 'text-warn-text' : 'text-gray-400'}`}>{q.matrah > 0 ? fmtTRY(q.matrah) : '—'}</td>
+                        <td className={`px-4 py-2.5 text-right font-mono ${q.matrah > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>{q.matrah > 0 ? fmtTRY(q.matrah) : '—'}</td>
                       </tr>
                     )
                   })}
                   <tr className="bg-primary-50/40 font-black border-t-2 border-primary-100">
                     <td className="px-4 py-2.5 text-primary-800 font-black text-xs">YTD Toplam</td>
-                    <td className="px-4 py-2.5 text-right font-mono font-black text-gray-900">{fmtTRY(ytd.revenue)}</td>
+                    <td className="px-4 py-2.5 text-right font-mono font-black text-[#0f172a]">{fmtTRY(ytd.revenue)}</td>
                     <td className={`px-4 py-2.5 text-right font-mono font-black ${ytd.gross_profit >= 0 ? 'text-primary-700' : 'text-neg'}`}>{fmtTRY(ytd.gross_profit)}</td>
                     <td className={`px-4 py-2.5 text-right font-mono font-black ${ytd.net_profit >= 0 ? 'text-pos-text' : 'text-neg'}`}>{fmtTRY(ytd.net_profit)}</td>
-                    <td className="px-4 py-2.5 text-right font-mono text-gray-500">{ytd.revenue > 0 ? fmtPctQ(ytd.gross_profit / ytd.revenue) : '—'}</td>
-                    <td className={`px-4 py-2.5 text-right font-mono font-black ${ytd.matrah > 0 ? 'text-warn-text' : 'text-gray-400'}`}>{ytd.matrah > 0 ? fmtTRY(ytd.matrah) : '—'}</td>
+                    <td className="px-4 py-2.5 text-right font-mono text-[#64748b]">{ytd.revenue > 0 ? fmtPctQ(ytd.gross_profit / ytd.revenue) : '—'}</td>
+                    <td className={`px-4 py-2.5 text-right font-mono font-black ${ytd.matrah > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>{ytd.matrah > 0 ? fmtTRY(ytd.matrah) : '—'}</td>
                   </tr>
                 </tbody>
               </table>
@@ -738,13 +738,13 @@ export async function CFOTab({ userId, companyId }: Props) {
                       <div key={q.label} className={`px-4 py-2.5 flex items-center justify-between gap-4 ${isUrgent ? 'bg-warn-light/40' : ''}`}>
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-gray-800">{q.label} Geçici Vergi</span>
-                            {isPast && <span className="text-[9px] bg-gray-100 text-gray-400 px-1.5 py-0.5 rounded">Geçti</span>}
+                            <span className="text-xs font-bold text-[#1e293b]">{q.label} Geçici Vergi</span>
+                            {isPast && <span className="text-[9px] bg-[#f1f5f9] text-[#94a3b8] px-1.5 py-0.5 rounded">Geçti</span>}
                             {isUrgent && !isPast && <span className="text-[9px] bg-warn-light text-warn-text font-bold px-1.5 py-0.5 rounded">30 gün içinde</span>}
                           </div>
-                          <div className="text-[10px] text-gray-400 mt-0.5">Son ödeme: {fmtDateQ(q.gecici_due_date)} · Matrah: {fmtTRY(q.matrah)}</div>
+                          <div className="text-[10px] text-[#94a3b8] mt-0.5">Son ödeme: {fmtDateQ(q.gecici_due_date)} · Matrah: {fmtTRY(q.matrah)}</div>
                         </div>
-                        <div className={`text-sm font-black tabular-nums ${isPast ? 'text-gray-400' : isUrgent ? 'text-warn-text' : 'text-warn-text'}`}>{fmtTRY(q.gecici_vergi)}</div>
+                        <div className={`text-sm font-black tabular-nums ${isPast ? 'text-[#94a3b8]' : isUrgent ? 'text-warn-text' : 'text-warn-text'}`}>{fmtTRY(q.gecici_vergi)}</div>
                       </div>
                     )
                   })}
@@ -794,8 +794,8 @@ export async function CFOTab({ userId, companyId }: Props) {
           >
             <span className="text-xl mt-0.5">{item.icon}</span>
             <div>
-              <div className="text-xs font-bold text-gray-900">{item.title}</div>
-              <div className="text-[10px] text-gray-400 mt-0.5">{item.desc}</div>
+              <div className="text-xs font-bold text-[#0f172a]">{item.title}</div>
+              <div className="text-[10px] text-[#94a3b8] mt-0.5">{item.desc}</div>
             </div>
           </Link>
         ))}
@@ -863,8 +863,8 @@ export async function CFOTab({ userId, companyId }: Props) {
             >
               <span className="text-xl mt-0.5">{item.icon}</span>
               <div>
-                <div className="text-xs font-bold text-gray-900">{item.title}</div>
-                <div className="text-[10px] text-gray-400 mt-0.5">{item.desc}</div>
+                <div className="text-xs font-bold text-[#0f172a]">{item.title}</div>
+                <div className="text-[10px] text-[#94a3b8] mt-0.5">{item.desc}</div>
               </div>
             </Link>
           ))}

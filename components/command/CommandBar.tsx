@@ -230,7 +230,7 @@ export function CommandBar() {
       >
         {/* ── Search row ────────────────────────────────────────────────────── */}
         <div className="flex items-center gap-3 px-4 py-3.5 border-b border-[#e2e8f0]">
-          <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <svg className="w-4 h-4 text-[#94a3b8] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
           <input
@@ -239,12 +239,12 @@ export function CommandBar() {
             onChange={e => { setQuery(e.target.value); setSel(0) }}
             onKeyDown={onKeyDown}
             placeholder="Operasyon ara veya komut gir..."
-            className="flex-1 text-[13px] text-gray-900 placeholder:text-gray-400 bg-transparent outline-none"
+            className="flex-1 text-[13px] text-[#0f172a] placeholder:text-[#94a3b8] bg-transparent outline-none"
           />
           {smartLoading && (
             <span className="w-3 h-3 rounded-full border-2 border-brand border-t-transparent animate-spin flex-shrink-0" />
           )}
-          <kbd className="text-[9px] text-gray-400 bg-gray-100 border border-[#e2e8f0] px-1.5 py-0.5 rounded font-mono leading-tight flex-shrink-0">
+          <kbd className="text-[9px] text-[#94a3b8] bg-[#f1f5f9] border border-[#e2e8f0] px-1.5 py-0.5 rounded font-mono leading-tight flex-shrink-0">
             ESC
           </kbd>
         </div>
@@ -253,7 +253,7 @@ export function CommandBar() {
         <div className="overflow-y-auto" style={{ maxHeight: 'calc(74vh - 56px)' }}>
           {filtered.length === 0 ? (
             <div className="px-4 py-10 text-center">
-              <div className="text-sm text-gray-400">"{query}" için operasyon bulunamadı</div>
+              <div className="text-sm text-[#94a3b8]">"{query}" için operasyon bulunamadı</div>
             </div>
           ) : (
             <div className="py-2">
@@ -281,7 +281,7 @@ export function CommandBar() {
                       cmd.kind === 'op'     ? <span className="text-[#64748b] text-[10px] font-black">▶</span> :
                       cmd.kind === 'create' ? <span className="text-pos text-sm font-black leading-none">+</span> :
                       cmd.kind === 'nav'    ? <span className="text-brand text-[9px] font-black">◆</span> :
-                                             <span className="text-gray-400 text-xs">→</span>
+                                             <span className="text-[#94a3b8] text-xs">→</span>
                     return (
                       <button
                         key={cmd.id}
@@ -309,12 +309,12 @@ export function CommandBar() {
                         {/* Label + sub */}
                         <div className="flex-1 min-w-0">
                           <div className={`text-[13px] leading-tight truncate ${
-                            isSelected ? 'font-semibold text-gray-900' : 'font-medium text-gray-700'
+                            isSelected ? 'font-semibold text-[#0f172a]' : 'font-medium text-[#334155]'
                           }`}>
                             {cmd.label}
                           </div>
                           {cmd.sub && (
-                            <div className="text-[11px] text-gray-400 truncate mt-0.5">
+                            <div className="text-[11px] text-[#94a3b8] truncate mt-0.5">
                               {cmd.sub}
                             </div>
                           )}
@@ -322,7 +322,7 @@ export function CommandBar() {
 
                         {/* Enter hint */}
                         {isSelected && (
-                          <kbd className="flex-shrink-0 text-[9px] text-gray-400 bg-gray-100 border border-[#e2e8f0] px-1.5 py-0.5 rounded font-mono leading-tight">
+                          <kbd className="flex-shrink-0 text-[9px] text-[#94a3b8] bg-[#f1f5f9] border border-[#e2e8f0] px-1.5 py-0.5 rounded font-mono leading-tight">
                             ↵
                           </kbd>
                         )}
@@ -337,11 +337,11 @@ export function CommandBar() {
           {/* Footer */}
           <div className="flex items-center justify-between px-4 py-2 border-t border-[#f1f5f9]">
             <div className="flex items-center gap-3">
-              <span className="text-[9px] text-gray-300 font-mono">↑↓ seç</span>
-              <span className="text-[9px] text-gray-300 font-mono">↵ çalıştır</span>
-              <span className="text-[9px] text-gray-300 font-mono">ESC kapat</span>
+              <span className="text-[9px] text-[#cbd5e1] font-mono">↑↓ seç</span>
+              <span className="text-[9px] text-[#cbd5e1] font-mono">↵ çalıştır</span>
+              <span className="text-[9px] text-[#cbd5e1] font-mono">ESC kapat</span>
             </div>
-            <span className="text-[9px] text-gray-300">Flowra OS · ⌘K</span>
+            <span className="text-[9px] text-[#cbd5e1]">Flowra OS · ⌘K</span>
           </div>
         </div>
       </div>

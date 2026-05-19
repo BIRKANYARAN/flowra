@@ -64,11 +64,11 @@ export function PartnersTab({
           {[
             { label: 'Toplam Bakiye',    value: fmt(totalPartnerBalance),              color: 'text-primary-600' },
             { label: 'Toplam Dağıtılan', value: fmt(totalDistributed),                 color: 'text-pos-text' },
-            { label: 'Eşitleme Gereken', value: fmt(equalization.total_equalization),  color: equalization.total_equalization > 0 ? 'text-warn-text' : 'text-gray-400' },
+            { label: 'Eşitleme Gereken', value: fmt(equalization.total_equalization),  color: equalization.total_equalization > 0 ? 'text-warn-text' : 'text-[#94a3b8]' },
           ].map(c => (
             <div key={c.label} className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
               <div className={`text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5 ${c.color}`}>{c.label}</div>
-              <div className="text-2xl font-black tabular-nums text-gray-900 leading-none">{c.value}</div>
+              <div className="text-2xl font-black tabular-nums text-[#0f172a] leading-none">{c.value}</div>
             </div>
           ))}
         </div>
@@ -78,7 +78,7 @@ export function PartnersTab({
 
       {!loading && !hasPartners && !fetchError && (
         <div className="bg-white border border-[#e2e8f0] rounded px-6 py-12 text-center">
-          <div className="text-sm text-gray-400">Henüz ortak eklenmemiş.</div>
+          <div className="text-sm text-[#94a3b8]">Henüz ortak eklenmemiş.</div>
         </div>
       )}
 
@@ -116,8 +116,8 @@ export function PartnersTab({
                   <div className="flex items-start justify-between gap-4 flex-wrap">
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <span className="font-bold text-gray-900 text-sm">{p.name}</span>
-                        {!p.is_active && <span className="text-[10px] bg-gray-100 text-gray-400 px-1.5 py-0.5 rounded font-semibold">Pasif</span>}
+                        <span className="font-bold text-[#0f172a] text-sm">{p.name}</span>
+                        {!p.is_active && <span className="text-[10px] bg-[#f1f5f9] text-[#94a3b8] px-1.5 py-0.5 rounded font-semibold">Pasif</span>}
                         {isUnderFunded && <span className="text-[10px] bg-warn-light text-warn-text px-1.5 py-0.5 rounded font-bold">⚠ Eşitleme gerekli</span>}
                         {withdrawable > 0.01 && !isUnderFunded && (
                           <span className="text-[10px] bg-pos-light text-pos-text px-1.5 py-0.5 rounded font-bold">
@@ -130,17 +130,17 @@ export function PartnersTab({
                     <div className="grid grid-cols-3 gap-x-6 gap-y-1 text-right shrink-0">
                       <div>
                         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Bakiye</div>
-                        <div className={`text-sm font-black tabular-nums ${(b?.partner_balance_try ?? 0) > 0 ? 'text-primary-700' : 'text-gray-400'}`}>
+                        <div className={`text-sm font-black tabular-nums ${(b?.partner_balance_try ?? 0) > 0 ? 'text-primary-700' : 'text-[#94a3b8]'}`}>
                           {fmt(b?.partner_balance_try ?? 0)}
                         </div>
                       </div>
                       <div>
                         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Dağıtılan</div>
-                        <div className="text-sm font-black tabular-nums text-gray-700">{fmt(b?.total_distributed_try ?? 0)}</div>
+                        <div className="text-sm font-black tabular-nums text-[#334155]">{fmt(b?.total_distributed_try ?? 0)}</div>
                       </div>
                       <div>
                         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Sermaye</div>
-                        <div className="text-sm font-black tabular-nums text-gray-900">{fmt(contributed)}</div>
+                        <div className="text-sm font-black tabular-nums text-[#0f172a]">{fmt(contributed)}</div>
                       </div>
                     </div>
                   </div>
@@ -149,7 +149,7 @@ export function PartnersTab({
                     <div className="mt-3 pt-3 border-t border-warn-light">
                       <div className="flex items-center justify-between text-xs">
                         <span className="text-warn-text font-semibold">Eşitleme açığı: {fmt(eqNeeded)}</span>
-                        <span className="text-gray-400">Hedef: {fmt(eqTarget)}</span>
+                        <span className="text-[#94a3b8]">Hedef: {fmt(eqTarget)}</span>
                       </div>
                       <div className="mt-1.5 bg-warn-light rounded-full h-1.5">
                         <div
@@ -164,7 +164,7 @@ export function PartnersTab({
                     <div className="mt-3 pt-3 border-t border-[#e2e8f0] space-y-3">
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">İsim</label>
+                          <label className="block text-[10px] font-semibold text-[#94a3b8] uppercase tracking-wide mb-1">İsim</label>
                           <input
                             className="w-full border border-[#e2e8f0] rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
                             value={editForm.name}
@@ -173,7 +173,7 @@ export function PartnersTab({
                           />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Pay Oranı (%)</label>
+                          <label className="block text-[10px] font-semibold text-[#94a3b8] uppercase tracking-wide mb-1">Pay Oranı (%)</label>
                           <input
                             type="number" min="0.01" max="100" step="0.01"
                             className="w-full border border-[#e2e8f0] rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
@@ -190,18 +190,18 @@ export function PartnersTab({
                         >
                           {editSaving ? 'Kaydediliyor...' : 'Kaydet'}
                         </button>
-                        <button onClick={onCancelEdit} className="text-xs font-semibold px-3 py-1.5 rounded border border-[#e2e8f0] text-gray-600 hover:bg-[#f8fafc] transition-colors">
+                        <button onClick={onCancelEdit} className="text-xs font-semibold px-3 py-1.5 rounded border border-[#e2e8f0] text-[#64748b] hover:bg-[#f8fafc] transition-colors">
                           İptal
                         </button>
                       </div>
                     </div>
                   ) : (
                     <div className="mt-2 pt-2 border-t border-[#f1f5f9] flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button onClick={() => onOpenEdit(p)} className="text-xs text-gray-400 hover:text-primary-600 px-2 py-1 rounded hover:bg-primary-50 transition-colors">Düzenle</button>
-                      <button onClick={() => onToggleTxHistory(p.id)} className="text-xs text-gray-400 hover:text-primary-600 px-2 py-1 rounded hover:bg-primary-50 transition-colors">
+                      <button onClick={() => onOpenEdit(p)} className="text-xs text-[#94a3b8] hover:text-primary-600 px-2 py-1 rounded hover:bg-primary-50 transition-colors">Düzenle</button>
+                      <button onClick={() => onToggleTxHistory(p.id)} className="text-xs text-[#94a3b8] hover:text-primary-600 px-2 py-1 rounded hover:bg-primary-50 transition-colors">
                         {expandedTxId === p.id ? 'Geçmişi Gizle ↑' : 'Geçmiş ↓'}
                       </button>
-                      <button onClick={() => onDeletePartner(p.id, p.name)} className="text-xs text-gray-400 hover:text-neg px-2 py-1 rounded hover:bg-neg-light transition-colors">Sil</button>
+                      <button onClick={() => onDeletePartner(p.id, p.name)} className="text-xs text-[#94a3b8] hover:text-neg px-2 py-1 rounded hover:bg-neg-light transition-colors">Sil</button>
                     </div>
                   )}
 
@@ -209,17 +209,17 @@ export function PartnersTab({
                     <div className="mt-3 pt-3 border-t border-[#e2e8f0]">
                       <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">İşlem Geçmişi</div>
                       {loadingTxId === p.id ? (
-                        <div className="py-3 text-xs text-gray-400">Yükleniyor...</div>
+                        <div className="py-3 text-xs text-[#94a3b8]">Yükleniyor...</div>
                       ) : !partnerTxs[p.id] || partnerTxs[p.id].length === 0 ? (
-                        <div className="py-3 text-xs text-gray-400">Kayıtlı işlem yok.</div>
+                        <div className="py-3 text-xs text-[#94a3b8]">Kayıtlı işlem yok.</div>
                       ) : (
                         <div className="space-y-1 max-h-48 overflow-y-auto">
                           {partnerTxs[p.id].map(tx => (
                             <div key={tx.id} className="flex items-center justify-between text-xs py-1 border-b border-[#f1f5f9] last:border-0">
                               <div className="min-w-0">
-                                <span className="font-semibold text-gray-700">{TX_TYPE_LABELS[tx.tx_type] ?? tx.tx_type}</span>
-                                {tx.notes && <span className="text-gray-400 ml-1.5">· {tx.notes}</span>}
-                                <div className="text-gray-400">{tx.tx_date?.slice(0, 10)}</div>
+                                <span className="font-semibold text-[#334155]">{TX_TYPE_LABELS[tx.tx_type] ?? tx.tx_type}</span>
+                                {tx.notes && <span className="text-[#94a3b8] ml-1.5">· {tx.notes}</span>}
+                                <div className="text-[#94a3b8]">{tx.tx_date?.slice(0, 10)}</div>
                               </div>
                               <span className={`shrink-0 font-black tabular-nums ml-4 ${['loan_out','salary','board_fee','dividend'].includes(tx.tx_type) ? 'text-neg' : 'text-pos-text'}`}>
                                 {fmt(tx.amount_try)}
@@ -239,8 +239,8 @@ export function PartnersTab({
             <div className="bg-warn-light border border-warn-light rounded px-5 py-4">
               <div className="text-[10px] font-bold uppercase tracking-widest text-warn-text mb-2">Eşitleme Özeti</div>
               <div className="grid grid-cols-2 gap-4 text-sm">
-                <div><span className="text-gray-500">Toplam eşitleme gereken: </span><span className="font-bold text-warn-text">{fmt(equalization.total_equalization)}</span></div>
-                <div><span className="text-gray-500">Baz (birim başına): </span><span className="font-bold text-gray-700">{fmt(equalization.baseline_per_unit)}</span></div>
+                <div><span className="text-[#64748b]">Toplam eşitleme gereken: </span><span className="font-bold text-warn-text">{fmt(equalization.total_equalization)}</span></div>
+                <div><span className="text-[#64748b]">Baz (birim başına): </span><span className="font-bold text-[#334155]">{fmt(equalization.baseline_per_unit)}</span></div>
               </div>
               <p className="text-xs text-warn-text mt-2 leading-relaxed">
                 En yüksek sermaye katkısı birim başına {fmt(equalization.baseline_per_unit)}.
@@ -253,18 +253,18 @@ export function PartnersTab({
 
       {/* Cross-navigation */}
       <div className="flex items-center justify-between px-1 pt-2">
-        <p className="text-[10px] text-gray-400 leading-relaxed">
+        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
           Ortak durumu sermaye, borç ve dağıtım sekmeleriyle birlikte izleyin.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
           <Link href="/dashboard/partners?tab=tranches" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Trancheler →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/partners?tab=distribution" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Kâr Dağıtımı →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/partners?tab=risk" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Risk Skoru →
           </Link>

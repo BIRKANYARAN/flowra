@@ -36,7 +36,7 @@ export function FlowraLogo({ size = 'md', showText = true }: Props) {
           <div className={`font-black ${s.text} leading-tight tracking-tight bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent`}>
             Flowra
           </div>
-          <div className={`${s.sub} text-gray-400 font-medium`}>ERP</div>
+          <div className={`${s.sub} text-[#94a3b8] font-medium`}>ERP</div>
         </div>
       )}
     </div>

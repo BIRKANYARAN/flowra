@@ -90,7 +90,7 @@ export function DistributionTab({
             </div>
             <div className="divide-y divide-[#f1f5f9]">
               {[
-                { label: 'Brüt Net Gelir',        value: distrib.distribution_layers.gross_net_income_try,    color: 'text-gray-900',    sign: '' },
+                { label: 'Brüt Net Gelir',        value: distrib.distribution_layers.gross_net_income_try,    color: 'text-[#0f172a]',    sign: '' },
                 { label: '(−) Yasal Yedek (TTK 519 %5)', value: distrib.distribution_layers.legal_reserve_try, color: 'text-warn-text', sign: '−' },
                 { label: '(−) YK Alıkoyması',      value: distrib.distribution_layers.board_retained_try,     color: 'text-warn-text',   sign: '−' },
                 { label: '(−) Ödenmemiş Huzur H.', value: distrib.distribution_layers.unpaid_compensation_try,color: 'text-warn-text',   sign: '−' },
@@ -99,7 +99,7 @@ export function DistributionTab({
                 { label: 'Net Dağıtılabilir',       value: distrib.distribution_layers.distributable_net_try,  color: distrib.distribution_layers.is_distributable ? 'text-pos-text' : 'text-neg-text', sign: '=' },
               ].map(row => (
                 <div key={row.label} className={`flex items-center justify-between px-4 py-3 ${row.sign === '=' ? 'bg-[#f8fafc]' : ''}`}>
-                  <div className="text-xs text-gray-600">{row.label}</div>
+                  <div className="text-xs text-[#64748b]">{row.label}</div>
                   <div className={`text-sm font-black tabular-nums font-mono ${row.color}`}>
                     {row.sign && row.sign !== '=' ? row.sign + ' ' : ''}{fmt(row.value)}
                   </div>
@@ -179,9 +179,9 @@ export function DistributionTab({
                 <tbody className="divide-y divide-[#f1f5f9]">
                   {distrib.per_partner_distribution.map(p => (
                     <tr key={p.partner_id} className="hover:bg-[#f8fafc]/60">
-                      <td className="px-4 py-3 font-semibold text-gray-900">{p.partner_name}</td>
-                      <td className="px-4 py-3 text-right text-gray-500">{pct(p.share_ratio)}</td>
-                      <td className="px-4 py-3 text-right font-mono text-gray-700">{fmt(p.gross_entitlement_try)}</td>
+                      <td className="px-4 py-3 font-semibold text-[#0f172a]">{p.partner_name}</td>
+                      <td className="px-4 py-3 text-right text-[#64748b]">{pct(p.share_ratio)}</td>
+                      <td className="px-4 py-3 text-right font-mono text-[#334155]">{fmt(p.gross_entitlement_try)}</td>
                       <td className="px-4 py-3 text-right font-mono text-neg">{fmt(p.withholding_try)}</td>
                       <td className="px-4 py-3 text-right font-mono font-bold text-pos-text">{fmt(p.net_entitlement_try)}</td>
                     </tr>
@@ -213,25 +213,25 @@ export function DistributionTab({
       )}
 
       {!distrib && !distribLoading && (
-        <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-8 text-center text-sm text-gray-400">
+        <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-8 text-center text-sm text-[#94a3b8]">
           Dönem net gelirini girin ve hesapla butonuna basın.
         </div>
       )}
 
       {/* Cross-navigation */}
       <div className="flex items-center justify-between px-1 pt-2">
-        <p className="text-[10px] text-gray-400 leading-relaxed">
+        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
           Kâr dağıtımı P&amp;L ve geçici vergi ile uyumlu olmalı.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
           <Link href="/dashboard/finance?tab=pnl" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             P&amp;L Analizi →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/finance?tab=quarterly" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Geçici Vergi →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/finance?tab=balance" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Bilanço →
           </Link>

@@ -156,7 +156,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-gray-900/30 z-40"
+        className="fixed inset-0 bg-[#0f172a]/30 z-40"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -174,11 +174,11 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
             <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] leading-none">
               Ticari
             </div>
-            <div className="text-base font-black text-gray-900 mt-1">Yeni Satış</div>
+            <div className="text-base font-black text-[#0f172a] mt-1">Yeni Satış</div>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-700 transition-colors p-1 -mr-1 leading-none text-lg"
+            className="text-[#94a3b8] hover:text-[#334155] transition-colors p-1 -mr-1 leading-none text-lg"
             aria-label="Kapat"
           >
             ✕
@@ -283,7 +283,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
                       <button
                         type="button"
                         onClick={() => removeItem(idx)}
-                        className="text-gray-300 hover:text-neg transition-colors text-lg leading-none pt-2 flex-shrink-0"
+                        className="text-[#cbd5e1] hover:text-neg transition-colors text-lg leading-none pt-2 flex-shrink-0"
                         aria-label="Kalemi sil"
                       >
                         ✕
@@ -294,7 +294,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
                   {/* Qty / Price / KDV row */}
                   <div className="grid grid-cols-3 gap-2">
                     <div>
-                      <label className="text-[9px] font-bold text-gray-400 uppercase tracking-wide block mb-1">
+                      <label className="text-[9px] font-bold text-[#94a3b8] uppercase tracking-wide block mb-1">
                         Miktar
                       </label>
                       <input
@@ -308,7 +308,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
                       />
                     </div>
                     <div>
-                      <label className="text-[9px] font-bold text-gray-400 uppercase tracking-wide block mb-1">
+                      <label className="text-[9px] font-bold text-[#94a3b8] uppercase tracking-wide block mb-1">
                         Birim Fiyat (₺)
                       </label>
                       <input
@@ -322,7 +322,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
                       />
                     </div>
                     <div>
-                      <label className="text-[9px] font-bold text-gray-400 uppercase tracking-wide block mb-1">
+                      <label className="text-[9px] font-bold text-[#94a3b8] uppercase tracking-wide block mb-1">
                         KDV
                       </label>
                       <select
@@ -339,8 +339,8 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
 
                   {/* Row total */}
                   {itemRowTotal(item) > 0 && (
-                    <div className="text-right text-xs text-gray-400 font-mono">
-                      Kalem toplamı: <span className="font-semibold text-gray-700">{formatTRY(itemRowTotal(item))}</span>
+                    <div className="text-right text-xs text-[#94a3b8] font-mono">
+                      Kalem toplamı: <span className="font-semibold text-[#334155]">{formatTRY(itemRowTotal(item))}</span>
                     </div>
                   )}
                 </div>
@@ -350,15 +350,15 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
             {/* Totals strip */}
             {grandTotal > 0 && (
               <div className="mt-3 bg-white border border-[#e2e8f0] rounded px-4 py-3 space-y-1">
-                <div className="flex justify-between text-xs text-gray-400">
+                <div className="flex justify-between text-xs text-[#94a3b8]">
                   <span>Ara Toplam</span>
-                  <span className="font-mono font-semibold text-gray-700">{formatTRY(subtotal)}</span>
+                  <span className="font-mono font-semibold text-[#334155]">{formatTRY(subtotal)}</span>
                 </div>
-                <div className="flex justify-between text-xs text-gray-400">
+                <div className="flex justify-between text-xs text-[#94a3b8]">
                   <span>KDV</span>
-                  <span className="font-mono font-semibold text-gray-700">{formatTRY(kdvTotal)}</span>
+                  <span className="font-mono font-semibold text-[#334155]">{formatTRY(kdvTotal)}</span>
                 </div>
-                <div className="flex justify-between text-sm font-black text-gray-900 pt-1 border-t border-[#e2e8f0]">
+                <div className="flex justify-between text-sm font-black text-[#0f172a] pt-1 border-t border-[#e2e8f0]">
                   <span>TOPLAM</span>
                   <span className="font-mono">{formatTRY(grandTotal)}</span>
                 </div>
@@ -396,7 +396,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 border border-[#e2e8f0] text-gray-500 py-2.5 rounded text-sm font-semibold hover:bg-[#f8fafc] transition-colors"
+              className="flex-1 border border-[#e2e8f0] text-[#64748b] py-2.5 rounded text-sm font-semibold hover:bg-[#f8fafc] transition-colors"
             >
               İptal
             </button>

@@ -14,7 +14,7 @@ function CommandBarSkeleton() {
   return (
     <div className="flex items-center gap-2 animate-pulse">
       {[...Array(4)].map((_, i) => (
-        <div key={i} className="h-8 w-28 bg-gray-100 rounded" />
+        <div key={i} className="h-8 w-28 bg-[#f1f5f9] rounded" />
       ))}
     </div>
   )
@@ -149,20 +149,20 @@ export async function ExpensesContent({ companyId }: Props) {
         <ExpensesCommandBar companyId={companyId} />
       </Suspense>
 
-      <p className="text-xs text-gray-400">Son 6 ay · {expenses.length} kayıt</p>
+      <p className="text-xs text-[#94a3b8]">Son 6 ay · {expenses.length} kayıt</p>
 
       {/* KPI Strip */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
         {[
           { label: 'Toplam Gider',    value: fmt(totalTRY),        sub: 'Son 6 ay (TRY)',                    color: 'text-neg' },
-          { label: 'Tek Seferlik',    value: String(expenses.length), sub: 'kayıt',                          color: 'text-gray-900' },
-          { label: 'Aylık Sabit Yük', value: monthlyBurden > 0 ? fmt(monthlyBurden) : '—', sub: `${recurring.length} tekrarlayan şablon`, color: monthlyBurden > 0 ? 'text-orange-700' : 'text-gray-400' },
-          { label: 'KDV İndirimi',    value: kdvDeductible > 0 ? fmt(kdvDeductible) : '—', sub: 'Tahmini indirilecek KDV', color: kdvDeductible > 0 ? 'text-pos-text' : 'text-gray-400' },
+          { label: 'Tek Seferlik',    value: String(expenses.length), sub: 'kayıt',                          color: 'text-[#0f172a]' },
+          { label: 'Aylık Sabit Yük', value: monthlyBurden > 0 ? fmt(monthlyBurden) : '—', sub: `${recurring.length} tekrarlayan şablon`, color: monthlyBurden > 0 ? 'text-orange-700' : 'text-[#94a3b8]' },
+          { label: 'KDV İndirimi',    value: kdvDeductible > 0 ? fmt(kdvDeductible) : '—', sub: 'Tahmini indirilecek KDV', color: kdvDeductible > 0 ? 'text-pos-text' : 'text-[#94a3b8]' },
         ].map((card, i) => (
           <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e2e8f0]' : ''}`}>
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
             <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
-            <div className="text-[10px] text-gray-400 mt-1">{card.sub}</div>
+            <div className="text-[10px] text-[#94a3b8] mt-1">{card.sub}</div>
           </div>
         ))}
       </div>
@@ -226,15 +226,15 @@ export async function ExpensesContent({ companyId }: Props) {
               const sharePct = totalTRY > 0 ? (cat.total / totalTRY) * 100 : 0
               return (
                 <div key={cat.category} className="flex items-center gap-3">
-                  <div className="w-28 text-xs text-gray-600 font-medium shrink-0 truncate">{cat.label}</div>
+                  <div className="w-28 text-xs text-[#64748b] font-medium shrink-0 truncate">{cat.label}</div>
                   <div className="flex-1">
-                    <div className="h-5 bg-gray-100 rounded overflow-hidden">
+                    <div className="h-5 bg-[#f1f5f9] rounded overflow-hidden">
                       <div className="h-5 bg-neg rounded" style={{ width: `${barPct}%` }} />
                     </div>
                   </div>
                   <div className="w-24 text-right shrink-0">
                     <span className="text-xs font-bold tabular-nums text-neg">{fmt(cat.total)}</span>
-                    <span className="text-[10px] text-gray-400 ml-1">%{sharePct.toFixed(0)}</span>
+                    <span className="text-[10px] text-[#94a3b8] ml-1">%{sharePct.toFixed(0)}</span>
                   </div>
                 </div>
               )
@@ -253,8 +253,8 @@ export async function ExpensesContent({ companyId }: Props) {
               return (
                 <div key={t.ym} className="flex-1 flex flex-col items-center gap-1 group relative">
                   <div className="w-full bg-neg-light group-hover:bg-neg rounded-t transition-all" style={{ height: `${heightPct}%` }} />
-                  <div className="text-[9px] text-gray-400 font-semibold">{fmtMonth(t.ym)}</div>
-                  <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block z-10 bg-gray-900 text-white rounded px-2 py-1 text-[10px] whitespace-nowrap">
+                  <div className="text-[9px] text-[#94a3b8] font-semibold">{fmtMonth(t.ym)}</div>
+                  <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block z-10 bg-[#0f172a] text-white rounded px-2 py-1 text-[10px] whitespace-nowrap">
                     <div className="font-bold">{fmtMonth(t.ym)}</div>
                     <div className="text-neg/70">{fmt(t.total)}</div>
                   </div>
@@ -262,7 +262,7 @@ export async function ExpensesContent({ companyId }: Props) {
               )
             })}
           </div>
-          <div className="flex items-center justify-between mt-2 text-[10px] text-gray-400">
+          <div className="flex items-center justify-between mt-2 text-[10px] text-[#94a3b8]">
             <span>En düşük: {fmt(Math.min(...trend.map(t => t.total)))}</span>
             <span>En yüksek: {fmt(Math.max(...trend.map(t => t.total)))}</span>
           </div>
@@ -277,7 +277,7 @@ export async function ExpensesContent({ companyId }: Props) {
 
       {/* Cross-navigation */}
       <div className="flex items-center justify-between px-1">
-        <p className="text-[10px] text-gray-400 leading-relaxed">
+        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
           Gider analizi P&amp;L ve nakit akışını doğrudan etkiler.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
@@ -287,7 +287,7 @@ export async function ExpensesContent({ companyId }: Props) {
           >
             P&amp;L Analizi →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link
             href="/dashboard/finance?tab=risks"
             className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap"

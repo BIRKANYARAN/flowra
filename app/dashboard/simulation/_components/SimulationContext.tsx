@@ -67,8 +67,8 @@ export async function SimulationContext({ companyId }: Props) {
         <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">
           Mevcut Finansal Durum
         </span>
-        <span className="text-[9px] text-gray-300">·</span>
-        <span className="text-[9px] text-gray-400">
+        <span className="text-[9px] text-[#cbd5e1]">·</span>
+        <span className="text-[9px] text-[#94a3b8]">
           {new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}
         </span>
       </div>
@@ -118,16 +118,16 @@ export async function SimulationContext({ companyId }: Props) {
             red:     'text-neg',
             amber:   'text-warn-text',
             orange:  'text-orange-700',
-            gray:    'text-gray-900',
+            gray:    'text-[#0f172a]',
           }
           return (
             <div key={kpi.label}
               className="bg-white border border-[#e2e8f0] rounded px-3 py-2.5 hover:border-[#e2e8f0] transition-colors">
               <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{kpi.label}</div>
-              <div className={`text-base font-black tabular-nums leading-none ${colors[kpi.tone] ?? 'text-gray-900'}`}>
+              <div className={`text-base font-black tabular-nums leading-none ${colors[kpi.tone] ?? 'text-[#0f172a]'}`}>
                 {kpi.value}
               </div>
-              <div className="text-[9px] text-gray-400 mt-0.5 leading-tight">{kpi.sub}</div>
+              <div className="text-[9px] text-[#94a3b8] mt-0.5 leading-tight">{kpi.sub}</div>
             </div>
           )
         })}
@@ -143,19 +143,19 @@ export async function SimulationContext({ companyId }: Props) {
             : 'bg-[#f8fafc] border-[#e2e8f0]'
         }`}>
           <div className="flex items-center gap-3">
-            <span className="text-[9px] font-black uppercase tracking-widest text-gray-500">
+            <span className="text-[9px] font-black uppercase tracking-widest text-[#64748b]">
               Başabaş Noktası
             </span>
-            <span className="text-sm font-black text-gray-900 tabular-nums">
+            <span className="text-sm font-black text-[#0f172a] tabular-nums">
               {fmt(breakEvenRevenue)}/ay
             </span>
-            <span className="text-[10px] text-gray-400">
+            <span className="text-[10px] text-[#94a3b8]">
               ({fmt(burn)} burn ÷ %{Math.round(assumedGrossMargin * 100)} brüt marj)
             </span>
           </div>
           <div className="flex items-center gap-2">
             {r.inputs.starting_cash > 0 && (
-              <span className="text-[10px] text-gray-500">
+              <span className="text-[10px] text-[#64748b]">
                 Başlangıç: {fmt(r.inputs.starting_cash)} nakit
               </span>
             )}

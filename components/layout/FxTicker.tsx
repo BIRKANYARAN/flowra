@@ -28,8 +28,8 @@ export function FxTicker() {
   // Skeleton during load
   if (loading) return (
     <div className="hidden md:flex items-center gap-3" aria-hidden>
-      <div className="h-2.5 w-16 bg-gray-100 rounded animate-pulse" />
-      <div className="h-2.5 w-16 bg-gray-100 rounded animate-pulse" />
+      <div className="h-2.5 w-16 bg-[#f1f5f9] rounded animate-pulse" />
+      <div className="h-2.5 w-16 bg-[#f1f5f9] rounded animate-pulse" />
     </div>
   )
 
@@ -45,7 +45,7 @@ export function FxTicker() {
         </span>
       )}
       <TickerPair code="USD" rate={rates.USD} />
-      <div className="w-px h-3 bg-gray-200 flex-shrink-0" />
+      <div className="w-px h-3 bg-[#e2e8f0] flex-shrink-0" />
       <TickerPair code="EUR" rate={rates.EUR} />
     </div>
   )
@@ -55,9 +55,9 @@ function TickerPair({ code, rate }: { code: string; rate: number }) {
   return (
     <div className="flex items-baseline gap-1.5 leading-none">
       <span className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8]">
-        {code}<span className="text-gray-300">/TRY</span>
+        {code}<span className="text-[#cbd5e1]">/TRY</span>
       </span>
-      <span className="text-[11px] font-black tabular-nums text-gray-700">
+      <span className="text-[11px] font-black tabular-nums text-[#334155]">
         {rate > 0 ? `₺${rate.toFixed(4)}` : '—'}
       </span>
     </div>

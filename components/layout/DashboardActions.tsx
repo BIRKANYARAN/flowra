@@ -77,7 +77,7 @@ export function DashboardActions() {
   }
 
   const btn = 'inline-flex items-center gap-1.5 px-3 py-2 rounded text-xs font-semibold border transition-colors disabled:opacity-40 cursor-pointer'
-  const gray = `${btn} bg-white border-[#e2e8f0] text-gray-700 hover:bg-[#f8fafc]`
+  const gray = `${btn} bg-white border-[#e2e8f0] text-[#334155] hover:bg-[#f8fafc]`
 
   return (
     <div className="flex flex-col items-end gap-2">

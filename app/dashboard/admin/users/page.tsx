@@ -31,7 +31,7 @@ const ROLE_LABELS: Record<MemberRole, string> = {
 const ROLE_COLORS: Record<MemberRole, string> = {
   admin:   'bg-primary-100 text-primary-700',
   manager: 'bg-info-light text-info-text',
-  viewer:  'bg-gray-100 text-gray-600',
+  viewer:  'bg-[#f1f5f9] text-[#64748b]',
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -177,7 +177,7 @@ export default function AdminUsersPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-black">Ekip Yönetimi</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <p className="text-sm text-[#64748b] mt-0.5">
             {activeMembers.length} aktif üye
             {pendingMembers.length > 0 ? `, ${pendingMembers.length} bekleyen davet` : ''}
           </p>
@@ -219,7 +219,7 @@ export default function AdminUsersPage() {
       {showInvite && (
         <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm mb-5 space-y-4">
           <h3 className="font-bold text-sm border-b border-[#e2e8f0] pb-3">Kullanıcı Davet Et</h3>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-[#64748b]">
             Davet edilecek kullanıcının Flowra hesabı olması gerekir.
             Henüz hesabı yoksa önce kayıt olmaları gerekir.
           </p>
@@ -249,7 +249,7 @@ export default function AdminUsersPage() {
             </div>
           </div>
 
-          <div className="bg-[#f8fafc] rounded p-3 text-xs text-gray-500 space-y-1">
+          <div className="bg-[#f8fafc] rounded p-3 text-xs text-[#64748b] space-y-1">
             <div><span className="font-semibold">İzleyici:</span> Tüm kayıtları okuyabilir, oluşturamaz veya düzenleyemez.</div>
             <div><span className="font-semibold">Satış Temsilcisi:</span> Kendi oluşturduğu müşterileri ve satışları yönetir.</div>
             <div><span className="font-semibold">Yönetici:</span> Tüm kayıtlara tam erişim ve ekip yönetimi.</div>
@@ -282,7 +282,7 @@ export default function AdminUsersPage() {
           <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Aktif Üyeler</span>
         </div>
         {activeMembers.length === 0 ? (
-          <div className="text-center py-10 text-gray-400 text-sm">Aktif üye bulunamadı.</div>
+          <div className="text-center py-10 text-[#94a3b8] text-sm">Aktif üye bulunamadı.</div>
         ) : (
           <div className="divide-y divide-[#f1f5f9]">
             {activeMembers.map(m => (
@@ -298,7 +298,7 @@ export default function AdminUsersPage() {
                     <div className="min-w-0">
                       <div className="text-sm font-semibold truncate">{m.display_name || m.email || m.user_id}</div>
                       {m.display_name && m.email && (
-                        <div className="text-xs text-gray-400 truncate">{m.email}</div>
+                        <div className="text-xs text-[#94a3b8] truncate">{m.email}</div>
                       )}
                     </div>
                   </div>
@@ -327,7 +327,7 @@ export default function AdminUsersPage() {
                       </button>
                       <button
                         onClick={() => setEditingId(null)}
-                        className="text-xs text-gray-400 px-2 py-1 rounded hover:bg-gray-100 transition-colors"
+                        className="text-xs text-[#94a3b8] px-2 py-1 rounded hover:bg-[#f1f5f9] transition-colors"
                       >
                         İptal
                       </button>
@@ -339,13 +339,13 @@ export default function AdminUsersPage() {
                       </span>
                       <button
                         onClick={() => startEditRole(m)}
-                        className="text-xs text-gray-400 hover:text-gray-700 px-2 py-1 rounded hover:bg-gray-100 transition-colors"
+                        className="text-xs text-[#94a3b8] hover:text-[#334155] px-2 py-1 rounded hover:bg-[#f1f5f9] transition-colors"
                       >
                         Rol Değiştir
                       </button>
                       <button
                         onClick={() => removeMember(m)}
-                        className="text-xs text-gray-400 hover:text-neg px-2 py-1 rounded hover:bg-neg-light transition-colors"
+                        className="text-xs text-[#94a3b8] hover:text-neg px-2 py-1 rounded hover:bg-neg-light transition-colors"
                       >
                         Çıkar
                       </button>
@@ -373,7 +373,7 @@ export default function AdminUsersPage() {
                       <span className="text-warn-text font-bold text-xs">?</span>
                     </div>
                     <div className="min-w-0">
-                      <div className="text-sm font-semibold truncate text-gray-500">
+                      <div className="text-sm font-semibold truncate text-[#64748b]">
                         {m.email || m.user_id}
                       </div>
                       <div className="text-xs text-warn-text">Davet bekleniyor</div>
@@ -386,7 +386,7 @@ export default function AdminUsersPage() {
                   </span>
                   <button
                     onClick={() => removeMember(m)}
-                    className="text-xs text-gray-400 hover:text-neg px-2 py-1 rounded hover:bg-neg-light transition-colors"
+                    className="text-xs text-[#94a3b8] hover:text-neg px-2 py-1 rounded hover:bg-neg-light transition-colors"
                   >
                     İptal
                   </button>
@@ -399,14 +399,14 @@ export default function AdminUsersPage() {
 
       {/* Cross-navigation */}
       <div className="flex items-center justify-between px-1">
-        <p className="text-[10px] text-gray-400 leading-relaxed">
+        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
           Kullanıcı ve rol yönetimi yönetişim sistemiyle birlikte çalışır.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
           <Link href="/dashboard/admin/audit" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Denetim İzi →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/admin/governance" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Yönetişim →
           </Link>

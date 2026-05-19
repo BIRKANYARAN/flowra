@@ -254,13 +254,13 @@ export function ProformaDetailClient({
         <div>
           <Link
             href="/dashboard/proformas"
-            className="text-sm text-gray-400 hover:text-gray-700 mb-1 inline-block"
+            className="text-sm text-[#94a3b8] hover:text-[#334155] mb-1 inline-block"
           >
             ← Proformalar
           </Link>
           <div className="flex items-center gap-3 flex-wrap mt-0.5">
             <h1 className="text-xl font-black">{no}</h1>
-            <span className="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded font-bold">
+            <span className="text-xs text-[#94a3b8] bg-[#f1f5f9] px-2 py-1 rounded font-bold">
               {currency}
             </span>
             <StatusBadge status={currentStatus} />
@@ -268,24 +268,24 @@ export function ProformaDetailClient({
             {(fxUsd || fxEur) && (
               <button
                 onClick={() => setShowFxInfo(!showFxInfo)}
-                className="w-6 h-6 rounded-full bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-600 text-xs font-bold flex items-center justify-center transition-colors"
+                className="w-6 h-6 rounded-full bg-[#f1f5f9] text-[#94a3b8] hover:bg-[#e2e8f0] hover:text-[#64748b] text-xs font-bold flex items-center justify-center transition-colors"
                 title="Kur bilgisi"
               >
                 i
               </button>
             )}
           </div>
-          <p className="text-sm text-gray-400 mt-0.5">{createdAt ? fmtDate(createdAt) : '—'}</p>
+          <p className="text-sm text-[#94a3b8] mt-0.5">{createdAt ? fmtDate(createdAt) : '—'}</p>
           {statusErr && <p className="text-xs text-neg mt-1">{statusErr}</p>}
 
           {/* TASK 10: FX info tooltip — only visible on click */}
           {showFxInfo && (fxUsd || fxEur) && (
-            <div className="mt-2 bg-[#f8fafc] border border-[#e2e8f0] rounded px-3 py-2 text-xs text-gray-500 inline-block">
-              <div className="font-semibold text-gray-600 mb-1">Kur Snapshot (Oluşturma Anı)</div>
-              {fxUsd ? <div>1 USD = <strong className="text-gray-700">₺{fxUsd.toFixed(4)}</strong></div> : null}
-              {fxEur ? <div>1 EUR = <strong className="text-gray-700">₺{fxEur.toFixed(4)}</strong></div> : null}
-              <div>1 TRY = <strong className="text-gray-700">₺1.0000</strong></div>
-              <div className="text-gray-400 mt-1">{createdAt ? fmtDate(createdAt) : ''}</div>
+            <div className="mt-2 bg-[#f8fafc] border border-[#e2e8f0] rounded px-3 py-2 text-xs text-[#64748b] inline-block">
+              <div className="font-semibold text-[#64748b] mb-1">Kur Snapshot (Oluşturma Anı)</div>
+              {fxUsd ? <div>1 USD = <strong className="text-[#334155]">₺{fxUsd.toFixed(4)}</strong></div> : null}
+              {fxEur ? <div>1 EUR = <strong className="text-[#334155]">₺{fxEur.toFixed(4)}</strong></div> : null}
+              <div>1 TRY = <strong className="text-[#334155]">₺1.0000</strong></div>
+              <div className="text-[#94a3b8] mt-1">{createdAt ? fmtDate(createdAt) : ''}</div>
             </div>
           )}
         </div>
@@ -359,12 +359,12 @@ export function ProformaDetailClient({
             <div className="flex items-center justify-between px-6 py-5 border-b border-[#e2e8f0]">
               <div>
                 <h2 className="font-black text-lg">Satışa Dönüştür</h2>
-                <p className="text-sm text-gray-500 mt-0.5">{no} · {customerName}</p>
+                <p className="text-sm text-[#64748b] mt-0.5">{no} · {customerName}</p>
               </div>
               <button
                 onClick={() => { if (!converting) setShowModal(false) }}
                 disabled={converting}
-                className="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100 text-xl text-gray-400 hover:text-gray-700 transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded hover:bg-[#f1f5f9] text-xl text-[#94a3b8] hover:text-[#334155] transition-colors"
               >
                 x
               </button>
@@ -394,7 +394,7 @@ export function ProformaDetailClient({
                     />
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-semibold truncate">{it.name}</div>
-                      <div className="text-xs text-gray-400">{S}{Number.isFinite(it.price) ? it.price.toFixed(2) : '0.00'} · %{it.kdv} KDV</div>
+                      <div className="text-xs text-[#94a3b8]">{S}{Number.isFinite(it.price) ? it.price.toFixed(2) : '0.00'} · %{it.kdv} KDV</div>
                     </div>
                     <div className="flex items-center gap-1 flex-shrink-0">
                       <button
@@ -405,7 +405,7 @@ export function ProformaDetailClient({
                             x.id === it.id ? { ...x, qty: Math.max(0.01, x.qty - 1) } : x
                           ))
                         }
-                        className="w-7 h-7 border border-[#e2e8f0] rounded text-sm font-bold hover:bg-gray-100 disabled:opacity-30 flex items-center justify-center"
+                        className="w-7 h-7 border border-[#e2e8f0] rounded text-sm font-bold hover:bg-[#f1f5f9] disabled:opacity-30 flex items-center justify-center"
                       >-</button>
                       <input
                         type="number"
@@ -427,7 +427,7 @@ export function ProformaDetailClient({
                             x.id === it.id ? { ...x, qty: x.qty + 1 } : x
                           ))
                         }
-                        className="w-7 h-7 border border-[#e2e8f0] rounded text-sm font-bold hover:bg-gray-100 disabled:opacity-30 flex items-center justify-center"
+                        className="w-7 h-7 border border-[#e2e8f0] rounded text-sm font-bold hover:bg-[#f1f5f9] disabled:opacity-30 flex items-center justify-center"
                       >+</button>
                     </div>
                     <div className="w-20 text-right text-sm font-bold tabular-nums flex-shrink-0">
@@ -441,11 +441,11 @@ export function ProformaDetailClient({
             {/* Modal footer */}
             <div className="px-6 py-5 border-t border-[#e2e8f0]">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-[#64748b]">
                   {selItems.filter(i => i.selected).length} ürün
                 </span>
                 <div className="text-right">
-                  <div className="text-xs text-gray-400">Satış Tutarı</div>
+                  <div className="text-xs text-[#94a3b8]">Satış Tutarı</div>
                   <div className="text-xl font-black tabular-nums">{S}{Number.isFinite(modalTotal) ? modalTotal.toFixed(2) : '0.00'}</div>
                 </div>
               </div>

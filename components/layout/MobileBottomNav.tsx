@@ -71,7 +71,7 @@ export function MobileBottomNav({ navBadges = {} }: Props) {
                   href={tab.href}
                   onClick={() => setOpen(false)}
                   className={`flex flex-col items-center gap-1 py-2 px-1 rounded transition-colors ${
-                    active ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-[#f8fafc]'
+                    active ? 'bg-primary-50 text-primary-700' : 'text-[#64748b] hover:bg-[#f8fafc]'
                   }`}
                 >
                   <span className="text-lg leading-none relative">
@@ -82,7 +82,7 @@ export function MobileBottomNav({ navBadges = {} }: Props) {
                       </span>
                     )}
                   </span>
-                  <span className={`text-[9px] font-semibold leading-none ${active ? 'text-primary-700' : 'text-gray-500'}`}>
+                  <span className={`text-[9px] font-semibold leading-none ${active ? 'text-primary-700' : 'text-[#64748b]'}`}>
                     {tab.label}
                   </span>
                 </Link>
@@ -106,7 +106,7 @@ export function MobileBottomNav({ navBadges = {} }: Props) {
                 key={tab.href}
                 href={tab.href}
                 className={`flex-1 flex flex-col items-center gap-0.5 py-2 px-1 transition-colors ${
-                  active ? 'text-primary-700' : 'text-gray-500 hover:text-gray-700'
+                  active ? 'text-primary-700' : 'text-[#64748b] hover:text-[#334155]'
                 }`}
               >
                 <span className="text-lg leading-none relative">
@@ -117,7 +117,7 @@ export function MobileBottomNav({ navBadges = {} }: Props) {
                     </span>
                   )}
                 </span>
-                <span className={`text-[9px] font-bold leading-none ${active ? 'text-primary-700' : 'text-gray-400'}`}>
+                <span className={`text-[9px] font-bold leading-none ${active ? 'text-primary-700' : 'text-[#94a3b8]'}`}>
                   {tab.label}
                 </span>
                 {active && <div className="w-4 h-0.5 rounded-full bg-primary-600 mt-0.5" />}
@@ -128,11 +128,11 @@ export function MobileBottomNav({ navBadges = {} }: Props) {
           <button
             onClick={() => setOpen(v => !v)}
             className={`flex-1 flex flex-col items-center gap-0.5 py-2 px-1 transition-colors ${
-              open ? 'text-primary-700' : 'text-gray-500'
+              open ? 'text-primary-700' : 'text-[#64748b]'
             }`}
           >
             <span className="text-lg leading-none">☰</span>
-            <span className={`text-[9px] font-bold leading-none ${open ? 'text-primary-700' : 'text-gray-400'}`}>Daha</span>
+            <span className={`text-[9px] font-bold leading-none ${open ? 'text-primary-700' : 'text-[#94a3b8]'}`}>Daha</span>
           </button>
         </div>
       </nav>

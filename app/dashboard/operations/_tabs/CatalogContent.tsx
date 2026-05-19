@@ -11,7 +11,7 @@ function CommandBarSkeleton() {
   return (
     <div className="flex items-center gap-2 animate-pulse">
       {[...Array(4)].map((_, i) => (
-        <div key={i} className="h-8 w-28 bg-gray-100 rounded" />
+        <div key={i} className="h-8 w-28 bg-[#f1f5f9] rounded" />
       ))}
     </div>
   )
@@ -104,13 +104,13 @@ export async function CatalogContent({ companyId, userId }: Props) {
               label: 'Aktif Ürün',
               value: String(products.length),
               sub:   `${productsWithStock.length} stokta · ${zeroStockProducts.length} tükenmiş`,
-              color: 'text-gray-900',
+              color: 'text-[#0f172a]',
             },
             {
               label: 'Katalog Liste Değeri',
               value: totalListValue > 0 ? fmtTRY(totalListValue) : '—',
               sub:   'Toplam liste fiyatı toplamı',
-              color: 'text-gray-900',
+              color: 'text-[#0f172a]',
             },
             {
               label: 'Ort. Brüt Marj',
@@ -118,7 +118,7 @@ export async function CatalogContent({ companyId, userId }: Props) {
               sub:   avgMargin !== null
                 ? `${withMargin.length} ürün FIFO maliyetiyle`
                 : 'FIFO maliyet verisi yok',
-              color: avgMargin === null ? 'text-gray-400'
+              color: avgMargin === null ? 'text-[#94a3b8]'
                 : avgMargin >= 0.30 ? 'text-pos-text'
                 : avgMargin >= 0.15 ? 'text-warn-text'
                 : 'text-neg',
@@ -135,7 +135,7 @@ export async function CatalogContent({ companyId, userId }: Props) {
             <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e2e8f0]' : ''}`}>
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
               <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
-              <div className="text-[10px] text-gray-400 mt-1 truncate" title={card.sub}>{card.sub}</div>
+              <div className="text-[10px] text-[#94a3b8] mt-1 truncate" title={card.sub}>{card.sub}</div>
             </div>
           ))}
         </div>
@@ -170,7 +170,7 @@ export async function CatalogContent({ companyId, userId }: Props) {
 
       {/* Cross-navigation */}
       <div className="flex items-center justify-between px-1">
-        <p className="text-[10px] text-gray-400 leading-relaxed">
+        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
           Ürün marjları P&amp;L&apos;i etkiler. Stok seviyesi ve simülasyon için ilgili sekmelere geçin.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
@@ -180,14 +180,14 @@ export async function CatalogContent({ companyId, userId }: Props) {
           >
             Stok →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link
             href="/dashboard/finance?tab=pnl"
             className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap"
           >
             P&amp;L Analizi →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link
             href="/dashboard/planning?tab=what-if"
             className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap"

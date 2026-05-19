@@ -36,25 +36,25 @@ function BSColumn({ title, rows }: { title: string; rows: Row[] }) {
   return (
     <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden flex flex-col">
       <div className="px-4 py-3 border-b border-[#e2e8f0] bg-[#f8fafc]">
-        <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">{title}</span>
+        <span className="text-[10px] font-black uppercase tracking-widest text-[#64748b]">{title}</span>
       </div>
       <div className="flex-1 divide-y divide-[#f1f5f9] px-4 py-2">
         {rows.map((row, i) => (
           <div key={i} className={`flex items-center justify-between py-2 gap-2 ${row.isGrand ? 'border-t-2 border-[#e2e8f0] mt-1' : ''}`}>
             <div className="min-w-0 flex-1">
               <span className={`text-xs leading-snug ${
-                row.isGrand  ? 'font-black text-gray-900 text-[13px]' :
-                row.isTotal  ? 'font-black text-gray-700' :
-                row.indent   ? 'text-gray-400 pl-4 font-medium' :
-                               'text-gray-700 font-semibold'
+                row.isGrand  ? 'font-black text-[#0f172a] text-[13px]' :
+                row.isTotal  ? 'font-black text-[#334155]' :
+                row.indent   ? 'text-[#94a3b8] pl-4 font-medium' :
+                               'text-[#334155] font-semibold'
               }`}>{row.label}</span>
-              {row.sub && <span className="text-[9px] text-gray-300 ml-1.5">{row.sub}</span>}
+              {row.sub && <span className="text-[9px] text-[#cbd5e1] ml-1.5">{row.sub}</span>}
             </div>
             <span className={`tabular-nums shrink-0 text-xs ${
-              row.isGrand  ? 'font-black text-gray-900 text-[13px]' :
-              row.isTotal  ? 'font-bold text-gray-800' :
-              row.indent   ? 'font-semibold text-gray-600' :
-              row.amount < 0 ? 'font-bold text-neg' : 'font-bold text-gray-700'
+              row.isGrand  ? 'font-black text-[#0f172a] text-[13px]' :
+              row.isTotal  ? 'font-bold text-[#1e293b]' :
+              row.indent   ? 'font-semibold text-[#64748b]' :
+              row.amount < 0 ? 'font-bold text-neg' : 'font-bold text-[#334155]'
             }`}>
               {(row.zero && row.amount === 0) ? '—' : fmtFull(row.amount)}
             </span>
@@ -238,8 +238,8 @@ export async function BalanceTab({ userId, companyId }: Props) {
       {/* Header KPI strip */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: 'Toplam Varlıklar',     value: fmt(bs.assets.total_assets_try),      color: 'text-gray-900' },
-          { label: 'Yabancı Kaynaklar',    value: fmt(bs.liabilities.total_liabilities_try), color: bs.liabilities.total_liabilities_try > 0 ? 'text-warn-text' : 'text-gray-400' },
+          { label: 'Toplam Varlıklar',     value: fmt(bs.assets.total_assets_try),      color: 'text-[#0f172a]' },
+          { label: 'Yabancı Kaynaklar',    value: fmt(bs.liabilities.total_liabilities_try), color: bs.liabilities.total_liabilities_try > 0 ? 'text-warn-text' : 'text-[#94a3b8]' },
           { label: 'Özsermaye',            value: fmt(bs.equity.total_equity_try),       color: bs.equity.total_equity_try >= 0 ? 'text-pos-text' : 'text-neg' },
         ].map(c => (
           <div key={c.label} className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
@@ -270,18 +270,18 @@ export async function BalanceTab({ userId, companyId }: Props) {
 
       {/* Cross-navigation */}
       <div className="flex items-center justify-between px-1">
-        <p className="text-[10px] text-gray-400 leading-relaxed">
+        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
           Bilanço tarihi: {bs.as_of_date} · Duran varlıklar ve uzun vadeli tahakkuklar henüz izlenmemektedir.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
           <Link href="/dashboard/partners" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Ortak Özkaynakları →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/finance?tab=cashflow" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Nakit →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/reports/balance-sheet" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Bilanço Raporu →
           </Link>

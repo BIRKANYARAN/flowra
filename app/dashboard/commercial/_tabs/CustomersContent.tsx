@@ -79,15 +79,15 @@ export async function CustomersContent({ companyId }: Props) {
   return (
     <div className="max-w-3xl space-y-6">
       <div>
-        <h2 className="text-xl font-black text-gray-900 tracking-tight">Müşteriler</h2>
-        <p className="text-xs text-gray-400 mt-0.5">{customers.length} kayıt · {sales.length} satış</p>
+        <h2 className="text-xl font-black text-[#0f172a] tracking-tight">Müşteriler</h2>
+        <p className="text-xs text-[#94a3b8] mt-0.5">{customers.length} kayıt · {sales.length} satış</p>
       </div>
 
       {/* KPI Strip */}
       {sales.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded overflow-hidden">
           {[
-            { label: 'Toplam Müşteri', value: String(customers.length), sub: `${sales.length} satış kaydı`,        color: 'text-gray-900' },
+            { label: 'Toplam Müşteri', value: String(customers.length), sub: `${sales.length} satış kaydı`,        color: 'text-[#0f172a]' },
             { label: 'Toplam Ciro',    value: billed > 0 ? fmt(billed) : '—', sub: 'Tüm satışlar (TRY)',           color: 'text-primary-700' },
             { label: 'Bekleyen Tahsilat', value: outstanding > 0 ? fmt(outstanding) : '—', sub: outstanding > 0 ? 'Ödenmemiş + kısmi' : 'Tamamı tahsil edildi ✓', color: outstanding > 0 ? 'text-neg' : 'text-pos-text' },
             { label: 'Tahsilat Oranı', value: billed > 0 ? `%${collectionRate}` : '—', sub: billed > 0 ? `${fmt(paidTotal)} / ${fmt(billed)} tahsil edildi` : 'Satış yok', color: collectionRate >= 80 ? 'text-pos-text' : collectionRate >= 50 ? 'text-warn-text' : 'text-neg' },
@@ -95,7 +95,7 @@ export async function CustomersContent({ companyId }: Props) {
             <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e2e8f0]' : ''}`}>
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
               <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
-              <div className="text-[10px] text-gray-400 mt-1">{card.sub}</div>
+              <div className="text-[10px] text-[#94a3b8] mt-1">{card.sub}</div>
             </div>
           ))}
         </div>
@@ -136,15 +136,15 @@ export async function CustomersContent({ companyId }: Props) {
               const sharePct = billed > 0 ? (tc.total / billed) * 100 : 0
               return (
                 <div key={tc.name} className="flex items-center gap-3">
-                  <div className="w-36 text-xs text-gray-700 font-medium shrink-0 truncate" title={tc.name}>{tc.name}</div>
+                  <div className="w-36 text-xs text-[#334155] font-medium shrink-0 truncate" title={tc.name}>{tc.name}</div>
                   <div className="flex-1">
-                    <div className="h-5 bg-gray-100 rounded overflow-hidden">
+                    <div className="h-5 bg-[#f1f5f9] rounded overflow-hidden">
                       <div className="h-5 bg-primary-400 rounded" style={{ width: `${barPct}%` }} />
                     </div>
                   </div>
                   <div className="w-28 text-right shrink-0">
                     <span className="text-xs font-bold tabular-nums text-primary-700">{fmt(tc.total)}</span>
-                    <span className="text-[10px] text-gray-400 ml-1">%{sharePct.toFixed(0)}</span>
+                    <span className="text-[10px] text-[#94a3b8] ml-1">%{sharePct.toFixed(0)}</span>
                   </div>
                 </div>
               )
@@ -160,7 +160,7 @@ export async function CustomersContent({ companyId }: Props) {
             <span className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">
               Müşteri Ödeme Riski
             </span>
-            <span className="text-[9px] text-gray-400">
+            <span className="text-[9px] text-[#94a3b8]">
               {atRiskCustomers.filter(r => r.risk_level === 'high').length > 0 && (
                 <span className="text-neg font-semibold">{atRiskCustomers.filter(r => r.risk_level === 'high').length} yüksek</span>
               )}
@@ -184,12 +184,12 @@ export async function CustomersContent({ companyId }: Props) {
                   {/* Customer info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-gray-800 truncate">{r.customer_name}</span>
+                      <span className="text-xs font-bold text-[#1e293b] truncate">{r.customer_name}</span>
                       <span className={`text-[9px] font-black uppercase tracking-wide px-1.5 py-0.5 rounded ${cfg.badge}`}>
                         {cfg.label}
                       </span>
                     </div>
-                    <div className="text-[10px] text-gray-400 mt-0.5 flex items-center gap-3">
+                    <div className="text-[10px] text-[#94a3b8] mt-0.5 flex items-center gap-3">
                       {r.overdue_count > 0 && (
                         <span>{r.overdue_count} gecikmiş işlem</span>
                       )}
@@ -204,7 +204,7 @@ export async function CustomersContent({ companyId }: Props) {
 
                   {/* Score bar */}
                   <div className="w-20 flex-shrink-0 hidden sm:block">
-                    <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="h-1.5 bg-[#f1f5f9] rounded-full overflow-hidden">
                       <div className={`h-full rounded-full ${r.risk_level === 'high' ? 'bg-neg' : r.risk_level === 'medium' ? 'bg-warn' : 'bg-pos'}`}
                         style={{ width: `${r.risk_score}%` }} />
                     </div>
@@ -215,7 +215,7 @@ export async function CustomersContent({ companyId }: Props) {
             })}
           </div>
           {riskScores.filter(r => r.risk_level !== 'low').length > 8 && (
-            <div className="px-5 py-2.5 text-[10px] text-gray-400 border-t border-[#f1f5f9]">
+            <div className="px-5 py-2.5 text-[10px] text-[#94a3b8] border-t border-[#f1f5f9]">
               +{riskScores.filter(r => r.risk_level !== 'low').length - 8} daha · Tüm risk analizi tahsilat sekmesinde
             </div>
           )}
@@ -226,7 +226,7 @@ export async function CustomersContent({ companyId }: Props) {
 
       {/* Cross-navigation */}
       <div className="flex items-center justify-between px-1">
-        <p className="text-[10px] text-gray-400 leading-relaxed">
+        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
           Müşteri risk skoru geç ödeme geçmişine dayanır. Tahsilat ve alacak analizi için ilgili sekmelere geçin.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
@@ -236,7 +236,7 @@ export async function CustomersContent({ companyId }: Props) {
           >
             Tahsilat →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link
             href="/dashboard/finance?tab=risks"
             className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap"

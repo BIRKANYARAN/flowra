@@ -54,8 +54,8 @@ const STATUS_META: Record<GeciciStatus, { label: string; cls: string }> = {
   urgent:   { label: '14 Gün İçinde', cls: 'bg-orange-100 text-orange-700 border-orange-200'     },
   upcoming: { label: 'Yaklaşıyor',    cls: 'bg-yellow-100 text-yellow-700 border-yellow-200'     },
   paid:     { label: 'Ödendi',        cls: 'bg-pos-light text-pos-text border-pos-light'  },
-  future:   { label: 'Henüz Yok',     cls: 'bg-gray-100 text-gray-500 border-[#e2e8f0]'           },
-  'n/a':    { label: 'Geçici Yok',    cls: 'bg-[#f8fafc] text-gray-400 border-[#e2e8f0]'            },
+  future:   { label: 'Henüz Yok',     cls: 'bg-[#f1f5f9] text-[#64748b] border-[#e2e8f0]'           },
+  'n/a':    { label: 'Geçici Yok',    cls: 'bg-[#f8fafc] text-[#94a3b8] border-[#e2e8f0]'            },
 }
 
 // ── KPI Card ──────────────────────────────────────────────────────────────────
@@ -72,7 +72,7 @@ function KpiCard({
   tone?: 'neutral' | 'warning' | 'positive' | 'critical'
 }) {
   const valueColor = {
-    neutral:  'text-gray-900',
+    neutral:  'text-[#0f172a]',
     warning:  'text-warn-text',
     positive: 'text-pos-text',
     critical: 'text-neg-text',
@@ -82,7 +82,7 @@ function KpiCard({
     <div className="flex flex-col gap-0.5 px-4 py-3 border-r border-[#e2e8f0] last:border-r-0">
       <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">{label}</div>
       <div className={`text-lg font-black tabular-nums leading-tight ${valueColor}`}>{value}</div>
-      {sub && <div className="text-[10px] text-gray-400 mt-0.5">{sub}</div>}
+      {sub && <div className="text-[10px] text-[#94a3b8] mt-0.5">{sub}</div>}
     </div>
   )
 }
@@ -93,7 +93,7 @@ function ErrorState({ href, label }: { href: string; label: string }) {
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-center px-4">
       <div className="text-3xl">⚠️</div>
-      <p className="text-sm text-gray-500">{label}</p>
+      <p className="text-sm text-[#64748b]">{label}</p>
       <a href={href} className="text-sm text-primary-600 font-semibold hover:underline">Yeniden Dene</a>
     </div>
   )
@@ -158,20 +158,20 @@ export default async function CorporateTaxPage() {
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-black text-gray-900 tracking-tight">
+          <h1 className="text-xl font-black text-[#0f172a] tracking-tight">
             Kurumlar Vergisi Tahmini
           </h1>
-          <p className="text-xs text-gray-400 mt-0.5">
+          <p className="text-xs text-[#94a3b8] mt-0.5">
             {currentYear} yılı geçici vergi takvimi + YTD kurumlar vergisi tahmini
           </p>
         </div>
         <div className="flex items-center gap-3">
           <Link href="/dashboard/cfo/tax/kdv"
-            className="text-xs font-semibold text-gray-400 hover:text-primary-600 transition-colors">
+            className="text-xs font-semibold text-[#94a3b8] hover:text-primary-600 transition-colors">
             KDV Özeti →
           </Link>
           <Link href="/dashboard/cfo"
-            className="text-xs font-semibold text-gray-400 hover:text-primary-600 transition-colors">
+            className="text-xs font-semibold text-[#94a3b8] hover:text-primary-600 transition-colors">
             ← CFO
           </Link>
         </div>
@@ -240,7 +240,7 @@ export default async function CorporateTaxPage() {
           </div>
 
           {quarters.length === 0 && (
-            <div className="px-4 py-6 text-center text-sm text-gray-400">
+            <div className="px-4 py-6 text-center text-sm text-[#94a3b8]">
               Bu yıla ait çeyrek verisi bulunamadı
             </div>
           )}
@@ -259,22 +259,22 @@ export default async function CorporateTaxPage() {
               >
                 {/* Quarter label */}
                 <div>
-                  <div className="text-sm font-black text-gray-800">{q.label}</div>
-                  <div className="text-[10px] text-gray-400">
+                  <div className="text-sm font-black text-[#1e293b]">{q.label}</div>
+                  <div className="text-[10px] text-[#94a3b8]">
                     {q.period.from.slice(5).replace('-', '/')} — {q.period.to.slice(5).replace('-', '/')}
                   </div>
                 </div>
 
                 {/* Matrah */}
                 <div className="text-right">
-                  <div className={`tabular-nums text-sm font-semibold ${q.matrah > 0 ? 'text-gray-900' : 'text-gray-300'}`}>
+                  <div className={`tabular-nums text-sm font-semibold ${q.matrah > 0 ? 'text-[#0f172a]' : 'text-[#cbd5e1]'}`}>
                     {q.matrah > 0 ? fmt(q.matrah) : '—'}
                   </div>
                 </div>
 
                 {/* Corporate Tax */}
                 <div className="text-right">
-                  <div className={`tabular-nums text-sm font-semibold ${q.corporate_tax > 0 ? 'text-warn-text' : 'text-gray-300'}`}>
+                  <div className={`tabular-nums text-sm font-semibold ${q.corporate_tax > 0 ? 'text-warn-text' : 'text-[#cbd5e1]'}`}>
                     {q.corporate_tax > 0 ? fmt(q.corporate_tax) : '—'}
                   </div>
                 </div>
@@ -285,12 +285,12 @@ export default async function CorporateTaxPage() {
                     <div className="text-xs text-primary-600 font-semibold">
                       30 Nis {currentYear + 1}
                       <br />
-                      <span className="text-[10px] text-gray-400 font-normal">(Yıllık Beyan)</span>
+                      <span className="text-[10px] text-[#94a3b8] font-normal">(Yıllık Beyan)</span>
                     </div>
                   ) : q.gecici_due_date ? (
-                    <div className="text-xs text-gray-700">{fmtDate(q.gecici_due_date)}</div>
+                    <div className="text-xs text-[#334155]">{fmtDate(q.gecici_due_date)}</div>
                   ) : (
-                    <div className="text-xs text-gray-300">—</div>
+                    <div className="text-xs text-[#cbd5e1]">—</div>
                   )}
                 </div>
 
@@ -313,8 +313,8 @@ export default async function CorporateTaxPage() {
           {/* YTD totals row */}
           {quarters.length > 0 && (
             <div className="grid grid-cols-[80px_1fr_1fr_1fr_110px] px-4 py-3 items-center bg-[#f8fafc] border-t-2 border-[#e2e8f0]">
-              <div className="text-[10px] font-black uppercase tracking-widest text-gray-500">YTD</div>
-              <div className="text-right tabular-nums text-sm font-black text-gray-900">
+              <div className="text-[10px] font-black uppercase tracking-widest text-[#64748b]">YTD</div>
+              <div className="text-right tabular-nums text-sm font-black text-[#0f172a]">
                 {ytd.matrah > 0 ? fmt(ytd.matrah) : '—'}
               </div>
               <div className="text-right tabular-nums text-sm font-black text-warn-text">
@@ -322,7 +322,7 @@ export default async function CorporateTaxPage() {
               </div>
               <div className="text-right" />
               <div className="flex justify-end">
-                <span className="text-[10px] font-black text-gray-500 uppercase tracking-wide">
+                <span className="text-[10px] font-black text-[#64748b] uppercase tracking-wide">
                   Geçici: {ytd.total_gecici > 0 ? fmt(ytd.total_gecici) : '—'}
                 </span>
               </div>
@@ -340,25 +340,25 @@ export default async function CorporateTaxPage() {
             </div>
           </div>
           <div className="px-4 py-4 space-y-2">
-            <div className="text-[10px] text-gray-500 mb-3">
+            <div className="text-[10px] text-[#64748b] mb-3">
               {monthsElapsed} aylık gerçekleşen ÷ {monthsElapsed} × 12 — yıl sonu tahmini
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-xs text-gray-600">Tahmini Yıllık Matrah</span>
-              <span className="tabular-nums text-sm font-black text-gray-900">{fmt(projectedMatrah)}</span>
+              <span className="text-xs text-[#64748b]">Tahmini Yıllık Matrah</span>
+              <span className="tabular-nums text-sm font-black text-[#0f172a]">{fmt(projectedMatrah)}</span>
             </div>
             <div className="flex items-center justify-between border-t border-[#e2e8f0] pt-2">
-              <span className="text-xs text-gray-600">Tahmini Yıllık KV (%25)</span>
+              <span className="text-xs text-[#64748b]">Tahmini Yıllık KV (%25)</span>
               <span className="tabular-nums text-sm font-black text-warn-text">{fmt(projectedKv)}</span>
             </div>
             {ytd.total_gecici > 0 && (
               <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-600">Ödenen Geçici YTD</span>
+                <span className="text-xs text-[#64748b]">Ödenen Geçici YTD</span>
                 <span className="tabular-nums text-sm font-semibold text-pos-text">−{fmt(ytd.total_gecici)}</span>
               </div>
             )}
             <div className="flex items-center justify-between border-t-2 border-[#e2e8f0] pt-2">
-              <span className="text-xs font-black text-gray-800">Tahmini Kalan Yükümlülük</span>
+              <span className="text-xs font-black text-[#1e293b]">Tahmini Kalan Yükümlülük</span>
               <span className={`tabular-nums text-sm font-black ${Math.max(0, projectedKv - ytd.total_gecici) > 0 ? 'text-orange-700' : 'text-pos-text'}`}>
                 {fmt(Math.max(0, projectedKv - ytd.total_gecici))}
               </span>
@@ -395,18 +395,18 @@ export default async function CorporateTaxPage() {
 
       {/* Cross-navigation */}
       <div className="flex items-center justify-between px-1">
-        <p className="text-[10px] text-gray-400 leading-relaxed">
+        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
           Kurumlar vergisi gelir tablosu ve KDV beyanıyla birlikte değerlendirilmeli.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
           <Link href="/dashboard/cfo/tax/kdv" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             KDV Beyanı →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/finance?tab=quarterly" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Geçici Vergi →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/reports/income-statement" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Gelir Tablosu →
           </Link>

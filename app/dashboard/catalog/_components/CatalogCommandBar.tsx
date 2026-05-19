@@ -52,7 +52,7 @@ export async function CatalogCommandBar({ companyId }: Props) {
 
   if (products.length === 0) {
     return (
-      <div className="flex items-center gap-2 px-4 py-2.5 bg-[#f8fafc] border border-[#e2e8f0] rounded text-xs text-gray-400">
+      <div className="flex items-center gap-2 px-4 py-2.5 bg-[#f8fafc] border border-[#e2e8f0] rounded text-xs text-[#94a3b8]">
         Henüz aktif ürün yok — katalog boş.{' '}
         <Link href="/dashboard/products" className="text-primary-600 font-semibold hover:text-primary-700">
           Ürün Ekle →
@@ -119,8 +119,8 @@ export async function CatalogCommandBar({ companyId }: Props) {
         {/* Total products */}
         <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#e2e8f0] rounded">
           <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Ürünler</span>
-          <span className="text-sm font-black tabular-nums text-gray-900">{totalProducts}</span>
-          <span className="text-[9px] text-gray-400">aktif</span>
+          <span className="text-sm font-black tabular-nums text-[#0f172a]">{totalProducts}</span>
+          <span className="text-[9px] text-[#94a3b8]">aktif</span>
         </div>
 
         {/* Priced */}
@@ -131,7 +131,7 @@ export async function CatalogCommandBar({ companyId }: Props) {
         }`}>
           <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Fiyatlı</span>
           <span className={`text-sm font-black tabular-nums ${
-            pricedProducts.length === totalProducts ? 'text-gray-900' : 'text-warn-text'
+            pricedProducts.length === totalProducts ? 'text-[#0f172a]' : 'text-warn-text'
           }`}>{pricedProducts.length}/{totalProducts}</span>
         </div>
 
@@ -145,10 +145,10 @@ export async function CatalogCommandBar({ companyId }: Props) {
         }`}>
           <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Maliyetli</span>
           <span className={`text-sm font-black tabular-nums ${
-            costdProducts.length === totalProducts ? 'text-gray-900' :
-            costdProducts.length === 0             ? 'text-gray-400' : 'text-warn-text'
+            costdProducts.length === totalProducts ? 'text-[#0f172a]' :
+            costdProducts.length === 0             ? 'text-[#94a3b8]' : 'text-warn-text'
           }`}>{costdProducts.length}/{totalProducts}</span>
-          <span className="text-[9px] text-gray-400">stok lotlu</span>
+          <span className="text-[9px] text-[#94a3b8]">stok lotlu</span>
         </div>
 
         {/* Average margin (TRY products only) */}
@@ -158,14 +158,14 @@ export async function CatalogCommandBar({ companyId }: Props) {
             avgMargin >= 0.20 ? 'bg-warn-light border-warn-light'    :
                                 'bg-neg-light border-neg-light'
           }`}>
-            <span className="text-[9px] font-black uppercase tracking-widest text-gray-500">Ort. Marj</span>
+            <span className="text-[9px] font-black uppercase tracking-widest text-[#64748b]">Ort. Marj</span>
             <span className={`text-sm font-black tabular-nums ${
               avgMargin >= 0.35 ? 'text-pos-text' :
               avgMargin >= 0.20 ? 'text-warn-text'   : 'text-neg'
             }`}>
               %{(avgMargin * 100).toFixed(0)}
             </span>
-            <span className="text-[9px] text-gray-400">{margins.length} TRY ürün</span>
+            <span className="text-[9px] text-[#94a3b8]">{margins.length} TRY ürün</span>
           </div>
         )}
 
@@ -189,14 +189,14 @@ export async function CatalogCommandBar({ companyId }: Props) {
             {belowThreshold.slice(0, 3).map(p => (
               <div key={p.name} className="px-3 py-2 flex items-center justify-between gap-3">
                 <div className="min-w-0 flex-1">
-                  <span className="text-xs font-bold text-gray-900 truncate block">{p.name}</span>
+                  <span className="text-xs font-bold text-[#0f172a] truncate block">{p.name}</span>
                   <span className="text-[10px] text-neg font-semibold">
                     %{(p.margin * 100).toFixed(0)} marj
                   </span>
                 </div>
                 <div className="text-right shrink-0">
-                  <div className="text-xs font-black tabular-nums text-gray-700">{fmt(p.price)}</div>
-                  <div className="text-[10px] text-gray-400">maliyet {fmt(p.cost)}</div>
+                  <div className="text-xs font-black tabular-nums text-[#334155]">{fmt(p.price)}</div>
+                  <div className="text-[10px] text-[#94a3b8]">maliyet {fmt(p.cost)}</div>
                 </div>
               </div>
             ))}

@@ -18,7 +18,7 @@ function fmtPct(r: number): string {
   return `%${(r * 100).toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}`
 }
 function delta(curr: number, prev: number): { text: string; color: string } {
-  if (prev === 0) return { text: '—', color: 'text-gray-400' }
+  if (prev === 0) return { text: '—', color: 'text-[#94a3b8]' }
   const pct  = ((curr - prev) / Math.abs(prev)) * 100
   const sign = pct >= 0 ? '+' : ''
   return { text: `${sign}${pct.toFixed(1)}%`, color: pct >= 0 ? 'text-pos-text' : 'text-neg' }
@@ -193,11 +193,11 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
-          <h2 className="text-lg font-black text-gray-900 tracking-tight">CFO Raporu {currentYear}</h2>
-          <p className="text-xs text-gray-400 mt-0.5">Çeyreklik P&L · Vergi Takvimi · Aylık Satışlar</p>
+          <h2 className="text-lg font-black text-[#0f172a] tracking-tight">CFO Raporu {currentYear}</h2>
+          <p className="text-xs text-[#94a3b8] mt-0.5">Çeyreklik P&L · Vergi Takvimi · Aylık Satışlar</p>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-xs bg-gray-100 text-gray-500 px-2.5 py-1 rounded font-semibold">
+          <span className="text-xs bg-[#f1f5f9] text-[#64748b] px-2.5 py-1 rounded font-semibold">
             {convRate}% dönüşüm · {a.total_sales} satış
           </span>
         </div>
@@ -207,7 +207,7 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
       <div className="grid grid-cols-4 gap-3">
         {[
           {
-            label: 'YTD Ciro', value: fmt(ytd.revenue), tone: 'text-gray-900',
+            label: 'YTD Ciro', value: fmt(ytd.revenue), tone: 'text-[#0f172a]',
             sub: ytdYoY ? ytdYoY.text + ' yıllık' : undefined, subColor: ytdYoY?.color,
           },
           {
@@ -220,14 +220,14 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
           },
           {
             label: 'Tahmini KV', value: fmt(ytd.corporate_tax),
-            tone: ytd.corporate_tax > 0 ? 'text-warn-text' : 'text-gray-400',
+            tone: ytd.corporate_tax > 0 ? 'text-warn-text' : 'text-[#94a3b8]',
           },
         ].map(c => (
           <div key={c.label} className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{c.label}</div>
             <div className={`text-xl font-black tabular-nums leading-none ${c.tone}`}>{c.value}</div>
             {'sub' in c && c.sub && (
-              <div className={`text-[10px] font-semibold mt-1 leading-none ${c.subColor ?? 'text-gray-400'}`}>{c.sub}</div>
+              <div className={`text-[10px] font-semibold mt-1 leading-none ${c.subColor ?? 'text-[#94a3b8]'}`}>{c.sub}</div>
             )}
           </div>
         ))}
@@ -237,8 +237,8 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
       {qs.length > 0 && (
         <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
           <div className="px-4 py-3 border-b border-[#e2e8f0]">
-            <h2 className="text-sm font-black text-gray-800">Çeyreklik Performans</h2>
-            <p className="text-[10px] text-gray-400 mt-0.5">Ciro · Brüt Kâr · Net Kâr · Marjlar</p>
+            <h2 className="text-sm font-black text-[#1e293b]">Çeyreklik Performans</h2>
+            <p className="text-[10px] text-[#94a3b8] mt-0.5">Ciro · Brüt Kâr · Net Kâr · Marjlar</p>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-xs min-w-[620px]">
@@ -263,17 +263,17 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
                   return (
                     <tr key={q.label} className={`hover:bg-[#f8fafc]/60 ${isFuture ? 'opacity-40' : ''}`}>
                       <td className="px-4 py-3">
-                        <div className="font-black text-gray-900">{q.label}</div>
-                        {isFuture && <div className="text-[9px] text-gray-400">Henüz başlamadı</div>}
+                        <div className="font-black text-[#0f172a]">{q.label}</div>
+                        {isFuture && <div className="text-[9px] text-[#94a3b8]">Henüz başlamadı</div>}
                       </td>
                       <td className="px-4 py-3 text-right">
-                        <div className="font-mono font-bold text-gray-900">{fmt(q.revenue)}</div>
+                        <div className="font-mono font-bold text-[#0f172a]">{fmt(q.revenue)}</div>
                         {revDelta && <div className={`text-[10px] font-semibold ${revDelta.color}`}>{revDelta.text} QoQ</div>}
                       </td>
                       <td className="px-4 py-3 text-right">
                         {yoy
                           ? <span className={`text-xs font-black tabular-nums ${yoy.color}`}>{yoy.text}</span>
-                          : <span className="text-gray-300 text-xs">—</span>}
+                          : <span className="text-[#cbd5e1] text-xs">—</span>}
                       </td>
                       <td className={`px-4 py-3 text-right font-mono font-bold ${q.gross_profit >= 0 ? 'text-primary-700' : 'text-neg'}`}>
                         {fmt(q.gross_profit)}
@@ -284,10 +284,10 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
                       <td className={`px-4 py-3 text-right font-mono ${q.gross_margin >= 0.3 ? 'text-pos-text' : q.gross_margin >= 0.1 ? 'text-warn-text' : 'text-neg'}`}>
                         {q.revenue > 0 ? fmtPct(q.gross_margin) : '—'}
                       </td>
-                      <td className={`px-4 py-3 text-right font-mono ${q.net_margin >= 0 ? 'text-gray-600' : 'text-neg'}`}>
+                      <td className={`px-4 py-3 text-right font-mono ${q.net_margin >= 0 ? 'text-[#64748b]' : 'text-neg'}`}>
                         {q.revenue > 0 ? fmtPct(q.net_margin) : '—'}
                       </td>
-                      <td className={`px-4 py-3 text-right font-mono ${q.matrah > 0 ? 'text-warn-text' : 'text-gray-400'}`}>
+                      <td className={`px-4 py-3 text-right font-mono ${q.matrah > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>
                         {q.matrah > 0 ? fmt(q.matrah) : '—'}
                       </td>
                     </tr>
@@ -296,21 +296,21 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
                 {/* YTD row */}
                 <tr className="bg-primary-50/40 font-black border-t-2 border-primary-100">
                   <td className="px-4 py-3 text-primary-800 font-black text-xs">YTD Toplam</td>
-                  <td className="px-4 py-3 text-right font-mono font-black text-gray-900">{fmt(ytd.revenue)}</td>
+                  <td className="px-4 py-3 text-right font-mono font-black text-[#0f172a]">{fmt(ytd.revenue)}</td>
                   <td className="px-4 py-3 text-right">
                     {ytdYoY
                       ? <span className={`text-xs font-black ${ytdYoY.color}`}>{ytdYoY.text}</span>
-                      : <span className="text-gray-300 text-xs">—</span>}
+                      : <span className="text-[#cbd5e1] text-xs">—</span>}
                   </td>
                   <td className={`px-4 py-3 text-right font-mono font-black ${ytd.gross_profit >= 0 ? 'text-primary-700' : 'text-neg'}`}>{fmt(ytd.gross_profit)}</td>
                   <td className={`px-4 py-3 text-right font-mono font-black ${ytd.net_profit >= 0 ? 'text-pos-text' : 'text-neg'}`}>{fmt(ytd.net_profit)}</td>
-                  <td className="px-4 py-3 text-right font-mono text-gray-500">
+                  <td className="px-4 py-3 text-right font-mono text-[#64748b]">
                     {ytd.revenue > 0 ? fmtPct(ytd.gross_profit / ytd.revenue) : '—'}
                   </td>
-                  <td className="px-4 py-3 text-right font-mono text-gray-500">
+                  <td className="px-4 py-3 text-right font-mono text-[#64748b]">
                     {ytd.revenue > 0 ? fmtPct(ytd.net_profit / ytd.revenue) : '—'}
                   </td>
-                  <td className={`px-4 py-3 text-right font-mono font-black ${ytd.matrah > 0 ? 'text-warn-text' : 'text-gray-400'}`}>{ytd.matrah > 0 ? fmt(ytd.matrah) : '—'}</td>
+                  <td className={`px-4 py-3 text-right font-mono font-black ${ytd.matrah > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>{ytd.matrah > 0 ? fmt(ytd.matrah) : '—'}</td>
                 </tr>
               </tbody>
             </table>
@@ -323,8 +323,8 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
         <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
           <div className="px-4 py-3 border-b border-[#e2e8f0] flex items-center justify-between">
             <div>
-              <h2 className="text-sm font-black text-gray-800">Geçici Vergi Takvimi {currentYear}</h2>
-              <p className="text-[10px] text-gray-400 mt-0.5">Kurumlar vergisi matrahı üzerinden %25 · yıllık beyan Nisan ayında</p>
+              <h2 className="text-sm font-black text-[#1e293b]">Geçici Vergi Takvimi {currentYear}</h2>
+              <p className="text-[10px] text-[#94a3b8] mt-0.5">Kurumlar vergisi matrahı üzerinden %25 · yıllık beyan Nisan ayında</p>
             </div>
             <span className="text-xs font-bold text-warn-text bg-warn-light border border-warn-light px-2.5 py-1 rounded">
               Toplam {fmt(ytd.total_gecici)}
@@ -339,13 +339,13 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
                 <div key={q.label} className={`px-4 py-3 flex items-center justify-between gap-4 ${isUrgent ? 'bg-warn-light/40' : ''}`}>
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-black text-gray-800">{q.label} Geçici Vergi</span>
-                      {isPast && <span className="text-[9px] bg-gray-100 text-gray-400 px-1.5 py-0.5 rounded">Geçti</span>}
+                      <span className="text-xs font-black text-[#1e293b]">{q.label} Geçici Vergi</span>
+                      {isPast && <span className="text-[9px] bg-[#f1f5f9] text-[#94a3b8] px-1.5 py-0.5 rounded">Geçti</span>}
                       {isUrgent && !isPast && <span className="text-[9px] bg-warn-light text-warn-text font-bold px-1.5 py-0.5 rounded">30 gün içinde</span>}
                     </div>
-                    <div className="text-[10px] text-gray-400 mt-0.5">Son ödeme: {fmtDate(q.gecici_due_date)} · Matrah: {fmt(q.matrah)}</div>
+                    <div className="text-[10px] text-[#94a3b8] mt-0.5">Son ödeme: {fmtDate(q.gecici_due_date)} · Matrah: {fmt(q.matrah)}</div>
                   </div>
-                  <div className={`text-base font-black tabular-nums ${isPast ? 'text-gray-400' : isUrgent ? 'text-warn-text' : 'text-warn-text'}`}>
+                  <div className={`text-base font-black tabular-nums ${isPast ? 'text-[#94a3b8]' : isUrgent ? 'text-warn-text' : 'text-warn-text'}`}>
                     {fmt(q.gecici_vergi)}
                   </div>
                 </div>
@@ -353,8 +353,8 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
             })}
             <div className="px-4 py-3 flex items-center justify-between bg-[#f8fafc]">
               <div>
-                <div className="text-xs font-black text-gray-700">Yıl Sonu Kurumlar Vergisi Tahmini</div>
-                <div className="text-[10px] text-gray-400 mt-0.5">Nisan {currentYear + 1} · Yıllık matrah × %25 − ödenen geçici vergiler</div>
+                <div className="text-xs font-black text-[#334155]">Yıl Sonu Kurumlar Vergisi Tahmini</div>
+                <div className="text-[10px] text-[#94a3b8] mt-0.5">Nisan {currentYear + 1} · Yıllık matrah × %25 − ödenen geçici vergiler</div>
               </div>
               <div className="text-base font-black text-warn-text tabular-nums">
                 {fmt(Math.max(0, ytd.corporate_tax - ytd.total_gecici))}
@@ -368,8 +368,8 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
       {monthly.length > 0 ? (
         <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
           <div className="px-4 py-3 border-b border-[#e2e8f0] flex items-center justify-between">
-            <h2 className="text-sm font-black text-gray-800">Aylık Satış Detayı</h2>
-            <span className="text-[10px] text-gray-400">{a.total_sales} satış · {a.total_proformas} teklif</span>
+            <h2 className="text-sm font-black text-[#1e293b]">Aylık Satış Detayı</h2>
+            <span className="text-[10px] text-[#94a3b8]">{a.total_sales} satış · {a.total_proformas} teklif</span>
           </div>
           <table className="w-full text-xs">
             <thead>
@@ -383,9 +383,9 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
             <tbody className="divide-y divide-[#f1f5f9]">
               {[...monthly].reverse().map(m => (
                 <tr key={m.month} className="hover:bg-[#f8fafc]/60 transition-colors">
-                  <td className="px-4 py-3 font-semibold text-gray-800">{m.month}</td>
-                  <td className="px-4 py-3 text-center text-gray-600 tabular-nums">{m.count}</td>
-                  <td className="px-4 py-3 text-right font-mono text-gray-700">{fmt(m.revenue_try)}</td>
+                  <td className="px-4 py-3 font-semibold text-[#1e293b]">{m.month}</td>
+                  <td className="px-4 py-3 text-center text-[#64748b] tabular-nums">{m.count}</td>
+                  <td className="px-4 py-3 text-right font-mono text-[#334155]">{fmt(m.revenue_try)}</td>
                   <td className={`px-4 py-3 text-right font-mono font-bold ${m.profit >= 0 ? 'text-pos-text' : 'text-neg'}`}>
                     {fmt(m.profit)}
                   </td>
@@ -396,8 +396,8 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
         </div>
       ) : (
         <div className="bg-white border border-[#e2e8f0] rounded text-center py-16 shadow-sm">
-          <p className="text-gray-500 font-medium text-sm">Henüz satış verisi yok.</p>
-          <p className="text-gray-400 text-xs mt-1">Satış kaydedildiğinde çeyreklik analiz otomatik hesaplanır.</p>
+          <p className="text-[#64748b] font-medium text-sm">Henüz satış verisi yok.</p>
+          <p className="text-[#94a3b8] text-xs mt-1">Satış kaydedildiğinde çeyreklik analiz otomatik hesaplanır.</p>
         </div>
       )}
 
@@ -405,11 +405,11 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
       <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
         <div className="px-4 py-3 border-b border-[#e2e8f0] flex items-center justify-between">
           <div>
-            <h2 className="text-sm font-black text-gray-800">Dönem Kapanış Kontrolü</h2>
-            <p className="text-[10px] text-gray-400 mt-0.5">Dönem kapatmadan önce kontrol edilmesi gereken kalemler</p>
+            <h2 className="text-sm font-black text-[#1e293b]">Dönem Kapanış Kontrolü</h2>
+            <p className="text-[10px] text-[#94a3b8] mt-0.5">Dönem kapatmadan önce kontrol edilmesi gereken kalemler</p>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs tabular-nums text-gray-500">{passCount}/{closeChecks.length}</span>
+            <span className="text-xs tabular-nums text-[#64748b]">{passCount}/{closeChecks.length}</span>
             <span className={`text-xs font-bold border px-2.5 py-1 rounded ${readinessBadgeClass}`}>
               {readinessLabel}
             </span>
@@ -417,7 +417,7 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
         </div>
 
         {/* Progress bar */}
-        <div className="h-1.5 bg-gray-100 w-full">
+        <div className="h-1.5 bg-[#f1f5f9] w-full">
           <div
             className={`h-full transition-all duration-500 ${
               readinessScore >= 100 ? 'bg-pos-light' : readinessScore >= 60 ? 'bg-warn' : 'bg-neg'
@@ -434,8 +434,8 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
               ? <span className="text-warn text-base leading-none">⚠</span>
               : <span className="text-neg text-base leading-none">✗</span>
 
-            const labelClass = check.ok ? 'text-gray-800' : check.warning ? 'text-warn-text' : 'text-neg-text'
-            const detailClass = check.ok ? 'text-gray-400' : check.warning ? 'text-warn-text' : 'text-neg'
+            const labelClass = check.ok ? 'text-[#1e293b]' : check.warning ? 'text-warn-text' : 'text-neg-text'
+            const detailClass = check.ok ? 'text-[#94a3b8]' : check.warning ? 'text-warn-text' : 'text-neg'
 
             return (
               <div key={check.id} className={`px-4 py-3 flex items-start gap-3 ${!check.ok && !check.warning ? 'bg-neg-light/30' : !check.ok ? 'bg-warn-light/30' : ''}`}>
@@ -458,18 +458,18 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
 
       {/* Cross-navigation */}
       <div className="flex items-center justify-between px-1">
-        <p className="text-[10px] text-gray-400 leading-relaxed">
+        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
           Çeyreklik gelir, matrah ve geçici vergi özeti.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
           <Link href="/dashboard/finance?tab=pnl" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Aylık P&amp;L →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/finance?tab=tax" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             KDV/KV →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/reports/income-statement" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Gelir Tablosu →
           </Link>

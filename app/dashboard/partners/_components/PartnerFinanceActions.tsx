@@ -155,7 +155,7 @@ export function PartnerFinanceActions({ partners, onRefresh }: PartnerFinanceAct
             </span>
           )}
         </div>
-        <span className={`text-gray-400 text-sm transition-transform duration-150 ${open ? 'rotate-180' : ''}`}>
+        <span className={`text-[#94a3b8] text-sm transition-transform duration-150 ${open ? 'rotate-180' : ''}`}>
           ▼
         </span>
       </button>
@@ -179,7 +179,7 @@ export function PartnerFinanceActions({ partners, onRefresh }: PartnerFinanceAct
                     'px-3 py-1.5 rounded text-xs font-semibold border transition-colors',
                     txType === action.tx_type
                       ? 'bg-primary-50 text-primary-700 border-primary-200'
-                      : 'bg-white text-gray-500 border-[#e2e8f0] hover:bg-[#f8fafc]',
+                      : 'bg-white text-[#64748b] border-[#e2e8f0] hover:bg-[#f8fafc]',
                   ].join(' ')}
                   title={action.desc}
                 >
@@ -187,7 +187,7 @@ export function PartnerFinanceActions({ partners, onRefresh }: PartnerFinanceAct
                 </button>
               ))}
             </div>
-            <p className="text-[10px] text-gray-400 mt-1.5">
+            <p className="text-[10px] text-[#94a3b8] mt-1.5">
               {ACTIONS.find(a => a.tx_type === txType)?.desc}
             </p>
           </div>
@@ -287,7 +287,7 @@ export function PartnerFinanceActions({ partners, onRefresh }: PartnerFinanceAct
                 type="button"
                 onClick={() => { resetForm(); setOpen(false) }}
                 disabled={saving}
-                className="px-4 py-2 rounded border border-[#e2e8f0] text-sm font-semibold text-gray-600 hover:bg-[#f8fafc] transition-colors disabled:opacity-50"
+                className="px-4 py-2 rounded border border-[#e2e8f0] text-sm font-semibold text-[#64748b] hover:bg-[#f8fafc] transition-colors disabled:opacity-50"
               >
                 İptal
               </button>

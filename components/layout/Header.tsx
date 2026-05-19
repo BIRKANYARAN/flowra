@@ -23,13 +23,13 @@ export function Header({ companyName }: Props) {
         <div className="w-5 h-5 rounded-md bg-primary-600 flex items-center justify-center flex-shrink-0">
           <span className="text-white font-black text-[9px]">FL</span>
         </div>
-        <span className="font-black text-sm text-gray-900">Flowra</span>
+        <span className="font-black text-sm text-[#0f172a]">Flowra</span>
       </div>
 
       {/* LEFT — desktop company breadcrumb */}
       <div className="hidden md:flex items-center">
         {companyName && (
-          <span className="text-[10px] font-semibold text-gray-400 tracking-wide">{companyName}</span>
+          <span className="text-[10px] font-semibold text-[#94a3b8] tracking-wide">{companyName}</span>
         )}
       </div>
 

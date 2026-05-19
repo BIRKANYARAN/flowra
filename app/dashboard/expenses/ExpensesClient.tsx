@@ -242,8 +242,8 @@ export default function ExpensesClient({
       {/* ── Section header ───────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-sm font-bold text-gray-900">Gider Kayıtları</h2>
-          <p className="text-xs text-gray-400 mt-0.5">
+          <h2 className="text-sm font-bold text-[#0f172a]">Gider Kayıtları</h2>
+          <p className="text-xs text-[#94a3b8] mt-0.5">
             {list.length} tek seferlik · {recurring.length} tekrarlayan
             {totalTRY > 0 && <span className="ml-2 text-neg font-semibold">· {fmtMoney(totalTRY)} toplam</span>}
           </p>
@@ -320,7 +320,7 @@ export default function ExpensesClient({
                   {partners.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
                 {partners.length === 0 && (
-                  <p className="text-xs text-gray-400 mt-1">Ortak sistemi aktif değilse boş bırakabilirsiniz.</p>
+                  <p className="text-xs text-[#94a3b8] mt-1">Ortak sistemi aktif değilse boş bırakabilirsiniz.</p>
                 )}
               </div>
             )}
@@ -328,11 +328,11 @@ export default function ExpensesClient({
             <label className="flex items-center gap-3 cursor-pointer select-none">
               <div
                 onClick={() => setForm(f => ({ ...f, is_recurring: !f.is_recurring }))}
-                className={`relative w-10 h-5 rounded-full transition-colors ${form.is_recurring ? 'bg-primary-600' : 'bg-gray-200'}`}
+                className={`relative w-10 h-5 rounded-full transition-colors ${form.is_recurring ? 'bg-primary-600' : 'bg-[#e2e8f0]'}`}
               >
                 <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${form.is_recurring ? 'translate-x-5' : 'translate-x-0.5'}`} />
               </div>
-              <span className="text-sm font-medium text-gray-700">Tekrarlayan gider</span>
+              <span className="text-sm font-medium text-[#334155]">Tekrarlayan gider</span>
             </label>
 
             {form.is_recurring ? (
@@ -396,21 +396,21 @@ export default function ExpensesClient({
                   <div key={e.id}
                     className="grid grid-cols-12 items-center px-5 py-3.5 hover:bg-[#f8fafc]/60 transition-colors group">
                     <div className="col-span-4 min-w-0">
-                      <div className="text-sm font-medium text-gray-800 truncate">{e.description}</div>
+                      <div className="text-sm font-medium text-[#1e293b] truncate">{e.description}</div>
                     </div>
                     <div className="col-span-2">
-                      <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
+                      <span className="text-xs bg-[#f1f5f9] text-[#64748b] px-2 py-0.5 rounded">
                         {CATEGORY_LABELS[e.category] ?? e.category}
                       </span>
                     </div>
-                    <div className="col-span-2 text-sm text-gray-500">{fmtDate(e.expense_date)}</div>
-                    <div className="col-span-1 text-right text-xs text-gray-400">
+                    <div className="col-span-2 text-sm text-[#64748b]">{fmtDate(e.expense_date)}</div>
+                    <div className="col-span-1 text-right text-xs text-[#94a3b8]">
                       {Number(e.kdv ?? 0) > 0 ? `%${Number(e.kdv)}` : '—'}
                     </div>
-                    <div className="col-span-1 text-right text-sm tabular-nums text-gray-700">
+                    <div className="col-span-1 text-right text-sm tabular-nums text-[#334155]">
                       {sym(e.currency)}{Number(e.amount).toFixed(2)}
                       {e.currency !== 'TRY' && (
-                        <div className="text-xs text-gray-400">kur: {Number(e.fx_rate).toFixed(4)}</div>
+                        <div className="text-xs text-[#94a3b8]">kur: {Number(e.fx_rate).toFixed(4)}</div>
                       )}
                     </div>
                     <div className="col-span-2 text-right flex items-center justify-end gap-2">
@@ -429,7 +429,7 @@ export default function ExpensesClient({
                           <button
                             onClick={() => setConfirmExpId(null)}
                             disabled={deleting === e.id}
-                            className="text-xs text-gray-400 px-1.5 py-0.5 rounded hover:bg-gray-100 transition-colors disabled:opacity-50"
+                            className="text-xs text-[#94a3b8] px-1.5 py-0.5 rounded hover:bg-[#f1f5f9] transition-colors disabled:opacity-50"
                           >
                             İptal
                           </button>
@@ -437,7 +437,7 @@ export default function ExpensesClient({
                       ) : (
                         <button
                           onClick={() => setConfirmExpId(e.id)}
-                          className="opacity-0 group-hover:opacity-100 text-xs text-gray-400 hover:text-neg px-1.5 py-1 rounded hover:bg-neg-light transition-all"
+                          className="opacity-0 group-hover:opacity-100 text-xs text-[#94a3b8] hover:text-neg px-1.5 py-1 rounded hover:bg-neg-light transition-all"
                         >
                           Sil
                         </button>
@@ -467,8 +467,8 @@ export default function ExpensesClient({
                     <div key={r.id}
                       className="grid grid-cols-12 items-center px-5 py-3.5 hover:bg-[#f8fafc]/60 transition-colors group">
                       <div className="col-span-4 min-w-0">
-                        <div className="text-sm font-medium text-gray-800 truncate">{r.description}</div>
-                        <div className="text-xs text-gray-400 mt-0.5">
+                        <div className="text-sm font-medium text-[#1e293b] truncate">{r.description}</div>
+                        <div className="text-xs text-[#94a3b8] mt-0.5">
                           {fmtDate(r.start_date)}{r.end_date ? ` → ${fmtDate(r.end_date)}` : ' → süresiz'}
                         </div>
                       </div>
@@ -478,11 +478,11 @@ export default function ExpensesClient({
                         </span>
                       </div>
                       <div className="col-span-2">
-                        <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
+                        <span className="text-xs bg-[#f1f5f9] text-[#64748b] px-2 py-0.5 rounded">
                           {FREQUENCY_LABELS[r.frequency] ?? r.frequency}
                         </span>
                       </div>
-                      <div className="col-span-1 text-right text-xs text-gray-400">
+                      <div className="col-span-1 text-right text-xs text-[#94a3b8]">
                         {Number(r.kdv) > 0 ? `%${r.kdv}` : '—'}
                       </div>
                       <div className="col-span-2 text-right text-sm font-bold tabular-nums text-neg">
@@ -501,7 +501,7 @@ export default function ExpensesClient({
                             <button
                               onClick={() => setConfirmRecId(null)}
                               disabled={deleting === r.id}
-                              className="text-xs text-gray-400 px-1.5 py-0.5 rounded hover:bg-gray-100 transition-colors disabled:opacity-50"
+                              className="text-xs text-[#94a3b8] px-1.5 py-0.5 rounded hover:bg-[#f1f5f9] transition-colors disabled:opacity-50"
                             >
                               İptal
                             </button>
@@ -509,7 +509,7 @@ export default function ExpensesClient({
                         ) : (
                           <button
                             onClick={() => setConfirmRecId(r.id)}
-                            className="opacity-0 group-hover:opacity-100 text-xs text-gray-400 hover:text-neg px-1.5 py-1 rounded hover:bg-neg-light transition-all"
+                            className="opacity-0 group-hover:opacity-100 text-xs text-[#94a3b8] hover:text-neg px-1.5 py-1 rounded hover:bg-neg-light transition-all"
                           >
                             Durdur
                           </button>

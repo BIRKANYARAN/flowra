@@ -53,7 +53,7 @@ function CFSection({ title, total, children }: {
       <div className="px-4 py-2.5 bg-[#f8fafc] border-b border-[#e2e8f0] flex items-center justify-between">
         <span className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">{title}</span>
         <span className={`text-sm font-black tabular-nums ${
-          total > 0 ? 'text-pos-text' : total < 0 ? 'text-neg' : 'text-gray-500'
+          total > 0 ? 'text-pos-text' : total < 0 ? 'text-neg' : 'text-[#64748b]'
         }`}>{fmt(total)}</span>
       </div>
       {children && <div className="px-4 py-2 divide-y divide-[#f1f5f9]">{children}</div>}
@@ -64,8 +64,8 @@ function CFSection({ title, total, children }: {
 function Line({ label, value }: { label: string; value: number }) {
   return (
     <div className="flex items-center justify-between py-1.5">
-      <span className="text-xs text-gray-600">{label}</span>
-      <span className={`tabular-nums text-xs font-semibold ${value >= 0 ? 'text-gray-700' : 'text-neg'}`}>{fmt(value)}</span>
+      <span className="text-xs text-[#64748b]">{label}</span>
+      <span className={`tabular-nums text-xs font-semibold ${value >= 0 ? 'text-[#334155]' : 'text-neg'}`}>{fmt(value)}</span>
     </div>
   )
 }
@@ -95,13 +95,13 @@ export default function CashFlowPage() {
       {/* Header */}
       <div className="flex items-center justify-between print:hidden">
         <div>
-          <h1 className="text-xl font-black text-gray-900 tracking-tight">Nakit Akış Tablosu</h1>
-          <p className="text-xs text-gray-400 mt-0.5">Faaliyet / Yatırım / Finansman</p>
+          <h1 className="text-xl font-black text-[#0f172a] tracking-tight">Nakit Akış Tablosu</h1>
+          <p className="text-xs text-[#94a3b8] mt-0.5">Faaliyet / Yatırım / Finansman</p>
         </div>
         <div className="flex items-center gap-2">
           <input type="date" value={from} onChange={e => setFrom(e.target.value)}
             className="border border-[#e2e8f0] rounded px-2 py-1 text-xs" />
-          <span className="text-xs text-gray-400">—</span>
+          <span className="text-xs text-[#94a3b8]">—</span>
           <input type="date" value={to} onChange={e => setTo(e.target.value)}
             className="border border-[#e2e8f0] rounded px-2 py-1 text-xs" />
           {cf && (
@@ -137,25 +137,25 @@ export default function CashFlowPage() {
               ],
             } as PdfReportOptions} />
           )}
-          <Link href="/dashboard/cfo" className="text-xs text-gray-400 hover:text-primary-600 font-semibold">← CFO</Link>
+          <Link href="/dashboard/cfo" className="text-xs text-[#94a3b8] hover:text-primary-600 font-semibold">← CFO</Link>
         </div>
       </div>
 
       {/* Print header */}
       <div className="hidden print:block mb-4">
         <h1 className="text-2xl font-black">Nakit Akış Tablosu</h1>
-        <p className="text-sm text-gray-500">{from} — {to}</p>
+        <p className="text-sm text-[#64748b]">{from} — {to}</p>
       </div>
 
       {error && <div className="bg-neg-light border border-neg-light rounded px-4 py-3 text-sm text-neg-text">{error}</div>}
-      {loading && <div className="bg-gray-100 rounded h-64 animate-pulse" />}
+      {loading && <div className="bg-[#f1f5f9] rounded h-64 animate-pulse" />}
 
       {cf && !loading && (
         <>
           {/* Opening balance */}
           <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 flex items-center justify-between">
-            <span className="text-xs font-semibold text-gray-600">Dönem Başı Nakit</span>
-            <span className="tabular-nums text-sm font-black text-gray-900">{fmt(cf.opening_balance_try)}</span>
+            <span className="text-xs font-semibold text-[#64748b]">Dönem Başı Nakit</span>
+            <span className="tabular-nums text-sm font-black text-[#0f172a]">{fmt(cf.opening_balance_try)}</span>
           </div>
 
           {/* Operating */}
@@ -213,7 +213,7 @@ export default function CashFlowPage() {
             </div>
             <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Dönem Sonu Nakit</div>
-              <div className="text-lg font-black tabular-nums text-gray-900">{fmt(cf.closing_balance_try)}</div>
+              <div className="text-lg font-black tabular-nums text-[#0f172a]">{fmt(cf.closing_balance_try)}</div>
             </div>
             <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Faaliyet Nakit</div>
@@ -227,18 +227,18 @@ export default function CashFlowPage() {
 
       {/* Cross-navigation */}
       <div className="flex items-center justify-between px-1 pt-1">
-        <p className="text-[10px] text-gray-400 leading-relaxed">
+        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
           Nakit akışı bilanço ve P&amp;L ile birlikte değerlendirilmeli.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
           <Link href="/dashboard/finance?tab=cashflow" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Nakit Projeksiyonu →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/finance?tab=balance" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Bilanço →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/finance?tab=pnl" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             P&amp;L →
           </Link>

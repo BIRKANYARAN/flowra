@@ -7,16 +7,16 @@ import { TabId, DebtTranche, STATUS_LABELS, pct, fmtPct } from '@/app/dashboard/
 export function ShareBar({ ratio }: { ratio: number }) {
   return (
     <div className="flex items-center gap-2">
-      <div className="flex-1 bg-gray-100 rounded-full h-1.5 max-w-[80px]">
+      <div className="flex-1 bg-[#f1f5f9] rounded-full h-1.5 max-w-[80px]">
         <div className="bg-primary-500 h-1.5 rounded-full" style={{ width: `${Math.min(ratio * 100, 100)}%` }} />
       </div>
-      <span className="text-xs text-gray-500 w-8">{pct(ratio)}</span>
+      <span className="text-xs text-[#64748b] w-8">{pct(ratio)}</span>
     </div>
   )
 }
 
 export function Skeleton({ h = 'h-16' }: { h?: string }) {
-  return <div className={`bg-gray-100 rounded ${h} animate-pulse`} />
+  return <div className={`bg-[#f1f5f9] rounded ${h} animate-pulse`} />
 }
 
 export function TabBtn({ id, active, label, onClick }: { id: TabId; active: boolean; label: string; onClick: (id: TabId) => void }) {
@@ -24,7 +24,7 @@ export function TabBtn({ id, active, label, onClick }: { id: TabId; active: bool
     <button
       onClick={() => onClick(id)}
       className={`px-3 py-1.5 rounded text-xs font-semibold transition-colors ${
-        active ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+        active ? 'bg-white text-[#0f172a] shadow-sm' : 'text-[#64748b] hover:text-[#334155]'
       }`}
     >
       {label}
@@ -51,7 +51,7 @@ export function RoiBar({ pct: roiPct }: { pct: number }) {
   const color  = roiPct >= 100 ? 'bg-pos-light' : roiPct >= 50 ? 'bg-warn' : 'bg-neg'
   return (
     <div className="flex items-center gap-2">
-      <div className="flex-1 bg-gray-100 rounded-full h-2 max-w-[120px]">
+      <div className="flex-1 bg-[#f1f5f9] rounded-full h-2 max-w-[120px]">
         <div className={`${color} h-2 rounded-full transition-all`} style={{ width: `${Math.max(2, capped / 2)}%` }} />
       </div>
       <span className={`text-xs font-bold tabular-nums ${roiPct >= 100 ? 'text-pos-text' : roiPct >= 50 ? 'text-warn-text' : 'text-neg'}`}>

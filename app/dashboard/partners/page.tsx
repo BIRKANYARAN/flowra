@@ -304,15 +304,15 @@ export default function PartnersPage() {
       <div className="flex items-end justify-between gap-4 flex-wrap">
         <div>
           <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Ortak Finans Merkezi</div>
-          <h1 className="text-2xl font-black tracking-tight text-gray-900 leading-tight">
+          <h1 className="text-2xl font-black tracking-tight text-[#0f172a] leading-tight">
             {TAB_META[activeTab]?.title ?? 'Ortaklar'}
           </h1>
-          <p className="text-sm text-gray-400 mt-1">{TAB_META[activeTab]?.sub ?? ''}</p>
+          <p className="text-sm text-[#94a3b8] mt-1">{TAB_META[activeTab]?.sub ?? ''}</p>
         </div>
         <div className="flex items-center gap-2">
           <Link
             href="/dashboard/admin/governance"
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded border border-[#e2e8f0] text-gray-600 text-xs font-semibold hover:border-[#e2e8f0] hover:bg-[#f8fafc] transition-colors whitespace-nowrap"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded border border-[#e2e8f0] text-[#64748b] text-xs font-semibold hover:border-[#e2e8f0] hover:bg-[#f8fafc] transition-colors whitespace-nowrap"
             title="Aylık yönetişim raporları ve ortak onay sistemi"
           >
             🏛️ Yönetişim

@@ -371,11 +371,11 @@ export default function SimulationClient({
     <div className="max-w-5xl space-y-4">
 
       {/* ── Zone 1: Status header ─────────────────────────────────────────────── */}
-      <div className="bg-gray-950 text-white rounded px-5 py-3 flex items-center justify-between gap-4 flex-wrap">
+      <div className="bg-[#020617] text-white rounded px-5 py-3 flex items-center justify-between gap-4 flex-wrap">
         <div>
           <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mr-3">Simülasyon</span>
           {!hasInputs ? (
-            <span className="text-sm text-gray-400">Maliyet ve fiyat girerek başlayın</span>
+            <span className="text-sm text-[#94a3b8]">Maliyet ve fiyat girerek başlayın</span>
           ) : isViable ? (
             <span className="text-sm font-bold text-pos">
               ✓ Kârlı plan &mdash; {qty} adet/ay &middot; yıllık{' '}
@@ -394,15 +394,15 @@ export default function SimulationClient({
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           {annualRate === 0 && (
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-[#64748b]">
               Faiz girilmedi · <a href="/dashboard/settings" className="text-primary-400 hover:underline">ekle →</a>
             </span>
           )}
-          <div className="flex items-center gap-1 bg-gray-800 border border-gray-700 rounded px-1 py-0.5">
+          <div className="flex items-center gap-1 bg-[#1e293b] border border-[#334155] rounded px-1 py-0.5">
             {CURRENCIES.map(c => (
               <button key={c} onClick={() => setDisplayCurrency(c)}
                 className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-colors ${
-                  displayCurrency === c ? 'bg-primary-600 text-white' : 'text-gray-400 hover:bg-gray-700'
+                  displayCurrency === c ? 'bg-primary-600 text-white' : 'text-[#94a3b8] hover:bg-[#334155]'
                 }`}>
                 {c}
               </button>
@@ -418,32 +418,32 @@ export default function SimulationClient({
             label: 'Birim Kâr',
             value: hasInputs ? fmtC(toDisplay(effectiveProfitPU), S) : '—',
             sub:   hasInputs ? `${fmtC(toDisplay(netPrice), S)} − ${fmtC(toDisplay(effectiveRealCost), S)}` : 'Maliyet ve fiyat girin',
-            color: !hasInputs ? 'text-gray-300' : effectiveProfitPU >= 0 ? 'text-pos-text' : 'text-neg',
+            color: !hasInputs ? 'text-[#cbd5e1]' : effectiveProfitPU >= 0 ? 'text-pos-text' : 'text-neg',
           },
           {
             label: 'Kâr Marjı',
             value: hasInputs ? pct(effectiveMargin) : '—',
             sub:   'Kâr / Gelir',
-            color: !hasInputs ? 'text-gray-300' : effectiveMargin >= 0 ? 'text-primary-700' : 'text-neg',
+            color: !hasInputs ? 'text-[#cbd5e1]' : effectiveMargin >= 0 ? 'text-primary-700' : 'text-neg',
           },
           {
             label: 'Yıllık Net',
             value: hasInputs ? fmtC(toDisplay(yearly.totalNetProfit), S) : '—',
             sub:   hasInputs ? `${qty * 12} adet · gider dahil` : 'Parametreler girin',
-            color: !hasInputs ? 'text-gray-300' : yearly.totalNetProfit >= 0 ? 'text-pos-text' : 'text-neg',
+            color: !hasInputs ? 'text-[#cbd5e1]' : yearly.totalNetProfit >= 0 ? 'text-pos-text' : 'text-neg',
           },
           {
             label: 'Başabaş',
             value: yearly.breakEvenUnits > 0 ? `${yearly.breakEvenUnits.toLocaleString('tr-TR')} adet` : '—',
             sub:   monthsToBreakEven ? `≈ ${monthsToBreakEven} ay` : 'Giderleri karşılamak için',
-            color: yearly.breakEvenUnits > 0 ? 'text-warn-text' : 'text-gray-300',
+            color: yearly.breakEvenUnits > 0 ? 'text-warn-text' : 'text-[#cbd5e1]',
           },
         ].map((card, i) => (
           <div key={card.label}
             className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e2e8f0]' : ''}`}>
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
             <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
-            <div className="text-[10px] text-gray-400 mt-1 leading-tight">{card.sub}</div>
+            <div className="text-[10px] text-[#94a3b8] mt-1 leading-tight">{card.sub}</div>
           </div>
         ))}
       </div>
@@ -498,11 +498,11 @@ export default function SimulationClient({
                     className={`w-full rounded-t transition-all ${isProfit ? 'bg-pos group-hover:bg-pos-light' : 'bg-neg-light group-hover:bg-neg'}`}
                     style={{ height: `${heightPct}%` }}
                   />
-                  <div className="text-[8px] text-gray-400 font-semibold leading-none">
+                  <div className="text-[8px] text-[#94a3b8] font-semibold leading-none">
                     {fmtMonth(r.ym).slice(0, 3)}
                   </div>
                   {/* Tooltip on hover */}
-                  <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block z-10 bg-gray-900 text-white rounded px-2 py-1 text-[10px] whitespace-nowrap">
+                  <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block z-10 bg-[#0f172a] text-white rounded px-2 py-1 text-[10px] whitespace-nowrap">
                     <div className="font-bold">{fmtMonth(r.ym)}</div>
                     <div>Gelir: {fmtC(toDisplay(r.revenue), S)}</div>
                     <div className={r.netProfit >= 0 ? 'text-pos' : 'text-neg'}>
@@ -516,7 +516,7 @@ export default function SimulationClient({
               )
             })}
           </div>
-          <div className="flex items-center gap-4 mt-3 text-[10px] text-gray-400">
+          <div className="flex items-center gap-4 mt-3 text-[10px] text-[#94a3b8]">
             <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-pos inline-block" /> Kârlı ay</span>
             <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-neg-light inline-block" /> Zararlı ay</span>
             <span className="ml-auto">Sütun yüksekliği = aylık gelir oranı</span>
@@ -532,7 +532,7 @@ export default function SimulationClient({
         <div className="grid grid-cols-3 gap-4 mb-3">
           <div>
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Net Kâr (Vergi Öncesi)</div>
-            <div className={`text-lg font-black tabular-nums ${!hasInputs ? 'text-gray-300' : yearly.totalNetProfit >= 0 ? 'text-gray-800' : 'text-neg'}`}>
+            <div className={`text-lg font-black tabular-nums ${!hasInputs ? 'text-[#cbd5e1]' : yearly.totalNetProfit >= 0 ? 'text-[#1e293b]' : 'text-neg'}`}>
               {hasInputs ? fmtC(toDisplay(yearly.totalNetProfit), S) : '—'}
             </div>
           </div>
@@ -543,19 +543,19 @@ export default function SimulationClient({
             <div className="text-lg font-black tabular-nums text-orange-600">
               {estimatedCorpTax > 0 ? `−${fmtC(toDisplay(estimatedCorpTax), S)}` : '—'}
             </div>
-            <div className="text-[10px] text-gray-400 mt-0.5">Tahmini KV</div>
+            <div className="text-[10px] text-[#94a3b8] mt-0.5">Tahmini KV</div>
           </div>
           <div>
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Vergi Sonrası Net</div>
-            <div className={`text-lg font-black tabular-nums ${!hasInputs ? 'text-gray-300' : netAfterCorpTax >= 0 ? 'text-pos-text' : 'text-neg'}`}>
+            <div className={`text-lg font-black tabular-nums ${!hasInputs ? 'text-[#cbd5e1]' : netAfterCorpTax >= 0 ? 'text-pos-text' : 'text-neg'}`}>
               {hasInputs ? fmtC(toDisplay(netAfterCorpTax), S) : '—'}
             </div>
-            <div className="text-[10px] text-gray-400 mt-0.5">Ortaklara dağıtılabilir</div>
+            <div className="text-[10px] text-[#94a3b8] mt-0.5">Ortaklara dağıtılabilir</div>
           </div>
         </div>
         {hasInputs && yearly.totalNetProfit > 0 && (
           <>
-            <div className="flex rounded-full h-1.5 overflow-hidden bg-gray-100">
+            <div className="flex rounded-full h-1.5 overflow-hidden bg-[#f1f5f9]">
               <div className="bg-pos h-1.5" style={{ width: `${100 - CORP_TAX_RATE}%` }} />
               <div className="bg-orange-300 h-1.5" style={{ width: `${CORP_TAX_RATE}%` }} />
             </div>
@@ -566,7 +566,7 @@ export default function SimulationClient({
           </>
         )}
         {hasInputs && yearly.yearlyExpenses > 0 && (
-          <div className="mt-2 pt-2 border-t border-[#e2e8f0] text-[10px] text-gray-400">
+          <div className="mt-2 pt-2 border-t border-[#e2e8f0] text-[10px] text-[#94a3b8]">
             Gider matrahı {fmtC(toDisplay(yearly.yearlyExpenses), S)} vergiden düşürülmüştür.
             KDV ayrıca Analitik sayfasında gösterilir.
           </div>
@@ -583,7 +583,7 @@ export default function SimulationClient({
               <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">
                 Ortak Dengesi Nasıl Etkilenir?
               </h2>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-[#64748b]">
                 {yearly.totalNetProfit > 0
                   ? `Vergi sonrası ${fmtC(toDisplay(netAfterCorpTax), S)} dağıtılır`
                   : 'Zarar durumunda ortak dağıtımı yapılamaz'}
@@ -600,11 +600,11 @@ export default function SimulationClient({
                 style={{ gridTemplateColumns: `repeat(${Math.min(partnerEq.entries.length, 4)}, 1fr)` }}>
                 {partnerEq.entries.map(e => (
                   <div key={e.partner_id} className="bg-white rounded px-3 py-2 text-center border border-pos-light">
-                    <div className="text-xs text-gray-500 font-semibold truncate mb-0.5">{e.partner_name}</div>
+                    <div className="text-xs text-[#64748b] font-semibold truncate mb-0.5">{e.partner_name}</div>
                     <div className="text-base font-black tabular-nums text-pos-text">
                       {fmtC(toDisplay(e.total_payout), S)}
                     </div>
-                    <div className="text-[10px] text-gray-400 mt-0.5">%{(e.share_ratio * 100).toFixed(0)} pay</div>
+                    <div className="text-[10px] text-[#94a3b8] mt-0.5">%{(e.share_ratio * 100).toFixed(0)} pay</div>
                     {e.equalization_amount > 0.01 && (
                       <div className="text-[10px] text-warn-text font-semibold mt-0.5">
                         +{fmtC(toDisplay(e.equalization_amount), S)} eşitleme
@@ -627,7 +627,7 @@ export default function SimulationClient({
               )}
             </>
           ) : yearly.totalNetProfit > 0 ? (
-            <div className="text-xs text-gray-400">Yükleniyor...</div>
+            <div className="text-xs text-[#94a3b8]">Yükleniyor...</div>
           ) : (
             <div className="text-xs text-neg-text bg-neg-light rounded px-3 py-2 border border-neg-light">
               ⚠ Zarar durumunda ortak dağıtımı yapılamaz. Parametreleri ayarlayarak kâra geçin.
@@ -660,7 +660,7 @@ export default function SimulationClient({
           ].map(t => (
             <div key={t.label}>
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">{t.label}</div>
-              <div className={`text-lg font-black tabular-nums ${t.color ?? 'text-gray-700'}`}>{t.value}</div>
+              <div className={`text-lg font-black tabular-nums ${t.color ?? 'text-[#334155]'}`}>{t.value}</div>
             </div>
           ))}
         </div>
@@ -668,14 +668,14 @@ export default function SimulationClient({
           <div>
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Yıllık Gider (Tekrarlı)</div>
             <div className="text-lg font-black tabular-nums text-neg">{fmtC(toDisplay(yearly.yearlyExpenses), S)}</div>
-            <div className="text-[10px] text-gray-400 mt-0.5">Tekrarlı gider planından</div>
+            <div className="text-[10px] text-[#94a3b8] mt-0.5">Tekrarlı gider planından</div>
           </div>
           <div>
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Net Kâr</div>
             <div className={`text-lg font-black tabular-nums ${yearly.totalNetProfit >= 0 ? 'text-pos-text' : 'text-neg'}`}>
               {fmtC(toDisplay(yearly.totalNetProfit), S)}
             </div>
-            <div className="text-[10px] text-gray-400 mt-0.5">Brüt Kâr − Gider</div>
+            <div className="text-[10px] text-[#94a3b8] mt-0.5">Brüt Kâr − Gider</div>
           </div>
           <div>
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Ortalama Marj</div>
@@ -689,7 +689,7 @@ export default function SimulationClient({
               <div className="text-lg font-black tabular-nums text-warn-text">
                 {yearly.breakEvenUnits.toLocaleString('tr-TR')} adet
               </div>
-              <div className="text-[10px] text-gray-400 mt-0.5">Giderleri karşılamak için</div>
+              <div className="text-[10px] text-[#94a3b8] mt-0.5">Giderleri karşılamak için</div>
             </div>
           )}
         </div>
@@ -721,7 +721,7 @@ export default function SimulationClient({
                   {fmtMonth(r.ym).slice(0, 3)}
                 </div>
                 <div className={`text-[8px] font-semibold leading-none ${text} opacity-80`}>{lbl}</div>
-                <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block z-10 bg-gray-900 text-white rounded px-2 py-1.5 text-[10px] whitespace-nowrap pointer-events-none">
+                <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block z-10 bg-[#0f172a] text-white rounded px-2 py-1.5 text-[10px] whitespace-nowrap pointer-events-none">
                   <div className="font-bold mb-0.5">{fmtMonth(r.ym)}</div>
                   <div>Gelir: {fmtC(toDisplay(r.revenue), S)}</div>
                   <div className={r.netProfit >= 0 ? 'text-pos' : 'text-neg'}>
@@ -735,7 +735,7 @@ export default function SimulationClient({
             )
           })}
         </div>
-        <div className="flex items-center gap-4 mt-3 text-[10px] text-gray-400">
+        <div className="flex items-center gap-4 mt-3 text-[10px] text-[#94a3b8]">
           <span className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-sm bg-pos-light border border-pos inline-block" />
             Güvenli
@@ -748,7 +748,7 @@ export default function SimulationClient({
             <span className="w-2.5 h-2.5 rounded-sm bg-neg-light border border-neg inline-block" />
             Kritik
           </span>
-          <span className="ml-auto text-[10px] text-gray-300">Hover = detay</span>
+          <span className="ml-auto text-[10px] text-[#cbd5e1]">Hover = detay</span>
         </div>
       </div>
 
@@ -764,7 +764,7 @@ export default function SimulationClient({
               <div className={`text-xl font-black tabular-nums ${turnsPositiveMonth ? 'text-pos-text' : 'text-neg'}`}>
                 {turnsPositiveMonth ? `${turnsPositiveMonth}. Ay` : '12+ ay'}
               </div>
-              <div className="text-[10px] text-gray-400 mt-0.5">Kümülatif nakit pozitife geçer</div>
+              <div className="text-[10px] text-[#94a3b8] mt-0.5">Kümülatif nakit pozitife geçer</div>
             </div>
             <div>
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">
@@ -781,14 +781,14 @@ export default function SimulationClient({
                   : adjustedMonthsToClear === null ? '∞'
                   : `${adjustedMonthsToClear} ay`}
               </div>
-              <div className="text-[10px] text-gray-400 mt-0.5">Dağıtım kapasitesine göre</div>
+              <div className="text-[10px] text-[#94a3b8] mt-0.5">Dağıtım kapasitesine göre</div>
             </div>
             <div>
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">12 Ay Sonu Kümülatif</div>
               <div className={`text-xl font-black tabular-nums ${(activeProjection[11]?.cumProfit ?? 0) >= 0 ? 'text-pos-text' : 'text-neg'}`}>
                 {activeProjection[11] ? fmtC(toDisplay(activeProjection[11].cumProfit), S) : '—'}
               </div>
-              <div className="text-[10px] text-gray-400 mt-0.5">Yıl sonu kümülatif nakit</div>
+              <div className="text-[10px] text-[#94a3b8] mt-0.5">Yıl sonu kümülatif nakit</div>
             </div>
           </div>
           {stableFromMonth ? (
@@ -813,7 +813,7 @@ export default function SimulationClient({
           Borç Baskısı Takibi
         </h2>
         {debtBurdenLoading ? (
-          <div className="text-xs text-gray-400">Yükleniyor...</div>
+          <div className="text-xs text-[#94a3b8]">Yükleniyor...</div>
         ) : (
           <>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-3">
@@ -821,10 +821,10 @@ export default function SimulationClient({
                 <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">
                   Toplam Borç{extraDebtTRY > 0 && <span className="text-warn ml-1">(+senaryo)</span>}
                 </div>
-                <div className="text-lg font-black tabular-nums text-gray-800">
+                <div className="text-lg font-black tabular-nums text-[#1e293b]">
                   {adjustedOutstanding > 0 ? fmtC(toDisplay(adjustedOutstanding), S) : '—'}
                 </div>
-                <div className="text-[10px] text-gray-400">
+                <div className="text-[10px] text-[#94a3b8]">
                   Ortaklara kalan{extraDebtTRY > 0 && ` · +${fmtC(toDisplay(extraDebtTRY), S)} senaryo`}
                 </div>
               </div>
@@ -833,12 +833,12 @@ export default function SimulationClient({
                 <div className={`text-lg font-black tabular-nums ${monthlyDistributable >= 0 ? 'text-pos-text' : 'text-neg'}`}>
                   {hasInputs ? fmtC(toDisplay(monthlyDistributable), S) : '—'}
                 </div>
-                <div className="text-[10px] text-gray-400">Vergi sonrası / 12</div>
+                <div className="text-[10px] text-[#94a3b8]">Vergi sonrası / 12</div>
               </div>
               <div>
                 <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Tahmini Temizlenme</div>
                 <div className={`text-lg font-black tabular-nums ${
-                  adjustedMonthsToClear === null ? 'text-gray-300'
+                  adjustedMonthsToClear === null ? 'text-[#cbd5e1]'
                   : adjustedMonthsToClear > 24 ? 'text-neg'
                   : adjustedMonthsToClear > 12 ? 'text-warn-text'
                   : 'text-pos-text'
@@ -847,14 +847,14 @@ export default function SimulationClient({
                     : adjustedMonthsToClear === null ? '∞'
                     : `${adjustedMonthsToClear} ay`}
                 </div>
-                <div className="text-[10px] text-gray-400">Borç / aylık kapasite</div>
+                <div className="text-[10px] text-[#94a3b8]">Borç / aylık kapasite</div>
               </div>
               <div>
                 <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Ortak Sayısı</div>
-                <div className="text-lg font-black tabular-nums text-gray-700">
+                <div className="text-lg font-black tabular-nums text-[#334155]">
                   {debtBurden?.summary.partner_count ?? partnerCount}
                 </div>
-                <div className="text-[10px] text-gray-400">Aktif ortak</div>
+                <div className="text-[10px] text-[#94a3b8]">Aktif ortak</div>
               </div>
             </div>
             <div className={`rounded px-3 py-2 border text-xs font-semibold ${ds.color} ${ds.bg} ${ds.border}`}>

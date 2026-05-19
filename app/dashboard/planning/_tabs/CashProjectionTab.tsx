@@ -126,9 +126,9 @@ export async function CashProjectionTab({ companyId }: Props) {
 
       {/* ── HEADER METRICS ─────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <Metric label="Ort. Aylık Gelir"   value={`₺${fmtK(avgRevenue)}`}    sub="6 ay ortalama"                                            color={avgRevenue > 0 ? 'text-pos-text' : 'text-gray-400'} />
-        <Metric label="Ort. Aylık Gider"   value={`₺${fmtK(avgExpenses)}`}   sub="6 ay ortalama"                                            color="text-gray-700" />
-        <Metric label="Borç Servisi/Ay"    value={hasTranches ? `₺${fmtK(monthlyDebtService)}` : '—'} sub="faiz tahmini" color={hasTranches ? 'text-orange-600' : 'text-gray-400'} />
+        <Metric label="Ort. Aylık Gelir"   value={`₺${fmtK(avgRevenue)}`}    sub="6 ay ortalama"                                            color={avgRevenue > 0 ? 'text-pos-text' : 'text-[#94a3b8]'} />
+        <Metric label="Ort. Aylık Gider"   value={`₺${fmtK(avgExpenses)}`}   sub="6 ay ortalama"                                            color="text-[#334155]" />
+        <Metric label="Borç Servisi/Ay"    value={hasTranches ? `₺${fmtK(monthlyDebtService)}` : '—'} sub="faiz tahmini" color={hasTranches ? 'text-orange-600' : 'text-[#94a3b8]'} />
         <Metric label="Ort. Net/Ay"        value={`₺${fmtK(avgNet)}`}         sub="gelir − gider − borç"                                    color={avgNet >= 0 ? 'text-pos-text' : 'text-neg'} />
       </div>
 
@@ -143,13 +143,13 @@ export async function CashProjectionTab({ companyId }: Props) {
       <div className="grid grid-cols-3 gap-3">
         {([
           { key: 'pessimistic', label: 'Kötümser (−20%)', summary: forecast.summary.pessimistic, accent: 'border-neg-light bg-neg-light',   text: 'text-neg-text',     sub: 'text-neg' },
-          { key: 'base',        label: 'Baz',              summary: forecast.summary.base,        accent: 'border-[#e2e8f0] bg-white',   text: 'text-gray-900',    sub: 'text-gray-400' },
+          { key: 'base',        label: 'Baz',              summary: forecast.summary.base,        accent: 'border-[#e2e8f0] bg-white',   text: 'text-[#0f172a]',    sub: 'text-[#94a3b8]' },
           { key: 'optimistic',  label: 'İyimser (+15%)',   summary: forecast.summary.optimistic,  accent: 'border-pos-light bg-pos-light', text: 'text-pos-text', sub: 'text-pos' },
         ] as const).map(s => (
           <div key={s.key} className={`rounded border px-4 py-3.5 ${s.accent}`}>
             <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-2">{s.label}</div>
             <div className={`text-xl font-black tabular-nums leading-none ${s.text}`}>
-              <span className="text-gray-300 text-sm font-normal mr-0.5">₺</span>
+              <span className="text-[#cbd5e1] text-sm font-normal mr-0.5">₺</span>
               {fmtK(Math.abs(s.summary.endCash))}
               {s.summary.endCash < 0 && <span className="text-sm ml-1 font-normal">(−)</span>}
             </div>
@@ -173,7 +173,7 @@ export async function CashProjectionTab({ companyId }: Props) {
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#f1f5f9]">
           <div>
             <span className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Baz Senaryo — Aylık Nakit Pozisyonu</span>
-            <span className="ml-2 text-[9px] text-gray-400">({startYear} projeksiyonu)</span>
+            <span className="ml-2 text-[9px] text-[#94a3b8]">({startYear} projeksiyonu)</span>
           </div>
           <Link href="/dashboard/planning?tab=scenarios" className="text-[10px] text-primary-600 font-semibold hover:underline">
             Senaryo Editörü →
@@ -194,7 +194,7 @@ export async function CashProjectionTab({ companyId }: Props) {
                     style={{ height: `${height}px` }}
                     title={`${m.label}: ₺${fmt(m.cash)}`}
                   />
-                  <span className="text-[7px] text-gray-400 leading-none font-medium">{m.label.split(' ')[0]}</span>
+                  <span className="text-[7px] text-[#94a3b8] leading-none font-medium">{m.label.split(' ')[0]}</span>
                 </div>
               )
             })}
@@ -215,12 +215,12 @@ export async function CashProjectionTab({ companyId }: Props) {
             <tbody className="divide-y divide-[#f1f5f9]">
               {forecast.base.map((m, i) => (
                 <tr key={i} className="hover:bg-[#f8fafc]/40">
-                  <td className="px-5 py-2 font-semibold text-gray-700 whitespace-nowrap">{m.label}</td>
-                  <td className="px-3 py-2 text-right tabular-nums text-gray-600">₺{fmtK(m.revenue)}</td>
+                  <td className="px-5 py-2 font-semibold text-[#334155] whitespace-nowrap">{m.label}</td>
+                  <td className="px-3 py-2 text-right tabular-nums text-[#64748b]">₺{fmtK(m.revenue)}</td>
                   <td className={`px-3 py-2 text-right tabular-nums font-semibold ${m.net >= 0 ? 'text-pos-text' : 'text-neg'}`}>
                     {m.net >= 0 ? '+' : '−'}₺{fmtK(Math.abs(m.net))}
                   </td>
-                  <td className={`px-5 py-2 text-right tabular-nums font-black ${m.cash >= 0 ? 'text-gray-900' : 'text-neg'}`}>
+                  <td className={`px-5 py-2 text-right tabular-nums font-black ${m.cash >= 0 ? 'text-[#0f172a]' : 'text-neg'}`}>
                     {m.cash < 0 ? '−' : ''}₺{fmtK(Math.abs(m.cash))}
                   </td>
                 </tr>
@@ -231,8 +231,8 @@ export async function CashProjectionTab({ companyId }: Props) {
       </div>
 
       {/* ── ASSUMPTIONS FOOTER ─────────────────────────────────────────────── */}
-      <div className="px-4 py-3 bg-[#f8fafc] border border-[#e2e8f0] rounded text-[10px] text-gray-400 space-y-1">
-        <div className="font-bold text-gray-500 mb-1">Projeksiyon Varsayımları</div>
+      <div className="px-4 py-3 bg-[#f8fafc] border border-[#e2e8f0] rounded text-[10px] text-[#94a3b8] space-y-1">
+        <div className="font-bold text-[#64748b] mb-1">Projeksiyon Varsayımları</div>
         <div>• Son 6 ayın aylık ortalaması baz alınmıştır (gelir + gider)</div>
         {hasTranches && <div>• Aylık borç servisi ₺{fmtK(monthlyDebtService)} tahmin edilmiştir (aktif tranche faizleri)</div>}
         <div>• İyimser: +%15 gelir büyümesi · Kötümser: −%20 gelir streji · Borç servisi her senaryoda sabit</div>
@@ -244,14 +244,14 @@ export async function CashProjectionTab({ companyId }: Props) {
 
       {/* Cross-navigation */}
       <div className="flex items-center justify-between px-1">
-        <p className="text-[10px] text-gray-400 leading-relaxed">
+        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
           Nakit projeksiyonu gerçek finansallarla ve borç baskısıyla birlikte değerlendirilmeli.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
           <Link href="/dashboard/finance?tab=cashflow" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Nakit Akışı →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/planning?tab=debt-pressure" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Borç Baskısı →
           </Link>
@@ -266,7 +266,7 @@ function Metric({ label, value, sub, color }: { label: string; value: string; su
     <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
       <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{label}</div>
       <div className={`text-lg font-black tabular-nums leading-none ${color}`}>{value}</div>
-      <div className="text-[9px] text-gray-400 mt-1">{sub}</div>
+      <div className="text-[9px] text-[#94a3b8] mt-1">{sub}</div>
     </div>
   )
 }

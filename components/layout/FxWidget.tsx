@@ -89,9 +89,9 @@ export function FxWidget({ initialFx }: Props) {
         {fxOk ? (
           <>
             <RatePair label="USD / TRY" value={fx.USD} />
-            <div className="w-px h-8 bg-gray-100 hidden sm:block" />
+            <div className="w-px h-8 bg-[#f1f5f9] hidden sm:block" />
             <RatePair label="EUR / TRY" value={fx.EUR} />
-            <div className="text-[10px] text-gray-400 text-right space-y-0.5">
+            <div className="text-[10px] text-[#94a3b8] text-right space-y-0.5">
               <div>Kaynak: {fxSourceLabel(fx.source)}</div>
               {fx.rate_date  && <div className="tabular-nums">Kur: {fmtRateDate(fx.rate_date)}</div>}
               {fx.fetched_at && <div className="tabular-nums">Güncellendi: {fmtTimestamp(fx.fetched_at)}</div>}
@@ -104,7 +104,7 @@ export function FxWidget({ initialFx }: Props) {
         <button
           onClick={refresh}
           disabled={refreshing}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold border bg-white border-[#e2e8f0] text-gray-700 hover:bg-[#f8fafc] disabled:opacity-40 transition-colors"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold border bg-white border-[#e2e8f0] text-[#334155] hover:bg-[#f8fafc] disabled:opacity-40 transition-colors"
           aria-label="Kurları güncelle"
         >
           <Icon name="refresh" size={12} className={refreshing ? 'animate-spin' : ''} />
@@ -119,7 +119,7 @@ function RatePair({ label, value }: { label: string; value: number }) {
   return (
     <div className="text-center">
       <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">{label}</div>
-      <div className="text-lg font-black tabular-nums text-gray-900">₺{Number(value).toFixed(4)}</div>
+      <div className="text-lg font-black tabular-nums text-[#0f172a]">₺{Number(value).toFixed(4)}</div>
     </div>
   )
 }

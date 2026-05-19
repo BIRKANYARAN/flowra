@@ -50,7 +50,7 @@ export function FlowraAlert({
     )}>
       <Icon name={iconKey} size={14} className={cn('shrink-0', p.fg)} />
       <span className={cn('text-xs font-semibold', p.fg)}>{text}</span>
-      {sub && <span className="text-[11px] text-gray-400 ml-1 truncate">{sub}</span>}
+      {sub && <span className="text-[11px] text-[#94a3b8] ml-1 truncate">{sub}</span>}
       {action && <div className="ml-auto shrink-0">{action}</div>}
       {href && !action && (
         <span className={cn('text-[10px] font-bold ml-auto shrink-0', p.fg)}>→</span>
@@ -68,7 +68,7 @@ export function FlowraAlert({
       </div>
       <div className="flex-1 min-w-0">
         <div className={cn('text-sm font-semibold', p.fg)}>{text}</div>
-        {sub && <div className="text-xs text-gray-500 mt-0.5">{sub}</div>}
+        {sub && <div className="text-xs text-[#64748b] mt-0.5">{sub}</div>}
       </div>
       {action && <div className="shrink-0">{action}</div>}
     </div>

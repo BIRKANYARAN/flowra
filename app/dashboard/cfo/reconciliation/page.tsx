@@ -118,17 +118,17 @@ export default function ReconciliationPage() {
       {/* Header */}
       <div className="flex items-center justify-between" data-print-hide>
         <div>
-          <h1 className="text-xl font-black text-gray-900 tracking-tight">GL Mutabakat</h1>
-          <p className="text-xs text-gray-400 mt-0.5">
+          <h1 className="text-xl font-black text-[#0f172a] tracking-tight">GL Mutabakat</h1>
+          <p className="text-xs text-[#94a3b8] mt-0.5">
             GL hesap bakiyeleri · Operasyonel tablo karşılaştırması
-            {lastRun && <span className="ml-1 text-gray-300">· {lastRun} itibarıyla</span>}
+            {lastRun && <span className="ml-1 text-[#cbd5e1]">· {lastRun} itibarıyla</span>}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={runCheck}
             disabled={loading}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-[#e2e8f0] bg-white text-xs font-semibold text-gray-600 hover:bg-[#f8fafc] hover:border-[#e2e8f0] transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-[#e2e8f0] bg-white text-xs font-semibold text-[#64748b] hover:bg-[#f8fafc] hover:border-[#e2e8f0] transition-colors disabled:opacity-50"
           >
             <svg className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -137,14 +137,14 @@ export default function ReconciliationPage() {
           </button>
           <button
             onClick={() => window.print()}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-[#e2e8f0] bg-white text-xs font-semibold text-gray-600 hover:bg-[#f8fafc] hover:border-[#e2e8f0] transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-[#e2e8f0] bg-white text-xs font-semibold text-[#64748b] hover:bg-[#f8fafc] hover:border-[#e2e8f0] transition-colors"
           >
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
             </svg>
             PDF
           </button>
-          <Link href="/dashboard/cfo" className="text-xs text-gray-400 hover:text-primary-600 font-semibold">
+          <Link href="/dashboard/cfo" className="text-xs text-[#94a3b8] hover:text-primary-600 font-semibold">
             ← CFO Cockpit
           </Link>
         </div>
@@ -152,9 +152,9 @@ export default function ReconciliationPage() {
 
       {/* Print-only header */}
       <div className="hidden print:block mb-2">
-        <div className="text-[10px] uppercase tracking-widest text-gray-400 font-black">Flowra — CFO Raporu</div>
-        <h1 className="text-2xl font-black text-gray-900">GL Mutabakat Raporu</h1>
-        <p className="text-xs text-gray-500 mt-0.5">
+        <div className="text-[10px] uppercase tracking-widest text-[#94a3b8] font-black">Flowra — CFO Raporu</div>
+        <h1 className="text-2xl font-black text-[#0f172a]">GL Mutabakat Raporu</h1>
+        <p className="text-xs text-[#64748b] mt-0.5">
           {new Date().toLocaleDateString('tr-TR', { day:'2-digit', month:'long', year:'numeric' })} itibarıyla
         </p>
       </div>
@@ -166,7 +166,7 @@ export default function ReconciliationPage() {
       {loading && !report && (
         <div className="flex flex-col gap-3">
           {[1,2,3,4].map(i => (
-            <div key={i} className="bg-gray-100 rounded h-14 animate-pulse" />
+            <div key={i} className="bg-[#f1f5f9] rounded h-14 animate-pulse" />
           ))}
         </div>
       )}
@@ -183,12 +183,12 @@ export default function ReconciliationPage() {
               <div className="text-[10px] font-black uppercase tracking-widest text-pos-text mt-0.5">Tamam</div>
             </div>
             <div className={`border rounded px-4 py-3 text-center ${warnCount > 0 ? 'bg-warn-light border-warn-light' : 'bg-[#f8fafc] border-[#e2e8f0]'}`}>
-              <div className={`text-2xl font-black tabular-nums ${warnCount > 0 ? 'text-warn-text' : 'text-gray-400'}`}>{warnCount}</div>
-              <div className={`text-[10px] font-black uppercase tracking-widest mt-0.5 ${warnCount > 0 ? 'text-warn-text' : 'text-gray-400'}`}>Uyarı</div>
+              <div className={`text-2xl font-black tabular-nums ${warnCount > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>{warnCount}</div>
+              <div className={`text-[10px] font-black uppercase tracking-widest mt-0.5 ${warnCount > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>Uyarı</div>
             </div>
             <div className={`border rounded px-4 py-3 text-center ${criticalCount > 0 ? 'bg-neg-light border-neg-light' : 'bg-[#f8fafc] border-[#e2e8f0]'}`}>
-              <div className={`text-2xl font-black tabular-nums ${criticalCount > 0 ? 'text-neg-text' : 'text-gray-400'}`}>{criticalCount}</div>
-              <div className={`text-[10px] font-black uppercase tracking-widest mt-0.5 ${criticalCount > 0 ? 'text-neg' : 'text-gray-400'}`}>Kritik</div>
+              <div className={`text-2xl font-black tabular-nums ${criticalCount > 0 ? 'text-neg-text' : 'text-[#94a3b8]'}`}>{criticalCount}</div>
+              <div className={`text-[10px] font-black uppercase tracking-widest mt-0.5 ${criticalCount > 0 ? 'text-neg' : 'text-[#94a3b8]'}`}>Kritik</div>
             </div>
           </div>
 
@@ -201,11 +201,11 @@ export default function ReconciliationPage() {
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-[#e2e8f0]">
-                    <th className="px-4 py-2.5 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Hesap / Kontrol</th>
-                    <th className="px-4 py-2.5 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">GL Değeri</th>
-                    <th className="px-4 py-2.5 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Operasyonel</th>
-                    <th className="px-4 py-2.5 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Fark</th>
-                    <th className="px-4 py-2.5 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">Durum</th>
+                    <th className="px-4 py-2.5 text-left text-[10px] font-black text-[#94a3b8] uppercase tracking-widest">Hesap / Kontrol</th>
+                    <th className="px-4 py-2.5 text-right text-[10px] font-black text-[#94a3b8] uppercase tracking-widest">GL Değeri</th>
+                    <th className="px-4 py-2.5 text-right text-[10px] font-black text-[#94a3b8] uppercase tracking-widest">Operasyonel</th>
+                    <th className="px-4 py-2.5 text-right text-[10px] font-black text-[#94a3b8] uppercase tracking-widest">Fark</th>
+                    <th className="px-4 py-2.5 text-center text-[10px] font-black text-[#94a3b8] uppercase tracking-widest">Durum</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#f1f5f9]">
@@ -214,16 +214,16 @@ export default function ReconciliationPage() {
                     return (
                       <tr key={i} className={`${item.severity !== 'ok' ? 'bg-opacity-30' : ''} hover:bg-[#f8fafc]/60`}>
                         <td className="px-4 py-3">
-                          <div className="font-semibold text-gray-800">{item.name}</div>
+                          <div className="font-semibold text-[#1e293b]">{item.name}</div>
                         </td>
-                        <td className="px-4 py-3 text-right font-mono text-gray-700 tabular-nums">
+                        <td className="px-4 py-3 text-right font-mono text-[#334155] tabular-nums">
                           {fmt(item.gl_value)}
                         </td>
-                        <td className="px-4 py-3 text-right font-mono text-gray-700 tabular-nums">
+                        <td className="px-4 py-3 text-right font-mono text-[#334155] tabular-nums">
                           {fmt(item.operational)}
                         </td>
                         <td className="px-4 py-3 text-right font-mono tabular-nums">
-                          <span className={item.diff > 0 ? (item.severity === 'critical' ? 'text-neg font-bold' : 'text-warn-text font-semibold') : 'text-gray-400'}>
+                          <span className={item.diff > 0 ? (item.severity === 'critical' ? 'text-neg font-bold' : 'text-warn-text font-semibold') : 'text-[#94a3b8]'}>
                             {item.diff > 0 ? fmt(item.diff) : '—'}
                           </span>
                         </td>
@@ -241,8 +241,8 @@ export default function ReconciliationPage() {
           </div>
 
           {/* Guidance */}
-          <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-3 text-xs text-gray-500 space-y-1" data-print-hide>
-            <div className="font-semibold text-gray-700 mb-1.5">Ne anlama geliyor?</div>
+          <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-3 text-xs text-[#64748b] space-y-1" data-print-hide>
+            <div className="font-semibold text-[#334155] mb-1.5">Ne anlama geliyor?</div>
             <div className="flex gap-2"><span className="text-pos-text font-bold shrink-0">✓ Tamam</span><span>GL ve operasyonel değer arasında {`<`}1 TRY fark var. Yuvarlama sapması.</span></div>
             <div className="flex gap-2"><span className="text-warn-text font-bold shrink-0">! Uyarı</span><span>1–99 TRY arası fark. Muhtemelen zamanlama farkı (dönem sonu kesilmemiş işlem). İncelenmesi önerilir.</span></div>
             <div className="flex gap-2"><span className="text-neg font-bold shrink-0">✗ Kritik</span><span>100+ TRY fark. GL ile operasyonel tablolar uyuşmuyor. Dönem kapanışı bu durum giderilmeden engellenilir.</span></div>
@@ -250,7 +250,7 @@ export default function ReconciliationPage() {
 
           {/* Cross-navigation */}
           <div className="flex items-center justify-between px-1" data-print-hide>
-            <p className="text-[10px] text-gray-400 leading-relaxed">
+            <p className="text-[10px] text-[#94a3b8] leading-relaxed">
               {report.checked_at
                 ? `Son kontrol: ${new Date(report.checked_at).toLocaleString('tr-TR')}`
                 : 'Sonuçlar her çalıştırmada canlı hesaplanır.'}
@@ -259,11 +259,11 @@ export default function ReconciliationPage() {
               <Link href="/dashboard/cfo/trial-balance" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
                 Mizan →
               </Link>
-              <span className="text-gray-200">|</span>
+              <span className="text-[#e2e8f0]">|</span>
               <Link href="/dashboard/cfo/journal-entries" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
                 Journal Kayıtları →
               </Link>
-              <span className="text-gray-200">|</span>
+              <span className="text-[#e2e8f0]">|</span>
               <Link href="/dashboard/cfo/period-close" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
                 Dönem Kapat →
               </Link>

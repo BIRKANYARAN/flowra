@@ -132,7 +132,7 @@ export default async function PublicProformaPage({ params }: { params: { id: str
           />
         </div>
 
-        <p className="text-center text-xs text-gray-400 mt-6 print:hidden">
+        <p className="text-center text-xs text-[#94a3b8] mt-6 print:hidden">
           Bu proforma fatura yalnızca bilgi amaçlıdır ve resmi fatura yerine geçmez.
         </p>
       </div>

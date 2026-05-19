@@ -19,14 +19,14 @@ export default async function RolesPage() {
   if (!uid) return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-center px-4">
       <div className="text-3xl">⚠️</div>
-      <p className="text-sm text-gray-500">Oturum bilgisi alınamadı. Lütfen sayfayı yenileyin.</p>
+      <p className="text-sm text-[#64748b]">Oturum bilgisi alınamadı. Lütfen sayfayı yenileyin.</p>
       <a href="/dashboard/admin/roles" className="text-sm text-primary-600 font-semibold hover:underline">Yeniden Dene</a>
     </div>
   )
 
   let companyId: string | null = null
   try { companyId = await resolveCompanyId(uid, supabase) } catch { /* non-fatal */ }
-  if (!companyId) return <div className="p-8 text-gray-500">Şirket bulunamadı.</div>
+  if (!companyId) return <div className="p-8 text-[#64748b]">Şirket bulunamadı.</div>
 
   const role = await resolveUserRole(uid, companyId, supabase).catch(() => null)
   if (role !== 'admin') {
@@ -47,7 +47,7 @@ export default async function RolesPage() {
   return (
     <div className="max-w-3xl space-y-4">
       <div className="flex items-center gap-3">
-        <h1 className="text-lg font-black text-gray-900 tracking-tight">Yetkilendirme</h1>
+        <h1 className="text-lg font-black text-[#0f172a] tracking-tight">Yetkilendirme</h1>
         <Link href="/dashboard/admin/users"
           className="text-xs text-primary-600 font-semibold hover:text-primary-700">
           Ekip Yönetimi →
@@ -61,7 +61,7 @@ export default async function RolesPage() {
           </h2>
         </div>
         {(members ?? []).length === 0 ? (
-          <div className="px-4 py-8 text-center text-sm text-gray-400">
+          <div className="px-4 py-8 text-center text-sm text-[#94a3b8]">
             Henüz üye yok.
           </div>
         ) : (
@@ -74,17 +74,17 @@ export default async function RolesPage() {
                   </span>
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="text-sm font-semibold text-gray-800 truncate">
+                  <div className="text-sm font-semibold text-[#1e293b] truncate">
                     {m.user_id}
                   </div>
-                  <div className="text-xs text-gray-400 mt-0.5">
+                  <div className="text-xs text-[#94a3b8] mt-0.5">
                     Üye: {new Date(m.created_at as string).toLocaleDateString('tr-TR')}
                   </div>
                 </div>
                 <span className={`text-xs font-bold px-2 py-0.5 rounded flex-shrink-0 ${
                   m.role === 'admin'   ? 'bg-primary-100 text-primary-700' :
                   m.role === 'manager' ? 'bg-info-light text-info-text'       :
-                                         'bg-gray-100 text-gray-500'
+                                         'bg-[#f1f5f9] text-[#64748b]'
                 }`}>
                   {ROLE_LABEL[m.role as string] ?? m.role}
                 </span>

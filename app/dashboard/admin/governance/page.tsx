@@ -113,8 +113,8 @@ function MetricCard({ label, value, sub, highlight = false }: { label: string; v
   return (
     <div className={`rounded border px-4 py-3 ${highlight ? 'border-primary-200 bg-primary-50/50' : 'border-[#e2e8f0] bg-white'}`}>
       <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{label}</div>
-      <div className={`text-xl font-black tabular-nums ${highlight ? 'text-primary-700' : 'text-gray-900'}`}>{value}</div>
-      {sub && <div className="text-[10px] text-gray-400 mt-0.5">{sub}</div>}
+      <div className={`text-xl font-black tabular-nums ${highlight ? 'text-primary-700' : 'text-[#0f172a]'}`}>{value}</div>
+      {sub && <div className="text-[10px] text-[#94a3b8] mt-0.5">{sub}</div>}
     </div>
   )
 }
@@ -133,7 +133,7 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
   const [signNotes, setSignNotes] = useState<Record<string, string>>({})
 
   if (!snap) return (
-    <div className="text-sm text-gray-400 p-4">Snapshot verisi yüklenemedi.</div>
+    <div className="text-sm text-[#94a3b8] p-4">Snapshot verisi yüklenemedi.</div>
   )
 
   const allPartnersSigned = snap.partner_balances.length > 0
@@ -151,7 +151,7 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
           <div className={`text-lg font-black mt-0.5 ${theme.text}`}>
             {theme.label} · Skor {Math.round(snap.composite_score ?? 0)}/100
           </div>
-          <div className="text-xs text-gray-500 mt-0.5">
+          <div className="text-xs text-[#64748b] mt-0.5">
             Oluşturuldu: {fmtDateTime(report.generated_at)}
             {report.is_finalized && ` · Sonuçlandırıldı: ${fmtDateTime(report.finalized_at!)}`}
           </div>
@@ -161,7 +161,7 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
             onClick={() => window.print()}
             data-print-hide
             title="Bu raporu PDF olarak kaydet veya yazdır"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-[#e2e8f0] bg-white text-xs font-semibold text-gray-600 hover:border-[#e2e8f0] hover:bg-[#f8fafc] transition-colors shadow-sm"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-[#e2e8f0] bg-white text-xs font-semibold text-[#64748b] hover:border-[#e2e8f0] hover:bg-[#f8fafc] transition-colors shadow-sm"
           >
             <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.75 19.5m10.56-5.671L17.25 19.5M4.5 4.227v.227a49.94 49.94 0 0111 0v-.227c0-.995-.717-1.825-1.703-1.98l-2.088-.337a49.72 49.72 0 00-4.218 0l-2.088.337C5.217 2.402 4.5 3.232 4.5 4.227zm12 4.023H3.5" />
@@ -242,16 +242,16 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
                   const signed = report.governance_signoffs.find(s => s.partner_id === pb.partner_id)
                   return (
                     <tr key={pb.partner_id} className="hover:bg-[#f8fafc]/50">
-                      <td className="px-4 py-3 font-semibold text-gray-900">{pb.partner_name}</td>
-                      <td className="px-4 py-3 text-right font-mono text-gray-600">%{pb.share_ratio_pct.toFixed(1)}</td>
-                      <td className="px-4 py-3 text-right font-mono text-gray-700">{fmtFull(pb.loan_balance_try)}</td>
+                      <td className="px-4 py-3 font-semibold text-[#0f172a]">{pb.partner_name}</td>
+                      <td className="px-4 py-3 text-right font-mono text-[#64748b]">%{pb.share_ratio_pct.toFixed(1)}</td>
+                      <td className="px-4 py-3 text-right font-mono text-[#334155]">{fmtFull(pb.loan_balance_try)}</td>
                       <td className="px-4 py-3 text-right">
                         {signed ? (
                           <div>
                             <div className="inline-flex items-center gap-1 text-[10px] font-bold text-pos-text bg-pos-light border border-pos-light rounded px-2 py-0.5">
                               ✓ {fmtDate(signed.signed_at)}
                             </div>
-                            {signed.notes && <div className="text-[10px] text-gray-400 mt-0.5">{signed.notes}</div>}
+                            {signed.notes && <div className="text-[10px] text-[#94a3b8] mt-0.5">{signed.notes}</div>}
                           </div>
                         ) : !report.is_finalized ? (
                           <div className="flex items-center gap-2 justify-end">
@@ -271,7 +271,7 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
                             </button>
                           </div>
                         ) : (
-                          <span className="text-[10px] text-gray-400">İmzalanmadı</span>
+                          <span className="text-[10px] text-[#94a3b8]">İmzalanmadı</span>
                         )}
                       </td>
                     </tr>
@@ -287,7 +287,7 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
       {report.notes && (
         <section>
           <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-2">Notlar</div>
-          <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-3 text-sm text-gray-700">{report.notes}</div>
+          <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-3 text-sm text-[#334155]">{report.notes}</div>
         </section>
       )}
 
@@ -295,8 +295,8 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
       {!report.is_finalized && (
         <div data-print-hide className={`rounded border px-5 py-4 ${allPartnersSigned ? 'bg-pos-light border-pos-light' : 'bg-[#f8fafc] border-[#e2e8f0]'} flex items-center justify-between gap-4`}>
           <div>
-            <div className="text-sm font-bold text-gray-900">Raporu Sonuçlandır</div>
-            <div className="text-xs text-gray-500 mt-0.5">
+            <div className="text-sm font-bold text-[#0f172a]">Raporu Sonuçlandır</div>
+            <div className="text-xs text-[#64748b] mt-0.5">
               {allPartnersSigned
                 ? 'Tüm ortaklar onayladı. Rapor kalıcı olarak kilitlenebilir.'
                 : `${report.governance_signoffs.length}/${snap.partner_balances.length} ortak onayı alındı. Sonuçlandırmak için tüm imzaları beklemek zorunda değilsiniz.`}
@@ -305,7 +305,7 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
           <button
             onClick={() => onFinalize(report.id)}
             disabled={finalizing}
-            className="flex-shrink-0 px-4 py-2 rounded bg-gray-900 text-white text-sm font-semibold hover:bg-gray-800 transition-colors disabled:opacity-60"
+            className="flex-shrink-0 px-4 py-2 rounded bg-[#0f172a] text-white text-sm font-semibold hover:bg-[#1e293b] transition-colors disabled:opacity-60"
           >
             {finalizing ? 'Sonuçlandırılıyor…' : 'Sonuçlandır & Kilitle'}
           </button>
@@ -316,8 +316,8 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
         <div className="rounded border border-[#e2e8f0] bg-[#f8fafc] px-5 py-4 flex items-center gap-3">
           <div className="text-lg">🔒</div>
           <div>
-            <div className="text-sm font-bold text-gray-700">Sonuçlandırıldı</div>
-            <div className="text-xs text-gray-400">{fmtDateTime(report.finalized_at!)} · Bu rapor artık değiştirilemez.</div>
+            <div className="text-sm font-bold text-[#334155]">Sonuçlandırıldı</div>
+            <div className="text-xs text-[#94a3b8]">{fmtDateTime(report.finalized_at!)} · Bu rapor artık değiştirilemez.</div>
           </div>
         </div>
       )}
@@ -445,10 +445,10 @@ export default function GovernancePage() {
       <div className="flex items-start justify-between gap-4" data-print-hide>
         <div>
           <div className="flex items-center gap-2">
-            <Link href="/dashboard/admin" className="text-xs text-gray-400 hover:text-gray-600">← Yönetim</Link>
+            <Link href="/dashboard/admin" className="text-xs text-[#94a3b8] hover:text-[#64748b]">← Yönetim</Link>
           </div>
-          <h1 className="text-xl font-black text-gray-900 tracking-tight mt-1">Ortak Yönetişim Sistemi</h1>
-          <p className="text-xs text-gray-400 mt-0.5">
+          <h1 className="text-xl font-black text-[#0f172a] tracking-tight mt-1">Ortak Yönetişim Sistemi</h1>
+          <p className="text-xs text-[#94a3b8] mt-0.5">
             Aylık finansal özet, ortak bakiye doğrulama ve resmi onay kaydı
           </p>
         </div>
@@ -501,7 +501,7 @@ export default function GovernancePage() {
             </div>
           </div>
           <div className="flex items-center justify-end gap-2">
-            <button onClick={() => setShowGenForm(false)} className="px-4 py-2 rounded border border-[#e2e8f0] text-sm font-semibold text-gray-600 hover:bg-[#f8fafc]">
+            <button onClick={() => setShowGenForm(false)} className="px-4 py-2 rounded border border-[#e2e8f0] text-sm font-semibold text-[#64748b] hover:bg-[#f8fafc]">
               Vazgeç
             </button>
             <button
@@ -526,13 +526,13 @@ export default function GovernancePage() {
       {/* Main layout: list + detail */}
       {loading ? (
         <div className="bg-white border border-[#e2e8f0] rounded p-8 text-center">
-          <div className="text-sm text-gray-400">Yükleniyor…</div>
+          <div className="text-sm text-[#94a3b8]">Yükleniyor…</div>
         </div>
       ) : reports.length === 0 ? (
         <div className="bg-white border border-[#e2e8f0] rounded p-10 text-center">
           <div className="text-3xl mb-3">📋</div>
-          <div className="text-sm font-semibold text-gray-700 mb-1">Henüz yönetişim raporu yok</div>
-          <div className="text-xs text-gray-400 mb-5">
+          <div className="text-sm font-semibold text-[#334155] mb-1">Henüz yönetişim raporu yok</div>
+          <div className="text-xs text-[#94a3b8] mb-5">
             İlk aylık raporu oluşturarak ortak onay sürecini başlatın.
             <br />Raporlar şirketin o ayki finansal pozisyonunun kalıcı kaydıdır.
           </div>
@@ -567,17 +567,17 @@ export default function GovernancePage() {
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <div className="text-sm font-bold text-gray-900 truncate">{r.period_label}</div>
+                    <div className="text-sm font-bold text-[#0f172a] truncate">{r.period_label}</div>
                     {r.is_finalized
-                      ? <span className="text-[9px] font-bold text-gray-500 bg-gray-100 rounded px-1.5 py-0.5 flex-shrink-0">🔒</span>
+                      ? <span className="text-[9px] font-bold text-[#64748b] bg-[#f1f5f9] rounded px-1.5 py-0.5 flex-shrink-0">🔒</span>
                       : <span className={`text-[9px] font-bold rounded px-1.5 py-0.5 flex-shrink-0 ${theme.text} ${theme.bg} border ${theme.border}`}>{theme.label}</span>
                     }
                   </div>
-                  <div className="text-[10px] text-gray-400 mt-1">
+                  <div className="text-[10px] text-[#94a3b8] mt-1">
                     {sigCount}/{partCount} onay · {fmtDate(r.generated_at)}
                   </div>
                   {sigCount > 0 && sigCount < partCount && (
-                    <div className="mt-1.5 h-1 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="mt-1.5 h-1 bg-[#f1f5f9] rounded-full overflow-hidden">
                       <div className="h-full bg-primary-500 rounded-full" style={{ width: `${(sigCount / partCount) * 100}%` }} />
                     </div>
                   )}
@@ -602,15 +602,15 @@ export default function GovernancePage() {
                 finalizing={finalizing}
               />
             ) : (
-              <div className="text-sm text-gray-400 text-center py-8">Soldan bir rapor seçin</div>
+              <div className="text-sm text-[#94a3b8] text-center py-8">Soldan bir rapor seçin</div>
             )}
           </div>
         </div>
       )}
 
       {/* Info footer */}
-      <div data-print-hide className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-5 py-4 text-xs text-gray-500 leading-relaxed">
-        <span className="font-semibold text-gray-700">Yönetişim Kaydı Hakkında:</span>{' '}
+      <div data-print-hide className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-5 py-4 text-xs text-[#64748b] leading-relaxed">
+        <span className="font-semibold text-[#334155]">Yönetişim Kaydı Hakkında:</span>{' '}
         Her rapor, o ay için şirketin finansal pozisyonunun anlık görüntüsüdür.
         Ortaklar kendi paylarını ve bakiyelerini görür, dijital onay verir.
         Sonuçlandırılan raporlar değiştirilemez — yasal uyumluluk için kalıcı kayıt oluşturulur.
@@ -618,18 +618,18 @@ export default function GovernancePage() {
 
       {/* Cross-navigation */}
       <div data-print-hide className="flex items-center justify-between px-1">
-        <p className="text-[10px] text-gray-400 leading-relaxed">
+        <p className="text-[10px] text-[#94a3b8] leading-relaxed">
           Yönetişim raporları denetim izi ve ortak dağıtım verisiyle birlikte değerlendirilmeli.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
           <Link href="/dashboard/admin/audit" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Denetim İzi →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/partners?tab=distribution" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             Kâr Dağıtımı →
           </Link>
-          <span className="text-gray-200">|</span>
+          <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/finance?tab=pnl" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
             P&amp;L →
           </Link>

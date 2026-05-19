@@ -33,8 +33,8 @@ export function PdfExportButton({ opts, label = 'PDF İndir', variant = 'default
 
   const base = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold transition-colors print:hidden disabled:opacity-60'
   const cls = variant === 'ghost'
-    ? `${base} text-gray-600 hover:bg-gray-100 border border-[#e2e8f0]`
-    : `${base} bg-gray-900 text-white hover:bg-gray-700`
+    ? `${base} text-[#64748b] hover:bg-[#f1f5f9] border border-[#e2e8f0]`
+    : `${base} bg-[#0f172a] text-white hover:bg-[#334155]`
 
   return (
     <button onClick={handleClick} disabled={loading} className={cls}>

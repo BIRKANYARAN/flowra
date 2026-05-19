@@ -153,8 +153,8 @@ export default async function AdminHubPage() {
 
       {/* Header */}
       <div>
-        <h1 className="text-xl font-black text-gray-900 tracking-tight">Yönetim Merkezi</h1>
-        <p className="text-xs text-gray-400 mt-0.5">Kullanıcılar, roller, onaylar ve denetim</p>
+        <h1 className="text-xl font-black text-[#0f172a] tracking-tight">Yönetim Merkezi</h1>
+        <p className="text-xs text-[#94a3b8] mt-0.5">Kullanıcılar, roller, onaylar ve denetim</p>
       </div>
 
       {/* Main tiles */}
@@ -171,10 +171,10 @@ export default async function AdminHubPage() {
             <div className="flex items-start gap-3">
               <span className="text-2xl flex-shrink-0">{tile.icon}</span>
               <div className="min-w-0">
-                <div className="font-bold text-sm text-gray-900 group-hover:text-primary-700 transition-colors">
+                <div className="font-bold text-sm text-[#0f172a] group-hover:text-primary-700 transition-colors">
                   {tile.title}
                 </div>
-                <div className="text-xs text-gray-400 mt-0.5">{tile.subtitle}</div>
+                <div className="text-xs text-[#94a3b8] mt-0.5">{tile.subtitle}</div>
               </div>
             </div>
             <div className="mt-3 flex items-center gap-1 text-[10px] font-semibold text-primary-600">
@@ -190,7 +190,7 @@ export default async function AdminHubPage() {
         <div className="flex flex-wrap gap-2">
           {SETTING_LINKS.map(s => (
             <Link key={s.href} href={s.href}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-white border border-[#e2e8f0] text-xs font-semibold text-gray-700 hover:border-primary-200 hover:text-primary-700 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-white border border-[#e2e8f0] text-xs font-semibold text-[#334155] hover:border-primary-200 hover:text-primary-700 transition-colors"
             >
               <span>{s.icon}</span>
               {s.label}
@@ -214,12 +214,12 @@ export default async function AdminHubPage() {
             {(summary.recentLogs as Array<{ id: string; action: string; entity_type: string; created_at: string }>).map(log => (
               <div key={log.id} className="flex items-center justify-between px-4 py-2.5">
                 <div className="flex items-center gap-2 min-w-0">
-                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold shrink-0 ${ACTION_STYLE[log.action] ?? 'bg-gray-100 text-gray-600'}`}>
+                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold shrink-0 ${ACTION_STYLE[log.action] ?? 'bg-[#f1f5f9] text-[#64748b]'}`}>
                     {ACTION_LABELS[log.action] ?? log.action}
                   </span>
-                  <span className="text-xs text-gray-600 truncate">{log.entity_type}</span>
+                  <span className="text-xs text-[#64748b] truncate">{log.entity_type}</span>
                 </div>
-                <span className="text-[10px] text-gray-400 shrink-0 ml-2">{fmtRelative(log.created_at)}</span>
+                <span className="text-[10px] text-[#94a3b8] shrink-0 ml-2">{fmtRelative(log.created_at)}</span>
               </div>
             ))}
           </div>
@@ -227,7 +227,7 @@ export default async function AdminHubPage() {
       )}
 
       {/* Quick nav */}
-      <div className="text-xs text-gray-400 flex items-center gap-4">
+      <div className="text-xs text-[#94a3b8] flex items-center gap-4">
         <Link href="/dashboard" className="hover:text-primary-600 font-semibold">← Komuta</Link>
         <Link href="/dashboard/admin/users" className="hover:text-primary-600">Kullanıcılar</Link>
         <Link href="/dashboard/admin/workflows" className="hover:text-primary-600">Onaylar</Link>

@@ -45,13 +45,13 @@ export function ProjectionTable({ projection, toDisplay, S, hasInputs }: Project
           <tbody>
             {projection.map(r => (
               <tr key={r.month} className="border-b border-[#f1f5f9] hover:bg-[#f8fafc]/50">
-                <td className="py-1.5 pr-3 font-medium text-gray-600">{r.month}. Ay</td>
+                <td className="py-1.5 pr-3 font-medium text-[#64748b]">{r.month}. Ay</td>
                 <td className="py-1.5 pr-3 text-right tabular-nums">
                   {fmtC(toDisplay(r.revenue), S)}
                   <MiniBar value={r.revenue} max={maxRevenue} color="bg-info-light" />
                 </td>
-                <td className="py-1.5 pr-3 text-right tabular-nums text-gray-500">{fmtC(toDisplay(r.cogs), S)}</td>
-                <td className="py-1.5 pr-3 text-right tabular-nums text-gray-500">{fmtC(toDisplay(r.holding), S)}</td>
+                <td className="py-1.5 pr-3 text-right tabular-nums text-[#64748b]">{fmtC(toDisplay(r.cogs), S)}</td>
+                <td className="py-1.5 pr-3 text-right tabular-nums text-[#64748b]">{fmtC(toDisplay(r.holding), S)}</td>
                 <td className={`py-1.5 pr-3 text-right tabular-nums font-semibold ${r.grossProfit >= 0 ? 'text-pos-text' : 'text-neg'}`}>
                   {fmtC(toDisplay(r.grossProfit), S)}
                 </td>

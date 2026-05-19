@@ -46,9 +46,9 @@ function runwayLabel(months: number | null): string {
 }
 
 function deltaLabel(base: number | null, scenario: number | null): { text: string; color: string } {
-  if (base === null || scenario === null) return { text: '—', color: 'text-gray-400' }
+  if (base === null || scenario === null) return { text: '—', color: 'text-[#94a3b8]' }
   const delta = scenario - base
-  if (Math.abs(delta) < 0.1) return { text: 'Değişim yok', color: 'text-gray-400' }
+  if (Math.abs(delta) < 0.1) return { text: 'Değişim yok', color: 'text-[#94a3b8]' }
   const sign = delta > 0 ? '+' : ''
   const color = delta > 0 ? 'text-pos-text' : 'text-neg'
   return { text: `${sign}${delta.toFixed(1)} ay`, color }
@@ -87,13 +87,13 @@ export function ScenarioPanel({ inputs, baseRunwayMonths }: Props) {
 
   const SL = 'flex flex-col gap-1'
   const SLabel = 'text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]'
-  const SValue = 'text-xs text-gray-400 tabular-nums'
+  const SValue = 'text-xs text-[#94a3b8] tabular-nums'
 
   return (
     <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
       <div className="px-4 py-3 border-b border-[#e2e8f0]">
-        <h2 className="text-sm font-black text-gray-800">Senaryo Analizi</h2>
-        <p className="text-[10px] text-gray-400 mt-0.5">
+        <h2 className="text-sm font-black text-[#1e293b]">Senaryo Analizi</h2>
+        <p className="text-[10px] text-[#94a3b8] mt-0.5">
           Parametreleri değiştir — runway anında güncellenir
         </p>
       </div>
@@ -173,14 +173,14 @@ export function ScenarioPanel({ inputs, baseRunwayMonths }: Props) {
           { label: 'A+B+C Hepsi', runway: comb_runway, delta: deltaLabel(base_r, comb_runway) },
         ].map((s, i) => {
           const months = s.runway
-          const tone = months === null ? 'text-gray-400'
+          const tone = months === null ? 'text-[#94a3b8]'
             : months <= 2  ? 'text-neg'
             : months <= 6  ? 'text-orange-600'
             : months <= 12 ? 'text-warn-text'
             : 'text-pos-text'
           return (
             <div key={s.label} className={`px-4 py-3 ${i === 3 ? 'col-span-2 sm:col-span-1' : ''}`}>
-              <div className="text-[9px] font-bold uppercase tracking-widest text-gray-400 mb-1">{s.label}</div>
+              <div className="text-[9px] font-bold uppercase tracking-widest text-[#94a3b8] mb-1">{s.label}</div>
               <div className={`text-base font-black tabular-nums leading-tight ${tone}`}>
                 {runwayLabel(months)}
               </div>

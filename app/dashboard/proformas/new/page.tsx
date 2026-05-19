@@ -193,10 +193,10 @@ export default function NewProformaPage() {
   return (
     <div className="max-w-5xl">
       <div className="flex items-center gap-3 mb-6">
-        <Link href="/dashboard/proformas" className="text-sm text-gray-400 hover:text-gray-700 transition-colors">
+        <Link href="/dashboard/proformas" className="text-sm text-[#94a3b8] hover:text-[#334155] transition-colors">
           ← Proformalar
         </Link>
-        <span className="text-gray-300">/</span>
+        <span className="text-[#cbd5e1]">/</span>
         <h1 className="text-xl font-black">Yeni Proforma</h1>
       </div>
 
@@ -334,7 +334,7 @@ export default function NewProformaPage() {
                                   )
                                 })()}
                               </div>
-                              <div className="text-xs text-gray-400 mt-0.5">
+                              <div className="text-xs text-[#94a3b8] mt-0.5">
                                 {(() => {
                                   const salePrice = getSalePrice(p)
                                   const cost      = getLegacyProductCost(p)
@@ -403,7 +403,7 @@ export default function NewProformaPage() {
                         <button
                           type="button"
                           onClick={() => setLines(ls => ls.filter((_, idx) => idx !== i))}
-                          className="ml-1 w-6 h-6 rounded text-gray-300 hover:text-neg hover:bg-neg-light flex items-center justify-center text-lg leading-none transition-colors"
+                          className="ml-1 w-6 h-6 rounded text-[#cbd5e1] hover:text-neg hover:bg-neg-light flex items-center justify-center text-lg leading-none transition-colors"
                         >
                           ×
                         </button>
@@ -417,7 +417,7 @@ export default function NewProformaPage() {
             <button
               type="button"
               onClick={() => setLines(ls => [...ls, emptyLine(currency)])}
-              className="mt-4 flex items-center gap-1.5 text-sm text-gray-500 hover:text-primary-600 py-1.5 px-2 rounded hover:bg-primary-50 transition-colors"
+              className="mt-4 flex items-center gap-1.5 text-sm text-[#64748b] hover:text-primary-600 py-1.5 px-2 rounded hover:bg-primary-50 transition-colors"
             >
               <span className="font-black text-base">+</span> Satır Ekle
             </button>
@@ -445,17 +445,17 @@ export default function NewProformaPage() {
             </div>
             <div className="space-y-2.5">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Ara Toplam</span>
+                <span className="text-[#64748b]">Ara Toplam</span>
                 <span className="font-medium tabular-nums">{S}{subtotal.toFixed(2)}</span>
               </div>
               {discountTotal > 0 && (
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Toplam İskonto</span>
+                  <span className="text-[#64748b]">Toplam İskonto</span>
                   <span className="font-medium tabular-nums text-neg">-{S}{discountTotal.toFixed(2)}</span>
                 </div>
               )}
               <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Toplam KDV</span>
+                <span className="text-[#64748b]">Toplam KDV</span>
                 <span className="font-medium tabular-nums">{S}{kdvTotal.toFixed(2)}</span>
               </div>
               <div className="border-t border-[#e2e8f0] pt-2.5">
