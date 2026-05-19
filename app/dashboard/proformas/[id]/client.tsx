@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Btn, ErrorBanner, StatusBadge, fmtDate, sym } from '@/components/ui'
 import { PdfDownloadButton } from '@/components/pdf/PdfDownloadButton'
-import type { PdfOptions } from '@/components/pdf/generatePdf'
+import type { PdfOptions, BrandColor, DocumentStyle } from '@/components/pdf/generatePdf'
 import { calculateLine, calculateTotals, type LineInput } from '@/lib/calc'
 
 // ── Serializable DTOs (no raw DB row types, no undefined fields) ──────────────
@@ -73,6 +73,10 @@ export interface ClientPdfOpts {
     currency:         string
     discount_percent: number
   }>
+  brand?: {
+    color: BrandColor
+    style: DocumentStyle
+  }
 }
 
 // ── Convert ClientPdfOpts → PdfOptions for the PDF engine ─────────────────────
@@ -96,6 +100,7 @@ function toPdfOptions(opts: ClientPdfOpts): PdfOptions {
       price: it.price, kdv: it.kdv, currency: it.currency,
       discount_percent: it.discount_percent ?? 0,
     })),
+    brand: opts.brand,
   }
 }
 

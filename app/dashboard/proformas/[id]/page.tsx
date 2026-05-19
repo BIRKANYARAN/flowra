@@ -6,6 +6,7 @@ import { fmtDate, sym } from '@/lib/format'
 import type { Proforma, ProformaItem, Customer, CompanyBank } from '@/types'
 import { ProformaDetailClient } from './client'
 import type { ClientItem, ClientPdfOpts } from './client'
+import type { BrandColor, DocumentStyle } from '@/components/pdf/generatePdf'
 import { safeNum, safeStr } from '@/lib/normalize'
 import { calculateTotals } from '@/lib/calc'
 import { InvoiceSection } from './InvoiceSection'
@@ -62,7 +63,7 @@ export default async function ProformaDetailPage({ params }: PageProps) {
         .order('sort_order', { ascending: true }),
       supabase
         .from('companies')
-        .select('name, address, phone, website, tax_id, tax_office, mersis_no, logo_url, email')
+        .select('name, address, phone, website, tax_id, tax_office, mersis_no, logo_url, email, brand_color, document_style')
         .eq('id', companyId)
         .maybeSingle(),
       supabase
@@ -84,15 +85,17 @@ export default async function ProformaDetailPage({ params }: PageProps) {
 
     // Build a settings-shaped object from the companies table so downstream code works unchanged
     const settings = companyRow ? {
-      company_name: companyRow.name       ?? null,
-      address:      companyRow.address    ?? null,
-      phone:        companyRow.phone      ?? null,
-      website:      companyRow.website    ?? null,
-      tax_number:   companyRow.tax_id     ?? null,  // companies.tax_id ↔ settings shape tax_number
-      tax_office:   companyRow.tax_office ?? null,
-      logo_url:     companyRow.logo_url   ?? null,
-      mersis_no:    companyRow.mersis_no  ?? null,
-      email:        companyRow.email      ?? null,
+      company_name:  companyRow.name          ?? null,
+      address:       companyRow.address       ?? null,
+      phone:         companyRow.phone         ?? null,
+      website:       companyRow.website       ?? null,
+      tax_number:    companyRow.tax_id        ?? null,  // companies.tax_id ↔ settings shape tax_number
+      tax_office:    companyRow.tax_office    ?? null,
+      logo_url:      companyRow.logo_url      ?? null,
+      mersis_no:     companyRow.mersis_no     ?? null,
+      email:         companyRow.email         ?? null,
+      brand_color:   companyRow.brand_color   ?? 'charcoal',
+      document_style: companyRow.document_style ?? 'corporate',
     } : null
 
     // ── 4. Fetch customer (optional, never fatal) ────────────────────────────
@@ -218,6 +221,10 @@ export default async function ProformaDetailPage({ params }: PageProps) {
         currency: it.currency,
         discount_percent: it.discount_percent,
       })),
+      brand: {
+        color: (settings?.brand_color || 'charcoal') as BrandColor,
+        style: (settings?.document_style || 'corporate') as DocumentStyle,
+      },
     }
 
     // ── 9. Render ────────────────────────────────────────────────────────────
