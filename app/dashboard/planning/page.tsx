@@ -49,9 +49,8 @@ export default async function PlanningPage({ searchParams }: PageProps) {
   }
   if (!userId) return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-center px-4">
-      <div className="text-3xl">⚠️</div>
-      <p className="text-sm text-[#64748b]">Oturum bilgisi alınamadı. Lütfen sayfayı yenileyin.</p>
-      <a href="/dashboard/planning" className="text-sm text-brand-light font-semibold hover:underline">Yeniden Dene</a>
+      <p className="text-xs text-[#64748b]">Oturum bilgisi alınamadı. Lütfen sayfayı yenileyin.</p>
+      <a href="/dashboard/planning" className="text-xs text-brand-light font-semibold hover:underline">Yeniden Dene</a>
     </div>
   )
 
@@ -59,9 +58,8 @@ export default async function PlanningPage({ searchParams }: PageProps) {
   try { companyId = await resolveCompanyId(userId, supabase) } catch { /* non-fatal */ }
   if (!companyId) return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-center px-4">
-      <div className="text-3xl">⚠️</div>
-      <p className="text-sm text-[#64748b]">Şirket bilgisi yüklenemedi. Lütfen sayfayı yenileyin.</p>
-      <a href="/dashboard/planning" className="text-sm text-brand-light font-semibold hover:underline">Yeniden Dene</a>
+      <p className="text-xs text-[#64748b]">Şirket bilgisi yüklenemedi. Lütfen sayfayı yenileyin.</p>
+      <a href="/dashboard/planning" className="text-xs text-brand-light font-semibold hover:underline">Yeniden Dene</a>
     </div>
   )
 
@@ -89,15 +87,15 @@ export default async function PlanningPage({ searchParams }: PageProps) {
       {/* PAGE HERO */}
       <div>
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Planlama Merkezi</div>
-        <h1 className="text-2xl font-black tracking-tight text-[#0f172a] leading-tight">
+        <h1 className="text-base font-bold text-[#0f172a] leading-tight">
           {planTitles[activeTab] ?? 'Planlama'}
         </h1>
-        <p className="text-sm text-[#94a3b8] mt-1">{planSubs[activeTab] ?? ''}</p>
+        <p className="text-xs text-[#94a3b8] mt-0.5">{planSubs[activeTab] ?? ''}</p>
       </div>
 
       {/* Sticky tab nav + context bar */}
       <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm -mx-4">
-        <div className="px-5 pt-1 border-b border-[#e2e8f0]">
+        <div className="px-4 pt-1 border-b border-[#e2e8f0]">
           <HubTabNav tabs={TABS} activeTab={activeTab} basePath="/dashboard/planning" />
         </div>
         <PlanningContextBar companyId={companyId} />

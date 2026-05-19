@@ -236,7 +236,7 @@ export async function CFOTab({ userId, companyId }: Props) {
     {
       name:   'Tahsilat oranı',
       passed: collectionRate >= 60,
-      detail: `${pct(collectionRate, 0)} tahsilat oranı${collectionRate >= 85 ? ' — sağlıklı ✓' : ' — takip gerekli'}`,
+      detail: `${pct(collectionRate, 0)} tahsilat oranı${collectionRate >= 85 ? ' — sağlıklı ✓' : ' — dönemde takip gerekli'}`,
     },
   ]
 
@@ -585,7 +585,7 @@ export async function CFOTab({ userId, companyId }: Props) {
         {/* Receivable aging */}
         <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
-            Alacak Yaşlandırma
+            Alacak Yaşlandırma — Bugün İtibarıyla
           </div>
           <div className="space-y-2">
             {[

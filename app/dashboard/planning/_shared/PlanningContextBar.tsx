@@ -80,7 +80,7 @@ export function PlanningContextBar({ companyId }: { companyId: string }) {
             : `${runwayMonths.toFixed(1)}ay`,
       sub:    runwayDays != null && runwayDays < 30 ? 'Kritik eşik'
             : runwayDays != null && runwayDays < 90 ? 'Baskı altında'
-            : runwayMonths != null ? 'nakit ömrü'
+            : runwayMonths != null ? 'mevcut hızda'
             : undefined,
       status: runwayMonths == null ? 'ok'
             : runwayMonths < 1 ? 'critical'
@@ -91,14 +91,14 @@ export function PlanningContextBar({ companyId }: { companyId: string }) {
     {
       label:  'AYLIK BURN',
       value:  burn > 0 ? fmtK(burn) : '—',
-      sub:    burn > 0 ? 'aylık gider oranı' : 'Kârlı',
+      sub:    burn > 0 ? 'son ay ortalaması' : 'Kârlı dönem',
       status: 'ok',
       border: true,
     },
     {
       label:  'NAKİT',
       value:  fmtK(data.cash.true_cash_position),
-      sub:    'pozisyon',
+      sub:    'anlık pozisyon',
       status: data.cash.true_cash_position < 50_000 ? 'critical'
             : data.cash.true_cash_position < 200_000 ? 'warn'
             : 'ok',

@@ -86,7 +86,7 @@ export function PartnersContextBar() {
     {
       label:  'ORTAK BORCU',
       value:  data.total_debt_to_partners > 0 ? fmtK(data.total_debt_to_partners) : '—',
-      sub:    data.total_debt_to_partners > 0 ? 'açık tranche' : 'Borç yok',
+      sub:    data.total_debt_to_partners > 0 ? 'açık borç dilimi' : 'Borç yok',
       status: data.total_debt_to_partners > 500_000 ? 'warn' : 'ok',
       border: true,
     },
@@ -104,7 +104,7 @@ export function PartnersContextBar() {
     {
       label:  'DAĞITILAN',
       value:  fmtK(data.total_dividends),
-      sub:    'kümülatif temettü',
+      sub:    'kümülatif · tüm dönemler',
       status: 'ok',
       border: true,
     },

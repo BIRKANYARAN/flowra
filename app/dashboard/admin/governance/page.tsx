@@ -133,7 +133,7 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
   const [signNotes, setSignNotes] = useState<Record<string, string>>({})
 
   if (!snap) return (
-    <div className="text-sm text-[#94a3b8] p-4">Snapshot verisi yüklenemedi.</div>
+    <div className="text-xs text-[#94a3b8] p-4">Snapshot verisi yüklenemedi.</div>
   )
 
   const allPartnersSigned = snap.partner_balances.length > 0
@@ -145,10 +145,10 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
     <div className="flex flex-col gap-6">
 
       {/* Header strip */}
-      <div className={`rounded border px-5 py-4 ${theme.bg} ${theme.border} flex items-start justify-between gap-4`}>
+      <div className={`rounded border px-4 py-3 ${theme.bg} ${theme.border} flex items-start justify-between gap-4`}>
         <div className="min-w-0">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">{snap.period_label} · Yönetişim Raporu</div>
-          <div className={`text-lg font-black mt-0.5 ${theme.text}`}>
+          <div className={`text-base font-bold mt-0.5 ${theme.text}`}>
             {theme.label} · Skor {Math.round(snap.composite_score ?? 0)}/100
           </div>
           <div className="text-xs text-[#64748b] mt-0.5">
@@ -168,8 +168,8 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
             </svg>
             Yazdır / PDF
           </button>
-          <div className={`text-2xl font-black tabular-nums ${theme.text}`}>
-            {Math.round(snap.composite_score ?? 0)}<span className="text-sm font-semibold">/100</span>
+          <div className={`text-xl font-black tabular-nums ${theme.text}`}>
+            {Math.round(snap.composite_score ?? 0)}<span className="text-xs font-semibold">/100</span>
           </div>
         </div>
       </div>
@@ -188,7 +188,7 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
 
       {/* Balance sheet */}
       <section>
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Bilanço Özeti</div>
+        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Bilanço Özeti — Dönem Sonu İtibarıyla</div>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           <MetricCard label="Toplam Varlık"  value={fmt(snap.total_assets_try)} />
           <MetricCard label="Toplam Borç"    value={fmt(snap.total_liabilities_try)} />
@@ -199,7 +199,7 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
 
       {/* Operational metrics */}
       <section>
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Operasyonel Metrikler</div>
+        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Operasyonel Metrikler — Dönem Sonu İtibarıyla</div>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           <MetricCard
             label="Nakit Pisti"
@@ -228,7 +228,7 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
         <section>
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Ortak Pozisyonları</div>
           <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
-            <table className="w-full text-sm">
+            <table className="w-full text-xs">
               <thead>
                 <tr className="border-b border-[#e2e8f0] bg-[#f8fafc]">
                   <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ortak</th>
@@ -287,15 +287,15 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
       {report.notes && (
         <section>
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">Notlar</div>
-          <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-3 text-sm text-[#334155]">{report.notes}</div>
+          <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-3 text-xs text-[#334155]">{report.notes}</div>
         </section>
       )}
 
       {/* Finalize action */}
       {!report.is_finalized && (
-        <div data-print-hide className={`rounded border px-5 py-4 ${allPartnersSigned ? 'bg-pos-light border-pos-light' : 'bg-[#f8fafc] border-[#e2e8f0]'} flex items-center justify-between gap-4`}>
+        <div data-print-hide className={`rounded border px-4 py-3 ${allPartnersSigned ? 'bg-pos-light border-pos-light' : 'bg-[#f8fafc] border-[#e2e8f0]'} flex items-center justify-between gap-4`}>
           <div>
-            <div className="text-sm font-bold text-[#0f172a]">Raporu Sonuçlandır</div>
+            <div className="text-xs font-bold text-[#0f172a]">Raporu Sonuçlandır</div>
             <div className="text-xs text-[#64748b] mt-0.5">
               {allPartnersSigned
                 ? 'Tüm ortaklar onayladı. Rapor kalıcı olarak kilitlenebilir.'
@@ -305,7 +305,7 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
           <button
             onClick={() => onFinalize(report.id)}
             disabled={finalizing}
-            className="flex-shrink-0 px-4 py-2 rounded bg-[#0f172a] text-white text-sm font-semibold hover:bg-[#1e293b] transition-colors disabled:opacity-60"
+            className="flex-shrink-0 px-4 py-2 rounded bg-[#0f172a] text-white text-xs font-semibold hover:bg-[#1e293b] transition-colors disabled:opacity-60"
           >
             {finalizing ? 'Sonuçlandırılıyor…' : 'Sonuçlandır & Kilitle'}
           </button>
@@ -313,10 +313,10 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
       )}
 
       {report.is_finalized && (
-        <div className="rounded border border-[#e2e8f0] bg-[#f8fafc] px-5 py-4 flex items-center gap-3">
-          <div className="text-lg">🔒</div>
+        <div className="rounded border border-[#e2e8f0] bg-[#f8fafc] px-4 py-3 flex items-center gap-3">
+          <div className="text-base">🔒</div>
           <div>
-            <div className="text-sm font-bold text-[#334155]">Sonuçlandırıldı</div>
+            <div className="text-xs font-bold text-[#334155]">Sonuçlandırıldı</div>
             <div className="text-xs text-[#94a3b8]">{fmtDateTime(report.finalized_at!)} · Bu rapor artık değiştirilemez.</div>
           </div>
         </div>
@@ -447,14 +447,14 @@ export default function GovernancePage() {
           <div className="flex items-center gap-2">
             <Link href="/dashboard/admin" className="text-xs text-[#94a3b8] hover:text-[#64748b]">← Yönetim</Link>
           </div>
-          <h1 className="text-xl font-black text-[#0f172a] tracking-tight mt-1">Ortak Yönetişim Sistemi</h1>
+          <h1 className="text-base font-bold text-[#0f172a] mt-1">Ortak Yönetişim Sistemi</h1>
           <p className="text-xs text-[#94a3b8] mt-0.5">
             Aylık finansal özet, ortak bakiye doğrulama ve resmi onay kaydı
           </p>
         </div>
         <button
           onClick={() => setShowGenForm(v => !v)}
-          className="flex-shrink-0 inline-flex items-center gap-1.5 bg-brand-light text-white px-4 py-2 rounded text-sm font-semibold hover:bg-brand transition-colors"
+          className="flex-shrink-0 inline-flex items-center gap-1.5 bg-brand-light text-white px-4 py-2 rounded text-xs font-semibold hover:bg-brand transition-colors"
         >
           {showGenForm ? '✕ Kapat' : '+ Yeni Rapor'}
         </button>
@@ -462,7 +462,7 @@ export default function GovernancePage() {
 
       {/* Generate form */}
       {showGenForm && (
-        <div data-print-hide className="bg-white border border-[#e2e8f0] rounded px-5 py-5 shadow-sm">
+        <div data-print-hide className="bg-white border border-[#e2e8f0] rounded px-4 py-4 shadow-sm">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">Yeni Yönetişim Raporu Oluştur</div>
           <div className="grid grid-cols-3 gap-3 mb-4">
             <div>
@@ -470,7 +470,7 @@ export default function GovernancePage() {
               <select
                 value={genYear}
                 onChange={e => setGenYear(Number(e.target.value))}
-                className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
+                className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-brand/30"
               >
                 {[now.getFullYear() - 1, now.getFullYear()].map(y => (
                   <option key={y} value={y}>{y}</option>
@@ -482,7 +482,7 @@ export default function GovernancePage() {
               <select
                 value={genMonth}
                 onChange={e => setGenMonth(Number(e.target.value))}
-                className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
+                className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-brand/30"
               >
                 {MONTHS.map((m, i) => (
                   <option key={i + 1} value={i + 1}>{m}</option>
@@ -496,18 +496,18 @@ export default function GovernancePage() {
                 value={genNotes}
                 onChange={e => setGenNotes(e.target.value)}
                 placeholder="Yönetim kurulu notu…"
-                className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
+                className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-brand/30"
               />
             </div>
           </div>
           <div className="flex items-center justify-end gap-2">
-            <button onClick={() => setShowGenForm(false)} className="px-4 py-2 rounded border border-[#e2e8f0] text-sm font-semibold text-[#64748b] hover:bg-[#f8fafc]">
+            <button onClick={() => setShowGenForm(false)} className="px-4 py-2 rounded border border-[#e2e8f0] text-xs font-semibold text-[#64748b] hover:bg-[#f8fafc]">
               Vazgeç
             </button>
             <button
               onClick={handleGenerate}
               disabled={generating}
-              className="px-4 py-2 rounded bg-brand-light text-white text-sm font-semibold hover:bg-brand disabled:opacity-60"
+              className="px-4 py-2 rounded bg-brand-light text-white text-xs font-semibold hover:bg-brand disabled:opacity-60"
             >
               {generating ? 'Oluşturuluyor…' : 'Rapor Oluştur'}
             </button>
@@ -517,7 +517,7 @@ export default function GovernancePage() {
 
       {/* Error */}
       {error && (
-        <div data-print-hide className="bg-neg-light border border-neg-light rounded px-4 py-3 text-sm text-neg-text flex items-center justify-between">
+        <div data-print-hide className="bg-neg-light border border-neg-light rounded px-4 py-3 text-xs text-neg-text flex items-center justify-between">
           <span>{error}</span>
           <button onClick={() => setError(null)} className="text-neg font-bold text-base ml-3">✕</button>
         </div>
@@ -526,7 +526,7 @@ export default function GovernancePage() {
       {/* Main layout: list + detail */}
       {loading ? (
         <div className="bg-white border border-[#e2e8f0] rounded p-8 text-center">
-          <div className="text-sm text-[#94a3b8]">Yükleniyor…</div>
+          <div className="text-xs text-[#94a3b8]">Yükleniyor…</div>
         </div>
       ) : reports.length === 0 ? (
         <div className="bg-white border border-[#e2e8f0] rounded p-10 text-center">
@@ -537,7 +537,7 @@ export default function GovernancePage() {
           </div>
           <button
             onClick={() => setShowGenForm(true)}
-            className="inline-flex items-center gap-1.5 bg-brand-light text-white px-4 py-2 rounded text-sm font-semibold hover:bg-brand transition-colors"
+            className="inline-flex items-center gap-1.5 bg-brand-light text-white px-4 py-2 rounded text-xs font-semibold hover:bg-brand transition-colors"
           >
             + İlk Raporu Oluştur
           </button>
@@ -566,7 +566,7 @@ export default function GovernancePage() {
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <div className="text-sm font-bold text-[#0f172a] truncate">{r.period_label}</div>
+                    <div className="text-xs font-bold text-[#0f172a] truncate">{r.period_label}</div>
                     {r.is_finalized
                       ? <span className="text-[9px] font-bold text-[#64748b] bg-[#f1f5f9] rounded px-1.5 py-0.5 flex-shrink-0">🔒</span>
                       : <span className={`text-[9px] font-bold rounded px-1.5 py-0.5 flex-shrink-0 ${theme.text} ${theme.bg} border ${theme.border}`}>{theme.label}</span>
@@ -601,14 +601,14 @@ export default function GovernancePage() {
                 finalizing={finalizing}
               />
             ) : (
-              <div className="text-sm text-[#94a3b8] text-center py-8">Soldan bir rapor seçin</div>
+              <div className="text-xs text-[#94a3b8] text-center py-8">Soldan bir rapor seçin</div>
             )}
           </div>
         </div>
       )}
 
       {/* Info footer */}
-      <div data-print-hide className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-5 py-4 text-xs text-[#64748b] leading-relaxed">
+      <div data-print-hide className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-3 text-xs text-[#64748b] leading-relaxed">
         <span className="font-semibold text-[#334155]">Yönetişim Kaydı Hakkında:</span>{' '}
         Her rapor, o ay için şirketin finansal pozisyonunun anlık görüntüsüdür.
         Ortaklar kendi paylarını ve bakiyelerini görür, dijital onay verir.
