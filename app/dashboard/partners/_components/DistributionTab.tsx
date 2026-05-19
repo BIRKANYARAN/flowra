@@ -39,7 +39,7 @@ export function DistributionTab({
 }: DistributionTabProps) {
   return (
     <div className="flex flex-col gap-4">
-      <div className="bg-white border border-[#e2e8f0] rounded px-5 py-4">
+      <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Dağıtım Parametreleri</div>
         <div className="grid grid-cols-2 gap-3">
           <div>
@@ -50,7 +50,7 @@ export function DistributionTab({
               type="number"
               min="0"
               placeholder="örn. 500000"
-              className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
+              className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-brand/30"
               value={netIncomeInput}
               onChange={e => onNetIncomeChange(e.target.value)}
             />
@@ -63,7 +63,7 @@ export function DistributionTab({
               type="number"
               min="0"
               placeholder="örn. 0"
-              className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
+              className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-brand/30"
               value={boardRetainedInput}
               onChange={e => onBoardRetainedChange(e.target.value)}
             />
@@ -100,7 +100,7 @@ export function DistributionTab({
               ].map(row => (
                 <div key={row.label} className={`flex items-center justify-between px-4 py-3 ${row.sign === '=' ? 'bg-[#f8fafc]' : ''}`}>
                   <div className="text-xs text-[#64748b]">{row.label}</div>
-                  <div className={`text-sm font-black tabular-nums font-mono ${row.color}`}>
+                  <div className={`text-xs font-black tabular-nums font-mono ${row.color}`}>
                     {row.sign && row.sign !== '=' ? row.sign + ' ' : ''}{fmt(row.value)}
                   </div>
                 </div>
@@ -113,7 +113,7 @@ export function DistributionTab({
             <div className="bg-pos-light border border-pos-light rounded px-4 py-3 space-y-3">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <div className="text-sm font-bold text-pos-text">Dağıtım yapılabilir</div>
+                  <div className="text-xs font-bold text-pos-text">Dağıtım yapılabilir</div>
                   <div className="text-xs text-pos-text mt-0.5">
                     Net dağıtılabilir: <span className="font-black">{fmt(distrib.distribution_layers.distributable_net_try)}</span>
                   </div>
@@ -157,7 +157,7 @@ export function DistributionTab({
             </div>
           ) : (
             <div className="bg-neg-light border border-neg-light rounded px-4 py-3">
-              <div className="text-sm font-bold text-neg-text">Dağıtım engellenmiştir</div>
+              <div className="text-xs font-bold text-neg-text">Dağıtım engellenmiştir</div>
               <div className="text-xs text-neg mt-0.5">{distrib.distribution_layers.block_reason ?? 'Dağıtılabilir net gelir yetersiz (TTK 509).'}</div>
             </div>
           )}
@@ -213,7 +213,7 @@ export function DistributionTab({
       )}
 
       {!distrib && !distribLoading && (
-        <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-8 text-center text-sm text-[#94a3b8]">
+        <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-8 text-center text-xs text-[#94a3b8]">
           Dönem net gelirini girin ve hesapla butonuna basın.
         </div>
       )}

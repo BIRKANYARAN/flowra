@@ -81,20 +81,18 @@ export async function ProformasContent({ companyId }: Props) {
 
       {/* Low win-rate alert — only when enough decisions to be statistically meaningful */}
       {winRate !== null && decided >= 5 && winRate < 30 && (
-        <div className={`rounded border px-4 py-3 flex items-start gap-3 ${
+        <div className={`rounded border px-4 py-3 flex items-center justify-between gap-4 ${
           winRate < 15 ? 'bg-neg-light border-neg-light' : 'bg-warn-light border-warn-light'
         }`}>
-          <span className="text-base mt-0.5">⚠</span>
-          <div className="flex-1">
+          <div>
             <div className={`text-[11px] font-black uppercase tracking-wide ${winRate < 15 ? 'text-neg-text' : 'text-warn-text'}`}>
               Düşük Teklif Dönüşüm Oranı — %{winRate}
             </div>
             <div className={`text-xs mt-0.5 ${winRate < 15 ? 'text-neg-text' : 'text-warn-text'}`}>
-              {decided} karar verilen tekliften sadece {convertedCount} tanesi satışa dönmüş.
-              Fiyatlandırma, teklif içeriği veya takip sürecini gözden geçirin.
+              {decided} karar verilen tekliften sadece {convertedCount} tanesi satışa dönmüş. Fiyatlandırma veya takip sürecini gözden geçirin.
             </div>
           </div>
-          <Link href="/dashboard/commercial?tab=pipeline" className={`text-[10px] font-bold underline underline-offset-2 shrink-0 mt-0.5 whitespace-nowrap ${winRate < 15 ? 'text-neg-text hover:text-neg-text' : 'text-warn-text hover:text-warn-text'}`}>
+          <Link href="/dashboard/commercial?tab=pipeline" className={`text-[10px] font-bold underline underline-offset-2 shrink-0 whitespace-nowrap ${winRate < 15 ? 'text-neg-text hover:text-neg-text' : 'text-warn-text hover:text-warn-text'}`}>
             Pipeline →
           </Link>
         </div>
@@ -109,16 +107,12 @@ export async function ProformasContent({ companyId }: Props) {
         )
         if (staleOpen.length < 3) return null
         return (
-          <div className="bg-warn-light border border-warn-light rounded px-4 py-3 flex items-start gap-3">
-            <span className="text-base mt-0.5">⚠</span>
-            <div className="flex-1">
-              <div className="text-[11px] font-black uppercase tracking-wide text-warn-text">
-                {staleOpen.length} Açık Teklif 14+ Gün Yanıt Bekliyor
-              </div>
-              <div className="text-xs text-warn-text mt-0.5">
-                Yanıt bekleyen teklifler pipeline değerini şişirir.
-                Müşteri takibi yapın veya teklifleri güncelleyin.
-              </div>
+          <div className="bg-warn-light border border-warn-light rounded px-4 py-3">
+            <div className="text-[11px] font-black uppercase tracking-wide text-warn-text">
+              {staleOpen.length} Açık Teklif 14+ Gün Yanıt Bekliyor
+            </div>
+            <div className="text-xs text-warn-text mt-0.5">
+              Yanıt bekleyen teklifler pipeline değerini şişirir. Müşteri takibi yapın veya teklifleri güncelleyin.
             </div>
           </div>
         )
@@ -126,7 +120,7 @@ export async function ProformasContent({ companyId }: Props) {
 
       {/* ── Proforma Status Funnel ────────────────────────────────────── */}
       {list.length > 2 && totalNonDraft > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Teklif Dönüşüm Hunisi</div>
           <div className="flex items-stretch gap-1">
             {[
@@ -174,7 +168,7 @@ export async function ProformasContent({ companyId }: Props) {
           </Link>
           <Link
             href="/dashboard/proformas/new"
-            className="inline-flex items-center gap-1.5 bg-brand-light text-white px-4 py-2 rounded text-sm font-semibold hover:bg-brand transition-colors"
+            className="inline-flex items-center gap-1.5 bg-brand-light text-white px-4 py-2 rounded text-xs font-semibold hover:bg-brand transition-colors"
           >
             + Yeni Proforma
           </Link>
@@ -189,7 +183,7 @@ export async function ProformasContent({ companyId }: Props) {
           action={
             <Link
               href="/dashboard/proformas/new"
-              className="inline-flex bg-brand-light text-white px-5 py-2 rounded text-sm font-semibold hover:bg-brand transition-colors"
+              className="inline-flex bg-brand-light text-white px-4 py-2 rounded text-xs font-semibold hover:bg-brand transition-colors"
             >
               İlk Proformayı Oluştur
             </Link>
@@ -197,7 +191,7 @@ export async function ProformasContent({ companyId }: Props) {
         />
       ) : (
         <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
-          <div className="grid grid-cols-12 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] px-5 py-3 border-b border-[#e2e8f0]">
+          <div className="grid grid-cols-12 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] px-4 py-2.5 border-b border-[#e2e8f0]">
             <div className="col-span-3">No / Revizyon</div>
             <div className="col-span-3">Müşteri</div>
             <div className="col-span-2">Durum</div>
@@ -217,16 +211,16 @@ export async function ProformasContent({ companyId }: Props) {
                 <Link
                   key={p.id}
                   href={`/dashboard/proformas/${p.id}`}
-                  className="grid grid-cols-12 items-center px-5 py-3.5 hover:bg-[#f8fafc]/60 transition-colors"
+                  className="grid grid-cols-12 items-center px-4 py-3 hover:bg-[#f8fafc]/60 transition-colors"
                 >
                   <div className="col-span-3">
                     <div className="text-xs font-mono font-semibold text-[#334155]">{p.proforma_no || '—'}</div>
                     {p.revision_no > 1 && <div className="text-xs text-brand-light">Rev. {p.revision_no}</div>}
                   </div>
-                  <div className="col-span-3 text-sm font-medium text-[#1e293b] truncate">{p.customer_name || '—'}</div>
+                  <div className="col-span-3 text-xs font-medium text-[#1e293b] truncate">{p.customer_name || '—'}</div>
                   <div className="col-span-2"><StatusBadge status={p.status || 'draft'} /></div>
-                  <div className="col-span-2 text-sm text-[#64748b]">{displayDate}</div>
-                  <div className="col-span-2 text-right font-black text-sm tabular-nums">{displayTotal}</div>
+                  <div className="col-span-2 text-xs text-[#64748b]">{displayDate}</div>
+                  <div className="col-span-2 text-right font-black text-xs tabular-nums">{displayTotal}</div>
                 </Link>
               )
             })}

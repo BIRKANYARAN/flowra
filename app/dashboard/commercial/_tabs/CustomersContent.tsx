@@ -103,13 +103,13 @@ export async function CustomersContent({ companyId }: Props) {
 
       {/* Revenue concentration alert — top customer > 40% of total billed */}
       {topCustomers.length > 0 && billed > 0 && topCustomers[0].total / billed > 0.4 && (
-        <div className={`rounded border px-4 py-3 flex items-start gap-3 ${
+        <div className={`rounded border px-4 py-3 ${
           topCustomers[0].total / billed > 0.6
             ? 'bg-neg-light border-neg-light'
             : 'bg-warn-light border-warn-light'
         }`}>
-          <span className="text-base mt-0.5">⚠</span>
-          <div className="flex-1">
+          
+          <div>
             <div className={`text-[11px] font-black uppercase tracking-wide ${
               topCustomers[0].total / billed > 0.6 ? 'text-neg-text' : 'text-warn-text'
             }`}>
@@ -128,8 +128,8 @@ export async function CustomersContent({ companyId }: Props) {
 
       {/* Top customers bar chart */}
       {topCustomers.length > 0 && billed > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded p-4">
-          <h3 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">En Yüksek Cirolu Müşteriler</h3>
+        <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
+          <h3 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">En Yüksek Cirolu Müşteriler</h3>
           <div className="space-y-2.5">
             {topCustomers.map(tc => {
               const barPct   = (tc.total / maxTopTotal) * 100
@@ -137,7 +137,7 @@ export async function CustomersContent({ companyId }: Props) {
               return (
                 <div key={tc.name} className="flex items-center gap-3">
                   <div className="w-36 text-xs text-[#334155] font-medium shrink-0 truncate" title={tc.name}>{tc.name}</div>
-                  <div className="flex-1">
+                  <div>
                     <div className="h-5 bg-[#f1f5f9] rounded overflow-hidden">
                       <div className="h-5 bg-brand-light rounded" style={{ width: `${barPct}%` }} />
                     </div>
@@ -156,7 +156,7 @@ export async function CustomersContent({ companyId }: Props) {
       {/* ── Customer Payment Risk Panel ──────────────────────────────────── */}
       {atRiskCustomers.length > 0 && (
         <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#f1f5f9]">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">
             <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
               Müşteri Ödeme Riski
             </span>
@@ -174,7 +174,7 @@ export async function CustomersContent({ companyId }: Props) {
             {atRiskCustomers.map(r => {
               const cfg = RISK_CFG[r.risk_level]
               return (
-                <div key={r.customer_name} className="flex items-center gap-4 px-5 py-3 hover:bg-[#f8fafc]/40">
+                <div key={r.customer_name} className="flex items-center gap-4 px-4 py-3 hover:bg-[#f8fafc]/40">
                   {/* Risk score ring */}
                   <div className="flex-shrink-0 w-10 h-10 rounded-full border-2 flex items-center justify-center"
                     style={{ borderColor: r.risk_level === 'high' ? '#f87171' : r.risk_level === 'medium' ? '#fb923c' : '#34d399' }}>
@@ -215,7 +215,7 @@ export async function CustomersContent({ companyId }: Props) {
             })}
           </div>
           {riskScores.filter(r => r.risk_level !== 'low').length > 8 && (
-            <div className="px-5 py-2.5 text-[10px] text-[#94a3b8] border-t border-[#f1f5f9]">
+            <div className="px-4 py-2 text-[10px] text-[#94a3b8] border-t border-[#f1f5f9]">
               +{riskScores.filter(r => r.risk_level !== 'low').length - 8} daha · Tüm risk analizi tahsilat sekmesinde
             </div>
           )}

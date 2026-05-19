@@ -68,7 +68,7 @@ export function PartnersTab({
           ].map(c => (
             <div key={c.label} className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
               <div className={`text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5 ${c.color}`}>{c.label}</div>
-              <div className="text-2xl font-black tabular-nums text-[#0f172a] leading-none">{c.value}</div>
+              <div className="text-xl font-black tabular-nums text-[#0f172a] leading-none">{c.value}</div>
             </div>
           ))}
         </div>
@@ -78,7 +78,7 @@ export function PartnersTab({
 
       {!loading && !hasPartners && !fetchError && (
         <div className="bg-white border border-[#e2e8f0] rounded px-6 py-12 text-center">
-          <div className="text-sm text-[#94a3b8]">Henüz ortak eklenmemiş.</div>
+          <div className="text-xs text-[#94a3b8]">Henüz ortak eklenmemiş.</div>
         </div>
       )}
 
@@ -112,11 +112,11 @@ export function PartnersTab({
               const isEditing     = editId === p.id
 
               return (
-                <div key={p.id} className={`bg-white border rounded px-5 py-4 group ${isUnderFunded ? 'border-warn-light' : 'border-[#e2e8f0]'}`}>
+                <div key={p.id} className={`bg-white border rounded px-4 py-3 group ${isUnderFunded ? 'border-warn-light' : 'border-[#e2e8f0]'}`}>
                   <div className="flex items-start justify-between gap-4 flex-wrap">
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <span className="font-bold text-[#0f172a] text-sm">{p.name}</span>
+                        <span className="font-bold text-[#0f172a] text-xs">{p.name}</span>
                         {!p.is_active && <span className="text-[10px] bg-[#f1f5f9] text-[#94a3b8] px-1.5 py-0.5 rounded font-semibold">Pasif</span>}
                         {isUnderFunded && <span className="text-[10px] bg-warn-light text-warn-text px-1.5 py-0.5 rounded font-bold">⚠ Eşitleme gerekli</span>}
                         {withdrawable > 0.01 && !isUnderFunded && (
@@ -130,17 +130,17 @@ export function PartnersTab({
                     <div className="grid grid-cols-3 gap-x-6 gap-y-1 text-right shrink-0">
                       <div>
                         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Bakiye</div>
-                        <div className={`text-sm font-black tabular-nums ${(b?.partner_balance_try ?? 0) > 0 ? 'text-brand' : 'text-[#94a3b8]'}`}>
+                        <div className={`text-xs font-black tabular-nums ${(b?.partner_balance_try ?? 0) > 0 ? 'text-brand' : 'text-[#94a3b8]'}`}>
                           {fmt(b?.partner_balance_try ?? 0)}
                         </div>
                       </div>
                       <div>
                         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Dağıtılan</div>
-                        <div className="text-sm font-black tabular-nums text-[#334155]">{fmt(b?.total_distributed_try ?? 0)}</div>
+                        <div className="text-xs font-black tabular-nums text-[#334155]">{fmt(b?.total_distributed_try ?? 0)}</div>
                       </div>
                       <div>
                         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Sermaye</div>
-                        <div className="text-sm font-black tabular-nums text-[#0f172a]">{fmt(contributed)}</div>
+                        <div className="text-xs font-black tabular-nums text-[#0f172a]">{fmt(contributed)}</div>
                       </div>
                     </div>
                   </div>
@@ -236,9 +236,9 @@ export function PartnersTab({
           </div>
 
           {equalization.total_equalization > 0 && (
-            <div className="bg-warn-light border border-warn-light rounded px-5 py-4">
+            <div className="bg-warn-light border border-warn-light rounded px-4 py-3">
               <div className="text-[10px] font-bold uppercase tracking-widest text-warn-text mb-2">Eşitleme Özeti</div>
-              <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="grid grid-cols-2 gap-4 text-xs">
                 <div><span className="text-[#64748b]">Toplam eşitleme gereken: </span><span className="font-bold text-warn-text">{fmt(equalization.total_equalization)}</span></div>
                 <div><span className="text-[#64748b]">Baz (birim başına): </span><span className="font-bold text-[#334155]">{fmt(equalization.baseline_per_unit)}</span></div>
               </div>
@@ -258,7 +258,7 @@ export function PartnersTab({
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
           <Link href="/dashboard/partners?tab=tranches" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            Trancheler →
+            Borç Dilimleri →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/partners?tab=distribution" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">

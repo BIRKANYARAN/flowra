@@ -81,7 +81,7 @@ function AllocationBar({ waterfall, totalDebt }: { waterfall: WaterfallData; tot
   const shortfallPct = available_cash_try < totalDebt ? ((totalDebt - available_cash_try) / universe) * 100 : 0
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded px-5 py-4 shadow-sm">
+    <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
       <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
         Nakit Dağılım Haritası
       </div>
@@ -193,7 +193,7 @@ export function WaterfallTab({
   return (
     <div className="flex flex-col gap-4">
       {loading ? <Skeleton h="h-32" /> : !waterfall ? (
-        <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-6 text-center text-sm text-[#94a3b8]">
+        <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-6 text-center text-xs text-[#94a3b8]">
           Waterfall verisi yüklenemedi.
         </div>
       ) : (
@@ -201,13 +201,13 @@ export function WaterfallTab({
           {/* ── Instrument strip ───────────────────────────────────────────── */}
           <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
             <div className="grid grid-cols-3 divide-x divide-[#e2e8f0]">
-              <div className="px-5 py-3.5">
+              <div className="px-4 py-3">
                 <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Mevcut Nakit</div>
                 <div className="text-xl font-black tabular-nums text-[#0f172a]">
                   {fmt(waterfall.available_cash_try)}
                 </div>
               </div>
-              <div className="px-5 py-3.5">
+              <div className="px-4 py-3">
                 <div className="text-[9px] font-black uppercase tracking-widest text-warn mb-1">Toplam Ortak Borcu</div>
                 <div className={`text-xl font-black tabular-nums ${totalDebt > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>
                   {fmt(totalDebt)}
@@ -221,7 +221,7 @@ export function WaterfallTab({
                   </div>
                 )}
               </div>
-              <div className="px-5 py-3.5">
+              <div className="px-4 py-3">
                 <div className={`text-[9px] font-black uppercase tracking-widest mb-1 ${
                   waterfall.remaining_after_debt >= 0 ? 'text-pos-text' : 'text-neg'
                 }`}>Borç Sonrası Kalan</div>
@@ -257,7 +257,7 @@ export function WaterfallTab({
           )}
 
           {totalDebt === 0 && (
-            <div className="bg-pos-light border border-pos-light rounded px-4 py-4 text-sm text-pos-text font-semibold text-center">
+            <div className="bg-pos-light border border-pos-light rounded px-4 py-4 text-xs text-pos-text font-semibold text-center">
               ✓ Tüm ortak borçları kapatılmış. Nakit dağıtıma hazır.
             </div>
           )}
@@ -283,7 +283,7 @@ export function WaterfallTab({
                       </div>
                       <div className="text-xs font-semibold text-[#1e293b]">{step.description}</div>
                     </div>
-                    <div className="text-sm font-black tabular-nums text-brand">{fmt(step.allocated_try)}</div>
+                    <div className="text-xs font-black tabular-nums text-brand">{fmt(step.allocated_try)}</div>
                   </div>
                 ))}
                 {waterfall.remaining_after_debt > 0 && (
@@ -294,7 +294,7 @@ export function WaterfallTab({
                       </div>
                       <div className="text-xs font-semibold text-pos-text">Dağıtılabilir nakit (temettü için)</div>
                     </div>
-                    <div className="text-sm font-black tabular-nums text-pos-text">{fmt(waterfall.remaining_after_debt)}</div>
+                    <div className="text-xs font-black tabular-nums text-pos-text">{fmt(waterfall.remaining_after_debt)}</div>
                   </div>
                 )}
               </div>
@@ -307,7 +307,7 @@ export function WaterfallTab({
               <div className="px-4 py-2.5 border-b border-[#e2e8f0] bg-[#f8fafc]/60 flex items-center justify-between">
                 <div>
                   <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Borç Pozisyonları</div>
-                  <div className="text-[10px] text-[#94a3b8] mt-0.5">{waterfall.tranches.filter(t => t.principal_try > 0).length} aktif tranche</div>
+                  <div className="text-[10px] text-[#94a3b8] mt-0.5">{waterfall.tranches.filter(t => t.principal_try > 0).length} aktif borç dilimi</div>
                 </div>
               </div>
               <table className="w-full text-xs">

@@ -26,7 +26,7 @@ function AgingStrip({ buckets, grandTotal }: { buckets: AgingBucket[]; grandTota
       {buckets.map((b, i) => (
         <div key={b.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e2e8f0]' : ''}`}>
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{b.label}</div>
-          <div className={`text-lg font-black tabular-nums leading-none ${b.color}`}>
+          <div className={`text-base font-black tabular-nums leading-none ${b.color}`}>
             {b.total > 0 ? fmt(b.total) : '—'}
           </div>
           <div className="text-[10px] text-[#94a3b8] mt-1">{b.sub}</div>
@@ -149,18 +149,16 @@ export async function CollectionsContent({ companyId }: Props) {
 
       {/* 90+ day overdue critical alert */}
       {overdue90Total > 0 && (
-        <div className="bg-neg-light border border-neg-light rounded px-4 py-3 flex items-start gap-3">
-          <span className="text-base mt-0.5">🔴</span>
-          <div className="flex-1">
+        <div className="bg-neg-light border border-neg-light rounded px-4 py-3 flex items-center justify-between gap-4">
+          <div>
             <div className="text-[11px] font-black uppercase tracking-wide text-neg-text">
               90+ Gün Vadesi Geçmiş — {overdue90Count} Fatura
             </div>
             <div className="text-xs text-neg-text mt-0.5">
-              <strong>{fmt(overdue90Total)}</strong> tutarında alacak 90 günü aşmış.
-              Hukuki süreç veya şüpheli alacak karşılığı değerlendirilmeli.
+              <strong>{fmt(overdue90Total)}</strong> tutarında alacak 90 günü aşmış. Hukuki süreç veya şüpheli alacak karşılığı değerlendirilmeli.
             </div>
           </div>
-          <Link href="/dashboard/finance?tab=risks" className="text-[10px] font-bold text-neg-text hover:text-neg-text underline underline-offset-2 shrink-0 mt-0.5 whitespace-nowrap">
+          <Link href="/dashboard/finance?tab=risks" className="text-[10px] font-bold text-neg-text hover:text-neg-text underline underline-offset-2 shrink-0 whitespace-nowrap">
             Risk Analizi →
           </Link>
         </div>
@@ -168,34 +166,27 @@ export async function CollectionsContent({ companyId }: Props) {
 
       {/* High debtor concentration alert (top debtor > 40% of total outstanding) */}
       {topDebtorShare > 0.40 && grandTotal > 0 && (
-        <div className={`rounded border px-4 py-3 flex items-start gap-3 ${
+        <div className={`rounded border px-4 py-3 ${
           topDebtorShare > 0.60 ? 'bg-neg-light border-neg-light' : 'bg-warn-light border-warn-light'
         }`}>
-          <span className="text-base mt-0.5">⚠</span>
-          <div className="flex-1">
-            <div className={`text-[11px] font-black uppercase tracking-wide ${topDebtorShare > 0.60 ? 'text-neg-text' : 'text-warn-text'}`}>
-              Tahsilat Konsantrasyonu — {topDebtors[0].name}
-            </div>
-            <div className={`text-xs mt-0.5 ${topDebtorShare > 0.60 ? 'text-neg-text' : 'text-warn-text'}`}>
-              Bu müşteri toplam açık alacağın <strong>%{Math.round(topDebtorShare * 100)}'ini</strong> oluşturuyor ({fmt(topDebtors[0].total)}).
-              {topDebtors[0].maxDays > 60 && ` ${topDebtors[0].maxDays} gündür ödeme bekliyor.`}
-            </div>
+          <div className={`text-[11px] font-black uppercase tracking-wide ${topDebtorShare > 0.60 ? 'text-neg-text' : 'text-warn-text'}`}>
+            Tahsilat Konsantrasyonu — {topDebtors[0].name}
+          </div>
+          <div className={`text-xs mt-0.5 ${topDebtorShare > 0.60 ? 'text-neg-text' : 'text-warn-text'}`}>
+            Bu müşteri toplam açık alacağın <strong>%{Math.round(topDebtorShare * 100)}&apos;ini</strong> oluşturuyor ({fmt(topDebtors[0].total)}).
+            {topDebtors[0].maxDays > 60 && ` ${topDebtors[0].maxDays} gündür ödeme bekliyor.`}
           </div>
         </div>
       )}
 
       {/* 60+ day overdue rate warning (only if no 90+ critical already shown) */}
       {overdue90Total === 0 && criticalRate > 0.30 && grandTotal > 0 && (
-        <div className="bg-warn-light border border-warn/30 rounded px-4 py-3 flex items-start gap-3">
-          <span className="text-base mt-0.5">⚠</span>
-          <div className="flex-1">
-            <div className="text-[11px] font-black uppercase tracking-wide text-warn-text">
-              Tahsilat Yaşlanıyor — %{Math.round(criticalRate * 100)} Gecikmiş
-            </div>
-            <div className="text-xs text-warn-text mt-0.5">
-              Açık alacakların {fmt(overdue60PlusTotal)} tutarındaki kısmı 60 günü aşmış.
-              Tahsilat sürecini hızlandırın.
-            </div>
+        <div className="bg-warn-light border border-warn/30 rounded px-4 py-3">
+          <div className="text-[11px] font-black uppercase tracking-wide text-warn-text">
+            Tahsilat Yaşlanıyor — %{Math.round(criticalRate * 100)} Gecikmiş
+          </div>
+          <div className="text-xs text-warn-text mt-0.5">
+            Açık alacakların {fmt(overdue60PlusTotal)} tutarındaki kısmı 60 günü aşmış. Tahsilat sürecini hızlandırın.
           </div>
         </div>
       )}
@@ -205,8 +196,8 @@ export async function CollectionsContent({ companyId }: Props) {
 
       {/* Top outstanding debtors */}
       {topDebtors.length > 0 && grandTotal > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">En Yüksek Bakiyeli Müşteriler</div>
+        <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
+          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">En Yüksek Bakiyeli Müşteriler</div>
           <div className="space-y-2.5">
             {topDebtors.map(d => {
               const barPct   = (d.total / maxDebtorTotal) * 100
@@ -216,9 +207,9 @@ export async function CollectionsContent({ companyId }: Props) {
                 <div key={d.name} className="flex items-center gap-3">
                   <div className="w-32 text-xs text-[#334155] font-medium shrink-0 truncate" title={d.name}>{d.name}</div>
                   <div className="flex-1">
-                    <div className="h-5 bg-[#f1f5f9] rounded overflow-hidden">
+                    <div className="h-3 bg-[#f1f5f9] rounded overflow-hidden">
                       <div
-                        className={`h-5 rounded ${d.maxDays > 60 ? 'bg-neg' : d.maxDays > 30 ? 'bg-warn' : 'bg-brand-light'}`}
+                        className={`h-3 rounded ${d.maxDays > 60 ? 'bg-neg' : d.maxDays > 30 ? 'bg-warn' : 'bg-brand-light'}`}
                         style={{ width: `${barPct}%` }}
                       />
                     </div>

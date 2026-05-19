@@ -304,10 +304,10 @@ export default function PartnersPage() {
       <div className="flex items-end justify-between gap-4 flex-wrap">
         <div>
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Ortak Finans Merkezi</div>
-          <h1 className="text-2xl font-black tracking-tight text-[#0f172a] leading-tight">
+          <h1 className="text-base font-bold tracking-tight text-[#0f172a] leading-tight">
             {TAB_META[activeTab]?.title ?? 'Ortaklar'}
           </h1>
-          <p className="text-sm text-[#94a3b8] mt-1">{TAB_META[activeTab]?.sub ?? ''}</p>
+          <p className="text-xs text-[#94a3b8] mt-0.5">{TAB_META[activeTab]?.sub ?? ''}</p>
         </div>
         <div className="flex items-center gap-2">
           <Link
@@ -315,7 +315,7 @@ export default function PartnersPage() {
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded border border-[#e2e8f0] text-[#64748b] text-xs font-semibold hover:border-[#e2e8f0] hover:bg-[#f8fafc] transition-colors whitespace-nowrap"
             title="Aylık yönetişim raporları ve ortak onay sistemi"
           >
-            🏛️ Yönetişim
+            Yönetişim
           </Link>
           <Link
             href="/dashboard/partners/new"
@@ -328,14 +328,14 @@ export default function PartnersPage() {
 
       {/* Sticky tab nav + context bar */}
       <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm -mx-4">
-        <div className="px-5 pt-1 border-b border-[#e2e8f0]">
+        <div className="px-4 pt-1 border-b border-[#e2e8f0]">
           <div className="flex items-center gap-0.5 overflow-x-auto scrollbar-none">
             {TABS.map(t => (
               <button
                 key={t.id}
                 onClick={() => setActiveTab(t.id)}
                 className={[
-                  'relative px-3 py-2.5 text-[13px] transition-colors whitespace-nowrap flex-shrink-0 bg-transparent border-0 cursor-pointer',
+                  'relative px-3 py-2 text-xs transition-colors whitespace-nowrap flex-shrink-0 bg-transparent border-0 cursor-pointer',
                   activeTab === t.id
                     ? 'text-[#0f172a] font-semibold border-b-2 border-[#0f172a] -mb-px'
                     : 'text-[#94a3b8] hover:text-[#334155] font-medium',
@@ -346,13 +346,13 @@ export default function PartnersPage() {
             ))}
           </div>
         </div>
-        <div className="px-5">
+        <div className="px-4">
           <PartnersContextBar />
         </div>
       </div>
 
       {fetchError && (
-        <div className="bg-neg-light border border-neg-light rounded px-4 py-3 text-sm text-neg-text font-medium">
+        <div className="bg-neg-light border border-neg-light rounded px-4 py-3 text-xs text-neg-text font-medium">
           {fetchError}
         </div>
       )}

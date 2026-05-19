@@ -185,19 +185,16 @@ export async function SalesContent({ companyId }: Props) {
         if (dayOfMonth < 10 || Math.abs(pctChange) < 15) return null
         const isDown = pctChange < 0
         return (
-          <div className={`rounded border px-4 py-3 flex items-start gap-3 ${
+          <div className={`rounded border px-4 py-3 ${
             isDown ? 'bg-warn-light border-warn-light' : 'bg-pos-light border-pos-light'
           }`}>
-            <span className="text-base mt-0.5">{isDown ? '⚠' : '↗'}</span>
-            <div className="flex-1">
-              <div className={`text-[11px] font-black uppercase tracking-wide ${isDown ? 'text-warn-text' : 'text-pos-text'}`}>
-                {isDown ? 'Aylık Ciro Düşüşü' : 'Aylık Ciro Artışı'}
-              </div>
-              <div className={`text-xs mt-0.5 ${isDown ? 'text-warn-text' : 'text-pos-text'}`}>
-                Bu ay {fmt(mtdRevenue)} — geçen aya ({fmt(prevRevenue)}) göre{' '}
-                <span className="font-bold">{momDelta.text}</span>.
-                {isDown && ` Ay ${dayOfMonth}. günü itibarıyla talep düşüşü gözlemleniyor.`}
-              </div>
+            <div className={`text-[11px] font-black uppercase tracking-wide ${isDown ? 'text-warn-text' : 'text-pos-text'}`}>
+              {isDown ? 'Aylık Ciro Düşüşü' : 'Aylık Ciro Artışı'}
+            </div>
+            <div className={`text-xs mt-0.5 ${isDown ? 'text-warn-text' : 'text-pos-text'}`}>
+              Bu ay {fmt(mtdRevenue)} — geçen aya ({fmt(prevRevenue)}) göre{' '}
+              <span className="font-bold">{momDelta.text}</span>.
+              {isDown && ` Ay ${dayOfMonth}. günü itibarıyla talep düşüşü gözlemleniyor.`}
             </div>
             <Link
               href="/dashboard/finance?tab=pnl"
