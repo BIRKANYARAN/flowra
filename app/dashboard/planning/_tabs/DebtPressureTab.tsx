@@ -129,7 +129,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
   const dsrBarColor = dsr <= 0.30 ? 'bg-pos'
     : dsr <= 0.60 ? 'bg-warn'
     : 'bg-neg-light'
-  const dsrLabel    = dsr === 0 ? 'Borç yok' : dsr <= 0.30 ? 'Sağlıklı' : dsr <= 0.60 ? 'Dikkat' : 'Kritik'
+  const dsrLabel    = dsr === 0 ? 'Borç yok' : dsr <= 0.30 ? 'Sağlıklı · Bu ay' : dsr <= 0.60 ? 'Baskı altında · Dikkat' : 'Kritik · Aksiyon gerekli'
 
   return (
     <div className="space-y-5">
@@ -139,23 +139,23 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
 
         <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
           <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Toplam Borç</div>
-          <div className={`text-lg font-black tabular-nums ${totalOutstanding > 0 ? 'text-[#0f172a]' : 'text-[#94a3b8]'}`}>
+          <div className={`text-xl font-black tabular-nums ${totalOutstanding > 0 ? 'text-[#0f172a]' : 'text-[#94a3b8]'}`}>
             {totalOutstanding > 0 ? fmt(totalOutstanding) : '—'}
           </div>
-          <div className="text-[9px] text-[#94a3b8] mt-0.5">{tranches.length} aktif tranche</div>
+          <div className="text-[9px] text-[#94a3b8] mt-0.5">{tranches.length} aktif borç dilimi</div>
         </div>
 
         <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
           <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Aylık Borç Servisi</div>
-          <div className={`text-lg font-black tabular-nums ${monthlyService > 0 ? 'text-warn' : 'text-[#94a3b8]'}`}>
+          <div className={`text-xl font-black tabular-nums ${monthlyService > 0 ? 'text-warn' : 'text-[#94a3b8]'}`}>
             {monthlyService > 0 ? fmt(monthlyService) : '—'}
           </div>
-          <div className="text-[9px] text-[#94a3b8] mt-0.5">faiz tahmini / ay</div>
+          <div className="text-[9px] text-[#94a3b8] mt-0.5">aylık nakit çıkışı · mevcut hızda</div>
         </div>
 
         <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
           <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">DSR (Borç/Gelir)</div>
-          <div className={`text-lg font-black tabular-nums ${dsrColor}`}>
+          <div className={`text-xl font-black tabular-nums ${dsrColor}`}>
             {monthlyService > 0 ? fmtPct(dsr) : '—'}
           </div>
           <div className={`text-[9px] mt-0.5 font-semibold ${dsrColor}`}>{dsrLabel}</div>
@@ -170,13 +170,16 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
           <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Sonraki Vade</div>
           {nextDue ? (
             <>
-              <div className={`text-lg font-black tabular-nums ${nextDueDays !== null && nextDueDays <= 14 ? 'text-neg' : 'text-[#0f172a]'}`}>
+              <div className={`text-xl font-black tabular-nums ${nextDueDays !== null && nextDueDays <= 14 ? 'text-neg' : 'text-[#0f172a]'}`}>
                 {nextDueDays !== null && nextDueDays <= 0 ? 'GECIKTI' : nextDueDays !== null ? `${nextDueDays}g` : '—'}
               </div>
               <div className="text-[9px] text-[#94a3b8] mt-0.5">{fmtDate(nextDue.due_date)}</div>
+              {nextDueDays !== null && nextDueDays <= 30 && nextDueDays > 0 && (
+                <div className="text-[9px] text-neg font-semibold mt-0.5">30 gün içinde · Hazırlık gerekli</div>
+              )}
             </>
           ) : (
-            <div className="text-lg font-black text-[#94a3b8]">—</div>
+            <div className="text-xl font-black text-[#94a3b8]">—</div>
           )}
         </div>
       </div>
@@ -185,10 +188,10 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
       {!hasTranches && (
         <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-6 py-10 text-center">
           <div className="text-xs font-medium text-[#334155] mb-1">Aktif ortak borcu yok</div>
-          <div className="text-xs text-[#94a3b8] mb-4">Ortak borçları Ortaklar → Trancheler bölümünden girilir.</div>
+          <div className="text-xs text-[#94a3b8] mb-4">Ortak borçları Ortaklar → Borç Dilimleri bölümünden girilir.</div>
           <Link href="/dashboard/partners?tab=tranches"
             className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-light hover:text-brand border border-[#e2e8f0] px-3 py-1.5 rounded hover:bg-brand-subtle transition-colors">
-            Tranche Ekle →
+            Borç Dilimi Ekle →
           </Link>
         </div>
       )}
@@ -197,11 +200,11 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
         <>
           {/* ── 12-MONTH SERVICE SCHEDULE ──────────────────────────────────── */}
           <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#f1f5f9]">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">
               <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">12 Aylık Faiz Yük Takvimi</span>
-              <span className="text-[9px] text-[#94a3b8]">Outstanding × yıllık faiz / 12</span>
+              <span className="text-[9px] text-[#94a3b8]">Varsayım: mevcut borç bakiyesi sabit kalıyor</span>
             </div>
-            <div className="px-5 pt-4 pb-3">
+            <div className="px-4 pt-3 pb-2">
               <div className="flex items-end gap-1 h-14">
                 {schedule.map((s, i) => {
                   const h       = Math.max(3, Math.round((s.interest / maxService) * 56))
@@ -226,8 +229,8 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
 
           {/* ── TRANCHE TABLE ─────────────────────────────────────────────── */}
           <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#f1f5f9]">
-              <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Aktif Trancheler</span>
+            <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">
+              <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Aktif Borç Dilimleri</span>
               <Link href="/dashboard/partners?tab=tranches"
                 className="text-[10px] text-brand-light font-semibold hover:underline">
                 Yönet →
@@ -281,7 +284,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
 
           {/* ── CONCENTRATION ─────────────────────────────────────────────── */}
           {sorted.length > 1 && (
-            <div className="bg-white border border-[#e2e8f0] rounded px-5 py-4">
+            <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
               <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
                 Borç Konsantrasyonu
               </div>
@@ -316,8 +319,8 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
           {/* Interest-free warning */}
           {tranches.some(t => !t.annual_interest_rate || t.annual_interest_rate === 0) && (
             <div className="px-4 py-3 bg-warn-light border border-warn-light rounded text-[10px] text-warn-text">
-              <span className="font-bold">* Faizsiz tranche uyarısı:</span>{' '}
-              Oran girilmemiş tranchelerde aylık %1,5 proxy faiz hesaplanmıştır.
+              <span className="font-bold">* Faizsiz borç dilimi uyarısı:</span>{' '}
+              Oran girilmemiş dilimlerde aylık %1,5 proxy faiz hesaplanmıştır.
               VUK + KVK 13 kapsamında örtülü kazanç dağıtımı riski değerlendirilebilir.
             </div>
           )}
@@ -331,7 +334,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
           <Link href="/dashboard/partners?tab=tranches" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            Trancheler →
+            Borç Dilimleri →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/planning?tab=cash-projection" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">

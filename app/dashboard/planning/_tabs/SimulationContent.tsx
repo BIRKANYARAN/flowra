@@ -23,8 +23,8 @@ function ContextSkeleton() {
 type SimTab = 'unit-profit' | 'partner-impact'
 
 const TAB_CONTEXT: Record<SimTab, { title: string; focus: string }> = {
-  'unit-profit':    { title: 'Birim Kâr Analizi', focus: 'WAC · Satış fiyatı · Brüt marj · Başabaş noktası' },
-  'partner-impact': { title: 'Ortak Etkisi',      focus: 'Dağıtılabilir kâr · Eşitleme hesabı · Dağıtım zaman planı' },
+  'unit-profit':    { title: 'Birim Kâr Analizi', focus: 'WAC · Satış fiyatı · Brüt marj · Mevcut hızda başabaş noktası' },
+  'partner-impact': { title: 'Ortak Etkisi',      focus: 'Dağıtılabilir kâr · Eşitleme hesabı · Dağıtım sonrası nakit etkisi' },
 }
 
 interface Props { companyId: string; userId: string; activeTab?: SimTab }
@@ -83,7 +83,7 @@ export async function SimulationContent({ companyId, userId, activeTab = 'unit-p
 
       {/* Tab context header */}
       <div className="px-4 py-3 bg-brand-subtle border border-brand/10 rounded">
-        <div className="text-sm font-black text-brand">{ctx.title}</div>
+        <div className="text-xs font-black text-brand">{ctx.title}</div>
         <div className="text-[10px] text-brand-light mt-0.5">{ctx.focus}</div>
       </div>
 

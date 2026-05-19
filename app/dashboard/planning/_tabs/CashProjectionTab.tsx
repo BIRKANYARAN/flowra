@@ -128,12 +128,12 @@ export async function CashProjectionTab({ companyId }: Props) {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <Metric label="Ort. Aylık Gelir"   value={`₺${fmtK(avgRevenue)}`}    sub="6 ay ortalama"                                            color={avgRevenue > 0 ? 'text-pos-text' : 'text-[#94a3b8]'} />
         <Metric label="Ort. Aylık Gider"   value={`₺${fmtK(avgExpenses)}`}   sub="6 ay ortalama"                                            color="text-[#334155]" />
-        <Metric label="Borç Servisi/Ay"    value={hasTranches ? `₺${fmtK(monthlyDebtService)}` : '—'} sub="faiz tahmini" color={hasTranches ? 'text-warn' : 'text-[#94a3b8]'} />
-        <Metric label="Ort. Net/Ay"        value={`₺${fmtK(avgNet)}`}         sub="gelir − gider − borç"                                    color={avgNet >= 0 ? 'text-pos-text' : 'text-neg'} />
+        <Metric label="Borç Servisi/Ay"    value={hasTranches ? `₺${fmtK(monthlyDebtService)}` : '—'} sub="aylık nakit çıkışı" color={hasTranches ? 'text-warn' : 'text-[#94a3b8]'} />
+        <Metric label="Ort. Net/Ay"        value={`₺${fmtK(avgNet)}`}         sub="borç sonrası · mevcut hızda"                             color={avgNet >= 0 ? 'text-pos-text' : 'text-neg'} />
       </div>
 
       {!hasData && (
-        <div className="bg-warn-light border border-warn-light rounded px-4 py-3 text-sm text-warn-text">
+        <div className="bg-warn-light border border-warn-light rounded px-4 py-3 text-xs text-warn-text">
           <span className="font-semibold">Geçmiş veri bulunamadı.</span>{' '}
           Son 6 aya ait satış ve gider girişi yapıldığında projeksiyon otomatik hesaplanır.
         </div>
@@ -156,7 +156,7 @@ export async function CashProjectionTab({ companyId }: Props) {
             <div className={`text-[10px] mt-1 ${s.sub}`}>12 ay sonu nakit</div>
             {s.summary.runwayEndMonth && (
               <div className="text-[10px] font-bold text-neg mt-1.5">
-                ⚠ {s.summary.runwayEndMonth} nakit tükeniyor
+                {s.summary.runwayEndMonth} nakit tükeniyor
               </div>
             )}
             {!s.summary.runwayEndMonth && s.summary.totalNet >= 0 && (
@@ -170,7 +170,7 @@ export async function CashProjectionTab({ companyId }: Props) {
 
       {/* ── BASE SCENARIO — MONTHLY CASH BARS ─────────────────────────────── */}
       <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#f1f5f9]">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">
           <div>
             <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Baz Senaryo — Aylık Nakit Pozisyonu</span>
             <span className="ml-2 text-[9px] text-[#94a3b8]">({startYear} projeksiyonu)</span>
@@ -181,7 +181,7 @@ export async function CashProjectionTab({ companyId }: Props) {
         </div>
 
         {/* Bar chart */}
-        <div className="px-5 pt-4 pb-2">
+        <div className="px-4 pt-3 pb-2">
           <div className="flex items-end gap-1 h-20">
             {forecast.base.map((m, i) => {
               const height    = Math.max(4, Math.round((Math.abs(m.cash) / maxCash) * 80))
@@ -206,21 +206,21 @@ export async function CashProjectionTab({ companyId }: Props) {
           <table className="w-full text-[10px]">
             <thead>
               <tr className="bg-[#f8fafc]/60">
-                <th className="text-left px-5 py-2 text-[9px] font-black uppercase tracking-widest text-[#94a3b8] whitespace-nowrap">Ay</th>
+                <th className="text-left px-4 py-2 text-[9px] font-black uppercase tracking-widest text-[#94a3b8] whitespace-nowrap">Ay</th>
                 <th className="text-right px-3 py-2 text-[9px] font-black uppercase tracking-widest text-[#94a3b8] whitespace-nowrap">Gelir</th>
                 <th className="text-right px-3 py-2 text-[9px] font-black uppercase tracking-widest text-[#94a3b8] whitespace-nowrap">Net</th>
-                <th className="text-right px-5 py-2 text-[9px] font-black uppercase tracking-widest text-[#94a3b8] whitespace-nowrap">Nakit</th>
+                <th className="text-right px-4 py-2 text-[9px] font-black uppercase tracking-widest text-[#94a3b8] whitespace-nowrap">Nakit</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#f1f5f9]">
               {forecast.base.map((m, i) => (
                 <tr key={i} className="hover:bg-[#f8fafc]/40">
-                  <td className="px-5 py-2 font-semibold text-[#334155] whitespace-nowrap">{m.label}</td>
+                  <td className="px-4 py-2 font-semibold text-[#334155] whitespace-nowrap">{m.label}</td>
                   <td className="px-3 py-2 text-right tabular-nums text-[#64748b]">₺{fmtK(m.revenue)}</td>
                   <td className={`px-3 py-2 text-right tabular-nums font-semibold ${m.net >= 0 ? 'text-pos-text' : 'text-neg'}`}>
                     {m.net >= 0 ? '+' : '−'}₺{fmtK(Math.abs(m.net))}
                   </td>
-                  <td className={`px-5 py-2 text-right tabular-nums font-black ${m.cash >= 0 ? 'text-[#0f172a]' : 'text-neg'}`}>
+                  <td className={`px-4 py-2 text-right tabular-nums font-black ${m.cash >= 0 ? 'text-[#0f172a]' : 'text-neg'}`}>
                     {m.cash < 0 ? '−' : ''}₺{fmtK(Math.abs(m.cash))}
                   </td>
                 </tr>
@@ -234,8 +234,8 @@ export async function CashProjectionTab({ companyId }: Props) {
       <div className="px-4 py-3 bg-[#f8fafc] border border-[#e2e8f0] rounded text-[10px] text-[#94a3b8] space-y-1">
         <div className="font-bold text-[#64748b] mb-1">Projeksiyon Varsayımları</div>
         <div>• Son 6 ayın aylık ortalaması baz alınmıştır (gelir + gider)</div>
-        {hasTranches && <div>• Aylık borç servisi ₺{fmtK(monthlyDebtService)} tahmin edilmiştir (aktif tranche faizleri)</div>}
-        <div>• İyimser: +%15 gelir büyümesi · Kötümser: −%20 gelir streji · Borç servisi her senaryoda sabit</div>
+        {hasTranches && <div>• Aylık borç servisi ₺{fmtK(monthlyDebtService)} tahmin edilmiştir (aktif borç dilimi faizleri)</div>}
+        <div>• İyimser: +%15 gelir büyümesi · Kötümser: −%20 gelir stresi · Borç servisi her senaryoda sabit</div>
         <div>• Mevsimsellik, yeni ürün ve büyük gider dalgalanmaları bu modele dahil değildir</div>
       </div>
 
@@ -265,7 +265,7 @@ function Metric({ label, value, sub, color }: { label: string; value: string; su
   return (
     <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
       <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{label}</div>
-      <div className={`text-lg font-black tabular-nums leading-none ${color}`}>{value}</div>
+      <div className={`text-xl font-black tabular-nums leading-none ${color}`}>{value}</div>
       <div className="text-[9px] text-[#94a3b8] mt-1">{sub}</div>
     </div>
   )
