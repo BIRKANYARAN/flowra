@@ -345,11 +345,11 @@ export default function SimulationClient({
     : null
 
   function debtStatus() {
-    if (adjustedOutstanding <= 0) return { label: 'Borç yok — tam dağıtım kapasitesi', color: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-200' }
-    if (monthlyDistributable <= 0) return { label: 'Kritik nakit riski — borç ödenemez', color: 'text-red-700', bg: 'bg-red-50', border: 'border-red-200' }
-    if (adjustedMonthsToClear !== null && adjustedMonthsToClear > 24) return { label: 'Borç baskısı yüksek — 2 yıldan uzun', color: 'text-red-700', bg: 'bg-red-50', border: 'border-red-200' }
-    if (adjustedMonthsToClear !== null && adjustedMonthsToClear > 12) return { label: 'Borç baskısı azalıyor — 1-2 yıl', color: 'text-amber-700', bg: 'bg-amber-50', border: 'border-amber-200' }
-    return { label: 'Güvenli dağıtım bölgesi — 12 ay içinde', color: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-200' }
+    if (adjustedOutstanding <= 0) return { label: 'Borç yok — tam dağıtım kapasitesi', color: 'text-pos-text', bg: 'bg-pos-light', border: 'border-pos-light' }
+    if (monthlyDistributable <= 0) return { label: 'Kritik nakit riski — borç ödenemez', color: 'text-neg-text', bg: 'bg-neg-light', border: 'border-neg-light' }
+    if (adjustedMonthsToClear !== null && adjustedMonthsToClear > 24) return { label: 'Borç baskısı yüksek — 2 yıldan uzun', color: 'text-neg-text', bg: 'bg-neg-light', border: 'border-neg-light' }
+    if (adjustedMonthsToClear !== null && adjustedMonthsToClear > 12) return { label: 'Borç baskısı azalıyor — 1-2 yıl', color: 'text-warn-text', bg: 'bg-warn-light', border: 'border-warn-light' }
+    return { label: 'Güvenli dağıtım bölgesi — 12 ay içinde', color: 'text-pos-text', bg: 'bg-pos-light', border: 'border-pos-light' }
   }
   const ds = debtStatus()
 
@@ -373,21 +373,21 @@ export default function SimulationClient({
       {/* ── Zone 1: Status header ─────────────────────────────────────────────── */}
       <div className="bg-gray-950 text-white rounded px-5 py-3 flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mr-3">Simülasyon</span>
+          <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mr-3">Simülasyon</span>
           {!hasInputs ? (
             <span className="text-sm text-gray-400">Maliyet ve fiyat girerek başlayın</span>
           ) : isViable ? (
-            <span className="text-sm font-bold text-emerald-400">
+            <span className="text-sm font-bold text-pos">
               ✓ Kârlı plan &mdash; {qty} adet/ay &middot; yıllık{' '}
               <span className="tabular-nums">{fmtC(toDisplay(yearly.totalNetProfit), S)}</span> net
             </span>
           ) : isBirimKarli ? (
-            <span className="text-sm font-bold text-amber-400">
+            <span className="text-sm font-bold text-warn">
               Birim kârlı &mdash; giderler yıllık{' '}
               <span className="tabular-nums">{fmtC(toDisplay(Math.abs(yearly.totalNetProfit)), S)}</span> açık bırakıyor
             </span>
           ) : (
-            <span className="text-sm font-bold text-red-400">
+            <span className="text-sm font-bold text-neg">
               ✗ Zarar &mdash; birim başına {fmtC(toDisplay(Math.abs(effectiveProfitPU)), S)} ekside
             </span>
           )}
@@ -412,36 +412,36 @@ export default function SimulationClient({
       </div>
 
       {/* ── Zone 1: Hero KPI cards ────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
         {[
           {
             label: 'Birim Kâr',
             value: hasInputs ? fmtC(toDisplay(effectiveProfitPU), S) : '—',
             sub:   hasInputs ? `${fmtC(toDisplay(netPrice), S)} − ${fmtC(toDisplay(effectiveRealCost), S)}` : 'Maliyet ve fiyat girin',
-            color: !hasInputs ? 'text-gray-300' : effectiveProfitPU >= 0 ? 'text-emerald-700' : 'text-red-600',
+            color: !hasInputs ? 'text-gray-300' : effectiveProfitPU >= 0 ? 'text-pos-text' : 'text-neg',
           },
           {
             label: 'Kâr Marjı',
             value: hasInputs ? pct(effectiveMargin) : '—',
             sub:   'Kâr / Gelir',
-            color: !hasInputs ? 'text-gray-300' : effectiveMargin >= 0 ? 'text-primary-700' : 'text-red-600',
+            color: !hasInputs ? 'text-gray-300' : effectiveMargin >= 0 ? 'text-primary-700' : 'text-neg',
           },
           {
             label: 'Yıllık Net',
             value: hasInputs ? fmtC(toDisplay(yearly.totalNetProfit), S) : '—',
             sub:   hasInputs ? `${qty * 12} adet · gider dahil` : 'Parametreler girin',
-            color: !hasInputs ? 'text-gray-300' : yearly.totalNetProfit >= 0 ? 'text-emerald-700' : 'text-red-600',
+            color: !hasInputs ? 'text-gray-300' : yearly.totalNetProfit >= 0 ? 'text-pos-text' : 'text-neg',
           },
           {
             label: 'Başabaş',
             value: yearly.breakEvenUnits > 0 ? `${yearly.breakEvenUnits.toLocaleString('tr-TR')} adet` : '—',
             sub:   monthsToBreakEven ? `≈ ${monthsToBreakEven} ay` : 'Giderleri karşılamak için',
-            color: yearly.breakEvenUnits > 0 ? 'text-amber-600' : 'text-gray-300',
+            color: yearly.breakEvenUnits > 0 ? 'text-warn-text' : 'text-gray-300',
           },
         ].map((card, i) => (
           <div key={card.label}
-            className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-gray-100' : ''}`}>
-            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{card.label}</div>
+            className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e2e8f0]' : ''}`}>
+            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
             <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
             <div className="text-[10px] text-gray-400 mt-1 leading-tight">{card.sub}</div>
           </div>
@@ -484,8 +484,8 @@ export default function SimulationClient({
 
       {/* ── Zone 2: Revenue timeline chart (CSS bars) ─────────────────────────── */}
       {hasInputs && (
-        <div className="bg-white border border-gray-100 rounded p-4 shadow-sm">
-          <h2 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">
+        <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
+          <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">
             Gelir Çizelgesi — 12 Ay
           </h2>
           <div className="grid grid-cols-12 gap-1 items-end h-24">
@@ -495,7 +495,7 @@ export default function SimulationClient({
               return (
                 <div key={r.ym} className="flex flex-col items-center gap-1 group relative">
                   <div
-                    className={`w-full rounded-t transition-all ${isProfit ? 'bg-emerald-400 group-hover:bg-emerald-500' : 'bg-red-300 group-hover:bg-red-400'}`}
+                    className={`w-full rounded-t transition-all ${isProfit ? 'bg-pos group-hover:bg-pos-light' : 'bg-neg-light group-hover:bg-neg'}`}
                     style={{ height: `${heightPct}%` }}
                   />
                   <div className="text-[8px] text-gray-400 font-semibold leading-none">
@@ -505,10 +505,10 @@ export default function SimulationClient({
                   <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block z-10 bg-gray-900 text-white rounded px-2 py-1 text-[10px] whitespace-nowrap">
                     <div className="font-bold">{fmtMonth(r.ym)}</div>
                     <div>Gelir: {fmtC(toDisplay(r.revenue), S)}</div>
-                    <div className={r.netProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}>
+                    <div className={r.netProfit >= 0 ? 'text-pos' : 'text-neg'}>
                       Net: {fmtC(toDisplay(r.netProfit), S)}
                     </div>
-                    <div className={r.cumProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}>
+                    <div className={r.cumProfit >= 0 ? 'text-pos' : 'text-neg'}>
                       Kümülatif: {fmtC(toDisplay(r.cumProfit), S)}
                     </div>
                   </div>
@@ -517,27 +517,27 @@ export default function SimulationClient({
             })}
           </div>
           <div className="flex items-center gap-4 mt-3 text-[10px] text-gray-400">
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-emerald-400 inline-block" /> Kârlı ay</span>
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-red-300 inline-block" /> Zararlı ay</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-pos inline-block" /> Kârlı ay</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-neg-light inline-block" /> Zararlı ay</span>
             <span className="ml-auto">Sütun yüksekliği = aylık gelir oranı</span>
           </div>
         </div>
       )}
 
       {/* ── Zone 2: Tax effect ───────────────────────────────────────────────── */}
-      <div className="bg-white border border-gray-100 rounded p-4 shadow-sm">
-        <h2 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3">
+      <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
+        <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
           Vergi Etkisi — Yıllık Tahmin
         </h2>
         <div className="grid grid-cols-3 gap-4 mb-3">
           <div>
-            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Net Kâr (Vergi Öncesi)</div>
-            <div className={`text-lg font-black tabular-nums ${!hasInputs ? 'text-gray-300' : yearly.totalNetProfit >= 0 ? 'text-gray-800' : 'text-red-600'}`}>
+            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Net Kâr (Vergi Öncesi)</div>
+            <div className={`text-lg font-black tabular-nums ${!hasInputs ? 'text-gray-300' : yearly.totalNetProfit >= 0 ? 'text-gray-800' : 'text-neg'}`}>
               {hasInputs ? fmtC(toDisplay(yearly.totalNetProfit), S) : '—'}
             </div>
           </div>
           <div>
-            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">
+            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">
               Kurumlar Vergisi (%{CORP_TAX_RATE})
             </div>
             <div className="text-lg font-black tabular-nums text-orange-600">
@@ -546,8 +546,8 @@ export default function SimulationClient({
             <div className="text-[10px] text-gray-400 mt-0.5">Tahmini KV</div>
           </div>
           <div>
-            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Vergi Sonrası Net</div>
-            <div className={`text-lg font-black tabular-nums ${!hasInputs ? 'text-gray-300' : netAfterCorpTax >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
+            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Vergi Sonrası Net</div>
+            <div className={`text-lg font-black tabular-nums ${!hasInputs ? 'text-gray-300' : netAfterCorpTax >= 0 ? 'text-pos-text' : 'text-neg'}`}>
               {hasInputs ? fmtC(toDisplay(netAfterCorpTax), S) : '—'}
             </div>
             <div className="text-[10px] text-gray-400 mt-0.5">Ortaklara dağıtılabilir</div>
@@ -556,17 +556,17 @@ export default function SimulationClient({
         {hasInputs && yearly.totalNetProfit > 0 && (
           <>
             <div className="flex rounded-full h-1.5 overflow-hidden bg-gray-100">
-              <div className="bg-emerald-400 h-1.5" style={{ width: `${100 - CORP_TAX_RATE}%` }} />
+              <div className="bg-pos h-1.5" style={{ width: `${100 - CORP_TAX_RATE}%` }} />
               <div className="bg-orange-300 h-1.5" style={{ width: `${CORP_TAX_RATE}%` }} />
             </div>
             <div className="flex justify-between mt-0.5">
-              <span className="text-[10px] text-emerald-600 font-semibold">%{100 - CORP_TAX_RATE} size kalır</span>
+              <span className="text-[10px] text-pos-text font-semibold">%{100 - CORP_TAX_RATE} size kalır</span>
               <span className="text-[10px] text-orange-500 font-semibold">%{CORP_TAX_RATE} kurumlar vergisi</span>
             </div>
           </>
         )}
         {hasInputs && yearly.yearlyExpenses > 0 && (
-          <div className="mt-2 pt-2 border-t border-gray-100 text-[10px] text-gray-400">
+          <div className="mt-2 pt-2 border-t border-[#e2e8f0] text-[10px] text-gray-400">
             Gider matrahı {fmtC(toDisplay(yearly.yearlyExpenses), S)} vergiden düşürülmüştür.
             KDV ayrıca Analitik sayfasında gösterilir.
           </div>
@@ -576,11 +576,11 @@ export default function SimulationClient({
       {/* ── Zone 2: Partner impact ────────────────────────────────────────────── */}
       {partnerCount > 0 && yearly.totalNetProfit !== 0 && (
         <div className={`border rounded p-4 ${
-          yearly.totalNetProfit > 0 ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'
+          yearly.totalNetProfit > 0 ? 'bg-pos-light border-pos-light' : 'bg-neg-light border-neg-light'
         }`}>
           <div className="flex items-center justify-between mb-2">
             <div>
-              <h2 className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-0.5">
+              <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">
                 Ortak Dengesi Nasıl Etkilenir?
               </h2>
               <p className="text-xs text-gray-500">
@@ -599,14 +599,14 @@ export default function SimulationClient({
               <div className="grid gap-2 mb-2"
                 style={{ gridTemplateColumns: `repeat(${Math.min(partnerEq.entries.length, 4)}, 1fr)` }}>
                 {partnerEq.entries.map(e => (
-                  <div key={e.partner_id} className="bg-white rounded px-3 py-2 text-center border border-emerald-100">
+                  <div key={e.partner_id} className="bg-white rounded px-3 py-2 text-center border border-pos-light">
                     <div className="text-xs text-gray-500 font-semibold truncate mb-0.5">{e.partner_name}</div>
-                    <div className="text-base font-black tabular-nums text-emerald-700">
+                    <div className="text-base font-black tabular-nums text-pos-text">
                       {fmtC(toDisplay(e.total_payout), S)}
                     </div>
                     <div className="text-[10px] text-gray-400 mt-0.5">%{(e.share_ratio * 100).toFixed(0)} pay</div>
                     {e.equalization_amount > 0.01 && (
-                      <div className="text-[10px] text-amber-600 font-semibold mt-0.5">
+                      <div className="text-[10px] text-warn-text font-semibold mt-0.5">
                         +{fmtC(toDisplay(e.equalization_amount), S)} eşitleme
                       </div>
                     )}
@@ -614,14 +614,14 @@ export default function SimulationClient({
                 ))}
               </div>
               {partnerEq.total_equalization > 0.01 ? (
-                <div className="text-xs text-amber-700 bg-amber-100 rounded px-3 py-2 border border-amber-200">
+                <div className="text-xs text-warn-text bg-warn-light rounded px-3 py-2 border border-warn-light">
                   ⚖ Bu plan <span className="font-bold">{fmtC(toDisplay(partnerEq.total_equalization), S)}</span> eşitleme açığını kapatır.{' '}
                   {partnerEq.remaining_after_eq > 0.01
                     ? `Kalan ${fmtC(toDisplay(partnerEq.remaining_after_eq), S)} hisse oranına göre dağıtılır.`
                     : 'Tüm tutar eşitlemeye gider.'}
                 </div>
               ) : (
-                <div className="text-xs text-emerald-700 bg-emerald-100 rounded px-3 py-2 border border-emerald-200">
+                <div className="text-xs text-pos-text bg-pos-light rounded px-3 py-2 border border-pos-light">
                   ✓ Ortak dengesi sağlıklı — tüm dağıtım hisse oranına göre yapılır.
                 </div>
               )}
@@ -629,7 +629,7 @@ export default function SimulationClient({
           ) : yearly.totalNetProfit > 0 ? (
             <div className="text-xs text-gray-400">Yükleniyor...</div>
           ) : (
-            <div className="text-xs text-red-700 bg-red-100 rounded px-3 py-2 border border-red-200">
+            <div className="text-xs text-neg-text bg-neg-light rounded px-3 py-2 border border-neg-light">
               ⚠ Zarar durumunda ortak dağıtımı yapılamaz. Parametreleri ayarlayarak kâra geçin.
             </div>
           )}
@@ -645,8 +645,8 @@ export default function SimulationClient({
       />
 
       {/* ── Zone 3: Yearly totals ─────────────────────────────────────────────── */}
-      <div className="bg-white border border-gray-100 rounded p-4 shadow-sm">
-        <h2 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Yıllık Toplam</h2>
+      <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
+        <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Yıllık Toplam</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {[
             { label: 'Toplam Gelir',               value: fmtC(toDisplay(yearly.totalRevenue), S) },
@@ -655,38 +655,38 @@ export default function SimulationClient({
             {
               label: 'Brüt Kâr',
               value: fmtC(toDisplay(yearly.totalGrossProfit), S),
-              color: yearly.totalGrossProfit >= 0 ? 'text-emerald-700' : 'text-red-600',
+              color: yearly.totalGrossProfit >= 0 ? 'text-pos-text' : 'text-neg',
             },
           ].map(t => (
             <div key={t.label}>
-              <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">{t.label}</div>
+              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">{t.label}</div>
               <div className={`text-lg font-black tabular-nums ${t.color ?? 'text-gray-700'}`}>{t.value}</div>
             </div>
           ))}
         </div>
-        <div className="mt-4 pt-4 border-t border-gray-100 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="mt-4 pt-4 border-t border-[#e2e8f0] grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           <div>
-            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Yıllık Gider (Tekrarlı)</div>
-            <div className="text-lg font-black tabular-nums text-red-600">{fmtC(toDisplay(yearly.yearlyExpenses), S)}</div>
+            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Yıllık Gider (Tekrarlı)</div>
+            <div className="text-lg font-black tabular-nums text-neg">{fmtC(toDisplay(yearly.yearlyExpenses), S)}</div>
             <div className="text-[10px] text-gray-400 mt-0.5">Tekrarlı gider planından</div>
           </div>
           <div>
-            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Net Kâr</div>
-            <div className={`text-lg font-black tabular-nums ${yearly.totalNetProfit >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
+            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Net Kâr</div>
+            <div className={`text-lg font-black tabular-nums ${yearly.totalNetProfit >= 0 ? 'text-pos-text' : 'text-neg'}`}>
               {fmtC(toDisplay(yearly.totalNetProfit), S)}
             </div>
             <div className="text-[10px] text-gray-400 mt-0.5">Brüt Kâr − Gider</div>
           </div>
           <div>
-            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Ortalama Marj</div>
-            <div className={`text-lg font-black tabular-nums ${yearly.avgMargin >= 0 ? 'text-primary-700' : 'text-red-600'}`}>
+            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Ortalama Marj</div>
+            <div className={`text-lg font-black tabular-nums ${yearly.avgMargin >= 0 ? 'text-primary-700' : 'text-neg'}`}>
               {pct(yearly.avgMargin)}
             </div>
           </div>
           {yearly.breakEvenUnits > 0 && (
             <div>
-              <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Başabaş Noktası</div>
-              <div className="text-lg font-black tabular-nums text-amber-600">
+              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Başabaş Noktası</div>
+              <div className="text-lg font-black tabular-nums text-warn-text">
                 {yearly.breakEvenUnits.toLocaleString('tr-TR')} adet
               </div>
               <div className="text-[10px] text-gray-400 mt-0.5">Giderleri karşılamak için</div>
@@ -696,13 +696,13 @@ export default function SimulationClient({
       </div>
 
       {/* ── Zone 4: Visual Pressure Timeline ─────────────────────────────────── */}
-      <div className="bg-white border border-gray-100 rounded p-4 shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+          <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
             Finansal Baskı Zaman Çizelgesi — 12 Ay
           </h2>
           {hasScenario && (
-            <span className="text-[10px] bg-amber-100 text-amber-700 border border-amber-200 rounded px-2 py-0.5 font-bold">
+            <span className="text-[10px] bg-warn-light text-warn-text border border-warn-light rounded px-2 py-0.5 font-bold">
               Senaryo aktif{collectionDelayPct > 0 ? ` · %${collectionDelayPct} gecikme` : ''}{extraDebtTRY > 0 ? ` · +${fmtC(extraDebtTRY, '₺')} borç` : ''}
             </span>
           )}
@@ -711,8 +711,8 @@ export default function SimulationClient({
           {activeProjection.map(r => {
             const isKritik = r.cumProfit < 0
             const isDikkat = !isKritik && r.netProfit < 0
-            const bg   = isKritik ? 'bg-red-100 border-red-200'     : isDikkat ? 'bg-amber-100 border-amber-200'     : 'bg-emerald-100 border-emerald-200'
-            const text = isKritik ? 'text-red-700'                   : isDikkat ? 'text-amber-700'                    : 'text-emerald-700'
+            const bg   = isKritik ? 'bg-neg-light border-neg-light'     : isDikkat ? 'bg-warn-light border-warn-light'     : 'bg-pos-light border-pos-light'
+            const text = isKritik ? 'text-neg-text'                   : isDikkat ? 'text-warn-text'                    : 'text-pos-text'
             const lbl  = isKritik ? 'Kritik'                         : isDikkat ? 'Dikkat'                            : 'Güvenli'
             return (
               <div key={r.ym}
@@ -724,10 +724,10 @@ export default function SimulationClient({
                 <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block z-10 bg-gray-900 text-white rounded px-2 py-1.5 text-[10px] whitespace-nowrap pointer-events-none">
                   <div className="font-bold mb-0.5">{fmtMonth(r.ym)}</div>
                   <div>Gelir: {fmtC(toDisplay(r.revenue), S)}</div>
-                  <div className={r.netProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}>
+                  <div className={r.netProfit >= 0 ? 'text-pos' : 'text-neg'}>
                     Net: {fmtC(toDisplay(r.netProfit), S)}
                   </div>
-                  <div className={r.cumProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}>
+                  <div className={r.cumProfit >= 0 ? 'text-pos' : 'text-neg'}>
                     Kümülatif: {fmtC(toDisplay(r.cumProfit), S)}
                   </div>
                 </div>
@@ -737,15 +737,15 @@ export default function SimulationClient({
         </div>
         <div className="flex items-center gap-4 mt-3 text-[10px] text-gray-400">
           <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-sm bg-emerald-100 border border-emerald-300 inline-block" />
+            <span className="w-2.5 h-2.5 rounded-sm bg-pos-light border border-pos inline-block" />
             Güvenli
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-sm bg-amber-100 border border-amber-300 inline-block" />
+            <span className="w-2.5 h-2.5 rounded-sm bg-warn-light border border-warn inline-block" />
             Dikkat
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-sm bg-red-100 border border-red-300 inline-block" />
+            <span className="w-2.5 h-2.5 rounded-sm bg-neg-light border border-neg inline-block" />
             Kritik
           </span>
           <span className="ml-auto text-[10px] text-gray-300">Hover = detay</span>
@@ -754,28 +754,28 @@ export default function SimulationClient({
 
       {/* ── Zone 4: Runway Forecast ───────────────────────────────────────────── */}
       {hasInputs && (
-        <div className="bg-white border border-gray-100 rounded p-4 shadow-sm">
-          <h2 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">
+        <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
+          <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
             Pist Tahmini — Güvenli Bölgeye Ne Zaman Ulaşılır?
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">İlk Kümülatif Kâr</div>
-              <div className={`text-xl font-black tabular-nums ${turnsPositiveMonth ? 'text-emerald-700' : 'text-red-600'}`}>
+              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">İlk Kümülatif Kâr</div>
+              <div className={`text-xl font-black tabular-nums ${turnsPositiveMonth ? 'text-pos-text' : 'text-neg'}`}>
                 {turnsPositiveMonth ? `${turnsPositiveMonth}. Ay` : '12+ ay'}
               </div>
               <div className="text-[10px] text-gray-400 mt-0.5">Kümülatif nakit pozitife geçer</div>
             </div>
             <div>
-              <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">
+              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">
                 {adjustedOutstanding > 0 ? 'Borç Temizlenir' : 'Borç Durumu'}
               </div>
               <div className={`text-xl font-black tabular-nums ${
-                adjustedOutstanding <= 0 ? 'text-emerald-700'
-                : adjustedMonthsToClear === null ? 'text-red-600'
-                : adjustedMonthsToClear > 24 ? 'text-red-600'
-                : adjustedMonthsToClear > 12 ? 'text-amber-600'
-                : 'text-emerald-700'
+                adjustedOutstanding <= 0 ? 'text-pos-text'
+                : adjustedMonthsToClear === null ? 'text-neg'
+                : adjustedMonthsToClear > 24 ? 'text-neg'
+                : adjustedMonthsToClear > 12 ? 'text-warn-text'
+                : 'text-pos-text'
               }`}>
                 {adjustedOutstanding <= 0 ? 'Borç yok'
                   : adjustedMonthsToClear === null ? '∞'
@@ -784,23 +784,23 @@ export default function SimulationClient({
               <div className="text-[10px] text-gray-400 mt-0.5">Dağıtım kapasitesine göre</div>
             </div>
             <div>
-              <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">12 Ay Sonu Kümülatif</div>
-              <div className={`text-xl font-black tabular-nums ${(activeProjection[11]?.cumProfit ?? 0) >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
+              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">12 Ay Sonu Kümülatif</div>
+              <div className={`text-xl font-black tabular-nums ${(activeProjection[11]?.cumProfit ?? 0) >= 0 ? 'text-pos-text' : 'text-neg'}`}>
                 {activeProjection[11] ? fmtC(toDisplay(activeProjection[11].cumProfit), S) : '—'}
               </div>
               <div className="text-[10px] text-gray-400 mt-0.5">Yıl sonu kümülatif nakit</div>
             </div>
           </div>
           {stableFromMonth ? (
-            <div className="mt-3 bg-emerald-50 border border-emerald-200 rounded px-3 py-2 text-xs text-emerald-700 font-semibold">
+            <div className="mt-3 bg-pos-light border border-pos-light rounded px-3 py-2 text-xs text-pos-text font-semibold">
               ✓ {stableFromMonth}. aydan itibaren güvenli bölge — kümülatif nakit kalıcı olarak pozitif
             </div>
           ) : turnsPositiveMonth ? (
-            <div className="mt-3 bg-amber-50 border border-amber-200 rounded px-3 py-2 text-xs text-amber-700 font-semibold">
+            <div className="mt-3 bg-warn-light border border-warn-light rounded px-3 py-2 text-xs text-warn-text font-semibold">
               ⚠ {turnsPositiveMonth}. ayda pozitife geçiyor ancak sonraki aylarda dalgalanma var
             </div>
           ) : (
-            <div className="mt-3 bg-red-50 border border-red-200 rounded px-3 py-2 text-xs text-red-700 font-semibold">
+            <div className="mt-3 bg-neg-light border border-neg-light rounded px-3 py-2 text-xs text-neg-text font-semibold">
               ✗ 12 ay içinde kümülatif pozitife geçilemiyor — parametreleri gözden geçirin
             </div>
           )}
@@ -809,7 +809,7 @@ export default function SimulationClient({
 
       {/* ── Zone 4: Debt burden tracking ─────────────────────────────────────── */}
       <div className={`border rounded p-4 ${ds.bg} ${ds.border}`}>
-        <h2 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3">
+        <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
           Borç Baskısı Takibi
         </h2>
         {debtBurdenLoading ? (
@@ -818,8 +818,8 @@ export default function SimulationClient({
           <>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-3">
               <div>
-                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">
-                  Toplam Borç{extraDebtTRY > 0 && <span className="text-amber-500 ml-1">(+senaryo)</span>}
+                <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">
+                  Toplam Borç{extraDebtTRY > 0 && <span className="text-warn ml-1">(+senaryo)</span>}
                 </div>
                 <div className="text-lg font-black tabular-nums text-gray-800">
                   {adjustedOutstanding > 0 ? fmtC(toDisplay(adjustedOutstanding), S) : '—'}
@@ -829,19 +829,19 @@ export default function SimulationClient({
                 </div>
               </div>
               <div>
-                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Aylık Dağıtım Kapasitesi</div>
-                <div className={`text-lg font-black tabular-nums ${monthlyDistributable >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
+                <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Aylık Dağıtım Kapasitesi</div>
+                <div className={`text-lg font-black tabular-nums ${monthlyDistributable >= 0 ? 'text-pos-text' : 'text-neg'}`}>
                   {hasInputs ? fmtC(toDisplay(monthlyDistributable), S) : '—'}
                 </div>
                 <div className="text-[10px] text-gray-400">Vergi sonrası / 12</div>
               </div>
               <div>
-                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Tahmini Temizlenme</div>
+                <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Tahmini Temizlenme</div>
                 <div className={`text-lg font-black tabular-nums ${
                   adjustedMonthsToClear === null ? 'text-gray-300'
-                  : adjustedMonthsToClear > 24 ? 'text-red-600'
-                  : adjustedMonthsToClear > 12 ? 'text-amber-600'
-                  : 'text-emerald-700'
+                  : adjustedMonthsToClear > 24 ? 'text-neg'
+                  : adjustedMonthsToClear > 12 ? 'text-warn-text'
+                  : 'text-pos-text'
                 }`}>
                   {adjustedOutstanding <= 0 ? '—'
                     : adjustedMonthsToClear === null ? '∞'
@@ -850,7 +850,7 @@ export default function SimulationClient({
                 <div className="text-[10px] text-gray-400">Borç / aylık kapasite</div>
               </div>
               <div>
-                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Ortak Sayısı</div>
+                <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Ortak Sayısı</div>
                 <div className="text-lg font-black tabular-nums text-gray-700">
                   {debtBurden?.summary.partner_count ?? partnerCount}
                 </div>

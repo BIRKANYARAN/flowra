@@ -118,21 +118,21 @@ export async function PartnerImpactTab({ companyId, userId }: Props) {
       {/* Tranche due soon + insufficient cash */}
       {trancheDueSoon && nextDue && (
         <div className={`rounded border px-4 py-3 flex items-start gap-3 ${
-          insufficientCash ? 'bg-red-50 border-red-200' : 'bg-amber-50 border-amber-200'
+          insufficientCash ? 'bg-neg-light border-neg-light' : 'bg-warn-light border-warn-light'
         }`}>
           <span className="text-base mt-0.5">{insufficientCash ? '🔴' : '⚠'}</span>
           <div className="flex-1">
-            <div className={`text-[11px] font-black uppercase tracking-wide ${insufficientCash ? 'text-red-800' : 'text-amber-800'}`}>
+            <div className={`text-[11px] font-black uppercase tracking-wide ${insufficientCash ? 'text-neg-text' : 'text-warn-text'}`}>
               Vade Yaklaşıyor — {daysUntilNextDue === 0 ? 'Bugün' : `${daysUntilNextDue} gün sonra`}
             </div>
-            <div className={`text-xs mt-0.5 ${insufficientCash ? 'text-red-700' : 'text-amber-700'}`}>
+            <div className={`text-xs mt-0.5 ${insufficientCash ? 'text-neg-text' : 'text-warn-text'}`}>
               {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 }).format(nextDue.outstanding_try)} borç vadesi {nextDue.due_date} tarihinde.
               {insufficientCash
                 ? ` Mevcut nakit (${new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 }).format(cashBalance)}) yetersiz.`
                 : ` Nakit yeterli görünüyor.`}
             </div>
           </div>
-          <Link href="/dashboard/planning?tab=debt-pressure" className={`text-[10px] font-bold underline underline-offset-2 shrink-0 mt-0.5 whitespace-nowrap ${insufficientCash ? 'text-red-700 hover:text-red-800' : 'text-amber-700 hover:text-amber-800'}`}>
+          <Link href="/dashboard/planning?tab=debt-pressure" className={`text-[10px] font-bold underline underline-offset-2 shrink-0 mt-0.5 whitespace-nowrap ${insufficientCash ? 'text-neg-text hover:text-neg-text' : 'text-warn-text hover:text-warn-text'}`}>
             Borç Baskısı →
           </Link>
         </div>

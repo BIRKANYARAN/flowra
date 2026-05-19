@@ -118,7 +118,7 @@ export async function ForecastTab({ userId: _userId, companyId }: Props) {
             label: 'Runway',
             value: runwayMonths !== null ? `${runwayMonths.toFixed(1)} ay` : '∞',
             tone:  runwayMonths === null ? 'text-gray-400' :
-                   runwayMonths <= 2 ? 'text-red-600' : runwayMonths <= 6 ? 'text-amber-600' : 'text-emerald-700',
+                   runwayMonths <= 2 ? 'text-neg' : runwayMonths <= 6 ? 'text-warn-text' : 'text-pos-text',
             sub:   runwayMonths !== null && runwayMonths <= 6 ? '⚠ Kritik eşik yakın' : 'Mevcut burn rate ile',
           },
           {
@@ -130,7 +130,7 @@ export async function ForecastTab({ userId: _userId, companyId }: Props) {
           {
             label: 'Mevcut Nakit',
             value: fmt(m.cash.true_cash_position),
-            tone:  m.cash.true_cash_position > 0 ? 'text-emerald-700' : 'text-red-600',
+            tone:  m.cash.true_cash_position > 0 ? 'text-pos-text' : 'text-neg',
             sub:   m.cash.distributable_cash > 0 ? `${fmt(m.cash.distributable_cash)} dağıtılabilir` : 'Yükümlülükler düşüldü',
           },
           {
@@ -138,12 +138,12 @@ export async function ForecastTab({ userId: _userId, companyId }: Props) {
             value: r.exhaustion_date
               ? new Date(r.exhaustion_date + 'T00:00:00Z').toLocaleDateString('tr-TR', { month: 'short', year: 'numeric' })
               : '12 ay sağlıklı',
-            tone:  r.exhaustion_date ? 'text-red-600' : 'text-emerald-700',
+            tone:  r.exhaustion_date ? 'text-neg' : 'text-pos-text',
             sub:   r.exhaustion_month !== null ? `Ay ${r.exhaustion_month}'de tükenebilir` : 'Tehlike sinyali yok',
           },
         ].map(c => (
-          <div key={c.label} className="bg-white border border-gray-100 rounded px-4 py-3 shadow-sm">
-            <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">{c.label}</div>
+          <div key={c.label} className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
+            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{c.label}</div>
             <div className={`text-xl font-black tabular-nums leading-none ${c.tone}`}>{c.value}</div>
             <div className="text-[10px] text-gray-400 mt-1">{c.sub}</div>
           </div>
@@ -152,14 +152,14 @@ export async function ForecastTab({ userId: _userId, companyId }: Props) {
 
       {/* Zone 2 — Bar chart */}
       {chartMonths.length > 0 && (
-        <div className="bg-white border border-gray-100 rounded px-4 py-4 shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded px-4 py-4 shadow-sm">
           <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">12 Aylık Nakit Projeksiyonu</div>
           <div className="flex items-end gap-1.5 h-32">
             {chartMonths.map((mo) => {
               const barH     = maxCash > 0 ? Math.max(2, Math.round((Math.max(0, mo.end_cash) / maxCash) * 100)) : 0
               const isNeg    = mo.end_cash <= 0
               const isLow    = !isNeg && mo.end_cash < maxCash * 0.2
-              const barColor = isNeg ? 'bg-red-400' : isLow ? 'bg-amber-400' : 'bg-emerald-400'
+              const barColor = isNeg ? 'bg-neg' : isLow ? 'bg-warn' : 'bg-pos'
               return (
                 <div key={mo.month} className="flex-1 flex flex-col items-center gap-0.5 min-w-0">
                   <div className="w-full flex items-end justify-center" style={{ height: '120px' }}>
@@ -183,37 +183,37 @@ export async function ForecastTab({ userId: _userId, companyId }: Props) {
 
       {/* Zone 3 — Monthly table */}
       {chartMonths.length > 0 && (
-        <div className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
-          <div className="px-4 py-3 border-b border-gray-100">
+        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+          <div className="px-4 py-3 border-b border-[#e2e8f0]">
             <h2 className="text-sm font-black text-gray-800">Aylık Projeksiyon Detayı</h2>
           </div>
           <table className="w-full text-xs">
             <thead>
-              <tr className="bg-gray-50 border-b border-gray-100">
+              <tr className="bg-[#f8fafc] border-b border-[#e2e8f0]">
                 <th className="text-left px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-400">Ay</th>
-                <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-emerald-400">Gelen</th>
-                <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-red-400">Giden</th>
+                <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-pos">Gelen</th>
+                <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-neg">Giden</th>
                 <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-400">Net</th>
                 <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-primary-400">Nakit Sonu</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-[#f1f5f9]">
               {chartMonths.map(mo => {
                 const isNeg = mo.end_cash <= 0
                 const net   = mo.cash_in - mo.cash_out
                 return (
-                  <tr key={mo.month} className={`hover:bg-gray-50/60 ${isNeg ? 'bg-red-50/30' : ''}`}>
+                  <tr key={mo.month} className={`hover:bg-[#f8fafc]/60 ${isNeg ? 'bg-neg-light/30' : ''}`}>
                     <td className="px-4 py-2.5 font-semibold text-gray-700">{mo.month_label}</td>
-                    <td className="px-4 py-2.5 text-right font-mono text-emerald-700 tabular-nums">
+                    <td className="px-4 py-2.5 text-right font-mono text-pos-text tabular-nums">
                       {mo.cash_in > 0 ? fmt(mo.cash_in) : <span className="text-gray-300">—</span>}
                     </td>
-                    <td className="px-4 py-2.5 text-right font-mono text-red-600 tabular-nums">
+                    <td className="px-4 py-2.5 text-right font-mono text-neg tabular-nums">
                       {mo.cash_out > 0 ? fmt(mo.cash_out) : <span className="text-gray-300">—</span>}
                     </td>
-                    <td className={`px-4 py-2.5 text-right font-mono font-bold tabular-nums ${net >= 0 ? 'text-gray-700' : 'text-red-600'}`}>
+                    <td className={`px-4 py-2.5 text-right font-mono font-bold tabular-nums ${net >= 0 ? 'text-gray-700' : 'text-neg'}`}>
                       {fmt(net)}
                     </td>
-                    <td className={`px-4 py-2.5 text-right font-black tabular-nums ${isNeg ? 'text-red-700' : 'text-gray-900'}`}>
+                    <td className={`px-4 py-2.5 text-right font-black tabular-nums ${isNeg ? 'text-neg-text' : 'text-gray-900'}`}>
                       {fmt(mo.end_cash)}
                     </td>
                   </tr>
@@ -226,13 +226,13 @@ export async function ForecastTab({ userId: _userId, companyId }: Props) {
 
       {/* Zone 3.5 — 3-Scenario Strategic Summary */}
       {forecast && (
-        <div className="bg-white border border-gray-100 rounded p-4 shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
           <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">12 Aylık Senaryo Analizi</div>
           <div className="grid grid-cols-3 gap-3">
             {([
-              { key: 'pessimistic' as const, label: 'Muhafazakâr',  bg: 'bg-red-50',     border: 'border-red-200',    netColor: 'text-red-600',    cashColor: 'text-red-700'    },
-              { key: 'base'        as const, label: 'Baz Senaryo',  bg: 'bg-gray-50',    border: 'border-gray-200',   netColor: 'text-gray-800',   cashColor: 'text-gray-900'   },
-              { key: 'optimistic'  as const, label: 'İyimser',       bg: 'bg-emerald-50', border: 'border-emerald-200',netColor: 'text-emerald-700',cashColor: 'text-emerald-800'},
+              { key: 'pessimistic' as const, label: 'Muhafazakâr',  bg: 'bg-neg-light',     border: 'border-neg-light',    netColor: 'text-neg',    cashColor: 'text-neg-text'    },
+              { key: 'base'        as const, label: 'Baz Senaryo',  bg: 'bg-[#f8fafc]',    border: 'border-[#e2e8f0]',   netColor: 'text-gray-800',   cashColor: 'text-gray-900'   },
+              { key: 'optimistic'  as const, label: 'İyimser',       bg: 'bg-pos-light', border: 'border-pos-light',netColor: 'text-pos-text',cashColor: 'text-pos-text'},
             ] as const).map(sc => {
               const s = forecast!.summary[sc.key]
               return (
@@ -252,10 +252,10 @@ export async function ForecastTab({ userId: _userId, companyId }: Props) {
                       <div className={`text-sm font-black tabular-nums ${sc.cashColor}`}>{fmtCompact(Math.abs(s.endCash))}{s.endCash < 0 ? ' (—)' : ''}</div>
                     </div>
                     {s.runwayEndMonth && (
-                      <div className="text-[9px] text-red-600 font-semibold mt-1">⚠ {s.runwayEndMonth}&apos;de nakit tükeniyor</div>
+                      <div className="text-[9px] text-neg font-semibold mt-1">⚠ {s.runwayEndMonth}&apos;de nakit tükeniyor</div>
                     )}
                     {!s.runwayEndMonth && (
-                      <div className="text-[9px] text-emerald-600 font-semibold mt-1">✓ 12 ay boyunca nakit pozitif</div>
+                      <div className="text-[9px] text-pos-text font-semibold mt-1">✓ 12 ay boyunca nakit pozitif</div>
                     )}
                   </div>
                 </div>
@@ -276,7 +276,7 @@ export async function ForecastTab({ userId: _userId, companyId }: Props) {
 
       {/* Runway tone indicator */}
       {runwayTone === 'critical' && (
-        <div className="bg-red-50 border border-red-200 rounded px-4 py-3 text-xs text-red-700 font-semibold">
+        <div className="bg-neg-light border border-neg-light rounded px-4 py-3 text-xs text-neg-text font-semibold">
           🔴 Kritik Runway — 2 aydan az nakit kaldı. Hemen aksiyon alın: yeni gelir getirin veya giderleri kısın.
         </div>
       )}

@@ -128,7 +128,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           userInitials={userInitials}
           companies={companies}
         >
-          <div className="flex min-h-screen bg-gray-50">
+          <div className="flex min-h-screen bg-[#f8fafc]">
             <CommandBar />
             <Sidebar navBadges={navBadges} />
             <div className="flex-1 flex flex-col min-w-0">
@@ -151,7 +151,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     if (e && typeof e === 'object' && 'digest' in e) throw e
     console.error('[layout] CRASH:', e instanceof Error ? e.message : String(e))
     return (
-      <div className="flex min-h-screen bg-gray-50">
+      <div className="flex min-h-screen bg-[#f8fafc]">
         <div className="flex-1 flex flex-col min-w-0">
           <main className="flex-1 px-5 py-4 overflow-auto">
             {children}

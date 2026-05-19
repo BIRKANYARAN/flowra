@@ -41,8 +41,8 @@ export function FlowraKpiCard({
 
   const inner = (
     <div className={cn(
-      'bg-white border border-gray-100 rounded px-3.5 py-3 flex flex-col gap-1 shadow-sm',
-      href && 'hover:border-gray-300 transition-colors',
+      'bg-white border border-[#e2e8f0] rounded px-3.5 py-3 flex flex-col gap-1 shadow-sm',
+      href && 'hover:border-[#e2e8f0] transition-colors',
       className,
     )}>
       <div className="flex items-start justify-between gap-1">
@@ -54,7 +54,7 @@ export function FlowraKpiCard({
         {rawValue ? (
           <span className={cn(
             'text-[22px] font-black tabular-nums leading-none',
-            resolvedTone === 'negative' ? 'text-red-600' : 'text-gray-900',
+            resolvedTone === 'negative' ? 'text-neg' : 'text-gray-900',
           )}>
             {rawValue}
           </span>
@@ -76,7 +76,7 @@ export function FlowraKpiCard({
       {delta !== undefined && (
         <div className={cn(
           'text-[11px] font-semibold tabular-nums',
-          delta >= 0 ? 'text-emerald-600' : 'text-red-600',
+          delta >= 0 ? 'text-pos-text' : 'text-neg',
         )}>
           {delta >= 0 ? '▲' : '▼'} {Math.abs(delta).toFixed(1)}%
           <span className="text-gray-400 font-normal"> geçen ay</span>

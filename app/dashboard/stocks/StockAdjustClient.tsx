@@ -15,8 +15,8 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSupabase } from '@/lib/hooks/useSupabase'
 
-const IL  = 'w-full border border-gray-200 rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white transition-colors'
-const LAB = 'block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5'
+const IL  = 'w-full border border-[#e2e8f0] rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white transition-colors'
+const LAB = 'block text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5'
 
 interface Props {
   products: { id: string; name: string; unit: string }[]
@@ -111,11 +111,11 @@ export default function StockAdjustClient({ products }: Props) {
   }
 
   return (
-    <div className="bg-white border border-gray-100 rounded p-5 space-y-4">
-      <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Stok Hareketi Ekle</span>
+    <div className="bg-white border border-[#e2e8f0] rounded p-5 space-y-4">
+      <div className="flex items-center justify-between border-b border-[#e2e8f0] pb-3">
+        <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Stok Hareketi Ekle</span>
         {success && (
-          <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded">
+          <span className="text-xs font-semibold text-pos-text bg-pos-light px-2 py-1 rounded">
             ✓ Kaydedildi
           </span>
         )}
@@ -181,7 +181,7 @@ export default function StockAdjustClient({ products }: Props) {
             <input type="number" step="0.0001" min="0" className={IL} value={fxRate}
               onChange={e => { setFxRate(e.target.value); setFxRateDate(null) }} />
             {fxRateDate && fxRateDate !== entryDate && (
-              <p className="text-xs text-amber-600 mt-1">
+              <p className="text-xs text-warn-text mt-1">
                 Seçilen tarih ({entryDate}) için kur bulunamadı, en yakın tarih kullanıldı.
               </p>
             )}
@@ -204,7 +204,7 @@ export default function StockAdjustClient({ products }: Props) {
       </div>
 
       {err && (
-        <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded px-3 py-2">
+        <div className="text-sm text-neg bg-neg-light border border-neg-light rounded px-3 py-2">
           {err}
         </div>
       )}

@@ -26,18 +26,18 @@ function pct(v: number): string {
 // ── Risk level helpers ────────────────────────────────────────────────────────
 
 const RISK_COLORS = {
-  low:      { bg: 'bg-emerald-100', text: 'text-emerald-700', label: 'Düşük Risk', border: 'border-emerald-200' },
-  moderate: { bg: 'bg-amber-100',   text: 'text-amber-700',   label: 'Orta Risk',  border: 'border-amber-200'   },
+  low:      { bg: 'bg-pos-light', text: 'text-pos-text', label: 'Düşük Risk', border: 'border-pos-light' },
+  moderate: { bg: 'bg-warn-light',   text: 'text-warn-text',   label: 'Orta Risk',  border: 'border-warn-light'   },
   high:     { bg: 'bg-orange-100',  text: 'text-orange-700',  label: 'Yüksek Risk', border: 'border-orange-200' },
-  critical: { bg: 'bg-red-100',     text: 'text-red-700',     label: 'Kritik',     border: 'border-red-200'     },
+  critical: { bg: 'bg-neg-light',     text: 'text-neg-text',     label: 'Kritik',     border: 'border-neg-light'     },
 } as const
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
 const SEVERITY_CFG = {
-  high:   { cls: 'bg-red-50 border-red-200 text-red-700',    icon: '🔴', label: 'Yüksek' },
-  medium: { cls: 'bg-amber-50 border-amber-200 text-amber-700', icon: '🟡', label: 'Orta'  },
-  low:    { cls: 'bg-gray-50 border-gray-200 text-gray-600',  icon: '⚪', label: 'Düşük' },
+  high:   { cls: 'bg-neg-light border-neg-light text-neg-text',    icon: '🔴', label: 'Yüksek' },
+  medium: { cls: 'bg-warn-light border-warn-light text-warn-text', icon: '🟡', label: 'Orta'  },
+  low:    { cls: 'bg-[#f8fafc] border-[#e2e8f0] text-gray-600',  icon: '⚪', label: 'Düşük' },
 } as const
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -147,7 +147,7 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
 
   if (risk.totalOutstanding === 0) {
     return (
-      <div className="bg-white border border-gray-100 rounded text-center py-16">
+      <div className="bg-white border border-[#e2e8f0] rounded text-center py-16">
         <div className="text-4xl mb-3">✅</div>
         <div className="text-sm font-black text-gray-900 mb-1">Açık Alacak Yok</div>
         <div className="text-xs text-gray-400">Tüm faturalar tahsil edilmiş görünüyor.</div>
@@ -171,26 +171,26 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
             label: 'Vadesi Geçmiş',
             value: fmt(risk.overdueTotal),
             sub:   `${pct(overdueRate)} vadesi aştı`,
-            tone:  overdueRate > 0.3 ? 'text-red-600' : overdueRate > 0 ? 'text-amber-600' : 'text-gray-400',
+            tone:  overdueRate > 0.3 ? 'text-neg' : overdueRate > 0 ? 'text-warn-text' : 'text-gray-400',
           },
           {
             label: 'Konsantrasyon (Top 1)',
             value: pct(risk.concentration.top1_pct),
             sub:   riskCfg.label,
-            tone:  risk.concentration.risk_level === 'low' ? 'text-emerald-700' :
-                   risk.concentration.risk_level === 'moderate' ? 'text-amber-700' : 'text-red-600',
+            tone:  risk.concentration.risk_level === 'low' ? 'text-pos-text' :
+                   risk.concentration.risk_level === 'moderate' ? 'text-warn-text' : 'text-neg',
           },
           {
             label: 'HHI Endeksi',
             value: risk.concentration.hhi.toFixed(0),
             sub:   risk.concentration.hhi < 1500 ? 'Rekabetçi' :
                    risk.concentration.hhi < 2500 ? 'Orta Konsantrasyon' : 'Yüksek Konsantrasyon',
-            tone:  risk.concentration.hhi < 1500 ? 'text-emerald-700' :
-                   risk.concentration.hhi < 2500 ? 'text-amber-700' : 'text-red-600',
+            tone:  risk.concentration.hhi < 1500 ? 'text-pos-text' :
+                   risk.concentration.hhi < 2500 ? 'text-warn-text' : 'text-neg',
           },
         ].map(c => (
-          <div key={c.label} className="bg-white border border-gray-100 rounded px-4 py-3 shadow-sm">
-            <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">{c.label}</div>
+          <div key={c.label} className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
+            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{c.label}</div>
             <div className={`text-xl font-black tabular-nums leading-none ${c.tone}`}>{c.value}</div>
             <div className="text-[10px] text-gray-400 mt-1">{c.sub}</div>
           </div>
@@ -198,7 +198,7 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
       </div>
 
       {/* Zone 2 — Konsantrasyon */}
-      <div className="bg-white border border-gray-100 rounded p-4 shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
         <div className="flex items-center justify-between mb-3">
           <div>
             <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Konsantrasyon Analizi</div>
@@ -224,7 +224,7 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
                 <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                   <div
                     className={`h-full rounded-full ${
-                      share > 0.4 ? 'bg-red-400' : share > 0.2 ? 'bg-amber-400' : 'bg-primary-400'
+                      share > 0.4 ? 'bg-neg' : share > 0.2 ? 'bg-warn' : 'bg-primary-400'
                     }`}
                     style={{ width: `${share * 100}%` }}
                   />
@@ -241,26 +241,26 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
       </div>
 
       {/* Zone 3 — Aging table */}
-      <div className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
-        <div className="px-4 py-3 border-b border-gray-100">
+      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+        <div className="px-4 py-3 border-b border-[#e2e8f0]">
           <h2 className="text-sm font-black text-gray-800">Müşteri Yaşlandırma Analizi</h2>
           <p className="text-[10px] text-gray-400 mt-0.5">Alacakların vade kırılımı</p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-xs min-w-[600px]">
             <thead>
-              <tr className="bg-gray-50 border-b border-gray-100">
+              <tr className="bg-[#f8fafc] border-b border-[#e2e8f0]">
                 <th className="text-left px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-400">Müşteri</th>
                 <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-400">Toplam</th>
-                <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-emerald-400">Güncel</th>
-                <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-amber-400">+30g</th>
+                <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-pos">Güncel</th>
+                <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-warn">+30g</th>
                 <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-orange-400">+60g</th>
-                <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-red-400">+90g</th>
+                <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-neg">+90g</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-[#f1f5f9]">
               {risk.aging.map(c => (
-                <tr key={c.customer_id} className="hover:bg-gray-50/60 transition-colors">
+                <tr key={c.customer_id} className="hover:bg-[#f8fafc]/60 transition-colors">
                   <td className="px-4 py-3">
                     <div className="font-semibold text-gray-800 truncate max-w-[160px]">{c.customer_name}</div>
                     {c.oldest_invoice_date && (
@@ -268,30 +268,30 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
                     )}
                   </td>
                   <td className="px-4 py-3 text-right font-black tabular-nums text-gray-900">{fmt(c.total_outstanding)}</td>
-                  <td className="px-4 py-3 text-right font-mono tabular-nums text-emerald-700">
+                  <td className="px-4 py-3 text-right font-mono tabular-nums text-pos-text">
                     {c.current > 0 ? fmt(c.current) : <span className="text-gray-200">—</span>}
                   </td>
-                  <td className="px-4 py-3 text-right font-mono tabular-nums text-amber-700">
+                  <td className="px-4 py-3 text-right font-mono tabular-nums text-warn-text">
                     {c.overdue_30d > 0 ? fmt(c.overdue_30d) : <span className="text-gray-200">—</span>}
                   </td>
                   <td className="px-4 py-3 text-right font-mono tabular-nums text-orange-700">
                     {c.overdue_60d > 0 ? fmt(c.overdue_60d) : <span className="text-gray-200">—</span>}
                   </td>
-                  <td className="px-4 py-3 text-right font-mono font-bold tabular-nums text-red-700">
+                  <td className="px-4 py-3 text-right font-mono font-bold tabular-nums text-neg-text">
                     {c.overdue_90d > 0 ? fmt(c.overdue_90d) : <span className="text-gray-200">—</span>}
                   </td>
                 </tr>
               ))}
               {/* Totals row */}
-              <tr className="bg-gray-50 font-black border-t-2 border-gray-200">
+              <tr className="bg-[#f8fafc] font-black border-t-2 border-[#e2e8f0]">
                 <td className="px-4 py-3 text-xs font-black text-gray-700">Toplam</td>
                 <td className="px-4 py-3 text-right font-black tabular-nums text-gray-900">{fmt(risk.totalOutstanding)}</td>
-                <td className="px-4 py-3 text-right font-black tabular-nums text-emerald-700">
+                <td className="px-4 py-3 text-right font-black tabular-nums text-pos-text">
                   {fmt(risk.totalOutstanding - risk.overdueTotal)}
                 </td>
-                <td className="px-4 py-3 text-right font-black tabular-nums text-amber-700">{fmt(risk.overdue30Total)}</td>
+                <td className="px-4 py-3 text-right font-black tabular-nums text-warn-text">{fmt(risk.overdue30Total)}</td>
                 <td className="px-4 py-3 text-right font-black tabular-nums text-orange-700">{fmt(risk.overdue60Total)}</td>
-                <td className="px-4 py-3 text-right font-black tabular-nums text-red-700">{fmt(risk.overdue90Total)}</td>
+                <td className="px-4 py-3 text-right font-black tabular-nums text-neg-text">{fmt(risk.overdue90Total)}</td>
               </tr>
             </tbody>
           </table>
@@ -300,7 +300,7 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
 
       {/* Zone 4 — Anomaly Detection */}
       {allAnomalies.length > 0 && (
-        <div className="bg-white border border-gray-100 rounded p-4 shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
           <div className="flex items-center justify-between mb-3">
             <div>
               <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Anormallik Tespiti</div>
@@ -330,7 +330,7 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
                       <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md ${
                         a.direction === 'spike'
                           ? 'bg-orange-100 text-orange-700'
-                          : 'bg-blue-100 text-blue-700'
+                          : 'bg-info-light text-info-text'
                       }`}>
                         {a.direction === 'spike' ? '▲ Ani Artış' : '▼ Ani Düşüş'}
                         {' '}{Math.abs(a.deviation_pct).toFixed(0)}%
@@ -349,7 +349,7 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
       )}
 
       {/* Zone 5 — Guidance */}
-      <div className="bg-white border border-gray-100 rounded p-4 shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
         <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">CFO Tavsiyesi</div>
         <ul className="space-y-1.5">
           {guidance.map((g, i) => (

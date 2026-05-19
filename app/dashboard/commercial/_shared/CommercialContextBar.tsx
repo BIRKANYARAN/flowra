@@ -36,11 +36,11 @@ interface ReadingProps {
 
 function Reading({ label, value, sub, status, border }: ReadingProps) {
   const valueCls =
-    status === 'critical' ? 'text-red-600' :
-    status === 'warn'     ? 'text-amber-700' :
+    status === 'critical' ? 'text-neg' :
+    status === 'warn'     ? 'text-warn-text' :
     'text-gray-900'
   return (
-    <div className={`flex flex-col gap-0 flex-shrink-0 px-4 py-2.5 ${border ? 'border-l border-gray-100' : ''}`}>
+    <div className={`flex flex-col gap-0 flex-shrink-0 px-4 py-2.5 ${border ? 'border-l border-[#e2e8f0]' : ''}`}>
       <span className="text-[8px] font-black uppercase tracking-widest text-gray-400 leading-none mb-1">
         {label}
       </span>
@@ -71,7 +71,7 @@ export function CommercialContextBar({ companyId }: { companyId: string }) {
   }, [companyId])
 
   if (loading) {
-    return <div className="h-[46px] bg-gray-50/60 border-b border-gray-100 animate-pulse" />
+    return <div className="h-[46px] bg-[#f8fafc]/60 border-b border-[#e2e8f0] animate-pulse" />
   }
   if (!data) return null
 
@@ -123,7 +123,7 @@ export function CommercialContextBar({ companyId }: { companyId: string }) {
   ]
 
   return (
-    <div className="flex items-center gap-0 bg-gray-50/40 border-b border-gray-100 overflow-x-auto scrollbar-none">
+    <div className="flex items-center gap-0 bg-[#f8fafc]/40 border-b border-[#e2e8f0] overflow-x-auto scrollbar-none">
       {readings.map(r => (
         <Reading key={r.label} {...r} />
       ))}

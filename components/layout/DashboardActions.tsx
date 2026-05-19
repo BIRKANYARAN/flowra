@@ -77,7 +77,7 @@ export function DashboardActions() {
   }
 
   const btn = 'inline-flex items-center gap-1.5 px-3 py-2 rounded text-xs font-semibold border transition-colors disabled:opacity-40 cursor-pointer'
-  const gray = `${btn} bg-white border-gray-200 text-gray-700 hover:bg-gray-50`
+  const gray = `${btn} bg-white border-[#e2e8f0] text-gray-700 hover:bg-[#f8fafc]`
 
   return (
     <div className="flex flex-col items-end gap-2">
@@ -89,9 +89,9 @@ export function DashboardActions() {
       </div>
       {status && (
         <div className={`text-xs px-3 py-1.5 rounded font-medium max-w-sm text-right ${
-          status.kind === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-        : status.kind === 'error'   ? 'bg-red-50 text-red-700 border border-red-200'
-                                    : 'bg-blue-50 text-blue-700 border border-blue-200'
+          status.kind === 'success' ? 'bg-pos-light text-pos-text border border-pos-light'
+        : status.kind === 'error'   ? 'bg-neg-light text-neg-text border border-neg-light'
+                                    : 'bg-info-light text-info-text border border-info-light'
         }`}>
           {status.msg}
         </div>

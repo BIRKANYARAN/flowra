@@ -31,10 +31,10 @@ function KpiCard({ label, value, sub, tone = 'neutral' }: {
   label: string; value: string; sub?: string; tone?: 'positive' | 'negative' | 'neutral'
 }) {
   return (
-    <div className="bg-white border border-gray-100 rounded px-4 py-3">
-      <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">{label}</div>
+    <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
+      <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{label}</div>
       <div className={`text-lg font-black tabular-nums leading-tight ${
-        tone === 'positive' ? 'text-emerald-700' : tone === 'negative' ? 'text-red-600' : 'text-gray-900'
+        tone === 'positive' ? 'text-pos-text' : tone === 'negative' ? 'text-neg' : 'text-gray-900'
       }`}>{value}</div>
       {sub && <div className="text-[10px] text-gray-400 mt-0.5">{sub}</div>}
     </div>
@@ -83,10 +83,10 @@ export default function ExecutiveSummaryPage() {
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <input type="date" value={from} onChange={e => setFrom(e.target.value)}
-            className="border border-gray-200 rounded px-2 py-1 text-xs" />
+            className="border border-[#e2e8f0] rounded px-2 py-1 text-xs" />
           <span className="text-xs text-gray-400">—</span>
           <input type="date" value={to} onChange={e => setTo(e.target.value)}
-            className="border border-gray-200 rounded px-2 py-1 text-xs" />
+            className="border border-[#e2e8f0] rounded px-2 py-1 text-xs" />
           {data && (
             <PdfExportButton label="PDF İndir" opts={{
               companyName: ws.companyName ?? 'Şirket',
@@ -142,58 +142,58 @@ export default function ExecutiveSummaryPage() {
         <p className="text-sm text-gray-500 mt-1">{from} — {to}</p>
       </div>
 
-      {error && <div className="bg-red-50 border border-red-200 rounded px-4 py-3 text-sm text-red-700">{error}</div>}
+      {error && <div className="bg-neg-light border border-neg-light rounded px-4 py-3 text-sm text-neg-text">{error}</div>}
       {loading && <div className="bg-gray-100 rounded h-48 animate-pulse" />}
 
       {data && !loading && (
         <>
           {/* ── Intelligence Alerts ─────────────────────────────────────────── */}
           {is && is.net_income < 0 && (
-            <div className="bg-red-50 border border-red-200 rounded px-4 py-3 flex items-start gap-3">
+            <div className="bg-neg-light border border-neg-light rounded px-4 py-3 flex items-start gap-3">
               <span className="text-base mt-0.5">🔴</span>
               <div className="flex-1">
-                <div className="text-[11px] font-black uppercase tracking-wide text-red-800">
+                <div className="text-[11px] font-black uppercase tracking-wide text-neg-text">
                   Dönem Zararı — {fmt(Math.abs(is.net_income))}
                 </div>
-                <div className="text-xs text-red-700 mt-0.5">
+                <div className="text-xs text-neg-text mt-0.5">
                   Bu dönem net zarar ile kapanıyor. Gider yapısı ve brüt marj incelenmeli.
                 </div>
               </div>
-              <Link href="/dashboard/reports/income-statement" className="text-[10px] font-bold text-red-700 hover:text-red-800 underline underline-offset-2 shrink-0 mt-0.5">
+              <Link href="/dashboard/reports/income-statement" className="text-[10px] font-bold text-neg-text hover:text-neg-text underline underline-offset-2 shrink-0 mt-0.5">
                 Gelir Tablosu →
               </Link>
             </div>
           )}
 
           {bs && bs.total_equity < 0 && (
-            <div className="bg-red-50 border border-red-200 rounded px-4 py-3 flex items-start gap-3">
+            <div className="bg-neg-light border border-neg-light rounded px-4 py-3 flex items-start gap-3">
               <span className="text-base mt-0.5">🔴</span>
               <div className="flex-1">
-                <div className="text-[11px] font-black uppercase tracking-wide text-red-800">
+                <div className="text-[11px] font-black uppercase tracking-wide text-neg-text">
                   Negatif Özkaynak — Teknik İflas Riski
                 </div>
-                <div className="text-xs text-red-700 mt-0.5">
+                <div className="text-xs text-neg-text mt-0.5">
                   Toplam yükümlülükler varlıkları aşıyor. TTK kapsamında ek sermaye yükümlülüğü doğabilir.
                 </div>
               </div>
-              <Link href="/dashboard/reports/balance-sheet" className="text-[10px] font-bold text-red-700 hover:text-red-800 underline underline-offset-2 shrink-0 mt-0.5">
+              <Link href="/dashboard/reports/balance-sheet" className="text-[10px] font-bold text-neg-text hover:text-neg-text underline underline-offset-2 shrink-0 mt-0.5">
                 Bilanço →
               </Link>
             </div>
           )}
 
           {cf && cf.operating < 0 && is && is.net_income > 0 && (
-            <div className="bg-amber-50 border border-amber-200 rounded px-4 py-3 flex items-start gap-3">
+            <div className="bg-warn-light border border-warn-light rounded px-4 py-3 flex items-start gap-3">
               <span className="text-base mt-0.5">⚠</span>
               <div className="flex-1">
-                <div className="text-[11px] font-black uppercase tracking-wide text-amber-800">
+                <div className="text-[11px] font-black uppercase tracking-wide text-warn-text">
                   Negatif Faaliyet Nakit Akışı
                 </div>
-                <div className="text-xs text-amber-700 mt-0.5">
+                <div className="text-xs text-warn-text mt-0.5">
                   Dönem kârlı olmasına rağmen faaliyet nakit akışı negatif. Tahsilat ve alacak yönetimi gözden geçirilmeli.
                 </div>
               </div>
-              <Link href="/dashboard/reports/cash-flow" className="text-[10px] font-bold text-amber-700 hover:text-amber-800 underline underline-offset-2 shrink-0 mt-0.5">
+              <Link href="/dashboard/reports/cash-flow" className="text-[10px] font-bold text-warn-text hover:text-warn-text underline underline-offset-2 shrink-0 mt-0.5">
                 Nakit Akışı →
               </Link>
             </div>
@@ -231,16 +231,16 @@ export default function ExecutiveSummaryPage() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Nakit Akışı</div>
-              <div className="bg-white border border-gray-100 rounded overflow-hidden">
+              <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
                 {[
                   { label: 'Faaliyet Nakit Akışı',   value: cf?.operating  ?? 0 },
                   { label: 'Yatırım Nakit Akışı',    value: cf?.investing  ?? 0 },
                   { label: 'Finansman Nakit Akışı',  value: cf?.financing  ?? 0 },
                   { label: 'Net Nakit Değişimi',     value: cf?.net_change ?? 0, bold: true },
                 ].map(row => (
-                  <div key={row.label} className={`flex items-center justify-between px-4 py-2 border-b border-gray-50 last:border-0 ${row.bold ? 'bg-gray-50' : ''}`}>
+                  <div key={row.label} className={`flex items-center justify-between px-4 py-2 border-b border-[#f1f5f9] last:border-0 ${row.bold ? 'bg-[#f8fafc]' : ''}`}>
                     <span className={`text-xs ${row.bold ? 'font-black text-gray-900' : 'text-gray-600'}`}>{row.label}</span>
-                    <span className={`tabular-nums text-xs font-semibold ${row.value > 0 ? 'text-emerald-700' : row.value < 0 ? 'text-red-600' : 'text-gray-500'}`}>
+                    <span className={`tabular-nums text-xs font-semibold ${row.value > 0 ? 'text-pos-text' : row.value < 0 ? 'text-neg' : 'text-gray-500'}`}>
                       {fmt(row.value)}
                     </span>
                   </div>
@@ -249,7 +249,7 @@ export default function ExecutiveSummaryPage() {
             </div>
             <div>
               <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Vergi Özeti</div>
-              <div className="bg-white border border-gray-100 rounded overflow-hidden">
+              <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
                 {[
                   { label: 'Satış KDV',     value: tax?.sales_vat    ?? 0 },
                   { label: 'Alış KDV',      value: -(tax?.purchase_vat ?? 0) },
@@ -257,7 +257,7 @@ export default function ExecutiveSummaryPage() {
                   { label: 'Net KDV',       value: tax?.net_vat ?? 0, bold: true },
                   { label: 'Kurumlar Verg.',value: -(is?.corporate_tax ?? 0) },
                 ].map(row => (
-                  <div key={row.label} className={`flex items-center justify-between px-4 py-2 border-b border-gray-50 last:border-0 ${row.bold ? 'bg-gray-50' : ''}`}>
+                  <div key={row.label} className={`flex items-center justify-between px-4 py-2 border-b border-[#f1f5f9] last:border-0 ${row.bold ? 'bg-[#f8fafc]' : ''}`}>
                     <span className={`text-xs ${row.bold ? 'font-black text-gray-900' : 'text-gray-600'}`}>{row.label}</span>
                     <span className={`tabular-nums text-xs font-semibold ${row.value > 0 ? 'text-orange-600' : row.value < 0 ? 'text-gray-600' : 'text-gray-400'}`}>
                       {fmt(Math.abs(row.value))} {row.bold && tax ? (tax.status === 'payable' ? '⬆ Ödenecek' : '⬇ Devir') : ''}

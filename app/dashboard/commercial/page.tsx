@@ -94,7 +94,7 @@ export default async function CommercialPage({ searchParams }: PageProps) {
 
       {/* Sticky tab nav + context bar */}
       <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm -mx-4">
-        <div className="px-5 pt-1 border-b border-gray-100">
+        <div className="px-5 pt-1 border-b border-[#e2e8f0]">
           <HubTabNav tabs={TABS} activeTab={activeTab} basePath="/dashboard/commercial" />
         </div>
         <CommercialContextBar companyId={companyId} />

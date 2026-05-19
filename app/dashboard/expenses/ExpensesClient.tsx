@@ -17,8 +17,8 @@ import { FlowraCard }   from '@/components/ui-kit/FlowraCard'
 import { FlowraInput }  from '@/components/ui-kit/FlowraInput'
 import { CURRENCIES_EXTENDED, EXPENSE_CATEGORIES, type Expense } from '@/types'
 
-const IL  = 'w-full border border-gray-200 rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400 transition-colors bg-white'
-const LAB = 'block text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1.5'
+const IL  = 'w-full border border-[#e2e8f0] rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400 transition-colors bg-white'
+const LAB = 'block text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5'
 
 export const CATEGORY_LABELS: Record<string, string> = {
   general:      'Genel',
@@ -245,7 +245,7 @@ export default function ExpensesClient({
           <h2 className="text-sm font-bold text-gray-900">Gider Kayıtları</h2>
           <p className="text-xs text-gray-400 mt-0.5">
             {list.length} tek seferlik · {recurring.length} tekrarlayan
-            {totalTRY > 0 && <span className="ml-2 text-red-600 font-semibold">· {fmtMoney(totalTRY)} toplam</span>}
+            {totalTRY > 0 && <span className="ml-2 text-neg font-semibold">· {fmtMoney(totalTRY)} toplam</span>}
           </p>
         </div>
         {!showForm && (
@@ -258,7 +258,7 @@ export default function ExpensesClient({
       {/* ── Add form ─────────────────────────────────────────────────────────── */}
       {showForm && (
         <FlowraCard>
-          <h3 className="font-bold text-sm border-b border-gray-100 pb-3 mb-4">Yeni Gider</h3>
+          <h3 className="font-bold text-sm border-b border-[#e2e8f0] pb-3 mb-4">Yeni Gider</h3>
           <div className="space-y-4">
 
             <FlowraInput
@@ -279,7 +279,7 @@ export default function ExpensesClient({
                     onChange={e => setForm(f => ({ ...f, amount: e.target.value }))}
                   />
                   <select
-                    className="border border-gray-200 rounded px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 bg-white transition-colors"
+                    className="border border-[#e2e8f0] rounded px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 bg-white transition-colors"
                     value={form.currency}
                     onChange={e => setForm(f => ({ ...f, currency: e.target.value }))}
                   >
@@ -382,8 +382,8 @@ export default function ExpensesClient({
         <>
           {/* ── One-off expenses ──────────────────────────────────────────────── */}
           {list.length > 0 && (
-            <div className="bg-white border border-gray-100 rounded overflow-hidden">
-              <div className="grid grid-cols-12 text-[10px] font-bold text-gray-400 uppercase tracking-widest px-5 py-3 border-b border-gray-100">
+            <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+              <div className="grid grid-cols-12 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] px-5 py-3 border-b border-[#e2e8f0]">
                 <div className="col-span-4">Açıklama</div>
                 <div className="col-span-2">Kategori</div>
                 <div className="col-span-2">Tarih</div>
@@ -391,10 +391,10 @@ export default function ExpensesClient({
                 <div className="col-span-1 text-right">Tutar</div>
                 <div className="col-span-2 text-right">TRY</div>
               </div>
-              <div className="divide-y divide-gray-50">
+              <div className="divide-y divide-[#f1f5f9]">
                 {list.map(e => (
                   <div key={e.id}
-                    className="grid grid-cols-12 items-center px-5 py-3.5 hover:bg-gray-50/60 transition-colors group">
+                    className="grid grid-cols-12 items-center px-5 py-3.5 hover:bg-[#f8fafc]/60 transition-colors group">
                     <div className="col-span-4 min-w-0">
                       <div className="text-sm font-medium text-gray-800 truncate">{e.description}</div>
                     </div>
@@ -414,7 +414,7 @@ export default function ExpensesClient({
                       )}
                     </div>
                     <div className="col-span-2 text-right flex items-center justify-end gap-2">
-                      <span className="text-sm font-bold tabular-nums text-red-600">
+                      <span className="text-sm font-bold tabular-nums text-neg">
                         {fmtMoney(Number(e.amount_try))}
                       </span>
                       {confirmExpId === e.id ? (
@@ -422,7 +422,7 @@ export default function ExpensesClient({
                           <button
                             onClick={() => del(e.id)}
                             disabled={deleting === e.id}
-                            className="text-xs text-white bg-red-500 hover:bg-red-600 px-2 py-0.5 rounded transition-colors font-semibold disabled:opacity-50"
+                            className="text-xs text-white bg-neg-light hover:bg-neg px-2 py-0.5 rounded transition-colors font-semibold disabled:opacity-50"
                           >
                             {deleting === e.id ? '…' : 'Evet'}
                           </button>
@@ -437,7 +437,7 @@ export default function ExpensesClient({
                       ) : (
                         <button
                           onClick={() => setConfirmExpId(e.id)}
-                          className="opacity-0 group-hover:opacity-100 text-xs text-gray-400 hover:text-red-500 px-1.5 py-1 rounded hover:bg-red-50 transition-all"
+                          className="opacity-0 group-hover:opacity-100 text-xs text-gray-400 hover:text-neg px-1.5 py-1 rounded hover:bg-neg-light transition-all"
                         >
                           Sil
                         </button>
@@ -453,8 +453,8 @@ export default function ExpensesClient({
           {recurring.length > 0 && (
             <div>
               <Label className="mb-3">Tekrarlayan Giderler ({recurring.length})</Label>
-              <div className="bg-white border border-gray-100 rounded overflow-hidden">
-                <div className="grid grid-cols-12 text-[10px] font-bold text-gray-400 uppercase tracking-widest px-5 py-3 border-b border-gray-100">
+              <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+                <div className="grid grid-cols-12 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] px-5 py-3 border-b border-[#e2e8f0]">
                   <div className="col-span-4">Açıklama</div>
                   <div className="col-span-2">Kategori</div>
                   <div className="col-span-2">Sıklık</div>
@@ -462,10 +462,10 @@ export default function ExpensesClient({
                   <div className="col-span-2 text-right">Tutar</div>
                   <div className="col-span-1 text-right" />
                 </div>
-                <div className="divide-y divide-gray-50">
+                <div className="divide-y divide-[#f1f5f9]">
                   {recurring.map(r => (
                     <div key={r.id}
-                      className="grid grid-cols-12 items-center px-5 py-3.5 hover:bg-gray-50/60 transition-colors group">
+                      className="grid grid-cols-12 items-center px-5 py-3.5 hover:bg-[#f8fafc]/60 transition-colors group">
                       <div className="col-span-4 min-w-0">
                         <div className="text-sm font-medium text-gray-800 truncate">{r.description}</div>
                         <div className="text-xs text-gray-400 mt-0.5">
@@ -485,7 +485,7 @@ export default function ExpensesClient({
                       <div className="col-span-1 text-right text-xs text-gray-400">
                         {Number(r.kdv) > 0 ? `%${r.kdv}` : '—'}
                       </div>
-                      <div className="col-span-2 text-right text-sm font-bold tabular-nums text-red-600">
+                      <div className="col-span-2 text-right text-sm font-bold tabular-nums text-neg">
                         {sym(r.currency)}{Number(r.amount).toFixed(2)}
                       </div>
                       <div className="col-span-1 text-right">
@@ -494,7 +494,7 @@ export default function ExpensesClient({
                             <button
                               onClick={() => delRecurring(r.id)}
                               disabled={deleting === r.id}
-                              className="text-xs text-white bg-red-500 hover:bg-red-600 px-2 py-0.5 rounded transition-colors font-semibold disabled:opacity-50"
+                              className="text-xs text-white bg-neg-light hover:bg-neg px-2 py-0.5 rounded transition-colors font-semibold disabled:opacity-50"
                             >
                               {deleting === r.id ? '…' : 'Evet'}
                             </button>
@@ -509,7 +509,7 @@ export default function ExpensesClient({
                         ) : (
                           <button
                             onClick={() => setConfirmRecId(r.id)}
-                            className="opacity-0 group-hover:opacity-100 text-xs text-gray-400 hover:text-red-500 px-1.5 py-1 rounded hover:bg-red-50 transition-all"
+                            className="opacity-0 group-hover:opacity-100 text-xs text-gray-400 hover:text-neg px-1.5 py-1 rounded hover:bg-neg-light transition-all"
                           >
                             Durdur
                           </button>
@@ -519,7 +519,7 @@ export default function ExpensesClient({
                   ))}
                 </div>
               </div>
-              {recurringError && <p className="text-xs text-red-500 mt-2">{recurringError}</p>}
+              {recurringError && <p className="text-xs text-neg mt-2">{recurringError}</p>}
             </div>
           )}
         </>

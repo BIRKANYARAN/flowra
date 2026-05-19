@@ -16,10 +16,10 @@ const btn = cva(
     variants: {
       variant: {
         primary:   'bg-primary-600 hover:bg-primary-700 text-white shadow-sm',
-        secondary: 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-200',
-        ghost:     'text-gray-500 hover:text-gray-900 hover:bg-gray-50',
-        danger:    'bg-red-50 hover:bg-red-100 text-red-700 border border-red-100',
-        success:   'bg-emerald-600 hover:bg-emerald-700 text-white',
+        secondary: 'bg-white hover:bg-[#f8fafc] text-gray-700 border border-[#e2e8f0]',
+        ghost:     'text-gray-500 hover:text-gray-900 hover:bg-[#f8fafc]',
+        danger:    'bg-neg-light hover:bg-neg-light text-neg-text border border-neg-light',
+        success:   'bg-pos hover:bg-pos text-white',
       },
       size: {
         sm: 'px-3 py-1.5 text-xs',
@@ -61,10 +61,10 @@ export const Btn = forwardRef<HTMLButtonElement, BtnProps>(
 Btn.displayName = 'Btn'
 
 /* ── Card ─────────────────────────────────────────────────────────────────── */
-const card = cva('bg-white border border-gray-200 rounded', {
+const card = cva('bg-white border border-[#e2e8f0] rounded', {
   variants: {
     padding:     { none: 'p-0', sm: 'p-4', md: 'p-5', lg: 'p-6' },
-    interactive: { true: 'hover:border-gray-300 cursor-pointer transition-colors', false: '' },
+    interactive: { true: 'hover:border-[#e2e8f0] cursor-pointer transition-colors', false: '' },
   },
   defaultVariants: { padding: 'md', interactive: false },
 })
@@ -77,7 +77,7 @@ export function Card({
 /* ── Label (tiny uppercase) ──────────────────────────────────────────────── */
 export function Label({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div className={cn('text-[10px] font-bold uppercase tracking-widest text-gray-400', className)}>
+    <div className={cn('text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]', className)}>
       {children}
     </div>
   )
@@ -117,7 +117,7 @@ export const DSInput = forwardRef<HTMLInputElement, DSInputProps>(
             'focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100',
             prefix && 'pl-8',
             suffix && 'pr-10',
-            error ? 'border-red-300' : 'border-gray-200',
+            error ? 'border-neg' : 'border-[#e2e8f0]',
           )}
           {...rest}
         />
@@ -127,7 +127,7 @@ export const DSInput = forwardRef<HTMLInputElement, DSInputProps>(
           </span>
         )}
       </div>
-      {error && <div className="text-[11px] text-red-600 mt-1">{error}</div>}
+      {error && <div className="text-[11px] text-neg mt-1">{error}</div>}
     </div>
   )
 )
@@ -219,7 +219,7 @@ export function StatCard({ label, value, sub, accent }: {
   label: string; value: string | number; sub?: string; accent?: boolean
 }) {
   return (
-    <div className={`bg-white border rounded p-5 ${accent ? 'border-primary-200 bg-primary-50' : 'border-gray-200'}`}>
+    <div className={`bg-white border rounded p-5 ${accent ? 'border-primary-200 bg-primary-50' : 'border-[#e2e8f0]'}`}>
       <div className={`text-xs font-semibold uppercase tracking-wide mb-1 ${accent ? 'text-primary-500' : 'text-gray-400'}`}>
         {label}
       </div>
@@ -251,7 +251,7 @@ export function EmptyState({ icon, title, sub, action }: {
   icon: string; title: string; sub?: string; action?: ReactNode
 }) {
   return (
-    <div className="bg-white border border-gray-200 rounded text-center py-16 px-6">
+    <div className="bg-white border border-[#e2e8f0] rounded text-center py-16 px-6">
       <div className="text-5xl mb-3">{icon}</div>
       <p className="font-semibold text-gray-700 mb-1">{title}</p>
       {sub && <p className="text-sm text-gray-400 mb-5">{sub}</p>}
@@ -272,7 +272,7 @@ export function LoadingSpinner() {
 /* ── Error banner ────────────────────────────────────────────────────────── */
 export function ErrorBanner({ msg }: { msg: string }) {
   return (
-    <div className="bg-red-50 border border-red-100 text-red-700 px-4 py-3 rounded text-sm">
+    <div className="bg-neg-light border border-neg-light text-neg-text px-4 py-3 rounded text-sm">
       {msg}
     </div>
   )
@@ -311,13 +311,13 @@ export const DSSelect = forwardRef<HTMLSelectElement, DSSelectProps>(
         className={cn(
           'w-full bg-white border rounded px-3 py-2 text-sm text-gray-900 transition-colors',
           'focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100',
-          error ? 'border-red-300' : 'border-gray-200',
+          error ? 'border-neg' : 'border-[#e2e8f0]',
         )}
         {...rest}
       >
         {children}
       </select>
-      {error && <div className="text-[11px] text-red-600 mt-1">{error}</div>}
+      {error && <div className="text-[11px] text-neg mt-1">{error}</div>}
     </div>
   )
 )

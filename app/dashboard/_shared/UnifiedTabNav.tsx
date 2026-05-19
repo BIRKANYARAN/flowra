@@ -24,7 +24,7 @@ interface Props {
 
 export function UnifiedTabNav({ tabs, activeTab, basePath }: Props) {
   return (
-    <div className="flex items-center gap-0.5 border-b border-gray-100 overflow-x-auto scrollbar-none pb-0">
+    <div className="flex items-center gap-0.5 border-b border-[#e2e8f0] overflow-x-auto scrollbar-none pb-0">
       {tabs.map(tab => {
         const isActive  = tab.key === activeTab
         const showBadge = tab.badge !== undefined && tab.badge > 0

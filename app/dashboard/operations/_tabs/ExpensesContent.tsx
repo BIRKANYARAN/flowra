@@ -152,15 +152,15 @@ export async function ExpensesContent({ companyId }: Props) {
       <p className="text-xs text-gray-400">Son 6 ay · {expenses.length} kayıt</p>
 
       {/* KPI Strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
         {[
-          { label: 'Toplam Gider',    value: fmt(totalTRY),        sub: 'Son 6 ay (TRY)',                    color: 'text-red-600' },
+          { label: 'Toplam Gider',    value: fmt(totalTRY),        sub: 'Son 6 ay (TRY)',                    color: 'text-neg' },
           { label: 'Tek Seferlik',    value: String(expenses.length), sub: 'kayıt',                          color: 'text-gray-900' },
           { label: 'Aylık Sabit Yük', value: monthlyBurden > 0 ? fmt(monthlyBurden) : '—', sub: `${recurring.length} tekrarlayan şablon`, color: monthlyBurden > 0 ? 'text-orange-700' : 'text-gray-400' },
-          { label: 'KDV İndirimi',    value: kdvDeductible > 0 ? fmt(kdvDeductible) : '—', sub: 'Tahmini indirilecek KDV', color: kdvDeductible > 0 ? 'text-emerald-700' : 'text-gray-400' },
+          { label: 'KDV İndirimi',    value: kdvDeductible > 0 ? fmt(kdvDeductible) : '—', sub: 'Tahmini indirilecek KDV', color: kdvDeductible > 0 ? 'text-pos-text' : 'text-gray-400' },
         ].map((card, i) => (
-          <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-gray-100' : ''}`}>
-            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{card.label}</div>
+          <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e2e8f0]' : ''}`}>
+            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
             <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
             <div className="text-[10px] text-gray-400 mt-1">{card.sub}</div>
           </div>
@@ -169,22 +169,22 @@ export async function ExpensesContent({ companyId }: Props) {
 
       {/* Expense anomaly alerts */}
       {expenseAnomalies.length > 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded px-4 py-3">
+        <div className="bg-warn-light border border-warn-light rounded px-4 py-3">
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="text-[10px] font-black uppercase tracking-widest text-amber-700">⚠ Anormal Gider Artışı</span>
-            <span className="text-[9px] text-amber-600">(istatistiksel eşik aşıldı)</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-warn-text">⚠ Anormal Gider Artışı</span>
+            <span className="text-[9px] text-warn-text">(istatistiksel eşik aşıldı)</span>
           </div>
           <div className="space-y-1">
             {expenseAnomalies.map((a, i) => (
               <div key={i} className="flex items-start gap-2">
-                <span className="text-[11px] bg-amber-100 text-amber-800 font-semibold px-2 py-0.5 rounded shrink-0">
+                <span className="text-[11px] bg-warn-light text-warn-text font-semibold px-2 py-0.5 rounded shrink-0">
                   {CATEGORY_LABELS[a.category] ?? a.category}
                 </span>
-                <span className="text-[10px] text-amber-700">{a.message}</span>
+                <span className="text-[10px] text-warn-text">{a.message}</span>
               </div>
             ))}
           </div>
-          <div className="text-[10px] text-amber-600 mt-1.5">
+          <div className="text-[10px] text-warn-text mt-1.5">
             Detaylı analiz için Finans → Risk sekmesini inceleyin.
           </div>
         </div>
@@ -192,25 +192,25 @@ export async function ExpensesContent({ companyId }: Props) {
 
       {/* Duplicate expense alerts */}
       {duplicateGroups.length > 0 && (
-        <div className="bg-red-50 border border-red-200 rounded px-4 py-3">
+        <div className="bg-neg-light border border-neg-light rounded px-4 py-3">
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="text-[10px] font-black uppercase tracking-widest text-red-700">⚠ Olası Kopya Gider — {duplicateGroups.length} Grup</span>
-            <span className="text-[9px] text-red-500">son 90 gün · yüksek güven</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-neg-text">⚠ Olası Kopya Gider — {duplicateGroups.length} Grup</span>
+            <span className="text-[9px] text-neg">son 90 gün · yüksek güven</span>
           </div>
           <div className="space-y-1.5">
             {duplicateGroups.map((grp, i) => (
               <div key={i} className="flex items-start gap-2">
-                <span className="text-[11px] bg-red-100 text-red-800 font-semibold px-2 py-0.5 rounded shrink-0">
+                <span className="text-[11px] bg-neg-light text-neg-text font-semibold px-2 py-0.5 rounded shrink-0">
                   {CATEGORY_LABELS[grp.expense_type] ?? grp.expense_type}
                 </span>
-                <span className="text-[10px] text-red-700 flex-1">{grp.message}</span>
-                <span className="text-[10px] font-bold text-red-700 shrink-0 tabular-nums">
+                <span className="text-[10px] text-neg-text flex-1">{grp.message}</span>
+                <span className="text-[10px] font-bold text-neg-text shrink-0 tabular-nums">
                   {grp.rows.map(r => r.expense_date).join(' · ')}
                 </span>
               </div>
             ))}
           </div>
-          <div className="text-[10px] text-red-600 mt-1.5">
+          <div className="text-[10px] text-neg mt-1.5">
             Finans → CFO sekmesinde gider denetimini tamamlayın.
           </div>
         </div>
@@ -218,8 +218,8 @@ export async function ExpensesContent({ companyId }: Props) {
 
       {/* Category breakdown */}
       {categories.length > 0 && (
-        <div className="bg-white border border-gray-100 rounded p-4 shadow-sm">
-          <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Kategori Analizi — Son 6 Ay</h3>
+        <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
+          <h3 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">Kategori Analizi — Son 6 Ay</h3>
           <div className="space-y-2.5">
             {categories.map(cat => {
               const barPct   = (cat.total / maxCatTotal) * 100
@@ -229,11 +229,11 @@ export async function ExpensesContent({ companyId }: Props) {
                   <div className="w-28 text-xs text-gray-600 font-medium shrink-0 truncate">{cat.label}</div>
                   <div className="flex-1">
                     <div className="h-5 bg-gray-100 rounded overflow-hidden">
-                      <div className="h-5 bg-red-400 rounded" style={{ width: `${barPct}%` }} />
+                      <div className="h-5 bg-neg rounded" style={{ width: `${barPct}%` }} />
                     </div>
                   </div>
                   <div className="w-24 text-right shrink-0">
-                    <span className="text-xs font-bold tabular-nums text-red-600">{fmt(cat.total)}</span>
+                    <span className="text-xs font-bold tabular-nums text-neg">{fmt(cat.total)}</span>
                     <span className="text-[10px] text-gray-400 ml-1">%{sharePct.toFixed(0)}</span>
                   </div>
                 </div>
@@ -245,18 +245,18 @@ export async function ExpensesContent({ companyId }: Props) {
 
       {/* Monthly trend */}
       {trend.length > 1 && (
-        <div className="bg-white border border-gray-100 rounded p-4 shadow-sm">
-          <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Aylık Gider Trendi</h3>
+        <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
+          <h3 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">Aylık Gider Trendi</h3>
           <div className="flex items-end gap-2 h-20">
             {trend.map(t => {
               const heightPct = Math.max(4, (t.total / maxTrendTotal) * 100)
               return (
                 <div key={t.ym} className="flex-1 flex flex-col items-center gap-1 group relative">
-                  <div className="w-full bg-red-300 group-hover:bg-red-400 rounded-t transition-all" style={{ height: `${heightPct}%` }} />
+                  <div className="w-full bg-neg-light group-hover:bg-neg rounded-t transition-all" style={{ height: `${heightPct}%` }} />
                   <div className="text-[9px] text-gray-400 font-semibold">{fmtMonth(t.ym)}</div>
                   <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block z-10 bg-gray-900 text-white rounded px-2 py-1 text-[10px] whitespace-nowrap">
                     <div className="font-bold">{fmtMonth(t.ym)}</div>
-                    <div className="text-red-300">{fmt(t.total)}</div>
+                    <div className="text-neg/70">{fmt(t.total)}</div>
                   </div>
                 </div>
               )

@@ -83,12 +83,12 @@ export async function CashflowTab({ userId, companyId }: Props) {
           {
             label: '12 Ay Kümülatif',
             value: fmt(finalCumul),
-            tone: finalCumul >= 0 ? 'text-emerald-700' : 'text-red-600',
+            tone: finalCumul >= 0 ? 'text-pos-text' : 'text-neg',
           },
           {
             label: 'Toplam Alacak',
             value: fmt(timeline.totalReceivables),
-            tone: timeline.totalReceivables > 0 ? 'text-amber-600' : 'text-gray-400',
+            tone: timeline.totalReceivables > 0 ? 'text-warn-text' : 'text-gray-400',
           },
           {
             label: 'Aylık Burn',
@@ -98,23 +98,23 @@ export async function CashflowTab({ userId, companyId }: Props) {
           {
             label: 'Runway',
             value: runwayMonths !== null ? `${runwayMonths.toFixed(1)} ay` : '∞',
-            tone: runwayMonths === null ? 'text-gray-400' : runwayMonths <= 2 ? 'text-red-600' : runwayMonths <= 6 ? 'text-amber-600' : 'text-emerald-600',
+            tone: runwayMonths === null ? 'text-gray-400' : runwayMonths <= 2 ? 'text-neg' : runwayMonths <= 6 ? 'text-warn-text' : 'text-pos-text',
           },
           {
             label: timeline.firstDangerMonth ? 'İlk Tehlike Ayı' : 'Nakit Durumu',
             value: timeline.firstDangerMonth ? fmtMonth(timeline.firstDangerMonth) : 'Sağlıklı ✓',
-            tone: timeline.firstDangerMonth ? 'text-red-600' : 'text-emerald-700',
+            tone: timeline.firstDangerMonth ? 'text-neg' : 'text-pos-text',
           },
           {
             label: runway.exhaustion_date ? 'Nakit Tükenme' : 'Projeksiyon',
             value: runway.exhaustion_date
               ? new Date(runway.exhaustion_date + 'T00:00:00Z').toLocaleDateString('tr-TR', { month: 'short', year: 'numeric' })
               : '12 ay sağlıklı',
-            tone: runway.exhaustion_date ? 'text-red-600' : 'text-emerald-700',
+            tone: runway.exhaustion_date ? 'text-neg' : 'text-pos-text',
           },
         ].map(c => (
-          <div key={c.label} className="bg-white border border-gray-100 rounded px-4 py-3 shadow-sm">
-            <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">{c.label}</div>
+          <div key={c.label} className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
+            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{c.label}</div>
             <div className={`text-xl font-black tabular-nums leading-none ${c.tone}`}>{c.value}</div>
           </div>
         ))}
@@ -122,41 +122,41 @@ export async function CashflowTab({ userId, companyId }: Props) {
 
       {/* Danger alert */}
       {timeline.firstDangerMonth && (
-        <div className="bg-red-50 border border-red-200 rounded px-4 py-3 text-sm text-red-700 font-semibold">
+        <div className="bg-neg-light border border-neg-light rounded px-4 py-3 text-sm text-neg-text font-semibold">
           🔴 {fmtMonth(timeline.firstDangerMonth)} ayında kümülatif nakit negatife düşüyor.
           Tahsilatlar hızlandırılmalı veya giderler kısılmalıdır.
         </div>
       )}
 
       {/* Zone 2 — Chart */}
-      <div className="bg-white border border-gray-100 rounded p-4 shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
         <CashflowChart className="w-full" />
       </div>
 
       {/* Zone 3 — Pressure timeline */}
       {timeline.pressureSignals.length > 0 && (
-        <div className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
-          <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+          <div className="px-4 py-3 border-b border-[#e2e8f0] flex items-center justify-between">
             <div>
               <h2 className="text-sm font-black text-gray-800">Baskı Haritası</h2>
               <p className="text-[10px] text-gray-400 mt-0.5">Negatif nakit akışı veya kümülatif tehlike olan gelecek aylar</p>
             </div>
             <span className={`text-xs font-bold px-2.5 py-1 rounded ${
               timeline.pressureSignals.some(s => s.severity === 'critical')
-                ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
+                ? 'bg-neg-light text-neg-text' : 'bg-warn-light text-warn-text'
             }`}>
               {timeline.pressureSignals.filter(s => s.severity === 'critical').length} kritik ·{' '}
               {timeline.pressureSignals.filter(s => s.severity === 'warn').length} uyarı
             </span>
           </div>
-          <div className="divide-y divide-gray-50">
+          <div className="divide-y divide-[#f1f5f9]">
             {timeline.pressureSignals.map(sig => {
               const isCritical = sig.severity === 'critical'
               return (
-                <div key={sig.month} className={`px-4 py-3 flex items-start gap-3 ${isCritical ? 'bg-red-50/50' : 'bg-amber-50/30'}`}>
-                  <div className={`mt-0.5 flex-shrink-0 w-2 h-2 rounded-full ${isCritical ? 'bg-red-500' : 'bg-amber-400'}`} />
+                <div key={sig.month} className={`px-4 py-3 flex items-start gap-3 ${isCritical ? 'bg-neg-light/50' : 'bg-warn-light/30'}`}>
+                  <div className={`mt-0.5 flex-shrink-0 w-2 h-2 rounded-full ${isCritical ? 'bg-neg-light' : 'bg-warn'}`} />
                   <div>
-                    <div className={`text-xs font-black ${isCritical ? 'text-red-700' : 'text-amber-700'}`}>
+                    <div className={`text-xs font-black ${isCritical ? 'text-neg-text' : 'text-warn-text'}`}>
                       {fmtMonth(sig.month)}
                     </div>
                     <ul className="mt-0.5 space-y-0.5">
@@ -173,14 +173,14 @@ export async function CashflowTab({ userId, companyId }: Props) {
       )}
 
       {timeline.pressureSignals.length === 0 && timeline.months.length > 0 && (
-        <div className="bg-emerald-50 border border-emerald-200 rounded px-4 py-3 text-sm text-emerald-700 font-semibold">
+        <div className="bg-pos-light border border-pos-light rounded px-4 py-3 text-sm text-pos-text font-semibold">
           ✓ Önümüzdeki 6 ayda nakit baskı sinyali tespit edilmedi.
         </div>
       )}
 
       {/* Zone 3.5 — 3-Section Cash Flow Statement Strip */}
-      <div className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
-        <div className="px-4 py-3 border-b border-gray-100">
+      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+        <div className="px-4 py-3 border-b border-[#e2e8f0]">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-sm font-black text-gray-800">Nakit Akış Tablosu (Dönem Özeti)</h2>
@@ -190,14 +190,14 @@ export async function CashflowTab({ userId, companyId }: Props) {
             </div>
             <span className={`text-xs font-bold px-2.5 py-1 rounded ${
               cashflowStatement.net_change_try >= 0
-                ? 'bg-emerald-100 text-emerald-700'
-                : 'bg-red-100 text-red-700'
+                ? 'bg-pos-light text-pos-text'
+                : 'bg-neg-light text-neg-text'
             }`}>
               Net {fmt(cashflowStatement.net_change_try)}
             </span>
           </div>
         </div>
-        <div className="grid grid-cols-3 divide-x divide-gray-100">
+        <div className="grid grid-cols-3 divide-x divide-[#e2e8f0]">
           {[
             {
               key:    'operating',
@@ -224,13 +224,13 @@ export async function CashflowTab({ userId, companyId }: Props) {
             const tone = section.value === 0
               ? 'text-gray-400'
               : section.value > 0
-                ? 'text-emerald-700'
-                : 'text-red-600'
+                ? 'text-pos-text'
+                : 'text-neg'
             return (
               <div key={section.key} className="px-4 py-3">
                 <div className="flex items-center gap-1.5 mb-1">
                   <span className="text-base">{section.icon}</span>
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">{section.label}</span>
+                  <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">{section.label}</span>
                 </div>
                 <div className={`text-lg font-black tabular-nums leading-none ${tone}`}>
                   {fmt(section.value)}
@@ -245,24 +245,24 @@ export async function CashflowTab({ userId, companyId }: Props) {
           cashflowStatement.financing.partner_loans_repaid_try !== 0 ||
           cashflowStatement.financing.capital_injected_try !== 0 ||
           cashflowStatement.financing.dividends_paid_try !== 0) && (
-          <div className="border-t border-gray-100 px-4 py-2.5 flex flex-wrap gap-3">
+          <div className="border-t border-[#e2e8f0] px-4 py-2.5 flex flex-wrap gap-3">
             {cashflowStatement.financing.partner_loans_received_try > 0 && (
-              <span className="text-[10px] text-emerald-700 font-semibold">
+              <span className="text-[10px] text-pos-text font-semibold">
                 + {fmt(cashflowStatement.financing.partner_loans_received_try)} ortak borç girişi
               </span>
             )}
             {cashflowStatement.financing.partner_loans_repaid_try !== 0 && (
-              <span className="text-[10px] text-red-600 font-semibold">
+              <span className="text-[10px] text-neg font-semibold">
                 {fmt(cashflowStatement.financing.partner_loans_repaid_try)} borç geri ödeme
               </span>
             )}
             {cashflowStatement.financing.capital_injected_try > 0 && (
-              <span className="text-[10px] text-emerald-700 font-semibold">
+              <span className="text-[10px] text-pos-text font-semibold">
                 + {fmt(cashflowStatement.financing.capital_injected_try)} sermaye girişi
               </span>
             )}
             {cashflowStatement.financing.dividends_paid_try !== 0 && (
-              <span className="text-[10px] text-red-600 font-semibold">
+              <span className="text-[10px] text-neg font-semibold">
                 {fmt(cashflowStatement.financing.dividends_paid_try)} temettü ödemesi
               </span>
             )}
@@ -272,14 +272,14 @@ export async function CashflowTab({ userId, companyId }: Props) {
 
       {/* Zone 4 — 12-month projection bar chart */}
       {chartMonths.length > 0 && (
-        <div className="bg-white border border-gray-100 rounded px-4 py-4 shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded px-4 py-4 shadow-sm">
           <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">12 Aylık Nakit Projeksiyonu</div>
           <div className="flex items-end gap-1.5 h-32">
             {chartMonths.map((mo) => {
               const barH     = maxCash > 0 ? Math.max(2, Math.round((Math.max(0, mo.end_cash) / maxCash) * 100)) : 0
               const isNeg    = mo.end_cash <= 0
               const isLow    = !isNeg && mo.end_cash < maxCash * 0.2
-              const barColor = isNeg ? 'bg-red-400' : isLow ? 'bg-amber-400' : 'bg-emerald-400'
+              const barColor = isNeg ? 'bg-neg' : isLow ? 'bg-warn' : 'bg-pos'
               return (
                 <div key={mo.month} className="flex-1 flex flex-col items-center gap-0.5 min-w-0">
                   <div className="w-full flex items-end justify-center" style={{ height: '120px' }}>
@@ -303,37 +303,37 @@ export async function CashflowTab({ userId, companyId }: Props) {
 
       {/* Zone 5 — Monthly projection table */}
       {chartMonths.length > 0 && (
-        <div className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
-          <div className="px-4 py-3 border-b border-gray-100">
+        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+          <div className="px-4 py-3 border-b border-[#e2e8f0]">
             <h2 className="text-sm font-black text-gray-800">Aylık Projeksiyon Detayı</h2>
           </div>
           <table className="w-full text-xs">
             <thead>
-              <tr className="bg-gray-50 border-b border-gray-100">
+              <tr className="bg-[#f8fafc] border-b border-[#e2e8f0]">
                 <th className="text-left px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-400">Ay</th>
-                <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-emerald-400">Gelen</th>
-                <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-red-400">Giden</th>
+                <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-pos">Gelen</th>
+                <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-neg">Giden</th>
                 <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-400">Net</th>
                 <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-primary-400">Nakit Sonu</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-[#f1f5f9]">
               {chartMonths.map(mo => {
                 const isNeg = mo.end_cash <= 0
                 const net   = mo.cash_in - mo.cash_out
                 return (
-                  <tr key={mo.month} className={`hover:bg-gray-50/60 ${isNeg ? 'bg-red-50/30' : ''}`}>
+                  <tr key={mo.month} className={`hover:bg-[#f8fafc]/60 ${isNeg ? 'bg-neg-light/30' : ''}`}>
                     <td className="px-4 py-2.5 font-semibold text-gray-700">{mo.month_label}</td>
-                    <td className="px-4 py-2.5 text-right font-mono text-emerald-700 tabular-nums">
+                    <td className="px-4 py-2.5 text-right font-mono text-pos-text tabular-nums">
                       {mo.cash_in > 0 ? fmt(mo.cash_in) : <span className="text-gray-300">—</span>}
                     </td>
-                    <td className="px-4 py-2.5 text-right font-mono text-red-600 tabular-nums">
+                    <td className="px-4 py-2.5 text-right font-mono text-neg tabular-nums">
                       {mo.cash_out > 0 ? fmt(mo.cash_out) : <span className="text-gray-300">—</span>}
                     </td>
-                    <td className={`px-4 py-2.5 text-right font-mono font-bold tabular-nums ${net >= 0 ? 'text-gray-700' : 'text-red-600'}`}>
+                    <td className={`px-4 py-2.5 text-right font-mono font-bold tabular-nums ${net >= 0 ? 'text-gray-700' : 'text-neg'}`}>
                       {fmt(net)}
                     </td>
-                    <td className={`px-4 py-2.5 text-right font-black tabular-nums ${isNeg ? 'text-red-700' : 'text-gray-900'}`}>
+                    <td className={`px-4 py-2.5 text-right font-black tabular-nums ${isNeg ? 'text-neg-text' : 'text-gray-900'}`}>
                       {fmt(mo.end_cash)}
                     </td>
                   </tr>

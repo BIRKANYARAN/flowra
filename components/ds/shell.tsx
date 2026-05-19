@@ -33,11 +33,11 @@ import { cn } from '@/components/ui'
 
 export const TOKENS = {
   // Card / Panel
-  panel:         'bg-white border border-gray-100 rounded shadow-sm',
-  panelHover:    'hover:shadow-[0_2px_6px_rgba(17,24,39,0.07)] hover:border-gray-200 transition-all',
-  panelCritical: 'bg-red-50   border border-red-200   rounded',
-  panelWarn:     'bg-amber-50 border border-amber-200 rounded',
-  panelOk:       'bg-emerald-50 border border-emerald-200 rounded',
+  panel:         'bg-white border border-[#e2e8f0] rounded shadow-sm',
+  panelHover:    'hover:shadow-[0_2px_6px_rgba(17,24,39,0.07)] hover:border-[#e2e8f0] transition-all',
+  panelCritical: 'bg-neg-light   border border-neg-light   rounded',
+  panelWarn:     'bg-warn-light border border-warn-light rounded',
+  panelOk:       'bg-pos-light border border-pos-light rounded',
 
   // Section label (inner, above a block)
   label: 'text-[10px] font-black uppercase tracking-widest text-gray-400 leading-none',
@@ -57,9 +57,9 @@ export const TOKENS = {
   mono:     'font-mono tabular-nums',
 
   // Status colors
-  ok:       'text-emerald-700',
-  warn:     'text-amber-700',
-  critical: 'text-red-600',
+  ok:       'text-pos-text',
+  warn:     'text-warn-text',
+  critical: 'text-neg',
   neutral:  'text-gray-900',
 
   // Layout
@@ -194,7 +194,7 @@ export function PanelHeader({
 }) {
   return (
     <div className={cn(
-      'flex items-center justify-between border-b border-gray-50',
+      'flex items-center justify-between border-b border-[#f1f5f9]',
       tight ? 'px-4 py-2.5' : 'px-5 py-3.5'
     )}>
       <div>
@@ -234,7 +234,7 @@ export function KpiStrip({
       className
     )}>
       <div className={cn(
-        colClass ? `grid ${colClass} divide-x divide-gray-100` : 'flex items-stretch divide-x divide-gray-100 overflow-x-auto scrollbar-none',
+        colClass ? `grid ${colClass} divide-x divide-[#e2e8f0]` : 'flex items-stretch divide-x divide-[#e2e8f0] overflow-x-auto scrollbar-none',
       )}>
         {children}
       </div>
@@ -277,7 +277,7 @@ export function KpiCell({
 
   if (href) {
     return (
-      <Link href={href} className="hover:bg-gray-50/70 transition-colors">
+      <Link href={href} className="hover:bg-[#f8fafc]/70 transition-colors">
         {content}
       </Link>
     )
@@ -304,22 +304,22 @@ export function PressureBanner({
 }) {
   const theme = {
     critical: {
-      wrap:   'border border-red-200 bg-red-50',
-      tag:    'text-[9px] font-black uppercase tracking-widest text-red-600',
-      msg:    'text-sm text-red-700 font-medium',
-      btn:    'text-xs font-bold text-red-700 bg-red-100 hover:bg-red-200',
+      wrap:   'border border-neg-light bg-neg-light',
+      tag:    'text-[9px] font-black uppercase tracking-widest text-neg',
+      msg:    'text-sm text-neg-text font-medium',
+      btn:    'text-xs font-bold text-neg-text bg-neg-light hover:bg-neg-light',
     },
     warn: {
-      wrap:   'border border-amber-200 bg-amber-50',
-      tag:    'text-[9px] font-black uppercase tracking-widest text-amber-700',
-      msg:    'text-sm text-amber-800 font-medium',
-      btn:    'text-xs font-bold text-amber-800 bg-amber-100 hover:bg-amber-200',
+      wrap:   'border border-warn-light bg-warn-light',
+      tag:    'text-[9px] font-black uppercase tracking-widest text-warn-text',
+      msg:    'text-sm text-warn-text font-medium',
+      btn:    'text-xs font-bold text-warn-text bg-warn-light hover:bg-warn-light',
     },
     info: {
-      wrap:   'border border-blue-200 bg-blue-50',
-      tag:    'text-[9px] font-black uppercase tracking-widest text-blue-700',
-      msg:    'text-sm text-blue-800 font-medium',
-      btn:    'text-xs font-bold text-blue-800 bg-blue-100 hover:bg-blue-200',
+      wrap:   'border border-info-light bg-info-light',
+      tag:    'text-[9px] font-black uppercase tracking-widest text-info-text',
+      msg:    'text-sm text-info-text font-medium',
+      btn:    'text-xs font-bold text-info-text bg-info-light hover:bg-info-light',
     },
   }[severity]
 
@@ -395,7 +395,7 @@ export function SkeletonPanel({ rows = 3 }: { rows?: number }) {
 export function SkeletonKpiStrip({ cells = 4 }: { cells?: number }) {
   return (
     <div className={cn(TOKENS.panel, 'overflow-hidden')}>
-      <div className={`grid grid-cols-${cells} divide-x divide-gray-100`}>
+      <div className={`grid grid-cols-${cells} divide-x divide-[#e2e8f0]`}>
         {Array.from({ length: cells }).map((_, i) => (
           <div key={i} className="px-5 py-3.5 animate-pulse space-y-2">
             <div className="h-2 bg-gray-100 rounded-full w-16" />
@@ -438,7 +438,7 @@ export function DataTh({
 }) {
   return (
     <th className={cn(
-      'px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 bg-gray-50/60 border-b border-gray-100',
+      'px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 bg-[#f8fafc]/60 border-b border-[#e2e8f0]',
       align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left',
       first && 'pl-5',
     )}>
@@ -460,7 +460,7 @@ export function DataTd({
 }) {
   return (
     <td className={cn(
-      'px-4 py-3 border-b border-gray-50',
+      'px-4 py-3 border-b border-[#f1f5f9]',
       align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left',
       first && 'pl-5',
       className,
@@ -488,14 +488,14 @@ export function AlertRow({
   actionHref: string
 }) {
   const accentColor =
-    severity === 'critical' ? 'border-red-400 hover:bg-red-50/30' :
-    severity === 'warning'  ? 'border-amber-300 hover:bg-amber-50/30' :
-    'border-gray-200 hover:bg-gray-50/60'
+    severity === 'critical' ? 'border-neg hover:bg-neg-light/30' :
+    severity === 'warning'  ? 'border-warn hover:bg-warn-light/30' :
+    'border-[#e2e8f0] hover:bg-[#f8fafc]/60'
 
   const btnClass =
     severity === 'critical'
-      ? 'bg-red-600 text-white hover:bg-red-700'
-      : 'border border-gray-200 text-gray-600 hover:bg-gray-50'
+      ? 'bg-neg text-white hover:bg-neg'
+      : 'border border-[#e2e8f0] text-gray-600 hover:bg-[#f8fafc]'
 
   return (
     <Link

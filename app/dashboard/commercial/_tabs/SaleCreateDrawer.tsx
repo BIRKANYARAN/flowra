@@ -169,7 +169,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
         className="fixed right-0 top-0 h-full w-[480px] bg-white z-50 border-l border-[#e2e8f0] flex flex-col"
       >
         {/* Header */}
-        <div className="flex items-start justify-between px-5 py-4 border-b border-gray-100 flex-shrink-0">
+        <div className="flex items-start justify-between px-5 py-4 border-b border-[#e2e8f0] flex-shrink-0">
           <div>
             <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 leading-none">
               Ticari
@@ -199,7 +199,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
                   htmlFor="sc-customer"
                   className="text-[10px] font-black uppercase tracking-widest text-gray-400 block mb-1.5 leading-none"
                 >
-                  Müşteri Adı <span className="text-red-500">*</span>
+                  Müşteri Adı <span className="text-neg">*</span>
                 </label>
                 <input
                   id="sc-customer"
@@ -207,7 +207,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
                   value={customerName}
                   onChange={e => { setCustomerName(e.target.value); setError('') }}
                   placeholder="Müşteri veya firma adı"
-                  className="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
+                  className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
                   required
                   autoFocus
                 />
@@ -219,14 +219,14 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
                     htmlFor="sc-sale-date"
                     className="text-[10px] font-black uppercase tracking-widest text-gray-400 block mb-1.5 leading-none"
                   >
-                    Satış Tarihi <span className="text-red-500">*</span>
+                    Satış Tarihi <span className="text-neg">*</span>
                   </label>
                   <input
                     id="sc-sale-date"
                     type="date"
                     value={saleDate}
                     onChange={e => { setSaleDate(e.target.value); setError('') }}
-                    className="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
+                    className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
                     required
                   />
                 </div>
@@ -242,7 +242,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
                     type="date"
                     value={dueDate}
                     onChange={e => setDueDate(e.target.value)}
-                    className="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
+                    className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
                   />
                 </div>
               </div>
@@ -268,7 +268,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
               {items.map((item, idx) => (
                 <div
                   key={idx}
-                  className="bg-gray-50/60 border border-gray-100 rounded p-3 space-y-2"
+                  className="bg-[#f8fafc]/60 border border-[#e2e8f0] rounded p-3 space-y-2"
                 >
                   {/* Description row */}
                   <div className="flex items-start gap-2">
@@ -277,13 +277,13 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
                       placeholder="Açıklama (ürün/hizmet)"
                       value={item.description}
                       onChange={e => updateItem(idx, 'description', e.target.value)}
-                      className="flex-1 border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300 bg-white"
+                      className="flex-1 border border-[#e2e8f0] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300 bg-white"
                     />
                     {items.length > 1 && (
                       <button
                         type="button"
                         onClick={() => removeItem(idx)}
-                        className="text-gray-300 hover:text-red-400 transition-colors text-lg leading-none pt-2 flex-shrink-0"
+                        className="text-gray-300 hover:text-neg transition-colors text-lg leading-none pt-2 flex-shrink-0"
                         aria-label="Kalemi sil"
                       >
                         ✕
@@ -304,7 +304,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
                         placeholder="1"
                         value={item.quantity}
                         onChange={e => updateItem(idx, 'quantity', e.target.value)}
-                        className="w-full border border-gray-200 rounded px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary-300 bg-white"
+                        className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary-300 bg-white"
                       />
                     </div>
                     <div>
@@ -318,7 +318,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
                         placeholder="0.00"
                         value={item.unit_price}
                         onChange={e => updateItem(idx, 'unit_price', e.target.value)}
-                        className="w-full border border-gray-200 rounded px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary-300 bg-white"
+                        className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary-300 bg-white"
                       />
                     </div>
                     <div>
@@ -328,7 +328,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
                       <select
                         value={item.kdv_rate}
                         onChange={e => updateItem(idx, 'kdv_rate', Number(e.target.value))}
-                        className="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300 bg-white"
+                        className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300 bg-white"
                       >
                         <option value={0}>%0</option>
                         <option value={10}>%10</option>
@@ -349,7 +349,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
 
             {/* Totals strip */}
             {grandTotal > 0 && (
-              <div className="mt-3 bg-white border border-gray-100 rounded px-4 py-3 space-y-1">
+              <div className="mt-3 bg-white border border-[#e2e8f0] rounded px-4 py-3 space-y-1">
                 <div className="flex justify-between text-xs text-gray-400">
                   <span>Ara Toplam</span>
                   <span className="font-mono font-semibold text-gray-700">{formatTRY(subtotal)}</span>
@@ -358,7 +358,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
                   <span>KDV</span>
                   <span className="font-mono font-semibold text-gray-700">{formatTRY(kdvTotal)}</span>
                 </div>
-                <div className="flex justify-between text-sm font-black text-gray-900 pt-1 border-t border-gray-100">
+                <div className="flex justify-between text-sm font-black text-gray-900 pt-1 border-t border-[#e2e8f0]">
                   <span>TOPLAM</span>
                   <span className="font-mono">{formatTRY(grandTotal)}</span>
                 </div>
@@ -380,13 +380,13 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
               onChange={e => setNotes(e.target.value)}
               rows={3}
               placeholder="İsteğe bağlı açıklama…"
-              className="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300 resize-none"
+              className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300 resize-none"
             />
           </div>
 
           {/* Error */}
           {error && (
-            <p className="text-xs text-red-600 font-semibold bg-red-50 border border-red-200 rounded px-3 py-2">
+            <p className="text-xs text-neg font-semibold bg-neg-light border border-neg-light rounded px-3 py-2">
               {error}
             </p>
           )}
@@ -396,7 +396,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 border border-gray-200 text-gray-500 py-2.5 rounded text-sm font-semibold hover:bg-gray-50 transition-colors"
+              className="flex-1 border border-[#e2e8f0] text-gray-500 py-2.5 rounded text-sm font-semibold hover:bg-[#f8fafc] transition-colors"
             >
               İptal
             </button>

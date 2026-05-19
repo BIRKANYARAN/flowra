@@ -25,26 +25,26 @@ export function LedgerTab({
   return (
     <div className="flex flex-col gap-3">
       {loading ? <Skeleton h="h-40" /> : !ledger ? (
-        <div className="bg-red-50 border border-red-200 rounded px-4 py-3 text-sm text-red-600">Finansal defter yüklenemedi.</div>
+        <div className="bg-neg-light border border-neg-light rounded px-4 py-3 text-sm text-neg">Finansal defter yüklenemedi.</div>
       ) : (
         <>
           <div className="grid grid-cols-4 gap-2">
             {[
               { label: 'Toplam Özkaynak',  value: fmt(ledger.summary.total_equity_pool),      color: 'text-primary-600' },
-              { label: 'Net Borç',          value: fmt(ledger.summary.total_debt_to_partners), color: ledger.summary.total_debt_to_partners > 0 ? 'text-amber-600' : 'text-gray-400' },
-              { label: 'Toplam Temettü',    value: fmt(ledger.summary.total_dividends),        color: 'text-emerald-600' },
+              { label: 'Net Borç',          value: fmt(ledger.summary.total_debt_to_partners), color: ledger.summary.total_debt_to_partners > 0 ? 'text-warn-text' : 'text-gray-400' },
+              { label: 'Toplam Temettü',    value: fmt(ledger.summary.total_dividends),        color: 'text-pos-text' },
               { label: 'Borç/Özkaynak',     value: ledger.summary.debt_to_equity_ratio !== null ? ledger.summary.debt_to_equity_ratio.toFixed(2) + '×' : '—', color: 'text-gray-700' },
             ].map(c => (
-              <div key={c.label} className="bg-white border border-gray-100 rounded px-4 py-3 shadow-sm">
+              <div key={c.label} className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
                 <div className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${c.color}`}>{c.label}</div>
                 <div className="text-lg font-black tabular-nums text-gray-900 leading-none">{c.value}</div>
               </div>
             ))}
           </div>
-          <div className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
+          <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
             <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-gray-100 bg-gray-50">
+                <tr className="border-b border-[#e2e8f0] bg-[#f8fafc]">
                   {([
                     { col: 'partner_name',        label: 'Ortak',       align: 'left'  },
                     { col: 'equity_contributed',   label: 'Özkaynak',    align: 'right' },
@@ -70,19 +70,19 @@ export function LedgerTab({
                   })}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-[#f1f5f9]">
                 {sortedLedgerEntries.map(e => (
-                  <tr key={e.partner_id} className={`hover:bg-gray-50/60 ${!e.is_active ? 'opacity-50' : ''}`}>
+                  <tr key={e.partner_id} className={`hover:bg-[#f8fafc]/60 ${!e.is_active ? 'opacity-50' : ''}`}>
                     <td className="px-4 py-3 font-semibold text-gray-900">
                       {e.partner_name}
                       {!e.is_active && <span className="ml-1.5 text-[9px] text-gray-400">(pasif)</span>}
                       <div className="text-[10px] text-gray-400 font-normal">{pct(e.share_ratio)}</div>
                     </td>
                     <td className="px-4 py-3 text-right font-mono text-primary-700 font-bold">{fmt(e.equity_contributed)}</td>
-                    <td className="px-4 py-3 text-right font-mono text-amber-600">{fmt(e.loans_given)}</td>
+                    <td className="px-4 py-3 text-right font-mono text-warn-text">{fmt(e.loans_given)}</td>
                     <td className="px-4 py-3 text-right font-mono text-gray-500">{fmt(e.loans_repaid)}</td>
-                    <td className={`px-4 py-3 text-right font-mono font-bold ${e.net_loan_outstanding > 0 ? 'text-amber-700' : 'text-gray-400'}`}>{fmt(e.net_loan_outstanding)}</td>
-                    <td className="px-4 py-3 text-right font-mono text-emerald-600">{fmt(e.dividends_received)}</td>
+                    <td className={`px-4 py-3 text-right font-mono font-bold ${e.net_loan_outstanding > 0 ? 'text-warn-text' : 'text-gray-400'}`}>{fmt(e.net_loan_outstanding)}</td>
+                    <td className="px-4 py-3 text-right font-mono text-pos-text">{fmt(e.dividends_received)}</td>
                     <td className="px-4 py-3 text-right font-mono text-gray-500">{fmt(e.salary_received)}</td>
                     <td className="px-4 py-3 text-right font-mono font-black text-primary-800">{fmt(e.company_total_owed)}</td>
                   </tr>

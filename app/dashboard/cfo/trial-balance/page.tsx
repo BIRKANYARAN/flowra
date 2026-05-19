@@ -109,7 +109,7 @@ export default function TrialBalancePage() {
           <button
             onClick={() => window.print()}
             title="Mizanı PDF olarak kaydet veya yazdır"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-gray-200 bg-white text-xs font-semibold text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-[#e2e8f0] bg-white text-xs font-semibold text-gray-600 hover:bg-[#f8fafc] hover:border-[#e2e8f0] transition-colors"
           >
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
@@ -129,20 +129,20 @@ export default function TrialBalancePage() {
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded px-4 py-3 text-sm text-red-700">{error}</div>
+        <div className="bg-neg-light border border-neg-light rounded px-4 py-3 text-sm text-neg-text">{error}</div>
       )}
 
       {/* Accounting checks */}
       {!loading && checks.length > 0 && (
-        <div className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
-          <div className="px-4 py-2.5 border-b border-gray-100 bg-gray-50">
+        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+          <div className="px-4 py-2.5 border-b border-[#e2e8f0] bg-[#f8fafc]">
             <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Muhasebe Doğruluk Kontrolleri</div>
           </div>
-          <div className="divide-y divide-gray-50">
+          <div className="divide-y divide-[#f1f5f9]">
             {checks.map((c, i) => (
               <div key={i} className="flex items-start justify-between px-4 py-3 gap-4">
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 text-[10px] font-black ${c.passed ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                  <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 text-[10px] font-black ${c.passed ? 'bg-pos-light text-pos-text' : 'bg-neg-light text-neg-text'}`}>
                     {c.passed ? '✓' : '✗'}
                   </div>
                   <div className="min-w-0">
@@ -151,7 +151,7 @@ export default function TrialBalancePage() {
                   </div>
                 </div>
                 {c.amount != null && (
-                  <div className="text-xs font-black tabular-nums text-red-600 shrink-0">{fmt(c.amount)}</div>
+                  <div className="text-xs font-black tabular-nums text-neg shrink-0">{fmt(c.amount)}</div>
                 )}
               </div>
             ))}
@@ -162,19 +162,19 @@ export default function TrialBalancePage() {
       {/* Summary row */}
       {!loading && tb && (
         <div className="grid grid-cols-3 gap-2">
-          <div className="bg-white border border-gray-100 rounded px-4 py-3 shadow-sm">
-            <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Toplam Borç</div>
+          <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
+            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Toplam Borç</div>
             <div className="text-xl font-black tabular-nums text-gray-900">{fmt(tb.total_debit_try)}</div>
           </div>
-          <div className="bg-white border border-gray-100 rounded px-4 py-3 shadow-sm">
-            <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Toplam Alacak</div>
+          <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
+            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Toplam Alacak</div>
             <div className="text-xl font-black tabular-nums text-gray-900">{fmt(tb.total_credit_try)}</div>
           </div>
-          <div className={`border rounded px-4 py-3 ${tb.is_balanced ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}>
-            <div className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${tb.is_balanced ? 'text-emerald-600' : 'text-red-600'}`}>
+          <div className={`border rounded px-4 py-3 ${tb.is_balanced ? 'bg-pos-light border-pos-light' : 'bg-neg-light border-neg-light'}`}>
+            <div className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${tb.is_balanced ? 'text-pos-text' : 'text-neg'}`}>
               {tb.is_balanced ? 'Dengeli' : 'Dengesiz'}
             </div>
-            <div className={`text-xl font-black tabular-nums ${tb.is_balanced ? 'text-emerald-700' : 'text-red-700'}`}>
+            <div className={`text-xl font-black tabular-nums ${tb.is_balanced ? 'text-pos-text' : 'text-neg-text'}`}>
               {tb.is_balanced ? '✓ Tamam' : fmt(tb.imbalance_try) + ' fark'}
             </div>
           </div>
@@ -188,7 +188,7 @@ export default function TrialBalancePage() {
       )}
 
       {!loading && !hasData && !error && (
-        <div className="bg-gray-50 border border-gray-200 rounded px-4 py-10 text-center">
+        <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-10 text-center">
           <div className="text-2xl mb-2">📒</div>
           <div className="text-sm font-semibold text-gray-500">Henüz journal entry yok</div>
           <div className="text-xs text-gray-400 mt-1">
@@ -204,31 +204,31 @@ export default function TrialBalancePage() {
             const accounts = (grouped.get(cls) ?? []).filter(a => a.debit_try > 0 || a.credit_try > 0)
             if (accounts.length === 0) return null
             return (
-              <div key={cls} className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
-                <div className="px-4 py-2.5 border-b border-gray-100 bg-gray-50">
+              <div key={cls} className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+                <div className="px-4 py-2.5 border-b border-[#e2e8f0] bg-[#f8fafc]">
                   <div className="text-[10px] font-black uppercase tracking-widest text-gray-500">
                     {CLASS_LABELS[cls] ?? cls}
                   </div>
                 </div>
                 <table className="w-full text-xs">
                   <thead>
-                    <tr className="border-b border-gray-50">
+                    <tr className="border-b border-[#f1f5f9]">
                       <th className="px-4 py-2 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Hesap</th>
                       <th className="px-4 py-2 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Borç</th>
                       <th className="px-4 py-2 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Alacak</th>
                       <th className="px-4 py-2 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Bakiye</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-50">
+                  <tbody className="divide-y divide-[#f1f5f9]">
                     {accounts.map(a => (
-                      <tr key={a.account_code} className="hover:bg-gray-50/60">
-                        <td className="px-4 py-2.5">
+                      <tr key={a.account_code} className="hover:bg-[#f8fafc]/60">
+                        <td className="px-4 py-2">
                           <span className="font-mono font-semibold text-gray-500 mr-2">{a.account_code}</span>
                           <span className="text-gray-800">{a.account_name_tr}</span>
                         </td>
-                        <td className="px-4 py-2.5 text-right font-mono text-gray-600">{a.debit_try > 0 ? fmt(a.debit_try) : '—'}</td>
-                        <td className="px-4 py-2.5 text-right font-mono text-gray-600">{a.credit_try > 0 ? fmt(a.credit_try) : '—'}</td>
-                        <td className={`px-4 py-2.5 text-right font-mono font-bold ${a.balance_try > 0 ? 'text-gray-900' : a.balance_try < 0 ? 'text-red-600' : 'text-gray-400'}`}>
+                        <td className="px-4 py-2 text-right font-mono text-gray-600">{a.debit_try > 0 ? fmt(a.debit_try) : '—'}</td>
+                        <td className="px-4 py-2 text-right font-mono text-gray-600">{a.credit_try > 0 ? fmt(a.credit_try) : '—'}</td>
+                        <td className={`px-4 py-2 text-right font-mono font-bold ${a.balance_try > 0 ? 'text-gray-900' : a.balance_try < 0 ? 'text-neg' : 'text-gray-400'}`}>
                           {fmt(a.balance_try)}
                         </td>
                       </tr>

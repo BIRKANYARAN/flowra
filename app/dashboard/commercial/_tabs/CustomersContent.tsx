@@ -19,9 +19,9 @@ interface SaleAgg {
 }
 
 const RISK_CFG = {
-  high:   { label: 'Yüksek Risk',  bg: 'bg-red-50',    border: 'border-red-200',    text: 'text-red-700',    badge: 'bg-red-100 text-red-700'    },
-  medium: { label: 'Orta Risk',    bg: 'bg-amber-50',  border: 'border-amber-200',  text: 'text-amber-700',  badge: 'bg-amber-100 text-amber-700'  },
-  low:    { label: 'Düşük Risk',   bg: 'bg-emerald-50',border: 'border-emerald-200',text: 'text-emerald-700',badge: 'bg-emerald-100 text-emerald-700'},
+  high:   { label: 'Yüksek Risk',  bg: 'bg-neg-light',    border: 'border-neg-light',    text: 'text-neg-text',    badge: 'bg-neg-light text-neg-text'    },
+  medium: { label: 'Orta Risk',    bg: 'bg-warn-light',  border: 'border-warn-light',  text: 'text-warn-text',  badge: 'bg-warn-light text-warn-text'  },
+  low:    { label: 'Düşük Risk',   bg: 'bg-pos-light',border: 'border-pos-light',text: 'text-pos-text',badge: 'bg-pos-light text-pos-text'},
 } as const
 
 export async function CustomersContent({ companyId }: Props) {
@@ -85,15 +85,15 @@ export async function CustomersContent({ companyId }: Props) {
 
       {/* KPI Strip */}
       {sales.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-gray-100 rounded overflow-hidden">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded overflow-hidden">
           {[
             { label: 'Toplam Müşteri', value: String(customers.length), sub: `${sales.length} satış kaydı`,        color: 'text-gray-900' },
             { label: 'Toplam Ciro',    value: billed > 0 ? fmt(billed) : '—', sub: 'Tüm satışlar (TRY)',           color: 'text-primary-700' },
-            { label: 'Bekleyen Tahsilat', value: outstanding > 0 ? fmt(outstanding) : '—', sub: outstanding > 0 ? 'Ödenmemiş + kısmi' : 'Tamamı tahsil edildi ✓', color: outstanding > 0 ? 'text-red-600' : 'text-emerald-600' },
-            { label: 'Tahsilat Oranı', value: billed > 0 ? `%${collectionRate}` : '—', sub: billed > 0 ? `${fmt(paidTotal)} / ${fmt(billed)} tahsil edildi` : 'Satış yok', color: collectionRate >= 80 ? 'text-emerald-700' : collectionRate >= 50 ? 'text-amber-700' : 'text-red-600' },
+            { label: 'Bekleyen Tahsilat', value: outstanding > 0 ? fmt(outstanding) : '—', sub: outstanding > 0 ? 'Ödenmemiş + kısmi' : 'Tamamı tahsil edildi ✓', color: outstanding > 0 ? 'text-neg' : 'text-pos-text' },
+            { label: 'Tahsilat Oranı', value: billed > 0 ? `%${collectionRate}` : '—', sub: billed > 0 ? `${fmt(paidTotal)} / ${fmt(billed)} tahsil edildi` : 'Satış yok', color: collectionRate >= 80 ? 'text-pos-text' : collectionRate >= 50 ? 'text-warn-text' : 'text-neg' },
           ].map((card, i) => (
-            <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-gray-100' : ''}`}>
-              <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{card.label}</div>
+            <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e2e8f0]' : ''}`}>
+              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
               <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
               <div className="text-[10px] text-gray-400 mt-1">{card.sub}</div>
             </div>
@@ -105,18 +105,18 @@ export async function CustomersContent({ companyId }: Props) {
       {topCustomers.length > 0 && billed > 0 && topCustomers[0].total / billed > 0.4 && (
         <div className={`rounded border px-4 py-3 flex items-start gap-3 ${
           topCustomers[0].total / billed > 0.6
-            ? 'bg-red-50 border-red-200'
-            : 'bg-amber-50 border-amber-200'
+            ? 'bg-neg-light border-neg-light'
+            : 'bg-warn-light border-warn-light'
         }`}>
           <span className="text-base mt-0.5">⚠</span>
           <div className="flex-1">
             <div className={`text-[11px] font-black uppercase tracking-wide ${
-              topCustomers[0].total / billed > 0.6 ? 'text-red-800' : 'text-amber-800'
+              topCustomers[0].total / billed > 0.6 ? 'text-neg-text' : 'text-warn-text'
             }`}>
               Yüksek Müşteri Konsantrasyonu
             </div>
             <div className={`text-xs mt-0.5 ${
-              topCustomers[0].total / billed > 0.6 ? 'text-red-700' : 'text-amber-700'
+              topCustomers[0].total / billed > 0.6 ? 'text-neg-text' : 'text-warn-text'
             }`}>
               <strong>{topCustomers[0].name}</strong> toplam cironun{' '}
               <strong>%{Math.round((topCustomers[0].total / billed) * 100)}&apos;ini</strong>{' '}
@@ -128,8 +128,8 @@ export async function CustomersContent({ companyId }: Props) {
 
       {/* Top customers bar chart */}
       {topCustomers.length > 0 && billed > 0 && (
-        <div className="bg-white border border-gray-100 rounded p-4">
-          <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">En Yüksek Cirolu Müşteriler</h3>
+        <div className="bg-white border border-[#e2e8f0] rounded p-4">
+          <h3 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">En Yüksek Cirolu Müşteriler</h3>
           <div className="space-y-2.5">
             {topCustomers.map(tc => {
               const barPct   = (tc.total / maxTopTotal) * 100
@@ -155,26 +155,26 @@ export async function CustomersContent({ companyId }: Props) {
 
       {/* ── Customer Payment Risk Panel ──────────────────────────────────── */}
       {atRiskCustomers.length > 0 && (
-        <div className="bg-white border border-gray-100 rounded overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-50">
+        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#f1f5f9]">
             <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">
               Müşteri Ödeme Riski
             </span>
             <span className="text-[9px] text-gray-400">
               {atRiskCustomers.filter(r => r.risk_level === 'high').length > 0 && (
-                <span className="text-red-600 font-semibold">{atRiskCustomers.filter(r => r.risk_level === 'high').length} yüksek</span>
+                <span className="text-neg font-semibold">{atRiskCustomers.filter(r => r.risk_level === 'high').length} yüksek</span>
               )}
               {atRiskCustomers.filter(r => r.risk_level === 'high').length > 0 && atRiskCustomers.filter(r => r.risk_level === 'medium').length > 0 && ' · '}
               {atRiskCustomers.filter(r => r.risk_level === 'medium').length > 0 && (
-                <span className="text-amber-600">{atRiskCustomers.filter(r => r.risk_level === 'medium').length} orta</span>
+                <span className="text-warn-text">{atRiskCustomers.filter(r => r.risk_level === 'medium').length} orta</span>
               )}
             </span>
           </div>
-          <div className="divide-y divide-gray-50">
+          <div className="divide-y divide-[#f1f5f9]">
             {atRiskCustomers.map(r => {
               const cfg = RISK_CFG[r.risk_level]
               return (
-                <div key={r.customer_name} className="flex items-center gap-4 px-5 py-3 hover:bg-gray-50/40">
+                <div key={r.customer_name} className="flex items-center gap-4 px-5 py-3 hover:bg-[#f8fafc]/40">
                   {/* Risk score ring */}
                   <div className="flex-shrink-0 w-10 h-10 rounded-full border-2 flex items-center justify-center"
                     style={{ borderColor: r.risk_level === 'high' ? '#f87171' : r.risk_level === 'medium' ? '#fb923c' : '#34d399' }}>
@@ -197,7 +197,7 @@ export async function CustomersContent({ companyId }: Props) {
                         <span>ort. {Math.round(r.avg_days_late)}g geç ödeme</span>
                       )}
                       {r.total_overdue > 0 && (
-                        <span className="text-red-500 font-semibold">{fmt(r.total_overdue)} vadesi geçmiş</span>
+                        <span className="text-neg font-semibold">{fmt(r.total_overdue)} vadesi geçmiş</span>
                       )}
                     </div>
                   </div>
@@ -205,7 +205,7 @@ export async function CustomersContent({ companyId }: Props) {
                   {/* Score bar */}
                   <div className="w-20 flex-shrink-0 hidden sm:block">
                     <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                      <div className={`h-full rounded-full ${r.risk_level === 'high' ? 'bg-red-400' : r.risk_level === 'medium' ? 'bg-amber-400' : 'bg-emerald-400'}`}
+                      <div className={`h-full rounded-full ${r.risk_level === 'high' ? 'bg-neg' : r.risk_level === 'medium' ? 'bg-warn' : 'bg-pos'}`}
                         style={{ width: `${r.risk_score}%` }} />
                     </div>
                     <div className={`text-[9px] font-semibold mt-0.5 text-right ${cfg.text}`}>{r.risk_score}/100</div>
@@ -215,7 +215,7 @@ export async function CustomersContent({ companyId }: Props) {
             })}
           </div>
           {riskScores.filter(r => r.risk_level !== 'low').length > 8 && (
-            <div className="px-5 py-2.5 text-[10px] text-gray-400 border-t border-gray-50">
+            <div className="px-5 py-2.5 text-[10px] text-gray-400 border-t border-[#f1f5f9]">
               +{riskScores.filter(r => r.risk_level !== 'low').length - 8} daha · Tüm risk analizi tahsilat sekmesinde
             </div>
           )}

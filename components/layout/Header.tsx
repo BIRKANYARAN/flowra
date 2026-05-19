@@ -16,7 +16,7 @@ interface Props {
 
 export function Header({ companyName }: Props) {
   return (
-    <header className="h-11 bg-white border-b border-gray-100 flex items-center justify-between px-4 flex-shrink-0 sticky top-0 z-10">
+    <header className="h-11 bg-white border-b border-[#e2e8f0] flex items-center justify-between px-4 flex-shrink-0 sticky top-0 z-10">
 
       {/* LEFT — mobile brand */}
       <div className="flex items-center gap-2 md:hidden">

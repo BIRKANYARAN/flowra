@@ -64,10 +64,10 @@ export default function KdvPage() {
         </div>
         <div className="flex items-center gap-2">
           <input type="date" value={from} onChange={e => setFrom(e.target.value)}
-            className="border border-gray-200 rounded px-2 py-1 text-xs" />
+            className="border border-[#e2e8f0] rounded px-2 py-1 text-xs" />
           <span className="text-xs text-gray-400">—</span>
           <input type="date" value={to} onChange={e => setTo(e.target.value)}
-            className="border border-gray-200 rounded px-2 py-1 text-xs" />
+            className="border border-[#e2e8f0] rounded px-2 py-1 text-xs" />
           <PdfExportButton
             label="KDV PDF"
             opts={{
@@ -96,15 +96,15 @@ export default function KdvPage() {
         <p className="text-sm text-gray-500">{from} — {to}</p>
       </div>
 
-      {error && <div className="bg-red-50 border border-red-200 rounded px-4 py-3 text-sm text-red-700">{error}</div>}
+      {error && <div className="bg-neg-light border border-neg-light rounded px-4 py-3 text-sm text-neg-text">{error}</div>}
       {loading && <div className="bg-gray-100 rounded h-40 animate-pulse" />}
 
       {kdv && !loading && (
         <>
           {/* Main card */}
-          <div className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
+          <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
             {/* Hesaplanan KDV (output) */}
-            <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-100">
+            <div className="px-4 py-2.5 bg-[#f8fafc] border-b border-[#e2e8f0]">
               <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Hesaplanan KDV (Çıkış)</div>
             </div>
             <div className="px-4 py-3 space-y-1.5">
@@ -115,36 +115,36 @@ export default function KdvPage() {
             </div>
 
             {/* İndirilecek KDV (input) */}
-            <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-100 border-t border-gray-100">
+            <div className="px-4 py-2.5 bg-[#f8fafc] border-b border-[#e2e8f0] border-t border-[#e2e8f0]">
               <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">İndirilecek KDV (Giriş)</div>
             </div>
             <div className="px-4 py-3 space-y-1.5">
               <div className="flex items-center justify-between">
                 <span className="text-xs text-gray-600">Alış KDV (191)</span>
-                <span className="tabular-nums text-sm font-semibold text-emerald-700">−{fmt(kdv.purchase_vat_try)}</span>
+                <span className="tabular-nums text-sm font-semibold text-pos-text">−{fmt(kdv.purchase_vat_try)}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-xs text-gray-600">Gider KDV (191)</span>
-                <span className="tabular-nums text-sm font-semibold text-emerald-700">−{fmt(kdv.expense_vat_try)}</span>
+                <span className="tabular-nums text-sm font-semibold text-pos-text">−{fmt(kdv.expense_vat_try)}</span>
               </div>
-              <div className="flex items-center justify-between border-t border-gray-100 pt-1.5">
+              <div className="flex items-center justify-between border-t border-[#e2e8f0] pt-1.5">
                 <span className="text-xs font-semibold text-gray-700">Toplam İndirilecek KDV</span>
-                <span className="tabular-nums text-sm font-black text-emerald-700">
+                <span className="tabular-nums text-sm font-black text-pos-text">
                   {fmt(kdv.purchase_vat_try + kdv.expense_vat_try)}
                 </span>
               </div>
             </div>
 
             {/* Net */}
-            <div className={`px-4 py-4 border-t-2 ${kdv.vat_status === 'payable' ? 'bg-orange-50 border-orange-200' : 'bg-emerald-50 border-emerald-200'}`}>
+            <div className={`px-4 py-4 border-t-2 ${kdv.vat_status === 'payable' ? 'bg-orange-50 border-orange-200' : 'bg-pos-light border-pos-light'}`}>
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-xs font-black text-gray-900">Net KDV</div>
-                  <div className={`text-[10px] font-semibold mt-0.5 ${kdv.vat_status === 'payable' ? 'text-orange-600' : 'text-emerald-600'}`}>
+                  <div className={`text-[10px] font-semibold mt-0.5 ${kdv.vat_status === 'payable' ? 'text-orange-600' : 'text-pos-text'}`}>
                     {kdv.vat_status === 'payable' ? '⬆ Ödenecek (beyan döneminde)' : '⬇ Sonraki döneme devir'}
                   </div>
                 </div>
-                <div className={`text-2xl font-black tabular-nums ${kdv.vat_status === 'payable' ? 'text-orange-700' : 'text-emerald-700'}`}>
+                <div className={`text-2xl font-black tabular-nums ${kdv.vat_status === 'payable' ? 'text-orange-700' : 'text-pos-text'}`}>
                   {fmt(Math.abs(kdv.net_vat_try))}
                 </div>
               </div>
@@ -152,7 +152,7 @@ export default function KdvPage() {
           </div>
 
           {/* Hesaplama özeti */}
-          <div className="bg-blue-50 border border-blue-200 rounded px-4 py-3 text-xs text-blue-700 leading-relaxed">
+          <div className="bg-info-light border border-info-light rounded px-4 py-3 text-xs text-info-text leading-relaxed">
             <span className="font-bold">KDV Formülü:</span>{' '}
             Hesaplanan KDV ({fmt(kdv.sales_vat_try)}) − İndirilecek KDV ({fmt(kdv.purchase_vat_try + kdv.expense_vat_try)}) ={' '}
             <span className="font-black">{fmt(Math.abs(kdv.net_vat_try))} {kdv.vat_status === 'payable' ? 'Ödenecek' : 'Devir'}</span>

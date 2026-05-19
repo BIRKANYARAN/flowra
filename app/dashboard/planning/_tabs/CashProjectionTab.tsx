@@ -126,14 +126,14 @@ export async function CashProjectionTab({ companyId }: Props) {
 
       {/* ── HEADER METRICS ─────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <Metric label="Ort. Aylık Gelir"   value={`₺${fmtK(avgRevenue)}`}    sub="6 ay ortalama"                                            color={avgRevenue > 0 ? 'text-emerald-700' : 'text-gray-400'} />
+        <Metric label="Ort. Aylık Gelir"   value={`₺${fmtK(avgRevenue)}`}    sub="6 ay ortalama"                                            color={avgRevenue > 0 ? 'text-pos-text' : 'text-gray-400'} />
         <Metric label="Ort. Aylık Gider"   value={`₺${fmtK(avgExpenses)}`}   sub="6 ay ortalama"                                            color="text-gray-700" />
         <Metric label="Borç Servisi/Ay"    value={hasTranches ? `₺${fmtK(monthlyDebtService)}` : '—'} sub="faiz tahmini" color={hasTranches ? 'text-orange-600' : 'text-gray-400'} />
-        <Metric label="Ort. Net/Ay"        value={`₺${fmtK(avgNet)}`}         sub="gelir − gider − borç"                                    color={avgNet >= 0 ? 'text-emerald-700' : 'text-red-600'} />
+        <Metric label="Ort. Net/Ay"        value={`₺${fmtK(avgNet)}`}         sub="gelir − gider − borç"                                    color={avgNet >= 0 ? 'text-pos-text' : 'text-neg'} />
       </div>
 
       {!hasData && (
-        <div className="bg-amber-50 border border-amber-200 rounded px-4 py-3 text-sm text-amber-700">
+        <div className="bg-warn-light border border-warn-light rounded px-4 py-3 text-sm text-warn-text">
           <span className="font-semibold">Geçmiş veri bulunamadı.</span>{' '}
           Son 6 aya ait satış ve gider girişi yapıldığında projeksiyon otomatik hesaplanır.
         </div>
@@ -142,9 +142,9 @@ export async function CashProjectionTab({ companyId }: Props) {
       {/* ── 3-SCENARIO SUMMARY CARDS ───────────────────────────────────────── */}
       <div className="grid grid-cols-3 gap-3">
         {([
-          { key: 'pessimistic', label: 'Kötümser (−20%)', summary: forecast.summary.pessimistic, accent: 'border-red-200 bg-red-50',   text: 'text-red-700',     sub: 'text-red-500' },
-          { key: 'base',        label: 'Baz',              summary: forecast.summary.base,        accent: 'border-gray-200 bg-white',   text: 'text-gray-900',    sub: 'text-gray-400' },
-          { key: 'optimistic',  label: 'İyimser (+15%)',   summary: forecast.summary.optimistic,  accent: 'border-emerald-200 bg-emerald-50', text: 'text-emerald-800', sub: 'text-emerald-500' },
+          { key: 'pessimistic', label: 'Kötümser (−20%)', summary: forecast.summary.pessimistic, accent: 'border-neg-light bg-neg-light',   text: 'text-neg-text',     sub: 'text-neg' },
+          { key: 'base',        label: 'Baz',              summary: forecast.summary.base,        accent: 'border-[#e2e8f0] bg-white',   text: 'text-gray-900',    sub: 'text-gray-400' },
+          { key: 'optimistic',  label: 'İyimser (+15%)',   summary: forecast.summary.optimistic,  accent: 'border-pos-light bg-pos-light', text: 'text-pos-text', sub: 'text-pos' },
         ] as const).map(s => (
           <div key={s.key} className={`rounded border px-4 py-3.5 ${s.accent}`}>
             <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2">{s.label}</div>
@@ -155,7 +155,7 @@ export async function CashProjectionTab({ companyId }: Props) {
             </div>
             <div className={`text-[10px] mt-1 ${s.sub}`}>12 ay sonu nakit</div>
             {s.summary.runwayEndMonth && (
-              <div className="text-[10px] font-bold text-red-600 mt-1.5">
+              <div className="text-[10px] font-bold text-neg mt-1.5">
                 ⚠ {s.summary.runwayEndMonth} nakit tükeniyor
               </div>
             )}
@@ -169,8 +169,8 @@ export async function CashProjectionTab({ companyId }: Props) {
       </div>
 
       {/* ── BASE SCENARIO — MONTHLY CASH BARS ─────────────────────────────── */}
-      <div className="bg-white border border-gray-100 rounded overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-50">
+      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#f1f5f9]">
           <div>
             <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Baz Senaryo — Aylık Nakit Pozisyonu</span>
             <span className="ml-2 text-[9px] text-gray-400">({startYear} projeksiyonu)</span>
@@ -186,7 +186,7 @@ export async function CashProjectionTab({ companyId }: Props) {
             {forecast.base.map((m, i) => {
               const height    = Math.max(4, Math.round((Math.abs(m.cash) / maxCash) * 80))
               const isNeg     = m.cash < 0
-              const barClass  = isNeg ? 'bg-red-400' : (m.cash > avgRevenue * 3 ? 'bg-emerald-500' : 'bg-primary-400')
+              const barClass  = isNeg ? 'bg-neg' : (m.cash > avgRevenue * 3 ? 'bg-pos-light' : 'bg-primary-400')
               return (
                 <div key={i} className="flex-1 flex flex-col items-center gap-0.5">
                   <div
@@ -205,22 +205,22 @@ export async function CashProjectionTab({ companyId }: Props) {
         <div className="overflow-x-auto">
           <table className="w-full text-[10px]">
             <thead>
-              <tr className="bg-gray-50/60">
+              <tr className="bg-[#f8fafc]/60">
                 <th className="text-left px-5 py-2 text-[9px] font-black uppercase tracking-widest text-gray-400 whitespace-nowrap">Ay</th>
                 <th className="text-right px-3 py-2 text-[9px] font-black uppercase tracking-widest text-gray-400 whitespace-nowrap">Gelir</th>
                 <th className="text-right px-3 py-2 text-[9px] font-black uppercase tracking-widest text-gray-400 whitespace-nowrap">Net</th>
                 <th className="text-right px-5 py-2 text-[9px] font-black uppercase tracking-widest text-gray-400 whitespace-nowrap">Nakit</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-[#f1f5f9]">
               {forecast.base.map((m, i) => (
-                <tr key={i} className="hover:bg-gray-50/40">
+                <tr key={i} className="hover:bg-[#f8fafc]/40">
                   <td className="px-5 py-2 font-semibold text-gray-700 whitespace-nowrap">{m.label}</td>
                   <td className="px-3 py-2 text-right tabular-nums text-gray-600">₺{fmtK(m.revenue)}</td>
-                  <td className={`px-3 py-2 text-right tabular-nums font-semibold ${m.net >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
+                  <td className={`px-3 py-2 text-right tabular-nums font-semibold ${m.net >= 0 ? 'text-pos-text' : 'text-neg'}`}>
                     {m.net >= 0 ? '+' : '−'}₺{fmtK(Math.abs(m.net))}
                   </td>
-                  <td className={`px-5 py-2 text-right tabular-nums font-black ${m.cash >= 0 ? 'text-gray-900' : 'text-red-600'}`}>
+                  <td className={`px-5 py-2 text-right tabular-nums font-black ${m.cash >= 0 ? 'text-gray-900' : 'text-neg'}`}>
                     {m.cash < 0 ? '−' : ''}₺{fmtK(Math.abs(m.cash))}
                   </td>
                 </tr>
@@ -231,7 +231,7 @@ export async function CashProjectionTab({ companyId }: Props) {
       </div>
 
       {/* ── ASSUMPTIONS FOOTER ─────────────────────────────────────────────── */}
-      <div className="px-4 py-3 bg-gray-50 border border-gray-100 rounded text-[10px] text-gray-400 space-y-1">
+      <div className="px-4 py-3 bg-[#f8fafc] border border-[#e2e8f0] rounded text-[10px] text-gray-400 space-y-1">
         <div className="font-bold text-gray-500 mb-1">Projeksiyon Varsayımları</div>
         <div>• Son 6 ayın aylık ortalaması baz alınmıştır (gelir + gider)</div>
         {hasTranches && <div>• Aylık borç servisi ₺{fmtK(monthlyDebtService)} tahmin edilmiştir (aktif tranche faizleri)</div>}
@@ -263,7 +263,7 @@ export async function CashProjectionTab({ companyId }: Props) {
 
 function Metric({ label, value, sub, color }: { label: string; value: string; sub: string; color: string }) {
   return (
-    <div className="bg-white border border-gray-100 rounded px-4 py-3">
+    <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
       <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1">{label}</div>
       <div className={`text-lg font-black tabular-nums leading-none ${color}`}>{value}</div>
       <div className="text-[9px] text-gray-400 mt-1">{sub}</div>

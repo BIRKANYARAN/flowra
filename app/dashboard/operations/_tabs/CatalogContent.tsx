@@ -98,7 +98,7 @@ export async function CatalogContent({ companyId, userId }: Props) {
 
       {/* ── Catalog KPI strip ─────────────────────────────────────────────── */}
       {products.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
           {[
             {
               label: 'Aktif Ürün',
@@ -119,9 +119,9 @@ export async function CatalogContent({ companyId, userId }: Props) {
                 ? `${withMargin.length} ürün FIFO maliyetiyle`
                 : 'FIFO maliyet verisi yok',
               color: avgMargin === null ? 'text-gray-400'
-                : avgMargin >= 0.30 ? 'text-emerald-700'
-                : avgMargin >= 0.15 ? 'text-amber-700'
-                : 'text-red-600',
+                : avgMargin >= 0.30 ? 'text-pos-text'
+                : avgMargin >= 0.15 ? 'text-warn-text'
+                : 'text-neg',
             },
             {
               label: 'Düşük Stok Uyarısı',
@@ -129,11 +129,11 @@ export async function CatalogContent({ companyId, userId }: Props) {
               sub:   lowStockProducts.length > 0
                 ? `${lowStockProducts.map(p => p.name).slice(0, 2).join(', ')}${lowStockProducts.length > 2 ? '…' : ''}`
                 : 'Tüm ürünler eşik üstünde',
-              color: lowStockProducts.length > 0 ? 'text-amber-700' : 'text-emerald-700',
+              color: lowStockProducts.length > 0 ? 'text-warn-text' : 'text-pos-text',
             },
           ].map((card, i) => (
-            <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-gray-100' : ''}`}>
-              <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{card.label}</div>
+            <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e2e8f0]' : ''}`}>
+              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
               <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
               <div className="text-[10px] text-gray-400 mt-1 truncate" title={card.sub}>{card.sub}</div>
             </div>
@@ -143,19 +143,19 @@ export async function CatalogContent({ companyId, userId }: Props) {
 
       {/* ── Low margin alert ─────────────────────────────────────────────────── */}
       {lowMarginProducts.length > 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded px-4 py-3">
+        <div className="bg-warn-light border border-warn-light rounded px-4 py-3">
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="text-[10px] font-black uppercase tracking-widest text-amber-700">⚠ Düşük Marjlı Ürünler</span>
-            <span className="text-[9px] text-amber-600">({lowMarginProducts.length} ürün &lt;%15 brüt marj)</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-warn-text">⚠ Düşük Marjlı Ürünler</span>
+            <span className="text-[9px] text-warn-text">({lowMarginProducts.length} ürün &lt;%15 brüt marj)</span>
           </div>
           <div className="flex flex-wrap gap-2">
             {lowMarginProducts.map(p => (
-              <span key={p.name} className="text-[10px] bg-amber-100 text-amber-800 font-semibold px-2 py-0.5 rounded">
+              <span key={p.name} className="text-[10px] bg-warn-light text-warn-text font-semibold px-2 py-0.5 rounded">
                 {p.name} · %{(p.margin * 100).toFixed(1)}
               </span>
             ))}
           </div>
-          <div className="text-[10px] text-amber-600 mt-1.5">
+          <div className="text-[10px] text-warn-text mt-1.5">
             Liste fiyatını artırın veya tedarik maliyetini düşürün.
           </div>
         </div>

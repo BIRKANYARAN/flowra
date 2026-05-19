@@ -71,13 +71,13 @@ export function MobileBottomNav({ navBadges = {} }: Props) {
                   href={tab.href}
                   onClick={() => setOpen(false)}
                   className={`flex flex-col items-center gap-1 py-2 px-1 rounded transition-colors ${
-                    active ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-50'
+                    active ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-[#f8fafc]'
                   }`}
                 >
                   <span className="text-lg leading-none relative">
                     {tab.emoji}
                     {badge > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[8px] font-black rounded-full w-3.5 h-3.5 flex items-center justify-center leading-none">
+                      <span className="absolute -top-1 -right-1 bg-neg-light text-white text-[8px] font-black rounded-full w-3.5 h-3.5 flex items-center justify-center leading-none">
                         {badge > 9 ? '9+' : badge}
                       </span>
                     )}
@@ -93,7 +93,7 @@ export function MobileBottomNav({ navBadges = {} }: Props) {
       </div>
 
       {/* Primary bottom bar */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-white border-t border-gray-100 safe-area-pb">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-white border-t border-[#e2e8f0] safe-area-pb">
         <div className="flex items-stretch">
           {PRIMARY.map(tab => {
             const active = isNavItemActive(
@@ -112,7 +112,7 @@ export function MobileBottomNav({ navBadges = {} }: Props) {
                 <span className="text-lg leading-none relative">
                   {tab.emoji}
                   {badge > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[8px] font-black rounded-full w-3.5 h-3.5 flex items-center justify-center leading-none">
+                    <span className="absolute -top-1 -right-1 bg-neg-light text-white text-[8px] font-black rounded-full w-3.5 h-3.5 flex items-center justify-center leading-none">
                       {badge > 9 ? '9+' : badge}
                     </span>
                   )}

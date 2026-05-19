@@ -98,7 +98,7 @@ export async function ExpensesCommandBar({ companyId }: Props) {
   // ── Empty state ─────────────────────────────────────────────────────────────
   if (curTotal === 0 && prevTotal === 0) {
     return (
-      <div className="flex items-center gap-2 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded text-xs text-gray-400">
+      <div className="flex items-center gap-2 px-4 py-2.5 bg-[#f8fafc] border border-[#e2e8f0] rounded text-xs text-gray-400">
         Bu ay henüz gider kaydı yok.
       </div>
     )
@@ -111,7 +111,7 @@ export async function ExpensesCommandBar({ companyId }: Props) {
       <div className="flex items-center gap-2 flex-wrap">
 
         {/* Bu Ay */}
-        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-100 rounded">
+        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#e2e8f0] rounded">
           <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Bu Ay</span>
           <span className="text-sm font-black tabular-nums text-gray-900">{fmt(curTotal)}</span>
           <span className="text-[9px] text-gray-400">{dayOfMonth}. gün</span>
@@ -119,7 +119,7 @@ export async function ExpensesCommandBar({ companyId }: Props) {
 
         {/* Geçen Ay */}
         {prevTotal > 0 && (
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-100 rounded">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#e2e8f0] rounded">
             <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Geçen Ay</span>
             <span className="text-sm font-black tabular-nums text-gray-500">{fmt(prevTotal)}</span>
           </div>
@@ -129,14 +129,14 @@ export async function ExpensesCommandBar({ companyId }: Props) {
         {momDeltaPct !== null && (
           <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded border ${
             accelerating
-              ? 'bg-red-50 border-red-200'
+              ? 'bg-neg-light border-neg-light'
               : decelerating
-              ? 'bg-emerald-50 border-emerald-200'
-              : 'bg-white border-gray-200'
+              ? 'bg-pos-light border-pos-light'
+              : 'bg-white border-[#e2e8f0]'
           }`}>
             <span className="text-[9px] font-black uppercase tracking-widest text-gray-500">MoM</span>
             <span className={`text-sm font-black tabular-nums ${
-              accelerating ? 'text-red-600' : decelerating ? 'text-emerald-700' : 'text-gray-700'
+              accelerating ? 'text-neg' : decelerating ? 'text-pos-text' : 'text-gray-700'
             }`}>
               {momDelta >= 0 ? '+' : ''}{momDeltaPct.toFixed(0)}%
             </span>
@@ -148,7 +148,7 @@ export async function ExpensesCommandBar({ companyId }: Props) {
 
         {/* Günlük Hız */}
         {dailyRate > 0 && (
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-100 rounded">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#e2e8f0] rounded">
             <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Günlük</span>
             <span className="text-sm font-black tabular-nums text-orange-700">{fmt(dailyRate)}</span>
             <span className="text-[9px] text-gray-400">/gün</span>
@@ -166,8 +166,8 @@ export async function ExpensesCommandBar({ companyId }: Props) {
       {(projected > 0 || topCat) && (
         <div className={`flex items-center justify-between gap-4 px-4 py-2.5 rounded border text-xs ${
           accelerating
-            ? 'bg-red-50 border-red-200'
-            : 'bg-gray-50 border-gray-100'
+            ? 'bg-neg-light border-neg-light'
+            : 'bg-[#f8fafc] border-[#e2e8f0]'
         }`}>
 
           {/* Left: projection */}
@@ -207,13 +207,13 @@ export async function ExpensesCommandBar({ companyId }: Props) {
 
       {/* ── Accelerating burn alert ────────────────────────────────────────── */}
       {accelerating && (
-        <div className="flex items-center gap-2 px-4 py-2 bg-red-50 border border-red-200 rounded">
-          <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse shrink-0" />
-          <span className="text-[10px] font-bold text-red-700">
+        <div className="flex items-center gap-2 px-4 py-2 bg-neg-light border border-neg-light rounded">
+          <span className="w-1.5 h-1.5 bg-neg-light rounded-full animate-pulse shrink-0" />
+          <span className="text-[10px] font-bold text-neg-text">
             Gider hızlanıyor — geçen aya kıyasla %{momDeltaPct!.toFixed(0)} artış.
           </span>
           <Link href="/dashboard/finance?tab=cashflow"
-            className="ml-auto text-[10px] font-semibold text-red-600 hover:text-red-700 shrink-0">
+            className="ml-auto text-[10px] font-semibold text-neg hover:text-neg-text shrink-0">
             Nakit Akışına Bak →
           </Link>
         </div>

@@ -70,17 +70,17 @@ export interface RiskTabProps {
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 const GRADE_COLORS: Record<RiskGrade, string> = {
-  A: 'bg-emerald-50 border-emerald-200 text-emerald-800',
-  B: 'bg-blue-50 border-blue-200 text-blue-800',
-  C: 'bg-amber-50 border-amber-200 text-amber-800',
+  A: 'bg-pos-light border-pos-light text-pos-text',
+  B: 'bg-info-light border-info-light text-info-text',
+  C: 'bg-warn-light border-warn-light text-warn-text',
   D: 'bg-orange-50 border-orange-200 text-orange-800',
-  F: 'bg-red-50 border-red-200 text-red-800',
+  F: 'bg-neg-light border-neg-light text-neg-text',
 }
 const GRADE_DOT: Record<RiskGrade, string> = {
-  A: 'bg-emerald-500', B: 'bg-blue-500', C: 'bg-amber-500', D: 'bg-orange-500', F: 'bg-red-500',
+  A: 'bg-pos-light', B: 'bg-info-light0', C: 'bg-warn-light', D: 'bg-orange-500', F: 'bg-neg-light',
 }
 const GRADE_BAR: Record<RiskGrade, string> = {
-  A: 'bg-emerald-400', B: 'bg-blue-400', C: 'bg-amber-400', D: 'bg-orange-400', F: 'bg-red-400',
+  A: 'bg-pos', B: 'bg-info', C: 'bg-warn', D: 'bg-orange-400', F: 'bg-neg',
 }
 
 const FMT = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 })
@@ -144,7 +144,7 @@ export function RiskTab({ loading }: RiskTabProps) {
 
   if (fetchErr) {
     return (
-      <div className="bg-red-50 border border-red-100 rounded px-4 py-3 text-sm text-red-600">
+      <div className="bg-neg-light border border-neg-light rounded px-4 py-3 text-sm text-neg">
         {fetchErr}
       </div>
     )
@@ -155,7 +155,7 @@ export function RiskTab({ loading }: RiskTabProps) {
 
   if (!rs || rs.partner_profiles.length === 0) {
     return (
-      <div className="bg-gray-50 border border-gray-200 rounded px-4 py-8 text-center text-sm text-gray-400">
+      <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-8 text-center text-sm text-gray-400">
         Ortak borç kaydı bulunamadı — risk skoru hesaplanamadı.
       </div>
     )
@@ -197,13 +197,13 @@ export function RiskTab({ loading }: RiskTabProps) {
 
       {/* ── Compliance Warnings ─────────────────────────────────────────────── */}
       {cw.length > 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded px-4 py-3">
-          <div className="text-[10px] font-black uppercase tracking-widest text-amber-700 mb-2">
+        <div className="bg-warn-light border border-warn-light rounded px-4 py-3">
+          <div className="text-[10px] font-black uppercase tracking-widest text-warn-text mb-2">
             ⚠ Yasal Uyum Uyarıları
           </div>
           <div className="space-y-1.5">
             {cw.map((w, i) => (
-              <div key={i} className="flex items-start gap-2 text-[11px] text-amber-800">
+              <div key={i} className="flex items-start gap-2 text-[11px] text-warn-text">
                 <span className="shrink-0 mt-px">•</span>
                 <span>
                   {w.partner && <span className="font-bold">{w.partner}: </span>}
@@ -220,10 +220,10 @@ export function RiskTab({ loading }: RiskTabProps) {
 
       {/* ── Per-Partner Risk Profiles ────────────────────────────────────────── */}
       {rs.partner_profiles.map(p => (
-        <div key={p.partner_id} className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
+        <div key={p.partner_id} className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
 
           {/* Partner header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-[#e2e8f0]">
             <div className="flex items-center gap-2.5">
               <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${GRADE_DOT[p.composite_grade]}`} />
               <div>
@@ -265,7 +265,7 @@ export function RiskTab({ loading }: RiskTabProps) {
 
           {/* Recommended action */}
           {p.recommended_action && (
-            <div className="px-4 py-2 bg-gray-50 border-t border-gray-100 flex items-center gap-2">
+            <div className="px-4 py-2 bg-[#f8fafc] border-t border-[#e2e8f0] flex items-center gap-2">
               <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 shrink-0">Öneri</span>
               <span className="text-[11px] text-gray-600">{p.recommended_action}</span>
             </div>

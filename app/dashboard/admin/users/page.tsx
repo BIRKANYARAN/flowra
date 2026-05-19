@@ -17,8 +17,8 @@ import Link from 'next/link'
 import type { CompanyMember, MemberRole } from '@/types'
 
 // ── Style tokens ──────────────────────────────────────────────────────────────
-const IL  = 'w-full border border-gray-200 rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white transition-colors'
-const LAB = 'block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5'
+const IL  = 'w-full border border-[#e2e8f0] rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white transition-colors'
+const LAB = 'block text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5'
 const SEL = `${IL} cursor-pointer`
 
 // ── Role labels ───────────────────────────────────────────────────────────────
@@ -30,7 +30,7 @@ const ROLE_LABELS: Record<MemberRole, string> = {
 
 const ROLE_COLORS: Record<MemberRole, string> = {
   admin:   'bg-primary-100 text-primary-700',
-  manager: 'bg-blue-100 text-blue-700',
+  manager: 'bg-info-light text-info-text',
   viewer:  'bg-gray-100 text-gray-600',
 }
 
@@ -159,10 +159,10 @@ export default function AdminUsersPage() {
   if (forbidden) {
     return (
       <div className="max-w-lg">
-        <div className="bg-red-50 border border-red-100 rounded p-6 text-center">
+        <div className="bg-neg-light border border-neg-light rounded p-6 text-center">
           <div className="text-3xl mb-3">🔒</div>
-          <h2 className="font-bold text-red-700 mb-1">Yetkisiz Erişim</h2>
-          <p className="text-sm text-red-600">Bu sayfaya yalnızca yöneticiler erişebilir.</p>
+          <h2 className="font-bold text-neg-text mb-1">Yetkisiz Erişim</h2>
+          <p className="text-sm text-neg">Bu sayfaya yalnızca yöneticiler erişebilir.</p>
         </div>
       </div>
     )
@@ -194,31 +194,31 @@ export default function AdminUsersPage() {
 
       {/* Global error */}
       {error && (
-        <div className="bg-red-50 border border-red-100 rounded px-4 py-3 text-sm text-red-600 mb-5">
+        <div className="bg-neg-light border border-neg-light rounded px-4 py-3 text-sm text-neg mb-5">
           {error}
         </div>
       )}
 
       {/* Role-save error */}
       {roleError && (
-        <div className="bg-red-50 border border-red-100 rounded px-4 py-3 text-sm text-red-600 mb-5 flex items-center justify-between">
+        <div className="bg-neg-light border border-neg-light rounded px-4 py-3 text-sm text-neg mb-5 flex items-center justify-between">
           <span>{roleError}</span>
-          <button onClick={() => setRoleError('')} className="ml-3 text-red-400 hover:text-red-600 font-bold text-base leading-none">×</button>
+          <button onClick={() => setRoleError('')} className="ml-3 text-neg hover:text-neg font-bold text-base leading-none">×</button>
         </div>
       )}
 
       {/* Remove-member error */}
       {removeError && (
-        <div className="bg-red-50 border border-red-100 rounded px-4 py-3 text-sm text-red-600 mb-5 flex items-center justify-between">
+        <div className="bg-neg-light border border-neg-light rounded px-4 py-3 text-sm text-neg mb-5 flex items-center justify-between">
           <span>{removeError}</span>
-          <button onClick={() => setRemoveError('')} className="ml-3 text-red-400 hover:text-red-600 font-bold text-base leading-none">×</button>
+          <button onClick={() => setRemoveError('')} className="ml-3 text-neg hover:text-neg font-bold text-base leading-none">×</button>
         </div>
       )}
 
       {/* Invite form */}
       {showInvite && (
-        <div className="bg-white border border-gray-100 rounded p-6 shadow-sm mb-5 space-y-4">
-          <h3 className="font-bold text-sm border-b border-gray-100 pb-3">Kullanıcı Davet Et</h3>
+        <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm mb-5 space-y-4">
+          <h3 className="font-bold text-sm border-b border-[#e2e8f0] pb-3">Kullanıcı Davet Et</h3>
           <p className="text-xs text-gray-500">
             Davet edilecek kullanıcının Flowra hesabı olması gerekir.
             Henüz hesabı yoksa önce kayıt olmaları gerekir.
@@ -249,14 +249,14 @@ export default function AdminUsersPage() {
             </div>
           </div>
 
-          <div className="bg-gray-50 rounded p-3 text-xs text-gray-500 space-y-1">
+          <div className="bg-[#f8fafc] rounded p-3 text-xs text-gray-500 space-y-1">
             <div><span className="font-semibold">İzleyici:</span> Tüm kayıtları okuyabilir, oluşturamaz veya düzenleyemez.</div>
             <div><span className="font-semibold">Satış Temsilcisi:</span> Kendi oluşturduğu müşterileri ve satışları yönetir.</div>
             <div><span className="font-semibold">Yönetici:</span> Tüm kayıtlara tam erişim ve ekip yönetimi.</div>
           </div>
 
-          {invError   && <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded px-3 py-2">{invError}</div>}
-          {invSuccess && <div className="text-sm text-green-700 bg-green-50 border border-green-100 rounded px-3 py-2">{invSuccess}</div>}
+          {invError   && <div className="text-sm text-neg bg-neg-light border border-neg-light rounded px-3 py-2">{invError}</div>}
+          {invSuccess && <div className="text-sm text-pos-text bg-pos-light border border-green-100 rounded px-3 py-2">{invSuccess}</div>}
 
           <div className="flex gap-2">
             <button
@@ -268,7 +268,7 @@ export default function AdminUsersPage() {
             </button>
             <button
               onClick={() => { setShowInvite(false); setInvEmail(''); setInvError(''); setInvSuccess('') }}
-              className="border border-gray-200 px-5 py-2.5 rounded text-sm font-medium hover:bg-gray-50/60 transition-colors"
+              className="border border-[#e2e8f0] px-5 py-2.5 rounded text-sm font-medium hover:bg-[#f8fafc]/60 transition-colors"
             >
               İptal
             </button>
@@ -277,16 +277,16 @@ export default function AdminUsersPage() {
       )}
 
       {/* Active members */}
-      <div className="bg-white border border-gray-100 rounded overflow-hidden mb-5">
-        <div className="px-5 py-3 border-b border-gray-100">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Aktif Üyeler</span>
+      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden mb-5">
+        <div className="px-5 py-3 border-b border-[#e2e8f0]">
+          <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Aktif Üyeler</span>
         </div>
         {activeMembers.length === 0 ? (
           <div className="text-center py-10 text-gray-400 text-sm">Aktif üye bulunamadı.</div>
         ) : (
-          <div className="divide-y divide-gray-50">
+          <div className="divide-y divide-[#f1f5f9]">
             {activeMembers.map(m => (
-              <div key={m.id} className="flex items-center justify-between px-5 py-4 hover:bg-gray-50/60 transition-colors">
+              <div key={m.id} className="flex items-center justify-between px-5 py-4 hover:bg-[#f8fafc]/60 transition-colors">
                 {/* User info */}
                 <div className="min-w-0 flex-1 mr-4">
                   <div className="flex items-center gap-2.5">
@@ -309,7 +309,7 @@ export default function AdminUsersPage() {
                   {editingId === m.id ? (
                     <>
                       <select
-                        className="border border-gray-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-primary-400"
+                        className="border border-[#e2e8f0] rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-primary-400"
                         value={editingRole}
                         onChange={(e: ChangeEvent<HTMLSelectElement>) => setEditingRole(e.target.value as MemberRole)}
                         autoFocus
@@ -345,7 +345,7 @@ export default function AdminUsersPage() {
                       </button>
                       <button
                         onClick={() => removeMember(m)}
-                        className="text-xs text-gray-400 hover:text-red-500 px-2 py-1 rounded hover:bg-red-50 transition-colors"
+                        className="text-xs text-gray-400 hover:text-neg px-2 py-1 rounded hover:bg-neg-light transition-colors"
                       >
                         Çıkar
                       </button>
@@ -360,23 +360,23 @@ export default function AdminUsersPage() {
 
       {/* Pending invitations */}
       {pendingMembers.length > 0 && (
-        <div className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
-          <div className="px-5 py-3 border-b border-gray-100">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Bekleyen Davetler</span>
+        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+          <div className="px-5 py-3 border-b border-[#e2e8f0]">
+            <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Bekleyen Davetler</span>
           </div>
-          <div className="divide-y divide-gray-50">
+          <div className="divide-y divide-[#f1f5f9]">
             {pendingMembers.map(m => (
-              <div key={m.id} className="flex items-center justify-between px-5 py-4 hover:bg-gray-50/60 transition-colors">
+              <div key={m.id} className="flex items-center justify-between px-5 py-4 hover:bg-[#f8fafc]/60 transition-colors">
                 <div className="min-w-0 flex-1 mr-4">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded bg-amber-100 flex items-center justify-center flex-shrink-0">
-                      <span className="text-amber-600 font-bold text-xs">?</span>
+                    <div className="w-8 h-8 rounded bg-warn-light flex items-center justify-center flex-shrink-0">
+                      <span className="text-warn-text font-bold text-xs">?</span>
                     </div>
                     <div className="min-w-0">
                       <div className="text-sm font-semibold truncate text-gray-500">
                         {m.email || m.user_id}
                       </div>
-                      <div className="text-xs text-amber-600">Davet bekleniyor</div>
+                      <div className="text-xs text-warn-text">Davet bekleniyor</div>
                     </div>
                   </div>
                 </div>
@@ -386,7 +386,7 @@ export default function AdminUsersPage() {
                   </span>
                   <button
                     onClick={() => removeMember(m)}
-                    className="text-xs text-gray-400 hover:text-red-500 px-2 py-1 rounded hover:bg-red-50 transition-colors"
+                    className="text-xs text-gray-400 hover:text-neg px-2 py-1 rounded hover:bg-neg-light transition-colors"
                   >
                     İptal
                   </button>

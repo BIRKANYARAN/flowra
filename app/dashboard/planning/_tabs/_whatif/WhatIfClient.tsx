@@ -391,7 +391,7 @@ export function WhatIfClient({ period, baseline }: Props) {
           </div>
         </div>
         {!hasBaseline && (
-          <span className="text-[9px] bg-amber-100 text-amber-700 px-2 py-1 rounded font-semibold flex-shrink-0">
+          <span className="text-[9px] bg-warn-light text-warn-text px-2 py-1 rounded font-semibold flex-shrink-0">
             Kayıt yok — sıfır baz
           </span>
         )}
@@ -472,7 +472,7 @@ export function WhatIfClient({ period, baseline }: Props) {
             {(revChange !== 0 || expChange !== 0 || cogsChange !== 0 || collDelay !== 0 || debtChange !== 0 || taxRateOverride !== 25) && (
               <button
                 onClick={() => { setRevChange(0); setExpChange(0); setCogsChange(0); setCollDelay(0); setDebtChange(0); setTaxRateOverride(25) }}
-                className="text-xs font-semibold text-gray-500 hover:text-gray-700 border border-gray-200 px-3 py-1.5 rounded hover:border-gray-300 transition-colors"
+                className="text-xs font-semibold text-gray-500 hover:text-gray-700 border border-[#e2e8f0] px-3 py-1.5 rounded hover:border-[#e2e8f0] transition-colors"
               >
                 ↺ Bazı Sıfırla
               </button>
@@ -524,7 +524,7 @@ export function WhatIfClient({ period, baseline }: Props) {
               <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
                   Kayıtlı Senaryolar
-                  {scenariosLoading && <span className="inline-block w-3 h-3 border border-gray-300 border-t-gray-500 rounded-full animate-spin" />}
+                  {scenariosLoading && <span className="inline-block w-3 h-3 border border-[#e2e8f0] border-t-gray-500 rounded-full animate-spin" />}
                   {!scenariosLoading && saved.length > 0 && <span className="font-normal text-gray-300">({saved.length})</span>}
                 </div>
                 {!scenariosLoading && saved.length >= 2 && (
@@ -533,7 +533,7 @@ export function WhatIfClient({ period, baseline }: Props) {
                     className={`text-[9px] font-bold px-2 py-0.5 rounded border transition-colors ${
                       compareMode
                         ? 'bg-primary-600 text-white border-primary-600'
-                        : 'border-gray-200 text-gray-500 hover:border-primary-300 hover:text-primary-600'
+                        : 'border-[#e2e8f0] text-gray-500 hover:border-primary-300 hover:text-primary-600'
                     }`}
                   >
                     {compareMode ? '✕ Kapat' : '⇄ Karşılaştır'}
@@ -548,7 +548,7 @@ export function WhatIfClient({ period, baseline }: Props) {
               )}
 
               {saved.map(s => {
-                const netColor    = s.summary.netIncome >= 0 ? 'text-emerald-700' : 'text-red-600'
+                const netColor    = s.summary.netIncome >= 0 ? 'text-pos-text' : 'text-neg'
                 const isSelected  = compareSelected.has(s.id)
                 const canSelect   = compareSelected.size < 5 || isSelected
                 const isBaseline  = s.is_baseline === true
@@ -558,7 +558,7 @@ export function WhatIfClient({ period, baseline }: Props) {
                       ? 'border-violet-200 bg-violet-50/30'
                       : compareMode && isSelected
                         ? 'border-primary-300 bg-primary-50/40'
-                        : 'border-gray-100'
+                        : 'border-[#e2e8f0]'
                   }`}>
                     {compareMode && (
                       <button
@@ -567,8 +567,8 @@ export function WhatIfClient({ period, baseline }: Props) {
                           isSelected
                             ? 'bg-primary-600 border-primary-600 text-white'
                             : canSelect
-                              ? 'border-gray-300 hover:border-primary-400'
-                              : 'border-gray-200 opacity-40 cursor-not-allowed'
+                              ? 'border-[#e2e8f0] hover:border-primary-400'
+                              : 'border-[#e2e8f0] opacity-40 cursor-not-allowed'
                         }`}
                       >
                         {isSelected && <svg viewBox="0 0 12 12" fill="none" className="w-4 h-4 -m-px"><path d="M2 6l3 3 5-5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
@@ -587,7 +587,7 @@ export function WhatIfClient({ period, baseline }: Props) {
                         <span className={netColor}>Net: {s.summary.netIncome >= 0 ? '+' : ''}₺{fmt(s.summary.netIncome)}</span>
                         <span>Marj: {pct(s.summary.grossMarginPct)}</span>
                         {s.summary.runwayMonths !== null && (
-                          <span className={s.summary.runwayMonths < 3 ? 'text-red-500' : 'text-gray-400'}>
+                          <span className={s.summary.runwayMonths < 3 ? 'text-neg' : 'text-gray-400'}>
                             Runway: {s.summary.runwayMonths.toFixed(1)}ay
                           </span>
                         )}
@@ -614,7 +614,7 @@ export function WhatIfClient({ period, baseline }: Props) {
                         <button
                           onClick={() => deleteSaved(s.id)}
                           title="Sil"
-                          className="text-[9px] text-gray-400 hover:text-red-500 border border-gray-100 rounded px-1.5 py-1 hover:bg-red-50 transition-colors"
+                          className="text-[9px] text-gray-400 hover:text-neg border border-[#e2e8f0] rounded px-1.5 py-1 hover:bg-neg-light transition-colors"
                         >
                           ✕
                         </button>
@@ -661,9 +661,9 @@ export function WhatIfClient({ period, baseline }: Props) {
             const hasRunway = computed.some(r => r.runwayMonths !== null)
 
             return (
-              <div className="bg-white border border-gray-100 rounded overflow-hidden">
+              <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
                 {/* Header row */}
-                <div className="px-3 py-2 bg-gray-50/60 border-b border-gray-100 grid gap-1" style={{ gridTemplateColumns: `5rem repeat(${cols.length}, 1fr)` }}>
+                <div className="px-3 py-2 bg-[#f8fafc]/60 border-b border-[#e2e8f0] grid gap-1" style={{ gridTemplateColumns: `5rem repeat(${cols.length}, 1fr)` }}>
                   <div />
                   {cols.map((s, i) => (
                     <div key={s.id} className="text-center">
@@ -673,20 +673,20 @@ export function WhatIfClient({ period, baseline }: Props) {
                   ))}
                 </div>
                 {/* Metric rows */}
-                <div className="divide-y divide-gray-50">
+                <div className="divide-y divide-[#f1f5f9]">
                   {rowDef.map(row => {
                     const vals = computed.map(row.get)
                     const best = bestIdx(vals, row.higherIsBetter)
                     return (
-                      <div key={row.label} className={`grid gap-1 px-3 py-2 items-center ${row.divider ? 'border-t border-gray-100 bg-gray-50/30' : ''}`} style={{ gridTemplateColumns: `5rem repeat(${cols.length}, 1fr)` }}>
+                      <div key={row.label} className={`grid gap-1 px-3 py-2 items-center ${row.divider ? 'border-t border-[#e2e8f0] bg-[#f8fafc]/30' : ''}`} style={{ gridTemplateColumns: `5rem repeat(${cols.length}, 1fr)` }}>
                         <div className="text-[9px] font-semibold text-gray-500">{row.label}</div>
                         {vals.map((v, i) => (
                           <div key={i} className={`text-center text-[10px] font-black tabular-nums rounded py-0.5 ${
                             i === best
                               ? row.higherIsBetter
-                                ? 'text-emerald-700 bg-emerald-50'
-                                : 'text-emerald-700 bg-emerald-50'
-                              : v < 0 ? 'text-red-600' : 'text-gray-700'
+                                ? 'text-pos-text bg-pos-light'
+                                : 'text-pos-text bg-pos-light'
+                              : v < 0 ? 'text-neg' : 'text-gray-700'
                           }`}>
                             {row.fmt(v)}
                           </div>
@@ -698,7 +698,7 @@ export function WhatIfClient({ period, baseline }: Props) {
                     <div className="grid gap-1 px-3 py-2 items-center" style={{ gridTemplateColumns: `5rem repeat(${cols.length}, 1fr)` }}>
                       <div className="text-[9px] font-semibold text-gray-500">Runway</div>
                       {computed.map((r, i) => (
-                        <div key={i} className={`text-center text-[10px] font-black tabular-nums ${r.runwayMonths === null ? 'text-emerald-600' : r.runwayMonths < 3 ? 'text-red-600' : 'text-amber-600'}`}>
+                        <div key={i} className={`text-center text-[10px] font-black tabular-nums ${r.runwayMonths === null ? 'text-pos-text' : r.runwayMonths < 3 ? 'text-neg' : 'text-warn-text'}`}>
                           {r.runwayMonths === null ? '∞' : `${r.runwayMonths.toFixed(1)}ay`}
                         </div>
                       ))}
@@ -706,7 +706,7 @@ export function WhatIfClient({ period, baseline }: Props) {
                   )}
                 </div>
                 {/* Load best scenario CTA */}
-                <div className="px-3 py-2 border-t border-gray-100 bg-gray-50/40 flex items-center justify-between">
+                <div className="px-3 py-2 border-t border-[#e2e8f0] bg-[#f8fafc]/40 flex items-center justify-between">
                   <span className="text-[9px] text-gray-400">En iyi Net Kâr: <strong className="text-gray-700">{cols[bestIdx(computed.map(r => r.netIncome), true)]?.name}</strong></span>
                   <button
                     onClick={() => restoreScenario(cols[bestIdx(computed.map(r => r.netIncome), true)]!)}
@@ -723,11 +723,11 @@ export function WhatIfClient({ period, baseline }: Props) {
           {!(compareMode && compareSelected.size >= 2) && (
           <>
           {/* P&L Summary */}
-          <div className="bg-white border border-gray-100 rounded overflow-hidden">
-            <div className="px-4 py-2.5 bg-gray-50/60 border-b border-gray-100">
+          <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+            <div className="px-4 py-2.5 bg-[#f8fafc]/60 border-b border-[#e2e8f0]">
               <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Kar/Zarar Özeti</span>
             </div>
-            <div className="divide-y divide-gray-50">
+            <div className="divide-y divide-[#f1f5f9]">
               <PnlRow label="Gelir"       value={result.revenue}      base={baseline.revenue}   indent={0} positive />
               <PnlRow label="COGS"        value={-result.cogs}        base={-baseline.cogs}     indent={1} />
               <PnlRow label="Brüt Kâr"   value={result.grossProfit}  base={baseGross}           indent={0} positive bold />
@@ -741,15 +741,15 @@ export function WhatIfClient({ period, baseline }: Props) {
 
           {/* Key metrics row */}
           <div className="grid grid-cols-2 gap-2">
-            <div className="bg-white border border-gray-100 rounded px-3 py-2.5">
+            <div className="bg-white border border-[#e2e8f0] rounded px-3 py-2.5">
               <div className="text-[9px] font-black uppercase tracking-widest text-gray-400">Brüt Marj</div>
-              <div className={`text-lg font-black tabular-nums ${result.grossMarginPct >= 0.25 ? 'text-emerald-700' : result.grossMarginPct > 0 ? 'text-amber-700' : 'text-red-600'}`}>
+              <div className={`text-lg font-black tabular-nums ${result.grossMarginPct >= 0.25 ? 'text-pos-text' : result.grossMarginPct > 0 ? 'text-warn-text' : 'text-neg'}`}>
                 {pct(result.grossMarginPct)}
               </div>
             </div>
-            <div className="bg-white border border-gray-100 rounded px-3 py-2.5">
+            <div className="bg-white border border-[#e2e8f0] rounded px-3 py-2.5">
               <div className="text-[9px] font-black uppercase tracking-widest text-gray-400">KDV Net</div>
-              <div className={`text-lg font-black tabular-nums ${result.vatNet > 0 ? 'text-orange-600' : 'text-emerald-700'}`}>
+              <div className={`text-lg font-black tabular-nums ${result.vatNet > 0 ? 'text-orange-600' : 'text-pos-text'}`}>
                 {result.vatNet > 0 ? '+' : ''}₺{fmt(result.vatNet)}
               </div>
               <div className="text-[9px] text-gray-400 mt-0.5">{result.vatNet > 0 ? 'ödenecek' : 'devreden'}</div>
@@ -757,8 +757,8 @@ export function WhatIfClient({ period, baseline }: Props) {
           </div>
 
           {/* Cash + distribution */}
-          <div className="bg-white border border-gray-100 rounded overflow-hidden">
-            <div className="px-4 py-2.5 bg-gray-50/60 border-b border-gray-100">
+          <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+            <div className="px-4 py-2.5 bg-[#f8fafc]/60 border-b border-[#e2e8f0]">
               <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Dağıtım & Nakit</span>
             </div>
             <div className="px-4 py-3 space-y-2">
@@ -769,15 +769,15 @@ export function WhatIfClient({ period, baseline }: Props) {
               {result.runwayMonths !== null && (
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] text-gray-500">Tahmini runway</span>
-                  <span className={`text-[11px] font-black tabular-nums ${result.runwayMonths < 3 ? 'text-red-600' : 'text-amber-600'}`}>
+                  <span className={`text-[11px] font-black tabular-nums ${result.runwayMonths < 3 ? 'text-neg' : 'text-warn-text'}`}>
                     {result.runwayMonths.toFixed(1)} ay
                   </span>
                 </div>
               )}
-              <div className="border-t border-gray-50 pt-2">
+              <div className="border-t border-[#f1f5f9] pt-2">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] text-gray-500">Dağıtılabilir (brüt)</span>
-                  <span className={`text-[11px] font-black tabular-nums ${result.distributable > 0 ? 'text-emerald-700' : 'text-gray-400'}`}>
+                  <span className={`text-[11px] font-black tabular-nums ${result.distributable > 0 ? 'text-pos-text' : 'text-gray-400'}`}>
                     {result.distributable > 0 ? `₺${fmtFull(result.distributable)}` : '—'}
                   </span>
                 </div>
@@ -789,7 +789,7 @@ export function WhatIfClient({ period, baseline }: Props) {
                 </div>
                 <div className="flex items-center justify-between mt-1">
                   <span className="text-[10px] font-semibold text-gray-700">Net Dağıtım</span>
-                  <span className={`text-[12px] font-black tabular-nums ${result.netDistrib > 0 ? 'text-emerald-700' : 'text-gray-400'}`}>
+                  <span className={`text-[12px] font-black tabular-nums ${result.netDistrib > 0 ? 'text-pos-text' : 'text-gray-400'}`}>
                     {result.netDistrib > 0 ? `₺${fmtFull(result.netDistrib)}` : '—'}
                   </span>
                 </div>
@@ -799,7 +799,7 @@ export function WhatIfClient({ period, baseline }: Props) {
 
           {/* Stress indicator */}
           {result.netIncome < 0 && (
-            <div className="bg-red-50 border border-red-200 rounded px-4 py-3 text-xs text-red-700">
+            <div className="bg-neg-light border border-neg-light rounded px-4 py-3 text-xs text-neg-text">
               <span className="font-bold">⚠ Zarar senaryosu.</span>{' '}
               Bu kombinasyonda aylık <strong>₺{fmt(Math.abs(result.netIncome))}</strong> zarar edilir.
               {result.runwayMonths !== null && result.runwayMonths < 6 &&
@@ -809,26 +809,26 @@ export function WhatIfClient({ period, baseline }: Props) {
 
           {/* Cascade story — cause → chain reaction narrative (only in normal mode) */}
           {cascadeStory && (
-            <div className="bg-gray-50 border border-gray-200 rounded overflow-hidden">
-              <div className="px-4 py-2.5 border-b border-gray-100">
+            <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded overflow-hidden">
+              <div className="px-4 py-2.5 border-b border-[#e2e8f0]">
                 <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Bu Senaryo Zinciri</span>
               </div>
-              <div className="divide-y divide-gray-100">
+              <div className="divide-y divide-[#e2e8f0]">
                 {cascadeStory.map(impact => (
                   <div key={impact.label} className={`px-4 py-2.5 flex items-center justify-between gap-3 ${
-                    impact.severity === 'critical' ? 'bg-red-50/40' :
-                    impact.severity === 'warn'     ? 'bg-amber-50/30' : ''
+                    impact.severity === 'critical' ? 'bg-neg-light/40' :
+                    impact.severity === 'warn'     ? 'bg-warn-light/30' : ''
                   }`}>
                     <div className="flex items-center gap-1.5 flex-shrink-0">
                       <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-                        impact.severity === 'critical' ? 'bg-red-400' :
-                        impact.severity === 'warn'     ? 'bg-amber-400' : 'bg-emerald-400'
+                        impact.severity === 'critical' ? 'bg-neg' :
+                        impact.severity === 'warn'     ? 'bg-warn' : 'bg-pos'
                       }`} />
                       <span className="text-[10px] font-bold text-gray-600">{impact.label}</span>
                     </div>
                     <span className={`text-[10px] font-semibold tabular-nums text-right leading-snug ${
-                      impact.severity === 'critical' ? 'text-red-700' :
-                      impact.severity === 'warn'     ? 'text-amber-700' : 'text-emerald-700'
+                      impact.severity === 'critical' ? 'text-neg-text' :
+                      impact.severity === 'warn'     ? 'text-warn-text' : 'text-pos-text'
                     }`}>{impact.delta}</span>
                   </div>
                 ))}
@@ -860,7 +860,7 @@ function SliderRow({
 }) {
   const isChanged = value !== 0
   const isGood    = positiveGood ? value > 0 : value < 0
-  const valueColor = !isChanged ? 'text-gray-500' : isGood ? 'text-emerald-700' : 'text-red-600'
+  const valueColor = !isChanged ? 'text-gray-500' : isGood ? 'text-pos-text' : 'text-neg'
 
   return (
     <div className="space-y-1.5">
@@ -893,12 +893,12 @@ function PnlRow({
   const changed    = Math.abs(value - base) > 0.5
   const improved   = positive ? value > base : value > base
   const deltaColor = changed
-    ? (positive ? (value > base ? 'text-emerald-600' : 'text-red-500')
-                : (value < base ? 'text-emerald-600' : 'text-red-500'))
+    ? (positive ? (value > base ? 'text-pos-text' : 'text-neg')
+                : (value < base ? 'text-pos-text' : 'text-neg'))
     : 'text-gray-300'
 
   return (
-    <div className={`flex items-center justify-between px-4 py-2 ${accent ? 'bg-gray-50/60' : ''}`}
+    <div className={`flex items-center justify-between px-4 py-2 ${accent ? 'bg-[#f8fafc]/60' : ''}`}
          style={{ paddingLeft: `${16 + indent * 12}px` }}>
       <span className={`text-[10px] ${bold ? 'font-black text-gray-800' : 'text-gray-500'}`}>{label}</span>
       <div className="flex items-center gap-2">
@@ -910,8 +910,8 @@ function PnlRow({
           </span>
         )}
         <span className={`text-[11px] tabular-nums ${bold ? 'font-black' : 'font-semibold'} ${
-          accent ? (value >= 0 ? 'text-emerald-700' : 'text-red-600')
-                 : (value >= 0 ? 'text-gray-800'    : 'text-red-500')
+          accent ? (value >= 0 ? 'text-pos-text' : 'text-neg')
+                 : (value >= 0 ? 'text-gray-800'    : 'text-neg')
         }`}>
           {value >= 0 ? '' : '−'}₺{fmt(Math.abs(value))}
         </span>

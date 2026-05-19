@@ -44,7 +44,7 @@ export function CashflowChart({ className = '' }: Props) {
 
   if (loading) {
     return (
-      <div className={`bg-white rounded border border-gray-100 p-5 ${className}`}>
+      <div className={`bg-white rounded border border-[#e2e8f0] p-5 ${className}`}>
         <div className="h-4 w-36 bg-gray-100 rounded animate-pulse mb-4" />
         <div className="flex items-end gap-1.5 h-24">
           {Array.from({ length: 12 }).map((_, i) => (
@@ -57,7 +57,7 @@ export function CashflowChart({ className = '' }: Props) {
 
   if (error || data.length === 0) {
     return (
-      <div className={`bg-white rounded border border-gray-100 p-5 ${className}`}>
+      <div className={`bg-white rounded border border-[#e2e8f0] p-5 ${className}`}>
         <p className="text-sm text-gray-400">{error || 'Veri yok'}</p>
       </div>
     )
@@ -68,21 +68,21 @@ export function CashflowChart({ className = '' }: Props) {
   const maxColH = 80   // px — max bar height
 
   return (
-    <div className={`bg-white rounded border border-gray-100 p-5 ${className}`}>
+    <div className={`bg-white rounded border border-[#e2e8f0] p-5 ${className}`}>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Nakit Akışı</h3>
+          <h3 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Nakit Akışı</h3>
           <p className="text-[10px] text-gray-300 mt-0.5">12 aylık görünüm · tahsilat − gider</p>
         </div>
         {/* Legend */}
         <div className="flex items-center gap-3 text-[10px] text-gray-400">
           <span className="flex items-center gap-1">
-            <span className="w-2.5 h-2.5 rounded-sm bg-emerald-400 inline-block" />
+            <span className="w-2.5 h-2.5 rounded-sm bg-pos inline-block" />
             Pozitif
           </span>
           <span className="flex items-center gap-1">
-            <span className="w-2.5 h-2.5 rounded-sm bg-red-400 inline-block" />
+            <span className="w-2.5 h-2.5 rounded-sm bg-neg inline-block" />
             Negatif
           </span>
           <span className="flex items-center gap-1">
@@ -99,8 +99,8 @@ export function CashflowChart({ className = '' }: Props) {
           const isPos     = d.net >= 0
           const isProj    = d.is_projected
           const colorBase = isPos
-            ? (isProj ? 'bg-emerald-200' : 'bg-emerald-400')
-            : (isProj ? 'bg-red-200'     : 'bg-red-400')
+            ? (isProj ? 'bg-pos-light' : 'bg-pos')
+            : (isProj ? 'bg-neg-light'     : 'bg-neg')
 
           return (
             <div key={d.month} className="flex-1 flex flex-col items-center justify-end group relative">
@@ -110,7 +110,7 @@ export function CashflowChart({ className = '' }: Props) {
                   <div className="font-bold">{d.month}</div>
                   <div>Tahsilat: {fmt(d.collected)}</div>
                   <div>Gider: {fmt(d.expenses)}</div>
-                  <div className={`font-bold ${d.net >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>
+                  <div className={`font-bold ${d.net >= 0 ? 'text-pos/70' : 'text-neg/70'}`}>
                     Net: {fmt(d.net)}
                   </div>
                   <div className="text-gray-400">Kümülatif: {fmt(d.cumulative)}</div>
@@ -132,10 +132,10 @@ export function CashflowChart({ className = '' }: Props) {
       </div>
 
       {/* Cumulative line note */}
-      <div className="mt-3 pt-3 border-t border-gray-50 flex items-center justify-between">
+      <div className="mt-3 pt-3 border-t border-[#f1f5f9] flex items-center justify-between">
         <span className="text-[10px] text-gray-400">Son kümülatif net:</span>
         <span className={`text-xs font-bold tabular-nums ${
-          (data[data.length - 1]?.cumulative ?? 0) >= 0 ? 'text-emerald-600' : 'text-red-600'
+          (data[data.length - 1]?.cumulative ?? 0) >= 0 ? 'text-pos-text' : 'text-neg'
         }`}>
           {fmt(data[data.length - 1]?.cumulative ?? 0)}
         </span>

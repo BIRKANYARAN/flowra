@@ -10,8 +10,8 @@ import { calculateLine, calculateTotals, round2, type LineInput } from '@/lib/ca
 import { getSalePrice, getSaleCurrency, getLegacyProductCost } from '@/lib/product-adapter'
 import { resolveCompanyId } from '@/lib/resolve-company'
 
-const IL  = 'w-full border border-gray-200 rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white transition-colors'
-const LAB = 'block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5'
+const IL  = 'w-full border border-[#e2e8f0] rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white transition-colors'
+const LAB = 'block text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5'
 const KDV_OPTS = [0, 1, 8, 10, 18, 20]
 
 type Line = {
@@ -207,7 +207,7 @@ export default function NewProformaPage() {
         <div className="col-span-2 space-y-5">
 
           {/* Step 1: Customer */}
-          <div className="bg-white border border-gray-100 rounded p-5">
+          <div className="bg-white border border-[#e2e8f0] rounded p-5">
             <h2 className="font-bold text-sm mb-4 flex items-center gap-2">
               <span className="w-5 h-5 bg-primary-600 text-white rounded-full text-xs flex items-center justify-center font-black">1</span>
               Müşteri Bilgileri &amp; Seçenekler
@@ -267,13 +267,13 @@ export default function NewProformaPage() {
           </div>
 
           {/* Step 2: Items */}
-          <div className="bg-white border border-gray-100 rounded p-5">
+          <div className="bg-white border border-[#e2e8f0] rounded p-5">
             <h2 className="font-bold text-sm mb-4 flex items-center gap-2">
               <span className="w-5 h-5 bg-primary-600 text-white rounded-full text-xs flex items-center justify-center font-black">2</span>
               Ürünler / Hizmetler
             </h2>
 
-            <div className="grid grid-cols-12 gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 px-1">
+            <div className="grid grid-cols-12 gap-2 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2 px-1">
               <div className="col-span-3">Ürün Adı</div>
               <div className="col-span-2 text-right">Birim Fiyat ({sym(currency)})</div>
               <div className="col-span-1 text-center">İskonto (%)</div>
@@ -313,7 +313,7 @@ export default function NewProformaPage() {
                             <button
                               key={p.id}
                               type="button"
-                              className="w-full text-left px-3 py-2.5 text-sm hover:bg-gray-50 border-b border-gray-50 last:border-0"
+                              className="w-full text-left px-3 py-2.5 text-sm hover:bg-[#f8fafc] border-b border-[#f1f5f9] last:border-0"
                               onMouseDown={e => { e.preventDefault(); selectProduct(i, p) }}
                             >
                               <div className="flex items-center justify-between">
@@ -325,9 +325,9 @@ export default function NewProformaPage() {
                                   const m = round2(((salePrice - cost) / salePrice) * 100)
                                   return (
                                     <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${
-                                      m < 10 ? 'bg-red-50 text-red-600'
-                                    : m < 25 ? 'bg-amber-50 text-amber-600'
-                                    :          'bg-emerald-50 text-emerald-700'
+                                      m < 10 ? 'bg-neg-light text-neg'
+                                    : m < 25 ? 'bg-warn-light text-warn-text'
+                                    :          'bg-pos-light text-pos-text'
                                     }`}>
                                       %{m.toFixed(0)} marj
                                     </span>
@@ -403,7 +403,7 @@ export default function NewProformaPage() {
                         <button
                           type="button"
                           onClick={() => setLines(ls => ls.filter((_, idx) => idx !== i))}
-                          className="ml-1 w-6 h-6 rounded text-gray-300 hover:text-red-500 hover:bg-red-50 flex items-center justify-center text-lg leading-none transition-colors"
+                          className="ml-1 w-6 h-6 rounded text-gray-300 hover:text-neg hover:bg-neg-light flex items-center justify-center text-lg leading-none transition-colors"
                         >
                           ×
                         </button>
@@ -424,7 +424,7 @@ export default function NewProformaPage() {
           </div>
 
           {/* Step 3: Notes */}
-          <div className="bg-white border border-gray-100 rounded p-5">
+          <div className="bg-white border border-[#e2e8f0] rounded p-5">
             <label className={LAB}>Notlar</label>
             <textarea
               className={`${IL} resize-none`}
@@ -438,9 +438,9 @@ export default function NewProformaPage() {
 
         {/* Right: Summary */}
         <div className="space-y-5">
-          <div className="bg-white border border-gray-100 rounded p-5 sticky top-20">
+          <div className="bg-white border border-[#e2e8f0] rounded p-5 sticky top-20">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Fiyat Özeti</h2>
+              <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Fiyat Özeti</h2>
               <span className="text-xs font-bold text-primary-600 bg-primary-50 px-2.5 py-0.5 rounded">{currency}</span>
             </div>
             <div className="space-y-2.5">
@@ -451,14 +451,14 @@ export default function NewProformaPage() {
               {discountTotal > 0 && (
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500">Toplam İskonto</span>
-                  <span className="font-medium tabular-nums text-red-600">-{S}{discountTotal.toFixed(2)}</span>
+                  <span className="font-medium tabular-nums text-neg">-{S}{discountTotal.toFixed(2)}</span>
                 </div>
               )}
               <div className="flex justify-between text-sm">
                 <span className="text-gray-500">Toplam KDV</span>
                 <span className="font-medium tabular-nums">{S}{kdvTotal.toFixed(2)}</span>
               </div>
-              <div className="border-t border-gray-100 pt-2.5">
+              <div className="border-t border-[#e2e8f0] pt-2.5">
                 <div className="flex justify-between font-black text-base">
                   <span>Genel Toplam</span>
                   <span className="tabular-nums">{S}{grand.toFixed(2)}</span>

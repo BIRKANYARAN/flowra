@@ -40,7 +40,7 @@ export function FxTicker() {
   return (
     <div className="hidden md:flex items-center gap-3" title="TCMB güncel kur">
       {isOld && (
-        <span className="text-[8px] font-bold uppercase tracking-wider text-amber-500 bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded leading-none">
+        <span className="text-[8px] font-bold uppercase tracking-wider text-warn bg-warn-light border border-warn-light px-1.5 py-0.5 rounded leading-none">
           son iş günü
         </span>
       )}

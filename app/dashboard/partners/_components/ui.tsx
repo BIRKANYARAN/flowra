@@ -34,10 +34,10 @@ export function TabBtn({ id, active, label, onClick }: { id: TabId; active: bool
 
 export function StatusPill({ status }: { status: DebtTranche['status'] }) {
   const cls = {
-    active:           'bg-blue-50 text-blue-700',
-    partially_repaid: 'bg-amber-50 text-amber-700',
-    repaid:           'bg-emerald-50 text-emerald-700',
-    overdue:          'bg-red-50 text-red-700',
+    active:           'bg-info-light text-info-text',
+    partially_repaid: 'bg-warn-light text-warn-text',
+    repaid:           'bg-pos-light text-pos-text',
+    overdue:          'bg-neg-light text-neg-text',
   }[status]
   return (
     <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${cls}`}>
@@ -48,13 +48,13 @@ export function StatusPill({ status }: { status: DebtTranche['status'] }) {
 
 export function RoiBar({ pct: roiPct }: { pct: number }) {
   const capped = Math.min(roiPct, 200)
-  const color  = roiPct >= 100 ? 'bg-emerald-500' : roiPct >= 50 ? 'bg-amber-400' : 'bg-red-400'
+  const color  = roiPct >= 100 ? 'bg-pos-light' : roiPct >= 50 ? 'bg-warn' : 'bg-neg'
   return (
     <div className="flex items-center gap-2">
       <div className="flex-1 bg-gray-100 rounded-full h-2 max-w-[120px]">
         <div className={`${color} h-2 rounded-full transition-all`} style={{ width: `${Math.max(2, capped / 2)}%` }} />
       </div>
-      <span className={`text-xs font-bold tabular-nums ${roiPct >= 100 ? 'text-emerald-600' : roiPct >= 50 ? 'text-amber-600' : 'text-red-600'}`}>
+      <span className={`text-xs font-bold tabular-nums ${roiPct >= 100 ? 'text-pos-text' : roiPct >= 50 ? 'text-warn-text' : 'text-neg'}`}>
         {fmtPct(roiPct)}
       </span>
     </div>

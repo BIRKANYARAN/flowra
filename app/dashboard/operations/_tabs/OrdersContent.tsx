@@ -33,9 +33,9 @@ interface Order {
 
 const STATUS_META: Record<OrderStatus, { label: string; cls: string }> = {
   draft:     { label: 'Taslak',     cls: 'bg-gray-100 text-gray-500' },
-  ordered:   { label: 'Sipariş Verildi', cls: 'bg-blue-100 text-blue-700' },
-  received:  { label: 'Teslim Alındı',   cls: 'bg-emerald-100 text-emerald-700' },
-  cancelled: { label: 'İptal',      cls: 'bg-red-100 text-red-500' },
+  ordered:   { label: 'Sipariş Verildi', cls: 'bg-info-light text-info-text' },
+  received:  { label: 'Teslim Alındı',   cls: 'bg-pos-light text-pos-text' },
+  cancelled: { label: 'İptal',      cls: 'bg-neg-light text-neg' },
 }
 
 const NEXT_STATUS: Record<OrderStatus, OrderStatus | null> = {
@@ -175,11 +175,11 @@ export function OrdersContent(_props: Props) {
         {[
           { label: 'Toplam',          value: total,         cls: 'text-gray-700' },
           { label: 'Taslak',          value: totalDraft,    cls: 'text-gray-500' },
-          { label: 'Sipariş Verildi', value: totalOrdered,  cls: 'text-blue-700' },
-          { label: 'Teslim Alındı',   value: totalReceived, cls: 'text-emerald-700' },
+          { label: 'Sipariş Verildi', value: totalOrdered,  cls: 'text-info-text' },
+          { label: 'Teslim Alındı',   value: totalReceived, cls: 'text-pos-text' },
         ].map(s => (
-          <div key={s.label} className="bg-white border border-gray-100 rounded px-4 py-3 shadow-sm">
-            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{s.label}</div>
+          <div key={s.label} className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
+            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{s.label}</div>
             <div className={`text-xl font-black tabular-nums ${s.cls}`}>{s.value}</div>
           </div>
         ))}
@@ -187,7 +187,7 @@ export function OrdersContent(_props: Props) {
 
       {/* ── Header + New Order CTA ──────────────────────────────────────── */}
       <div className="flex items-center justify-between">
-        <h2 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Satın Alma Siparişleri</h2>
+        <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Satın Alma Siparişleri</h2>
         <button
           onClick={() => setShowForm(v => !v)}
           className="text-xs font-bold bg-primary-600 text-white px-4 py-2 rounded hover:bg-primary-700 transition-colors"
@@ -198,39 +198,39 @@ export function OrdersContent(_props: Props) {
 
       {/* ── New order form ─────────────────────────────────────────────── */}
       {showForm && (
-        <div className="bg-white border border-gray-100 rounded p-5 space-y-4">
+        <div className="bg-white border border-[#e2e8f0] rounded p-5 space-y-4">
           <h3 className="text-sm font-bold text-gray-700">Yeni Satın Alma Siparişi</h3>
           {formError && (
-            <div className="text-xs text-red-600 bg-red-50 border border-red-100 rounded px-3 py-2">{formError}</div>
+            <div className="text-xs text-neg bg-neg-light border border-neg-light rounded px-3 py-2">{formError}</div>
           )}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Tedarikçi *</label>
+              <label className="block text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Tedarikçi *</label>
               <input
                 value={formSupplier} onChange={e => setFormSupplier(e.target.value)}
-                className="w-full border border-gray-200 rounded px-3 py-2 text-sm"
+                className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm"
                 placeholder="Tedarikçi adı"
               />
             </div>
             <div>
-              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Sipariş Tarihi</label>
+              <label className="block text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Sipariş Tarihi</label>
               <input
                 type="date" value={formDate} onChange={e => setFormDate(e.target.value)}
-                className="w-full border border-gray-200 rounded px-3 py-2 text-sm"
+                className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm"
               />
             </div>
             <div>
-              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Beklenen Teslim</label>
+              <label className="block text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Beklenen Teslim</label>
               <input
                 type="date" value={formExpected} onChange={e => setFormExpected(e.target.value)}
-                className="w-full border border-gray-200 rounded px-3 py-2 text-sm"
+                className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm"
               />
             </div>
             <div>
-              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Notlar</label>
+              <label className="block text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Notlar</label>
               <input
                 value={formNotes} onChange={e => setFormNotes(e.target.value)}
-                className="w-full border border-gray-200 rounded px-3 py-2 text-sm"
+                className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm"
                 placeholder="Opsiyonel"
               />
             </div>
@@ -238,30 +238,30 @@ export function OrdersContent(_props: Props) {
 
           {/* Line items */}
           <div>
-            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Kalemler</div>
+            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">Kalemler</div>
             {formItems.map((item, idx) => (
               <div key={idx} className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-2 mb-2">
                 <input
                   value={item.name} onChange={e => setFormItems(prev => prev.map((it, i) => i === idx ? { ...it, name: e.target.value } : it))}
-                  className="border border-gray-200 rounded px-2 py-1.5 text-xs" placeholder="Ürün / hizmet adı"
+                  className="border border-[#e2e8f0] rounded px-2 py-1.5 text-xs" placeholder="Ürün / hizmet adı"
                 />
                 <input
                   value={item.unit} onChange={e => setFormItems(prev => prev.map((it, i) => i === idx ? { ...it, unit: e.target.value } : it))}
-                  className="border border-gray-200 rounded px-2 py-1.5 text-xs" placeholder="adet"
+                  className="border border-[#e2e8f0] rounded px-2 py-1.5 text-xs" placeholder="adet"
                 />
                 <input
                   type="number" value={item.quantity} min="0"
                   onChange={e => setFormItems(prev => prev.map((it, i) => i === idx ? { ...it, quantity: e.target.value } : it))}
-                  className="border border-gray-200 rounded px-2 py-1.5 text-xs text-right" placeholder="Miktar"
+                  className="border border-[#e2e8f0] rounded px-2 py-1.5 text-xs text-right" placeholder="Miktar"
                 />
                 <input
                   type="number" value={item.unit_price} min="0"
                   onChange={e => setFormItems(prev => prev.map((it, i) => i === idx ? { ...it, unit_price: e.target.value } : it))}
-                  className="border border-gray-200 rounded px-2 py-1.5 text-xs text-right" placeholder="Birim fiyat ₺"
+                  className="border border-[#e2e8f0] rounded px-2 py-1.5 text-xs text-right" placeholder="Birim fiyat ₺"
                 />
                 <button
                   onClick={() => setFormItems(prev => prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev)}
-                  className="text-gray-400 hover:text-red-500 text-sm font-bold"
+                  className="text-gray-400 hover:text-neg text-sm font-bold"
                 >✕</button>
               </div>
             ))}
@@ -296,13 +296,13 @@ export function OrdersContent(_props: Props) {
         return (
           <>
             {overdueOrders.length > 0 && (
-              <div className="bg-amber-50 border border-amber-200 rounded px-4 py-3 flex items-start gap-3">
+              <div className="bg-warn-light border border-warn-light rounded px-4 py-3 flex items-start gap-3">
                 <span className="text-base mt-0.5">⚠</span>
                 <div className="flex-1">
-                  <div className="text-[11px] font-black uppercase tracking-wide text-amber-800">
+                  <div className="text-[11px] font-black uppercase tracking-wide text-warn-text">
                     {overdueOrders.length} Sipariş Gecikmiş
                   </div>
-                  <div className="text-xs text-amber-700 mt-0.5">
+                  <div className="text-xs text-warn-text mt-0.5">
                     Beklenen tarih geçti ama henüz teslim alınmadı:{' '}
                     {overdueOrders.slice(0, 2).map(o => o.supplier_name).join(', ')}
                     {overdueOrders.length > 2 ? ` ve ${overdueOrders.length - 2} diğer` : ''}.
@@ -311,13 +311,13 @@ export function OrdersContent(_props: Props) {
               </div>
             )}
             {pendingTotal > 100_000 && (
-              <div className="bg-blue-50 border border-blue-200 rounded px-4 py-3 flex items-start gap-3">
+              <div className="bg-info-light border border-info-light rounded px-4 py-3 flex items-start gap-3">
                 <span className="text-base mt-0.5">ℹ</span>
                 <div className="flex-1">
-                  <div className="text-[11px] font-black uppercase tracking-wide text-blue-800">
+                  <div className="text-[11px] font-black uppercase tracking-wide text-info-text">
                     Büyük Bekleyen Sipariş Hacmi
                   </div>
-                  <div className="text-xs text-blue-700 mt-0.5">
+                  <div className="text-xs text-info-text mt-0.5">
                     Bekleyen (taslak + sipariş) toplam: {fmt(pendingTotal)}. Nakit akışı planlamasına dahil edilmeli.
                   </div>
                 </div>
@@ -329,7 +329,7 @@ export function OrdersContent(_props: Props) {
 
       {/* ── List ──────────────────────────────────────────────────────── */}
       {error && (
-        <div className="bg-red-50 border border-red-100 rounded px-4 py-3 text-sm text-red-600">{error}</div>
+        <div className="bg-neg-light border border-neg-light rounded px-4 py-3 text-sm text-neg">{error}</div>
       )}
 
       {loading ? (
@@ -341,8 +341,8 @@ export function OrdersContent(_props: Props) {
           Henüz satın alma siparişi yok.
         </div>
       ) : (
-        <div className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
-          <div className="divide-y divide-gray-100">
+        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+          <div className="divide-y divide-[#e2e8f0]">
             {orders.map(order => {
               const meta  = STATUS_META[order.status]
               const next  = NEXT_STATUS[order.status]
@@ -351,7 +351,7 @@ export function OrdersContent(_props: Props) {
               return (
                 <div key={order.id}>
                   <div
-                    className="px-5 py-3 flex items-center gap-3 hover:bg-gray-50/50 cursor-pointer"
+                    className="px-4 py-2 flex items-center gap-3 hover:bg-[#f8fafc]/50 cursor-pointer"
                     onClick={() => setExpandedId(isExp ? null : order.id)}
                   >
                     {/* Info */}
@@ -385,7 +385,7 @@ export function OrdersContent(_props: Props) {
                         <button
                           disabled={busy}
                           onClick={() => cancelOrder(order.id)}
-                          className="text-[10px] font-bold px-2 py-1 border border-gray-200 text-gray-500 rounded hover:border-red-300 hover:text-red-600 disabled:opacity-50"
+                          className="text-[10px] font-bold px-2 py-1 border border-[#e2e8f0] text-gray-500 rounded hover:border-neg hover:text-neg disabled:opacity-50"
                         >İptal</button>
                       )}
                     </div>
@@ -393,10 +393,10 @@ export function OrdersContent(_props: Props) {
 
                   {/* Expanded items */}
                   {isExp && order.purchase_order_items.length > 0 && (
-                    <div className="px-5 pb-3 border-t border-gray-50 bg-gray-50/50">
+                    <div className="px-5 pb-3 border-t border-[#f1f5f9] bg-[#f8fafc]/50">
                       <table className="w-full text-xs mt-2">
                         <thead>
-                          <tr className="text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100">
+                          <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] border-b border-[#e2e8f0]">
                             <th className="text-left py-1.5">Kalem</th>
                             <th className="text-right py-1.5">Miktar</th>
                             <th className="text-right py-1.5">Birim Fiyat</th>
@@ -407,7 +407,7 @@ export function OrdersContent(_props: Props) {
                           {order.purchase_order_items
                             .sort((a, b) => (a as unknown as { sort_order: number }).sort_order - (b as unknown as { sort_order: number }).sort_order)
                             .map(it => (
-                            <tr key={it.id} className="border-b border-gray-50 last:border-0">
+                            <tr key={it.id} className="border-b border-[#f1f5f9] last:border-0">
                               <td className="py-1.5 text-gray-700">{it.name} <span className="text-gray-400">({it.unit})</span></td>
                               <td className="py-1.5 text-right tabular-nums text-gray-600">{it.quantity}</td>
                               <td className="py-1.5 text-right tabular-nums text-gray-600">{fmt(it.unit_price)}</td>

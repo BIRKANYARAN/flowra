@@ -84,20 +84,20 @@ export async function StockContent({ companyId, userId }: Props) {
       </div>
 
       {/* Portfolio summary strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
         {[
           { label: 'Toplam Stok Değeri', value: fmtTRY(portfolioValueTry),      sub: 'FIFO lot maliyeti bazlı',  color: 'text-gray-900' },
           { label: 'Ürün Sayısı',        value: String(products.length),         sub: `${lots.length} açık lot`, color: 'text-gray-900' },
-          { label: 'Düşük Stok',         value: String(lowStockCount),           sub: 'Eşik altı ürün',           color: lowStockCount > 0 ? 'text-amber-700' : 'text-gray-400' },
+          { label: 'Düşük Stok',         value: String(lowStockCount),           sub: 'Eşik altı ürün',           color: lowStockCount > 0 ? 'text-warn-text' : 'text-gray-400' },
           {
             label: 'Tutarsız Kayıt',
             value: String(inconsistentItems.length),
             sub:   inconsistentItems.length > 0 ? 'Hareket ≠ stok sayacı' : 'Tutarlı ✓',
-            color: inconsistentItems.length > 0 ? 'text-red-600' : 'text-gray-400',
+            color: inconsistentItems.length > 0 ? 'text-neg' : 'text-gray-400',
           },
         ].map((card, i) => (
-          <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-gray-100' : ''}`}>
-            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{card.label}</div>
+          <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e2e8f0]' : ''}`}>
+            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
             <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
             <div className="text-[10px] text-gray-400 mt-1">{card.sub}</div>
           </div>
@@ -106,36 +106,36 @@ export async function StockContent({ companyId, userId }: Props) {
 
       {/* Zero-stock alert — products completely out of stock */}
       {zeroStockCount > 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded px-4 py-3 flex items-start gap-3">
+        <div className="bg-warn-light border border-warn-light rounded px-4 py-3 flex items-start gap-3">
           <span className="text-base mt-0.5">⚠</span>
           <div className="flex-1">
-            <div className="text-[10px] font-black uppercase tracking-widest text-amber-800 mb-1">
+            <div className="text-[10px] font-black uppercase tracking-widest text-warn-text mb-1">
               Stok Tükendi — {zeroStockCount} Ürün
             </div>
             <div className="flex flex-wrap gap-2">
               {products.filter(p => p.stock_qty <= 0).slice(0, 6).map(p => (
-                <span key={p.id} className="text-[10px] bg-amber-100 text-amber-800 font-semibold px-2 py-0.5 rounded">
+                <span key={p.id} className="text-[10px] bg-warn-light text-warn-text font-semibold px-2 py-0.5 rounded">
                   {p.name}
                 </span>
               ))}
               {zeroStockCount > 6 && (
-                <span className="text-[10px] text-amber-600 font-semibold">+{zeroStockCount - 6} ürün daha</span>
+                <span className="text-[10px] text-warn-text font-semibold">+{zeroStockCount - 6} ürün daha</span>
               )}
             </div>
-            <p className="text-[10px] text-amber-700 mt-1">Satış öncesi stok alımı yapılmalı.</p>
+            <p className="text-[10px] text-warn-text mt-1">Satış öncesi stok alımı yapılmalı.</p>
           </div>
         </div>
       )}
 
       {/* Stock consistency warning — only shown when stock_qty counter diverges from movement sum */}
       {inconsistentItems.length > 0 && (
-        <div className="bg-red-50 border border-red-200 rounded px-4 py-3">
-          <div className="text-[10px] font-black uppercase tracking-widest text-red-700 mb-2">
+        <div className="bg-neg-light border border-neg-light rounded px-4 py-3">
+          <div className="text-[10px] font-black uppercase tracking-widest text-neg-text mb-2">
             ⚠ Stok Tutarsızlığı — {inconsistentItems.length} Ürün
           </div>
           <div className="space-y-1.5">
             {inconsistentItems.map(item => (
-              <div key={item.product_id} className="flex items-start gap-2 text-[11px] text-red-800">
+              <div key={item.product_id} className="flex items-start gap-2 text-[11px] text-neg-text">
                 <span className="shrink-0 mt-px">•</span>
                 <span>
                   <span className="font-bold">
@@ -146,14 +146,14 @@ export async function StockContent({ companyId, userId }: Props) {
                   {' '}· Stok sayacı:{' '}
                   <span className="font-semibold">{item.legacy_qty.toLocaleString('tr-TR', { maximumFractionDigits: 3 })}</span>
                   {' '}· Fark:{' '}
-                  <span className={`font-black ${item.drift > 0 ? 'text-emerald-700' : 'text-red-700'}`}>
+                  <span className={`font-black ${item.drift > 0 ? 'text-pos-text' : 'text-neg-text'}`}>
                     {item.drift > 0 ? '+' : ''}{item.drift.toLocaleString('tr-TR', { maximumFractionDigits: 3 })}
                   </span>
                 </span>
               </div>
             ))}
           </div>
-          <p className="mt-2 text-[10px] text-red-600">
+          <p className="mt-2 text-[10px] text-neg">
             Stok sayacı ile hareket geçmişi arasındaki fark FIFO maliyet hesaplamalarını etkileyebilir.
             Manuel düzeltme için Stok Düzeltme aracını kullanın.
           </p>
@@ -162,17 +162,17 @@ export async function StockContent({ companyId, userId }: Props) {
 
       {/* FIFO Lot Panel */}
       {lots.length > 0 && (
-        <div className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
-          <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+          <div className="px-5 py-4 border-b border-[#e2e8f0] flex items-center justify-between">
             <div>
-              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">FIFO Lot Paneli</span>
+              <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">FIFO Lot Paneli</span>
               <span className="ml-2 text-[10px] text-gray-400">— açık lotlar, tutma süresi ve maliyet</span>
             </div>
             <span className="text-[10px] text-gray-400 bg-gray-100 px-2 py-0.5 rounded">
               {lots.length} lot · {fmtTRY(portfolioValueTry)}
             </span>
           </div>
-          <div className="divide-y divide-gray-50">
+          <div className="divide-y divide-[#f1f5f9]">
             {products.filter(p => lotsByProduct.has(p.id)).map(product => {
               const productLots  = lotsByProduct.get(product.id) ?? []
               const productValue = productLots.reduce((s, l) => s + l.costTry, 0)
@@ -187,21 +187,21 @@ export async function StockContent({ companyId, userId }: Props) {
                     </div>
                     <div className="flex items-center gap-4 text-right">
                       <div>
-                        <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Toplam Miktar</div>
+                        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Toplam Miktar</div>
                         <div className="text-sm font-black tabular-nums text-gray-800">
                           {totalQty.toLocaleString('tr-TR', { maximumFractionDigits: 3 })} {product.unit}
                         </div>
                       </div>
                       <div>
-                        <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Lot Değeri</div>
+                        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Lot Değeri</div>
                         <div className="text-sm font-black tabular-nums text-primary-700">{fmtTRY(productValue)}</div>
                       </div>
                     </div>
                   </div>
-                  <div className="bg-gray-50 rounded overflow-hidden">
+                  <div className="bg-[#f8fafc] rounded overflow-hidden">
                     <table className="w-full text-xs">
                       <thead>
-                        <tr className="text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100">
+                        <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] border-b border-[#e2e8f0]">
                           <th className="text-left px-3 py-2">Giriş Tarihi</th>
                           <th className="text-right px-3 py-2">Kalan Adet</th>
                           <th className="text-right px-3 py-2">Birim Maliyet</th>
@@ -213,9 +213,9 @@ export async function StockContent({ companyId, userId }: Props) {
                         {productLots.map(lot => {
                           const perUnitTry = lot.cost_price_try != null && lot.cost_price_try > 0
                             ? lot.cost_price_try : lot.cost_price * (lot.cost_fx_rate || 1)
-                          const urgency = lot.days > 180 ? 'text-red-600' : lot.days > 90 ? 'text-amber-600' : 'text-gray-600'
+                          const urgency = lot.days > 180 ? 'text-neg' : lot.days > 90 ? 'text-warn-text' : 'text-gray-600'
                           return (
-                            <tr key={lot.id} className="border-b border-gray-100 last:border-0">
+                            <tr key={lot.id} className="border-b border-[#e2e8f0] last:border-0">
                               <td className="px-3 py-2 text-gray-700">{fmtDateShort(lot.received_at)}</td>
                               <td className="px-3 py-2 text-right tabular-nums font-semibold text-gray-800">
                                 {lot.qty_remaining.toLocaleString('tr-TR', { maximumFractionDigits: 3 })}
@@ -236,7 +236,7 @@ export async function StockContent({ companyId, userId }: Props) {
                     </table>
                   </div>
                   {oldestLot && oldestLot.days > 180 && (
-                    <div className="mt-2 text-[10px] text-red-600 bg-red-50 border border-red-100 rounded px-3 py-1.5 font-semibold">
+                    <div className="mt-2 text-[10px] text-neg bg-neg-light border border-neg-light rounded px-3 py-1.5 font-semibold">
                       ⚠ En eski lot {oldestLot.days} gündür tutulmakta — finansman maliyeti yüksek
                     </div>
                   )}
@@ -248,9 +248,9 @@ export async function StockContent({ companyId, userId }: Props) {
       )}
 
       {/* Current stock levels */}
-      <div className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
-        <div className="px-5 py-4 border-b border-gray-100">
-          <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Mevcut Stok</span>
+      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+        <div className="px-5 py-4 border-b border-[#e2e8f0]">
+          <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Mevcut Stok</span>
         </div>
         {products.length === 0 ? (
           <div className="py-14 text-center">
@@ -258,7 +258,7 @@ export async function StockContent({ companyId, userId }: Props) {
             <div className="text-sm font-semibold text-gray-600">Ürün bulunamadı.</div>
           </div>
         ) : (
-          <div className="divide-y divide-gray-50">
+          <div className="divide-y divide-[#f1f5f9]">
             {products.map(p => {
               const stockNum = Number(p.stock_qty)
               const alertNum = Number(p.stock_alert_qty)
@@ -266,7 +266,7 @@ export async function StockContent({ companyId, userId }: Props) {
               const isZero   = stockNum <= 0
               const lotValue = (lotsByProduct.get(p.id) ?? []).reduce((s, l) => s + l.costTry, 0)
               return (
-                <div key={p.id} className="flex items-center justify-between px-5 py-3 hover:bg-gray-50/60">
+                <div key={p.id} className="flex items-center justify-between px-5 py-3 hover:bg-[#f8fafc]/60">
                   <div>
                     <span className="text-sm font-semibold text-gray-900">{p.name}</span>
                     {p.sku && <span className="text-xs text-gray-400 ml-2">{p.sku}</span>}
@@ -277,9 +277,9 @@ export async function StockContent({ companyId, userId }: Props) {
                     )}
                   </div>
                   <div className="flex items-center gap-3">
-                    {isLow  && <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded font-semibold">Düşük</span>}
-                    {isZero && <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded font-semibold">Tükendi</span>}
-                    <span className={`text-sm font-bold tabular-nums ${isZero ? 'text-red-600' : isLow ? 'text-amber-700' : 'text-gray-900'}`}>
+                    {isLow  && <span className="text-xs bg-warn-light text-warn-text px-2 py-0.5 rounded font-semibold">Düşük</span>}
+                    {isZero && <span className="text-xs bg-neg-light text-neg-text px-2 py-0.5 rounded font-semibold">Tükendi</span>}
+                    <span className={`text-sm font-bold tabular-nums ${isZero ? 'text-neg' : isLow ? 'text-warn-text' : 'text-gray-900'}`}>
                       {stockNum.toLocaleString('tr-TR', { maximumFractionDigits: 3 })} {p.unit}
                     </span>
                   </div>
@@ -293,9 +293,9 @@ export async function StockContent({ companyId, userId }: Props) {
       <StockAdjustClient products={products.map(p => ({ id: p.id, name: p.name, unit: p.unit }))} />
 
       {/* Movement history */}
-      <div className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
-        <div className="px-5 py-4 border-b border-gray-100">
-          <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Son Hareketler</span>
+      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+        <div className="px-5 py-4 border-b border-[#e2e8f0]">
+          <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Son Hareketler</span>
           <span className="ml-2 text-[10px] text-gray-400">— son 50 kayıt</span>
         </div>
         {movements.length === 0 ? (
@@ -307,7 +307,7 @@ export async function StockContent({ companyId, userId }: Props) {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-gray-50 border-b border-gray-100">
+                <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] border-b border-[#e2e8f0]">
                   <th className="text-left px-5 py-3">Ürün</th>
                   <th className="text-center px-3 py-3">Tip</th>
                   <th className="text-right px-3 py-3">Değişim</th>
@@ -317,12 +317,12 @@ export async function StockContent({ companyId, userId }: Props) {
                   <th className="text-right px-5 py-3">Tarih</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-[#f1f5f9]">
                 {movements.map(m => {
                   const prod = productMap.get(m.product_id)
                   const cost = Number(m.unit_cost || 0)
                   return (
-                    <tr key={m.id} className="hover:bg-gray-50/60">
+                    <tr key={m.id} className="hover:bg-[#f8fafc]/60">
                       <td className="px-5 py-3 font-medium text-gray-900">
                         {prod?.name ?? '—'}
                         {prod?.sku && <span className="text-xs text-gray-400 ml-1">{prod.sku}</span>}
@@ -332,7 +332,7 @@ export async function StockContent({ companyId, userId }: Props) {
                           {TYPE_LABELS[m.reference_type] ?? m.reference_type}
                         </span>
                       </td>
-                      <td className={`px-3 py-3 text-right font-bold tabular-nums ${Number(m.qty_change) >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
+                      <td className={`px-3 py-3 text-right font-bold tabular-nums ${Number(m.qty_change) >= 0 ? 'text-pos-text' : 'text-neg'}`}>
                         {Number(m.qty_change) > 0 ? '+' : ''}{Number(m.qty_change)}
                       </td>
                       <td className="px-3 py-3 text-right tabular-nums text-gray-500 text-xs">

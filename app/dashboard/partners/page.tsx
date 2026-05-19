@@ -312,7 +312,7 @@ export default function PartnersPage() {
         <div className="flex items-center gap-2">
           <Link
             href="/dashboard/admin/governance"
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded border border-gray-200 text-gray-600 text-xs font-semibold hover:border-gray-300 hover:bg-gray-50 transition-colors whitespace-nowrap"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded border border-[#e2e8f0] text-gray-600 text-xs font-semibold hover:border-[#e2e8f0] hover:bg-[#f8fafc] transition-colors whitespace-nowrap"
             title="Aylık yönetişim raporları ve ortak onay sistemi"
           >
             🏛️ Yönetişim
@@ -328,7 +328,7 @@ export default function PartnersPage() {
 
       {/* Sticky tab nav + context bar */}
       <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm -mx-4">
-        <div className="px-5 pt-1 border-b border-gray-100">
+        <div className="px-5 pt-1 border-b border-[#e2e8f0]">
           <div className="flex items-center gap-0.5 overflow-x-auto scrollbar-none">
             {TABS.map(t => (
               <button
@@ -352,7 +352,7 @@ export default function PartnersPage() {
       </div>
 
       {fetchError && (
-        <div className="bg-red-50 border border-red-100 rounded px-4 py-3 text-sm text-red-700 font-medium">
+        <div className="bg-neg-light border border-neg-light rounded px-4 py-3 text-sm text-neg-text font-medium">
           {fetchError}
         </div>
       )}

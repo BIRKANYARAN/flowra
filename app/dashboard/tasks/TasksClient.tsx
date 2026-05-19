@@ -9,8 +9,8 @@ import { useState, type ChangeEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Task, TaskStatus, Customer, Sale } from '@/types'
 
-const IL  = 'w-full border border-gray-200 rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white transition-colors'
-const LAB = 'block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5'
+const IL  = 'w-full border border-[#e2e8f0] rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white transition-colors'
+const LAB = 'block text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5'
 const SEL = `${IL} cursor-pointer`
 const BTN = 'px-4 py-2 rounded text-sm font-semibold transition-colors'
 
@@ -20,8 +20,8 @@ const STATUS_LABELS: Record<TaskStatus, string> = {
   cancelled: 'İptal',
 }
 const STATUS_COLORS: Record<TaskStatus, string> = {
-  open:      'bg-blue-100 text-blue-700',
-  done:      'bg-emerald-100 text-emerald-700',
+  open:      'bg-info-light text-info-text',
+  done:      'bg-pos-light text-pos-text',
   cancelled: 'bg-gray-100 text-gray-500',
 }
 
@@ -135,7 +135,7 @@ export default function TasksClient({ initialTasks, initialCustomers, initialSal
 
       {/* ── Toolbar ───────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between">
-        <h2 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+        <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
           {filtered.length} Görev
         </h2>
         <button
@@ -148,9 +148,9 @@ export default function TasksClient({ initialTasks, initialCustomers, initialSal
 
       {/* ── Create form ───────────────────────────────────────────────────── */}
       {showForm && (
-        <div className="bg-white rounded border border-gray-100 p-5 space-y-4">
+        <div className="bg-white rounded border border-[#e2e8f0] p-5 space-y-4">
           <h2 className="text-sm font-bold text-gray-700">Yeni Görev</h2>
-          {formError && <p className="text-xs text-red-600">{formError}</p>}
+          {formError && <p className="text-xs text-neg">{formError}</p>}
           <div>
             <label className={LAB}>Başlık *</label>
             <input
@@ -254,15 +254,15 @@ export default function TasksClient({ initialTasks, initialCustomers, initialSal
 
       {/* ── Error ─────────────────────────────────────────────────────────── */}
       {error && (
-        <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded px-3 py-2 flex items-center justify-between">
+        <div className="text-sm text-neg bg-neg-light border border-neg-light rounded px-3 py-2 flex items-center justify-between">
           <span>{error}</span>
-          <button onClick={() => setError('')} className="ml-3 text-red-400 font-bold">✕</button>
+          <button onClick={() => setError('')} className="ml-3 text-neg font-bold">✕</button>
         </div>
       )}
 
       {/* ── Task list ─────────────────────────────────────────────────────── */}
       {filtered.length === 0 ? (
-        <div className="bg-white rounded border border-gray-100 p-8 text-center">
+        <div className="bg-white rounded border border-[#e2e8f0] p-8 text-center">
           <p className="text-sm text-gray-400">
             {tab === 'open' ? 'Açık görev yok. ✓' : 'Bu durumda görev yok.'}
           </p>
@@ -275,7 +275,7 @@ export default function TasksClient({ initialTasks, initialCustomers, initialSal
               <div
                 key={task.id}
                 className={`bg-white rounded border p-4 flex items-start gap-3 ${
-                  overdue ? 'border-red-200 bg-red-50/60' : 'border-gray-100'
+                  overdue ? 'border-neg-light bg-neg-light/60' : 'border-[#e2e8f0]'
                 }`}
               >
                 {/* Status toggle */}
@@ -284,8 +284,8 @@ export default function TasksClient({ initialTasks, initialCustomers, initialSal
                   title={task.status === 'done' ? 'Yeniden Aç' : 'Tamamlandı İşaretle'}
                   className={`mt-0.5 w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-colors ${
                     task.status === 'done'
-                      ? 'bg-emerald-500 border-emerald-500 text-white'
-                      : 'border-gray-300 hover:border-emerald-400'
+                      ? 'bg-pos-light border-pos text-white'
+                      : 'border-[#e2e8f0] hover:border-pos'
                   }`}
                 >
                   {task.status === 'done' && (
@@ -309,7 +309,7 @@ export default function TasksClient({ initialTasks, initialCustomers, initialSal
                   </div>
                   <div className="flex items-center gap-3 mt-1 flex-wrap">
                     {task.due_date && (
-                      <span className={`text-xs ${overdue ? 'text-red-600 font-semibold' : 'text-gray-400'}`}>
+                      <span className={`text-xs ${overdue ? 'text-neg font-semibold' : 'text-gray-400'}`}>
                         📅 {formatDate(task.due_date)}{overdue && ' — GEÇMİŞ'}
                       </span>
                     )}
@@ -335,7 +335,7 @@ export default function TasksClient({ initialTasks, initialCustomers, initialSal
                   {confirmId === task.id ? (
                     <span className="flex items-center gap-1">
                       <button onClick={() => deleteTask(task.id)}
-                        className="text-[10px] text-white bg-red-500 hover:bg-red-600 px-2 py-1 rounded transition-colors font-semibold">
+                        className="text-[10px] text-white bg-neg-light hover:bg-neg px-2 py-1 rounded transition-colors font-semibold">
                         Evet, sil
                       </button>
                       <button onClick={() => setConfirmId(null)}
@@ -346,7 +346,7 @@ export default function TasksClient({ initialTasks, initialCustomers, initialSal
                   ) : (
                     <button
                       onClick={() => setConfirmId(task.id)}
-                      className="text-[10px] text-gray-400 hover:text-red-600 px-2 py-1 rounded hover:bg-red-50 transition-colors"
+                      className="text-[10px] text-gray-400 hover:text-neg px-2 py-1 rounded hover:bg-neg-light transition-colors"
                     >
                       Sil
                     </button>

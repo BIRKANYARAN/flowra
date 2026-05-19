@@ -225,11 +225,11 @@ export function CommandBar() {
 
       {/* Panel */}
       <div
-        className="relative w-full max-w-[560px] bg-white rounded border border-gray-200 shadow-[0_24px_48px_rgba(17,24,39,0.18),0_8px_16px_rgba(17,24,39,0.08)] overflow-hidden"
+        className="relative w-full max-w-[560px] bg-white rounded border border-[#e2e8f0] shadow-[0_24px_48px_rgba(17,24,39,0.18),0_8px_16px_rgba(17,24,39,0.08)] overflow-hidden"
         style={{ maxHeight: '74vh' }}
       >
         {/* ── Search row ────────────────────────────────────────────────────── */}
-        <div className="flex items-center gap-3 px-4 py-3.5 border-b border-gray-100">
+        <div className="flex items-center gap-3 px-4 py-3.5 border-b border-[#e2e8f0]">
           <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
@@ -244,7 +244,7 @@ export function CommandBar() {
           {smartLoading && (
             <span className="w-3 h-3 rounded-full border-2 border-violet-400 border-t-transparent animate-spin flex-shrink-0" />
           )}
-          <kbd className="text-[9px] text-gray-400 bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded font-mono leading-tight flex-shrink-0">
+          <kbd className="text-[9px] text-gray-400 bg-gray-100 border border-[#e2e8f0] px-1.5 py-0.5 rounded font-mono leading-tight flex-shrink-0">
             ESC
           </kbd>
         </div>
@@ -279,7 +279,7 @@ export function CommandBar() {
                     const iconEl =
                       cmd.kind === 'smart'  ? <span className="text-violet-500 text-xs">⚡</span> :
                       cmd.kind === 'op'     ? <span className="text-gray-500 text-[10px] font-black">▶</span> :
-                      cmd.kind === 'create' ? <span className="text-emerald-500 text-sm font-black leading-none">+</span> :
+                      cmd.kind === 'create' ? <span className="text-pos text-sm font-black leading-none">+</span> :
                       cmd.kind === 'nav'    ? <span className="text-violet-400 text-[9px] font-black">◆</span> :
                                              <span className="text-gray-400 text-xs">→</span>
                     return (
@@ -290,7 +290,7 @@ export function CommandBar() {
                         className={[
                           'relative w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors',
                           isSelected
-                            ? cmd.kind === 'smart' ? 'bg-violet-50' : 'bg-gray-50'
+                            ? cmd.kind === 'smart' ? 'bg-violet-50' : 'bg-[#f8fafc]'
                             : '',
                         ].join(' ')}
                       >
@@ -322,7 +322,7 @@ export function CommandBar() {
 
                         {/* Enter hint */}
                         {isSelected && (
-                          <kbd className="flex-shrink-0 text-[9px] text-gray-400 bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded font-mono leading-tight">
+                          <kbd className="flex-shrink-0 text-[9px] text-gray-400 bg-gray-100 border border-[#e2e8f0] px-1.5 py-0.5 rounded font-mono leading-tight">
                             ↵
                           </kbd>
                         )}
@@ -335,7 +335,7 @@ export function CommandBar() {
           )}
 
           {/* Footer */}
-          <div className="flex items-center justify-between px-4 py-2 border-t border-gray-50">
+          <div className="flex items-center justify-between px-4 py-2 border-t border-[#f1f5f9]">
             <div className="flex items-center gap-3">
               <span className="text-[9px] text-gray-300 font-mono">↑↓ seç</span>
               <span className="text-[9px] text-gray-300 font-mono">↵ çalıştır</span>

@@ -10,8 +10,8 @@ import type { CompanyBank, UserSettings } from '@/types'
 import { resolveCompanyId } from '@/lib/resolve-company'
 
 // DS-aligned style tokens (primary instead of indigo, consistent radius)
-const IL  = 'w-full border border-gray-200 rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400 transition-colors'
-const LAB = 'block text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1.5'
+const IL  = 'w-full border border-[#e2e8f0] rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400 transition-colors'
+const LAB = 'block text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5'
 
 type Msg = { text: string; kind: 'success' | 'error' | 'info' }
 
@@ -358,7 +358,7 @@ export default function SettingsPage() {
 
           {/* Logo */}
           <FlowraCard>
-            <p className="font-bold text-sm border-b border-gray-100 pb-2 mb-3">Firma Logosu</p>
+            <p className="font-bold text-sm border-b border-[#e2e8f0] pb-2 mb-3">Firma Logosu</p>
 
             {/* Hidden file input */}
             <input
@@ -379,7 +379,7 @@ export default function SettingsPage() {
               {/* Preview box */}
               <label
                 htmlFor="logo-file-input"
-                className="w-16 h-16 rounded border-2 border-dashed border-gray-200 flex items-center justify-center bg-gray-50 overflow-hidden hover:border-primary-400 transition-colors flex-shrink-0 relative"
+                className="w-16 h-16 rounded border-2 border-dashed border-[#e2e8f0] flex items-center justify-center bg-[#f8fafc] overflow-hidden hover:border-primary-400 transition-colors flex-shrink-0 relative"
                 style={{ cursor: uploading ? 'default' : 'pointer' }}
                 title="Logo yüklemek için tıklayın"
               >
@@ -411,8 +411,8 @@ export default function SettingsPage() {
                   htmlFor="logo-file-input"
                   className={`inline-flex items-center justify-center px-3 py-1.5 rounded border text-xs font-semibold transition-colors select-none ${
                     uploading
-                      ? 'opacity-50 cursor-default bg-gray-50 border-gray-200 text-gray-400'
-                      : 'cursor-pointer bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300'
+                      ? 'opacity-50 cursor-default bg-[#f8fafc] border-[#e2e8f0] text-gray-400'
+                      : 'cursor-pointer bg-white border-[#e2e8f0] text-gray-700 hover:bg-[#f8fafc] hover:border-[#e2e8f0]'
                   }`}
                 >
                   {uploading ? 'Yükleniyor...' : signedPreview ? 'Değiştir' : 'Logo Seç'}
@@ -422,7 +422,7 @@ export default function SettingsPage() {
                   <button
                     type="button"
                     onClick={removeLogo}
-                    className="text-[10px] text-red-400 hover:text-red-600 transition-colors block"
+                    className="text-[10px] text-neg hover:text-neg transition-colors block"
                   >
                     Kaldır
                   </button>
@@ -433,7 +433,7 @@ export default function SettingsPage() {
 
           {/* Company Info */}
           <FlowraCard>
-            <p className="font-bold text-sm border-b border-gray-100 pb-2 mb-3">Firma Bilgileri</p>
+            <p className="font-bold text-sm border-b border-[#e2e8f0] pb-2 mb-3">Firma Bilgileri</p>
 
             <div className="space-y-3">
               <FlowraInput
@@ -515,7 +515,7 @@ export default function SettingsPage() {
 
           {/* Banks */}
           <FlowraCard>
-            <div className="flex items-center justify-between border-b border-gray-100 pb-2 mb-3">
+            <div className="flex items-center justify-between border-b border-[#e2e8f0] pb-2 mb-3">
               <div>
                 <p className="font-bold text-sm">Banka Hesapları</p>
                 <p className="text-[10px] text-gray-400 mt-0.5">PDF&apos;de ve proforma sayfasında gösterilir</p>
@@ -528,8 +528,8 @@ export default function SettingsPage() {
             </div>
 
             {addBank && (
-              <div className="bg-gray-50 rounded p-3 mb-3 space-y-3">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest">
+              <div className="bg-[#f8fafc] rounded p-3 mb-3 space-y-3">
+                <p className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
                   {editBankId ? 'Hesabı Düzenle' : 'Yeni Banka Hesabı'}
                 </p>
 
@@ -599,7 +599,7 @@ export default function SettingsPage() {
                     className={`flex items-center justify-between rounded px-3 py-2 border transition-colors ${
                       b.is_default
                         ? 'border-primary-200 bg-primary-50'
-                        : 'border-gray-100 hover:bg-gray-50'
+                        : 'border-[#e2e8f0] hover:bg-[#f8fafc]'
                     }`}
                   >
                     <div className="min-w-0 flex-1">
@@ -641,7 +641,7 @@ export default function SettingsPage() {
 
           {/* Interest Rate */}
           <FlowraCard>
-            <p className="font-bold text-sm border-b border-gray-100 pb-2 mb-3">Faiz Oranı</p>
+            <p className="font-bold text-sm border-b border-[#e2e8f0] pb-2 mb-3">Faiz Oranı</p>
             <p className="text-[10px] text-gray-400 mb-3">
               Simülasyon ve reel kâr hesabı için para birimi bazında yıllık oran
             </p>
@@ -656,7 +656,7 @@ export default function SettingsPage() {
                   className={`text-xs border rounded-md px-2.5 py-1 font-semibold transition-colors select-none ${
                     intCurrency === c
                       ? 'border-primary-500 bg-primary-500 text-white'
-                      : 'border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-800'
+                      : 'border-[#e2e8f0] text-gray-500 hover:bg-[#f8fafc] hover:text-gray-800'
                   }`}
                 >
                   {c}
@@ -688,8 +688,8 @@ export default function SettingsPage() {
             </div>
 
             {intHistory.length > 0 && (
-              <div className="mt-3 border-t border-gray-100 pt-3 space-y-1">
-                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-1.5">
+              <div className="mt-3 border-t border-[#e2e8f0] pt-3 space-y-1">
+                <p className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">
                   Geçmiş — {intCurrency}
                 </p>
                 {intHistory.map(r => (
@@ -722,7 +722,7 @@ export default function SettingsPage() {
           </div>
 
           {demoDisabled ? (
-            <div className="text-xs px-3 py-2 rounded border bg-amber-50 border-amber-100 text-amber-700">
+            <div className="text-xs px-3 py-2 rounded border bg-warn-light border-warn-light text-warn-text">
               Canlı ortamda kapalıdır.
             </div>
           ) : (
@@ -768,9 +768,9 @@ export default function SettingsPage() {
 // ── Shared inline helper ──────────────────────────────────────────────────────
 function MsgBanner({ msg }: { msg: { text: string; kind: 'success' | 'error' | 'info' } }) {
   const styles = {
-    success: 'bg-emerald-50 border-emerald-100 text-emerald-700',
-    error:   'bg-red-50 border-red-100 text-red-700',
-    info:    'bg-amber-50 border-amber-100 text-amber-700',
+    success: 'bg-pos-light border-pos-light text-pos-text',
+    error:   'bg-neg-light border-neg-light text-neg-text',
+    info:    'bg-warn-light border-warn-light text-warn-text',
   }
   const icons = { success: '✓', error: '✕', info: 'ℹ' }
   return (

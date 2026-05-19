@@ -48,13 +48,13 @@ function WRow({ label, value, sub, isTotal, isDeduction, isSub }: {
     : isSub ? 'text-[11px] font-medium text-gray-400 pl-4'
     : 'text-xs font-semibold text-gray-600'
   const valueClass = isTotal
-    ? `text-sm font-black ${value >= 0 ? 'text-emerald-700' : 'text-red-600'}`
+    ? `text-sm font-black ${value >= 0 ? 'text-pos-text' : 'text-neg'}`
     : isDeduction
-    ? 'text-xs font-bold text-red-500'
-    : `text-xs font-bold ${value >= 0 ? 'text-gray-800' : 'text-red-500'}`
+    ? 'text-xs font-bold text-neg'
+    : `text-xs font-bold ${value >= 0 ? 'text-gray-800' : 'text-neg'}`
 
   return (
-    <div className={`flex items-center justify-between gap-2 py-1.5 ${isTotal ? 'border-t border-dashed border-gray-200 mt-1' : ''}`}>
+    <div className={`flex items-center justify-between gap-2 py-1.5 ${isTotal ? 'border-t border-dashed border-[#e2e8f0] mt-1' : ''}`}>
       <div className="min-w-0">
         <span className={labelClass}>{label}</span>
         {sub && <span className="text-[9px] text-gray-400 ml-1.5">{sub}</span>}
@@ -131,7 +131,7 @@ export async function PnlTab({ userId, companyId }: Props) {
   const s = currentSummary
   if (!s) {
     return (
-      <div className="bg-white border border-gray-100 rounded text-center py-16 shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded text-center py-16 shadow-sm">
         <div className="w-8 h-8 rounded-full bg-gray-100 mx-auto mb-3 flex items-center justify-center">
           <span className="text-gray-400 text-sm font-bold">—</span>
         </div>
@@ -170,16 +170,16 @@ export async function PnlTab({ userId, companyId }: Props) {
       {/* Month-over-month margin deterioration alert */}
       {marginDrop !== null && marginDrop > 0.10 && (
         <div className={`rounded border px-4 py-3 flex items-start gap-3 ${
-          marginDrop > 0.20 ? 'bg-red-50 border-red-200' : 'bg-amber-50 border-amber-200'
+          marginDrop > 0.20 ? 'bg-neg-light border-neg-light' : 'bg-warn-light border-warn-light'
         }`}>
           <span className="text-base mt-0.5">{marginDrop > 0.20 ? '🔴' : '⚠'}</span>
           <div className="flex-1">
             <div className={`text-[11px] font-black uppercase tracking-wide ${
-              marginDrop > 0.20 ? 'text-red-800' : 'text-amber-800'
+              marginDrop > 0.20 ? 'text-neg-text' : 'text-warn-text'
             }`}>
               Brüt Marj Düşüşü — Geçen Aya Göre
             </div>
-            <div className={`text-xs mt-0.5 ${marginDrop > 0.20 ? 'text-red-700' : 'text-amber-700'}`}>
+            <div className={`text-xs mt-0.5 ${marginDrop > 0.20 ? 'text-neg-text' : 'text-warn-text'}`}>
               Bu ay: <strong>%{((currentMargin ?? 0) * 100).toFixed(1)}</strong>{' '}
               → Geçen ay: <strong>%{(priorMargin! * 100).toFixed(1)}</strong>{' '}
               ({marginDrop > 0 ? '−' : '+'}{(Math.abs(marginDrop) * 100).toFixed(1)} puan).{' '}
@@ -188,7 +188,7 @@ export async function PnlTab({ userId, companyId }: Props) {
           </div>
           <Link href="/dashboard/operations?tab=expenses"
             className={`text-[10px] font-bold underline underline-offset-2 shrink-0 mt-0.5 whitespace-nowrap ${
-              marginDrop > 0.20 ? 'text-red-700 hover:text-red-800' : 'text-amber-700 hover:text-amber-800'
+              marginDrop > 0.20 ? 'text-neg-text hover:text-neg-text' : 'text-warn-text hover:text-warn-text'
             }`}>
             Giderler →
           </Link>
@@ -201,7 +201,7 @@ export async function PnlTab({ userId, companyId }: Props) {
       <div className="col-span-7 space-y-4">
 
         {/* Main waterfall */}
-        <div className="bg-white border border-gray-100 rounded p-5 shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded p-5 shadow-sm">
           <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4">
             Kâr / Zarar — {fmtMonth(currentYM)}
           </div>
@@ -233,19 +233,19 @@ export async function PnlTab({ userId, companyId }: Props) {
         </div>
 
         {/* KDV Özeti */}
-        <div className="bg-white border border-gray-100 rounded p-4 shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
           <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">KDV Özeti</div>
           <div className="grid grid-cols-3 gap-3">
             {[
-              { label: 'Hesaplanan KDV',   value: salesVat,    color: 'text-emerald-700' },
-              { label: '− İndirilecek KDV', value: purchaseVat + expenseVat, color: 'text-red-500' },
-              { label: 'Net KDV',           value: netVat,      color: netVat > 0 ? 'text-orange-700' : 'text-emerald-700' },
+              { label: 'Hesaplanan KDV',   value: salesVat,    color: 'text-pos-text' },
+              { label: '− İndirilecek KDV', value: purchaseVat + expenseVat, color: 'text-neg' },
+              { label: 'Net KDV',           value: netVat,      color: netVat > 0 ? 'text-orange-700' : 'text-pos-text' },
             ].map(c => (
               <div key={c.label} className="text-center">
                 <div className="text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1">{c.label}</div>
                 <div className={`text-sm font-black tabular-nums ${c.color}`}>{fmtFull(Math.abs(c.value))}</div>
                 {c.label === 'Net KDV' && (
-                  <div className={`text-[9px] mt-0.5 font-semibold ${netVat > 0 ? 'text-orange-600' : 'text-emerald-600'}`}>
+                  <div className={`text-[9px] mt-0.5 font-semibold ${netVat > 0 ? 'text-orange-600' : 'text-pos-text'}`}>
                     {netVat > 0 ? '⬆ Ödenecek' : netVat < 0 ? '⬇ Devir' : 'Sıfır'}
                   </div>
                 )}
@@ -265,7 +265,7 @@ export async function PnlTab({ userId, companyId }: Props) {
             { label: 'Toplam Giderler',  value: fmt(expenses),    sub: 'Kesinti + operasyonel', color: 'border-l-amber-400' },
             { label: 'Vergi Matrahı',    value: fmt(matrah),      sub: 'Vergi öncesi kazanç', color: matrah >= 0 ? 'border-l-primary-400' : 'border-l-red-400' },
           ].map(k => (
-            <div key={k.label} className={`bg-white border border-l-4 border-gray-100 ${k.color} rounded px-4 py-3`}>
+            <div key={k.label} className={`bg-white border border-l-4 border-[#e2e8f0] ${k.color} rounded px-4 py-3`}>
               <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-0.5">{k.label}</div>
               <div className="text-[10px] text-gray-400">{k.sub}</div>
               <div className="text-lg font-black tabular-nums text-gray-900 mt-1">{k.value}</div>
@@ -274,7 +274,7 @@ export async function PnlTab({ userId, companyId }: Props) {
         </div>
 
         {/* 6-ay mini trend */}
-        <div className="bg-white border border-gray-100 rounded p-4 shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
           <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">6 Aylık Net Kâr Trendi</div>
           <div className="space-y-1.5">
             {monthYMs.map((ym, i) => {
@@ -287,10 +287,10 @@ export async function PnlTab({ userId, companyId }: Props) {
                 <div key={ym} className={`flex items-center gap-2 ${isCur ? 'font-bold' : ''}`}>
                   <span className="text-[10px] text-gray-400 w-12 shrink-0">{fmtMonth(ym)}</span>
                   <div className="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden">
-                    <div className={`h-full rounded-full ${net >= 0 ? 'bg-emerald-400' : 'bg-red-400'}`}
+                    <div className={`h-full rounded-full ${net >= 0 ? 'bg-pos' : 'bg-neg'}`}
                       style={{ width: `${barW}%` }} />
                   </div>
-                  <span className={`text-[10px] tabular-nums w-16 text-right shrink-0 ${net >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
+                  <span className={`text-[10px] tabular-nums w-16 text-right shrink-0 ${net >= 0 ? 'text-pos-text' : 'text-neg'}`}>
                     {fmt(net)}
                   </span>
                 </div>

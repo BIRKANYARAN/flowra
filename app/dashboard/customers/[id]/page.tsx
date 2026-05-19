@@ -57,16 +57,16 @@ function fmtDate(s: string) {
 
 const STATUS_PROFORMA: Record<string, { label: string; cls: string }> = {
   draft:     { label: 'Taslak',     cls: 'bg-gray-100 text-gray-500' },
-  sent:      { label: 'Gönderildi', cls: 'bg-blue-100 text-blue-700' },
-  accepted:  { label: 'Onaylandı',  cls: 'bg-green-100 text-green-700' },
-  approved:  { label: 'Onaylı',     cls: 'bg-green-100 text-green-700' },
-  rejected:  { label: 'Reddedildi', cls: 'bg-red-100 text-red-600' },
+  sent:      { label: 'Gönderildi', cls: 'bg-info-light text-info-text' },
+  accepted:  { label: 'Onaylandı',  cls: 'bg-pos-light text-pos-text' },
+  approved:  { label: 'Onaylı',     cls: 'bg-pos-light text-pos-text' },
+  rejected:  { label: 'Reddedildi', cls: 'bg-neg-light text-neg' },
   converted: { label: 'Satışa Dön', cls: 'bg-purple-100 text-purple-700' },
 }
 
 const STATUS_PAYMENT: Record<string, { label: string; cls: string }> = {
-  pending:   { label: 'Bekliyor', cls: 'bg-amber-100 text-amber-700' },
-  paid:      { label: 'Ödendi',   cls: 'bg-green-100 text-green-700' },
+  pending:   { label: 'Bekliyor', cls: 'bg-warn-light text-warn-text' },
+  paid:      { label: 'Ödendi',   cls: 'bg-pos-light text-pos-text' },
   partial:   { label: 'Kısmi',    cls: 'bg-yellow-100 text-yellow-700' },
   overdue:   { label: 'Gecikti',  cls: 'bg-orange-100 text-orange-700' },
   cancelled: { label: 'İptal',    cls: 'bg-gray-100 text-gray-500' },
@@ -74,8 +74,8 @@ const STATUS_PAYMENT: Record<string, { label: string; cls: string }> = {
 
 const STATUS_SHIPMENT: Record<string, { label: string; cls: string }> = {
   pending:   { label: 'Bekliyor',  cls: 'bg-gray-100 text-gray-500' },
-  shipped:   { label: 'Kargoda',   cls: 'bg-blue-100 text-blue-700' },
-  delivered: { label: 'Teslim',    cls: 'bg-green-100 text-green-700' },
+  shipped:   { label: 'Kargoda',   cls: 'bg-info-light text-info-text' },
+  delivered: { label: 'Teslim',    cls: 'bg-pos-light text-pos-text' },
 }
 
 function Badge({ map, val }: { map: Record<string, { label: string; cls: string }>; val: string | null }) {
@@ -155,7 +155,7 @@ export default function CustomerDetailPage() {
     return (
       <div className="max-w-2xl">
         <button onClick={() => router.back()} className="text-sm text-gray-400 hover:text-gray-700 mb-4 inline-flex items-center gap-1">← Geri</button>
-        <div className="bg-red-50 border border-red-100 rounded p-6 text-red-600 text-sm">{error || 'Bilinmeyen hata.'}</div>
+        <div className="bg-neg-light border border-neg-light rounded p-6 text-neg text-sm">{error || 'Bilinmeyen hata.'}</div>
       </div>
     )
   }
@@ -183,19 +183,19 @@ export default function CustomerDetailPage() {
           {
             label: summary.balance_try > 0 ? 'Bakiye (Ödenmedi)' : 'Tahsil Edildi',
             value: `₺${fmt(Math.abs(summary.balance_try))}`,
-            cls:   summary.balance_try > 0 ? 'text-red-600' : 'text-green-600',
+            cls:   summary.balance_try > 0 ? 'text-neg' : 'text-pos-text',
           },
         ].map(c => (
-          <div key={c.label} className="bg-white border border-gray-100 rounded px-4 py-3">
-            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{c.label}</div>
+          <div key={c.label} className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
+            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{c.label}</div>
             <div className={`text-lg font-black tabular-nums ${c.cls ?? ''}`}>{c.value}</div>
           </div>
         ))}
       </div>
 
       {/* ── Customer info ─────────────────────────────────────────────────── */}
-      <div className="bg-white border border-gray-100 rounded p-5">
-        <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Müşteri Bilgileri</h2>
+      <div className="bg-white border border-[#e2e8f0] rounded p-5">
+        <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">Müşteri Bilgileri</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2 text-sm">
           {customer.tax_number && (
             <>
@@ -225,21 +225,21 @@ export default function CustomerDetailPage() {
       </div>
 
       {/* ── Sales ─────────────────────────────────────────────────────────── */}
-      <div className="bg-white border border-gray-100 rounded overflow-hidden">
-        <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-          <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Satışlar</h2>
+      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+        <div className="px-5 py-4 border-b border-[#e2e8f0] flex items-center justify-between">
+          <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Satışlar</h2>
           <span className="text-xs text-gray-400">{summary.sale_count} kayıt</span>
         </div>
         {updateError && (
-          <div className="mx-5 mt-3 text-xs text-red-600 bg-red-50 border border-red-100 rounded px-3 py-2 flex items-center justify-between">
+          <div className="mx-5 mt-3 text-xs text-neg bg-neg-light border border-neg-light rounded px-3 py-2 flex items-center justify-between">
             <span>{updateError}</span>
-            <button onClick={() => setUpdateError('')} className="ml-3 text-red-400 hover:text-red-600 font-bold">✕</button>
+            <button onClick={() => setUpdateError('')} className="ml-3 text-neg hover:text-neg font-bold">✕</button>
           </div>
         )}
         {sales.length === 0 ? (
           <div className="text-center py-10 text-gray-400 text-sm">Henüz satış yok.</div>
         ) : (
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-[#e2e8f0]">
             {sales.map(s => {
               const busy = updatingSaleId === s.id
               return (
@@ -273,7 +273,7 @@ export default function CustomerDetailPage() {
                           className={`px-2 py-0.5 rounded border text-[10px] font-bold uppercase transition-colors disabled:cursor-not-allowed
                             ${s.payment_status === st
                               ? 'bg-gray-900 text-white border-gray-900'
-                              : 'border-gray-200 text-gray-500 hover:border-gray-400 hover:text-gray-700'
+                              : 'border-[#e2e8f0] text-gray-500 hover:border-[#64748b] hover:text-gray-700'
                             }`}
                         >
                           {STATUS_PAYMENT[st]?.label ?? st}
@@ -292,7 +292,7 @@ export default function CustomerDetailPage() {
                           className={`px-2 py-0.5 rounded border text-[10px] font-bold uppercase transition-colors disabled:cursor-not-allowed
                             ${s.shipment_status === st
                               ? 'bg-gray-900 text-white border-gray-900'
-                              : 'border-gray-200 text-gray-500 hover:border-gray-400 hover:text-gray-700'
+                              : 'border-[#e2e8f0] text-gray-500 hover:border-[#64748b] hover:text-gray-700'
                             }`}
                         >
                           {STATUS_SHIPMENT[st]?.label ?? st}
@@ -308,17 +308,17 @@ export default function CustomerDetailPage() {
       </div>
 
       {/* ── Proformas ─────────────────────────────────────────────────────── */}
-      <div className="bg-white border border-gray-100 rounded overflow-hidden">
-        <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-          <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Proformalar</h2>
+      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+        <div className="px-5 py-4 border-b border-[#e2e8f0] flex items-center justify-between">
+          <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Proformalar</h2>
           <span className="text-xs text-gray-400">{summary.proforma_count} kayıt</span>
         </div>
         {proformas.length === 0 ? (
           <div className="text-center py-10 text-gray-400 text-sm">Henüz proforma yok.</div>
         ) : (
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-[#e2e8f0]">
             {proformas.map(p => (
-              <div key={p.id} className="flex items-center justify-between px-5 py-3 hover:bg-gray-50/60 transition-colors">
+              <div key={p.id} className="flex items-center justify-between px-5 py-3 hover:bg-[#f8fafc]/60 transition-colors">
                 <div className="min-w-0">
                   <div className="text-sm font-semibold">{p.proforma_no ?? p.id.slice(0, 8)}</div>
                   <div className="text-xs text-gray-400">{fmtDate(p.created_at)}</div>

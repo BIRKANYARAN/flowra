@@ -11,8 +11,8 @@ import type { Customer } from '@/types'
 
 export type { Customer }
 
-const IL  = 'w-full border border-gray-200 rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white transition-colors'
-const LAB = 'block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5'
+const IL  = 'w-full border border-[#e2e8f0] rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white transition-colors'
+const LAB = 'block text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5'
 
 const EMPTY = {
   name: '', address: '', tax_number: '', tax_office: '',
@@ -87,7 +87,7 @@ export default function CustomersClient({ initialCustomers }: Props) {
     <div className="space-y-4">
       {/* ── Toolbar ───────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between">
-        <h2 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+        <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
           {list.length} Müşteri
         </h2>
         {!showForm && (
@@ -102,8 +102,8 @@ export default function CustomersClient({ initialCustomers }: Props) {
 
       {/* ── Add/Edit Form ─────────────────────────────────────────────────── */}
       {showForm && (
-        <div className="bg-white border border-gray-100 rounded p-6 space-y-4">
-          <h3 className="font-bold text-sm border-b border-gray-100 pb-3">
+        <div className="bg-white border border-[#e2e8f0] rounded p-6 space-y-4">
+          <h3 className="font-bold text-sm border-b border-[#e2e8f0] pb-3">
             {editId ? 'Müşteriyi Düzenle' : 'Yeni Müşteri'}
           </h3>
           <div>
@@ -125,7 +125,7 @@ export default function CustomersClient({ initialCustomers }: Props) {
             <textarea className={`${IL} resize-none`} rows={2} {...f('notes')} />
           </div>
           {err && (
-            <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded px-3 py-2">
+            <div className="text-sm text-neg bg-neg-light border border-neg-light rounded px-3 py-2">
               {err}
             </div>
           )}
@@ -139,7 +139,7 @@ export default function CustomersClient({ initialCustomers }: Props) {
             </button>
             <button
               onClick={closeForm}
-              className="border border-gray-200 px-5 py-2.5 rounded text-sm font-medium hover:bg-gray-50/60 transition-colors"
+              className="border border-[#e2e8f0] px-5 py-2.5 rounded text-sm font-medium hover:bg-[#f8fafc]/60 transition-colors"
             >
               İptal
             </button>
@@ -158,7 +158,7 @@ export default function CustomersClient({ initialCustomers }: Props) {
       )}
 
       {/* ── Customer List ─────────────────────────────────────────────────── */}
-      <div className="bg-white border border-gray-100 rounded overflow-hidden">
+      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
         {filtered.length === 0 ? (
           <div className="py-16 text-center">
             <div className="text-4xl mb-3">👥</div>
@@ -172,9 +172,9 @@ export default function CustomersClient({ initialCustomers }: Props) {
             )}
           </div>
         ) : (
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-[#e2e8f0]">
             {filtered.map(c => (
-              <div key={c.id} className="flex items-center justify-between px-5 py-4 hover:bg-gray-50/60 transition-colors">
+              <div key={c.id} className="flex items-center justify-between px-5 py-4 hover:bg-[#f8fafc]/60 transition-colors">
                 <button
                   onClick={() => router.push(`/dashboard/customers/${c.id}`)}
                   className="min-w-0 text-left flex-1 mr-3"
@@ -200,7 +200,7 @@ export default function CustomersClient({ initialCustomers }: Props) {
                     <span className="flex items-center gap-1">
                       <button
                         onClick={() => del(c.id)}
-                        className="text-xs text-white bg-red-500 hover:bg-red-600 px-2 py-1 rounded transition-colors font-semibold"
+                        className="text-xs text-white bg-neg-light hover:bg-neg px-2 py-1 rounded transition-colors font-semibold"
                       >
                         Evet, sil
                       </button>
@@ -214,7 +214,7 @@ export default function CustomersClient({ initialCustomers }: Props) {
                   ) : (
                     <button
                       onClick={() => setConfirmId(c.id)}
-                      className="text-xs text-gray-400 hover:text-red-500 px-2 py-1 rounded hover:bg-red-50 transition-colors"
+                      className="text-xs text-gray-400 hover:text-neg px-2 py-1 rounded hover:bg-neg-light transition-colors"
                     >
                       Sil
                     </button>

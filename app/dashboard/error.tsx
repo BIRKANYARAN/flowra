@@ -15,14 +15,14 @@ export default function DashboardError({
 
   return (
     <div className="flex items-center justify-center min-h-[60vh]">
-      <div className="bg-white border border-gray-100 rounded p-10 max-w-md text-center">
+      <div className="bg-white border border-[#e2e8f0] rounded p-10 max-w-md text-center">
         <div className="text-4xl mb-4">⚠️</div>
         <h2 className="text-lg font-black text-gray-900 mb-2">Bir hata oluştu</h2>
         <p className="text-sm text-gray-500 mb-4">
           Sayfa yüklenirken beklenmeyen bir hata meydana geldi.
         </p>
         {error?.message && process.env.NODE_ENV !== 'production' && (
-          <p className="text-xs text-gray-400 font-mono bg-gray-50 rounded p-3 mb-4 break-all max-h-24 overflow-auto text-left">
+          <p className="text-xs text-gray-400 font-mono bg-[#f8fafc] rounded p-3 mb-4 break-all max-h-24 overflow-auto text-left">
             {error.message}
           </p>
         )}

@@ -128,7 +128,7 @@ export function PartnerImpactClient({
 
   if (partnerCount === 0) {
     return (
-      <div className="bg-white border border-gray-100 rounded p-10 text-center">
+      <div className="bg-white border border-[#e2e8f0] rounded p-10 text-center">
         <div className="text-3xl mb-3">👥</div>
         <div className="text-sm font-semibold text-gray-700 mb-1">Ortak bulunamadı</div>
         <div className="text-xs text-gray-400 mb-4">
@@ -149,33 +149,33 @@ export function PartnerImpactClient({
 
       {/* ── Position summary strip ─────────────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-white border border-gray-100 rounded px-4 py-3">
+        <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
           <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1">Nakit Bakiye</div>
-          <div className={`text-lg font-black tabular-nums ${cashBalance >= 0 ? 'text-gray-900' : 'text-red-600'}`}>
+          <div className={`text-lg font-black tabular-nums ${cashBalance >= 0 ? 'text-gray-900' : 'text-neg'}`}>
             {fmt(cashBalance)}
           </div>
           <div className="text-[10px] text-gray-400 mt-0.5">tahsil − ödenen</div>
         </div>
 
-        <div className="bg-white border border-gray-100 rounded px-4 py-3">
+        <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
           <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1">Dağıtılabilir</div>
-          <div className={`text-lg font-black tabular-nums ${cashDistributable > 0 ? 'text-emerald-700' : 'text-gray-400'}`}>
+          <div className={`text-lg font-black tabular-nums ${cashDistributable > 0 ? 'text-pos-text' : 'text-gray-400'}`}>
             {cashDistributable > 0 ? fmt(cashDistributable) : '—'}
           </div>
           <div className="text-[10px] text-gray-400 mt-0.5">yükümlülükler düşülmüş</div>
         </div>
 
-        <div className="bg-white border border-gray-100 rounded px-4 py-3">
+        <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
           <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1">Net Gelir (Tahakkuk)</div>
-          <div className={`text-lg font-black tabular-nums ${netIncome >= 0 ? 'text-gray-900' : 'text-red-600'}`}>
+          <div className={`text-lg font-black tabular-nums ${netIncome >= 0 ? 'text-gray-900' : 'text-neg'}`}>
             {fmt(netIncome)}
           </div>
           <div className="text-[10px] text-gray-400 mt-0.5">vergi sonrası</div>
         </div>
 
-        <div className="bg-white border border-gray-100 rounded px-4 py-3">
+        <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
           <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1">Toplam Ortak Borcu</div>
-          <div className={`text-lg font-black tabular-nums ${totalLoanBalance > 0 ? 'text-amber-700' : 'text-gray-400'}`}>
+          <div className={`text-lg font-black tabular-nums ${totalLoanBalance > 0 ? 'text-warn-text' : 'text-gray-400'}`}>
             {totalLoanBalance > 0 ? fmt(totalLoanBalance) : 'Yok'}
           </div>
           <div className="text-[10px] text-gray-400 mt-0.5">{partnerCount} aktif ortak</div>
@@ -184,16 +184,16 @@ export function PartnerImpactClient({
 
       {/* ── Next loan due alert ────────────────────────────────────────────── */}
       {nextDue && (
-        <div className="flex items-center justify-between gap-3 px-4 py-3 bg-amber-50 border border-amber-200 rounded">
+        <div className="flex items-center justify-between gap-3 px-4 py-3 bg-warn-light border border-warn-light rounded">
           <div className="flex items-center gap-3 min-w-0">
-            <span className="text-[9px] font-black uppercase tracking-widest text-amber-600 flex-shrink-0">Yaklaşan Geri Ödeme</span>
-            <span className="text-sm font-medium text-amber-700 truncate">
+            <span className="text-[9px] font-black uppercase tracking-widest text-warn-text flex-shrink-0">Yaklaşan Geri Ödeme</span>
+            <span className="text-sm font-medium text-warn-text truncate">
               {fmt(nextDue.outstanding_try)} · {fmtDate(nextDue.due_date)}
             </span>
           </div>
           <Link
             href="/dashboard/partners?tab=tranches"
-            className="flex-shrink-0 text-xs font-bold text-amber-700 hover:underline whitespace-nowrap"
+            className="flex-shrink-0 text-xs font-bold text-warn-text hover:underline whitespace-nowrap"
           >
             Trancheler →
           </Link>
@@ -201,8 +201,8 @@ export function PartnerImpactClient({
       )}
 
       {/* ── Distribution simulator ─────────────────────────────────────────── */}
-      <div className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
-        <div className="flex items-center justify-between px-5 py-3 border-b border-gray-50">
+      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+        <div className="flex items-center justify-between px-5 py-3 border-b border-[#f1f5f9]">
           <div>
             <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Dağıtım Simülatörü</div>
             <div className="text-[10px] text-gray-400 mt-0.5">
@@ -213,7 +213,7 @@ export function PartnerImpactClient({
             {sliderActive && (
               <button
                 onClick={() => { setSimAmount(Math.max(0, Math.round(cashDistributable))); setSliderActive(false) }}
-                className="text-[10px] font-semibold text-gray-500 hover:text-gray-700 px-2 py-1 rounded border border-gray-200 hover:bg-gray-50"
+                className="text-[10px] font-semibold text-gray-500 hover:text-gray-700 px-2 py-1 rounded border border-[#e2e8f0] hover:bg-[#f8fafc]"
               >
                 Sıfırla
               </button>
@@ -225,7 +225,7 @@ export function PartnerImpactClient({
         </div>
 
         {/* Slider */}
-        <div className="px-5 py-4 border-b border-gray-50">
+        <div className="px-5 py-4 border-b border-[#f1f5f9]">
           <div className="flex items-center gap-4">
             <div className="flex-1">
               <input
@@ -253,9 +253,9 @@ export function PartnerImpactClient({
 
           {/* Legal reserve warning */}
           {legalReserveWarning && (
-            <div className="mt-3 flex items-start gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded">
-              <span className="text-amber-500 flex-shrink-0 text-sm">⚠</span>
-              <div className="text-[11px] text-amber-700">
+            <div className="mt-3 flex items-start gap-2 px-3 py-2 bg-warn-light border border-warn-light rounded">
+              <span className="text-warn flex-shrink-0 text-sm">⚠</span>
+              <div className="text-[11px] text-warn-text">
                 <span className="font-bold">TTK 519 uyarısı:</span> Yasal yedek ({fmt(legalReserve)}) ayrılmadan
                 net gelirin tamamı dağıtılamaz. Önerilen maksimum: {fmt(Math.max(0, netIncome - legalReserve))}.
               </div>
@@ -268,28 +268,28 @@ export function PartnerImpactClient({
           <div>
             {/* Equalization notice */}
             {hasEqualization && (
-              <div className="px-5 py-2 bg-blue-50/60 border-b border-blue-100">
-                <span className="text-[9px] font-black uppercase tracking-widest text-blue-600">
+              <div className="px-5 py-2 bg-info-light/60 border-b border-info-light">
+                <span className="text-[9px] font-black uppercase tracking-widest text-info-text">
                   Eşitleme aktif — katkı dengesizliği gideriliyor
                 </span>
               </div>
             )}
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-50 bg-gray-50/60">
+                <tr className="border-b border-[#f1f5f9] bg-[#f8fafc]/60">
                   <th className="text-left px-5 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400">Ortak</th>
                   <th className="text-right px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400">Pay</th>
                   {hasEqualization && (
-                    <th className="text-right px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-blue-400">Eşitleme</th>
+                    <th className="text-right px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-info">Eşitleme</th>
                   )}
                   <th className="text-right px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400">Pro-rata</th>
                   <th className="text-right px-5 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400">Toplam</th>
-                  <th className="text-right px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-amber-400">Ortak Borcu</th>
+                  <th className="text-right px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-warn">Ortak Borcu</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-[#f1f5f9]">
                 {displayEntries.map(e => (
-                  <tr key={e.partner_id} className="hover:bg-gray-50/50">
+                  <tr key={e.partner_id} className="hover:bg-[#f8fafc]/50">
                     <td className="px-5 py-3">
                       <div className="font-semibold text-gray-900">{e.partner_name}</div>
                       <div className="text-[10px] text-gray-400">{pct(e.share_ratio)} hisse</div>
@@ -300,7 +300,7 @@ export function PartnerImpactClient({
                     {hasEqualization && (
                       <td className="px-4 py-3 text-right">
                         {e.equalization_amount > 0 ? (
-                          <span className="font-mono text-[11px] text-blue-700">{fmt(e.equalization_amount)}</span>
+                          <span className="font-mono text-[11px] text-info-text">{fmt(e.equalization_amount)}</span>
                         ) : (
                           <span className="text-[10px] text-gray-300">—</span>
                         )}
@@ -310,27 +310,27 @@ export function PartnerImpactClient({
                       {e.pro_rata_share > 0 ? fmt(e.pro_rata_share) : <span className="text-gray-300">—</span>}
                     </td>
                     <td className="px-5 py-3 text-right">
-                      <span className="font-black text-[13px] text-emerald-700 tabular-nums">{fmt(e.total_payout)}</span>
+                      <span className="font-black text-[13px] text-pos-text tabular-nums">{fmt(e.total_payout)}</span>
                     </td>
                     <td className="px-4 py-3 text-right">
                       {e.loan_balance_try > 0 ? (
-                        <span className="font-mono text-[11px] text-amber-600">{fmt(e.loan_balance_try)}</span>
+                        <span className="font-mono text-[11px] text-warn-text">{fmt(e.loan_balance_try)}</span>
                       ) : (
-                        <span className="text-[10px] text-emerald-500 font-semibold">Kapalı</span>
+                        <span className="text-[10px] text-pos font-semibold">Kapalı</span>
                       )}
                     </td>
                   </tr>
                 ))}
               </tbody>
               <tfoot>
-                <tr className="border-t border-gray-100 bg-gray-50/40">
+                <tr className="border-t border-[#e2e8f0] bg-[#f8fafc]/40">
                   <td colSpan={hasEqualization ? 4 : 3} className="px-5 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400">
                     Toplam
                   </td>
-                  <td className="px-5 py-2.5 text-right font-black text-[14px] tabular-nums text-emerald-700">
+                  <td className="px-5 py-2.5 text-right font-black text-[14px] tabular-nums text-pos-text">
                     {fmt(displayEntries.reduce((s, e) => s + e.total_payout, 0))}
                   </td>
-                  <td className="px-4 py-2.5 text-right font-mono text-[11px] text-amber-600">
+                  <td className="px-4 py-2.5 text-right font-mono text-[11px] text-warn-text">
                     {fmt(totalLoanBalance)}
                   </td>
                 </tr>
@@ -350,14 +350,14 @@ export function PartnerImpactClient({
 
       {/* ── Per-partner loan breakdown ─────────────────────────────────────── */}
       {totalLoanBalance > 0 && (
-        <div className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
-          <div className="flex items-center justify-between px-5 py-3 border-b border-gray-50">
+        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+          <div className="flex items-center justify-between px-5 py-3 border-b border-[#f1f5f9]">
             <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Ortak Borç Pozisyonları</div>
             <Link href="/dashboard/partners?tab=tranches" className="text-[10px] font-semibold text-primary-600 hover:text-primary-700">
               Tranche detayı →
             </Link>
           </div>
-          <div className="divide-y divide-gray-50">
+          <div className="divide-y divide-[#f1f5f9]">
             {displayEntries.map(e => {
               const loanPct = totalLoanBalance > 0 ? (e.loan_balance_try / totalLoanBalance) * 100 : 0
               return (
@@ -365,7 +365,7 @@ export function PartnerImpactClient({
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2 mb-1">
                       <span className="text-sm font-semibold text-gray-900">{e.partner_name}</span>
-                      <span className={`text-sm font-black tabular-nums ${e.loan_balance_try > 0 ? 'text-amber-700' : 'text-gray-400'}`}>
+                      <span className={`text-sm font-black tabular-nums ${e.loan_balance_try > 0 ? 'text-warn-text' : 'text-gray-400'}`}>
                         {e.loan_balance_try > 0 ? fmt(e.loan_balance_try) : 'Yok'}
                       </span>
                     </div>
@@ -373,7 +373,7 @@ export function PartnerImpactClient({
                       <div className="flex items-center gap-2">
                         <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
                           <div
-                            className="h-full bg-amber-400 rounded-full"
+                            className="h-full bg-warn rounded-full"
                             style={{ width: `${Math.min(100, loanPct)}%` }}
                           />
                         </div>

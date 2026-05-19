@@ -10,10 +10,10 @@ import { cn } from '@/components/ui'
 type Tone = 'warning' | 'danger' | 'info' | 'success' | 'orange'
 
 const PALETTE: Record<Tone, { bg: string; fg: string; icon: string }> = {
-  warning: { bg: 'bg-amber-50 border-amber-200',  fg: 'text-amber-700',  icon: 'alert'      },
-  danger:  { bg: 'bg-red-50 border-red-200',       fg: 'text-red-700',    icon: 'flame'      },
-  info:    { bg: 'bg-blue-50 border-blue-200',     fg: 'text-blue-700',   icon: 'info'       },
-  success: { bg: 'bg-emerald-50 border-emerald-200', fg: 'text-emerald-700', icon: 'check'  },
+  warning: { bg: 'bg-warn-light border-warn-light',  fg: 'text-warn-text',  icon: 'alert'      },
+  danger:  { bg: 'bg-neg-light border-neg-light',       fg: 'text-neg-text',    icon: 'flame'      },
+  info:    { bg: 'bg-info-light border-info-light',     fg: 'text-info-text',   icon: 'info'       },
+  success: { bg: 'bg-pos-light border-pos-light', fg: 'text-pos-text', icon: 'check'  },
   orange:  { bg: 'bg-orange-50 border-orange-200', fg: 'text-orange-700', icon: 'alert'      },
 }
 

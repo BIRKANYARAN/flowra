@@ -114,15 +114,15 @@ export async function SimulationContext({ companyId }: Props) {
           },
         ].map(kpi => {
           const colors: Record<string, string> = {
-            emerald: 'text-emerald-700',
-            red:     'text-red-600',
-            amber:   'text-amber-700',
+            emerald: 'text-pos-text',
+            red:     'text-neg',
+            amber:   'text-warn-text',
             orange:  'text-orange-700',
             gray:    'text-gray-900',
           }
           return (
             <div key={kpi.label}
-              className="bg-white border border-gray-100 rounded px-3 py-2.5 hover:border-gray-300 transition-colors">
+              className="bg-white border border-[#e2e8f0] rounded px-3 py-2.5 hover:border-[#e2e8f0] transition-colors">
               <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1">{kpi.label}</div>
               <div className={`text-base font-black tabular-nums leading-none ${colors[kpi.tone] ?? 'text-gray-900'}`}>
                 {kpi.value}
@@ -137,10 +137,10 @@ export async function SimulationContext({ companyId }: Props) {
       {burn > 0 && (
         <div className={`flex items-center justify-between gap-4 px-4 py-2.5 rounded border text-xs ${
           m.cash.true_cash_position <= 0
-            ? 'bg-red-50 border-red-200'
+            ? 'bg-neg-light border-neg-light'
             : runwayMonths !== null && runwayMonths <= 6
-            ? 'bg-amber-50 border-amber-200'
-            : 'bg-gray-50 border-gray-100'
+            ? 'bg-warn-light border-warn-light'
+            : 'bg-[#f8fafc] border-[#e2e8f0]'
         }`}>
           <div className="flex items-center gap-3">
             <span className="text-[9px] font-black uppercase tracking-widest text-gray-500">
@@ -160,7 +160,7 @@ export async function SimulationContext({ companyId }: Props) {
               </span>
             )}
             {r.exhaustion_month !== null && (
-              <span className="text-[10px] font-bold text-red-600">
+              <span className="text-[10px] font-bold text-neg">
                 ⚠ Ay {r.exhaustion_month}&apos;de tükenme
               </span>
             )}

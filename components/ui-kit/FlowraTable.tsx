@@ -42,7 +42,7 @@ export function FlowraTable<T>({
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-100 text-red-700 px-4 py-3 rounded text-sm">
+      <div className="bg-neg-light border border-neg-light text-neg-text px-4 py-3 rounded text-sm">
         {error}
       </div>
     )
@@ -60,15 +60,15 @@ export function FlowraTable<T>({
   }
 
   return (
-    <div className={cn('bg-white border border-gray-200 rounded overflow-hidden', className)}>
+    <div className={cn('bg-white border border-[#e2e8f0] rounded overflow-hidden', className)}>
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-gray-100">
+          <tr className="border-b border-[#e2e8f0]">
             {columns.map(col => (
               <th
                 key={col.key}
                 className={cn(
-                  'px-5 py-3 text-[10px] font-bold uppercase tracking-widest text-gray-400',
+                  'px-5 py-3 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]',
                   col.align === 'right'  && 'text-right',
                   col.align === 'center' && 'text-center',
                   col.className,
@@ -79,12 +79,12 @@ export function FlowraTable<T>({
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-50">
+        <tbody className="divide-y divide-[#f1f5f9]">
           {rows.map((row, i) => (
             <tr
               key={rowKey(row)}
               className={cn(
-                'hover:bg-gray-50/60 transition-colors',
+                'hover:bg-[#f8fafc]/60 transition-colors',
                 onRowClick && 'cursor-pointer',
               )}
               onClick={() => onRowClick?.(row)}
@@ -107,7 +107,7 @@ export function FlowraTable<T>({
         </tbody>
       </table>
       {footer && (
-        <div className="border-t border-gray-100 px-5 py-3">
+        <div className="border-t border-[#e2e8f0] px-5 py-3">
           {footer}
         </div>
       )}

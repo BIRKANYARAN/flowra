@@ -66,9 +66,9 @@ export function InputPanel({
   onExtraPartnerDebtChange,
 }: InputPanelProps) {
   return (
-    <div className="bg-white border border-gray-100 rounded p-5 space-y-4">
+    <div className="bg-white border border-[#e2e8f0] rounded p-5 space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Parametreler</h2>
+        <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Parametreler</h2>
         <span className="text-[10px] text-gray-400 italic">Sonuçlar yukarıda otomatik güncellenir ↑</span>
       </div>
 
@@ -163,35 +163,35 @@ export function InputPanel({
           />
         </div>
         <div className="flex items-end">
-          <div className="bg-blue-50 border border-blue-200 rounded px-4 py-2.5 text-xs text-blue-700 w-full">
+          <div className="bg-info-light border border-info-light rounded px-4 py-2.5 text-xs text-info-text w-full">
             ℹ Giderler tekrarlı gider planından otomatik hesaplanır
             {recurringLoading && <span className="ml-2 opacity-60">yükleniyor…</span>}
           </div>
         </div>
         <div className="flex items-end">
-          <div className="bg-gray-50 border border-gray-200 rounded px-4 py-2.5 text-xs w-full">
+          <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-2.5 text-xs w-full">
             <span className="text-gray-400 uppercase tracking-wide font-semibold block mb-0.5">Stok Tutma Süresi</span>
             <span className="font-bold text-gray-700">
               {holdingDays} gün
               {holdingDays >= 30 && <span className="text-gray-400 font-normal"> ({(holdingDays / 30).toFixed(1)} ay)</span>}
             </span>
             {!entryDate && !productId && (
-              <span className="text-amber-600 ml-2">(varsayılan 30 gün)</span>
+              <span className="text-warn-text ml-2">(varsayılan 30 gün)</span>
             )}
             {!entryDate && productId && (
-              <span className="text-amber-600 ml-2">(stok lotu bulunamadı)</span>
+              <span className="text-warn-text ml-2">(stok lotu bulunamadı)</span>
             )}
           </div>
         </div>
       </div>
 
       {/* ── Senaryo Katmanları ──────────────────────────────────────────────── */}
-      <div className="pt-3 border-t border-dashed border-gray-200">
+      <div className="pt-3 border-t border-dashed border-[#e2e8f0]">
         <div className="flex items-center gap-2 mb-3">
-          <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Senaryo Katmanları</span>
+          <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Senaryo Katmanları</span>
           <span className="text-[10px] text-gray-400 font-normal">— isteğe bağlı · baskı haritasını etkiler</span>
           {hasScenario && (
-            <span className="ml-auto text-[10px] bg-amber-100 text-amber-700 border border-amber-200 rounded px-2 py-0.5 font-bold">
+            <span className="ml-auto text-[10px] bg-warn-light text-warn-text border border-warn-light rounded px-2 py-0.5 font-bold">
               Senaryo aktif
             </span>
           )}
@@ -201,7 +201,7 @@ export function InputPanel({
             <label className={LAB}>
               Tahsilat Gecikmesi — %{collectionDelayPct}
               {collectionDelayPct > 0 && (
-                <span className="text-amber-500 normal-case font-normal ml-1">
+                <span className="text-warn normal-case font-normal ml-1">
                   (gelirin %{collectionDelayPct}&apos;i gecikmeli)
                 </span>
               )}

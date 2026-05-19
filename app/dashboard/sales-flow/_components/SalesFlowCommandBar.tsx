@@ -97,7 +97,7 @@ export async function SalesFlowCommandBar({ companyId }: Props) {
   // ── Empty state ─────────────────────────────────────────────────────────────
   if (total === 0) {
     return (
-      <div className="flex items-center gap-2 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded text-xs text-gray-400">
+      <div className="flex items-center gap-2 px-4 py-2.5 bg-[#f8fafc] border border-[#e2e8f0] rounded text-xs text-gray-400">
         Henüz teklif kaydı yok — pipeline boş.
       </div>
     )
@@ -108,8 +108,8 @@ export async function SalesFlowCommandBar({ companyId }: Props) {
 
   const funnelSteps = [
     { label: 'Taslak',    count: funnel.draft,     color: 'bg-gray-300'     },
-    { label: 'Gönderildi', count: funnel.sent,     color: 'bg-blue-400'     },
-    { label: 'Onaylandı',  count: funnel.accepted, color: 'bg-emerald-400'  },
+    { label: 'Gönderildi', count: funnel.sent,     color: 'bg-info'     },
+    { label: 'Onaylandı',  count: funnel.accepted, color: 'bg-pos'  },
     { label: 'Satıldı',    count: funnel.converted, color: 'bg-primary-500' },
   ]
 
@@ -120,20 +120,20 @@ export async function SalesFlowCommandBar({ companyId }: Props) {
       <div className="flex items-center gap-2 flex-wrap">
 
         {/* Açık Pipeline */}
-        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-100 rounded">
+        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#e2e8f0] rounded">
           <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Açık Pipeline</span>
           {openPipelineValue > 0
-            ? <span className="text-sm font-black tabular-nums text-blue-700">{fmt(openPipelineValue)}</span>
+            ? <span className="text-sm font-black tabular-nums text-info-text">{fmt(openPipelineValue)}</span>
             : <span className="text-sm font-black text-gray-400">—</span>
           }
           <span className="text-[9px] text-gray-400">{openPipelineCount} teklif</span>
         </div>
 
         {/* MTD Satış */}
-        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-100 rounded">
+        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#e2e8f0] rounded">
           <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Bu Ay</span>
           {mtdRevenue > 0
-            ? <span className="text-sm font-black tabular-nums text-emerald-700">{fmt(mtdRevenue)}</span>
+            ? <span className="text-sm font-black tabular-nums text-pos-text">{fmt(mtdRevenue)}</span>
             : <span className="text-sm font-black text-gray-400">—</span>
           }
           <span className="text-[9px] text-gray-400">{salesMtd.length} satış</span>
@@ -142,14 +142,14 @@ export async function SalesFlowCommandBar({ companyId }: Props) {
         {/* Kazanma Oranı */}
         {winRate !== null && (
           <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded border ${
-            winRate >= 60 ? 'bg-emerald-50 border-emerald-200' :
-            winRate >= 35 ? 'bg-amber-50 border-amber-200'    :
-                            'bg-red-50 border-red-200'
+            winRate >= 60 ? 'bg-pos-light border-pos-light' :
+            winRate >= 35 ? 'bg-warn-light border-warn-light'    :
+                            'bg-neg-light border-neg-light'
           }`}>
             <span className="text-[9px] font-black uppercase tracking-widest text-gray-500">Kazanma</span>
             <span className={`text-sm font-black tabular-nums ${
-              winRate >= 60 ? 'text-emerald-700' :
-              winRate >= 35 ? 'text-amber-700'   : 'text-red-600'
+              winRate >= 60 ? 'text-pos-text' :
+              winRate >= 35 ? 'text-warn-text'   : 'text-neg'
             }`}>
               %{winRate.toFixed(0)}
             </span>
@@ -159,7 +159,7 @@ export async function SalesFlowCommandBar({ companyId }: Props) {
 
         {/* Dönüşüm */}
         {conversionRate !== null && (
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-100 rounded">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#e2e8f0] rounded">
             <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Dönüşüm</span>
             <span className="text-sm font-black tabular-nums text-gray-700">%{conversionRate.toFixed(0)}</span>
             <span className="text-[9px] text-gray-400">{funnel.converted}/{total}</span>
@@ -174,7 +174,7 @@ export async function SalesFlowCommandBar({ companyId }: Props) {
       </div>
 
       {/* ── Pipeline Funnel + Stale alert ─────────────────────────────────── */}
-      <div className="flex items-center gap-3 px-4 py-2.5 bg-gray-50 border border-gray-100 rounded">
+      <div className="flex items-center gap-3 px-4 py-2.5 bg-[#f8fafc] border border-[#e2e8f0] rounded">
 
         {/* Funnel mini-viz */}
         <div className="flex items-center gap-3 flex-1">
@@ -209,7 +209,7 @@ export async function SalesFlowCommandBar({ companyId }: Props) {
 
         {/* Rejected signal */}
         {funnel.rejected > 0 && (
-          <span className="text-[10px] text-red-500 font-semibold shrink-0">
+          <span className="text-[10px] text-neg font-semibold shrink-0">
             {funnel.rejected} reddedildi
           </span>
         )}
@@ -217,10 +217,10 @@ export async function SalesFlowCommandBar({ companyId }: Props) {
 
       {/* ── Stale proposal alert ──────────────────────────────────────────── */}
       {staleRows.length > 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded overflow-hidden">
-          <div className="px-3 py-2 border-b border-amber-100 flex items-center gap-2">
-            <span className="w-1.5 h-1.5 bg-amber-500 rounded-full shrink-0" />
-            <span className="text-[9px] font-black uppercase tracking-widest text-amber-700">
+        <div className="bg-warn-light border border-warn-light rounded overflow-hidden">
+          <div className="px-3 py-2 border-b border-warn-light flex items-center gap-2">
+            <span className="w-1.5 h-1.5 bg-warn-light rounded-full shrink-0" />
+            <span className="text-[9px] font-black uppercase tracking-widest text-warn-text">
               Yanıt Bekleyen Teklifler — 15+ Gün
             </span>
           </div>
@@ -233,11 +233,11 @@ export async function SalesFlowCommandBar({ companyId }: Props) {
                     <span className="text-xs font-bold text-gray-900 truncate block">
                       {p.customer_name ?? '—'}
                     </span>
-                    <span className="text-[10px] text-amber-600 font-semibold">
+                    <span className="text-[10px] text-warn-text font-semibold">
                       {age} gündür yanıt yok
                     </span>
                   </div>
-                  <div className="text-sm font-black tabular-nums text-amber-700 shrink-0">
+                  <div className="text-sm font-black tabular-nums text-warn-text shrink-0">
                     {fmt(Number(p.total ?? 0))}
                     <span className="text-[10px] font-normal text-gray-400 ml-1">{p.currency}</span>
                   </div>

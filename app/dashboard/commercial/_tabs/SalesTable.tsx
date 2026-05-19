@@ -13,24 +13,24 @@ import { SaleCreateDrawer } from './SaleCreateDrawer'
 // ── Lookups ───────────────────────────────────────────────────────────────────
 
 const PAYMENT_META: Record<string, { label: string; cls: string }> = {
-  pending:   { label: 'Bekliyor', cls: 'bg-amber-50 text-amber-700 border-amber-200' },
-  paid:      { label: 'Ödendi',   cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-  partial:   { label: 'Kısmi',    cls: 'bg-blue-50 text-blue-700 border-blue-200' },
-  overdue:   { label: 'Gecikmiş', cls: 'bg-red-50 text-red-600 border-red-200' },
-  cancelled: { label: 'İptal',    cls: 'bg-gray-50 text-gray-400 border-gray-200' },
+  pending:   { label: 'Bekliyor', cls: 'bg-warn-light text-warn-text border-warn-light' },
+  paid:      { label: 'Ödendi',   cls: 'bg-pos-light text-pos-text border-pos-light' },
+  partial:   { label: 'Kısmi',    cls: 'bg-info-light text-info-text border-info-light' },
+  overdue:   { label: 'Gecikmiş', cls: 'bg-neg-light text-neg border-neg-light' },
+  cancelled: { label: 'İptal',    cls: 'bg-[#f8fafc] text-gray-400 border-[#e2e8f0]' },
 }
 
 const SHIPMENT_META: Record<string, { label: string; cls: string }> = {
-  pending:   { label: 'Hazırlanıyor', cls: 'bg-gray-50 text-gray-500 border-gray-200' },
-  shipped:   { label: 'Kargoda',      cls: 'bg-blue-50 text-blue-600 border-blue-200' },
-  delivered: { label: 'Teslim',       cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  pending:   { label: 'Hazırlanıyor', cls: 'bg-[#f8fafc] text-gray-500 border-[#e2e8f0]' },
+  shipped:   { label: 'Kargoda',      cls: 'bg-info-light text-info-text border-info-light' },
+  delivered: { label: 'Teslim',       cls: 'bg-pos-light text-pos-text border-pos-light' },
 }
 
 const ACTIONABLE_STATUSES = new Set(['pending', 'partial', 'overdue'])
 
 function StatusBadge({ map, val }: { map: Record<string, { label: string; cls: string }>; val: string | null }) {
   if (!val) return null
-  const m = map[val] ?? { label: val, cls: 'bg-gray-50 text-gray-400 border-gray-200' }
+  const m = map[val] ?? { label: val, cls: 'bg-[#f8fafc] text-gray-400 border-[#e2e8f0]' }
   return (
     <span className={`inline-flex items-center px-1.5 py-0.5 rounded border text-[10px] font-bold ${m.cls}`}>
       {m.label}
@@ -116,7 +116,7 @@ function PaymentDrawer({ sale, onClose, onSuccess }: PaymentDrawerProps) {
         className="fixed right-0 top-0 h-full w-80 bg-white z-50 border-l border-[#e2e8f0] flex flex-col"
       >
         {/* Drawer header */}
-        <div className="flex items-start justify-between px-5 py-4 border-b border-gray-100">
+        <div className="flex items-start justify-between px-5 py-4 border-b border-[#e2e8f0]">
           <div>
             <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 leading-none">
               Ödeme Kaydet
@@ -126,7 +126,7 @@ function PaymentDrawer({ sale, onClose, onSuccess }: PaymentDrawerProps) {
               Toplam: {formatTRY(sale.total_try)}
             </div>
             {alreadyPaid > 0 && (
-              <div className="text-[10px] text-blue-600 font-semibold mt-0.5 font-mono">
+              <div className="text-[10px] text-info-text font-semibold mt-0.5 font-mono">
                 Daha önce {formatTRY(alreadyPaid)} alındı · kalan {formatTRY(remaining)}
               </div>
             )}
@@ -158,16 +158,16 @@ function PaymentDrawer({ sale, onClose, onSuccess }: PaymentDrawerProps) {
               min="0.01"
               value={amount}
               onChange={e => setAmount(e.target.value)}
-              className="w-full border border-gray-200 rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300 font-mono tabular-nums"
+              className="w-full border border-[#e2e8f0] rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300 font-mono tabular-nums"
               required
               autoFocus
             />
             {parsedAmount > 0 && (
               <p className="mt-1 text-[10px] text-gray-400">
                 {isFullPayment ? (
-                  <span className="text-emerald-600 font-semibold">Tam ödeme olarak işlenecek</span>
+                  <span className="text-pos-text font-semibold">Tam ödeme olarak işlenecek</span>
                 ) : (
-                  <span className="text-blue-600 font-semibold">
+                  <span className="text-info-text font-semibold">
                     Kısmi ödeme · sonra kalan {formatTRY(sale.total_try - totalAfterThis)}
                   </span>
                 )}
@@ -187,7 +187,7 @@ function PaymentDrawer({ sale, onClose, onSuccess }: PaymentDrawerProps) {
               id="payment-method"
               value={paymentMethod}
               onChange={e => setPaymentMethod(e.target.value as PaymentMethod)}
-              className="w-full border border-gray-200 rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
+              className="w-full border border-[#e2e8f0] rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
             >
               {PAYMENT_METHODS.map(m => (
                 <option key={m} value={m}>{m}</option>
@@ -208,13 +208,13 @@ function PaymentDrawer({ sale, onClose, onSuccess }: PaymentDrawerProps) {
               type="date"
               value={date}
               onChange={e => setDate(e.target.value)}
-              className="w-full border border-gray-200 rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
+              className="w-full border border-[#e2e8f0] rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
               required
             />
           </div>
 
           {error && (
-            <p className="text-xs text-red-600 font-semibold bg-red-50 border border-red-200 rounded px-3 py-2">
+            <p className="text-xs text-neg font-semibold bg-neg-light border border-neg-light rounded px-3 py-2">
               {error}
             </p>
           )}
@@ -223,7 +223,7 @@ function PaymentDrawer({ sale, onClose, onSuccess }: PaymentDrawerProps) {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 border border-gray-200 text-gray-500 py-2.5 rounded text-sm font-semibold hover:bg-gray-50 transition-colors"
+              className="flex-1 border border-[#e2e8f0] text-gray-500 py-2.5 rounded text-sm font-semibold hover:bg-[#f8fafc] transition-colors"
             >
               İptal
             </button>
@@ -335,7 +335,7 @@ export function SalesTable({ rows }: Props) {
               placeholder="Müşteri ara…"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full pl-8 pr-3 py-2 text-sm border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-primary-300 bg-white"
+              className="w-full pl-8 pr-3 py-2 text-sm border border-[#e2e8f0] rounded focus:outline-none focus:ring-2 focus:ring-primary-300 bg-white"
             />
           </div>
 
@@ -358,7 +358,7 @@ export function SalesTable({ rows }: Props) {
           <select
             value={statusFilter}
             onChange={e => setStatusFilter(e.target.value)}
-            className="border border-gray-200 rounded px-3 py-2 text-xs font-medium bg-white focus:outline-none focus:ring-2 focus:ring-primary-300"
+            className="border border-[#e2e8f0] rounded px-3 py-2 text-xs font-medium bg-white focus:outline-none focus:ring-2 focus:ring-primary-300"
           >
             {PAYMENT_FILTER_OPTIONS.map(o => (
               <option key={o.value} value={o.value}>{o.label}</option>
@@ -400,11 +400,11 @@ export function SalesTable({ rows }: Props) {
             {
               label: 'Nominal Kâr',
               value: formatTRY(totalPft),
-              color: totalPft >= 0 ? 'text-emerald-700' : 'text-red-600',
+              color: totalPft >= 0 ? 'text-pos-text' : 'text-neg',
             },
           ].map(card => (
-            <div key={card.label} className="bg-white border border-gray-100 rounded p-4 shadow-sm">
-              <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">{card.label}</div>
+            <div key={card.label} className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
+              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
               <div className={`text-xl font-black tabular-nums ${card.color}`}>{card.value}</div>
             </div>
           ))}
@@ -412,7 +412,7 @@ export function SalesTable({ rows }: Props) {
 
         {/* ── Table ──────────────────────────────────────────────────────────── */}
         {filtered.length === 0 ? (
-          <div className="bg-white border border-gray-100 rounded text-center py-12 shadow-sm">
+          <div className="bg-white border border-[#e2e8f0] rounded text-center py-12 shadow-sm">
             <p className="text-gray-400 text-sm">{isFiltered ? 'Filtreyle eşleşen satış yok.' : 'Henüz satış kaydı yok.'}</p>
             {isFiltered && (
               <button
@@ -424,9 +424,9 @@ export function SalesTable({ rows }: Props) {
             )}
           </div>
         ) : (
-          <div className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
+          <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
             {/* Header */}
-            <div className="grid grid-cols-12 text-[10px] font-bold text-gray-400 px-5 py-3 border-b border-gray-100 uppercase tracking-widest">
+            <div className="grid grid-cols-12 text-[0.65rem] font-black text-[#94a3b8] px-4 py-2 border-b border-[#e2e8f0] uppercase tracking-widest">
               <div className="col-span-3">Müşteri</div>
               <div className="col-span-2">Proforma</div>
               <div className="col-span-2">Tarih</div>
@@ -436,12 +436,12 @@ export function SalesTable({ rows }: Props) {
             </div>
 
             {/* Rows */}
-            <div className="divide-y divide-gray-50">
+            <div className="divide-y divide-[#f1f5f9]">
               {filtered.map(s => (
                 <div
                   key={s.id}
                   onClick={() => router.push(`/dashboard/sales/${s.id}`)}
-                  className="grid grid-cols-12 items-center px-5 py-3.5 hover:bg-gray-50/60 transition-colors cursor-pointer"
+                  className="grid grid-cols-12 items-center px-4 py-2 hover:bg-[#f8fafc]/60 transition-colors cursor-pointer"
                 >
                   <div className="col-span-3 text-sm font-semibold truncate">{s.customer_name}</div>
 
@@ -464,7 +464,7 @@ export function SalesTable({ rows }: Props) {
                     ) : formatTRY(s.total)}
                   </div>
 
-                  <div className={`col-span-1 text-right text-xs font-bold tabular-nums ${s.nominal_profit >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
+                  <div className={`col-span-1 text-right text-xs font-bold tabular-nums ${s.nominal_profit >= 0 ? 'text-pos-text' : 'text-neg'}`}>
                     {formatTRY(s.nominal_profit)}
                   </div>
 
@@ -488,7 +488,7 @@ export function SalesTable({ rows }: Props) {
 
             {/* Footer count */}
             {isFiltered && (
-              <div className="px-5 py-2 border-t border-gray-100 bg-gray-50/60">
+              <div className="px-5 py-2 border-t border-[#e2e8f0] bg-[#f8fafc]/60">
                 <span className="text-[10px] text-gray-400">
                   {filtered.length} gösteriliyor · toplam {rows.length} satış
                 </span>

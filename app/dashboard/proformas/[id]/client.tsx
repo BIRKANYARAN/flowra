@@ -276,11 +276,11 @@ export function ProformaDetailClient({
             )}
           </div>
           <p className="text-sm text-gray-400 mt-0.5">{createdAt ? fmtDate(createdAt) : '—'}</p>
-          {statusErr && <p className="text-xs text-red-500 mt-1">{statusErr}</p>}
+          {statusErr && <p className="text-xs text-neg mt-1">{statusErr}</p>}
 
           {/* TASK 10: FX info tooltip — only visible on click */}
           {showFxInfo && (fxUsd || fxEur) && (
-            <div className="mt-2 bg-gray-50 border border-gray-200 rounded px-3 py-2 text-xs text-gray-500 inline-block">
+            <div className="mt-2 bg-[#f8fafc] border border-[#e2e8f0] rounded px-3 py-2 text-xs text-gray-500 inline-block">
               <div className="font-semibold text-gray-600 mb-1">Kur Snapshot (Oluşturma Anı)</div>
               {fxUsd ? <div>1 USD = <strong className="text-gray-700">₺{fxUsd.toFixed(4)}</strong></div> : null}
               {fxEur ? <div>1 EUR = <strong className="text-gray-700">₺{fxEur.toFixed(4)}</strong></div> : null}
@@ -356,7 +356,7 @@ export function ProformaDetailClient({
         >
           <div className="bg-white rounded border border-[#e2e8f0] shadow-sm w-full max-w-lg flex flex-col max-h-[90vh]">
             {/* Modal header */}
-            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+            <div className="flex items-center justify-between px-6 py-5 border-b border-[#e2e8f0]">
               <div>
                 <h2 className="font-black text-lg">Satışa Dönüştür</h2>
                 <p className="text-sm text-gray-500 mt-0.5">{no} · {customerName}</p>
@@ -372,7 +372,7 @@ export function ProformaDetailClient({
 
             {/* Modal body — items only, no manual holding days */}
             <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3">
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Ürün Seçimi</p>
+              <p className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ürün Seçimi</p>
 
               {selItems.map(it => {
                 const lt = calculateLine({ price: it.price, quantity: it.qty, discount_percent: it.discountPercent, kdv: it.kdv }).line_total
@@ -380,7 +380,7 @@ export function ProformaDetailClient({
                   <div
                     key={it.id}
                     className={`flex items-center gap-3 p-3.5 rounded border transition-colors ${
-                      it.selected ? 'border-gray-900 bg-gray-50' : 'border-gray-100 opacity-50'
+                      it.selected ? 'border-gray-900 bg-[#f8fafc]' : 'border-[#e2e8f0] opacity-50'
                     }`}
                   >
                     <input
@@ -405,7 +405,7 @@ export function ProformaDetailClient({
                             x.id === it.id ? { ...x, qty: Math.max(0.01, x.qty - 1) } : x
                           ))
                         }
-                        className="w-7 h-7 border border-gray-200 rounded text-sm font-bold hover:bg-gray-100 disabled:opacity-30 flex items-center justify-center"
+                        className="w-7 h-7 border border-[#e2e8f0] rounded text-sm font-bold hover:bg-gray-100 disabled:opacity-30 flex items-center justify-center"
                       >-</button>
                       <input
                         type="number"
@@ -417,7 +417,7 @@ export function ProformaDetailClient({
                           const v = parseFloat(e.target.value)
                           if (v > 0) setSelItems(s => s.map(x => x.id === it.id ? { ...x, qty: v } : x))
                         }}
-                        className="w-14 text-center text-sm border border-gray-200 rounded py-1 focus:outline-none focus:ring-2 focus:ring-primary-400 disabled:opacity-30"
+                        className="w-14 text-center text-sm border border-[#e2e8f0] rounded py-1 focus:outline-none focus:ring-2 focus:ring-primary-400 disabled:opacity-30"
                       />
                       <button
                         type="button"
@@ -427,7 +427,7 @@ export function ProformaDetailClient({
                             x.id === it.id ? { ...x, qty: x.qty + 1 } : x
                           ))
                         }
-                        className="w-7 h-7 border border-gray-200 rounded text-sm font-bold hover:bg-gray-100 disabled:opacity-30 flex items-center justify-center"
+                        className="w-7 h-7 border border-[#e2e8f0] rounded text-sm font-bold hover:bg-gray-100 disabled:opacity-30 flex items-center justify-center"
                       >+</button>
                     </div>
                     <div className="w-20 text-right text-sm font-bold tabular-nums flex-shrink-0">
@@ -439,7 +439,7 @@ export function ProformaDetailClient({
             </div>
 
             {/* Modal footer */}
-            <div className="px-6 py-5 border-t border-gray-100">
+            <div className="px-6 py-5 border-t border-[#e2e8f0]">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm text-gray-500">
                   {selItems.filter(i => i.selected).length} ürün
@@ -459,7 +459,7 @@ export function ProformaDetailClient({
                 <button
                   onClick={confirmConvert}
                   disabled={converting || selItems.filter(i => i.selected).length === 0}
-                  className="flex-1 bg-emerald-600 text-white rounded py-2.5 text-sm font-bold hover:bg-emerald-700 disabled:opacity-40 flex items-center justify-center gap-2 transition-colors"
+                  className="flex-1 bg-pos text-white rounded py-2.5 text-sm font-bold hover:bg-pos disabled:opacity-40 flex items-center justify-center gap-2 transition-colors"
                 >
                   {converting ? (
                     <>

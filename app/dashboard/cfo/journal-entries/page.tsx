@@ -52,16 +52,16 @@ export default async function JournalEntriesPage() {
       </div>
 
       {rows.length === 0 ? (
-        <div className="bg-amber-50 border border-amber-200 rounded px-4 py-6 text-sm text-amber-700 text-center">
+        <div className="bg-warn-light border border-warn-light rounded px-4 py-6 text-sm text-warn-text text-center">
           <div className="font-bold mb-1">Journal kaydı bulunamadı</div>
-          <div className="text-xs text-amber-600">
+          <div className="text-xs text-warn-text">
             GL modu <strong>shadow</strong> modunda çalışıyorsa journal kayıtları otomatik oluşturulmaz.
             Kayıt oluşturmaya başlamak için{' '}
-            <Link href="/dashboard/admin/settings" className="underline font-semibold hover:text-amber-800">
+            <Link href="/dashboard/admin/settings" className="underline font-semibold hover:text-warn-text">
               Şirket Ayarları
             </Link>{' '}
-            sayfasından <code className="bg-amber-100 px-1 rounded">gl_mode</code> değerini{' '}
-            <code className="bg-amber-100 px-1 rounded">parallel</code> olarak güncelleyin.
+            sayfasından <code className="bg-warn-light px-1 rounded">gl_mode</code> değerini{' '}
+            <code className="bg-warn-light px-1 rounded">parallel</code> olarak güncelleyin.
           </div>
         </div>
       ) : (
@@ -75,8 +75,8 @@ export default async function JournalEntriesPage() {
             const balanced    = Math.abs(totalDebit - totalCredit) < 0.01
 
             return (
-              <div key={entry.id as string} className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
-                <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50 border-b border-gray-100">
+              <div key={entry.id as string} className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+                <div className="flex items-center justify-between px-4 py-2.5 bg-[#f8fafc] border-b border-[#e2e8f0]">
                   <div className="flex items-center gap-3">
                     <span className="text-xs font-black text-gray-500">{fmtDate(entry.entry_date as string)}</span>
                     {entry.reference && (
@@ -85,7 +85,7 @@ export default async function JournalEntriesPage() {
                       </span>
                     )}
                     <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                      entry.source_type === 'sale'     ? 'bg-blue-100 text-blue-700'    :
+                      entry.source_type === 'sale'     ? 'bg-info-light text-info-text'    :
                       entry.source_type === 'expense'  ? 'bg-orange-100 text-orange-700' :
                       entry.source_type === 'purchase' ? 'bg-purple-100 text-purple-700' :
                       'bg-gray-100 text-gray-600'
@@ -95,7 +95,7 @@ export default async function JournalEntriesPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                      balanced ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+                      balanced ? 'bg-pos-light text-pos-text' : 'bg-neg-light text-neg-text'
                     }`}>
                       {balanced ? '✓ DENGELI' : '✗ FARK VAR'}
                     </span>
@@ -107,30 +107,30 @@ export default async function JournalEntriesPage() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs">
                     <thead>
-                      <tr className="border-b border-gray-100">
+                      <tr className="border-b border-[#e2e8f0]">
                         <th className="text-left px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-gray-400 w-16">Hesap</th>
                         <th className="text-left px-2 py-1.5 text-[10px] font-black uppercase tracking-widest text-gray-400">Hesap Adı</th>
                         <th className="text-right px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-gray-400 w-32">Borç (DR)</th>
                         <th className="text-right px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-gray-400 w-32">Alacak (CR)</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-50">
+                    <tbody className="divide-y divide-[#f1f5f9]">
                       {lines.map((line, i) => (
                         <tr key={i}>
                           <td className="px-4 py-1.5 font-mono text-gray-600">{line.account_code}</td>
                           <td className="px-2 py-1.5 text-gray-700">{line.account_name}</td>
-                          <td className="px-4 py-1.5 text-right tabular-nums text-blue-700 font-semibold">
+                          <td className="px-4 py-1.5 text-right tabular-nums text-info-text font-semibold">
                             {Number(line.debit_try) > 0 ? fmtTRY(Number(line.debit_try)) : '—'}
                           </td>
-                          <td className="px-4 py-1.5 text-right tabular-nums text-emerald-700 font-semibold">
+                          <td className="px-4 py-1.5 text-right tabular-nums text-pos-text font-semibold">
                             {Number(line.credit_try) > 0 ? fmtTRY(Number(line.credit_try)) : '—'}
                           </td>
                         </tr>
                       ))}
-                      <tr className="border-t border-gray-200 bg-gray-50">
+                      <tr className="border-t border-[#e2e8f0] bg-[#f8fafc]">
                         <td colSpan={2} className="px-4 py-1.5 text-xs font-black text-gray-600 uppercase tracking-wide">Toplam</td>
-                        <td className="px-4 py-1.5 text-right tabular-nums font-black text-blue-700">{fmtTRY(totalDebit)}</td>
-                        <td className="px-4 py-1.5 text-right tabular-nums font-black text-emerald-700">{fmtTRY(totalCredit)}</td>
+                        <td className="px-4 py-1.5 text-right tabular-nums font-black text-info-text">{fmtTRY(totalDebit)}</td>
+                        <td className="px-4 py-1.5 text-right tabular-nums font-black text-pos-text">{fmtTRY(totalCredit)}</td>
                       </tr>
                     </tbody>
                   </table>

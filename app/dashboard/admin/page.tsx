@@ -48,9 +48,9 @@ async function fetchSummary(companyId: string) {
 // ── Action color map ──────────────────────────────────────────────────────────
 
 const ACTION_STYLE: Record<string, string> = {
-  create: 'bg-emerald-100 text-emerald-700',
-  update: 'bg-blue-100 text-blue-700',
-  delete: 'bg-red-100 text-red-700',
+  create: 'bg-pos-light text-pos-text',
+  update: 'bg-info-light text-info-text',
+  delete: 'bg-neg-light text-neg-text',
 }
 
 function fmtRelative(iso: string): string {
@@ -99,7 +99,7 @@ export default async function AdminHubPage() {
       title:    'Kullanıcılar',
       subtitle: `${summary.memberCount} aktif üye`,
       icon:     '👥',
-      color:    'border-blue-100 hover:border-blue-200',
+      color:    'border-info-light hover:border-info-light',
     },
     {
       href:     '/dashboard/admin/roles',
@@ -116,8 +116,8 @@ export default async function AdminHubPage() {
         : 'Bekleyen onay yok',
       icon:     '✅',
       color:    summary.pendingApprovals > 0
-        ? 'border-amber-200 hover:border-amber-300'
-        : 'border-gray-100 hover:border-gray-200',
+        ? 'border-warn-light hover:border-warn'
+        : 'border-[#e2e8f0] hover:border-[#e2e8f0]',
       badge:    summary.pendingApprovals > 0 ? summary.pendingApprovals : undefined,
     },
     {
@@ -125,7 +125,7 @@ export default async function AdminHubPage() {
       title:    'Denetim Kaydı',
       subtitle: 'Tüm finansal işlem geçmişi',
       icon:     '📋',
-      color:    'border-gray-100 hover:border-gray-200',
+      color:    'border-[#e2e8f0] hover:border-[#e2e8f0]',
     },
     {
       href:     '/dashboard/admin/governance',
@@ -164,7 +164,7 @@ export default async function AdminHubPage() {
             className={`relative bg-white border rounded p-4 hover:shadow-sm transition-all group ${tile.color}`}
           >
             {tile.badge != null && (
-              <span className="absolute top-3 right-3 min-w-[20px] h-5 px-1.5 rounded-full bg-amber-500 text-white text-[10px] font-black flex items-center justify-center">
+              <span className="absolute top-3 right-3 min-w-[20px] h-5 px-1.5 rounded-full bg-warn-light text-white text-[10px] font-black flex items-center justify-center">
                 {tile.badge}
               </span>
             )}
@@ -185,12 +185,12 @@ export default async function AdminHubPage() {
       </div>
 
       {/* Settings quick-links */}
-      <div className="bg-gray-50 border border-gray-100 rounded p-4">
+      <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded p-4">
         <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">Hızlı Ayarlar</div>
         <div className="flex flex-wrap gap-2">
           {SETTING_LINKS.map(s => (
             <Link key={s.href} href={s.href}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-white border border-gray-100 text-xs font-semibold text-gray-700 hover:border-primary-200 hover:text-primary-700 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-white border border-[#e2e8f0] text-xs font-semibold text-gray-700 hover:border-primary-200 hover:text-primary-700 transition-colors"
             >
               <span>{s.icon}</span>
               {s.label}
@@ -201,8 +201,8 @@ export default async function AdminHubPage() {
 
       {/* Recent audit activity */}
       {summary.recentLogs.length > 0 && (
-        <div className="bg-white border border-gray-100 rounded overflow-hidden">
-          <div className="px-4 py-3 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
+        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+          <div className="px-4 py-3 bg-[#f8fafc] border-b border-[#e2e8f0] flex items-center justify-between">
             <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Son Aktivite</div>
             <Link href="/dashboard/admin/audit"
               className="text-[10px] font-semibold text-primary-600 hover:underline"
@@ -210,7 +210,7 @@ export default async function AdminHubPage() {
               Tümünü Gör →
             </Link>
           </div>
-          <div className="divide-y divide-gray-50">
+          <div className="divide-y divide-[#f1f5f9]">
             {(summary.recentLogs as Array<{ id: string; action: string; entity_type: string; created_at: string }>).map(log => (
               <div key={log.id} className="flex items-center justify-between px-4 py-2.5">
                 <div className="flex items-center gap-2 min-w-0">

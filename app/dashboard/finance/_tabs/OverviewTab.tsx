@@ -20,10 +20,10 @@ function fmtFull(n: number): string {
 }
 function runwayColor(months: number | null): string {
   if (months === null) return 'text-gray-400'
-  if (months <= 2)     return 'text-red-600'
+  if (months <= 2)     return 'text-neg'
   if (months <= 6)     return 'text-orange-600'
-  if (months <= 12)    return 'text-amber-600'
-  return 'text-emerald-600'
+  if (months <= 12)    return 'text-warn-text'
+  return 'text-pos-text'
 }
 function sq<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
   return fn().catch(() => fallback)
@@ -37,12 +37,12 @@ function KpiBlock({ label, value, sub, tone = 'neutral', href }: {
   href?: string
 }) {
   const valueColor = {
-    positive: 'text-emerald-700', negative: 'text-red-600',
-    warning: 'text-amber-600', critical: 'text-red-700', neutral: 'text-gray-900',
+    positive: 'text-pos-text', negative: 'text-neg',
+    warning: 'text-warn-text', critical: 'text-neg-text', neutral: 'text-gray-900',
   }[tone]
   const content = (
-    <div className="bg-white border border-gray-100 rounded px-4 py-3 shadow-sm hover:shadow-[0_2px_4px_rgba(17,24,39,0.07)] transition-shadow">
-      <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">{label}</div>
+    <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm hover:shadow-[0_2px_4px_rgba(17,24,39,0.07)] transition-shadow">
+      <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{label}</div>
       <div className={`text-xl font-black tabular-nums leading-none ${valueColor}`}>{value}</div>
       {sub && <div className="text-[10px] text-gray-400 mt-1 leading-tight">{sub}</div>}
     </div>
@@ -52,9 +52,9 @@ function KpiBlock({ label, value, sub, tone = 'neutral', href }: {
 
 function RiskPill({ label, value, level }: { label: string; value: string; level: 'ok' | 'warn' | 'critical' }) {
   const colors = {
-    ok:       'bg-emerald-50 border-emerald-200 text-emerald-700',
-    warn:     'bg-amber-50 border-amber-200 text-amber-700',
-    critical: 'bg-red-50 border-red-200 text-red-700',
+    ok:       'bg-pos-light border-pos-light text-pos-text',
+    warn:     'bg-warn-light border-warn-light text-warn-text',
+    critical: 'bg-neg-light border-neg-light text-neg-text',
   }[level]
   const icons = { ok: '✓', warn: '⚠', critical: '🔴' }[level]
   return (
@@ -122,7 +122,7 @@ export async function OverviewTab({ userId: _userId, companyId }: Props) {
     <div className="space-y-4">
 
       {runwayTone === 'critical' && (
-        <div className="bg-red-50 border border-red-300 rounded px-4 py-3 text-sm text-red-700 font-semibold flex items-center gap-2">
+        <div className="bg-neg-light border border-neg rounded px-4 py-3 text-sm text-neg-text font-semibold flex items-center gap-2">
           <span className="animate-pulse">🔴</span>
           Kritik: Runway {runwayMonths?.toFixed(1)} ay — acil aksiyon gerekiyor.
         </div>
@@ -166,12 +166,12 @@ export async function OverviewTab({ userId: _userId, companyId }: Props) {
             value={m.burn.monthly_burn_rate > 0 ? fmt(m.burn.monthly_burn_rate) : '—'}
             sub="3 aylık ortalama" tone="neutral" href="/dashboard/operations?tab=expenses" />
           <div className={`rounded px-4 py-3 border-2 ${
-            runwayTone === 'critical' ? 'bg-red-50 border-red-300' :
-            runwayTone === 'warning'  ? 'bg-amber-50 border-amber-300' :
-            runwayTone === 'positive' ? 'bg-emerald-50 border-emerald-200' :
-            'bg-gray-50 border-gray-200'
+            runwayTone === 'critical' ? 'bg-neg-light border-neg' :
+            runwayTone === 'warning'  ? 'bg-warn-light border-warn' :
+            runwayTone === 'positive' ? 'bg-pos-light border-pos-light' :
+            'bg-[#f8fafc] border-[#e2e8f0]'
           }`}>
-            <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Runway</div>
+            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Runway</div>
             <div className={`text-xl font-black tabular-nums leading-none ${runwayColor(runwayMonths)}`}>
               {runwayMonths !== null ? `${runwayMonths.toFixed(1)} ay` : '∞'}
             </div>
@@ -190,15 +190,15 @@ export async function OverviewTab({ userId: _userId, companyId }: Props) {
       <div className="grid grid-cols-5 gap-2">
         <div className="col-span-3">
           <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1.5">Tahsilat Sağlığı</div>
-          <div className="bg-white border border-gray-100 rounded px-4 py-3 space-y-2 shadow-sm">
+          <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 space-y-2 shadow-sm">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-gray-600">Toplam Açık Alacak</span>
               <span className="text-sm font-black tabular-nums text-gray-900">{fmt(m.receivables.total_outstanding)}</span>
             </div>
             {[
-              { label: '+30 gün (Risk)',        value: m.receivables.overdue_30d, color: 'bg-amber-400' },
+              { label: '+30 gün (Risk)',        value: m.receivables.overdue_30d, color: 'bg-warn' },
               { label: '+60 gün (Yüksek Risk)', value: m.receivables.overdue_60d, color: 'bg-orange-500' },
-              { label: '+90 gün (Kritik)',      value: m.receivables.overdue_90d, color: 'bg-red-600'   },
+              { label: '+90 gün (Kritik)',      value: m.receivables.overdue_90d, color: 'bg-neg'   },
             ].map(({ label, value, color }) => {
               const pct = m.receivables.total_outstanding > 0
                 ? Math.min(100, (value / m.receivables.total_outstanding) * 100) : 0
@@ -213,11 +213,11 @@ export async function OverviewTab({ userId: _userId, companyId }: Props) {
                 </div>
               )
             })}
-            <div className="flex items-center justify-between pt-1 border-t border-gray-100">
+            <div className="flex items-center justify-between pt-1 border-t border-[#e2e8f0]">
               <span className="text-[10px] text-gray-500 font-semibold">Tahsilat Oranı</span>
               <span className={`text-xs font-black tabular-nums ${
-                m.receivables.collection_rate_pct >= 80 ? 'text-emerald-600' :
-                m.receivables.collection_rate_pct >= 50 ? 'text-amber-600' : 'text-red-600'
+                m.receivables.collection_rate_pct >= 80 ? 'text-pos-text' :
+                m.receivables.collection_rate_pct >= 50 ? 'text-warn-text' : 'text-neg'
               }`}>%{m.receivables.collection_rate_pct.toFixed(1)}</span>
             </div>
           </div>
@@ -269,13 +269,13 @@ export async function OverviewTab({ userId: _userId, companyId }: Props) {
       {chartMonths.length > 0 && (
         <div>
           <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1.5">12 Aylık Nakit Projeksiyonu</div>
-          <div className="bg-white border border-gray-100 rounded px-4 py-4 shadow-sm">
+          <div className="bg-white border border-[#e2e8f0] rounded px-4 py-4 shadow-sm">
             <div className="flex items-end gap-1.5 h-24">
               {chartMonths.map((mo) => {
                 const barH    = maxCash > 0 ? Math.max(2, Math.round((Math.max(0, mo.end_cash) / maxCash) * 100)) : 0
                 const isNeg   = mo.end_cash <= 0
                 const isLow   = !isNeg && mo.end_cash < maxCash * 0.2
-                const barColor = isNeg ? 'bg-red-400' : isLow ? 'bg-amber-400' : 'bg-emerald-400'
+                const barColor = isNeg ? 'bg-neg' : isLow ? 'bg-warn' : 'bg-pos'
                 return (
                   <div key={mo.month} className="flex-1 flex flex-col items-center gap-0.5 min-w-0">
                     <div className="w-full flex items-end justify-center" style={{ height: '88px' }}>
@@ -293,9 +293,9 @@ export async function OverviewTab({ userId: _userId, companyId }: Props) {
             <div className="flex items-center justify-between mt-2 text-[10px] text-gray-400">
               <span>Başlangıç: {fmt(r.inputs.starting_cash)}</span>
               {r.exhaustion_month !== null ? (
-                <span className="text-red-500 font-semibold">⚠ Ay {r.exhaustion_month}&apos;de nakit tükenebilir</span>
+                <span className="text-neg font-semibold">⚠ Ay {r.exhaustion_month}&apos;de nakit tükenebilir</span>
               ) : (
-                <span className="text-emerald-600 font-semibold">12 ay boyunca nakit sağlıklı</span>
+                <span className="text-pos-text font-semibold">12 ay boyunca nakit sağlıklı</span>
               )}
               <span>Burn: {fmt(r.inputs.monthly_burn)}/ay</span>
             </div>

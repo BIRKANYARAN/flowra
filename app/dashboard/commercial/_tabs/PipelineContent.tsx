@@ -43,9 +43,9 @@ const STATUS_LABEL: Record<string, string> = {
 }
 const STATUS_COLOR: Record<string, string> = {
   draft:     'bg-gray-100 text-gray-500',
-  sent:      'bg-blue-100 text-blue-700',
-  accepted:  'bg-emerald-100 text-emerald-700',
-  rejected:  'bg-red-100 text-red-600',
+  sent:      'bg-info-light text-info-text',
+  accepted:  'bg-pos-light text-pos-text',
+  rejected:  'bg-neg-light text-neg',
   converted: 'bg-primary-100 text-primary-700',
 }
 
@@ -130,15 +130,15 @@ export async function PipelineContent({ companyId }: Props) {
       </div>
 
       {/* KPI Strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-gray-100 rounded overflow-hidden">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded overflow-hidden">
         {[
           { label: 'Stok Değeri',  value: serverFmt(stockValue),   sub: `${stockLots.length} aktif lot`,                color: 'text-gray-900' },
-          { label: 'Pipeline',     value: pipelineVal > 0 ? serverFmt(pipelineVal) : '—', sub: 'bekleyen teklifler', color: 'text-blue-700' },
+          { label: 'Pipeline',     value: pipelineVal > 0 ? serverFmt(pipelineVal) : '—', sub: 'bekleyen teklifler', color: 'text-info-text' },
           { label: 'Toplam Ciro',  value: totalRevenue > 0 ? serverFmt(totalRevenue) : '—', sub: unpaidTotal > 0 ? `${serverFmt(unpaidTotal)} bekliyor` : 'tamamı tahsil', color: 'text-gray-900' },
-          { label: 'Brüt Kâr',    value: totalRevenue > 0 ? serverFmt(grossProfit) : '—', sub: totalRevenue > 0 ? `%${grossMargin.toFixed(1)} marj` : 'veri yok', color: grossProfit >= 0 ? 'text-emerald-700' : 'text-red-600' },
+          { label: 'Brüt Kâr',    value: totalRevenue > 0 ? serverFmt(grossProfit) : '—', sub: totalRevenue > 0 ? `%${grossMargin.toFixed(1)} marj` : 'veri yok', color: grossProfit >= 0 ? 'text-pos-text' : 'text-neg' },
         ].map((card, i) => (
-          <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-gray-100' : ''}`}>
-            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{card.label}</div>
+          <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e2e8f0]' : ''}`}>
+            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
             <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
             <div className="text-[10px] text-gray-400 mt-1">{card.sub}</div>
           </div>
@@ -147,20 +147,20 @@ export async function PipelineContent({ companyId }: Props) {
 
       {/* Recent proformas */}
       {recentPf.length > 0 && (
-        <div className="bg-white border border-gray-100 rounded overflow-hidden">
-          <div className="px-4 py-2 border-b border-gray-100">
-            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Son Teklifler</span>
+        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+          <div className="px-4 py-2 border-b border-[#e2e8f0]">
+            <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Son Teklifler</span>
           </div>
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-[10px] font-bold uppercase text-gray-400 border-b border-gray-100">
+              <tr className="text-[10px] font-bold uppercase text-gray-400 border-b border-[#e2e8f0]">
                 <th className="text-left px-4 py-2">Müşteri</th>
                 <th className="text-left px-4 py-2">Durum</th>
                 <th className="text-right px-4 py-2">Tutar</th>
                 <th className="text-right px-4 py-2">Tarih</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-[#f1f5f9]">
               {recentPf.map(p => (
                 <tr key={p.id}>
                   <td className="px-4 py-2.5 font-medium text-gray-800 max-w-[200px] truncate">{p.customer_name ?? '—'}</td>
@@ -185,24 +185,24 @@ export async function PipelineContent({ companyId }: Props) {
 
       {/* Revenue anomaly alerts */}
       {revenueAnomalies.length > 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded px-4 py-3">
+        <div className="bg-warn-light border border-warn-light rounded px-4 py-3">
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="text-[10px] font-black uppercase tracking-widest text-amber-700">⚠ Anormal Gelir Hareketi</span>
-            <span className="text-[9px] text-amber-600">(istatistiksel eşik aşıldı)</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-warn-text">⚠ Anormal Gelir Hareketi</span>
+            <span className="text-[9px] text-warn-text">(istatistiksel eşik aşıldı)</span>
           </div>
           <div className="space-y-1">
             {revenueAnomalies.map((a, i) => (
               <div key={i} className="flex items-start gap-2">
                 <span className={`text-[11px] font-semibold px-2 py-0.5 rounded shrink-0 ${
-                  a.direction === 'drop' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800'
+                  a.direction === 'drop' ? 'bg-neg-light text-neg-text' : 'bg-warn-light text-warn-text'
                 }`}>
                   {fmtMonth(a.month)}
                 </span>
-                <span className="text-[10px] text-amber-700">{a.message}</span>
+                <span className="text-[10px] text-warn-text">{a.message}</span>
               </div>
             ))}
           </div>
-          <div className="text-[10px] text-amber-600 mt-1.5">
+          <div className="text-[10px] text-warn-text mt-1.5">
             Detaylı analiz için Finans → Risk sekmesini inceleyin.
           </div>
         </div>
@@ -210,8 +210,8 @@ export async function PipelineContent({ companyId }: Props) {
 
       {/* Monthly revenue trend */}
       {recentMonths.length > 1 && (
-        <div className="bg-white border border-gray-100 rounded p-4 shadow-sm">
-          <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Aylık Ciro Trendi</h3>
+        <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
+          <h3 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">Aylık Ciro Trendi</h3>
           <div className="flex items-end gap-2 h-20">
             {recentMonths.map(m => {
               const heightPct = Math.max(4, (m.revenue / maxRevMonth) * 100)

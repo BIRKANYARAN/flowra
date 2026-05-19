@@ -123,12 +123,12 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
   const hasTranches = tranches.length > 0
 
   // ── DSR color ─────────────────────────────────────────────────────────────
-  const dsrColor    = dsr <= 0.30 ? 'text-emerald-700'
-    : dsr <= 0.60 ? 'text-amber-700'
-    : 'text-red-700'
-  const dsrBarColor = dsr <= 0.30 ? 'bg-emerald-400'
-    : dsr <= 0.60 ? 'bg-amber-400'
-    : 'bg-red-500'
+  const dsrColor    = dsr <= 0.30 ? 'text-pos-text'
+    : dsr <= 0.60 ? 'text-warn-text'
+    : 'text-neg-text'
+  const dsrBarColor = dsr <= 0.30 ? 'bg-pos'
+    : dsr <= 0.60 ? 'bg-warn'
+    : 'bg-neg-light'
   const dsrLabel    = dsr === 0 ? 'Borç yok' : dsr <= 0.30 ? 'Sağlıklı' : dsr <= 0.60 ? 'Dikkat' : 'Kritik'
 
   return (
@@ -137,7 +137,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
       {/* ── KPI STRIP ──────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
 
-        <div className="bg-white border border-gray-100 rounded px-4 py-3">
+        <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
           <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1">Toplam Borç</div>
           <div className={`text-lg font-black tabular-nums ${totalOutstanding > 0 ? 'text-gray-900' : 'text-gray-400'}`}>
             {totalOutstanding > 0 ? fmt(totalOutstanding) : '—'}
@@ -145,7 +145,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
           <div className="text-[9px] text-gray-400 mt-0.5">{tranches.length} aktif tranche</div>
         </div>
 
-        <div className="bg-white border border-gray-100 rounded px-4 py-3">
+        <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
           <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1">Aylık Borç Servisi</div>
           <div className={`text-lg font-black tabular-nums ${monthlyService > 0 ? 'text-orange-600' : 'text-gray-400'}`}>
             {monthlyService > 0 ? fmt(monthlyService) : '—'}
@@ -153,7 +153,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
           <div className="text-[9px] text-gray-400 mt-0.5">faiz tahmini / ay</div>
         </div>
 
-        <div className="bg-white border border-gray-100 rounded px-4 py-3">
+        <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
           <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1">DSR (Borç/Gelir)</div>
           <div className={`text-lg font-black tabular-nums ${dsrColor}`}>
             {monthlyService > 0 ? fmtPct(dsr) : '—'}
@@ -166,11 +166,11 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
           )}
         </div>
 
-        <div className="bg-white border border-gray-100 rounded px-4 py-3">
+        <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
           <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1">Sonraki Vade</div>
           {nextDue ? (
             <>
-              <div className={`text-lg font-black tabular-nums ${nextDueDays !== null && nextDueDays <= 14 ? 'text-red-600' : 'text-gray-900'}`}>
+              <div className={`text-lg font-black tabular-nums ${nextDueDays !== null && nextDueDays <= 14 ? 'text-neg' : 'text-gray-900'}`}>
                 {nextDueDays !== null && nextDueDays <= 0 ? 'GECIKTI' : nextDueDays !== null ? `${nextDueDays}g` : '—'}
               </div>
               <div className="text-[9px] text-gray-400 mt-0.5">{fmtDate(nextDue.due_date)}</div>
@@ -183,7 +183,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
 
       {/* ── EMPTY STATE ───────────────────────────────────────────────────── */}
       {!hasTranches && (
-        <div className="bg-gray-50 border border-gray-100 rounded px-6 py-10 text-center">
+        <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-6 py-10 text-center">
           <div className="text-2xl mb-2">🏦</div>
           <div className="text-sm font-semibold text-gray-700 mb-1">Aktif ortak borcu yok</div>
           <div className="text-xs text-gray-400 mb-4">Ortak borçları Ortaklar → Trancheler bölümünden girilir.</div>
@@ -197,8 +197,8 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
       {hasTranches && (
         <>
           {/* ── 12-MONTH SERVICE SCHEDULE ──────────────────────────────────── */}
-          <div className="bg-white border border-gray-100 rounded overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-50">
+          <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#f1f5f9]">
               <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">12 Aylık Faiz Yük Takvimi</span>
               <span className="text-[9px] text-gray-400">Outstanding × yıllık faiz / 12</span>
             </div>
@@ -226,8 +226,8 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
           </div>
 
           {/* ── TRANCHE TABLE ─────────────────────────────────────────────── */}
-          <div className="bg-white border border-gray-100 rounded overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-50">
+          <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#f1f5f9]">
               <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Aktif Trancheler</span>
               <Link href="/dashboard/partners?tab=tranches"
                 className="text-[10px] text-primary-600 font-semibold hover:underline">
@@ -237,7 +237,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
             <div className="overflow-x-auto">
               <table className="w-full text-[10px]">
                 <thead>
-                  <tr className="bg-gray-50/60">
+                  <tr className="bg-[#f8fafc]/60">
                     <th className="text-left px-5 py-2 text-[9px] font-black uppercase tracking-widest text-gray-400">Ortak</th>
                     <th className="text-right px-3 py-2 text-[9px] font-black uppercase tracking-widest text-gray-400">Kalan</th>
                     <th className="text-right px-3 py-2 text-[9px] font-black uppercase tracking-widest text-gray-400">Oran</th>
@@ -245,14 +245,14 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
                     <th className="text-right px-5 py-2 text-[9px] font-black uppercase tracking-widest text-gray-400">Vade</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-50">
+                <tbody className="divide-y divide-[#f1f5f9]">
                   {tranches.map(t => {
                     const rate      = t.annual_interest_rate ?? 0
                     const monthly   = rate > 0 ? t.outstanding_try * rate / 12 : t.outstanding_try * 0.015
                     const isOverdue = t.due_date && new Date(t.due_date + 'T00:00:00').getTime() < nowMs
                     const share     = totalOutstanding > 0 ? t.outstanding_try / totalOutstanding : 0
                     return (
-                      <tr key={t.id} className="hover:bg-gray-50/40">
+                      <tr key={t.id} className="hover:bg-[#f8fafc]/40">
                         <td className="px-5 py-2.5">
                           <div className="font-semibold text-gray-800">{t.partner_name ?? 'Ortak'}</div>
                           <div className="text-[9px] text-gray-400">{fmtPct(share)} toplam</div>
@@ -261,16 +261,16 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
                           {fmt(t.outstanding_try)}
                         </td>
                         <td className="px-3 py-2.5 text-right tabular-nums text-gray-600">
-                          {rate > 0 ? `%${(rate * 100).toFixed(1)}` : <span className="text-amber-600 font-semibold">Faizsiz*</span>}
+                          {rate > 0 ? `%${(rate * 100).toFixed(1)}` : <span className="text-warn-text font-semibold">Faizsiz*</span>}
                         </td>
                         <td className="px-3 py-2.5 text-right tabular-nums text-orange-600 font-semibold hidden sm:table-cell">
                           {fmt(monthly)}
                         </td>
                         <td className="px-5 py-2.5 text-right whitespace-nowrap">
-                          <span className={`font-semibold ${isOverdue ? 'text-red-600' : 'text-gray-700'}`}>
+                          <span className={`font-semibold ${isOverdue ? 'text-neg' : 'text-gray-700'}`}>
                             {fmtDate(t.due_date)}
                           </span>
-                          {isOverdue && <div className="text-[9px] text-red-500 font-bold">GECIKTI</div>}
+                          {isOverdue && <div className="text-[9px] text-neg font-bold">GECIKTI</div>}
                         </td>
                       </tr>
                     )
@@ -282,14 +282,14 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
 
           {/* ── CONCENTRATION ─────────────────────────────────────────────── */}
           {sorted.length > 1 && (
-            <div className="bg-white border border-gray-100 rounded px-5 py-4">
+            <div className="bg-white border border-[#e2e8f0] rounded px-5 py-4">
               <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-3">
                 Borç Konsantrasyonu
               </div>
               <div className="space-y-2">
                 {sorted.map(p => {
                   const share = totalOutstanding > 0 ? p.outstanding / totalOutstanding : 0
-                  const barColor = share > 0.8 ? 'bg-red-400' : share > 0.5 ? 'bg-amber-400' : 'bg-primary-400'
+                  const barColor = share > 0.8 ? 'bg-neg' : share > 0.5 ? 'bg-warn' : 'bg-primary-400'
                   return (
                     <div key={p.name}>
                       <div className="flex items-center justify-between mb-1">
@@ -306,7 +306,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
                 })}
               </div>
               {concentration > 0.8 && (
-                <div className="mt-3 text-[10px] text-amber-700 bg-amber-50 border border-amber-100 rounded px-3 py-2">
+                <div className="mt-3 text-[10px] text-warn-text bg-warn-light border border-warn-light rounded px-3 py-2">
                   <span className="font-bold">Yüksek konsantrasyon:</span> {sorted[0].name} toplam borcun{' '}
                   {fmtPct(concentration)}&apos;ini oluşturuyor. Refinansman riski gözlemlenmeli.
                 </div>
@@ -316,7 +316,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
 
           {/* Interest-free warning */}
           {tranches.some(t => !t.annual_interest_rate || t.annual_interest_rate === 0) && (
-            <div className="px-4 py-3 bg-amber-50 border border-amber-200 rounded text-[10px] text-amber-700">
+            <div className="px-4 py-3 bg-warn-light border border-warn-light rounded text-[10px] text-warn-text">
               <span className="font-bold">* Faizsiz tranche uyarısı:</span>{' '}
               Oran girilmemiş tranchelerde aylık %1,5 proxy faiz hesaplanmıştır.
               VUK + KVK 13 kapsamında örtülü kazanç dağıtımı riski değerlendirilebilir.

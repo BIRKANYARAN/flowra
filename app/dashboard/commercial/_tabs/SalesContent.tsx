@@ -28,7 +28,7 @@ function delta(curr: number, prev: number): { text: string; color: string } | nu
   const sign = pct >= 0 ? '+' : ''
   return {
     text:  `${sign}${pct.toFixed(1)}%`,
-    color: pct >= 0 ? 'text-emerald-600' : 'text-red-500',
+    color: pct >= 0 ? 'text-pos-text' : 'text-neg',
   }
 }
 
@@ -108,7 +108,7 @@ export async function SalesContent({ companyId }: Props) {
 
       {/* ── KPI Strip ────────────────────────────────────────────────────── */}
       {(mtdCount > 0 || list.length > 0) && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
           {[
             {
               label: 'Bu Ay Ciro (MTD)',
@@ -122,7 +122,7 @@ export async function SalesContent({ companyId }: Props) {
               label: 'Tahsil Edildi',
               value: mtdPaid > 0 ? fmt(mtdPaid) : '—',
               sub:   `%${collRatePct} tahsilat oranı · ${mtdPaidCount} fatura`,
-              color: collRatePct >= 80 ? 'text-emerald-700' : collRatePct >= 50 ? 'text-amber-700' : 'text-gray-900',
+              color: collRatePct >= 80 ? 'text-pos-text' : collRatePct >= 50 ? 'text-warn-text' : 'text-gray-900',
             },
             {
               label: 'Bekleyen Tahsilat',
@@ -130,7 +130,7 @@ export async function SalesContent({ companyId }: Props) {
               sub:   mtdPending > 0
                 ? `${mtdCount - mtdPaidCount} ödenmemiş fatura`
                 : 'Tamamı tahsil edildi ✓',
-              color: mtdPending > 0 ? 'text-red-600' : 'text-emerald-600',
+              color: mtdPending > 0 ? 'text-neg' : 'text-pos-text',
             },
             {
               label: 'Toplam Satış',
@@ -139,8 +139,8 @@ export async function SalesContent({ companyId }: Props) {
               color: 'text-gray-900',
             },
           ].map((card, i) => (
-            <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-gray-100' : ''}`}>
-              <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{card.label}</div>
+            <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e2e8f0]' : ''}`}>
+              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
               <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
               <div className="text-[10px] text-gray-400 mt-1 flex items-center gap-1">{card.sub}</div>
             </div>
@@ -150,7 +150,7 @@ export async function SalesContent({ companyId }: Props) {
 
       {/* ── Currency breakdown (only if multi-currency) ───────────────────── */}
       {topCurrencies.length > 1 && (
-        <div className="bg-white border border-gray-100 rounded p-4 shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
           <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">Bu Ay — Para Birimi Dağılımı</div>
           <div className="flex gap-4 flex-wrap">
             {topCurrencies.map(([cur, total]) => (
@@ -171,7 +171,7 @@ export async function SalesContent({ companyId }: Props) {
         <p className="text-xs text-gray-400">{list.length} satış kaydı · tüm dönemler</p>
         <Link
           href="/dashboard/commercial?tab=collections"
-          className="border border-gray-100 px-3.5 py-2 rounded text-xs font-semibold text-gray-500 hover:bg-gray-50 hover:text-gray-800 transition-colors"
+          className="border border-[#e2e8f0] px-3.5 py-2 rounded text-xs font-semibold text-gray-500 hover:bg-[#f8fafc] hover:text-gray-800 transition-colors"
         >
           Tahsilatlar →
         </Link>
@@ -186,14 +186,14 @@ export async function SalesContent({ companyId }: Props) {
         const isDown = pctChange < 0
         return (
           <div className={`rounded border px-4 py-3 flex items-start gap-3 ${
-            isDown ? 'bg-amber-50 border-amber-200' : 'bg-emerald-50 border-emerald-200'
+            isDown ? 'bg-warn-light border-warn-light' : 'bg-pos-light border-pos-light'
           }`}>
             <span className="text-base mt-0.5">{isDown ? '⚠' : '↗'}</span>
             <div className="flex-1">
-              <div className={`text-[11px] font-black uppercase tracking-wide ${isDown ? 'text-amber-800' : 'text-emerald-800'}`}>
+              <div className={`text-[11px] font-black uppercase tracking-wide ${isDown ? 'text-warn-text' : 'text-pos-text'}`}>
                 {isDown ? 'Aylık Ciro Düşüşü' : 'Aylık Ciro Artışı'}
               </div>
-              <div className={`text-xs mt-0.5 ${isDown ? 'text-amber-700' : 'text-emerald-700'}`}>
+              <div className={`text-xs mt-0.5 ${isDown ? 'text-warn-text' : 'text-pos-text'}`}>
                 Bu ay {fmt(mtdRevenue)} — geçen aya ({fmt(prevRevenue)}) göre{' '}
                 <span className="font-bold">{momDelta.text}</span>.
                 {isDown && ` Ay ${dayOfMonth}. günü itibarıyla talep düşüşü gözlemleniyor.`}
@@ -201,7 +201,7 @@ export async function SalesContent({ companyId }: Props) {
             </div>
             <Link
               href="/dashboard/finance?tab=pnl"
-              className={`text-[10px] font-bold underline underline-offset-2 shrink-0 mt-0.5 ${isDown ? 'text-amber-700' : 'text-emerald-700'}`}
+              className={`text-[10px] font-bold underline underline-offset-2 shrink-0 mt-0.5 ${isDown ? 'text-warn-text' : 'text-pos-text'}`}
             >
               P&amp;L Analizi →
             </Link>

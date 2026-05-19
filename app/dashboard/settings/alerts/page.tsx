@@ -27,9 +27,9 @@ const RULE_META: Record<string, { label: string; desc: string; unit: string; ico
 }
 
 const SEVERITY_OPTS: Array<{ value: string; label: string; cls: string }> = [
-  { value: 'info',     label: 'Bilgi',    cls: 'bg-blue-100 text-blue-700'   },
-  { value: 'warning',  label: 'Uyarı',   cls: 'bg-amber-100 text-amber-700' },
-  { value: 'critical', label: 'Kritik',  cls: 'bg-red-100 text-red-700'     },
+  { value: 'info',     label: 'Bilgi',    cls: 'bg-info-light text-info-text'   },
+  { value: 'warning',  label: 'Uyarı',   cls: 'bg-warn-light text-warn-text' },
+  { value: 'critical', label: 'Kritik',  cls: 'bg-neg-light text-neg-text'     },
 ]
 
 function severityCls(s: string) {
@@ -92,17 +92,17 @@ export default function AlertSettingsPage() {
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded px-4 py-3 text-sm text-red-700">{error}</div>
+        <div className="bg-neg-light border border-neg-light rounded px-4 py-3 text-sm text-neg-text">{error}</div>
       )}
       {flash && (
-        <div className="bg-emerald-50 border border-emerald-200 rounded px-4 py-3 text-sm text-emerald-700">{flash}</div>
+        <div className="bg-pos-light border border-pos-light rounded px-4 py-3 text-sm text-pos-text">{flash}</div>
       )}
 
       {loading && <div className="bg-gray-100 rounded h-64 animate-pulse" />}
 
       {!loading && (
-        <div className="bg-white border border-gray-100 rounded overflow-hidden">
-          <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-100">
+        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+          <div className="px-4 py-2.5 bg-[#f8fafc] border-b border-[#e2e8f0]">
             <div className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-3 text-[10px] font-black uppercase tracking-widest text-gray-400">
               <span>Kural</span>
               <span>Eşik</span>
@@ -112,7 +112,7 @@ export default function AlertSettingsPage() {
             </div>
           </div>
 
-          <div className="divide-y divide-gray-50">
+          <div className="divide-y divide-[#f1f5f9]">
             {rules.map(rule => {
               const meta = RULE_META[rule.rule_type] ?? { label: rule.rule_type, desc: '', unit: '', icon: '🔔' }
               return (
@@ -134,7 +134,7 @@ export default function AlertSettingsPage() {
                       min="0"
                       value={rule.threshold_value ?? ''}
                       onChange={e => updateRule(rule.rule_type, { threshold_value: e.target.value === '' ? null : Number(e.target.value) })}
-                      className="w-full border border-gray-200 rounded px-2 py-1 text-xs text-right"
+                      className="w-full border border-[#e2e8f0] rounded px-2 py-1 text-xs text-right"
                     />
                     {meta.unit && <span className="text-[10px] text-gray-400 shrink-0">{meta.unit}</span>}
                   </div>
@@ -143,7 +143,7 @@ export default function AlertSettingsPage() {
                   <select
                     value={rule.severity}
                     onChange={e => updateRule(rule.rule_type, { severity: e.target.value as AlertRule['severity'] })}
-                    className="border border-gray-200 rounded px-2 py-1 text-xs"
+                    className="border border-[#e2e8f0] rounded px-2 py-1 text-xs"
                   >
                     {SEVERITY_OPTS.map(o => (
                       <option key={o.value} value={o.value}>{o.label}</option>
@@ -154,7 +154,7 @@ export default function AlertSettingsPage() {
                   <div className="flex justify-center">
                     <button
                       onClick={() => updateRule(rule.rule_type, { is_active: !rule.is_active })}
-                      className={`w-8 h-4 rounded-full transition-colors relative ${rule.is_active ? 'bg-emerald-500' : 'bg-gray-300'}`}
+                      className={`w-8 h-4 rounded-full transition-colors relative ${rule.is_active ? 'bg-pos-light' : 'bg-gray-300'}`}
                     >
                       <span className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow transition-transform ${rule.is_active ? 'translate-x-4' : 'translate-x-0.5'}`} />
                     </button>
@@ -180,7 +180,7 @@ export default function AlertSettingsPage() {
       )}
 
       {/* Info box */}
-      <div className="bg-blue-50 border border-blue-200 rounded px-4 py-3 text-xs text-blue-700 leading-relaxed">
+      <div className="bg-info-light border border-info-light rounded px-4 py-3 text-xs text-info-text leading-relaxed">
         <span className="font-bold">Not:</span>{' '}
         Değişiklikler CEO Cockpit karar uyarılarına anında yansır. Kural devre dışı bırakılırsa
         ilgili uyarılar hiç gösterilmez. Eşik değeri boş bırakılırsa sistem varsayılanı kullanılır.

@@ -41,9 +41,9 @@ const STATUS_LABEL: Record<Period['status'], string> = {
 }
 
 const STATUS_COLOR: Record<Period['status'], string> = {
-  open:      'bg-blue-50 text-blue-700',
-  pre_close: 'bg-amber-50 text-amber-700',
-  closed:    'bg-emerald-50 text-emerald-700',
+  open:      'bg-info-light text-info-text',
+  pre_close: 'bg-warn-light text-warn-text',
+  closed:    'bg-pos-light text-pos-text',
   locked:    'bg-gray-100 text-gray-500',
 }
 
@@ -151,7 +151,7 @@ export default function PeriodClosePage() {
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded px-4 py-3 text-sm text-red-700">{error}</div>
+        <div className="bg-neg-light border border-neg-light rounded px-4 py-3 text-sm text-neg-text">{error}</div>
       )}
 
       {loading && (
@@ -159,7 +159,7 @@ export default function PeriodClosePage() {
       )}
 
       {!loading && periods.length === 0 && !error && (
-        <div className="bg-gray-50 border border-gray-200 rounded px-4 py-10 text-center">
+        <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-10 text-center">
           <div className="text-2xl mb-2">📅</div>
           <div className="text-sm font-semibold text-gray-500">Muhasebe dönemi bulunamadı</div>
           <div className="text-xs text-gray-400 mt-1">Dönem oluşturmak için Ayarlar → Dönem Yönetimi kullanın.</div>
@@ -177,7 +177,7 @@ export default function PeriodClosePage() {
           const canClose   = isCloseEnabled(p.id)
 
           return (
-            <div key={p.id} className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
+            <div key={p.id} className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
 
               {/* Period header row */}
               <div className="px-5 py-4">
@@ -211,7 +211,7 @@ export default function PeriodClosePage() {
                         className={`text-xs font-semibold px-3 py-1.5 rounded transition-colors ${
                           isExpanded
                             ? 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                            : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
+                            : 'bg-info-light text-info-text hover:bg-info-light'
                         }`}
                       >
                         {isExpanded ? 'Kapat ▲' : 'Kontrol Listesi ▼'}
@@ -223,7 +223,7 @@ export default function PeriodClosePage() {
                         onClick={() => closePeriod(p.id)}
                         disabled={isWorking || !canClose}
                         title={canClose ? 'Dönemi kapat' : `Kapamak için ${requiredCount} zorunlu kontrolü tamamlayın`}
-                        className="text-xs font-bold px-3 py-1.5 rounded bg-amber-600 text-white hover:bg-amber-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                        className="text-xs font-bold px-3 py-1.5 rounded bg-warn text-white hover:bg-warn disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                       >
                         {isWorking ? 'İşleniyor...' : 'Dönemi Kapat'}
                       </button>
@@ -250,7 +250,7 @@ export default function PeriodClosePage() {
 
                 {msg && (
                   <div className={`mt-2 text-xs px-3 py-2 rounded ${
-                    msg.startsWith('✓') ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'
+                    msg.startsWith('✓') ? 'bg-pos-light text-pos-text' : 'bg-neg-light text-neg'
                   }`}>
                     {msg}
                   </div>
@@ -259,7 +259,7 @@ export default function PeriodClosePage() {
 
               {/* Checklist panel */}
               {isExpanded && (
-                <div className="border-t border-gray-100 px-5 py-4 bg-gray-50/60">
+                <div className="border-t border-[#e2e8f0] px-5 py-4 bg-[#f8fafc]/60">
                   <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">
                     Kapanış Kontrol Listesi — {reqChecked}/{requiredCount} zorunlu tamamlandı
                   </p>
@@ -271,20 +271,20 @@ export default function PeriodClosePage() {
                         <label
                           key={item.key}
                           className={`flex items-start gap-3 p-2.5 rounded cursor-pointer transition-colors group ${
-                            isDone ? 'bg-emerald-50' : 'bg-white hover:bg-gray-50'
+                            isDone ? 'bg-pos-light' : 'bg-white hover:bg-[#f8fafc]'
                           }`}
                         >
                           <input
                             type="checkbox"
                             checked={isDone}
                             onChange={() => toggleChecklistItem(p.id, item.key)}
-                            className="mt-0.5 w-4 h-4 rounded text-emerald-500 border-gray-300 cursor-pointer"
+                            className="mt-0.5 w-4 h-4 rounded text-pos border-[#e2e8f0] cursor-pointer"
                           />
                           <div className="flex-1 min-w-0">
-                            <div className={`text-xs font-semibold ${isDone ? 'text-emerald-700 line-through' : 'text-gray-800'}`}>
+                            <div className={`text-xs font-semibold ${isDone ? 'text-pos-text line-through' : 'text-gray-800'}`}>
                               {item.label}
                               {item.required
-                                ? <span className="ml-1.5 text-[9px] font-bold text-red-500 uppercase tracking-widest">Zorunlu</span>
+                                ? <span className="ml-1.5 text-[9px] font-bold text-neg uppercase tracking-widest">Zorunlu</span>
                                 : <span className="ml-1.5 text-[9px] font-bold text-gray-400 uppercase tracking-widest">İsteğe Bağlı</span>
                               }
                             </div>
@@ -305,12 +305,12 @@ export default function PeriodClosePage() {
                   </div>
 
                   {!canClose && reqChecked < requiredCount && (
-                    <div className="mt-3 px-3 py-2 bg-amber-50 border border-amber-200 rounded text-xs text-amber-700">
+                    <div className="mt-3 px-3 py-2 bg-warn-light border border-warn-light rounded text-xs text-warn-text">
                       ⚠️ Dönemi kapatmak için {requiredCount - reqChecked} zorunlu kontrol daha tamamlanmalı.
                     </div>
                   )}
                   {canClose && (
-                    <div className="mt-3 px-3 py-2 bg-emerald-50 border border-emerald-200 rounded text-xs text-emerald-700 font-semibold">
+                    <div className="mt-3 px-3 py-2 bg-pos-light border border-pos-light rounded text-xs text-pos-text font-semibold">
                       ✓ Tüm zorunlu kontroller tamamlandı — dönem kapatılabilir.
                     </div>
                   )}
@@ -321,7 +321,7 @@ export default function PeriodClosePage() {
         })}
       </div>
 
-      <div className="bg-blue-50 border border-blue-200 rounded px-4 py-3 text-xs text-blue-700 leading-relaxed">
+      <div className="bg-info-light border border-info-light rounded px-4 py-3 text-xs text-info-text leading-relaxed">
         <span className="font-bold">Not:</span> API ayrıca mizan dengesi ve mutabakat uyuşmazlıklarını otomatik denetler.
         Kilit işlemi geri alınamaz — tüm finansal yazma işlemleri bu dönem için engellenir.
       </div>

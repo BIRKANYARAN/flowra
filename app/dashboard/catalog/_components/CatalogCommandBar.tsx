@@ -52,7 +52,7 @@ export async function CatalogCommandBar({ companyId }: Props) {
 
   if (products.length === 0) {
     return (
-      <div className="flex items-center gap-2 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded text-xs text-gray-400">
+      <div className="flex items-center gap-2 px-4 py-2.5 bg-[#f8fafc] border border-[#e2e8f0] rounded text-xs text-gray-400">
         Henüz aktif ürün yok — katalog boş.{' '}
         <Link href="/dashboard/products" className="text-primary-600 font-semibold hover:text-primary-700">
           Ürün Ekle →
@@ -117,7 +117,7 @@ export async function CatalogCommandBar({ companyId }: Props) {
       <div className="flex items-center gap-2 flex-wrap">
 
         {/* Total products */}
-        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-100 rounded">
+        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#e2e8f0] rounded">
           <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Ürünler</span>
           <span className="text-sm font-black tabular-nums text-gray-900">{totalProducts}</span>
           <span className="text-[9px] text-gray-400">aktif</span>
@@ -126,27 +126,27 @@ export async function CatalogCommandBar({ companyId }: Props) {
         {/* Priced */}
         <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded border ${
           pricedProducts.length === totalProducts
-            ? 'bg-white border-gray-200'
-            : 'bg-amber-50 border-amber-200'
+            ? 'bg-white border-[#e2e8f0]'
+            : 'bg-warn-light border-warn-light'
         }`}>
           <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Fiyatlı</span>
           <span className={`text-sm font-black tabular-nums ${
-            pricedProducts.length === totalProducts ? 'text-gray-900' : 'text-amber-700'
+            pricedProducts.length === totalProducts ? 'text-gray-900' : 'text-warn-text'
           }`}>{pricedProducts.length}/{totalProducts}</span>
         </div>
 
         {/* With cost data */}
         <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded border ${
           costdProducts.length === totalProducts
-            ? 'bg-white border-gray-200'
+            ? 'bg-white border-[#e2e8f0]'
             : costdProducts.length === 0
-            ? 'bg-gray-50 border-gray-200'
-            : 'bg-amber-50 border-amber-200'
+            ? 'bg-[#f8fafc] border-[#e2e8f0]'
+            : 'bg-warn-light border-warn-light'
         }`}>
           <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Maliyetli</span>
           <span className={`text-sm font-black tabular-nums ${
             costdProducts.length === totalProducts ? 'text-gray-900' :
-            costdProducts.length === 0             ? 'text-gray-400' : 'text-amber-700'
+            costdProducts.length === 0             ? 'text-gray-400' : 'text-warn-text'
           }`}>{costdProducts.length}/{totalProducts}</span>
           <span className="text-[9px] text-gray-400">stok lotlu</span>
         </div>
@@ -154,14 +154,14 @@ export async function CatalogCommandBar({ companyId }: Props) {
         {/* Average margin (TRY products only) */}
         {avgMargin !== null && (
           <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded border ${
-            avgMargin >= 0.35 ? 'bg-emerald-50 border-emerald-200' :
-            avgMargin >= 0.20 ? 'bg-amber-50 border-amber-200'    :
-                                'bg-red-50 border-red-200'
+            avgMargin >= 0.35 ? 'bg-pos-light border-pos-light' :
+            avgMargin >= 0.20 ? 'bg-warn-light border-warn-light'    :
+                                'bg-neg-light border-neg-light'
           }`}>
             <span className="text-[9px] font-black uppercase tracking-widest text-gray-500">Ort. Marj</span>
             <span className={`text-sm font-black tabular-nums ${
-              avgMargin >= 0.35 ? 'text-emerald-700' :
-              avgMargin >= 0.20 ? 'text-amber-700'   : 'text-red-600'
+              avgMargin >= 0.35 ? 'text-pos-text' :
+              avgMargin >= 0.20 ? 'text-warn-text'   : 'text-neg'
             }`}>
               %{(avgMargin * 100).toFixed(0)}
             </span>
@@ -178,10 +178,10 @@ export async function CatalogCommandBar({ companyId }: Props) {
 
       {/* ── Below-margin alert ────────────────────────────────────────────── */}
       {belowCount > 0 && (
-        <div className="bg-red-50 border border-red-200 rounded overflow-hidden">
-          <div className="px-3 py-2 border-b border-red-100 flex items-center gap-2">
-            <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse shrink-0" />
-            <span className="text-[9px] font-black uppercase tracking-widest text-red-700">
+        <div className="bg-neg-light border border-neg-light rounded overflow-hidden">
+          <div className="px-3 py-2 border-b border-neg-light flex items-center gap-2">
+            <span className="w-1.5 h-1.5 bg-neg-light rounded-full animate-pulse shrink-0" />
+            <span className="text-[9px] font-black uppercase tracking-widest text-neg-text">
               Düşük Marjlı Ürünler — %{Math.round(MARGIN_FLOOR * 100)} altında
             </span>
           </div>
@@ -190,7 +190,7 @@ export async function CatalogCommandBar({ companyId }: Props) {
               <div key={p.name} className="px-3 py-2 flex items-center justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <span className="text-xs font-bold text-gray-900 truncate block">{p.name}</span>
-                  <span className="text-[10px] text-red-600 font-semibold">
+                  <span className="text-[10px] text-neg font-semibold">
                     %{(p.margin * 100).toFixed(0)} marj
                   </span>
                 </div>
@@ -201,7 +201,7 @@ export async function CatalogCommandBar({ companyId }: Props) {
               </div>
             ))}
             {belowCount > 3 && (
-              <div className="px-3 py-1.5 text-[10px] text-red-600 font-semibold">
+              <div className="px-3 py-1.5 text-[10px] text-neg font-semibold">
                 +{belowCount - 3} ürün daha
               </div>
             )}
@@ -211,27 +211,27 @@ export async function CatalogCommandBar({ companyId }: Props) {
 
       {/* ── Blind spot notice ─────────────────────────────────────────────── */}
       {blindSpots.length > 0 && blindSpots.length <= 5 && (
-        <div className="flex items-center gap-3 px-4 py-2 bg-amber-50 border border-amber-200 rounded">
-          <span className="text-[10px] font-bold text-amber-700">
+        <div className="flex items-center gap-3 px-4 py-2 bg-warn-light border border-warn-light rounded">
+          <span className="text-[10px] font-bold text-warn-text">
             {blindSpots.length} ürünün fiyatı var ama stok maliyeti bilinmiyor:
           </span>
-          <span className="text-[10px] text-amber-600 truncate">
+          <span className="text-[10px] text-warn-text truncate">
             {blindSpots.slice(0, 3).map(p => p.name).join(', ')}
             {blindSpots.length > 3 ? ` +${blindSpots.length - 3} daha` : ''}
           </span>
           <Link href="/dashboard/stocks"
-            className="ml-auto text-[10px] font-semibold text-amber-700 hover:text-amber-800 shrink-0">
+            className="ml-auto text-[10px] font-semibold text-warn-text hover:text-warn-text shrink-0">
             Stok Ekle →
           </Link>
         </div>
       )}
       {blindSpots.length > 5 && (
-        <div className="flex items-center gap-3 px-4 py-2 bg-amber-50 border border-amber-200 rounded">
-          <span className="text-[10px] font-bold text-amber-700">
+        <div className="flex items-center gap-3 px-4 py-2 bg-warn-light border border-warn-light rounded">
+          <span className="text-[10px] font-bold text-warn-text">
             {blindSpots.length} ürün için marj hesaplanamıyor (%{uncoveredPct.toFixed(0)} katalog kör nokta).
           </span>
           <Link href="/dashboard/stocks"
-            className="ml-auto text-[10px] font-semibold text-amber-700 hover:text-amber-800 shrink-0">
+            className="ml-auto text-[10px] font-semibold text-warn-text hover:text-warn-text shrink-0">
             Stok Girişi Yap →
           </Link>
         </div>

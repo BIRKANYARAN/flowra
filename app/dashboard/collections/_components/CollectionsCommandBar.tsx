@@ -76,7 +76,7 @@ export async function CollectionsCommandBar({ companyId }: Props) {
 
   if (totalOutstanding === 0 && urgentRows.length === 0) {
     return (
-      <div className="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 border border-emerald-200 rounded text-xs font-semibold text-emerald-700">
+      <div className="flex items-center gap-2 px-4 py-2.5 bg-pos-light border border-pos-light rounded text-xs font-semibold text-pos-text">
         ✓ Tüm tahsilatlar güncel — açık alacak yok.
       </div>
     )
@@ -89,7 +89,7 @@ export async function CollectionsCommandBar({ companyId }: Props) {
       <div className="flex items-center gap-2 flex-wrap">
 
         {/* Açık Alacak */}
-        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-100 rounded">
+        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#e2e8f0] rounded">
           <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Açık Alacak</span>
           <span className="text-sm font-black tabular-nums text-gray-900">{fmt(totalOutstanding)}</span>
           <span className="text-[9px] text-gray-400">{openCount} fatura</span>
@@ -97,33 +97,33 @@ export async function CollectionsCommandBar({ companyId }: Props) {
 
         {/* Gecikmiş */}
         {overdueTotal > 0 && (
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 border border-red-200 rounded">
-            <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse shrink-0" />
-            <span className="text-[9px] font-black uppercase tracking-widest text-red-600">Gecikmiş</span>
-            <span className="text-sm font-black tabular-nums text-red-700">{fmt(overdueTotal)}</span>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-neg-light border border-neg-light rounded">
+            <span className="w-1.5 h-1.5 bg-neg-light rounded-full animate-pulse shrink-0" />
+            <span className="text-[9px] font-black uppercase tracking-widest text-neg">Gecikmiş</span>
+            <span className="text-sm font-black tabular-nums text-neg-text">{fmt(overdueTotal)}</span>
           </div>
         )}
 
         {/* Kısmi */}
         {partialTotal > 0 && (
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded">
-            <span className="text-[9px] font-black uppercase tracking-widest text-blue-600">Kısmi</span>
-            <span className="text-sm font-black tabular-nums text-blue-700">{fmt(partialTotal)}</span>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-info-light border border-info-light rounded">
+            <span className="text-[9px] font-black uppercase tracking-widest text-info-text">Kısmi</span>
+            <span className="text-sm font-black tabular-nums text-info-text">{fmt(partialTotal)}</span>
           </div>
         )}
 
         {/* Tahsilat oranı */}
         <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded border ${
           collectionRate >= 80
-            ? 'bg-emerald-50 border-emerald-200'
+            ? 'bg-pos-light border-pos-light'
             : collectionRate >= 50
-            ? 'bg-amber-50 border-amber-200'
-            : 'bg-red-50 border-red-200'
+            ? 'bg-warn-light border-warn-light'
+            : 'bg-neg-light border-neg-light'
         }`}>
           <span className="text-[9px] font-black uppercase tracking-widest text-gray-500">Tahsilat</span>
           <span className={`text-sm font-black tabular-nums ${
-            collectionRate >= 80 ? 'text-emerald-700' :
-            collectionRate >= 50 ? 'text-amber-700' : 'text-red-700'
+            collectionRate >= 80 ? 'text-pos-text' :
+            collectionRate >= 50 ? 'text-warn-text' : 'text-neg-text'
           }`}>
             %{collectionRate.toFixed(0)}
           </span>
@@ -139,10 +139,10 @@ export async function CollectionsCommandBar({ companyId }: Props) {
 
       {/* ── Acil Tahsilat ─────────────────────────────────────────────────── */}
       {urgentRows.length > 0 && (
-        <div className="bg-red-50 border border-red-200 rounded overflow-hidden">
-          <div className="px-3 py-2 border-b border-red-100 flex items-center gap-2">
-            <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
-            <span className="text-[9px] font-black uppercase tracking-widest text-red-700">Acil Tahsilat — Vadesi Geçmiş</span>
+        <div className="bg-neg-light border border-neg-light rounded overflow-hidden">
+          <div className="px-3 py-2 border-b border-neg-light flex items-center gap-2">
+            <span className="w-1.5 h-1.5 bg-neg-light rounded-full animate-pulse" />
+            <span className="text-[9px] font-black uppercase tracking-widest text-neg-text">Acil Tahsilat — Vadesi Geçmiş</span>
           </div>
           <div className="divide-y divide-red-100">
             {urgentRows.map(r => {
@@ -154,11 +154,11 @@ export async function CollectionsCommandBar({ companyId }: Props) {
                     <span className="text-xs font-bold text-gray-900 truncate block">
                       {r.customer_name}
                     </span>
-                    <span className="text-[10px] text-red-600 font-semibold">
+                    <span className="text-[10px] text-neg font-semibold">
                       {days} gün gecikmiş
                     </span>
                   </div>
-                  <div className="text-sm font-black tabular-nums text-red-700 shrink-0">
+                  <div className="text-sm font-black tabular-nums text-neg-text shrink-0">
                     {fmt(remaining)}
                   </div>
                 </div>

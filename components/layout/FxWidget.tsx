@@ -74,14 +74,14 @@ export function FxWidget({ initialFx }: Props) {
 
   return (
     <div className={`rounded px-4 py-3 border flex items-center justify-between gap-6 flex-wrap ${
-      fxFallback ? 'bg-amber-50 border-amber-200' : 'bg-white border-gray-200'
+      fxFallback ? 'bg-warn-light border-warn-light' : 'bg-white border-[#e2e8f0]'
     }`}>
       {/* Left — label + badges */}
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Güncel Kur</span>
-        {fxIsOld    && <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded font-semibold">Son iş günü</span>}
-        {fxFallback && <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded font-semibold">Veri alınamadı</span>}
-        {refreshErr && <span className="text-xs text-red-600">{refreshErr}</span>}
+        <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Güncel Kur</span>
+        {fxIsOld    && <span className="text-xs bg-warn-light text-warn-text px-2 py-0.5 rounded font-semibold">Son iş günü</span>}
+        {fxFallback && <span className="text-xs bg-neg-light text-neg px-2 py-0.5 rounded font-semibold">Veri alınamadı</span>}
+        {refreshErr && <span className="text-xs text-neg">{refreshErr}</span>}
       </div>
 
       {/* Right — rates + meta + refresh */}
@@ -98,13 +98,13 @@ export function FxWidget({ initialFx }: Props) {
             </div>
           </>
         ) : (
-          <span className="text-xs text-amber-700">Kur bilgisi şu an mevcut değil.</span>
+          <span className="text-xs text-warn-text">Kur bilgisi şu an mevcut değil.</span>
         )}
 
         <button
           onClick={refresh}
           disabled={refreshing}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold border bg-white border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-40 transition-colors"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold border bg-white border-[#e2e8f0] text-gray-700 hover:bg-[#f8fafc] disabled:opacity-40 transition-colors"
           aria-label="Kurları güncelle"
         >
           <Icon name="refresh" size={12} className={refreshing ? 'animate-spin' : ''} />
@@ -118,7 +118,7 @@ export function FxWidget({ initialFx }: Props) {
 function RatePair({ label, value }: { label: string; value: number }) {
   return (
     <div className="text-center">
-      <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-0.5">{label}</div>
+      <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">{label}</div>
       <div className="text-lg font-black tabular-nums text-gray-900">₺{Number(value).toFixed(4)}</div>
     </div>
   )

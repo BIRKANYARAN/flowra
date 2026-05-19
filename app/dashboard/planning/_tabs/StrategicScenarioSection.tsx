@@ -106,15 +106,15 @@ export async function StrategicScenarioSection({ companyId }: Props) {
         key:     'pessimistic' as const,
         label:   'Kötümser (−20%)',
         data:    result.pessimistic,
-        accent:  'border-red-200 bg-red-50',
-        text:    'text-red-700',
-        sub:     'text-red-500',
+        accent:  'border-neg-light bg-neg-light',
+        text:    'text-neg-text',
+        sub:     'text-neg',
       },
       {
         key:     'base' as const,
         label:   'Baz',
         data:    result.base,
-        accent:  'border-gray-200 bg-white',
+        accent:  'border-[#e2e8f0] bg-white',
         text:    'text-gray-900',
         sub:     'text-gray-400',
       },
@@ -122,14 +122,14 @@ export async function StrategicScenarioSection({ companyId }: Props) {
         key:     'optimistic' as const,
         label:   'İyimser (+15%)',
         data:    result.optimistic,
-        accent:  'border-emerald-200 bg-emerald-50',
-        text:    'text-emerald-800',
-        sub:     'text-emerald-600',
+        accent:  'border-pos-light bg-pos-light',
+        text:    'text-pos-text',
+        sub:     'text-pos-text',
       },
     ] as const
 
     return (
-      <div className="space-y-4 pt-4 border-t border-gray-100">
+      <div className="space-y-4 pt-4 border-t border-[#e2e8f0]">
         <div className="flex items-center justify-between">
           <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">
             Stratejik P&amp;L Projeksiyonu (12 Ay)
@@ -158,12 +158,12 @@ export async function StrategicScenarioSection({ companyId }: Props) {
                 Faiz: ₺{fmtK(s.data.total_interest)} · Vergi: ₺{fmtK(s.data.total_tax)}
               </div>
               {s.data.avg_dsr > 0 && (
-                <div className={`text-[10px] font-semibold mt-1.5 ${s.data.avg_dsr > 0.5 ? 'text-red-600' : s.data.avg_dsr > 0.3 ? 'text-amber-600' : 'text-emerald-600'}`}>
+                <div className={`text-[10px] font-semibold mt-1.5 ${s.data.avg_dsr > 0.5 ? 'text-neg' : s.data.avg_dsr > 0.3 ? 'text-warn-text' : 'text-pos-text'}`}>
                   Ort. DSR: {pct(s.data.avg_dsr)}
                 </div>
               )}
               {s.data.runway_end_month && (
-                <div className="text-[10px] font-bold text-red-600 mt-1">
+                <div className="text-[10px] font-bold text-neg mt-1">
                   ⚠ {s.data.runway_end_month} tükeniyor
                 </div>
               )}
@@ -178,14 +178,14 @@ export async function StrategicScenarioSection({ companyId }: Props) {
         </div>
 
         {/* Base scenario monthly P&L table (compact) */}
-        <div className="bg-white border border-gray-100 rounded overflow-hidden">
-          <div className="px-5 py-3 border-b border-gray-50 text-[9px] font-black uppercase tracking-widest text-gray-400">
+        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+          <div className="px-5 py-3 border-b border-[#f1f5f9] text-[9px] font-black uppercase tracking-widest text-gray-400">
             Baz Senaryo — Aylık P&amp;L
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-[10px]">
               <thead>
-                <tr className="bg-gray-50/60">
+                <tr className="bg-[#f8fafc]/60">
                   <th className="text-left px-4 py-2 font-black text-gray-400 whitespace-nowrap">Ay</th>
                   <th className="text-right px-3 py-2 font-black text-gray-400 whitespace-nowrap">Gelir</th>
                   <th className="text-right px-3 py-2 font-black text-gray-400 whitespace-nowrap">EBITDA</th>
@@ -195,12 +195,12 @@ export async function StrategicScenarioSection({ companyId }: Props) {
                   <th className="text-right px-4 py-2 font-black text-gray-400 whitespace-nowrap">DSR</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-[#f1f5f9]">
                 {result.base.months.map((m, i) => (
-                  <tr key={i} className="hover:bg-gray-50/40">
+                  <tr key={i} className="hover:bg-[#f8fafc]/40">
                     <td className="px-4 py-1.5 font-semibold text-gray-700 whitespace-nowrap">{m.label}</td>
                     <td className="px-3 py-1.5 text-right tabular-nums text-gray-600">₺{fmtK(m.revenue)}</td>
-                    <td className={`px-3 py-1.5 text-right tabular-nums font-semibold ${m.ebitda >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
+                    <td className={`px-3 py-1.5 text-right tabular-nums font-semibold ${m.ebitda >= 0 ? 'text-pos-text' : 'text-neg'}`}>
                       {m.ebitda >= 0 ? '' : '−'}₺{fmtK(Math.abs(m.ebitda))}
                     </td>
                     <td className="px-3 py-1.5 text-right tabular-nums text-gray-500">
@@ -209,14 +209,14 @@ export async function StrategicScenarioSection({ companyId }: Props) {
                     <td className="px-3 py-1.5 text-right tabular-nums text-gray-500">
                       {m.tax > 0 ? `₺${fmtK(m.tax)}` : '—'}
                     </td>
-                    <td className={`px-4 py-1.5 text-right tabular-nums font-black ${m.net_income >= 0 ? 'text-gray-900' : 'text-red-600'}`}>
+                    <td className={`px-4 py-1.5 text-right tabular-nums font-black ${m.net_income >= 0 ? 'text-gray-900' : 'text-neg'}`}>
                       {m.net_income < 0 ? '−' : ''}₺{fmtK(Math.abs(m.net_income))}
                     </td>
                     <td className={`px-4 py-1.5 text-right tabular-nums text-[9px] font-semibold ${
                       m.dsr === 0 ? 'text-gray-300'
-                      : m.dsr > 0.5 ? 'text-red-600'
-                      : m.dsr > 0.3 ? 'text-amber-600'
-                      : 'text-emerald-600'
+                      : m.dsr > 0.5 ? 'text-neg'
+                      : m.dsr > 0.3 ? 'text-warn-text'
+                      : 'text-pos-text'
                     }`}>
                       {m.dsr > 0 ? pct(m.dsr) : '—'}
                     </td>

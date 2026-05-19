@@ -59,16 +59,16 @@ const CASH_EXCLUDED_EXPENSE_TYPES = new Set(['loan_repayment','partner_financing
 // ── Situation status → color theme ────────────────────────────────────────────
 
 const SITUATION_THEME: Record<SituationStatus, { bg: string; border: string; text: string; badge: string; icon: string }> = {
-  healthy:  { bg: 'bg-emerald-50',  border: 'border-emerald-200', text: 'text-emerald-800', badge: 'bg-emerald-100 text-emerald-700', icon: '✓' },
-  caution:  { bg: 'bg-amber-50',    border: 'border-amber-200',   text: 'text-amber-800',   badge: 'bg-amber-100 text-amber-700',   icon: '⚠' },
+  healthy:  { bg: 'bg-pos-light',  border: 'border-pos-light', text: 'text-pos-text', badge: 'bg-pos-light text-pos-text', icon: '✓' },
+  caution:  { bg: 'bg-warn-light',    border: 'border-warn-light',   text: 'text-warn-text',   badge: 'bg-warn-light text-warn-text',   icon: '⚠' },
   'at-risk':{ bg: 'bg-orange-50',   border: 'border-orange-200',  text: 'text-orange-800',  badge: 'bg-orange-100 text-orange-700', icon: '!' },
-  critical: { bg: 'bg-red-50',      border: 'border-red-200',     text: 'text-red-800',     badge: 'bg-red-100 text-red-700',       icon: '✗' },
+  critical: { bg: 'bg-neg-light',      border: 'border-neg-light',     text: 'text-neg-text',     badge: 'bg-neg-light text-neg-text',       icon: '✗' },
 }
 
 const ALERT_SEVERITY_THEME: Record<string, { bg: string; border: string; text: string; dot: string }> = {
-  critical: { bg: 'bg-red-50',     border: 'border-red-200',    text: 'text-red-700',    dot: 'bg-red-500' },
-  warning:  { bg: 'bg-amber-50',   border: 'border-amber-200',  text: 'text-amber-700',  dot: 'bg-amber-500' },
-  info:     { bg: 'bg-blue-50',    border: 'border-blue-200',   text: 'text-blue-700',   dot: 'bg-blue-400' },
+  critical: { bg: 'bg-neg-light',     border: 'border-neg-light',    text: 'text-neg-text',    dot: 'bg-neg-light' },
+  warning:  { bg: 'bg-warn-light',   border: 'border-warn-light',  text: 'text-warn-text',  dot: 'bg-warn-light' },
+  info:     { bg: 'bg-info-light',    border: 'border-info-light',   text: 'text-info-text',   dot: 'bg-info' },
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -541,7 +541,7 @@ export default async function DashboardPage() {
             + Proforma
           </Link>
           <Link href="/dashboard/operations?tab=expenses"
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded border border-gray-200 text-gray-700 text-xs font-semibold hover:bg-gray-50 transition-colors">
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded border border-[#e2e8f0] text-gray-700 text-xs font-semibold hover:bg-[#f8fafc] transition-colors">
             + Gider
           </Link>
           <Link href="/dashboard/commercial?tab=collections"
@@ -553,15 +553,15 @@ export default async function DashboardPage() {
 
       {/* ── ADAPTIVE PRESSURE BANNER — only renders when system detects crisis ── */}
       {pressureMode === 'cash_crisis' && (
-        <div className="flex items-center justify-between gap-3 px-5 py-3 rounded border border-red-200 bg-red-50">
+        <div className="flex items-center justify-between gap-3 px-5 py-3 rounded border border-neg-light bg-neg-light">
           <div className="flex items-center gap-3 min-w-0">
-            <span className="text-[9px] font-black uppercase tracking-widest text-red-600 flex-shrink-0">⚠ NAKİT KRİZİ</span>
-            <span className="text-sm text-red-700 font-medium truncate">
+            <span className="text-[9px] font-black uppercase tracking-widest text-neg flex-shrink-0">⚠ NAKİT KRİZİ</span>
+            <span className="text-sm text-neg-text font-medium truncate">
               {runwayDays}g nakit ömrü — acil eylem gerekiyor
             </span>
           </div>
           <Link href="/dashboard/planning?tab=cash-projection"
-            className="flex-shrink-0 text-xs font-bold text-red-700 bg-red-100 hover:bg-red-200 px-3 py-1.5 rounded transition-colors whitespace-nowrap">
+            className="flex-shrink-0 text-xs font-bold text-neg-text bg-neg-light hover:bg-neg-light px-3 py-1.5 rounded transition-colors whitespace-nowrap">
             Eylem Planı →
           </Link>
         </div>
@@ -570,16 +570,16 @@ export default async function DashboardPage() {
       {/* ── CAUSAL CONTEXT CHAIN — system cross-center intelligence ──────────── */}
       {ctxChain && (
         <Link href={ctxChain.href}
-          className="flex items-center gap-3 px-4 py-2.5 bg-white border border-gray-100 rounded shadow-sm hover:border-gray-200 transition-colors overflow-hidden group">
+          className="flex items-center gap-3 px-4 py-2.5 bg-white border border-[#e2e8f0] rounded shadow-sm hover:border-[#e2e8f0] transition-colors overflow-hidden group">
           <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 flex-shrink-0">BAĞLAM</span>
           <div className="flex items-center gap-1 overflow-x-auto scrollbar-none flex-1 min-w-0">
             {ctxChain.nodes.map((node, i) => (
               <span key={i} className="flex items-center gap-1 flex-shrink-0">
                 {i > 0 && <span className="text-gray-300 text-xs mx-0.5">→</span>}
                 <span className={`text-[11px] px-2 py-0.5 rounded-md font-medium ${
-                  node.severity === 'critical' ? 'bg-red-50 text-red-700 border border-red-100' :
-                  node.severity === 'warn'     ? 'bg-amber-50 text-amber-700 border border-amber-100' :
-                  'bg-gray-50 text-gray-600 border border-gray-100'
+                  node.severity === 'critical' ? 'bg-neg-light text-neg-text border border-neg-light' :
+                  node.severity === 'warn'     ? 'bg-warn-light text-warn-text border border-warn-light' :
+                  'bg-[#f8fafc] text-gray-600 border border-[#e2e8f0]'
                 }`}>
                   {node.label}
                 </span>
@@ -595,7 +595,7 @@ export default async function DashboardPage() {
       )}
 
       {/* ── SİSTEM YORUMU — AI / rule-based narrative panel ──────────────────── */}
-      <div className="bg-white border border-gray-100 rounded px-5 py-4 shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded px-5 py-4 shadow-sm">
         <div className="flex items-center justify-between mb-3">
           <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Sistem Yorumu</span>
           <span className={`text-[8px] font-semibold px-2 py-0.5 rounded ${
@@ -609,7 +609,7 @@ export default async function DashboardPage() {
         <p className="text-sm text-gray-700 leading-relaxed mb-3">{aiSummary.summary_tr}</p>
         <div className="flex flex-wrap gap-1.5 mb-3">
           {aiSummary.key_factors.map((f, i) => (
-            <span key={i} className="text-[10px] bg-gray-50 border border-gray-100 text-gray-600 px-2 py-1 rounded">
+            <span key={i} className="text-[10px] bg-[#f8fafc] border border-[#e2e8f0] text-gray-600 px-2 py-1 rounded">
               {f}
             </span>
           ))}
@@ -624,14 +624,14 @@ export default async function DashboardPage() {
       {/* One container border tint when a genuine crisis signal is active. No cell animations. */}
       {/* Size differential: dominant 26px vs 21px — felt, not shouted. Layout never shifts.  */}
       <div className={`bg-white rounded shadow-sm overflow-hidden border ${
-        dominantKpi === 'runway'      ? 'border-red-200'   :
-        dominantKpi === 'receivables' ? 'border-amber-200' : 'border-gray-100'
+        dominantKpi === 'runway'      ? 'border-neg-light'   :
+        dominantKpi === 'receivables' ? 'border-warn-light' : 'border-[#e2e8f0]'
       }`}>
-        <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-gray-100">
+        <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-[#e2e8f0]">
 
           {/* Ciro */}
           <Link href="/dashboard/commercial?tab=sales"
-            className="px-5 py-4 hover:bg-gray-50/60 transition-colors">
+            className="px-5 py-4 hover:bg-[#f8fafc]/60 transition-colors">
             <div className="text-[9px] font-black uppercase tracking-widest mb-1.5 text-gray-400">Ciro</div>
             <div className={`${kpiValueSize('revenue')} font-black tabular-nums leading-none text-gray-900`}>
               <span className="text-gray-300 font-normal text-sm mr-0.5">₺</span>{formatKpi(fs.revenue_try)}
@@ -640,7 +640,7 @@ export default async function DashboardPage() {
               {fs.revenue_try > 0 ? `Brüt marj ${pct(grossMarginPct)}` : 'Satış yok'}
             </div>
             {revDeltaPct !== null && (
-              <div className={`text-[10px] font-semibold mt-0.5 tabular-nums ${revDeltaPct >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+              <div className={`text-[10px] font-semibold mt-0.5 tabular-nums ${revDeltaPct >= 0 ? 'text-pos-text' : 'text-neg'}`}>
                 {revDeltaPct >= 0 ? '▲' : '▼'} {Math.abs(revDeltaPct).toFixed(1)}% geçen ay
               </div>
             )}
@@ -648,15 +648,15 @@ export default async function DashboardPage() {
 
           {/* Aylık Net */}
           <Link href="/dashboard/finance?tab=pnl"
-            className={`px-5 py-4 hover:bg-gray-50/60 transition-colors ${monthlyNet < 0 ? 'bg-red-50/25' : ''}`}>
+            className={`px-5 py-4 hover:bg-[#f8fafc]/60 transition-colors ${monthlyNet < 0 ? 'bg-neg-light/25' : ''}`}>
             <div className="text-[9px] font-black uppercase tracking-widest mb-1.5 text-gray-400">Aylık Net</div>
-            <div className={`${kpiValueSize('net')} font-black tabular-nums leading-none ${monthlyNet >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
-              <span className={`font-normal text-sm mr-0.5 ${monthlyNet >= 0 ? 'text-emerald-300' : 'text-red-300'}`}>₺</span>
+            <div className={`${kpiValueSize('net')} font-black tabular-nums leading-none ${monthlyNet >= 0 ? 'text-pos-text' : 'text-neg'}`}>
+              <span className={`font-normal text-sm mr-0.5 ${monthlyNet >= 0 ? 'text-pos/70' : 'text-neg/70'}`}>₺</span>
               {formatKpi(Math.abs(monthlyNet))}
             </div>
             <div className="text-[10px] text-gray-400 mt-1.5">{monthlyNet >= 0 ? 'Kârlı dönem' : 'Zarar'}</div>
             {netDeltaPct !== null && (
-              <div className={`text-[10px] font-semibold mt-0.5 tabular-nums ${netDeltaPct >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+              <div className={`text-[10px] font-semibold mt-0.5 tabular-nums ${netDeltaPct >= 0 ? 'text-pos-text' : 'text-neg'}`}>
                 {netDeltaPct >= 0 ? '▲' : '▼'} {Math.abs(netDeltaPct).toFixed(1)}% geçen ay
               </div>
             )}
@@ -667,20 +667,20 @@ export default async function DashboardPage() {
 
           {/* Bekleyen Tahsilat */}
           <Link href="/dashboard/commercial?tab=collections"
-            className={`px-5 py-4 hover:bg-gray-50/60 transition-colors ${dominantKpi === 'receivables' ? 'bg-amber-50/40' : ''}`}>
-            <div className={`text-[9px] font-black uppercase tracking-widest mb-1.5 ${dominantKpi === 'receivables' ? 'text-amber-700' : 'text-gray-400'}`}>
+            className={`px-5 py-4 hover:bg-[#f8fafc]/60 transition-colors ${dominantKpi === 'receivables' ? 'bg-warn-light/40' : ''}`}>
+            <div className={`text-[9px] font-black uppercase tracking-widest mb-1.5 ${dominantKpi === 'receivables' ? 'text-warn-text' : 'text-gray-400'}`}>
               Bekleyen
             </div>
-            <div className={`${kpiValueSize('receivables')} font-black tabular-nums leading-none ${uncollectedSalesTotal > 0 ? 'text-amber-700' : 'text-emerald-700'}`}>
+            <div className={`${kpiValueSize('receivables')} font-black tabular-nums leading-none ${uncollectedSalesTotal > 0 ? 'text-warn-text' : 'text-pos-text'}`}>
               {uncollectedSalesTotal > 0
-                ? <><span className="text-amber-300 font-normal text-sm mr-0.5">₺</span>{formatKpi(uncollectedSalesTotal)}</>
+                ? <><span className="text-warn/70 font-normal text-sm mr-0.5">₺</span>{formatKpi(uncollectedSalesTotal)}</>
                 : <span className="text-lg">Temiz</span>}
             </div>
             <div className="text-[10px] text-gray-400 mt-1.5">
               {uncollectedSalesTotal > 0 ? `${uncollectedSalesCount} satış · %${actuallyCollectedPct} tahsil` : 'Tümü tahsil edildi'}
             </div>
             {overdueTotal60 > 0 && (
-              <div className="text-[10px] font-semibold tabular-nums text-red-500">
+              <div className="text-[10px] font-semibold tabular-nums text-neg">
                 {fmt(overdueTotal60)} · 60+ gün
               </div>
             )}
@@ -688,12 +688,12 @@ export default async function DashboardPage() {
 
           {/* Nakit Ömrü */}
           <Link href="/dashboard/planning?tab=cash-projection"
-            className={`px-5 py-4 hover:bg-gray-50/60 transition-colors ${dominantKpi === 'runway' ? 'bg-red-50/40' : ''}`}>
-            <div className={`text-[9px] font-black uppercase tracking-widest mb-1.5 ${dominantKpi === 'runway' ? 'text-red-600' : 'text-gray-400'}`}>
+            className={`px-5 py-4 hover:bg-[#f8fafc]/60 transition-colors ${dominantKpi === 'runway' ? 'bg-neg-light/40' : ''}`}>
+            <div className={`text-[9px] font-black uppercase tracking-widest mb-1.5 ${dominantKpi === 'runway' ? 'text-neg' : 'text-gray-400'}`}>
               Nakit Ömrü
             </div>
             <div className={`${kpiValueSize('runway')} font-black tabular-nums leading-none ${
-              runwayDays < 0 ? 'text-gray-400' : runwayDays < 90 ? 'text-red-600' : 'text-emerald-700'
+              runwayDays < 0 ? 'text-gray-400' : runwayDays < 90 ? 'text-neg' : 'text-pos-text'
             }`}>
               {runwayDays < 0
                 ? <span className="text-lg">—</span>
@@ -717,14 +717,14 @@ export default async function DashboardPage() {
       </div>
 
       {/* ── KARAR SIRASI — Operational Workflow Queue ─────────────────────── */}
-      <div className="bg-white border border-gray-100 rounded shadow-sm overflow-hidden">
+      <div className="bg-white border border-[#e2e8f0] rounded shadow-sm overflow-hidden">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3 border-b border-gray-50">
+        <div className="flex items-center justify-between px-5 py-3 border-b border-[#f1f5f9]">
           <div className="flex items-center gap-2.5">
             <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Karar Sırası</span>
             {critAlerts.length > 0 && (
-              <span className="inline-flex items-center text-[9px] font-black bg-red-500 text-white px-1.5 py-0.5 rounded leading-none">
+              <span className="inline-flex items-center text-[9px] font-black bg-neg-light text-white px-1.5 py-0.5 rounded leading-none">
                 {critAlerts.length} ACİL
               </span>
             )}
@@ -734,29 +734,29 @@ export default async function DashboardPage() {
 
         {topAlerts.length === 0 ? (
           <div className="flex items-center gap-3 px-5 py-4">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0" />
+            <span className="w-2 h-2 rounded-full bg-pos flex-shrink-0" />
             <span className="text-sm text-gray-500">Tüm sistemler normal · Bekleyen karar yok</span>
           </div>
         ) : (
-          <div className="divide-y divide-gray-50">
+          <div className="divide-y divide-[#f1f5f9]">
 
             {/* ── ACIL ─────────────────────────────────────────────────────── */}
             {critAlerts.length > 0 && (
               <div>
-                <div className="px-5 py-1.5 bg-red-50/60">
-                  <span className="text-[9px] font-black uppercase tracking-widest text-red-500">
+                <div className="px-5 py-1.5 bg-neg-light/60">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-neg">
                     ● Acil — {critAlerts.length} hareket gerekiyor
                   </span>
                 </div>
-                <div className="divide-y divide-gray-50">
+                <div className="divide-y divide-[#f1f5f9]">
                   {critAlerts.map(alert => (
                     <Link key={alert.id} href={alert.actionHref}
-                      className="flex items-center gap-4 px-5 py-4 border-l-[3px] border-red-400 hover:bg-red-50/30 transition-colors group">
+                      className="flex items-center gap-4 px-5 py-4 border-l-[3px] border-neg hover:bg-neg-light/30 transition-colors group">
                       <div className="flex-1 min-w-0">
                         <div className="text-[13px] font-bold text-gray-900 leading-tight">{alert.title}</div>
                         <div className="text-[11px] text-gray-500 mt-0.5">{alert.detail}</div>
                       </div>
-                      <span className="flex-shrink-0 text-xs font-bold px-3 py-1.5 bg-red-600 text-white rounded group-hover:bg-red-700 transition-colors whitespace-nowrap">
+                      <span className="flex-shrink-0 text-xs font-bold px-3 py-1.5 bg-neg text-white rounded group-hover:bg-neg transition-colors whitespace-nowrap">
                         {alert.actionLabel} →
                       </span>
                     </Link>
@@ -768,20 +768,20 @@ export default async function DashboardPage() {
             {/* ── YAKLAŞIYOR ───────────────────────────────────────────────── */}
             {warnAlerts.length > 0 && (
               <div>
-                <div className="px-5 py-1.5 bg-amber-50/60">
-                  <span className="text-[9px] font-black uppercase tracking-widest text-amber-600">
+                <div className="px-5 py-1.5 bg-warn-light/60">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-warn-text">
                     ◐ Yaklaşıyor — {warnAlerts.length} takip
                   </span>
                 </div>
-                <div className="divide-y divide-gray-50">
+                <div className="divide-y divide-[#f1f5f9]">
                   {warnAlerts.map(alert => (
                     <Link key={alert.id} href={alert.actionHref}
-                      className="flex items-center gap-4 px-5 py-3.5 border-l-[3px] border-amber-300 hover:bg-amber-50/30 transition-colors group">
+                      className="flex items-center gap-4 px-5 py-3.5 border-l-[3px] border-warn hover:bg-warn-light/30 transition-colors group">
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-medium text-gray-800 leading-tight">{alert.title}</div>
                         <div className="text-[11px] text-gray-500 mt-0.5 truncate">{alert.detail}</div>
                       </div>
-                      <span className="flex-shrink-0 text-xs font-semibold px-3 py-1.5 border border-gray-200 text-gray-600 rounded group-hover:bg-gray-50 transition-colors whitespace-nowrap">
+                      <span className="flex-shrink-0 text-xs font-semibold px-3 py-1.5 border border-[#e2e8f0] text-gray-600 rounded group-hover:bg-[#f8fafc] transition-colors whitespace-nowrap">
                         {alert.actionLabel} →
                       </span>
                     </Link>
@@ -793,15 +793,15 @@ export default async function DashboardPage() {
             {/* ── BİLGİ ────────────────────────────────────────────────────── */}
             {infoAlerts.length > 0 && (
               <div>
-                <div className="px-5 py-1.5 bg-gray-50/60">
+                <div className="px-5 py-1.5 bg-[#f8fafc]/60">
                   <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">
                     ○ Bilgi — {infoAlerts.length}
                   </span>
                 </div>
-                <div className="divide-y divide-gray-50">
+                <div className="divide-y divide-[#f1f5f9]">
                   {infoAlerts.map(alert => (
                     <Link key={alert.id} href={alert.actionHref}
-                      className="flex items-center gap-4 px-5 py-2.5 border-l-[3px] border-gray-200 hover:bg-gray-50/60 transition-colors group">
+                      className="flex items-center gap-4 px-5 py-2.5 border-l-[3px] border-[#e2e8f0] hover:bg-[#f8fafc]/60 transition-colors group">
                       <div className="flex-1 min-w-0">
                         <div className="text-[11px] font-medium text-gray-600 leading-tight">{alert.title}</div>
                         <div className="text-[10px] text-gray-400 mt-0.5 truncate">{alert.detail}</div>
@@ -821,19 +821,19 @@ export default async function DashboardPage() {
 
       {/* ── NAKIT KÖPRÜSÜ — compact horizontal rail ───────────────────────── */}
       <div className={`bg-white rounded shadow-sm border transition-colors duration-150 ${
-        cashDistributable < 0 ? 'border-red-200' : cashDistributable > 0 ? 'border-gray-100' : 'border-gray-100'
+        cashDistributable < 0 ? 'border-neg-light' : cashDistributable > 0 ? 'border-[#e2e8f0]' : 'border-[#e2e8f0]'
       }`}>
-        <div className="flex items-center justify-between px-5 py-2.5 border-b border-gray-50">
+        <div className="flex items-center justify-between px-5 py-2.5 border-b border-[#f1f5f9]">
           <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Nakit Köprüsü</span>
           <Link href="/dashboard/finance?tab=cashflow" className="text-[10px] text-primary-600 font-semibold hover:text-primary-700">Cashflow →</Link>
         </div>
         {/* Rail: first 3 items normal, "= Dağıtılabilir" is the decision node — always dominant */}
-        <div className="px-5 py-3 grid grid-cols-4 divide-x divide-gray-100 items-end">
+        <div className="px-5 py-3 grid grid-cols-4 divide-x divide-[#e2e8f0] items-end">
           {/* Input items — subordinate */}
           {[
-            { label: '+ Tahsil Edilen',      value: actuallyCollected,       tone: 'text-emerald-700', sub: `%${actuallyCollectedPct} tahsilat` },
-            { label: '− Ödenen Giderler',    value: -paidExpenses,           tone: 'text-red-600',    sub: `${fmt(unpaidExpenses)} bekliyor` },
-            { label: '− Açık Yükümlülükler', value: -outstandingObligations, tone: 'text-amber-600',  sub: 'ödenmemiş' },
+            { label: '+ Tahsil Edilen',      value: actuallyCollected,       tone: 'text-pos-text', sub: `%${actuallyCollectedPct} tahsilat` },
+            { label: '− Ödenen Giderler',    value: -paidExpenses,           tone: 'text-neg',    sub: `${fmt(unpaidExpenses)} bekliyor` },
+            { label: '− Açık Yükümlülükler', value: -outstandingObligations, tone: 'text-warn-text',  sub: 'ödenmemiş' },
           ].map(c => (
             <div key={c.label} className="px-4 first:pl-0">
               <div className="text-[9px] font-bold uppercase tracking-widest text-gray-400 mb-1">{c.label}</div>
@@ -842,29 +842,29 @@ export default async function DashboardPage() {
             </div>
           ))}
           {/* Decision node — Dağıtılabilir always dominates visually */}
-          <div className={`pl-4 pr-0 pb-1 border-l border-gray-100 ${cashDistributable < 0 ? 'bg-red-50/40 -mx-0 rounded-br-xl' : ''}`}>
-            <div className={`text-[9px] font-black uppercase tracking-widest mb-1 ${cashDistributable >= 0 ? 'text-gray-500' : 'text-red-600'}`}>
+          <div className={`pl-4 pr-0 pb-1 border-l border-[#e2e8f0] ${cashDistributable < 0 ? 'bg-neg-light/40 -mx-0 rounded-br-xl' : ''}`}>
+            <div className={`text-[9px] font-black uppercase tracking-widest mb-1 ${cashDistributable >= 0 ? 'text-gray-500' : 'text-neg'}`}>
               = Dağıtılabilir
             </div>
-            <div className={`text-2xl font-black tabular-nums leading-none ${cashDistributable >= 0 ? 'text-gray-900' : 'text-red-700'}`}>
+            <div className={`text-2xl font-black tabular-nums leading-none ${cashDistributable >= 0 ? 'text-gray-900' : 'text-neg-text'}`}>
               {fmt(cashDistributable)}
             </div>
             <div className="text-[9px] text-gray-400 mt-0.5">bakiye {fmt(cashBalance)}</div>
           </div>
         </div>
         {stockValue > 0 && (
-          <div className="px-5 pb-2 pt-2 border-t border-gray-50 flex items-center gap-2">
+          <div className="px-5 pb-2 pt-2 border-t border-[#f1f5f9] flex items-center gap-2">
             <span className="text-[9px] font-bold uppercase tracking-widest text-gray-300 flex-shrink-0">Stok</span>
             <span className="text-[10px] text-gray-400 tabular-nums">{fmt(stockValue)} maliyet bedeliyle stokta bekliyor</span>
           </div>
         )}
         {cashDistributable > 0 && equalization.entries.length > 0 && (
-          <div className={`px-5 pb-3 pt-2 flex items-center gap-2 overflow-hidden flex-wrap ${stockValue > 0 ? '' : 'border-t border-gray-50'}`}>
+          <div className={`px-5 pb-3 pt-2 flex items-center gap-2 overflow-hidden flex-wrap ${stockValue > 0 ? '' : 'border-t border-[#f1f5f9]'}`}>
             <span className="text-[9px] font-bold uppercase tracking-widest text-gray-300 flex-shrink-0">Paylaşım</span>
             {equalization.entries.slice(0, 4).map(e => (
-              <div key={e.partner_id} className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-100 rounded px-2.5 py-1 min-w-0">
+              <div key={e.partner_id} className="flex items-center gap-1.5 bg-pos-light border border-pos-light rounded px-2.5 py-1 min-w-0">
                 <span className="text-[10px] text-gray-600 font-semibold truncate max-w-[72px]">{e.partner_name}</span>
-                <span className="text-[11px] font-black tabular-nums text-emerald-700 flex-shrink-0">{fmt(e.total_payout)}</span>
+                <span className="text-[11px] font-black tabular-nums text-pos-text flex-shrink-0">{fmt(e.total_payout)}</span>
               </div>
             ))}
           </div>
@@ -875,8 +875,8 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
 
         {/* Runway summary — compressed single line */}
-        <div className="lg:col-span-8 bg-white border border-gray-100 rounded shadow-sm">
-          <div className="flex items-center justify-between px-5 py-2.5 border-b border-gray-50">
+        <div className="lg:col-span-8 bg-white border border-[#e2e8f0] rounded shadow-sm">
+          <div className="flex items-center justify-between px-5 py-2.5 border-b border-[#f1f5f9]">
             <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Nakit Pisti</span>
             <Link href="/dashboard/planning?tab=cash-projection" className="text-[10px] text-primary-600 font-semibold hover:text-primary-700">Projeksiyon →</Link>
           </div>
@@ -884,23 +884,23 @@ export default async function DashboardPage() {
           {(() => {
             const baseDanger = !!forecast.summary.base.runwayEndMonth
             const scenarios = [
-              { key: 'pessimistic' as const, label: 'Kötümser', summary: forecast.summary.pessimistic, tone: 'text-red-600' },
-              { key: 'base'        as const, label: 'Baz',      summary: forecast.summary.base,        tone: baseDanger ? 'text-red-700' : 'text-gray-800' },
-              { key: 'optimistic'  as const, label: 'İyimser',  summary: forecast.summary.optimistic,  tone: 'text-emerald-700' },
+              { key: 'pessimistic' as const, label: 'Kötümser', summary: forecast.summary.pessimistic, tone: 'text-neg' },
+              { key: 'base'        as const, label: 'Baz',      summary: forecast.summary.base,        tone: baseDanger ? 'text-neg-text' : 'text-gray-800' },
+              { key: 'optimistic'  as const, label: 'İyimser',  summary: forecast.summary.optimistic,  tone: 'text-pos-text' },
             ]
             return (
-              <div className="px-5 py-3 grid grid-cols-3 gap-4 divide-x divide-gray-100 items-end">
+              <div className="px-5 py-3 grid grid-cols-3 gap-4 divide-x divide-[#e2e8f0] items-end">
                 {scenarios.map(({ key, label, summary, tone }) => {
                   const isBase    = key === 'base'
                   const isDanger  = baseDanger && isBase
                   return (
                     <div key={key} className="pl-4 first:pl-0">
-                      <div className={`text-[9px] font-bold uppercase tracking-widest mb-1 ${isDanger ? 'text-red-600' : 'text-gray-400'}`}>
+                      <div className={`text-[9px] font-bold uppercase tracking-widest mb-1 ${isDanger ? 'text-neg' : 'text-gray-400'}`}>
                         {label}
                       </div>
                       <div className={`font-black tabular-nums leading-none ${isDanger ? 'text-[19px]' : 'text-base'} ${tone}`}>
                         {summary.runwayEndMonth
-                          ? <span className="text-red-500">{summary.runwayEndMonth}</span>
+                          ? <span className="text-neg">{summary.runwayEndMonth}</span>
                           : fmt(summary.endCash)}
                       </div>
                       <div className="text-[9px] text-gray-400 mt-0.5">
@@ -917,14 +917,14 @@ export default async function DashboardPage() {
         {/* Right column: proformalar + dönem + giderler */}
         <div className="lg:col-span-4 flex flex-col gap-3">
           {/* Giderler breakdown */}
-          <div className="bg-white border border-gray-100 rounded px-4 py-3.5 shadow-sm">
+          <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3.5 shadow-sm">
             <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">Giderler</div>
             <div className="text-xl font-black tabular-nums text-gray-900 leading-none mb-1">
               <span className="text-gray-300 font-normal text-sm mr-0.5">₺</span>{formatKpi(fs.expenses_total_try)}
             </div>
             <div className="text-[10px] text-gray-400 mb-2">~{fmt(monthlyExpenses)}/ay</div>
             {expDeltaPct !== null && (
-              <div className={`text-[11px] font-semibold tabular-nums ${expDeltaPct > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+              <div className={`text-[11px] font-semibold tabular-nums ${expDeltaPct > 0 ? 'text-neg' : 'text-pos-text'}`}>
                 {expDeltaPct > 0 ? '▲' : '▼'} {Math.abs(expDeltaPct).toFixed(1)}% <span className="text-gray-400 font-normal">geçen ay</span>
               </div>
             )}
@@ -936,7 +936,7 @@ export default async function DashboardPage() {
           {/* Açık proformalar */}
           {outstanding > 0 && (
             <Link href="/dashboard/commercial?tab=proformas"
-              className="bg-white border border-gray-100 rounded px-4 py-3.5 shadow-sm hover:border-gray-200 transition-colors">
+              className="bg-white border border-[#e2e8f0] rounded px-4 py-3.5 shadow-sm hover:border-[#e2e8f0] transition-colors">
               <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">Açık Proformalar</div>
               <div className="text-xl font-black tabular-nums text-primary-700 leading-none">
                 <span className="text-primary-300 font-normal text-sm mr-0.5">₺</span>{formatKpi(outstanding)}
@@ -948,17 +948,17 @@ export default async function DashboardPage() {
           {/* Dönem kapanışı */}
           {openPeriodDaysOverdue > 10 && (
             <Link href="/dashboard/cfo/period-close"
-              className="bg-amber-50 border border-amber-200 rounded px-4 py-3.5 hover:border-amber-300 transition-colors">
-              <div className="text-[10px] font-black uppercase tracking-widest text-amber-500 mb-1.5">Dönem Kapanışı</div>
-              <div className="text-sm font-bold text-amber-700">{openPeriodDaysOverdue} gündür bekliyor</div>
-              <div className="text-[10px] text-amber-500 mt-1">CFO Cockpit'e git →</div>
+              className="bg-warn-light border border-warn-light rounded px-4 py-3.5 hover:border-warn transition-colors">
+              <div className="text-[10px] font-black uppercase tracking-widest text-warn mb-1.5">Dönem Kapanışı</div>
+              <div className="text-sm font-bold text-warn-text">{openPeriodDaysOverdue} gündür bekliyor</div>
+              <div className="text-[10px] text-warn mt-1">CFO Cockpit'e git →</div>
             </Link>
           )}
 
           {/* Tasks reminder */}
           {taskReminders.length > 0 && (
             <Link href="/dashboard/planning?tab=tasks"
-              className="bg-white border border-gray-100 rounded px-4 py-3.5 shadow-sm hover:border-gray-200 transition-colors">
+              className="bg-white border border-[#e2e8f0] rounded px-4 py-3.5 shadow-sm hover:border-[#e2e8f0] transition-colors">
               <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">Yaklaşan Görevler</div>
               <div className="text-xl font-black text-primary-700">{taskReminders.length}</div>
               <div className="text-[10px] text-gray-400 mt-1">
@@ -973,8 +973,8 @@ export default async function DashboardPage() {
       </div>
 
       {/* ── RISK RADAR — cross-center intelligence surface ───────────────── */}
-      <div className="bg-white border border-gray-100 rounded shadow-sm overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-50">
+      <div className="bg-white border border-[#e2e8f0] rounded shadow-sm overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#f1f5f9]">
           <div className="flex items-center gap-3">
             <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Risk Radar</span>
             <span className={`text-[9px] font-black px-2 py-0.5 rounded ${situTheme.badge}`}>
@@ -1024,15 +1024,15 @@ export default async function DashboardPage() {
             },
           ] as const).map(dim => {
             const scoreColor =
-              dim.score >= 80 ? 'text-emerald-700' :
-              dim.score >= 60 ? 'text-amber-700'   :
+              dim.score >= 80 ? 'text-pos-text' :
+              dim.score >= 60 ? 'text-warn-text'   :
               dim.score >= 40 ? 'text-orange-600'  :
-              'text-red-600'
+              'text-neg'
             const barColor =
-              dim.score >= 80 ? 'bg-emerald-400' :
-              dim.score >= 60 ? 'bg-amber-400'   :
+              dim.score >= 80 ? 'bg-pos' :
+              dim.score >= 60 ? 'bg-warn'   :
               dim.score >= 40 ? 'bg-orange-400'  :
-              'bg-red-400'
+              'bg-neg'
             const statusLabel =
               dim.score >= 80 ? 'Sağlıklı' :
               dim.score >= 60 ? 'Dikkat'   :
@@ -1040,7 +1040,7 @@ export default async function DashboardPage() {
               'Kritik'
             return (
               <Link key={dim.key} href={dim.href}
-                className="flex flex-col gap-2 group hover:bg-gray-50/60 rounded p-3 -m-1 transition-colors">
+                className="flex flex-col gap-2 group hover:bg-[#f8fafc]/60 rounded p-3 -m-1 transition-colors">
                 <div className="flex items-center justify-between">
                   <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">{dim.label}</span>
                   <span className={`text-[9px] font-bold ${scoreColor}`}>{statusLabel}</span>

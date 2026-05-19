@@ -18,8 +18,8 @@ import { useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
-const IL  = 'w-full border border-gray-200 rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white transition-colors'
-const LAB = 'block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5'
+const IL  = 'w-full border border-[#e2e8f0] rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white transition-colors'
+const LAB = 'block text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5'
 
 export default function NewPartnerPage() {
   const router = useRouter()
@@ -109,7 +109,7 @@ export default function NewPartnerPage() {
 
       {/* ── Form ────────────────────────────────────────────────────────────── */}
       <form onSubmit={handleSubmit} noValidate>
-        <div className="bg-white border border-gray-100 rounded p-6 shadow-sm space-y-5">
+        <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm space-y-5">
 
           {/* Name */}
           <div>
@@ -171,7 +171,7 @@ export default function NewPartnerPage() {
 
           {/* Error */}
           {error && (
-            <div className="text-sm px-3 py-2.5 rounded border bg-red-50 border-red-100 text-red-700 flex items-center gap-2">
+            <div className="text-sm px-3 py-2.5 rounded border bg-neg-light border-neg-light text-neg-text flex items-center gap-2">
               <span>✕</span>
               <span>{error}</span>
             </div>
@@ -188,7 +188,7 @@ export default function NewPartnerPage() {
             </button>
             <Link
               href="/dashboard/partners"
-              className="inline-flex items-center px-4 py-2.5 text-sm font-semibold rounded border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+              className="inline-flex items-center px-4 py-2.5 text-sm font-semibold rounded border border-[#e2e8f0] text-gray-600 hover:bg-[#f8fafc] transition-colors"
             >
               İptal
             </Link>

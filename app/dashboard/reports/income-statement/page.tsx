@@ -37,13 +37,13 @@ function Row({ label, value, sub, bold, indent, positive, negative }: {
   positive?: boolean; negative?: boolean
 }) {
   return (
-    <div className={`flex items-center justify-between py-1.5 border-b border-gray-50 last:border-0 ${indent ? 'pl-6' : ''}`}>
+    <div className={`flex items-center justify-between py-1.5 border-b border-[#f1f5f9] last:border-0 ${indent ? 'pl-6' : ''}`}>
       <div className="min-w-0">
         <span className={`text-xs ${bold ? 'font-black text-gray-900' : 'font-medium text-gray-600'}`}>{label}</span>
         {sub && <span className="text-[10px] text-gray-400 ml-2">{sub}</span>}
       </div>
       <span className={`tabular-nums text-sm shrink-0 ${bold ? 'font-black' : 'font-semibold'} ${
-        positive ? 'text-emerald-700' : negative ? 'text-red-600' : 'text-gray-900'
+        positive ? 'text-pos-text' : negative ? 'text-neg' : 'text-gray-900'
       }`}>{value}</span>
     </div>
   )
@@ -108,10 +108,10 @@ export default function IncomeStatementPage() {
         </div>
         <div className="flex items-center gap-2">
           <input type="date" value={from} onChange={e => setFrom(e.target.value)}
-            className="border border-gray-200 rounded px-2 py-1 text-xs" />
+            className="border border-[#e2e8f0] rounded px-2 py-1 text-xs" />
           <span className="text-xs text-gray-400">—</span>
           <input type="date" value={to} onChange={e => setTo(e.target.value)}
-            className="border border-gray-200 rounded px-2 py-1 text-xs" />
+            className="border border-[#e2e8f0] rounded px-2 py-1 text-xs" />
           {pdfOpts && <PdfExportButton opts={pdfOpts} label="PDF İndir" />}
           <Link href="/dashboard/cfo" className="text-xs text-gray-400 hover:text-primary-600 font-semibold">← CFO</Link>
         </div>
@@ -123,13 +123,13 @@ export default function IncomeStatementPage() {
         <p className="text-sm text-gray-500">{from} — {to}</p>
       </div>
 
-      {error && <div className="bg-red-50 border border-red-200 rounded px-4 py-3 text-sm text-red-700">{error}</div>}
+      {error && <div className="bg-neg-light border border-neg-light rounded px-4 py-3 text-sm text-neg-text">{error}</div>}
       {loading && <div className="bg-gray-100 rounded h-64 animate-pulse" />}
 
       {pnl && !loading && (
-        <div className="bg-white border border-gray-100 rounded overflow-hidden print:border-none print:shadow-none">
+        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden print:border-none print:shadow-none">
           {/* Revenue section */}
-          <div className="px-4 py-2 bg-gray-50 border-b border-gray-100">
+          <div className="px-4 py-2 bg-[#f8fafc] border-b border-[#e2e8f0]">
             <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Satışlar</div>
           </div>
           <div className="px-4">
@@ -141,7 +141,7 @@ export default function IncomeStatementPage() {
           </div>
 
           {/* OpEx section */}
-          <div className="px-4 py-2 bg-gray-50 border-b border-gray-100 border-t border-gray-100 mt-1">
+          <div className="px-4 py-2 bg-[#f8fafc] border-b border-[#e2e8f0] border-t border-[#e2e8f0] mt-1">
             <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Faaliyet Giderleri</div>
           </div>
           <div className="px-4">
@@ -153,7 +153,7 @@ export default function IncomeStatementPage() {
           </div>
 
           {/* Tax section */}
-          <div className="px-4 py-2 bg-gray-50 border-b border-gray-100 border-t border-gray-100 mt-1">
+          <div className="px-4 py-2 bg-[#f8fafc] border-b border-[#e2e8f0] border-t border-[#e2e8f0] mt-1">
             <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Vergi</div>
           </div>
           <div className="px-4">
@@ -162,10 +162,10 @@ export default function IncomeStatementPage() {
           </div>
 
           {/* Net income */}
-          <div className={`px-4 py-3 border-t-2 ${pnl.net_after_tax_try >= 0 ? 'border-emerald-200 bg-emerald-50' : 'border-red-200 bg-red-50'}`}>
+          <div className={`px-4 py-3 border-t-2 ${pnl.net_after_tax_try >= 0 ? 'border-pos-light bg-pos-light' : 'border-neg-light bg-neg-light'}`}>
             <div className="flex items-center justify-between">
               <span className="text-sm font-black text-gray-900">Dönem Net Kârı</span>
-              <span className={`text-xl font-black tabular-nums ${pnl.net_after_tax_try >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
+              <span className={`text-xl font-black tabular-nums ${pnl.net_after_tax_try >= 0 ? 'text-pos-text' : 'text-neg'}`}>
                 {fmt(pnl.net_after_tax_try)}
               </span>
             </div>

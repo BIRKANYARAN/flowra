@@ -99,7 +99,7 @@ export default function WorkflowsPage() {
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded px-4 py-3 text-sm text-red-700">{error}</div>
+        <div className="bg-neg-light border border-neg-light rounded px-4 py-3 text-sm text-neg-text">{error}</div>
       )}
 
       {loading && (
@@ -107,7 +107,7 @@ export default function WorkflowsPage() {
       )}
 
       {!loading && workflows.length === 0 && !error && (
-        <div className="bg-gray-50 border border-gray-200 rounded px-4 py-12 text-center">
+        <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-12 text-center">
           <div className="text-2xl mb-2">✓</div>
           <div className="text-sm font-semibold text-gray-500">Onay bekleyen işlem yok</div>
           <div className="text-xs text-gray-400 mt-1">Tüm işlemler onaylandı veya henüz onay gerektiren işlem oluşturulmadı.</div>
@@ -121,14 +121,14 @@ export default function WorkflowsPage() {
           const payload = w.payload ?? {}
 
           return (
-            <div key={w.id} className="bg-white border border-gray-100 rounded overflow-hidden">
+            <div key={w.id} className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
               {/* Main row */}
               <div className="px-5 py-4">
                 <div className="flex items-start justify-between gap-3 flex-wrap">
                   <div className="flex-1 min-w-0">
                     {/* Type badge */}
                     <div className="flex items-center gap-2 mb-1.5">
-                      <span className="text-[10px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">
+                      <span className="text-[10px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded bg-warn-light text-warn-text">
                         {TYPE_LABELS[w.workflow_type] ?? w.workflow_type}
                       </span>
                       {w.expires_at && (
@@ -178,7 +178,7 @@ export default function WorkflowsPage() {
                     placeholder="Not (opsiyonel)…"
                     value={notes[w.id] ?? ''}
                     onChange={e => setNotes(n => ({ ...n, [w.id]: e.target.value }))}
-                    className="w-full border border-gray-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary-400 bg-gray-50"
+                    className="w-full border border-[#e2e8f0] rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary-400 bg-[#f8fafc]"
                   />
                 </div>
 
@@ -187,21 +187,21 @@ export default function WorkflowsPage() {
                   <button
                     onClick={() => resolve(w.id, 'approve')}
                     disabled={isWork}
-                    className="flex-1 text-xs font-bold py-2 rounded bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 transition-colors"
+                    className="flex-1 text-xs font-bold py-2 rounded bg-pos text-white hover:bg-pos disabled:opacity-50 transition-colors"
                   >
                     {isWork ? '…' : '✓ Onayla'}
                   </button>
                   <button
                     onClick={() => resolve(w.id, 'reject')}
                     disabled={isWork}
-                    className="flex-1 text-xs font-bold py-2 rounded bg-red-50 text-red-600 hover:bg-red-100 disabled:opacity-50 transition-colors border border-red-200"
+                    className="flex-1 text-xs font-bold py-2 rounded bg-neg-light text-neg hover:bg-neg-light disabled:opacity-50 transition-colors border border-neg-light"
                   >
                     {isWork ? '…' : '✕ Reddet'}
                   </button>
                   {w.resource_id && w.resource_type === 'expense' && (
                     <Link
                       href={`/dashboard/expenses?highlight=${w.resource_id}`}
-                      className="text-xs text-primary-600 font-semibold px-3 py-2 rounded hover:bg-primary-50 transition-colors border border-gray-200"
+                      className="text-xs text-primary-600 font-semibold px-3 py-2 rounded hover:bg-primary-50 transition-colors border border-[#e2e8f0]"
                     >
                       Masrafı Gör →
                     </Link>
@@ -209,7 +209,7 @@ export default function WorkflowsPage() {
                 </div>
 
                 {fb && fb.msg && (
-                  <div className={`mt-2 text-xs px-3 py-2 rounded ${fb.ok ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'}`}>
+                  <div className={`mt-2 text-xs px-3 py-2 rounded ${fb.ok ? 'bg-pos-light text-pos-text' : 'bg-neg-light text-neg'}`}>
                     {fb.msg}
                   </div>
                 )}

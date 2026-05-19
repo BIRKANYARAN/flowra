@@ -54,9 +54,9 @@ export default async function RolesPage() {
         </Link>
       </div>
 
-      <div className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
-        <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
-          <h2 className="text-xs font-bold text-gray-600 uppercase tracking-wide">
+      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+        <div className="px-4 py-3 border-b border-[#e2e8f0] bg-[#f8fafc]">
+          <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
             Şirket Üyeleri ve Roller
           </h2>
         </div>
@@ -65,7 +65,7 @@ export default async function RolesPage() {
             Henüz üye yok.
           </div>
         ) : (
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-[#e2e8f0]">
             {(members ?? []).map((m) => (
               <div key={m.user_id} className="flex items-center gap-3 px-4 py-3">
                 <div className="w-8 h-8 rounded bg-primary-100 flex items-center justify-center flex-shrink-0">
@@ -83,7 +83,7 @@ export default async function RolesPage() {
                 </div>
                 <span className={`text-xs font-bold px-2 py-0.5 rounded flex-shrink-0 ${
                   m.role === 'admin'   ? 'bg-primary-100 text-primary-700' :
-                  m.role === 'manager' ? 'bg-blue-100 text-blue-700'       :
+                  m.role === 'manager' ? 'bg-info-light text-info-text'       :
                                          'bg-gray-100 text-gray-500'
                 }`}>
                   {ROLE_LABEL[m.role as string] ?? m.role}
@@ -94,7 +94,7 @@ export default async function RolesPage() {
         )}
       </div>
 
-      <div className="bg-amber-50 border border-amber-200 rounded px-4 py-3 text-sm text-amber-800">
+      <div className="bg-warn-light border border-warn-light rounded px-4 py-3 text-sm text-warn-text">
         <strong>Not:</strong> Rol düzenleme ve üye davet özellikleri geliştirme aşamasındadır.
         Mevcut roller sadece görüntüleme modundadır.
       </div>

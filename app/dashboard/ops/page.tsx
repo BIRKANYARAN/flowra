@@ -82,14 +82,14 @@ function KpiCard({
   href?: string
 }) {
   const valueColor = {
-    ok:       'text-emerald-700',
-    warn:     'text-amber-700',
-    critical: 'text-red-600',
+    ok:       'text-pos-text',
+    warn:     'text-warn-text',
+    critical: 'text-neg',
     neutral:  'text-gray-900',
   }[tone]
 
   const inner = (
-    <div className="bg-white border border-gray-100 rounded px-4 py-3 hover:border-primary-300 transition-colors">
+    <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 hover:border-primary-300 transition-colors">
       <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">{label}</div>
       <div className={`text-xl font-black tabular-nums leading-none ${valueColor}`}>{value}</div>
       {sub && <div className="text-[10px] text-gray-400 mt-1">{sub}</div>}
@@ -106,7 +106,7 @@ function SectionTitle({ label, count, href }: { label: string; count?: number; h
       <div className="flex items-center gap-2">
         <h2 className="text-xs font-black uppercase tracking-widest text-gray-500">{label}</h2>
         {count !== undefined && count > 0 && (
-          <span className="text-[10px] font-bold bg-red-100 text-red-700 rounded px-1.5 py-0.5">{count}</span>
+          <span className="text-[10px] font-bold bg-neg-light text-neg-text rounded px-1.5 py-0.5">{count}</span>
         )}
       </div>
       <Link href={href} className="text-[10px] font-semibold text-primary-600 hover:text-primary-700">
@@ -306,7 +306,7 @@ export default async function OpsCommandPage() {
       <div className="grid grid-cols-2 gap-4">
 
         {/* LEFT: Overdue collections */}
-        <div className="bg-white border border-gray-100 rounded overflow-hidden">
+        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
           <div className="px-4 pt-4 pb-2">
             <SectionTitle
               label="Vadesi Geçmiş Tahsilatlar"
@@ -317,13 +317,13 @@ export default async function OpsCommandPage() {
           {(overdue ?? []).length === 0 ? (
             <EmptyRow message="Gecikmiş tahsilat yok" />
           ) : (
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-[#e2e8f0]">
               {(overdue as OverdueSale[]).map(s => {
                 const remaining = (s.total_try ?? 0) - (s.amount_paid ?? 0)
                 const days      = daysOverdue(s.due_date, s.sale_date)
-                const tone      = days > 60 ? 'text-red-600' : days > 30 ? 'text-amber-600' : 'text-gray-700'
+                const tone      = days > 60 ? 'text-neg' : days > 30 ? 'text-warn-text' : 'text-gray-700'
                 return (
-                  <div key={s.id} className="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50">
+                  <div key={s.id} className="flex items-center justify-between px-4 py-2.5 hover:bg-[#f8fafc]">
                     <div className="min-w-0 flex-1">
                       <div className="text-sm font-semibold text-gray-800 truncate">
                         {(s.customers as { name: string } | null)?.name ?? '—'}
@@ -332,7 +332,7 @@ export default async function OpsCommandPage() {
                         {days} gün gecikmiş
                       </div>
                     </div>
-                    <div className="text-sm font-black text-right ml-3 text-red-600 tabular-nums">
+                    <div className="text-sm font-black text-right ml-3 text-neg tabular-nums">
                       {fmtTRY(remaining)}
                     </div>
                   </div>
@@ -340,7 +340,7 @@ export default async function OpsCommandPage() {
               })}
             </div>
           )}
-          <div className="px-4 py-2 border-t border-gray-100">
+          <div className="px-4 py-2 border-t border-[#e2e8f0]">
             <Link href="/dashboard/commercial?tab=collections"
               className="text-[10px] font-semibold text-primary-600 hover:text-primary-700">
               Tam Tahsilat Listesi →
@@ -349,7 +349,7 @@ export default async function OpsCommandPage() {
         </div>
 
         {/* RIGHT: Critical stock */}
-        <div className="bg-white border border-gray-100 rounded overflow-hidden">
+        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
           <div className="px-4 pt-4 pb-2">
             <SectionTitle
               label="Kritik Stok Seviyeleri"
@@ -360,10 +360,10 @@ export default async function OpsCommandPage() {
           {lowStock.length === 0 ? (
             <EmptyRow message="Tüm ürünlerde yeterli stok mevcut" />
           ) : (
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-[#e2e8f0]">
               {lowStock.map(p => (
                 <div key={p.product_id}
-                  className="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50">
+                  className="flex items-center justify-between px-4 py-2.5 hover:bg-[#f8fafc]">
                   <div className="min-w-0 flex-1">
                     <div className="text-sm font-semibold text-gray-800 truncate">{p.name}</div>
                     {p.sku && (
@@ -372,19 +372,19 @@ export default async function OpsCommandPage() {
                   </div>
                   <div className="ml-3 text-right">
                     <span className={`text-sm font-black tabular-nums ${
-                      p.qty === 0 ? 'text-red-600' : p.qty <= 2 ? 'text-orange-600' : 'text-amber-600'
+                      p.qty === 0 ? 'text-neg' : p.qty <= 2 ? 'text-orange-600' : 'text-warn-text'
                     }`}>
                       {p.qty} {p.unit}
                     </span>
                     {p.qty === 0 && (
-                      <div className="text-[10px] font-bold text-red-500 mt-0.5">Tükendi</div>
+                      <div className="text-[10px] font-bold text-neg mt-0.5">Tükendi</div>
                     )}
                   </div>
                 </div>
               ))}
             </div>
           )}
-          <div className="px-4 py-2 border-t border-gray-100">
+          <div className="px-4 py-2 border-t border-[#e2e8f0]">
             <Link href="/dashboard/operations?tab=orders"
               className="text-[10px] font-semibold text-primary-600 hover:text-primary-700">
               Satın Alma Emri Ver →
@@ -394,7 +394,7 @@ export default async function OpsCommandPage() {
       </div>
 
       {/* ── Open purchase orders ─────────────────────────────────────────── */}
-      <div className="bg-white border border-gray-100 rounded overflow-hidden">
+      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
         <div className="px-4 pt-4 pb-2">
           <SectionTitle
             label="Açık Satın Alma Emirleri"
@@ -405,10 +405,10 @@ export default async function OpsCommandPage() {
         {(openOrders ?? []).length === 0 ? (
           <EmptyRow message="Açık satın alma emri yok" />
         ) : (
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-[#e2e8f0]">
             {(openOrders as OpenOrder[]).map(o => (
               <div key={o.id}
-                className="grid grid-cols-3 gap-4 items-center px-4 py-2.5 hover:bg-gray-50">
+                className="grid grid-cols-3 gap-4 items-center px-4 py-2.5 hover:bg-[#f8fafc]">
                 <div className="min-w-0">
                   <div className="text-sm font-semibold text-gray-800 truncate">{o.supplier_name}</div>
                   <div className="text-[10px] text-gray-400">{fmtDate(o.order_date)}</div>
@@ -416,7 +416,7 @@ export default async function OpsCommandPage() {
                 <div className="text-center">
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
                     o.status === 'ordered'
-                      ? 'bg-blue-100 text-blue-700'
+                      ? 'bg-info-light text-info-text'
                       : 'bg-gray-100 text-gray-600'
                   }`}>
                     {STATUS_LABEL[o.status] ?? o.status}
@@ -433,7 +433,7 @@ export default async function OpsCommandPage() {
 
       {/* ── Pending workflow approvals ───────────────────────────────────── */}
       {(pending ?? []).length > 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded overflow-hidden">
+        <div className="bg-warn-light border border-warn-light rounded overflow-hidden">
           <div className="px-4 pt-4 pb-2">
             <SectionTitle
               label="Onay Bekleyen İşlemler"
@@ -444,17 +444,17 @@ export default async function OpsCommandPage() {
           <div className="divide-y divide-amber-100">
             {(pending as PendingWorkflow[]).map(w => (
               <div key={w.id}
-                className="flex items-center justify-between px-4 py-2.5 hover:bg-amber-100/50">
+                className="flex items-center justify-between px-4 py-2.5 hover:bg-warn-light/50">
                 <div>
-                  <div className="text-sm font-semibold text-amber-900">
+                  <div className="text-sm font-semibold text-warn-text">
                     {WFLOW_LABEL[w.workflow_type] ?? w.workflow_type}
                   </div>
-                  <div className="text-[10px] text-amber-600">
+                  <div className="text-[10px] text-warn-text">
                     {fmtDate(w.created_at)}
                   </div>
                 </div>
                 <Link href="/dashboard/admin/workflows"
-                  className="text-[10px] font-bold text-amber-700 bg-amber-200 rounded px-3 py-1 hover:bg-amber-300 transition-colors">
+                  className="text-[10px] font-bold text-warn-text bg-warn-light rounded px-3 py-1 hover:bg-warn transition-colors">
                   İncele
                 </Link>
               </div>
@@ -472,7 +472,7 @@ export default async function OpsCommandPage() {
           { label: 'Müşteri Listesi',   href: '/dashboard/commercial?tab=customers',  emoji: '👥' },
         ].map(({ label, href, emoji }) => (
           <Link key={href} href={href}
-            className="bg-white border border-gray-100 rounded px-4 py-3 hover:border-primary-300 hover:bg-primary-50 transition-colors flex items-center gap-2">
+            className="bg-white border border-[#e2e8f0] rounded px-4 py-3 hover:border-primary-300 hover:bg-primary-50 transition-colors flex items-center gap-2">
             <span className="text-lg">{emoji}</span>
             <span className="text-xs font-semibold text-gray-700">{label}</span>
           </Link>

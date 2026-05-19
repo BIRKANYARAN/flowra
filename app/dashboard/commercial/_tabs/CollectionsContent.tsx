@@ -22,10 +22,10 @@ interface AgingBucket { label: string; count: number; total: number; color: stri
 function AgingStrip({ buckets, grandTotal }: { buckets: AgingBucket[]; grandTotal: number }) {
   if (grandTotal === 0) return null
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
       {buckets.map((b, i) => (
-        <div key={b.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-gray-100' : ''}`}>
-          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{b.label}</div>
+        <div key={b.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e2e8f0]' : ''}`}>
+          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{b.label}</div>
           <div className={`text-lg font-black tabular-nums leading-none ${b.color}`}>
             {b.total > 0 ? fmt(b.total) : '—'}
           </div>
@@ -79,10 +79,10 @@ export async function CollectionsContent({ companyId }: Props) {
 
   // ── Aging computation ──────────────────────────────────────────────────────
   const bucketData = [
-    { label: 'Güncel (0-30g)',    maxDays: 30,  count: 0, total: 0, color: 'text-amber-700',   sub: '' },
+    { label: 'Güncel (0-30g)',    maxDays: 30,  count: 0, total: 0, color: 'text-warn-text',   sub: '' },
     { label: '31-60 Gün',         maxDays: 60,  count: 0, total: 0, color: 'text-orange-700',  sub: '' },
-    { label: '61-90 Gün',         maxDays: 90,  count: 0, total: 0, color: 'text-red-600',     sub: '' },
-    { label: '90+ Gün (Kritik)',  maxDays: Infinity, count: 0, total: 0, color: 'text-red-800 font-black', sub: '' },
+    { label: '61-90 Gün',         maxDays: 90,  count: 0, total: 0, color: 'text-neg',     sub: '' },
+    { label: '90+ Gün (Kritik)',  maxDays: Infinity, count: 0, total: 0, color: 'text-neg-text font-black', sub: '' },
   ]
 
   let grandTotal = 0
@@ -149,18 +149,18 @@ export async function CollectionsContent({ companyId }: Props) {
 
       {/* 90+ day overdue critical alert */}
       {overdue90Total > 0 && (
-        <div className="bg-red-50 border border-red-200 rounded px-4 py-3 flex items-start gap-3">
+        <div className="bg-neg-light border border-neg-light rounded px-4 py-3 flex items-start gap-3">
           <span className="text-base mt-0.5">🔴</span>
           <div className="flex-1">
-            <div className="text-[11px] font-black uppercase tracking-wide text-red-800">
+            <div className="text-[11px] font-black uppercase tracking-wide text-neg-text">
               90+ Gün Vadesi Geçmiş — {overdue90Count} Fatura
             </div>
-            <div className="text-xs text-red-700 mt-0.5">
+            <div className="text-xs text-neg-text mt-0.5">
               <strong>{fmt(overdue90Total)}</strong> tutarında alacak 90 günü aşmış.
               Hukuki süreç veya şüpheli alacak karşılığı değerlendirilmeli.
             </div>
           </div>
-          <Link href="/dashboard/finance?tab=risks" className="text-[10px] font-bold text-red-700 hover:text-red-800 underline underline-offset-2 shrink-0 mt-0.5 whitespace-nowrap">
+          <Link href="/dashboard/finance?tab=risks" className="text-[10px] font-bold text-neg-text hover:text-neg-text underline underline-offset-2 shrink-0 mt-0.5 whitespace-nowrap">
             Risk Analizi →
           </Link>
         </div>
@@ -169,14 +169,14 @@ export async function CollectionsContent({ companyId }: Props) {
       {/* High debtor concentration alert (top debtor > 40% of total outstanding) */}
       {topDebtorShare > 0.40 && grandTotal > 0 && (
         <div className={`rounded border px-4 py-3 flex items-start gap-3 ${
-          topDebtorShare > 0.60 ? 'bg-red-50 border-red-200' : 'bg-amber-50 border-amber-200'
+          topDebtorShare > 0.60 ? 'bg-neg-light border-neg-light' : 'bg-warn-light border-warn-light'
         }`}>
           <span className="text-base mt-0.5">⚠</span>
           <div className="flex-1">
-            <div className={`text-[11px] font-black uppercase tracking-wide ${topDebtorShare > 0.60 ? 'text-red-800' : 'text-amber-800'}`}>
+            <div className={`text-[11px] font-black uppercase tracking-wide ${topDebtorShare > 0.60 ? 'text-neg-text' : 'text-warn-text'}`}>
               Tahsilat Konsantrasyonu — {topDebtors[0].name}
             </div>
-            <div className={`text-xs mt-0.5 ${topDebtorShare > 0.60 ? 'text-red-700' : 'text-amber-700'}`}>
+            <div className={`text-xs mt-0.5 ${topDebtorShare > 0.60 ? 'text-neg-text' : 'text-warn-text'}`}>
               Bu müşteri toplam açık alacağın <strong>%{Math.round(topDebtorShare * 100)}'ini</strong> oluşturuyor ({fmt(topDebtors[0].total)}).
               {topDebtors[0].maxDays > 60 && ` ${topDebtors[0].maxDays} gündür ödeme bekliyor.`}
             </div>
@@ -205,20 +205,20 @@ export async function CollectionsContent({ companyId }: Props) {
 
       {/* Top outstanding debtors */}
       {topDebtors.length > 0 && grandTotal > 0 && (
-        <div className="bg-white border border-gray-100 rounded p-4 shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
           <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4">En Yüksek Bakiyeli Müşteriler</div>
           <div className="space-y-2.5">
             {topDebtors.map(d => {
               const barPct   = (d.total / maxDebtorTotal) * 100
               const sharePct = grandTotal > 0 ? (d.total / grandTotal) * 100 : 0
-              const urgency  = d.maxDays > 60 ? 'text-red-600' : d.maxDays > 30 ? 'text-amber-600' : 'text-gray-400'
+              const urgency  = d.maxDays > 60 ? 'text-neg' : d.maxDays > 30 ? 'text-warn-text' : 'text-gray-400'
               return (
                 <div key={d.name} className="flex items-center gap-3">
                   <div className="w-32 text-xs text-gray-700 font-medium shrink-0 truncate" title={d.name}>{d.name}</div>
                   <div className="flex-1">
                     <div className="h-5 bg-gray-100 rounded overflow-hidden">
                       <div
-                        className={`h-5 rounded ${d.maxDays > 60 ? 'bg-red-400' : d.maxDays > 30 ? 'bg-amber-400' : 'bg-primary-400'}`}
+                        className={`h-5 rounded ${d.maxDays > 60 ? 'bg-neg' : d.maxDays > 30 ? 'bg-warn' : 'bg-primary-400'}`}
                         style={{ width: `${barPct}%` }}
                       />
                     </div>

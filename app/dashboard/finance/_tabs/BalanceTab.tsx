@@ -34,13 +34,13 @@ type Row = {
 
 function BSColumn({ title, rows }: { title: string; rows: Row[] }) {
   return (
-    <div className="bg-white border border-gray-100 rounded overflow-hidden flex flex-col">
-      <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
+    <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden flex flex-col">
+      <div className="px-4 py-3 border-b border-[#e2e8f0] bg-[#f8fafc]">
         <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">{title}</span>
       </div>
-      <div className="flex-1 divide-y divide-gray-50 px-4 py-2">
+      <div className="flex-1 divide-y divide-[#f1f5f9] px-4 py-2">
         {rows.map((row, i) => (
-          <div key={i} className={`flex items-center justify-between py-2 gap-2 ${row.isGrand ? 'border-t-2 border-gray-200 mt-1' : ''}`}>
+          <div key={i} className={`flex items-center justify-between py-2 gap-2 ${row.isGrand ? 'border-t-2 border-[#e2e8f0] mt-1' : ''}`}>
             <div className="min-w-0 flex-1">
               <span className={`text-xs leading-snug ${
                 row.isGrand  ? 'font-black text-gray-900 text-[13px]' :
@@ -54,7 +54,7 @@ function BSColumn({ title, rows }: { title: string; rows: Row[] }) {
               row.isGrand  ? 'font-black text-gray-900 text-[13px]' :
               row.isTotal  ? 'font-bold text-gray-800' :
               row.indent   ? 'font-semibold text-gray-600' :
-              row.amount < 0 ? 'font-bold text-red-600' : 'font-bold text-gray-700'
+              row.amount < 0 ? 'font-bold text-neg' : 'font-bold text-gray-700'
             }`}>
               {(row.zero && row.amount === 0) ? '—' : fmtFull(row.amount)}
             </span>
@@ -180,18 +180,18 @@ export async function BalanceTab({ userId, companyId }: Props) {
 
       {/* Negative equity — critical solvency alert */}
       {negativeEquity && (
-        <div className="bg-red-50 border border-red-200 rounded px-4 py-3 flex items-start gap-3">
+        <div className="bg-neg-light border border-neg-light rounded px-4 py-3 flex items-start gap-3">
           <span className="text-base mt-0.5">🔴</span>
           <div className="flex-1">
-            <div className="text-[11px] font-black uppercase tracking-wide text-red-800">
+            <div className="text-[11px] font-black uppercase tracking-wide text-neg-text">
               Negatif Özsermaye — Teknik İflas Riski
             </div>
-            <div className="text-xs text-red-700 mt-0.5">
+            <div className="text-xs text-neg-text mt-0.5">
               Özsermaye <strong>{fmt(equity)}</strong>. Toplam yükümlülükler varlıkları aşıyor.
               Sermaye artırımı veya borç yeniden yapılandırması değerlendirilmeli.
             </div>
           </div>
-          <Link href="/dashboard/partners" className="text-[10px] font-bold text-red-700 hover:text-red-800 underline underline-offset-2 shrink-0 mt-0.5 whitespace-nowrap">
+          <Link href="/dashboard/partners" className="text-[10px] font-bold text-neg-text hover:text-neg-text underline underline-offset-2 shrink-0 mt-0.5 whitespace-nowrap">
             Ortak Sermayesi →
           </Link>
         </div>
@@ -200,14 +200,14 @@ export async function BalanceTab({ userId, companyId }: Props) {
       {/* High leverage warning */}
       {!negativeEquity && leverageRatio > 0.65 && totalLiabilities > 0 && (
         <div className={`rounded border px-4 py-3 flex items-start gap-3 ${
-          leverageRatio > 0.80 ? 'bg-red-50 border-red-200' : 'bg-amber-50 border-amber-200'
+          leverageRatio > 0.80 ? 'bg-neg-light border-neg-light' : 'bg-warn-light border-warn-light'
         }`}>
           <span className="text-base mt-0.5">⚠</span>
           <div className="flex-1">
-            <div className={`text-[11px] font-black uppercase tracking-wide ${leverageRatio > 0.80 ? 'text-red-800' : 'text-amber-800'}`}>
+            <div className={`text-[11px] font-black uppercase tracking-wide ${leverageRatio > 0.80 ? 'text-neg-text' : 'text-warn-text'}`}>
               {leverageRatio > 0.80 ? 'Yüksek Finansal Kaldıraç' : 'Kaldıraç Oranı Dikkat Sınırında'}
             </div>
-            <div className={`text-xs mt-0.5 ${leverageRatio > 0.80 ? 'text-red-700' : 'text-amber-700'}`}>
+            <div className={`text-xs mt-0.5 ${leverageRatio > 0.80 ? 'text-neg-text' : 'text-warn-text'}`}>
               Toplam borç/varlık oranı <strong>%{(leverageRatio * 100).toFixed(0)}</strong>.
               Yabancı kaynaklar: {fmt(totalLiabilities)} · Özsermaye: {fmt(equity)}.
               {leverageRatio > 0.80 ? ' Kredi kapasitesi sınırlı.' : ' Borç yönetimine dikkat.'}
@@ -239,11 +239,11 @@ export async function BalanceTab({ userId, companyId }: Props) {
       <div className="grid grid-cols-3 gap-3">
         {[
           { label: 'Toplam Varlıklar',     value: fmt(bs.assets.total_assets_try),      color: 'text-gray-900' },
-          { label: 'Yabancı Kaynaklar',    value: fmt(bs.liabilities.total_liabilities_try), color: bs.liabilities.total_liabilities_try > 0 ? 'text-amber-700' : 'text-gray-400' },
-          { label: 'Özsermaye',            value: fmt(bs.equity.total_equity_try),       color: bs.equity.total_equity_try >= 0 ? 'text-emerald-700' : 'text-red-600' },
+          { label: 'Yabancı Kaynaklar',    value: fmt(bs.liabilities.total_liabilities_try), color: bs.liabilities.total_liabilities_try > 0 ? 'text-warn-text' : 'text-gray-400' },
+          { label: 'Özsermaye',            value: fmt(bs.equity.total_equity_try),       color: bs.equity.total_equity_try >= 0 ? 'text-pos-text' : 'text-neg' },
         ].map(c => (
-          <div key={c.label} className="bg-white border border-gray-100 rounded px-4 py-3 shadow-sm">
-            <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">{c.label}</div>
+          <div key={c.label} className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
+            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{c.label}</div>
             <div className={`text-xl font-black tabular-nums leading-none ${c.color}`}>{c.value}</div>
           </div>
         ))}
@@ -258,8 +258,8 @@ export async function BalanceTab({ userId, companyId }: Props) {
       {/* Balanced invariant check */}
       <div className={`flex items-center gap-2 px-4 py-2.5 rounded text-xs font-semibold ${
         bs.balanced
-          ? 'bg-emerald-50 border border-emerald-200 text-emerald-700'
-          : 'bg-amber-50 border border-amber-200 text-amber-700'
+          ? 'bg-pos-light border border-pos-light text-pos-text'
+          : 'bg-warn-light border border-warn-light text-warn-text'
       }`}>
         {bs.balanced ? (
           <>✓ Bilanço dengeli — Varlıklar = Kaynaklar ({fmtFull(bs.assets.total_assets_try)})</>

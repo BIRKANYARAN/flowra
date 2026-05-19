@@ -46,7 +46,7 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
     return (
       <div className="max-w-3xl">
         <Link href="/dashboard/sales" className="text-sm text-gray-400 hover:text-gray-900 mb-4 inline-block">← Satışlar</Link>
-        <div className="bg-white border border-gray-100 rounded p-10 text-center">
+        <div className="bg-white border border-[#e2e8f0] rounded p-10 text-center">
           <p className="text-gray-400 text-sm">Satış bulunamadı veya silinmiş.</p>
         </div>
       </div>
@@ -78,17 +78,17 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
             {s.proforma_no} →
           </Link>
         ) : s.proforma_no ? (
-          <span className="text-xs font-mono text-gray-400 bg-gray-50 border border-gray-200 px-3 py-1.5 rounded">
+          <span className="text-xs font-mono text-gray-400 bg-[#f8fafc] border border-[#e2e8f0] px-3 py-1.5 rounded">
             {s.proforma_no} (silinmiş)
           </span>
         ) : null}
       </div>
 
       {/* Items table */}
-      <div className="bg-white border border-gray-100 rounded overflow-hidden mb-5">
+      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden mb-5">
         <table className="w-full">
           <thead>
-            <tr className="text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-gray-50 border-b border-gray-200">
+            <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] border-b border-[#e2e8f0]">
               <th className="text-left px-5 py-3">Ürün</th>
               <th className="text-center px-3 py-3">Miktar</th>
               <th className="text-right px-3 py-3">Birim Fiyat</th>
@@ -98,7 +98,7 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
               <th className="text-right px-5 py-3">Toplam</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-[#e2e8f0]">
             {saleItems.length === 0 ? (
               <tr><td colSpan={7} className="px-5 py-6 text-center text-sm text-gray-400">Ürün verisi bulunamadı.</td></tr>
             ) : saleItems.map((it, i) => {
@@ -107,7 +107,7 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
               const discountedPrice = line.discounted_unit_price
               const total = line.line_total
               return (
-                <tr key={it.id || String(i)} className={`text-sm ${i % 2 === 1 ? 'bg-gray-50/50' : ''}`}>
+                <tr key={it.id || String(i)} className={`text-sm ${i % 2 === 1 ? 'bg-[#f8fafc]/50' : ''}`}>
                   <td className="px-5 py-3 font-medium">{it.product_name}</td>
                   <td className="px-3 py-3 text-center tabular-nums">{it.quantity}</td>
                   <td className="px-3 py-3 text-right tabular-nums">{S}{it.price.toFixed(2)}</td>
@@ -121,7 +121,7 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
           </tbody>
         </table>
 
-        <div className="px-5 py-4 border-t border-gray-100 bg-gray-50/40">
+        <div className="px-5 py-4 border-t border-[#e2e8f0] bg-[#f8fafc]/40">
           <div className="ml-auto w-56 space-y-1.5">
             <div className="flex justify-between text-sm">
               <span className="text-gray-500">Ara Toplam</span>
@@ -146,8 +146,8 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
       </div>
 
       {/* Profit card */}
-      <div className="bg-white border border-gray-100 rounded p-5">
-        <h2 className="font-bold text-sm text-gray-500 uppercase tracking-wide mb-4">Finansal Özet</h2>
+      <div className="bg-white border border-[#e2e8f0] rounded p-5">
+        <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">Finansal Özet</h2>
         <div className="grid grid-cols-3 gap-4 text-center">
           <div>
             <div className="text-xs text-gray-400 mb-1">Maliyet</div>
@@ -155,13 +155,13 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
           </div>
           <div>
             <div className="text-xs text-gray-400 mb-1">Nominal Kâr</div>
-            <div className={`text-lg font-black tabular-nums ${s.nominal_profit >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
+            <div className={`text-lg font-black tabular-nums ${s.nominal_profit >= 0 ? 'text-pos-text' : 'text-neg'}`}>
               {fmt(s.nominal_profit)}
             </div>
           </div>
           <div>
             <div className="text-xs text-gray-400 mb-1">Reel Kâr</div>
-            <div className={`text-lg font-black tabular-nums ${s.real_profit >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
+            <div className={`text-lg font-black tabular-nums ${s.real_profit >= 0 ? 'text-pos-text' : 'text-neg'}`}>
               {fmt(s.real_profit)}
             </div>
             {s.interest_rate > 0 && (

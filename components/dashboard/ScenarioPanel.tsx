@@ -50,7 +50,7 @@ function deltaLabel(base: number | null, scenario: number | null): { text: strin
   const delta = scenario - base
   if (Math.abs(delta) < 0.1) return { text: 'Değişim yok', color: 'text-gray-400' }
   const sign = delta > 0 ? '+' : ''
-  const color = delta > 0 ? 'text-emerald-600' : 'text-red-600'
+  const color = delta > 0 ? 'text-pos-text' : 'text-neg'
   return { text: `${sign}${delta.toFixed(1)} ay`, color }
 }
 
@@ -86,12 +86,12 @@ export function ScenarioPanel({ inputs, baseRunwayMonths }: Props) {
   const comb_runway = calcRunway(comb_cash, comb_burn)
 
   const SL = 'flex flex-col gap-1'
-  const SLabel = 'text-[10px] font-bold uppercase tracking-widest text-gray-500'
+  const SLabel = 'text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]'
   const SValue = 'text-xs text-gray-400 tabular-nums'
 
   return (
-    <div className="bg-white border border-gray-200 rounded overflow-hidden">
-      <div className="px-4 py-3 border-b border-gray-100">
+    <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+      <div className="px-4 py-3 border-b border-[#e2e8f0]">
         <h2 className="text-sm font-black text-gray-800">Senaryo Analizi</h2>
         <p className="text-[10px] text-gray-400 mt-0.5">
           Parametreleri değiştir — runway anında güncellenir
@@ -117,7 +117,7 @@ export function ScenarioPanel({ inputs, baseRunwayMonths }: Props) {
             <span className={SValue}>%100 — tam tahsilat</span>
           </div>
           {collectionPct < 100 && (
-            <div className="mt-1.5 text-[10px] text-amber-600 font-semibold">
+            <div className="mt-1.5 text-[10px] text-warn-text font-semibold">
               {fmt(outstanding_total * (1 - collectionPct / 100))} alacak gecikirse runway %{Math.round((1 - (a_runway ?? 0) / (base_r ?? 1)) * 100)} düşer
             </div>
           )}
@@ -157,7 +157,7 @@ export function ScenarioPanel({ inputs, baseRunwayMonths }: Props) {
             <span className={SValue}>%50 — yarı gider</span>
           </div>
           {burnCutPct > 0 && (
-            <div className="mt-1.5 text-[10px] text-emerald-600 font-semibold">
+            <div className="mt-1.5 text-[10px] text-pos-text font-semibold">
               {fmt(monthly_burn * burnCutPct / 100)}/ay tasarruf → yeni burn {fmt(comb_burn)}/ay
             </div>
           )}
@@ -165,7 +165,7 @@ export function ScenarioPanel({ inputs, baseRunwayMonths }: Props) {
       </div>
 
       {/* Results grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 divide-x divide-gray-100 border-t border-gray-100">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 divide-x divide-[#e2e8f0] border-t border-[#e2e8f0]">
         {[
           { label: 'Baz Senaryo',  runway: base_r,    delta: null },
           { label: 'A Senaryosu', runway: a_runway,   delta: deltaLabel(base_r, a_runway) },
@@ -174,10 +174,10 @@ export function ScenarioPanel({ inputs, baseRunwayMonths }: Props) {
         ].map((s, i) => {
           const months = s.runway
           const tone = months === null ? 'text-gray-400'
-            : months <= 2  ? 'text-red-600'
+            : months <= 2  ? 'text-neg'
             : months <= 6  ? 'text-orange-600'
-            : months <= 12 ? 'text-amber-600'
-            : 'text-emerald-600'
+            : months <= 12 ? 'text-warn-text'
+            : 'text-pos-text'
           return (
             <div key={s.label} className={`px-4 py-3 ${i === 3 ? 'col-span-2 sm:col-span-1' : ''}`}>
               <div className="text-[9px] font-bold uppercase tracking-widest text-gray-400 mb-1">{s.label}</div>

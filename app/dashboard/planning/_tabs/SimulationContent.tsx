@@ -92,9 +92,9 @@ export async function SimulationContent({ companyId, userId, activeTab = 'unit-p
       </Suspense>
 
       <div className="flex items-center gap-3">
-        <div className="flex-1 border-t border-dashed border-gray-200" />
+        <div className="flex-1 border-t border-dashed border-[#e2e8f0]" />
         <span className="text-[9px] font-black uppercase tracking-widest text-gray-300">Simülasyon Motoru</span>
-        <div className="flex-1 border-t border-dashed border-gray-200" />
+        <div className="flex-1 border-t border-dashed border-[#e2e8f0]" />
       </div>
 
       <SimulationClient
