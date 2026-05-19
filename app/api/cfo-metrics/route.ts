@@ -180,10 +180,11 @@ export async function GET(req: NextRequest) {
         .gte('expense_date', ytdFrom)
         .lte('expense_date', today),
 
-      // 12. YTD sales VAT — kdv_amount_try column does not exist on live DB; salesVat = 0
+      // 12. YTD sales VAT — kdv_amount_try added in accounting_truth_v1.sql (NOT NULL DEFAULT 0)
+      //     Older records default to 0; new records carry the frozen KDV amount at sale creation time.
       supabase
         .from('sales')
-        .select('total_try:total')
+        .select('kdv_amount_try')
         .eq('company_id', companyId)
         .is('deleted_at', null)
         .gte('sale_date', ytdFrom)
@@ -251,13 +252,13 @@ export async function GET(req: NextRequest) {
     }, 0)
     const ytdProfit = ytdRevenue - ytdCogs - ytdOpExpenses
 
-    // VAT net — kdv_amount_try does not exist on live DB; salesVat is 0 until a VAT column is added
-    const salesVat   = 0
-    void ytdSalesVatRes // fetched for query health monitoring only
+    // VAT net — kdv_amount_try exists since accounting_truth_v1.sql (NOT NULL DEFAULT 0)
+    // Pre-migration rows contribute 0; post-migration rows carry the frozen KDV at sale creation.
+    const salesVat   = (ytdSalesVatRes.data ?? []).reduce((s, r) => s + Number((r as { kdv_amount_try?: number | null }).kdv_amount_try ?? 0), 0)
     const expenseVat = (ytdExpenseVatRes.data ?? []).reduce((s, r) => s + Number(r.kdv ?? 0), 0)
-    // purchaseVat is always 0 until a proper `purchases` + `purchase_items` module is added
+    // purchaseVat is always 0 until a proper `purchases` + `purchase_items` module is built
     const purchaseVat = 0
-    void ytdPurchaseVatRes // referenced above, unused now
+    void ytdPurchaseVatRes // referenced above, unused until purchases module is added
 
     const kdvNet = salesVat - purchaseVat - expenseVat
 

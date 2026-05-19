@@ -71,6 +71,12 @@ SELECT 'COLUMN', col_check, status FROM (
     CASE WHEN EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='audit_logs' AND column_name='prev_hash') THEN '✅ EXISTS' ELSE '❌ MISSING' END
   UNION ALL SELECT 'audit_logs.entity_type',
     CASE WHEN EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='audit_logs' AND column_name='entity_type') THEN '✅ EXISTS' ELSE '❌ MISSING' END
+  UNION ALL SELECT 'sales.kdv_amount_try',
+    CASE WHEN EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='sales' AND column_name='kdv_amount_try') THEN '✅ EXISTS' ELSE '❌ MISSING' END
+  UNION ALL SELECT 'sale_items.kdv_rate',
+    CASE WHEN EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='sale_items' AND column_name='kdv_rate') THEN '✅ EXISTS' ELSE '❌ MISSING' END
+  UNION ALL SELECT 'partner_loan_tranches.interest_rate_annual_pct',
+    CASE WHEN EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='partner_loan_tranches' AND column_name='interest_rate_annual_pct') THEN '✅ EXISTS' ELSE '❌ MISSING' END
   UNION ALL SELECT 'partner_loan_tranches.annual_interest_rate',
     CASE WHEN EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='partner_loan_tranches' AND column_name='annual_interest_rate') THEN '✅ EXISTS' ELSE '❌ MISSING' END
   UNION ALL SELECT 'accounting_periods.gl_enabled',
