@@ -9,7 +9,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { Skeleton } from '@/components/ds'
-import { formatTRY as fmt } from '@/lib/format'
+import { fmtTRY as fmt } from '@/lib/format'
 
 interface ReconciliationItem {
   name:        string
@@ -112,6 +112,30 @@ export default function ReconciliationPage() {
   const warnCount     = report?.items.filter(i => i.severity === 'warning').length ?? 0
   const okCount       = report?.items.filter(i => i.severity === 'ok').length ?? 0
 
+  // ── C5: Reconciliation Intelligence — causal narrative ─────────────────────
+  const reconLines: string[] = []
+  if (report) {
+    const criticalItems = report.items.filter(i => i.severity === 'critical')
+    const warnItems     = report.items.filter(i => i.severity === 'warning')
+
+    if (criticalItems.length === 0 && warnItems.length === 0) {
+      reconLines.push('GL ve operasyonel tablolar tamamen uyuşuyor — dönem kapanışı için muhasebe bütünlüğü teyit edildi.')
+    }
+    if (criticalItems.length > 0) {
+      reconLines.push(
+        `${criticalItems.length} kritik fark (${criticalItems.map(i => i.name).join(', ')}) — GL ile operasyonel tablolar uyuşmuyor. Genellikle eksik veya hatalı journal entry nedeniyle oluşur.`
+      )
+      reconLines.push(
+        'Kritik farklar giderilmeden bu dönemin gelir tablosu ve bilançosu kesinleştirilmemeli — dönem kapanışı engellenecek.'
+      )
+    }
+    if (warnItems.length > 0) {
+      reconLines.push(
+        `${warnItems.length} zamanlama farkı — dönem kesim tarihine yakın işlemler bir sonraki dönem kapanışına sarkabilir. Araştırılması önerilir ama kapanışı engellemez.`
+      )
+    }
+  }
+
   return (
     <div className="flex flex-col gap-4 max-w-4xl">
       <style dangerouslySetInnerHTML={{ __html: PRINT_STYLE }} />
@@ -176,6 +200,23 @@ export default function ReconciliationPage() {
         <>
           {/* Status banner */}
           <StatusBanner report={report} />
+
+          {/* C5: Mutabakat Zeka Değerlendirmesi */}
+          {reconLines.length > 0 && (
+            <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
+              <div className="flex items-center justify-between mb-2.5">
+                <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Mutabakat Değerlendirmesi</span>
+                <span className="text-[9px] text-[#94a3b8]">Finansal doğruluk · Dönem kapanış hazırlığı</span>
+              </div>
+              <div className="space-y-0.5">
+                {reconLines.map((line, i) => (
+                  <div key={i} className="text-[11px] text-[#64748b] leading-snug">
+                    <span className="text-[#cbd5e1] mr-1.5">—</span>{line}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Summary chips */}
           <div className="grid grid-cols-3 gap-2">
