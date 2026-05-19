@@ -79,8 +79,10 @@ export async function GET(req: NextRequest) {
         } else {
           authUserMap[userId] = { email: null, display_name: null }
         }
-      } catch {
-        // Non-fatal — user row may have been deleted from auth
+      } catch (authErr) {
+        // Non-fatal — user row may have been deleted from auth.
+        // Log with userId so operators can spot orphaned company_members rows.
+        console.warn('[admin/members] auth user fetch failed for userId:', userId, authErr instanceof Error ? authErr.message : String(authErr))
         authUserMap[userId] = { email: null, display_name: null }
       }
     }))

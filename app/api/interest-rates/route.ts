@@ -82,7 +82,8 @@ export async function GET(req: NextRequest) {
       .limit(12)
 
     return NextResponse.json(data ?? [])
-  } catch {
+  } catch (err) {
+    console.error('[interest-rates GET] unexpected error:', err instanceof Error ? err.message : String(err))
     return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 })
   }
 }

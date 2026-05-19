@@ -3,6 +3,7 @@ import { computeMultiScenario }         from '@/lib/services/simulation-strategi
 import type { BaseExpenseLine, DebtTranche, StrategicScenarioInput } from '@/lib/services/simulation-strategic.service'
 import { CORPORATE_TAX_RATE_TR }        from '@/lib/services/finance-rules'
 import { resolveApiAuth } from '@/lib/api-auth'
+import { round2 } from '@/lib/calc'
 
 export const dynamic = 'force-dynamic'
 
@@ -93,13 +94,14 @@ export async function POST(req: NextRequest) {
             : 0
           tranches.push({
             label:             `Ortak Borcu (${principal > 0 ? `₺${(principal / 1000).toFixed(0)}K` : '?'})`,
-            monthly_interest:  Math.round(monthlyInterest),
-            monthly_repayment: remainingMonths > 0 ? Math.round(principal / remainingMonths) : 0,
+            monthly_interest:  round2(monthlyInterest),
+            monthly_repayment: remainingMonths > 0 ? round2(principal / remainingMonths) : 0,
             remaining_months:  remainingMonths,
           })
         }
-      } catch {
-        // partner_loan_tranches table may not exist in shadow mode — non-fatal
+      } catch (trancheErr) {
+        // Non-fatal — partner_loan_tranches table may not exist yet (migration not applied)
+        console.warn('[simulation/strategic] loan tranche fetch failed (non-fatal):', trancheErr instanceof Error ? trancheErr.message : String(trancheErr))
       }
     }
 
