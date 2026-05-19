@@ -64,7 +64,7 @@ const STATUS_COLOR: Record<ProformaStatus, string> = {
   sent:      'bg-info-light text-info-text',
   accepted:  'bg-pos-light text-pos-text',
   rejected:  'bg-neg-light text-neg',
-  converted: 'bg-primary-100 text-primary-700',
+  converted: 'bg-brand-subtle text-brand',
 }
 const PAYMENT_COLOR: Record<string, string> = {
   pending: 'bg-warn-light text-warn-text', paid: 'bg-pos-light text-pos-text',
@@ -103,7 +103,7 @@ function Stage({ stageKey, step, label, count, value, color, sub, selected, onCl
     <button type="button" onClick={onClick}
       className={`flex-1 min-w-0 text-left transition-all group focus:outline-none ${selected ? 'scale-[1.02]' : ''}`}>
       <div className={`border-2 rounded px-4 py-4 h-full transition-all ${color} ${
-        selected ? 'shadow-sm ring-2 ring-offset-1 ring-primary-400' : 'group-hover:shadow-sm group-hover:border-[#e2e8f0]'
+        selected ? 'shadow-sm ring-2 ring-offset-1 ring-brand/30' : 'group-hover:shadow-sm group-hover:border-[#e2e8f0]'
       }`}>
         <div className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-0.5">{step}</div>
         <div className="font-black text-base leading-tight mb-2">{label}</div>
@@ -160,7 +160,7 @@ function StokPanel({ lots }: { lots: StockLot[] }) {
         </tfoot>
       </table>
       <div className="px-4 py-2 text-right">
-        <Link href="/dashboard/stocks" className="text-xs text-primary-600 font-semibold hover:underline">Tüm stok →</Link>
+        <Link href="/dashboard/stocks" className="text-xs text-brand-light font-semibold hover:underline">Tüm stok →</Link>
       </div>
     </div>
   )
@@ -185,7 +185,7 @@ function TeklifPanel({ proformas }: { proformas: Proforma[] }) {
             <tr key={p.id} className="hover:bg-[#f8fafc]/60">
               <td className="px-4 py-2.5">
                 <Link href={`/dashboard/proformas/${p.id}`}
-                  className="font-semibold text-[#1e293b] hover:text-primary-600 truncate block max-w-[200px]">
+                  className="font-semibold text-[#1e293b] hover:text-brand-light truncate block max-w-[200px]">
                   {p.customer_name ?? '—'}
                 </Link>
               </td>
@@ -199,7 +199,7 @@ function TeklifPanel({ proformas }: { proformas: Proforma[] }) {
         </tbody>
       </table>
       <div className="px-4 py-2 text-right">
-        <Link href="/dashboard/proformas" className="text-xs text-primary-600 font-semibold hover:underline">Tüm teklifler →</Link>
+        <Link href="/dashboard/proformas" className="text-xs text-brand-light font-semibold hover:underline">Tüm teklifler →</Link>
       </div>
     </div>
   )
@@ -225,11 +225,11 @@ function SatisPanel({ proformas }: { proformas: Proforma[] }) {
             <tr key={p.id} className="hover:bg-[#f8fafc]/60">
               <td className="px-4 py-2.5">
                 <Link href={`/dashboard/proformas/${p.id}`}
-                  className="font-semibold text-[#1e293b] hover:text-primary-600 truncate block max-w-[200px]">
+                  className="font-semibold text-[#1e293b] hover:text-brand-light truncate block max-w-[200px]">
                   {p.customer_name ?? '—'}
                 </Link>
               </td>
-              <td className="px-4 py-2.5 text-right tabular-nums font-semibold text-primary-700">{fmt(Number(p.total ?? 0))}</td>
+              <td className="px-4 py-2.5 text-right tabular-nums font-semibold text-brand">{fmt(Number(p.total ?? 0))}</td>
               <td className="px-4 py-2.5 text-right text-[#94a3b8] text-xs">{p.currency}</td>
               <td className="px-4 py-2.5 text-right text-[#94a3b8]">{fmtDate(p.updated_at)}</td>
             </tr>
@@ -238,13 +238,13 @@ function SatisPanel({ proformas }: { proformas: Proforma[] }) {
         <tfoot>
           <tr className="border-t-2 border-[#e2e8f0]">
             <td className="px-4 py-2 text-xs font-bold text-[#64748b]">Toplam</td>
-            <td className="px-4 py-2 text-right font-black tabular-nums text-primary-700">{fmt(total)}</td>
+            <td className="px-4 py-2 text-right font-black tabular-nums text-brand">{fmt(total)}</td>
             <td colSpan={2} />
           </tr>
         </tfoot>
       </table>
       <div className="px-4 py-2 text-right">
-        <Link href="/dashboard/sales" className="text-xs text-primary-600 font-semibold hover:underline">Tüm satışlar →</Link>
+        <Link href="/dashboard/sales" className="text-xs text-brand-light font-semibold hover:underline">Tüm satışlar →</Link>
       </div>
     </div>
   )
@@ -296,7 +296,7 @@ function TahsilatPanel({ sales }: { sales: Sale[] }) {
       </table>
       <div className="px-4 py-2 flex items-center justify-between">
         {sales.length > 15 && <span className="text-[10px] text-[#94a3b8]">İlk 15 gösteriliyor</span>}
-        <Link href="/dashboard/collections" className="text-xs text-primary-600 font-semibold hover:underline ml-auto">
+        <Link href="/dashboard/collections" className="text-xs text-brand-light font-semibold hover:underline ml-auto">
           Tahsilat sayfasına git →
         </Link>
       </div>
@@ -355,7 +355,7 @@ function KarPanel({ sales }: { sales: Sale[] }) {
         </tbody>
       </table>
       <div className="px-4 py-2 text-right">
-        <Link href="/dashboard/finance?tab=quarterly" className="text-xs text-primary-600 font-semibold hover:underline">Detaylı analiz →</Link>
+        <Link href="/dashboard/finance?tab=quarterly" className="text-xs text-brand-light font-semibold hover:underline">Detaylı analiz →</Link>
       </div>
     </div>
   )
@@ -439,7 +439,7 @@ export default function SalesFlowClient({ initialProformas, initialSales, initia
         <div className="flex items-center self-center text-[#cbd5e1] text-xl font-black select-none px-0.5">→</div>
         <Stage stageKey="satis" step="3. Satış" label="Faturalanan"
           count={converted.length} value={sumTotal(converted)}
-          color="bg-primary-50 border-[#e2e8f0] text-primary-900" sub="proforma → satış"
+          color="bg-brand-subtle border-[#e2e8f0] text-brand" sub="proforma → satış"
           selected={selected === 'satis'} onClick={() => toggle('satis')} />
         <div className="flex items-center self-center text-[#cbd5e1] text-xl font-black select-none px-0.5">→</div>
         <Stage stageKey="tahsilat" step="4. Tahsilat" label="Nakit Girişi"
@@ -467,7 +467,7 @@ export default function SalesFlowClient({ initialProformas, initialSales, initia
               { label: 'Taslak',       count: drafts.length,    color: 'text-[#64748b]',    stage: null         },
               { label: 'Gönderildi',   count: sent.length,      color: 'text-info-text',    stage: 'teklif' as StageKey },
               { label: 'Onaylandı',    count: accepted.length,  color: 'text-pos-text', stage: 'teklif' as StageKey },
-              { label: 'Satışa Döndü', count: converted.length, color: 'text-primary-600', stage: 'satis'  as StageKey },
+              { label: 'Satışa Döndü', count: converted.length, color: 'text-brand-light', stage: 'satis'  as StageKey },
             ].map(c => (
               <button key={c.label} onClick={() => c.stage && toggle(c.stage)}
                 className="focus:outline-none group" type="button">

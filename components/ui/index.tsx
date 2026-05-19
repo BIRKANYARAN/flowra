@@ -15,7 +15,7 @@ const btn = cva(
   {
     variants: {
       variant: {
-        primary:   'bg-primary-600 hover:bg-primary-700 text-white shadow-sm',
+        primary:   'bg-brand-light hover:bg-brand text-white shadow-sm',
         secondary: 'bg-white hover:bg-[#f8fafc] text-[#334155] border border-[#e2e8f0]',
         ghost:     'text-[#64748b] hover:text-[#0f172a] hover:bg-[#f8fafc]',
         danger:    'bg-neg-light hover:bg-neg-light text-neg-text border border-neg-light',
@@ -219,11 +219,11 @@ export function StatCard({ label, value, sub, accent }: {
   label: string; value: string | number; sub?: string; accent?: boolean
 }) {
   return (
-    <div className={`bg-white border rounded p-5 ${accent ? 'border-[#e2e8f0] bg-primary-50' : 'border-[#e2e8f0]'}`}>
-      <div className={`text-xs font-semibold uppercase tracking-wide mb-1 ${accent ? 'text-primary-500' : 'text-[#94a3b8]'}`}>
+    <div className={`bg-white border rounded p-5 ${accent ? 'border-[#e2e8f0] bg-brand-subtle' : 'border-[#e2e8f0]'}`}>
+      <div className={`text-xs font-semibold uppercase tracking-wide mb-1 ${accent ? 'text-brand-light' : 'text-[#94a3b8]'}`}>
         {label}
       </div>
-      <div className={`text-2xl font-black tabular-nums ${accent ? 'text-primary-700' : 'text-[#0f172a]'}`}>
+      <div className={`text-2xl font-black tabular-nums ${accent ? 'text-brand' : 'text-[#0f172a]'}`}>
         {value}
       </div>
       {sub && <div className="text-xs text-[#94a3b8] mt-1">{sub}</div>}

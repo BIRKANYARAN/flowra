@@ -74,7 +74,7 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
         </div>
         {s.proforma_no && s.proforma_id && s.proforma_exists ? (
           <Link href={`/dashboard/proformas/${s.proforma_id}`}
-            className="text-xs font-mono text-primary-700 bg-primary-50 border border-[#e2e8f0] px-3 py-1.5 rounded hover:bg-primary-100 transition-colors">
+            className="text-xs font-mono text-brand bg-brand-subtle border border-[#e2e8f0] px-3 py-1.5 rounded hover:bg-brand-subtle transition-colors">
             {s.proforma_no} →
           </Link>
         ) : s.proforma_no ? (
@@ -177,15 +177,15 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
           Satış detayı tahsilat ve P&amp;L analiziyle birlikte değerlendirilmeli.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
-          <Link href="/dashboard/commercial?tab=sales" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/commercial?tab=sales" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Satışlar →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/commercial?tab=collections" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/commercial?tab=collections" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Tahsilat →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/finance?tab=pnl" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/finance?tab=pnl" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             P&amp;L →
           </Link>
         </div>

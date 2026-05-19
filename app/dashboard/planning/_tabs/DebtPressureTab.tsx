@@ -187,7 +187,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
           <div className="text-xs font-medium text-[#334155] mb-1">Aktif ortak borcu yok</div>
           <div className="text-xs text-[#94a3b8] mb-4">Ortak borçları Ortaklar → Trancheler bölümünden girilir.</div>
           <Link href="/dashboard/partners?tab=tranches"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary-600 hover:text-primary-700 border border-[#e2e8f0] px-3 py-1.5 rounded hover:bg-primary-50 transition-colors">
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-light hover:text-brand border border-[#e2e8f0] px-3 py-1.5 rounded hover:bg-brand-subtle transition-colors">
             Tranche Ekle →
           </Link>
         </div>
@@ -209,7 +209,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
                   return (
                     <div key={i} className="flex-1 flex flex-col items-center gap-0.5">
                       <div
-                        className={`w-full rounded-t-sm ${isPast ? 'bg-primary-400' : 'bg-warn-light'}`}
+                        className={`w-full rounded-t-sm ${isPast ? 'bg-brand-light' : 'bg-warn-light'}`}
                         style={{ height: `${h}px` }}
                         title={`${s.label}: ${fmt(s.interest)}`}
                       />
@@ -229,7 +229,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
             <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#f1f5f9]">
               <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Aktif Trancheler</span>
               <Link href="/dashboard/partners?tab=tranches"
-                className="text-[10px] text-primary-600 font-semibold hover:underline">
+                className="text-[10px] text-brand-light font-semibold hover:underline">
                 Yönet →
               </Link>
             </div>
@@ -288,7 +288,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
               <div className="space-y-2">
                 {sorted.map(p => {
                   const share = totalOutstanding > 0 ? p.outstanding / totalOutstanding : 0
-                  const barColor = share > 0.8 ? 'bg-neg' : share > 0.5 ? 'bg-warn' : 'bg-primary-400'
+                  const barColor = share > 0.8 ? 'bg-neg' : share > 0.5 ? 'bg-warn' : 'bg-brand-light'
                   return (
                     <div key={p.name}>
                       <div className="flex items-center justify-between mb-1">
@@ -330,15 +330,15 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
           Borç baskısı ortak dengesi ve nakit projeksiyonuyla birlikte değerlendirilmeli.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
-          <Link href="/dashboard/partners?tab=tranches" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/partners?tab=tranches" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Trancheler →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/planning?tab=cash-projection" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/planning?tab=cash-projection" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Nakit Projeksiyonu →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/finance?tab=risks" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/finance?tab=risks" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Risk Analizi →
           </Link>
         </div>

@@ -62,7 +62,7 @@ export function PartnersTab({
       ) : (
         <div className="grid grid-cols-3 gap-2">
           {[
-            { label: 'Toplam Bakiye',    value: fmt(totalPartnerBalance),              color: 'text-primary-600' },
+            { label: 'Toplam Bakiye',    value: fmt(totalPartnerBalance),              color: 'text-brand-light' },
             { label: 'Toplam Dağıtılan', value: fmt(totalDistributed),                 color: 'text-pos-text' },
             { label: 'Eşitleme Gereken', value: fmt(equalization.total_equalization),  color: equalization.total_equalization > 0 ? 'text-warn-text' : 'text-[#94a3b8]' },
           ].map(c => (
@@ -130,7 +130,7 @@ export function PartnersTab({
                     <div className="grid grid-cols-3 gap-x-6 gap-y-1 text-right shrink-0">
                       <div>
                         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Bakiye</div>
-                        <div className={`text-sm font-black tabular-nums ${(b?.partner_balance_try ?? 0) > 0 ? 'text-primary-700' : 'text-[#94a3b8]'}`}>
+                        <div className={`text-sm font-black tabular-nums ${(b?.partner_balance_try ?? 0) > 0 ? 'text-brand' : 'text-[#94a3b8]'}`}>
                           {fmt(b?.partner_balance_try ?? 0)}
                         </div>
                       </div>
@@ -186,7 +186,7 @@ export function PartnersTab({
                       <div className="flex gap-2">
                         <button
                           onClick={() => onSaveEdit(p.id)} disabled={editSaving}
-                          className="text-xs font-bold px-3 py-1.5 rounded bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50 transition-colors"
+                          className="text-xs font-bold px-3 py-1.5 rounded bg-brand-light text-white hover:bg-brand disabled:opacity-50 transition-colors"
                         >
                           {editSaving ? 'Kaydediliyor...' : 'Kaydet'}
                         </button>
@@ -197,8 +197,8 @@ export function PartnersTab({
                     </div>
                   ) : (
                     <div className="mt-2 pt-2 border-t border-[#f1f5f9] flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button onClick={() => onOpenEdit(p)} className="text-xs text-[#94a3b8] hover:text-primary-600 px-2 py-1 rounded hover:bg-primary-50 transition-colors">Düzenle</button>
-                      <button onClick={() => onToggleTxHistory(p.id)} className="text-xs text-[#94a3b8] hover:text-primary-600 px-2 py-1 rounded hover:bg-primary-50 transition-colors">
+                      <button onClick={() => onOpenEdit(p)} className="text-xs text-[#94a3b8] hover:text-brand-light px-2 py-1 rounded hover:bg-brand-subtle transition-colors">Düzenle</button>
+                      <button onClick={() => onToggleTxHistory(p.id)} className="text-xs text-[#94a3b8] hover:text-brand-light px-2 py-1 rounded hover:bg-brand-subtle transition-colors">
                         {expandedTxId === p.id ? 'Geçmişi Gizle ↑' : 'Geçmiş ↓'}
                       </button>
                       <button onClick={() => onDeletePartner(p.id, p.name)} className="text-xs text-[#94a3b8] hover:text-neg px-2 py-1 rounded hover:bg-neg-light transition-colors">Sil</button>
@@ -257,15 +257,15 @@ export function PartnersTab({
           Ortak durumu sermaye, borç ve dağıtım sekmeleriyle birlikte izleyin.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
-          <Link href="/dashboard/partners?tab=tranches" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/partners?tab=tranches" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Trancheler →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/partners?tab=distribution" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/partners?tab=distribution" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Kâr Dağıtımı →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/partners?tab=risk" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/partners?tab=risk" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Risk Skoru →
           </Link>
         </div>

@@ -132,7 +132,7 @@ export async function CollectionsCommandBar({ companyId }: Props) {
 
         {/* Link to risk tab for full aging */}
         <Link href="/dashboard/finance?tab=risks"
-          className="ml-auto text-[10px] text-primary-600 font-semibold hover:text-primary-700 transition-colors shrink-0">
+          className="ml-auto text-[10px] text-brand-light font-semibold hover:text-brand transition-colors shrink-0">
           Yaşlandırma Analizi →
         </Link>
       </div>

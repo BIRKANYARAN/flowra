@@ -258,7 +258,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
               <button
                 type="button"
                 onClick={addItem}
-                className="text-[10px] font-semibold text-primary-600 hover:text-primary-700 hover:underline transition-colors"
+                className="text-[10px] font-semibold text-brand-light hover:text-brand hover:underline transition-colors"
               >
                 + Kalem Ekle
               </button>
@@ -403,7 +403,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
             <button
               type="submit"
               disabled={saving || grandTotal <= 0}
-              className="flex-1 bg-primary-600 text-white py-2.5 rounded text-sm font-semibold hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 bg-brand-light text-white py-2.5 rounded text-sm font-semibold hover:bg-brand transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {saving ? 'Kaydediliyor…' : 'Satış Oluştur'}
             </button>

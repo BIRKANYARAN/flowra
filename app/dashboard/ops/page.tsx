@@ -109,7 +109,7 @@ function SectionTitle({ label, count, href }: { label: string; count?: number; h
           <span className="text-[10px] font-bold bg-neg-light text-neg-text rounded px-1.5 py-0.5">{count}</span>
         )}
       </div>
-      <Link href={href} className="text-[10px] font-semibold text-primary-600 hover:text-primary-700">
+      <Link href={href} className="text-[10px] font-semibold text-brand-light hover:text-brand">
         Tümünü Gör →
       </Link>
     </div>
@@ -140,7 +140,7 @@ export default async function OpsCommandPage() {
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-center px-4">
       <div className="text-3xl">⚠️</div>
       <p className="text-sm text-[#64748b]">Oturum bilgisi alınamadı. Lütfen sayfayı yenileyin.</p>
-      <a href="/dashboard/ops" className="text-sm text-primary-600 font-semibold hover:underline">Yeniden Dene</a>
+      <a href="/dashboard/ops" className="text-sm text-brand-light font-semibold hover:underline">Yeniden Dene</a>
     </div>
   )
 
@@ -150,7 +150,7 @@ export default async function OpsCommandPage() {
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-center px-4">
       <div className="text-3xl">⚠️</div>
       <p className="text-sm text-[#64748b]">Şirket bilgisi yüklenemedi. Lütfen sayfayı yenileyin.</p>
-      <a href="/dashboard/ops" className="text-sm text-primary-600 font-semibold hover:underline">Yeniden Dene</a>
+      <a href="/dashboard/ops" className="text-sm text-brand-light font-semibold hover:underline">Yeniden Dene</a>
     </div>
   )
 
@@ -265,7 +265,7 @@ export default async function OpsCommandPage() {
           <p className="text-xs text-[#94a3b8] mt-0.5">{todayDate}</p>
         </div>
         <Link href="/dashboard/commercial?tab=sales"
-          className="text-xs font-semibold text-primary-600 hover:text-primary-700">
+          className="text-xs font-semibold text-brand-light hover:text-brand">
           Yeni Satış →
         </Link>
       </div>
@@ -342,7 +342,7 @@ export default async function OpsCommandPage() {
           )}
           <div className="px-4 py-2 border-t border-[#e2e8f0]">
             <Link href="/dashboard/commercial?tab=collections"
-              className="text-[10px] font-semibold text-primary-600 hover:text-primary-700">
+              className="text-[10px] font-semibold text-brand-light hover:text-brand">
               Tam Tahsilat Listesi →
             </Link>
           </div>
@@ -386,7 +386,7 @@ export default async function OpsCommandPage() {
           )}
           <div className="px-4 py-2 border-t border-[#e2e8f0]">
             <Link href="/dashboard/operations?tab=orders"
-              className="text-[10px] font-semibold text-primary-600 hover:text-primary-700">
+              className="text-[10px] font-semibold text-brand-light hover:text-brand">
               Satın Alma Emri Ver →
             </Link>
           </div>
@@ -472,7 +472,7 @@ export default async function OpsCommandPage() {
           { label: 'Müşteri Listesi',   href: '/dashboard/commercial?tab=customers',  emoji: '👥' },
         ].map(({ label, href, emoji }) => (
           <Link key={href} href={href}
-            className="bg-white border border-[#e2e8f0] rounded px-4 py-3 hover:border-[#e2e8f0] hover:bg-primary-50 transition-colors flex items-center gap-2">
+            className="bg-white border border-[#e2e8f0] rounded px-4 py-3 hover:border-[#e2e8f0] hover:bg-brand-subtle transition-colors flex items-center gap-2">
             <span className="text-lg">{emoji}</span>
             <span className="text-xs font-semibold text-[#334155]">{label}</span>
           </Link>

@@ -116,7 +116,7 @@ export default function TrialBalancePage() {
             </svg>
             Yazdır / PDF
           </button>
-          <Link href="/dashboard/cfo" className="text-xs text-[#94a3b8] hover:text-primary-600 font-semibold">
+          <Link href="/dashboard/cfo" className="text-xs text-[#94a3b8] hover:text-brand-light font-semibold">
             ← CFO Cockpit
           </Link>
         </div>
@@ -246,15 +246,15 @@ export default function TrialBalancePage() {
           Mizan dengesi bilanço ve journal entries ile doğrulanmalı.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
-          <Link href="/dashboard/finance?tab=balance" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/finance?tab=balance" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Bilanço →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/cfo/journal-entries" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/cfo/journal-entries" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Journal Entries →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/finance?tab=pnl" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/finance?tab=pnl" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             P&amp;L →
           </Link>
         </div>

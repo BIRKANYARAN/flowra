@@ -157,7 +157,7 @@ export async function ExpensesCommandBar({ companyId }: Props) {
 
         {/* Link to cashflow */}
         <Link href="/dashboard/finance?tab=cashflow"
-          className="ml-auto text-[10px] text-primary-600 font-semibold hover:text-primary-700 transition-colors shrink-0">
+          className="ml-auto text-[10px] text-brand-light font-semibold hover:text-brand transition-colors shrink-0">
           Nakit Akışı →
         </Link>
       </div>

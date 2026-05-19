@@ -145,7 +145,7 @@ export default function PeriodClosePage() {
             Muhasebe dönemlerini kapat ve kilitle — kapanış için {requiredCount} zorunlu kontrol
           </p>
         </div>
-        <Link href="/dashboard/cfo" className="text-xs text-[#94a3b8] hover:text-primary-600 font-semibold">
+        <Link href="/dashboard/cfo" className="text-xs text-[#94a3b8] hover:text-brand-light font-semibold">
           ← CFO Cockpit
         </Link>
       </div>
@@ -240,7 +240,7 @@ export default function PeriodClosePage() {
 
                     <Link
                       href={`/dashboard/cfo/trial-balance?period_id=${p.id}`}
-                      className="text-xs text-primary-600 hover:text-primary-700 font-semibold px-2 py-1.5 rounded hover:bg-primary-50 transition-colors"
+                      className="text-xs text-brand-light hover:text-brand font-semibold px-2 py-1.5 rounded hover:bg-brand-subtle transition-colors"
                     >
                       Mizan →
                     </Link>
@@ -293,7 +293,7 @@ export default function PeriodClosePage() {
                             <Link
                               href={`/dashboard/cfo/trial-balance?period_id=${p.id}`}
                               onClick={e => e.stopPropagation()}
-                              className="text-[10px] text-primary-600 font-semibold hover:underline shrink-0"
+                              className="text-[10px] text-brand-light font-semibold hover:underline shrink-0"
                             >
                               Mizan →
                             </Link>
@@ -331,15 +331,15 @@ export default function PeriodClosePage() {
           Dönem kapanışı mizan ve mutabakat kontrolü tamamlandıktan sonra yapılmalı.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
-          <Link href="/dashboard/cfo/trial-balance" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/cfo/trial-balance" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Mizan →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/cfo/reconciliation" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/cfo/reconciliation" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Mutabakat →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/cfo/journal-entries" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/cfo/journal-entries" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Journal Kayıtları →
           </Link>
         </div>

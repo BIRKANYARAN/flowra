@@ -140,10 +140,10 @@ export async function StrategicScenarioSection({ companyId }: Props) {
         {/* 3-scenario summary cards */}
         <div className="grid grid-cols-3 gap-3">
           {SCENARIO_CFG.map(s => (
-            <div key={s.key} className={`rounded border px-4 py-3.5 ${s.accent} ${s.key === result.recommended ? 'ring-2 ring-primary-400 ring-offset-1' : ''}`}>
+            <div key={s.key} className={`rounded border px-4 py-3.5 ${s.accent} ${s.key === result.recommended ? 'ring-2 ring-brand/30 ring-offset-1' : ''}`}>
               <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{s.label}</div>
               {result.recommended === s.key && (
-                <div className="text-[8px] font-bold text-primary-600 mb-1.5 uppercase tracking-wide">★ Önerilen</div>
+                <div className="text-[8px] font-bold text-brand-light mb-1.5 uppercase tracking-wide">★ Önerilen</div>
               )}
               <div className={`text-xl font-black tabular-nums leading-none ${s.text}`}>
                 <span className="text-[#cbd5e1] text-sm font-normal mr-0.5">₺</span>
@@ -172,8 +172,8 @@ export async function StrategicScenarioSection({ companyId }: Props) {
         </div>
 
         {/* Recommendation */}
-        <div className="px-4 py-3 bg-primary-50 border border-[#e2e8f0] rounded text-xs text-primary-800">
-          <span className="font-black uppercase tracking-wide text-[9px] text-primary-600 mr-2">Öneri</span>
+        <div className="px-4 py-3 bg-brand-subtle border border-[#e2e8f0] rounded text-xs text-brand">
+          <span className="font-black uppercase tracking-wide text-[9px] text-brand-light mr-2">Öneri</span>
           {result.recommendation_reason}
         </div>
 

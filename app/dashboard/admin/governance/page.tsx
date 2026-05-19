@@ -111,9 +111,9 @@ const STATUS_THEME = {
 
 function MetricCard({ label, value, sub, highlight = false }: { label: string; value: string; sub?: string; highlight?: boolean }) {
   return (
-    <div className={`rounded border px-4 py-3 ${highlight ? 'border-[#e2e8f0] bg-primary-50/50' : 'border-[#e2e8f0] bg-white'}`}>
+    <div className={`rounded border px-4 py-3 ${highlight ? 'border-[#e2e8f0] bg-brand-subtle/50' : 'border-[#e2e8f0] bg-white'}`}>
       <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{label}</div>
-      <div className={`text-xl font-black tabular-nums ${highlight ? 'text-primary-700' : 'text-[#0f172a]'}`}>{value}</div>
+      <div className={`text-xl font-black tabular-nums ${highlight ? 'text-brand' : 'text-[#0f172a]'}`}>{value}</div>
       {sub && <div className="text-[10px] text-[#94a3b8] mt-0.5">{sub}</div>}
     </div>
   )
@@ -265,7 +265,7 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
                             <button
                               onClick={() => onSignoff(report.id, pb.partner_id, pb.partner_name, signNotes[pb.partner_id] ?? '')}
                               disabled={signing}
-                              className="text-[10px] font-bold text-white bg-primary-600 hover:bg-primary-700 rounded px-2.5 py-1 transition-colors disabled:opacity-60"
+                              className="text-[10px] font-bold text-white bg-brand-light hover:bg-brand rounded px-2.5 py-1 transition-colors disabled:opacity-60"
                             >
                               {signing ? '…' : 'Onayla'}
                             </button>
@@ -454,7 +454,7 @@ export default function GovernancePage() {
         </div>
         <button
           onClick={() => setShowGenForm(v => !v)}
-          className="flex-shrink-0 inline-flex items-center gap-1.5 bg-primary-600 text-white px-4 py-2 rounded text-sm font-semibold hover:bg-primary-700 transition-colors"
+          className="flex-shrink-0 inline-flex items-center gap-1.5 bg-brand-light text-white px-4 py-2 rounded text-sm font-semibold hover:bg-brand transition-colors"
         >
           {showGenForm ? '✕ Kapat' : '+ Yeni Rapor'}
         </button>
@@ -507,7 +507,7 @@ export default function GovernancePage() {
             <button
               onClick={handleGenerate}
               disabled={generating}
-              className="px-4 py-2 rounded bg-primary-600 text-white text-sm font-semibold hover:bg-primary-700 disabled:opacity-60"
+              className="px-4 py-2 rounded bg-brand-light text-white text-sm font-semibold hover:bg-brand disabled:opacity-60"
             >
               {generating ? 'Oluşturuluyor…' : 'Rapor Oluştur'}
             </button>
@@ -537,7 +537,7 @@ export default function GovernancePage() {
           </div>
           <button
             onClick={() => setShowGenForm(true)}
-            className="inline-flex items-center gap-1.5 bg-primary-600 text-white px-4 py-2 rounded text-sm font-semibold hover:bg-primary-700 transition-colors"
+            className="inline-flex items-center gap-1.5 bg-brand-light text-white px-4 py-2 rounded text-sm font-semibold hover:bg-brand transition-colors"
           >
             + İlk Raporu Oluştur
           </button>
@@ -561,7 +561,7 @@ export default function GovernancePage() {
                   onClick={() => setSelectedId(r.id)}
                   className={`w-full text-left rounded border px-4 py-3 transition-all ${
                     selectedId === r.id
-                      ? 'border-[#e2e8f0] bg-primary-50/50 shadow-sm'
+                      ? 'border-[#e2e8f0] bg-brand-subtle/50 shadow-sm'
                       : 'border-[#e2e8f0] bg-white hover:border-[#e2e8f0]'
                   }`}
                 >
@@ -577,7 +577,7 @@ export default function GovernancePage() {
                   </div>
                   {sigCount > 0 && sigCount < partCount && (
                     <div className="mt-1.5 h-1 bg-[#f1f5f9] rounded-full overflow-hidden">
-                      <div className="h-full bg-primary-500 rounded-full" style={{ width: `${(sigCount / partCount) * 100}%` }} />
+                      <div className="h-full bg-brand-light rounded-full" style={{ width: `${(sigCount / partCount) * 100}%` }} />
                     </div>
                   )}
                   {sigCount === partCount && partCount > 0 && (
@@ -621,15 +621,15 @@ export default function GovernancePage() {
           Yönetişim raporları denetim izi ve ortak dağıtım verisiyle birlikte değerlendirilmeli.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
-          <Link href="/dashboard/admin/audit" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/admin/audit" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Denetim İzi →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/partners?tab=distribution" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/partners?tab=distribution" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Kâr Dağıtımı →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/finance?tab=pnl" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/finance?tab=pnl" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             P&amp;L →
           </Link>
         </div>

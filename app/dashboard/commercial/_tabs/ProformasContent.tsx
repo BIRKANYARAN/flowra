@@ -133,7 +133,7 @@ export async function ProformasContent({ companyId }: Props) {
               { label: 'Taslak',    count: draftCount,     color: 'bg-[#e2e8f0]',    textColor: 'text-[#64748b]'    },
               { label: 'Gönderildi', count: sentCount,     color: 'bg-info-light',    textColor: 'text-info-text'    },
               { label: 'Onaylandı', count: acceptedCount,  color: 'bg-pos-light', textColor: 'text-pos-text' },
-              { label: 'Dönüştü',  count: convertedCount,  color: 'bg-primary-400', textColor: 'text-primary-800' },
+              { label: 'Dönüştü',  count: convertedCount,  color: 'bg-brand-light', textColor: 'text-brand' },
               { label: 'Reddedildi', count: rejectedCount, color: 'bg-neg-light',     textColor: 'text-neg-text'     },
             ].map((step, i) => {
               if (step.count === 0) return null
@@ -174,7 +174,7 @@ export async function ProformasContent({ companyId }: Props) {
           </Link>
           <Link
             href="/dashboard/proformas/new"
-            className="inline-flex items-center gap-1.5 bg-primary-600 text-white px-4 py-2 rounded text-sm font-semibold hover:bg-primary-700 transition-colors"
+            className="inline-flex items-center gap-1.5 bg-brand-light text-white px-4 py-2 rounded text-sm font-semibold hover:bg-brand transition-colors"
           >
             + Yeni Proforma
           </Link>
@@ -189,7 +189,7 @@ export async function ProformasContent({ companyId }: Props) {
           action={
             <Link
               href="/dashboard/proformas/new"
-              className="inline-flex bg-primary-600 text-white px-5 py-2 rounded text-sm font-semibold hover:bg-primary-700 transition-colors"
+              className="inline-flex bg-brand-light text-white px-5 py-2 rounded text-sm font-semibold hover:bg-brand transition-colors"
             >
               İlk Proformayı Oluştur
             </Link>
@@ -221,7 +221,7 @@ export async function ProformasContent({ companyId }: Props) {
                 >
                   <div className="col-span-3">
                     <div className="text-xs font-mono font-semibold text-[#334155]">{p.proforma_no || '—'}</div>
-                    {p.revision_no > 1 && <div className="text-xs text-primary-500">Rev. {p.revision_no}</div>}
+                    {p.revision_no > 1 && <div className="text-xs text-brand-light">Rev. {p.revision_no}</div>}
                   </div>
                   <div className="col-span-3 text-sm font-medium text-[#1e293b] truncate">{p.customer_name || '—'}</div>
                   <div className="col-span-2"><StatusBadge status={p.status || 'draft'} /></div>
@@ -240,15 +240,15 @@ export async function ProformasContent({ companyId }: Props) {
           Teklifler satışa döndükten sonra pipeline ve tahsilat akışını takip edin.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
-          <Link href="/dashboard/commercial?tab=pipeline" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/commercial?tab=pipeline" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Pipeline →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/commercial?tab=sales" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/commercial?tab=sales" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Satışlar →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/commercial?tab=collections" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/commercial?tab=collections" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Tahsilat →
           </Link>
         </div>

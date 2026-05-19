@@ -173,7 +173,7 @@ export default function StockAdjustClient({ products }: Props) {
             <label className={LAB}>
               Kur ({costCurrency}/TRY)
               {fxRateDate && (
-                <span className="text-primary-500 normal-case font-normal ml-1">
+                <span className="text-brand-light normal-case font-normal ml-1">
                   — {new Date(fxRateDate + 'T00:00:00').toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' })} tarihli
                 </span>
               )}
@@ -212,7 +212,7 @@ export default function StockAdjustClient({ products }: Props) {
       <button
         disabled={saving}
         onClick={adjust}
-        className="inline-flex items-center gap-2 px-4 py-2.5 rounded text-sm font-bold bg-primary-600 text-white hover:bg-primary-700 transition-colors disabled:opacity-50"
+        className="inline-flex items-center gap-2 px-4 py-2.5 rounded text-sm font-bold bg-brand-light text-white hover:bg-brand transition-colors disabled:opacity-50"
       >
         {saving ? (
           <>

@@ -113,7 +113,7 @@ export default function IncomeStatementPage() {
           <input type="date" value={to} onChange={e => setTo(e.target.value)}
             className="border border-[#e2e8f0] rounded px-2 py-1 text-xs" />
           {pdfOpts && <PdfExportButton opts={pdfOpts} label="PDF İndir" />}
-          <Link href="/dashboard/cfo" className="text-xs text-[#94a3b8] hover:text-primary-600 font-semibold">← CFO</Link>
+          <Link href="/dashboard/cfo" className="text-xs text-[#94a3b8] hover:text-brand-light font-semibold">← CFO</Link>
         </div>
       </div>
 
@@ -180,15 +180,15 @@ export default function IncomeStatementPage() {
           Gelir tablosu P&amp;L analizi ve satışlarla birlikte değerlendirilmeli.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
-          <Link href="/dashboard/finance?tab=pnl" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/finance?tab=pnl" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             P&amp;L Analizi →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/finance?tab=quarterly" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/finance?tab=quarterly" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Geçici Vergi →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/commercial?tab=sales" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/commercial?tab=sales" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Satışlar →
           </Link>
         </div>

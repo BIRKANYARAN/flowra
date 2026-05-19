@@ -154,7 +154,7 @@ export default function AdminAuditPage() {
           <button
             onClick={verifyChain}
             disabled={chainLoading}
-            className="text-xs font-semibold px-3 py-1.5 bg-primary-600 text-white rounded hover:bg-primary-700 disabled:opacity-50 transition-colors"
+            className="text-xs font-semibold px-3 py-1.5 bg-brand-light text-white rounded hover:bg-brand disabled:opacity-50 transition-colors"
           >
             {chainLoading ? 'Doğrulanıyor…' : 'Zinciri Doğrula'}
           </button>
@@ -340,7 +340,7 @@ export default function AdminAuditPage() {
                             </code>
                           </td>
                           <td className="px-4 py-2">
-                            <button className="text-xs text-primary-600 hover:text-primary-800 font-medium">
+                            <button className="text-xs text-brand-light hover:text-brand font-medium">
                               {isExpanded ? '▲ Gizle' : '▼ Görüntüle'}
                             </button>
                           </td>
@@ -415,15 +415,15 @@ export default function AdminAuditPage() {
           Denetim izi tüm değişikliklerin yasal kaydıdır — silinmez.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
-          <Link href="/dashboard/admin/governance" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/admin/governance" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Yönetişim →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/admin/users" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/admin/users" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Kullanıcılar →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/cfo/journal-entries" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/cfo/journal-entries" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Journal Kayıtları →
           </Link>
         </div>

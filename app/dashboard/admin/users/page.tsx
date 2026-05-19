@@ -29,7 +29,7 @@ const ROLE_LABELS: Record<MemberRole, string> = {
 }
 
 const ROLE_COLORS: Record<MemberRole, string> = {
-  admin:   'bg-primary-100 text-primary-700',
+  admin:   'bg-brand-subtle text-brand',
   manager: 'bg-info-light text-info-text',
   viewer:  'bg-[#f1f5f9] text-[#64748b]',
 }
@@ -185,7 +185,7 @@ export default function AdminUsersPage() {
         {!showInvite && (
           <button
             onClick={() => { setShowInvite(true); setInvError(''); setInvSuccess('') }}
-            className="bg-primary-600 text-white px-4 py-2.5 rounded text-sm font-semibold hover:bg-primary-700 transition-colors"
+            className="bg-brand-light text-white px-4 py-2.5 rounded text-sm font-semibold hover:bg-brand transition-colors"
           >
             + Kullanıcı Davet Et
           </button>
@@ -262,7 +262,7 @@ export default function AdminUsersPage() {
             <button
               onClick={submitInvite}
               disabled={invSaving || !invEmail.trim()}
-              className="bg-primary-600 text-white px-5 py-2.5 rounded text-sm font-semibold hover:bg-primary-700 disabled:opacity-40 transition-colors"
+              className="bg-brand-light text-white px-5 py-2.5 rounded text-sm font-semibold hover:bg-brand disabled:opacity-40 transition-colors"
             >
               {invSaving ? 'Gönderiliyor...' : 'Davet Gönder'}
             </button>
@@ -290,8 +290,8 @@ export default function AdminUsersPage() {
                 {/* User info */}
                 <div className="min-w-0 flex-1 mr-4">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded bg-primary-100 flex items-center justify-center flex-shrink-0">
-                      <span className="text-primary-700 font-bold text-xs">
+                    <div className="w-8 h-8 rounded bg-brand-subtle flex items-center justify-center flex-shrink-0">
+                      <span className="text-brand font-bold text-xs">
                         {(m.display_name || m.email || '?').slice(0, 2).toUpperCase()}
                       </span>
                     </div>
@@ -321,7 +321,7 @@ export default function AdminUsersPage() {
                       <button
                         onClick={() => saveRole(m.id)}
                         disabled={roleSaving}
-                        className="text-xs text-primary-600 font-semibold hover:text-primary-800 disabled:opacity-40 px-2 py-1 rounded hover:bg-primary-50 transition-colors"
+                        className="text-xs text-brand-light font-semibold hover:text-brand disabled:opacity-40 px-2 py-1 rounded hover:bg-brand-subtle transition-colors"
                       >
                         {roleSaving ? '...' : 'Kaydet'}
                       </button>
@@ -403,11 +403,11 @@ export default function AdminUsersPage() {
           Kullanıcı ve rol yönetimi yönetişim sistemiyle birlikte çalışır.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
-          <Link href="/dashboard/admin/audit" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/admin/audit" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Denetim İzi →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/admin/governance" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/admin/governance" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Yönetişim →
           </Link>
         </div>

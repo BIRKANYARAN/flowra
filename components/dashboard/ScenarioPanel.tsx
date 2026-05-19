@@ -105,12 +105,12 @@ export function ScenarioPanel({ inputs, baseRunwayMonths }: Props) {
         <div>
           <div className="flex items-center justify-between mb-2">
             <label className={SLabel}>A — Tahsilat Oranı</label>
-            <span className="text-xs font-black text-primary-600">%{collectionPct}</span>
+            <span className="text-xs font-black text-brand-light">%{collectionPct}</span>
           </div>
           <input
             type="range" min={0} max={100} step={5} value={collectionPct}
             onChange={e => setCollectionPct(Number(e.target.value))}
-            className="w-full accent-primary-500 h-1.5"
+            className="w-full accent-brand-light h-1.5"
           />
           <div className="flex justify-between mt-0.5">
             <span className={SValue}>%0 — hiç tahsilat yok</span>
@@ -127,13 +127,13 @@ export function ScenarioPanel({ inputs, baseRunwayMonths }: Props) {
         <div>
           <div className="flex items-center justify-between mb-2">
             <label className={SLabel}>B — Ek Finansman (₺)</label>
-            <span className="text-xs font-black text-primary-600">{fmt(extraLoan)}</span>
+            <span className="text-xs font-black text-brand-light">{fmt(extraLoan)}</span>
           </div>
           <input
             type="range" min={0} max={Math.max(500_000, monthly_burn * 12)} step={10_000}
             value={extraLoan}
             onChange={e => setExtraLoan(Number(e.target.value))}
-            className="w-full accent-primary-500 h-1.5"
+            className="w-full accent-brand-light h-1.5"
           />
           <div className="flex justify-between mt-0.5">
             <span className={SValue}>₺0</span>
@@ -145,12 +145,12 @@ export function ScenarioPanel({ inputs, baseRunwayMonths }: Props) {
         <div>
           <div className="flex items-center justify-between mb-2">
             <label className={SLabel}>C — Gider Kesintisi</label>
-            <span className="text-xs font-black text-primary-600">%{burnCutPct}</span>
+            <span className="text-xs font-black text-brand-light">%{burnCutPct}</span>
           </div>
           <input
             type="range" min={0} max={50} step={5} value={burnCutPct}
             onChange={e => setBurnCutPct(Number(e.target.value))}
-            className="w-full accent-primary-500 h-1.5"
+            className="w-full accent-brand-light h-1.5"
           />
           <div className="flex justify-between mt-0.5">
             <span className={SValue}>%0 — kesinti yok</span>

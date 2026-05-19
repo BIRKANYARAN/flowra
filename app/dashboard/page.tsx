@@ -143,7 +143,7 @@ export default async function DashboardPage() {
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-center px-4">
       <div className="text-3xl">⚠️</div>
       <p className="text-sm text-[#64748b]">Oturum bilgisi alınamadı. Lütfen sayfayı yenileyin.</p>
-      <a href="/dashboard" className="text-sm text-primary-600 font-semibold hover:underline">Yeniden Dene</a>
+      <a href="/dashboard" className="text-sm text-brand-light font-semibold hover:underline">Yeniden Dene</a>
     </div>
   )
 
@@ -159,7 +159,7 @@ export default async function DashboardPage() {
         <p className="text-sm text-[#64748b] max-w-sm">
           Hesabınıza bağlı şirket bilgisi alınamadı. Lütfen sayfayı yenileyin veya destek ekibiyle iletişime geçin.
         </p>
-        <a href="/dashboard" className="text-sm text-primary-600 font-semibold hover:underline">
+        <a href="/dashboard" className="text-sm text-brand-light font-semibold hover:underline">
           Yeniden Dene
         </a>
       </div>
@@ -545,7 +545,7 @@ export default async function DashboardPage() {
             + Gider
           </Link>
           <Link href="/dashboard/commercial?tab=collections"
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded bg-primary-600 text-white text-xs font-semibold hover:bg-primary-700 transition-colors">
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded bg-brand-light text-white text-xs font-semibold hover:bg-brand transition-colors">
             Tahsilat
           </Link>
         </div>
@@ -588,7 +588,7 @@ export default async function DashboardPage() {
             <span className="text-[#cbd5e1] text-xs mx-1 flex-shrink-0">→</span>
             <span className="text-[11px] text-[#64748b] italic flex-shrink-0">{ctxChain.conclusion}</span>
           </div>
-          <span className="flex-shrink-0 text-[10px] font-semibold text-primary-600 group-hover:text-primary-700 whitespace-nowrap">
+          <span className="flex-shrink-0 text-[10px] font-semibold text-brand-light group-hover:text-brand whitespace-nowrap">
             Analiz →
           </span>
         </Link>
@@ -615,8 +615,8 @@ export default async function DashboardPage() {
           ))}
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-[9px] font-black uppercase tracking-widest text-primary-600">Öneri</span>
-          <span className="text-[11px] text-primary-700 font-medium">{aiSummary.recommendation}</span>
+          <span className="text-[9px] font-black uppercase tracking-widest text-brand-light">Öneri</span>
+          <span className="text-[11px] text-brand font-medium">{aiSummary.recommendation}</span>
         </div>
       </div>
 
@@ -825,7 +825,7 @@ export default async function DashboardPage() {
       }`}>
         <div className="flex items-center justify-between px-5 py-2.5 border-b border-[#f1f5f9]">
           <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Nakit Köprüsü</span>
-          <Link href="/dashboard/finance?tab=cashflow" className="text-[10px] text-primary-600 font-semibold hover:text-primary-700">Cashflow →</Link>
+          <Link href="/dashboard/finance?tab=cashflow" className="text-[10px] text-brand-light font-semibold hover:text-brand">Cashflow →</Link>
         </div>
         {/* Rail: first 3 items normal, "= Dağıtılabilir" is the decision node — always dominant */}
         <div className="px-5 py-3 grid grid-cols-4 divide-x divide-[#e2e8f0] items-end">
@@ -878,7 +878,7 @@ export default async function DashboardPage() {
         <div className="lg:col-span-8 bg-white border border-[#e2e8f0] rounded shadow-sm">
           <div className="flex items-center justify-between px-5 py-2.5 border-b border-[#f1f5f9]">
             <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Nakit Pisti</span>
-            <Link href="/dashboard/planning?tab=cash-projection" className="text-[10px] text-primary-600 font-semibold hover:text-primary-700">Projeksiyon →</Link>
+            <Link href="/dashboard/planning?tab=cash-projection" className="text-[10px] text-brand-light font-semibold hover:text-brand">Projeksiyon →</Link>
           </div>
           {/* Scenario strip: calm equal weight. Base gets slightly larger when in danger — no opacity tricks. */}
           {(() => {
@@ -928,7 +928,7 @@ export default async function DashboardPage() {
                 {expDeltaPct > 0 ? '▲' : '▼'} {Math.abs(expDeltaPct).toFixed(1)}% <span className="text-[#94a3b8] font-normal">geçen ay</span>
               </div>
             )}
-            <Link href="/dashboard/operations?tab=expenses" className="block mt-2 text-[10px] text-primary-600 font-semibold hover:underline">
+            <Link href="/dashboard/operations?tab=expenses" className="block mt-2 text-[10px] text-brand-light font-semibold hover:underline">
               Gider detayı →
             </Link>
           </div>
@@ -938,8 +938,8 @@ export default async function DashboardPage() {
             <Link href="/dashboard/commercial?tab=proformas"
               className="bg-white border border-[#e2e8f0] rounded px-4 py-3.5 shadow-sm hover:border-[#e2e8f0] transition-colors">
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">Açık Proformalar</div>
-              <div className="text-xl font-black tabular-nums text-primary-700 leading-none">
-                <span className="text-primary-300 font-normal text-sm mr-0.5">₺</span>{formatKpi(outstanding)}
+              <div className="text-xl font-black tabular-nums text-brand leading-none">
+                <span className="text-brand-light font-normal text-sm mr-0.5">₺</span>{formatKpi(outstanding)}
               </div>
               <div className="text-[10px] text-[#94a3b8] mt-1">{openProfs.length} adet onay bekliyor →</div>
             </Link>
@@ -960,7 +960,7 @@ export default async function DashboardPage() {
             <Link href="/dashboard/planning?tab=tasks"
               className="bg-white border border-[#e2e8f0] rounded px-4 py-3.5 shadow-sm hover:border-[#e2e8f0] transition-colors">
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">Yaklaşan Görevler</div>
-              <div className="text-xl font-black text-primary-700">{taskReminders.length}</div>
+              <div className="text-xl font-black text-brand">{taskReminders.length}</div>
               <div className="text-[10px] text-[#94a3b8] mt-1">
                 {taskReminders.filter(t => t.due_date < todayISO).length > 0
                   ? `${taskReminders.filter(t => t.due_date < todayISO).length} gecikmiş`
@@ -1073,7 +1073,7 @@ export default async function DashboardPage() {
         </div>
         <Link
           href="/dashboard/reports"
-          className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap ml-4"
+          className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap ml-4"
         >
           Raporlar →
         </Link>

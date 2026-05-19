@@ -99,7 +99,7 @@ export default function ReportsHubPage() {
         <button
           onClick={downloadCfoPack}
           disabled={generating}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded bg-primary-600 text-white text-sm font-semibold hover:bg-primary-700 transition-colors disabled:opacity-60"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded bg-brand-light text-white text-sm font-semibold hover:bg-brand transition-colors disabled:opacity-60"
         >
           {generating ? (
             <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
@@ -123,12 +123,12 @@ export default function ReportsHubPage() {
       )}
 
       {/* CFO Pack info */}
-      <div className="bg-primary-50 border border-[#e2e8f0] rounded px-4 py-3">
+      <div className="bg-brand-subtle border border-[#e2e8f0] rounded px-4 py-3">
         <div className="flex items-start gap-3">
           <span className="text-2xl flex-shrink-0">📦</span>
           <div>
-            <div className="text-sm font-bold text-primary-800">CFO Rapor Paketi</div>
-            <div className="text-xs text-primary-600 mt-0.5">
+            <div className="text-sm font-bold text-brand">CFO Rapor Paketi</div>
+            <div className="text-xs text-brand-light mt-0.5">
               Tek bir markalı PDF olarak: Gelir Tablosu + Vergi Özeti + Alacak Yaşlandırma.
               Dönem: {from} — {to}
             </div>
@@ -145,13 +145,13 @@ export default function ReportsHubPage() {
             <div className="flex items-start gap-3">
               <span className="text-2xl flex-shrink-0">{r.icon}</span>
               <div className="min-w-0">
-                <div className="font-bold text-sm text-[#0f172a] group-hover:text-primary-700 transition-colors">
+                <div className="font-bold text-sm text-[#0f172a] group-hover:text-brand transition-colors">
                   {r.title}
                 </div>
                 <div className="text-xs text-[#94a3b8] mt-0.5">{r.subtitle}</div>
               </div>
             </div>
-            <div className="mt-3 flex items-center gap-1 text-[10px] font-semibold text-primary-600">
+            <div className="mt-3 flex items-center gap-1 text-[10px] font-semibold text-brand-light">
               Görüntüle <span className="group-hover:translate-x-0.5 transition-transform">→</span>
             </div>
           </Link>
@@ -173,7 +173,7 @@ export default function ReportsHubPage() {
           <a
             href={`/api/export/sales?from=${from}&to=${to}`}
             download
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-[#e2e8f0] bg-[#f8fafc] text-xs font-semibold text-[#334155] hover:border-[#e2e8f0] hover:bg-primary-50 hover:text-primary-700 transition-colors"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-[#e2e8f0] bg-[#f8fafc] text-xs font-semibold text-[#334155] hover:border-[#e2e8f0] hover:bg-brand-subtle hover:text-brand transition-colors"
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M12 16l-4-4h3V4h2v8h3l-4 4z" />
@@ -184,7 +184,7 @@ export default function ReportsHubPage() {
           <a
             href={`/api/export/expenses?from=${from}&to=${to}`}
             download
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-[#e2e8f0] bg-[#f8fafc] text-xs font-semibold text-[#334155] hover:border-[#e2e8f0] hover:bg-primary-50 hover:text-primary-700 transition-colors"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-[#e2e8f0] bg-[#f8fafc] text-xs font-semibold text-[#334155] hover:border-[#e2e8f0] hover:bg-brand-subtle hover:text-brand transition-colors"
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M12 16l-4-4h3V4h2v8h3l-4 4z" />
@@ -195,7 +195,7 @@ export default function ReportsHubPage() {
           <a
             href={`/api/export/purchases?from=${from}&to=${to}`}
             download
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-[#e2e8f0] bg-[#f8fafc] text-xs font-semibold text-[#334155] hover:border-[#e2e8f0] hover:bg-primary-50 hover:text-primary-700 transition-colors"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-[#e2e8f0] bg-[#f8fafc] text-xs font-semibold text-[#334155] hover:border-[#e2e8f0] hover:bg-brand-subtle hover:text-brand transition-colors"
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M12 16l-4-4h3V4h2v8h3l-4 4z" />
@@ -206,7 +206,7 @@ export default function ReportsHubPage() {
           <a
             href="/api/export/stock"
             download
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-[#e2e8f0] bg-[#f8fafc] text-xs font-semibold text-[#334155] hover:border-[#e2e8f0] hover:bg-primary-50 hover:text-primary-700 transition-colors"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-[#e2e8f0] bg-[#f8fafc] text-xs font-semibold text-[#334155] hover:border-[#e2e8f0] hover:bg-brand-subtle hover:text-brand transition-colors"
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M12 16l-4-4h3V4h2v8h3l-4 4z" />
@@ -217,7 +217,7 @@ export default function ReportsHubPage() {
           <a
             href="/api/export/customers"
             download
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-[#e2e8f0] bg-[#f8fafc] text-xs font-semibold text-[#334155] hover:border-[#e2e8f0] hover:bg-primary-50 hover:text-primary-700 transition-colors"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-[#e2e8f0] bg-[#f8fafc] text-xs font-semibold text-[#334155] hover:border-[#e2e8f0] hover:bg-brand-subtle hover:text-brand transition-colors"
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M12 16l-4-4h3V4h2v8h3l-4 4z" />
@@ -235,15 +235,15 @@ export default function ReportsHubPage() {
           Raporlar CFO cockpit ve dönem kapanış süreciyle birlikte değerlendirilmeli.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
-          <Link href="/dashboard/finance?tab=cfo" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/finance?tab=cfo" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             CFO Cockpit →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/cfo/trial-balance" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/cfo/trial-balance" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Mizan →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/cfo/period-close" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/cfo/period-close" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Dönem Kapanışı →
           </Link>
         </div>

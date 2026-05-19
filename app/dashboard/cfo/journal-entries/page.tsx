@@ -24,7 +24,7 @@ export default async function JournalEntriesPage() {
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-center px-4">
       <div className="text-3xl">⚠️</div>
       <p className="text-sm text-[#64748b]">Oturum bilgisi alınamadı. Lütfen sayfayı yenileyin.</p>
-      <a href="/dashboard/cfo/journal-entries" className="text-sm text-primary-600 font-semibold hover:underline">Yeniden Dene</a>
+      <a href="/dashboard/cfo/journal-entries" className="text-sm text-brand-light font-semibold hover:underline">Yeniden Dene</a>
     </div>
   )
   if (!companyId) return <div className="p-8 text-[#64748b]">Şirket bulunamadı.</div>
@@ -48,7 +48,7 @@ export default async function JournalEntriesPage() {
           <h1 className="text-xl font-black text-[#0f172a] tracking-tight">Journal Kayıtları</h1>
           <p className="text-xs text-[#94a3b8] mt-0.5">Çift taraflı muhasebe denetim izi — son 100 kayıt</p>
         </div>
-        <Link href="/dashboard/cfo" className="text-xs text-[#94a3b8] hover:text-primary-600 font-semibold">← CFO</Link>
+        <Link href="/dashboard/cfo" className="text-xs text-[#94a3b8] hover:text-brand-light font-semibold">← CFO</Link>
       </div>
 
       {rows.length === 0 ? (
@@ -147,15 +147,15 @@ export default async function JournalEntriesPage() {
           Journal kayıtları mizan ve dönem kapanışıyla birlikte değerlendirilmeli.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
-          <Link href="/dashboard/cfo/trial-balance" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/cfo/trial-balance" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Mizan →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/cfo/period-close" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/cfo/period-close" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Dönem Kapat →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/finance?tab=balance" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/finance?tab=balance" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Bilanço →
           </Link>
         </div>

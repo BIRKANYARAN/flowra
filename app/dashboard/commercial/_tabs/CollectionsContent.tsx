@@ -218,7 +218,7 @@ export async function CollectionsContent({ companyId }: Props) {
                   <div className="flex-1">
                     <div className="h-5 bg-[#f1f5f9] rounded overflow-hidden">
                       <div
-                        className={`h-5 rounded ${d.maxDays > 60 ? 'bg-neg' : d.maxDays > 30 ? 'bg-warn' : 'bg-primary-400'}`}
+                        className={`h-5 rounded ${d.maxDays > 60 ? 'bg-neg' : d.maxDays > 30 ? 'bg-warn' : 'bg-brand-light'}`}
                         style={{ width: `${barPct}%` }}
                       />
                     </div>
@@ -250,14 +250,14 @@ export async function CollectionsContent({ companyId }: Props) {
         <div className="flex items-center gap-2 shrink-0 ml-4">
           <Link
             href="/dashboard/commercial?tab=customers"
-            className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap"
+            className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap"
           >
             Müşteri Riskleri →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
           <Link
             href="/dashboard/finance?tab=risks"
-            className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap"
+            className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap"
           >
             Alacak Risk Analizi →
           </Link>

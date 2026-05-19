@@ -82,9 +82,9 @@ export async function SimulationContent({ companyId, userId, activeTab = 'unit-p
     <div className="space-y-4 max-w-5xl">
 
       {/* Tab context header */}
-      <div className="px-4 py-3 bg-primary-50 border border-primary-100 rounded">
-        <div className="text-sm font-black text-primary-800">{ctx.title}</div>
-        <div className="text-[10px] text-primary-500 mt-0.5">{ctx.focus}</div>
+      <div className="px-4 py-3 bg-brand-subtle border border-brand/10 rounded">
+        <div className="text-sm font-black text-brand">{ctx.title}</div>
+        <div className="text-[10px] text-brand-light mt-0.5">{ctx.focus}</div>
       </div>
 
       <Suspense fallback={<ContextSkeleton />}>
@@ -112,15 +112,15 @@ export async function SimulationContent({ companyId, userId, activeTab = 'unit-p
           Simülasyon sonuçlarını nakit projeksiyonu ve gerçek P&amp;L ile karşılaştırın.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
-          <Link href="/dashboard/planning?tab=cash-projection" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/planning?tab=cash-projection" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Nakit Projeksiyonu →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/planning?tab=what-if" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/planning?tab=what-if" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             What-If →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/finance?tab=overview" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/finance?tab=overview" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Finansal Durum →
           </Link>
         </div>

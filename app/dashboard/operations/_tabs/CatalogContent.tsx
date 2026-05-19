@@ -176,21 +176,21 @@ export async function CatalogContent({ companyId, userId }: Props) {
         <div className="flex items-center gap-2 shrink-0 ml-4">
           <Link
             href="/dashboard/operations?tab=stock"
-            className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap"
+            className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap"
           >
             Stok →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
           <Link
             href="/dashboard/finance?tab=pnl"
-            className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap"
+            className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap"
           >
             P&amp;L Analizi →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
           <Link
             href="/dashboard/planning?tab=what-if"
-            className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap"
+            className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap"
           >
             What-If Simülasyon →
           </Link>

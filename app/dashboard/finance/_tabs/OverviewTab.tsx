@@ -306,7 +306,7 @@ export async function OverviewTab({ userId: _userId, companyId }: Props) {
       {/* Quick actions */}
       <div className="flex flex-wrap gap-2 pt-1">
         <Link href="/dashboard/commercial?tab=collections"
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded bg-primary-600 text-white text-xs font-semibold hover:bg-primary-700 transition-colors">
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded bg-brand-light text-white text-xs font-semibold hover:bg-brand transition-colors">
           Tahsilat Yönet
         </Link>
         <Link href="/dashboard/operations?tab=expenses"

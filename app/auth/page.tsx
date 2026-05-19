@@ -62,7 +62,7 @@ export default function AuthPage() {
       <div className="w-full max-w-sm bg-white rounded border border-[#e2e8f0] shadow-sm p-8">
         {/* Logo */}
         <div className="flex items-center gap-3 mb-8">
-          <div className="w-9 h-9 rounded bg-primary-600 flex items-center justify-center">
+          <div className="w-9 h-9 rounded bg-brand-light flex items-center justify-center">
             <span className="text-white font-black text-sm">F</span>
           </div>
           <div>
@@ -116,14 +116,14 @@ export default function AuthPage() {
           {success && <div className="text-sm text-pos-text bg-pos-light border border-pos-light rounded px-3 py-2">{success}</div>}
 
           <button onClick={handle} disabled={loading}
-            className="w-full bg-primary-600 text-white py-2.5 rounded text-sm font-bold hover:bg-primary-700 disabled:opacity-50 transition-colors">
+            className="w-full bg-brand-light text-white py-2.5 rounded text-sm font-bold hover:bg-brand disabled:opacity-50 transition-colors">
             {loading ? 'Lütfen bekleyin...' : mode === 'login' ? 'Giriş Yap' : 'Kayıt Ol'}
           </button>
 
           <p className="text-center text-sm text-[#64748b]">
             {mode === 'login' ? 'Hesabın yok mu?' : 'Zaten hesabın var mı?'}{' '}
             <button onClick={() => { setMode(m => m === 'login' ? 'register' : 'login'); setError(''); setSuccess('') }}
-              className="text-primary-600 font-semibold hover:underline">
+              className="text-brand-light font-semibold hover:underline">
               {mode === 'login' ? 'Kayıt Ol' : 'Giriş Yap'}
             </button>
           </p>

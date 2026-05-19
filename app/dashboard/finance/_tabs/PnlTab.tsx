@@ -263,7 +263,7 @@ export async function PnlTab({ userId, companyId }: Props) {
           {[
             { label: 'Brüt Kâr',        value: fmt(grossProfit), sub: `Marj: ${pct(grossProfit, revenue)}`, color: grossProfit >= 0 ? 'border-l-emerald-400' : 'border-l-red-400' },
             { label: 'Toplam Giderler',  value: fmt(expenses),    sub: 'Kesinti + operasyonel', color: 'border-l-amber-400' },
-            { label: 'Vergi Matrahı',    value: fmt(matrah),      sub: 'Vergi öncesi kazanç', color: matrah >= 0 ? 'border-l-primary-400' : 'border-l-red-400' },
+            { label: 'Vergi Matrahı',    value: fmt(matrah),      sub: 'Vergi öncesi kazanç', color: matrah >= 0 ? 'border-l-brand/30' : 'border-l-red-400' },
           ].map(k => (
             <div key={k.label} className={`bg-white border border-l-4 border-[#e2e8f0] ${k.color} rounded px-4 py-3`}>
               <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">{k.label}</div>
@@ -307,15 +307,15 @@ export async function PnlTab({ userId, companyId }: Props) {
           PDF dışa aktarım için resmi raporu inceleyin.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
-          <Link href="/dashboard/commercial?tab=sales" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/commercial?tab=sales" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Satışlar →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/operations?tab=expenses" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/operations?tab=expenses" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Giderler →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/reports/income-statement" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/reports/income-statement" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Gelir Tablosu →
           </Link>
         </div>

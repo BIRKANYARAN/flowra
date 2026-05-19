@@ -257,7 +257,7 @@ export default function CollectionsClient({ initialRows }: Props) {
             <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
               {dueDateStr}
               {row.proformas?.proforma_no && (
-                <span className="text-[10px] font-mono text-primary-500">
+                <span className="text-[10px] font-mono text-brand-light">
                   {row.proformas.proforma_no}
                 </span>
               )}

@@ -219,14 +219,14 @@ export async function SalesContent({ companyId }: Props) {
         <div className="flex items-center gap-2 shrink-0 ml-4">
           <Link
             href="/dashboard/finance?tab=pnl"
-            className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap"
+            className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap"
           >
             P&amp;L Analizi →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
           <Link
             href="/dashboard/commercial?tab=pipeline"
-            className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap"
+            className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap"
           >
             Satış Akışı →
           </Link>

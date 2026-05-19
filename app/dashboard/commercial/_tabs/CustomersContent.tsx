@@ -88,7 +88,7 @@ export async function CustomersContent({ companyId }: Props) {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded overflow-hidden">
           {[
             { label: 'Toplam Müşteri', value: String(customers.length), sub: `${sales.length} satış kaydı`,        color: 'text-[#0f172a]' },
-            { label: 'Toplam Ciro',    value: billed > 0 ? fmt(billed) : '—', sub: 'Tüm satışlar (TRY)',           color: 'text-primary-700' },
+            { label: 'Toplam Ciro',    value: billed > 0 ? fmt(billed) : '—', sub: 'Tüm satışlar (TRY)',           color: 'text-brand' },
             { label: 'Bekleyen Tahsilat', value: outstanding > 0 ? fmt(outstanding) : '—', sub: outstanding > 0 ? 'Ödenmemiş + kısmi' : 'Tamamı tahsil edildi ✓', color: outstanding > 0 ? 'text-neg' : 'text-pos-text' },
             { label: 'Tahsilat Oranı', value: billed > 0 ? `%${collectionRate}` : '—', sub: billed > 0 ? `${fmt(paidTotal)} / ${fmt(billed)} tahsil edildi` : 'Satış yok', color: collectionRate >= 80 ? 'text-pos-text' : collectionRate >= 50 ? 'text-warn-text' : 'text-neg' },
           ].map((card, i) => (
@@ -139,11 +139,11 @@ export async function CustomersContent({ companyId }: Props) {
                   <div className="w-36 text-xs text-[#334155] font-medium shrink-0 truncate" title={tc.name}>{tc.name}</div>
                   <div className="flex-1">
                     <div className="h-5 bg-[#f1f5f9] rounded overflow-hidden">
-                      <div className="h-5 bg-primary-400 rounded" style={{ width: `${barPct}%` }} />
+                      <div className="h-5 bg-brand-light rounded" style={{ width: `${barPct}%` }} />
                     </div>
                   </div>
                   <div className="w-28 text-right shrink-0">
-                    <span className="text-xs font-bold tabular-nums text-primary-700">{fmt(tc.total)}</span>
+                    <span className="text-xs font-bold tabular-nums text-brand">{fmt(tc.total)}</span>
                     <span className="text-[10px] text-[#94a3b8] ml-1">%{sharePct.toFixed(0)}</span>
                   </div>
                 </div>
@@ -232,14 +232,14 @@ export async function CustomersContent({ companyId }: Props) {
         <div className="flex items-center gap-2 shrink-0 ml-4">
           <Link
             href="/dashboard/commercial?tab=collections"
-            className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap"
+            className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap"
           >
             Tahsilat →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
           <Link
             href="/dashboard/finance?tab=risks"
-            className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap"
+            className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap"
           >
             Alacak Risk Analizi →
           </Link>

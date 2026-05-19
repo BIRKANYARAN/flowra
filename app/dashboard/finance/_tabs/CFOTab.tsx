@@ -428,7 +428,7 @@ export async function CFOTab({ userId, companyId }: Props) {
               </span>
               <Link
                 href="/dashboard/cfo/period-close"
-                className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2"
+                className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2"
               >
                 Dönem Kapat →
               </Link>
@@ -437,7 +437,7 @@ export async function CFOTab({ userId, companyId }: Props) {
         ) : (
           <div className="text-xs text-[#94a3b8] text-center py-3">
             Aktif muhasebe dönemi bulunamadı.{' '}
-            <Link href="/dashboard/cfo/period-close" className="font-semibold text-primary-600 hover:text-primary-700 underline underline-offset-2">
+            <Link href="/dashboard/cfo/period-close" className="font-semibold text-brand-light hover:text-brand underline underline-offset-2">
               Yeni dönem aç →
             </Link>
           </div>
@@ -577,7 +577,7 @@ export async function CFOTab({ userId, companyId }: Props) {
           </div>
           <Link
             href="/dashboard/finance?tab=tax"
-            className="mt-3 block text-center text-xs font-semibold text-primary-600 hover:text-primary-700"
+            className="mt-3 block text-center text-xs font-semibold text-brand-light hover:text-brand"
           >
             Vergi detayı →
           </Link>
@@ -606,7 +606,7 @@ export async function CFOTab({ userId, companyId }: Props) {
           </div>
           <Link
             href="/dashboard/commercial?tab=collections"
-            className="mt-3 block text-center text-xs font-semibold text-primary-600 hover:text-primary-700"
+            className="mt-3 block text-center text-xs font-semibold text-brand-light hover:text-brand"
           >
             Tahsilatlar →
           </Link>
@@ -638,7 +638,7 @@ export async function CFOTab({ userId, companyId }: Props) {
         </div>
         <Link
           href="/dashboard/finance?tab=pnl"
-          className="mt-3 block text-center text-xs font-semibold text-primary-600 hover:text-primary-700"
+          className="mt-3 block text-center text-xs font-semibold text-brand-light hover:text-brand"
         >
           Detaylı P&L raporu →
         </Link>
@@ -684,7 +684,7 @@ export async function CFOTab({ userId, companyId }: Props) {
                   <tr className="bg-[#f8fafc] border-b border-[#e2e8f0]">
                     <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Çeyrek</th>
                     <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ciro</th>
-                    <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-primary-400">Brüt Kâr</th>
+                    <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-brand-light">Brüt Kâr</th>
                     <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-pos">Net Kâr</th>
                     <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Brüt Marj</th>
                     <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-warn">KV Matrahı</th>
@@ -702,7 +702,7 @@ export async function CFOTab({ userId, companyId }: Props) {
                           <div className="font-mono font-bold text-[#0f172a]">{fmtTRY(q.revenue)}</div>
                           {revDelta && <div className={`text-[10px] font-semibold ${revDelta.color}`}>{revDelta.text}</div>}
                         </td>
-                        <td className={`px-4 py-2.5 text-right font-mono font-bold ${q.gross_profit >= 0 ? 'text-primary-700' : 'text-neg'}`}>{fmtTRY(q.gross_profit)}</td>
+                        <td className={`px-4 py-2.5 text-right font-mono font-bold ${q.gross_profit >= 0 ? 'text-brand' : 'text-neg'}`}>{fmtTRY(q.gross_profit)}</td>
                         <td className={`px-4 py-2.5 text-right font-mono font-bold ${q.net_profit >= 0 ? 'text-pos-text' : 'text-neg'}`}>{fmtTRY(q.net_profit)}</td>
                         <td className={`px-4 py-2.5 text-right font-mono ${q.gross_margin >= 0.3 ? 'text-pos-text' : q.gross_margin >= 0.1 ? 'text-warn-text' : 'text-neg'}`}>
                           {q.revenue > 0 ? fmtPctQ(q.gross_margin) : '—'}
@@ -711,10 +711,10 @@ export async function CFOTab({ userId, companyId }: Props) {
                       </tr>
                     )
                   })}
-                  <tr className="bg-primary-50/40 font-black border-t-2 border-primary-100">
-                    <td className="px-4 py-2.5 text-primary-800 font-black text-xs">YTD Toplam</td>
+                  <tr className="bg-brand-subtle/40 font-black border-t-2 border-brand/10">
+                    <td className="px-4 py-2.5 text-brand font-black text-xs">YTD Toplam</td>
                     <td className="px-4 py-2.5 text-right font-mono font-black text-[#0f172a]">{fmtTRY(ytd.revenue)}</td>
-                    <td className={`px-4 py-2.5 text-right font-mono font-black ${ytd.gross_profit >= 0 ? 'text-primary-700' : 'text-neg'}`}>{fmtTRY(ytd.gross_profit)}</td>
+                    <td className={`px-4 py-2.5 text-right font-mono font-black ${ytd.gross_profit >= 0 ? 'text-brand' : 'text-neg'}`}>{fmtTRY(ytd.gross_profit)}</td>
                     <td className={`px-4 py-2.5 text-right font-mono font-black ${ytd.net_profit >= 0 ? 'text-pos-text' : 'text-neg'}`}>{fmtTRY(ytd.net_profit)}</td>
                     <td className="px-4 py-2.5 text-right font-mono text-[#64748b]">{ytd.revenue > 0 ? fmtPctQ(ytd.gross_profit / ytd.revenue) : '—'}</td>
                     <td className={`px-4 py-2.5 text-right font-mono font-black ${ytd.matrah > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>{ytd.matrah > 0 ? fmtTRY(ytd.matrah) : '—'}</td>

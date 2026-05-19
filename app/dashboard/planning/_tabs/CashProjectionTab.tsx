@@ -175,7 +175,7 @@ export async function CashProjectionTab({ companyId }: Props) {
             <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Baz Senaryo — Aylık Nakit Pozisyonu</span>
             <span className="ml-2 text-[9px] text-[#94a3b8]">({startYear} projeksiyonu)</span>
           </div>
-          <Link href="/dashboard/planning?tab=scenarios" className="text-[10px] text-primary-600 font-semibold hover:underline">
+          <Link href="/dashboard/planning?tab=scenarios" className="text-[10px] text-brand-light font-semibold hover:underline">
             Senaryo Editörü →
           </Link>
         </div>
@@ -186,7 +186,7 @@ export async function CashProjectionTab({ companyId }: Props) {
             {forecast.base.map((m, i) => {
               const height    = Math.max(4, Math.round((Math.abs(m.cash) / maxCash) * 80))
               const isNeg     = m.cash < 0
-              const barClass  = isNeg ? 'bg-neg' : (m.cash > avgRevenue * 3 ? 'bg-pos-light' : 'bg-primary-400')
+              const barClass  = isNeg ? 'bg-neg' : (m.cash > avgRevenue * 3 ? 'bg-pos-light' : 'bg-brand-light')
               return (
                 <div key={i} className="flex-1 flex flex-col items-center gap-0.5">
                   <div
@@ -248,11 +248,11 @@ export async function CashProjectionTab({ companyId }: Props) {
           Nakit projeksiyonu gerçek finansallarla ve borç baskısıyla birlikte değerlendirilmeli.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
-          <Link href="/dashboard/finance?tab=cashflow" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/finance?tab=cashflow" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Nakit Akışı →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/planning?tab=debt-pressure" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/planning?tab=debt-pressure" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Borç Baskısı →
           </Link>
         </div>

@@ -88,7 +88,7 @@ export default function AlertSettingsPage() {
           <h1 className="text-xl font-black text-[#0f172a] tracking-tight">Uyarı Kuralları</h1>
           <p className="text-xs text-[#94a3b8] mt-0.5">Her kural için eşik değerini ve ciddiyetini yapılandırın</p>
         </div>
-        <Link href="/dashboard/settings" className="text-xs text-[#94a3b8] hover:text-primary-600 font-semibold">← Ayarlar</Link>
+        <Link href="/dashboard/settings" className="text-xs text-[#94a3b8] hover:text-brand-light font-semibold">← Ayarlar</Link>
       </div>
 
       {error && (
@@ -167,7 +167,7 @@ export default function AlertSettingsPage() {
                     className={`text-[0.65rem] font-black uppercase tracking-widest px-3 py-1.5 rounded transition-colors ${
                       saving === rule.rule_type
                         ? 'bg-[#f1f5f9] text-[#94a3b8] cursor-wait'
-                        : 'bg-primary-600 text-white hover:bg-primary-700'
+                        : 'bg-brand-light text-white hover:bg-brand'
                     }`}
                   >
                     {saving === rule.rule_type ? '...' : 'Kaydet'}

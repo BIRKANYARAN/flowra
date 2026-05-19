@@ -31,7 +31,7 @@ export default function DashboardError({
         )}
         <button
           onClick={reset}
-          className="bg-primary-600 text-white px-5 py-2.5 rounded text-sm font-semibold hover:bg-primary-700 transition-colors"
+          className="bg-brand-light text-white px-5 py-2.5 rounded text-sm font-semibold hover:bg-brand transition-colors"
         >
           Tekrar Dene
         </button>

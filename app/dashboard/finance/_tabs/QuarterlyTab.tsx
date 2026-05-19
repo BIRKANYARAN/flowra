@@ -247,7 +247,7 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
                   <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Çeyrek</th>
                   <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ciro</th>
                   <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">YoY</th>
-                  <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-primary-400">Brüt Kâr</th>
+                  <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-brand-light">Brüt Kâr</th>
                   <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-pos">Net Kâr</th>
                   <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Brüt Marj</th>
                   <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Net Marj</th>
@@ -275,7 +275,7 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
                           ? <span className={`text-xs font-black tabular-nums ${yoy.color}`}>{yoy.text}</span>
                           : <span className="text-[#cbd5e1] text-xs">—</span>}
                       </td>
-                      <td className={`px-4 py-3 text-right font-mono font-bold ${q.gross_profit >= 0 ? 'text-primary-700' : 'text-neg'}`}>
+                      <td className={`px-4 py-3 text-right font-mono font-bold ${q.gross_profit >= 0 ? 'text-brand' : 'text-neg'}`}>
                         {fmt(q.gross_profit)}
                       </td>
                       <td className={`px-4 py-3 text-right font-mono font-bold ${q.net_profit >= 0 ? 'text-pos-text' : 'text-neg'}`}>
@@ -294,15 +294,15 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
                   )
                 })}
                 {/* YTD row */}
-                <tr className="bg-primary-50/40 font-black border-t-2 border-primary-100">
-                  <td className="px-4 py-3 text-primary-800 font-black text-xs">YTD Toplam</td>
+                <tr className="bg-brand-subtle/40 font-black border-t-2 border-brand/10">
+                  <td className="px-4 py-3 text-brand font-black text-xs">YTD Toplam</td>
                   <td className="px-4 py-3 text-right font-mono font-black text-[#0f172a]">{fmt(ytd.revenue)}</td>
                   <td className="px-4 py-3 text-right">
                     {ytdYoY
                       ? <span className={`text-xs font-black ${ytdYoY.color}`}>{ytdYoY.text}</span>
                       : <span className="text-[#cbd5e1] text-xs">—</span>}
                   </td>
-                  <td className={`px-4 py-3 text-right font-mono font-black ${ytd.gross_profit >= 0 ? 'text-primary-700' : 'text-neg'}`}>{fmt(ytd.gross_profit)}</td>
+                  <td className={`px-4 py-3 text-right font-mono font-black ${ytd.gross_profit >= 0 ? 'text-brand' : 'text-neg'}`}>{fmt(ytd.gross_profit)}</td>
                   <td className={`px-4 py-3 text-right font-mono font-black ${ytd.net_profit >= 0 ? 'text-pos-text' : 'text-neg'}`}>{fmt(ytd.net_profit)}</td>
                   <td className="px-4 py-3 text-right font-mono text-[#64748b]">
                     {ytd.revenue > 0 ? fmtPct(ytd.gross_profit / ytd.revenue) : '—'}
@@ -462,15 +462,15 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
           Çeyreklik gelir, matrah ve geçici vergi özeti.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
-          <Link href="/dashboard/finance?tab=pnl" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/finance?tab=pnl" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Aylık P&amp;L →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/finance?tab=tax" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/finance?tab=tax" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             KDV/KV →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/reports/income-statement" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/reports/income-statement" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Gelir Tablosu →
           </Link>
         </div>

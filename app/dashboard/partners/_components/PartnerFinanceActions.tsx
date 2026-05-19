@@ -178,7 +178,7 @@ export function PartnerFinanceActions({ partners, onRefresh }: PartnerFinanceAct
                   className={[
                     'px-3 py-1.5 rounded text-xs font-semibold border transition-colors',
                     txType === action.tx_type
-                      ? 'bg-primary-50 text-primary-700 border-[#e2e8f0]'
+                      ? 'bg-brand-subtle text-brand border-[#e2e8f0]'
                       : 'bg-white text-[#64748b] border-[#e2e8f0] hover:bg-[#f8fafc]',
                   ].join(' ')}
                   title={action.desc}
@@ -294,7 +294,7 @@ export function PartnerFinanceActions({ partners, onRefresh }: PartnerFinanceAct
               <button
                 type="submit"
                 disabled={saving}
-                className="px-4 py-2 rounded bg-primary-600 text-white text-sm font-semibold hover:bg-primary-700 transition-colors disabled:opacity-60"
+                className="px-4 py-2 rounded bg-brand-light text-white text-sm font-semibold hover:bg-brand transition-colors disabled:opacity-60"
               >
                 {saving ? 'Kaydediliyor…' : 'Kaydet'}
               </button>

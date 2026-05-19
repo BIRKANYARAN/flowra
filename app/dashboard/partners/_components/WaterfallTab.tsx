@@ -31,7 +31,7 @@ export interface WaterfallTabProps {
 // Partner discriminator palette — intentional multi-hue visualization set
 // (SPEC exception: data visualization requires diverse distinguishable colors)
 const PARTNER_COLORS = [
-  'bg-primary-500',
+  'bg-brand-light',
   'bg-info',
   'bg-brand',
   'bg-fuchsia-500',
@@ -40,7 +40,7 @@ const PARTNER_COLORS = [
 ]
 
 const PARTNER_COLORS_TEXT = [
-  'text-primary-700',
+  'text-brand',
   'text-info-text',
   'text-brand',
   'text-fuchsia-700',
@@ -49,7 +49,7 @@ const PARTNER_COLORS_TEXT = [
 ]
 
 const PARTNER_COLORS_BG_LIGHT = [
-  'bg-primary-50',
+  'bg-brand-subtle',
   'bg-info-light',
   'bg-brand-subtle',
   'bg-fuchsia-50',
@@ -283,7 +283,7 @@ export function WaterfallTab({
                       </div>
                       <div className="text-xs font-semibold text-[#1e293b]">{step.description}</div>
                     </div>
-                    <div className="text-sm font-black tabular-nums text-primary-700">{fmt(step.allocated_try)}</div>
+                    <div className="text-sm font-black tabular-nums text-brand">{fmt(step.allocated_try)}</div>
                   </div>
                 ))}
                 {waterfall.remaining_after_debt > 0 && (
@@ -363,15 +363,15 @@ export function WaterfallTab({
           Geri ödeme planı nakit akışı ve borç baskısıyla birlikte değerlendirilmeli.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
-          <Link href="/dashboard/planning?tab=debt-pressure" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/planning?tab=debt-pressure" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Borç Baskısı →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/finance?tab=cashflow" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/finance?tab=cashflow" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Nakit Akışı →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/finance?tab=balance" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/finance?tab=balance" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Bilanço →
           </Link>
         </div>

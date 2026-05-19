@@ -137,7 +137,7 @@ export function InputPanel({
           <label className={LAB}>
             Yıllık Faiz Oranı (%)
             {selectedProduct && (
-              <span className="text-primary-500 normal-case font-normal ml-1">
+              <span className="text-brand-light normal-case font-normal ml-1">
                 — {getSaleCurrency(selectedProduct) ?? 'TRY'}
               </span>
             )}

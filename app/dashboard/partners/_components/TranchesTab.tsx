@@ -108,7 +108,7 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
         <button
           onClick={showForm ? closeForm : openForm}
           disabled={saving}
-          className="inline-flex items-center gap-1.5 bg-primary-600 text-white px-4 py-2 rounded text-sm font-semibold hover:bg-primary-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+          className="inline-flex items-center gap-1.5 bg-brand-light text-white px-4 py-2 rounded text-sm font-semibold hover:bg-brand transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {showForm ? '✕ Kapat' : '+ Yeni Borç Dilimi'}
         </button>
@@ -235,7 +235,7 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
             <button
               type="submit"
               disabled={saving}
-              className="px-4 py-2 rounded bg-primary-600 text-white text-sm font-semibold hover:bg-primary-700 transition-colors disabled:opacity-60"
+              className="px-4 py-2 rounded bg-brand-light text-white text-sm font-semibold hover:bg-brand transition-colors disabled:opacity-60"
             >
               {saving ? 'Kaydediliyor…' : 'Kaydet'}
             </button>
@@ -282,7 +282,7 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
           <div className="flex flex-col gap-3">
             {waterfall.tranches.filter(t => t.principal_try > 0).map(t => {
               const repaidPct    = t.principal_try > 0 ? (t.actual_repaid_try / t.principal_try) * 100 : 0
-              const progressColor = t.status === 'repaid' ? 'bg-pos-light' : t.status === 'overdue' ? 'bg-neg-light' : 'bg-primary-500'
+              const progressColor = t.status === 'repaid' ? 'bg-pos-light' : t.status === 'overdue' ? 'bg-neg-light' : 'bg-brand-light'
               return (
                 <div key={t.id} className="bg-white border border-[#e2e8f0] rounded px-5 py-4 shadow-sm">
                   <div className="flex items-start justify-between gap-4 mb-3">
@@ -339,15 +339,15 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
           Borç dilimleri, borç baskısı ve geri ödeme simülasyonuyla birlikte inceleyin.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
-          <Link href="/dashboard/planning?tab=debt-pressure" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/planning?tab=debt-pressure" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Borç Baskısı →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/partners?tab=waterfall" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/partners?tab=waterfall" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Geri Ödeme →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/finance?tab=balance" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/finance?tab=balance" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Bilanço →
           </Link>
         </div>

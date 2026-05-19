@@ -230,7 +230,7 @@ function PaymentDrawer({ sale, onClose, onSuccess }: PaymentDrawerProps) {
             <button
               type="submit"
               disabled={saving || parsedAmount <= 0}
-              className="flex-1 bg-primary-600 text-white py-2.5 rounded text-sm font-semibold hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 bg-brand-light text-white py-2.5 rounded text-sm font-semibold hover:bg-brand transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {saving ? 'Kaydediliyor…' : 'Kaydet'}
             </button>
@@ -378,7 +378,7 @@ export function SalesTable({ rows }: Props) {
           {/* Create — stays in filter row, no orphan bar */}
           <button
             onClick={() => setShowCreate(true)}
-            className="ml-auto inline-flex items-center gap-1.5 bg-primary-600 text-white px-4 py-2 rounded text-sm font-semibold hover:bg-primary-700 transition-colors whitespace-nowrap flex-shrink-0"
+            className="ml-auto inline-flex items-center gap-1.5 bg-brand-light text-white px-4 py-2 rounded text-sm font-semibold hover:bg-brand transition-colors whitespace-nowrap flex-shrink-0"
           >
             + Satış Oluştur
           </button>
@@ -417,7 +417,7 @@ export function SalesTable({ rows }: Props) {
             {isFiltered && (
               <button
                 onClick={clearFilters}
-                className="mt-2 text-xs text-primary-600 hover:text-primary-700 font-semibold"
+                className="mt-2 text-xs text-brand-light hover:text-brand font-semibold"
               >
                 Filtreleri temizle →
               </button>
@@ -476,7 +476,7 @@ export function SalesTable({ rows }: Props) {
                     {ACTIONABLE_STATUSES.has(s.payment_status) && (
                       <button
                         onClick={e => { e.stopPropagation(); setPaymentRow(s) }}
-                        className="text-[10px] font-semibold text-primary-600 hover:text-primary-700 hover:underline transition-colors leading-none"
+                        className="text-[10px] font-semibold text-brand-light hover:text-brand hover:underline transition-colors leading-none"
                       >
                         ₺ Kaydet
                       </button>

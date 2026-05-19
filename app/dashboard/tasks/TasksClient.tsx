@@ -140,7 +140,7 @@ export default function TasksClient({ initialTasks, initialCustomers, initialSal
         </h2>
         <button
           onClick={() => { setShowForm(s => !s); setFormError('') }}
-          className={`${BTN} bg-primary-600 text-white hover:bg-primary-700`}
+          className={`${BTN} bg-brand-light text-white hover:bg-brand`}
         >
           {showForm ? 'İptal' : '+ Yeni Görev'}
         </button>
@@ -221,7 +221,7 @@ export default function TasksClient({ initialTasks, initialCustomers, initialSal
             <button
               onClick={handleCreate}
               disabled={saving}
-              className={`${BTN} bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50`}
+              className={`${BTN} bg-brand-light text-white hover:bg-brand disabled:opacity-50`}
             >
               {saving ? 'Kaydediliyor…' : 'Kaydet'}
             </button>

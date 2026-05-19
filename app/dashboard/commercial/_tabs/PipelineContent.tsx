@@ -46,7 +46,7 @@ const STATUS_COLOR: Record<string, string> = {
   sent:      'bg-info-light text-info-text',
   accepted:  'bg-pos-light text-pos-text',
   rejected:  'bg-neg-light text-neg',
-  converted: 'bg-primary-100 text-primary-700',
+  converted: 'bg-brand-subtle text-brand',
 }
 
 type ProformaWithFx = Proforma & { fx_try?: number | null }
@@ -217,11 +217,11 @@ export async function PipelineContent({ companyId }: Props) {
               const heightPct = Math.max(4, (m.revenue / maxRevMonth) * 100)
               return (
                 <div key={m.month} className="flex-1 flex flex-col items-center gap-1 group relative">
-                  <div className="w-full bg-primary-300 group-hover:bg-primary-400 rounded-t transition-all" style={{ height: `${heightPct}%` }} />
+                  <div className="w-full bg-brand-subtle group-hover:bg-brand-light rounded-t transition-all" style={{ height: `${heightPct}%` }} />
                   <div className="text-[9px] text-[#94a3b8] font-semibold">{fmtMonth(m.month)}</div>
                   <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block z-10 bg-[#0f172a] text-white rounded px-2 py-1 text-[10px] whitespace-nowrap">
                     <div className="font-bold">{fmtMonth(m.month)}</div>
-                    <div className="text-primary-300">{serverFmt(m.revenue)}</div>
+                    <div className="text-brand-light">{serverFmt(m.revenue)}</div>
                   </div>
                 </div>
               )
@@ -247,15 +247,15 @@ export async function PipelineContent({ companyId }: Props) {
           Satış akışı tahsilat ve müşteri riskiyle birlikte yönetilmeli.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
-          <Link href="/dashboard/commercial?tab=collections" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/commercial?tab=collections" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Tahsilat →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/commercial?tab=customers" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/commercial?tab=customers" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Müşteri Riskleri →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/finance?tab=pnl" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/finance?tab=pnl" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             P&amp;L Analizi →
           </Link>
         </div>

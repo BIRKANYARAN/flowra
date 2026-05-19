@@ -132,7 +132,7 @@ export default function ExecutiveSummaryPage() {
               ],
             } as PdfReportOptions} />
           )}
-          <Link href="/dashboard" className="text-xs text-[#94a3b8] hover:text-primary-600 font-semibold">← Dashboard</Link>
+          <Link href="/dashboard" className="text-xs text-[#94a3b8] hover:text-brand-light font-semibold">← Dashboard</Link>
         </div>
       </div>
 
@@ -274,19 +274,19 @@ export default function ExecutiveSummaryPage() {
               Yönetici özeti tüm raporlarla birlikte değerlendirilmeli.
             </p>
             <div className="flex items-center gap-2 shrink-0 ml-4">
-              <Link href="/dashboard/reports/income-statement" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+              <Link href="/dashboard/reports/income-statement" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
                 Gelir Tablosu →
               </Link>
               <span className="text-[#e2e8f0]">|</span>
-              <Link href="/dashboard/reports/balance-sheet" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+              <Link href="/dashboard/reports/balance-sheet" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
                 Bilanço →
               </Link>
               <span className="text-[#e2e8f0]">|</span>
-              <Link href="/dashboard/reports/cash-flow" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+              <Link href="/dashboard/reports/cash-flow" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
                 Nakit Akışı →
               </Link>
               <span className="text-[#e2e8f0]">|</span>
-              <Link href="/dashboard/cfo/trial-balance" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+              <Link href="/dashboard/cfo/trial-balance" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
                 Mizan →
               </Link>
             </div>

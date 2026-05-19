@@ -30,7 +30,7 @@ export function LedgerTab({
         <>
           <div className="grid grid-cols-4 gap-2">
             {[
-              { label: 'Toplam Özkaynak',  value: fmt(ledger.summary.total_equity_pool),      color: 'text-primary-600' },
+              { label: 'Toplam Özkaynak',  value: fmt(ledger.summary.total_equity_pool),      color: 'text-brand-light' },
               { label: 'Net Borç',          value: fmt(ledger.summary.total_debt_to_partners), color: ledger.summary.total_debt_to_partners > 0 ? 'text-warn-text' : 'text-[#94a3b8]' },
               { label: 'Toplam Temettü',    value: fmt(ledger.summary.total_dividends),        color: 'text-pos-text' },
               { label: 'Borç/Özkaynak',     value: ledger.summary.debt_to_equity_ratio !== null ? ledger.summary.debt_to_equity_ratio.toFixed(2) + '×' : '—', color: 'text-[#334155]' },
@@ -60,7 +60,7 @@ export function LedgerTab({
                     return (
                       <th
                         key={h.label}
-                        className={`px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest ${isSorted ? 'text-primary-600' : 'text-[#94a3b8]'} ${isLeft ? 'text-left' : 'text-right'} ${h.col ? 'cursor-pointer select-none hover:text-[#64748b]' : ''}`}
+                        className={`px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest ${isSorted ? 'text-brand-light' : 'text-[#94a3b8]'} ${isLeft ? 'text-left' : 'text-right'} ${h.col ? 'cursor-pointer select-none hover:text-[#64748b]' : ''}`}
                         onClick={h.col ? () => onToggleSort(h.col as LedgerSortCol) : undefined}
                       >
                         {h.label}
@@ -78,13 +78,13 @@ export function LedgerTab({
                       {!e.is_active && <span className="ml-1.5 text-[9px] text-[#94a3b8]">(pasif)</span>}
                       <div className="text-[10px] text-[#94a3b8] font-normal">{pct(e.share_ratio)}</div>
                     </td>
-                    <td className="px-4 py-3 text-right font-mono text-primary-700 font-bold">{fmt(e.equity_contributed)}</td>
+                    <td className="px-4 py-3 text-right font-mono text-brand font-bold">{fmt(e.equity_contributed)}</td>
                     <td className="px-4 py-3 text-right font-mono text-warn-text">{fmt(e.loans_given)}</td>
                     <td className="px-4 py-3 text-right font-mono text-[#64748b]">{fmt(e.loans_repaid)}</td>
                     <td className={`px-4 py-3 text-right font-mono font-bold ${e.net_loan_outstanding > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>{fmt(e.net_loan_outstanding)}</td>
                     <td className="px-4 py-3 text-right font-mono text-pos-text">{fmt(e.dividends_received)}</td>
                     <td className="px-4 py-3 text-right font-mono text-[#64748b]">{fmt(e.salary_received)}</td>
-                    <td className="px-4 py-3 text-right font-mono font-black text-primary-800">{fmt(e.company_total_owed)}</td>
+                    <td className="px-4 py-3 text-right font-mono font-black text-brand">{fmt(e.company_total_owed)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -99,11 +99,11 @@ export function LedgerTab({
           Ortak defter özkaynaklar ve bilanço ile uyumlu olmalıdır.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
-          <Link href="/dashboard/finance?tab=balance" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/finance?tab=balance" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Bilanço →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/partners?tab=tranches" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/partners?tab=tranches" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Borç Dilimleri →
           </Link>
         </div>

@@ -144,7 +144,7 @@ export default function ReconciliationPage() {
             </svg>
             PDF
           </button>
-          <Link href="/dashboard/cfo" className="text-xs text-[#94a3b8] hover:text-primary-600 font-semibold">
+          <Link href="/dashboard/cfo" className="text-xs text-[#94a3b8] hover:text-brand-light font-semibold">
             ← CFO Cockpit
           </Link>
         </div>
@@ -256,15 +256,15 @@ export default function ReconciliationPage() {
                 : 'Sonuçlar her çalıştırmada canlı hesaplanır.'}
             </p>
             <div className="flex items-center gap-2 shrink-0 ml-4">
-              <Link href="/dashboard/cfo/trial-balance" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+              <Link href="/dashboard/cfo/trial-balance" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
                 Mizan →
               </Link>
               <span className="text-[#e2e8f0]">|</span>
-              <Link href="/dashboard/cfo/journal-entries" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+              <Link href="/dashboard/cfo/journal-entries" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
                 Journal Kayıtları →
               </Link>
               <span className="text-[#e2e8f0]">|</span>
-              <Link href="/dashboard/cfo/period-close" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+              <Link href="/dashboard/cfo/period-close" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
                 Dönem Kapat →
               </Link>
             </div>

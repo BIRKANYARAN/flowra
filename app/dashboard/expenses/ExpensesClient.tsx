@@ -328,7 +328,7 @@ export default function ExpensesClient({
             <label className="flex items-center gap-3 cursor-pointer select-none">
               <div
                 onClick={() => setForm(f => ({ ...f, is_recurring: !f.is_recurring }))}
-                className={`relative w-10 h-5 rounded-full transition-colors ${form.is_recurring ? 'bg-primary-600' : 'bg-[#e2e8f0]'}`}
+                className={`relative w-10 h-5 rounded-full transition-colors ${form.is_recurring ? 'bg-brand-light' : 'bg-[#e2e8f0]'}`}
               >
                 <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${form.is_recurring ? 'translate-x-5' : 'translate-x-0.5'}`} />
               </div>
@@ -473,7 +473,7 @@ export default function ExpensesClient({
                         </div>
                       </div>
                       <div className="col-span-2">
-                        <span className="text-xs bg-primary-50 text-primary-600 px-2 py-0.5 rounded">
+                        <span className="text-xs bg-brand-subtle text-brand-light px-2 py-0.5 rounded">
                           {CATEGORY_LABELS[r.category] ?? r.category}
                         </span>
                       </div>

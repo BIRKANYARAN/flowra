@@ -228,10 +228,10 @@ export async function TaxTab({ userId, companyId }: Props) {
               const pos     = kdvPositionLabel(row.netVat)
               const isCurrent = row.ym === today.slice(0, 7)
               return (
-                <tr key={row.ym} className={`hover:bg-[#f8fafc]/60 transition-colors ${isCurrent ? 'bg-primary-50/30' : ''}`}>
+                <tr key={row.ym} className={`hover:bg-[#f8fafc]/60 transition-colors ${isCurrent ? 'bg-brand-subtle/30' : ''}`}>
                   <td className="px-4 py-3 font-semibold text-[#1e293b]">
                     {fmtMonth(row.ym)}
-                    {isCurrent && <span className="ml-2 text-[9px] bg-primary-100 text-primary-700 font-bold px-1.5 py-0.5 rounded">Bu ay</span>}
+                    {isCurrent && <span className="ml-2 text-[9px] bg-brand-subtle text-brand font-bold px-1.5 py-0.5 rounded">Bu ay</span>}
                   </td>
                   <td className="px-4 py-3 text-right font-mono text-pos-text tabular-nums">
                     {row.salesVat > 0 ? fmt(row.salesVat) : <span className="text-[#cbd5e1]">—</span>}

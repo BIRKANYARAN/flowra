@@ -319,7 +319,7 @@ export default function PartnersPage() {
           </Link>
           <Link
             href="/dashboard/partners/new"
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded bg-primary-600 text-white text-xs font-semibold hover:bg-primary-700 transition-colors whitespace-nowrap"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded bg-brand-light text-white text-xs font-semibold hover:bg-brand transition-colors whitespace-nowrap"
           >
             + Ortak Ekle
           </Link>

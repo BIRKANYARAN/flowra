@@ -94,7 +94,7 @@ function ErrorState({ href, label }: { href: string; label: string }) {
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-center px-4">
       <div className="text-3xl">⚠️</div>
       <p className="text-sm text-[#64748b]">{label}</p>
-      <a href={href} className="text-sm text-primary-600 font-semibold hover:underline">Yeniden Dene</a>
+      <a href={href} className="text-sm text-brand-light font-semibold hover:underline">Yeniden Dene</a>
     </div>
   )
 }
@@ -167,11 +167,11 @@ export default async function CorporateTaxPage() {
         </div>
         <div className="flex items-center gap-3">
           <Link href="/dashboard/cfo/tax/kdv"
-            className="text-xs font-semibold text-[#94a3b8] hover:text-primary-600 transition-colors">
+            className="text-xs font-semibold text-[#94a3b8] hover:text-brand-light transition-colors">
             KDV Özeti →
           </Link>
           <Link href="/dashboard/cfo"
-            className="text-xs font-semibold text-[#94a3b8] hover:text-primary-600 transition-colors">
+            className="text-xs font-semibold text-[#94a3b8] hover:text-brand-light transition-colors">
             ← CFO
           </Link>
         </div>
@@ -254,7 +254,7 @@ export default async function CorporateTaxPage() {
               <div
                 key={q.label}
                 className={`grid grid-cols-[80px_1fr_1fr_1fr_110px] px-4 py-3 items-center ${
-                  isQ4 ? 'bg-primary-50' : ''
+                  isQ4 ? 'bg-brand-subtle' : ''
                 }`}
               >
                 {/* Quarter label */}
@@ -282,7 +282,7 @@ export default async function CorporateTaxPage() {
                 {/* Due date */}
                 <div className="text-right">
                   {isQ4 ? (
-                    <div className="text-xs text-primary-600 font-semibold">
+                    <div className="text-xs text-brand-light font-semibold">
                       30 Nis {currentYear + 1}
                       <br />
                       <span className="text-[10px] text-[#94a3b8] font-normal">(Yıllık Beyan)</span>
@@ -297,7 +297,7 @@ export default async function CorporateTaxPage() {
                 {/* Status badge */}
                 <div className="flex justify-end">
                   {isQ4 ? (
-                    <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-black uppercase tracking-wide rounded border bg-primary-100 text-primary-700 border-[#e2e8f0]">
+                    <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-black uppercase tracking-wide rounded border bg-brand-subtle text-brand border-[#e2e8f0]">
                       Yıllık KV
                     </span>
                   ) : (
@@ -399,15 +399,15 @@ export default async function CorporateTaxPage() {
           Kurumlar vergisi gelir tablosu ve KDV beyanıyla birlikte değerlendirilmeli.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
-          <Link href="/dashboard/cfo/tax/kdv" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/cfo/tax/kdv" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             KDV Beyanı →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/finance?tab=quarterly" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/finance?tab=quarterly" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Geçici Vergi →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/reports/income-statement" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/reports/income-statement" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Gelir Tablosu →
           </Link>
         </div>

@@ -110,7 +110,7 @@ export async function SalesFlowCommandBar({ companyId }: Props) {
     { label: 'Taslak',    count: funnel.draft,     color: 'bg-[#e2e8f0]'     },
     { label: 'Gönderildi', count: funnel.sent,     color: 'bg-info'     },
     { label: 'Onaylandı',  count: funnel.accepted, color: 'bg-pos'  },
-    { label: 'Satıldı',    count: funnel.converted, color: 'bg-primary-500' },
+    { label: 'Satıldı',    count: funnel.converted, color: 'bg-brand-light' },
   ]
 
   return (
@@ -168,7 +168,7 @@ export async function SalesFlowCommandBar({ companyId }: Props) {
 
         {/* Link to collections */}
         <Link href="/dashboard/collections"
-          className="ml-auto text-[10px] text-primary-600 font-semibold hover:text-primary-700 transition-colors shrink-0">
+          className="ml-auto text-[10px] text-brand-light font-semibold hover:text-brand transition-colors shrink-0">
           Tahsilat →
         </Link>
       </div>

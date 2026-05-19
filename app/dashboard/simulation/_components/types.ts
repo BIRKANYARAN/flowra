@@ -6,7 +6,7 @@ import type { Currency, Product, RecurringProjectionMonth } from '@/types'
 export type { Currency, Product, RecurringProjectionMonth }
 
 /* ── Style tokens ───────────────────────────────────────────────────────────── */
-export const IL  = 'w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white transition-colors'
+export const IL  = 'w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand/30 bg-white transition-colors'
 export const LAB = 'block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5'
 
 /* ── Formatters ─────────────────────────────────────────────────────────────── */

@@ -54,7 +54,7 @@ export async function CatalogCommandBar({ companyId }: Props) {
     return (
       <div className="flex items-center gap-2 px-4 py-2.5 bg-[#f8fafc] border border-[#e2e8f0] rounded text-xs text-[#94a3b8]">
         Henüz aktif ürün yok — katalog boş.{' '}
-        <Link href="/dashboard/products" className="text-primary-600 font-semibold hover:text-primary-700">
+        <Link href="/dashboard/products" className="text-brand-light font-semibold hover:text-brand">
           Ürün Ekle →
         </Link>
       </div>
@@ -171,7 +171,7 @@ export async function CatalogCommandBar({ companyId }: Props) {
 
         {/* Link to simulation */}
         <Link href="/dashboard/planning?tab=unit-profit"
-          className="ml-auto text-[10px] text-primary-600 font-semibold hover:text-primary-700 transition-colors shrink-0">
+          className="ml-auto text-[10px] text-brand-light font-semibold hover:text-brand transition-colors shrink-0">
           Simülasyon →
         </Link>
       </div>

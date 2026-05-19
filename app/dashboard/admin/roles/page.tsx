@@ -20,7 +20,7 @@ export default async function RolesPage() {
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-center px-4">
       <div className="text-3xl">⚠️</div>
       <p className="text-sm text-[#64748b]">Oturum bilgisi alınamadı. Lütfen sayfayı yenileyin.</p>
-      <a href="/dashboard/admin/roles" className="text-sm text-primary-600 font-semibold hover:underline">Yeniden Dene</a>
+      <a href="/dashboard/admin/roles" className="text-sm text-brand-light font-semibold hover:underline">Yeniden Dene</a>
     </div>
   )
 
@@ -49,7 +49,7 @@ export default async function RolesPage() {
       <div className="flex items-center gap-3">
         <h1 className="text-lg font-black text-[#0f172a] tracking-tight">Yetkilendirme</h1>
         <Link href="/dashboard/admin/users"
-          className="text-xs text-primary-600 font-semibold hover:text-primary-700">
+          className="text-xs text-brand-light font-semibold hover:text-brand">
           Ekip Yönetimi →
         </Link>
       </div>
@@ -68,8 +68,8 @@ export default async function RolesPage() {
           <div className="divide-y divide-[#e2e8f0]">
             {(members ?? []).map((m) => (
               <div key={m.user_id} className="flex items-center gap-3 px-4 py-3">
-                <div className="w-8 h-8 rounded bg-primary-100 flex items-center justify-center flex-shrink-0">
-                  <span className="text-primary-700 font-bold text-xs">
+                <div className="w-8 h-8 rounded bg-brand-subtle flex items-center justify-center flex-shrink-0">
+                  <span className="text-brand font-bold text-xs">
                     {(m.role as string).slice(0, 1).toUpperCase()}
                   </span>
                 </div>
@@ -82,7 +82,7 @@ export default async function RolesPage() {
                   </div>
                 </div>
                 <span className={`text-xs font-bold px-2 py-0.5 rounded flex-shrink-0 ${
-                  m.role === 'admin'   ? 'bg-primary-100 text-primary-700' :
+                  m.role === 'admin'   ? 'bg-brand-subtle text-brand' :
                   m.role === 'manager' ? 'bg-info-light text-info-text'       :
                                          'bg-[#f1f5f9] text-[#64748b]'
                 }`}>

@@ -98,7 +98,7 @@ export default async function FinancePage({ searchParams }: PageProps) {
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-center px-4">
       <div className="text-3xl">⚠️</div>
       <p className="text-sm text-[#64748b]">Oturum bilgisi alınamadı. Lütfen sayfayı yenileyin.</p>
-      <a href="/dashboard/finance" className="text-sm text-primary-600 font-semibold hover:underline">Yeniden Dene</a>
+      <a href="/dashboard/finance" className="text-sm text-brand-light font-semibold hover:underline">Yeniden Dene</a>
     </div>
   )
 
@@ -108,7 +108,7 @@ export default async function FinancePage({ searchParams }: PageProps) {
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-center px-4">
       <div className="text-3xl">⚠️</div>
       <p className="text-sm text-[#64748b]">Şirket bilgisi yüklenemedi. Lütfen sayfayı yenileyin.</p>
-      <a href="/dashboard/finance" className="text-sm text-primary-600 font-semibold hover:underline">Yeniden Dene</a>
+      <a href="/dashboard/finance" className="text-sm text-brand-light font-semibold hover:underline">Yeniden Dene</a>
     </div>
   )
 
@@ -142,7 +142,7 @@ export default async function FinancePage({ searchParams }: PageProps) {
         </div>
         {activeTab === 'cfo' && (
           <a href="/dashboard/cfo/period-close"
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded bg-primary-600 text-white text-xs font-semibold hover:bg-primary-700 transition-colors">
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded bg-brand-light text-white text-xs font-semibold hover:bg-brand transition-colors">
             Dönem Kapat
           </a>
         )}

@@ -66,7 +66,7 @@ export function Sidebar({ navBadges = {} }: SidebarProps) {
             onClick={hasMultiCompany ? () => setShowSwitcher(s => !s) : undefined}
             title={hasMultiCompany ? 'Şirket değiştir' : undefined}
           >
-            <div className="w-8 h-8 rounded bg-primary-600 flex items-center justify-center flex-shrink-0 overflow-hidden relative">
+            <div className="w-8 h-8 rounded bg-brand-light flex items-center justify-center flex-shrink-0 overflow-hidden relative">
               {logoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={logoUrl} alt="logo" className="w-full h-full object-contain p-0.5" />
@@ -103,18 +103,18 @@ export function Sidebar({ navBadges = {} }: SidebarProps) {
                   onClick={() => { setShowSwitcher(false); if (!isActive) switchCompany(c.companyId) }}
                   className={`w-full text-left flex items-center gap-2 px-3 py-2 text-xs transition-colors ${
                     isActive
-                      ? 'bg-primary-50 text-primary-700 font-semibold'
+                      ? 'bg-brand-subtle text-brand font-semibold'
                       : 'text-[#64748b] hover:bg-[#f8fafc]'
                   }`}
                 >
-                  <div className="w-5 h-5 rounded bg-primary-100 flex items-center justify-center flex-shrink-0">
-                    <span className="text-[9px] font-black text-primary-600">
+                  <div className="w-5 h-5 rounded bg-brand-subtle flex items-center justify-center flex-shrink-0">
+                    <span className="text-[9px] font-black text-brand-light">
                       {(c.companyName ?? 'Ş').slice(0, 2).toUpperCase()}
                     </span>
                   </div>
                   <span className="truncate flex-1">{c.companyName ?? c.companyId.slice(0, 8)}</span>
                   {isActive && (
-                    <span className="text-[9px] font-bold text-primary-500 flex-shrink-0">✓</span>
+                    <span className="text-[9px] font-bold text-brand-light flex-shrink-0">✓</span>
                   )}
                 </button>
               )
@@ -167,8 +167,8 @@ export function Sidebar({ navBadges = {} }: SidebarProps) {
       {/* ── User footer ────────────────────────────────────────────────────── */}
       <div className="pt-3 border-t border-[#e2e8f0] mt-3">
         <div className="flex items-center gap-2.5 px-3 py-1.5 mb-0.5">
-          <div className="w-7 h-7 rounded bg-primary-100 flex items-center justify-center flex-shrink-0">
-            <span className="text-primary-700 font-bold text-xs">{userInitials}</span>
+          <div className="w-7 h-7 rounded bg-brand-subtle flex items-center justify-center flex-shrink-0">
+            <span className="text-brand font-bold text-xs">{userInitials}</span>
           </div>
           <div className="min-w-0 flex-1">
             <div className="text-xs font-semibold text-[#1e293b] truncate">{userName}</div>
@@ -238,7 +238,7 @@ function NavLink({ item, active, liveBadge }: { item: NavItem; active: boolean; 
       className={`
         flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[12px] transition-colors
         ${active
-          ? 'bg-primary-600 text-white font-semibold shadow-sm'
+          ? 'bg-brand-light text-white font-semibold shadow-sm'
           : 'text-[#64748b] hover:bg-[#f8fafc] hover:text-[#1e293b]'
         }
       `}
@@ -267,7 +267,7 @@ type MemberRole = 'admin' | 'manager' | 'viewer'
 
 function RoleBadge({ role }: { role: MemberRole }) {
   const cfg = {
-    admin:   { cls: 'bg-primary-100 text-primary-700', label: 'YNT' },
+    admin:   { cls: 'bg-brand-subtle text-brand', label: 'YNT' },
     manager: { cls: 'bg-info-light text-info-text',       label: 'SAT' },
     viewer:  { cls: 'bg-[#f1f5f9] text-[#64748b]',       label: 'İZL' },
   }[role]

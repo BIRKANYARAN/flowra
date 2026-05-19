@@ -383,10 +383,10 @@ export function WhatIfClient({ period, baseline }: Props) {
     <div className="space-y-5">
 
       {/* ── INTRO BANNER ─────────────────────────────────────────────────── */}
-      <div className="px-4 py-3 bg-primary-50 border border-primary-100 rounded flex items-start justify-between gap-3">
+      <div className="px-4 py-3 bg-brand-subtle border border-brand/10 rounded flex items-start justify-between gap-3">
         <div>
-          <div className="text-sm font-black text-primary-800">Senaryo Editörü — {period}</div>
-          <div className="text-[10px] text-primary-500 mt-0.5">
+          <div className="text-sm font-black text-brand">Senaryo Editörü — {period}</div>
+          <div className="text-[10px] text-brand-light mt-0.5">
             Kaydırıcıları hareket ettirin → P&amp;L, EBITDA, vergi ve dağıtım anında güncellenir
           </div>
         </div>
@@ -462,7 +462,7 @@ export function WhatIfClient({ period, baseline }: Props) {
               type="range" min={0} max={40} step={1}
               value={taxRateOverride}
               onChange={e => setTaxRateOverride(Number(e.target.value))}
-              className="w-full h-1.5 appearance-none rounded-full bg-[#e2e8f0] accent-primary-600 cursor-pointer"
+              className="w-full h-1.5 appearance-none rounded-full bg-[#e2e8f0] accent-brand-light cursor-pointer"
             />
             <div className="text-[9px] text-[#94a3b8]">Mevcut KVK oranı %25 · Bu tahminidir</div>
           </div>
@@ -479,7 +479,7 @@ export function WhatIfClient({ period, baseline }: Props) {
             )}
             <button
               onClick={() => setShowSaveBox(v => !v)}
-              className="text-xs font-semibold text-primary-600 hover:text-primary-700 border border-[#e2e8f0] px-3 py-1.5 rounded hover:border-[#e2e8f0] transition-colors"
+              className="text-xs font-semibold text-brand-light hover:text-brand border border-[#e2e8f0] px-3 py-1.5 rounded hover:border-[#e2e8f0] transition-colors"
             >
               {showSaveBox ? '✕ Kapat' : '＋ Kaydet'}
             </button>
@@ -487,8 +487,8 @@ export function WhatIfClient({ period, baseline }: Props) {
 
           {/* Save scenario inline form */}
           {showSaveBox && (
-            <div className="bg-primary-50 border border-primary-100 rounded px-3 py-3 space-y-2">
-              <div className="text-[9px] font-black uppercase tracking-widest text-primary-400">Senaryo Adı</div>
+            <div className="bg-brand-subtle border border-brand/10 rounded px-3 py-3 space-y-2">
+              <div className="text-[9px] font-black uppercase tracking-widest text-brand-light">Senaryo Adı</div>
               <div className="flex gap-2">
                 <input
                   type="text"
@@ -501,7 +501,7 @@ export function WhatIfClient({ period, baseline }: Props) {
                 <button
                   onClick={saveScenario}
                   disabled={!saveName.trim() || saving}
-                  className="text-xs font-bold text-white bg-primary-600 hover:bg-primary-700 rounded px-3 py-1.5 disabled:opacity-50 transition-colors flex items-center gap-1"
+                  className="text-xs font-bold text-white bg-brand-light hover:bg-brand rounded px-3 py-1.5 disabled:opacity-50 transition-colors flex items-center gap-1"
                 >
                   {saving ? (
                     <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -532,8 +532,8 @@ export function WhatIfClient({ period, baseline }: Props) {
                     onClick={() => { setCompareMode(v => !v); setCompareSelected(new Set()) }}
                     className={`text-[9px] font-bold px-2 py-0.5 rounded border transition-colors ${
                       compareMode
-                        ? 'bg-primary-600 text-white border-primary-600'
-                        : 'border-[#e2e8f0] text-[#64748b] hover:border-[#e2e8f0] hover:text-primary-600'
+                        ? 'bg-brand-light text-white border-brand-light'
+                        : 'border-[#e2e8f0] text-[#64748b] hover:border-[#e2e8f0] hover:text-brand-light'
                     }`}
                   >
                     {compareMode ? '✕ Kapat' : '⇄ Karşılaştır'}
@@ -542,7 +542,7 @@ export function WhatIfClient({ period, baseline }: Props) {
               </div>
 
               {compareMode && (
-                <div className="bg-primary-50 border border-primary-100 rounded px-3 py-2 text-[9px] text-primary-600">
+                <div className="bg-brand-subtle border border-brand/10 rounded px-3 py-2 text-[9px] text-brand-light">
                   Karşılaştırmak istediğiniz senaryoları seçin (maks. 5) → sağ panelde tablo görünür.
                 </div>
               )}
@@ -557,7 +557,7 @@ export function WhatIfClient({ period, baseline }: Props) {
                     isBaseline
                       ? 'border-brand-subtle bg-brand-subtle/20'
                       : compareMode && isSelected
-                        ? 'border-[#e2e8f0] bg-primary-50/40'
+                        ? 'border-[#e2e8f0] bg-brand-subtle/40'
                         : 'border-[#e2e8f0]'
                   }`}>
                     {compareMode && (
@@ -565,9 +565,9 @@ export function WhatIfClient({ period, baseline }: Props) {
                         onClick={() => canSelect && toggleCompareSelect(s.id)}
                         className={`flex-shrink-0 w-4 h-4 rounded border transition-colors ${
                           isSelected
-                            ? 'bg-primary-600 border-primary-600 text-white'
+                            ? 'bg-brand-light border-brand-light text-white'
                             : canSelect
-                              ? 'border-[#e2e8f0] hover:border-primary-400'
+                              ? 'border-[#e2e8f0] hover:border-brand/30'
                               : 'border-[#e2e8f0] opacity-40 cursor-not-allowed'
                         }`}
                       >
@@ -607,7 +607,7 @@ export function WhatIfClient({ period, baseline }: Props) {
                         <button
                           onClick={() => restoreScenario(s)}
                           title="Bu senaryoyu yükle"
-                          className="text-[9px] font-bold text-primary-600 hover:text-primary-700 border border-[#e2e8f0] rounded px-2 py-1 hover:bg-primary-50 transition-colors"
+                          className="text-[9px] font-bold text-brand-light hover:text-brand border border-[#e2e8f0] rounded px-2 py-1 hover:bg-brand-subtle transition-colors"
                         >
                           Yükle
                         </button>
@@ -710,7 +710,7 @@ export function WhatIfClient({ period, baseline }: Props) {
                   <span className="text-[9px] text-[#94a3b8]">En iyi Net Kâr: <strong className="text-[#334155]">{cols[bestIdx(computed.map(r => r.netIncome), true)]?.name}</strong></span>
                   <button
                     onClick={() => restoreScenario(cols[bestIdx(computed.map(r => r.netIncome), true)]!)}
-                    className="text-[9px] font-bold text-primary-600 border border-[#e2e8f0] px-2 py-1 rounded hover:bg-primary-50 transition-colors"
+                    className="text-[9px] font-bold text-brand-light border border-[#e2e8f0] px-2 py-1 rounded hover:bg-brand-subtle transition-colors"
                   >
                     Yükle →
                   </button>
@@ -872,7 +872,7 @@ function SliderRow({
         type="range" min={min} max={max} step={step}
         value={value}
         onChange={e => onChange(Number(e.target.value))}
-        className="w-full h-1.5 appearance-none rounded-full bg-[#e2e8f0] accent-primary-600 cursor-pointer"
+        className="w-full h-1.5 appearance-none rounded-full bg-[#e2e8f0] accent-brand-light cursor-pointer"
       />
       <div className="text-[9px] text-[#94a3b8]">{sub}</div>
     </div>

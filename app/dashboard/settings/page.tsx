@@ -379,7 +379,7 @@ export default function SettingsPage() {
               {/* Preview box */}
               <label
                 htmlFor="logo-file-input"
-                className="w-16 h-16 rounded border-2 border-dashed border-[#e2e8f0] flex items-center justify-center bg-[#f8fafc] overflow-hidden hover:border-primary-400 transition-colors flex-shrink-0 relative"
+                className="w-16 h-16 rounded border-2 border-dashed border-[#e2e8f0] flex items-center justify-center bg-[#f8fafc] overflow-hidden hover:border-brand/30 transition-colors flex-shrink-0 relative"
                 style={{ cursor: uploading ? 'default' : 'pointer' }}
                 title="Logo yüklemek için tıklayın"
               >
@@ -563,7 +563,7 @@ export default function SettingsPage() {
                     type="checkbox"
                     checked={bankForm.is_default}
                     onChange={e => setBankForm(b => ({ ...b, is_default: e.target.checked }))}
-                    className="accent-primary-600 w-3.5 h-3.5"
+                    className="accent-brand-light w-3.5 h-3.5"
                   />
                   Varsayılan hesap olarak işaretle
                 </label>
@@ -598,7 +598,7 @@ export default function SettingsPage() {
                     key={b.id}
                     className={`flex items-center justify-between rounded px-3 py-2 border transition-colors ${
                       b.is_default
-                        ? 'border-[#e2e8f0] bg-primary-50'
+                        ? 'border-[#e2e8f0] bg-brand-subtle'
                         : 'border-[#e2e8f0] hover:bg-[#f8fafc]'
                     }`}
                   >
@@ -608,7 +608,7 @@ export default function SettingsPage() {
                           {b.bank_name}{b.branch_name ? ` — ${b.branch_name}` : ''}
                         </span>
                         {b.is_default && (
-                          <span className="text-[9px] bg-primary-600 text-white px-1.5 py-0.5 rounded">
+                          <span className="text-[9px] bg-brand-light text-white px-1.5 py-0.5 rounded">
                             Varsayılan
                           </span>
                         )}
@@ -621,7 +621,7 @@ export default function SettingsPage() {
                         <button
                           onClick={() => setDefaultBank(b.id)}
                           title="Varsayılan yap"
-                          className="text-xs text-[#94a3b8] hover:text-primary-600 px-1.5 py-1 rounded hover:bg-primary-50 transition-colors"
+                          className="text-xs text-[#94a3b8] hover:text-brand-light px-1.5 py-1 rounded hover:bg-brand-subtle transition-colors"
                         >
                           ☆
                         </button>
@@ -655,7 +655,7 @@ export default function SettingsPage() {
                   onClick={() => { setIntCurrency(c); setIntRate('') }}
                   className={`text-xs border rounded-md px-2.5 py-1 font-semibold transition-colors select-none ${
                     intCurrency === c
-                      ? 'border-primary-500 bg-primary-500 text-white'
+                      ? 'border-brand-light bg-brand-light text-white'
                       : 'border-[#e2e8f0] text-[#64748b] hover:bg-[#f8fafc] hover:text-[#1e293b]'
                   }`}
                 >
@@ -734,7 +734,7 @@ export default function SettingsPage() {
                 onClick={loadDemo}
                 loading={demoLoading === 'seed'}
                 disabled={demoLoading !== false}
-                className="border-[#e2e8f0] text-primary-700 bg-primary-50 hover:bg-primary-100"
+                className="border-[#e2e8f0] text-brand bg-brand-subtle hover:bg-brand-subtle"
               >
                 {demoLoading === 'seed' ? 'Yükleniyor...' : 'Demo Veri Yükle'}
               </FlowraButton>
@@ -756,7 +756,7 @@ export default function SettingsPage() {
       {/* ── Quick Links ─────────────────────────────────────────────────── */}
       <div className="flex items-center gap-3">
         <a href="/dashboard/settings/alerts"
-          className="text-xs font-semibold text-primary-600 hover:text-primary-700 px-3 py-2 rounded hover:bg-primary-50 border border-[#e2e8f0] transition-colors">
+          className="text-xs font-semibold text-brand-light hover:text-brand px-3 py-2 rounded hover:bg-brand-subtle border border-[#e2e8f0] transition-colors">
           Uyarı Kuralları →
         </a>
       </div>

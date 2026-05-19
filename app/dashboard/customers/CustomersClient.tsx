@@ -93,7 +93,7 @@ export default function CustomersClient({ initialCustomers }: Props) {
         {!showForm && (
           <button
             onClick={openNew}
-            className="bg-primary-600 text-white px-4 py-2 rounded text-sm font-semibold hover:bg-primary-700 transition-colors"
+            className="bg-brand-light text-white px-4 py-2 rounded text-sm font-semibold hover:bg-brand transition-colors"
           >
             + Yeni Müşteri
           </button>
@@ -133,7 +133,7 @@ export default function CustomersClient({ initialCustomers }: Props) {
             <button
               onClick={save}
               disabled={saving || !form.name.trim()}
-              className="bg-primary-600 text-white px-5 py-2.5 rounded text-sm font-semibold hover:bg-primary-700 disabled:opacity-40 transition-colors"
+              className="bg-brand-light text-white px-5 py-2.5 rounded text-sm font-semibold hover:bg-brand disabled:opacity-40 transition-colors"
             >
               {saving ? 'Kaydediliyor...' : editId ? 'Güncelle' : 'Kaydet'}
             </button>
@@ -178,7 +178,7 @@ export default function CustomersClient({ initialCustomers }: Props) {
                   onClick={() => router.push(`/dashboard/customers/${c.id}`)}
                   className="min-w-0 text-left flex-1 mr-3"
                 >
-                  <div className="text-sm font-semibold truncate hover:text-primary-600 transition-colors">
+                  <div className="text-sm font-semibold truncate hover:text-brand-light transition-colors">
                     {c.name}
                   </div>
                   {c.tax_number && (

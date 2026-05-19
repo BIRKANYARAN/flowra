@@ -209,7 +209,7 @@ export default function NewProformaPage() {
           {/* Step 1: Customer */}
           <div className="bg-white border border-[#e2e8f0] rounded p-5">
             <h2 className="font-bold text-sm mb-4 flex items-center gap-2">
-              <span className="w-5 h-5 bg-primary-600 text-white rounded-full text-xs flex items-center justify-center font-black">1</span>
+              <span className="w-5 h-5 bg-brand-light text-white rounded-full text-xs flex items-center justify-center font-black">1</span>
               Müşteri Bilgileri &amp; Seçenekler
             </h2>
             <div className="space-y-4">
@@ -269,7 +269,7 @@ export default function NewProformaPage() {
           {/* Step 2: Items */}
           <div className="bg-white border border-[#e2e8f0] rounded p-5">
             <h2 className="font-bold text-sm mb-4 flex items-center gap-2">
-              <span className="w-5 h-5 bg-primary-600 text-white rounded-full text-xs flex items-center justify-center font-black">2</span>
+              <span className="w-5 h-5 bg-brand-light text-white rounded-full text-xs flex items-center justify-center font-black">2</span>
               Ürünler / Hizmetler
             </h2>
 
@@ -417,7 +417,7 @@ export default function NewProformaPage() {
             <button
               type="button"
               onClick={() => setLines(ls => [...ls, emptyLine(currency)])}
-              className="mt-4 flex items-center gap-1.5 text-sm text-[#64748b] hover:text-primary-600 py-1.5 px-2 rounded hover:bg-primary-50 transition-colors"
+              className="mt-4 flex items-center gap-1.5 text-sm text-[#64748b] hover:text-brand-light py-1.5 px-2 rounded hover:bg-brand-subtle transition-colors"
             >
               <span className="font-black text-base">+</span> Satır Ekle
             </button>
@@ -441,7 +441,7 @@ export default function NewProformaPage() {
           <div className="bg-white border border-[#e2e8f0] rounded p-5 sticky top-20">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Fiyat Özeti</h2>
-              <span className="text-xs font-bold text-primary-600 bg-primary-50 px-2.5 py-0.5 rounded">{currency}</span>
+              <span className="text-xs font-bold text-brand-light bg-brand-subtle px-2.5 py-0.5 rounded">{currency}</span>
             </div>
             <div className="space-y-2.5">
               <div className="flex justify-between text-sm">

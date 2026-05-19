@@ -297,7 +297,7 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
                 key={c}
                 onClick={() => setCurrency(c)}
                 className={`px-3 py-1.5 rounded text-xs font-semibold transition-colors ${
-                  currency === c ? 'bg-primary-600 text-white' : 'text-[#64748b] hover:bg-[#f1f5f9]'
+                  currency === c ? 'bg-brand-light text-white' : 'text-[#64748b] hover:bg-[#f1f5f9]'
                 }`}
               >
                 {c}
@@ -391,7 +391,7 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
                                   openCostCalc(p.id)
                                   setCostCalcQty(String(Math.max(1, Math.round(Number(p.stock_qty)))))
                                 }}
-                                className="text-xs text-[#cbd5e1] hover:text-primary-600 hover:bg-primary-50 px-1.5 py-0.5 rounded transition-colors flex-shrink-0"
+                                className="text-xs text-[#cbd5e1] hover:text-brand-light hover:bg-brand-subtle px-1.5 py-0.5 rounded transition-colors flex-shrink-0"
                                 title="Maliyet Hesapla"
                               >
                                 &#9998;
@@ -433,7 +433,7 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
                         ) : (
                           <button
                             onClick={() => startEdit(p)}
-                            className="text-primary-600 hover:text-primary-800 hover:bg-primary-50 px-2 py-1 rounded transition-colors font-medium"
+                            className="text-brand-light hover:text-brand hover:bg-brand-subtle px-2 py-1 rounded transition-colors font-medium"
                             title="Düzenlemek için tıklayın"
                           >
                             {catalogPrice > 0 ? (
@@ -511,7 +511,7 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
                                     <div className="col-span-2 text-center text-[#64748b]">{lot.cost_currency ?? 'TRY'}</div>
                                     <div className="col-span-2 text-right tabular-nums text-[#64748b]">{fxRate.toFixed(4)}</div>
                                     <div className="col-span-2 text-right tabular-nums font-medium text-[#1e293b]">₺{fmt(lotCostTry)}</div>
-                                    <div className="col-span-2 text-right tabular-nums font-bold text-primary-700">₺{fmt(lotValue)}</div>
+                                    <div className="col-span-2 text-right tabular-nums font-bold text-brand">₺{fmt(lotValue)}</div>
                                   </div>
                                 )
                               })}
@@ -633,7 +633,7 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
                   ))}
                   <button
                     onClick={() => setCostRows(rs => [...rs, { label: '', amount: '', currency: 'TRY' as Currency, entry_date: new Date().toISOString().slice(0, 10) }])}
-                    className="text-xs text-primary-600 hover:text-primary-800 font-semibold"
+                    className="text-xs text-brand-light hover:text-brand font-semibold"
                   >
                     + Kalem Ekle
                   </button>
@@ -655,13 +655,13 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
                     </div>
                     <div>
                       <div className="text-xs text-[#94a3b8] font-semibold uppercase mb-1">Birim Maliyet</div>
-                      <div className="text-xl font-black tabular-nums text-primary-700">₺{fmt(unitCost)}</div>
+                      <div className="text-xl font-black tabular-nums text-brand">₺{fmt(unitCost)}</div>
                     </div>
                   </div>
                   <button
                     onClick={saveCostEntries}
                     disabled={costSaving}
-                    className="w-full py-2.5 bg-primary-600 text-white text-sm font-bold rounded hover:bg-primary-700 transition-colors disabled:opacity-50"
+                    className="w-full py-2.5 bg-brand-light text-white text-sm font-bold rounded hover:bg-brand transition-colors disabled:opacity-50"
                   >
                     {costSaving ? 'Kaydediliyor...' : 'Kaydet'}
                   </button>

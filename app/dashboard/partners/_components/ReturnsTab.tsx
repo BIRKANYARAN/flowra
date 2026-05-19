@@ -61,11 +61,11 @@ export function ReturnsTab({ loading, returns }: ReturnsTabProps) {
               Sermaye getirisi kâr dağıtımı ve borç trancheleriyle bütünleşik izlenebilir.
             </p>
             <div className="flex items-center gap-2 shrink-0 ml-4">
-              <Link href="/dashboard/partners?tab=distribution" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+              <Link href="/dashboard/partners?tab=distribution" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
                 Kâr Dağıtımı →
               </Link>
               <span className="text-[#e2e8f0]">|</span>
-              <Link href="/dashboard/partners?tab=tranches" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+              <Link href="/dashboard/partners?tab=tranches" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
                 Borç Dilimleri →
               </Link>
             </div>

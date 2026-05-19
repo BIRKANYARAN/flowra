@@ -182,7 +182,7 @@ export default function NewPartnerPage() {
             <button
               type="submit"
               disabled={saving}
-              className="inline-flex items-center gap-1.5 px-5 py-2.5 text-sm font-bold rounded bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50 transition-colors"
+              className="inline-flex items-center gap-1.5 px-5 py-2.5 text-sm font-bold rounded bg-brand-light text-white hover:bg-brand disabled:opacity-50 transition-colors"
             >
               {saving ? 'Kaydediliyor...' : 'Ortak Ekle'}
             </button>

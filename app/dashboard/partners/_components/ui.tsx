@@ -8,7 +8,7 @@ export function ShareBar({ ratio }: { ratio: number }) {
   return (
     <div className="flex items-center gap-2">
       <div className="flex-1 bg-[#f1f5f9] rounded-full h-1.5 max-w-[80px]">
-        <div className="bg-primary-500 h-1.5 rounded-full" style={{ width: `${Math.min(ratio * 100, 100)}%` }} />
+        <div className="bg-brand-light h-1.5 rounded-full" style={{ width: `${Math.min(ratio * 100, 100)}%` }} />
       </div>
       <span className="text-xs text-[#64748b] w-8">{pct(ratio)}</span>
     </div>

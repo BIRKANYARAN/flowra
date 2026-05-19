@@ -223,7 +223,7 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
                 <div className="h-2 bg-[#f1f5f9] rounded-full overflow-hidden">
                   <div
                     className={`h-full rounded-full ${
-                      share > 0.4 ? 'bg-neg' : share > 0.2 ? 'bg-warn' : 'bg-primary-400'
+                      share > 0.4 ? 'bg-neg' : share > 0.2 ? 'bg-warn' : 'bg-brand-light'
                     }`}
                     style={{ width: `${share * 100}%` }}
                   />
@@ -368,21 +368,21 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
         <div className="flex items-center gap-2 shrink-0 ml-4">
           <Link
             href="/dashboard/commercial?tab=collections"
-            className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap"
+            className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap"
           >
             Tahsilat →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
           <Link
             href="/dashboard/commercial?tab=customers"
-            className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap"
+            className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap"
           >
             Müşteri Riskleri →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
           <Link
             href="/dashboard/operations?tab=expenses"
-            className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap"
+            className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap"
           >
             Giderler →
           </Link>

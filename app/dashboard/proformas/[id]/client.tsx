@@ -337,10 +337,10 @@ export function ProformaDetailClient({
       </div>
 
       {/* Share link bar */}
-      <div className="mt-4 mb-6 bg-primary-50 border border-primary-100 rounded px-5 py-3 flex items-center justify-between gap-4">
+      <div className="mt-4 mb-6 bg-brand-subtle border border-brand/10 rounded px-5 py-3 flex items-center justify-between gap-4">
         <div className="min-w-0">
-          <div className="text-sm font-semibold text-primary-800">Paylaşılabilir Link</div>
-          <div className="text-xs text-primary-400 font-mono truncate mt-0.5">{shareUrl}</div>
+          <div className="text-sm font-semibold text-brand">Paylaşılabilir Link</div>
+          <div className="text-xs text-brand-light font-mono truncate mt-0.5">{shareUrl}</div>
         </div>
         <Btn onClick={copyLink} variant="secondary" small>
           {copied ? '✓' : 'Kopyala'}
@@ -390,7 +390,7 @@ export function ProformaDetailClient({
                       onChange={() =>
                         setSelItems(s => s.map(x => x.id === it.id ? { ...x, selected: !x.selected } : x))
                       }
-                      className="w-4 h-4 accent-primary-600 flex-shrink-0"
+                      className="w-4 h-4 accent-brand-light flex-shrink-0"
                     />
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-semibold truncate">{it.name}</div>

@@ -194,7 +194,7 @@ export async function StockContent({ companyId, userId }: Props) {
                       </div>
                       <div>
                         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Lot Değeri</div>
-                        <div className="text-sm font-black tabular-nums text-primary-700">{fmtTRY(productValue)}</div>
+                        <div className="text-sm font-black tabular-nums text-brand">{fmtTRY(productValue)}</div>
                       </div>
                     </div>
                   </div>
@@ -225,7 +225,7 @@ export async function StockContent({ companyId, userId }: Props) {
                                   ? `${lot.cost_price.toFixed(2)} ${lot.cost_currency} → ₺${perUnitTry.toFixed(2)}`
                                   : `₺${perUnitTry.toFixed(2)}`}
                               </td>
-                              <td className="px-3 py-2 text-right tabular-nums font-semibold text-primary-700">{fmtTRY(lot.costTry)}</td>
+                              <td className="px-3 py-2 text-right tabular-nums font-semibold text-brand">{fmtTRY(lot.costTry)}</td>
                               <td className={`px-3 py-2 text-right tabular-nums font-semibold ${urgency}`}>
                                 {lot.days} gün{lot.days > 180 && <span className="ml-1 text-[10px]">⚠</span>}
                               </td>
@@ -272,7 +272,7 @@ export async function StockContent({ companyId, userId }: Props) {
                     {p.sku && <span className="text-xs text-[#94a3b8] ml-2">{p.sku}</span>}
                     {lotValue > 0 && (
                       <div className="text-[10px] text-[#94a3b8] mt-0.5">
-                        Lot değeri: <span className="font-semibold text-primary-600">{fmtTRY(lotValue)}</span>
+                        Lot değeri: <span className="font-semibold text-brand-light">{fmtTRY(lotValue)}</span>
                       </div>
                     )}
                   </div>
@@ -362,14 +362,14 @@ export async function StockContent({ companyId, userId }: Props) {
         <div className="flex items-center gap-2 shrink-0 ml-4">
           <Link
             href="/dashboard/operations?tab=catalog"
-            className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap"
+            className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap"
           >
             Katalog →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
           <Link
             href="/dashboard/finance?tab=pnl"
-            className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap"
+            className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap"
           >
             P&amp;L Analizi →
           </Link>

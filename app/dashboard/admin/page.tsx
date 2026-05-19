@@ -106,7 +106,7 @@ export default async function AdminHubPage() {
       title:    'Roller & İzinler',
       subtitle: 'Rol yapılandırması',
       icon:     '🔐',
-      color:    'border-primary-100 hover:border-[#e2e8f0]',
+      color:    'border-brand/10 hover:border-[#e2e8f0]',
     },
     {
       href:     '/dashboard/admin/workflows',
@@ -171,13 +171,13 @@ export default async function AdminHubPage() {
             <div className="flex items-start gap-3">
               <span className="text-2xl flex-shrink-0">{tile.icon}</span>
               <div className="min-w-0">
-                <div className="font-bold text-sm text-[#0f172a] group-hover:text-primary-700 transition-colors">
+                <div className="font-bold text-sm text-[#0f172a] group-hover:text-brand transition-colors">
                   {tile.title}
                 </div>
                 <div className="text-xs text-[#94a3b8] mt-0.5">{tile.subtitle}</div>
               </div>
             </div>
-            <div className="mt-3 flex items-center gap-1 text-[10px] font-semibold text-primary-600">
+            <div className="mt-3 flex items-center gap-1 text-[10px] font-semibold text-brand-light">
               Git <span className="group-hover:translate-x-0.5 transition-transform">→</span>
             </div>
           </Link>
@@ -190,7 +190,7 @@ export default async function AdminHubPage() {
         <div className="flex flex-wrap gap-2">
           {SETTING_LINKS.map(s => (
             <Link key={s.href} href={s.href}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-white border border-[#e2e8f0] text-xs font-semibold text-[#334155] hover:border-[#e2e8f0] hover:text-primary-700 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-white border border-[#e2e8f0] text-xs font-semibold text-[#334155] hover:border-[#e2e8f0] hover:text-brand transition-colors"
             >
               <span>{s.icon}</span>
               {s.label}
@@ -205,7 +205,7 @@ export default async function AdminHubPage() {
           <div className="px-4 py-3 bg-[#f8fafc] border-b border-[#e2e8f0] flex items-center justify-between">
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Son Aktivite</div>
             <Link href="/dashboard/admin/audit"
-              className="text-[10px] font-semibold text-primary-600 hover:underline"
+              className="text-[10px] font-semibold text-brand-light hover:underline"
             >
               Tümünü Gör →
             </Link>
@@ -228,10 +228,10 @@ export default async function AdminHubPage() {
 
       {/* Quick nav */}
       <div className="text-xs text-[#94a3b8] flex items-center gap-4">
-        <Link href="/dashboard" className="hover:text-primary-600 font-semibold">← Komuta</Link>
-        <Link href="/dashboard/admin/users" className="hover:text-primary-600">Kullanıcılar</Link>
-        <Link href="/dashboard/admin/workflows" className="hover:text-primary-600">Onaylar</Link>
-        <Link href="/dashboard/admin/audit" className="hover:text-primary-600">Denetim</Link>
+        <Link href="/dashboard" className="hover:text-brand-light font-semibold">← Komuta</Link>
+        <Link href="/dashboard/admin/users" className="hover:text-brand-light">Kullanıcılar</Link>
+        <Link href="/dashboard/admin/workflows" className="hover:text-brand-light">Onaylar</Link>
+        <Link href="/dashboard/admin/audit" className="hover:text-brand-light">Denetim</Link>
       </div>
 
     </div>

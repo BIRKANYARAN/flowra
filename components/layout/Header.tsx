@@ -20,7 +20,7 @@ export function Header({ companyName }: Props) {
 
       {/* LEFT — mobile brand */}
       <div className="flex items-center gap-2 md:hidden">
-        <div className="w-5 h-5 rounded-md bg-primary-600 flex items-center justify-center flex-shrink-0">
+        <div className="w-5 h-5 rounded-md bg-brand-light flex items-center justify-center flex-shrink-0">
           <span className="text-white font-black text-[9px]">FL</span>
         </div>
         <span className="font-black text-sm text-[#0f172a]">Flowra</span>

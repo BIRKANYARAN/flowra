@@ -395,14 +395,14 @@ export default function SimulationClient({
         <div className="flex items-center gap-3 flex-wrap">
           {annualRate === 0 && (
             <span className="text-xs text-[#64748b]">
-              Faiz girilmedi · <a href="/dashboard/settings" className="text-primary-400 hover:underline">ekle →</a>
+              Faiz girilmedi · <a href="/dashboard/settings" className="text-brand-light hover:underline">ekle →</a>
             </span>
           )}
           <div className="flex items-center gap-1 bg-[#1e293b] border border-[#334155] rounded px-1 py-0.5">
             {CURRENCIES.map(c => (
               <button key={c} onClick={() => setDisplayCurrency(c)}
                 className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-colors ${
-                  displayCurrency === c ? 'bg-primary-600 text-white' : 'text-[#94a3b8] hover:bg-[#334155]'
+                  displayCurrency === c ? 'bg-brand-light text-white' : 'text-[#94a3b8] hover:bg-[#334155]'
                 }`}>
                 {c}
               </button>
@@ -424,7 +424,7 @@ export default function SimulationClient({
             label: 'Kâr Marjı',
             value: hasInputs ? pct(effectiveMargin) : '—',
             sub:   'Kâr / Gelir',
-            color: !hasInputs ? 'text-[#cbd5e1]' : effectiveMargin >= 0 ? 'text-primary-700' : 'text-neg',
+            color: !hasInputs ? 'text-[#cbd5e1]' : effectiveMargin >= 0 ? 'text-brand' : 'text-neg',
           },
           {
             label: 'Yıllık Net',
@@ -589,7 +589,7 @@ export default function SimulationClient({
                   : 'Zarar durumunda ortak dağıtımı yapılamaz'}
               </p>
             </div>
-            <a href="/dashboard/partners" className="text-xs text-primary-600 font-semibold hover:underline shrink-0">
+            <a href="/dashboard/partners" className="text-xs text-brand-light font-semibold hover:underline shrink-0">
               Ortak sayfası →
             </a>
           </div>
@@ -679,7 +679,7 @@ export default function SimulationClient({
           </div>
           <div>
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Ortalama Marj</div>
-            <div className={`text-lg font-black tabular-nums ${yearly.avgMargin >= 0 ? 'text-primary-700' : 'text-neg'}`}>
+            <div className={`text-lg font-black tabular-nums ${yearly.avgMargin >= 0 ? 'text-brand' : 'text-neg'}`}>
               {pct(yearly.avgMargin)}
             </div>
           </div>

@@ -135,7 +135,7 @@ export function PartnerImpactClient({
         </div>
         <Link
           href="/dashboard/partners/new"
-          className="inline-flex items-center gap-1.5 bg-primary-600 text-white px-4 py-2 rounded text-sm font-semibold hover:bg-primary-700"
+          className="inline-flex items-center gap-1.5 bg-brand-light text-white px-4 py-2 rounded text-sm font-semibold hover:bg-brand"
         >
           + Ortak Ekle
         </Link>
@@ -217,7 +217,7 @@ export function PartnerImpactClient({
                 Sıfırla
               </button>
             )}
-            <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${sliderActive ? 'bg-primary-100 text-primary-700' : 'bg-[#f1f5f9] text-[#64748b]'}`}>
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${sliderActive ? 'bg-brand-subtle text-brand' : 'bg-[#f1f5f9] text-[#64748b]'}`}>
               {sliderActive ? 'Simülasyon' : 'Canlı'}
             </span>
           </div>
@@ -234,7 +234,7 @@ export function PartnerImpactClient({
                 step={Math.round(maxSlider / 200)}
                 value={Math.round(displayAmount)}
                 onChange={e => { setSimAmount(Number(e.target.value)); setSliderActive(true) }}
-                className="w-full h-2 rounded-full appearance-none bg-[#e2e8f0] accent-primary-600 cursor-pointer"
+                className="w-full h-2 rounded-full appearance-none bg-[#e2e8f0] accent-brand-light cursor-pointer"
               />
               <div className="flex justify-between text-[9px] text-[#94a3b8] mt-1">
                 <span>₺0</span>
@@ -243,7 +243,7 @@ export function PartnerImpactClient({
               </div>
             </div>
             <div className="flex-shrink-0 text-right">
-              <div className={`text-xl font-black tabular-nums ${displayAmount > 0 ? 'text-primary-700' : 'text-[#94a3b8]'}`}>
+              <div className={`text-xl font-black tabular-nums ${displayAmount > 0 ? 'text-brand' : 'text-[#94a3b8]'}`}>
                 {fmt(displayAmount)}
               </div>
               <div className="text-[9px] text-[#94a3b8]">dağıtılacak</div>
@@ -352,7 +352,7 @@ export function PartnerImpactClient({
         <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
           <div className="flex items-center justify-between px-5 py-3 border-b border-[#f1f5f9]">
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ortak Borç Pozisyonları</div>
-            <Link href="/dashboard/partners?tab=tranches" className="text-[10px] font-semibold text-primary-600 hover:text-primary-700">
+            <Link href="/dashboard/partners?tab=tranches" className="text-[10px] font-semibold text-brand-light hover:text-brand">
               Tranche detayı →
             </Link>
           </div>
@@ -392,15 +392,15 @@ export function PartnerImpactClient({
       {/* ── Footer: go deeper ─────────────────────────────────────────────── */}
       <div className="flex items-center gap-3 text-[11px] text-[#94a3b8] flex-wrap">
         <span>Daha ayrıntılı analiz için:</span>
-        <Link href="/dashboard/partners" className="text-primary-600 font-semibold hover:underline">
+        <Link href="/dashboard/partners" className="text-brand-light font-semibold hover:underline">
           Ortak Merkezi →
         </Link>
         <span>·</span>
-        <Link href="/dashboard/partners?tab=distribution" className="text-primary-600 font-semibold hover:underline">
+        <Link href="/dashboard/partners?tab=distribution" className="text-brand-light font-semibold hover:underline">
           Dağıtım Tablosu →
         </Link>
         <span>·</span>
-        <Link href="/dashboard/admin/governance" className="text-primary-600 font-semibold hover:underline">
+        <Link href="/dashboard/admin/governance" className="text-brand-light font-semibold hover:underline">
           Yönetişim Raporu →
         </Link>
       </div>

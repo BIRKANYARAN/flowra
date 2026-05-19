@@ -190,7 +190,7 @@ export function OrdersContent(_props: Props) {
         <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Satın Alma Siparişleri</h2>
         <button
           onClick={() => setShowForm(v => !v)}
-          className="text-xs font-bold bg-primary-600 text-white px-4 py-2 rounded hover:bg-primary-700 transition-colors"
+          className="text-xs font-bold bg-brand-light text-white px-4 py-2 rounded hover:bg-brand transition-colors"
         >
           {showForm ? '✕ İptal' : '+ Yeni Sipariş'}
         </button>
@@ -267,7 +267,7 @@ export function OrdersContent(_props: Props) {
             ))}
             <button
               onClick={() => setFormItems(prev => [...prev, { name: '', unit: 'adet', quantity: '1', unit_price: '' }])}
-              className="text-xs text-primary-600 font-semibold hover:underline"
+              className="text-xs text-brand-light font-semibold hover:underline"
             >+ Kalem Ekle</button>
           </div>
 
@@ -275,7 +275,7 @@ export function OrdersContent(_props: Props) {
             <button onClick={() => setShowForm(false)} className="text-xs text-[#64748b] hover:text-[#334155] px-4 py-2">İptal</button>
             <button
               onClick={submitForm} disabled={formSaving}
-              className="text-xs font-bold bg-primary-600 text-white px-5 py-2 rounded hover:bg-primary-700 disabled:opacity-50 transition-colors"
+              className="text-xs font-bold bg-brand-light text-white px-5 py-2 rounded hover:bg-brand disabled:opacity-50 transition-colors"
             >
               {formSaving ? 'Kaydediliyor...' : 'Kaydet'}
             </button>
@@ -376,7 +376,7 @@ export function OrdersContent(_props: Props) {
                         <button
                           disabled={busy}
                           onClick={() => advanceStatus(order)}
-                          className="text-[10px] font-bold px-2.5 py-1 bg-primary-600 text-white rounded hover:bg-primary-700 disabled:opacity-50 transition-colors"
+                          className="text-[10px] font-bold px-2.5 py-1 bg-brand-light text-white rounded hover:bg-brand disabled:opacity-50 transition-colors"
                         >
                           {busy ? '...' : NEXT_LABEL[order.status]}
                         </button>
@@ -434,15 +434,15 @@ export function OrdersContent(_props: Props) {
           Satın alma siparişleri stok ve giderlerle birlikte yönetilmeli.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
-          <Link href="/dashboard/operations?tab=stock" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/operations?tab=stock" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Stok →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/operations?tab=expenses" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/operations?tab=expenses" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Giderler →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/finance?tab=pnl" className="text-[11px] font-bold text-primary-600 hover:text-primary-700 underline underline-offset-2 whitespace-nowrap">
+          <Link href="/dashboard/finance?tab=pnl" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             P&amp;L →
           </Link>
         </div>
