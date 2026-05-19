@@ -50,8 +50,8 @@ function StatusBanner({ report }: { report: ReconciliationReport }) {
       <div className="bg-pos-light border border-pos-light rounded px-4 py-3 flex items-center gap-3">
         <div className="w-8 h-8 rounded-full bg-pos-light flex items-center justify-center text-pos-text font-black text-sm shrink-0">✓</div>
         <div>
-          <div className="text-sm font-black text-pos-text">Mutabakat Tamamlandı</div>
-          <div className="text-xs text-pos-text mt-0.5">Tüm GL hesapları operasyonel tablolarla uyuşuyor. Dönem kapanışına hazır.</div>
+          <div className="text-xs font-black text-pos-text">Mutabakat Tamamlandı — Dönem Kapanışına Hazır</div>
+          <div className="text-[10px] text-pos-text mt-0.5">Tüm GL hesapları operasyonel tablolarla uyuşuyor. 100 TRY üzeri fark bulunmuyor.</div>
         </div>
       </div>
     )
@@ -62,8 +62,8 @@ function StatusBanner({ report }: { report: ReconciliationReport }) {
       <div className="bg-neg-light border border-neg-light rounded px-4 py-3 flex items-center gap-3">
         <div className="w-8 h-8 rounded-full bg-neg-light flex items-center justify-center text-neg-text font-black text-sm shrink-0">✗</div>
         <div>
-          <div className="text-sm font-black text-neg-text">Kritik Farklar Mevcut — Dönem Kapatılamaz</div>
-          <div className="text-xs text-neg mt-0.5">
+          <div className="text-xs font-black text-neg-text">Kritik Farklar Mevcut — Dönem Kapatılamaz</div>
+          <div className="text-[10px] text-neg mt-0.5">
             {criticalCount} kritik, {warnCount} uyarı. 100 TRY üzerindeki farklar giderilmeden dönem kapanışı engellenilir.
           </div>
         </div>
@@ -75,9 +75,9 @@ function StatusBanner({ report }: { report: ReconciliationReport }) {
     <div className="bg-warn-light border border-warn-light rounded px-4 py-3 flex items-center gap-3">
       <div className="w-8 h-8 rounded-full bg-warn-light flex items-center justify-center text-warn-text font-black text-sm shrink-0">!</div>
       <div>
-        <div className="text-sm font-black text-warn-text">Küçük Farklar Var</div>
-        <div className="text-xs text-warn-text mt-0.5">
-          {warnCount} uyarı (1–99 TRY arası). Dönem kapatılabilir ancak araştırılması önerilir.
+        <div className="text-xs font-black text-warn-text">Küçük Farklar Var — Dönem Kapatılabilir</div>
+        <div className="text-[10px] text-warn-text mt-0.5">
+          {warnCount} uyarı (1–99 TRY arası). Zamanlama farkı olabilir — araştırılması önerilir.
         </div>
       </div>
     </div>
@@ -118,7 +118,7 @@ export default function ReconciliationPage() {
       {/* Header */}
       <div className="flex items-center justify-between" data-print-hide>
         <div>
-          <h1 className="text-xl font-black text-[#0f172a] tracking-tight">GL Mutabakat</h1>
+          <h1 className="text-base font-bold text-[#0f172a]">GL Mutabakat</h1>
           <p className="text-xs text-[#94a3b8] mt-0.5">
             GL hesap bakiyeleri · Operasyonel tablo karşılaştırması
             {lastRun && <span className="ml-1 text-[#cbd5e1]">· {lastRun} itibarıyla</span>}
@@ -160,7 +160,7 @@ export default function ReconciliationPage() {
       </div>
 
       {error && (
-        <div className="bg-neg-light border border-neg-light rounded px-4 py-3 text-sm text-neg-text">{error}</div>
+        <div className="bg-neg-light border border-neg-light rounded px-4 py-3 text-xs text-neg-text">{error}</div>
       )}
 
       {loading && !report && (
@@ -179,15 +179,15 @@ export default function ReconciliationPage() {
           {/* Summary chips */}
           <div className="grid grid-cols-3 gap-2">
             <div className="bg-pos-light border border-pos-light rounded px-4 py-3 text-center">
-              <div className="text-2xl font-black text-pos-text tabular-nums">{okCount}</div>
+              <div className="text-xl font-black text-pos-text tabular-nums">{okCount}</div>
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-pos-text mt-0.5">Tamam</div>
             </div>
             <div className={`border rounded px-4 py-3 text-center ${warnCount > 0 ? 'bg-warn-light border-warn-light' : 'bg-[#f8fafc] border-[#e2e8f0]'}`}>
-              <div className={`text-2xl font-black tabular-nums ${warnCount > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>{warnCount}</div>
+              <div className={`text-xl font-black tabular-nums ${warnCount > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>{warnCount}</div>
               <div className={`text-[0.65rem] font-black uppercase tracking-widest mt-0.5 ${warnCount > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>Uyarı</div>
             </div>
             <div className={`border rounded px-4 py-3 text-center ${criticalCount > 0 ? 'bg-neg-light border-neg-light' : 'bg-[#f8fafc] border-[#e2e8f0]'}`}>
-              <div className={`text-2xl font-black tabular-nums ${criticalCount > 0 ? 'text-neg-text' : 'text-[#94a3b8]'}`}>{criticalCount}</div>
+              <div className={`text-xl font-black tabular-nums ${criticalCount > 0 ? 'text-neg-text' : 'text-[#94a3b8]'}`}>{criticalCount}</div>
               <div className={`text-[0.65rem] font-black uppercase tracking-widest mt-0.5 ${criticalCount > 0 ? 'text-neg' : 'text-[#94a3b8]'}`}>Kritik</div>
             </div>
           </div>
@@ -252,8 +252,8 @@ export default function ReconciliationPage() {
           <div className="flex items-center justify-between px-1" data-print-hide>
             <p className="text-[10px] text-[#94a3b8] leading-relaxed">
               {report.checked_at
-                ? `Son kontrol: ${new Date(report.checked_at).toLocaleString('tr-TR')}`
-                : 'Sonuçlar her çalıştırmada canlı hesaplanır.'}
+                ? `Son kontrol: ${new Date(report.checked_at).toLocaleString('tr-TR')} — Kritik fark olmadan dönem kapanışı yapılabilir`
+                : 'Sonuçlar her çalıştırmada canlı hesaplanır — dönem kapanışı öncesi temiz mutabakat şart.'}
             </p>
             <div className="flex items-center gap-2 shrink-0 ml-4">
               <Link href="/dashboard/cfo/trial-balance" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">

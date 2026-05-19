@@ -140,9 +140,9 @@ export default function PeriodClosePage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-black text-[#0f172a] tracking-tight">Dönem Kapanış Yönetimi</h1>
+          <h1 className="text-base font-bold text-[#0f172a]">Dönem Kapanış Yönetimi</h1>
           <p className="text-xs text-[#94a3b8] mt-0.5">
-            Muhasebe dönemlerini kapat ve kilitle — kapanış için {requiredCount} zorunlu kontrol
+            Dönem kapatıldığında tüm finansal yazma işlemleri engellenir — {requiredCount} zorunlu kontrol gerekli
           </p>
         </div>
         <Link href="/dashboard/cfo" className="text-xs text-[#94a3b8] hover:text-brand-light font-semibold">
@@ -151,7 +151,7 @@ export default function PeriodClosePage() {
       </div>
 
       {error && (
-        <div className="bg-neg-light border border-neg-light rounded px-4 py-3 text-sm text-neg-text">{error}</div>
+        <div className="bg-neg-light border border-neg-light rounded px-4 py-3 text-xs text-neg-text">{error}</div>
       )}
 
       {loading && (
@@ -179,11 +179,11 @@ export default function PeriodClosePage() {
             <div key={p.id} className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
 
               {/* Period header row */}
-              <div className="px-5 py-4">
+              <div className="px-4 py-3">
                 <div className="flex items-center justify-between gap-4 flex-wrap">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <span className="text-sm font-bold text-[#0f172a]">
+                      <span className="text-xs font-bold text-[#0f172a]">
                         {fmt(p.period_start)} — {fmt(p.period_end)}
                       </span>
                       <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${STATUS_COLOR[p.status]}`}>
@@ -258,7 +258,7 @@ export default function PeriodClosePage() {
 
               {/* Checklist panel */}
               {isExpanded && (
-                <div className="border-t border-[#e2e8f0] px-5 py-4 bg-[#f8fafc]/60">
+                <div className="border-t border-[#e2e8f0] px-4 py-3 bg-[#f8fafc]/60">
                   <p className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
                     Kapanış Kontrol Listesi — {reqChecked}/{requiredCount} zorunlu tamamlandı
                   </p>
@@ -305,7 +305,7 @@ export default function PeriodClosePage() {
 
                   {!canClose && reqChecked < requiredCount && (
                     <div className="mt-3 px-3 py-2 bg-warn-light border border-warn-light rounded text-xs text-warn-text">
-                      ⚠️ Dönemi kapatmak için {requiredCount - reqChecked} zorunlu kontrol daha tamamlanmalı.
+                      Dönemi kapatmak için {requiredCount - reqChecked} zorunlu kontrol daha tamamlanmalı.
                     </div>
                   )}
                   {canClose && (
