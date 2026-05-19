@@ -172,7 +172,7 @@ export async function PnlTab({ userId, companyId }: Props) {
         <div className={`rounded border px-4 py-3 flex items-start gap-3 ${
           marginDrop > 0.20 ? 'bg-neg-light border-neg-light' : 'bg-warn-light border-warn-light'
         }`}>
-          <span className="text-base mt-0.5">{marginDrop > 0.20 ? '🔴' : '⚠'}</span>
+          <span className={`w-1.5 h-1.5 rounded-full shrink-0 mt-1.5 ${marginDrop > 0.20 ? 'bg-neg' : 'bg-warn'}`} />
           <div className="flex-1">
             <div className={`text-[11px] font-black uppercase tracking-wide ${
               marginDrop > 0.20 ? 'text-neg-text' : 'text-warn-text'

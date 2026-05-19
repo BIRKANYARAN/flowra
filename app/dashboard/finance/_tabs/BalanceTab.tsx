@@ -181,7 +181,7 @@ export async function BalanceTab({ userId, companyId }: Props) {
       {/* Negative equity — critical solvency alert */}
       {negativeEquity && (
         <div className="bg-neg-light border border-neg-light rounded px-4 py-3 flex items-start gap-3">
-          <span className="text-base mt-0.5">🔴</span>
+          <span className="w-1.5 h-1.5 rounded-full bg-neg shrink-0 mt-1.5" />
           <div className="flex-1">
             <div className="text-[11px] font-black uppercase tracking-wide text-neg-text">
               Negatif Özsermaye — Teknik İflas Riski
@@ -202,7 +202,7 @@ export async function BalanceTab({ userId, companyId }: Props) {
         <div className={`rounded border px-4 py-3 flex items-start gap-3 ${
           leverageRatio > 0.80 ? 'bg-neg-light border-neg-light' : 'bg-warn-light border-warn-light'
         }`}>
-          <span className="text-base mt-0.5">⚠</span>
+          <span className="w-1.5 h-1.5 rounded-full bg-warn shrink-0 mt-1.5" />
           <div className="flex-1">
             <div className={`text-[11px] font-black uppercase tracking-wide ${leverageRatio > 0.80 ? 'text-neg-text' : 'text-warn-text'}`}>
               {leverageRatio > 0.80 ? 'Yüksek Finansal Kaldıraç' : 'Kaldıraç Oranı Dikkat Sınırında'}
@@ -219,7 +219,7 @@ export async function BalanceTab({ userId, companyId }: Props) {
       {/* Low current ratio warning */}
       {currentRatio !== null && currentRatio < 1.0 && currentLiab > 10_000 && (
         <div className="bg-warn-light border border-warn/30 rounded px-4 py-3 flex items-start gap-3">
-          <span className="text-base mt-0.5">⚠</span>
+          <span className="w-1.5 h-1.5 rounded-full bg-warn shrink-0 mt-1.5" />
           <div className="flex-1">
             <div className="text-[11px] font-black uppercase tracking-wide text-warn-text">
               Düşük Likidite — Cari Oran {currentRatio.toFixed(2)}

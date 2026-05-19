@@ -242,7 +242,7 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
       {/* Zone 3 — Aging table */}
       <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
         <div className="px-4 py-3 border-b border-[#e2e8f0]">
-          <h2 className="text-sm font-black text-[#1e293b]">Müşteri Yaşlandırma Analizi</h2>
+          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Müşteri Yaşlandırma Analizi</div>
           <p className="text-[10px] text-[#94a3b8] mt-0.5">Alacakların vade kırılımı</p>
         </div>
         <div className="overflow-x-auto">

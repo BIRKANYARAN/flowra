@@ -237,7 +237,7 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
       {qs.length > 0 && (
         <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
           <div className="px-4 py-3 border-b border-[#e2e8f0]">
-            <h2 className="text-sm font-black text-[#1e293b]">Çeyreklik Performans</h2>
+            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Çeyreklik Performans</div>
             <p className="text-[10px] text-[#94a3b8] mt-0.5">Ciro · Brüt Kâr · Net Kâr · Marjlar</p>
           </div>
           <div className="overflow-x-auto">
@@ -323,7 +323,7 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
         <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
           <div className="px-4 py-3 border-b border-[#e2e8f0] flex items-center justify-between">
             <div>
-              <h2 className="text-sm font-black text-[#1e293b]">Geçici Vergi Takvimi {currentYear}</h2>
+              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Geçici Vergi Takvimi {currentYear}</div>
               <p className="text-[10px] text-[#94a3b8] mt-0.5">Kurumlar vergisi matrahı üzerinden %25 · yıllık beyan Nisan ayında</p>
             </div>
             <span className="text-xs font-bold text-warn-text bg-warn-light border border-warn-light px-2.5 py-1 rounded">
@@ -368,7 +368,7 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
       {monthly.length > 0 ? (
         <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
           <div className="px-4 py-3 border-b border-[#e2e8f0] flex items-center justify-between">
-            <h2 className="text-sm font-black text-[#1e293b]">Aylık Satış Detayı</h2>
+            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Aylık Satış Detayı</div>
             <span className="text-[10px] text-[#94a3b8]">{a.total_sales} satış · {a.total_proformas} teklif</span>
           </div>
           <table className="w-full text-xs">
@@ -405,7 +405,7 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
       <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
         <div className="px-4 py-3 border-b border-[#e2e8f0] flex items-center justify-between">
           <div>
-            <h2 className="text-sm font-black text-[#1e293b]">Dönem Kapanış Kontrolü</h2>
+            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Dönem Kapanış Kontrolü</div>
             <p className="text-[10px] text-[#94a3b8] mt-0.5">Dönem kapatmadan önce kontrol edilmesi gereken kalemler</p>
           </div>
           <div className="flex items-center gap-2">

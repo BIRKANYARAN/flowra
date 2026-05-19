@@ -77,9 +77,9 @@ export async function StockContent({ companyId, userId }: Props) {
   const productMap     = new Map(products.map(p => [p.id, p]))
 
   return (
-    <div className="max-w-4xl space-y-6">
+    <div className="max-w-4xl space-y-4">
       <div>
-        <h2 className="text-xl font-black text-[#0f172a] tracking-tight">Stok Zekası</h2>
+        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Stok Zekası</div>
         <p className="text-xs text-[#94a3b8] mt-0.5">FIFO lot değerlemesi · stok hareketleri · portföy özeti</p>
       </div>
 
@@ -182,7 +182,7 @@ export async function StockContent({ companyId, userId }: Props) {
                 <div key={product.id} className="px-5 py-3">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-[#0f172a]">{product.name}</span>
+                      <span className="text-xs font-bold text-[#0f172a]">{product.name}</span>
                       {product.sku && <span className="text-[10px] font-mono text-[#94a3b8]">{product.sku}</span>}
                     </div>
                     <div className="flex items-center gap-4 text-right">
@@ -266,9 +266,9 @@ export async function StockContent({ companyId, userId }: Props) {
               const isZero   = stockNum <= 0
               const lotValue = (lotsByProduct.get(p.id) ?? []).reduce((s, l) => s + l.costTry, 0)
               return (
-                <div key={p.id} className="flex items-center justify-between px-5 py-3 hover:bg-[#f8fafc]/60">
+                <div key={p.id} className="flex items-center justify-between px-4 py-3 hover:bg-[#f8fafc]/60">
                   <div>
-                    <span className="text-sm font-semibold text-[#0f172a]">{p.name}</span>
+                    <span className="text-xs font-semibold text-[#0f172a]">{p.name}</span>
                     {p.sku && <span className="text-xs text-[#94a3b8] ml-2">{p.sku}</span>}
                     {lotValue > 0 && (
                       <div className="text-[10px] text-[#94a3b8] mt-0.5">

@@ -144,7 +144,7 @@ export async function ExpensesContent({ companyId }: Props) {
   const duplicateGroups = detectDuplicates(dupCandidates).filter(d => d.confidence === 'high')
 
   return (
-    <div className="max-w-4xl space-y-6">
+    <div className="max-w-4xl space-y-4">
       <Suspense fallback={<CommandBarSkeleton />}>
         <ExpensesCommandBar companyId={companyId} />
       </Suspense>

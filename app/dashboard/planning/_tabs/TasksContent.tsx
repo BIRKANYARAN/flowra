@@ -82,9 +82,9 @@ export async function TasksContent({ companyId }: Props) {
   const overdueTasks = tasks.filter(t => t.status === 'open' && t.due_date != null && t.due_date < today).slice(0, 3)
 
   return (
-    <div className="max-w-3xl space-y-6">
+    <div className="max-w-3xl space-y-4">
       <div>
-        <h2 className="text-xl font-black text-[#0f172a] tracking-tight">Görevler</h2>
+        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Görevler</div>
         <p className="text-xs text-[#94a3b8] mt-0.5">Hafif CRM — takip ve hatırlatma · {tasks.length} kayıt</p>
       </div>
 

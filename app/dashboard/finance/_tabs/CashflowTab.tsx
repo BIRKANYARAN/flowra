@@ -122,8 +122,8 @@ export async function CashflowTab({ userId, companyId }: Props) {
 
       {/* Danger alert */}
       {timeline.firstDangerMonth && (
-        <div className="bg-neg-light border border-neg-light rounded px-4 py-3 text-sm text-neg-text font-semibold">
-          🔴 {fmtMonth(timeline.firstDangerMonth)} ayında kümülatif nakit negatife düşüyor.
+        <div className="bg-neg-light border border-neg-light rounded px-4 py-3 text-xs text-neg-text font-semibold">
+          {fmtMonth(timeline.firstDangerMonth)} ayında kümülatif nakit negatife düşüyor.
           Tahsilatlar hızlandırılmalı veya giderler kısılmalıdır.
         </div>
       )}
@@ -138,7 +138,7 @@ export async function CashflowTab({ userId, companyId }: Props) {
         <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
           <div className="px-4 py-3 border-b border-[#e2e8f0] flex items-center justify-between">
             <div>
-              <h2 className="text-sm font-black text-[#1e293b]">Baskı Haritası</h2>
+              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Baskı Haritası</div>
               <p className="text-[10px] text-[#94a3b8] mt-0.5">Negatif nakit akışı veya kümülatif tehlike olan gelecek aylar</p>
             </div>
             <span className={`text-xs font-bold px-2.5 py-1 rounded ${
@@ -173,8 +173,8 @@ export async function CashflowTab({ userId, companyId }: Props) {
       )}
 
       {timeline.pressureSignals.length === 0 && timeline.months.length > 0 && (
-        <div className="bg-pos-light border border-pos-light rounded px-4 py-3 text-sm text-pos-text font-semibold">
-          ✓ Önümüzdeki 6 ayda nakit baskı sinyali tespit edilmedi.
+        <div className="bg-pos-light border border-pos-light rounded px-4 py-3 text-xs text-pos-text font-semibold">
+          Önümüzdeki 6 ayda nakit baskı sinyali tespit edilmedi.
         </div>
       )}
 
@@ -183,7 +183,7 @@ export async function CashflowTab({ userId, companyId }: Props) {
         <div className="px-4 py-3 border-b border-[#e2e8f0]">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-sm font-black text-[#1e293b]">Nakit Akış Tablosu (Dönem Özeti)</h2>
+              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Nakit Akış Tablosu (Dönem Özeti)</div>
               <p className="text-[10px] text-[#94a3b8] mt-0.5">
                 {from} – {today} · Faaliyet / Yatırım / Finansman
               </p>
@@ -305,7 +305,7 @@ export async function CashflowTab({ userId, companyId }: Props) {
       {chartMonths.length > 0 && (
         <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
           <div className="px-4 py-3 border-b border-[#e2e8f0]">
-            <h2 className="text-sm font-black text-[#1e293b]">Aylık Projeksiyon Detayı</h2>
+            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Aylık Projeksiyon Detayı</div>
           </div>
           <table className="w-full text-xs">
             <thead>

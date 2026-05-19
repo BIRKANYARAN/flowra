@@ -122,7 +122,7 @@ export async function TaxTab({ userId, companyId }: Props) {
   )
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
 
       {/* ── Tax urgency banner ────────────────────────────────────────────────── */}
       {overdueQuarters.length > 0 && (
@@ -209,7 +209,7 @@ export async function TaxTab({ userId, companyId }: Props) {
       {/* ── Zone 2: Aylık KDV Geçmişi ───────────────────────────────────────── */}
       <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
         <div className="px-4 py-3 border-b border-[#e2e8f0]">
-          <h2 className="text-sm font-black text-[#1e293b]">Aylık KDV Geçmişi</h2>
+          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Aylık KDV Geçmişi</div>
           <p className="text-[10px] text-[#94a3b8] mt-0.5">Son 6 ay · Satış KDV − İndirim = Net KDV</p>
         </div>
         <table className="w-full text-xs">
@@ -262,7 +262,7 @@ export async function TaxTab({ userId, companyId }: Props) {
       <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
         <div className="px-4 py-3 border-b border-[#e2e8f0] flex items-center justify-between">
           <div>
-            <h2 className="text-sm font-black text-[#1e293b]">Geçici Vergi Takvimi {currentYear}</h2>
+            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Geçici Vergi Takvimi {currentYear}</div>
             <p className="text-[10px] text-[#94a3b8] mt-0.5">Kurumlar vergisi matrahı üzerinden %25 · Q1 Mayıs · Q2 Ağustos · Q3 Kasım</p>
           </div>
           {ytd.total_gecici > 0 && (
@@ -333,7 +333,7 @@ export async function TaxTab({ userId, companyId }: Props) {
       {ytd.revenue > 0 && (
         <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
           <div className="px-4 py-3 border-b border-[#e2e8f0]">
-            <h2 className="text-sm font-black text-[#1e293b]">Matrah Analizi — YTD {currentYear}</h2>
+            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Matrah Analizi — YTD {currentYear}</div>
             <p className="text-[10px] text-[#94a3b8] mt-0.5">
               Ciro → Brüt Kâr → Matrah → KV hesabı · {monthsElapsed} ay geçti
             </p>

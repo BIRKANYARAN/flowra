@@ -185,7 +185,7 @@ export async function ForecastTab({ userId: _userId, companyId }: Props) {
       {chartMonths.length > 0 && (
         <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
           <div className="px-4 py-3 border-b border-[#e2e8f0]">
-            <h2 className="text-sm font-black text-[#1e293b]">Aylık Projeksiyon Detayı</h2>
+            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Aylık Projeksiyon Detayı</div>
           </div>
           <table className="w-full text-xs">
             <thead>
@@ -277,7 +277,7 @@ export async function ForecastTab({ userId: _userId, companyId }: Props) {
       {/* Runway tone indicator */}
       {runwayTone === 'critical' && (
         <div className="bg-neg-light border border-neg-light rounded px-4 py-3 text-xs text-neg-text font-semibold">
-          🔴 Kritik Runway — 2 aydan az nakit kaldı. Hemen aksiyon alın: yeni gelir getirin veya giderleri kısın.
+          Kritik Runway — 2 aydan az nakit kaldı. Hemen aksiyon alın: yeni gelir getirin veya giderleri kısın.
         </div>
       )}
 

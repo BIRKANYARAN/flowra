@@ -121,7 +121,7 @@ export async function OverviewTab({ userId: _userId, companyId }: Props) {
     <div className="space-y-4">
 
       {runwayTone === 'critical' && (
-        <div className="bg-neg-light border border-neg rounded px-4 py-3 text-sm text-neg-text font-semibold flex items-center gap-2">
+        <div className="bg-neg-light border border-neg rounded px-4 py-3 text-xs text-neg-text font-semibold flex items-center gap-2">
           <span className="w-1.5 h-1.5 rounded-full bg-neg shrink-0 animate-pulse" />
           Kritik: Runway {runwayMonths?.toFixed(1)} ay — acil aksiyon gerekiyor.
         </div>
@@ -131,7 +131,7 @@ export async function OverviewTab({ userId: _userId, companyId }: Props) {
       {m.receivables.total_outstanding > 0 &&
        m.receivables.overdue_60d + m.receivables.overdue_90d > m.receivables.total_outstanding * 0.2 && (
         <div className="bg-warn-light border border-warn/30 rounded px-4 py-3 flex items-start gap-3">
-          <span className="text-base mt-0.5">⚠</span>
+          <span className="w-1.5 h-1.5 rounded-full bg-warn shrink-0 mt-1.5" />
           <div className="flex-1">
             <div className="text-[11px] font-black uppercase tracking-wide text-warn-text">
               Alacak Yaşlanması Yüksek
