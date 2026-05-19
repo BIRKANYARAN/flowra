@@ -15,7 +15,8 @@ import { fmtTRY as fmt }     from '@/lib/format'
 
 // ── Formatters ────────────────────────────────────────────────────────────────
 
-function fmtPct(r: number): string {
+/** Local 0-1 ratio → percent string. Canonical fmtPct takes value-already-in-pct. */
+function pct(r: number): string {
   return `%${(r * 100).toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}`
 }
 function delta(curr: number, prev: number): { text: string; color: string } {
@@ -188,6 +189,58 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
     ? 'bg-warn-light text-warn-text border-warn-light'
     : 'bg-neg-light text-neg-text border-neg-light'
 
+  // ── C8: Quarterly Pressure Brief ────────────────────────────────────────────
+  const quarterlyBriefLines: string[] = []
+
+  // 1. Revenue trajectory vs prior year
+  if (ytdYoY && prevYtd.revenue > 0) {
+    const yoyNum = ((ytd.revenue - prevYtd.revenue) / prevYtd.revenue) * 100
+    if (yoyNum >= 10) {
+      quarterlyBriefLines.push(`YTD ciro geçen yılın aynı dönemine göre ${ytdYoY.text} büyüdü — gelir ivmesi güçlü; marj kalitesinin korunduğunu çeyrek bazında doğrulayın.`)
+    } else if (yoyNum >= 0) {
+      quarterlyBriefLines.push(`YTD ciro geçen yılın aynı dönemine göre ${ytdYoY.text} artıyor — büyüme var ancak ivme sınırlı; gider artışını gelirle orantılı tutun.`)
+    } else {
+      quarterlyBriefLines.push(`YTD ciro geçen yılın aynı dönemine göre ${ytdYoY.text} geride — gelir daralması sürdürülüyorsa gider yapısının yeniden değerlendirilmesi gerekir.`)
+    }
+  } else if (ytd.revenue > 0) {
+    quarterlyBriefLines.push(`YTD ciro ${fmt(ytd.revenue)} — geçen yıl karşılaştırma verisi yok; bu dönem baz yıl olarak kaydedilecek.`)
+  }
+
+  // 2. Margin quality signal
+  if (ytd.revenue > 0) {
+    const ytdNetMargin = ytd.net_profit / ytd.revenue
+    if (ytdNetMargin >= 0.15) {
+      quarterlyBriefLines.push(`Net marj ${pct(ytdNetMargin)} — güçlü kârlılık; temettü kapasitesi ve yatırım tampon mevcut.`)
+    } else if (ytdNetMargin >= 0.05) {
+      quarterlyBriefLines.push(`Net marj ${pct(ytdNetMargin)} — kâr pozitif ancak ince; gider artışı veya gelir düşüşü marjı hızla eritebilir.`)
+    } else if (ytdNetMargin >= 0) {
+      quarterlyBriefLines.push(`Net marj ${pct(ytdNetMargin)} — neredeyse başabaş; vergi yükümlülükleri ve operasyonel tampon minimum düzeyde.`)
+    } else {
+      quarterlyBriefLines.push(`Net marj negatif (${pct(ytdNetMargin)}) — YTD zarar; vergi matrahı oluşmaz ancak gider yapısı mevcut gelirle örtüşmüyor.`)
+    }
+  }
+
+  // 3. Gecici vergi compliance
+  if (pastDueGecici.length > 0) {
+    quarterlyBriefLines.push(`${pastDueGecici.length} geçici vergi dönemi vadesi geçti — beyan yapılmadıysa gecikme zammı ve vergi cezası riski doğuyor.`)
+  } else if (ytd.total_gecici > 0) {
+    const remaining = Math.max(0, ytd.corporate_tax - ytd.total_gecici)
+    if (remaining > 0) {
+      quarterlyBriefLines.push(`${fmt(ytd.total_gecici)} geçici vergi ödendi; yıl sonunda ${fmt(remaining)} kurumlar vergisi mahsubu kalan — nakit planlamasında ayrılmış olmalı.`)
+    } else {
+      quarterlyBriefLines.push(`Ödenen geçici vergiler tahmini kurumlar vergisini karşılıyor — yıl sonu nakit çıkışı minimal görünüyor.`)
+    }
+  }
+
+  // 4. Close readiness
+  const failCount = closeChecks.length - passCount
+  if (failCount === 0) {
+    quarterlyBriefLines.push('Dönem kapanış kontrolleri tam geçti — finansal tablolar onaylanmaya hazır.')
+  } else {
+    const failLabels = closeChecks.filter(c => !c.ok).map(c => c.label).join(', ')
+    quarterlyBriefLines.push(`${failCount} kapanış kontrolü eksik (${failLabels}) — raporlar kesinleştirilmeden önce giderilmeli.`)
+  }
+
   return (
     <div className="space-y-4">
 
@@ -233,6 +286,20 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
           </div>
         ))}
       </div>
+
+      {/* C8 — Quarterly Pressure Brief */}
+      {quarterlyBriefLines.length > 0 && (
+        <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded p-4 shadow-sm">
+          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Çeyreklik Baskı Özeti</div>
+          <div className="space-y-1.5">
+            {quarterlyBriefLines.map((line, i) => (
+              <p key={i} className="text-xs text-[#334155] leading-relaxed">
+                {i > 0 && <span className="text-[#94a3b8] mr-1">—</span>}{line}
+              </p>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Zone 2 — Quarter grid */}
       {qs.length > 0 && (
@@ -282,10 +349,10 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
                       {fmt(q.net_profit)}
                     </DataTd>
                     <DataTd align="right" className={`font-mono ${q.gross_margin >= 0.3 ? 'text-pos-text' : q.gross_margin >= 0.1 ? 'text-warn-text' : 'text-neg'}`}>
-                      {q.revenue > 0 ? fmtPct(q.gross_margin) : '—'}
+                      {q.revenue > 0 ? pct(q.gross_margin) : '—'}
                     </DataTd>
                     <DataTd align="right" className={`font-mono ${q.net_margin >= 0 ? 'text-[#64748b]' : 'text-neg'}`}>
-                      {q.revenue > 0 ? fmtPct(q.net_margin) : '—'}
+                      {q.revenue > 0 ? pct(q.net_margin) : '—'}
                     </DataTd>
                     <DataTd align="right" className={`font-mono ${q.matrah > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>
                       {q.matrah > 0 ? fmt(q.matrah) : '—'}
@@ -305,10 +372,10 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
                 <DataTd align="right" className={`font-mono font-black ${ytd.gross_profit >= 0 ? 'text-brand' : 'text-neg'}`}>{fmt(ytd.gross_profit)}</DataTd>
                 <DataTd align="right" className={`font-mono font-black ${ytd.net_profit >= 0 ? 'text-pos-text' : 'text-neg'}`}>{fmt(ytd.net_profit)}</DataTd>
                 <DataTd align="right" className="font-mono text-[#64748b]">
-                  {ytd.revenue > 0 ? fmtPct(ytd.gross_profit / ytd.revenue) : '—'}
+                  {ytd.revenue > 0 ? pct(ytd.gross_profit / ytd.revenue) : '—'}
                 </DataTd>
                 <DataTd align="right" className="font-mono text-[#64748b]">
-                  {ytd.revenue > 0 ? fmtPct(ytd.net_profit / ytd.revenue) : '—'}
+                  {ytd.revenue > 0 ? pct(ytd.net_profit / ytd.revenue) : '—'}
                 </DataTd>
                 <DataTd align="right" className={`font-mono font-black ${ytd.matrah > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>{ytd.matrah > 0 ? fmt(ytd.matrah) : '—'}</DataTd>
               </tr>
