@@ -80,7 +80,7 @@ function KpiCard({
 
   return (
     <div className="flex flex-col gap-0.5 px-4 py-3 border-r border-[#e2e8f0] last:border-r-0">
-      <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">{label}</div>
+      <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">{label}</div>
       <div className={`text-lg font-black tabular-nums leading-tight ${valueColor}`}>{value}</div>
       {sub && <div className="text-[10px] text-gray-400 mt-0.5">{sub}</div>}
     </div>
@@ -224,14 +224,14 @@ export default async function CorporateTaxPage() {
       {/* ── Quarterly Breakdown ─────────────────────────────────────────────── */}
       <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
         <div className="px-4 py-2.5 bg-[#f8fafc] border-b border-[#e2e8f0]">
-          <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+          <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">
             Geçici Vergi Takvimi — {currentYear}
           </div>
         </div>
 
         <div className="divide-y divide-[#e2e8f0]">
           {/* Column headers */}
-          <div className="grid grid-cols-[80px_1fr_1fr_1fr_110px] px-4 py-2 text-[10px] font-black uppercase tracking-widest text-gray-400">
+          <div className="grid grid-cols-[80px_1fr_1fr_1fr_110px] px-4 py-2 text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">
             <div>Dönem</div>
             <div className="text-right">Matrah</div>
             <div className="text-right">Tahmini KV</div>
@@ -335,7 +335,7 @@ export default async function CorporateTaxPage() {
       {monthsElapsed < 12 && projectedMatrah > 0 && (
         <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
           <div className="px-4 py-2.5 bg-[#f8fafc] border-b border-[#e2e8f0]">
-            <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+            <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">
               Yıllık Projeksiyon (Extrapolasyon)
             </div>
           </div>

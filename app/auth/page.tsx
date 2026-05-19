@@ -6,7 +6,7 @@ import { useSupabase } from '@/lib/hooks/useSupabase'
 
 type Mode = 'login' | 'register'
 
-const IL  = 'w-full border border-[#e2e8f0] rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white'
+const IL  = 'w-full border border-[#e2e8f0] rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 bg-white'
 const LAB = 'block text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5'
 
 export default function AuthPage() {
@@ -66,12 +66,12 @@ export default function AuthPage() {
             <span className="text-white font-black text-sm">F</span>
           </div>
           <div>
-            <div className="font-black text-gray-900">Flowra</div>
-            <div className="text-xs text-gray-400">ERP Sistemi</div>
+            <div className="font-black text-[#0f172a]">Flowra</div>
+            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">ERP Sistemi</div>
           </div>
         </div>
 
-        <h2 className="text-xl font-bold mb-6">
+        <h2 className="text-base font-bold text-[#0f172a] mb-6">
           {mode === 'login' ? 'Giriş Yap' : 'Hesap Oluştur'}
         </h2>
 
@@ -113,7 +113,7 @@ export default function AuthPage() {
           )}
 
           {error   && <div className="text-sm text-neg bg-neg-light border border-neg-light rounded px-3 py-2">{error}</div>}
-          {success && <div className="text-sm text-pos-text bg-pos-light border border-green-100 rounded px-3 py-2">{success}</div>}
+          {success && <div className="text-sm text-pos-text bg-pos-light border border-pos-light rounded px-3 py-2">{success}</div>}
 
           <button onClick={handle} disabled={loading}
             className="w-full bg-primary-600 text-white py-2.5 rounded text-sm font-bold hover:bg-primary-700 disabled:opacity-50 transition-colors">

@@ -215,11 +215,11 @@ export async function TaxTab({ userId, companyId }: Props) {
         <table className="w-full text-xs">
           <thead>
             <tr className="bg-[#f8fafc] border-b border-[#e2e8f0]">
-              <th className="text-left px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-400">Dönem</th>
+              <th className="text-left px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Dönem</th>
               <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-pos">Satış KDV</th>
               <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-neg">İndirilecek</th>
-              <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-400">Net KDV</th>
-              <th className="text-center px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-400">Durum</th>
+              <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Net KDV</th>
+              <th className="text-center px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Durum</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#f1f5f9]">
@@ -369,7 +369,7 @@ export async function TaxTab({ userId, companyId }: Props) {
           href="/dashboard/cfo/tax/kdv"
           className="bg-white border border-[#e2e8f0] rounded px-4 py-3 hover:border-orange-200 transition-colors shadow-sm"
         >
-          <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">KDV Detayı</div>
+          <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">KDV Detayı</div>
           <div className="text-xs font-bold text-gray-900">KDV Özeti →</div>
           <div className="text-[10px] text-gray-400 mt-0.5">Hesaplanan − İndirilecek = Net KDV · Beyanname hazırlığı</div>
         </Link>
@@ -377,7 +377,7 @@ export async function TaxTab({ userId, companyId }: Props) {
           href="/dashboard/cfo/tax/corporate"
           className="bg-white border border-[#e2e8f0] rounded px-4 py-3 hover:border-warn-light transition-colors shadow-sm"
         >
-          <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Kurumlar Vergisi</div>
+          <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Kurumlar Vergisi</div>
           <div className="text-xs font-bold text-gray-900">KV Raporu →</div>
           <div className="text-[10px] text-gray-400 mt-0.5">Geçici vergi takvimi · YTD kurumlar vergisi tahmini</div>
         </Link>

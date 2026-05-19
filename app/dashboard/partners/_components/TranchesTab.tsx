@@ -120,7 +120,7 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
           onSubmit={handleSubmit}
           className="bg-white border border-[#e2e8f0] rounded px-5 py-5 shadow-sm flex flex-col gap-4"
         >
-          <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+          <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">
             Yeni Borç Tranşı
           </div>
 

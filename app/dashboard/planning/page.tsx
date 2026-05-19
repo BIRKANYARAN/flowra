@@ -88,7 +88,7 @@ export default async function PlanningPage({ searchParams }: PageProps) {
 
       {/* PAGE HERO */}
       <div>
-        <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Planlama Merkezi</div>
+        <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Planlama Merkezi</div>
         <h1 className="text-2xl font-black tracking-tight text-gray-900 leading-tight">
           {planTitles[activeTab] ?? 'Planlama'}
         </h1>

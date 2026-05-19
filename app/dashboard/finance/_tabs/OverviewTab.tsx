@@ -152,7 +152,7 @@ export async function OverviewTab({ userId: _userId, companyId }: Props) {
 
       {/* Zone 1 — Likidite Kontrol Merkezi */}
       <div>
-        <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1.5">Likidite Kontrol Merkezi</div>
+        <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">Likidite Kontrol Merkezi</div>
         <div className="grid grid-cols-4 gap-2">
           <KpiBlock label="Nakit Pozisyonu" value={fmt(m.cash.true_cash_position)}
             sub="Tahsilat − ödenen giderler"
@@ -189,7 +189,7 @@ export async function OverviewTab({ userId: _userId, companyId }: Props) {
       {/* Zone 2 — Tahsilat + Risk */}
       <div className="grid grid-cols-5 gap-2">
         <div className="col-span-3">
-          <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1.5">Tahsilat Sağlığı</div>
+          <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">Tahsilat Sağlığı</div>
           <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 space-y-2 shadow-sm">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-gray-600">Toplam Açık Alacak</span>
@@ -223,7 +223,7 @@ export async function OverviewTab({ userId: _userId, companyId }: Props) {
           </div>
         </div>
         <div className="col-span-2">
-          <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1.5">Risk Matrisi</div>
+          <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">Risk Matrisi</div>
           <div className="space-y-1.5">
             <RiskPill label="Runway"
               value={runwayMonths !== null ? `${runwayMonths.toFixed(1)} ay` : '∞'}
@@ -243,7 +243,7 @@ export async function OverviewTab({ userId: _userId, companyId }: Props) {
 
       {/* Zone 3 — Finansal Özet */}
       <div>
-        <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1.5">Finansal Özet</div>
+        <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">Finansal Özet</div>
         <div className="grid grid-cols-5 gap-2">
           <KpiBlock label="Özsermaye" value={fmt(m.partner.total_equity)}
             sub="Toplam capital_in" href="/dashboard/partners" />
@@ -268,7 +268,7 @@ export async function OverviewTab({ userId: _userId, companyId }: Props) {
       {/* Zone 4 — Runway Chart */}
       {chartMonths.length > 0 && (
         <div>
-          <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1.5">12 Aylık Nakit Projeksiyonu</div>
+          <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">12 Aylık Nakit Projeksiyonu</div>
           <div className="bg-white border border-[#e2e8f0] rounded px-4 py-4 shadow-sm">
             <div className="flex items-end gap-1.5 h-24">
               {chartMonths.map((mo) => {

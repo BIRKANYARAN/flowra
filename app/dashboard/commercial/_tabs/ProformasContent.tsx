@@ -127,7 +127,7 @@ export async function ProformasContent({ companyId }: Props) {
       {/* ── Proforma Status Funnel ────────────────────────────────────── */}
       {list.length > 2 && totalNonDraft > 0 && (
         <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
-          <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">Teklif Dönüşüm Hunisi</div>
+          <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Teklif Dönüşüm Hunisi</div>
           <div className="flex items-stretch gap-1">
             {[
               { label: 'Taslak',    count: draftCount,     color: 'bg-gray-200',    textColor: 'text-gray-600'    },

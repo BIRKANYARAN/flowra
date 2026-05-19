@@ -118,7 +118,7 @@ function PaymentDrawer({ sale, onClose, onSuccess }: PaymentDrawerProps) {
         {/* Drawer header */}
         <div className="flex items-start justify-between px-5 py-4 border-b border-[#e2e8f0]">
           <div>
-            <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 leading-none">
+            <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] leading-none">
               Ödeme Kaydet
             </div>
             <div className="text-sm font-semibold text-gray-900 mt-1">{sale.customer_name}</div>
@@ -147,7 +147,7 @@ function PaymentDrawer({ sale, onClose, onSuccess }: PaymentDrawerProps) {
           <div>
             <label
               htmlFor="payment-amount"
-              className="text-[10px] font-black uppercase tracking-widest text-gray-400 block mb-1.5 leading-none"
+              className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] block mb-1.5 leading-none"
             >
               Ödeme Tutarı (TRY)
             </label>
@@ -179,7 +179,7 @@ function PaymentDrawer({ sale, onClose, onSuccess }: PaymentDrawerProps) {
           <div>
             <label
               htmlFor="payment-method"
-              className="text-[10px] font-black uppercase tracking-widest text-gray-400 block mb-1.5 leading-none"
+              className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] block mb-1.5 leading-none"
             >
               Ödeme Yöntemi
             </label>
@@ -199,7 +199,7 @@ function PaymentDrawer({ sale, onClose, onSuccess }: PaymentDrawerProps) {
           <div>
             <label
               htmlFor="payment-date"
-              className="text-[10px] font-black uppercase tracking-widest text-gray-400 block mb-1.5 leading-none"
+              className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] block mb-1.5 leading-none"
             >
               Ödeme Tarihi
             </label>

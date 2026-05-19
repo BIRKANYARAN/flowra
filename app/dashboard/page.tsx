@@ -571,7 +571,7 @@ export default async function DashboardPage() {
       {ctxChain && (
         <Link href={ctxChain.href}
           className="flex items-center gap-3 px-4 py-2.5 bg-white border border-[#e2e8f0] rounded shadow-sm hover:border-[#e2e8f0] transition-colors overflow-hidden group">
-          <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 flex-shrink-0">BAĞLAM</span>
+          <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] flex-shrink-0">BAĞLAM</span>
           <div className="flex items-center gap-1 overflow-x-auto scrollbar-none flex-1 min-w-0">
             {ctxChain.nodes.map((node, i) => (
               <span key={i} className="flex items-center gap-1 flex-shrink-0">
@@ -597,10 +597,10 @@ export default async function DashboardPage() {
       {/* ── SİSTEM YORUMU — AI / rule-based narrative panel ──────────────────── */}
       <div className="bg-white border border-[#e2e8f0] rounded px-5 py-4 shadow-sm">
         <div className="flex items-center justify-between mb-3">
-          <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Sistem Yorumu</span>
+          <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Sistem Yorumu</span>
           <span className={`text-[8px] font-semibold px-2 py-0.5 rounded ${
             aiSummary.generated_by === 'ai'
-              ? 'bg-violet-50 text-violet-600'
+              ? 'bg-brand-subtle text-brand'
               : 'bg-gray-100 text-gray-400'
           }`}>
             {aiSummary.generated_by === 'ai' ? `AI · ${aiSummary.model_version ?? 'claude'}` : 'kural tabanlı'}
@@ -722,7 +722,7 @@ export default async function DashboardPage() {
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-3 border-b border-[#f1f5f9]">
           <div className="flex items-center gap-2.5">
-            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Karar Sırası</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Karar Sırası</span>
             {critAlerts.length > 0 && (
               <span className="inline-flex items-center text-[9px] font-black bg-neg-light text-white px-1.5 py-0.5 rounded leading-none">
                 {critAlerts.length} ACİL
@@ -794,7 +794,7 @@ export default async function DashboardPage() {
             {infoAlerts.length > 0 && (
               <div>
                 <div className="px-5 py-1.5 bg-[#f8fafc]/60">
-                  <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">
                     ○ Bilgi — {infoAlerts.length}
                   </span>
                 </div>
@@ -824,7 +824,7 @@ export default async function DashboardPage() {
         cashDistributable < 0 ? 'border-neg-light' : cashDistributable > 0 ? 'border-[#e2e8f0]' : 'border-[#e2e8f0]'
       }`}>
         <div className="flex items-center justify-between px-5 py-2.5 border-b border-[#f1f5f9]">
-          <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Nakit Köprüsü</span>
+          <span className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Nakit Köprüsü</span>
           <Link href="/dashboard/finance?tab=cashflow" className="text-[10px] text-primary-600 font-semibold hover:text-primary-700">Cashflow →</Link>
         </div>
         {/* Rail: first 3 items normal, "= Dağıtılabilir" is the decision node — always dominant */}
@@ -877,7 +877,7 @@ export default async function DashboardPage() {
         {/* Runway summary — compressed single line */}
         <div className="lg:col-span-8 bg-white border border-[#e2e8f0] rounded shadow-sm">
           <div className="flex items-center justify-between px-5 py-2.5 border-b border-[#f1f5f9]">
-            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Nakit Pisti</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Nakit Pisti</span>
             <Link href="/dashboard/planning?tab=cash-projection" className="text-[10px] text-primary-600 font-semibold hover:text-primary-700">Projeksiyon →</Link>
           </div>
           {/* Scenario strip: calm equal weight. Base gets slightly larger when in danger — no opacity tricks. */}
@@ -918,7 +918,7 @@ export default async function DashboardPage() {
         <div className="lg:col-span-4 flex flex-col gap-3">
           {/* Giderler breakdown */}
           <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3.5 shadow-sm">
-            <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">Giderler</div>
+            <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Giderler</div>
             <div className="text-xl font-black tabular-nums text-gray-900 leading-none mb-1">
               <span className="text-gray-300 font-normal text-sm mr-0.5">₺</span>{formatKpi(fs.expenses_total_try)}
             </div>
@@ -937,7 +937,7 @@ export default async function DashboardPage() {
           {outstanding > 0 && (
             <Link href="/dashboard/commercial?tab=proformas"
               className="bg-white border border-[#e2e8f0] rounded px-4 py-3.5 shadow-sm hover:border-[#e2e8f0] transition-colors">
-              <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">Açık Proformalar</div>
+              <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">Açık Proformalar</div>
               <div className="text-xl font-black tabular-nums text-primary-700 leading-none">
                 <span className="text-primary-300 font-normal text-sm mr-0.5">₺</span>{formatKpi(outstanding)}
               </div>
@@ -959,7 +959,7 @@ export default async function DashboardPage() {
           {taskReminders.length > 0 && (
             <Link href="/dashboard/planning?tab=tasks"
               className="bg-white border border-[#e2e8f0] rounded px-4 py-3.5 shadow-sm hover:border-[#e2e8f0] transition-colors">
-              <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">Yaklaşan Görevler</div>
+              <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">Yaklaşan Görevler</div>
               <div className="text-xl font-black text-primary-700">{taskReminders.length}</div>
               <div className="text-[10px] text-gray-400 mt-1">
                 {taskReminders.filter(t => t.due_date < todayISO).length > 0
@@ -976,7 +976,7 @@ export default async function DashboardPage() {
       <div className="bg-white border border-[#e2e8f0] rounded shadow-sm overflow-hidden">
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#f1f5f9]">
           <div className="flex items-center gap-3">
-            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Risk Radar</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Risk Radar</span>
             <span className={`text-[9px] font-black px-2 py-0.5 rounded ${situTheme.badge}`}>
               {situation.composite}/100
             </span>
@@ -1042,7 +1042,7 @@ export default async function DashboardPage() {
               <Link key={dim.key} href={dim.href}
                 className="flex flex-col gap-2 group hover:bg-[#f8fafc]/60 rounded p-3 -m-1 transition-colors">
                 <div className="flex items-center justify-between">
-                  <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">{dim.label}</span>
+                  <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">{dim.label}</span>
                   <span className={`text-[9px] font-bold ${scoreColor}`}>{statusLabel}</span>
                 </div>
                 {/* Score number */}

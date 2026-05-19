@@ -242,7 +242,7 @@ export function CommandBar() {
             className="flex-1 text-[13px] text-gray-900 placeholder:text-gray-400 bg-transparent outline-none"
           />
           {smartLoading && (
-            <span className="w-3 h-3 rounded-full border-2 border-violet-400 border-t-transparent animate-spin flex-shrink-0" />
+            <span className="w-3 h-3 rounded-full border-2 border-brand border-t-transparent animate-spin flex-shrink-0" />
           )}
           <kbd className="text-[9px] text-gray-400 bg-gray-100 border border-[#e2e8f0] px-1.5 py-0.5 rounded font-mono leading-tight flex-shrink-0">
             ESC
@@ -263,11 +263,11 @@ export function CommandBar() {
                   <div className={`px-4 pt-3 pb-1 flex items-center gap-2 ${
                     grp.name === 'Akıllı Öneriler' ? 'pt-2' : ''
                   }`}>
-                    <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">
+                    <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">
                       {grp.name}
                     </span>
                     {grp.name === 'Akıllı Öneriler' && (
-                      <span className="text-[8px] font-bold bg-violet-100 text-violet-600 px-1.5 py-0.5 rounded">
+                      <span className="text-[8px] font-bold bg-brand-subtle text-brand px-1.5 py-0.5 rounded">
                         CANLI
                       </span>
                     )}
@@ -277,10 +277,10 @@ export function CommandBar() {
                   {grp.items.map(({ cmd, flatIdx }) => {
                     const isSelected = sel === flatIdx
                     const iconEl =
-                      cmd.kind === 'smart'  ? <span className="text-violet-500 text-xs">⚡</span> :
-                      cmd.kind === 'op'     ? <span className="text-gray-500 text-[10px] font-black">▶</span> :
+                      cmd.kind === 'smart'  ? <span className="text-brand-light text-xs">⚡</span> :
+                      cmd.kind === 'op'     ? <span className="text-[#64748b] text-[10px] font-black">▶</span> :
                       cmd.kind === 'create' ? <span className="text-pos text-sm font-black leading-none">+</span> :
-                      cmd.kind === 'nav'    ? <span className="text-violet-400 text-[9px] font-black">◆</span> :
+                      cmd.kind === 'nav'    ? <span className="text-brand text-[9px] font-black">◆</span> :
                                              <span className="text-gray-400 text-xs">→</span>
                     return (
                       <button
@@ -290,14 +290,14 @@ export function CommandBar() {
                         className={[
                           'relative w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors',
                           isSelected
-                            ? cmd.kind === 'smart' ? 'bg-violet-50' : 'bg-[#f8fafc]'
+                            ? cmd.kind === 'smart' ? 'bg-brand-subtle/30' : 'bg-[#f8fafc]'
                             : '',
                         ].join(' ')}
                       >
                         {/* Left accent */}
                         {isSelected && (
                           <span className={`absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full ${
-                            cmd.kind === 'smart' ? 'bg-violet-500' : 'bg-gray-400'
+                            cmd.kind === 'smart' ? 'bg-brand' : 'bg-[#94a3b8]'
                           }`} />
                         )}
 

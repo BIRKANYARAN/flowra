@@ -103,7 +103,7 @@ export default function AlertSettingsPage() {
       {!loading && (
         <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
           <div className="px-4 py-2.5 bg-[#f8fafc] border-b border-[#e2e8f0]">
-            <div className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-3 text-[10px] font-black uppercase tracking-widest text-gray-400">
+            <div className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-3 text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">
               <span>Kural</span>
               <span>Eşik</span>
               <span>Ciddiyet</span>

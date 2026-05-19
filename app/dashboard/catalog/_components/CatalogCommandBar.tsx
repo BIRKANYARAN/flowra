@@ -118,7 +118,7 @@ export async function CatalogCommandBar({ companyId }: Props) {
 
         {/* Total products */}
         <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#e2e8f0] rounded">
-          <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Ürünler</span>
+          <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Ürünler</span>
           <span className="text-sm font-black tabular-nums text-gray-900">{totalProducts}</span>
           <span className="text-[9px] text-gray-400">aktif</span>
         </div>
@@ -129,7 +129,7 @@ export async function CatalogCommandBar({ companyId }: Props) {
             ? 'bg-white border-[#e2e8f0]'
             : 'bg-warn-light border-warn-light'
         }`}>
-          <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Fiyatlı</span>
+          <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Fiyatlı</span>
           <span className={`text-sm font-black tabular-nums ${
             pricedProducts.length === totalProducts ? 'text-gray-900' : 'text-warn-text'
           }`}>{pricedProducts.length}/{totalProducts}</span>
@@ -143,7 +143,7 @@ export async function CatalogCommandBar({ companyId }: Props) {
             ? 'bg-[#f8fafc] border-[#e2e8f0]'
             : 'bg-warn-light border-warn-light'
         }`}>
-          <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Maliyetli</span>
+          <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Maliyetli</span>
           <span className={`text-sm font-black tabular-nums ${
             costdProducts.length === totalProducts ? 'text-gray-900' :
             costdProducts.length === 0             ? 'text-gray-400' : 'text-warn-text'

@@ -51,7 +51,7 @@ interface BalanceSheet {
 function Section({ title }: { title: string }) {
   return (
     <div className="px-4 py-2 bg-[#f8fafc] border-b border-[#e2e8f0]">
-      <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">{title}</div>
+      <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">{title}</div>
     </div>
   )
 }

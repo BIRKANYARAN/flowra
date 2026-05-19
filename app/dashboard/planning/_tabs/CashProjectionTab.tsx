@@ -147,7 +147,7 @@ export async function CashProjectionTab({ companyId }: Props) {
           { key: 'optimistic',  label: 'İyimser (+15%)',   summary: forecast.summary.optimistic,  accent: 'border-pos-light bg-pos-light', text: 'text-pos-text', sub: 'text-pos' },
         ] as const).map(s => (
           <div key={s.key} className={`rounded border px-4 py-3.5 ${s.accent}`}>
-            <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2">{s.label}</div>
+            <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-2">{s.label}</div>
             <div className={`text-xl font-black tabular-nums leading-none ${s.text}`}>
               <span className="text-gray-300 text-sm font-normal mr-0.5">₺</span>
               {fmtK(Math.abs(s.summary.endCash))}
@@ -172,7 +172,7 @@ export async function CashProjectionTab({ companyId }: Props) {
       <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#f1f5f9]">
           <div>
-            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Baz Senaryo — Aylık Nakit Pozisyonu</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Baz Senaryo — Aylık Nakit Pozisyonu</span>
             <span className="ml-2 text-[9px] text-gray-400">({startYear} projeksiyonu)</span>
           </div>
           <Link href="/dashboard/planning?tab=scenarios" className="text-[10px] text-primary-600 font-semibold hover:underline">
@@ -206,10 +206,10 @@ export async function CashProjectionTab({ companyId }: Props) {
           <table className="w-full text-[10px]">
             <thead>
               <tr className="bg-[#f8fafc]/60">
-                <th className="text-left px-5 py-2 text-[9px] font-black uppercase tracking-widest text-gray-400 whitespace-nowrap">Ay</th>
-                <th className="text-right px-3 py-2 text-[9px] font-black uppercase tracking-widest text-gray-400 whitespace-nowrap">Gelir</th>
-                <th className="text-right px-3 py-2 text-[9px] font-black uppercase tracking-widest text-gray-400 whitespace-nowrap">Net</th>
-                <th className="text-right px-5 py-2 text-[9px] font-black uppercase tracking-widest text-gray-400 whitespace-nowrap">Nakit</th>
+                <th className="text-left px-5 py-2 text-[9px] font-black uppercase tracking-widest text-[#94a3b8] whitespace-nowrap">Ay</th>
+                <th className="text-right px-3 py-2 text-[9px] font-black uppercase tracking-widest text-[#94a3b8] whitespace-nowrap">Gelir</th>
+                <th className="text-right px-3 py-2 text-[9px] font-black uppercase tracking-widest text-[#94a3b8] whitespace-nowrap">Net</th>
+                <th className="text-right px-5 py-2 text-[9px] font-black uppercase tracking-widest text-[#94a3b8] whitespace-nowrap">Nakit</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#f1f5f9]">
@@ -264,7 +264,7 @@ export async function CashProjectionTab({ companyId }: Props) {
 function Metric({ label, value, sub, color }: { label: string; value: string; sub: string; color: string }) {
   return (
     <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
-      <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1">{label}</div>
+      <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{label}</div>
       <div className={`text-lg font-black tabular-nums leading-none ${color}`}>{value}</div>
       <div className="text-[9px] text-gray-400 mt-1">{sub}</div>
     </div>

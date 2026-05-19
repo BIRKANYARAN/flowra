@@ -151,7 +151,7 @@ export async function SalesContent({ companyId }: Props) {
       {/* ── Currency breakdown (only if multi-currency) ───────────────────── */}
       {topCurrencies.length > 1 && (
         <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
-          <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">Bu Ay — Para Birimi Dağılımı</div>
+          <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Bu Ay — Para Birimi Dağılımı</div>
           <div className="flex gap-4 flex-wrap">
             {topCurrencies.map(([cur, total]) => (
               <div key={cur} className="flex items-center gap-2">

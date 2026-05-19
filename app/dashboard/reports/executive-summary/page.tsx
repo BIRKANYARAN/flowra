@@ -201,7 +201,7 @@ export default function ExecutiveSummaryPage() {
 
           {/* P&L Summary */}
           <div>
-            <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Kâr / Zarar</div>
+            <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-2">Kâr / Zarar</div>
             <div className="grid grid-cols-4 gap-2">
               <KpiCard label="Satış Gelirleri"  value={fmt(is?.revenue ?? 0)} />
               <KpiCard label="Brüt Kâr"         value={fmt(is?.gross_profit ?? 0)}
@@ -217,7 +217,7 @@ export default function ExecutiveSummaryPage() {
 
           {/* Balance Sheet + Cash Flow */}
           <div>
-            <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Finansal Pozisyon</div>
+            <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-2">Finansal Pozisyon</div>
             <div className="grid grid-cols-4 gap-2">
               <KpiCard label="Toplam Varlık"     value={fmt(bs?.total_assets ?? 0)} />
               <KpiCard label="Nakit"             value={fmt(bs?.cash_try ?? 0)} tone="positive" />
@@ -230,7 +230,7 @@ export default function ExecutiveSummaryPage() {
           {/* Cash Flow + Tax */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Nakit Akışı</div>
+              <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-2">Nakit Akışı</div>
               <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
                 {[
                   { label: 'Faaliyet Nakit Akışı',   value: cf?.operating  ?? 0 },
@@ -248,7 +248,7 @@ export default function ExecutiveSummaryPage() {
               </div>
             </div>
             <div>
-              <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Vergi Özeti</div>
+              <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-2">Vergi Özeti</div>
               <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
                 {[
                   { label: 'Satış KDV',     value: tax?.sales_vat    ?? 0 },

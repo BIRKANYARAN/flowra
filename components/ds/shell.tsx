@@ -40,15 +40,15 @@ export const TOKENS = {
   panelOk:       'bg-pos-light border border-pos-light rounded',
 
   // Section label (inner, above a block)
-  label: 'text-[10px] font-black uppercase tracking-widest text-gray-400 leading-none',
+  label: 'text-[10px] font-black uppercase tracking-widest text-[#94a3b8] leading-none',
 
   // Page-level section divider label
-  pageLabel: 'text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1.5',
+  pageLabel: 'text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5',
 
   // Page hero title
   heroTitle: 'text-2xl font-black tracking-tight text-gray-900 leading-tight',
   heroSub:   'text-sm text-gray-400 mt-1',
-  heroSuper: 'text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1',
+  heroSuper: 'text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-1',
 
   // Typography
   valueXl:  'text-xl font-black tabular-nums leading-none',
@@ -438,7 +438,7 @@ export function DataTh({
 }) {
   return (
     <th className={cn(
-      'px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400 bg-[#f8fafc]/60 border-b border-[#e2e8f0]',
+      'px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc]/60 border-b border-[#e2e8f0]',
       align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left',
       first && 'pl-5',
     )}>

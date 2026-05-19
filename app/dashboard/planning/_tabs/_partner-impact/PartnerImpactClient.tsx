@@ -150,7 +150,7 @@ export function PartnerImpactClient({
       {/* ── Position summary strip ─────────────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
-          <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1">Nakit Bakiye</div>
+          <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Nakit Bakiye</div>
           <div className={`text-lg font-black tabular-nums ${cashBalance >= 0 ? 'text-gray-900' : 'text-neg'}`}>
             {fmt(cashBalance)}
           </div>
@@ -158,7 +158,7 @@ export function PartnerImpactClient({
         </div>
 
         <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
-          <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1">Dağıtılabilir</div>
+          <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Dağıtılabilir</div>
           <div className={`text-lg font-black tabular-nums ${cashDistributable > 0 ? 'text-pos-text' : 'text-gray-400'}`}>
             {cashDistributable > 0 ? fmt(cashDistributable) : '—'}
           </div>
@@ -166,7 +166,7 @@ export function PartnerImpactClient({
         </div>
 
         <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
-          <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1">Net Gelir (Tahakkuk)</div>
+          <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Net Gelir (Tahakkuk)</div>
           <div className={`text-lg font-black tabular-nums ${netIncome >= 0 ? 'text-gray-900' : 'text-neg'}`}>
             {fmt(netIncome)}
           </div>
@@ -174,7 +174,7 @@ export function PartnerImpactClient({
         </div>
 
         <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
-          <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1">Toplam Ortak Borcu</div>
+          <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Toplam Ortak Borcu</div>
           <div className={`text-lg font-black tabular-nums ${totalLoanBalance > 0 ? 'text-warn-text' : 'text-gray-400'}`}>
             {totalLoanBalance > 0 ? fmt(totalLoanBalance) : 'Yok'}
           </div>
@@ -204,7 +204,7 @@ export function PartnerImpactClient({
       <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
         <div className="flex items-center justify-between px-5 py-3 border-b border-[#f1f5f9]">
           <div>
-            <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Dağıtım Simülatörü</div>
+            <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Dağıtım Simülatörü</div>
             <div className="text-[10px] text-gray-400 mt-0.5">
               Kaydırıcıyla dağıtılacak tutarı değiştirin, payları canlı görün
             </div>
@@ -277,13 +277,13 @@ export function PartnerImpactClient({
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[#f1f5f9] bg-[#f8fafc]/60">
-                  <th className="text-left px-5 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400">Ortak</th>
-                  <th className="text-right px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400">Pay</th>
+                  <th className="text-left px-5 py-2.5 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Ortak</th>
+                  <th className="text-right px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Pay</th>
                   {hasEqualization && (
                     <th className="text-right px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-info">Eşitleme</th>
                   )}
-                  <th className="text-right px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400">Pro-rata</th>
-                  <th className="text-right px-5 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400">Toplam</th>
+                  <th className="text-right px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Pro-rata</th>
+                  <th className="text-right px-5 py-2.5 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Toplam</th>
                   <th className="text-right px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-warn">Ortak Borcu</th>
                 </tr>
               </thead>
@@ -324,7 +324,7 @@ export function PartnerImpactClient({
               </tbody>
               <tfoot>
                 <tr className="border-t border-[#e2e8f0] bg-[#f8fafc]/40">
-                  <td colSpan={hasEqualization ? 4 : 3} className="px-5 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-400">
+                  <td colSpan={hasEqualization ? 4 : 3} className="px-5 py-2.5 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">
                     Toplam
                   </td>
                   <td className="px-5 py-2.5 text-right font-black text-[14px] tabular-nums text-pos-text">
@@ -352,7 +352,7 @@ export function PartnerImpactClient({
       {totalLoanBalance > 0 && (
         <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
           <div className="flex items-center justify-between px-5 py-3 border-b border-[#f1f5f9]">
-            <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Ortak Borç Pozisyonları</div>
+            <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Ortak Borç Pozisyonları</div>
             <Link href="/dashboard/partners?tab=tranches" className="text-[10px] font-semibold text-primary-600 hover:text-primary-700">
               Tranche detayı →
             </Link>

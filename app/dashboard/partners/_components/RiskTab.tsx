@@ -266,7 +266,7 @@ export function RiskTab({ loading }: RiskTabProps) {
           {/* Recommended action */}
           {p.recommended_action && (
             <div className="px-4 py-2 bg-[#f8fafc] border-t border-[#e2e8f0] flex items-center gap-2">
-              <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 shrink-0">Öneri</span>
+              <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] shrink-0">Öneri</span>
               <span className="text-[11px] text-gray-600">{p.recommended_action}</span>
             </div>
           )}

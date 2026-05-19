@@ -112,7 +112,7 @@ export async function ExpensesCommandBar({ companyId }: Props) {
 
         {/* Bu Ay */}
         <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#e2e8f0] rounded">
-          <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Bu Ay</span>
+          <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Bu Ay</span>
           <span className="text-sm font-black tabular-nums text-gray-900">{fmt(curTotal)}</span>
           <span className="text-[9px] text-gray-400">{dayOfMonth}. gün</span>
         </div>
@@ -120,7 +120,7 @@ export async function ExpensesCommandBar({ companyId }: Props) {
         {/* Geçen Ay */}
         {prevTotal > 0 && (
           <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#e2e8f0] rounded">
-            <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Geçen Ay</span>
+            <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Geçen Ay</span>
             <span className="text-sm font-black tabular-nums text-gray-500">{fmt(prevTotal)}</span>
           </div>
         )}
@@ -149,7 +149,7 @@ export async function ExpensesCommandBar({ companyId }: Props) {
         {/* Günlük Hız */}
         {dailyRate > 0 && (
           <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#e2e8f0] rounded">
-            <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Günlük</span>
+            <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Günlük</span>
             <span className="text-sm font-black tabular-nums text-orange-700">{fmt(dailyRate)}</span>
             <span className="text-[9px] text-gray-400">/gün</span>
           </div>

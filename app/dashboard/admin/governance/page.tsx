@@ -112,7 +112,7 @@ const STATUS_THEME = {
 function MetricCard({ label, value, sub, highlight = false }: { label: string; value: string; sub?: string; highlight?: boolean }) {
   return (
     <div className={`rounded border px-4 py-3 ${highlight ? 'border-primary-200 bg-primary-50/50' : 'border-[#e2e8f0] bg-white'}`}>
-      <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">{label}</div>
+      <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{label}</div>
       <div className={`text-xl font-black tabular-nums ${highlight ? 'text-primary-700' : 'text-gray-900'}`}>{value}</div>
       {sub && <div className="text-[10px] text-gray-400 mt-0.5">{sub}</div>}
     </div>
@@ -147,7 +147,7 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
       {/* Header strip */}
       <div className={`rounded border px-5 py-4 ${theme.bg} ${theme.border} flex items-start justify-between gap-4`}>
         <div className="min-w-0">
-          <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">{snap.period_label} · Yönetişim Raporu</div>
+          <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">{snap.period_label} · Yönetişim Raporu</div>
           <div className={`text-lg font-black mt-0.5 ${theme.text}`}>
             {theme.label} · Skor {Math.round(snap.composite_score ?? 0)}/100
           </div>
@@ -176,7 +176,7 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
 
       {/* P&L snapshot */}
       <section>
-        <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">Dönem Gelir Tablosu</div>
+        <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Dönem Gelir Tablosu</div>
         <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
           <MetricCard label="Gelir"      value={fmt(snap.revenue_try)} />
           <MetricCard label="SMMM"       value={fmt(snap.cogs_try)} />
@@ -188,7 +188,7 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
 
       {/* Balance sheet */}
       <section>
-        <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">Bilanço Özeti</div>
+        <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Bilanço Özeti</div>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           <MetricCard label="Toplam Varlık"  value={fmt(snap.total_assets_try)} />
           <MetricCard label="Toplam Borç"    value={fmt(snap.total_liabilities_try)} />
@@ -199,7 +199,7 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
 
       {/* Operational metrics */}
       <section>
-        <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">Operasyonel Metrikler</div>
+        <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Operasyonel Metrikler</div>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           <MetricCard
             label="Nakit Pisti"
@@ -226,15 +226,15 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
       {/* Partner positions */}
       {snap.partner_balances.length > 0 && (
         <section>
-          <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">Ortak Pozisyonları</div>
+          <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Ortak Pozisyonları</div>
           <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[#e2e8f0] bg-[#f8fafc]">
-                  <th className="text-left px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-400">Ortak</th>
-                  <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-400">Pay</th>
-                  <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-400">Borç Bakiyesi</th>
-                  <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-400">İmza</th>
+                  <th className="text-left px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Ortak</th>
+                  <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Pay</th>
+                  <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Borç Bakiyesi</th>
+                  <th className="text-right px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">İmza</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#f1f5f9]">
@@ -286,7 +286,7 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
       {/* Notes */}
       {report.notes && (
         <section>
-          <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Notlar</div>
+          <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-2">Notlar</div>
           <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-3 text-sm text-gray-700">{report.notes}</div>
         </section>
       )}
@@ -463,7 +463,7 @@ export default function GovernancePage() {
       {/* Generate form */}
       {showGenForm && (
         <div data-print-hide className="bg-white border border-[#e2e8f0] rounded px-5 py-5 shadow-sm">
-          <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4">Yeni Yönetişim Raporu Oluştur</div>
+          <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-4">Yeni Yönetişim Raporu Oluştur</div>
           <div className="grid grid-cols-3 gap-3 mb-4">
             <div>
               <label className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] block mb-1">Yıl</label>
@@ -548,7 +548,7 @@ export default function GovernancePage() {
 
           {/* Report list */}
           <div data-print-hide className="flex flex-col gap-2">
-            <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 px-1 mb-1">
+            <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] px-1 mb-1">
               {reports.length} Rapor
             </div>
             {reports.map(r => {

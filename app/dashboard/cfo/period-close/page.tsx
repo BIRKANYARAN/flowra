@@ -260,7 +260,7 @@ export default function PeriodClosePage() {
               {/* Checklist panel */}
               {isExpanded && (
                 <div className="border-t border-[#e2e8f0] px-5 py-4 bg-[#f8fafc]/60">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
                     Kapanış Kontrol Listesi — {reqChecked}/{requiredCount} zorunlu tamamlandı
                   </p>
 

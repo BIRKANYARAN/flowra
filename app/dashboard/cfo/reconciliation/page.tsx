@@ -195,7 +195,7 @@ export default function ReconciliationPage() {
           {/* Reconciliation items table */}
           <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
             <div className="px-4 py-2.5 border-b border-[#e2e8f0] bg-[#f8fafc]">
-              <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Hesap Karşılaştırması</div>
+              <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Hesap Karşılaştırması</div>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-xs">

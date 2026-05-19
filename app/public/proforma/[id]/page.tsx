@@ -19,11 +19,11 @@ export default async function PublicProformaPage({ params }: { params: { id: str
 
   if (!bundle) {
     return (
-      <main className="min-h-screen bg-gray-100 flex items-center justify-center p-4 sm:p-8">
-        <div className="bg-white rounded p-10 text-center max-w-sm w-full border border-[#e2e8f0]">
+      <main className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-4 sm:p-8">
+        <div className="bg-white rounded p-6 text-center max-w-sm w-full border border-[#e2e8f0]">
           <div className="text-4xl mb-3">&#128270;</div>
-          <p className="text-gray-600 font-semibold">Proforma bulunamadı</p>
-          <p className="text-sm text-gray-400 mt-1">Geçersiz veya silinmiş bir bağlantı.</p>
+          <p className="text-[#334155] font-semibold">Proforma bulunamadı</p>
+          <p className="text-sm text-[#94a3b8] mt-1">Geçersiz veya silinmiş bir bağlantı.</p>
         </div>
       </main>
     )
@@ -97,7 +97,7 @@ export default async function PublicProformaPage({ params }: { params: { id: str
   }))
 
   return (
-    <main className="min-h-screen bg-gray-100 py-6 sm:py-10 px-2 sm:px-4 print:bg-white print:py-0 print:px-0">
+    <main className="min-h-screen bg-[#f8fafc] py-6 sm:py-10 px-2 sm:px-4 print:bg-white print:py-0 print:px-0">
       <div className="max-w-3xl mx-auto">
         {/* ── Action bar (hidden on print) ── */}
         <PublicActions
@@ -111,7 +111,7 @@ export default async function PublicProformaPage({ params }: { params: { id: str
         />
 
         <div className="text-center mb-4 print:hidden">
-          <span className="text-xs text-gray-400 tracking-wide">Flowra ile oluşturuldu</span>
+          <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Flowra ile oluşturuldu</span>
         </div>
 
         <div id="proforma-content">

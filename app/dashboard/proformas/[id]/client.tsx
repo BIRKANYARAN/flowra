@@ -380,7 +380,7 @@ export function ProformaDetailClient({
                   <div
                     key={it.id}
                     className={`flex items-center gap-3 p-3.5 rounded border transition-colors ${
-                      it.selected ? 'border-gray-900 bg-[#f8fafc]' : 'border-[#e2e8f0] opacity-50'
+                      it.selected ? 'border-[#0f172a] bg-[#f8fafc]' : 'border-[#e2e8f0] opacity-50'
                     }`}
                   >
                     <input

@@ -272,7 +272,7 @@ export default function CustomerDetailPage() {
                           onClick={() => updateSale(s.id, { payment_status: st })}
                           className={`px-2 py-0.5 rounded border text-[10px] font-bold uppercase transition-colors disabled:cursor-not-allowed
                             ${s.payment_status === st
-                              ? 'bg-gray-900 text-white border-gray-900'
+                              ? 'bg-[#0f172a] text-white border-[#0f172a]'
                               : 'border-[#e2e8f0] text-gray-500 hover:border-[#64748b] hover:text-gray-700'
                             }`}
                         >
@@ -291,7 +291,7 @@ export default function CustomerDetailPage() {
                           onClick={() => updateSale(s.id, { shipment_status: st })}
                           className={`px-2 py-0.5 rounded border text-[10px] font-bold uppercase transition-colors disabled:cursor-not-allowed
                             ${s.shipment_status === st
-                              ? 'bg-gray-900 text-white border-gray-900'
+                              ? 'bg-[#0f172a] text-white border-[#0f172a]'
                               : 'border-[#e2e8f0] text-gray-500 hover:border-[#64748b] hover:text-gray-700'
                             }`}
                         >

@@ -36,8 +36,8 @@ export function UnifiedTabNav({ tabs, activeTab, basePath }: Props) {
               relative flex items-center gap-1.5 px-3 py-2.5 text-[13px]
               transition-colors whitespace-nowrap flex-shrink-0 rounded-none
               ${isActive
-                ? 'text-gray-900 font-semibold border-b-2 border-gray-900 -mb-px'
-                : 'text-gray-400 hover:text-gray-600 font-medium'
+                ? 'text-[#0f172a] font-semibold border-b-2 border-[#0f172a] -mb-px'
+                : 'text-[#94a3b8] hover:text-[#334155] font-medium'
               }
             `}
           >

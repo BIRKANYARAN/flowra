@@ -86,7 +86,7 @@ export function DistributionTab({
           {/* 4-Layer Distribution Breakdown */}
           <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
             <div className="px-4 py-2.5 border-b border-[#e2e8f0] bg-[#f8fafc]">
-              <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">4 Katmanlı Dağıtım Güvenlik Hesabı</div>
+              <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">4 Katmanlı Dağıtım Güvenlik Hesabı</div>
             </div>
             <div className="divide-y divide-[#f1f5f9]">
               {[
@@ -166,13 +166,13 @@ export function DistributionTab({
           {distrib.per_partner_distribution.length > 0 && (
             <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
               <div className="px-4 py-2.5 border-b border-[#e2e8f0] bg-[#f8fafc]">
-                <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Ortak Bazında Hak Edilenler</div>
+                <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Ortak Bazında Hak Edilenler</div>
               </div>
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-[#e2e8f0]">
                     {['Ortak', 'Pay', 'Brüt Hak', 'Stopaj', 'Net Hak'].map(h => (
-                      <th key={h} className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest text-gray-400 ${h === 'Ortak' ? 'text-left' : 'text-right'}`}>{h}</th>
+                      <th key={h} className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest text-[#94a3b8] ${h === 'Ortak' ? 'text-left' : 'text-right'}`}>{h}</th>
                     ))}
                   </tr>
                 </thead>

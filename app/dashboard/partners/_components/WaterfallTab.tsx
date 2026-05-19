@@ -28,10 +28,12 @@ export interface WaterfallTabProps {
 
 // ── Colour palette per partner index ─────────────────────────────────────────
 
+// Partner discriminator palette — intentional multi-hue visualization set
+// (SPEC exception: data visualization requires diverse distinguishable colors)
 const PARTNER_COLORS = [
   'bg-primary-500',
-  'bg-info-light0',
-  'bg-indigo-500',
+  'bg-info',
+  'bg-brand',
   'bg-fuchsia-500',
   'bg-sky-500',
   'bg-purple-500',
@@ -40,7 +42,7 @@ const PARTNER_COLORS = [
 const PARTNER_COLORS_TEXT = [
   'text-primary-700',
   'text-info-text',
-  'text-indigo-700',
+  'text-brand',
   'text-fuchsia-700',
   'text-sky-700',
   'text-purple-700',
@@ -49,7 +51,7 @@ const PARTNER_COLORS_TEXT = [
 const PARTNER_COLORS_BG_LIGHT = [
   'bg-primary-50',
   'bg-info-light',
-  'bg-indigo-50',
+  'bg-brand-subtle',
   'bg-fuchsia-50',
   'bg-sky-50',
   'bg-purple-50',
@@ -80,7 +82,7 @@ function AllocationBar({ waterfall, totalDebt }: { waterfall: WaterfallData; tot
 
   return (
     <div className="bg-white border border-[#e2e8f0] rounded px-5 py-4 shadow-sm">
-      <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">
+      <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
         Nakit Dağılım Haritası
       </div>
 
@@ -200,7 +202,7 @@ export function WaterfallTab({
           <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
             <div className="grid grid-cols-3 divide-x divide-[#e2e8f0]">
               <div className="px-5 py-3.5">
-                <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1">Mevcut Nakit</div>
+                <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Mevcut Nakit</div>
                 <div className="text-xl font-black tabular-nums text-gray-900">
                   {fmt(waterfall.available_cash_try)}
                 </div>
@@ -269,7 +271,7 @@ export function WaterfallTab({
           {waterfall.steps.length > 0 && (
             <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
               <div className="px-4 py-2.5 border-b border-[#e2e8f0] bg-[#f8fafc]/60">
-                <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Öncelik Sırası</div>
+                <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Öncelik Sırası</div>
                 <div className="text-[10px] text-gray-400 mt-0.5">Normalleştirilmiş iki aşamalı waterfall</div>
               </div>
               <div className="divide-y divide-[#f1f5f9]">
@@ -304,7 +306,7 @@ export function WaterfallTab({
             <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
               <div className="px-4 py-2.5 border-b border-[#e2e8f0] bg-[#f8fafc]/60 flex items-center justify-between">
                 <div>
-                  <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Borç Pozisyonları</div>
+                  <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Borç Pozisyonları</div>
                   <div className="text-[10px] text-gray-400 mt-0.5">{waterfall.tranches.filter(t => t.principal_try > 0).length} aktif tranche</div>
                 </div>
               </div>
@@ -312,7 +314,7 @@ export function WaterfallTab({
                 <thead>
                   <tr className="border-b border-[#e2e8f0] bg-[#f8fafc]/40">
                     {['Ortak','Toplam Borç','Ödenen','Kalan','Açık Gün','Durum'].map(h => (
-                      <th key={h} className={`px-4 py-2 text-[9px] font-black uppercase tracking-widest text-gray-400 ${h === 'Ortak' ? 'text-left' : 'text-right'}`}>{h}</th>
+                      <th key={h} className={`px-4 py-2 text-[9px] font-black uppercase tracking-widest text-[#94a3b8] ${h === 'Ortak' ? 'text-left' : 'text-right'}`}>{h}</th>
                     ))}
                   </tr>
                 </thead>

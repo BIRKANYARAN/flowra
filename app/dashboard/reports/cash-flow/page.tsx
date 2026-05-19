@@ -51,7 +51,7 @@ function CFSection({ title, total, children }: {
   return (
     <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
       <div className="px-4 py-2.5 bg-[#f8fafc] border-b border-[#e2e8f0] flex items-center justify-between">
-        <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">{title}</span>
+        <span className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">{title}</span>
         <span className={`text-sm font-black tabular-nums ${
           total > 0 ? 'text-pos-text' : total < 0 ? 'text-neg' : 'text-gray-500'
         }`}>{fmt(total)}</span>

@@ -75,6 +75,28 @@ Number (KPI md):  text-base font-black font-mono tabular-nums
 Number (inline):  text-xs font-mono tabular-nums
 ```
 
+### 2.4 Documented Exceptions
+
+These patterns deviate from the canonical scale by intentional design decision.
+They must not be "corrected" in future sweeps.
+
+```
+label-strip:      text-[9px] font-black uppercase tracking-widest text-[#94a3b8]
+```
+**Used in:** KPI strip cells (5-wide dashboard grid), command bar stat blocks, dense
+context bars with ≤80px column width. The 9px (vs 10.4px canonical) is intentional for
+layout density — the font weight and tracking carry sufficient hierarchy.
+
+```
+label-chart-axis: text-[9px] font-medium text-[#94a3b8]
+label-bar-caption: text-[8px] font-medium
+```
+**Used in:** Chart axis tick labels, bar chart month abbreviations, sparkline annotations.
+These are rendering artifacts, not UI typography — sub-10px is standard in data visualization.
+
+**Rule:** `text-[9px]` is only allowed in `label-strip` or `label-chart-axis` contexts.
+Never use it for running body text, card descriptions, or action labels.
+
 ### 2.2 Font Stack
 
 ```css

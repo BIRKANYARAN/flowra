@@ -37,7 +37,7 @@ function Reading({ label, value, sub, status, border }: ReadingProps) {
     'text-gray-900'
   return (
     <div className={`flex flex-col gap-0 flex-shrink-0 px-4 py-2.5 ${border ? 'border-l border-[#e2e8f0]' : ''}`}>
-      <span className="text-[8px] font-black uppercase tracking-widest text-gray-400 leading-none mb-1">
+      <span className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8] leading-none mb-1">
         {label}
       </span>
       <span className={`text-[13px] font-black tabular-nums leading-none ${valueCls}`}>

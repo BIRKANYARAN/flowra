@@ -148,7 +148,7 @@ export default function AdminAuditPage() {
       <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm mb-5">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Denetim Zinciri Bütünlüğü</div>
+            <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Denetim Zinciri Bütünlüğü</div>
             <div className="text-[10px] text-gray-400 mt-0.5">SHA-256 hash zinciri — son 30 gün</div>
           </div>
           <button

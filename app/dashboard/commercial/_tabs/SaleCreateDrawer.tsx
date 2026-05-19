@@ -171,7 +171,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
         {/* Header */}
         <div className="flex items-start justify-between px-5 py-4 border-b border-[#e2e8f0] flex-shrink-0">
           <div>
-            <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 leading-none">
+            <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] leading-none">
               Ticari
             </div>
             <div className="text-base font-black text-gray-900 mt-1">Yeni Satış</div>
@@ -190,14 +190,14 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
 
           {/* ── Section 1: Müşteri ─────────────────────────────────────────── */}
           <div>
-            <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">
+            <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
               Müşteri Bilgileri
             </div>
             <div className="space-y-3">
               <div>
                 <label
                   htmlFor="sc-customer"
-                  className="text-[10px] font-black uppercase tracking-widest text-gray-400 block mb-1.5 leading-none"
+                  className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] block mb-1.5 leading-none"
                 >
                   Müşteri Adı <span className="text-neg">*</span>
                 </label>
@@ -217,7 +217,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
                 <div>
                   <label
                     htmlFor="sc-sale-date"
-                    className="text-[10px] font-black uppercase tracking-widest text-gray-400 block mb-1.5 leading-none"
+                    className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] block mb-1.5 leading-none"
                   >
                     Satış Tarihi <span className="text-neg">*</span>
                   </label>
@@ -233,7 +233,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
                 <div>
                   <label
                     htmlFor="sc-due-date"
-                    className="text-[10px] font-black uppercase tracking-widest text-gray-400 block mb-1.5 leading-none"
+                    className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] block mb-1.5 leading-none"
                   >
                     Ödeme Vadesi
                   </label>
@@ -252,7 +252,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
           {/* ── Section 2: Kalemler ─────────────────────────────────────────── */}
           <div>
             <div className="flex items-center justify-between mb-3">
-              <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+              <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">
                 Kalemler
               </div>
               <button
@@ -370,7 +370,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
           <div>
             <label
               htmlFor="sc-notes"
-              className="text-[10px] font-black uppercase tracking-widest text-gray-400 block mb-1.5 leading-none"
+              className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] block mb-1.5 leading-none"
             >
               Notlar
             </label>

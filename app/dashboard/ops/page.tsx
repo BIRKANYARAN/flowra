@@ -90,7 +90,7 @@ function KpiCard({
 
   const inner = (
     <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 hover:border-primary-300 transition-colors">
-      <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">{label}</div>
+      <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{label}</div>
       <div className={`text-xl font-black tabular-nums leading-none ${valueColor}`}>{value}</div>
       {sub && <div className="text-[10px] text-gray-400 mt-1">{sub}</div>}
     </div>

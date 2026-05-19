@@ -146,7 +146,7 @@ export function PartnerFinanceActions({ partners, onRefresh }: PartnerFinanceAct
         className="w-full flex items-center justify-between px-5 py-4 text-left group disabled:cursor-not-allowed"
       >
         <div className="flex items-center gap-2">
-          <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+          <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">
             Finansal İşlem Kaydet
           </div>
           {success && (
@@ -166,7 +166,7 @@ export function PartnerFinanceActions({ partners, onRefresh }: PartnerFinanceAct
 
           {/* Action type selector */}
           <div className="mb-5">
-            <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">
+            <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
               İşlem Türü
             </div>
             <div className="flex flex-wrap gap-2">
@@ -199,7 +199,7 @@ export function PartnerFinanceActions({ partners, onRefresh }: PartnerFinanceAct
             <div>
               <label
                 htmlFor="pfa-partner"
-                className="text-[10px] font-black uppercase tracking-widest text-gray-400 block mb-1.5 leading-none"
+                className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] block mb-1.5 leading-none"
               >
                 Ortak <span className="text-neg">*</span>
               </label>
@@ -222,7 +222,7 @@ export function PartnerFinanceActions({ partners, onRefresh }: PartnerFinanceAct
               <div>
                 <label
                   htmlFor="pfa-amount"
-                  className="text-[10px] font-black uppercase tracking-widest text-gray-400 block mb-1.5 leading-none"
+                  className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] block mb-1.5 leading-none"
                 >
                   Tutar (₺) <span className="text-neg">*</span>
                 </label>
@@ -241,7 +241,7 @@ export function PartnerFinanceActions({ partners, onRefresh }: PartnerFinanceAct
               <div>
                 <label
                   htmlFor="pfa-date"
-                  className="text-[10px] font-black uppercase tracking-widest text-gray-400 block mb-1.5 leading-none"
+                  className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] block mb-1.5 leading-none"
                 >
                   Tarih <span className="text-neg">*</span>
                 </label>
@@ -260,7 +260,7 @@ export function PartnerFinanceActions({ partners, onRefresh }: PartnerFinanceAct
             <div>
               <label
                 htmlFor="pfa-notes"
-                className="text-[10px] font-black uppercase tracking-widest text-gray-400 block mb-1.5 leading-none"
+                className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] block mb-1.5 leading-none"
               >
                 Notlar
               </label>

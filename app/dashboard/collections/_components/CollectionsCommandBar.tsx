@@ -90,7 +90,7 @@ export async function CollectionsCommandBar({ companyId }: Props) {
 
         {/* Açık Alacak */}
         <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#e2e8f0] rounded">
-          <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Açık Alacak</span>
+          <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Açık Alacak</span>
           <span className="text-sm font-black tabular-nums text-gray-900">{fmt(totalOutstanding)}</span>
           <span className="text-[9px] text-gray-400">{openCount} fatura</span>
         </div>

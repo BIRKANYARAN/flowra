@@ -91,7 +91,7 @@ export function Sidebar({ navBadges = {} }: SidebarProps) {
         {hasMultiCompany && showSwitcher && (
           <div className="mt-2 rounded border border-[#e2e8f0] bg-white shadow-sm overflow-hidden">
             <div className="px-3 py-1.5 bg-[#f8fafc] border-b border-[#e2e8f0]">
-              <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+              <span className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">
                 Şirket Seç
               </span>
             </div>

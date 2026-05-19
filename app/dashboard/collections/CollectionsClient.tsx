@@ -522,7 +522,7 @@ export default function CollectionsClient({ initialRows }: Props) {
               <div>
                 {overdueRows.length > 0 && regularRows.length > 0 && (
                   <div className="px-4 py-2 bg-[#f8fafc] border-b border-[#e2e8f0]">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">
                       Diğer Kayıtlar
                     </span>
                   </div>

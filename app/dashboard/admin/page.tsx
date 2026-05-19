@@ -132,7 +132,7 @@ export default async function AdminHubPage() {
       title:    'Ortak Yönetişim',
       subtitle: 'Aylık mutabakat & onay sistemi',
       icon:     '🏛️',
-      color:    'border-violet-100 hover:border-violet-200',
+      color:    'border-brand-subtle hover:border-brand-subtle',
     },
   ]
 
@@ -186,7 +186,7 @@ export default async function AdminHubPage() {
 
       {/* Settings quick-links */}
       <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded p-4">
-        <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">Hızlı Ayarlar</div>
+        <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Hızlı Ayarlar</div>
         <div className="flex flex-wrap gap-2">
           {SETTING_LINKS.map(s => (
             <Link key={s.href} href={s.href}
@@ -203,7 +203,7 @@ export default async function AdminHubPage() {
       {summary.recentLogs.length > 0 && (
         <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
           <div className="px-4 py-3 bg-[#f8fafc] border-b border-[#e2e8f0] flex items-center justify-between">
-            <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Son Aktivite</div>
+            <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Son Aktivite</div>
             <Link href="/dashboard/admin/audit"
               className="text-[10px] font-semibold text-primary-600 hover:underline"
             >

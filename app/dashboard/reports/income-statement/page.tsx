@@ -130,7 +130,7 @@ export default function IncomeStatementPage() {
         <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden print:border-none print:shadow-none">
           {/* Revenue section */}
           <div className="px-4 py-2 bg-[#f8fafc] border-b border-[#e2e8f0]">
-            <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Satışlar</div>
+            <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Satışlar</div>
           </div>
           <div className="px-4">
             <Row label="Satış Gelirleri"        value={fmt(pnl.revenue_try)} />
@@ -142,7 +142,7 @@ export default function IncomeStatementPage() {
 
           {/* OpEx section */}
           <div className="px-4 py-2 bg-[#f8fafc] border-b border-[#e2e8f0] border-t border-[#e2e8f0] mt-1">
-            <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Faaliyet Giderleri</div>
+            <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Faaliyet Giderleri</div>
           </div>
           <div className="px-4">
             <Row label="Toplam Giderler"         value={fmt(-pnl.expenses_total_try)} indent negative={pnl.expenses_total_try > 0} />
@@ -154,7 +154,7 @@ export default function IncomeStatementPage() {
 
           {/* Tax section */}
           <div className="px-4 py-2 bg-[#f8fafc] border-b border-[#e2e8f0] border-t border-[#e2e8f0] mt-1">
-            <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Vergi</div>
+            <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Vergi</div>
           </div>
           <div className="px-4">
             <Row label="Kurumlar Vergisi Matrahı" value={fmt(pnl.matrah_try)} indent sub={`%${pnl.corporate_tax_rate} oran`} />

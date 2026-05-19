@@ -136,7 +136,7 @@ export default async function FinancePage({ searchParams }: PageProps) {
       {/* ── PAGE HERO ─────────────────────────────────────────────────────────── */}
       <div className="flex items-end justify-between gap-4 flex-wrap">
         <div>
-          <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Finans Merkezi</div>
+          <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Finans Merkezi</div>
           <h1 className="text-2xl font-black tracking-tight text-gray-900 leading-tight">{meta.title}</h1>
           <p className="text-sm text-gray-400 mt-1">{meta.sub}</p>
         </div>

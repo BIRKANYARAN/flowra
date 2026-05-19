@@ -206,7 +206,7 @@ export async function CollectionsContent({ companyId }: Props) {
       {/* Top outstanding debtors */}
       {topDebtors.length > 0 && grandTotal > 0 && (
         <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
-          <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4">En Yüksek Bakiyeli Müşteriler</div>
+          <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-4">En Yüksek Bakiyeli Müşteriler</div>
           <div className="space-y-2.5">
             {topDebtors.map(d => {
               const barPct   = (d.total / maxDebtorTotal) * 100

@@ -105,7 +105,7 @@ export default function KdvPage() {
           <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
             {/* Hesaplanan KDV (output) */}
             <div className="px-4 py-2.5 bg-[#f8fafc] border-b border-[#e2e8f0]">
-              <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Hesaplanan KDV (Çıkış)</div>
+              <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Hesaplanan KDV (Çıkış)</div>
             </div>
             <div className="px-4 py-3 space-y-1.5">
               <div className="flex items-center justify-between">
@@ -116,7 +116,7 @@ export default function KdvPage() {
 
             {/* İndirilecek KDV (input) */}
             <div className="px-4 py-2.5 bg-[#f8fafc] border-b border-[#e2e8f0] border-t border-[#e2e8f0]">
-              <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">İndirilecek KDV (Giriş)</div>
+              <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">İndirilecek KDV (Giriş)</div>
             </div>
             <div className="px-4 py-3 space-y-1.5">
               <div className="flex items-center justify-between">

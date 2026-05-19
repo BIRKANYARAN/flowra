@@ -54,7 +54,7 @@ export function FxTicker() {
 function TickerPair({ code, rate }: { code: string; rate: number }) {
   return (
     <div className="flex items-baseline gap-1.5 leading-none">
-      <span className="text-[8px] font-black uppercase tracking-widest text-gray-400">
+      <span className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8]">
         {code}<span className="text-gray-300">/TRY</span>
       </span>
       <span className="text-[11px] font-black tabular-nums text-gray-700">
