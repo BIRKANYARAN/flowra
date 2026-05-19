@@ -112,7 +112,7 @@ export async function ProformasContent({ companyId }: Props) {
               {staleOpen.length} Açık Teklif 14+ Gün Yanıt Bekliyor
             </div>
             <div className="text-xs text-warn-text mt-0.5">
-              Yanıt bekleyen teklifler pipeline değerini şişirir. Müşteri takibi yapın veya teklifleri güncelleyin.
+              Yanıtsız teklifler pipeline değerini şişirir ve dönüşüm oranını düşürür. Müşteri takibi yapın veya teklifleri güncelleyin.
             </div>
           </div>
         )
@@ -231,7 +231,7 @@ export async function ProformasContent({ companyId }: Props) {
       {/* Cross-navigation */}
       <div className="flex items-center justify-between px-1">
         <p className="text-[10px] text-[#94a3b8] leading-relaxed">
-          Teklifler satışa döndükten sonra pipeline ve tahsilat akışını takip edin.
+          Teklif → Satış → Tahsilat zinciri kapanmadan nakit etkisi olmaz — dönüşüm hızını takip edin.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
           <Link href="/dashboard/commercial?tab=pipeline" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">

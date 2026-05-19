@@ -77,10 +77,11 @@ export async function CustomersContent({ companyId }: Props) {
   const atRiskCustomers = riskScores.filter(r => r.risk_level !== 'low').slice(0, 8)
 
   return (
-    <div className="max-w-3xl space-y-6">
-      <div>
-        <h2 className="text-xl font-black text-[#0f172a] tracking-tight">Müşteriler</h2>
-        <p className="text-xs text-[#94a3b8] mt-0.5">{customers.length} kayıt · {sales.length} satış</p>
+    <div className="max-w-3xl space-y-4">
+      <div className="flex items-center justify-between">
+        <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+          Müşteriler — {customers.length} kayıt · {sales.length} satış analiz edildi
+        </span>
       </div>
 
       {/* KPI Strip */}
@@ -89,7 +90,7 @@ export async function CustomersContent({ companyId }: Props) {
           {[
             { label: 'Toplam Müşteri', value: String(customers.length), sub: `${sales.length} satış kaydı`,        color: 'text-[#0f172a]' },
             { label: 'Toplam Ciro',    value: billed > 0 ? fmt(billed) : '—', sub: 'Tüm satışlar (TRY)',           color: 'text-brand' },
-            { label: 'Bekleyen Tahsilat', value: outstanding > 0 ? fmt(outstanding) : '—', sub: outstanding > 0 ? 'Ödenmemiş + kısmi' : 'Tamamı tahsil edildi ✓', color: outstanding > 0 ? 'text-neg' : 'text-pos-text' },
+            { label: 'Bekleyen Tahsilat', value: outstanding > 0 ? fmt(outstanding) : '—', sub: outstanding > 0 ? 'Ödenmemiş + kısmi' : 'Tamamı tahsil edildi', color: outstanding > 0 ? 'text-neg' : 'text-pos-text' },
             { label: 'Tahsilat Oranı', value: billed > 0 ? `%${collectionRate}` : '—', sub: billed > 0 ? `${fmt(paidTotal)} / ${fmt(billed)} tahsil edildi` : 'Satış yok', color: collectionRate >= 80 ? 'text-pos-text' : collectionRate >= 50 ? 'text-warn-text' : 'text-neg' },
           ].map((card, i) => (
             <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e2e8f0]' : ''}`}>
@@ -227,7 +228,7 @@ export async function CustomersContent({ companyId }: Props) {
       {/* Cross-navigation */}
       <div className="flex items-center justify-between px-1">
         <p className="text-[10px] text-[#94a3b8] leading-relaxed">
-          Müşteri risk skoru geç ödeme geçmişine dayanır. Tahsilat ve alacak analizi için ilgili sekmelere geçin.
+          Risk skoru geç ödeme geçmişi ve konsantrasyon baskısına dayanır — tahsilat gecikmesi doğrudan nakit pozisyonunu etkiler.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
           <Link

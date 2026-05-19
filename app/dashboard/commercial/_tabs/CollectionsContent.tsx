@@ -26,7 +26,7 @@ function AgingStrip({ buckets, grandTotal }: { buckets: AgingBucket[]; grandTota
       {buckets.map((b, i) => (
         <div key={b.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e2e8f0]' : ''}`}>
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{b.label}</div>
-          <div className={`text-base font-black tabular-nums leading-none ${b.color}`}>
+          <div className={`text-xl font-black tabular-nums leading-none ${b.color}`}>
             {b.total > 0 ? fmt(b.total) : '—'}
           </div>
           <div className="text-[10px] text-[#94a3b8] mt-1">{b.sub}</div>
@@ -236,7 +236,7 @@ export async function CollectionsContent({ companyId }: Props) {
       {/* Cross-navigation */}
       <div className="flex items-center justify-between px-1">
         <p className="text-[10px] text-[#94a3b8] leading-relaxed">
-          Tahsilat yaşlandırması alacak risk analizinin temelini oluşturur.
+          60+ gün geciken alacaklar nakit pozisyonunu doğrudan baskılar — runway hesabı bu rakamlara dayanır.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
           <Link

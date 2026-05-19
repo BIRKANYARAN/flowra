@@ -129,7 +129,7 @@ export async function SalesContent({ companyId }: Props) {
               value: mtdPending > 0 ? fmt(mtdPending) : '—',
               sub:   mtdPending > 0
                 ? `${mtdCount - mtdPaidCount} ödenmemiş fatura`
-                : 'Tamamı tahsil edildi ✓',
+                : 'Bu ay tamamı tahsil edildi',
               color: mtdPending > 0 ? 'text-neg' : 'text-pos-text',
             },
             {
@@ -211,7 +211,7 @@ export async function SalesContent({ companyId }: Props) {
       {/* Cross-navigation */}
       <div className="flex items-center justify-between px-1">
         <p className="text-[10px] text-[#94a3b8] leading-relaxed">
-          Satış verisi P&amp;L ve nakit akışı hesaplamalarının temelidir.
+          MTD ciro tahsil edildiğinde nakit pozisyonuna girer — tahsilat hızı runway'ı doğrudan belirler.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
           <Link

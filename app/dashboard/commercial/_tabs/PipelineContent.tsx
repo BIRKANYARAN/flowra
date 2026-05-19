@@ -117,24 +117,23 @@ export async function PipelineContent({ companyId }: Props) {
     .slice(0, 3)
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <Suspense fallback={<CommandBarSkeleton />}>
         <SalesFlowCommandBar companyId={companyId} />
       </Suspense>
 
-      <div>
-        <h2 className="text-xl font-black text-[#0f172a] tracking-tight">Satış Akışı</h2>
-        <p className="text-xs text-[#94a3b8] mt-0.5">
-          Pipeline görünümü · {proformas.length} teklif · {sales.length} satış
-        </p>
+      <div className="flex items-center justify-between">
+        <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+          Satış Akışı — {proformas.length} teklif · {sales.length} satış
+        </span>
       </div>
 
       {/* KPI Strip */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded overflow-hidden">
         {[
           { label: 'Stok Değeri',  value: serverFmt(stockValue),   sub: `${stockLots.length} aktif lot`,                color: 'text-[#0f172a]' },
-          { label: 'Pipeline',     value: pipelineVal > 0 ? serverFmt(pipelineVal) : '—', sub: 'bekleyen teklifler', color: 'text-info-text' },
-          { label: 'Toplam Ciro',  value: totalRevenue > 0 ? serverFmt(totalRevenue) : '—', sub: unpaidTotal > 0 ? `${serverFmt(unpaidTotal)} bekliyor` : 'tamamı tahsil', color: 'text-[#0f172a]' },
+          { label: 'Pipeline',     value: pipelineVal > 0 ? serverFmt(pipelineVal) : '—', sub: 'gönderildi · onaylandı', color: 'text-info-text' },
+          { label: 'Toplam Ciro',  value: totalRevenue > 0 ? serverFmt(totalRevenue) : '—', sub: unpaidTotal > 0 ? `${serverFmt(unpaidTotal)} tahsilat bekliyor` : 'tahsilat tamamlandı', color: 'text-[#0f172a]' },
           { label: 'Brüt Kâr',    value: totalRevenue > 0 ? serverFmt(grossProfit) : '—', sub: totalRevenue > 0 ? `%${grossMargin.toFixed(1)} marj` : 'veri yok', color: grossProfit >= 0 ? 'text-pos-text' : 'text-neg' },
         ].map((card, i) => (
           <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e2e8f0]' : ''}`}>
@@ -151,9 +150,9 @@ export async function PipelineContent({ companyId }: Props) {
           <div className="px-4 py-2 border-b border-[#e2e8f0]">
             <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Son Teklifler</span>
           </div>
-          <table className="w-full text-sm">
+          <table className="w-full text-xs">
             <thead>
-              <tr className="text-[10px] font-bold uppercase text-[#94a3b8] border-b border-[#e2e8f0]">
+              <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] border-b border-[#e2e8f0]">
                 <th className="text-left px-4 py-2">Müşteri</th>
                 <th className="text-left px-4 py-2">Durum</th>
                 <th className="text-right px-4 py-2">Tutar</th>
@@ -187,7 +186,7 @@ export async function PipelineContent({ companyId }: Props) {
       {revenueAnomalies.length > 0 && (
         <div className="bg-warn-light border border-warn-light rounded px-4 py-3">
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="text-[0.65rem] font-black uppercase tracking-widest text-warn-text">⚠ Anormal Gelir Hareketi</span>
+            <span className="text-[0.65rem] font-black uppercase tracking-widest text-warn-text">Anormal Gelir Hareketi</span>
             <span className="text-[9px] text-warn-text">(istatistiksel eşik aşıldı)</span>
           </div>
           <div className="space-y-1">
@@ -211,7 +210,7 @@ export async function PipelineContent({ companyId }: Props) {
       {/* Monthly revenue trend */}
       {recentMonths.length > 1 && (
         <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
-          <h3 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">Aylık Ciro Trendi</h3>
+          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">Aylık Ciro Trendi — Son 6 Ay</div>
           <div className="flex items-end gap-2 h-20">
             {recentMonths.map(m => {
               const heightPct = Math.max(4, (m.revenue / maxRevMonth) * 100)
@@ -244,7 +243,7 @@ export async function PipelineContent({ companyId }: Props) {
       {/* Cross-navigation */}
       <div className="flex items-center justify-between px-1">
         <p className="text-[10px] text-[#94a3b8] leading-relaxed">
-          Satış akışı tahsilat ve müşteri riskiyle birlikte yönetilmeli.
+          Pipeline değeri tahsilata dönmeden nakit etkisi olmaz — tahsilat ve müşteri riskiyle birlikte değerlendirin.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
           <Link href="/dashboard/commercial?tab=collections" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
