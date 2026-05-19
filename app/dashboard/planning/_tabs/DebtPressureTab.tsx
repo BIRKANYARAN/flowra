@@ -2,19 +2,15 @@
 // Server component. Fetches active loan tranches, computes DSR + upcoming
 // payment schedule, renders tranche ladder and concentration analysis.
 
-import { createClient }    from '@/lib/supabase-server'
-import { FinanceService }  from '@/lib/services/finance.service'
-import Link                from 'next/link'
-import { NarrativeFooter } from '@/components/ds'
+import { createClient }         from '@/lib/supabase-server'
+import { FinanceService }       from '@/lib/services/finance.service'
+import Link                     from 'next/link'
+import { NarrativeFooter }      from '@/components/ds'
+import { fmtTRY as fmt, fmtPct as fmtPctLib } from '@/lib/format'
 
-const FMT = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 })
-function fmt(n: number) {
-  const abs = Math.abs(n)
-  if (abs >= 1_000_000) return `₺${(n / 1_000_000).toFixed(2)}M`
-  if (abs >= 1_000)     return `₺${(n / 1_000).toFixed(1)}K`
-  return `₺${FMT.format(Math.round(n))}`
-}
-function fmtPct(v: number) { return `%${(v * 100).toFixed(1).replace('.', ',')}` }
+// fmtPct in this file takes a 0-1 ratio → percentage
+function fmtPct(v: number) { return fmtPctLib(v * 100) }
+// fmtDate: "15 Nis 2026" short month style (different from canonical "15.04.2026")
 function fmtDate(iso: string | null) {
   if (!iso) return '—'
   try {
@@ -132,6 +128,50 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
     : 'bg-neg-light'
   const dsrLabel    = dsr === 0 ? 'Borç yok' : dsr <= 0.30 ? 'Sağlıklı · Bu ay' : dsr <= 0.60 ? 'Baskı altında · Dikkat' : 'Kritik · Aksiyon gerekli'
 
+  // ── C3: Treasury Pressure Narrative — causal debt-service → runway lines ──
+  const annualService   = monthlyService * 12
+  const pressureLines: string[] = []
+
+  if (monthlyService > 0) {
+    pressureLines.push(
+      `Aylık ${fmt(monthlyService)} borç servisi — yıllık ${fmt(annualService)} kesinleşmiş nakit çıkışı.`
+    )
+  }
+  if (dsr > 0) {
+    if (dsr <= 0.30) {
+      pressureLines.push(
+        `Borç/gelir oranı ${fmtPct(dsr)} — sürdürülebilir. Temettü ve yatırım kapasitesi korunuyor.`
+      )
+    } else if (dsr <= 0.60) {
+      pressureLines.push(
+        `Borç/gelir oranı ${fmtPct(dsr)} — nakit üretimi baskı altında. Büyüme yatırımı ve temettü kapasitesi daralıyor.`
+      )
+    } else {
+      pressureLines.push(
+        `Borç/gelir oranı ${fmtPct(dsr)} — kritik. Nakit açığı ve operasyonel rezerv tehdit altında; acil yapılandırma değerlendirilebilir.`
+      )
+    }
+  }
+  if (nextDueDays !== null && nextDueDays < 0) {
+    pressureLines.push(
+      `${fmt(nextDue?.outstanding_try ?? 0)} vadesi geçmiş — gecikme ortak ilişkisini ve refinansman koşullarını etkiliyor.`
+    )
+  } else if (nextDueDays !== null && nextDueDays <= 30) {
+    const daysText = nextDueDays === 0 ? 'Bugün' : `${nextDueDays} gün içinde`
+    pressureLines.push(
+      `${daysText} ${fmt(nextDue?.outstanding_try ?? 0)} vade — bu hafta nakit hazırlığı tamamlanmalı.`
+    )
+  }
+  if (concentration > 0.80) {
+    pressureLines.push(
+      `${sorted[0]?.name ?? 'Dominant ortak'} toplam borcun ${fmtPct(concentration)}'ini tutuyor — tek taraflı geri çağrı şirkete özgü bir kırılganlık yaratıyor.`
+    )
+  } else if (concentration > 0.50 && sorted.length > 1) {
+    pressureLines.push(
+      `${sorted[0]?.name ?? 'Dominant ortak'} borçların ${fmtPct(concentration)}'ini oluşturuyor — konsantrasyon kademeli olarak dengelenmeli.`
+    )
+  }
+
   return (
     <div className="space-y-5">
 
@@ -184,6 +224,23 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
           )}
         </div>
       </div>
+
+      {/* ── HAZINE BASKI DEĞERLENDİRMESİ ─────────────────────────────────── */}
+      {hasTranches && pressureLines.length > 0 && (
+        <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
+          <div className="flex items-center justify-between mb-2.5">
+            <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Hazine Baskı Değerlendirmesi</span>
+            <span className="text-[9px] text-[#94a3b8]">Borç servisi · Nakit ömrü · Konsantrasyon</span>
+          </div>
+          <div className="space-y-0.5">
+            {pressureLines.map((line, i) => (
+              <div key={i} className="text-[11px] text-[#64748b] leading-snug">
+                <span className="text-[#cbd5e1] mr-1.5">—</span>{line}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ── EMPTY STATE ───────────────────────────────────────────────────── */}
       {!hasTranches && (
