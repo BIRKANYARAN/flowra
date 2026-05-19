@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Skeleton } from '@/components/ds'
+import { Skeleton, ErrorBanner } from '@/components/ds'
 import { PdfExportButton } from '@/components/reports/PdfExportButton'
 import { useWorkspace }    from '@/lib/workspace-context'
 import type { PdfReportOptions } from '@/lib/utils/pdf-report'
@@ -143,7 +143,7 @@ export default function ExecutiveSummaryPage() {
         <p className="text-sm text-[#64748b] mt-1">{from} — {to}</p>
       </div>
 
-      {error && <div className="bg-neg-light border border-neg-light rounded px-4 py-3 text-sm text-neg-text">{error}</div>}
+      {error && <ErrorBanner msg={error} />}
       {loading && <Skeleton height="h-48" />}
 
       {data && !loading && (

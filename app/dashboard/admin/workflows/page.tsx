@@ -6,7 +6,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { Skeleton } from '@/components/ds'
+import { Skeleton, ErrorBanner } from '@/components/ds'
 import { fmtDate as fmt, fmtTRY } from '@/lib/format'
 
 interface WorkflowInstance {
@@ -99,7 +99,7 @@ export default function WorkflowsPage() {
       </div>
 
       {error && (
-        <div className="bg-neg-light border border-neg-light rounded px-4 py-3 text-sm text-neg-text">{error}</div>
+        <ErrorBanner msg={error} />
       )}
 
       {loading && (

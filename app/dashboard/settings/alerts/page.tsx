@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Skeleton } from '@/components/ds'
+import { Skeleton, ErrorBanner } from '@/components/ds'
 
 interface AlertRule {
   id:              string | null
@@ -93,7 +93,7 @@ export default function AlertSettingsPage() {
       </div>
 
       {error && (
-        <div className="bg-neg-light border border-neg-light rounded px-4 py-3 text-sm text-neg-text">{error}</div>
+        <ErrorBanner msg={error} />
       )}
       {flash && (
         <div className="bg-pos-light border border-pos-light rounded px-4 py-3 text-sm text-pos-text">{flash}</div>
