@@ -71,6 +71,16 @@ export function fmtCompact(value: number, currency = 'TRY'): string {
   return `${sign}${s}${fmtNum(abs, 0)}`
 }
 
+/** Bloomberg-rail dense format for context bars and instrument strips.
+ *  ≥1M → "X.XM"  |  ≥100K → "XXXK"  |  <100K → "₺X.XXX"
+ *  Omits ₺ prefix for M/K values to save space in dense UIs. */
+export function fmtDense(value: number): string {
+  const abs = Math.abs(value)
+  if (abs >= 1_000_000) return (value / 1_000_000).toFixed(1) + 'M'
+  if (abs >= 100_000)   return Math.round(value / 1_000) + 'K'
+  return '₺' + TRY_FMT_0.format(value)
+}
+
 // ── Date formatters ───────────────────────────────────────────────────────────
 
 /** "15.05.2025" — Turkish short date */

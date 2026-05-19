@@ -8,6 +8,7 @@
 
 import { useState, useEffect } from 'react'
 import { ContextReading, ContextRail, ContextRailSkeleton } from '@/components/ds'
+import { fmtDense as fmtK } from '@/lib/format'
 
 interface LedgerSummary {
   total_equity_pool:      number
@@ -16,15 +17,6 @@ interface LedgerSummary {
   debt_to_equity_ratio:   number | null
   partner_count:          number
   active_partner_count:   number
-}
-
-const TRY = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 })
-
-function fmtK(n: number): string {
-  const abs = Math.abs(n)
-  if (abs >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M'
-  if (abs >= 100_000)   return Math.round(n / 1_000) + 'K'
-  return '₺' + TRY.format(n)
 }
 
 export function PartnersContextBar() {

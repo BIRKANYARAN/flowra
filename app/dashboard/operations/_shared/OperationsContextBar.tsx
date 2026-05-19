@@ -7,20 +7,12 @@
 
 import { useState, useEffect } from 'react'
 import { ContextReading, ContextRail, ContextRailSkeleton } from '@/components/ds'
+import { fmtDense as fmtK } from '@/lib/format'
 
 interface OpsPeek {
   burn:  { monthly_burn_rate: number; runway_months: number | null }
   stock: { fifo_value: number; coverage_months: number | null }
   cash:  { true_cash_position: number }
-}
-
-const TRY = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 })
-
-function fmtK(n: number): string {
-  const abs = Math.abs(n)
-  if (abs >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M'
-  if (abs >= 100_000)   return Math.round(n / 1_000) + 'K'
-  return '₺' + TRY.format(n)
 }
 
 export function OperationsContextBar({ companyId }: { companyId: string }) {
