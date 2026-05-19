@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { resolveApiAuth } from '@/lib/api-auth'
+import { resolveApiAuth }   from '@/lib/api-auth'
+import { reqCtx, apiError } from '@/lib/api-utils'
 
 export const dynamic = 'force-dynamic'
 
-// ── GET /api/governance/[id] — single report detail ──────────────────────────
+// ── GET /api/governance/[id] — single report with all signoffs ────────────────
 
 export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const ctx = reqCtx(req)
   try {
     const auth = await resolveApiAuth(req)
     if (!auth.ok) return auth.response
@@ -18,7 +20,7 @@ export async function GET(
       .from('governance_reports')
       .select(`
         *,
-        governance_signoffs ( id, partner_id, partner_name, signed_at, notes )
+        governance_signoffs ( id, partner_id, partner_name, signed_by, signed_at, notes )
       `)
       .eq('id', params.id)
       .eq('company_id', companyId)
@@ -31,17 +33,22 @@ export async function GET(
     return NextResponse.json({ report: data })
   } catch (e) {
     console.error('[governance/[id] GET]', e)
-    return NextResponse.json({ error: 'Internal error' }, { status: 500 })
+    return apiError(ctx, 'Rapor alınamadı', 500, 'DB_READ_FAILED')
   }
 }
 
-// ── PATCH /api/governance/[id] — finalize or add notes ───────────────────────
+// ── PATCH /api/governance/[id] — finalize report or add notes ────────────────
 // Body: { action: 'finalize' | 'note', notes?: string }
+//
+// finalize: immutably locks the report (is_finalized = true + timestamp).
+//           Once finalized, signoffs cannot be added or removed.
+//           CAS guard: rejects if already finalized (409).
 
 export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const ctx = reqCtx(req)
   try {
     const auth = await resolveApiAuth(req)
     if (!auth.ok) return auth.response
@@ -51,7 +58,7 @@ export async function PATCH(
     const action = body.action as string
 
     if (action === 'finalize') {
-      // Check: report belongs to this company and is not already finalized
+      // CAS: check current state before update
       const { data: existing } = await supabase
         .from('governance_reports')
         .select('id, is_finalized')
@@ -59,8 +66,12 @@ export async function PATCH(
         .eq('company_id', companyId)
         .single()
 
-      if (!existing) return NextResponse.json({ error: 'Rapor bulunamadı' }, { status: 404 })
-      if (existing.is_finalized) return NextResponse.json({ error: 'Rapor zaten sonuçlandırıldı' }, { status: 409 })
+      if (!existing) {
+        return NextResponse.json({ error: 'Rapor bulunamadı' }, { status: 404 })
+      }
+      if (existing.is_finalized) {
+        return NextResponse.json({ error: 'Rapor zaten sonuçlandırıldı' }, { status: 409 })
+      }
 
       const { data, error } = await supabase
         .from('governance_reports')
@@ -71,10 +82,13 @@ export async function PATCH(
         })
         .eq('id', params.id)
         .eq('company_id', companyId)
+        .eq('is_finalized', false)  // CAS — prevents race condition
         .select()
         .single()
 
-      if (error) throw error
+      if (error || !data) {
+        return NextResponse.json({ error: 'Sonuçlandırma başarısız — eş zamanlı değişiklik algılandı' }, { status: 409 })
+      }
       return NextResponse.json({ report: data })
     }
 
@@ -91,20 +105,24 @@ export async function PATCH(
       return NextResponse.json({ report: data })
     }
 
-    return NextResponse.json({ error: 'Geçersiz aksiyon' }, { status: 400 })
+    return NextResponse.json({ error: 'Geçersiz aksiyon. finalize veya note olmalı.' }, { status: 400 })
   } catch (e) {
     console.error('[governance/[id] PATCH]', e)
-    return NextResponse.json({ error: 'Internal error' }, { status: 500 })
+    return apiError(ctx, 'Rapor güncellenemedi', 500, 'DB_WRITE_FAILED')
   }
 }
 
 // ── POST /api/governance/[id] — record partner signoff ───────────────────────
 // Body: { partner_id: string, partner_name: string, notes?: string }
+//
+// Idempotent via upsert on (report_id, partner_id).
+// Blocked if report is already finalized.
 
 export async function POST(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const ctx = reqCtx(req)
   try {
     const auth = await resolveApiAuth(req)
     if (!auth.ok) return auth.response
@@ -117,7 +135,7 @@ export async function POST(
       return NextResponse.json({ error: 'partner_id ve partner_name zorunludur' }, { status: 400 })
     }
 
-    // Verify report exists and belongs to this company
+    // Guard: report must exist, belong to this company, and not be finalized
     const { data: report } = await supabase
       .from('governance_reports')
       .select('id, is_finalized')
@@ -125,8 +143,12 @@ export async function POST(
       .eq('company_id', companyId)
       .single()
 
-    if (!report) return NextResponse.json({ error: 'Rapor bulunamadı' }, { status: 404 })
-    if (report.is_finalized) return NextResponse.json({ error: 'Sonuçlandırılmış rapor imzalanamaz' }, { status: 409 })
+    if (!report) {
+      return NextResponse.json({ error: 'Rapor bulunamadı' }, { status: 404 })
+    }
+    if (report.is_finalized) {
+      return NextResponse.json({ error: 'Sonuçlandırılmış rapor imzalanamaz' }, { status: 409 })
+    }
 
     const { data, error } = await supabase
       .from('governance_signoffs')
@@ -146,6 +168,6 @@ export async function POST(
     return NextResponse.json({ signoff: data })
   } catch (e) {
     console.error('[governance/[id] POST]', e)
-    return NextResponse.json({ error: 'Internal error' }, { status: 500 })
+    return apiError(ctx, 'İmza kaydedilemedi', 500, 'DB_WRITE_FAILED')
   }
 }
