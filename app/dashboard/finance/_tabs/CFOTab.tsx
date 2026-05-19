@@ -99,10 +99,10 @@ function TaxRow({ label, amount, sign, detail, bold }: {
   return (
     <div className={`flex items-start justify-between ${bold ? 'font-bold' : ''}`}>
       <div>
-        <div className={`text-sm ${bold ? 'text-[#0f172a]' : 'text-[#334155]'}`}>{label}</div>
-        <div className="text-[11px] text-[#94a3b8]">{detail}</div>
+        <div className={`text-xs ${bold ? 'text-[#0f172a]' : 'text-[#334155]'}`}>{label}</div>
+        <div className="text-[0.65rem] text-[#94a3b8]">{detail}</div>
       </div>
-      <div className={`text-sm font-bold tabular-nums ${sign > 0 ? 'text-neg-text' : 'text-pos-text'}`}>
+      <div className={`text-xs font-bold tabular-nums ${sign > 0 ? 'text-neg-text' : 'text-pos-text'}`}>
         {fmtTRY(amount)}
       </div>
     </div>
@@ -293,12 +293,12 @@ export async function CFOTab({ userId, companyId }: Props) {
 
         {/* Financial Health Score */}
         <div className={`border rounded p-4 flex flex-col items-center justify-center text-center ${gradeColor}`}>
-          <div className="text-[0.65rem] font-black uppercase tracking-widest mb-2 opacity-60">
+          <div className="text-[0.65rem] font-black uppercase tracking-widest mb-1.5 opacity-60">
             Finansal Sağlık
           </div>
-          <div className="text-6xl font-black">{healthScore.grade}</div>
-          <div className="text-2xl font-bold mt-1">{healthScore.score}/100</div>
-          <div className="text-[11px] mt-2 opacity-70">
+          <div className="text-4xl font-black">{healthScore.grade}</div>
+          <div className="text-base font-bold mt-1 tabular-nums">{healthScore.score}/100</div>
+          <div className="text-[0.65rem] mt-1.5 opacity-70">
             {healthScore.grade === 'A' ? 'Mükemmel' :
              healthScore.grade === 'B' ? 'İyi' :
              healthScore.grade === 'C' ? 'Orta' :
@@ -319,9 +319,9 @@ export async function CFOTab({ userId, companyId }: Props) {
               { label: 'Borç/Özkaynak', value: debtToEquity.toFixed(2) + 'x', ok: debtToEquity <= 1 },
               { label: 'Tahsilat Oranı', value: pct(collectionRate, 0), ok: collectionRate >= 60 },
             ].map(row => (
-              <div key={row.label} className="flex items-center justify-between text-sm">
+              <div key={row.label} className="flex items-center justify-between text-xs">
                 <span className="text-[#64748b]">{row.label}</span>
-                <span className={`font-bold ${row.ok ? 'text-pos-text' : 'text-neg'}`}>
+                <span className={`font-bold tabular-nums ${row.ok ? 'text-pos-text' : 'text-neg'}`}>
                   {row.ok ? '✓' : '!'} {row.value}
                 </span>
               </div>
@@ -346,16 +346,15 @@ export async function CFOTab({ userId, companyId }: Props) {
         </div>
         <div className="grid grid-cols-2 gap-2">
           {checks.map(c => (
-            <div key={c.name} className={`rounded px-3 py-2.5 border text-sm ${
+            <div key={c.name} className={`rounded px-3 py-2 border flex items-start gap-2 ${
               c.passed
                 ? 'bg-pos-light border-pos-light'
                 : 'bg-neg-light border-neg-light'
             }`}>
-              <div className={`font-semibold ${c.passed ? 'text-pos-text' : 'text-neg-text'}`}>
-                {c.passed ? '✓' : '✗'} {c.name}
-              </div>
-              <div className={`text-[11px] mt-0.5 ${c.passed ? 'text-pos-text' : 'text-neg'}`}>
-                {c.detail}
+              <span className={`w-1.5 h-1.5 rounded-full shrink-0 mt-1 ${c.passed ? 'bg-pos' : 'bg-neg'}`} />
+              <div>
+                <div className={`text-xs font-semibold ${c.passed ? 'text-pos-text' : 'text-neg-text'}`}>{c.name}</div>
+                <div className={`text-[0.65rem] mt-0.5 ${c.passed ? 'text-pos-text' : 'text-neg'}`}>{c.detail}</div>
               </div>
             </div>
           ))}
@@ -407,13 +406,13 @@ export async function CFOTab({ userId, companyId }: Props) {
                 { key: 'tax_summary_approved',   label: 'Vergi Tipi Ataması', passed: periodData.checklist.tax_summary_approved },
                 { key: 'balance_sheet_balanced', label: 'Bilanço Dengeli',    passed: periodData.checklist.balance_sheet_balanced },
               ].map(item => (
-                <div key={item.key} className={`rounded px-3 py-2.5 border text-xs text-center ${
+                <div key={item.key} className={`rounded px-3 py-2 border flex items-center gap-2 ${
                   item.passed
                     ? 'bg-pos-light border-pos-light'
                     : 'bg-warn-light border-warn-light'
                 }`}>
-                  <div className="text-lg mb-0.5">{item.passed ? '✓' : '✗'}</div>
-                  <div className={`font-semibold text-[11px] ${item.passed ? 'text-pos-text' : 'text-warn-text'}`}>{item.label}</div>
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${item.passed ? 'bg-pos' : 'bg-warn'}`} />
+                  <span className={`text-[0.65rem] font-semibold ${item.passed ? 'text-pos-text' : 'text-warn-text'}`}>{item.label}</span>
                 </div>
               ))}
             </div>
@@ -473,7 +472,7 @@ export async function CFOTab({ userId, companyId }: Props) {
                         ? 'bg-neg-light text-neg-text'
                         : 'bg-warn-light text-warn-text'
                     }`}>
-                      {d.confidence === 'high' ? '⚠️ Yüksek' : '🔍 Orta'}
+                      {d.confidence === 'high' ? 'Yüksek' : 'Orta'}
                     </span>
                   </div>
                   <span className="text-[10px] text-[#64748b]">{d.rows.map(r => r.expense_date).join(' · ')}</span>
@@ -504,7 +503,7 @@ export async function CFOTab({ userId, companyId }: Props) {
           {/* Assets */}
           <div>
             <div className="text-xs font-bold text-[#64748b] mb-2">AKTİFLER</div>
-            <div className="space-y-1.5 text-sm">
+            <div className="space-y-1.5 text-xs">
               <BalanceLine label="Nakit"      value={balanceSheet?.assets.cash_try ?? 0} />
               <BalanceLine label="Alacaklar"  value={balanceSheet?.assets.receivables_try ?? 0} />
               <BalanceLine label="Stok"       value={balanceSheet?.assets.inventory_try ?? 0} />
@@ -516,7 +515,7 @@ export async function CFOTab({ userId, companyId }: Props) {
           {/* Liabilities */}
           <div>
             <div className="text-xs font-bold text-[#64748b] mb-2">PASİFLER</div>
-            <div className="space-y-1.5 text-sm">
+            <div className="space-y-1.5 text-xs">
               <BalanceLine label="Ortak Borçları"  value={balanceSheet?.liabilities.partner_loans_try ?? 0} negative />
               <BalanceLine label="Vergi Borcu"     value={balanceSheet?.liabilities.tax_payable_try ?? 0} negative />
               <div className="pt-1.5 border-t border-[#e2e8f0]">
@@ -527,7 +526,7 @@ export async function CFOTab({ userId, companyId }: Props) {
           {/* Equity */}
           <div>
             <div className="text-xs font-bold text-[#64748b] mb-2">ÖZKAYNAK</div>
-            <div className="space-y-1.5 text-sm">
+            <div className="space-y-1.5 text-xs">
               <BalanceLine label="Ortak Sermayesi"  value={balanceSheet?.equity.total_partner_capital_try ?? 0} />
               <BalanceLine label="Geçmiş Yıl Karı"  value={balanceSheet?.equity.retained_earnings_try ?? 0} />
               <BalanceLine label="Dönem Kar/Zararı" value={balanceSheet?.equity.current_period_profit_try ?? 0} />
@@ -594,12 +593,12 @@ export async function CFOTab({ userId, companyId }: Props) {
               { label: '31–60 gün',          value: riskData?.overdue30Total ?? 0,                                   color: 'text-warn-text'   },
               { label: '60+ gün (Gecikmiş)', value: (riskData?.overdue60Total ?? 0) + (riskData?.overdue90Total ?? 0), color: 'text-neg-text'   },
             ].map(row => (
-              <div key={row.label} className="flex items-center justify-between text-sm">
+              <div key={row.label} className="flex items-center justify-between text-xs">
                 <span className="text-[#64748b]">{row.label}</span>
                 <span className={`font-bold ${row.color}`}>{fmt(row.value)}</span>
               </div>
             ))}
-            <div className="pt-2 border-t border-[#e2e8f0] flex items-center justify-between text-sm font-bold">
+            <div className="pt-2 border-t border-[#e2e8f0] flex items-center justify-between text-xs font-bold">
               <span className="text-[#334155]">Toplam Alacak</span>
               <span className="text-[#0f172a]">{fmt(riskData?.totalOutstanding ?? 0)}</span>
             </div>
@@ -627,7 +626,7 @@ export async function CFOTab({ userId, companyId }: Props) {
           ].map(k => (
             <div key={k.label} className="text-center">
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{k.label}</div>
-              <div className={`text-lg font-black tabular-nums ${k.color}`}>
+              <div className={`text-base font-black tabular-nums ${k.color}`}>
                 {fmtCompact(Math.abs(k.value))}
               </div>
               {k.label !== 'Satış Geliri' && (
@@ -664,17 +663,17 @@ export async function CFOTab({ userId, companyId }: Props) {
           <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
             <div className="px-4 py-3 border-b border-[#e2e8f0] flex items-center justify-between">
               <div>
-                <h2 className="text-sm font-black text-[#1e293b]">Çeyreklik Analitik — {currentYear}</h2>
+                <h2 className="text-xs font-black text-[#0f172a]">Çeyreklik Analitik — {currentYear}</h2>
                 <p className="text-[10px] text-[#94a3b8] mt-0.5">YTD P&L · Çeyreklik performans · Geçici vergi takvimi</p>
               </div>
               <div className="grid grid-cols-2 gap-2 text-right">
                 <div>
                   <div className="text-[9px] font-bold uppercase tracking-widest text-[#94a3b8]">YTD Ciro</div>
-                  <div className="text-sm font-black text-[#0f172a] tabular-nums">{fmtTRY(ytd.revenue)}</div>
+                  <div className="text-xs font-black text-[#0f172a] tabular-nums">{fmtTRY(ytd.revenue)}</div>
                 </div>
                 <div>
                   <div className="text-[9px] font-bold uppercase tracking-widest text-[#94a3b8]">Net Kâr</div>
-                  <div className={`text-sm font-black tabular-nums ${ytd.net_after_tax >= 0 ? 'text-pos-text' : 'text-neg'}`}>{fmtTRY(ytd.net_after_tax)}</div>
+                  <div className={`text-xs font-black tabular-nums ${ytd.net_after_tax >= 0 ? 'text-pos-text' : 'text-neg'}`}>{fmtTRY(ytd.net_after_tax)}</div>
                 </div>
               </div>
             </div>
@@ -744,7 +743,7 @@ export async function CFOTab({ userId, companyId }: Props) {
                           </div>
                           <div className="text-[10px] text-[#94a3b8] mt-0.5">Son ödeme: {fmtDateQ(q.gecici_due_date)} · Matrah: {fmtTRY(q.matrah)}</div>
                         </div>
-                        <div className={`text-sm font-black tabular-nums ${isPast ? 'text-[#94a3b8]' : isUrgent ? 'text-warn-text' : 'text-warn-text'}`}>{fmtTRY(q.gecici_vergi)}</div>
+                        <div className={`text-xs font-black tabular-nums ${isPast ? 'text-[#94a3b8]' : isUrgent ? 'text-warn-text' : 'text-warn-text'}`}>{fmtTRY(q.gecici_vergi)}</div>
                       </div>
                     )
                   })}
@@ -756,116 +755,58 @@ export async function CFOTab({ userId, companyId }: Props) {
       })()}
 
       {/* GL Tools */}
-      <div className="grid grid-cols-4 gap-2">
-        {[
-          {
-            href:  '/dashboard/cfo/trial-balance',
-            title: 'Mizan',
-            desc:  'Tüm hesap kodları ve bakiyeler',
-            icon:  '📒',
-            color: 'hover:border-[#e2e8f0]',
-          },
-          {
-            href:  '/dashboard/cfo/period-close',
-            title: 'Dönem Kapanışı',
-            desc:  'Dönemleri kapat ve kilitle',
-            icon:  '🔒',
-            color: 'hover:border-warn',
-          },
-          {
-            href:  '/dashboard/cfo/journal-entries',
-            title: 'Journal Kayıtları',
-            desc:  'Çift taraflı muhasebe denetim izi',
-            icon:  '📋',
-            color: 'hover:border-pos',
-          },
-          {
-            href:  '/dashboard/cfo/reconciliation',
-            title: 'GL Mutabakat',
-            desc:  'GL vs operasyonel tablo karşılaştırması',
-            icon:  '⚖️',
-            color: 'hover:border-info',
-          },
-        ].map(item => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={`bg-white border border-[#e2e8f0] rounded px-4 py-3 flex items-start gap-3 transition-colors ${item.color}`}
-          >
-            <span className="text-xl mt-0.5">{item.icon}</span>
-            <div>
-              <div className="text-xs font-bold text-[#0f172a]">{item.title}</div>
-              <div className="text-[10px] text-[#94a3b8] mt-0.5">{item.desc}</div>
-            </div>
-          </Link>
-        ))}
+      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+        <div className="px-4 py-2.5 border-b border-[#e2e8f0]">
+          <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">GL Araçları</span>
+        </div>
+        <div className="grid grid-cols-4 divide-x divide-[#f1f5f9]">
+          {[
+            { href: '/dashboard/cfo/trial-balance',   title: 'Mizan',           desc: 'Hesap kodları ve bakiyeler',        tag: 'TB' },
+            { href: '/dashboard/cfo/period-close',    title: 'Dönem Kapanışı',  desc: 'Kapat ve kilitle',                  tag: 'PC' },
+            { href: '/dashboard/cfo/journal-entries', title: 'Journal',         desc: 'Çift taraflı muhasebe denetim izi', tag: 'JE' },
+            { href: '/dashboard/cfo/reconciliation',  title: 'GL Mutabakat',    desc: 'GL vs operasyonel tablo',           tag: 'RC' },
+          ].map(item => (
+            <Link key={item.href} href={item.href}
+              className="px-4 py-3 hover:bg-[#f8fafc] transition-colors">
+              <div className="flex items-center gap-2 mb-0.5">
+                <span className="text-[0.65rem] font-black text-[#94a3b8] bg-[#f1f5f9] px-1.5 py-0.5 rounded tabular-nums">{item.tag}</span>
+                <span className="text-xs font-bold text-[#0f172a]">{item.title}</span>
+              </div>
+              <div className="text-[0.65rem] text-[#94a3b8]">{item.desc}</div>
+            </Link>
+          ))}
+        </div>
       </div>
 
       {/* Financial Reports */}
-      <div>
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">Finansal Raporlar</div>
-        <div className="grid grid-cols-3 gap-2">
+      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+        <div className="px-4 py-2.5 border-b border-[#e2e8f0]">
+          <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Finansal Raporlar</span>
+        </div>
+        <div className="grid grid-cols-4 divide-x divide-[#f1f5f9]">
           {[
-            {
-              href:  '/dashboard/reports/income-statement',
-              title: 'Gelir Tablosu',
-              desc:  'P&L — Brüt kâr, Faaliyet Kârı, net kâr',
-              icon:  '📈',
-              color: 'hover:border-pos',
-            },
-            {
-              href:  '/dashboard/reports/balance-sheet',
-              title: 'Bilanço',
-              desc:  'Varlıklar = Kaynaklar + Özkaynak',
-              icon:  '⚖️',
-              color: 'hover:border-info',
-            },
-            {
-              href:  '/dashboard/reports/cash-flow',
-              title: 'Nakit Akışı',
-              desc:  'Faaliyet / Yatırım / Finansman',
-              icon:  '💧',
-              color: 'hover:border-cyan-300',
-            },
-            {
-              href:  '/dashboard/reports/executive-summary',
-              title: 'Yönetici Özeti',
-              desc:  '1 sayfa CEO raporu — PDF hazır',
-              icon:  '📄',
-              color: 'hover:border-[#e2e8f0]',
-            },
-            {
-              href:  '/dashboard/cfo/tax/kdv',
-              title: 'KDV Özeti',
-              desc:  'Hesaplanan − İndirilecek = Net KDV',
-              icon:  '🧾',
-              color: 'hover:border-warn/30',
-            },
-            {
-              href:  '/dashboard/cfo/tax/corporate',
-              title: 'Kurumlar Vergisi',
-              desc:  'Geçici vergi takvimi + YTD KV tahmini',
-              icon:  '🏛️',
-              color: 'hover:border-warn',
-            },
-            {
-              href:  '/dashboard/insights',
-              title: 'AI Analizler',
-              desc:  'Anomali tespiti, kopya giderler, AI özeti',
-              icon:  '🤖',
-              color: 'hover:border-purple-300',
-            },
+            { href: '/dashboard/reports/income-statement', title: 'Gelir Tablosu',      desc: 'P&L — Brüt kâr, net kâr' },
+            { href: '/dashboard/reports/balance-sheet',    title: 'Bilanço',            desc: 'Aktif = Pasif + Özkaynak' },
+            { href: '/dashboard/reports/cash-flow',        title: 'Nakit Akışı',        desc: 'Faaliyet / Yatırım / Finansman' },
+            { href: '/dashboard/reports/executive-summary',title: 'Yönetici Özeti',     desc: '1 sayfa PDF — CEO için' },
           ].map(item => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`bg-white border border-[#e2e8f0] rounded px-4 py-3 flex items-start gap-3 transition-colors ${item.color}`}
-            >
-              <span className="text-xl mt-0.5">{item.icon}</span>
-              <div>
-                <div className="text-xs font-bold text-[#0f172a]">{item.title}</div>
-                <div className="text-[10px] text-[#94a3b8] mt-0.5">{item.desc}</div>
-              </div>
+            <Link key={item.href} href={item.href}
+              className="px-4 py-3 hover:bg-[#f8fafc] transition-colors">
+              <div className="text-xs font-bold text-[#0f172a] mb-0.5">{item.title}</div>
+              <div className="text-[0.65rem] text-[#94a3b8]">{item.desc}</div>
+            </Link>
+          ))}
+        </div>
+        <div className="grid grid-cols-3 divide-x divide-[#f1f5f9] border-t border-[#f1f5f9]">
+          {[
+            { href: '/dashboard/cfo/tax/kdv',       title: 'KDV Özeti',          desc: 'Hesaplanan − İndirilecek' },
+            { href: '/dashboard/cfo/tax/corporate', title: 'Kurumlar Vergisi',   desc: 'Geçici vergi takvimi' },
+            { href: '/dashboard/insights',           title: 'AI Analizler',       desc: 'Anomali ve kopya gider tespiti' },
+          ].map(item => (
+            <Link key={item.href} href={item.href}
+              className="px-4 py-3 hover:bg-[#f8fafc] transition-colors">
+              <div className="text-xs font-bold text-[#0f172a] mb-0.5">{item.title}</div>
+              <div className="text-[0.65rem] text-[#94a3b8]">{item.desc}</div>
             </Link>
           ))}
         </div>

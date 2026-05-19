@@ -140,10 +140,9 @@ export default async function DashboardPage() {
     // Transient Supabase error — fall through to error UI below
   }
   if (!userId) return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-center px-4">
-      <div className="text-3xl">⚠️</div>
-      <p className="text-sm text-[#64748b]">Oturum bilgisi alınamadı. Lütfen sayfayı yenileyin.</p>
-      <a href="/dashboard" className="text-sm text-brand-light font-semibold hover:underline">Yeniden Dene</a>
+    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-2 text-center px-4">
+      <p className="text-xs text-[#64748b]">Oturum bilgisi alınamadı. Lütfen sayfayı yenileyin.</p>
+      <a href="/dashboard" className="text-xs text-brand-light font-semibold hover:underline">Yeniden Dene</a>
     </div>
   )
 
@@ -153,13 +152,12 @@ export default async function DashboardPage() {
   try { companyId = await resolveCompanyId(uid, supabase) }
   catch {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center px-4">
-        <div className="text-4xl">⚠️</div>
-        <h2 className="text-xl font-bold text-[#0f172a]">Şirket bilgisi yüklenemedi</h2>
-        <p className="text-sm text-[#64748b] max-w-sm">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-2 text-center px-4">
+        <h2 className="text-base font-bold text-[#0f172a]">Şirket bilgisi yüklenemedi</h2>
+        <p className="text-xs text-[#64748b] max-w-sm">
           Hesabınıza bağlı şirket bilgisi alınamadı. Lütfen sayfayı yenileyin veya destek ekibiyle iletişime geçin.
         </p>
-        <a href="/dashboard" className="text-sm text-brand-light font-semibold hover:underline">
+        <a href="/dashboard" className="text-xs text-brand-light font-semibold hover:underline">
           Yeniden Dene
         </a>
       </div>
@@ -532,7 +530,7 @@ export default async function DashboardPage() {
 
       {/* ── PAGE HERO ─────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-black tracking-tight text-[#0f172a] leading-tight">CEO Komuta Merkezi</h1>
+        <h1 className="text-base font-bold text-[#0f172a] leading-tight">CEO Komuta Merkezi</h1>
         <div className="flex items-center gap-2 flex-shrink-0">
           <span className="text-sm text-[#94a3b8] tabular-nums">{label}</span>
           <span className="text-[#e2e8f0] text-sm">·</span>
@@ -553,10 +551,10 @@ export default async function DashboardPage() {
 
       {/* ── ADAPTIVE PRESSURE BANNER — only renders when system detects crisis ── */}
       {pressureMode === 'cash_crisis' && (
-        <div className="flex items-center justify-between gap-3 px-5 py-3 rounded border border-neg-light bg-neg-light">
+        <div className="flex items-center justify-between gap-3 px-4 py-2.5 rounded border border-neg-light bg-neg-light">
           <div className="flex items-center gap-3 min-w-0">
             <span className="text-[9px] font-black uppercase tracking-widest text-neg flex-shrink-0">⚠ NAKİT KRİZİ</span>
-            <span className="text-sm text-neg-text font-medium truncate">
+            <span className="text-xs text-neg-text font-medium truncate">
               {runwayDays}g nakit ömrü — acil eylem gerekiyor
             </span>
           </div>
@@ -595,7 +593,7 @@ export default async function DashboardPage() {
       )}
 
       {/* ── SİSTEM YORUMU — AI / rule-based narrative panel ──────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded px-5 py-4 shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
         <div className="flex items-center justify-between mb-3">
           <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Sistem Yorumu</span>
           <span className={`text-[8px] font-semibold px-2 py-0.5 rounded ${
@@ -606,7 +604,7 @@ export default async function DashboardPage() {
             {aiSummary.generated_by === 'ai' ? `AI · ${aiSummary.model_version ?? 'claude'}` : 'kural tabanlı'}
           </span>
         </div>
-        <p className="text-sm text-[#334155] leading-relaxed mb-3">{aiSummary.summary_tr}</p>
+        <p className="text-xs text-[#334155] leading-relaxed mb-3">{aiSummary.summary_tr}</p>
         <div className="flex flex-wrap gap-1.5 mb-3">
           {aiSummary.key_factors.map((f, i) => (
             <span key={i} className="text-[10px] bg-[#f8fafc] border border-[#e2e8f0] text-[#64748b] px-2 py-1 rounded">
@@ -631,7 +629,7 @@ export default async function DashboardPage() {
 
           {/* Ciro */}
           <Link href="/dashboard/commercial?tab=sales"
-            className="px-5 py-4 hover:bg-[#f8fafc]/60 transition-colors">
+            className="px-4 py-3 hover:bg-[#f8fafc]/60 transition-colors">
             <div className="text-[9px] font-black uppercase tracking-widest mb-1.5 text-[#94a3b8]">Ciro</div>
             <div className={`${kpiValueSize('revenue')} font-black tabular-nums leading-none text-[#0f172a]`}>
               <span className="text-[#cbd5e1] font-normal text-sm mr-0.5">₺</span>{formatKpi(fs.revenue_try)}
@@ -648,7 +646,7 @@ export default async function DashboardPage() {
 
           {/* Aylık Net */}
           <Link href="/dashboard/finance?tab=pnl"
-            className={`px-5 py-4 hover:bg-[#f8fafc]/60 transition-colors ${monthlyNet < 0 ? 'bg-neg-light/25' : ''}`}>
+            className={`px-4 py-3 hover:bg-[#f8fafc]/60 transition-colors ${monthlyNet < 0 ? 'bg-neg-light/25' : ''}`}>
             <div className="text-[9px] font-black uppercase tracking-widest mb-1.5 text-[#94a3b8]">Aylık Net</div>
             <div className={`${kpiValueSize('net')} font-black tabular-nums leading-none ${monthlyNet >= 0 ? 'text-pos-text' : 'text-neg'}`}>
               <span className={`font-normal text-sm mr-0.5 ${monthlyNet >= 0 ? 'text-pos/70' : 'text-neg/70'}`}>₺</span>
@@ -667,7 +665,7 @@ export default async function DashboardPage() {
 
           {/* Bekleyen Tahsilat */}
           <Link href="/dashboard/commercial?tab=collections"
-            className={`px-5 py-4 hover:bg-[#f8fafc]/60 transition-colors ${dominantKpi === 'receivables' ? 'bg-warn-light/40' : ''}`}>
+            className={`px-4 py-3 hover:bg-[#f8fafc]/60 transition-colors ${dominantKpi === 'receivables' ? 'bg-warn-light/40' : ''}`}>
             <div className={`text-[9px] font-black uppercase tracking-widest mb-1.5 ${dominantKpi === 'receivables' ? 'text-warn-text' : 'text-[#94a3b8]'}`}>
               Bekleyen
             </div>
@@ -688,7 +686,7 @@ export default async function DashboardPage() {
 
           {/* Nakit Ömrü */}
           <Link href="/dashboard/planning?tab=cash-projection"
-            className={`px-5 py-4 hover:bg-[#f8fafc]/60 transition-colors ${dominantKpi === 'runway' ? 'bg-neg-light/40' : ''}`}>
+            className={`px-4 py-3 hover:bg-[#f8fafc]/60 transition-colors ${dominantKpi === 'runway' ? 'bg-neg-light/40' : ''}`}>
             <div className={`text-[9px] font-black uppercase tracking-widest mb-1.5 ${dominantKpi === 'runway' ? 'text-neg' : 'text-[#94a3b8]'}`}>
               Nakit Ömrü
             </div>
@@ -720,7 +718,7 @@ export default async function DashboardPage() {
       <div className="bg-white border border-[#e2e8f0] rounded shadow-sm overflow-hidden">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3 border-b border-[#f1f5f9]">
+        <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#f1f5f9]">
           <div className="flex items-center gap-2.5">
             <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Karar Sırası</span>
             {critAlerts.length > 0 && (
@@ -733,9 +731,9 @@ export default async function DashboardPage() {
         </div>
 
         {topAlerts.length === 0 ? (
-          <div className="flex items-center gap-3 px-5 py-4">
+          <div className="flex items-center gap-3 px-4 py-3">
             <span className="w-2 h-2 rounded-full bg-pos flex-shrink-0" />
-            <span className="text-sm text-[#64748b]">Tüm sistemler normal · Bekleyen karar yok</span>
+            <span className="text-xs text-[#64748b]">Tüm sistemler normal · Bekleyen karar yok</span>
           </div>
         ) : (
           <div className="divide-y divide-[#f1f5f9]">
@@ -743,7 +741,7 @@ export default async function DashboardPage() {
             {/* ── ACIL ─────────────────────────────────────────────────────── */}
             {critAlerts.length > 0 && (
               <div>
-                <div className="px-5 py-1.5 bg-neg-light/60">
+                <div className="px-4 py-1.5 bg-neg-light/60">
                   <span className="text-[9px] font-black uppercase tracking-widest text-neg">
                     ● Acil — {critAlerts.length} hareket gerekiyor
                   </span>
@@ -751,9 +749,9 @@ export default async function DashboardPage() {
                 <div className="divide-y divide-[#f1f5f9]">
                   {critAlerts.map(alert => (
                     <Link key={alert.id} href={alert.actionHref}
-                      className="flex items-center gap-4 px-5 py-4 border-l-[3px] border-neg hover:bg-neg-light/30 transition-colors group">
+                      className="flex items-center gap-4 px-4 py-3 border-l-[3px] border-neg hover:bg-neg-light/30 transition-colors group">
                       <div className="flex-1 min-w-0">
-                        <div className="text-[13px] font-bold text-[#0f172a] leading-tight">{alert.title}</div>
+                        <div className="text-xs font-bold text-[#0f172a] leading-tight">{alert.title}</div>
                         <div className="text-[11px] text-[#64748b] mt-0.5">{alert.detail}</div>
                       </div>
                       <span className="flex-shrink-0 text-xs font-bold px-3 py-1.5 bg-neg text-white rounded group-hover:bg-neg transition-colors whitespace-nowrap">
@@ -768,7 +766,7 @@ export default async function DashboardPage() {
             {/* ── YAKLAŞIYOR ───────────────────────────────────────────────── */}
             {warnAlerts.length > 0 && (
               <div>
-                <div className="px-5 py-1.5 bg-warn-light/60">
+                <div className="px-4 py-1.5 bg-warn-light/60">
                   <span className="text-[9px] font-black uppercase tracking-widest text-warn-text">
                     ◐ Yaklaşıyor — {warnAlerts.length} takip
                   </span>
@@ -776,9 +774,9 @@ export default async function DashboardPage() {
                 <div className="divide-y divide-[#f1f5f9]">
                   {warnAlerts.map(alert => (
                     <Link key={alert.id} href={alert.actionHref}
-                      className="flex items-center gap-4 px-5 py-3.5 border-l-[3px] border-warn hover:bg-warn-light/30 transition-colors group">
+                      className="flex items-center gap-4 px-4 py-3 border-l-[3px] border-warn hover:bg-warn-light/30 transition-colors group">
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium text-[#1e293b] leading-tight">{alert.title}</div>
+                        <div className="text-xs font-medium text-[#1e293b] leading-tight">{alert.title}</div>
                         <div className="text-[11px] text-[#64748b] mt-0.5 truncate">{alert.detail}</div>
                       </div>
                       <span className="flex-shrink-0 text-xs font-semibold px-3 py-1.5 border border-[#e2e8f0] text-[#64748b] rounded group-hover:bg-[#f8fafc] transition-colors whitespace-nowrap">
@@ -793,7 +791,7 @@ export default async function DashboardPage() {
             {/* ── BİLGİ ────────────────────────────────────────────────────── */}
             {infoAlerts.length > 0 && (
               <div>
-                <div className="px-5 py-1.5 bg-[#f8fafc]/60">
+                <div className="px-4 py-1.5 bg-[#f8fafc]/60">
                   <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">
                     ○ Bilgi — {infoAlerts.length}
                   </span>
@@ -801,7 +799,7 @@ export default async function DashboardPage() {
                 <div className="divide-y divide-[#f1f5f9]">
                   {infoAlerts.map(alert => (
                     <Link key={alert.id} href={alert.actionHref}
-                      className="flex items-center gap-4 px-5 py-2.5 border-l-[3px] border-[#e2e8f0] hover:bg-[#f8fafc]/60 transition-colors group">
+                      className="flex items-center gap-4 px-4 py-2.5 border-l-[3px] border-[#e2e8f0] hover:bg-[#f8fafc]/60 transition-colors group">
                       <div className="flex-1 min-w-0">
                         <div className="text-[11px] font-medium text-[#64748b] leading-tight">{alert.title}</div>
                         <div className="text-[10px] text-[#94a3b8] mt-0.5 truncate">{alert.detail}</div>
@@ -823,12 +821,12 @@ export default async function DashboardPage() {
       <div className={`bg-white rounded shadow-sm border transition-colors duration-150 ${
         cashDistributable < 0 ? 'border-neg-light' : cashDistributable > 0 ? 'border-[#e2e8f0]' : 'border-[#e2e8f0]'
       }`}>
-        <div className="flex items-center justify-between px-5 py-2.5 border-b border-[#f1f5f9]">
+        <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#f1f5f9]">
           <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Nakit Köprüsü</span>
           <Link href="/dashboard/finance?tab=cashflow" className="text-[10px] text-brand-light font-semibold hover:text-brand">Cashflow →</Link>
         </div>
         {/* Rail: first 3 items normal, "= Dağıtılabilir" is the decision node — always dominant */}
-        <div className="px-5 py-3 grid grid-cols-4 divide-x divide-[#e2e8f0] items-end">
+        <div className="px-4 py-2.5 grid grid-cols-4 divide-x divide-[#e2e8f0] items-end">
           {/* Input items — subordinate */}
           {[
             { label: '+ Tahsil Edilen',      value: actuallyCollected,       tone: 'text-pos-text', sub: `%${actuallyCollectedPct} tahsilat` },
@@ -846,20 +844,20 @@ export default async function DashboardPage() {
             <div className={`text-[9px] font-black uppercase tracking-widest mb-1 ${cashDistributable >= 0 ? 'text-[#64748b]' : 'text-neg'}`}>
               = Dağıtılabilir
             </div>
-            <div className={`text-2xl font-black tabular-nums leading-none ${cashDistributable >= 0 ? 'text-[#0f172a]' : 'text-neg-text'}`}>
+            <div className={`text-xl font-black tabular-nums leading-none ${cashDistributable >= 0 ? 'text-[#0f172a]' : 'text-neg-text'}`}>
               {fmt(cashDistributable)}
             </div>
             <div className="text-[9px] text-[#94a3b8] mt-0.5">bakiye {fmt(cashBalance)}</div>
           </div>
         </div>
         {stockValue > 0 && (
-          <div className="px-5 pb-2 pt-2 border-t border-[#f1f5f9] flex items-center gap-2">
+          <div className="px-4 pb-2 pt-2 border-t border-[#f1f5f9] flex items-center gap-2">
             <span className="text-[9px] font-bold uppercase tracking-widest text-[#cbd5e1] flex-shrink-0">Stok</span>
             <span className="text-[10px] text-[#94a3b8] tabular-nums">{fmt(stockValue)} maliyet bedeliyle stokta bekliyor</span>
           </div>
         )}
         {cashDistributable > 0 && equalization.entries.length > 0 && (
-          <div className={`px-5 pb-3 pt-2 flex items-center gap-2 overflow-hidden flex-wrap ${stockValue > 0 ? '' : 'border-t border-[#f1f5f9]'}`}>
+          <div className={`px-4 pb-2 pt-2 flex items-center gap-2 overflow-hidden flex-wrap ${stockValue > 0 ? '' : 'border-t border-[#f1f5f9]'}`}>
             <span className="text-[9px] font-bold uppercase tracking-widest text-[#cbd5e1] flex-shrink-0">Paylaşım</span>
             {equalization.entries.slice(0, 4).map(e => (
               <div key={e.partner_id} className="flex items-center gap-1.5 bg-pos-light border border-pos-light rounded px-2.5 py-1 min-w-0">
@@ -876,7 +874,7 @@ export default async function DashboardPage() {
 
         {/* Runway summary — compressed single line */}
         <div className="lg:col-span-8 bg-white border border-[#e2e8f0] rounded shadow-sm">
-          <div className="flex items-center justify-between px-5 py-2.5 border-b border-[#f1f5f9]">
+          <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#f1f5f9]">
             <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Nakit Pisti</span>
             <Link href="/dashboard/planning?tab=cash-projection" className="text-[10px] text-brand-light font-semibold hover:text-brand">Projeksiyon →</Link>
           </div>
@@ -889,7 +887,7 @@ export default async function DashboardPage() {
               { key: 'optimistic'  as const, label: 'İyimser',  summary: forecast.summary.optimistic,  tone: 'text-pos-text' },
             ]
             return (
-              <div className="px-5 py-3 grid grid-cols-3 gap-4 divide-x divide-[#e2e8f0] items-end">
+              <div className="px-4 py-2.5 grid grid-cols-3 gap-4 divide-x divide-[#e2e8f0] items-end">
                 {scenarios.map(({ key, label, summary, tone }) => {
                   const isBase    = key === 'base'
                   const isDanger  = baseDanger && isBase
@@ -950,7 +948,7 @@ export default async function DashboardPage() {
             <Link href="/dashboard/cfo/period-close"
               className="bg-warn-light border border-warn-light rounded px-4 py-3.5 hover:border-warn transition-colors">
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-warn mb-1.5">Dönem Kapanışı</div>
-              <div className="text-sm font-bold text-warn-text">{openPeriodDaysOverdue} gündür bekliyor</div>
+              <div className="text-xs font-bold text-warn-text">{openPeriodDaysOverdue} gündür bekliyor</div>
               <div className="text-[10px] text-warn mt-1">CFO Cockpit'e git →</div>
             </Link>
           )}
@@ -974,7 +972,7 @@ export default async function DashboardPage() {
 
       {/* ── RISK RADAR — cross-center intelligence surface ───────────────── */}
       <div className="bg-white border border-[#e2e8f0] rounded shadow-sm overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#f1f5f9]">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">
           <div className="flex items-center gap-3">
             <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Risk Radar</span>
             <span className={`text-[9px] font-black px-2 py-0.5 rounded ${situTheme.badge}`}>
@@ -983,7 +981,7 @@ export default async function DashboardPage() {
           </div>
           <span className="text-[10px] text-[#94a3b8]">{situation.criticalFactor}</span>
         </div>
-        <div className="px-5 py-4 grid grid-cols-1 sm:grid-cols-5 gap-4">
+        <div className="px-4 py-3 grid grid-cols-1 sm:grid-cols-5 gap-4">
           {([
             {
               key:    'cash',
