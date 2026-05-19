@@ -92,12 +92,17 @@ export function evaluateAlerts(inputs: AlertInputs): DecisionAlert[] {
 
   // ── CASH_RUNWAY_90 ─────────────────────────────────────────────────────────
   if (inputs.cashRunwayDays >= 0 && inputs.cashRunwayDays <= 90 && inputs.cashRunwayDays > 30) {
+    // Only describe as "loss" when monthly income is actually negative;
+    // profitable companies with declining cash have a different root cause.
+    const runwayDetail = inputs.monthlyNetIncome < 0
+      ? `Aylık zarar ${fmtK(Math.abs(inputs.monthlyNetIncome))} — gelir artırın veya gider kesin`
+      : `Nakit azalıyor — tahsilat hızlandırın veya borç baskısını değerlendirin`
     alerts.push({
       id:          'CASH_RUNWAY_90',
       rule_type:   'CASH_RUNWAY_90',
       severity:    'warning',
       title:       `Nakit yaklaşık ${inputs.cashRunwayDays} gün yeter`,
-      detail:      `Aylık zarar ${fmtK(Math.abs(inputs.monthlyNetIncome))} — gelir artırın veya gider kesin`,
+      detail:      runwayDetail,
       actionLabel: 'Simülasyon Yap',
       actionHref:  '/dashboard/planning?tab=cash-projection',
     })
@@ -105,12 +110,15 @@ export function evaluateAlerts(inputs: AlertInputs): DecisionAlert[] {
 
   // ── CASH_RUNWAY_30 ─────────────────────────────────────────────────────────
   if (inputs.cashRunwayDays >= 0 && inputs.cashRunwayDays <= 30) {
+    const runwayDetail30 = inputs.monthlyNetIncome < 0
+      ? `Aylık ${fmtK(Math.abs(inputs.monthlyNetIncome))} zarar — acil aksiyon gerekli`
+      : `Nakit kritik seviyed — acil tahsilat veya finansman gerekli`
     alerts.push({
       id:          'CASH_RUNWAY_30',
       rule_type:   'CASH_RUNWAY_30',
       severity:    'critical',
       title:       `Kritik: nakit ${inputs.cashRunwayDays} günde tükeniyor`,
-      detail:      `Aylık ${fmtK(Math.abs(inputs.monthlyNetIncome))} zarar — acil aksiyon gerekli`,
+      detail:      runwayDetail30,
       actionLabel: 'Nakit Simülasyonu',
       actionHref:  '/dashboard/planning?tab=cash-projection',
     })
@@ -171,6 +179,26 @@ export function evaluateAlerts(inputs: AlertInputs): DecisionAlert[] {
     })
   }
 
+  // ── KDV_LARGE ─────────────────────────────────────────────────────────────
+  // Large accumulated KDV payable even when the declaration deadline is not yet
+  // imminent. A company with ₺340K in undeclared KDV should see this in treasury —
+  // that cash is not freely deployable even if the due date is 3 weeks away.
+  // Only fires when TAX_DUE_SOON is NOT active (taxDueDays > 7 or -1)
+  // to avoid duplicating the same KDV concern with different severity.
+  const taxDueNotImminent = inputs.taxDueDays < 0 || inputs.taxDueDays > 7
+  if (taxDueNotImminent && inputs.kdvPayable >= 50_000) {
+    alerts.push({
+      id:          'KDV_LARGE',
+      rule_type:   'KDV_LARGE',
+      severity:    'warning',
+      title:       `${fmtK(inputs.kdvPayable)} KDV birikmekte`,
+      detail:      'Bu tutar şirkete ait değil — beyan tarihi yaklaştığında nakit baskısı oluşabilir',
+      actionLabel: 'KDV Raporu',
+      actionHref:  '/dashboard/cfo',
+      amount:      inputs.kdvPayable,
+    })
+  }
+
   // ── BS_IMBALANCED ──────────────────────────────────────────────────────────
   if (inputs.bsImbalanceTry > 100) {
     alerts.push({
@@ -210,6 +238,22 @@ export function evaluateAlerts(inputs: AlertInputs): DecisionAlert[] {
       actionLabel: 'Ortak Sermaye',
       actionHref:  '/dashboard/partners',
       amount:      inputs.equityGapTry,
+    })
+  }
+
+  // ── DSR_STRAINED ──────────────────────────────────────────────────────────
+  // DSR > 0.50 but ≤ 0.70 is "strained" — company is spending more than half its
+  // income on debt service. This is a clear warning sign even if not yet critical.
+  // Fires independently from DSR_HIGH so companies don't miss the strained zone.
+  if (inputs.debtServiceRatio > 0.50 && inputs.debtServiceRatio <= 0.70) {
+    alerts.push({
+      id:          'DSR_STRAINED',
+      rule_type:   'DSR_STRAINED',
+      severity:    'warning',
+      title:       `Borç servis oranı yüksek: %${round2(inputs.debtServiceRatio * 100)}`,
+      detail:      `Gelirinizin %${round2(inputs.debtServiceRatio * 100)} borç servise gidiyor — borç yeniden yapılandırmasını değerlendirin`,
+      actionLabel: 'Waterfall Simülasyonu',
+      actionHref:  '/dashboard/partners',
     })
   }
 

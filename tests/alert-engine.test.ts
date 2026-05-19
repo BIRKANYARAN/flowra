@@ -184,4 +184,59 @@ describe('evaluateAlerts', () => {
     const alert = alerts.find(a => a.rule_type === 'EQUITY_GAP_OVERDUE')
     expect(alert).toBeUndefined()
   })
+
+  // ── E6 alert calibration ────────────────────────────────────────────────────
+
+  it('debtServiceRatio: 0.62 (> 0.50, <= 0.70) → fires DSR_STRAINED (warning)', () => {
+    const alerts = evaluateAlerts({ ...CLEAN, debtServiceRatio: 0.62 })
+    const strained = alerts.find(a => a.rule_type === 'DSR_STRAINED')
+    const high     = alerts.find(a => a.rule_type === 'DSR_HIGH')
+    expect(strained).toBeDefined()
+    expect(strained!.severity).toBe('warning')
+    expect(high).toBeUndefined()    // DSR_HIGH requires > 0.70
+  })
+
+  it('debtServiceRatio: 0.50 (exactly) → no DSR_STRAINED (boundary: > 0.50 required)', () => {
+    const alerts = evaluateAlerts({ ...CLEAN, debtServiceRatio: 0.50 })
+    const strained = alerts.find(a => a.rule_type === 'DSR_STRAINED')
+    expect(strained).toBeUndefined()
+  })
+
+  it('debtServiceRatio: 0.80 → fires DSR_HIGH (critical), not DSR_STRAINED', () => {
+    const alerts = evaluateAlerts({ ...CLEAN, debtServiceRatio: 0.80 })
+    const strained = alerts.find(a => a.rule_type === 'DSR_STRAINED')
+    const high     = alerts.find(a => a.rule_type === 'DSR_HIGH')
+    expect(strained).toBeUndefined()
+    expect(high).toBeDefined()
+    expect(high!.severity).toBe('critical')
+  })
+
+  it('kdvPayable >= 50_000 and taxDueDays = -1 → fires KDV_LARGE (warning)', () => {
+    const alerts = evaluateAlerts({ ...CLEAN, kdvPayable: 340_000, taxDueDays: -1 })
+    const alert = alerts.find(a => a.rule_type === 'KDV_LARGE')
+    expect(alert).toBeDefined()
+    expect(alert!.severity).toBe('warning')
+    expect(alert!.amount).toBe(340_000)
+  })
+
+  it('kdvPayable >= 50_000 but taxDueDays <= 7 → KDV_LARGE does NOT fire (TAX_DUE_SOON instead)', () => {
+    const alerts = evaluateAlerts({ ...CLEAN, kdvPayable: 340_000, taxDueDays: 3 })
+    const large  = alerts.find(a => a.rule_type === 'KDV_LARGE')
+    const due    = alerts.find(a => a.rule_type === 'TAX_DUE_SOON')
+    expect(large).toBeUndefined()   // suppressed when TAX_DUE_SOON would fire
+    expect(due).toBeDefined()
+  })
+
+  it('kdvPayable < 50_000 → no KDV_LARGE', () => {
+    const alerts = evaluateAlerts({ ...CLEAN, kdvPayable: 49_999, taxDueDays: -1 })
+    const alert = alerts.find(a => a.rule_type === 'KDV_LARGE')
+    expect(alert).toBeUndefined()
+  })
+
+  it('monthlyNetIncome > 0 with low runway → runway detail does not say "zarar"', () => {
+    const alerts = evaluateAlerts({ ...CLEAN, cashRunwayDays: 60, monthlyNetIncome: 50_000 })
+    const alert = alerts.find(a => a.rule_type === 'CASH_RUNWAY_90')
+    expect(alert).toBeDefined()
+    expect(alert!.detail).not.toContain('zarar')
+  })
 })
