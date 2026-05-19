@@ -15,10 +15,6 @@ export function ShareBar({ ratio }: { ratio: number }) {
   )
 }
 
-export function Skeleton({ h = 'h-16' }: { h?: string }) {
-  return <div className={`bg-[#f1f5f9] rounded ${h} animate-pulse`} />
-}
-
 export function TabBtn({ id, active, label, onClick }: { id: TabId; active: boolean; label: string; onClick: (id: TabId) => void }) {
   return (
     <button

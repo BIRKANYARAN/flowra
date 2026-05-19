@@ -5,6 +5,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { Skeleton } from '@/components/ds'
 import { fmtDate as fmt } from '@/lib/format'
 
 interface Period {
@@ -46,8 +47,6 @@ const STATUS_COLOR: Record<Period['status'], string> = {
   closed:    'bg-pos-light text-pos-text',
   locked:    'bg-[#f1f5f9] text-[#64748b]',
 }
-
-function Skeleton() { return <div className="bg-[#f1f5f9] rounded h-16 animate-pulse" /> }
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
@@ -155,7 +154,7 @@ export default function PeriodClosePage() {
       )}
 
       {loading && (
-        <div className="flex flex-col gap-2">{[1,2,3].map(i => <Skeleton key={i} />)}</div>
+        <div className="flex flex-col gap-2">{[1,2,3].map(i => <Skeleton key={i} height="h-16" />)}</div>
       )}
 
       {!loading && periods.length === 0 && !error && (

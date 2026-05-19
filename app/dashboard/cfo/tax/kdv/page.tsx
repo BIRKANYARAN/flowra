@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { Skeleton } from '@/components/ds'
 import { PdfExportButton } from '@/components/reports/PdfExportButton'
 import { formatTRY as fmt } from '@/lib/format'
 
@@ -97,7 +98,7 @@ export default function KdvPage() {
       </div>
 
       {error && <div className="bg-neg-light border border-neg-light rounded px-4 py-3 text-sm text-neg-text">{error}</div>}
-      {loading && <div className="bg-[#f1f5f9] rounded h-40 animate-pulse" />}
+      {loading && <Skeleton height="h-40" />}
 
       {kdv && !loading && (
         <>

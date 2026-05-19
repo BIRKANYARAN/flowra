@@ -6,6 +6,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import { Skeleton } from '@/components/ds'
 import { fmtDate as fmt, fmtTRY } from '@/lib/format'
 
 interface WorkflowInstance {
@@ -30,7 +31,6 @@ const TYPE_LABELS: Record<string, string> = {
 
 const fmtMoney = (n: unknown) => fmtTRY(Number(n ?? 0) || 0, 0)
 
-function Skeleton() { return <div className="bg-[#f1f5f9] rounded h-20 animate-pulse" /> }
 
 export default function WorkflowsPage() {
   const [workflows, setWorkflows] = useState<WorkflowInstance[]>([])
@@ -103,7 +103,7 @@ export default function WorkflowsPage() {
       )}
 
       {loading && (
-        <div className="space-y-2">{[1,2,3].map(i => <Skeleton key={i} />)}</div>
+        <div className="space-y-2">{[1,2,3].map(i => <Skeleton key={i} height="h-20" />)}</div>
       )}
 
       {!loading && workflows.length === 0 && !error && (

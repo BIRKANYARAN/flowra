@@ -10,13 +10,13 @@
 //   5. Tranche detail table
 
 import Link from 'next/link'
-import { NarrativeFooter } from '@/components/ds'
+import { NarrativeFooter, Skeleton } from '@/components/ds'
 import {
   WaterfallData,
   DebtTranche,
   fmt,
 } from '@/app/dashboard/partners/_components/types'
-import { Skeleton, StatusPill } from '@/app/dashboard/partners/_components/ui'
+import { StatusPill } from '@/app/dashboard/partners/_components/ui'
 
 export interface WaterfallTabProps {
   loading: boolean
@@ -193,7 +193,7 @@ export function WaterfallTab({
 }: WaterfallTabProps) {
   return (
     <div className="flex flex-col gap-4">
-      {loading ? <Skeleton h="h-32" /> : !waterfall ? (
+      {loading ? <Skeleton height="h-32" /> : !waterfall ? (
         <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-6 text-center text-xs text-[#94a3b8]">
           Waterfall verisi yüklenemedi.
         </div>

@@ -1,12 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import { NarrativeFooter } from '@/components/ds'
+import { NarrativeFooter, Skeleton } from '@/components/ds'
 import {
   LedgerData, LedgerEntry, LedgerSortCol,
   pct, fmt,
 } from '@/app/dashboard/partners/_components/types'
-import { Skeleton } from '@/app/dashboard/partners/_components/ui'
 
 export interface LedgerTabProps {
   loading: boolean
@@ -25,7 +24,7 @@ export function LedgerTab({
 }: LedgerTabProps) {
   return (
     <div className="flex flex-col gap-3">
-      {loading ? <Skeleton h="h-40" /> : !ledger ? (
+      {loading ? <Skeleton height="h-40" /> : !ledger ? (
         <div className="bg-neg-light border border-neg-light rounded px-4 py-3 text-sm text-neg">Finansal defter yüklenemedi.</div>
       ) : (
         <>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { Skeleton } from '@/components/ds'
 
 interface AlertRule {
   id:              string | null
@@ -98,7 +99,7 @@ export default function AlertSettingsPage() {
         <div className="bg-pos-light border border-pos-light rounded px-4 py-3 text-sm text-pos-text">{flash}</div>
       )}
 
-      {loading && <div className="bg-[#f1f5f9] rounded h-64 animate-pulse" />}
+      {loading && <Skeleton height="h-64" />}
 
       {!loading && (
         <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">

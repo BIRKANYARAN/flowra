@@ -1,12 +1,12 @@
 'use client'
 
 import Link from 'next/link'
-import { NarrativeFooter } from '@/components/ds'
+import { NarrativeFooter, Skeleton } from '@/components/ds'
 import {
   CapitalReturn,
   fmt, fmtPct,
 } from '@/app/dashboard/partners/_components/types'
-import { Skeleton, RoiBar } from '@/app/dashboard/partners/_components/ui'
+import { RoiBar } from '@/app/dashboard/partners/_components/ui'
 
 export interface ReturnsTabProps {
   loading: boolean
@@ -16,7 +16,7 @@ export interface ReturnsTabProps {
 export function ReturnsTab({ loading, returns }: ReturnsTabProps) {
   return (
     <div className="flex flex-col gap-4">
-      {loading ? <Skeleton h="h-32" /> : returns.length === 0 ? (
+      {loading ? <Skeleton height="h-32" /> : returns.length === 0 ? (
         <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-6 text-center text-sm text-[#94a3b8]">
           Getiri verisi hesaplanamadı.
         </div>

@@ -8,6 +8,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import { Skeleton } from '@/components/ds'
 import { formatTRY as fmt } from '@/lib/format'
 
 interface ReconciliationItem {
@@ -166,7 +167,7 @@ export default function ReconciliationPage() {
       {loading && !report && (
         <div className="flex flex-col gap-3">
           {[1,2,3,4].map(i => (
-            <div key={i} className="bg-[#f1f5f9] rounded h-14 animate-pulse" />
+            <Skeleton key={i} height="h-14" />
           ))}
         </div>
       )}

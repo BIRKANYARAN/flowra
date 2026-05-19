@@ -1,12 +1,12 @@
 'use client'
 
 import Link from 'next/link'
-import { NarrativeFooter } from '@/components/ds'
+import { NarrativeFooter, Skeleton } from '@/components/ds'
 import {
   PartnerRow, EqResult, TxRow,
   pct, fmt, TX_TYPE_LABELS,
 } from '@/app/dashboard/partners/_components/types'
-import { ShareBar, Skeleton } from '@/app/dashboard/partners/_components/ui'
+import { ShareBar } from '@/app/dashboard/partners/_components/ui'
 
 export interface PartnersTabProps {
   loading: boolean
@@ -58,7 +58,7 @@ export function PartnersTab({
     <>
       {loading ? (
         <div className="grid grid-cols-3 gap-2">
-          {[1,2,3].map(i => <Skeleton key={i} />)}
+          {[1,2,3].map(i => <Skeleton key={i} height="h-16" />)}
         </div>
       ) : (
         <div className="grid grid-cols-3 gap-2">
@@ -75,7 +75,7 @@ export function PartnersTab({
         </div>
       )}
 
-      {loading && <div className="flex flex-col gap-2"><Skeleton h="h-20" /><Skeleton h="h-20" /></div>}
+      {loading && <div className="flex flex-col gap-2"><Skeleton height="h-20" /><Skeleton height="h-20" /></div>}
 
       {!loading && !hasPartners && !fetchError && (
         <div className="bg-white border border-[#e2e8f0] rounded px-6 py-12 text-center">

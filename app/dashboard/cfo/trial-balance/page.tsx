@@ -6,6 +6,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { Skeleton } from '@/components/ds'
 import { formatTRY as fmt } from '@/lib/format'
 
 const PRINT_STYLE = `
@@ -58,10 +59,6 @@ const CLASS_LABELS: Record<string, string> = {
   cogs:                  'Satış Maliyeti',
   operating_expense:     'Faaliyet Giderleri',
   financing:             'Finansman Giderleri',
-}
-
-function Skeleton() {
-  return <div className="bg-[#f1f5f9] rounded h-12 animate-pulse" />
 }
 
 export default function TrialBalancePage() {
@@ -183,7 +180,7 @@ export default function TrialBalancePage() {
 
       {loading && (
         <div className="flex flex-col gap-2">
-          {[1,2,3,4].map(i => <Skeleton key={i} />)}
+          {[1,2,3,4].map(i => <Skeleton key={i} height="h-12" />)}
         </div>
       )}
 

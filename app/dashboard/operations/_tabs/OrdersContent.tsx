@@ -5,7 +5,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { NarrativeFooter } from '@/components/ds'
+import { NarrativeFooter, Skeleton } from '@/components/ds'
 import { formatTRY as fmt, fmtDate } from '@/lib/format'
 
 type OrderStatus = 'draft' | 'ordered' | 'received' | 'cancelled'
@@ -335,7 +335,7 @@ export function OrdersContent(_props: Props) {
 
       {loading ? (
         <div className="space-y-2">
-          {[1, 2, 3].map(i => <div key={i} className="bg-[#f1f5f9] rounded h-16 animate-pulse" />)}
+          {[1, 2, 3].map(i => <Skeleton key={i} height="h-16" />)}
         </div>
       ) : orders.length === 0 ? (
         <div className="text-center py-12 text-[#94a3b8] text-sm">
