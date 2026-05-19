@@ -26,6 +26,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import type { ReceivableAging } from '@/types'
 import { resolveApiAuth } from '@/lib/api-auth'
+import { round2 } from '@/lib/calc'
 
 export async function GET(req: NextRequest) {
   const auth = await resolveApiAuth(req)
@@ -35,12 +36,16 @@ export async function GET(req: NextRequest) {
   // Fetch all outstanding receivables (no date filter — want full aging picture)
   // Use sale_date (business invoice date) for aging — not created_at (DB insertion time).
   // A backdated invoice entered today should age from its sale_date, not today.
+  // Safety cap: 5000 rows. A company with >5000 outstanding invoices has bigger problems;
+  // oldest-first ordering ensures the most aged (highest risk) buckets are never missed.
   const { data, error } = await supabase
     .from('sales')
     .select('total_try:total, amount_paid:paid_amount, sale_date')
     .eq('company_id', companyId)
     .is('deleted_at', null)
     .in('payment_status', ['pending', 'partial', 'overdue'])
+    .order('sale_date', { ascending: true })
+    .limit(5000)
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
@@ -85,11 +90,11 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // Round to 2 decimal places
-  result.current.total_try      = Math.round(result.current.total_try      * 100) / 100
-  result.aged_30_60.total_try   = Math.round(result.aged_30_60.total_try   * 100) / 100
-  result.aged_60_plus.total_try = Math.round(result.aged_60_plus.total_try * 100) / 100
-  result.total.total_try        = Math.round(result.total.total_try        * 100) / 100
+  // Round to 2 decimal places — round2() prevents IEEE 754 edge cases (e.g. 0.005 → 0.01)
+  result.current.total_try      = round2(result.current.total_try)
+  result.aged_30_60.total_try   = round2(result.aged_30_60.total_try)
+  result.aged_60_plus.total_try = round2(result.aged_60_plus.total_try)
+  result.total.total_try        = round2(result.total.total_try)
 
   return NextResponse.json(result)
 }

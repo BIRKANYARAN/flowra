@@ -30,8 +30,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { REQUEST_ID_HEADER } from '@/middleware'
 import { resolveApiAuth } from '@/lib/api-auth'
-
-function round2(v: number) { return Math.round((v + Number.EPSILON) * 100) / 100 }
+import { round2 } from '@/lib/calc'
 
 interface PartnerLedgerEntry {
   partner_id:             string

@@ -26,6 +26,7 @@ export async function GET(req: NextRequest) {
     .eq('product_id', productId)
     .is('deleted_at', null)
     .order('entry_date', { ascending: false })
+    .limit(500)   // per-product cost entries are bounded; cap prevents runaway scan on bulk imports
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json(data ?? [])
