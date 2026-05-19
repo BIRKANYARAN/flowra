@@ -144,6 +144,51 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
     guidance.push('Konsantrasyon riski düşük. Alacaklar zamanında tahsil ediliyor.')
   }
 
+  // ── C9: Financial Early-Warning System ─────────────────────────────────────
+  // Forward-looking signals: what is about to get worse?
+  const earlyWarningLines: string[] = []
+
+  // Signal 1: 30d bucket cascade — will cross into 60d within a month
+  if (risk.overdue30Total > 0) {
+    earlyWarningLines.push(`${fmt(risk.overdue30Total)} alacak şu anda 30 gün bandında — tahsilat yapılmazsa bir ay içinde 60 gün dilimine geçer ve risk skoru yükselir.`)
+  }
+
+  // Signal 2: 60d bucket cascade — entering write-off territory
+  if (risk.overdue60Total > 0) {
+    earlyWarningLines.push(`${fmt(risk.overdue60Total)} alacak 60 gün bandında — 30 gün içinde 90+ dilimine geçer; bu noktada şüpheli alacak karşılığı veya hukuki süreç gerekebilir.`)
+  }
+
+  // Signal 3: Revenue deceleration trend (last 3 months)
+  if (monthlyRevenue.length >= 3) {
+    const recent  = monthlyRevenue.slice(-3)
+    const avg01   = (recent[0].revenue + recent[1].revenue) / 2
+    const lastRev = recent[2].revenue
+    if (avg01 > 0 && lastRev > 0) {
+      const trendPct = (lastRev - avg01) / avg01
+      if (trendPct < -0.10) {
+        earlyWarningLines.push(`Gelir son 3 ayda %${Math.abs(trendPct * 100).toFixed(0)} düşüş trendi gösteriyor — henüz kritik değil, ancak ivme sürdürülürse 60-90 gün içinde nakit baskısı oluşabilir.`)
+      }
+    }
+  }
+
+  // Signal 4: Concentration cliff — single-customer shutdown risk
+  if (risk.aging.length > 0 && risk.totalOutstanding > 0) {
+    const top1      = risk.aging[0]
+    const top1Share = top1.total_outstanding / risk.totalOutstanding
+    if (top1Share > 0.40) {
+      earlyWarningLines.push(`${top1.customer_name} toplam alacağın ${pct(top1Share)}'ini tutuyor — bu müşterinin ödeme aksaması tek başına tüm nakit girişini duraksatabilir.`)
+    }
+  }
+
+  // Signal 5: Incoming overdue pressure band (30d+60d → leading indicator for 90d growth)
+  const incomingOverdue   = risk.overdue30Total + risk.overdue60Total
+  if (incomingOverdue > 0 && risk.totalOutstanding > 0) {
+    const incomingRate = incomingOverdue / risk.totalOutstanding
+    if (incomingRate > 0.30) {
+      earlyWarningLines.push(`Toplam alacağın ${pct(incomingRate)}'i (${fmt(incomingOverdue)}) 30-60 gün bandında — bu dilim 90+ segmentinin besleyicisi; müdahale penceresi daralıyor.`)
+    }
+  }
+
   if (risk.totalOutstanding === 0) {
     return (
       <div className="bg-white border border-[#e2e8f0] rounded text-center py-12">
@@ -194,6 +239,20 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
           </div>
         ))}
       </div>
+
+      {/* C9 — Financial Early-Warning System */}
+      {earlyWarningLines.length > 0 && (
+        <div className="bg-[#fffbeb] border border-warn-light rounded p-4 shadow-sm">
+          <div className="text-[0.65rem] font-black uppercase tracking-widest text-warn-text mb-3">Erken Uyarı Göstergesi</div>
+          <div className="space-y-1.5">
+            {earlyWarningLines.map((line, i) => (
+              <p key={i} className="text-xs text-[#334155] leading-relaxed">
+                {i > 0 && <span className="text-warn-text mr-1">—</span>}{line}
+              </p>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Zone 2 — Konsantrasyon */}
       <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
