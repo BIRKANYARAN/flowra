@@ -3,14 +3,13 @@ export const dynamic = 'force-dynamic'
 import { createClient } from '@/lib/supabase-server'
 import { notFound } from 'next/navigation'
 import { fmtDate, sym } from '@/lib/format'
-import type { Proforma, ProformaItem, Customer, CompanyBank, UserSettings } from '@/types'
+import type { Proforma, ProformaItem, Customer, CompanyBank } from '@/types'
 import { ProformaDetailClient } from './client'
 import type { ClientItem, ClientPdfOpts } from './client'
 import { safeNum, safeStr } from '@/lib/normalize'
 import { calculateTotals } from '@/lib/calc'
 import { InvoiceSection } from './InvoiceSection'
 import { resolveCompanyId } from '@/lib/resolve-company'
-import { safeSystemQuery } from '@/lib/admin-db'
 
 
 function isValidUUID(val: unknown): val is string {
@@ -46,43 +45,55 @@ export default async function ProformaDetailPage({ params }: PageProps) {
   catch { return notFound() }
 
   try {
-    // ── 3. Fetch proforma + items + settings + banks concurrently ────────────
-    const [pRes, iRes, sRes, bRes] = await Promise.all([
+    // ── 3. Fetch proforma + items + company + banks concurrently ─────────────
+    // NOTE: user_settings removed from this query — it has no company-info columns
+    // (only settings JSONB). Company data lives in the companies table.
+    const [pRes, iRes, cmpRes, bRes] = await Promise.all([
       supabase
         .from('proformas')
         .select('*')
         .eq('id', id)
-        .eq('company_id', companyId)   // FIX: was .eq('user_id', user.id) — blocked all team members
+        .eq('company_id', companyId)
         .maybeSingle(),
       supabase
         .from('proforma_items')
         .select('*')
         .eq('proforma_id', id)
         .order('sort_order', { ascending: true }),
-      safeSystemQuery('user_settings')
-        .select('*')
-        .eq('company_id', companyId)
-        .is('deleted_at', null)
-        .order('updated_at', { ascending: false })
-        .limit(1)
+      supabase
+        .from('companies')
+        .select('name, address, phone, website, tax_id, tax_office, mersis_no, logo_url, email')
+        .eq('id', companyId)
         .maybeSingle(),
       supabase
         .from('company_banks')
         .select('*')
-        .eq('company_id', companyId)   // FIX: was .eq('user_id', user.id) — wrong scope
+        .eq('company_id', companyId)
         .is('deleted_at', null)
         .order('is_default', { ascending: false }),
     ])
 
-    // Separate DB errors from genuine "not found" — both previously returned notFound(),
-    // which masked real errors as 404s and made debugging impossible.
-    if (pRes.error) throw pRes.error     // real DB error → propagates to error boundary
-    if (!pRes.data) return notFound()    // proforma doesn't exist or RLS denied it
+    // Separate DB errors from genuine "not found"
+    if (pRes.error) throw pRes.error
+    if (!pRes.data) return notFound()
 
-    const proforma = pRes.data as Proforma
-    const rawItems = Array.isArray(iRes.data) ? (iRes.data as ProformaItem[]) : []
-    const settings = sRes.data ? (sRes.data as UserSettings) : null
-    const banks    = Array.isArray(bRes.data) ? (bRes.data as CompanyBank[]) : []
+    const proforma   = pRes.data as Proforma
+    const rawItems   = Array.isArray(iRes.data) ? (iRes.data as ProformaItem[]) : []
+    const companyRow = cmpRes.data as Record<string, string | null> | null
+    const banks      = Array.isArray(bRes.data) ? (bRes.data as CompanyBank[]) : []
+
+    // Build a settings-shaped object from the companies table so downstream code works unchanged
+    const settings = companyRow ? {
+      company_name: companyRow.name       ?? null,
+      address:      companyRow.address    ?? null,
+      phone:        companyRow.phone      ?? null,
+      website:      companyRow.website    ?? null,
+      tax_number:   companyRow.tax_id     ?? null,  // companies.tax_id ↔ settings shape tax_number
+      tax_office:   companyRow.tax_office ?? null,
+      logo_url:     companyRow.logo_url   ?? null,
+      mersis_no:    companyRow.mersis_no  ?? null,
+      email:        companyRow.email      ?? null,
+    } : null
 
     // ── 4. Fetch customer (optional, never fatal) ────────────────────────────
     let customer: Customer | null = null
