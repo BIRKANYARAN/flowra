@@ -34,6 +34,7 @@ import { requireAdmin } from '@/lib/require-role'
 import { PartnerService } from '@/lib/services/partner.service'
 import { REQUEST_ID_HEADER } from '@/middleware'
 import { resolveApiAuth } from '@/lib/api-auth'
+import { round2 } from '@/lib/calc'
 
 interface DeclareEntry {
   partner_id:      string
@@ -88,6 +89,103 @@ export async function POST(req: NextRequest) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(entry.tx_date ?? '')) {
       return NextResponse.json({ error: `${entry.partner_id}: geçersiz tx_date formatı (YYYY-MM-DD bekleniyor)`, code: 'VALIDATION_ERROR', type: 'BUSINESS' }, { status: 422 })
     }
+  }
+
+  // ── Partner ownership pre-validation ────────────────────────────────────────
+  // Verify ALL partner IDs belong to this company BEFORE any inserts.
+  // PartnerService.addTransaction also validates per-partner, but returns a 500;
+  // pre-validation here returns 422 with a clear error and prevents partial writes.
+  const requestedPartnerIds = (declarations as DeclareEntry[]).map(d => d.partner_id)
+  const { data: companyPartners, error: partnerFetchErr } = await supabase
+    .from('partners')
+    .select('id')
+    .eq('company_id', companyId)
+    .is('deleted_at', null)
+    .in('id', requestedPartnerIds)
+
+  if (partnerFetchErr) {
+    console.error('[dividend/declare] partner ownership check failed:', partnerFetchErr.message)
+    return NextResponse.json({ error: 'Ortak doğrulaması yapılamadı', code: 'DB_READ_FAILED' }, { status: 500 })
+  }
+
+  const validPartnerIds = new Set((companyPartners ?? []).map((p: { id: string }) => p.id))
+  const invalidPartnerIds = requestedPartnerIds.filter(id => !validPartnerIds.has(id))
+  if (invalidPartnerIds.length > 0) {
+    return NextResponse.json({
+      error:              `Bu şirkete ait olmayan ortak ID'leri: ${invalidPartnerIds.join(', ')}`,
+      invalid_partner_ids: invalidPartnerIds,
+      code:               'PARTNER_NOT_FOUND',
+      type:               'BUSINESS',
+    }, { status: 422 })
+  }
+
+  // ── Distributable profit guard (TTK 509) ─────────────────────────────────────
+  // Dividend declarations exceeding net profit are prohibited by Turkish Commercial Code.
+  // We compute a YTD estimate of net income (revenue - COGS proxy - operational expenses)
+  // as the distributable upper bound. This is a lightweight approximation — the precise
+  // figure requires PCLEEngine with formal period data — but it prevents gross violations
+  // (e.g. declaring ₺5M dividend on ₺500K profit, or declaring with negative YTD income).
+  //
+  // If the financial data query fails (e.g. tables empty on a new company), we allow the
+  // declaration to proceed with a non-blocking warning — startup companies with no revenue
+  // history should not be blocked from recording initial dividends from equity.
+  const totalGrossRequested = round2(
+    (declarations as DeclareEntry[]).reduce((s, d) => s + Number(d.gross_try ?? 0), 0)
+  )
+  try {
+    const currentYear = new Date().getFullYear()
+    const ytdFrom     = `${currentYear}-01-01`
+    const ytdTo       = new Date().toISOString().slice(0, 10)
+
+    const [revenueRes, expensesRes] = await Promise.all([
+      supabase
+        .from('sales')
+        .select('total_try:total')
+        .eq('company_id', companyId)
+        .is('deleted_at', null)
+        .gte('sale_date', ytdFrom)
+        .lte('sale_date', ytdTo),
+      supabase
+        .from('expenses')
+        .select('amount_try, expense_type')
+        .eq('company_id', companyId)
+        .is('deleted_at', null)
+        .gte('expense_date', ytdFrom)
+        .lte('expense_date', ytdTo),
+    ])
+
+    const FINANCING = new Set(['partner_financing', 'loan_repayment', 'dividend', 'internal_transfer', 'principal', 'partner_loan'])
+    const ytdRevenue  = (revenueRes.data  ?? []).reduce((s: number, r: { total_try: number }) => s + Number(r.total_try ?? 0), 0)
+    const ytdExpenses = (expensesRes.data ?? []).reduce((s: number, r: { amount_try: number; expense_type?: string | null }) => {
+      if (r.expense_type && FINANCING.has(r.expense_type)) return s
+      return s + Number(r.amount_try ?? 0)
+    }, 0)
+    const ytdNetIncome = round2(ytdRevenue - ytdExpenses)
+
+    if (ytdRevenue > 0 && ytdNetIncome < 0) {
+      return NextResponse.json({
+        error:          'Temettü beyan edilemez: YTD net gelir negatif (TTK 509)',
+        detail:         `YTD gelir: ₺${ytdRevenue.toLocaleString('tr-TR')} — YTD gider: ₺${ytdExpenses.toLocaleString('tr-TR')} — Net: ₺${ytdNetIncome.toLocaleString('tr-TR')}`,
+        code:           'INSUFFICIENT_PROFIT',
+        type:           'BUSINESS',
+        ytd_net_income: ytdNetIncome,
+      }, { status: 422 })
+    }
+
+    if (ytdRevenue > 0 && totalGrossRequested > ytdNetIncome + 0.01) {
+      return NextResponse.json({
+        error:            'Temettü beyanı net geliri aşıyor (TTK 509)',
+        detail:           `Beyan tutarı: ₺${totalGrossRequested.toLocaleString('tr-TR')} — YTD net gelir: ₺${ytdNetIncome.toLocaleString('tr-TR')}`,
+        code:             'DIVIDEND_EXCEEDS_PROFIT',
+        type:             'BUSINESS',
+        gross_requested:  totalGrossRequested,
+        ytd_net_income:   ytdNetIncome,
+      }, { status: 422 })
+    }
+  } catch (profitCheckErr) {
+    // Non-fatal: if profit check fails, proceed with a logged warning.
+    // New companies (no transactions yet) should not be blocked from declaring dividends.
+    console.warn('[dividend/declare] distributable profit check failed (non-fatal):', profitCheckErr instanceof Error ? profitCheckErr.message : String(profitCheckErr))
   }
 
   // Sequential inserts — first failure aborts the rest.
