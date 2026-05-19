@@ -186,33 +186,33 @@ export async function StrategicScenarioSection({ companyId }: Props) {
             <table className="w-full text-[10px]">
               <thead>
                 <tr className="bg-[#f8fafc]/60">
-                  <th className="text-left px-4 py-2 font-black text-[#94a3b8] whitespace-nowrap">Ay</th>
-                  <th className="text-right px-3 py-2 font-black text-[#94a3b8] whitespace-nowrap">Gelir</th>
-                  <th className="text-right px-3 py-2 font-black text-[#94a3b8] whitespace-nowrap">EBITDA</th>
-                  <th className="text-right px-3 py-2 font-black text-[#94a3b8] whitespace-nowrap">Faiz</th>
-                  <th className="text-right px-3 py-2 font-black text-[#94a3b8] whitespace-nowrap">Vergi</th>
-                  <th className="text-right px-4 py-2 font-black text-[#94a3b8] whitespace-nowrap">Net</th>
-                  <th className="text-right px-4 py-2 font-black text-[#94a3b8] whitespace-nowrap">DSR</th>
+                  <th className="text-left px-4 py-2.5 font-black text-[#94a3b8] whitespace-nowrap">Ay</th>
+                  <th className="text-right px-4 py-2.5 font-black text-[#94a3b8] whitespace-nowrap">Gelir</th>
+                  <th className="text-right px-4 py-2.5 font-black text-[#94a3b8] whitespace-nowrap">EBITDA</th>
+                  <th className="text-right px-4 py-2.5 font-black text-[#94a3b8] whitespace-nowrap">Faiz</th>
+                  <th className="text-right px-4 py-2.5 font-black text-[#94a3b8] whitespace-nowrap">Vergi</th>
+                  <th className="text-right px-4 py-2.5 font-black text-[#94a3b8] whitespace-nowrap">Net</th>
+                  <th className="text-right px-4 py-2.5 font-black text-[#94a3b8] whitespace-nowrap">DSR</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#f1f5f9]">
                 {result.base.months.map((m, i) => (
                   <tr key={i} className="hover:bg-[#f8fafc]/40">
-                    <td className="px-4 py-1.5 font-semibold text-[#334155] whitespace-nowrap">{m.label}</td>
-                    <td className="px-3 py-1.5 text-right tabular-nums text-[#64748b]">₺{fmtK(m.revenue)}</td>
-                    <td className={`px-3 py-1.5 text-right tabular-nums font-semibold ${m.ebitda >= 0 ? 'text-pos-text' : 'text-neg'}`}>
+                    <td className="px-4 py-2 font-semibold text-[#334155] whitespace-nowrap">{m.label}</td>
+                    <td className="px-4 py-2 text-right tabular-nums text-[#64748b]">₺{fmtK(m.revenue)}</td>
+                    <td className={`px-4 py-2 text-right tabular-nums font-semibold ${m.ebitda >= 0 ? 'text-pos-text' : 'text-neg'}`}>
                       {m.ebitda >= 0 ? '' : '−'}₺{fmtK(Math.abs(m.ebitda))}
                     </td>
-                    <td className="px-3 py-1.5 text-right tabular-nums text-[#64748b]">
+                    <td className="px-4 py-2 text-right tabular-nums text-[#64748b]">
                       {m.interest > 0 ? `₺${fmtK(m.interest)}` : '—'}
                     </td>
-                    <td className="px-3 py-1.5 text-right tabular-nums text-[#64748b]">
+                    <td className="px-4 py-2 text-right tabular-nums text-[#64748b]">
                       {m.tax > 0 ? `₺${fmtK(m.tax)}` : '—'}
                     </td>
-                    <td className={`px-4 py-1.5 text-right tabular-nums font-black ${m.net_income >= 0 ? 'text-[#0f172a]' : 'text-neg'}`}>
+                    <td className={`px-4 py-2 text-right tabular-nums font-black ${m.net_income >= 0 ? 'text-[#0f172a]' : 'text-neg'}`}>
                       {m.net_income < 0 ? '−' : ''}₺{fmtK(Math.abs(m.net_income))}
                     </td>
-                    <td className={`px-4 py-1.5 text-right tabular-nums text-[9px] font-semibold ${
+                    <td className={`px-4 py-2 text-right tabular-nums text-[9px] font-semibold ${
                       m.dsr === 0 ? 'text-[#cbd5e1]'
                       : m.dsr > 0.5 ? 'text-neg'
                       : m.dsr > 0.3 ? 'text-warn-text'

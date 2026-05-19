@@ -241,11 +241,11 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
               <table className="w-full text-[10px]">
                 <thead>
                   <tr className="bg-[#f8fafc]/60">
-                    <th className="text-left px-5 py-2 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Ortak</th>
-                    <th className="text-right px-3 py-2 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Kalan</th>
-                    <th className="text-right px-3 py-2 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Oran</th>
-                    <th className="text-right px-3 py-2 text-[9px] font-black uppercase tracking-widest text-[#94a3b8] hidden sm:table-cell">Aylık Faiz</th>
-                    <th className="text-right px-5 py-2 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Vade</th>
+                    <th className="text-left px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Ortak</th>
+                    <th className="text-right px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Kalan</th>
+                    <th className="text-right px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Oran</th>
+                    <th className="text-right px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-[#94a3b8] hidden sm:table-cell">Aylık Faiz</th>
+                    <th className="text-right px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Vade</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#f1f5f9]">
@@ -256,20 +256,20 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
                     const share     = totalOutstanding > 0 ? t.outstanding_try / totalOutstanding : 0
                     return (
                       <tr key={t.id} className="hover:bg-[#f8fafc]/40">
-                        <td className="px-5 py-2.5">
+                        <td className="px-4 py-3">
                           <div className="font-semibold text-[#1e293b]">{t.partner_name ?? 'Ortak'}</div>
                           <div className="text-[9px] text-[#94a3b8]">{fmtPct(share)} toplam</div>
                         </td>
-                        <td className="px-3 py-2.5 text-right tabular-nums font-black text-[#0f172a]">
+                        <td className="px-4 py-3 text-right tabular-nums font-black text-[#0f172a]">
                           {fmt(t.outstanding_try)}
                         </td>
-                        <td className="px-3 py-2.5 text-right tabular-nums text-[#64748b]">
+                        <td className="px-4 py-3 text-right tabular-nums text-[#64748b]">
                           {rate > 0 ? `%${(rate * 100).toFixed(1)}` : <span className="text-warn-text font-semibold">Faizsiz*</span>}
                         </td>
-                        <td className="px-3 py-2.5 text-right tabular-nums text-warn font-semibold hidden sm:table-cell">
+                        <td className="px-4 py-3 text-right tabular-nums text-warn font-semibold hidden sm:table-cell">
                           {fmt(monthly)}
                         </td>
-                        <td className="px-5 py-2.5 text-right whitespace-nowrap">
+                        <td className="px-4 py-3 text-right whitespace-nowrap">
                           <span className={`font-semibold ${isOverdue ? 'text-neg' : 'text-[#334155]'}`}>
                             {fmtDate(t.due_date)}
                           </span>

@@ -7,7 +7,7 @@
 //   4. Monthly sales breakdown
 
 import Link                                         from 'next/link'
-import { NarrativeFooter }                         from '@/components/ds'
+import { NarrativeFooter, DataTable, DataTh, DataTd } from '@/components/ds'
 import { getQuarterlyReport, type QuarterResult } from '@/lib/finance/financial-core'
 import { normalizeAnalytics } from '@/lib/normalize'
 import { createClient }       from '@/lib/supabase-server'
@@ -241,81 +241,79 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Çeyreklik Performans</div>
             <p className="text-[10px] text-[#94a3b8] mt-0.5">Ciro · Brüt Kâr · Net Kâr · Marjlar</p>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs min-w-[620px]">
-              <thead>
-                <tr className="bg-[#f8fafc] border-b border-[#e2e8f0]">
-                  <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Çeyrek</th>
-                  <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ciro</th>
-                  <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">YoY</th>
-                  <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-brand-light">Brüt Kâr</th>
-                  <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-pos">Net Kâr</th>
-                  <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Brüt Marj</th>
-                  <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Net Marj</th>
-                  <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-warn">KV Matrahı</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#f1f5f9]">
-                {qs.map((q: QuarterResult, i: number) => {
-                  const prev = i > 0 ? qs[i - 1] : null
-                  const revDelta = prev && prev.revenue > 0 ? delta(q.revenue, prev.revenue) : null
-                  const yoy      = yoyRevDelta(i)
-                  const isFuture = !q.is_past_quarter && q.period.from > today
-                  return (
-                    <tr key={q.label} className={`hover:bg-[#f8fafc]/60 ${isFuture ? 'opacity-40' : ''}`}>
-                      <td className="px-4 py-3">
-                        <div className="font-black text-[#0f172a]">{q.label}</div>
-                        {isFuture && <div className="text-[9px] text-[#94a3b8]">Henüz başlamadı</div>}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <div className="font-mono font-bold text-[#0f172a]">{fmt(q.revenue)}</div>
-                        {revDelta && <div className={`text-[10px] font-semibold ${revDelta.color}`}>{revDelta.text} QoQ</div>}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        {yoy
-                          ? <span className={`text-xs font-black tabular-nums ${yoy.color}`}>{yoy.text}</span>
-                          : <span className="text-[#cbd5e1] text-xs">—</span>}
-                      </td>
-                      <td className={`px-4 py-3 text-right font-mono font-bold ${q.gross_profit >= 0 ? 'text-brand' : 'text-neg'}`}>
-                        {fmt(q.gross_profit)}
-                      </td>
-                      <td className={`px-4 py-3 text-right font-mono font-bold ${q.net_profit >= 0 ? 'text-pos-text' : 'text-neg'}`}>
-                        {fmt(q.net_profit)}
-                      </td>
-                      <td className={`px-4 py-3 text-right font-mono ${q.gross_margin >= 0.3 ? 'text-pos-text' : q.gross_margin >= 0.1 ? 'text-warn-text' : 'text-neg'}`}>
-                        {q.revenue > 0 ? fmtPct(q.gross_margin) : '—'}
-                      </td>
-                      <td className={`px-4 py-3 text-right font-mono ${q.net_margin >= 0 ? 'text-[#64748b]' : 'text-neg'}`}>
-                        {q.revenue > 0 ? fmtPct(q.net_margin) : '—'}
-                      </td>
-                      <td className={`px-4 py-3 text-right font-mono ${q.matrah > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>
-                        {q.matrah > 0 ? fmt(q.matrah) : '—'}
-                      </td>
-                    </tr>
-                  )
-                })}
-                {/* YTD row */}
-                <tr className="bg-brand-subtle/40 font-black border-t-2 border-brand/10">
-                  <td className="px-4 py-3 text-brand font-black text-xs">YTD Toplam</td>
-                  <td className="px-4 py-3 text-right font-mono font-black text-[#0f172a]">{fmt(ytd.revenue)}</td>
-                  <td className="px-4 py-3 text-right">
-                    {ytdYoY
-                      ? <span className={`text-xs font-black ${ytdYoY.color}`}>{ytdYoY.text}</span>
-                      : <span className="text-[#cbd5e1] text-xs">—</span>}
-                  </td>
-                  <td className={`px-4 py-3 text-right font-mono font-black ${ytd.gross_profit >= 0 ? 'text-brand' : 'text-neg'}`}>{fmt(ytd.gross_profit)}</td>
-                  <td className={`px-4 py-3 text-right font-mono font-black ${ytd.net_profit >= 0 ? 'text-pos-text' : 'text-neg'}`}>{fmt(ytd.net_profit)}</td>
-                  <td className="px-4 py-3 text-right font-mono text-[#64748b]">
-                    {ytd.revenue > 0 ? fmtPct(ytd.gross_profit / ytd.revenue) : '—'}
-                  </td>
-                  <td className="px-4 py-3 text-right font-mono text-[#64748b]">
-                    {ytd.revenue > 0 ? fmtPct(ytd.net_profit / ytd.revenue) : '—'}
-                  </td>
-                  <td className={`px-4 py-3 text-right font-mono font-black ${ytd.matrah > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>{ytd.matrah > 0 ? fmt(ytd.matrah) : '—'}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+          <DataTable minWidth="620px">
+            <thead>
+              <tr>
+                <DataTh>Çeyrek</DataTh>
+                <DataTh align="right">Ciro</DataTh>
+                <DataTh align="right">YoY</DataTh>
+                <DataTh align="right" className="text-brand-light">Brüt Kâr</DataTh>
+                <DataTh align="right" className="text-pos">Net Kâr</DataTh>
+                <DataTh align="right">Brüt Marj</DataTh>
+                <DataTh align="right">Net Marj</DataTh>
+                <DataTh align="right" className="text-warn">KV Matrahı</DataTh>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#f1f5f9]">
+              {qs.map((q: QuarterResult, i: number) => {
+                const prev = i > 0 ? qs[i - 1] : null
+                const revDelta = prev && prev.revenue > 0 ? delta(q.revenue, prev.revenue) : null
+                const yoy      = yoyRevDelta(i)
+                const isFuture = !q.is_past_quarter && q.period.from > today
+                return (
+                  <tr key={q.label} className={`hover:bg-[#f8fafc]/60 ${isFuture ? 'opacity-40' : ''}`}>
+                    <DataTd>
+                      <div className="font-black text-[#0f172a]">{q.label}</div>
+                      {isFuture && <div className="text-[9px] text-[#94a3b8]">Henüz başlamadı</div>}
+                    </DataTd>
+                    <DataTd align="right">
+                      <div className="font-mono font-bold text-[#0f172a]">{fmt(q.revenue)}</div>
+                      {revDelta && <div className={`text-[10px] font-semibold ${revDelta.color}`}>{revDelta.text} QoQ</div>}
+                    </DataTd>
+                    <DataTd align="right">
+                      {yoy
+                        ? <span className={`text-xs font-black tabular-nums ${yoy.color}`}>{yoy.text}</span>
+                        : <span className="text-[#cbd5e1] text-xs">—</span>}
+                    </DataTd>
+                    <DataTd align="right" className={`font-mono font-bold ${q.gross_profit >= 0 ? 'text-brand' : 'text-neg'}`}>
+                      {fmt(q.gross_profit)}
+                    </DataTd>
+                    <DataTd align="right" className={`font-mono font-bold ${q.net_profit >= 0 ? 'text-pos-text' : 'text-neg'}`}>
+                      {fmt(q.net_profit)}
+                    </DataTd>
+                    <DataTd align="right" className={`font-mono ${q.gross_margin >= 0.3 ? 'text-pos-text' : q.gross_margin >= 0.1 ? 'text-warn-text' : 'text-neg'}`}>
+                      {q.revenue > 0 ? fmtPct(q.gross_margin) : '—'}
+                    </DataTd>
+                    <DataTd align="right" className={`font-mono ${q.net_margin >= 0 ? 'text-[#64748b]' : 'text-neg'}`}>
+                      {q.revenue > 0 ? fmtPct(q.net_margin) : '—'}
+                    </DataTd>
+                    <DataTd align="right" className={`font-mono ${q.matrah > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>
+                      {q.matrah > 0 ? fmt(q.matrah) : '—'}
+                    </DataTd>
+                  </tr>
+                )
+              })}
+              {/* YTD row */}
+              <tr className="bg-brand-subtle/40 font-black border-t-2 border-brand/10">
+                <DataTd className="text-brand font-black">YTD Toplam</DataTd>
+                <DataTd align="right" className="font-mono font-black text-[#0f172a]">{fmt(ytd.revenue)}</DataTd>
+                <DataTd align="right">
+                  {ytdYoY
+                    ? <span className={`text-xs font-black ${ytdYoY.color}`}>{ytdYoY.text}</span>
+                    : <span className="text-[#cbd5e1] text-xs">—</span>}
+                </DataTd>
+                <DataTd align="right" className={`font-mono font-black ${ytd.gross_profit >= 0 ? 'text-brand' : 'text-neg'}`}>{fmt(ytd.gross_profit)}</DataTd>
+                <DataTd align="right" className={`font-mono font-black ${ytd.net_profit >= 0 ? 'text-pos-text' : 'text-neg'}`}>{fmt(ytd.net_profit)}</DataTd>
+                <DataTd align="right" className="font-mono text-[#64748b]">
+                  {ytd.revenue > 0 ? fmtPct(ytd.gross_profit / ytd.revenue) : '—'}
+                </DataTd>
+                <DataTd align="right" className="font-mono text-[#64748b]">
+                  {ytd.revenue > 0 ? fmtPct(ytd.net_profit / ytd.revenue) : '—'}
+                </DataTd>
+                <DataTd align="right" className={`font-mono font-black ${ytd.matrah > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>{ytd.matrah > 0 ? fmt(ytd.matrah) : '—'}</DataTd>
+              </tr>
+            </tbody>
+          </DataTable>
         </div>
       )}
 

@@ -203,11 +203,11 @@ export async function StockContent({ companyId, userId }: Props) {
                     <table className="w-full text-xs">
                       <thead>
                         <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] border-b border-[#e2e8f0]">
-                          <th className="text-left px-3 py-2">Giriş Tarihi</th>
-                          <th className="text-right px-3 py-2">Kalan Adet</th>
-                          <th className="text-right px-3 py-2">Birim Maliyet</th>
-                          <th className="text-right px-3 py-2">Lot Değeri (₺)</th>
-                          <th className="text-right px-3 py-2">Tutma Süresi</th>
+                          <th className="text-left px-4 py-2.5">Giriş Tarihi</th>
+                          <th className="text-right px-4 py-2.5">Kalan Adet</th>
+                          <th className="text-right px-4 py-2.5">Birim Maliyet</th>
+                          <th className="text-right px-4 py-2.5">Lot Değeri (₺)</th>
+                          <th className="text-right px-4 py-2.5">Tutma Süresi</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -217,17 +217,17 @@ export async function StockContent({ companyId, userId }: Props) {
                           const urgency = lot.days > 180 ? 'text-neg' : lot.days > 90 ? 'text-warn-text' : 'text-[#64748b]'
                           return (
                             <tr key={lot.id} className="border-b border-[#e2e8f0] last:border-0">
-                              <td className="px-3 py-2 text-[#334155]">{fmtDateShort(lot.received_at)}</td>
-                              <td className="px-3 py-2 text-right tabular-nums font-semibold text-[#1e293b]">
+                              <td className="px-4 py-3 text-[#334155]">{fmtDateShort(lot.received_at)}</td>
+                              <td className="px-4 py-3 text-right tabular-nums font-semibold text-[#1e293b]">
                                 {lot.qty_remaining.toLocaleString('tr-TR', { maximumFractionDigits: 3 })}
                               </td>
-                              <td className="px-3 py-2 text-right tabular-nums text-[#64748b]">
+                              <td className="px-4 py-3 text-right tabular-nums text-[#64748b]">
                                 {lot.cost_currency !== 'TRY'
                                   ? `${lot.cost_price.toFixed(2)} ${lot.cost_currency} → ₺${perUnitTry.toFixed(2)}`
                                   : `₺${perUnitTry.toFixed(2)}`}
                               </td>
-                              <td className="px-3 py-2 text-right tabular-nums font-semibold text-brand">{fmtTRY(lot.costTry)}</td>
-                              <td className={`px-3 py-2 text-right tabular-nums font-semibold ${urgency}`}>
+                              <td className="px-4 py-3 text-right tabular-nums font-semibold text-brand">{fmtTRY(lot.costTry)}</td>
+                              <td className={`px-4 py-3 text-right tabular-nums font-semibold ${urgency}`}>
                                 {lot.days} gün{lot.days > 180 && <span className="ml-1 text-[10px]">⚠</span>}
                               </td>
                             </tr>
