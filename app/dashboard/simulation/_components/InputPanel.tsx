@@ -66,7 +66,7 @@ export function InputPanel({
   onExtraPartnerDebtChange,
 }: InputPanelProps) {
   return (
-    <div className="bg-white border border-gray-100 rounded-xl p-5 space-y-4">
+    <div className="bg-white border border-gray-100 rounded p-5 space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Parametreler</h2>
         <span className="text-[10px] text-gray-400 italic">Sonuçlar yukarıda otomatik güncellenir ↑</span>
@@ -163,13 +163,13 @@ export function InputPanel({
           />
         </div>
         <div className="flex items-end">
-          <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-2.5 text-xs text-blue-700 w-full">
+          <div className="bg-blue-50 border border-blue-200 rounded px-4 py-2.5 text-xs text-blue-700 w-full">
             ℹ Giderler tekrarlı gider planından otomatik hesaplanır
             {recurringLoading && <span className="ml-2 opacity-60">yükleniyor…</span>}
           </div>
         </div>
         <div className="flex items-end">
-          <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-xs w-full">
+          <div className="bg-gray-50 border border-gray-200 rounded px-4 py-2.5 text-xs w-full">
             <span className="text-gray-400 uppercase tracking-wide font-semibold block mb-0.5">Stok Tutma Süresi</span>
             <span className="font-bold text-gray-700">
               {holdingDays} gün
@@ -191,7 +191,7 @@ export function InputPanel({
           <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Senaryo Katmanları</span>
           <span className="text-[10px] text-gray-400 font-normal">— isteğe bağlı · baskı haritasını etkiler</span>
           {hasScenario && (
-            <span className="ml-auto text-[10px] bg-amber-100 text-amber-700 border border-amber-200 rounded-full px-2 py-0.5 font-bold">
+            <span className="ml-auto text-[10px] bg-amber-100 text-amber-700 border border-amber-200 rounded px-2 py-0.5 font-bold">
               Senaryo aktif
             </span>
           )}

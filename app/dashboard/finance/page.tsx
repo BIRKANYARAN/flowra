@@ -68,11 +68,11 @@ function TabSkeleton() {
     <div className="space-y-3 animate-pulse">
       <div className="grid grid-cols-4 gap-3">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="bg-gray-100 rounded-xl h-16" />
+          <div key={i} className="bg-gray-100 rounded h-16" />
         ))}
       </div>
-      <div className="bg-gray-100 rounded-xl h-48" />
-      <div className="bg-gray-100 rounded-xl h-32" />
+      <div className="bg-gray-100 rounded h-48" />
+      <div className="bg-gray-100 rounded h-32" />
     </div>
   )
 }
@@ -142,13 +142,13 @@ export default async function FinancePage({ searchParams }: PageProps) {
         </div>
         {activeTab === 'cfo' && (
           <a href="/dashboard/cfo/period-close"
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary-600 text-white text-xs font-semibold hover:bg-primary-700 transition-colors">
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded bg-primary-600 text-white text-xs font-semibold hover:bg-primary-700 transition-colors">
             Dönem Kapat
           </a>
         )}
         {activeTab === 'tax' && (
           <a href="/dashboard/cfo/tax/kdv"
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-gray-200 text-gray-700 text-xs font-semibold hover:bg-gray-50 transition-colors">
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded border border-gray-200 text-gray-700 text-xs font-semibold hover:bg-gray-50 transition-colors">
             KDV Beyanı →
           </a>
         )}
@@ -166,7 +166,7 @@ export default async function FinancePage({ searchParams }: PageProps) {
 
       {/* ── GL mode indicator ─────────────────────────────────────────────────── */}
       {glMode === 'shadow' && (
-        <div className="flex items-center gap-2.5 px-3.5 py-2.5 bg-amber-50 border border-amber-200 rounded-xl text-xs">
+        <div className="flex items-center gap-2.5 px-3.5 py-2.5 bg-amber-50 border border-amber-200 rounded text-xs">
           <span className="text-amber-500 text-base leading-none">⚠</span>
           <div>
             <span className="font-bold text-amber-800">Muhasebe kaynağı: Operasyonel tablolar</span>
@@ -179,7 +179,7 @@ export default async function FinancePage({ searchParams }: PageProps) {
         </div>
       )}
       {glMode === 'parallel' && (
-        <div className="flex items-center gap-2.5 px-3.5 py-2.5 bg-blue-50 border border-blue-100 rounded-xl text-xs">
+        <div className="flex items-center gap-2.5 px-3.5 py-2.5 bg-blue-50 border border-blue-100 rounded text-xs">
           <span className="text-blue-400 text-base leading-none">ℹ</span>
           <span className="font-bold text-blue-700">Muhasebe kaynağı: Paralel mod</span>
           <span className="text-blue-500 ml-1">— GL journal yazılıyor ancak raporlama hâlâ operasyonel tablolardan.</span>

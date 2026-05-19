@@ -15,7 +15,7 @@ import Link from 'next/link'
 import type { AuditLog } from '@/types'
 
 // ── Style tokens ──────────────────────────────────────────────────────────────
-const SEL = 'border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 bg-white transition-colors cursor-pointer'
+const SEL = 'border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 bg-white transition-colors cursor-pointer'
 
 // ── Entity type labels ────────────────────────────────────────────────────────
 const ENTITY_LABELS: Record<string, string> = {
@@ -122,7 +122,7 @@ export default function AdminAuditPage() {
   if (forbidden) {
     return (
       <div className="max-w-lg">
-        <div className="bg-red-50 border border-red-100 rounded-2xl p-6 text-center">
+        <div className="bg-red-50 border border-red-100 rounded p-6 text-center">
           <div className="text-3xl mb-3">🔒</div>
           <h2 className="font-bold text-red-700 mb-1">Yetkisiz Erişim</h2>
           <p className="text-sm text-red-600">Bu sayfaya yalnızca yöneticiler erişebilir.</p>
@@ -145,7 +145,7 @@ export default function AdminAuditPage() {
       </div>
 
       {/* ── Audit Chain Integrity ─────────────────────────────────────────── */}
-      <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)] mb-5">
+      <div className="bg-white border border-gray-100 rounded p-4 shadow-sm mb-5">
         <div className="flex items-center justify-between mb-3">
           <div>
             <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Denetim Zinciri Bütünlüğü</div>
@@ -154,14 +154,14 @@ export default function AdminAuditPage() {
           <button
             onClick={verifyChain}
             disabled={chainLoading}
-            className="text-xs font-semibold px-3 py-1.5 bg-primary-600 text-white rounded-xl hover:bg-primary-700 disabled:opacity-50 transition-colors"
+            className="text-xs font-semibold px-3 py-1.5 bg-primary-600 text-white rounded hover:bg-primary-700 disabled:opacity-50 transition-colors"
           >
             {chainLoading ? 'Doğrulanıyor…' : 'Zinciri Doğrula'}
           </button>
         </div>
 
         {chainError && (
-          <div className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-xl px-3 py-2">
+          <div className="text-xs text-red-600 bg-red-50 border border-red-100 rounded px-3 py-2">
             {chainError}
           </div>
         )}
@@ -169,16 +169,16 @@ export default function AdminAuditPage() {
         {chainResult && !chainError && (
           <div className="mt-2">
             {!chainResult.is_supported ? (
-              <div className="flex items-center gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2">
+              <div className="flex items-center gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded px-3 py-2">
                 <span className="text-sm">⚠</span>
                 <span>Hash kolonları bu veritabanında henüz aktif değil (migrasyon bekleniyor).</span>
               </div>
             ) : chainResult.total_checked === 0 ? (
-              <div className="flex items-center gap-2 text-xs text-gray-500 bg-gray-50 border border-gray-100 rounded-xl px-3 py-2">
+              <div className="flex items-center gap-2 text-xs text-gray-500 bg-gray-50 border border-gray-100 rounded px-3 py-2">
                 <span>Seçili aralıkta denetim kaydı bulunamadı.</span>
               </div>
             ) : chainResult.ok ? (
-              <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-3">
+              <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-100 rounded px-4 py-3">
                 <span className="text-lg">✓</span>
                 <div>
                   <div className="text-xs font-bold text-emerald-700">Zincir bütün — müdahale tespit edilmedi</div>
@@ -188,7 +188,7 @@ export default function AdminAuditPage() {
                 </div>
               </div>
             ) : (
-              <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+              <div className="bg-red-50 border border-red-200 rounded px-4 py-3">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-sm">⛔</span>
                   <div className="text-xs font-bold text-red-700">
@@ -199,7 +199,7 @@ export default function AdminAuditPage() {
                   {chainResult.total_checked} kayıttan {chainResult.broken_links} tanesi doğrulanamadı. Kayıtlar değiştirilmiş olabilir.
                 </div>
                 {chainResult.first_broken && (
-                  <div className="bg-white border border-red-100 rounded-xl p-3 space-y-1">
+                  <div className="bg-white border border-red-100 rounded p-3 space-y-1">
                     <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">İlk Bozuk Kayıt</div>
                     <div className="text-[10px] text-gray-700">
                       <span className="text-gray-400">ID:</span>{' '}
@@ -226,7 +226,7 @@ export default function AdminAuditPage() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)] mb-5 flex flex-wrap gap-3 items-end">
+      <div className="bg-white border border-gray-100 rounded p-4 shadow-sm mb-5 flex flex-wrap gap-3 items-end">
         <div>
           <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">İşlem</div>
           <select
@@ -264,7 +264,7 @@ export default function AdminAuditPage() {
         </div>
         <button
           onClick={() => { setFilterAction(''); setFilterEntityType(''); setFilterSince('') }}
-          className="text-sm text-gray-400 hover:text-gray-700 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors"
+          className="text-sm text-gray-400 hover:text-gray-700 px-3 py-2 rounded hover:bg-gray-50 transition-colors"
         >
           Sıfırla
         </button>
@@ -272,7 +272,7 @@ export default function AdminAuditPage() {
 
       {/* Error */}
       {error && (
-        <div className="bg-red-50 border border-red-100 rounded-xl px-4 py-3 text-sm text-red-600 mb-5">
+        <div className="bg-red-50 border border-red-100 rounded px-4 py-3 text-sm text-red-600 mb-5">
           {error}
         </div>
       )}
@@ -287,7 +287,7 @@ export default function AdminAuditPage() {
       {/* Table */}
       {!loading && (
         <>
-          <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+          <div className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
             {logs.length === 0 ? (
               <div className="text-center py-16 text-gray-400">
                 <div className="text-4xl mb-2">📋</div>
@@ -329,7 +329,7 @@ export default function AdminAuditPage() {
                             </code>
                           </td>
                           <td className="px-5 py-3">
-                            <span className={`text-xs font-semibold px-2 py-1 rounded-full ${actionMeta.color}`}>
+                            <span className={`text-xs font-semibold px-2 py-1 rounded ${actionMeta.color}`}>
                               {actionMeta.label}
                             </span>
                           </td>
@@ -353,7 +353,7 @@ export default function AdminAuditPage() {
                                   <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">
                                     Önceki Değer
                                   </div>
-                                  <pre className="text-[10px] bg-white border border-gray-100 rounded-xl p-3 overflow-auto max-h-48 text-gray-700">
+                                  <pre className="text-[10px] bg-white border border-gray-100 rounded p-3 overflow-auto max-h-48 text-gray-700">
                                     {log.old_data ? JSON.stringify(log.old_data, null, 2) : '—'}
                                   </pre>
                                 </div>
@@ -361,7 +361,7 @@ export default function AdminAuditPage() {
                                   <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">
                                     Yeni Değer
                                   </div>
-                                  <pre className="text-[10px] bg-white border border-gray-100 rounded-xl p-3 overflow-auto max-h-48 text-gray-700">
+                                  <pre className="text-[10px] bg-white border border-gray-100 rounded p-3 overflow-auto max-h-48 text-gray-700">
                                     {log.new_data ? JSON.stringify(log.new_data, null, 2) : '—'}
                                   </pre>
                                 </div>
@@ -392,14 +392,14 @@ export default function AdminAuditPage() {
                 <button
                   onClick={() => load(offset - PAGE_SIZE)}
                   disabled={offset === 0}
-                  className="px-3 py-1.5 text-xs border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-40 transition-colors"
+                  className="px-3 py-1.5 text-xs border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-40 transition-colors"
                 >
                   ← Önceki
                 </button>
                 <button
                   onClick={() => load(offset + PAGE_SIZE)}
                   disabled={offset + PAGE_SIZE >= total}
-                  className="px-3 py-1.5 text-xs border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-40 transition-colors"
+                  className="px-3 py-1.5 text-xs border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-40 transition-colors"
                 >
                   Sonraki →
                 </button>

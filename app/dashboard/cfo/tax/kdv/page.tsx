@@ -64,10 +64,10 @@ export default function KdvPage() {
         </div>
         <div className="flex items-center gap-2">
           <input type="date" value={from} onChange={e => setFrom(e.target.value)}
-            className="border border-gray-200 rounded-lg px-2 py-1 text-xs" />
+            className="border border-gray-200 rounded px-2 py-1 text-xs" />
           <span className="text-xs text-gray-400">—</span>
           <input type="date" value={to} onChange={e => setTo(e.target.value)}
-            className="border border-gray-200 rounded-lg px-2 py-1 text-xs" />
+            className="border border-gray-200 rounded px-2 py-1 text-xs" />
           <PdfExportButton
             label="KDV PDF"
             opts={{
@@ -96,13 +96,13 @@ export default function KdvPage() {
         <p className="text-sm text-gray-500">{from} — {to}</p>
       </div>
 
-      {error && <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700">{error}</div>}
-      {loading && <div className="bg-gray-100 rounded-xl h-40 animate-pulse" />}
+      {error && <div className="bg-red-50 border border-red-200 rounded px-4 py-3 text-sm text-red-700">{error}</div>}
+      {loading && <div className="bg-gray-100 rounded h-40 animate-pulse" />}
 
       {kdv && !loading && (
         <>
           {/* Main card */}
-          <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+          <div className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
             {/* Hesaplanan KDV (output) */}
             <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-100">
               <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Hesaplanan KDV (Çıkış)</div>
@@ -152,7 +152,7 @@ export default function KdvPage() {
           </div>
 
           {/* Hesaplama özeti */}
-          <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-xs text-blue-700 leading-relaxed">
+          <div className="bg-blue-50 border border-blue-200 rounded px-4 py-3 text-xs text-blue-700 leading-relaxed">
             <span className="font-bold">KDV Formülü:</span>{' '}
             Hesaplanan KDV ({fmt(kdv.sales_vat_try)}) − İndirilecek KDV ({fmt(kdv.purchase_vat_try + kdv.expense_vat_try)}) ={' '}
             <span className="font-black">{fmt(Math.abs(kdv.net_vat_try))} {kdv.vat_status === 'payable' ? 'Ödenecek' : 'Devir'}</span>

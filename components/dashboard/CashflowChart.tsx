@@ -44,7 +44,7 @@ export function CashflowChart({ className = '' }: Props) {
 
   if (loading) {
     return (
-      <div className={`bg-white rounded-2xl border border-gray-100 p-5 ${className}`}>
+      <div className={`bg-white rounded border border-gray-100 p-5 ${className}`}>
         <div className="h-4 w-36 bg-gray-100 rounded animate-pulse mb-4" />
         <div className="flex items-end gap-1.5 h-24">
           {Array.from({ length: 12 }).map((_, i) => (
@@ -57,7 +57,7 @@ export function CashflowChart({ className = '' }: Props) {
 
   if (error || data.length === 0) {
     return (
-      <div className={`bg-white rounded-2xl border border-gray-100 p-5 ${className}`}>
+      <div className={`bg-white rounded border border-gray-100 p-5 ${className}`}>
         <p className="text-sm text-gray-400">{error || 'Veri yok'}</p>
       </div>
     )
@@ -68,7 +68,7 @@ export function CashflowChart({ className = '' }: Props) {
   const maxColH = 80   // px — max bar height
 
   return (
-    <div className={`bg-white rounded-2xl border border-gray-100 p-5 ${className}`}>
+    <div className={`bg-white rounded border border-gray-100 p-5 ${className}`}>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
@@ -106,7 +106,7 @@ export function CashflowChart({ className = '' }: Props) {
             <div key={d.month} className="flex-1 flex flex-col items-center justify-end group relative">
               {/* Tooltip */}
               <div className="absolute bottom-full mb-2 hidden group-hover:flex flex-col items-center z-10 pointer-events-none">
-                <div className="bg-gray-900 text-white text-[10px] rounded-lg px-2.5 py-1.5 whitespace-nowrap shadow-lg">
+                <div className="bg-gray-900 text-white text-[10px] rounded px-2.5 py-1.5 whitespace-nowrap">
                   <div className="font-bold">{d.month}</div>
                   <div>Tahsilat: {fmt(d.collected)}</div>
                   <div>Gider: {fmt(d.expenses)}</div>

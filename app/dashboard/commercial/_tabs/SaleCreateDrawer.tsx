@@ -166,7 +166,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
         role="dialog"
         aria-modal="true"
         aria-label="Yeni Satış"
-        className="fixed right-0 top-0 h-full w-[480px] bg-white z-50 shadow-2xl flex flex-col"
+        className="fixed right-0 top-0 h-full w-[480px] bg-white z-50 border-l border-[#e2e8f0] flex flex-col"
       >
         {/* Header */}
         <div className="flex items-start justify-between px-5 py-4 border-b border-gray-100 flex-shrink-0">
@@ -207,7 +207,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
                   value={customerName}
                   onChange={e => { setCustomerName(e.target.value); setError('') }}
                   placeholder="Müşteri veya firma adı"
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
+                  className="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
                   required
                   autoFocus
                 />
@@ -226,7 +226,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
                     type="date"
                     value={saleDate}
                     onChange={e => { setSaleDate(e.target.value); setError('') }}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
+                    className="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
                     required
                   />
                 </div>
@@ -242,7 +242,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
                     type="date"
                     value={dueDate}
                     onChange={e => setDueDate(e.target.value)}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
+                    className="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
                   />
                 </div>
               </div>
@@ -268,7 +268,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
               {items.map((item, idx) => (
                 <div
                   key={idx}
-                  className="bg-gray-50/60 border border-gray-100 rounded-xl p-3 space-y-2"
+                  className="bg-gray-50/60 border border-gray-100 rounded p-3 space-y-2"
                 >
                   {/* Description row */}
                   <div className="flex items-start gap-2">
@@ -277,7 +277,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
                       placeholder="Açıklama (ürün/hizmet)"
                       value={item.description}
                       onChange={e => updateItem(idx, 'description', e.target.value)}
-                      className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300 bg-white"
+                      className="flex-1 border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300 bg-white"
                     />
                     {items.length > 1 && (
                       <button
@@ -304,7 +304,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
                         placeholder="1"
                         value={item.quantity}
                         onChange={e => updateItem(idx, 'quantity', e.target.value)}
-                        className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary-300 bg-white"
+                        className="w-full border border-gray-200 rounded px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary-300 bg-white"
                       />
                     </div>
                     <div>
@@ -318,7 +318,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
                         placeholder="0.00"
                         value={item.unit_price}
                         onChange={e => updateItem(idx, 'unit_price', e.target.value)}
-                        className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary-300 bg-white"
+                        className="w-full border border-gray-200 rounded px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary-300 bg-white"
                       />
                     </div>
                     <div>
@@ -328,7 +328,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
                       <select
                         value={item.kdv_rate}
                         onChange={e => updateItem(idx, 'kdv_rate', Number(e.target.value))}
-                        className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300 bg-white"
+                        className="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300 bg-white"
                       >
                         <option value={0}>%0</option>
                         <option value={10}>%10</option>
@@ -349,7 +349,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
 
             {/* Totals strip */}
             {grandTotal > 0 && (
-              <div className="mt-3 bg-white border border-gray-100 rounded-xl px-4 py-3 space-y-1">
+              <div className="mt-3 bg-white border border-gray-100 rounded px-4 py-3 space-y-1">
                 <div className="flex justify-between text-xs text-gray-400">
                   <span>Ara Toplam</span>
                   <span className="font-mono font-semibold text-gray-700">{formatTRY(subtotal)}</span>
@@ -380,13 +380,13 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
               onChange={e => setNotes(e.target.value)}
               rows={3}
               placeholder="İsteğe bağlı açıklama…"
-              className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300 resize-none"
+              className="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300 resize-none"
             />
           </div>
 
           {/* Error */}
           {error && (
-            <p className="text-xs text-red-600 font-semibold bg-red-50 border border-red-200 rounded-xl px-3 py-2">
+            <p className="text-xs text-red-600 font-semibold bg-red-50 border border-red-200 rounded px-3 py-2">
               {error}
             </p>
           )}
@@ -396,14 +396,14 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 border border-gray-200 text-gray-500 py-2.5 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-colors"
+              className="flex-1 border border-gray-200 text-gray-500 py-2.5 rounded text-sm font-semibold hover:bg-gray-50 transition-colors"
             >
               İptal
             </button>
             <button
               type="submit"
               disabled={saving || grandTotal <= 0}
-              className="flex-1 bg-primary-600 text-white py-2.5 rounded-xl text-sm font-semibold hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 bg-primary-600 text-white py-2.5 rounded text-sm font-semibold hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {saving ? 'Kaydediliyor…' : 'Satış Oluştur'}
             </button>

@@ -16,7 +16,7 @@ export function FlowraLogo({ size = 'md', showText = true }: Props) {
 
   return (
     <div className="flex items-center gap-2.5">
-      <div className={`${s.icon} rounded-lg bg-gradient-to-br from-violet-500 to-purple-700 flex items-center justify-center flex-shrink-0 shadow-sm`}>
+      <div className={`${s.icon} rounded bg-gradient-to-br from-violet-500 to-purple-700 flex items-center justify-center flex-shrink-0 shadow-sm`}>
         <svg
           viewBox="0 0 24 24"
           fill="none"

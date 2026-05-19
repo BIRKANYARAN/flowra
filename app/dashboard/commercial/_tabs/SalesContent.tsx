@@ -108,7 +108,7 @@ export async function SalesContent({ companyId }: Props) {
 
       {/* ── KPI Strip ────────────────────────────────────────────────────── */}
       {(mtdCount > 0 || list.length > 0) && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
           {[
             {
               label: 'Bu Ay Ciro (MTD)',
@@ -150,7 +150,7 @@ export async function SalesContent({ companyId }: Props) {
 
       {/* ── Currency breakdown (only if multi-currency) ───────────────────── */}
       {topCurrencies.length > 1 && (
-        <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+        <div className="bg-white border border-gray-100 rounded p-4 shadow-sm">
           <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">Bu Ay — Para Birimi Dağılımı</div>
           <div className="flex gap-4 flex-wrap">
             {topCurrencies.map(([cur, total]) => (
@@ -171,7 +171,7 @@ export async function SalesContent({ companyId }: Props) {
         <p className="text-xs text-gray-400">{list.length} satış kaydı · tüm dönemler</p>
         <Link
           href="/dashboard/commercial?tab=collections"
-          className="border border-gray-100 px-3.5 py-2 rounded-xl text-xs font-semibold text-gray-500 hover:bg-gray-50 hover:text-gray-800 transition-colors"
+          className="border border-gray-100 px-3.5 py-2 rounded text-xs font-semibold text-gray-500 hover:bg-gray-50 hover:text-gray-800 transition-colors"
         >
           Tahsilatlar →
         </Link>
@@ -185,7 +185,7 @@ export async function SalesContent({ companyId }: Props) {
         if (dayOfMonth < 10 || Math.abs(pctChange) < 15) return null
         const isDown = pctChange < 0
         return (
-          <div className={`rounded-xl border px-4 py-3 flex items-start gap-3 ${
+          <div className={`rounded border px-4 py-3 flex items-start gap-3 ${
             isDown ? 'bg-amber-50 border-amber-200' : 'bg-emerald-50 border-emerald-200'
           }`}>
             <span className="text-base mt-0.5">{isDown ? '⚠' : '↗'}</span>

@@ -225,7 +225,7 @@ export function CommandBar() {
 
       {/* Panel */}
       <div
-        className="relative w-full max-w-[560px] bg-white rounded-2xl border border-gray-200 shadow-[0_24px_48px_rgba(17,24,39,0.18),0_8px_16px_rgba(17,24,39,0.08)] overflow-hidden"
+        className="relative w-full max-w-[560px] bg-white rounded border border-gray-200 shadow-[0_24px_48px_rgba(17,24,39,0.18),0_8px_16px_rgba(17,24,39,0.08)] overflow-hidden"
         style={{ maxHeight: '74vh' }}
       >
         {/* ── Search row ────────────────────────────────────────────────────── */}
@@ -267,7 +267,7 @@ export function CommandBar() {
                       {grp.name}
                     </span>
                     {grp.name === 'Akıllı Öneriler' && (
-                      <span className="text-[8px] font-bold bg-violet-100 text-violet-600 px-1.5 py-0.5 rounded-full">
+                      <span className="text-[8px] font-bold bg-violet-100 text-violet-600 px-1.5 py-0.5 rounded">
                         CANLI
                       </span>
                     )}

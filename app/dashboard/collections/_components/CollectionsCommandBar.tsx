@@ -76,7 +76,7 @@ export async function CollectionsCommandBar({ companyId }: Props) {
 
   if (totalOutstanding === 0 && urgentRows.length === 0) {
     return (
-      <div className="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 border border-emerald-200 rounded-xl text-xs font-semibold text-emerald-700">
+      <div className="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 border border-emerald-200 rounded text-xs font-semibold text-emerald-700">
         ✓ Tüm tahsilatlar güncel — açık alacak yok.
       </div>
     )
@@ -89,7 +89,7 @@ export async function CollectionsCommandBar({ companyId }: Props) {
       <div className="flex items-center gap-2 flex-wrap">
 
         {/* Açık Alacak */}
-        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-100 rounded-xl">
+        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-100 rounded">
           <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Açık Alacak</span>
           <span className="text-sm font-black tabular-nums text-gray-900">{fmt(totalOutstanding)}</span>
           <span className="text-[9px] text-gray-400">{openCount} fatura</span>
@@ -97,7 +97,7 @@ export async function CollectionsCommandBar({ companyId }: Props) {
 
         {/* Gecikmiş */}
         {overdueTotal > 0 && (
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 border border-red-200 rounded-xl">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 border border-red-200 rounded">
             <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse shrink-0" />
             <span className="text-[9px] font-black uppercase tracking-widest text-red-600">Gecikmiş</span>
             <span className="text-sm font-black tabular-nums text-red-700">{fmt(overdueTotal)}</span>
@@ -106,14 +106,14 @@ export async function CollectionsCommandBar({ companyId }: Props) {
 
         {/* Kısmi */}
         {partialTotal > 0 && (
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-xl">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded">
             <span className="text-[9px] font-black uppercase tracking-widest text-blue-600">Kısmi</span>
             <span className="text-sm font-black tabular-nums text-blue-700">{fmt(partialTotal)}</span>
           </div>
         )}
 
         {/* Tahsilat oranı */}
-        <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border ${
+        <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded border ${
           collectionRate >= 80
             ? 'bg-emerald-50 border-emerald-200'
             : collectionRate >= 50
@@ -139,7 +139,7 @@ export async function CollectionsCommandBar({ companyId }: Props) {
 
       {/* ── Acil Tahsilat ─────────────────────────────────────────────────── */}
       {urgentRows.length > 0 && (
-        <div className="bg-red-50 border border-red-200 rounded-xl overflow-hidden">
+        <div className="bg-red-50 border border-red-200 rounded overflow-hidden">
           <div className="px-3 py-2 border-b border-red-100 flex items-center gap-2">
             <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
             <span className="text-[9px] font-black uppercase tracking-widest text-red-700">Acil Tahsilat — Vadesi Geçmiş</span>

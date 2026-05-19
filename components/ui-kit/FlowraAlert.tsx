@@ -43,7 +43,7 @@ export function FlowraAlert({
 
   const inner = variant === 'pill' ? (
     <div className={cn(
-      'flex items-center gap-2.5 border rounded-lg px-3 py-1.5 transition-all',
+      'flex items-center gap-2.5 border rounded px-3 py-1.5 transition-all',
       p.bg,
       href && 'hover:shadow-sm cursor-pointer',
       className,
@@ -58,7 +58,7 @@ export function FlowraAlert({
     </div>
   ) : (
     <div className={cn(
-      'flex items-start gap-3 border rounded-2xl p-4',
+      'flex items-start gap-3 border rounded p-4',
       p.bg,
       href && 'hover:shadow-sm cursor-pointer transition-all',
       className,

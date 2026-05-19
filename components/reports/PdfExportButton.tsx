@@ -31,7 +31,7 @@ export function PdfExportButton({ opts, label = 'PDF İndir', variant = 'default
     }
   }
 
-  const base = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors print:hidden disabled:opacity-60'
+  const base = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold transition-colors print:hidden disabled:opacity-60'
   const cls = variant === 'ghost'
     ? `${base} text-gray-600 hover:bg-gray-100 border border-gray-200`
     : `${base} bg-gray-900 text-white hover:bg-gray-700`

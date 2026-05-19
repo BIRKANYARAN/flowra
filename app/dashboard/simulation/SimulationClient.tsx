@@ -371,7 +371,7 @@ export default function SimulationClient({
     <div className="max-w-5xl space-y-4">
 
       {/* ── Zone 1: Status header ─────────────────────────────────────────────── */}
-      <div className="bg-gray-950 text-white rounded-xl px-5 py-3 flex items-center justify-between gap-4 flex-wrap">
+      <div className="bg-gray-950 text-white rounded px-5 py-3 flex items-center justify-between gap-4 flex-wrap">
         <div>
           <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mr-3">Simülasyon</span>
           {!hasInputs ? (
@@ -398,7 +398,7 @@ export default function SimulationClient({
               Faiz girilmedi · <a href="/dashboard/settings" className="text-primary-400 hover:underline">ekle →</a>
             </span>
           )}
-          <div className="flex items-center gap-1 bg-gray-800 border border-gray-700 rounded-lg px-1 py-0.5">
+          <div className="flex items-center gap-1 bg-gray-800 border border-gray-700 rounded px-1 py-0.5">
             {CURRENCIES.map(c => (
               <button key={c} onClick={() => setDisplayCurrency(c)}
                 className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-colors ${
@@ -412,7 +412,7 @@ export default function SimulationClient({
       </div>
 
       {/* ── Zone 1: Hero KPI cards ────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
         {[
           {
             label: 'Birim Kâr',
@@ -484,7 +484,7 @@ export default function SimulationClient({
 
       {/* ── Zone 2: Revenue timeline chart (CSS bars) ─────────────────────────── */}
       {hasInputs && (
-        <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+        <div className="bg-white border border-gray-100 rounded p-4 shadow-sm">
           <h2 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">
             Gelir Çizelgesi — 12 Ay
           </h2>
@@ -502,7 +502,7 @@ export default function SimulationClient({
                     {fmtMonth(r.ym).slice(0, 3)}
                   </div>
                   {/* Tooltip on hover */}
-                  <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block z-10 bg-gray-900 text-white rounded-lg px-2 py-1 text-[10px] whitespace-nowrap shadow-lg">
+                  <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block z-10 bg-gray-900 text-white rounded px-2 py-1 text-[10px] whitespace-nowrap">
                     <div className="font-bold">{fmtMonth(r.ym)}</div>
                     <div>Gelir: {fmtC(toDisplay(r.revenue), S)}</div>
                     <div className={r.netProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}>
@@ -525,7 +525,7 @@ export default function SimulationClient({
       )}
 
       {/* ── Zone 2: Tax effect ───────────────────────────────────────────────── */}
-      <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+      <div className="bg-white border border-gray-100 rounded p-4 shadow-sm">
         <h2 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3">
           Vergi Etkisi — Yıllık Tahmin
         </h2>
@@ -575,7 +575,7 @@ export default function SimulationClient({
 
       {/* ── Zone 2: Partner impact ────────────────────────────────────────────── */}
       {partnerCount > 0 && yearly.totalNetProfit !== 0 && (
-        <div className={`border rounded-xl p-4 ${
+        <div className={`border rounded p-4 ${
           yearly.totalNetProfit > 0 ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'
         }`}>
           <div className="flex items-center justify-between mb-2">
@@ -599,7 +599,7 @@ export default function SimulationClient({
               <div className="grid gap-2 mb-2"
                 style={{ gridTemplateColumns: `repeat(${Math.min(partnerEq.entries.length, 4)}, 1fr)` }}>
                 {partnerEq.entries.map(e => (
-                  <div key={e.partner_id} className="bg-white rounded-xl px-3 py-2 text-center border border-emerald-100">
+                  <div key={e.partner_id} className="bg-white rounded px-3 py-2 text-center border border-emerald-100">
                     <div className="text-xs text-gray-500 font-semibold truncate mb-0.5">{e.partner_name}</div>
                     <div className="text-base font-black tabular-nums text-emerald-700">
                       {fmtC(toDisplay(e.total_payout), S)}
@@ -614,14 +614,14 @@ export default function SimulationClient({
                 ))}
               </div>
               {partnerEq.total_equalization > 0.01 ? (
-                <div className="text-xs text-amber-700 bg-amber-100 rounded-xl px-3 py-2 border border-amber-200">
+                <div className="text-xs text-amber-700 bg-amber-100 rounded px-3 py-2 border border-amber-200">
                   ⚖ Bu plan <span className="font-bold">{fmtC(toDisplay(partnerEq.total_equalization), S)}</span> eşitleme açığını kapatır.{' '}
                   {partnerEq.remaining_after_eq > 0.01
                     ? `Kalan ${fmtC(toDisplay(partnerEq.remaining_after_eq), S)} hisse oranına göre dağıtılır.`
                     : 'Tüm tutar eşitlemeye gider.'}
                 </div>
               ) : (
-                <div className="text-xs text-emerald-700 bg-emerald-100 rounded-xl px-3 py-2 border border-emerald-200">
+                <div className="text-xs text-emerald-700 bg-emerald-100 rounded px-3 py-2 border border-emerald-200">
                   ✓ Ortak dengesi sağlıklı — tüm dağıtım hisse oranına göre yapılır.
                 </div>
               )}
@@ -629,7 +629,7 @@ export default function SimulationClient({
           ) : yearly.totalNetProfit > 0 ? (
             <div className="text-xs text-gray-400">Yükleniyor...</div>
           ) : (
-            <div className="text-xs text-red-700 bg-red-100 rounded-xl px-3 py-2 border border-red-200">
+            <div className="text-xs text-red-700 bg-red-100 rounded px-3 py-2 border border-red-200">
               ⚠ Zarar durumunda ortak dağıtımı yapılamaz. Parametreleri ayarlayarak kâra geçin.
             </div>
           )}
@@ -645,7 +645,7 @@ export default function SimulationClient({
       />
 
       {/* ── Zone 3: Yearly totals ─────────────────────────────────────────────── */}
-      <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+      <div className="bg-white border border-gray-100 rounded p-4 shadow-sm">
         <h2 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Yıllık Toplam</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {[
@@ -696,13 +696,13 @@ export default function SimulationClient({
       </div>
 
       {/* ── Zone 4: Visual Pressure Timeline ─────────────────────────────────── */}
-      <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+      <div className="bg-white border border-gray-100 rounded p-4 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
             Finansal Baskı Zaman Çizelgesi — 12 Ay
           </h2>
           {hasScenario && (
-            <span className="text-[10px] bg-amber-100 text-amber-700 border border-amber-200 rounded-full px-2 py-0.5 font-bold">
+            <span className="text-[10px] bg-amber-100 text-amber-700 border border-amber-200 rounded px-2 py-0.5 font-bold">
               Senaryo aktif{collectionDelayPct > 0 ? ` · %${collectionDelayPct} gecikme` : ''}{extraDebtTRY > 0 ? ` · +${fmtC(extraDebtTRY, '₺')} borç` : ''}
             </span>
           )}
@@ -716,12 +716,12 @@ export default function SimulationClient({
             const lbl  = isKritik ? 'Kritik'                         : isDikkat ? 'Dikkat'                            : 'Güvenli'
             return (
               <div key={r.ym}
-                className={`border rounded-lg p-1.5 flex flex-col items-center gap-0.5 group relative cursor-default ${bg}`}>
+                className={`border rounded p-1.5 flex flex-col items-center gap-0.5 group relative cursor-default ${bg}`}>
                 <div className={`text-[9px] font-bold leading-none ${text}`}>
                   {fmtMonth(r.ym).slice(0, 3)}
                 </div>
                 <div className={`text-[8px] font-semibold leading-none ${text} opacity-80`}>{lbl}</div>
-                <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block z-10 bg-gray-900 text-white rounded-lg px-2 py-1.5 text-[10px] whitespace-nowrap shadow-lg pointer-events-none">
+                <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block z-10 bg-gray-900 text-white rounded px-2 py-1.5 text-[10px] whitespace-nowrap pointer-events-none">
                   <div className="font-bold mb-0.5">{fmtMonth(r.ym)}</div>
                   <div>Gelir: {fmtC(toDisplay(r.revenue), S)}</div>
                   <div className={r.netProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}>
@@ -754,7 +754,7 @@ export default function SimulationClient({
 
       {/* ── Zone 4: Runway Forecast ───────────────────────────────────────────── */}
       {hasInputs && (
-        <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+        <div className="bg-white border border-gray-100 rounded p-4 shadow-sm">
           <h2 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">
             Pist Tahmini — Güvenli Bölgeye Ne Zaman Ulaşılır?
           </h2>
@@ -792,15 +792,15 @@ export default function SimulationClient({
             </div>
           </div>
           {stableFromMonth ? (
-            <div className="mt-3 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2 text-xs text-emerald-700 font-semibold">
+            <div className="mt-3 bg-emerald-50 border border-emerald-200 rounded px-3 py-2 text-xs text-emerald-700 font-semibold">
               ✓ {stableFromMonth}. aydan itibaren güvenli bölge — kümülatif nakit kalıcı olarak pozitif
             </div>
           ) : turnsPositiveMonth ? (
-            <div className="mt-3 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 text-xs text-amber-700 font-semibold">
+            <div className="mt-3 bg-amber-50 border border-amber-200 rounded px-3 py-2 text-xs text-amber-700 font-semibold">
               ⚠ {turnsPositiveMonth}. ayda pozitife geçiyor ancak sonraki aylarda dalgalanma var
             </div>
           ) : (
-            <div className="mt-3 bg-red-50 border border-red-200 rounded-xl px-3 py-2 text-xs text-red-700 font-semibold">
+            <div className="mt-3 bg-red-50 border border-red-200 rounded px-3 py-2 text-xs text-red-700 font-semibold">
               ✗ 12 ay içinde kümülatif pozitife geçilemiyor — parametreleri gözden geçirin
             </div>
           )}
@@ -808,7 +808,7 @@ export default function SimulationClient({
       )}
 
       {/* ── Zone 4: Debt burden tracking ─────────────────────────────────────── */}
-      <div className={`border rounded-xl p-4 ${ds.bg} ${ds.border}`}>
+      <div className={`border rounded p-4 ${ds.bg} ${ds.border}`}>
         <h2 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3">
           Borç Baskısı Takibi
         </h2>
@@ -857,7 +857,7 @@ export default function SimulationClient({
                 <div className="text-[10px] text-gray-400">Aktif ortak</div>
               </div>
             </div>
-            <div className={`rounded-xl px-3 py-2 border text-xs font-semibold ${ds.color} ${ds.bg} ${ds.border}`}>
+            <div className={`rounded px-3 py-2 border text-xs font-semibold ${ds.color} ${ds.bg} ${ds.border}`}>
               {ds.label}
             </div>
           </>

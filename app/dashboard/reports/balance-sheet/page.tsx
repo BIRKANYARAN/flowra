@@ -95,7 +95,7 @@ export default function BalanceSheetPage() {
         <div className="flex items-center gap-2">
           <label className="text-xs text-gray-500">Tarih itibarıyla:</label>
           <input type="date" value={asOf} onChange={e => setAsOf(e.target.value)}
-            className="border border-gray-200 rounded-lg px-2 py-1 text-xs" />
+            className="border border-gray-200 rounded px-2 py-1 text-xs" />
           {bs && <PdfExportButton opts={{
             companyName: ws.companyName ?? 'Şirket',
             reportTitle: 'Bilanço',
@@ -133,13 +133,13 @@ export default function BalanceSheetPage() {
         <p className="text-sm text-gray-500">{asOf} itibarıyla</p>
       </div>
 
-      {error && <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700">{error}</div>}
-      {loading && <div className="bg-gray-100 rounded-xl h-64 animate-pulse" />}
+      {error && <div className="bg-red-50 border border-red-200 rounded px-4 py-3 text-sm text-red-700">{error}</div>}
+      {loading && <div className="bg-gray-100 rounded h-64 animate-pulse" />}
 
       {bs && !loading && (
         <div className="grid grid-cols-2 gap-4">
           {/* Left: Assets */}
-          <div className="bg-white border border-gray-100 rounded-xl overflow-hidden print:border-gray-300">
+          <div className="bg-white border border-gray-100 rounded overflow-hidden print:border-gray-300">
             <div className="px-4 py-3 bg-blue-50 border-b border-blue-100">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-black uppercase tracking-widest text-blue-600">Varlıklar</span>
@@ -169,7 +169,7 @@ export default function BalanceSheetPage() {
           {/* Right: Liabilities + Equity */}
           <div className="flex flex-col gap-4">
             {/* Liabilities */}
-            <div className="bg-white border border-gray-100 rounded-xl overflow-hidden print:border-gray-300">
+            <div className="bg-white border border-gray-100 rounded overflow-hidden print:border-gray-300">
               <div className="px-4 py-3 bg-orange-50 border-b border-orange-100">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-black uppercase tracking-widest text-orange-600">Kaynaklar</span>
@@ -197,7 +197,7 @@ export default function BalanceSheetPage() {
             </div>
 
             {/* Equity */}
-            <div className="bg-white border border-gray-100 rounded-xl overflow-hidden print:border-gray-300">
+            <div className="bg-white border border-gray-100 rounded overflow-hidden print:border-gray-300">
               <div className="px-4 py-3 bg-emerald-50 border-b border-emerald-100">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-black uppercase tracking-widest text-emerald-600">Özkaynak</span>
@@ -217,7 +217,7 @@ export default function BalanceSheetPage() {
 
       {/* Balance check */}
       {bs && !loading && (
-        <div className={`px-4 py-2.5 rounded-xl border text-xs font-semibold flex items-center gap-2 ${
+        <div className={`px-4 py-2.5 rounded border text-xs font-semibold flex items-center gap-2 ${
           bs.balanced ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-red-50 border-red-200 text-red-700'
         }`}>
           <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-black flex-shrink-0 ${

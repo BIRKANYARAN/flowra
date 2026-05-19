@@ -90,7 +90,7 @@ export async function TasksContent({ companyId }: Props) {
 
       {/* KPI Strip */}
       {tasks.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
           {[
             { label: 'Açık Görev',       value: String(statusCounts.open ?? 0),   sub: 'bekliyor',          color: statusCounts.open > 0 ? 'text-blue-700' : 'text-gray-400' },
             { label: 'Vadesi Geçmiş',    value: overdue > 0 ? String(overdue) : '—', sub: overdue > 0 ? 'hemen ele alınmalı' : 'gecikmiş yok ✓', color: overdue > 0 ? 'text-red-600' : 'text-emerald-600' },
@@ -108,7 +108,7 @@ export async function TasksContent({ companyId }: Props) {
 
       {/* Overdue alert */}
       {overdueTasks.length > 0 && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+        <div className="bg-red-50 border border-red-200 rounded p-4">
           <h3 className="text-xs font-bold text-red-700 uppercase tracking-widest mb-2">🔴 Vadesi Geçmiş Görevler ({overdue})</h3>
           <div className="space-y-1">
             {overdueTasks.map(t => (

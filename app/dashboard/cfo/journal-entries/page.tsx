@@ -52,7 +52,7 @@ export default async function JournalEntriesPage() {
       </div>
 
       {rows.length === 0 ? (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-6 text-sm text-amber-700 text-center">
+        <div className="bg-amber-50 border border-amber-200 rounded px-4 py-6 text-sm text-amber-700 text-center">
           <div className="font-bold mb-1">Journal kaydı bulunamadı</div>
           <div className="text-xs text-amber-600">
             GL modu <strong>shadow</strong> modunda çalışıyorsa journal kayıtları otomatik oluşturulmaz.
@@ -75,7 +75,7 @@ export default async function JournalEntriesPage() {
             const balanced    = Math.abs(totalDebit - totalCredit) < 0.01
 
             return (
-              <div key={entry.id as string} className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+              <div key={entry.id as string} className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
                 <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50 border-b border-gray-100">
                   <div className="flex items-center gap-3">
                     <span className="text-xs font-black text-gray-500">{fmtDate(entry.entry_date as string)}</span>

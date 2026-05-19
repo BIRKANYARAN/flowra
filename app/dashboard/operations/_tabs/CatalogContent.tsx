@@ -11,7 +11,7 @@ function CommandBarSkeleton() {
   return (
     <div className="flex items-center gap-2 animate-pulse">
       {[...Array(4)].map((_, i) => (
-        <div key={i} className="h-8 w-28 bg-gray-100 rounded-xl" />
+        <div key={i} className="h-8 w-28 bg-gray-100 rounded" />
       ))}
     </div>
   )
@@ -98,7 +98,7 @@ export async function CatalogContent({ companyId, userId }: Props) {
 
       {/* ── Catalog KPI strip ─────────────────────────────────────────────── */}
       {products.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
           {[
             {
               label: 'Aktif Ürün',
@@ -143,14 +143,14 @@ export async function CatalogContent({ companyId, userId }: Props) {
 
       {/* ── Low margin alert ─────────────────────────────────────────────────── */}
       {lowMarginProducts.length > 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+        <div className="bg-amber-50 border border-amber-200 rounded px-4 py-3">
           <div className="flex items-center gap-2 mb-1.5">
             <span className="text-[10px] font-black uppercase tracking-widest text-amber-700">⚠ Düşük Marjlı Ürünler</span>
             <span className="text-[9px] text-amber-600">({lowMarginProducts.length} ürün &lt;%15 brüt marj)</span>
           </div>
           <div className="flex flex-wrap gap-2">
             {lowMarginProducts.map(p => (
-              <span key={p.name} className="text-[10px] bg-amber-100 text-amber-800 font-semibold px-2 py-0.5 rounded-lg">
+              <span key={p.name} className="text-[10px] bg-amber-100 text-amber-800 font-semibold px-2 py-0.5 rounded">
                 {p.name} · %{(p.margin * 100).toFixed(1)}
               </span>
             ))}

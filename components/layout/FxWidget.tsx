@@ -73,14 +73,14 @@ export function FxWidget({ initialFx }: Props) {
   }
 
   return (
-    <div className={`rounded-2xl px-4 py-3 border flex items-center justify-between gap-6 flex-wrap ${
+    <div className={`rounded px-4 py-3 border flex items-center justify-between gap-6 flex-wrap ${
       fxFallback ? 'bg-amber-50 border-amber-200' : 'bg-white border-gray-200'
     }`}>
       {/* Left — label + badges */}
       <div className="flex items-center gap-2 flex-wrap">
         <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Güncel Kur</span>
-        {fxIsOld    && <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-semibold">Son iş günü</span>}
-        {fxFallback && <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-semibold">Veri alınamadı</span>}
+        {fxIsOld    && <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded font-semibold">Son iş günü</span>}
+        {fxFallback && <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded font-semibold">Veri alınamadı</span>}
         {refreshErr && <span className="text-xs text-red-600">{refreshErr}</span>}
       </div>
 
@@ -104,7 +104,7 @@ export function FxWidget({ initialFx }: Props) {
         <button
           onClick={refresh}
           disabled={refreshing}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border bg-white border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-40 transition-colors"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold border bg-white border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-40 transition-colors"
           aria-label="Kurları güncelle"
         >
           <Icon name="refresh" size={12} className={refreshing ? 'animate-spin' : ''} />

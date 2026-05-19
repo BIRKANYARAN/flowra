@@ -77,7 +77,7 @@ const STATUS_META = {
 function StatusBadge({ status }: { status: string }) {
   const m = STATUS_META[status as keyof typeof STATUS_META] ?? STATUS_META.pending
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-bold border ${m.bg} ${m.text} ${m.border}`}>
+    <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border ${m.bg} ${m.text} ${m.border}`}>
       {m.label}
     </span>
   )
@@ -305,7 +305,7 @@ export default function CollectionsClient({ initialRows }: Props) {
                 <button
                   disabled={isPending}
                   onClick={() => patch(row.id, 'paid')}
-                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 transition-colors disabled:opacity-50"
+                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 transition-colors disabled:opacity-50"
                 >
                   {isPending ? '⟳' : '✓'} Tahsil Et
                 </button>
@@ -320,7 +320,7 @@ export default function CollectionsClient({ initialRows }: Props) {
                       setPartialErr('')
                     }
                   }}
-                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 transition-colors disabled:opacity-50"
+                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded text-[11px] font-semibold bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 transition-colors disabled:opacity-50"
                 >
                   ½ Kısmi
                 </button>
@@ -328,7 +328,7 @@ export default function CollectionsClient({ initialRows }: Props) {
                   <button
                     disabled={isPending}
                     onClick={() => patch(row.id, 'overdue')}
-                    className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-semibold bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 transition-colors disabled:opacity-50"
+                    className="inline-flex items-center gap-1 px-2 py-1.5 rounded text-[11px] font-semibold bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 transition-colors disabled:opacity-50"
                   >
                     Gecikmiş
                   </button>
@@ -339,7 +339,7 @@ export default function CollectionsClient({ initialRows }: Props) {
               <button
                 disabled={isPending}
                 onClick={() => patch(row.id, 'pending')}
-                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium bg-gray-50 text-gray-500 hover:bg-gray-100 border border-gray-200 transition-colors disabled:opacity-50"
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded text-[11px] font-medium bg-gray-50 text-gray-500 hover:bg-gray-100 border border-gray-200 transition-colors disabled:opacity-50"
               >
                 ↩ Geri Al
               </button>
@@ -361,7 +361,7 @@ export default function CollectionsClient({ initialRows }: Props) {
                 placeholder={`0,00 — max ${fmtTRY(row.total_try)}`}
                 value={partialAmt}
                 onChange={(e: ChangeEvent<HTMLInputElement>) => { setPartialAmt(e.target.value); setPartialErr('') }}
-                className="flex-1 border border-blue-200 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-300 tabular-nums bg-white"
+                className="flex-1 border border-blue-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-300 tabular-nums bg-white"
                 autoFocus
               />
               {partialErr && (
@@ -371,13 +371,13 @@ export default function CollectionsClient({ initialRows }: Props) {
             <button
               disabled={isPending}
               onClick={() => savePartial(row)}
-              className="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-50 shrink-0"
+              className="px-3 py-1.5 rounded text-[11px] font-bold bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-50 shrink-0"
             >
               {isPending ? '…' : 'Kaydet'}
             </button>
             <button
               onClick={() => { setPartialId(null); setPartialAmt(''); setPartialErr('') }}
-              className="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold text-gray-500 hover:bg-gray-100 transition-colors shrink-0"
+              className="px-2.5 py-1.5 rounded text-[11px] font-semibold text-gray-500 hover:bg-gray-100 transition-colors shrink-0"
             >
               İptal
             </button>
@@ -402,7 +402,7 @@ export default function CollectionsClient({ initialRows }: Props) {
               placeholder="Müşteri ara…"
               value={search}
               onChange={e => { setSearch(e.target.value) }}
-              className="pl-8 pr-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-300 bg-white w-44"
+              className="pl-8 pr-3 py-1.5 text-xs border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-primary-300 bg-white w-44"
             />
             {search && (
               <button
@@ -414,18 +414,18 @@ export default function CollectionsClient({ initialRows }: Props) {
             )}
           </div>
           {/* Tab switcher */}
-          <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
+          <div className="flex gap-1 bg-gray-100 rounded p-1">
             {TABS.map(t => (
               <button
                 key={t.key}
                 onClick={() => setTab(t.key)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 rounded text-xs font-semibold transition-colors flex items-center gap-1.5 ${
                   tab === t.key ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
                 {t.label}
                 {t.count !== undefined && !loading && (
-                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
                     tab === t.key ? 'bg-gray-100 text-gray-600' : 'bg-gray-200 text-gray-500'
                   }`}>
                     {t.count}
@@ -439,7 +439,7 @@ export default function CollectionsClient({ initialRows }: Props) {
 
       {/* Summary strip */}
       <div className="grid grid-cols-3 gap-2">
-        <div className="bg-white rounded-xl border border-gray-100 px-4 py-3 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+        <div className="bg-white rounded border border-gray-100 px-4 py-3 shadow-sm">
           <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Gösterilen</div>
           <div className="text-xl font-black tabular-nums text-gray-900">
             {loading ? '—' : fmtTRY(displayRows.reduce((s, r) => s + (r.total_try ?? 0), 0))}
@@ -448,7 +448,7 @@ export default function CollectionsClient({ initialRows }: Props) {
             {search ? `${displayRows.length} / ${rows.length} kayıt` : `${rows.length} kayıt`}
           </div>
         </div>
-        <div className="bg-white rounded-xl border border-gray-100 px-4 py-3 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+        <div className="bg-white rounded border border-gray-100 px-4 py-3 shadow-sm">
           <div className="text-[10px] font-bold uppercase tracking-widest text-amber-500 mb-1">Bekliyor</div>
           <div className="text-xl font-black tabular-nums text-amber-700">
             {loading ? '—' : fmtTRY(unpaidTotal)}
@@ -460,7 +460,7 @@ export default function CollectionsClient({ initialRows }: Props) {
             {displayRows.filter(r => r.payment_status !== 'paid').length} satış
           </div>
         </div>
-        <div className="bg-white rounded-xl border border-gray-100 px-4 py-3 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+        <div className="bg-white rounded border border-gray-100 px-4 py-3 shadow-sm">
           <div className="text-[10px] font-bold uppercase tracking-widest text-emerald-500 mb-1">Tahsil Edildi</div>
           <div className="text-xl font-black tabular-nums text-emerald-700">
             {loading ? '—' : fmtTRY(paidTotal)}
@@ -473,14 +473,14 @@ export default function CollectionsClient({ initialRows }: Props) {
 
       {/* Error banner */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-xs text-red-700 font-medium flex items-center justify-between">
+        <div className="bg-red-50 border border-red-200 rounded px-4 py-3 text-xs text-red-700 font-medium flex items-center justify-between">
           {error}
           <button onClick={() => setError(null)} className="text-red-400 hover:text-red-600 ml-4">✕</button>
         </div>
       )}
 
       {/* Main table */}
-      <div className="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+      <div className="bg-white rounded border border-gray-100 overflow-hidden shadow-sm">
 
         {loading ? (
           <div className="py-16 flex items-center justify-center">
@@ -509,7 +509,7 @@ export default function CollectionsClient({ initialRows }: Props) {
                   <span className="text-[10px] font-black uppercase tracking-widest text-red-500">
                     Vadesi Geçmiş
                   </span>
-                  <span className="text-[10px] font-bold bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full">
+                  <span className="text-[10px] font-bold bg-red-100 text-red-700 px-1.5 py-0.5 rounded">
                     {overdueRows.length} kayıt · {fmtTRY(overdueTotal)}
                   </span>
                 </div>

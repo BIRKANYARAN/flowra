@@ -10,7 +10,7 @@ import type { CompanyBank, UserSettings } from '@/types'
 import { resolveCompanyId } from '@/lib/resolve-company'
 
 // DS-aligned style tokens (primary instead of indigo, consistent radius)
-const IL  = 'w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400 transition-colors'
+const IL  = 'w-full border border-gray-200 rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400 transition-colors'
 const LAB = 'block text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1.5'
 
 type Msg = { text: string; kind: 'success' | 'error' | 'info' }
@@ -379,7 +379,7 @@ export default function SettingsPage() {
               {/* Preview box */}
               <label
                 htmlFor="logo-file-input"
-                className="w-16 h-16 rounded-xl border-2 border-dashed border-gray-200 flex items-center justify-center bg-gray-50 overflow-hidden hover:border-primary-400 transition-colors flex-shrink-0 relative"
+                className="w-16 h-16 rounded border-2 border-dashed border-gray-200 flex items-center justify-center bg-gray-50 overflow-hidden hover:border-primary-400 transition-colors flex-shrink-0 relative"
                 style={{ cursor: uploading ? 'default' : 'pointer' }}
                 title="Logo yüklemek için tıklayın"
               >
@@ -399,7 +399,7 @@ export default function SettingsPage() {
                   </div>
                 )}
                 {uploading && (
-                  <div className="absolute inset-0 bg-white/80 flex items-center justify-center rounded-xl pointer-events-none">
+                  <div className="absolute inset-0 bg-white/80 flex items-center justify-center rounded pointer-events-none">
                     <div className="w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
                   </div>
                 )}
@@ -409,7 +409,7 @@ export default function SettingsPage() {
               <div className="flex-1 space-y-1.5">
                 <label
                   htmlFor="logo-file-input"
-                  className={`inline-flex items-center justify-center px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors select-none ${
+                  className={`inline-flex items-center justify-center px-3 py-1.5 rounded border text-xs font-semibold transition-colors select-none ${
                     uploading
                       ? 'opacity-50 cursor-default bg-gray-50 border-gray-200 text-gray-400'
                       : 'cursor-pointer bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300'
@@ -528,7 +528,7 @@ export default function SettingsPage() {
             </div>
 
             {addBank && (
-              <div className="bg-gray-50 rounded-xl p-3 mb-3 space-y-3">
+              <div className="bg-gray-50 rounded p-3 mb-3 space-y-3">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest">
                   {editBankId ? 'Hesabı Düzenle' : 'Yeni Banka Hesabı'}
                 </p>
@@ -596,7 +596,7 @@ export default function SettingsPage() {
                 {banks.map(b => (
                   <div
                     key={b.id}
-                    className={`flex items-center justify-between rounded-lg px-3 py-2 border transition-colors ${
+                    className={`flex items-center justify-between rounded px-3 py-2 border transition-colors ${
                       b.is_default
                         ? 'border-primary-200 bg-primary-50'
                         : 'border-gray-100 hover:bg-gray-50'
@@ -608,7 +608,7 @@ export default function SettingsPage() {
                           {b.bank_name}{b.branch_name ? ` — ${b.branch_name}` : ''}
                         </span>
                         {b.is_default && (
-                          <span className="text-[9px] bg-primary-600 text-white px-1.5 py-0.5 rounded-full">
+                          <span className="text-[9px] bg-primary-600 text-white px-1.5 py-0.5 rounded">
                             Varsayılan
                           </span>
                         )}
@@ -621,7 +621,7 @@ export default function SettingsPage() {
                         <button
                           onClick={() => setDefaultBank(b.id)}
                           title="Varsayılan yap"
-                          className="text-xs text-gray-400 hover:text-primary-600 px-1.5 py-1 rounded-lg hover:bg-primary-50 transition-colors"
+                          className="text-xs text-gray-400 hover:text-primary-600 px-1.5 py-1 rounded hover:bg-primary-50 transition-colors"
                         >
                           ☆
                         </button>
@@ -722,7 +722,7 @@ export default function SettingsPage() {
           </div>
 
           {demoDisabled ? (
-            <div className="text-xs px-3 py-2 rounded-lg border bg-amber-50 border-amber-100 text-amber-700">
+            <div className="text-xs px-3 py-2 rounded border bg-amber-50 border-amber-100 text-amber-700">
               Canlı ortamda kapalıdır.
             </div>
           ) : (
@@ -756,7 +756,7 @@ export default function SettingsPage() {
       {/* ── Quick Links ─────────────────────────────────────────────────── */}
       <div className="flex items-center gap-3">
         <a href="/dashboard/settings/alerts"
-          className="text-xs font-semibold text-primary-600 hover:text-primary-700 px-3 py-2 rounded-lg hover:bg-primary-50 border border-primary-200 transition-colors">
+          className="text-xs font-semibold text-primary-600 hover:text-primary-700 px-3 py-2 rounded hover:bg-primary-50 border border-primary-200 transition-colors">
           Uyarı Kuralları →
         </a>
       </div>
@@ -774,7 +774,7 @@ function MsgBanner({ msg }: { msg: { text: string; kind: 'success' | 'error' | '
   }
   const icons = { success: '✓', error: '✕', info: 'ℹ' }
   return (
-    <div className={`text-sm px-3 py-2.5 rounded-xl border flex items-center gap-2 ${styles[msg.kind]}`}>
+    <div className={`text-sm px-3 py-2.5 rounded border flex items-center gap-2 ${styles[msg.kind]}`}>
       <span>{icons[msg.kind]}</span>
       {msg.text}
     </div>

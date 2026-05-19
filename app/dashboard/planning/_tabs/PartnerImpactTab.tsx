@@ -117,7 +117,7 @@ export async function PartnerImpactTab({ companyId, userId }: Props) {
 
       {/* Tranche due soon + insufficient cash */}
       {trancheDueSoon && nextDue && (
-        <div className={`rounded-xl border px-4 py-3 flex items-start gap-3 ${
+        <div className={`rounded border px-4 py-3 flex items-start gap-3 ${
           insufficientCash ? 'bg-red-50 border-red-200' : 'bg-amber-50 border-amber-200'
         }`}>
           <span className="text-base mt-0.5">{insufficientCash ? '🔴' : '⚠'}</span>
@@ -140,7 +140,7 @@ export async function PartnerImpactTab({ companyId, userId }: Props) {
 
       {/* Negative distributable cash warning */}
       {cashDistributable <= 0 && netIncome > 0 && (
-        <div className="bg-orange-50 border border-orange-300 rounded-xl px-4 py-3 flex items-start gap-3">
+        <div className="bg-orange-50 border border-orange-300 rounded px-4 py-3 flex items-start gap-3">
           <span className="text-base mt-0.5">⚠</span>
           <div className="flex-1">
             <div className="text-[11px] font-black uppercase tracking-wide text-orange-800">

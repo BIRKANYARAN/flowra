@@ -60,7 +60,7 @@ export function MobileBottomNav({ navBadges = {} }: Props) {
       <div className={`fixed bottom-14 left-0 right-0 z-50 md:hidden transition-transform duration-200 ease-out ${
         open ? 'translate-y-0' : 'translate-y-full'
       }`}>
-        <div className="mx-2 mb-1 bg-white rounded-2xl border border-gray-100 shadow-xl overflow-hidden">
+        <div className="mx-2 mb-1 bg-white rounded border border-[#e2e8f0] shadow-sm overflow-hidden">
           <div className="grid grid-cols-4 p-2 gap-1">
             {visible.map(tab => {
               const active = isNavItemActive({ href: tab.href, label: tab.label, icon: '' }, pathname)
@@ -70,7 +70,7 @@ export function MobileBottomNav({ navBadges = {} }: Props) {
                   key={tab.href}
                   href={tab.href}
                   onClick={() => setOpen(false)}
-                  className={`flex flex-col items-center gap-1 py-2 px-1 rounded-xl transition-colors ${
+                  className={`flex flex-col items-center gap-1 py-2 px-1 rounded transition-colors ${
                     active ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-50'
                   }`}
                 >

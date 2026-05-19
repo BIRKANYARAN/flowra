@@ -260,7 +260,7 @@ export function ProformaDetailClient({
           </Link>
           <div className="flex items-center gap-3 flex-wrap mt-0.5">
             <h1 className="text-xl font-black">{no}</h1>
-            <span className="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded-full font-bold">
+            <span className="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded font-bold">
               {currency}
             </span>
             <StatusBadge status={currentStatus} />
@@ -280,7 +280,7 @@ export function ProformaDetailClient({
 
           {/* TASK 10: FX info tooltip — only visible on click */}
           {showFxInfo && (fxUsd || fxEur) && (
-            <div className="mt-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-500 inline-block">
+            <div className="mt-2 bg-gray-50 border border-gray-200 rounded px-3 py-2 text-xs text-gray-500 inline-block">
               <div className="font-semibold text-gray-600 mb-1">Kur Snapshot (Oluşturma Anı)</div>
               {fxUsd ? <div>1 USD = <strong className="text-gray-700">₺{fxUsd.toFixed(4)}</strong></div> : null}
               {fxEur ? <div>1 EUR = <strong className="text-gray-700">₺{fxEur.toFixed(4)}</strong></div> : null}
@@ -337,7 +337,7 @@ export function ProformaDetailClient({
       </div>
 
       {/* Share link bar */}
-      <div className="mt-4 mb-6 bg-primary-50 border border-primary-100 rounded-xl px-5 py-3 flex items-center justify-between gap-4">
+      <div className="mt-4 mb-6 bg-primary-50 border border-primary-100 rounded px-5 py-3 flex items-center justify-between gap-4">
         <div className="min-w-0">
           <div className="text-sm font-semibold text-primary-800">Paylaşılabilir Link</div>
           <div className="text-xs text-primary-400 font-mono truncate mt-0.5">{shareUrl}</div>
@@ -354,7 +354,7 @@ export function ProformaDetailClient({
           style={{ backgroundColor: 'rgba(0,0,0,0.45)' }}
           onClick={e => { if (e.target === e.currentTarget && !converting) setShowModal(false) }}
         >
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col max-h-[90vh]">
+          <div className="bg-white rounded border border-[#e2e8f0] shadow-sm w-full max-w-lg flex flex-col max-h-[90vh]">
             {/* Modal header */}
             <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
               <div>
@@ -364,7 +364,7 @@ export function ProformaDetailClient({
               <button
                 onClick={() => { if (!converting) setShowModal(false) }}
                 disabled={converting}
-                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-xl text-gray-400 hover:text-gray-700 transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100 text-xl text-gray-400 hover:text-gray-700 transition-colors"
               >
                 x
               </button>
@@ -379,7 +379,7 @@ export function ProformaDetailClient({
                 return (
                   <div
                     key={it.id}
-                    className={`flex items-center gap-3 p-3.5 rounded-xl border transition-colors ${
+                    className={`flex items-center gap-3 p-3.5 rounded border transition-colors ${
                       it.selected ? 'border-gray-900 bg-gray-50' : 'border-gray-100 opacity-50'
                     }`}
                   >
@@ -405,7 +405,7 @@ export function ProformaDetailClient({
                             x.id === it.id ? { ...x, qty: Math.max(0.01, x.qty - 1) } : x
                           ))
                         }
-                        className="w-7 h-7 border border-gray-200 rounded-lg text-sm font-bold hover:bg-gray-100 disabled:opacity-30 flex items-center justify-center"
+                        className="w-7 h-7 border border-gray-200 rounded text-sm font-bold hover:bg-gray-100 disabled:opacity-30 flex items-center justify-center"
                       >-</button>
                       <input
                         type="number"
@@ -417,7 +417,7 @@ export function ProformaDetailClient({
                           const v = parseFloat(e.target.value)
                           if (v > 0) setSelItems(s => s.map(x => x.id === it.id ? { ...x, qty: v } : x))
                         }}
-                        className="w-14 text-center text-sm border border-gray-200 rounded-lg py-1 focus:outline-none focus:ring-2 focus:ring-primary-400 disabled:opacity-30"
+                        className="w-14 text-center text-sm border border-gray-200 rounded py-1 focus:outline-none focus:ring-2 focus:ring-primary-400 disabled:opacity-30"
                       />
                       <button
                         type="button"
@@ -427,7 +427,7 @@ export function ProformaDetailClient({
                             x.id === it.id ? { ...x, qty: x.qty + 1 } : x
                           ))
                         }
-                        className="w-7 h-7 border border-gray-200 rounded-lg text-sm font-bold hover:bg-gray-100 disabled:opacity-30 flex items-center justify-center"
+                        className="w-7 h-7 border border-gray-200 rounded text-sm font-bold hover:bg-gray-100 disabled:opacity-30 flex items-center justify-center"
                       >+</button>
                     </div>
                     <div className="w-20 text-right text-sm font-bold tabular-nums flex-shrink-0">
@@ -459,7 +459,7 @@ export function ProformaDetailClient({
                 <button
                   onClick={confirmConvert}
                   disabled={converting || selItems.filter(i => i.selected).length === 0}
-                  className="flex-1 bg-emerald-600 text-white rounded-xl py-2.5 text-sm font-bold hover:bg-emerald-700 disabled:opacity-40 flex items-center justify-center gap-2 transition-colors"
+                  className="flex-1 bg-emerald-600 text-white rounded py-2.5 text-sm font-bold hover:bg-emerald-700 disabled:opacity-40 flex items-center justify-center gap-2 transition-colors"
                 >
                   {converting ? (
                     <>

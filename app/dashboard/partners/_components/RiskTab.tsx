@@ -108,7 +108,7 @@ function ScoreBar({ score, grade }: { score: number; grade: RiskGrade }) {
 
 function GradeBadge({ grade }: { grade: RiskGrade }) {
   return (
-    <span className={`text-[10px] font-black border px-1.5 py-0.5 rounded-lg tracking-wide ${GRADE_COLORS[grade]}`}>
+    <span className={`text-[10px] font-black border px-1.5 py-0.5 rounded tracking-wide ${GRADE_COLORS[grade]}`}>
       {grade}
     </span>
   )
@@ -135,16 +135,16 @@ export function RiskTab({ loading }: RiskTabProps) {
   if (loading || !fetchDone) {
     return (
       <div className="space-y-3 animate-pulse">
-        <div className="h-20 bg-gray-100 rounded-xl" />
-        <div className="h-48 bg-gray-100 rounded-xl" />
-        <div className="h-48 bg-gray-100 rounded-xl" />
+        <div className="h-20 bg-gray-100 rounded" />
+        <div className="h-48 bg-gray-100 rounded" />
+        <div className="h-48 bg-gray-100 rounded" />
       </div>
     )
   }
 
   if (fetchErr) {
     return (
-      <div className="bg-red-50 border border-red-100 rounded-xl px-4 py-3 text-sm text-red-600">
+      <div className="bg-red-50 border border-red-100 rounded px-4 py-3 text-sm text-red-600">
         {fetchErr}
       </div>
     )
@@ -155,7 +155,7 @@ export function RiskTab({ loading }: RiskTabProps) {
 
   if (!rs || rs.partner_profiles.length === 0) {
     return (
-      <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-8 text-center text-sm text-gray-400">
+      <div className="bg-gray-50 border border-gray-200 rounded px-4 py-8 text-center text-sm text-gray-400">
         Ortak borç kaydı bulunamadı — risk skoru hesaplanamadı.
       </div>
     )
@@ -167,7 +167,7 @@ export function RiskTab({ loading }: RiskTabProps) {
     <div className="space-y-4">
 
       {/* ── Company-Level Grade Banner ───────────────────────────────────────── */}
-      <div className={`rounded-xl border px-5 py-4 flex items-center justify-between gap-4 ${GRADE_COLORS[rs.company_grade]}`}>
+      <div className={`rounded border px-5 py-4 flex items-center justify-between gap-4 ${GRADE_COLORS[rs.company_grade]}`}>
         <div>
           <div className="text-[9px] font-black uppercase tracking-widest opacity-60 mb-1.5">Şirket Geneli Risk Notu</div>
           <div className="flex items-center gap-3">
@@ -197,7 +197,7 @@ export function RiskTab({ loading }: RiskTabProps) {
 
       {/* ── Compliance Warnings ─────────────────────────────────────────────── */}
       {cw.length > 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+        <div className="bg-amber-50 border border-amber-200 rounded px-4 py-3">
           <div className="text-[10px] font-black uppercase tracking-widest text-amber-700 mb-2">
             ⚠ Yasal Uyum Uyarıları
           </div>
@@ -220,7 +220,7 @@ export function RiskTab({ loading }: RiskTabProps) {
 
       {/* ── Per-Partner Risk Profiles ────────────────────────────────────────── */}
       {rs.partner_profiles.map(p => (
-        <div key={p.partner_id} className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+        <div key={p.partner_id} className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
 
           {/* Partner header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">

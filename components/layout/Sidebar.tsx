@@ -66,7 +66,7 @@ export function Sidebar({ navBadges = {} }: SidebarProps) {
             onClick={hasMultiCompany ? () => setShowSwitcher(s => !s) : undefined}
             title={hasMultiCompany ? 'Şirket değiştir' : undefined}
           >
-            <div className="w-8 h-8 rounded-lg bg-primary-600 flex items-center justify-center flex-shrink-0 overflow-hidden relative">
+            <div className="w-8 h-8 rounded bg-primary-600 flex items-center justify-center flex-shrink-0 overflow-hidden relative">
               {logoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={logoUrl} alt="logo" className="w-full h-full object-contain p-0.5" />
@@ -89,7 +89,7 @@ export function Sidebar({ navBadges = {} }: SidebarProps) {
 
         {/* ── Company switcher dropdown ──────────────────────────────────── */}
         {hasMultiCompany && showSwitcher && (
-          <div className="mt-2 rounded-lg border border-gray-200 bg-white shadow-lg overflow-hidden">
+          <div className="mt-2 rounded border border-[#e2e8f0] bg-white shadow-sm overflow-hidden">
             <div className="px-3 py-1.5 bg-gray-50 border-b border-gray-100">
               <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">
                 Şirket Seç
@@ -126,7 +126,7 @@ export function Sidebar({ navBadges = {} }: SidebarProps) {
       {/* ── Command trigger ────────────────────────────────────────────────── */}
       <button
         onClick={() => window.dispatchEvent(new CustomEvent('flowra:cmd'))}
-        className="mx-1 mb-3 w-[calc(100%-0.5rem)] flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-100 bg-gray-50/60 hover:bg-gray-100 hover:border-gray-200 transition-colors text-left group"
+        className="mx-1 mb-3 w-[calc(100%-0.5rem)] flex items-center gap-2 px-3 py-2 rounded border border-gray-100 bg-gray-50/60 hover:bg-gray-100 hover:border-gray-200 transition-colors text-left group"
       >
         <svg className="w-3.5 h-3.5 text-gray-400 flex-shrink-0 group-hover:text-gray-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -167,7 +167,7 @@ export function Sidebar({ navBadges = {} }: SidebarProps) {
       {/* ── User footer ────────────────────────────────────────────────────── */}
       <div className="pt-3 border-t border-gray-100 mt-3">
         <div className="flex items-center gap-2.5 px-3 py-1.5 mb-0.5">
-          <div className="w-7 h-7 rounded-lg bg-primary-100 flex items-center justify-center flex-shrink-0">
+          <div className="w-7 h-7 rounded bg-primary-100 flex items-center justify-center flex-shrink-0">
             <span className="text-primary-700 font-bold text-xs">{userInitials}</span>
           </div>
           <div className="min-w-0 flex-1">
@@ -251,7 +251,7 @@ function NavLink({ item, active, liveBadge }: { item: NavItem; active: boolean; 
       />
       <span className="truncate">{item.label}</span>
       {badge !== undefined && badge > 0 && (
-        <span className={`ml-auto min-w-[18px] text-center text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+        <span className={`ml-auto min-w-[18px] text-center text-[10px] font-bold px-1.5 py-0.5 rounded ${
           active ? 'bg-white/20 text-white' : 'bg-red-500 text-white'
         }`}>
           {badge > 99 ? '99+' : badge}
@@ -273,7 +273,7 @@ function RoleBadge({ role }: { role: MemberRole }) {
   }[role]
 
   return (
-    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${cfg.cls}`}>
+    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded flex-shrink-0 ${cfg.cls}`}>
       {cfg.label}
     </span>
   )

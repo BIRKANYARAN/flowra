@@ -41,7 +41,7 @@ function KpiBlock({ label, value, sub, tone = 'neutral', href }: {
     warning: 'text-amber-600', critical: 'text-red-700', neutral: 'text-gray-900',
   }[tone]
   const content = (
-    <div className="bg-white border border-gray-100 rounded-xl px-4 py-3 shadow-[0_1px_2px_rgba(17,24,39,0.04)] hover:shadow-[0_2px_4px_rgba(17,24,39,0.07)] transition-shadow">
+    <div className="bg-white border border-gray-100 rounded px-4 py-3 shadow-sm hover:shadow-[0_2px_4px_rgba(17,24,39,0.07)] transition-shadow">
       <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">{label}</div>
       <div className={`text-xl font-black tabular-nums leading-none ${valueColor}`}>{value}</div>
       {sub && <div className="text-[10px] text-gray-400 mt-1 leading-tight">{sub}</div>}
@@ -58,7 +58,7 @@ function RiskPill({ label, value, level }: { label: string; value: string; level
   }[level]
   const icons = { ok: '✓', warn: '⚠', critical: '🔴' }[level]
   return (
-    <div className={`flex items-center justify-between px-3 py-2 rounded-xl border ${colors}`}>
+    <div className={`flex items-center justify-between px-3 py-2 rounded border ${colors}`}>
       <span className="text-xs font-semibold">{icons} {label}</span>
       <span className="text-xs font-black tabular-nums">{value}</span>
     </div>
@@ -122,7 +122,7 @@ export async function OverviewTab({ userId: _userId, companyId }: Props) {
     <div className="space-y-4">
 
       {runwayTone === 'critical' && (
-        <div className="bg-red-50 border border-red-300 rounded-xl px-4 py-3 text-sm text-red-700 font-semibold flex items-center gap-2">
+        <div className="bg-red-50 border border-red-300 rounded px-4 py-3 text-sm text-red-700 font-semibold flex items-center gap-2">
           <span className="animate-pulse">🔴</span>
           Kritik: Runway {runwayMonths?.toFixed(1)} ay — acil aksiyon gerekiyor.
         </div>
@@ -131,7 +131,7 @@ export async function OverviewTab({ userId: _userId, companyId }: Props) {
       {/* High overdue receivables alert — fires when 60d+ overdue exceeds 20% of total outstanding */}
       {m.receivables.total_outstanding > 0 &&
        m.receivables.overdue_60d + m.receivables.overdue_90d > m.receivables.total_outstanding * 0.2 && (
-        <div className="bg-orange-50 border border-orange-300 rounded-xl px-4 py-3 flex items-start gap-3">
+        <div className="bg-orange-50 border border-orange-300 rounded px-4 py-3 flex items-start gap-3">
           <span className="text-base mt-0.5">⚠</span>
           <div className="flex-1">
             <div className="text-[11px] font-black uppercase tracking-wide text-orange-800">
@@ -165,7 +165,7 @@ export async function OverviewTab({ userId: _userId, companyId }: Props) {
           <KpiBlock label="Aylık Burn"
             value={m.burn.monthly_burn_rate > 0 ? fmt(m.burn.monthly_burn_rate) : '—'}
             sub="3 aylık ortalama" tone="neutral" href="/dashboard/operations?tab=expenses" />
-          <div className={`rounded-xl px-4 py-3 border-2 ${
+          <div className={`rounded px-4 py-3 border-2 ${
             runwayTone === 'critical' ? 'bg-red-50 border-red-300' :
             runwayTone === 'warning'  ? 'bg-amber-50 border-amber-300' :
             runwayTone === 'positive' ? 'bg-emerald-50 border-emerald-200' :
@@ -190,7 +190,7 @@ export async function OverviewTab({ userId: _userId, companyId }: Props) {
       <div className="grid grid-cols-5 gap-2">
         <div className="col-span-3">
           <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1.5">Tahsilat Sağlığı</div>
-          <div className="bg-white border border-gray-100 rounded-xl px-4 py-3 space-y-2 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+          <div className="bg-white border border-gray-100 rounded px-4 py-3 space-y-2 shadow-sm">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-gray-600">Toplam Açık Alacak</span>
               <span className="text-sm font-black tabular-nums text-gray-900">{fmt(m.receivables.total_outstanding)}</span>
@@ -269,7 +269,7 @@ export async function OverviewTab({ userId: _userId, companyId }: Props) {
       {chartMonths.length > 0 && (
         <div>
           <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1.5">12 Aylık Nakit Projeksiyonu</div>
-          <div className="bg-white border border-gray-100 rounded-xl px-4 py-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+          <div className="bg-white border border-gray-100 rounded px-4 py-4 shadow-sm">
             <div className="flex items-end gap-1.5 h-24">
               {chartMonths.map((mo) => {
                 const barH    = maxCash > 0 ? Math.max(2, Math.round((Math.max(0, mo.end_cash) / maxCash) * 100)) : 0
@@ -306,19 +306,19 @@ export async function OverviewTab({ userId: _userId, companyId }: Props) {
       {/* Quick actions */}
       <div className="flex flex-wrap gap-2 pt-1">
         <Link href="/dashboard/commercial?tab=collections"
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary-600 text-white text-xs font-semibold hover:bg-primary-700 transition-colors">
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded bg-primary-600 text-white text-xs font-semibold hover:bg-primary-700 transition-colors">
           Tahsilat Yönet
         </Link>
         <Link href="/dashboard/operations?tab=expenses"
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-orange-500 text-white text-xs font-semibold hover:bg-orange-600 transition-colors">
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded bg-orange-500 text-white text-xs font-semibold hover:bg-orange-600 transition-colors">
           Giderleri Gözden Geçir
         </Link>
         <Link href="/dashboard/partners"
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gray-100 text-gray-700 text-xs font-semibold hover:bg-gray-200 transition-colors">
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded bg-gray-100 text-gray-700 text-xs font-semibold hover:bg-gray-200 transition-colors">
           Ortak Dengesi
         </Link>
         <Link href="/dashboard/planning?tab=unit-profit"
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gray-100 text-gray-700 text-xs font-semibold hover:bg-gray-200 transition-colors">
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded bg-gray-100 text-gray-700 text-xs font-semibold hover:bg-gray-200 transition-colors">
           Senaryo Simülasyonu
         </Link>
       </div>

@@ -92,16 +92,16 @@ export default function AlertSettingsPage() {
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700">{error}</div>
+        <div className="bg-red-50 border border-red-200 rounded px-4 py-3 text-sm text-red-700">{error}</div>
       )}
       {flash && (
-        <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 text-sm text-emerald-700">{flash}</div>
+        <div className="bg-emerald-50 border border-emerald-200 rounded px-4 py-3 text-sm text-emerald-700">{flash}</div>
       )}
 
-      {loading && <div className="bg-gray-100 rounded-xl h-64 animate-pulse" />}
+      {loading && <div className="bg-gray-100 rounded h-64 animate-pulse" />}
 
       {!loading && (
-        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+        <div className="bg-white border border-gray-100 rounded overflow-hidden">
           <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-100">
             <div className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-3 text-[10px] font-black uppercase tracking-widest text-gray-400">
               <span>Kural</span>
@@ -134,7 +134,7 @@ export default function AlertSettingsPage() {
                       min="0"
                       value={rule.threshold_value ?? ''}
                       onChange={e => updateRule(rule.rule_type, { threshold_value: e.target.value === '' ? null : Number(e.target.value) })}
-                      className="w-full border border-gray-200 rounded-lg px-2 py-1 text-xs text-right"
+                      className="w-full border border-gray-200 rounded px-2 py-1 text-xs text-right"
                     />
                     {meta.unit && <span className="text-[10px] text-gray-400 shrink-0">{meta.unit}</span>}
                   </div>
@@ -143,7 +143,7 @@ export default function AlertSettingsPage() {
                   <select
                     value={rule.severity}
                     onChange={e => updateRule(rule.rule_type, { severity: e.target.value as AlertRule['severity'] })}
-                    className="border border-gray-200 rounded-lg px-2 py-1 text-xs"
+                    className="border border-gray-200 rounded px-2 py-1 text-xs"
                   >
                     {SEVERITY_OPTS.map(o => (
                       <option key={o.value} value={o.value}>{o.label}</option>
@@ -164,7 +164,7 @@ export default function AlertSettingsPage() {
                   <button
                     onClick={() => saveRule(rule)}
                     disabled={saving === rule.rule_type}
-                    className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg transition-colors ${
+                    className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded transition-colors ${
                       saving === rule.rule_type
                         ? 'bg-gray-100 text-gray-400 cursor-wait'
                         : 'bg-primary-600 text-white hover:bg-primary-700'
@@ -180,7 +180,7 @@ export default function AlertSettingsPage() {
       )}
 
       {/* Info box */}
-      <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-xs text-blue-700 leading-relaxed">
+      <div className="bg-blue-50 border border-blue-200 rounded px-4 py-3 text-xs text-blue-700 leading-relaxed">
         <span className="font-bold">Not:</span>{' '}
         Değişiklikler CEO Cockpit karar uyarılarına anında yansır. Kural devre dışı bırakılırsa
         ilgili uyarılar hiç gösterilmez. Eşik değeri boş bırakılırsa sistem varsayılanı kullanılır.

@@ -11,7 +11,7 @@ import type { Customer } from '@/types'
 
 export type { Customer }
 
-const IL  = 'w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white transition-colors'
+const IL  = 'w-full border border-gray-200 rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white transition-colors'
 const LAB = 'block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5'
 
 const EMPTY = {
@@ -93,7 +93,7 @@ export default function CustomersClient({ initialCustomers }: Props) {
         {!showForm && (
           <button
             onClick={openNew}
-            className="bg-primary-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-primary-700 transition-colors"
+            className="bg-primary-600 text-white px-4 py-2 rounded text-sm font-semibold hover:bg-primary-700 transition-colors"
           >
             + Yeni Müşteri
           </button>
@@ -102,7 +102,7 @@ export default function CustomersClient({ initialCustomers }: Props) {
 
       {/* ── Add/Edit Form ─────────────────────────────────────────────────── */}
       {showForm && (
-        <div className="bg-white border border-gray-100 rounded-xl p-6 space-y-4">
+        <div className="bg-white border border-gray-100 rounded p-6 space-y-4">
           <h3 className="font-bold text-sm border-b border-gray-100 pb-3">
             {editId ? 'Müşteriyi Düzenle' : 'Yeni Müşteri'}
           </h3>
@@ -125,7 +125,7 @@ export default function CustomersClient({ initialCustomers }: Props) {
             <textarea className={`${IL} resize-none`} rows={2} {...f('notes')} />
           </div>
           {err && (
-            <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl px-3 py-2">
+            <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded px-3 py-2">
               {err}
             </div>
           )}
@@ -133,13 +133,13 @@ export default function CustomersClient({ initialCustomers }: Props) {
             <button
               onClick={save}
               disabled={saving || !form.name.trim()}
-              className="bg-primary-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-primary-700 disabled:opacity-40 transition-colors"
+              className="bg-primary-600 text-white px-5 py-2.5 rounded text-sm font-semibold hover:bg-primary-700 disabled:opacity-40 transition-colors"
             >
               {saving ? 'Kaydediliyor...' : editId ? 'Güncelle' : 'Kaydet'}
             </button>
             <button
               onClick={closeForm}
-              className="border border-gray-200 px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50/60 transition-colors"
+              className="border border-gray-200 px-5 py-2.5 rounded text-sm font-medium hover:bg-gray-50/60 transition-colors"
             >
               İptal
             </button>
@@ -158,7 +158,7 @@ export default function CustomersClient({ initialCustomers }: Props) {
       )}
 
       {/* ── Customer List ─────────────────────────────────────────────────── */}
-      <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+      <div className="bg-white border border-gray-100 rounded overflow-hidden">
         {filtered.length === 0 ? (
           <div className="py-16 text-center">
             <div className="text-4xl mb-3">👥</div>
@@ -192,7 +192,7 @@ export default function CustomersClient({ initialCustomers }: Props) {
                 <div className="flex gap-1 flex-shrink-0">
                   <button
                     onClick={() => openEdit(c)}
-                    className="text-xs text-gray-400 hover:text-gray-900 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors"
+                    className="text-xs text-gray-400 hover:text-gray-900 px-2 py-1 rounded hover:bg-gray-100 transition-colors"
                   >
                     Düzenle
                   </button>
@@ -200,13 +200,13 @@ export default function CustomersClient({ initialCustomers }: Props) {
                     <span className="flex items-center gap-1">
                       <button
                         onClick={() => del(c.id)}
-                        className="text-xs text-white bg-red-500 hover:bg-red-600 px-2 py-1 rounded-lg transition-colors font-semibold"
+                        className="text-xs text-white bg-red-500 hover:bg-red-600 px-2 py-1 rounded transition-colors font-semibold"
                       >
                         Evet, sil
                       </button>
                       <button
                         onClick={() => setConfirmId(null)}
-                        className="text-xs text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors"
+                        className="text-xs text-gray-400 px-2 py-1 rounded hover:bg-gray-100 transition-colors"
                       >
                         İptal
                       </button>
@@ -214,7 +214,7 @@ export default function CustomersClient({ initialCustomers }: Props) {
                   ) : (
                     <button
                       onClick={() => setConfirmId(c.id)}
-                      className="text-xs text-gray-400 hover:text-red-500 px-2 py-1 rounded-lg hover:bg-red-50 transition-colors"
+                      className="text-xs text-gray-400 hover:text-red-500 px-2 py-1 rounded hover:bg-red-50 transition-colors"
                     >
                       Sil
                     </button>

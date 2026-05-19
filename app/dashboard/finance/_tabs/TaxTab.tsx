@@ -126,7 +126,7 @@ export async function TaxTab({ userId, companyId }: Props) {
 
       {/* ── Tax urgency banner ────────────────────────────────────────────────── */}
       {overdueQuarters.length > 0 && (
-        <div className="bg-red-50 border border-red-300 rounded-xl px-4 py-3 flex items-start gap-3">
+        <div className="bg-red-50 border border-red-300 rounded px-4 py-3 flex items-start gap-3">
           <span className="text-base animate-pulse">🔴</span>
           <div className="flex-1">
             <div className="text-[11px] font-black uppercase tracking-wide text-red-800">
@@ -147,7 +147,7 @@ export async function TaxTab({ userId, companyId }: Props) {
       )}
 
       {overdueQuarters.length === 0 && urgentQuarters.length > 0 && (
-        <div className="bg-amber-50 border border-amber-300 rounded-xl px-4 py-3 flex items-start gap-3">
+        <div className="bg-amber-50 border border-amber-300 rounded px-4 py-3 flex items-start gap-3">
           <span className="text-base">⚠</span>
           <div className="flex-1">
             <div className="text-[11px] font-black uppercase tracking-wide text-amber-800">
@@ -168,7 +168,7 @@ export async function TaxTab({ userId, companyId }: Props) {
       )}
 
       {/* ── Zone 1: KPI Strip ────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-4 gap-0 bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+      <div className="grid grid-cols-4 gap-0 bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
         {[
           {
             label: 'Net KDV (Bu Ay)',
@@ -207,7 +207,7 @@ export async function TaxTab({ userId, companyId }: Props) {
       </div>
 
       {/* ── Zone 2: Aylık KDV Geçmişi ───────────────────────────────────────── */}
-      <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+      <div className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
         <div className="px-4 py-3 border-b border-gray-100">
           <h2 className="text-sm font-black text-gray-800">Aylık KDV Geçmişi</h2>
           <p className="text-[10px] text-gray-400 mt-0.5">Son 6 ay · Satış KDV − İndirim = Net KDV</p>
@@ -231,7 +231,7 @@ export async function TaxTab({ userId, companyId }: Props) {
                 <tr key={row.ym} className={`hover:bg-gray-50/60 transition-colors ${isCurrent ? 'bg-primary-50/30' : ''}`}>
                   <td className="px-4 py-3 font-semibold text-gray-800">
                     {fmtMonth(row.ym)}
-                    {isCurrent && <span className="ml-2 text-[9px] bg-primary-100 text-primary-700 font-bold px-1.5 py-0.5 rounded-full">Bu ay</span>}
+                    {isCurrent && <span className="ml-2 text-[9px] bg-primary-100 text-primary-700 font-bold px-1.5 py-0.5 rounded">Bu ay</span>}
                   </td>
                   <td className="px-4 py-3 text-right font-mono text-emerald-700 tabular-nums">
                     {row.salesVat > 0 ? fmt(row.salesVat) : <span className="text-gray-300">—</span>}
@@ -246,7 +246,7 @@ export async function TaxTab({ userId, companyId }: Props) {
                     {row.salesVat === 0 && row.purchaseVat === 0 && row.expenseVat === 0 ? (
                       <span className="text-[10px] text-gray-300">Veri yok</span>
                     ) : (
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${pos.bg} ${pos.color}`}>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${pos.bg} ${pos.color}`}>
                         {pos.label}
                       </span>
                     )}
@@ -259,14 +259,14 @@ export async function TaxTab({ userId, companyId }: Props) {
       </div>
 
       {/* ── Zone 3: Geçici Vergi Takvimi ─────────────────────────────────────── */}
-      <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+      <div className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
         <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
           <div>
             <h2 className="text-sm font-black text-gray-800">Geçici Vergi Takvimi {currentYear}</h2>
             <p className="text-[10px] text-gray-400 mt-0.5">Kurumlar vergisi matrahı üzerinden %25 · Q1 Mayıs · Q2 Ağustos · Q3 Kasım</p>
           </div>
           {ytd.total_gecici > 0 && (
-            <span className="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full">
+            <span className="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded">
               {fmt(ytd.total_gecici)} ödendi
             </span>
           )}
@@ -295,12 +295,12 @@ export async function TaxTab({ userId, companyId }: Props) {
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-xs font-black text-gray-800">Q{q} Geçici Vergi</span>
                     {statusBadge.text && (
-                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border ${statusBadge.cls}`}>
+                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${statusBadge.cls}`}>
                         {statusBadge.text}
                       </span>
                     )}
                     {!hasData && (
-                      <span className="text-[9px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full">Veri bekleniyor</span>
+                      <span className="text-[9px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">Veri bekleniyor</span>
                     )}
                   </div>
                   <div className="text-[10px] text-gray-400 mt-0.5">
@@ -331,7 +331,7 @@ export async function TaxTab({ userId, companyId }: Props) {
 
       {/* ── Zone 4: Matrah Analizi ───────────────────────────────────────────── */}
       {ytd.revenue > 0 && (
-        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+        <div className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
           <div className="px-4 py-3 border-b border-gray-100">
             <h2 className="text-sm font-black text-gray-800">Matrah Analizi — YTD {currentYear}</h2>
             <p className="text-[10px] text-gray-400 mt-0.5">
@@ -367,7 +367,7 @@ export async function TaxTab({ userId, companyId }: Props) {
       <div className="grid grid-cols-2 gap-3">
         <Link
           href="/dashboard/cfo/tax/kdv"
-          className="bg-white border border-gray-100 rounded-xl px-4 py-3 hover:border-orange-200 transition-colors shadow-[0_1px_2px_rgba(17,24,39,0.04)]"
+          className="bg-white border border-gray-100 rounded px-4 py-3 hover:border-orange-200 transition-colors shadow-sm"
         >
           <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">KDV Detayı</div>
           <div className="text-xs font-bold text-gray-900">KDV Özeti →</div>
@@ -375,7 +375,7 @@ export async function TaxTab({ userId, companyId }: Props) {
         </Link>
         <Link
           href="/dashboard/cfo/tax/corporate"
-          className="bg-white border border-gray-100 rounded-xl px-4 py-3 hover:border-amber-200 transition-colors shadow-[0_1px_2px_rgba(17,24,39,0.04)]"
+          className="bg-white border border-gray-100 rounded px-4 py-3 hover:border-amber-200 transition-colors shadow-sm"
         >
           <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Kurumlar Vergisi</div>
           <div className="text-xs font-bold text-gray-900">KV Raporu →</div>

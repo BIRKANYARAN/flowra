@@ -255,7 +255,7 @@ export async function CFOTab({ userId, companyId }: Props) {
 
       {/* ── Veri yükleme hatası banner — yalnızca servis çağrıları başarısız olduğunda görünür ── */}
       {loadErrors.length > 0 && (
-        <div className="flex items-start gap-2.5 px-3.5 py-2.5 bg-red-50 border border-red-200 rounded-xl text-xs">
+        <div className="flex items-start gap-2.5 px-3.5 py-2.5 bg-red-50 border border-red-200 rounded text-xs">
           <span className="text-red-500 text-base leading-none mt-0.5 shrink-0">⚠</span>
           <div className="flex-1 min-w-0">
             <span className="font-bold text-red-800">Bazı veriler yüklenemedi</span>
@@ -281,7 +281,7 @@ export async function CFOTab({ userId, companyId }: Props) {
         <div className="flex gap-2">
           <Link
             href="/dashboard/finance?tab=tax"
-            className="text-xs font-semibold text-gray-500 hover:text-gray-800 border border-gray-100 px-3 py-1.5 rounded-xl hover:bg-gray-50 transition-colors"
+            className="text-xs font-semibold text-gray-500 hover:text-gray-800 border border-gray-100 px-3 py-1.5 rounded hover:bg-gray-50 transition-colors"
           >
             Vergi Merkezi →
           </Link>
@@ -292,7 +292,7 @@ export async function CFOTab({ userId, companyId }: Props) {
       <div className="grid grid-cols-3 gap-3">
 
         {/* Financial Health Score */}
-        <div className={`border rounded-xl p-4 flex flex-col items-center justify-center text-center ${gradeColor}`}>
+        <div className={`border rounded p-4 flex flex-col items-center justify-center text-center ${gradeColor}`}>
           <div className="text-[10px] font-black uppercase tracking-widest mb-2 opacity-60">
             Finansal Sağlık
           </div>
@@ -307,7 +307,7 @@ export async function CFOTab({ userId, companyId }: Props) {
         </div>
 
         {/* Component scores */}
-        <div className="border border-gray-100 rounded-xl p-4 bg-white col-span-2 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+        <div className="border border-gray-100 rounded p-4 bg-white col-span-2 shadow-sm">
           <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">
             Bileşen Skorları
           </div>
@@ -331,12 +331,12 @@ export async function CFOTab({ userId, companyId }: Props) {
       </div>
 
       {/* Row 2: Accounting Accuracy Checks */}
-      <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+      <div className="bg-white border border-gray-100 rounded p-4 shadow-sm">
         <div className="flex items-center justify-between mb-3">
           <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">
             Muhasebe Doğruluk Kontrolleri
           </div>
-          <span className={`text-xs font-bold px-2 py-1 rounded-full ${
+          <span className={`text-xs font-bold px-2 py-1 rounded ${
             checksPassedCount === checks.length
               ? 'bg-emerald-50 text-emerald-700'
               : 'bg-amber-50 text-amber-700'
@@ -346,7 +346,7 @@ export async function CFOTab({ userId, companyId }: Props) {
         </div>
         <div className="grid grid-cols-2 gap-2">
           {checks.map(c => (
-            <div key={c.name} className={`rounded-lg px-3 py-2.5 border text-sm ${
+            <div key={c.name} className={`rounded px-3 py-2.5 border text-sm ${
               c.passed
                 ? 'bg-emerald-50 border-emerald-200'
                 : 'bg-red-50 border-red-200'
@@ -363,11 +363,11 @@ export async function CFOTab({ userId, companyId }: Props) {
       </div>
 
       {/* Period Close Status */}
-      <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+      <div className="bg-white border border-gray-100 rounded p-4 shadow-sm">
         <div className="flex items-center justify-between mb-3">
           <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Dönem Kapanış Durumu</div>
           {periodData ? (
-            <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${
+            <span className={`text-[10px] font-bold px-2 py-1 rounded ${
               periodData.period.status === 'locked' ? 'bg-gray-100 text-gray-500' :
               periodData.period.status === 'closed' ? 'bg-blue-50 text-blue-700' :
               periodData.checklist.ready_to_close  ? 'bg-emerald-50 text-emerald-700' :
@@ -379,7 +379,7 @@ export async function CFOTab({ userId, companyId }: Props) {
                'AKTİF DÖNEM'}
             </span>
           ) : (
-            <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-gray-100 text-gray-400">DÖNEM YOK</span>
+            <span className="text-[10px] font-bold px-2 py-1 rounded bg-gray-100 text-gray-400">DÖNEM YOK</span>
           )}
         </div>
 
@@ -407,7 +407,7 @@ export async function CFOTab({ userId, companyId }: Props) {
                 { key: 'tax_summary_approved',   label: 'Vergi Tipi Ataması', passed: periodData.checklist.tax_summary_approved },
                 { key: 'balance_sheet_balanced', label: 'Bilanço Dengeli',    passed: periodData.checklist.balance_sheet_balanced },
               ].map(item => (
-                <div key={item.key} className={`rounded-xl px-3 py-2.5 border text-xs text-center ${
+                <div key={item.key} className={`rounded px-3 py-2.5 border text-xs text-center ${
                   item.passed
                     ? 'bg-emerald-50 border-emerald-200'
                     : 'bg-amber-50 border-amber-200'
@@ -446,19 +446,19 @@ export async function CFOTab({ userId, companyId }: Props) {
 
       {/* Kopya Masraf Uyarıları — only shown when potential duplicates are found */}
       {duplicates.length > 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+        <div className="bg-amber-50 border border-amber-200 rounded p-4">
           <div className="flex items-center justify-between mb-3">
             <div>
               <div className="text-[10px] font-black uppercase tracking-widest text-amber-600">Kopya Masraf Uyarıları</div>
               <div className="text-[10px] text-amber-500 mt-0.5">Son 3 ay — istatistiksel tespit · CFO onayı gerekli</div>
             </div>
-            <span className="text-[9px] font-black uppercase tracking-wide bg-amber-100 text-amber-700 px-2 py-0.5 rounded-lg border border-amber-200">
+            <span className="text-[9px] font-black uppercase tracking-wide bg-amber-100 text-amber-700 px-2 py-0.5 rounded border border-amber-200">
               {duplicates.filter(d => d.confidence === 'high').length} yüksek · {duplicates.filter(d => d.confidence === 'medium').length} orta
             </span>
           </div>
           <div className="space-y-2">
             {duplicates.map((d, i) => (
-              <div key={i} className={`rounded-lg px-3 py-2.5 border text-xs ${
+              <div key={i} className={`rounded px-3 py-2.5 border text-xs ${
                 d.confidence === 'high'
                   ? 'bg-red-50 border-red-200'
                   : 'bg-amber-50 border-amber-200'
@@ -489,12 +489,12 @@ export async function CFOTab({ userId, companyId }: Props) {
       )}
 
       {/* Row 3: Balance Sheet preview */}
-      <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+      <div className="bg-white border border-gray-100 rounded p-4 shadow-sm">
         <div className="flex items-center justify-between mb-3">
           <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">
             Bilanço Özeti — {fmtDate(today)}
           </div>
-          <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${
+          <span className={`text-[10px] font-bold px-2 py-1 rounded ${
             bsBalanced ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'
           }`}>
             {bsBalanced ? 'DENGELENMIŞ' : 'FARK VAR'}
@@ -538,7 +538,7 @@ export async function CFOTab({ userId, companyId }: Props) {
           </div>
         </div>
         {!bsBalanced && (
-          <div className="mt-3 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-700">
+          <div className="mt-3 bg-amber-50 border border-amber-200 rounded px-3 py-2 text-xs text-amber-700">
             <strong>Fark:</strong> {fmt(balanceSheet?.imbalance_try ?? 0)} — Nakit pozisyonu yaklaşık hesaplanmaktadır.
           </div>
         )}
@@ -548,7 +548,7 @@ export async function CFOTab({ userId, companyId }: Props) {
       <div className="grid grid-cols-2 gap-3">
 
         {/* Tax */}
-        <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+        <div className="bg-white border border-gray-100 rounded p-4 shadow-sm">
           <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">
             Vergi Yükümlülükleri ({today.slice(0, 4)})
           </div>
@@ -584,7 +584,7 @@ export async function CFOTab({ userId, companyId }: Props) {
         </div>
 
         {/* Receivable aging */}
-        <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+        <div className="bg-white border border-gray-100 rounded p-4 shadow-sm">
           <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">
             Alacak Yaşlandırma
           </div>
@@ -614,7 +614,7 @@ export async function CFOTab({ userId, companyId }: Props) {
       </div>
 
       {/* Row 5: P&L Summary */}
-      <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+      <div className="bg-white border border-gray-100 rounded p-4 shadow-sm">
         <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">
           Gelir Tablosu Özeti — {today.slice(0, 4)} YTD
         </div>
@@ -661,7 +661,7 @@ export async function CFOTab({ userId, companyId }: Props) {
         const fmtDateQ = (d: string) => { const [y, m, day] = d.split('-'); const months = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara']; return `${day} ${months[Number(m)-1]} ${y}` }
 
         return (
-          <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+          <div className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
             <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
               <div>
                 <h2 className="text-sm font-black text-gray-800">Çeyreklik Analitik — {currentYear}</h2>
@@ -727,7 +727,7 @@ export async function CFOTab({ userId, companyId }: Props) {
               <div className="border-t border-gray-100">
                 <div className="px-4 py-3 flex items-center justify-between">
                   <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Geçici Vergi Takvimi {currentYear}</div>
-                  <span className="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">Toplam {fmtTRY(ytd.total_gecici)}</span>
+                  <span className="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded">Toplam {fmtTRY(ytd.total_gecici)}</span>
                 </div>
                 <div className="divide-y divide-gray-50">
                   {qs.filter((q: QuarterResult) => q.gecici_vergi > 0 && q.gecici_due_date).map((q: QuarterResult) => {
@@ -739,8 +739,8 @@ export async function CFOTab({ userId, companyId }: Props) {
                         <div>
                           <div className="flex items-center gap-2">
                             <span className="text-xs font-bold text-gray-800">{q.label} Geçici Vergi</span>
-                            {isPast && <span className="text-[9px] bg-gray-100 text-gray-400 px-1.5 py-0.5 rounded-full">Geçti</span>}
-                            {isUrgent && !isPast && <span className="text-[9px] bg-amber-100 text-amber-700 font-bold px-1.5 py-0.5 rounded-full">30 gün içinde</span>}
+                            {isPast && <span className="text-[9px] bg-gray-100 text-gray-400 px-1.5 py-0.5 rounded">Geçti</span>}
+                            {isUrgent && !isPast && <span className="text-[9px] bg-amber-100 text-amber-700 font-bold px-1.5 py-0.5 rounded">30 gün içinde</span>}
                           </div>
                           <div className="text-[10px] text-gray-400 mt-0.5">Son ödeme: {fmtDateQ(q.gecici_due_date)} · Matrah: {fmtTRY(q.matrah)}</div>
                         </div>
@@ -790,7 +790,7 @@ export async function CFOTab({ userId, companyId }: Props) {
           <Link
             key={item.href}
             href={item.href}
-            className={`bg-white border border-gray-100 rounded-xl px-4 py-3 flex items-start gap-3 transition-colors ${item.color}`}
+            className={`bg-white border border-gray-100 rounded px-4 py-3 flex items-start gap-3 transition-colors ${item.color}`}
           >
             <span className="text-xl mt-0.5">{item.icon}</span>
             <div>
@@ -859,7 +859,7 @@ export async function CFOTab({ userId, companyId }: Props) {
             <Link
               key={item.href}
               href={item.href}
-              className={`bg-white border border-gray-100 rounded-xl px-4 py-3 flex items-start gap-3 transition-colors ${item.color}`}
+              className={`bg-white border border-gray-100 rounded px-4 py-3 flex items-start gap-3 transition-colors ${item.color}`}
             >
               <span className="text-xl mt-0.5">{item.icon}</span>
               <div>

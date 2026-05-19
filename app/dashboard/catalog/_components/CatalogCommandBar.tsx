@@ -52,7 +52,7 @@ export async function CatalogCommandBar({ companyId }: Props) {
 
   if (products.length === 0) {
     return (
-      <div className="flex items-center gap-2 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-400">
+      <div className="flex items-center gap-2 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded text-xs text-gray-400">
         Henüz aktif ürün yok — katalog boş.{' '}
         <Link href="/dashboard/products" className="text-primary-600 font-semibold hover:text-primary-700">
           Ürün Ekle →
@@ -117,14 +117,14 @@ export async function CatalogCommandBar({ companyId }: Props) {
       <div className="flex items-center gap-2 flex-wrap">
 
         {/* Total products */}
-        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-100 rounded-xl">
+        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-100 rounded">
           <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Ürünler</span>
           <span className="text-sm font-black tabular-nums text-gray-900">{totalProducts}</span>
           <span className="text-[9px] text-gray-400">aktif</span>
         </div>
 
         {/* Priced */}
-        <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border ${
+        <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded border ${
           pricedProducts.length === totalProducts
             ? 'bg-white border-gray-200'
             : 'bg-amber-50 border-amber-200'
@@ -136,7 +136,7 @@ export async function CatalogCommandBar({ companyId }: Props) {
         </div>
 
         {/* With cost data */}
-        <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border ${
+        <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded border ${
           costdProducts.length === totalProducts
             ? 'bg-white border-gray-200'
             : costdProducts.length === 0
@@ -153,7 +153,7 @@ export async function CatalogCommandBar({ companyId }: Props) {
 
         {/* Average margin (TRY products only) */}
         {avgMargin !== null && (
-          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border ${
+          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded border ${
             avgMargin >= 0.35 ? 'bg-emerald-50 border-emerald-200' :
             avgMargin >= 0.20 ? 'bg-amber-50 border-amber-200'    :
                                 'bg-red-50 border-red-200'
@@ -178,7 +178,7 @@ export async function CatalogCommandBar({ companyId }: Props) {
 
       {/* ── Below-margin alert ────────────────────────────────────────────── */}
       {belowCount > 0 && (
-        <div className="bg-red-50 border border-red-200 rounded-xl overflow-hidden">
+        <div className="bg-red-50 border border-red-200 rounded overflow-hidden">
           <div className="px-3 py-2 border-b border-red-100 flex items-center gap-2">
             <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse shrink-0" />
             <span className="text-[9px] font-black uppercase tracking-widest text-red-700">
@@ -211,7 +211,7 @@ export async function CatalogCommandBar({ companyId }: Props) {
 
       {/* ── Blind spot notice ─────────────────────────────────────────────── */}
       {blindSpots.length > 0 && blindSpots.length <= 5 && (
-        <div className="flex items-center gap-3 px-4 py-2 bg-amber-50 border border-amber-200 rounded-xl">
+        <div className="flex items-center gap-3 px-4 py-2 bg-amber-50 border border-amber-200 rounded">
           <span className="text-[10px] font-bold text-amber-700">
             {blindSpots.length} ürünün fiyatı var ama stok maliyeti bilinmiyor:
           </span>
@@ -226,7 +226,7 @@ export async function CatalogCommandBar({ companyId }: Props) {
         </div>
       )}
       {blindSpots.length > 5 && (
-        <div className="flex items-center gap-3 px-4 py-2 bg-amber-50 border border-amber-200 rounded-xl">
+        <div className="flex items-center gap-3 px-4 py-2 bg-amber-50 border border-amber-200 rounded">
           <span className="text-[10px] font-bold text-amber-700">
             {blindSpots.length} ürün için marj hesaplanamıyor (%{uncoveredPct.toFixed(0)} katalog kör nokta).
           </span>

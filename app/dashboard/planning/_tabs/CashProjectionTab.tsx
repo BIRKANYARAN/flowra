@@ -133,7 +133,7 @@ export async function CashProjectionTab({ companyId }: Props) {
       </div>
 
       {!hasData && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-700">
+        <div className="bg-amber-50 border border-amber-200 rounded px-4 py-3 text-sm text-amber-700">
           <span className="font-semibold">Geçmiş veri bulunamadı.</span>{' '}
           Son 6 aya ait satış ve gider girişi yapıldığında projeksiyon otomatik hesaplanır.
         </div>
@@ -146,7 +146,7 @@ export async function CashProjectionTab({ companyId }: Props) {
           { key: 'base',        label: 'Baz',              summary: forecast.summary.base,        accent: 'border-gray-200 bg-white',   text: 'text-gray-900',    sub: 'text-gray-400' },
           { key: 'optimistic',  label: 'İyimser (+15%)',   summary: forecast.summary.optimistic,  accent: 'border-emerald-200 bg-emerald-50', text: 'text-emerald-800', sub: 'text-emerald-500' },
         ] as const).map(s => (
-          <div key={s.key} className={`rounded-xl border px-4 py-3.5 ${s.accent}`}>
+          <div key={s.key} className={`rounded border px-4 py-3.5 ${s.accent}`}>
             <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2">{s.label}</div>
             <div className={`text-xl font-black tabular-nums leading-none ${s.text}`}>
               <span className="text-gray-300 text-sm font-normal mr-0.5">₺</span>
@@ -169,7 +169,7 @@ export async function CashProjectionTab({ companyId }: Props) {
       </div>
 
       {/* ── BASE SCENARIO — MONTHLY CASH BARS ─────────────────────────────── */}
-      <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+      <div className="bg-white border border-gray-100 rounded overflow-hidden">
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-50">
           <div>
             <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Baz Senaryo — Aylık Nakit Pozisyonu</span>
@@ -231,7 +231,7 @@ export async function CashProjectionTab({ companyId }: Props) {
       </div>
 
       {/* ── ASSUMPTIONS FOOTER ─────────────────────────────────────────────── */}
-      <div className="px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl text-[10px] text-gray-400 space-y-1">
+      <div className="px-4 py-3 bg-gray-50 border border-gray-100 rounded text-[10px] text-gray-400 space-y-1">
         <div className="font-bold text-gray-500 mb-1">Projeksiyon Varsayımları</div>
         <div>• Son 6 ayın aylık ortalaması baz alınmıştır (gelir + gider)</div>
         {hasTranches && <div>• Aylık borç servisi ₺{fmtK(monthlyDebtService)} tahmin edilmiştir (aktif tranche faizleri)</div>}
@@ -263,7 +263,7 @@ export async function CashProjectionTab({ companyId }: Props) {
 
 function Metric({ label, value, sub, color }: { label: string; value: string; sub: string; color: string }) {
   return (
-    <div className="bg-white border border-gray-100 rounded-xl px-4 py-3">
+    <div className="bg-white border border-gray-100 rounded px-4 py-3">
       <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1">{label}</div>
       <div className={`text-lg font-black tabular-nums leading-none ${color}`}>{value}</div>
       <div className="text-[9px] text-gray-400 mt-1">{sub}</div>

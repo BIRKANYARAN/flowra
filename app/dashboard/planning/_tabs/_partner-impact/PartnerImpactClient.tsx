@@ -128,7 +128,7 @@ export function PartnerImpactClient({
 
   if (partnerCount === 0) {
     return (
-      <div className="bg-white border border-gray-100 rounded-xl p-10 text-center">
+      <div className="bg-white border border-gray-100 rounded p-10 text-center">
         <div className="text-3xl mb-3">👥</div>
         <div className="text-sm font-semibold text-gray-700 mb-1">Ortak bulunamadı</div>
         <div className="text-xs text-gray-400 mb-4">
@@ -136,7 +136,7 @@ export function PartnerImpactClient({
         </div>
         <Link
           href="/dashboard/partners/new"
-          className="inline-flex items-center gap-1.5 bg-primary-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-primary-700"
+          className="inline-flex items-center gap-1.5 bg-primary-600 text-white px-4 py-2 rounded text-sm font-semibold hover:bg-primary-700"
         >
           + Ortak Ekle
         </Link>
@@ -149,7 +149,7 @@ export function PartnerImpactClient({
 
       {/* ── Position summary strip ─────────────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-white border border-gray-100 rounded-xl px-4 py-3">
+        <div className="bg-white border border-gray-100 rounded px-4 py-3">
           <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1">Nakit Bakiye</div>
           <div className={`text-lg font-black tabular-nums ${cashBalance >= 0 ? 'text-gray-900' : 'text-red-600'}`}>
             {fmt(cashBalance)}
@@ -157,7 +157,7 @@ export function PartnerImpactClient({
           <div className="text-[10px] text-gray-400 mt-0.5">tahsil − ödenen</div>
         </div>
 
-        <div className="bg-white border border-gray-100 rounded-xl px-4 py-3">
+        <div className="bg-white border border-gray-100 rounded px-4 py-3">
           <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1">Dağıtılabilir</div>
           <div className={`text-lg font-black tabular-nums ${cashDistributable > 0 ? 'text-emerald-700' : 'text-gray-400'}`}>
             {cashDistributable > 0 ? fmt(cashDistributable) : '—'}
@@ -165,7 +165,7 @@ export function PartnerImpactClient({
           <div className="text-[10px] text-gray-400 mt-0.5">yükümlülükler düşülmüş</div>
         </div>
 
-        <div className="bg-white border border-gray-100 rounded-xl px-4 py-3">
+        <div className="bg-white border border-gray-100 rounded px-4 py-3">
           <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1">Net Gelir (Tahakkuk)</div>
           <div className={`text-lg font-black tabular-nums ${netIncome >= 0 ? 'text-gray-900' : 'text-red-600'}`}>
             {fmt(netIncome)}
@@ -173,7 +173,7 @@ export function PartnerImpactClient({
           <div className="text-[10px] text-gray-400 mt-0.5">vergi sonrası</div>
         </div>
 
-        <div className="bg-white border border-gray-100 rounded-xl px-4 py-3">
+        <div className="bg-white border border-gray-100 rounded px-4 py-3">
           <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1">Toplam Ortak Borcu</div>
           <div className={`text-lg font-black tabular-nums ${totalLoanBalance > 0 ? 'text-amber-700' : 'text-gray-400'}`}>
             {totalLoanBalance > 0 ? fmt(totalLoanBalance) : 'Yok'}
@@ -184,7 +184,7 @@ export function PartnerImpactClient({
 
       {/* ── Next loan due alert ────────────────────────────────────────────── */}
       {nextDue && (
-        <div className="flex items-center justify-between gap-3 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl">
+        <div className="flex items-center justify-between gap-3 px-4 py-3 bg-amber-50 border border-amber-200 rounded">
           <div className="flex items-center gap-3 min-w-0">
             <span className="text-[9px] font-black uppercase tracking-widest text-amber-600 flex-shrink-0">Yaklaşan Geri Ödeme</span>
             <span className="text-sm font-medium text-amber-700 truncate">
@@ -201,7 +201,7 @@ export function PartnerImpactClient({
       )}
 
       {/* ── Distribution simulator ─────────────────────────────────────────── */}
-      <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+      <div className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
         <div className="flex items-center justify-between px-5 py-3 border-b border-gray-50">
           <div>
             <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Dağıtım Simülatörü</div>
@@ -213,12 +213,12 @@ export function PartnerImpactClient({
             {sliderActive && (
               <button
                 onClick={() => { setSimAmount(Math.max(0, Math.round(cashDistributable))); setSliderActive(false) }}
-                className="text-[10px] font-semibold text-gray-500 hover:text-gray-700 px-2 py-1 rounded-lg border border-gray-200 hover:bg-gray-50"
+                className="text-[10px] font-semibold text-gray-500 hover:text-gray-700 px-2 py-1 rounded border border-gray-200 hover:bg-gray-50"
               >
                 Sıfırla
               </button>
             )}
-            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${sliderActive ? 'bg-primary-100 text-primary-700' : 'bg-gray-100 text-gray-500'}`}>
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${sliderActive ? 'bg-primary-100 text-primary-700' : 'bg-gray-100 text-gray-500'}`}>
               {sliderActive ? 'Simülasyon' : 'Canlı'}
             </span>
           </div>
@@ -253,7 +253,7 @@ export function PartnerImpactClient({
 
           {/* Legal reserve warning */}
           {legalReserveWarning && (
-            <div className="mt-3 flex items-start gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg">
+            <div className="mt-3 flex items-start gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded">
               <span className="text-amber-500 flex-shrink-0 text-sm">⚠</span>
               <div className="text-[11px] text-amber-700">
                 <span className="font-bold">TTK 519 uyarısı:</span> Yasal yedek ({fmt(legalReserve)}) ayrılmadan
@@ -350,7 +350,7 @@ export function PartnerImpactClient({
 
       {/* ── Per-partner loan breakdown ─────────────────────────────────────── */}
       {totalLoanBalance > 0 && (
-        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+        <div className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
           <div className="flex items-center justify-between px-5 py-3 border-b border-gray-50">
             <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Ortak Borç Pozisyonları</div>
             <Link href="/dashboard/partners?tab=tranches" className="text-[10px] font-semibold text-primary-600 hover:text-primary-700">

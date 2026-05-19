@@ -89,7 +89,7 @@ function KpiCard({
   }[tone]
 
   const inner = (
-    <div className="bg-white border border-gray-100 rounded-xl px-4 py-3 hover:border-primary-300 transition-colors">
+    <div className="bg-white border border-gray-100 rounded px-4 py-3 hover:border-primary-300 transition-colors">
       <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">{label}</div>
       <div className={`text-xl font-black tabular-nums leading-none ${valueColor}`}>{value}</div>
       {sub && <div className="text-[10px] text-gray-400 mt-1">{sub}</div>}
@@ -106,7 +106,7 @@ function SectionTitle({ label, count, href }: { label: string; count?: number; h
       <div className="flex items-center gap-2">
         <h2 className="text-xs font-black uppercase tracking-widest text-gray-500">{label}</h2>
         {count !== undefined && count > 0 && (
-          <span className="text-[10px] font-bold bg-red-100 text-red-700 rounded-full px-1.5 py-0.5">{count}</span>
+          <span className="text-[10px] font-bold bg-red-100 text-red-700 rounded px-1.5 py-0.5">{count}</span>
         )}
       </div>
       <Link href={href} className="text-[10px] font-semibold text-primary-600 hover:text-primary-700">
@@ -306,7 +306,7 @@ export default async function OpsCommandPage() {
       <div className="grid grid-cols-2 gap-4">
 
         {/* LEFT: Overdue collections */}
-        <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
+        <div className="bg-white border border-gray-100 rounded overflow-hidden">
           <div className="px-4 pt-4 pb-2">
             <SectionTitle
               label="Vadesi Geçmiş Tahsilatlar"
@@ -349,7 +349,7 @@ export default async function OpsCommandPage() {
         </div>
 
         {/* RIGHT: Critical stock */}
-        <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
+        <div className="bg-white border border-gray-100 rounded overflow-hidden">
           <div className="px-4 pt-4 pb-2">
             <SectionTitle
               label="Kritik Stok Seviyeleri"
@@ -394,7 +394,7 @@ export default async function OpsCommandPage() {
       </div>
 
       {/* ── Open purchase orders ─────────────────────────────────────────── */}
-      <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
+      <div className="bg-white border border-gray-100 rounded overflow-hidden">
         <div className="px-4 pt-4 pb-2">
           <SectionTitle
             label="Açık Satın Alma Emirleri"
@@ -414,7 +414,7 @@ export default async function OpsCommandPage() {
                   <div className="text-[10px] text-gray-400">{fmtDate(o.order_date)}</div>
                 </div>
                 <div className="text-center">
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
                     o.status === 'ordered'
                       ? 'bg-blue-100 text-blue-700'
                       : 'bg-gray-100 text-gray-600'
@@ -433,7 +433,7 @@ export default async function OpsCommandPage() {
 
       {/* ── Pending workflow approvals ───────────────────────────────────── */}
       {(pending ?? []).length > 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded-2xl overflow-hidden">
+        <div className="bg-amber-50 border border-amber-200 rounded overflow-hidden">
           <div className="px-4 pt-4 pb-2">
             <SectionTitle
               label="Onay Bekleyen İşlemler"
@@ -454,7 +454,7 @@ export default async function OpsCommandPage() {
                   </div>
                 </div>
                 <Link href="/dashboard/admin/workflows"
-                  className="text-[10px] font-bold text-amber-700 bg-amber-200 rounded-lg px-3 py-1 hover:bg-amber-300 transition-colors">
+                  className="text-[10px] font-bold text-amber-700 bg-amber-200 rounded px-3 py-1 hover:bg-amber-300 transition-colors">
                   İncele
                 </Link>
               </div>
@@ -472,7 +472,7 @@ export default async function OpsCommandPage() {
           { label: 'Müşteri Listesi',   href: '/dashboard/commercial?tab=customers',  emoji: '👥' },
         ].map(({ label, href, emoji }) => (
           <Link key={href} href={href}
-            className="bg-white border border-gray-100 rounded-xl px-4 py-3 hover:border-primary-300 hover:bg-primary-50 transition-colors flex items-center gap-2">
+            className="bg-white border border-gray-100 rounded px-4 py-3 hover:border-primary-300 hover:bg-primary-50 transition-colors flex items-center gap-2">
             <span className="text-lg">{emoji}</span>
             <span className="text-xs font-semibold text-gray-700">{label}</span>
           </Link>

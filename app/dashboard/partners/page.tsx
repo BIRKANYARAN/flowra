@@ -312,14 +312,14 @@ export default function PartnersPage() {
         <div className="flex items-center gap-2">
           <Link
             href="/dashboard/admin/governance"
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-gray-200 text-gray-600 text-xs font-semibold hover:border-gray-300 hover:bg-gray-50 transition-colors whitespace-nowrap"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded border border-gray-200 text-gray-600 text-xs font-semibold hover:border-gray-300 hover:bg-gray-50 transition-colors whitespace-nowrap"
             title="Aylık yönetişim raporları ve ortak onay sistemi"
           >
             🏛️ Yönetişim
           </Link>
           <Link
             href="/dashboard/partners/new"
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary-600 text-white text-xs font-semibold hover:bg-primary-700 transition-colors whitespace-nowrap"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded bg-primary-600 text-white text-xs font-semibold hover:bg-primary-700 transition-colors whitespace-nowrap"
           >
             + Ortak Ekle
           </Link>
@@ -352,7 +352,7 @@ export default function PartnersPage() {
       </div>
 
       {fetchError && (
-        <div className="bg-red-50 border border-red-100 rounded-xl px-4 py-3 text-sm text-red-700 font-medium">
+        <div className="bg-red-50 border border-red-100 rounded px-4 py-3 text-sm text-red-700 font-medium">
           {fetchError}
         </div>
       )}

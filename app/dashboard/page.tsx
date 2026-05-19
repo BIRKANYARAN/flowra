@@ -537,15 +537,15 @@ export default async function DashboardPage() {
           <span className="text-sm text-gray-400 tabular-nums">{label}</span>
           <span className="text-gray-200 text-sm">·</span>
           <Link href="/dashboard/commercial?tab=proformas"
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-gray-900 text-white text-xs font-semibold hover:bg-gray-700 transition-colors">
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded bg-gray-900 text-white text-xs font-semibold hover:bg-gray-700 transition-colors">
             + Proforma
           </Link>
           <Link href="/dashboard/operations?tab=expenses"
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-gray-200 text-gray-700 text-xs font-semibold hover:bg-gray-50 transition-colors">
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded border border-gray-200 text-gray-700 text-xs font-semibold hover:bg-gray-50 transition-colors">
             + Gider
           </Link>
           <Link href="/dashboard/commercial?tab=collections"
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-primary-600 text-white text-xs font-semibold hover:bg-primary-700 transition-colors">
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded bg-primary-600 text-white text-xs font-semibold hover:bg-primary-700 transition-colors">
             Tahsilat
           </Link>
         </div>
@@ -553,7 +553,7 @@ export default async function DashboardPage() {
 
       {/* ── ADAPTIVE PRESSURE BANNER — only renders when system detects crisis ── */}
       {pressureMode === 'cash_crisis' && (
-        <div className="flex items-center justify-between gap-3 px-5 py-3 rounded-xl border border-red-200 bg-red-50">
+        <div className="flex items-center justify-between gap-3 px-5 py-3 rounded border border-red-200 bg-red-50">
           <div className="flex items-center gap-3 min-w-0">
             <span className="text-[9px] font-black uppercase tracking-widest text-red-600 flex-shrink-0">⚠ NAKİT KRİZİ</span>
             <span className="text-sm text-red-700 font-medium truncate">
@@ -561,7 +561,7 @@ export default async function DashboardPage() {
             </span>
           </div>
           <Link href="/dashboard/planning?tab=cash-projection"
-            className="flex-shrink-0 text-xs font-bold text-red-700 bg-red-100 hover:bg-red-200 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap">
+            className="flex-shrink-0 text-xs font-bold text-red-700 bg-red-100 hover:bg-red-200 px-3 py-1.5 rounded transition-colors whitespace-nowrap">
             Eylem Planı →
           </Link>
         </div>
@@ -570,7 +570,7 @@ export default async function DashboardPage() {
       {/* ── CAUSAL CONTEXT CHAIN — system cross-center intelligence ──────────── */}
       {ctxChain && (
         <Link href={ctxChain.href}
-          className="flex items-center gap-3 px-4 py-2.5 bg-white border border-gray-100 rounded-xl shadow-[0_1px_2px_rgba(17,24,39,0.04)] hover:border-gray-200 transition-colors overflow-hidden group">
+          className="flex items-center gap-3 px-4 py-2.5 bg-white border border-gray-100 rounded shadow-sm hover:border-gray-200 transition-colors overflow-hidden group">
           <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 flex-shrink-0">BAĞLAM</span>
           <div className="flex items-center gap-1 overflow-x-auto scrollbar-none flex-1 min-w-0">
             {ctxChain.nodes.map((node, i) => (
@@ -595,10 +595,10 @@ export default async function DashboardPage() {
       )}
 
       {/* ── SİSTEM YORUMU — AI / rule-based narrative panel ──────────────────── */}
-      <div className="bg-white border border-gray-100 rounded-xl px-5 py-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+      <div className="bg-white border border-gray-100 rounded px-5 py-4 shadow-sm">
         <div className="flex items-center justify-between mb-3">
           <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Sistem Yorumu</span>
-          <span className={`text-[8px] font-semibold px-2 py-0.5 rounded-full ${
+          <span className={`text-[8px] font-semibold px-2 py-0.5 rounded ${
             aiSummary.generated_by === 'ai'
               ? 'bg-violet-50 text-violet-600'
               : 'bg-gray-100 text-gray-400'
@@ -609,7 +609,7 @@ export default async function DashboardPage() {
         <p className="text-sm text-gray-700 leading-relaxed mb-3">{aiSummary.summary_tr}</p>
         <div className="flex flex-wrap gap-1.5 mb-3">
           {aiSummary.key_factors.map((f, i) => (
-            <span key={i} className="text-[10px] bg-gray-50 border border-gray-100 text-gray-600 px-2 py-1 rounded-lg">
+            <span key={i} className="text-[10px] bg-gray-50 border border-gray-100 text-gray-600 px-2 py-1 rounded">
               {f}
             </span>
           ))}
@@ -623,7 +623,7 @@ export default async function DashboardPage() {
       {/* ── FINANCIAL INSTRUMENT STRIP ─────────────────────────────────────────── */}
       {/* One container border tint when a genuine crisis signal is active. No cell animations. */}
       {/* Size differential: dominant 26px vs 21px — felt, not shouted. Layout never shifts.  */}
-      <div className={`bg-white rounded-xl shadow-[0_1px_2px_rgba(17,24,39,0.04)] overflow-hidden border ${
+      <div className={`bg-white rounded shadow-sm overflow-hidden border ${
         dominantKpi === 'runway'      ? 'border-red-200'   :
         dominantKpi === 'receivables' ? 'border-amber-200' : 'border-gray-100'
       }`}>
@@ -717,14 +717,14 @@ export default async function DashboardPage() {
       </div>
 
       {/* ── KARAR SIRASI — Operational Workflow Queue ─────────────────────── */}
-      <div className="bg-white border border-gray-100 rounded-xl shadow-[0_1px_2px_rgba(17,24,39,0.04)] overflow-hidden">
+      <div className="bg-white border border-gray-100 rounded shadow-sm overflow-hidden">
 
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-3 border-b border-gray-50">
           <div className="flex items-center gap-2.5">
             <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Karar Sırası</span>
             {critAlerts.length > 0 && (
-              <span className="inline-flex items-center text-[9px] font-black bg-red-500 text-white px-1.5 py-0.5 rounded-full leading-none">
+              <span className="inline-flex items-center text-[9px] font-black bg-red-500 text-white px-1.5 py-0.5 rounded leading-none">
                 {critAlerts.length} ACİL
               </span>
             )}
@@ -756,7 +756,7 @@ export default async function DashboardPage() {
                         <div className="text-[13px] font-bold text-gray-900 leading-tight">{alert.title}</div>
                         <div className="text-[11px] text-gray-500 mt-0.5">{alert.detail}</div>
                       </div>
-                      <span className="flex-shrink-0 text-xs font-bold px-3 py-1.5 bg-red-600 text-white rounded-lg group-hover:bg-red-700 transition-colors whitespace-nowrap">
+                      <span className="flex-shrink-0 text-xs font-bold px-3 py-1.5 bg-red-600 text-white rounded group-hover:bg-red-700 transition-colors whitespace-nowrap">
                         {alert.actionLabel} →
                       </span>
                     </Link>
@@ -781,7 +781,7 @@ export default async function DashboardPage() {
                         <div className="text-sm font-medium text-gray-800 leading-tight">{alert.title}</div>
                         <div className="text-[11px] text-gray-500 mt-0.5 truncate">{alert.detail}</div>
                       </div>
-                      <span className="flex-shrink-0 text-xs font-semibold px-3 py-1.5 border border-gray-200 text-gray-600 rounded-lg group-hover:bg-gray-50 transition-colors whitespace-nowrap">
+                      <span className="flex-shrink-0 text-xs font-semibold px-3 py-1.5 border border-gray-200 text-gray-600 rounded group-hover:bg-gray-50 transition-colors whitespace-nowrap">
                         {alert.actionLabel} →
                       </span>
                     </Link>
@@ -820,7 +820,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* ── NAKIT KÖPRÜSÜ — compact horizontal rail ───────────────────────── */}
-      <div className={`bg-white rounded-xl shadow-[0_1px_2px_rgba(17,24,39,0.04)] border transition-colors duration-150 ${
+      <div className={`bg-white rounded shadow-sm border transition-colors duration-150 ${
         cashDistributable < 0 ? 'border-red-200' : cashDistributable > 0 ? 'border-gray-100' : 'border-gray-100'
       }`}>
         <div className="flex items-center justify-between px-5 py-2.5 border-b border-gray-50">
@@ -862,7 +862,7 @@ export default async function DashboardPage() {
           <div className={`px-5 pb-3 pt-2 flex items-center gap-2 overflow-hidden flex-wrap ${stockValue > 0 ? '' : 'border-t border-gray-50'}`}>
             <span className="text-[9px] font-bold uppercase tracking-widest text-gray-300 flex-shrink-0">Paylaşım</span>
             {equalization.entries.slice(0, 4).map(e => (
-              <div key={e.partner_id} className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-100 rounded-lg px-2.5 py-1 min-w-0">
+              <div key={e.partner_id} className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-100 rounded px-2.5 py-1 min-w-0">
                 <span className="text-[10px] text-gray-600 font-semibold truncate max-w-[72px]">{e.partner_name}</span>
                 <span className="text-[11px] font-black tabular-nums text-emerald-700 flex-shrink-0">{fmt(e.total_payout)}</span>
               </div>
@@ -875,7 +875,7 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
 
         {/* Runway summary — compressed single line */}
-        <div className="lg:col-span-8 bg-white border border-gray-100 rounded-xl shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+        <div className="lg:col-span-8 bg-white border border-gray-100 rounded shadow-sm">
           <div className="flex items-center justify-between px-5 py-2.5 border-b border-gray-50">
             <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Nakit Pisti</span>
             <Link href="/dashboard/planning?tab=cash-projection" className="text-[10px] text-primary-600 font-semibold hover:text-primary-700">Projeksiyon →</Link>
@@ -917,7 +917,7 @@ export default async function DashboardPage() {
         {/* Right column: proformalar + dönem + giderler */}
         <div className="lg:col-span-4 flex flex-col gap-3">
           {/* Giderler breakdown */}
-          <div className="bg-white border border-gray-100 rounded-xl px-4 py-3.5 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+          <div className="bg-white border border-gray-100 rounded px-4 py-3.5 shadow-sm">
             <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">Giderler</div>
             <div className="text-xl font-black tabular-nums text-gray-900 leading-none mb-1">
               <span className="text-gray-300 font-normal text-sm mr-0.5">₺</span>{formatKpi(fs.expenses_total_try)}
@@ -936,7 +936,7 @@ export default async function DashboardPage() {
           {/* Açık proformalar */}
           {outstanding > 0 && (
             <Link href="/dashboard/commercial?tab=proformas"
-              className="bg-white border border-gray-100 rounded-xl px-4 py-3.5 shadow-[0_1px_2px_rgba(17,24,39,0.04)] hover:border-gray-200 transition-colors">
+              className="bg-white border border-gray-100 rounded px-4 py-3.5 shadow-sm hover:border-gray-200 transition-colors">
               <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">Açık Proformalar</div>
               <div className="text-xl font-black tabular-nums text-primary-700 leading-none">
                 <span className="text-primary-300 font-normal text-sm mr-0.5">₺</span>{formatKpi(outstanding)}
@@ -948,7 +948,7 @@ export default async function DashboardPage() {
           {/* Dönem kapanışı */}
           {openPeriodDaysOverdue > 10 && (
             <Link href="/dashboard/cfo/period-close"
-              className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3.5 hover:border-amber-300 transition-colors">
+              className="bg-amber-50 border border-amber-200 rounded px-4 py-3.5 hover:border-amber-300 transition-colors">
               <div className="text-[10px] font-black uppercase tracking-widest text-amber-500 mb-1.5">Dönem Kapanışı</div>
               <div className="text-sm font-bold text-amber-700">{openPeriodDaysOverdue} gündür bekliyor</div>
               <div className="text-[10px] text-amber-500 mt-1">CFO Cockpit'e git →</div>
@@ -958,7 +958,7 @@ export default async function DashboardPage() {
           {/* Tasks reminder */}
           {taskReminders.length > 0 && (
             <Link href="/dashboard/planning?tab=tasks"
-              className="bg-white border border-gray-100 rounded-xl px-4 py-3.5 shadow-[0_1px_2px_rgba(17,24,39,0.04)] hover:border-gray-200 transition-colors">
+              className="bg-white border border-gray-100 rounded px-4 py-3.5 shadow-sm hover:border-gray-200 transition-colors">
               <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1.5">Yaklaşan Görevler</div>
               <div className="text-xl font-black text-primary-700">{taskReminders.length}</div>
               <div className="text-[10px] text-gray-400 mt-1">
@@ -973,11 +973,11 @@ export default async function DashboardPage() {
       </div>
 
       {/* ── RISK RADAR — cross-center intelligence surface ───────────────── */}
-      <div className="bg-white border border-gray-100 rounded-xl shadow-[0_1px_2px_rgba(17,24,39,0.04)] overflow-hidden">
+      <div className="bg-white border border-gray-100 rounded shadow-sm overflow-hidden">
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-50">
           <div className="flex items-center gap-3">
             <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Risk Radar</span>
-            <span className={`text-[9px] font-black px-2 py-0.5 rounded-full ${situTheme.badge}`}>
+            <span className={`text-[9px] font-black px-2 py-0.5 rounded ${situTheme.badge}`}>
               {situation.composite}/100
             </span>
           </div>
@@ -1040,7 +1040,7 @@ export default async function DashboardPage() {
               'Kritik'
             return (
               <Link key={dim.key} href={dim.href}
-                className="flex flex-col gap-2 group hover:bg-gray-50/60 rounded-xl p-3 -m-1 transition-colors">
+                className="flex flex-col gap-2 group hover:bg-gray-50/60 rounded p-3 -m-1 transition-colors">
                 <div className="flex items-center justify-between">
                   <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">{dim.label}</span>
                   <span className={`text-[9px] font-bold ${scoreColor}`}>{statusLabel}</span>

@@ -16,14 +16,14 @@ export function ShareBar({ ratio }: { ratio: number }) {
 }
 
 export function Skeleton({ h = 'h-16' }: { h?: string }) {
-  return <div className={`bg-gray-100 rounded-xl ${h} animate-pulse`} />
+  return <div className={`bg-gray-100 rounded ${h} animate-pulse`} />
 }
 
 export function TabBtn({ id, active, label, onClick }: { id: TabId; active: boolean; label: string; onClick: (id: TabId) => void }) {
   return (
     <button
       onClick={() => onClick(id)}
-      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+      className={`px-3 py-1.5 rounded text-xs font-semibold transition-colors ${
         active ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
       }`}
     >
@@ -40,7 +40,7 @@ export function StatusPill({ status }: { status: DebtTranche['status'] }) {
     overdue:          'bg-red-50 text-red-700',
   }[status]
   return (
-    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${cls}`}>
+    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${cls}`}>
       {STATUS_LABELS[status]}
     </span>
   )

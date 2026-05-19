@@ -31,7 +31,7 @@ function KpiCard({ label, value, sub, tone = 'neutral' }: {
   label: string; value: string; sub?: string; tone?: 'positive' | 'negative' | 'neutral'
 }) {
   return (
-    <div className="bg-white border border-gray-100 rounded-xl px-4 py-3">
+    <div className="bg-white border border-gray-100 rounded px-4 py-3">
       <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">{label}</div>
       <div className={`text-lg font-black tabular-nums leading-tight ${
         tone === 'positive' ? 'text-emerald-700' : tone === 'negative' ? 'text-red-600' : 'text-gray-900'
@@ -83,10 +83,10 @@ export default function ExecutiveSummaryPage() {
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <input type="date" value={from} onChange={e => setFrom(e.target.value)}
-            className="border border-gray-200 rounded-lg px-2 py-1 text-xs" />
+            className="border border-gray-200 rounded px-2 py-1 text-xs" />
           <span className="text-xs text-gray-400">—</span>
           <input type="date" value={to} onChange={e => setTo(e.target.value)}
-            className="border border-gray-200 rounded-lg px-2 py-1 text-xs" />
+            className="border border-gray-200 rounded px-2 py-1 text-xs" />
           {data && (
             <PdfExportButton label="PDF İndir" opts={{
               companyName: ws.companyName ?? 'Şirket',
@@ -142,14 +142,14 @@ export default function ExecutiveSummaryPage() {
         <p className="text-sm text-gray-500 mt-1">{from} — {to}</p>
       </div>
 
-      {error && <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700">{error}</div>}
-      {loading && <div className="bg-gray-100 rounded-xl h-48 animate-pulse" />}
+      {error && <div className="bg-red-50 border border-red-200 rounded px-4 py-3 text-sm text-red-700">{error}</div>}
+      {loading && <div className="bg-gray-100 rounded h-48 animate-pulse" />}
 
       {data && !loading && (
         <>
           {/* ── Intelligence Alerts ─────────────────────────────────────────── */}
           {is && is.net_income < 0 && (
-            <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 flex items-start gap-3">
+            <div className="bg-red-50 border border-red-200 rounded px-4 py-3 flex items-start gap-3">
               <span className="text-base mt-0.5">🔴</span>
               <div className="flex-1">
                 <div className="text-[11px] font-black uppercase tracking-wide text-red-800">
@@ -166,7 +166,7 @@ export default function ExecutiveSummaryPage() {
           )}
 
           {bs && bs.total_equity < 0 && (
-            <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 flex items-start gap-3">
+            <div className="bg-red-50 border border-red-200 rounded px-4 py-3 flex items-start gap-3">
               <span className="text-base mt-0.5">🔴</span>
               <div className="flex-1">
                 <div className="text-[11px] font-black uppercase tracking-wide text-red-800">
@@ -183,7 +183,7 @@ export default function ExecutiveSummaryPage() {
           )}
 
           {cf && cf.operating < 0 && is && is.net_income > 0 && (
-            <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-start gap-3">
+            <div className="bg-amber-50 border border-amber-200 rounded px-4 py-3 flex items-start gap-3">
               <span className="text-base mt-0.5">⚠</span>
               <div className="flex-1">
                 <div className="text-[11px] font-black uppercase tracking-wide text-amber-800">
@@ -231,7 +231,7 @@ export default function ExecutiveSummaryPage() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Nakit Akışı</div>
-              <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+              <div className="bg-white border border-gray-100 rounded overflow-hidden">
                 {[
                   { label: 'Faaliyet Nakit Akışı',   value: cf?.operating  ?? 0 },
                   { label: 'Yatırım Nakit Akışı',    value: cf?.investing  ?? 0 },
@@ -249,7 +249,7 @@ export default function ExecutiveSummaryPage() {
             </div>
             <div>
               <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Vergi Özeti</div>
-              <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+              <div className="bg-white border border-gray-100 rounded overflow-hidden">
                 {[
                   { label: 'Satış KDV',     value: tax?.sales_vat    ?? 0 },
                   { label: 'Alış KDV',      value: -(tax?.purchase_vat ?? 0) },

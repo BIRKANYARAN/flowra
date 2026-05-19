@@ -178,7 +178,7 @@ export function OrdersContent(_props: Props) {
           { label: 'Sipariş Verildi', value: totalOrdered,  cls: 'text-blue-700' },
           { label: 'Teslim Alındı',   value: totalReceived, cls: 'text-emerald-700' },
         ].map(s => (
-          <div key={s.label} className="bg-white border border-gray-100 rounded-xl px-4 py-3 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+          <div key={s.label} className="bg-white border border-gray-100 rounded px-4 py-3 shadow-sm">
             <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{s.label}</div>
             <div className={`text-xl font-black tabular-nums ${s.cls}`}>{s.value}</div>
           </div>
@@ -190,7 +190,7 @@ export function OrdersContent(_props: Props) {
         <h2 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Satın Alma Siparişleri</h2>
         <button
           onClick={() => setShowForm(v => !v)}
-          className="text-xs font-bold bg-primary-600 text-white px-4 py-2 rounded-xl hover:bg-primary-700 transition-colors"
+          className="text-xs font-bold bg-primary-600 text-white px-4 py-2 rounded hover:bg-primary-700 transition-colors"
         >
           {showForm ? '✕ İptal' : '+ Yeni Sipariş'}
         </button>
@@ -198,17 +198,17 @@ export function OrdersContent(_props: Props) {
 
       {/* ── New order form ─────────────────────────────────────────────── */}
       {showForm && (
-        <div className="bg-white border border-gray-100 rounded-xl p-5 space-y-4">
+        <div className="bg-white border border-gray-100 rounded p-5 space-y-4">
           <h3 className="text-sm font-bold text-gray-700">Yeni Satın Alma Siparişi</h3>
           {formError && (
-            <div className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{formError}</div>
+            <div className="text-xs text-red-600 bg-red-50 border border-red-100 rounded px-3 py-2">{formError}</div>
           )}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Tedarikçi *</label>
               <input
                 value={formSupplier} onChange={e => setFormSupplier(e.target.value)}
-                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm"
+                className="w-full border border-gray-200 rounded px-3 py-2 text-sm"
                 placeholder="Tedarikçi adı"
               />
             </div>
@@ -216,21 +216,21 @@ export function OrdersContent(_props: Props) {
               <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Sipariş Tarihi</label>
               <input
                 type="date" value={formDate} onChange={e => setFormDate(e.target.value)}
-                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm"
+                className="w-full border border-gray-200 rounded px-3 py-2 text-sm"
               />
             </div>
             <div>
               <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Beklenen Teslim</label>
               <input
                 type="date" value={formExpected} onChange={e => setFormExpected(e.target.value)}
-                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm"
+                className="w-full border border-gray-200 rounded px-3 py-2 text-sm"
               />
             </div>
             <div>
               <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Notlar</label>
               <input
                 value={formNotes} onChange={e => setFormNotes(e.target.value)}
-                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm"
+                className="w-full border border-gray-200 rounded px-3 py-2 text-sm"
                 placeholder="Opsiyonel"
               />
             </div>
@@ -243,21 +243,21 @@ export function OrdersContent(_props: Props) {
               <div key={idx} className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-2 mb-2">
                 <input
                   value={item.name} onChange={e => setFormItems(prev => prev.map((it, i) => i === idx ? { ...it, name: e.target.value } : it))}
-                  className="border border-gray-200 rounded-lg px-2 py-1.5 text-xs" placeholder="Ürün / hizmet adı"
+                  className="border border-gray-200 rounded px-2 py-1.5 text-xs" placeholder="Ürün / hizmet adı"
                 />
                 <input
                   value={item.unit} onChange={e => setFormItems(prev => prev.map((it, i) => i === idx ? { ...it, unit: e.target.value } : it))}
-                  className="border border-gray-200 rounded-lg px-2 py-1.5 text-xs" placeholder="adet"
+                  className="border border-gray-200 rounded px-2 py-1.5 text-xs" placeholder="adet"
                 />
                 <input
                   type="number" value={item.quantity} min="0"
                   onChange={e => setFormItems(prev => prev.map((it, i) => i === idx ? { ...it, quantity: e.target.value } : it))}
-                  className="border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-right" placeholder="Miktar"
+                  className="border border-gray-200 rounded px-2 py-1.5 text-xs text-right" placeholder="Miktar"
                 />
                 <input
                   type="number" value={item.unit_price} min="0"
                   onChange={e => setFormItems(prev => prev.map((it, i) => i === idx ? { ...it, unit_price: e.target.value } : it))}
-                  className="border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-right" placeholder="Birim fiyat ₺"
+                  className="border border-gray-200 rounded px-2 py-1.5 text-xs text-right" placeholder="Birim fiyat ₺"
                 />
                 <button
                   onClick={() => setFormItems(prev => prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev)}
@@ -275,7 +275,7 @@ export function OrdersContent(_props: Props) {
             <button onClick={() => setShowForm(false)} className="text-xs text-gray-500 hover:text-gray-700 px-4 py-2">İptal</button>
             <button
               onClick={submitForm} disabled={formSaving}
-              className="text-xs font-bold bg-primary-600 text-white px-5 py-2 rounded-xl hover:bg-primary-700 disabled:opacity-50 transition-colors"
+              className="text-xs font-bold bg-primary-600 text-white px-5 py-2 rounded hover:bg-primary-700 disabled:opacity-50 transition-colors"
             >
               {formSaving ? 'Kaydediliyor...' : 'Kaydet'}
             </button>
@@ -296,7 +296,7 @@ export function OrdersContent(_props: Props) {
         return (
           <>
             {overdueOrders.length > 0 && (
-              <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-start gap-3">
+              <div className="bg-amber-50 border border-amber-200 rounded px-4 py-3 flex items-start gap-3">
                 <span className="text-base mt-0.5">⚠</span>
                 <div className="flex-1">
                   <div className="text-[11px] font-black uppercase tracking-wide text-amber-800">
@@ -311,7 +311,7 @@ export function OrdersContent(_props: Props) {
               </div>
             )}
             {pendingTotal > 100_000 && (
-              <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 flex items-start gap-3">
+              <div className="bg-blue-50 border border-blue-200 rounded px-4 py-3 flex items-start gap-3">
                 <span className="text-base mt-0.5">ℹ</span>
                 <div className="flex-1">
                   <div className="text-[11px] font-black uppercase tracking-wide text-blue-800">
@@ -329,19 +329,19 @@ export function OrdersContent(_props: Props) {
 
       {/* ── List ──────────────────────────────────────────────────────── */}
       {error && (
-        <div className="bg-red-50 border border-red-100 rounded-xl px-4 py-3 text-sm text-red-600">{error}</div>
+        <div className="bg-red-50 border border-red-100 rounded px-4 py-3 text-sm text-red-600">{error}</div>
       )}
 
       {loading ? (
         <div className="space-y-2">
-          {[1, 2, 3].map(i => <div key={i} className="bg-gray-100 rounded-xl h-16 animate-pulse" />)}
+          {[1, 2, 3].map(i => <div key={i} className="bg-gray-100 rounded h-16 animate-pulse" />)}
         </div>
       ) : orders.length === 0 ? (
         <div className="text-center py-12 text-gray-400 text-sm">
           Henüz satın alma siparişi yok.
         </div>
       ) : (
-        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+        <div className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
           <div className="divide-y divide-gray-100">
             {orders.map(order => {
               const meta  = STATUS_META[order.status]
@@ -358,7 +358,7 @@ export function OrdersContent(_props: Props) {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-semibold">{order.supplier_name}</span>
-                        <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-full ${meta.cls}`}>{meta.label}</span>
+                        <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded ${meta.cls}`}>{meta.label}</span>
                       </div>
                       <div className="text-xs text-gray-400 mt-0.5">
                         {fmtDate(order.order_date)}
@@ -376,7 +376,7 @@ export function OrdersContent(_props: Props) {
                         <button
                           disabled={busy}
                           onClick={() => advanceStatus(order)}
-                          className="text-[10px] font-bold px-2.5 py-1 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors"
+                          className="text-[10px] font-bold px-2.5 py-1 bg-primary-600 text-white rounded hover:bg-primary-700 disabled:opacity-50 transition-colors"
                         >
                           {busy ? '...' : NEXT_LABEL[order.status]}
                         </button>
@@ -385,7 +385,7 @@ export function OrdersContent(_props: Props) {
                         <button
                           disabled={busy}
                           onClick={() => cancelOrder(order.id)}
-                          className="text-[10px] font-bold px-2 py-1 border border-gray-200 text-gray-500 rounded-lg hover:border-red-300 hover:text-red-600 disabled:opacity-50"
+                          className="text-[10px] font-bold px-2 py-1 border border-gray-200 text-gray-500 rounded hover:border-red-300 hover:text-red-600 disabled:opacity-50"
                         >İptal</button>
                       )}
                     </div>

@@ -136,7 +136,7 @@ export function PartnerFinanceActions({ partners, onRefresh }: PartnerFinanceAct
   // ── Render ────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="bg-white border border-gray-100 rounded-xl shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+    <div className="bg-white border border-gray-100 rounded shadow-sm">
 
       {/* Collapsed header / toggle — disabled while save is in flight */}
       <button
@@ -150,7 +150,7 @@ export function PartnerFinanceActions({ partners, onRefresh }: PartnerFinanceAct
             Finansal İşlem Kaydet
           </div>
           {success && (
-            <span className="text-[10px] text-emerald-700 font-semibold bg-emerald-50 border border-emerald-200 rounded-lg px-2 py-0.5 ml-2">
+            <span className="text-[10px] text-emerald-700 font-semibold bg-emerald-50 border border-emerald-200 rounded px-2 py-0.5 ml-2">
               {success}
             </span>
           )}
@@ -176,7 +176,7 @@ export function PartnerFinanceActions({ partners, onRefresh }: PartnerFinanceAct
                   type="button"
                   onClick={() => selectAction(action.tx_type)}
                   className={[
-                    'px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors',
+                    'px-3 py-1.5 rounded text-xs font-semibold border transition-colors',
                     txType === action.tx_type
                       ? 'bg-primary-50 text-primary-700 border-primary-200'
                       : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50',
@@ -207,7 +207,7 @@ export function PartnerFinanceActions({ partners, onRefresh }: PartnerFinanceAct
                 id="pfa-partner"
                 value={form.partner_id}
                 onChange={e => field('partner_id', e.target.value)}
-                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
+                className="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
                 required
               >
                 <option value="">— Ortak seçin —</option>
@@ -234,7 +234,7 @@ export function PartnerFinanceActions({ partners, onRefresh }: PartnerFinanceAct
                   placeholder="0.00"
                   value={form.amount}
                   onChange={e => field('amount', e.target.value)}
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary-300"
+                  className="w-full border border-gray-200 rounded px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary-300"
                   required
                 />
               </div>
@@ -250,7 +250,7 @@ export function PartnerFinanceActions({ partners, onRefresh }: PartnerFinanceAct
                   type="date"
                   value={form.tx_date}
                   onChange={e => field('tx_date', e.target.value)}
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
+                  className="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
                   required
                 />
               </div>
@@ -270,13 +270,13 @@ export function PartnerFinanceActions({ partners, onRefresh }: PartnerFinanceAct
                 onChange={e => field('notes', e.target.value)}
                 rows={2}
                 placeholder="İsteğe bağlı açıklama…"
-                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300 resize-none"
+                className="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300 resize-none"
               />
             </div>
 
             {/* Error */}
             {error && (
-              <p className="text-xs text-red-600 font-semibold bg-red-50 border border-red-200 rounded-xl px-3 py-2">
+              <p className="text-xs text-red-600 font-semibold bg-red-50 border border-red-200 rounded px-3 py-2">
                 {error}
               </p>
             )}
@@ -287,14 +287,14 @@ export function PartnerFinanceActions({ partners, onRefresh }: PartnerFinanceAct
                 type="button"
                 onClick={() => { resetForm(); setOpen(false) }}
                 disabled={saving}
-                className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50"
+                className="px-4 py-2 rounded border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50"
               >
                 İptal
               </button>
               <button
                 type="submit"
                 disabled={saving}
-                className="px-4 py-2 rounded-xl bg-primary-600 text-white text-sm font-semibold hover:bg-primary-700 transition-colors disabled:opacity-60"
+                className="px-4 py-2 rounded bg-primary-600 text-white text-sm font-semibold hover:bg-primary-700 transition-colors disabled:opacity-60"
               >
                 {saving ? 'Kaydediliyor…' : 'Kaydet'}
               </button>

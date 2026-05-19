@@ -39,7 +39,7 @@ export function DistributionTab({
 }: DistributionTabProps) {
   return (
     <div className="flex flex-col gap-4">
-      <div className="bg-white border border-gray-100 rounded-xl px-5 py-4">
+      <div className="bg-white border border-gray-100 rounded px-5 py-4">
         <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3">Dağıtım Parametreleri</div>
         <div className="grid grid-cols-2 gap-3">
           <div>
@@ -50,7 +50,7 @@ export function DistributionTab({
               type="number"
               min="0"
               placeholder="örn. 500000"
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
+              className="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
               value={netIncomeInput}
               onChange={e => onNetIncomeChange(e.target.value)}
             />
@@ -63,7 +63,7 @@ export function DistributionTab({
               type="number"
               min="0"
               placeholder="örn. 0"
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
+              className="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
               value={boardRetainedInput}
               onChange={e => onBoardRetainedChange(e.target.value)}
             />
@@ -75,7 +75,7 @@ export function DistributionTab({
             parseFloat(boardRetainedInput) || 0,
           )}
           disabled={distribLoading}
-          className="mt-3 text-xs font-bold px-4 py-2 rounded-lg bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50 transition-colors"
+          className="mt-3 text-xs font-bold px-4 py-2 rounded bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50 transition-colors"
         >
           {distribLoading ? 'Hesaplanıyor...' : 'Dağıtım Hesapla'}
         </button>
@@ -84,7 +84,7 @@ export function DistributionTab({
       {distrib && (
         <>
           {/* 4-Layer Distribution Breakdown */}
-          <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+          <div className="bg-white border border-gray-100 rounded overflow-hidden">
             <div className="px-4 py-2.5 border-b border-gray-100 bg-gray-50">
               <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">4 Katmanlı Dağıtım Güvenlik Hesabı</div>
             </div>
@@ -110,7 +110,7 @@ export function DistributionTab({
 
           {/* Block reason / distribute status */}
           {distrib.distribution_layers.is_distributable ? (
-            <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 space-y-3">
+            <div className="bg-emerald-50 border border-emerald-200 rounded px-4 py-3 space-y-3">
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <div className="text-sm font-bold text-emerald-800">Dağıtım yapılabilir</div>
@@ -125,14 +125,14 @@ export function DistributionTab({
                     <button
                       onClick={onDeclareDividend}
                       disabled={dividendLoading}
-                      className="text-xs font-bold px-3 py-2 rounded-lg bg-emerald-700 text-white hover:bg-emerald-800 disabled:opacity-50 transition-colors"
+                      className="text-xs font-bold px-3 py-2 rounded bg-emerald-700 text-white hover:bg-emerald-800 disabled:opacity-50 transition-colors"
                     >
                       {dividendLoading ? 'Kaydediliyor…' : 'Onayla'}
                     </button>
                     <button
                       onClick={() => { onSetDividendConfirm(false) }}
                       disabled={dividendLoading}
-                      className="text-xs font-bold px-3 py-2 rounded-lg border border-emerald-300 text-emerald-800 hover:bg-emerald-100 disabled:opacity-50 transition-colors"
+                      className="text-xs font-bold px-3 py-2 rounded border border-emerald-300 text-emerald-800 hover:bg-emerald-100 disabled:opacity-50 transition-colors"
                     >
                       İptal
                     </button>
@@ -140,7 +140,7 @@ export function DistributionTab({
                 ) : (
                   <button
                     onClick={() => { onSetDividendConfirm(true) }}
-                    className="text-xs font-bold px-4 py-2 rounded-lg bg-emerald-700 text-white hover:bg-emerald-800 transition-colors shrink-0"
+                    className="text-xs font-bold px-4 py-2 rounded bg-emerald-700 text-white hover:bg-emerald-800 transition-colors shrink-0"
                   >
                     Temettü Beyan Et
                   </button>
@@ -156,7 +156,7 @@ export function DistributionTab({
               )}
             </div>
           ) : (
-            <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+            <div className="bg-red-50 border border-red-200 rounded px-4 py-3">
               <div className="text-sm font-bold text-red-700">Dağıtım engellenmiştir</div>
               <div className="text-xs text-red-600 mt-0.5">{distrib.distribution_layers.block_reason ?? 'Dağıtılabilir net gelir yetersiz (TTK 509).'}</div>
             </div>
@@ -164,7 +164,7 @@ export function DistributionTab({
 
           {/* Per-partner entitlements */}
           {distrib.per_partner_distribution.length > 0 && (
-            <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+            <div className="bg-white border border-gray-100 rounded overflow-hidden">
               <div className="px-4 py-2.5 border-b border-gray-100 bg-gray-50">
                 <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Ortak Bazında Hak Edilenler</div>
               </div>
@@ -201,7 +201,7 @@ export function DistributionTab({
                   ? 'bg-amber-50 border-amber-200 text-amber-700'
                   : 'bg-blue-50 border-blue-200 text-blue-700'
                 return (
-                  <div key={i} className={`border rounded-xl px-4 py-3 text-xs ${cls}`}>
+                  <div key={i} className={`border rounded px-4 py-3 text-xs ${cls}`}>
                     <span className="font-bold uppercase tracking-wide">[{w.type}]</span>{' '}{w.message}
                     {w.amount != null && <span className="font-black ml-1">{fmt(w.amount)}</span>}
                   </div>
@@ -213,7 +213,7 @@ export function DistributionTab({
       )}
 
       {!distrib && !distribLoading && (
-        <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-8 text-center text-sm text-gray-400">
+        <div className="bg-gray-50 border border-gray-200 rounded px-4 py-8 text-center text-sm text-gray-400">
           Dönem net gelirini girin ve hesapla butonuna basın.
         </div>
       )}

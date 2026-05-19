@@ -131,7 +131,7 @@ export async function PnlTab({ userId, companyId }: Props) {
   const s = currentSummary
   if (!s) {
     return (
-      <div className="bg-white border border-gray-100 rounded-xl text-center py-16 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+      <div className="bg-white border border-gray-100 rounded text-center py-16 shadow-sm">
         <div className="w-8 h-8 rounded-full bg-gray-100 mx-auto mb-3 flex items-center justify-center">
           <span className="text-gray-400 text-sm font-bold">—</span>
         </div>
@@ -169,7 +169,7 @@ export async function PnlTab({ userId, companyId }: Props) {
 
       {/* Month-over-month margin deterioration alert */}
       {marginDrop !== null && marginDrop > 0.10 && (
-        <div className={`rounded-xl border px-4 py-3 flex items-start gap-3 ${
+        <div className={`rounded border px-4 py-3 flex items-start gap-3 ${
           marginDrop > 0.20 ? 'bg-red-50 border-red-200' : 'bg-amber-50 border-amber-200'
         }`}>
           <span className="text-base mt-0.5">{marginDrop > 0.20 ? '🔴' : '⚠'}</span>
@@ -201,7 +201,7 @@ export async function PnlTab({ userId, companyId }: Props) {
       <div className="col-span-7 space-y-4">
 
         {/* Main waterfall */}
-        <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+        <div className="bg-white border border-gray-100 rounded p-5 shadow-sm">
           <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4">
             Kâr / Zarar — {fmtMonth(currentYM)}
           </div>
@@ -233,7 +233,7 @@ export async function PnlTab({ userId, companyId }: Props) {
         </div>
 
         {/* KDV Özeti */}
-        <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+        <div className="bg-white border border-gray-100 rounded p-4 shadow-sm">
           <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">KDV Özeti</div>
           <div className="grid grid-cols-3 gap-3">
             {[
@@ -265,7 +265,7 @@ export async function PnlTab({ userId, companyId }: Props) {
             { label: 'Toplam Giderler',  value: fmt(expenses),    sub: 'Kesinti + operasyonel', color: 'border-l-amber-400' },
             { label: 'Vergi Matrahı',    value: fmt(matrah),      sub: 'Vergi öncesi kazanç', color: matrah >= 0 ? 'border-l-primary-400' : 'border-l-red-400' },
           ].map(k => (
-            <div key={k.label} className={`bg-white border border-l-4 border-gray-100 ${k.color} rounded-xl px-4 py-3`}>
+            <div key={k.label} className={`bg-white border border-l-4 border-gray-100 ${k.color} rounded px-4 py-3`}>
               <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-0.5">{k.label}</div>
               <div className="text-[10px] text-gray-400">{k.sub}</div>
               <div className="text-lg font-black tabular-nums text-gray-900 mt-1">{k.value}</div>
@@ -274,7 +274,7 @@ export async function PnlTab({ userId, companyId }: Props) {
         </div>
 
         {/* 6-ay mini trend */}
-        <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+        <div className="bg-white border border-gray-100 rounded p-4 shadow-sm">
           <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">6 Aylık Net Kâr Trendi</div>
           <div className="space-y-1.5">
             {monthYMs.map((ym, i) => {

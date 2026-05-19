@@ -78,7 +78,7 @@ const PAYMENT_LABEL: Record<string, string> = {
 function PfBadge({ status }: { status: string }) {
   const s = status as ProformaStatus
   return (
-    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg ${STATUS_COLOR[s] ?? 'bg-gray-100 text-gray-500'}`}>
+    <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${STATUS_COLOR[s] ?? 'bg-gray-100 text-gray-500'}`}>
       {STATUS_LABEL[s] ?? status}
     </span>
   )
@@ -87,7 +87,7 @@ function PfBadge({ status }: { status: string }) {
 function PayBadge({ status }: { status: string | null }) {
   const s = status ?? 'pending'
   return (
-    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg ${PAYMENT_COLOR[s] ?? 'bg-gray-100 text-gray-500'}`}>
+    <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${PAYMENT_COLOR[s] ?? 'bg-gray-100 text-gray-500'}`}>
       {PAYMENT_LABEL[s] ?? s}
     </span>
   )
@@ -102,8 +102,8 @@ function Stage({ stageKey, step, label, count, value, color, sub, selected, onCl
   return (
     <button type="button" onClick={onClick}
       className={`flex-1 min-w-0 text-left transition-all group focus:outline-none ${selected ? 'scale-[1.02]' : ''}`}>
-      <div className={`border-2 rounded-xl px-4 py-4 h-full transition-all ${color} ${
-        selected ? 'shadow-md ring-2 ring-offset-1 ring-primary-400' : 'group-hover:shadow-sm group-hover:border-primary-300'
+      <div className={`border-2 rounded px-4 py-4 h-full transition-all ${color} ${
+        selected ? 'shadow-sm ring-2 ring-offset-1 ring-primary-400' : 'group-hover:shadow-sm group-hover:border-primary-300'
       }`}>
         <div className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-0.5">{step}</div>
         <div className="font-black text-base leading-tight mb-2">{label}</div>
@@ -257,14 +257,14 @@ function TahsilatPanel({ sales }: { sales: Sale[] }) {
   return (
     <div>
       <div className="flex gap-3 px-4 py-3 border-b border-gray-100">
-        <div className="flex items-center gap-1.5 bg-amber-50 rounded-lg px-3 py-1.5">
+        <div className="flex items-center gap-1.5 bg-amber-50 rounded px-3 py-1.5">
           <span className="w-2 h-2 bg-amber-400 rounded-full" />
           <span className="text-xs font-bold text-amber-700">{unpaid.length} bekliyor</span>
           <span className="text-xs tabular-nums text-amber-600 font-black ml-1">
             {fmt(unpaid.reduce((s, r) => s + Number(r.total_try ?? 0), 0))}
           </span>
         </div>
-        <div className="flex items-center gap-1.5 bg-emerald-50 rounded-lg px-3 py-1.5">
+        <div className="flex items-center gap-1.5 bg-emerald-50 rounded px-3 py-1.5">
           <span className="w-2 h-2 bg-emerald-400 rounded-full" />
           <span className="text-xs font-bold text-emerald-700">{paid.length} tahsil</span>
           <span className="text-xs tabular-nums text-emerald-600 font-black ml-1">
@@ -316,15 +316,15 @@ function KarPanel({ sales }: { sales: Sale[] }) {
   return (
     <div>
       <div className="flex gap-3 px-4 py-3 border-b border-gray-100">
-        <div className="flex items-center gap-1.5 bg-gray-50 rounded-lg px-3 py-1.5">
+        <div className="flex items-center gap-1.5 bg-gray-50 rounded px-3 py-1.5">
           <span className="text-xs text-gray-500">Ciro</span>
           <span className="text-xs font-black tabular-nums text-gray-800">{fmt(totalRevenue)}</span>
         </div>
-        <div className="flex items-center gap-1.5 bg-gray-50 rounded-lg px-3 py-1.5">
+        <div className="flex items-center gap-1.5 bg-gray-50 rounded px-3 py-1.5">
           <span className="text-xs text-gray-500">SMM</span>
           <span className="text-xs font-black tabular-nums text-red-600">{fmt(totalCogs)}</span>
         </div>
-        <div className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 ${grossProfit >= 0 ? 'bg-emerald-50' : 'bg-red-50'}`}>
+        <div className={`flex items-center gap-1.5 rounded px-3 py-1.5 ${grossProfit >= 0 ? 'bg-emerald-50' : 'bg-red-50'}`}>
           <span className="text-xs text-gray-500">Brüt Kâr</span>
           <span className={`text-xs font-black tabular-nums ${grossProfit >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>{fmt(grossProfit)}</span>
           <span className="text-[10px] text-gray-400">%{margin.toFixed(1)}</span>
@@ -411,7 +411,7 @@ export default function SalesFlowClient({ initialProformas, initialSales, initia
       tahsilat: 'Tahsilat Durumu', kar: 'Kâr Analizi',
     }
     return (
-      <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+      <div className="bg-white border border-gray-100 rounded overflow-hidden">
         <div className="px-4 py-2 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
           <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{titles[selected]}</span>
           <button onClick={() => setSelected(null)} className="text-gray-400 hover:text-gray-700 text-lg leading-none">×</button>
@@ -460,7 +460,7 @@ export default function SalesFlowClient({ initialProformas, initialSales, initia
 
       {/* ── Conversion rate strip ────────────────────────────────────────── */}
       {proformas.length > 0 && (
-        <div className="bg-white border border-gray-100 rounded-xl px-5 py-3">
+        <div className="bg-white border border-gray-100 rounded px-5 py-3">
           <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3">Dönüşüm Oranları</div>
           <div className="grid grid-cols-4 gap-4 text-center">
             {[

@@ -11,9 +11,9 @@ function ContextSkeleton() {
   return (
     <div className="space-y-2 animate-pulse">
       <div className="grid grid-cols-5 gap-2">
-        {[...Array(5)].map((_, i) => <div key={i} className="h-16 bg-gray-100 rounded-xl" />)}
+        {[...Array(5)].map((_, i) => <div key={i} className="h-16 bg-gray-100 rounded" />)}
       </div>
-      <div className="h-9 bg-gray-100 rounded-xl" />
+      <div className="h-9 bg-gray-100 rounded" />
     </div>
   )
 }
@@ -82,7 +82,7 @@ export async function SimulationContent({ companyId, userId, activeTab = 'unit-p
     <div className="space-y-4 max-w-5xl">
 
       {/* Tab context header */}
-      <div className="px-4 py-3 bg-primary-50 border border-primary-100 rounded-xl">
+      <div className="px-4 py-3 bg-primary-50 border border-primary-100 rounded">
         <div className="text-sm font-black text-primary-800">{ctx.title}</div>
         <div className="text-[10px] text-primary-500 mt-0.5">{ctx.focus}</div>
       </div>

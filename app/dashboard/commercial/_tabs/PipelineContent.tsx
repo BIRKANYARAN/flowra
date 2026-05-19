@@ -15,7 +15,7 @@ function CommandBarSkeleton() {
   return (
     <div className="flex items-center gap-2 animate-pulse">
       {[...Array(4)].map((_, i) => (
-        <div key={i} className="h-8 w-28 bg-gray-100 rounded-xl" />
+        <div key={i} className="h-8 w-28 bg-gray-100 rounded" />
       ))}
     </div>
   )
@@ -130,7 +130,7 @@ export async function PipelineContent({ companyId }: Props) {
       </div>
 
       {/* KPI Strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-gray-100 rounded-xl overflow-hidden">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-gray-100 rounded overflow-hidden">
         {[
           { label: 'Stok Değeri',  value: serverFmt(stockValue),   sub: `${stockLots.length} aktif lot`,                color: 'text-gray-900' },
           { label: 'Pipeline',     value: pipelineVal > 0 ? serverFmt(pipelineVal) : '—', sub: 'bekleyen teklifler', color: 'text-blue-700' },
@@ -147,7 +147,7 @@ export async function PipelineContent({ companyId }: Props) {
 
       {/* Recent proformas */}
       {recentPf.length > 0 && (
-        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+        <div className="bg-white border border-gray-100 rounded overflow-hidden">
           <div className="px-4 py-2 border-b border-gray-100">
             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Son Teklifler</span>
           </div>
@@ -165,7 +165,7 @@ export async function PipelineContent({ companyId }: Props) {
                 <tr key={p.id}>
                   <td className="px-4 py-2.5 font-medium text-gray-800 max-w-[200px] truncate">{p.customer_name ?? '—'}</td>
                   <td className="px-4 py-2.5">
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg ${STATUS_COLOR[p.status] ?? 'bg-gray-100 text-gray-500'}`}>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${STATUS_COLOR[p.status] ?? 'bg-gray-100 text-gray-500'}`}>
                       {STATUS_LABEL[p.status] ?? p.status}
                     </span>
                   </td>
@@ -185,7 +185,7 @@ export async function PipelineContent({ companyId }: Props) {
 
       {/* Revenue anomaly alerts */}
       {revenueAnomalies.length > 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+        <div className="bg-amber-50 border border-amber-200 rounded px-4 py-3">
           <div className="flex items-center gap-2 mb-1.5">
             <span className="text-[10px] font-black uppercase tracking-widest text-amber-700">⚠ Anormal Gelir Hareketi</span>
             <span className="text-[9px] text-amber-600">(istatistiksel eşik aşıldı)</span>
@@ -193,7 +193,7 @@ export async function PipelineContent({ companyId }: Props) {
           <div className="space-y-1">
             {revenueAnomalies.map((a, i) => (
               <div key={i} className="flex items-start gap-2">
-                <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-lg shrink-0 ${
+                <span className={`text-[11px] font-semibold px-2 py-0.5 rounded shrink-0 ${
                   a.direction === 'drop' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800'
                 }`}>
                   {fmtMonth(a.month)}
@@ -210,7 +210,7 @@ export async function PipelineContent({ companyId }: Props) {
 
       {/* Monthly revenue trend */}
       {recentMonths.length > 1 && (
-        <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+        <div className="bg-white border border-gray-100 rounded p-4 shadow-sm">
           <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Aylık Ciro Trendi</h3>
           <div className="flex items-end gap-2 h-20">
             {recentMonths.map(m => {
@@ -219,7 +219,7 @@ export async function PipelineContent({ companyId }: Props) {
                 <div key={m.month} className="flex-1 flex flex-col items-center gap-1 group relative">
                   <div className="w-full bg-primary-300 group-hover:bg-primary-400 rounded-t transition-all" style={{ height: `${heightPct}%` }} />
                   <div className="text-[9px] text-gray-400 font-semibold">{fmtMonth(m.month)}</div>
-                  <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block z-10 bg-gray-900 text-white rounded-lg px-2 py-1 text-[10px] whitespace-nowrap shadow-lg">
+                  <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block z-10 bg-gray-900 text-white rounded px-2 py-1 text-[10px] whitespace-nowrap">
                     <div className="font-bold">{fmtMonth(m.month)}</div>
                     <div className="text-primary-300">{serverFmt(m.revenue)}</div>
                   </div>

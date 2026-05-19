@@ -47,7 +47,7 @@ function StatusBanner({ report }: { report: ReconciliationReport }) {
 
   if (report.is_reconciled && criticalCount === 0 && warnCount === 0) {
     return (
-      <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 flex items-center gap-3">
+      <div className="bg-emerald-50 border border-emerald-200 rounded px-4 py-3 flex items-center gap-3">
         <div className="w-8 h-8 rounded-full bg-emerald-200 flex items-center justify-center text-emerald-700 font-black text-sm shrink-0">✓</div>
         <div>
           <div className="text-sm font-black text-emerald-800">Mutabakat Tamamlandı</div>
@@ -59,7 +59,7 @@ function StatusBanner({ report }: { report: ReconciliationReport }) {
 
   if (criticalCount > 0) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 flex items-center gap-3">
+      <div className="bg-red-50 border border-red-200 rounded px-4 py-3 flex items-center gap-3">
         <div className="w-8 h-8 rounded-full bg-red-200 flex items-center justify-center text-red-700 font-black text-sm shrink-0">✗</div>
         <div>
           <div className="text-sm font-black text-red-800">Kritik Farklar Mevcut — Dönem Kapatılamaz</div>
@@ -72,7 +72,7 @@ function StatusBanner({ report }: { report: ReconciliationReport }) {
   }
 
   return (
-    <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-center gap-3">
+    <div className="bg-amber-50 border border-amber-200 rounded px-4 py-3 flex items-center gap-3">
       <div className="w-8 h-8 rounded-full bg-amber-200 flex items-center justify-center text-amber-700 font-black text-sm shrink-0">!</div>
       <div>
         <div className="text-sm font-black text-amber-800">Küçük Farklar Var</div>
@@ -128,7 +128,7 @@ export default function ReconciliationPage() {
           <button
             onClick={runCheck}
             disabled={loading}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 bg-white text-xs font-semibold text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-gray-200 bg-white text-xs font-semibold text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-colors disabled:opacity-50"
           >
             <svg className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -137,7 +137,7 @@ export default function ReconciliationPage() {
           </button>
           <button
             onClick={() => window.print()}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 bg-white text-xs font-semibold text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-gray-200 bg-white text-xs font-semibold text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-colors"
           >
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
@@ -160,13 +160,13 @@ export default function ReconciliationPage() {
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700">{error}</div>
+        <div className="bg-red-50 border border-red-200 rounded px-4 py-3 text-sm text-red-700">{error}</div>
       )}
 
       {loading && !report && (
         <div className="flex flex-col gap-3">
           {[1,2,3,4].map(i => (
-            <div key={i} className="bg-gray-100 rounded-xl h-14 animate-pulse" />
+            <div key={i} className="bg-gray-100 rounded h-14 animate-pulse" />
           ))}
         </div>
       )}
@@ -178,22 +178,22 @@ export default function ReconciliationPage() {
 
           {/* Summary chips */}
           <div className="grid grid-cols-3 gap-2">
-            <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 text-center">
+            <div className="bg-emerald-50 border border-emerald-200 rounded px-4 py-3 text-center">
               <div className="text-2xl font-black text-emerald-700 tabular-nums">{okCount}</div>
               <div className="text-[10px] font-black uppercase tracking-widest text-emerald-600 mt-0.5">Tamam</div>
             </div>
-            <div className={`border rounded-xl px-4 py-3 text-center ${warnCount > 0 ? 'bg-amber-50 border-amber-200' : 'bg-gray-50 border-gray-200'}`}>
+            <div className={`border rounded px-4 py-3 text-center ${warnCount > 0 ? 'bg-amber-50 border-amber-200' : 'bg-gray-50 border-gray-200'}`}>
               <div className={`text-2xl font-black tabular-nums ${warnCount > 0 ? 'text-amber-700' : 'text-gray-400'}`}>{warnCount}</div>
               <div className={`text-[10px] font-black uppercase tracking-widest mt-0.5 ${warnCount > 0 ? 'text-amber-600' : 'text-gray-400'}`}>Uyarı</div>
             </div>
-            <div className={`border rounded-xl px-4 py-3 text-center ${criticalCount > 0 ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-200'}`}>
+            <div className={`border rounded px-4 py-3 text-center ${criticalCount > 0 ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-200'}`}>
               <div className={`text-2xl font-black tabular-nums ${criticalCount > 0 ? 'text-red-700' : 'text-gray-400'}`}>{criticalCount}</div>
               <div className={`text-[10px] font-black uppercase tracking-widest mt-0.5 ${criticalCount > 0 ? 'text-red-600' : 'text-gray-400'}`}>Kritik</div>
             </div>
           </div>
 
           {/* Reconciliation items table */}
-          <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+          <div className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
             <div className="px-4 py-2.5 border-b border-gray-100 bg-gray-50">
               <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Hesap Karşılaştırması</div>
             </div>
@@ -228,7 +228,7 @@ export default function ReconciliationPage() {
                           </span>
                         </td>
                         <td className="px-4 py-3 text-center">
-                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${cfg.cls}`}>
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold border ${cfg.cls}`}>
                             {cfg.icon} {cfg.label}
                           </span>
                         </td>
@@ -241,7 +241,7 @@ export default function ReconciliationPage() {
           </div>
 
           {/* Guidance */}
-          <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs text-gray-500 space-y-1" data-print-hide>
+          <div className="bg-gray-50 border border-gray-200 rounded px-4 py-3 text-xs text-gray-500 space-y-1" data-print-hide>
             <div className="font-semibold text-gray-700 mb-1.5">Ne anlama geliyor?</div>
             <div className="flex gap-2"><span className="text-emerald-600 font-bold shrink-0">✓ Tamam</span><span>GL ve operasyonel değer arasında {`<`}1 TRY fark var. Yuvarlama sapması.</span></div>
             <div className="flex gap-2"><span className="text-amber-600 font-bold shrink-0">! Uyarı</span><span>1–99 TRY arası fark. Muhtemelen zamanlama farkı (dönem sonu kesilmemiş işlem). İncelenmesi önerilir.</span></div>

@@ -142,7 +142,7 @@ export async function ForecastTab({ userId: _userId, companyId }: Props) {
             sub:   r.exhaustion_month !== null ? `Ay ${r.exhaustion_month}'de tükenebilir` : 'Tehlike sinyali yok',
           },
         ].map(c => (
-          <div key={c.label} className="bg-white border border-gray-100 rounded-xl px-4 py-3 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+          <div key={c.label} className="bg-white border border-gray-100 rounded px-4 py-3 shadow-sm">
             <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">{c.label}</div>
             <div className={`text-xl font-black tabular-nums leading-none ${c.tone}`}>{c.value}</div>
             <div className="text-[10px] text-gray-400 mt-1">{c.sub}</div>
@@ -152,7 +152,7 @@ export async function ForecastTab({ userId: _userId, companyId }: Props) {
 
       {/* Zone 2 — Bar chart */}
       {chartMonths.length > 0 && (
-        <div className="bg-white border border-gray-100 rounded-xl px-4 py-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+        <div className="bg-white border border-gray-100 rounded px-4 py-4 shadow-sm">
           <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">12 Aylık Nakit Projeksiyonu</div>
           <div className="flex items-end gap-1.5 h-32">
             {chartMonths.map((mo) => {
@@ -183,7 +183,7 @@ export async function ForecastTab({ userId: _userId, companyId }: Props) {
 
       {/* Zone 3 — Monthly table */}
       {chartMonths.length > 0 && (
-        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+        <div className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
           <div className="px-4 py-3 border-b border-gray-100">
             <h2 className="text-sm font-black text-gray-800">Aylık Projeksiyon Detayı</h2>
           </div>
@@ -226,7 +226,7 @@ export async function ForecastTab({ userId: _userId, companyId }: Props) {
 
       {/* Zone 3.5 — 3-Scenario Strategic Summary */}
       {forecast && (
-        <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+        <div className="bg-white border border-gray-100 rounded p-4 shadow-sm">
           <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">12 Aylık Senaryo Analizi</div>
           <div className="grid grid-cols-3 gap-3">
             {([
@@ -236,7 +236,7 @@ export async function ForecastTab({ userId: _userId, companyId }: Props) {
             ] as const).map(sc => {
               const s = forecast!.summary[sc.key]
               return (
-                <div key={sc.key} className={`rounded-xl p-3 border ${sc.bg} ${sc.border}`}>
+                <div key={sc.key} className={`rounded p-3 border ${sc.bg} ${sc.border}`}>
                   <div className="text-[10px] font-bold text-gray-500 mb-2">{sc.label}</div>
                   <div className="space-y-1.5">
                     <div>
@@ -276,7 +276,7 @@ export async function ForecastTab({ userId: _userId, companyId }: Props) {
 
       {/* Runway tone indicator */}
       {runwayTone === 'critical' && (
-        <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-xs text-red-700 font-semibold">
+        <div className="bg-red-50 border border-red-200 rounded px-4 py-3 text-xs text-red-700 font-semibold">
           🔴 Kritik Runway — 2 aydan az nakit kaldı. Hemen aksiyon alın: yeni gelir getirin veya giderleri kısın.
         </div>
       )}

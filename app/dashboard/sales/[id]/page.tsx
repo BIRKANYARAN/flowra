@@ -46,7 +46,7 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
     return (
       <div className="max-w-3xl">
         <Link href="/dashboard/sales" className="text-sm text-gray-400 hover:text-gray-900 mb-4 inline-block">← Satışlar</Link>
-        <div className="bg-white border border-gray-100 rounded-2xl p-10 text-center">
+        <div className="bg-white border border-gray-100 rounded p-10 text-center">
           <p className="text-gray-400 text-sm">Satış bulunamadı veya silinmiş.</p>
         </div>
       </div>
@@ -74,18 +74,18 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
         </div>
         {s.proforma_no && s.proforma_id && s.proforma_exists ? (
           <Link href={`/dashboard/proformas/${s.proforma_id}`}
-            className="text-xs font-mono text-primary-700 bg-primary-50 border border-primary-200 px-3 py-1.5 rounded-lg hover:bg-primary-100 transition-colors">
+            className="text-xs font-mono text-primary-700 bg-primary-50 border border-primary-200 px-3 py-1.5 rounded hover:bg-primary-100 transition-colors">
             {s.proforma_no} →
           </Link>
         ) : s.proforma_no ? (
-          <span className="text-xs font-mono text-gray-400 bg-gray-50 border border-gray-200 px-3 py-1.5 rounded-lg">
+          <span className="text-xs font-mono text-gray-400 bg-gray-50 border border-gray-200 px-3 py-1.5 rounded">
             {s.proforma_no} (silinmiş)
           </span>
         ) : null}
       </div>
 
       {/* Items table */}
-      <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden mb-5">
+      <div className="bg-white border border-gray-100 rounded overflow-hidden mb-5">
         <table className="w-full">
           <thead>
             <tr className="text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-gray-50 border-b border-gray-200">
@@ -131,7 +131,7 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
               <span className="text-gray-500">KDV</span>
               <span className="tabular-nums">{S}{s.kdv_total.toFixed(2)}</span>
             </div>
-            <div className="bg-gray-900 text-white rounded-xl px-4 py-3 flex justify-between mt-1">
+            <div className="bg-gray-900 text-white rounded px-4 py-3 flex justify-between mt-1">
               <span className="font-bold text-sm">TOPLAM</span>
               <span className="font-black tabular-nums">{S}{s.total.toFixed(2)}</span>
             </div>
@@ -146,7 +146,7 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
       </div>
 
       {/* Profit card */}
-      <div className="bg-white border border-gray-100 rounded-2xl p-5">
+      <div className="bg-white border border-gray-100 rounded p-5">
         <h2 className="font-bold text-sm text-gray-500 uppercase tracking-wide mb-4">Finansal Özet</h2>
         <div className="grid grid-cols-3 gap-4 text-center">
           <div>

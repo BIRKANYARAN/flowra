@@ -85,7 +85,7 @@ export async function CustomersContent({ companyId }: Props) {
 
       {/* KPI Strip */}
       {sales.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-gray-100 rounded-xl overflow-hidden">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-gray-100 rounded overflow-hidden">
           {[
             { label: 'Toplam Müşteri', value: String(customers.length), sub: `${sales.length} satış kaydı`,        color: 'text-gray-900' },
             { label: 'Toplam Ciro',    value: billed > 0 ? fmt(billed) : '—', sub: 'Tüm satışlar (TRY)',           color: 'text-primary-700' },
@@ -103,7 +103,7 @@ export async function CustomersContent({ companyId }: Props) {
 
       {/* Revenue concentration alert — top customer > 40% of total billed */}
       {topCustomers.length > 0 && billed > 0 && topCustomers[0].total / billed > 0.4 && (
-        <div className={`rounded-xl border px-4 py-3 flex items-start gap-3 ${
+        <div className={`rounded border px-4 py-3 flex items-start gap-3 ${
           topCustomers[0].total / billed > 0.6
             ? 'bg-red-50 border-red-200'
             : 'bg-amber-50 border-amber-200'
@@ -128,7 +128,7 @@ export async function CustomersContent({ companyId }: Props) {
 
       {/* Top customers bar chart */}
       {topCustomers.length > 0 && billed > 0 && (
-        <div className="bg-white border border-gray-100 rounded-xl p-4">
+        <div className="bg-white border border-gray-100 rounded p-4">
           <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">En Yüksek Cirolu Müşteriler</h3>
           <div className="space-y-2.5">
             {topCustomers.map(tc => {
@@ -138,8 +138,8 @@ export async function CustomersContent({ companyId }: Props) {
                 <div key={tc.name} className="flex items-center gap-3">
                   <div className="w-36 text-xs text-gray-700 font-medium shrink-0 truncate" title={tc.name}>{tc.name}</div>
                   <div className="flex-1">
-                    <div className="h-5 bg-gray-100 rounded-lg overflow-hidden">
-                      <div className="h-5 bg-primary-400 rounded-lg" style={{ width: `${barPct}%` }} />
+                    <div className="h-5 bg-gray-100 rounded overflow-hidden">
+                      <div className="h-5 bg-primary-400 rounded" style={{ width: `${barPct}%` }} />
                     </div>
                   </div>
                   <div className="w-28 text-right shrink-0">
@@ -155,7 +155,7 @@ export async function CustomersContent({ companyId }: Props) {
 
       {/* ── Customer Payment Risk Panel ──────────────────────────────────── */}
       {atRiskCustomers.length > 0 && (
-        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+        <div className="bg-white border border-gray-100 rounded overflow-hidden">
           <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-50">
             <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">
               Müşteri Ödeme Riski

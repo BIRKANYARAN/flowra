@@ -25,7 +25,7 @@ export function LedgerTab({
   return (
     <div className="flex flex-col gap-3">
       {loading ? <Skeleton h="h-40" /> : !ledger ? (
-        <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-600">Finansal defter yüklenemedi.</div>
+        <div className="bg-red-50 border border-red-200 rounded px-4 py-3 text-sm text-red-600">Finansal defter yüklenemedi.</div>
       ) : (
         <>
           <div className="grid grid-cols-4 gap-2">
@@ -35,13 +35,13 @@ export function LedgerTab({
               { label: 'Toplam Temettü',    value: fmt(ledger.summary.total_dividends),        color: 'text-emerald-600' },
               { label: 'Borç/Özkaynak',     value: ledger.summary.debt_to_equity_ratio !== null ? ledger.summary.debt_to_equity_ratio.toFixed(2) + '×' : '—', color: 'text-gray-700' },
             ].map(c => (
-              <div key={c.label} className="bg-white border border-gray-100 rounded-xl px-4 py-3 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+              <div key={c.label} className="bg-white border border-gray-100 rounded px-4 py-3 shadow-sm">
                 <div className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${c.color}`}>{c.label}</div>
                 <div className="text-lg font-black tabular-nums text-gray-900 leading-none">{c.value}</div>
               </div>
             ))}
           </div>
-          <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+          <div className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b border-gray-100 bg-gray-50">

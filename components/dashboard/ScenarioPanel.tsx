@@ -90,7 +90,7 @@ export function ScenarioPanel({ inputs, baseRunwayMonths }: Props) {
   const SValue = 'text-xs text-gray-400 tabular-nums'
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+    <div className="bg-white border border-gray-200 rounded overflow-hidden">
       <div className="px-4 py-3 border-b border-gray-100">
         <h2 className="text-sm font-black text-gray-800">Senaryo Analizi</h2>
         <p className="text-[10px] text-gray-400 mt-0.5">

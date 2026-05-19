@@ -42,7 +42,7 @@ export function FlowraTable<T>({
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-100 text-red-700 px-4 py-3 rounded-xl text-sm">
+      <div className="bg-red-50 border border-red-100 text-red-700 px-4 py-3 rounded text-sm">
         {error}
       </div>
     )
@@ -60,7 +60,7 @@ export function FlowraTable<T>({
   }
 
   return (
-    <div className={cn('bg-white border border-gray-200 rounded-2xl overflow-hidden', className)}>
+    <div className={cn('bg-white border border-gray-200 rounded overflow-hidden', className)}>
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-gray-100">

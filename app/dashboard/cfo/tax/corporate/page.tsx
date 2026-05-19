@@ -178,7 +178,7 @@ export default async function CorporateTaxPage() {
       </div>
 
       {/* ── KPI Strip ──────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-4 gap-0 bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+      <div className="grid grid-cols-4 gap-0 bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
         <KpiCard
           label="YTD Matrah"
           value={ytd.matrah > 0 ? fmt(ytd.matrah) : '—'}
@@ -205,7 +205,7 @@ export default async function CorporateTaxPage() {
 
       {/* ── Alert banner for upcoming gecici ───────────────────────────────── */}
       {nextDue && (
-        <div className={`rounded-xl px-4 py-3 border text-sm flex items-center justify-between ${
+        <div className={`rounded px-4 py-3 border text-sm flex items-center justify-between ${
           nextDue.gecici_due_date <= addDays(today, 14)
             ? 'bg-orange-50 border-orange-200 text-orange-800'
             : 'bg-amber-50 border-amber-200 text-amber-800'
@@ -216,13 +216,13 @@ export default async function CorporateTaxPage() {
             <span className="font-black">{fmt(nextDue.gecici_vergi)}</span>
           </span>
           {nextDue.gecici_due_date <= addDays(today, 14) && (
-            <span className="text-xs font-black bg-orange-200 text-orange-900 rounded-full px-2 py-0.5">ACİL</span>
+            <span className="text-xs font-black bg-orange-200 text-orange-900 rounded px-2 py-0.5">ACİL</span>
           )}
         </div>
       )}
 
       {/* ── Quarterly Breakdown ─────────────────────────────────────────────── */}
-      <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+      <div className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
         <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-100">
           <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">
             Geçici Vergi Takvimi — {currentYear}
@@ -333,7 +333,7 @@ export default async function CorporateTaxPage() {
 
       {/* ── Yıllık Projeksiyon ──────────────────────────────────────────────── */}
       {monthsElapsed < 12 && projectedMatrah > 0 && (
-        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+        <div className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
           <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-100">
             <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">
               Yıllık Projeksiyon (Extrapolasyon)
@@ -369,7 +369,7 @@ export default async function CorporateTaxPage() {
 
       {/* ── Hesaplama özeti ─────────────────────────────────────────────────── */}
       {ytd.matrah > 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-xs text-amber-800 leading-relaxed space-y-1">
+        <div className="bg-amber-50 border border-amber-200 rounded px-4 py-3 text-xs text-amber-800 leading-relaxed space-y-1">
           <div>
             <span className="font-black">KV Formülü:</span>{' '}
             Matrah ({fmt(ytd.matrah)}) × %25 ={' '}
@@ -386,7 +386,7 @@ export default async function CorporateTaxPage() {
       )}
 
       {/* ── Disclaimer ─────────────────────────────────────────────────────── */}
-      <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-xs text-blue-700 leading-relaxed">
+      <div className="bg-blue-50 border border-blue-200 rounded px-4 py-3 text-xs text-blue-700 leading-relaxed">
         <span className="font-black">Not:</span>{' '}
         Bu sayfa tahmini hesaplama içerir. Kesin kurumlar vergisi beyanı muhasebeci tarafından
         hazırlanmalıdır. Geçici vergi dönemleri: Q1 → 17 Mayıs, Q2 → 17 Ağustos, Q3 → 17 Kasım.

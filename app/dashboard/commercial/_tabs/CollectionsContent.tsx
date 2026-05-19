@@ -11,7 +11,7 @@ function CommandBarSkeleton() {
   return (
     <div className="flex items-center gap-2 animate-pulse">
       {[...Array(4)].map((_, i) => (
-        <div key={i} className="h-8 w-28 bg-gray-100 rounded-xl" />
+        <div key={i} className="h-8 w-28 bg-gray-100 rounded" />
       ))}
     </div>
   )
@@ -22,7 +22,7 @@ interface AgingBucket { label: string; count: number; total: number; color: stri
 function AgingStrip({ buckets, grandTotal }: { buckets: AgingBucket[]; grandTotal: number }) {
   if (grandTotal === 0) return null
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
       {buckets.map((b, i) => (
         <div key={b.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-gray-100' : ''}`}>
           <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{b.label}</div>
@@ -149,7 +149,7 @@ export async function CollectionsContent({ companyId }: Props) {
 
       {/* 90+ day overdue critical alert */}
       {overdue90Total > 0 && (
-        <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 flex items-start gap-3">
+        <div className="bg-red-50 border border-red-200 rounded px-4 py-3 flex items-start gap-3">
           <span className="text-base mt-0.5">🔴</span>
           <div className="flex-1">
             <div className="text-[11px] font-black uppercase tracking-wide text-red-800">
@@ -168,7 +168,7 @@ export async function CollectionsContent({ companyId }: Props) {
 
       {/* High debtor concentration alert (top debtor > 40% of total outstanding) */}
       {topDebtorShare > 0.40 && grandTotal > 0 && (
-        <div className={`rounded-xl border px-4 py-3 flex items-start gap-3 ${
+        <div className={`rounded border px-4 py-3 flex items-start gap-3 ${
           topDebtorShare > 0.60 ? 'bg-red-50 border-red-200' : 'bg-amber-50 border-amber-200'
         }`}>
           <span className="text-base mt-0.5">⚠</span>
@@ -186,7 +186,7 @@ export async function CollectionsContent({ companyId }: Props) {
 
       {/* 60+ day overdue rate warning (only if no 90+ critical already shown) */}
       {overdue90Total === 0 && criticalRate > 0.30 && grandTotal > 0 && (
-        <div className="bg-orange-50 border border-orange-300 rounded-xl px-4 py-3 flex items-start gap-3">
+        <div className="bg-orange-50 border border-orange-300 rounded px-4 py-3 flex items-start gap-3">
           <span className="text-base mt-0.5">⚠</span>
           <div className="flex-1">
             <div className="text-[11px] font-black uppercase tracking-wide text-orange-800">
@@ -205,7 +205,7 @@ export async function CollectionsContent({ companyId }: Props) {
 
       {/* Top outstanding debtors */}
       {topDebtors.length > 0 && grandTotal > 0 && (
-        <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+        <div className="bg-white border border-gray-100 rounded p-4 shadow-sm">
           <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4">En Yüksek Bakiyeli Müşteriler</div>
           <div className="space-y-2.5">
             {topDebtors.map(d => {
@@ -216,9 +216,9 @@ export async function CollectionsContent({ companyId }: Props) {
                 <div key={d.name} className="flex items-center gap-3">
                   <div className="w-32 text-xs text-gray-700 font-medium shrink-0 truncate" title={d.name}>{d.name}</div>
                   <div className="flex-1">
-                    <div className="h-5 bg-gray-100 rounded-lg overflow-hidden">
+                    <div className="h-5 bg-gray-100 rounded overflow-hidden">
                       <div
-                        className={`h-5 rounded-lg ${d.maxDays > 60 ? 'bg-red-400' : d.maxDays > 30 ? 'bg-amber-400' : 'bg-primary-400'}`}
+                        className={`h-5 rounded ${d.maxDays > 60 ? 'bg-red-400' : d.maxDays > 30 ? 'bg-amber-400' : 'bg-primary-400'}`}
                         style={{ width: `${barPct}%` }}
                       />
                     </div>

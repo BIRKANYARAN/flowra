@@ -147,7 +147,7 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
 
   if (risk.totalOutstanding === 0) {
     return (
-      <div className="bg-white border border-gray-100 rounded-2xl text-center py-16">
+      <div className="bg-white border border-gray-100 rounded text-center py-16">
         <div className="text-4xl mb-3">✅</div>
         <div className="text-sm font-black text-gray-900 mb-1">Açık Alacak Yok</div>
         <div className="text-xs text-gray-400">Tüm faturalar tahsil edilmiş görünüyor.</div>
@@ -189,7 +189,7 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
                    risk.concentration.hhi < 2500 ? 'text-amber-700' : 'text-red-600',
           },
         ].map(c => (
-          <div key={c.label} className="bg-white border border-gray-100 rounded-xl px-4 py-3 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+          <div key={c.label} className="bg-white border border-gray-100 rounded px-4 py-3 shadow-sm">
             <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">{c.label}</div>
             <div className={`text-xl font-black tabular-nums leading-none ${c.tone}`}>{c.value}</div>
             <div className="text-[10px] text-gray-400 mt-1">{c.sub}</div>
@@ -198,13 +198,13 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
       </div>
 
       {/* Zone 2 — Konsantrasyon */}
-      <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+      <div className="bg-white border border-gray-100 rounded p-4 shadow-sm">
         <div className="flex items-center justify-between mb-3">
           <div>
             <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Konsantrasyon Analizi</div>
             <div className="text-[10px] text-gray-400 mt-0.5">Top müşterilerin toplam alacak içindeki payı</div>
           </div>
-          <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${riskCfg.bg} ${riskCfg.text} ${riskCfg.border}`}>
+          <span className={`text-[10px] font-bold px-2.5 py-1 rounded border ${riskCfg.bg} ${riskCfg.text} ${riskCfg.border}`}>
             {riskCfg.label}
           </span>
         </div>
@@ -241,7 +241,7 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
       </div>
 
       {/* Zone 3 — Aging table */}
-      <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+      <div className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
         <div className="px-4 py-3 border-b border-gray-100">
           <h2 className="text-sm font-black text-gray-800">Müşteri Yaşlandırma Analizi</h2>
           <p className="text-[10px] text-gray-400 mt-0.5">Alacakların vade kırılımı</p>
@@ -300,13 +300,13 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
 
       {/* Zone 4 — Anomaly Detection */}
       {allAnomalies.length > 0 && (
-        <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+        <div className="bg-white border border-gray-100 rounded p-4 shadow-sm">
           <div className="flex items-center justify-between mb-3">
             <div>
               <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Anormallik Tespiti</div>
               <div className="text-[10px] text-gray-400 mt-0.5">Son 6 ay istatistiksel sapma analizi · ±2σ eşiği</div>
             </div>
-            <span className="text-[9px] font-black uppercase tracking-wide bg-violet-100 text-violet-700 px-2 py-0.5 rounded-lg">
+            <span className="text-[9px] font-black uppercase tracking-wide bg-violet-100 text-violet-700 px-2 py-0.5 rounded">
               {allAnomalies.filter(a => a.severity === 'high').length} yüksek · {allAnomalies.filter(a => a.severity === 'medium').length} orta
             </span>
           </div>
@@ -321,7 +321,7 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
                 return `${names[mo - 1]} ${String(y).slice(2)}`
               })()
               return (
-                <div key={i} className={`flex items-start gap-3 border rounded-xl px-3 py-2.5 ${cfg.cls}`}>
+                <div key={i} className={`flex items-start gap-3 border rounded px-3 py-2.5 ${cfg.cls}`}>
                   <span className="flex-shrink-0 text-sm mt-0.5">{cfg.icon}</span>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -349,7 +349,7 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
       )}
 
       {/* Zone 5 — Guidance */}
-      <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+      <div className="bg-white border border-gray-100 rounded p-4 shadow-sm">
         <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">CFO Tavsiyesi</div>
         <ul className="space-y-1.5">
           {guidance.map((g, i) => (

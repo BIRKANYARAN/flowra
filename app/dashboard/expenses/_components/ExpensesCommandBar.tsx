@@ -98,7 +98,7 @@ export async function ExpensesCommandBar({ companyId }: Props) {
   // ── Empty state ─────────────────────────────────────────────────────────────
   if (curTotal === 0 && prevTotal === 0) {
     return (
-      <div className="flex items-center gap-2 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-400">
+      <div className="flex items-center gap-2 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded text-xs text-gray-400">
         Bu ay henüz gider kaydı yok.
       </div>
     )
@@ -111,7 +111,7 @@ export async function ExpensesCommandBar({ companyId }: Props) {
       <div className="flex items-center gap-2 flex-wrap">
 
         {/* Bu Ay */}
-        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-100 rounded-xl">
+        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-100 rounded">
           <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Bu Ay</span>
           <span className="text-sm font-black tabular-nums text-gray-900">{fmt(curTotal)}</span>
           <span className="text-[9px] text-gray-400">{dayOfMonth}. gün</span>
@@ -119,7 +119,7 @@ export async function ExpensesCommandBar({ companyId }: Props) {
 
         {/* Geçen Ay */}
         {prevTotal > 0 && (
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-100 rounded-xl">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-100 rounded">
             <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Geçen Ay</span>
             <span className="text-sm font-black tabular-nums text-gray-500">{fmt(prevTotal)}</span>
           </div>
@@ -127,7 +127,7 @@ export async function ExpensesCommandBar({ companyId }: Props) {
 
         {/* MoM Delta */}
         {momDeltaPct !== null && (
-          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border ${
+          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded border ${
             accelerating
               ? 'bg-red-50 border-red-200'
               : decelerating
@@ -148,7 +148,7 @@ export async function ExpensesCommandBar({ companyId }: Props) {
 
         {/* Günlük Hız */}
         {dailyRate > 0 && (
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-100 rounded-xl">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-100 rounded">
             <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Günlük</span>
             <span className="text-sm font-black tabular-nums text-orange-700">{fmt(dailyRate)}</span>
             <span className="text-[9px] text-gray-400">/gün</span>
@@ -164,7 +164,7 @@ export async function ExpensesCommandBar({ companyId }: Props) {
 
       {/* ── Projection + Top Category ──────────────────────────────────────── */}
       {(projected > 0 || topCat) && (
-        <div className={`flex items-center justify-between gap-4 px-4 py-2.5 rounded-xl border text-xs ${
+        <div className={`flex items-center justify-between gap-4 px-4 py-2.5 rounded border text-xs ${
           accelerating
             ? 'bg-red-50 border-red-200'
             : 'bg-gray-50 border-gray-100'
@@ -207,7 +207,7 @@ export async function ExpensesCommandBar({ companyId }: Props) {
 
       {/* ── Accelerating burn alert ────────────────────────────────────────── */}
       {accelerating && (
-        <div className="flex items-center gap-2 px-4 py-2 bg-red-50 border border-red-200 rounded-xl">
+        <div className="flex items-center gap-2 px-4 py-2 bg-red-50 border border-red-200 rounded">
           <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse shrink-0" />
           <span className="text-[10px] font-bold text-red-700">
             Gider hızlanıyor — geçen aya kıyasla %{momDeltaPct!.toFixed(0)} artış.

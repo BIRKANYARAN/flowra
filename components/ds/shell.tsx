@@ -9,7 +9,7 @@
 // GOVERNANCE RULES:
 //
 //   PageShell      → wraps every dashboard page    (max-w-5xl, gap-5)
-//   Panel          → every content block            (white, gray-100 border, rounded-xl, subtle shadow)
+//   Panel          → every content block            (white, gray-100 border, rounded, subtle shadow)
 //   PanelHeader    → panel title row                (border-b, px-5 py-3.5)
 //   KpiStrip       → horizontal instrument bar      (divide-x, single container)
 //   KpiCell        → individual reading in a strip  (px-5 py-3.5)
@@ -33,11 +33,11 @@ import { cn } from '@/components/ui'
 
 export const TOKENS = {
   // Card / Panel
-  panel:         'bg-white border border-gray-100 rounded-xl shadow-[0_1px_2px_rgba(17,24,39,0.04)]',
+  panel:         'bg-white border border-gray-100 rounded shadow-sm',
   panelHover:    'hover:shadow-[0_2px_6px_rgba(17,24,39,0.07)] hover:border-gray-200 transition-all',
-  panelCritical: 'bg-red-50   border border-red-200   rounded-xl',
-  panelWarn:     'bg-amber-50 border border-amber-200 rounded-xl',
-  panelOk:       'bg-emerald-50 border border-emerald-200 rounded-xl',
+  panelCritical: 'bg-red-50   border border-red-200   rounded',
+  panelWarn:     'bg-amber-50 border border-amber-200 rounded',
+  panelOk:       'bg-emerald-50 border border-emerald-200 rounded',
 
   // Section label (inner, above a block)
   label: 'text-[10px] font-black uppercase tracking-widest text-gray-400 leading-none',
@@ -324,7 +324,7 @@ export function PressureBanner({
   }[severity]
 
   return (
-    <div className={cn('flex items-center justify-between gap-3 px-5 py-3 rounded-xl', theme.wrap)}>
+    <div className={cn('flex items-center justify-between gap-3 px-5 py-3 rounded', theme.wrap)}>
       <div className="flex items-center gap-3 min-w-0">
         <span className={cn(theme.tag, 'flex-shrink-0')}>{tag}</span>
         <span className={cn(theme.msg, 'truncate')}>{message}</span>
@@ -332,7 +332,7 @@ export function PressureBanner({
       {actionLabel && actionHref && (
         <Link
           href={actionHref}
-          className={cn(theme.btn, 'flex-shrink-0 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap')}
+          className={cn(theme.btn, 'flex-shrink-0 px-3 py-1.5 rounded transition-colors whitespace-nowrap')}
         >
           {actionLabel} →
         </Link>
@@ -378,7 +378,7 @@ export function Skeleton({
   className?: string
 }) {
   return (
-    <div className={cn('bg-gray-100 rounded-xl animate-pulse', height, className)} />
+    <div className={cn('bg-gray-100 rounded animate-pulse', height, className)} />
   )
 }
 
@@ -514,7 +514,7 @@ export function AlertRow({
         )}
       </div>
       <span className={cn(
-        'flex-shrink-0 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap',
+        'flex-shrink-0 text-xs font-semibold px-3 py-1.5 rounded transition-colors whitespace-nowrap',
         btnClass,
       )}>
         {actionLabel} →

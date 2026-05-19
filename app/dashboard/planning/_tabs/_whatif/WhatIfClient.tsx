@@ -383,7 +383,7 @@ export function WhatIfClient({ period, baseline }: Props) {
     <div className="space-y-5">
 
       {/* ── INTRO BANNER ─────────────────────────────────────────────────── */}
-      <div className="px-4 py-3 bg-primary-50 border border-primary-100 rounded-xl flex items-start justify-between gap-3">
+      <div className="px-4 py-3 bg-primary-50 border border-primary-100 rounded flex items-start justify-between gap-3">
         <div>
           <div className="text-sm font-black text-primary-800">Senaryo Editörü — {period}</div>
           <div className="text-[10px] text-primary-500 mt-0.5">
@@ -391,7 +391,7 @@ export function WhatIfClient({ period, baseline }: Props) {
           </div>
         </div>
         {!hasBaseline && (
-          <span className="text-[9px] bg-amber-100 text-amber-700 px-2 py-1 rounded-lg font-semibold flex-shrink-0">
+          <span className="text-[9px] bg-amber-100 text-amber-700 px-2 py-1 rounded font-semibold flex-shrink-0">
             Kayıt yok — sıfır baz
           </span>
         )}
@@ -472,14 +472,14 @@ export function WhatIfClient({ period, baseline }: Props) {
             {(revChange !== 0 || expChange !== 0 || cogsChange !== 0 || collDelay !== 0 || debtChange !== 0 || taxRateOverride !== 25) && (
               <button
                 onClick={() => { setRevChange(0); setExpChange(0); setCogsChange(0); setCollDelay(0); setDebtChange(0); setTaxRateOverride(25) }}
-                className="text-xs font-semibold text-gray-500 hover:text-gray-700 border border-gray-200 px-3 py-1.5 rounded-lg hover:border-gray-300 transition-colors"
+                className="text-xs font-semibold text-gray-500 hover:text-gray-700 border border-gray-200 px-3 py-1.5 rounded hover:border-gray-300 transition-colors"
               >
                 ↺ Bazı Sıfırla
               </button>
             )}
             <button
               onClick={() => setShowSaveBox(v => !v)}
-              className="text-xs font-semibold text-primary-600 hover:text-primary-700 border border-primary-200 px-3 py-1.5 rounded-lg hover:border-primary-300 transition-colors"
+              className="text-xs font-semibold text-primary-600 hover:text-primary-700 border border-primary-200 px-3 py-1.5 rounded hover:border-primary-300 transition-colors"
             >
               {showSaveBox ? '✕ Kapat' : '＋ Kaydet'}
             </button>
@@ -487,7 +487,7 @@ export function WhatIfClient({ period, baseline }: Props) {
 
           {/* Save scenario inline form */}
           {showSaveBox && (
-            <div className="bg-primary-50 border border-primary-100 rounded-xl px-3 py-3 space-y-2">
+            <div className="bg-primary-50 border border-primary-100 rounded px-3 py-3 space-y-2">
               <div className="text-[9px] font-black uppercase tracking-widest text-primary-400">Senaryo Adı</div>
               <div className="flex gap-2">
                 <input
@@ -496,12 +496,12 @@ export function WhatIfClient({ period, baseline }: Props) {
                   onChange={e => setSaveName(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') saveScenario() }}
                   placeholder="Örn: Agresif büyüme, Q3 baskı…"
-                  className="flex-1 border border-primary-200 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary-400 bg-white"
+                  className="flex-1 border border-primary-200 rounded px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary-400 bg-white"
                 />
                 <button
                   onClick={saveScenario}
                   disabled={!saveName.trim() || saving}
-                  className="text-xs font-bold text-white bg-primary-600 hover:bg-primary-700 rounded-lg px-3 py-1.5 disabled:opacity-50 transition-colors flex items-center gap-1"
+                  className="text-xs font-bold text-white bg-primary-600 hover:bg-primary-700 rounded px-3 py-1.5 disabled:opacity-50 transition-colors flex items-center gap-1"
                 >
                   {saving ? (
                     <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -530,7 +530,7 @@ export function WhatIfClient({ period, baseline }: Props) {
                 {!scenariosLoading && saved.length >= 2 && (
                   <button
                     onClick={() => { setCompareMode(v => !v); setCompareSelected(new Set()) }}
-                    className={`text-[9px] font-bold px-2 py-0.5 rounded-lg border transition-colors ${
+                    className={`text-[9px] font-bold px-2 py-0.5 rounded border transition-colors ${
                       compareMode
                         ? 'bg-primary-600 text-white border-primary-600'
                         : 'border-gray-200 text-gray-500 hover:border-primary-300 hover:text-primary-600'
@@ -542,7 +542,7 @@ export function WhatIfClient({ period, baseline }: Props) {
               </div>
 
               {compareMode && (
-                <div className="bg-primary-50 border border-primary-100 rounded-xl px-3 py-2 text-[9px] text-primary-600">
+                <div className="bg-primary-50 border border-primary-100 rounded px-3 py-2 text-[9px] text-primary-600">
                   Karşılaştırmak istediğiniz senaryoları seçin (maks. 5) → sağ panelde tablo görünür.
                 </div>
               )}
@@ -553,7 +553,7 @@ export function WhatIfClient({ period, baseline }: Props) {
                 const canSelect   = compareSelected.size < 5 || isSelected
                 const isBaseline  = s.is_baseline === true
                 return (
-                  <div key={s.id} className={`bg-white border rounded-xl px-3 py-2.5 flex items-center justify-between gap-2 transition-colors ${
+                  <div key={s.id} className={`bg-white border rounded px-3 py-2.5 flex items-center justify-between gap-2 transition-colors ${
                     isBaseline
                       ? 'border-violet-200 bg-violet-50/30'
                       : compareMode && isSelected
@@ -599,7 +599,7 @@ export function WhatIfClient({ period, baseline }: Props) {
                           <button
                             onClick={() => markAsBaseline(s.id)}
                             title="Referans senaryo olarak ayarla"
-                            className="text-[9px] font-bold text-violet-600 hover:text-violet-700 border border-violet-200 rounded-lg px-2 py-1 hover:bg-violet-50 transition-colors"
+                            className="text-[9px] font-bold text-violet-600 hover:text-violet-700 border border-violet-200 rounded px-2 py-1 hover:bg-violet-50 transition-colors"
                           >
                             Referans →
                           </button>
@@ -607,14 +607,14 @@ export function WhatIfClient({ period, baseline }: Props) {
                         <button
                           onClick={() => restoreScenario(s)}
                           title="Bu senaryoyu yükle"
-                          className="text-[9px] font-bold text-primary-600 hover:text-primary-700 border border-primary-200 rounded-lg px-2 py-1 hover:bg-primary-50 transition-colors"
+                          className="text-[9px] font-bold text-primary-600 hover:text-primary-700 border border-primary-200 rounded px-2 py-1 hover:bg-primary-50 transition-colors"
                         >
                           Yükle
                         </button>
                         <button
                           onClick={() => deleteSaved(s.id)}
                           title="Sil"
-                          className="text-[9px] text-gray-400 hover:text-red-500 border border-gray-100 rounded-lg px-1.5 py-1 hover:bg-red-50 transition-colors"
+                          className="text-[9px] text-gray-400 hover:text-red-500 border border-gray-100 rounded px-1.5 py-1 hover:bg-red-50 transition-colors"
                         >
                           ✕
                         </button>
@@ -661,7 +661,7 @@ export function WhatIfClient({ period, baseline }: Props) {
             const hasRunway = computed.some(r => r.runwayMonths !== null)
 
             return (
-              <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+              <div className="bg-white border border-gray-100 rounded overflow-hidden">
                 {/* Header row */}
                 <div className="px-3 py-2 bg-gray-50/60 border-b border-gray-100 grid gap-1" style={{ gridTemplateColumns: `5rem repeat(${cols.length}, 1fr)` }}>
                   <div />
@@ -681,7 +681,7 @@ export function WhatIfClient({ period, baseline }: Props) {
                       <div key={row.label} className={`grid gap-1 px-3 py-2 items-center ${row.divider ? 'border-t border-gray-100 bg-gray-50/30' : ''}`} style={{ gridTemplateColumns: `5rem repeat(${cols.length}, 1fr)` }}>
                         <div className="text-[9px] font-semibold text-gray-500">{row.label}</div>
                         {vals.map((v, i) => (
-                          <div key={i} className={`text-center text-[10px] font-black tabular-nums rounded-lg py-0.5 ${
+                          <div key={i} className={`text-center text-[10px] font-black tabular-nums rounded py-0.5 ${
                             i === best
                               ? row.higherIsBetter
                                 ? 'text-emerald-700 bg-emerald-50'
@@ -710,7 +710,7 @@ export function WhatIfClient({ period, baseline }: Props) {
                   <span className="text-[9px] text-gray-400">En iyi Net Kâr: <strong className="text-gray-700">{cols[bestIdx(computed.map(r => r.netIncome), true)]?.name}</strong></span>
                   <button
                     onClick={() => restoreScenario(cols[bestIdx(computed.map(r => r.netIncome), true)]!)}
-                    className="text-[9px] font-bold text-primary-600 border border-primary-200 px-2 py-1 rounded-lg hover:bg-primary-50 transition-colors"
+                    className="text-[9px] font-bold text-primary-600 border border-primary-200 px-2 py-1 rounded hover:bg-primary-50 transition-colors"
                   >
                     Yükle →
                   </button>
@@ -723,7 +723,7 @@ export function WhatIfClient({ period, baseline }: Props) {
           {!(compareMode && compareSelected.size >= 2) && (
           <>
           {/* P&L Summary */}
-          <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+          <div className="bg-white border border-gray-100 rounded overflow-hidden">
             <div className="px-4 py-2.5 bg-gray-50/60 border-b border-gray-100">
               <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Kar/Zarar Özeti</span>
             </div>
@@ -741,13 +741,13 @@ export function WhatIfClient({ period, baseline }: Props) {
 
           {/* Key metrics row */}
           <div className="grid grid-cols-2 gap-2">
-            <div className="bg-white border border-gray-100 rounded-xl px-3 py-2.5">
+            <div className="bg-white border border-gray-100 rounded px-3 py-2.5">
               <div className="text-[9px] font-black uppercase tracking-widest text-gray-400">Brüt Marj</div>
               <div className={`text-lg font-black tabular-nums ${result.grossMarginPct >= 0.25 ? 'text-emerald-700' : result.grossMarginPct > 0 ? 'text-amber-700' : 'text-red-600'}`}>
                 {pct(result.grossMarginPct)}
               </div>
             </div>
-            <div className="bg-white border border-gray-100 rounded-xl px-3 py-2.5">
+            <div className="bg-white border border-gray-100 rounded px-3 py-2.5">
               <div className="text-[9px] font-black uppercase tracking-widest text-gray-400">KDV Net</div>
               <div className={`text-lg font-black tabular-nums ${result.vatNet > 0 ? 'text-orange-600' : 'text-emerald-700'}`}>
                 {result.vatNet > 0 ? '+' : ''}₺{fmt(result.vatNet)}
@@ -757,7 +757,7 @@ export function WhatIfClient({ period, baseline }: Props) {
           </div>
 
           {/* Cash + distribution */}
-          <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+          <div className="bg-white border border-gray-100 rounded overflow-hidden">
             <div className="px-4 py-2.5 bg-gray-50/60 border-b border-gray-100">
               <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Dağıtım & Nakit</span>
             </div>
@@ -799,7 +799,7 @@ export function WhatIfClient({ period, baseline }: Props) {
 
           {/* Stress indicator */}
           {result.netIncome < 0 && (
-            <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-xs text-red-700">
+            <div className="bg-red-50 border border-red-200 rounded px-4 py-3 text-xs text-red-700">
               <span className="font-bold">⚠ Zarar senaryosu.</span>{' '}
               Bu kombinasyonda aylık <strong>₺{fmt(Math.abs(result.netIncome))}</strong> zarar edilir.
               {result.runwayMonths !== null && result.runwayMonths < 6 &&
@@ -809,7 +809,7 @@ export function WhatIfClient({ period, baseline }: Props) {
 
           {/* Cascade story — cause → chain reaction narrative (only in normal mode) */}
           {cascadeStory && (
-            <div className="bg-gray-50 border border-gray-200 rounded-xl overflow-hidden">
+            <div className="bg-gray-50 border border-gray-200 rounded overflow-hidden">
               <div className="px-4 py-2.5 border-b border-gray-100">
                 <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Bu Senaryo Zinciri</span>
               </div>

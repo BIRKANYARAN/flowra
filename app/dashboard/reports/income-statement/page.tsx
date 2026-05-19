@@ -108,10 +108,10 @@ export default function IncomeStatementPage() {
         </div>
         <div className="flex items-center gap-2">
           <input type="date" value={from} onChange={e => setFrom(e.target.value)}
-            className="border border-gray-200 rounded-lg px-2 py-1 text-xs" />
+            className="border border-gray-200 rounded px-2 py-1 text-xs" />
           <span className="text-xs text-gray-400">—</span>
           <input type="date" value={to} onChange={e => setTo(e.target.value)}
-            className="border border-gray-200 rounded-lg px-2 py-1 text-xs" />
+            className="border border-gray-200 rounded px-2 py-1 text-xs" />
           {pdfOpts && <PdfExportButton opts={pdfOpts} label="PDF İndir" />}
           <Link href="/dashboard/cfo" className="text-xs text-gray-400 hover:text-primary-600 font-semibold">← CFO</Link>
         </div>
@@ -123,11 +123,11 @@ export default function IncomeStatementPage() {
         <p className="text-sm text-gray-500">{from} — {to}</p>
       </div>
 
-      {error && <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700">{error}</div>}
-      {loading && <div className="bg-gray-100 rounded-xl h-64 animate-pulse" />}
+      {error && <div className="bg-red-50 border border-red-200 rounded px-4 py-3 text-sm text-red-700">{error}</div>}
+      {loading && <div className="bg-gray-100 rounded h-64 animate-pulse" />}
 
       {pnl && !loading && (
-        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden print:border-none print:shadow-none">
+        <div className="bg-white border border-gray-100 rounded overflow-hidden print:border-none print:shadow-none">
           {/* Revenue section */}
           <div className="px-4 py-2 bg-gray-50 border-b border-gray-100">
             <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Satışlar</div>

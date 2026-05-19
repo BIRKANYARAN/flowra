@@ -16,12 +16,12 @@ export function ReturnsTab({ loading, returns }: ReturnsTabProps) {
   return (
     <div className="flex flex-col gap-4">
       {loading ? <Skeleton h="h-32" /> : returns.length === 0 ? (
-        <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-6 text-center text-sm text-gray-400">
+        <div className="bg-gray-50 border border-gray-200 rounded px-4 py-6 text-center text-sm text-gray-400">
           Getiri verisi hesaplanamadı.
         </div>
       ) : (
         <>
-          <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+          <div className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
             <div className="px-4 py-2.5 border-b border-gray-100 bg-gray-50">
               <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Ortak Bazında Sermaye Getirisi</div>
             </div>
@@ -49,7 +49,7 @@ export function ReturnsTab({ loading, returns }: ReturnsTabProps) {
             </div>
           </div>
 
-          <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-xs text-blue-700 leading-relaxed">
+          <div className="bg-blue-50 border border-blue-200 rounded px-4 py-3 text-xs text-blue-700 leading-relaxed">
             <span className="font-bold">Not:</span> ROI = (Geri Alınan / Yatırılan) × 100.
             Geri alınan = geri ödemeler + temettü + maaş/huzur. %100 üzeri tam geri dönüş anlamına gelir.
             Faiz izleme ve IRR hesaplaması için gelişmiş borç takibi gereklidir.

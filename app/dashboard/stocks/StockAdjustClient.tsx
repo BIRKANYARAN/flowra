@@ -15,7 +15,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSupabase } from '@/lib/hooks/useSupabase'
 
-const IL  = 'w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white transition-colors'
+const IL  = 'w-full border border-gray-200 rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white transition-colors'
 const LAB = 'block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5'
 
 interface Props {
@@ -111,11 +111,11 @@ export default function StockAdjustClient({ products }: Props) {
   }
 
   return (
-    <div className="bg-white border border-gray-100 rounded-xl p-5 space-y-4">
+    <div className="bg-white border border-gray-100 rounded p-5 space-y-4">
       <div className="flex items-center justify-between border-b border-gray-100 pb-3">
         <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Stok Hareketi Ekle</span>
         {success && (
-          <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg">
+          <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded">
             ✓ Kaydedildi
           </span>
         )}
@@ -204,7 +204,7 @@ export default function StockAdjustClient({ products }: Props) {
       </div>
 
       {err && (
-        <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl px-3 py-2">
+        <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded px-3 py-2">
           {err}
         </div>
       )}
@@ -212,7 +212,7 @@ export default function StockAdjustClient({ products }: Props) {
       <button
         disabled={saving}
         onClick={adjust}
-        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-primary-600 text-white hover:bg-primary-700 transition-colors disabled:opacity-50"
+        className="inline-flex items-center gap-2 px-4 py-2.5 rounded text-sm font-bold bg-primary-600 text-white hover:bg-primary-700 transition-colors disabled:opacity-50"
       >
         {saving ? (
           <>

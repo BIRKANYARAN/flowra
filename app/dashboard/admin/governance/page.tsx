@@ -111,7 +111,7 @@ const STATUS_THEME = {
 
 function MetricCard({ label, value, sub, highlight = false }: { label: string; value: string; sub?: string; highlight?: boolean }) {
   return (
-    <div className={`rounded-xl border px-4 py-3 ${highlight ? 'border-primary-200 bg-primary-50/50' : 'border-gray-100 bg-white'}`}>
+    <div className={`rounded border px-4 py-3 ${highlight ? 'border-primary-200 bg-primary-50/50' : 'border-gray-100 bg-white'}`}>
       <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">{label}</div>
       <div className={`text-xl font-black tabular-nums ${highlight ? 'text-primary-700' : 'text-gray-900'}`}>{value}</div>
       {sub && <div className="text-[10px] text-gray-400 mt-0.5">{sub}</div>}
@@ -145,7 +145,7 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
     <div className="flex flex-col gap-6">
 
       {/* Header strip */}
-      <div className={`rounded-xl border px-5 py-4 ${theme.bg} ${theme.border} flex items-start justify-between gap-4`}>
+      <div className={`rounded border px-5 py-4 ${theme.bg} ${theme.border} flex items-start justify-between gap-4`}>
         <div className="min-w-0">
           <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">{snap.period_label} · Yönetişim Raporu</div>
           <div className={`text-lg font-black mt-0.5 ${theme.text}`}>
@@ -161,7 +161,7 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
             onClick={() => window.print()}
             data-print-hide
             title="Bu raporu PDF olarak kaydet veya yazdır"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 bg-white text-xs font-semibold text-gray-600 hover:border-gray-300 hover:bg-gray-50 transition-colors shadow-sm"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-gray-200 bg-white text-xs font-semibold text-gray-600 hover:border-gray-300 hover:bg-gray-50 transition-colors shadow-sm"
           >
             <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.75 19.5m10.56-5.671L17.25 19.5M4.5 4.227v.227a49.94 49.94 0 0111 0v-.227c0-.995-.717-1.825-1.703-1.98l-2.088-.337a49.72 49.72 0 00-4.218 0l-2.088.337C5.217 2.402 4.5 3.232 4.5 4.227zm12 4.023H3.5" />
@@ -227,7 +227,7 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
       {snap.partner_balances.length > 0 && (
         <section>
           <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">Ortak Pozisyonları</div>
-          <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+          <div className="bg-white border border-gray-100 rounded overflow-hidden">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-100 bg-gray-50">
@@ -248,7 +248,7 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
                       <td className="px-4 py-3 text-right">
                         {signed ? (
                           <div>
-                            <div className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">
+                            <div className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-2 py-0.5">
                               ✓ {fmtDate(signed.signed_at)}
                             </div>
                             {signed.notes && <div className="text-[10px] text-gray-400 mt-0.5">{signed.notes}</div>}
@@ -260,12 +260,12 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
                               placeholder="Not (isteğe bağlı)"
                               value={signNotes[pb.partner_id] ?? ''}
                               onChange={e => setSignNotes(prev => ({ ...prev, [pb.partner_id]: e.target.value }))}
-                              className="text-xs border border-gray-200 rounded-lg px-2 py-1 w-32 focus:outline-none focus:ring-1 focus:ring-primary-400"
+                              className="text-xs border border-gray-200 rounded px-2 py-1 w-32 focus:outline-none focus:ring-1 focus:ring-primary-400"
                             />
                             <button
                               onClick={() => onSignoff(report.id, pb.partner_id, pb.partner_name, signNotes[pb.partner_id] ?? '')}
                               disabled={signing}
-                              className="text-[10px] font-bold text-white bg-primary-600 hover:bg-primary-700 rounded-lg px-2.5 py-1 transition-colors disabled:opacity-60"
+                              className="text-[10px] font-bold text-white bg-primary-600 hover:bg-primary-700 rounded px-2.5 py-1 transition-colors disabled:opacity-60"
                             >
                               {signing ? '…' : 'Onayla'}
                             </button>
@@ -287,13 +287,13 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
       {report.notes && (
         <section>
           <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Notlar</div>
-          <div className="bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm text-gray-700">{report.notes}</div>
+          <div className="bg-gray-50 border border-gray-100 rounded px-4 py-3 text-sm text-gray-700">{report.notes}</div>
         </section>
       )}
 
       {/* Finalize action */}
       {!report.is_finalized && (
-        <div data-print-hide className={`rounded-xl border px-5 py-4 ${allPartnersSigned ? 'bg-emerald-50 border-emerald-200' : 'bg-gray-50 border-gray-100'} flex items-center justify-between gap-4`}>
+        <div data-print-hide className={`rounded border px-5 py-4 ${allPartnersSigned ? 'bg-emerald-50 border-emerald-200' : 'bg-gray-50 border-gray-100'} flex items-center justify-between gap-4`}>
           <div>
             <div className="text-sm font-bold text-gray-900">Raporu Sonuçlandır</div>
             <div className="text-xs text-gray-500 mt-0.5">
@@ -305,7 +305,7 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
           <button
             onClick={() => onFinalize(report.id)}
             disabled={finalizing}
-            className="flex-shrink-0 px-4 py-2 rounded-xl bg-gray-900 text-white text-sm font-semibold hover:bg-gray-800 transition-colors disabled:opacity-60"
+            className="flex-shrink-0 px-4 py-2 rounded bg-gray-900 text-white text-sm font-semibold hover:bg-gray-800 transition-colors disabled:opacity-60"
           >
             {finalizing ? 'Sonuçlandırılıyor…' : 'Sonuçlandır & Kilitle'}
           </button>
@@ -313,7 +313,7 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
       )}
 
       {report.is_finalized && (
-        <div className="rounded-xl border border-gray-100 bg-gray-50 px-5 py-4 flex items-center gap-3">
+        <div className="rounded border border-gray-100 bg-gray-50 px-5 py-4 flex items-center gap-3">
           <div className="text-lg">🔒</div>
           <div>
             <div className="text-sm font-bold text-gray-700">Sonuçlandırıldı</div>
@@ -454,7 +454,7 @@ export default function GovernancePage() {
         </div>
         <button
           onClick={() => setShowGenForm(v => !v)}
-          className="flex-shrink-0 inline-flex items-center gap-1.5 bg-primary-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-primary-700 transition-colors"
+          className="flex-shrink-0 inline-flex items-center gap-1.5 bg-primary-600 text-white px-4 py-2 rounded text-sm font-semibold hover:bg-primary-700 transition-colors"
         >
           {showGenForm ? '✕ Kapat' : '+ Yeni Rapor'}
         </button>
@@ -462,7 +462,7 @@ export default function GovernancePage() {
 
       {/* Generate form */}
       {showGenForm && (
-        <div data-print-hide className="bg-white border border-gray-100 rounded-xl px-5 py-5 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+        <div data-print-hide className="bg-white border border-gray-100 rounded px-5 py-5 shadow-sm">
           <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4">Yeni Yönetişim Raporu Oluştur</div>
           <div className="grid grid-cols-3 gap-3 mb-4">
             <div>
@@ -470,7 +470,7 @@ export default function GovernancePage() {
               <select
                 value={genYear}
                 onChange={e => setGenYear(Number(e.target.value))}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
+                className="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
               >
                 {[now.getFullYear() - 1, now.getFullYear()].map(y => (
                   <option key={y} value={y}>{y}</option>
@@ -482,7 +482,7 @@ export default function GovernancePage() {
               <select
                 value={genMonth}
                 onChange={e => setGenMonth(Number(e.target.value))}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
+                className="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
               >
                 {MONTHS.map((m, i) => (
                   <option key={i + 1} value={i + 1}>{m}</option>
@@ -496,18 +496,18 @@ export default function GovernancePage() {
                 value={genNotes}
                 onChange={e => setGenNotes(e.target.value)}
                 placeholder="Yönetim kurulu notu…"
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
+                className="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
               />
             </div>
           </div>
           <div className="flex items-center justify-end gap-2">
-            <button onClick={() => setShowGenForm(false)} className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50">
+            <button onClick={() => setShowGenForm(false)} className="px-4 py-2 rounded border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50">
               Vazgeç
             </button>
             <button
               onClick={handleGenerate}
               disabled={generating}
-              className="px-4 py-2 rounded-xl bg-primary-600 text-white text-sm font-semibold hover:bg-primary-700 disabled:opacity-60"
+              className="px-4 py-2 rounded bg-primary-600 text-white text-sm font-semibold hover:bg-primary-700 disabled:opacity-60"
             >
               {generating ? 'Oluşturuluyor…' : 'Rapor Oluştur'}
             </button>
@@ -517,7 +517,7 @@ export default function GovernancePage() {
 
       {/* Error */}
       {error && (
-        <div data-print-hide className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700 flex items-center justify-between">
+        <div data-print-hide className="bg-red-50 border border-red-200 rounded px-4 py-3 text-sm text-red-700 flex items-center justify-between">
           <span>{error}</span>
           <button onClick={() => setError(null)} className="text-red-400 font-bold text-base ml-3">✕</button>
         </div>
@@ -525,11 +525,11 @@ export default function GovernancePage() {
 
       {/* Main layout: list + detail */}
       {loading ? (
-        <div className="bg-white border border-gray-100 rounded-xl p-8 text-center">
+        <div className="bg-white border border-gray-100 rounded p-8 text-center">
           <div className="text-sm text-gray-400">Yükleniyor…</div>
         </div>
       ) : reports.length === 0 ? (
-        <div className="bg-white border border-gray-100 rounded-xl p-10 text-center">
+        <div className="bg-white border border-gray-100 rounded p-10 text-center">
           <div className="text-3xl mb-3">📋</div>
           <div className="text-sm font-semibold text-gray-700 mb-1">Henüz yönetişim raporu yok</div>
           <div className="text-xs text-gray-400 mb-5">
@@ -538,7 +538,7 @@ export default function GovernancePage() {
           </div>
           <button
             onClick={() => setShowGenForm(true)}
-            className="inline-flex items-center gap-1.5 bg-primary-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-primary-700 transition-colors"
+            className="inline-flex items-center gap-1.5 bg-primary-600 text-white px-4 py-2 rounded text-sm font-semibold hover:bg-primary-700 transition-colors"
           >
             + İlk Raporu Oluştur
           </button>
@@ -560,7 +560,7 @@ export default function GovernancePage() {
                 <button
                   key={r.id}
                   onClick={() => setSelectedId(r.id)}
-                  className={`w-full text-left rounded-xl border px-4 py-3 transition-all ${
+                  className={`w-full text-left rounded border px-4 py-3 transition-all ${
                     selectedId === r.id
                       ? 'border-primary-300 bg-primary-50/50 shadow-sm'
                       : 'border-gray-100 bg-white hover:border-gray-200'
@@ -569,8 +569,8 @@ export default function GovernancePage() {
                   <div className="flex items-center justify-between gap-2">
                     <div className="text-sm font-bold text-gray-900 truncate">{r.period_label}</div>
                     {r.is_finalized
-                      ? <span className="text-[9px] font-bold text-gray-500 bg-gray-100 rounded-full px-1.5 py-0.5 flex-shrink-0">🔒</span>
-                      : <span className={`text-[9px] font-bold rounded-full px-1.5 py-0.5 flex-shrink-0 ${theme.text} ${theme.bg} border ${theme.border}`}>{theme.label}</span>
+                      ? <span className="text-[9px] font-bold text-gray-500 bg-gray-100 rounded px-1.5 py-0.5 flex-shrink-0">🔒</span>
+                      : <span className={`text-[9px] font-bold rounded px-1.5 py-0.5 flex-shrink-0 ${theme.text} ${theme.bg} border ${theme.border}`}>{theme.label}</span>
                     }
                   </div>
                   <div className="text-[10px] text-gray-400 mt-1">
@@ -592,7 +592,7 @@ export default function GovernancePage() {
           </div>
 
           {/* Report detail */}
-          <div className="bg-white border border-gray-100 rounded-xl px-6 py-6 shadow-[0_1px_3px_rgba(17,24,39,0.06)]">
+          <div className="bg-white border border-[#e2e8f0] rounded p-4">
             {selectedReport ? (
               <ReportDetail
                 report={selectedReport}
@@ -609,7 +609,7 @@ export default function GovernancePage() {
       )}
 
       {/* Info footer */}
-      <div data-print-hide className="bg-gray-50 border border-gray-100 rounded-xl px-5 py-4 text-xs text-gray-500 leading-relaxed">
+      <div data-print-hide className="bg-gray-50 border border-gray-100 rounded px-5 py-4 text-xs text-gray-500 leading-relaxed">
         <span className="font-semibold text-gray-700">Yönetişim Kaydı Hakkında:</span>{' '}
         Her rapor, o ay için şirketin finansal pozisyonunun anlık görüntüsüdür.
         Ortaklar kendi paylarını ve bakiyelerini görür, dijital onay verir.

@@ -76,7 +76,7 @@ export function DashboardActions() {
     if (fileRef.current) fileRef.current.value = ''
   }
 
-  const btn = 'inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition-colors disabled:opacity-40 cursor-pointer'
+  const btn = 'inline-flex items-center gap-1.5 px-3 py-2 rounded text-xs font-semibold border transition-colors disabled:opacity-40 cursor-pointer'
   const gray = `${btn} bg-white border-gray-200 text-gray-700 hover:bg-gray-50`
 
   return (
@@ -88,7 +88,7 @@ export function DashboardActions() {
         <input ref={fileRef} type="file" accept=".json" className="hidden" onChange={handleImport} />
       </div>
       {status && (
-        <div className={`text-xs px-3 py-1.5 rounded-lg font-medium max-w-sm text-right ${
+        <div className={`text-xs px-3 py-1.5 rounded font-medium max-w-sm text-right ${
           status.kind === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
         : status.kind === 'error'   ? 'bg-red-50 text-red-700 border border-red-200'
                                     : 'bg-blue-50 text-blue-700 border border-blue-200'

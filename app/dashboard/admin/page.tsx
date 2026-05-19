@@ -161,7 +161,7 @@ export default async function AdminHubPage() {
       <div className="grid grid-cols-2 gap-4">
         {TILES.map(tile => (
           <Link key={tile.href} href={tile.href}
-            className={`relative bg-white border rounded-xl p-4 hover:shadow-sm transition-all group ${tile.color}`}
+            className={`relative bg-white border rounded p-4 hover:shadow-sm transition-all group ${tile.color}`}
           >
             {tile.badge != null && (
               <span className="absolute top-3 right-3 min-w-[20px] h-5 px-1.5 rounded-full bg-amber-500 text-white text-[10px] font-black flex items-center justify-center">
@@ -185,12 +185,12 @@ export default async function AdminHubPage() {
       </div>
 
       {/* Settings quick-links */}
-      <div className="bg-gray-50 border border-gray-100 rounded-xl p-4">
+      <div className="bg-gray-50 border border-gray-100 rounded p-4">
         <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">Hızlı Ayarlar</div>
         <div className="flex flex-wrap gap-2">
           {SETTING_LINKS.map(s => (
             <Link key={s.href} href={s.href}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-gray-100 text-xs font-semibold text-gray-700 hover:border-primary-200 hover:text-primary-700 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-white border border-gray-100 text-xs font-semibold text-gray-700 hover:border-primary-200 hover:text-primary-700 transition-colors"
             >
               <span>{s.icon}</span>
               {s.label}
@@ -201,7 +201,7 @@ export default async function AdminHubPage() {
 
       {/* Recent audit activity */}
       {summary.recentLogs.length > 0 && (
-        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+        <div className="bg-white border border-gray-100 rounded overflow-hidden">
           <div className="px-4 py-3 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
             <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Son Aktivite</div>
             <Link href="/dashboard/admin/audit"

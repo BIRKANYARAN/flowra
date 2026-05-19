@@ -122,7 +122,7 @@ export async function SimulationContext({ companyId }: Props) {
           }
           return (
             <div key={kpi.label}
-              className="bg-white border border-gray-100 rounded-xl px-3 py-2.5 hover:border-gray-300 transition-colors">
+              className="bg-white border border-gray-100 rounded px-3 py-2.5 hover:border-gray-300 transition-colors">
               <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1">{kpi.label}</div>
               <div className={`text-base font-black tabular-nums leading-none ${colors[kpi.tone] ?? 'text-gray-900'}`}>
                 {kpi.value}
@@ -135,7 +135,7 @@ export async function SimulationContext({ companyId }: Props) {
 
       {/* ── Break-even signal ─────────────────────────────────────────────── */}
       {burn > 0 && (
-        <div className={`flex items-center justify-between gap-4 px-4 py-2.5 rounded-xl border text-xs ${
+        <div className={`flex items-center justify-between gap-4 px-4 py-2.5 rounded border text-xs ${
           m.cash.true_cash_position <= 0
             ? 'bg-red-50 border-red-200'
             : runwayMonths !== null && runwayMonths <= 6

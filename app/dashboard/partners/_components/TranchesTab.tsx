@@ -100,7 +100,7 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
       {/* Header row: success toast + CTA */}
       <div className="flex items-center justify-between gap-3 min-h-[32px]">
         {success && (
-          <span className="text-xs text-emerald-700 font-semibold bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-1">
+          <span className="text-xs text-emerald-700 font-semibold bg-emerald-50 border border-emerald-200 rounded px-3 py-1">
             Borç dilimi başarıyla eklendi.
           </span>
         )}
@@ -108,7 +108,7 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
         <button
           onClick={showForm ? closeForm : openForm}
           disabled={saving}
-          className="inline-flex items-center gap-1.5 bg-primary-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-primary-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+          className="inline-flex items-center gap-1.5 bg-primary-600 text-white px-4 py-2 rounded text-sm font-semibold hover:bg-primary-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {showForm ? '✕ Kapat' : '+ Yeni Borç Dilimi'}
         </button>
@@ -118,7 +118,7 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
       {showForm && (
         <form
           onSubmit={handleSubmit}
-          className="bg-white border border-gray-100 rounded-xl px-5 py-5 shadow-[0_1px_2px_rgba(17,24,39,0.04)] flex flex-col gap-4"
+          className="bg-white border border-gray-100 rounded px-5 py-5 shadow-sm flex flex-col gap-4"
         >
           <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">
             Yeni Borç Tranşı
@@ -132,7 +132,7 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
             <select
               value={form.partner_id}
               onChange={e => field('partner_id', e.target.value)}
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="border border-gray-200 rounded px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               required
             >
               <option value="">— Ortak seçin —</option>
@@ -155,7 +155,7 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
                 value={form.amount_try}
                 onChange={e => field('amount_try', e.target.value)}
                 placeholder="0.00"
-                className="border border-gray-200 rounded-lg px-3 py-2 text-sm font-mono text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="border border-gray-200 rounded px-3 py-2 text-sm font-mono text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 required
               />
             </div>
@@ -171,7 +171,7 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
                 value={form.annual_interest_rate}
                 onChange={e => field('annual_interest_rate', e.target.value)}
                 placeholder="0"
-                className="border border-gray-200 rounded-lg px-3 py-2 text-sm font-mono text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="border border-gray-200 rounded px-3 py-2 text-sm font-mono text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
           </div>
@@ -186,7 +186,7 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
                 type="date"
                 value={form.disbursement_date}
                 onChange={e => field('disbursement_date', e.target.value)}
-                className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="border border-gray-200 rounded px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 required
               />
             </div>
@@ -198,7 +198,7 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
                 type="date"
                 value={form.expected_repayment_date}
                 onChange={e => field('expected_repayment_date', e.target.value)}
-                className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="border border-gray-200 rounded px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
           </div>
@@ -213,12 +213,12 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
               onChange={e => field('notes', e.target.value)}
               rows={2}
               placeholder="İsteğe bağlı açıklama..."
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 resize-none focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="border border-gray-200 rounded px-3 py-2 text-sm text-gray-900 resize-none focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
           </div>
 
           {formErr && (
-            <div className="text-sm text-red-600 font-medium bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+            <div className="text-sm text-red-600 font-medium bg-red-50 border border-red-100 rounded px-3 py-2">
               {formErr}
             </div>
           )}
@@ -228,14 +228,14 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
               type="button"
               onClick={closeForm}
               disabled={saving}
-              className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50"
+              className="px-4 py-2 rounded border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50"
             >
               Vazgeç
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="px-4 py-2 rounded-xl bg-primary-600 text-white text-sm font-semibold hover:bg-primary-700 transition-colors disabled:opacity-60"
+              className="px-4 py-2 rounded bg-primary-600 text-white text-sm font-semibold hover:bg-primary-700 transition-colors disabled:opacity-60"
             >
               {saving ? 'Kaydediliyor…' : 'Kaydet'}
             </button>
@@ -245,27 +245,27 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
 
       {/* Existing tranches display */}
       {loading ? <Skeleton h="h-32" /> : !waterfall ? (
-        <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-6 text-center text-sm text-gray-400">
+        <div className="bg-gray-50 border border-gray-200 rounded px-4 py-6 text-center text-sm text-gray-400">
           Borç dilimi verisi yüklenemedi.
         </div>
       ) : waterfall.tranches.filter(t => t.principal_try > 0).length === 0 ? (
-        <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-6 text-center text-sm text-emerald-700 font-semibold">
+        <div className="bg-emerald-50 border border-emerald-200 rounded px-4 py-6 text-center text-sm text-emerald-700 font-semibold">
           Aktif ortak borç tranche&apos;ı yok.
         </div>
       ) : (
         <>
           <div className="grid grid-cols-3 gap-2">
-            <div className="bg-white border border-amber-200 rounded-xl px-4 py-3">
+            <div className="bg-white border border-amber-200 rounded px-4 py-3">
               <div className="text-[10px] font-bold uppercase tracking-widest text-amber-500 mb-1">Toplam Açık Borç</div>
               <div className="text-2xl font-black tabular-nums text-amber-700">{fmt(waterfall.total_debt_try)}</div>
             </div>
-            <div className="bg-white border border-gray-100 rounded-xl px-4 py-3 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+            <div className="bg-white border border-gray-100 rounded px-4 py-3 shadow-sm">
               <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Aktif Borç Dilimi</div>
               <div className="text-2xl font-black tabular-nums text-gray-900">
                 {waterfall.tranches.filter(t => t.status !== 'repaid').length}
               </div>
             </div>
-            <div className="bg-white border border-gray-100 rounded-xl px-4 py-3 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+            <div className="bg-white border border-gray-100 rounded px-4 py-3 shadow-sm">
               <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Kapanma Tahmini</div>
               <div className={`text-2xl font-black tabular-nums ${
                 (waterfall.debt_clearance_months ?? 0) > 0
@@ -284,7 +284,7 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
               const repaidPct    = t.principal_try > 0 ? (t.actual_repaid_try / t.principal_try) * 100 : 0
               const progressColor = t.status === 'repaid' ? 'bg-emerald-500' : t.status === 'overdue' ? 'bg-red-500' : 'bg-primary-500'
               return (
-                <div key={t.id} className="bg-white border border-gray-100 rounded-xl px-5 py-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+                <div key={t.id} className="bg-white border border-gray-100 rounded px-5 py-4 shadow-sm">
                   <div className="flex items-start justify-between gap-4 mb-3">
                     <div>
                       <div className="flex items-center gap-2">

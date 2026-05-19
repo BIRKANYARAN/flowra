@@ -54,7 +54,7 @@ export default async function RolesPage() {
         </Link>
       </div>
 
-      <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+      <div className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
         <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
           <h2 className="text-xs font-bold text-gray-600 uppercase tracking-wide">
             Şirket Üyeleri ve Roller
@@ -68,7 +68,7 @@ export default async function RolesPage() {
           <div className="divide-y divide-gray-100">
             {(members ?? []).map((m) => (
               <div key={m.user_id} className="flex items-center gap-3 px-4 py-3">
-                <div className="w-8 h-8 rounded-lg bg-primary-100 flex items-center justify-center flex-shrink-0">
+                <div className="w-8 h-8 rounded bg-primary-100 flex items-center justify-center flex-shrink-0">
                   <span className="text-primary-700 font-bold text-xs">
                     {(m.role as string).slice(0, 1).toUpperCase()}
                   </span>
@@ -81,7 +81,7 @@ export default async function RolesPage() {
                     Üye: {new Date(m.created_at as string).toLocaleDateString('tr-TR')}
                   </div>
                 </div>
-                <span className={`text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${
+                <span className={`text-xs font-bold px-2 py-0.5 rounded flex-shrink-0 ${
                   m.role === 'admin'   ? 'bg-primary-100 text-primary-700' :
                   m.role === 'manager' ? 'bg-blue-100 text-blue-700'       :
                                          'bg-gray-100 text-gray-500'
@@ -94,7 +94,7 @@ export default async function RolesPage() {
         )}
       </div>
 
-      <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-800">
+      <div className="bg-amber-50 border border-amber-200 rounded px-4 py-3 text-sm text-amber-800">
         <strong>Not:</strong> Rol düzenleme ve üye davet özellikleri geliştirme aşamasındadır.
         Mevcut roller sadece görüntüleme modundadır.
       </div>

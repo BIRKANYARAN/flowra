@@ -10,7 +10,7 @@ import { calculateLine, calculateTotals, round2, type LineInput } from '@/lib/ca
 import { getSalePrice, getSaleCurrency, getLegacyProductCost } from '@/lib/product-adapter'
 import { resolveCompanyId } from '@/lib/resolve-company'
 
-const IL  = 'w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white transition-colors'
+const IL  = 'w-full border border-gray-200 rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white transition-colors'
 const LAB = 'block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5'
 const KDV_OPTS = [0, 1, 8, 10, 18, 20]
 
@@ -207,7 +207,7 @@ export default function NewProformaPage() {
         <div className="col-span-2 space-y-5">
 
           {/* Step 1: Customer */}
-          <div className="bg-white border border-gray-100 rounded-2xl p-5">
+          <div className="bg-white border border-gray-100 rounded p-5">
             <h2 className="font-bold text-sm mb-4 flex items-center gap-2">
               <span className="w-5 h-5 bg-primary-600 text-white rounded-full text-xs flex items-center justify-center font-black">1</span>
               Müşteri Bilgileri &amp; Seçenekler
@@ -267,7 +267,7 @@ export default function NewProformaPage() {
           </div>
 
           {/* Step 2: Items */}
-          <div className="bg-white border border-gray-100 rounded-2xl p-5">
+          <div className="bg-white border border-gray-100 rounded p-5">
             <h2 className="font-bold text-sm mb-4 flex items-center gap-2">
               <span className="w-5 h-5 bg-primary-600 text-white rounded-full text-xs flex items-center justify-center font-black">2</span>
               Ürünler / Hizmetler
@@ -308,7 +308,7 @@ export default function NewProformaPage() {
                         onFocus={() => setSearch({ idx: i, q: line.name, open: true })}
                       />
                       {isOpen && opts.length > 0 && (
-                        <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-gray-100 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                        <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-[#e2e8f0] rounded shadow-sm max-h-48 overflow-y-auto">
                           {opts.map(p => (
                             <button
                               key={p.id}
@@ -403,7 +403,7 @@ export default function NewProformaPage() {
                         <button
                           type="button"
                           onClick={() => setLines(ls => ls.filter((_, idx) => idx !== i))}
-                          className="ml-1 w-6 h-6 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 flex items-center justify-center text-lg leading-none transition-colors"
+                          className="ml-1 w-6 h-6 rounded text-gray-300 hover:text-red-500 hover:bg-red-50 flex items-center justify-center text-lg leading-none transition-colors"
                         >
                           ×
                         </button>
@@ -417,14 +417,14 @@ export default function NewProformaPage() {
             <button
               type="button"
               onClick={() => setLines(ls => [...ls, emptyLine(currency)])}
-              className="mt-4 flex items-center gap-1.5 text-sm text-gray-500 hover:text-primary-600 py-1.5 px-2 rounded-lg hover:bg-primary-50 transition-colors"
+              className="mt-4 flex items-center gap-1.5 text-sm text-gray-500 hover:text-primary-600 py-1.5 px-2 rounded hover:bg-primary-50 transition-colors"
             >
               <span className="font-black text-base">+</span> Satır Ekle
             </button>
           </div>
 
           {/* Step 3: Notes */}
-          <div className="bg-white border border-gray-100 rounded-2xl p-5">
+          <div className="bg-white border border-gray-100 rounded p-5">
             <label className={LAB}>Notlar</label>
             <textarea
               className={`${IL} resize-none`}
@@ -438,10 +438,10 @@ export default function NewProformaPage() {
 
         {/* Right: Summary */}
         <div className="space-y-5">
-          <div className="bg-white border border-gray-100 rounded-2xl p-5 sticky top-20">
+          <div className="bg-white border border-gray-100 rounded p-5 sticky top-20">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Fiyat Özeti</h2>
-              <span className="text-xs font-bold text-primary-600 bg-primary-50 px-2.5 py-0.5 rounded-full">{currency}</span>
+              <span className="text-xs font-bold text-primary-600 bg-primary-50 px-2.5 py-0.5 rounded">{currency}</span>
             </div>
             <div className="space-y-2.5">
               <div className="flex justify-between text-sm">

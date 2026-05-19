@@ -17,7 +17,7 @@ import { FlowraCard }   from '@/components/ui-kit/FlowraCard'
 import { FlowraInput }  from '@/components/ui-kit/FlowraInput'
 import { CURRENCIES_EXTENDED, EXPENSE_CATEGORIES, type Expense } from '@/types'
 
-const IL  = 'w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400 transition-colors bg-white'
+const IL  = 'w-full border border-gray-200 rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400 transition-colors bg-white'
 const LAB = 'block text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1.5'
 
 export const CATEGORY_LABELS: Record<string, string> = {
@@ -279,7 +279,7 @@ export default function ExpensesClient({
                     onChange={e => setForm(f => ({ ...f, amount: e.target.value }))}
                   />
                   <select
-                    className="border border-gray-200 rounded-xl px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 bg-white transition-colors"
+                    className="border border-gray-200 rounded px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 bg-white transition-colors"
                     value={form.currency}
                     onChange={e => setForm(f => ({ ...f, currency: e.target.value }))}
                   >
@@ -382,7 +382,7 @@ export default function ExpensesClient({
         <>
           {/* ── One-off expenses ──────────────────────────────────────────────── */}
           {list.length > 0 && (
-            <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+            <div className="bg-white border border-gray-100 rounded overflow-hidden">
               <div className="grid grid-cols-12 text-[10px] font-bold text-gray-400 uppercase tracking-widest px-5 py-3 border-b border-gray-100">
                 <div className="col-span-4">Açıklama</div>
                 <div className="col-span-2">Kategori</div>
@@ -399,7 +399,7 @@ export default function ExpensesClient({
                       <div className="text-sm font-medium text-gray-800 truncate">{e.description}</div>
                     </div>
                     <div className="col-span-2">
-                      <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-lg">
+                      <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
                         {CATEGORY_LABELS[e.category] ?? e.category}
                       </span>
                     </div>
@@ -422,14 +422,14 @@ export default function ExpensesClient({
                           <button
                             onClick={() => del(e.id)}
                             disabled={deleting === e.id}
-                            className="text-xs text-white bg-red-500 hover:bg-red-600 px-2 py-0.5 rounded-lg transition-colors font-semibold disabled:opacity-50"
+                            className="text-xs text-white bg-red-500 hover:bg-red-600 px-2 py-0.5 rounded transition-colors font-semibold disabled:opacity-50"
                           >
                             {deleting === e.id ? '…' : 'Evet'}
                           </button>
                           <button
                             onClick={() => setConfirmExpId(null)}
                             disabled={deleting === e.id}
-                            className="text-xs text-gray-400 px-1.5 py-0.5 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50"
+                            className="text-xs text-gray-400 px-1.5 py-0.5 rounded hover:bg-gray-100 transition-colors disabled:opacity-50"
                           >
                             İptal
                           </button>
@@ -437,7 +437,7 @@ export default function ExpensesClient({
                       ) : (
                         <button
                           onClick={() => setConfirmExpId(e.id)}
-                          className="opacity-0 group-hover:opacity-100 text-xs text-gray-400 hover:text-red-500 px-1.5 py-1 rounded-lg hover:bg-red-50 transition-all"
+                          className="opacity-0 group-hover:opacity-100 text-xs text-gray-400 hover:text-red-500 px-1.5 py-1 rounded hover:bg-red-50 transition-all"
                         >
                           Sil
                         </button>
@@ -453,7 +453,7 @@ export default function ExpensesClient({
           {recurring.length > 0 && (
             <div>
               <Label className="mb-3">Tekrarlayan Giderler ({recurring.length})</Label>
-              <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+              <div className="bg-white border border-gray-100 rounded overflow-hidden">
                 <div className="grid grid-cols-12 text-[10px] font-bold text-gray-400 uppercase tracking-widest px-5 py-3 border-b border-gray-100">
                   <div className="col-span-4">Açıklama</div>
                   <div className="col-span-2">Kategori</div>
@@ -473,12 +473,12 @@ export default function ExpensesClient({
                         </div>
                       </div>
                       <div className="col-span-2">
-                        <span className="text-xs bg-primary-50 text-primary-600 px-2 py-0.5 rounded-lg">
+                        <span className="text-xs bg-primary-50 text-primary-600 px-2 py-0.5 rounded">
                           {CATEGORY_LABELS[r.category] ?? r.category}
                         </span>
                       </div>
                       <div className="col-span-2">
-                        <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-lg">
+                        <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
                           {FREQUENCY_LABELS[r.frequency] ?? r.frequency}
                         </span>
                       </div>
@@ -494,14 +494,14 @@ export default function ExpensesClient({
                             <button
                               onClick={() => delRecurring(r.id)}
                               disabled={deleting === r.id}
-                              className="text-xs text-white bg-red-500 hover:bg-red-600 px-2 py-0.5 rounded-lg transition-colors font-semibold disabled:opacity-50"
+                              className="text-xs text-white bg-red-500 hover:bg-red-600 px-2 py-0.5 rounded transition-colors font-semibold disabled:opacity-50"
                             >
                               {deleting === r.id ? '…' : 'Evet'}
                             </button>
                             <button
                               onClick={() => setConfirmRecId(null)}
                               disabled={deleting === r.id}
-                              className="text-xs text-gray-400 px-1.5 py-0.5 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50"
+                              className="text-xs text-gray-400 px-1.5 py-0.5 rounded hover:bg-gray-100 transition-colors disabled:opacity-50"
                             >
                               İptal
                             </button>
@@ -509,7 +509,7 @@ export default function ExpensesClient({
                         ) : (
                           <button
                             onClick={() => setConfirmRecId(r.id)}
-                            className="opacity-0 group-hover:opacity-100 text-xs text-gray-400 hover:text-red-500 px-1.5 py-1 rounded-lg hover:bg-red-50 transition-all"
+                            className="opacity-0 group-hover:opacity-100 text-xs text-gray-400 hover:text-red-500 px-1.5 py-1 rounded hover:bg-red-50 transition-all"
                           >
                             Durdur
                           </button>

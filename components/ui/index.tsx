@@ -11,7 +11,7 @@ export function cn(...args: unknown[]) { return twMerge(clsx(args)) }
 
 /* ── Btn (CVA-driven, replaces the original hand-rolled version) ─────────── */
 const btn = cva(
-  'inline-flex items-center justify-center gap-2 font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed',
+  'inline-flex items-center justify-center gap-2 font-semibold rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed',
   {
     variants: {
       variant: {
@@ -61,7 +61,7 @@ export const Btn = forwardRef<HTMLButtonElement, BtnProps>(
 Btn.displayName = 'Btn'
 
 /* ── Card ─────────────────────────────────────────────────────────────────── */
-const card = cva('bg-white border border-gray-200 rounded-2xl', {
+const card = cva('bg-white border border-gray-200 rounded', {
   variants: {
     padding:     { none: 'p-0', sm: 'p-4', md: 'p-5', lg: 'p-6' },
     interactive: { true: 'hover:border-gray-300 cursor-pointer transition-colors', false: '' },
@@ -113,7 +113,7 @@ export const DSInput = forwardRef<HTMLInputElement, DSInputProps>(
         <input
           ref={ref}
           className={cn(
-            'w-full bg-white border rounded-xl px-3 py-2 text-sm text-gray-900 placeholder-gray-400 transition-colors',
+            'w-full bg-white border rounded px-3 py-2 text-sm text-gray-900 placeholder-gray-400 transition-colors',
             'focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100',
             prefix && 'pl-8',
             suffix && 'pr-10',
@@ -137,34 +137,34 @@ DSInput.displayName = 'DSInput'
 // Accepts BOTH Turkish display strings AND English DB keys.
 const STATUS_MAP: Record<string, { label: string; cls: string }> = {
   // English DB keys (legacy)
-  draft:        { label: 'Taslak',       cls: 'bg-gray-100 text-gray-600' },
-  sent:         { label: 'Gönderildi',   cls: 'bg-blue-50 text-blue-700' },
-  accepted:     { label: 'Onaylandı',    cls: 'bg-emerald-50 text-emerald-700' },
-  rejected:     { label: 'Reddedildi',   cls: 'bg-red-50 text-red-700' },
-  converted:    { label: 'Dönüştürüldü', cls: 'bg-primary-50 text-primary-700' },
-  paid:         { label: 'Ödendi',       cls: 'bg-emerald-50 text-emerald-700' },
-  partial:      { label: 'Kısmi',        cls: 'bg-amber-50 text-amber-700' },
-  unpaid:       { label: 'Bekliyor',     cls: 'bg-amber-50 text-amber-700' },
-  pending:      { label: 'Bekliyor',     cls: 'bg-amber-50 text-amber-700' },
-  overdue:      { label: 'Gecikmiş',     cls: 'bg-red-50 text-red-700' },
-  completed:    { label: 'Tamamlandı',   cls: 'bg-emerald-50 text-emerald-700' },
-  cancelled:    { label: 'İptal',        cls: 'bg-gray-100 text-gray-500' },
+  draft:        { label: 'Taslak',       cls: 'bg-[#f1f5f9] text-[#64748b]' },
+  sent:         { label: 'Gönderildi',   cls: 'bg-info-light text-info-text' },
+  accepted:     { label: 'Onaylandı',    cls: 'bg-pos-light text-pos-text' },
+  rejected:     { label: 'Reddedildi',   cls: 'bg-neg-light text-neg-text' },
+  converted:    { label: 'Dönüştürüldü', cls: 'bg-brand-subtle text-brand' },
+  paid:         { label: 'Ödendi',       cls: 'bg-pos-light text-pos-text' },
+  partial:      { label: 'Kısmi',        cls: 'bg-warn-light text-warn-text' },
+  unpaid:       { label: 'Bekliyor',     cls: 'bg-warn-light text-warn-text' },
+  pending:      { label: 'Bekliyor',     cls: 'bg-warn-light text-warn-text' },
+  overdue:      { label: 'Gecikmiş',     cls: 'bg-neg-light text-neg-text' },
+  completed:    { label: 'Tamamlandı',   cls: 'bg-pos-light text-pos-text' },
+  cancelled:    { label: 'İptal',        cls: 'bg-[#f1f5f9] text-[#64748b]' },
   // Turkish display strings (design system native)
-  Taslak:       { label: 'Taslak',       cls: 'bg-gray-100 text-gray-600' },
-  Gönderildi:   { label: 'Gönderildi',   cls: 'bg-blue-50 text-blue-700' },
-  Onaylandı:    { label: 'Onaylandı',    cls: 'bg-emerald-50 text-emerald-700' },
-  Reddedildi:   { label: 'Reddedildi',   cls: 'bg-red-50 text-red-700' },
-  Dönüştürüldü: { label: 'Dönüştürüldü', cls: 'bg-primary-50 text-primary-700' },
-  Bekliyor:     { label: 'Bekliyor',     cls: 'bg-amber-50 text-amber-700' },
-  Ödendi:       { label: 'Ödendi',       cls: 'bg-emerald-50 text-emerald-700' },
-  Gecikmiş:     { label: 'Gecikmiş',     cls: 'bg-red-50 text-red-700' },
-  Tamamlandı:   { label: 'Tamamlandı',   cls: 'bg-emerald-50 text-emerald-700' },
+  Taslak:       { label: 'Taslak',       cls: 'bg-[#f1f5f9] text-[#64748b]' },
+  Gönderildi:   { label: 'Gönderildi',   cls: 'bg-info-light text-info-text' },
+  Onaylandı:    { label: 'Onaylandı',    cls: 'bg-pos-light text-pos-text' },
+  Reddedildi:   { label: 'Reddedildi',   cls: 'bg-neg-light text-neg-text' },
+  Dönüştürüldü: { label: 'Dönüştürüldü', cls: 'bg-brand-subtle text-brand' },
+  Bekliyor:     { label: 'Bekliyor',     cls: 'bg-warn-light text-warn-text' },
+  Ödendi:       { label: 'Ödendi',       cls: 'bg-pos-light text-pos-text' },
+  Gecikmiş:     { label: 'Gecikmiş',     cls: 'bg-neg-light text-neg-text' },
+  Tamamlandı:   { label: 'Tamamlandı',   cls: 'bg-pos-light text-pos-text' },
 }
 
 export function StatusBadge({ status }: { status: string }) {
   const s = STATUS_MAP[status] ?? { label: status, cls: 'bg-gray-100 text-gray-500' }
   return (
-    <span className={cn('inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-semibold', s.cls)}>
+    <span className={cn('inline-flex items-center px-2.5 py-0.5 rounded text-xs font-semibold', s.cls)}>
       {s.label}
     </span>
   )
@@ -197,9 +197,9 @@ export function Money({
     kpi:    'text-2xl font-black tracking-tight',
   }[emphasis]
   const toneCls = {
-    neutral:  'text-gray-900',
-    positive: 'text-emerald-700',
-    negative: 'text-red-700',
+    neutral:  'text-[#0f172a]',
+    positive: 'text-pos',
+    negative: 'text-neg',
   }[tone]
   const sign = signed && value > 0 ? '+' : signed && value < 0 ? '−' : ''
   const abs  = Math.abs(value)
@@ -219,7 +219,7 @@ export function StatCard({ label, value, sub, accent }: {
   label: string; value: string | number; sub?: string; accent?: boolean
 }) {
   return (
-    <div className={`bg-white border rounded-2xl p-5 ${accent ? 'border-primary-200 bg-primary-50' : 'border-gray-200'}`}>
+    <div className={`bg-white border rounded p-5 ${accent ? 'border-primary-200 bg-primary-50' : 'border-gray-200'}`}>
       <div className={`text-xs font-semibold uppercase tracking-wide mb-1 ${accent ? 'text-primary-500' : 'text-gray-400'}`}>
         {label}
       </div>
@@ -251,7 +251,7 @@ export function EmptyState({ icon, title, sub, action }: {
   icon: string; title: string; sub?: string; action?: ReactNode
 }) {
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl text-center py-16 px-6">
+    <div className="bg-white border border-gray-200 rounded text-center py-16 px-6">
       <div className="text-5xl mb-3">{icon}</div>
       <p className="font-semibold text-gray-700 mb-1">{title}</p>
       {sub && <p className="text-sm text-gray-400 mb-5">{sub}</p>}
@@ -272,7 +272,7 @@ export function LoadingSpinner() {
 /* ── Error banner ────────────────────────────────────────────────────────── */
 export function ErrorBanner({ msg }: { msg: string }) {
   return (
-    <div className="bg-red-50 border border-red-100 text-red-700 px-4 py-3 rounded-xl text-sm">
+    <div className="bg-red-50 border border-red-100 text-red-700 px-4 py-3 rounded text-sm">
       {msg}
     </div>
   )
@@ -309,7 +309,7 @@ export const DSSelect = forwardRef<HTMLSelectElement, DSSelectProps>(
       <select
         ref={ref}
         className={cn(
-          'w-full bg-white border rounded-xl px-3 py-2 text-sm text-gray-900 transition-colors',
+          'w-full bg-white border rounded px-3 py-2 text-sm text-gray-900 transition-colors',
           'focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100',
           error ? 'border-red-300' : 'border-gray-200',
         )}

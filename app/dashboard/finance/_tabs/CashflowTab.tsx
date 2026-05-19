@@ -113,7 +113,7 @@ export async function CashflowTab({ userId, companyId }: Props) {
             tone: runway.exhaustion_date ? 'text-red-600' : 'text-emerald-700',
           },
         ].map(c => (
-          <div key={c.label} className="bg-white border border-gray-100 rounded-xl px-4 py-3 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+          <div key={c.label} className="bg-white border border-gray-100 rounded px-4 py-3 shadow-sm">
             <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">{c.label}</div>
             <div className={`text-xl font-black tabular-nums leading-none ${c.tone}`}>{c.value}</div>
           </div>
@@ -122,26 +122,26 @@ export async function CashflowTab({ userId, companyId }: Props) {
 
       {/* Danger alert */}
       {timeline.firstDangerMonth && (
-        <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700 font-semibold">
+        <div className="bg-red-50 border border-red-200 rounded px-4 py-3 text-sm text-red-700 font-semibold">
           🔴 {fmtMonth(timeline.firstDangerMonth)} ayında kümülatif nakit negatife düşüyor.
           Tahsilatlar hızlandırılmalı veya giderler kısılmalıdır.
         </div>
       )}
 
       {/* Zone 2 — Chart */}
-      <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+      <div className="bg-white border border-gray-100 rounded p-4 shadow-sm">
         <CashflowChart className="w-full" />
       </div>
 
       {/* Zone 3 — Pressure timeline */}
       {timeline.pressureSignals.length > 0 && (
-        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+        <div className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
           <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
             <div>
               <h2 className="text-sm font-black text-gray-800">Baskı Haritası</h2>
               <p className="text-[10px] text-gray-400 mt-0.5">Negatif nakit akışı veya kümülatif tehlike olan gelecek aylar</p>
             </div>
-            <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+            <span className={`text-xs font-bold px-2.5 py-1 rounded ${
               timeline.pressureSignals.some(s => s.severity === 'critical')
                 ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
             }`}>
@@ -173,13 +173,13 @@ export async function CashflowTab({ userId, companyId }: Props) {
       )}
 
       {timeline.pressureSignals.length === 0 && timeline.months.length > 0 && (
-        <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 text-sm text-emerald-700 font-semibold">
+        <div className="bg-emerald-50 border border-emerald-200 rounded px-4 py-3 text-sm text-emerald-700 font-semibold">
           ✓ Önümüzdeki 6 ayda nakit baskı sinyali tespit edilmedi.
         </div>
       )}
 
       {/* Zone 3.5 — 3-Section Cash Flow Statement Strip */}
-      <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+      <div className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
         <div className="px-4 py-3 border-b border-gray-100">
           <div className="flex items-center justify-between">
             <div>
@@ -188,7 +188,7 @@ export async function CashflowTab({ userId, companyId }: Props) {
                 {from} – {today} · Faaliyet / Yatırım / Finansman
               </p>
             </div>
-            <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+            <span className={`text-xs font-bold px-2.5 py-1 rounded ${
               cashflowStatement.net_change_try >= 0
                 ? 'bg-emerald-100 text-emerald-700'
                 : 'bg-red-100 text-red-700'
@@ -272,7 +272,7 @@ export async function CashflowTab({ userId, companyId }: Props) {
 
       {/* Zone 4 — 12-month projection bar chart */}
       {chartMonths.length > 0 && (
-        <div className="bg-white border border-gray-100 rounded-xl px-4 py-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+        <div className="bg-white border border-gray-100 rounded px-4 py-4 shadow-sm">
           <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">12 Aylık Nakit Projeksiyonu</div>
           <div className="flex items-end gap-1.5 h-32">
             {chartMonths.map((mo) => {
@@ -303,7 +303,7 @@ export async function CashflowTab({ userId, companyId }: Props) {
 
       {/* Zone 5 — Monthly projection table */}
       {chartMonths.length > 0 && (
-        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+        <div className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
           <div className="px-4 py-3 border-b border-gray-100">
             <h2 className="text-sm font-black text-gray-800">Aylık Projeksiyon Detayı</h2>
           </div>

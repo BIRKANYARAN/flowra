@@ -63,7 +63,7 @@ export async function ProformasContent({ companyId }: Props) {
     <div className="max-w-5xl space-y-4">
       {/* KPI strip */}
       {list.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
           {[
             { label: 'Toplam Teklif',    value: String(list.length),   sub: 'tüm zamanlar',                         color: 'text-gray-900' },
             { label: 'Pipeline Değeri',  value: openCount > 0 ? formatTRY(pipelineValueTRY) : '—', sub: `${openCount} açık teklif (gönderildi/onaylandı)`, color: openCount > 0 ? 'text-blue-700' : 'text-gray-400' },
@@ -81,7 +81,7 @@ export async function ProformasContent({ companyId }: Props) {
 
       {/* Low win-rate alert — only when enough decisions to be statistically meaningful */}
       {winRate !== null && decided >= 5 && winRate < 30 && (
-        <div className={`rounded-xl border px-4 py-3 flex items-start gap-3 ${
+        <div className={`rounded border px-4 py-3 flex items-start gap-3 ${
           winRate < 15 ? 'bg-red-50 border-red-200' : 'bg-amber-50 border-amber-200'
         }`}>
           <span className="text-base mt-0.5">⚠</span>
@@ -109,7 +109,7 @@ export async function ProformasContent({ companyId }: Props) {
         )
         if (staleOpen.length < 3) return null
         return (
-          <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-start gap-3">
+          <div className="bg-amber-50 border border-amber-200 rounded px-4 py-3 flex items-start gap-3">
             <span className="text-base mt-0.5">⚠</span>
             <div className="flex-1">
               <div className="text-[11px] font-black uppercase tracking-wide text-amber-800">
@@ -126,7 +126,7 @@ export async function ProformasContent({ companyId }: Props) {
 
       {/* ── Proforma Status Funnel ────────────────────────────────────── */}
       {list.length > 2 && totalNonDraft > 0 && (
-        <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+        <div className="bg-white border border-gray-100 rounded p-4 shadow-sm">
           <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">Teklif Dönüşüm Hunisi</div>
           <div className="flex items-stretch gap-1">
             {[
@@ -140,7 +140,7 @@ export async function ProformasContent({ companyId }: Props) {
               const widthPct = list.length > 0 ? Math.max(6, Math.round((step.count / list.length) * 100)) : 6
               return (
                 <div key={step.label} className="flex-1 min-w-0">
-                  <div className={`h-8 rounded-lg flex items-center justify-center ${step.color}`}
+                  <div className={`h-8 rounded flex items-center justify-center ${step.color}`}
                     style={{ minWidth: `${widthPct}%` }}>
                     <span className={`text-[10px] font-black tabular-nums ${step.textColor}`}>{step.count}</span>
                   </div>
@@ -168,13 +168,13 @@ export async function ProformasContent({ companyId }: Props) {
         <div className="flex items-center gap-2">
           <Link
             href="/dashboard/commercial?tab=pipeline"
-            className="inline-flex items-center gap-1.5 border border-gray-100 text-gray-500 px-3.5 py-2 rounded-xl text-xs font-semibold hover:bg-gray-50 hover:text-gray-800 transition-colors"
+            className="inline-flex items-center gap-1.5 border border-gray-100 text-gray-500 px-3.5 py-2 rounded text-xs font-semibold hover:bg-gray-50 hover:text-gray-800 transition-colors"
           >
             Pipeline →
           </Link>
           <Link
             href="/dashboard/proformas/new"
-            className="inline-flex items-center gap-1.5 bg-primary-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-primary-700 transition-colors"
+            className="inline-flex items-center gap-1.5 bg-primary-600 text-white px-4 py-2 rounded text-sm font-semibold hover:bg-primary-700 transition-colors"
           >
             + Yeni Proforma
           </Link>
@@ -189,14 +189,14 @@ export async function ProformasContent({ companyId }: Props) {
           action={
             <Link
               href="/dashboard/proformas/new"
-              className="inline-flex bg-primary-600 text-white px-5 py-2 rounded-xl text-sm font-semibold hover:bg-primary-700 transition-colors"
+              className="inline-flex bg-primary-600 text-white px-5 py-2 rounded text-sm font-semibold hover:bg-primary-700 transition-colors"
             >
               İlk Proformayı Oluştur
             </Link>
           }
         />
       ) : (
-        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+        <div className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
           <div className="grid grid-cols-12 text-[10px] font-bold text-gray-400 uppercase tracking-widest px-5 py-3 border-b border-gray-100">
             <div className="col-span-3">No / Revizyon</div>
             <div className="col-span-3">Müşteri</div>

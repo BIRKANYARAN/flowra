@@ -34,6 +34,40 @@ module.exports = {
           subtle:  '#f9fafb',
           muted:   '#f3f4f6',
         },
+        // SPEC v2.0 — ink ramp (replaces fg above in new code)
+        ink: {
+          1: '#0f172a',
+          2: '#334155',
+          3: '#64748b',
+          4: '#94a3b8',
+          5: '#cbd5e1',
+        },
+        // SPEC v2.0 — semantic status colors
+        pos: {
+          DEFAULT: '#059669',
+          text:    '#065f46',
+          light:   '#d1fae5',
+        },
+        neg: {
+          DEFAULT: '#dc2626',
+          text:    '#991b1b',
+          light:   '#fee2e2',
+        },
+        warn: {
+          DEFAULT: '#d97706',
+          text:    '#92400e',
+          light:   '#fef3c7',
+        },
+        info: {
+          DEFAULT: '#2563eb',
+          text:    '#1e40af',
+          light:   '#dbeafe',
+        },
+        brand: {
+          DEFAULT: '#5b21b6',
+          light:   '#7c3aed',
+          subtle:  '#ede9fe',
+        },
       },
       borderRadius: {
         xl:    '12px',

@@ -18,7 +18,7 @@ import { useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
-const IL  = 'w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white transition-colors'
+const IL  = 'w-full border border-gray-200 rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white transition-colors'
 const LAB = 'block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5'
 
 export default function NewPartnerPage() {
@@ -109,7 +109,7 @@ export default function NewPartnerPage() {
 
       {/* ── Form ────────────────────────────────────────────────────────────── */}
       <form onSubmit={handleSubmit} noValidate>
-        <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-[0_1px_2px_rgba(17,24,39,0.04)] space-y-5">
+        <div className="bg-white border border-gray-100 rounded p-6 shadow-sm space-y-5">
 
           {/* Name */}
           <div>
@@ -171,7 +171,7 @@ export default function NewPartnerPage() {
 
           {/* Error */}
           {error && (
-            <div className="text-sm px-3 py-2.5 rounded-xl border bg-red-50 border-red-100 text-red-700 flex items-center gap-2">
+            <div className="text-sm px-3 py-2.5 rounded border bg-red-50 border-red-100 text-red-700 flex items-center gap-2">
               <span>✕</span>
               <span>{error}</span>
             </div>
@@ -182,13 +182,13 @@ export default function NewPartnerPage() {
             <button
               type="submit"
               disabled={saving}
-              className="inline-flex items-center gap-1.5 px-5 py-2.5 text-sm font-bold rounded-xl bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50 transition-colors"
+              className="inline-flex items-center gap-1.5 px-5 py-2.5 text-sm font-bold rounded bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50 transition-colors"
             >
               {saving ? 'Kaydediliyor...' : 'Ortak Ekle'}
             </button>
             <Link
               href="/dashboard/partners"
-              className="inline-flex items-center px-4 py-2.5 text-sm font-semibold rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+              className="inline-flex items-center px-4 py-2.5 text-sm font-semibold rounded border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
             >
               İptal
             </Link>

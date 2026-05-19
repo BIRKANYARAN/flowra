@@ -41,7 +41,7 @@ export function FlowraKpiCard({
 
   const inner = (
     <div className={cn(
-      'bg-white border border-gray-100 rounded-xl px-3.5 py-3 flex flex-col gap-1 shadow-[0_1px_2px_rgba(17,24,39,0.04)]',
+      'bg-white border border-gray-100 rounded px-3.5 py-3 flex flex-col gap-1 shadow-sm',
       href && 'hover:border-gray-300 transition-colors',
       className,
     )}>

@@ -17,7 +17,7 @@ import Link from 'next/link'
 import type { CompanyMember, MemberRole } from '@/types'
 
 // ── Style tokens ──────────────────────────────────────────────────────────────
-const IL  = 'w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white transition-colors'
+const IL  = 'w-full border border-gray-200 rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400 bg-white transition-colors'
 const LAB = 'block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5'
 const SEL = `${IL} cursor-pointer`
 
@@ -159,7 +159,7 @@ export default function AdminUsersPage() {
   if (forbidden) {
     return (
       <div className="max-w-lg">
-        <div className="bg-red-50 border border-red-100 rounded-2xl p-6 text-center">
+        <div className="bg-red-50 border border-red-100 rounded p-6 text-center">
           <div className="text-3xl mb-3">🔒</div>
           <h2 className="font-bold text-red-700 mb-1">Yetkisiz Erişim</h2>
           <p className="text-sm text-red-600">Bu sayfaya yalnızca yöneticiler erişebilir.</p>
@@ -185,7 +185,7 @@ export default function AdminUsersPage() {
         {!showInvite && (
           <button
             onClick={() => { setShowInvite(true); setInvError(''); setInvSuccess('') }}
-            className="bg-primary-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-primary-700 transition-colors"
+            className="bg-primary-600 text-white px-4 py-2.5 rounded text-sm font-semibold hover:bg-primary-700 transition-colors"
           >
             + Kullanıcı Davet Et
           </button>
@@ -194,14 +194,14 @@ export default function AdminUsersPage() {
 
       {/* Global error */}
       {error && (
-        <div className="bg-red-50 border border-red-100 rounded-xl px-4 py-3 text-sm text-red-600 mb-5">
+        <div className="bg-red-50 border border-red-100 rounded px-4 py-3 text-sm text-red-600 mb-5">
           {error}
         </div>
       )}
 
       {/* Role-save error */}
       {roleError && (
-        <div className="bg-red-50 border border-red-100 rounded-xl px-4 py-3 text-sm text-red-600 mb-5 flex items-center justify-between">
+        <div className="bg-red-50 border border-red-100 rounded px-4 py-3 text-sm text-red-600 mb-5 flex items-center justify-between">
           <span>{roleError}</span>
           <button onClick={() => setRoleError('')} className="ml-3 text-red-400 hover:text-red-600 font-bold text-base leading-none">×</button>
         </div>
@@ -209,7 +209,7 @@ export default function AdminUsersPage() {
 
       {/* Remove-member error */}
       {removeError && (
-        <div className="bg-red-50 border border-red-100 rounded-xl px-4 py-3 text-sm text-red-600 mb-5 flex items-center justify-between">
+        <div className="bg-red-50 border border-red-100 rounded px-4 py-3 text-sm text-red-600 mb-5 flex items-center justify-between">
           <span>{removeError}</span>
           <button onClick={() => setRemoveError('')} className="ml-3 text-red-400 hover:text-red-600 font-bold text-base leading-none">×</button>
         </div>
@@ -217,7 +217,7 @@ export default function AdminUsersPage() {
 
       {/* Invite form */}
       {showInvite && (
-        <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-[0_1px_2px_rgba(17,24,39,0.04)] mb-5 space-y-4">
+        <div className="bg-white border border-gray-100 rounded p-6 shadow-sm mb-5 space-y-4">
           <h3 className="font-bold text-sm border-b border-gray-100 pb-3">Kullanıcı Davet Et</h3>
           <p className="text-xs text-gray-500">
             Davet edilecek kullanıcının Flowra hesabı olması gerekir.
@@ -249,26 +249,26 @@ export default function AdminUsersPage() {
             </div>
           </div>
 
-          <div className="bg-gray-50 rounded-xl p-3 text-xs text-gray-500 space-y-1">
+          <div className="bg-gray-50 rounded p-3 text-xs text-gray-500 space-y-1">
             <div><span className="font-semibold">İzleyici:</span> Tüm kayıtları okuyabilir, oluşturamaz veya düzenleyemez.</div>
             <div><span className="font-semibold">Satış Temsilcisi:</span> Kendi oluşturduğu müşterileri ve satışları yönetir.</div>
             <div><span className="font-semibold">Yönetici:</span> Tüm kayıtlara tam erişim ve ekip yönetimi.</div>
           </div>
 
-          {invError   && <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl px-3 py-2">{invError}</div>}
-          {invSuccess && <div className="text-sm text-green-700 bg-green-50 border border-green-100 rounded-xl px-3 py-2">{invSuccess}</div>}
+          {invError   && <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded px-3 py-2">{invError}</div>}
+          {invSuccess && <div className="text-sm text-green-700 bg-green-50 border border-green-100 rounded px-3 py-2">{invSuccess}</div>}
 
           <div className="flex gap-2">
             <button
               onClick={submitInvite}
               disabled={invSaving || !invEmail.trim()}
-              className="bg-primary-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-primary-700 disabled:opacity-40 transition-colors"
+              className="bg-primary-600 text-white px-5 py-2.5 rounded text-sm font-semibold hover:bg-primary-700 disabled:opacity-40 transition-colors"
             >
               {invSaving ? 'Gönderiliyor...' : 'Davet Gönder'}
             </button>
             <button
               onClick={() => { setShowInvite(false); setInvEmail(''); setInvError(''); setInvSuccess('') }}
-              className="border border-gray-200 px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-50/60 transition-colors"
+              className="border border-gray-200 px-5 py-2.5 rounded text-sm font-medium hover:bg-gray-50/60 transition-colors"
             >
               İptal
             </button>
@@ -277,7 +277,7 @@ export default function AdminUsersPage() {
       )}
 
       {/* Active members */}
-      <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden mb-5">
+      <div className="bg-white border border-gray-100 rounded overflow-hidden mb-5">
         <div className="px-5 py-3 border-b border-gray-100">
           <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Aktif Üyeler</span>
         </div>
@@ -290,7 +290,7 @@ export default function AdminUsersPage() {
                 {/* User info */}
                 <div className="min-w-0 flex-1 mr-4">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-primary-100 flex items-center justify-center flex-shrink-0">
+                    <div className="w-8 h-8 rounded bg-primary-100 flex items-center justify-center flex-shrink-0">
                       <span className="text-primary-700 font-bold text-xs">
                         {(m.display_name || m.email || '?').slice(0, 2).toUpperCase()}
                       </span>
@@ -309,7 +309,7 @@ export default function AdminUsersPage() {
                   {editingId === m.id ? (
                     <>
                       <select
-                        className="border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-primary-400"
+                        className="border border-gray-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-primary-400"
                         value={editingRole}
                         onChange={(e: ChangeEvent<HTMLSelectElement>) => setEditingRole(e.target.value as MemberRole)}
                         autoFocus
@@ -321,31 +321,31 @@ export default function AdminUsersPage() {
                       <button
                         onClick={() => saveRole(m.id)}
                         disabled={roleSaving}
-                        className="text-xs text-primary-600 font-semibold hover:text-primary-800 disabled:opacity-40 px-2 py-1 rounded-lg hover:bg-primary-50 transition-colors"
+                        className="text-xs text-primary-600 font-semibold hover:text-primary-800 disabled:opacity-40 px-2 py-1 rounded hover:bg-primary-50 transition-colors"
                       >
                         {roleSaving ? '...' : 'Kaydet'}
                       </button>
                       <button
                         onClick={() => setEditingId(null)}
-                        className="text-xs text-gray-400 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors"
+                        className="text-xs text-gray-400 px-2 py-1 rounded hover:bg-gray-100 transition-colors"
                       >
                         İptal
                       </button>
                     </>
                   ) : (
                     <>
-                      <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${ROLE_COLORS[m.role]}`}>
+                      <span className={`text-xs font-semibold px-2.5 py-1 rounded ${ROLE_COLORS[m.role]}`}>
                         {ROLE_LABELS[m.role]}
                       </span>
                       <button
                         onClick={() => startEditRole(m)}
-                        className="text-xs text-gray-400 hover:text-gray-700 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors"
+                        className="text-xs text-gray-400 hover:text-gray-700 px-2 py-1 rounded hover:bg-gray-100 transition-colors"
                       >
                         Rol Değiştir
                       </button>
                       <button
                         onClick={() => removeMember(m)}
-                        className="text-xs text-gray-400 hover:text-red-500 px-2 py-1 rounded-lg hover:bg-red-50 transition-colors"
+                        className="text-xs text-gray-400 hover:text-red-500 px-2 py-1 rounded hover:bg-red-50 transition-colors"
                       >
                         Çıkar
                       </button>
@@ -360,7 +360,7 @@ export default function AdminUsersPage() {
 
       {/* Pending invitations */}
       {pendingMembers.length > 0 && (
-        <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+        <div className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
           <div className="px-5 py-3 border-b border-gray-100">
             <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Bekleyen Davetler</span>
           </div>
@@ -369,7 +369,7 @@ export default function AdminUsersPage() {
               <div key={m.id} className="flex items-center justify-between px-5 py-4 hover:bg-gray-50/60 transition-colors">
                 <div className="min-w-0 flex-1 mr-4">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
+                    <div className="w-8 h-8 rounded bg-amber-100 flex items-center justify-center flex-shrink-0">
                       <span className="text-amber-600 font-bold text-xs">?</span>
                     </div>
                     <div className="min-w-0">
@@ -381,12 +381,12 @@ export default function AdminUsersPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${ROLE_COLORS[m.role]}`}>
+                  <span className={`text-xs font-semibold px-2.5 py-1 rounded ${ROLE_COLORS[m.role]}`}>
                     {ROLE_LABELS[m.role]}
                   </span>
                   <button
                     onClick={() => removeMember(m)}
-                    className="text-xs text-gray-400 hover:text-red-500 px-2 py-1 rounded-lg hover:bg-red-50 transition-colors"
+                    className="text-xs text-gray-400 hover:text-red-500 px-2 py-1 rounded hover:bg-red-50 transition-colors"
                   >
                     İptal
                   </button>

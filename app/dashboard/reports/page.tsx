@@ -99,7 +99,7 @@ export default function ReportsHubPage() {
         <button
           onClick={downloadCfoPack}
           disabled={generating}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary-600 text-white text-sm font-semibold hover:bg-primary-700 transition-colors disabled:opacity-60"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded bg-primary-600 text-white text-sm font-semibold hover:bg-primary-700 transition-colors disabled:opacity-60"
         >
           {generating ? (
             <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
@@ -117,13 +117,13 @@ export default function ReportsHubPage() {
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700">
+        <div className="bg-red-50 border border-red-200 rounded px-4 py-3 text-sm text-red-700">
           {error}
         </div>
       )}
 
       {/* CFO Pack info */}
-      <div className="bg-primary-50 border border-primary-200 rounded-xl px-4 py-3">
+      <div className="bg-primary-50 border border-primary-200 rounded px-4 py-3">
         <div className="flex items-start gap-3">
           <span className="text-2xl flex-shrink-0">📦</span>
           <div>
@@ -140,7 +140,7 @@ export default function ReportsHubPage() {
       <div className="grid grid-cols-2 gap-4">
         {REPORTS.map(r => (
           <Link key={r.href} href={r.href}
-            className="bg-white border border-gray-100 rounded-xl p-4 hover:border-primary-200 hover:shadow-sm transition-all group"
+            className="bg-white border border-gray-100 rounded p-4 hover:border-primary-200 hover:shadow-sm transition-all group"
           >
             <div className="flex items-start gap-3">
               <span className="text-2xl flex-shrink-0">{r.icon}</span>
@@ -159,7 +159,7 @@ export default function ReportsHubPage() {
       </div>
 
       {/* Accountant CSV Export */}
-      <div className="bg-white border border-gray-100 rounded-xl p-4">
+      <div className="bg-white border border-gray-100 rounded p-4">
         <div className="flex items-start gap-3 mb-3">
           <span className="text-2xl flex-shrink-0">📋</span>
           <div>
@@ -173,7 +173,7 @@ export default function ReportsHubPage() {
           <a
             href={`/api/export/sales?from=${from}&to=${to}`}
             download
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-xs font-semibold text-gray-700 hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 transition-colors"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-gray-200 bg-gray-50 text-xs font-semibold text-gray-700 hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 transition-colors"
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M12 16l-4-4h3V4h2v8h3l-4 4z" />
@@ -184,7 +184,7 @@ export default function ReportsHubPage() {
           <a
             href={`/api/export/expenses?from=${from}&to=${to}`}
             download
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-xs font-semibold text-gray-700 hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 transition-colors"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-gray-200 bg-gray-50 text-xs font-semibold text-gray-700 hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 transition-colors"
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M12 16l-4-4h3V4h2v8h3l-4 4z" />
@@ -195,7 +195,7 @@ export default function ReportsHubPage() {
           <a
             href={`/api/export/purchases?from=${from}&to=${to}`}
             download
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-xs font-semibold text-gray-700 hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 transition-colors"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-gray-200 bg-gray-50 text-xs font-semibold text-gray-700 hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 transition-colors"
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M12 16l-4-4h3V4h2v8h3l-4 4z" />
@@ -206,7 +206,7 @@ export default function ReportsHubPage() {
           <a
             href="/api/export/stock"
             download
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-xs font-semibold text-gray-700 hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 transition-colors"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-gray-200 bg-gray-50 text-xs font-semibold text-gray-700 hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 transition-colors"
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M12 16l-4-4h3V4h2v8h3l-4 4z" />
@@ -217,7 +217,7 @@ export default function ReportsHubPage() {
           <a
             href="/api/export/customers"
             download
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-xs font-semibold text-gray-700 hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 transition-colors"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-gray-200 bg-gray-50 text-xs font-semibold text-gray-700 hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 transition-colors"
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M12 16l-4-4h3V4h2v8h3l-4 4z" />

@@ -291,12 +291,12 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
 
         <div className="flex items-center gap-3">
           {/* Currency selector */}
-          <div className="flex items-center gap-1 bg-white border border-gray-100 rounded-xl px-1 py-1">
+          <div className="flex items-center gap-1 bg-white border border-gray-100 rounded px-1 py-1">
             {CURRENCIES.map(c => (
               <button
                 key={c}
                 onClick={() => setCurrency(c)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                className={`px-3 py-1.5 rounded text-xs font-semibold transition-colors ${
                   currency === c ? 'bg-primary-600 text-white' : 'text-gray-500 hover:bg-gray-100'
                 }`}
               >
@@ -311,7 +311,7 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
             placeholder="Ürün ara..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="border border-gray-200 rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 w-56"
+            className="border border-gray-200 rounded px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 w-56"
           />
         </div>
       </div>
@@ -320,17 +320,17 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
       {(catalogInsights.negativeMarginCount > 0 || catalogInsights.lowMarginCount > 0 || catalogInsights.highestMargin.margin > -Infinity) && (
         <div className="flex flex-wrap gap-2 mb-5">
           {catalogInsights.highestMargin.margin > -Infinity && (
-            <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2 text-xs font-semibold text-emerald-700">
+            <div className="bg-emerald-50 border border-emerald-200 rounded px-3 py-2 text-xs font-semibold text-emerald-700">
               En yüksek marj: {catalogInsights.highestMargin.name} (%{catalogInsights.highestMargin.margin.toFixed(0)})
             </div>
           )}
           {catalogInsights.lowMarginCount > 0 && (
-            <div className="bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 text-xs font-semibold text-amber-700">
+            <div className="bg-amber-50 border border-amber-200 rounded px-3 py-2 text-xs font-semibold text-amber-700">
               {catalogInsights.lowMarginCount} üründe düşük marj (&lt;%10)
             </div>
           )}
           {catalogInsights.negativeMarginCount > 0 && (
-            <div className="bg-red-50 border border-red-200 rounded-xl px-3 py-2 text-xs font-semibold text-red-700">
+            <div className="bg-red-50 border border-red-200 rounded px-3 py-2 text-xs font-semibold text-red-700">
               {catalogInsights.negativeMarginCount} üründe negatif marj
             </div>
           )}
@@ -338,7 +338,7 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
       )}
 
       {/* ── Table ────────────────────────────────────────────────────── */}
-      <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+      <div className="bg-white border border-gray-100 rounded overflow-hidden">
         {filtered.length === 0 ? (
           <div className="py-12 text-center">
             <div className="text-sm text-gray-400">
@@ -428,12 +428,12 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
                             onBlur={() => savePrice(p.id)}
                             onKeyDown={e => handlePriceKeyDown(e, p.id)}
                             disabled={savingPrice}
-                            className="w-28 ml-auto text-right border border-primary-300 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
+                            className="w-28 ml-auto text-right border border-primary-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
                           />
                         ) : (
                           <button
                             onClick={() => startEdit(p)}
-                            className="text-primary-600 hover:text-primary-800 hover:bg-primary-50 px-2 py-1 rounded-lg transition-colors font-medium"
+                            className="text-primary-600 hover:text-primary-800 hover:bg-primary-50 px-2 py-1 rounded transition-colors font-medium"
                             title="Düzenlemek için tıklayın"
                           >
                             {catalogPrice > 0 ? (
@@ -462,7 +462,7 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
                           <span className="text-gray-300 text-sm">&mdash;</span>
                         ) : (
                           <div className="flex flex-col items-end gap-0.5">
-                            <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold tabular-nums ${marginColor(margin)} ${marginBg(margin)}`}>
+                            <span className={`inline-flex items-center px-2.5 py-1 rounded text-xs font-bold tabular-nums ${marginColor(margin)} ${marginBg(margin)}`}>
                               %{margin.toFixed(1)}
                             </span>
                             {margin < 0 && <span className="text-[10px] text-red-500 font-medium">Fiyat artır</span>}
@@ -485,7 +485,7 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
                         ) : productLots.lots.length === 0 ? (
                           <p className="text-sm text-gray-400 py-2">Bu ürün için stok lotu bulunamadı.</p>
                         ) : (
-                          <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+                          <div className="bg-white border border-gray-100 rounded overflow-hidden">
                             <div className="grid text-[10px] font-bold text-gray-400 uppercase tracking-widest px-4 py-2 border-b border-gray-100" style={{ gridTemplateColumns: 'repeat(14, minmax(0, 1fr))' }}>
                               <div className="col-span-2">Giriş Tarihi</div>
                               <div className="col-span-2 text-right">Kalan Adet</div>
@@ -562,7 +562,7 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
           style={{ backgroundColor: 'rgba(0,0,0,0.45)' }}
           onClick={e => { if (e.target === e.currentTarget) setCostCalcId(null) }}
         >
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg">
+          <div className="bg-white rounded border border-[#e2e8f0] shadow-sm w-full max-w-lg">
             <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
               <div>
                 <h2 className="font-black text-lg">Maliyet Hesapla</h2>
@@ -570,7 +570,7 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
               </div>
               <button
                 onClick={() => setCostCalcId(null)}
-                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-xl text-gray-400 hover:text-gray-700"
+                className="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100 text-xl text-gray-400 hover:text-gray-700"
               >
                 x
               </button>
@@ -585,17 +585,17 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
                     <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Adet</label>
                     <input
                       type="number" min="1" step="1"
-                      className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
+                      className="w-full border border-gray-200 rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
                       value={costCalcQty}
                       onChange={e => setCostCalcQty(e.target.value)}
                     />
                   </div>
                   <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Maliyet Kalemleri</div>
                   {costRows.map((row, i) => (
-                    <div key={i} className="space-y-1.5 p-3 bg-gray-50 rounded-xl">
+                    <div key={i} className="space-y-1.5 p-3 bg-gray-50 rounded">
                       <div className="flex items-center gap-2">
                         <input
-                          className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 bg-white"
+                          className="flex-1 border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 bg-white"
                           value={row.label}
                           onChange={e => setCostRows(rs => rs.map((r, j) => j === i ? { ...r, label: e.target.value } : r))}
                           placeholder="Kalem adı"
@@ -610,13 +610,13 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
                       <div className="flex items-center gap-2">
                         <input
                           type="number" min="0" step="0.01"
-                          className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm text-right focus:outline-none focus:ring-2 focus:ring-primary-400 bg-white"
+                          className="flex-1 border border-gray-200 rounded px-3 py-2 text-sm text-right focus:outline-none focus:ring-2 focus:ring-primary-400 bg-white"
                           value={row.amount}
                           onChange={e => setCostRows(rs => rs.map((r, j) => j === i ? { ...r, amount: e.target.value } : r))}
                           placeholder="0.00"
                         />
                         <select
-                          className="border border-gray-200 rounded-lg px-2 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-400"
+                          className="border border-gray-200 rounded px-2 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-400"
                           value={row.currency}
                           onChange={e => setCostRows(rs => rs.map((r, j) => j === i ? { ...r, currency: e.target.value as Currency } : r))}
                         >
@@ -624,7 +624,7 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
                         </select>
                         <input
                           type="date"
-                          className="border border-gray-200 rounded-lg px-2 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-400"
+                          className="border border-gray-200 rounded px-2 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-400"
                           value={row.entry_date}
                           onChange={e => setCostRows(rs => rs.map((r, j) => j === i ? { ...r, entry_date: e.target.value } : r))}
                         />
@@ -661,7 +661,7 @@ export default function CatalogClient({ initialProducts, initialRealCosts, userI
                   <button
                     onClick={saveCostEntries}
                     disabled={costSaving}
-                    className="w-full py-2.5 bg-primary-600 text-white text-sm font-bold rounded-xl hover:bg-primary-700 transition-colors disabled:opacity-50"
+                    className="w-full py-2.5 bg-primary-600 text-white text-sm font-bold rounded hover:bg-primary-700 transition-colors disabled:opacity-50"
                   >
                     {costSaving ? 'Kaydediliyor...' : 'Kaydet'}
                   </button>

@@ -113,7 +113,7 @@ function PaymentDrawer({ sale, onClose, onSuccess }: PaymentDrawerProps) {
         role="dialog"
         aria-modal="true"
         aria-label="Ödeme Kaydet"
-        className="fixed right-0 top-0 h-full w-80 bg-white z-50 shadow-2xl flex flex-col"
+        className="fixed right-0 top-0 h-full w-80 bg-white z-50 border-l border-[#e2e8f0] flex flex-col"
       >
         {/* Drawer header */}
         <div className="flex items-start justify-between px-5 py-4 border-b border-gray-100">
@@ -158,7 +158,7 @@ function PaymentDrawer({ sale, onClose, onSuccess }: PaymentDrawerProps) {
               min="0.01"
               value={amount}
               onChange={e => setAmount(e.target.value)}
-              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300 font-mono tabular-nums"
+              className="w-full border border-gray-200 rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300 font-mono tabular-nums"
               required
               autoFocus
             />
@@ -187,7 +187,7 @@ function PaymentDrawer({ sale, onClose, onSuccess }: PaymentDrawerProps) {
               id="payment-method"
               value={paymentMethod}
               onChange={e => setPaymentMethod(e.target.value as PaymentMethod)}
-              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
+              className="w-full border border-gray-200 rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
             >
               {PAYMENT_METHODS.map(m => (
                 <option key={m} value={m}>{m}</option>
@@ -208,13 +208,13 @@ function PaymentDrawer({ sale, onClose, onSuccess }: PaymentDrawerProps) {
               type="date"
               value={date}
               onChange={e => setDate(e.target.value)}
-              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
+              className="w-full border border-gray-200 rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
               required
             />
           </div>
 
           {error && (
-            <p className="text-xs text-red-600 font-semibold bg-red-50 border border-red-200 rounded-xl px-3 py-2">
+            <p className="text-xs text-red-600 font-semibold bg-red-50 border border-red-200 rounded px-3 py-2">
               {error}
             </p>
           )}
@@ -223,14 +223,14 @@ function PaymentDrawer({ sale, onClose, onSuccess }: PaymentDrawerProps) {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 border border-gray-200 text-gray-500 py-2.5 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-colors"
+              className="flex-1 border border-gray-200 text-gray-500 py-2.5 rounded text-sm font-semibold hover:bg-gray-50 transition-colors"
             >
               İptal
             </button>
             <button
               type="submit"
               disabled={saving || parsedAmount <= 0}
-              className="flex-1 bg-primary-600 text-white py-2.5 rounded-xl text-sm font-semibold hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 bg-primary-600 text-white py-2.5 rounded text-sm font-semibold hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {saving ? 'Kaydediliyor…' : 'Kaydet'}
             </button>
@@ -335,17 +335,17 @@ export function SalesTable({ rows }: Props) {
               placeholder="Müşteri ara…"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full pl-8 pr-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-300 bg-white"
+              className="w-full pl-8 pr-3 py-2 text-sm border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-primary-300 bg-white"
             />
           </div>
 
           {/* Date range */}
-          <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
+          <div className="flex gap-1 bg-gray-100 rounded p-1">
             {(Object.keys(DATE_RANGE_LABELS) as DateRange[]).map(k => (
               <button
                 key={k}
                 onClick={() => setDateRange(k)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                className={`px-3 py-1.5 rounded text-xs font-semibold transition-colors ${
                   dateRange === k ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
@@ -358,7 +358,7 @@ export function SalesTable({ rows }: Props) {
           <select
             value={statusFilter}
             onChange={e => setStatusFilter(e.target.value)}
-            className="border border-gray-200 rounded-xl px-3 py-2 text-xs font-medium bg-white focus:outline-none focus:ring-2 focus:ring-primary-300"
+            className="border border-gray-200 rounded px-3 py-2 text-xs font-medium bg-white focus:outline-none focus:ring-2 focus:ring-primary-300"
           >
             {PAYMENT_FILTER_OPTIONS.map(o => (
               <option key={o.value} value={o.value}>{o.label}</option>
@@ -369,7 +369,7 @@ export function SalesTable({ rows }: Props) {
           {isFiltered && (
             <button
               onClick={clearFilters}
-              className="text-xs font-semibold text-gray-400 hover:text-gray-700 px-2 py-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+              className="text-xs font-semibold text-gray-400 hover:text-gray-700 px-2 py-1.5 rounded hover:bg-gray-100 transition-colors"
             >
               Temizle ✕
             </button>
@@ -378,7 +378,7 @@ export function SalesTable({ rows }: Props) {
           {/* Create — stays in filter row, no orphan bar */}
           <button
             onClick={() => setShowCreate(true)}
-            className="ml-auto inline-flex items-center gap-1.5 bg-primary-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-primary-700 transition-colors whitespace-nowrap flex-shrink-0"
+            className="ml-auto inline-flex items-center gap-1.5 bg-primary-600 text-white px-4 py-2 rounded text-sm font-semibold hover:bg-primary-700 transition-colors whitespace-nowrap flex-shrink-0"
           >
             + Satış Oluştur
           </button>
@@ -403,7 +403,7 @@ export function SalesTable({ rows }: Props) {
               color: totalPft >= 0 ? 'text-emerald-700' : 'text-red-600',
             },
           ].map(card => (
-            <div key={card.label} className="bg-white border border-gray-100 rounded-xl p-4 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+            <div key={card.label} className="bg-white border border-gray-100 rounded p-4 shadow-sm">
               <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">{card.label}</div>
               <div className={`text-xl font-black tabular-nums ${card.color}`}>{card.value}</div>
             </div>
@@ -412,7 +412,7 @@ export function SalesTable({ rows }: Props) {
 
         {/* ── Table ──────────────────────────────────────────────────────────── */}
         {filtered.length === 0 ? (
-          <div className="bg-white border border-gray-100 rounded-xl text-center py-12 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+          <div className="bg-white border border-gray-100 rounded text-center py-12 shadow-sm">
             <p className="text-gray-400 text-sm">{isFiltered ? 'Filtreyle eşleşen satış yok.' : 'Henüz satış kaydı yok.'}</p>
             {isFiltered && (
               <button
@@ -424,7 +424,7 @@ export function SalesTable({ rows }: Props) {
             )}
           </div>
         ) : (
-          <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+          <div className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
             {/* Header */}
             <div className="grid grid-cols-12 text-[10px] font-bold text-gray-400 px-5 py-3 border-b border-gray-100 uppercase tracking-widest">
               <div className="col-span-3">Müşteri</div>

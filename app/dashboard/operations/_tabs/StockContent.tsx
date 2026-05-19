@@ -84,7 +84,7 @@ export async function StockContent({ companyId, userId }: Props) {
       </div>
 
       {/* Portfolio summary strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
         {[
           { label: 'Toplam Stok Değeri', value: fmtTRY(portfolioValueTry),      sub: 'FIFO lot maliyeti bazlı',  color: 'text-gray-900' },
           { label: 'Ürün Sayısı',        value: String(products.length),         sub: `${lots.length} açık lot`, color: 'text-gray-900' },
@@ -106,7 +106,7 @@ export async function StockContent({ companyId, userId }: Props) {
 
       {/* Zero-stock alert — products completely out of stock */}
       {zeroStockCount > 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-start gap-3">
+        <div className="bg-amber-50 border border-amber-200 rounded px-4 py-3 flex items-start gap-3">
           <span className="text-base mt-0.5">⚠</span>
           <div className="flex-1">
             <div className="text-[10px] font-black uppercase tracking-widest text-amber-800 mb-1">
@@ -114,7 +114,7 @@ export async function StockContent({ companyId, userId }: Props) {
             </div>
             <div className="flex flex-wrap gap-2">
               {products.filter(p => p.stock_qty <= 0).slice(0, 6).map(p => (
-                <span key={p.id} className="text-[10px] bg-amber-100 text-amber-800 font-semibold px-2 py-0.5 rounded-lg">
+                <span key={p.id} className="text-[10px] bg-amber-100 text-amber-800 font-semibold px-2 py-0.5 rounded">
                   {p.name}
                 </span>
               ))}
@@ -129,7 +129,7 @@ export async function StockContent({ companyId, userId }: Props) {
 
       {/* Stock consistency warning — only shown when stock_qty counter diverges from movement sum */}
       {inconsistentItems.length > 0 && (
-        <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+        <div className="bg-red-50 border border-red-200 rounded px-4 py-3">
           <div className="text-[10px] font-black uppercase tracking-widest text-red-700 mb-2">
             ⚠ Stok Tutarsızlığı — {inconsistentItems.length} Ürün
           </div>
@@ -162,13 +162,13 @@ export async function StockContent({ companyId, userId }: Props) {
 
       {/* FIFO Lot Panel */}
       {lots.length > 0 && (
-        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+        <div className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
           <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
             <div>
               <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">FIFO Lot Paneli</span>
               <span className="ml-2 text-[10px] text-gray-400">— açık lotlar, tutma süresi ve maliyet</span>
             </div>
-            <span className="text-[10px] text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+            <span className="text-[10px] text-gray-400 bg-gray-100 px-2 py-0.5 rounded">
               {lots.length} lot · {fmtTRY(portfolioValueTry)}
             </span>
           </div>
@@ -198,7 +198,7 @@ export async function StockContent({ companyId, userId }: Props) {
                       </div>
                     </div>
                   </div>
-                  <div className="bg-gray-50 rounded-xl overflow-hidden">
+                  <div className="bg-gray-50 rounded overflow-hidden">
                     <table className="w-full text-xs">
                       <thead>
                         <tr className="text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100">
@@ -236,7 +236,7 @@ export async function StockContent({ companyId, userId }: Props) {
                     </table>
                   </div>
                   {oldestLot && oldestLot.days > 180 && (
-                    <div className="mt-2 text-[10px] text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-1.5 font-semibold">
+                    <div className="mt-2 text-[10px] text-red-600 bg-red-50 border border-red-100 rounded px-3 py-1.5 font-semibold">
                       ⚠ En eski lot {oldestLot.days} gündür tutulmakta — finansman maliyeti yüksek
                     </div>
                   )}
@@ -248,7 +248,7 @@ export async function StockContent({ companyId, userId }: Props) {
       )}
 
       {/* Current stock levels */}
-      <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+      <div className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
         <div className="px-5 py-4 border-b border-gray-100">
           <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Mevcut Stok</span>
         </div>
@@ -277,8 +277,8 @@ export async function StockContent({ companyId, userId }: Props) {
                     )}
                   </div>
                   <div className="flex items-center gap-3">
-                    {isLow  && <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-lg font-semibold">Düşük</span>}
-                    {isZero && <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-lg font-semibold">Tükendi</span>}
+                    {isLow  && <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded font-semibold">Düşük</span>}
+                    {isZero && <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded font-semibold">Tükendi</span>}
                     <span className={`text-sm font-bold tabular-nums ${isZero ? 'text-red-600' : isLow ? 'text-amber-700' : 'text-gray-900'}`}>
                       {stockNum.toLocaleString('tr-TR', { maximumFractionDigits: 3 })} {p.unit}
                     </span>
@@ -293,7 +293,7 @@ export async function StockContent({ companyId, userId }: Props) {
       <StockAdjustClient products={products.map(p => ({ id: p.id, name: p.name, unit: p.unit }))} />
 
       {/* Movement history */}
-      <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+      <div className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
         <div className="px-5 py-4 border-b border-gray-100">
           <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Son Hareketler</span>
           <span className="ml-2 text-[10px] text-gray-400">— son 50 kayıt</span>
@@ -328,7 +328,7 @@ export async function StockContent({ companyId, userId }: Props) {
                         {prod?.sku && <span className="text-xs text-gray-400 ml-1">{prod.sku}</span>}
                       </td>
                       <td className="px-3 py-3 text-center">
-                        <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-lg">
+                        <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
                           {TYPE_LABELS[m.reference_type] ?? m.reference_type}
                         </span>
                       </td>

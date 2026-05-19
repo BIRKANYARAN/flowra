@@ -20,10 +20,10 @@ function TabSkeleton() {
   return (
     <div className="space-y-3 animate-pulse">
       <div className="grid grid-cols-4 gap-3">
-        {[...Array(4)].map((_, i) => <div key={i} className="bg-gray-100 rounded-xl h-16" />)}
+        {[...Array(4)].map((_, i) => <div key={i} className="bg-gray-100 rounded h-16" />)}
       </div>
-      <div className="bg-gray-100 rounded-xl h-48" />
-      <div className="bg-gray-100 rounded-xl h-32" />
+      <div className="bg-gray-100 rounded h-48" />
+      <div className="bg-gray-100 rounded h-32" />
     </div>
   )
 }

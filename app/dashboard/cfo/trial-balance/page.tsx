@@ -61,7 +61,7 @@ const CLASS_LABELS: Record<string, string> = {
 }
 
 function Skeleton() {
-  return <div className="bg-gray-100 rounded-xl h-12 animate-pulse" />
+  return <div className="bg-gray-100 rounded h-12 animate-pulse" />
 }
 
 export default function TrialBalancePage() {
@@ -109,7 +109,7 @@ export default function TrialBalancePage() {
           <button
             onClick={() => window.print()}
             title="Mizanı PDF olarak kaydet veya yazdır"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 bg-white text-xs font-semibold text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-gray-200 bg-white text-xs font-semibold text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-colors"
           >
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
@@ -129,12 +129,12 @@ export default function TrialBalancePage() {
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700">{error}</div>
+        <div className="bg-red-50 border border-red-200 rounded px-4 py-3 text-sm text-red-700">{error}</div>
       )}
 
       {/* Accounting checks */}
       {!loading && checks.length > 0 && (
-        <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+        <div className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
           <div className="px-4 py-2.5 border-b border-gray-100 bg-gray-50">
             <div className="text-[10px] font-black uppercase tracking-widest text-gray-400">Muhasebe Doğruluk Kontrolleri</div>
           </div>
@@ -162,15 +162,15 @@ export default function TrialBalancePage() {
       {/* Summary row */}
       {!loading && tb && (
         <div className="grid grid-cols-3 gap-2">
-          <div className="bg-white border border-gray-100 rounded-xl px-4 py-3 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+          <div className="bg-white border border-gray-100 rounded px-4 py-3 shadow-sm">
             <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Toplam Borç</div>
             <div className="text-xl font-black tabular-nums text-gray-900">{fmt(tb.total_debit_try)}</div>
           </div>
-          <div className="bg-white border border-gray-100 rounded-xl px-4 py-3 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+          <div className="bg-white border border-gray-100 rounded px-4 py-3 shadow-sm">
             <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Toplam Alacak</div>
             <div className="text-xl font-black tabular-nums text-gray-900">{fmt(tb.total_credit_try)}</div>
           </div>
-          <div className={`border rounded-xl px-4 py-3 ${tb.is_balanced ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}>
+          <div className={`border rounded px-4 py-3 ${tb.is_balanced ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}>
             <div className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${tb.is_balanced ? 'text-emerald-600' : 'text-red-600'}`}>
               {tb.is_balanced ? 'Dengeli' : 'Dengesiz'}
             </div>
@@ -188,7 +188,7 @@ export default function TrialBalancePage() {
       )}
 
       {!loading && !hasData && !error && (
-        <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-10 text-center">
+        <div className="bg-gray-50 border border-gray-200 rounded px-4 py-10 text-center">
           <div className="text-2xl mb-2">📒</div>
           <div className="text-sm font-semibold text-gray-500">Henüz journal entry yok</div>
           <div className="text-xs text-gray-400 mt-1">
@@ -204,7 +204,7 @@ export default function TrialBalancePage() {
             const accounts = (grouped.get(cls) ?? []).filter(a => a.debit_try > 0 || a.credit_try > 0)
             if (accounts.length === 0) return null
             return (
-              <div key={cls} className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+              <div key={cls} className="bg-white border border-gray-100 rounded overflow-hidden shadow-sm">
                 <div className="px-4 py-2.5 border-b border-gray-100 bg-gray-50">
                   <div className="text-[10px] font-black uppercase tracking-widest text-gray-500">
                     {CLASS_LABELS[cls] ?? cls}

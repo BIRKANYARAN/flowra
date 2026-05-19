@@ -137,7 +137,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
       {/* ── KPI STRIP ──────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
 
-        <div className="bg-white border border-gray-100 rounded-xl px-4 py-3">
+        <div className="bg-white border border-gray-100 rounded px-4 py-3">
           <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1">Toplam Borç</div>
           <div className={`text-lg font-black tabular-nums ${totalOutstanding > 0 ? 'text-gray-900' : 'text-gray-400'}`}>
             {totalOutstanding > 0 ? fmt(totalOutstanding) : '—'}
@@ -145,7 +145,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
           <div className="text-[9px] text-gray-400 mt-0.5">{tranches.length} aktif tranche</div>
         </div>
 
-        <div className="bg-white border border-gray-100 rounded-xl px-4 py-3">
+        <div className="bg-white border border-gray-100 rounded px-4 py-3">
           <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1">Aylık Borç Servisi</div>
           <div className={`text-lg font-black tabular-nums ${monthlyService > 0 ? 'text-orange-600' : 'text-gray-400'}`}>
             {monthlyService > 0 ? fmt(monthlyService) : '—'}
@@ -153,7 +153,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
           <div className="text-[9px] text-gray-400 mt-0.5">faiz tahmini / ay</div>
         </div>
 
-        <div className="bg-white border border-gray-100 rounded-xl px-4 py-3">
+        <div className="bg-white border border-gray-100 rounded px-4 py-3">
           <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1">DSR (Borç/Gelir)</div>
           <div className={`text-lg font-black tabular-nums ${dsrColor}`}>
             {monthlyService > 0 ? fmtPct(dsr) : '—'}
@@ -166,7 +166,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
           )}
         </div>
 
-        <div className="bg-white border border-gray-100 rounded-xl px-4 py-3">
+        <div className="bg-white border border-gray-100 rounded px-4 py-3">
           <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1">Sonraki Vade</div>
           {nextDue ? (
             <>
@@ -183,12 +183,12 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
 
       {/* ── EMPTY STATE ───────────────────────────────────────────────────── */}
       {!hasTranches && (
-        <div className="bg-gray-50 border border-gray-100 rounded-xl px-6 py-10 text-center">
+        <div className="bg-gray-50 border border-gray-100 rounded px-6 py-10 text-center">
           <div className="text-2xl mb-2">🏦</div>
           <div className="text-sm font-semibold text-gray-700 mb-1">Aktif ortak borcu yok</div>
           <div className="text-xs text-gray-400 mb-4">Ortak borçları Ortaklar → Trancheler bölümünden girilir.</div>
           <Link href="/dashboard/partners?tab=tranches"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary-600 hover:text-primary-700 border border-primary-200 px-3 py-1.5 rounded-lg hover:bg-primary-50 transition-colors">
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary-600 hover:text-primary-700 border border-primary-200 px-3 py-1.5 rounded hover:bg-primary-50 transition-colors">
             Tranche Ekle →
           </Link>
         </div>
@@ -197,7 +197,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
       {hasTranches && (
         <>
           {/* ── 12-MONTH SERVICE SCHEDULE ──────────────────────────────────── */}
-          <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+          <div className="bg-white border border-gray-100 rounded overflow-hidden">
             <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-50">
               <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">12 Aylık Faiz Yük Takvimi</span>
               <span className="text-[9px] text-gray-400">Outstanding × yıllık faiz / 12</span>
@@ -226,7 +226,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
           </div>
 
           {/* ── TRANCHE TABLE ─────────────────────────────────────────────── */}
-          <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
+          <div className="bg-white border border-gray-100 rounded overflow-hidden">
             <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-50">
               <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Aktif Trancheler</span>
               <Link href="/dashboard/partners?tab=tranches"
@@ -282,7 +282,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
 
           {/* ── CONCENTRATION ─────────────────────────────────────────────── */}
           {sorted.length > 1 && (
-            <div className="bg-white border border-gray-100 rounded-xl px-5 py-4">
+            <div className="bg-white border border-gray-100 rounded px-5 py-4">
               <div className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-3">
                 Borç Konsantrasyonu
               </div>
@@ -306,7 +306,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
                 })}
               </div>
               {concentration > 0.8 && (
-                <div className="mt-3 text-[10px] text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+                <div className="mt-3 text-[10px] text-amber-700 bg-amber-50 border border-amber-100 rounded px-3 py-2">
                   <span className="font-bold">Yüksek konsantrasyon:</span> {sorted[0].name} toplam borcun{' '}
                   {fmtPct(concentration)}&apos;ini oluşturuyor. Refinansman riski gözlemlenmeli.
                 </div>
@@ -316,7 +316,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
 
           {/* Interest-free warning */}
           {tranches.some(t => !t.annual_interest_rate || t.annual_interest_rate === 0) && (
-            <div className="px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl text-[10px] text-amber-700">
+            <div className="px-4 py-3 bg-amber-50 border border-amber-200 rounded text-[10px] text-amber-700">
               <span className="font-bold">* Faizsiz tranche uyarısı:</span>{' '}
               Oran girilmemiş tranchelerde aylık %1,5 proxy faiz hesaplanmıştır.
               VUK + KVK 13 kapsamında örtülü kazanç dağıtımı riski değerlendirilebilir.

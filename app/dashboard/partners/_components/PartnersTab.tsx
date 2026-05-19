@@ -66,7 +66,7 @@ export function PartnersTab({
             { label: 'Toplam Dağıtılan', value: fmt(totalDistributed),                 color: 'text-emerald-600' },
             { label: 'Eşitleme Gereken', value: fmt(equalization.total_equalization),  color: equalization.total_equalization > 0 ? 'text-amber-600' : 'text-gray-400' },
           ].map(c => (
-            <div key={c.label} className="bg-white border border-gray-100 rounded-xl px-4 py-3 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+            <div key={c.label} className="bg-white border border-gray-100 rounded px-4 py-3 shadow-sm">
               <div className={`text-[10px] font-bold uppercase tracking-widest mb-1.5 ${c.color}`}>{c.label}</div>
               <div className="text-2xl font-black tabular-nums text-gray-900 leading-none">{c.value}</div>
             </div>
@@ -77,7 +77,7 @@ export function PartnersTab({
       {loading && <div className="flex flex-col gap-2"><Skeleton h="h-20" /><Skeleton h="h-20" /></div>}
 
       {!loading && !hasPartners && !fetchError && (
-        <div className="bg-white border border-gray-100 rounded-xl px-6 py-12 text-center">
+        <div className="bg-white border border-gray-100 rounded px-6 py-12 text-center">
           <div className="text-sm text-gray-400">Henüz ortak eklenmemiş.</div>
         </div>
       )}
@@ -85,7 +85,7 @@ export function PartnersTab({
       {!loading && hasPartners && (
         <>
           {equalization.baseline_per_unit > 0 && (
-            <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-xs text-blue-700">
+            <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded px-4 py-3 text-xs text-blue-700">
               <span className="text-base flex-shrink-0 mt-0.5">ℹ</span>
               <div>
                 <span className="font-bold">Eşitleme nedir? </span>
@@ -112,15 +112,15 @@ export function PartnersTab({
               const isEditing     = editId === p.id
 
               return (
-                <div key={p.id} className={`bg-white border rounded-xl px-5 py-4 group ${isUnderFunded ? 'border-amber-200' : 'border-gray-200'}`}>
+                <div key={p.id} className={`bg-white border rounded px-5 py-4 group ${isUnderFunded ? 'border-amber-200' : 'border-gray-200'}`}>
                   <div className="flex items-start justify-between gap-4 flex-wrap">
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <span className="font-bold text-gray-900 text-sm">{p.name}</span>
-                        {!p.is_active && <span className="text-[10px] bg-gray-100 text-gray-400 px-1.5 py-0.5 rounded-lg font-semibold">Pasif</span>}
-                        {isUnderFunded && <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-bold">⚠ Eşitleme gerekli</span>}
+                        {!p.is_active && <span className="text-[10px] bg-gray-100 text-gray-400 px-1.5 py-0.5 rounded font-semibold">Pasif</span>}
+                        {isUnderFunded && <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-bold">⚠ Eşitleme gerekli</span>}
                         {withdrawable > 0.01 && !isUnderFunded && (
-                          <span className="text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full font-bold">
+                          <span className="text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded font-bold">
                             ✓ {fmt(withdrawable)} çekilebilir
                           </span>
                         )}
@@ -166,7 +166,7 @@ export function PartnersTab({
                         <div>
                           <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">İsim</label>
                           <input
-                            className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
+                            className="w-full border border-gray-200 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
                             value={editForm.name}
                             onChange={e => onEditFormChange({ ...editForm, name: e.target.value })}
                             autoFocus
@@ -176,7 +176,7 @@ export function PartnersTab({
                           <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Pay Oranı (%)</label>
                           <input
                             type="number" min="0.01" max="100" step="0.01"
-                            className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
+                            className="w-full border border-gray-200 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
                             value={editForm.shareRatioPct}
                             onChange={e => onEditFormChange({ ...editForm, shareRatioPct: e.target.value })}
                           />
@@ -186,22 +186,22 @@ export function PartnersTab({
                       <div className="flex gap-2">
                         <button
                           onClick={() => onSaveEdit(p.id)} disabled={editSaving}
-                          className="text-xs font-bold px-3 py-1.5 rounded-lg bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50 transition-colors"
+                          className="text-xs font-bold px-3 py-1.5 rounded bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50 transition-colors"
                         >
                           {editSaving ? 'Kaydediliyor...' : 'Kaydet'}
                         </button>
-                        <button onClick={onCancelEdit} className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors">
+                        <button onClick={onCancelEdit} className="text-xs font-semibold px-3 py-1.5 rounded border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors">
                           İptal
                         </button>
                       </div>
                     </div>
                   ) : (
                     <div className="mt-2 pt-2 border-t border-gray-50 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button onClick={() => onOpenEdit(p)} className="text-xs text-gray-400 hover:text-primary-600 px-2 py-1 rounded-lg hover:bg-primary-50 transition-colors">Düzenle</button>
-                      <button onClick={() => onToggleTxHistory(p.id)} className="text-xs text-gray-400 hover:text-primary-600 px-2 py-1 rounded-lg hover:bg-primary-50 transition-colors">
+                      <button onClick={() => onOpenEdit(p)} className="text-xs text-gray-400 hover:text-primary-600 px-2 py-1 rounded hover:bg-primary-50 transition-colors">Düzenle</button>
+                      <button onClick={() => onToggleTxHistory(p.id)} className="text-xs text-gray-400 hover:text-primary-600 px-2 py-1 rounded hover:bg-primary-50 transition-colors">
                         {expandedTxId === p.id ? 'Geçmişi Gizle ↑' : 'Geçmiş ↓'}
                       </button>
-                      <button onClick={() => onDeletePartner(p.id, p.name)} className="text-xs text-gray-400 hover:text-red-500 px-2 py-1 rounded-lg hover:bg-red-50 transition-colors">Sil</button>
+                      <button onClick={() => onDeletePartner(p.id, p.name)} className="text-xs text-gray-400 hover:text-red-500 px-2 py-1 rounded hover:bg-red-50 transition-colors">Sil</button>
                     </div>
                   )}
 
@@ -236,7 +236,7 @@ export function PartnersTab({
           </div>
 
           {equalization.total_equalization > 0 && (
-            <div className="bg-amber-50 border border-amber-200 rounded-xl px-5 py-4">
+            <div className="bg-amber-50 border border-amber-200 rounded px-5 py-4">
               <div className="text-[10px] font-bold uppercase tracking-widest text-amber-600 mb-2">Eşitleme Özeti</div>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div><span className="text-gray-500">Toplam eşitleme gereken: </span><span className="font-bold text-amber-700">{fmt(equalization.total_equalization)}</span></div>
