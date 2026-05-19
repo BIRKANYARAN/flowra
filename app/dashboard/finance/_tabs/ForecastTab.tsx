@@ -109,6 +109,44 @@ export async function ForecastTab({ userId: _userId, companyId }: Props) {
   const runwayTone  = runwayMonths === null ? 'neutral'
     : runwayMonths <= 2 ? 'critical' : runwayMonths <= 6 ? 'warning' : 'positive'
 
+  // ── C7: Scenario Causality Engine — explain WHY scenarios diverge ─────────
+  const causalityLines: string[] = []
+  if (forecast) {
+    const base        = forecast.summary.base
+    const optimistic  = forecast.summary.optimistic
+    const pessimistic = forecast.summary.pessimistic
+
+    const scenarioSpread = optimistic.endCash - pessimistic.endCash
+    if (Math.abs(scenarioSpread) > 0) {
+      causalityLines.push(
+        `İyimser ve muhafazakâr senaryo arasındaki 12 aylık nakit farkı ${fmtCompact(Math.abs(scenarioSpread))} — bu gelir belirsizliğinin doğrudan nakit gölgesidir.`
+      )
+    }
+
+    if (base.totalNet >= 0) {
+      causalityLines.push(
+        `Baz senaryoda 12 aylık net kâr ${fmtCompact(base.totalNet)} — mevcut gelir hızında gider yapısı sürdürülebilir.`
+      )
+    } else {
+      causalityLines.push(
+        `Baz senaryoda 12 aylık net ${fmtCompact(Math.abs(base.totalNet))} zarar — mevcut gelir hızı gider yapısını karşılamıyor; baz senaryo dahi karlı değil.`
+      )
+    }
+
+    if (pessimistic.runwayEndMonth) {
+      causalityLines.push(
+        `Muhafazakâr senaryoda nakit ${pessimistic.runwayEndMonth}'de tükenebilir — gelir baskısı realize olursa bu dönem öncesi likidite hazırlığı gerekir.`
+      )
+    }
+
+    if (m.burn.monthly_burn_rate > 0) {
+      const tenPctBurnImpact = m.burn.monthly_burn_rate * 0.1 * 12
+      causalityLines.push(
+        `Aylık burn ${fmt(m.burn.monthly_burn_rate)} — %10 gider artışı yıllık ${fmtCompact(tenPctBurnImpact)} ek nakit çıkışı yaratır ve senaryolardan bağımsız olarak runway'i kısaltır.`
+      )
+    }
+  }
+
   return (
     <div className="space-y-4">
 
@@ -265,6 +303,23 @@ export async function ForecastTab({ userId: _userId, companyId }: Props) {
           </div>
           <div className="mt-2 text-[10px] text-[#94a3b8]">
             Baz senaryo: son 6 ay ortalaması · İyimser: +%15 gelir büyümesi · Muhafazakâr: -%20 gelir baskısı
+          </div>
+        </div>
+      )}
+
+      {/* C7: Senaryo Nedensellik Analizi */}
+      {forecast && causalityLines.length > 0 && (
+        <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
+          <div className="flex items-center justify-between mb-2.5">
+            <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Senaryo Nedensellik Analizi</span>
+            <span className="text-[9px] text-[#94a3b8]">Gelir belirsizliği · Burn kaldıracı · Nakit gölgesi</span>
+          </div>
+          <div className="space-y-0.5">
+            {causalityLines.map((line, i) => (
+              <div key={i} className="text-[11px] text-[#64748b] leading-snug">
+                <span className="text-[#cbd5e1] mr-1.5">—</span>{line}
+              </div>
+            ))}
           </div>
         </div>
       )}
