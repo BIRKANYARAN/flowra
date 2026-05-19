@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole }      from '@/lib/require-role'
 import { WorkflowService }  from '@/lib/services/workflow.service'
+import type { WorkflowType } from '@/lib/services/workflow.service'
 import { logAudit }         from '@/lib/audit'
 import type { AuditEntityType, AuditAction } from '@/types'
 import { resolveApiAuth }   from '@/lib/api-auth'
@@ -8,6 +9,15 @@ import { resolveApiAuth }   from '@/lib/api-auth'
 export const dynamic = 'force-dynamic'
 
 // POST /api/workflow/[id]/resolve — approve or reject a pending workflow (admin only)
+
+// Map workflow type → audit entity type for accurate audit trail.
+// Previously hardcoded to 'expense' for all types (governance gap).
+const WORKFLOW_AUDIT_ENTITY: Record<WorkflowType, AuditEntityType> = {
+  expense_approval:     'expense',
+  partner_loan:         'partner',
+  dividend_declaration: 'partner',
+  period_close:         'period',
+}
 
 export async function POST(
   req: NextRequest,
@@ -57,20 +67,24 @@ export async function POST(
       }
     }
 
+    // Audit trail: use correct entity type per workflow type (not hardcoded 'expense')
+    const auditEntityType: AuditEntityType =
+      WORKFLOW_AUDIT_ENTITY[workflow.workflow_type as WorkflowType] ?? 'workflow'
     logAudit({
       userId:     uid,
       companyId,
-      entityType: 'expense' as AuditEntityType,
-      entityId:   workflow.id,
+      entityType: auditEntityType,
+      entityId:   workflow.resource_id ?? workflow.id,
       action:     (action === 'approve' ? 'update' : 'delete') as AuditAction,
-      newData:    { workflow_status: workflow.status, workflow_type: workflow.workflow_type, notes: workflow.notes },
+      newData:    { workflow_id: workflow.id, workflow_status: workflow.status, workflow_type: workflow.workflow_type, approver_id: uid, notes: workflow.notes },
     })
 
     return NextResponse.json({ workflow, resolved: true })
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Internal error'
     const status = msg.includes('bulunamadı') ? 404
-      : msg.includes('zaten') || msg.includes('dolmuş') ? 409
+      : msg.includes('zaten') || msg.includes('dolmuş') || msg.includes('eş zamanlı') ? 409
+      : msg.includes('onaylayamazsınız') ? 403
       : 500
     console.error('[workflow/resolve]', e)
     return NextResponse.json({ error: msg }, { status })
