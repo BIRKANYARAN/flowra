@@ -8,15 +8,10 @@
 import { useState, useEffect } from 'react'
 import { ContextReading, ContextRail, ContextRailSkeleton } from '@/components/ds'
 import { fmtDense as fmtK } from '@/lib/format'
-
-interface OpsPeek {
-  burn:  { monthly_burn_rate: number; runway_months: number | null }
-  stock: { fifo_value: number; coverage_months: number | null }
-  cash:  { true_cash_position: number }
-}
+import type { CfoMetrics } from '@/lib/finance/cfo-metrics'
 
 export function OperationsContextBar({ companyId }: { companyId: string }) {
-  const [data, setData]             = useState<OpsPeek | null>(null)
+  const [data, setData]             = useState<CfoMetrics | null>(null)
   const [pendingExpenses, setPendingExpenses] = useState<number | null>(null)
   const [loading, setLoading]       = useState(true)
 
@@ -26,7 +21,7 @@ export function OperationsContextBar({ companyId }: { companyId: string }) {
       fetch('/api/cfo-metrics').then(r => r.ok ? r.json() : null),
       fetch('/api/expenses/pending-total').then(r => r.ok ? r.json() : null).catch(() => null),
     ]).then(([metrics, pending]) => {
-      if (metrics) setData(metrics as OpsPeek)
+      if (metrics) setData(metrics as CfoMetrics)
       if (pending?.total != null) setPendingExpenses(pending.total)
     }).catch(() => {}).finally(() => setLoading(false))
   }, [companyId])

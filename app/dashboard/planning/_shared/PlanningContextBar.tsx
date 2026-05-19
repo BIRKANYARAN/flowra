@@ -8,21 +8,17 @@
 import { useState, useEffect } from 'react'
 import { ContextReading, ContextRail, ContextRailSkeleton } from '@/components/ds'
 import { fmtDense as fmtK } from '@/lib/format'
-
-interface PlanningPeek {
-  burn: { monthly_burn_rate: number; runway_months: number | null; runway_days: number | null }
-  cash: { true_cash_position: number; distributable_cash: number }
-}
+import type { CfoMetrics } from '@/lib/finance/cfo-metrics'
 
 export function PlanningContextBar({ companyId }: { companyId: string }) {
-  const [data, setData]     = useState<PlanningPeek | null>(null)
+  const [data, setData]     = useState<CfoMetrics | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     setLoading(true)
     fetch('/api/cfo-metrics')
       .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d) setData(d as PlanningPeek) })
+      .then(d => { if (d) setData(d as CfoMetrics) })
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [companyId])

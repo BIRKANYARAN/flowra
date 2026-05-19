@@ -9,14 +9,7 @@
 import { useState, useEffect } from 'react'
 import { ContextReading, ContextRail, ContextRailSkeleton } from '@/components/ds'
 import { fmtDense as fmtK } from '@/lib/format'
-
-interface CfoPeek {
-  cash:        { true_cash_position: number; distributable_cash: number }
-  burn:        { runway_days: number | null; runway_months: number | null }
-  receivables: { total_outstanding: number; overdue_60d: number }
-  tax:         { kdv_net: number; corporate_tax_estimate: number }
-  partner:     { total_loans: number }
-}
+import type { CfoMetrics } from '@/lib/finance/cfo-metrics'
 
 const TRY = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 })
 
@@ -25,14 +18,14 @@ function prefixed(n: number): string {
 }
 
 export function FinanceContextBar({ companyId }: { companyId: string }) {
-  const [data, setData]     = useState<CfoPeek | null>(null)
+  const [data, setData]     = useState<CfoMetrics | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     setLoading(true)
     fetch('/api/cfo-metrics')
       .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d) setData(d) })
+      .then(d => { if (d) setData(d as CfoMetrics) })
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [companyId])
