@@ -129,7 +129,7 @@ export async function TasksContent({ companyId }: Props) {
       {/* Cross-navigation */}
       <div className="flex items-center justify-between px-1">
         <p className="text-[10px] text-[#94a3b8] leading-relaxed">
-          Görevler tahsilat ve satış akışıyla koordineli yönetilmeli.
+          Kritik görev gecikmeleri tahsilat ve teklif dönüşümü hızını doğrudan etkiler — öncelikli görevleri ticari akışla koordineli takip edin.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
           <Link href="/dashboard/commercial?tab=collections" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">

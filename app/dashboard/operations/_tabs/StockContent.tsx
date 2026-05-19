@@ -357,7 +357,7 @@ export async function StockContent({ companyId, userId }: Props) {
       {/* Cross-navigation */}
       <div className="flex items-center justify-between px-1">
         <p className="text-[10px] text-[#94a3b8] leading-relaxed">
-          FIFO stok maliyetleri satış marjlarını ve P&amp;L&apos;i doğrudan etkiler.
+          Stok yaşı arttıkça FIFO maliyeti yükselir — eski lot satışı marjı ve P&amp;L&apos;i doğrudan etkiler.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
           <Link

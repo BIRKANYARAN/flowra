@@ -431,7 +431,7 @@ export function OrdersContent(_props: Props) {
       {/* Cross-navigation */}
       <div className="flex items-center justify-between px-1">
         <p className="text-[10px] text-[#94a3b8] leading-relaxed">
-          Satın alma siparişleri stok ve giderlerle birlikte yönetilmeli.
+          Satın alma maliyeti FIFO&apos;ya girer ve COGS üzerinden P&amp;L&apos;e yansır — alım zamanlaması ve marj birlikte değerlendirilmeli.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
           <Link href="/dashboard/operations?tab=stock" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">

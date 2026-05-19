@@ -303,8 +303,7 @@ export async function PnlTab({ userId, companyId }: Props) {
       {/* Cross-navigation */}
       <div className="col-span-12 flex items-center justify-between px-1 pt-1">
         <p className="text-[10px] text-[#94a3b8] leading-relaxed">
-          Bu görünüm cari ay tahakkuk bazlı P&amp;L&apos;i gösterir.
-          PDF dışa aktarım için resmi raporu inceleyin.
+          Tahakkuk kârı gerçek nakit değildir — tahsilat hızı P&amp;L ile nakit pozisyonu arasındaki açığı belirler.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
           <Link href="/dashboard/commercial?tab=sales" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">

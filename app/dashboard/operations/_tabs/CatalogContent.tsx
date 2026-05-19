@@ -171,7 +171,7 @@ export async function CatalogContent({ companyId, userId }: Props) {
       {/* Cross-navigation */}
       <div className="flex items-center justify-between px-1">
         <p className="text-[10px] text-[#94a3b8] leading-relaxed">
-          Ürün marjları P&amp;L&apos;i etkiler. Stok seviyesi ve simülasyon için ilgili sekmelere geçin.
+          Düşük marjlı ürün hacmi ciro üretir ama kâr değil — her ürünün birim kârını satış hacmiyle birlikte takip edin.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
           <Link

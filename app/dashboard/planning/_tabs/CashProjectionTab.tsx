@@ -245,7 +245,7 @@ export async function CashProjectionTab({ companyId }: Props) {
       {/* Cross-navigation */}
       <div className="flex items-center justify-between px-1">
         <p className="text-[10px] text-[#94a3b8] leading-relaxed">
-          Nakit projeksiyonu gerçek finansallarla ve borç baskısıyla birlikte değerlendirilmeli.
+          Projeksiyon bir tahmin — gerçekleşen satış ve tahsilat takvimiyle hizalayarak güncel tutun.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
           <Link href="/dashboard/finance?tab=cashflow" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">

@@ -330,7 +330,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
       {/* Cross-navigation */}
       <div className="flex items-center justify-between px-1">
         <p className="text-[10px] text-[#94a3b8] leading-relaxed">
-          Borç baskısı ortak dengesi ve nakit projeksiyonuyla birlikte değerlendirilmeli.
+          Borç servisi nakit dışına çıkınca runway direkt kısalır — borç baskısı ve nakit projeksiyonu aynı anda izlenmeli.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
           <Link href="/dashboard/partners?tab=tranches" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">

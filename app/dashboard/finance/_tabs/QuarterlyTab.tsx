@@ -459,7 +459,7 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
       {/* Cross-navigation */}
       <div className="flex items-center justify-between px-1">
         <p className="text-[10px] text-[#94a3b8] leading-relaxed">
-          Çeyreklik gelir, matrah ve geçici vergi özeti.
+          Geçici vergi nakit planlamasını doğrudan etkiler — çeyrek matrahı büyüyorsa nakit rezervi buna göre ayrılmalı.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
           <Link href="/dashboard/finance?tab=pnl" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">

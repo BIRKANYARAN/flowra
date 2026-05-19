@@ -278,7 +278,7 @@ export async function ExpensesContent({ companyId }: Props) {
       {/* Cross-navigation */}
       <div className="flex items-center justify-between px-1">
         <p className="text-[10px] text-[#94a3b8] leading-relaxed">
-          Gider analizi P&amp;L ve nakit akışını doğrudan etkiler.
+          Gider artışı brüt marjı düşürür ve runway&apos;ı kısaltır — gider trendi satış hızıyla birlikte değerlendirilmeli.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
           <Link
