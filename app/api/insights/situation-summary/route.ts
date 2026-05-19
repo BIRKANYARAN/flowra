@@ -7,6 +7,7 @@ import type { SituationInputs }                 from '@/lib/engines/situation.en
 import type { AlertInputs }                     from '@/lib/engines/alert.engine'
 import { resolveApiAuth }                       from '@/lib/api-auth'
 import { getCfoMetrics }                        from '@/lib/finance/financial-core'
+import { reqCtx, apiError }                     from '@/lib/api-utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,6 +17,7 @@ export const dynamic = 'force-dynamic'
 // Financial data is computed by rule-based engines; AI only writes the narrative.
 
 export async function GET(req: NextRequest) {
+  const ctx = reqCtx(req)
   try {
     const auth = await resolveApiAuth(req)
     if (!auth.ok) return auth.response
@@ -98,7 +100,39 @@ export async function GET(req: NextRequest) {
 
     const situation = computeSituation(situationInputs)
 
-    // Alert inputs
+    // ── Compute tranche-based inputs (same as alerts/evaluate) ──────────────────
+    let nextDueDays = -1, nextAmt = 0
+    for (const t of tranches) {
+      if (t.due_date) {
+        const days = Math.round((new Date(t.due_date as string).getTime() - nowMs) / 86_400_000)
+        if (nextDueDays < 0 || days < nextDueDays) {
+          nextDueDays = days
+          nextAmt = Number(t.outstanding_try ?? 0)
+        }
+      }
+    }
+
+    // ── KDV from PnL (available) + tax due date ──────────────────────────────
+    const kdvPayable = pnl?.net_vat_try ?? 0
+    const taxDueDays = kdvPayable > 0 ? (() => {
+      const curMonth = now.getMonth() + 1
+      const curYear  = now.getFullYear()
+      const dueMonth = curMonth === 12 ? 1 : curMonth + 1
+      const dueYear  = curMonth === 12 ? curYear + 1 : curYear
+      const dueDate  = new Date(`${dueYear}-${String(dueMonth).padStart(2, '0')}-24`)
+      return Math.round((dueDate.getTime() - nowMs) / 86_400_000)
+    })() : -1
+
+    // ── Cash runway from cfo metrics (available) ────────────────────────────
+    const cashRunwayDays = cfo?.burn.runway_days ?? -1
+
+    // ── Data quality: explicitly label which inputs are approximations ───────
+    // In shadow GL mode, balance sheet imbalance and legal reserve cannot be
+    // computed from operational tables alone — we don't have GL account balances.
+    // These are labeled as approximated so the consumer can show a caveat banner.
+    const approximatedInputs: string[] = ['bsImbalanceTry', 'legalReserveDeficit', 'maxBurdenScoreAbs', 'equityGapTry', 'openPeriodDaysOverdue']
+
+    // Alert inputs — populated from actual data where available
     const alertInputs: AlertInputs = {
       overdueCount30: overdue.filter(s => {
         const age = Math.round((nowMs - new Date(((s.sale_date as string) || '1970-01-01') + 'T00:00:00Z').getTime()) / 86_400_000)
@@ -110,18 +144,18 @@ export async function GET(req: NextRequest) {
         return age > 60
       }).length,
       overdueTotal60:           ot60,
-      totalReceivables:         allOutstanding,  // all outstanding including < 30 days
-      cashRunwayDays:           -1,
+      totalReceivables:         allOutstanding,
+      cashRunwayDays,                       // from cfo metrics
       monthlyNetIncome:         monthlyNet,
-      maxBurdenScoreAbs:        0,
-      nextTrancheDueDays:       -1,
-      nextTrancheAmount:        0,
-      openPeriodDaysOverdue:    -1,
-      kdvPayable:               0,
-      taxDueDays:               -1,
-      bsImbalanceTry:           0,
-      legalReserveDeficit:      0,
-      equityGapTry:             0,
+      maxBurdenScoreAbs:        0,          // requires waterfall — unavailable
+      nextTrancheDueDays:       nextDueDays, // computed from tranches
+      nextTrancheAmount:        nextAmt,
+      openPeriodDaysOverdue:    -1,          // not queried here — unavailable
+      kdvPayable,                            // from PnL net_vat_try
+      taxDueDays,                            // computed from kdvPayable
+      bsImbalanceTry:           0,           // requires GL — unavailable in shadow mode
+      legalReserveDeficit:      0,           // requires period close — unavailable
+      equityGapTry:             0,           // not queried here — unavailable
       equityCallOverdueDays:    -1,
       debtServiceRatio:         dsr,
       partnerLoanConcentration: loanConcentration,
@@ -142,9 +176,17 @@ export async function GET(req: NextRequest) {
       alerts: alerts.slice(0, 5),
       summary,
       computed_at: new Date().toISOString(),
+      // E9: explicit data quality signal — consumers should show a caveat banner
+      // when approximated_inputs is non-empty (GL shadow mode limitation)
+      data_quality: {
+        approximated_inputs: approximatedInputs,
+        note: approximatedInputs.length > 0
+          ? 'GL gölge modda — bilanço dengesi, yasal yedek ve ortak yük skoru hesaplanamıyor. Bu alanlar için bazı alertler üretilmiyor olabilir.'
+          : null,
+      },
     })
   } catch (e) {
     console.error('[insights/situation-summary]', e)
-    return NextResponse.json({ error: 'Internal error' }, { status: 500 })
+    return apiError(ctx, 'Durum özeti hesaplanamadı', 500, 'DB_READ_FAILED')
   }
 }

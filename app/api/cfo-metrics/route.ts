@@ -222,6 +222,8 @@ export async function GET(req: NextRequest) {
     ])
 
     // ── Log any query errors (degrade gracefully) ───────────────────────────
+    // E9: collect failed query messages to surface in response as data_quality signal.
+    // Consumers can show "some metrics are approximate" when this is non-empty.
     const queryErrors = [
       allTimeCollectedRes.error, allTimePaidExpensesRes.error, unpaidExpensesRes.error,
       periodCollectedRes.error, periodPaidExpensesRes.error, trailingBurnRes.error,
@@ -230,6 +232,7 @@ export async function GET(req: NextRequest) {
       ytdPurchaseVatRes.error, ytdExpenseVatRes.error, partnerTxRes.error,
       stockRes.error,
     ].filter(Boolean)
+    const queryFailedMessages = queryErrors.map(e => (e as { message?: string }).message ?? 'unknown')
     if (queryErrors.length > 0) {
       queryErrors.forEach(e => console.error('[cfo-metrics] query error:', (e as { message?: string }).message))
     }
@@ -323,6 +326,15 @@ export async function GET(req: NextRequest) {
       partner,
       stock,
       period: { from, to },
+      // E9: explicit data quality signal — surface which DB queries failed gracefully.
+      // An empty array means all metrics are computed from complete data.
+      // A non-empty array means some metrics fell back to 0 (unavailable data).
+      data_quality: {
+        query_failures:  queryFailedMessages.length,
+        note: queryFailedMessages.length > 0
+          ? `${queryFailedMessages.length} sorgu başarısız — bazı metrikler 0 veya eksik olabilir.`
+          : null,
+      },
     })
   } catch (err) {
     console.error('[cfo-metrics] error:', err instanceof Error ? err.message : String(err))

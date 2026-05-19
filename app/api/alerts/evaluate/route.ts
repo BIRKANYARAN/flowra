@@ -180,7 +180,19 @@ export async function GET(req: NextRequest) {
     }
 
     const alerts = evaluateAlerts(inputs)
-    return NextResponse.json({ alerts, count: alerts.length })
+
+    // E9: explicit data quality signal — in shadow GL mode, some alert inputs
+    // cannot be computed from operational tables. Surface this so the consumer
+    // can show a caveat: "not all checks are active" rather than silently missing them.
+    const approximatedInputs = ['bsImbalanceTry', 'legalReserveDeficit']
+    return NextResponse.json({
+      alerts,
+      count: alerts.length,
+      data_quality: {
+        approximated_inputs: approximatedInputs,
+        note: 'GL gölge modda — bilanço dengesi ve yasal yedek kontrolleri hesaplanamıyor. Bu alert kuralları devre dışı.',
+      },
+    })
   } catch (e) {
     console.error('[alerts/evaluate]', e)
     return apiError(ctx, 'Alert değerlendirmesi başarısız', 500, 'DB_READ_FAILED')
