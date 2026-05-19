@@ -46,9 +46,20 @@ export async function POST(req: NextRequest) {
     const startMonth = (typeof body.start_month === 'string' && /^\d{4}-\d{2}$/.test(body.start_month))
       ? body.start_month : defaultStart
 
-    // ── Read base expenses from DB (categorized monthly recurring) ─────────
-    const from = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
-    const to   = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10)
+    // ── Read base expenses from DB (3-month trailing average) ─────────────
+    // Use a 3-month trailing window and divide by 3 for a stable monthly baseline.
+    // Single-month snapshot is distorted by one-off capital expenses (e.g. a
+    // ₺200K equipment purchase this month projects ₺200K/month for 12 months).
+    // 3-month average dampens one-off items and captures seasonality.
+    //
+    // Capital and financing types are excluded — they are not recurring operational
+    // commitments that belong in a forward-looking expense projection.
+    const TRAILING_MONTHS = 3
+    const trailStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - (TRAILING_MONTHS - 1), 1))
+    const from = trailStart.toISOString().slice(0, 10)
+    const to   = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0)).toISOString().slice(0, 10)
+
+    const NON_RECURRING_TYPES = new Set(['capital', 'partner_financing', 'loan_repayment', 'dividend', 'internal_transfer', 'principal', 'partner_loan'])
 
     // Only use paid expenses as baseline — unpaid/pending expenses haven't been
     // disbursed and should not be projected as ongoing commitments.
@@ -61,41 +72,50 @@ export async function POST(req: NextRequest) {
       .gte('expense_date', from)
       .lte('expense_date', to)
 
-    // Aggregate by category for current month baseline
+    // Aggregate by category for trailing average baseline
     const categoryMap: Record<string, number> = {}
     for (const row of expenseRows ?? []) {
       const cat = (row.expense_type as string) ?? 'general'
+      if (NON_RECURRING_TYPES.has(cat)) continue  // exclude one-off / financing flows
       categoryMap[cat] = (categoryMap[cat] ?? 0) + Number(row.amount_try ?? 0)
     }
 
-    const baseExpenses: BaseExpenseLine[] = Object.entries(categoryMap).map(([category, amount_try]) => ({
+    // Divide by trailing window to get monthly average
+    const baseExpenses: BaseExpenseLine[] = Object.entries(categoryMap).map(([category, total]) => ({
       category,
-      amount_try,
+      amount_try: round2(total / TRAILING_MONTHS),
     }))
 
     // ── Read partner loan tranches for debt service ────────────────────────
     const tranches: DebtTranche[] = []
     if (body.include_debt !== false) {
       try {
+        // Select outstanding_try (current remaining balance) — NOT amount_try (original principal).
+        // Using amount_try overstates interest when a tranche has been partially repaid.
+        // Example: ₺950K original, ₺300K already repaid → outstanding = ₺650K.
+        // Interest should be ₺650K × rate, not ₺950K × rate.
+        // The interest-accrual cron also uses outstanding_try for the same reason.
         const { data: trancheRows } = await supabase
           .from('partner_loan_tranches')
-          .select('amount_try, annual_interest_rate, status, due_date')
+          .select('outstanding_try, amount_try, annual_interest_rate, status, due_date')
           .eq('company_id', companyId)
           .eq('status', 'active')
 
         for (const t of trancheRows ?? []) {
-          const principal      = Number(t.amount_try ?? 0)
+          // outstanding_try = current balance (may be null on older rows — fall back to amount_try)
+          const outstanding    = Number((t.outstanding_try ?? t.amount_try) ?? 0)
+          const originalAmt    = Number(t.amount_try ?? 0)
           // annual_interest_rate is a decimal (0.15 = 15%) — do NOT divide by 100 again
           const annualRate      = Number(t.annual_interest_rate ?? 0)
-          const monthlyInterest = principal * annualRate / 12
+          const monthlyInterest = outstanding * annualRate / 12
           // Remaining months from due_date
           const remainingMonths = t.due_date
             ? Math.max(0, Math.ceil((new Date(t.due_date as string).getTime() - Date.now()) / (30 * 86_400_000)))
             : 0
           tranches.push({
-            label:             `Ortak Borcu (${principal > 0 ? `₺${(principal / 1000).toFixed(0)}K` : '?'})`,
+            label:             `Ortak Borcu (${outstanding > 0 ? `₺${(outstanding / 1000).toFixed(0)}K bakiye` : originalAmt > 0 ? `₺${(originalAmt / 1000).toFixed(0)}K` : '?'})`,
             monthly_interest:  round2(monthlyInterest),
-            monthly_repayment: remainingMonths > 0 ? round2(principal / remainingMonths) : 0,
+            monthly_repayment: remainingMonths > 0 ? round2(outstanding / remainingMonths) : 0,
             remaining_months:  remainingMonths,
           })
         }
