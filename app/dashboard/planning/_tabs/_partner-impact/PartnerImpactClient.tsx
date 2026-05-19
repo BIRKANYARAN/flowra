@@ -8,6 +8,7 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
+import { round2 } from '@/lib/calc'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -49,7 +50,7 @@ function fmtDate(iso: string): string {
   try { return new Date(iso).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }) }
   catch { return iso }
 }
-function round2(n: number): number { return Math.round(n * 100) / 100 }
+
 
 // Pure equalization kernel — same algorithm as server-side computeEqualization
 function computeEq(entries: EqualizationEntry[], distributable: number): EqualizationEntry[] {

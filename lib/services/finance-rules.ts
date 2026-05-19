@@ -196,6 +196,8 @@ export function periodForMonth(yyyymm: string): Period {
 }
 
 // ── Rounding (kept colocated to avoid drift across services) ─────────────────
+// @deprecated: prefer importing round2 from '@/lib/calc' directly.
+//   This copy is kept for backward compatibility; implementations are identical.
 
 export function round2(v: number): number {
   return Math.round((v + Number.EPSILON) * 100) / 100
