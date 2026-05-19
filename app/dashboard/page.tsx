@@ -532,35 +532,11 @@ export default async function DashboardPage() {
     <div className="flex flex-col gap-4">
 
       {/* ── PAGE HERO ─────────────────────────────────────────────────────── */}
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-black tracking-tight text-gray-900 leading-tight">CEO Komuta Merkezi</h1>
-          <div className="flex items-center gap-2.5 mt-1.5 flex-wrap">
-            <span className="text-sm text-gray-400">{label}</span>
-            {fxData.USD > 0 && (
-              <>
-                <span className="text-gray-200">·</span>
-                <span className="text-[11px] text-gray-400 tabular-nums font-mono">
-                  <span className="text-gray-300">$</span>{fxData.USD.toFixed(2)}
-                  <span className="mx-1.5 text-gray-200">·</span>
-                  <span className="text-gray-300">€</span>{fxData.EUR.toFixed(2)}
-                </span>
-              </>
-            )}
-            <span className="text-gray-200">·</span>
-            <div className={`flex items-center gap-1.5 text-sm font-semibold ${situTheme.text}`}>
-              <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-black ${situTheme.badge}`}>
-                {situTheme.icon}
-              </span>
-              <span className="truncate max-w-xs">{situation.situationLine}</span>
-            </div>
-            <span className={`text-[10px] font-black px-2 py-0.5 rounded-full cursor-help ${situTheme.badge}`}
-              title="Durum skoru: 80+ sağlıklı · 60–79 dikkat · 40–59 risk · 40 altı kritik">
-              {situation.composite}/100
-            </span>
-          </div>
-        </div>
-        <div className="flex items-center gap-1.5 flex-shrink-0 flex-wrap justify-end">
+      <div className="flex items-center justify-between gap-4">
+        <h1 className="text-2xl font-black tracking-tight text-gray-900 leading-tight">CEO Komuta Merkezi</h1>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <span className="text-sm text-gray-400 tabular-nums">{label}</span>
+          <span className="text-gray-200 text-sm">·</span>
           <Link href="/dashboard/commercial?tab=proformas"
             className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-gray-900 text-white text-xs font-semibold hover:bg-gray-700 transition-colors">
             + Proforma
