@@ -93,6 +93,8 @@ create table if not exists companies (
   name         text        not null,
   logo_url     text,
   tax_id       text,
+  tax_office   text,
+  mersis_no    text,
   address      text,
   phone        text,
   email        text,
@@ -755,8 +757,11 @@ create table if not exists job_runs (
 -- ─────────────────────────────────────────────────────────────────────────────
 
 -- companies (already has gl_mode above, but guard for existing DBs)
-alter table companies add column if not exists gl_mode text not null default 'shadow'
+alter table companies add column if not exists gl_mode    text not null default 'shadow'
   check (gl_mode in ('shadow', 'parallel', 'gl_primary'));
+-- companies: tax_office + mersis_no (settings page columns — added 2026-05-20)
+alter table companies add column if not exists tax_office text;
+alter table companies add column if not exists mersis_no  text;
 
 -- accounting_periods extended columns
 alter table accounting_periods add column if not exists pre_close_at timestamptz;

@@ -6,7 +6,7 @@ import { PageHeader, ErrorBanner } from '@/components/ui'
 import { FlowraCard }   from '@/components/ui-kit/FlowraCard'
 import { FlowraButton } from '@/components/ui-kit/FlowraButton'
 import { FlowraInput }  from '@/components/ui-kit/FlowraInput'
-import type { CompanyBank, UserSettings } from '@/types'
+import type { CompanyBank } from '@/types'
 import { resolveCompanyId } from '@/lib/resolve-company'
 
 // DS-aligned style tokens (primary instead of indigo, consistent radius)
@@ -53,44 +53,57 @@ export default function SettingsPage() {
   const [intCurrency, setIntCurrency] = useState<'TRY'|'USD'|'EUR'>('TRY')
 
   // ── Load ────────────────────────────────────────────────────────────────────
+  // Company info lives on the `companies` table (name, address, phone, website,
+  // logo_url, tax_id, tax_office, mersis_no). The old code read from user_settings
+  // which has NONE of these columns — every load silently returned nothing.
   const load = useCallback(async () => {
     const { data: authData, error: authError } = await supabase.auth.getUser()
-    if (authError || !authData?.user) return null
+    if (authError || !authData?.user) { setLoading(false); return }
     const user = authData.user
     const companyId = await resolveCompanyId(user.id, supabase)
 
-    const [sRes, bRes] = await Promise.all([
-      supabase.from('user_settings').select('*').eq('company_id', companyId).is('deleted_at', null)
-        .order('updated_at', { ascending: false }).limit(1).maybeSingle(),
-      supabase.from('company_banks').select('*').eq('company_id', companyId).is('deleted_at', null)
+    const [coRes, bRes] = await Promise.all([
+      supabase
+        .from('companies')
+        .select('name, address, phone, website, tax_id, tax_office, mersis_no, logo_url, email')
+        .eq('id', companyId)
+        .maybeSingle(),
+      supabase
+        .from('company_banks')
+        .select('*')
+        .eq('company_id', companyId)
+        .is('deleted_at', null)
         .order('is_default', { ascending: false }),
     ])
 
-    if (sRes.data) {
-      const d = sRes.data as UserSettings
+    if (coRes.data) {
+      const d = coRes.data as Record<string, string | null>
       setForm({
-        company_name: d.company_name || '', address:    d.address    || '',
-        phone:        d.phone        || '', website:    d.website    || '',
-        tax_number:   d.tax_number   || '', tax_office: d.tax_office || '',
-        mersis_no:    d.mersis_no    || '',
+        company_name: d.name       || '',
+        address:      d.address    || '',
+        phone:        d.phone      || '',
+        website:      d.website    || '',
+        tax_number:   d.tax_id     || '',   // companies.tax_id ↔ form.tax_number
+        tax_office:   d.tax_office || '',
+        mersis_no:    d.mersis_no  || '',
       })
 
-      // DB stores the full public URL (new uploads) or a legacy storage path.
-      // • New: logo_url starts with "http" — use directly, no API round-trip needed.
-      // • Legacy: logo_url is a bare path — call GET /api/upload/logo to resolve it.
-      if (d.logo_url) {
-        setLogoPath(d.logo_url)
-        if (d.logo_url.startsWith('http')) {
-          setSignedPreview(d.logo_url)
+      const logoUrl = d.logo_url
+      if (logoUrl) {
+        setLogoPath(logoUrl)
+        // New uploads: full https:// URL — use directly
+        // Legacy: bare storage path — resolve via API
+        if (logoUrl.startsWith('http')) {
+          setSignedPreview(logoUrl)
         } else {
           try {
             const logoRes = await fetch('/api/upload/logo')
             if (logoRes.ok) {
-              const logoData = await logoRes.json()
+              const logoData = (await logoRes.json()) as Record<string, string>
               const resolved = logoData.url ?? logoData.signed_url
               if (resolved) setSignedPreview(resolved)
             }
-          } catch { /* non-critical — preview will just be empty */ }
+          } catch { /* non-critical — preview stays empty */ }
         }
       }
     }
@@ -151,23 +164,47 @@ export default function SettingsPage() {
   }
 
   // ── Save company settings ──────────────────────────────────────────────────
+  // Saves to `companies` table (company_name→name, tax_number→tax_id).
+  // logo_url is managed separately by /api/upload/logo (already saved to companies).
   async function saveSettings() {
     setSaving(true)
     setMsg(null)
-    const { data: authData, error: authError } = await supabase.auth.getUser()
-    if (authError || !authData?.user) return null
-    const user = authData.user
-    const companyId = await resolveCompanyId(user.id, supabase)
+    try {
+      const { data: authData, error: authError } = await supabase.auth.getUser()
+      if (authError || !authData?.user) {
+        flash(setMsg, 'Oturum bilgileri alınamadı. Lütfen sayfayı yenileyip tekrar deneyin.', 'error')
+        setSaving(false)
+        return
+      }
+      const user = authData.user
+      const companyId = await resolveCompanyId(user.id, supabase)
 
-    const { error } = await supabase
-      .from('user_settings')
-      .upsert(
-        { user_id: user.id, company_id: companyId, ...form, logo_url: logoPath || null },
-        { onConflict: 'user_id' }
-      )
+      const { error } = await supabase
+        .from('companies')
+        .update({
+          name:       form.company_name.trim() || undefined,
+          address:    form.address.trim()    || null,
+          phone:      form.phone.trim()      || null,
+          website:    form.website.trim()    || null,
+          tax_id:     form.tax_number.trim() || null,   // form.tax_number → companies.tax_id
+          tax_office: form.tax_office.trim() || null,
+          mersis_no:  form.mersis_no.trim()  || null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', companyId)
 
-    setSaving(false)
-    flash(setMsg, error ? 'Kayıt sırasında bir hata oluştu. Lütfen tekrar deneyin.' : 'Kaydedildi ✓', error ? 'error' : 'success')
+      if (error) {
+        // Surface the actual DB error so we can diagnose schema drift
+        flash(setMsg, `Kayıt hatası: ${error.message}`, 'error')
+      } else {
+        flash(setMsg, 'Firma bilgileri kaydedildi ✓')
+        load()   // re-fetch to confirm DB round-trip
+      }
+    } catch (e) {
+      flash(setMsg, 'Beklenmeyen hata: ' + String(e), 'error')
+    } finally {
+      setSaving(false)
+    }
   }
 
   // ── Bank CRUD ──────────────────────────────────────────────────────────────
