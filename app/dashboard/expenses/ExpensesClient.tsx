@@ -408,7 +408,7 @@ export default function ExpensesClient({
                       {Number(e.kdv ?? 0) > 0 ? `%${Number(e.kdv)}` : '—'}
                     </div>
                     <div className="col-span-1 text-right text-sm tabular-nums text-[#334155]">
-                      {sym(e.currency)}{Number(e.amount).toFixed(2)}
+                      {fmtMoney(Number(e.amount), e.currency)}
                       {e.currency !== 'TRY' && (
                         <div className="text-xs text-[#94a3b8]">kur: {Number(e.fx_rate).toFixed(4)}</div>
                       )}
@@ -486,7 +486,7 @@ export default function ExpensesClient({
                         {Number(r.kdv) > 0 ? `%${r.kdv}` : '—'}
                       </div>
                       <div className="col-span-2 text-right text-sm font-bold tabular-nums text-neg">
-                        {sym(r.currency)}{Number(r.amount).toFixed(2)}
+                        {fmtMoney(Number(r.amount), r.currency)}
                       </div>
                       <div className="col-span-1 text-right">
                         {confirmRecId === r.id ? (

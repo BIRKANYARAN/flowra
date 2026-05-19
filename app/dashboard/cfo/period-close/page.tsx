@@ -104,8 +104,9 @@ export default function PeriodClosePage() {
       }
     } catch {
       setFeedback(f => ({ ...f, [periodId]: 'Ağ hatası.' }))
+    } finally {
+      setWorking(null)
     }
-    setWorking(null)
   }
 
   async function lockPeriod(periodId: string) {
@@ -127,8 +128,9 @@ export default function PeriodClosePage() {
       }
     } catch {
       setFeedback(f => ({ ...f, [periodId]: 'Ağ hatası.' }))
+    } finally {
+      setWorking(null)
     }
-    setWorking(null)
   }
 
   const requiredCount = CHECKLIST.filter(i => i.required).length

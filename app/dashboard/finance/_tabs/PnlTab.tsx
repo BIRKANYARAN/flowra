@@ -262,9 +262,9 @@ export async function PnlTab({ userId, companyId }: Props) {
         {/* KPI cards */}
         <div className="space-y-2">
           {[
-            { label: 'Brüt Kâr',        value: fmt(grossProfit), sub: `Marj: ${pct(grossProfit, revenue)}`, color: grossProfit >= 0 ? 'border-l-emerald-400' : 'border-l-red-400' },
-            { label: 'Toplam Giderler',  value: fmt(expenses),    sub: 'Kesinti + operasyonel', color: 'border-l-amber-400' },
-            { label: 'Vergi Matrahı',    value: fmt(matrah),      sub: 'Vergi öncesi kazanç', color: matrah >= 0 ? 'border-l-brand/30' : 'border-l-red-400' },
+            { label: 'Brüt Kâr',        value: fmt(grossProfit), sub: `Marj: ${pct(grossProfit, revenue)}`, color: grossProfit >= 0 ? 'border-l-[#059669]' : 'border-l-[#dc2626]' },
+            { label: 'Toplam Giderler',  value: fmt(expenses),    sub: 'Kesinti + operasyonel', color: 'border-l-[#d97706]' },
+            { label: 'Vergi Matrahı',    value: fmt(matrah),      sub: 'Vergi öncesi kazanç', color: matrah >= 0 ? 'border-l-brand/30' : 'border-l-[#dc2626]' },
           ].map(k => (
             <div key={k.label} className={`bg-white border border-l-4 border-[#e2e8f0] ${k.color} rounded px-4 py-3`}>
               <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">{k.label}</div>

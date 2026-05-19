@@ -3,7 +3,7 @@
 // ── SaleCreateDrawer — slide-in drawer for creating a direct sale ─────────────
 
 import { useState, useCallback, useEffect } from 'react'
-import { formatTRY } from '@/lib/format'
+import { fmtTRY as fmt } from '@/lib/format'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -340,7 +340,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
                   {/* Row total */}
                   {itemRowTotal(item) > 0 && (
                     <div className="text-right text-xs text-[#94a3b8] font-mono">
-                      Kalem toplamı: <span className="font-semibold text-[#334155]">{formatTRY(itemRowTotal(item))}</span>
+                      Kalem toplamı: <span className="font-semibold text-[#334155]">{fmt(itemRowTotal(item))}</span>
                     </div>
                   )}
                 </div>
@@ -352,15 +352,15 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
               <div className="mt-3 bg-white border border-[#e2e8f0] rounded px-4 py-3 space-y-1">
                 <div className="flex justify-between text-xs text-[#94a3b8]">
                   <span>Ara Toplam</span>
-                  <span className="font-mono font-semibold text-[#334155]">{formatTRY(subtotal)}</span>
+                  <span className="font-mono font-semibold text-[#334155]">{fmt(subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-xs text-[#94a3b8]">
                   <span>KDV</span>
-                  <span className="font-mono font-semibold text-[#334155]">{formatTRY(kdvTotal)}</span>
+                  <span className="font-mono font-semibold text-[#334155]">{fmt(kdvTotal)}</span>
                 </div>
                 <div className="flex justify-between text-sm font-black text-[#0f172a] pt-1 border-t border-[#e2e8f0]">
                   <span>TOPLAM</span>
-                  <span className="font-mono">{formatTRY(grandTotal)}</span>
+                  <span className="font-mono">{fmt(grandTotal)}</span>
                 </div>
               </div>
             )}

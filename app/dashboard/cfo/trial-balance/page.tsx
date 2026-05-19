@@ -7,7 +7,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Skeleton, ErrorBanner } from '@/components/ds'
-import { formatTRY as fmt } from '@/lib/format'
+import { fmtTRY as fmt } from '@/lib/format'
 
 const PRINT_STYLE = `
 @media print {

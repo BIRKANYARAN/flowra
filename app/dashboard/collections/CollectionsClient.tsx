@@ -244,7 +244,7 @@ export default function CollectionsClient({ initialRows }: Props) {
     return (
       <div
         key={row.id}
-        className={`border-b border-[#f1f5f9] last:border-0 ${isOD ? 'border-l-2 border-l-red-400 bg-neg-light/30' : ''}`}
+        className={`border-b border-[#f1f5f9] last:border-0 ${isOD ? 'border-l-2 border-l-[#dc2626] bg-neg-light/30' : ''}`}
       >
         {/* Main row */}
         <div className="flex items-center gap-3 px-4 py-3 flex-wrap">

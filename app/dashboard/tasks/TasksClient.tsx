@@ -8,6 +8,7 @@
 import { useState, type ChangeEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Task, TaskStatus, Customer, Sale } from '@/types'
+import { fmtTRY } from '@/lib/format'
 
 const IL  = 'w-full border border-[#e2e8f0] rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand bg-white transition-colors'
 const LAB = 'block text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5'
@@ -195,7 +196,7 @@ export default function TasksClient({ initialTasks, initialCustomers, initialSal
               <option value="">— Seçiniz —</option>
               {initialSales.map(s => (
                 <option key={s.id} value={s.id}>
-                  {s.customer_name} — ₺{Number(s.total_try).toLocaleString('tr-TR', { minimumFractionDigits: 0 })}
+                  {s.customer_name} — {fmtTRY(Number(s.total_try), 0)}
                   {' '}({new Date(s.sale_date || s.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })})
                 </option>
               ))}

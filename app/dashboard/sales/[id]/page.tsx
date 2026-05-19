@@ -5,14 +5,13 @@ import Link from 'next/link'
 import { normalizeSaleDetail, normalizeSaleItem, type NormalizedSaleDetail, type NormalizedSaleItem } from '@/lib/normalize'
 import { calculateLine, type LineInput } from '@/lib/calc'
 import { resolveCompanyId } from '@/lib/resolve-company'
-import { fmtTRY as fmt } from '@/lib/format'
+import { fmtTRY as fmt, fmtMoney, fmtNum, sym } from '@/lib/format'
 
 function fmtDate(d: string) {
   try {
     return new Date(d).toLocaleDateString('tr-TR', { day:'2-digit', month:'2-digit', year:'numeric' })
   } catch { return d }
 }
-function sym(c: string) { return c === 'USD' ? '$' : c === 'EUR' ? '€' : '₺' }
 
 export default async function SaleDetailPage({ params }: { params: { id: string } }) {
   const supabase = createClient()
@@ -110,11 +109,11 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
                 <tr key={it.id || String(i)} className={`text-sm ${i % 2 === 1 ? 'bg-[#f8fafc]/50' : ''}`}>
                   <td className="px-5 py-3 font-medium">{it.product_name}</td>
                   <td className="px-3 py-3 text-center tabular-nums">{it.quantity}</td>
-                  <td className="px-3 py-3 text-right tabular-nums">{S}{it.price.toFixed(2)}</td>
+                  <td className="px-3 py-3 text-right tabular-nums">{fmtMoney(it.price, s.currency)}</td>
                   <td className="px-3 py-3 text-center text-[#64748b]">{disc > 0 ? `%${disc}` : '—'}</td>
-                  <td className="px-3 py-3 text-right tabular-nums">{S}{discountedPrice.toFixed(2)}</td>
+                  <td className="px-3 py-3 text-right tabular-nums">{fmtMoney(discountedPrice, s.currency)}</td>
                   <td className="px-3 py-3 text-center text-[#64748b]">%{it.kdv}</td>
-                  <td className="px-5 py-3 text-right font-bold tabular-nums">{S}{total.toFixed(2)}</td>
+                  <td className="px-5 py-3 text-right font-bold tabular-nums">{fmtMoney(total, s.currency)}</td>
                 </tr>
               )
             })}
@@ -125,15 +124,15 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
           <div className="ml-auto w-56 space-y-1.5">
             <div className="flex justify-between text-sm">
               <span className="text-[#64748b]">Ara Toplam</span>
-              <span className="tabular-nums">{S}{s.subtotal.toFixed(2)}</span>
+              <span className="tabular-nums">{fmtMoney(s.subtotal, s.currency)}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-[#64748b]">KDV</span>
-              <span className="tabular-nums">{S}{s.kdv_total.toFixed(2)}</span>
+              <span className="tabular-nums">{fmtMoney(s.kdv_total, s.currency)}</span>
             </div>
             <div className="bg-[#0f172a] text-white rounded px-4 py-3 flex justify-between mt-1">
               <span className="font-bold text-sm">TOPLAM</span>
-              <span className="font-black tabular-nums">{S}{s.total.toFixed(2)}</span>
+              <span className="font-black tabular-nums">{fmtMoney(s.total, s.currency)}</span>
             </div>
             {s.currency !== 'TRY' && (
               <div className="flex justify-between text-xs text-[#64748b] pt-1">
