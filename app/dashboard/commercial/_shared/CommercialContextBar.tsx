@@ -6,7 +6,7 @@
 // Shows key receivables, proformas, and collections state at a glance.
 
 import { useState, useEffect } from 'react'
-import { ContextReading } from '@/components/ds'
+import { ContextReading, ContextRail, ContextRailSkeleton } from '@/components/ds'
 
 interface CommercialPeek {
   receivables: { total_outstanding: number; overdue_60d: number }
@@ -43,9 +43,7 @@ export function CommercialContextBar({ companyId }: { companyId: string }) {
     }).catch(() => {}).finally(() => setLoading(false))
   }, [companyId])
 
-  if (loading) {
-    return <div className="h-[46px] bg-[#f8fafc]/60 border-b border-[#e2e8f0] animate-pulse" />
-  }
+  if (loading) return <ContextRailSkeleton />
   if (!data) return null
 
   const overdue60   = data.receivables.overdue_60d
@@ -55,7 +53,7 @@ export function CommercialContextBar({ companyId }: { companyId: string }) {
     : 100
 
   return (
-    <div className="flex items-center gap-0 bg-[#f8fafc]/40 border-b border-[#e2e8f0] overflow-x-auto scrollbar-none">
+    <ContextRail>
       <ContextReading
         label="AÇIK ALACAK"
         value={outstanding > 0 ? fmtK(outstanding) : '—'}
@@ -90,6 +88,6 @@ export function CommercialContextBar({ companyId }: { companyId: string }) {
         status={data.cash.true_cash_position < 50_000 ? 'critical'
               : data.cash.true_cash_position < 200_000 ? 'warn' : 'ok'}
       />
-    </div>
+    </ContextRail>
   )
 }

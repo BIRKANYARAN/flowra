@@ -7,7 +7,7 @@
 // Loads independently via /api/cfo-metrics.
 
 import { useState, useEffect } from 'react'
-import { ContextReading } from '@/components/ds'
+import { ContextReading, ContextRail, ContextRailSkeleton } from '@/components/ds'
 
 interface CfoPeek {
   cash:        { true_cash_position: number; distributable_cash: number }
@@ -43,11 +43,7 @@ export function FinanceContextBar({ companyId }: { companyId: string }) {
       .finally(() => setLoading(false))
   }, [companyId])
 
-  if (loading) {
-    return (
-      <div className="h-[52px] bg-[#f8fafc]/60 border-b border-[#e2e8f0] animate-pulse" />
-    )
-  }
+  if (loading) return <ContextRailSkeleton className="h-[52px]" />
 
   if (!data) return null
 
@@ -56,7 +52,7 @@ export function FinanceContextBar({ companyId }: { companyId: string }) {
   const cash   = data.cash.true_cash_position
 
   return (
-    <div className="flex items-center gap-0 bg-[#f8fafc]/40 border-b border-[#e2e8f0] overflow-x-auto scrollbar-none">
+    <ContextRail>
       <ContextReading
         label="NAKİT"
         value={fmtK(cash)}
@@ -92,6 +88,6 @@ export function FinanceContextBar({ companyId }: { companyId: string }) {
         value={fmtK(data.partner.total_loans)}
         status={data.partner.total_loans > 500_000 ? 'warn' : 'ok'}
       />
-    </div>
+    </ContextRail>
   )
 }

@@ -6,7 +6,7 @@
 // Shows runway, burn, forecast, and scenario state.
 
 import { useState, useEffect } from 'react'
-import { ContextReading } from '@/components/ds'
+import { ContextReading, ContextRail, ContextRailSkeleton } from '@/components/ds'
 
 interface PlanningPeek {
   burn: { monthly_burn_rate: number; runway_months: number | null; runway_days: number | null }
@@ -35,9 +35,7 @@ export function PlanningContextBar({ companyId }: { companyId: string }) {
       .finally(() => setLoading(false))
   }, [companyId])
 
-  if (loading) {
-    return <div className="h-[46px] bg-[#f8fafc]/60 border-b border-[#e2e8f0] animate-pulse" />
-  }
+  if (loading) return <ContextRailSkeleton />
   if (!data) return null
 
   const runwayMonths = data.burn.runway_months
@@ -45,7 +43,7 @@ export function PlanningContextBar({ companyId }: { companyId: string }) {
   const burn         = data.burn.monthly_burn_rate
 
   return (
-    <div className="flex items-center gap-0 bg-[#f8fafc]/40 border-b border-[#e2e8f0] overflow-x-auto scrollbar-none">
+    <ContextRail>
       <ContextReading
         label="RUNWAY"
         value={runwayMonths == null ? '—'
@@ -82,6 +80,6 @@ export function PlanningContextBar({ companyId }: { companyId: string }) {
         sub={data.cash.distributable_cash > 0 ? 'temettüye hazır' : 'Yok'}
         status="ok"
       />
-    </div>
+    </ContextRail>
   )
 }

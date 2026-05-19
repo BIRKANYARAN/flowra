@@ -6,7 +6,7 @@
 // Shows expenses, stock, and burn rate at a glance.
 
 import { useState, useEffect } from 'react'
-import { ContextReading } from '@/components/ds'
+import { ContextReading, ContextRail, ContextRailSkeleton } from '@/components/ds'
 
 interface OpsPeek {
   burn:  { monthly_burn_rate: number; runway_months: number | null }
@@ -39,9 +39,7 @@ export function OperationsContextBar({ companyId }: { companyId: string }) {
     }).catch(() => {}).finally(() => setLoading(false))
   }, [companyId])
 
-  if (loading) {
-    return <div className="h-[46px] bg-[#f8fafc]/60 border-b border-[#e2e8f0] animate-pulse" />
-  }
+  if (loading) return <ContextRailSkeleton />
   if (!data) return null
 
   const burn     = data.burn.monthly_burn_rate
@@ -49,7 +47,7 @@ export function OperationsContextBar({ companyId }: { companyId: string }) {
   const coverage = data.stock.coverage_months
 
   return (
-    <div className="flex items-center gap-0 bg-[#f8fafc]/40 border-b border-[#e2e8f0] overflow-x-auto scrollbar-none">
+    <ContextRail>
       <ContextReading
         label="AYLIK BURN"
         value={burn > 0 ? fmtK(burn) : '—'}
@@ -90,6 +88,6 @@ export function OperationsContextBar({ companyId }: { companyId: string }) {
               : data.burn.runway_months < 6 ? 'warn'
               : 'ok'}
       />
-    </div>
+    </ContextRail>
   )
 }

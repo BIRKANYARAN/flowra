@@ -431,16 +431,19 @@ export function DataTh({
   children,
   align = 'left',
   first = false,
+  className,
 }: {
   children: ReactNode
   align?: 'left' | 'right' | 'center'
   first?: boolean
+  className?: string
 }) {
   return (
     <th className={cn(
       'px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc]/60 border-b border-[#e2e8f0]',
       align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left',
       first && 'pl-5',
+      className,
     )}>
       {children}
     </th>
@@ -600,5 +603,23 @@ export function ContextReading({
         <span className="text-[9px] text-[#94a3b8] leading-none mt-0.5">{sub}</span>
       )}
     </div>
+  )
+}
+
+// ── ContextRail — Bloomberg-style horizontal status bar shell ─────────────────
+// Wraps a row of ContextReading cells with consistent container styling.
+// Use ContextRailSkeleton during async load.
+
+export function ContextRail({ children }: { children: ReactNode }) {
+  return (
+    <div className="flex items-center gap-0 bg-[#f8fafc]/40 border-b border-[#e2e8f0] overflow-x-auto scrollbar-none">
+      {children}
+    </div>
+  )
+}
+
+export function ContextRailSkeleton({ className }: { className?: string }) {
+  return (
+    <div className={cn('h-[46px] bg-[#f8fafc]/60 border-b border-[#e2e8f0] animate-pulse', className)} />
   )
 }

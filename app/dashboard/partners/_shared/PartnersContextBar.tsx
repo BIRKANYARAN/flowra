@@ -7,7 +7,7 @@
 // Loads from /api/partners/ledger on mount.
 
 import { useState, useEffect } from 'react'
-import { ContextReading } from '@/components/ds'
+import { ContextReading, ContextRail, ContextRailSkeleton } from '@/components/ds'
 
 interface LedgerSummary {
   total_equity_pool:      number
@@ -40,16 +40,14 @@ export function PartnersContextBar() {
       .finally(() => setLoading(false))
   }, [])
 
-  if (loading) {
-    return <div className="h-[46px] bg-[#f8fafc]/60 border-b border-[#e2e8f0] animate-pulse" />
-  }
+  if (loading) return <ContextRailSkeleton />
   if (!data) return null
 
   const deRatio    = data.debt_to_equity_ratio
   const deRatioStr = deRatio == null ? '—' : deRatio.toFixed(2) + 'x'
 
   return (
-    <div className="flex items-center gap-0 bg-[#f8fafc]/40 border-b border-[#e2e8f0] overflow-x-auto scrollbar-none">
+    <ContextRail>
       <ContextReading
         label="SERMAYE HAVUZU"
         value={fmtK(data.total_equity_pool)}
@@ -85,6 +83,6 @@ export function PartnersContextBar() {
           : 'Tümü aktif'}
         status="ok"
       />
-    </div>
+    </ContextRail>
   )
 }
