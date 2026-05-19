@@ -14,10 +14,6 @@ import { fmtTRY as fmt }               from '@/lib/format'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-const TRY_FMT = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
-function fmtFull(n: number): string {
-  return (n < 0 ? '−' : '') + '₺' + TRY_FMT.format(Math.abs(n))
-}
 function runwayColor(months: number | null): string {
   if (months === null) return 'text-[#94a3b8]'
   if (months <= 2)     return 'text-neg'
@@ -88,10 +84,19 @@ export async function OverviewTab({ userId: _userId, companyId }: Props) {
     inputs: { starting_cash: 0, monthly_burn: 0, outstanding_total: 0, horizon_months: 12 },
   }
 
-  // Sequential: runway forecast needs the tax obligation from cfoMetrics to correctly
-  // model the first-month cash outflow (corporate tax + KDV payable).
-  const metrics = await sq(() => getCfoMetrics(companyId, { from, to: today }), ZERO_METRICS)
-  const runway  = await sq(
+  // Previous month range — for C6 operational memory layer
+  const prevEnd   = new Date(year, now.getMonth(), 0)  // last day of previous month
+  const prevStart = new Date(prevEnd.getFullYear(), prevEnd.getMonth(), 1)
+  const prevFrom  = prevStart.toISOString().slice(0, 10)
+  const prevTo    = prevEnd.toISOString().slice(0, 10)
+
+  // Parallel: current + previous month metrics (independent queries)
+  // Sequential: runway forecast must wait for current metrics (needs taxObligation)
+  const [metrics, prevMetrics] = await Promise.all([
+    sq(() => getCfoMetrics(companyId, { from, to: today }),        ZERO_METRICS),
+    sq(() => getCfoMetrics(companyId, { from: prevFrom, to: prevTo }), ZERO_METRICS),
+  ])
+  const runway = await sq(
     () => getRunwayForecast(companyId, {
       from, to: today, months: 12,
       taxObligation: metrics.tax.total_fiscal_obligation,
@@ -116,6 +121,43 @@ export async function OverviewTab({ userId: _userId, companyId }: Props) {
 
   const chartMonths = r.months.slice(0, 12)
   const maxCash     = Math.max(1, ...chartMonths.map(mo => Math.max(0, mo.end_cash)))
+
+  // ── C6: Operational Memory Layer — month-over-month narrative ─────────────
+  const prevM      = prevMetrics
+  const memoryLines: string[] = []
+
+  const cashDelta = m.cash.true_cash_position - prevM.cash.true_cash_position
+  if (Math.abs(cashDelta) >= 500) {
+    memoryLines.push(cashDelta > 0
+      ? `Nakit pozisyonu geçen aya kıyasla ${fmt(cashDelta)} arttı.`
+      : `Nakit pozisyonu geçen aya kıyasla ${fmt(Math.abs(cashDelta))} eridi — runway baskısı izlenmeli.`
+    )
+  }
+
+  const prevBurn  = prevM.burn.monthly_burn_rate
+  const burnDelta = m.burn.monthly_burn_rate - prevBurn
+  if (prevBurn > 0 && m.burn.monthly_burn_rate > 0 && Math.abs(burnDelta) >= 500) {
+    const burnPct = Math.round(Math.abs(burnDelta / prevBurn) * 100)
+    if (burnPct >= 5) {
+      memoryLines.push(burnDelta > 0
+        ? `Aylık burn ${burnPct}% arttı (${fmt(prevBurn)} → ${fmt(m.burn.monthly_burn_rate)}) — gider artışı nakit ömrünü kısaltıyor.`
+        : `Aylık burn ${burnPct}% düştü (${fmt(prevBurn)} → ${fmt(m.burn.monthly_burn_rate)}) — gider disiplini nakit ömrünü uzatıyor.`
+      )
+    }
+  }
+
+  const overdue      = m.receivables.overdue_30d    + m.receivables.overdue_60d    + m.receivables.overdue_90d
+  const prevOverdue  = prevM.receivables.overdue_30d + prevM.receivables.overdue_60d + prevM.receivables.overdue_90d
+  const overdueDelta = overdue - prevOverdue
+  if (overdueDelta >= 500) {
+    memoryLines.push(`Vadesi geçmiş alacaklar ${fmt(overdueDelta)} büyüdü — tahsilat baskısı artıyor.`)
+  } else if (overdueDelta <= -500) {
+    memoryLines.push(`Vadesi geçmiş alacaklar ${fmt(Math.abs(overdueDelta))} azaldı — tahsilat süreçleri işliyor.`)
+  }
+
+  if (memoryLines.length === 0) {
+    memoryLines.push('Nakit, burn ve alacak yapısı geçen ay seviyesinde — operasyonel istikrar korunuyor.')
+  }
 
   return (
     <div className="space-y-4">
@@ -240,6 +282,21 @@ export async function OverviewTab({ userId: _userId, companyId }: Props) {
         </div>
       </div>
 
+      {/* C6: Operasyonel Bellek — geçen ay kıyaslaması */}
+      <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
+        <div className="flex items-center justify-between mb-2.5">
+          <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Operasyonel Bellek</span>
+          <span className="text-[9px] text-[#94a3b8]">Geçen ay kıyaslaması · Nakit · Burn · Alacaklar</span>
+        </div>
+        <div className="space-y-0.5">
+          {memoryLines.map((line, i) => (
+            <div key={i} className="text-[11px] text-[#64748b] leading-snug">
+              <span className="text-[#cbd5e1] mr-1.5">—</span>{line}
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Zone 3 — Finansal Özet */}
       <div>
         <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">Finansal Özet</div>
@@ -252,7 +309,7 @@ export async function OverviewTab({ userId: _userId, companyId }: Props) {
             sub={m.stock.coverage_months ? `${m.stock.coverage_months.toFixed(1)} ay karşılık` : undefined}
             href="/dashboard/operations?tab=stock" />
           <KpiBlock label="KDV Net"
-            value={fmtFull(Math.abs(m.tax.kdv_net))}
+            value={fmt(Math.abs(m.tax.kdv_net))}
             sub={m.tax.kdv_net > 0 ? 'Ödenecek' : 'Devredilecek'}
             tone={m.tax.kdv_net > 0 ? 'warning' : 'neutral'}
             href="/dashboard/finance?tab=tax" />
