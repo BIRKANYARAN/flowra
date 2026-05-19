@@ -166,8 +166,11 @@ export function computeBurnMetrics(
     }
   }
 
-  const runwayMonths = round2(distributableCash / monthlyBurn)
-  const runwayDays   = Math.round(runwayMonths * 30.44)
+  // Floor at 0 — negative distributableCash must not produce negative runway months/days.
+  // A negative distributable means the company is already past exhaustion; the correct
+  // representation is 0 months / 0 days remaining, not a confusing negative number.
+  const runwayMonths = round2(Math.max(0, distributableCash / monthlyBurn))
+  const runwayDays   = Math.max(0, Math.round(runwayMonths * 30.44))
 
   let exhaustionDate: string | null = null
   if (distributableCash > 0 && monthlyBurn > 0) {
