@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
   // oldest-first ordering ensures the most aged (highest risk) buckets are never missed.
   const { data, error } = await supabase
     .from('sales')
-    .select('total_try:total, amount_paid:paid_amount, sale_date')
+    .select('total_try:total, amount_paid:paid_amount, sale_date, currency, fx_rate_try')
     .eq('company_id', companyId)
     .is('deleted_at', null)
     .in('payment_status', ['pending', 'partial', 'overdue'])
@@ -69,6 +69,10 @@ export async function GET(req: NextRequest) {
     computed_at:  new Date().toISOString(),
   }
 
+  // FX exposure accumulator: track non-TRY receivables by currency.
+  // Keyed by currency code (e.g. 'USD', 'EUR').
+  const fxAcc: Record<string, { count: number; total_native: number; total_try_at_booking: number }> = {}
+
   for (const row of data ?? []) {
     const amtTry  = Math.max(0, Number(row.total_try ?? 0) - Number(row.amount_paid ?? 0))
     if (!row.sale_date) continue  // skip rows with no business date — can't age them
@@ -88,6 +92,20 @@ export async function GET(req: NextRequest) {
       result.aged_60_plus.count     += 1
       result.aged_60_plus.total_try += amtTry
     }
+
+    // FX exposure accumulation — only for non-TRY sales with a valid booking rate.
+    // total_native = outstanding TRY / fx_rate_try (the original foreign currency amount).
+    // This lets the CFO see "USD 45K outstanding" separately from the ₺1.44M TRY booking value,
+    // so FX rate movements between booking and today are visible rather than hidden.
+    const currency   = (row as { currency?: string | null }).currency
+    const fxRateTry  = Number((row as { fx_rate_try?: number | null }).fx_rate_try ?? 0)
+    if (currency && currency !== 'TRY' && fxRateTry > 0) {
+      const nativeAmt = round2(amtTry / fxRateTry)
+      if (!fxAcc[currency]) fxAcc[currency] = { count: 0, total_native: 0, total_try_at_booking: 0 }
+      fxAcc[currency].count               += 1
+      fxAcc[currency].total_native        += nativeAmt
+      fxAcc[currency].total_try_at_booking += amtTry
+    }
   }
 
   // Round to 2 decimal places — round2() prevents IEEE 754 edge cases (e.g. 0.005 → 0.01)
@@ -95,6 +113,20 @@ export async function GET(req: NextRequest) {
   result.aged_30_60.total_try   = round2(result.aged_30_60.total_try)
   result.aged_60_plus.total_try = round2(result.aged_60_plus.total_try)
   result.total.total_try        = round2(result.total.total_try)
+
+  // Attach FX breakdown only when non-TRY receivables exist (avoids noise for TRY-only companies)
+  const hasFxExposure = Object.keys(fxAcc).length > 0
+  if (hasFxExposure) {
+    const rounded: typeof fxAcc = {}
+    for (const [ccy, acc] of Object.entries(fxAcc)) {
+      rounded[ccy] = {
+        count:                acc.count,
+        total_native:         round2(acc.total_native),
+        total_try_at_booking: round2(acc.total_try_at_booking),
+      }
+    }
+    result.fx_breakdown = rounded
+  }
 
   return NextResponse.json(result)
 }

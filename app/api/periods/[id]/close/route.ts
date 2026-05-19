@@ -4,6 +4,7 @@ import { TrialBalanceService } from '@/lib/services/ledger/trial-balance.service
 import { ReconciliationService } from '@/lib/services/ledger/reconciliation.service'
 import { resolveApiAuth } from '@/lib/api-auth'
 import { auditPeriodTransition } from '@/lib/db/mutation-audit'
+import { WorkflowService } from '@/lib/services/workflow.service'
 
 export const dynamic = 'force-dynamic'
 
@@ -57,6 +58,29 @@ export async function POST(
       }, { status: 422 })
     }
 
+    // ── Workflow awareness check (non-blocking) ───────────────────────────────
+    // Query pending expense approval workflows before closing the period.
+    // These are NOT blockers — the CFO can still close, but should be aware that
+    // un-approved expenses are still outstanding. They will flow into the next
+    // period if approved after close, which may cause reconciliation surprises.
+    //
+    // This is informational only: warnings are returned alongside the success response.
+    // If the workflow_instances table doesn't exist yet, we degrade gracefully.
+    const pendingWorkflowWarnings: Array<{ id: string; amount_try: number | null; description: string | null }> = []
+    try {
+      const pending = await WorkflowService.getPending(supabase, companyId, 'expense_approval')
+      for (const wf of pending) {
+        pendingWorkflowWarnings.push({
+          id:          wf.id,
+          amount_try:  (wf.payload as { amount_try?: number } | null)?.amount_try ?? null,
+          description: (wf.payload as { notes?: string } | null)?.notes ?? null,
+        })
+      }
+    } catch (wfErr) {
+      // Non-fatal: workflow_instances table may not exist in all environments
+      console.warn('[periods/close] workflow check failed (non-fatal):', wfErr instanceof Error ? wfErr.message : String(wfErr))
+    }
+
     // Transition to closed — conditional on current status to prevent concurrent
     // double-close race (two admins simultaneously passing the pre-check).
     // .neq('status','closed') ensures only one request wins the CAS-like update.
@@ -96,6 +120,13 @@ export async function POST(
       period_id:       params.id,
       trial_balance:   { is_balanced: true, checks: tbReport.checks },
       reconciliation:  { is_reconciled: reconciliation.is_reconciled },
+      warnings:        pendingWorkflowWarnings.length > 0
+        ? [{
+            code:    'PENDING_EXPENSE_APPROVALS',
+            message: `${pendingWorkflowWarnings.length} bekleyen masraf onayı var. Bu masraflar onaylanırsa bir sonraki döneme düşecek.`,
+            items:   pendingWorkflowWarnings,
+          }]
+        : [],
     })
   } catch (e) {
     console.error('[periods/close] error:', e)

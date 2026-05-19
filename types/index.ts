@@ -1244,4 +1244,19 @@ export interface ReceivableAging {
   aged_60_plus: { count: number; total_try: number }   // 61+ days old
   total:        { count: number; total_try: number }   // all outstanding
   computed_at:  string                                  // ISO timestamp
+  /**
+   * FX exposure breakdown — only populated when non-TRY receivables exist.
+   * Keyed by currency code (e.g. 'USD', 'EUR').
+   *
+   * total_native:       outstanding amount in the native foreign currency
+   * total_try_at_booking: outstanding in TRY at the original booking fx_rate
+   *
+   * The difference between total_try_at_booking and current-rate TRY conversion
+   * represents unrealized FX gain/loss exposure — invisible if only total_try is shown.
+   */
+  fx_breakdown?: Record<string, {
+    count:                number
+    total_native:         number  // e.g. USD 45000
+    total_try_at_booking: number  // e.g. ₺1440000 (at booking rate ₺32/USD)
+  }>
 }
