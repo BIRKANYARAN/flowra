@@ -39,7 +39,7 @@ Mevcut bir veritabanında çalıştırırsanız:
 -- veya schema_verify.sql içeriğini yapıştır
 ```
 
-Beklenen sonuç: 36 tablo, 15 fonksiyon, 5 trigger, 3 view — tümü ✅
+Beklenen sonuç: 40 tablo (36 + workflow_instances, workflow_instance_items, governance_reports, governance_signoffs), 15 fonksiyon, 5 trigger, 3 view — tümü ✅
 
 ---
 
@@ -47,8 +47,9 @@ Beklenen sonuç: 36 tablo, 15 fonksiyon, 5 trigger, 3 view — tümü ✅
 
 | Dosya | Açıklama | Ne zaman kullanılır |
 |-------|----------|---------------------|
-| `FLOWRA_FULL_INSTALL.sql` | **Temiz kurulum** — faz 1-9 birleştirilmiş (1935 satır) | Boş Supabase projesi |
-| `flowra_FULL_MIGRATION.sql` | **Toplu migration** — faz 1-9 artı job queue altyapısı (3199 satır) | Mevcut üretim veritabanı |
+| `FLOWRA_FULL_INSTALL.sql` | **Temiz kurulum** — faz 1-9 + workflow + governance birleştirilmiş | Boş Supabase projesi |
+| `flowra_FULL_MIGRATION.sql` | **Toplu migration** — faz 1-9 + workflow + governance (M+N sections) | Mevcut üretim veritabanı |
+| `phase9_workflow_governance_patch.sql` | **Bağımsız patch** — yalnızca workflow + governance tabloları | MIGRATION çalıştırıldıysa ancak patch uygulanmadıysa |
 | `flowra_install.sql` | Temel şema (orijinal, 619 satır) | Yalnızca baz tablo kurulumu |
 | `repair_production.sql` | Sütun eklemeleri, RPC yamalar, RLS düzeltmeleri | Prodüksiyon acil tamir |
 | `supabase/archive/flowra_phase*.sql` | Artımlı faz dosyaları — arşivlendi | Referans / tarih amaçlı |
@@ -63,9 +64,14 @@ Beklenen sonuç: 36 tablo, 15 fonksiyon, 5 trigger, 3 view — tümü ✅
 Mevcut Supabase projesini güncellemek için:
 
 ```
-1. flowra_FULL_MIGRATION.sql → çalıştır (faz 1-9 hepsini kapsar, idempotent)
-2. supabase/archive/flowra_phase14_orders.sql → çalıştır (purchase_orders tablosu)
-3. schema_verify.sql → doğrula
+1. flowra_FULL_MIGRATION.sql → çalıştır (faz 1-9 + workflow + governance hepsini kapsar, idempotent)
+2. schema_verify.sql → doğrula
+```
+
+Eğer daha önce MIGRATION çalıştırdıysanız ama workflow/governance tabloları eksikse:
+
+```
+phase9_workflow_governance_patch.sql → çalıştır (idempotent standalone patch)
 ```
 
 Ya da faz faz ilerlemek istiyorsanız (arşivden):

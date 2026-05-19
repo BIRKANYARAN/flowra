@@ -46,7 +46,11 @@ FROM (VALUES
   ('journal_entries'),
   ('journal_entry_lines'),
   ('backfill_runs'),
-  ('job_runs')
+  ('job_runs'),
+  ('workflow_instances'),
+  ('workflow_instance_items'),
+  ('governance_reports'),
+  ('governance_signoffs')
 ) t(table_name)
 
 UNION ALL

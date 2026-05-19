@@ -2484,17 +2484,106 @@ create policy governance_signoffs_company_access on governance_signoffs
 grant all on governance_reports  to authenticated, service_role;
 grant all on governance_signoffs to authenticated, service_role;
 
+-- ─────────────────────────────────────────────────────────────────────────────
+-- SECTION 15 — WORKFLOW ENGINE (Phase 9)
+-- Tracks multi-step approval workflows. Immutable once resolved.
+-- ─────────────────────────────────────────────────────────────────────────────
+
+create table if not exists workflow_instances (
+  id              uuid        default gen_random_uuid() primary key,
+  company_id      uuid        not null references companies(id) on delete cascade,
+  workflow_type   text        not null
+    check (workflow_type in ('expense_approval','partner_loan','dividend_declaration','period_close')),
+  status          text        not null default 'pending'
+    check (status in ('pending','approved','rejected','expired')),
+  initiator_id    uuid        not null references auth.users(id),
+  approver_id     uuid        references auth.users(id),
+  initiated_at    timestamptz not null default now(),
+  resolved_at     timestamptz,
+  expires_at      timestamptz,
+  payload         jsonb       not null default '{}',
+  notes           text,
+  resource_type   text,
+  resource_id     uuid,
+  created_at      timestamptz not null default now(),
+  updated_at      timestamptz not null default now()
+);
+
+create index if not exists idx_workflow_company_status
+  on workflow_instances (company_id, status, workflow_type);
+create index if not exists idx_workflow_resource
+  on workflow_instances (resource_id) where resource_id is not null;
+create index if not exists idx_workflow_expires
+  on workflow_instances (expires_at) where expires_at is not null and status = 'pending';
+
+create table if not exists workflow_instance_items (
+  id              uuid        default gen_random_uuid() primary key,
+  workflow_id     uuid        not null references workflow_instances(id) on delete cascade,
+  item_key        text        not null,
+  label           text        not null,
+  is_required     boolean     not null default true,
+  is_completed    boolean     not null default false,
+  completed_at    timestamptz,
+  completed_by    uuid        references auth.users(id),
+  notes           text,
+  created_at      timestamptz not null default now()
+);
+
+create index if not exists idx_workflow_items_workflow
+  on workflow_instance_items (workflow_id);
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_trigger
+    where tgname = 'workflow_instances_updated_at'
+      and tgrelid = 'workflow_instances'::regclass
+  ) then
+    create trigger workflow_instances_updated_at
+      before update on workflow_instances
+      for each row execute function update_updated_at_column();
+  end if;
+exception when undefined_table then null;
+       when undefined_function then null;
+end $$;
+
+alter table workflow_instances       enable row level security;
+alter table workflow_instance_items  enable row level security;
+
+drop policy if exists workflow_instances_company_member on workflow_instances;
+create policy workflow_instances_company_member on workflow_instances
+  for all using (
+    company_id in (
+      select company_id from company_members where user_id = auth.uid()
+    )
+  );
+
+drop policy if exists workflow_items_via_workflow on workflow_instance_items;
+create policy workflow_items_via_workflow on workflow_instance_items
+  for all using (
+    workflow_id in (
+      select id from workflow_instances
+      where company_id in (
+        select company_id from company_members where user_id = auth.uid()
+      )
+    )
+  );
+
+grant all on workflow_instances      to authenticated, service_role;
+grant all on workflow_instance_items to authenticated, service_role;
+
 -- ═══════════════════════════════════════════════════════════════════════════════
--- END OF FLOWRA_FULL_INSTALL.sql  (v2 — 2026-05-18)
+-- END OF FLOWRA_FULL_INSTALL.sql  (v3 — 2026-05-20)
 --
 -- After running, verify with:
 --   \i supabase/schema_verify.sql
 --   OR paste schema_verify.sql into SQL Editor
 --
--- Tables created: 34+ (includes governance_reports, governance_signoffs,
---                        partner_transactions, purchase_orders, purchase_order_items)
+-- Tables created: 36+ (includes governance_reports, governance_signoffs,
+--                        partner_transactions, purchase_orders, purchase_order_items,
+--                        workflow_instances, workflow_instance_items)
 -- RPCs created:   15+ (convert_proforma_to_sale updated with Accounting Truth v1 fixes)
--- Indexes:        56+
--- RLS policies:   66+
+-- Indexes:        60+
+-- RLS policies:   68+
 -- IDEMPOTENT:     Yes — safe to run on clean installs AND existing databases
 -- ═══════════════════════════════════════════════════════════════════════════════
