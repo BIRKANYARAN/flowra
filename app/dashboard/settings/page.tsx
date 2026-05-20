@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
 import { useSupabase } from '@/lib/hooks/useSupabase'
 import { PageHeader, ErrorBanner } from '@/components/ui'
 import { FlowraCard }   from '@/components/ui-kit/FlowraCard'
@@ -975,10 +976,10 @@ export default function SettingsPage() {
 
       {/* ── Quick Links ─────────────────────────────────────────────────── */}
       <div className="flex items-center gap-3">
-        <a href="/dashboard/settings/alerts"
+        <Link href="/dashboard/settings/alerts"
           className="text-xs font-semibold text-brand-light hover:text-brand px-3 py-2 rounded hover:bg-brand-subtle border border-[#e2e8f0] transition-colors">
           Uyarı Kuralları →
-        </a>
+        </Link>
       </div>
 
     </div>

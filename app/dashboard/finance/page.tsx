@@ -24,6 +24,7 @@ export const dynamic = 'force-dynamic'
 
 import { redirect }          from 'next/navigation'
 import { Suspense }          from 'react'
+import Link                  from 'next/link'
 import { createClient }      from '@/lib/supabase-server'
 import { resolveCompanyId }  from '@/lib/resolve-company'
 import { UnifiedTabNav }     from '@/app/dashboard/_shared/UnifiedTabNav'
@@ -141,16 +142,16 @@ export default async function FinancePage({ searchParams }: PageProps) {
           <p className="text-sm text-[#94a3b8] mt-1">{meta.sub}</p>
         </div>
         {activeTab === 'cfo' && (
-          <a href="/dashboard/cfo/period-close"
+          <Link href="/dashboard/cfo/period-close"
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded bg-brand-light text-white text-xs font-semibold hover:bg-brand transition-colors">
             Dönem Kapat
-          </a>
+          </Link>
         )}
         {activeTab === 'tax' && (
-          <a href="/dashboard/cfo/tax/kdv"
+          <Link href="/dashboard/cfo/tax/kdv"
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded border border-[#e2e8f0] text-[#334155] text-xs font-semibold hover:bg-[#f8fafc] transition-colors">
             KDV Beyanı →
-          </a>
+          </Link>
         )}
       </div>
 
@@ -172,10 +173,10 @@ export default async function FinancePage({ searchParams }: PageProps) {
             <span className="font-bold text-warn-text">Muhasebe kaynağı: Operasyonel tablolar</span>
             <span className="text-warn-text ml-2">— Çift taraflı muhasebe (GL) henüz aktif değil. Bilanço ve mizan boş görünebilir.</span>
           </div>
-          <a href="/dashboard/cfo/reconciliation"
+          <Link href="/dashboard/cfo/reconciliation"
             className="ml-auto shrink-0 text-warn-text font-semibold hover:underline whitespace-nowrap">
             GL Aktive Et →
-          </a>
+          </Link>
         </div>
       )}
       {glMode === 'parallel' && (

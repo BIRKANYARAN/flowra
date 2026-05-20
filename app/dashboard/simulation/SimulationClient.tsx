@@ -16,6 +16,7 @@
 //   • partner equalization     — /api/partners/equalization (when net profit changes)
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import Link from 'next/link'
 import { CURRENCIES, type Currency, type Product, type RecurringProjectionMonth } from '@/types'
 import { round2 } from '@/lib/calc'
 import { getSalePrice, getSaleCurrency, getLegacyProductCost } from '@/lib/product-adapter'
@@ -395,7 +396,7 @@ export default function SimulationClient({
         <div className="flex items-center gap-3 flex-wrap">
           {annualRate === 0 && (
             <span className="text-xs text-[#64748b]">
-              Faiz girilmedi · <a href="/dashboard/settings" className="text-brand-light hover:underline">ekle →</a>
+              Faiz girilmedi · <Link href="/dashboard/settings" className="text-brand-light hover:underline">ekle →</Link>
             </span>
           )}
           <div className="flex items-center gap-1 bg-[#1e293b] border border-[#334155] rounded px-1 py-0.5">
@@ -589,9 +590,9 @@ export default function SimulationClient({
                   : 'Zarar durumunda ortak dağıtımı yapılamaz'}
               </p>
             </div>
-            <a href="/dashboard/partners" className="text-xs text-brand-light font-semibold hover:underline shrink-0">
+            <Link href="/dashboard/partners" className="text-xs text-brand-light font-semibold hover:underline shrink-0">
               Ortak sayfası →
-            </a>
+            </Link>
           </div>
 
           {yearly.totalNetProfit > 0 && partnerEq.entries.length > 0 ? (
