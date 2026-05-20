@@ -137,9 +137,9 @@ export default async function AdminHubPage() {
   ]
 
   const SETTING_LINKS = [
-    { href: '/dashboard/settings',        label: 'Genel Ayarlar',      icon: '⚙️' },
-    { href: '/dashboard/settings/alerts', label: 'Uyarı Eşikleri',     icon: '🔔' },
-    { href: '/dashboard/backups',         label: 'Yedekleme',           icon: '💾' },
+    { href: '/dashboard/settings',        label: 'Genel Ayarlar',  icon: '⚙️' },
+    { href: '/dashboard/settings/alerts', label: 'Uyarı Eşikleri', icon: '🔔' },
+    { href: '/dashboard/reports',         label: 'Raporlar',        icon: '📄' },
   ]
 
   const ACTION_LABELS: Record<string, string> = {

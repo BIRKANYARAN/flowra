@@ -197,7 +197,7 @@ export default function NewProformaPage() {
   return (
     <div className="max-w-5xl">
       <div className="flex items-center gap-3 mb-6">
-        <Link href="/dashboard/proformas" className="text-sm text-[#94a3b8] hover:text-[#334155] transition-colors">
+        <Link href="/dashboard/commercial?tab=proformas" className="text-sm text-[#94a3b8] hover:text-[#334155] transition-colors">
           ← Proformalar
         </Link>
         <span className="text-[#cbd5e1]">/</span>
