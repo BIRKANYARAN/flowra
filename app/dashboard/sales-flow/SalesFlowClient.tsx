@@ -199,7 +199,7 @@ function TeklifPanel({ proformas }: { proformas: Proforma[] }) {
         </tbody>
       </table>
       <div className="px-4 py-2 text-right">
-        <Link href="/dashboard/proformas" className="text-xs text-brand-light font-semibold hover:underline">Tüm teklifler →</Link>
+        <Link href="/dashboard/commercial?tab=proformas" className="text-xs text-brand-light font-semibold hover:underline">Tüm teklifler →</Link>
       </div>
     </div>
   )
@@ -296,7 +296,7 @@ function TahsilatPanel({ sales }: { sales: Sale[] }) {
       </table>
       <div className="px-4 py-2 flex items-center justify-between">
         {sales.length > 15 && <span className="text-[10px] text-[#94a3b8]">İlk 15 gösteriliyor</span>}
-        <Link href="/dashboard/collections" className="text-xs text-brand-light font-semibold hover:underline ml-auto">
+        <Link href="/dashboard/commercial?tab=collections" className="text-xs text-brand-light font-semibold hover:underline ml-auto">
           Tahsilat sayfasına git →
         </Link>
       </div>

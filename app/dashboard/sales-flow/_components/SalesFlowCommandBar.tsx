@@ -167,7 +167,7 @@ export async function SalesFlowCommandBar({ companyId }: Props) {
         )}
 
         {/* Link to collections */}
-        <Link href="/dashboard/collections"
+        <Link href="/dashboard/commercial?tab=collections"
           className="ml-auto text-[10px] text-brand-light font-semibold hover:text-brand transition-colors shrink-0">
           Tahsilat →
         </Link>

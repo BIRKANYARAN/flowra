@@ -8,7 +8,7 @@
  *   • Role-filtered via getGroupsForRole()
  *   • isNavItemActive() — safe prefix match (no /sales matching /sales-flow)
  *   • Non-admin users get standalone Ayarlar at bottom (SETTINGS_FALLBACK)
- *   • Width: w-56 (224 px)
+ *   • Width: w-60 (240 px)
  *   • Multi-company: shows switcher when user belongs to >1 company
  */
 
