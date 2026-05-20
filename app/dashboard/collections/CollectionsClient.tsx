@@ -10,7 +10,7 @@
 // Tab switching + mutations remain fully client-side via /api/collections.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useEffect, useState, useCallback, useMemo, type ChangeEvent } from 'react'
+import { useEffect, useRef, useState, useCallback, useMemo, type ChangeEvent } from 'react'
 
 export interface CollectionRow {
   id: string
@@ -95,12 +95,18 @@ interface Props {
 
 export default function CollectionsClient({ initialRows }: Props) {
   const [rows,       setRows]       = useState<CollectionRow[]>(initialRows)
-  // Start false: initial "unpaid" data comes from server
+  // Start false: initial "unpaid" data comes from server — no spinner on first paint
   const [loading,    setLoading]    = useState(false)
   const [tab,        setTab]        = useState<TabKey>('unpaid')
   const [patching,   setPatching]   = useState<string | null>(null)
   const [error,      setError]      = useState<string | null>(null)
   const [search,     setSearch]     = useState('')
+
+  // Track whether the 'unpaid' data was seeded from the server SSR pass.
+  // We skip the initial client fetch for 'unpaid' if the server already gave us rows
+  // to avoid overwriting good SSR data with a client fetch that might fail or return
+  // a different subset.
+  const serverSeededRef = useRef(initialRows.length > 0)
 
   // Partial payment state — which row is expanded + the entered amount
   const [partialId,  setPartialId]  = useState<string | null>(null)
@@ -118,6 +124,9 @@ export default function CollectionsClient({ initialRows }: Props) {
   const load = useCallback(async (status: TabKey, signal?: AbortSignal) => {
     setLoading(true)
     setError(null)
+    // Snapshot current rows so we can restore on error
+    let prevRows: CollectionRow[] = []
+    setRows(prev => { prevRows = prev; return prev })
     try {
       const res = await fetch(`/api/collections?status=${status}`, { signal })
       if (!res.ok) {
@@ -125,18 +134,25 @@ export default function CollectionsClient({ initialRows }: Props) {
         throw new Error(body.error ?? `HTTP ${res.status}`)
       }
       const data = await res.json()
-      // API now returns { data, page, page_size, total } — handle both shapes
-      const rows = Array.isArray(data) ? data : (data?.data ?? [])
-      setRows(rows)
+      const fetched: CollectionRow[] = Array.isArray(data) ? data : (data?.data ?? [])
+      setRows(fetched)
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') return
-      setError('Tahsilat verileri yüklenemedi.')
+      // On error: keep existing rows visible — don't blank the list
+      setRows(prevRows)
+      setError('Tahsilat verileri yüklenemedi — önceki veriler gösteriliyor.')
     } finally {
       setLoading(false)
     }
   }, [])
 
   useEffect(() => {
+    // Skip the initial fetch for 'unpaid' tab when SSR already seeded the rows.
+    // Only fetch when switching away from the server-seeded tab, or when SSR gave 0 rows.
+    if (tab === 'unpaid' && serverSeededRef.current) {
+      serverSeededRef.current = false  // allow future manual refreshes
+      return
+    }
     const ctrl = new AbortController()
     load(tab, ctrl.signal)
     return () => ctrl.abort()
