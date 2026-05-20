@@ -54,7 +54,7 @@ export async function CatalogCommandBar({ companyId }: Props) {
     return (
       <div className="flex items-center gap-2 px-4 py-2.5 bg-[#f8fafc] border border-[#e2e8f0] rounded text-xs text-[#94a3b8]">
         Henüz aktif ürün yok — katalog boş.{' '}
-        <Link href="/dashboard/products" className="text-brand-light font-semibold hover:text-brand">
+        <Link href="/dashboard/operations?tab=catalog" className="text-brand-light font-semibold hover:text-brand">
           Ürün Ekle →
         </Link>
       </div>
