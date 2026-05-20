@@ -22,7 +22,7 @@
 /** Data required to derive all alert types. All fields are pre-fetched by the caller. */
 export interface AlertDeriveInput {
   // ── Per-sale overdue payment checks ────────────────────────────────────────
-  /** Sales with payment_status in (unpaid, partial, overdue) AND sale_date < 30 days ago */
+  /** Sales with payment_status in (pending, partial, overdue) AND sale_date < 30 days ago */
   overdueSales: Array<{
     id:              string
     customer_name:   string
@@ -92,8 +92,8 @@ export const COMPANY_SENTINEL_ID = '00000000-0000-0000-0000-000000000000'
  * Validation / formula documentation:
  *
  *   Alert 1 (overdue_payment):
- *     fires when:  ageDays = floor((now - created_at) / 86400000) > 30
- *                  AND payment_status ∈ {unpaid, partial, overdue}
+ *     fires when:  ageDays = floor((now - sale_date) / 86400000) > 30
+ *                  AND payment_status ∈ {pending, partial, overdue}
  *     severity:    critical if ageDays > 60, else warning
  *     entity_key:  'sale::<sale_id>'
  *

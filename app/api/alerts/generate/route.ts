@@ -12,7 +12,7 @@
 // This separation makes thresholds testable without mocking Supabase.
 //
 // Alert types:
-//   overdue_payment     — per sale, unpaid/partial/overdue AND > 30 days old
+//   overdue_payment     — per sale, pending/partial/overdue AND > 30 days old
 //   low_stock           — per product, stock_qty ≤ stock_alert_qty
 //   negative_cashflow   — company-level, projected next-month net < −1000 TRY
 //   aged_60_plus        — company-level, 60+ day receivables exceed 5000 TRY
@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
       .eq('company_id', companyId)
       .gte('created_at', sevenDaysAgo),
 
-    // B. Overdue sales: unpaid/partial/overdue AND > 30 days old (max 50)
+    // B. Overdue sales: pending/partial/overdue AND > 30 days old (max 50)
     //    Includes amount_paid so alert messages show net outstanding for partial sales.
     //    Use sale_date (business invoice date) for aging — not created_at (DB insertion time).
     supabase
@@ -101,7 +101,7 @@ export async function POST(req: NextRequest) {
       .eq('is_active', true)
       .gt('stock_alert_qty', 0),
 
-    // D. Outstanding sales (unpaid/partial) — for cashflow projection input
+    // D. Outstanding sales (pending/partial) — for cashflow projection input
     //    Includes amount_paid so partial payments are netted out correctly.
     supabase
       .from('sales')

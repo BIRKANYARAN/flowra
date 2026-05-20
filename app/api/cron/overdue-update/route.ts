@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 // POST /api/cron/overdue-update
 //
 // Invoked daily by Vercel Cron at 00:30 UTC.
-// Marks sales as overdue where due_date < today and payment_status is still unpaid/partial.
+// Marks sales as overdue where due_date < today and payment_status is still pending/partial.
 // Idempotent: only updates rows that aren't already overdue.
 //
 // Also fires audit_logs entries for any newly overdue sales.
@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
   const today    = new Date().toISOString().slice(0, 10)
 
   try {
-    // Find all unpaid/partial sales whose due_date has passed
+    // Find all pending/partial sales whose due_date has passed
     const { data: stale, error: fetchErr } = await supabase
       .from('sales')
       .select('id, company_id, customer_name, total_try:total, due_date, payment_status')
