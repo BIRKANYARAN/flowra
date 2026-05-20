@@ -146,7 +146,7 @@ export default function PeriodClosePage() {
             Dönem kapatıldığında tüm finansal yazma işlemleri engellenir — {requiredCount} zorunlu kontrol gerekli
           </p>
         </div>
-        <Link href="/dashboard/cfo" className="text-xs text-[#94a3b8] hover:text-brand-light font-semibold">
+        <Link href="/dashboard/finance?tab=cfo" className="text-xs text-[#94a3b8] hover:text-brand-light font-semibold">
           ← CFO Cockpit
         </Link>
       </div>

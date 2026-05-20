@@ -129,7 +129,7 @@ export default function DesignSystemPage() {
       <section>
         <SectionHeader label="KPI Cards" />
         <div className="grid grid-cols-4 gap-3">
-          <FlowraKpiCard label="Ciro"         value={1248000} sub="Brüt marj %42" delta={12.3}  href="/dashboard/sales" />
+          <FlowraKpiCard label="Ciro"         value={1248000} sub="Brüt marj %42" delta={12.3}  href="/dashboard/commercial?tab=sales" />
           <FlowraKpiCard label="Giderler"     value={340000}  sub="~₺28.000/ay"   tone="neutral"  />
           <FlowraKpiCard label="Bekleyen"     value={0}       sub="Tümü tahsil ✓" tone="neutral"  />
           <FlowraKpiCard label="Stok Değeri"  value={88000}   sub="FIFO maliyet"                  />
@@ -140,10 +140,10 @@ export default function DesignSystemPage() {
       <section>
         <SectionHeader label="Alerts" />
         <div className="space-y-2">
-          <FlowraAlert tone="orange"   text="KDV ödemesi: ₺12.345,67" sub="Beyan döneminde ödenecek" href="/dashboard/analytics" />
-          <FlowraAlert tone="danger"   text="Nakit ~18 günde tükenebilir" sub="Aylık ₺45K zarar, likit varlık ₺810K" href="/dashboard/expenses" />
+          <FlowraAlert tone="orange"   text="KDV ödemesi: ₺12.345,67" sub="Beyan döneminde ödenecek" href="/dashboard/finance?tab=tax" />
+          <FlowraAlert tone="danger"   text="Nakit ~18 günde tükenebilir" sub="Aylık ₺45K zarar, likit varlık ₺810K" href="/dashboard/operations?tab=expenses" />
           <FlowraAlert tone="warning"  text="Ortak dengesi bozuk" sub="₺8.400 eşitleme açığı var" href="/dashboard/partners" />
-          <FlowraAlert tone="info"     text="3 satış tahsilat bekliyor: ₺92.000" sub="Tahsilat sayfasından ödeme durumunu güncelleyin" href="/dashboard/collections" />
+          <FlowraAlert tone="info"     text="3 satış tahsilat bekliyor: ₺92.000" sub="Tahsilat sayfasından ödeme durumunu güncelleyin" href="/dashboard/commercial?tab=collections" />
         </div>
         <div className="mt-3 space-y-2">
           <SectionHeader label="Card variant" />

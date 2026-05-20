@@ -169,7 +169,7 @@ export default function ReconciliationPage() {
             </svg>
             PDF
           </button>
-          <Link href="/dashboard/cfo" className="text-xs text-[#94a3b8] hover:text-brand-light font-semibold">
+          <Link href="/dashboard/finance?tab=cfo" className="text-xs text-[#94a3b8] hover:text-brand-light font-semibold">
             ← CFO Cockpit
           </Link>
         </div>

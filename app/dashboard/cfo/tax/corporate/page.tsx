@@ -170,9 +170,9 @@ export default async function CorporateTaxPage() {
             className="text-xs font-semibold text-[#94a3b8] hover:text-brand-light transition-colors">
             KDV Özeti →
           </Link>
-          <Link href="/dashboard/cfo"
+          <Link href="/dashboard/finance?tab=cfo"
             className="text-xs font-semibold text-[#94a3b8] hover:text-brand-light transition-colors">
-            ← CFO
+            ← CFO Cockpit
           </Link>
         </div>
       </div>

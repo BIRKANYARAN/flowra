@@ -138,7 +138,7 @@ export default function CashFlowPage() {
               ],
             } as PdfReportOptions} />
           )}
-          <Link href="/dashboard/cfo" className="text-xs text-[#94a3b8] hover:text-brand-light font-semibold">← CFO</Link>
+          <Link href="/dashboard/finance" className="text-xs text-[#94a3b8] hover:text-brand-light font-semibold">← Finans</Link>
         </div>
       </div>
 
