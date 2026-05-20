@@ -133,7 +133,7 @@ export async function KomutaContent({ companyId }: Props) {
       .from('sales')
       .select('id, total_try:total, amount_paid:paid_amount, payment_status, due_date, sale_date, customers(name)')
       .eq('company_id', companyId)
-      .in('payment_status', ['unpaid', 'partial', 'overdue'])
+      .in('payment_status', ['pending', 'partial', 'overdue'])
       .is('deleted_at', null)
       .order('due_date', { ascending: true, nullsFirst: false })
       .limit(5),

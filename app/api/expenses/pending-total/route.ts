@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
     .select('amount_try, payment_status, due_date')
     .eq('company_id', companyId)
     .is('deleted_at', null)
-    .in('payment_status', ['unpaid', 'overdue'])
+    .in('payment_status', ['pending', 'overdue'])
 
   if (error) {
     return NextResponse.json({ total: 0, count: 0, overdue_count: 0 })
@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
   for (const r of rows) {
     total += Number(r.amount_try ?? 0)
     const isOverdue = r.payment_status === 'overdue' ||
-      (r.due_date != null && r.due_date < today && r.payment_status === 'unpaid')
+      (r.due_date != null && r.due_date < today && r.payment_status === 'pending')
     if (isOverdue) overdueCount++
   }
 
