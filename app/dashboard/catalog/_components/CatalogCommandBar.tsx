@@ -219,7 +219,7 @@ export async function CatalogCommandBar({ companyId }: Props) {
             {blindSpots.slice(0, 3).map(p => p.name).join(', ')}
             {blindSpots.length > 3 ? ` +${blindSpots.length - 3} daha` : ''}
           </span>
-          <Link href="/dashboard/stocks"
+          <Link href="/dashboard/operations?tab=stock"
             className="ml-auto text-[10px] font-semibold text-warn-text hover:text-warn-text shrink-0">
             Stok Ekle →
           </Link>
@@ -230,7 +230,7 @@ export async function CatalogCommandBar({ companyId }: Props) {
           <span className="text-[10px] font-bold text-warn-text">
             {blindSpots.length} ürün için marj hesaplanamıyor (%{uncoveredPct.toFixed(0)} katalog kör nokta).
           </span>
-          <Link href="/dashboard/stocks"
+          <Link href="/dashboard/operations?tab=stock"
             className="ml-auto text-[10px] font-semibold text-warn-text hover:text-warn-text shrink-0">
             Stok Girişi Yap →
           </Link>

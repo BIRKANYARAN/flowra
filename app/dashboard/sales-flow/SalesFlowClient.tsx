@@ -160,7 +160,7 @@ function StokPanel({ lots }: { lots: StockLot[] }) {
         </tfoot>
       </table>
       <div className="px-4 py-2 text-right">
-        <Link href="/dashboard/stocks" className="text-xs text-brand-light font-semibold hover:underline">Tüm stok →</Link>
+        <Link href="/dashboard/operations?tab=stock" className="text-xs text-brand-light font-semibold hover:underline">Tüm stok →</Link>
       </div>
     </div>
   )
