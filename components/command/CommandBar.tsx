@@ -47,8 +47,8 @@ const STATIC_CMDS: Cmd[] = [
   { id: 'op-bal',   grp: 'Operasyonlar', label: 'Bilanço pozisyonunu gör',           sub: 'Varlıklar · Yükümlülükler · Özsermaye',  href: '/dashboard/finance?tab=balance',                kind: 'op' },
 
   // ── Oluştur — creation commands ───────────────────────────────────────────
-  { id: 'c-exp',   grp: 'Oluştur',       label: 'Gider kaydet',                      href: '/dashboard/expenses/new',               kind: 'create' },
-  { id: 'c-sal',   grp: 'Oluştur',       label: 'Satış oluştur',                     href: '/dashboard/sales/new',                  kind: 'create' },
+  { id: 'c-exp',   grp: 'Oluştur',       label: 'Gider kaydet',                      href: '/dashboard/operations?tab=expenses',    kind: 'create' },
+  { id: 'c-sal',   grp: 'Oluştur',       label: 'Satış oluştur',                     href: '/dashboard/proformas/new',              kind: 'create' },
   { id: 'c-pro',   grp: 'Oluştur',       label: 'Proforma hazırla',                  href: '/dashboard/proformas/new',              kind: 'create' },
   { id: 'c-tsk',   grp: 'Oluştur',       label: 'Görev ekle',                        href: '/dashboard/planning?tab=tasks',         kind: 'create' },
 
