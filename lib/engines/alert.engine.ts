@@ -174,7 +174,7 @@ export function evaluateAlerts(inputs: AlertInputs): DecisionAlert[] {
       title:       `KDV beyanı ${inputs.taxDueDays} gün kaldı`,
       detail:      `Ödenecek KDV: ${fmtK(inputs.kdvPayable)}`,
       actionLabel: 'KDV Raporu',
-      actionHref:  '/dashboard/cfo',
+      actionHref:  '/dashboard/cfo/tax/kdv',
       amount:      inputs.kdvPayable,
     })
   }
@@ -194,7 +194,7 @@ export function evaluateAlerts(inputs: AlertInputs): DecisionAlert[] {
       title:       `${fmtK(inputs.kdvPayable)} KDV birikmekte`,
       detail:      'Bu tutar şirkete ait değil — beyan tarihi yaklaştığında nakit baskısı oluşabilir',
       actionLabel: 'KDV Raporu',
-      actionHref:  '/dashboard/cfo',
+      actionHref:  '/dashboard/cfo/tax/kdv',
       amount:      inputs.kdvPayable,
     })
   }
