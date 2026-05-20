@@ -95,11 +95,10 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: '/dashboard/finance',    label: 'Finans Merkezi',   icon: 'analytics'  },
       { href: '/dashboard/commercial', label: 'Ticari Akış',      icon: 'activity'   },
-      { href: '/dashboard/ops',        label: 'OPS Komuta',       icon: 'tasks'      },
       { href: '/dashboard/operations', label: 'Operasyon',        icon: 'products'   },
       { href: '/dashboard/partners',   label: 'Ortak Finansmanı', icon: 'partners'   },
       { href: '/dashboard/planning',   label: 'Planlama',         icon: 'simulation' },
-      { href: '/dashboard/insights',   label: 'AI Analiz',        icon: 'activity'   },
+      { href: '/dashboard/insights',   label: 'AI Analiz',        icon: 'analytics'  },
     ],
   },
 
@@ -216,6 +215,7 @@ export const COMMERCIAL_TABS = [
 
 /** Operations center — /dashboard/operations?tab= */
 export const OPERATIONS_TABS = [
+  { key: 'komuta',   label: 'Komuta'    },
   { key: 'expenses', label: 'Giderler'  },
   { key: 'catalog',  label: 'Katalog'   },
   { key: 'stock',    label: 'Stok'      },
@@ -252,6 +252,7 @@ export const ROUTE_REDIRECTS: Record<string, string> = {
   '/dashboard/simulation':  '/dashboard/planning?tab=unit-profit',
   '/dashboard/tasks':       '/dashboard/planning?tab=tasks',
   '/dashboard/activity':    '/dashboard/admin/audit',
+  '/dashboard/ops':         '/dashboard/operations?tab=komuta',
 }
 
 // ── Mobile bottom nav (5 items) ───────────────────────────────────────────────
@@ -265,7 +266,7 @@ export interface MobileNavItem {
 export const MOBILE_NAV: MobileNavItem[] = [
   { href: '/dashboard',             label: 'Ana Sayfa', emoji: '🏠' },
   { href: '/dashboard/commercial',  label: 'Ticari',    emoji: '💰' },
-  { href: '/dashboard/ops',         label: 'OPS',       emoji: '⚡' },
+  { href: '/dashboard/operations',  label: 'Operasyon', emoji: '⚡' },
   { href: '/dashboard/finance',     label: 'Finans',    emoji: '📊' },
   { href: '/dashboard/planning',    label: 'Planlama',  emoji: '📈' },
 ]

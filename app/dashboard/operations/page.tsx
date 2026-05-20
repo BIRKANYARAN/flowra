@@ -11,6 +11,7 @@ import { resolveCompanyId } from '@/lib/resolve-company'
 import { HubTabNav } from '@/app/dashboard/_shared/HubTabNav'
 import { OPERATIONS_TABS } from '@/lib/nav-config'
 import { OperationsContextBar } from './_shared/OperationsContextBar'
+import { KomutaContent }  from './_tabs/KomutaContent'
 import { ExpensesContent } from './_tabs/ExpensesContent'
 import { CatalogContent }  from './_tabs/CatalogContent'
 import { StockContent }    from './_tabs/StockContent'
@@ -64,13 +65,18 @@ export default async function OperationsPage({ searchParams }: PageProps) {
   )
 
   const params    = await searchParams
-  const rawTab    = params.tab ?? 'expenses'
-  const activeTab = VALID_TABS.includes(rawTab) ? rawTab : 'expenses'
+  const rawTab    = params.tab ?? 'komuta'
+  const activeTab = VALID_TABS.includes(rawTab) ? rawTab : 'komuta'
 
   const opTitles: Record<string, string> = {
-    expenses: 'Giderler', catalog: 'Katalog', stock: 'Stok', orders: 'Siparişler',
+    komuta:   'OPS Komuta',
+    expenses: 'Giderler',
+    catalog:  'Katalog',
+    stock:    'Stok',
+    orders:   'Siparişler',
   }
   const opSubs: Record<string, string> = {
+    komuta:   'Günlük komuta · Vadesi geçmiş · Kritik stok · Açık onaylar',
     expenses: 'Gider yönetimi · Ödenmiş/bekleyen · Kategori analizi',
     catalog:  'Ürün kataloğu · Fiyat yönetimi · Stok seviyeleri',
     stock:    'Stok durumu · FIFO değerleme · Kritik seviyeler',
@@ -98,6 +104,7 @@ export default async function OperationsPage({ searchParams }: PageProps) {
       </div>
 
       <Suspense fallback={<TabSkeleton />}>
+        {activeTab === 'komuta'   && <KomutaContent  companyId={companyId} />}
         {activeTab === 'expenses' && <ExpensesContent companyId={companyId} />}
         {activeTab === 'catalog'  && <CatalogContent companyId={companyId} userId={userId} />}
         {activeTab === 'stock'    && <StockContent   companyId={companyId} userId={userId} />}

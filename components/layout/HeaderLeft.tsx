@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation'
 const PATH_TITLES: Array<{ pattern: RegExp; title: string }> = [
   { pattern: /^\/dashboard\/finance/,         title: 'Finans Merkezi'      },
   { pattern: /^\/dashboard\/commercial/,      title: 'Ticari Akış'         },
+  { pattern: /^\/dashboard\/ops/,              title: 'OPS Komuta'          },
   { pattern: /^\/dashboard\/operations/,      title: 'Operasyon'           },
   { pattern: /^\/dashboard\/partners/,        title: 'Ortak Finansmanı'    },
   { pattern: /^\/dashboard\/planning/,        title: 'Planlama'            },

@@ -79,21 +79,21 @@ describe('getGroupsForRole', () => {
 // ── Item counts ───────────────────────────────────────────────────────────────
 
 describe('getAllItemsForRole item counts', () => {
-  // Groups: genel (1) + merkezler (7: finance, commercial, ops, operations, partners, planning, insights) + yonetim (3 — admin only)
-  it('admin sees 11 nav items (1 genel + 7 merkezler + 3 yonetim)', () => {
-    expect(getAllItemsForRole('admin').length).toBe(11)
+  // Groups: genel (1) + merkezler (6: finance, commercial, operations, partners, planning, insights) + yonetim (3 — admin only)
+  it('admin sees 10 nav items (1 genel + 6 merkezler + 3 yonetim)', () => {
+    expect(getAllItemsForRole('admin').length).toBe(10)
   })
 
-  it('manager sees 8 nav items (1 genel + 7 merkezler)', () => {
-    expect(getAllItemsForRole('manager').length).toBe(8)
+  it('manager sees 7 nav items (1 genel + 6 merkezler)', () => {
+    expect(getAllItemsForRole('manager').length).toBe(7)
   })
 
-  it('viewer sees 8 nav items (1 genel + 7 merkezler)', () => {
-    expect(getAllItemsForRole('viewer').length).toBe(8)
+  it('viewer sees 7 nav items (1 genel + 6 merkezler)', () => {
+    expect(getAllItemsForRole('viewer').length).toBe(7)
   })
 
-  it('null role sees 8 nav items', () => {
-    expect(getAllItemsForRole(null).length).toBe(8)
+  it('null role sees 7 nav items', () => {
+    expect(getAllItemsForRole(null).length).toBe(7)
   })
 
   it('getNavCount matches getAllItemsForRole length', () => {
@@ -105,15 +105,17 @@ describe('getAllItemsForRole item counts', () => {
 // ── merkezler group contains expected hubs ────────────────────────────────────
 
 describe('merkezler group contents', () => {
-  it('contains all 6 center hubs', () => {
+  it('contains all 6 center hubs (ops merged into operations)', () => {
     const items = getAllItemsForRole('viewer')
     const hrefs = items.map(i => i.href)
     expect(hrefs).toContain('/dashboard/finance')
     expect(hrefs).toContain('/dashboard/commercial')
-    expect(hrefs).toContain('/dashboard/ops')
     expect(hrefs).toContain('/dashboard/operations')
     expect(hrefs).toContain('/dashboard/partners')
     expect(hrefs).toContain('/dashboard/planning')
+    expect(hrefs).toContain('/dashboard/insights')
+    // /dashboard/ops is now a redirect, not a sidebar item
+    expect(hrefs).not.toContain('/dashboard/ops')
   })
 
   it('komuta merkezi uses exact matching', () => {
@@ -137,12 +139,12 @@ describe('merkezler group contents', () => {
 describe('isNavItemActive', () => {
   const exact: NavItem = { href: '/dashboard', label: 'Komuta', icon: 'dashboard', exact: true }
   const finance: NavItem = { href: '/dashboard/finance', label: 'Finans', icon: 'analytics' }
-  const ops: NavItem = { href: '/dashboard/ops', label: 'OPS', icon: 'tasks' }
+  const operations: NavItem = { href: '/dashboard/operations', label: 'Operasyon', icon: 'products' }
 
   it('exact item: active only on exact match', () => {
     expect(isNavItemActive(exact, '/dashboard')).toBe(true)
     expect(isNavItemActive(exact, '/dashboard/finance')).toBe(false)
-    expect(isNavItemActive(exact, '/dashboard/ops')).toBe(false)
+    expect(isNavItemActive(exact, '/dashboard/operations')).toBe(false)
   })
 
   it('prefix item: active on exact match', () => {
@@ -159,9 +161,11 @@ describe('isNavItemActive', () => {
     expect(isNavItemActive(finance, '/dashboard/finance-extra')).toBe(false)
   })
 
-  it('ops item: active on /dashboard/ops', () => {
-    expect(isNavItemActive(ops, '/dashboard/ops')).toBe(true)
-    expect(isNavItemActive(ops, '/dashboard/operations')).toBe(false)
+  it('operations item: active on /dashboard/operations and komuta tab', () => {
+    expect(isNavItemActive(operations, '/dashboard/operations')).toBe(true)
+    // ?tab= query params not part of pathname, so this tests the base path
+    expect(isNavItemActive(operations, '/dashboard/operations')).toBe(true)
+    expect(isNavItemActive(operations, '/dashboard/finance')).toBe(false)
   })
 
   it('finance active on ?tab=cfo URL (pathname only)', () => {
@@ -179,11 +183,10 @@ describe('findNavItem + isKnownNavHref', () => {
     expect(item?.label).toBe('Komuta Merkezi')
   })
 
-  it('finds ops komuta by href', () => {
+  it('ops is no longer a sidebar item (merged into operations/komuta tab)', () => {
+    // /dashboard/ops redirects to /dashboard/operations?tab=komuta
     const item = findNavItem('/dashboard/ops')
-    expect(item).toBeDefined()
-    expect(item?.label).toBe('OPS Komuta')
-    expect(item?.icon).toBe('tasks')
+    expect(item).toBeUndefined()
   })
 
   it('returns undefined for unknown href', () => {
@@ -193,8 +196,10 @@ describe('findNavItem + isKnownNavHref', () => {
   it('isKnownNavHref: true for known routes', () => {
     expect(isKnownNavHref('/dashboard')).toBe(true)
     expect(isKnownNavHref('/dashboard/finance')).toBe(true)
-    expect(isKnownNavHref('/dashboard/ops')).toBe(true)
+    expect(isKnownNavHref('/dashboard/operations')).toBe(true)
     expect(isKnownNavHref('/dashboard/admin')).toBe(true)
+    // /dashboard/ops is now a redirect page, not a sidebar item
+    expect(isKnownNavHref('/dashboard/ops')).toBe(false)
   })
 
   it('isKnownNavHref: false for tab routes (not sidebar items)', () => {
@@ -222,9 +227,10 @@ describe('Tab contracts — canonical key sets', () => {
     expect(keys).toContain('customers')
   })
 
-  it('OPERATIONS_TABS has 4 tabs', () => {
-    expect(OPERATIONS_TABS.length).toBe(4)
+  it('OPERATIONS_TABS has 5 tabs (komuta added as first tab)', () => {
+    expect(OPERATIONS_TABS.length).toBe(5)
     const keys = OPERATIONS_TABS.map(t => t.key)
+    expect(keys[0]).toBe('komuta')
     expect(keys).toContain('expenses')
     expect(keys).toContain('catalog')
     expect(keys).toContain('stock')
@@ -251,8 +257,12 @@ describe('ROUTE_REDIRECTS', () => {
     expect(ROUTE_REDIRECTS['/dashboard/activity']).toBe('/dashboard/admin/audit')
   })
 
-  it('has 17 redirect entries', () => {
-    expect(Object.keys(ROUTE_REDIRECTS).length).toBe(17)
+  it('has 18 redirect entries (added /dashboard/ops)', () => {
+    expect(Object.keys(ROUTE_REDIRECTS).length).toBe(18)
+  })
+
+  it('ops redirects to operations komuta tab', () => {
+    expect(ROUTE_REDIRECTS['/dashboard/ops']).toBe('/dashboard/operations?tab=komuta')
   })
 
   it('all destinations start with /dashboard/', () => {
@@ -282,9 +292,10 @@ describe('MOBILE_NAV', () => {
     expect(MOBILE_NAV[0].href).toBe('/dashboard')
   })
 
-  it('includes OPS Komuta (/dashboard/ops)', () => {
+  it('includes Operasyon (/dashboard/operations) — ops merged into hub', () => {
     const hrefs = MOBILE_NAV.map(i => i.href)
-    expect(hrefs).toContain('/dashboard/ops')
+    expect(hrefs).toContain('/dashboard/operations')
+    expect(hrefs).not.toContain('/dashboard/ops')
   })
 
   it('all items have emoji', () => {
