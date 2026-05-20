@@ -161,9 +161,9 @@ export async function TaxTab({ userId, companyId }: Props) {
               ))}
             </div>
           </div>
-          <a href="/dashboard/cfo/tax/corporate" className="text-[10px] font-bold text-warn-text hover:text-warn-text underline underline-offset-2 shrink-0 mt-0.5">
+          <Link href="/dashboard/cfo/tax/corporate" className="text-[10px] font-bold text-warn-text hover:text-warn-text underline underline-offset-2 shrink-0 mt-0.5">
             KV Detayı →
-          </a>
+          </Link>
         </div>
       )}
 

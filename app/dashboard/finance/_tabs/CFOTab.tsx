@@ -542,7 +542,7 @@ export async function CFOTab({ userId, companyId }: Props) {
             ))}
           </div>
           <div className="text-[9px] text-warn-text mt-2">
-            → <a href="/dashboard/operations?tab=expenses" className="font-semibold underline underline-offset-2">Masrafları incele</a> · Duplikasyonları manuel olarak onaylayın veya silin
+            → <Link href="/dashboard/operations?tab=expenses" className="font-semibold underline underline-offset-2">Masrafları incele</Link> · Duplikasyonları manuel olarak onaylayın veya silin
           </div>
         </div>
       )}
