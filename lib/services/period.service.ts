@@ -107,7 +107,7 @@ export class PeriodService {
       .lte('expense_date', to)
 
     const checklist: PeriodCloseChecklist = {
-      bank_reconciled:        true,                 // manual step — always shown as TODO
+      bank_reconciled:        true,                 // manual step — not automated; CFO verifies at /cfo/reconciliation
       expenses_complete:      (unpaidCount ?? 0) === 0,
       tax_summary_approved:   (nullTypeCount ?? 0) === 0,
       balance_sheet_balanced,
