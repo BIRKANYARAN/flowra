@@ -78,7 +78,7 @@ export async function QuarterlyTab({ userId, companyId }: Props) {
         .from('sales')
         .select('*', { count: 'exact', head: true })
         .eq('company_id', companyId)
-        .in('payment_status', ['unpaid', 'partial', 'overdue'])
+        .in('payment_status', ['pending', 'partial', 'overdue'])
         .not('is_deleted', 'eq', true)
       return count ?? 0
     }, 0),
