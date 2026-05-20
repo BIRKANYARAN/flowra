@@ -264,7 +264,7 @@ function sym(c: string): string {
   if (c === 'USD') return '$'
   if (c === 'EUR') return '€'
   if (c === 'GBP') return '£'
-  return '₺'
+  return 'TL'
 }
 
 // ── Utility: number formatting ────────────────────────────────────────────────
@@ -841,8 +841,13 @@ export async function generatePdf(opts: PdfOptions): Promise<void> {
 
     if (company.name?.trim()) {
       setF('bold', docStyle === 'executive' ? 9 : 8, P.ink)
-      const lines = doc.splitTextToSize(company.name.trim(), col2Adj) as string[]
-      lines.forEach(l => { tL(l, COL_L, ySat); ySat += 4.2 })
+      let nameLines = doc.splitTextToSize(company.name.trim(), col2Adj) as string[]
+      // Avoid orphaned short last line — try slightly wider column with smaller font
+      if (nameLines.length === 2 && nameLines[1].length < 8) {
+        setF('bold', 7, P.ink)
+        nameLines = doc.splitTextToSize(company.name.trim(), col2Adj + 6) as string[]
+      }
+      nameLines.forEach(l => { tL(l, COL_L, ySat); ySat += 4.2 })
     }
     if (company.address?.trim()) {
       setF('normal', 7, P.inkLight)
@@ -1104,7 +1109,7 @@ export async function generatePdf(opts: PdfOptions): Promise<void> {
   const TXL  = RX - TW
 
   // Height calculation
-  const totLineCount = 1 + (hasDiscount ? 1 : 0) + kdvRates.length + 1  // subtotal + disc + kdv lines + kdv total
+  const totLineCount = 1 + (hasDiscount ? 1 : 0) + kdvRates.length + (kdvRates.length > 1 ? 1 : 0)  // subtotal + disc + kdv lines + kdv total (only when multiple rates)
   const totLineH = docStyle === 'executive' ? 7.5 : 6.5
   const totBoxH  = totLineCount * totLineH + (docStyle === 'executive' ? 10 : 8)
   const gtH      = docStyle === 'executive' ? 18 : 14  // GENEL TOPLAM stripe height
@@ -1112,6 +1117,33 @@ export async function generatePdf(opts: PdfOptions): Promise<void> {
   ensureSpace(totBoxH + gtH + 50)
 
   const totStartY = curY
+
+  // ── LEFT PANEL: Bank information (rendered at the same vertical level as totals) ──
+  let bankPanelEndY = totStartY
+  const hasBanksLocal = banks.length > 0
+  if (hasBanksLocal) {
+    const bankPanelW = TXL - LX - 8
+    let bpy = totStartY
+
+    setF('bold', 5.5, P.inkLight)
+    tL(t('Ödeme Bilgileri').toUpperCase(), LX + CP, bpy + 5)
+    bpy += 8
+
+    banks.forEach(b => {
+      const bankLabel = [b.bankName, b.branchName].filter(Boolean).join(' · ')
+      setF('bold', 7.5, P.inkMid)
+      const bankLabelLines = doc.splitTextToSize(bankLabel, bankPanelW - CP * 2) as string[]
+      bankLabelLines.forEach(l => { tL(l, LX + CP, bpy); bpy += 4 })
+      doc.setFont('courier', 'normal')
+      doc.setFontSize(7)
+      doc.setTextColor(P.inkLight[0], P.inkLight[1], P.inkLight[2])
+      tL('IBAN: ' + (b.iban || ''), LX + CP, bpy)
+      doc.setFont(FONT, 'normal')
+      bpy += 7
+    })
+
+    bankPanelEndY = bpy
+  }
 
   // Draw totals box (border only for corporate/industrial; thin rules for executive/minimal)
   if (docStyle === 'corporate' || docStyle === 'industrial') {
@@ -1147,11 +1179,13 @@ export async function generatePdf(opts: PdfOptions): Promise<void> {
     ty += totLineH
   })
 
-  // KDV Toplam separator + line
-  hLine(ty - totLineH * 0.4, TXL + CP, RX - CP, P.ruleMed, 0.2)
-  setF('bold', docStyle === 'executive' ? 8.5 : 8, P.inkMid)
-  tL(t('KDV Tutarı'), TXL + CP, ty)
-  tR(money(kdvTotal, S), RX - CP, ty)
+  // KDV Toplam summary row — only shown when there are multiple KDV rates
+  if (kdvRates.length > 1) {
+    hLine(ty - totLineH * 0.4, TXL + CP, RX - CP, P.ruleMed, 0.2)
+    setF('bold', docStyle === 'executive' ? 8.5 : 8, P.inkMid)
+    tL(t('KDV Tutarı'), TXL + CP, ty)
+    tR(money(kdvTotal, S), RX - CP, ty)
+  }
 
   // ── GENEL TOPLAM — the financial anchor ───────────────────────────────────
   const gtY = totStartY + totBoxH
@@ -1165,7 +1199,8 @@ export async function generatePdf(opts: PdfOptions): Promise<void> {
     tR(money(grand, S), RX - CP, curY + (docStyle === 'executive' ? 9 : 7))
     setF('normal', 6.5, P.inkLight)
     tR(currencyLabel(currency, useTurkish), RX - CP, curY + (docStyle === 'executive' ? 18 : 14))
-    curY += docStyle === 'executive' ? 28 : 22
+    const execGtEnd = totStartY + (docStyle === 'executive' ? 28 : 22)
+    curY = Math.max(execGtEnd, bankPanelEndY) + gap(6)
   } else {
     // corporate / industrial: filled accent stripe
     fillR(TXL, gtY, TW, gtH, P.accent)
@@ -1184,7 +1219,7 @@ export async function generatePdf(opts: PdfOptions): Promise<void> {
     setF('bold', 14, P.accentText)
     tR(money(grand, S), RX - CP, gtY + 10)
 
-    curY = gtY + gtH + gap(8)
+    curY = Math.max(gtY + gtH, bankPanelEndY) + gap(8)
   }
 
   // ══════════════════════════════════════════════════════════════════════════════
@@ -1192,7 +1227,6 @@ export async function generatePdf(opts: PdfOptions): Promise<void> {
   // ══════════════════════════════════════════════════════════════════════════════
 
   const hasNotes  = notes?.trim().length > 0
-  const hasBanks  = banks.length > 0
   const hasFx     = fxUsd > 0 || fxEur > 0
   const hasPreparer = !!(preparer?.name?.trim())
 
@@ -1204,13 +1238,12 @@ export async function generatePdf(opts: PdfOptions): Promise<void> {
     : ''
 
   // Estimate footer height
-  const sigH       = hasPreparer ? 32 : 28
+  const sigH       = hasPreparer ? 38 : 34
   const yalnizH    = 9
   const validH     = 9
   const notesH     = hasNotes ? 14 : 0
   const fxH        = hasFx ? 8 : 0
-  const banksH     = hasBanks ? banks.length * 7 + 8 : 0
-  const footerH    = yalnizH + validH + notesH + fxH + banksH + sigH
+  const footerH    = yalnizH + validH + notesH + fxH + sigH
 
   ensureSpace(footerH + 4)
 
@@ -1224,11 +1257,12 @@ export async function generatePdf(opts: PdfOptions): Promise<void> {
     fillR(LX, fi, CONTENT_W, yalnizH, P.bgZebra)
     strokeR(LX, fi, CONTENT_W, yalnizH, P.ruleLight, 0.2)
   }
-  setF('normal', 7.5, P.inkLight)
+  setF('normal', 8, P.inkMid)
   tL(yalnizLine, LX + CP, fi + 6)
   fi += yalnizH
 
   // ── Geçerlilik satırı ──────────────────────────────────────────────────────
+  fi += 2  // extra breathing room above validity
   const validLine = t('Bu proforma teklifi ') + validityDays + t(' gün geçerlidir. Son geçerlilik: ') + addDays(createdAt, validityDays)
 
   if (hasNotes) {
@@ -1272,34 +1306,13 @@ export async function generatePdf(opts: PdfOptions): Promise<void> {
     fi += fxH
   }
 
-  // ── Banka bilgileri ────────────────────────────────────────────────────────
-  if (hasBanks) {
-    setF('bold', 5.5, P.inkLight)
-    tL(t('Ödeme Bilgileri'), LX + CP, fi + 5)
-    fi += 7.5
-
-    banks.forEach(b => {
-      const bankLabel = [b.bankName, b.branchName].filter(Boolean).join(' · ')
-      setF('bold', 7.5, P.inkMid)
-      tL(bankLabel, LX + CP, fi)
-      // IBAN in monospaced appearance
-      doc.setFont('courier', 'normal')
-      doc.setFontSize(7)
-      doc.setTextColor(P.inkLight[0], P.inkLight[1], P.inkLight[2])
-      tR('IBAN: ' + (b.iban || ''), RX - CP, fi)
-      doc.setFont(FONT, 'normal')
-      fi += 7
-    })
-    hLine(fi, LX, RX, P.ruleLight, 0.15)
-  }
-
   // ── İmza alanı ─────────────────────────────────────────────────────────────
   const SIG_COL_W = CONTENT_W / 2 - 6
   const SIG_LX    = LX + CP
   const SIG_RX    = LX + CONTENT_W / 2 + CP
 
   // Left label
-  setF('bold', 5.5, P.inkLight)
+  setF('bold', 5.5, P.inkMid)
   const leftLabel = hasPreparer ? t('Proformayı Düzenleyen') : t('Satıcı / Kaşe Onayı')
   tL(leftLabel, SIG_LX, fi + 6)
   tL(t('Alıcı Onayı'), SIG_RX, fi + 6)
@@ -1317,12 +1330,15 @@ export async function generatePdf(opts: PdfOptions): Promise<void> {
     }
   }
 
-  // Signature lines
+  // Signature lines — "İmza / Kaşe" label above each line
   const sigLineY = fi + sigH - 8
-  hLine(sigLineY, SIG_LX, SIG_LX + SIG_COL_W, P.ruleMed, 0.3)
-  hLine(sigLineY, SIG_RX, SIG_RX + SIG_COL_W, P.ruleMed, 0.3)
+  setF('normal', 5.5, P.inkLight)
+  tL(t('İmza / Kaşe'), SIG_LX, sigLineY - 2)
+  tL(t('İmza / Kaşe'), SIG_RX, sigLineY - 2)
+  hLine(sigLineY, SIG_LX, SIG_LX + SIG_COL_W, P.ruleMed, 0.45)
+  hLine(sigLineY, SIG_RX, SIG_RX + SIG_COL_W, P.ruleMed, 0.45)
 
-  setF('normal', 6, P.inkLight)
+  setF('normal', 7, P.inkLight)
   tL(company.name?.trim()  || '', SIG_LX, fi + sigH - 3)
   tL(customer.name?.trim() || '', SIG_RX, fi + sigH - 3)
 
