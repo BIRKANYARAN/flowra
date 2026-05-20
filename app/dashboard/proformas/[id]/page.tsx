@@ -179,17 +179,19 @@ export default async function ProformaDetailPage({ params }: PageProps) {
       preparer: (proforma.preparer_name?.trim())
         ? { name: safeStr(proforma.preparer_name), title: safeStr(proforma.preparer_title) }
         : null,
-      // Prefer frozen snapshot → fall back to live data for pre-snapshot proformas
+      // Prefer frozen snapshot → fall back to live data for pre-snapshot proformas.
+      // logoUrl always falls back to live settings if snapshot has it empty —
+      // older proformas had snapshots taken from user_settings (no logo_url there).
       company: proforma.company_snapshot
         ? {
-            name:      safeStr(proforma.company_snapshot.name),
-            address:   safeStr(proforma.company_snapshot.address),
-            phone:     safeStr(proforma.company_snapshot.phone),
-            website:   safeStr(proforma.company_snapshot.website),
-            taxNumber: safeStr(proforma.company_snapshot.tax_number),
-            taxOffice: safeStr(proforma.company_snapshot.tax_office),
-            logoUrl:   safeStr(proforma.company_snapshot.logo_url),
-            mersisNo:  safeStr(proforma.company_snapshot.mersis_no),
+            name:      safeStr(proforma.company_snapshot.name)      || safeStr(settings?.company_name),
+            address:   safeStr(proforma.company_snapshot.address)   || safeStr(settings?.address),
+            phone:     safeStr(proforma.company_snapshot.phone)     || safeStr(settings?.phone),
+            website:   safeStr(proforma.company_snapshot.website)   || safeStr(settings?.website),
+            taxNumber: safeStr(proforma.company_snapshot.tax_number)|| safeStr(settings?.tax_number),
+            taxOffice: safeStr(proforma.company_snapshot.tax_office)|| safeStr(settings?.tax_office),
+            logoUrl:   safeStr(proforma.company_snapshot.logo_url)  || safeStr(settings?.logo_url),
+            mersisNo:  safeStr(proforma.company_snapshot.mersis_no) || safeStr(settings?.mersis_no),
           }
         : {
             name:      safeStr(settings?.company_name),

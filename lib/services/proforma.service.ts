@@ -178,13 +178,13 @@ export class ProformaService {
       // 5. Snapshot company + customer data for deterministic PDF rendering
       //    Even if company/customer details change later, this proforma's PDF
       //    always uses the data as it existed at creation time.
-      const [settingsRes, customerRes] = await Promise.all([
-        safeSystemQuery('user_settings')
-          .select('company_name, address, phone, website, tax_number, tax_office, mersis_no, logo_url')
-          .eq('company_id', companyId)
-          .is('deleted_at', null)
-          .order('updated_at', { ascending: false })
-          .limit(1)
+      //    NOTE: company info lives on the companies table (NOT user_settings which
+      //    has no company columns — name, address, logo_url etc. were never there).
+      const [companyRes, customerRes] = await Promise.all([
+        supabase
+          .from('companies')
+          .select('name, address, phone, website, tax_id, tax_office, mersis_no, logo_url')
+          .eq('id', companyId)
           .maybeSingle(),
         customer_id
           ? supabase
@@ -196,16 +196,16 @@ export class ProformaService {
           : Promise.resolve({ data: null }),
       ])
 
-      const companySnapshot = settingsRes.data
+      const companySnapshot = companyRes.data
         ? {
-            name:       settingsRes.data.company_name ?? '',
-            address:    settingsRes.data.address ?? '',
-            phone:      settingsRes.data.phone ?? '',
-            website:    settingsRes.data.website ?? '',
-            tax_number: settingsRes.data.tax_number ?? '',
-            tax_office: settingsRes.data.tax_office ?? '',
-            mersis_no:  settingsRes.data.mersis_no ?? '',
-            logo_url:   settingsRes.data.logo_url ?? '',
+            name:       companyRes.data.name       ?? '',
+            address:    companyRes.data.address     ?? '',
+            phone:      companyRes.data.phone       ?? '',
+            website:    companyRes.data.website     ?? '',
+            tax_number: companyRes.data.tax_id      ?? '',  // companies uses tax_id, snapshot uses tax_number
+            tax_office: companyRes.data.tax_office  ?? '',
+            mersis_no:  companyRes.data.mersis_no   ?? '',
+            logo_url:   companyRes.data.logo_url    ?? '',
           }
         : null
 
