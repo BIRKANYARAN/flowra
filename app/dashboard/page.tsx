@@ -568,26 +568,12 @@ export default async function DashboardPage() {
   return (
     <div className="flex flex-col gap-4">
 
-      {/* ── PAGE HERO ─────────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-base font-bold text-[#0f172a] leading-tight">CEO Komuta Merkezi</h1>
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <span className="text-sm text-[#94a3b8] tabular-nums">{label}</span>
-          <span className="text-[#e2e8f0] text-sm">·</span>
-          <Link href="/dashboard/commercial?tab=proformas"
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded bg-[#0f172a] text-white text-xs font-semibold hover:bg-[#334155] transition-colors">
-            + Proforma
-          </Link>
-          <Link href="/dashboard/operations?tab=expenses"
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded border border-[#e2e8f0] text-[#334155] text-xs font-semibold hover:bg-[#f8fafc] transition-colors">
-            + Gider
-          </Link>
-          <Link href="/dashboard/commercial?tab=collections"
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded bg-brand-light text-white text-xs font-semibold hover:bg-brand transition-colors">
-            Tahsilat
-          </Link>
+      {/* ── PAGE HERO: date context only (title + shortcuts moved to topbar) ── */}
+      {label && (
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs text-[#94a3b8] tabular-nums">{label}</span>
         </div>
-      </div>
+      )}
 
       {/* ── ADAPTIVE PRESSURE BANNER — only renders when system detects crisis ── */}
       {pressureMode === 'cash_crisis' && (
