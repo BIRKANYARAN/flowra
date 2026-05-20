@@ -358,7 +358,7 @@ export default function GovernancePage() {
         setSelectedId(json.reports[0].id)
       }
     } catch (e) {
-      setError('Raporlar yüklenemedi. governance.sql migration çalıştırıldı mı?')
+      setError('Yönetişim raporları yüklenemedi. Lütfen sayfayı yenileyin veya yöneticinizle iletişime geçin.')
     } finally {
       setLoading(false)
     }

@@ -200,7 +200,7 @@ export default function WorkflowsPage() {
                   </button>
                   {w.resource_id && w.resource_type === 'expense' && (
                     <Link
-                      href={`/dashboard/expenses?highlight=${w.resource_id}`}
+                      href={`/dashboard/operations?tab=expenses&highlight=${w.resource_id}`}
                       className="text-xs text-brand-light font-semibold px-3 py-2 rounded hover:bg-brand-subtle transition-colors border border-[#e2e8f0]"
                     >
                       Masrafı Gör →
