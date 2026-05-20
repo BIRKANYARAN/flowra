@@ -175,7 +175,7 @@ export async function CatalogContent({ companyId, userId }: Props) {
         links={[
           { label: 'Stok',               href: '/dashboard/operations?tab=stock' },
           { label: 'P&L Analizi',        href: '/dashboard/finance?tab=pnl' },
-          { label: 'What-If Simülasyon', href: '/dashboard/planning?tab=what-if' },
+          { label: 'Senaryo Analizi',    href: '/dashboard/planning?tab=scenarios' },
         ]}
       />
     </div>

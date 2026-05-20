@@ -112,7 +112,7 @@ export async function SimulationContent({ companyId, userId, activeTab = 'unit-p
         narrative="Simülasyon varsayımları gerçekleşmezse nakit pozisyonu ve runway planlaması sapabilir — gerçek P&L ile düzenli karşılaştırın."
         links={[
           { label: 'Nakit Projeksiyonu', href: '/dashboard/planning?tab=cash-projection' },
-          { label: 'What-If',            href: '/dashboard/planning?tab=what-if' },
+          { label: 'Senaryo Analizi',     href: '/dashboard/planning?tab=scenarios' },
           { label: 'Finansal Durum',     href: '/dashboard/finance?tab=overview' },
         ]}
       />
