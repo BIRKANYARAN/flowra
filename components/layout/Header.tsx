@@ -34,7 +34,7 @@ export function Header({ companyName }: Props) {
       {/* CENTER — global quick actions */}
       <div className="hidden md:flex items-center gap-1.5 flex-1 justify-center">
         <Link
-          href="/dashboard/commercial?tab=proformas"
+          href="/dashboard/proformas/new"
           className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#0f172a] text-white text-[11px] font-semibold hover:bg-[#334155] transition-colors whitespace-nowrap">
           + Proforma
         </Link>
