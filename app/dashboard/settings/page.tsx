@@ -485,8 +485,7 @@ export default function SettingsPage() {
                     src={signedPreview}
                     alt="Firma logosu"
                     className="w-full h-full object-contain p-1 pointer-events-none"
-                    onLoad={() => console.log('[LOGO_RENDER_OK]', signedPreview)}
-                    onError={() => { console.warn('[LOGO_FAIL]', signedPreview); setSignedPreview('') }}
+                    onError={() => { setSignedPreview('') }}
                   />
                 ) : (
                   <div className="text-center pointer-events-none">
