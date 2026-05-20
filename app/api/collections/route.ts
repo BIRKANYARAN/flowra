@@ -29,9 +29,13 @@ export async function GET(req: NextRequest) {
       .order('sale_date', { ascending: false })
       .limit(200)
 
-    if (ALLOWED_STATUSES.includes(statusFilter as PaymentStatus)) {
+    if (statusFilter === 'unpaid') {
+      // 'unpaid' is a virtual status: all rows that are not yet fully collected
+      query = query.in('payment_status', ['pending', 'partial', 'overdue'])
+    } else if (ALLOWED_STATUSES.includes(statusFilter as PaymentStatus)) {
       query = query.eq('payment_status', statusFilter)
     }
+    // else: no filter → return all rows
 
     const { data, error } = await query
 

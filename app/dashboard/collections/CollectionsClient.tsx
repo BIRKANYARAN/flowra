@@ -29,7 +29,8 @@ export interface CollectionRow {
   proformas: { proforma_no: string } | null
 }
 
-type TabKey = 'pending' | 'paid' | 'all'
+// 'unpaid' = pending + partial + overdue (all not-yet-collected rows)
+type TabKey = 'unpaid' | 'paid' | 'all'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -96,7 +97,7 @@ export default function CollectionsClient({ initialRows }: Props) {
   const [rows,       setRows]       = useState<CollectionRow[]>(initialRows)
   // Start false: initial "unpaid" data comes from server
   const [loading,    setLoading]    = useState(false)
-  const [tab,        setTab]        = useState<TabKey>('pending')
+  const [tab,        setTab]        = useState<TabKey>('unpaid')
   const [patching,   setPatching]   = useState<string | null>(null)
   const [error,      setError]      = useState<string | null>(null)
   const [search,     setSearch]     = useState('')
@@ -168,7 +169,7 @@ export default function CollectionsClient({ initialRows }: Props) {
         } : r))
       } else {
         // Remove from filtered view if no longer belongs
-        if (tab === 'pending' && status === 'paid') {
+        if (tab === 'unpaid' && status === 'paid') {
           setRows(prev => prev.filter(r => r.id !== id))
         } else if (tab === 'paid' && status !== 'paid') {
           setRows(prev => prev.filter(r => r.id !== id))
@@ -224,7 +225,7 @@ export default function CollectionsClient({ initialRows }: Props) {
   const paidCount     = rows.filter(r => r.payment_status === 'paid').length
 
   const TABS: { key: TabKey; label: string; count?: number }[] = [
-    { key: 'pending', label: 'Bekleyenler', count: pendingCount },
+    { key: 'unpaid', label: 'Bekleyenler', count: pendingCount },
     { key: 'paid',   label: 'Ödenenler',   count: paidCount    },
     { key: 'all',    label: 'Tümü',        count: rows.length  },
   ]
@@ -491,7 +492,7 @@ export default function CollectionsClient({ initialRows }: Props) {
             <div className="text-xs font-medium text-[#334155] mb-1">
               {search
                 ? 'Eşleşen kayıt bulunamadı'
-                : tab === 'pending' ? 'Bekleyen tahsilat yok' : 'Bu filtrede kayıt yok'}
+                : tab === 'unpaid' ? 'Bekleyen tahsilat yok' : 'Bu filtrede kayıt yok'}
             </div>
             <div className="text-[0.65rem] text-[#94a3b8]">
               {search ? `"${search}" araması için sonuç yok` : 'Tüm tahsilatlar bu görünümde gösterilir'}
