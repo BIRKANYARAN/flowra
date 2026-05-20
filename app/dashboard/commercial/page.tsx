@@ -86,7 +86,7 @@ export default async function CommercialPage({ searchParams }: PageProps) {
       {/* PAGE HERO */}
       <div>
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Ticari Akış Merkezi</div>
-        <h1 className="text-base font-bold tracking-tight text-[#0f172a] leading-tight">
+        <h1 className="text-2xl font-black tracking-tight text-[#0f172a] leading-tight">
           {tabTitles[activeTab] ?? 'Ticari Akış'}
         </h1>
         <p className="text-xs text-[#94a3b8] mt-0.5">{tabSubtitles[activeTab] ?? ''}</p>
