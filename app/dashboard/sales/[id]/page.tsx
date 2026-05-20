@@ -44,7 +44,7 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
   if (!sale) {
     return (
       <div className="max-w-3xl">
-        <Link href="/dashboard/sales" className="text-sm text-[#94a3b8] hover:text-[#0f172a] mb-4 inline-block">← Satışlar</Link>
+        <Link href="/dashboard/commercial?tab=sales" className="text-sm text-[#94a3b8] hover:text-[#0f172a] mb-4 inline-block">← Satışlar</Link>
         <div className="bg-white border border-[#e2e8f0] rounded p-10 text-center">
           <p className="text-[#94a3b8] text-sm">Satış bulunamadı veya silinmiş.</p>
         </div>
@@ -67,7 +67,7 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
     <div className="max-w-3xl">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <Link href="/dashboard/sales" className="text-sm text-[#94a3b8] hover:text-[#0f172a] mb-1 inline-block">← Satışlar</Link>
+          <Link href="/dashboard/commercial?tab=sales" className="text-sm text-[#94a3b8] hover:text-[#0f172a] mb-1 inline-block">← Satışlar</Link>
           <h1 className="text-2xl font-black">{s.customer_name}</h1>
           <p className="text-sm text-[#94a3b8] mt-0.5">{fmtDate(s.sale_date || s.created_at)}</p>
         </div>

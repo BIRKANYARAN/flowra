@@ -244,7 +244,7 @@ function SatisPanel({ proformas }: { proformas: Proforma[] }) {
         </tfoot>
       </table>
       <div className="px-4 py-2 text-right">
-        <Link href="/dashboard/sales" className="text-xs text-brand-light font-semibold hover:underline">Tüm satışlar →</Link>
+        <Link href="/dashboard/commercial?tab=sales" className="text-xs text-brand-light font-semibold hover:underline">Tüm satışlar →</Link>
       </div>
     </div>
   )

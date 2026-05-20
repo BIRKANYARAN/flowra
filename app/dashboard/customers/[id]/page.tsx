@@ -167,7 +167,7 @@ export default function CustomerDetailPage() {
 
       {/* ── Back + header ─────────────────────────────────────────────────── */}
       <div>
-        <Link href="/dashboard/customers" className="text-sm text-[#94a3b8] hover:text-[#334155] inline-flex items-center gap-1 mb-3">
+        <Link href="/dashboard/commercial?tab=customers" className="text-sm text-[#94a3b8] hover:text-[#334155] inline-flex items-center gap-1 mb-3">
           ← Müşteriler
         </Link>
         <h1 className="text-2xl font-black">{customer.name}</h1>
