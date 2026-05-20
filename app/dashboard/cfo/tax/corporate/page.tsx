@@ -158,7 +158,7 @@ export default async function CorporateTaxPage() {
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-black text-[#0f172a] tracking-tight">
+          <h1 className="text-2xl font-black text-[#0f172a] tracking-tight">
             Kurumlar Vergisi Tahmini
           </h1>
           <p className="text-xs text-[#94a3b8] mt-0.5">

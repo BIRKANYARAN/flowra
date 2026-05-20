@@ -86,7 +86,7 @@ export default function AlertSettingsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-black text-[#0f172a] tracking-tight">Uyarı Kuralları</h1>
+          <h1 className="text-2xl font-black text-[#0f172a] tracking-tight">Uyarı Kuralları</h1>
           <p className="text-xs text-[#94a3b8] mt-0.5">Her kural için eşik değerini ve ciddiyetini yapılandırın</p>
         </div>
         <Link href="/dashboard/settings" className="text-xs text-[#94a3b8] hover:text-brand-light font-semibold">← Ayarlar</Link>

@@ -83,7 +83,7 @@ export default function WorkflowsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-black text-[#0f172a] tracking-tight">Onay Bekleyen İşlemler</h1>
+          <h1 className="text-2xl font-black text-[#0f172a] tracking-tight">Onay Bekleyen İşlemler</h1>
           <p className="text-xs text-[#94a3b8] mt-0.5">
             {loading ? 'Yükleniyor…' : `${workflows.length} işlem onay bekliyor`}
           </p>

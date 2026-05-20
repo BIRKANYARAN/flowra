@@ -99,7 +99,7 @@ export default function TrialBalancePage() {
       <style dangerouslySetInnerHTML={{ __html: PRINT_STYLE }} />
       <div className="flex items-center justify-between" data-print-hide>
         <div>
-          <h1 className="text-xl font-black text-[#0f172a] tracking-tight">Mizan</h1>
+          <h1 className="text-2xl font-black text-[#0f172a] tracking-tight">Mizan</h1>
           <p className="text-xs text-[#94a3b8] mt-0.5">Genel Muhasebe Hesap Bakiyeleri</p>
         </div>
         <div className="flex items-center gap-2">

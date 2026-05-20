@@ -45,7 +45,7 @@ export default async function JournalEntriesPage() {
     <div className="flex flex-col gap-4 max-w-5xl">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-black text-[#0f172a] tracking-tight">Journal Kayıtları</h1>
+          <h1 className="text-2xl font-black text-[#0f172a] tracking-tight">Journal Kayıtları</h1>
           <p className="text-xs text-[#94a3b8] mt-0.5">Çift taraflı muhasebe denetim izi — son 100 kayıt</p>
         </div>
         <Link href="/dashboard/cfo" className="text-xs text-[#94a3b8] hover:text-brand-light font-semibold">← CFO</Link>

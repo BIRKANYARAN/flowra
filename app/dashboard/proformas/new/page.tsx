@@ -201,7 +201,7 @@ export default function NewProformaPage() {
           ← Proformalar
         </Link>
         <span className="text-[#cbd5e1]">/</span>
-        <h1 className="text-xl font-black">Yeni Proforma</h1>
+        <h1 className="text-2xl font-black">Yeni Proforma</h1>
       </div>
 
       {error && <div className="mb-4"><ErrorBanner msg={error} /></div>}

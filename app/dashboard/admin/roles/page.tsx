@@ -47,7 +47,7 @@ export default async function RolesPage() {
   return (
     <div className="max-w-3xl space-y-4">
       <div className="flex items-center gap-3">
-        <h1 className="text-lg font-black text-[#0f172a] tracking-tight">Yetkilendirme</h1>
+        <h1 className="text-2xl font-black text-[#0f172a] tracking-tight">Yetkilendirme</h1>
         <Link href="/dashboard/admin/users"
           className="text-xs text-brand-light font-semibold hover:text-brand">
           Ekip Yönetimi →

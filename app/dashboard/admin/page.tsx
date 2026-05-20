@@ -153,7 +153,7 @@ export default async function AdminHubPage() {
 
       {/* Header */}
       <div>
-        <h1 className="text-xl font-black text-[#0f172a] tracking-tight">Yönetim Merkezi</h1>
+        <h1 className="text-2xl font-black text-[#0f172a] tracking-tight">Yönetim Merkezi</h1>
         <p className="text-xs text-[#94a3b8] mt-0.5">Kullanıcılar, roller, onaylar ve denetim</p>
       </div>
 
