@@ -84,10 +84,11 @@ export default function SettingsPage() {
     const user = authData.user
     const companyId = await resolveCompanyId(user.id, supabase)
 
+    // Base company fields + banks — these always exist
     const [coRes, bRes] = await Promise.all([
       supabase
         .from('companies')
-        .select('name, address, phone, website, tax_id, tax_office, mersis_no, logo_url, email, brand_color, document_style, default_preparer_name, default_preparer_title')
+        .select('name, address, phone, website, tax_id, tax_office, mersis_no, logo_url, email')
         .eq('id', companyId)
         .maybeSingle(),
       supabase
@@ -110,10 +111,22 @@ export default function SettingsPage() {
         mersis_no:    d.mersis_no  || '',
       })
 
-      setBrandColor(d.brand_color || 'charcoal')
-      setDocumentStyle(d.document_style || 'corporate')
-      setDefaultPreparerName(d.default_preparer_name || '')
-      setDefaultPreparerTitle(d.default_preparer_title || '')
+      // Brand identity columns — added via migration; load separately so a missing
+      // column in the schema cache cannot poison the base company load above.
+      try {
+        const brandRes = await supabase
+          .from('companies')
+          .select('brand_color, document_style, default_preparer_name, default_preparer_title')
+          .eq('id', companyId)
+          .maybeSingle()
+        if (brandRes.data && !brandRes.error) {
+          const b = brandRes.data as Record<string, string | null>
+          setBrandColor(b.brand_color   || 'charcoal')
+          setDocumentStyle(b.document_style || 'corporate')
+          setDefaultPreparerName(b.default_preparer_name   || '')
+          setDefaultPreparerTitle(b.default_preparer_title || '')
+        }
+      } catch { /* brand columns not yet migrated — use UI defaults */ }
 
       const logoUrl = d.logo_url
       if (logoUrl) {
@@ -206,32 +219,46 @@ export default function SettingsPage() {
       const user = authData.user
       const companyId = await resolveCompanyId(user.id, supabase)
 
+      // ── Base company fields (always present columns) ─────────────────────
       const { error } = await supabase
         .from('companies')
         .update({
-          name:                  form.company_name.trim() || undefined,
-          address:               form.address.trim()    || null,
-          phone:                 form.phone.trim()      || null,
-          website:               form.website.trim()    || null,
-          tax_id:                form.tax_number.trim() || null,   // form.tax_number → companies.tax_id
-          tax_office:            form.tax_office.trim() || null,
-          mersis_no:             form.mersis_no.trim()  || null,
-          // Belge Kimliği
-          brand_color:           brandColor,
-          document_style:        documentStyle,
-          default_preparer_name: defaultPreparerName.trim() || null,
-          default_preparer_title: defaultPreparerTitle.trim() || null,
-          updated_at:            new Date().toISOString(),
+          name:       form.company_name.trim() || undefined,
+          address:    form.address.trim()    || null,
+          phone:      form.phone.trim()      || null,
+          website:    form.website.trim()    || null,
+          tax_id:     form.tax_number.trim() || null,
+          tax_office: form.tax_office.trim() || null,
+          mersis_no:  form.mersis_no.trim()  || null,
+          updated_at: new Date().toISOString(),
         } as Record<string, unknown>)
         .eq('id', companyId)
 
       if (error) {
-        // Surface the actual DB error so we can diagnose schema drift
         flash(setMsg, `Kayıt hatası: ${error.message}`, 'error')
+        return
+      }
+
+      // ── Brand identity columns (added via migration — save separately) ────
+      // If these columns don't exist yet the error is silenced; user sees a
+      // note to run the migration rather than a blocking error.
+      const { error: brandErr } = await supabase
+        .from('companies')
+        .update({
+          brand_color:            brandColor,
+          document_style:         documentStyle,
+          default_preparer_name:  defaultPreparerName.trim()  || null,
+          default_preparer_title: defaultPreparerTitle.trim() || null,
+        } as Record<string, unknown>)
+        .eq('id', companyId)
+
+      if (brandErr) {
+        // Columns missing — surface friendly hint instead of raw error
+        flash(setMsg, 'Firma bilgileri kaydedildi ✓ — Belge kimliği için SQL migrasyonu gerekli (bkz. patch_company_settings_columns.sql)', 'info')
       } else {
         flash(setMsg, 'Firma bilgileri kaydedildi ✓')
-        load()   // re-fetch to confirm DB round-trip
       }
+      load()   // re-fetch to confirm DB round-trip
     } catch (e) {
       flash(setMsg, 'Beklenmeyen hata: ' + String(e), 'error')
     } finally {

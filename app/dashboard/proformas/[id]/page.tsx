@@ -63,7 +63,7 @@ export default async function ProformaDetailPage({ params }: PageProps) {
         .order('sort_order', { ascending: true }),
       supabase
         .from('companies')
-        .select('name, address, phone, website, tax_id, tax_office, mersis_no, logo_url, email, brand_color, document_style')
+        .select('name, address, phone, website, tax_id, tax_office, mersis_no, logo_url, email')
         .eq('id', companyId)
         .maybeSingle(),
       supabase
@@ -85,18 +85,31 @@ export default async function ProformaDetailPage({ params }: PageProps) {
 
     // Build a settings-shaped object from the companies table so downstream code works unchanged
     const settings = companyRow ? {
-      company_name:  companyRow.name          ?? null,
-      address:       companyRow.address       ?? null,
-      phone:         companyRow.phone         ?? null,
-      website:       companyRow.website       ?? null,
-      tax_number:    companyRow.tax_id        ?? null,  // companies.tax_id ↔ settings shape tax_number
-      tax_office:    companyRow.tax_office    ?? null,
-      logo_url:      companyRow.logo_url      ?? null,
-      mersis_no:     companyRow.mersis_no     ?? null,
-      email:         companyRow.email         ?? null,
-      brand_color:   companyRow.brand_color   ?? 'charcoal',
-      document_style: companyRow.document_style ?? 'corporate',
+      company_name: companyRow.name       ?? null,
+      address:      companyRow.address    ?? null,
+      phone:        companyRow.phone      ?? null,
+      website:      companyRow.website    ?? null,
+      tax_number:   companyRow.tax_id     ?? null,  // companies.tax_id ↔ settings shape tax_number
+      tax_office:   companyRow.tax_office ?? null,
+      logo_url:     companyRow.logo_url   ?? null,
+      mersis_no:    companyRow.mersis_no  ?? null,
+      email:        companyRow.email      ?? null,
     } : null
+
+    // Brand identity — separate query so missing columns can't break the base load
+    let brandColor   = 'charcoal'
+    let documentStyleVal = 'corporate'
+    try {
+      const { data: brandRow } = await supabase
+        .from('companies')
+        .select('brand_color, document_style')
+        .eq('id', companyId)
+        .maybeSingle()
+      if (brandRow) {
+        brandColor       = (brandRow as Record<string, string | null>).brand_color    || 'charcoal'
+        documentStyleVal = (brandRow as Record<string, string | null>).document_style || 'corporate'
+      }
+    } catch { /* brand columns not yet migrated — use defaults */ }
 
     // ── 4. Fetch customer (optional, never fatal) ────────────────────────────
     let customer: Customer | null = null
@@ -222,8 +235,8 @@ export default async function ProformaDetailPage({ params }: PageProps) {
         discount_percent: it.discount_percent,
       })),
       brand: {
-        color: (settings?.brand_color || 'charcoal') as BrandColor,
-        style: (settings?.document_style || 'corporate') as DocumentStyle,
+        color: brandColor as BrandColor,
+        style: documentStyleVal as DocumentStyle,
       },
     }
 
