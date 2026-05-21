@@ -36,30 +36,33 @@ import { CashflowTab }   from './_tabs/CashflowTab'
 import { TaxTab }        from './_tabs/TaxTab'
 import { RisksTab }      from './_tabs/RisksTab'
 import { CFOTab }        from './_tabs/CFOTab'
+import { BoardPackTab }  from './_tabs/BoardPackTab'
 import { FinanceContextBar } from './_shared/FinanceContextBar'
 
 // ── Valid tabs ─────────────────────────────────────────────────────────────────
 
-type FinanceTab = 'pnl' | 'balance' | 'cashflow' | 'tax' | 'risks' | 'cfo'
+type FinanceTab = 'pnl' | 'balance' | 'cashflow' | 'tax' | 'risks' | 'cfo' | 'boardpack'
 
-const VALID_TABS: FinanceTab[] = ['pnl', 'balance', 'cashflow', 'tax', 'risks', 'cfo']
+const VALID_TABS: FinanceTab[] = ['pnl', 'balance', 'cashflow', 'tax', 'risks', 'cfo', 'boardpack']
 
 const FINANCE_NAV_TABS = [
-  { key: 'pnl',      label: 'Kâr/Zarar' },
-  { key: 'balance',  label: 'Bilanço'   },
-  { key: 'cashflow', label: 'Nakit'     },
-  { key: 'tax',      label: 'Vergi'     },
-  { key: 'risks',    label: 'Riskler'   },
-  { key: 'cfo',      label: 'CFO'       },
+  { key: 'pnl',       label: 'Kâr/Zarar'   },
+  { key: 'balance',   label: 'Bilanço'      },
+  { key: 'cashflow',  label: 'Nakit'        },
+  { key: 'tax',       label: 'Vergi'        },
+  { key: 'risks',     label: 'Riskler'      },
+  { key: 'cfo',       label: 'CFO'          },
+  { key: 'boardpack', label: 'Yön. Paketi'  },
 ]
 
 const TAB_META: Record<FinanceTab, { title: string; sub: string }> = {
-  pnl:      { title: 'Kâr / Zarar',  sub: 'Ciro · Brüt Kâr · Faaliyet Kârı · Vergi Sonrası Net' },
-  balance:  { title: 'Bilanço',       sub: 'Varlıklar · Yükümlülükler · Özsermaye' },
-  cashflow: { title: 'Nakit Akışı',  sub: 'Burn rate · Runway · 12 ay projeksiyon · Baskı haritası' },
-  tax:      { title: 'Vergi Merkezi', sub: 'KDV · Geçici Vergi · Kurumlar Vergisi · Matrah Analizi' },
-  risks:    { title: 'Risk Analizi',  sub: 'Alacak yaşlandırma · Müşteri konsantrasyonu · HHI Endeksi' },
-  cfo:      { title: 'CFO Cockpit',  sub: 'Muhasebe doğruluğu · Çeyreklik · Dönem yönetimi · Mizan' },
+  pnl:       { title: 'Kâr / Zarar',     sub: 'Ciro · Brüt Kâr · Faaliyet Kârı · Vergi Sonrası Net' },
+  balance:   { title: 'Bilanço',          sub: 'Varlıklar · Yükümlülükler · Özsermaye' },
+  cashflow:  { title: 'Nakit Akışı',     sub: 'Burn rate · Runway · 12 ay projeksiyon · Baskı haritası' },
+  tax:       { title: 'Vergi Merkezi',    sub: 'KDV · Geçici Vergi · Kurumlar Vergisi · Matrah Analizi' },
+  risks:     { title: 'Risk Analizi',     sub: 'Alacak yaşlandırma · Müşteri konsantrasyonu · HHI Endeksi' },
+  cfo:       { title: 'CFO Cockpit',     sub: 'Muhasebe doğruluğu · Çeyreklik · Dönem yönetimi · Mizan' },
+  boardpack: { title: 'Yönetim Paketi',  sub: 'Tüm finansal tablolar · Rasyolar · Uyarılar · Belgeler' },
 }
 
 // ── Loading skeleton ───────────────────────────────────────────────────────────
@@ -189,12 +192,13 @@ export default async function FinancePage({ searchParams }: PageProps) {
 
       {/* ── Active tab content ────────────────────────────────────────────────── */}
       <Suspense fallback={<div className="mt-5"><TabSkeleton /></div>}>
-        {activeTab === 'pnl'      && <PnlTab      {...tabProps} />}
-        {activeTab === 'balance'  && <BalanceTab  {...tabProps} />}
-        {activeTab === 'cashflow' && <CashflowTab {...tabProps} />}
-        {activeTab === 'tax'      && <TaxTab      {...tabProps} />}
-        {activeTab === 'risks'    && <RisksTab    {...tabProps} />}
-        {activeTab === 'cfo'      && <CFOTab      {...tabProps} />}
+        {activeTab === 'pnl'       && <PnlTab      {...tabProps} />}
+        {activeTab === 'balance'   && <BalanceTab  {...tabProps} />}
+        {activeTab === 'cashflow'  && <CashflowTab {...tabProps} />}
+        {activeTab === 'tax'       && <TaxTab      {...tabProps} />}
+        {activeTab === 'risks'     && <RisksTab    {...tabProps} />}
+        {activeTab === 'cfo'       && <CFOTab      {...tabProps} />}
+        {activeTab === 'boardpack' && <BoardPackTab {...tabProps} />}
       </Suspense>
 
     </div>

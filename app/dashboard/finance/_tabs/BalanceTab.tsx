@@ -4,6 +4,7 @@
 // Includes FIFO inventory, per-partner capital lines, partner loans,
 // estimated tax payable, current-period P&L, and balanced invariant check.
 // Two-column layout: Varlıklar (Assets) | Kaynaklar (Liabilities + Equity)
+// Sprint 5: narrative-institutional format — account | amount | % of total | document links
 
 import Link                     from 'next/link'
 import { createClient }        from '@/lib/supabase-server'
@@ -18,12 +19,17 @@ const TRY_FMT = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 0, maxim
 function fmtFull(n: number): string {
   return (n < 0 ? '−' : '') + '₺' + TRY_FMT.format(Math.abs(n))
 }
+function fmtPct(pct: number): string {
+  if (!isFinite(pct)) return '—'
+  return `%${Math.abs(pct).toFixed(1)}`
+}
 
 // ── Row types ─────────────────────────────────────────────────────────────────
 
 type Row = {
   label:    string
   amount:   number
+  pctOf?:   number        // total to compute % share from
   indent?:  boolean
   isTotal?: boolean
   isGrand?: boolean
@@ -36,31 +42,43 @@ type Row = {
 function BSColumn({ title, rows }: { title: string; rows: Row[] }) {
   return (
     <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden flex flex-col">
-      <div className="px-4 py-3 border-b border-[#e2e8f0] bg-[#f8fafc]">
+      <div className="px-4 py-3 border-b border-[#e2e8f0] bg-[#f8fafc] flex items-center justify-between">
         <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#64748b]">{title}</span>
+        <span className="text-[0.6rem] text-[#94a3b8] font-medium">Tutar · Pay</span>
       </div>
       <div className="flex-1 divide-y divide-[#f1f5f9] px-4 py-2">
-        {rows.map((row, i) => (
-          <div key={i} className={`flex items-center justify-between py-2 gap-2 ${row.isGrand ? 'border-t-2 border-[#e2e8f0] mt-1' : ''}`}>
-            <div className="min-w-0 flex-1">
-              <span className={`text-xs leading-snug ${
-                row.isGrand  ? 'font-black text-[#0f172a] text-[13px]' :
-                row.isTotal  ? 'font-black text-[#334155]' :
-                row.indent   ? 'text-[#94a3b8] pl-4 font-medium' :
-                               'text-[#334155] font-semibold'
-              }`}>{row.label}</span>
-              {row.sub && <span className="text-[9px] text-[#cbd5e1] ml-1.5">{row.sub}</span>}
+        {rows.map((row, i) => {
+          const pct = (row.pctOf && row.pctOf > 0) ? (row.amount / row.pctOf) * 100 : null
+          return (
+            <div key={i} className={`flex items-center justify-between py-2 gap-2 ${row.isGrand ? 'border-t-2 border-[#e2e8f0] mt-1' : ''}`}>
+              <div className="min-w-0 flex-1">
+                <span className={`text-xs leading-snug ${
+                  row.isGrand  ? 'font-black text-[#0f172a] text-[13px]' :
+                  row.isTotal  ? 'font-black text-[#334155]' :
+                  row.indent   ? 'text-[#94a3b8] pl-4 font-medium' :
+                                 'text-[#334155] font-semibold'
+                }`}>{row.label}</span>
+                {row.sub && <span className="text-[9px] text-[#cbd5e1] ml-1.5">{row.sub}</span>}
+              </div>
+              <div className="flex items-center gap-3 shrink-0">
+                {/* % share of total */}
+                {pct !== null && !row.isGrand && !row.isTotal && (
+                  <span className="text-[0.6rem] text-[#94a3b8] tabular-nums w-10 text-right">
+                    {fmtPct(pct)}
+                  </span>
+                )}
+                <span className={`tabular-nums text-xs ${
+                  row.isGrand  ? 'font-black text-[#0f172a] text-[13px]' :
+                  row.isTotal  ? 'font-bold text-[#1e293b]' :
+                  row.indent   ? 'font-semibold text-[#64748b]' :
+                  row.amount < 0 ? 'font-bold text-neg' : 'font-bold text-[#334155]'
+                }`}>
+                  {(row.zero && row.amount === 0) ? '—' : fmtFull(row.amount)}
+                </span>
+              </div>
             </div>
-            <span className={`tabular-nums shrink-0 text-xs ${
-              row.isGrand  ? 'font-black text-[#0f172a] text-[13px]' :
-              row.isTotal  ? 'font-bold text-[#1e293b]' :
-              row.indent   ? 'font-semibold text-[#64748b]' :
-              row.amount < 0 ? 'font-bold text-neg' : 'font-bold text-[#334155]'
-            }`}>
-              {(row.zero && row.amount === 0) ? '—' : fmtFull(row.amount)}
-            </span>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )
@@ -69,55 +87,57 @@ function BSColumn({ title, rows }: { title: string; rows: Row[] }) {
 // ── Row builders ──────────────────────────────────────────────────────────────
 
 function buildAssetRows(bs: BalanceSheet): Row[] {
-  const a = bs.assets
+  const a   = bs.assets
+  const tot = a.total_assets_try
   const rows: Row[] = [
-    { label: 'Dönen Varlıklar', amount: a.total_current_try, isTotal: true },
-    { label: 'Kasa ve Bankalar',  amount: a.cash_try,         indent: true, zero: true },
-    { label: 'Ticari Alacaklar',  amount: a.receivables_try,  indent: true, zero: true },
-    { label: 'Stok (FIFO)',        amount: a.inventory_try,    indent: true, zero: true },
+    { label: 'Dönen Varlıklar', amount: a.total_current_try, isTotal: true, pctOf: tot },
+    { label: 'Kasa ve Bankalar',  amount: a.cash_try,         indent: true, zero: true, pctOf: tot },
+    { label: 'Ticari Alacaklar',  amount: a.receivables_try,  indent: true, zero: true, pctOf: tot },
+    { label: 'Stok (FIFO)',        amount: a.inventory_try,    indent: true, zero: true, pctOf: tot },
   ]
   if (a.other_current_try > 0) {
-    rows.push({ label: 'Diğer Dönen Varlıklar', amount: a.other_current_try, indent: true })
+    rows.push({ label: 'Diğer Dönen Varlıklar', amount: a.other_current_try, indent: true, pctOf: tot })
   }
   // Non-current assets (usually 0 until equipment tracking)
   if (a.total_non_current_try > 0) {
-    rows.push({ label: 'Duran Varlıklar', amount: a.total_non_current_try, isTotal: true })
-    if (a.equipment_try > 0)         rows.push({ label: 'Maddi Duran Varlıklar', amount: a.equipment_try,  indent: true })
-    if (a.deposits_try > 0)          rows.push({ label: 'Depozitolar',           amount: a.deposits_try,   indent: true })
-    if (a.other_non_current_try > 0) rows.push({ label: 'Diğer Duran',           amount: a.other_non_current_try, indent: true })
+    rows.push({ label: 'Duran Varlıklar', amount: a.total_non_current_try, isTotal: true, pctOf: tot })
+    if (a.equipment_try > 0)         rows.push({ label: 'Maddi Duran Varlıklar', amount: a.equipment_try,  indent: true, pctOf: tot })
+    if (a.deposits_try > 0)          rows.push({ label: 'Depozitolar',           amount: a.deposits_try,   indent: true, pctOf: tot })
+    if (a.other_non_current_try > 0) rows.push({ label: 'Diğer Duran',           amount: a.other_non_current_try, indent: true, pctOf: tot })
   }
-  rows.push({ label: 'TOPLAM VARLIKLAR', amount: a.total_assets_try, isGrand: true })
+  rows.push({ label: 'TOPLAM VARLIKLAR', amount: tot, isGrand: true })
   return rows
 }
 
 function buildLiabEquityRows(bs: BalanceSheet): Row[] {
-  const l = bs.liabilities
-  const e = bs.equity
+  const l   = bs.liabilities
+  const e   = bs.equity
+  const tot = bs.assets.total_assets_try   // use asset total as denominator for % share
   const rows: Row[] = []
 
   // ── Liabilities ──────────────────────────────────────────────────────────────
-  rows.push({ label: 'Kısa Vadeli Yükümlülükler', amount: l.total_current_try, isTotal: true })
+  rows.push({ label: 'Kısa Vadeli Yükümlülükler', amount: l.total_current_try, isTotal: true, pctOf: tot })
   if (l.partner_loans_try > 0)
-    rows.push({ label: 'Ortaklara Borçlar (K.V.)',   amount: l.partner_loans_try,           indent: true })
+    rows.push({ label: 'Ortaklara Borçlar (K.V.)',   amount: l.partner_loans_try,           indent: true, pctOf: tot })
   if (l.tax_payable_try > 0)
-    rows.push({ label: 'Vergi Yükümlülükleri',        amount: l.tax_payable_try,             indent: true })
+    rows.push({ label: 'Vergi Yükümlülükleri',        amount: l.tax_payable_try,             indent: true, pctOf: tot })
   if (l.other_current_payables_try > 0)
-    rows.push({ label: 'Diğer Kısa Vadeli Borçlar',  amount: l.other_current_payables_try,  indent: true })
+    rows.push({ label: 'Diğer Kısa Vadeli Borçlar',  amount: l.other_current_payables_try,  indent: true, pctOf: tot })
   if (l.total_current_try === 0)
     rows.push({ label: 'Kısa Vadeli Borç Yok',       amount: 0, indent: true, zero: true })
 
   if (l.total_non_current_try > 0) {
-    rows.push({ label: 'Uzun Vadeli Yükümlülükler', amount: l.total_non_current_try, isTotal: true })
+    rows.push({ label: 'Uzun Vadeli Yükümlülükler', amount: l.total_non_current_try, isTotal: true, pctOf: tot })
     if (l.partner_loans_long_term_try > 0)
-      rows.push({ label: 'Ortaklara Borçlar (U.V.)', amount: l.partner_loans_long_term_try, indent: true })
+      rows.push({ label: 'Ortaklara Borçlar (U.V.)', amount: l.partner_loans_long_term_try, indent: true, pctOf: tot })
     if (l.other_non_current_try > 0)
-      rows.push({ label: 'Diğer Uzun Vadeli',        amount: l.other_non_current_try,       indent: true })
+      rows.push({ label: 'Diğer Uzun Vadeli',        amount: l.other_non_current_try,       indent: true, pctOf: tot })
   }
 
-  rows.push({ label: 'Toplam Yabancı Kaynaklar', amount: l.total_liabilities_try, isTotal: true })
+  rows.push({ label: 'Toplam Yabancı Kaynaklar', amount: l.total_liabilities_try, isTotal: true, pctOf: tot })
 
   // ── Equity ───────────────────────────────────────────────────────────────────
-  rows.push({ label: 'Özsermaye', amount: e.total_equity_try, isTotal: true })
+  rows.push({ label: 'Özsermaye', amount: e.total_equity_try, isTotal: true, pctOf: tot })
 
   // Per-partner capital lines (show up to 4 individually, else just total)
   if (e.partner_capital_lines.length > 0 && e.partner_capital_lines.length <= 4) {
@@ -128,15 +148,16 @@ function buildLiabEquityRows(bs: BalanceSheet): Row[] {
         indent: true,
         sub:    `%${(p.share_ratio * 100).toFixed(0)}`,
         zero:   true,
+        pctOf:  tot,
       })
     }
   } else if (e.partner_capital_lines.length > 4) {
-    rows.push({ label: 'Ortak Sermayeleri', amount: e.total_partner_capital_try, indent: true })
+    rows.push({ label: 'Ortak Sermayeleri', amount: e.total_partner_capital_try, indent: true, pctOf: tot })
   }
 
   if (e.retained_earnings_try !== 0)
-    rows.push({ label: 'Geçmiş Yıl Kârları', amount: e.retained_earnings_try, indent: true })
-  rows.push({ label: 'Dönem Net Kârı/Zararı', amount: e.current_period_profit_try, indent: true, zero: true })
+    rows.push({ label: 'Geçmiş Yıl Kârları', amount: e.retained_earnings_try, indent: true, pctOf: tot })
+  rows.push({ label: 'Dönem Net Kârı/Zararı', amount: e.current_period_profit_try, indent: true, zero: true, pctOf: tot })
 
   rows.push({ label: 'TOPLAM KAYNAKLAR', amount: l.total_liabilities_try + e.total_equity_try, isGrand: true })
   return rows
@@ -275,7 +296,8 @@ export async function BalanceTab({ userId, companyId }: Props) {
         links={[
           { label: 'Ortak Özkaynakları', href: '/dashboard/partners' },
           { label: 'Nakit',              href: '/dashboard/finance?tab=cashflow' },
-          { label: 'Bilanço Raporu',     href: '/dashboard/reports/balance-sheet' },
+          { label: 'Bilanço Belgesi',    href: `/documents/balance-sheet/${bs.as_of_date.slice(0,7)}` },
+          { label: 'Yönetim Paketi',     href: `/documents/income-statement/${bs.as_of_date.slice(0,7)}` },
         ]}
       />
     </div>
