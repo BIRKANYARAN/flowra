@@ -90,6 +90,22 @@ export async function POST(req: NextRequest) {
       createdByEmail,
     )
 
+    // Run Phase 3 engines
+    const { runValidation, buildShareholderPositions, buildExecutiveSummary, buildConfidenceV2 } = await import('@/lib/engines/reconciliation.engine')
+    const validation = runValidation(reconData)
+    const confidenceV2 = buildConfidenceV2(reconData, validation)
+    const shareholderPositions = buildShareholderPositions(reconData, reconciliationDate)
+    const executiveSummary = buildExecutiveSummary(reconData, validation, confidenceV2)
+
+    // Store computed metadata alongside sections
+    const enrichedSections = {
+      ...reconData,
+      _validation: validation,
+      _confidence_v2: confidenceV2,
+      _shareholder_positions: shareholderPositions,
+      _executive_summary: executiveSummary,
+    }
+
     // Build period_label from the date
     const periodLabel = reconciliationDate.slice(0, 7)
 
@@ -103,7 +119,7 @@ export async function POST(req: NextRequest) {
         title,
         period_label:        periodLabel,
         status:              'draft',
-        sections:            reconData,
+        sections:            enrichedSections,
         data_hash:           reconData.data_hash,
         confidence_score:    reconData.confidence_score,
         confidence_factors:  reconData.confidence_factors,

@@ -261,6 +261,108 @@ export interface ConfidenceFactor {
   description:   string
 }
 
+// ─── Phase 3 Types ────────────────────────────────────────────────────────────
+
+export type ValidationResult = 'PASS' | 'WARNING' | 'FAIL'
+
+export interface ValidationCheck {
+  id:          string
+  title:       string
+  result:      ValidationResult
+  variance:    number | null
+  explanation: string
+  severity:    'critical' | 'warning' | 'info'
+}
+
+export interface FinancialValidation {
+  balance_sheet_check:   ValidationCheck
+  treasury_check:        ValidationCheck
+  inventory_check:       ValidationCheck
+  partner_finance_check: ValidationCheck
+  profit_check:          ValidationCheck
+  distribution_check:    ValidationCheck
+  overall_status:        ValidationResult
+  checks_passed:         number
+  checks_total:          number
+}
+
+export interface ShareholderPosition {
+  partner_name:              string
+  ownership_pct:             number
+  paid_capital:              number
+  capital_injections_ytd:    number
+  partner_receivables:       number
+  partner_liabilities:       number
+  debt_tranche_exposure:     number
+  accumulated_distributions: number
+  current_distribution_right: number
+  net_economic_position:     number
+  economic_note:             string | null
+}
+
+export interface ShareholderPositionSummary {
+  positions:         ShareholderPosition[]
+  total_equity:      number
+  total_distributable: number
+  as_of_date:        string
+}
+
+export interface SnapshotDelta {
+  field:        string
+  label:        string
+  previous:     number
+  current:      number
+  change:       number
+  change_pct:   number | null
+  direction:    'up' | 'down' | 'flat'
+  significance: 'critical' | 'notable' | 'minor'
+}
+
+export interface SnapshotComparison {
+  current_id:         string
+  previous_id:        string
+  current_date:       string
+  previous_date:      string
+  deltas:             SnapshotDelta[]
+  governance_summary: string[]
+}
+
+export interface AuditEntry {
+  action:       'created' | 'approved' | 'rejected' | 'locked' | 'viewed'
+  actor:        string
+  timestamp:    string
+  note:         string | null
+  hash_at_time?: string
+}
+
+export interface GovernanceExecutiveSummary {
+  headline:             string
+  treasury_position:    string
+  working_capital:      string
+  net_assets:           string
+  distributable_profit: string
+  receivable_risk:      string
+  debt_pressure:        string
+  governance_issues:    string[]
+  confidence_summary:   string
+  recommendation:       string
+}
+
+export interface ConfidenceScoreV2 {
+  total: number
+  breakdown: Array<{
+    factor:    string
+    weight:    number
+    score:     number
+    max_score: number
+    status:    'full' | 'partial' | 'none'
+    detail:    string
+    deduction: number
+  }>
+  grade:          'A' | 'B' | 'C' | 'D' | 'F'
+  interpretation: string
+}
+
 export interface ReconciliationData {
   section1:    ReconSection1_CompanyIdentity
   section2:    ReconSection2_Treasury

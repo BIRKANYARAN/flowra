@@ -286,6 +286,78 @@ export default async function ReconciliationDetailPage({
       {/* ── SECTIONS ─────────────────────────────────────────────────────────── */}
       <div className="max-w-5xl mx-auto px-6 py-8 space-y-4">
 
+        {/* ── Executive Summary ──────────────────────────────────────────────── */}
+        {(snapshot.sections as any)._executive_summary && (() => {
+          const es = (snapshot.sections as any)._executive_summary as any
+          return (
+            <div className="bg-[#0f172a] text-white rounded p-5">
+              <div className="text-[10px] font-black uppercase tracking-widest text-white/60 mb-2">Yönetim Özeti</div>
+              <p className="text-sm font-semibold text-white mb-4">{es.headline}</p>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 mb-4">
+                {[
+                  { label: 'Nakit Durumu', value: es.treasury_position },
+                  { label: 'İşletme Sermayesi', value: es.working_capital },
+                  { label: 'Net Varlık', value: es.net_assets },
+                  { label: 'Dağıtılabilir Kâr', value: es.distributable_profit },
+                ].map(item => (
+                  <div key={item.label} className="bg-white/10 rounded p-3">
+                    <div className="text-[10px] font-bold text-white/50 uppercase tracking-widest mb-1">{item.label}</div>
+                    <div className="text-xs font-semibold text-white leading-snug">{item.value}</div>
+                  </div>
+                ))}
+              </div>
+              {es.governance_issues?.length > 0 && (
+                <div className="mb-3">
+                  {es.governance_issues.map((issue: string, i: number) => (
+                    <div key={i} className="flex items-start gap-2 text-xs text-amber-300 mb-1">
+                      <span className="flex-shrink-0 mt-0.5">⚠</span>
+                      <span>{issue}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-white/60">{es.confidence_summary}</span>
+                <span className="text-xs font-semibold text-white/80 italic">{es.recommendation}</span>
+              </div>
+            </div>
+          )
+        })()}
+
+        {/* ── Financial Validation Center ────────────────────────────────────── */}
+        {(snapshot.sections as any)._validation && (() => {
+          const v = (snapshot.sections as any)._validation as any
+          const checks = [v.balance_sheet_check, v.treasury_check, v.inventory_check, v.partner_finance_check, v.profit_check, v.distribution_check]
+          const overallColor = v.overall_status === 'PASS' ? 'text-[#16a34a]' : v.overall_status === 'WARNING' ? 'text-[#d97706]' : 'text-[#dc2626]'
+          return (
+            <div className="bg-white border border-[#e2e8f0] rounded">
+              <div className="flex items-center justify-between px-5 py-3 border-b border-[#e2e8f0] bg-[#f8fafc]">
+                <span className="text-xs font-black text-[#0f172a] uppercase tracking-widest">Finansal Doğrulama Merkezi</span>
+                <span className={`text-xs font-black ${overallColor}`}>
+                  {v.overall_status === 'PASS' ? '✓ TÜM KONTROLLER GEÇTI' : v.overall_status === 'WARNING' ? '⚠ UYARILAR VAR' : '✗ HATALAR VAR'} — {v.checks_passed}/{v.checks_total}
+                </span>
+              </div>
+              <div className="divide-y divide-[#e2e8f0]">
+                {checks.map((c: any) => {
+                  const icon = c.result === 'PASS' ? '✓' : c.result === 'WARNING' ? '⚠' : '✗'
+                  const color = c.result === 'PASS' ? 'text-[#16a34a]' : c.result === 'WARNING' ? 'text-[#d97706]' : 'text-[#dc2626]'
+                  return (
+                    <div key={c.id} className="flex items-center gap-4 px-5 py-2.5">
+                      <span className={`text-sm font-bold w-4 flex-shrink-0 ${color}`}>{icon}</span>
+                      <span className="text-xs font-semibold text-[#0f172a] w-44 flex-shrink-0">{c.title}</span>
+                      <span className={`text-[10px] font-black w-16 flex-shrink-0 ${color}`}>{c.result}</span>
+                      <span className="text-[10px] text-[#64748b] w-28 flex-shrink-0">
+                        {c.variance !== null ? `Fark: ₺${c.variance.toLocaleString('tr-TR')}` : '—'}
+                      </span>
+                      <span className="text-[10px] text-[#94a3b8] flex-1">{c.explanation}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )
+        })()}
+
         {/* S1 — Company Identity */}
         <SectionBlock number={1} title="Şirket Kimliği">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
@@ -616,6 +688,44 @@ export default async function ReconciliationDetailPage({
           })()}
         </SectionBlock>
 
+        {/* ── Shareholder Economic Positions ─────────────────────────────────── */}
+        {(snapshot.sections as any)._shareholder_positions && (() => {
+          const sp = (snapshot.sections as any)._shareholder_positions as any
+          const positions: any[] = sp.positions ?? []
+          if (positions.length === 0) return null
+          const fmtPos = (n: number) => new Intl.NumberFormat('tr-TR', {style: 'currency', currency: 'TRY', maximumFractionDigits: 0}).format(n)
+          return (
+            <SectionBlock number={0} title="Ortak Ekonomik Pozisyonu">
+              <div className="overflow-x-auto">
+                <table className="w-full text-[11px]">
+                  <thead>
+                    <tr className="bg-[#0f172a] text-white">
+                      {['Ortak', 'Pay %', 'Ödenen Sermaye', 'Alacak', 'Borç', 'Dağıtım Hakkı', 'Net Pozisyon'].map(h => (
+                        <th key={h} className="px-3 py-2 text-left font-bold text-[10px] uppercase tracking-wide">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {positions.map((p: any, i: number) => (
+                      <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-[#f8fafc]'}>
+                        <td className="px-3 py-2 font-semibold text-[#0f172a]">{p.partner_name}</td>
+                        <td className="px-3 py-2 text-[#334155]">%{p.ownership_pct}</td>
+                        <td className="px-3 py-2 text-[#334155]">{fmtPos(p.paid_capital)}</td>
+                        <td className="px-3 py-2 text-[#334155]">{fmtPos(p.partner_receivables)}</td>
+                        <td className="px-3 py-2 text-[#334155]">{fmtPos(p.partner_liabilities)}</td>
+                        <td className="px-3 py-2 text-[#334155]">{fmtPos(p.current_distribution_right)}</td>
+                        <td className={`px-3 py-2 font-bold ${p.net_economic_position >= 0 ? 'text-[#16a34a]' : 'text-[#dc2626]'}`}>
+                          {fmtPos(p.net_economic_position)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </SectionBlock>
+          )
+        })()}
+
         {/* S10 — Partner Receivables */}
         <SectionBlock number={10} title="Ortak Alacakları (Şirkete Borçlar)">
           {(() => {
@@ -942,6 +1052,38 @@ export default async function ReconciliationDetailPage({
             </div>
           </div>
         )}
+
+        {/* ── Audit Trail ─────────────────────────────────────────────────────── */}
+        <div className="bg-white border border-[#e2e8f0] rounded">
+          <div className="px-5 py-3 border-b border-[#e2e8f0] bg-[#f8fafc]">
+            <span className="text-xs font-black text-[#0f172a] uppercase tracking-widest">Denetim Geçmişi</span>
+          </div>
+          <div className="px-5 py-4">
+            <div className="space-y-3">
+              {[
+                { action: 'Oluşturuldu', actor: snapshot.created_by ?? '—', time: snapshot.created_at, color: 'bg-[#e2e8f0]' },
+                ...(snapshot.signoffs ?? []).filter((s: any) => s.signed_at).map((s: any) => ({
+                  action: s.status === 'approved' ? 'Onaylandı' : 'Reddedildi',
+                  actor: s.partner_name + (s.comments ? ` — "${s.comments}"` : ''),
+                  time: s.signed_at,
+                  color: s.status === 'approved' ? 'bg-[#dcfce7]' : 'bg-[#fee2e2]',
+                })),
+                ...(snapshot.is_immutable ? [{ action: 'Kilitlendi', actor: 'admin', time: snapshot.reconciliation_date, color: 'bg-[#fef3c7]' }] : []),
+              ].map((entry, i) => (
+                <div key={i} className="flex items-start gap-3">
+                  <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${entry.color}`} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold text-[#0f172a]">{entry.action}</span>
+                      <span className="text-[10px] text-[#94a3b8]">{new Date(entry.time).toLocaleDateString('tr-TR', {day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'})}</span>
+                    </div>
+                    <div className="text-[10px] text-[#64748b] truncate">{entry.actor}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
 
       </div>
     </div>

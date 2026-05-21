@@ -38,6 +38,13 @@ import type {
   ReconSection19_Signoffs,
   GovernanceFinding,
   ConfidenceFactor,
+  FinancialValidation,
+  ValidationCheck,
+  ValidationResult,
+  ShareholderPosition,
+  ShareholderPositionSummary,
+  GovernanceExecutiveSummary,
+  ConfidenceScoreV2,
 } from '@/types/reconciliation'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1080,4 +1087,356 @@ export class ReconciliationEngine {
       data_hash:          dataHash,
     }
   }
+}
+
+// ── Engine 1: Financial Validation ───────────────────────────────────────────
+export function runValidation(sections: ReconciliationData): FinancialValidation {
+  const checks: ValidationCheck[] = []
+
+  // 1. Balance sheet: Assets = Liabilities + Equity
+  const s14 = sections.section14 as any
+  const assets = s14?.total_assets ?? 0
+  const liabEquity = (s14?.total_liabilities ?? 0) + (s14?.total_equity ?? 0)
+  const bsVariance = Math.abs(assets - liabEquity)
+  checks.push({
+    id: 'balance_sheet',
+    title: 'Bilanço Dengesi',
+    result: bsVariance < 100 ? 'PASS' : bsVariance < 10000 ? 'WARNING' : 'FAIL',
+    variance: r2(bsVariance),
+    explanation: bsVariance < 100 ? 'Aktif = Pasif + Özkaynak dengesi sağlandı' : `₺${bsVariance.toLocaleString('tr-TR')} fark tespit edildi`,
+    severity: bsVariance < 100 ? 'info' : bsVariance < 10000 ? 'warning' : 'critical',
+  })
+
+  // 2. Treasury: sum of bank accounts = total cash
+  const s2 = sections.section2 as any
+  const bankSum = (s2?.bank_accounts ?? []).reduce((a: number, b: any) => a + (b.balance_try ?? 0), 0)
+  const cashTotal = s2?.total_cash_try ?? 0
+  const treasVariance = Math.abs(bankSum - cashTotal)
+  checks.push({
+    id: 'treasury',
+    title: 'Kasa/Banka Doğrulama',
+    result: treasVariance < 1 ? 'PASS' : treasVariance < 1000 ? 'WARNING' : 'FAIL',
+    variance: r2(treasVariance),
+    explanation: treasVariance < 1 ? 'Banka hesapları toplamı hazine bakiyesiyle eşleşiyor' : `₺${treasVariance.toLocaleString('tr-TR')} fark`,
+    severity: treasVariance < 1 ? 'info' : 'warning',
+  })
+
+  // 3. Inventory: sum of items = total
+  const s5 = sections.section5 as any
+  const itemSum = (s5?.top_items ?? []).reduce((a: number, b: any) => a + (b.total_value ?? 0), 0)
+  const invTotal = s5?.total_inventory_try ?? 0
+  const invVariance = Math.abs(itemSum - invTotal)
+  const invResult: ValidationResult = itemSum === 0 ? 'WARNING' : invVariance < 1000 ? 'PASS' : 'WARNING'
+  checks.push({
+    id: 'inventory',
+    title: 'Stok Doğrulama',
+    result: invResult,
+    variance: r2(invVariance),
+    explanation: itemSum === 0 ? 'Stok kalemleri detayı eksik, manuel doğrulama gerekiyor' : invVariance < 1000 ? 'Stok kalemleri toplamı bilanço stok değeriyle uyumlu' : `₺${invVariance.toLocaleString('tr-TR')} fark`,
+    severity: invResult === 'PASS' ? 'info' : 'warning',
+  })
+
+  // 4. Partner finance: receivables vs liabilities vs loans
+  const s10total = (sections.section10 as any)?.total_partner_receivables ?? 0
+  const s11total = (sections.section11 as any)?.total_partner_liabilities ?? 0
+  const partnerLoans = (sections.section8 as any)?.partner_loans ?? 0
+  const netPartner = Math.abs(s10total - s11total)
+  const partnerResult: ValidationResult = netPartner < 10 ? 'PASS' : netPartner < partnerLoans * 0.1 + 1 ? 'WARNING' : 'WARNING'
+  checks.push({
+    id: 'partner_finance',
+    title: 'Ortak Hesapları Dengesi',
+    result: partnerResult,
+    variance: r2(netPartner),
+    explanation: partnerResult === 'PASS' ? 'Ortak alacak ve borçları dengede' : `Ortak alacak/borç farkı ₺${netPartner.toLocaleString('tr-TR')}`,
+    severity: 'info',
+  })
+
+  // 5. Profit: gross margin > 0 (basic viability check)
+  const s15 = sections.section15 as any
+  const grossProfit = s15?.gross_profit_try ?? 0
+  const revenue = s15?.revenue_try ?? 0
+  const profitResult: ValidationResult = revenue === 0 ? 'WARNING' : grossProfit >= 0 ? 'PASS' : 'FAIL'
+  checks.push({
+    id: 'profit',
+    title: 'Kârlılık Kontrolü',
+    result: profitResult,
+    variance: r2(grossProfit),
+    explanation: revenue === 0 ? 'Gelir verisi mevcut değil' : grossProfit >= 0 ? `Brüt kâr pozitif (₺${grossProfit.toLocaleString('tr-TR')})` : `Brüt kâr negatif (₺${grossProfit.toLocaleString('tr-TR')})`,
+    severity: profitResult === 'FAIL' ? 'critical' : profitResult === 'WARNING' ? 'warning' : 'info',
+  })
+
+  // 6. Distribution: YTD distributions <= net income
+  const ytdDist = (sections.section13 as any)?.ytd_total ?? 0
+  const netIncome = s15?.net_profit_try ?? 0
+  const distResult: ValidationResult = ytdDist <= netIncome ? 'PASS' : ytdDist <= netIncome * 1.1 ? 'WARNING' : 'FAIL'
+  checks.push({
+    id: 'distribution',
+    title: 'Kâr Dağıtım Dengesi',
+    result: distResult,
+    variance: r2(ytdDist - netIncome),
+    explanation: distResult === 'PASS' ? 'Dağıtımlar net kâr içinde kalıyor' : `Dağıtımlar (₺${ytdDist.toLocaleString('tr-TR')}) net kârı (₺${netIncome.toLocaleString('tr-TR')}) aşıyor`,
+    severity: distResult === 'FAIL' ? 'critical' : 'warning',
+  })
+
+  const passed = checks.filter(c => c.result === 'PASS').length
+  const hasFail = checks.some(c => c.result === 'FAIL')
+  const hasWarn = checks.some(c => c.result === 'WARNING')
+  const overall: ValidationResult = hasFail ? 'FAIL' : hasWarn ? 'WARNING' : 'PASS'
+
+  return {
+    balance_sheet_check:   checks[0],
+    treasury_check:        checks[1],
+    inventory_check:       checks[2],
+    partner_finance_check: checks[3],
+    profit_check:          checks[4],
+    distribution_check:    checks[5],
+    overall_status:        overall,
+    checks_passed:         passed,
+    checks_total:          checks.length,
+  }
+}
+
+// ── Engine 2: Shareholder Economic Positions ──────────────────────────────────
+export function buildShareholderPositions(sections: ReconciliationData, asOfDate: string): ShareholderPositionSummary {
+  const s9  = sections.section9  as any
+  const s10 = sections.section10 as any
+  const s11 = sections.section11 as any
+  const s12 = sections.section12 as any
+  const s13 = sections.section13 as any
+  const s15 = sections.section15 as any
+
+  const partners: Array<{name: string; ownership_pct: number; equity_value: number}> = s9?.partners ?? []
+  const distributableNet = Math.max(0, (s15?.net_profit_try ?? 0) - (s13?.ytd_total ?? 0))
+
+  const positions: ShareholderPosition[] = partners.map(p => {
+    const recv = (s10?.partner_receivables ?? []).find((r: any) =>
+      r.partner_name?.toLowerCase() === p.name?.toLowerCase()
+    )?.balance ?? 0
+
+    const liab = (s11?.partner_liabilities ?? []).find((l: any) =>
+      l.partner_name?.toLowerCase() === p.name?.toLowerCase()
+    )?.balance ?? 0
+
+    const trancheExposure = (s12?.tranches ?? [])
+      .filter((t: any) => t.partner_name?.toLowerCase() === p.name?.toLowerCase())
+      .reduce((a: number, t: any) => a + (t.outstanding ?? 0), 0)
+
+    const partnerDist = (s13?.per_partner ?? []).find((d: any) =>
+      d.name?.toLowerCase() === p.name?.toLowerCase()
+    )
+    const accumulatedDist = (partnerDist?.huzur_hakki ?? 0) + (partnerDist?.temettu ?? 0)
+
+    const distRight = r2(distributableNet * (p.ownership_pct / 100))
+    const netPos = r2(p.equity_value + recv - liab + distRight)
+
+    return {
+      partner_name:              p.name,
+      ownership_pct:             p.ownership_pct,
+      paid_capital:              p.equity_value,
+      capital_injections_ytd:    0,
+      partner_receivables:       recv,
+      partner_liabilities:       liab,
+      debt_tranche_exposure:     trancheExposure,
+      accumulated_distributions: accumulatedDist,
+      current_distribution_right: distRight,
+      net_economic_position:     netPos,
+      economic_note: null,
+    }
+  })
+
+  return {
+    positions,
+    total_equity:       s9?.total_equity ?? 0,
+    total_distributable: distributableNet,
+    as_of_date:         asOfDate,
+  }
+}
+
+// ── Engine 6: Governance Executive Summary ────────────────────────────────────
+export function buildExecutiveSummary(
+  sections: ReconciliationData,
+  validation: FinancialValidation,
+  confidence: ConfidenceScoreV2,
+): GovernanceExecutiveSummary {
+  const s2  = sections.section2  as any
+  const s3  = sections.section3  as any
+  const s4  = sections.section4  as any
+  const s5  = sections.section5  as any
+  const s8  = sections.section8  as any
+  const s9  = sections.section9  as any
+  const s13 = sections.section13 as any
+  const s15 = sections.section15 as any
+  const s16 = sections.section16 as any
+
+  const fmtCur = (n: number) => new Intl.NumberFormat('tr-TR', {style: 'currency', currency: 'TRY', maximumFractionDigits: 0}).format(n)
+
+  const cash = s2?.total_cash_try ?? 0
+  const receivables = s3?.total_receivables_try ?? 0
+  const overdueRecv = s3?.overdue_receivables_try ?? 0
+  const payables = s4?.total_payables_try ?? 0
+  const inventory = s5?.total_inventory_try ?? 0
+  const equity = s9?.total_equity ?? 0
+  const netIncome = s15?.net_profit_try ?? 0
+  const dsr = s8?.dsr ?? 0
+  const distributable = Math.max(0, netIncome - (s13?.ytd_total ?? 0))
+
+  // Working capital = current assets - current liabilities
+  const workingCapital = (cash + receivables + inventory) - payables
+  const netAssets = equity
+
+  // Runway (months) — very rough: cash / avg monthly expense
+  const avgMonthlyExpense = (s8?.monthly_interest_expense ?? 1) * 12 + (payables / 3)
+  const runwayMonths = avgMonthlyExpense > 0 ? Math.floor(cash / (avgMonthlyExpense / 12)) : 99
+  const runwayCapped = Math.min(runwayMonths, 24)
+
+  const healthStatus = confidence.total >= 80 ? 'sağlıklı' : confidence.total >= 60 ? 'dikkat gerektirir' : 'kritik durumda'
+  const headline = `Şirket finansal durumu ${healthStatus} — Güven Skoru: ${confidence.total}/100 (${confidence.grade})`
+
+  const govIssues: string[] = (s16?.findings ?? [])
+    .filter((f: any) => f.severity === 'critical')
+    .slice(0, 5)
+    .map((f: any) => f.title as string)
+
+  if (validation.overall_status === 'FAIL') {
+    govIssues.unshift('Finansal doğrulama başarısız — rakamlar tutarsız')
+  }
+
+  const overdueTopCustomer = (s3?.top_customers ?? []).length
+  const receivableNote = overdueRecv > 0
+    ? `${fmtCur(overdueRecv)} vadesi geçmiş alacak (${overdueTopCustomer} müşteri)`
+    : 'Vadesi geçmiş alacak yok'
+
+  const debtNote = dsr > 0.7 ? `Borç servis oranı kritik (${dsr.toFixed(2)})` : dsr > 0.4 ? `Borç servis oranı yüksek (${dsr.toFixed(2)})` : `Borç servis oranı normal (${dsr.toFixed(2)})`
+
+  const recommendation = confidence.total >= 80 && validation.overall_status === 'PASS'
+    ? 'Mutabakat onaya hazır. Hissedar imzaları toplanabilir.'
+    : validation.overall_status === 'FAIL'
+    ? 'Finansal tutarsızlıklar giderilmeden onay alınamaz.'
+    : 'Eksik belgeler tamamlandıktan sonra onaya sunulabilir.'
+
+  return {
+    headline,
+    treasury_position:    `${fmtCur(cash)} nakit${runwayCapped < 24 ? `, ~${runwayCapped} ay operasyonel runway` : ''}`,
+    working_capital:      `${fmtCur(workingCapital)} (Dönen Varlık − Kısa Vadeli Borç)`,
+    net_assets:           `${fmtCur(netAssets)} toplam özkaynak`,
+    distributable_profit: distributable > 0 ? `${fmtCur(distributable)} dağıtılabilir kâr mevcut` : 'Dağıtılabilir kâr yok',
+    receivable_risk:      receivableNote,
+    debt_pressure:        debtNote,
+    governance_issues:    govIssues,
+    confidence_summary:   `${confidence.total}/100 — ${confidence.grade} — ${confidence.interpretation}`,
+    recommendation,
+  }
+}
+
+// ── Engine 7: Confidence Score V2 ────────────────────────────────────────────
+export function buildConfidenceV2(
+  sections: ReconciliationData,
+  validation: FinancialValidation,
+): ConfidenceScoreV2 {
+  const s3 = sections.section3 as any
+  const s5 = sections.section5 as any
+  const s7 = sections.section7 as any
+  const s1 = sections.section1 as any
+
+  type Factor = ConfidenceScoreV2['breakdown'][number]
+  const breakdown: Factor[] = []
+
+  // 1. Bank reconciliation (20%)
+  const bankStatus = validation.treasury_check.result
+  const bankScore = bankStatus === 'PASS' ? 20 : bankStatus === 'WARNING' ? 13 : 0
+  breakdown.push({
+    factor: 'Banka Mutabakatı', weight: 20, score: bankScore, max_score: 20,
+    status: bankScore === 20 ? 'full' : bankScore > 0 ? 'partial' : 'none',
+    detail: bankStatus === 'PASS' ? 'Banka hesapları mutabık' : 'Banka mutabakatı eksik veya tutarsız',
+    deduction: 20 - bankScore,
+  })
+
+  // 2. Financial consistency (20%)
+  const fcStatus = validation.overall_status
+  const fcScore = fcStatus === 'PASS' ? 20 : fcStatus === 'WARNING' ? 12 : 0
+  breakdown.push({
+    factor: 'Finansal Tutarlılık', weight: 20, score: fcScore, max_score: 20,
+    status: fcScore === 20 ? 'full' : fcScore > 0 ? 'partial' : 'none',
+    detail: fcStatus === 'PASS' ? 'Tüm finansal kontroller geçti' : `${validation.checks_total - validation.checks_passed} kontrol başarısız`,
+    deduction: 20 - fcScore,
+  })
+
+  // 3. Closed accounting period (15%)
+  const hasPeriodData = (sections.section14 as any)?.total_assets > 0
+  const periodScore = hasPeriodData ? 15 : 7
+  breakdown.push({
+    factor: 'Kapalı Muhasebe Dönemi', weight: 15, score: periodScore, max_score: 15,
+    status: periodScore === 15 ? 'full' : 'partial',
+    detail: hasPeriodData ? 'Dönem verileri mevcut' : 'Dönem kapanışı doğrulanamadı',
+    deduction: 15 - periodScore,
+  })
+
+  // 4. Inventory verification (15%)
+  const lastCountDate = s5?.last_count_date
+  let invScore = 0
+  let invDetail = 'Sayım tarihi bilinmiyor'
+  if (lastCountDate) {
+    const daysSince = Math.floor((Date.now() - new Date(lastCountDate).getTime()) / 86400000)
+    invScore = daysSince <= 90 ? 15 : daysSince <= 180 ? 8 : 0
+    invDetail = `Son sayım ${daysSince} gün önce`
+  } else {
+    invScore = 5
+    invDetail = 'Sayım tarihi kayıt altına alınmamış'
+  }
+  breakdown.push({
+    factor: 'Stok Sayımı', weight: 15, score: invScore, max_score: 15,
+    status: invScore === 15 ? 'full' : invScore > 0 ? 'partial' : 'none',
+    detail: invDetail,
+    deduction: 15 - invScore,
+  })
+
+  // 5. Receivable quality (10%)
+  const totalRecv = s3?.total_receivables_try ?? 0
+  const overdue90 = s3?.aging?.bucket_90plus ?? 0
+  const ovdRatio = totalRecv > 0 ? overdue90 / totalRecv : 0
+  const recvScore = ovdRatio < 0.05 ? 10 : ovdRatio < 0.20 ? 6 : 0
+  breakdown.push({
+    factor: 'Alacak Kalitesi', weight: 10, score: recvScore, max_score: 10,
+    status: recvScore === 10 ? 'full' : recvScore > 0 ? 'partial' : 'none',
+    detail: ovdRatio < 0.05 ? '90+ gün vadesi geçmiş alacak ihmal edilebilir seviyede' : `Alacakların %${Math.round(ovdRatio * 100)}'i 90+ gün vadesi geçmiş`,
+    deduction: 10 - recvScore,
+  })
+
+  // 6. Tax compliance (10%)
+  const nextTaxDue = s7?.next_due_date
+  let taxScore = 10
+  let taxDetail = 'Vergi yükümlülükleri güncel'
+  if (nextTaxDue) {
+    const daysUntilDue = Math.floor((new Date(nextTaxDue).getTime() - Date.now()) / 86400000)
+    if (daysUntilDue < 0) { taxScore = 0; taxDetail = 'Vadesi geçmiş vergi yükümlülüğü mevcut' }
+    else if (daysUntilDue < 7) { taxScore = 5; taxDetail = `Vergi beyanı ${daysUntilDue} gün içinde` }
+  }
+  breakdown.push({
+    factor: 'Vergi Uyumu', weight: 10, score: taxScore, max_score: 10,
+    status: taxScore === 10 ? 'full' : taxScore > 0 ? 'partial' : 'none',
+    detail: taxDetail,
+    deduction: 10 - taxScore,
+  })
+
+  // 7. Documentation completeness (10%)
+  const hasCompanyInfo = !!(s1?.tax_number && s1?.address)
+  const hasContactInfo = !!(s1?.phone || s1?.email)
+  const docScore = (hasCompanyInfo ? 6 : 3) + (hasContactInfo ? 2 : 0) + 2
+  const docScoreCapped = Math.min(docScore, 10)
+  breakdown.push({
+    factor: 'Belge Tamlığı', weight: 10, score: docScoreCapped, max_score: 10,
+    status: docScoreCapped === 10 ? 'full' : docScoreCapped > 5 ? 'partial' : 'none',
+    detail: hasCompanyInfo ? 'Şirket bilgileri eksiksiz' : 'Şirket bilgileri eksik',
+    deduction: 10 - docScoreCapped,
+  })
+
+  const total = Math.min(100, breakdown.reduce((a, b) => a + b.score, 0))
+  const grade: ConfidenceScoreV2['grade'] = total >= 90 ? 'A' : total >= 75 ? 'B' : total >= 60 ? 'C' : total >= 40 ? 'D' : 'F'
+  const interpretation = grade === 'A' ? 'Mükemmel — Onaya hazır'
+    : grade === 'B' ? 'İyi — Küçük eksikler var'
+    : grade === 'C' ? 'Orta — Dikkat gerektiren alanlar mevcut'
+    : grade === 'D' ? 'Zayıf — Önemli eksikler giderilmeli'
+    : 'Yetersiz — Onay verilmemeli'
+
+  return { total, breakdown, grade, interpretation }
 }
