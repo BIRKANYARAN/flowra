@@ -94,8 +94,8 @@ export function SituationBrief({
     cashRunwayDays < 90 ? 'warn'    : 'ok'
   const runwayValue =
     cashRunwayDays < 0  ? '—' :
-    cashRunwayDays >= 365 ? `${Math.round(cashRunwayDays / 30)}ay` :
-    `${cashRunwayDays}g`
+    cashRunwayDays >= 365 ? `${Math.round(cashRunwayDays / 30)} ay` :
+    `${cashRunwayDays} gün`
   const runwayCtx =
     cashRunwayDays < 0  ? 'Bakiye girilmedi'  :
     cashRunwayDays < 30 ? 'Nakit tükeniyor!'  :
@@ -108,7 +108,7 @@ export function SituationBrief({
     receivablesTotal > 0 ? 'neutral' : 'ok'
   const agingValue = fmtCompact(receivablesTotal)
   const agingCtx =
-    overdueTotal60 > 0 ? `${fmtCompact(overdueTotal60)} 60g+` :
+    overdueTotal60 > 0 ? `${fmtCompact(overdueTotal60)} 60gün+` :
     receivablesTotal > 0 ? 'Vade içi' : 'Temiz'
 
   // Signal 3: Debt service ratio

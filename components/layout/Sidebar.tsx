@@ -238,7 +238,7 @@ function NavLink({ item, active, liveBadge }: { item: NavItem; active: boolean; 
       className={`
         flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[12px] transition-colors
         ${active
-          ? 'bg-brand-light text-white font-semibold shadow-sm'
+          ? 'bg-[#0f172a] text-white font-semibold'
           : 'text-[#64748b] hover:bg-[#f8fafc] hover:text-[#1e293b]'
         }
       `}

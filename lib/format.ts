@@ -61,14 +61,15 @@ export function fmtMoney(value: number, currency = 'TRY', decimals = 2): string 
   return sym(currency) + fmtNum(value, decimals)
 }
 
-/** Abbreviated KPI format: "₺1,2M" | "₺450B" | "₺12.500" */
+/** Abbreviated KPI format: "₺1,2M" | "₺175K" | "₺12.500"
+ *  Uses K (kilo) not B (Bin) for thousands to avoid Billion confusion. */
 export function fmtCompact(value: number, currency = 'TRY'): string {
   const abs = Math.abs(value)
   const sign = value < 0 ? '-' : ''
   const s = sym(currency)
   if (abs >= 1_000_000) return `${sign}${s}${PCT_FMT.format(abs / 1_000_000)}M`
-  if (abs >= 1_000)     return `${sign}${s}${TRY_FMT_0.format(abs / 1_000)}B`
-  return `${sign}${s}${fmtNum(abs, 0)}`
+  if (abs >= 100_000)   return `${sign}${s}${PCT_FMT.format(abs / 1_000)}K`
+  return `${sign}${s}${TRY_FMT_0.format(abs)}`
 }
 
 /** Bloomberg-rail dense format for context bars and instrument strips.

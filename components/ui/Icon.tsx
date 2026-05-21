@@ -15,7 +15,7 @@ import {
   Flame, Coins, TrendingUp, AlertTriangle, Info, ChevronRight,
   ChevronDown, ChevronUp, MoreHorizontal, Filter, Eye, EyeOff,
   Shield, UserCog, ClipboardList, Database, Receipt, ShoppingCart,
-  Activity, Key, Crown, Wallet,
+  Activity, Key, Crown, Wallet, FileCheck2,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -44,6 +44,7 @@ const REGISTRY: Record<string, LucideIcon> = {
   roles:         Key,            // authorization / roles
   ceo:           Crown,          // CEO summary
   alerts:        AlertTriangle,  // critical alerts
+  reports:       FileCheck2,     // reconciliation / reports
   'arrow-right': ArrowRight,
   'arrow-up':    ArrowUp,
   'arrow-down':  ArrowDown,
