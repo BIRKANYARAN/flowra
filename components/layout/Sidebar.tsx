@@ -159,6 +159,7 @@ export function Sidebar({ navBadges = {} }: SidebarProps) {
               item={SETTINGS_FALLBACK}
               active={isNavItemActive(SETTINGS_FALLBACK, pathname)}
               liveBadge={navBadges[SETTINGS_FALLBACK.href]}
+              pathname={pathname}
             />
           </>
         )}
@@ -220,6 +221,7 @@ function NavGroupBlock({
             item={item}
             active={isNavItemActive(item, pathname)}
             liveBadge={navBadges[item.href]}
+            pathname={pathname}
           />
         ))}
       </div>
@@ -229,35 +231,78 @@ function NavGroupBlock({
 
 // ── NavLink ───────────────────────────────────────────────────────────────────
 
-function NavLink({ item, active, liveBadge }: { item: NavItem; active: boolean; liveBadge?: number }) {
-  // liveBadge overrides item.badge — live server count takes precedence over static config
+function NavLink({
+  item, active, liveBadge, pathname,
+}: {
+  item: NavItem
+  active: boolean
+  liveBadge?: number
+  pathname: string
+}) {
   const badge = liveBadge ?? item.badge
+  // A child route is active → parent gets a subtle "open" indicator
+  const childActive = item.children?.some(c => isNavItemActive(c, pathname)) ?? false
+
   return (
-    <Link
-      href={item.href}
-      className={`
-        flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[12px] transition-colors
-        ${active
-          ? 'bg-[#0f172a] text-white font-semibold'
-          : 'text-[#64748b] hover:bg-[#f8fafc] hover:text-[#1e293b]'
-        }
-      `}
-    >
-      <Icon
-        name={item.icon}
-        size={13}
-        strokeWidth={active ? 2 : 1.5}
-        className={`flex-shrink-0 ${active ? 'text-white' : 'text-[#94a3b8]'}`}
-      />
-      <span className="truncate">{item.label}</span>
-      {badge !== undefined && badge > 0 && (
-        <span className={`ml-auto min-w-[18px] text-center text-[10px] font-bold px-1.5 py-0.5 rounded ${
-          active ? 'bg-white/20 text-white' : 'bg-neg-light text-white'
-        }`}>
-          {badge > 99 ? '99+' : badge}
-        </span>
+    <div>
+      <Link
+        href={item.href}
+        className={`
+          flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[12px] transition-colors
+          ${active
+            ? 'bg-[#0f172a] text-white font-semibold'
+            : childActive
+              ? 'text-[#1e293b] font-medium hover:bg-[#f8fafc]'
+              : 'text-[#64748b] hover:bg-[#f8fafc] hover:text-[#1e293b]'
+          }
+        `}
+      >
+        <Icon
+          name={item.icon}
+          size={13}
+          strokeWidth={active || childActive ? 2 : 1.5}
+          className={`flex-shrink-0 ${active ? 'text-white' : 'text-[#94a3b8]'}`}
+        />
+        <span className="truncate">{item.label}</span>
+        {badge !== undefined && badge > 0 && (
+          <span className={`ml-auto min-w-[18px] text-center text-[10px] font-bold px-1.5 py-0.5 rounded ${
+            active ? 'bg-white/20 text-white' : 'bg-neg-light text-white'
+          }`}>
+            {badge > 99 ? '99+' : badge}
+          </span>
+        )}
+      </Link>
+
+      {/* Sub-items — always visible when parent has children */}
+      {item.children && item.children.length > 0 && (
+        <div className="ml-3 mt-0.5 pl-3 border-l border-[#e2e8f0] space-y-0.5">
+          {item.children.map(child => {
+            const childIsActive = isNavItemActive(child, pathname)
+            return (
+              <Link
+                key={child.href}
+                href={child.href}
+                className={`
+                  flex items-center gap-2 px-2 py-1.5 rounded-md text-[11px] transition-colors
+                  ${childIsActive
+                    ? 'bg-[#0f172a] text-white font-semibold'
+                    : 'text-[#64748b] hover:bg-[#f8fafc] hover:text-[#1e293b]'
+                  }
+                `}
+              >
+                <Icon
+                  name={child.icon}
+                  size={11}
+                  strokeWidth={childIsActive ? 2 : 1.5}
+                  className={`flex-shrink-0 ${childIsActive ? 'text-white' : 'text-[#94a3b8]'}`}
+                />
+                <span className="truncate">{child.label}</span>
+              </Link>
+            )
+          })}
+        </div>
       )}
-    </Link>
+    </div>
   )
 }
 

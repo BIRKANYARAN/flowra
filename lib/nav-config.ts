@@ -61,6 +61,8 @@ export interface NavItem {
   minRole?: MemberRole
   /** Optional numeric badge (e.g. alert count) */
   badge?: number
+  /** Nested sub-items rendered indented below this item. */
+  children?: NavItem[]
 }
 
 export interface NavGroup {
@@ -108,10 +110,17 @@ export const NAV_GROUPS: NavGroup[] = [
     label:   'Yönetim',
     minRole: 'admin',
     items: [
-      { href: '/dashboard/admin',                     label: 'Yönetim',     icon: 'shield'    },
-      { href: '/dashboard/admin/workflows',          label: 'Onaylar',     icon: 'activity'  },
-      { href: '/dashboard/admin/reconciliation',     label: 'Mutabakatlar', icon: 'reports'  },
-      { href: '/dashboard/settings',                 label: 'Ayarlar',     icon: 'settings'  },
+      {
+        href:  '/dashboard/admin',
+        label: 'Yönetim',
+        icon:  'shield',
+        exact: true,
+        children: [
+          { href: '/dashboard/admin/workflows',      label: 'Onaylar',      icon: 'activity' },
+          { href: '/dashboard/admin/reconciliation', label: 'Mutabakatlar', icon: 'reports'  },
+        ],
+      },
+      { href: '/dashboard/settings', label: 'Ayarlar', icon: 'settings' },
     ],
   },
 ]

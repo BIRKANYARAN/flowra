@@ -169,7 +169,12 @@ async function fetchSnapshot(id: string): Promise<SnapshotDetail | null> {
       .maybeSingle()
 
     if (error || !data) return null
-    return data as SnapshotDetail
+    // Supabase returns the join as 'reconciliation_signoffs'; SnapshotDetail expects 'signoffs'
+    const row = data as Record<string, unknown>
+    return {
+      ...row,
+      signoffs: (row.reconciliation_signoffs as SnapshotDetail['signoffs']) ?? [],
+    } as SnapshotDetail
   } catch {
     return null
   }
