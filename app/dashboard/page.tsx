@@ -399,8 +399,9 @@ export default async function DashboardPage() {
   // Receivables delta: difference between what's outstanding vs what was 30d ago
   const receivablesDelta = overdueTotal30 > 0 ? overdueTotal30 : 0
 
-  // Cash delta: monthly net is the best proxy for cash flow direction
-  const cashDelta = monthlyNet
+  // Cash delta: we don't have prior-period cash balance — show 0 (blank)
+  // rather than mislead with monthly P&L (which can exceed current cash balance)
+  const cashDelta = 0
 
   // Payables due in 30 days: unpaid expenses (all due — approximated)
   const payablesDue30 = unpaidExpenses

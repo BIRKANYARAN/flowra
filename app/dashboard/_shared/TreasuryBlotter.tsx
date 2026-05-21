@@ -112,13 +112,13 @@ export function TreasuryBlotter({
     cashRunwayMonths < 1.5 ? 'critical' :
     cashRunwayMonths < 3 ? 'warn' : 'ok'
 
-  const agingStr = avgAgingDays > 0 ? `ort. ${Math.round(avgAgingDays)} g` : 'vade içi'
+  const agingStr = avgAgingDays > 0 ? `ort. ${Math.round(avgAgingDays)} gün` : 'vade içi'
   const agingSev: 'critical' | 'warn' | 'ok' | 'neutral' =
     avgAgingDays > 60 ? 'critical' :
     avgAgingDays > 30 ? 'warn' :
     avgAgingDays > 0  ? 'neutral' : 'ok'
 
-  const due30Str = payablesDue30 > 0 ? `${fmtCompact(payablesDue30)} 30g içinde` : '30g içinde yok'
+  const due30Str = payablesDue30 > 0 ? `${fmtCompact(payablesDue30)} / 30 gün` : '30 gün içinde yok'
   const due30Sev: 'critical' | 'warn' | 'neutral' =
     payablesDue30 > 0 && payablesDue30 > payables * 0.5 ? 'critical' :
     payablesDue30 > 0 ? 'warn' : 'neutral'
@@ -127,13 +127,13 @@ export function TreasuryBlotter({
     ? 'vade yok'
     : nextTrancheDays === 0
       ? `bugün! ${fmtCompact(nextTrancheAmt)}`
-      : `${nextTrancheDays}g — ${fmtCompact(nextTrancheAmt)}`
+      : `${nextTrancheDays} gün — ${fmtCompact(nextTrancheAmt)}`
   const trancheSev: 'critical' | 'warn' | 'ok' | 'neutral' =
     nextTrancheDays == null ? 'neutral' :
     nextTrancheDays <= 7  ? 'critical' :
     nextTrancheDays <= 21 ? 'warn' : 'neutral'
 
-  const pnlStr   = `YTD: ${fmtCompact(ytdPnl)}`
+  const pnlStr   = `YTD: ${fmtTRY(ytdPnl, 0)}`
   const pnlSev: 'ok' | 'critical' | 'neutral' =
     periodPnl >= 0 && ytdPnl >= 0 ? 'ok' :
     periodPnl < 0 || ytdPnl < 0   ? 'critical' : 'neutral'
