@@ -6,8 +6,8 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import Link from 'next/link'
-import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase-server'
+import { resolveCompanyId } from '@/lib/resolve-company'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -65,22 +65,27 @@ function fmtDate(iso: string): string {
 
 async function fetchSnapshots(): Promise<SnapshotListItem[]> {
   try {
-    const cookieStore = cookies()
     const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return []
+    const companyId = await resolveCompanyId(user.id, supabase)
+    if (!companyId) return []
 
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) return []
+    const { data, error } = await supabase
+      .from('reconciliation_snapshots')
+      .select(`
+        id, company_id, created_by, created_at,
+        reconciliation_date, title, period_label, status,
+        data_hash, is_immutable, immutable_at,
+        confidence_score, approver_count, signoff_count,
+        reconciliation_signoffs ( id, partner_name, ownership_pct, status, signed_at )
+      `)
+      .eq('company_id', companyId)
+      .order('created_at', { ascending: false })
+      .limit(12)
 
-    const base = process.env.NEXT_PUBLIC_APP_URL ?? ''
-    const res = await fetch(`${base}/api/reconciliation/snapshots`, {
-      headers: {
-        cookie: cookieStore.toString(),
-      },
-      cache: 'no-store',
-    })
-    if (!res.ok) return []
-    const json = await res.json()
-    return json.snapshots ?? []
+    if (error) return []
+    return (data ?? []) as SnapshotListItem[]
   } catch {
     return []
   }

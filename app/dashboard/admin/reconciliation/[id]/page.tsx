@@ -5,9 +5,10 @@
 // Server component that fetches the snapshot and renders all sections.
 // ═══════════════════════════════════════════════════════════════════════════════
 
-import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import { createClient } from '@/lib/supabase-server'
+import { resolveCompanyId } from '@/lib/resolve-company'
 import type {
   ReconciliationSnapshot,
   ReconciliationData,
@@ -148,15 +149,27 @@ interface SnapshotDetail extends ReconciliationSnapshot {
 
 async function fetchSnapshot(id: string): Promise<SnapshotDetail | null> {
   try {
-    const cookieStore = cookies()
-    const base = process.env.NEXT_PUBLIC_APP_URL ?? ''
-    const res = await fetch(`${base}/api/reconciliation/snapshots/${id}`, {
-      headers: { cookie: cookieStore.toString() },
-      cache: 'no-store',
-    })
-    if (!res.ok) return null
-    const json = await res.json()
-    return json.snapshot ?? null
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return null
+    const companyId = await resolveCompanyId(user.id, supabase)
+    if (!companyId) return null
+
+    const { data, error } = await supabase
+      .from('reconciliation_snapshots')
+      .select(`
+        *,
+        reconciliation_signoffs (
+          id, partner_id, partner_name, ownership_pct,
+          status, signed_at, comments, created_at
+        )
+      `)
+      .eq('id', id)
+      .eq('company_id', companyId)
+      .maybeSingle()
+
+    if (error || !data) return null
+    return data as SnapshotDetail
   } catch {
     return null
   }
