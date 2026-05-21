@@ -19,6 +19,7 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = new URL(req.url)
   const statusFilter = searchParams.get('status') ?? 'all'
+  const sortMode     = searchParams.get('sort') ?? ''
 
   try {
     let query = supabase
@@ -58,7 +59,27 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    return NextResponse.json(data ?? [])
+    let result = data ?? []
+
+    // ── Risk sort: score = (days_since_due × 0.6) + (amount_try / 10000 × 0.4) ──
+    if (sortMode === 'risk') {
+      const today = new Date().toISOString().slice(0, 10)
+      result = [...result].sort((a, b) => {
+        const scoreOf = (r: typeof result[number]) => {
+          const refDate = (r as { due_date?: string | null; sale_date?: string | null }).due_date
+            ?? (r as { due_date?: string | null; sale_date?: string | null }).sale_date
+            ?? ''
+          const days = refDate
+            ? Math.max(0, Math.round((new Date(today).getTime() - new Date((refDate as string).slice(0, 10)).getTime()) / 86_400_000))
+            : 0
+          const amtTry = Number((r as { total_try?: number }).total_try ?? 0)
+          return days * 0.6 + (amtTry / 10000) * 0.4
+        }
+        return scoreOf(b) - scoreOf(a)
+      })
+    }
+
+    return NextResponse.json(result)
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 })
   }
