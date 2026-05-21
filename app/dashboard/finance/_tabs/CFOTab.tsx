@@ -13,6 +13,7 @@
 //   7. Finansal raporlar linkleri
 
 import Link                      from 'next/link'
+import { ObservationRail }       from '@/app/dashboard/_shared/ObservationRail'
 import { BalanceSheetService }   from '@/lib/services/balance-sheet.service'
 import { TaxService }            from '@/lib/services/tax.service'
 import { FinanceService }        from '@/lib/services/finance.service'
@@ -295,6 +296,9 @@ export async function CFOTab({ userId, companyId }: Props) {
 
   return (
     <div className="space-y-4">
+
+      {/* ── Period-close intelligence signals ──────────────────────────────────── */}
+      <ObservationRail context="period-close" maxItems={3} />
 
       {/* ── Veri yükleme hatası banner — yalnızca servis çağrıları başarısız olduğunda görünür ── */}
       {loadErrors.length > 0 && (

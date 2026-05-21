@@ -16,6 +16,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { ObservationRail } from '@/app/dashboard/_shared/ObservationRail'
 
 import {
   TabId, LedgerSortCol,
@@ -299,6 +300,9 @@ export default function PartnersPage() {
 
   return (
     <div className="flex flex-col gap-5 max-w-5xl">
+
+      {/* ── Partner intelligence signals ─────────────────────────────────────── */}
+      <ObservationRail context="partners" maxItems={3} />
 
       {/* PAGE HERO */}
       <div className="flex items-end justify-between gap-4 flex-wrap">

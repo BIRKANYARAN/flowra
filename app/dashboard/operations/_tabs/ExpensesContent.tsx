@@ -1,13 +1,16 @@
-// ── ExpensesContent — Operations hub / expenses tab ───────────────────────────
+// ── ExpensesContent — Expense Intelligence Surface ─────────────────────────────
+// Sprint 4: Burn Intelligence Strip, anomaly detection, approval queue,
+//           category view with anomaly badges, slide-over expense form
 
-import Link from 'next/link'
 import { Suspense } from 'react'
 import { NarrativeFooter } from '@/components/ds'
 import { createClient } from '@/lib/supabase-server'
 import type { Expense } from '@/types'
-import ExpensesClient, { type RecurringRow } from '@/app/dashboard/expenses/ExpensesClient'
+import ExpensesIntelligenceClient from '@/app/dashboard/expenses/ExpensesIntelligenceClient'
+import type { RecurringRow } from '@/app/dashboard/expenses/ExpensesClient'
 import { ExpensesCommandBar } from '@/app/dashboard/expenses/_components/ExpensesCommandBar'
-import { fmtTRY as fmt }      from '@/lib/format'
+import { ObservationRail } from '@/app/dashboard/_shared/ObservationRail'
+import { fmtTRY as fmt } from '@/lib/format'
 import { detectExpenseAnomalies, type MonthlyExpense } from '@/lib/engines/anomaly.engine'
 import { detectDuplicates, type ExpenseRow as DupExpenseRow } from '@/lib/engines/duplicate-detector'
 
@@ -20,7 +23,6 @@ function CommandBarSkeleton() {
     </div>
   )
 }
-
 
 function fmtMonth(ym: string): string {
   const [y, m] = ym.split('-').map(Number)
@@ -35,7 +37,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   principal: 'Anapara', dividend: 'Kâr Payı', partner_loan: 'Ortak Finansmanı', other: 'Diğer',
 }
 
-type ExpenseRow = Expense & { kdv?: number }
+type ExpenseRow = Expense & { kdv?: number; workflow_instance?: string | null; title?: string }
 
 interface Props { companyId: string }
 
@@ -45,6 +47,17 @@ export async function ExpensesContent({ companyId }: Props) {
   const sixMonthsAgo = new Date()
   sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
   const fromDate = sixMonthsAgo.toISOString().slice(0, 10)
+
+  // Previous month date for burn comparison
+  const prevMonthStart = new Date()
+  prevMonthStart.setMonth(prevMonthStart.getMonth() - 1)
+  prevMonthStart.setDate(1)
+  const prevMonthEnd = new Date()
+  prevMonthEnd.setDate(0)
+  const currentMonthStart = new Date()
+  currentMonthStart.setDate(1)
+  const currentYM  = new Date().toISOString().slice(0, 7)
+  const prevYM     = prevMonthStart.toISOString().slice(0, 7)
 
   const [expensesRes, recurringRes, partnersRes] = await Promise.all([
     supabase
@@ -74,9 +87,53 @@ export async function ExpensesContent({ companyId }: Props) {
   const recurring = (recurringRes.data ?? []) as RecurringRow[]
   const partners  = (partnersRes.data  ?? []) as { id: string; name: string }[]
 
-  const totalTRY = expenses.reduce((s, e) => s + Number(e.amount_try), 0)
+  // ── Burn Intelligence ──────────────────────────────────────────────────────
+  const currentMonthExpenses = expenses.filter(e =>
+    (e.expense_date ?? '').slice(0, 7) === currentYM
+  )
+  const prevMonthExpenses = expenses.filter(e =>
+    (e.expense_date ?? '').slice(0, 7) === prevYM
+  )
+  const currentBurn = currentMonthExpenses.reduce((s, e) => s + Number(e.amount_try), 0)
+  const prevBurn    = prevMonthExpenses.reduce((s, e) => s + Number(e.amount_try), 0)
+  const burnDelta   = currentBurn - prevBurn
+  const burnDeltaPct = prevBurn > 0 ? (burnDelta / prevBurn) * 100 : 0
 
-  const catMap = new Map<string, number>()
+  // ── Current month by category ──────────────────────────────────────────────
+  const currentCatMap = new Map<string, number>()
+  for (const e of currentMonthExpenses) {
+    const key = e.category ?? 'other'
+    currentCatMap.set(key, (currentCatMap.get(key) ?? 0) + Number(e.amount_try))
+  }
+
+  // ── Anomaly detection (current month vs trailing 6) ────────────────────────
+  const anomalyExpMap: Record<string, Record<string, number>> = {}
+  for (const e of expenses) {
+    const ym  = (e.expense_date ?? e.created_at ?? '').slice(0, 7)
+    const cat = (e.category as string) ?? 'other'
+    if (!ym) continue
+    if (!anomalyExpMap[cat]) anomalyExpMap[cat] = {}
+    anomalyExpMap[cat][ym] = (anomalyExpMap[cat][ym] ?? 0) + Number(e.amount_try)
+  }
+  const monthlyExpenses: MonthlyExpense[] = []
+  for (const [category, byMonth] of Object.entries(anomalyExpMap)) {
+    for (const [month, amount] of Object.entries(byMonth)) {
+      monthlyExpenses.push({ month, category, amount })
+    }
+  }
+  const expenseAnomalies = detectExpenseAnomalies(monthlyExpenses)
+    .filter(a => a.severity === 'high')
+    .slice(0, 5)
+
+  // ── Approval queue (pending + has workflow_instance) ───────────────────────
+  const approvalQueue = expenses.filter(e =>
+    e.payment_status === 'pending' && e.workflow_instance
+  )
+  const approvalTotal = approvalQueue.reduce((s, e) => s + Number(e.amount_try), 0)
+
+  // ── Full 6-month category breakdown ───────────────────────────────────────
+  const totalTRY = expenses.reduce((s, e) => s + Number(e.amount_try), 0)
+  const catMap   = new Map<string, number>()
   for (const e of expenses) {
     const key = e.category ?? 'other'
     catMap.set(key, (catMap.get(key) ?? 0) + Number(e.amount_try))
@@ -86,6 +143,20 @@ export async function ExpensesContent({ companyId }: Props) {
     .map(([category, total]) => ({ category, label: CATEGORY_LABELS[category] ?? category, total }))
   const maxCatTotal = categories[0]?.total ?? 1
 
+  // Build anomaly ratio lookup for badge display
+  const anomalyRatioMap: Record<string, { current: number; avg: number; ratio: number }> = {}
+  for (const a of expenseAnomalies) {
+    const currentVal = anomalyExpMap[a.category]?.[currentYM] ?? 0
+    if (a.mean > 0 && currentVal > 0) {
+      anomalyRatioMap[a.category] = {
+        current: currentVal,
+        avg:     a.mean,
+        ratio:   currentVal / a.mean,
+      }
+    }
+  }
+
+  // ── Monthly trend ──────────────────────────────────────────────────────────
   const trendMap = new Map<string, number>()
   for (const e of expenses) {
     const ym = (e.expense_date ?? e.created_at ?? '').slice(0, 7)
@@ -111,26 +182,7 @@ export async function ExpensesContent({ companyId }: Props) {
     return rate <= 0 ? sum : sum + Number(e.amount_try) * rate / 100
   }, 0)
 
-  // ── Expense anomaly detection ──────────────────────────────────────────────
-  const anomalyExpMap: Record<string, Record<string, number>> = {}
-  for (const e of expenses) {
-    const ym  = (e.expense_date ?? e.created_at ?? '').slice(0, 7)
-    const cat = (e.category as string) ?? 'other'
-    if (!ym) continue
-    if (!anomalyExpMap[cat]) anomalyExpMap[cat] = {}
-    anomalyExpMap[cat][ym] = (anomalyExpMap[cat][ym] ?? 0) + Number(e.amount_try)
-  }
-  const monthlyExpenses: MonthlyExpense[] = []
-  for (const [category, byMonth] of Object.entries(anomalyExpMap)) {
-    for (const [month, amount] of Object.entries(byMonth)) {
-      monthlyExpenses.push({ month, category, amount })
-    }
-  }
-  const expenseAnomalies = detectExpenseAnomalies(monthlyExpenses)
-    .filter(a => a.severity === 'high')
-    .slice(0, 3)
-
-  // ── Duplicate expense detection (last 90 days) ────────────────────────────
+  // ── Duplicate detection ────────────────────────────────────────────────────
   const ninetyDaysAgo = new Date(Date.now() - 90 * 86_400_000).toISOString().slice(0, 10)
   const dupCandidates: DupExpenseRow[] = expenses
     .filter(e => (e.expense_date ?? '') >= ninetyDaysAgo)
@@ -146,13 +198,71 @@ export async function ExpensesContent({ companyId }: Props) {
 
   return (
     <div className="max-w-4xl space-y-4">
+      <ObservationRail context="expenses" maxItems={3} />
+
       <Suspense fallback={<CommandBarSkeleton />}>
         <ExpensesCommandBar companyId={companyId} />
       </Suspense>
 
+      {/* ── Burn Intelligence Strip ───────────────────────────────────────────── */}
+      <div className="bg-white border border-[#e2e8f0] rounded shadow-sm overflow-hidden">
+        {/* Row 1: This month vs last */}
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 border-b border-[#f1f5f9]">
+          <div className="flex items-center gap-2">
+            <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Bu Ay</span>
+            <span className="text-sm font-black tabular-nums text-neg">{fmt(currentBurn)}</span>
+          </div>
+          {prevBurn > 0 && (
+            <>
+              <span className="text-[#94a3b8] text-xs">·</span>
+              <span className="text-xs text-[#64748b]">Geçen ay: {fmt(prevBurn)}</span>
+              {burnDelta !== 0 && (
+                <span className={`text-xs font-semibold ${burnDelta > 0 ? 'text-neg' : 'text-pos-text'}`}>
+                  {burnDelta > 0 ? '↑' : '↓'}{fmt(Math.abs(burnDelta))} ({burnDeltaPct > 0 ? '+' : ''}{Math.round(burnDeltaPct)}%)
+                </span>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Row 2: Top categories this month with anomaly flags */}
+        {currentBurn > 0 && (
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2.5 border-b border-[#f1f5f9] text-xs">
+            <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Kategori</span>
+            {Array.from(currentCatMap.entries())
+              .sort((a, b) => b[1] - a[1])
+              .slice(0, 4)
+              .map(([cat, total]) => {
+                const anomaly = anomalyRatioMap[cat]
+                return (
+                  <span key={cat} className="flex items-center gap-1 text-[#334155]">
+                    <span>{CATEGORY_LABELS[cat] ?? cat}: {fmt(total)}</span>
+                    {anomaly && (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wide bg-warn-light text-warn-text border border-warn/30">
+                        ⚠ ANOMALİ {anomaly.ratio.toFixed(1)}×
+                      </span>
+                    )}
+                  </span>
+                )
+              })}
+          </div>
+        )}
+
+        {/* Row 3: Approval queue */}
+        {approvalQueue.length > 0 && (
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2.5 bg-warn-light/30 text-xs">
+            <span className="text-[0.65rem] font-black uppercase tracking-widest text-warn-text">Onay</span>
+            <span className="font-semibold text-warn-text">
+              {approvalQueue.length} masraf onay bekliyor — {fmt(approvalTotal)}
+            </span>
+            <span className="text-[#94a3b8] text-[10px]">Aşağıdan onaylayabilirsiniz</span>
+          </div>
+        )}
+      </div>
+
       <p className="text-xs text-[#94a3b8]">Son 6 ay · {expenses.length} kayıt</p>
 
-      {/* KPI Strip */}
+      {/* ── KPI Strip ─────────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
         {[
           { label: 'Toplam Gider',    value: fmt(totalTRY),        sub: 'Son 6 ay (TRY)',                    color: 'text-neg' },
@@ -168,11 +278,11 @@ export async function ExpensesContent({ companyId }: Props) {
         ))}
       </div>
 
-      {/* Expense anomaly alerts */}
+      {/* ── Expense anomaly alerts ─────────────────────────────────────────────── */}
       {expenseAnomalies.length > 0 && (
         <div className="bg-warn-light border border-warn-light rounded px-4 py-3">
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="text-[0.65rem] font-black uppercase tracking-widest text-warn-text">⚠ Anormal Gider Artışı</span>
+            <span className="text-[0.65rem] font-black uppercase tracking-widest text-warn-text">Anormal Gider Artışı</span>
             <span className="text-[9px] text-warn-text">(istatistiksel eşik aşıldı)</span>
           </div>
           <div className="space-y-1">
@@ -185,17 +295,14 @@ export async function ExpensesContent({ companyId }: Props) {
               </div>
             ))}
           </div>
-          <div className="text-[10px] text-warn-text mt-1.5">
-            Detaylı analiz için Finans → Risk sekmesini inceleyin.
-          </div>
         </div>
       )}
 
-      {/* Duplicate expense alerts */}
+      {/* ── Duplicate expense alerts ───────────────────────────────────────────── */}
       {duplicateGroups.length > 0 && (
         <div className="bg-neg-light border border-neg-light rounded px-4 py-3">
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="text-[0.65rem] font-black uppercase tracking-widest text-neg-text">⚠ Olası Kopya Gider — {duplicateGroups.length} Grup</span>
+            <span className="text-[0.65rem] font-black uppercase tracking-widest text-neg-text">Olası Kopya Gider — {duplicateGroups.length} Grup</span>
             <span className="text-[9px] text-neg">son 90 gün · yüksek güven</span>
           </div>
           <div className="space-y-1.5">
@@ -211,50 +318,73 @@ export async function ExpensesContent({ companyId }: Props) {
               </div>
             ))}
           </div>
-          <div className="text-[10px] text-neg mt-1.5">
-            Finans → CFO sekmesinde gider denetimini tamamlayın.
-          </div>
         </div>
       )}
 
-      {/* Category breakdown */}
+      {/* ── Category breakdown (collapsible) — with anomaly badges ───────────── */}
       {categories.length > 0 && (
         <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
-          <h3 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">Kategori Analizi — Son 6 Ay</h3>
+          <h3 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">Kategori Özeti — Son 6 Ay</h3>
           <div className="space-y-2.5">
             {categories.map(cat => {
-              const barPct   = (cat.total / maxCatTotal) * 100
-              const sharePct = totalTRY > 0 ? (cat.total / totalTRY) * 100 : 0
+              const barPct    = (cat.total / maxCatTotal) * 100
+              const sharePct  = totalTRY > 0 ? (cat.total / totalTRY) * 100 : 0
+              const anomaly   = anomalyRatioMap[cat.category]
+              const currentMo = currentCatMap.get(cat.category) ?? 0
+
+              // Trend indicator vs previous month
+              const prevMoCatVal = (anomalyExpMap[cat.category]?.[prevYM] ?? 0)
+              const trendDir = currentMo > prevMoCatVal ? '↑' :
+                               currentMo < prevMoCatVal ? '↓' : '→'
+              const trendColor = currentMo > prevMoCatVal * 1.1 ? 'text-neg' :
+                                 currentMo < prevMoCatVal * 0.9 ? 'text-pos-text' : 'text-[#94a3b8]'
+
               return (
                 <div key={cat.category} className="flex items-center gap-3">
                   <div className="w-28 text-xs text-[#64748b] font-medium shrink-0 truncate">{cat.label}</div>
                   <div className="flex-1">
                     <div className="h-5 bg-[#f1f5f9] rounded overflow-hidden">
-                      <div className="h-5 bg-neg rounded" style={{ width: `${barPct}%` }} />
+                      <div
+                        className={`h-5 rounded ${anomaly ? 'bg-warn' : 'bg-neg'}`}
+                        style={{ width: `${barPct}%` }}
+                      />
                     </div>
                   </div>
-                  <div className="w-24 text-right shrink-0">
+                  <div className="flex items-center gap-1.5 w-48 text-right shrink-0 justify-end flex-wrap">
                     <span className="text-xs font-bold tabular-nums text-neg">{fmt(cat.total)}</span>
-                    <span className="text-[10px] text-[#94a3b8] ml-1">%{sharePct.toFixed(0)}</span>
+                    <span className="text-[10px] text-[#94a3b8]">%{sharePct.toFixed(0)}</span>
+                    <span className={`text-[10px] font-semibold ${trendColor}`}>{trendDir} {anomaly ? 'ANOMALİ' : trendDir === '→' ? 'sabit' : 'normal'}</span>
+                    {anomaly && (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wide bg-warn-light text-warn-text border border-warn/30">
+                        ort. {fmt(anomaly.avg)}
+                      </span>
+                    )}
                   </div>
                 </div>
               )
             })}
           </div>
+          <div className="mt-3 text-[9px] text-[#cbd5e1]">
+            Turuncu bar = mevcut ay anormalisi · trend ok = bu ay vs geçen ay
+          </div>
         </div>
       )}
 
-      {/* Monthly trend */}
+      {/* ── Monthly trend ─────────────────────────────────────────────────────── */}
       {trend.length > 1 && (
         <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
           <h3 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">Aylık Gider Trendi</h3>
           <div className="flex items-end gap-2 h-20">
             {trend.map(t => {
-              const heightPct = Math.max(4, (t.total / maxTrendTotal) * 100)
+              const heightPct    = Math.max(4, (t.total / maxTrendTotal) * 100)
+              const isCurrent    = t.ym === currentYM
               return (
                 <div key={t.ym} className="flex-1 flex flex-col items-center gap-1 group relative">
-                  <div className="w-full bg-neg-light group-hover:bg-neg rounded-t transition-all" style={{ height: `${heightPct}%` }} />
-                  <div className="text-[9px] text-[#94a3b8] font-semibold">{fmtMonth(t.ym)}</div>
+                  <div
+                    className={`w-full rounded-t transition-all ${isCurrent ? 'bg-neg' : 'bg-neg-light group-hover:bg-neg'}`}
+                    style={{ height: `${heightPct}%` }}
+                  />
+                  <div className={`text-[9px] font-semibold ${isCurrent ? 'text-neg' : 'text-[#94a3b8]'}`}>{fmtMonth(t.ym)}</div>
                   <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block z-10 bg-[#0f172a] text-white rounded px-2 py-1 text-[10px] whitespace-nowrap">
                     <div className="font-bold">{fmtMonth(t.ym)}</div>
                     <div className="text-neg/70">{fmt(t.total)}</div>
@@ -270,10 +400,19 @@ export async function ExpensesContent({ companyId }: Props) {
         </div>
       )}
 
-      <ExpensesClient
+      {/* ── Client: expense list + approval queue + slide-over add form ─────────── */}
+      <ExpensesIntelligenceClient
         initialExpenses={expenses}
         initialRecurring={recurring}
         initialPartners={partners}
+        approvalQueue={approvalQueue.map(e => ({
+          id:          e.id,
+          title:       (e as ExpenseRow).title ?? e.description ?? 'Masraf',
+          amount_try:  Number(e.amount_try),
+          category:    e.category ?? 'other',
+          expense_date: e.expense_date,
+          workflow_instance: (e as ExpenseRow).workflow_instance ?? null,
+        }))}
       />
 
       {/* Cross-navigation */}

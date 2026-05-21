@@ -1,11 +1,12 @@
-// ── CollectionsContent — Commercial hub / collections tab ─────────────────────
+// ── CollectionsContent — Collections Pressure Surface ──────────────────────────
+// Sprint 3: risk-weighted pressure view replacing the tab-based table
 
-import Link from 'next/link'
 import { Suspense } from 'react'
 import { NarrativeFooter } from '@/components/ds'
 import { createClient } from '@/lib/supabase-server'
-import CollectionsClient, { type CollectionRow } from '@/app/dashboard/collections/CollectionsClient'
+import CollectionsPressureClient, { type CollectionRow } from '@/app/dashboard/collections/CollectionsPressureClient'
 import { CollectionsCommandBar } from '@/app/dashboard/collections/_components/CollectionsCommandBar'
+import { ObservationRail } from '@/app/dashboard/_shared/ObservationRail'
 import { fmtTRY as fmt } from '@/lib/format'
 
 function CommandBarSkeleton() {
@@ -18,23 +19,13 @@ function CommandBarSkeleton() {
   )
 }
 
-interface AgingBucket { label: string; count: number; total: number; color: string; sub: string }
-
-function AgingStrip({ buckets, grandTotal }: { buckets: AgingBucket[]; grandTotal: number }) {
-  if (grandTotal === 0) return null
-  return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
-      {buckets.map((b, i) => (
-        <div key={b.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e2e8f0]' : ''}`}>
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{b.label}</div>
-          <div className={`text-xl font-black tabular-nums leading-none ${b.color}`}>
-            {b.total > 0 ? fmt(b.total) : '—'}
-          </div>
-          <div className="text-[10px] text-[#94a3b8] mt-1">{b.sub}</div>
-        </div>
-      ))}
-    </div>
-  )
+// ── Risk score formula (same as API sort) ─────────────────────────────────────
+function riskScore(row: { due_date?: string | null; sale_date?: string | null; total_try: number }, today: string): number {
+  const refDate = row.due_date ?? row.sale_date ?? ''
+  const days = refDate
+    ? Math.max(0, Math.round((new Date(today).getTime() - new Date(refDate.slice(0, 10)).getTime()) / 86_400_000))
+    : 0
+  return days * 0.6 + (row.total_try / 10000) * 0.4
 }
 
 interface Props { companyId: string }
@@ -43,196 +34,99 @@ export async function CollectionsContent({ companyId }: Props) {
   const supabase = createClient()
   const today    = new Date().toISOString().slice(0, 10)
 
-  const [rowsRes, agingRes] = await Promise.all([
-    supabase
-      .from('sales')
-      .select('id, customer_name, currency, total_try:total, sale_date, created_at, due_date, amount_paid:paid_amount, proforma_id, payment_status, paid_at, proformas(proforma_no)')
-      .eq('company_id', companyId)
-      .is('deleted_at', null)
-      .in('payment_status', ['pending', 'partial', 'overdue'])
-      .order('sale_date', { ascending: false })
-      .range(0, 49),
+  // Fetch all open receivables (pending + partial + overdue)
+  const { data: rawRows } = await supabase
+    .from('sales')
+    .select('id, customer_name, currency, total_try:total, sale_date, created_at, due_date, amount_paid:paid_amount, proforma_id, payment_status, paid_at, proformas(proforma_no)')
+    .eq('company_id', companyId)
+    .is('deleted_at', null)
+    .in('payment_status', ['pending', 'partial', 'overdue'])
+    .order('sale_date', { ascending: false })
+    .limit(100)
 
-    // Full dataset for aging + debtor ranking — lightweight select
-    supabase
-      .from('sales')
-      .select('customer_name, total:total, paid_amount, due_date, sale_date')
-      .eq('company_id', companyId)
-      .is('deleted_at', null)
-      .in('payment_status', ['pending', 'partial', 'overdue']),
-  ])
+  const initialRows: CollectionRow[] = ((rawRows ?? []) as Array<{
+    id: string
+    customer_name: string
+    currency: string
+    total_try: number
+    sale_date: string | null
+    created_at: string
+    due_date: string | null
+    amount_paid: number | null
+    proforma_id: string | null
+    payment_status: string
+    paid_at: string | null
+    proformas: { proforma_no: string } | { proforma_no: string }[] | null
+  }>)
+    .map(r => ({
+      id:             r.id,
+      customer_name:  r.customer_name,
+      currency:       r.currency,
+      total:          r.total_try,
+      total_try:      r.total_try,
+      sale_date:      r.sale_date,
+      created_at:     r.created_at,
+      due_date:       r.due_date,
+      amount_paid:    r.amount_paid,
+      proforma_id:    r.proforma_id,
+      payment_status: r.payment_status as CollectionRow['payment_status'],
+      paid_at:        r.paid_at,
+      proformas:      (Array.isArray(r.proformas) ? r.proformas[0] ?? null : r.proformas) as CollectionRow['proformas'],
+    }))
+    // Sort by risk score DESC server-side
+    .sort((a, b) => riskScore(b, today) - riskScore(a, today))
 
-  const initialRows: CollectionRow[] = (rowsRes.data ?? []).map(r => ({
-    id:             r.id,
-    customer_name:  r.customer_name,
-    currency:       r.currency,
-    total:          r.total_try,
-    total_try:      r.total_try,
-    sale_date:      r.sale_date,
-    created_at:     r.created_at,
-    due_date:       r.due_date,
-    amount_paid:    r.amount_paid,
-    proforma_id:    r.proforma_id,
-    payment_status: r.payment_status as CollectionRow['payment_status'],
-    paid_at:        r.paid_at,
-    proformas:      (Array.isArray(r.proformas) ? r.proformas[0] ?? null : r.proformas) as CollectionRow['proformas'],
-  }))
+  // ── Pressure summary stats ─────────────────────────────────────────────────
+  const grandTotal  = initialRows.reduce((s, r) => s + Math.max(0, r.total_try - (r.amount_paid ?? 0)), 0)
+  const totalCount  = initialRows.length
 
-  // ── Aging computation ──────────────────────────────────────────────────────
-  const bucketData = [
-    { label: 'Güncel (0-30g)',    maxDays: 30,  count: 0, total: 0, color: 'text-warn-text',   sub: '' },
-    { label: '31-60 Gün',         maxDays: 60,  count: 0, total: 0, color: 'text-warn-text',  sub: '' },
-    { label: '61-90 Gün',         maxDays: 90,  count: 0, total: 0, color: 'text-neg',     sub: '' },
-    { label: '90+ Gün (Kritik)',  maxDays: Infinity, count: 0, total: 0, color: 'text-neg-text font-black', sub: '' },
-  ]
+  const criticalRows = initialRows.filter(r => {
+    const refDate = r.due_date ?? r.sale_date ?? ''
+    if (!refDate) return false
+    const days = Math.round((new Date(today).getTime() - new Date(refDate.slice(0, 10)).getTime()) / 86_400_000)
+    return days > 60
+  })
+  const criticalTotal = criticalRows.reduce((s, r) => s + Math.max(0, r.total_try - (r.amount_paid ?? 0)), 0)
 
-  let grandTotal = 0
-
-  for (const row of (agingRes.data ?? [])) {
-    const remaining = Math.max(0, Number(row.total ?? 0) - Number(row.paid_amount ?? 0))
-    if (remaining <= 0) continue
-
-    // Reference date: use due_date if set, else sale_date; compare against today
-    const refDate = (row.due_date ?? row.sale_date ?? '') as string
-    const daysOverdue = refDate
-      ? Math.max(0, Math.round((new Date(today).getTime() - new Date(refDate.slice(0, 10)).getTime()) / 86_400_000))
-      : 0
-
-    const bucketIdx = daysOverdue <= 30 ? 0 : daysOverdue <= 60 ? 1 : daysOverdue <= 90 ? 2 : 3
-    bucketData[bucketIdx].count += 1
-    bucketData[bucketIdx].total += remaining
-    grandTotal += remaining
-  }
-
-  const agingBuckets: AgingBucket[] = bucketData.map(b => ({
-    label: b.label,
-    count: b.count,
-    total: b.total,
-    color: b.color,
-    sub:   b.count > 0 ? `${b.count} fatura` : 'Yok',
-  }))
-
-  // ── Top outstanding debtors ────────────────────────────────────────────────
-  const debtorMap = new Map<string, { total: number; count: number; maxDays: number }>()
-  for (const row of (agingRes.data ?? [])) {
-    const remaining = Math.max(0, Number(row.total ?? 0) - Number(row.paid_amount ?? 0))
-    if (remaining <= 0) continue
-    const name = ((row as { customer_name?: string | null }).customer_name) ?? 'Bilinmiyor'
-    const refDate = (((row as { due_date?: string | null }).due_date ?? (row as { sale_date?: string | null }).sale_date) ?? '') as string
-    const daysOverdue = refDate
-      ? Math.max(0, Math.round((new Date(today).getTime() - new Date(refDate.slice(0, 10)).getTime()) / 86_400_000))
-      : 0
-    const prev = debtorMap.get(name) ?? { total: 0, count: 0, maxDays: 0 }
-    debtorMap.set(name, {
-      total: prev.total + remaining,
-      count: prev.count + 1,
-      maxDays: Math.max(prev.maxDays, daysOverdue),
-    })
-  }
-  const topDebtors = Array.from(debtorMap.entries())
-    .map(([name, d]) => ({ name, ...d }))
-    .sort((a, b) => b.total - a.total)
-    .slice(0, 5)
-  const maxDebtorTotal = topDebtors[0]?.total ?? 1
-
-  // ── Alert thresholds ─────────────────────────────────────────────────────────
-  const overdue90Total      = agingBuckets[3]?.total ?? 0
-  const overdue90Count      = agingBuckets[3]?.count ?? 0
-  const topDebtorShare      = grandTotal > 0 && topDebtors.length > 0 ? topDebtors[0].total / grandTotal : 0
-  const overdue60PlusTotal  = (agingBuckets[2]?.total ?? 0) + overdue90Total
-  const criticalRate        = grandTotal > 0 ? overdue60PlusTotal / grandTotal : 0
+  const nearDueRows = initialRows.filter(r => {
+    const refDate = r.due_date ?? r.sale_date ?? ''
+    if (!refDate) return false
+    const days = Math.round((new Date(today).getTime() - new Date(refDate.slice(0, 10)).getTime()) / 86_400_000)
+    return days >= 0 && days <= 30
+  })
+  const nearDueTotal = nearDueRows.reduce((s, r) => s + Math.max(0, r.total_try - (r.amount_paid ?? 0)), 0)
 
   return (
     <div className="max-w-5xl space-y-3">
+      <ObservationRail context="collections" maxItems={3} />
+
       <Suspense fallback={<CommandBarSkeleton />}>
         <CollectionsCommandBar companyId={companyId} />
       </Suspense>
 
-      {/* 90+ day overdue critical alert */}
-      {overdue90Total > 0 && (
-        <div className="bg-neg-light border border-neg-light rounded px-4 py-3 flex items-center justify-between gap-4">
-          <div>
-            <div className="text-[11px] font-black uppercase tracking-wide text-neg-text">
-              90+ Gün Vadesi Geçmiş — {overdue90Count} Fatura
-            </div>
-            <div className="text-xs text-neg-text mt-0.5">
-              <strong>{fmt(overdue90Total)}</strong> tutarında alacak 90 günü aşmış. Hukuki süreç veya şüpheli alacak karşılığı değerlendirilmeli.
-            </div>
-          </div>
-          <Link href="/dashboard/finance?tab=risks" className="text-[10px] font-bold text-neg-text hover:text-neg-text underline underline-offset-2 shrink-0 whitespace-nowrap">
-            Risk Analizi →
-          </Link>
+      {/* ── Pressure Summary Strip ─────────────────────────────────────────────── */}
+      {grandTotal > 0 && (
+        <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm flex flex-wrap gap-x-4 gap-y-1 items-center text-xs">
+          <span className="font-bold text-[#0f172a]">{fmt(grandTotal)} açık alacak</span>
+          <span className="text-[#94a3b8]">·</span>
+          <span className="text-[#334155]">{totalCount} fatura</span>
+          {criticalTotal > 0 && (
+            <>
+              <span className="text-[#94a3b8]">·</span>
+              <span className="font-bold text-neg">{fmt(criticalTotal)} kritik (60+ gün)</span>
+            </>
+          )}
+          {nearDueTotal > 0 && (
+            <>
+              <span className="text-[#94a3b8]">·</span>
+              <span className="font-semibold text-warn-text">{fmt(nearDueTotal)} vadesi &lt;30 gün</span>
+            </>
+          )}
         </div>
       )}
 
-      {/* High debtor concentration alert (top debtor > 40% of total outstanding) */}
-      {topDebtorShare > 0.40 && grandTotal > 0 && (
-        <div className={`rounded border px-4 py-3 ${
-          topDebtorShare > 0.60 ? 'bg-neg-light border-neg-light' : 'bg-warn-light border-warn-light'
-        }`}>
-          <div className={`text-[11px] font-black uppercase tracking-wide ${topDebtorShare > 0.60 ? 'text-neg-text' : 'text-warn-text'}`}>
-            Tahsilat Konsantrasyonu — {topDebtors[0].name}
-          </div>
-          <div className={`text-xs mt-0.5 ${topDebtorShare > 0.60 ? 'text-neg-text' : 'text-warn-text'}`}>
-            Bu müşteri toplam açık alacağın <strong>%{Math.round(topDebtorShare * 100)}&apos;ini</strong> oluşturuyor ({fmt(topDebtors[0].total)}).
-            {topDebtors[0].maxDays > 60 && ` ${topDebtors[0].maxDays} gündür ödeme bekliyor.`}
-          </div>
-        </div>
-      )}
-
-      {/* 60+ day overdue rate warning (only if no 90+ critical already shown) */}
-      {overdue90Total === 0 && criticalRate > 0.30 && grandTotal > 0 && (
-        <div className="bg-warn-light border border-warn/30 rounded px-4 py-3">
-          <div className="text-[11px] font-black uppercase tracking-wide text-warn-text">
-            Tahsilat Yaşlanıyor — %{Math.round(criticalRate * 100)} Gecikmiş
-          </div>
-          <div className="text-xs text-warn-text mt-0.5">
-            Açık alacakların {fmt(overdue60PlusTotal)} tutarındaki kısmı 60 günü aşmış. Tahsilat sürecini hızlandırın.
-          </div>
-        </div>
-      )}
-
-      {/* Aging KPI strip */}
-      <AgingStrip buckets={agingBuckets} grandTotal={grandTotal} />
-
-      {/* Top outstanding debtors */}
-      {topDebtors.length > 0 && grandTotal > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">En Yüksek Bakiyeli Müşteriler</div>
-          <div className="space-y-2.5">
-            {topDebtors.map(d => {
-              const barPct   = (d.total / maxDebtorTotal) * 100
-              const sharePct = grandTotal > 0 ? (d.total / grandTotal) * 100 : 0
-              const urgency  = d.maxDays > 60 ? 'text-neg' : d.maxDays > 30 ? 'text-warn-text' : 'text-[#94a3b8]'
-              return (
-                <div key={d.name} className="flex items-center gap-3">
-                  <div className="w-32 text-xs text-[#334155] font-medium shrink-0 truncate" title={d.name}>{d.name}</div>
-                  <div className="flex-1">
-                    <div className="h-3 bg-[#f1f5f9] rounded overflow-hidden">
-                      <div
-                        className={`h-3 rounded ${d.maxDays > 60 ? 'bg-neg' : d.maxDays > 30 ? 'bg-warn' : 'bg-brand-light'}`}
-                        style={{ width: `${barPct}%` }}
-                      />
-                    </div>
-                  </div>
-                  <div className="w-36 text-right shrink-0">
-                    <span className="text-xs font-bold tabular-nums text-[#1e293b]">{fmt(d.total)}</span>
-                    <span className="text-[10px] text-[#94a3b8] ml-1">%{sharePct.toFixed(0)}</span>
-                    {d.maxDays > 0 && (
-                      <span className={`text-[9px] ml-1 font-semibold ${urgency}`}>{d.maxDays}g</span>
-                    )}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-          <div className="mt-3 text-[9px] text-[#cbd5e1]">
-            Bar rengi: kırmızı = 60+ gün · sarı = 30–60 gün · mavi = güncel
-          </div>
-        </div>
-      )}
-
-      <CollectionsClient initialRows={initialRows} />
+      {/* ── Risk-sorted pressure rows (client) ────────────────────────────────── */}
+      <CollectionsPressureClient initialRows={initialRows} />
 
       {/* Cross-navigation */}
       <NarrativeFooter
