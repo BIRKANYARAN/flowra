@@ -57,7 +57,9 @@ export default function ReconciliationPdfPage({
           return
         }
         const json = await res.json()
-        setSnapshot(json.snapshot ?? null)
+        const raw = json.snapshot
+        if (raw) raw.signoffs = raw.reconciliation_signoffs ?? []
+        setSnapshot(raw ?? null)
       } catch {
         setError('Ağ hatası oluştu.')
       } finally {
