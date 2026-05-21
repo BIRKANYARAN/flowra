@@ -86,13 +86,12 @@ export default async function PrintProformaPage({ params }: { params: { id: stri
   return (
     <div className="print-wrapper">
       <style dangerouslySetInnerHTML={{ __html: `
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
         @page { size: A4; margin: 10mm; }
         @media print {
           body {
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
-            font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+            font-family: -apple-system, 'Helvetica Neue', Arial, 'Liberation Sans', sans-serif;
           }
           .no-print, .print\\:hidden { display: none !important; }
           .print-wrapper { padding: 0; }
@@ -104,6 +103,7 @@ export default async function PrintProformaPage({ params }: { params: { id: stri
           margin: 0 auto;
           padding: 8mm;
           background: white;
+          font-family: -apple-system, 'Helvetica Neue', Arial, 'Liberation Sans', sans-serif;
         }
       `}} />
 

@@ -137,7 +137,7 @@ export function ProformaInvoice({
     .sort((a, b) => +a - +b)
 
   return (
-    <div className="bg-white overflow-hidden" style={{ fontFamily: "'Inter', 'Helvetica Neue', Arial, sans-serif" }}>
+    <div className="bg-white overflow-hidden" style={{ fontFamily: "-apple-system, 'Helvetica Neue', Arial, 'Liberation Sans', sans-serif" }}>
 
       {/* ── Accent stripe + document type ────────────────────────────────── */}
       <div className="bg-gray-900 px-8 py-4 flex items-center justify-between">
@@ -157,7 +157,7 @@ export function ProformaInvoice({
             </div>
           )}
           {settings?.company_name && (
-            <div className="text-white/60 text-sm font-medium">{settings.company_name}</div>
+            <div className="text-white/80 text-sm font-medium">{settings.company_name}</div>
           )}
         </div>
         <div className="text-right">
@@ -369,7 +369,7 @@ export function ProformaInvoice({
           </div>
 
           {/* Grand total — high emphasis */}
-          <div className="bg-gray-900 text-white rounded-b-xl px-5 py-4 flex justify-between items-center">
+          <div className="bg-gray-900 text-white rounded-b-xl px-5 py-4 flex justify-between items-center antialiased">
             <div>
               <div className="text-white/50 text-[10px] font-bold uppercase tracking-widest">Genel Toplam</div>
               <div className="text-white/60 text-[10px] mt-0.5">{currencyLabel(proforma.currency || 'TRY')}</div>
@@ -386,7 +386,7 @@ export function ProformaInvoice({
       <div className="mx-6 mb-6 border border-gray-200 rounded-xl overflow-hidden">
 
         {/* Yazı ile tutar */}
-        <div className="px-5 py-3 bg-gray-50 border-b border-gray-200">
+        <div className="px-5 py-3 bg-gray-50 border-b border-gray-200 border-l-4 border-l-gray-800">
           <span className="text-xs text-gray-500 font-medium">
             Yalnız{' '}
             <span className="text-gray-800 font-semibold">
@@ -425,7 +425,7 @@ export function ProformaInvoice({
                       <span className="text-gray-400 font-normal"> · {b.branch_name}</span>
                     )}
                   </span>
-                  <span className="text-xs font-mono text-gray-600 tracking-wide tabular-nums">
+                  <span className="text-[11px] font-mono text-gray-600 tracking-wide tabular-nums">
                     {b.iban}
                   </span>
                 </div>
@@ -438,12 +438,12 @@ export function ProformaInvoice({
         <div className="px-5 py-4 grid grid-cols-2 gap-8">
           <div>
             <div className="text-[9px] font-black text-gray-300 uppercase tracking-widest mb-3">Satıcı Onayı</div>
-            <div className="h-12 border-b border-dashed border-gray-200" />
+            <div className="h-12 border-b border-gray-300" />
             <div className="mt-1 text-[10px] text-gray-400">{settings?.company_name || ''}</div>
           </div>
           <div>
             <div className="text-[9px] font-black text-gray-300 uppercase tracking-widest mb-3">Alıcı Onayı</div>
-            <div className="h-12 border-b border-dashed border-gray-200" />
+            <div className="h-12 border-b border-gray-300" />
             <div className="mt-1 text-[10px] text-gray-400">{proforma.customer_name || ''}</div>
           </div>
         </div>
