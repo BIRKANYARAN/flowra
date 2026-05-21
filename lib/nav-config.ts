@@ -115,10 +115,6 @@ export const NAV_GROUPS: NavGroup[] = [
         label: 'Yönetim',
         icon:  'shield',
         exact: true,
-        children: [
-          { href: '/dashboard/admin/workflows',      label: 'Onaylar',      icon: 'activity' },
-          { href: '/dashboard/admin/reconciliation', label: 'Mutabakatlar', icon: 'reports'  },
-        ],
       },
       { href: '/dashboard/settings', label: 'Ayarlar', icon: 'settings' },
     ],
