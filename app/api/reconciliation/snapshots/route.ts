@@ -132,7 +132,12 @@ export async function POST(req: NextRequest) {
 
     if (insertError || !snapshot) {
       console.error('[reconciliation/snapshots POST] insert error:', insertError)
-      return apiError(ctx, 'Mutabakat kaydedilemedi', 500, 'DB_WRITE_FAILED')
+      const hint = insertError?.message ?? insertError?.code ?? 'unknown'
+      const isTableMissing = hint.includes('relation') || hint.includes('does not exist') || (insertError as { code?: string } | null)?.code === '42P01'
+      const userMsg = isTableMissing
+        ? 'Mutabakat tablosu bulunamadı — Supabase\'de reconciliation_system.sql migration\'ını çalıştırın.'
+        : `Mutabakat kaydedilemedi: ${hint}`
+      return NextResponse.json({ error: userMsg, code: 'DB_WRITE_FAILED', detail: hint }, { status: 500 })
     }
 
     // Insert signoff rows for each active partner
