@@ -701,7 +701,7 @@ export default async function ReconciliationDetailPage({
           const sp = (snapshot.sections as any)._shareholder_positions as any
           const positions: any[] = sp.positions ?? []
           if (positions.length === 0) return null
-          const fmtPos = (n: number) => new Intl.NumberFormat('tr-TR', {style: 'currency', currency: 'TRY', maximumFractionDigits: 0}).format(n)
+          const fmtPos = (n: number) => fmtTRY(n, 0)
           return (
             <SectionBlock number={0} title="Ortak Ekonomik Pozisyonu">
               <div className="overflow-x-auto">
