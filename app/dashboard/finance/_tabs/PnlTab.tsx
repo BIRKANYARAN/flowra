@@ -5,14 +5,17 @@
 //   • KDV özeti (sales / purchase / expense / net)
 //   • Tahsilat vs fatura delta
 //   • Geçen aylar mini-trend (son 6 ay sparkline row)
+//   • Çok Dönemli Karşılaştırma (son 6 ay yan yana)
 
 import Link                          from 'next/link'
 import { FinanceService }           from '@/lib/services/finance.service'
 import { periodForMonth }           from '@/lib/services/finance-rules'
-import { fmtTRY as fmt, fmtMonthShort as fmtMonth } from '@/lib/format'
+import { fmtTRY, fmtTRY as fmt, fmtMonthShort as fmtMonth } from '@/lib/format'
 import { createClient }             from '@/lib/supabase-server'
 import { NarrativeFooter }          from '@/components/ds'
 import { GLIncomeStatementService } from '@/lib/services/ledger/gl-income-statement.service'
+import { MultiPeriodPnlService }    from '@/lib/services/finance/multi-period-pnl.service'
+import type { MultiPeriodPnlReport, PnlLineItem } from '@/lib/services/finance/multi-period-pnl.service'
 
 // ── Formatters ────────────────────────────────────────────────────────────────
 
@@ -79,6 +82,97 @@ const CATEGORY_LABELS: Record<string, string> = {
   other:         'Diğer',
 }
 
+// ── Multi-Period Comparison Table ─────────────────────────────────────────────
+
+function MultiPeriodTable({ report }: { report: MultiPeriodPnlReport }) {
+  // Periods newest first (reversed for display)
+  const periods = [...report.periods].reverse()
+
+  return (
+    <div className="bg-white border border-[#e2e8f0] rounded p-5 shadow-sm overflow-x-auto">
+      <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">
+        Çok Dönemli Karşılaştırma — Son 6 Ay
+      </div>
+      <table className="w-full text-xs border-collapse min-w-[600px]">
+        <thead>
+          <tr className="border-b border-[#e2e8f0]">
+            <th className="text-left py-2 pr-3 text-[10px] font-black uppercase tracking-wide text-[#94a3b8] w-40">
+              Kalem
+            </th>
+            {periods.map(p => (
+              <th key={p.period_key} className="text-right py-2 px-2 text-[10px] font-black uppercase tracking-wide text-[#94a3b8] whitespace-nowrap">
+                {p.period_label}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {report.line_items.map(item => (
+            <MultiPeriodRow key={item.key} item={item} periods={periods} />
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+function MultiPeriodRow({
+  item,
+  periods,
+}: {
+  item: PnlLineItem
+  periods: MultiPeriodPnlReport['periods']
+}) {
+  const isSubtotal = item.is_subtotal
+
+  const rowClass = isSubtotal
+    ? 'border-t border-dashed border-[#e2e8f0] bg-[#f8fafc]'
+    : 'border-t border-[#f1f5f9]'
+
+  const labelClass = isSubtotal
+    ? 'font-black text-[#0f172a]'
+    : item.indent_level === 1
+    ? 'text-[#64748b] pl-4'
+    : item.indent_level === 2
+    ? 'text-[#94a3b8] pl-8'
+    : 'font-semibold text-[#334155]'
+
+  return (
+    <tr className={rowClass}>
+      <td className={`py-1.5 pr-3 text-[11px] ${labelClass}`}>
+        {item.label}
+      </td>
+      {periods.map(p => {
+        const pk    = p.period_key
+        const value = item.values[pk] ?? 0
+        // For inverted items (expenses) display positive
+        const displayVal = item.is_inverted ? Math.abs(value) : value
+        const chgPct     = item.change_pcts[pk]
+
+        const valueColor = isSubtotal
+          ? value >= 0 ? 'text-pos-text' : 'text-neg'
+          : 'text-[#1e293b]'
+
+        return (
+          <td key={pk} className={`py-1.5 px-2 text-right tabular-nums align-top ${isSubtotal ? 'font-black' : 'font-medium'}`}>
+            <div className={`text-[11px] ${valueColor}`}>
+              {fmtTRY(displayVal, 0)}
+            </div>
+            {chgPct !== null && chgPct !== undefined && (
+              <div className={`text-[9px] mt-0.5 ${
+                chgPct > 0 ? 'text-pos-text' : chgPct < 0 ? 'text-neg' : 'text-[#94a3b8]'
+              }`}>
+                {chgPct > 0 ? '▲' : chgPct < 0 ? '▼' : '—'}
+                {chgPct !== 0 ? `%${Math.abs(chgPct).toFixed(1)}` : ''}
+              </div>
+            )}
+          </td>
+        )
+      })}
+    </tr>
+  )
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 interface Props { userId: string; companyId: string; glMode?: string }
@@ -99,7 +193,13 @@ export async function PnlTab({ userId, companyId, glMode = 'shadow' }: Props) {
     ? await sq(() => GLIncomeStatementService.compute(companyId, supabase, { toDate: monthTo }), null)
     : null
 
-  const [currentSummary, expenseCatRaw, ...historySummaries] = await Promise.all([
+  // Build last-6-months periods for multi-period P&L
+  const last6Periods = lastNMonths(6, now).map(ym => {
+    const [y, m] = ym.split('-').map(Number)
+    return { year: y, month: m }
+  })
+
+  const [currentSummary, expenseCatRaw, multiPeriodReport, ...historySummaries] = await Promise.all([
     sq(() => FinanceService.getFinancialSummary(userId, companyId, periodForMonth(currentYM)), null),
     sq(async () => {
       const { data } = await supabase
@@ -112,6 +212,7 @@ export async function PnlTab({ userId, companyId, glMode = 'shadow' }: Props) {
         .neq('payment_status', 'cancelled')
       return (data ?? []) as Array<{ category: string | null; amount_try: number | null }>
     }, [] as Array<{ category: string | null; amount_try: number | null }>),
+    sq(() => MultiPeriodPnlService.getReport(companyId, supabase, last6Periods), null),
     ...lastNMonths(6, now).map(ym =>
       sq(() => FinanceService.getFinancialSummary(userId, companyId, periodForMonth(ym)), null)
     ),
@@ -336,6 +437,11 @@ export async function PnlTab({ userId, companyId, glMode = 'shadow' }: Props) {
         ]}
       />
     </div>
+
+    {/* Çok Dönemli Karşılaştırma */}
+    {multiPeriodReport && (
+      <MultiPeriodTable report={multiPeriodReport} />
+    )}
     </div>
   )
 }
