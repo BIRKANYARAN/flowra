@@ -20,9 +20,140 @@ import {
   ConcentrationRiskService,
   type ConcentrationRiskReport,
 } from '@/lib/services/commercial/concentration-risk.service'
+import {
+  CohortAnalysisService,
+  type CohortAnalysisReport,
+} from '@/lib/services/commercial/cohort-analysis.service'
 import CustomerIntelligenceTable from './_intelligence/CustomerIntelligenceTable'
 
 interface Props { companyId: string }
+
+// ── Cohort heatmap color helper ───────────────────────────────────────────────
+function retentionColor(pct: number | undefined): string {
+  if (pct === undefined) return 'bg-[#f1f5f9] text-[#cbd5e1]'
+  if (pct >= 80) return 'bg-pos-light text-pos-text'
+  if (pct >= 50) return 'bg-warn-light text-warn-text'
+  if (pct >= 30) return 'bg-orange-100 text-orange-700'
+  return 'bg-neg-light text-neg-text'
+}
+
+// ── CohortSection ─────────────────────────────────────────────────────────────
+function CohortSection({ report }: { report: import('@/lib/services/commercial/cohort-analysis.service').CohortAnalysisReport }) {
+  const { cohorts, summary } = report
+
+  // Build column labels M0–M5
+  const COL_COUNT = 6
+
+  return (
+    <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+      {/* Header */}
+      <div className="px-4 py-3 border-b border-[#f1f5f9]">
+        <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+          Müşteri Kohortları
+        </span>
+      </div>
+
+      {/* Summary strip */}
+      <div className="grid grid-cols-3 divide-x divide-[#f1f5f9] border-b border-[#f1f5f9]">
+        <div className="p-3">
+          <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+            Ort. Müşteri Ömrü
+          </div>
+          <div className="text-lg font-black tabular-nums text-[#0f172a] leading-none">
+            {summary.avg_customer_lifetime_months !== null
+              ? `${summary.avg_customer_lifetime_months.toFixed(1)} ay`
+              : '—'}
+          </div>
+        </div>
+        <div className="p-3">
+          <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+            2. Ay Ort. Tutma
+          </div>
+          <div className={`text-lg font-black tabular-nums leading-none ${
+            summary.avg_second_month_retention_pct !== null
+              ? summary.avg_second_month_retention_pct >= 50 ? 'text-pos-text' : 'text-warn-text'
+              : 'text-[#0f172a]'
+          }`}>
+            {summary.avg_second_month_retention_pct !== null
+              ? `%${summary.avg_second_month_retention_pct.toFixed(0)}`
+              : '—'}
+          </div>
+        </div>
+        <div className="p-3">
+          <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+            En İyi Kohort
+          </div>
+          <div className="text-sm font-black text-brand leading-none">
+            {summary.best_cohort_label ?? '—'}
+          </div>
+        </div>
+      </div>
+
+      {/* Cohort table */}
+      <div className="overflow-x-auto">
+        <table className="w-full text-xs">
+          <thead>
+            <tr className="border-b border-[#f1f5f9]">
+              <th className="text-left px-4 py-2 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] w-28">
+                Kohort
+              </th>
+              <th className="text-center px-2 py-2 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] w-16">
+                Müşteri
+              </th>
+              {Array.from({ length: COL_COUNT }, (_, i) => (
+                <th key={i} className="text-center px-2 py-2 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] w-14">
+                  M{i}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[#f8fafc]">
+            {cohorts.map(cohort => {
+              // Compute M0, M1, … M5 month keys
+              const [y, m] = cohort.cohort_month.split('-').map(Number)
+              const monthKeys: (string | null)[] = Array.from({ length: COL_COUNT }, (_, offset) => {
+                const d = new Date(y, m - 1 + offset, 1)
+                return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+              })
+
+              return (
+                <tr key={cohort.cohort_month} className="hover:bg-[#f8fafc]/60">
+                  <td className="px-4 py-2 text-[11px] font-bold text-[#334155] whitespace-nowrap">
+                    {cohort.cohort_label}
+                  </td>
+                  <td className="px-2 py-2 text-center tabular-nums text-[#64748b]">
+                    {cohort.cohort_size}
+                  </td>
+                  {monthKeys.map((mk, offset) => {
+                    const ret = mk ? cohort.retention_pct[mk] : undefined
+                    const rev = mk ? cohort.monthly_revenue[mk] : undefined
+                    const revenueTitle = rev !== undefined
+                      ? fmt(rev)
+                      : 'Veri yok'
+                    return (
+                      <td key={offset} className="px-1 py-1.5 text-center">
+                        <span
+                          className={`inline-block w-12 py-1 rounded text-[10px] font-bold tabular-nums cursor-default ${retentionColor(ret)}`}
+                          title={`${revenueTitle} · ${ret !== undefined ? `%${ret.toFixed(0)} tutma` : 'Veri yok'}`}
+                        >
+                          {ret !== undefined ? `%${ret.toFixed(0)}` : '—'}
+                        </span>
+                      </td>
+                    )
+                  })}
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="px-4 py-2 border-t border-[#f8fafc] text-[9px] text-[#cbd5e1]">
+        Hücre = o aydaki aktif müşteri oranı (hover: gelir). Son 6 kohort gösteriliyor.
+      </div>
+    </div>
+  )
+}
 
 interface SaleAgg {
   customer_name:  string
@@ -47,7 +178,7 @@ export async function CustomersContent({ companyId }: Props) {
   const periodFrom = `${now.getFullYear()}-01-01`
   const periodTo   = now.toISOString().slice(0, 10)
 
-  const [customersRes, salesRes, intelligenceProfiles, concentrationReport] = await Promise.all([
+  const [customersRes, salesRes, intelligenceProfiles, concentrationReport, cohortReport] = await Promise.all([
     supabase
       .from('customers')
       .select('*')
@@ -64,6 +195,8 @@ export async function CustomersContent({ companyId }: Props) {
     CustomerIntelligenceService.getProfiles(companyId, supabase).catch(() => [] as CustomerPaymentProfile[]),
     ConcentrationRiskService.getReport(companyId, supabase, { from: periodFrom, to: periodTo })
       .catch(() => null as ConcentrationRiskReport | null),
+    CohortAnalysisService.getReport(companyId, supabase)
+      .catch(() => null as CohortAnalysisReport | null),
   ])
 
   const customers = (customersRes.data ?? []) as Customer[]
@@ -364,6 +497,11 @@ export async function CustomersContent({ companyId }: Props) {
       )}
 
       <CustomersClient initialCustomers={customers} />
+
+      {/* ── Müşteri Kohortları ────────────────────────────────────────────── */}
+      {cohortReport && cohortReport.cohorts.length > 0 && (
+        <CohortSection report={cohortReport} />
+      )}
 
       <NarrativeFooter
         narrative="Risk skoru geç ödeme geçmişi ve konsantrasyon baskısına dayanır — tahsilat gecikmesi doğrudan nakit pozisyonunu etkiler."
