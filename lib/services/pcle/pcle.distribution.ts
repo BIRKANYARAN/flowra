@@ -51,6 +51,75 @@ export interface ComplianceWarning {
   severity: 'info' | 'warning' | 'error'
 }
 
+export interface ComplianceViolation {
+  rule:     string   // e.g. 'TTK_509_NO_PROFIT'
+  message:  string   // Turkish language
+  blocking: boolean  // true = hard block, false = warning
+}
+
+/**
+ * Pure function: validates all Turkish legal rules BEFORE any distribution is allowed.
+ * Returns an array of violations (empty = compliant).
+ */
+export function checkDistributionCompliance(params: {
+  distributableNet:      number
+  dividendAmount:        number
+  legalReservesDone:     boolean  // true if legal reserve has been set this period
+  legalReserveBalance:   number
+  paidInCapital:         number
+  boardDecisionRef?:     string | null  // for huzur hakkı
+  isCompensationPayment: boolean
+}): ComplianceViolation[] {
+  const violations: ComplianceViolation[] = []
+  const {
+    distributableNet,
+    dividendAmount,
+    legalReservesDone,
+    legalReserveBalance,
+    paidInCapital,
+    boardDecisionRef,
+    isCompensationPayment,
+  } = params
+
+  // RULE 1 — TTK 509: dividendAmount > distributableNet
+  if (dividendAmount > distributableNet) {
+    violations.push({
+      rule:     'TTK_509_NO_PROFIT',
+      message:  'Dağıtılabilir net kâr yetersiz (TTK 509)',
+      blocking: true,
+    })
+  }
+
+  // RULE 2 — TTK 519: legal reserve not done and balance below 20% of capital
+  if (!legalReservesDone && legalReserveBalance < paidInCapital * 0.20) {
+    violations.push({
+      rule:     'TTK_519_RESERVE_REQUIRED',
+      message:  'Yasal yedek tamamlanmadan temettü dağıtılamaz (TTK 519)',
+      blocking: true,
+    })
+  }
+
+  // RULE 3 — TTK 394: compensation payment without board decision reference
+  if (isCompensationPayment && !boardDecisionRef) {
+    violations.push({
+      rule:     'TTK_394_BOARD_REQUIRED',
+      message:  'Huzur hakkı için Genel Kurul kararı gereklidir (TTK 394)',
+      blocking: true,
+    })
+  }
+
+  // RULE 4 — Negative distributable net
+  if (distributableNet < 0) {
+    violations.push({
+      rule:     'NEGATIVE_DISTRIBUTION',
+      message:  'Dönem zararında dağıtım yapılamaz',
+      blocking: true,
+    })
+  }
+
+  return violations
+}
+
 export class PCLEDistribution {
   // GVK 94 — dividend withholding rate
   static readonly WITHHOLDING_RATE = 0.10

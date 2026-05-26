@@ -7,12 +7,14 @@ import { describe, it, expect } from 'vitest'
 import {
   CHART_OF_ACCOUNTS,
   EXPENSE_TYPE_TO_ACCOUNT,
+  REQUIRED_ACCOUNT_CODES,
   getAccount,
   getAccountSafe,
   isCashAccount,
   isDebitNormal,
   accountClass,
   accountsByClass,
+  validateChartOfAccounts,
 } from '../lib/accounting/chart-of-accounts'
 
 // ── getAccount ────────────────────────────────────────────────────────────────
@@ -281,6 +283,50 @@ describe('CHART_OF_ACCOUNTS integrity', () => {
       a => a.class === 'operating_expense' || a.class === 'cogs' || a.class === 'financing'
     )) {
       expect(acc.normal_balance).toBe('debit')
+    }
+  })
+})
+
+// ── validateChartOfAccounts ───────────────────────────────────────────────────
+
+describe('validateChartOfAccounts', () => {
+  it('all required accounts exist in CHART_OF_ACCOUNTS', () => {
+    const result = validateChartOfAccounts()
+    expect(result.missing_codes).toHaveLength(0)
+  })
+
+  it('no duplicate codes', () => {
+    const result = validateChartOfAccounts()
+    expect(result.duplicate_codes).toHaveLength(0)
+  })
+
+  it('normal_balance is either "debit" or "credit" for all entries', () => {
+    for (const acc of CHART_OF_ACCOUNTS) {
+      expect(['debit', 'credit']).toContain(acc.normal_balance)
+    }
+  })
+
+  it('asset accounts have debit normal balance', () => {
+    const result = validateChartOfAccounts()
+    // No normal_balance_errors involving current_asset or non_current_asset
+    const assetErrors = result.normal_balance_errors.filter(e =>
+      e.includes('current_asset') || e.includes('non_current_asset')
+    )
+    expect(assetErrors).toHaveLength(0)
+  })
+
+  it('liability accounts have credit normal balance', () => {
+    const result = validateChartOfAccounts()
+    const liabilityErrors = result.normal_balance_errors.filter(e =>
+      e.includes('current_liability') || e.includes('non_current_liability')
+    )
+    expect(liabilityErrors).toHaveLength(0)
+  })
+
+  it('REQUIRED_ACCOUNT_CODES contains all critical codes', () => {
+    const CRITICAL = ['100', '102', '120', '320', '500', '600', '620', '590']
+    for (const code of CRITICAL) {
+      expect(REQUIRED_ACCOUNT_CODES).toContain(code)
     }
   })
 })

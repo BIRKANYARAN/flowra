@@ -108,3 +108,74 @@ export function accountClass(code: string): AccountClass | null {
 export function accountsByClass(cls: AccountClass): AccountDefinition[] {
   return CHART_OF_ACCOUNTS.filter(a => a.class === cls)
 }
+
+// ── Chart of Accounts completeness validator ──────────────────────────────────
+
+/** Required account codes that must exist in the chart of accounts */
+export const REQUIRED_ACCOUNT_CODES: string[] = [
+  '100','102','120','153','191','253','257',
+  '320','321','335','360','391','421',
+  '500','501','542','570','580','590',
+  '600','620','760','770','771','772','773','780',
+]
+
+export interface ChartOfAccountsValidation {
+  valid:                  boolean
+  missing_codes:          string[]   // required codes not present in CoA
+  duplicate_codes:        string[]   // codes appearing more than once
+  normal_balance_errors:  string[]   // accounts where normal_balance seems wrong
+}
+
+/**
+ * Validate completeness and correctness of the Chart of Accounts.
+ *
+ * Checks:
+ *   1. All required codes are present
+ *   2. No duplicate codes exist
+ *   3. Normal balance is consistent with account class
+ *      (assets/expenses → debit; liabilities/equity/revenue → credit)
+ *      Contra accounts (257, 501, 580) are explicitly excluded from this check.
+ */
+export function validateChartOfAccounts(): ChartOfAccountsValidation {
+  const allCodes  = CHART_OF_ACCOUNTS.map(a => a.code)
+  const codeSet   = new Set(allCodes)
+
+  // 1. Missing required codes
+  const missing_codes = REQUIRED_ACCOUNT_CODES.filter(c => !codeSet.has(c))
+
+  // 2. Duplicate codes
+  const seen     = new Set<string>()
+  const dupes    = new Set<string>()
+  for (const code of allCodes) {
+    if (seen.has(code)) dupes.add(code)
+    else seen.add(code)
+  }
+  const duplicate_codes = Array.from(dupes)
+
+  // 3. Normal balance consistency
+  // Contra accounts have intentionally reversed normal balances — exclude them
+  const CONTRA_ACCOUNTS = new Set(['257', '501', '580'])
+
+  const DEBIT_CLASSES: AccountClass[]  = ['current_asset', 'non_current_asset', 'cogs', 'operating_expense', 'financing']
+  const CREDIT_CLASSES: AccountClass[] = ['current_liability', 'non_current_liability', 'equity', 'revenue']
+
+  const normal_balance_errors: string[] = []
+
+  for (const acc of CHART_OF_ACCOUNTS) {
+    if (CONTRA_ACCOUNTS.has(acc.code)) continue
+
+    if (DEBIT_CLASSES.includes(acc.class) && acc.normal_balance !== 'debit') {
+      normal_balance_errors.push(
+        `${acc.code} (${acc.class}) has normal_balance='${acc.normal_balance}' but expected 'debit'`
+      )
+    } else if (CREDIT_CLASSES.includes(acc.class) && acc.normal_balance !== 'credit') {
+      normal_balance_errors.push(
+        `${acc.code} (${acc.class}) has normal_balance='${acc.normal_balance}' but expected 'credit'`
+      )
+    }
+  }
+
+  const valid = missing_codes.length === 0 && duplicate_codes.length === 0 && normal_balance_errors.length === 0
+
+  return { valid, missing_codes, duplicate_codes, normal_balance_errors }
+}

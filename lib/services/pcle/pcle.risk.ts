@@ -53,6 +53,7 @@ export interface CompanyRiskSummary {
   dsr:                   number   // debt service ratio
   concentration_pct:     number   // largest single lender % of total debt
   highest_risk_partner:  string | null
+  concentration_warning: string | null  // set when any partner provides >80% of total loans
 }
 
 function scoreToGrade(score: number): RiskGrade {
@@ -83,8 +84,15 @@ export class PCLERisk {
 
     const profiles: PartnerRiskProfile[] = partners.map(p => {
       // ── 1. Concentration Risk ────────────────────────────────────────────────
-      const conc_pct   = total_debt_try > 0 ? (p.net_loan / total_debt_try) * 100 : 0
-      const conc_score = Math.max(0, Math.min(100, 100 - (conc_pct - 30) * 2))  // >50% → F
+      const conc_pct        = total_debt_try > 0 ? (p.net_loan / total_debt_try) * 100 : 0
+      const conc_ratio      = conc_pct / 100  // 0–1 decimal for threshold comparisons
+      let conc_score        = Math.max(0, Math.min(100, 100 - (conc_pct - 30) * 2))  // >50% → F
+      // Apply concentration penalty: >80% → -30 pts, >60% → -15 pts
+      if (conc_ratio > 0.80) {
+        conc_score = Math.max(0, conc_score - 30)
+      } else if (conc_ratio > 0.60) {
+        conc_score = Math.max(0, conc_score - 15)
+      }
       const concentration: PartnerRiskDimension = {
         name:      'Konsantrasyon Riski',
         score:     round2(conc_score),
@@ -213,6 +221,14 @@ export class PCLERisk {
       ? profiles.reduce((worst, p) => p.composite_score < worst.composite_score ? p : worst).partner_name
       : null
 
+    // ── Concentration warning — triggered when any single partner > 80% ─────
+    const maxConcentration = total_debt_try > 0
+      ? Math.max(...partners.map(p => p.net_loan / total_debt_try), 0)
+      : 0
+    const concentration_warning: string | null = maxConcentration > 0.80
+      ? `Tek ortak toplam ortaklık borcunun %${(maxConcentration * 100).toFixed(0)}'ini sağlıyor — konsantrasyon riski yüksek`
+      : null
+
     return {
       partner_profiles:      profiles,
       company_composite,
@@ -221,6 +237,7 @@ export class PCLERisk {
       dsr:                   round2(dsr),
       concentration_pct,
       highest_risk_partner:  highest_risk,
+      concentration_warning,
     }
   }
 }

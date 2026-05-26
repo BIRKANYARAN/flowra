@@ -11,6 +11,7 @@ import { describe, it, expect } from 'vitest'
 import { PCLEEquity } from '../lib/services/pcle/pcle.equity'
 import { PCLEDistribution, type DistributionInputs } from '../lib/services/pcle/pcle.distribution'
 import { PCLERisk } from '../lib/services/pcle/pcle.risk'
+import { PCLELiability, type PartnerLoanInput } from '../lib/services/pcle/pcle.liability'
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // PCLEEquity
@@ -536,5 +537,93 @@ describe('PCLERisk.computePartnerRisks — company summary', () => {
     const result = PCLERisk.computePartnerRisks(mkRiskParams())
     const lowest = result.partner_profiles.reduce((a, b) => a.composite_score < b.composite_score ? a : b)
     expect(result.highest_risk_partner).toBe(lowest.partner_name)
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// PCLELiability — computeWaterfall edge cases
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function mkLoanInput(overrides: Partial<PartnerLoanInput> & Pick<PartnerLoanInput, 'partner_id' | 'partner_name' | 'share_ratio' | 'net_loan'>): PartnerLoanInput {
+  return {
+    total_loaned:    overrides.net_loan,
+    total_repaid:    0,
+    first_loan_date: null,
+    ...overrides,
+  }
+}
+
+describe('PCLELiability.computeWaterfall — edge cases', () => {
+  it('partner with 0 share_ratio never receives repayment (edge case 1)', () => {
+    // Partner p1 has share_ratio=0 but has net_loan. In Phase 2 pro-rata, 0 share → 0 allocation.
+    // In Phase 1 normalization, all loan is "overfinanced" vs expected (0), so p1 gets Phase 1 repayment.
+    // But if p2 also has 0 share_ratio and no loan, the test is: a partner with share_ratio=0 and no loan gets nothing.
+    const loans: PartnerLoanInput[] = [
+      mkLoanInput({ partner_id: 'p1', partner_name: 'Ahmet',  share_ratio: 1.0, net_loan: 100_000 }),
+      mkLoanInput({ partner_id: 'p2', partner_name: 'Mehmet', share_ratio: 0.0, net_loan: 0 }),
+    ]
+    const result = PCLELiability.computeWaterfall(50_000, loans)
+    const p2 = result.allocations.find(a => a.partner_id === 'p2')
+    expect(p2?.allocated_try).toBe(0)
+  })
+
+  it('all partners equally funded — pure pro-rata expected (edge case 2)', () => {
+    // Both partners have 50% share and equal loans — no Phase 1 normalization needed.
+    // Phase 2 should split equally.
+    const loans: PartnerLoanInput[] = [
+      mkLoanInput({ partner_id: 'p1', partner_name: 'Ahmet',  share_ratio: 0.5, net_loan: 50_000 }),
+      mkLoanInput({ partner_id: 'p2', partner_name: 'Mehmet', share_ratio: 0.5, net_loan: 50_000 }),
+    ]
+    const result = PCLELiability.computeWaterfall(40_000, loans)
+    const p1 = result.allocations.find(a => a.partner_id === 'p1')!
+    const p2 = result.allocations.find(a => a.partner_id === 'p2')!
+    // Both should get equal allocation (20K each)
+    expect(p1.phase1_try).toBe(0)  // no normalization
+    expect(p2.phase1_try).toBe(0)
+    expect(p1.allocated_try).toBeCloseTo(20_000, 0)
+    expect(p2.allocated_try).toBeCloseTo(20_000, 0)
+  })
+
+  it('single partner — gets 100% of payment (edge case 3)', () => {
+    const loans: PartnerLoanInput[] = [
+      mkLoanInput({ partner_id: 'p1', partner_name: 'Ahmet', share_ratio: 1.0, net_loan: 200_000 }),
+    ]
+    const result = PCLELiability.computeWaterfall(80_000, loans)
+    const p1 = result.allocations.find(a => a.partner_id === 'p1')!
+    expect(p1.allocated_try).toBeCloseTo(80_000, 0)
+    expect(result.total_allocated_try).toBeCloseTo(80_000, 0)
+  })
+
+  it('payment exactly equals excess — normalization completes, phase 2 gets zero (edge case 4)', () => {
+    // p1 has share_ratio=0.4 but net_loan=60K; total=80K; expected=32K; excess=28K
+    // p2 has share_ratio=0.6 but net_loan=20K; total=80K; expected=48K; no excess
+    // Available cash = 28K (exactly p1's excess) → Phase 1 fully clears, Phase 2 gets 0
+    const loans: PartnerLoanInput[] = [
+      mkLoanInput({ partner_id: 'p1', partner_name: 'Ahmet',  share_ratio: 0.4, net_loan: 60_000 }),
+      mkLoanInput({ partner_id: 'p2', partner_name: 'Mehmet', share_ratio: 0.6, net_loan: 20_000 }),
+    ]
+    const result = PCLELiability.computeWaterfall(28_000, loans)
+    const p1 = result.allocations.find(a => a.partner_id === 'p1')!
+    const p2 = result.allocations.find(a => a.partner_id === 'p2')!
+    // p1 should receive their full excess in Phase 1
+    expect(p1.phase1_try).toBeCloseTo(28_000, 0)
+    // p2 should get nothing (no cash left for Phase 2)
+    expect(p2.allocated_try).toBe(0)
+  })
+
+  it('net_loan never goes negative after allocation (edge case 5 — bug guard)', () => {
+    // Provide more cash than total debt — no partner should receive more than their net_loan
+    const loans: PartnerLoanInput[] = [
+      mkLoanInput({ partner_id: 'p1', partner_name: 'Ahmet',  share_ratio: 0.6, net_loan: 30_000 }),
+      mkLoanInput({ partner_id: 'p2', partner_name: 'Mehmet', share_ratio: 0.4, net_loan: 20_000 }),
+    ]
+    const result = PCLELiability.computeWaterfall(200_000, loans)  // way more than debt
+    for (const alloc of result.allocations) {
+      const original = loans.find(l => l.partner_id === alloc.partner_id)!
+      // allocated must never exceed original net_loan
+      expect(alloc.allocated_try).toBeLessThanOrEqual(original.net_loan + 0.01)
+    }
+    // Total allocated must equal total debt (capped)
+    expect(result.total_allocated_try).toBeCloseTo(50_000, 0)
   })
 })

@@ -3,6 +3,169 @@
 
 import { round2 } from '@/lib/calc'
 
+// ── Debt Pressure Timeline ─────────────────────────────────────────────────────
+
+export interface DebtPressurePeriod {
+  month:            string   // YYYY-MM
+  debt_service_try: number   // interest + scheduled_repayment
+  net_income_try:   number   // projected net income for that month
+  dsr:              number   // debt_service / max(1, net_income)
+  status: 'healthy' | 'strained' | 'critical' | 'insolvent'
+}
+
+export interface DebtPressureTimeline {
+  periods:           DebtPressurePeriod[]
+  peak_dsr:          number
+  peak_month:        string
+  months_strained:   number
+  months_critical:   number
+  months_insolvent:  number
+  clearance_month:   string | null  // first month where dsr < 0.3 after being strained
+}
+
+function dprStatus(dsr: number): DebtPressurePeriod['status'] {
+  if (dsr < 0.30) return 'healthy'
+  if (dsr < 0.50) return 'strained'
+  if (dsr < 0.70) return 'critical'
+  return 'insolvent'
+}
+
+function advanceYYYYMM(ym: string, n: number): string {
+  let [y, m] = ym.split('-').map(Number)
+  m += n
+  while (m > 12) { m -= 12; y++ }
+  while (m < 1)  { m += 12; y-- }
+  return `${y}-${String(m).padStart(2, '0')}`
+}
+
+export function computeDebtPressureTimeline(params: {
+  projectedMonthlyNetIncome: number[]
+  monthlyDebtService: number[]
+  startMonth: string
+}): DebtPressureTimeline {
+  const len = Math.max(params.projectedMonthlyNetIncome.length, params.monthlyDebtService.length)
+  const periods: DebtPressurePeriod[] = []
+
+  for (let i = 0; i < len; i++) {
+    const net_income_try   = params.projectedMonthlyNetIncome[i] ?? 0
+    const debt_service_try = params.monthlyDebtService[i]        ?? 0
+    const dsr              = round2(debt_service_try / Math.max(1, net_income_try))
+    periods.push({
+      month: advanceYYYYMM(params.startMonth, i),
+      debt_service_try,
+      net_income_try,
+      dsr,
+      status: dprStatus(dsr),
+    })
+  }
+
+  // Peak DSR
+  let peak_dsr   = 0
+  let peak_month = periods[0]?.month ?? params.startMonth
+  for (const p of periods) {
+    if (p.dsr > peak_dsr) { peak_dsr = p.dsr; peak_month = p.month }
+  }
+
+  const months_strained  = periods.filter(p => p.status === 'strained').length
+  const months_critical  = periods.filter(p => p.status === 'critical').length
+  const months_insolvent = periods.filter(p => p.status === 'insolvent').length
+
+  // clearance_month: first healthy month AFTER at least one strained/critical/insolvent
+  let wasStrained    = false
+  let clearance_month: string | null = null
+  for (const p of periods) {
+    if (p.status !== 'healthy') { wasStrained = true }
+    else if (wasStrained && !clearance_month) { clearance_month = p.month }
+  }
+
+  return { periods, peak_dsr, peak_month, months_strained, months_critical, months_insolvent, clearance_month }
+}
+
+// ── Seasonal Revenue Distribution ─────────────────────────────────────────────
+
+export type RevenueModel = 'uniform' | 'seasonal' | 'custom'
+
+export const SEASONAL_PRESETS = {
+  retail_turkey: [0.06, 0.06, 0.08, 0.08, 0.09, 0.10, 0.09, 0.09, 0.09, 0.10, 0.08, 0.08],
+  service_b2b:   [0.08, 0.08, 0.09, 0.09, 0.09, 0.08, 0.07, 0.07, 0.09, 0.09, 0.09, 0.08],
+  uniform:       Array(12).fill(1 / 12) as number[],
+}
+
+export function distributeRevenue(
+  totalAnnual: number,
+  model: RevenueModel,
+  monthlyWeights?: number[],
+): number[] {
+  if (model === 'custom') {
+    if (!monthlyWeights || monthlyWeights.length !== 12) {
+      throw new Error('distributeRevenue: custom model requires exactly 12 monthly weights')
+    }
+    const total = monthlyWeights.reduce((s, w) => s + w, 0)
+    if (total === 0) {
+      throw new Error('distributeRevenue: custom weights must not all be zero')
+    }
+    const normalized = monthlyWeights.map(w => w / total)
+    return normalized.map(w => round2(totalAnnual * w))
+  }
+
+  const weights = model === 'seasonal' ? SEASONAL_PRESETS.retail_turkey : SEASONAL_PRESETS.uniform
+  return weights.map(w => round2(totalAnnual * w))
+}
+
+// ── Three-Scenario Comparison ──────────────────────────────────────────────────
+
+export interface ScenarioVariant {
+  name:            'base' | 'optimistic' | 'pessimistic'
+  multiplier:      number
+  monthly_revenue: number[]
+  monthly_net:     number[]
+  runway_months:   number | null  // null = doesn't run out
+  cumulative_net:  number
+}
+
+export function buildThreeScenarios(params: {
+  baseMonthlyRevenue: number[]
+  baseMonthlyExpenses: number[]
+  taxRate: number
+  growthFactor?:  number
+  stressFactor?:  number
+  initialCash?:   number
+}): { base: ScenarioVariant; optimistic: ScenarioVariant; pessimistic: ScenarioVariant } {
+  const growthFactor  = params.growthFactor  ?? 0.15
+  const stressFactor  = params.stressFactor  ?? 0.20
+  const initialCash   = params.initialCash   ?? 0
+
+  function buildVariant(
+    name: ScenarioVariant['name'],
+    multiplier: number,
+  ): ScenarioVariant {
+    const monthly_revenue = params.baseMonthlyRevenue.map(r => round2(r * multiplier))
+    const monthly_net: number[] = []
+    let cash = initialCash
+    let runway_months: number | null = null
+
+    for (let i = 0; i < monthly_revenue.length; i++) {
+      const rev  = monthly_revenue[i]
+      const exp  = params.baseMonthlyExpenses[i] ?? 0
+      const ebt  = round2(rev - exp)
+      const tax  = ebt > 0 ? round2(ebt * params.taxRate) : 0
+      const net  = round2(ebt - tax)
+      monthly_net.push(net)
+      cash = round2(cash + net)
+      if (cash < 0 && runway_months === null) runway_months = i + 1
+    }
+
+    const cumulative_net = round2(monthly_net.reduce((s, n) => s + n, 0))
+    return { name, multiplier, monthly_revenue, monthly_net, runway_months, cumulative_net }
+  }
+
+  return {
+    base:        buildVariant('base',        1.0),
+    optimistic:  buildVariant('optimistic',  1 + growthFactor),
+    pessimistic: buildVariant('pessimistic', 1 - stressFactor),
+  }
+}
+
 export interface MonthlyData {
   year:       number
   month:      number          // 1-12

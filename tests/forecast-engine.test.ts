@@ -8,6 +8,10 @@ import { describe, it, expect } from 'vitest'
 import {
   computeForecast,
   buildForecastInputs,
+  computeDebtPressureTimeline,
+  distributeRevenue,
+  buildThreeScenarios,
+  SEASONAL_PRESETS,
   type ForecastInputs,
   type TrailingMonthActual,
 } from '../lib/engines/forecast.engine'
@@ -302,5 +306,133 @@ describe('buildForecastInputs', () => {
     // max(0, 1) = 1, so 0/1 = 0
     expect(inputs.avgMonthlyRevenue).toBe(0)
     expect(inputs.avgMonthlyExpenses).toBe(0)
+  })
+})
+
+// ── computeDebtPressureTimeline ───────────────────────────────────────────────
+
+describe('computeDebtPressureTimeline — status classification', () => {
+  it('all healthy months returns clearance_month = null (was never strained)', () => {
+    // clearance_month only set after being strained; if always healthy, it stays null
+    const result = computeDebtPressureTimeline({
+      projectedMonthlyNetIncome: [100_000, 100_000, 100_000],
+      monthlyDebtService:        [10_000,  10_000,  10_000],  // dsr = 0.1 → healthy
+      startMonth: '2025-01',
+    })
+    expect(result.clearance_month).toBeNull()
+  })
+
+  it('DSR > 0.7 → insolvent status', () => {
+    const result = computeDebtPressureTimeline({
+      projectedMonthlyNetIncome: [10_000],
+      monthlyDebtService:        [8_000],   // 8000/10000 = 0.8 > 0.7
+      startMonth: '2025-01',
+    })
+    expect(result.periods[0].status).toBe('insolvent')
+  })
+
+  it('clearance_month is null if never falls below 0.3 after being strained', () => {
+    // dsr stays at 0.4 (strained) all 3 months
+    const result = computeDebtPressureTimeline({
+      projectedMonthlyNetIncome: [100_000, 100_000, 100_000],
+      monthlyDebtService:        [40_000,  40_000,  40_000],
+      startMonth: '2025-03',
+    })
+    expect(result.clearance_month).toBeNull()
+  })
+
+  it('peak_dsr is the maximum DSR across all months', () => {
+    const result = computeDebtPressureTimeline({
+      projectedMonthlyNetIncome: [100_000, 100_000, 100_000],
+      monthlyDebtService:        [10_000,  60_000,  20_000],
+      startMonth: '2025-01',
+    })
+    // month 2: 60000/100000 = 0.6 is the highest
+    expect(result.peak_dsr).toBeCloseTo(0.6, 1)
+    expect(result.peak_month).toBe('2025-02')
+  })
+
+  it('months_strained counts strained periods correctly', () => {
+    // dsr: 0.4, 0.6, 0.8, 0.1 → strained=1, critical=1, insolvent=1
+    const result = computeDebtPressureTimeline({
+      projectedMonthlyNetIncome: [100_000, 100_000, 100_000, 100_000],
+      monthlyDebtService:        [40_000,  60_000,  80_000,  10_000],
+      startMonth: '2025-01',
+    })
+    expect(result.months_strained).toBe(1)
+    expect(result.months_critical).toBe(1)
+    expect(result.months_insolvent).toBe(1)
+  })
+
+  it('clearance_month is set when recovery follows a strained period', () => {
+    // strained then healthy
+    const result = computeDebtPressureTimeline({
+      projectedMonthlyNetIncome: [100_000, 100_000, 100_000],
+      monthlyDebtService:        [40_000,  40_000,  5_000],  // last month dsr = 0.05 → healthy
+      startMonth: '2025-06',
+    })
+    expect(result.clearance_month).toBe('2025-08')
+  })
+})
+
+// ── distributeRevenue ─────────────────────────────────────────────────────────
+
+describe('distributeRevenue', () => {
+  it('uniform: all 12 months are equal', () => {
+    const result = distributeRevenue(1_200_000, 'uniform')
+    expect(result).toHaveLength(12)
+    result.forEach(v => expect(v).toBeCloseTo(100_000, 0))
+  })
+
+  it('seasonal: sums to totalAnnual within rounding', () => {
+    const result = distributeRevenue(1_000_000, 'seasonal')
+    const sum = result.reduce((s, v) => s + v, 0)
+    expect(sum).toBeCloseTo(1_000_000, -1)  // within ±10 due to rounding
+  })
+
+  it('custom: weights normalized when they do not sum to 1', () => {
+    // weights sum to 2 — should be normalized
+    const weights = Array(12).fill(2 / 12)
+    const result = distributeRevenue(1_200_000, 'custom', weights)
+    const sum = result.reduce((s, v) => s + v, 0)
+    expect(sum).toBeCloseTo(1_200_000, -1)
+  })
+
+  it('custom: throws if wrong number of weights provided', () => {
+    expect(() => distributeRevenue(1_000_000, 'custom', [0.1, 0.2])).toThrow()
+  })
+
+  it('custom: throws if all weights are zero', () => {
+    expect(() => distributeRevenue(1_000_000, 'custom', Array(12).fill(0))).toThrow()
+  })
+})
+
+// ── buildThreeScenarios ───────────────────────────────────────────────────────
+
+describe('buildThreeScenarios', () => {
+  const baseMonthlyRevenue  = Array(12).fill(100_000)
+  const baseMonthlyExpenses = Array(12).fill(80_000)
+  const taxRate = 0.20
+
+  it('optimistic revenue > base revenue each month', () => {
+    const { base, optimistic } = buildThreeScenarios({ baseMonthlyRevenue, baseMonthlyExpenses, taxRate })
+    for (let i = 0; i < 12; i++) {
+      expect(optimistic.monthly_revenue[i]).toBeGreaterThan(base.monthly_revenue[i])
+    }
+  })
+
+  it('pessimistic net < base net (due to lower revenue, same expenses)', () => {
+    const { base, pessimistic } = buildThreeScenarios({ baseMonthlyRevenue, baseMonthlyExpenses, taxRate })
+    const baseTotal = base.monthly_net.reduce((s, n) => s + n, 0)
+    const pessTotal = pessimistic.monthly_net.reduce((s, n) => s + n, 0)
+    expect(pessTotal).toBeLessThan(baseTotal)
+  })
+
+  it('cumulative_net matches sum of monthly_net', () => {
+    const { base, optimistic, pessimistic } = buildThreeScenarios({ baseMonthlyRevenue, baseMonthlyExpenses, taxRate })
+    for (const scenario of [base, optimistic, pessimistic]) {
+      const sum = scenario.monthly_net.reduce((s, n) => s + n, 0)
+      expect(scenario.cumulative_net).toBeCloseTo(sum, 0)
+    }
   })
 })

@@ -4,6 +4,7 @@ import type { BaseExpenseLine, DebtTranche, StrategicScenarioInput } from '@/lib
 import { CORPORATE_TAX_RATE_TR }        from '@/lib/services/finance-rules'
 import { resolveApiAuth } from '@/lib/api-auth'
 import { round2 } from '@/lib/calc'
+import { computeDebtPressureTimeline } from '@/lib/engines/forecast.engine'
 
 export const dynamic = 'force-dynamic'
 
@@ -143,7 +144,17 @@ export async function POST(req: NextRequest) {
 
     const result = computeMultiScenario(input)
 
-    return NextResponse.json(result)
+    // ── Compute debt pressure timeline (based on base scenario) ───────────────
+    const baseMonths = result.base.months
+    const projectedMonthlyNetIncome = baseMonths.map(m => m.net_income)
+    const monthlyDebtServiceArr = baseMonths.map(m => m.debt_service)
+    const debt_pressure = computeDebtPressureTimeline({
+      projectedMonthlyNetIncome,
+      monthlyDebtService: monthlyDebtServiceArr,
+      startMonth: input.start_month,
+    })
+
+    return NextResponse.json({ ...result, debt_pressure })
   } catch (e) {
     console.error('[simulation/strategic]', e)
     return NextResponse.json({ error: 'Internal error' }, { status: 500 })
