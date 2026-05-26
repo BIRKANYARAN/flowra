@@ -32,6 +32,7 @@ type AnyClient = SupabaseClient<any>
 import {
   CORPORATE_TAX_RATE_TR,
   materializeRecurring,
+  NON_DEDUCTIBLE_EXPENSE_TYPES,
   resolveDeductibility,
   resolveExpenseType,
   round2,
@@ -256,10 +257,15 @@ export class FinanceService {
       const cat       = String(e.category ?? 'general') as ExpenseCategory
       const amount    = Number(e.amount_try ?? 0)
       const kdv       = Number(e.kdv ?? 0)
-      const deductive = resolveDeductibility(cat, null)   // is_deductible not on expenses table
+      // Derive expenseType first so deductibility can check it.
+      // Stored expense_type takes precedence; fall back to category-derived type.
       const expenseType = e.expense_type
         ? String(e.expense_type) as ExpenseType
         : resolveExpenseType(cat)
+      // Non-deductible if the expense type is a balance-sheet or distribution flow
+      // (matches the exclusion logic in /api/cfo-metrics) OR if the category map says no.
+      const deductive = !NON_DEDUCTIBLE_EXPENSE_TYPES.has(expenseType) &&
+        resolveDeductibility(cat, null)
       lines.push({
         source:          'expense',
         source_id:       String(e.id),

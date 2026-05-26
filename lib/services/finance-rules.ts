@@ -61,6 +61,24 @@ export const EXPENSE_TYPE_MAP: Record<ExpenseCategory, ExpenseType> = {
 }
 
 /**
+ * Expense *types* that are non-deductible regardless of category.
+ * These represent balance-sheet movements or distribution flows, not P&L costs:
+ *   internal_transfer — internal cash movement (no P&L effect)
+ *   partner_financing — partner capital/loan inflow (balance-sheet only)
+ *   loan_repayment    — principal repayment (balance-sheet only)
+ *   dividend          — after-tax profit distribution
+ *
+ * This mirrors the exclusion logic in /api/cfo-metrics (expense_type filter).
+ * Used by finance.service.ts to align deductibility with the tax matrah calculation.
+ */
+export const NON_DEDUCTIBLE_EXPENSE_TYPES = new Set<ExpenseType>([
+  'internal_transfer',
+  'partner_financing',
+  'loan_repayment',
+  'dividend',
+])
+
+/**
  * Resolve the effective deductibility for a row.
  *   - explicit `true` / `false` from DB row wins
  *   - `null` / `undefined` → fall back to the category map

@@ -20,6 +20,7 @@ import {
 } from '../lib/services/tax.service'
 import {
   materializeRecurring,
+  NON_DEDUCTIBLE_EXPENSE_TYPES,
   resolveDeductibility,
   resolveExpenseType,
   periodForMonth,
@@ -358,6 +359,49 @@ describe('periodForMonth()', () => {
   it('December 2024 → ends on 31', () => {
     const p = periodForMonth('2024-12')
     expect(p.to).toBe('2024-12-31')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// NON_DEDUCTIBLE_EXPENSE_TYPES — Faz 11-C alignment set
+//
+// This set drives the deductibility override in finance.service.ts to align
+// with the expense_type filter in /api/cfo-metrics. Both code paths must agree
+// on which expense types are excluded from the corporate tax base.
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('NON_DEDUCTIBLE_EXPENSE_TYPES', () => {
+  it('contains exactly the four non-P&L expense types', () => {
+    // These four types are balance-sheet movements or after-tax distributions
+    // and must be excluded from the corporate tax matrah in BOTH cfo-metrics
+    // (expense_type column filter) and finance.service.ts (getOperatingExpenses).
+    expect(NON_DEDUCTIBLE_EXPENSE_TYPES.has('internal_transfer')).toBe(true)
+    expect(NON_DEDUCTIBLE_EXPENSE_TYPES.has('partner_financing')).toBe(true)
+    expect(NON_DEDUCTIBLE_EXPENSE_TYPES.has('loan_repayment')).toBe(true)
+    expect(NON_DEDUCTIBLE_EXPENSE_TYPES.has('dividend')).toBe(true)
+  })
+
+  it('does NOT contain operational expense types', () => {
+    for (const t of ['operational', 'capital', 'financial', 'tax', 'other'] as const) {
+      expect(NON_DEDUCTIBLE_EXPENSE_TYPES.has(t), `${t} should NOT be in non-deductible set`).toBe(false)
+    }
+  })
+
+  it('has exactly 4 entries — no accidental additions', () => {
+    expect(NON_DEDUCTIBLE_EXPENSE_TYPES.size).toBe(4)
+  })
+
+  it('mirrors cfo-metrics exclusion logic — internal_transfer is excluded', () => {
+    // Regression guard: if this fails, the finance.service.ts and
+    // /api/cfo-metrics divergence (Faz 11-C) would re-appear.
+    // The cfo-metrics route excludes expenses where:
+    //   expense_type === 'partner_financing' || 'loan_repayment' || 'dividend' || 'internal_transfer'
+    // This set must contain the same four types.
+    const cfoMetricsExclusions = new Set(['partner_financing', 'loan_repayment', 'dividend', 'internal_transfer'])
+    for (const t of cfoMetricsExclusions) {
+      expect(NON_DEDUCTIBLE_EXPENSE_TYPES.has(t as never), `${t} missing from set`).toBe(true)
+    }
+    expect(NON_DEDUCTIBLE_EXPENSE_TYPES.size).toBe(cfoMetricsExclusions.size)
   })
 })
 
