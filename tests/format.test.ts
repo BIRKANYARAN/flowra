@@ -12,6 +12,7 @@ import {
   fmtMoney,
   fmtCompact,
   fmtDate,
+  fmtDateMed,
   fmtMonth,
   fmtMonthShort,
   fmtDatetime,
@@ -187,6 +188,38 @@ describe('fmtDate', () => {
 
   it('returns string for all valid inputs', () => {
     expect(typeof fmtDate('2025-06-01')).toBe('string')
+  })
+})
+
+// ── fmtDateMed ────────────────────────────────────────────────────────────────
+
+describe('fmtDateMed', () => {
+  it('returns "—" for null/undefined', () => {
+    expect(fmtDateMed(null)).toBe('—')
+    expect(fmtDateMed(undefined)).toBe('—')
+  })
+
+  it('includes day, abbreviated month, and full year', () => {
+    const result = fmtDateMed('2025-05-15')
+    expect(result).toContain('15')
+    expect(result).toContain('2025')
+    // Turkish abbreviated month for May is "May"
+    expect(result).toContain('May')
+  })
+
+  it('differs from fmtDate (uses short month name, not numeric)', () => {
+    const med = fmtDateMed('2025-05-15')
+    const short = fmtDate('2025-05-15')
+    // fmtDate → "15.05.2025" (all numeric), fmtDateMed → "15 May 2025" (abbrev month)
+    expect(med).not.toBe(short)
+    // fmtDate uses dots, fmtDateMed does not
+    expect(short).toMatch(/\d{2}\.\d{2}\.\d{4}/)
+    expect(med).not.toMatch(/\d{2}\.\d{2}\.\d{4}/)
+  })
+
+  it('accepts Date objects', () => {
+    const result = fmtDateMed(new Date('2025-01-01'))
+    expect(result).toContain('2025')
   })
 })
 
