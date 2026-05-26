@@ -12,6 +12,7 @@ import SalesFlowClient, {
 import { SalesFlowCommandBar } from '@/app/dashboard/sales-flow/_components/SalesFlowCommandBar'
 import { fmtMonthShort as fmtMonth } from '@/lib/format'
 import { detectRevenueAnomalies, type MonthlyRevenue } from '@/lib/engines/anomaly.engine'
+import { SalesFunnelService, type FunnelStage } from '@/lib/services/commercial/sales-funnel.service'
 
 function CommandBarSkeleton() {
   return (
@@ -52,7 +53,7 @@ interface Props { companyId: string }
 export async function PipelineContent({ companyId }: Props) {
   const supabase = createClient()
 
-  const [pfRes, salesRes, lotRes] = await Promise.all([
+  const [pfRes, salesRes, lotRes, funnelResult] = await Promise.all([
     supabase
       .from('proformas')
       .select('id, customer_name, status, total, fx_try, currency, created_at, updated_at')
@@ -71,6 +72,8 @@ export async function PipelineContent({ companyId }: Props) {
       .eq('company_id', companyId)
       .is('deleted_at', null)
       .gt('qty_remaining', 0),
+
+    SalesFunnelService.getReport(companyId, supabase).catch(() => null),
   ])
 
   const proformas = (pfRes.data  ?? []) as Proforma[]
@@ -112,11 +115,129 @@ export async function PipelineContent({ companyId }: Props) {
     .filter(a => a.severity === 'high')
     .slice(0, 3)
 
+  const funnelReport = funnelResult ?? null
+  const funnelStages = funnelReport?.stages ?? []
+  const funnelMaxCount = Math.max(...funnelStages.map(s => s.count), 1)
+
   return (
     <div className="space-y-4">
       <Suspense fallback={<CommandBarSkeleton />}>
         <SalesFlowCommandBar companyId={companyId} />
       </Suspense>
+
+      {/* ── Satış Hunisi ─────────────────────────────────────────────────── */}
+      {funnelReport && funnelStages.length > 0 && (
+        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+          {/* Header */}
+          <div className="px-4 py-2.5 border-b border-[#e2e8f0] flex items-center justify-between">
+            <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+              Satış Hunisi — {funnelReport.period_label}
+            </span>
+            {funnelReport.metrics.overall_conversion_pct !== null && (
+              <span className="text-[10px] font-bold text-brand">
+                Genel dönüşüm: %{funnelReport.metrics.overall_conversion_pct.toFixed(1)}
+              </span>
+            )}
+          </div>
+
+          {/* Bottleneck alert */}
+          {funnelReport.bottleneck_label &&
+            funnelStages.some(s => s.conversion_rate_pct !== null && s.conversion_rate_pct < 50) && (
+            <div className="px-4 py-2 bg-warn-light border-b border-warn-light">
+              <span className="text-[10px] font-bold text-warn-text">
+                ⚠ {funnelReport.bottleneck_label}
+              </span>
+            </div>
+          )}
+
+          {/* Funnel bars */}
+          <div className="px-4 pt-4 pb-2 space-y-2">
+            {funnelStages.map((stage: FunnelStage, idx: number) => {
+              const barPct = funnelMaxCount > 0 ? Math.max(4, (stage.count / funnelMaxCount) * 100) : 4
+              return (
+                <div key={stage.stage}>
+                  {/* Conversion arrow between stages */}
+                  {idx > 0 && stage.conversion_rate_pct !== null && (
+                    <div className="flex items-center gap-2 mb-1 ml-2">
+                      <div className="w-3 h-3 text-[#94a3b8]">↓</div>
+                      <span className={`text-[10px] font-bold ${
+                        stage.conversion_rate_pct >= 70 ? 'text-pos-text' :
+                        stage.conversion_rate_pct >= 50 ? 'text-warn-text' : 'text-neg'
+                      }`}>
+                        %{stage.conversion_rate_pct.toFixed(0)} dönüşüm
+                        {stage.drop_off_pct !== null && stage.drop_off_pct > 0 && (
+                          <span className="text-[#94a3b8] font-normal ml-1">
+                            (%{stage.drop_off_pct.toFixed(0)} kayıp)
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                  )}
+                  {/* Stage row */}
+                  <div className="flex items-center gap-3">
+                    <div className="w-36 shrink-0">
+                      <div className="text-[10px] font-semibold text-[#334155] truncate">{stage.label}</div>
+                      <div className="text-[9px] text-[#94a3b8]">{stage.count} kayıt</div>
+                    </div>
+                    <div className="flex-1 h-6 bg-[#f8fafc] rounded overflow-hidden">
+                      <div
+                        className={`h-full rounded transition-all ${
+                          idx === 0 ? 'bg-brand' :
+                          idx === 1 ? 'bg-info-text' :
+                          idx === 2 ? 'bg-pos-text' :
+                          idx === 3 ? 'bg-warn-text' :
+                          'bg-brand'
+                        } opacity-80`}
+                        style={{ width: `${barPct}%` }}
+                      />
+                    </div>
+                    <div className="w-24 text-right shrink-0">
+                      <div className="text-[10px] font-bold text-[#1e293b] tabular-nums">
+                        {stage.total_value_try > 0 ? serverFmt(stage.total_value_try) : '—'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Metrics strip */}
+          <div className="border-t border-[#e2e8f0] grid grid-cols-2 sm:grid-cols-4 divide-x divide-[#f1f5f9]">
+            {[
+              {
+                label: 'Ortalama Anlaşma',
+                value: funnelReport.metrics.avg_deal_size_try !== null
+                  ? serverFmt(funnelReport.metrics.avg_deal_size_try) : '—',
+                color: 'text-[#0f172a]',
+              },
+              {
+                label: 'Pipeline Değeri',
+                value: funnelReport.metrics.total_pipeline_value_try > 0
+                  ? serverFmt(funnelReport.metrics.total_pipeline_value_try) : '—',
+                color: 'text-info-text',
+              },
+              {
+                label: 'Kapatılan (Ödendi)',
+                value: funnelReport.metrics.total_closed_won_try > 0
+                  ? serverFmt(funnelReport.metrics.total_closed_won_try) : '—',
+                color: 'text-pos-text',
+              },
+              {
+                label: 'Satış Hızı / Ay',
+                value: funnelReport.metrics.velocity !== null
+                  ? `${funnelReport.metrics.velocity} anlaşma` : '—',
+                color: 'text-[#0f172a]',
+              },
+            ].map(card => (
+              <div key={card.label} className="px-3 py-2.5">
+                <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">{card.label}</div>
+                <div className={`text-sm font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="flex items-center justify-between">
         <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
