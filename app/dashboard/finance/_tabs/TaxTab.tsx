@@ -16,14 +16,7 @@ import {
 } from '@/lib/finance/financial-core'
 import { TaxService, type KDVSummary, type CorporateTaxEstimate } from '@/lib/services/tax.service'
 import { createClient } from '@/lib/supabase-server'
-import { fmtTRY as fmt } from '@/lib/format'
-
-// ── Formatters ────────────────────────────────────────────────────────────────
-function fmtMonth(ym: string): string {
-  const [y, m] = ym.split('-').map(Number)
-  const names  = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara']
-  return `${names[m - 1] ?? ym} ${String(y).slice(2)}`
-}
+import { fmtTRY as fmt, fmtMonthShort as fmtMonth } from '@/lib/format'
 function fmtDate(d: string): string {
   if (!d) return ''
   const [y, m, day] = d.split('-')

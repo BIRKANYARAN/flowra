@@ -9,17 +9,14 @@
 import Link                          from 'next/link'
 import { FinanceService }           from '@/lib/services/finance.service'
 import { periodForMonth }           from '@/lib/services/finance-rules'
-import { fmtTRY as fmt }           from '@/lib/format'
+import { fmtTRY as fmt, fmtMonthShort as fmtMonth } from '@/lib/format'
 import { createClient }             from '@/lib/supabase-server'
 import { NarrativeFooter }          from '@/components/ds'
 import { GLIncomeStatementService } from '@/lib/services/ledger/gl-income-statement.service'
 
 // ── Formatters ────────────────────────────────────────────────────────────────
 
-const TRY = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
-function fmtFull(n: number): string {
-  return (n < 0 ? '−' : '') + '₺' + TRY.format(Math.abs(n))
-}
+function fmtFull(n: number): string { return fmt(n, 0) }
 function pct(num: number, den: number): string {
   if (den === 0) return '—'
   return `%${((num / den) * 100).toFixed(1).replace('.', ',')}`
@@ -33,12 +30,6 @@ function lastNMonths(n: number, ref: Date): string[] {
   }
   return months
 }
-function fmtMonth(ym: string): string {
-  const [y, m] = ym.split('-').map(Number)
-  const names  = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara']
-  return `${names[m - 1] ?? ym} ${String(y).slice(2)}`
-}
-
 // ── Waterfall row ─────────────────────────────────────────────────────────────
 
 function WRow({ label, value, sub, isTotal, isDeduction, isSub }: {

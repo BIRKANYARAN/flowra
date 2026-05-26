@@ -975,10 +975,14 @@ export default function SettingsPage() {
       </FlowraCard>
 
       {/* ── Quick Links ─────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 flex-wrap">
         <Link href="/dashboard/settings/alerts"
           className="text-xs font-semibold text-brand-light hover:text-brand px-3 py-2 rounded hover:bg-brand-subtle border border-[#e2e8f0] transition-colors">
           Uyarı Kuralları →
+        </Link>
+        <Link href="/dashboard/settings/email"
+          className="text-xs font-semibold text-brand-light hover:text-brand px-3 py-2 rounded hover:bg-brand-subtle border border-[#e2e8f0] transition-colors">
+          E-posta Bildirimleri →
         </Link>
       </div>
 

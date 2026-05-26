@@ -16,10 +16,7 @@ import { NarrativeFooter }          from '@/components/ds'
 
 // ── Formatters ────────────────────────────────────────────────────────────────
 
-const TRY_FMT = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
-function fmtFull(n: number): string {
-  return (n < 0 ? '−' : '') + '₺' + TRY_FMT.format(Math.abs(n))
-}
+function fmtFull(n: number): string { return fmt(n, 0) }
 function fmtPct(pct: number): string {
   if (!isFinite(pct)) return '—'
   return `%${Math.abs(pct).toFixed(1)}`

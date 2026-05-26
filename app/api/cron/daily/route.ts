@@ -3,6 +3,7 @@ import { getSystemAdminClient }      from '@/lib/admin-db'
 import { makeRequestContext }        from '@/lib/logger'
 import { runOverdueUpdateJob }       from '@/lib/jobs/overdue-update.job'
 import { runInterestAccrualJob }     from '@/lib/jobs/interest-accrual.job'
+import { runAlertDigestJob }         from '@/lib/jobs/alert-digest.job'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,6 +13,7 @@ export const dynamic = 'force-dynamic'
 // Coordinates all per-company daily maintenance jobs:
 //   1. Overdue update  — mark sales past due_date as 'overdue'
 //   2. Interest accrual — accrue daily interest on partner loan tranches
+//   3. Alert digest     — send email digest for critical/warning alerts
 //
 // Protected by Bearer token: Authorization: Bearer ${CRON_SECRET}
 // Idempotent: each individual job uses runJob() which checks idempotency keys.
@@ -95,6 +97,24 @@ export async function POST(req: NextRequest) {
       { completed: 0, skipped: 0, failed: 0, total_accrued: 0 } as Record<string, number>,
     )
 
+    // ── Run alert digest for all companies (graceful — never blocks) ─────────
+    const digestResults = await Promise.allSettled(
+      companyIds.map(id => runAlertDigestJob(id, supabase, today)),
+    )
+
+    const digestSummary = digestResults.reduce(
+      (acc, r) => {
+        if (r.status === 'fulfilled') {
+          acc[r.value.status] = (acc[r.value.status] ?? 0) + 1
+          acc.total_sent       += r.value.recordsProcessed
+        } else {
+          acc.failed = (acc.failed ?? 0) + 1
+        }
+        return acc
+      },
+      { completed: 0, skipped: 0, failed: 0, total_sent: 0 } as Record<string, number>,
+    )
+
     // ── Log summary ───────────────────────────────────────────────────────────
     console.info(JSON.stringify({
       level:    'info',
@@ -104,6 +124,7 @@ export async function POST(req: NextRequest) {
       companies: companyIds.length,
       overdue:  overdueSummary,
       accrual:  accrualSummary,
+      digest:   digestSummary,
     }))
 
     return NextResponse.json({
@@ -116,6 +137,7 @@ export async function POST(req: NextRequest) {
         ...accrualSummary,
         companies_with_loans: loanCompanyIds.length,
       },
+      digest: digestSummary,
     })
   } catch (e) {
     console.error('[cron/daily] unexpected error:', e, { runId })

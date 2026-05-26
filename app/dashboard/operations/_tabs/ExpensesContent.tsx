@@ -10,7 +10,7 @@ import ExpensesIntelligenceClient from '@/app/dashboard/expenses/ExpensesIntelli
 import type { RecurringRow } from '@/app/dashboard/expenses/ExpensesClient'
 import { ExpensesCommandBar } from '@/app/dashboard/expenses/_components/ExpensesCommandBar'
 import { ObservationRail } from '@/app/dashboard/_shared/ObservationRail'
-import { fmtTRY as fmt } from '@/lib/format'
+import { fmtTRY as fmt, fmtMonthShort as fmtMonth } from '@/lib/format'
 import { detectExpenseAnomalies, type MonthlyExpense } from '@/lib/engines/anomaly.engine'
 import { detectDuplicates, type ExpenseRow as DupExpenseRow } from '@/lib/engines/duplicate-detector'
 
@@ -22,12 +22,6 @@ function CommandBarSkeleton() {
       ))}
     </div>
   )
-}
-
-function fmtMonth(ym: string): string {
-  const [y, m] = ym.split('-').map(Number)
-  const names = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara']
-  return `${names[m - 1] ?? ym} ${String(y).slice(2)}`
 }
 
 const CATEGORY_LABELS: Record<string, string> = {

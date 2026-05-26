@@ -14,15 +14,9 @@ import { ScenarioPanel }   from '@/components/dashboard/ScenarioPanel'
 import { getCashflowTimeline, getRunwayForecast, getCfoMetrics } from '@/lib/finance/financial-core'
 import { CashFlowStatementService } from '@/lib/services/cashflow-statement.service'
 import { createClient }             from '@/lib/supabase-server'
-import { fmtTRY as fmt }  from '@/lib/format'
+import { fmtTRY as fmt, fmtMonthShort as fmtMonth } from '@/lib/format'
 import type { CfoMetrics } from '@/lib/finance/cfo-metrics'
 import type { CashFlowStatement } from '@/types/dto'
-
-function fmtMonth(ym: string): string {
-  const [y, m] = ym.split('-').map(Number)
-  const names  = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara']
-  return `${names[m - 1] ?? ym} ${y}`
-}
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
