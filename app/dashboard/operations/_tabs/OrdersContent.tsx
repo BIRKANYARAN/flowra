@@ -7,6 +7,7 @@ import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { NarrativeFooter, Skeleton } from '@/components/ds'
 import { formatTRY as fmt, fmtDate } from '@/lib/format'
+import { SupplierPerformancePanel } from './_supplier-performance/SupplierPerformancePanel'
 
 type OrderStatus = 'draft' | 'ordered' | 'received' | 'cancelled'
 
@@ -428,6 +429,9 @@ export function OrdersContent(_props: Props) {
           </div>
         </div>
       )}
+
+      {/* ── Supplier Performance Analytics ────────────────────────────── */}
+      <SupplierPerformancePanel />
 
       {/* Cross-navigation */}
       <NarrativeFooter
