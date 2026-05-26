@@ -13,6 +13,10 @@ import { ObservationRail } from '@/app/dashboard/_shared/ObservationRail'
 import { fmtTRY as fmt, fmtMonthShort as fmtMonth } from '@/lib/format'
 import { detectExpenseAnomalies, type MonthlyExpense } from '@/lib/engines/anomaly.engine'
 import { detectDuplicates, type ExpenseRow as DupExpenseRow } from '@/lib/engines/duplicate-detector'
+import {
+  ExpenseIntelligenceService,
+  type ExpenseIntelligenceReport,
+} from '@/lib/services/finance/expense-intelligence.service'
 
 function CommandBarSkeleton() {
   return (
@@ -53,7 +57,13 @@ export async function ExpensesContent({ companyId }: Props) {
   const currentYM  = new Date().toISOString().slice(0, 7)
   const prevYM     = prevMonthStart.toISOString().slice(0, 7)
 
-  const [expensesRes, recurringRes, partnersRes] = await Promise.all([
+  // Intelligence period: current month
+  const intelligencePeriod = {
+    from: `${currentYM}-01`,
+    to:   new Date().toISOString().slice(0, 10),
+  }
+
+  const [expensesRes, recurringRes, partnersRes, expenseIntelligence] = await Promise.all([
     supabase
       .from('expenses')
       .select('*')
@@ -75,6 +85,8 @@ export async function ExpensesContent({ companyId }: Props) {
       .eq('company_id', companyId)
       .is('deleted_at', null)
       .order('name'),
+    ExpenseIntelligenceService.getReport(companyId, supabase, intelligencePeriod)
+      .catch(() => null as ExpenseIntelligenceReport | null),
   ])
 
   const expenses  = (expensesRes.data  ?? []) as ExpenseRow[]
@@ -271,6 +283,84 @@ export async function ExpensesContent({ companyId }: Props) {
           </div>
         ))}
       </div>
+
+      {/* ── Gider Analizi (expense-intelligence) ─────────────────────────────── */}
+      {expenseIntelligence && expenseIntelligence.categories.length > 0 && (
+        <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+              Gider Analizi
+            </span>
+            {expenseIntelligence.fastest_growing && (
+              <span className="text-[9px] font-black uppercase tracking-wide px-2 py-0.5 rounded bg-neg-light text-neg-text">
+                En Hızlı Büyüyen: {expenseIntelligence.fastest_growing}
+                {expenseIntelligence.fastest_growing_pct !== null && (
+                  <span> +%{expenseIntelligence.fastest_growing_pct.toFixed(0)}</span>
+                )}
+              </span>
+            )}
+          </div>
+
+          {/* Category breakdown table */}
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-[#e2e8f0]">
+                  <th className="text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] pb-1.5 pr-2">Kategori</th>
+                  <th className="text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] pb-1.5 px-2">Tutar</th>
+                  <th className="text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] pb-1.5 px-2">% Pay</th>
+                  <th className="text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] pb-1.5 pl-2">Değişim</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#f8fafc]">
+                {expenseIntelligence.categories.slice(0, 8).map(cat => {
+                  const isGrowing  = cat.trend === 'up'
+                  const isDeclining = cat.trend === 'down'
+                  const isNew      = cat.trend === 'new'
+                  const changePctAbs = cat.change_pct !== null ? Math.abs(cat.change_pct) : null
+                  const changeColor =
+                    isGrowing && cat.change_pct !== null && cat.change_pct > 10
+                      ? 'text-neg font-bold'
+                      : isDeclining && cat.change_pct !== null && cat.change_pct < -10
+                        ? 'text-pos-text font-bold'
+                        : 'text-[#64748b]'
+                  const trendArrow = isNew ? '★' : isGrowing ? '↑' : isDeclining ? '↓' : '—'
+                  const trendColor = isNew ? 'text-info-text' : isGrowing ? 'text-neg' : isDeclining ? 'text-pos-text' : 'text-[#94a3b8]'
+                  return (
+                    <tr key={cat.expense_type} className="hover:bg-[#f8fafc]/60">
+                      <td className="py-1.5 pr-2 font-medium text-[#334155]">{cat.label}</td>
+                      <td className="py-1.5 px-2 text-right tabular-nums text-[#1e293b] font-semibold">{fmt(cat.current_try)}</td>
+                      <td className="py-1.5 px-2 text-right tabular-nums text-[#64748b]">%{cat.current_pct_of_total.toFixed(0)}</td>
+                      <td className="py-1.5 pl-2 text-right tabular-nums">
+                        {isNew ? (
+                          <span className="text-info-text text-[10px] font-bold">YENİ</span>
+                        ) : cat.change_pct !== null ? (
+                          <span className={`${changeColor} flex items-center justify-end gap-0.5`}>
+                            <span className={trendColor}>{trendArrow}</span>
+                            <span>{cat.change_pct > 0 ? '+' : ''}{changePctAbs !== null ? changePctAbs.toFixed(0) : '0'}%</span>
+                          </span>
+                        ) : (
+                          <span className="text-[#94a3b8]">—</span>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Total summary */}
+          <div className="flex items-center justify-between pt-1 border-t border-[#f1f5f9] text-xs text-[#64748b]">
+            <span>Toplam: <strong className="text-[#1e293b]">{fmt(expenseIntelligence.total_expenses_try)}</strong></span>
+            {expenseIntelligence.total_change_pct !== null && (
+              <span className={expenseIntelligence.total_change_pct > 0 ? 'text-neg font-semibold' : 'text-pos-text font-semibold'}>
+                {expenseIntelligence.total_change_pct > 0 ? '+' : ''}{expenseIntelligence.total_change_pct.toFixed(0)}% önceki döneme göre
+              </span>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ── Expense anomaly alerts ─────────────────────────────────────────────── */}
       {expenseAnomalies.length > 0 && (
