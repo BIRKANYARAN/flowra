@@ -172,9 +172,11 @@ export function WhatIfClient({ period, baseline }: Props) {
 
   // Load: try DB first, fall back to localStorage
   useEffect(() => {
+    let cancelled = false
     setScenariosLoading(true)
     fetchDBScenarios()
       .then(dbRows => {
+        if (cancelled) return
         if (dbRows.length > 0) {
           setSaved(dbRows)
           persistLocal(dbRows) // sync localStorage cache
@@ -182,8 +184,9 @@ export function WhatIfClient({ period, baseline }: Props) {
           setSaved(loadLocal())
         }
       })
-      .catch(() => setSaved(loadLocal()))
-      .finally(() => setScenariosLoading(false))
+      .catch(() => { if (!cancelled) setSaved(loadLocal()) })
+      .finally(() => { if (!cancelled) setScenariosLoading(false) })
+    return () => { cancelled = true }
   }, [])
 
   const deleteSaved = useCallback(async (id: string) => {
