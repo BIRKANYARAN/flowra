@@ -242,6 +242,7 @@ export const PLANNING_TABS = [
   { key: 'unit-profit',     label: 'Birim Kâr'          },
   { key: 'cash-projection', label: 'Nakit Projeksiyonu'  },
   { key: 'scenarios',       label: 'Senaryolar'          },
+  { key: 'variance',        label: 'Gerçek vs Plan'      },
   { key: 'debt-pressure',   label: 'Borç Baskısı'       },
   { key: 'partner-impact',  label: 'Ortak Etkisi'       },
   { key: 'tasks',           label: 'Görevler'            },

@@ -17,6 +17,7 @@ import { CashProjectionTab }  from './_tabs/CashProjectionTab'
 import { WhatIfTab }          from './_tabs/WhatIfTab'
 import { DebtPressureTab }    from './_tabs/DebtPressureTab'
 import { PartnerImpactTab }   from './_tabs/PartnerImpactTab'
+import { VarianceTab }        from './_tabs/VarianceTab'
 
 function TabSkeleton() {
   return (
@@ -68,14 +69,19 @@ export default async function PlanningPage({ searchParams }: PageProps) {
   const activeTab = VALID_TABS.includes(rawTab) ? rawTab : 'unit-profit'
 
   const planTitles: Record<string, string> = {
-    'unit-profit': 'Birim Karlılık', 'cash-projection': 'Nakit Projeksiyonu',
-    'scenarios': 'Senaryo Analizi', 'debt-pressure': 'Borç Baskısı',
-    'partner-impact': 'Ortak Etkisi', 'tasks': 'Görevler',
+    'unit-profit':     'Birim Karlılık',
+    'cash-projection': 'Nakit Projeksiyonu',
+    'scenarios':       'Senaryo Analizi',
+    'variance':        'Gerçek vs Plan',
+    'debt-pressure':   'Borç Baskısı',
+    'partner-impact':  'Ortak Etkisi',
+    'tasks':           'Görevler',
   }
   const planSubs: Record<string, string> = {
     'unit-profit':     'Birim karlılık · Marj analizi · Fiyat optimizasyonu',
     'cash-projection': 'Nakit projeksiyonu · 12 ay görünümü · Senaryo bazlı',
     'scenarios':       'Senaryo planlama · Duyarlılık analizi · Stres testleri',
+    'variance':        'Senaryo doğruluğu · Plan vs gerçekleşen · Tahmin sapması',
     'debt-pressure':   'Borç baskısı · Servis oranı · Tranche takvimi',
     'partner-impact':  'Ortak etkisi · Eşitleme hesabı · Dağıtım analizi',
     'tasks':           'Görev takibi · Vadesi yaklaşan · Öncelik sırası',
@@ -118,6 +124,8 @@ export default async function PlanningPage({ searchParams }: PageProps) {
         {activeTab === 'scenarios' && (
           <WhatIfTab companyId={companyId} userId={userId} />
         )}
+        {/* variance: scenario vs actuals bridge */}
+        {activeTab === 'variance' && <VarianceTab />}
         {/* debt-pressure: tranche ladder + DSR + concentration */}
         {activeTab === 'debt-pressure' && (
           <DebtPressureTab companyId={companyId} userId={userId} />
