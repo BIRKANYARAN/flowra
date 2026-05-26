@@ -7,6 +7,8 @@ import { fmtTRY, fmtDate as fmtDateShort, fmtDatetime as fmtDateTime } from '@/l
 import type { StockMovement }                       from '@/types'
 import StockAdjustClient                            from '@/app/dashboard/stocks/StockAdjustClient'
 import { StockQueryService }                        from '@/lib/services/stock-query.service'
+import { InventoryValuationService }                from '@/lib/services/inventory/inventory-valuation.service'
+import type { InventoryValuationReport }            from '@/lib/services/inventory/inventory-valuation.service'
 
 function holdingDays(entryDate: string): number {
   const today = new Date()
@@ -26,7 +28,7 @@ interface Props { companyId: string; userId: string }
 export async function StockContent({ companyId, userId }: Props) {
   const supabase = createClient()
 
-  const [productsRes, movementsRes, lotsRes, inconsistencies] = await Promise.all([
+  const [productsRes, movementsRes, lotsRes, inconsistencies, valuation] = await Promise.allSettled([
     supabase
       .from('products')
       .select('id, name, sku, unit, stock_qty, stock_alert_qty')
@@ -48,13 +50,16 @@ export async function StockContent({ companyId, userId }: Props) {
       .is('deleted_at', null)
       .order('received_at', { ascending: true }),
     StockQueryService.listInconsistentProducts(userId, companyId).catch(() => []),
+    InventoryValuationService.getReport(companyId, supabase).catch(() => null),
   ])
 
-  const products  = (productsRes.data  ?? []) as ProductRow[]
-  const movements = (movementsRes.data ?? []) as StockMovement[]
-  const lots      = (lotsRes.data      ?? []) as StockLotRow[]
+  const products  = (productsRes.status === 'fulfilled' ? (productsRes.value.data  ?? []) : []) as ProductRow[]
+  const movements = (movementsRes.status === 'fulfilled' ? (movementsRes.value.data ?? []) : []) as StockMovement[]
+  const lots      = (lotsRes.status === 'fulfilled' ? (lotsRes.value.data      ?? []) : []) as StockLotRow[]
   // inconsistencies: products where stock_qty (legacy counter) ≠ Σ stock_movements.qty
-  const inconsistentItems = inconsistencies
+  const inconsistentItems = inconsistencies.status === 'fulfilled' ? inconsistencies.value : []
+  const valuationReport: InventoryValuationReport | null =
+    valuation.status === 'fulfilled' ? valuation.value : null
 
   interface LotMeta extends StockLotRow { days: number; costTry: number }
 
@@ -158,6 +163,90 @@ export async function StockContent({ companyId, userId }: Props) {
             Stok sayacı ile hareket geçmişi arasındaki fark FIFO maliyet hesaplamalarını etkileyebilir.
             Manuel düzeltme için Stok Düzeltme aracını kullanın.
           </p>
+        </div>
+      )}
+
+      {/* Stok Değerleme — FIFO aging + product summary */}
+      {valuationReport && valuationReport.total_lots > 0 && (
+        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+          <div className="px-5 py-4 border-b border-[#e2e8f0] flex items-center justify-between">
+            <div>
+              <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Stok Değerleme</span>
+              <span className="ml-2 text-[10px] text-[#94a3b8]">— FIFO maliyet bazlı lot yaşlandırması</span>
+            </div>
+            <span className="text-[10px] text-[#94a3b8] bg-[#f1f5f9] px-2 py-0.5 rounded">
+              {fmtTRY(valuationReport.total_inventory_value_try)} toplam
+            </span>
+          </div>
+
+          {/* Aging buckets */}
+          <div className="grid grid-cols-4 divide-x divide-[#e2e8f0] border-b border-[#e2e8f0]">
+            {[
+              { label: 'Güncel (<30g)',  value: valuationReport.aging_summary.current_try,       color: 'text-pos-text' },
+              { label: '30-60 gün',      value: valuationReport.aging_summary.aging_30_try,       color: 'text-[#0f172a]' },
+              { label: '60-90 gün',      value: valuationReport.aging_summary.aging_60_try,       color: 'text-warn-text' },
+              { label: '90+ gün',        value: valuationReport.aging_summary.aging_90_plus_try,  color: 'text-neg' },
+            ].map(b => (
+              <div key={b.label} className="px-4 py-3">
+                <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{b.label}</div>
+                <div className={`text-base font-black tabular-nums leading-none ${b.color}`}>{fmtTRY(b.value)}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Product summary table */}
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] border-b border-[#e2e8f0]">
+                  <th className="text-left px-5 py-2.5">Ürün</th>
+                  <th className="text-right px-4 py-2.5">Toplam Miktar</th>
+                  <th className="text-right px-4 py-2.5">Stok Değeri (₺)</th>
+                  <th className="text-right px-4 py-2.5">Ort. Birim Maliyet</th>
+                  <th className="text-right px-4 py-2.5">Maks. Yaş</th>
+                  <th className="text-right px-5 py-2.5">Durum</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#f1f5f9]">
+                {valuationReport.products.map(prod => {
+                  const ageColor = prod.max_age_days >= 90 ? 'text-neg'
+                    : prod.max_age_days >= 60 ? 'text-warn-text' : 'text-[#64748b]'
+                  return (
+                    <tr key={prod.product_id} className="hover:bg-[#f8fafc]/60">
+                      <td className="px-5 py-3 font-semibold text-[#0f172a]">{prod.product_name}</td>
+                      <td className="px-4 py-3 text-right tabular-nums text-[#334155]">
+                        {prod.total_qty.toLocaleString('tr-TR', { maximumFractionDigits: 3 })}
+                      </td>
+                      <td className="px-4 py-3 text-right tabular-nums font-semibold text-brand">
+                        {fmtTRY(prod.total_value_try)}
+                      </td>
+                      <td className="px-4 py-3 text-right tabular-nums text-[#64748b]">
+                        ₺{prod.avg_cost_try.toFixed(2)}
+                      </td>
+                      <td className={`px-4 py-3 text-right tabular-nums font-semibold ${ageColor}`}>
+                        {prod.max_age_days} gün
+                      </td>
+                      <td className="px-5 py-3 text-right">
+                        {prod.is_low_stock ? (
+                          <span className="text-[10px] bg-warn-light text-warn-text px-2 py-0.5 rounded font-semibold">Düşük</span>
+                        ) : (
+                          <span className="text-[10px] text-[#94a3b8]">Normal</span>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {valuationReport.low_stock_count > 0 && (
+            <div className="px-5 py-3 border-t border-[#e2e8f0] bg-warn-light">
+              <span className="text-[10px] font-semibold text-warn-text">
+                ⚠ {valuationReport.low_stock_count} ürün yeniden sipariş eşiğinin altında
+              </span>
+            </div>
+          )}
         </div>
       )}
 
