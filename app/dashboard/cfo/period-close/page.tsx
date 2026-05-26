@@ -1,12 +1,13 @@
 'use client'
 
 // /dashboard/cfo/period-close — Dönem Kapanış Workflow
-// Lists accounting periods, shows pre-close checklist, allows close + lock transitions.
+// Enhanced with 16-point auto+manual readiness checks from PeriodCloseEnhancedService.
 
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Skeleton } from '@/components/ds'
 import { fmtDate as fmt } from '@/lib/format'
+import type { PeriodCloseReadiness, PeriodCloseCheck } from '@/lib/services/ledger/period-close-enhanced.service'
 
 interface Period {
   id:           string
@@ -15,32 +16,6 @@ interface Period {
   status:       'open' | 'pre_close' | 'closed' | 'locked'
   closed_at?:   string | null
   locked_at?:   string | null
-}
-
-// ── Pre-close checklist definition ───────────────────────────────────────────
-// required = true → must be checked before Close button activates
-// gl_mode_required = true → only blocking when gl_mode is 'parallel' or 'gl_primary'
-const CHECKLIST = [
-  { key: 'trial_balance',        label: 'Mizan dengesi kontrol edildi',           required: true,  gl_mode_required: false, hint: 'Mizan görünümünden tüm hesapların dengeli olduğunu doğrulayın.' },
-  { key: 'bank_reconciliation',  label: 'Banka mutabakatı tamamlandı',            required: true,  gl_mode_required: false, hint: 'Bankadaki bakiye ile sistemdeki 102 hesap bakiyesi eşleşiyor.' },
-  { key: 'all_sales_entered',    label: 'Tüm satış faturaları girildi',           required: true,  gl_mode_required: false, hint: 'Dönem içindeki tüm satış faturaları sisteme yüklendi.' },
-  { key: 'all_expenses_entered', label: 'Tüm masraflar girildi',                  required: true,  gl_mode_required: false, hint: 'Dönem içindeki tüm masraflar (faturalar dahil) kayıt altına alındı.' },
-  { key: 'kdv_calculated',       label: 'KDV beyanı hesaplandı',                  required: true,  gl_mode_required: false, hint: 'Hesaplanan KDV - İndirilecek KDV = Beyanname tutarı doğrulandı.' },
-  { key: 'journal_entries_done', label: 'Tüm muhasebe kayıtları oluşturuldu',     required: false, gl_mode_required: true,  hint: 'Tüm satış, gider ve satın alma işlemleri için journal kaydı oluşturuldu.' },
-  { key: 'stock_counted',        label: 'Stok sayımı yapıldı',                    required: false, gl_mode_required: false, hint: 'Fiziksel stok, sistemdeki stok ile karşılaştırıldı.' },
-  { key: 'compensation_paid',    label: 'Ortak huzur hakkı işlendi',              required: false, gl_mode_required: false, hint: 'Dönem huzur hakları masraf olarak girildi (TTK 394).' },
-  { key: 'interest_accrued',     label: 'Faiz tahakkukları hesaplandı',           required: false, gl_mode_required: false, hint: 'Ortak borçlarına ait faiz tahakkukları işlendi.' },
-] as const
-
-type ChecklistKey = typeof CHECKLIST[number]['key']
-
-// ── Backfill status ───────────────────────────────────────────────────────────
-interface BackfillStatus {
-  operational_totals: { sales: number; expenses: number; purchases: number }
-  journaled_totals:   { sales: number; expenses: number; purchases: number }
-  voided_entries:     number
-  backfill_complete:  boolean
-  checked_at:         string
 }
 
 // ── Status helpers ────────────────────────────────────────────────────────────
@@ -59,19 +34,47 @@ const STATUS_COLOR: Record<Period['status'], string> = {
   locked:    'bg-[#f1f5f9] text-[#64748b]',
 }
 
+// ── Check status helpers ──────────────────────────────────────────────────────
+
+function CheckStatusBadge({ check }: { check: PeriodCloseCheck }) {
+  const cls = check.status === 'pass'    ? 'bg-pos-light text-pos-text' :
+              check.status === 'fail'    ? 'bg-neg-light text-neg' :
+              check.status === 'warn'    ? 'bg-warn-light text-warn-text' :
+              check.status === 'pending' ? 'bg-[#f1f5f9] text-[#64748b]' :
+              'bg-[#f8fafc] text-[#94a3b8]'
+  const label = check.status === 'pass'    ? '✓ Geçti' :
+                check.status === 'fail'    ? '✗ Başarısız' :
+                check.status === 'warn'    ? '⚠ Uyarı' :
+                check.status === 'pending' ? '○ Bekleniyor' :
+                '– Atlandı'
+  return <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${cls}`}>{label}</span>
+}
+
+// ── Category icons ────────────────────────────────────────────────────────────
+
+const CATEGORY_LABEL: Record<PeriodCloseCheck['category'], string> = {
+  accounting:  'Muhasebe',
+  compliance:  'Uyum',
+  partner:     'Ortak',
+  documents:   'Belgeler',
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function PeriodClosePage() {
-  const [periods,        setPeriods]        = useState<Period[]>([])
-  const [loading,        setLoading]        = useState(true)
-  const [error,          setError]          = useState<string | null>(null)
-  const [working,        setWorking]        = useState<string | null>(null)
-  const [feedback,       setFeedback]       = useState<Record<string, string>>({})
-  const [expanded,       setExpanded]       = useState<string | null>(null)
-  const [checklist,      setChecklist]      = useState<Record<string, Set<ChecklistKey>>>({})
-  const [backfill,       setBackfill]       = useState<BackfillStatus | null>(null)
-  const [backfillLoading,setBackfillLoading]= useState(false)
-  const [glMode,         setGlMode]         = useState<string | null>(null)
+  const [periods,       setPeriods]       = useState<Period[]>([])
+  const [loading,       setLoading]       = useState(true)
+  const [error,         setError]         = useState<string | null>(null)
+  const [working,       setWorking]       = useState<string | null>(null)
+  const [feedback,      setFeedback]      = useState<Record<string, string>>({})
+  const [expanded,      setExpanded]      = useState<string | null>(null)
+
+  // Enhanced readiness state (keyed by period id)
+  const [readiness,       setReadiness]       = useState<Record<string, PeriodCloseReadiness>>({})
+  const [readinessLoading, setReadinessLoading] = useState<Record<string, boolean>>({})
+
+  // Manual check overrides (keyed by `${periodId}:${key}`)
+  const [manualChecks, setManualChecks] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
     const ctrl = new AbortController()
@@ -80,7 +83,6 @@ export default function PeriodClosePage() {
       .then(d => {
         const list: Period[] = Array.isArray(d) ? d : d.periods ?? []
         setPeriods(list)
-        // Auto-expand the first open/pre_close period
         const first = list.find(p => p.status === 'open' || p.status === 'pre_close')
         if (first) setExpanded(first.id)
       })
@@ -89,45 +91,33 @@ export default function PeriodClosePage() {
     return () => ctrl.abort()
   }, [])
 
-  // Fetch backfill status + gl_mode on mount
+  // Load readiness when a period is expanded
   useEffect(() => {
-    setBackfillLoading(true)
-    const ctrl = new AbortController()
-    Promise.all([
-      fetch('/api/admin/journal-backfill', { signal: ctrl.signal }).then(r => r.ok ? r.json() : null),
-      fetch('/api/admin/gl-mode',          { signal: ctrl.signal }).then(r => r.ok ? r.json() : null),
-    ])
-      .then(([backfillData, glData]) => {
-        if (backfillData) setBackfill(backfillData as BackfillStatus)
-        if (glData?.gl_mode) setGlMode(glData.gl_mode as string)
+    if (!expanded) return
+    if (readiness[expanded]) return  // already loaded
+    setReadinessLoading(prev => ({ ...prev, [expanded]: true }))
+    fetch(`/api/periods/close-readiness?period_id=${expanded}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data) setReadiness(prev => ({ ...prev, [expanded]: data as PeriodCloseReadiness }))
       })
-      .catch(err => { if (err.name !== 'AbortError') console.warn('[period-close] backfill fetch error:', err) })
-      .finally(() => setBackfillLoading(false))
-    return () => ctrl.abort()
-  }, [])
+      .catch(() => {/* non-fatal */})
+      .finally(() => setReadinessLoading(prev => ({ ...prev, [expanded]: false })))
+  }, [expanded, readiness])
 
-  function toggleChecklistItem(periodId: string, key: ChecklistKey) {
-    setChecklist(prev => {
-      const current = new Set(prev[periodId] ?? [])
-      if (current.has(key)) current.delete(key); else current.add(key)
-      return { ...prev, [periodId]: current }
-    })
+  function toggleManual(periodId: string, key: string) {
+    const mk = `${periodId}:${key}`
+    setManualChecks(prev => ({ ...prev, [mk]: !prev[mk] }))
+  }
+
+  function isManualDone(periodId: string, key: string): boolean {
+    return manualChecks[`${periodId}:${key}`] === true
   }
 
   function isCloseEnabled(periodId: string): boolean {
-    const checked = checklist[periodId] ?? new Set()
-    // Standard required items must all be checked
-    const standardOk = CHECKLIST.filter(i => i.required && !i.gl_mode_required).every(i => checked.has(i.key))
-    // gl_mode_required items are blocking only when gl_mode is 'parallel' or 'gl_primary'
-    const isGlBlocking = glMode === 'parallel' || glMode === 'gl_primary'
-    const glOk = !isGlBlocking || CHECKLIST.filter(i => i.gl_mode_required).every(i => checked.has(i.key))
-    return standardOk && glOk
-  }
-
-  // Compute effective required count (varies by gl_mode)
-  function effectiveRequiredCount(): number {
-    const isGlBlocking = glMode === 'parallel' || glMode === 'gl_primary'
-    return CHECKLIST.filter(i => i.required || (i.gl_mode_required && isGlBlocking)).length
+    const r = readiness[periodId]
+    if (!r) return false
+    return r.can_close
   }
 
   async function closePeriod(periodId: string) {
@@ -175,8 +165,6 @@ export default function PeriodClosePage() {
     }
   }
 
-  const requiredCount = effectiveRequiredCount()
-
   return (
     <div className="flex flex-col gap-4 max-w-3xl">
 
@@ -185,7 +173,7 @@ export default function PeriodClosePage() {
         <div>
           <h1 className="text-2xl font-black text-[#0f172a] tracking-tight">Dönem Kapanış Yönetimi</h1>
           <p className="text-xs text-[#94a3b8] mt-0.5">
-            Dönem kapatıldığında tüm finansal yazma işlemleri engellenir — {requiredCount} zorunlu kontrol gerekli
+            16-nokta otomatik + manuel kontrol listesi — tüm bloke kontroller geçmeli
           </p>
         </div>
         <Link href="/dashboard/finance?tab=cfo" className="text-xs text-[#94a3b8] hover:text-brand-light font-semibold">
@@ -210,14 +198,13 @@ export default function PeriodClosePage() {
 
       <div className="flex flex-col gap-3">
         {periods.map(p => {
-          const isWorking     = working === p.id
-          const msg           = feedback[p.id]
-          const isOpen        = p.status === 'open' || p.status === 'pre_close'
-          const isExpanded    = expanded === p.id && isOpen
-          const checked       = checklist[p.id] ?? new Set<ChecklistKey>()
-          const isGlBlocking  = glMode === 'parallel' || glMode === 'gl_primary'
-          const reqChecked    = CHECKLIST.filter(i => (i.required || (i.gl_mode_required && isGlBlocking)) && checked.has(i.key)).length
-          const canClose      = isCloseEnabled(p.id)
+          const isWorking  = working === p.id
+          const msg        = feedback[p.id]
+          const isOpen     = p.status === 'open' || p.status === 'pre_close'
+          const isExpanded = expanded === p.id && isOpen
+          const r          = readiness[p.id]
+          const rLoading   = readinessLoading[p.id] ?? false
+          const canClose   = isCloseEnabled(p.id)
 
           return (
             <div key={p.id} className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
@@ -233,9 +220,9 @@ export default function PeriodClosePage() {
                       <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${STATUS_COLOR[p.status]}`}>
                         {STATUS_LABEL[p.status]}
                       </span>
-                      {isOpen && (
-                        <span className="text-[10px] text-[#94a3b8]">
-                          {reqChecked}/{requiredCount} zorunlu kontrol
+                      {isOpen && r && (
+                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${r.can_close ? 'bg-pos-light text-pos-text' : 'bg-neg-light text-neg'}`}>
+                          {r.can_close ? '✓ Kapatılabilir' : `${r.blocking_count} bloke kontrol`}
                         </span>
                       )}
                     </div>
@@ -265,7 +252,7 @@ export default function PeriodClosePage() {
                       <button
                         onClick={() => closePeriod(p.id)}
                         disabled={isWorking || !canClose}
-                        title={canClose ? 'Dönemi kapat' : `Kapamak için ${requiredCount} zorunlu kontrolü tamamlayın`}
+                        title={canClose ? 'Dönemi kapat' : 'Tüm bloke kontroller geçmeli'}
                         className="text-xs font-bold px-3 py-1.5 rounded bg-warn text-white hover:bg-warn disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                       >
                         {isWorking ? 'İşleniyor...' : 'Dönemi Kapat'}
@@ -300,98 +287,135 @@ export default function PeriodClosePage() {
                 )}
               </div>
 
-              {/* Checklist panel */}
+              {/* Enhanced Readiness Panel */}
               {isExpanded && (
                 <div className="border-t border-[#e2e8f0] px-4 py-3 bg-[#f8fafc]/60">
-                  <p className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
-                    Kapanış Kontrol Listesi — {reqChecked}/{requiredCount} zorunlu tamamlandı
-                  </p>
 
-                  {/* Shadow GL mode banner */}
-                  {glMode === 'shadow' && (
-                    <div className="mb-3 px-3 py-2 bg-info-light border border-info-light rounded text-xs text-info-text">
-                      GL modu &apos;shadow&apos; — otomatik kayıt oluşturulmaz. Muhasebe kayıtları zorunlu değil.
+                  {/* Readiness summary header */}
+                  {r && (
+                    <div className={`mb-3 px-3 py-2 rounded border flex items-center gap-3 flex-wrap ${
+                      r.can_close
+                        ? 'bg-pos-light border-pos-light'
+                        : 'bg-warn-light border-warn-light'
+                    }`}>
+                      <div className={`text-xs font-bold ${r.can_close ? 'text-pos-text' : 'text-warn-text'}`}>
+                        {r.can_close ? '✓ Dönem kapatılabilir' : `${r.blocking_count} bloke kontrol başarısız`}
+                      </div>
+                      <div className="flex items-center gap-2 text-[10px] text-[#64748b] ml-auto flex-wrap">
+                        <span>{r.auto_passed_count} otomatik geçti</span>
+                        {r.warning_count > 0 && <span className="text-warn-text">{r.warning_count} uyarı</span>}
+                        <span>{r.manual_pending_count} manuel bekliyor</span>
+                      </div>
                     </div>
                   )}
 
-                  <div className="space-y-2">
-                    {CHECKLIST.map(item => {
-                      const isDone       = checked.has(item.key)
-                      const isJeItem     = item.key === 'journal_entries_done'
-                      const isBlocking   = item.required || (item.gl_mode_required && isGlBlocking)
+                  {rLoading && !r && (
+                    <div className="flex flex-col gap-1.5 mb-3">
+                      {[1,2,3,4].map(i => <Skeleton key={i} height="h-10" />)}
+                    </div>
+                  )}
 
-                      // For journal_entries_done, compute auto-status from backfill data
-                      let jeStatusBadge: React.ReactNode = null
-                      if (isJeItem && backfill) {
-                        const { backfill_complete, journaled_totals, operational_totals } = backfill
-                        const totalMissing = (
-                          Math.max(0, operational_totals.sales     - journaled_totals.sales) +
-                          Math.max(0, operational_totals.expenses  - journaled_totals.expenses) +
-                          Math.max(0, operational_totals.purchases - journaled_totals.purchases)
-                        )
-                        jeStatusBadge = backfill_complete
-                          ? <span className="text-[10px] font-bold text-pos-text bg-pos-light px-1.5 py-0.5 rounded ml-2">✅ Tamamlandı</span>
-                          : <span className="text-[10px] font-bold text-warn-text bg-warn-light px-1.5 py-0.5 rounded ml-2">⚠️ {totalMissing} kayıt eksik</span>
-                      } else if (isJeItem && backfillLoading) {
-                        jeStatusBadge = <span className="text-[10px] text-[#94a3b8] ml-2">Yükleniyor…</span>
-                      }
+                  {r && (
+                    <>
+                      <p className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
+                        Kapanış Kontrol Listesi — {r.checks.length} kontrol
+                      </p>
 
-                      return (
-                        <label
-                          key={item.key}
-                          className={`flex items-start gap-3 p-2.5 rounded cursor-pointer transition-colors group ${
-                            isDone ? 'bg-pos-light' : 'bg-white hover:bg-[#f8fafc]'
-                          }`}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={isDone}
-                            onChange={() => toggleChecklistItem(p.id, item.key)}
-                            className="mt-0.5 w-4 h-4 rounded text-pos border-[#e2e8f0] cursor-pointer"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <div className={`text-xs font-semibold ${isDone ? 'text-pos-text line-through' : 'text-[#1e293b]'}`}>
-                              {item.label}
-                              {isBlocking
-                                ? <span className="ml-1.5 text-[9px] font-bold text-neg uppercase tracking-widest">Zorunlu</span>
-                                : <span className="ml-1.5 text-[9px] font-bold text-[#94a3b8] uppercase tracking-widest">İsteğe Bağlı</span>
-                              }
-                              {jeStatusBadge}
+                      {/* Group checks by category */}
+                      {(['accounting', 'compliance', 'partner', 'documents'] as Array<PeriodCloseCheck['category']>).map(cat => {
+                        const catChecks = r.checks.filter(c => c.category === cat)
+                        if (catChecks.length === 0) return null
+                        return (
+                          <div key={cat} className="mb-3">
+                            <p className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">
+                              {CATEGORY_LABEL[cat]}
+                            </p>
+                            <div className="space-y-1.5">
+                              {catChecks.map(check => {
+                                const isManual  = !check.is_auto
+                                const manualOn  = isManual && isManualDone(p.id, check.key)
+                                const isDone    = check.status === 'pass' || manualOn
+                                const isSkipped = check.status === 'skip'
+
+                                return (
+                                  <div
+                                    key={check.key}
+                                    className={`flex items-start gap-3 p-2.5 rounded ${
+                                      isSkipped   ? 'bg-[#f8fafc] opacity-60' :
+                                      isDone      ? 'bg-pos-light' :
+                                      check.status === 'fail' ? 'bg-neg-light border border-neg-light' :
+                                      check.status === 'warn' ? 'bg-warn-light' :
+                                      'bg-white hover:bg-[#f8fafc]'
+                                    } ${isManual ? 'cursor-pointer' : ''}`}
+                                    onClick={() => isManual ? toggleManual(p.id, check.key) : undefined}
+                                  >
+                                    {/* Checkbox or auto icon */}
+                                    {isManual ? (
+                                      <input
+                                        type="checkbox"
+                                        checked={manualOn}
+                                        onChange={() => toggleManual(p.id, check.key)}
+                                        className="mt-0.5 w-4 h-4 rounded text-pos border-[#e2e8f0] cursor-pointer"
+                                        onClick={e => e.stopPropagation()}
+                                      />
+                                    ) : (
+                                      <span className={`mt-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 ${
+                                        check.status === 'pass' ? 'bg-pos text-white' :
+                                        check.status === 'fail' ? 'bg-neg text-white' :
+                                        check.status === 'warn' ? 'bg-warn text-white' :
+                                        'bg-[#e2e8f0] text-[#94a3b8]'
+                                      }`}>
+                                        {check.status === 'pass' ? '✓' : check.status === 'fail' ? '✗' : check.status === 'warn' ? '!' : '–'}
+                                      </span>
+                                    )}
+
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center gap-1.5 flex-wrap">
+                                        <span className={`text-xs font-semibold ${isDone ? 'text-pos-text line-through' : isSkipped ? 'text-[#94a3b8] line-through' : check.status === 'fail' ? 'text-neg' : 'text-[#1e293b]'}`}>
+                                          {check.label}
+                                        </span>
+                                        {check.blocking && !isSkipped && (
+                                          <span className="text-[9px] font-bold text-neg uppercase tracking-widest">Bloke</span>
+                                        )}
+                                        {!check.is_auto && (
+                                          <span className="text-[9px] font-bold text-[#94a3b8] uppercase tracking-widest">Manuel</span>
+                                        )}
+                                        {check.is_auto && !isSkipped && (
+                                          <span className="text-[9px] font-bold text-info-text uppercase tracking-widest">Otomatik</span>
+                                        )}
+                                        {!isSkipped && <CheckStatusBadge check={check} />}
+                                      </div>
+                                      <div className="text-[10px] text-[#94a3b8] mt-0.5">{check.detail}</div>
+                                    </div>
+
+                                    {check.action_url && (check.status === 'fail' || check.status === 'warn') && (
+                                      <Link
+                                        href={check.action_url}
+                                        onClick={e => e.stopPropagation()}
+                                        className="text-[10px] text-brand-light font-semibold hover:underline shrink-0"
+                                      >
+                                        Düzelt →
+                                      </Link>
+                                    )}
+                                  </div>
+                                )
+                              })}
                             </div>
-                            <div className="text-[10px] text-[#94a3b8] mt-0.5">{item.hint}</div>
                           </div>
-                          {item.key === 'trial_balance' && (
-                            <Link
-                              href={`/dashboard/cfo/trial-balance?period_id=${p.id}`}
-                              onClick={e => e.stopPropagation()}
-                              className="text-[10px] text-brand-light font-semibold hover:underline shrink-0"
-                            >
-                              Mizan →
-                            </Link>
-                          )}
-                          {isJeItem && (
-                            <Link
-                              href="/dashboard/cfo/journal-entries"
-                              onClick={e => e.stopPropagation()}
-                              className="text-[10px] text-brand-light font-semibold hover:underline shrink-0"
-                            >
-                              Journal →
-                            </Link>
-                          )}
-                        </label>
-                      )
-                    })}
-                  </div>
+                        )
+                      })}
 
-                  {!canClose && reqChecked < requiredCount && (
-                    <div className="mt-3 px-3 py-2 bg-warn-light border border-warn-light rounded text-xs text-warn-text">
-                      Dönemi kapatmak için {requiredCount - reqChecked} zorunlu kontrol daha tamamlanmalı.
-                    </div>
-                  )}
-                  {canClose && (
-                    <div className="mt-3 px-3 py-2 bg-pos-light border border-pos-light rounded text-xs text-pos-text font-semibold">
-                      ✓ Tüm zorunlu kontroller tamamlandı — dönem kapatılabilir.
-                    </div>
+                      {/* Summary footer */}
+                      {r.can_close ? (
+                        <div className="mt-3 px-3 py-2 bg-pos-light border border-pos-light rounded text-xs text-pos-text font-semibold">
+                          ✓ Tüm bloke kontroller geçti — dönem kapatılabilir.
+                        </div>
+                      ) : (
+                        <div className="mt-3 px-3 py-2 bg-warn-light border border-warn-light rounded text-xs text-warn-text">
+                          {r.blocking_count} bloke kontrol başarısız — dönemi kapatmak için bunları düzeltin.
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               )}
@@ -401,8 +425,8 @@ export default function PeriodClosePage() {
       </div>
 
       <div className="bg-info-light border border-info-light rounded px-4 py-3 text-xs text-info-text leading-relaxed">
-        <span className="font-bold">Not:</span> API ayrıca mizan dengesi ve mutabakat uyuşmazlıklarını otomatik denetler.
-        Kilit işlemi geri alınamaz — tüm finansal yazma işlemleri bu dönem için engellenir.
+        <span className="font-bold">Not:</span> Otomatik kontroller canlı verilerden hesaplanır.
+        Bloke kontrollerin tamamı geçmeden dönem kapatılamaz. Uyarılar kapatmayı engellemez.
       </div>
 
       {/* Cross-navigation */}
@@ -415,12 +439,12 @@ export default function PeriodClosePage() {
             Mizan →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/cfo/reconciliation" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            Mutabakat →
+          <Link href="/dashboard/cfo/bank-reconciliation" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
+            Banka Mutabakatı →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/cfo/journal-entries" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
-            Journal Kayıtları →
+            Journal →
           </Link>
         </div>
       </div>
