@@ -39,6 +39,7 @@ import { ObservationRail }       from './_shared/ObservationRail'
 import { SituationLine }         from '@/components/dashboard/SituationLine'
 import { PeriodSummaryWidget }   from './_shared/PeriodSummaryWidget'
 import { CeoIntelligencePanel }  from './_shared/CeoIntelligencePanel'
+import { KpiTargetPanel }        from './_shared/KpiTargetPanel'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -542,6 +543,9 @@ export default async function DashboardPage() {
 
       {/* ── CEO INTELLIGENCE PANEL — multi-signal health brief ───────────── */}
       <CeoIntelligencePanel />
+
+      {/* ── KPI TARGET PANEL — Hedef Takibi ─────────────────────────────── */}
+      <KpiTargetPanel />
 
       {/* ── INTELLIGENCE SIGNALS — cross-context pattern observations ───── */}
       <ObservationRail context="all" maxItems={4} />
