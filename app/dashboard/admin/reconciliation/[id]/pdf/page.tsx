@@ -49,9 +49,10 @@ export default function ReconciliationPdfPage({
   const [generating, setGenerating] = useState(false)
 
   useEffect(() => {
+    const controller = new AbortController()
     async function load() {
       try {
-        const res = await fetch(`/api/reconciliation/snapshots/${params.id}`)
+        const res = await fetch(`/api/reconciliation/snapshots/${params.id}`, { signal: controller.signal })
         if (!res.ok) {
           setError(`Mutabakat yüklenemedi (${res.status})`)
           return
@@ -60,13 +61,14 @@ export default function ReconciliationPdfPage({
         const raw = json.snapshot
         if (raw) raw.signoffs = raw.reconciliation_signoffs ?? []
         setSnapshot(raw ?? null)
-      } catch {
-        setError('Ağ hatası oluştu.')
+      } catch (e: unknown) {
+        if ((e as { name?: string })?.name !== 'AbortError') setError('Ağ hatası oluştu.')
       } finally {
         setLoading(false)
       }
     }
     void load()
+    return () => controller.abort()
   }, [params.id])
 
   async function handleDownload() {
