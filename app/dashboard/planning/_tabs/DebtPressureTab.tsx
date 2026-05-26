@@ -6,17 +6,10 @@ import { createClient }         from '@/lib/supabase-server'
 import { FinanceService }       from '@/lib/services/finance.service'
 import Link                     from 'next/link'
 import { NarrativeFooter }      from '@/components/ds'
-import { fmtTRY as fmt, fmtPct as fmtPctLib } from '@/lib/format'
+import { fmtTRY as fmt, fmtPct as fmtPctLib, fmtDateMed as fmtDate } from '@/lib/format'
 
 // fmtPct in this file takes a 0-1 ratio → percentage
 function fmtPct(v: number) { return fmtPctLib(v * 100) }
-// fmtDate: "15 Nis 2026" short month style (different from canonical "15.04.2026")
-function fmtDate(iso: string | null) {
-  if (!iso) return '—'
-  try {
-    return new Date(iso + 'T00:00:00').toLocaleDateString('tr-TR', { day: '2-digit', month: 'short', year: 'numeric' })
-  } catch { return iso }
-}
 
 const TR_MONTHS = ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara']
 function monthLabel(year: number, month: number) { return `${TR_MONTHS[month - 1]} ${year}` }

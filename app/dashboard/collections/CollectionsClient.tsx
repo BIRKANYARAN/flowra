@@ -11,7 +11,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useEffect, useRef, useState, useCallback, useMemo, type ChangeEvent } from 'react'
-import { fmtTRY } from '@/lib/format'
+import { fmtTRY, fmtDateMed as fmtDate } from '@/lib/format'
 
 export interface CollectionRow {
   id: string
@@ -39,10 +39,6 @@ function fmtForeign(n: number, currency: string) {
   const sym = currency === 'USD' ? '$' : currency === 'EUR' ? '€' : currency === 'GBP' ? '£' : ''
   if (!sym) return fmtTRY(n)
   return sym + new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n) || 0)
-}
-
-function fmtDate(iso: string) {
-  return new Date(iso).toLocaleDateString('tr-TR', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
 function fmtDateShort(iso: string) {

@@ -7,6 +7,7 @@ import {
   WaterfallData, PartnerRow,
   fmt, fmtPct,
 } from '@/app/dashboard/partners/_components/types'
+import { fmtDateMed } from '@/lib/format'
 import { StatusPill } from '@/app/dashboard/partners/_components/ui'
 
 export interface TranchesTabProps {
@@ -329,7 +330,7 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
                 const nextInterestDate = (() => {
                   const d = new Date()
                   d.setMonth(d.getMonth() + 1, 1)
-                  return d.toLocaleDateString('tr-TR', { day: '2-digit', month: 'short', year: 'numeric' })
+                  return fmtDateMed(d)
                 })()
                 return (
                   <div key={t.id} className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">

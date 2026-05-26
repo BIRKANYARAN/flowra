@@ -11,7 +11,7 @@ import { NarrativeFooter, DataTable, DataTh, DataTd } from '@/components/ds'
 import { getQuarterlyReport, type QuarterResult } from '@/lib/finance/financial-core'
 import { normalizeAnalytics } from '@/lib/normalize'
 import { createClient }       from '@/lib/supabase-server'
-import { fmtTRY as fmt }     from '@/lib/format'
+import { fmtTRY as fmt, fmtDateMed as fmtDate } from '@/lib/format'
 
 // ── Formatters ────────────────────────────────────────────────────────────────
 
@@ -24,12 +24,6 @@ function delta(curr: number, prev: number): { text: string; color: string } {
   const pct  = ((curr - prev) / Math.abs(prev)) * 100
   const sign = pct >= 0 ? '+' : ''
   return { text: `${sign}${pct.toFixed(1)}%`, color: pct >= 0 ? 'text-pos-text' : 'text-neg' }
-}
-function fmtDate(d: string): string {
-  if (!d) return ''
-  const [y, m, day] = d.split('-')
-  const months = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara']
-  return `${day} ${months[Number(m) - 1]} ${y}`
 }
 function addDays(dateStr: string, n: number): string {
   const d = new Date(dateStr); d.setDate(d.getDate() + n)

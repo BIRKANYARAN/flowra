@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { Customer } from '@/types'
-import { fmtNum as fmt } from '@/lib/format'
+import { fmtNum as fmt, fmtDateMed as fmtDate } from '@/lib/format'
 
 // ── Local types for the detail API response ───────────────────────────────────
 
@@ -50,10 +50,6 @@ interface DetailData {
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-function fmtDate(s: string) {
-  return new Date(s).toLocaleDateString('tr-TR', { day: '2-digit', month: 'short', year: 'numeric' })
-}
 
 const STATUS_PROFORMA: Record<string, { label: string; cls: string }> = {
   draft:     { label: 'Taslak',     cls: 'bg-[#f1f5f9] text-[#64748b]' },

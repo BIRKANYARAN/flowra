@@ -5,7 +5,7 @@
 // slide-over customer detail panel, and inline action forms.
 
 import { useCallback, useState, useMemo, type ChangeEvent } from 'react'
-import { fmtTRY } from '@/lib/format'
+import { fmtTRY, fmtDateMed as fmtDate } from '@/lib/format'
 
 export interface CollectionRow {
   id: string
@@ -24,10 +24,6 @@ export interface CollectionRow {
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-function fmtDate(iso: string) {
-  return new Date(iso).toLocaleDateString('tr-TR', { day: '2-digit', month: 'short', year: 'numeric' })
-}
 
 function fmtDateShort(iso: string) {
   return new Date(iso).toLocaleDateString('tr-TR', { day: '2-digit', month: 'short' })

@@ -104,6 +104,16 @@ export function fmtDate(d: string | Date | null | undefined): string {
   } catch { return String(d) }
 }
 
+/** "15 May 2025" — Turkish medium date (abbreviated month name) */
+export function fmtDateMed(d: string | Date | null | undefined): string {
+  if (!d) return '—'
+  try {
+    return new Date(d).toLocaleDateString('tr-TR', {
+      day: '2-digit', month: 'short', year: 'numeric',
+    })
+  } catch { return String(d) }
+}
+
 /** "Mayıs 2025" — long month + year */
 export function fmtMonth(d: string | Date | null | undefined): string {
   if (!d) return '—'

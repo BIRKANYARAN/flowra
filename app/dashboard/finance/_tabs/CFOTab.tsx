@@ -23,7 +23,7 @@ import { getCfoMetrics, getQuarterlyReport } from '@/lib/finance/financial-core'
 import { getRiskEngineResult }   from '@/lib/finance/risk-engine'
 import { detectDuplicates }      from '@/lib/engines/duplicate-detector'
 import { createClient }          from '@/lib/supabase-server'
-import { fmtTRY, fmtPct, fmtDate, fmtCompact } from '@/lib/format'
+import { fmtTRY, fmtPct, fmtDate, fmtCompact, fmtDateMed } from '@/lib/format'
 import { makeRequestContext }    from '@/lib/logger'
 import type { CfoMetrics }       from '@/lib/finance/cfo-metrics'
 import type { QuarterResult }    from '@/lib/finance/financial-core'
@@ -451,11 +451,11 @@ export async function CFOTab({ userId, companyId }: Props) {
             <div className="flex items-center gap-3 mb-3 px-1">
               <div className="text-xs text-[#64748b]">
                 <span className="font-semibold text-[#334155]">
-                  {new Date(periodData.period.period_start + 'T00:00:00').toLocaleDateString('tr-TR', { day: '2-digit', month: 'short', year: 'numeric' })}
+                  {fmtDateMed(periodData.period.period_start)}
                 </span>
                 <span className="mx-1.5 text-[#cbd5e1]">—</span>
                 <span className="font-semibold text-[#334155]">
-                  {new Date(periodData.period.period_end + 'T00:00:00').toLocaleDateString('tr-TR', { day: '2-digit', month: 'short', year: 'numeric' })}
+                  {fmtDateMed(periodData.period.period_end)}
                 </span>
               </div>
               <span className="text-[10px] text-[#cbd5e1]">·</span>
@@ -721,7 +721,7 @@ export async function CFOTab({ userId, companyId }: Props) {
           return { text: `${p >= 0 ? '+' : ''}${p.toFixed(1)}%`, color: p >= 0 ? 'text-pos-text' : 'text-neg' }
         }
         const addDaysQ = (dateStr: string, n: number) => { const d = new Date(dateStr); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10) }
-        const fmtDateQ = (d: string) => { const [y, m, day] = d.split('-'); const months = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara']; return `${day} ${months[Number(m)-1]} ${y}` }
+        const fmtDateQ = fmtDateMed
 
         return (
           <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">

@@ -16,13 +16,7 @@ import {
 } from '@/lib/finance/financial-core'
 import { TaxService, type KDVSummary, type CorporateTaxEstimate } from '@/lib/services/tax.service'
 import { createClient } from '@/lib/supabase-server'
-import { fmtTRY as fmt, fmtMonthShort as fmtMonth } from '@/lib/format'
-function fmtDate(d: string): string {
-  if (!d) return ''
-  const [y, m, day] = d.split('-')
-  const months = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara']
-  return `${day} ${months[Number(m) - 1]} ${y}`
-}
+import { fmtTRY as fmt, fmtMonthShort as fmtMonth, fmtDateMed as fmtDate } from '@/lib/format'
 function addDays(dateStr: string, n: number): string {
   const d = new Date(dateStr + 'T00:00:00')
   d.setDate(d.getDate() + n)
