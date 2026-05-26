@@ -1,14 +1,16 @@
 // ── SalesContent — Commercial hub / sales tab ─────────────────────────────────
 //
 // KPI strip: MTD revenue vs prior month + payment status + currency breakdown
+// Gelir Kaynakları: 90-day revenue attribution by customer + product
 // Table: SalesTable client island (search, filter, sort, status update)
 
 import Link         from 'next/link'
 import { NarrativeFooter } from '@/components/ds'
 import { createClient }    from '@/lib/supabase-server'
 import { normalizeSaleRow } from '@/lib/normalize'
-import { fmtTRY as fmt }   from '@/lib/format'
+import { fmtTRY as fmt, fmtPct }   from '@/lib/format'
 import { SalesTable }       from './SalesTable'
+import { RevenueAttributionService, type RevenueContributor } from '@/lib/services/commercial/revenue-attribution.service'
 
 interface Props { companyId: string }
 
@@ -41,8 +43,8 @@ export async function SalesContent({ companyId }: Props) {
   const mtd  = monthRange(0)
   const prev = monthRange(-1)
 
-  // ── Parallel: full list + MTD + prior month aggregates ───────────────────
-  const [allRes, mtdRes, prevRes] = await Promise.all([
+  // ── Parallel: full list + MTD + prior month aggregates + attribution ──────
+  const [allRes, mtdRes, prevRes, attribution] = await Promise.all([
     // Full list for the table (no range limit — SalesTable handles pagination client-side)
     supabase
       .from('sales')
@@ -68,6 +70,9 @@ export async function SalesContent({ companyId }: Props) {
       .is('deleted_at', null)
       .gte('sale_date', prev.from)
       .lte('sale_date', prev.to),
+
+    // Revenue attribution (90d) — graceful fallback on error
+    RevenueAttributionService.getReport(companyId, supabase).catch(() => null),
   ])
 
   // ── Full list ─────────────────────────────────────────────────────────────
@@ -106,6 +111,127 @@ export async function SalesContent({ companyId }: Props) {
 
   return (
     <div className="max-w-4xl space-y-4">
+
+      {/* ── Gelir Kaynakları (90d Revenue Attribution) ───────────────────── */}
+      {attribution && attribution.total_revenue_try > 0 && (
+        <div className="bg-white border border-[#e2e8f0] rounded shadow-sm overflow-hidden">
+          {/* Header + concentration summary */}
+          <div className="px-4 pt-4 pb-3 border-b border-[#e2e8f0]">
+            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Gelir Kaynakları — Son 90 Gün</div>
+            <div className="flex flex-wrap gap-4 items-center mt-2">
+              <div>
+                <span className="text-[10px] text-[#94a3b8]">Toplam Ciro</span>
+                <div className="text-lg font-black tabular-nums text-[#0f172a]">{fmt(attribution.total_revenue_try)}</div>
+              </div>
+              {attribution.top3_customer_pct !== null && (
+                <div>
+                  <span className="text-[10px] text-[#94a3b8]">İlk 3 Müşteri</span>
+                  <div className="text-lg font-black tabular-nums text-[#0f172a]">%{attribution.top3_customer_pct.toFixed(1)}</div>
+                </div>
+              )}
+              {attribution.top3_product_pct !== null && attribution.by_product.length > 0 && (
+                <div>
+                  <span className="text-[10px] text-[#94a3b8]">İlk 3 Ürün</span>
+                  <div className="text-lg font-black tabular-nums text-[#0f172a]">%{attribution.top3_product_pct.toFixed(1)}</div>
+                </div>
+              )}
+              <div>
+                <span className="text-[10px] text-[#94a3b8]">Yeni Müşteri Cirosu</span>
+                <div className="text-lg font-black tabular-nums text-pos-text">{fmt(attribution.new_customer_revenue_try)}</div>
+              </div>
+              <div>
+                <span className="text-[10px] text-[#94a3b8]">Mevcut Müşteri Cirosu</span>
+                <div className="text-lg font-black tabular-nums text-[#0f172a]">{fmt(attribution.returning_customer_revenue_try)}</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-[#e2e8f0]">
+            {/* Top 5 customers */}
+            <div className="p-4">
+              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">En İyi 5 Müşteri</div>
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="text-[#94a3b8] text-[10px]">
+                    <th className="text-left font-semibold pb-1.5 w-5">#</th>
+                    <th className="text-left font-semibold pb-1.5">Müşteri</th>
+                    <th className="text-right font-semibold pb-1.5">Ciro</th>
+                    <th className="text-right font-semibold pb-1.5 w-10">Pay%</th>
+                    <th className="text-right font-semibold pb-1.5 w-6">Trend</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#f1f5f9]">
+                  {attribution.by_customer.slice(0, 5).map((c: RevenueContributor) => (
+                    <tr key={c.name} className="hover:bg-[#f8fafc]">
+                      <td className="py-1.5 text-[#94a3b8] tabular-nums">{c.rank}</td>
+                      <td className="py-1.5 font-medium text-[#1e293b] max-w-[120px] truncate" title={c.name}>{c.name}</td>
+                      <td className="py-1.5 text-right tabular-nums text-[#1e293b]">{fmt(c.total_try)}</td>
+                      <td className="py-1.5 text-right tabular-nums text-[#64748b]">%{c.pct_of_total.toFixed(1)}</td>
+                      <td className="py-1.5 text-right">
+                        {c.trend === 'growing'   && <span className="text-pos-text font-bold">↑</span>}
+                        {c.trend === 'declining' && <span className="text-neg font-bold">↓</span>}
+                        {c.trend === 'new'       && <span className="text-[#6366f1] font-bold text-[10px]">YENİ</span>}
+                        {c.trend === 'stable'    && <span className="text-[#94a3b8]">→</span>}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Top 5 products (or new/returning summary if no products) */}
+            {attribution.by_product.length > 0 ? (
+              <div className="p-4">
+                <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">En İyi 5 Ürün / Hizmet</div>
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="text-[#94a3b8] text-[10px]">
+                      <th className="text-left font-semibold pb-1.5 w-5">#</th>
+                      <th className="text-left font-semibold pb-1.5">Ürün / Hizmet</th>
+                      <th className="text-right font-semibold pb-1.5">Ciro</th>
+                      <th className="text-right font-semibold pb-1.5 w-10">Pay%</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#f1f5f9]">
+                    {attribution.by_product.slice(0, 5).map((p: RevenueContributor) => (
+                      <tr key={p.name} className="hover:bg-[#f8fafc]">
+                        <td className="py-1.5 text-[#94a3b8] tabular-nums">{p.rank}</td>
+                        <td className="py-1.5 font-medium text-[#1e293b] max-w-[120px] truncate" title={p.name}>{p.name}</td>
+                        <td className="py-1.5 text-right tabular-nums text-[#1e293b]">{fmt(p.total_try)}</td>
+                        <td className="py-1.5 text-right tabular-nums text-[#64748b]">%{p.pct_of_total.toFixed(1)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="p-4 flex flex-col gap-3">
+                <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Yeni vs Mevcut Müşteri</div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-[#f0fdf4] rounded p-3">
+                    <div className="text-[10px] text-[#94a3b8] mb-0.5">Yeni Müşteri</div>
+                    <div className="text-base font-black tabular-nums text-pos-text">{fmt(attribution.new_customer_revenue_try)}</div>
+                    {attribution.total_revenue_try > 0 && (
+                      <div className="text-[10px] text-[#94a3b8]">
+                        %{((attribution.new_customer_revenue_try / attribution.total_revenue_try) * 100).toFixed(1)}
+                      </div>
+                    )}
+                  </div>
+                  <div className="bg-[#f8fafc] rounded p-3">
+                    <div className="text-[10px] text-[#94a3b8] mb-0.5">Mevcut Müşteri</div>
+                    <div className="text-base font-black tabular-nums text-[#0f172a]">{fmt(attribution.returning_customer_revenue_try)}</div>
+                    {attribution.total_revenue_try > 0 && (
+                      <div className="text-[10px] text-[#94a3b8]">
+                        %{((attribution.returning_customer_revenue_try / attribution.total_revenue_try) * 100).toFixed(1)}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ── KPI Strip ────────────────────────────────────────────────────── */}
       {(mtdCount > 0 || list.length > 0) && (
