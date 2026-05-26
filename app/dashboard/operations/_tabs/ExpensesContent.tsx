@@ -17,6 +17,7 @@ import {
   ExpenseIntelligenceService,
   type ExpenseIntelligenceReport,
 } from '@/lib/services/finance/expense-intelligence.service'
+import { SupplierAnalyticsPanel } from './_supplier-analytics/SupplierAnalyticsPanel'
 
 function CommandBarSkeleton() {
   return (
@@ -498,6 +499,9 @@ export async function ExpensesContent({ companyId }: Props) {
           workflow_instance: (e as ExpenseRow).workflow_instance ?? null,
         }))}
       />
+
+      {/* ── Tedarikçi Analizi ─────────────────────────────────────────────────── */}
+      <SupplierAnalyticsPanel />
 
       {/* Cross-navigation */}
       <NarrativeFooter
