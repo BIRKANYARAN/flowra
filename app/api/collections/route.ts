@@ -11,6 +11,8 @@ import { auditPaymentApplied } from '@/lib/db/mutation-audit'
 const ALLOWED_STATUSES = ['pending', 'paid', 'partial', 'overdue', 'cancelled'] as const
 type PaymentStatus = typeof ALLOWED_STATUSES[number]
 
+import { sanitizePaidAmount, computeCollectionRiskScore } from '@/lib/utils/collections-pure'
+
 // ── GET ───────────────────────────────────────────────────────────────────────
 export async function GET(req: NextRequest) {
   const auth = await resolveApiAuth(req)
@@ -64,19 +66,10 @@ export async function GET(req: NextRequest) {
     // ── Risk sort: score = (days_since_due × 0.6) + (amount_try / 10000 × 0.4) ──
     if (sortMode === 'risk') {
       const today = new Date().toISOString().slice(0, 10)
-      result = [...result].sort((a, b) => {
-        const scoreOf = (r: typeof result[number]) => {
-          const refDate = (r as { due_date?: string | null; sale_date?: string | null }).due_date
-            ?? (r as { due_date?: string | null; sale_date?: string | null }).sale_date
-            ?? ''
-          const days = refDate
-            ? Math.max(0, Math.round((new Date(today).getTime() - new Date((refDate as string).slice(0, 10)).getTime()) / 86_400_000))
-            : 0
-          const amtTry = Number((r as { total_try?: number }).total_try ?? 0)
-          return days * 0.6 + (amtTry / 10000) * 0.4
-        }
-        return scoreOf(b) - scoreOf(a)
-      })
+      result = [...result].sort((a, b) =>
+        computeCollectionRiskScore(b as Parameters<typeof computeCollectionRiskScore>[0], today) -
+        computeCollectionRiskScore(a as Parameters<typeof computeCollectionRiskScore>[0], today)
+      )
     }
 
     return NextResponse.json(result)
@@ -125,7 +118,7 @@ export async function PATCH(req: NextRequest) {
 
     // Optional fields — only write when explicitly provided
     if (amount_paid !== undefined)
-      patch.paid_amount = amount_paid != null ? Math.max(0, Number(amount_paid) || 0) : null
+      patch.paid_amount = sanitizePaidAmount(amount_paid)
     if (due_date !== undefined)    patch.due_date    = due_date
 
     const { error } = await supabase
