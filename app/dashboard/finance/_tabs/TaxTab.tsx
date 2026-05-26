@@ -18,6 +18,7 @@ import {
 } from '@/lib/finance/financial-core'
 import { TaxService, type KDVSummary, type CorporateTaxEstimate } from '@/lib/services/tax.service'
 import { TaxCalendarService, type TaxCalendar, type TaxObligation } from '@/lib/services/tax/tax-calendar.service'
+import { TaxReserveService, type TaxReserveReport, type TaxReserveItem } from '@/lib/services/tax/tax-reserve.service'
 import { createClient } from '@/lib/supabase-server'
 import { fmtTRY as fmt, fmtMonthShort as fmtMonth, fmtDateMed as fmtDate } from '@/lib/format'
 function addDays(dateStr: string, n: number): string {
@@ -84,11 +85,12 @@ export async function TaxTab({ userId, companyId }: Props) {
   const currentYM = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
   const currentPeriod = periodForMonth(currentYM)
 
-  const [report, kdvSummary, corpTaxEstimate, taxCalendar, ...monthlySummaries] = await Promise.all([
+  const [report, kdvSummary, corpTaxEstimate, taxCalendar, taxReserve, ...monthlySummaries] = await Promise.all([
     sq(() => getQuarterlyReport(userId, companyId, currentYear), ZERO_REPORT),
     sq(() => TaxService.computeKDVSummary(companyId, currentPeriod.from, currentPeriod.to, supabase), null as KDVSummary | null),
     sq(() => TaxService.estimateCorporateTax(companyId, today, supabase), null as CorporateTaxEstimate | null),
     sq(() => TaxCalendarService.getCalendar(companyId, userId, supabase, { today }), null as TaxCalendar | null),
+    sq(() => TaxReserveService.buildReport(companyId, supabase, today), null as TaxReserveReport | null),
     ...monthYMs.map(ym =>
       sq(() => FinanceService.getFinancialSummary(userId, companyId, periodForMonth(ym)), null)
     ),
@@ -121,8 +123,177 @@ export async function TaxTab({ userId, companyId }: Props) {
     q.gecici_due_date && q.gecici_vergi > 0 && geciciStatus(q.gecici_due_date, today) === 'urgent'
   )
 
+  // ── Vergi Rezervi helpers ────────────────────────────────────────────────────
+  const reserveCoverageBadge = (status: TaxReserveReport['coverage_status']) => {
+    switch (status) {
+      case 'adequate':     return { text: 'Yeterli (%120+)',   cls: 'bg-pos-light text-pos-text border-pos-light' }
+      case 'tight':        return { text: 'Sınırda (%80–120)', cls: 'bg-warn-light text-warn-text border-warn-light' }
+      case 'insufficient': return { text: 'Yetersiz (<%80)',   cls: 'bg-neg-light text-neg-text border-neg-light' }
+      default:             return { text: 'Bilinmiyor',        cls: 'bg-[#f1f5f9] text-[#64748b] border-[#e2e8f0]' }
+    }
+  }
+
+  const reserveItemStatusCls = (status: TaxReserveItem['status']) => {
+    switch (status) {
+      case 'overdue':  return 'bg-neg-light text-neg-text border-neg-light'
+      case 'due_soon': return 'bg-warn-light text-warn-text border-warn-light'
+      case 'upcoming': return 'bg-[#f1f5f9] text-[#64748b] border-[#e2e8f0]'
+      default:         return 'bg-pos-light text-pos-text border-pos-light'
+    }
+  }
+
+  const reserveItemStatusText = (item: TaxReserveItem) => {
+    switch (item.status) {
+      case 'overdue':  return `${Math.abs(item.days_until_due)} gün gecikti`
+      case 'due_soon': return `${item.days_until_due} gün kaldı`
+      case 'upcoming': return `${item.days_until_due} gün`
+      default:         return 'Ödendi'
+    }
+  }
+
   return (
     <div className="space-y-4">
+
+      {/* ── Vergi Rezervi ────────────────────────────────────────────────────── */}
+      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+        <div className="px-4 py-3 border-b border-[#e2e8f0] flex items-center justify-between">
+          <div>
+            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Vergi Rezervi</div>
+            <p className="text-[10px] text-[#94a3b8] mt-0.5">Yaklaşan vergi yükümlülükleri için nakit rezerv takibi</p>
+          </div>
+          {taxReserve && (
+            <div className="flex items-center gap-2 shrink-0">
+              {(() => {
+                const badge = reserveCoverageBadge(taxReserve.coverage_status)
+                return (
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${badge.cls}`}>
+                    {badge.text}
+                  </span>
+                )
+              })()}
+            </div>
+          )}
+        </div>
+
+        {!taxReserve ? (
+          <div className="px-4 py-6 text-center">
+            <p className="text-xs text-[#94a3b8]">Vergi rezervi hesaplanamadı</p>
+          </div>
+        ) : (
+          <>
+            {/* Coverage summary strip */}
+            <div className="grid grid-cols-4 gap-0 border-b border-[#e2e8f0]">
+              {[
+                {
+                  label: 'Toplam Rezerv',
+                  value: fmt(taxReserve.total_reserved_try),
+                  color: 'text-warn-text',
+                },
+                {
+                  label: 'Mevcut Nakit',
+                  value: taxReserve.cash_available_try !== null ? fmt(taxReserve.cash_available_try) : '—',
+                  color: taxReserve.cash_available_try !== null ? 'text-pos-text' : 'text-[#94a3b8]',
+                },
+                {
+                  label: 'Karşılama Oranı',
+                  value: taxReserve.reserve_coverage_pct !== null
+                    ? `%${taxReserve.reserve_coverage_pct.toFixed(0)}`
+                    : '—',
+                  color: taxReserve.coverage_status === 'adequate'
+                    ? 'text-pos-text'
+                    : taxReserve.coverage_status === 'tight'
+                    ? 'text-warn-text'
+                    : taxReserve.coverage_status === 'insufficient'
+                    ? 'text-neg'
+                    : 'text-[#94a3b8]',
+                },
+                {
+                  label: 'Vadesi Geçmiş',
+                  value: taxReserve.total_overdue_try > 0 ? fmt(taxReserve.total_overdue_try) : '—',
+                  color: taxReserve.total_overdue_try > 0 ? 'text-neg' : 'text-[#94a3b8]',
+                },
+              ].map((card, i) => (
+                <div key={card.label}
+                  className={`p-3 ${i < 3 ? 'border-r border-[#e2e8f0]' : ''}`}>
+                  <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
+                  <div className={`text-base font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Insufficient coverage warning */}
+            {taxReserve.coverage_status === 'insufficient' && taxReserve.cash_available_try !== null && (
+              <div className="mx-4 my-3 bg-neg-light border border-neg rounded px-3 py-2 flex items-start gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-neg shrink-0 mt-1" />
+                <div className="text-xs text-neg-text">
+                  <span className="font-black">Nakit rezervi yetersiz.</span>{' '}
+                  Mevcut nakit (<strong>{fmt(taxReserve.cash_available_try)}</strong>), vergi yükümlülüklerinin
+                  {' '}<strong>%{taxReserve.reserve_coverage_pct?.toFixed(0) ?? '?'}</strong>&apos;ini karşılıyor.
+                  Hedef: toplam rezervin en az %120&apos;si ({fmt(taxReserve.total_reserved_try * 1.2)}).
+                </div>
+              </div>
+            )}
+
+            {/* Items table */}
+            {taxReserve.items.filter(i => i.status !== 'paid').length > 0 ? (
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="bg-[#f8fafc] border-b border-[#e2e8f0]">
+                    <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Vergi Türü</th>
+                    <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Dönem</th>
+                    <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Son Gün</th>
+                    <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Tahmini</th>
+                    <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Rezerv</th>
+                    <th className="text-center px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Durum</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#f1f5f9]">
+                  {taxReserve.items
+                    .filter(item => item.status !== 'paid')
+                    .map(item => {
+                      const statusCls  = reserveItemStatusCls(item.status)
+                      const statusText = reserveItemStatusText(item)
+                      const rowBg = item.status === 'overdue'
+                        ? 'bg-neg-light/20'
+                        : item.status === 'due_soon'
+                        ? 'bg-warn-light/10'
+                        : ''
+                      return (
+                        <tr key={`${item.tax_type}-${item.due_date}`}
+                          className={`hover:bg-[#f8fafc]/60 transition-colors ${rowBg}`}>
+                          <td className="px-4 py-2.5 font-bold text-[#1e293b]">{item.label}</td>
+                          <td className="px-4 py-2.5 text-[#64748b]">{item.period_label}</td>
+                          <td className={`px-4 py-2.5 font-semibold ${
+                            item.status === 'overdue' ? 'text-neg-text' :
+                            item.status === 'due_soon' ? 'text-warn-text' :
+                            'text-[#1e293b]'
+                          }`}>
+                            {fmtDate(item.due_date)}
+                          </td>
+                          <td className="px-4 py-2.5 text-right font-mono tabular-nums text-[#1e293b]">
+                            {item.estimated_amount_try > 0 ? fmt(item.estimated_amount_try) : <span className="text-[#cbd5e1]">—</span>}
+                          </td>
+                          <td className="px-4 py-2.5 text-right font-mono tabular-nums font-bold text-warn-text">
+                            {item.reserved_amount_try > 0 ? fmt(item.reserved_amount_try) : <span className="text-[#cbd5e1]">—</span>}
+                          </td>
+                          <td className="px-4 py-2.5 text-center">
+                            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${statusCls}`}>
+                              {statusText}
+                            </span>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                </tbody>
+              </table>
+            ) : (
+              <div className="px-4 py-6 text-center">
+                <p className="text-xs text-[#94a3b8]">Yaklaşan vergi yükümlülüğü bulunamadı</p>
+              </div>
+            )}
+          </>
+        )}
+      </div>
 
       {/* ── Tax urgency banner ────────────────────────────────────────────────── */}
       {overdueQuarters.length > 0 && (
