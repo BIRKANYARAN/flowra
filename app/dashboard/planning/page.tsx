@@ -19,6 +19,7 @@ import { DebtPressureTab }    from './_tabs/DebtPressureTab'
 import { PartnerImpactTab }   from './_tabs/PartnerImpactTab'
 import { VarianceTab }        from './_tabs/VarianceTab'
 import { BreakEvenTab }       from './_tabs/BreakEvenTab'
+import { BudgetTab }          from './_tabs/BudgetTab'
 
 function TabSkeleton() {
   return (
@@ -78,6 +79,7 @@ export default async function PlanningPage({ searchParams }: PageProps) {
     'partner-impact':  'Ortak Etkisi',
     'breakeven':       'Başabaş Analizi',
     'tasks':           'Görevler',
+    'budget':          'Bütçe vs Gerçekleşen',
   }
   const planSubs: Record<string, string> = {
     'unit-profit':     'Birim karlılık · Marj analizi · Fiyat optimizasyonu',
@@ -88,6 +90,7 @@ export default async function PlanningPage({ searchParams }: PageProps) {
     'partner-impact':  'Ortak etkisi · Eşitleme hesabı · Dağıtım analizi',
     'breakeven':       'Başabaş noktası · Katkı payı · Güvenlik marjı · Hedef kâr senaryosu',
     'tasks':           'Görev takibi · Vadesi yaklaşan · Öncelik sırası',
+    'budget':          'Aylık bütçe hedefleri · Gelir/gider varyansı · YTD özet',
   }
 
   return (
@@ -138,6 +141,8 @@ export default async function PlanningPage({ searchParams }: PageProps) {
           <BreakEvenTab companyId={companyId} userId={userId} />
         )}
         {activeTab === 'tasks' && <TasksContent companyId={companyId} />}
+        {/* budget: monthly budget targets vs actuals */}
+        {activeTab === 'budget' && <BudgetTab />}
       </Suspense>
     </div>
   )
