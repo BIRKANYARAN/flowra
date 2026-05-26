@@ -1,12 +1,19 @@
 // ── /api/collections ─────────────────────────────────────────────────────────
 // GET   — list sales with payment_status (filter by ?status=unpaid|paid|all)
 // PATCH — update payment_status on a sale (mark paid / unpaid / partial / overdue)
+//
+// Dual-write: when payment_status transitions to 'paid' or 'partial' with an
+// amount, a sale_payment journal entry (DR 102 Bankalar / CR 120 Alıcılar) is
+// written via dualWrite(). Idempotent: ON CONFLICT DO NOTHING on the unique
+// (company_id, source_type='sale_payment', source_id=sale_id) index.
 
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { resolveApiAuth } from '@/lib/api-auth'
 import { auditPaymentApplied } from '@/lib/db/mutation-audit'
+import { dualWrite, resolvePeriodId } from '@/lib/services/ledger/dual-write.service'
+import { JournalEntryService } from '@/lib/services/ledger/journal-entry.service'
 
 const ALLOWED_STATUSES = ['pending', 'paid', 'partial', 'overdue', 'cancelled'] as const
 type PaymentStatus = typeof ALLOWED_STATUSES[number]
@@ -129,6 +136,31 @@ export async function PATCH(req: NextRequest) {
       .is('deleted_at', null)
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+    // ── Dual-write: GL journal entry for payment (DR 102 Bankalar, CR 120 Alıcılar)
+    // Only fire when transitioning to a payment state with a positive amount.
+    // Idempotent via unique index on (company_id, 'sale_payment', sale_id).
+    if ((payment_status === 'paid' || payment_status === 'partial') && amount_paid !== undefined) {
+      const amountPaid = Number(amount_paid) || 0
+      if (amountPaid > 0) {
+        const today     = new Date().toISOString().slice(0, 10)
+        const periodId  = await resolvePeriodId(companyId, today, supabase).catch(() => null)
+        await dualWrite({
+          companyId,
+          periodId,
+          createdBy: uid,
+          supabase,
+          buildEntry: () => JournalEntryService.buildSalePaymentEntry({
+            sale_id:      id,
+            payment_date: today,
+            amount_try:   amountPaid,
+          }),
+        }).catch(err => {
+          // Non-blocking: GL write failure must not break the operational write
+          console.error('[collections PATCH] dual-write failed:', err instanceof Error ? err.message : String(err))
+        })
+      }
+    }
 
     // Fire-and-forget audit trail — payment mutations must be traceable
     auditPaymentApplied({
