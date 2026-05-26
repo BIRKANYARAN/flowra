@@ -22,6 +22,8 @@ import type { FxExposureReport }       from '@/lib/services/finance/fx-exposure.
 import { AnnualSummaryService }        from '@/lib/services/finance/annual-summary.service'
 import type { AnnualSummary }          from '@/lib/services/finance/annual-summary.service'
 import { fmtPct }                      from '@/lib/format'
+import { HealthScorecardService }      from '@/lib/services/finance/health-scorecard.service'
+import type { HealthScorecard, FinancialRatio } from '@/lib/services/finance/health-scorecard.service'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -123,13 +125,14 @@ export async function OverviewTab({ userId, companyId, glMode = 'shadow' }: Prop
   // Parallel: current + previous month metrics + YTD financial summary + period + FX + annual
   // Sequential: runway forecast must wait for current metrics (needs taxObligation)
   const currentYM = `${year}-${mon}`
-  const [metrics, prevMetrics, ytdSummary, currentPeriod, fxExposure, annualSummary] = await Promise.all([
+  const [metrics, prevMetrics, ytdSummary, currentPeriod, fxExposure, annualSummary, scorecard] = await Promise.all([
     sq(() => getCfoMetrics(companyId, { from, to: today }),        ZERO_METRICS),
     sq(() => getCfoMetrics(companyId, { from: prevFrom, to: prevTo }), ZERO_METRICS),
     sq(() => FinanceService.getFinancialSummary(userId, companyId, periodForMonth(currentYM)), null),
     sq(() => PeriodService.getCurrent(companyId, supabase), null),
     sq(() => FxExposureService.getReport(companyId, supabase), null as FxExposureReport | null),
     sq(() => AnnualSummaryService.getSummary(companyId, userId, supabase, { yearsBack: 3 }), null as AnnualSummary | null),
+    sq(() => HealthScorecardService.getScorecard(companyId, userId, supabase, { from: ytdFrom, to: today }), null as HealthScorecard | null),
   ])
   const runway = await sq(
     () => getRunwayForecast(companyId, {
@@ -605,6 +608,109 @@ export async function OverviewTab({ userId, companyId, glMode = 'shadow' }: Prop
                 </tbody>
               </table>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Mali Sağlık Kartı ───────────────────────────────────────────────── */}
+      {scorecard && (
+        <div className="bg-white border border-[#e2e8f0] rounded shadow-sm">
+          {/* Header */}
+          <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">
+            <div>
+              <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Mali Sağlık Kartı</div>
+              <div className="text-xs text-[#64748b] mt-0.5">10 finansal oran · yönetim kurulu düzeyi</div>
+            </div>
+            <div className="flex items-center gap-3">
+              {/* Category grade badges */}
+              {(Object.entries(scorecard.categories) as Array<[string, { grade: string; ratios: string[] }]>).map(([cat, data]) => {
+                const catLabel: Record<string, string> = {
+                  liquidity: 'Likidite', profitability: 'Kârlılık',
+                  efficiency: 'Verimlilik', leverage: 'Kaldıraç',
+                }
+                const gradeColor: Record<string, string> = {
+                  A: 'bg-pos-light text-pos-text border-pos-light',
+                  B: 'bg-blue-50 text-blue-700 border-blue-200',
+                  C: 'bg-warn-light text-warn-text border-warn/30',
+                  D: 'bg-orange-50 text-orange-700 border-orange-200',
+                  F: 'bg-neg-light text-neg-text border-neg/30',
+                }
+                const colors = gradeColor[data.grade] ?? 'bg-[#f1f5f9] text-[#64748b] border-[#e2e8f0]'
+                return (
+                  <div key={cat} className={`flex flex-col items-center px-2 py-1 rounded border text-center ${colors}`}>
+                    <span className="text-[9px] font-black uppercase tracking-wide">{catLabel[cat]}</span>
+                    <span className="text-sm font-black leading-none">{data.grade}</span>
+                  </div>
+                )
+              })}
+              {/* Overall grade */}
+              <div className={`flex flex-col items-center px-3 py-1.5 rounded border-2 text-center ${
+                scorecard.overall_grade === 'A' ? 'border-pos-light bg-pos-light text-pos-text' :
+                scorecard.overall_grade === 'B' ? 'border-blue-200 bg-blue-50 text-blue-700' :
+                scorecard.overall_grade === 'C' ? 'border-warn/40 bg-warn-light text-warn-text' :
+                scorecard.overall_grade === 'D' ? 'border-orange-200 bg-orange-50 text-orange-700' :
+                'border-neg/40 bg-neg-light text-neg-text'
+              }`}>
+                <span className="text-[9px] font-black uppercase tracking-wide">Genel</span>
+                <span className="text-xl font-black leading-none">{scorecard.overall_grade}</span>
+                <span className="text-[9px] tabular-nums">{Math.round(scorecard.overall_score)}/100</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Ratio table — worst ratios first */}
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-[#f1f5f9]">
+                  <th className="text-left px-4 py-2 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Oran</th>
+                  <th className="text-right px-4 py-2 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Değer</th>
+                  <th className="text-center px-4 py-2 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Not</th>
+                  <th className="text-left px-4 py-2 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Kriter</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[...scorecard.ratios]
+                  .filter(r => r.value !== null)
+                  .sort((a, b) => {
+                    const gradeOrder: Record<string, number> = { F: 0, D: 1, C: 2, B: 3, A: 4 }
+                    return (gradeOrder[a.grade ?? 'A'] ?? 4) - (gradeOrder[b.grade ?? 'A'] ?? 4)
+                  })
+                  .map((ratio: FinancialRatio) => {
+                    const gradeColor: Record<string, string> = {
+                      A: 'bg-pos-light text-pos-text',
+                      B: 'bg-blue-50 text-blue-700',
+                      C: 'bg-warn-light text-warn-text',
+                      D: 'bg-orange-50 text-orange-700',
+                      F: 'bg-neg-light text-neg-text',
+                    }
+                    const colors = gradeColor[ratio.grade ?? ''] ?? 'bg-[#f1f5f9] text-[#64748b]'
+                    const val = ratio.value!
+                    const display = ratio.unit === 'pct'
+                      ? `%${val.toFixed(1)}`
+                      : ratio.unit === 'x'
+                      ? `${val.toFixed(2)}x`
+                      : val.toFixed(2)
+                    return (
+                      <tr key={ratio.key} className="border-b border-[#f8fafc] hover:bg-[#fafafa]">
+                        <td className="px-4 py-2">
+                          <div className="font-semibold text-[#0f172a]">{ratio.name}</div>
+                          <div className="text-[10px] text-[#94a3b8] mt-0.5">{ratio.description}</div>
+                        </td>
+                        <td className="px-4 py-2 text-right tabular-nums font-black text-[#0f172a]">{display}</td>
+                        <td className="px-4 py-2 text-center">
+                          {ratio.grade && (
+                            <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-black ${colors}`}>
+                              {ratio.grade}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-2 text-[10px] text-[#64748b]">{ratio.benchmark}</td>
+                      </tr>
+                    )
+                  })}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
