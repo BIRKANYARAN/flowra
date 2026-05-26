@@ -984,6 +984,10 @@ export default function SettingsPage() {
           className="text-xs font-semibold text-brand-light hover:text-brand px-3 py-2 rounded hover:bg-brand-subtle border border-[#e2e8f0] transition-colors">
           E-posta Bildirimleri →
         </Link>
+        <Link href="/dashboard/settings/setup"
+          className="text-xs font-semibold text-brand-light hover:text-brand px-3 py-2 rounded hover:bg-brand-subtle border border-[#e2e8f0] transition-colors">
+          Kurulum Durumu →
+        </Link>
       </div>
 
     </div>
