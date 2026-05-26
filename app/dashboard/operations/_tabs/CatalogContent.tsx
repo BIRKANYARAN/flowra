@@ -7,6 +7,8 @@ import { createClient } from '@/lib/supabase-server'
 import type { Product } from '@/types'
 import CatalogClient from '@/app/dashboard/catalog/CatalogClient'
 import { CatalogCommandBar } from '@/app/dashboard/catalog/_components/CatalogCommandBar'
+import { ProductMarginService } from '@/lib/services/inventory/product-margin.service'
+import type { ProductMarginReport } from '@/lib/services/inventory/product-margin.service'
 
 function CommandBarSkeleton() {
   return (
@@ -31,7 +33,10 @@ interface Props { companyId: string; userId: string }
 export async function CatalogContent({ companyId, userId }: Props) {
   const supabase = createClient()
 
-  const [prodRes, lotRes] = await Promise.all([
+  const today  = new Date().toISOString().slice(0, 10)
+  const ytdFrom = today.slice(0, 4) + '-01-01'
+
+  const [prodRes, lotRes, marginReport] = await Promise.all([
     supabase
       .from('products')
       .select('*')
@@ -48,6 +53,9 @@ export async function CatalogContent({ companyId, userId }: Props) {
       .eq('company_id', companyId)
       .is('deleted_at', null)
       .gt('qty_remaining', 0),
+
+    ProductMarginService.getReport(companyId, supabase, { from: ytdFrom, to: today })
+      .catch(() => null as ProductMarginReport | null),
   ])
 
   const products = (prodRes.data ?? []) as Product[]
@@ -168,6 +176,104 @@ export async function CatalogContent({ companyId, userId }: Props) {
         userId={userId}
         companyId={companyId}
       />
+
+      {/* ── Ürün Karlılığı ────────────────────────────────────────────────────── */}
+      {marginReport && marginReport.products.length > 0 && (
+        <div className="bg-white border border-[#e2e8f0] rounded shadow-sm">
+          {/* Header strip */}
+          <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">
+            <div>
+              <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Ürün Karlılığı</div>
+              <div className="text-xs text-[#64748b] mt-0.5">FIFO maliyet bazlı brüt marj · {today.slice(0, 4)} yılı</div>
+            </div>
+            <div className="flex items-center gap-4 text-xs">
+              <div className="text-right">
+                <div className="text-[9px] uppercase tracking-wide text-[#94a3b8]">Toplam Gelir</div>
+                <div className="font-black tabular-nums text-[#0f172a]">{fmtTRY(marginReport.total_revenue_try)}</div>
+              </div>
+              <div className="text-right">
+                <div className="text-[9px] uppercase tracking-wide text-[#94a3b8]">Genel Brüt Marj</div>
+                <div className={`font-black tabular-nums ${
+                  marginReport.overall_gross_margin_pct > 40 ? 'text-pos-text' :
+                  marginReport.overall_gross_margin_pct > 20 ? 'text-warn-text' : 'text-neg'
+                }`}>%{marginReport.overall_gross_margin_pct.toFixed(1)}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Below-threshold warning */}
+          {marginReport.products_below_threshold_count > 0 && (
+            <div className="px-4 py-2 bg-warn-light border-b border-warn/20 text-xs text-warn-text font-semibold flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-warn shrink-0" />
+              {marginReport.products_below_threshold_count} ürün %10 altında marj — fiyat veya maliyet revizyonu gerekebilir.
+            </div>
+          )}
+
+          {/* Best/worst callouts */}
+          {(marginReport.top_margin_product || marginReport.lowest_margin_product) && (
+            <div className="flex gap-4 px-4 py-2 border-b border-[#f1f5f9] text-[10px]">
+              {marginReport.top_margin_product && (
+                <span className="text-pos-text">
+                  <span className="font-black">En yüksek marj:</span> {marginReport.top_margin_product}
+                </span>
+              )}
+              {marginReport.lowest_margin_product && marginReport.products.length > 1 && (
+                <span className="text-neg">
+                  <span className="font-black">En düşük marj:</span> {marginReport.lowest_margin_product}
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Product table */}
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-[#f1f5f9]">
+                  <th className="text-left px-4 py-2 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Ürün</th>
+                  <th className="text-right px-4 py-2 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Satış Adedi</th>
+                  <th className="text-right px-4 py-2 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Gelir</th>
+                  <th className="text-right px-4 py-2 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Brüt Marj %</th>
+                  <th className="text-center px-4 py-2 text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Not</th>
+                </tr>
+              </thead>
+              <tbody>
+                {marginReport.products.slice(0, 10).map(p => {
+                  const gradeColors: Record<string, string> = {
+                    excellent: 'bg-pos-light text-pos-text',
+                    good:      'bg-blue-50 text-blue-700',
+                    fair:      'bg-warn-light text-warn-text',
+                    poor:      'bg-neg-light text-neg-text',
+                  }
+                  const gradeLabels: Record<string, string> = {
+                    excellent: 'Mükemmel', good: 'İyi', fair: 'Orta', poor: 'Zayıf',
+                  }
+                  const colors = gradeColors[p.margin_grade] ?? 'bg-[#f1f5f9] text-[#64748b]'
+                  return (
+                    <tr key={p.product_id} className="border-b border-[#f8fafc] hover:bg-[#fafafa]">
+                      <td className="px-4 py-2">
+                        <div className="font-semibold text-[#0f172a]">{p.product_name}</div>
+                        {p.category && <div className="text-[10px] text-[#94a3b8]">{p.category}</div>}
+                      </td>
+                      <td className="px-4 py-2 text-right tabular-nums text-[#334155]">{p.units_sold}</td>
+                      <td className="px-4 py-2 text-right tabular-nums font-semibold text-[#0f172a]">{fmtTRY(p.revenue_try)}</td>
+                      <td className={`px-4 py-2 text-right tabular-nums font-black ${
+                        p.gross_margin_pct > 40 ? 'text-pos-text' :
+                        p.gross_margin_pct > 20 ? 'text-warn-text' : 'text-neg'
+                      }`}>%{p.gross_margin_pct.toFixed(1)}</td>
+                      <td className="px-4 py-2 text-center">
+                        <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-semibold ${colors}`}>
+                          {gradeLabels[p.margin_grade]}
+                        </span>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* Cross-navigation */}
       <NarrativeFooter
