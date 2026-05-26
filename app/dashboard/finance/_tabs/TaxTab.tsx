@@ -14,6 +14,8 @@ import {
   geciciDueDate,
   type QuarterResult,
 } from '@/lib/finance/financial-core'
+import { TaxService, type KDVSummary, type CorporateTaxEstimate } from '@/lib/services/tax.service'
+import { createClient } from '@/lib/supabase-server'
 import { fmtTRY as fmt } from '@/lib/format'
 
 // ── Formatters ────────────────────────────────────────────────────────────────
@@ -87,8 +89,15 @@ export async function TaxTab({ userId, companyId }: Props) {
     ytd: { revenue: 0, gross_profit: 0, net_profit: 0, matrah: 0, corporate_tax: 0, net_after_tax: 0, total_gecici: 0 },
   }
 
-  const [report, ...monthlySummaries] = await Promise.all([
+  const supabase = createClient()
+
+  const currentYM = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+  const currentPeriod = periodForMonth(currentYM)
+
+  const [report, kdvSummary, corpTaxEstimate, ...monthlySummaries] = await Promise.all([
     sq(() => getQuarterlyReport(userId, companyId, currentYear), ZERO_REPORT),
+    sq(() => TaxService.computeKDVSummary(companyId, currentPeriod.from, currentPeriod.to, supabase), null as KDVSummary | null),
+    sq(() => TaxService.estimateCorporateTax(companyId, today, supabase), null as CorporateTaxEstimate | null),
     ...monthYMs.map(ym =>
       sq(() => FinanceService.getFinancialSummary(userId, companyId, periodForMonth(ym)), null)
     ),
@@ -204,6 +213,93 @@ export async function TaxTab({ userId, companyId }: Props) {
             <div className="text-[10px] text-[#94a3b8] mt-1">{card.sub}</div>
           </div>
         ))}
+      </div>
+
+      {/* ── Zone 1b: KDV Özet Kartı ─────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 gap-3">
+        {/* KDV Summary */}
+        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+          <div className="px-4 py-2.5 bg-[#f8fafc] border-b border-[#e2e8f0] flex items-center justify-between">
+            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">KDV Özeti — {kdvSummary?.period_label ?? currentYM}</div>
+            <Link href="/dashboard/cfo/tax/kdv" className="text-[10px] font-bold text-brand-light hover:text-brand underline-offset-2">
+              Detaylı Analiz →
+            </Link>
+          </div>
+          <div className="px-4 py-3 space-y-2">
+            {kdvSummary ? (
+              <>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-[#64748b]">Hesaplanan KDV (çıkış)</span>
+                  <span className="tabular-nums text-sm font-black text-warn">{fmt(kdvSummary.output_vat_try)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-[#64748b]">İndirilecek KDV (giriş)</span>
+                  <span className="tabular-nums text-sm font-semibold text-pos-text">−{fmt(kdvSummary.input_vat_try)}</span>
+                </div>
+                <div className="flex items-center justify-between border-t border-[#e2e8f0] pt-2">
+                  <span className="text-xs font-black text-[#1e293b]">Net KDV</span>
+                  <span className={`tabular-nums text-sm font-black ${kdvSummary.vat_payable ? 'text-warn-text' : 'text-pos-text'}`}>
+                    {fmt(Math.abs(kdvSummary.net_vat_try))}
+                    <span className={`ml-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded border ${
+                      kdvSummary.vat_payable
+                        ? 'bg-warn-light text-warn-text border-warn/20'
+                        : 'bg-pos-light text-pos-text border-pos-light'
+                    }`}>
+                      {kdvSummary.vat_payable ? 'Ödenecek' : 'Devir'}
+                    </span>
+                  </span>
+                </div>
+                <div className="text-[10px] text-[#94a3b8] pt-0.5">
+                  Beyan tarihi:{' '}
+                  <span className="font-semibold text-[#64748b]">
+                    {kdvSummary.filing_due_date}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <p className="text-xs text-[#94a3b8] py-2">KDV verisi yüklenemedi</p>
+            )}
+          </div>
+        </div>
+
+        {/* Corporate Tax Estimate */}
+        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+          <div className="px-4 py-2.5 bg-[#f8fafc] border-b border-[#e2e8f0] flex items-center justify-between">
+            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Kurumlar Vergisi Tahmini — YTD {currentYear}</div>
+            <Link href="/dashboard/cfo/tax/corporate" className="text-[10px] font-bold text-brand-light hover:text-brand underline-offset-2">
+              Detaylı Analiz →
+            </Link>
+          </div>
+          <div className="px-4 py-3 space-y-2">
+            {corpTaxEstimate ? (
+              <>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-[#64748b]">YTD Ciro</span>
+                  <span className="tabular-nums text-sm font-semibold text-[#0f172a]">{fmt(corpTaxEstimate.ytd_revenue_try)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-[#64748b]">Tahmini KV (%25)</span>
+                  <span className="tabular-nums text-sm font-black text-warn-text">{fmt(corpTaxEstimate.estimated_tax_try)}</span>
+                </div>
+                <div className="flex items-center justify-between border-t border-[#e2e8f0] pt-2">
+                  <span className="text-xs font-black text-[#1e293b]">Kalan Vergi</span>
+                  <span className={`tabular-nums text-sm font-black ${corpTaxEstimate.remaining_tax_try > 0 ? 'text-warn-text' : 'text-pos-text'}`}>
+                    {fmt(Math.abs(corpTaxEstimate.remaining_tax_try))}
+                    {corpTaxEstimate.remaining_tax_try < 0 && (
+                      <span className="ml-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded border bg-pos-light text-pos-text border-pos-light">Fazla ödendi</span>
+                    )}
+                  </span>
+                </div>
+                <div className="text-[10px] text-[#94a3b8] pt-0.5">
+                  Sonraki avans:{' '}
+                  <span className="font-semibold text-[#64748b]">{corpTaxEstimate.next_advance_due}</span>
+                </div>
+              </>
+            ) : (
+              <p className="text-xs text-[#94a3b8] py-2">Kurumlar vergisi verisi yüklenemedi</p>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* ── Zone 2: Aylık KDV Geçmişi ───────────────────────────────────────── */}

@@ -50,6 +50,7 @@ interface CompanyRiskSummary {
   dsr:                  number
   concentration_pct:    number
   highest_risk_partner: string | null
+  concentration_warning: string | null
 }
 
 interface ComplianceWarning {
@@ -95,6 +96,89 @@ function fmt(n: number) {
 const DIM_KEYS: Array<keyof PartnerRiskProfile['dimensions']> = [
   'concentration', 'duration', 'burden', 'coverage', 'liquidity', 'compliance',
 ]
+
+// ── Heatmap helpers ────────────────────────────────────────────────────────────
+
+// Score thresholds per task spec: ≥70=green, 40-69=amber, <40=red
+// (slightly different from the grade system — these are cell colour thresholds)
+function heatCell(score: number): string {
+  if (score >= 70) return 'bg-pos-light text-pos-text'
+  if (score >= 40) return 'bg-warn-light text-warn-text'
+  return 'bg-neg-light text-neg-text'
+}
+
+// Letter grade per task spec: A(≥80), B(60-79), C(40-59), D(<40)
+function gradeFromScore(score: number): string {
+  if (score >= 80) return 'A'
+  if (score >= 60) return 'B'
+  if (score >= 40) return 'C'
+  return 'D'
+}
+
+const DIM_LABELS: Record<keyof PartnerRiskProfile['dimensions'], string> = {
+  concentration: 'Konsant.',
+  duration:      'Vade',
+  burden:        'Yük',
+  coverage:      'Teminat',
+  liquidity:     'Likidite',
+  compliance:    'Uyum',
+}
+
+function HeatmapGrid({ profiles }: { profiles: PartnerRiskProfile[] }) {
+  return (
+    <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+      <div className="px-4 py-2.5 border-b border-[#e2e8f0] bg-[#f8fafc]/60">
+        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Risk Isı Haritası</div>
+        <div className="text-[10px] text-[#94a3b8] mt-0.5">
+          Yeşil ≥70 · Turuncu 40–69 · Kırmızı &lt;40 · Not: A≥80 · B≥60 · C≥40 · D&lt;40
+        </div>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-xs border-collapse">
+          <thead>
+            <tr className="border-b border-[#e2e8f0]">
+              <th className="px-3 py-2 text-left text-[9px] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] sticky left-0 z-10 min-w-[100px]">
+                Ortak
+              </th>
+              {DIM_KEYS.map(k => (
+                <th key={k} className="px-2 py-2 text-center text-[9px] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] whitespace-nowrap min-w-[72px]">
+                  {DIM_LABELS[k]}
+                </th>
+              ))}
+              <th className="px-3 py-2 text-center text-[9px] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] whitespace-nowrap">
+                Genel Not
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[#f1f5f9]">
+            {profiles.map(p => (
+              <tr key={p.partner_id} className="hover:bg-[#fafafa]">
+                <td className="px-3 py-2 font-semibold text-[#0f172a] sticky left-0 bg-white z-10 whitespace-nowrap">
+                  {p.partner_name}
+                </td>
+                {DIM_KEYS.map(k => {
+                  const dim = p.dimensions[k]
+                  return (
+                    <td key={k} className="px-2 py-1.5 text-center">
+                      <div className={`inline-flex items-center justify-center w-10 h-6 rounded text-[11px] font-black tabular-nums ${heatCell(dim.score)}`}>
+                        {dim.score.toFixed(0)}
+                      </div>
+                    </td>
+                  )
+                })}
+                <td className="px-3 py-1.5 text-center">
+                  <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-sm font-black border-2 ${GRADE_COLORS[p.composite_grade]}`}>
+                    {gradeFromScore(p.composite_score)}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
 
 function ScoreBar({ score, grade }: { score: number; grade: RiskGrade }) {
   return (
@@ -195,6 +279,24 @@ export function RiskTab({ loading }: RiskTabProps) {
           </div>
         </div>
       </div>
+
+      {/* ── Konsantrasyon Uyarısı Banner ─────────────────────────────────────── */}
+      {rs.concentration_warning && (
+        <div className="bg-neg-light border border-neg-light rounded px-4 py-3 flex items-start gap-3">
+          <span className="text-neg font-black text-base shrink-0">!</span>
+          <div>
+            <div className="text-[0.65rem] font-black uppercase tracking-widest text-neg-text mb-1">
+              Konsantrasyon Uyarısı
+            </div>
+            <div className="text-xs text-neg-text">{rs.concentration_warning}</div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Risk Heatmap Grid ────────────────────────────────────────────────── */}
+      {rs.partner_profiles.length > 0 && (
+        <HeatmapGrid profiles={rs.partner_profiles} />
+      )}
 
       {/* ── Compliance Warnings ─────────────────────────────────────────────── */}
       {cw.length > 0 && (

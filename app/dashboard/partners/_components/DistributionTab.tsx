@@ -1,11 +1,25 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { NarrativeFooter } from '@/components/ds'
 import {
   DistribState,
   pct, fmt,
 } from '@/app/dashboard/partners/_components/types'
+
+// ── Compliance gate types ──────────────────────────────────────────────────────
+
+interface ComplianceViolation {
+  rule:     string
+  message:  string
+  blocking: boolean
+}
+
+interface CompliancePreCheck {
+  violations: ComplianceViolation[]
+  blocked:    boolean
+}
 
 export interface DistributionTabProps {
   distrib: DistribState | null
@@ -38,6 +52,57 @@ export function DistributionTab({
   onSetDividendConfirm,
   onDeclareDividend,
 }: DistributionTabProps) {
+  const [preCheck,       setPreCheck]       = useState<CompliancePreCheck | null>(null)
+  const [preCheckLoading, setPreCheckLoading] = useState(false)
+
+  // Run compliance pre-check before full distribution compute
+  async function handleCalculate() {
+    const netIncome    = parseFloat(netIncomeInput)    || 0
+    const boardRetained = parseFloat(boardRetainedInput) || 0
+
+    setPreCheckLoading(true)
+    setPreCheck(null)
+    try {
+      const params = new URLSearchParams({
+        net_income:      String(netIncome),
+        board_retained:  String(boardRetained),
+        // dividend_requested = 0 for pre-check (we just want to see the rules)
+        dividend_requested: '0',
+        legal_reserves_done: 'false',
+      })
+      const res = await fetch(`/api/partners/pcle/distribute?${params}`)
+      if (res.status === 422) {
+        const json = await res.json().catch(() => ({ violations: [], blocked: true }))
+        setPreCheck({ violations: json.violations ?? [], blocked: true })
+      } else if (res.ok) {
+        const json = await res.json().catch(() => ({}))
+        setPreCheck({ violations: json.violations ?? [], blocked: false })
+        // Only call full distribution if no blocking violation
+        onLoadDistribution(netIncome, boardRetained)
+      } else {
+        // On unexpected error, still allow distribution to run
+        onLoadDistribution(netIncome, boardRetained)
+      }
+    } catch {
+      onLoadDistribution(netIncome, boardRetained)
+    }
+    setPreCheckLoading(false)
+  }
+
+  const hasBlockingViolation = preCheck?.blocked === true
+
+  // Rule display order with Turkish labels
+  const RULE_LABELS: Record<string, string> = {
+    TTK_509_NO_PROFIT:    'TTK 509 — Kâr yokken dağıtım yasaktır',
+    TTK_509_EXCESS:       'TTK 509 — Dağıtılabilir kâr sınırı',
+    TTK_519_RESERVE:      'TTK 519 — Yasal yedek zorunluluğu',
+    NEG_DISTRIBUTABLE:    'Negatif dağıtılabilir tutar',
+  }
+
+  function ruleLabel(rule: string): string {
+    return RULE_LABELS[rule] ?? rule.replace(/_/g, ' ')
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
@@ -53,7 +118,7 @@ export function DistributionTab({
               placeholder="örn. 500000"
               className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-brand/30"
               value={netIncomeInput}
-              onChange={e => onNetIncomeChange(e.target.value)}
+              onChange={e => { onNetIncomeChange(e.target.value); setPreCheck(null) }}
             />
           </div>
           <div>
@@ -66,21 +131,88 @@ export function DistributionTab({
               placeholder="örn. 0"
               className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-brand/30"
               value={boardRetainedInput}
-              onChange={e => onBoardRetainedChange(e.target.value)}
+              onChange={e => { onBoardRetainedChange(e.target.value); setPreCheck(null) }}
             />
           </div>
         </div>
         <button
-          onClick={() => onLoadDistribution(
-            parseFloat(netIncomeInput) || 0,
-            parseFloat(boardRetainedInput) || 0,
-          )}
-          disabled={distribLoading}
+          onClick={handleCalculate}
+          disabled={distribLoading || preCheckLoading}
           className="mt-3 text-xs font-bold px-4 py-2 rounded bg-brand-light text-white hover:bg-brand disabled:opacity-50 transition-colors"
         >
-          {distribLoading ? 'Hesaplanıyor...' : 'Dağıtım Hesapla'}
+          {distribLoading || preCheckLoading ? 'Hesaplanıyor...' : 'Dağıtım Hesapla'}
         </button>
       </div>
+
+      {/* ── Compliance Pre-Check Panel ──────────────────────────────────────── */}
+      {preCheck && (
+        <div className={`border rounded overflow-hidden ${hasBlockingViolation ? 'border-neg-light bg-neg-light' : 'border-pos-light bg-pos-light'}`}>
+          <div className={`px-4 py-2 border-b ${hasBlockingViolation ? 'border-neg-light' : 'border-pos-light'}`}>
+            <div className={`text-[0.65rem] font-black uppercase tracking-widest ${hasBlockingViolation ? 'text-neg-text' : 'text-pos-text'}`}>
+              Yasal Uyum Ön Kontrolü
+            </div>
+          </div>
+          <div className="divide-y divide-[#f1f5f9]">
+            {/* Show core TTK rules explicitly */}
+            {[
+              {
+                key:      'ttk509',
+                label:    'TTK 509 — Dağıtılabilir kâr',
+                passing:  !preCheck.violations.some(v => v.rule.includes('509') && v.blocking),
+                blocking: preCheck.violations.some(v => v.rule.includes('509') && v.blocking),
+                msg:      preCheck.violations.find(v => v.rule.includes('509'))?.message,
+              },
+              {
+                key:      'ttk519',
+                label:    'TTK 519 — Yasal yedek ayrımı',
+                passing:  !preCheck.violations.some(v => v.rule.includes('519') && v.blocking),
+                blocking: preCheck.violations.some(v => v.rule.includes('519') && v.blocking),
+                msg:      preCheck.violations.find(v => v.rule.includes('519'))?.message,
+              },
+              {
+                key:      'neg',
+                label:    'Negatif dağıtım kontrolü',
+                passing:  !preCheck.violations.some(v => v.rule.includes('NEG') && v.blocking),
+                blocking: preCheck.violations.some(v => v.rule.includes('NEG') && v.blocking),
+                msg:      preCheck.violations.find(v => v.rule.includes('NEG'))?.message,
+              },
+            ].map(rule => (
+              <div key={rule.key} className={`flex items-start gap-3 px-4 py-2.5 bg-white`}>
+                <span className={`text-base shrink-0 mt-0.5 ${rule.blocking ? 'text-neg' : 'text-pos-text'}`}>
+                  {rule.blocking ? '✗' : '✓'}
+                </span>
+                <div>
+                  <div className={`text-[11px] font-bold ${rule.blocking ? 'text-neg-text' : 'text-pos-text'}`}>
+                    {rule.label}
+                  </div>
+                  {rule.msg && (
+                    <div className={`text-[10px] mt-0.5 ${rule.blocking ? 'text-neg' : 'text-[#64748b]'}`}>
+                      {rule.msg}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+            {/* Any additional non-blocking warnings from the API */}
+            {preCheck.violations.filter(v => !v.blocking && !['509','519','NEG'].some(k => v.rule.includes(k))).map((v, i) => (
+              <div key={i} className="flex items-start gap-3 px-4 py-2.5 bg-white">
+                <span className="text-warn text-base shrink-0 mt-0.5">⚠</span>
+                <div>
+                  <div className="text-[11px] font-bold text-warn-text">{ruleLabel(v.rule)}</div>
+                  <div className="text-[10px] text-warn-text mt-0.5">{v.message}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+          {hasBlockingViolation && (
+            <div className="px-4 py-3 bg-neg-light border-t border-neg-light">
+              <div className="text-xs text-neg-text font-bold">
+                Engelleme ihlali mevcut — Dağıtım başlatılamaz.
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {distrib && (
         <>
@@ -141,9 +273,11 @@ export function DistributionTab({
                 ) : (
                   <button
                     onClick={() => { onSetDividendConfirm(true) }}
-                    className="text-xs font-bold px-4 py-2 rounded bg-pos text-white hover:bg-pos transition-colors shrink-0"
+                    disabled={hasBlockingViolation}
+                    className="text-xs font-bold px-4 py-2 rounded bg-pos text-white hover:bg-pos transition-colors shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+                    title={hasBlockingViolation ? 'Yasal uyum ihlali nedeniyle dağıtım engellenmiştir' : undefined}
                   >
-                    Temettü Beyan Et
+                    Dağıtım Başlat
                   </button>
                 )}
               </div>

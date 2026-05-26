@@ -53,6 +53,100 @@ import type {
 function startOfDayUTC(yyyymmdd: string): string { return yyyymmdd + 'T00:00:00.000Z' }
 function endOfDayUTC(yyyymmdd: string):   string { return yyyymmdd + 'T23:59:59.999Z' }
 
+// ── KDV summary types ──────────────────────────────────────────────────────────
+export interface KDVSummary {
+  period_label:    string       // e.g. "Mayıs 2026"
+  output_vat_try:  number       // 391 account: hesaplanan KDV (from sales)
+  input_vat_try:   number       // 191 account: indirilecek KDV (from expenses)
+  net_vat_try:     number       // output - input (positive = payable)
+  vat_payable:     boolean      // net_vat_try > 0
+  filing_due_date: string       // 26th of the following month (Turkish rule)
+  period_start:    string
+  period_end:      string
+  breakdown: {
+    sales_vat_try:    number   // KDV from sales (18% or 8% mixed)
+    expense_vat_try:  number   // deductible KDV from expenses
+    vat_rate_summary: { rate: number; base_try: number; vat_try: number }[]
+  }
+}
+
+// ── Corporate tax estimate types ───────────────────────────────────────────────
+export interface CorporateTaxEstimate {
+  ytd_revenue_try:        number
+  ytd_expenses_try:       number
+  ytd_gross_profit_try:   number
+  ytd_net_before_tax_try: number
+  tax_rate:               number    // 0.25 for 2026 Turkey standard
+  estimated_tax_try:      number    // max(0, ytd_net_before_tax * tax_rate)
+  advance_tax_paid_try:   number    // from expense records tagged as 'advance_tax'
+  remaining_tax_try:      number    // estimated - paid (can be negative = overpaid)
+  next_advance_due:       string    // date of next quarterly advance payment
+  fiscal_year:            number
+}
+
+// ── Pure helper: Turkish month name ───────────────────────────────────────────
+const TR_MONTHS = [
+  'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
+  'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık',
+]
+
+/** Returns "Mayıs 2026" format from a YYYY-MM-DD period end date. */
+function periodLabel(periodEnd: string): string {
+  const [y, m] = periodEnd.split('-').map(Number)
+  return `${TR_MONTHS[(m ?? 1) - 1] ?? ''} ${y}`
+}
+
+/**
+ * Pure function: compute filing due date for a KDV period.
+ * Turkish rule: due on the 26th of the month FOLLOWING periodEnd.
+ * Example: period ending 2026-05-31 → due "2026-06-26"
+ */
+export function computeFilingDueDate(periodEnd: string): string {
+  const [y, m] = periodEnd.split('-').map(Number)
+  const dueMonth = (m % 12) + 1
+  const dueYear  = m === 12 ? y + 1 : y
+  return `${dueYear}-${String(dueMonth).padStart(2, '0')}-26`
+}
+
+/**
+ * Pure function: compute KDV totals from raw DB rows.
+ * Exported for unit testing — no Supabase dependency.
+ */
+export function computeKDVFromRows(
+  salesRows:   { kdv_amount_try: number; tax_rate?: number }[],
+  expenseRows: { kdv_deductible_try: number }[],
+): { output_vat_try: number; input_vat_try: number; net_vat_try: number; vat_payable: boolean } {
+  const output = round2(salesRows.reduce((s, r) => s + Number(r.kdv_amount_try ?? 0), 0))
+  const input  = round2(expenseRows.reduce((s, r) => s + Number(r.kdv_deductible_try ?? 0), 0))
+  const net    = round2(output - input)
+  return { output_vat_try: output, input_vat_try: input, net_vat_try: net, vat_payable: net > 0 }
+}
+
+/**
+ * Pure function: compute next Turkish corporate tax advance due date.
+ * Advance schedule: 17th of April, July, October, January.
+ */
+export function nextCorporateTaxAdvanceDue(asOfDate: string): string {
+  const d = new Date(asOfDate + 'T00:00:00')
+  const year  = d.getFullYear()
+  const month = d.getMonth() + 1 // 1-based
+
+  // Advance due months (1-based): April=4, July=7, October=10, January=1
+  const dueDates = [
+    `${year}-01-17`,
+    `${year}-04-17`,
+    `${year}-07-17`,
+    `${year}-10-17`,
+    `${year + 1}-01-17`,
+  ]
+
+  for (const d2 of dueDates) {
+    if (d2 > asOfDate) return d2
+  }
+  // Should never reach here — last entry is always next year
+  return `${year + 1}-04-17`
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // PURE KERNELS — DB-free, simulation-friendly. EXPORTED individually so the
 // simulation engine and tests can use them without pulling Supabase.
@@ -224,5 +318,137 @@ export class TaxService {
       deductible_expenses_try: exp.deductible_try,
       rate_percent:            rate ?? CORPORATE_TAX_RATE_TR,
     })
+  }
+
+  // ── KDV Summary (new) — period-level VAT report ─────────────────────────────
+  static async computeKDVSummary(
+    companyId: string,
+    periodStart: string,  // YYYY-MM-DD
+    periodEnd: string,
+    supabase: AnyClient,
+  ): Promise<KDVSummary> {
+    const [{ data: salesRows, error: salesErr }, { data: expenseRows, error: expErr }] =
+      await Promise.all([
+        supabase
+          .from('sales')
+          .select('kdv_amount_try, tax_rate, total_try')
+          .eq('company_id', companyId)
+          .is('deleted_at', null)
+          .gte('sale_date', periodStart)
+          .lte('sale_date', periodEnd),
+        supabase
+          .from('expenses')
+          .select('kdv_deductible_try')
+          .eq('company_id', companyId)
+          .is('deleted_at', null)
+          .gte('expense_date', periodStart)
+          .lte('expense_date', periodEnd),
+      ])
+
+    if (salesErr) throw new AppError('DB_READ_FAILED', 'Satış KDV verisi alınamadı', { dbError: salesErr.message })
+    if (expErr)   throw new AppError('DB_READ_FAILED', 'Gider KDV verisi alınamadı', { dbError: expErr.message })
+
+    const sales    = (salesRows   ?? []) as { kdv_amount_try: number; tax_rate?: number; total_try?: number }[]
+    const expenses = (expenseRows ?? []) as { kdv_deductible_try: number }[]
+
+    const { output_vat_try, input_vat_try, net_vat_try, vat_payable } =
+      computeKDVFromRows(sales, expenses)
+
+    // VAT rate breakdown: group sales by tax_rate
+    const rateMap = new Map<number, { base_try: number; vat_try: number }>()
+    for (const s of sales) {
+      const rate = Number(s.tax_rate ?? 0)
+      const vat  = Number(s.kdv_amount_try ?? 0)
+      const base = rate > 0 ? round2(vat / (rate / 100)) : Number(s.total_try ?? 0)
+      const cur  = rateMap.get(rate) ?? { base_try: 0, vat_try: 0 }
+      rateMap.set(rate, { base_try: round2(cur.base_try + base), vat_try: round2(cur.vat_try + vat) })
+    }
+    const vat_rate_summary = Array.from(rateMap.entries())
+      .map(([rate, v]) => ({ rate, base_try: v.base_try, vat_try: v.vat_try }))
+      .sort((a, b) => a.rate - b.rate)
+
+    return {
+      period_label:    periodLabel(periodEnd),
+      output_vat_try,
+      input_vat_try,
+      net_vat_try,
+      vat_payable,
+      filing_due_date: computeFilingDueDate(periodEnd),
+      period_start:    periodStart,
+      period_end:      periodEnd,
+      breakdown: {
+        sales_vat_try:   output_vat_try,
+        expense_vat_try: input_vat_try,
+        vat_rate_summary,
+      },
+    }
+  }
+
+  // ── Corporate Tax Estimate (new) — YTD estimate ──────────────────────────────
+  static async estimateCorporateTax(
+    companyId: string,
+    asOfDate: string,  // YYYY-MM-DD — compute YTD up to this date
+    supabase: AnyClient,
+  ): Promise<CorporateTaxEstimate> {
+    const fiscalYear   = Number(asOfDate.slice(0, 4))
+    const ytdStart     = `${fiscalYear}-01-01`
+    const TAX_RATE     = 0.25
+
+    // Fetch YTD sales revenue and YTD expenses in parallel
+    const [{ data: salesData, error: salesErr }, { data: expData, error: expErr }] =
+      await Promise.all([
+        supabase
+          .from('sales')
+          .select('total_try')
+          .eq('company_id', companyId)
+          .is('deleted_at', null)
+          .gte('sale_date', ytdStart)
+          .lte('sale_date', asOfDate),
+        supabase
+          .from('expenses')
+          .select('amount_try, category')
+          .eq('company_id', companyId)
+          .is('deleted_at', null)
+          .gte('expense_date', ytdStart)
+          .lte('expense_date', asOfDate),
+      ])
+
+    if (salesErr) throw new AppError('DB_READ_FAILED', 'Satış verisi alınamadı', { dbError: salesErr.message })
+    if (expErr)   throw new AppError('DB_READ_FAILED', 'Gider verisi alınamadı', { dbError: expErr.message })
+
+    const ytd_revenue_try  = round2((salesData ?? []).reduce((s, r) => s + Number(r.total_try ?? 0), 0))
+    const allExpenses       = (expData ?? []) as { amount_try: number; category: string }[]
+
+    // Advance tax paid: expenses tagged as category 'tax' (advance_tax proxy)
+    const advance_tax_paid_try = round2(
+      allExpenses
+        .filter(e => e.category === 'tax')
+        .reduce((s, e) => s + Number(e.amount_try ?? 0), 0)
+    )
+
+    const ytd_expenses_try = round2(
+      allExpenses
+        .filter(e => e.category !== 'tax')
+        .reduce((s, e) => s + Number(e.amount_try ?? 0), 0)
+    )
+
+    const ytd_gross_profit_try   = round2(ytd_revenue_try - ytd_expenses_try)
+    const ytd_net_before_tax_try = ytd_gross_profit_try
+    const estimated_tax_try      = round2(Math.max(0, ytd_net_before_tax_try * TAX_RATE))
+    const remaining_tax_try      = round2(estimated_tax_try - advance_tax_paid_try)
+    const next_advance_due       = nextCorporateTaxAdvanceDue(asOfDate)
+
+    return {
+      ytd_revenue_try,
+      ytd_expenses_try,
+      ytd_gross_profit_try,
+      ytd_net_before_tax_try,
+      tax_rate:            TAX_RATE,
+      estimated_tax_try,
+      advance_tax_paid_try,
+      remaining_tax_try,
+      next_advance_due,
+      fiscal_year:         fiscalYear,
+    }
   }
 }

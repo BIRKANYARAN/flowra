@@ -406,6 +406,7 @@ export default function PartnersPage() {
           waterfall={waterfall}
           totalDebt={totalDebt}
           availCash={availCash}
+          partners={partners}
           onCashChange={setAvailCash}
           onLoadWaterfall={loadWaterfall}
         />

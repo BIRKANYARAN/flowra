@@ -8,9 +8,11 @@
 //   • entity_type
 //   • user_id (which team member performed the action)
 // Paginates 50 rows at a time.
+// Chain Integrity Panel at the top with date range picker.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { Fragment, useState, useEffect, useCallback, type ChangeEvent } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { AuditLog } from '@/types'
 
@@ -47,9 +49,24 @@ interface ChainResult {
   to:            string
 }
 
+function todayStr(): string {
+  return new Date().toISOString().slice(0, 10)
+}
+
+function dfl30Str(): string {
+  return new Date(Date.now() - 30 * 86_400_000).toISOString().slice(0, 10)
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function AdminAuditPage() {
+  const searchParams = useSearchParams()
+  const router       = useRouter()
+
+  // ── Date range (from search params, defaulting to last 30 days) ───────────
+  const [chainFrom, setChainFrom] = useState<string>(() => searchParams.get('from') ?? dfl30Str())
+  const [chainTo,   setChainTo]   = useState<string>(() => searchParams.get('to')   ?? todayStr())
+
   const [logs,      setLogs]      = useState<AuditLog[]>([])
   const [total,     setTotal]     = useState(0)
   const [offset,    setOffset]    = useState(0)
@@ -70,14 +87,19 @@ export default function AdminAuditPage() {
   const [chainLoading, setChainLoading] = useState(false)
   const [chainError,   setChainError]   = useState('')
 
-  const verifyChain = useCallback(async () => {
+  const verifyChain = useCallback(async (from: string, to: string) => {
     setChainLoading(true)
     setChainError('')
     setChainResult(null)
+
+    // Sync search params
+    const params = new URLSearchParams()
+    params.set('from', from)
+    params.set('to',   to)
+    router.replace(`?${params.toString()}`, { scroll: false })
+
     try {
-      const today  = new Date().toISOString().slice(0, 10)
-      const dfl30  = new Date(Date.now() - 30 * 86_400_000).toISOString().slice(0, 10)
-      const res    = await fetch(`/api/admin/audit/chain?from=${dfl30}&to=${today}`)
+      const res = await fetch(`/api/admin/audit/chain?from=${from}&to=${to}`)
       if (!res.ok) { setChainError('Zincir doğrulama başarısız.'); return }
       setChainResult(await res.json())
     } catch {
@@ -85,9 +107,15 @@ export default function AdminAuditPage() {
     } finally {
       setChainLoading(false)
     }
+  }, [router])
+
+  // Run chain verify on mount with default / URL-provided dates
+  useEffect(() => {
+    verifyChain(chainFrom, chainTo)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // ── Fetch ──────────────────────────────────────────────────────────────────
+  // ── Fetch audit logs ───────────────────────────────────────────────────────
 
   const load = useCallback(async (off = 0, signal?: AbortSignal) => {
     setLoading(true)
@@ -131,7 +159,7 @@ export default function AdminAuditPage() {
     )
   }
 
-  const totalPages = Math.ceil(total / PAGE_SIZE)
+  const totalPages  = Math.ceil(total / PAGE_SIZE)
   const currentPage = Math.floor(offset / PAGE_SIZE) + 1
 
   return (
@@ -144,25 +172,79 @@ export default function AdminAuditPage() {
         </p>
       </div>
 
-      {/* ── Audit Chain Integrity ─────────────────────────────────────────── */}
+      {/* ── Chain Integrity Panel ──────────────────────────────────────────── */}
       <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm mb-5">
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-start justify-between mb-3 gap-4 flex-wrap">
           <div>
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Denetim Zinciri Bütünlüğü</div>
-            <div className="text-[10px] text-[#94a3b8] mt-0.5">SHA-256 hash zinciri — son 30 gün</div>
+            <div className="text-[10px] text-[#94a3b8] mt-0.5">SHA-256 hash zinciri · tarih aralığı seçin</div>
           </div>
-          <button
-            onClick={verifyChain}
-            disabled={chainLoading}
-            className="text-xs font-semibold px-3 py-1.5 bg-brand-light text-white rounded hover:bg-brand disabled:opacity-50 transition-colors"
-          >
-            {chainLoading ? 'Doğrulanıyor…' : 'Zinciri Doğrula'}
-          </button>
+
+          {/* Date range picker + verify button */}
+          <div className="flex items-end gap-2 flex-wrap">
+            <div>
+              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Başlangıç</div>
+              <input
+                type="date"
+                className={SEL + ' text-xs'}
+                value={chainFrom}
+                max={chainTo}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setChainFrom(e.target.value)}
+              />
+            </div>
+            <div>
+              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Bitiş</div>
+              <input
+                type="date"
+                className={SEL + ' text-xs'}
+                value={chainTo}
+                min={chainFrom}
+                max={todayStr()}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setChainTo(e.target.value)}
+              />
+            </div>
+            <button
+              onClick={() => { setChainFrom(dfl30Str()); setChainTo(todayStr()) }}
+              className="text-xs text-[#94a3b8] hover:text-[#334155] px-2 py-2 rounded hover:bg-[#f8fafc] transition-colors whitespace-nowrap"
+              title="Son 30 güne sıfırla"
+            >
+              Son 30 Gün
+            </button>
+            <button
+              onClick={() => verifyChain(chainFrom, chainTo)}
+              disabled={chainLoading || !chainFrom || !chainTo}
+              className="text-xs font-semibold px-3 py-2 bg-brand-light text-white rounded hover:bg-brand disabled:opacity-50 transition-colors whitespace-nowrap"
+            >
+              {chainLoading ? 'Doğrulanıyor…' : 'Zinciri Doğrula'}
+            </button>
+          </div>
         </div>
+
+        {/* Status badge */}
+        {!chainLoading && chainResult && !chainError && chainResult.is_supported && chainResult.total_checked > 0 && (
+          <div className="mb-3">
+            {chainResult.ok ? (
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-pos-light text-pos-text border border-pos-light">
+                ✅ Zincir Bütünlüklü
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-neg-light text-neg-text border border-neg-light">
+                ❌ Zincir İhlali Tespit Edildi!
+              </span>
+            )}
+          </div>
+        )}
 
         {chainError && (
           <div className="text-xs text-neg bg-neg-light border border-neg-light rounded px-3 py-2">
             {chainError}
+          </div>
+        )}
+
+        {chainLoading && (
+          <div className="flex items-center gap-2 text-xs text-[#94a3b8] py-2">
+            <div className="w-4 h-4 border-2 border-brand border-t-transparent rounded-full animate-spin" />
+            Doğrulanıyor…
           </div>
         )}
 
@@ -200,7 +282,7 @@ export default function AdminAuditPage() {
                 </div>
                 {chainResult.first_broken && (
                   <div className="bg-white border border-neg-light rounded p-3 space-y-1">
-                    <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">İlk Bozuk Kayıt</div>
+                    <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">İlk İhlal</div>
                     <div className="text-[10px] text-[#334155]">
                       <span className="text-[#94a3b8]">ID:</span>{' '}
                       <code className="bg-neg-light px-1 rounded">{chainResult.first_broken.id}</code>
@@ -224,6 +306,8 @@ export default function AdminAuditPage() {
           </div>
         )}
       </div>
+
+      {/* ── Audit Log Table + Filters ──────────────────────────────────────── */}
 
       {/* Filters */}
       <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm mb-5 flex flex-wrap gap-3 items-end">
@@ -300,16 +384,19 @@ export default function AdminAuditPage() {
                     <th className="px-4 py-2 text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Tarih</th>
                     <th className="px-4 py-2 text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Kullanıcı</th>
                     <th className="px-4 py-2 text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">İşlem</th>
-                    <th className="px-4 py-2 text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Kayıt Türü</th>
-                    <th className="px-4 py-2 text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Kayıt ID</th>
+                    <th className="px-4 py-2 text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Kaynak</th>
+                    <th className="px-4 py-2 text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Hash</th>
                     <th className="px-4 py-2 text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Detay</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#f1f5f9]">
                   {logs.map(log => {
-                    const actionMeta = ACTION_LABELS[log.action] ?? { label: log.action, color: 'bg-[#f1f5f9] text-[#64748b]' }
+                    const actionMeta  = ACTION_LABELS[log.action] ?? { label: log.action, color: 'bg-[#f1f5f9] text-[#64748b]' }
                     const entityLabel = ENTITY_LABELS[log.entity_type] ?? log.entity_type
-                    const isExpanded = expanded === log.id
+                    const isExpanded  = expanded === log.id
+                    // content_hash may not exist on the AuditLog type yet (pre-migration)
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    const contentHash = (log as any).content_hash as string | null | undefined
 
                     return (
                       <Fragment key={log.id}>
@@ -333,11 +420,21 @@ export default function AdminAuditPage() {
                               {actionMeta.label}
                             </span>
                           </td>
-                          <td className="px-4 py-2 text-xs text-[#334155]">{entityLabel}</td>
-                          <td className="px-4 py-2">
+                          <td className="px-4 py-2 text-xs text-[#334155]">
+                            <span className="text-[#64748b]">{entityLabel}</span>
+                            <span className="mx-1 text-[#cbd5e1]">·</span>
                             <code className="text-[10px] bg-[#f1f5f9] text-[#64748b] rounded px-1.5 py-0.5">
                               {log.entity_id.slice(0, 8)}…
                             </code>
+                          </td>
+                          <td className="px-4 py-2">
+                            {contentHash ? (
+                              <code className="text-[10px] font-mono bg-[#f8fafc] text-[#64748b] border border-[#e2e8f0] rounded px-1.5 py-0.5" title={contentHash}>
+                                {contentHash.slice(0, 8)}
+                              </code>
+                            ) : (
+                              <span className="text-[10px] text-[#cbd5e1]">—</span>
+                            )}
                           </td>
                           <td className="px-4 py-2">
                             <button className="text-xs text-brand-light hover:text-brand font-medium">
@@ -369,6 +466,11 @@ export default function AdminAuditPage() {
                               {log.ip_address && (
                                 <div className="mt-2 text-[10px] text-[#94a3b8]">
                                   IP: {log.ip_address}
+                                </div>
+                              )}
+                              {contentHash && (
+                                <div className="mt-1 text-[10px] text-[#94a3b8]">
+                                  SHA-256: <code className="font-mono">{contentHash}</code>
                                 </div>
                               )}
                             </td>
@@ -410,7 +512,7 @@ export default function AdminAuditPage() {
       )}
 
       {/* Cross-navigation */}
-      <div className="flex items-center justify-between px-1">
+      <div className="flex items-center justify-between px-1 mt-4">
         <p className="text-[10px] text-[#94a3b8] leading-relaxed">
           Denetim izi tüm değişikliklerin yasal kaydıdır — silinmez.
         </p>
@@ -425,6 +527,14 @@ export default function AdminAuditPage() {
           <span className="text-[#e2e8f0]">|</span>
           <Link href="/dashboard/cfo/journal-entries" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
             Journal Kayıtları →
+          </Link>
+          <span className="text-[#e2e8f0]">|</span>
+          <Link
+            href={`/api/admin/audit/export?from=${chainFrom}&to=${chainTo}`}
+            target="_blank"
+            className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap"
+          >
+            CSV İndir →
           </Link>
         </div>
       </div>

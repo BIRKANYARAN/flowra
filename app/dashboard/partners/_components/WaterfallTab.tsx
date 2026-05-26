@@ -14,6 +14,7 @@ import { NarrativeFooter, Skeleton } from '@/components/ds'
 import {
   WaterfallData,
   DebtTranche,
+  PartnerRow,
   fmt,
 } from '@/app/dashboard/partners/_components/types'
 import { StatusPill } from '@/app/dashboard/partners/_components/ui'
@@ -23,6 +24,7 @@ export interface WaterfallTabProps {
   waterfall: WaterfallData | null
   totalDebt: number
   availCash: number
+  partners: PartnerRow[]
   onCashChange: (v: number) => void
   onLoadWaterfall: (cash: number) => void
 }
@@ -190,6 +192,7 @@ export function WaterfallTab({
   loading,
   waterfall,
   totalDebt,
+  partners,
 }: WaterfallTabProps) {
   return (
     <div className="flex flex-col gap-4">
@@ -237,6 +240,131 @@ export function WaterfallTab({
               </div>
             </div>
           </div>
+
+          {/* ── Loan Positions + Pro-Rata Summary ─────────────────────────── */}
+          {totalDebt > 0 && waterfall.tranches.length > 0 && (() => {
+            // Build per-partner position data merging waterfall tranches with partner share ratios
+            const partnerMap = new Map(partners.map(p => [p.id, p]))
+            const positions = waterfall.tranches
+              .filter(t => t.principal_try > 0)
+              .map(t => {
+                const p           = partnerMap.get(t.partner_id)
+                const shareRatio  = p?.share_ratio ?? 0
+                const expectedLoan = totalDebt * shareRatio
+                const excess      = t.remaining_principal_try - expectedLoan
+                return { t, shareRatio, expectedLoan, excess }
+              })
+
+            // "Normalleşme Durumu": balanced if all |burden_pct| within ±5%
+            const allBalanced = positions.every(pos => {
+              const burdenPct = totalDebt > 0 ? Math.abs(pos.excess / totalDebt) * 100 : 0
+              return burdenPct <= 5
+            })
+
+            // Phase 1 simulation: ₺100K payment
+            const SIM_PAYMENT = 100_000
+            const overfinanced = positions.filter(pos => pos.excess > 0.005)
+            const totalExcess  = overfinanced.reduce((s, pos) => s + pos.excess, 0)
+            const phase1Allocs = positions.map(pos => {
+              if (pos.excess <= 0.005) return { ...pos, phase1: 0, phase2: 0 }
+              const phase1 = totalExcess > 0
+                ? (SIM_PAYMENT >= totalExcess
+                  ? Math.min(pos.excess, SIM_PAYMENT)
+                  : (pos.excess / totalExcess) * SIM_PAYMENT)
+                : 0
+              return { ...pos, phase1: Math.round(phase1 * 100) / 100, phase2: 0 }
+            })
+            const cashAfterPhase1   = Math.max(0, SIM_PAYMENT - totalExcess)
+            const phase2Allocs = phase1Allocs.map(pos => {
+              const phase2 = cashAfterPhase1 > 0 ? cashAfterPhase1 * pos.shareRatio : 0
+              return { ...pos, phase2: Math.round(phase2 * 100) / 100 }
+            })
+
+            return (
+              <>
+                {/* Normalization badge */}
+                <div className={`flex items-center gap-3 rounded px-4 py-2.5 border text-xs ${
+                  allBalanced
+                    ? 'bg-pos-light border-pos-light text-pos-text'
+                    : 'bg-warn-light border-warn-light text-warn-text'
+                }`}>
+                  <span className="font-black text-sm">{allBalanced ? '✓' : '⚠'}</span>
+                  <div>
+                    <span className="font-bold">Normalleşme Durumu: </span>
+                    <span className="font-black">{allBalanced ? 'Dengeli' : 'Dengesiz'}</span>
+                    <span className="ml-1 opacity-70">
+                      {allBalanced
+                        ? '— Tüm ortaklar pay oranına göre ±%5 içinde.'
+                        : '— Bazı ortakların borç yükü pay oranından sapıyor.'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Loan positions table */}
+                <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+                  <div className="px-4 py-2.5 border-b border-[#e2e8f0] bg-[#f8fafc]/60">
+                    <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ortak Borç Pozisyonları</div>
+                    <div className="text-[10px] text-[#94a3b8] mt-0.5">Mevcut borç · Beklenen pro-rata · Fazla/Eksik</div>
+                  </div>
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b border-[#e2e8f0] bg-[#f8fafc]/40">
+                        {['Ortak', 'Pay %', 'Net Borç', 'Beklenen', 'Fark'].map(h => (
+                          <th key={h} className={`px-4 py-2 text-[9px] font-black uppercase tracking-widest text-[#94a3b8] ${h === 'Ortak' ? 'text-left' : 'text-right'}`}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#f1f5f9]">
+                      {positions.map(({ t, shareRatio, expectedLoan, excess }) => (
+                        <tr key={t.id} className="hover:bg-[#f8fafc]/60">
+                          <td className="px-4 py-2.5 font-semibold text-[#0f172a]">{t.partner_name}</td>
+                          <td className="px-4 py-2.5 text-right text-[#64748b]">%{(shareRatio * 100).toFixed(0)}</td>
+                          <td className="px-4 py-2.5 text-right font-mono font-bold text-warn-text">{fmt(t.remaining_principal_try)}</td>
+                          <td className="px-4 py-2.5 text-right font-mono text-[#64748b]">{fmt(expectedLoan)}</td>
+                          <td className={`px-4 py-2.5 text-right font-mono font-bold ${excess > 0 ? 'text-neg-text' : excess < -100 ? 'text-pos-text' : 'text-[#94a3b8]'}`}>
+                            {excess > 100 ? '+' : ''}{fmt(excess)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Phase 1 & 2 simulation with ₺100K */}
+                <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+                  <div className="px-4 py-2.5 border-b border-[#e2e8f0] bg-[#f8fafc]/60">
+                    <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ödeme Simülasyonu — ₺100.000 örnek ödeme</div>
+                    <div className="text-[10px] text-[#94a3b8] mt-0.5">Faz 1: Aşırı yük normalizasyonu · Faz 2: Pay oranına göre pro-rata</div>
+                  </div>
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b border-[#e2e8f0] bg-[#f8fafc]/40">
+                        {['Ortak', 'Faz 1 (Normalizasyon)', 'Faz 2 (Pro-Rata)', 'Toplam'].map(h => (
+                          <th key={h} className={`px-4 py-2 text-[9px] font-black uppercase tracking-widest text-[#94a3b8] ${h === 'Ortak' ? 'text-left' : 'text-right'}`}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#f1f5f9]">
+                      {phase2Allocs.map(pos => (
+                        <tr key={pos.t.id} className="hover:bg-[#f8fafc]/60">
+                          <td className="px-4 py-2.5 font-semibold text-[#0f172a]">{pos.t.partner_name}</td>
+                          <td className="px-4 py-2.5 text-right font-mono text-brand">
+                            {pos.phase1 > 0 ? fmt(pos.phase1) : <span className="text-[#94a3b8]">—</span>}
+                          </td>
+                          <td className="px-4 py-2.5 text-right font-mono text-info-text">
+                            {pos.phase2 > 0 ? fmt(pos.phase2) : <span className="text-[#94a3b8]">—</span>}
+                          </td>
+                          <td className="px-4 py-2.5 text-right font-mono font-bold text-[#0f172a]">
+                            {fmt(pos.phase1 + pos.phase2)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )
+          })()}
 
           {/* ── Clearance projection ───────────────────────────────────────── */}
           {waterfall.debt_clearance_months != null && totalDebt > 0 && (

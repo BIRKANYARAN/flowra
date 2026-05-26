@@ -79,6 +79,9 @@ export const ERROR_CODES = {
   // System — Company resolution
   COMPANY_NOT_RESOLVED:     { type: 'SYSTEM' as ErrorType,   httpStatus: 500 },
 
+  // Business — Period guard
+  PERIOD_LOCKED:            { type: 'BUSINESS' as ErrorType, httpStatus: 409 },
+
   // Business — Audit (Phase 7)
   AUDIT_FORBIDDEN:          { type: 'SECURITY' as ErrorType, httpStatus: 403 },
   ROLLBACK_NOT_SUPPORTED:   { type: 'BUSINESS' as ErrorType, httpStatus: 422 },

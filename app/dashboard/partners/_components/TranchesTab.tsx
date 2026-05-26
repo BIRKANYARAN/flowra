@@ -280,56 +280,128 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
             </div>
           </div>
 
-          <div className="flex flex-col gap-3">
-            {waterfall.tranches.filter(t => t.principal_try > 0).map(t => {
-              const repaidPct    = t.principal_try > 0 ? (t.actual_repaid_try / t.principal_try) * 100 : 0
-              const progressColor = t.status === 'repaid' ? 'bg-pos-light' : t.status === 'overdue' ? 'bg-neg-light' : 'bg-brand-light'
-              return (
-                <div key={t.id} className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
-                  <div className="flex items-start justify-between gap-4 mb-3">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-[#0f172a]">{t.partner_name}</span>
-                        <StatusPill status={t.status} />
-                      </div>
-                      <div className="text-[10px] text-[#94a3b8] mt-0.5">{t.days_outstanding} gündür açık</div>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <div className="text-base font-black tabular-nums text-warn-text">{fmt(t.remaining_principal_try)}</div>
-                      <div className="text-[10px] text-[#94a3b8]">kalan</div>
-                    </div>
+          {/* ── TotalBurden Summary Row ───────────────────────────────────── */}
+          {(() => {
+            const activeTranches = waterfall.tranches.filter(t => t.principal_try > 0 && t.status !== 'repaid')
+            const totalPrincipal = activeTranches.reduce((s, t) => s + t.remaining_principal_try, 0)
+            const totalMonthly   = activeTranches.reduce((s, t) => s + (t.remaining_principal_try * (t.interest_rate_annual_pct / 100) / 12), 0)
+            const totalAccrued   = activeTranches.reduce((s, t) => s + t.accrued_interest_try, 0)
+            return (
+              <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+                <div className="px-4 py-2 border-b border-[#f1f5f9] bg-[#f8fafc]/60">
+                  <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Toplam Faiz Yükü Özeti</div>
+                </div>
+                <div className="grid grid-cols-3 divide-x divide-[#f1f5f9]">
+                  <div className="px-4 py-3">
+                    <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Kalan Ana Para</div>
+                    <div className="text-base font-black tabular-nums text-warn-text">{fmt(totalPrincipal)}</div>
                   </div>
-
-                  <div className="grid grid-cols-3 gap-4 mb-3 text-xs">
-                    <div>
-                      <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Toplam Borç</div>
-                      <div className="font-mono font-bold text-[#334155]">{fmt(t.principal_try)}</div>
-                    </div>
-                    <div>
-                      <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Ödenen</div>
-                      <div className="font-mono font-bold text-pos-text">{fmt(t.actual_repaid_try)}</div>
-                    </div>
-                    <div>
-                      <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Geri Ödeme</div>
-                      <div className="font-mono font-bold text-[#334155]">{fmtPct(repaidPct)}</div>
-                    </div>
+                  <div className="px-4 py-3">
+                    <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Aylık Faiz Maliyeti</div>
+                    <div className="text-base font-black tabular-nums text-neg-text">{fmt(totalMonthly)}</div>
                   </div>
-
-                  <div>
-                    <div className="flex justify-between text-[10px] text-[#94a3b8] mb-1">
-                      <span>Geri ödeme ilerleme</span>
-                      <span>{fmtPct(repaidPct)}</span>
-                    </div>
-                    <div className="bg-[#f1f5f9] rounded-full h-2">
-                      <div
-                        className={`${progressColor} h-2 rounded-full transition-all`}
-                        style={{ width: `${Math.min(100, repaidPct)}%` }}
-                      />
-                    </div>
+                  <div className="px-4 py-3">
+                    <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Toplam Tahakkuk</div>
+                    <div className="text-base font-black tabular-nums text-neg-text">{fmt(totalAccrued)}</div>
                   </div>
                 </div>
-              )
-            })}
+              </div>
+            )
+          })()}
+
+          {/* ── Tranche Cards (sorted by accrued interest desc) ──────────── */}
+          <div className="flex flex-col gap-3">
+            {[...waterfall.tranches.filter(t => t.principal_try > 0)]
+              .sort((a, b) => b.accrued_interest_try - a.accrued_interest_try)
+              .map(t => {
+                const repaidPct     = t.principal_try > 0 ? (t.actual_repaid_try / t.principal_try) * 100 : 0
+                const progressColor = t.status === 'repaid' ? 'bg-pos-light' : t.status === 'overdue' ? 'bg-neg-light' : 'bg-brand-light'
+                // Monthly interest cost
+                const monthlyInterest = t.remaining_principal_try * (t.interest_rate_annual_pct / 100) / 12
+                // Maturity progress: time elapsed / total duration
+                const disbDate    = t.disbursement_date ? new Date(t.disbursement_date).getTime() : null
+                const maturityDate = t.expected_repayment_date ? new Date(t.expected_repayment_date).getTime() : null
+                const nowMs       = Date.now()
+                const maturityPct = (disbDate && maturityDate && maturityDate > disbDate)
+                  ? Math.min(100, Math.max(0, ((nowMs - disbDate) / (maturityDate - disbDate)) * 100))
+                  : null
+                // Next interest date: 1st of next month (approximate)
+                const nextInterestDate = (() => {
+                  const d = new Date()
+                  d.setMonth(d.getMonth() + 1, 1)
+                  return d.toLocaleDateString('tr-TR', { day: '2-digit', month: 'short', year: 'numeric' })
+                })()
+                return (
+                  <div key={t.id} className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
+                    <div className="flex items-start justify-between gap-4 mb-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-[#0f172a]">{t.partner_name}</span>
+                          <StatusPill status={t.status} />
+                        </div>
+                        <div className="text-[10px] text-[#94a3b8] mt-0.5">{t.days_outstanding} gündür açık</div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <div className="text-base font-black tabular-nums text-warn-text">{fmt(t.remaining_principal_try)}</div>
+                        <div className="text-[10px] text-[#94a3b8]">kalan anapara</div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 mb-3 text-xs">
+                      <div>
+                        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Ana Para</div>
+                        <div className="font-mono font-bold text-[#334155]">{fmt(t.principal_try)}</div>
+                      </div>
+                      <div>
+                        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Yıllık Faiz</div>
+                        <div className="font-mono font-bold text-[#334155]">%{t.interest_rate_annual_pct.toFixed(2)}</div>
+                      </div>
+                      <div>
+                        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Aylık Maliyet</div>
+                        <div className="font-mono font-bold text-neg-text">{fmt(monthlyInterest)}</div>
+                      </div>
+                      <div>
+                        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Tahakkuk</div>
+                        <div className="font-mono font-bold text-neg-text">{fmt(t.accrued_interest_try)}</div>
+                      </div>
+                      <div>
+                        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Sonraki Faiz</div>
+                        <div className="font-mono text-[#64748b] text-[10px]">{nextInterestDate}</div>
+                      </div>
+                    </div>
+
+                    {/* Maturity progress bar */}
+                    {maturityPct !== null ? (
+                      <div className="mb-3">
+                        <div className="flex justify-between text-[10px] text-[#94a3b8] mb-1">
+                          <span>Vade ilerlemesi ({t.disbursement_date?.slice(0,10)} → {t.expected_repayment_date?.slice(0,10)})</span>
+                          <span>{maturityPct.toFixed(0)}%</span>
+                        </div>
+                        <div className="bg-[#f1f5f9] rounded-full h-2">
+                          <div
+                            className={`h-2 rounded-full transition-all ${maturityPct >= 90 ? 'bg-neg-light' : maturityPct >= 70 ? 'bg-warn-light' : 'bg-info'}`}
+                            style={{ width: `${maturityPct}%` }}
+                          />
+                        </div>
+                      </div>
+                    ) : null}
+
+                    {/* Repayment progress bar */}
+                    <div>
+                      <div className="flex justify-between text-[10px] text-[#94a3b8] mb-1">
+                        <span>Geri ödeme ilerleme</span>
+                        <span>{fmtPct(repaidPct)}</span>
+                      </div>
+                      <div className="bg-[#f1f5f9] rounded-full h-2">
+                        <div
+                          className={`${progressColor} h-2 rounded-full transition-all`}
+                          style={{ width: `${Math.min(100, repaidPct)}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
           </div>
         </>
       )}

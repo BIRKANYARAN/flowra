@@ -2,6 +2,8 @@
 // Called at the top of every financial write API route.
 // DB trigger (fn_guard_period_write) is the second layer of defense.
 
+import { AppError } from '@/types/errors'
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnySupabaseClient = any
 
@@ -68,6 +70,39 @@ export async function checkPeriodGuard(
     blocked:        false,
     period_status:  period.status,
     period_id:      period.id,
+  }
+}
+
+// Strict variant: throws AppError('PERIOD_LOCKED') if period is locked/closed.
+// Use in server actions / mutations that must never proceed on locked periods.
+// Unlike checkPeriodGuard (which returns a result), this throws directly
+// so callers can simply: await strictPeriodGuard(companyId, date, supabase)
+export async function strictPeriodGuard(
+  companyId:       string,
+  transactionDate: string,   // YYYY-MM-DD
+  supabase:        AnySupabaseClient,
+): Promise<void> {
+  const result = await checkPeriodGuard(companyId, transactionDate, supabase)
+  if (result.blocked) {
+    throw new AppError(
+      'PERIOD_LOCKED',
+      result.reason ?? `Bu tarihin ait olduğu dönem kilitlenmiş veya kapalı (${transactionDate}).`,
+      { period_id: result.period_id, period_status: result.period_status },
+    )
+  }
+}
+
+// Convenience assertion: throws AppError if guardResult.blocked === true.
+// Usage:
+//   const g = await checkPeriodGuard(companyId, date, supabase)
+//   assertNotLocked(g)
+export function assertNotLocked(guardResult: PeriodGuardResult): void {
+  if (guardResult.blocked) {
+    throw new AppError(
+      'PERIOD_LOCKED',
+      guardResult.reason ?? 'Bu dönem kilitlenmiş veya kapalı.',
+      { period_id: guardResult.period_id, period_status: guardResult.period_status },
+    )
   }
 }
 

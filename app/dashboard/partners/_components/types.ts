@@ -87,8 +87,12 @@ export interface DebtTranche {
   partner_id:               string
   partner_name:             string
   principal_try:            number
-  remaining_principal_try:  number
+  interest_rate_annual_pct: number
+  disbursement_date:        string
+  expected_repayment_date?: string
   actual_repaid_try:        number
+  accrued_interest_try:     number
+  remaining_principal_try:  number
   status:                   'active' | 'partially_repaid' | 'repaid' | 'overdue'
   days_outstanding:         number
 }
