@@ -46,6 +46,13 @@ const REPORTS = [
     icon:     '🎯',
     color:    'amber',
   },
+  {
+    href:     '/dashboard/reports/health',
+    title:    'Mali Sağlık Raporu',
+    subtitle: 'Likidite, karlılık, alacaklar — basılabilir özet',
+    icon:     '🏥',
+    color:    'green',
+  },
 ]
 
 export default function ReportsHubPage() {
