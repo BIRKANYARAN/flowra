@@ -102,6 +102,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: '/dashboard/planning',    label: 'Planlama',         icon: 'simulation' },
       { href: '/dashboard/insights',   label: 'AI Analiz',        icon: 'analytics'  },
       { href: '/dashboard/governance', label: 'Yönetişim',        icon: 'shield',    minRole: 'admin' as const },
+      { href: '/dashboard/documents', label: 'Belgeler',          icon: 'backup' },
     ],
   },
 

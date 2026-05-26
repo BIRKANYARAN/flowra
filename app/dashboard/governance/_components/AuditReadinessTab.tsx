@@ -3,6 +3,11 @@
 import { useState, useCallback, useEffect } from 'react'
 import { cn } from '@/components/ui'
 import type { AuditCheckItem, AuditReadinessReport } from '@/lib/services/governance/audit-readiness.service'
+import {
+  DOCUMENT_TYPE_LABELS,
+  AUDIT_REQUIRED_TYPES,
+} from '@/lib/services/documents/document.service'
+import type { DocumentSummary } from '@/lib/services/documents/document.service'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 type CategoryKey = 'accounting' | 'partner' | 'governance' | 'tax'
@@ -174,23 +179,104 @@ function CheckRow({
   )
 }
 
+// ── Document Status Section ────────────────────────────────────────────────────
+function DocumentStatusSection({ docSummary }: { docSummary: DocumentSummary | null }) {
+  if (!docSummary) return null
+
+  const readinessPct   = docSummary.audit_readiness_pct
+  const readinessColor =
+    readinessPct >= 80 ? 'text-green-700' :
+    readinessPct >= 50 ? 'text-amber-600' :
+    'text-red-600'
+
+  const presentTypes = Object.entries(docSummary.by_type)
+    .filter(([t]) => AUDIT_REQUIRED_TYPES.includes(t as typeof AUDIT_REQUIRED_TYPES[number]))
+    .filter(([, count]) => count > 0)
+    .map(([t]) => t)
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider">
+          Belge Durumu
+        </h3>
+        <a
+          href="/dashboard/documents?audit_required=true"
+          className="text-xs text-violet-600 hover:underline"
+        >
+          Denetim belgelerini gör →
+        </a>
+      </div>
+
+      <div className="grid grid-cols-3 gap-3">
+        <div className="border border-gray-200 rounded-xl p-3 bg-white">
+          <p className="text-xs text-gray-500">Toplam Belge</p>
+          <p className="text-xl font-bold text-gray-900 mt-0.5">{docSummary.total_documents}</p>
+        </div>
+        <div className="border border-gray-200 rounded-xl p-3 bg-white">
+          <p className="text-xs text-gray-500">Doğrulananlar</p>
+          <p className="text-xl font-bold text-gray-900 mt-0.5">
+            {docSummary.audit_required_verified}
+            <span className="text-xs text-gray-400 font-normal"> / {docSummary.audit_required_total}</span>
+          </p>
+        </div>
+        <div className="border border-gray-200 rounded-xl p-3 bg-white">
+          <p className="text-xs text-gray-500">Denetim Hazırlığı</p>
+          <p className={cn('text-xl font-bold mt-0.5', readinessColor)}>%{readinessPct}</p>
+        </div>
+      </div>
+
+      {presentTypes.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {presentTypes.map(t => (
+            <span key={t} className="text-[11px] px-2 py-0.5 rounded border font-medium bg-green-50 text-green-700 border-green-200">
+              ✓ {DOCUMENT_TYPE_LABELS[t as keyof typeof DOCUMENT_TYPE_LABELS]}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {docSummary.missing_audit_docs.length > 0 && (
+        <div className="space-y-1.5">
+          <p className="text-xs font-medium text-red-700">Eksik Denetim Belgeleri:</p>
+          {docSummary.missing_audit_docs.map(m => (
+            <div key={m.document_type} className="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg">
+              <span className="text-red-500 text-xs">✗</span>
+              <span className="text-xs text-red-700">{DOCUMENT_TYPE_LABELS[m.document_type]}</span>
+              <span className="text-xs text-red-500 ml-auto">{m.description}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Main Tab ───────────────────────────────────────────────────────────────────
 export default function AuditReadinessTab() {
   const [report, setReport]           = useState<AuditReadinessReport | null>(null)
   const [loading, setLoading]         = useState(true)
   const [acknowledging, setAcknowledging] = useState<string | null>(null)
   const [error, setError]             = useState<string | null>(null)
+  const [docSummary, setDocSummary]   = useState<DocumentSummary | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
-      const r = await fetch('/api/governance/audit-readiness')
-      if (r.ok) {
-        const d = await r.json()
+      const [auditRes, docRes] = await Promise.all([
+        fetch('/api/governance/audit-readiness'),
+        fetch('/api/documents/summary'),
+      ])
+      if (auditRes.ok) {
+        const d = await auditRes.json() as { report?: AuditReadinessReport }
         setReport(d.report ?? null)
       } else {
         setError('Rapor yüklenemedi.')
+      }
+      if (docRes.ok) {
+        const d = await docRes.json() as { summary?: DocumentSummary }
+        setDocSummary(d.summary ?? null)
       }
     } catch {
       setError('Sunucuya bağlanılamadı.')
@@ -312,6 +398,9 @@ export default function AuditReadinessTab() {
           </div>
         )
       })}
+
+      {/* Document status section */}
+      <DocumentStatusSection docSummary={docSummary} />
 
       {/* Footer note */}
       <p className="text-xs text-gray-400 bg-gray-50 rounded-lg px-3 py-2">

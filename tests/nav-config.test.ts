@@ -79,21 +79,21 @@ describe('getGroupsForRole', () => {
 // ── Item counts ───────────────────────────────────────────────────────────────
 
 describe('getAllItemsForRole item counts', () => {
-  // Groups: genel (1) + merkezler (7: finance, commercial, operations, partners, planning, insights + governance[admin-only]) + yonetim (3 — admin only)
-  it('admin sees 11 nav items (1 genel + 7 merkezler + 3 yonetim)', () => {
-    expect(getAllItemsForRole('admin').length).toBe(11)
+  // Groups: genel (1) + merkezler (8: finance, commercial, operations, partners, planning, insights + governance[admin-only] + documents) + yonetim (3 — admin only)
+  it('admin sees 12 nav items (1 genel + 8 merkezler + 3 yonetim)', () => {
+    expect(getAllItemsForRole('admin').length).toBe(12)
   })
 
-  it('manager sees 7 nav items (1 genel + 6 merkezler)', () => {
-    expect(getAllItemsForRole('manager').length).toBe(7)
+  it('manager sees 8 nav items (1 genel + 7 merkezler visible)', () => {
+    expect(getAllItemsForRole('manager').length).toBe(8)
   })
 
-  it('viewer sees 7 nav items (1 genel + 6 merkezler)', () => {
-    expect(getAllItemsForRole('viewer').length).toBe(7)
+  it('viewer sees 8 nav items (1 genel + 7 merkezler visible)', () => {
+    expect(getAllItemsForRole('viewer').length).toBe(8)
   })
 
-  it('null role sees 7 nav items', () => {
-    expect(getAllItemsForRole(null).length).toBe(7)
+  it('null role sees 8 nav items', () => {
+    expect(getAllItemsForRole(null).length).toBe(8)
   })
 
   it('getNavCount matches getAllItemsForRole length', () => {
