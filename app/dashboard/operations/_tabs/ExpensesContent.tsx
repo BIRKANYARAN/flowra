@@ -18,6 +18,7 @@ import {
   type ExpenseIntelligenceReport,
 } from '@/lib/services/finance/expense-intelligence.service'
 import { SupplierAnalyticsPanel } from './_supplier-analytics/SupplierAnalyticsPanel'
+import { PayablesAgingSection } from './_ap-aging/PayablesAgingSection'
 
 function CommandBarSkeleton() {
   return (
@@ -499,6 +500,9 @@ export async function ExpensesContent({ companyId }: Props) {
           workflow_instance: (e as ExpenseRow).workflow_instance ?? null,
         }))}
       />
+
+      {/* ── Borç Yaşlandırma (AP Aging) ──────────────────────────────────────── */}
+      <PayablesAgingSection />
 
       {/* ── Tedarikçi Analizi ─────────────────────────────────────────────────── */}
       <SupplierAnalyticsPanel />

@@ -14,6 +14,7 @@
 
 import Link                      from 'next/link'
 import { ObservationRail }       from '@/app/dashboard/_shared/ObservationRail'
+import { BorcYaslandirmaOzeti }  from '@/app/dashboard/finance/_shared/BorcYaslandirmaOzeti'
 import { WorkingCapitalSection } from '@/app/dashboard/finance/_shared/WorkingCapitalSection'
 import { RetainedEarningsService } from '@/lib/services/finance/retained-earnings.service'
 import { BalanceSheetService }   from '@/lib/services/balance-sheet.service'
@@ -680,6 +681,9 @@ export async function CFOTab({ userId, companyId }: Props) {
           </Link>
         </div>
       </div>
+
+      {/* Row 4b: AP Aging Summary */}
+      <BorcYaslandirmaOzeti companyId={companyId} supabase={supabase} />
 
       {/* Row 5: P&L Summary */}
       <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
