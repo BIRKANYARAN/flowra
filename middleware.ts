@@ -59,7 +59,7 @@ const DASHBOARD_REDIRECTS: Record<string, string> = {
   '/dashboard/catalog':     '/dashboard/operations?tab=catalog',
   '/dashboard/products':    '/dashboard/operations?tab=catalog',
   '/dashboard/stocks':      '/dashboard/operations?tab=stock',
-  '/dashboard/orders':      '/dashboard/operations?tab=orders',
+  // NOTE: /dashboard/orders is now a real page — redirect removed (Faz 14)
   '/dashboard/simulation':  '/dashboard/planning?tab=unit-profit',
   '/dashboard/tasks':       '/dashboard/planning?tab=tasks',
   // Legacy pages retired — redirect to canonical equivalents
