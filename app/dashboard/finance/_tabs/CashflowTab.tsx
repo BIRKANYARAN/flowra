@@ -12,6 +12,7 @@ import { NarrativeFooter } from '@/components/ds'
 import { CashflowChart }   from '@/components/dashboard/CashflowChart'
 import { ScenarioPanel }   from '@/components/dashboard/ScenarioPanel'
 import { CashflowPrediction } from '@/components/dashboard/CashflowPrediction'
+import { BurnRateSection }    from '@/components/dashboard/BurnRateSection'
 import { getCashflowTimeline, getRunwayForecast, getCfoMetrics } from '@/lib/finance/financial-core'
 import { CashFlowStatementService } from '@/lib/services/cashflow-statement.service'
 import { createClient }             from '@/lib/supabase-server'
@@ -358,6 +359,9 @@ export async function CashflowTab({ userId, companyId }: Props) {
           <CashflowPrediction />
         </div>
       </div>
+
+      {/* Zone 8 — Nakit Tüketim Hızı (Burn Rate Monitor) */}
+      <BurnRateSection />
 
       {/* Cross-link → formal 3-section cash flow statement */}
       <NarrativeFooter
