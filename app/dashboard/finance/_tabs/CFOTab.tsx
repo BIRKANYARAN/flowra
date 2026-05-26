@@ -831,12 +831,13 @@ export async function CFOTab({ userId, companyId }: Props) {
         <div className="px-4 py-2.5 border-b border-[#e2e8f0]">
           <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">GL Araçları</span>
         </div>
-        <div className="grid grid-cols-4 divide-x divide-[#f1f5f9]">
+        <div className="grid grid-cols-5 divide-x divide-[#f1f5f9]">
           {[
-            { href: '/dashboard/cfo/trial-balance',   title: 'Mizan',           desc: 'Hesap kodları ve bakiyeler',        tag: 'TB' },
-            { href: '/dashboard/cfo/period-close',    title: 'Dönem Kapanışı',  desc: 'Kapat ve kilitle',                  tag: 'PC' },
-            { href: '/dashboard/cfo/journal-entries', title: 'Journal',         desc: 'Çift taraflı muhasebe denetim izi', tag: 'JE' },
-            { href: '/dashboard/cfo/reconciliation',  title: 'GL Mutabakat',    desc: 'GL vs operasyonel tablo',           tag: 'RC' },
+            { href: '/dashboard/cfo/trial-balance',        title: 'Mizan',              desc: 'Hesap kodları ve bakiyeler',        tag: 'TB' },
+            { href: '/dashboard/cfo/period-close',         title: 'Dönem Kapanışı',     desc: 'Kapat ve kilitle',                  tag: 'PC' },
+            { href: '/dashboard/cfo/journal-entries',      title: 'Journal',            desc: 'Çift taraflı muhasebe denetim izi', tag: 'JE' },
+            { href: '/dashboard/cfo/reconciliation',       title: 'GL Mutabakat',       desc: 'GL vs operasyonel tablo',           tag: 'RC' },
+            { href: '/dashboard/cfo/bank-reconciliation',  title: 'Banka Mutabakat',    desc: 'Banka ekstresi eşleştirme',         tag: 'BK' },
           ].map(item => (
             <Link key={item.href} href={item.href}
               className="px-4 py-3 hover:bg-[#f8fafc] transition-colors">
