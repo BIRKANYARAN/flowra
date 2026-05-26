@@ -16,6 +16,10 @@ import {
   type CustomerPaymentProfile,
   type PortfolioRisk,
 } from '@/lib/services/commercial/customer-intelligence.service'
+import {
+  ConcentrationRiskService,
+  type ConcentrationRiskReport,
+} from '@/lib/services/commercial/concentration-risk.service'
 import CustomerIntelligenceTable from './_intelligence/CustomerIntelligenceTable'
 
 interface Props { companyId: string }
@@ -38,7 +42,12 @@ const RISK_CFG = {
 export async function CustomersContent({ companyId }: Props) {
   const supabase = createClient()
 
-  const [customersRes, salesRes, intelligenceProfiles] = await Promise.all([
+  // Default period: current year
+  const now = new Date()
+  const periodFrom = `${now.getFullYear()}-01-01`
+  const periodTo   = now.toISOString().slice(0, 10)
+
+  const [customersRes, salesRes, intelligenceProfiles, concentrationReport] = await Promise.all([
     supabase
       .from('customers')
       .select('*')
@@ -53,6 +62,8 @@ export async function CustomersContent({ companyId }: Props) {
       .order('created_at', { ascending: false })
       .limit(500),
     CustomerIntelligenceService.getProfiles(companyId, supabase).catch(() => [] as CustomerPaymentProfile[]),
+    ConcentrationRiskService.getReport(companyId, supabase, { from: periodFrom, to: periodTo })
+      .catch(() => null as ConcentrationRiskReport | null),
   ])
 
   const customers = (customersRes.data ?? []) as Customer[]
@@ -89,6 +100,12 @@ export async function CustomersContent({ companyId }: Props) {
   // ── New intelligence portfolio summary ───────────────────────────────────
   const portfolio: PortfolioRisk = CustomerIntelligenceService.computePortfolioRisk(intelligenceProfiles)
 
+  const hhiStatusColor = {
+    low:      { badge: 'bg-pos-light text-pos-text',  label: 'Düşük' },
+    moderate: { badge: 'bg-warn-light text-warn-text', label: 'Orta'  },
+    high:     { badge: 'bg-neg-light text-neg-text',   label: 'Yüksek' },
+  }
+
   return (
     <div className="max-w-3xl space-y-4">
       <div className="flex items-center justify-between">
@@ -96,6 +113,73 @@ export async function CustomersContent({ companyId }: Props) {
           Müşteriler — {customers.length} kayıt · {sales.length} satış analiz edildi
         </span>
       </div>
+
+      {/* ── Müşteri Yoğunlaşma Riski (HHI) ──────────────────────────────── */}
+      {concentrationReport && concentrationReport.customer_count > 0 && (
+        <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+              Müşteri Yoğunlaşma Riski
+            </span>
+            <span className={`text-[9px] font-black uppercase tracking-wide px-2 py-0.5 rounded ${hhiStatusColor[concentrationReport.hhi_status].badge}`}>
+              HHI {concentrationReport.hhi.toFixed(3)} — {hhiStatusColor[concentrationReport.hhi_status].label}
+            </span>
+          </div>
+
+          {/* Dominant customer warning */}
+          {concentrationReport.has_dominant_customer && (
+            <div className="bg-neg-light border border-neg-light rounded px-3 py-2">
+              <div className="text-[11px] font-black uppercase tracking-wide text-neg-text">
+                Dominant Müşteri Riski
+              </div>
+              <div className="text-xs text-neg-text mt-0.5">
+                <strong>{concentrationReport.top_customer_name}</strong> gelirin{' '}
+                <strong>%{concentrationReport.top_customer_share_pct.toFixed(0)}&apos;ini</strong>{' '}
+                oluşturuyor. Bu müşterinin kaybı şirketi ciddi şekilde etkiler.
+              </div>
+            </div>
+          )}
+
+          {/* Top 3 share sentence */}
+          <p className="text-xs text-[#64748b]">
+            Top 3 müşteri gelirin{' '}
+            <strong className="text-[#1e293b]">%{concentrationReport.top_3_share_pct.toFixed(0)}&apos;ini</strong>{' '}
+            oluşturuyor
+            {concentrationReport.customer_count > 3 && (
+              <span> · {concentrationReport.customer_count} aktif müşteri</span>
+            )}
+          </p>
+
+          {/* Concentration bars */}
+          <div className="space-y-2">
+            {concentrationReport.customers.slice(0, 6).map(c => {
+              const barColor =
+                c.risk_label === 'dominant'    ? 'bg-neg'
+                : c.risk_label === 'major'     ? 'bg-warn'
+                : c.risk_label === 'significant' ? 'bg-brand-light'
+                : 'bg-[#cbd5e1]'
+              return (
+                <div key={c.customer_name} className="flex items-center gap-3">
+                  <div className="w-32 text-xs text-[#334155] font-medium shrink-0 truncate" title={c.customer_name}>
+                    {c.customer_name}
+                  </div>
+                  <div className="flex-1 h-4 bg-[#f1f5f9] rounded overflow-hidden">
+                    <div
+                      className={`h-4 rounded ${barColor}`}
+                      style={{ width: `${Math.min(c.revenue_share_pct, 100)}%` }}
+                    />
+                  </div>
+                  <div className="w-16 text-right shrink-0">
+                    <span className="text-xs font-bold tabular-nums text-[#334155]">
+                      %{c.revenue_share_pct.toFixed(0)}
+                    </span>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* ── Intelligence Portfolio KPI Strip ─────────────────────────────── */}
       {intelligenceProfiles.length > 0 && (
