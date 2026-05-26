@@ -38,6 +38,7 @@ import { TemporalPressureRail }  from './_shared/TemporalPressureRail'
 import { ObservationRail }       from './_shared/ObservationRail'
 import { SituationLine }         from '@/components/dashboard/SituationLine'
 import { PeriodSummaryWidget }   from './_shared/PeriodSummaryWidget'
+import { CeoIntelligencePanel }  from './_shared/CeoIntelligencePanel'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -538,6 +539,9 @@ export default async function DashboardPage() {
 
       {/* ── PERIOD SUMMARY — CFO-to-CEO financial brief ─────────────────── */}
       <PeriodSummaryWidget from={from} to={to} />
+
+      {/* ── CEO INTELLIGENCE PANEL — multi-signal health brief ───────────── */}
+      <CeoIntelligencePanel />
 
       {/* ── INTELLIGENCE SIGNALS — cross-context pattern observations ───── */}
       <ObservationRail context="all" maxItems={4} />
