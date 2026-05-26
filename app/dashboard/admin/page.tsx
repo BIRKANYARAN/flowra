@@ -11,6 +11,7 @@ export const dynamic = 'force-dynamic'
 import Link from 'next/link'
 import { createClient }     from '@/lib/supabase-server'
 import { resolveCompanyId } from '@/lib/resolve-company'
+import { getGlMode }        from '@/lib/middleware/period-guard'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -507,6 +508,60 @@ function ReconciliationTab({ snapshots }: { snapshots: ReconciliationRow[] }) {
   )
 }
 
+// ── GL Modu Section ───────────────────────────────────────────────────────────
+
+const GL_MODE_BADGE: Record<string, { label: string; cls: string }> = {
+  shadow:     { label: 'Shadow (Pasif)',     cls: 'bg-[#f1f5f9] text-[#64748b]'  },
+  parallel:   { label: 'Paralel (İzleme)',   cls: 'bg-amber-50 text-amber-700'    },
+  gl_primary: { label: 'GL Birincil (Aktif)', cls: 'bg-green-50 text-green-700'   },
+}
+
+const GL_MODE_UPGRADE: Record<string, { next: string; label: string } | null> = {
+  shadow:     { next: 'parallel',   label: 'Paralel Moda Geç'    },
+  parallel:   { next: 'gl_primary', label: 'GL Birincil Moda Geç' },
+  gl_primary: null,
+}
+
+function GlModeSection({ glMode }: { glMode: 'shadow' | 'parallel' | 'gl_primary' }) {
+  const badge   = GL_MODE_BADGE[glMode]   ?? GL_MODE_BADGE.shadow
+  const upgrade = GL_MODE_UPGRADE[glMode] ?? null
+
+  return (
+    <div className="bg-white border border-[#e2e8f0] rounded shadow-sm p-4">
+      <div className="flex items-center justify-between mb-3">
+        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">GL Modu</div>
+        <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${badge.cls}`}>
+          {badge.label}
+        </span>
+      </div>
+
+      <p className="text-xs text-[#64748b] mb-4">
+        GL modu, satış/gider/alış kayıtlarının muhasebe defterine (journal_entries) ne zaman
+        yazıldığını belirler. Shadow: hiç yazılmaz. Paralel: asenkron yazılır. GL Birincil: senkron.
+      </p>
+
+      <div className="flex items-center gap-2 flex-wrap">
+        {upgrade && (
+          <Link
+            href={`/dashboard/admin/gl-mode?upgrade=${upgrade.next}`}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-brand text-white text-xs font-semibold hover:bg-brand-dark transition-colors"
+          >
+            {upgrade.label} →
+          </Link>
+        )}
+        <Link
+          href="/api/admin/gl-divergence"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-white border border-[#e2e8f0] text-xs font-semibold text-[#334155] hover:text-brand transition-colors"
+        >
+          GL Sapma Raporu (JSON) ↗
+        </Link>
+      </div>
+    </div>
+  )
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default async function AdminHubPage({
@@ -524,6 +579,12 @@ export default async function AdminHubPage({
     const { data } = await supabase.auth.getUser()
     if (data?.user) companyId = await resolveCompanyId(data.user.id, supabase)
   } catch { /* non-fatal — admin layout already validated */ }
+
+  // Fetch gl_mode server-side (always, for the GL Modu section)
+  let glMode: 'shadow' | 'parallel' | 'gl_primary' = 'shadow'
+  if (companyId) {
+    try { glMode = await getGlMode(companyId, supabase) } catch { /* non-fatal */ }
+  }
 
   // Fetch only the data needed for the active tab
   const [members, workflows, auditLogs, reconciliations] = await Promise.all([
@@ -595,6 +656,9 @@ export default async function AdminHubPage({
           ))}
         </div>
       </div>
+
+      {/* GL Modu */}
+      <GlModeSection glMode={glMode} />
 
       {/* Back link */}
       <div className="text-xs text-[#94a3b8]">

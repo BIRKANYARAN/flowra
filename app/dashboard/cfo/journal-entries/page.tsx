@@ -6,6 +6,22 @@ import { fmtDate, fmtTRY }    from '@/lib/format'
 
 export const dynamic = 'force-dynamic'
 
+// Local row shape — voucher_number is optional (migration may be pending)
+interface JournalEntryRow {
+  id:                  string
+  entry_date:          string
+  description:         string | null
+  reference:           string | null
+  source_type:         string | null
+  voucher_number?:     string | null
+  journal_entry_lines: Array<{
+    account_code: string
+    account_name: string
+    debit_try:    number
+    credit_try:   number
+  }>
+}
+
 export default async function JournalEntriesPage() {
   // Auth gate is layout.tsx — no redirect here to prevent /auth ↔ /dashboard loop.
   const supabase = createClient()
@@ -29,15 +45,38 @@ export default async function JournalEntriesPage() {
   )
   if (!companyId) return <div className="p-8 text-[#64748b]">Şirket bulunamadı.</div>
 
-  const { data: entries } = await supabase
-    .from('journal_entries')
-    .select(`
-      id, entry_date, description, reference, source_type,
-      journal_entry_lines ( account_code, account_name, debit_try, credit_try )
-    `)
-    .eq('company_id', companyId)
-    .order('entry_date', { ascending: false })
-    .limit(100)
+  // Try selecting with voucher_number; fall back gracefully if migration is pending.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let entries: JournalEntryRow[] | null = null
+  try {
+    const { data: d1, error: e1 } = await supabase
+      .from('journal_entries')
+      .select(`
+        id, entry_date, description, reference, source_type, voucher_number,
+        journal_entry_lines ( account_code, account_name, debit_try, credit_try )
+      `)
+      .eq('company_id', companyId)
+      .order('entry_date', { ascending: false })
+      .limit(100)
+    if (e1 && e1.message?.includes('voucher_number')) {
+      const { data: d2 } = await supabase
+        .from('journal_entries')
+        .select(`
+          id, entry_date, description, reference, source_type,
+          journal_entry_lines ( account_code, account_name, debit_try, credit_try )
+        `)
+        .eq('company_id', companyId)
+        .order('entry_date', { ascending: false })
+        .limit(100)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      entries = d2 as any
+    } else {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      entries = d1 as any
+    }
+  } catch {
+    entries = null
+  }
 
   const rows = entries ?? []
 
@@ -67,21 +106,24 @@ export default async function JournalEntriesPage() {
       ) : (
         <div className="flex flex-col gap-3">
           {rows.map((entry) => {
-            const lines = (entry.journal_entry_lines as Array<{
-              account_code: string; account_name: string; debit_try: number; credit_try: number
-            }>) ?? []
+            const lines       = entry.journal_entry_lines ?? []
             const totalDebit  = lines.reduce((s, l) => s + Number(l.debit_try  ?? 0), 0)
             const totalCredit = lines.reduce((s, l) => s + Number(l.credit_try ?? 0), 0)
             const balanced    = Math.abs(totalDebit - totalCredit) < 0.01
 
             return (
-              <div key={entry.id as string} className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+              <div key={entry.id} className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
                 <div className="flex items-center justify-between px-4 py-2.5 bg-[#f8fafc] border-b border-[#e2e8f0]">
                   <div className="flex items-center gap-3">
-                    <span className="text-xs font-black text-[#64748b]">{fmtDate(entry.entry_date as string)}</span>
+                    <span className="text-xs font-black text-[#64748b]">{fmtDate(entry.entry_date)}</span>
+                    {entry.voucher_number && (
+                      <span className="text-[10px] bg-brand-subtle text-brand font-mono px-1.5 py-0.5 rounded font-semibold tracking-wide">
+                        {entry.voucher_number}
+                      </span>
+                    )}
                     {entry.reference && (
                       <span className="text-[10px] bg-[#e2e8f0] text-[#64748b] px-1.5 py-0.5 rounded font-mono">
-                        {entry.reference as string}
+                        {entry.reference}
                       </span>
                     )}
                     <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
@@ -90,7 +132,7 @@ export default async function JournalEntriesPage() {
                       entry.source_type === 'purchase' ? 'bg-purple-100 text-purple-700' :
                       'bg-[#f1f5f9] text-[#64748b]'
                     }`}>
-                      {(entry.source_type as string)?.toUpperCase() ?? 'MANUEL'}
+                      {entry.source_type?.toUpperCase() ?? 'MANUEL'}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -102,7 +144,7 @@ export default async function JournalEntriesPage() {
                   </div>
                 </div>
                 {entry.description && (
-                  <div className="px-4 pt-2 text-xs text-[#64748b]">{entry.description as string}</div>
+                  <div className="px-4 pt-2 text-xs text-[#64748b]">{entry.description}</div>
                 )}
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs">

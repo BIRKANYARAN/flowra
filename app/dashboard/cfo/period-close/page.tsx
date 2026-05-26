@@ -3,7 +3,7 @@
 // /dashboard/cfo/period-close — Dönem Kapanış Workflow
 // Lists accounting periods, shows pre-close checklist, allows close + lock transitions.
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Skeleton } from '@/components/ds'
 import { fmtDate as fmt } from '@/lib/format'
@@ -19,18 +19,29 @@ interface Period {
 
 // ── Pre-close checklist definition ───────────────────────────────────────────
 // required = true → must be checked before Close button activates
+// gl_mode_required = true → only blocking when gl_mode is 'parallel' or 'gl_primary'
 const CHECKLIST = [
-  { key: 'trial_balance',       label: 'Mizan dengesi kontrol edildi',  required: true,  hint: 'Mizan görünümünden tüm hesapların dengeli olduğunu doğrulayın.' },
-  { key: 'bank_reconciliation', label: 'Banka mutabakatı tamamlandı',   required: true,  hint: 'Bankadaki bakiye ile sistemdeki 102 hesap bakiyesi eşleşiyor.' },
-  { key: 'all_sales_entered',   label: 'Tüm satış faturaları girildi',  required: true,  hint: 'Dönem içindeki tüm satış faturaları sisteme yüklendi.' },
-  { key: 'all_expenses_entered',label: 'Tüm masraflar girildi',         required: true,  hint: 'Dönem içindeki tüm masraflar (faturalar dahil) kayıt altına alındı.' },
-  { key: 'kdv_calculated',      label: 'KDV beyanı hesaplandı',         required: true,  hint: 'Hesaplanan KDV - İndirilecek KDV = Beyanname tutarı doğrulandı.' },
-  { key: 'stock_counted',       label: 'Stok sayımı yapıldı',           required: false, hint: 'Fiziksel stok, sistemdeki stok ile karşılaştırıldı.' },
-  { key: 'compensation_paid',   label: 'Ortak huzur hakkı işlendi',     required: false, hint: 'Dönem huzur hakları masraf olarak girildi (TTK 394).' },
-  { key: 'interest_accrued',    label: 'Faiz tahakkukları hesaplandı',  required: false, hint: 'Ortak borçlarına ait faiz tahakkukları işlendi.' },
+  { key: 'trial_balance',        label: 'Mizan dengesi kontrol edildi',           required: true,  gl_mode_required: false, hint: 'Mizan görünümünden tüm hesapların dengeli olduğunu doğrulayın.' },
+  { key: 'bank_reconciliation',  label: 'Banka mutabakatı tamamlandı',            required: true,  gl_mode_required: false, hint: 'Bankadaki bakiye ile sistemdeki 102 hesap bakiyesi eşleşiyor.' },
+  { key: 'all_sales_entered',    label: 'Tüm satış faturaları girildi',           required: true,  gl_mode_required: false, hint: 'Dönem içindeki tüm satış faturaları sisteme yüklendi.' },
+  { key: 'all_expenses_entered', label: 'Tüm masraflar girildi',                  required: true,  gl_mode_required: false, hint: 'Dönem içindeki tüm masraflar (faturalar dahil) kayıt altına alındı.' },
+  { key: 'kdv_calculated',       label: 'KDV beyanı hesaplandı',                  required: true,  gl_mode_required: false, hint: 'Hesaplanan KDV - İndirilecek KDV = Beyanname tutarı doğrulandı.' },
+  { key: 'journal_entries_done', label: 'Tüm muhasebe kayıtları oluşturuldu',     required: false, gl_mode_required: true,  hint: 'Tüm satış, gider ve satın alma işlemleri için journal kaydı oluşturuldu.' },
+  { key: 'stock_counted',        label: 'Stok sayımı yapıldı',                    required: false, gl_mode_required: false, hint: 'Fiziksel stok, sistemdeki stok ile karşılaştırıldı.' },
+  { key: 'compensation_paid',    label: 'Ortak huzur hakkı işlendi',              required: false, gl_mode_required: false, hint: 'Dönem huzur hakları masraf olarak girildi (TTK 394).' },
+  { key: 'interest_accrued',     label: 'Faiz tahakkukları hesaplandı',           required: false, gl_mode_required: false, hint: 'Ortak borçlarına ait faiz tahakkukları işlendi.' },
 ] as const
 
 type ChecklistKey = typeof CHECKLIST[number]['key']
+
+// ── Backfill status ───────────────────────────────────────────────────────────
+interface BackfillStatus {
+  operational_totals: { sales: number; expenses: number; purchases: number }
+  journaled_totals:   { sales: number; expenses: number; purchases: number }
+  voided_entries:     number
+  backfill_complete:  boolean
+  checked_at:         string
+}
 
 // ── Status helpers ────────────────────────────────────────────────────────────
 
@@ -51,13 +62,16 @@ const STATUS_COLOR: Record<Period['status'], string> = {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function PeriodClosePage() {
-  const [periods,   setPeriods]   = useState<Period[]>([])
-  const [loading,   setLoading]   = useState(true)
-  const [error,     setError]     = useState<string | null>(null)
-  const [working,   setWorking]   = useState<string | null>(null)
-  const [feedback,  setFeedback]  = useState<Record<string, string>>({})
-  const [expanded,  setExpanded]  = useState<string | null>(null)
-  const [checklist, setChecklist] = useState<Record<string, Set<ChecklistKey>>>({})
+  const [periods,        setPeriods]        = useState<Period[]>([])
+  const [loading,        setLoading]        = useState(true)
+  const [error,          setError]          = useState<string | null>(null)
+  const [working,        setWorking]        = useState<string | null>(null)
+  const [feedback,       setFeedback]       = useState<Record<string, string>>({})
+  const [expanded,       setExpanded]       = useState<string | null>(null)
+  const [checklist,      setChecklist]      = useState<Record<string, Set<ChecklistKey>>>({})
+  const [backfill,       setBackfill]       = useState<BackfillStatus | null>(null)
+  const [backfillLoading,setBackfillLoading]= useState(false)
+  const [glMode,         setGlMode]         = useState<string | null>(null)
 
   useEffect(() => {
     const ctrl = new AbortController()
@@ -75,6 +89,23 @@ export default function PeriodClosePage() {
     return () => ctrl.abort()
   }, [])
 
+  // Fetch backfill status + gl_mode on mount
+  useEffect(() => {
+    setBackfillLoading(true)
+    const ctrl = new AbortController()
+    Promise.all([
+      fetch('/api/admin/journal-backfill', { signal: ctrl.signal }).then(r => r.ok ? r.json() : null),
+      fetch('/api/admin/gl-mode',          { signal: ctrl.signal }).then(r => r.ok ? r.json() : null),
+    ])
+      .then(([backfillData, glData]) => {
+        if (backfillData) setBackfill(backfillData as BackfillStatus)
+        if (glData?.gl_mode) setGlMode(glData.gl_mode as string)
+      })
+      .catch(err => { if (err.name !== 'AbortError') console.warn('[period-close] backfill fetch error:', err) })
+      .finally(() => setBackfillLoading(false))
+    return () => ctrl.abort()
+  }, [])
+
   function toggleChecklistItem(periodId: string, key: ChecklistKey) {
     setChecklist(prev => {
       const current = new Set(prev[periodId] ?? [])
@@ -85,7 +116,18 @@ export default function PeriodClosePage() {
 
   function isCloseEnabled(periodId: string): boolean {
     const checked = checklist[periodId] ?? new Set()
-    return CHECKLIST.filter(i => i.required).every(i => checked.has(i.key))
+    // Standard required items must all be checked
+    const standardOk = CHECKLIST.filter(i => i.required && !i.gl_mode_required).every(i => checked.has(i.key))
+    // gl_mode_required items are blocking only when gl_mode is 'parallel' or 'gl_primary'
+    const isGlBlocking = glMode === 'parallel' || glMode === 'gl_primary'
+    const glOk = !isGlBlocking || CHECKLIST.filter(i => i.gl_mode_required).every(i => checked.has(i.key))
+    return standardOk && glOk
+  }
+
+  // Compute effective required count (varies by gl_mode)
+  function effectiveRequiredCount(): number {
+    const isGlBlocking = glMode === 'parallel' || glMode === 'gl_primary'
+    return CHECKLIST.filter(i => i.required || (i.gl_mode_required && isGlBlocking)).length
   }
 
   async function closePeriod(periodId: string) {
@@ -133,7 +175,7 @@ export default function PeriodClosePage() {
     }
   }
 
-  const requiredCount = CHECKLIST.filter(i => i.required).length
+  const requiredCount = effectiveRequiredCount()
 
   return (
     <div className="flex flex-col gap-4 max-w-3xl">
@@ -168,13 +210,14 @@ export default function PeriodClosePage() {
 
       <div className="flex flex-col gap-3">
         {periods.map(p => {
-          const isWorking  = working === p.id
-          const msg        = feedback[p.id]
-          const isOpen     = p.status === 'open' || p.status === 'pre_close'
-          const isExpanded = expanded === p.id && isOpen
-          const checked    = checklist[p.id] ?? new Set<ChecklistKey>()
-          const reqChecked = CHECKLIST.filter(i => i.required && checked.has(i.key)).length
-          const canClose   = isCloseEnabled(p.id)
+          const isWorking     = working === p.id
+          const msg           = feedback[p.id]
+          const isOpen        = p.status === 'open' || p.status === 'pre_close'
+          const isExpanded    = expanded === p.id && isOpen
+          const checked       = checklist[p.id] ?? new Set<ChecklistKey>()
+          const isGlBlocking  = glMode === 'parallel' || glMode === 'gl_primary'
+          const reqChecked    = CHECKLIST.filter(i => (i.required || (i.gl_mode_required && isGlBlocking)) && checked.has(i.key)).length
+          const canClose      = isCloseEnabled(p.id)
 
           return (
             <div key={p.id} className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
@@ -264,9 +307,35 @@ export default function PeriodClosePage() {
                     Kapanış Kontrol Listesi — {reqChecked}/{requiredCount} zorunlu tamamlandı
                   </p>
 
+                  {/* Shadow GL mode banner */}
+                  {glMode === 'shadow' && (
+                    <div className="mb-3 px-3 py-2 bg-info-light border border-info-light rounded text-xs text-info-text">
+                      GL modu &apos;shadow&apos; — otomatik kayıt oluşturulmaz. Muhasebe kayıtları zorunlu değil.
+                    </div>
+                  )}
+
                   <div className="space-y-2">
                     {CHECKLIST.map(item => {
-                      const isDone = checked.has(item.key)
+                      const isDone       = checked.has(item.key)
+                      const isJeItem     = item.key === 'journal_entries_done'
+                      const isBlocking   = item.required || (item.gl_mode_required && isGlBlocking)
+
+                      // For journal_entries_done, compute auto-status from backfill data
+                      let jeStatusBadge: React.ReactNode = null
+                      if (isJeItem && backfill) {
+                        const { backfill_complete, journaled_totals, operational_totals } = backfill
+                        const totalMissing = (
+                          Math.max(0, operational_totals.sales     - journaled_totals.sales) +
+                          Math.max(0, operational_totals.expenses  - journaled_totals.expenses) +
+                          Math.max(0, operational_totals.purchases - journaled_totals.purchases)
+                        )
+                        jeStatusBadge = backfill_complete
+                          ? <span className="text-[10px] font-bold text-pos-text bg-pos-light px-1.5 py-0.5 rounded ml-2">✅ Tamamlandı</span>
+                          : <span className="text-[10px] font-bold text-warn-text bg-warn-light px-1.5 py-0.5 rounded ml-2">⚠️ {totalMissing} kayıt eksik</span>
+                      } else if (isJeItem && backfillLoading) {
+                        jeStatusBadge = <span className="text-[10px] text-[#94a3b8] ml-2">Yükleniyor…</span>
+                      }
+
                       return (
                         <label
                           key={item.key}
@@ -283,10 +352,11 @@ export default function PeriodClosePage() {
                           <div className="flex-1 min-w-0">
                             <div className={`text-xs font-semibold ${isDone ? 'text-pos-text line-through' : 'text-[#1e293b]'}`}>
                               {item.label}
-                              {item.required
+                              {isBlocking
                                 ? <span className="ml-1.5 text-[9px] font-bold text-neg uppercase tracking-widest">Zorunlu</span>
                                 : <span className="ml-1.5 text-[9px] font-bold text-[#94a3b8] uppercase tracking-widest">İsteğe Bağlı</span>
                               }
+                              {jeStatusBadge}
                             </div>
                             <div className="text-[10px] text-[#94a3b8] mt-0.5">{item.hint}</div>
                           </div>
@@ -297,6 +367,15 @@ export default function PeriodClosePage() {
                               className="text-[10px] text-brand-light font-semibold hover:underline shrink-0"
                             >
                               Mizan →
+                            </Link>
+                          )}
+                          {isJeItem && (
+                            <Link
+                              href="/dashboard/cfo/journal-entries"
+                              onClick={e => e.stopPropagation()}
+                              className="text-[10px] text-brand-light font-semibold hover:underline shrink-0"
+                            >
+                              Journal →
                             </Link>
                           )}
                         </label>

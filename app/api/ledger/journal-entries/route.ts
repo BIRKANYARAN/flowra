@@ -20,26 +20,38 @@ export async function GET(req: NextRequest) {
     const limit       = Math.min(isFinite(rawLimit)  ? Math.max(1, rawLimit)  : 50,  200)
     const offset      = isFinite(rawOffset) ? Math.max(0, rawOffset) : 0
 
-    let query = supabase
-      .from('journal_entries')
-      .select(`
-        id, source_type, source_id, entry_date, description, reference,
-        is_adjustment, is_reversal, is_voided, created_at,
-        journal_entry_lines (
-          id, account_code, account_name, debit_try, credit_try, description
-        )
-      `, { count: 'exact' })
-      .eq('company_id', companyId)
-      .order('entry_date', { ascending: false })
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1)
+    const buildQuery = (withVoucher: boolean) => {
+      const selectFields = withVoucher
+        ? `id, source_type, source_id, entry_date, description, reference, voucher_number,
+           is_adjustment, is_reversal, is_voided, created_at,
+           journal_entry_lines (
+             id, account_code, account_name, debit_try, credit_try, description
+           )`
+        : `id, source_type, source_id, entry_date, description, reference,
+           is_adjustment, is_reversal, is_voided, created_at,
+           journal_entry_lines (
+             id, account_code, account_name, debit_try, credit_try, description
+           )`
+      let q = supabase
+        .from('journal_entries')
+        .select(selectFields, { count: 'exact' })
+        .eq('company_id', companyId)
+        .order('entry_date', { ascending: false })
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1)
+      if (periodId)   q = q.eq('period_id',   periodId)
+      if (sourceType) q = q.eq('source_type', sourceType)
+      if (fromDate)   q = q.gte('entry_date', fromDate)
+      if (toDate)     q = q.lte('entry_date', toDate)
+      return q
+    }
 
-    if (periodId)   query = query.eq('period_id',   periodId)
-    if (sourceType) query = query.eq('source_type', sourceType)
-    if (fromDate)   query = query.gte('entry_date', fromDate)
-    if (toDate)     query = query.lte('entry_date', toDate)
-
-    const { data, error, count } = await query
+    // Try with voucher_number first; fall back if migration is pending and column doesn't exist yet.
+    let { data, error, count } = await buildQuery(true)
+    if (error && error.message?.includes('voucher_number')) {
+      console.warn('[ledger/journal-entries] voucher_number column missing, retrying without it')
+      ;({ data, error, count } = await buildQuery(false))
+    }
     if (error) {
       console.warn('[ledger/journal-entries] query error (table may not exist):', error.message)
       return NextResponse.json({ entries: [], total: 0 })
