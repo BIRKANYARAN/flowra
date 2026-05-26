@@ -5,9 +5,10 @@ import { useSearchParams, useRouter }       from 'next/navigation'
 import { cn } from '@/components/ui'
 import AuditReadinessTab from './_components/AuditReadinessTab'
 import ExportsTab from './_components/ExportsTab'
+import CommitmentsTab from './_components/CommitmentsTab'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
-type TabId = 'calendar' | 'actions' | 'resolutions' | 'audit' | 'exports'
+type TabId = 'calendar' | 'actions' | 'resolutions' | 'audit' | 'exports' | 'commitments'
 
 interface GovernanceObligation {
   id: string; source: string; title: string; description: string
@@ -34,6 +35,7 @@ const TABS: { id: TabId; label: string; icon: string }[] = [
   { id: 'resolutions', label: 'Kararlar',            icon: '⚖️' },
   { id: 'audit',       label: 'Denetim Hazırlığı',  icon: '✅' },
   { id: 'exports',     label: 'Veri Dışa Aktarma',  icon: '📦' },
+  { id: 'commitments', label: 'Taahhütler',          icon: '📋' },
 ]
 
 const ACTION_TYPE_LABELS: Record<string, string> = {
@@ -690,6 +692,7 @@ export default function GovernancePage() {
         {activeTab === 'resolutions' && <ResolutionsTab />}
         {activeTab === 'audit'       && <AuditReadinessTab />}
         {activeTab === 'exports'     && <ExportsTab />}
+        {activeTab === 'commitments' && <CommitmentsTab />}
       </div>
     </div>
   )
