@@ -25,6 +25,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Skeleton } from '@/components/ds'
 import { fmtTRY, fmtPct } from '@/lib/format'
 import type { PartnerCapitalAccount, ExitScenario } from '@/lib/services/pcle/capital-account.service'
+import type { CapitalCallReport, CapitalCallSummary } from '@/lib/services/pcle/capital-call.service'
 
 // ── API response shape ────────────────────────────────────────────────────────
 
@@ -310,6 +311,148 @@ function ExitScenarioSection({
   )
 }
 
+// ── TTK 588 Status badge ──────────────────────────────────────────────────────
+
+function CapitalCallStatusBadge({ status }: { status: CapitalCallSummary['status'] }) {
+  const MAP: Record<CapitalCallSummary['status'], { label: string; cls: string }> = {
+    paid:                  { label: 'Tamamlandı',   cls: 'bg-[#dcfce7] text-[#16a34a]' },
+    current:               { label: 'Güncel',       cls: 'bg-[#f0fdf4] text-[#16a34a]' },
+    due_soon:              { label: 'Yaklaşıyor',   cls: 'bg-[#fef3c7] text-[#d97706]' },
+    overdue_no_interest:   { label: 'Gecikmiş',     cls: 'bg-[#fee2e2] text-[#dc2626]' },
+    overdue_with_interest: { label: 'TTK 588 Faiz', cls: 'bg-[#fef2f2] text-[#dc2626]' },
+  }
+  const { label, cls } = MAP[status] ?? { label: status, cls: '' }
+  return (
+    <span className={`inline-block px-2 py-0.5 rounded-full text-[0.6rem] font-bold ${cls}`}>
+      {label}
+    </span>
+  )
+}
+
+// ── Taahhüt Takibi section ────────────────────────────────────────────────────
+
+function CapitalCommitmentSection() {
+  const { data, isLoading, error } = useQuery<CapitalCallReport>({
+    queryKey: ['capital-calls'],
+    queryFn: async () => {
+      const res = await fetch('/api/partners/capital-calls')
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({ error: 'Veri alınamadı' })) as { error?: string }
+        throw new Error(d.error ?? `HTTP ${res.status}`)
+      }
+      return res.json() as Promise<CapitalCallReport>
+    },
+    staleTime: 60_000,
+  })
+
+  if (isLoading) return <Skeleton height="h-32" />
+
+  if (error || !data) {
+    const msg = error instanceof Error ? error.message : 'Taahhüt verileri alınamadı'
+    return (
+      <div className="bg-[#fef2f2] border border-[#fecaca] rounded px-4 py-3 text-xs text-[#dc2626]">
+        {msg}
+      </div>
+    )
+  }
+
+  const hasOverdue = data.overdue_partners > 0
+
+  return (
+    <div className="flex flex-col gap-4">
+
+      {/* Overdue warning banner */}
+      {hasOverdue && (
+        <div className="bg-[#fef2f2] border border-[#fecaca] rounded px-4 py-3 flex items-start gap-3">
+          <div className="text-[#dc2626] text-sm font-black mt-0.5">⚠</div>
+          <div>
+            <div className="text-xs font-bold text-[#dc2626]">
+              {data.overdue_partners} ortak gecikmiş taahhüt — TTK 588 faizi uygulanıyor
+            </div>
+            <div className="text-[0.65rem] text-[#dc2626] mt-0.5">
+              Toplam faiz tutarı: {fmtTRY(data.total_ttk_588_interest_try)}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Summary strip */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="bg-white border border-[#e2e8f0] rounded px-3 py-2.5 shadow-sm">
+          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Toplam Taahhüt</div>
+          <div className="text-sm font-black text-[#0f172a] tabular-nums mt-1">{fmtTRY(data.total_committed_try)}</div>
+        </div>
+        <div className="bg-white border border-[#e2e8f0] rounded px-3 py-2.5 shadow-sm">
+          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ödenen</div>
+          <div className="text-sm font-black text-[#16a34a] tabular-nums mt-1">{fmtTRY(data.total_paid_try)}</div>
+        </div>
+        <div className={`rounded px-3 py-2.5 shadow-sm border ${data.total_equity_gap_try > 0 ? 'bg-[#fef2f2] border-[#fecaca]' : 'bg-white border-[#e2e8f0]'}`}>
+          <div className={`text-[0.65rem] font-black uppercase tracking-widest ${data.total_equity_gap_try > 0 ? 'text-[#dc2626]' : 'text-[#94a3b8]'}`}>
+            Eksik Taahhüt
+          </div>
+          <div className={`text-sm font-black tabular-nums mt-1 ${data.total_equity_gap_try > 0 ? 'text-[#dc2626]' : 'text-[#0f172a]'}`}>
+            {fmtTRY(data.total_equity_gap_try)}
+          </div>
+        </div>
+      </div>
+
+      {data.partners.length === 0 ? (
+        <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-6 text-center text-xs text-[#94a3b8]">
+          Henüz sermaye taahhüdü kaydı bulunmuyor.
+        </div>
+      ) : (
+        <div className="bg-white border border-[#e2e8f0] rounded shadow-sm overflow-hidden">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="bg-[#f8fafc] border-b border-[#e2e8f0]">
+                <th className="px-3 py-2 text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ortak</th>
+                <th className="px-3 py-2 text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Pay</th>
+                <th className="px-3 py-2 text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Taahhüt</th>
+                <th className="px-3 py-2 text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ödenen</th>
+                <th className="px-3 py-2 text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Eksik</th>
+                <th className="px-3 py-2 text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">TTK 588 Faizi</th>
+                <th className="px-3 py-2 text-center text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Durum</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#f1f5f9]">
+              {data.partners.map(p => (
+                <tr
+                  key={p.partner_id}
+                  className={p.is_overdue ? 'bg-[#fff7f7]' : 'hover:bg-[#f8fafc] transition-colors'}
+                >
+                  <td className="px-3 py-2.5 font-semibold text-[#0f172a]">
+                    {p.partner_name}
+                    {p.days_overdue !== null && (
+                      <div className="text-[0.6rem] text-[#dc2626] mt-0.5">{p.days_overdue} gün gecikmiş</div>
+                    )}
+                  </td>
+                  <td className="px-3 py-2.5 text-[#475569] tabular-nums">{fmtPct(p.share_ratio_pct)}</td>
+                  <td className="px-3 py-2.5 text-right tabular-nums">{fmtTRY(p.total_committed_try)}</td>
+                  <td className="px-3 py-2.5 text-right tabular-nums text-[#16a34a]">{fmtTRY(p.total_paid_try)}</td>
+                  <td className={`px-3 py-2.5 text-right tabular-nums font-semibold ${p.equity_gap_try > 0 ? 'text-[#dc2626]' : 'text-[#16a34a]'}`}>
+                    {fmtTRY(p.equity_gap_try)}
+                  </td>
+                  <td className="px-3 py-2.5 text-right tabular-nums text-[#dc2626]">
+                    {p.ttk_588_applies ? fmtTRY(p.ttk_588_interest_try) : '—'}
+                  </td>
+                  <td className="px-3 py-2.5 text-center">
+                    <CapitalCallStatusBadge status={p.status} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <div className="text-[0.65rem] text-[#94a3b8]">
+        TTK 588 faizi: yıllık %{(data.partners[0]?.ttk_588_interest_rate ?? 0.09) * 100} (TCMB referans faiz) ·
+        Hesaplama: eksik taahhüt × faiz × (gecikme günü / 365)
+      </div>
+    </div>
+  )
+}
+
 // ── Main Tab ──────────────────────────────────────────────────────────────────
 
 export function CapitalAccountTab() {
@@ -408,6 +551,12 @@ export function CapitalAccountTab() {
         multiple={multiple}
         onMultipleChange={setMultiple}
       />
+
+      {/* Taahhüt Takibi section */}
+      <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+        Sermaye Taahhüt Takibi — TTK 588
+      </div>
+      <CapitalCommitmentSection />
 
       {/* Footer */}
       <div className="text-[0.65rem] text-[#94a3b8]">
