@@ -11,6 +11,7 @@
 //   5. Kâr Dağıtımı  — 4-layer distribution safety + Turkish compliance
 //   6. Getiri         — per-partner ROI and capital return metrics
 //   7. Risk           — 6-dimension PCLE risk scoring + compliance warnings
+//   8. Sermaye Hesabı — per-partner capital account + exit waterfall simulation
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
@@ -31,6 +32,7 @@ import { TranchesTab }    from '@/app/dashboard/partners/_components/TranchesTab
 import { DistributionTab } from '@/app/dashboard/partners/_components/DistributionTab'
 import { ReturnsTab }     from '@/app/dashboard/partners/_components/ReturnsTab'
 import { RiskTab }        from '@/app/dashboard/partners/_components/RiskTab'
+import { CapitalAccountTab } from '@/app/dashboard/partners/_components/CapitalAccountTab'
 import { PartnersContextBar } from '@/app/dashboard/partners/_shared/PartnersContextBar'
 import { PartnerFinanceActions } from '@/app/dashboard/partners/_components/PartnerFinanceActions'
 
@@ -284,6 +286,7 @@ export default function PartnersPage() {
     distribution: { title: 'Kâr Dağıtımı',      sub: '4 katmanlı güvenlik · Yasal yedek · TTK 509 uyumu' },
     returns:      { title: 'Getiri Analizi',     sub: 'ROI · Sermaye geri dönüşü · Ortak bazlı performans' },
     risk:         { title: 'Risk Haritası',      sub: '6 boyutlu PCLE risk skoru · Yasal uyum · Öneriler' },
+    capital:      { title: 'Sermaye Hesabı',     sub: 'Ortak bazında sermaye pozisyonu · Defter değeri · Çıkış simülasyonu' },
   }
 
   const TABS: { id: TabId; label: string }[] = [
@@ -294,6 +297,7 @@ export default function PartnersPage() {
     { id: 'distribution', label: 'Kâr Dağıtımı' },
     { id: 'returns',      label: 'Getiri'       },
     { id: 'risk',         label: 'Risk'         },
+    { id: 'capital',      label: 'Sermaye Hesabı' },
   ]
 
   // ── Render ────────────────────────────────────────────────────────────────────
@@ -448,6 +452,10 @@ export default function PartnersPage() {
 
       {activeTab === 'risk' && (
         <RiskTab loading={loading} />
+      )}
+
+      {activeTab === 'capital' && (
+        <CapitalAccountTab />
       )}
 
     </div>
