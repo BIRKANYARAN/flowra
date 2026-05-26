@@ -5,6 +5,8 @@
 //   2. Tahsilat Sağlığı + Risk Matrisi (5/5 col grid)
 //   3. Finansal Özet (5 KPIs)
 //   4. 12 Ay Nakit Projeksiyonu (bar chart)
+//   5. Kur Riski (FX Exposure)
+//   6. Yıllık Özet (Year-over-Year)
 
 import Link from 'next/link'
 import { getCfoMetrics, getRunwayForecast } from '@/lib/finance/financial-core'
@@ -15,6 +17,11 @@ import { FinanceService }              from '@/lib/services/finance.service'
 import { periodForMonth }              from '@/lib/services/finance-rules'
 import { createClient }                from '@/lib/supabase-server'
 import { PeriodService }               from '@/lib/services/period.service'
+import { FxExposureService }           from '@/lib/services/finance/fx-exposure.service'
+import type { FxExposureReport }       from '@/lib/services/finance/fx-exposure.service'
+import { AnnualSummaryService }        from '@/lib/services/finance/annual-summary.service'
+import type { AnnualSummary }          from '@/lib/services/finance/annual-summary.service'
+import { fmtPct }                      from '@/lib/format'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -113,14 +120,16 @@ export async function OverviewTab({ userId, companyId, glMode = 'shadow' }: Prop
   const prevFrom  = prevStart.toISOString().slice(0, 10)
   const prevTo    = prevEnd.toISOString().slice(0, 10)
 
-  // Parallel: current + previous month metrics + YTD financial summary + period
+  // Parallel: current + previous month metrics + YTD financial summary + period + FX + annual
   // Sequential: runway forecast must wait for current metrics (needs taxObligation)
   const currentYM = `${year}-${mon}`
-  const [metrics, prevMetrics, ytdSummary, currentPeriod] = await Promise.all([
+  const [metrics, prevMetrics, ytdSummary, currentPeriod, fxExposure, annualSummary] = await Promise.all([
     sq(() => getCfoMetrics(companyId, { from, to: today }),        ZERO_METRICS),
     sq(() => getCfoMetrics(companyId, { from: prevFrom, to: prevTo }), ZERO_METRICS),
     sq(() => FinanceService.getFinancialSummary(userId, companyId, periodForMonth(currentYM)), null),
     sq(() => PeriodService.getCurrent(companyId, supabase), null),
+    sq(() => FxExposureService.getReport(companyId, supabase), null as FxExposureReport | null),
+    sq(() => AnnualSummaryService.getSummary(companyId, userId, supabase, { yearsBack: 3 }), null as AnnualSummary | null),
   ])
   const runway = await sq(
     () => getRunwayForecast(companyId, {
@@ -436,6 +445,165 @@ export async function OverviewTab({ userId, companyId, glMode = 'shadow' }: Prop
                 <span className="text-pos-text font-semibold">12 ay boyunca nakit sağlıklı</span>
               )}
               <span>Burn: {fmt(r.inputs.monthly_burn)}/ay</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Zone 5 — Kur Riski (FX Exposure) */}
+      <div>
+        <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">Kur Riski</div>
+        {!fxExposure || fxExposure.exposures.length === 0 ? (
+          <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-3 flex items-center gap-3">
+            <span className="w-1.5 h-1.5 rounded-full bg-pos shrink-0" />
+            <span className="text-xs text-[#64748b]">Tüm işlemler TRY cinsinden — döviz riski yok</span>
+          </div>
+        ) : (
+          <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+            {/* Total gain/loss summary */}
+            <div className="px-5 py-3 border-b border-[#e2e8f0] flex items-center justify-between">
+              <span className="text-[10px] text-[#64748b]">
+                Toplam gerçekleşmemiş kur etkisi
+              </span>
+              <span className={`text-sm font-black tabular-nums ${fxExposure.total_fx_gain_loss_try >= 0 ? 'text-pos-text' : 'text-neg'}`}>
+                {fxExposure.total_fx_gain_loss_try >= 0 ? '+' : ''}{fmt(fxExposure.total_fx_gain_loss_try)}
+              </span>
+            </div>
+            {/* Per-currency rows */}
+            <div className="divide-y divide-[#f1f5f9]">
+              {fxExposure.exposures.map(exp => {
+                const isLong      = exp.net_foreign >= 0
+                const gainLoss    = exp.net_fx_gain_loss_try
+                const gainColor   = gainLoss >= 0 ? 'text-pos-text' : 'text-neg'
+                const posColor    = isLong ? 'text-pos-text' : 'text-neg'
+                return (
+                  <div key={exp.currency} className="px-5 py-3">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-black text-[#0f172a]">{exp.currency}</span>
+                        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${isLong ? 'bg-pos-light text-pos-text' : 'bg-neg-light text-neg-text'}`}>
+                          {isLong ? 'Uzun' : 'Kısa'} {Math.abs(exp.net_foreign).toLocaleString('tr-TR', { maximumFractionDigits: 2 })}
+                        </span>
+                        {exp.current_rate_try > 0 && (
+                          <span className="text-[10px] text-[#94a3b8]">
+                            Kur: ₺{exp.current_rate_try.toFixed(2)}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        <div className={`text-sm font-black tabular-nums ${gainColor}`}>
+                          {gainLoss >= 0 ? '+' : ''}{fmt(gainLoss)}
+                        </div>
+                        <div className="text-[10px] text-[#94a3b8]">net kur etkisi</div>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-[#f8fafc] rounded px-3 py-2">
+                        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Alacaklar</div>
+                        <div className="text-xs font-semibold tabular-nums text-[#334155]">
+                          {exp.receivables_foreign.toLocaleString('tr-TR', { maximumFractionDigits: 2 })} {exp.currency}
+                        </div>
+                        <div className={`text-[10px] tabular-nums ${exp.receivables_fx_gain_loss_try >= 0 ? 'text-pos-text' : 'text-neg'}`}>
+                          {exp.receivables_fx_gain_loss_try >= 0 ? '+' : ''}{fmt(exp.receivables_fx_gain_loss_try)}
+                        </div>
+                      </div>
+                      <div className="bg-[#f8fafc] rounded px-3 py-2">
+                        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Borçlar</div>
+                        <div className="text-xs font-semibold tabular-nums text-[#334155]">
+                          {exp.payables_foreign.toLocaleString('tr-TR', { maximumFractionDigits: 2 })} {exp.currency}
+                        </div>
+                        <div className={`text-[10px] tabular-nums ${exp.payables_fx_gain_loss_try >= 0 ? 'text-pos-text' : 'text-neg'}`}>
+                          {exp.payables_fx_gain_loss_try >= 0 ? '+' : ''}{fmt(exp.payables_fx_gain_loss_try)}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Zone 6 — Yıllık Özet (Year-over-Year) */}
+      {annualSummary && annualSummary.years.length > 0 && (
+        <div>
+          <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">Yıllık Özet</div>
+          <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] border-b border-[#e2e8f0]">
+                    <th className="text-left px-5 py-2.5">Metrik</th>
+                    {annualSummary.years.map(y => (
+                      <th key={y.year} className="text-right px-4 py-2.5">
+                        {y.year}
+                        {y.year === annualSummary.best_year_revenue && (
+                          <span className="ml-1 text-[8px] text-pos-text bg-pos-light px-1 py-0.5 rounded">En iyi ciro</span>
+                        )}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#f1f5f9]">
+                  {/* Revenue */}
+                  <tr className="hover:bg-[#f8fafc]/60">
+                    <td className="px-5 py-2.5 font-semibold text-[#334155]">Ciro</td>
+                    {annualSummary.years.map(y => (
+                      <td key={y.year} className="px-4 py-2.5 text-right tabular-nums font-semibold text-[#0f172a]">
+                        {fmt(y.revenue_try)}
+                        {y.revenue_growth_pct !== null && (
+                          <div className={`text-[10px] font-semibold ${y.revenue_growth_pct >= 0 ? 'text-pos-text' : 'text-neg'}`}>
+                            {y.revenue_growth_pct >= 0 ? '+' : ''}{y.revenue_growth_pct.toFixed(1)}%
+                          </div>
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                  {/* Gross Profit */}
+                  <tr className="hover:bg-[#f8fafc]/60">
+                    <td className="px-5 py-2.5 font-semibold text-[#334155]">Brüt Kâr</td>
+                    {annualSummary.years.map(y => (
+                      <td key={y.year} className="px-4 py-2.5 text-right tabular-nums">
+                        <div className={`font-semibold ${y.gross_profit_try >= 0 ? 'text-[#0f172a]' : 'text-neg'}`}>
+                          {fmt(y.gross_profit_try)}
+                        </div>
+                        <div className="text-[10px] text-[#94a3b8]">
+                          Marj: %{y.gross_margin_pct.toFixed(1)}
+                        </div>
+                      </td>
+                    ))}
+                  </tr>
+                  {/* Net Income */}
+                  <tr className="hover:bg-[#f8fafc]/60">
+                    <td className="px-5 py-2.5 font-semibold text-[#334155]">Net Gelir</td>
+                    {annualSummary.years.map(y => (
+                      <td key={y.year} className="px-4 py-2.5 text-right tabular-nums">
+                        <div className={`font-semibold ${y.net_income_try >= 0 ? 'text-pos-text' : 'text-neg'}`}>
+                          {fmt(y.net_income_try)}
+                        </div>
+                        <div className="text-[10px] text-[#94a3b8]">
+                          Marj: %{y.net_margin_pct.toFixed(1)}
+                        </div>
+                        {y.net_income_growth_pct !== null && (
+                          <div className={`text-[10px] font-semibold ${y.net_income_growth_pct >= 0 ? 'text-pos-text' : 'text-neg'}`}>
+                            {y.net_income_growth_pct >= 0 ? '+' : ''}{y.net_income_growth_pct.toFixed(1)}%
+                          </div>
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                  {/* Expenses */}
+                  <tr className="hover:bg-[#f8fafc]/60">
+                    <td className="px-5 py-2.5 font-semibold text-[#334155]">Giderler</td>
+                    {annualSummary.years.map(y => (
+                      <td key={y.year} className="px-4 py-2.5 text-right tabular-nums text-[#64748b]">
+                        {fmt(y.expenses_try)}
+                      </td>
+                    ))}
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
