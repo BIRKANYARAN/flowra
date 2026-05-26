@@ -79,9 +79,9 @@ describe('getGroupsForRole', () => {
 // ── Item counts ───────────────────────────────────────────────────────────────
 
 describe('getAllItemsForRole item counts', () => {
-  // Groups: genel (1) + merkezler (6: finance, commercial, operations, partners, planning, insights) + yonetim (3 — admin only)
-  it('admin sees 10 nav items (1 genel + 6 merkezler + 3 yonetim)', () => {
-    expect(getAllItemsForRole('admin').length).toBe(10)
+  // Groups: genel (1) + merkezler (7: finance, commercial, operations, partners, planning, insights + governance[admin-only]) + yonetim (3 — admin only)
+  it('admin sees 11 nav items (1 genel + 7 merkezler + 3 yonetim)', () => {
+    expect(getAllItemsForRole('admin').length).toBe(11)
   })
 
   it('manager sees 7 nav items (1 genel + 6 merkezler)', () => {
