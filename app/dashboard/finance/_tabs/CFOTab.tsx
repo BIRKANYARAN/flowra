@@ -14,6 +14,7 @@
 
 import Link                      from 'next/link'
 import { ObservationRail }       from '@/app/dashboard/_shared/ObservationRail'
+import { WorkingCapitalSection } from '@/app/dashboard/finance/_shared/WorkingCapitalSection'
 import { BalanceSheetService }   from '@/lib/services/balance-sheet.service'
 import { TaxService }            from '@/lib/services/tax.service'
 import { FinanceService }        from '@/lib/services/finance.service'
@@ -817,6 +818,13 @@ export async function CFOTab({ userId, companyId }: Props) {
           </div>
         )
       })()}
+
+      {/* Çalışma Sermayesi — Working Capital Intelligence */}
+      <WorkingCapitalSection
+        companyId={companyId}
+        userId={userId}
+        supabase={supabase}
+      />
 
       {/* GL Tools */}
       <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
