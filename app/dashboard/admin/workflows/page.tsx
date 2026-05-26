@@ -1,15 +1,16 @@
-'use client'
+// /dashboard/admin/workflows — Pending Workflow Approvals (Server Component)
+// Admin-only page. Fetches pending workflows via direct Supabase query.
 
-// /dashboard/admin/workflows — Pending Workflow Approvals
-// Lists pending expense approvals (and future workflow types).
-// Admin-only page.
+export const dynamic = 'force-dynamic'
 
-import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { Skeleton, ErrorBanner } from '@/components/ds'
-import { fmtDate as fmt, fmtTRY } from '@/lib/format'
+import { createClient }     from '@/lib/supabase-server'
+import { resolveCompanyId } from '@/lib/resolve-company'
+import WorkflowActions      from './workflow-actions'
 
-interface WorkflowInstance {
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+interface WorkflowRow {
   id:            string
   workflow_type: string
   status:        string
@@ -17,64 +18,89 @@ interface WorkflowInstance {
   initiated_at:  string
   expires_at:    string | null
   payload:       Record<string, unknown>
-  resource_type: string | null
-  resource_id:   string | null
   notes:         string | null
 }
 
+// ── Labels ────────────────────────────────────────────────────────────────────
+
 const TYPE_LABELS: Record<string, string> = {
   expense_approval:     'Masraf Onayı',
-  partner_loan:         'Ortak Borç',
+  partner_loan_entry:   'Ortak Borç Girişi',
   dividend_declaration: 'Temettü Beyanı',
-  period_close:         'Dönem Kapanış',
+  period_close:         'Dönem Kapanışı',
+  period_lock:          'Dönem Kilitleme',
 }
 
-const fmtMoney = (n: unknown) => fmtTRY(Number(n ?? 0) || 0, 0)
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
+function fmtDate(iso: string): string {
+  try {
+    return new Date(iso).toLocaleDateString('tr-TR', {
+      day:   '2-digit',
+      month: 'short',
+      year:  'numeric',
+    })
+  } catch { return iso }
+}
 
-export default function WorkflowsPage() {
-  const [workflows, setWorkflows] = useState<WorkflowInstance[]>([])
-  const [loading,   setLoading]   = useState(true)
-  const [error,     setError]     = useState<string | null>(null)
-  const [working,   setWorking]   = useState<string | null>(null)
-  const [notes,     setNotes]     = useState<Record<string, string>>({})
-  const [feedback,  setFeedback]  = useState<Record<string, { ok: boolean; msg: string }>>({})
+// ── Page ──────────────────────────────────────────────────────────────────────
 
-  const load = useCallback((signal?: AbortSignal) => {
-    setLoading(true)
-    fetch('/api/workflow', { signal })
-      .then(r => r.json())
-      .then(d => setWorkflows(d.workflows ?? []))
-      .catch(err => { if (err.name !== 'AbortError') setError('Onay bekleyen işlemler yüklenemedi') })
-      .finally(() => setLoading(false))
-  }, [])
+export default async function WorkflowsPage() {
+  const supabase  = createClient()
+  let companyId: string | null = null
 
-  useEffect(() => {
-    const ctrl = new AbortController()
-    load(ctrl.signal)
-    return () => ctrl.abort()
-  }, [load])
+  try {
+    const { data } = await supabase.auth.getUser()
+    if (data?.user) companyId = await resolveCompanyId(data.user.id, supabase)
+  } catch { /* non-fatal */ }
 
-  async function resolve(id: string, action: 'approve' | 'reject') {
-    setWorking(id)
-    setFeedback(f => ({ ...f, [id]: { ok: true, msg: '' } }))
+  // Fetch pending workflows
+  let workflows: WorkflowRow[] = []
+  let tableError = false
+
+  if (companyId) {
     try {
-      const res  = await fetch(`/api/workflow/${id}/resolve`, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ action, notes: notes[id] ?? '' }),
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        setFeedback(f => ({ ...f, [id]: { ok: false, msg: data.error ?? 'Hata oluştu' } }))
+      const { data, error } = await supabase
+        .from('workflow_instances')
+        .select('id, workflow_type, status, initiator_id, initiated_at, expires_at, payload, notes')
+        .eq('company_id', companyId)
+        .eq('status', 'pending')
+        .order('initiated_at', { ascending: false })
+
+      if (error) {
+        // Table doesn't exist yet
+        if (error.message?.includes('does not exist') || error.code === '42P01') {
+          tableError = true
+        } else {
+          console.error('[workflows page]', error)
+        }
       } else {
-        setFeedback(f => ({ ...f, [id]: { ok: true, msg: action === 'approve' ? '✓ Onaylandı' : '✕ Reddedildi' } }))
-        setTimeout(() => setWorkflows(prev => prev.filter(w => w.id !== id)), 1500)
+        workflows = (data ?? []) as WorkflowRow[]
       }
-    } catch {
-      setFeedback(f => ({ ...f, [id]: { ok: false, msg: 'Ağ hatası' } }))
-    }
-    setWorking(null)
+    } catch { tableError = true }
+  }
+
+  // ── Render ────────────────────────────────────────────────────────────────
+
+  if (tableError) {
+    return (
+      <div className="max-w-3xl space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-black text-[#0f172a] tracking-tight">Onay Bekleyen İşlemler</h1>
+          </div>
+          <Link href="/dashboard/admin" className="text-xs text-[#94a3b8] hover:text-brand-light font-semibold">
+            ← Yönetim
+          </Link>
+        </div>
+        <div className="bg-warn-light border border-warn-light rounded px-4 py-6 text-center">
+          <div className="text-sm font-semibold text-warn-text mb-1">Workflow sistemi kurulum bekliyor</div>
+          <div className="text-xs text-[#64748b]">
+            workflow_instances tablosu henüz oluşturulmamış. Veritabanı migrasyonunu çalıştırın.
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -85,139 +111,79 @@ export default function WorkflowsPage() {
         <div>
           <h1 className="text-2xl font-black text-[#0f172a] tracking-tight">Onay Bekleyen İşlemler</h1>
           <p className="text-xs text-[#94a3b8] mt-0.5">
-            {loading ? 'Yükleniyor…' : `${workflows.length} işlem onay bekliyor`}
+            {workflows.length} işlem onay bekliyor
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={() => load()} className="text-xs text-[#94a3b8] hover:text-brand-light font-semibold">
+          <Link href="/dashboard/admin/workflows" className="text-xs text-[#94a3b8] hover:text-brand-light font-semibold">
             ↺ Yenile
-          </button>
+          </Link>
           <Link href="/dashboard/admin" className="text-xs text-[#94a3b8] hover:text-brand-light font-semibold">
             ← Yönetim
           </Link>
         </div>
       </div>
 
-      {error && (
-        <ErrorBanner msg={error} />
-      )}
-
-      {loading && (
-        <div className="space-y-2">{[1,2,3].map(i => <Skeleton key={i} height="h-20" />)}</div>
-      )}
-
-      {!loading && workflows.length === 0 && !error && (
+      {/* Empty state */}
+      {workflows.length === 0 && (
         <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-12 text-center">
           <div className="text-2xl mb-2">✓</div>
-          <div className="text-sm font-semibold text-[#64748b]">Onay bekleyen işlem yok</div>
-          <div className="text-xs text-[#94a3b8] mt-1">Tüm işlemler onaylandı veya henüz onay gerektiren işlem oluşturulmadı.</div>
+          <div className="text-sm font-semibold text-[#64748b]">Bekleyen iş akışı yok</div>
+          <div className="text-xs text-[#94a3b8] mt-1">
+            Tüm işlemler onaylandı veya henüz onay gerektiren işlem oluşturulmadı.
+          </div>
         </div>
       )}
 
-      <div className="space-y-3">
-        {workflows.map(w => {
-          const fb      = feedback[w.id]
-          const isWork  = working === w.id
-          const payload = w.payload ?? {}
-
-          return (
-            <div key={w.id} className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
-              {/* Main row */}
-              <div className="px-5 py-4">
-                <div className="flex items-start justify-between gap-3 flex-wrap">
-                  <div className="flex-1 min-w-0">
-                    {/* Type badge */}
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <span className="text-[0.65rem] font-black uppercase tracking-widest px-1.5 py-0.5 rounded bg-warn-light text-warn-text">
-                        {TYPE_LABELS[w.workflow_type] ?? w.workflow_type}
-                      </span>
-                      {w.expires_at && (
-                        <span className="text-[10px] text-[#94a3b8]">
-                          Son: {fmt(w.expires_at)}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Expense details */}
-                    {w.workflow_type === 'expense_approval' && (
-                      <div className="space-y-0.5">
-                        <div className="text-sm font-bold text-[#0f172a]">
-                          {fmtMoney(payload.amount_try)}
-                          <span className="text-xs font-normal text-[#94a3b8] ml-1.5">
-                            ({String(payload.currency ?? 'TRY')} {Number(payload.amount ?? 0).toLocaleString('tr-TR')} @ kur)
-                          </span>
-                        </div>
-                        <div className="text-xs text-[#64748b] truncate">
-                          {String(payload.description ?? '—')}
-                        </div>
-                        <div className="flex gap-3 text-[10px] text-[#94a3b8] mt-1">
-                          <span>Kategori: {String(payload.category ?? '—')}</span>
-                          <span>Tarih: {String(payload.expense_date ?? '—')}</span>
-                          <span>Eşik: {fmtMoney(payload.threshold)}</span>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Generic payload for other types */}
-                    {w.workflow_type !== 'expense_approval' && (
-                      <div className="text-xs text-[#64748b]">
-                        {JSON.stringify(payload).slice(0, 120)}…
-                      </div>
-                    )}
-
-                    <div className="text-[10px] text-[#94a3b8] mt-1.5">
-                      Başlatıldı: {fmt(w.initiated_at)}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Notes */}
-                <div className="mt-3">
-                  <input
-                    type="text"
-                    placeholder="Not (opsiyonel)…"
-                    value={notes[w.id] ?? ''}
-                    onChange={e => setNotes(n => ({ ...n, [w.id]: e.target.value }))}
-                    className="w-full border border-[#e2e8f0] rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-brand/30 bg-[#f8fafc]"
-                  />
-                </div>
-
-                {/* Actions */}
-                <div className="flex gap-2 mt-3">
-                  <button
-                    onClick={() => resolve(w.id, 'approve')}
-                    disabled={isWork}
-                    className="flex-1 text-xs font-bold py-2 rounded bg-pos text-white hover:bg-pos disabled:opacity-50 transition-colors"
-                  >
-                    {isWork ? '…' : '✓ Onayla'}
-                  </button>
-                  <button
-                    onClick={() => resolve(w.id, 'reject')}
-                    disabled={isWork}
-                    className="flex-1 text-xs font-bold py-2 rounded bg-neg-light text-neg hover:bg-neg-light disabled:opacity-50 transition-colors border border-neg-light"
-                  >
-                    {isWork ? '…' : '✕ Reddet'}
-                  </button>
-                  {w.resource_id && w.resource_type === 'expense' && (
-                    <Link
-                      href={`/dashboard/operations?tab=expenses&highlight=${w.resource_id}`}
-                      className="text-xs text-brand-light font-semibold px-3 py-2 rounded hover:bg-brand-subtle transition-colors border border-[#e2e8f0]"
-                    >
-                      Masrafı Gör →
-                    </Link>
-                  )}
-                </div>
-
-                {fb && fb.msg && (
-                  <div className={`mt-2 text-xs px-3 py-2 rounded ${fb.ok ? 'bg-pos-light text-pos-text' : 'bg-neg-light text-neg'}`}>
-                    {fb.msg}
-                  </div>
-                )}
-              </div>
-            </div>
-          )
-        })}
-      </div>
+      {/* Workflow table */}
+      {workflows.length > 0 && (
+        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="border-b border-[#e2e8f0] bg-[#f8fafc]">
+                <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+                  Tür
+                </th>
+                <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+                  Başlatan
+                </th>
+                <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+                  Başlatıldı
+                </th>
+                <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+                  Son Tarih
+                </th>
+                <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+                  İşlemler
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#f1f5f9]">
+              {workflows.map(w => (
+                <tr key={w.id} className="hover:bg-[#f8fafc]/50 transition-colors">
+                  <td className="px-4 py-3">
+                    <span className="text-[0.65rem] font-black uppercase tracking-widest px-1.5 py-0.5 rounded bg-warn-light text-warn-text">
+                      {TYPE_LABELS[w.workflow_type] ?? w.workflow_type}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 font-mono text-[#64748b]">
+                    {w.initiator_id.slice(0, 8)}…
+                  </td>
+                  <td className="px-4 py-3 text-[#64748b]">
+                    {fmtDate(w.initiated_at)}
+                  </td>
+                  <td className="px-4 py-3 text-[#94a3b8]">
+                    {w.expires_at ? fmtDate(w.expires_at) : '—'}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <WorkflowActions workflowId={w.id} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {/* Cross-navigation */}
       <div className="flex items-center justify-between px-1">
@@ -225,11 +191,17 @@ export default function WorkflowsPage() {
           Onay bekleyen işlemler denetim izinde kayıt altına alınır.
         </p>
         <div className="flex items-center gap-2 shrink-0 ml-4">
-          <Link href="/dashboard/admin/audit" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
+          <Link
+            href="/dashboard/admin/audit"
+            className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap"
+          >
             Denetim İzi →
           </Link>
           <span className="text-[#e2e8f0]">|</span>
-          <Link href="/dashboard/operations?tab=expenses" className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap">
+          <Link
+            href="/dashboard/operations?tab=expenses"
+            className="text-[11px] font-bold text-brand-light hover:text-brand underline underline-offset-2 whitespace-nowrap"
+          >
             Giderler →
           </Link>
         </div>

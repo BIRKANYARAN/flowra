@@ -3,14 +3,27 @@ import { FinanceService }             from '@/lib/services/finance.service'
 import { TaxService }                 from '@/lib/services/tax.service'
 import { BalanceSheetService }        from '@/lib/services/balance-sheet.service'
 import { CashFlowStatementService }   from '@/lib/services/cashflow-statement.service'
-import { resolveApiAuth } from '@/lib/api-auth'
+import { PeriodService }              from '@/lib/services/period.service'
+import { resolveApiAuth }             from '@/lib/api-auth'
+import {
+  CFO_PACK_MANIFEST,
+  getRequiredReports,
+  type CFOPackReport,
+} from '@/lib/reports/cfo-pack-manifest'
 
 export const dynamic = 'force-dynamic'
 
-// GET /api/reports/cfo-pack?from=&to=&as_of=
+// GET /api/reports/cfo-pack?from=&to=&as_of=&period_id=
 //
 // Full CFO Package — all financial statements in one JSON response.
 // The client can render this as a multi-section print view or trigger a download.
+//
+// Response includes:
+//   manifest     — full CFO_PACK_MANIFEST
+//   completeness — { total, required_total, available, required_available, pct_complete }
+//   generated_at — ISO timestamp
+//   period_id    — resolved period id (from param or current open period)
+//   company_id   — company id
 //
 // Future: generate ZIP with individual PDFs (react-pdf or Puppeteer server-side).
 
@@ -20,11 +33,23 @@ export async function GET(req: NextRequest) {
     if (!auth.ok) return auth.response
     const { uid, companyId, supabase } = auth
 
-    const params = req.nextUrl.searchParams
-    const now    = new Date()
-    const from   = params.get('from')  ?? `${now.getFullYear()}-01-01`
-    const to     = params.get('to')    ?? now.toISOString().slice(0, 10)
-    const asOf   = params.get('as_of') ?? to
+    const params   = req.nextUrl.searchParams
+    const now      = new Date()
+    const from     = params.get('from')      ?? `${now.getFullYear()}-01-01`
+    const to       = params.get('to')        ?? now.toISOString().slice(0, 10)
+    const asOf     = params.get('as_of')     ?? to
+    const periodIdParam = params.get('period_id') ?? null
+
+    // Resolve period_id — use param if provided, otherwise look up current open period
+    let periodId: string | null = periodIdParam
+    if (!periodId) {
+      try {
+        const currentPeriod = await PeriodService.getCurrent(companyId, supabase)
+        periodId = currentPeriod?.id ?? null
+      } catch {
+        periodId = null
+      }
+    }
 
     // Fetch company name for the header
     const { data: companyRow } = await supabase
@@ -77,16 +102,46 @@ export async function GET(req: NextRequest) {
     const bs  = balanceSheet.status === 'fulfilled' ? balanceSheet.value : null
     const cf  = cashFlow.status === 'fulfilled' ? cashFlow.value : null
 
+    // ── Completeness calculation ──────────────────────────────────────────────
+    // Map section availability by manifest id
+    const availabilityMap: Record<string, boolean> = {
+      income_statement:  pnl  !== null,
+      balance_sheet:     bs   !== null,
+      cash_flow:         cf   !== null,
+      trial_balance:     false,           // not fetched in this route (GL-only)
+      partner_capital:   false,           // not fetched here
+      vat_summary:       tax  !== null,
+      receivables_aging: receivables.status === 'fulfilled' && !!receivables.value.data,
+      executive_summary: false,           // not fetched in this route
+    }
+
+    const required = getRequiredReports()
+    const total            = CFO_PACK_MANIFEST.length
+    const required_total   = required.length
+    const available        = CFO_PACK_MANIFEST.filter((r: CFOPackReport) => availabilityMap[r.id]).length
+    const required_available = required.filter((r: CFOPackReport) => availabilityMap[r.id]).length
+    const pct_complete     = total > 0 ? Math.round((available / total) * 100) : 0
+
     return NextResponse.json({
       company_name: companyName,
+      company_id:   companyId,
+      period_id:    periodId,
       from, to, as_of: asOf,
       generated_at: new Date().toISOString(),
+      manifest:     CFO_PACK_MANIFEST,
+      completeness: {
+        total,
+        required_total,
+        available,
+        required_available,
+        pct_complete,
+      },
       sections: {
-        income_statement: pnl ?? null,
-        tax_summary:      tax ?? null,
-        balance_sheet:    bs  ?? null,
-        cash_flow:        cf  ?? null,
-        receivables_aging: aging,
+        income_statement:    pnl ?? null,
+        tax_summary:         tax ?? null,
+        balance_sheet:       bs  ?? null,
+        cash_flow:           cf  ?? null,
+        receivables_aging:   aging,
         expense_by_category: expByCategory,
       },
     })

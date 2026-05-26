@@ -181,6 +181,49 @@ export async function GET(req: NextRequest) {
 
     const alerts = evaluateAlerts(inputs)
 
+    // ── Alert lifecycle: upsert active alerts, deactivate resolved ones ──────
+    try {
+      // 1. Read currently-active alerts from DB for this company
+      const { data: existingActive } = await supabase
+        .from('alerts')
+        .select('entity_id')
+        .eq('company_id', companyId)
+        .eq('is_active', true)
+
+      const existingIds = new Set((existingActive ?? []).map((r: { entity_id: string }) => r.entity_id))
+      const currentIds  = new Set(alerts.map(a => a.id))
+
+      // 2. Upsert all currently-firing alerts with is_active: true
+      if (alerts.length > 0) {
+        const upsertRows = alerts.map(a => ({
+          company_id:   companyId,
+          actor_user_id: uid,
+          entity_type:  'alert_rule',
+          entity_id:    a.id,
+          message:      a.detail,
+          severity:     a.severity,
+          is_active:    true,
+          updated_at:   new Date().toISOString(),
+        }))
+        await supabase
+          .from('alerts')
+          .upsert(upsertRows, { onConflict: 'company_id,entity_id' })
+      }
+
+      // 3. Mark previously-active alerts that are no longer firing as resolved
+      const resolvedIds = [...existingIds].filter(id => !currentIds.has(id))
+      if (resolvedIds.length > 0) {
+        await supabase
+          .from('alerts')
+          .update({ is_active: false, updated_at: new Date().toISOString() })
+          .eq('company_id', companyId)
+          .in('entity_id', resolvedIds)
+      }
+    } catch (lifecycleErr) {
+      // Non-fatal: lifecycle tracking failure should not break alert delivery
+      console.warn('[alerts/evaluate] lifecycle upsert failed', lifecycleErr)
+    }
+
     // E9: explicit data quality signal — in shadow GL mode, some alert inputs
     // cannot be computed from operational tables. Surface this so the consumer
     // can show a caveat: "not all checks are active" rather than silently missing them.

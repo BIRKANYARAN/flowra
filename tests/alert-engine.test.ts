@@ -2,7 +2,7 @@
 // Unit tests for lib/engines/alert.engine.ts
 
 import { describe, it, expect } from 'vitest'
-import { evaluateAlerts, type AlertInputs } from '@/lib/engines/alert.engine'
+import { evaluateAlerts, evaluateCFOAlerts, type AlertInputs, type CFOAccuracyInputs } from '@/lib/engines/alert.engine'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Base "clean" inputs — no alerts should fire
@@ -238,5 +238,85 @@ describe('evaluateAlerts', () => {
     const alert = alerts.find(a => a.rule_type === 'CASH_RUNWAY_90')
     expect(alert).toBeDefined()
     expect(alert!.detail).not.toContain('zarar')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CFO Accuracy Alerts
+// ─────────────────────────────────────────────────────────────────────────────
+
+const CLEAN_CFO: CFOAccuracyInputs = {
+  trialBalanceImbalance:  0,
+  cashBookBalance:        100_000,
+  bankStatementBalance:   100_000,
+  fifoIntegrityIssues:    0,
+  legalReserveShortfall:  0,
+}
+
+const TEST_COMPANY_ID = 'company-test-uuid'
+
+describe('CFO accuracy alerts', () => {
+
+  it('balanced trial balance (imbalance = 0) → no BS alert', () => {
+    const alerts = evaluateCFOAlerts({ ...CLEAN_CFO, trialBalanceImbalance: 0 }, TEST_COMPANY_ID)
+    expect(alerts.find(a => a.rule_type === 'BS_IMBALANCED')).toBeUndefined()
+    expect(alerts.find(a => a.rule_type === 'BS_ROUNDING')).toBeUndefined()
+  })
+
+  it('trialBalanceImbalance ≥ 1 → critical BS_IMBALANCED', () => {
+    const alerts = evaluateCFOAlerts({ ...CLEAN_CFO, trialBalanceImbalance: 5.00 }, TEST_COMPANY_ID)
+    const alert = alerts.find(a => a.rule_type === 'BS_IMBALANCED')
+    expect(alert).toBeDefined()
+    expect(alert!.severity).toBe('critical')
+    expect(alert!.detail).toContain('5.00')
+  })
+
+  it('trialBalanceImbalance 0.05 → warning BS_ROUNDING', () => {
+    const alerts = evaluateCFOAlerts({ ...CLEAN_CFO, trialBalanceImbalance: 0.05 }, TEST_COMPANY_ID)
+    const rounding = alerts.find(a => a.rule_type === 'BS_ROUNDING')
+    const imbalanced = alerts.find(a => a.rule_type === 'BS_IMBALANCED')
+    expect(rounding).toBeDefined()
+    expect(rounding!.severity).toBe('warning')
+    expect(imbalanced).toBeUndefined()
+  })
+
+  it('fifoIntegrityIssues > 0 → critical FIFO_INTEGRITY with count in message', () => {
+    const alerts = evaluateCFOAlerts({ ...CLEAN_CFO, fifoIntegrityIssues: 3 }, TEST_COMPANY_ID)
+    const alert = alerts.find(a => a.rule_type === 'FIFO_INTEGRITY')
+    expect(alert).toBeDefined()
+    expect(alert!.severity).toBe('critical')
+    expect(alert!.detail).toContain('3')
+  })
+
+  it('bank gap > 100 → warning BANK_RECONCILIATION_GAP', () => {
+    const alerts = evaluateCFOAlerts({
+      ...CLEAN_CFO,
+      cashBookBalance:      100_000,
+      bankStatementBalance: 99_800,  // gap = 200 > 100
+    }, TEST_COMPANY_ID)
+    const alert = alerts.find(a => a.rule_type === 'BANK_RECONCILIATION_GAP')
+    expect(alert).toBeDefined()
+    expect(alert!.severity).toBe('warning')
+  })
+
+  it('bank gap ≤ 100 → no BANK_RECONCILIATION_GAP alert', () => {
+    const alerts = evaluateCFOAlerts({
+      ...CLEAN_CFO,
+      cashBookBalance:      100_000,
+      bankStatementBalance: 99_950,  // gap = 50 ≤ 100
+    }, TEST_COMPANY_ID)
+    expect(alerts.find(a => a.rule_type === 'BANK_RECONCILIATION_GAP')).toBeUndefined()
+  })
+
+  it('legalReserveShortfall > 0 → warning LEGAL_RESERVE_SHORTFALL', () => {
+    const alerts = evaluateCFOAlerts({ ...CLEAN_CFO, legalReserveShortfall: 5_000 }, TEST_COMPANY_ID)
+    const alert = alerts.find(a => a.rule_type === 'LEGAL_RESERVE_SHORTFALL')
+    expect(alert).toBeDefined()
+    expect(alert!.severity).toBe('warning')
+  })
+
+  it('all clean inputs → empty array', () => {
+    const alerts = evaluateCFOAlerts(CLEAN_CFO, TEST_COMPANY_ID)
+    expect(alerts).toHaveLength(0)
   })
 })

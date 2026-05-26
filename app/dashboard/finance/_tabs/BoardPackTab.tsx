@@ -12,6 +12,10 @@
 import { useState }  from 'react'
 import Link          from 'next/link'
 import { fmtTRY }   from '@/lib/format'
+import {
+  CFO_PACK_MANIFEST,
+  type CFOPackReport,
+} from '@/lib/reports/cfo-pack-manifest'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -75,10 +79,19 @@ interface DocumentLinks {
   income_statement: string
 }
 
+interface Completeness {
+  total:              number
+  required_total:     number
+  available:          number
+  required_available: number
+  pct_complete:       number
+}
+
 interface BoardPack {
   period:       string
   generated_at: string
   company_name: string
+  completeness?: Completeness
   data: {
     executive_summary: ExecSummary
     balance_sheet:     BalanceSheetData | null
@@ -155,6 +168,28 @@ function fmtRatio(v: number | null, decimals = 2): string {
 function fmtPct(v: number | null): string {
   if (v === null) return '—'
   return `%${v.toFixed(1)}`
+}
+
+function categoryLabel(cat: CFOPackReport['category']): string {
+  switch (cat) {
+    case 'accounting':          return 'Muhasebe'
+    case 'financial_statement': return 'Finansal Tablo'
+    case 'tax':                 return 'Vergi'
+    case 'partner':             return 'Ortak'
+    case 'executive':           return 'Yönetim'
+    default:                    return cat
+  }
+}
+
+function categoryColor(cat: CFOPackReport['category']): string {
+  switch (cat) {
+    case 'accounting':          return 'bg-[#eff6ff] text-[#1d4ed8]'
+    case 'financial_statement': return 'bg-[#f0fdf4] text-[#166534]'
+    case 'tax':                 return 'bg-[#fffbeb] text-[#92400e]'
+    case 'partner':             return 'bg-[#faf5ff] text-[#7e22ce]'
+    case 'executive':           return 'bg-[#fff1f2] text-[#9f1239]'
+    default:                    return 'bg-[#f8fafc] text-[#64748b]'
+  }
 }
 
 // ── Preview card sub-components ───────────────────────────────────────────────
@@ -371,15 +406,86 @@ export function BoardPackTab({ userId: _userId, companyId: _companyId }: Props) 
 
       {/* ── Idle prompt ─────────────────────────────────────────────────────── */}
       {state === 'idle' && (
-        <div className="bg-[#f8fafc] border border-dashed border-[#e2e8f0] rounded px-6 py-10 text-center">
-          <div className="text-2xl mb-3">📋</div>
-          <div className="text-sm font-black text-[#0f172a] mb-1">
-            Yönetim Paketi
+        <div className="space-y-4">
+
+          {/* Intro card */}
+          <div className="bg-[#f8fafc] border border-dashed border-[#e2e8f0] rounded px-6 py-8 text-center">
+            <div className="text-2xl mb-3">📋</div>
+            <div className="text-sm font-black text-[#0f172a] mb-1">
+              Yönetim Paketi
+            </div>
+            <div className="text-xs text-[#94a3b8] max-w-sm mx-auto leading-relaxed">
+              Dönem seçin ve &ldquo;Paket Oluştur&rdquo; butonuna tıklayın.
+              Tüm finansal tablolar, temel rasyolar ve yönetim uyarıları tek bir pakette derlenir.
+            </div>
           </div>
-          <div className="text-xs text-[#94a3b8] max-w-sm mx-auto leading-relaxed">
-            Dönem seçin ve &ldquo;Paket Oluştur&rdquo; butonuna tıklayın.
-            Tüm finansal tablolar, temel rasyolar ve yönetim uyarıları tek bir pakette derlenir.
+
+          {/* Manifest checklist */}
+          <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+            <div className="px-4 py-3 border-b border-[#e2e8f0] bg-[#f8fafc] flex items-center justify-between">
+              <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#64748b]">
+                Pakete Dahil Edilecek Raporlar
+              </span>
+              <span className="text-[10px] text-[#94a3b8]">
+                {CFO_PACK_MANIFEST.filter(r => r.required).length} zorunlu · {CFO_PACK_MANIFEST.filter(r => !r.required).length} opsiyonel
+              </span>
+            </div>
+            <div className="divide-y divide-[#f1f5f9]">
+              {CFO_PACK_MANIFEST.map(report => (
+                <div key={report.id} className="flex items-center justify-between px-4 py-2.5 gap-3">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-4 h-4 rounded border border-[#e2e8f0] bg-[#f8fafc] flex-shrink-0 flex items-center justify-center">
+                      <span className="text-[8px] text-[#94a3b8]">○</span>
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-xs font-semibold text-[#334155] truncate">{report.title}</div>
+                      <div className="text-[9px] text-[#94a3b8]">{report.title_en}</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    <span className={`px-1.5 py-0.5 rounded text-[9px] font-semibold ${categoryColor(report.category)}`}>
+                      {categoryLabel(report.category)}
+                    </span>
+                    <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
+                      report.required
+                        ? 'bg-[#0f172a] text-white'
+                        : 'bg-[#f1f5f9] text-[#64748b]'
+                    }`}>
+                      {report.required ? 'Zorunlu' : 'Opsiyonel'}
+                    </span>
+                    <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-[#f1f5f9] text-[#94a3b8]">
+                      Bekliyor
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
+
+          {/* Pack download info */}
+          <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
+            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
+              Pack&apos;i İndir
+            </div>
+            <div className="text-xs text-[#64748b] leading-relaxed mb-3">
+              &ldquo;Paket Oluştur&rdquo; butonuna tıklayarak aşağıdaki içeriklerle bir yönetim paketi oluşturabilirsiniz:
+            </div>
+            <ul className="space-y-1">
+              {[
+                'Tüm finansal tablolar (Bilanço, Gelir Tablosu, Nakit Akışı)',
+                'Temel finansal rasyolar ve yorum',
+                'Karar uyarıları ve risk analizi',
+                'Ortak sermaye özeti',
+                'Mizan ve KDV özeti',
+              ].map((item, i) => (
+                <li key={i} className="flex items-start gap-2 text-xs text-[#334155]">
+                  <span className="text-pos-text font-black mt-0.5">✓</span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+
         </div>
       )}
 
