@@ -68,6 +68,39 @@ export interface DebtBurdenResult {
   summary: DebtBurdenSummary
 }
 
+/* ── Projection row ─────────────────────────────────────────────────────────── */
+export interface ProjectionRow {
+  month:       number
+  ym:          string
+  revenue:     number
+  cogs:        number
+  holding:     number
+  grossProfit: number
+  expense:     number
+  netProfit:   number
+  cumProfit:   number
+}
+
+/** Yearly aggregate of a 12-month projection */
+export interface YearlyTotals {
+  totalRevenue:     number
+  totalCOGS:        number
+  totalHolding:     number
+  totalGrossProfit: number
+  avgMargin:        number
+  yearlyExpenses:   number
+  totalNetProfit:   number
+  breakEvenUnits:   number
+}
+
+/** Debt-status style tokens */
+export interface DebtStatusStyle {
+  label:  string
+  color:  string
+  bg:     string
+  border: string
+}
+
 /* ── Props ──────────────────────────────────────────────────────────────────── */
 export interface SimulationClientProps {
   userId:             string

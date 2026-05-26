@@ -21,13 +21,16 @@ import { CURRENCIES, type Currency, type Product, type RecurringProjectionMonth 
 import { round2 } from '@/lib/calc'
 import { getSalePrice, getSaleCurrency, getLegacyProductCost } from '@/lib/product-adapter'
 import {
-  currSym, fmtC, pct, fmtMonth,
+  currSym, fmtC, pct,
   ZERO_SIM_EQ,
   type SimEqResult, type DebtBurdenResult, type SimulationClientProps,
 } from './_components/types'
 import { MiniBar } from './_components/MiniBar'
 import { InputPanel } from './_components/InputPanel'
 import { ProjectionTable } from './_components/ProjectionTable'
+import { SimulationInsightsPanel } from './_components/SimulationInsightsPanel'
+import { SimulationPressureZone } from './_components/SimulationPressureZone'
+import type { YearlyTotals } from './_components/types'
 
 export type { SimulationClientProps }
 
@@ -278,7 +281,7 @@ export default function SimulationClient({
   }, [qty, netPrice, unitCost, effectiveHoldingPU, effectiveProfitPU, recurringProjection])
 
   /* ── Yearly totals ──────────────────────────────────────────────────────── */
-  const yearly = useMemo(() => {
+  const yearly = useMemo((): YearlyTotals => {
     const totalRevenue     = round2(projection.reduce((s, r) => s + r.revenue, 0))
     const totalCOGS        = round2(projection.reduce((s, r) => s + r.cogs, 0))
     const totalHolding     = round2(projection.reduce((s, r) => s + r.holding, 0))
@@ -483,159 +486,20 @@ export default function SimulationClient({
         onExtraPartnerDebtChange={setExtraPartnerDebt}
       />
 
-      {/* ── Zone 2: Revenue timeline chart (CSS bars) ─────────────────────────── */}
-      {hasInputs && (
-        <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
-          <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">
-            Gelir Çizelgesi — 12 Ay
-          </h2>
-          <div className="grid grid-cols-12 gap-1 items-end h-24">
-            {projection.map(r => {
-              const heightPct = maxRevenue > 0 ? Math.max(4, (r.revenue / maxRevenue) * 100) : 4
-              const isProfit  = r.netProfit >= 0
-              return (
-                <div key={r.ym} className="flex flex-col items-center gap-1 group relative">
-                  <div
-                    className={`w-full rounded-t transition-all ${isProfit ? 'bg-pos group-hover:bg-pos-light' : 'bg-neg-light group-hover:bg-neg'}`}
-                    style={{ height: `${heightPct}%` }}
-                  />
-                  <div className="text-[8px] text-[#94a3b8] font-semibold leading-none">
-                    {fmtMonth(r.ym).slice(0, 3)}
-                  </div>
-                  {/* Tooltip on hover */}
-                  <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block z-10 bg-[#0f172a] text-white rounded px-2 py-1 text-[10px] whitespace-nowrap">
-                    <div className="font-bold">{fmtMonth(r.ym)}</div>
-                    <div>Gelir: {fmtC(toDisplay(r.revenue), S)}</div>
-                    <div className={r.netProfit >= 0 ? 'text-pos' : 'text-neg'}>
-                      Net: {fmtC(toDisplay(r.netProfit), S)}
-                    </div>
-                    <div className={r.cumProfit >= 0 ? 'text-pos' : 'text-neg'}>
-                      Kümülatif: {fmtC(toDisplay(r.cumProfit), S)}
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-          <div className="flex items-center gap-4 mt-3 text-[10px] text-[#94a3b8]">
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-pos inline-block" /> Kârlı ay</span>
-            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-neg-light inline-block" /> Zararlı ay</span>
-            <span className="ml-auto">Sütun yüksekliği = aylık gelir oranı</span>
-          </div>
-        </div>
-      )}
-
-      {/* ── Zone 2: Tax effect ───────────────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
-        <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
-          Vergi Etkisi — Yıllık Tahmin
-        </h2>
-        <div className="grid grid-cols-3 gap-4 mb-3">
-          <div>
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Net Kâr (Vergi Öncesi)</div>
-            <div className={`text-lg font-black tabular-nums ${!hasInputs ? 'text-[#cbd5e1]' : yearly.totalNetProfit >= 0 ? 'text-[#1e293b]' : 'text-neg'}`}>
-              {hasInputs ? fmtC(toDisplay(yearly.totalNetProfit), S) : '—'}
-            </div>
-          </div>
-          <div>
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">
-              Kurumlar Vergisi (%{CORP_TAX_RATE})
-            </div>
-            <div className="text-lg font-black tabular-nums text-warn">
-              {estimatedCorpTax > 0 ? `−${fmtC(toDisplay(estimatedCorpTax), S)}` : '—'}
-            </div>
-            <div className="text-[10px] text-[#94a3b8] mt-0.5">Tahmini KV</div>
-          </div>
-          <div>
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Vergi Sonrası Net</div>
-            <div className={`text-lg font-black tabular-nums ${!hasInputs ? 'text-[#cbd5e1]' : netAfterCorpTax >= 0 ? 'text-pos-text' : 'text-neg'}`}>
-              {hasInputs ? fmtC(toDisplay(netAfterCorpTax), S) : '—'}
-            </div>
-            <div className="text-[10px] text-[#94a3b8] mt-0.5">Ortaklara dağıtılabilir</div>
-          </div>
-        </div>
-        {hasInputs && yearly.totalNetProfit > 0 && (
-          <>
-            <div className="flex rounded-full h-1.5 overflow-hidden bg-[#f1f5f9]">
-              <div className="bg-pos h-1.5" style={{ width: `${100 - CORP_TAX_RATE}%` }} />
-              <div className="bg-warn-light h-1.5" style={{ width: `${CORP_TAX_RATE}%` }} />
-            </div>
-            <div className="flex justify-between mt-0.5">
-              <span className="text-[10px] text-pos-text font-semibold">%{100 - CORP_TAX_RATE} size kalır</span>
-              <span className="text-[10px] text-warn font-semibold">%{CORP_TAX_RATE} kurumlar vergisi</span>
-            </div>
-          </>
-        )}
-        {hasInputs && yearly.yearlyExpenses > 0 && (
-          <div className="mt-2 pt-2 border-t border-[#e2e8f0] text-[10px] text-[#94a3b8]">
-            Gider matrahı {fmtC(toDisplay(yearly.yearlyExpenses), S)} vergiden düşürülmüştür.
-            KDV ayrıca Analitik sayfasında gösterilir.
-          </div>
-        )}
-      </div>
-
-      {/* ── Zone 2: Partner impact ────────────────────────────────────────────── */}
-      {partnerCount > 0 && yearly.totalNetProfit !== 0 && (
-        <div className={`border rounded p-4 ${
-          yearly.totalNetProfit > 0 ? 'bg-pos-light border-pos-light' : 'bg-neg-light border-neg-light'
-        }`}>
-          <div className="flex items-center justify-between mb-2">
-            <div>
-              <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">
-                Ortak Dengesi Nasıl Etkilenir?
-              </h2>
-              <p className="text-xs text-[#64748b]">
-                {yearly.totalNetProfit > 0
-                  ? `Vergi sonrası ${fmtC(toDisplay(netAfterCorpTax), S)} dağıtılır`
-                  : 'Zarar durumunda ortak dağıtımı yapılamaz'}
-              </p>
-            </div>
-            <Link href="/dashboard/partners" className="text-xs text-brand-light font-semibold hover:underline shrink-0">
-              Ortak sayfası →
-            </Link>
-          </div>
-
-          {yearly.totalNetProfit > 0 && partnerEq.entries.length > 0 ? (
-            <>
-              <div className="grid gap-2 mb-2"
-                style={{ gridTemplateColumns: `repeat(${Math.min(partnerEq.entries.length, 4)}, 1fr)` }}>
-                {partnerEq.entries.map(e => (
-                  <div key={e.partner_id} className="bg-white rounded px-3 py-2 text-center border border-pos-light">
-                    <div className="text-xs text-[#64748b] font-semibold truncate mb-0.5">{e.partner_name}</div>
-                    <div className="text-base font-black tabular-nums text-pos-text">
-                      {fmtC(toDisplay(e.total_payout), S)}
-                    </div>
-                    <div className="text-[10px] text-[#94a3b8] mt-0.5">%{(e.share_ratio * 100).toFixed(0)} pay</div>
-                    {e.equalization_amount > 0.01 && (
-                      <div className="text-[10px] text-warn-text font-semibold mt-0.5">
-                        +{fmtC(toDisplay(e.equalization_amount), S)} eşitleme
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-              {partnerEq.total_equalization > 0.01 ? (
-                <div className="text-xs text-warn-text bg-warn-light rounded px-3 py-2 border border-warn-light">
-                  ⚖ Bu plan <span className="font-bold">{fmtC(toDisplay(partnerEq.total_equalization), S)}</span> eşitleme açığını kapatır.{' '}
-                  {partnerEq.remaining_after_eq > 0.01
-                    ? `Kalan ${fmtC(toDisplay(partnerEq.remaining_after_eq), S)} hisse oranına göre dağıtılır.`
-                    : 'Tüm tutar eşitlemeye gider.'}
-                </div>
-              ) : (
-                <div className="text-xs text-pos-text bg-pos-light rounded px-3 py-2 border border-pos-light">
-                  ✓ Ortak dengesi sağlıklı — tüm dağıtım hisse oranına göre yapılır.
-                </div>
-              )}
-            </>
-          ) : yearly.totalNetProfit > 0 ? (
-            <div className="text-xs text-[#94a3b8]">Yükleniyor...</div>
-          ) : (
-            <div className="text-xs text-neg-text bg-neg-light rounded px-3 py-2 border border-neg-light">
-              ⚠ Zarar durumunda ortak dağıtımı yapılamaz. Parametreleri ayarlayarak kâra geçin.
-            </div>
-          )}
-        </div>
-      )}
+      {/* ── Zone 2: Revenue chart + Tax effect + Partner impact ──────────────── */}
+      <SimulationInsightsPanel
+        hasInputs={hasInputs}
+        projection={projection}
+        maxRevenue={maxRevenue}
+        toDisplay={toDisplay}
+        S={S}
+        CORP_TAX_RATE={CORP_TAX_RATE}
+        yearly={yearly}
+        estimatedCorpTax={estimatedCorpTax}
+        netAfterCorpTax={netAfterCorpTax}
+        partnerCount={partnerCount}
+        partnerEq={partnerEq}
+      />
 
       {/* ── Zone 3: Monthly projection table ─────────────────────────────────── */}
       <ProjectionTable
@@ -696,174 +560,25 @@ export default function SimulationClient({
         </div>
       </div>
 
-      {/* ── Zone 4: Visual Pressure Timeline ─────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
-            Finansal Baskı Zaman Çizelgesi — 12 Ay
-          </h2>
-          {hasScenario && (
-            <span className="text-[10px] bg-warn-light text-warn-text border border-warn-light rounded px-2 py-0.5 font-bold">
-              Senaryo aktif{collectionDelayPct > 0 ? ` · %${collectionDelayPct} gecikme` : ''}{extraDebtTRY > 0 ? ` · +${fmtC(extraDebtTRY, '₺')} borç` : ''}
-            </span>
-          )}
-        </div>
-        <div className="grid grid-cols-12 gap-1.5">
-          {activeProjection.map(r => {
-            const isKritik = r.cumProfit < 0
-            const isDikkat = !isKritik && r.netProfit < 0
-            const bg   = isKritik ? 'bg-neg-light border-neg-light'     : isDikkat ? 'bg-warn-light border-warn-light'     : 'bg-pos-light border-pos-light'
-            const text = isKritik ? 'text-neg-text'                   : isDikkat ? 'text-warn-text'                    : 'text-pos-text'
-            const lbl  = isKritik ? 'Kritik'                         : isDikkat ? 'Dikkat'                            : 'Güvenli'
-            return (
-              <div key={r.ym}
-                className={`border rounded p-1.5 flex flex-col items-center gap-0.5 group relative cursor-default ${bg}`}>
-                <div className={`text-[9px] font-bold leading-none ${text}`}>
-                  {fmtMonth(r.ym).slice(0, 3)}
-                </div>
-                <div className={`text-[8px] font-semibold leading-none ${text} opacity-80`}>{lbl}</div>
-                <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:block z-10 bg-[#0f172a] text-white rounded px-2 py-1.5 text-[10px] whitespace-nowrap pointer-events-none">
-                  <div className="font-bold mb-0.5">{fmtMonth(r.ym)}</div>
-                  <div>Gelir: {fmtC(toDisplay(r.revenue), S)}</div>
-                  <div className={r.netProfit >= 0 ? 'text-pos' : 'text-neg'}>
-                    Net: {fmtC(toDisplay(r.netProfit), S)}
-                  </div>
-                  <div className={r.cumProfit >= 0 ? 'text-pos' : 'text-neg'}>
-                    Kümülatif: {fmtC(toDisplay(r.cumProfit), S)}
-                  </div>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-        <div className="flex items-center gap-4 mt-3 text-[10px] text-[#94a3b8]">
-          <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-sm bg-pos-light border border-pos inline-block" />
-            Güvenli
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-sm bg-warn-light border border-warn inline-block" />
-            Dikkat
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-sm bg-neg-light border border-neg inline-block" />
-            Kritik
-          </span>
-          <span className="ml-auto text-[10px] text-[#cbd5e1]">Hover = detay</span>
-        </div>
-      </div>
-
-      {/* ── Zone 4: Runway Forecast ───────────────────────────────────────────── */}
-      {hasInputs && (
-        <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
-          <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
-            Pist Tahmini — Güvenli Bölgeye Ne Zaman Ulaşılır?
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">İlk Kümülatif Kâr</div>
-              <div className={`text-xl font-black tabular-nums ${turnsPositiveMonth ? 'text-pos-text' : 'text-neg'}`}>
-                {turnsPositiveMonth ? `${turnsPositiveMonth}. Ay` : '12+ ay'}
-              </div>
-              <div className="text-[10px] text-[#94a3b8] mt-0.5">Kümülatif nakit pozitife geçer</div>
-            </div>
-            <div>
-              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">
-                {adjustedOutstanding > 0 ? 'Borç Temizlenir' : 'Borç Durumu'}
-              </div>
-              <div className={`text-xl font-black tabular-nums ${
-                adjustedOutstanding <= 0 ? 'text-pos-text'
-                : adjustedMonthsToClear === null ? 'text-neg'
-                : adjustedMonthsToClear > 24 ? 'text-neg'
-                : adjustedMonthsToClear > 12 ? 'text-warn-text'
-                : 'text-pos-text'
-              }`}>
-                {adjustedOutstanding <= 0 ? 'Borç yok'
-                  : adjustedMonthsToClear === null ? '∞'
-                  : `${adjustedMonthsToClear} ay`}
-              </div>
-              <div className="text-[10px] text-[#94a3b8] mt-0.5">Dağıtım kapasitesine göre</div>
-            </div>
-            <div>
-              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">12 Ay Sonu Kümülatif</div>
-              <div className={`text-xl font-black tabular-nums ${(activeProjection[11]?.cumProfit ?? 0) >= 0 ? 'text-pos-text' : 'text-neg'}`}>
-                {activeProjection[11] ? fmtC(toDisplay(activeProjection[11].cumProfit), S) : '—'}
-              </div>
-              <div className="text-[10px] text-[#94a3b8] mt-0.5">Yıl sonu kümülatif nakit</div>
-            </div>
-          </div>
-          {stableFromMonth ? (
-            <div className="mt-3 bg-pos-light border border-pos-light rounded px-3 py-2 text-xs text-pos-text font-semibold">
-              ✓ {stableFromMonth}. aydan itibaren güvenli bölge — kümülatif nakit kalıcı olarak pozitif
-            </div>
-          ) : turnsPositiveMonth ? (
-            <div className="mt-3 bg-warn-light border border-warn-light rounded px-3 py-2 text-xs text-warn-text font-semibold">
-              ⚠ {turnsPositiveMonth}. ayda pozitife geçiyor ancak sonraki aylarda dalgalanma var
-            </div>
-          ) : (
-            <div className="mt-3 bg-neg-light border border-neg-light rounded px-3 py-2 text-xs text-neg-text font-semibold">
-              ✗ 12 ay içinde kümülatif pozitife geçilemiyor — parametreleri gözden geçirin
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ── Zone 4: Debt burden tracking ─────────────────────────────────────── */}
-      <div className={`border rounded p-4 ${ds.bg} ${ds.border}`}>
-        <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
-          Borç Baskısı Takibi
-        </h2>
-        {debtBurdenLoading ? (
-          <div className="text-xs text-[#94a3b8]">Yükleniyor...</div>
-        ) : (
-          <>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-3">
-              <div>
-                <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">
-                  Toplam Borç{extraDebtTRY > 0 && <span className="text-warn ml-1">(+senaryo)</span>}
-                </div>
-                <div className="text-lg font-black tabular-nums text-[#1e293b]">
-                  {adjustedOutstanding > 0 ? fmtC(toDisplay(adjustedOutstanding), S) : '—'}
-                </div>
-                <div className="text-[10px] text-[#94a3b8]">
-                  Ortaklara kalan{extraDebtTRY > 0 && ` · +${fmtC(toDisplay(extraDebtTRY), S)} senaryo`}
-                </div>
-              </div>
-              <div>
-                <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Aylık Dağıtım Kapasitesi</div>
-                <div className={`text-lg font-black tabular-nums ${monthlyDistributable >= 0 ? 'text-pos-text' : 'text-neg'}`}>
-                  {hasInputs ? fmtC(toDisplay(monthlyDistributable), S) : '—'}
-                </div>
-                <div className="text-[10px] text-[#94a3b8]">Vergi sonrası / 12</div>
-              </div>
-              <div>
-                <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Tahmini Temizlenme</div>
-                <div className={`text-lg font-black tabular-nums ${
-                  adjustedMonthsToClear === null ? 'text-[#cbd5e1]'
-                  : adjustedMonthsToClear > 24 ? 'text-neg'
-                  : adjustedMonthsToClear > 12 ? 'text-warn-text'
-                  : 'text-pos-text'
-                }`}>
-                  {adjustedOutstanding <= 0 ? '—'
-                    : adjustedMonthsToClear === null ? '∞'
-                    : `${adjustedMonthsToClear} ay`}
-                </div>
-                <div className="text-[10px] text-[#94a3b8]">Borç / aylık kapasite</div>
-              </div>
-              <div>
-                <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Ortak Sayısı</div>
-                <div className="text-lg font-black tabular-nums text-[#334155]">
-                  {debtBurden?.summary.partner_count ?? partnerCount}
-                </div>
-                <div className="text-[10px] text-[#94a3b8]">Aktif ortak</div>
-              </div>
-            </div>
-            <div className={`rounded px-3 py-2 border text-xs font-semibold ${ds.color} ${ds.bg} ${ds.border}`}>
-              {ds.label}
-            </div>
-          </>
-        )}
-      </div>
+      {/* ── Zone 4: Pressure Timeline + Runway Forecast + Debt burden ─────────── */}
+      <SimulationPressureZone
+        hasInputs={hasInputs}
+        hasScenario={hasScenario}
+        collectionDelayPct={collectionDelayPct}
+        extraDebtTRY={extraDebtTRY}
+        activeProjection={activeProjection}
+        toDisplay={toDisplay}
+        S={S}
+        turnsPositiveMonth={turnsPositiveMonth}
+        stableFromMonth={stableFromMonth}
+        adjustedOutstanding={adjustedOutstanding}
+        adjustedMonthsToClear={adjustedMonthsToClear}
+        monthlyDistributable={monthlyDistributable}
+        debtBurden={debtBurden}
+        partnerCount={partnerCount}
+        debtBurdenLoading={debtBurdenLoading}
+        ds={ds}
+      />
 
     </div>
   )
