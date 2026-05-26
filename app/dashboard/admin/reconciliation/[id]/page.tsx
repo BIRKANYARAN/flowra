@@ -30,27 +30,17 @@ import type {
   GovernanceFinding,
 } from '@/types/reconciliation'
 import SignoffPanel from './SignoffPanel'
+import { fmtTRY, fmtDate } from '@/lib/format'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-const tryFmt = new Intl.NumberFormat('tr-TR', {
-  style: 'currency', currency: 'TRY', maximumFractionDigits: 0,
-})
 function fmt(n: number | null | undefined): string {
   if (n == null) return '—'
-  return tryFmt.format(n)
+  return fmtTRY(n, 0)
 }
 function pct(n: number | null | undefined): string {
   if (n == null) return '—'
   return n.toFixed(2) + '%'
-}
-function fmtDate(iso: string | null | undefined): string {
-  if (!iso) return '—'
-  try {
-    return new Date(iso).toLocaleDateString('tr-TR', {
-      day: '2-digit', month: '2-digit', year: 'numeric',
-    })
-  } catch { return iso }
 }
 
 // ── SectionBlock helper ───────────────────────────────────────────────────────

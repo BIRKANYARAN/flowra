@@ -12,6 +12,7 @@ import Link from 'next/link'
 import { createClient }     from '@/lib/supabase-server'
 import { resolveCompanyId } from '@/lib/resolve-company'
 import { getGlMode }        from '@/lib/middleware/period-guard'
+import { fmtDate, fmtRelative } from '@/lib/format'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -95,24 +96,7 @@ const RECON_STATUS_MAP = {
   archived:         { label: 'Arşiv',        cls: 'bg-[#f8fafc] text-[#94a3b8]'  },
 } as const
 
-function fmtDate(iso: string): string {
-  try {
-    return new Date(iso).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' })
-  } catch { return iso }
-}
-
-function fmtRelative(iso: string): string {
-  try {
-    const diff = Date.now() - new Date(iso).getTime()
-    const mins = Math.floor(diff / 60_000)
-    if (mins < 1)  return 'az önce'
-    if (mins < 60) return `${mins}d önce`
-    const hrs = Math.floor(mins / 60)
-    if (hrs < 24)  return `${hrs}sa önce`
-    const days = Math.floor(hrs / 24)
-    return `${days}g önce`
-  } catch { return '' }
-}
+// fmtDate and fmtRelative are imported from @/lib/format
 
 // ── Data fetchers ─────────────────────────────────────────────────────────────
 

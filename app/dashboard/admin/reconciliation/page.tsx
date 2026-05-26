@@ -6,8 +6,9 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase-server'
+import { createClient }  from '@/lib/supabase-server'
 import { resolveCompanyId } from '@/lib/resolve-company'
+import { fmtDate }       from '@/lib/format'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -53,13 +54,7 @@ function confidenceBadge(score: number | null) {
   )
 }
 
-function fmtDate(iso: string): string {
-  try {
-    return new Date(iso).toLocaleDateString('tr-TR', {
-      day: '2-digit', month: '2-digit', year: 'numeric',
-    })
-  } catch { return iso }
-}
+// fmtDate imported from @/lib/format
 
 // ── Data fetch ────────────────────────────────────────────────────────────────
 
