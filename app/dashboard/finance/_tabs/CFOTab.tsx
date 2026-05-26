@@ -15,6 +15,7 @@
 import Link                      from 'next/link'
 import { ObservationRail }       from '@/app/dashboard/_shared/ObservationRail'
 import { WorkingCapitalSection } from '@/app/dashboard/finance/_shared/WorkingCapitalSection'
+import { RetainedEarningsService } from '@/lib/services/finance/retained-earnings.service'
 import { BalanceSheetService }   from '@/lib/services/balance-sheet.service'
 import { TaxService }            from '@/lib/services/tax.service'
 import { FinanceService }        from '@/lib/services/finance.service'
@@ -159,7 +160,9 @@ export async function CFOTab({ userId, companyId }: Props) {
     return { period, checklist }
   })())
 
-  const [balanceSheet, financialSummary, kdvResult, corporateTaxResult, partnerBalances, cfoMetrics, riskData, quarterlyReport, dupExpenses] =
+  const currentYear = parseInt(today.slice(0, 4), 10)
+
+  const [balanceSheet, financialSummary, kdvResult, corporateTaxResult, partnerBalances, cfoMetrics, riskData, quarterlyReport, dupExpenses, retainedEarnings] =
     await Promise.all([
       sqt('Bilanço',          BalanceSheetService.compute(userId, companyId, today, supabase)),
       sqt('Gelir Tablosu',    FinanceService.getFinancialSummary(userId, companyId, period, undefined, ctx)),
@@ -177,6 +180,7 @@ export async function CFOTab({ userId, companyId }: Props) {
         .gte('expense_date', dupFrom)
         .neq('payment_status', 'cancelled')
         .then(r => r.data ?? []),
+      RetainedEarningsService.getStatement(companyId, userId, supabase, currentYear).catch(() => null),
     ])
 
   const duplicates = detectDuplicates(
@@ -825,6 +829,88 @@ export async function CFOTab({ userId, companyId }: Props) {
         userId={userId}
         supabase={supabase}
       />
+
+      {/* Kâr/Zarar Dağılımı — Retained Earnings Roll-Forward */}
+      {retainedEarnings && (() => {
+        const re = retainedEarnings
+        const discrepancyOk = re.discrepancy_try !== null && Math.abs(re.discrepancy_try) <= 100
+        const discrepancyWarn = re.discrepancy_try !== null && Math.abs(re.discrepancy_try) > 100
+
+        const rows = [
+          { label: 'Açılış Geçmiş Yıl Karı',                          value: re.opening_retained_earnings_try, color: 'text-[#0f172a]'  },
+          { label: `Dönem Net Kar/(Zararı) — ${currentYear}`,          value: re.net_income_try,                color: re.net_income_try >= 0 ? 'text-pos-text' : 'text-neg'   },
+          { label: 'Yasal Yedek Akçe Ayrımı (TTK 519 — %5)',           value: -re.legal_reserve_transfer_try,   color: re.legal_reserve_transfer_try > 0 ? 'text-neg-text' : 'text-[#94a3b8]' },
+          { label: 'Kâr Payı Dağıtımı (Onaylanmış)',                   value: -re.dividends_declared_try,       color: re.dividends_declared_try > 0 ? 'text-neg-text' : 'text-[#94a3b8]'    },
+        ]
+
+        return (
+          <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+                  Kâr/Zarar Dağılımı — Özkaynak Roll-Forward
+                </div>
+                <div className="text-[10px] text-[#94a3b8] mt-0.5">
+                  {re.period_from} — {re.period_to} · TTK 519 Yasal Yedek Akçe
+                </div>
+              </div>
+              {re.balance_sheet_equity_try !== null && (
+                <span className={`text-[10px] font-bold px-2 py-1 rounded border ${
+                  discrepancyOk
+                    ? 'bg-pos-light border-pos-light text-pos-text'
+                    : 'bg-warn-light border-warn-light text-warn-text'
+                }`}>
+                  {discrepancyOk ? '✓ Bilanço ile uyumlu' : '⚠ Fark var'}
+                </span>
+              )}
+            </div>
+            <div className="border border-[#e2e8f0] rounded overflow-hidden mb-3">
+              <table className="w-full text-xs">
+                <tbody className="divide-y divide-[#f1f5f9]">
+                  {rows.map((row, i) => (
+                    <tr key={i} className="bg-white hover:bg-[#f8fafc]/60">
+                      <td className="px-4 py-2 text-[#334155]">{row.label}</td>
+                      <td className={`px-4 py-2 text-right font-mono tabular-nums ${row.color}`}>
+                        {fmtTRY(row.value)}
+                      </td>
+                    </tr>
+                  ))}
+                  <tr className="bg-[#f8fafc] border-t-2 border-[#e2e8f0]">
+                    <td className="px-4 py-2.5 font-black text-[#0f172a]">Kapanış Geçmiş Yıl Karı</td>
+                    <td className={`px-4 py-2.5 text-right font-mono font-black tabular-nums ${
+                      re.closing_retained_earnings_try >= 0 ? 'text-pos-text' : 'text-neg'
+                    }`}>
+                      {fmtTRY(re.closing_retained_earnings_try)}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            {re.balance_sheet_equity_try !== null && (
+              <div className={`rounded px-3 py-2 border text-xs ${
+                discrepancyOk
+                  ? 'bg-pos-light border-pos-light text-pos-text'
+                  : 'bg-warn-light border-warn-light text-warn-text'
+              }`}>
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold">Bilanço Özkaynak Kontrolü</span>
+                  <span className="font-mono font-bold tabular-nums">
+                    {discrepancyOk ? '✓ Fark ≤ ₺100' : `Fark: ${fmtTRY(re.discrepancy_try ?? 0)}`}
+                  </span>
+                </div>
+                <div className="text-[10px] mt-1 opacity-80">
+                  Bilanço: {fmtTRY(re.balance_sheet_equity_try)} · Kapanış GYK: {fmtTRY(re.closing_retained_earnings_try)}
+                </div>
+                {discrepancyWarn && (
+                  <div className="text-[10px] mt-1 font-semibold">
+                    Nakit tahmini yöntemi nedeniyle fark oluşabilir — dönem kapanışında kontrol edin.
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )
+      })()}
 
       {/* GL Tools */}
       <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
