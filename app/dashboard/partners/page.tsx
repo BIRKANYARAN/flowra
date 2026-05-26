@@ -35,6 +35,7 @@ import { RiskTab }        from '@/app/dashboard/partners/_components/RiskTab'
 import { CapitalAccountTab } from '@/app/dashboard/partners/_components/CapitalAccountTab'
 import { DividendTab } from '@/app/dashboard/partners/_components/DividendTab'
 import { CompensationTab } from '@/app/dashboard/partners/_components/CompensationTab'
+import { EquityDilutionTab } from '@/app/dashboard/partners/_components/EquityDilutionTab'
 import { PartnersContextBar } from '@/app/dashboard/partners/_shared/PartnersContextBar'
 import { PartnerFinanceActions } from '@/app/dashboard/partners/_components/PartnerFinanceActions'
 
@@ -291,6 +292,7 @@ export default function PartnersPage() {
     capital:      { title: 'Sermaye Hesabı',     sub: 'Ortak bazında sermaye pozisyonu · Defter değeri · Çıkış simülasyonu' },
     dividend:     { title: 'Temettü',            sub: 'TTK 509/519 uyum hesabı · GVK 94 stopaj · Onay akışı' },
     compensation: { title: 'Huzur Hakkı',        sub: 'TTK 394 · Aylık ortak tazminatı · GVK 94 stopaj · Takvim yönetimi' },
+    dilution:     { title: 'Sermaye Seyreltme',  sub: 'Yeni sermaye artışı senaryoları · Pay oranı değişimi · Ortak hisse alımı' },
   }
 
   const TABS: { id: TabId; label: string }[] = [
@@ -304,6 +306,7 @@ export default function PartnersPage() {
     { id: 'capital',      label: 'Sermaye Hesabı' },
     { id: 'dividend',     label: 'Temettü'      },
     { id: 'compensation', label: 'Huzur Hakkı'  },
+    { id: 'dilution',     label: 'Sermaye Seyreltme' },
   ]
 
   // ── Render ────────────────────────────────────────────────────────────────────
@@ -470,6 +473,10 @@ export default function PartnersPage() {
 
       {activeTab === 'compensation' && (
         <CompensationTab partners={partners} />
+      )}
+
+      {activeTab === 'dilution' && (
+        <EquityDilutionTab />
       )}
 
     </div>
