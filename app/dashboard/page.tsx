@@ -40,6 +40,7 @@ import { SituationLine }         from '@/components/dashboard/SituationLine'
 import { PeriodSummaryWidget }   from './_shared/PeriodSummaryWidget'
 import { CeoIntelligencePanel }  from './_shared/CeoIntelligencePanel'
 import { KpiTargetPanel }        from './_shared/KpiTargetPanel'
+import { AlertFeedPanel }        from './_shared/AlertFeedPanel'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -546,6 +547,9 @@ export default async function DashboardPage() {
 
       {/* ── KPI TARGET PANEL — Hedef Takibi ─────────────────────────────── */}
       <KpiTargetPanel />
+
+      {/* ── ALERT FEED — Uyarı Akışı (persistent notification center) ──── */}
+      <AlertFeedPanel />
 
       {/* ── INTELLIGENCE SIGNALS — cross-context pattern observations ───── */}
       <ObservationRail context="all" maxItems={4} />
