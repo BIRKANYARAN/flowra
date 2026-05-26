@@ -33,6 +33,7 @@ import { DistributionTab } from '@/app/dashboard/partners/_components/Distributi
 import { ReturnsTab }     from '@/app/dashboard/partners/_components/ReturnsTab'
 import { RiskTab }        from '@/app/dashboard/partners/_components/RiskTab'
 import { CapitalAccountTab } from '@/app/dashboard/partners/_components/CapitalAccountTab'
+import { DividendTab } from '@/app/dashboard/partners/_components/DividendTab'
 import { PartnersContextBar } from '@/app/dashboard/partners/_shared/PartnersContextBar'
 import { PartnerFinanceActions } from '@/app/dashboard/partners/_components/PartnerFinanceActions'
 
@@ -287,6 +288,7 @@ export default function PartnersPage() {
     returns:      { title: 'Getiri Analizi',     sub: 'ROI · Sermaye geri dönüşü · Ortak bazlı performans' },
     risk:         { title: 'Risk Haritası',      sub: '6 boyutlu PCLE risk skoru · Yasal uyum · Öneriler' },
     capital:      { title: 'Sermaye Hesabı',     sub: 'Ortak bazında sermaye pozisyonu · Defter değeri · Çıkış simülasyonu' },
+    dividend:     { title: 'Temettü',            sub: 'TTK 509/519 uyum hesabı · GVK 94 stopaj · Onay akışı' },
   }
 
   const TABS: { id: TabId; label: string }[] = [
@@ -298,6 +300,7 @@ export default function PartnersPage() {
     { id: 'returns',      label: 'Getiri'       },
     { id: 'risk',         label: 'Risk'         },
     { id: 'capital',      label: 'Sermaye Hesabı' },
+    { id: 'dividend',     label: 'Temettü'      },
   ]
 
   // ── Render ────────────────────────────────────────────────────────────────────
@@ -456,6 +459,10 @@ export default function PartnersPage() {
 
       {activeTab === 'capital' && (
         <CapitalAccountTab />
+      )}
+
+      {activeTab === 'dividend' && (
+        <DividendTab />
       )}
 
     </div>

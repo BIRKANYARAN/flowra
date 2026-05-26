@@ -1,30 +1,20 @@
 // ── POST /api/partners/dividend/declare ───────────────────────────────────────
 //
-// Atomic (server-side) dividend declaration for all partners in one request.
-// Replaces the previous N×POST-per-partner pattern from the client, which was
-// non-atomic: a failure mid-loop left some partners with dividend records and
-// others without.
+// Handles two different declaration patterns (detected by body shape):
 //
-// Request body:
-//   {
-//     declarations: Array<{
-//       partner_id:      string
-//       gross_try:       number   // gross entitlement before withholding
-//       withholding_try: number   // stopaj (default: %10 GVK 94)
-//       net_try:         number   // net payout = gross - withholding
-//       tx_date:         string   // YYYY-MM-DD
-//     }>
-//   }
+// Pattern A — Workflow initiation (new, TTK-compliant):
+//   Body:  { gross_dividend_try: number, notes?: string }
+//   Auth:  admin only
+//   Action: calculates DividendCalculation, verifies TTK 509/519, then
+//           creates a dividend_declaration workflow_instance for approval.
+//   Response: { workflowId: string }
 //
-// Behaviour:
-//   - Auth + company resolution required (admin only)
-//   - Sequential inserts; on first failure → 500, no partial success reported
-//   - All records use tx_type = 'dividend', currency = 'TRY', fx_rate = 1
-//   - If a partner_id does not belong to this company → 422
+// Pattern B — Atomic batch insert (legacy, direct insert):
+//   Body:  { declarations: Array<{ partner_id, gross_try, withholding_try, net_try, tx_date }> }
+//   Auth:  admin only
+//   Action: inserts partner_finance_events for each partner atomically.
+//   Response: { success: true, inserted: number }
 //
-// Response:
-//   { success: true, inserted: number }    on success
-//   { error: string, failed_partner_id? }  on failure
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const dynamic = 'force-dynamic'
@@ -35,6 +25,7 @@ import { PartnerService } from '@/lib/services/partner.service'
 import { REQUEST_ID_HEADER } from '@/middleware'
 import { resolveApiAuth } from '@/lib/api-auth'
 import { round2 } from '@/lib/calc'
+import { DividendService } from '@/lib/services/pcle/dividend.service'
 
 interface DeclareEntry {
   partner_id:      string
@@ -53,9 +44,42 @@ export async function POST(req: NextRequest) {
   try { await requireAdmin(uid, companyId, supabase) }
   catch { return NextResponse.json({ error: 'Temettü beyanı için admin yetkisi gerekir', code: 'FORBIDDEN', type: 'SECURITY' }, { status: 403 }) }
 
-  let body: { declarations?: unknown }
+  let body: { declarations?: unknown; gross_dividend_try?: unknown; notes?: unknown }
   try { body = await req.json() }
   catch { return NextResponse.json({ error: 'Geçersiz JSON', code: 'VALIDATION_ERROR', type: 'BUSINESS' }, { status: 422 }) }
+
+  // ── Pattern A: Workflow initiation ────────────────────────────────────────
+  if (body.gross_dividend_try !== undefined) {
+    const gross = Number(body.gross_dividend_try)
+    if (!isFinite(gross) || gross <= 0) {
+      return NextResponse.json(
+        { error: 'gross_dividend_try sıfırdan büyük bir sayı olmalı', code: 'VALIDATION_ERROR' },
+        { status: 422 },
+      )
+    }
+    try {
+      const calculation = await DividendService.calculate(companyId, uid, supabase, gross)
+      if (!calculation.can_declare) {
+        return NextResponse.json(
+          { error: 'Temettü beyanı engellenmiş', blocking_reasons: calculation.blocking_reasons, code: 'COMPLIANCE_FAILURE' },
+          { status: 422 },
+        )
+      }
+      const result = await DividendService.initiateDeclaration(
+        companyId, uid, supabase, calculation,
+        typeof body.notes === 'string' ? body.notes : undefined,
+      )
+      return NextResponse.json(result, { headers: { [REQUEST_ID_HEADER]: ctx.requestId } })
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      return NextResponse.json(
+        { error: msg, code: 'INTERNAL_ERROR' },
+        { status: 500, headers: { [REQUEST_ID_HEADER]: ctx.requestId } },
+      )
+    }
+  }
+
+  // ── Pattern B: Legacy batch insert ───────────────────────────────────────
 
   const declarations = body.declarations
   if (!Array.isArray(declarations) || declarations.length === 0) {
