@@ -2,13 +2,148 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useQuery } from '@tanstack/react-query'
 import { NarrativeFooter, Skeleton } from '@/components/ds'
 import {
   WaterfallData, PartnerRow,
   fmt, fmtPct,
 } from '@/app/dashboard/partners/_components/types'
-import { fmtDateMed } from '@/lib/format'
+import { fmtDateMed, fmtTRY } from '@/lib/format'
 import { StatusPill } from '@/app/dashboard/partners/_components/ui'
+import type { CostOfCapitalReport } from '@/lib/services/pcle/cost-of-capital.service'
+
+// ── Sermaye Maliyeti inline section ─────────────────────────────────────────
+
+function SermayeMaliyetiSection() {
+  const { data, isLoading, isError } = useQuery<CostOfCapitalReport>({
+    queryKey: ['cost-of-capital'],
+    queryFn: async () => {
+      const res = await fetch('/api/partners/cost-of-capital')
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      return res.json()
+    },
+    staleTime: 5 * 60 * 1000,
+  })
+
+  if (isLoading) {
+    return (
+      <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm animate-pulse">
+        <div className="h-3 bg-[#f1f5f9] rounded w-40 mb-3" />
+        <div className="grid grid-cols-3 gap-2">
+          {[...Array(3)].map((_, i) => <div key={i} className="h-14 bg-[#f1f5f9] rounded" />)}
+        </div>
+      </div>
+    )
+  }
+
+  if (isError || !data || data.partners.length === 0) {
+    return null  // silently hide if no loans or error
+  }
+
+  const wacdPct = data.wacd_pct * 100
+
+  return (
+    <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+            Sermaye Maliyeti — WACD
+          </div>
+          <div className="text-[10px] text-[#94a3b8] mt-0.5">
+            Ortak borç ağırlıklı ortalama faiz maliyeti · {data.as_of_date}
+          </div>
+        </div>
+        <div className="text-right">
+          <div className="text-2xl font-black tabular-nums text-warn-text">
+            %{(wacdPct).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </div>
+          <div className="text-[10px] text-[#94a3b8]">WACD yıllık</div>
+        </div>
+      </div>
+
+      {/* Summary KPIs */}
+      <div className="grid grid-cols-3 gap-2 mb-3">
+        <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-3 py-2">
+          <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Toplam Borç</div>
+          <div className="text-sm font-black tabular-nums text-warn-text">{fmtTRY(data.total_outstanding_try)}</div>
+        </div>
+        <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-3 py-2">
+          <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Yıllık Faiz</div>
+          <div className="text-sm font-black tabular-nums text-neg-text">{fmtTRY(data.total_annual_interest_try)}</div>
+        </div>
+        <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-3 py-2">
+          <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">YTD Tahakkuk</div>
+          <div className="text-sm font-black tabular-nums text-neg-text">{fmtTRY(data.ytd_interest_accrued_try)}</div>
+        </div>
+      </div>
+
+      {/* Per-partner table */}
+      <div className="border border-[#e2e8f0] rounded overflow-hidden">
+        <table className="w-full text-xs">
+          <thead>
+            <tr className="bg-[#f8fafc] border-b border-[#e2e8f0]">
+              <th className="px-3 py-2 text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ortak</th>
+              <th className="px-3 py-2 text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Borç</th>
+              <th className="px-3 py-2 text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Oran</th>
+              <th className="px-3 py-2 text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Yıllık Maliyet</th>
+              <th className="px-3 py-2 text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Aylık</th>
+              <th className="px-3 py-2 text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">YTD</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[#f1f5f9]">
+            {data.partners.map(p => (
+              <tr key={p.partner_id} className="hover:bg-[#f8fafc]/60">
+                <td className="px-3 py-2 font-semibold text-[#334155]">
+                  {p.partner_name}
+                  {p.is_zero_rate && (
+                    <span className="ml-1.5 text-[9px] bg-warn-light text-warn-text font-bold px-1.5 py-0.5 rounded">%0</span>
+                  )}
+                  {p.is_high_rate && (
+                    <span className="ml-1.5 text-[9px] bg-neg-light text-neg-text font-bold px-1.5 py-0.5 rounded">Yüksek</span>
+                  )}
+                </td>
+                <td className="px-3 py-2 text-right font-mono tabular-nums text-warn-text">{fmtTRY(p.outstanding_try)}</td>
+                <td className="px-3 py-2 text-right font-mono tabular-nums">
+                  %{(p.annual_interest_rate * 100).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </td>
+                <td className="px-3 py-2 text-right font-mono tabular-nums text-neg-text">{fmtTRY(p.annual_interest_try)}</td>
+                <td className="px-3 py-2 text-right font-mono tabular-nums text-neg-text">{fmtTRY(p.monthly_interest_try)}</td>
+                <td className="px-3 py-2 text-right font-mono tabular-nums text-[#64748b]">{fmtTRY(p.ytd_interest_try)}</td>
+              </tr>
+            ))}
+          </tbody>
+          <tfoot>
+            <tr className="bg-[#f8fafc] border-t-2 border-[#e2e8f0] font-black">
+              <td className="px-3 py-2 text-[#0f172a]">TOPLAM</td>
+              <td className="px-3 py-2 text-right font-mono tabular-nums text-warn-text">{fmtTRY(data.total_outstanding_try)}</td>
+              <td className="px-3 py-2 text-right font-mono tabular-nums text-[#0f172a]">
+                %{(wacdPct).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </td>
+              <td className="px-3 py-2 text-right font-mono tabular-nums text-neg-text">{fmtTRY(data.total_annual_interest_try)}</td>
+              <td className="px-3 py-2 text-right font-mono tabular-nums text-neg-text">{fmtTRY(data.total_monthly_interest_try)}</td>
+              <td className="px-3 py-2 text-right font-mono tabular-nums text-[#64748b]">{fmtTRY(data.ytd_interest_accrued_try)}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      {/* VUK/KVK 13 zero-rate warning */}
+      {data.zero_rate_loan_count > 0 && (
+        <div className="mt-3 bg-warn-light border border-warn-light rounded px-3 py-2.5 text-xs">
+          <div className="font-bold text-warn-text mb-1">
+            VUK/KVK 13 Riski: %0 Faizli Borçlanma Tespit Edildi
+          </div>
+          <div className="text-warn">
+            {data.zero_rate_loan_count} adet sıfır faizli borç dilimi ({fmtTRY(data.zero_rate_amount_try)}) —
+            örtülü kazanç/örtülü sermaye riski. Piyasa faiz oranı esas alınarak belgeleme yapılması önerilir.
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 
 export interface TranchesTabProps {
   loading:   boolean
@@ -406,6 +541,9 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
           </div>
         </>
       )}
+
+      {/* Sermaye Maliyeti — WACD section */}
+      <SermayeMaliyetiSection />
 
       {/* Cross-navigation */}
       <NarrativeFooter
