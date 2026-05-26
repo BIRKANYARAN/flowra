@@ -9,6 +9,8 @@ import StockAdjustClient                            from '@/app/dashboard/stocks
 import { StockQueryService }                        from '@/lib/services/stock-query.service'
 import { InventoryValuationService }                from '@/lib/services/inventory/inventory-valuation.service'
 import type { InventoryValuationReport }            from '@/lib/services/inventory/inventory-valuation.service'
+import { ReorderAlertService }                      from '@/lib/services/inventory/reorder-alert.service'
+import type { ReorderAlertReport }                  from '@/lib/services/inventory/reorder-alert.service'
 
 function holdingDays(entryDate: string): number {
   const today = new Date()
@@ -28,7 +30,7 @@ interface Props { companyId: string; userId: string }
 export async function StockContent({ companyId, userId }: Props) {
   const supabase = createClient()
 
-  const [productsRes, movementsRes, lotsRes, inconsistencies, valuation] = await Promise.allSettled([
+  const [productsRes, movementsRes, lotsRes, inconsistencies, valuation, reorderAlertsResult] = await Promise.allSettled([
     supabase
       .from('products')
       .select('id, name, sku, unit, stock_qty, stock_alert_qty')
@@ -51,6 +53,7 @@ export async function StockContent({ companyId, userId }: Props) {
       .order('received_at', { ascending: true }),
     StockQueryService.listInconsistentProducts(userId, companyId).catch(() => []),
     InventoryValuationService.getReport(companyId, supabase).catch(() => null),
+    ReorderAlertService.getReport(companyId, supabase).catch(() => null),
   ])
 
   const products  = (productsRes.status === 'fulfilled' ? (productsRes.value.data  ?? []) : []) as ProductRow[]
@@ -60,6 +63,8 @@ export async function StockContent({ companyId, userId }: Props) {
   const inconsistentItems = inconsistencies.status === 'fulfilled' ? inconsistencies.value : []
   const valuationReport: InventoryValuationReport | null =
     valuation.status === 'fulfilled' ? valuation.value : null
+  const reorderReport: ReorderAlertReport | null =
+    reorderAlertsResult.status === 'fulfilled' ? reorderAlertsResult.value : null
 
   interface LotMeta extends StockLotRow { days: number; costTry: number }
 
@@ -88,6 +93,103 @@ export async function StockContent({ companyId, userId }: Props) {
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Stok Zekası</div>
         <p className="text-xs text-[#94a3b8] mt-0.5">FIFO lot değerlemesi · stok hareketleri · portföy özeti</p>
       </div>
+
+      {/* Yeniden Sipariş Uyarıları — reorder alert summary + action table */}
+      {reorderReport && (reorderReport.out_of_stock_count > 0 || reorderReport.critical_count > 0 || reorderReport.low_count > 0) && (
+        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+          <div className="px-5 py-4 border-b border-[#e2e8f0] flex items-center justify-between">
+            <div>
+              <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Yeniden Sipariş Uyarıları</span>
+              <span className="ml-2 text-[10px] text-[#94a3b8]">— düşük stok tespiti ve sipariş önerileri</span>
+            </div>
+            {/* Alert count badges */}
+            <div className="flex items-center gap-2">
+              {reorderReport.out_of_stock_count > 0 && (
+                <span className="text-[10px] font-black bg-neg-light text-neg-text px-2 py-0.5 rounded">
+                  {reorderReport.out_of_stock_count} Stok Bitti
+                </span>
+              )}
+              {reorderReport.critical_count > 0 && (
+                <span className="text-[10px] font-black bg-orange-50 text-orange-700 px-2 py-0.5 rounded">
+                  {reorderReport.critical_count} Kritik
+                </span>
+              )}
+              {reorderReport.low_count > 0 && (
+                <span className="text-[10px] font-black bg-warn-light text-warn-text px-2 py-0.5 rounded">
+                  {reorderReport.low_count} Düşük
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Action-required products table */}
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] border-b border-[#e2e8f0]">
+                  <th className="text-left px-5 py-2.5">Ürün</th>
+                  <th className="text-right px-4 py-2.5">Mevcut Stok</th>
+                  <th className="text-right px-4 py-2.5">Kalan Gün</th>
+                  <th className="text-right px-4 py-2.5">Önerilen Sipariş</th>
+                  <th className="text-right px-5 py-2.5">Durum</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#f1f5f9]">
+                {reorderReport.alerts
+                  .filter(a => a.action_required)
+                  .map(alert => {
+                    const badgeClass =
+                      alert.alert_level === 'out_of_stock' ? 'bg-neg-light text-neg-text'
+                      : alert.alert_level === 'critical'   ? 'bg-orange-50 text-orange-700'
+                      : 'bg-warn-light text-warn-text'
+                    const qtyColor =
+                      alert.alert_level === 'out_of_stock' ? 'text-neg'
+                      : alert.alert_level === 'critical'   ? 'text-orange-700'
+                      : 'text-warn-text'
+                    return (
+                      <tr key={alert.product_id} className="hover:bg-[#f8fafc]/60">
+                        <td className="px-5 py-3 font-semibold text-[#0f172a]">
+                          {alert.product_name}
+                          {alert.product_sku && (
+                            <span className="ml-2 text-[10px] font-mono text-[#94a3b8]">{alert.product_sku}</span>
+                          )}
+                        </td>
+                        <td className={`px-4 py-3 text-right tabular-nums font-bold ${qtyColor}`}>
+                          {alert.current_qty.toLocaleString('tr-TR', { maximumFractionDigits: 3 })}
+                        </td>
+                        <td className="px-4 py-3 text-right tabular-nums text-[#64748b]">
+                          {alert.days_of_stock_remaining != null
+                            ? `${alert.days_of_stock_remaining} gün`
+                            : '—'}
+                        </td>
+                        <td className="px-4 py-3 text-right tabular-nums text-brand font-semibold">
+                          {alert.suggested_order_qty != null
+                            ? alert.suggested_order_qty.toLocaleString('tr-TR', { maximumFractionDigits: 3 })
+                            : '—'}
+                        </td>
+                        <td className="px-5 py-3 text-right">
+                          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded ${badgeClass}`}>
+                            {alert.urgency_label}
+                          </span>
+                        </td>
+                      </tr>
+                    )
+                  })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Footer: no-threshold count */}
+          {reorderReport.products_without_threshold > 0 && (
+            <div className="px-5 py-3 border-t border-[#e2e8f0] bg-[#f8fafc]">
+              <span className="text-[10px] text-[#64748b]">
+                <span className="font-semibold">{reorderReport.products_without_threshold} ürün</span>
+                {' '}için yeniden sipariş eşiği tanımlanmamış — eşik belirlemek için ürün ayarlarını güncelleyin.
+              </span>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Portfolio summary strip */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
