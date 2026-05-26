@@ -166,13 +166,20 @@ export function getNavCount(role: MemberRole | null): number {
 /**
  * Determines whether a NavItem should appear active for a given pathname.
  *
+ * Strips query params from pathname before comparing so that
+ * `/dashboard/finance?tab=pnl` correctly matches the nav item with
+ * href `/dashboard/finance`.
+ *
  * Uses safe prefix matching: `/dashboard/commercial` is active on
  * `/dashboard/commercial` and `/dashboard/commercial/something`
  * but NOT on `/dashboard/commercial-extra` (hyphen check).
  */
 export function isNavItemActive(item: NavItem, pathname: string): boolean {
-  if (item.exact) return pathname === item.href
-  return pathname === item.href || pathname.startsWith(item.href + '/')
+  // Strip query string from pathname (client usePathname() never includes it,
+  // but guard here for server-side and test usage).
+  const cleanPath = pathname.split('?')[0]
+  if (item.exact) return cleanPath === item.href
+  return cleanPath === item.href || cleanPath.startsWith(item.href + '/')
 }
 
 // ── Nav item lookup ───────────────────────────────────────────────────────────
