@@ -1,12 +1,22 @@
 // ── CustomersContent — Commercial hub / customers tab ─────────────────────────
+// Upgraded with Customer Payment Behavior intelligence:
+//   • Portfolio risk summary (4 KPI tiles)
+//   • Per-customer sortable intelligence table with risk tiers, payment metrics, trends
+//   • Expandable detail modal per customer
+//   • Original sections (revenue concentration, top customers, legacy risk scores) preserved
 
-import Link from 'next/link'
 import { NarrativeFooter } from '@/components/ds'
 import { createClient } from '@/lib/supabase-server'
 import type { Customer } from '@/types'
 import CustomersClient from '@/app/dashboard/customers/CustomersClient'
-import { fmtTRY as fmt } from '@/lib/format'
+import { fmtTRY as fmt, fmtDate } from '@/lib/format'
 import { scoreCustomerRisk, type CustomerPayment } from '@/lib/engines/anomaly.engine'
+import {
+  CustomerIntelligenceService,
+  type CustomerPaymentProfile,
+  type PortfolioRisk,
+} from '@/lib/services/commercial/customer-intelligence.service'
+import CustomerIntelligenceTable from './_intelligence/CustomerIntelligenceTable'
 
 interface Props { companyId: string }
 
@@ -28,7 +38,7 @@ const RISK_CFG = {
 export async function CustomersContent({ companyId }: Props) {
   const supabase = createClient()
 
-  const [customersRes, salesRes] = await Promise.all([
+  const [customersRes, salesRes, intelligenceProfiles] = await Promise.all([
     supabase
       .from('customers')
       .select('*')
@@ -42,6 +52,7 @@ export async function CustomersContent({ companyId }: Props) {
       .is('deleted_at', null)
       .order('created_at', { ascending: false })
       .limit(500),
+    CustomerIntelligenceService.getProfiles(companyId, supabase).catch(() => [] as CustomerPaymentProfile[]),
   ])
 
   const customers = (customersRes.data ?? []) as Customer[]
@@ -50,8 +61,6 @@ export async function CustomersContent({ companyId }: Props) {
   const billed      = sales.reduce((s, r) => s + Number(r.total_try ?? 0), 0)
   const outstanding = sales.filter(r => r.payment_status !== 'paid').reduce((s, r) => s + Number(r.total_try ?? 0), 0)
   const paidTotal   = sales.filter(s => s.payment_status === 'paid').reduce((s, r) => s + Number(r.total_try ?? 0), 0)
-  // Amount-based collection rate (correct): paid TRY / total billed TRY.
-  // Count-based (paidCount / sales.length) is misleading when invoice sizes vary.
   const collectionRate = billed > 0 ? Math.round((paidTotal / billed) * 100) : 0
 
   const topMap = new Map<string, number>()
@@ -65,7 +74,7 @@ export async function CustomersContent({ companyId }: Props) {
     .map(([name, total]) => ({ name, total }))
   const maxTopTotal = topCustomers[0]?.total ?? 1
 
-  // ── Customer payment risk scoring ──────────────────────────────────────────
+  // ── Customer payment risk scoring (legacy anomaly engine) ─────────────────
   const payments: CustomerPayment[] = sales.map(s => ({
     customer_name:  s.customer_name ?? 'Bilinmiyor',
     sale_date:      s.sale_date ?? new Date().toISOString().slice(0, 10),
@@ -74,8 +83,11 @@ export async function CustomersContent({ companyId }: Props) {
     total_try:      Number(s.total_try ?? 0),
     payment_status: s.payment_status ?? 'pending',
   }))
-  const riskScores     = scoreCustomerRisk(payments)
+  const riskScores      = scoreCustomerRisk(payments)
   const atRiskCustomers = riskScores.filter(r => r.risk_level !== 'low').slice(0, 8)
+
+  // ── New intelligence portfolio summary ───────────────────────────────────
+  const portfolio: PortfolioRisk = CustomerIntelligenceService.computePortfolioRisk(intelligenceProfiles)
 
   return (
     <div className="max-w-3xl space-y-4">
@@ -85,8 +97,57 @@ export async function CustomersContent({ companyId }: Props) {
         </span>
       </div>
 
-      {/* KPI Strip */}
-      {sales.length > 0 && (
+      {/* ── Intelligence Portfolio KPI Strip ─────────────────────────────── */}
+      {intelligenceProfiles.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded overflow-hidden">
+          {[
+            {
+              label: 'Toplam Müşteri',
+              value: String(portfolio.total_customers),
+              sub: `${portfolio.critical_count > 0 ? `${portfolio.critical_count} kritik · ` : ''}${portfolio.high_risk_count} yüksek risk`,
+              color: portfolio.critical_count > 0 ? 'text-neg' : 'text-[#0f172a]',
+            },
+            {
+              label: 'Kritik Risk',
+              value: portfolio.critical_count > 0 ? String(portfolio.critical_count) : '—',
+              sub: portfolio.critical_count > 0 ? 'Acil aksiyon gerekiyor' : 'Kritik risk yok',
+              color: portfolio.critical_count > 0 ? 'text-neg' : 'text-pos-text',
+            },
+            {
+              label: 'Vadesi Geçmiş',
+              value: portfolio.total_overdue_try > 0 ? fmt(portfolio.total_overdue_try) : '—',
+              sub: portfolio.total_overdue_try > 0 ? 'Tahsilat bekliyor' : 'Vadesi geçmiş yok',
+              color: portfolio.total_overdue_try > 0 ? 'text-neg' : 'text-pos-text',
+            },
+            {
+              label: 'Zamanında Ödeme',
+              value: portfolio.portfolio_on_time_rate > 0
+                ? `%${Math.round(portfolio.portfolio_on_time_rate * 100)}`
+                : '—',
+              sub: portfolio.avg_days_to_pay_portfolio !== null
+                ? `Ort. ${Math.round(portfolio.avg_days_to_pay_portfolio)}g ödeme`
+                : 'Vade verisi yok',
+              color: portfolio.portfolio_on_time_rate >= 0.8 ? 'text-pos-text'
+                : portfolio.portfolio_on_time_rate >= 0.5 ? 'text-warn-text'
+                : 'text-neg',
+            },
+          ].map((card, i) => (
+            <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e2e8f0]' : ''}`}>
+              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
+              <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
+              <div className="text-[10px] text-[#94a3b8] mt-1">{card.sub}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── Customer Intelligence Table (client component for interactivity) ── */}
+      {intelligenceProfiles.length > 0 && (
+        <CustomerIntelligenceTable profiles={intelligenceProfiles} />
+      )}
+
+      {/* ── Legacy KPI strip (shown only when intelligence data unavailable) ── */}
+      {intelligenceProfiles.length === 0 && sales.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded overflow-hidden">
           {[
             { label: 'Toplam Müşteri', value: String(customers.length), sub: `${sales.length} satış kaydı`,        color: 'text-[#0f172a]' },
@@ -110,7 +171,6 @@ export async function CustomersContent({ companyId }: Props) {
             ? 'bg-neg-light border-neg-light'
             : 'bg-warn-light border-warn-light'
         }`}>
-          
           <div>
             <div className={`text-[11px] font-black uppercase tracking-wide ${
               topCustomers[0].total / billed > 0.6 ? 'text-neg-text' : 'text-warn-text'
@@ -139,7 +199,7 @@ export async function CustomersContent({ companyId }: Props) {
               return (
                 <div key={tc.name} className="flex items-center gap-3">
                   <div className="w-36 text-xs text-[#334155] font-medium shrink-0 truncate" title={tc.name}>{tc.name}</div>
-                  <div>
+                  <div className="flex-1">
                     <div className="h-5 bg-[#f1f5f9] rounded overflow-hidden">
                       <div className="h-5 bg-brand-light rounded" style={{ width: `${barPct}%` }} />
                     </div>
@@ -155,7 +215,7 @@ export async function CustomersContent({ companyId }: Props) {
         </div>
       )}
 
-      {/* ── Customer Payment Risk Panel ──────────────────────────────────── */}
+      {/* ── Customer Payment Risk Panel (legacy anomaly engine) ────────────── */}
       {atRiskCustomers.length > 0 && (
         <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">
@@ -177,13 +237,10 @@ export async function CustomersContent({ companyId }: Props) {
               const cfg = RISK_CFG[r.risk_level]
               return (
                 <div key={r.customer_name} className="flex items-center gap-4 px-4 py-3 hover:bg-[#f8fafc]/40">
-                  {/* Risk score ring */}
                   <div className="flex-shrink-0 w-10 h-10 rounded-full border-2 flex items-center justify-center"
                     style={{ borderColor: r.risk_level === 'high' ? '#f87171' : r.risk_level === 'medium' ? '#fb923c' : '#34d399' }}>
                     <span className={`text-[11px] font-black tabular-nums ${cfg.text}`}>{r.risk_score}</span>
                   </div>
-
-                  {/* Customer info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-bold text-[#1e293b] truncate">{r.customer_name}</span>
@@ -203,8 +260,6 @@ export async function CustomersContent({ companyId }: Props) {
                       )}
                     </div>
                   </div>
-
-                  {/* Score bar */}
                   <div className="w-20 flex-shrink-0 hidden sm:block">
                     <div className="h-1.5 bg-[#f1f5f9] rounded-full overflow-hidden">
                       <div className={`h-full rounded-full ${r.risk_level === 'high' ? 'bg-neg' : r.risk_level === 'medium' ? 'bg-warn' : 'bg-pos'}`}
@@ -226,7 +281,6 @@ export async function CustomersContent({ companyId }: Props) {
 
       <CustomersClient initialCustomers={customers} />
 
-      {/* Cross-navigation */}
       <NarrativeFooter
         narrative="Risk skoru geç ödeme geçmişi ve konsantrasyon baskısına dayanır — tahsilat gecikmesi doğrudan nakit pozisyonunu etkiler."
         links={[
