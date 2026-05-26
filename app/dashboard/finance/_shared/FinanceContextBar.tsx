@@ -22,12 +22,14 @@ export function FinanceContextBar({ companyId }: { companyId: string }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    const controller = new AbortController()
     setLoading(true)
-    fetch('/api/cfo-metrics')
+    fetch('/api/cfo-metrics', { signal: controller.signal })
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d) setData(d as CfoMetrics) })
-      .catch(() => {})
+      .catch(e => { if (e?.name !== 'AbortError') console.error(e) })
       .finally(() => setLoading(false))
+    return () => controller.abort()
   }, [companyId])
 
   if (loading) return <ContextRailSkeleton className="h-[52px]" />

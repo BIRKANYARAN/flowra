@@ -21,14 +21,18 @@ export function CommercialContextBar({ companyId }: { companyId: string }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    const controller = new AbortController()
+    const { signal } = controller
     setLoading(true)
     Promise.all([
-      fetch('/api/cfo-metrics').then(r => r.ok ? r.json() : null).catch(() => null),
-      fetch('/api/proformas/summary').then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch('/api/cfo-metrics',       { signal }).then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch('/api/proformas/summary', { signal }).then(r => r.ok ? r.json() : null).catch(() => null),
     ]).then(([metrics, pf]) => {
       if (metrics) setData(metrics as CfoMetrics)
       if (pf?.open_count != null) setPfSummary(pf as ProformaSummary)
-    }).catch(() => {}).finally(() => setLoading(false))
+    }).catch(e => { if (e?.name !== 'AbortError') console.error(e) })
+      .finally(() => setLoading(false))
+    return () => controller.abort()
   }, [companyId])
 
   if (loading) return <ContextRailSkeleton />

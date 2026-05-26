@@ -24,12 +24,14 @@ export function PartnersContextBar() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    const controller = new AbortController()
     setLoading(true)
-    fetch('/api/partners/ledger')
+    fetch('/api/partners/ledger', { signal: controller.signal })
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d?.summary) setData(d.summary) })
-      .catch(() => {})
+      .catch(e => { if (e?.name !== 'AbortError') console.error(e) })
       .finally(() => setLoading(false))
+    return () => controller.abort()
   }, [])
 
   if (loading) return <ContextRailSkeleton />

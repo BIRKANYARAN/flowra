@@ -16,14 +16,18 @@ export function OperationsContextBar({ companyId }: { companyId: string }) {
   const [loading, setLoading]       = useState(true)
 
   useEffect(() => {
+    const controller = new AbortController()
+    const { signal } = controller
     setLoading(true)
     Promise.all([
-      fetch('/api/cfo-metrics').then(r => r.ok ? r.json() : null),
-      fetch('/api/expenses/pending-total').then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch('/api/cfo-metrics',             { signal }).then(r => r.ok ? r.json() : null),
+      fetch('/api/expenses/pending-total',  { signal }).then(r => r.ok ? r.json() : null).catch(() => null),
     ]).then(([metrics, pending]) => {
       if (metrics) setData(metrics as CfoMetrics)
       if (pending?.total != null) setPendingExpenses(pending.total)
-    }).catch(() => {}).finally(() => setLoading(false))
+    }).catch(e => { if (e?.name !== 'AbortError') console.error(e) })
+      .finally(() => setLoading(false))
+    return () => controller.abort()
   }, [companyId])
 
   if (loading) return <ContextRailSkeleton />
