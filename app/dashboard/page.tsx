@@ -36,6 +36,7 @@ import { TreasuryBlotter }       from './_shared/TreasuryBlotter'
 import { DecisionQueue }         from './_shared/DecisionQueue'
 import { TemporalPressureRail }  from './_shared/TemporalPressureRail'
 import { ObservationRail }       from './_shared/ObservationRail'
+import { SituationLine }         from '@/components/dashboard/SituationLine'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -432,6 +433,21 @@ export default async function DashboardPage() {
 
   // ── Render ────────────────────────────────────────────────────────────────
 
+  // ── Dönem Durumu ──────────────────────────────────────────────────────────
+  const currentAccountingPeriod = openPeriodData[0] ?? null
+  const periodStatusLabel: Record<string, string> = {
+    open:       'Açık',
+    pre_close:  'Ön Kapanış',
+    closed:     'Kapalı',
+    locked:     'Kilitli',
+  }
+  const periodStatusColor: Record<string, string> = {
+    open:       'text-pos-text',
+    pre_close:  'text-warn-text',
+    closed:     'text-[#64748b]',
+    locked:     'text-neg-text',
+  }
+
   return (
     <div className="flex flex-col gap-4">
 
@@ -441,6 +457,70 @@ export default async function DashboardPage() {
         <Link href="/dashboard/reports"
           className="text-[10px] text-brand-light font-semibold hover:text-brand">
           Raporlar →
+        </Link>
+      </div>
+
+      {/* ── SITUATION LINE — prominent full-width status banner ─────────── */}
+      <SituationLine
+        status={situationFinal.status}
+        composite={situationFinal.composite}
+        situationLine={aiSummary.summary_tr}
+        criticalCount={alertCounts.critical}
+        warningCount={alertCounts.warning}
+      />
+
+      {/* ── 4 STRATEGIC KPI CARDS ──────────────────────────────────────── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {/* Revenue */}
+        <Link href="/dashboard/finance?tab=pnl"
+          className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm hover:shadow-md transition-shadow">
+          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Ciro (Dönem)</div>
+          <div className="text-xl font-black tabular-nums text-[#0f172a]">{fmt(fs.revenue_try)}</div>
+          <div className="text-[10px] text-[#94a3b8] mt-0.5">{label}</div>
+        </Link>
+        {/* Net Income */}
+        <Link href="/dashboard/finance?tab=pnl"
+          className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm hover:shadow-md transition-shadow">
+          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Net Gelir</div>
+          <div className={`text-xl font-black tabular-nums ${fs.net_after_tax_try >= 0 ? 'text-pos-text' : 'text-neg'}`}>
+            {fmt(fs.net_after_tax_try)}
+          </div>
+          <div className="text-[10px] text-[#94a3b8] mt-0.5">
+            {fs.revenue_try > 0 ? `Marj: %${((fs.net_after_tax_try / fs.revenue_try) * 100).toFixed(1)}` : 'Veri yok'}
+          </div>
+        </Link>
+        {/* Cash Position */}
+        <Link href="/dashboard/finance?tab=cashflow"
+          className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm hover:shadow-md transition-shadow">
+          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Nakit Pozisyonu</div>
+          <div className={`text-xl font-black tabular-nums ${cashBalance >= 0 ? 'text-[#0f172a]' : 'text-neg'}`}>
+            {fmt(cashBalance)}
+          </div>
+          <div className="text-[10px] text-[#94a3b8] mt-0.5">
+            {runwayMonths < 999 ? `Runway: ${runwayMonths.toFixed(1)} ay` : 'Runway: ∞'}
+          </div>
+        </Link>
+        {/* Dönem Durumu */}
+        <Link href="/dashboard/cfo?tab=period"
+          className={`rounded px-4 py-3 border shadow-sm hover:shadow-md transition-shadow ${
+            currentAccountingPeriod?.status === 'locked'    ? 'bg-neg-light border-neg-light' :
+            currentAccountingPeriod?.status === 'pre_close' ? 'bg-warn-light border-warn-light' :
+            currentAccountingPeriod?.status === 'open'      ? 'bg-pos-light border-pos-light' :
+            'bg-white border-[#e2e8f0]'
+          }`}>
+          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Dönem Durumu</div>
+          <div className={`text-xl font-black leading-none ${
+            currentAccountingPeriod ? (periodStatusColor[currentAccountingPeriod.status] ?? 'text-[#64748b]') : 'text-[#94a3b8]'
+          }`}>
+            {currentAccountingPeriod
+              ? (periodStatusLabel[currentAccountingPeriod.status] ?? currentAccountingPeriod.status)
+              : 'Dönem Yok'}
+          </div>
+          {currentAccountingPeriod && (
+            <div className="text-[10px] text-[#94a3b8] mt-0.5">
+              {new Date(currentAccountingPeriod.period_end + 'T00:00:00Z').toLocaleDateString('tr-TR', { month: 'short', year: 'numeric' })}
+            </div>
+          )}
         </Link>
       </div>
 

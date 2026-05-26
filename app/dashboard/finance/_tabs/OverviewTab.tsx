@@ -11,6 +11,10 @@ import { getCfoMetrics, getRunwayForecast } from '@/lib/finance/financial-core'
 import type { CfoMetrics }             from '@/lib/finance/cfo-metrics'
 import type { RunwayForecastResponse } from '@/lib/finance/financial-core'
 import { fmtTRY as fmt }               from '@/lib/format'
+import { FinanceService }              from '@/lib/services/finance.service'
+import { periodForMonth }              from '@/lib/services/finance-rules'
+import { createClient }                from '@/lib/supabase-server'
+import { PeriodService }               from '@/lib/services/period.service'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -60,16 +64,35 @@ function RiskPill({ label, value, level }: { label: string; value: string; level
   )
 }
 
+// ── GL Mode badge ─────────────────────────────────────────────────────────────
+
+function GlModeBadge({ mode }: { mode: string }) {
+  const cfg: Record<string, { label: string; colors: string }> = {
+    shadow:     { label: 'Shadow',     colors: 'bg-[#f1f5f9] border-[#e2e8f0] text-[#64748b]' },
+    parallel:   { label: 'Paralel',    colors: 'bg-blue-50 border-blue-200 text-blue-700' },
+    gl_primary: { label: 'GL Birincil', colors: 'bg-pos-light border-pos-light text-pos-text' },
+  }
+  const { label, colors } = cfg[mode] ?? cfg['shadow']
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-wide ${colors}`}>
+      <span className="w-1 h-1 rounded-full bg-current opacity-60" />
+      GL: {label}
+    </span>
+  )
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
-interface Props { userId: string; companyId: string }
+interface Props { userId: string; companyId: string; glMode?: string }
 
-export async function OverviewTab({ userId: _userId, companyId }: Props) {
+export async function OverviewTab({ userId, companyId, glMode = 'shadow' }: Props) {
+  const supabase = createClient()
   const now   = new Date()
   const today = now.toISOString().slice(0, 10)
   const year  = now.getFullYear()
   const mon   = String(now.getMonth() + 1).padStart(2, '0')
   const from  = `${year}-${mon}-01`
+  const ytdFrom = `${year}-01-01`
 
   const ZERO_METRICS: CfoMetrics = {
     cash:        { true_cash_position: 0, operational_cash: 0, restricted_cash: 0, distributable_cash: 0 },
@@ -90,11 +113,14 @@ export async function OverviewTab({ userId: _userId, companyId }: Props) {
   const prevFrom  = prevStart.toISOString().slice(0, 10)
   const prevTo    = prevEnd.toISOString().slice(0, 10)
 
-  // Parallel: current + previous month metrics (independent queries)
+  // Parallel: current + previous month metrics + YTD financial summary + period
   // Sequential: runway forecast must wait for current metrics (needs taxObligation)
-  const [metrics, prevMetrics] = await Promise.all([
+  const currentYM = `${year}-${mon}`
+  const [metrics, prevMetrics, ytdSummary, currentPeriod] = await Promise.all([
     sq(() => getCfoMetrics(companyId, { from, to: today }),        ZERO_METRICS),
     sq(() => getCfoMetrics(companyId, { from: prevFrom, to: prevTo }), ZERO_METRICS),
+    sq(() => FinanceService.getFinancialSummary(userId, companyId, periodForMonth(currentYM)), null),
+    sq(() => PeriodService.getCurrent(companyId, supabase), null),
   ])
   const runway = await sq(
     () => getRunwayForecast(companyId, {
@@ -159,8 +185,64 @@ export async function OverviewTab({ userId: _userId, companyId }: Props) {
     memoryLines.push('Nakit, burn ve alacak yapısı geçen ay seviyesinde — operasyonel istikrar korunuyor.')
   }
 
+  // ── Derived P&L values ─────────────────────────────────────────────────────
+  const ytdRevenue    = Number(ytdSummary?.revenue_try       ?? 0)
+  const ytdGrossProfit = Number(ytdSummary?.gross_profit_try  ?? 0)
+  const ytdNetIncome  = Number(ytdSummary?.net_after_tax_try  ?? 0)
+
+  // Period display
+  const periodLabel = currentPeriod
+    ? `${new Date(currentPeriod.period_start + 'T00:00:00Z').toLocaleDateString('tr-TR', { month: 'short', year: 'numeric' })} – ${new Date(currentPeriod.period_end + 'T00:00:00Z').toLocaleDateString('tr-TR', { month: 'short', year: 'numeric' })}`
+    : `${year} ${new Date(now.setDate(1)).toLocaleDateString('tr-TR', { month: 'long' })}`
+  const periodStatus = currentPeriod?.status ?? null
+
   return (
     <div className="space-y-4">
+
+      {/* ── GL Mode + Period header strip ─────────────────────────────────────── */}
+      <div className="flex items-center justify-between gap-3 px-1">
+        <div className="flex items-center gap-2">
+          <GlModeBadge mode={glMode} />
+          {glMode === 'shadow' && (
+            <span className="text-[10px] text-[#94a3b8]">Muhasebe kaydı oluşturulmuyor — GL modu shadow</span>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          {periodStatus && (
+            <span className={`text-[9px] font-semibold px-2 py-0.5 rounded-full border ${
+              periodStatus === 'locked' ? 'bg-neg-light border-neg-light text-neg-text' :
+              periodStatus === 'closed' ? 'bg-[#f1f5f9] border-[#e2e8f0] text-[#64748b]' :
+              'bg-pos-light border-pos-light text-pos-text'
+            }`}>
+              {periodStatus === 'open' ? 'Açık' : periodStatus === 'closed' ? 'Kapalı' : 'Kilitli'}
+            </span>
+          )}
+          <Link href="/dashboard/cfo?tab=period"
+            className="text-[10px] text-brand-light font-semibold hover:text-brand">
+            {periodLabel} →
+          </Link>
+        </div>
+      </div>
+
+      {/* ── P&L KPI cards (Revenue YTD, Gross Profit, Net Income, Cash) ──────── */}
+      <div>
+        <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">Dönem P&L Özeti</div>
+        <div className="grid grid-cols-4 gap-2">
+          <KpiBlock label="Ciro (YTD)" value={fmt(ytdRevenue)}
+            sub={`${year} yılı kümülatif`}
+            tone={ytdRevenue > 0 ? 'positive' : 'neutral'} />
+          <KpiBlock label="Brüt Kâr" value={fmt(ytdGrossProfit)}
+            sub={ytdRevenue > 0 ? `Marj: %${((ytdGrossProfit / ytdRevenue) * 100).toFixed(1)}` : undefined}
+            tone={ytdGrossProfit >= 0 ? 'positive' : 'negative'} />
+          <KpiBlock label="Net Gelir" value={fmt(ytdNetIncome)}
+            sub={ytdNetIncome >= 0 ? 'Kârlı dönem' : 'Zararlı dönem'}
+            tone={ytdNetIncome >= 0 ? 'positive' : 'negative'} />
+          <KpiBlock label="Nakit Pozisyonu" value={fmt(m.cash.true_cash_position)}
+            sub="Tahsilat − ödenen giderler"
+            tone={m.cash.true_cash_position > 0 ? 'positive' : 'critical'}
+            href="/dashboard/finance?tab=cashflow" />
+        </div>
+      </div>
 
       {runwayTone === 'critical' && (
         <div className="bg-neg-light border border-neg rounded px-4 py-3 text-xs text-neg-text font-semibold flex items-center gap-2">

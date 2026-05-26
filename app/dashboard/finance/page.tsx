@@ -127,11 +127,12 @@ export default async function FinancePage({ searchParams }: PageProps) {
 
   const activeTab = (VALID_TABS.includes(rawTab as FinanceTab) ? rawTab : 'pnl') as FinanceTab
   const meta      = TAB_META[activeTab]
-  const tabProps  = { userId, companyId }
 
   // ── GL mode — show data source indicator ─────────────────────────────────
   let glMode: string = 'shadow'
   try { glMode = await getGlMode(companyId, supabase) } catch { /* non-fatal */ }
+
+  const tabProps  = { userId, companyId, glMode }
 
   // ── Render ────────────────────────────────────────────────────────────────────
   return (

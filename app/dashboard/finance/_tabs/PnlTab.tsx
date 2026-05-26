@@ -6,12 +6,13 @@
 //   • Tahsilat vs fatura delta
 //   • Geçen aylar mini-trend (son 6 ay sparkline row)
 
-import Link                  from 'next/link'
-import { FinanceService }   from '@/lib/services/finance.service'
-import { periodForMonth }   from '@/lib/services/finance-rules'
-import { fmtTRY as fmt }   from '@/lib/format'
-import { createClient }     from '@/lib/supabase-server'
-import { NarrativeFooter }  from '@/components/ds'
+import Link                          from 'next/link'
+import { FinanceService }           from '@/lib/services/finance.service'
+import { periodForMonth }           from '@/lib/services/finance-rules'
+import { fmtTRY as fmt }           from '@/lib/format'
+import { createClient }             from '@/lib/supabase-server'
+import { NarrativeFooter }          from '@/components/ds'
+import { GLIncomeStatementService } from '@/lib/services/ledger/gl-income-statement.service'
 
 // ── Formatters ────────────────────────────────────────────────────────────────
 
@@ -89,9 +90,9 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-interface Props { userId: string; companyId: string }
+interface Props { userId: string; companyId: string; glMode?: string }
 
-export async function PnlTab({ userId, companyId }: Props) {
+export async function PnlTab({ userId, companyId, glMode = 'shadow' }: Props) {
   const now  = new Date()
   const currentYM = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
   const monthYMs  = lastNMonths(6, now)
@@ -100,6 +101,12 @@ export async function PnlTab({ userId, companyId }: Props) {
   const { from: monthFrom, to: monthTo } = periodForMonth(currentYM)
 
   function sq<T>(fn: () => Promise<T>, fb: T): Promise<T> { return fn().catch(() => fb) }
+
+  // Try GL income statement when mode supports it
+  const useGl = glMode === 'gl_primary' || glMode === 'parallel'
+  const glStatement = useGl
+    ? await sq(() => GLIncomeStatementService.compute(companyId, supabase, { toDate: monthTo }), null)
+    : null
 
   const [currentSummary, expenseCatRaw, ...historySummaries] = await Promise.all([
     sq(() => FinanceService.getFinancialSummary(userId, companyId, periodForMonth(currentYM)), null),
@@ -130,7 +137,23 @@ export async function PnlTab({ userId, companyId }: Props) {
     .map(([cat, total]) => ({ cat, label: CATEGORY_LABELS[cat] ?? cat, total }))
 
   const s = currentSummary
-  if (!s) {
+
+  // ── Determine data source and values ─────────────────────────────────────
+  // GL data takes precedence in gl_primary mode; operational is fallback.
+  const hasGlData  = glStatement !== null && glStatement.gross_revenue_try > 0
+  const useGlData  = glMode === 'gl_primary' && hasGlData
+  const dataSource = glMode === 'gl_primary' ? 'GL (Muhasebe)' : 'Operasyonel (Tahmin)'
+
+  // When GL data is available and mode is gl_primary, prefer GL values
+  const revenue      = useGlData ? glStatement!.gross_revenue_try    : Number(s?.revenue_try         ?? 0)
+  const cogs         = useGlData ? glStatement!.cogs_try             : Number(s?.cost_try            ?? 0)
+  const grossProfit  = useGlData ? glStatement!.gross_profit_try     : Number(s?.gross_profit_try    ?? 0)
+  const expenses     = useGlData ? glStatement!.total_opex_try       : Number(s?.expenses_total_try  ?? 0)
+  const ebitda       = useGlData ? glStatement!.ebitda_try           : grossProfit - expenses
+  const netAfterTax  = useGlData ? glStatement!.net_income_try       : Number(s?.net_after_tax_try   ?? 0)
+  const corpTax      = useGlData ? glStatement!.tax_try              : Number(s?.corporate_tax_try   ?? 0)
+
+  if (!s && !hasGlData) {
     return (
       <div className="bg-white border border-[#e2e8f0] rounded text-center py-16 shadow-sm">
         <div className="w-8 h-8 rounded-full bg-[#f1f5f9] mx-auto mb-3 flex items-center justify-center">
@@ -142,21 +165,14 @@ export async function PnlTab({ userId, companyId }: Props) {
     )
   }
 
-  const revenue      = Number(s.revenue_try              ?? 0)
-  const cogs         = Number(s.cost_try                 ?? 0)
-  const grossProfit  = Number(s.gross_profit_try         ?? 0)
-  const expenses     = Number(s.expenses_total_try       ?? 0)
-  const matrah       = Number(s.matrah_try               ?? 0)
-  const netAfterTax  = Number(s.net_after_tax_try        ?? 0)
-  const corpTax      = Number(s.corporate_tax_try        ?? 0)
-  const salesVat     = Number(s.sales_vat_try            ?? 0)
-  const purchaseVat  = Number(s.purchase_vat_try         ?? 0)
-  const expenseVat   = Number(s.expense_vat_try          ?? 0)
+  const matrah       = Number(s?.matrah_try           ?? 0)
+  const salesVat     = Number(s?.sales_vat_try        ?? 0)
+  const purchaseVat  = Number(s?.purchase_vat_try     ?? 0)
+  const expenseVat   = Number(s?.expense_vat_try      ?? 0)
   const netVat       = salesVat - purchaseVat - expenseVat
-  const ebitda       = grossProfit - expenses
 
   // Month-over-month margin trend — historySummaries[4] = prior month, [5] = current
-  const priorSummary    = historySummaries[historySummaries.length - 2] ?? null
+  const priorSummary    = (historySummaries as Array<typeof s>)[historySummaries.length - 2] ?? null
   const priorRevenue    = Number(priorSummary?.revenue_try    ?? 0)
   const priorGrossProfit = Number(priorSummary?.gross_profit_try ?? 0)
   const currentMargin   = revenue > 0 ? grossProfit / revenue   : null
@@ -167,6 +183,23 @@ export async function PnlTab({ userId, companyId }: Props) {
 
   return (
     <div className="space-y-4">
+
+      {/* Veri kaynağı indicator */}
+      <div className="flex items-center gap-2 px-1">
+        <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Veri Kaynağı:</span>
+        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[9px] font-black ${
+          glMode === 'gl_primary' && hasGlData
+            ? 'bg-pos-light border-pos-light text-pos-text'
+            : glMode === 'parallel'
+            ? 'bg-blue-50 border-blue-200 text-blue-700'
+            : 'bg-[#f1f5f9] border-[#e2e8f0] text-[#64748b]'
+        }`}>
+          {dataSource}
+        </span>
+        {glMode === 'parallel' && hasGlData && (
+          <span className="text-[9px] text-[#94a3b8]">GL verileri mevcut ancak raporlama operasyoneldir</span>
+        )}
+      </div>
 
       {/* Month-over-month margin deterioration alert */}
       {marginDrop !== null && marginDrop > 0.10 && (

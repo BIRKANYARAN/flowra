@@ -1,7 +1,27 @@
 import { createClient } from '@/lib/supabase-server'
-import { isAppError } from '@/types/errors'
+import { isAppError, AppError } from '@/types/errors'
 
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error'
+
+// ── Log level filtering ────────────────────────────────────────────────────────
+
+const LEVEL_RANK: Record<LogLevel, number> = {
+  debug: 0,
+  info:  1,
+  warn:  2,
+  error: 3,
+}
+
+function getConfiguredLevel(): LogLevel {
+  const env = process.env.LOG_LEVEL as LogLevel | undefined
+  if (env && env in LEVEL_RANK) return env
+  return process.env.NODE_ENV === 'production' ? 'info' : 'debug'
+}
+
+/** Returns true if the given level should be emitted given the configured minimum. */
+export function shouldLog(level: LogLevel): boolean {
+  return LEVEL_RANK[level] >= LEVEL_RANK[getConfiguredLevel()]
+}
 
 export interface RequestContext {
   requestId: string
@@ -29,6 +49,101 @@ export function contextFromHeader(
   return makeRequestContext(userId)
 }
 
+// ── Performance timing helper ─────────────────────────────────────────────────
+
+/**
+ * Create a high-resolution timer. Call .end() when the work completes.
+ * Logs: { level: 'info', message: '<label> completed', duration_ms: N, ...meta }
+ * Always logs at 'info' regardless of LOG_LEVEL filtering.
+ */
+export function createTimer(label: string): { end: (meta?: Record<string, unknown>) => void } {
+  const startMs = Date.now()
+  return {
+    end(meta?: Record<string, unknown>) {
+      const duration_ms = Date.now() - startMs
+      const entry: Record<string, unknown> = {
+        level:       'info',
+        message:     `${label} completed`,
+        duration_ms,
+        ...(meta ?? {}),
+      }
+      // Write to stdout — always emitted (financial timing is always relevant)
+      console.info(JSON.stringify(entry))
+    },
+  }
+}
+
+// ── Error serializer ──────────────────────────────────────────────────────────
+
+/**
+ * Serialize any caught value into a plain object suitable for structured logging.
+ * Handles: AppError (with .code), native Error, plain objects/strings.
+ */
+export function serializeError(err: unknown): { message: string; code?: string; stack?: string } {
+  if (err instanceof AppError) {
+    return {
+      message: err.message,
+      code:    err.code,
+      stack:   err.stack?.slice(0, 500),
+    }
+  }
+  if (err instanceof Error) {
+    return {
+      message: err.message,
+      stack:   err.stack?.slice(0, 500),
+    }
+  }
+  if (typeof err === 'string') {
+    return { message: err }
+  }
+  if (err !== null && typeof err === 'object') {
+    const obj = err as Record<string, unknown>
+    return {
+      message: String(obj.message ?? JSON.stringify(err)),
+      code:    obj.code !== undefined ? String(obj.code) : undefined,
+    }
+  }
+  return { message: String(err) }
+}
+
+// ── Financial audit trail logger ──────────────────────────────────────────────
+
+export interface FinancialActionParams {
+  requestId:    string
+  userId:       string
+  companyId:    string
+  action:       string       // e.g. 'sale.create', 'period.close', 'dividend.declare'
+  resourceType: string
+  resourceId:   string
+  amount_try?:  number
+  metadata?:    Record<string, unknown>
+}
+
+/**
+ * Emit a structured log entry for a financial action.
+ * Always writes at 'info' level regardless of LOG_LEVEL — financial actions are
+ * always audited. This is a structured console log, NOT a DB write (see lib/audit.ts
+ * for that). Designed for log aggregation pipelines (Vercel logs, DataDog, etc.).
+ */
+export function logFinancialAction(params: FinancialActionParams): void {
+  const entry: Record<string, unknown> = {
+    level:         'info',
+    audit:         true,
+    request_id:    params.requestId,
+    user_id:       params.userId,
+    company_id:    params.companyId,
+    action:        params.action,
+    resource_type: params.resourceType,
+    resource_id:   params.resourceId,
+    timestamp:     new Date().toISOString(),
+  }
+  if (params.amount_try !== undefined) entry.amount_try = params.amount_try
+  if (params.metadata)                 Object.assign(entry, params.metadata)
+
+  // Always emit — bypasses shouldLog() filtering
+  console.info(JSON.stringify(entry))
+}
+
 /** Write to system_logs via security-definer RPC. Never throws. */
 export async function log(
   ctx:      RequestContext,
@@ -36,6 +151,8 @@ export async function log(
   message:  string,
   context?: Record<string, unknown>
 ): Promise<void> {
+  // Respect LOG_LEVEL filtering before hitting the DB
+  if (!shouldLog(level)) return
   try {
     const supabase = createClient()
     await supabase.rpc('write_system_log', {

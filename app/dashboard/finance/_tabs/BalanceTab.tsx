@@ -6,12 +6,13 @@
 // Two-column layout: Varlıklar (Assets) | Kaynaklar (Liabilities + Equity)
 // Sprint 5: narrative-institutional format — account | amount | % of total | document links
 
-import Link                     from 'next/link'
-import { createClient }        from '@/lib/supabase-server'
-import { BalanceSheetService } from '@/lib/services/balance-sheet.service'
-import { fmtTRY as fmt }       from '@/lib/format'
-import type { BalanceSheet }   from '@/types/dto'
-import { NarrativeFooter }     from '@/components/ds'
+import Link                          from 'next/link'
+import { createClient }             from '@/lib/supabase-server'
+import { BalanceSheetService }      from '@/lib/services/balance-sheet.service'
+import { GLBalanceSheetService }    from '@/lib/services/ledger/gl-balance-sheet.service'
+import { fmtTRY as fmt }            from '@/lib/format'
+import type { BalanceSheet }        from '@/types/dto'
+import { NarrativeFooter }          from '@/components/ds'
 
 // ── Formatters ────────────────────────────────────────────────────────────────
 
@@ -165,9 +166,9 @@ function buildLiabEquityRows(bs: BalanceSheet): Row[] {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-interface Props { userId: string; companyId: string }
+interface Props { userId: string; companyId: string; glMode?: string }
 
-export async function BalanceTab({ userId, companyId }: Props) {
+export async function BalanceTab({ userId, companyId, glMode = 'shadow' }: Props) {
   const today   = new Date().toISOString().slice(0, 10)
   const supabase = createClient()
 
@@ -179,7 +180,58 @@ export async function BalanceTab({ userId, companyId }: Props) {
     balanced: true, imbalance_try: 0,
   }
 
-  const bs = await BalanceSheetService.compute(userId, companyId, today, supabase).catch(() => FALLBACK)
+  // Try GL balance sheet when mode supports it
+  const canUseGl = glMode === 'gl_primary' || glMode === 'parallel'
+  const glBs = canUseGl
+    ? await GLBalanceSheetService.compute(companyId, supabase, { asOf: today }).catch(() => null)
+    : null
+
+  // Use GL data if gl_primary with real entries (total_assets > 0), else fall back to operational
+  const hasGlEntries = glBs !== null && glBs.total_assets_try > 0
+  const useGlData    = glMode === 'gl_primary' && hasGlEntries
+  const balanceSource = useGlData ? 'GL Tabanlı' : 'Operasyonel Tahmin'
+
+  // Operational balance sheet (always computed as fallback)
+  const operationalBs = await BalanceSheetService.compute(userId, companyId, today, supabase).catch(() => FALLBACK)
+
+  // Build unified balance sheet for rendering from GL data when available
+  const glMappedBs: BalanceSheet | null = (useGlData && glBs) ? {
+    as_of_date:  today,
+    computed_at: glBs.computed_at,
+    assets: {
+      cash_try:             glBs.cash_try,
+      receivables_try:      glBs.trade_receivables_try,
+      inventory_try:        glBs.inventory_try,
+      other_current_try:    glBs.deductible_vat_try,
+      total_current_try:    glBs.cash_try + glBs.trade_receivables_try + glBs.inventory_try + glBs.deductible_vat_try,
+      equipment_try:        Math.max(0, glBs.equipment_net_try),
+      deposits_try:         0,
+      other_non_current_try: 0,
+      total_non_current_try: Math.max(0, glBs.equipment_net_try),
+      total_assets_try:     glBs.total_assets_try,
+    },
+    liabilities: {
+      partner_loans_try:          glBs.partner_loans_st_try,
+      tax_payable_try:            glBs.tax_payable_try + glBs.output_vat_try,
+      other_current_payables_try: glBs.trade_payables_try + glBs.payroll_payables_try,
+      total_current_try:          glBs.trade_payables_try + glBs.partner_loans_st_try + glBs.payroll_payables_try + glBs.tax_payable_try + glBs.output_vat_try,
+      partner_loans_long_term_try: glBs.partner_loans_lt_try,
+      other_non_current_try:      0,
+      total_non_current_try:      glBs.partner_loans_lt_try,
+      total_liabilities_try:      glBs.total_liabilities_try,
+    },
+    equity: {
+      partner_capital_lines:       [],
+      total_partner_capital_try:   glBs.paid_in_capital_try,
+      retained_earnings_try:       glBs.retained_earnings_try - glBs.accumulated_losses_try,
+      current_period_profit_try:   glBs.current_period_profit_try,
+      total_equity_try:            glBs.total_equity_try,
+    },
+    balanced:      glBs.is_balanced,
+    imbalance_try: glBs.imbalance_try,
+  } : null
+
+  const bs = glMappedBs ?? operationalBs
 
   const assetRows   = buildAssetRows(bs)
   const liabEqRows  = buildLiabEquityRows(bs)
@@ -199,6 +251,21 @@ export async function BalanceTab({ userId, companyId }: Props) {
 
   return (
     <div className="space-y-4">
+
+      {/* Balance source indicator */}
+      <div className="flex items-center gap-2 px-1">
+        <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Bilanço Kaynağı:</span>
+        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[9px] font-black ${
+          useGlData
+            ? 'bg-pos-light border-pos-light text-pos-text'
+            : 'bg-[#f1f5f9] border-[#e2e8f0] text-[#64748b]'
+        }`}>
+          {balanceSource}
+        </span>
+        {glMode === 'parallel' && !hasGlEntries && (
+          <span className="text-[9px] text-[#94a3b8]">Paralel modda GL kayıtları henüz yok</span>
+        )}
+      </div>
 
       {/* Negative equity — critical solvency alert */}
       {negativeEquity && (
@@ -277,16 +344,22 @@ export async function BalanceTab({ userId, companyId }: Props) {
         <BSColumn title="Kaynaklar (Liabilities + Equity)" rows={liabEqRows} />
       </div>
 
-      {/* Balanced invariant check */}
+      {/* Balanced invariant check — Denklik */}
       <div className={`flex items-center gap-2 px-4 py-2.5 rounded text-xs font-semibold ${
         bs.balanced
           ? 'bg-pos-light border border-pos-light text-pos-text'
           : 'bg-warn-light border border-warn-light text-warn-text'
       }`}>
         {bs.balanced ? (
-          <>✓ Bilanço dengeli — Varlıklar = Kaynaklar ({fmtFull(bs.assets.total_assets_try)})</>
+          <>
+            <span className="w-1.5 h-1.5 rounded-full bg-pos shrink-0" />
+            Denklik: Dengeli — Varlıklar = Kaynaklar ({fmtFull(bs.assets.total_assets_try)})
+          </>
         ) : (
-          <>⚠ Bilanço farkı: {fmtFull(diff)} — Bazı kalemler sisteme girilmemiş olabilir (duran varlıklar, tahakkuklar).</>
+          <>
+            <span className="w-1.5 h-1.5 rounded-full bg-warn shrink-0" />
+            Denklik: Dengesiz — ₺{fmtFull(diff)} fark — Bazı kalemler sisteme girilmemiş olabilir.
+          </>
         )}
       </div>
 

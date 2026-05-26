@@ -52,3 +52,7 @@ kept for reference but are NOT run by dbmate. Do not modify them.
 |------|-------------|
 | 20260526000001_audit_chain_columns.sql | Add content_hash + prev_hash to audit_logs |
 | 20260526000002_journal_voucher_numbers.sql | Voucher numbering on journal_entries |
+| 20260526000003_workflow_instances.sql | Workflow approval state machine table |
+| 20260526000004_alert_rules_table.sql | Configurable alert thresholds per company |
+| 20260526000005_job_runs_table.sql | Async job tracking (service role only) |
+| 20260526000006_companies_gl_mode_default.sql | gl_mode column with constraint on companies |
