@@ -37,6 +37,7 @@ import { DividendTab } from '@/app/dashboard/partners/_components/DividendTab'
 import { CompensationTab } from '@/app/dashboard/partners/_components/CompensationTab'
 import { EquityDilutionTab } from '@/app/dashboard/partners/_components/EquityDilutionTab'
 import { AmortizationTab }  from '@/app/dashboard/partners/_components/AmortizationTab'
+import { DividendLedgerTab } from '@/app/dashboard/partners/_components/DividendLedgerTab'
 import { PartnersContextBar } from '@/app/dashboard/partners/_shared/PartnersContextBar'
 import { PartnerFinanceActions } from '@/app/dashboard/partners/_components/PartnerFinanceActions'
 
@@ -294,7 +295,8 @@ export default function PartnersPage() {
     dividend:     { title: 'Temettü',            sub: 'TTK 509/519 uyum hesabı · GVK 94 stopaj · Onay akışı' },
     compensation: { title: 'Huzur Hakkı',        sub: 'TTK 394 · Aylık ortak tazminatı · GVK 94 stopaj · Takvim yönetimi' },
     dilution:     { title: 'Sermaye Seyreltme',  sub: 'Yeni sermaye artışı senaryoları · Pay oranı değişimi · Ortak hisse alımı' },
-    amortization: { title: 'Amortisman Takvimi', sub: 'Tranche bazında aylık ödeme planı · Faiz · Anapara · Kapanış tarihi' },
+    amortization:     { title: 'Amortisman Takvimi',  sub: 'Tranche bazında aylık ödeme planı · Faiz · Anapara · Kapanış tarihi' },
+    'dividend-ledger': { title: 'Dağıtım Geçmişi',   sub: 'Tüm temettü hareketleri · TTK 509/519 uyum takibi · Ortak bazında toplamlar' },
   }
 
   const TABS: { id: TabId; label: string }[] = [
@@ -309,7 +311,8 @@ export default function PartnersPage() {
     { id: 'dividend',     label: 'Temettü'      },
     { id: 'compensation', label: 'Huzur Hakkı'  },
     { id: 'dilution',     label: 'Sermaye Seyreltme' },
-    { id: 'amortization', label: 'Amortisman'        },
+    { id: 'amortization',     label: 'Amortisman'       },
+    { id: 'dividend-ledger', label: 'Dağıtım Geçmişi' },
   ]
 
   // ── Render ────────────────────────────────────────────────────────────────────
@@ -484,6 +487,10 @@ export default function PartnersPage() {
 
       {activeTab === 'amortization' && (
         <AmortizationTab />
+      )}
+
+      {activeTab === 'dividend-ledger' && (
+        <DividendLedgerTab />
       )}
 
     </div>
