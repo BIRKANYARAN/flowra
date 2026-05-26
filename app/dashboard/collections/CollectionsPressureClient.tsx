@@ -5,6 +5,7 @@
 // slide-over customer detail panel, and inline action forms.
 
 import { useCallback, useState, useMemo, type ChangeEvent } from 'react'
+import { fmtTRY } from '@/lib/format'
 
 export interface CollectionRow {
   id: string
@@ -23,10 +24,6 @@ export interface CollectionRow {
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-function fmtTRY(n: number) {
-  return new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(Math.round(Number(n) || 0)) + ' ₺'
-}
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString('tr-TR', { day: '2-digit', month: 'short', year: 'numeric' })
@@ -170,18 +167,18 @@ function SlideOver({ row, allRows, onClose, onAction, onExtend, onNote }: SlideO
             <div className="bg-[#f8fafc] rounded p-3 space-y-1.5">
               <div className="flex justify-between text-xs">
                 <span className="text-[#64748b]">Toplam</span>
-                <span className="font-bold tabular-nums">{fmtTRY(activeRow.total_try)}</span>
+                <span className="font-bold tabular-nums">{fmtTRY(activeRow.total_try, 0)}</span>
               </div>
               {(activeRow.amount_paid ?? 0) > 0 && (
                 <div className="flex justify-between text-xs">
                   <span className="text-[#64748b]">Ödenen</span>
-                  <span className="font-semibold text-pos-text tabular-nums">{fmtTRY(activeRow.amount_paid ?? 0)}</span>
+                  <span className="font-semibold text-pos-text tabular-nums">{fmtTRY(activeRow.amount_paid ?? 0, 0)}</span>
                 </div>
               )}
               {(activeRow.amount_paid ?? 0) > 0 && (
                 <div className="flex justify-between text-xs border-t border-[#e2e8f0] pt-1.5 mt-1.5">
                   <span className="text-[#64748b] font-semibold">Kalan</span>
-                  <span className="font-black text-neg tabular-nums">{fmtTRY(remaining)}</span>
+                  <span className="font-black text-neg tabular-nums">{fmtTRY(remaining, 0)}</span>
                 </div>
               )}
               <div className="flex justify-between text-xs">
@@ -209,7 +206,7 @@ function SlideOver({ row, allRows, onClose, onAction, onExtend, onNote }: SlideO
               <div className="bg-[#f8fafc] rounded p-3">
                 <div className="flex justify-between text-xs mb-2">
                   <span className="text-[#64748b]">Toplam açık alacak</span>
-                  <span className="font-black text-neg tabular-nums">{fmtTRY(customerTotal)}</span>
+                  <span className="font-black text-neg tabular-nums">{fmtTRY(customerTotal, 0)}</span>
                 </div>
                 <div className="space-y-1 max-h-40 overflow-y-auto">
                   {sameCustomer.map(r => {
@@ -221,7 +218,7 @@ function SlideOver({ row, allRows, onClose, onAction, onExtend, onNote }: SlideO
                           {r.proformas?.proforma_no ?? fmtDateShort(r.sale_date ?? r.created_at)}
                           {d > 0 && <span className="text-neg ml-1">({d}g)</span>}
                         </span>
-                        <span className="tabular-nums">{fmtTRY(rem)}</span>
+                        <span className="tabular-nums">{fmtTRY(rem, 0)}</span>
                       </div>
                     )
                   })}
@@ -258,7 +255,7 @@ function SlideOver({ row, allRows, onClose, onAction, onExtend, onNote }: SlideO
             {activeAction === 'pay' && (
               <div className="bg-pos-light/30 rounded p-3 space-y-2 border border-pos-light">
                 <label className="text-[10px] font-black uppercase tracking-widest text-pos-text">
-                  Tahsilat Tutarı (₺) — max {fmtTRY(remaining)}
+                  Tahsilat Tutarı (₺) — max {fmtTRY(remaining, 0)}
                 </label>
                 <div className="flex gap-2">
                   <input
@@ -290,7 +287,7 @@ function SlideOver({ row, allRows, onClose, onAction, onExtend, onNote }: SlideO
                     onClick={async () => { setSaving(true); await onAction(activeRow.id, 'paid'); setSaving(false); setActiveAction(null) }}
                     className="text-[10px] font-semibold text-pos-text underline underline-offset-1 hover:no-underline disabled:opacity-50"
                   >
-                    Tamamını tahsil et ({fmtTRY(remaining)})
+                    Tamamını tahsil et ({fmtTRY(remaining, 0)})
                   </button>
                 </div>
               </div>
@@ -404,7 +401,7 @@ function PressureRow({ row, onExpand, onQuickPay, patching }: RowProps) {
             )}
             {hasPartial && (
               <span className="text-[10px] text-pos-text font-semibold">
-                Kısmi ödeme: {fmtTRY(row.amount_paid ?? 0)} alındı
+                Kısmi ödeme: {fmtTRY(row.amount_paid ?? 0, 0)} alındı
               </span>
             )}
           </div>
@@ -412,9 +409,9 @@ function PressureRow({ row, onExpand, onQuickPay, patching }: RowProps) {
 
         {/* Amount + date */}
         <div className="text-right shrink-0">
-          <div className="text-sm font-black tabular-nums text-[#0f172a]">{fmtTRY(remaining)}</div>
+          <div className="text-sm font-black tabular-nums text-[#0f172a]">{fmtTRY(remaining, 0)}</div>
           {hasPartial && (
-            <div className="text-[10px] text-[#94a3b8] tabular-nums">{fmtTRY(row.total_try)} toplam</div>
+            <div className="text-[10px] text-[#94a3b8] tabular-nums">{fmtTRY(row.total_try, 0)} toplam</div>
           )}
           <div className={`text-[10px] mt-0.5 ${days > 0 ? meta.labelColor : 'text-[#94a3b8]'} font-semibold`}>
             {days > 0 ? `${days} gün vadeli` : days < 0 ? `${Math.abs(days)} gün kaldı` : 'Bugün'}

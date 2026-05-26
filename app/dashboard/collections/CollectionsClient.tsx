@@ -11,6 +11,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useEffect, useRef, useState, useCallback, useMemo, type ChangeEvent } from 'react'
+import { fmtTRY } from '@/lib/format'
 
 export interface CollectionRow {
   id: string
@@ -33,10 +34,6 @@ export interface CollectionRow {
 type TabKey = 'unpaid' | 'paid' | 'all'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-function fmtTRY(n: number) {
-  return new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n) || 0) + ' ₺'
-}
 
 function fmtForeign(n: number, currency: string) {
   const sym = currency === 'USD' ? '$' : currency === 'EUR' ? '€' : currency === 'GBP' ? '£' : ''

@@ -8,6 +8,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { fmtDate, fmtMoney, ErrorBanner, EmptyState, Label } from '@/components/ui'
+import { fmtTRY } from '@/lib/format'
 import { FlowraButton } from '@/components/ui-kit/FlowraButton'
 import { FlowraInput }  from '@/components/ui-kit/FlowraInput'
 import { CURRENCIES_EXTENDED, EXPENSE_CATEGORIES, type Expense } from '@/types'
@@ -46,9 +47,7 @@ interface AddFormProps {
   partners: { id: string; name: string }[]
 }
 
-function fmtTRYLocal(n: number) {
-  return new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(Math.round(n)) + ' ₺'
-}
+const fmtTRYLocal = (n: number) => fmtTRY(n, 0)
 
 function AddExpenseSlideOver({ onClose, onSaved, partners: initialPartners }: AddFormProps) {
   const today = new Date().toISOString().slice(0, 10)

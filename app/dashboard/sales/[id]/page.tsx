@@ -5,13 +5,7 @@ import Link from 'next/link'
 import { normalizeSaleDetail, normalizeSaleItem, type NormalizedSaleDetail, type NormalizedSaleItem } from '@/lib/normalize'
 import { calculateLine, type LineInput } from '@/lib/calc'
 import { resolveCompanyId } from '@/lib/resolve-company'
-import { fmtTRY as fmt, fmtMoney, fmtNum, sym } from '@/lib/format'
-
-function fmtDate(d: string) {
-  try {
-    return new Date(d).toLocaleDateString('tr-TR', { day:'2-digit', month:'2-digit', year:'numeric' })
-  } catch { return d }
-}
+import { fmtTRY as fmt, fmtMoney, fmtNum, sym, fmtDate } from '@/lib/format'
 
 export default async function SaleDetailPage({ params }: { params: { id: string } }) {
   const supabase = createClient()
