@@ -6,6 +6,10 @@ import { createClient } from '@/lib/supabase-server'
 import { StatusBadge, EmptyState, ErrorBanner } from '@/components/ui'
 import { formatTRY, fmtDate, sym } from '@/lib/format'
 import { normalizeProformaRow, type NormalizedProformaRow } from '@/lib/normalize'
+import {
+  ProformaAnalyticsService,
+  type ProformaConversionMetrics,
+} from '@/lib/services/commercial/proforma-analytics.service'
 
 interface Props { companyId: string }
 
@@ -13,6 +17,16 @@ export async function ProformasContent({ companyId }: Props) {
   const supabase = createClient()
   let list: NormalizedProformaRow[] = []
   let fetchError = ''
+
+  // Analytics period: current year
+  const now = new Date()
+  const analyticsPeriod = {
+    from: `${now.getFullYear()}-01-01`,
+    to:   now.toISOString().slice(0, 10),
+  }
+  const analytics: ProformaConversionMetrics | null =
+    await ProformaAnalyticsService.getMetrics(companyId, supabase, analyticsPeriod)
+      .catch(() => null)
 
   // Pipeline aggregates
   let pipelineValueTRY = 0
@@ -60,8 +74,105 @@ export async function ProformasContent({ companyId }: Props) {
   const decided   = convertedCount + rejectedCount
   const winRate   = decided > 0 ? Math.round((convertedCount / decided) * 100) : null
 
+  const trendBadge = analytics?.win_rate_trend
+  const trendColor =
+    trendBadge === 'improving'  ? 'bg-pos-light text-pos-text'
+    : trendBadge === 'declining' ? 'bg-neg-light text-neg-text'
+    : trendBadge === 'stable'    ? 'bg-[#f1f5f9] text-[#64748b]'
+    : 'bg-[#f1f5f9] text-[#94a3b8]'
+  const trendLabel =
+    trendBadge === 'improving'           ? 'İyileşiyor'
+    : trendBadge === 'declining'          ? 'Gerileme'
+    : trendBadge === 'stable'             ? 'Stabil'
+    : 'Yetersiz Veri'
+
   return (
     <div className="max-w-5xl space-y-4">
+
+      {/* ── Dönüşüm Analizi (proforma-analytics) ──────────────────────────── */}
+      {analytics && analytics.total_proformas > 0 && (
+        <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+              Dönüşüm Analizi
+            </span>
+            <span className={`text-[9px] font-black uppercase tracking-wide px-2 py-0.5 rounded ${trendColor}`}>
+              {trendLabel}
+              {analytics.prior_win_rate_pct !== null && (
+                <span> · Önceki: %{analytics.prior_win_rate_pct.toFixed(0)}</span>
+              )}
+            </span>
+          </div>
+
+          {/* 4 KPI cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 border border-[#e2e8f0] rounded overflow-hidden">
+            {[
+              {
+                label: 'Kazanma Oranı',
+                value: analytics.total_proformas > 0 ? `%${analytics.win_rate_pct.toFixed(0)}` : '—',
+                sub: `${analytics.converted_count + analytics.rejected_count + analytics.expired_count} karar verildi`,
+                color: analytics.win_rate_pct >= 60 ? 'text-pos-text'
+                  : analytics.win_rate_pct >= 40 ? 'text-warn-text'
+                  : 'text-neg',
+              },
+              {
+                label: 'Toplam Teklif',
+                value: String(analytics.total_proformas),
+                sub: `${analytics.converted_count} dönüştü · ${analytics.pending_count} açık`,
+                color: 'text-[#0f172a]',
+              },
+              {
+                label: 'Pipeline Değeri',
+                value: analytics.pipeline_count > 0 ? formatTRY(analytics.pipeline_value_try) : '—',
+                sub: `${analytics.pipeline_count} açık teklif`,
+                color: analytics.pipeline_count > 0 ? 'text-info-text' : 'text-[#94a3b8]',
+              },
+              {
+                label: 'Ort. Anlaşma',
+                value: analytics.avg_deal_size_try !== null ? formatTRY(analytics.avg_deal_size_try) : '—',
+                sub: analytics.avg_days_to_convert !== null
+                  ? `Ort. ${analytics.avg_days_to_convert}g dönüşüm`
+                  : 'Dönüşüm yok',
+                color: 'text-[#334155]',
+              },
+            ].map((card, i) => (
+              <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e2e8f0]' : ''}`}>
+                <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
+                <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
+                <div className="text-[10px] text-[#94a3b8] mt-1 leading-tight">{card.sub}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Conversion funnel */}
+          <div>
+            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">Dönüşüm Hunisi</div>
+            <div className="flex items-stretch gap-1">
+              {[
+                { label: 'Toplam',     count: analytics.total_proformas,  color: 'bg-[#e2e8f0]',   textColor: 'text-[#475569]'  },
+                { label: 'Dönüştü',   count: analytics.converted_count,   color: 'bg-pos-light', textColor: 'text-pos-text' },
+                { label: 'Reddedildi', count: analytics.rejected_count,   color: 'bg-neg-light',   textColor: 'text-neg-text'   },
+                { label: 'Süresi Doldu', count: analytics.expired_count,  color: 'bg-warn-light',  textColor: 'text-warn-text'  },
+                { label: 'Bekliyor',   count: analytics.pending_count,    color: 'bg-info-light',  textColor: 'text-info-text'  },
+              ].map(step => {
+                if (step.count === 0) return null
+                const widthPct = analytics.total_proformas > 0
+                  ? Math.max(6, Math.round((step.count / analytics.total_proformas) * 100))
+                  : 6
+                return (
+                  <div key={step.label} className="flex-1 min-w-0">
+                    <div className={`h-7 rounded flex items-center justify-center ${step.color}`}>
+                      <span className={`text-[10px] font-black tabular-nums ${step.textColor}`}>{step.count}</span>
+                    </div>
+                    <div className={`text-[9px] mt-1 text-center font-semibold ${step.textColor} truncate`}>{step.label}</div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* KPI strip */}
       {list.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
