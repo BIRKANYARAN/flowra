@@ -8,7 +8,12 @@
     "start": "next start",
     "lint": "next lint",
     "test": "vitest",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
+    "test:ui": "vitest --ui",
+    "db:migrate": "dbmate --url \"$SUPABASE_DB_URL\" up",
+    "db:rollback": "dbmate --url \"$SUPABASE_DB_URL\" rollback",
+    "db:status": "dbmate --url \"$SUPABASE_DB_URL\" status",
+    "db:new": "dbmate --url \"$SUPABASE_DB_URL\" new"
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.2",

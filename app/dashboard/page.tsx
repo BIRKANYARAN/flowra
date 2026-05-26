@@ -355,9 +355,30 @@ export default async function DashboardPage() {
   }
   const decisionAlerts = evaluateAlerts(alertInputs)
 
+  // ── Re-apply situation with alert penalty now that we have alert counts ───
+  // First pass (situation above) was needed to feed partner score into alertInputs.
+  // This second pass applies the alert penalty so the composite cannot contradict
+  // visible critical alerts.
+  const alertCounts = {
+    critical: decisionAlerts.filter(a => a.severity === 'critical').length,
+    warning:  decisionAlerts.filter(a => a.severity === 'warning').length,
+    info:     decisionAlerts.filter(a => a.severity === 'info').length,
+  }
+  const situationFinal = computeSituation({
+    cashRunwayMonths:  runwayMonths,
+    isProfitable:      monthlyNet >= 0,
+    netMarginPct:      fs.revenue_try > 0 ? fs.net_after_tax_try / fs.revenue_try : 0,
+    debtServiceRatio,
+    overdueRatioPct,
+    maxBurdenScoreAbs: equalization.total_equalization > 0
+      ? Math.min(1, equalization.total_equalization / Math.max(distributableAmount, 1))
+      : 0,
+    activeAlertCounts: alertCounts,
+  })
+
   // ── AI Situation Summary ───────────────────────────────────────────────────
   const aiSummary = await generateSituationSummary({
-    situation,
+    situation: situationFinal,
     topAlerts:  decisionAlerts.slice(0, 5),
     period:     label,
     revenue:    fs.revenue_try,
@@ -426,8 +447,8 @@ export default async function DashboardPage() {
       {/* ── SITUATION BRIEF ─────────────────────────────────────────────── */}
       <SituationBrief
         situationLine={aiSummary.summary_tr}
-        situationStatus={situation.status}
-        compositeScore={situation.composite}
+        situationStatus={situationFinal.status}
+        compositeScore={situationFinal.composite}
         cashRunwayDays={runwayDays}
         receivablesTotal={uncollectedSalesTotal}
         overdueTotal60={overdueTotal60}

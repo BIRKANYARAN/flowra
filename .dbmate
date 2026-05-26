@@ -1,0 +1,6 @@
+# dbmate configuration for Flowra
+# https://github.com/amacneil/dbmate
+
+migrations-dir = supabase/migrations
+schema-file    = supabase/schema.sql
+no-dump-schema = true

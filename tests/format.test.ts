@@ -113,9 +113,11 @@ describe('fmtCompact', () => {
     expect(result).toContain('₺')
   })
 
-  it('formats thousands with B suffix (Bin = thousand in Turkish context)', () => {
+  it('formats sub-100K values without suffix (full number, Turkish locale)', () => {
+    // fmtCompact uses K for ≥100K, M for ≥1M; sub-100K gets full formatting
     const result = fmtCompact(12_500)
-    expect(result).toContain('B')
+    expect(result).not.toContain('B')
+    expect(result).not.toContain('K')
     expect(result).toContain('₺')
   })
 

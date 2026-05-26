@@ -195,3 +195,120 @@ describe('computeSituation — scores structure', () => {
     }
   })
 })
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Alert Penalty Tests (T0.1 — Phase 0 implementation)
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeSituation — alert penalty (T0.1)', () => {
+  it('0 alerts: no penalty — perfect score stays 100', () => {
+    const result = computeSituation({
+      ...IDEAL,
+      activeAlertCounts: { critical: 0, warning: 0, info: 0 },
+    })
+    expect(result.composite).toBe(100)
+    expect(result.status).toBe('healthy')
+  })
+
+  it('1 critical alert: composite ≤ 74', () => {
+    const result = computeSituation({
+      ...IDEAL,
+      activeAlertCounts: { critical: 1, warning: 0, info: 0 },
+    })
+    expect(result.composite).toBeLessThanOrEqual(74)
+  })
+
+  it('1 critical alert: status cannot be healthy', () => {
+    const result = computeSituation({
+      ...IDEAL,
+      activeAlertCounts: { critical: 1, warning: 0, info: 0 },
+    })
+    expect(result.status).not.toBe('healthy')
+  })
+
+  it('1 critical alert on healthy company: status is caution', () => {
+    // 100 - 15 = 85 → but capped at 74 → caution
+    const result = computeSituation({
+      ...IDEAL,
+      activeAlertCounts: { critical: 1, warning: 0, info: 0 },
+    })
+    expect(result.composite).toBe(74)
+    expect(result.status).toBe('caution')
+  })
+
+  it('3 critical alerts: composite ≤ 55 (100 - 45 = 55, capped at 74)', () => {
+    const result = computeSituation({
+      ...IDEAL,
+      activeAlertCounts: { critical: 3, warning: 0, info: 0 },
+    })
+    // 100 - (3×15) = 55, already ≤ 74 so cap does not change it further
+    // statusFromComposite: ≥80 healthy, ≥60 caution, ≥40 at-risk, <40 critical
+    expect(result.composite).toBe(55)
+    expect(result.status).toBe('at-risk')
+  })
+
+  it('warnings apply smaller penalty (3 pts each)', () => {
+    const result = computeSituation({
+      ...IDEAL,
+      activeAlertCounts: { critical: 0, warning: 2, info: 0 },
+    })
+    expect(result.composite).toBe(94)   // 100 - 2×3 = 94
+    expect(result.status).toBe('healthy')
+  })
+
+  it('mixed: 1 critical + 2 warnings', () => {
+    const result = computeSituation({
+      ...IDEAL,
+      activeAlertCounts: { critical: 1, warning: 2, info: 0 },
+    })
+    // 100 - 15 - 6 = 79 → capped at 74
+    expect(result.composite).toBe(74)
+    expect(result.status).not.toBe('healthy')
+  })
+
+  it('situation line leads with Kritik when critical alert active', () => {
+    const result = computeSituation({
+      ...IDEAL,
+      activeAlertCounts: { critical: 1, warning: 0, info: 0 },
+    })
+    expect(result.situationLine).toMatch(/^Kritik/)
+  })
+
+  it('situation line does NOT lead with Kritik when no critical alerts', () => {
+    const result = computeSituation({
+      ...IDEAL,
+      activeAlertCounts: { critical: 0, warning: 1, info: 0 },
+    })
+    expect(result.situationLine).not.toMatch(/^Kritik/)
+  })
+
+  it('backward compat: missing activeAlertCounts → no penalty', () => {
+    // Old callers that do not pass activeAlertCounts must still work
+    const result = computeSituation(IDEAL)
+    expect(result.composite).toBe(100)
+    expect(result.status).toBe('healthy')
+  })
+
+  it('info alerts do not reduce composite', () => {
+    const result = computeSituation({
+      ...IDEAL,
+      activeAlertCounts: { critical: 0, warning: 0, info: 10 },
+    })
+    expect(result.composite).toBe(100)
+  })
+
+  it('penalty floor is 0: many alerts cannot go below 0', () => {
+    const result = computeSituation({
+      ...IDEAL,
+      activeAlertCounts: { critical: 20, warning: 20, info: 0 },
+    })
+    expect(result.composite).toBeGreaterThanOrEqual(0)
+  })
+
+  it('scores object is unaffected by alert penalty (penalty is composite-only)', () => {
+    const withAlerts    = computeSituation({ ...IDEAL, activeAlertCounts: { critical: 2, warning: 0, info: 0 } })
+    const withoutAlerts = computeSituation(IDEAL)
+    // Individual dimension scores must be identical
+    expect(withAlerts.scores).toEqual(withoutAlerts.scores)
+  })
+})

@@ -161,9 +161,18 @@ export async function GET(req: NextRequest) {
       partnerLoanConcentration: loanConcentration,
     }
 
-    const alerts  = evaluateAlerts(alertInputs)
+    const alerts = evaluateAlerts(alertInputs)
+    // Re-compute situation with alert penalty applied
+    const situationFinal = computeSituation({
+      ...situationInputs,
+      activeAlertCounts: {
+        critical: alerts.filter(a => a.severity === 'critical').length,
+        warning:  alerts.filter(a => a.severity === 'warning').length,
+        info:     alerts.filter(a => a.severity === 'info').length,
+      },
+    })
     const summary = await generateSituationSummary({
-      situation,
+      situation: situationFinal,
       topAlerts:   alerts.slice(0, 3),
       period,
       revenue:     pnl?.revenue_try ?? 0,
@@ -172,7 +181,7 @@ export async function GET(req: NextRequest) {
     })
 
     return NextResponse.json({
-      situation,
+      situation: situationFinal,
       alerts: alerts.slice(0, 5),
       summary,
       computed_at: new Date().toISOString(),

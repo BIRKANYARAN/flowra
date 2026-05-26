@@ -16,8 +16,9 @@
 //   logAudit({ userId, entityType: 'purchase', entityId: id, action: 'create', newData: row })
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { createClient }  from '@/lib/supabase-server'
-import { AppError }      from '@/types/errors'
+import { createClient }    from '@/lib/supabase-server'
+import { stampAuditRow }  from '@/lib/services/audit-chain.service'
+import { AppError }       from '@/types/errors'
 import type {
   AuditLog,
   Alert,
@@ -62,7 +63,7 @@ export async function logAudit(input: LogAuditInput): Promise<void> {
   // the current request's cookies (Next.js server context).
   try {
     const supabase = createClient()
-    await supabase
+    const { data: inserted, error: insertError } = await supabase
       .from('audit_logs')
       .insert({
         user_id:     input.userId,
@@ -74,6 +75,26 @@ export async function logAudit(input: LogAuditInput): Promise<void> {
         new_data:    input.newData  ?? null,
         ip_address:  input.ipAddress ?? null,
       })
+      .select('id, created_at')
+      .single()
+
+    if (!insertError && inserted) {
+      // Fire-and-forget tamper-evident hash stamp.
+      // stampAuditRow gracefully no-ops if content_hash column is not yet migrated.
+      stampAuditRow(
+        inserted.id,
+        input.companyId,
+        {
+          action:        input.action,
+          resource_type: input.entityType,
+          resource_id:   input.entityId,
+          old_values:    input.oldData  ?? null,
+          new_values:    input.newData  ?? null,
+          created_at:    inserted.created_at,
+        },
+        supabase,
+      ).catch(() => { /* non-fatal: hash stamp failure never blocks audit write */ })
+    }
   } catch (err: unknown) {
     // Log but never propagate — audit failures must not crash the main flow.
     console.error('[audit] WRITE_FAIL audit_logs:', err instanceof Error ? err.message : String(err))

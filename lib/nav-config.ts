@@ -116,6 +116,7 @@ export const NAV_GROUPS: NavGroup[] = [
         icon:  'shield',
         exact: true,
       },
+      { href: '/dashboard/admin/workflows', label: 'İş Akışları', icon: 'workflow' },
       { href: '/dashboard/settings', label: 'Ayarlar', icon: 'settings' },
     ],
   },

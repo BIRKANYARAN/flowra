@@ -5,6 +5,12 @@ import { round2 } from '@/lib/calc'
 
 export type SituationStatus = 'healthy' | 'caution' | 'at-risk' | 'critical'
 
+export interface ActiveAlertCounts {
+  critical: number
+  warning:  number
+  info:     number
+}
+
 export interface SituationInputs {
   // Cash dimension (weight 0.30)
   cashRunwayMonths: number        // months of runway at current burn rate (0 if profitable)
@@ -21,6 +27,11 @@ export interface SituationInputs {
 
   // Partner dimension (weight 0.10)
   maxBurdenScoreAbs: number       // absolute value of worst partner burden score (0-1 scale)
+
+  // Active alert counts — used to penalise the composite score so it cannot
+  // contradict visible critical alerts. Optional: callers that do not yet
+  // have alert counts pass nothing and receive no penalty.
+  activeAlertCounts?: ActiveAlertCounts
 }
 
 export interface SituationResult {
@@ -143,7 +154,7 @@ export function computeSituation(inputs: SituationInputs): SituationResult {
     partner:     round2(partnerScore(inputs)),
   }
 
-  const composite = round2(
+  const rawComposite = round2(
     scores.cash        * WEIGHTS.cash        +
     scores.profit      * WEIGHTS.profit      +
     scores.debt        * WEIGHTS.debt        +
@@ -151,9 +162,24 @@ export function computeSituation(inputs: SituationInputs): SituationResult {
     scores.partner     * WEIGHTS.partner,
   )
 
+  // ── Alert penalty ─────────────────────────────────────────────────────────
+  // Each critical alert removes 15 points; each warning removes 3 points.
+  // A critical alert also hard-caps the composite at 74 so the status can
+  // never display as 'healthy' while a critical alert is active.
+  // This prevents the trust-destroying "100/100 Sağlıklı + critical alert" state.
+  const criticalCount = inputs.activeAlertCounts?.critical ?? 0
+  const warningCount  = inputs.activeAlertCounts?.warning  ?? 0
+  const alertPenalty  = criticalCount * 15 + warningCount * 3
+  const penalised     = Math.max(0, round2(rawComposite - alertPenalty))
+  const composite     = criticalCount > 0 ? Math.min(penalised, 74) : penalised
+
   const status         = statusFromComposite(composite)
   const criticalFactor = deriveCriticalFactor(inputs, scores)
-  const situationLine  = `Şirket ${STATUS_LABELS[status]} — ${criticalFactor}`
+
+  // Lead with alert language when critical alerts are active
+  const situationLine = criticalCount > 0
+    ? `Kritik uyarı mevcut — ${criticalFactor}`
+    : `Şirket ${STATUS_LABELS[status]} — ${criticalFactor}`
 
   return { status, composite, situationLine, criticalFactor, scores }
 }
