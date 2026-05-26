@@ -1,8 +1,8 @@
-# Flowra CFO El Kitabı
+# CFO Muhasebe El Kitabı
 
-**Mali İşler ve Muhasebe Uzmanları için Teknik Başvuru Kılavuzu**
+**Türk KOBİ'leri için Flowra Muhasebe Sistemi — CFO, Muhasebeci ve Mali Müşavir Başvuru Rehberi**
 
-Bu el kitabı, Flowra'yı muhasebe ve finansal kontrol amacıyla kullanan CFO'lar, muhasebeciler ve mali müşavirler için hazırlanmıştır. MSUGT hesap planı, çift taraflı kayıt sistemi ve Türk muhasebe standartları hakkında temel bilgi varsayılmaktadır.
+Bu el kitabı, Flowra'nın muhasebe altyapısını derinlemesine anlamak isteyen CFO'lar, muhasebeciler, mali müşavirler ve şirket ortakları için hazırlanmıştır. Türk muhasebe standartları (MSUGT), çift taraflı kayıt sistemi ve ilgili mevzuat (TTK, GVK, VUK, KDV Kanunu) kapsamlı biçimde ele alınmaktadır. Teknik bilgisi olmayan yöneticiler de bu kitaptan yararlanabilir; her bölüm temel kavramları sıfırdan açıklar.
 
 ---
 
@@ -818,4 +818,155 @@ Tüm admin endpoint'leri `Authorization: Bearer <token>` başlığı ve CFO/Admi
 
 ---
 
-*Bu el kitabı Flowra v2.0 sürümü için hazırlanmıştır. MSUGT hesap planı referansları 2024 güncellemesine dayanmaktadır. Vergi oranları ve beyanname tarihleri Türk vergi mevzuatındaki değişikliklere göre güncellenebilir.*
+## 14. Kurumlar Vergisi Tahmini
+
+### 14.1 Kurumlar Vergisi Nedir?
+
+Kurumlar vergisi, şirketlerin belirli bir vergi döneminde elde ettikleri kazanç üzerinden ödediği doğrudan vergidir. Türkiye'de kurumlar vergisi oranı **%25**'tir (2024 ve sonrası için geçerli standart oran).
+
+### 14.2 Vergi Matrahı Hesabı
+
+Kurumlar vergisi matrahı, ticari kârdan vergi mevzuatı kapsamındaki indirimler düşülerek bulunan "mali kâr"dır:
+
+```
+Ticari Kâr (Dönem Net Kârı)
+  - Kanunen Kabul Edilen İndirimler
+    + Kanunen Kabul Edilmeyen Giderler (KKEG)
+  ══════════════════════════════════════════
+  = VERGİ MATRAHI (Mali Kâr)
+
+Hesaplanan Kurumlar Vergisi = Vergi Matrahı × %25
+```
+
+**Kanunen Kabul Edilmeyen Giderlere (KKEG) Örnekler:**
+- Örtülü kazanç dağıtımı kapsamındaki işlemler (KVK 13)
+- Belgesiz giderler
+- Ceza ve para cezaları
+- Bazı bağış ve yardımlar (limitin üzerindekiler)
+
+### 14.3 Flowra'da Vergi Tahmini
+
+Flowra, kesin vergi matrahını hesaplamaz (bu mali müşavir işidir); ancak şu yaklaşık hesaplamayı sunar:
+
+```
+Tahmini Kurumlar Vergisi = Dönem Net Kârı (EBT) × 0,25
+```
+
+Bu tahmin aşağıdakiler dahil edilmeden hesaplanır:
+- KKEG düzeltmeleri
+- Geçmiş yıl zararları
+- Yatırım indirimleri
+
+Finans Merkezi > Gelir Tablosu ekranında "Tahmini Vergi" satırı bu hesapla doldurulur.
+
+### 14.4 Kurumlar Vergisi Beyan Takvimi
+
+| İşlem | Tarih |
+|-------|-------|
+| Geçici vergi beyannamesi (Q1) | 17 Mayıs |
+| Geçici vergi beyannamesi (Q2) | 17 Ağustos |
+| Geçici vergi beyannamesi (Q3) | 17 Kasım |
+| Yıllık kurumlar vergisi beyannamesi | Hesap dönemini takip eden 4. ayın son günü (takvim yılı için: 30 Nisan) |
+
+Geçici vergi, yıllık kurumlar vergisinin peşin ödenmesi niteliğindedir. Yıllık beyanda mahsup edilir.
+
+### 14.5 Muhasebe Kaydı
+
+Tahakkuk yöntemiyle hesap dönemi boyunca vergi karşılığı ayrılır:
+
+```
+DR 370 Dönem Kârı Vergi ve Diğer Yasal Yükümlülükler
+  CR 360 Ödenecek Vergi
+```
+
+Flowra bu kaydı dönem kapanışında ve yıllık hesaplamada otomatik önerir.
+
+---
+
+## 15. TTK / GVK / VUK Uyum Kuralları
+
+### 15.1 Türk Ticaret Kanunu (TTK) Uyum Özeti
+
+| Madde | Konu | Flowra'da Kontrol Noktası |
+|-------|------|--------------------------|
+| **TTK 394** | Huzur hakkı için yönetim kurulu kararı zorunlu | Dönem kapanış kontrol listesi Madde 7 |
+| **TTK 509** | Net kâr yokken temettü beyan edilemez | Kâr dağıtımı beyanında dağıtılabilir kâr kontrolü |
+| **TTK 514** | Yönetim kurulunun finansal kontrol görevi | Mutabakat snapshot sistemi |
+| **TTK 519** | Yasal yedek: net kârın %5'i zorunlu | Dönem kapanışında otomatik yasal yedek fişi |
+| **TTK 588** | Ödenmemiş sermaye için faiz hakkı | Sermaye açığı uyarısı (CAPITAL_UNPAID) |
+
+### 15.2 Gelir Vergisi Kanunu (GVK) Uyum Özeti
+
+| Madde | Konu | Flowra'da Kontrol Noktası |
+|-------|------|--------------------------|
+| **GVK 94** | Temettü ödemelerinde %10 stopaj | Temettü beyanında otomatik stopaj fişi (CR 360) |
+| **GVK 61** | Huzur hakkı ücret sayılır; SGK bildirimi | Maaş gideri kategorisinde kayıt (hesap 771) |
+| **GVK 70** | Kiracı stopajı | Kira gideri kategorisinde kullanıcı uyarısı |
+
+### 15.3 Vergi Usul Kanunu (VUK) Uyum Özeti
+
+| Madde | Konu | Flowra'da Kontrol Noktası |
+|-------|------|--------------------------|
+| **VUK 219** | Her dönem banka mutabakatı tutulmalı | Dönem kapanış kontrol listesi Madde 1 |
+| **VUK 227** | Belgesiz gider kabul edilmez | Gider belge yükleme özelliği |
+| **VUK 315** | Amortisman hesaplama yöntemi | Demirbaş girişinde yıllık oran belirleme |
+
+### 15.4 KDV Kanunu Uyum Özeti
+
+| Madde | Konu | Flowra'da Kontrol Noktası |
+|-------|------|--------------------------|
+| **KDV K. Md. 29** | İndirilecek KDV hakkı; fatura şartı | 191 hesabı otomatik hesapla |
+| **KDV K. Md. 41** | Beyan tarihi (ayın 26'sı) | Finans Merkezi > Vergi takvimi uyarısı |
+| **KDV K. Md. 23** | Özel matrah halleri | Standart oran dışı işlemlerde manuel kontrol gerekir |
+
+### 15.5 Kurumlar Vergisi Kanunu (KVK) Uyum Özeti
+
+| Madde | Konu | Flowra'da Kontrol Noktası |
+|-------|------|--------------------------|
+| **KVK 13** | Transfer fiyatlandırması; faizsiz ortak kredisi riski | Dilim girişinde VUK/KVK 13 uyarısı |
+| **KVK 5** | İştirak kazancı istisnası | Manuel düzeltme fişi gerekebilir |
+| **KVK 32** | Geçici vergi ve yıllık beyan | Vergi takvimi bildirimleri |
+
+### 15.6 Uyum Kontrol Döngüsü
+
+Önerilen aylık uyum kontrol rutini:
+
+```
+Her Ay Sonu:
+  [ ] Tüm satış faturaları sisteme girildi mi?
+  [ ] Tüm masraf belgeleri yüklendi mi?
+  [ ] KDV beyanı için 391-191 farkı hesaplandı mı?
+  [ ] Ortak kredilerinde VUK/KVK 13 uyarısı var mı?
+  [ ] Huzur hakkı gider kaydedildi mi?
+  [ ] Dönem kapanış 8 madde listesi tamamlandı mı?
+  [ ] Mizan dengeli mi?
+
+Her Üç Ayda Bir:
+  [ ] Geçici vergi hesaplaması için mali müşavire veri aktarıldı mı?
+  [ ] Yasal yedek sınırı kontrol edildi mi? (%20 aşıldı mı?)
+  [ ] Stok sayımı yapıldı ve muhasebe uyumlu mu?
+  [ ] Audit log hash zinciri doğrulandı mı?
+
+Yıl Sonu:
+  [ ] Yıllık kurumlar vergisi beyanı için geçici vergi mahsubu hazır mı?
+  [ ] Temettü kararı ve stopaj bildirimi yapıldı mı?
+  [ ] Dönem sonu stok değerlemesi FIFO ile doğrulandı mı?
+  [ ] Bilanço denge kontrolü: Aktif = Pasif + Öz Kaynak?
+```
+
+---
+
+### 13.3 API Endpoint Referansı (Yineleme — Hızlı Erişim)
+
+| Endpoint | Yöntem | Açıklama |
+|----------|--------|----------|
+| `/api/admin/gl-shadow-audit` | GET | Operasyonel ve GL değer karşılaştırması |
+| `/api/admin/gl-readiness` | GET | Kapsam yüzdesi ve eksik fiş listesi |
+| `/api/admin/audit-chain-verify` | GET | Denetim zinciri kurcalama kontrolü |
+| `/api/admin/trial-balance` | GET | Dönem bazlı veya kümülatif mizan verisi |
+| `/api/admin/period-close-status` | GET | Dönem kontrol listesi durumu |
+| `/api/health` | GET | Genel sistem sağlığı ve GL durumu |
+
+---
+
+*Bu el kitabı Flowra v1.0 sürümü için hazırlanmıştır. MSUGT hesap planı referansları 2024 güncellemesine dayanmaktadır. Vergi oranları ve beyanname tarihleri Türk vergi mevzuatındaki değişikliklere göre güncellenebilir. Kesin vergi hesaplamaları için lisanslı mali müşavirinize danışınız.*
