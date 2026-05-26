@@ -18,6 +18,7 @@ import { WhatIfTab }          from './_tabs/WhatIfTab'
 import { DebtPressureTab }    from './_tabs/DebtPressureTab'
 import { PartnerImpactTab }   from './_tabs/PartnerImpactTab'
 import { VarianceTab }        from './_tabs/VarianceTab'
+import { BreakEvenTab }       from './_tabs/BreakEvenTab'
 
 function TabSkeleton() {
   return (
@@ -75,6 +76,7 @@ export default async function PlanningPage({ searchParams }: PageProps) {
     'variance':        'Gerçek vs Plan',
     'debt-pressure':   'Borç Baskısı',
     'partner-impact':  'Ortak Etkisi',
+    'breakeven':       'Başabaş Analizi',
     'tasks':           'Görevler',
   }
   const planSubs: Record<string, string> = {
@@ -84,6 +86,7 @@ export default async function PlanningPage({ searchParams }: PageProps) {
     'variance':        'Senaryo doğruluğu · Plan vs gerçekleşen · Tahmin sapması',
     'debt-pressure':   'Borç baskısı · Servis oranı · Tranche takvimi',
     'partner-impact':  'Ortak etkisi · Eşitleme hesabı · Dağıtım analizi',
+    'breakeven':       'Başabaş noktası · Katkı payı · Güvenlik marjı · Hedef kâr senaryosu',
     'tasks':           'Görev takibi · Vadesi yaklaşan · Öncelik sırası',
   }
 
@@ -129,6 +132,10 @@ export default async function PlanningPage({ searchParams }: PageProps) {
         {/* debt-pressure: tranche ladder + DSR + concentration */}
         {activeTab === 'debt-pressure' && (
           <DebtPressureTab companyId={companyId} userId={userId} />
+        )}
+        {/* breakeven: başabaş analizi */}
+        {activeTab === 'breakeven' && (
+          <BreakEvenTab companyId={companyId} userId={userId} />
         )}
         {activeTab === 'tasks' && <TasksContent companyId={companyId} />}
       </Suspense>

@@ -246,6 +246,7 @@ export const PLANNING_TABS = [
   { key: 'variance',        label: 'Gerçek vs Plan'      },
   { key: 'debt-pressure',   label: 'Borç Baskısı'       },
   { key: 'partner-impact',  label: 'Ortak Etkisi'       },
+  { key: 'breakeven',       label: 'Başabaş'             },
   { key: 'tasks',           label: 'Görevler'            },
 ] as const
 
