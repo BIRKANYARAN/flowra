@@ -3,9 +3,10 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams, useRouter }       from 'next/navigation'
 import { cn } from '@/components/ui'
+import AuditReadinessTab from './_components/AuditReadinessTab'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
-type TabId = 'calendar' | 'actions' | 'resolutions'
+type TabId = 'calendar' | 'actions' | 'resolutions' | 'audit'
 
 interface GovernanceObligation {
   id: string; source: string; title: string; description: string
@@ -30,6 +31,7 @@ const TABS: { id: TabId; label: string; icon: string }[] = [
   { id: 'calendar',    label: 'Takvim',              icon: '📅' },
   { id: 'actions',     label: 'Kurumsal Aksiyonlar', icon: '🏛️' },
   { id: 'resolutions', label: 'Kararlar',            icon: '⚖️' },
+  { id: 'audit',       label: 'Denetim Hazırlığı',  icon: '✅' },
 ]
 
 const ACTION_TYPE_LABELS: Record<string, string> = {
@@ -684,6 +686,7 @@ export default function GovernancePage() {
         {activeTab === 'calendar'    && <CalendarTab />}
         {activeTab === 'actions'     && <ActionsTab />}
         {activeTab === 'resolutions' && <ResolutionsTab />}
+        {activeTab === 'audit'       && <AuditReadinessTab />}
       </div>
     </div>
   )
