@@ -11,6 +11,7 @@ import Link              from 'next/link'
 import { NarrativeFooter } from '@/components/ds'
 import { CashflowChart }   from '@/components/dashboard/CashflowChart'
 import { ScenarioPanel }   from '@/components/dashboard/ScenarioPanel'
+import { CashflowPrediction } from '@/components/dashboard/CashflowPrediction'
 import { getCashflowTimeline, getRunwayForecast, getCfoMetrics } from '@/lib/finance/financial-core'
 import { CashFlowStatementService } from '@/lib/services/cashflow-statement.service'
 import { createClient }             from '@/lib/supabase-server'
@@ -344,6 +345,19 @@ export async function CashflowTab({ userId, companyId }: Props) {
         inputs={runway.inputs}
         baseRunwayMonths={runway.safe_months > 0 ? runway.safe_months : null}
       />
+
+      {/* Zone 7 — Tahmin (30/60/90-day cash flow prediction) */}
+      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+        <div className="px-4 py-3 border-b border-[#e2e8f0]">
+          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Tahmin — 30/60/90 Günlük Nakit Projeksiyonu</div>
+          <p className="text-[10px] text-[#94a3b8] mt-0.5">
+            Alacak davranışı + taahhütler temelinde iyimser / baz / kötümser senaryo analizi
+          </p>
+        </div>
+        <div className="p-4">
+          <CashflowPrediction />
+        </div>
+      </div>
 
       {/* Cross-link → formal 3-section cash flow statement */}
       <NarrativeFooter
