@@ -37,6 +37,7 @@ import { DecisionQueue }         from './_shared/DecisionQueue'
 import { TemporalPressureRail }  from './_shared/TemporalPressureRail'
 import { ObservationRail }       from './_shared/ObservationRail'
 import { SituationLine }         from '@/components/dashboard/SituationLine'
+import { PeriodSummaryWidget }   from './_shared/PeriodSummaryWidget'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -534,6 +535,9 @@ export default async function DashboardPage() {
         overdueTotal60={overdueTotal60}
         debtServiceRatio={debtServiceRatio}
       />
+
+      {/* ── PERIOD SUMMARY — CFO-to-CEO financial brief ─────────────────── */}
+      <PeriodSummaryWidget from={from} to={to} />
 
       {/* ── INTELLIGENCE SIGNALS — cross-context pattern observations ───── */}
       <ObservationRail context="all" maxItems={4} />
