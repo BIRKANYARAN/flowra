@@ -20,6 +20,18 @@ import { fmtTRY as fmt, fmtMonthShort as fmtMonth } from '@/lib/format'
 import type { CfoMetrics } from '@/lib/finance/cfo-metrics'
 import type { CashFlowStatement } from '@/types/dto'
 
+import { CashflowWaterfallService } from '@/lib/services/finance/cashflow-waterfall.service'
+import type { WaterfallSegment } from '@/lib/services/finance/cashflow-waterfall.service'
+
+// ── Waterfall color map ───────────────────────────────────────────────────────
+const SEGMENT_COLOR: Record<WaterfallSegment['color_class'], { bar: string; text: string; bg: string }> = {
+  green:  { bar: 'bg-pos',       text: 'text-pos-text',  bg: 'bg-pos-light' },
+  red:    { bar: 'bg-neg',       text: 'text-neg',       bg: 'bg-neg-light' },
+  blue:   { bar: 'bg-[#3b82f6]', text: 'text-[#1d4ed8]', bg: 'bg-blue-50' },
+  gray:   { bar: 'bg-[#94a3b8]', text: 'text-[#475569]', bg: 'bg-slate-100' },
+  purple: { bar: 'bg-[#a855f7]', text: 'text-[#7e22ce]', bg: 'bg-purple-50' },
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 interface Props { userId: string; companyId: string }
@@ -56,13 +68,23 @@ export async function CashflowTab({ userId, companyId }: Props) {
   const today = now.toISOString().slice(0, 10)
   const supabase = createClient()
 
-  const [timeline, runway, metrics, cashflowStatement] = await Promise.all([
+  const ZERO_WATERFALL = {
+    periods: [] as never[],
+    ytd_operating_try: 0,
+    ytd_investing_try: 0,
+    ytd_financing_try: 0,
+    ytd_net_change_try: 0,
+    trend_description: '',
+  }
+
+  const [timeline, runway, metrics, cashflowStatement, waterfallReport] = await Promise.all([
     sq(() => getCashflowTimeline(companyId, { pastMonths: 6, futureMonths: 6 }), {
       months: [], pressureSignals: [], firstDangerMonth: null, totalReceivables: 0,
     }),
     sq(() => getRunwayForecast(companyId, { months: 12 }), ZERO_RUNWAY),
     sq(() => getCfoMetrics(companyId, { from, to: today }), ZERO_METRICS),
     sq(() => CashFlowStatementService.compute(userId, companyId, { from, to: today }, supabase), ZERO_CF),
+    sq(() => CashflowWaterfallService.getReport(companyId, supabase), ZERO_WATERFALL),
   ])
 
   const lastMonth     = timeline.months[timeline.months.length - 1]
@@ -263,6 +285,134 @@ export async function CashflowTab({ userId, companyId }: Props) {
                 {fmt(cashflowStatement.financing.dividends_paid_try)} temettü ödemesi
               </span>
             )}
+          </div>
+        )}
+      </div>
+
+      {/* Zone 3.8 — Nakit Akış Köprüsü (Waterfall) */}
+      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+        <div className="px-4 py-3 border-b border-[#e2e8f0]">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Nakit Akış Köprüsü</div>
+              <p className="text-[10px] text-[#94a3b8] mt-0.5">
+                Son 3 ay — Faaliyet / Yatırım / Finansman köprüsü
+              </p>
+            </div>
+            <span className={`text-xs font-bold px-2.5 py-1 rounded ${
+              waterfallReport.ytd_net_change_try >= 0
+                ? 'bg-pos-light text-pos-text'
+                : 'bg-neg-light text-neg-text'
+            }`}>
+              3 Ay Net {fmt(waterfallReport.ytd_net_change_try)}
+            </span>
+          </div>
+        </div>
+
+        {/* YTD Summary — 4 numbers */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 divide-x-0 sm:divide-x divide-[#e2e8f0] border-b border-[#e2e8f0]">
+          {[
+            { label: 'Faaliyet', value: waterfallReport.ytd_operating_try,  icon: '🔄' },
+            { label: 'Yatırım',  value: waterfallReport.ytd_investing_try,   icon: '🏗️' },
+            { label: 'Finansman',value: waterfallReport.ytd_financing_try,   icon: '🤝' },
+            { label: 'Net Değişim',value: waterfallReport.ytd_net_change_try, icon: '📊' },
+          ].map(item => {
+            const tone = item.value > 0 ? 'text-pos-text' : item.value < 0 ? 'text-neg' : 'text-[#94a3b8]'
+            return (
+              <div key={item.label} className="px-4 py-3">
+                <div className="flex items-center gap-1 mb-1">
+                  <span className="text-sm">{item.icon}</span>
+                  <span className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">{item.label}</span>
+                </div>
+                <div className={`text-base font-black tabular-nums leading-none ${tone}`}>
+                  {fmt(item.value)}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Waterfall for most recent month */}
+        {waterfallReport.periods.length > 0 && (() => {
+          const period = waterfallReport.periods[0]
+          const maxAbs = Math.max(
+            1,
+            ...period.segments.filter(s => !s.is_subtotal).map(s => Math.abs(s.amount_try)),
+          )
+          return (
+            <div>
+              <div className="px-4 py-2 bg-[#f8fafc] border-b border-[#e2e8f0] flex items-center justify-between">
+                <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#64748b]">
+                  {period.label} — Köprü Detayı
+                </span>
+                <span className="text-[10px] text-[#94a3b8]">
+                  Açılış: {fmt(period.opening_cash_try)} → Kapanış: {fmt(period.closing_cash_try)}
+                </span>
+              </div>
+              <div className="divide-y divide-[#f1f5f9]">
+                {period.segments.map(seg => {
+                  const colors = SEGMENT_COLOR[seg.color_class]
+                  const barPct = seg.is_subtotal
+                    ? 0
+                    : Math.round((Math.abs(seg.amount_try) / maxAbs) * 60)
+                  return (
+                    <div
+                      key={seg.key}
+                      className={`px-4 py-2.5 flex items-center gap-3 ${seg.is_subtotal ? 'bg-[#f8fafc]' : ''}`}
+                    >
+                      <div className="w-32 shrink-0">
+                        <span className={`text-[11px] font-${seg.is_subtotal ? 'black' : 'medium'} ${seg.is_subtotal ? colors.text : 'text-[#475569]'}`}>
+                          {seg.label}
+                        </span>
+                      </div>
+                      {/* Bar */}
+                      {!seg.is_subtotal && (
+                        <div className="flex-1 h-4 bg-[#f1f5f9] rounded-sm overflow-hidden">
+                          <div
+                            className={`h-full rounded-sm ${colors.bar} opacity-75 transition-all`}
+                            style={{ width: `${barPct}%` }}
+                          />
+                        </div>
+                      )}
+                      {seg.is_subtotal && <div className="flex-1 border-t border-dashed border-[#cbd5e1]" />}
+                      <div className="w-28 text-right shrink-0">
+                        <span className={`text-xs font-${seg.is_subtotal ? 'black' : 'medium'} tabular-nums ${colors.text}`}>
+                          {seg.amount_try !== 0 ? fmt(seg.amount_try) : '—'}
+                        </span>
+                      </div>
+                      <div className="w-28 text-right shrink-0">
+                        <span className="text-[10px] text-[#94a3b8] tabular-nums">
+                          {fmt(seg.running_total_try)}
+                        </span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )
+        })()}
+
+        {/* 3-month trend summary */}
+        {waterfallReport.periods.length > 0 && (
+          <div className="border-t border-[#e2e8f0] px-4 py-3">
+            <div className="flex items-start gap-2">
+              <div className="flex gap-1.5 mt-0.5">
+                {waterfallReport.periods.map(p => {
+                  const isPos = p.net_change_try >= 0
+                  return (
+                    <span
+                      key={p.month}
+                      className={`inline-flex items-center justify-center w-4 h-4 rounded-full text-[8px] font-black ${isPos ? 'bg-pos text-white' : 'bg-neg text-white'}`}
+                      title={`${p.label}: ${fmt(p.net_change_try)}`}
+                    >
+                      {isPos ? '↑' : '↓'}
+                    </span>
+                  )
+                })}
+              </div>
+              <p className="text-[11px] text-[#64748b]">{waterfallReport.trend_description}</p>
+            </div>
           </div>
         )}
       </div>
