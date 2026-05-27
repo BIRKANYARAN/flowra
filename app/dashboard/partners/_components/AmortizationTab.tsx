@@ -1,11 +1,18 @@
 'use client'
 
 // ─────────────────────────────────────────────────────────────────────────────
-// AmortizationTab — Amortisman Takvimi + Vade Takvimi
+// AmortizationTab — Amortisman Takvimi + Faiz Tahakkuku + Vade Takvimi
 //
 // Per-tranche monthly payment schedule (up to 60 months).
 // Summary strip + expandable tranche detail with full amortization table.
 // Row colors: gray = past, white = current, light blue = future.
+//
+// Also shows a "Faiz Tahakkuku" interest accrual section:
+//   - Portfolio summary: outstanding principal, YTD accrual, outstanding interest
+//   - VUK örtülü kazanç risk alert
+//   - Market rate reference chip
+//   - Per-tranche accrual table with compliance coloring
+//   - Next month interest obligation chip
 //
 // Also shows a "Vade Takvimi" debt maturity section:
 //   - 5-bucket maturity bar chart
@@ -15,6 +22,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { fmtTRY } from '@/lib/format'
 import type {
   LoanAmortizationReport,
@@ -22,6 +30,7 @@ import type {
   AmortizationRow,
 } from '@/lib/services/pcle/amortization.service'
 import type { DebtMaturityReport } from '@/lib/services/pcle/debt-maturity.service'
+import type { InterestAccrualReport } from '@/lib/services/pcle/interest-accrual.service'
 
 // ── API fetch hooks ───────────────────────────────────────────────────────────
 
@@ -81,6 +90,22 @@ function useAmortizationReport() {
   }
 
   return { report, loading, error, load, loaded }
+}
+
+function useInterestAccrualReport() {
+  return useQuery<InterestAccrualReport>({
+    queryKey: ['partners', 'interest-accrual'],
+    queryFn: async () => {
+      const res = await fetch('/api/partners/interest-accrual')
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({})) as { error?: string }
+        throw new Error(body.error ?? `HTTP ${res.status}`)
+      }
+      const json = await res.json() as { report: InterestAccrualReport }
+      return json.report
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  })
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -289,6 +314,187 @@ function TrancheCard({ tranche }: { tranche: TrancheAmortization }) {
           </div>
 
           <ScheduleTable rows={tranche.schedule} />
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Faiz Tahakkuku — Interest Accrual Section ─────────────────────────────────
+
+function RateChip({ ratePct, marketRatePct }: { ratePct: number; marketRatePct: number }) {
+  if (ratePct === 0) {
+    return (
+      <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[0.6rem] font-black uppercase tracking-wide bg-red-50 border border-red-200 text-red-700">
+        %0
+      </span>
+    )
+  }
+  if (ratePct < marketRatePct * 0.5) {
+    return (
+      <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[0.6rem] font-black uppercase tracking-wide bg-orange-50 border border-orange-200 text-orange-700">
+        %{ratePct.toFixed(1)}
+      </span>
+    )
+  }
+  return (
+    <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[0.6rem] font-black uppercase tracking-wide bg-emerald-50 border border-emerald-200 text-emerald-700">
+      %{ratePct.toFixed(1)}
+    </span>
+  )
+}
+
+function FaizTahakkuku() {
+  const { data: report, isLoading, isError, error } = useInterestAccrualReport()
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col gap-2">
+        {[1, 2, 3].map(i => (
+          <div key={i} className="h-7 rounded bg-[#f1f5f9] animate-pulse" />
+        ))}
+      </div>
+    )
+  }
+
+  if (isError) {
+    return (
+      <div className="rounded border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700 font-medium">
+        {error instanceof Error ? error.message : 'Faiz tahakkuk verisi yüklenemedi'}
+      </div>
+    )
+  }
+
+  if (!report) return null
+
+  const { tranches } = report
+
+  return (
+    <div className="flex flex-col gap-4">
+      {/* Portfolio summary */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <div className="rounded border border-[#e2e8f0] bg-[#f8fafc] px-4 py-3">
+          <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+            Toplam Anapara
+          </div>
+          <div className="text-base font-black text-[#0f172a] leading-tight tabular-nums">
+            {fmtTRY(report.total_outstanding_principal)}
+          </div>
+        </div>
+        <div className="rounded border border-[#e2e8f0] bg-[#f8fafc] px-4 py-3">
+          <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+            YTD Tahakkuk
+          </div>
+          <div className="text-base font-black text-amber-600 leading-tight tabular-nums">
+            {fmtTRY(report.total_accrued_ytd)}
+          </div>
+        </div>
+        <div className="rounded border border-[#e2e8f0] bg-[#f8fafc] px-4 py-3">
+          <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+            Ödenmemiş Faiz
+          </div>
+          <div className="text-base font-black text-[#0f172a] leading-tight tabular-nums">
+            {fmtTRY(report.total_outstanding_interest)}
+          </div>
+        </div>
+      </div>
+
+      {/* VUK risk alert */}
+      {report.vuk_risk_count > 0 && (
+        <div className="rounded border border-red-200 bg-red-50 px-3 py-2 text-[0.7rem] font-semibold text-red-800">
+          ⚠ {report.vuk_risk_count} tranche VUK örtülü kazanç riski — sıfır faizli büyük borç
+        </div>
+      )}
+
+      {/* Reference rate + next month obligation chips */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="inline-flex items-center gap-1.5 rounded border border-[#e2e8f0] bg-[#f8fafc] px-3 py-1.5">
+          <span className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">
+            Referans Faiz
+          </span>
+          <span className="text-sm font-black text-[#0f172a]">%{report.market_rate_pct}</span>
+        </div>
+        {report.next_month_interest_try > 0 && (
+          <div className="inline-flex items-center gap-1.5 rounded border border-amber-200 bg-amber-50 px-3 py-1.5">
+            <span className="text-[0.6rem] font-black uppercase tracking-widest text-amber-700">
+              Gelecek ay faiz yükü
+            </span>
+            <span className="text-sm font-black text-amber-800 tabular-nums">
+              {fmtTRY(report.next_month_interest_try)}
+            </span>
+          </div>
+        )}
+        {report.weighted_avg_rate !== null && (
+          <span className="text-[0.7rem] text-[#64748b]">
+            Ağırlıklı ort. faiz:{' '}
+            <strong className="text-[#334155]">%{report.weighted_avg_rate.toFixed(2)}</strong>
+          </span>
+        )}
+      </div>
+
+      {/* Per-tranche table */}
+      {tranches.length === 0 ? (
+        <p className="text-xs text-[#94a3b8] py-2 text-center">
+          Tahakkuk hesaplanacak aktif tranche bulunamadı.
+        </p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs border-collapse">
+            <thead>
+              <tr className="border-b border-[#e2e8f0]">
+                <th className="py-1.5 px-2 text-left font-semibold text-[#64748b] whitespace-nowrap">Ortak</th>
+                <th className="py-1.5 px-2 text-right font-semibold text-[#64748b] whitespace-nowrap">Anapara</th>
+                <th className="py-1.5 px-2 text-right font-semibold text-[#64748b] whitespace-nowrap">Faiz</th>
+                <th className="py-1.5 px-2 text-right font-semibold text-[#64748b] whitespace-nowrap">₺/gün</th>
+                <th className="py-1.5 px-2 text-right font-semibold text-[#64748b] whitespace-nowrap">Aylık</th>
+                <th className="py-1.5 px-2 text-right font-semibold text-[#64748b] whitespace-nowrap">YTD</th>
+                <th className="py-1.5 px-2 text-right font-semibold text-[#64748b] whitespace-nowrap">Ödenmemiş</th>
+                <th className="py-1.5 px-2 text-center font-semibold text-[#64748b] whitespace-nowrap">Risk</th>
+              </tr>
+            </thead>
+            <tbody>
+              {tranches.map(t => (
+                <tr
+                  key={t.tranche_id}
+                  className="border-b border-[#f1f5f9] bg-white hover:bg-[#f8fafc]"
+                >
+                  <td className="py-1 px-2 font-medium text-[#334155] whitespace-nowrap max-w-[140px] truncate">
+                    {t.partner_name}
+                  </td>
+                  <td className="py-1 px-2 text-right tabular-nums text-[#0f172a]">
+                    {fmtTRY(t.outstanding_principal)}
+                  </td>
+                  <td className="py-1 px-2 text-right">
+                    <RateChip ratePct={t.interest_rate_annual_pct} marketRatePct={report.market_rate_pct} />
+                  </td>
+                  <td className="py-1 px-2 text-right tabular-nums text-[#334155]">
+                    {fmtTRY(t.daily_interest_try)}
+                  </td>
+                  <td className="py-1 px-2 text-right tabular-nums text-amber-600">
+                    {fmtTRY(t.monthly_accrual_try)}
+                  </td>
+                  <td className="py-1 px-2 text-right tabular-nums text-[#334155]">
+                    {fmtTRY(t.ytd_accrual_try)}
+                  </td>
+                  <td className="py-1 px-2 text-right tabular-nums font-semibold text-[#0f172a]">
+                    {fmtTRY(t.outstanding_interest_try)}
+                  </td>
+                  <td className="py-1 px-2 text-center">
+                    {t.vuk_risk && (
+                      <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[0.55rem] font-black uppercase tracking-wide bg-red-50 border border-red-200 text-red-700">
+                        VUK
+                      </span>
+                    )}
+                    {t.is_below_market && !t.vuk_risk && (
+                      <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[0.55rem] font-black uppercase tracking-wide bg-orange-50 border border-orange-200 text-orange-700">
+                        Düşük
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>
@@ -615,6 +821,14 @@ export function AmortizationTab() {
           )}
         </div>
       )}
+
+      {/* ── Faiz Tahakkuku ───────────────────────────────────────────────── */}
+      <div className="border-t border-[#e2e8f0] pt-4">
+        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
+          Faiz Tahakkuku
+        </div>
+        <FaizTahakkuku />
+      </div>
 
       {/* ── Vade Takvimi ─────────────────────────────────────────────────── */}
       <div className="border-t border-[#e2e8f0] pt-4">
