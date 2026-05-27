@@ -249,6 +249,7 @@ export const PLANNING_TABS = [
   { key: 'breakeven',       label: 'Başabaş'             },
   { key: 'tasks',           label: 'Görevler'            },
   { key: 'budget',          label: 'Bütçe'               },
+  { key: 'calendar',        label: 'Takvim'              },
 ] as const
 
 // ── Redirect map — old routes → new center URLs ───────────────────────────────

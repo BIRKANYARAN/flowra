@@ -21,6 +21,7 @@ import { PartnerImpactTab }   from './_tabs/PartnerImpactTab'
 import { VarianceTab }        from './_tabs/VarianceTab'
 import { BreakEvenTab }       from './_tabs/BreakEvenTab'
 import { BudgetTab }          from './_tabs/BudgetTab'
+import { CalendarContent }    from './_tabs/CalendarContent'
 
 function TabSkeleton() {
   return (
@@ -81,6 +82,7 @@ export default async function PlanningPage({ searchParams }: PageProps) {
     'breakeven':       'Başabaş Analizi',
     'tasks':           'Görevler',
     'budget':          'Bütçe vs Gerçekleşen',
+    'calendar':        'Finansal Takvim',
   }
   const planSubs: Record<string, string> = {
     'unit-profit':     'Birim karlılık · Marj analizi · Fiyat optimizasyonu',
@@ -92,6 +94,7 @@ export default async function PlanningPage({ searchParams }: PageProps) {
     'breakeven':       'Başabaş noktası · Katkı payı · Güvenlik marjı · Hedef kâr senaryosu',
     'tasks':           'Görev takibi · Vadesi yaklaşan · Öncelik sırası',
     'budget':          'Aylık bütçe hedefleri · Gelir/gider varyansı · YTD özet',
+    'calendar':        'Vergi takvimleri · Dönem kapanışları · Ortak yükümlülükleri · Yönetişim',
   }
 
   return (
@@ -144,6 +147,8 @@ export default async function PlanningPage({ searchParams }: PageProps) {
         {activeTab === 'tasks' && <TasksContent companyId={companyId} />}
         {/* budget: monthly budget targets vs actuals */}
         {activeTab === 'budget' && <BudgetTab />}
+        {/* calendar: annual financial calendar */}
+        {activeTab === 'calendar' && <CalendarContent companyId={companyId} />}
       </Suspense>
     </div>
   )

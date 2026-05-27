@@ -11,6 +11,8 @@ import { fmtTRY as fmt } from '@/lib/format'
 import { ReceivablesPriorityService } from '@/lib/services/commercial/receivables-priority.service'
 import type { ReceivablesPriorityReport } from '@/lib/services/commercial/receivables-priority.service'
 import { ReceivablesHeatmapService } from '@/lib/services/commercial/receivables-heatmap.service'
+import { PaymentBehaviorService } from '@/lib/services/commercial/payment-behavior.service'
+import type { PaymentBehaviorReport, PaymentBehaviorClass } from '@/lib/services/commercial/payment-behavior.service'
 
 function CommandBarSkeleton() {
   return (
@@ -31,6 +33,151 @@ function riskScore(row: { due_date?: string | null; sale_date?: string | null; t
   return days * 0.6 + (row.total_try / 10000) * 0.4
 }
 
+// ── Payment Behavior Section ───────────────────────────────────────────────────
+
+const CLASS_LABELS: Record<PaymentBehaviorClass, string> = {
+  excellent:  'Mükemmel',
+  good:       'İyi',
+  average:    'Orta',
+  poor:       'Zayıf',
+  unreliable: 'Güvenilmez',
+}
+
+const CLASS_COLORS: Record<PaymentBehaviorClass, string> = {
+  excellent:  'bg-[#f0fdf4] text-[#15803d]',
+  good:       'bg-[#f0fdf4] text-[#16a34a]',
+  average:    'bg-[#fff7ed] text-[#c2410c]',
+  poor:       'bg-[#fef2f2] text-neg',
+  unreliable: 'bg-neg-light text-neg-text',
+}
+
+function ScoreBar({ score }: { score: number }) {
+  const color =
+    score >= 70 ? '#22c55e' :
+    score >= 50 ? '#facc15' : '#ef4444'
+  return (
+    <div className="flex items-center gap-1.5">
+      <div className="w-16 h-1.5 bg-[#f1f5f9] rounded-full overflow-hidden">
+        <div
+          className="h-full rounded-full"
+          style={{ width: `${score}%`, backgroundColor: color }}
+        />
+      </div>
+      <span className="tabular-nums text-[11px] font-bold" style={{ color }}>{score}</span>
+    </div>
+  )
+}
+
+function PaymentBehaviorSection({ report }: { report: PaymentBehaviorReport }) {
+  const hasOutstanding = report.profiles.some(p => p.outstanding_try > 0)
+
+  return (
+    <div className="bg-white border border-[#e2e8f0] rounded shadow-sm">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">
+        <div>
+          <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Ödeme Davranışı</div>
+          <div className="text-xs text-[#64748b] mt-0.5">Son 12 ay müşteri ödeme güvenilirlik profili</div>
+        </div>
+        <div className="flex items-center gap-4 text-xs">
+          <div className="text-right">
+            <div className="text-[9px] uppercase tracking-wide text-[#94a3b8]">Ort. Güvenilirlik</div>
+            <div className="font-black tabular-nums text-[#0f172a]">{report.avg_reliability_score}/100</div>
+          </div>
+          {report.excellent_count > 0 && (
+            <div className="text-right">
+              <div className="text-[9px] uppercase tracking-wide text-[#94a3b8]">Mükemmel</div>
+              <div className="font-black tabular-nums text-[#15803d]">{report.excellent_count} müşteri</div>
+            </div>
+          )}
+          {report.unreliable_count > 0 && (
+            <div className="text-right">
+              <div className="text-[9px] uppercase tracking-wide text-[#94a3b8]">Güvenilmez</div>
+              <div className="font-black tabular-nums text-neg">{report.unreliable_count} müşteri</div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Alert chips */}
+      <div className="flex flex-wrap gap-2 px-4 py-2 border-b border-[#f1f5f9]">
+        {report.high_risk_outstanding_try > 0 && (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black bg-neg-light text-neg-text">
+            <span className="w-1.5 h-1.5 rounded-full bg-current opacity-60" />
+            {fmt(report.high_risk_outstanding_try)} güvenilmez/zayıf müşterilerde bekliyor
+          </span>
+        )}
+        {report.predicted_30d_collections > 0 && (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black bg-[#f0fdf4] text-[#15803d]">
+            <span className="w-1.5 h-1.5 rounded-full bg-current opacity-60" />
+            {fmt(report.predicted_30d_collections)} önümüzdeki 30 günde tahmin edilen tahsilat
+          </span>
+        )}
+        {!hasOutstanding && (
+          <span className="text-[10px] text-[#94a3b8]">Açık alacak yok</span>
+        )}
+      </div>
+
+      {/* Customer table */}
+      <div className="overflow-x-auto">
+        <table className="w-full text-xs">
+          <thead>
+            <tr className="border-b border-[#f1f5f9]">
+              <th className="text-left px-4 py-2 text-[#94a3b8] font-medium">Müşteri</th>
+              <th className="text-left px-2 py-2 text-[#94a3b8] font-medium">Güvenilirlik</th>
+              <th className="text-left px-2 py-2 text-[#94a3b8] font-medium">Davranış</th>
+              <th className="text-right px-2 py-2 text-[#94a3b8] font-medium">Ort. Ödeme</th>
+              <th className="text-right px-2 py-2 text-[#94a3b8] font-medium">Açık Bakiye</th>
+              <th className="text-right px-4 py-2 text-[#94a3b8] font-medium">Tahmini Ödeme</th>
+            </tr>
+          </thead>
+          <tbody>
+            {report.profiles.slice(0, 15).map(p => {
+              const isHighRisk = p.behavior_class === 'poor' || p.behavior_class === 'unreliable'
+              const firstPrediction = p.predicted_payments[0] ?? null
+
+              return (
+                <tr key={p.customer_name} className="border-b border-[#f8fafc] hover:bg-[#f8fafc]">
+                  <td className="px-4 py-2 text-[#334155] font-medium truncate max-w-[160px]">
+                    {p.customer_name}
+                  </td>
+                  <td className="px-2 py-2">
+                    <ScoreBar score={p.reliability_score} />
+                  </td>
+                  <td className="px-2 py-2">
+                    <span className={`inline-block text-[9px] font-black px-1.5 py-0.5 rounded ${CLASS_COLORS[p.behavior_class]}`}>
+                      {CLASS_LABELS[p.behavior_class]}
+                    </span>
+                  </td>
+                  <td className="px-2 py-2 text-right tabular-nums text-[#475569]">
+                    {p.avg_days_to_pay !== null
+                      ? <span>{Math.round(p.avg_days_to_pay)} gün</span>
+                      : <span className="text-[#cbd5e1]">—</span>
+                    }
+                  </td>
+                  <td className={`px-2 py-2 text-right tabular-nums font-semibold ${isHighRisk ? 'text-neg' : 'text-[#0f172a]'}`}>
+                    {p.outstanding_try > 0 ? fmt(p.outstanding_try) : <span className="text-[#cbd5e1]">—</span>}
+                  </td>
+                  <td className="px-4 py-2 text-right text-[#64748b]">
+                    {firstPrediction?.expected_payment_date ? (
+                      <span className="tabular-nums">{firstPrediction.expected_payment_date}</span>
+                    ) : (
+                      <span className="text-[#cbd5e1]">—</span>
+                    )}
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+      <div className="px-4 py-2 text-[10px] text-[#94a3b8]">
+        Güvenilirlik skoru 0-100; son 12 aylık ödeme geçmişine dayanır
+      </div>
+    </div>
+  )
+}
+
 interface Props { companyId: string }
 
 export async function CollectionsContent({ companyId }: Props) {
@@ -38,11 +185,13 @@ export async function CollectionsContent({ companyId }: Props) {
   const today    = new Date().toISOString().slice(0, 10)
 
   // Fetch prioritized receivables and flat list in parallel
-  const [priorityReport, heatmapReport] = await Promise.all([
+  const [priorityReport, heatmapReport, paymentBehaviorReport] = await Promise.all([
     ReceivablesPriorityService.getReport(companyId, supabase, { today })
       .catch(() => null as ReceivablesPriorityReport | null),
     ReceivablesHeatmapService.getReport(companyId, supabase)
       .catch(() => null),
+    PaymentBehaviorService.getReport(companyId, supabase, { today })
+      .catch(() => null as PaymentBehaviorReport | null),
   ])
 
   // Fetch all open receivables (pending + partial + overdue)
@@ -311,6 +460,11 @@ export async function CollectionsContent({ companyId }: Props) {
           </div>
           <div className="px-4 py-2 text-[10px] text-[#94a3b8]">Risk skoru 0-100; yüksek = acil tahsilat önceliği</div>
         </div>
+      )}
+
+      {/* ── Ödeme Davranışı ───────────────────────────────────────────────────── */}
+      {paymentBehaviorReport && paymentBehaviorReport.profiles.some(p => p.paid_count > 0 || p.outstanding_count > 0) && (
+        <PaymentBehaviorSection report={paymentBehaviorReport} />
       )}
 
       {/* Cross-navigation */}

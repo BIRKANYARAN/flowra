@@ -237,8 +237,8 @@ describe('Tab contracts — canonical key sets', () => {
     expect(keys).toContain('orders')
   })
 
-  it('PLANNING_TABS has 9 tabs (budget added)', () => {
-    expect(PLANNING_TABS.length).toBe(9)
+  it('PLANNING_TABS has 10 tabs (budget + calendar added)', () => {
+    expect(PLANNING_TABS.length).toBe(10)
     const keys = PLANNING_TABS.map(t => t.key)
     expect(keys).toContain('unit-profit')
     expect(keys).toContain('variance')
