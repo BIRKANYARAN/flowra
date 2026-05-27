@@ -1,149 +1,210 @@
 /**
- * FX Exposure Service — pure-math tests.
+ * FX Exposure Service — pure function tests.
  *
- * Scope (no DB — tests pure calculation logic):
- *   • Empty / TRY-only data → graceful empty result
- *   • USD receivable gain when current > booking rate
- *   • USD payable loss when current > booking rate
- *   • Net position = receivables - payables
- *   • total_fx_gain_loss_try = sum of all
- *   • highest_exposure_currency = largest |net_foreign|
- *   • Multiple currencies → separate exposure rows
+ * Tests all exported pure helpers:
+ *   computeFxGainLoss
+ *   computeFxExposureRatio
+ *   classifyFxExposureRisk
+ *   computeNaturalHedgeRatio
+ *   computeNetFxExposure
  *
  * Run with:  npx vitest run tests/fx-exposure.test.ts
  */
+
 import { describe, it, expect } from 'vitest'
-import type { CurrencyExposure } from '../lib/services/finance/fx-exposure.service'
+import {
+  computeFxGainLoss,
+  computeFxExposureRatio,
+  classifyFxExposureRisk,
+  computeNaturalHedgeRatio,
+  computeNetFxExposure,
+} from '../lib/services/finance/fx-exposure.service'
 
-// ── Pure calculation helpers (extracted from service logic) ───────────────────
+// ── computeFxGainLoss ─────────────────────────────────────────────────────────
 
-function computeExposure(
-  currency:     string,
-  recForeign:   number,
-  recBookRate:  number,
-  payForeign:   number,
-  payBookRate:  number,
-  currentRate:  number,
-): CurrencyExposure {
-  const recBooking    = recForeign * recBookRate
-  const recCurrent    = recForeign * currentRate
-  const recGainLoss   = recCurrent - recBooking
+describe('computeFxGainLoss', () => {
 
-  const payBooking    = payForeign * payBookRate
-  const payCurrent    = payForeign * currentRate
-  const payGainLoss   = payBooking - payCurrent   // loss = booking was cheaper
-
-  const netForeign    = recForeign - payForeign
-  const netGainLoss   = recGainLoss + payGainLoss
-
-  return {
-    currency,
-    receivables_foreign:          recForeign,
-    receivables_try_at_booking:   recBooking,
-    receivables_try_at_current:   recCurrent,
-    receivables_fx_gain_loss_try: recGainLoss,
-    payables_foreign:             payForeign,
-    payables_try_at_booking:      payBooking,
-    payables_try_at_current:      payCurrent,
-    payables_fx_gain_loss_try:    payGainLoss,
-    net_foreign:                  netForeign,
-    net_fx_gain_loss_try:         netGainLoss,
-    current_rate_try:             currentRate,
-  }
-}
-
-// ── Tests ─────────────────────────────────────────────────────────────────────
-
-describe('FxExposureService — pure calculation tests', () => {
-
-  // 1. No foreign currency sales → empty exposures
-  it('No foreign currency data → empty exposures', () => {
-    const exposures: CurrencyExposure[] = []
-    expect(exposures).toHaveLength(0)
-    const total = exposures.reduce((s, e) => s + e.net_fx_gain_loss_try, 0)
-    expect(total).toBe(0)
+  it('gain: TRY weakened (current > entry) → positive result', () => {
+    // 1000 USD at entry ₺32, current ₺38 → gain 6000
+    const result = computeFxGainLoss(1000, 32, 38)
+    expect(result).toBe(6000)
   })
 
-  // 2. USD receivable gain: current_rate > booking_rate → positive gain
-  it('USD receivable: current rate > booking rate → positive gain', () => {
-    // 1000 USD receivable; booking at ₺32, current at ₺38
-    const exp = computeExposure('USD', 1000, 32, 0, 0, 38)
-    expect(exp.receivables_fx_gain_loss_try).toBeGreaterThan(0)
-    expect(exp.receivables_fx_gain_loss_try).toBe(6000) // (38-32) × 1000
+  it('loss: TRY strengthened (current < entry) → negative result', () => {
+    // 500 USD at entry ₺38, current ₺32 → loss -3000
+    const result = computeFxGainLoss(500, 38, 32)
+    expect(result).toBe(-3000)
   })
 
-  // 3. USD payable loss: current_rate > booking_rate → negative gain (loss)
-  it('USD payable: current rate > booking rate → negative gain (loss)', () => {
-    // 500 USD payable; booked at ₺32, current at ₺38
-    const exp = computeExposure('USD', 0, 0, 500, 32, 38)
-    // payGainLoss = bookingTRY - currentTRY = 16000 - 19000 = -3000
-    expect(exp.payables_fx_gain_loss_try).toBeLessThan(0)
-    expect(exp.payables_fx_gain_loss_try).toBe(-3000)
+  it('zero change: same entry and current rate → zero gain/loss', () => {
+    const result = computeFxGainLoss(1000, 35, 35)
+    expect(result).toBe(0)
   })
 
-  // 4. Net position = receivables_foreign - payables_foreign
-  it('net_foreign = receivables_foreign - payables_foreign', () => {
-    const exp = computeExposure('USD', 1000, 32, 400, 32, 38)
-    expect(exp.net_foreign).toBe(600)
+  it('zero amount: no exposure → zero regardless of rates', () => {
+    const result = computeFxGainLoss(0, 30, 40)
+    expect(result).toBe(0)
   })
 
-  // 5. total_fx_gain_loss_try = sum of all net gains/losses
-  it('total_fx_gain_loss_try sums all currency net gains/losses', () => {
-    const expUsd = computeExposure('USD', 1000, 32, 0, 0, 38)
-    const expEur = computeExposure('EUR', 500, 35, 200, 35, 40)
-    const total  = expUsd.net_fx_gain_loss_try + expEur.net_fx_gain_loss_try
-    // USD: 6000 gain (rec) + 0 (no pay) = 6000
-    // EUR rec: (40-35)×500 = 2500; pay: 200×35 - 200×40 = 7000-8000 = -1000 → net = 1500
-    expect(total).toBe(expUsd.net_fx_gain_loss_try + expEur.net_fx_gain_loss_try)
-    expect(typeof total).toBe('number')
+  it('EUR: gain when rate moves from 35 to 42 on 200 units', () => {
+    // (42 - 35) × 200 = 1400
+    const result = computeFxGainLoss(200, 35, 42)
+    expect(result).toBe(1400)
   })
 
-  // 6. highest_exposure_currency = currency with largest |net_foreign|
-  it('highest_exposure_currency is the one with largest |net_foreign|', () => {
-    const exposures: CurrencyExposure[] = [
-      computeExposure('USD', 1000, 32, 0, 0, 38),  // net_foreign = 1000
-      computeExposure('EUR', 5000, 35, 0, 0, 40),  // net_foreign = 5000
-    ]
-    // Sort by |net_foreign| desc → EUR first
-    exposures.sort((a, b) => Math.abs(b.net_foreign) - Math.abs(a.net_foreign))
-    expect(exposures[0].currency).toBe('EUR')
+  it('GBP: fractional amounts compute correctly', () => {
+    // 100 GBP, entry 45.50, current 47.25 → (47.25-45.50)×100 = 175
+    const result = computeFxGainLoss(100, 45.5, 47.25)
+    expect(result).toBe(175)
   })
 
-  // 7. TRY-only data → graceful empty result
-  it('TRY-only data produces empty exposures and zero gain/loss', () => {
-    const exposures: CurrencyExposure[] = []
-    const totalGainLoss = exposures.reduce((s, e) => s + e.net_fx_gain_loss_try, 0)
-    const highest       = exposures.length > 0 ? exposures[0].currency : null
-    expect(exposures).toHaveLength(0)
-    expect(totalGainLoss).toBe(0)
-    expect(highest).toBeNull()
+})
+
+// ── computeFxExposureRatio ────────────────────────────────────────────────────
+
+describe('computeFxExposureRatio', () => {
+
+  it('normal case: 30000 foreign out of 100000 total → 30%', () => {
+    const result = computeFxExposureRatio(30000, 100000)
+    expect(result).toBe(30)
   })
 
-  // 8. Multiple currencies → each has separate exposure row
-  it('Multiple currencies produce separate exposure rows', () => {
-    const exposures: CurrencyExposure[] = [
-      computeExposure('USD', 1000, 32, 0, 0, 38),
-      computeExposure('EUR', 500,  35, 0, 0, 40),
-    ]
-    expect(exposures).toHaveLength(2)
-    expect(exposures.map(e => e.currency)).toContain('USD')
-    expect(exposures.map(e => e.currency)).toContain('EUR')
-    // Each row is independent
-    expect(exposures[0].receivables_foreign).toBe(1000)
-    expect(exposures[1].receivables_foreign).toBe(500)
+  it('100% foreign exposure → 100', () => {
+    const result = computeFxExposureRatio(50000, 50000)
+    expect(result).toBe(100)
   })
 
-  // Extra: net short position (payables > receivables)
-  it('Net short position: payables > receivables → net_foreign is negative', () => {
-    const exp = computeExposure('USD', 200, 32, 500, 32, 38)
-    expect(exp.net_foreign).toBe(-300)
+  it('zero total revenue → returns 0 (no division by zero)', () => {
+    const result = computeFxExposureRatio(5000, 0)
+    expect(result).toBe(0)
   })
 
-  // Extra: same rate booking and current → zero gain/loss
-  it('Same booking and current rate → zero gain/loss', () => {
-    const exp = computeExposure('USD', 1000, 35, 500, 35, 35)
-    expect(exp.net_fx_gain_loss_try).toBe(0)
-    expect(exp.receivables_fx_gain_loss_try).toBe(0)
-    expect(exp.payables_fx_gain_loss_try).toBe(0)
+  it('zero foreign revenue → returns 0', () => {
+    const result = computeFxExposureRatio(0, 80000)
+    expect(result).toBe(0)
   })
+
+  it('small ratio rounds to 2 decimals', () => {
+    const result = computeFxExposureRatio(1, 3)
+    expect(result).toBe(33.33)
+  })
+
+})
+
+// ── classifyFxExposureRisk ────────────────────────────────────────────────────
+
+describe('classifyFxExposureRisk', () => {
+
+  it('0% → minimal', () => {
+    expect(classifyFxExposureRisk(0)).toBe('minimal')
+  })
+
+  it('9.99% → minimal (just below threshold)', () => {
+    expect(classifyFxExposureRisk(9.99)).toBe('minimal')
+  })
+
+  it('10% → moderate (boundary — exactly at threshold)', () => {
+    expect(classifyFxExposureRisk(10)).toBe('moderate')
+  })
+
+  it('20% → moderate', () => {
+    expect(classifyFxExposureRisk(20)).toBe('moderate')
+  })
+
+  it('29.99% → moderate (just below elevated threshold)', () => {
+    expect(classifyFxExposureRisk(29.99)).toBe('moderate')
+  })
+
+  it('30% → elevated (boundary)', () => {
+    expect(classifyFxExposureRisk(30)).toBe('elevated')
+  })
+
+  it('45% → elevated', () => {
+    expect(classifyFxExposureRisk(45)).toBe('elevated')
+  })
+
+  it('60% → elevated (boundary — exactly at upper threshold)', () => {
+    expect(classifyFxExposureRisk(60)).toBe('elevated')
+  })
+
+  it('60.01% → high (just above elevated threshold)', () => {
+    expect(classifyFxExposureRisk(60.01)).toBe('high')
+  })
+
+  it('80% → high', () => {
+    expect(classifyFxExposureRisk(80)).toBe('high')
+  })
+
+  it('100% → high', () => {
+    expect(classifyFxExposureRisk(100)).toBe('high')
+  })
+
+})
+
+// ── computeNaturalHedgeRatio ──────────────────────────────────────────────────
+
+describe('computeNaturalHedgeRatio', () => {
+
+  it('perfectly hedged: expenses equal revenue → 100%', () => {
+    const result = computeNaturalHedgeRatio(50000, 50000)
+    expect(result).toBe(100)
+  })
+
+  it('50% hedged: expenses half of revenue → 50%', () => {
+    const result = computeNaturalHedgeRatio(25000, 50000)
+    expect(result).toBe(50)
+  })
+
+  it('no expenses → 0%', () => {
+    const result = computeNaturalHedgeRatio(0, 40000)
+    expect(result).toBe(0)
+  })
+
+  it('zero revenue → null (cannot compute ratio)', () => {
+    const result = computeNaturalHedgeRatio(5000, 0)
+    expect(result).toBeNull()
+  })
+
+  it('over-hedged: expenses > revenue → ratio > 100', () => {
+    // 120 000 expenses vs 100 000 revenue → 120%
+    const result = computeNaturalHedgeRatio(120000, 100000)
+    expect(result).toBe(120)
+  })
+
+  it('fractional result rounds to 2 decimals', () => {
+    const result = computeNaturalHedgeRatio(10, 30)
+    expect(result).toBe(33.33)
+  })
+
+})
+
+// ── computeNetFxExposure ──────────────────────────────────────────────────────
+
+describe('computeNetFxExposure', () => {
+
+  it('net long: revenue > expenses → positive exposure', () => {
+    const result = computeNetFxExposure(80000, 20000)
+    expect(result).toBe(60000)
+  })
+
+  it('net short: expenses > revenue → negative exposure', () => {
+    const result = computeNetFxExposure(20000, 80000)
+    expect(result).toBe(-60000)
+  })
+
+  it('balanced: revenue equals expenses → zero exposure', () => {
+    const result = computeNetFxExposure(50000, 50000)
+    expect(result).toBe(0)
+  })
+
+  it('no expenses → net exposure equals full foreign revenue', () => {
+    const result = computeNetFxExposure(45000, 0)
+    expect(result).toBe(45000)
+  })
+
+  it('no revenue → net exposure is negative of expenses', () => {
+    const result = computeNetFxExposure(0, 30000)
+    expect(result).toBe(-30000)
+  })
+
 })

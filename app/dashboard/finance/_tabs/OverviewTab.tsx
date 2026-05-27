@@ -18,8 +18,7 @@ import { FinanceService }              from '@/lib/services/finance.service'
 import { periodForMonth }              from '@/lib/services/finance-rules'
 import { createClient }                from '@/lib/supabase-server'
 import { PeriodService }               from '@/lib/services/period.service'
-import { FxExposureService }           from '@/lib/services/finance/fx-exposure.service'
-import type { FxExposureReport }       from '@/lib/services/finance/fx-exposure.service'
+
 import { AnnualSummaryService }        from '@/lib/services/finance/annual-summary.service'
 import type { AnnualSummary }          from '@/lib/services/finance/annual-summary.service'
 import { fmtPct }                      from '@/lib/format'
@@ -30,6 +29,7 @@ import type { PeriodComparisonReport, MetricComparison } from '@/lib/services/fi
 import { SeasonalityService }           from '@/lib/services/finance/seasonality.service'
 import type { SeasonalityReport }       from '@/lib/services/finance/seasonality.service'
 import FiscalYearSummaryClient          from './_fiscal/FiscalYearSummaryClient'
+import FxExposureClient                 from './_fx/FxExposureClient'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -399,12 +399,11 @@ export async function OverviewTab({ userId, companyId, glMode = 'shadow' }: Prop
   // Parallel: current + previous month metrics + YTD financial summary + period + FX + annual
   // Sequential: runway forecast must wait for current metrics (needs taxObligation)
   const currentYM = `${year}-${mon}`
-  const [metrics, prevMetrics, ytdSummary, currentPeriod, fxExposure, annualSummary, scorecard, periodComparison, monthComparison, seasonalityReport] = await Promise.all([
+  const [metrics, prevMetrics, ytdSummary, currentPeriod, annualSummary, scorecard, periodComparison, monthComparison, seasonalityReport] = await Promise.all([
     sq(() => getCfoMetrics(companyId, { from, to: today }),        ZERO_METRICS),
     sq(() => getCfoMetrics(companyId, { from: prevFrom, to: prevTo }), ZERO_METRICS),
     sq(() => FinanceService.getFinancialSummary(userId, companyId, periodForMonth(currentYM)), null),
     sq(() => PeriodService.getCurrent(companyId, supabase), null),
-    sq(() => FxExposureService.getReport(companyId, supabase), null as FxExposureReport | null),
     sq(() => AnnualSummaryService.getSummary(companyId, userId, supabase, { yearsBack: 3 }), null as AnnualSummary | null),
     sq(() => HealthScorecardService.getScorecard(companyId, userId, supabase, { from: ytdFrom, to: today }), null as HealthScorecard | null),
     sq(() => PeriodComparisonService.getYearComparison(companyId, year, supabase), null as PeriodComparisonReport | null),
@@ -730,80 +729,7 @@ export async function OverviewTab({ userId, companyId, glMode = 'shadow' }: Prop
         </div>
       )}
 
-      {/* Zone 5 — Kur Riski (FX Exposure) */}
-      <div>
-        <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">Kur Riski</div>
-        {!fxExposure || fxExposure.exposures.length === 0 ? (
-          <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-3 flex items-center gap-3">
-            <span className="w-1.5 h-1.5 rounded-full bg-pos shrink-0" />
-            <span className="text-xs text-[#64748b]">Tüm işlemler TRY cinsinden — döviz riski yok</span>
-          </div>
-        ) : (
-          <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
-            {/* Total gain/loss summary */}
-            <div className="px-5 py-3 border-b border-[#e2e8f0] flex items-center justify-between">
-              <span className="text-[10px] text-[#64748b]">
-                Toplam gerçekleşmemiş kur etkisi
-              </span>
-              <span className={`text-sm font-black tabular-nums ${fxExposure.total_fx_gain_loss_try >= 0 ? 'text-pos-text' : 'text-neg'}`}>
-                {fxExposure.total_fx_gain_loss_try >= 0 ? '+' : ''}{fmt(fxExposure.total_fx_gain_loss_try)}
-              </span>
-            </div>
-            {/* Per-currency rows */}
-            <div className="divide-y divide-[#f1f5f9]">
-              {fxExposure.exposures.map(exp => {
-                const isLong      = exp.net_foreign >= 0
-                const gainLoss    = exp.net_fx_gain_loss_try
-                const gainColor   = gainLoss >= 0 ? 'text-pos-text' : 'text-neg'
-                const posColor    = isLong ? 'text-pos-text' : 'text-neg'
-                return (
-                  <div key={exp.currency} className="px-5 py-3">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-black text-[#0f172a]">{exp.currency}</span>
-                        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${isLong ? 'bg-pos-light text-pos-text' : 'bg-neg-light text-neg-text'}`}>
-                          {isLong ? 'Uzun' : 'Kısa'} {Math.abs(exp.net_foreign).toLocaleString('tr-TR', { maximumFractionDigits: 2 })}
-                        </span>
-                        {exp.current_rate_try > 0 && (
-                          <span className="text-[10px] text-[#94a3b8]">
-                            Kur: ₺{exp.current_rate_try.toFixed(2)}
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-right">
-                        <div className={`text-sm font-black tabular-nums ${gainColor}`}>
-                          {gainLoss >= 0 ? '+' : ''}{fmt(gainLoss)}
-                        </div>
-                        <div className="text-[10px] text-[#94a3b8]">net kur etkisi</div>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="bg-[#f8fafc] rounded px-3 py-2">
-                        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Alacaklar</div>
-                        <div className="text-xs font-semibold tabular-nums text-[#334155]">
-                          {exp.receivables_foreign.toLocaleString('tr-TR', { maximumFractionDigits: 2 })} {exp.currency}
-                        </div>
-                        <div className={`text-[10px] tabular-nums ${exp.receivables_fx_gain_loss_try >= 0 ? 'text-pos-text' : 'text-neg'}`}>
-                          {exp.receivables_fx_gain_loss_try >= 0 ? '+' : ''}{fmt(exp.receivables_fx_gain_loss_try)}
-                        </div>
-                      </div>
-                      <div className="bg-[#f8fafc] rounded px-3 py-2">
-                        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Borçlar</div>
-                        <div className="text-xs font-semibold tabular-nums text-[#334155]">
-                          {exp.payables_foreign.toLocaleString('tr-TR', { maximumFractionDigits: 2 })} {exp.currency}
-                        </div>
-                        <div className={`text-[10px] tabular-nums ${exp.payables_fx_gain_loss_try >= 0 ? 'text-pos-text' : 'text-neg'}`}>
-                          {exp.payables_fx_gain_loss_try >= 0 ? '+' : ''}{fmt(exp.payables_fx_gain_loss_try)}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        )}
-      </div>
+      {/* Zone 5 — Kur Riski (FX Exposure) — rendered client-side in Zone 10 below */}
 
       {/* Zone 6 — Yıllık Özet (Year-over-Year) */}
       {annualSummary && annualSummary.years.length > 0 && (
@@ -1007,6 +933,9 @@ export async function OverviewTab({ userId, companyId, glMode = 'shadow' }: Prop
 
       {/* Zone 9 — Mali Yıl Kapanış Özeti */}
       <FiscalYearSummaryClient companyId={companyId} />
+
+      {/* Zone 10 — Kur Riski Analizi */}
+      <FxExposureClient companyId={companyId} />
 
       {/* Quick actions */}
       <div className="flex flex-wrap gap-2 pt-1">

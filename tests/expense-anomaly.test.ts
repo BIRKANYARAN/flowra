@@ -1,171 +1,300 @@
 /**
- * Expense Anomaly Detection — pure function unit tests
- *
- * Tests all exported pure helpers from:
- *   lib/services/finance/expense-anomaly.service.ts
- *
+ * Tests for lib/services/finance/expense-anomaly.service.ts
+ * All pure functions — no DB calls, no side effects.
  * Run with: npx vitest run tests/expense-anomaly.test.ts
  */
 
 import { describe, it, expect } from 'vitest'
 import {
+  computeMean,
+  computeStdDev,
   computeZScore,
-  computeDeviationPct,
-  classifyAnomaly,
-  buildAnomalyDescription,
-  computePopulationStdDev,
+  computeIQRBounds,
+  classifyAnomalySeverity,
+  isPotentialDuplicate,
 } from '../lib/services/finance/expense-anomaly.service'
 
-// ── computeZScore ─────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// computeMean
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe('computeMean', () => {
+  it('1. returns correct mean for normal array', () => {
+    expect(computeMean([10, 20, 30])).toBeCloseTo(20)
+  })
+
+  it('2. returns 0 for empty array', () => {
+    expect(computeMean([])).toBe(0)
+  })
+
+  it('3. returns the value itself for single element', () => {
+    expect(computeMean([42])).toBe(42)
+  })
+
+  it('4. handles all identical values', () => {
+    expect(computeMean([5, 5, 5, 5])).toBe(5)
+  })
+
+  it('5. handles floating point values', () => {
+    expect(computeMean([1.5, 2.5, 3.0])).toBeCloseTo(7 / 3)
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════════
+// computeStdDev
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe('computeStdDev', () => {
+  it('6. computes population stddev correctly', () => {
+    // mean=3, deviations squared: 4,1,0,1,4 → variance=2 → stddev≈1.414
+    const values = [1, 2, 3, 4, 5]
+    const mean = computeMean(values)
+    expect(computeStdDev(values, mean)).toBeCloseTo(Math.sqrt(2))
+  })
+
+  it('7. returns 0 for empty array', () => {
+    expect(computeStdDev([], 0)).toBe(0)
+  })
+
+  it('8. returns 0 for single-element array', () => {
+    expect(computeStdDev([99], 99)).toBe(0)
+  })
+
+  it('9. returns 0 for all identical values', () => {
+    expect(computeStdDev([7, 7, 7], 7)).toBe(0)
+  })
+
+  it('10. returns positive value for varied array', () => {
+    const values = [100, 200, 300, 400]
+    const mean = computeMean(values)
+    expect(computeStdDev(values, mean)).toBeGreaterThan(0)
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════════
+// computeZScore
+// ═══════════════════════════════════════════════════════════════════════════
 
 describe('computeZScore', () => {
-  it('1. normal z-score: (150 - 100) / 25 = 2', () => {
-    expect(computeZScore(150, 100, 25)).toBeCloseTo(2, 5)
+  it('11. computes z-score correctly for value above mean', () => {
+    // mean=10, stdDev=2, value=12 → z=1
+    expect(computeZScore(12, 10, 2)).toBeCloseTo(1)
   })
 
-  it('2. stddev = 0 → null', () => {
-    expect(computeZScore(100, 100, 0)).toBeNull()
+  it('12. computes z-score correctly for value below mean', () => {
+    // mean=10, stdDev=2, value=6 → z=-2
+    expect(computeZScore(6, 10, 2)).toBeCloseTo(-2)
   })
 
-  it('3. negative z-score: (50 - 100) / 25 = -2', () => {
-    expect(computeZScore(50, 100, 25)).toBeCloseTo(-2, 5)
+  it('13. returns 0 when value equals mean', () => {
+    expect(computeZScore(10, 10, 5)).toBe(0)
   })
 
-  it('4. value equals mean → z-score = 0', () => {
-    expect(computeZScore(100, 100, 10)).toBeCloseTo(0, 5)
+  it('14. returns null when stdDev is 0', () => {
+    expect(computeZScore(10, 10, 0)).toBeNull()
   })
 
-  it('5. large deviation: (1000 - 100) / 100 = 9', () => {
-    expect(computeZScore(1000, 100, 100)).toBeCloseTo(9, 5)
-  })
-})
-
-// ── computeDeviationPct ───────────────────────────────────────────────────────
-
-describe('computeDeviationPct', () => {
-  it('6. normal: (150 - 100) / 100 × 100 = 50%', () => {
-    expect(computeDeviationPct(150, 100)).toBeCloseTo(50, 5)
-  })
-
-  it('7. zero baseline → 0', () => {
-    expect(computeDeviationPct(999, 0)).toBe(0)
-  })
-
-  it('8. negative deviation: (50 - 100) / 100 × 100 = -50%', () => {
-    expect(computeDeviationPct(50, 100)).toBeCloseTo(-50, 5)
-  })
-
-  it('9. value equals baseline → 0%', () => {
-    expect(computeDeviationPct(200, 200)).toBeCloseTo(0, 5)
-  })
-
-  it('10. more than double → 100%', () => {
-    expect(computeDeviationPct(200, 100)).toBeCloseTo(100, 5)
+  it('15. returns null when stdDev is 0 even if value differs from mean', () => {
+    expect(computeZScore(20, 10, 0)).toBeNull()
   })
 })
 
-// ── classifyAnomaly ───────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// computeIQRBounds
+// ═══════════════════════════════════════════════════════════════════════════
 
-describe('classifyAnomaly', () => {
-  it('11. high: |zscore| > 2 → high', () => {
-    expect(classifyAnomaly(2.5, 30)).toBe('high')
+describe('computeIQRBounds', () => {
+  it('16. computes IQR bounds for normal dataset of 4+ values', () => {
+    const result = computeIQRBounds([1, 2, 3, 4])
+    expect(result).not.toBeNull()
+    expect(result!.iqr).toBeGreaterThan(0)
+    expect(result!.upper_bound).toBeGreaterThan(result!.q3)
+    expect(result!.lower_bound).toBeLessThan(result!.q1)
   })
 
-  it('12. high: deviation > 100% → high (even with null zscore)', () => {
-    expect(classifyAnomaly(null, 150)).toBe('high')
+  it('17. returns null for fewer than 4 values (3 values)', () => {
+    expect(computeIQRBounds([1, 2, 3])).toBeNull()
   })
 
-  it('13. medium: |zscore| > 1.5 but ≤ 2 → medium', () => {
-    expect(classifyAnomaly(1.8, 30)).toBe('medium')
+  it('18. returns null for empty array', () => {
+    expect(computeIQRBounds([])).toBeNull()
   })
 
-  it('14. medium: deviation > 50% but ≤ 100% with null zscore → medium', () => {
-    expect(classifyAnomaly(null, 75)).toBe('medium')
+  it('19. upper_bound = Q3 + 1.5 × IQR', () => {
+    const values = [10, 20, 30, 40, 50, 60, 70, 80]
+    const result = computeIQRBounds(values)
+    expect(result).not.toBeNull()
+    expect(result!.upper_bound).toBeCloseTo(result!.q3 + 1.5 * result!.iqr)
   })
 
-  it('15. low: deviation > 25% but ≤ 50% with null zscore → low', () => {
-    expect(classifyAnomaly(null, 30)).toBe('low')
-  })
-
-  it('16. null: below threshold — deviation < 25% and zscore < 1.5 → null', () => {
-    expect(classifyAnomaly(1.0, 10)).toBeNull()
-  })
-
-  it('17. null: zscore null and deviation < 25% → null', () => {
-    expect(classifyAnomaly(null, 20)).toBeNull()
-  })
-
-  it('18. high: negative zscore with |value| > 2 → high', () => {
-    expect(classifyAnomaly(-2.5, 30)).toBe('high')
-  })
-
-  it('19. medium: negative zscore with |value| > 1.5 → medium', () => {
-    expect(classifyAnomaly(-1.8, 30)).toBe('medium')
+  it('20. lower_bound = Q1 - 1.5 × IQR', () => {
+    const values = [10, 20, 30, 40, 50, 60, 70, 80]
+    const result = computeIQRBounds(values)
+    expect(result).not.toBeNull()
+    expect(result!.lower_bound).toBeCloseTo(result!.q1 - 1.5 * result!.iqr)
   })
 })
 
-// ── buildAnomalyDescription ───────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// classifyAnomalySeverity
+// ═══════════════════════════════════════════════════════════════════════════
 
-describe('buildAnomalyDescription', () => {
-  it('20. spike with positive deviation contains expense type label', () => {
-    const desc = buildAnomalyDescription('software', 150, 'spike')
-    // 'software' maps to 'Yazılım'
-    expect(desc).toContain('Yazılım')
-    expect(desc).toContain('üzerinde')
+describe('classifyAnomalySeverity', () => {
+  const noBounds = null
+
+  it('21. classifies high severity when |z_score| > 3', () => {
+    expect(classifyAnomalySeverity(3.5, 100, noBounds)).toBe('high')
+    expect(classifyAnomalySeverity(-3.5, 100, noBounds)).toBe('high')
   })
 
-  it('21. new_vendor message mentions yeni tedarikçi', () => {
-    const desc = buildAnomalyDescription('marketing', 0, 'new_vendor')
-    expect(desc.toLowerCase()).toContain('tedarikçi')
+  it('22. classifies medium severity when |z_score| is 2–3', () => {
+    expect(classifyAnomalySeverity(2.5, 100, noBounds)).toBe('medium')
   })
 
-  it('22. unusual_category message mentions category label', () => {
-    const desc = buildAnomalyDescription('rent', 0, 'unusual_category')
-    expect(desc).toContain('Kira')
-    expect(desc).toContain('görülmemişti')
+  it('23. classifies low severity when |z_score| is 1.5–2', () => {
+    expect(classifyAnomalySeverity(1.7, 100, noBounds)).toBe('low')
   })
 
-  it('23. duplicate_suspect message mentions kopya', () => {
-    const desc = buildAnomalyDescription('salary', 0, 'duplicate_suspect')
-    expect(desc.toLowerCase()).toContain('kopya')
+  it('24. classifies none for |z_score| <= 1.5', () => {
+    expect(classifyAnomalySeverity(1.0, 100, noBounds)).toBe('none')
   })
 
-  it('24. spike with unknown expense type uses type key in message', () => {
-    const desc = buildAnomalyDescription('custom_type_xyz', 60, 'spike')
-    expect(desc).toContain('custom_type_xyz')
+  it('25. IQR fallback: high when value > upper_bound × 1.5', () => {
+    const bounds = { lower_bound: 0, upper_bound: 100 }
+    // value=160 > 150 (100 × 1.5)
+    expect(classifyAnomalySeverity(null, 160, bounds)).toBe('high')
+  })
+
+  it('26. IQR fallback: medium when value > upper_bound but <= upper_bound × 1.5', () => {
+    const bounds = { lower_bound: 0, upper_bound: 100 }
+    // value=110 > 100 but < 150
+    expect(classifyAnomalySeverity(null, 110, bounds)).toBe('medium')
+  })
+
+  it('27. IQR fallback: none when value <= upper_bound', () => {
+    const bounds = { lower_bound: 0, upper_bound: 100 }
+    expect(classifyAnomalySeverity(null, 80, bounds)).toBe('none')
+  })
+
+  it('28. returns none when z_score is null and iqrBounds is null', () => {
+    expect(classifyAnomalySeverity(null, 500, null)).toBe('none')
   })
 })
 
-// ── computePopulationStdDev ───────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// isPotentialDuplicate
+// ═══════════════════════════════════════════════════════════════════════════
 
-describe('computePopulationStdDev', () => {
-  it('25. single value → null', () => {
-    expect(computePopulationStdDev([100])).toBeNull()
+describe('isPotentialDuplicate', () => {
+  const base = {
+    supplier_name: 'Acme Corp',
+    amount_try: 1000,
+    created_at: '2026-01-10T12:00:00Z',
+  }
+
+  it('29. returns true for exact match same supplier + same amount within window', () => {
+    const others = [
+      {
+        supplier_name: 'Acme Corp',
+        amount_try: 1000,
+        created_at: '2026-01-12T12:00:00Z', // 2 days later — within 7 days
+      },
+    ]
+    expect(isPotentialDuplicate(base, others)).toBe(true)
   })
 
-  it('26. empty array → null', () => {
-    expect(computePopulationStdDev([])).toBeNull()
+  it('30. returns true for amount within ±1 TRY tolerance', () => {
+    const others = [
+      {
+        supplier_name: 'Acme Corp',
+        amount_try: 1000.5,
+        created_at: '2026-01-11T12:00:00Z',
+      },
+    ]
+    expect(isPotentialDuplicate(base, others)).toBe(true)
   })
 
-  it('27. two identical values → 0', () => {
-    expect(computePopulationStdDev([100, 100])).toBe(0)
+  it('31. returns false for different supplier', () => {
+    const others = [
+      {
+        supplier_name: 'Other Corp',
+        amount_try: 1000,
+        created_at: '2026-01-11T12:00:00Z',
+      },
+    ]
+    expect(isPotentialDuplicate(base, others)).toBe(false)
   })
 
-  it('28. known stddev: [2, 4, 4, 4, 5, 5, 7, 9] → 2', () => {
-    // population stddev = 2
-    const result = computePopulationStdDev([2, 4, 4, 4, 5, 5, 7, 9])
-    expect(result).toBeCloseTo(2, 5)
+  it('32. returns false for same supplier but amount difference > 1 TRY', () => {
+    const others = [
+      {
+        supplier_name: 'Acme Corp',
+        amount_try: 1002, // > 1 TRY difference
+        created_at: '2026-01-11T12:00:00Z',
+      },
+    ]
+    expect(isPotentialDuplicate(base, others)).toBe(false)
   })
 
-  it('29. two values [0, 10] → stddev = 5', () => {
-    // mean = 5, variance = (25 + 25) / 2 = 25, stddev = 5
-    const result = computePopulationStdDev([0, 10])
-    expect(result).toBeCloseTo(5, 5)
+  it('33. returns false when the matching entry is outside the window', () => {
+    const others = [
+      {
+        supplier_name: 'Acme Corp',
+        amount_try: 1000,
+        created_at: '2026-01-01T12:00:00Z', // 9 days before — outside 7-day window
+      },
+    ]
+    expect(isPotentialDuplicate(base, others)).toBe(false)
   })
 
-  it('30. three values [1, 2, 3] → stddev ≈ 0.816', () => {
-    // mean = 2, variance = (1 + 0 + 1) / 3 ≈ 0.6667, stddev ≈ 0.8165
-    const result = computePopulationStdDev([1, 2, 3])
-    expect(result).toBeCloseTo(0.8165, 3)
+  it('34. returns false when expense has no supplier_name', () => {
+    const noSupplier = { ...base, supplier_name: null }
+    const others = [
+      {
+        supplier_name: null as string | null,
+        amount_try: 1000,
+        created_at: '2026-01-11T12:00:00Z',
+      },
+    ]
+    expect(isPotentialDuplicate(noSupplier, others)).toBe(false)
+  })
+
+  it('35. returns false for empty others array', () => {
+    expect(isPotentialDuplicate(base, [])).toBe(false)
+  })
+
+  it('36. respects custom windowDays parameter — outside short window', () => {
+    const others = [
+      {
+        supplier_name: 'Acme Corp',
+        amount_try: 1000,
+        created_at: '2026-01-18T12:00:00Z', // 8 days later
+      },
+    ]
+    // Default window is 7 days — should miss
+    expect(isPotentialDuplicate(base, others, 7)).toBe(false)
+  })
+
+  it('37. respects custom windowDays parameter — within wider window', () => {
+    const others = [
+      {
+        supplier_name: 'Acme Corp',
+        amount_try: 1000,
+        created_at: '2026-01-18T12:00:00Z', // 8 days later
+      },
+    ]
+    // Custom window of 10 days — should match
+    expect(isPotentialDuplicate(base, others, 10)).toBe(true)
+  })
+
+  it('38. is case-insensitive for supplier_name comparison', () => {
+    const others = [
+      {
+        supplier_name: 'acme corp', // lowercase
+        amount_try: 1000,
+        created_at: '2026-01-11T12:00:00Z',
+      },
+    ]
+    expect(isPotentialDuplicate(base, others)).toBe(true)
   })
 })

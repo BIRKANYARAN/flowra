@@ -17,10 +17,7 @@ import {
   ExpenseIntelligenceService,
   type ExpenseIntelligenceReport,
 } from '@/lib/services/finance/expense-intelligence.service'
-import {
-  ExpenseAnomalyService,
-  type ExpenseAnomalyReport,
-} from '@/lib/services/finance/expense-anomaly.service'
+import { ExpenseAnomalyClient } from './_anomaly/ExpenseAnomalyClient'
 import { SupplierAnalyticsPanel } from './_supplier-analytics/SupplierAnalyticsPanel'
 import { PayablesAgingSection } from './_ap-aging/PayablesAgingSection'
 import { SupplierPaymentTermsClient } from './_supplier-terms/SupplierPaymentTermsClient'
@@ -70,7 +67,7 @@ export async function ExpensesContent({ companyId }: Props) {
     to:   new Date().toISOString().slice(0, 10),
   }
 
-  const [expensesRes, recurringRes, partnersRes, expenseIntelligence, anomalyReport] = await Promise.all([
+  const [expensesRes, recurringRes, partnersRes, expenseIntelligence] = await Promise.all([
     supabase
       .from('expenses')
       .select('*')
@@ -94,8 +91,6 @@ export async function ExpensesContent({ companyId }: Props) {
       .order('name'),
     ExpenseIntelligenceService.getReport(companyId, supabase, intelligencePeriod)
       .catch(() => null as ExpenseIntelligenceReport | null),
-    ExpenseAnomalyService.getReport(companyId, supabase)
-      .catch(() => null as ExpenseAnomalyReport | null),
   ])
 
   const expenses  = (expensesRes.data  ?? []) as ExpenseRow[]
@@ -512,98 +507,7 @@ export async function ExpensesContent({ companyId }: Props) {
       <PayablesAgingSection />
 
       {/* ── Anormal Gider Tespiti ──────────────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded shadow-sm overflow-hidden">
-        <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 border-b border-[#f1f5f9]">
-          <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
-            Anormal Gider Tespiti
-          </span>
-          {anomalyReport && (anomalyReport.high_count + anomalyReport.medium_count + anomalyReport.low_count) > 0 && (
-            <div className="flex items-center gap-1.5">
-              {anomalyReport.high_count > 0 && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wide bg-[#fee2e2] text-[#b91c1c] border border-[#fca5a5]">
-                  Yüksek {anomalyReport.high_count}
-                </span>
-              )}
-              {anomalyReport.medium_count > 0 && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wide bg-warn-light text-warn-text border border-warn/30">
-                  Orta {anomalyReport.medium_count}
-                </span>
-              )}
-              {anomalyReport.low_count > 0 && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wide bg-[#fefce8] text-[#a16207] border border-[#fde047]/50">
-                  Düşük {anomalyReport.low_count}
-                </span>
-              )}
-            </div>
-          )}
-        </div>
-
-        {!anomalyReport || anomalyReport.anomalies.length === 0 ? (
-          <div className="px-4 py-6 text-center text-xs text-[#94a3b8]">
-            Son 30 günde anormal gider tespit edilmedi
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="border-b border-[#e2e8f0]">
-                  <th className="text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] px-4 py-2">Tarih</th>
-                  <th className="text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] px-2 py-2">Tedarikçi</th>
-                  <th className="text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] px-2 py-2">Tür</th>
-                  <th className="text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] px-2 py-2">Tutar</th>
-                  <th className="text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] px-2 py-2">Sapma</th>
-                  <th className="text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] px-2 py-2">Tip</th>
-                  <th className="text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] px-2 py-2">Açıklama</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#f8fafc]">
-                {anomalyReport.anomalies.map(a => {
-                  const severityStyle =
-                    a.severity === 'high'   ? 'bg-[#fee2e2] text-[#b91c1c] border-[#fca5a5]' :
-                    a.severity === 'medium' ? 'bg-warn-light text-warn-text border-warn/30'   :
-                                             'bg-[#fefce8] text-[#a16207] border-[#fde047]/50'
-                  const typeLabel =
-                    a.anomaly_type === 'spike'             ? 'Ani Artış'   :
-                    a.anomaly_type === 'new_vendor'        ? 'Yeni Tedarikçi' :
-                    a.anomaly_type === 'unusual_category'  ? 'Alışılmadık Kategori' :
-                                                             'Kopya Şüphesi'
-                  const devSign = a.deviation_pct > 0 ? '+' : ''
-                  return (
-                    <tr key={a.expense_id} className="hover:bg-[#f8fafc]/60">
-                      <td className="px-4 py-2 tabular-nums text-[#64748b] whitespace-nowrap">{a.expense_date}</td>
-                      <td className="px-2 py-2 text-[#334155] max-w-[120px] truncate">
-                        {a.supplier_name ?? '—'}
-                      </td>
-                      <td className="px-2 py-2 text-[#334155]">
-                        {CATEGORY_LABELS[a.expense_type] ?? a.expense_type}
-                      </td>
-                      <td className="px-2 py-2 text-right tabular-nums font-semibold text-neg">
-                        {fmt(a.amount_try)}
-                      </td>
-                      <td className={`px-2 py-2 text-right tabular-nums font-bold whitespace-nowrap ${
-                        a.deviation_pct > 50 ? 'text-[#b91c1c]' :
-                        a.deviation_pct > 25 ? 'text-warn-text' : 'text-[#64748b]'
-                      }`}>
-                        {devSign}{a.deviation_pct.toFixed(0)}%
-                      </td>
-                      <td className="px-2 py-2">
-                        <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wide border ${severityStyle}`}>
-                          {typeLabel}
-                        </span>
-                      </td>
-                      <td className="px-2 py-2 text-[#64748b] max-w-[200px]">{a.description}</td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-            <div className="px-4 py-2 border-t border-[#f1f5f9] flex items-center justify-between text-[10px] text-[#94a3b8]">
-              <span>Son 30 gün analizi · {anomalyReport.analysis_window_days} günlük pencere</span>
-              <span>Toplam anormal tutar: <strong className="text-neg">{fmt(anomalyReport.total_anomaly_amount_try)}</strong></span>
-            </div>
-          </div>
-        )}
-      </div>
+      <ExpenseAnomalyClient companyId={companyId} />
 
       {/* ── Tedarikçi Analizi ─────────────────────────────────────────────────── */}
       <SupplierAnalyticsPanel />

@@ -165,7 +165,7 @@ async function fetchExpenseParams(
       .gte('sale_date', from)
       .lte('sale_date', to),
 
-    ExpenseAnomalyService.getReport(companyId, supabase),
+    new ExpenseAnomalyService(supabase).getReport(companyId),
   ])
 
   const expenses = expRes.status === 'fulfilled' ? (expRes.value?.data ?? []) : []
@@ -198,7 +198,7 @@ async function fetchExpenseParams(
   return {
     expense_ratio_pct,
     anomaly_count:     anomaly?.anomalies?.length ?? 0,
-    anomaly_total_try: anomaly?.total_anomaly_amount_try ?? 0,
+    anomaly_total_try: anomaly?.total_anomalous_amount_try ?? 0,
     top_category,
     top_category_pct,
   }

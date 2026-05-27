@@ -1,197 +1,391 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // lib/services/finance/fx-exposure.service.ts
 //
-// FX exposure report — multi-currency position + unrealized gain/loss.
+// Multi-Currency FX Exposure Analysis
 //
-// Rules:
-//   • Only non-TRY currency sales/expenses are considered exposures.
-//   • Receivables: outstanding (pending/partial/overdue) sales with currency ≠ TRY
-//     that have fx_rate_try recorded (booking rate).
-//   • Payables: outstanding expenses with currency ≠ TRY.
-//   • Gain/loss = (current_rate − booking_rate) × foreign_amount
-//       receivable: gain when current_rate > booking_rate (TRY weakened → receivable worth more)
-//       payable:    loss when current_rate > booking_rate (TRY weakened → payable costs more)
-//   • If no multi-currency data exists, returns { exposures: [], note }.
+// Computes unrealized FX gains/losses on sales and purchases/expenses
+// denominated in foreign currency, and estimates hedging needs.
+//
+// Key rules:
+//   • Only non-TRY currencies are considered exposures.
+//   • Revenue: sales with currency != 'TRY' in the analysis window.
+//   • Expenses: expenses with currency != 'TRY' in the analysis window.
+//   • current_rate: most recent exchange_rate from sales or expenses for that
+//     currency within the period (proxy for current market rate).
+//   • Unrealized G/L = (current_rate - entry_rate) × foreign_amount
+//       positive = gain (TRY weakened vs foreign)
+//       negative = loss (TRY strengthened vs foreign)
+//   • If no multi-currency data exists, returns an empty report with
+//     total_exposure_ratio_pct = 0.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { round2 } from '@/lib/calc'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyClient = SupabaseClient<any>
 
-// ── Output interfaces ─────────────────────────────────────────────────────────
+// ── Pure exported helpers ──────────────────────────────────────────────────────
+
+/**
+ * Compute FX gain/loss on a single foreign-currency position.
+ *
+ * gain  when current_rate > entry_rate (TRY weakened → foreign worth more in TRY)
+ * loss  when current_rate < entry_rate (TRY strengthened)
+ */
+export function computeFxGainLoss(
+  foreignAmount: number,
+  entryRateTry: number,
+  currentRateTry: number,
+): number {
+  return round2((currentRateTry - entryRateTry) * foreignAmount)
+}
+
+/**
+ * Compute FX exposure ratio.
+ * Returns 0 if totalRevenueTry is 0 to avoid division by zero.
+ */
+export function computeFxExposureRatio(
+  foreignRevenueTry: number,
+  totalRevenueTry: number,
+): number {
+  if (totalRevenueTry === 0) return 0
+  return round2((foreignRevenueTry / totalRevenueTry) * 100)
+}
+
+/**
+ * Classify FX exposure risk based on exposure percentage.
+ *   <10%   → 'minimal'
+ *   10-30% → 'moderate'
+ *   30-60% → 'elevated'
+ *   >60%   → 'high'
+ */
+export function classifyFxExposureRisk(
+  exposureRatioPct: number,
+): 'minimal' | 'moderate' | 'elevated' | 'high' {
+  if (exposureRatioPct < 10)  return 'minimal'
+  if (exposureRatioPct < 30)  return 'moderate'
+  if (exposureRatioPct <= 60) return 'elevated'
+  return 'high'
+}
+
+/**
+ * Compute natural hedge ratio: foreign expenses / foreign revenue × 100.
+ * Close to 100 = naturally hedged (revenues and expenses cancel out).
+ * Returns null if foreignRevenueTry is 0 (no revenue to hedge against).
+ */
+export function computeNaturalHedgeRatio(
+  foreignExpensesTry: number,
+  foreignRevenueTry: number,
+): number | null {
+  if (foreignRevenueTry === 0) return null
+  return round2((foreignExpensesTry / foreignRevenueTry) * 100)
+}
+
+/**
+ * Estimate net FX exposure (hedging need) in TRY terms.
+ *   positive = net receiver of FX (revenue > expenses in foreign)
+ *   negative = net payer of FX
+ */
+export function computeNetFxExposure(
+  foreignRevenueTry: number,
+  foreignExpensesTry: number,
+): number {
+  return round2(foreignRevenueTry - foreignExpensesTry)
+}
+
+// ── Types ──────────────────────────────────────────────────────────────────────
 
 export interface CurrencyExposure {
-  currency: string
-
-  // Receivables in this currency
-  receivables_foreign:          number   // outstanding in foreign currency
-  receivables_try_at_booking:   number   // at historical booking rate
-  receivables_try_at_current:   number   // at current rate
-  receivables_fx_gain_loss_try: number   // current − booking (positive = gain)
-
-  // Payables in this currency
-  payables_foreign:          number
-  payables_try_at_booking:   number
-  payables_try_at_current:   number
-  payables_fx_gain_loss_try: number
-
-  // Net position
-  net_foreign:          number   // receivables - payables (positive = long)
-  net_fx_gain_loss_try: number   // net unrealized gain/loss at current rates
-  current_rate_try:     number   // current TRY rate used
+  currency: string                    // 'USD' | 'EUR' | 'GBP' | 'OTHER'
+  revenue_foreign: number             // in foreign currency units
+  revenue_try: number                 // at entry rate
+  expenses_foreign: number
+  expenses_try: number
+  avg_entry_rate: number
+  current_rate: number | null         // from most recent transaction as proxy
+  unrealized_gain_loss_try: number | null
+  net_exposure_try: number
+  exposure_ratio_pct: number
+  natural_hedge_ratio_pct: number | null
+  risk_level: 'minimal' | 'moderate' | 'elevated' | 'high'
 }
 
 export interface FxExposureReport {
-  as_of_date:                  string
-  exposures:                   CurrencyExposure[]
-  total_fx_gain_loss_try:      number
-  highest_exposure_currency:   string | null
-  computed_at:                 string
-  /** Populated when no multi-currency data exists */
-  note?: string
+  as_of_date: string
+  period_months: number              // analysis window
+  total_revenue_try: number
+  foreign_revenue_try: number
+  total_exposure_ratio_pct: number
+  currencies: CurrencyExposure[]
+  total_unrealized_gl_try: number | null
+  total_net_exposure_try: number
+  largest_exposure_currency: string | null
+  hedging_recommendation: string     // Turkish text
 }
 
-// ── Service ───────────────────────────────────────────────────────────────────
+// ── Hedging recommendation ─────────────────────────────────────────────────────
+
+function hedgingRecommendation(exposureRatioPct: number): string {
+  if (exposureRatioPct < 10)  return 'FX riski düşük. Mevcut yapı yeterli.'
+  if (exposureRatioPct < 30)  return 'Orta düzey FX maruziyeti. Doğal hedging oranına dikkat edin.'
+  if (exposureRatioPct <= 60) return 'Yüksek FX maruziyeti. Kurumsal hedging değerlendirilebilir.'
+  return 'Kritik FX maruziyeti. Döviz yönetimi stratejisi acilen gerekli.'
+}
+
+// ── Service class ──────────────────────────────────────────────────────────────
 
 export class FxExposureService {
 
-  static async getReport(
-    companyId: string,
-    supabase:  AnyClient,
-    opts?:     { today?: string },
-  ): Promise<FxExposureReport> {
-    const today      = opts?.today ?? new Date().toISOString().slice(0, 10)
-    const computedAt = new Date().toISOString()
+  constructor(private supabase: AnyClient) {}
 
-    // Parallel: outstanding sales + outstanding expenses + latest FX rates
-    const [salesRes, expensesRes, fxRes] = await Promise.allSettled([
-      // Outstanding non-TRY sales (receivables)
-      supabase
-        .from('sales')
-        .select('total, currency, fx_rate_try')
-        .eq('company_id', companyId)
-        .is('deleted_at', null)
-        .neq('currency', 'TRY')
-        .in('payment_status', ['pending', 'partial', 'overdue']),
-      // Outstanding non-TRY expenses (payables)
-      supabase
-        .from('expenses')
-        .select('amount, currency, fx_rate')
-        .eq('company_id', companyId)
-        .is('deleted_at', null)
-        .neq('currency', 'TRY')
-        .eq('payment_status', 'pending'),
-      // Latest FX rates from DB (any date — we only need approximate current rate)
-      supabase
-        .from('fx_rates')
-        .select('currency, buying, rate_date')
-        .in('currency', ['USD', 'EUR', 'GBP', 'CHF'])
-        .order('rate_date', { ascending: false })
-        .limit(20),
+  async getReport(
+    companyId: string,
+    periodMonths = 6,
+  ): Promise<FxExposureReport> {
+    const today    = new Date().toISOString().slice(0, 10)
+    const fromDate = (() => {
+      const d = new Date()
+      d.setMonth(d.getMonth() - periodMonths)
+      return d.toISOString().slice(0, 10)
+    })()
+
+    // ── Parallel queries ───────────────────────────────────────────────────────
+
+    // Sales in period with non-TRY currency
+    const salesPromise = this.supabase
+      .from('sales')
+      .select('currency, total, total_try, fx_rate_try, sale_date')
+      .eq('company_id', companyId)
+      .is('deleted_at', null)
+      .neq('currency', 'TRY')
+      .gte('sale_date', fromDate)
+      .lte('sale_date', today)
+      .not('payment_status', 'eq', 'cancelled')
+      .limit(5000)
+
+    // All sales in period for total_revenue_try
+    const totalRevenuePromise = this.supabase
+      .from('sales')
+      .select('total_try')
+      .eq('company_id', companyId)
+      .is('deleted_at', null)
+      .gte('sale_date', fromDate)
+      .lte('sale_date', today)
+      .not('payment_status', 'eq', 'cancelled')
+      .limit(10000)
+
+    // Expenses in period with non-TRY currency
+    const expensesPromise = this.supabase
+      .from('expenses')
+      .select('currency, amount, amount_try, fx_rate, expense_date')
+      .eq('company_id', companyId)
+      .is('deleted_at', null)
+      .neq('currency', 'TRY')
+      .gte('expense_date', fromDate)
+      .lte('expense_date', today)
+      .limit(5000)
+
+    const [salesRes, totalRevRes, expensesRes] = await Promise.allSettled([
+      salesPromise,
+      totalRevenuePromise,
+      expensesPromise,
     ])
 
-    const sales    = salesRes.status    === 'fulfilled' ? (salesRes.value.data    ?? []) : []
-    const expenses = expensesRes.status === 'fulfilled' ? (expensesRes.value.data ?? []) : []
-    const fxRows   = fxRes.status       === 'fulfilled' ? (fxRes.value.data       ?? []) : []
+    const salesRows = salesRes.status === 'fulfilled' ? (salesRes.value.data ?? []) : []
+    const totalRevRows = totalRevRes.status === 'fulfilled' ? (totalRevRes.value.data ?? []) : []
+    const expensesRows = expensesRes.status === 'fulfilled' ? (expensesRes.value.data ?? []) : []
 
-    // Check for multi-currency data
-    const hasForeignSales    = (sales    as Array<{ currency: string }>).some(s => s.currency !== 'TRY')
-    const hasForeignExpenses = (expenses as Array<{ currency: string }>).some(e => e.currency !== 'TRY')
+    // Total revenue (TRY) for the period
+    const totalRevenueTry = totalRevRows.reduce((s: number, r: { total_try: number | null }) =>
+      s + Number(r.total_try ?? 0), 0)
 
-    if (!hasForeignSales && !hasForeignExpenses) {
+    // If no foreign currency activity, return empty report
+    if (salesRows.length === 0 && expensesRows.length === 0) {
       return {
-        as_of_date:                 today,
-        exposures:                  [],
-        total_fx_gain_loss_try:     0,
-        highest_exposure_currency:  null,
-        computed_at:                computedAt,
-        note: 'Çok para birimli veri bulunamadı',
+        as_of_date: today,
+        period_months: periodMonths,
+        total_revenue_try: totalRevenueTry,
+        foreign_revenue_try: 0,
+        total_exposure_ratio_pct: 0,
+        currencies: [],
+        total_unrealized_gl_try: null,
+        total_net_exposure_try: 0,
+        largest_exposure_currency: null,
+        hedging_recommendation: hedgingRecommendation(0),
       }
     }
 
-    // Build current rate map: currency → latest buying rate
-    const currentRates = new Map<string, number>()
-    for (const row of (fxRows as Array<{ currency: string; buying: number; rate_date: string }>)) {
-      if (!currentRates.has(row.currency)) {
-        currentRates.set(row.currency, Number(row.buying))
-      }
+    // ── Aggregate per currency ─────────────────────────────────────────────────
+
+    type CcyData = {
+      revenue_foreign: number
+      revenue_try: number
+      expenses_foreign: number
+      expenses_try: number
+      // For weighted avg entry rate on revenue side
+      sum_rate_x_foreign: number
+      // Track most recent transaction date and rate
+      latest_sale_date: string
+      latest_sale_rate: number | null
+      latest_exp_date: string
+      latest_exp_rate: number | null
     }
 
-    // Aggregate by currency
-    type CurrencyData = {
-      rec_foreign: number; rec_booking_try: number
-      pay_foreign: number; pay_booking_try: number
-    }
-    const byCurrency = new Map<string, CurrencyData>()
+    const byCurrency = new Map<string, CcyData>()
 
-    function ensureCurrency(ccy: string) {
+    function ensureCcy(ccy: string): CcyData {
       if (!byCurrency.has(ccy)) {
-        byCurrency.set(ccy, { rec_foreign: 0, rec_booking_try: 0, pay_foreign: 0, pay_booking_try: 0 })
+        byCurrency.set(ccy, {
+          revenue_foreign: 0,
+          revenue_try: 0,
+          expenses_foreign: 0,
+          expenses_try: 0,
+          sum_rate_x_foreign: 0,
+          latest_sale_date: '',
+          latest_sale_rate: null,
+          latest_exp_date: '',
+          latest_exp_rate: null,
+        })
       }
       return byCurrency.get(ccy)!
     }
 
-    for (const sale of (sales as Array<{ total: number; currency: string; fx_rate_try: number | null }>)) {
-      if (!sale.currency || sale.currency === 'TRY') continue
-      const bookingRate = Number(sale.fx_rate_try ?? 1)
-      const foreign     = bookingRate > 0 ? Number(sale.total) / bookingRate : 0
-      const d = ensureCurrency(sale.currency)
-      d.rec_foreign      += foreign
-      d.rec_booking_try  += Number(sale.total)
+    for (const row of (salesRows as Array<{
+      currency: string
+      total: number | null
+      total_try: number | null
+      fx_rate_try: number | null
+      sale_date: string | null
+    }>)) {
+      const ccy = String(row.currency ?? '').toUpperCase()
+      if (!ccy || ccy === 'TRY') continue
+
+      const normalizedCcy = ['USD', 'EUR', 'GBP'].includes(ccy) ? ccy : 'OTHER'
+      const d = ensureCcy(normalizedCcy)
+
+      const foreignAmt = Number(row.total ?? 0)
+      const tryAmt     = Number(row.total_try ?? 0)
+      const rate       = Number(row.fx_rate_try ?? 0)
+
+      d.revenue_foreign += foreignAmt
+      d.revenue_try     += tryAmt
+      if (rate > 0) d.sum_rate_x_foreign += rate * foreignAmt
+
+      const saleDate = String(row.sale_date ?? '')
+      if (saleDate > d.latest_sale_date && rate > 0) {
+        d.latest_sale_date = saleDate
+        d.latest_sale_rate = rate
+      }
     }
 
-    for (const exp of (expenses as Array<{ amount: number; currency: string; fx_rate: number | null }>)) {
-      if (!exp.currency || exp.currency === 'TRY') continue
-      const bookingRate = Number(exp.fx_rate ?? 1)
-      const d = ensureCurrency(exp.currency)
-      d.pay_foreign     += Number(exp.amount)
-      d.pay_booking_try += Number(exp.amount) * bookingRate
+    for (const row of (expensesRows as Array<{
+      currency: string
+      amount: number | null
+      amount_try: number | null
+      fx_rate: number | null
+      expense_date: string | null
+    }>)) {
+      const ccy = String(row.currency ?? '').toUpperCase()
+      if (!ccy || ccy === 'TRY') continue
+
+      const normalizedCcy = ['USD', 'EUR', 'GBP'].includes(ccy) ? ccy : 'OTHER'
+      const d = ensureCcy(normalizedCcy)
+
+      const foreignAmt = Number(row.amount ?? 0)
+      const tryAmt     = Number(row.amount_try ?? 0)
+      const rate       = Number(row.fx_rate ?? 0)
+
+      d.expenses_foreign += foreignAmt
+      d.expenses_try     += tryAmt
+
+      const expDate = String(row.expense_date ?? '')
+      if (expDate > d.latest_exp_date && rate > 0) {
+        d.latest_exp_date = expDate
+        d.latest_exp_rate = rate
+      }
     }
 
-    // Build exposure rows
-    const exposures: CurrencyExposure[] = []
+    // ── Build CurrencyExposure array ───────────────────────────────────────────
 
-    for (const [currency, d] of byCurrency) {
-      const currentRate = currentRates.get(currency) ?? 0
+    const foreignRevenueTry = Array.from(byCurrency.values()).reduce(
+      (s, d) => s + d.revenue_try, 0,
+    )
 
-      const recAtCurrent  = d.rec_foreign * currentRate
-      const recGainLoss   = recAtCurrent - d.rec_booking_try
+    const totalExposureRatioPct = computeFxExposureRatio(foreignRevenueTry, totalRevenueTry)
 
-      const payAtCurrent  = d.pay_foreign * currentRate
-      const payGainLoss   = d.pay_booking_try - payAtCurrent   // loss when pay goes up
+    const currencies: CurrencyExposure[] = []
 
-      const netForeign    = d.rec_foreign - d.pay_foreign
-      const netGainLoss   = recGainLoss + payGainLoss
+    for (const [ccy, d] of byCurrency) {
+      // Skip currencies with zero activity
+      if (d.revenue_foreign === 0 && d.expenses_foreign === 0) continue
 
-      exposures.push({
-        currency,
-        receivables_foreign:          d.rec_foreign,
-        receivables_try_at_booking:   d.rec_booking_try,
-        receivables_try_at_current:   recAtCurrent,
-        receivables_fx_gain_loss_try: recGainLoss,
-        payables_foreign:             d.pay_foreign,
-        payables_try_at_booking:      d.pay_booking_try,
-        payables_try_at_current:      payAtCurrent,
-        payables_fx_gain_loss_try:    payGainLoss,
-        net_foreign:                  netForeign,
-        net_fx_gain_loss_try:         netGainLoss,
-        current_rate_try:             currentRate,
+      // Weighted average entry rate
+      const avgEntryRate = d.revenue_foreign > 0 && d.sum_rate_x_foreign > 0
+        ? round2(d.sum_rate_x_foreign / d.revenue_foreign)
+        : 0
+
+      // Current rate = most recent transaction rate (sale or expense), whichever is later
+      let currentRate: number | null = null
+      if (d.latest_sale_date >= d.latest_exp_date && d.latest_sale_rate !== null) {
+        currentRate = d.latest_sale_rate
+      } else if (d.latest_exp_rate !== null) {
+        currentRate = d.latest_exp_rate
+      } else if (d.latest_sale_rate !== null) {
+        currentRate = d.latest_sale_rate
+      }
+
+      // Unrealized G/L: based on revenue_foreign (receivable positions)
+      // (current_rate - avg_entry_rate) × revenue_foreign
+      const unrealizedGl = (currentRate !== null && avgEntryRate > 0 && d.revenue_foreign > 0)
+        ? computeFxGainLoss(d.revenue_foreign, avgEntryRate, currentRate)
+        : null
+
+      const netExposureTry    = computeNetFxExposure(d.revenue_try, d.expenses_try)
+      const exposureRatioPct  = computeFxExposureRatio(d.revenue_try, totalRevenueTry)
+      const naturalHedgeRatio = computeNaturalHedgeRatio(d.expenses_try, d.revenue_try)
+      const riskLevel         = classifyFxExposureRisk(exposureRatioPct)
+
+      currencies.push({
+        currency: ccy,
+        revenue_foreign: round2(d.revenue_foreign),
+        revenue_try: round2(d.revenue_try),
+        expenses_foreign: round2(d.expenses_foreign),
+        expenses_try: round2(d.expenses_try),
+        avg_entry_rate: avgEntryRate,
+        current_rate: currentRate,
+        unrealized_gain_loss_try: unrealizedGl,
+        net_exposure_try: netExposureTry,
+        exposure_ratio_pct: exposureRatioPct,
+        natural_hedge_ratio_pct: naturalHedgeRatio,
+        risk_level: riskLevel,
       })
     }
 
-    // Sort: largest absolute net position first
-    exposures.sort((a, b) => Math.abs(b.net_foreign) - Math.abs(a.net_foreign))
+    // Sort: largest revenue_try first
+    currencies.sort((a, b) => b.revenue_try - a.revenue_try)
 
-    const totalGainLoss          = exposures.reduce((s, e) => s + e.net_fx_gain_loss_try, 0)
-    const highestExposureCurrency = exposures.length > 0 ? exposures[0].currency : null
+    const largestExposureCurrency = currencies.length > 0 ? currencies[0].currency : null
+
+    // Total unrealized G/L: sum non-null values; null if all null
+    const glValues = currencies.map(c => c.unrealized_gain_loss_try).filter((v): v is number => v !== null)
+    const totalUnrealizedGl = glValues.length > 0
+      ? round2(glValues.reduce((s, v) => s + v, 0))
+      : null
+
+    const totalNetExposureTry = round2(currencies.reduce((s, c) => s + c.net_exposure_try, 0))
 
     return {
-      as_of_date:                 today,
-      exposures,
-      total_fx_gain_loss_try:     totalGainLoss,
-      highest_exposure_currency:  highestExposureCurrency,
-      computed_at:                computedAt,
+      as_of_date: today,
+      period_months: periodMonths,
+      total_revenue_try: round2(totalRevenueTry),
+      foreign_revenue_try: round2(foreignRevenueTry),
+      total_exposure_ratio_pct: totalExposureRatioPct,
+      currencies,
+      total_unrealized_gl_try: totalUnrealizedGl,
+      total_net_exposure_try: totalNetExposureTry,
+      largest_exposure_currency: largestExposureCurrency,
+      hedging_recommendation: hedgingRecommendation(totalExposureRatioPct),
     }
   }
 }

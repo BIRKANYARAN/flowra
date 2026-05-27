@@ -1,333 +1,349 @@
-// ── ExpenseAnomalyService — Statistical Expense Anomaly Detection ─────────────
-// Detects unusual expenses by comparing recent 30 days against a 60-day
-// rolling baseline (days 31-90). Four anomaly types:
-//   spike            — amount significantly above category average
-//   new_vendor       — supplier not seen in last 90 days
-//   unusual_category — expense_type not seen in days 31-90
-//   duplicate_suspect— same supplier + type + amount (±5%) within 7 days
+// ─────────────────────────────────────────────────────────────────────────────
+// lib/services/finance/expense-anomaly.service.ts
+//
+// Statistical Expense Anomaly Detection
+//
+// Algorithm:
+//   1. Fetch all expenses in the analysis window (default 90 days).
+//   2. Group by expense_type; compute mean + stdDev per category (min 3 rows).
+//   3. For each expense compute z-score vs its category baseline.
+//   4. Run IQR bounds per category for a second detection signal.
+//   5. Run duplicate detection: same supplier + same amount ±1 TRY within 7 days.
+//   6. Classify severity and build the report.
+// ─────────────────────────────────────────────────────────────────────────────
 
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { EXPENSE_TYPE_LABELS } from './expense-intelligence.service'
+import { CATEGORY_LABELS } from './expense-forecast.service'
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyClient = SupabaseClient<any>
 
-export type AnomalySeverity = 'high' | 'medium' | 'low'
+// ── Public types ───────────────────────────────────────────────────────────────
 
 export interface ExpenseAnomaly {
   expense_id: string
-  expense_date: string
   supplier_name: string | null
-  expense_type: string
   amount_try: number
-  category_avg_try: number
-  category_stddev_try: number | null
-  zscore: number | null
-  deviation_pct: number
-  severity: AnomalySeverity
-  anomaly_type: 'spike' | 'new_vendor' | 'unusual_category' | 'duplicate_suspect'
-  description: string
+  expense_type: string
+  expense_label: string        // Turkish label from CATEGORY_LABELS
+  created_at: string
+  z_score: number | null
+  category_mean_try: number
+  category_std_dev_try: number
+  severity: 'high' | 'medium' | 'low' | 'none'
+  anomaly_reasons: string[]    // e.g. ["Z-skoru 3.2 — kategorinin 3× üzerinde", "Muhtemel kopya fatura"]
+  is_potential_duplicate: boolean
 }
 
 export interface ExpenseAnomalyReport {
-  anomalies: ExpenseAnomaly[]
-  high_count: number
-  medium_count: number
-  low_count: number
-  total_anomaly_amount_try: number
   analysis_window_days: number
-  as_of_date: string
+  total_expenses_analyzed: number
+  anomalies_found: number
+  high_severity_count: number
+  duplicate_suspects: number
+  anomalies: ExpenseAnomaly[]        // severity !== 'none' OR is_potential_duplicate, sorted by severity then amount
+  total_anomalous_amount_try: number
+  categories_with_anomalies: string[]
 }
 
-// ── Raw DB row ─────────────────────────────────────────────────────────────────
+// ── IQR bounds result ──────────────────────────────────────────────────────────
 
-interface ExpenseRow {
-  id: string
-  expense_date: string | null
-  supplier_name: string | null
-  expense_type: string | null
-  amount_try: number | null
+export interface IQRBounds {
+  q1: number
+  q3: number
+  iqr: number
+  lower_bound: number
+  upper_bound: number
 }
 
-// ── Pure helpers ──────────────────────────────────────────────────────────────
+// ── Pure computation functions ─────────────────────────────────────────────────
+
+/**
+ * Compute mean of an array of numbers.
+ * Returns 0 for empty array.
+ */
+export function computeMean(values: number[]): number {
+  if (values.length === 0) return 0
+  return values.reduce((s, v) => s + v, 0) / values.length
+}
 
 /**
  * Compute population standard deviation.
- * Returns null if fewer than 2 values.
- * Returns 0 if all values are identical.
+ * Returns 0 for empty or single-element array.
  */
-export function computePopulationStdDev(values: number[]): number | null {
-  if (values.length < 2) return null
-  const mean = values.reduce((s, v) => s + v, 0) / values.length
-  const variance = values.reduce((s, v) => s + Math.pow(v - mean, 2), 0) / values.length
+export function computeStdDev(values: number[], mean: number): number {
+  if (values.length <= 1) return 0
+  const variance = values.reduce((s, v) => s + (v - mean) ** 2, 0) / values.length
   return Math.sqrt(variance)
 }
 
 /**
- * Compute z-score: (value - mean) / stddev.
- * Returns null if stddev is 0 or null.
+ * Compute z-score: (value - mean) / stdDev.
+ * Returns null if stdDev is 0.
  */
-export function computeZScore(value: number, mean: number, stddev: number): number | null {
-  if (stddev === 0) return null
-  return (value - mean) / stddev
+export function computeZScore(value: number, mean: number, stdDev: number): number | null {
+  if (stdDev === 0) return null
+  return (value - mean) / stdDev
 }
 
 /**
- * Compute deviation percentage: (value - baseline) / baseline × 100.
- * Returns 0 if baseline is 0.
- */
-export function computeDeviationPct(value: number, baseline: number): number {
-  if (baseline === 0) return 0
-  return ((value - baseline) / baseline) * 100
-}
-
-/**
- * Classify anomaly severity based on z-score and deviation percent.
- * Returns null if below threshold (deviationPct < 25% AND no significant z-score).
+ * Compute IQR bounds from a pre-sorted ascending array.
+ * Returns null if fewer than 4 values.
  *
- * high:   |zscore| > 2  OR deviationPct > 100
- * medium: |zscore| > 1.5 OR deviationPct > 50
- * low:    threshold met but not high/medium
- * null:   below threshold
+ * lower_bound = Q1 - 1.5 × IQR
+ * upper_bound = Q3 + 1.5 × IQR
  */
-export function classifyAnomaly(
+export function computeIQRBounds(sortedValues: number[]): IQRBounds | null {
+  if (sortedValues.length < 4) return null
+
+  const n = sortedValues.length
+
+  // Interpolated quartiles (exclusive method)
+  const q1Index = (n - 1) * 0.25
+  const q3Index = (n - 1) * 0.75
+
+  const q1Lower = Math.floor(q1Index)
+  const q1Upper = Math.ceil(q1Index)
+  const q3Lower = Math.floor(q3Index)
+  const q3Upper = Math.ceil(q3Index)
+
+  const q1 = q1Lower === q1Upper
+    ? sortedValues[q1Lower]
+    : sortedValues[q1Lower] + (q1Index - q1Lower) * (sortedValues[q1Upper] - sortedValues[q1Lower])
+
+  const q3 = q3Lower === q3Upper
+    ? sortedValues[q3Lower]
+    : sortedValues[q3Lower] + (q3Index - q3Lower) * (sortedValues[q3Upper] - sortedValues[q3Lower])
+
+  const iqr = q3 - q1
+  const lower_bound = q1 - 1.5 * iqr
+  const upper_bound = q3 + 1.5 * iqr
+
+  return { q1, q3, iqr, lower_bound, upper_bound }
+}
+
+/**
+ * Classify anomaly severity using z-score and IQR bounds.
+ *
+ * Rules:
+ *   |z_score| > 3 OR value > upper_bound × 1.5  → 'high'
+ *   |z_score| 2-3 OR value > upper_bound         → 'medium'
+ *   |z_score| 1.5-2                              → 'low'
+ *   else                                          → 'none'
+ *
+ * If z_score is null: use IQR bounds only.
+ */
+export function classifyAnomalySeverity(
   zScore: number | null,
-  deviationPct: number,
-): AnomalySeverity | null {
+  value: number,
+  iqrBounds: { lower_bound: number; upper_bound: number } | null,
+): 'high' | 'medium' | 'low' | 'none' {
   const absZ = zScore !== null ? Math.abs(zScore) : null
 
-  // Check if below threshold
-  if (deviationPct < 25 && (absZ === null || absZ < 1.5)) return null
+  // High: extreme z-score OR far above IQR upper bound
+  if (absZ !== null && absZ > 3) return 'high'
+  if (iqrBounds !== null && value > iqrBounds.upper_bound * 1.5) return 'high'
 
-  // High severity
-  if ((absZ !== null && absZ > 2) || deviationPct > 100) return 'high'
+  // Medium: high z-score OR above IQR upper bound
+  if (absZ !== null && absZ > 2) return 'medium'
+  if (iqrBounds !== null && value > iqrBounds.upper_bound) return 'medium'
 
-  // Medium severity
-  if ((absZ !== null && absZ > 1.5) || deviationPct > 50) return 'medium'
+  // Low: moderate z-score
+  if (absZ !== null && absZ > 1.5) return 'low'
 
-  // Low severity (threshold met but not high/medium)
-  return 'low'
+  return 'none'
 }
 
 /**
- * Build Turkish description for an anomaly.
+ * Detect whether an expense is a potential duplicate of another in the same collection.
+ * Criteria: same supplier_name (case-insensitive) + same amount (±1 TRY) within windowDays.
  */
-export function buildAnomalyDescription(
-  expenseType: string,
-  deviationPct: number,
-  anomalyType: ExpenseAnomaly['anomaly_type'],
-): string {
-  const label = EXPENSE_TYPE_LABELS[expenseType] ?? expenseType
-  const absDev = Math.abs(Math.round(deviationPct))
+export function isPotentialDuplicate(
+  expense: { supplier_name: string | null; amount_try: number; created_at: string },
+  others: Array<{ supplier_name: string | null; amount_try: number; created_at: string }>,
+  windowDays = 7,
+): boolean {
+  if (!expense.supplier_name) return false
 
-  switch (anomalyType) {
-    case 'spike':
-      if (deviationPct > 0) {
-        return `${label} gideri aylık ortalamanın %${absDev} üzerinde`
-      }
-      return `${label} gideri aylık ortalamanın %${absDev} altında`
-    case 'new_vendor':
-      return `${label} kategorisinde son 90 günde görülmeyen yeni tedarikçi`
-    case 'unusual_category':
-      return `${label} kategorisi son 90 günde görülmemişti`
-    case 'duplicate_suspect':
-      return `${label} giderinde 7 gün içinde aynı tutarda olası kopya tespit edildi`
+  const expDate   = new Date(expense.created_at).getTime()
+  const expAmt    = expense.amount_try
+  const expSupply = expense.supplier_name.toLowerCase().trim()
+  const windowMs  = windowDays * 86_400_000
+
+  for (const other of others) {
+    if (!other.supplier_name) continue
+    if (other.supplier_name.toLowerCase().trim() !== expSupply) continue
+
+    const otherAmt  = other.amount_try
+    if (Math.abs(expAmt - otherAmt) > 1) continue
+
+    const otherDate = new Date(other.created_at).getTime()
+    if (Math.abs(expDate - otherDate) > windowMs) continue
+
+    return true
   }
+
+  return false
 }
 
-// ── Severity sort order ───────────────────────────────────────────────────────
+// ── Severity sort order ────────────────────────────────────────────────────────
 
-const SEVERITY_ORDER: Record<AnomalySeverity, number> = { high: 0, medium: 1, low: 2 }
+const SEVERITY_ORDER: Record<'high' | 'medium' | 'low' | 'none', number> = {
+  high: 0, medium: 1, low: 2, none: 3,
+}
 
-// ── Service ───────────────────────────────────────────────────────────────────
+// ── Service class ──────────────────────────────────────────────────────────────
 
 export class ExpenseAnomalyService {
-  static async getReport(
+
+  private supabase: AnyClient
+
+  constructor(supabase: AnyClient) {
+    this.supabase = supabase
+  }
+
+  async getReport(
     companyId: string,
-    supabase: SupabaseClient,
-    asOfDate: Date = new Date(),
+    windowDays = 90,
   ): Promise<ExpenseAnomalyReport> {
-    const today = asOfDate.toISOString().slice(0, 10)
+    const today = new Date()
+    const windowStart = new Date(today.getTime() - windowDays * 86_400_000)
+      .toISOString()
+      .slice(0, 10)
+    const todayStr = today.toISOString().slice(0, 10)
 
-    // Window: last 90 days
-    const window90Start = new Date(asOfDate.getTime() - 90 * 86_400_000).toISOString().slice(0, 10)
-    // Baseline: days 31-90 (prior 60 days)
-    const baselineStart = new Date(asOfDate.getTime() - 90 * 86_400_000).toISOString().slice(0, 10)
-    const baselineEnd   = new Date(asOfDate.getTime() - 31 * 86_400_000).toISOString().slice(0, 10)
-    // Recent: last 30 days
-    const recentStart   = new Date(asOfDate.getTime() - 30 * 86_400_000).toISOString().slice(0, 10)
-
-    // Fetch all expenses in the 90-day window
-    const { data: allRows } = await supabase
+    // ── Fetch expenses in window ──────────────────────────────────────────────
+    const { data: rows } = await this.supabase
       .from('expenses')
-      .select('id, expense_date, supplier_name, expense_type, amount_try')
+      .select('id, supplier_name, amount_try, expense_type, created_at, expense_date')
       .eq('company_id', companyId)
       .is('deleted_at', null)
-      .gte('expense_date', window90Start)
-      .lte('expense_date', today)
+      .gte('expense_date', windowStart)
+      .lte('expense_date', todayStr)
       .order('expense_date', { ascending: false })
 
-    const expenses = (allRows ?? []) as ExpenseRow[]
+    interface ExpenseRow {
+      id: string
+      supplier_name: string | null
+      amount_try: number | string | null
+      expense_type: string | null
+      created_at: string
+      expense_date: string | null
+    }
 
-    // Split into baseline (days 31-90) and recent (last 30 days)
-    const baselineRows = expenses.filter(
-      e => e.expense_date && e.expense_date >= baselineStart && e.expense_date <= baselineEnd,
-    )
-    const recentRows = expenses.filter(
-      e => e.expense_date && e.expense_date >= recentStart && e.expense_date <= today,
-    )
+    const expenses = (rows ?? []) as ExpenseRow[]
 
-    // ── Build category baselines ──────────────────────────────────────────────
-    // For each expense_type in baseline: collect amounts, compute avg + stddev
-    const categoryAmounts = new Map<string, number[]>()
-    for (const row of baselineRows) {
+    // ── Group amounts by expense_type ─────────────────────────────────────────
+    const categoryAmountMap = new Map<string, number[]>()
+    for (const row of expenses) {
       const type = row.expense_type ?? 'other'
       const amt  = Number(row.amount_try ?? 0)
-      if (!categoryAmounts.has(type)) categoryAmounts.set(type, [])
-      categoryAmounts.get(type)!.push(amt)
+      if (!categoryAmountMap.has(type)) categoryAmountMap.set(type, [])
+      categoryAmountMap.get(type)!.push(amt)
     }
 
-    interface CategoryBaseline {
-      avg: number
-      stddev: number | null
+    // ── Compute stats per category (min 3 expenses) ───────────────────────────
+    interface CategoryStats {
+      mean: number
+      stdDev: number
+      iqrBounds: IQRBounds | null
     }
-    const categoryBaseline = new Map<string, CategoryBaseline>()
-    for (const [type, amounts] of categoryAmounts.entries()) {
-      const avg    = amounts.reduce((s, v) => s + v, 0) / amounts.length
-      const stddev = computePopulationStdDev(amounts)
-      categoryBaseline.set(type, { avg, stddev })
-    }
-
-    // ── Build baseline lookup sets ────────────────────────────────────────────
-    const baselineSuppliers = new Set<string>()
-    const baselineCategories = new Set<string>()
-    for (const row of baselineRows) {
-      if (row.supplier_name) baselineSuppliers.add(row.supplier_name)
-      if (row.expense_type)  baselineCategories.add(row.expense_type)
+    const categoryStats = new Map<string, CategoryStats>()
+    for (const [type, amounts] of categoryAmountMap.entries()) {
+      if (amounts.length < 3) continue
+      const mean   = computeMean(amounts)
+      const stdDev = computeStdDev(amounts, mean)
+      const sorted = [...amounts].sort((a, b) => a - b)
+      const iqrBounds = computeIQRBounds(sorted)
+      categoryStats.set(type, { mean, stdDev, iqrBounds })
     }
 
-    // ── Detect duplicate suspects in recent rows ──────────────────────────────
-    // Same supplier_name + expense_type + amount (±5%) within 7 days
-    const duplicateSuspectIds = new Set<string>()
-    for (let i = 0; i < recentRows.length; i++) {
-      const a = recentRows[i]
-      if (!a.expense_date || !a.supplier_name || !a.expense_type) continue
-      const aAmt  = Number(a.amount_try ?? 0)
-      const aDate = new Date(a.expense_date).getTime()
-
-      for (let j = i + 1; j < recentRows.length; j++) {
-        const b = recentRows[j]
-        if (!b.expense_date || !b.supplier_name || !b.expense_type) continue
-        if (b.supplier_name !== a.supplier_name) continue
-        if (b.expense_type  !== a.expense_type)  continue
-
-        const bAmt  = Number(b.amount_try ?? 0)
-        const bDate = new Date(b.expense_date).getTime()
-
-        // Amount within ±5%
-        const amtDiff = Math.abs(aAmt - bAmt) / Math.max(aAmt, bAmt, 1)
-        if (amtDiff > 0.05) continue
-
-        // Within 7 days
-        const dayDiff = Math.abs(aDate - bDate) / 86_400_000
-        if (dayDiff > 7) continue
-
-        duplicateSuspectIds.add(a.id)
-        duplicateSuspectIds.add(b.id)
-      }
-    }
-
-    // ── Classify each recent expense ──────────────────────────────────────────
+    // ── Build anomaly list ────────────────────────────────────────────────────
     const anomalies: ExpenseAnomaly[] = []
 
-    for (const row of recentRows) {
-      const type        = row.expense_type ?? 'other'
-      const amount      = Number(row.amount_try ?? 0)
-      const baseline    = categoryBaseline.get(type)
-      const categoryAvg = baseline?.avg ?? 0
-      const stddev      = baseline?.stddev ?? null
+    for (const row of expenses) {
+      const type   = row.expense_type ?? 'other'
+      const amount = Number(row.amount_try ?? 0)
+      const stats  = categoryStats.get(type)
 
-      const deviationPct = computeDeviationPct(amount, categoryAvg)
-      const zscore       = stddev !== null && stddev > 0
-        ? computeZScore(amount, categoryAvg, stddev)
-        : null
+      const zScore     = stats ? computeZScore(amount, stats.mean, stats.stdDev) : null
+      const iqrBounds  = stats?.iqrBounds ?? null
+      const mean       = stats?.mean ?? 0
+      const stdDev     = stats?.stdDev ?? 0
 
-      // ── Determine anomaly type (priority: duplicate > spike > new_vendor > unusual_category) ──
-      let anomalyType: ExpenseAnomaly['anomaly_type'] | null = null
-      let severity: AnomalySeverity | null = null
+      // Duplicate check: compare against all other rows (same id excluded)
+      const others = expenses.filter(e => e.id !== row.id).map(e => ({
+        supplier_name: e.supplier_name,
+        amount_try:    Number(e.amount_try ?? 0),
+        created_at:    e.created_at,
+      }))
+      const isDuplicate = isPotentialDuplicate(
+        {
+          supplier_name: row.supplier_name,
+          amount_try:    amount,
+          created_at:    row.created_at,
+        },
+        others,
+        7,
+      )
 
-      // 1. Duplicate suspect
-      if (duplicateSuspectIds.has(row.id)) {
-        anomalyType = 'duplicate_suspect'
-        severity    = 'high'
+      const severity = classifyAnomalySeverity(zScore, amount, iqrBounds)
+
+      // Include if anomalous OR duplicate suspect
+      if (severity === 'none' && !isDuplicate) continue
+
+      // Build reasons
+      const reasons: string[] = []
+      if (zScore !== null && Math.abs(zScore) > 1.5) {
+        const multiplier = mean > 0 ? (amount / mean).toFixed(1) : '?'
+        reasons.push(`Z-skoru ${zScore.toFixed(1)} — kategorinin ${multiplier}× üzerinde`)
+      }
+      if (iqrBounds !== null && amount > iqrBounds.upper_bound) {
+        reasons.push(`IQR üst sınırını (${Math.round(iqrBounds.upper_bound).toLocaleString('tr-TR')} ₺) aşıyor`)
+      }
+      if (isDuplicate) {
+        reasons.push('Muhtemel kopya fatura')
       }
 
-      // 2. Spike: amount > avg + 1.5×stddev, or deviation > 25% with baseline
-      if (!anomalyType) {
-        const hasBaseline = baseline != null && baseline.avg > 0
-        const isSpike = hasBaseline && (
-          (stddev !== null && stddev > 0 && zscore !== null && zscore > 1.5)
-          || deviationPct > 25
-        )
-
-        if (isSpike) {
-          const classified = classifyAnomaly(zscore, deviationPct)
-          if (classified) {
-            anomalyType = 'spike'
-            severity    = classified
-          }
-        }
-      }
-
-      // 3. New vendor
-      if (!anomalyType && row.supplier_name && !baselineSuppliers.has(row.supplier_name)) {
-        anomalyType = 'new_vendor'
-        severity    = 'low'
-      }
-
-      // 4. Unusual category
-      if (!anomalyType && !baselineCategories.has(type)) {
-        anomalyType = 'unusual_category'
-        severity    = 'low'
-      }
-
-      if (!anomalyType || !severity) continue
+      const label = CATEGORY_LABELS[type] ?? type
 
       anomalies.push({
         expense_id:          row.id,
-        expense_date:        row.expense_date ?? today,
         supplier_name:       row.supplier_name ?? null,
-        expense_type:        type,
         amount_try:          amount,
-        category_avg_try:    categoryAvg,
-        category_stddev_try: stddev,
-        zscore,
-        deviation_pct:       Math.round(deviationPct * 10) / 10,
+        expense_type:        type,
+        expense_label:       label,
+        created_at:          row.created_at,
+        z_score:             zScore,
+        category_mean_try:   mean,
+        category_std_dev_try: stdDev,
         severity,
-        anomaly_type:        anomalyType,
-        description:         buildAnomalyDescription(type, deviationPct, anomalyType),
+        anomaly_reasons:     reasons,
+        is_potential_duplicate: isDuplicate,
       })
     }
 
-    // ── Sort: severity (high first), then date (newest first) ────────────────
+    // ── Sort: severity asc, then amount desc ──────────────────────────────────
     anomalies.sort((a, b) => {
-      const sev = SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity]
-      if (sev !== 0) return sev
-      return b.expense_date.localeCompare(a.expense_date)
+      const sevDiff = SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity]
+      if (sevDiff !== 0) return sevDiff
+      return b.amount_try - a.amount_try
     })
 
-    const high_count   = anomalies.filter(a => a.severity === 'high').length
-    const medium_count = anomalies.filter(a => a.severity === 'medium').length
-    const low_count    = anomalies.filter(a => a.severity === 'low').length
-    const total_anomaly_amount_try = anomalies.reduce((s, a) => s + a.amount_try, 0)
+    const highSeverityCount   = anomalies.filter(a => a.severity === 'high').length
+    const duplicateSuspects   = anomalies.filter(a => a.is_potential_duplicate).length
+    const anomalousAmount     = anomalies.reduce((s, a) => s + a.amount_try, 0)
+    const categoriesWithAnomalies = [...new Set(anomalies.map(a => a.expense_label))]
 
     return {
+      analysis_window_days:     windowDays,
+      total_expenses_analyzed:  expenses.length,
+      anomalies_found:          anomalies.length,
+      high_severity_count:      highSeverityCount,
+      duplicate_suspects:       duplicateSuspects,
       anomalies,
-      high_count,
-      medium_count,
-      low_count,
-      total_anomaly_amount_try,
-      analysis_window_days: 90,
-      as_of_date: today,
+      total_anomalous_amount_try: anomalousAmount,
+      categories_with_anomalies:  categoriesWithAnomalies,
     }
   }
 }
