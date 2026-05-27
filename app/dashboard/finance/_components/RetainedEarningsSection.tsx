@@ -6,7 +6,7 @@
 // Shows the formal retained earnings statement:
 //   Opening RE → +Net Income → -Legal Reserve → -Dividends → Closing RE
 //
-// Cross-checks vs balance sheet equity (green ✓ within 100 TRY, amber ⚠ otherwise).
+// Updated to use new RetainedEarningsStatement shape (multi-period rollforward).
 // Uses TanStack Query for data fetching.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -26,7 +26,7 @@ export function RetainedEarningsSection({ year }: Props) {
   const currentYear = year ?? new Date().getFullYear()
 
   const { data, isLoading, isError } = useQuery<RetainedEarningsStatement>({
-    queryKey: ['retained-earnings', currentYear],
+    queryKey: ['retained-earnings', null, currentYear],
     queryFn: async () => {
       const res = await fetch(`/api/finance/retained-earnings?year=${currentYear}`)
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
@@ -61,34 +61,31 @@ export function RetainedEarningsSection({ year }: Props) {
     )
   }
 
-  const discrepancyOk = data.discrepancy_try !== null && Math.abs(data.discrepancy_try) <= 100
-  const discrepancyWarn = data.discrepancy_try !== null && Math.abs(data.discrepancy_try) > 100
-
   const rows: Array<{ label: string; value: number; sign?: 'positive' | 'negative' | 'neutral'; bold?: boolean; separator?: boolean }> = [
     {
       label: 'Açılış Geçmiş Yıl Karı',
-      value: data.opening_retained_earnings_try,
+      value: data.opening_total,
       sign: 'neutral',
     },
     {
-      label: `Dönem Net Karı / (Zararı) — ${data.period_from.slice(0, 4)}`,
-      value: data.net_income_try,
-      sign: data.net_income_try >= 0 ? 'positive' : 'negative',
+      label: `Toplam Net Kâr / (Zarar) — ${currentYear}`,
+      value: data.total_net_income,
+      sign: data.total_net_income >= 0 ? 'positive' : 'negative',
     },
     {
       label: 'Yasal Yedek Akçe Ayrımı (TTK 519 — %5)',
-      value: -data.legal_reserve_transfer_try,
-      sign: data.legal_reserve_transfer_try > 0 ? 'negative' : 'neutral',
+      value: -data.total_legal_reserves,
+      sign: data.total_legal_reserves > 0 ? 'negative' : 'neutral',
     },
     {
       label: 'Kâr Payı Dağıtımı (Onaylanmış)',
-      value: -data.dividends_declared_try,
-      sign: data.dividends_declared_try > 0 ? 'negative' : 'neutral',
+      value: -data.total_dividends,
+      sign: data.total_dividends > 0 ? 'negative' : 'neutral',
     },
     {
       label: 'Kapanış Geçmiş Yıl Karı',
-      value: data.closing_retained_earnings_try,
-      sign: data.closing_retained_earnings_try >= 0 ? 'positive' : 'negative',
+      value: data.closing_total,
+      sign: data.closing_total >= 0 ? 'positive' : 'negative',
       bold: true,
       separator: true,
     },
@@ -103,18 +100,18 @@ export function RetainedEarningsSection({ year }: Props) {
             Kâr/Zarar Dağılımı — Özkaynak Roll-Forward
           </div>
           <div className="text-[10px] text-[#94a3b8] mt-0.5">
-            {data.period_from} — {data.period_to} · TTK 519 Yasal Yedek Akçe
+            {currentYear} Yılı · TTK 519 Yasal Yedek Akçe
           </div>
         </div>
-        {/* Cross-check badge */}
-        {data.balance_sheet_equity_try !== null && (
+        {/* Equity coverage ratio badge */}
+        {data.equity_coverage_ratio !== null && (
           <span className={cn(
             'text-[10px] font-bold px-2 py-1 rounded border',
-            discrepancyOk
+            data.equity_coverage_ratio >= 1
               ? 'bg-pos-light border-pos-light text-pos-text'
               : 'bg-warn-light border-warn-light text-warn-text',
           )}>
-            {discrepancyOk ? '✓ Bilanço ile uyumlu' : '⚠ Fark var'}
+            Kapsama: {data.equity_coverage_ratio.toFixed(2)}x
           </span>
         )}
       </div>
@@ -147,38 +144,11 @@ export function RetainedEarningsSection({ year }: Props) {
         </table>
       </div>
 
-      {/* Cross-check detail */}
-      {data.balance_sheet_equity_try !== null && (
-        <div className={cn(
-          'mt-3 rounded px-3 py-2 border text-xs',
-          discrepancyOk
-            ? 'bg-pos-light border-pos-light text-pos-text'
-            : 'bg-warn-light border-warn-light text-warn-text',
-        )}>
-          <div className="flex items-center justify-between">
-            <span className="font-semibold">Bilanço Özkaynak Kontrolü</span>
-            <span className="font-mono font-bold tabular-nums">
-              {discrepancyOk ? '✓ Fark ≤ ₺100' : `Fark: ${fmtTRY(data.discrepancy_try ?? 0)}`}
-            </span>
-          </div>
-          <div className="text-[10px] mt-1 opacity-80">
-            Bilanço Özkaynak: {fmtTRY(data.balance_sheet_equity_try)}
-            {' · '}
-            Kapanış GYK: {fmtTRY(data.closing_retained_earnings_try)}
-          </div>
-          {discrepancyWarn && (
-            <div className="text-[10px] mt-1 font-semibold">
-              Nakit tahmini yöntemi nedeniyle fark oluşabilir — dönem kapanışında manuel kontrol yapın.
-            </div>
-          )}
-        </div>
-      )}
-
       {/* Legal reserve note */}
-      {data.legal_reserve_transfer_try > 0 && (
+      {data.total_legal_reserves > 0 && (
         <div className="mt-2 text-[10px] text-[#94a3b8]">
-          TTK 519: Net kârın %5'i yasal yedek akçe olarak ayrılır (sermayenin %20'sine ulaşana kadar).
-          Bu dönem: {fmtTRY(data.legal_reserve_ytd_try)} ayrılmıştır.
+          TTK 519: Net kârın %5&apos;i yasal yedek akçe olarak ayrılır (sermayenin %20&apos;sine ulaşana kadar).
+          Bu dönem: {fmtTRY(data.total_legal_reserves)} ayrılmıştır.
         </div>
       )}
     </div>

@@ -14,6 +14,7 @@ import { fmtTRY as fmt }            from '@/lib/format'
 import type { BalanceSheet }        from '@/types/dto'
 import { NarrativeFooter }          from '@/components/ds'
 import { WorkingCapitalSection }    from '@/components/dashboard/WorkingCapitalSection'
+import { RetainedEarningsClient }   from './_retained/RetainedEarningsClient'
 
 // ── Formatters ────────────────────────────────────────────────────────────────
 
@@ -374,6 +375,9 @@ export async function BalanceTab({ userId, companyId, glMode = 'shadow' }: Props
 
       {/* Working Capital Analysis — CCC, liquidity ratios, 12-month trend */}
       <WorkingCapitalSection />
+
+      {/* Retained Earnings Rollforward — equity movement period by period */}
+      <RetainedEarningsClient companyId={companyId} />
     </div>
   )
 }
