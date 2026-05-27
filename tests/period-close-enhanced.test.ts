@@ -105,8 +105,8 @@ function makeSupabase(
       if (table === 'accounting_periods') {
         const data = (tables.accounting_periods as unknown[]) ?? [{
           id:              'period-1',
-          period_start:    '2026-04-01',
-          period_end:      '2026-04-30',
+          period_start:    '2026-05-01',
+          period_end:      '2026-05-31',
           opening_cash_try: 100_000,
           closing_cash_try: 120_000,
         }]
