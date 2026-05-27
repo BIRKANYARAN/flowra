@@ -15,6 +15,7 @@ import { SimulationContent }  from './_tabs/SimulationContent'
 import { TasksContent }       from './_tabs/TasksContent'
 import { CashProjectionTab }  from './_tabs/CashProjectionTab'
 import { WhatIfTab }          from './_tabs/WhatIfTab'
+import { ScenariosContent }   from './_tabs/ScenariosContent'
 import { DebtPressureTab }    from './_tabs/DebtPressureTab'
 import { PartnerImpactTab }   from './_tabs/PartnerImpactTab'
 import { VarianceTab }        from './_tabs/VarianceTab'
@@ -126,9 +127,9 @@ export default async function PlanningPage({ searchParams }: PageProps) {
         {activeTab === 'cash-projection' && (
           <CashProjectionTab companyId={companyId} />
         )}
-        {/* scenarios: interactive what-if slider engine */}
+        {/* scenarios: what-if slider engine + scenario comparison matrix */}
         {activeTab === 'scenarios' && (
-          <WhatIfTab companyId={companyId} userId={userId} />
+          <ScenariosContent companyId={companyId} userId={userId} />
         )}
         {/* variance: scenario vs actuals bridge */}
         {activeTab === 'variance' && <VarianceTab />}

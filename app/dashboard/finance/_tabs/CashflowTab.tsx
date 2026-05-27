@@ -13,6 +13,7 @@ import { CashflowChart }   from '@/components/dashboard/CashflowChart'
 import { ScenarioPanel }   from '@/components/dashboard/ScenarioPanel'
 import { CashflowPrediction } from '@/components/dashboard/CashflowPrediction'
 import { BurnRateSection }    from '@/components/dashboard/BurnRateSection'
+import { TreasurySection }    from '@/components/dashboard/TreasurySection'
 import { getCashflowTimeline, getRunwayForecast, getCfoMetrics } from '@/lib/finance/financial-core'
 import { CashFlowStatementService } from '@/lib/services/cashflow-statement.service'
 import { createClient }             from '@/lib/supabase-server'
@@ -514,7 +515,10 @@ export async function CashflowTab({ userId, companyId }: Props) {
         </div>
       </div>
 
-      {/* Zone 8 — Nakit Tüketim Hızı (Burn Rate Monitor) */}
+      {/* Zone 8 — Hazine Yönetimi (Treasury Management) */}
+      <TreasurySection />
+
+      {/* Zone 9 — Nakit Tüketim Hızı (Burn Rate Monitor) */}
       <BurnRateSection />
 
       {/* Cross-link → formal 3-section cash flow statement */}
