@@ -24,6 +24,7 @@ import type { CashFlowStatement } from '@/types/dto'
 import { CashflowWaterfallService } from '@/lib/services/finance/cashflow-waterfall.service'
 import type { WaterfallSegment } from '@/lib/services/finance/cashflow-waterfall.service'
 import { CashProjectionSection } from '@/app/dashboard/finance/_components/CashProjectionSection'
+import { CashflowWaterfallClient } from '@/app/dashboard/finance/_tabs/_waterfall/CashflowWaterfallClient'
 
 // ── Waterfall color map ───────────────────────────────────────────────────────
 const SEGMENT_COLOR: Record<WaterfallSegment['color_class'], { bar: string; text: string; bg: string }> = {
@@ -517,6 +518,9 @@ export async function CashflowTab({ userId, companyId }: Props) {
 
       {/* Zone 8 — Hazine Yönetimi (Treasury Management) */}
       <TreasurySection />
+
+      {/* Zone 8.5 — 12-Month Cash Flow Waterfall Projection */}
+      <CashflowWaterfallClient companyId={companyId} />
 
       {/* Zone 9 — Nakit Tüketim Hızı (Burn Rate Monitor) */}
       <BurnRateSection />

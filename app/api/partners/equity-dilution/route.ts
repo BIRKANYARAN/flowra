@@ -1,13 +1,13 @@
 // GET /api/partners/equity-dilution
-// Returns an equity dilution simulation report for the authenticated company.
-// Admin role required (simulation is sensitive financial modelling).
+// Returns a capital structure / equity dilution report for the authenticated company.
+// Admin role required (financial modelling is sensitive data).
 
 import { NextRequest, NextResponse } from 'next/server'
 import { resolveApiAuth } from '@/lib/api-auth'
 import { apiError, reqCtx } from '@/lib/api-utils'
-import { EquityDilutionService } from '@/lib/services/pcle/equity-dilution.service'
+import { CapitalStructureService } from '@/lib/services/pcle/equity-dilution.service'
 
-export const revalidate = 60
+export const revalidate = 3600
 
 export async function GET(req: NextRequest) {
   const ctx = reqCtx(req)
@@ -28,10 +28,11 @@ export async function GET(req: NextRequest) {
       return apiError(ctx, 'Yönetici yetkisi gerekli', 403, 'FORBIDDEN')
     }
 
-    const report = await EquityDilutionService.getReport(companyId, supabase)
+    const service = new CapitalStructureService(supabase)
+    const report  = await service.getReport(companyId)
     return NextResponse.json({ report })
   } catch (err) {
     console.error('[equity-dilution GET]', err instanceof Error ? err.message : err)
-    return apiError(ctx, 'Seyreltme raporu hesaplanamadı', 500)
+    return apiError(ctx, 'Sermaye yapısı raporu hesaplanamadı', 500)
   }
 }

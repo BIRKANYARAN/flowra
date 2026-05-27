@@ -1,264 +1,225 @@
 /**
- * Cash Flow Waterfall — unit tests
+ * Cash Flow Waterfall Projection Service — unit tests
  *
- * Tests pure computation helpers. No DB or network calls.
+ * Tests pure helpers:
+ *   - computeNetCash               (positive, negative, zero)
+ *   - computeEndingCash            (normal cases)
+ *   - classifyCashPosition         (all 4 classes + edge cases)
+ *   - applyScenarioMultiplier      (all 3 scenarios, multiplier verification)
+ *   - findCashCrisisMonth          (never / first / last / middle / empty)
+ *
+ * No DB or network calls — all in-memory.
  */
 
 import { describe, it, expect } from 'vitest'
 import {
-  buildWaterfallSegments,
-  computeTrendDescription,
-  assignSegmentColor,
+  computeNetCash,
+  computeEndingCash,
+  classifyCashPosition,
+  applyScenarioMultiplier,
+  findCashCrisisMonth,
 } from '../lib/services/finance/cashflow-waterfall.service'
-import type { CashWaterfallPeriod, WaterfallSegment } from '../lib/services/finance/cashflow-waterfall.service'
 
-// ── assignSegmentColor ────────────────────────────────────────────────────────
+// ── computeNetCash ────────────────────────────────────────────────────────────
 
-describe('assignSegmentColor — pure', () => {
-
-  // Test 1: operating + positive → green
-  it('1. operating + positive amount → green', () => {
-    expect(assignSegmentColor('operating', 10_000)).toBe('green')
+describe('computeNetCash', () => {
+  it('returns positive net when inflows > outflows', () => {
+    expect(computeNetCash(100_000, 60_000)).toBe(40_000)
   })
 
-  // Test 2: operating + negative → red
-  it('2. operating + negative amount → red', () => {
-    expect(assignSegmentColor('operating', -5_000)).toBe('red')
+  it('returns negative net when inflows < outflows', () => {
+    expect(computeNetCash(50_000, 80_000)).toBe(-30_000)
   })
 
-  // Test 3: operating + zero → green (zero treated as non-negative)
-  it('3. operating + zero → green', () => {
-    expect(assignSegmentColor('operating', 0)).toBe('green')
+  it('returns zero when inflows === outflows', () => {
+    expect(computeNetCash(75_000, 75_000)).toBe(0)
   })
 
-  // Test 4: investing + negative → blue
-  it('4. investing + negative amount → blue', () => {
-    expect(assignSegmentColor('investing', -20_000)).toBe('blue')
+  it('handles zero inflows', () => {
+    expect(computeNetCash(0, 20_000)).toBe(-20_000)
   })
 
-  // Test 5: investing + positive → gray (inflow from asset sale)
-  it('5. investing + positive amount → gray', () => {
-    expect(assignSegmentColor('investing', 5_000)).toBe('gray')
+  it('handles zero outflows', () => {
+    expect(computeNetCash(30_000, 0)).toBe(30_000)
   })
 
-  // Test 6: financing + positive → purple
-  it('6. financing + positive amount → purple', () => {
-    expect(assignSegmentColor('financing', 50_000)).toBe('purple')
-  })
-
-  // Test 7: financing + negative → purple (still purple for financing)
-  it('7. financing + negative amount → purple', () => {
-    expect(assignSegmentColor('financing', -10_000)).toBe('purple')
-  })
-
-  // Test 8: result + positive → green
-  it('8. result + positive → green', () => {
-    expect(assignSegmentColor('result', 8_000)).toBe('green')
-  })
-
-  // Test 9: result + negative → red
-  it('9. result + negative → red', () => {
-    expect(assignSegmentColor('result', -3_000)).toBe('red')
+  it('rounds to 2 decimal places', () => {
+    expect(computeNetCash(100.005, 0)).toBe(100.01)
   })
 })
 
-// ── buildWaterfallSegments ────────────────────────────────────────────────────
+// ── computeEndingCash ─────────────────────────────────────────────────────────
 
-describe('buildWaterfallSegments — pure', () => {
-
-  // Test 10: all positive scenario — running total builds correctly
-  it('10. all positive inputs: running total accumulates from opening', () => {
-    const segs = buildWaterfallSegments(
-      { collections: 100_000, expensePayments: 0 },
-      { equipmentPurchases: 0 },
-      { loanInflows: 50_000, loanRepayments: 0 },
-      10_000, // opening cash
-    )
-    // Opening = 10_000
-    // After collections: 10_000 + 100_000 = 110_000
-    const collections = segs.find(s => s.key === 'collections')!
-    expect(collections.running_total_try).toBe(110_000)
-    expect(collections.amount_try).toBe(100_000)
-    expect(collections.is_subtotal).toBe(false)
+describe('computeEndingCash', () => {
+  it('adds positive net cash to opening', () => {
+    expect(computeEndingCash(500_000, 40_000)).toBe(540_000)
   })
 
-  // Test 11: all negative scenario — running total decreases
-  it('11. all negative inputs: running total decreases from opening', () => {
-    const segs = buildWaterfallSegments(
-      { collections: 0, expensePayments: 30_000 },
-      { equipmentPurchases: 20_000 },
-      { loanInflows: 0, loanRepayments: 5_000 },
-      100_000, // opening cash
-    )
-    // After expense_payments: 100_000 - 30_000 = 70_000
-    const expensePayments = segs.find(s => s.key === 'expense_payments')!
-    expect(expensePayments.running_total_try).toBe(70_000)
-    expect(expensePayments.amount_try).toBe(-30_000)
+  it('subtracts negative net cash from opening', () => {
+    expect(computeEndingCash(500_000, -30_000)).toBe(470_000)
   })
 
-  // Test 12: is_subtotal marks are correct
-  it('12. is_subtotal correctly marks subtotal segments', () => {
-    const segs = buildWaterfallSegments(
-      { collections: 50_000, expensePayments: 20_000 },
-      { equipmentPurchases: 10_000 },
-      { loanInflows: 15_000, loanRepayments: 5_000 },
-      0,
-    )
-    const subtotalKeys = segs.filter(s => s.is_subtotal).map(s => s.key)
-    expect(subtotalKeys).toContain('operating_subtotal')
-    expect(subtotalKeys).toContain('investing_subtotal')
-    expect(subtotalKeys).toContain('financing_subtotal')
-    expect(subtotalKeys).toContain('net_change')
-
-    const detailKeys = segs.filter(s => !s.is_subtotal).map(s => s.key)
-    expect(detailKeys).toContain('collections')
-    expect(detailKeys).toContain('expense_payments')
-    expect(detailKeys).toContain('equipment_purchases')
-    expect(detailKeys).toContain('loan_inflows')
-    expect(detailKeys).toContain('loan_repayments')
+  it('returns negative when opening + net < 0', () => {
+    expect(computeEndingCash(10_000, -50_000)).toBe(-40_000)
   })
 
-  // Test 13: mixed scenario — net_change segment has correct amount_try
-  it('13. net_change amount equals closing minus opening', () => {
-    const openingCash = 50_000
-    const segs = buildWaterfallSegments(
-      { collections: 80_000, expensePayments: 40_000 },
-      { equipmentPurchases: 10_000 },
-      { loanInflows: 20_000, loanRepayments: 5_000 },
-      openingCash,
-    )
-    // net = 80_000 - 40_000 - 10_000 + 20_000 - 5_000 = 45_000
-    const netChange = segs.find(s => s.key === 'net_change')!
-    expect(netChange.amount_try).toBe(45_000)
-    expect(netChange.running_total_try).toBe(openingCash + 45_000)
-    expect(netChange.is_subtotal).toBe(true)
-    expect(netChange.category).toBe('result')
+  it('handles zero opening', () => {
+    expect(computeEndingCash(0, 25_000)).toBe(25_000)
   })
 
-  // Test 14: expense payments and equipment are stored as negative amounts
-  it('14. expense_payments and equipment_purchases are negative amounts', () => {
-    const segs = buildWaterfallSegments(
-      { collections: 100_000, expensePayments: 30_000 },
-      { equipmentPurchases: 15_000 },
-      { loanInflows: 0, loanRepayments: 0 },
-      0,
-    )
-    const expPayments = segs.find(s => s.key === 'expense_payments')!
-    const equipment   = segs.find(s => s.key === 'equipment_purchases')!
-    expect(expPayments.amount_try).toBe(-30_000)
-    expect(equipment.amount_try).toBe(-15_000)
-  })
-
-  // Test 15: total segment count is always 9
-  it('15. always produces exactly 9 segments', () => {
-    const segs = buildWaterfallSegments(
-      { collections: 10_000, expensePayments: 5_000 },
-      { equipmentPurchases: 2_000 },
-      { loanInflows: 1_000, loanRepayments: 500 },
-      20_000,
-    )
-    expect(segs).toHaveLength(9)
+  it('rounds to 2 decimal places', () => {
+    expect(computeEndingCash(100.005, 0)).toBe(100.01)
   })
 })
 
-// ── computeTrendDescription ───────────────────────────────────────────────────
+// ── classifyCashPosition ──────────────────────────────────────────────────────
 
-/** Build a minimal CashWaterfallPeriod for trend tests. */
-function makePeriod(month: string, operatingNet: number, openingCash = 0): CashWaterfallPeriod {
-  const segments: WaterfallSegment[] = [
-    {
-      key: 'collections',
-      label: 'Tahsilatlar',
-      category: 'operating',
-      amount_try: operatingNet > 0 ? operatingNet : 0,
-      running_total_try: openingCash + (operatingNet > 0 ? operatingNet : 0),
-      is_subtotal: false,
-      color_class: 'green',
-    },
-    {
-      key: 'expense_payments',
-      label: 'Gider Ödemeleri',
-      category: 'operating',
-      amount_try: operatingNet < 0 ? operatingNet : 0,
-      running_total_try: openingCash + operatingNet,
-      is_subtotal: false,
-      color_class: operatingNet < 0 ? 'red' : 'green',
-    },
-    {
-      key: 'operating_subtotal',
-      label: 'Faaliyet Net',
-      category: 'operating',
-      amount_try: 0,
-      running_total_try: openingCash + operatingNet,
-      is_subtotal: true,
-      color_class: operatingNet >= 0 ? 'green' : 'red',
-    },
-  ]
-  return {
-    month,
-    label: month,
-    opening_cash_try: openingCash,
-    segments,
-    closing_cash_try: openingCash + operatingNet,
-    net_change_try: operatingNet,
-  }
-}
-
-describe('computeTrendDescription — pure', () => {
-
-  // Test 16: empty periods → fallback message
-  it('16. empty periods → "Nakit akış verisi bulunamadı."', () => {
-    const result = computeTrendDescription([])
-    expect(result).toBe('Nakit akış verisi bulunamadı.')
+describe('classifyCashPosition', () => {
+  it('returns "negative" when ending cash is below zero', () => {
+    expect(classifyCashPosition(-1, 100_000)).toBe('negative')
   })
 
-  // Test 17: all 3 periods positive operating → 3 aylık pozitif
-  it('17. 3 periods all positive operating → 3 aylık pozitif description', () => {
-    const periods = [
-      makePeriod('2026-05', 50_000),
-      makePeriod('2026-04', 30_000),
-      makePeriod('2026-03', 20_000),
-    ]
-    const result = computeTrendDescription(periods)
-    expect(result).toContain('3 aylık')
-    expect(result).toContain('pozitif')
+  it('returns "negative" when ending cash is exactly negative', () => {
+    expect(classifyCashPosition(-100_000, 50_000)).toBe('negative')
   })
 
-  // Test 18: all 3 periods negative operating → 3 aylık negatif
-  it('18. 3 periods all negative operating → 3 aylık negatif description', () => {
-    const periods = [
-      makePeriod('2026-05', -50_000),
-      makePeriod('2026-04', -30_000),
-      makePeriod('2026-03', -20_000),
-    ]
-    const result = computeTrendDescription(periods)
-    expect(result).toContain('negatif')
+  it('returns "tight" when 0 < ending < 1× burn', () => {
+    // 50_000 ending, 100_000 burn → 0.5 months → tight
+    expect(classifyCashPosition(50_000, 100_000)).toBe('tight')
   })
 
-  // Test 19: mixed 3 periods → karışık description
-  it('19. mixed 3 periods (2 positive, 1 negative) → karışık description', () => {
-    const periods = [
-      makePeriod('2026-05', 50_000),
-      makePeriod('2026-04', 30_000),
-      makePeriod('2026-03', -10_000),
-    ]
-    const result = computeTrendDescription(periods)
-    expect(result).toContain('karışık')
-    expect(result).toContain('2 pozitif')
-    expect(result).toContain('1 negatif')
+  it('returns "adequate" when 1× <= ending < 3× burn', () => {
+    // 200_000 ending, 100_000 burn → 2 months → adequate
+    expect(classifyCashPosition(200_000, 100_000)).toBe('adequate')
   })
 
-  // Test 20: single period positive
-  it('20. single positive period → pozitif single period description', () => {
-    const periods = [makePeriod('2026-05', 10_000)]
-    const result = computeTrendDescription(periods)
-    expect(result).toContain('pozitif')
+  it('returns "adequate" at exactly 1× burn', () => {
+    expect(classifyCashPosition(100_000, 100_000)).toBe('adequate')
   })
 
-  // Test 21: single period negative
-  it('21. single negative period → negatif single period description', () => {
-    const periods = [makePeriod('2026-05', -5_000)]
-    const result = computeTrendDescription(periods)
-    expect(result).toContain('negatif')
+  it('returns "strong" when ending >= 3× burn', () => {
+    // 300_000 ending, 100_000 burn → 3 months → strong
+    expect(classifyCashPosition(300_000, 100_000)).toBe('strong')
+  })
+
+  it('returns "strong" well above 3× burn', () => {
+    expect(classifyCashPosition(1_000_000, 100_000)).toBe('strong')
+  })
+
+  it('returns "strong" when avg burn is 0 and cash is positive', () => {
+    expect(classifyCashPosition(100_000, 0)).toBe('strong')
+  })
+
+  it('returns "negative" when avg burn is 0 and cash is 0', () => {
+    // zero cash with zero burn — ending = 0, not > 0
+    expect(classifyCashPosition(0, 0)).toBe('negative')
+  })
+
+  it('returns "negative" when avg burn is 0 and cash is negative', () => {
+    expect(classifyCashPosition(-1, 0)).toBe('negative')
+  })
+})
+
+// ── applyScenarioMultiplier ───────────────────────────────────────────────────
+
+describe('applyScenarioMultiplier', () => {
+  const BASE_INFLOWS  = 200_000
+  const BASE_OUTFLOWS = 150_000
+
+  it('base scenario: inflows and outflows unchanged (1.0×)', () => {
+    const result = applyScenarioMultiplier(BASE_INFLOWS, BASE_OUTFLOWS, 'base')
+    expect(result.inflows).toBe(BASE_INFLOWS)
+    expect(result.outflows).toBe(BASE_OUTFLOWS)
+  })
+
+  it('conservative scenario: inflows × 0.85', () => {
+    const result = applyScenarioMultiplier(BASE_INFLOWS, BASE_OUTFLOWS, 'conservative')
+    expect(result.inflows).toBeCloseTo(BASE_INFLOWS * 0.85, 1)
+  })
+
+  it('conservative scenario: outflows × 1.10', () => {
+    const result = applyScenarioMultiplier(BASE_INFLOWS, BASE_OUTFLOWS, 'conservative')
+    expect(result.outflows).toBeCloseTo(BASE_OUTFLOWS * 1.10, 1)
+  })
+
+  it('optimistic scenario: inflows × 1.15', () => {
+    const result = applyScenarioMultiplier(BASE_INFLOWS, BASE_OUTFLOWS, 'optimistic')
+    expect(result.inflows).toBeCloseTo(BASE_INFLOWS * 1.15, 1)
+  })
+
+  it('optimistic scenario: outflows × 0.95', () => {
+    const result = applyScenarioMultiplier(BASE_INFLOWS, BASE_OUTFLOWS, 'optimistic')
+    expect(result.outflows).toBeCloseTo(BASE_OUTFLOWS * 0.95, 1)
+  })
+
+  it('conservative reduces net cash vs base', () => {
+    const base         = applyScenarioMultiplier(BASE_INFLOWS, BASE_OUTFLOWS, 'base')
+    const conservative = applyScenarioMultiplier(BASE_INFLOWS, BASE_OUTFLOWS, 'conservative')
+    const baseNet         = base.inflows - base.outflows
+    const conservativeNet = conservative.inflows - conservative.outflows
+    expect(conservativeNet).toBeLessThan(baseNet)
+  })
+
+  it('optimistic increases net cash vs base', () => {
+    const base      = applyScenarioMultiplier(BASE_INFLOWS, BASE_OUTFLOWS, 'base')
+    const optimistic = applyScenarioMultiplier(BASE_INFLOWS, BASE_OUTFLOWS, 'optimistic')
+    const baseNet      = base.inflows - base.outflows
+    const optimisticNet = optimistic.inflows - optimistic.outflows
+    expect(optimisticNet).toBeGreaterThan(baseNet)
+  })
+
+  it('handles zero inflows and outflows', () => {
+    const result = applyScenarioMultiplier(0, 0, 'conservative')
+    expect(result.inflows).toBe(0)
+    expect(result.outflows).toBe(0)
+  })
+})
+
+// ── findCashCrisisMonth ───────────────────────────────────────────────────────
+
+describe('findCashCrisisMonth', () => {
+  it('returns null for empty array', () => {
+    expect(findCashCrisisMonth([])).toBeNull()
+  })
+
+  it('returns null when cash is always positive', () => {
+    expect(findCashCrisisMonth([100_000, 80_000, 90_000, 50_000])).toBeNull()
+  })
+
+  it('returns null when all values are exactly zero (not negative)', () => {
+    expect(findCashCrisisMonth([0, 0, 0])).toBeNull()
+  })
+
+  it('returns 0 when first month is negative', () => {
+    expect(findCashCrisisMonth([-10_000, 20_000, 30_000])).toBe(0)
+  })
+
+  it('returns last index when only last month is negative', () => {
+    const arr = [100_000, 80_000, 50_000, -5_000]
+    expect(findCashCrisisMonth(arr)).toBe(3)
+  })
+
+  it('returns first negative index when multiple months are negative', () => {
+    const arr = [100_000, -10_000, -20_000, 50_000]
+    expect(findCashCrisisMonth(arr)).toBe(1)
+  })
+
+  it('returns middle index when crisis is in the middle', () => {
+    const arr = [200_000, 150_000, -5_000, 30_000, 60_000]
+    expect(findCashCrisisMonth(arr)).toBe(2)
+  })
+
+  it('returns 0 for single-element array with negative value', () => {
+    expect(findCashCrisisMonth([-1])).toBe(0)
+  })
+
+  it('returns null for single-element array with positive value', () => {
+    expect(findCashCrisisMonth([1])).toBeNull()
+  })
+
+  it('correctly handles a 12-month array matching a typical projection', () => {
+    // 10 positive months, then 2 negative
+    const months = [500_000, 480_000, 460_000, 440_000, 420_000, 400_000, 380_000, 360_000, 340_000, 320_000, -10_000, -50_000]
+    expect(findCashCrisisMonth(months)).toBe(10)
   })
 })

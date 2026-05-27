@@ -1,16 +1,20 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // GET /api/finance/cashflow-waterfall
 //
-// Cash Flow Waterfall — monthly operating/investing/financing bridge.
+// Returns both the 3-month bridge waterfall and the 12-month forward projection.
+//
+// Query params:
+//   ?scenario=base|conservative|optimistic  (default: base)
+//     → controls the 12-month forward projection scenario
 //
 // Returns:
-//   { report: CashflowWaterfallReport }
+//   { report: CashflowWaterfallReport, projection: CashflowWaterfallProjection }
 //
-// Auth: any authenticated company member.
-// Cache: revalidate every 300 seconds.
+// Auth: manager+ (resolveApiAuth).
+// Cache: revalidate every 1800 seconds.
 // ─────────────────────────────────────────────────────────────────────────────
 
-export const revalidate = 300
+export const revalidate = 1800
 
 import { NextRequest, NextResponse } from 'next/server'
 import { resolveApiAuth } from '@/lib/api-auth'
@@ -22,10 +26,19 @@ export async function GET(req: NextRequest) {
   if (!auth.ok) return auth.response
   const { companyId, supabase, ctx } = auth
 
+  const scenarioRaw = req.nextUrl.searchParams.get('scenario') ?? 'base'
+  const scenario =
+    scenarioRaw === 'conservative' || scenarioRaw === 'optimistic'
+      ? scenarioRaw
+      : 'base'
+
   try {
-    const report = await CashflowWaterfallService.getReport(companyId, supabase)
+    const [report, projection] = await Promise.all([
+      CashflowWaterfallService.getReport(companyId, supabase),
+      CashflowWaterfallService.getProjection(companyId, supabase, scenario),
+    ])
     return NextResponse.json(
-      { report },
+      { report, projection },
       { headers: { [REQUEST_ID_HEADER]: ctx.requestId } },
     )
   } catch (err) {

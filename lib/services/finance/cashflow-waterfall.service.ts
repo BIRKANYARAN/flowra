@@ -254,6 +254,130 @@ export function computeTrendDescription(periods: CashWaterfallPeriod[]): string 
   return 'Son döneme ait faaliyet nakit akışı negatif seyretti.'
 }
 
+// ── 12-Month Waterfall Projection Types ──────────────────────────────────────
+
+export interface WaterfallMonth {
+  month_key: string           // "2025-06"
+  month_label: string         // "Haziran 2025"
+  opening_cash_try: number
+
+  // Inflows
+  operating_receipts_try: number    // from sales/collections
+  other_inflows_try: number         // other income
+  total_inflows_try: number
+
+  // Outflows (waterfall layers)
+  layer1_opex_try: number          // salaries + rent + recurring
+  layer2_tax_try: number           // KDV + SGK + tax obligations
+  layer3_debt_service_try: number  // loan principal + interest
+  layer4_capex_try: number         // equipment/investments
+  layer5_discretionary_try: number // other/variable
+  total_outflows_try: number
+
+  net_cash_try: number
+  ending_cash_try: number
+  cash_position: 'strong' | 'adequate' | 'tight' | 'negative'
+}
+
+export interface CashflowWaterfallProjection {
+  generated_at: string
+  opening_balance_try: number
+  months: WaterfallMonth[]         // 12 months
+  scenario: 'base' | 'conservative' | 'optimistic'
+  crisis_month: number | null       // 0-based index, null if no crisis
+  crisis_month_label: string | null
+  avg_monthly_burn_try: number
+  months_of_runway: number | null   // null if already negative
+  total_inflows_12m_try: number
+  total_outflows_12m_try: number
+}
+
+// ── Turkish month names (long form) ──────────────────────────────────────────
+
+const TR_MONTHS_LONG = [
+  'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
+  'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık',
+]
+
+function projectionMonthLabel(monthKey: string): string {
+  const [year, month] = monthKey.split('-')
+  const m = parseInt(month, 10) - 1
+  return `${TR_MONTHS_LONG[m] ?? month} ${year}`
+}
+
+function addMonthsToKey(monthKey: string, n: number): string {
+  const [y, m] = monthKey.split('-').map(Number)
+  const date = new Date(y, m - 1 + n, 1)
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+}
+
+// ── Pure helpers for 12-month projection (exported for testing) ───────────────
+
+/**
+ * Compute net cash for a period: inflows - outflows
+ */
+export function computeNetCash(inflowsTry: number, outflowsTry: number): number {
+  return round2(inflowsTry - outflowsTry)
+}
+
+/**
+ * Compute ending cash: opening + net_cash
+ */
+export function computeEndingCash(openingTry: number, netCashTry: number): number {
+  return round2(openingTry + netCashTry)
+}
+
+/**
+ * Classify cash position relative to avg monthly burn:
+ *   strong:   ending_cash >= 3 × avg_monthly_burn
+ *   adequate: 1 × <= ending_cash < 3 ×
+ *   tight:    0 < ending_cash < 1 ×
+ *   negative: ending_cash < 0
+ *
+ * Edge case: if avg_monthly_burn === 0 → 'strong' if positive, 'negative' if <= 0
+ */
+export function classifyCashPosition(
+  endingCashTry: number,
+  avgMonthlyBurnTry: number,
+): 'strong' | 'adequate' | 'tight' | 'negative' {
+  if (endingCashTry < 0) return 'negative'
+  if (avgMonthlyBurnTry <= 0) return endingCashTry > 0 ? 'strong' : 'negative'
+  const months = endingCashTry / avgMonthlyBurnTry
+  if (months >= 3) return 'strong'
+  if (months >= 1) return 'adequate'
+  return 'tight'
+}
+
+/**
+ * Apply stress scenario multiplier to a base inflows/outflows pair.
+ *   base:         1.0 × inflows, 1.0 × outflows
+ *   conservative: 0.85 × inflows, 1.10 × outflows
+ *   optimistic:   1.15 × inflows, 0.95 × outflows
+ */
+export function applyScenarioMultiplier(
+  baseInflows: number,
+  baseOutflows: number,
+  scenario: 'base' | 'conservative' | 'optimistic',
+): { inflows: number; outflows: number } {
+  if (scenario === 'conservative') {
+    return { inflows: round2(baseInflows * 0.85), outflows: round2(baseOutflows * 1.10) }
+  }
+  if (scenario === 'optimistic') {
+    return { inflows: round2(baseInflows * 1.15), outflows: round2(baseOutflows * 0.95) }
+  }
+  return { inflows: round2(baseInflows), outflows: round2(baseOutflows) }
+}
+
+/**
+ * Find the first month index (0-based) where ending cash goes negative.
+ * Returns null if cash never goes negative or if the array is empty.
+ */
+export function findCashCrisisMonth(monthlyEndingCash: number[]): number | null {
+  if (monthlyEndingCash.length === 0) return null
+  const idx = monthlyEndingCash.findIndex(c => c < 0)
+  return idx === -1 ? null : idx
+}
+
 // ── Service ───────────────────────────────────────────────────────────────────
 
 const LOAN_IN_TYPES  = new Set(['loan_to_company', 'loan_in'])
@@ -537,6 +661,238 @@ export class CashflowWaterfallService {
       ytd_financing_try,
       ytd_net_change_try,
       trend_description,
+    }
+  }
+
+  // ── 12-Month Forward Waterfall Projection ──────────────────────────────────
+
+  static async getProjection(
+    companyId: string,
+    supabase: AnyClient,
+    scenario: 'base' | 'conservative' | 'optimistic' = 'base',
+  ): Promise<CashflowWaterfallProjection> {
+    const today = new Date().toISOString().slice(0, 10)
+    const currentMonthKey = today.slice(0, 7)
+
+    const sixMonthsAgo = (() => {
+      const d = new Date(today + 'T00:00:00Z')
+      d.setUTCMonth(d.getUTCMonth() - 6)
+      return d.toISOString().slice(0, 10)
+    })()
+
+    // ── 1. Opening cash proxy (last 6mo paid sales − paid expenses) ───────────
+    const [salesPaidRes, expPaidRes, histSalesRes, histExpRes, loanRes] = await Promise.all([
+      supabase
+        .from('sales')
+        .select('paid_amount')
+        .eq('company_id', companyId)
+        .is('deleted_at', null)
+        .eq('payment_status', 'paid')
+        .gte('sale_date', sixMonthsAgo),
+      supabase
+        .from('expenses')
+        .select('amount_try')
+        .eq('company_id', companyId)
+        .is('deleted_at', null)
+        .in('payment_status', ['paid', 'partial'])
+        .gte('expense_date', sixMonthsAgo),
+      supabase
+        .from('sales')
+        .select('paid_amount, sale_date')
+        .eq('company_id', companyId)
+        .is('deleted_at', null)
+        .eq('payment_status', 'paid')
+        .gte('sale_date', sixMonthsAgo),
+      supabase
+        .from('expenses')
+        .select('amount_try, expense_date, category')
+        .eq('company_id', companyId)
+        .is('deleted_at', null)
+        .gte('expense_date', sixMonthsAgo),
+      supabase
+        .from('partner_loan_tranches')
+        .select('principal_try, total_repaid_try, expected_repayment_date, interest_rate_annual_pct, annual_interest_rate, status')
+        .eq('company_id', companyId)
+        .is('deleted_at', null)
+        .in('status', ['active', 'pending', 'partially_repaid']),
+    ])
+
+    const salesPaidRows  = salesPaidRes.data  ?? []
+    const expPaidRows    = expPaidRes.data     ?? []
+    const histSales      = histSalesRes.data   ?? []
+    const histExp        = histExpRes.data      ?? []
+    const loanTranches   = loanRes.data         ?? []
+
+    const totalSalesPaid = salesPaidRows.reduce(
+      (s: number, r: { paid_amount: number | null }) => s + (Number(r.paid_amount) || 0), 0,
+    )
+    const totalExpPaid = expPaidRows.reduce(
+      (s: number, r: { amount_try: number | null }) => s + (Number(r.amount_try) || 0), 0,
+    )
+    const openingBalance = round2(Math.max(0, totalSalesPaid - totalExpPaid))
+
+    // ── 2. Historical monthly averages ────────────────────────────────────────
+    const N_MONTHS = 6
+
+    const totalRevenue = histSales.reduce(
+      (s: number, r: { paid_amount: number | null }) => s + (Number(r.paid_amount) || 0), 0,
+    )
+    const avgMonthlyRevenue = round2(totalRevenue / N_MONTHS)
+
+    let totalOpex  = 0
+    let totalTax   = 0
+    let totalCapex = 0
+    let totalOther = 0
+
+    for (const e of histExp) {
+      const amt = Number(e.amount_try) || 0
+      const cat = String(e.category ?? '').toLowerCase()
+
+      if (
+        cat.includes('kdv') || cat.includes('vergi') || cat.includes('tax') ||
+        cat.includes('sgk') || cat.includes('muhtasar') || cat.includes('stopaj') ||
+        cat.includes('kurumlar')
+      ) {
+        totalTax += amt
+      } else if (
+        cat.includes('ekipman') || cat.includes('makine') || cat.includes('demirbaş') ||
+        cat.includes('yatırım') || cat.includes('capex') || cat.includes('araç')
+      ) {
+        totalCapex += amt
+      } else if (
+        cat.includes('maaş') || cat.includes('kira') || cat.includes('elektrik') ||
+        cat.includes('su') || cat.includes('internet') || cat.includes('abonelik') ||
+        cat.includes('salary') || cat.includes('rent') || cat.includes('personnel') ||
+        cat.includes('personel')
+      ) {
+        totalOpex += amt
+      } else {
+        totalOpex  += amt * 0.5
+        totalOther += amt * 0.5
+      }
+    }
+
+    const avgMonthlyOpex  = round2(totalOpex  / N_MONTHS)
+    const avgMonthlyTax   = round2(totalTax   / N_MONTHS)
+    const avgMonthlyCapex = round2(totalCapex / N_MONTHS)
+    const avgMonthlyOther = round2(totalOther / N_MONTHS)
+
+    // Monthly interest across all active loans
+    let totalMonthlyInterest = 0
+    for (const t of loanTranches) {
+      const outstanding = Math.max(
+        0,
+        (Number(t.principal_try) || 0) - (Number(t.total_repaid_try) || 0),
+      )
+      if (outstanding <= 0) continue
+      const annualRate =
+        t.interest_rate_annual_pct != null
+          ? Number(t.interest_rate_annual_pct) / 100
+          : t.annual_interest_rate != null
+          ? Number(t.annual_interest_rate)
+          : 0.12
+      totalMonthlyInterest += round2(outstanding * (annualRate / 12))
+    }
+    const avgMonthlyDebtBase = round2(totalMonthlyInterest)
+
+    const avgMonthlyBurn = round2(
+      avgMonthlyOpex + avgMonthlyTax + avgMonthlyDebtBase + avgMonthlyCapex + avgMonthlyOther,
+    )
+
+    // ── 3. Debt repayment schedule ─────────────────────────────────────────────
+    const debtRepaymentByMonth: Record<string, number> = {}
+    for (const t of loanTranches) {
+      if (!t.expected_repayment_date) continue
+      const repayKey = (t.expected_repayment_date as string).slice(0, 7)
+      const outstanding = Math.max(
+        0,
+        (Number(t.principal_try) || 0) - (Number(t.total_repaid_try) || 0),
+      )
+      if (outstanding <= 0) continue
+      debtRepaymentByMonth[repayKey] = (debtRepaymentByMonth[repayKey] ?? 0) + outstanding
+    }
+
+    // ── 4. Build 12 forward months ─────────────────────────────────────────────
+    const months: WaterfallMonth[] = []
+    let runningCash = openingBalance
+
+    for (let i = 0; i < 12; i++) {
+      const monthKey = addMonthsToKey(currentMonthKey, i + 1)
+
+      const baseInflows  = avgMonthlyRevenue
+      const baseOpex     = avgMonthlyOpex
+      const baseTax      = avgMonthlyTax
+      const baseCapex    = avgMonthlyCapex
+      const baseOther    = avgMonthlyOther
+
+      const scheduledPrincipal = debtRepaymentByMonth[monthKey] ?? 0
+      const baseDebtService    = round2(avgMonthlyDebtBase + scheduledPrincipal)
+      const baseOutflows       = round2(baseOpex + baseTax + baseDebtService + baseCapex + baseOther)
+
+      const { inflows: scaledInflows, outflows: scaledOutflows } = applyScenarioMultiplier(
+        baseInflows,
+        baseOutflows,
+        scenario,
+      )
+
+      const outflowScale = baseOutflows > 0 ? scaledOutflows / baseOutflows : 1
+      const layer1 = round2(baseOpex        * outflowScale)
+      const layer2 = round2(baseTax         * outflowScale)
+      const layer3 = round2(baseDebtService * outflowScale)
+      const layer4 = round2(baseCapex       * outflowScale)
+      const layer5 = round2(baseOther       * outflowScale)
+      const totalOut = round2(layer1 + layer2 + layer3 + layer4 + layer5)
+      const totalIn  = round2(scaledInflows)
+
+      const netCash = computeNetCash(totalIn, totalOut)
+      const opening = runningCash
+      const ending  = computeEndingCash(opening, netCash)
+
+      months.push({
+        month_key:               monthKey,
+        month_label:             projectionMonthLabel(monthKey),
+        opening_cash_try:        round2(opening),
+        operating_receipts_try:  totalIn,
+        other_inflows_try:       0,
+        total_inflows_try:       totalIn,
+        layer1_opex_try:         layer1,
+        layer2_tax_try:          layer2,
+        layer3_debt_service_try: layer3,
+        layer4_capex_try:        layer4,
+        layer5_discretionary_try: layer5,
+        total_outflows_try:      totalOut,
+        net_cash_try:            netCash,
+        ending_cash_try:         round2(ending),
+        cash_position:           classifyCashPosition(ending, avgMonthlyBurn),
+      })
+
+      runningCash = ending
+    }
+
+    // ── 5. Summary ─────────────────────────────────────────────────────────────
+    const endingCashes     = months.map(m => m.ending_cash_try)
+    const crisisIdx        = findCashCrisisMonth(endingCashes)
+    const crisisLabel      = crisisIdx !== null ? months[crisisIdx].month_label : null
+    const total12mInflows  = round2(months.reduce((s, m) => s + m.total_inflows_try,  0))
+    const total12mOutflows = round2(months.reduce((s, m) => s + m.total_outflows_try, 0))
+    const finalBalance     = months[months.length - 1]?.ending_cash_try ?? 0
+    const monthsOfRunway   = finalBalance < 0
+      ? null
+      : avgMonthlyBurn > 0
+      ? round2(finalBalance / avgMonthlyBurn)
+      : null
+
+    return {
+      generated_at:           new Date().toISOString(),
+      opening_balance_try:    openingBalance,
+      months,
+      scenario,
+      crisis_month:           crisisIdx,
+      crisis_month_label:     crisisLabel,
+      avg_monthly_burn_try:   avgMonthlyBurn,
+      months_of_runway:       monthsOfRunway,
+      total_inflows_12m_try:  total12mInflows,
+      total_outflows_12m_try: total12mOutflows,
     }
   }
 }
