@@ -39,6 +39,7 @@ import { EquityDilutionTab } from '@/app/dashboard/partners/_components/EquityDi
 import { AmortizationTab }  from '@/app/dashboard/partners/_components/AmortizationTab'
 import { DividendLedgerTab } from '@/app/dashboard/partners/_components/DividendLedgerTab'
 import { CapitalStatementTab } from '@/app/dashboard/partners/_components/CapitalStatementTab'
+import { DistributionSimulatorTab } from '@/app/dashboard/partners/_components/DistributionSimulatorTab'
 import { PartnersContextBar } from '@/app/dashboard/partners/_shared/PartnersContextBar'
 import { PartnerFinanceActions } from '@/app/dashboard/partners/_components/PartnerFinanceActions'
 
@@ -299,6 +300,7 @@ export default function PartnersPage() {
     amortization:     { title: 'Amortisman Takvimi',  sub: 'Tranche bazında aylık ödeme planı · Faiz · Anapara · Kapanış tarihi' },
     'dividend-ledger':     { title: 'Dağıtım Geçmişi',      sub: 'Tüm temettü hareketleri · TTK 509/519 uyum takibi · Ortak bazında toplamlar' },
     'capital-statement':   { title: 'Sermaye Hesap Özeti',  sub: 'Ortak bazında sermaye hesabı · Katkılar · Kâr payı dağılımı · Temettü · Huzur hakkı' },
+    'distribution-simulator': { title: 'Kâr Dağıtımı Simülatörü', sub: 'TTK 519 yasal yedek · GVK 94 stopaj · 4 katmanlı dağıtım güvenliği · Senaryo karşılaştırması' },
   }
 
   const TABS: { id: TabId; label: string }[] = [
@@ -316,6 +318,7 @@ export default function PartnersPage() {
     { id: 'amortization',     label: 'Amortisman'       },
     { id: 'dividend-ledger',   label: 'Dağıtım Geçmişi' },
     { id: 'capital-statement', label: 'Sermaye Hesabı' },
+    { id: 'distribution-simulator', label: 'Kâr Dağıtımı' },
   ]
 
   // ── Render ────────────────────────────────────────────────────────────────────
@@ -498,6 +501,10 @@ export default function PartnersPage() {
 
       {activeTab === 'capital-statement' && (
         <CapitalStatementTab />
+      )}
+
+      {activeTab === 'distribution-simulator' && (
+        <DistributionSimulatorTab />
       )}
 
     </div>

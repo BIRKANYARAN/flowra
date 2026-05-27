@@ -1,13 +1,15 @@
 // ── KomutaContent — Operations hub / komuta tab ──────────────────────────────
 //
 // Daily operations command center — the "what needs attention RIGHT NOW" view.
-// Shows: overdue collections, critical stock, open orders, pending approvals.
+// Shows: overdue collections, critical stock, open orders, pending approvals,
+//        and the Operational KPI Heatmap (13-week × 7-day revenue grid).
 //
 // Server component; companyId already resolved by operations/page.tsx.
 
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase-server'
 import { fmtTRY, fmtDate } from '@/lib/format'
+import { OpsHeatmapClient } from './_heatmap/OpsHeatmapClient'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -430,6 +432,9 @@ export async function KomutaContent({ companyId }: Props) {
           </Link>
         ))}
       </div>
+
+      {/* Operational KPI Heatmap */}
+      <OpsHeatmapClient />
     </div>
   )
 }
