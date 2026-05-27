@@ -13,6 +13,7 @@
 //   7. Finansal raporlar linkleri
 
 import Link                      from 'next/link'
+import { PeriodCloseWizard }     from '@/app/dashboard/finance/_tabs/_period-close/PeriodCloseWizard'
 import { ObservationRail }       from '@/app/dashboard/_shared/ObservationRail'
 import { BorcYaslandirmaOzeti }  from '@/app/dashboard/finance/_shared/BorcYaslandirmaOzeti'
 import { WorkingCapitalSection } from '@/app/dashboard/finance/_shared/WorkingCapitalSection'
@@ -450,6 +451,9 @@ export async function CFOTab({ userId, companyId }: Props) {
 
       {/* ── Period-close intelligence signals ──────────────────────────────────── */}
       <ObservationRail context="period-close" maxItems={3} />
+
+      {/* ── Period Close Wizard — guided step-by-step close process ──────────── */}
+      <PeriodCloseWizard periodId={periodData?.period.id} />
 
       {/* ── Veri yükleme hatası banner — yalnızca servis çağrıları başarısız olduğunda görünür ── */}
       {loadErrors.length > 0 && (

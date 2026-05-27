@@ -10,6 +10,7 @@ import { CatalogCommandBar } from '@/app/dashboard/catalog/_components/CatalogCo
 import { ProductMarginService } from '@/lib/services/inventory/product-margin.service'
 import type { ProductMarginReport } from '@/lib/services/inventory/product-margin.service'
 import { InventoryValuationClient } from './_inventory-valuation/InventoryValuationClient'
+import { PriceOptimizationClient } from './_price-optimization/PriceOptimizationClient'
 
 function CommandBarSkeleton() {
   return (
@@ -275,6 +276,9 @@ export async function CatalogContent({ companyId, userId }: Props) {
           </div>
         </div>
       )}
+
+      {/* ── Fiyat Optimizasyonu ───────────────────────────────────────────────── */}
+      <PriceOptimizationClient />
 
       {/* ── Envanter Değerleme ────────────────────────────────────────────────── */}
       <InventoryValuationClient />
