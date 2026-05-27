@@ -5,6 +5,7 @@
 //   2. 12-month bar chart
 //   3. Monthly projection table
 //   4. Scenario panel (client island)
+//   5. Finansal Eğilimler — 12-month KPI trend lines with momentum scoring
 
 import Link                                 from 'next/link'
 import { NarrativeFooter }                 from '@/components/ds'
@@ -17,6 +18,8 @@ import type { RunwayForecastResponse }      from '@/lib/finance/financial-core'
 import type { ForecastResult }             from '@/lib/engines/forecast.engine'
 import { fmtTRY as fmt }                   from '@/lib/format'
 import { fmtCompact }                      from '@/lib/format'
+import { FinancialTrendsService }          from '@/lib/services/finance/financial-trends.service'
+import type { KpiTrend, FinancialTrendsReport } from '@/lib/services/finance/financial-trends.service'
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -72,6 +75,12 @@ export async function ForecastTab({ userId: _userId, companyId }: Props) {
       taxObligation: metrics.tax.total_fiscal_obligation,
     }),
     ZERO_RUNWAY,
+  )
+
+  // ── Financial trends (12-month KPI trend lines) ──────────────────────────────
+  const trendsReport: FinancialTrendsReport | null = await sq(
+    () => FinancialTrendsService.getReport(companyId, supabase),
+    null,
   )
 
   // ── 3-scenario forecast ──────────────────────────────────────────────────────
