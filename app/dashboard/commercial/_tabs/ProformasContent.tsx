@@ -10,6 +10,7 @@ import {
   ProformaAnalyticsService,
   type ProformaConversionMetrics,
 } from '@/lib/services/commercial/proforma-analytics.service'
+import { ProformaAnalyticsClient } from './_proforma-analytics/ProformaAnalyticsClient'
 
 interface Props { companyId: string }
 
@@ -88,6 +89,9 @@ export async function ProformasContent({ companyId }: Props) {
 
   return (
     <div className="max-w-5xl space-y-4">
+
+      {/* ── Proforma Analizi — 90-day pipeline intelligence (client island) ── */}
+      <ProformaAnalyticsClient />
 
       {/* ── Dönüşüm Analizi (proforma-analytics) ──────────────────────────── */}
       {analytics && analytics.total_proformas > 0 && (

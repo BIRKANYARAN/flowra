@@ -21,6 +21,7 @@ import { TaxCalendarService, type TaxCalendar, type TaxObligation } from '@/lib/
 import { TaxReserveService, type TaxReserveReport, type TaxReserveItem } from '@/lib/services/tax/tax-reserve.service'
 import { createClient } from '@/lib/supabase-server'
 import { fmtTRY as fmt, fmtMonthShort as fmtMonth, fmtDateMed as fmtDate } from '@/lib/format'
+import { TaxCalendarClient } from './_tax-calendar/TaxCalendarClient'
 function addDays(dateStr: string, n: number): string {
   const d = new Date(dateStr + 'T00:00:00')
   d.setDate(d.getDate() + n)
@@ -153,6 +154,9 @@ export async function TaxTab({ userId, companyId }: Props) {
 
   return (
     <div className="space-y-4">
+
+      {/* ── Vergi Takvimi (client island — TanStack Query) ───────────────────── */}
+      <TaxCalendarClient year={currentYear} />
 
       {/* ── Vergi Rezervi ────────────────────────────────────────────────────── */}
       <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">

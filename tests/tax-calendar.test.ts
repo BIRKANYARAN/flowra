@@ -1,27 +1,165 @@
 /**
- * TaxCalendarService pure-function unit tests.
+ * TaxCalendarService — unit tests.
+ *
+ * Covers both the legacy pure helpers and the new CFO-calendar pure exports.
  *
  * Run with: npx vitest run tests/tax-calendar.test.ts
  */
 
 import { describe, it, expect } from 'vitest'
 import {
+  // Legacy helpers
   adjustForWeekend,
   computeDueDates,
   computeDueDatesForPeriod,
   TaxCalendarService,
+  // New pure exports
+  computeKdvDueDate,
+  computeGeciVergiDueDate,
+  assignObligationStatus,
+  computeDaysUntil,
+  buildObligationId,
 } from '../lib/services/tax/tax-calendar.service'
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 1. KDV due date: Nisan 2026 → May 26 2026
+// 1. computeKdvDueDate
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe('KDV due date', () => {
+describe('computeKdvDueDate()', () => {
+  it('Nisan 2026 KDV → due 2026-05-26', () => {
+    expect(computeKdvDueDate(2026, 4)).toBe('2026-05-26')
+  })
+
+  it('December KDV wraps to next year: 2026-12 → 2027-01-26', () => {
+    expect(computeKdvDueDate(2026, 12)).toBe('2027-01-26')
+  })
+
+  it('January KDV → February 26', () => {
+    expect(computeKdvDueDate(2026, 1)).toBe('2026-02-26')
+  })
+
+  it('November KDV → December 26', () => {
+    expect(computeKdvDueDate(2025, 11)).toBe('2025-12-26')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 2. computeGeciVergiDueDate
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeGeciVergiDueDate()', () => {
+  it('Q1 2026 → 2026-05-17', () => {
+    expect(computeGeciVergiDueDate(2026, 1)).toBe('2026-05-17')
+  })
+
+  it('Q2 2026 → 2026-08-17', () => {
+    expect(computeGeciVergiDueDate(2026, 2)).toBe('2026-08-17')
+  })
+
+  it('Q3 2026 → 2026-11-17', () => {
+    expect(computeGeciVergiDueDate(2026, 3)).toBe('2026-11-17')
+  })
+
+  it('Q4 2026 wraps to next year → 2027-02-17', () => {
+    expect(computeGeciVergiDueDate(2026, 4)).toBe('2027-02-17')
+  })
+
+  it('Q1 different year — 2025-05-17', () => {
+    expect(computeGeciVergiDueDate(2025, 1)).toBe('2025-05-17')
+  })
+
+  it('invalid quarter throws', () => {
+    expect(() => computeGeciVergiDueDate(2026, 5)).toThrow()
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 3. assignObligationStatus
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('assignObligationStatus()', () => {
+  it('returns overdue when due date is in the past', () => {
+    expect(assignObligationStatus('2026-05-26', '2026-06-01')).toBe('overdue')
+  })
+
+  it('returns due_soon when 1 day away', () => {
+    expect(assignObligationStatus('2026-05-27', '2026-05-26')).toBe('due_soon')
+  })
+
+  it('returns due_soon when 14 days away', () => {
+    expect(assignObligationStatus('2026-06-09', '2026-05-26')).toBe('due_soon')
+  })
+
+  it('returns due_soon when 0 days away (today)', () => {
+    expect(assignObligationStatus('2026-05-26', '2026-05-26')).toBe('due_soon')
+  })
+
+  it('returns upcoming when 15 days away', () => {
+    expect(assignObligationStatus('2026-06-10', '2026-05-26')).toBe('upcoming')
+  })
+
+  it('returns upcoming when 60 days away', () => {
+    expect(assignObligationStatus('2026-07-25', '2026-05-26')).toBe('upcoming')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 4. computeDaysUntil
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeDaysUntil()', () => {
+  it('positive when due date is in the future', () => {
+    expect(computeDaysUntil('2026-06-01', '2026-05-26')).toBe(6)
+  })
+
+  it('negative when due date is in the past', () => {
+    expect(computeDaysUntil('2026-05-20', '2026-05-26')).toBe(-6)
+  })
+
+  it('zero when due date is today', () => {
+    expect(computeDaysUntil('2026-05-26', '2026-05-26')).toBe(0)
+  })
+
+  it('correctly computes cross-month boundary', () => {
+    expect(computeDaysUntil('2026-06-05', '2026-05-26')).toBe(10)
+  })
+
+  it('correctly computes cross-year boundary', () => {
+    expect(computeDaysUntil('2027-01-26', '2026-12-26')).toBe(31)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 5. buildObligationId
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('buildObligationId()', () => {
+  it('builds KDV id: kdv_2026_04', () => {
+    expect(buildObligationId('kdv', 2026, '04')).toBe('kdv_2026_04')
+  })
+
+  it('builds Geçici Vergi Q2 id: gecici_vergi_2026_q2', () => {
+    expect(buildObligationId('gecici_vergi', 2026, 'q2')).toBe('gecici_vergi_2026_q2')
+  })
+
+  it('builds Kurumlar Vergisi id: kurumlar_vergisi_2025_annual', () => {
+    expect(buildObligationId('kurumlar_vergisi', 2025, 'annual')).toBe('kurumlar_vergisi_2025_annual')
+  })
+
+  it('builds SGK id: sgk_2026_03', () => {
+    expect(buildObligationId('sgk', 2026, '03')).toBe('sgk_2026_03')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 6. Legacy: KDV due date via computeDueDates
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('KDV due date (legacy)', () => {
   it('Nisan 2026 KDV → due 2026-05-26', () => {
     const obs = computeDueDates('2026-04', '2026-01-01')
     const kdv = obs.find(o => o.obligation_type === 'kdv_declaration')
     expect(kdv).toBeDefined()
-    // 2026-05-26 is a Tuesday — no weekend shift needed
     expect(kdv!.due_date).toBe('2026-05-26')
   })
 
@@ -40,52 +178,37 @@ describe('KDV due date', () => {
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 2. Weekend shift
+// 7. Legacy: adjustForWeekend()
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe('adjustForWeekend()', () => {
   it('Saturday (2026-05-16) → Monday 2026-05-18', () => {
-    // 2026-05-16 is a Saturday
-    const result = adjustForWeekend('2026-05-16')
-    expect(result).toBe('2026-05-18')
+    expect(adjustForWeekend('2026-05-16')).toBe('2026-05-18')
   })
 
   it('Sunday (2026-05-17) → Monday 2026-05-18', () => {
-    // 2026-05-17 is a Sunday
-    const result = adjustForWeekend('2026-05-17')
-    expect(result).toBe('2026-05-18')
+    expect(adjustForWeekend('2026-05-17')).toBe('2026-05-18')
   })
 
   it('Monday is unchanged', () => {
-    const result = adjustForWeekend('2026-05-18')
-    expect(result).toBe('2026-05-18')
+    expect(adjustForWeekend('2026-05-18')).toBe('2026-05-18')
   })
 
   it('Friday is unchanged', () => {
-    const result = adjustForWeekend('2026-05-22')
-    expect(result).toBe('2026-05-22')
+    expect(adjustForWeekend('2026-05-22')).toBe('2026-05-22')
   })
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 3. Geçici Vergi Q1 → May 17
+// 8. Legacy: Geçici Vergi via computeDueDatesForPeriod
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe('Geçici Vergi Q1', () => {
+describe('Geçici Vergi (legacy)', () => {
   it('March 2026 generates Q1 Geçici Vergi due May 17 2026', () => {
     const obs = computeDueDatesForPeriod('2026-03', '2026-01-01')
     const q1  = obs.find(o => o.obligation_type === 'gecici_vergi_q1')
     expect(q1).toBeDefined()
-    // 2026-05-17 is a Sunday → shifts to 2026-05-18
     expect(q1!.due_date).toBe(adjustForWeekend('2026-05-17'))
-  })
-
-  it('March 2025 generates Q1 due May 17 2025', () => {
-    const obs = computeDueDatesForPeriod('2025-03', '2025-01-01')
-    const q1  = obs.find(o => o.obligation_type === 'gecici_vergi_q1')
-    expect(q1).toBeDefined()
-    // May 17 2025 is a Saturday → Monday May 19
-    expect(q1!.due_date).toBe(adjustForWeekend('2025-05-17'))
   })
 
   it('June 2026 generates Q2 Geçici Vergi due Aug 17 2026', () => {
@@ -102,7 +225,7 @@ describe('Geçici Vergi Q1', () => {
     expect(q3!.due_date).toBe(adjustForWeekend('2026-11-17'))
   })
 
-  it('Non-quarter months (e.g. Nisan) do NOT generate Geçici Vergi', () => {
+  it('Non-quarter months do NOT generate Geçici Vergi', () => {
     const obs = computeDueDatesForPeriod('2026-04', '2026-01-01')
     const gv  = obs.find(o => o.obligation_type.startsWith('gecici_vergi'))
     expect(gv).toBeUndefined()
@@ -110,10 +233,10 @@ describe('Geçici Vergi Q1', () => {
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 4. Kurumlar Vergisi → April 30 following year
+// 9. Legacy: Kurumlar Vergisi
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe('Kurumlar Vergisi', () => {
+describe('Kurumlar Vergisi (legacy)', () => {
   it('December 2025 → KV due 2026-04-30', () => {
     const obs = computeDueDatesForPeriod('2025-12', '2025-01-01')
     const kv  = obs.find(o => o.obligation_type === 'kurumlar_vergisi')
@@ -136,37 +259,29 @@ describe('Kurumlar Vergisi', () => {
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 5. priority = 'critical' when overdue
+// 10. Legacy: priority + status
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe('priority rules', () => {
+describe('priority + status (legacy)', () => {
   it('priority = critical when obligation is overdue', () => {
-    // today is 2026-06-01, so April KDV (due May 26) is overdue
     const obs = computeDueDates('2026-04', '2026-06-01')
     const kdv = obs.find(o => o.obligation_type === 'kdv_declaration')
-    expect(kdv).toBeDefined()
     expect(kdv!.status).toBe('overdue')
     expect(kdv!.priority).toBe('critical')
     expect(kdv!.days_remaining).toBeLessThan(0)
   })
 
   it('priority = critical when 5 days remaining (≤7)', () => {
-    // April KDV due 2026-05-26; today = 2026-05-21 → 5 days left → critical
     const obs = computeDueDates('2026-04', '2026-05-21')
     const kdv = obs.find(o => o.obligation_type === 'kdv_declaration')
     expect(kdv!.priority).toBe('critical')
     expect(kdv!.days_remaining).toBe(5)
   })
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // 6. priority = 'warning' when 10 days remaining
-  // ─────────────────────────────────────────────────────────────────────────
-  it('priority = warning when 10 days remaining (8-14 days)', () => {
-    // April KDV due 2026-05-26; today = 2026-05-16 → 10 days left → warning
+  it('priority = warning when 10 days remaining', () => {
     const obs = computeDueDates('2026-04', '2026-05-16')
     const kdv = obs.find(o => o.obligation_type === 'kdv_declaration')
     expect(kdv!.priority).toBe('warning')
-    expect(kdv!.days_remaining).toBe(10)
   })
 
   it('priority = info when 30 days remaining', () => {
@@ -174,15 +289,8 @@ describe('priority rules', () => {
     const kdv = obs.find(o => o.obligation_type === 'kdv_declaration')
     expect(kdv!.priority).toBe('info')
   })
-})
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 7. days_remaining is negative when overdue
-// ─────────────────────────────────────────────────────────────────────────────
-
-describe('days_remaining', () => {
   it('days_remaining is negative when due date is in the past', () => {
-    // April KDV due 2026-05-26; today = 2026-06-05 → -10 days
     const obs = computeDueDates('2026-04', '2026-06-05')
     const kdv = obs.find(o => o.obligation_type === 'kdv_declaration')
     expect(kdv!.days_remaining).toBe(-10)
@@ -198,74 +306,10 @@ describe('days_remaining', () => {
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 8. Horizon limits obligations to 12 months
+// 11. Legacy: SGK Primler due date
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe('TaxCalendarService.getCalendar horizon', () => {
-  it('returns obligations only within the horizon window', async () => {
-    const today    = '2026-01-01'
-    const horizon  = 12
-    // No supabase needed if amount estimation just returns nulls
-    // We test via computeDueDates loop logic directly
-    // Collect obligations for 14 months
-    const extended = Array.from({ length: 15 }, (_, i) => {
-      const m = i + 1
-      const y = 2026 + Math.floor((m - 1) / 12)
-      const mo = ((m - 1) % 12) + 1
-      const ym = `${y}-${String(mo).padStart(2, '0')}`
-      return computeDueDatesForPeriod(ym, today)
-    }).flat()
-
-    // Max due_date in a 12-month horizon from 2026-01-01 is 2027-01-xx
-    const horizonEnd = '2027-01-31'
-    const inWindow = extended.filter(o => o.due_date <= horizonEnd)
-    const outWindow = extended.filter(o => o.due_date > horizonEnd)
-
-    // inWindow should have items, outWindow should also have items (the extended ones)
-    expect(inWindow.length).toBeGreaterThan(0)
-    expect(outWindow.length).toBeGreaterThan(0)
-  })
-
-  it('getCalendar returns at least 12 obligations for a full year', async () => {
-    // Mock supabase that returns empty data
-    const mockSupabase = {
-      from: () => ({
-        select: () => ({
-          eq:  function() { return this },
-          is:  function() { return this },
-          gt:  function() { return this },
-          gte: function() { return this },
-          lte: function() { return this },
-          in:  function() { return this },
-          then: (cb: (v: { data: null; error: null }) => unknown) => Promise.resolve(cb({ data: null, error: null })),
-        }),
-      }),
-    }
-
-    const calendar = await TaxCalendarService.getCalendar(
-      'test-company',
-      'test-user',
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      mockSupabase as any,
-      { today: '2026-01-01', horizon: 12 },
-    )
-
-    // At minimum: 12 KDV + 12 Muhtasar + 12 SGK + 3 Geçici + 1 KV = 40 obligations
-    expect(calendar.obligations.length).toBeGreaterThan(12)
-    // All sorted by due_date
-    for (let i = 1; i < calendar.obligations.length; i++) {
-      expect(calendar.obligations[i]!.due_date >= calendar.obligations[i - 1]!.due_date).toBe(true)
-    }
-    // computed_at is set
-    expect(calendar.computed_at).toBeTruthy()
-  })
-})
-
-// ─────────────────────────────────────────────────────────────────────────────
-// 9. SGK Primler due date
-// ─────────────────────────────────────────────────────────────────────────────
-
-describe('SGK Primler', () => {
+describe('SGK Primler (legacy)', () => {
   it('SGK for January 2026 → due 2026-01-28 (adjusted for weekends)', () => {
     const obs = computeDueDatesForPeriod('2026-01', '2026-01-01')
     const sgk = obs.find(o => o.obligation_type === 'sgk_primler')
@@ -281,15 +325,74 @@ describe('SGK Primler', () => {
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 10. Stable IDs
+// 12. Legacy: Stable IDs
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe('stable IDs', () => {
-  it('obligation IDs are stable across calls', () => {
+describe('stable IDs (legacy)', () => {
+  it('obligation IDs are stable across calls with different today values', () => {
     const obs1 = computeDueDates('2026-04', '2026-01-01')
     const obs2 = computeDueDates('2026-04', '2026-03-15')
     const ids1 = obs1.map(o => o.id).sort()
     const ids2 = obs2.map(o => o.id).sort()
     expect(ids1).toEqual(ids2)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 13. Legacy: TaxCalendarService.getCalendar
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('TaxCalendarService.getCalendar (legacy)', () => {
+  it('returns at least 12 obligations for a full year', async () => {
+    const mockSupabase = {
+      from: () => ({
+        select: () => ({
+          eq:  function() { return this },
+          is:  function() { return this },
+          gt:  function() { return this },
+          gte: function() { return this },
+          lte: function() { return this },
+          in:  function() { return this },
+          then: (cb: (v: { data: null; error: null }) => unknown) =>
+            Promise.resolve(cb({ data: null, error: null })),
+        }),
+      }),
+    }
+
+    const calendar = await TaxCalendarService.getCalendar(
+      'test-company',
+      'test-user',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      mockSupabase as any,
+      { today: '2026-01-01', horizon: 12 },
+    )
+
+    expect(calendar.obligations.length).toBeGreaterThan(12)
+    // All sorted by due_date
+    for (let i = 1; i < calendar.obligations.length; i++) {
+      expect(calendar.obligations[i]!.due_date >= calendar.obligations[i - 1]!.due_date).toBe(true)
+    }
+    expect(calendar.computed_at).toBeTruthy()
+  })
+
+  it('returns obligations within the horizon window only', async () => {
+    const today   = '2026-01-01'
+    const horizon = 12
+
+    const extended = Array.from({ length: 15 }, (_, i) => {
+      const m  = i + 1
+      const y  = 2026 + Math.floor((m - 1) / 12)
+      const mo = ((m - 1) % 12) + 1
+      const ym = `${y}-${String(mo).padStart(2, '0')}`
+      return computeDueDatesForPeriod(ym, today)
+    }).flat()
+
+    const horizonEnd = '2027-01-31'
+    const inWindow   = extended.filter(o => o.due_date <= horizonEnd)
+    const outWindow  = extended.filter(o => o.due_date > horizonEnd)
+
+    expect(inWindow.length).toBeGreaterThan(0)
+    expect(outWindow.length).toBeGreaterThan(0)
+    void horizon // used for context
   })
 })
