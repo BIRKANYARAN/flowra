@@ -32,6 +32,7 @@ import { TranchesTab }    from '@/app/dashboard/partners/_components/TranchesTab
 import { DistributionTab } from '@/app/dashboard/partners/_components/DistributionTab'
 import { ReturnsTab }     from '@/app/dashboard/partners/_components/ReturnsTab'
 import { RiskTab }        from '@/app/dashboard/partners/_components/RiskTab'
+import { LoanCovenantPanel } from '@/app/dashboard/partners/_components/LoanCovenantPanel'
 import { CapitalAccountTab } from '@/app/dashboard/partners/_components/CapitalAccountTab'
 import { DividendTab } from '@/app/dashboard/partners/_components/DividendTab'
 import { CompensationTab } from '@/app/dashboard/partners/_components/CompensationTab'
@@ -472,7 +473,10 @@ export default function PartnersPage() {
       )}
 
       {activeTab === 'risk' && (
-        <RiskTab loading={loading} />
+        <div className="space-y-5">
+          <LoanCovenantPanel companyId="" />
+          <RiskTab loading={loading} />
+        </div>
       )}
 
       {activeTab === 'capital' && (
