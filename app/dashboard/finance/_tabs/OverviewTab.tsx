@@ -29,6 +29,7 @@ import { PeriodComparisonService }     from '@/lib/services/finance/period-compa
 import type { PeriodComparisonReport, MetricComparison } from '@/lib/services/finance/period-comparison.service'
 import { SeasonalityService }           from '@/lib/services/finance/seasonality.service'
 import type { SeasonalityReport }       from '@/lib/services/finance/seasonality.service'
+import FiscalYearSummaryClient          from './_fiscal/FiscalYearSummaryClient'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -1003,6 +1004,9 @@ export async function OverviewTab({ userId, companyId, glMode = 'shadow' }: Prop
       {seasonalityReport && (
         <SeasonalitySection report={seasonalityReport} />
       )}
+
+      {/* Zone 9 — Mali Yıl Kapanış Özeti */}
+      <FiscalYearSummaryClient companyId={companyId} />
 
       {/* Quick actions */}
       <div className="flex flex-wrap gap-2 pt-1">

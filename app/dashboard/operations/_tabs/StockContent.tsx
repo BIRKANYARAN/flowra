@@ -11,6 +11,7 @@ import { InventoryValuationService }                from '@/lib/services/invento
 import type { InventoryValuationReport }            from '@/lib/services/inventory/inventory-valuation.service'
 import { ReorderAlertService }                      from '@/lib/services/inventory/reorder-alert.service'
 import type { ReorderAlertReport }                  from '@/lib/services/inventory/reorder-alert.service'
+import { FifoAuditClient }                          from './_fifo/FifoAuditClient'
 
 function holdingDays(entryDate: string): number {
   const today = new Date()
@@ -545,6 +546,9 @@ export async function StockContent({ companyId, userId }: Props) {
           </div>
         )}
       </div>
+
+      {/* FIFO Lot Denetimi — integrity audit, over-consumed lots, orphaned allocations */}
+      <FifoAuditClient companyId={companyId} />
 
       {/* Cross-navigation */}
       <NarrativeFooter
