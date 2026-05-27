@@ -10,6 +10,7 @@ import { ObservationRail } from '@/app/dashboard/_shared/ObservationRail'
 import { fmtTRY as fmt } from '@/lib/format'
 import { ReceivablesPriorityService } from '@/lib/services/commercial/receivables-priority.service'
 import type { ReceivablesPriorityReport } from '@/lib/services/commercial/receivables-priority.service'
+import { ReceivablesHeatmapService } from '@/lib/services/commercial/receivables-heatmap.service'
 
 function CommandBarSkeleton() {
   return (
@@ -37,9 +38,11 @@ export async function CollectionsContent({ companyId }: Props) {
   const today    = new Date().toISOString().slice(0, 10)
 
   // Fetch prioritized receivables and flat list in parallel
-  const [priorityReport] = await Promise.all([
+  const [priorityReport, heatmapReport] = await Promise.all([
     ReceivablesPriorityService.getReport(companyId, supabase, { today })
       .catch(() => null as ReceivablesPriorityReport | null),
+    ReceivablesHeatmapService.getReport(companyId, supabase)
+      .catch(() => null),
   ])
 
   // Fetch all open receivables (pending + partial + overdue)
@@ -231,6 +234,84 @@ export async function CollectionsContent({ companyId }: Props) {
 
       {/* ── Risk-sorted pressure rows (client) ────────────────────────────────── */}
       <CollectionsPressureClient initialRows={initialRows} />
+
+      {/* ── Alacak Yaş Haritası ───────────────────────────────────────────────── */}
+      {heatmapReport && heatmapReport.total_outstanding_try > 0 && (
+        <div className="bg-white border border-[#e2e8f0] rounded shadow-sm">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">
+            <div>
+              <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Alacak Yaş Haritası</div>
+              <div className="text-xs text-[#64748b] mt-0.5">Müşteri × yaşlandırma kovası dağılımı</div>
+            </div>
+            <div className="flex items-center gap-4 text-xs">
+              <div className="text-right">
+                <div className="text-[9px] uppercase tracking-wide text-[#94a3b8]">Toplam Açık</div>
+                <div className="font-black tabular-nums text-[#0f172a]">{fmt(heatmapReport.total_outstanding_try)}</div>
+              </div>
+              {heatmapReport.critical_outstanding_try > 0 && (
+                <div className="text-right">
+                  <div className="text-[9px] uppercase tracking-wide text-[#94a3b8]">Kritik (61+ Gün)</div>
+                  <div className="font-black tabular-nums text-neg">{fmt(heatmapReport.critical_outstanding_try)}</div>
+                </div>
+              )}
+            </div>
+          </div>
+          {/* Bucket totals bar */}
+          <div className="flex h-2 mx-4 mt-3 rounded overflow-hidden gap-px">
+            {heatmapReport.bucket_totals.map(b => (
+              <div
+                key={b.bucket}
+                style={{ width: `${b.pct_of_total}%` }}
+                title={`${b.label}: ${fmt(b.total_try)} (${b.pct_of_total.toFixed(1)}%)`}
+                className={`h-full ${
+                  b.bucket === 'current' ? 'bg-[#22c55e]' :
+                  b.bucket === 'days_1_30' ? 'bg-[#facc15]' :
+                  b.bucket === 'days_31_60' ? 'bg-[#f97316]' :
+                  b.bucket === 'days_61_90' ? 'bg-[#ef4444]' : 'bg-[#991b1b]'
+                }`}
+              />
+            ))}
+          </div>
+          {/* Customer heatmap table */}
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs mt-2">
+              <thead>
+                <tr className="border-b border-[#f1f5f9]">
+                  <th className="text-left px-4 py-2 text-[#94a3b8] font-medium">Müşteri</th>
+                  {['Güncel','1-30G','31-60G','61-90G','90+G'].map(l => (
+                    <th key={l} className="text-right px-2 py-2 text-[#94a3b8] font-medium">{l}</th>
+                  ))}
+                  <th className="text-right px-4 py-2 text-[#94a3b8] font-medium">Toplam</th>
+                  <th className="text-right px-4 py-2 text-[#94a3b8] font-medium">Risk</th>
+                </tr>
+              </thead>
+              <tbody>
+                {heatmapReport.customers.slice(0, 10).map(c => (
+                  <tr key={c.customer_name} className="border-b border-[#f8fafc] hover:bg-[#f8fafc]">
+                    <td className="px-4 py-2 text-[#334155] font-medium truncate max-w-[140px]">{c.customer_name}</td>
+                    {(['current','days_1_30','days_31_60','days_61_90','days_91_plus'] as const).map(b => (
+                      <td key={b} className="px-2 py-2 text-right tabular-nums text-[#475569]">
+                        {c.buckets[b] > 0 ? fmt(c.buckets[b]) : <span className="text-[#cbd5e1]">—</span>}
+                      </td>
+                    ))}
+                    <td className="px-4 py-2 text-right tabular-nums font-semibold text-[#0f172a]">{fmt(c.total_outstanding_try)}</td>
+                    <td className="px-4 py-2 text-right">
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                        c.risk_score >= 70 ? 'bg-[#fef2f2] text-neg' :
+                        c.risk_score >= 40 ? 'bg-[#fff7ed] text-warn-text' :
+                        'bg-[#f0fdf4] text-[#15803d]'
+                      }`}>
+                        {Math.round(c.risk_score)}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="px-4 py-2 text-[10px] text-[#94a3b8]">Risk skoru 0-100; yüksek = acil tahsilat önceliği</div>
+        </div>
+      )}
 
       {/* Cross-navigation */}
       <NarrativeFooter
