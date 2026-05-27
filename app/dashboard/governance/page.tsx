@@ -8,6 +8,7 @@ import ExportsTab            from './_components/ExportsTab'
 import CommitmentsTab        from './_components/CommitmentsTab'
 import DecisionContextTab    from './_components/DecisionContextTab'
 import AuditTrailTab         from './_components/AuditTrailTab'
+import AuditHashChainPanel   from './_components/AuditHashChainPanel'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 type TabId = 'calendar' | 'actions' | 'resolutions' | 'audit' | 'exports' | 'commitments' | 'decisions' | 'audit-trail'
@@ -698,7 +699,12 @@ export default function GovernancePage() {
         {activeTab === 'exports'     && <ExportsTab />}
         {activeTab === 'commitments' && <CommitmentsTab />}
         {activeTab === 'decisions'   && <DecisionContextTab />}
-        {activeTab === 'audit-trail' && <AuditTrailTab />}
+        {activeTab === 'audit-trail' && (
+          <div className="space-y-6">
+            <AuditHashChainPanel />
+            <AuditTrailTab />
+          </div>
+        )}
       </div>
     </div>
   )

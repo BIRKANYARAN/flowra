@@ -7,7 +7,8 @@ import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { NarrativeFooter, Skeleton } from '@/components/ds'
 import { formatTRY as fmt, fmtDate } from '@/lib/format'
-import { SupplierPerformancePanel } from './_supplier-performance/SupplierPerformancePanel'
+import { SupplierPerformancePanel }    from './_supplier-performance/SupplierPerformancePanel'
+import { PurchaseAnalyticsClient }     from './_purchase/PurchaseAnalyticsClient'
 
 type OrderStatus = 'draft' | 'ordered' | 'received' | 'cancelled'
 
@@ -432,6 +433,9 @@ export function OrdersContent(_props: Props) {
 
       {/* ── Supplier Performance Analytics ────────────────────────────── */}
       <SupplierPerformancePanel />
+
+      {/* ── Purchase Order Analytics ──────────────────────────────────── */}
+      <PurchaseAnalyticsClient companyId={_props.companyId ?? ''} />
 
       {/* Cross-navigation */}
       <NarrativeFooter
