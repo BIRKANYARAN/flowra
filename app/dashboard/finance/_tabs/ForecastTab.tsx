@@ -9,6 +9,7 @@
 
 import Link                                 from 'next/link'
 import { NarrativeFooter }                 from '@/components/ds'
+import { FinancialRatiosSection }          from '@/components/dashboard/FinancialRatiosSection'
 import { createClient }                    from '@/lib/supabase-server'
 import { getCfoMetrics, getRunwayForecast } from '@/lib/finance/financial-core'
 import { computeForecast, buildForecastInputs } from '@/lib/engines/forecast.engine'
@@ -345,6 +346,9 @@ export async function ForecastTab({ userId: _userId, companyId }: Props) {
           Kritik Runway — 2 aydan az nakit kaldı. Hemen aksiyon alın: yeni gelir getirin veya giderleri kısın.
         </div>
       )}
+
+      {/* Zone 5 — Finansal Oranlar */}
+      <FinancialRatiosSection />
 
       {/* Cross-navigation */}
       <NarrativeFooter
