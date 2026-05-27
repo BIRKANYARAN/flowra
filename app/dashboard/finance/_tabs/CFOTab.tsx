@@ -13,6 +13,7 @@
 //   7. Finansal raporlar linkleri
 
 import Link                      from 'next/link'
+import { PeriodCloseChecklistClient } from '@/app/dashboard/finance/_tabs/_close/PeriodCloseChecklistClient'
 import IncomeStatementClient     from '@/app/dashboard/finance/_tabs/_income/IncomeStatementClient'
 import BankReconciliationClient  from '@/app/dashboard/finance/_tabs/_reconciliation/BankReconciliationClient'
 import { PeriodCloseWizard }     from '@/app/dashboard/finance/_tabs/_period-close/PeriodCloseWizard'
@@ -450,6 +451,9 @@ export async function CFOTab({ userId, companyId }: Props) {
 
   return (
     <div className="space-y-4">
+
+      {/* ── Period Close Enforcement Checklist — most important CFO workflow ───── */}
+      <PeriodCloseChecklistClient companyId={companyId} />
 
       {/* ── Period-close intelligence signals ──────────────────────────────────── */}
       <ObservationRail context="period-close" maxItems={3} />

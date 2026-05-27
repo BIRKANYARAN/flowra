@@ -4,6 +4,7 @@
 import { Suspense } from 'react'
 import { NarrativeFooter } from '@/components/ds'
 import { createClient } from '@/lib/supabase-server'
+import InvoiceAgingClient from './_aging/InvoiceAgingClient'
 import CollectionsPressureClient, { type CollectionRow } from '@/app/dashboard/collections/CollectionsPressureClient'
 import { CollectionsCommandBar } from '@/app/dashboard/collections/_components/CollectionsCommandBar'
 import { ObservationRail } from '@/app/dashboard/_shared/ObservationRail'
@@ -258,6 +259,9 @@ export async function CollectionsContent({ companyId }: Props) {
 
   return (
     <div className="max-w-5xl space-y-3">
+      {/* ── Invoice Aging Tracker ─────────────────────────────────────────────── */}
+      <InvoiceAgingClient companyId={companyId} />
+
       <ObservationRail context="collections" maxItems={3} />
 
       <Suspense fallback={<CommandBarSkeleton />}>
