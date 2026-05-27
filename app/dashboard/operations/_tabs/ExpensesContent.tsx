@@ -23,6 +23,7 @@ import {
 } from '@/lib/services/finance/expense-anomaly.service'
 import { SupplierAnalyticsPanel } from './_supplier-analytics/SupplierAnalyticsPanel'
 import { PayablesAgingSection } from './_ap-aging/PayablesAgingSection'
+import { SupplierPaymentTermsClient } from './_supplier-terms/SupplierPaymentTermsClient'
 
 function CommandBarSkeleton() {
   return (
@@ -606,6 +607,9 @@ export async function ExpensesContent({ companyId }: Props) {
 
       {/* ── Tedarikçi Analizi ─────────────────────────────────────────────────── */}
       <SupplierAnalyticsPanel />
+
+      {/* ── Tedarikçi Ödeme Koşulları ─────────────────────────────────────────── */}
+      <SupplierPaymentTermsClient companyId={companyId} />
 
       {/* Cross-navigation */}
       <NarrativeFooter

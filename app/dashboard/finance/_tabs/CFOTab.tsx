@@ -13,6 +13,7 @@
 //   7. Finansal raporlar linkleri
 
 import Link                      from 'next/link'
+import IncomeStatementClient     from '@/app/dashboard/finance/_tabs/_income/IncomeStatementClient'
 import { PeriodCloseWizard }     from '@/app/dashboard/finance/_tabs/_period-close/PeriodCloseWizard'
 import { ObservationRail }       from '@/app/dashboard/_shared/ObservationRail'
 import { BorcYaslandirmaOzeti }  from '@/app/dashboard/finance/_shared/BorcYaslandirmaOzeti'
@@ -562,6 +563,9 @@ export async function CFOTab({ userId, companyId }: Props) {
           ))}
         </div>
       </div>
+
+      {/* ── Gelir Tablosu — Formal Income Statement ─────────────────────────── */}
+      <IncomeStatementClient companyId={companyId} />
 
       {/* GL Mutabakat Raporu */}
       {glReconciliation && (
