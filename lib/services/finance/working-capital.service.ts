@@ -314,6 +314,161 @@ async function computePeriod(
   }
 }
 
+// ── NEW: 12-Month Report types and pure exports ───────────────────────────────
+
+export interface WorkingCapitalMonth {
+  month: string         // 'YYYY-MM'
+  label: string
+  // CCC components
+  dio_days: number | null
+  dso_days: number | null
+  dpo_days: number | null
+  ccc_days: number | null
+  // Position
+  current_assets: number
+  current_liabilities: number
+  working_capital: number
+  current_ratio: number | null
+  quick_ratio: number | null
+}
+
+export interface WorkingCapitalReport {
+  company_id: string
+  months: WorkingCapitalMonth[]  // last 12 months
+  // Current month metrics (most recent)
+  current_ccc_days: number | null
+  current_ratio: number | null
+  quick_ratio: number | null
+  working_capital: number
+  // Trends
+  ccc_trend: 'improving' | 'deteriorating' | 'stable' | 'insufficient'
+  liquidity_trend: 'improving' | 'deteriorating' | 'stable' | 'insufficient'
+  // Benchmarks
+  ccc_benchmark_days: number   // 45 (healthy for Turkish SME retail)
+  current_ratio_benchmark: number  // 1.5
+  // Risk flags
+  negative_working_capital: boolean
+  high_ccc: boolean              // CCC > 60 days
+  low_current_ratio: boolean     // current_ratio < 1.2
+  computed_at: string
+}
+
+// ── Pure exports (all unit-testable) ─────────────────────────────────────────
+
+/** DIO = (avg_inventory / cogs) × 30. Returns null when cogs = 0. */
+export function computeDIO(avgInventory: number, cogs: number): number | null {
+  if (cogs === 0) return null
+  return round2((avgInventory / cogs) * 30)
+}
+
+/** DSO = (avg_receivables / revenue) × 30. Returns null when revenue = 0. */
+export function computeDSO(avgReceivables: number, revenue: number): number | null {
+  if (revenue === 0) return null
+  return round2((avgReceivables / revenue) * 30)
+}
+
+/** DPO = (avg_payables / cogs) × 30. Returns null when cogs = 0. */
+export function computeDPO(avgPayables: number, cogs: number): number | null {
+  if (cogs === 0) return 0  // no COGS → assume no payables → DPO = 0
+  return round2((avgPayables / cogs) * 30)
+}
+
+/** CCC = DIO + DSO - DPO. Any null DIO is treated as 0. Returns null if DSO or DPO is null. */
+export function computeCCC(
+  dio: number | null,
+  dso: number | null,
+  dpo: number | null,
+): number | null {
+  if (dso === null || dpo === null) return null
+  return round2((dio ?? 0) + dso - dpo)
+}
+
+/** Working capital = current_assets - current_liabilities. */
+export function computeWorkingCapital(currentAssets: number, currentLiabilities: number): number {
+  return round2(currentAssets - currentLiabilities)
+}
+
+/** Current ratio = current_assets / current_liabilities. Returns null when liabilities = 0. */
+export function computeCurrentRatio(currentAssets: number, currentLiabilities: number): number | null {
+  if (currentLiabilities === 0) return null
+  return round2(currentAssets / currentLiabilities)
+}
+
+/** Quick ratio = (cash + receivables) / current_liabilities. Returns null when liabilities = 0. */
+export function computeQuickRatio(
+  cash: number,
+  receivables: number,
+  currentLiabilities: number,
+): number | null {
+  if (currentLiabilities === 0) return null
+  return round2((cash + receivables) / currentLiabilities)
+}
+
+/**
+ * Classify CCC trend: compare avg of last 3 months vs prior 3.
+ * > 3 days better (lower) = improving; > 3 days worse (higher) = deteriorating.
+ * Returns 'insufficient' when fewer than 6 valid months.
+ */
+export function classifyCCCTrend(
+  months: Array<{ ccc_days: number | null }>,
+): 'improving' | 'deteriorating' | 'stable' | 'insufficient' {
+  const valid = months.filter(m => m.ccc_days !== null)
+  if (valid.length < 6) return 'insufficient'
+  // months[0] = most recent
+  const recent = valid.slice(0, 3)
+  const prior  = valid.slice(3, 6)
+  const avgRecent = recent.reduce((s, m) => s + m.ccc_days!, 0) / recent.length
+  const avgPrior  = prior.reduce((s, m) => s + m.ccc_days!, 0) / prior.length
+  const diff = avgRecent - avgPrior  // negative = getting better
+  if (diff < -3) return 'improving'
+  if (diff >  3) return 'deteriorating'
+  return 'stable'
+}
+
+/** Classify liquidity trend from current_ratio month array. */
+function classifyLiquidityTrend(
+  months: Array<{ current_ratio: number | null }>,
+): 'improving' | 'deteriorating' | 'stable' | 'insufficient' {
+  const valid = months.filter(m => m.current_ratio !== null)
+  if (valid.length < 6) return 'insufficient'
+  const recent = valid.slice(0, 3)
+  const prior  = valid.slice(3, 6)
+  const avgRecent = recent.reduce((s, m) => s + m.current_ratio!, 0) / recent.length
+  const avgPrior  = prior.reduce((s, m) => s + m.current_ratio!, 0) / prior.length
+  const diff = avgRecent - avgPrior  // positive = improving
+  if (diff >  0.1) return 'improving'
+  if (diff < -0.1) return 'deteriorating'
+  return 'stable'
+}
+
+// ── Month helpers (local, mirrors burn-rate pattern) ─────────────────────────
+
+function monthLabelTR(year: number, month: number): string {
+  return new Date(year, month - 1, 1).toLocaleDateString('tr-TR', {
+    month: 'long',
+    year: 'numeric',
+  })
+}
+
+function buildMonthSlots12(now: Date) {
+  const slots = []
+  for (let i = 0; i < 12; i++) {
+    const d     = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    const year  = d.getFullYear()
+    const month = d.getMonth() + 1
+    const key   = `${year}-${String(month).padStart(2, '0')}`
+    slots.push({ year, month, key, label: monthLabelTR(year, month) })
+  }
+  return slots  // newest first
+}
+
+function monthRange12(year: number, month: number): { from: string; to: string } {
+  const from = `${year}-${String(month).padStart(2, '0')}-01`
+  const lastDay = new Date(year, month, 0).getDate()
+  const to = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
+  return { from, to }
+}
+
 // ── Public API ────────────────────────────────────────────────────────────────
 
 export class WorkingCapitalService {
@@ -368,6 +523,177 @@ export class WorkingCapitalService {
       prior_ccc_days: prev.ccc_days,
 
       computed_at: (opts?.today ?? new Date().toISOString()),
+    }
+  }
+
+  /**
+   * Build a 12-month WorkingCapitalReport.
+   * Each month is computed independently using month-scoped queries.
+   */
+  static async getReport(
+    companyId: string,
+    supabase: AnyClient,
+    now: Date = new Date(),
+  ): Promise<WorkingCapitalReport> {
+    const slots = buildMonthSlots12(now)
+    // oldest→newest window
+    const oldest = slots[slots.length - 1]
+    const newest = slots[0]
+    const windowFrom = monthRange12(oldest.year, oldest.month).from
+    const windowTo   = monthRange12(newest.year, newest.month).to
+
+    // ── Single-window fetches ─────────────────────────────────────────────────
+    const [salesRes, expensesRes, stockLotsRes] = await Promise.allSettled([
+      supabase
+        .from('sales')
+        .select('sale_date, total_try, payment_status, amount_paid')
+        .eq('company_id', companyId)
+        .is('deleted_at', null)
+        .neq('payment_status', 'deleted')
+        .gte('sale_date', windowFrom)
+        .lte('sale_date', windowTo),
+
+      supabase
+        .from('expenses')
+        .select('expense_date, amount_try, payment_status')
+        .eq('company_id', companyId)
+        .is('deleted_at', null)
+        .gte('expense_date', windowFrom)
+        .lte('expense_date', windowTo),
+
+      // Inventory at end-of-window (qty_remaining column per schema)
+      supabase
+        .from('stock_lots')
+        .select('qty_remaining, entry_cost_try, company_id')
+        .eq('company_id', companyId)
+        .is('deleted_at', null)
+        .gt('qty_remaining', 0),
+    ])
+
+    const allSales    = (salesRes.status    === 'fulfilled' ? salesRes.value?.data    : null) ?? []
+    const allExpenses = (expensesRes.status === 'fulfilled' ? expensesRes.value?.data : null) ?? []
+    // stock_lots: use qty_remaining (confirmed in schema index) and entry_cost_try
+    const allLots     = (stockLotsRes.status === 'fulfilled' ? stockLotsRes.value?.data : null) ?? []
+
+    // Total current inventory value (same for all months — snapshot)
+    const totalInventoryValue = allLots.reduce((s: number, lot: Record<string, unknown>) => {
+      const qty  = Number(lot['qty_remaining'] ?? lot['remaining_qty'] ?? 0)
+      const cost = Number(lot['entry_cost_try'] ?? lot['cost_price_try'] ?? 0)
+      return s + qty * cost
+    }, 0)
+
+    // ── Per-month aggregation ─────────────────────────────────────────────────
+    interface MonthAgg {
+      revenue: number
+      cogs: number
+      receivables: number   // outstanding at month end
+      payables: number      // unpaid expenses at month end
+      cashCollected: number // paid amounts in month
+      cashPaid: number      // paid expenses in month
+    }
+
+    const monthAgg: Record<string, MonthAgg> = {}
+    for (const slot of slots) {
+      monthAgg[slot.key] = { revenue: 0, cogs: 0, receivables: 0, payables: 0, cashCollected: 0, cashPaid: 0 }
+    }
+
+    for (const s of allSales) {
+      const key = String(s['sale_date'] ?? '').slice(0, 7)
+      if (!(key in monthAgg)) continue
+      const total = Number(s['total_try']) || 0
+      const paid  = Number(s['amount_paid'] ?? 0)
+      const status = String(s['payment_status'] ?? 'unpaid')
+      monthAgg[key].revenue += total
+      // Receivable = unpaid portion of open sales
+      if (status !== 'paid') {
+        monthAgg[key].receivables += total - paid
+      } else {
+        monthAgg[key].cashCollected += total
+      }
+    }
+
+    for (const e of allExpenses) {
+      const key = String(e['expense_date'] ?? '').slice(0, 7)
+      if (!(key in monthAgg)) continue
+      const amt    = Number(e['amount_try']) || 0
+      const status = String(e['payment_status'] ?? 'unpaid')
+      if (status !== 'paid') {
+        monthAgg[key].payables += amt
+      } else {
+        monthAgg[key].cashPaid += amt
+      }
+    }
+
+    // Rough rolling cash estimate (cumulative from oldest to newest)
+    let runningCash = 0
+
+    // Build months array (newest first like the slots)
+    // We need oldest-first for cash accumulation, then reverse
+    const slotsAsc = [...slots].reverse()  // oldest first
+
+    const monthsAsc: WorkingCapitalMonth[] = slotsAsc.map(slot => {
+      const agg  = monthAgg[slot.key]!
+      runningCash += agg.cashCollected - agg.cashPaid
+
+      const cashEstimate = Math.max(0, runningCash)
+      const receivables  = agg.receivables
+      const inventory    = totalInventoryValue
+      const payables     = agg.payables
+
+      // Working capital position
+      const current_assets      = cashEstimate + receivables + inventory
+      const current_liabilities = payables
+      const working_capital     = computeWorkingCapital(current_assets, current_liabilities)
+      const current_ratio       = computeCurrentRatio(current_assets, current_liabilities)
+      const quick_ratio         = computeQuickRatio(cashEstimate, receivables, current_liabilities)
+
+      // CCC — use formula method (monthly, 30-day basis)
+      const dso = computeDSO(receivables, agg.revenue)
+      // For DIO and DPO use COGS if available — fall back to revenue proxy
+      // COGS data not directly available per-month without sale_item_allocations;
+      // use revenue as proxy (conservative) when cogs=0
+      const cogs = agg.cogs > 0 ? agg.cogs : agg.revenue * 0.6
+      const dio  = inventory > 0 && cogs > 0 ? computeDIO(inventory, cogs) : null
+      const dpo  = computeDPO(payables, cogs)
+      const ccc  = computeCCC(dio, dso, dpo)
+
+      return {
+        month: slot.key,
+        label: slot.label,
+        dio_days: dio,
+        dso_days: dso,
+        dpo_days: dpo,
+        ccc_days: ccc,
+        current_assets:      round2(current_assets),
+        current_liabilities: round2(current_liabilities),
+        working_capital,
+        current_ratio,
+        quick_ratio,
+      }
+    })
+
+    // newest first
+    const months = [...monthsAsc].reverse()
+
+    const current = months[0]!
+    const ccc_trend       = classifyCCCTrend(months)
+    const liquidity_trend = classifyLiquidityTrend(months)
+
+    return {
+      company_id:   companyId,
+      months,
+      current_ccc_days:  current.ccc_days,
+      current_ratio:     current.current_ratio,
+      quick_ratio:       current.quick_ratio,
+      working_capital:   current.working_capital,
+      ccc_trend,
+      liquidity_trend,
+      ccc_benchmark_days:       45,
+      current_ratio_benchmark:  1.5,
+      negative_working_capital: current.working_capital < 0,
+      high_ccc:          current.ccc_days !== null && current.ccc_days > 60,
+      low_current_ratio: current.current_ratio !== null && current.current_ratio < 1.2,
+      computed_at: new Date().toISOString(),
     }
   }
 }

@@ -13,6 +13,7 @@ import { GLBalanceSheetService }    from '@/lib/services/ledger/gl-balance-sheet
 import { fmtTRY as fmt }            from '@/lib/format'
 import type { BalanceSheet }        from '@/types/dto'
 import { NarrativeFooter }          from '@/components/ds'
+import { WorkingCapitalSection }    from '@/components/dashboard/WorkingCapitalSection'
 
 // ── Formatters ────────────────────────────────────────────────────────────────
 
@@ -370,6 +371,9 @@ export async function BalanceTab({ userId, companyId, glMode = 'shadow' }: Props
           { label: 'Yönetim Paketi',     href: `/documents/income-statement/${bs.as_of_date.slice(0,7)}` },
         ]}
       />
+
+      {/* Working Capital Analysis — CCC, liquidity ratios, 12-month trend */}
+      <WorkingCapitalSection />
     </div>
   )
 }

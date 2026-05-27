@@ -1,16 +1,19 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 // GET /api/finance/working-capital
 //
-// Returns Working Capital Intelligence metrics: DSO, DPO, DIO, CCC.
+// Working Capital Management — Cash Conversion Cycle & Liquidity Position.
 //
-// Query params (optional):
-//   from   YYYY-MM-DD  (default: first day of current month)
-//   to     YYYY-MM-DD  (default: today)
+// Query params:
+//   mode   'report' (default) → 12-month WorkingCapitalReport
+//          'period'           → single-period WorkingCapitalMetrics (legacy)
+//   from   YYYY-MM-DD  (period mode only, default: first day of current month)
+//   to     YYYY-MM-DD  (period mode only, default: today)
 //
 // Auth: any authenticated company member.
+// Cache: revalidate every 300 seconds.
 // ═══════════════════════════════════════════════════════════════════════════════
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 300
 
 import { NextRequest, NextResponse } from 'next/server'
 import { resolveApiAuth } from '@/lib/api-auth'
@@ -25,7 +28,7 @@ function parseDate(s: string | null): string | null {
 
 function defaultPeriod(): { from: string; to: string } {
   const today = new Date().toISOString().slice(0, 10)
-  const from  = today.slice(0, 7) + '-01'  // first day of current month
+  const from  = today.slice(0, 7) + '-01'
   return { from, to: today }
 }
 
@@ -35,29 +38,40 @@ export async function GET(req: NextRequest) {
   const { uid, companyId, supabase, ctx } = auth
 
   try {
-    const url = new URL(req.url)
-    const raw_from = parseDate(url.searchParams.get('from'))
-    const raw_to   = parseDate(url.searchParams.get('to'))
+    const url  = new URL(req.url)
+    const mode = url.searchParams.get('mode') ?? 'report'
 
-    const defaults = defaultPeriod()
-    const from = raw_from ?? defaults.from
-    const to   = raw_to   ?? defaults.to
+    if (mode === 'period') {
+      // Legacy single-period endpoint
+      const raw_from = parseDate(url.searchParams.get('from'))
+      const raw_to   = parseDate(url.searchParams.get('to'))
+      const defaults = defaultPeriod()
+      const from = raw_from ?? defaults.from
+      const to   = raw_to   ?? defaults.to
 
-    if (from > to) {
-      return NextResponse.json(
-        { error: '"from" tarihi "to" tarihinden önce olmalı', code: 'VALIDATION_ERROR', type: 'BUSINESS' },
-        { status: 422, headers: { [REQUEST_ID_HEADER]: ctx.requestId } },
+      if (from > to) {
+        return NextResponse.json(
+          { error: '"from" tarihi "to" tarihinden önce olmalı', code: 'VALIDATION_ERROR', type: 'BUSINESS' },
+          { status: 422, headers: { [REQUEST_ID_HEADER]: ctx.requestId } },
+        )
+      }
+
+      const metrics = await WorkingCapitalService.compute(
+        companyId,
+        uid,
+        supabase,
+        { from, to },
       )
+
+      return NextResponse.json(metrics, { headers: { [REQUEST_ID_HEADER]: ctx.requestId } })
     }
 
-    const metrics = await WorkingCapitalService.compute(
-      companyId,
-      uid,
-      supabase,
-      { from, to },
+    // Default: 12-month report
+    const report = await WorkingCapitalService.getReport(companyId, supabase)
+    return NextResponse.json(
+      { report },
+      { headers: { [REQUEST_ID_HEADER]: ctx.requestId } },
     )
-
-    return NextResponse.json(metrics, { headers: { [REQUEST_ID_HEADER]: ctx.requestId } })
 
   } catch (err) {
     const { body, status } = toErrorResponse(err)

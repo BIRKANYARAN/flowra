@@ -9,6 +9,7 @@ import CatalogClient from '@/app/dashboard/catalog/CatalogClient'
 import { CatalogCommandBar } from '@/app/dashboard/catalog/_components/CatalogCommandBar'
 import { ProductMarginService } from '@/lib/services/inventory/product-margin.service'
 import type { ProductMarginReport } from '@/lib/services/inventory/product-margin.service'
+import { InventoryValuationClient } from './_inventory-valuation/InventoryValuationClient'
 
 function CommandBarSkeleton() {
   return (
@@ -274,6 +275,9 @@ export async function CatalogContent({ companyId, userId }: Props) {
           </div>
         </div>
       )}
+
+      {/* ── Envanter Değerleme ────────────────────────────────────────────────── */}
+      <InventoryValuationClient />
 
       {/* Cross-navigation */}
       <NarrativeFooter
