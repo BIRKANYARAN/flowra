@@ -38,6 +38,7 @@ import { CompensationTab } from '@/app/dashboard/partners/_components/Compensati
 import { EquityDilutionTab } from '@/app/dashboard/partners/_components/EquityDilutionTab'
 import { AmortizationTab }  from '@/app/dashboard/partners/_components/AmortizationTab'
 import { DividendLedgerTab } from '@/app/dashboard/partners/_components/DividendLedgerTab'
+import { CapitalStatementTab } from '@/app/dashboard/partners/_components/CapitalStatementTab'
 import { PartnersContextBar } from '@/app/dashboard/partners/_shared/PartnersContextBar'
 import { PartnerFinanceActions } from '@/app/dashboard/partners/_components/PartnerFinanceActions'
 
@@ -296,7 +297,8 @@ export default function PartnersPage() {
     compensation: { title: 'Huzur Hakkı',        sub: 'TTK 394 · Aylık ortak tazminatı · GVK 94 stopaj · Takvim yönetimi' },
     dilution:     { title: 'Sermaye Seyreltme',  sub: 'Yeni sermaye artışı senaryoları · Pay oranı değişimi · Ortak hisse alımı' },
     amortization:     { title: 'Amortisman Takvimi',  sub: 'Tranche bazında aylık ödeme planı · Faiz · Anapara · Kapanış tarihi' },
-    'dividend-ledger': { title: 'Dağıtım Geçmişi',   sub: 'Tüm temettü hareketleri · TTK 509/519 uyum takibi · Ortak bazında toplamlar' },
+    'dividend-ledger':     { title: 'Dağıtım Geçmişi',      sub: 'Tüm temettü hareketleri · TTK 509/519 uyum takibi · Ortak bazında toplamlar' },
+    'capital-statement':   { title: 'Sermaye Hesap Özeti',  sub: 'Ortak bazında sermaye hesabı · Katkılar · Kâr payı dağılımı · Temettü · Huzur hakkı' },
   }
 
   const TABS: { id: TabId; label: string }[] = [
@@ -312,7 +314,8 @@ export default function PartnersPage() {
     { id: 'compensation', label: 'Huzur Hakkı'  },
     { id: 'dilution',     label: 'Sermaye Seyreltme' },
     { id: 'amortization',     label: 'Amortisman'       },
-    { id: 'dividend-ledger', label: 'Dağıtım Geçmişi' },
+    { id: 'dividend-ledger',   label: 'Dağıtım Geçmişi' },
+    { id: 'capital-statement', label: 'Sermaye Hesabı' },
   ]
 
   // ── Render ────────────────────────────────────────────────────────────────────
@@ -491,6 +494,10 @@ export default function PartnersPage() {
 
       {activeTab === 'dividend-ledger' && (
         <DividendLedgerTab />
+      )}
+
+      {activeTab === 'capital-statement' && (
+        <CapitalStatementTab />
       )}
 
     </div>
