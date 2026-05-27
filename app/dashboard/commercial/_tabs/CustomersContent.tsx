@@ -25,6 +25,7 @@ import {
   type CohortAnalysisReport,
 } from '@/lib/services/commercial/cohort-analysis.service'
 import CustomerIntelligenceTable from './_intelligence/CustomerIntelligenceTable'
+import CustomerLtvClient from './_ltv/CustomerLtvClient'
 
 interface Props { companyId: string }
 
@@ -246,6 +247,9 @@ export async function CustomersContent({ companyId }: Props) {
           Müşteriler — {customers.length} kayıt · {sales.length} satış analiz edildi
         </span>
       </div>
+
+      {/* ── Müşteri Değer Analizi (LTV) ──────────────────────────────────── */}
+      <CustomerLtvClient />
 
       {/* ── Müşteri Yoğunlaşma Riski (HHI) ──────────────────────────────── */}
       {concentrationReport && concentrationReport.customer_count > 0 && (

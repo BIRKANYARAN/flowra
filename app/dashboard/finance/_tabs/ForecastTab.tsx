@@ -21,6 +21,35 @@ import { fmtTRY as fmt }                   from '@/lib/format'
 import { fmtCompact }                      from '@/lib/format'
 import { FinancialTrendsService }          from '@/lib/services/finance/financial-trends.service'
 import type { KpiTrend, FinancialTrendsReport } from '@/lib/services/finance/financial-trends.service'
+import { RevenueForecastService }          from '@/lib/services/finance/revenue-forecast.service'
+
+// ── Revenue Forecast types (mirrored here to avoid client-bundle leakage) ─────
+
+interface ForecastMonthResult {
+  month:             string
+  label:             string
+  trend_forecast:    number | null
+  seasonal_forecast: number | null
+  pipeline_forecast: number | null
+  blended_forecast:  number
+  confidence_low:    number
+  confidence_high:   number
+}
+
+interface RevenueForecastReport {
+  company_id:          string
+  base_period:         string
+  forecast_months:     ForecastMonthResult[]
+  trend_slope:         number
+  trend_r_squared:     number
+  seasonal_strength:   'strong' | 'moderate' | 'weak' | 'insufficient'
+  active_pipeline_try: number
+  win_rate_pct:        number
+  total_3m_forecast:   number
+  vs_last_3m_pct:      number
+  summary_line:        string
+  computed_at:         string
+}
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -81,6 +110,12 @@ export async function ForecastTab({ userId: _userId, companyId }: Props) {
   // ── Financial trends (12-month KPI trend lines) ──────────────────────────────
   const trendsReport: FinancialTrendsReport | null = await sq(
     () => FinancialTrendsService.getReport(companyId, supabase),
+    null,
+  )
+
+  // ── 3-month revenue forecast ─────────────────────────────────────────────────
+  const revenueForecast: RevenueForecastReport | null = await sq(
+    () => RevenueForecastService.getReport(companyId, supabase),
     null,
   )
 
@@ -157,8 +192,101 @@ export async function ForecastTab({ userId: _userId, companyId }: Props) {
     }
   }
 
+  // ── Seasonal strength label (TR) ─────────────────────────────────────────────
+  const seasonalStrengthLabel = (s: RevenueForecastReport['seasonal_strength'] | undefined): string => {
+    switch (s) {
+      case 'strong':       return 'Güçlü'
+      case 'moderate':     return 'Orta'
+      case 'weak':         return 'Zayıf'
+      case 'insufficient': return 'Yetersiz veri'
+      default:             return '—'
+    }
+  }
+
   return (
     <div className="space-y-4">
+
+      {/* ── Gelir Tahmini (3 Ay) ─────────────────────────────────────────────── */}
+      {revenueForecast && (
+        <div className="bg-white border border-[#e2e8f0] rounded shadow-sm overflow-hidden">
+          {/* Header */}
+          <div className="px-4 py-3 border-b border-[#e2e8f0] flex items-center justify-between">
+            <div>
+              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Gelir Tahmini (3 Ay)</div>
+              <div className="text-[11px] text-[#64748b] mt-0.5">{revenueForecast.summary_line}</div>
+            </div>
+            <div className="text-right">
+              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">3 Aylık Toplam</div>
+              <div className={`text-lg font-black tabular-nums ${revenueForecast.vs_last_3m_pct >= 0 ? 'text-pos-text' : 'text-neg'}`}>
+                {fmt(revenueForecast.total_3m_forecast)}
+              </div>
+              <div className="text-[10px] text-[#94a3b8]">
+                Geçen 3 aya göre{' '}
+                <span className={revenueForecast.vs_last_3m_pct >= 0 ? 'text-pos-text font-bold' : 'text-neg font-bold'}>
+                  {revenueForecast.vs_last_3m_pct >= 0 ? '+' : ''}{revenueForecast.vs_last_3m_pct.toFixed(1)}%
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Month cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-[#e2e8f0]">
+            {revenueForecast.forecast_months.map((mo) => (
+              <div key={mo.month} className="px-4 py-4">
+                {/* Month name */}
+                <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{mo.label}</div>
+
+                {/* Blended forecast (large) */}
+                <div className="text-xl font-black tabular-nums text-[#0f172a] leading-none mb-0.5">
+                  {fmt(mo.blended_forecast)}
+                </div>
+
+                {/* Confidence range */}
+                <div className="text-[10px] text-[#64748b] mb-3">
+                  {fmt(mo.confidence_low)} – {fmt(mo.confidence_high)}
+                </div>
+
+                {/* Method contribution pills */}
+                <div className="flex flex-wrap gap-1">
+                  {mo.trend_forecast !== null && (
+                    <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-[#f1f5f9] text-[9px] font-semibold text-[#64748b]">
+                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#3b82f6]" />
+                      Eğilim {fmtCompact(mo.trend_forecast)}
+                    </span>
+                  )}
+                  {mo.seasonal_forecast !== null && (
+                    <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-[#f1f5f9] text-[9px] font-semibold text-[#64748b]">
+                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#8b5cf6]" />
+                      Mevsim {fmtCompact(mo.seasonal_forecast)}
+                    </span>
+                  )}
+                  {mo.pipeline_forecast !== null && (
+                    <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-[#f1f5f9] text-[9px] font-semibold text-[#64748b]">
+                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#10b981]" />
+                      Boru hattı {fmtCompact(mo.pipeline_forecast)}
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Model quality footer */}
+          <div className="px-4 py-2.5 border-t border-[#e2e8f0] bg-[#f8fafc] flex flex-wrap items-center gap-3 text-[10px] text-[#94a3b8]">
+            <span>R² <strong className="text-[#64748b]">{revenueForecast.trend_r_squared.toFixed(2)}</strong></span>
+            <span className="text-[#e2e8f0]">·</span>
+            <span>Sezonalite: <strong className="text-[#64748b]">{seasonalStrengthLabel(revenueForecast.seasonal_strength)}</strong></span>
+            <span className="text-[#e2e8f0]">·</span>
+            <span>Boru hattı: <strong className="text-[#64748b]">{revenueForecast.active_pipeline_try > 0 ? fmt(revenueForecast.active_pipeline_try) : '—'}</strong></span>
+            {revenueForecast.active_pipeline_try > 0 && (
+              <>
+                <span className="text-[#e2e8f0]">·</span>
+                <span>Kazanma oranı: <strong className="text-[#64748b]">%{revenueForecast.win_rate_pct.toFixed(0)}</strong></span>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Zone 1 — KPI strip */}
       <div className="grid grid-cols-4 gap-3">
