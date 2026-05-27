@@ -11,6 +11,7 @@ import { ProductMarginService } from '@/lib/services/inventory/product-margin.se
 import type { ProductMarginReport } from '@/lib/services/inventory/product-margin.service'
 import { InventoryValuationClient } from './_inventory-valuation/InventoryValuationClient'
 import { PriceOptimizationClient } from './_price-optimization/PriceOptimizationClient'
+import { ProductProfitabilityWaterfall } from './_product-profitability/ProductProfitabilityWaterfall'
 
 function CommandBarSkeleton() {
   return (
@@ -276,6 +277,9 @@ export async function CatalogContent({ companyId, userId }: Props) {
           </div>
         </div>
       )}
+
+      {/* ── Ürün Kârlılık Şelalesi ────────────────────────────────────────────── */}
+      <ProductProfitabilityWaterfall />
 
       {/* ── Fiyat Optimizasyonu ───────────────────────────────────────────────── */}
       <PriceOptimizationClient />

@@ -37,6 +37,7 @@ import { DecisionQueue }         from './_shared/DecisionQueue'
 import { TemporalPressureRail }  from './_shared/TemporalPressureRail'
 import { ObservationRail }       from './_shared/ObservationRail'
 import { SituationLine }         from '@/components/dashboard/SituationLine'
+import { SituationScoreCard }    from '@/components/dashboard/SituationScoreCard'
 import { PeriodSummaryWidget }   from './_shared/PeriodSummaryWidget'
 import { CeoIntelligencePanel }  from './_shared/CeoIntelligencePanel'
 import { InsightPanel }          from '@/components/dashboard/InsightPanel'
@@ -455,6 +456,9 @@ export default async function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-4">
+
+      {/* ── SITUATION SCORE CARD — CEO hero element (computed client-side) ── */}
+      <SituationScoreCard />
 
       {/* ── DATE CONTEXT ─────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between">
