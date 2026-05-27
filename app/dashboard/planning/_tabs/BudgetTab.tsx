@@ -6,6 +6,7 @@
 //   - 12-month variance table with color coding
 //   - Inline form for admins to enter/update current-month budget
 //   - Expense Forecast panel (next month category-level prediction)
+//   - 3-Way Variance Analysis (Actual vs Budget vs Forecast)
 //
 // Color coding:
 //   Revenue — green = on_track/above, red = below, gray = no_budget
@@ -17,6 +18,7 @@ import { usePermissions } from '@/lib/workspace-context'
 import { fmtTRY, fmtPct } from '@/lib/format'
 import type { BudgetVarianceReport, MonthlyVariance } from '@/lib/services/finance/budget-variance.service'
 import type { ExpenseForecastReport } from '@/lib/services/finance/expense-forecast.service'
+import type { VarianceReport, VarianceRow, VarianceCell, VarianceDirection } from '@/lib/services/planning/variance-analysis.service'
 
 // ── Small helpers ─────────────────────────────────────────────────────────────
 
@@ -255,6 +257,278 @@ function ExpenseForecastPanel() {
       </div>
       <div className="px-4 py-2 text-[10px] text-[#94a3b8] border-t border-[#f1f5f9]">
         Son hesaplama: {new Date(report.computed_at).toLocaleString('tr-TR')}
+      </div>
+    </div>
+  )
+}
+
+// ── Variance Analysis helpers ─────────────────────────────────────────────────
+
+const MONTH_LABELS_SHORT = ['Oc', 'Şb', 'Mr', 'Ns', 'My', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Ek', 'Ks', 'Ar']
+
+function varianceCellBg(dir: VarianceDirection): string {
+  switch (dir) {
+    case 'favorable':   return 'bg-pos-light text-pos-text'
+    case 'unfavorable': return 'bg-neg-light text-neg-text'
+    case 'neutral':     return 'bg-[#f1f5f9] text-[#64748b]'
+    case 'no_data':
+    default:            return 'bg-transparent text-[#cbd5e1]'
+  }
+}
+
+function variancePctChip(pct: number | null, dir: VarianceDirection): JSX.Element {
+  if (pct === null) return <span className="text-[#cbd5e1]">—</span>
+  const cls = varianceCellBg(dir)
+  const sign = pct >= 0 ? '+' : ''
+  return (
+    <span className={`inline-block text-[9px] font-bold px-1 py-0.5 rounded ${cls}`}>
+      {sign}{pct.toFixed(1)}%
+    </span>
+  )
+}
+
+function YtdValueBlock({ cell, label }: { cell: VarianceCell; label: string }): JSX.Element {
+  return (
+    <div className="text-right">
+      <div className="text-[9px] font-semibold text-[#94a3b8] mb-0.5">{label}</div>
+      {cell.actual !== null && (
+        <div className="text-xs font-black tabular-nums text-[#0f172a]">{fmtTRY(cell.actual)}</div>
+      )}
+      {cell.budget !== null && (
+        <div className="text-[9px] tabular-nums text-[#64748b]">B: {fmtTRY(cell.budget)}</div>
+      )}
+      {cell.forecast !== null && (
+        <div className="text-[9px] tabular-nums text-[#64748b]">T: {fmtTRY(cell.forecast)}</div>
+      )}
+      <div className="mt-0.5 space-y-0.5">
+        {cell.actual_vs_budget_pct !== null && (
+          <div className="flex items-center justify-end gap-0.5">
+            <span className="text-[8px] text-[#94a3b8]">B:</span>
+            {variancePctChip(cell.actual_vs_budget_pct, cell.actual_vs_budget_dir)}
+          </div>
+        )}
+        {cell.actual_vs_forecast_pct !== null && (
+          <div className="flex items-center justify-end gap-0.5">
+            <span className="text-[8px] text-[#94a3b8]">T:</span>
+            {variancePctChip(cell.actual_vs_forecast_pct, cell.actual_vs_forecast_dir)}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function VarianceMatrixRow({ row }: { row: VarianceRow }): JSX.Element {
+  return (
+    <tr className="border-b border-[#f8fafc] hover:bg-[#f8fafc] transition-colors">
+      {/* Metric label */}
+      <td className="px-3 py-2 font-semibold text-[#334155] text-xs whitespace-nowrap sticky left-0 bg-white z-10">
+        {row.metric_label}
+      </td>
+      {/* 12 monthly cells */}
+      {row.monthly.map((cell, i) => (
+        <td key={i} className="px-1 py-2 text-center">
+          {variancePctChip(cell.actual_vs_budget_pct, cell.actual_vs_budget_dir)}
+        </td>
+      ))}
+      {/* YTD */}
+      <td className="px-3 py-2 bg-[#f8fafc] border-l border-[#e2e8f0]">
+        <YtdValueBlock cell={row.ytd} label={row.metric_label} />
+      </td>
+    </tr>
+  )
+}
+
+async function fetchVarianceAnalysis(year: number): Promise<VarianceReport> {
+  const res = await fetch(`/api/planning/variance-analysis?year=${year}`)
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    throw new Error((data as { error?: string }).error ?? `HTTP ${res.status}`)
+  }
+  const data = await res.json() as { report: VarianceReport }
+  return data.report
+}
+
+function VarianceAnalysisPanel(): JSX.Element {
+  const now = new Date()
+  const [year, setYear] = useState(now.getFullYear())
+
+  const { data: report, isLoading, isError, error, refetch } = useQuery({
+    queryKey: ['variance-analysis', year],
+    queryFn: () => fetchVarianceAnalysis(year),
+    staleTime: 5 * 60 * 1000,
+  })
+
+  const yearOptions = Array.from({ length: 5 }, (_, i) => now.getFullYear() - 2 + i)
+
+  if (isLoading) {
+    return (
+      <div className="space-y-2 animate-pulse">
+        <div className="bg-[#f1f5f9] rounded h-6 w-48" />
+        <div className="bg-[#f1f5f9] rounded h-64" />
+      </div>
+    )
+  }
+
+  if (isError || !report) {
+    return (
+      <div className="bg-white border border-[#e2e8f0] rounded p-4 text-xs text-[#94a3b8]">
+        Varyans analizi yüklenemedi.
+        {error instanceof Error ? ` (${error.message})` : ''}
+        <button
+          onClick={() => refetch()}
+          className="ml-2 text-brand-light font-semibold hover:underline"
+        >
+          Yeniden Dene
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="bg-white border border-[#e2e8f0] rounded shadow-sm">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-[#f1f5f9]">
+        <div>
+          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+            3 Yönlü Analiz
+          </div>
+          <div className="text-sm font-black text-[#0f172a] mt-0.5">
+            Varyans Analizi
+          </div>
+          <p className="text-[10px] text-[#94a3b8] mt-0.5">
+            Gerçekleşen / Bütçe / Tahmin karşılaştırması
+          </p>
+        </div>
+        {/* Year selector */}
+        <select
+          value={year}
+          onChange={e => setYear(parseInt(e.target.value))}
+          className="border border-[#e2e8f0] rounded px-3 py-1.5 text-xs text-[#0f172a] focus:outline-none focus:ring-1 focus:ring-brand-light"
+        >
+          {yearOptions.map(y => (
+            <option key={y} value={y}>{y}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Summary chips */}
+      <div className="grid grid-cols-3 gap-3 px-4 py-3 border-b border-[#f1f5f9]">
+        {/* YTD Revenue Variance */}
+        <div className="bg-[#f8fafc] rounded px-3 py-2 text-center">
+          <div className="text-[9px] font-black uppercase tracking-wide text-[#94a3b8] mb-1">
+            YTD Gelir Varyansı
+          </div>
+          {report.ytd_revenue_variance_pct !== null ? (
+            <div className={`text-sm font-black tabular-nums ${
+              report.ytd_revenue_variance_pct >= 0 ? 'text-pos-text' : 'text-neg-text'
+            }`}>
+              {report.ytd_revenue_variance_pct >= 0 ? '+' : ''}
+              {fmtPct(report.ytd_revenue_variance_pct)}
+            </div>
+          ) : (
+            <div className="text-sm font-black text-[#94a3b8]">—</div>
+          )}
+          <div className="text-[9px] text-[#94a3b8] mt-0.5">vs Bütçe</div>
+        </div>
+
+        {/* YTD Expense Variance */}
+        <div className="bg-[#f8fafc] rounded px-3 py-2 text-center">
+          <div className="text-[9px] font-black uppercase tracking-wide text-[#94a3b8] mb-1">
+            YTD Gider Varyansı
+          </div>
+          {report.ytd_expense_variance_pct !== null ? (
+            <div className={`text-sm font-black tabular-nums ${
+              report.ytd_expense_variance_pct <= 0 ? 'text-pos-text' : 'text-neg-text'
+            }`}>
+              {report.ytd_expense_variance_pct >= 0 ? '+' : ''}
+              {fmtPct(report.ytd_expense_variance_pct)}
+            </div>
+          ) : (
+            <div className="text-sm font-black text-[#94a3b8]">—</div>
+          )}
+          <div className="text-[9px] text-[#94a3b8] mt-0.5">vs Bütçe</div>
+        </div>
+
+        {/* Forecast Accuracy */}
+        <div className="bg-[#f8fafc] rounded px-3 py-2 text-center">
+          <div className="text-[9px] font-black uppercase tracking-wide text-[#94a3b8] mb-1">
+            Tahmin Doğruluğu
+          </div>
+          {report.forecast_accuracy_score !== null ? (
+            <div className={`text-sm font-black tabular-nums ${
+              report.forecast_accuracy_score >= 90 ? 'text-pos-text'
+              : report.forecast_accuracy_score >= 70 ? 'text-warn-text'
+              : 'text-neg-text'
+            }`}>
+              {report.forecast_accuracy_score.toFixed(0)}
+              <span className="text-xs font-normal">/100</span>
+            </div>
+          ) : (
+            <div className="text-sm font-black text-[#94a3b8]">—</div>
+          )}
+          <div className="text-[9px] text-[#94a3b8] mt-0.5">
+            {report.months_available} ay verisi
+          </div>
+        </div>
+      </div>
+
+      {/* Status flags */}
+      {!report.has_budget && !report.has_forecast && (
+        <div className="px-4 py-2 text-[10px] text-[#94a3b8] border-b border-[#f1f5f9]">
+          Bu yıl için bütçe ve tahmin verisi bulunmuyor. Sadece gerçekleşen veriler gösteriliyor.
+        </div>
+      )}
+      {report.has_budget && !report.has_forecast && (
+        <div className="px-4 py-2 text-[10px] text-[#94a3b8] border-b border-[#f1f5f9]">
+          Tahmin senaryosu (baseline) bulunamadı — sadece bütçe varyansı gösteriliyor.
+        </div>
+      )}
+
+      {/* Variance matrix */}
+      <div className="overflow-x-auto">
+        <table className="w-full text-[10px]">
+          <thead>
+            <tr className="border-b border-[#f1f5f9] bg-[#f8fafc]">
+              <th className="text-left px-3 py-2 font-semibold text-[#64748b] sticky left-0 bg-[#f8fafc] z-10">
+                Metrik
+              </th>
+              {MONTH_LABELS_SHORT.map((m, i) => (
+                <th key={i} className="text-center px-1 py-2 font-semibold text-[#64748b] min-w-[36px]">
+                  {m}
+                </th>
+              ))}
+              <th className="text-right px-3 py-2 font-semibold text-[#64748b] bg-[#f1f5f9] border-l border-[#e2e8f0] min-w-[100px]">
+                YTD
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {report.rows.map(row => (
+              <VarianceMatrixRow key={row.metric_key} row={row} />
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Legend */}
+      <div className="px-4 py-2 border-t border-[#f1f5f9] flex items-center gap-4 flex-wrap">
+        <span className="text-[9px] text-[#94a3b8] font-semibold uppercase tracking-wide">Renk kodlaması (Bütçe vs Gerçekleşen):</span>
+        <span className="inline-flex items-center gap-1 text-[9px]">
+          <span className="w-2 h-2 rounded-sm bg-pos-light inline-block" />
+          <span className="text-pos-text font-semibold">Olumlu</span>
+        </span>
+        <span className="inline-flex items-center gap-1 text-[9px]">
+          <span className="w-2 h-2 rounded-sm bg-neg-light inline-block" />
+          <span className="text-neg-text font-semibold">Olumsuz</span>
+        </span>
+        <span className="inline-flex items-center gap-1 text-[9px]">
+          <span className="w-2 h-2 rounded-sm bg-[#f1f5f9] inline-block" />
+          <span className="text-[#64748b] font-semibold">Nötr (&lt;1%)</span>
+        </span>
+        <span className="ml-auto text-[9px] text-[#cbd5e1]">
+          Son güncelleme: {new Date(report.computed_at).toLocaleString('tr-TR')}
+        </span>
       </div>
     </div>
   )
@@ -546,6 +820,9 @@ export function BudgetTab() {
 
       {/* Expense Forecast panel */}
       <ExpenseForecastPanel />
+
+      {/* 3-Way Variance Analysis */}
+      <VarianceAnalysisPanel />
 
       {/* Admin budget entry form */}
       {isAdmin && (

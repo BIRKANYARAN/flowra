@@ -39,6 +39,7 @@ import { ObservationRail }       from './_shared/ObservationRail'
 import { SituationLine }         from '@/components/dashboard/SituationLine'
 import { PeriodSummaryWidget }   from './_shared/PeriodSummaryWidget'
 import { CeoIntelligencePanel }  from './_shared/CeoIntelligencePanel'
+import { InsightPanel }          from '@/components/dashboard/InsightPanel'
 import { KpiTargetPanel }        from './_shared/KpiTargetPanel'
 import { AlertFeedPanel }        from './_shared/AlertFeedPanel'
 
@@ -544,6 +545,9 @@ export default async function DashboardPage() {
 
       {/* ── CEO INTELLIGENCE PANEL — multi-signal health brief ───────────── */}
       <CeoIntelligencePanel />
+
+      {/* ── İŞ ZEKÂSİ — rule-based deterministic BI insights ────────────── */}
+      <InsightPanel />
 
       {/* ── KPI TARGET PANEL — Hedef Takibi ─────────────────────────────── */}
       <KpiTargetPanel />
