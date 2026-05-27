@@ -27,6 +27,7 @@ import {
 import CustomerIntelligenceTable from './_intelligence/CustomerIntelligenceTable'
 import CustomerLtvClient from './_ltv/CustomerLtvClient'
 import CustomerConcentrationClient from './_concentration/CustomerConcentrationClient'
+import SegmentProfitabilityClient from './_segments/SegmentProfitabilityClient'
 
 interface Props { companyId: string }
 
@@ -248,6 +249,9 @@ export async function CustomersContent({ companyId }: Props) {
           Müşteriler — {customers.length} kayıt · {sales.length} satış analiz edildi
         </span>
       </div>
+
+      {/* ── Segment Kârlılık Analizi ─────────────────────────────────────── */}
+      <SegmentProfitabilityClient companyId={companyId} />
 
       {/* ── Müşteri Yoğunlaşma Analizi (HHI) ────────────────────────────── */}
       <CustomerConcentrationClient />

@@ -42,6 +42,7 @@ import { PeriodSummaryWidget }   from './_shared/PeriodSummaryWidget'
 import { CeoIntelligencePanel }  from './_shared/CeoIntelligencePanel'
 import { InsightPanel }          from '@/components/dashboard/InsightPanel'
 import { KpiTargetPanel }        from './_shared/KpiTargetPanel'
+import { KpiScorecardPanel }     from './_components/KpiScorecardPanel'
 import { AlertFeedPanel }        from './_shared/AlertFeedPanel'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -555,6 +556,9 @@ export default async function DashboardPage() {
 
       {/* ── KPI TARGET PANEL — Hedef Takibi ─────────────────────────────── */}
       <KpiTargetPanel />
+
+      {/* ── KPI SCORECARD — Target vs Actual comparison ─────────────────── */}
+      <KpiScorecardPanel companyId={companyId} />
 
       {/* ── ALERT FEED — Uyarı Akışı (persistent notification center) ──── */}
       <AlertFeedPanel />
