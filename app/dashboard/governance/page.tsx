@@ -7,9 +7,10 @@ import AuditReadinessTab    from './_components/AuditReadinessTab'
 import ExportsTab            from './_components/ExportsTab'
 import CommitmentsTab        from './_components/CommitmentsTab'
 import DecisionContextTab    from './_components/DecisionContextTab'
+import AuditTrailTab         from './_components/AuditTrailTab'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
-type TabId = 'calendar' | 'actions' | 'resolutions' | 'audit' | 'exports' | 'commitments' | 'decisions'
+type TabId = 'calendar' | 'actions' | 'resolutions' | 'audit' | 'exports' | 'commitments' | 'decisions' | 'audit-trail'
 
 interface GovernanceObligation {
   id: string; source: string; title: string; description: string
@@ -37,7 +38,8 @@ const TABS: { id: TabId; label: string; icon: string }[] = [
   { id: 'audit',       label: 'Denetim Hazırlığı',  icon: '✅' },
   { id: 'exports',     label: 'Veri Dışa Aktarma',  icon: '📦' },
   { id: 'commitments', label: 'Taahhütler',          icon: '📋' },
-  { id: 'decisions',   label: 'Karar Geçmişi',       icon: '🧠' },
+  { id: 'decisions',    label: 'Karar Geçmişi',       icon: '🧠' },
+  { id: 'audit-trail', label: 'Denetim İzi',          icon: '🔍' },
 ]
 
 const ACTION_TYPE_LABELS: Record<string, string> = {
@@ -696,6 +698,7 @@ export default function GovernancePage() {
         {activeTab === 'exports'     && <ExportsTab />}
         {activeTab === 'commitments' && <CommitmentsTab />}
         {activeTab === 'decisions'   && <DecisionContextTab />}
+        {activeTab === 'audit-trail' && <AuditTrailTab />}
       </div>
     </div>
   )
