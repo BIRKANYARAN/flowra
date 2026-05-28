@@ -41,6 +41,7 @@ import { AmortizationTab }  from '@/app/dashboard/partners/_components/Amortizat
 import { DividendLedgerTab } from '@/app/dashboard/partners/_components/DividendLedgerTab'
 import { CapitalStatementTab } from '@/app/dashboard/partners/_components/CapitalStatementTab'
 import { DistributionSimulatorTab } from '@/app/dashboard/partners/_components/DistributionSimulatorTab'
+import { ContributionTimelineTab }  from '@/app/dashboard/partners/_components/ContributionTimelineTab'
 import { PartnersContextBar } from '@/app/dashboard/partners/_shared/PartnersContextBar'
 import { PartnerFinanceActions } from '@/app/dashboard/partners/_components/PartnerFinanceActions'
 
@@ -302,6 +303,7 @@ export default function PartnersPage() {
     'dividend-ledger':     { title: 'Dağıtım Geçmişi',      sub: 'Tüm temettü hareketleri · TTK 509/519 uyum takibi · Ortak bazında toplamlar' },
     'capital-statement':   { title: 'Sermaye Hesap Özeti',  sub: 'Ortak bazında sermaye hesabı · Katkılar · Kâr payı dağılımı · Temettü · Huzur hakkı' },
     'distribution-simulator': { title: 'Kâr Dağıtımı Simülatörü', sub: 'TTK 519 yasal yedek · GVK 94 stopaj · 4 katmanlı dağıtım güvenliği · Senaryo karşılaştırması' },
+    contributions: { title: 'Taahhüt Takvimi', sub: 'Sermaye taahhüt doluluk oranı · TTK 588 yasal faiz riski · Ortak bazlı katkı geçmişi' },
   }
 
   const TABS: { id: TabId; label: string }[] = [
@@ -320,6 +322,7 @@ export default function PartnersPage() {
     { id: 'dividend-ledger',   label: 'Dağıtım Geçmişi' },
     { id: 'capital-statement', label: 'Sermaye Hesabı' },
     { id: 'distribution-simulator', label: 'Kâr Dağıtımı' },
+    { id: 'contributions',          label: 'Taahhüt Takvimi' },
   ]
 
   // ── Render ────────────────────────────────────────────────────────────────────
@@ -509,6 +512,10 @@ export default function PartnersPage() {
 
       {activeTab === 'distribution-simulator' && (
         <DistributionSimulatorTab />
+      )}
+
+      {activeTab === 'contributions' && (
+        <ContributionTimelineTab companyId="" />
       )}
 
     </div>

@@ -24,7 +24,8 @@ import type { CashFlowStatement } from '@/types/dto'
 import { CashflowWaterfallService } from '@/lib/services/finance/cashflow-waterfall.service'
 import type { WaterfallSegment } from '@/lib/services/finance/cashflow-waterfall.service'
 import { CashProjectionSection } from '@/app/dashboard/finance/_components/CashProjectionSection'
-import { CashflowWaterfallClient } from '@/app/dashboard/finance/_tabs/_waterfall/CashflowWaterfallClient'
+import { CashflowWaterfallClient }   from '@/app/dashboard/finance/_tabs/_waterfall/CashflowWaterfallClient'
+import { CashSensitivityClient }     from '@/app/dashboard/finance/_tabs/_sensitivity/CashSensitivityClient'
 
 // ── Waterfall color map ───────────────────────────────────────────────────────
 const SEGMENT_COLOR: Record<WaterfallSegment['color_class'], { bar: string; text: string; bg: string }> = {
@@ -524,6 +525,9 @@ export async function CashflowTab({ userId, companyId }: Props) {
 
       {/* Zone 9 — Nakit Tüketim Hızı (Burn Rate Monitor) */}
       <BurnRateSection />
+
+      {/* Zone 10 — Cash Flow Sensitivity Analysis (Stress Testing) */}
+      <CashSensitivityClient companyId={companyId} />
 
       {/* Cross-link → formal 3-section cash flow statement */}
       <NarrativeFooter

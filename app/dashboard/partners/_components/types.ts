@@ -158,7 +158,7 @@ export interface DistribState {
   compliance_warnings:      ComplianceWarning[]
 }
 
-export type TabId = 'partners' | 'ledger' | 'waterfall' | 'tranches' | 'distribution' | 'returns' | 'risk' | 'capital' | 'dividend' | 'compensation' | 'dilution' | 'amortization' | 'dividend-ledger' | 'capital-statement' | 'distribution-simulator'
+export type TabId = 'partners' | 'ledger' | 'waterfall' | 'tranches' | 'distribution' | 'returns' | 'risk' | 'capital' | 'dividend' | 'compensation' | 'dilution' | 'amortization' | 'dividend-ledger' | 'capital-statement' | 'distribution-simulator' | 'contributions'
 
 export type LedgerSortCol = 'partner_name' | 'equity_contributed' | 'loans_given' | 'net_loan_outstanding' | 'dividends_received' | 'company_total_owed'
 
