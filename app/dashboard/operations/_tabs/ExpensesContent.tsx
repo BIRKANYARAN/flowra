@@ -21,6 +21,7 @@ import { ExpenseAnomalyClient } from './_anomaly/ExpenseAnomalyClient'
 import { SupplierAnalyticsPanel } from './_supplier-analytics/SupplierAnalyticsPanel'
 import { PayablesAgingSection } from './_ap-aging/PayablesAgingSection'
 import { SupplierPaymentTermsClient } from './_supplier-terms/SupplierPaymentTermsClient'
+import { VendorConcentrationClient } from './_vendor/VendorConcentrationClient'
 
 function CommandBarSkeleton() {
   return (
@@ -514,6 +515,9 @@ export async function ExpensesContent({ companyId }: Props) {
 
       {/* ── Tedarikçi Ödeme Koşulları ─────────────────────────────────────────── */}
       <SupplierPaymentTermsClient companyId={companyId} />
+
+      {/* ── Tedarikçi Konsantrasyon Riski ────────────────────────────────────── */}
+      <VendorConcentrationClient companyId={companyId} />
 
       {/* Cross-navigation */}
       <NarrativeFooter

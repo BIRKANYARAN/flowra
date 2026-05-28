@@ -30,6 +30,7 @@ import { SeasonalityService }           from '@/lib/services/finance/seasonality
 import type { SeasonalityReport }       from '@/lib/services/finance/seasonality.service'
 import FiscalYearSummaryClient          from './_fiscal/FiscalYearSummaryClient'
 import FxExposureClient                 from './_fx/FxExposureClient'
+import MarginBridgeClient               from './_bridge/MarginBridgeClient'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -936,6 +937,9 @@ export async function OverviewTab({ userId, companyId, glMode = 'shadow' }: Prop
 
       {/* Zone 10 — Kur Riski Analizi */}
       <FxExposureClient companyId={companyId} />
+
+      {/* Zone 11 — Brüt Kâr Köprüsü */}
+      <MarginBridgeClient companyId={companyId} />
 
       {/* Quick actions */}
       <div className="flex flex-wrap gap-2 pt-1">
