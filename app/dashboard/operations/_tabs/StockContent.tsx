@@ -12,6 +12,7 @@ import type { InventoryValuationReport }            from '@/lib/services/invento
 import { ReorderAlertService }                      from '@/lib/services/inventory/reorder-alert.service'
 import type { ReorderAlertReport }                  from '@/lib/services/inventory/reorder-alert.service'
 import { FifoAuditClient }                          from './_fifo/FifoAuditClient'
+import { SalesVelocityClient }                      from './_velocity/SalesVelocityClient'
 
 function holdingDays(entryDate: string): number {
   const today = new Date()
@@ -546,6 +547,9 @@ export async function StockContent({ companyId, userId }: Props) {
           </div>
         )}
       </div>
+
+      {/* Satış Hız Analizi — velocity, stock-out predictions, reorder intelligence */}
+      <SalesVelocityClient companyId={companyId} />
 
       {/* FIFO Lot Denetimi — integrity audit, over-consumed lots, orphaned allocations */}
       <FifoAuditClient companyId={companyId} />
