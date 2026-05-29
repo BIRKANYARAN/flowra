@@ -199,3 +199,201 @@ describe('isOverdue — overdue detection', () => {
     expect(isOverdue('2026-05-27', 'ordered', '2026-05-27')).toBe(false)
   })
 })
+
+// ── gradeSupplierPerformance — additional edge cases ─────────────────────────
+
+describe('gradeSupplierPerformance — on-time boundary precision', () => {
+
+  // on_time exactly 90 → still qualifies for excellent
+  it('fulfillment=95, onTime=90 (exact threshold) → excellent', () => {
+    expect(gradeSupplierPerformance(95, 90, 5)).toBe('excellent')
+  })
+
+  // on_time 89.99 → just below excellent on-time requirement
+  it('fulfillment=98, onTime=89.99 → good (onTime<90 blocks excellent)', () => {
+    expect(gradeSupplierPerformance(98, 89.99, 5)).toBe('good')
+  })
+
+  // fulfillment exactly 95, on_time null → excellent
+  it('fulfillment=95, onTime=null → excellent (null on_time is permissive)', () => {
+    expect(gradeSupplierPerformance(95, null, 10)).toBe('excellent')
+  })
+
+  // fulfillment 94.99 → just below excellent tier
+  it('fulfillment=94.99, onTime=null → good', () => {
+    expect(gradeSupplierPerformance(94.99, null, 10)).toBe('good')
+  })
+
+  // on_time exactly 75 with fulfillment=85 → good (boundary)
+  it('fulfillment=85, onTime=75 (exact boundary) → good', () => {
+    expect(gradeSupplierPerformance(85, 75, 4)).toBe('good')
+  })
+
+  // on_time 74.99 with fulfillment=85 → falls through good to fair
+  it('fulfillment=85, onTime=74.99 → fair (just below onTime threshold)', () => {
+    expect(gradeSupplierPerformance(85, 74.99, 5)).toBe('fair')
+  })
+
+  // poCount exactly 3 → qualifies (not insufficient_data)
+  it('poCount=3 (minimum valid) → not insufficient_data', () => {
+    const result = gradeSupplierPerformance(100, 100, 3)
+    expect(result).not.toBe('insufficient_data')
+  })
+
+  // poCount exactly 2 → insufficient_data
+  it('poCount=2 → insufficient_data', () => {
+    expect(gradeSupplierPerformance(100, 100, 2)).toBe('insufficient_data')
+  })
+
+  // fulfillment 69.99 → just below fair → poor
+  it('fulfillment=69.99 → poor (just below fair boundary)', () => {
+    expect(gradeSupplierPerformance(69.99, null, 5)).toBe('poor')
+  })
+
+  // fulfillment 70 → fair (at fair boundary)
+  it('fulfillment=70 (exact fair boundary) → fair', () => {
+    expect(gradeSupplierPerformance(70, null, 5)).toBe('fair')
+  })
+
+  // high on-time but poor fulfillment still = poor
+  it('fulfillment=10, onTime=100 → poor (fulfillment dominates)', () => {
+    expect(gradeSupplierPerformance(10, 100, 10)).toBe('poor')
+  })
+
+  // large poCount doesn't change grade
+  it('fulfillment=99, onTime=99, poCount=1000 → excellent', () => {
+    expect(gradeSupplierPerformance(99, 99, 1000)).toBe('excellent')
+  })
+})
+
+// ── computeFulfillmentRate — additional edge cases ────────────────────────────
+
+describe('computeFulfillmentRate — rounding and edge cases', () => {
+
+  // Rounding: result is rounded to 2 decimal places
+  it('received=2, total=7, cancelled=1 → 2/6 = 33.33%', () => {
+    expect(computeFulfillmentRate(2, 7, 1)).toBeCloseTo(33.33, 1)
+  })
+
+  // Cancelled > total edge case — nonCancelled would be negative → return 0
+  it('cancelled > total (edge) → 0 (nonCancelled ≤ 0)', () => {
+    expect(computeFulfillmentRate(0, 3, 5)).toBe(0)
+  })
+
+  // received === total - cancelled → 100%
+  it('received = nonCancelled → 100%', () => {
+    expect(computeFulfillmentRate(7, 10, 3)).toBe(100)
+  })
+
+  // Large numbers remain accurate
+  it('received=500, total=1000, cancelled=200 → 500/800 = 62.5%', () => {
+    expect(computeFulfillmentRate(500, 1000, 200)).toBeCloseTo(62.5, 1)
+  })
+
+  // Partial with no cancellations
+  it('received=3, total=4, cancelled=0 → 75%', () => {
+    expect(computeFulfillmentRate(3, 4, 0)).toBe(75)
+  })
+
+  // 0% fulfillment with active orders
+  it('received=0, total=10, cancelled=0 → 0%', () => {
+    expect(computeFulfillmentRate(0, 10, 0)).toBe(0)
+  })
+
+  // Mix of received and pending
+  it('received=6, total=10, cancelled=1 → 6/9 = 66.67%', () => {
+    expect(computeFulfillmentRate(6, 10, 1)).toBeCloseTo(66.67, 1)
+  })
+})
+
+// ── computeOnTimeRate — additional edge cases ─────────────────────────────────
+
+describe('computeOnTimeRate — precision and boundaries', () => {
+
+  // All on-time
+  it('onTime=10, received=10 → 100%', () => {
+    expect(computeOnTimeRate(10, 10)).toBe(100)
+  })
+
+  // None on-time
+  it('onTime=0, received=5 → 0%', () => {
+    expect(computeOnTimeRate(0, 5)).toBe(0)
+  })
+
+  // Single order on-time
+  it('onTime=1, received=1 → 100%', () => {
+    expect(computeOnTimeRate(1, 1)).toBe(100)
+  })
+
+  // Two of three on-time
+  it('onTime=2, received=3 → 66.67%', () => {
+    const result = computeOnTimeRate(2, 3)
+    expect(result).not.toBeNull()
+    expect(result!).toBeCloseTo(66.67, 1)
+  })
+
+  // Large dataset
+  it('onTime=95, received=100 → 95%', () => {
+    expect(computeOnTimeRate(95, 100)).toBe(95)
+  })
+
+  // 50% rate
+  it('onTime=5, received=10 → 50%', () => {
+    expect(computeOnTimeRate(5, 10)).toBe(50)
+  })
+
+  // Single delivery, not on-time
+  it('onTime=0, received=1 → 0%', () => {
+    expect(computeOnTimeRate(0, 1)).toBe(0)
+  })
+})
+
+// ── isOverdue — additional edge cases ────────────────────────────────────────
+
+describe('isOverdue — additional status and date coverage', () => {
+
+  // 'approved' status → not overdue (non-pending)
+  it('status "approved" + past date → false (not a pending status)', () => {
+    expect(isOverdue('2020-01-01', 'approved', '2026-05-29')).toBe(false)
+  })
+
+  // 'in_transit' status → not overdue (not a tracked pending status)
+  it('status "in_transit" + past date → false', () => {
+    expect(isOverdue('2020-01-01', 'in_transit', '2026-05-29')).toBe(false)
+  })
+
+  // Date one day before today → overdue
+  it('expectedDate one day before today → true', () => {
+    expect(isOverdue('2026-05-28', 'ordered', '2026-05-29')).toBe(true)
+  })
+
+  // Date one day after today → not overdue
+  it('expectedDate one day after today → false', () => {
+    expect(isOverdue('2026-05-30', 'ordered', '2026-05-29')).toBe(false)
+  })
+
+  // Empty string as expectedDate → false (falsy)
+  it('expectedDate empty string → false', () => {
+    expect(isOverdue('', 'ordered', '2026-05-29')).toBe(false)
+  })
+
+  // partially_received with date way in the past → overdue
+  it('partially_received + date 2 years ago → true', () => {
+    expect(isOverdue('2024-01-01', 'partially_received', '2026-05-29')).toBe(true)
+  })
+
+  // draft with date 30 days ago → overdue
+  it('draft + date 30 days ago → true', () => {
+    expect(isOverdue('2026-04-29', 'draft', '2026-05-29')).toBe(true)
+  })
+
+  // 'received' with very old date → always false
+  it('received + date years ago → false', () => {
+    expect(isOverdue('2020-01-01', 'received', '2026-05-29')).toBe(false)
+  })
+
+  // 'cancelled' with date yesterday → false
+  it('cancelled + date yesterday → false', () => {
+    expect(isOverdue('2026-05-28', 'cancelled', '2026-05-29')).toBe(false)
+  })
+})

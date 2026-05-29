@@ -166,3 +166,116 @@ describe('GeneralLedgerService.classBalance — rounding', () => {
     expect(result).toBeCloseTo(300.01, 2)
   })
 })
+
+// ── All valid AccountClass values ─────────────────────────────────────────────
+
+describe('GeneralLedgerService.classBalance — all account classes', () => {
+  it('correctly totals cogs accounts (620)', () => {
+    const gl = mkGL([{ account_code: '620', class: 'cogs', balance_try: 75_000 }])
+    expect(GeneralLedgerService.classBalance(gl, 'cogs')).toBe(75_000)
+  })
+
+  it('correctly totals non_current_liability accounts (421)', () => {
+    const gl = mkGL([{ account_code: '421', class: 'non_current_liability', balance_try: 200_000 }])
+    expect(GeneralLedgerService.classBalance(gl, 'non_current_liability')).toBe(200_000)
+  })
+
+  it('correctly totals financing accounts (780)', () => {
+    const gl = mkGL([{ account_code: '780', class: 'financing', balance_try: 12_500 }])
+    expect(GeneralLedgerService.classBalance(gl, 'financing')).toBe(12_500)
+  })
+
+  it('returns 0 for a class with no matching accounts in GL', () => {
+    const gl = mkGL([{ account_code: '100', class: 'current_asset', balance_try: 5_000 }])
+    expect(GeneralLedgerService.classBalance(gl, 'revenue')).toBe(0)
+  })
+})
+
+// ── Large GL with many accounts ───────────────────────────────────────────────
+
+describe('GeneralLedgerService.classBalance — large GL fixture', () => {
+  it('sums all operating_expense accounts correctly', () => {
+    const gl = mkGL([
+      { account_code: '760', class: 'operating_expense', balance_try:  40_000 },
+      { account_code: '770', class: 'operating_expense', balance_try:  60_000 },
+      { account_code: '771', class: 'operating_expense', balance_try:  80_000 },
+      { account_code: '772', class: 'operating_expense', balance_try:  20_000 },
+      { account_code: '773', class: 'operating_expense', balance_try:  10_000 },
+    ])
+    expect(GeneralLedgerService.classBalance(gl, 'operating_expense')).toBe(210_000)
+  })
+
+  it('sums all equity accounts correctly including contra', () => {
+    const gl = mkGL([
+      { account_code: '500', class: 'equity', balance_try:  500_000 },
+      { account_code: '542', class: 'equity', balance_try:   50_000 },
+      { account_code: '570', class: 'equity', balance_try:  100_000 },
+      { account_code: '590', class: 'equity', balance_try:   25_000 },
+      // contra: unpaid capital (debit normal => balance_try is negative)
+      { account_code: '501', class: 'equity', balance_try: -100_000 },
+    ])
+    expect(GeneralLedgerService.classBalance(gl, 'equity')).toBe(575_000)
+  })
+
+  it('classBalance is independent across classes on the same GL snapshot', () => {
+    const gl = mkGL([
+      { account_code: '100', class: 'current_asset',     balance_try: 10_000 },
+      { account_code: '102', class: 'current_asset',     balance_try: 90_000 },
+      { account_code: '320', class: 'current_liability', balance_try: 30_000 },
+      { account_code: '391', class: 'current_liability', balance_try: 15_000 },
+      { account_code: '600', class: 'revenue',           balance_try: 500_000 },
+      { account_code: '770', class: 'operating_expense', balance_try:  80_000 },
+    ])
+    expect(GeneralLedgerService.classBalance(gl, 'current_asset')).toBe(100_000)
+    expect(GeneralLedgerService.classBalance(gl, 'current_liability')).toBe(45_000)
+    expect(GeneralLedgerService.classBalance(gl, 'revenue')).toBe(500_000)
+    expect(GeneralLedgerService.classBalance(gl, 'operating_expense')).toBe(80_000)
+    expect(GeneralLedgerService.classBalance(gl, 'cogs')).toBe(0)
+  })
+})
+
+// ── Fractional balance aggregation ───────────────────────────────────────────
+
+describe('GeneralLedgerService.classBalance — fractional balances', () => {
+  it('sums fractional balances and rounds to 2dp', () => {
+    const gl = mkGL([
+      { account_code: '100', class: 'current_asset', balance_try: 0.1 },
+      { account_code: '102', class: 'current_asset', balance_try: 0.2 },
+    ])
+    // 0.1 + 0.2 = 0.30000000000000004 in IEEE; round2 should produce 0.3
+    const result = GeneralLedgerService.classBalance(gl, 'current_asset')
+    expect(result).toBeCloseTo(0.3, 2)
+  })
+
+  it('large fractional sum rounds correctly', () => {
+    const gl = mkGL([
+      { account_code: '770', class: 'operating_expense', balance_try: 333.333 },
+      { account_code: '771', class: 'operating_expense', balance_try: 333.333 },
+      { account_code: '772', class: 'operating_expense', balance_try: 333.334 },
+    ])
+    const result = GeneralLedgerService.classBalance(gl, 'operating_expense')
+    expect(result).toBeCloseTo(1000, 1)
+  })
+})
+
+// ── Multiple unknown codes mixed with known ───────────────────────────────────
+
+describe('GeneralLedgerService.classBalance — multiple unknown codes', () => {
+  it('ignores all unknown codes and only sums CoA-registered ones', () => {
+    const gl = mkGL([
+      { account_code: '997', class: 'current_asset', balance_try: 999_999 }, // unknown
+      { account_code: '998', class: 'current_asset', balance_try: 888_888 }, // unknown
+      { account_code: '100', class: 'current_asset', balance_try:   5_000 }, // valid
+      { account_code: '102', class: 'current_asset', balance_try:  10_000 }, // valid
+    ])
+    expect(GeneralLedgerService.classBalance(gl, 'current_asset')).toBe(15_000)
+  })
+
+  it('unknown codes for an unrelated class do not contaminate the queried class', () => {
+    const gl = mkGL([
+      { account_code: '999', class: 'revenue', balance_try: 1_000_000 }, // unknown
+      { account_code: '600', class: 'revenue', balance_try:   200_000 }, // valid
+    ])
+    expect(GeneralLedgerService.classBalance(gl, 'revenue')).toBe(200_000)
+  })
+})

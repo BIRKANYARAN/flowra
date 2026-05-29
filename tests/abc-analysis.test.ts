@@ -178,3 +178,241 @@ describe('classifyInventoryEfficiency', () => {
     expect(classifyInventoryEfficiency(500)).toBe('excessive')
   })
 })
+
+// ── assignAbcTier — additional boundary precision ─────────────────────────────
+
+describe('assignAbcTier — extended boundary checks', () => {
+
+  // A tier: 0 to exactly 80
+  it('returns A for exactly 0', () => {
+    expect(assignAbcTier(0)).toBe('A')
+  })
+
+  it('returns A for 79.999 (just under 80)', () => {
+    expect(assignAbcTier(79.999)).toBe('A')
+  })
+
+  it('returns A for 40 (midpoint of A range)', () => {
+    expect(assignAbcTier(40)).toBe('A')
+  })
+
+  // B tier: 80.001 to exactly 95
+  it('returns B for 82', () => {
+    expect(assignAbcTier(82)).toBe('B')
+  })
+
+  it('returns B for 88 (midpoint of B range)', () => {
+    expect(assignAbcTier(88)).toBe('B')
+  })
+
+  it('returns B for 94.999 (just under 95)', () => {
+    expect(assignAbcTier(94.999)).toBe('B')
+  })
+
+  // C tier: above 95
+  it('returns C for 96', () => {
+    expect(assignAbcTier(96)).toBe('C')
+  })
+
+  it('returns C for 99.9', () => {
+    expect(assignAbcTier(99.9)).toBe('C')
+  })
+
+  it('returns C for exactly 100', () => {
+    expect(assignAbcTier(100)).toBe('C')
+  })
+})
+
+// ── computeTopNRevenuePct — additional cases ──────────────────────────────────
+
+describe('computeTopNRevenuePct — sorting assumption and precision', () => {
+
+  // n=0 → 0% (no items taken)
+  it('returns 0 for n=0', () => {
+    const result = computeTopNRevenuePct([500, 300, 200], 0)
+    expect(result).toBe(0)
+  })
+
+  // Single item array, top-1
+  it('single item [1000], n=1 → 100%', () => {
+    const result = computeTopNRevenuePct([1000], 1)
+    expect(result).toBeCloseTo(100, 5)
+  })
+
+  // Two equal items, top-1 → 50%
+  it('[500, 500], n=1 → 50%', () => {
+    const result = computeTopNRevenuePct([500, 500], 1)
+    expect(result).toBeCloseTo(50, 5)
+  })
+
+  // n > length — slice doesn't throw, uses all items
+  it('n larger than array length → 100%', () => {
+    const result = computeTopNRevenuePct([100, 200, 300], 100)
+    expect(result).toBeCloseTo(100, 5)
+  })
+
+  // Top 3 of 5: [300, 200, 100, 80, 20] → total=700, top3=600 → 85.71%
+  it('[300, 200, 100, 80, 20] top-3 → 85.71%', () => {
+    const result = computeTopNRevenuePct([300, 200, 100, 80, 20], 3)
+    expect(result).toBeCloseTo(85.71, 1)
+  })
+
+  // Fractional revenues
+  it('[33.33, 33.33, 33.34], n=1 → 33.34%', () => {
+    const result = computeTopNRevenuePct([33.34, 33.33, 33.33], 1)
+    expect(result).toBeCloseTo(33.34, 1)
+  })
+
+  // All zeros → 0 regardless of n
+  it('all zeros, n=2 → 0', () => {
+    expect(computeTopNRevenuePct([0, 0, 0, 0], 2)).toBe(0)
+  })
+
+  // Large values don't lose precision
+  it('[1_000_000, 500_000, 250_000], n=2 → 85.71%', () => {
+    const result = computeTopNRevenuePct([1_000_000, 500_000, 250_000], 2)
+    expect(result).toBeCloseTo(85.71, 1)
+  })
+})
+
+// ── abcTierToScore — all values, type safety ──────────────────────────────────
+
+describe('abcTierToScore — exhaustive', () => {
+
+  it('A → 100 (integer)', () => {
+    expect(abcTierToScore('A')).toBe(100)
+  })
+
+  it('B → 60 (integer)', () => {
+    expect(abcTierToScore('B')).toBe(60)
+  })
+
+  it('C → 20 (integer)', () => {
+    expect(abcTierToScore('C')).toBe(20)
+  })
+
+  // Verify A > B > C ordering
+  it('A score > B score > C score', () => {
+    expect(abcTierToScore('A')).toBeGreaterThan(abcTierToScore('B'))
+    expect(abcTierToScore('B')).toBeGreaterThan(abcTierToScore('C'))
+  })
+
+  // All scores are positive
+  it('all scores are positive integers', () => {
+    expect(abcTierToScore('A')).toBeGreaterThan(0)
+    expect(abcTierToScore('B')).toBeGreaterThan(0)
+    expect(abcTierToScore('C')).toBeGreaterThan(0)
+  })
+})
+
+// ── computeInventoryEfficiency — precision and special values ─────────────────
+
+describe('computeInventoryEfficiency — additional cases', () => {
+
+  // Very small stock vs large revenue
+  it('stock=1, revenue=1_000_000 → 0.0001% (very small)', () => {
+    const result = computeInventoryEfficiency(1, 1_000_000)
+    expect(result).not.toBeNull()
+    expect(result!).toBeCloseTo(0.0001, 4)
+  })
+
+  // Very large stock vs small revenue → large ratio
+  it('stock=1_000_000, revenue=100 → 1_000_000%', () => {
+    const result = computeInventoryEfficiency(1_000_000, 100)
+    expect(result).not.toBeNull()
+    expect(result!).toBeCloseTo(1_000_000, 0)
+  })
+
+  // Zero stock, nonzero revenue → 0%
+  it('stock=0, revenue=50_000 → 0%', () => {
+    const result = computeInventoryEfficiency(0, 50_000)
+    expect(result).not.toBeNull()
+    expect(result!).toBe(0)
+  })
+
+  // Exactly at optimal lower boundary (50%)
+  it('stock=50_000, revenue=100_000 → 50% (optimal boundary)', () => {
+    const result = computeInventoryEfficiency(50_000, 100_000)
+    expect(result).not.toBeNull()
+    expect(result!).toBeCloseTo(50, 5)
+  })
+
+  // Exactly at over_invested boundary (200%)
+  it('stock=200_000, revenue=100_000 → 200%', () => {
+    const result = computeInventoryEfficiency(200_000, 100_000)
+    expect(result).not.toBeNull()
+    expect(result!).toBeCloseTo(200, 5)
+  })
+
+  // Nonzero revenue, nonzero stock at 75% (optimal midpoint)
+  it('stock=75_000, revenue=100_000 → 75%', () => {
+    const result = computeInventoryEfficiency(75_000, 100_000)
+    expect(result).not.toBeNull()
+    expect(result!).toBeCloseTo(75, 5)
+  })
+})
+
+// ── classifyInventoryEfficiency — additional mid-range values ─────────────────
+
+describe('classifyInventoryEfficiency — extended mid-range', () => {
+
+  // 0% → under_invested
+  it('returns under_invested for 0', () => {
+    expect(classifyInventoryEfficiency(0)).toBe('under_invested')
+  })
+
+  // 25% → under_invested
+  it('returns under_invested for 25', () => {
+    expect(classifyInventoryEfficiency(25)).toBe('under_invested')
+  })
+
+  // 50% (lower optimal boundary) → optimal
+  it('returns optimal for 50 (lower boundary)', () => {
+    expect(classifyInventoryEfficiency(50)).toBe('optimal')
+  })
+
+  // 60% → optimal
+  it('returns optimal for 60', () => {
+    expect(classifyInventoryEfficiency(60)).toBe('optimal')
+  })
+
+  // 80% → optimal
+  it('returns optimal for 80', () => {
+    expect(classifyInventoryEfficiency(80)).toBe('optimal')
+  })
+
+  // 100% (upper optimal boundary) → optimal
+  it('returns optimal for 100 (upper boundary)', () => {
+    expect(classifyInventoryEfficiency(100)).toBe('optimal')
+  })
+
+  // 101% → over_invested
+  it('returns over_invested for 101', () => {
+    expect(classifyInventoryEfficiency(101)).toBe('over_invested')
+  })
+
+  // 150% → over_invested
+  it('returns over_invested for 150', () => {
+    expect(classifyInventoryEfficiency(150)).toBe('over_invested')
+  })
+
+  // 200% → over_invested (at boundary)
+  it('returns over_invested for 200', () => {
+    expect(classifyInventoryEfficiency(200)).toBe('over_invested')
+  })
+
+  // 201% → excessive
+  it('returns excessive for 201', () => {
+    expect(classifyInventoryEfficiency(201)).toBe('excessive')
+  })
+
+  // 1000% → excessive
+  it('returns excessive for 1000', () => {
+    expect(classifyInventoryEfficiency(1000)).toBe('excessive')
+  })
+
+  // null always returns unknown
+  it('null → unknown (no change)', () => {
+    expect(classifyInventoryEfficiency(null)).toBe('unknown')
+  })
+})

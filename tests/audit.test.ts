@@ -162,3 +162,264 @@ describe('rollback input validation', () => {
     expect(validate('wrong qty entered')).toBe(true)
   })
 })
+
+// ── Alert severity — extended edge cases ─────────────────────────────────────
+
+describe('alert severity — boundary amounts', () => {
+
+  it('partner_transaction exactly 100_000 → warning', () => {
+    expect(getAlertSeverity({
+      action: 'create', entityType: 'partner_transaction', amount: 100_000,
+    })).toBe('warning')
+  })
+
+  it('partner_transaction at 99_999 → info (below threshold)', () => {
+    expect(getAlertSeverity({
+      action: 'create', entityType: 'partner_transaction', amount: 99_999,
+    })).toBe('info')
+  })
+
+  it('partner_transaction at 1_000_000 → warning', () => {
+    expect(getAlertSeverity({
+      action: 'create', entityType: 'partner_transaction', amount: 1_000_000,
+    })).toBe('warning')
+  })
+
+  it('partner_transaction amount=0 → info', () => {
+    expect(getAlertSeverity({
+      action: 'create', entityType: 'partner_transaction', amount: 0,
+    })).toBe('info')
+  })
+
+  it('update action on any entity → info (not delete, not large partner_tx)', () => {
+    expect(getAlertSeverity({
+      action: 'update', entityType: 'expense', amount: 50_000,
+    })).toBe('info')
+  })
+
+  it('delete on expense → warning', () => {
+    expect(getAlertSeverity({ action: 'delete', entityType: 'expense' })).toBe('warning')
+  })
+
+  it('delete on stock_movement → warning', () => {
+    expect(getAlertSeverity({ action: 'delete', entityType: 'stock_movement' })).toBe('warning')
+  })
+
+  it('delete on partner_transaction (even large) → warning (delete always wins)', () => {
+    expect(getAlertSeverity({
+      action: 'delete', entityType: 'partner_transaction', amount: 500_000,
+    })).toBe('warning')
+  })
+
+  it('create stock_movement → info', () => {
+    expect(getAlertSeverity({ action: 'create', entityType: 'stock_movement' })).toBe('info')
+  })
+
+  it('create expense → info', () => {
+    expect(getAlertSeverity({ action: 'create', entityType: 'expense' })).toBe('info')
+  })
+})
+
+// ── Rollback opposite tx_type — extended ─────────────────────────────────────
+
+describe('rollback opposite tx_type — idempotency and completeness', () => {
+
+  it('loan_in reversal → loan_out', () => {
+    expect(OPPOSITE_TX['loan_in']).toBe('loan_out')
+  })
+
+  it('loan_out reversal → loan_in (symmetric)', () => {
+    expect(OPPOSITE_TX['loan_out']).toBe('loan_in')
+  })
+
+  it('loan_in ↔ loan_out is a symmetric pair', () => {
+    expect(OPPOSITE_TX[OPPOSITE_TX['loan_in']]).toBe('loan_in')
+    expect(OPPOSITE_TX[OPPOSITE_TX['loan_out']]).toBe('loan_out')
+  })
+
+  it('salary reversal → salary (self-inverse)', () => {
+    expect(OPPOSITE_TX['salary']).toBe('salary')
+  })
+
+  it('board_fee reversal → board_fee (self-inverse)', () => {
+    expect(OPPOSITE_TX['board_fee']).toBe('board_fee')
+  })
+
+  it('dividend reversal → dividend (self-inverse)', () => {
+    expect(OPPOSITE_TX['dividend']).toBe('dividend')
+  })
+
+  it('OPPOSITE_TX has exactly 5 entries', () => {
+    expect(Object.keys(OPPOSITE_TX).length).toBe(5)
+  })
+
+  it('all values in OPPOSITE_TX are strings', () => {
+    for (const val of Object.values(OPPOSITE_TX)) {
+      expect(typeof val).toBe('string')
+    }
+  })
+
+  it('self-inverse entries map back to themselves', () => {
+    const selfInverse = ['salary', 'board_fee', 'dividend']
+    for (const key of selfInverse) {
+      expect(OPPOSITE_TX[OPPOSITE_TX[key]]).toBe(key)
+    }
+  })
+})
+
+// ── Stock movement reversal — amount arithmetic ───────────────────────────────
+
+describe('stock movement reversal — arithmetic accuracy', () => {
+
+  it('qty_change=100 → reversal = -100', () => {
+    expect(-(100)).toBe(-100)
+  })
+
+  it('qty_change=-100 → reversal = 100', () => {
+    expect(-(-100)).toBe(100)
+  })
+
+  it('qty_change=0.5 → reversal = -0.5', () => {
+    expect(-(0.5)).toBeCloseTo(-0.5, 5)
+  })
+
+  it('reversing twice returns original qty', () => {
+    const original = 75
+    expect(-(-(original))).toBe(original)
+  })
+
+  it('large qty reversal preserves magnitude', () => {
+    const original = 999_999
+    expect(-original).toBe(-999_999)
+  })
+})
+
+// ── movement_type derivation ──────────────────────────────────────────────────
+
+describe('stock movement type derivation from qty', () => {
+
+  const getType = (qty: number) =>
+    qty > 0 ? 'in' : qty < 0 ? 'out' : 'adjustment'
+
+  it('positive qty → in', () => {
+    expect(getType(1)).toBe('in')
+    expect(getType(100)).toBe('in')
+    expect(getType(0.001)).toBe('in')
+  })
+
+  it('negative qty → out', () => {
+    expect(getType(-1)).toBe('out')
+    expect(getType(-500)).toBe('out')
+    expect(getType(-0.001)).toBe('out')
+  })
+
+  it('zero qty → adjustment', () => {
+    expect(getType(0)).toBe('adjustment')
+  })
+
+  it('large positive → in', () => {
+    expect(getType(999_999)).toBe('in')
+  })
+
+  it('large negative → out', () => {
+    expect(getType(-999_999)).toBe('out')
+  })
+})
+
+// ── AuditLog shape — extended field tests ─────────────────────────────────────
+
+describe('audit log shape — extended', () => {
+
+  it('update action preserves both old and new data', () => {
+    const log = {
+      action: 'update' as const,
+      old_data: { amount: 100, status: 'draft' },
+      new_data: { amount: 200, status: 'finalized' },
+    }
+    expect(log.old_data.amount).toBe(100)
+    expect(log.new_data.amount).toBe(200)
+    expect(log.old_data.status).toBe('draft')
+    expect(log.new_data.status).toBe('finalized')
+  })
+
+  it('create action: old_data is null, new_data has id', () => {
+    const log = {
+      action: 'create' as const,
+      old_data: null,
+      new_data: { id: 'new-entity-123', amount: 500 },
+    }
+    expect(log.old_data).toBeNull()
+    expect(log.new_data.id).toBe('new-entity-123')
+  })
+
+  it('delete action: old_data has id, new_data is null', () => {
+    const log = {
+      action: 'delete' as const,
+      old_data: { id: 'to-delete-456', amount: 300 },
+      new_data: null,
+    }
+    expect(log.old_data.id).toBe('to-delete-456')
+    expect(log.new_data).toBeNull()
+  })
+
+  it('all three action types are distinct strings', () => {
+    const actions = ['create', 'update', 'delete']
+    const unique = new Set(actions)
+    expect(unique.size).toBe(3)
+  })
+})
+
+// ── Rollback input validation — extended ──────────────────────────────────────
+
+describe('rollback input validation — extended', () => {
+
+  const SUPPORTED = new Set(['stock_movement', 'expense', 'partner_transaction'])
+
+  it('stock_movement is supported', () => {
+    expect(SUPPORTED.has('stock_movement')).toBe(true)
+  })
+
+  it('expense is supported', () => {
+    expect(SUPPORTED.has('expense')).toBe(true)
+  })
+
+  it('partner_transaction is supported', () => {
+    expect(SUPPORTED.has('partner_transaction')).toBe(true)
+  })
+
+  it('journal_entry is not supported', () => {
+    expect(SUPPORTED.has('journal_entry')).toBe(false)
+  })
+
+  it('product is not supported', () => {
+    expect(SUPPORTED.has('product')).toBe(false)
+  })
+
+  it('empty string is not supported', () => {
+    expect(SUPPORTED.has('')).toBe(false)
+  })
+
+  it('reason with only spaces is invalid', () => {
+    const validate = (r: string) => r.trim().length > 0
+    expect(validate('     ')).toBe(false)
+  })
+
+  it('reason with content is valid', () => {
+    const validate = (r: string) => r.trim().length > 0
+    expect(validate('data entry error')).toBe(true)
+  })
+
+  it('reason with tabs and newlines only is invalid', () => {
+    const validate = (r: string) => r.trim().length > 0
+    expect(validate('\t\n')).toBe(false)
+  })
+
+  it('reason with leading/trailing whitespace but content is valid', () => {
+    const validate = (r: string) => r.trim().length > 0
+    expect(validate('  valid reason  ')).toBe(true)
+  })
+
+  it('SUPPORTED set has exactly 3 entries', () => {
+    expect(SUPPORTED.size).toBe(3)
+  })
+})

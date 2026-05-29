@@ -152,3 +152,151 @@ describe('buildReconciliationLine', () => {
     expect(line.discrepancy_try).toBe(0)
   })
 })
+
+// ── computeReconciliationDiscrepancy — edge cases ────────────────────────────
+
+describe('computeReconciliationDiscrepancy — edge cases', () => {
+  it('large positive discrepancy', () => {
+    expect(computeReconciliationDiscrepancy(1_000_000, 500_000)).toBe(500_000)
+  })
+
+  it('large negative discrepancy', () => {
+    expect(computeReconciliationDiscrepancy(500_000, 1_000_000)).toBe(-500_000)
+  })
+
+  it('small fractional discrepancy is rounded to 2dp', () => {
+    // 100.005 - 100.003 = 0.002 → round2 = 0
+    const result = computeReconciliationDiscrepancy(100.005, 100.003)
+    const dp = String(Math.abs(result)).split('.')[1]?.length ?? 0
+    expect(dp).toBeLessThanOrEqual(2)
+  })
+
+  it('negative book balance works correctly', () => {
+    // Overdraft: book = -500, bank = -200, discrepancy = -300
+    expect(computeReconciliationDiscrepancy(-500, -200)).toBe(-300)
+  })
+
+  it('zero book, non-zero bank returns negative discrepancy', () => {
+    expect(computeReconciliationDiscrepancy(0, 5000)).toBe(-5000)
+  })
+})
+
+// ── classifyDiscrepancy — boundary precision ──────────────────────────────────
+
+describe('classifyDiscrepancy — exact boundary values', () => {
+  it('exactly 0 returns clean', () => {
+    expect(classifyDiscrepancy(0)).toBe('clean')
+  })
+
+  it('just below 100 returns clean (99.99)', () => {
+    expect(classifyDiscrepancy(99.99)).toBe('clean')
+  })
+
+  it('exactly 100 returns minor', () => {
+    expect(classifyDiscrepancy(100)).toBe('minor')
+  })
+
+  it('exactly 1000 returns minor', () => {
+    expect(classifyDiscrepancy(1000)).toBe('minor')
+  })
+
+  it('1000.01 returns moderate', () => {
+    expect(classifyDiscrepancy(1001)).toBe('moderate')
+  })
+
+  it('exactly 10000 returns moderate', () => {
+    expect(classifyDiscrepancy(10000)).toBe('moderate')
+  })
+
+  it('10000.01 returns material', () => {
+    expect(classifyDiscrepancy(10001)).toBe('material')
+  })
+
+  it('negative values use absolute magnitude for classification', () => {
+    expect(classifyDiscrepancy(-100)).toBe('minor')
+    expect(classifyDiscrepancy(-1001)).toBe('moderate')
+    expect(classifyDiscrepancy(-10001)).toBe('material')
+  })
+
+  it('very large discrepancy returns material', () => {
+    expect(classifyDiscrepancy(1_000_000)).toBe('material')
+  })
+})
+
+// ── computeReconciliationPct — additional cases ───────────────────────────────
+
+describe('computeReconciliationPct — additional cases', () => {
+  it('50% discrepancy returns 50', () => {
+    // book=2000, bank=1000, discrepancy=1000, denom=2000 → 50
+    expect(computeReconciliationPct(2000, 1000)).toBe(50)
+  })
+
+  it('1% discrepancy returns 99', () => {
+    // book=1000, bank=990, discrepancy=10, denom=1000 → 99
+    expect(computeReconciliationPct(1000, 990)).toBe(99)
+  })
+
+  it('result is always between 0 and 100', () => {
+    const cases: [number, number][] = [
+      [0, 0], [100, 50], [50, 100], [1000, 999], [0, 9999], [9999, 0],
+    ]
+    cases.forEach(([book, bank]) => {
+      const pct = computeReconciliationPct(book, bank)
+      expect(pct).toBeGreaterThanOrEqual(0)
+      expect(pct).toBeLessThanOrEqual(100)
+    })
+  })
+
+  it('symmetric: swapping book and bank yields same pct', () => {
+    const a = computeReconciliationPct(8000, 10000)
+    const b = computeReconciliationPct(10000, 8000)
+    expect(a).toBe(b)
+  })
+
+  it('uses max(book, bank) as denominator — larger value determines scale', () => {
+    // book=100, bank=10000, discrepancy=9900, denom=10000 → (1 - 9900/10000)*100 = 1
+    expect(computeReconciliationPct(100, 10000)).toBeCloseTo(1, 0)
+  })
+})
+
+// ── buildReconciliationLine — returned object shape ───────────────────────────
+
+describe('buildReconciliationLine — returned object shape and types', () => {
+  it('result has all required fields', () => {
+    const line = buildReconciliationLine('TestBank', 10000, 9000)
+    expect(line).toHaveProperty('account_name')
+    expect(line).toHaveProperty('book_balance_try')
+    expect(line).toHaveProperty('bank_balance_try')
+    expect(line).toHaveProperty('discrepancy_try')
+    expect(line).toHaveProperty('discrepancy_severity')
+    expect(line).toHaveProperty('reconciliation_pct')
+    expect(line).toHaveProperty('is_reconciled')
+  })
+
+  it('book_balance_try and bank_balance_try are rounded to 2dp', () => {
+    const line = buildReconciliationLine('X', 1000.555, 999.005)
+    const bookDp = String(line.book_balance_try).split('.')[1]?.length ?? 0
+    const bankDp = String(line.bank_balance_try).split('.')[1]?.length ?? 0
+    expect(bookDp).toBeLessThanOrEqual(2)
+    expect(bankDp).toBeLessThanOrEqual(2)
+  })
+
+  it('moderate severity (discrepancy 5000) → is_reconciled false', () => {
+    const line = buildReconciliationLine('Vakıfbank', 15000, 10000)
+    expect(line.discrepancy_severity).toBe('moderate')
+    expect(line.is_reconciled).toBe(false)
+  })
+
+  it('account_name is preserved as-is', () => {
+    const line = buildReconciliationLine('İş Bankası Şubesi', 1000, 1000)
+    expect(line.account_name).toBe('İş Bankası Şubesi')
+  })
+
+  it('negative bank balance handled correctly', () => {
+    // book=0, bank=-5000 → discrepancy = 5000 → moderate
+    const line = buildReconciliationLine('Overdraft', 0, -5000)
+    expect(line.discrepancy_try).toBeCloseTo(5000, 1)
+    expect(line.discrepancy_severity).toBe('moderate')
+    expect(line.is_reconciled).toBe(false)
+  })
+})

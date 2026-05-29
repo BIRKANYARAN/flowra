@@ -119,4 +119,166 @@ describe('computeMomentum', () => {
     const result = computeMomentum(makePoints([100, 120, 140, 160, 180, 200]))
     expect(valid).toContain(result)
   })
+
+  test('accelerating when recent growth clearly outpaces prior growth', () => {
+    // Prior 3 months: +1/step. Recent 3 months: +20/step. Low variance to avoid volatile.
+    const points = makePoints([100, 101, 102, 103, 104, 105, 106, 126, 146, 166])
+    const result = computeMomentum(points)
+    expect(result).toBe('accelerating')
+  })
+
+  test('decelerating when recent growth slows vs prior', () => {
+    // Prior 3 months: +20/step. Recent 3 months: +1/step. Low variance overall.
+    const points = makePoints([100, 120, 140, 160, 180, 200, 220, 221, 222, 223])
+    const result = computeMomentum(points)
+    expect(result).toBe('decelerating')
+  })
+
+  test('exactly 6 points is not insufficient', () => {
+    const points = makePoints([100, 100, 100, 100, 100, 100])
+    const result = computeMomentum(points)
+    expect(result).not.toBe('insufficient')
+  })
+
+  test('exactly 5 points returns insufficient', () => {
+    const result = computeMomentum(makePoints([100, 100, 100, 100, 100]))
+    expect(result).toBe('insufficient')
+  })
+
+  test('NaN values are filtered out — if valid count < 6 returns insufficient', () => {
+    const points: TrendPoint[] = [
+      { month: '2026-01', label: 'Oca', value: NaN },
+      { month: '2026-02', label: 'Şub', value: 100 },
+      { month: '2026-03', label: 'Mar', value: 100 },
+      { month: '2026-04', label: 'Nis', value: 100 },
+      { month: '2026-05', label: 'May', value: 100 },
+      { month: '2026-06', label: 'Haz', value: 100 },
+    ]
+    // Only 5 valid points after NaN is filtered → insufficient
+    expect(computeMomentum(points)).toBe('insufficient')
+  })
+
+  test('12 steady-growth points returns valid enum', () => {
+    const valid = ['accelerating', 'steady', 'decelerating', 'volatile', 'insufficient']
+    const result = computeMomentum(makePoints([100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210]))
+    expect(valid).toContain(result)
+    expect(result).not.toBe('insufficient')
+    expect(result).not.toBe('volatile')
+  })
+})
+
+// ── computeLinearRegression — additional precision tests ─────────────────────
+
+describe('computeLinearRegression — precision and boundary', () => {
+  test('two equal values returns [v, v]', () => {
+    const result = computeLinearRegression([7, 7])
+    expect(result).toHaveLength(2)
+    result.forEach(v => expect(v).toBeCloseTo(7, 1))
+  })
+
+  test('exact sequence 2,4,6,8 — trend midpoints are accurate', () => {
+    const result = computeLinearRegression([2, 4, 6, 8])
+    expect(result).toHaveLength(4)
+    // Perfect linear: trend values should equal the inputs
+    expect(result[0]).toBeCloseTo(2, 0)
+    expect(result[3]).toBeCloseTo(8, 0)
+  })
+
+  test('all zeros returns array of zeros', () => {
+    const result = computeLinearRegression([0, 0, 0, 0])
+    result.forEach(v => expect(v).toBe(0))
+  })
+
+  test('values with decimals are rounded to 2dp', () => {
+    const result = computeLinearRegression([1.001, 2.002, 3.003])
+    result.forEach(v => {
+      const dp = String(v).split('.')[1]?.length ?? 0
+      expect(dp).toBeLessThanOrEqual(2)
+    })
+  })
+
+  test('large values do not lose precision', () => {
+    const result = computeLinearRegression([1_000_000, 2_000_000, 3_000_000])
+    expect(result[0]).toBeCloseTo(1_000_000, -2)
+    expect(result[2]).toBeCloseTo(3_000_000, -2)
+  })
+
+  test('negative trend values are supported', () => {
+    const result = computeLinearRegression([-10, -20, -30])
+    expect(result[0]).toBeGreaterThan(result[2])
+    result.forEach(v => expect(v).toBeLessThanOrEqual(0))
+  })
+})
+
+// ── computeCoeffOfVariation — additional tests ────────────────────────────────
+
+describe('computeCoeffOfVariation — additional boundary cases', () => {
+  test('single value returns 0 (no variance)', () => {
+    expect(computeCoeffOfVariation([42])).toBe(0)
+  })
+
+  test('two equal values returns 0', () => {
+    expect(computeCoeffOfVariation([100, 100])).toBe(0)
+  })
+
+  test('result is non-negative', () => {
+    const cv = computeCoeffOfVariation([10, 20, 30, 40])
+    expect(cv).toBeGreaterThanOrEqual(0)
+  })
+
+  test('result is a percentage (roughly 0–200 range for normal data)', () => {
+    const cv = computeCoeffOfVariation([50, 100, 150])
+    expect(cv).toBeGreaterThan(0)
+    expect(cv).toBeLessThan(200)
+  })
+
+  test('CV above 40 threshold for volatile detection', () => {
+    // CV of [1, 100] should well exceed 40
+    const cv = computeCoeffOfVariation([1, 100])
+    expect(cv).toBeGreaterThan(40)
+  })
+
+  test('CV below 40 for tight cluster', () => {
+    const cv = computeCoeffOfVariation([99, 100, 101, 100, 99])
+    expect(cv).toBeLessThan(5)
+  })
+
+  test('array with all negative values (mean < 0) does not return 0', () => {
+    // mean = -50, so still computable
+    const cv = computeCoeffOfVariation([-40, -50, -60])
+    expect(cv).toBeGreaterThan(0)
+  })
+})
+
+// ── SHORT_MONTH_LABELS — additional entries ───────────────────────────────────
+
+describe('SHORT_MONTH_LABELS — all entries', () => {
+  test('index 1 is Şub (February)', () => {
+    expect(SHORT_MONTH_LABELS[1]).toBe('Şub')
+  })
+
+  test('index 2 is Mar (March)', () => {
+    expect(SHORT_MONTH_LABELS[2]).toBe('Mar')
+  })
+
+  test('index 6 is Tem (July)', () => {
+    expect(SHORT_MONTH_LABELS[6]).toBe('Tem')
+  })
+
+  test('index 10 is Kas (November)', () => {
+    expect(SHORT_MONTH_LABELS[10]).toBe('Kas')
+  })
+
+  test('all entries are strings of length 2-4 chars', () => {
+    SHORT_MONTH_LABELS.forEach(label => {
+      expect(typeof label).toBe('string')
+      expect(label.length).toBeGreaterThanOrEqual(2)
+      expect(label.length).toBeLessThanOrEqual(4)
+    })
+  })
+
+  test('no duplicate labels', () => {
+    const unique = new Set(SHORT_MONTH_LABELS)
+    expect(unique.size).toBe(12)
+  })
 })
