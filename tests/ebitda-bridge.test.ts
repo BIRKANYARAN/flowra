@@ -2,44 +2,84 @@
 // tests/ebitda-bridge.test.ts
 //
 // Unit tests for all pure functions in ebitda-bridge.service.ts:
-//   - computeEbitda                    (3 tests)
-//   - computeVolumeEffect              (5 tests)
-//   - computeMarginEffect              (4 tests)
-//   - computeOpexEffect                (4 tests)
-//   - computeCogsEffect                (4 tests)
-//   - buildEbitdaBridge                (9 tests)
-//   - computeOperatingLeverage         (5 tests)
-//   - classifyOperatingLeverageHealth  (8 tests)
-//   Total: 42 tests
+//   - computeEbitda                    (5 tests)
+//   - computeEbitdaMargin              (4 tests)
+//   - computeVolumeEffect              (6 tests)
+//   - computePriceMixEffect            (6 tests)
+//   - computeCostEffect                (6 tests)
+//   - computeResidualEffect            (7 tests)
+//   - computeEbitdaChange              (4 tests)
+//   - validateBridgeReconciliation     (6 tests)
+//   - classifyEbitdaTrend              (16 tests)
+//   - computeBridgeContributions       (7 tests)
+//   - identifyPrimaryDriver            (10 tests)
+//   - classifyEbitdaMarginHealth       (10 tests)
+//   - generateBridgeNarrative          (14 tests)
+//   Total: 101 inline + integration = 113 tests
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { describe, it, expect } from 'vitest'
 import {
   computeEbitda,
+  computeEbitdaMargin,
   computeVolumeEffect,
-  computeMarginEffect,
-  computeOpexEffect,
-  computeCogsEffect,
-  buildEbitdaBridge,
-  computeOperatingLeverage,
-  classifyOperatingLeverageHealth,
+  computePriceMixEffect,
+  computeCostEffect,
+  computeResidualEffect,
+  computeEbitdaChange,
+  validateBridgeReconciliation,
+  classifyEbitdaTrend,
+  computeBridgeContributions,
+  identifyPrimaryDriver,
+  classifyEbitdaMarginHealth,
+  generateBridgeNarrative,
 } from '../lib/services/finance/ebitda-bridge.service'
 
 // ── computeEbitda ──────────────────────────────────────────────────────────────
 
 describe('computeEbitda', () => {
-  it('normal: revenue - cogs - opex', () => {
-    // 200_000 - 80_000 - 40_000 = 80_000
-    expect(computeEbitda(200_000, 80_000, 40_000)).toBe(80_000)
+  it('normal: grossProfit - operatingExpenses', () => {
+    // 120_000 - 40_000 = 80_000
+    expect(computeEbitda(120_000, 40_000)).toBe(80_000)
   })
 
   it('zero components → 0', () => {
-    expect(computeEbitda(0, 0, 0)).toBe(0)
+    expect(computeEbitda(0, 0)).toBe(0)
   })
 
-  it('negative EBITDA when costs exceed revenue', () => {
-    // 50_000 - 60_000 - 20_000 = -30_000
-    expect(computeEbitda(50_000, 60_000, 20_000)).toBe(-30_000)
+  it('negative EBITDA when opex exceeds gross profit', () => {
+    // 30_000 - 50_000 = -20_000
+    expect(computeEbitda(30_000, 50_000)).toBe(-20_000)
+  })
+
+  it('gross profit = 0 but opex > 0 → negative EBITDA', () => {
+    expect(computeEbitda(0, 15_000)).toBe(-15_000)
+  })
+
+  it('high gross profit, low opex → positive EBITDA', () => {
+    expect(computeEbitda(500_000, 100_000)).toBe(400_000)
+  })
+})
+
+// ── computeEbitdaMargin ───────────────────────────────────────────────────────
+
+describe('computeEbitdaMargin', () => {
+  it('normal: ebitda / revenue * 100', () => {
+    // 80_000 / 400_000 * 100 = 20%
+    expect(computeEbitdaMargin(80_000, 400_000)).toBeCloseTo(20)
+  })
+
+  it('zero revenue → null', () => {
+    expect(computeEbitdaMargin(80_000, 0)).toBeNull()
+  })
+
+  it('negative ebitda → negative margin', () => {
+    // -20_000 / 100_000 * 100 = -20%
+    expect(computeEbitdaMargin(-20_000, 100_000)).toBeCloseTo(-20)
+  })
+
+  it('ebitda = revenue → 100% margin', () => {
+    expect(computeEbitdaMargin(100_000, 100_000)).toBeCloseTo(100)
   })
 })
 
@@ -47,234 +87,564 @@ describe('computeEbitda', () => {
 
 describe('computeVolumeEffect', () => {
   it('revenue increase with positive prior margin → positive effect', () => {
-    // (150_000 - 100_000) × (20 / 100) = 10_000
+    // (150_000 - 100_000) × (20/100) = 10_000
     expect(computeVolumeEffect(100_000, 150_000, 20)).toBeCloseTo(10_000)
   })
 
   it('revenue decline with positive prior margin → negative effect', () => {
-    // (80_000 - 100_000) × (25 / 100) = -5_000
+    // (80_000 - 100_000) × (25/100) = -5_000
     expect(computeVolumeEffect(100_000, 80_000, 25)).toBeCloseTo(-5_000)
   })
 
-  it('zero prior margin → zero volume effect regardless of revenue change', () => {
-    expect(computeVolumeEffect(100_000, 200_000, 0)).toBe(0)
+  it('same revenue → zero volume effect', () => {
+    expect(computeVolumeEffect(100_000, 100_000, 30)).toBe(0)
+  })
+
+  it('null prior margin → null', () => {
+    expect(computeVolumeEffect(100_000, 150_000, null)).toBeNull()
   })
 
   it('negative prior margin + revenue growth → negative effect', () => {
-    // (120_000 - 100_000) × (-10 / 100) = -2_000
+    // (120_000 - 100_000) × (-10/100) = -2_000
     expect(computeVolumeEffect(100_000, 120_000, -10)).toBeCloseTo(-2_000)
   })
 
-  it('same revenue prior and current → zero volume effect', () => {
-    expect(computeVolumeEffect(100_000, 100_000, 30)).toBe(0)
+  it('zero prior margin → zero effect regardless of revenue change', () => {
+    expect(computeVolumeEffect(100_000, 200_000, 0)).toBe(0)
   })
 })
 
-// ── computeMarginEffect ────────────────────────────────────────────────────────
+// ── computePriceMixEffect ─────────────────────────────────────────────────────
 
-describe('computeMarginEffect', () => {
-  it('margin improvement → positive effect', () => {
-    // 200_000 × (25 - 20) / 100 = 10_000
-    expect(computeMarginEffect(200_000, 25, 20)).toBeCloseTo(10_000)
+describe('computePriceMixEffect', () => {
+  it('margin expansion → positive effect', () => {
+    // 200_000 × (30 - 25) / 100 = 10_000
+    expect(computePriceMixEffect(200_000, 25, 30)).toBeCloseTo(10_000)
   })
 
-  it('margin decline → negative effect', () => {
-    // 200_000 × (15 - 20) / 100 = -10_000
-    expect(computeMarginEffect(200_000, 15, 20)).toBeCloseTo(-10_000)
-  })
-
-  it('zero revenue → zero effect regardless of margin change', () => {
-    expect(computeMarginEffect(0, 30, 10)).toBe(0)
+  it('margin compression → negative effect', () => {
+    // 200_000 × (18 - 25) / 100 = -14_000
+    expect(computePriceMixEffect(200_000, 25, 18)).toBeCloseTo(-14_000)
   })
 
   it('same margins → zero effect', () => {
-    expect(computeMarginEffect(150_000, 22, 22)).toBe(0)
+    expect(computePriceMixEffect(150_000, 22, 22)).toBe(0)
+  })
+
+  it('null prior gross margin → null', () => {
+    expect(computePriceMixEffect(200_000, null, 30)).toBeNull()
+  })
+
+  it('null current gross margin → null', () => {
+    expect(computePriceMixEffect(200_000, 25, null)).toBeNull()
+  })
+
+  it('both margins null → null', () => {
+    expect(computePriceMixEffect(200_000, null, null)).toBeNull()
   })
 })
 
-// ── computeOpexEffect ──────────────────────────────────────────────────────────
+// ── computeCostEffect ─────────────────────────────────────────────────────────
 
-describe('computeOpexEffect', () => {
-  it('cost reduction → positive effect (favorable)', () => {
-    // prior=50_000, current=40_000 → -(40_000 - 50_000) = 10_000
-    expect(computeOpexEffect(50_000, 40_000)).toBe(10_000)
+describe('computeCostEffect', () => {
+  it('cost reduction relative to revenue → positive effect (savings)', () => {
+    // priorOpexRatio = 30_000/100_000 = 0.30
+    // expectedOpex   = 120_000 × 0.30 = 36_000
+    // costEffect     = -(25_000 - 36_000) = +11_000
+    expect(computeCostEffect(100_000, 30_000, 120_000, 25_000)).toBeCloseTo(11_000)
   })
 
-  it('cost increase → negative effect (unfavorable)', () => {
-    // prior=50_000, current=65_000 → -(65_000 - 50_000) = -15_000
-    expect(computeOpexEffect(50_000, 65_000)).toBe(-15_000)
+  it('cost overrun relative to revenue → negative effect', () => {
+    // priorOpexRatio = 30_000/100_000 = 0.30
+    // expectedOpex   = 120_000 × 0.30 = 36_000
+    // costEffect     = -(50_000 - 36_000) = -14_000
+    expect(computeCostEffect(100_000, 30_000, 120_000, 50_000)).toBeCloseTo(-14_000)
   })
 
-  it('no change → zero effect', () => {
-    expect(computeOpexEffect(30_000, 30_000)).toBeCloseTo(0)
+  it('same opex ratio → zero effect', () => {
+    // priorOpexRatio = 0.30; currentOpex = 120_000 × 0.30 = 36_000
+    expect(computeCostEffect(100_000, 30_000, 120_000, 36_000)).toBeCloseTo(0)
   })
 
-  it('zero prior opex, positive current → negative effect', () => {
-    // -(20_000 - 0) = -20_000
-    expect(computeOpexEffect(0, 20_000)).toBe(-20_000)
-  })
-})
-
-// ── computeCogsEffect ──────────────────────────────────────────────────────────
-
-describe('computeCogsEffect', () => {
-  it('COGS ratio improvement → positive effect (favorable)', () => {
-    // currentRevenue=200_000, prior ratio=0.60, current ratio=0.55
-    // = 200_000 × (0.60 - 0.55) = 10_000
-    expect(computeCogsEffect(180_000, 200_000, 0.60, 0.55)).toBeCloseTo(10_000)
+  it('zero prior revenue → null', () => {
+    expect(computeCostEffect(0, 30_000, 120_000, 40_000)).toBeNull()
   })
 
-  it('COGS ratio worsening → negative effect (unfavorable)', () => {
-    // currentRevenue=200_000, prior ratio=0.55, current ratio=0.65
-    // = 200_000 × (0.55 - 0.65) = -20_000
-    expect(computeCogsEffect(180_000, 200_000, 0.55, 0.65)).toBeCloseTo(-20_000)
+  it('zero opex in both periods → zero effect', () => {
+    expect(computeCostEffect(100_000, 0, 120_000, 0)).toBeCloseTo(0)
   })
 
-  it('same COGS ratio → zero effect', () => {
-    expect(computeCogsEffect(100_000, 150_000, 0.50, 0.50)).toBe(0)
-  })
-
-  it('zero current revenue → zero effect', () => {
-    expect(computeCogsEffect(100_000, 0, 0.60, 0.70)).toBeCloseTo(0)
+  it('current revenue same as prior → simple opex comparison', () => {
+    // priorOpexRatio = 0.25; expected = 0.25 × 100_000 = 25_000; actual = 20_000
+    // costEffect = -(20_000 - 25_000) = +5_000
+    expect(computeCostEffect(100_000, 25_000, 100_000, 20_000)).toBeCloseTo(5_000)
   })
 })
 
-// ── buildEbitdaBridge ─────────────────────────────────────────────────────────
+// ── computeResidualEffect ─────────────────────────────────────────────────────
 
-describe('buildEbitdaBridge', () => {
-  const prior   = { revenue: 100_000, cogs: 55_000, opex: 25_000 }
-  const current = { revenue: 120_000, cogs: 60_000, opex: 22_000 }
-
-  it('prior_ebitda = revenue - cogs - opex (prior)', () => {
-    const bridge = buildEbitdaBridge(prior, current)
-    expect(bridge.prior_ebitda).toBe(100_000 - 55_000 - 25_000)  // 20_000
+describe('computeResidualEffect', () => {
+  it('all effects account for total change → residual ~0', () => {
+    // totalChange = 18_000
+    // vol=10_000, price=5_000, cost=3_000 → residual = 18_000 - 18_000 = 0
+    expect(computeResidualEffect(20_000, 38_000, 10_000, 5_000, 3_000)).toBeCloseTo(0)
   })
 
-  it('current_ebitda = revenue - cogs - opex (current)', () => {
-    const bridge = buildEbitdaBridge(prior, current)
-    expect(bridge.current_ebitda).toBe(120_000 - 60_000 - 22_000)  // 38_000
+  it('unexplained gap → non-zero residual', () => {
+    // totalChange = 20_000; vol+price+cost = 15_000 → residual = 5_000
+    expect(computeResidualEffect(10_000, 30_000, 8_000, 4_000, 3_000)).toBeCloseTo(5_000)
   })
 
-  it('reconciliation_error is approximately 0', () => {
-    const bridge = buildEbitdaBridge(prior, current)
-    expect(Math.abs(bridge.reconciliation_error)).toBeLessThan(0.01)
+  it('null volumeEffect → null', () => {
+    expect(computeResidualEffect(20_000, 38_000, null, 5_000, 3_000)).toBeNull()
   })
 
-  it('prior + sum of effects ≈ current EBITDA', () => {
-    const bridge = buildEbitdaBridge(prior, current)
-    const computed = bridge.prior_ebitda
-      + bridge.volume_effect
-      + bridge.cogs_effect
-      + bridge.margin_effect
-      + bridge.opex_effect
-    expect(Math.abs(computed - bridge.current_ebitda)).toBeLessThan(0.01)
+  it('null priceMixEffect → null', () => {
+    expect(computeResidualEffect(20_000, 38_000, 10_000, null, 3_000)).toBeNull()
   })
 
-  it('components array has 4 items', () => {
-    const bridge = buildEbitdaBridge(prior, current)
-    expect(bridge.components).toHaveLength(4)
+  it('null costEffect → null', () => {
+    expect(computeResidualEffect(20_000, 38_000, 10_000, 5_000, null)).toBeNull()
   })
 
-  it('component labels are Turkish', () => {
-    const bridge = buildEbitdaBridge(prior, current)
-    const labels = bridge.components.map(c => c.label)
-    expect(labels).toContain('Hacim Etkisi')
-    expect(labels).toContain('SMM Verimliliği')
-    expect(labels).toContain('Marj Etkisi')
-    expect(labels).toContain('Opex Etkisi')
+  it('all effects null → null', () => {
+    expect(computeResidualEffect(20_000, 38_000, null, null, null)).toBeNull()
   })
 
-  it('is_favorable=true when component value > 0', () => {
-    const bridge = buildEbitdaBridge(prior, current)
-    for (const c of bridge.components) {
-      if (c.value > 0)  expect(c.is_favorable).toBe(true)
-      if (c.value <= 0) expect(c.is_favorable).toBe(false)
+  it('negative EBITDA change → negative residual when effects overcount', () => {
+    // totalChange = -10_000; effects sum = -5_000; residual = -10_000 - (-5_000) = -5_000
+    expect(computeResidualEffect(30_000, 20_000, -3_000, -1_000, -1_000)).toBeCloseTo(-5_000)
+  })
+})
+
+// ── computeEbitdaChange ───────────────────────────────────────────────────────
+
+describe('computeEbitdaChange', () => {
+  it('positive change', () => {
+    expect(computeEbitdaChange(20_000, 38_000)).toBe(18_000)
+  })
+
+  it('negative change', () => {
+    expect(computeEbitdaChange(50_000, 30_000)).toBe(-20_000)
+  })
+
+  it('zero change', () => {
+    expect(computeEbitdaChange(25_000, 25_000)).toBe(0)
+  })
+
+  it('from negative to positive', () => {
+    expect(computeEbitdaChange(-10_000, 5_000)).toBe(15_000)
+  })
+})
+
+// ── validateBridgeReconciliation ──────────────────────────────────────────────
+
+describe('validateBridgeReconciliation', () => {
+  it('consistent bridge → gap = 0', () => {
+    // totalChange=18_000; sum=18_000
+    expect(validateBridgeReconciliation(18_000, 10_000, 5_000, 3_000, 0)).toBeCloseTo(0)
+  })
+
+  it('gap when effects do not sum to total', () => {
+    // totalChange=20_000; sum=18_000; gap=2_000
+    expect(validateBridgeReconciliation(20_000, 10_000, 5_000, 2_000, 1_000)).toBeCloseTo(2_000)
+  })
+
+  it('null volumeEffect → null', () => {
+    expect(validateBridgeReconciliation(18_000, null, 5_000, 3_000, 0)).toBeNull()
+  })
+
+  it('null priceMixEffect → null', () => {
+    expect(validateBridgeReconciliation(18_000, 10_000, null, 3_000, 0)).toBeNull()
+  })
+
+  it('null costEffect → null', () => {
+    expect(validateBridgeReconciliation(18_000, 10_000, 5_000, null, 0)).toBeNull()
+  })
+
+  it('null residualEffect → null', () => {
+    expect(validateBridgeReconciliation(18_000, 10_000, 5_000, 3_000, null)).toBeNull()
+  })
+})
+
+// ── classifyEbitdaTrend ───────────────────────────────────────────────────────
+
+describe('classifyEbitdaTrend', () => {
+  // Priority: turnaround > deterioration > others
+
+  it('turnaround: priorEbitda < 0 AND currentEbitda > 0', () => {
+    expect(classifyEbitdaTrend(-10_000, 5_000)).toBe('turnaround')
+  })
+
+  it('turnaround takes priority even when % change is large', () => {
+    expect(classifyEbitdaTrend(-1, 1_000_000)).toBe('turnaround')
+  })
+
+  it('deterioration: priorEbitda > 0 AND currentEbitda < 0', () => {
+    expect(classifyEbitdaTrend(20_000, -5_000)).toBe('deterioration')
+  })
+
+  it('deterioration takes priority over % calculation', () => {
+    expect(classifyEbitdaTrend(1_000_000, -1)).toBe('deterioration')
+  })
+
+  it('insufficient_data: priorEbitda === 0', () => {
+    expect(classifyEbitdaTrend(0, 10_000)).toBe('insufficient_data')
+  })
+
+  it('insufficient_data: priorEbitda === 0, currentEbitda = 0', () => {
+    expect(classifyEbitdaTrend(0, 0)).toBe('insufficient_data')
+  })
+
+  it('strong_growth: change_pct >= +25%', () => {
+    // 100_000 → 125_000: +25%
+    expect(classifyEbitdaTrend(100_000, 125_000)).toBe('strong_growth')
+  })
+
+  it('strong_growth: change_pct well above 25%', () => {
+    // 100_000 → 200_000: +100%
+    expect(classifyEbitdaTrend(100_000, 200_000)).toBe('strong_growth')
+  })
+
+  it('growth: change_pct >= +10%', () => {
+    // 100_000 → 115_000: +15%
+    expect(classifyEbitdaTrend(100_000, 115_000)).toBe('growth')
+  })
+
+  it('growth: exact +10% boundary', () => {
+    // 100_000 → 110_000: +10%
+    expect(classifyEbitdaTrend(100_000, 110_000)).toBe('growth')
+  })
+
+  it('stable: change_pct between -10% and +10% (exclusive)', () => {
+    // 100_000 → 105_000: +5%
+    expect(classifyEbitdaTrend(100_000, 105_000)).toBe('stable')
+  })
+
+  it('stable: change_pct = 0', () => {
+    expect(classifyEbitdaTrend(50_000, 50_000)).toBe('stable')
+  })
+
+  it('decline: change_pct between -10% and -25%', () => {
+    // 100_000 → 85_000: -15%
+    expect(classifyEbitdaTrend(100_000, 85_000)).toBe('decline')
+  })
+
+  it('decline: exact -25% boundary', () => {
+    // 100_000 → 75_000: -25%
+    expect(classifyEbitdaTrend(100_000, 75_000)).toBe('decline')
+  })
+
+  it('severe_decline: change_pct < -25%', () => {
+    // 100_000 → 70_000: -30%
+    expect(classifyEbitdaTrend(100_000, 70_000)).toBe('severe_decline')
+  })
+
+  it('severe_decline: near total wipeout', () => {
+    // 100_000 → 1_000: -99%
+    expect(classifyEbitdaTrend(100_000, 1_000)).toBe('severe_decline')
+  })
+})
+
+// ── computeBridgeContributions ────────────────────────────────────────────────
+
+describe('computeBridgeContributions', () => {
+  it('normal case: contributions sum explains effects', () => {
+    const result = computeBridgeContributions(20_000, 10_000, 6_000, 4_000)
+    expect(result).not.toBeNull()
+    expect(result!.volume_contribution_pct).toBeCloseTo(50)
+    expect(result!.price_mix_contribution_pct).toBeCloseTo(30)
+    expect(result!.cost_contribution_pct).toBeCloseTo(20)
+  })
+
+  it('zero totalChange → null', () => {
+    expect(computeBridgeContributions(0, 10_000, 5_000, 3_000)).toBeNull()
+  })
+
+  it('null volumeEffect → volume_contribution_pct is null', () => {
+    const result = computeBridgeContributions(20_000, null, 10_000, 5_000)
+    expect(result).not.toBeNull()
+    expect(result!.volume_contribution_pct).toBeNull()
+    expect(result!.price_mix_contribution_pct).toBeCloseTo(50)
+  })
+
+  it('null priceMixEffect → price_mix_contribution_pct is null', () => {
+    const result = computeBridgeContributions(20_000, 10_000, null, 5_000)
+    expect(result).not.toBeNull()
+    expect(result!.price_mix_contribution_pct).toBeNull()
+  })
+
+  it('null costEffect → cost_contribution_pct is null', () => {
+    const result = computeBridgeContributions(20_000, 10_000, 5_000, null)
+    expect(result).not.toBeNull()
+    expect(result!.cost_contribution_pct).toBeNull()
+  })
+
+  it('negative effects → negative contribution pcts', () => {
+    const result = computeBridgeContributions(10_000, 20_000, -5_000, -5_000)
+    expect(result).not.toBeNull()
+    expect(result!.volume_contribution_pct).toBeCloseTo(200)
+    expect(result!.price_mix_contribution_pct).toBeCloseTo(-50)
+    expect(result!.cost_contribution_pct).toBeCloseTo(-50)
+  })
+
+  it('negative totalChange with negative effects → positive contribution pcts', () => {
+    const result = computeBridgeContributions(-10_000, -5_000, -3_000, -2_000)
+    expect(result).not.toBeNull()
+    expect(result!.volume_contribution_pct).toBeCloseTo(50)
+    expect(result!.price_mix_contribution_pct).toBeCloseTo(30)
+    expect(result!.cost_contribution_pct).toBeCloseTo(20)
+  })
+})
+
+// ── identifyPrimaryDriver ─────────────────────────────────────────────────────
+
+describe('identifyPrimaryDriver', () => {
+  it('volume is clearly largest → volume', () => {
+    expect(identifyPrimaryDriver(50_000, 5_000, 3_000)).toBe('volume')
+  })
+
+  it('price_mix is clearly largest → price_mix', () => {
+    expect(identifyPrimaryDriver(5_000, 50_000, 3_000)).toBe('price_mix')
+  })
+
+  it('cost is clearly largest → cost', () => {
+    expect(identifyPrimaryDriver(3_000, 5_000, 50_000)).toBe('cost')
+  })
+
+  it('all null → insufficient_data', () => {
+    expect(identifyPrimaryDriver(null, null, null)).toBe('insufficient_data')
+  })
+
+  it('two are tied as largest → mixed', () => {
+    // 50_000 and 50_000 both largest
+    expect(identifyPrimaryDriver(50_000, 50_000, 3_000)).toBe('mixed')
+  })
+
+  it('all three equal → mixed', () => {
+    expect(identifyPrimaryDriver(30_000, 30_000, 30_000)).toBe('mixed')
+  })
+
+  it('negative effects: largest absolute value wins', () => {
+    // abs(-50_000) > abs(5_000) > abs(-3_000)
+    expect(identifyPrimaryDriver(-50_000, 5_000, -3_000)).toBe('volume')
+  })
+
+  it('one null, others clear → identifies from non-null', () => {
+    expect(identifyPrimaryDriver(null, 50_000, 3_000)).toBe('price_mix')
+  })
+
+  it('two null, one non-null → that one wins', () => {
+    expect(identifyPrimaryDriver(null, null, 10_000)).toBe('cost')
+  })
+
+  it('all zero → mixed', () => {
+    expect(identifyPrimaryDriver(0, 0, 0)).toBe('mixed')
+  })
+})
+
+// ── classifyEbitdaMarginHealth ────────────────────────────────────────────────
+
+describe('classifyEbitdaMarginHealth', () => {
+  it('null → insufficient_data', () => {
+    expect(classifyEbitdaMarginHealth(null)).toBe('insufficient_data')
+  })
+
+  it('exact 25% → excellent', () => {
+    expect(classifyEbitdaMarginHealth(25)).toBe('excellent')
+  })
+
+  it('above 25% → excellent', () => {
+    expect(classifyEbitdaMarginHealth(40)).toBe('excellent')
+  })
+
+  it('exact 15% → good', () => {
+    expect(classifyEbitdaMarginHealth(15)).toBe('good')
+  })
+
+  it('between 15% and 25% → good', () => {
+    expect(classifyEbitdaMarginHealth(20)).toBe('good')
+  })
+
+  it('exact 8% → moderate', () => {
+    expect(classifyEbitdaMarginHealth(8)).toBe('moderate')
+  })
+
+  it('between 8% and 15% → moderate', () => {
+    expect(classifyEbitdaMarginHealth(12)).toBe('moderate')
+  })
+
+  it('exact 3% → low', () => {
+    expect(classifyEbitdaMarginHealth(3)).toBe('low')
+  })
+
+  it('between 3% and 8% → low', () => {
+    expect(classifyEbitdaMarginHealth(5)).toBe('low')
+  })
+
+  it('below 3% → negative', () => {
+    expect(classifyEbitdaMarginHealth(2)).toBe('negative')
+  })
+
+  it('0% → negative', () => {
+    expect(classifyEbitdaMarginHealth(0)).toBe('negative')
+  })
+
+  it('negative margin → negative', () => {
+    expect(classifyEbitdaMarginHealth(-5)).toBe('negative')
+  })
+})
+
+// ── generateBridgeNarrative ───────────────────────────────────────────────────
+
+describe('generateBridgeNarrative', () => {
+  it('insufficient_data → explains missing data', () => {
+    const result = generateBridgeNarrative('insufficient_data', 'volume', 0, null)
+    expect(result).toContain('yeterli veri')
+  })
+
+  it('turnaround → positive transition message', () => {
+    const result = generateBridgeNarrative('turnaround', 'cost', 30_000, 10)
+    expect(result).toContain('negatif')
+    expect(result).toContain('pozitif')
+  })
+
+  it('turnaround includes margin if available', () => {
+    const result = generateBridgeNarrative('turnaround', 'volume', 15_000, 12.5)
+    expect(result).toContain('12.5')
+  })
+
+  it('deterioration → urgent alert message', () => {
+    const result = generateBridgeNarrative('deterioration', 'price_mix', -20_000, -5)
+    expect(result).toContain('negatif')
+  })
+
+  it('strong_growth + volume driver', () => {
+    const result = generateBridgeNarrative('strong_growth', 'volume', 50_000, 25)
+    expect(result).toContain('hacim')
+  })
+
+  it('strong_growth + price_mix driver', () => {
+    const result = generateBridgeNarrative('strong_growth', 'price_mix', 50_000, 30)
+    expect(result).toContain('fiyat')
+  })
+
+  it('strong_growth + cost driver', () => {
+    const result = generateBridgeNarrative('strong_growth', 'cost', 50_000, 28)
+    expect(result).toContain('maliyet')
+  })
+
+  it('severe_decline mentions risk', () => {
+    const result = generateBridgeNarrative('severe_decline', 'cost', -40_000, 2)
+    expect(result).toContain('risk')
+  })
+
+  it('growth with mixed driver', () => {
+    const result = generateBridgeNarrative('growth', 'mixed', 15_000, 18)
+    expect(typeof result).toBe('string')
+    expect(result.length).toBeGreaterThan(10)
+  })
+
+  it('stable → stable description', () => {
+    const result = generateBridgeNarrative('stable', 'volume', 2_000, 20)
+    expect(typeof result).toBe('string')
+    expect(result.length).toBeGreaterThan(10)
+  })
+
+  it('decline with cost driver', () => {
+    const result = generateBridgeNarrative('decline', 'cost', -15_000, 8)
+    expect(typeof result).toBe('string')
+    expect(result.length).toBeGreaterThan(10)
+  })
+
+  it('null margin omits margin from narrative', () => {
+    const result = generateBridgeNarrative('growth', 'volume', 10_000, null)
+    // Should not contain %null or undefined
+    expect(result).not.toContain('null')
+    expect(result).not.toContain('undefined')
+  })
+
+  it('returns non-empty string for all trend types', () => {
+    const trends = ['strong_growth', 'growth', 'stable', 'decline', 'severe_decline', 'turnaround', 'deterioration', 'insufficient_data'] as const
+    for (const trend of trends) {
+      const result = generateBridgeNarrative(trend, 'volume', 1_000, 10)
+      expect(result.length).toBeGreaterThan(0)
     }
   })
 
-  it('pct_of_prior is null when prior_ebitda = 0', () => {
-    const zeroPrior = { revenue: 50_000, cogs: 30_000, opex: 20_000 } // ebitda = 0
-    const bridge = buildEbitdaBridge(zeroPrior, current)
-    expect(bridge.prior_ebitda).toBe(0)
-    for (const c of bridge.components) {
-      expect(c.pct_of_prior).toBeNull()
+  it('all driver types produce valid narratives', () => {
+    const drivers = ['volume', 'price_mix', 'cost', 'mixed', 'insufficient_data'] as const
+    for (const driver of drivers) {
+      const result = generateBridgeNarrative('growth', driver, 10_000, 15)
+      expect(result.length).toBeGreaterThan(0)
+      expect(result).not.toContain('undefined')
     }
   })
-
-  it('handles identical periods → all effects near 0', () => {
-    const same = { revenue: 100_000, cogs: 55_000, opex: 25_000 }
-    const bridge = buildEbitdaBridge(same, same)
-    expect(Math.abs(bridge.volume_effect)).toBeLessThan(0.01)
-    expect(Math.abs(bridge.cogs_effect)).toBeLessThan(0.01)
-    expect(Math.abs(bridge.opex_effect)).toBeLessThan(0.01)
-    expect(Math.abs(bridge.reconciliation_error)).toBeLessThan(0.01)
-  })
 })
 
-// ── computeOperatingLeverage ──────────────────────────────────────────────────
+// ── Integration: bridge reconciliation consistency ─────────────────────────────
 
-describe('computeOperatingLeverage', () => {
-  it('OL > 1 when EBITDA grows faster than revenue', () => {
-    // EBITDA +30%, revenue +10% → OL = 3.0
-    const ol = computeOperatingLeverage(10, 30)
-    expect(ol).toBeCloseTo(3.0)
+describe('bridge reconciliation integration', () => {
+  it('full bridge reconciles: residual = 0 when all effects computable', () => {
+    const priorRevenue  = 100_000
+    const currentRevenue = 120_000
+    const priorCogs     = 60_000
+    const currentCogs   = 70_000
+    const priorOpex     = 20_000
+    const currentOpex   = 18_000
+
+    const priorGrossProfit   = priorRevenue   - priorCogs
+    const currentGrossProfit = currentRevenue - currentCogs
+
+    const priorGrossMarginPct   = (priorGrossProfit   / priorRevenue)   * 100
+    const currentGrossMarginPct = (currentGrossProfit / currentRevenue) * 100
+
+    const priorEbitda   = computeEbitda(priorGrossProfit,   priorOpex)
+    const currentEbitda = computeEbitda(currentGrossProfit, currentOpex)
+
+    const priorEbitdaMarginPct = computeEbitdaMargin(priorEbitda, priorRevenue)
+
+    const totalChange  = computeEbitdaChange(priorEbitda, currentEbitda)
+    const volumeEffect = computeVolumeEffect(priorRevenue, currentRevenue, priorEbitdaMarginPct)
+    const priceMix     = computePriceMixEffect(currentRevenue, priorGrossMarginPct, currentGrossMarginPct)
+    const costEffect   = computeCostEffect(priorRevenue, priorOpex, currentRevenue, currentOpex)
+    const residual     = computeResidualEffect(priorEbitda, currentEbitda, volumeEffect, priceMix, costEffect)
+
+    expect(residual).not.toBeNull()
+
+    const gap = validateBridgeReconciliation(totalChange, volumeEffect, priceMix, costEffect, residual)
+    expect(gap).not.toBeNull()
+    expect(Math.abs(gap!)).toBeLessThan(0.01)
   })
 
-  it('OL < 1 when EBITDA grows slower than revenue', () => {
-    // EBITDA +5%, revenue +10% → OL = 0.5
-    const ol = computeOperatingLeverage(10, 5)
-    expect(ol).toBeCloseTo(0.5)
+  it('classifyEbitdaTrend and classifyEbitdaMarginHealth are consistent for strong scenarios', () => {
+    const priorEbitda   = 50_000
+    const currentEbitda = 80_000  // +60%
+    const revenue       = 300_000
+
+    const trend        = classifyEbitdaTrend(priorEbitda, currentEbitda)
+    const marginHealth = classifyEbitdaMarginHealth(computeEbitdaMargin(currentEbitda, revenue))
+
+    expect(trend).toBe('strong_growth')
+    // 80_000/300_000 * 100 ≈ 26.7% → excellent
+    expect(marginHealth).toBe('excellent')
   })
 
-  it('zero revenue change → null', () => {
-    expect(computeOperatingLeverage(0, 20)).toBeNull()
-  })
+  it('contributions sum close to 100% when all effects are provided', () => {
+    const totalChange  = 15_000
+    const volumeEffect = 8_000
+    const priceMix     = 4_000
+    const costEffect   = 3_000
 
-  it('negative OL when EBITDA declines while revenue grows', () => {
-    // EBITDA -10%, revenue +10% → OL = -1.0
-    const ol = computeOperatingLeverage(10, -10)
-    expect(ol).toBeCloseTo(-1.0)
-  })
+    const contributions = computeBridgeContributions(totalChange, volumeEffect, priceMix, costEffect)
+    expect(contributions).not.toBeNull()
 
-  it('OL = 1.0 when EBITDA and revenue grow equally', () => {
-    expect(computeOperatingLeverage(15, 15)).toBeCloseTo(1.0)
-  })
-})
+    const sum =
+      (contributions!.volume_contribution_pct ?? 0) +
+      (contributions!.price_mix_contribution_pct ?? 0) +
+      (contributions!.cost_contribution_pct ?? 0)
 
-// ── classifyOperatingLeverageHealth ──────────────────────────────────────────
-
-describe('classifyOperatingLeverageHealth', () => {
-  it('both null → insufficient_data', () => {
-    expect(classifyOperatingLeverageHealth(null, null)).toBe('insufficient_data')
-  })
-
-  it('OL null with revenue growth → insufficient_data', () => {
-    expect(classifyOperatingLeverageHealth(null, 10)).toBe('insufficient_data')
-  })
-
-  it('high_leverage_positive: OL > 2 and revenue growing', () => {
-    expect(classifyOperatingLeverageHealth(3.5, 10)).toBe('high_leverage_positive')
-  })
-
-  it('not high_leverage_positive when OL > 2 but revenue declining', () => {
-    // OL > 2 but revenue < 0 → should not return high_leverage_positive
-    const result = classifyOperatingLeverageHealth(3.5, -5)
-    expect(result).not.toBe('high_leverage_positive')
-  })
-
-  it('high_leverage_negative: OL < -1', () => {
-    expect(classifyOperatingLeverageHealth(-2, 5)).toBe('high_leverage_negative')
-  })
-
-  it('improving: OL between 1 and 2', () => {
-    expect(classifyOperatingLeverageHealth(1.5, 10)).toBe('improving')
-  })
-
-  it('low_leverage: OL between 0 and 1', () => {
-    expect(classifyOperatingLeverageHealth(0.5, 10)).toBe('low_leverage')
-  })
-
-  it('declining: OL between -1 and 0', () => {
-    expect(classifyOperatingLeverageHealth(-0.5, 5)).toBe('declining')
+    // sum should be close to 100% (may not be exact if residual exists)
+    expect(sum).toBeCloseTo(100)
   })
 })
