@@ -556,3 +556,149 @@ describe('computeDailyCollectionRate — additional precision cases', () => {
     expect(computeDailyCollectionRate(1, 1)).toBeCloseTo(100)
   })
 })
+
+// ── computeDodChange — formula verification ───────────────────────────────────
+
+describe('computeDodChange — formula verification', () => {
+  it('formula: (today - yesterday) / yesterday × 100', () => {
+    // (200 - 100) / 100 × 100 = 100%
+    expect(computeDodChange(200, 100)).toBeCloseTo(100)
+  })
+
+  it('today = 0 and yesterday > 0 → -100%', () => {
+    expect(computeDodChange(0, 100)).toBeCloseTo(-100)
+  })
+
+  it('today = yesterday × 2 → 100%', () => {
+    expect(computeDodChange(500, 250)).toBeCloseTo(100)
+  })
+
+  it('today = yesterday × 0.5 → -50%', () => {
+    expect(computeDodChange(250, 500)).toBeCloseTo(-50)
+  })
+
+  it('zero denominator (yesterday = 0) → null regardless of today value', () => {
+    expect(computeDodChange(0, 0)).toBeNull()
+    expect(computeDodChange(999, 0)).toBeNull()
+  })
+
+  it('fractional values compute correctly', () => {
+    // (1.5 - 1.0) / 1.0 × 100 = 50%
+    expect(computeDodChange(1.5, 1.0)).toBeCloseTo(50)
+  })
+})
+
+// ── computeWowChange — formula verification ───────────────────────────────────
+
+describe('computeWowChange — formula verification', () => {
+  it('formula: (thisWeek - lastWeek) / lastWeek × 100', () => {
+    expect(computeWowChange(120, 100)).toBeCloseTo(20)
+  })
+
+  it('zero lastWeek → null', () => {
+    expect(computeWowChange(500, 0)).toBeNull()
+  })
+
+  it('thisWeek = lastWeek → 0%', () => {
+    expect(computeWowChange(300, 300)).toBeCloseTo(0)
+  })
+
+  it('thisWeek = 0 and lastWeek > 0 → -100%', () => {
+    expect(computeWowChange(0, 400)).toBeCloseTo(-100)
+  })
+
+  it('thisWeek triple lastWeek → 200%', () => {
+    expect(computeWowChange(900, 300)).toBeCloseTo(200)
+  })
+
+  it('zero both → null', () => {
+    expect(computeWowChange(0, 0)).toBeNull()
+  })
+})
+
+// ── classifyOpsPulse — threshold boundaries ───────────────────────────────────
+
+describe('classifyOpsPulse — threshold boundaries', () => {
+  it('critical: overdueCount > 5 AND stockCritical > 3', () => {
+    expect(classifyOpsPulse(10, true, 6, 4)).toBe('critical')
+  })
+
+  it('critical threshold exact: overdueCount = 6 AND stockCritical = 4', () => {
+    expect(classifyOpsPulse(null, true, 6, 4)).toBe('critical')
+  })
+
+  it('not critical when overdueCount = 5 (boundary — must be > 5)', () => {
+    const result = classifyOpsPulse(5, true, 5, 4)
+    expect(result).not.toBe('critical')
+  })
+
+  it('not critical when stockCritical = 3 (boundary — must be > 3)', () => {
+    const result = classifyOpsPulse(5, true, 6, 3)
+    expect(result).not.toBe('critical')
+  })
+
+  it('slow when hasSalesToday = false', () => {
+    expect(classifyOpsPulse(5, false, 0, 0)).toBe('slow')
+  })
+
+  it('slow when salesDodPct < -20', () => {
+    expect(classifyOpsPulse(-25, true, 0, 0)).toBe('slow')
+  })
+
+  it('slow at exact -20.1 (just below threshold)', () => {
+    expect(classifyOpsPulse(-20.1, true, 0, 0)).toBe('slow')
+  })
+
+  it('NOT slow at exactly -20 (boundary: must be < -20)', () => {
+    const result = classifyOpsPulse(-20, true, 0, 0)
+    expect(result).not.toBe('slow')
+  })
+
+  it('strong: salesDodPct > 0 AND stockCritical = 0 AND hasSalesToday', () => {
+    expect(classifyOpsPulse(10, true, 0, 0)).toBe('strong')
+  })
+
+  it('normal: mixed signals without critical or slow conditions', () => {
+    expect(classifyOpsPulse(null, true, 0, 0)).toBe('normal')
+  })
+
+  it('normal: salesDodPct = 0 (not positive, not below -20)', () => {
+    expect(classifyOpsPulse(0, true, 0, 0)).toBe('normal')
+  })
+
+  it('normal: salesDodPct > 0 but stockCritical > 0', () => {
+    expect(classifyOpsPulse(5, true, 0, 1)).toBe('normal')
+  })
+})
+
+// ── computeFillRate — formula verification ────────────────────────────────────
+
+describe('computeFillRate — formula verification', () => {
+  it('formula: fulfilled / ordered × 100', () => {
+    expect(computeFillRate(80, 100)).toBeCloseTo(80)
+  })
+
+  it('100% fill rate when fulfilled = ordered', () => {
+    expect(computeFillRate(50, 50)).toBeCloseTo(100)
+  })
+
+  it('0% fill rate when fulfilled = 0', () => {
+    expect(computeFillRate(0, 100)).toBeCloseTo(0)
+  })
+
+  it('returns 0 when ordersTotal = 0 (guard divide-by-zero)', () => {
+    expect(computeFillRate(0, 0)).toBe(0)
+  })
+
+  it('fill rate > 100% when fulfilled > ordered is allowed mathematically', () => {
+    expect(computeFillRate(120, 100)).toBeCloseTo(120)
+  })
+
+  it('50% fill rate for half fulfilled', () => {
+    expect(computeFillRate(5, 10)).toBeCloseTo(50)
+  })
+
+  it('result is always non-negative for non-negative inputs', () => {
+    expect(computeFillRate(30, 100)).toBeGreaterThanOrEqual(0)
+  })
+})

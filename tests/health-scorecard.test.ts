@@ -549,3 +549,162 @@ describe('getScorecard — structure', () => {
     expect(scorecard.period_to).toBe('2024-03-31')
   })
 })
+
+// ── 25. gradeRatio — all grade boundaries for current_ratio ──────────────────
+
+describe('gradeRatio — current_ratio all boundaries', () => {
+  it('exactly 2.0 → A', () => {
+    expect(HealthScorecardService.gradeRatio('current_ratio', 2.0)).toBe('A')
+  })
+
+  it('exactly 1.5 → B', () => {
+    expect(HealthScorecardService.gradeRatio('current_ratio', 1.5)).toBe('B')
+  })
+
+  it('exactly 1.0 → C', () => {
+    expect(HealthScorecardService.gradeRatio('current_ratio', 1.0)).toBe('C')
+  })
+
+  it('exactly 0.5 → D', () => {
+    expect(HealthScorecardService.gradeRatio('current_ratio', 0.5)).toBe('D')
+  })
+
+  it('0.499 → F', () => {
+    expect(HealthScorecardService.gradeRatio('current_ratio', 0.499)).toBe('F')
+  })
+
+  it('0.0 → F', () => {
+    expect(HealthScorecardService.gradeRatio('current_ratio', 0.0)).toBe('F')
+  })
+})
+
+// ── 26. gradeRatio — net_margin_pct all boundaries ────────────────────────────
+
+describe('gradeRatio — net_margin_pct all boundaries', () => {
+  it('exactly 15 → A', () => {
+    expect(HealthScorecardService.gradeRatio('net_margin_pct', 15)).toBe('A')
+  })
+
+  it('exactly 10 → B', () => {
+    expect(HealthScorecardService.gradeRatio('net_margin_pct', 10)).toBe('B')
+  })
+
+  it('exactly 5 → C', () => {
+    expect(HealthScorecardService.gradeRatio('net_margin_pct', 5)).toBe('C')
+  })
+
+  it('exactly 0 → D', () => {
+    expect(HealthScorecardService.gradeRatio('net_margin_pct', 0)).toBe('D')
+  })
+
+  it('-0.001 → F (negative)', () => {
+    expect(HealthScorecardService.gradeRatio('net_margin_pct', -0.001)).toBe('F')
+  })
+})
+
+// ── 27. gradeRatio — debt_to_equity all boundaries ───────────────────────────
+
+describe('gradeRatio — debt_to_equity all boundaries', () => {
+  it('exactly 0.5 → A', () => {
+    expect(HealthScorecardService.gradeRatio('debt_to_equity', 0.5)).toBe('A')
+  })
+
+  it('0.501 → B', () => {
+    expect(HealthScorecardService.gradeRatio('debt_to_equity', 0.501)).toBe('B')
+  })
+
+  it('exactly 1.0 → B', () => {
+    expect(HealthScorecardService.gradeRatio('debt_to_equity', 1.0)).toBe('B')
+  })
+
+  it('1.001 → C', () => {
+    expect(HealthScorecardService.gradeRatio('debt_to_equity', 1.001)).toBe('C')
+  })
+
+  it('exactly 2.0 → C', () => {
+    expect(HealthScorecardService.gradeRatio('debt_to_equity', 2.0)).toBe('C')
+  })
+
+  it('2.001 → D', () => {
+    expect(HealthScorecardService.gradeRatio('debt_to_equity', 2.001)).toBe('D')
+  })
+
+  it('exactly 4.0 → D', () => {
+    expect(HealthScorecardService.gradeRatio('debt_to_equity', 4.0)).toBe('D')
+  })
+
+  it('4.001 → F', () => {
+    expect(HealthScorecardService.gradeRatio('debt_to_equity', 4.001)).toBe('F')
+  })
+})
+
+// ── 28. computeOverallScore — all grades at extreme values ────────────────────
+
+describe('computeOverallScore — extreme single grades', () => {
+  it('single C ratio → score = 60', () => {
+    const ratios: FinancialRatio[] = [
+      { key: 'a', name: '', value: 1, unit: 'ratio', grade: 'C', description: '', benchmark: '', trend: null },
+    ]
+    expect(HealthScorecardService.computeOverallScore(ratios)).toBe(60)
+  })
+
+  it('single B ratio → score = 80', () => {
+    const ratios: FinancialRatio[] = [
+      { key: 'a', name: '', value: 1, unit: 'ratio', grade: 'B', description: '', benchmark: '', trend: null },
+    ]
+    expect(HealthScorecardService.computeOverallScore(ratios)).toBe(80)
+  })
+
+  it('all null-grade ratios → score = 0', () => {
+    const ratios: FinancialRatio[] = [
+      { key: 'a', name: '', value: null, unit: 'ratio', grade: null, description: '', benchmark: '', trend: null },
+      { key: 'b', name: '', value: null, unit: 'ratio', grade: null, description: '', benchmark: '', trend: null },
+    ]
+    expect(HealthScorecardService.computeOverallScore(ratios)).toBe(0)
+  })
+
+  it('grade score map: A=100, B=80, C=60, D=40, F=20', () => {
+    const grades: Array<FinancialRatio['grade']> = ['A', 'B', 'C', 'D', 'F']
+    const expected = [100, 80, 60, 40, 20]
+    for (let i = 0; i < grades.length; i++) {
+      const ratios: FinancialRatio[] = [
+        { key: 'x', name: '', value: 1, unit: 'ratio', grade: grades[i], description: '', benchmark: '', trend: null },
+      ]
+      expect(HealthScorecardService.computeOverallScore(ratios)).toBe(expected[i])
+    }
+  })
+})
+
+// ── 29. inverse grade/score round-trip ────────────────────────────────────────
+
+describe('computeCategoryGrade — inverse round-trip', () => {
+  it('A ratio → category grade A', () => {
+    const ratios: FinancialRatio[] = [
+      { key: 'gross_margin_pct', name: '', value: 50, unit: 'pct', grade: 'A', description: '', benchmark: '', trend: null },
+    ]
+    expect(HealthScorecardService.computeCategoryGrade(ratios, ['gross_margin_pct'])).toBe('A')
+  })
+
+  it('F ratio → category grade F (score=20 < 30)', () => {
+    const ratios: FinancialRatio[] = [
+      { key: 'net_margin_pct', name: '', value: -1, unit: 'pct', grade: 'F', description: '', benchmark: '', trend: null },
+    ]
+    expect(HealthScorecardService.computeCategoryGrade(ratios, ['net_margin_pct'])).toBe('F')
+  })
+
+  it('D+D average = 40 → D category', () => {
+    const ratios: FinancialRatio[] = [
+      { key: 'debt_to_equity',    name: '', value: 3, unit: 'ratio', grade: 'D', description: '', benchmark: '', trend: null },
+      { key: 'debt_service_ratio', name: '', value: 0.6, unit: 'ratio', grade: 'D', description: '', benchmark: '', trend: null },
+    ]
+    expect(HealthScorecardService.computeCategoryGrade(ratios, ['debt_to_equity', 'debt_service_ratio'])).toBe('D')
+  })
+
+  it('C+C average = 60 → C category', () => {
+    const ratios: FinancialRatio[] = [
+      { key: 'asset_turnover',       name: '', value: 1.2, unit: 'x',    grade: 'C', description: '', benchmark: '', trend: null },
+      { key: 'receivables_turnover', name: '', value: 7,   unit: 'x',    grade: 'C', description: '', benchmark: '', trend: null },
+    ]
+    expect(HealthScorecardService.computeCategoryGrade(ratios, ['asset_turnover', 'receivables_turnover'])).toBe('C')
+  })
+})

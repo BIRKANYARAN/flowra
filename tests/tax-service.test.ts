@@ -558,3 +558,205 @@ describe('nextCorporateTaxAdvanceDue() — additional boundary tests', () => {
     }
   })
 })
+
+// ── computeFilingDueDate — monthly correctness ────────────────────────────────
+
+describe('computeFilingDueDate — monthly correctness', () => {
+  it('January period ends → due February 26', () => {
+    expect(computeFilingDueDate('2026-01-31')).toBe('2026-02-26')
+  })
+
+  it('March period ends → due April 26', () => {
+    expect(computeFilingDueDate('2026-03-31')).toBe('2026-04-26')
+  })
+
+  it('June period ends → due July 26', () => {
+    expect(computeFilingDueDate('2026-06-30')).toBe('2026-07-26')
+  })
+
+  it('September period ends → due October 26', () => {
+    expect(computeFilingDueDate('2026-09-30')).toBe('2026-10-26')
+  })
+
+  it('November period ends → due December 26', () => {
+    expect(computeFilingDueDate('2026-11-30')).toBe('2026-12-26')
+  })
+
+  it('December period ends → due January 26 of next year (year rolls over)', () => {
+    expect(computeFilingDueDate('2026-12-31')).toBe('2027-01-26')
+  })
+
+  it('returns a valid YYYY-MM-DD formatted string', () => {
+    const result = computeFilingDueDate('2026-05-31')
+    expect(result).toMatch(/^\d{4}-\d{2}-26$/)
+  })
+
+  it('day is always 26', () => {
+    const months = ['01', '03', '05', '07', '09', '11']
+    for (const m of months) {
+      const result = computeFilingDueDate(`2026-${m}-28`)
+      expect(result.endsWith('-26')).toBe(true)
+    }
+  })
+})
+
+// ── computeKdv — VAT rate scenarios ──────────────────────────────────────────
+
+describe('computeKdv — VAT rate scenarios', () => {
+  it('0% VAT: net_vat = 0 when all inputs are 0', () => {
+    const result = computeKdv({ sales_vat_try: 0, purchase_vat_try: 0, expense_vat_try: 0 })
+    expect(result.net_vat_try).toBe(0)
+  })
+
+  it('18% scenario: sales VAT = 1800, no input → net = 1800', () => {
+    const result = computeKdv({ sales_vat_try: 1800, purchase_vat_try: 0, expense_vat_try: 0 })
+    expect(result.net_vat_try).toBe(1800)
+  })
+
+  it('8% scenario: sales VAT = 400, no input → net = 400', () => {
+    const result = computeKdv({ sales_vat_try: 400, purchase_vat_try: 0, expense_vat_try: 0 })
+    expect(result.net_vat_try).toBe(400)
+  })
+
+  it('net = gross - VAT: net_vat = sales - purchase - expense', () => {
+    const result = computeKdv({ sales_vat_try: 2000, purchase_vat_try: 500, expense_vat_try: 300 })
+    expect(result.net_vat_try).toBeCloseTo(2000 - 500 - 300, 1)
+  })
+
+  it('net can be negative (recoverable VAT) when input > output', () => {
+    const result = computeKdv({ sales_vat_try: 200, purchase_vat_try: 1000, expense_vat_try: 0 })
+    expect(result.net_vat_try).toBeLessThan(0)
+  })
+
+  it('returns all four fields: sales_vat_try, purchase_vat_try, expense_vat_try, net_vat_try', () => {
+    const result = computeKdv({ sales_vat_try: 1000, purchase_vat_try: 200, expense_vat_try: 100 })
+    expect(typeof result.sales_vat_try).toBe('number')
+    expect(typeof result.purchase_vat_try).toBe('number')
+    expect(typeof result.expense_vat_try).toBe('number')
+    expect(typeof result.net_vat_try).toBe('number')
+  })
+})
+
+// ── computeCorporateTax — rate and loss scenarios ─────────────────────────────
+
+describe('computeCorporateTax — rate and loss scenarios', () => {
+  it('25% rate: tax = matrah × 0.25 for profitable scenario', () => {
+    const result = computeCorporateTax({
+      revenue_try: 1_000_000,
+      cost_try: 600_000,
+      deductible_expenses_try: 100_000,
+      rate_percent: 25,
+    })
+    // matrah = 1_000_000 - 600_000 - 100_000 = 300_000
+    // tax = 300_000 × 0.25 = 75_000
+    expect(result.tax_try).toBeCloseTo(75_000, 1)
+  })
+
+  it('25% rate: net_after_tax = matrah - tax', () => {
+    const result = computeCorporateTax({
+      revenue_try: 500_000,
+      cost_try: 200_000,
+      deductible_expenses_try: 50_000,
+      rate_percent: 25,
+    })
+    expect(result.net_after_tax_try).toBeCloseTo(result.matrah_try - result.tax_try, 1)
+  })
+
+  it('loss scenario: matrah < 0 → tax = 0', () => {
+    const result = computeCorporateTax({
+      revenue_try: 100_000,
+      cost_try: 200_000,
+      deductible_expenses_try: 0,
+      rate_percent: 25,
+    })
+    expect(result.tax_try).toBe(0)
+  })
+
+  it('loss scenario: net_after_tax = matrah (negative) when tax = 0', () => {
+    const result = computeCorporateTax({
+      revenue_try: 50_000,
+      cost_try: 100_000,
+      deductible_expenses_try: 0,
+      rate_percent: 25,
+    })
+    // matrah = -50_000, tax = 0, net = -50_000
+    expect(result.net_after_tax_try).toBeCloseTo(-50_000, 1)
+    expect(result.tax_try).toBe(0)
+  })
+
+  it('zero revenue → negative matrah → tax = 0', () => {
+    const result = computeCorporateTax({
+      revenue_try: 0,
+      cost_try: 0,
+      deductible_expenses_try: 10_000,
+      rate_percent: 25,
+    })
+    expect(result.tax_try).toBe(0)
+  })
+
+  it('rate_percent is preserved in result', () => {
+    const result = computeCorporateTax({
+      revenue_try: 1_000_000,
+      cost_try: 0,
+      deductible_expenses_try: 0,
+      rate_percent: 25,
+    })
+    expect(result.rate_percent).toBe(25)
+  })
+})
+
+// ── computeKDVFromRows — sum of VAT amounts ───────────────────────────────────
+
+describe('computeKDVFromRows — sum of all VAT amounts', () => {
+  it('sums all kdv_amount_try from sales rows', () => {
+    const rows = [
+      { kdv_amount_try: 900, tax_rate: 18 },
+      { kdv_amount_try: 160, tax_rate: 8 },
+      { kdv_amount_try: 400, tax_rate: 18 },
+    ]
+    const result = computeKDVFromRows(rows, [])
+    expect(result.output_vat_try).toBeCloseTo(1460, 1)
+  })
+
+  it('sums all kdv_deductible_try from expense rows', () => {
+    const rows = [
+      { kdv_deductible_try: 200 },
+      { kdv_deductible_try: 150 },
+      { kdv_deductible_try: 50 },
+    ]
+    const result = computeKDVFromRows([], rows)
+    expect(result.input_vat_try).toBeCloseTo(400, 1)
+  })
+
+  it('net = output - input', () => {
+    const salesRows = [{ kdv_amount_try: 1000, tax_rate: 18 }]
+    const expenseRows = [{ kdv_deductible_try: 300 }]
+    const result = computeKDVFromRows(salesRows, expenseRows)
+    expect(result.net_vat_try).toBeCloseTo(700, 1)
+  })
+
+  it('vat_payable true when net > 0', () => {
+    const result = computeKDVFromRows([{ kdv_amount_try: 500 }], [])
+    expect(result.vat_payable).toBe(true)
+  })
+
+  it('vat_payable false when net = 0', () => {
+    const result = computeKDVFromRows(
+      [{ kdv_amount_try: 500 }],
+      [{ kdv_deductible_try: 500 }],
+    )
+    expect(result.vat_payable).toBe(false)
+  })
+
+  it('single sales row → output = that row amount', () => {
+    const result = computeKDVFromRows([{ kdv_amount_try: 720 }], [])
+    expect(result.output_vat_try).toBe(720)
+  })
+
+  it('handles many rows correctly', () => {
+    const salesRows = Array.from({ length: 10 }, (_, i) => ({ kdv_amount_try: 100 * (i + 1) }))
+    const result = computeKDVFromRows(salesRows, [])
+    // 100 + 200 + ... + 1000 = 5500
+    expect(result.output_vat_try).toBeCloseTo(5500, 1)
+  })
+})

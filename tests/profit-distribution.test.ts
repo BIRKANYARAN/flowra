@@ -564,4 +564,148 @@ describe('computePartnerAllocations — additional', () => {
   })
 })
 
+// ── computeLegalReserveAllocation — cap and gap scenarios ────────────────────
 
+describe('computeLegalReserveAllocation — cap and gap scenarios', () => {
+  it('already at cap (existing = 20% of capital) returns 0', () => {
+    // capital = 500_000, 20% = 100_000 → already there
+    expect(computeLegalReserveAllocation(200_000, 500_000, 100_000)).toBe(0)
+  })
+
+  it('partial cap gap smaller than 5% of income — allocates gap only', () => {
+    // capital = 1_000_000, target = 200_000, existing = 197_000 → gap = 3_000
+    // 5% of 100_000 = 5_000, but gap is only 3_000
+    expect(computeLegalReserveAllocation(100_000, 1_000_000, 197_000)).toBe(3_000)
+  })
+
+  it('large gap — 5% of net income is limiting factor', () => {
+    // capital = 2_000_000, target = 400_000, existing = 0 → gap = 400_000
+    // 5% of 100_000 = 5_000 < gap → return 5_000
+    expect(computeLegalReserveAllocation(100_000, 2_000_000, 0)).toBe(5_000)
+  })
+
+  it('reserve slightly above cap (existing > 20%) returns 0', () => {
+    // capital = 1_000_000, target = 200_000, existing = 210_000 → gap < 0
+    expect(computeLegalReserveAllocation(100_000, 1_000_000, 210_000)).toBe(0)
+  })
+
+  it('minimal income — small 5% allocation', () => {
+    expect(computeLegalReserveAllocation(1_000, 500_000, 0)).toBeCloseTo(50, 1)
+  })
+})
+
+// ── computeDistributableNet — GVK 94 withholding 10% ─────────────────────────
+
+describe('computeDistributableNet — GVK 94 withholding 10%', () => {
+  it('distributableNet = distributableGross × 0.90', () => {
+    expect(computeDistributableNet(100_000)).toBeCloseTo(90_000)
+  })
+
+  it('gross = 0 → net = 0', () => {
+    expect(computeDistributableNet(0)).toBe(0)
+  })
+
+  it('negative gross → net = 0 (no negative distribution)', () => {
+    expect(computeDistributableNet(-50_000)).toBe(0)
+  })
+
+  it('withholding is 10%: gross - net = 10% of gross', () => {
+    const gross = 200_000
+    const net = computeDistributableNet(gross)
+    expect(gross - net).toBeCloseTo(gross * 0.10, 1)
+  })
+
+  it('fractional gross rounds to 2 decimal places', () => {
+    const net = computeDistributableNet(333.33)
+    expect(net).toBeCloseTo(299.997, 1)
+  })
+})
+
+// ── computePartnerAllocations — share-sum invariant ──────────────────────────
+
+describe('computePartnerAllocations — share-sum invariant', () => {
+  it('sum of gross_allocations ≈ distributableGross for 100% share split', () => {
+    const distributableGross = 500_000
+    const partners = [
+      { partner_id: 'p1', partner_name: 'A', share_pct: 60 },
+      { partner_id: 'p2', partner_name: 'B', share_pct: 40 },
+    ]
+    const result = computePartnerAllocations(distributableGross, partners)
+    const totalGross = result.reduce((s, a) => s + a.gross_allocation, 0)
+    expect(totalGross).toBeCloseTo(distributableGross, 0)
+  })
+
+  it('sum of net_allocations ≈ distributableGross × 0.90 for 100% share split', () => {
+    const distributableGross = 1_000_000
+    const partners = [
+      { partner_id: 'p1', partner_name: 'A', share_pct: 70 },
+      { partner_id: 'p2', partner_name: 'B', share_pct: 30 },
+    ]
+    const result = computePartnerAllocations(distributableGross, partners)
+    const totalNet = result.reduce((s, a) => s + a.net_allocation, 0)
+    expect(totalNet).toBeCloseTo(distributableGross * 0.90, 0)
+  })
+
+  it('withholding_tax = gross_allocation × 0.10 per partner', () => {
+    const result = computePartnerAllocations(100_000, [
+      { partner_id: 'p1', partner_name: 'A', share_pct: 100 },
+    ])
+    expect(result[0].withholding_tax).toBeCloseTo(result[0].gross_allocation * 0.10, 1)
+  })
+
+  it('net_allocation = gross_allocation × 0.90 per partner', () => {
+    const result = computePartnerAllocations(200_000, [
+      { partner_id: 'p1', partner_name: 'A', share_pct: 50 },
+      { partner_id: 'p2', partner_name: 'B', share_pct: 50 },
+    ])
+    for (const alloc of result) {
+      expect(alloc.net_allocation).toBeCloseTo(alloc.gross_allocation * 0.90, 1)
+    }
+  })
+})
+
+// ── buildScenario — edge cases ────────────────────────────────────────────────
+
+describe('buildScenario — edge cases', () => {
+  const samplePartners = [
+    { partner_id: 'p1', partner_name: 'Partner A', share_pct: 60 },
+    { partner_id: 'p2', partner_name: 'Partner B', share_pct: 40 },
+  ]
+
+  it('zero net income → can_distribute is false', () => {
+    const scenario = buildScenario(0, 1_000_000, 0, 0, 0, samplePartners)
+    expect(scenario.can_distribute).toBe(false)
+  })
+
+  it('zero net income → distributable_gross is 0 or negative', () => {
+    const scenario = buildScenario(0, 1_000_000, 0, 0, 0, samplePartners)
+    expect(scenario.distributable_gross).toBe(0)
+  })
+
+  it('result contains distributable_net field', () => {
+    const scenario = buildScenario(500_000, 1_000_000, 0, 0, 0, samplePartners)
+    expect(typeof scenario.distributable_net).toBe('number')
+  })
+
+  it('distributable_net = distributableGross × 0.90 when positive', () => {
+    const scenario = buildScenario(200_000, 1_000_000, 200_000, 0, 0, samplePartners)
+    // reserve already at cap → legalReserve = 0, boardRetained = 0, unpaid = 0
+    // distributableGross = 200_000, net = 200_000 × 0.90 = 180_000
+    expect(scenario.distributable_net).toBeCloseTo(scenario.distributable_gross * 0.90, 1)
+  })
+
+  it('negative net income → ttk_509_violated is false (no distribution attempted)', () => {
+    const scenario = buildScenario(-100_000, 1_000_000, 0, 0, 0, samplePartners)
+    expect(scenario.can_distribute).toBe(false)
+  })
+
+  it('boardRetainedPct = 100 → distributableGross is very small or negative', () => {
+    const scenario = buildScenario(100_000, 1_000_000, 0, 100, 0, samplePartners)
+    expect(scenario.can_distribute).toBe(false)
+  })
+
+  it('legal_reserve_satisfied when existing >= 20% of capital', () => {
+    const scenario = buildScenario(100_000, 1_000_000, 200_000, 0, 0, samplePartners)
+    expect(scenario.legal_reserve_satisfied).toBe(true)
+  })
+})

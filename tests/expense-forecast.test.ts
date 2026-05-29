@@ -566,3 +566,145 @@ describe('buildCategoryForecast confidence CV', () => {
   })
 
 })
+
+// ── CATEGORY_LABELS — additional keys ────────────────────────────────────────
+
+describe('CATEGORY_LABELS — additional keys', () => {
+
+  it('81. rent label is Turkish', () => {
+    expect(CATEGORY_LABELS.rent).toBe('Kira')
+  })
+
+  it('82. software label is Turkish', () => {
+    expect(CATEGORY_LABELS.software).toBe('Yazılım & Abonelik')
+  })
+
+  it('83. marketing label is Turkish', () => {
+    expect(CATEGORY_LABELS.marketing).toBe('Pazarlama')
+  })
+
+  it('84. logistics label is Turkish', () => {
+    expect(CATEGORY_LABELS.logistics).toBe('Lojistik')
+  })
+
+  it('85. utilities label is Turkish', () => {
+    expect(CATEGORY_LABELS.utilities).toBe('Faturalar')
+  })
+
+  it('86. operational label is Turkish', () => {
+    expect(CATEGORY_LABELS.operational).toBe('Operasyonel')
+  })
+
+  it('87. general label is Turkish', () => {
+    expect(CATEGORY_LABELS.general).toBe('Genel Gider')
+  })
+
+  it('88. tax label is Turkish', () => {
+    expect(CATEGORY_LABELS.tax).toBe('Vergi')
+  })
+
+  it('89. partner_loan_interest label is Turkish', () => {
+    expect(CATEGORY_LABELS.partner_loan_interest).toBe('Ortak Faizi')
+  })
+
+  it('90. has exactly 10 entries', () => {
+    expect(Object.keys(CATEGORY_LABELS).length).toBe(10)
+  })
+
+  it('91. all values are non-empty strings', () => {
+    for (const [, label] of Object.entries(CATEGORY_LABELS)) {
+      expect(typeof label).toBe('string')
+      expect(label.length).toBeGreaterThan(0)
+    }
+  })
+
+})
+
+// ── computeCategoryTrend — all 3 levels at exact thresholds ─────────────────
+
+describe('computeCategoryTrend — exact threshold tests', () => {
+
+  it('92. 5.0 → stable (not > 5)', () => {
+    expect(computeCategoryTrend(5.0)).toBe('stable')
+  })
+
+  it('93. 5.0000001 → growing', () => {
+    expect(computeCategoryTrend(5.0000001)).toBe('growing')
+  })
+
+  it('94. -5.0 → stable (not < -5)', () => {
+    expect(computeCategoryTrend(-5.0)).toBe('stable')
+  })
+
+  it('95. -5.0000001 → declining', () => {
+    expect(computeCategoryTrend(-5.0000001)).toBe('declining')
+  })
+
+  it('96. very large positive → growing', () => {
+    expect(computeCategoryTrend(9999)).toBe('growing')
+  })
+
+  it('97. very large negative → declining', () => {
+    expect(computeCategoryTrend(-9999)).toBe('declining')
+  })
+
+})
+
+// ── detectRecurring — consistent monthly amounts → true ─────────────────────
+
+describe('detectRecurring — consistent amounts', () => {
+
+  it('98. 6 months all 750 → CV=0 → recurring', () => {
+    const amounts: (number | null)[] = [750, 750, 750, 750, 750, 750]
+    expect(detectRecurring(amounts, 'Vendor')).toBe(true)
+  })
+
+  it('99. 4 months with tiny variation (~1%) → CV < 10% → recurring', () => {
+    const amounts: (number | null)[] = [null, null, 1000, 1005, 995, 1000]
+    expect(detectRecurring(amounts, 'Vendor')).toBe(true)
+  })
+
+  it('100. 3 months present (threshold is 4) → not recurring', () => {
+    const amounts: (number | null)[] = [null, null, null, 500, 500, 500]
+    expect(detectRecurring(amounts, 'Vendor')).toBe(false)
+  })
+
+  it('101. irregular amounts (high CV) → not recurring even with 6 months', () => {
+    const amounts: (number | null)[] = [50, 500, 50, 500, 50, 500]
+    expect(detectRecurring(amounts, 'Vendor')).toBe(false)
+  })
+
+})
+
+// ── buildSummaryLine — structure verification ─────────────────────────────
+
+describe('buildSummaryLine — structure verification', () => {
+
+  it('102. contains forecastMonthLabel in output', () => {
+    const line = buildSummaryLine('Ekim 2026', 300_000, 280_000)
+    expect(line).toContain('Ekim 2026')
+  })
+
+  it('103. non-empty string for any valid inputs', () => {
+    const line = buildSummaryLine('Kasım 2026', 500_000, 500_000)
+    expect(typeof line).toBe('string')
+    expect(line.length).toBeGreaterThan(0)
+  })
+
+  it('104. contains "gider" in all cases', () => {
+    const line = buildSummaryLine('Aralık 2026', 1_200_000, 1_000_000)
+    expect(line).toContain('gider')
+  })
+
+  it('105. format large number with M suffix', () => {
+    const line = buildSummaryLine('Ocak 2027', 5_000_000, 4_000_000)
+    expect(line).toContain('M')
+  })
+
+  it('106. zero avg → no percent line suffix', () => {
+    const line = buildSummaryLine('Şubat 2027', 100_000, 0)
+    // When last3mAvgTotal=0 → returns simplified message without "ortalamadan"
+    expect(line).toContain('için')
+  })
+
+})

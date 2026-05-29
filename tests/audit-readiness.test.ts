@@ -567,3 +567,133 @@ describe('computeScore → toGrade pipeline', () => {
     expect(toGrade(score)).toBe('D')
   })
 })
+
+// ── computeScore — weight proportionality ────────────────────────────────────
+
+describe('computeScore — weight proportionality', () => {
+
+  it('pass(10) + fail(90) → 10', () => {
+    const items = [
+      makeItem({ key: 'a', status: 'pass', weight: 10 }),
+      makeItem({ key: 'b', status: 'fail', weight: 90 }),
+    ]
+    expect(computeScore(items)).toBe(10)
+  })
+
+  it('warn(100) + skip(100) → warn earns 50 / 100 = 50', () => {
+    const items = [
+      makeItem({ key: 'a', status: 'warn', weight: 100 }),
+      makeItem({ key: 'b', status: 'skip', weight: 100 }),
+    ]
+    // skip excluded from denominator: earned=50, total=100 → 50
+    expect(computeScore(items)).toBe(50)
+  })
+
+  it('needs_review(50) + skip(50) → 0/50 = 0', () => {
+    const items = [
+      makeItem({ key: 'a', status: 'needs_review', weight: 50 }),
+      makeItem({ key: 'b', status: 'skip',         weight: 50 }),
+    ]
+    expect(computeScore(items)).toBe(0)
+  })
+
+  it('pass(1) + fail(99) → 1', () => {
+    const items = [
+      makeItem({ key: 'a', status: 'pass', weight: 1 }),
+      makeItem({ key: 'b', status: 'fail', weight: 99 }),
+    ]
+    expect(computeScore(items)).toBe(1)
+  })
+
+  it('three pass items different weights sums correctly', () => {
+    const items = [
+      makeItem({ key: 'a', status: 'pass', weight: 30 }),
+      makeItem({ key: 'b', status: 'pass', weight: 50 }),
+      makeItem({ key: 'c', status: 'pass', weight: 20 }),
+    ]
+    // earned=100, total=100 → 100
+    expect(computeScore(items)).toBe(100)
+  })
+
+  it('warn with weight 60 earns 30; total 100 → score 30', () => {
+    const items = [
+      makeItem({ key: 'a', status: 'warn', weight: 60 }),
+      makeItem({ key: 'b', status: 'fail', weight: 40 }),
+    ]
+    expect(computeScore(items)).toBe(30)
+  })
+
+})
+
+// ── toGrade — exhaustive boundary verification ───────────────────────────────
+
+describe('toGrade — all grade bands', () => {
+
+  it('0 → F', () => { expect(toGrade(0)).toBe('F') })
+  it('39 → F', () => { expect(toGrade(39)).toBe('F') })
+  it('40 → D', () => { expect(toGrade(40)).toBe('D') })
+  it('59 → D', () => { expect(toGrade(59)).toBe('D') })
+  it('60 → C', () => { expect(toGrade(60)).toBe('C') })
+  it('74 → C', () => { expect(toGrade(74)).toBe('C') })
+  it('75 → B', () => { expect(toGrade(75)).toBe('B') })
+  it('89 → B', () => { expect(toGrade(89)).toBe('B') })
+  it('90 → A', () => { expect(toGrade(90)).toBe('A') })
+  it('100 → A', () => { expect(toGrade(100)).toBe('A') })
+
+  it('each integer from 0 to 100 maps to a valid grade', () => {
+    const validGrades = new Set(['A', 'B', 'C', 'D', 'F'])
+    for (let s = 0; s <= 100; s++) {
+      expect(validGrades.has(toGrade(s))).toBe(true)
+    }
+  })
+
+})
+
+// ── categoryStats — warn counting ────────────────────────────────────────────
+
+describe('categoryStats — warn and needs_review', () => {
+
+  it('warn counted in total but not in passed', () => {
+    const items: AuditCheckItem[] = [
+      makeItem({ key: 'a', status: 'warn', weight: 50, category: 'tax' }),
+    ]
+    const stats = categoryStats(items, 'tax')
+    expect(stats.total).toBe(1)
+    expect(stats.passed).toBe(0)
+  })
+
+  it('needs_review not counted in passed', () => {
+    const items: AuditCheckItem[] = [
+      makeItem({ key: 'a', status: 'needs_review', weight: 40, category: 'governance' }),
+      makeItem({ key: 'b', status: 'pass',         weight: 60, category: 'governance' }),
+    ]
+    const stats = categoryStats(items, 'governance')
+    expect(stats.passed).toBe(1)
+    expect(stats.total).toBe(2)
+    expect(stats.score).toBe(60)
+  })
+
+  it('multiple categories: only target category counted', () => {
+    const items: AuditCheckItem[] = [
+      makeItem({ key: 'a', status: 'pass', weight: 50, category: 'accounting' }),
+      makeItem({ key: 'b', status: 'pass', weight: 50, category: 'partner' }),
+      makeItem({ key: 'c', status: 'fail', weight: 50, category: 'tax' }),
+    ]
+    const stats = categoryStats(items, 'partner')
+    expect(stats.total).toBe(1)
+    expect(stats.passed).toBe(1)
+    expect(stats.score).toBe(100)
+  })
+
+  it('all skip in category → total=0, score=100', () => {
+    const items: AuditCheckItem[] = [
+      makeItem({ key: 'a', status: 'skip', weight: 30, category: 'governance' }),
+      makeItem({ key: 'b', status: 'skip', weight: 70, category: 'governance' }),
+    ]
+    const stats = categoryStats(items, 'governance')
+    expect(stats.total).toBe(0)
+    expect(stats.passed).toBe(0)
+    expect(stats.score).toBe(100)
+  })
+
+})

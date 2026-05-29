@@ -569,3 +569,177 @@ describe('isPotentialDuplicate additional', () => {
     expect(isPotentialDuplicate(base, others)).toBe(true)
   })
 })
+
+// ═══════════════════════════════════════════════════════════════════════════
+// computeMean — formula verification
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe('computeMean — formula verification', () => {
+  it('81. sum / count: [3, 7] → 10/2 = 5', () => {
+    expect(computeMean([3, 7])).toBe(5)
+  })
+
+  it('82. [0, 0, 0] → 0', () => {
+    expect(computeMean([0, 0, 0])).toBe(0)
+  })
+
+  it('83. fractional result: [1, 2] → 1.5', () => {
+    expect(computeMean([1, 2])).toBeCloseTo(1.5, 5)
+  })
+
+  it('84. single large value: [1_000_000] → 1_000_000', () => {
+    expect(computeMean([1_000_000])).toBe(1_000_000)
+  })
+
+  it('85. five elements sum: [10, 20, 30, 40, 50] → 150/5 = 30', () => {
+    expect(computeMean([10, 20, 30, 40, 50])).toBe(30)
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════════
+// computeStdDev — uniform values always give 0
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe('computeStdDev — uniform values', () => {
+  it('86. [100, 100] → stdDev = 0', () => {
+    expect(computeStdDev([100, 100], 100)).toBe(0)
+  })
+
+  it('87. [0.5, 0.5, 0.5] → stdDev = 0', () => {
+    expect(computeStdDev([0.5, 0.5, 0.5], 0.5)).toBe(0)
+  })
+
+  it('88. [99999, 99999, 99999, 99999] → stdDev = 0', () => {
+    expect(computeStdDev([99999, 99999, 99999, 99999], 99999)).toBe(0)
+  })
+
+  it('89. population formula: sqrt(mean_sq_dev). [0, 4] mean=2 → sqrt(4) = 2', () => {
+    expect(computeStdDev([0, 4], 2)).toBeCloseTo(2, 5)
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════════
+// computeZScore — formula ((value - mean) / stdDev)
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe('computeZScore — formula validation', () => {
+  it('90. (value - mean) / stdDev: (15 - 10) / 5 = 1.0', () => {
+    expect(computeZScore(15, 10, 5)).toBeCloseTo(1.0, 5)
+  })
+
+  it('91. negative numerator: (5 - 10) / 5 = -1.0', () => {
+    expect(computeZScore(5, 10, 5)).toBeCloseTo(-1.0, 5)
+  })
+
+  it('92. null when stdDev exactly 0 but value != mean', () => {
+    expect(computeZScore(999, 1, 0)).toBeNull()
+  })
+
+  it('93. zero result: value = mean, any stdDev > 0', () => {
+    expect(computeZScore(50, 50, 10)).toBeCloseTo(0, 5)
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════════
+// computeIQRBounds — Q1/Q3/IQR formula and boundary
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe('computeIQRBounds — Q1/Q3 formula', () => {
+  it('94. null with exactly 3 values', () => {
+    expect(computeIQRBounds([5, 10, 15])).toBeNull()
+  })
+
+  it('95. non-null with exactly 4 values (threshold)', () => {
+    const result = computeIQRBounds([1, 2, 3, 4])
+    expect(result).not.toBeNull()
+  })
+
+  it('96. upper_bound = q3 + 1.5 * iqr (4 element check)', () => {
+    const result = computeIQRBounds([1, 2, 3, 4])!
+    expect(result.upper_bound).toBeCloseTo(result.q3 + 1.5 * result.iqr, 5)
+  })
+
+  it('97. lower_bound = q1 - 1.5 * iqr (4 element check)', () => {
+    const result = computeIQRBounds([1, 2, 3, 4])!
+    expect(result.lower_bound).toBeCloseTo(result.q1 - 1.5 * result.iqr, 5)
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════════
+// classifyAnomalySeverity — exact Z-score boundaries
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe('classifyAnomalySeverity — exact Z-score boundaries', () => {
+  const noBounds = null
+
+  it('98. |z| > 3 → high; |z| = 3.001 → high', () => {
+    expect(classifyAnomalySeverity(3.001, 0, noBounds)).toBe('high')
+  })
+
+  it('99. |z| = 3.0 → NOT > 3, so medium (since > 2)', () => {
+    expect(classifyAnomalySeverity(3.0, 0, noBounds)).toBe('medium')
+  })
+
+  it('100. |z| > 2 and <= 3 → medium; z = 2.001', () => {
+    expect(classifyAnomalySeverity(2.001, 0, noBounds)).toBe('medium')
+  })
+
+  it('101. |z| = 2.0 → NOT > 2, so low (since > 1.5)', () => {
+    expect(classifyAnomalySeverity(2.0, 0, noBounds)).toBe('low')
+  })
+
+  it('102. |z| > 1.5 and <= 2 → low; z = 1.501', () => {
+    expect(classifyAnomalySeverity(1.501, 0, noBounds)).toBe('low')
+  })
+
+  it('103. |z| = 1.5 → NOT > 1.5 → none', () => {
+    expect(classifyAnomalySeverity(1.5, 0, noBounds)).toBe('none')
+  })
+
+  it('104. |z| = 0 → none', () => {
+    expect(classifyAnomalySeverity(0, 0, noBounds)).toBe('none')
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════════
+// isPotentialDuplicate — exact amount match and tolerance boundary
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe('isPotentialDuplicate — amount tolerance', () => {
+  const base = {
+    supplier_name: 'Test Corp',
+    amount_try: 2000,
+    created_at: '2026-06-01T09:00:00Z',
+  }
+
+  it('105. exact same amount → duplicate', () => {
+    const others = [{ supplier_name: 'Test Corp', amount_try: 2000, created_at: '2026-06-02T09:00:00Z' }]
+    expect(isPotentialDuplicate(base, others)).toBe(true)
+  })
+
+  it('106. amount differs by 0.99 → within tolerance → duplicate', () => {
+    const others = [{ supplier_name: 'Test Corp', amount_try: 2000.99, created_at: '2026-06-02T09:00:00Z' }]
+    expect(isPotentialDuplicate(base, others)).toBe(true)
+  })
+
+  it('107. amount differs by 1.0 → within tolerance (≤ 1) → duplicate', () => {
+    const others = [{ supplier_name: 'Test Corp', amount_try: 2001, created_at: '2026-06-02T09:00:00Z' }]
+    expect(isPotentialDuplicate(base, others)).toBe(true)
+  })
+
+  it('108. amount differs by 1.01 → beyond tolerance → not duplicate', () => {
+    const others = [{ supplier_name: 'Test Corp', amount_try: 2001.01, created_at: '2026-06-02T09:00:00Z' }]
+    expect(isPotentialDuplicate(base, others)).toBe(false)
+  })
+
+  it('109. negative amount diff within tolerance (base - other = -1.0)', () => {
+    const others = [{ supplier_name: 'Test Corp', amount_try: 1999, created_at: '2026-06-02T09:00:00Z' }]
+    expect(isPotentialDuplicate(base, others)).toBe(true)
+  })
+
+  it('110. empty supplier_name on both → no match (base has no supplier)', () => {
+    const noSupplier = { ...base, supplier_name: null }
+    const others = [{ supplier_name: null as string | null, amount_try: 2000, created_at: '2026-06-02T09:00:00Z' }]
+    expect(isPotentialDuplicate(noSupplier, others)).toBe(false)
+  })
+})

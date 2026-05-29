@@ -554,3 +554,190 @@ describe('sortAlertsBySeverity + countBySeverity — combined', () => {
     }
   })
 })
+
+// ── sortAlertsBySeverity — ordering guarantees ────────────────────────────────
+
+describe('sortAlertsBySeverity — ordering guarantees', () => {
+  it('places critical before warning before info', () => {
+    const alerts = [
+      makeAlert({ id: 'i1', severity: 'info' }),
+      makeAlert({ id: 'w1', severity: 'warning' }),
+      makeAlert({ id: 'c1', severity: 'critical' }),
+    ]
+    const sorted = sortAlertsBySeverity(alerts)
+    expect(sorted[0].severity).toBe('critical')
+    expect(sorted[1].severity).toBe('warning')
+    expect(sorted[2].severity).toBe('info')
+  })
+
+  it('stable sort — equal severity preserves relative order by last_triggered_at desc', () => {
+    const alerts = [
+      makeAlert({ id: 'w_older', severity: 'warning', last_triggered_at: '2026-05-01T00:00:00Z' }),
+      makeAlert({ id: 'w_newer', severity: 'warning', last_triggered_at: '2026-05-27T00:00:00Z' }),
+    ]
+    const sorted = sortAlertsBySeverity(alerts)
+    // Newer last_triggered_at should come first among equal severities
+    expect(sorted[0].id).toBe('w_newer')
+    expect(sorted[1].id).toBe('w_older')
+  })
+
+  it('empty array returns empty array', () => {
+    expect(sortAlertsBySeverity([])).toEqual([])
+  })
+
+  it('single item array returns same single item', () => {
+    const alert = makeAlert({ id: 'solo', severity: 'warning' })
+    const sorted = sortAlertsBySeverity([alert])
+    expect(sorted).toHaveLength(1)
+    expect(sorted[0].id).toBe('solo')
+  })
+
+  it('all same severity — order by last_triggered_at descending', () => {
+    const alerts = [
+      makeAlert({ id: 'a', severity: 'critical', last_triggered_at: '2026-05-10T00:00:00Z' }),
+      makeAlert({ id: 'b', severity: 'critical', last_triggered_at: '2026-05-25T00:00:00Z' }),
+      makeAlert({ id: 'c', severity: 'critical', last_triggered_at: '2026-05-15T00:00:00Z' }),
+    ]
+    const sorted = sortAlertsBySeverity(alerts)
+    expect(sorted[0].id).toBe('b')
+    expect(sorted[1].id).toBe('c')
+    expect(sorted[2].id).toBe('a')
+  })
+
+  it('does not mutate the original array', () => {
+    const alerts = [
+      makeAlert({ id: 'i', severity: 'info' }),
+      makeAlert({ id: 'c', severity: 'critical' }),
+    ]
+    const original = [...alerts]
+    sortAlertsBySeverity(alerts)
+    expect(alerts[0].id).toBe(original[0].id)
+    expect(alerts[1].id).toBe(original[1].id)
+  })
+
+  it('warnings come before info in sorted output', () => {
+    const alerts = [
+      makeAlert({ id: 'i1', severity: 'info' }),
+      makeAlert({ id: 'w1', severity: 'warning' }),
+      makeAlert({ id: 'i2', severity: 'info' }),
+    ]
+    const sorted = sortAlertsBySeverity(alerts)
+    const firstInfoIdx = sorted.findIndex(a => a.severity === 'info')
+    const warnings = sorted.filter(a => a.severity === 'warning')
+    for (const w of warnings) {
+      expect(sorted.indexOf(w)).toBeLessThan(firstInfoIdx)
+    }
+  })
+
+  it('large mixed array has all criticals at the front', () => {
+    const severities: Array<'critical' | 'warning' | 'info'> = ['info', 'warning', 'critical', 'info', 'critical', 'warning']
+    const alerts = severities.map((sev, i) => makeAlert({ id: `x${i}`, severity: sev }))
+    const sorted = sortAlertsBySeverity(alerts)
+    const criticalCount = severities.filter(s => s === 'critical').length
+    for (let i = 0; i < criticalCount; i++) {
+      expect(sorted[i].severity).toBe('critical')
+    }
+  })
+})
+
+// ── countBySeverity — counting logic ─────────────────────────────────────────
+
+describe('countBySeverity — counting logic', () => {
+  it('only critical alerts → correct critical count, others zero', () => {
+    const alerts = [
+      makeAlert({ id: 'c1', severity: 'critical' }),
+      makeAlert({ id: 'c2', severity: 'critical' }),
+    ]
+    const counts = countBySeverity(alerts)
+    expect(counts.critical).toBe(2)
+    expect(counts.warning).toBe(0)
+    expect(counts.info).toBe(0)
+  })
+
+  it('only warning alerts → correct warning count, others zero', () => {
+    const alerts = [
+      makeAlert({ id: 'w1', severity: 'warning' }),
+      makeAlert({ id: 'w2', severity: 'warning' }),
+      makeAlert({ id: 'w3', severity: 'warning' }),
+    ]
+    const counts = countBySeverity(alerts)
+    expect(counts.critical).toBe(0)
+    expect(counts.warning).toBe(3)
+    expect(counts.info).toBe(0)
+  })
+
+  it('only info alerts → correct info count, others zero', () => {
+    const alerts = [makeAlert({ id: 'i1', severity: 'info' })]
+    const counts = countBySeverity(alerts)
+    expect(counts.critical).toBe(0)
+    expect(counts.warning).toBe(0)
+    expect(counts.info).toBe(1)
+  })
+
+  it('mixed counts are correctly tallied', () => {
+    const alerts = [
+      makeAlert({ id: 'c1', severity: 'critical' }),
+      makeAlert({ id: 'w1', severity: 'warning' }),
+      makeAlert({ id: 'w2', severity: 'warning' }),
+      makeAlert({ id: 'i1', severity: 'info' }),
+      makeAlert({ id: 'i2', severity: 'info' }),
+      makeAlert({ id: 'i3', severity: 'info' }),
+    ]
+    const counts = countBySeverity(alerts)
+    expect(counts.critical).toBe(1)
+    expect(counts.warning).toBe(2)
+    expect(counts.info).toBe(3)
+  })
+
+  it('empty array → all zero counts', () => {
+    const counts = countBySeverity([])
+    expect(counts.critical).toBe(0)
+    expect(counts.warning).toBe(0)
+    expect(counts.info).toBe(0)
+  })
+
+  it('sum of all counts equals total number of alerts', () => {
+    const alerts = Array.from({ length: 9 }, (_, i) => {
+      const sev = (['critical', 'warning', 'info'] as const)[i % 3]
+      return makeAlert({ id: `a${i}`, severity: sev })
+    })
+    const counts = countBySeverity(alerts)
+    expect(counts.critical + counts.warning + counts.info).toBe(9)
+  })
+
+  it('zero of a specific category when none present', () => {
+    const alerts = [
+      makeAlert({ id: 'c1', severity: 'critical' }),
+      makeAlert({ id: 'i1', severity: 'info' }),
+    ]
+    const counts = countBySeverity(alerts)
+    expect(counts.warning).toBe(0)
+  })
+
+  it('countBySeverity total equals critical + warning + info relationship', () => {
+    const alerts = [
+      makeAlert({ id: 'c1', severity: 'critical' }),
+      makeAlert({ id: 'c2', severity: 'critical' }),
+      makeAlert({ id: 'w1', severity: 'warning' }),
+      makeAlert({ id: 'i1', severity: 'info' }),
+    ]
+    const counts = countBySeverity(alerts)
+    const total = counts.critical + counts.warning + counts.info
+    expect(total).toBe(alerts.length)
+    expect(counts.critical).toBe(2)
+    expect(counts.warning).toBe(1)
+    expect(counts.info).toBe(1)
+  })
+
+  it('countBySeverity is consistent with sorted array', () => {
+    const alerts = [
+      makeAlert({ id: 'c1', severity: 'critical' }),
+      makeAlert({ id: 'w1', severity: 'warning' }),
+      makeAlert({ id: 'i1', severity: 'info' }),
+      makeAlert({ id: 'c2', severity: 'critical' }),
+    ]
+    const sortedCounts = countBySeverity(sortAlertsBySeverity(alerts))
+    const unsortedCounts = countBySeverity(alerts)
+    expect(sortedCounts).toEqual(unsortedCounts)
+  })
+})

@@ -565,3 +565,142 @@ describe('buildPayloadSummary — additional precision tests', () => {
     expect(result).not.toMatch(/K/)
   })
 })
+
+// ── computeResolutionDays — hour-level precision ──────────────────────────────
+
+describe('computeResolutionDays — hour precision tests', () => {
+  it('exactly 36 hours (1.5 days) → floor → 1', () => {
+    expect(computeResolutionDays(
+      '2026-05-01T00:00:00Z',
+      '2026-05-02T12:00:00Z',
+    )).toBe(1)
+  })
+
+  it('exactly 47h59m → floor → 1 (not 2)', () => {
+    expect(computeResolutionDays(
+      '2026-05-01T00:00:00Z',
+      '2026-05-02T23:59:00Z',
+    )).toBe(1)
+  })
+
+  it('exactly 5 days → 5', () => {
+    expect(computeResolutionDays(
+      '2026-06-01T00:00:00Z',
+      '2026-06-06T00:00:00Z',
+    )).toBe(5)
+  })
+
+  it('null resolvedAt always returns null regardless of initiatedAt value', () => {
+    expect(computeResolutionDays('1970-01-01T00:00:00Z', null)).toBeNull()
+  })
+})
+
+// ── computeGovernanceScore — resolution rate linear scaling ──────────────────
+
+describe('computeGovernanceScore — linear scaling', () => {
+  it('1% resolution → Math.round(0.01*40)=0 points', () => {
+    const score = computeGovernanceScore(1, 1, false, false)
+    expect(score).toBe(0)
+  })
+
+  it('2% resolution → Math.round(0.02*40)=1 point', () => {
+    const score = computeGovernanceScore(2, 1, false, false)
+    expect(score).toBe(1)
+  })
+
+  it('50% resolution → Math.round(0.50*40)=20 points', () => {
+    const withHalf = computeGovernanceScore(50, 1, false, false)
+    const withZero = computeGovernanceScore(0, 1, false, false)
+    expect(withHalf - withZero).toBe(20)
+  })
+
+  it('99% resolution → Math.round(0.99*40)=40 points', () => {
+    const with99  = computeGovernanceScore(99, 1, false, false)
+    const with100 = computeGovernanceScore(100, 1, false, false)
+    // 99% → round(39.6)=40, same as 100% → round(40)=40
+    expect(with99).toBe(with100)
+  })
+
+  it('full max score = 100 with all conditions met', () => {
+    expect(computeGovernanceScore(100, 0, true, true)).toBe(100)
+  })
+
+  it('score with only stale=0 + audit = 40 points', () => {
+    // stale=30, audit=10 → 40
+    expect(computeGovernanceScore(0, 0, false, true)).toBe(40)
+  })
+})
+
+// ── buildPayloadSummary — string and numeric edge cases ───────────────────────
+
+describe('buildPayloadSummary — edge cases', () => {
+  it('amount_try as float → formats with K when >= 1000', () => {
+    const result = buildPayloadSummary({ amount_try: 2500.75 })
+    expect(result).toMatch(/K/)
+  })
+
+  it('empty description string → falls through to "—"', () => {
+    const result = buildPayloadSummary({ description: '' })
+    expect(result).toBe('—')
+  })
+
+  it('description with only whitespace → "—"', () => {
+    const result = buildPayloadSummary({ description: '   ' })
+    expect(result).toBe('—')
+  })
+
+  it('both partner_name and description → uses partner_name', () => {
+    const result = buildPayloadSummary({ partner_name: 'Ali Bey', description: 'Açıklama' })
+    expect(result).toBe('Ali Bey')
+  })
+
+  it('amount_try = -500 (negative) → falls through to partner_name', () => {
+    // Negative amount: typeof === number but <=0 → skip
+    const result = buildPayloadSummary({ amount_try: -500, partner_name: 'Fatma Hanım' })
+    expect(result).toBe('Fatma Hanım')
+  })
+
+  it('description of exactly 57 chars → not truncated', () => {
+    const desc = 'A'.repeat(57)
+    const result = buildPayloadSummary({ description: desc })
+    expect(result).toBe(desc)
+    expect(result.endsWith('…')).toBe(false)
+  })
+
+  it('description of 58 chars → not truncated (threshold is 60)', () => {
+    const desc = 'A'.repeat(58)
+    const result = buildPayloadSummary({ description: desc })
+    expect(result).toBe(desc)
+  })
+})
+
+// ── WORKFLOW_TYPE_LABELS — all labels exhaustive check ───────────────────────
+
+describe('WORKFLOW_TYPE_LABELS — exhaustive', () => {
+  const expectedLabels: Record<string, string> = {
+    dividend_declaration: 'Temettü Beyanı',
+    expense_approval:     'Masraf Onayı',
+    partner_loan_entry:   'Ortak Borç Girişi',
+    period_close:         'Dönem Kapanışı',
+    period_lock:          'Dönem Kilitleme',
+    equity_payment:       'Sermaye Ödemesi',
+    compensation_payment: 'Huzur Hakkı',
+    large_expense:        'Büyük Masraf Onayı',
+  }
+
+  it('all 8 labels match exactly', () => {
+    for (const [key, label] of Object.entries(expectedLabels)) {
+      expect(WORKFLOW_TYPE_LABELS[key]).toBe(label)
+    }
+  })
+
+  it('object has exactly 8 keys', () => {
+    expect(Object.keys(WORKFLOW_TYPE_LABELS)).toHaveLength(8)
+  })
+
+  it('no label is an empty string', () => {
+    for (const label of Object.values(WORKFLOW_TYPE_LABELS)) {
+      expect(label.trim().length).toBeGreaterThan(0)
+    }
+  })
+})

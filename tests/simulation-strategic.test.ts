@@ -11,6 +11,7 @@ import { describe, it, expect } from 'vitest'
 import {
   computeStrategicScenario,
   computeMultiScenario,
+  SEASONAL_WEIGHTS_DEFAULT,
   type StrategicScenarioInput,
 } from '../lib/services/simulation-strategic.service'
 
@@ -558,5 +559,129 @@ describe('computeMultiScenario — recommended selection', () => {
     expect(result.base.months).toHaveLength(6)
     expect(result.optimistic.months).toHaveLength(6)
     expect(result.pessimistic.months).toHaveLength(6)
+  })
+})
+
+// ── SEASONAL_WEIGHTS_DEFAULT — structure checks ───────────────────────────────
+
+describe('SEASONAL_WEIGHTS_DEFAULT — structure checks', () => {
+  it('has exactly 12 elements', () => {
+    expect(SEASONAL_WEIGHTS_DEFAULT).toHaveLength(12)
+  })
+
+  it('sum is close to 12 (normalized scale)', () => {
+    const sum = SEASONAL_WEIGHTS_DEFAULT.reduce((s, w) => s + w, 0)
+    expect(sum).toBeCloseTo(12, 0)
+  })
+
+  it('all weights are positive numbers', () => {
+    for (const w of SEASONAL_WEIGHTS_DEFAULT) {
+      expect(w).toBeGreaterThan(0)
+    }
+  })
+
+  it('Q4 months (Oct-Dec indices 9-11) have higher weights than Jan (index 0)', () => {
+    expect(SEASONAL_WEIGHTS_DEFAULT[10]).toBeGreaterThan(SEASONAL_WEIGHTS_DEFAULT[0])  // November > January
+    expect(SEASONAL_WEIGHTS_DEFAULT[11]).toBeGreaterThan(SEASONAL_WEIGHTS_DEFAULT[0])  // December > January
+  })
+})
+
+// ── computeStrategicScenario — monthly breakdown fields ───────────────────────
+
+describe('computeStrategicScenario — monthly breakdown fields', () => {
+  it('each month has revenue field as number', () => {
+    const result = computeStrategicScenario(mkInput())
+    for (const m of result.months) {
+      expect(typeof m.revenue).toBe('number')
+    }
+  })
+
+  it('each month has opex field as number', () => {
+    const result = computeStrategicScenario(mkInput())
+    for (const m of result.months) {
+      expect(typeof m.opex).toBe('number')
+    }
+  })
+
+  it('each month has net_income field as number', () => {
+    const result = computeStrategicScenario(mkInput())
+    for (const m of result.months) {
+      expect(typeof m.net_income).toBe('number')
+    }
+  })
+
+  it('net_income formula: ebt - tax (ebt = ebitda - interest)', () => {
+    const result = computeStrategicScenario(mkInput({ tax_rate: 25, debt_tranches: [] }))
+    for (const m of result.months) {
+      const ebt = m.ebt
+      const expectedNet = ebt > 0 ? ebt - m.tax : ebt
+      expect(m.net_income).toBeCloseTo(expectedNet, 1)
+    }
+  })
+
+  it('uniform revenue — all months have equal revenue', () => {
+    const result = computeStrategicScenario(mkInput({ revenue_model: 'uniform', target_annual_revenue: 1_200_000 }))
+    const revs = result.months.map(m => m.revenue)
+    const allEqual = revs.every(r => Math.abs(r - revs[0]) < 1)
+    expect(allEqual).toBe(true)
+  })
+
+  it('total_revenue ≈ sum of monthly revenues', () => {
+    const result = computeStrategicScenario(mkInput())
+    const sumMonthly = result.months.reduce((s, m) => s + m.revenue, 0)
+    expect(result.total_revenue).toBeCloseTo(sumMonthly, 0)
+  })
+
+  it('ebitda = revenue - opex per month', () => {
+    const result = computeStrategicScenario(mkInput())
+    for (const m of result.months) {
+      expect(m.ebitda).toBeCloseTo(m.revenue - m.opex, 1)
+    }
+  })
+})
+
+// ── computeMultiScenario — revenue ordering ───────────────────────────────────
+
+describe('computeMultiScenario — revenue and net ordering', () => {
+  it('optimistic total_revenue > base total_revenue', () => {
+    const result = computeMultiScenario(mkInput())
+    expect(result.optimistic.total_revenue).toBeGreaterThan(result.base.total_revenue)
+  })
+
+  it('base total_revenue > pessimistic total_revenue', () => {
+    const result = computeMultiScenario(mkInput())
+    expect(result.base.total_revenue).toBeGreaterThan(result.pessimistic.total_revenue)
+  })
+
+  it('optimistic has higher net than base for high-revenue input', () => {
+    const result = computeMultiScenario(mkInput({ target_annual_revenue: 5_000_000 }))
+    expect(result.optimistic.total_net).toBeGreaterThan(result.base.total_net)
+  })
+
+  it('base has higher net than pessimistic', () => {
+    const result = computeMultiScenario(mkInput())
+    expect(result.base.total_net).toBeGreaterThan(result.pessimistic.total_net)
+  })
+
+  it('all 3 scenarios have same fixed base expenses category structure', () => {
+    const result = computeMultiScenario(mkInput())
+    // All scenarios use same expense categories — opex values differ by multiplier but shape is same
+    expect(result.base.months[0].opex).toBeGreaterThan(0)
+    expect(result.optimistic.months[0].opex).toBeGreaterThan(0)
+    expect(result.pessimistic.months[0].opex).toBeGreaterThan(0)
+  })
+
+  it('returns base, optimistic, pessimistic, recommended, recommendation_reason', () => {
+    const result = computeMultiScenario(mkInput())
+    expect(result).toHaveProperty('base')
+    expect(result).toHaveProperty('optimistic')
+    expect(result).toHaveProperty('pessimistic')
+    expect(result).toHaveProperty('recommended')
+    expect(result).toHaveProperty('recommendation_reason')
+  })
+
+  it('recommended is one of base | optimistic | pessimistic', () => {
+    const result = computeMultiScenario(mkInput())
+    expect(['base', 'optimistic', 'pessimistic']).toContain(result.recommended)
   })
 })
