@@ -1,8 +1,8 @@
 // ── /api/commercial/sales-funnel ─────────────────────────────────────────────
-// GET — Returns SalesFunnelReport: stage-by-stage conversion, velocity, metrics.
-// Access: any authenticated member.
+// GET — Returns SalesFunnelReport: proforma → sale → payment funnel analytics.
+// Access: manager+ only.
 
-export const revalidate = 300
+export const revalidate = 300 // 5 minutes
 
 import { NextRequest, NextResponse } from 'next/server'
 import { resolveApiAuth } from '@/lib/api-auth'
@@ -17,7 +17,8 @@ export async function GET(req: NextRequest) {
   const { companyId, supabase } = auth
 
   try {
-    const report = await SalesFunnelService.getReport(companyId, supabase)
+    const service = new SalesFunnelService(supabase)
+    const report  = await service.getReport(companyId)
     return NextResponse.json({ report })
   } catch (err) {
     console.error('[sales-funnel]', err)

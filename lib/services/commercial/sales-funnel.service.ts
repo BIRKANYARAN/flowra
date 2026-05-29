@@ -1,109 +1,254 @@
-// ── SalesFunnelService — Stage-by-Stage Pipeline Funnel Analytics ────────────
-// Tracks proforma → sale → payment conversion at each stage.
-// Data source: sales table with is_proforma flag + proformas table.
-// Stages: proforma_created → sent → approved → sale_confirmed → sale_paid
+// ── SalesFunnelService — Sales Funnel Conversion Analytics ───────────────────
+// Tracks conversion rates and velocities across the proforma→sale→payment
+// funnel stages for Turkish SME context.
+//
+// Funnel stages:
+//   1. proforma    — Proforma/Teklif: proposal/quote
+//   2. confirmed   — Onaylı Sipariş: confirmed order (sale created, unpaid)
+//   3. partial     — Kısmi Tahsilat: partially paid
+//   4. paid        — Tam Tahsilat: fully paid
+//   5. overdue     — Vadesi Geçmiş: past due date, unpaid
+//
+// All pure functions exported for unit testing.
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+// ── Exported Types ─────────────────────────────────────────────────────────────
 
 export interface FunnelStage {
-  stage: 'proforma_created' | 'proforma_sent' | 'proforma_approved' | 'sale_confirmed' | 'sale_paid'
-  label: string               // Turkish label
+  stage_id: string           // 'proforma' | 'confirmed' | 'partial' | 'paid' | 'overdue'
+  stage_name: string         // Turkish name
   count: number
-  total_value_try: number     // sum of values at this stage
-  conversion_rate_pct: number | null  // this stage count / previous stage count × 100
-  avg_days_in_stage: number | null    // average time spent in this stage
-  drop_off_pct: number | null         // 100 - conversion_rate (lost at this stage)
+  value_try: number          // total value of sales at this stage
+  avg_days_in_stage: number | null  // avg time spent in this stage before moving to next
 }
 
 export interface FunnelMetrics {
-  overall_conversion_pct: number | null   // paid / total_created × 100
-  avg_days_to_payment: number | null      // proforma_created to sale fully paid
-  avg_deal_size_try: number | null        // avg total_try for confirmed sales
-  total_pipeline_value_try: number        // value of proformas not yet converted
-  total_closed_won_try: number           // value of paid sales this period
-  velocity: number | null                // deals closed per month (last 3 months avg)
+  proforma_to_sale_rate: number        // % of proformas that converted to sales
+  sale_to_paid_rate: number            // % of confirmed sales that got paid (fully)
+  sale_to_partial_rate: number         // % that became partial
+  overall_conversion_rate: number      // proforma → paid
+
+  avg_proforma_to_sale_days: number | null   // avg days from proforma to conversion
+  avg_sale_to_payment_days: number | null    // avg days from sale to full payment (DSO)
+  avg_total_cycle_days: number | null        // proforma to payment total
 }
 
 export interface SalesFunnelReport {
+  analysis_period: string     // "last_30_days" or "last_90_days"
+
   stages: FunnelStage[]
   metrics: FunnelMetrics
-  period_label: string    // 'Son 90 Gün'
-  top_conversion_stage: string | null    // stage with worst conversion
-  bottleneck_label: string | null        // Turkish: 'En büyük kayıp: Proforma → Satış aşamasında (%42)'
+
+  conversion_health: ReturnType<typeof classifyConversionRateHealth>
+  deal_velocity: ReturnType<typeof classifyDealVelocity>
+  bottleneck_stage: string | null
+
+  open_pipeline_value_try: number         // proforma + confirmed (not yet paid)
+  weighted_pipeline_value_try: number
+  pipeline_30d_forecast_try: number | null
+
+  monthly_flow: ReturnType<typeof computeMonthlyFunnelFlow>
+  total_leakage_try: number              // total value not progressing
 }
 
-// ── Raw DB rows ────────────────────────────────────────────────────────────────
-
-interface ProformaRow {
-  id:         string
-  status:     string | null
-  total:      number | null
-  currency:   string | null
-  fx_try:     number | null
-  created_at: string
-}
-
-interface SaleRow {
-  id:             string
-  is_proforma:    boolean | null
-  status:         string | null
-  payment_status: string | null
-  total:          number | null
-  fx_try:         number | null
-  currency:       string | null
-  created_at:     string
-  sale_date:      string | null
-  proforma_id:    string | null
-}
-
-// ── Pure Helpers (exported) ───────────────────────────────────────────────────
+// ── Pure Functions (exported) ─────────────────────────────────────────────────
 
 /**
- * Compute conversion rate: current / previous × 100.
- * Returns null if previous is 0 (cannot divide).
+ * Compute conversion rate between two stage counts.
+ * Returns 0 if from_count = 0 (no NaN).
  */
-export function computeConversionRate(current: number, previous: number): number | null {
-  if (previous === 0) return null
-  return Math.round((current / previous) * 100 * 10) / 10
+export function computeConversionRate(from_count: number, to_count: number): number {
+  if (from_count === 0) return 0
+  return (to_count / from_count) * 100
 }
 
 /**
- * Compute drop-off percentage: 100 - conversionRate.
- * Returns null if conversionRate is null.
+ * Compute average days in stage.
+ * Returns null if no completed transitions (empty array).
  */
-export function computeDropOff(conversionRate: number | null): number | null {
-  if (conversionRate === null) return null
-  return Math.round((100 - conversionRate) * 10) / 10
+export function computeAvgDaysInStage(stageDurations: number[]): number | null {
+  if (stageDurations.length === 0) return null
+  const total = stageDurations.reduce((sum, d) => sum + d, 0)
+  return total / stageDurations.length
 }
 
 /**
- * Find the bottleneck stage: the stage (excluding the first) with the
- * lowest non-null conversion_rate_pct. Returns null if no such stage.
+ * Classify conversion rate health.
+ * excellent: >= 70%
+ * good:      >= 50%
+ * moderate:  >= 30%
+ * low:       >= 15%
+ * poor:      < 15%
  */
-export function findBottleneckStage(stages: FunnelStage[]): FunnelStage | null {
-  if (stages.length === 0) return null
-  const candidates = stages.slice(1).filter(s => s.conversion_rate_pct !== null)
-  if (candidates.length === 0) return null
-  return candidates.reduce((worst, s) =>
-    (s.conversion_rate_pct as number) < (worst.conversion_rate_pct as number) ? s : worst,
+export function classifyConversionRateHealth(
+  conversionRate: number,
+): 'excellent' | 'good' | 'moderate' | 'low' | 'poor' {
+  if (conversionRate >= 70) return 'excellent'
+  if (conversionRate >= 50) return 'good'
+  if (conversionRate >= 30) return 'moderate'
+  if (conversionRate >= 15) return 'low'
+  return 'poor'
+}
+
+/**
+ * Compute funnel leakage (value lost at each stage).
+ * = value entering stage - value advancing to next stage
+ * Always >= 0.
+ */
+export function computeFunnelLeakage(
+  enteringValue: number,
+  advancingValue: number,
+): number {
+  const diff = enteringValue - advancingValue
+  return diff > 0 ? diff : 0
+}
+
+/**
+ * Compute funnel velocity (value × conversion rate = expected revenue output).
+ * velocity = total_pipeline_value × overall_conversion_rate / 100
+ */
+export function computeFunnelVelocity(
+  totalPipelineValue: number,
+  overallConversionRate: number,
+): number {
+  return totalPipelineValue * (overallConversionRate / 100)
+}
+
+/**
+ * Compute weighted pipeline value.
+ * Weights: proforma=10%, confirmed=40%, partial=70%, overdue=20%
+ */
+export function computeWeightedPipelineValue(
+  proformaValue: number,
+  confirmedValue: number,
+  partialValue: number,
+  overdueValue: number,
+): number {
+  return (
+    proformaValue * 0.10 +
+    confirmedValue * 0.40 +
+    partialValue * 0.70 +
+    overdueValue * 0.20
   )
 }
 
 /**
- * Build a Turkish bottleneck label from the worst stage.
- * Returns null if stage is null.
+ * Classify deal velocity based on avg cycle days.
+ * fast:    <= 14 days total cycle
+ * normal:  <= 30 days
+ * slow:    <= 60 days
+ * stalled: > 60 days or null
  */
-export function buildBottleneckLabel(stage: FunnelStage | null): string | null {
-  if (!stage) return null
-  const pct = stage.conversion_rate_pct !== null
-    ? `%${stage.conversion_rate_pct.toFixed(0)}`
-    : '%?'
-  return `En büyük kayıp: ${stage.label} aşamasında (${pct})`
+export function classifyDealVelocity(
+  avgTotalCycleDays: number | null,
+): 'fast' | 'normal' | 'slow' | 'stalled' {
+  if (avgTotalCycleDays === null) return 'stalled'
+  if (avgTotalCycleDays <= 14) return 'fast'
+  if (avgTotalCycleDays <= 30) return 'normal'
+  if (avgTotalCycleDays <= 60) return 'slow'
+  return 'stalled'
 }
 
-// ── Internal helpers ──────────────────────────────────────────────────────────
+/**
+ * Compute monthly funnel flow (how many new proformas vs closed this month).
+ */
+export function computeMonthlyFunnelFlow(
+  newProformas: number,
+  closedAsWon: number,
+  closedAsLost: number,
+): { won_rate: number; lost_rate: number; still_open: number } {
+  const total = newProformas
+  const decided = closedAsWon + closedAsLost
+
+  if (total === 0) {
+    return { won_rate: 0, lost_rate: 0, still_open: 0 }
+  }
+
+  // If no decided outcomes, all are still open
+  if (decided === 0) {
+    return {
+      won_rate: 0,
+      lost_rate: 0,
+      still_open: newProformas,
+    }
+  }
+
+  const won_rate = (closedAsWon / total) * 100
+  const lost_rate = (closedAsLost / total) * 100
+  const still_open = newProformas - closedAsWon - closedAsLost
+
+  return { won_rate, lost_rate, still_open }
+}
+
+/**
+ * Identify bottleneck stage (stage with highest value and lowest conversion to next).
+ * Returns the stage_id with highest leakage.
+ * Returns null if stages is empty or has fewer than 2 stages.
+ */
+export function identifyBottleneckStage(stages: FunnelStage[]): string | null {
+  if (stages.length < 2) return null
+
+  let maxLeakage = -Infinity
+  let bottleneckId: string | null = null
+
+  for (let i = 0; i < stages.length - 1; i++) {
+    const current = stages[i]
+    const next    = stages[i + 1]
+    const leakage = computeFunnelLeakage(current.value_try, next.value_try)
+    if (leakage > maxLeakage) {
+      maxLeakage   = leakage
+      bottleneckId = current.stage_id
+    }
+  }
+
+  return bottleneckId
+}
+
+/**
+ * Compute 30-day run rate for pipeline.
+ * Returns null if avgCycleDays > 30 days (deals won't close within 30 days).
+ * Returns null if avgCycleDays is null (no velocity data).
+ */
+export function computePipeline30DayForecast(
+  openPipelineValue: number,
+  historicalConversionRate: number,
+  avgCycleDays: number | null,
+): number | null {
+  if (avgCycleDays === null) return null
+  if (avgCycleDays > 30) return null
+
+  // Expected revenue = pipeline value × conversion rate × (30 / cycle days)
+  const cycleCount = 30 / avgCycleDays
+  return openPipelineValue * (historicalConversionRate / 100) * cycleCount
+}
+
+// ── Internal DB Types ─────────────────────────────────────────────────────────
+
+interface SaleRow {
+  id:             string
+  payment_status: string | null
+  total:          number | null
+  currency:       string | null
+  fx_try:         number | null
+  created_at:     string
+  sale_date:      string | null
+  due_date:       string | null
+  paid_at:        string | null
+  partially_paid_at?: string | null
+}
+
+interface ProformaRow {
+  id:           string
+  status:       string | null
+  total:        number | null
+  currency:     string | null
+  fx_try:       number | null
+  created_at:   string
+  converted_at: string | null
+}
+
+// ── Internal Helpers ──────────────────────────────────────────────────────────
 
 function toTRY(total: number | null, currency: string | null, fx_try: number | null): number {
   const t = Number(total ?? 0)
@@ -111,189 +256,221 @@ function toTRY(total: number | null, currency: string | null, fx_try: number | n
   return t * (Number(fx_try) || 1)
 }
 
+function daysBetween(a: string, b: string): number {
+  return Math.abs(new Date(b).getTime() - new Date(a).getTime()) / 86_400_000
+}
+
 // ── Service ───────────────────────────────────────────────────────────────────
 
 export class SalesFunnelService {
-  static async getReport(
-    companyId: string,
-    supabase: SupabaseClient,
-    opts?: { days?: number },
-  ): Promise<SalesFunnelReport> {
-    const days = opts?.days ?? 90
-    const cutoff = new Date(Date.now() - days * 86_400_000).toISOString().slice(0, 10)
+  constructor(private readonly supabase: SupabaseClient<any>) {}
 
-    const [proformasRes, salesRes] = await Promise.allSettled([
-      supabase
+  async getReport(companyId: string): Promise<SalesFunnelReport> {
+    const now    = new Date()
+    const cutoff = new Date(now.getTime() - 90 * 86_400_000).toISOString().slice(0, 10)
+    const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
+
+    // ── Fetch data ────────────────────────────────────────────────────────────
+    const [proformasRes, salesRes] = await Promise.all([
+      this.supabase
         .from('proformas')
-        .select('id, status, total, currency, fx_try, created_at')
+        .select('id, status, total, currency, fx_try, created_at, converted_at')
         .eq('company_id', companyId)
         .is('deleted_at', null)
         .gte('created_at', cutoff),
 
-      supabase
+      this.supabase
         .from('sales')
-        .select('id, is_proforma, status, payment_status, total, fx_try, currency, created_at, sale_date, proforma_id')
+        .select('id, payment_status, total, currency, fx_try, created_at, sale_date, due_date, paid_at')
         .eq('company_id', companyId)
         .is('deleted_at', null)
         .gte('created_at', cutoff),
     ])
 
-    const proformas: ProformaRow[] =
-      proformasRes.status === 'fulfilled' ? ((proformasRes.value.data ?? []) as ProformaRow[]) : []
-    const allSales: SaleRow[] =
-      salesRes.status === 'fulfilled' ? ((salesRes.value.data ?? []) as SaleRow[]) : []
+    if (proformasRes.error) throw new Error(`SalesFunnelService: ${proformasRes.error.message}`)
+    if (salesRes.error)     throw new Error(`SalesFunnelService: ${salesRes.error.message}`)
 
-    // Split sales into proforma-type and actual-sale-type
-    const salesProformas = allSales.filter(s => s.is_proforma === true)
-    const actualSales    = allSales.filter(s => s.is_proforma === false || s.is_proforma === null)
+    const proformas  = (proformasRes.data ?? []) as ProformaRow[]
+    const salesRaw   = (salesRes.data   ?? []) as SaleRow[]
 
-    // ── Stage 1: proforma_created ─────────────────────────────────────────────
-    // All proformas in the period (union of proformas table + sales with is_proforma=true)
-    const allProformaRows: Array<{ id: string; status: string | null; valueTRY: number; created_at: string }> = [
-      ...proformas.map(p => ({
-        id: p.id,
-        status: p.status,
-        valueTRY: toTRY(p.total, p.currency, p.fx_try),
-        created_at: p.created_at,
-      })),
-      ...salesProformas.map(s => ({
-        id: s.id,
-        status: s.status,
-        valueTRY: toTRY(s.total, s.currency, s.fx_try),
-        created_at: s.created_at,
-      })),
-    ]
-    // De-duplicate by id
-    const seenIds = new Set<string>()
-    const uniqueProformas = allProformaRows.filter(p => {
-      if (seenIds.has(p.id)) return false
-      seenIds.add(p.id)
-      return true
-    })
+    const todayStr = now.toISOString().slice(0, 10)
 
-    const createdCount    = uniqueProformas.length
-    const createdValueTRY = uniqueProformas.reduce((s, p) => s + p.valueTRY, 0)
+    // ── Classify sales by payment_status ─────────────────────────────────────
+    const confirmedSales: SaleRow[] = []
+    const partialSales:   SaleRow[] = []
+    const paidSales:      SaleRow[] = []
+    const overdueSales:   SaleRow[] = []
 
-    // ── Stage 2: proforma_sent ────────────────────────────────────────────────
-    // status = 'sent' | 'approved' | 'converted' (all downstream stages)
-    const sentStatuses = new Set(['sent', 'approved', 'accepted', 'converted'])
-    const sentProformas = uniqueProformas.filter(p => sentStatuses.has(p.status ?? ''))
-    const sentCount    = sentProformas.length
-    const sentValueTRY = sentProformas.reduce((s, p) => s + p.valueTRY, 0)
+    for (const s of salesRaw) {
+      const ps = s.payment_status ?? 'unpaid'
+      if (ps === 'paid') {
+        paidSales.push(s)
+      } else if (ps === 'partial') {
+        partialSales.push(s)
+      } else if (ps === 'overdue') {
+        overdueSales.push(s)
+      } else {
+        // unpaid → check if overdue by due_date
+        if (s.due_date && s.due_date < todayStr) {
+          overdueSales.push(s)
+        } else {
+          confirmedSales.push(s)
+        }
+      }
+    }
 
-    // ── Stage 3: proforma_approved ────────────────────────────────────────────
-    // status = 'approved' | 'accepted' | 'converted'
-    const approvedStatuses = new Set(['approved', 'accepted', 'converted'])
-    const approvedProformas = uniqueProformas.filter(p => approvedStatuses.has(p.status ?? ''))
-    const approvedCount    = approvedProformas.length
-    const approvedValueTRY = approvedProformas.reduce((s, p) => s + p.valueTRY, 0)
+    // ── Stage values ──────────────────────────────────────────────────────────
+    const proformaCount = proformas.length
+    const proformaValue = proformas.reduce((s, p) => s + toTRY(p.total, p.currency, p.fx_try), 0)
 
-    // ── Stage 4: sale_confirmed ───────────────────────────────────────────────
-    // Actual sales (is_proforma=false) with payment_status in pending|partial|paid|overdue
-    const confirmedStatuses = new Set(['pending', 'partial', 'paid', 'overdue', 'confirmed'])
-    const confirmedSales = actualSales.filter(
-      s => confirmedStatuses.has(s.payment_status ?? '') || s.payment_status === null,
+    const confirmedCount = confirmedSales.length
+    const confirmedValue = confirmedSales.reduce((s, r) => s + toTRY(r.total, r.currency, r.fx_try), 0)
+
+    const partialCount = partialSales.length
+    const partialValue = partialSales.reduce((s, r) => s + toTRY(r.total, r.currency, r.fx_try), 0)
+
+    const paidCount = paidSales.length
+    const paidValue = paidSales.reduce((s, r) => s + toTRY(r.total, r.currency, r.fx_try), 0)
+
+    const overdueCount = overdueSales.length
+    const overdueValue = overdueSales.reduce((s, r) => s + toTRY(r.total, r.currency, r.fx_try), 0)
+
+    // ── Avg days in stage ─────────────────────────────────────────────────────
+    // proforma stage: time from created_at to converted_at (or today if still open)
+    const proformaDurations = proformas.map(p =>
+      daysBetween(p.created_at, p.converted_at ?? todayStr),
     )
-    const confirmedCount    = confirmedSales.length
-    const confirmedValueTRY = confirmedSales.reduce((s, sale) => s + toTRY(sale.total, sale.currency, sale.fx_try), 0)
+    const avgDaysProforma = computeAvgDaysInStage(proformaDurations)
 
-    // ── Stage 5: sale_paid ────────────────────────────────────────────────────
-    const paidSales = actualSales.filter(s => s.payment_status === 'paid')
-    const paidCount    = paidSales.length
-    const paidValueTRY = paidSales.reduce((s, sale) => s + toTRY(sale.total, sale.currency, sale.fx_try), 0)
+    // confirmed → paid: sale_date to paid_at
+    const paidDurations = paidSales
+      .filter(s => s.paid_at)
+      .map(s => daysBetween(s.sale_date ?? s.created_at, s.paid_at!))
+    const avgDaysConfirmed = computeAvgDaysInStage(paidDurations)
 
-    // ── Conversion rates ──────────────────────────────────────────────────────
-    const cr12 = computeConversionRate(sentCount, createdCount)
-    const cr23 = computeConversionRate(approvedCount, sentCount)
-    const cr34 = computeConversionRate(confirmedCount, approvedCount)
-    const cr45 = computeConversionRate(paidCount, confirmedCount)
-
-    // ── Build stages ──────────────────────────────────────────────────────────
+    // ── Stages array ──────────────────────────────────────────────────────────
     const stages: FunnelStage[] = [
       {
-        stage: 'proforma_created',
-        label: 'Proforma Oluşturuldu',
-        count: createdCount,
-        total_value_try: createdValueTRY,
-        conversion_rate_pct: null,
-        avg_days_in_stage: null,
-        drop_off_pct: null,
+        stage_id:         'proforma',
+        stage_name:       'Proforma/Teklif',
+        count:            proformaCount,
+        value_try:        proformaValue,
+        avg_days_in_stage: avgDaysProforma,
       },
       {
-        stage: 'proforma_sent',
-        label: 'Proforma Gönderildi',
-        count: sentCount,
-        total_value_try: sentValueTRY,
-        conversion_rate_pct: cr12,
+        stage_id:         'confirmed',
+        stage_name:       'Onaylı Sipariş',
+        count:            confirmedCount,
+        value_try:        confirmedValue,
         avg_days_in_stage: null,
-        drop_off_pct: computeDropOff(cr12),
       },
       {
-        stage: 'proforma_approved',
-        label: 'Proforma Onaylandı',
-        count: approvedCount,
-        total_value_try: approvedValueTRY,
-        conversion_rate_pct: cr23,
+        stage_id:         'partial',
+        stage_name:       'Kısmi Tahsilat',
+        count:            partialCount,
+        value_try:        partialValue,
         avg_days_in_stage: null,
-        drop_off_pct: computeDropOff(cr23),
       },
       {
-        stage: 'sale_confirmed',
-        label: 'Satış Onaylandı',
-        count: confirmedCount,
-        total_value_try: confirmedValueTRY,
-        conversion_rate_pct: cr34,
-        avg_days_in_stage: null,
-        drop_off_pct: computeDropOff(cr34),
+        stage_id:         'paid',
+        stage_name:       'Tam Tahsilat',
+        count:            paidCount,
+        value_try:        paidValue,
+        avg_days_in_stage: avgDaysConfirmed,
       },
       {
-        stage: 'sale_paid',
-        label: 'Satış Ödendi',
-        count: paidCount,
-        total_value_try: paidValueTRY,
-        conversion_rate_pct: cr45,
+        stage_id:         'overdue',
+        stage_name:       'Vadesi Geçmiş',
+        count:            overdueCount,
+        value_try:        overdueValue,
         avg_days_in_stage: null,
-        drop_off_pct: computeDropOff(cr45),
       },
     ]
 
     // ── Metrics ───────────────────────────────────────────────────────────────
-    const overallConversion = computeConversionRate(paidCount, createdCount)
+    const totalSales = confirmedCount + partialCount + paidCount + overdueCount
 
-    const avgDealSize = confirmedCount > 0
-      ? Math.round(confirmedValueTRY / confirmedCount)
-      : null
+    const proformaToSaleRate   = computeConversionRate(proformaCount, totalSales)
+    const saleToPaidRate       = computeConversionRate(totalSales, paidCount)
+    const saleToPartialRate    = computeConversionRate(totalSales, partialCount)
+    const overallConversionRate = computeConversionRate(proformaCount, paidCount)
 
-    // Pipeline value: proformas not yet converted
-    const pipelineStatuses = new Set(['draft', 'sent', 'accepted', 'approved'])
-    const pipelineValueTRY = uniqueProformas
-      .filter(p => pipelineStatuses.has(p.status ?? 'draft'))
-      .reduce((s, p) => s + p.valueTRY, 0)
+    // avg cycle days: proforma creation to payment
+    const avgProformaToSaleDays = computeAvgDaysInStage(
+      proformas
+        .filter(p => p.converted_at)
+        .map(p => daysBetween(p.created_at, p.converted_at!)),
+    )
 
-    // Velocity: paidSales count / 3 months
-    const threeMonthsAgo = new Date(Date.now() - 90 * 86_400_000).toISOString()
-    const recentPaid = paidSales.filter(s => (s.sale_date ?? s.created_at) >= threeMonthsAgo.slice(0, 10))
-    const velocity = recentPaid.length > 0 ? Math.round((recentPaid.length / 3) * 10) / 10 : null
+    const avgSaleToPaymentDays = computeAvgDaysInStage(paidDurations)
 
-    const metrics: FunnelMetrics = {
-      overall_conversion_pct: overallConversion,
-      avg_days_to_payment: null,  // requires timestamp data per row not available
-      avg_deal_size_try: avgDealSize,
-      total_pipeline_value_try: pipelineValueTRY,
-      total_closed_won_try: paidValueTRY,
-      velocity,
+    let avgTotalCycleDays: number | null = null
+    if (avgProformaToSaleDays !== null && avgSaleToPaymentDays !== null) {
+      avgTotalCycleDays = avgProformaToSaleDays + avgSaleToPaymentDays
+    } else if (avgProformaToSaleDays !== null) {
+      avgTotalCycleDays = avgProformaToSaleDays
+    } else if (avgSaleToPaymentDays !== null) {
+      avgTotalCycleDays = avgSaleToPaymentDays
     }
 
-    // ── Bottleneck ────────────────────────────────────────────────────────────
-    const bottleneck = findBottleneckStage(stages)
-    const bottleneckLabel = buildBottleneckLabel(bottleneck)
+    const metrics: FunnelMetrics = {
+      proforma_to_sale_rate:    proformaToSaleRate,
+      sale_to_paid_rate:        saleToPaidRate,
+      sale_to_partial_rate:     saleToPartialRate,
+      overall_conversion_rate:  overallConversionRate,
+      avg_proforma_to_sale_days: avgProformaToSaleDays,
+      avg_sale_to_payment_days:  avgSaleToPaymentDays,
+      avg_total_cycle_days:      avgTotalCycleDays,
+    }
+
+    // ── Derived values ────────────────────────────────────────────────────────
+    const conversionHealth = classifyConversionRateHealth(overallConversionRate)
+    const dealVelocity     = classifyDealVelocity(avgTotalCycleDays)
+    const bottleneckStage  = identifyBottleneckStage(stages)
+
+    const openPipelineValue    = proformaValue + confirmedValue
+    const weightedPipelineValue = computeWeightedPipelineValue(
+      proformaValue,
+      confirmedValue,
+      partialValue,
+      overdueValue,
+    )
+
+    const pipeline30dForecast = computePipeline30DayForecast(
+      openPipelineValue,
+      overallConversionRate,
+      avgTotalCycleDays,
+    )
+
+    // ── Monthly flow (this calendar month) ───────────────────────────────────
+    const newProformasThisMonth  = proformas.filter(p => p.created_at >= monthStart).length
+    const closedAsWonThisMonth   = paidSales.filter(s => (s.paid_at ?? s.sale_date ?? s.created_at) >= monthStart).length
+    const closedAsLostThisMonth  = proformas.filter(
+      p => ['rejected', 'expired', 'cancelled'].includes(p.status ?? '') && p.created_at >= monthStart,
+    ).length
+
+    const monthlyFlow = computeMonthlyFunnelFlow(
+      newProformasThisMonth,
+      closedAsWonThisMonth,
+      closedAsLostThisMonth,
+    )
+
+    // ── Total leakage ─────────────────────────────────────────────────────────
+    // Value that entered but did not reach paid stage
+    const totalLeakage = computeFunnelLeakage(proformaValue, paidValue)
 
     return {
+      analysis_period:            'last_90_days',
       stages,
       metrics,
-      period_label: `Son ${days} Gün`,
-      top_conversion_stage: bottleneck?.stage ?? null,
-      bottleneck_label: bottleneckLabel,
+      conversion_health:          conversionHealth,
+      deal_velocity:              dealVelocity,
+      bottleneck_stage:           bottleneckStage,
+      open_pipeline_value_try:    openPipelineValue,
+      weighted_pipeline_value_try: weightedPipelineValue,
+      pipeline_30d_forecast_try:  pipeline30dForecast,
+      monthly_flow:               monthlyFlow,
+      total_leakage_try:          totalLeakage,
     }
   }
 }

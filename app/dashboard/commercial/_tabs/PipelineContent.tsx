@@ -74,7 +74,7 @@ export async function PipelineContent({ companyId }: Props) {
       .is('deleted_at', null)
       .gt('qty_remaining', 0),
 
-    SalesFunnelService.getReport(companyId, supabase).catch(() => null),
+    new SalesFunnelService(supabase).getReport(companyId).catch(() => null),
   ])
 
   const proformas = (pfRes.data  ?? []) as Proforma[]
@@ -135,21 +135,20 @@ export async function PipelineContent({ companyId }: Props) {
           {/* Header */}
           <div className="px-4 py-2.5 border-b border-[#e2e8f0] flex items-center justify-between">
             <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
-              Satış Hunisi — {funnelReport.period_label}
+              Satış Hunisi — {funnelReport.analysis_period === 'last_90_days' ? 'Son 90 Gün' : 'Son 30 Gün'}
             </span>
-            {funnelReport.metrics.overall_conversion_pct !== null && (
+            {funnelReport.metrics.overall_conversion_rate > 0 && (
               <span className="text-[10px] font-bold text-brand">
-                Genel dönüşüm: %{funnelReport.metrics.overall_conversion_pct.toFixed(1)}
+                Genel dönüşüm: %{funnelReport.metrics.overall_conversion_rate.toFixed(1)}
               </span>
             )}
           </div>
 
           {/* Bottleneck alert */}
-          {funnelReport.bottleneck_label &&
-            funnelStages.some(s => s.conversion_rate_pct !== null && s.conversion_rate_pct < 50) && (
+          {funnelReport.bottleneck_stage && (
             <div className="px-4 py-2 bg-warn-light border-b border-warn-light">
               <span className="text-[10px] font-bold text-warn-text">
-                ⚠ {funnelReport.bottleneck_label}
+                ⚠ Darboğaz: {funnelStages.find(s => s.stage_id === funnelReport.bottleneck_stage)?.stage_name ?? funnelReport.bottleneck_stage}
               </span>
             </div>
           )}
@@ -158,29 +157,28 @@ export async function PipelineContent({ companyId }: Props) {
           <div className="px-4 pt-4 pb-2 space-y-2">
             {funnelStages.map((stage: FunnelStage, idx: number) => {
               const barPct = funnelMaxCount > 0 ? Math.max(4, (stage.count / funnelMaxCount) * 100) : 4
+              const prevStage = idx > 0 ? funnelStages[idx - 1] : null
+              const convRate = prevStage && prevStage.count > 0
+                ? (stage.count / prevStage.count) * 100
+                : null
               return (
-                <div key={stage.stage}>
+                <div key={stage.stage_id}>
                   {/* Conversion arrow between stages */}
-                  {idx > 0 && stage.conversion_rate_pct !== null && (
+                  {idx > 0 && convRate !== null && (
                     <div className="flex items-center gap-2 mb-1 ml-2">
                       <div className="w-3 h-3 text-[#94a3b8]">↓</div>
                       <span className={`text-[10px] font-bold ${
-                        stage.conversion_rate_pct >= 70 ? 'text-pos-text' :
-                        stage.conversion_rate_pct >= 50 ? 'text-warn-text' : 'text-neg'
+                        convRate >= 70 ? 'text-pos-text' :
+                        convRate >= 50 ? 'text-warn-text' : 'text-neg'
                       }`}>
-                        %{stage.conversion_rate_pct.toFixed(0)} dönüşüm
-                        {stage.drop_off_pct !== null && stage.drop_off_pct > 0 && (
-                          <span className="text-[#94a3b8] font-normal ml-1">
-                            (%{stage.drop_off_pct.toFixed(0)} kayıp)
-                          </span>
-                        )}
+                        %{convRate.toFixed(0)} dönüşüm
                       </span>
                     </div>
                   )}
                   {/* Stage row */}
                   <div className="flex items-center gap-3">
                     <div className="w-36 shrink-0">
-                      <div className="text-[10px] font-semibold text-[#334155] truncate">{stage.label}</div>
+                      <div className="text-[10px] font-semibold text-[#334155] truncate">{stage.stage_name}</div>
                       <div className="text-[9px] text-[#94a3b8]">{stage.count} kayıt</div>
                     </div>
                     <div className="flex-1 h-6 bg-[#f8fafc] rounded overflow-hidden">
@@ -197,7 +195,7 @@ export async function PipelineContent({ companyId }: Props) {
                     </div>
                     <div className="w-24 text-right shrink-0">
                       <div className="text-[10px] font-bold text-[#1e293b] tabular-nums">
-                        {stage.total_value_try > 0 ? serverFmt(stage.total_value_try) : '—'}
+                        {stage.value_try > 0 ? serverFmt(stage.value_try) : '—'}
                       </div>
                     </div>
                   </div>
@@ -210,28 +208,28 @@ export async function PipelineContent({ companyId }: Props) {
           <div className="border-t border-[#e2e8f0] grid grid-cols-2 sm:grid-cols-4 divide-x divide-[#f1f5f9]">
             {[
               {
-                label: 'Ortalama Anlaşma',
-                value: funnelReport.metrics.avg_deal_size_try !== null
-                  ? serverFmt(funnelReport.metrics.avg_deal_size_try) : '—',
-                color: 'text-[#0f172a]',
-              },
-              {
-                label: 'Pipeline Değeri',
-                value: funnelReport.metrics.total_pipeline_value_try > 0
-                  ? serverFmt(funnelReport.metrics.total_pipeline_value_try) : '—',
+                label: 'Açık Pipeline',
+                value: funnelReport.open_pipeline_value_try > 0
+                  ? serverFmt(funnelReport.open_pipeline_value_try) : '—',
                 color: 'text-info-text',
               },
               {
-                label: 'Kapatılan (Ödendi)',
-                value: funnelReport.metrics.total_closed_won_try > 0
-                  ? serverFmt(funnelReport.metrics.total_closed_won_try) : '—',
-                color: 'text-pos-text',
+                label: 'Ağırlıklı Pipeline',
+                value: funnelReport.weighted_pipeline_value_try > 0
+                  ? serverFmt(funnelReport.weighted_pipeline_value_try) : '—',
+                color: 'text-[#0f172a]',
               },
               {
-                label: 'Satış Hızı / Ay',
-                value: funnelReport.metrics.velocity !== null
-                  ? `${funnelReport.metrics.velocity} anlaşma` : '—',
-                color: 'text-[#0f172a]',
+                label: 'Toplam Kayıp',
+                value: funnelReport.total_leakage_try > 0
+                  ? serverFmt(funnelReport.total_leakage_try) : '—',
+                color: 'text-neg',
+              },
+              {
+                label: '30G Tahmin',
+                value: funnelReport.pipeline_30d_forecast_try !== null
+                  ? serverFmt(funnelReport.pipeline_30d_forecast_try) : '—',
+                color: 'text-pos-text',
               },
             ].map(card => (
               <div key={card.label} className="px-3 py-2.5">
