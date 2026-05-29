@@ -38,12 +38,13 @@ import { RisksTab }      from './_tabs/RisksTab'
 import { CFOTab }        from './_tabs/CFOTab'
 import { BoardPackTab }  from './_tabs/BoardPackTab'
 import { FinanceContextBar } from './_shared/FinanceContextBar'
+import ReportsTab        from '@/app/dashboard/cfo/_tabs/ReportsTab'
 
 // ── Valid tabs ─────────────────────────────────────────────────────────────────
 
-type FinanceTab = 'pnl' | 'balance' | 'cashflow' | 'tax' | 'risks' | 'cfo' | 'boardpack'
+type FinanceTab = 'pnl' | 'balance' | 'cashflow' | 'tax' | 'risks' | 'cfo' | 'boardpack' | 'reports'
 
-const VALID_TABS: FinanceTab[] = ['pnl', 'balance', 'cashflow', 'tax', 'risks', 'cfo', 'boardpack']
+const VALID_TABS: FinanceTab[] = ['pnl', 'balance', 'cashflow', 'tax', 'risks', 'cfo', 'boardpack', 'reports']
 
 const FINANCE_NAV_TABS = [
   { key: 'pnl',       label: 'Kâr/Zarar'   },
@@ -53,16 +54,18 @@ const FINANCE_NAV_TABS = [
   { key: 'risks',     label: 'Riskler'      },
   { key: 'cfo',       label: 'CFO'          },
   { key: 'boardpack', label: 'Yön. Paketi'  },
+  { key: 'reports',   label: 'CFO Paketi'   },
 ]
 
 const TAB_META: Record<FinanceTab, { title: string; sub: string }> = {
-  pnl:       { title: 'Kâr / Zarar',     sub: 'Ciro · Brüt Kâr · Faaliyet Kârı · Vergi Sonrası Net' },
-  balance:   { title: 'Bilanço',          sub: 'Varlıklar · Yükümlülükler · Özsermaye' },
-  cashflow:  { title: 'Nakit Akışı',     sub: 'Burn rate · Runway · 12 ay projeksiyon · Baskı haritası' },
-  tax:       { title: 'Vergi Merkezi',    sub: 'KDV · Geçici Vergi · Kurumlar Vergisi · Matrah Analizi' },
-  risks:     { title: 'Risk Analizi',     sub: 'Alacak yaşlandırma · Müşteri konsantrasyonu · HHI Endeksi' },
-  cfo:       { title: 'CFO Cockpit',     sub: 'Muhasebe doğruluğu · Çeyreklik · Dönem yönetimi · Mizan' },
-  boardpack: { title: 'Yönetim Paketi',  sub: 'Tüm finansal tablolar · Rasyolar · Uyarılar · Belgeler' },
+  pnl:       { title: 'Kâr / Zarar',          sub: 'Ciro · Brüt Kâr · Faaliyet Kârı · Vergi Sonrası Net' },
+  balance:   { title: 'Bilanço',               sub: 'Varlıklar · Yükümlülükler · Özsermaye' },
+  cashflow:  { title: 'Nakit Akışı',          sub: 'Burn rate · Runway · 12 ay projeksiyon · Baskı haritası' },
+  tax:       { title: 'Vergi Merkezi',         sub: 'KDV · Geçici Vergi · Kurumlar Vergisi · Matrah Analizi' },
+  risks:     { title: 'Risk Analizi',          sub: 'Alacak yaşlandırma · Müşteri konsantrasyonu · HHI Endeksi' },
+  cfo:       { title: 'CFO Cockpit',          sub: 'Muhasebe doğruluğu · Çeyreklik · Dönem yönetimi · Mizan' },
+  boardpack: { title: 'Yönetim Paketi',       sub: 'Tüm finansal tablolar · Rasyolar · Uyarılar · Belgeler' },
+  reports:   { title: 'CFO Raporlama Paketi', sub: 'Aylık CFO paketi · Tüm raporlar · ZIP indirme' },
 }
 
 // ── Loading skeleton ───────────────────────────────────────────────────────────
@@ -200,6 +203,7 @@ export default async function FinancePage({ searchParams }: PageProps) {
         {activeTab === 'risks'     && <RisksTab    {...tabProps} />}
         {activeTab === 'cfo'       && <CFOTab      {...tabProps} />}
         {activeTab === 'boardpack' && <BoardPackTab {...tabProps} />}
+        {activeTab === 'reports'   && <ReportsTab />}
       </Suspense>
 
     </div>

@@ -22,6 +22,7 @@ import { VarianceTab }        from './_tabs/VarianceTab'
 import { BreakEvenTab }       from './_tabs/BreakEvenTab'
 import { BudgetTab }          from './_tabs/BudgetTab'
 import { CalendarContent }    from './_tabs/CalendarContent'
+import { MultiScenarioTab }   from './_tabs/MultiScenarioTab'
 
 function TabSkeleton() {
   return (
@@ -82,7 +83,8 @@ export default async function PlanningPage({ searchParams }: PageProps) {
     'breakeven':       'Başabaş Analizi',
     'tasks':           'Görevler',
     'budget':          'Bütçe vs Gerçekleşen',
-    'calendar':        'Finansal Takvim',
+    'calendar':           'Finansal Takvim',
+    'scenario-compare':   'Senaryo Karşılaştırması',
   }
   const planSubs: Record<string, string> = {
     'unit-profit':     'Birim karlılık · Marj analizi · Fiyat optimizasyonu',
@@ -94,7 +96,8 @@ export default async function PlanningPage({ searchParams }: PageProps) {
     'breakeven':       'Başabaş noktası · Katkı payı · Güvenlik marjı · Hedef kâr senaryosu',
     'tasks':           'Görev takibi · Vadesi yaklaşan · Öncelik sırası',
     'budget':          'Aylık bütçe hedefleri · Gelir/gider varyansı · YTD özet',
-    'calendar':        'Vergi takvimleri · Dönem kapanışları · Ortak yükümlülükleri · Yönetişim',
+    'calendar':           'Vergi takvimleri · Dönem kapanışları · Ortak yükümlülükleri · Yönetişim',
+    'scenario-compare':   'Senaryo karşılaştırması · Borç baskısı · Önerilen senaryo',
   }
 
   return (
@@ -149,6 +152,8 @@ export default async function PlanningPage({ searchParams }: PageProps) {
         {activeTab === 'budget' && <BudgetTab companyId={companyId} />}
         {/* calendar: annual financial calendar */}
         {activeTab === 'calendar' && <CalendarContent companyId={companyId} />}
+        {/* scenario-compare: multi-scenario comparison with debt pressure */}
+        {activeTab === 'scenario-compare' && <MultiScenarioTab />}
       </Suspense>
     </div>
   )

@@ -248,8 +248,9 @@ export const PLANNING_TABS = [
   { key: 'partner-impact',  label: 'Ortak Etkisi'       },
   { key: 'breakeven',       label: 'Başabaş'             },
   { key: 'tasks',           label: 'Görevler'            },
-  { key: 'budget',          label: 'Bütçe'               },
-  { key: 'calendar',        label: 'Takvim'              },
+  { key: 'budget',              label: 'Bütçe'                   },
+  { key: 'calendar',            label: 'Takvim'                  },
+  { key: 'scenario-compare',    label: 'Senaryo Karşılaştırması' },
 ] as const
 
 // ── Redirect map — old routes → new center URLs ───────────────────────────────

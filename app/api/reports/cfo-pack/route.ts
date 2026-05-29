@@ -10,6 +10,9 @@ import {
   getRequiredReports,
   type CFOPackReport,
 } from '@/lib/reports/cfo-pack-manifest'
+import {
+  buildEmptyManifest,
+} from '@/lib/services/reporting/cfo-pack.service'
 
 export const dynamic = 'force-dynamic'
 
@@ -147,6 +150,90 @@ export async function GET(req: NextRequest) {
     })
   } catch (e) {
     console.error('[reports/cfo-pack]', e)
+    return NextResponse.json({ error: 'Internal error' }, { status: 500 })
+  }
+}
+
+// ── POST /api/reports/cfo-pack ────────────────────────────────────────────────
+//
+// Body: { period_id: string }
+// Creates (or re-starts) a CFO pack for the given period.
+// Persists to cfo_pack_manifests table when available; returns the manifest.
+// Auth: admin only.
+
+export async function POST(req: NextRequest) {
+  try {
+    const auth = await resolveApiAuth(req)
+    if (!auth.ok) return auth.response
+    const { companyId, supabase } = auth
+
+    const body = await req.json().catch(() => ({}))
+    const periodId: string | undefined = body?.period_id
+
+    if (!periodId) {
+      return NextResponse.json(
+        { error: 'period_id is required' },
+        { status: 400 },
+      )
+    }
+
+    // Resolve a human-readable label from the accounting_periods table if possible.
+    let periodLabel = periodId
+    try {
+      const { data: periodRow } = await supabase
+        .from('accounting_periods')
+        .select('label, starts_at')
+        .eq('id', periodId)
+        .eq('company_id', companyId)
+        .single()
+      if (periodRow?.label) {
+        periodLabel = periodRow.label as string
+      } else if (periodRow?.starts_at) {
+        const d = new Date(periodRow.starts_at as string)
+        const months = [
+          'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
+          'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık',
+        ]
+        periodLabel = `${months[d.getMonth()]} ${d.getFullYear()}`
+      }
+    } catch {
+      // non-fatal — label falls back to period_id
+    }
+
+    // Build empty manifest (all items pending)
+    const manifest = buildEmptyManifest(periodId, periodLabel)
+
+    // Attempt to persist to cfo_pack_manifests table — silently skip if table
+    // doesn't exist yet (schema migration may not have run in all envs).
+    try {
+      await supabase
+        .from('cfo_pack_manifests')
+        .upsert(
+          {
+            company_id:   companyId,
+            period_id:    periodId,
+            period_label: periodLabel,
+            items:        manifest.items,
+            total_size_kb: 0,
+            is_complete:  false,
+            download_url: null,
+            created_at:   manifest.created_at,
+          },
+          { onConflict: 'company_id,period_id' },
+        )
+    } catch {
+      // non-fatal — table may not exist in this environment
+    }
+
+    return NextResponse.json(
+      {
+        manifest,
+        message: `CFO paketi oluşturuldu: ${periodLabel}`,
+      },
+      { status: 201 },
+    )
+  } catch (e) {
+    console.error('[reports/cfo-pack POST]', e)
     return NextResponse.json({ error: 'Internal error' }, { status: 500 })
   }
 }
