@@ -1,6 +1,8 @@
 // ── /api/commercial/customer-ltv-enhanced ─────────────────────────────────────
-// GET — Returns CustomerLtvEnhancedReport: multi-method LTV, segment analysis,
-//       CLV tier classification, portfolio stats.
+// GET — Returns CustomerLtvReport: LTV:CAC analysis, revenue concentration HHI,
+//       customer tier classification, payback period, NRR.
+// Query params:
+//   period_months  number (defaults to 12) — lookback window
 // Access: manager+ only.
 // Cache: revalidate every 3600 seconds (1 hour).
 
@@ -18,9 +20,13 @@ export async function GET(req: NextRequest) {
 
   const { companyId, supabase } = auth
 
+  const { searchParams } = new URL(req.url)
+  const periodParam = searchParams.get('period_months')
+  const periodMonths = periodParam ? Math.max(1, Math.min(60, parseInt(periodParam, 10) || 12)) : 12
+
   try {
     const service = new CustomerLtvEnhancedService(supabase)
-    const report  = await service.getReport(companyId)
+    const report  = await service.getReport(companyId, periodMonths)
     return NextResponse.json({ report })
   } catch (err) {
     console.error('[customer-ltv-enhanced]', err)
