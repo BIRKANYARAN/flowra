@@ -336,3 +336,218 @@ describe('evaluateCFOAlerts — thresholds', () => {
   })
 
 })
+
+// ─────────────────────────────────────────────────────────────────────────────
+// evaluateAlerts — additional rule coverage
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('evaluateAlerts — additional rule coverage', () => {
+
+  it('fires PERIOD_NOT_CLOSED when openPeriodDaysOverdue > 10', () => {
+    const alerts = evaluateAlerts({ ...BASE_INPUTS, openPeriodDaysOverdue: 11 })
+    expect(alerts.some(a => a.rule_type === 'PERIOD_NOT_CLOSED')).toBe(true)
+  })
+
+  it('does NOT fire PERIOD_NOT_CLOSED when openPeriodDaysOverdue <= 10', () => {
+    const alerts = evaluateAlerts({ ...BASE_INPUTS, openPeriodDaysOverdue: 10 })
+    expect(alerts.some(a => a.rule_type === 'PERIOD_NOT_CLOSED')).toBe(false)
+  })
+
+  it('does NOT fire PERIOD_NOT_CLOSED when openPeriodDaysOverdue = -1', () => {
+    const alerts = evaluateAlerts({ ...BASE_INPUTS, openPeriodDaysOverdue: -1 })
+    expect(alerts.some(a => a.rule_type === 'PERIOD_NOT_CLOSED')).toBe(false)
+  })
+
+  it('fires TAX_DUE_SOON when taxDueDays <= 7 and kdvPayable > 50', () => {
+    const alerts = evaluateAlerts({ ...BASE_INPUTS, taxDueDays: 3, kdvPayable: 1_000 })
+    expect(alerts.some(a => a.rule_type === 'TAX_DUE_SOON')).toBe(true)
+  })
+
+  it('does NOT fire TAX_DUE_SOON when kdvPayable <= 50', () => {
+    const alerts = evaluateAlerts({ ...BASE_INPUTS, taxDueDays: 1, kdvPayable: 50 })
+    expect(alerts.some(a => a.rule_type === 'TAX_DUE_SOON')).toBe(false)
+  })
+
+  it('does NOT fire TAX_DUE_SOON when taxDueDays = -1', () => {
+    const alerts = evaluateAlerts({ ...BASE_INPUTS, taxDueDays: -1, kdvPayable: 100_000 })
+    expect(alerts.some(a => a.rule_type === 'TAX_DUE_SOON')).toBe(false)
+  })
+
+  it('fires KDV_LARGE when kdvPayable >= 50_000 and tax not imminent', () => {
+    const alerts = evaluateAlerts({ ...BASE_INPUTS, taxDueDays: -1, kdvPayable: 50_000 })
+    expect(alerts.some(a => a.rule_type === 'KDV_LARGE')).toBe(true)
+  })
+
+  it('does NOT fire KDV_LARGE when kdvPayable < 50_000', () => {
+    const alerts = evaluateAlerts({ ...BASE_INPUTS, taxDueDays: -1, kdvPayable: 49_999 })
+    expect(alerts.some(a => a.rule_type === 'KDV_LARGE')).toBe(false)
+  })
+
+  it('fires KDV_LARGE with warning severity', () => {
+    const alerts = evaluateAlerts({ ...BASE_INPUTS, taxDueDays: -1, kdvPayable: 100_000 })
+    const alert = alerts.find(a => a.rule_type === 'KDV_LARGE')
+    expect(alert?.severity).toBe('warning')
+  })
+
+  it('KDV_LARGE and TAX_DUE_SOON do not fire simultaneously', () => {
+    // TAX_DUE_SOON fires when taxDueDays <= 7 → KDV_LARGE should NOT fire then
+    const alerts = evaluateAlerts({ ...BASE_INPUTS, taxDueDays: 5, kdvPayable: 100_000 })
+    const hasTaxDueSoon = alerts.some(a => a.rule_type === 'TAX_DUE_SOON')
+    const hasKdvLarge   = alerts.some(a => a.rule_type === 'KDV_LARGE')
+    // Either one or the other fires (not both)
+    expect(hasTaxDueSoon && hasKdvLarge).toBe(false)
+  })
+
+  it('fires LEGAL_RESERVE_LOW when legalReserveDeficit > 0', () => {
+    const alerts = evaluateAlerts({ ...BASE_INPUTS, legalReserveDeficit: 5_000 })
+    expect(alerts.some(a => a.rule_type === 'LEGAL_RESERVE_LOW')).toBe(true)
+  })
+
+  it('LEGAL_RESERVE_LOW has warning severity', () => {
+    const alerts = evaluateAlerts({ ...BASE_INPUTS, legalReserveDeficit: 10_000 })
+    const alert = alerts.find(a => a.rule_type === 'LEGAL_RESERVE_LOW')
+    expect(alert?.severity).toBe('warning')
+  })
+
+  it('does NOT fire LEGAL_RESERVE_LOW when legalReserveDeficit = 0', () => {
+    const alerts = evaluateAlerts({ ...BASE_INPUTS, legalReserveDeficit: 0 })
+    expect(alerts.some(a => a.rule_type === 'LEGAL_RESERVE_LOW')).toBe(false)
+  })
+
+  it('fires EQUITY_GAP_OVERDUE when equityGapTry > 0 and equityCallOverdueDays > 0', () => {
+    const alerts = evaluateAlerts({ ...BASE_INPUTS, equityGapTry: 50_000, equityCallOverdueDays: 5 })
+    expect(alerts.some(a => a.rule_type === 'EQUITY_GAP_OVERDUE')).toBe(true)
+  })
+
+  it('does NOT fire EQUITY_GAP_OVERDUE when equityGapTry = 0', () => {
+    const alerts = evaluateAlerts({ ...BASE_INPUTS, equityGapTry: 0, equityCallOverdueDays: 30 })
+    expect(alerts.some(a => a.rule_type === 'EQUITY_GAP_OVERDUE')).toBe(false)
+  })
+
+  it('does NOT fire EQUITY_GAP_OVERDUE when equityCallOverdueDays <= 0', () => {
+    const alerts = evaluateAlerts({ ...BASE_INPUTS, equityGapTry: 50_000, equityCallOverdueDays: 0 })
+    expect(alerts.some(a => a.rule_type === 'EQUITY_GAP_OVERDUE')).toBe(false)
+  })
+
+  it('fires CONCENTRATION when partnerLoanConcentration > 0.80', () => {
+    const alerts = evaluateAlerts({ ...BASE_INPUTS, partnerLoanConcentration: 0.81 })
+    expect(alerts.some(a => a.rule_type === 'CONCENTRATION')).toBe(true)
+  })
+
+  it('does NOT fire CONCENTRATION when partnerLoanConcentration = 0.80', () => {
+    const alerts = evaluateAlerts({ ...BASE_INPUTS, partnerLoanConcentration: 0.80 })
+    expect(alerts.some(a => a.rule_type === 'CONCENTRATION')).toBe(false)
+  })
+
+  it('does NOT fire PARTNER_LOAN_DUE when nextTrancheDueDays > 14', () => {
+    const alerts = evaluateAlerts({ ...BASE_INPUTS, nextTrancheDueDays: 15, nextTrancheAmount: 50_000 })
+    expect(alerts.some(a => a.rule_type === 'PARTNER_LOAN_DUE')).toBe(false)
+  })
+
+  it('does NOT fire PARTNER_LOAN_DUE when nextTrancheDueDays = -1 (no tranche)', () => {
+    const alerts = evaluateAlerts({ ...BASE_INPUTS, nextTrancheDueDays: -1, nextTrancheAmount: 100_000 })
+    expect(alerts.some(a => a.rule_type === 'PARTNER_LOAN_DUE')).toBe(false)
+  })
+
+  it('PARTNER_LOAN_DUE has critical severity', () => {
+    const alerts = evaluateAlerts({ ...BASE_INPUTS, nextTrancheDueDays: 0, nextTrancheAmount: 50_000 })
+    const alert = alerts.find(a => a.rule_type === 'PARTNER_LOAN_DUE')
+    expect(alert?.severity).toBe('critical')
+  })
+
+  it('CASH_RUNWAY_30 has critical severity', () => {
+    const alerts = evaluateAlerts({ ...BASE_INPUTS, cashRunwayDays: 10 })
+    const alert = alerts.find(a => a.rule_type === 'CASH_RUNWAY_30')
+    expect(alert?.severity).toBe('critical')
+  })
+
+  it('CASH_RUNWAY_90 has warning severity', () => {
+    const alerts = evaluateAlerts({ ...BASE_INPUTS, cashRunwayDays: 60 })
+    const alert = alerts.find(a => a.rule_type === 'CASH_RUNWAY_90')
+    expect(alert?.severity).toBe('warning')
+  })
+
+  it('cash runway 30 and 90 do not both fire for the same input', () => {
+    // cashRunwayDays = 20 → only CASH_RUNWAY_30
+    const alerts20 = evaluateAlerts({ ...BASE_INPUTS, cashRunwayDays: 20 })
+    expect(alerts20.some(a => a.rule_type === 'CASH_RUNWAY_30')).toBe(true)
+    expect(alerts20.some(a => a.rule_type === 'CASH_RUNWAY_90')).toBe(false)
+    // cashRunwayDays = 60 → only CASH_RUNWAY_90
+    const alerts60 = evaluateAlerts({ ...BASE_INPUTS, cashRunwayDays: 60 })
+    expect(alerts60.some(a => a.rule_type === 'CASH_RUNWAY_90')).toBe(true)
+    expect(alerts60.some(a => a.rule_type === 'CASH_RUNWAY_30')).toBe(false)
+  })
+
+  it('RECEIVABLE_30 has warning severity', () => {
+    const alerts = evaluateAlerts({ ...BASE_INPUTS, overdueCount30: 1, overdueTotal30: 1_000 })
+    const alert = alerts.find(a => a.rule_type === 'RECEIVABLE_30')
+    expect(alert?.severity).toBe('warning')
+  })
+
+  it('RECEIVABLE_60 always fires when overdueCount60 > 0 and overdueTotal60 > 500', () => {
+    for (const count of [1, 2, 10]) {
+      const alerts = evaluateAlerts({ ...BASE_INPUTS, overdueCount60: count, overdueTotal60: 10_000 })
+      expect(alerts.some(a => a.rule_type === 'RECEIVABLE_60')).toBe(true)
+    }
+  })
+
+  it('does NOT fire RECEIVABLE_60 when overdueTotal60 = 0', () => {
+    const alerts = evaluateAlerts({ ...BASE_INPUTS, overdueCount60: 5, overdueTotal60: 0 })
+    expect(alerts.some(a => a.rule_type === 'RECEIVABLE_60')).toBe(false)
+  })
+
+  it('every alert has a non-empty title and detail', () => {
+    const alerts = evaluateAlerts({
+      ...BASE_INPUTS,
+      overdueCount30: 1, overdueTotal30: 1_000,
+      overdueCount60: 1, overdueTotal60: 5_000,
+      cashRunwayDays: 20,
+      legalReserveDeficit: 1_000,
+    })
+    for (const alert of alerts) {
+      expect(alert.title.length).toBeGreaterThan(0)
+      expect(alert.detail.length).toBeGreaterThan(0)
+    }
+  })
+
+  it('every alert has a non-empty actionLabel and actionHref', () => {
+    const alerts = evaluateAlerts({
+      ...BASE_INPUTS,
+      overdueCount30: 1, overdueTotal30: 1_000,
+    })
+    for (const alert of alerts) {
+      expect(alert.actionLabel.length).toBeGreaterThan(0)
+      expect(alert.actionHref.length).toBeGreaterThan(0)
+    }
+  })
+
+  it('DSR_STRAINED does NOT fire when debtServiceRatio = 0.50 exactly', () => {
+    const alerts = evaluateAlerts({ ...BASE_INPUTS, debtServiceRatio: 0.50 })
+    expect(alerts.some(a => a.rule_type === 'DSR_STRAINED')).toBe(false)
+  })
+
+  it('DSR_HIGH does NOT fire for debtServiceRatio = 0.70 exactly', () => {
+    const alerts = evaluateAlerts({ ...BASE_INPUTS, debtServiceRatio: 0.70 })
+    expect(alerts.some(a => a.rule_type === 'DSR_HIGH')).toBe(false)
+  })
+
+  it('DSR_STRAINED fires for debtServiceRatio = 0.51', () => {
+    const alerts = evaluateAlerts({ ...BASE_INPUTS, debtServiceRatio: 0.51 })
+    expect(alerts.some(a => a.rule_type === 'DSR_STRAINED')).toBe(true)
+  })
+
+  it('DSR_HIGH fires for debtServiceRatio = 0.71', () => {
+    const alerts = evaluateAlerts({ ...BASE_INPUTS, debtServiceRatio: 0.71 })
+    expect(alerts.some(a => a.rule_type === 'DSR_HIGH')).toBe(true)
+  })
+
+  it('DSR_STRAINED and DSR_HIGH never both fire simultaneously', () => {
+    for (const ratio of [0.55, 0.70, 0.75, 0.90]) {
+      const alerts = evaluateAlerts({ ...BASE_INPUTS, debtServiceRatio: ratio })
+      const strained = alerts.some(a => a.rule_type === 'DSR_STRAINED')
+      const high     = alerts.some(a => a.rule_type === 'DSR_HIGH')
+      expect(strained && high).toBe(false)
+    }
+  })
+
+})

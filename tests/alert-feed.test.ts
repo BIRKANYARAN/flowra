@@ -342,4 +342,215 @@ describe('FeedAlert — shape and field contracts', () => {
     expect(sorted[0].due_date).toBe('2026-06-01')
     expect(sorted[0].id).toBe('a')
   })
+
+  it('trigger_count can be set to values > 1', () => {
+    const alert = makeAlert({ id: 'x', trigger_count: 5 })
+    expect(alert.trigger_count).toBe(5)
+  })
+
+  it('action_label can be set to a string', () => {
+    const alert = makeAlert({ id: 'x', action_label: 'Tahsilat Sayfası' })
+    expect(alert.action_label).toBe('Tahsilat Sayfası')
+  })
+
+  it('action_href can be set to a URL path', () => {
+    const alert = makeAlert({ id: 'x', action_href: '/dashboard/commercial?tab=collections' })
+    expect(alert.action_href).toBe('/dashboard/commercial?tab=collections')
+  })
+
+  it('first_triggered_at and last_triggered_at can differ', () => {
+    const alert = makeAlert({
+      id: 'x',
+      first_triggered_at: '2026-05-01T00:00:00Z',
+      last_triggered_at:  '2026-05-27T10:00:00Z',
+    })
+    expect(alert.first_triggered_at).toBe('2026-05-01T00:00:00Z')
+    expect(alert.last_triggered_at).toBe('2026-05-27T10:00:00Z')
+    expect(alert.first_triggered_at).not.toBe(alert.last_triggered_at)
+  })
+})
+
+// ── sortAlertsBySeverity — boundary / additional edge cases ───────────────────
+
+describe('sortAlertsBySeverity — extra edge cases', () => {
+  it('mixed 10-item array has correct severity order', () => {
+    const alerts = [
+      makeAlert({ id: 'i1', severity: 'info' }),
+      makeAlert({ id: 'w1', severity: 'warning' }),
+      makeAlert({ id: 'c1', severity: 'critical' }),
+      makeAlert({ id: 'i2', severity: 'info' }),
+      makeAlert({ id: 'c2', severity: 'critical' }),
+      makeAlert({ id: 'w2', severity: 'warning' }),
+      makeAlert({ id: 'i3', severity: 'info' }),
+      makeAlert({ id: 'c3', severity: 'critical' }),
+      makeAlert({ id: 'w3', severity: 'warning' }),
+      makeAlert({ id: 'c4', severity: 'critical' }),
+    ]
+    const sorted = sortAlertsBySeverity(alerts)
+    // First 4 must all be critical
+    for (let i = 0; i < 4; i++) expect(sorted[i].severity).toBe('critical')
+    // Next 3 must all be warning
+    for (let i = 4; i < 7; i++) expect(sorted[i].severity).toBe('warning')
+    // Last 3 must all be info
+    for (let i = 7; i < 10; i++) expect(sorted[i].severity).toBe('info')
+  })
+
+  it('no critical alerts — warnings come first', () => {
+    const alerts = [
+      makeAlert({ id: 'i', severity: 'info',    last_triggered_at: '2026-05-27T00:00:00Z' }),
+      makeAlert({ id: 'w', severity: 'warning', last_triggered_at: '2026-05-26T00:00:00Z' }),
+    ]
+    const sorted = sortAlertsBySeverity(alerts)
+    expect(sorted[0].severity).toBe('warning')
+    expect(sorted[1].severity).toBe('info')
+  })
+
+  it('no warning alerts — critical then info', () => {
+    const alerts = [
+      makeAlert({ id: 'i', severity: 'info',     last_triggered_at: '2026-05-27T00:00:00Z' }),
+      makeAlert({ id: 'c', severity: 'critical', last_triggered_at: '2026-05-26T00:00:00Z' }),
+    ]
+    const sorted = sortAlertsBySeverity(alerts)
+    expect(sorted[0].severity).toBe('critical')
+    expect(sorted[1].severity).toBe('info')
+  })
+
+  it('is_acknowledged field preserved after sort', () => {
+    const alerts = [
+      makeAlert({ id: 'a', severity: 'info',     is_acknowledged: true }),
+      makeAlert({ id: 'b', severity: 'critical', is_acknowledged: false }),
+    ]
+    const sorted = sortAlertsBySeverity(alerts)
+    const ackMap = Object.fromEntries(sorted.map(a => [a.id, a.is_acknowledged]))
+    expect(ackMap['a']).toBe(true)
+    expect(ackMap['b']).toBe(false)
+  })
+
+  it('alert_type preserved after sort', () => {
+    const alerts = [
+      makeAlert({ id: 'a', severity: 'warning', alert_type: 'RECEIVABLE_30' }),
+      makeAlert({ id: 'b', severity: 'critical', alert_type: 'CASH_RUNWAY_30' }),
+    ]
+    const sorted = sortAlertsBySeverity(alerts)
+    expect(sorted[0].alert_type).toBe('CASH_RUNWAY_30')
+    expect(sorted[1].alert_type).toBe('RECEIVABLE_30')
+  })
+})
+
+// ── countBySeverity — additional edge cases ───────────────────────────────────
+
+describe('countBySeverity — additional edge cases', () => {
+  it('result values are all non-negative integers', () => {
+    const alerts = [
+      makeAlert({ id: 'a', severity: 'critical' }),
+      makeAlert({ id: 'b', severity: 'warning' }),
+      makeAlert({ id: 'c', severity: 'info' }),
+    ]
+    const counts = countBySeverity(alerts)
+    expect(counts.critical).toBeGreaterThanOrEqual(0)
+    expect(counts.warning).toBeGreaterThanOrEqual(0)
+    expect(counts.info).toBeGreaterThanOrEqual(0)
+    expect(Number.isInteger(counts.critical)).toBe(true)
+    expect(Number.isInteger(counts.warning)).toBe(true)
+    expect(Number.isInteger(counts.info)).toBe(true)
+  })
+
+  it('100 alerts all critical → critical count = 100', () => {
+    const alerts = Array.from({ length: 100 }, (_, i) =>
+      makeAlert({ id: `c${i}`, severity: 'critical' }),
+    )
+    const counts = countBySeverity(alerts)
+    expect(counts.critical).toBe(100)
+    expect(counts.warning).toBe(0)
+    expect(counts.info).toBe(0)
+  })
+
+  it('count does not depend on sort order of input', () => {
+    const forward  = [
+      makeAlert({ id: 'c1', severity: 'critical' }),
+      makeAlert({ id: 'w1', severity: 'warning' }),
+      makeAlert({ id: 'i1', severity: 'info' }),
+    ]
+    const backward = [...forward].reverse()
+    const c1 = countBySeverity(forward)
+    const c2 = countBySeverity(backward)
+    expect(c1).toEqual(c2)
+  })
+
+  it('2 critical + 0 warning + 1 info → correct counts', () => {
+    const alerts = [
+      makeAlert({ id: 'c1', severity: 'critical' }),
+      makeAlert({ id: 'c2', severity: 'critical' }),
+      makeAlert({ id: 'i1', severity: 'info' }),
+    ]
+    const counts = countBySeverity(alerts)
+    expect(counts).toEqual({ critical: 2, warning: 0, info: 1 })
+  })
+
+  it('sorted output and unsorted input produce same counts', () => {
+    const alerts = [
+      makeAlert({ id: 'w1', severity: 'warning' }),
+      makeAlert({ id: 'c1', severity: 'critical' }),
+      makeAlert({ id: 'i1', severity: 'info' }),
+      makeAlert({ id: 'c2', severity: 'critical' }),
+    ]
+    const sorted = sortAlertsBySeverity(alerts)
+    expect(countBySeverity(alerts)).toEqual(countBySeverity(sorted))
+  })
+})
+
+// ── Integration: sort + count combination ─────────────────────────────────────
+
+describe('sortAlertsBySeverity + countBySeverity — combined', () => {
+  it('sort then count equals count then sort', () => {
+    const alerts = [
+      makeAlert({ id: 'a', severity: 'info' }),
+      makeAlert({ id: 'b', severity: 'critical' }),
+      makeAlert({ id: 'c', severity: 'warning' }),
+      makeAlert({ id: 'd', severity: 'critical' }),
+      makeAlert({ id: 'e', severity: 'info' }),
+    ]
+    const sorted = sortAlertsBySeverity(alerts)
+    expect(countBySeverity(alerts)).toEqual(countBySeverity(sorted))
+  })
+
+  it('first item of sorted array has highest severity in countBySeverity', () => {
+    const alerts = [
+      makeAlert({ id: 'w', severity: 'warning' }),
+      makeAlert({ id: 'c', severity: 'critical' }),
+      makeAlert({ id: 'i', severity: 'info' }),
+    ]
+    const sorted = sortAlertsBySeverity(alerts)
+    const counts = countBySeverity(alerts)
+    if (counts.critical > 0) {
+      expect(sorted[0].severity).toBe('critical')
+    } else if (counts.warning > 0) {
+      expect(sorted[0].severity).toBe('warning')
+    } else {
+      expect(sorted[0].severity).toBe('info')
+    }
+  })
+
+  it('countBySeverity after sort equals countBySeverity before sort', () => {
+    const alerts = Array.from({ length: 15 }, (_, i) => {
+      const sev = (['critical', 'warning', 'info'] as const)[i % 3]
+      return makeAlert({ id: `a${i}`, severity: sev })
+    })
+    expect(countBySeverity(sortAlertsBySeverity(alerts))).toEqual(countBySeverity(alerts))
+  })
+
+  it('all criticals in sorted output come before first warning', () => {
+    const alerts = [
+      makeAlert({ id: 'c1', severity: 'critical', last_triggered_at: '2026-05-01T00:00:00Z' }),
+      makeAlert({ id: 'w1', severity: 'warning',  last_triggered_at: '2026-05-27T00:00:00Z' }),
+      makeAlert({ id: 'c2', severity: 'critical', last_triggered_at: '2026-05-15T00:00:00Z' }),
+    ]
+    const sorted = sortAlertsBySeverity(alerts)
+    const firstWarningIdx = sorted.findIndex(a => a.severity === 'warning')
+    const criticals = sorted.filter(a => a.severity === 'critical')
+    for (const c of criticals) {
+      const idx = sorted.indexOf(c)
+      expect(idx).toBeLessThan(firstWarningIdx)
+    }
+  })
 })

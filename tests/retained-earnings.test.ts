@@ -304,4 +304,197 @@ describe('buildRollforwardLine', () => {
     expect(line.is_deficit).toBe(true)
   })
 
+  it('48. period_label for February is Şubat', () => {
+    const line = buildRollforwardLine('2025-02', 0, 0, 0, 0, 0, 0)
+    expect(line.period_label).toContain('Şubat')
+  })
+
+  it('49. period_label for March is Mart', () => {
+    const line = buildRollforwardLine('2025-03', 0, 0, 0, 0, 0, 0)
+    expect(line.period_label).toContain('Mart')
+  })
+
+  it('50. period_label for June is Haziran', () => {
+    const line = buildRollforwardLine('2025-06', 0, 0, 0, 0, 0, 0)
+    expect(line.period_label).toContain('Haziran')
+  })
+
+  it('51. period_label for July is Temmuz', () => {
+    const line = buildRollforwardLine('2025-07', 0, 0, 0, 0, 0, 0)
+    expect(line.period_label).toContain('Temmuz')
+  })
+
+  it('52. legal_reserve_try stored on line', () => {
+    const line = buildRollforwardLine('2025-11', 0, 100_000, 5_000, 0, 0, 0)
+    expect(line.legal_reserve_try).toBeCloseTo(5_000, 2)
+  })
+
+  it('53. compensation_try stored on line', () => {
+    const line = buildRollforwardLine('2025-11', 0, 100_000, 0, 0, 8_000, 0)
+    expect(line.compensation_try).toBeCloseTo(8_000, 2)
+  })
+
+  it('54. adjustments_try stored on line', () => {
+    const line = buildRollforwardLine('2025-11', 0, 100_000, 0, 0, 0, 3_500)
+    expect(line.adjustments_try).toBeCloseTo(3_500, 2)
+  })
+
+  it('55. opening_try stored on line', () => {
+    const line = buildRollforwardLine('2025-05', 200_000, 0, 0, 0, 0, 0)
+    expect(line.opening_try).toBeCloseTo(200_000, 2)
+  })
+
+})
+
+// ── computePeriodLegalReserve — boundary tests ────────────────────────────────
+
+describe('computePeriodLegalReserve — boundary tests', () => {
+
+  it('56. gap of exactly 1 TRY → proposed capped at 1', () => {
+    // paidInCapital 100k → cap 20k; existing 19_999 → gap 1
+    // netIncome 100k → proposed 5_000 > gap 1 → capped at 1
+    const result = computePeriodLegalReserve(100_000, 100_000, 19_999)
+    expect(result).toBeCloseTo(1, 2)
+  })
+
+  it('57. exact threshold: existing = target - 0.01 → small reserve still applied', () => {
+    // paidInCapital 1_000 → cap 200; existing 199.99 → gap 0.01
+    // proposed = 10k × 0.05 = 500 → capped at 0.01
+    const result = computePeriodLegalReserve(10_000, 1_000, 199.99)
+    expect(result).toBeCloseTo(0.01, 2)
+  })
+
+  it('58. net income of 1 TRY → reserve is 0.05 TRY', () => {
+    const result = computePeriodLegalReserve(1, 10_000, 0)
+    expect(result).toBeCloseTo(0.05, 2)
+  })
+
+  it('59. returns 0 when paidInCapital negative (edge case)', () => {
+    // Negative paid-in capital → cap ≤ 0 → no reserve
+    const result = computePeriodLegalReserve(100_000, -50_000, 0)
+    expect(result).toBe(0)
+  })
+
+})
+
+// ── computeClosingBalance — boundary tests ────────────────────────────────────
+
+describe('computeClosingBalance — boundary tests', () => {
+
+  it('60. legalReserve equal to netIncome → closing = opening', () => {
+    const result = computeClosingBalance(50_000, 10_000, 10_000, 0, 0, 0)
+    expect(result).toBeCloseTo(50_000, 2)
+  })
+
+  it('61. dividends equal to opening + netIncome → closing is 0 or negative', () => {
+    const result = computeClosingBalance(10_000, 5_000, 0, 15_000, 0, 0)
+    expect(result).toBeCloseTo(0, 2)
+  })
+
+  it('62. all deductions sum > opening + netIncome → closing negative', () => {
+    const result = computeClosingBalance(5_000, 3_000, 1_000, 7_000, 2_000, 0)
+    // 5000 + 3000 - 1000 - 7000 - 2000 = -2000
+    expect(result).toBeLessThan(0)
+    expect(result).toBeCloseTo(-2_000, 2)
+  })
+
+  it('63. very large values remain precise', () => {
+    const result = computeClosingBalance(10_000_000, 2_000_000, 100_000, 500_000, 200_000, 0)
+    expect(result).toBeCloseTo(11_200_000, 0)
+  })
+
+})
+
+// ── isAccumulatedDeficit — boundary tests ─────────────────────────────────────
+
+describe('isAccumulatedDeficit — boundary tests', () => {
+
+  it('64. exactly 0 is not deficit', () => {
+    expect(isAccumulatedDeficit(0)).toBe(false)
+  })
+
+  it('65. -0 is not deficit (JavaScript -0 === 0)', () => {
+    expect(isAccumulatedDeficit(-0)).toBe(false)
+  })
+
+  it('66. Number.EPSILON is not deficit', () => {
+    expect(isAccumulatedDeficit(Number.EPSILON)).toBe(false)
+  })
+
+  it('67. -Number.EPSILON is deficit', () => {
+    expect(isAccumulatedDeficit(-Number.EPSILON)).toBe(true)
+  })
+
+})
+
+// ── computeEquityCoverageRatio — boundary tests ───────────────────────────────
+
+describe('computeEquityCoverageRatio — boundary tests', () => {
+
+  it('68. both equity and liabilities are 0 → returns null', () => {
+    expect(computeEquityCoverageRatio(0, 0)).toBeNull()
+  })
+
+  it('69. very small liabilities → large ratio', () => {
+    const ratio = computeEquityCoverageRatio(1_000_000, 1)
+    expect(ratio).toBeDefined()
+    expect(ratio!).toBeGreaterThan(1_000)
+  })
+
+  it('70. ratio sign matches equity sign', () => {
+    const pos = computeEquityCoverageRatio(100, 100)
+    const neg = computeEquityCoverageRatio(-100, 100)
+    expect(pos!).toBeGreaterThan(0)
+    expect(neg!).toBeLessThan(0)
+  })
+
+})
+
+// ── Integration: multi-period rollforward chain ───────────────────────────────
+
+describe('multi-period rollforward chain', () => {
+
+  it('71. closing of period N becomes opening of period N+1', () => {
+    const p1 = buildRollforwardLine('2025-01', 0, 50_000, 2_500, 5_000, 0, 0)
+    const p2 = buildRollforwardLine('2025-02', p1.closing_try, 30_000, 1_500, 0, 0, 0)
+    expect(p2.opening_try).toBeCloseTo(p1.closing_try, 2)
+  })
+
+  it('72. two profitable periods accumulate correctly', () => {
+    const p1 = buildRollforwardLine('2025-01', 0, 100_000, 5_000, 20_000, 0, 0)
+    const p2 = buildRollforwardLine('2025-02', p1.closing_try, 80_000, 4_000, 10_000, 0, 0)
+    expect(p1.is_deficit).toBe(false)
+    expect(p2.is_deficit).toBe(false)
+    expect(p2.closing_try).toBeGreaterThan(p1.closing_try)
+  })
+
+  it('73. loss period after profit period may still remain non-deficit', () => {
+    const p1 = buildRollforwardLine('2025-01', 0, 200_000, 10_000, 0, 0, 0)
+    const p2 = buildRollforwardLine('2025-02', p1.closing_try, -50_000, 0, 0, 0, 0)
+    // Even after a loss, if opening was large enough, closing is still positive
+    expect(p2.closing_try).toBeGreaterThan(0)
+    expect(p2.is_deficit).toBe(false)
+  })
+
+  it('74. three-period chain: total net income equals sum of individual net incomes', () => {
+    const incomes = [100_000, -30_000, 50_000]
+    let opening = 0
+    const lines = incomes.map((ni, i) => {
+      const line = buildRollforwardLine(`2025-0${i + 1}`, opening, ni, 0, 0, 0, 0)
+      opening = line.closing_try
+      return line
+    })
+    const totalNetIncome = lines.reduce((s, l) => s + l.net_income_try, 0)
+    expect(totalNetIncome).toBeCloseTo(incomes.reduce((s, n) => s + n, 0), 2)
+  })
+
+  it('75. period chain with dividends: each period correctly deducts dividends', () => {
+    const p1 = buildRollforwardLine('2025-01', 100_000, 50_000, 2_500, 30_000, 0, 0)
+    const p2 = buildRollforwardLine('2025-02', p1.closing_try, 60_000, 3_000, 20_000, 0, 0)
+    expect(p1.dividends_try).toBeCloseTo(30_000, 2)
+    expect(p2.dividends_try).toBeCloseTo(20_000, 2)
+    expect(p1.closing_try).toBeCloseTo(100_000 + 50_000 - 2_500 - 30_000, 2)
+    expect(p2.closing_try).toBeCloseTo(p1.closing_try + 60_000 - 3_000 - 20_000, 2)
+  })
+
 })

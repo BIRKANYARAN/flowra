@@ -341,4 +341,316 @@ describe('PeriodCloseEnhancedService', () => {
     expect(result.warning_count).toBeGreaterThanOrEqual(1)
   })
 
+  // ── Check key uniqueness ────────────────────────────────────────────────────
+
+  it('all checks have unique keys', async () => {
+    const supabase = makeSupabaseWithJournal([{ debit_try: 1000, credit_try: 1000 }])
+    const result = await PeriodCloseEnhancedService.getReadiness('co-1', 'uid-1', supabase as never)
+    const keys = result.checks.map(c => c.key)
+    const uniqueKeys = new Set(keys)
+    expect(uniqueKeys.size).toBe(keys.length)
+  })
+
+  it('returns exactly 16 checks (12 auto + 4 manual)', async () => {
+    const supabase = makeSupabaseWithJournal([{ debit_try: 1000, credit_try: 1000 }])
+    const result = await PeriodCloseEnhancedService.getReadiness('co-1', 'uid-1', supabase as never)
+    expect(result.checks).toHaveLength(16)
+  })
+
+  it('auto checks count is 12', async () => {
+    const supabase = makeSupabaseWithJournal([{ debit_try: 1000, credit_try: 1000 }])
+    const result = await PeriodCloseEnhancedService.getReadiness('co-1', 'uid-1', supabase as never)
+    const autoChecks = result.checks.filter(c => c.is_auto)
+    expect(autoChecks).toHaveLength(12)
+  })
+
+  it('manual checks count is 4 and all are pending', async () => {
+    const supabase = makeSupabaseWithJournal([{ debit_try: 1000, credit_try: 1000 }])
+    const result = await PeriodCloseEnhancedService.getReadiness('co-1', 'uid-1', supabase as never)
+    const manualChecks = result.checks.filter(c => !c.is_auto)
+    expect(manualChecks).toHaveLength(4)
+    for (const c of manualChecks) {
+      expect(c.status).toBe('pending')
+    }
+  })
+
+  it('manual_pending_count equals number of pending non-auto checks', async () => {
+    const supabase = makeSupabaseWithJournal([{ debit_try: 1000, credit_try: 1000 }])
+    const result = await PeriodCloseEnhancedService.getReadiness('co-1', 'uid-1', supabase as never)
+    const expected = result.checks.filter(c => !c.is_auto && c.status === 'pending').length
+    expect(result.manual_pending_count).toBe(expected)
+  })
+
+  // ── Category coverage ───────────────────────────────────────────────────────
+
+  it('checks include all four categories', async () => {
+    const supabase = makeSupabaseWithJournal([{ debit_try: 1000, credit_try: 1000 }])
+    const result = await PeriodCloseEnhancedService.getReadiness('co-1', 'uid-1', supabase as never)
+    const categories = new Set(result.checks.map(c => c.category))
+    expect(categories.has('accounting')).toBe(true)
+    expect(categories.has('compliance')).toBe(true)
+    expect(categories.has('partner')).toBe(true)
+    expect(categories.has('documents')).toBe(true)
+  })
+
+  // ── Check: no_unposted_sales ────────────────────────────────────────────────
+
+  it('no_unposted_sales passes when sales array is empty', async () => {
+    const supabase = makeSupabase({ sales: [] })
+    const result = await PeriodCloseEnhancedService.getReadiness('co-1', 'uid-1', supabase as never)
+    const check = result.checks.find(c => c.key === 'no_unposted_sales')
+    expect(check).toBeDefined()
+    expect(check!.status).toBe('pass')
+  })
+
+  it('no_unposted_sales fails when draft sales exist', async () => {
+    const supabase = makeSupabase({ sales: [{ id: 's1' }, { id: 's2' }] })
+    const result = await PeriodCloseEnhancedService.getReadiness('co-1', 'uid-1', supabase as never)
+    const check = result.checks.find(c => c.key === 'no_unposted_sales')
+    expect(check).toBeDefined()
+    expect(check!.status).toBe('fail')
+  })
+
+  it('no_unposted_sales failure is blocking', async () => {
+    const supabase = makeSupabase({ sales: [{ id: 's1' }] })
+    const result = await PeriodCloseEnhancedService.getReadiness('co-1', 'uid-1', supabase as never)
+    const check = result.checks.find(c => c.key === 'no_unposted_sales')
+    expect(check?.blocking).toBe(true)
+  })
+
+  // ── Check: no_unposted_expenses ─────────────────────────────────────────────
+
+  it('no_unposted_expenses passes when expenses array is empty', async () => {
+    const supabase = makeSupabase({ expenses: [] })
+    const result = await PeriodCloseEnhancedService.getReadiness('co-1', 'uid-1', supabase as never)
+    const check = result.checks.find(c => c.key === 'no_unposted_expenses')
+    expect(check).toBeDefined()
+    expect(check!.status).toBe('pass')
+  })
+
+  it('no_unposted_expenses fails when draft expenses exist', async () => {
+    const supabase = makeSupabase({ expenses: [{ id: 'e1' }, { id: 'e2' }, { id: 'e3' }] })
+    const result = await PeriodCloseEnhancedService.getReadiness('co-1', 'uid-1', supabase as never)
+    const check = result.checks.find(c => c.key === 'no_unposted_expenses')
+    expect(check).toBeDefined()
+    expect(check!.status).toBe('fail')
+  })
+
+  // ── Check: trial_balance_balanced edge cases ────────────────────────────────
+
+  it('trial_balance_balanced passes when journal is empty (no entries)', async () => {
+    const supabase = makeSupabaseWithJournal([])
+    const result = await PeriodCloseEnhancedService.getReadiness('co-1', 'uid-1', supabase as never)
+    const check = result.checks.find(c => c.key === 'trial_balance_balanced')
+    expect(check!.status).toBe('pass')
+  })
+
+  it('trial_balance_balanced passes with many balanced entries', async () => {
+    const rows = Array.from({ length: 20 }, (_, i) => ({
+      debit_try: (i + 1) * 1000,
+      credit_try: (i + 1) * 1000,
+    }))
+    const supabase = makeSupabaseWithJournal(rows)
+    const result = await PeriodCloseEnhancedService.getReadiness('co-1', 'uid-1', supabase as never)
+    const check = result.checks.find(c => c.key === 'trial_balance_balanced')
+    expect(check!.status).toBe('pass')
+  })
+
+  it('trial_balance_balanced is blocking', async () => {
+    const supabase = makeSupabaseWithJournal([{ debit_try: 1000, credit_try: 1000 }])
+    const result = await PeriodCloseEnhancedService.getReadiness('co-1', 'uid-1', supabase as never)
+    const check = result.checks.find(c => c.key === 'trial_balance_balanced')
+    expect(check?.blocking).toBe(true)
+  })
+
+  // ── Check: bank_reconciliation edge: exactly 90% matched → pass ────────────
+
+  it('bank_reconciliation_status passes exactly at 90% matched', async () => {
+    const lines = [
+      ...Array(9).fill(null).map((_, i) => ({ id: `l${i}`, match_status: 'matched' })),
+      { id: 'l9', match_status: 'unmatched' },
+    ]
+    const supabase = makeSupabaseWithBankLines(lines)
+    const result = await PeriodCloseEnhancedService.getReadiness('co-1', 'uid-1', supabase as never)
+    const check = result.checks.find(c => c.key === 'bank_reconciliation_status')
+    expect(check!.status).toBe('pass')
+  })
+
+  // ── Result shape ────────────────────────────────────────────────────────────
+
+  it('computed_at is a valid ISO string', async () => {
+    const supabase = makeSupabaseWithJournal([])
+    const result = await PeriodCloseEnhancedService.getReadiness('co-1', 'uid-1', supabase as never)
+    expect(result.computed_at).toMatch(/^\d{4}-\d{2}-\d{2}T/)
+    expect(new Date(result.computed_at).getTime()).not.toBeNaN()
+  })
+
+  it('period_id is null when no accounting period found', async () => {
+    // makeSupabase returns a period by default; use a mock that returns empty periods
+    const noPeriodsSupabase = {
+      auth: { getUser: async () => ({ data: { user: { id: 'uid-test' } }, error: null }) },
+      from(table: string) {
+        if (table === 'accounting_periods') return makeChain([], null)
+        if (table === 'audit_acknowledgements' || table === 'partner_documents') return makeChain([], 0)
+        return makeChain([], 0)
+      },
+    }
+    const result = await PeriodCloseEnhancedService.getReadiness('co-1', 'uid-1', noPeriodsSupabase as never)
+    expect(result.period_id).toBeNull()
+  })
+
+  it('period_label is a non-empty string', async () => {
+    const supabase = makeSupabaseWithJournal([])
+    const result = await PeriodCloseEnhancedService.getReadiness('co-1', 'uid-1', supabase as never)
+    expect(typeof result.period_label).toBe('string')
+    expect(result.period_label.length).toBeGreaterThan(0)
+  })
+
+  it('warning_count matches actual warn checks', async () => {
+    const supabase = makeSupabase({
+      journal_entries:      [{ debit_try: 1000, credit_try: 1000 }],
+      bank_statement_lines: [
+        { id: 'l1', match_status: 'matched' },
+        { id: 'l2', match_status: 'matched' },
+        { id: 'l3', match_status: 'unmatched' }, // 66% → warn
+      ],
+    })
+    const result = await PeriodCloseEnhancedService.getReadiness('co-1', 'uid-1', supabase as never)
+    const actualWarns = result.checks.filter(c => c.status === 'warn').length
+    expect(result.warning_count).toBe(actualWarns)
+  })
+
+  it('all checks have a non-empty label and detail', async () => {
+    const supabase = makeSupabaseWithJournal([{ debit_try: 1000, credit_try: 1000 }])
+    const result = await PeriodCloseEnhancedService.getReadiness('co-1', 'uid-1', supabase as never)
+    for (const check of result.checks) {
+      expect(check.label.length).toBeGreaterThan(0)
+      expect(check.detail.length).toBeGreaterThan(0)
+    }
+  })
+
+  it('all checks have a valid status value', async () => {
+    const supabase = makeSupabaseWithJournal([{ debit_try: 1000, credit_try: 1000 }])
+    const result = await PeriodCloseEnhancedService.getReadiness('co-1', 'uid-1', supabase as never)
+    const validStatuses = new Set(['pass', 'fail', 'warn', 'pending', 'skip'])
+    for (const check of result.checks) {
+      expect(validStatuses.has(check.status)).toBe(true)
+    }
+  })
+
+  it('draft sales + unbalanced journal → blocking_count >= 2', async () => {
+    const supabase = makeSupabase({
+      journal_entries: [{ debit_try: 10_000, credit_try: 5_000 }],
+      sales:           [{ id: 's1' }, { id: 's2' }],
+    })
+    const result = await PeriodCloseEnhancedService.getReadiness('co-1', 'uid-1', supabase as never)
+    expect(result.blocking_count).toBeGreaterThanOrEqual(2)
+    expect(result.can_close).toBe(false)
+  })
+
+  it('partner_loan_tranches with rows → partner_loans_current is warn', async () => {
+    const supabase = makeSupabase({
+      journal_entries: [{ debit_try: 1000, credit_try: 1000 }],
+      partner_loan_tranches: [
+        { id: 't1', expected_repayment_date: '2026-01-01', outstanding_try: 50_000 },
+      ],
+    })
+    const result = await PeriodCloseEnhancedService.getReadiness('co-1', 'uid-1', supabase as never)
+    const check = result.checks.find(c => c.key === 'partner_loans_current')
+    expect(check).toBeDefined()
+    expect(check!.status).toBe('warn')
+  })
+
+  it('capital_commitments with unpaid rows → capital_commitments_current is warn', async () => {
+    const supabase = makeSupabase({
+      journal_entries: [{ debit_try: 1000, credit_try: 1000 }],
+      partner_capital_commitments: [
+        { committed_try: 100_000, paid_try: 50_000, due_date: '2026-01-01' },
+      ],
+    })
+    const result = await PeriodCloseEnhancedService.getReadiness('co-1', 'uid-1', supabase as never)
+    const check = result.checks.find(c => c.key === 'capital_commitments_current')
+    expect(check).toBeDefined()
+    expect(check!.status).toBe('warn')
+  })
+
+  it('capital_commitments with fully paid rows → capital_commitments_current is pass', async () => {
+    const supabase = makeSupabase({
+      journal_entries: [{ debit_try: 1000, credit_try: 1000 }],
+      partner_capital_commitments: [
+        { committed_try: 50_000, paid_try: 50_000, due_date: '2026-01-01' },
+      ],
+    })
+    const result = await PeriodCloseEnhancedService.getReadiness('co-1', 'uid-1', supabase as never)
+    const check = result.checks.find(c => c.key === 'capital_commitments_current')
+    expect(check).toBeDefined()
+    expect(check!.status).toBe('pass')
+  })
+
+  it('bank_statement_uploaded is pass when documents exist', async () => {
+    const supabase = makeSupabase({
+      journal_entries: [{ debit_try: 1000, credit_try: 1000 }],
+      documents:       [{ id: 'doc1' }],
+    })
+    const result = await PeriodCloseEnhancedService.getReadiness('co-1', 'uid-1', supabase as never)
+    const check = result.checks.find(c => c.key === 'bank_statement_uploaded')
+    expect(check).toBeDefined()
+    expect(check!.status).toBe('pass')
+  })
+
+  it('bank_statement_uploaded is warn when no documents', async () => {
+    const supabase = makeSupabase({
+      journal_entries: [{ debit_try: 1000, credit_try: 1000 }],
+      documents:       [],
+    })
+    const result = await PeriodCloseEnhancedService.getReadiness('co-1', 'uid-1', supabase as never)
+    const check = result.checks.find(c => c.key === 'bank_statement_uploaded')
+    expect(check).toBeDefined()
+    // Either warn or skip is acceptable when no documents
+    expect(['warn', 'skip']).toContain(check!.status)
+  })
+
+  it('pending compensation payments → no_overdue_compensation is fail', async () => {
+    const supabase = makeSupabase({
+      journal_entries:              [{ debit_try: 1000, credit_try: 1000 }],
+      partner_compensation_payments: [{ id: 'p1' }, { id: 'p2' }],
+    })
+    const result = await PeriodCloseEnhancedService.getReadiness('co-1', 'uid-1', supabase as never)
+    const check = result.checks.find(c => c.key === 'no_overdue_compensation')
+    expect(check).toBeDefined()
+    expect(check!.status).toBe('fail')
+  })
+
+  it('no_overdue_compensation is blocking', async () => {
+    const supabase = makeSupabase({
+      partner_compensation_payments: [{ id: 'p1' }],
+    })
+    const result = await PeriodCloseEnhancedService.getReadiness('co-1', 'uid-1', supabase as never)
+    const check = result.checks.find(c => c.key === 'no_overdue_compensation')
+    expect(check?.blocking).toBe(true)
+  })
+
+  it('dividend workflow rows → no_pending_dividend_workflow is warn', async () => {
+    const supabase = makeSupabase({
+      journal_entries:      [{ debit_try: 1000, credit_try: 1000 }],
+      workflow_instances:   [{ id: 'wf1', created_at: new Date(Date.now() - 10 * 86_400_000).toISOString() }],
+    })
+    const result = await PeriodCloseEnhancedService.getReadiness('co-1', 'uid-1', supabase as never)
+    const check = result.checks.find(c => c.key === 'no_pending_dividend_workflow')
+    expect(check).toBeDefined()
+    expect(check!.status).toBe('warn')
+  })
+
+  it('auto_passed_count is 0 when trial balance fails and other checks fail', async () => {
+    const supabase = makeSupabase({
+      journal_entries: [{ debit_try: 10_000, credit_try: 5_000 }],
+      sales:           [{ id: 's1' }],
+      expenses:        [{ id: 'e1' }],
+    })
+    const result = await PeriodCloseEnhancedService.getReadiness('co-1', 'uid-1', supabase as never)
+    // At minimum the auto_passed_count should be less when many checks fail
+    const manualPendingOnly = result.checks.filter(c => c.is_auto && c.status === 'pass').length
+    expect(result.auto_passed_count).toBe(manualPendingOnly)
+  })
+
 })

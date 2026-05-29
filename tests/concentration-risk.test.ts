@@ -339,3 +339,206 @@ describe('ConcentrationRiskService.getReport', () => {
     expect(report.period_to).toBe('2025-12-31')
   })
 })
+
+// ── computeHHI — additional edge cases ───────────────────────────────────────
+
+describe('ConcentrationRiskService.computeHHI — additional edge cases', () => {
+  it('asymmetric split 0.7 + 0.3 → 0.49 + 0.09 = 0.58', () => {
+    const hhi = ConcentrationRiskService.computeHHI([0.7, 0.3])
+    expect(hhi).toBeCloseTo(0.58, 4)
+  })
+
+  it('ten customers at 10% each → HHI = 0.10', () => {
+    const shares = Array(10).fill(0.1)
+    expect(ConcentrationRiskService.computeHHI(shares)).toBeCloseTo(0.1, 4)
+  })
+
+  it('100 customers at 1% each → HHI = 0.01', () => {
+    const shares = Array(100).fill(0.01)
+    expect(ConcentrationRiskService.computeHHI(shares)).toBeCloseTo(0.01, 4)
+  })
+
+  it('HHI increases when distribution becomes more concentrated', () => {
+    const equal4 = ConcentrationRiskService.computeHHI([0.25, 0.25, 0.25, 0.25])   // 0.25
+    const skewed = ConcentrationRiskService.computeHHI([0.7, 0.1, 0.1, 0.1])       // 0.52
+    expect(skewed).toBeGreaterThan(equal4)
+  })
+
+  it('HHI is always in [0, 1] range for valid shares', () => {
+    const cases = [
+      [1.0],
+      [0.5, 0.5],
+      [0.33, 0.33, 0.34],
+      [0.1, 0.2, 0.3, 0.4],
+    ]
+    for (const shares of cases) {
+      const hhi = ConcentrationRiskService.computeHHI(shares)
+      expect(hhi).toBeGreaterThanOrEqual(0)
+      expect(hhi).toBeLessThanOrEqual(1)
+    }
+  })
+
+  it('HHI is the sum of squared shares', () => {
+    const shares = [0.4, 0.35, 0.25]
+    const expected = shares.reduce((sum, s) => sum + s * s, 0)
+    expect(ConcentrationRiskService.computeHHI(shares)).toBeCloseTo(expected, 8)
+  })
+
+  it('single tiny share → near 0 HHI', () => {
+    expect(ConcentrationRiskService.computeHHI([0.001])).toBeCloseTo(0.000001, 6)
+  })
+
+  it('HHI is symmetric — order of shares does not matter', () => {
+    const hhi1 = ConcentrationRiskService.computeHHI([0.6, 0.3, 0.1])
+    const hhi2 = ConcentrationRiskService.computeHHI([0.1, 0.3, 0.6])
+    expect(hhi1).toBeCloseTo(hhi2, 8)
+  })
+})
+
+// ── getHhhStatus — additional boundary tests ──────────────────────────────────
+
+describe('ConcentrationRiskService.getHhhStatus — additional boundary tests', () => {
+  it('threshold at exactly 0.15 is moderate (not low)', () => {
+    expect(ConcentrationRiskService.getHhhStatus(0.15)).toBe('moderate')
+  })
+
+  it('threshold at exactly 0.25 is moderate (not high)', () => {
+    expect(ConcentrationRiskService.getHhhStatus(0.25)).toBe('moderate')
+  })
+
+  it('0.149 → low', () => {
+    expect(ConcentrationRiskService.getHhhStatus(0.149)).toBe('low')
+  })
+
+  it('0.151 → moderate', () => {
+    expect(ConcentrationRiskService.getHhhStatus(0.151)).toBe('moderate')
+  })
+
+  it('0.249 → moderate', () => {
+    expect(ConcentrationRiskService.getHhhStatus(0.249)).toBe('moderate')
+  })
+
+  it('0.251 → high', () => {
+    expect(ConcentrationRiskService.getHhhStatus(0.251)).toBe('high')
+  })
+
+  it('all common HHI from equal-split companies', () => {
+    // 2 equal customers → HHI = 0.5 → high
+    expect(ConcentrationRiskService.getHhhStatus(0.5)).toBe('high')
+    // 10 equal customers → HHI = 0.1 → low
+    expect(ConcentrationRiskService.getHhhStatus(0.1)).toBe('low')
+    // 5 equal customers → HHI = 0.2 → moderate
+    expect(ConcentrationRiskService.getHhhStatus(0.2)).toBe('moderate')
+  })
+})
+
+// ── getRiskLabel — additional boundary tests ──────────────────────────────────
+
+describe('ConcentrationRiskService.getRiskLabel — additional boundary tests', () => {
+  it('negative share → minor (edge case)', () => {
+    // Shares can't really be negative, but tests the lower bound behavior
+    const result = ConcentrationRiskService.getRiskLabel(-10)
+    expect(result).toBe('minor')
+  })
+
+  it('exactly 40 → major (not dominant, exclusive upper bound)', () => {
+    expect(ConcentrationRiskService.getRiskLabel(40)).toBe('major')
+  })
+
+  it('exactly 41 → dominant', () => {
+    expect(ConcentrationRiskService.getRiskLabel(41)).toBe('dominant')
+  })
+
+  it('exactly 20 → significant (not major)', () => {
+    expect(ConcentrationRiskService.getRiskLabel(20)).toBe('significant')
+  })
+
+  it('exactly 21 → major', () => {
+    expect(ConcentrationRiskService.getRiskLabel(21)).toBe('major')
+  })
+
+  it('exactly 10 → minor (not significant)', () => {
+    expect(ConcentrationRiskService.getRiskLabel(10)).toBe('minor')
+  })
+
+  it('exactly 11 → significant', () => {
+    expect(ConcentrationRiskService.getRiskLabel(11)).toBe('significant')
+  })
+
+  it('50% → dominant', () => {
+    expect(ConcentrationRiskService.getRiskLabel(50)).toBe('dominant')
+  })
+
+  it('25% → major', () => {
+    expect(ConcentrationRiskService.getRiskLabel(25)).toBe('major')
+  })
+
+  it('14% → significant', () => {
+    expect(ConcentrationRiskService.getRiskLabel(14)).toBe('significant')
+  })
+
+  it('7% → minor', () => {
+    expect(ConcentrationRiskService.getRiskLabel(7)).toBe('minor')
+  })
+
+  it('returns string type in all cases', () => {
+    for (const pct of [0, 5, 10, 11, 15, 20, 21, 25, 30, 40, 41, 50, 100]) {
+      expect(typeof ConcentrationRiskService.getRiskLabel(pct)).toBe('string')
+    }
+  })
+})
+
+// ── getReport — additional integration tests ──────────────────────────────────
+
+describe('ConcentrationRiskService.getReport — additional integration tests', () => {
+  const period = { from: '2025-01-01', to: '2025-12-31' }
+
+  it('hhi is sum of squared fractional shares', async () => {
+    const rows: MockSaleRow[] = [
+      { customer_name: 'A', total_try: 600 },
+      { customer_name: 'B', total_try: 400 },
+    ]
+    const report = await ConcentrationRiskService.getReport('c1', makeMockSupabase(rows), period)
+    const expected = (0.6 * 0.6) + (0.4 * 0.4)   // 0.36 + 0.16 = 0.52
+    expect(report.hhi).toBeCloseTo(expected, 4)
+  })
+
+  it('top_3_share_pct is 100 when only 2 customers exist', async () => {
+    const rows: MockSaleRow[] = [
+      { customer_name: 'A', total_try: 700 },
+      { customer_name: 'B', total_try: 300 },
+    ]
+    const report = await ConcentrationRiskService.getReport('c1', makeMockSupabase(rows), period)
+    expect(report.top_3_share_pct).toBeCloseTo(100, 1)
+  })
+
+  it('computed_at is a valid ISO date string', async () => {
+    const rows: MockSaleRow[] = [{ customer_name: 'A', total_try: 100 }]
+    const report = await ConcentrationRiskService.getReport('c1', makeMockSupabase(rows), period)
+    expect(typeof report.computed_at).toBe('string')
+    expect(report.computed_at.length).toBeGreaterThan(0)
+  })
+
+  it('all customer risk_labels are valid strings', async () => {
+    const rows: MockSaleRow[] = [
+      { customer_name: 'A', total_try: 500 },
+      { customer_name: 'B', total_try: 300 },
+      { customer_name: 'C', total_try: 200 },
+    ]
+    const report = await ConcentrationRiskService.getReport('c1', makeMockSupabase(rows), period)
+    const validLabels = ['dominant', 'major', 'significant', 'minor']
+    for (const c of report.customers) {
+      expect(validLabels).toContain(c.risk_label)
+    }
+  })
+
+  it('three equal customers → none dominant', async () => {
+    const rows: MockSaleRow[] = [
+      { customer_name: 'A', total_try: 333 },
+      { customer_name: 'B', total_try: 333 },
+      { customer_name: 'C', total_try: 334 },
+    ]
+    const report = await ConcentrationRiskService.getReport('c1', makeMockSupabase(rows), period)
+    expect(report.has_dominant_customer).toBe(false)
+  })
+})

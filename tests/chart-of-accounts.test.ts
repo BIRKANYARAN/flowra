@@ -329,4 +329,302 @@ describe('validateChartOfAccounts', () => {
       expect(REQUIRED_ACCOUNT_CODES).toContain(code)
     }
   })
+
+  it('validateChartOfAccounts returns valid=true overall', () => {
+    const result = validateChartOfAccounts()
+    expect(result.valid).toBe(true)
+  })
+
+  it('normal_balance_errors is empty (no mismatches)', () => {
+    const result = validateChartOfAccounts()
+    expect(result.normal_balance_errors).toHaveLength(0)
+  })
+
+  it('expense accounts have no normal_balance_errors', () => {
+    const result = validateChartOfAccounts()
+    const expenseErrors = result.normal_balance_errors.filter(e =>
+      e.includes('operating_expense') || e.includes('cogs') || e.includes('financing')
+    )
+    expect(expenseErrors).toHaveLength(0)
+  })
+})
+
+// ── Additional getAccount edge cases ─────────────────────────────────────────
+
+describe('getAccount — additional edge cases', () => {
+  it('returns correct name for 500 (Paid-in Capital)', () => {
+    const acc = getAccount('500')
+    expect(acc.name).toBe('Paid-in Capital')
+    expect(acc.class).toBe('equity')
+  })
+
+  it('returns correct name for 620 (Cost of Goods Sold)', () => {
+    const acc = getAccount('620')
+    expect(acc.name).toBe('Cost of Goods Sold')
+    expect(acc.class).toBe('cogs')
+  })
+
+  it('returns correct name for 770 (G&A)', () => {
+    const acc = getAccount('770')
+    expect(acc.name).toBe('General & Administrative')
+    expect(acc.class).toBe('operating_expense')
+  })
+
+  it('returns correct name for 321 (Partner Loans ST)', () => {
+    const acc = getAccount('321')
+    expect(acc.class).toBe('current_liability')
+    expect(acc.normal_balance).toBe('credit')
+  })
+
+  it('returns correct name for 191 (Deductible VAT)', () => {
+    const acc = getAccount('191')
+    expect(acc.class).toBe('current_asset')
+    expect(acc.normal_balance).toBe('debit')
+  })
+
+  it('returns correct name for 780 (Finance Expense)', () => {
+    const acc = getAccount('780')
+    expect(acc.class).toBe('financing')
+    expect(acc.normal_balance).toBe('debit')
+  })
+
+  it('throws with meaningful message for whitespace code', () => {
+    expect(() => getAccount(' ')).toThrow()
+  })
+
+  it('throws for numeric-looking but invalid code', () => {
+    expect(() => getAccount('999')).toThrow('Unknown account code: 999')
+  })
+
+  it('throws for all-alpha code', () => {
+    expect(() => getAccount('abc')).toThrow()
+  })
+})
+
+// ── getAccountSafe — additional cases ────────────────────────────────────────
+
+describe('getAccountSafe — additional cases', () => {
+  it('returns null for whitespace', () => {
+    expect(getAccountSafe(' ')).toBeNull()
+  })
+
+  it('returns null for numeric-format non-existent code', () => {
+    expect(getAccountSafe('001')).toBeNull()
+    expect(getAccountSafe('200')).toBeNull()
+  })
+
+  it('returns correct account for all REQUIRED codes', () => {
+    for (const code of REQUIRED_ACCOUNT_CODES) {
+      const acc = getAccountSafe(code)
+      expect(acc).not.toBeNull()
+      expect(acc!.code).toBe(code)
+    }
+  })
+
+  it('returns null for string that is too long', () => {
+    expect(getAccountSafe('10200')).toBeNull()
+  })
+
+  it('returns the same object reference as getAccount for known code', () => {
+    const safe = getAccountSafe('100')
+    const direct = getAccount('100')
+    expect(safe).toBe(direct)
+  })
+})
+
+// ── isCashAccount — extended ──────────────────────────────────────────────────
+
+describe('isCashAccount — extended', () => {
+  it('only 100 and 102 are cash accounts in the CoA', () => {
+    const cashCodes = CHART_OF_ACCOUNTS.filter(a => a.is_cash).map(a => a.code)
+    expect(cashCodes).toContain('100')
+    expect(cashCodes).toContain('102')
+    expect(cashCodes.length).toBe(2)
+  })
+
+  it('returns false for 153 (Inventory)', () => {
+    expect(isCashAccount('153')).toBe(false)
+  })
+
+  it('returns false for 191 (Deductible VAT)', () => {
+    expect(isCashAccount('191')).toBe(false)
+  })
+
+  it('returns false for 320 (Trade Payables)', () => {
+    expect(isCashAccount('320')).toBe(false)
+  })
+
+  it('returns false for 780 (Finance Expense)', () => {
+    expect(isCashAccount('780')).toBe(false)
+  })
+
+  it('returns false for 253 (Equipment)', () => {
+    expect(isCashAccount('253')).toBe(false)
+  })
+})
+
+// ── isDebitNormal — extended boundary tests ───────────────────────────────────
+
+describe('isDebitNormal — extended boundary tests', () => {
+  it('returns true for 153 (Inventory — asset)', () => {
+    expect(isDebitNormal('153')).toBe(true)
+  })
+
+  it('returns true for 191 (Deductible VAT — asset)', () => {
+    expect(isDebitNormal('191')).toBe(true)
+  })
+
+  it('returns true for 253 (Equipment — non-current asset)', () => {
+    expect(isDebitNormal('253')).toBe(true)
+  })
+
+  it('returns true for 760 (Marketing — operating_expense)', () => {
+    expect(isDebitNormal('760')).toBe(true)
+  })
+
+  it('returns true for 771 (Payroll — operating_expense)', () => {
+    expect(isDebitNormal('771')).toBe(true)
+  })
+
+  it('returns true for 772 (Rent — operating_expense)', () => {
+    expect(isDebitNormal('772')).toBe(true)
+  })
+
+  it('returns true for 773 (Software — operating_expense)', () => {
+    expect(isDebitNormal('773')).toBe(true)
+  })
+
+  it('returns false for 335 (Payroll Payables — liability)', () => {
+    expect(isDebitNormal('335')).toBe(false)
+  })
+
+  it('returns false for 360 (Tax Payable)', () => {
+    expect(isDebitNormal('360')).toBe(false)
+  })
+
+  it('returns false for 421 (Partner Loans LT)', () => {
+    expect(isDebitNormal('421')).toBe(false)
+  })
+
+  it('returns false for 542 (Legal Reserves — equity)', () => {
+    expect(isDebitNormal('542')).toBe(false)
+  })
+
+  it('returns false for 642 (Interest Income — revenue)', () => {
+    expect(isDebitNormal('642')).toBe(false)
+  })
+
+  it('returns false for 649 (Other Income — revenue)', () => {
+    expect(isDebitNormal('649')).toBe(false)
+  })
+
+  it('returns true for contra-asset 257 (Accumulated Depreciation)', () => {
+    // 257 has normal_balance='credit' → isDebitNormal returns false
+    expect(isDebitNormal('257')).toBe(false)
+  })
+
+  it('returns true for contra-equity 580 (Accumulated Losses)', () => {
+    // 580 has normal_balance='debit' per the CoA definition
+    expect(isDebitNormal('580')).toBe(true)
+  })
+})
+
+// ── accountClass — additional class checks ────────────────────────────────────
+
+describe('accountClass — additional class checks', () => {
+  it('returns cogs for 620', () => {
+    expect(accountClass('620')).toBe('cogs')
+  })
+
+  it('returns financing for 780', () => {
+    expect(accountClass('780')).toBe('financing')
+  })
+
+  it('returns revenue for 642', () => {
+    expect(accountClass('642')).toBe('revenue')
+  })
+
+  it('returns revenue for 649', () => {
+    expect(accountClass('649')).toBe('revenue')
+  })
+
+  it('returns operating_expense for 771, 772, 773, 760', () => {
+    for (const code of ['771', '772', '773', '760']) {
+      expect(accountClass(code)).toBe('operating_expense')
+    }
+  })
+
+  it('returns non_current_asset for 253 and 257', () => {
+    expect(accountClass('253')).toBe('non_current_asset')
+    expect(accountClass('257')).toBe('non_current_asset')
+  })
+
+  it('returns equity for 501, 542, 570, 580', () => {
+    for (const code of ['501', '542', '570', '580']) {
+      expect(accountClass(code)).toBe('equity')
+    }
+  })
+
+  it('returns null for unknown code consistently', () => {
+    expect(accountClass('000')).toBeNull()
+    expect(accountClass('999')).toBeNull()
+    expect(accountClass('abc')).toBeNull()
+  })
+})
+
+// ── accountsByClass — completeness checks ─────────────────────────────────────
+
+describe('accountsByClass — completeness checks', () => {
+  it('each account in CHART_OF_ACCOUNTS appears in its class group', () => {
+    for (const acc of CHART_OF_ACCOUNTS) {
+      const group = accountsByClass(acc.class)
+      expect(group.some(a => a.code === acc.code)).toBe(true)
+    }
+  })
+
+  it('all classes partition the full CHART_OF_ACCOUNTS without overlap', () => {
+    const classes: string[] = [
+      'current_asset', 'non_current_asset',
+      'current_liability', 'non_current_liability',
+      'equity', 'revenue', 'cogs', 'operating_expense', 'financing',
+    ]
+    const allGrouped = classes.flatMap(c => accountsByClass(c as ReturnType<typeof accountClass> & string))
+    expect(allGrouped.length).toBe(CHART_OF_ACCOUNTS.length)
+  })
+
+  it('no account appears in more than one class group', () => {
+    const classes: string[] = [
+      'current_asset', 'non_current_asset',
+      'current_liability', 'non_current_liability',
+      'equity', 'revenue', 'cogs', 'operating_expense', 'financing',
+    ]
+    const allCodes = classes.flatMap(c => accountsByClass(c as ReturnType<typeof accountClass> & string).map(a => a.code))
+    expect(new Set(allCodes).size).toBe(allCodes.length)
+  })
+
+  it('revenue class contains 600, 642, 649', () => {
+    const codes = accountsByClass('revenue').map(a => a.code)
+    expect(codes).toContain('600')
+    expect(codes).toContain('642')
+    expect(codes).toContain('649')
+  })
+
+  it('operating_expense class contains 760, 770, 771, 772, 773', () => {
+    const codes = accountsByClass('operating_expense').map(a => a.code)
+    for (const c of ['760', '770', '771', '772', '773']) {
+      expect(codes).toContain(c)
+    }
+  })
+
+  it('financing class contains only 780', () => {
+    const accts = accountsByClass('financing')
+    expect(accts).toHaveLength(1)
+    expect(accts[0].code).toBe('780')
+  })
+
+  it('cogs class contains only 620', () => {
+    const accts = accountsByClass('cogs')
+    expect(accts).toHaveLength(1)
+    expect(accts[0].code).toBe('620')
+  })
 })

@@ -320,3 +320,168 @@ describe('computeVariance — pure kernel', () => {
   })
 
 })
+
+// ── Variance field structure ───────────────────────────────────────────────────
+
+describe('computeVariance — variance field structure', () => {
+  it('variance object has all expected keys', () => {
+    const result = computeVariance(makeProjected(), makeActuals(), TODAY, PERIOD_TO)
+    expect(result.variance).not.toBeNull()
+    expect(result.variance).toHaveProperty('revenue_try')
+    expect(result.variance).toHaveProperty('revenue_pct')
+    expect(result.variance).toHaveProperty('net_income_try')
+    expect(result.variance).toHaveProperty('net_income_pct')
+    expect(result.variance).toHaveProperty('expenses_try')
+    expect(result.variance).toHaveProperty('expenses_pct')
+  })
+
+  it('variance.revenue_try = actuals.revenue_try - projected.revenue_try', () => {
+    const proj   = makeProjected({ revenue_try: 100_000 })
+    const actual = makeActuals({ revenue_try: 85_000 })
+    const result = computeVariance(proj, actual, TODAY, PERIOD_TO)
+    expect(result.variance!.revenue_try).toBe(-15_000)
+  })
+
+  it('variance.net_income_try = actuals.net_income_try - projected.net_income_try', () => {
+    const proj   = makeProjected({ net_income_try: 25_000 })
+    const actual = makeActuals({ net_income_try: 20_000 })
+    const result = computeVariance(proj, actual, TODAY, PERIOD_TO)
+    expect(result.variance!.net_income_try).toBe(-5_000)
+  })
+
+  it('variance.expenses_try = actuals.expenses_try - projected.expenses_try', () => {
+    const proj   = makeProjected({ expenses_try: 30_000 })
+    const actual = makeActuals({ expenses_try: 35_000 })
+    const result = computeVariance(proj, actual, TODAY, PERIOD_TO)
+    expect(result.variance!.expenses_try).toBe(5_000)
+  })
+
+  it('variance.revenue_pct is null when projected revenue = 0', () => {
+    const proj   = makeProjected({ revenue_try: 0 })
+    const actual = makeActuals({ revenue_try: 100_000 })
+    const result = computeVariance(proj, actual, TODAY, PERIOD_TO)
+    expect(result.variance!.revenue_pct).toBeNull()
+  })
+
+  it('variance.expenses_pct is null when projected expenses = 0', () => {
+    const proj   = makeProjected({ expenses_try: 0 })
+    const actual = makeActuals({ expenses_try: 10_000 })
+    const result = computeVariance(proj, actual, TODAY, PERIOD_TO)
+    expect(result.variance!.expenses_pct).toBeNull()
+  })
+
+  it('variance.revenue_pct sign: actuals < projected → negative pct', () => {
+    const proj   = makeProjected({ revenue_try: 100_000 })
+    const actual = makeActuals({ revenue_try: 80_000 })
+    const result = computeVariance(proj, actual, TODAY, PERIOD_TO)
+    expect(result.variance!.revenue_pct).toBeLessThan(0)
+  })
+
+  it('variance.revenue_pct sign: actuals > projected → positive pct', () => {
+    const proj   = makeProjected({ revenue_try: 100_000 })
+    const actual = makeActuals({ revenue_try: 120_000 })
+    const result = computeVariance(proj, actual, TODAY, PERIOD_TO)
+    expect(result.variance!.revenue_pct).toBeGreaterThan(0)
+  })
+
+  it('variance.net_income_pct uses |projected| as denominator', () => {
+    const proj   = makeProjected({ net_income_try: 25_000 })
+    const actual = makeActuals({ net_income_try: 30_000 })
+    const result = computeVariance(proj, actual, TODAY, PERIOD_TO)
+    // (30000 - 25000) / 25000 = 0.2
+    expect(result.variance!.net_income_pct).toBeCloseTo(0.2, 4)
+  })
+})
+
+// ── Verdict determination details ─────────────────────────────────────────────
+
+describe('computeVariance — verdict determination details', () => {
+  it('verdict uses revenue_pct as primary when projected revenue != 0', () => {
+    // revenue within ±10% but net_income far off → still accurate
+    const proj   = makeProjected({ revenue_try: 100_000, net_income_try: 25_000 })
+    const actual = makeActuals({ revenue_try: 105_000, net_income_try: -50_000 })
+    const result = computeVariance(proj, actual, TODAY, PERIOD_TO)
+    // revenue_pct = +5% → within ±10% → accurate (despite bad net_income)
+    expect(result.verdict).toBe('accurate')
+  })
+
+  it('falls back to net_income_pct when projected revenue = 0', () => {
+    // projected revenue = 0, so revenue_pct is null
+    // net_income is within ±10% → accurate
+    const proj   = makeProjected({ revenue_try: 0, net_income_try: 25_000 })
+    const actual = makeActuals({ revenue_try: 0, net_income_try: 26_000 })
+    const result = computeVariance(proj, actual, TODAY, PERIOD_TO)
+    // net_income_pct = 1000/25000 = 0.04 → within ±10% → accurate
+    expect(result.verdict).toBe('accurate')
+  })
+
+  it('net_income fallback: actuals < projected by >10% → optimistic', () => {
+    const proj   = makeProjected({ revenue_try: 0, net_income_try: 25_000 })
+    const actual = makeActuals({ revenue_try: 0, net_income_try: 20_000 })
+    const result = computeVariance(proj, actual, TODAY, PERIOD_TO)
+    // net_income_pct = -5000/25000 = -0.2 → optimistic
+    expect(result.verdict).toBe('optimistic')
+  })
+
+  it('verdict_detail contains percentage info for accurate verdict', () => {
+    const proj   = makeProjected({ revenue_try: 100_000 })
+    const actual = makeActuals({ revenue_try: 105_000 })
+    const result = computeVariance(proj, actual, TODAY, PERIOD_TO)
+    expect(result.verdict_detail).toContain('%')
+  })
+
+  it('verdict_detail contains percentage info for optimistic verdict', () => {
+    const proj   = makeProjected({ revenue_try: 100_000 })
+    const actual = makeActuals({ revenue_try: 80_000 })
+    const result = computeVariance(proj, actual, TODAY, PERIOD_TO)
+    expect(result.verdict_detail).toContain('%')
+  })
+
+  it('verdict_detail contains percentage info for pessimistic verdict', () => {
+    const proj   = makeProjected({ revenue_try: 100_000 })
+    const actual = makeActuals({ revenue_try: 120_000 })
+    const result = computeVariance(proj, actual, TODAY, PERIOD_TO)
+    expect(result.verdict_detail).toContain('%')
+  })
+})
+
+// ── Accuracy score computation ─────────────────────────────────────────────────
+
+describe('computeVariance — accuracy score computation', () => {
+  it('accuracy_score = 100 when all metrics match exactly', () => {
+    const result = computeVariance(makeProjected(), makeActuals(), TODAY, PERIOD_TO)
+    expect(result.accuracy_score).toBe(100)
+  })
+
+  it('accuracy_score decreases proportionally to deviation size', () => {
+    const proj = makeProjected({ revenue_try: 100_000 })
+    const small = computeVariance(proj, makeActuals({ revenue_try: 98_000 }), TODAY, PERIOD_TO)
+    const large = computeVariance(proj, makeActuals({ revenue_try: 50_000 }), TODAY, PERIOD_TO)
+    expect(small.accuracy_score!).toBeGreaterThan(large.accuracy_score!)
+  })
+
+  it('accuracy_score is never null when actuals are provided', () => {
+    const result = computeVariance(makeProjected(), makeActuals(), TODAY, PERIOD_TO)
+    expect(result.accuracy_score).not.toBeNull()
+  })
+
+  it('gross_profit deviation contributes to accuracy score', () => {
+    const proj    = makeProjected()
+    const perfect = computeVariance(proj, makeActuals(), TODAY, PERIOD_TO)
+    const gpOff   = computeVariance(proj, makeActuals({ gross_profit_try: 10_000 }), TODAY, PERIOD_TO)
+    expect(gpOff.accuracy_score!).toBeLessThan(perfect.accuracy_score!)
+  })
+
+  it('accuracy_score is always between 0 and 100 for extreme cases', () => {
+    const extremes = [
+      makeActuals({ revenue_try: 0, net_income_try: -1_000_000 }),
+      makeActuals({ revenue_try: 10_000_000, net_income_try: 5_000_000 }),
+      makeActuals({ revenue_try: 1, net_income_try: 1 }),
+    ]
+    for (const actual of extremes) {
+      const result = computeVariance(makeProjected(), actual, TODAY, PERIOD_TO)
+      expect(result.accuracy_score!).toBeGreaterThanOrEqual(0)
+      expect(result.accuracy_score!).toBeLessThanOrEqual(100)
+    }
+  })
+})
