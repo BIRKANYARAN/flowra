@@ -39,6 +39,47 @@ describe('computeConversionRate', () => {
     const result = computeConversionRate(1, 3)
     expect(result).toBeCloseTo(33.33, 1)
   })
+
+  it('returns 50 for exactly half converted', () => {
+    expect(computeConversionRate(5, 10)).toBe(50)
+  })
+
+  it('returns 1 for 1 out of 100', () => {
+    expect(computeConversionRate(1, 100)).toBe(1)
+  })
+
+  it('returns 99 for 99 out of 100', () => {
+    expect(computeConversionRate(99, 100)).toBe(99)
+  })
+
+  it('handles large numbers', () => {
+    expect(computeConversionRate(1000, 5000)).toBe(20)
+  })
+
+  it('returns null only when total is 0 regardless of converted', () => {
+    expect(computeConversionRate(5, 0)).toBeNull()
+  })
+
+  it('returns correct value for 2/3', () => {
+    expect(computeConversionRate(2, 3)).toBeCloseTo(66.67, 1)
+  })
+
+  it('returns 25 for 1 of 4', () => {
+    expect(computeConversionRate(1, 4)).toBe(25)
+  })
+
+  it('returns 75 for 3 of 4', () => {
+    expect(computeConversionRate(3, 4)).toBe(75)
+  })
+
+  it('handles conversion of 200 out of 400', () => {
+    expect(computeConversionRate(200, 400)).toBe(50)
+  })
+
+  it('handles very small conversion rate', () => {
+    const result = computeConversionRate(1, 10000)
+    expect(result).toBeCloseTo(0.01, 4)
+  })
 })
 
 // ── computeAvgDaysToClose ─────────────────────────────────────────────────────
@@ -86,6 +127,43 @@ describe('computeAvgDaysToClose', () => {
     ]
     expect(computeAvgDaysToClose(deals)).toBe(10)
   })
+
+  it('handles deals spanning months', () => {
+    const deals = [{ created_at: '2025-01-30', closed_at: '2025-03-01' }]
+    // Jan 30 to Mar 1 = 30 days
+    expect(computeAvgDaysToClose(deals)).toBe(30)
+  })
+
+  it('handles deals spanning a year boundary', () => {
+    const deals = [{ created_at: '2024-12-25', closed_at: '2025-01-04' }]
+    // Dec 25 to Jan 4 = 10 days
+    expect(computeAvgDaysToClose(deals)).toBe(10)
+  })
+
+  it('computes average of 4 deals correctly', () => {
+    // 3, 6, 9, 12 → avg 7.5
+    const deals = [
+      { created_at: '2025-01-01', closed_at: '2025-01-04' },
+      { created_at: '2025-01-01', closed_at: '2025-01-07' },
+      { created_at: '2025-01-01', closed_at: '2025-01-10' },
+      { created_at: '2025-01-01', closed_at: '2025-01-13' },
+    ]
+    expect(computeAvgDaysToClose(deals)).toBe(7.5)
+  })
+
+  it('handles deals with 30-day cycle', () => {
+    const deals = [
+      { created_at: '2025-01-01', closed_at: '2025-01-31' },
+      { created_at: '2025-02-01', closed_at: '2025-03-03' },
+    ]
+    const result = computeAvgDaysToClose(deals)
+    expect(result).toBeCloseTo(30, 0)
+  })
+
+  it('single deal of 100 days returns 100', () => {
+    const deals = [{ created_at: '2025-01-01', closed_at: '2025-04-11' }]
+    expect(computeAvgDaysToClose(deals)).toBe(100)
+  })
 })
 
 // ── computePipelineVelocity ───────────────────────────────────────────────────
@@ -117,6 +195,39 @@ describe('computePipelineVelocity', () => {
   it('returns 0 when dealCount is 0', () => {
     expect(computePipelineVelocity(0, 5000, 50, 14)).toBe(0)
   })
+
+  it('returns 0 when avgDealValue is 0', () => {
+    expect(computePipelineVelocity(10, 0, 50, 14)).toBe(0)
+  })
+
+  it('higher win rate yields higher velocity', () => {
+    const low  = computePipelineVelocity(10, 5000, 30, 14) as number
+    const high = computePipelineVelocity(10, 5000, 60, 14) as number
+    expect(high).toBeGreaterThan(low)
+  })
+
+  it('longer days-to-close reduces velocity', () => {
+    const fast = computePipelineVelocity(10, 5000, 50, 7)  as number
+    const slow = computePipelineVelocity(10, 5000, 50, 28) as number
+    expect(fast).toBeGreaterThan(slow)
+  })
+
+  it('winRate=100 computes full revenue per day', () => {
+    // (5 × 1000 × 1.0) / 10 = 500
+    expect(computePipelineVelocity(5, 1000, 100, 10)).toBe(500)
+  })
+
+  it('fractional win rate handled correctly', () => {
+    // (10 × 2000 × (33.33/100)) / 20 ≈ 333.3
+    const result = computePipelineVelocity(10, 2000, 33.33, 20) as number
+    expect(result).toBeCloseTo(333.3, 0)
+  })
+
+  it('large values compute without overflow', () => {
+    // (1000 × 100000 × 0.7) / 30 ≈ 2,333,333
+    const result = computePipelineVelocity(1000, 100000, 70, 30) as number
+    expect(result).toBeCloseTo(2333333, -3)
+  })
 })
 
 // ── computeWinLossRatio ───────────────────────────────────────────────────────
@@ -140,6 +251,32 @@ describe('computeWinLossRatio', () => {
 
   it('returns fractional ratio', () => {
     expect(computeWinLossRatio(1, 4)).toBe(0.25)
+  })
+
+  it('returns null only when lost is 0, not when won is 0', () => {
+    expect(computeWinLossRatio(0, 0)).toBeNull()
+  })
+
+  it('returns 3 for 9 won, 3 lost', () => {
+    expect(computeWinLossRatio(9, 3)).toBe(3)
+  })
+
+  it('returns 0.5 for 1 won, 2 lost', () => {
+    expect(computeWinLossRatio(1, 2)).toBe(0.5)
+  })
+
+  it('handles large numbers', () => {
+    expect(computeWinLossRatio(1000, 200)).toBe(5)
+  })
+
+  it('ratio above 1 means more wins than losses', () => {
+    const ratio = computeWinLossRatio(7, 3) as number
+    expect(ratio).toBeGreaterThan(1)
+  })
+
+  it('ratio below 1 means more losses than wins', () => {
+    const ratio = computeWinLossRatio(2, 8) as number
+    expect(ratio).toBeLessThan(1)
   })
 })
 
@@ -197,6 +334,45 @@ describe('classifyPipelineHealth', () => {
   it('boundary: conv exactly 40% and days exactly benchmark*1.25 → good', () => {
     expect(classifyPipelineHealth(40, 17.5, 14)).toBe('good')
   })
+
+  it('conv=59 + days=10 does not qualify for excellent (conv < 60)', () => {
+    // conv < 60, so doesn't hit excellent; conv >= 40 AND days <= 17.5 → good
+    expect(classifyPipelineHealth(59, 10)).toBe('good')
+  })
+
+  it('conv=60 + days=11 (just above 0.75*14=10.5) → not excellent → good', () => {
+    expect(classifyPipelineHealth(60, 11)).toBe('good')
+  })
+
+  it('conv=39 + days=17 → not good (conv < 40) → average (days <= 28)', () => {
+    expect(classifyPipelineHealth(39, 17)).toBe('average')
+  })
+
+  it('conv=null + days=29 → average (days <= 28)', () => {
+    expect(classifyPipelineHealth(null, 29)).toBe('average')
+  })
+
+  it('conv=null + days=30 → underperforming (days > 28, conv null → fails average conv check)', () => {
+    // days <= benchmark*2=28? No, 30 > 28. conv check: null >= 20? No. → underperforming
+    expect(classifyPipelineHealth(null, 30)).toBe('underperforming')
+  })
+
+  it('conv=20 + days=null → average (conv >= 20)', () => {
+    expect(classifyPipelineHealth(20, null)).toBe('average')
+  })
+
+  it('benchmark=7: excellent requires conv>=60 and days<=5.25', () => {
+    expect(classifyPipelineHealth(65, 5, 7)).toBe('excellent')
+  })
+
+  it('all nulls with custom benchmark still returns insufficient_data', () => {
+    expect(classifyPipelineHealth(null, null, 100)).toBe('insufficient_data')
+  })
+
+  it('underperforming when conv=19 and days=29 (default benchmark=14, 28 threshold)', () => {
+    // conv=19 < 20 fails average conv check; days=29 > 28 fails average days check → underperforming
+    expect(classifyPipelineHealth(19, 29)).toBe('underperforming')
+  })
 })
 
 // ── computeSalesCycleEfficiency ───────────────────────────────────────────────
@@ -232,6 +408,30 @@ describe('computeSalesCycleEfficiency', () => {
   it('handles custom benchmark', () => {
     // 30 / 10 * 100 = 300 (very fast)
     expect(computeSalesCycleEfficiency(10, 30)).toBe(300)
+  })
+
+  it('returns 50 for twice the benchmark', () => {
+    // benchmark=14, actual=28 → 14/28*100=50
+    expect(computeSalesCycleEfficiency(28, 14)).toBe(50)
+  })
+
+  it('returns 400 for 4x faster than benchmark', () => {
+    // benchmark=28, actual=7 → 28/7*100=400
+    expect(computeSalesCycleEfficiency(7, 28)).toBe(400)
+  })
+
+  it('returns fractional efficiency', () => {
+    // benchmark=10, actual=30 → 10/30*100 ≈ 33.33
+    const result = computeSalesCycleEfficiency(30, 10) as number
+    expect(result).toBeCloseTo(33.33, 1)
+  })
+
+  it('benchmark=1 day, actual=1 day → 100', () => {
+    expect(computeSalesCycleEfficiency(1, 1)).toBe(100)
+  })
+
+  it('very fast deal: actual=1, benchmark=30 → 3000', () => {
+    expect(computeSalesCycleEfficiency(1, 30)).toBe(3000)
   })
 })
 
@@ -298,6 +498,45 @@ describe('computeStuckDealRate', () => {
     ])
     expect(result.stuck_value).toBe(60_000)
     expect(result.stuck_rate_pct).toBe(100)
+  })
+
+  it('stuck_rate_pct is 0 when no deals are stuck', () => {
+    const recentDate = new Date(Date.now() - 1 * 86_400_000).toISOString().slice(0, 10)
+    const result = computeStuckDealRate([{ created_at: recentDate, value: 5_000 }])
+    expect(result.stuck_rate_pct).toBe(0)
+  })
+
+  it('stuck_rate_pct is 33.33 for 1 of 3 stuck', () => {
+    const oldDate    = new Date(Date.now() - 60 * 86_400_000).toISOString().slice(0, 10)
+    const recentDate = new Date(Date.now() -  2 * 86_400_000).toISOString().slice(0, 10)
+    const result = computeStuckDealRate([
+      { created_at: oldDate,    value: 1_000 },
+      { created_at: recentDate, value: 1_000 },
+      { created_at: recentDate, value: 1_000 },
+    ])
+    expect(result.stuck_count).toBe(1)
+    expect(result.stuck_rate_pct).toBeCloseTo(33.33, 1)
+  })
+
+  it('deals with 0 value are still counted as stuck', () => {
+    const oldDate = new Date(Date.now() - 35 * 86_400_000).toISOString().slice(0, 10)
+    const result = computeStuckDealRate([{ created_at: oldDate, value: 0 }])
+    expect(result.stuck_count).toBe(1)
+    expect(result.stuck_value).toBe(0)
+    expect(result.stuck_rate_pct).toBe(100)
+  })
+
+  it('default threshold is 30 days', () => {
+    // 29 days ago should not be stuck by default
+    const date29 = new Date(Date.now() - 29 * 86_400_000).toISOString().slice(0, 10)
+    const result = computeStuckDealRate([{ created_at: date29, value: 1_000 }])
+    expect(result.stuck_count).toBe(0)
+  })
+
+  it('threshold boundary: exactly 30 days → stuck', () => {
+    const date30 = new Date(Date.now() - 30 * 86_400_000).toISOString().slice(0, 10)
+    const result = computeStuckDealRate([{ created_at: date30, value: 1_000 }])
+    expect(result.stuck_count).toBe(1)
   })
 })
 
@@ -392,5 +631,49 @@ describe('computeMonthlyPipelineFlow', () => {
     expect(result[4].pending).toBe(8)
     // Jun: 8 + 4 - 2 - 1 = 9
     expect(result[5].pending).toBe(9)
+  })
+
+  it('single month with 0 conversion → null rate', () => {
+    const input = [{ month: '2025-01', created: 10, converted: 0, lost: 0 }]
+    const result = computeMonthlyPipelineFlow(input)
+    expect(result[0].conversion_rate).toBeNull()
+    expect(result[0].pending).toBe(10)
+  })
+
+  it('conversion_rate = 50 for 1 converted, 1 lost', () => {
+    const input = [{ month: '2025-03', created: 2, converted: 1, lost: 1 }]
+    const result = computeMonthlyPipelineFlow(input)
+    expect(result[0].conversion_rate).toBe(50)
+  })
+
+  it('running pending accumulates over many months', () => {
+    const input = [
+      { month: '2025-01', created: 5, converted: 0, lost: 0 },
+      { month: '2025-02', created: 5, converted: 0, lost: 0 },
+      { month: '2025-03', created: 5, converted: 0, lost: 0 },
+    ]
+    const result = computeMonthlyPipelineFlow(input)
+    expect(result[0].pending).toBe(5)
+    expect(result[1].pending).toBe(10)
+    expect(result[2].pending).toBe(15)
+  })
+
+  it('output length matches input length', () => {
+    const input = Array.from({ length: 12 }, (_, i) => ({
+      month:     `2025-${String(i + 1).padStart(2, '0')}`,
+      created:   3,
+      converted: 1,
+      lost:      0,
+    }))
+    const result = computeMonthlyPipelineFlow(input)
+    expect(result).toHaveLength(12)
+  })
+
+  it('months with only lost deals accumulate nothing in pending', () => {
+    const input = [
+      { month: '2025-01', created: 5, converted: 0, lost: 5 },
+    ]
+    const result = computeMonthlyPipelineFlow(input)
+    expect(result[0].pending).toBe(0)
   })
 })

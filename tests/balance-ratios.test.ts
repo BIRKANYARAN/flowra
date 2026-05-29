@@ -422,4 +422,342 @@ describe('computeBalanceSheetHealthScore', () => {
     expect(computeBalanceSheetHealthScore(null, null, 3.0, null)).toBeCloseTo(60, 1)
   })
 
+  it('66. currentRatio=1.0 → liquidity raw = 50, component = 17.5', () => {
+    // liquidity: 1.0/2 × 100 = 50 → 50×0.35=17.5; rest null → 50 total
+    expect(computeBalanceSheetHealthScore(1.0, null, null, null)).toBeCloseTo(50, 1)
+  })
+
+  it('67. debtToEquity=0 → leverage raw = 100, component = 30', () => {
+    // max(0, 100 - 0×20) = 100; 100×0.30=30; rest null → 17.5+10+7.5=35; total=65
+    expect(computeBalanceSheetHealthScore(null, 0, null, null)).toBeCloseTo(65, 1)
+  })
+
+  it('68. assetTurnover=1.0 → efficiency raw = 50, component = 10', () => {
+    // min(100, 1×50) = 50; 50×0.20=10; rest null → 17.5+15+7.5=40; total=50
+    expect(computeBalanceSheetHealthScore(null, null, 1.0, null)).toBeCloseTo(50, 1)
+  })
+
+  it('69. netProfitMarginPct=0 → profitability raw = 50, component = 7.5', () => {
+    // clamp(0+50,0,100)=50; 50×0.15=7.5; rest null → 17.5+15+10=42.5; total=50
+    expect(computeBalanceSheetHealthScore(null, null, null, 0)).toBeCloseTo(50, 1)
+  })
+
+  it('70. margin=-50 → profitability raw = 0, component = 0', () => {
+    // clamp(-50+50,0,100)=0; 0×0.15=0; rest null → 17.5+15+10=42.5
+    expect(computeBalanceSheetHealthScore(null, null, null, -50)).toBeCloseTo(42.5, 1)
+  })
+
+  it('71. margin=100 saturates at 100 → component = 15', () => {
+    // clamp(100+50,0,100)=100; 100×0.15=15; rest null → 17.5+15+10=42.5; total=57.5
+    expect(computeBalanceSheetHealthScore(null, null, null, 100)).toBeCloseTo(57.5, 1)
+  })
+
+  it('72. currentRatio=0 → liquidity raw = 0, component = 0', () => {
+    // min(100, 0/2×100)=0; 0×0.35=0; rest null → 0+15+10+7.5=32.5
+    expect(computeBalanceSheetHealthScore(0, null, null, null)).toBeCloseTo(32.5, 1)
+  })
+
+  it('73. debtToEquity=4 → leverage raw clamped to 20', () => {
+    // max(0, 100 - 4×20) = max(0, 20) = 20; 20×0.30=6; rest null → 17.5+10+7.5=35; total=41
+    expect(computeBalanceSheetHealthScore(null, 4, null, null)).toBeCloseTo(41, 1)
+  })
+
+  it('74. assetTurnover=0.5 → efficiency raw = 25', () => {
+    // min(100, 0.5×50) = 25; 25×0.20=5; rest null → 17.5+15+7.5=40; total=45
+    expect(computeBalanceSheetHealthScore(null, null, 0.5, null)).toBeCloseTo(45, 1)
+  })
+
+  it('75. all maximum inputs → near 100 score', () => {
+    // ratio=4→100; D/E=0→100; turn=3→100; margin=100→100
+    // 100×0.35 + 100×0.30 + 100×0.20 + 100×0.15 = 100
+    expect(computeBalanceSheetHealthScore(4.0, 0, 3.0, 100)).toBeCloseTo(100, 1)
+  })
+
+  it('76. all zero / worst inputs → low score', () => {
+    // ratio=0→0; D/E=10→0; turn=0→0; margin=-200→0
+    // all raw=0 → score=0
+    expect(computeBalanceSheetHealthScore(0, 10, 0, -200)).toBeCloseTo(0, 1)
+  })
+
+  it('77. currentRatio=3.0 → raw=min(100,150)=100 → component=35', () => {
+    // rest null → 35+15+10+7.5=67.5
+    expect(computeBalanceSheetHealthScore(3.0, null, null, null)).toBeCloseTo(67.5, 1)
+  })
+
+  it('78. debtToEquity=1.0 → leverage raw = 80, component = 24', () => {
+    // 100 - 1×20 = 80; 80×0.30=24; rest null → 17.5+10+7.5=35; total=59
+    expect(computeBalanceSheetHealthScore(null, 1.0, null, null)).toBeCloseTo(59, 1)
+  })
+
+  it('79. debtToEquity=2.0 → leverage raw = 60, component = 18', () => {
+    // 100 - 2×20 = 60; 60×0.30=18; rest null → 17.5+10+7.5=35; total=53
+    expect(computeBalanceSheetHealthScore(null, 2.0, null, null)).toBeCloseTo(53, 1)
+  })
+
+  it('80. mixed good/bad inputs: healthy ratio + very high debt', () => {
+    // ratio=2.0→100→35; D/E=5→0→0; turn=2→100→20; margin=20→70→10.5; total=65.5
+    const result = computeBalanceSheetHealthScore(2.0, 5.0, 2.0, 20)
+    expect(result).toBeCloseTo(65.5, 1)
+  })
+
+})
+
+// ── Additional boundary and edge case tests ─────────────────────────────────
+
+describe('computeCurrentRatio – additional', () => {
+
+  it('81. large numbers: 1_000_000 / 500_000 → 2.0', () => {
+    expect(computeCurrentRatio(1_000_000, 500_000)).toBeCloseTo(2.0, 6)
+  })
+
+  it('82. fractional assets: 1.5 / 1.0 → 1.5', () => {
+    expect(computeCurrentRatio(1.5, 1.0)).toBeCloseTo(1.5, 6)
+  })
+
+  it('83. zero assets, non-zero liabilities → 0', () => {
+    expect(computeCurrentRatio(0, 500)).toBe(0)
+  })
+
+})
+
+describe('computeQuickRatio – additional', () => {
+
+  it('84. inventory > current assets → negative quick ratio', () => {
+    // (200 - 500) / 400 = -0.75
+    expect(computeQuickRatio(200, 500, 400)).toBeCloseTo(-0.75, 6)
+  })
+
+  it('85. very small values precision', () => {
+    // (10 - 3) / 7 = 1.0
+    expect(computeQuickRatio(10, 3, 7)).toBeCloseTo(1.0, 5)
+  })
+
+})
+
+describe('computeCashRatio – additional', () => {
+
+  it('86. cash equals liabilities → ratio = 1.0', () => {
+    expect(computeCashRatio(400, 400)).toBeCloseTo(1.0, 6)
+  })
+
+  it('87. cash > liabilities → ratio > 1', () => {
+    // 600 / 400 = 1.5
+    expect(computeCashRatio(600, 400)).toBeCloseTo(1.5, 6)
+  })
+
+})
+
+describe('classifyLiquidityHealth – additional', () => {
+
+  it('88. 1.499 → tight (just below adequate threshold)', () => {
+    expect(classifyLiquidityHealth(1.499)).toBe('tight')
+  })
+
+  it('89. 1.999 → adequate (just below strong threshold)', () => {
+    expect(classifyLiquidityHealth(1.999)).toBe('adequate')
+  })
+
+  it('90. 0.999 → critical (just below tight threshold)', () => {
+    expect(classifyLiquidityHealth(0.999)).toBe('critical')
+  })
+
+  it('91. 10.0 → strong', () => {
+    expect(classifyLiquidityHealth(10.0)).toBe('strong')
+  })
+
+  it('92. negative value → critical', () => {
+    expect(classifyLiquidityHealth(-1.0)).toBe('critical')
+  })
+
+})
+
+describe('computeDebtToEquityRatio – additional', () => {
+
+  it('93. zero liabilities, positive equity → 0', () => {
+    expect(computeDebtToEquityRatio(0, 1000)).toBe(0)
+  })
+
+  it('94. very high debt → high ratio', () => {
+    // 10000 / 100 = 100
+    expect(computeDebtToEquityRatio(10000, 100)).toBeCloseTo(100, 6)
+  })
+
+  it('95. negative liabilities (unusual) → negative ratio', () => {
+    // -500 / 1000 = -0.5
+    expect(computeDebtToEquityRatio(-500, 1000)).toBeCloseTo(-0.5, 6)
+  })
+
+})
+
+describe('computeDebtToAssetsRatio – additional', () => {
+
+  it('96. zero liabilities → 0', () => {
+    expect(computeDebtToAssetsRatio(0, 1000)).toBe(0)
+  })
+
+  it('97. all assets are liabilities → 1.0', () => {
+    expect(computeDebtToAssetsRatio(500, 500)).toBeCloseTo(1.0, 6)
+  })
+
+})
+
+describe('computeEquityMultiplier – additional', () => {
+
+  it('98. negative equity → negative multiplier', () => {
+    // 1000 / -200 = -5.0
+    expect(computeEquityMultiplier(1000, -200)).toBeCloseTo(-5.0, 6)
+  })
+
+  it('99. assets equal equity → multiplier = 1.0 (no leverage)', () => {
+    expect(computeEquityMultiplier(500, 500)).toBeCloseTo(1.0, 6)
+  })
+
+  it('100. high leverage: assets = 10 × equity', () => {
+    // 10000 / 1000 = 10.0
+    expect(computeEquityMultiplier(10000, 1000)).toBeCloseTo(10.0, 6)
+  })
+
+})
+
+describe('computeInterestCoverageRatio – additional', () => {
+
+  it('101. exactly 1.5 (acceptable threshold)', () => {
+    // 150 / 100 = 1.5
+    expect(computeInterestCoverageRatio(150, 100)).toBeCloseTo(1.5, 6)
+  })
+
+  it('102. exactly 3.0 (comfortable threshold)', () => {
+    expect(computeInterestCoverageRatio(300, 100)).toBeCloseTo(3.0, 6)
+  })
+
+  it('103. very high coverage (20×)', () => {
+    expect(computeInterestCoverageRatio(2000, 100)).toBeCloseTo(20.0, 6)
+  })
+
+})
+
+describe('classifySolvencyHealth – additional', () => {
+
+  it('104. debtToEquity exactly 3.0 → leveraged (not > 3, equals 3)', () => {
+    expect(classifySolvencyHealth(3.0, null)).toBe('leveraged')
+  })
+
+  it('105. debtToEquity exactly 1.5 → adequate (not > 1.5)', () => {
+    expect(classifySolvencyHealth(1.5, null)).toBe('adequate')
+  })
+
+  it('106. debtToEquity exactly 0.5 → strong (not > 0.5)', () => {
+    expect(classifySolvencyHealth(0.5, null)).toBe('strong')
+  })
+
+  it('107. interestCoverage exactly 1.0 → leveraged (not < 1)', () => {
+    expect(classifySolvencyHealth(null, 1.0)).toBe('leveraged')
+  })
+
+  it('108. interestCoverage exactly 2.0 → adequate (not < 2)', () => {
+    expect(classifySolvencyHealth(null, 2.0)).toBe('adequate')
+  })
+
+  it('109. interestCoverage exactly 4.0 → strong (not < 4)', () => {
+    expect(classifySolvencyHealth(null, 4.0)).toBe('strong')
+  })
+
+  it('110. D/E > 3 AND coverage < 1 → distressed (both trigger)', () => {
+    expect(classifySolvencyHealth(4.0, 0.5)).toBe('distressed')
+  })
+
+  it('111. D/E null, coverage = 10 → strong', () => {
+    expect(classifySolvencyHealth(null, 10)).toBe('strong')
+  })
+
+  it('112. one null is ok → not insufficient_data', () => {
+    expect(classifySolvencyHealth(0.3, null)).toBe('strong')
+  })
+
+})
+
+describe('computeAssetTurnover – additional', () => {
+
+  it('113. high efficiency: 5× turnover', () => {
+    expect(computeAssetTurnover(5000, 1000)).toBeCloseTo(5.0, 6)
+  })
+
+  it('114. zero revenue → 0', () => {
+    expect(computeAssetTurnover(0, 1000)).toBe(0)
+  })
+
+  it('115. large fractional result', () => {
+    // 1000 / 3000 ≈ 0.333
+    expect(computeAssetTurnover(1000, 3000)).toBeCloseTo(0.3333, 4)
+  })
+
+})
+
+describe('computeReceivablesTurnover – additional', () => {
+
+  it('116. high turnover: 12×', () => {
+    expect(computeReceivablesTurnover(12000, 1000)).toBeCloseTo(12.0, 6)
+  })
+
+  it('117. zero revenue → 0', () => {
+    expect(computeReceivablesTurnover(0, 300)).toBe(0)
+  })
+
+})
+
+describe('computePayablesTurnover – additional', () => {
+
+  it('118. high turnover: 6×', () => {
+    expect(computePayablesTurnover(6000, 1000)).toBeCloseTo(6.0, 6)
+  })
+
+  it('119. zero purchases → 0', () => {
+    expect(computePayablesTurnover(0, 200)).toBe(0)
+  })
+
+})
+
+describe('computeNetProfitMargin – additional', () => {
+
+  it('120. 100% margin (all revenue is profit)', () => {
+    expect(computeNetProfitMargin(1000, 1000)).toBeCloseTo(100, 6)
+  })
+
+  it('121. 0.1% margin (very thin)', () => {
+    // 1 / 1000 × 100 = 0.1
+    expect(computeNetProfitMargin(1, 1000)).toBeCloseTo(0.1, 6)
+  })
+
+  it('122. margin > 100% (unusual but mathematically valid)', () => {
+    // 2000 / 1000 × 100 = 200
+    expect(computeNetProfitMargin(2000, 1000)).toBeCloseTo(200, 6)
+  })
+
+})
+
+describe('computeReturnOnAssets – additional', () => {
+
+  it('123. negative return (losses)', () => {
+    // -100 / 1000 × 100 = -10
+    expect(computeReturnOnAssets(-100, 1000)).toBeCloseTo(-10, 6)
+  })
+
+  it('124. 100% ROA (profit equals total assets)', () => {
+    expect(computeReturnOnAssets(1000, 1000)).toBeCloseTo(100, 6)
+  })
+
+})
+
+describe('computeReturnOnEquity – additional', () => {
+
+  it('125. negative equity (distressed firm) → negative denominator result', () => {
+    // 100 / -500 × 100 = -20
+    expect(computeReturnOnEquity(100, -500)).toBeCloseTo(-20, 6)
+  })
+
+  it('126. very high ROE (30%)', () => {
+    // 300 / 1000 × 100 = 30
+    expect(computeReturnOnEquity(300, 1000)).toBeCloseTo(30, 6)
+  })
+
 })
