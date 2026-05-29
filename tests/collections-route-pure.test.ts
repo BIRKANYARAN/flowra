@@ -10,6 +10,58 @@ import { describe, it, expect } from 'vitest'
 import { sanitizePaidAmount, computeCollectionRiskScore } from '../lib/utils/collections-pure'
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Additional edge-case coverage for sanitizePaidAmount
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('sanitizePaidAmount — extended edge cases', () => {
+  it('boolean true coerces to 1', () => {
+    // Number(true) = 1 → Math.max(0, 1) = 1
+    expect(sanitizePaidAmount(true as unknown as number)).toBe(1)
+  })
+
+  it('boolean false coerces to 0', () => {
+    // Number(false) = 0 → Math.max(0, 0||0) = 0
+    expect(sanitizePaidAmount(false as unknown as number)).toBe(0)
+  })
+
+  it('whitespace string " " → 0 (NaN guard)', () => {
+    // Number(' ') = 0 in JS, 0||0 = 0
+    expect(sanitizePaidAmount(' ' as unknown as number)).toBe(0)
+  })
+
+  it('string " 750.5 " with padding → 750.5', () => {
+    // Number(' 750.5 ') = 750.5 in JS
+    expect(sanitizePaidAmount(' 750.5 ' as unknown as number)).toBe(750.5)
+  })
+
+  it('integer 1 → 1 (boundary at minimum positive)', () => {
+    expect(sanitizePaidAmount(1)).toBe(1)
+  })
+
+  it('very small positive float → returned as-is', () => {
+    expect(sanitizePaidAmount(0.001)).toBe(0.001)
+  })
+
+  it('string "0" → 0', () => {
+    expect(sanitizePaidAmount('0' as unknown as number)).toBe(0)
+  })
+
+  it('negative string "-100" → 0', () => {
+    expect(sanitizePaidAmount('-100' as unknown as number)).toBe(0)
+  })
+
+  it('null-like value 0 is distinct from null — returns 0 not null', () => {
+    const result = sanitizePaidAmount(0)
+    expect(result).toBe(0)
+    expect(result).not.toBeNull()
+  })
+
+  it('returns number type for numeric input', () => {
+    expect(typeof sanitizePaidAmount(100)).toBe('number')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
 // sanitizePaidAmount — NaN guard (Faz 13-F)
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -152,5 +204,67 @@ describe('computeCollectionRiskScore', () => {
     )
     // days = 10 → score = 10×0.6 + 0 = 6.0
     expect(score).toBeCloseTo(6.0, 5)
+  })
+
+  it('null total_try treated as 0', () => {
+    const score = computeCollectionRiskScore(
+      { due_date: '2025-01-01', total_try: null },
+      '2025-01-06',
+    )
+    // days = 5 → score = 5×0.6 + 0 = 3.0
+    expect(score).toBeCloseTo(3.0, 5)
+  })
+
+  it('score is always non-negative (clipped at 0 for future dates)', () => {
+    const score = computeCollectionRiskScore(
+      { due_date: '2099-01-01', total_try: 0 },
+      '2025-01-01',
+    )
+    expect(score).toBeGreaterThanOrEqual(0)
+  })
+
+  it('fractional days are rounded correctly', () => {
+    // 2025-01-01 to 2025-01-02 = 1 day
+    const score = computeCollectionRiskScore(
+      { due_date: '2025-01-01', total_try: 10_000 },
+      '2025-01-02',
+    )
+    // 1×0.6 + 1×0.4 = 1.0
+    expect(score).toBeCloseTo(1.0, 5)
+  })
+
+  it('very large amount dominates when not overdue', () => {
+    const score = computeCollectionRiskScore(
+      { due_date: '2025-06-01', total_try: 10_000_000 },
+      '2025-06-01',
+    )
+    // days = 0 → score = (10_000_000/10_000)×0.4 = 400
+    expect(score).toBeCloseTo(400, 5)
+  })
+
+  it('sale_date fallback ignores due_date = undefined (not null)', () => {
+    const score = computeCollectionRiskScore(
+      { sale_date: '2025-01-01', total_try: 0 },
+      '2025-01-11',
+    )
+    // due_date is undefined → falls to sale_date → days = 10 → 10×0.6 = 6.0
+    expect(score).toBeCloseTo(6.0, 5)
+  })
+
+  it('exactly 365 days overdue, ₺20k (non-leap year span)', () => {
+    // 2025-01-01 to 2026-01-01 = 365 days (2025 is not a leap year)
+    const score = computeCollectionRiskScore(
+      { due_date: '2025-01-01', total_try: 20_000 },
+      '2026-01-01',
+    )
+    // days = 365 → 365×0.6 + 2×0.4 = 219.8
+    expect(score).toBeCloseTo(219.8, 5)
+  })
+
+  it('amount component scales linearly', () => {
+    const s1 = computeCollectionRiskScore({ due_date: '2025-06-01', total_try: 10_000 }, '2025-06-01')
+    const s2 = computeCollectionRiskScore({ due_date: '2025-06-01', total_try: 20_000 }, '2025-06-01')
+    // s2 should be exactly double s1 (same days=0)
+    expect(s2).toBeCloseTo(s1 * 2, 5)
   })
 })

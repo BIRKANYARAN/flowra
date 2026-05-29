@@ -257,3 +257,229 @@ describe('CertifiedExportPackage', () => {
     expect(result).toMatch(/^[a-f0-9]{64}$/)
   })
 })
+
+// ── CertifiedExportService.computeChecksum ─────────────────────────────────────
+
+describe('CertifiedExportService.computeChecksum — edge cases', () => {
+
+  it('empty object produces a valid 64-char hex string', () => {
+    const result = CertifiedExportService.computeChecksum({})
+    expect(result).toMatch(/^[a-f0-9]{64}$/)
+  })
+
+  it('two different objects always produce different checksums', () => {
+    const a = CertifiedExportService.computeChecksum({ revenue: 100_000 })
+    const b = CertifiedExportService.computeChecksum({ revenue: 100_001 })
+    expect(a).not.toBe(b)
+  })
+
+  it('key order matters — different key order may produce different result', () => {
+    const obj1 = { a: 1, b: 2 }
+    const obj2 = { b: 2, a: 1 }
+    // JSON.stringify preserves insertion order — so this may differ
+    // We just confirm the function is stable for each input
+    const c1 = CertifiedExportService.computeChecksum(obj1)
+    const c2 = CertifiedExportService.computeChecksum(obj1)
+    expect(c1).toBe(c2)  // same object → always same
+    // Note: c1 may or may not equal the checksum of obj2; we just confirm determinism
+    const c3 = CertifiedExportService.computeChecksum(obj2)
+    const c4 = CertifiedExportService.computeChecksum(obj2)
+    expect(c3).toBe(c4)
+  })
+
+  it('nested objects produce a checksum', () => {
+    const data = { financial_summary: { revenue: 500_000, expenses: 200_000 }, raw_data: { sales: [] } }
+    const result = CertifiedExportService.computeChecksum(data)
+    expect(result).toHaveLength(64)
+  })
+
+  it('null values in object are included in checksum', () => {
+    const withNull    = CertifiedExportService.computeChecksum({ key: null })
+    const withString  = CertifiedExportService.computeChecksum({ key: 'null' })
+    expect(withNull).not.toBe(withString)
+  })
+
+  it('arrays in object produce correct checksum', () => {
+    const data = { items: [1, 2, 3] }
+    const expected = createHash('sha256').update(JSON.stringify(data)).digest('hex')
+    expect(CertifiedExportService.computeChecksum(data)).toBe(expected)
+  })
+})
+
+// ── CertifiedExportPackage — financial_summary invariants ─────────────────────
+
+describe('CertifiedExportPackage — financial_summary arithmetic invariants', () => {
+
+  it('gross_profit = revenue - cogs', () => {
+    const pkg = buildPackage()
+    const fs  = pkg.financial_summary
+    expect(fs.gross_profit_try).toBe(fs.revenue_try - fs.cogs_try)
+  })
+
+  it('net_income = gross_profit - expenses', () => {
+    const pkg = buildPackage()
+    const fs  = pkg.financial_summary
+    expect(fs.net_income_try).toBe(fs.gross_profit_try - fs.expenses_try)
+  })
+
+  it('net_income is negative when expenses exceed gross_profit', () => {
+    const pkg = buildPackage({
+      financial_summary: {
+        period_label:     '2026-01-01 – 2026-05-26',
+        revenue_try:      100_000,
+        cogs_try:          80_000,
+        gross_profit_try:  20_000,
+        expenses_try:      50_000,
+        net_income_try:   -30_000,
+        cash_try:         10_000,
+      },
+    })
+    expect(pkg.financial_summary.net_income_try).toBeLessThan(0)
+  })
+
+  it('zero-revenue package has non-positive net income', () => {
+    const pkg = buildPackage({
+      financial_summary: {
+        period_label:     '2026-01-01 – 2026-01-31',
+        revenue_try:       0,
+        cogs_try:          0,
+        gross_profit_try:  0,
+        expenses_try:     10_000,
+        net_income_try:  -10_000,
+        cash_try:          5_000,
+      },
+    })
+    expect(pkg.financial_summary.net_income_try).toBeLessThanOrEqual(0)
+  })
+})
+
+// ── CertifiedExportPackage — partner_summary invariants ───────────────────────
+
+describe('CertifiedExportPackage — partner_summary invariants', () => {
+
+  it('total_partners equals partners array length', () => {
+    const pkg = buildPackage()
+    expect(pkg.partner_summary.total_partners).toBe(pkg.partner_summary.partners.length)
+  })
+
+  it('active_partners <= total_partners', () => {
+    const pkg = buildPackage()
+    expect(pkg.partner_summary.active_partners).toBeLessThanOrEqual(pkg.partner_summary.total_partners)
+  })
+
+  it('total_partner_debt_try is the sum of individual partner loan amounts', () => {
+    const pkg = buildPackage()
+    const sumLoans = pkg.partner_summary.partners.reduce(
+      (s, p) => s + p.loan_outstanding_try,
+      0,
+    )
+    expect(pkg.partner_summary.total_partner_debt_try).toBe(sumLoans)
+  })
+
+  it('share_ratio_pct values sum to 100 for full partnership', () => {
+    const pkg  = buildPackage()
+    const sumPct = pkg.partner_summary.partners.reduce((s, p) => s + p.share_ratio_pct, 0)
+    expect(sumPct).toBeCloseTo(100, 1)
+  })
+
+  it('empty partners list has total_partner_debt_try of 0', () => {
+    const pkg = buildPackage({
+      partner_summary: {
+        partners:               [],
+        total_partner_debt_try: 0,
+        total_partners:         0,
+        active_partners:        0,
+      },
+    })
+    expect(pkg.partner_summary.total_partner_debt_try).toBe(0)
+    expect(pkg.partner_summary.partners).toHaveLength(0)
+  })
+})
+
+// ── CertifiedExportPackage — receivables and governance ───────────────────────
+
+describe('CertifiedExportPackage — receivables and governance invariants', () => {
+
+  it('overdue_receivables_try <= total_receivables_try', () => {
+    const pkg = buildPackage()
+    const rs  = pkg.receivables_summary
+    expect(rs.overdue_receivables_try).toBeLessThanOrEqual(rs.total_receivables_try)
+  })
+
+  it('total_receivables_try is non-negative', () => {
+    const pkg = buildPackage()
+    expect(pkg.receivables_summary.total_receivables_try).toBeGreaterThanOrEqual(0)
+  })
+
+  it('audit_readiness_score is either null or in range 0-100', () => {
+    const pkg   = buildPackage()
+    const score = pkg.governance_summary.audit_readiness_score
+    if (score !== null) {
+      expect(score).toBeGreaterThanOrEqual(0)
+      expect(score).toBeLessThanOrEqual(100)
+    }
+  })
+
+  it('corporate_actions total_actions >= 0', () => {
+    const pkg = buildPackage()
+    expect(pkg.corporate_actions_summary.total_actions).toBeGreaterThanOrEqual(0)
+  })
+
+  it('governance pending_resolutions and open_workflows are non-negative integers', () => {
+    const pkg = buildPackage()
+    const gs  = pkg.governance_summary
+    expect(gs.open_workflows).toBeGreaterThanOrEqual(0)
+    expect(gs.pending_resolutions).toBeGreaterThanOrEqual(0)
+    expect(Number.isInteger(gs.open_workflows)).toBe(true)
+    expect(Number.isInteger(gs.pending_resolutions)).toBe(true)
+  })
+})
+
+// ── CertifiedExportPackage — raw_data integrity ───────────────────────────────
+
+describe('CertifiedExportPackage — raw_data integrity', () => {
+
+  it('all sales have an id field', () => {
+    const pkg = buildPackage()
+    for (const sale of pkg.raw_data.sales) {
+      expect(sale).toHaveProperty('id')
+      expect(typeof sale.id).toBe('string')
+    }
+  })
+
+  it('all expenses have an id and amount_try field', () => {
+    const pkg = buildPackage()
+    for (const exp of pkg.raw_data.expenses) {
+      expect(exp).toHaveProperty('id')
+      expect(exp).toHaveProperty('amount_try')
+    }
+  })
+
+  it('sale customer_name can be null (anonymous customer)', () => {
+    const pkg = buildPackage()
+    const anonymousSale = pkg.raw_data.sales.find(s => s.customer_name === null)
+    expect(anonymousSale).toBeDefined()
+  })
+
+  it('record_counts.sales equals raw_data.sales length', () => {
+    const pkg = buildPackage()
+    expect(pkg.manifest.record_counts.sales).toBe(pkg.raw_data.sales.length)
+  })
+
+  it('record_counts.expenses equals raw_data.expenses length', () => {
+    const pkg = buildPackage()
+    expect(pkg.manifest.record_counts.expenses).toBe(pkg.raw_data.expenses.length)
+  })
+
+  it('empty raw_data package has record_counts of 0', () => {
+    const pkg = buildPackage({
+      raw_data: { sales: [], expenses: [] },
+      manifest: buildManifest({
+        record_counts: { sales: 0, expenses: 0, partners: 2, corporate_actions: 5, open_receivables: 4 },
+      }),
+    })
+    expect(pkg.raw_data.sales).toHaveLength(0)
+    expect(pkg.raw_data.expenses).toHaveLength(0)
+    expect(pkg.manifest.record_counts.sales).toBe(0)
+  })
+})
