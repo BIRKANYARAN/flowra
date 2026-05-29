@@ -23,6 +23,7 @@ import { createClient } from '@/lib/supabase-server'
 import { fmtTRY as fmt, fmtMonthShort as fmtMonth, fmtDateMed as fmtDate } from '@/lib/format'
 import { TaxCalendarClient } from './_tax-calendar/TaxCalendarClient'
 import { TaxComplianceDashboardClient } from './_tax/TaxComplianceDashboardClient'
+import { TaxComplianceClient } from './_tax-compliance/TaxComplianceClient'
 function addDays(dateStr: string, n: number): string {
   const d = new Date(dateStr + 'T00:00:00')
   d.setDate(d.getDate() + n)
@@ -155,6 +156,9 @@ export async function TaxTab({ userId, companyId }: Props) {
 
   return (
     <div className="space-y-4">
+
+      {/* ── Vergi Uyum Takvimi (client island — TanStack Query) ─────────────── */}
+      <TaxComplianceClient companyId={companyId} />
 
       {/* ── Vergi Uyum Paneli (client island — TanStack Query) ───────────────── */}
       <TaxComplianceDashboardClient companyId={companyId} />
