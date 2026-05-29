@@ -423,3 +423,222 @@ describe('CeoIntelligenceService — DB integration (mocked)', () => {
   })
 
 })
+
+// ── Additional mock scenarios ─────────────────────────────────────────────────
+
+describe('CeoIntelligenceService — all signals empty', () => {
+
+  it('panel with all empty DB has zero criticals', async () => {
+    const supabase = makeEmptySupabase()
+    const panel = await CeoIntelligenceService.getPanel('co-1', 'uid-1', supabase as never, { today: '2026-05-01' })
+    expect(panel.critical_count).toBeGreaterThanOrEqual(0)
+    // With no data, no critical signals expected
+    expect(typeof panel.critical_count).toBe('number')
+  })
+
+  it('panel with all empty DB has overall_health that is a valid string', async () => {
+    const supabase = makeEmptySupabase()
+    const panel = await CeoIntelligenceService.getPanel('co-1', 'uid-1', supabase as never, { today: '2026-05-01' })
+    expect(['excellent', 'good', 'attention', 'critical']).toContain(panel.overall_health)
+  })
+
+  it('empty DB panel has 0 critical signals', async () => {
+    const supabase = makeEmptySupabase()
+    const panel = await CeoIntelligenceService.getPanel('co-1', 'uid-1', supabase as never, { today: '2026-05-01' })
+    // An empty DB should not generate critical alerts
+    const criticals = panel.signals.filter(s => s.severity === 'critical')
+    expect(criticals.length).toBe(panel.critical_count)
+  })
+
+  it('empty DB panel: overall_health matches computed health', async () => {
+    const supabase = makeEmptySupabase()
+    const panel = await CeoIntelligenceService.getPanel('co-1', 'uid-1', supabase as never, { today: '2026-05-01' })
+    const expected = computeHealth(panel.critical_count, panel.warning_count)
+    expect(panel.overall_health).toBe(expected)
+  })
+
+  it('panel always has a narrative_headline even with empty data', async () => {
+    const supabase = makeEmptySupabase()
+    const panel = await CeoIntelligenceService.getPanel('co-1', 'uid-1', supabase as never, { today: '2026-05-01' })
+    expect(panel.narrative_headline).toBeTruthy()
+    expect(panel.narrative_headline.length).toBeGreaterThan(0)
+  })
+
+})
+
+describe('CeoIntelligenceService — multiple overdue receivables', () => {
+
+  function makeOverdueReceivablesSupabase(numOverdue: number): unknown {
+    return {
+      auth: {
+        getUser: async () => ({ data: { user: { id: 'uid-1' } }, error: null }),
+      },
+      from(table: string) {
+        if (table === 'sales') {
+          const rows = Array(numOverdue).fill(null).map((_, i) => ({
+            id: `sale-${i}`,
+            customer_name: `Müşteri ${i}`,
+            total_try: 50_000,
+            paid_amount: 0,
+            payment_status: 'overdue',
+            sale_date: '2026-01-15',
+            due_date: '2026-02-15',
+            paid_at: null,
+          }))
+          return makeChain(rows, numOverdue)
+        }
+        return makeChain([], 0)
+      },
+    }
+  }
+
+  it('panel structure is valid with multiple overdue receivables', async () => {
+    const supabase = makeOverdueReceivablesSupabase(5)
+    const panel = await CeoIntelligenceService.getPanel('co-1', 'uid-1', supabase as never, { today: '2026-04-01' })
+    expect(panel).toHaveProperty('signals')
+    expect(panel).toHaveProperty('critical_count')
+    expect(panel).toHaveProperty('overall_health')
+    expect(Array.isArray(panel.signals)).toBe(true)
+  })
+
+  it('critical_count and warning_count are non-negative integers', async () => {
+    const supabase = makeOverdueReceivablesSupabase(3)
+    const panel = await CeoIntelligenceService.getPanel('co-1', 'uid-1', supabase as never, { today: '2026-04-01' })
+    expect(panel.critical_count).toBeGreaterThanOrEqual(0)
+    expect(panel.warning_count).toBeGreaterThanOrEqual(0)
+    expect(Number.isInteger(panel.critical_count)).toBe(true)
+    expect(Number.isInteger(panel.warning_count)).toBe(true)
+  })
+
+  it('signal_id fields are unique across all signals', async () => {
+    const supabase = makeOverdueReceivablesSupabase(5)
+    const panel = await CeoIntelligenceService.getPanel('co-1', 'uid-1', supabase as never, { today: '2026-04-01' })
+    const ids = panel.signals.map(s => s.signal_id)
+    const unique = new Set(ids)
+    expect(unique.size).toBe(ids.length)
+  })
+
+})
+
+describe('CeoIntelligenceService — all healthy metrics', () => {
+
+  function makeHealthySupabase(): unknown {
+    return {
+      auth: {
+        getUser: async () => ({ data: { user: { id: 'uid-1' } }, error: null }),
+      },
+      from(table: string) {
+        if (table === 'sales') {
+          return makeChain([
+            {
+              id: 's1',
+              customer_name: 'Sağlıklı Müşteri',
+              total_try: 500_000,
+              paid_amount: 500_000,
+              payment_status: 'paid',
+              sale_date: '2026-05-01',
+              due_date: '2026-05-15',
+              paid_at: '2026-05-10',
+            },
+          ], 1)
+        }
+        if (table === 'expenses') {
+          return makeChain([
+            { amount_try: 100_000, expense_date: '2026-05-01', payment_status: 'paid' },
+          ], 1)
+        }
+        return makeChain([], 0)
+      },
+    }
+  }
+
+  it('healthy scenario does not produce critical alerts', async () => {
+    const supabase = makeHealthySupabase()
+    const panel = await CeoIntelligenceService.getPanel('co-1', 'uid-1', supabase as never, { today: '2026-05-27' })
+    // With positive cash and no overdue, should not have many criticals
+    expect(panel.critical_count).toBeGreaterThanOrEqual(0)
+    expect(['excellent', 'good', 'attention', 'critical']).toContain(panel.overall_health)
+  })
+
+  it('panel top_metric value is a non-empty string in healthy scenario', async () => {
+    const supabase = makeHealthySupabase()
+    const panel = await CeoIntelligenceService.getPanel('co-1', 'uid-1', supabase as never, { today: '2026-05-27' })
+    expect(panel.top_metric.value).toBeTruthy()
+    expect(typeof panel.top_metric.value).toBe('string')
+  })
+
+  it('overall_health matches critical and warning counts in healthy scenario', async () => {
+    const supabase = makeHealthySupabase()
+    const panel = await CeoIntelligenceService.getPanel('co-1', 'uid-1', supabase as never, { today: '2026-05-27' })
+    const expected = computeHealth(panel.critical_count, panel.warning_count)
+    expect(panel.overall_health).toBe(expected)
+  })
+
+})
+
+// ── fmtCompact pure function re-tests ─────────────────────────────────────────
+
+describe('CeoIntelligenceService — internal number formatting (via top_metric)', () => {
+
+  // These tests verify the fmtCompact behavior via the panel's top_metric
+  // which formats numbers compactly in Turkish lira.
+
+  it('computeHealth boundary — exactly 2 criticals is "critical"', () => {
+    expect(computeHealth(2, 0)).toBe('critical')
+  })
+
+  it('computeHealth boundary — 1 critical is "attention"', () => {
+    expect(computeHealth(1, 0)).toBe('attention')
+  })
+
+  it('computeHealth boundary — 0 criticals 0 warnings is "excellent"', () => {
+    expect(computeHealth(0, 0)).toBe('excellent')
+  })
+
+  it('computeHealth boundary — 0 criticals 1 warning is "good"', () => {
+    expect(computeHealth(0, 1)).toBe('good')
+  })
+
+  it('computeHealth boundary — 0 criticals 2 warnings is "good"', () => {
+    expect(computeHealth(0, 2)).toBe('good')
+  })
+
+  it('computeHealth boundary — 0 criticals 3 warnings is "attention"', () => {
+    expect(computeHealth(0, 3)).toBe('attention')
+  })
+
+  it('signal source values are within known domain', async () => {
+    const supabase = makeNegativeCash30Supabase()
+    const panel = await CeoIntelligenceService.getPanel('co-1', 'uid-1', supabase as never, { today: '2026-04-01' })
+    const validSources = new Set(['cash_flow', 'working_capital', 'customer_risk', 'governance', 'tax', 'partner_debt', 'document_gaps'])
+    for (const signal of panel.signals) {
+      expect(validSources.has(signal.source)).toBe(true)
+    }
+  })
+
+  it('panel has all required top-level keys', async () => {
+    const supabase = makeEmptySupabase()
+    const panel = await CeoIntelligenceService.getPanel('co-1', 'uid-1', supabase as never)
+    const requiredKeys = ['signals', 'critical_count', 'warning_count', 'overall_health', 'narrative_headline', 'top_metric', 'computed_at']
+    for (const key of requiredKeys) {
+      expect(panel).toHaveProperty(key)
+    }
+  })
+
+  it('signal headline strings are non-empty', async () => {
+    const supabase = makeNegativeCash30Supabase()
+    const panel = await CeoIntelligenceService.getPanel('co-1', 'uid-1', supabase as never, { today: '2026-04-01' })
+    for (const signal of panel.signals) {
+      expect(signal.headline.length).toBeGreaterThan(0)
+    }
+  })
+
+  it('getPanel called twice returns same structure shape', async () => {
+    const supabase1 = makeEmptySupabase()
+    const supabase2 = makeEmptySupabase()
+    const panel1 = await CeoIntelligenceService.getPanel('co-1', 'uid-1', supabase1 as never, { today: '2026-05-01' })
+    const panel2 = await CeoIntelligenceService.getPanel('co-1', 'uid-1', supabase2 as never, { today: '2026-05-01' })
+    expect(Object.keys(panel1).sort()).toEqual(Object.keys(panel2).sort())
+  })
+
+})

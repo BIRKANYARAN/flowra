@@ -385,3 +385,386 @@ describe('buildAlertDigestHtml — extended', () => {
     expect(html).toContain('href="https://app.flowra.io/dashboard?co=123"')
   })
 })
+
+// ── buildAlertDigestHtml — multiple alerts ────────────────────────────────────
+
+describe('buildAlertDigestHtml — multiple alerts', () => {
+  it('two critical alerts both appear in HTML', () => {
+    const html = buildAlertDigestHtml({
+      companyName: 'Test Co',
+      date: '1 Ocak 2026',
+      critical: [
+        { title: 'Kritik Bir', detail: 'Detay 1', severity: 'critical' },
+        { title: 'Kritik Iki', detail: 'Detay 2', severity: 'critical' },
+      ],
+      warnings: [],
+      dashboardUrl: 'https://example.com',
+    })
+    expect(html).toContain('Kritik Bir')
+    expect(html).toContain('Kritik Iki')
+  })
+
+  it('three warnings all appear in HTML', () => {
+    const html = buildAlertDigestHtml({
+      companyName: 'Test Co',
+      date: '1 Ocak 2026',
+      critical: [],
+      warnings: [
+        { title: 'Uyarı A', detail: 'da', severity: 'warning' },
+        { title: 'Uyarı B', detail: 'db', severity: 'warning' },
+        { title: 'Uyarı C', detail: 'dc', severity: 'warning' },
+      ],
+      dashboardUrl: 'https://example.com',
+    })
+    expect(html).toContain('Uyarı A')
+    expect(html).toContain('Uyarı B')
+    expect(html).toContain('Uyarı C')
+  })
+
+  it('count in section heading matches alerts array length', () => {
+    const html = buildAlertDigestHtml({
+      companyName: 'Co',
+      date: '1 Ocak 2026',
+      critical: [
+        { title: 'C1', detail: 'D1', severity: 'critical' },
+        { title: 'C2', detail: 'D2', severity: 'critical' },
+        { title: 'C3', detail: 'D3', severity: 'critical' },
+      ],
+      warnings: [],
+      dashboardUrl: 'https://example.com',
+    })
+    expect(html).toContain('Kritik Uyarılar (3)')
+  })
+
+  it('5 total notifications → title shows "5 Bildirim"', () => {
+    const html = buildAlertDigestHtml({
+      companyName: 'Co',
+      date: '1 Ocak 2026',
+      critical: [
+        { title: 'C1', detail: 'D1', severity: 'critical' },
+        { title: 'C2', detail: 'D2', severity: 'critical' },
+      ],
+      warnings: [
+        { title: 'W1', detail: 'D1', severity: 'warning' },
+        { title: 'W2', detail: 'D2', severity: 'warning' },
+        { title: 'W3', detail: 'D3', severity: 'warning' },
+      ],
+      dashboardUrl: 'https://example.com',
+    })
+    expect(html).toContain('5 Bildirim')
+  })
+})
+
+// ── buildAlertDigestHtml — zero alerts ────────────────────────────────────────
+
+describe('buildAlertDigestHtml — zero alerts (empty array)', () => {
+  it('with no alerts, HTML is still valid (no crash)', () => {
+    const html = buildAlertDigestHtml({
+      companyName: 'Empty Co',
+      date: '1 Ocak 2026',
+      critical: [],
+      warnings: [],
+      dashboardUrl: 'https://example.com',
+    })
+    expect(html).toContain('<!DOCTYPE html>')
+    expect(html).toContain('Empty Co')
+  })
+
+  it('with no alerts, title shows "0 Bildirim"', () => {
+    const html = buildAlertDigestHtml({
+      companyName: 'Co',
+      date: '1 Ocak 2026',
+      critical: [],
+      warnings: [],
+      dashboardUrl: 'https://example.com',
+    })
+    expect(html).toContain('0 Bildirim')
+  })
+
+  it('with no alerts, no critical section rendered', () => {
+    const html = buildAlertDigestHtml({
+      companyName: 'Co',
+      date: '1 Ocak 2026',
+      critical: [],
+      warnings: [],
+      dashboardUrl: 'https://example.com',
+    })
+    expect(html).not.toContain('Kritik Uyarılar (')
+  })
+
+  it('with no alerts, no warning section rendered', () => {
+    const html = buildAlertDigestHtml({
+      companyName: 'Co',
+      date: '1 Ocak 2026',
+      critical: [],
+      warnings: [],
+      dashboardUrl: 'https://example.com',
+    })
+    expect(html).not.toContain('⚠️ Uyarılar')
+  })
+})
+
+// ── renderAlertRow — info severity ───────────────────────────────────────────
+
+describe('renderAlertRow — info severity', () => {
+  it('shows "Bilgi" badge for info severity', () => {
+    const html = renderAlertRow({ title: 'Bilgi Mesajı', detail: 'Bilgi detayı', severity: 'info' })
+    expect(html).toContain('Bilgi')
+  })
+
+  it('uses blue badge color (#0ea5e9) for info', () => {
+    const html = renderAlertRow({ title: 'T', detail: 'D', severity: 'info' })
+    expect(html).toContain('#0ea5e9')
+  })
+
+  it('uses light blue background for info', () => {
+    const html = renderAlertRow({ title: 'T', detail: 'D', severity: 'info' })
+    expect(html).toContain('#f0f9ff')
+  })
+
+  it('info alert contains title and detail text', () => {
+    const html = renderAlertRow({ title: 'Sistem Güncellemesi', detail: 'v2.0 çıktı', severity: 'info' })
+    expect(html).toContain('Sistem Güncellemesi')
+    expect(html).toContain('v2.0 çıktı')
+  })
+})
+
+// ── renderAlertRow — amount formatting ───────────────────────────────────────
+
+describe('renderAlertRow — amount with ₺ symbol', () => {
+  it('renders ₺ symbol when amount is provided', () => {
+    const html = renderAlertRow({ title: 'T', detail: 'D', severity: 'warning', amount: 100_000 })
+    expect(html).toContain('₺')
+  })
+
+  it('formats 1000 as "1.000" (Turkish locale)', () => {
+    const html = renderAlertRow({ title: 'T', detail: 'D', severity: 'critical', amount: 1_000 })
+    expect(html).toContain('1.000')
+  })
+
+  it('formats 1234567 with dots', () => {
+    const html = renderAlertRow({ title: 'T', detail: 'D', severity: 'warning', amount: 1_234_567 })
+    expect(html).toContain('1.234.567')
+  })
+
+  it('does not render ₺ when amount is 0', () => {
+    const html = renderAlertRow({ title: 'T', detail: 'D', severity: 'warning', amount: 0 })
+    expect(html).not.toContain('₺')
+  })
+
+  it('does not render ₺ when amount is absent', () => {
+    const html = renderAlertRow({ title: 'T', detail: 'D', severity: 'info' })
+    expect(html).not.toContain('₺')
+  })
+})
+
+// ── renderAlertRow — actionLabel and actionHref ───────────────────────────────
+
+describe('renderAlertRow — with dueDate and action fields', () => {
+  it('alert without action fields renders correctly', () => {
+    const html = renderAlertRow({ title: 'No Actions', detail: 'D', severity: 'info' })
+    expect(html).toContain('No Actions')
+    expect(typeof html).toBe('string')
+    expect(html.length).toBeGreaterThan(50)
+  })
+
+  it('warning alert with amount renders amount in bold', () => {
+    const html = renderAlertRow({ title: 'T', detail: 'D', severity: 'warning', amount: 50_000 })
+    expect(html).toContain('font-weight:700')
+    expect(html).toContain('50.000')
+  })
+
+  it('critical alert with amount shows ₺ and formatted number', () => {
+    const html = renderAlertRow({ title: 'T', detail: 'D', severity: 'critical', amount: 2_500_000 })
+    expect(html).toContain('₺')
+    expect(html).toContain('2.500.000')
+  })
+})
+
+// ── wrapEmailTemplate — very long content ────────────────────────────────────
+
+describe('wrapEmailTemplate — very long content', () => {
+  it('handles a very long title (>200 chars)', () => {
+    const longTitle = 'A'.repeat(250)
+    const html = wrapEmailTemplate(longTitle, '<p>x</p>')
+    expect(html).toContain('A'.repeat(50))
+    expect(html).toContain('<!DOCTYPE html>')
+  })
+
+  it('handles a very long content body without errors', () => {
+    const longContent = '<p>' + 'Test paragraph. '.repeat(1000) + '</p>'
+    expect(() => wrapEmailTemplate('Title', longContent)).not.toThrow()
+    const html = wrapEmailTemplate('Title', longContent)
+    expect(html).toContain('Test paragraph.')
+  })
+
+  it('result length scales with content length', () => {
+    const short = wrapEmailTemplate('T', '<p>x</p>')
+    const long  = wrapEmailTemplate('T', '<p>' + 'x'.repeat(10_000) + '</p>')
+    expect(long.length).toBeGreaterThan(short.length + 9_000)
+  })
+})
+
+// ── HTML encoding — all string fields ────────────────────────────────────────
+
+describe('HTML encoding — all string fields', () => {
+  it('double-quotes in title are escaped', () => {
+    const html = wrapEmailTemplate('Say "hello"', '<p>x</p>')
+    // escapeHtml does not escape quotes, but title appears in <title> tag
+    // Ensure angle brackets are properly escaped
+    expect(html).not.toContain('<Say')
+  })
+
+  it('greater-than sign in detail is escaped', () => {
+    const html = renderAlertRow({ title: '3 > 2', detail: 'Check a > b', severity: 'info' })
+    // > in title and detail should be escaped
+    expect(html).toContain('&gt;')
+  })
+
+  it('less-than sign in title is escaped', () => {
+    const html = renderAlertRow({ title: '1 < 2', detail: 'D', severity: 'info' })
+    expect(html).toContain('&lt;')
+  })
+
+  it('ampersand in detail is escaped', () => {
+    const html = renderAlertRow({ title: 'T', detail: 'Sales & Revenue', severity: 'info' })
+    expect(html).toContain('&amp;')
+  })
+
+  it('output contains DOCTYPE declaration', () => {
+    const html = wrapEmailTemplate('T', '<p>ok</p>')
+    expect(html).toContain('<!DOCTYPE html>')
+  })
+
+  it('output contains opening and closing html tags', () => {
+    const html = wrapEmailTemplate('T', '<p>ok</p>')
+    expect(html).toContain('<html')
+    expect(html).toContain('</html>')
+  })
+})
+
+// ── buildAlertDigestHtml — mixed scenarios ────────────────────────────────────
+
+describe('buildAlertDigestHtml — mixed and edge scenarios', () => {
+  it('total count = critical.length + warnings.length', () => {
+    const html = buildAlertDigestHtml({
+      companyName: 'Co',
+      date: '1 Ocak 2026',
+      critical: [
+        { title: 'C1', detail: 'D1', severity: 'critical' },
+        { title: 'C2', detail: 'D2', severity: 'critical' },
+      ],
+      warnings: [
+        { title: 'W1', detail: 'D1', severity: 'warning' },
+      ],
+      dashboardUrl: 'https://example.com',
+    })
+    expect(html).toContain('3 Bildirim')
+  })
+
+  it('warnings count appears in warning section header', () => {
+    const html = buildAlertDigestHtml({
+      companyName: 'Co',
+      date: '1 Ocak 2026',
+      critical: [],
+      warnings: [
+        { title: 'W1', detail: 'D1', severity: 'warning' },
+        { title: 'W2', detail: 'D2', severity: 'warning' },
+      ],
+      dashboardUrl: 'https://example.com',
+    })
+    expect(html).toContain('Uyarılar (2)')
+  })
+
+  it('critical count appears in critical section header', () => {
+    const html = buildAlertDigestHtml({
+      companyName: 'Co',
+      date: '1 Ocak 2026',
+      critical: [
+        { title: 'C1', detail: 'D1', severity: 'critical' },
+        { title: 'C2', detail: 'D2', severity: 'critical' },
+        { title: 'C3', detail: 'D3', severity: 'critical' },
+      ],
+      warnings: [],
+      dashboardUrl: 'https://example.com',
+    })
+    expect(html).toContain('Kritik Uyarılar (3)')
+  })
+
+  it('summary shows warning count when no criticals', () => {
+    const html = buildAlertDigestHtml({
+      companyName: 'Co',
+      date: '1 Ocak 2026',
+      critical: [],
+      warnings: [
+        { title: 'W1', detail: 'D1', severity: 'warning' },
+        { title: 'W2', detail: 'D2', severity: 'warning' },
+      ],
+      dashboardUrl: 'https://example.com',
+    })
+    // Summary should say "2 uyarı bildirimi"
+    expect(html).toContain('2')
+    expect(html).toContain('uyarı')
+  })
+
+  it('alert amounts appear when provided', () => {
+    const html = buildAlertDigestHtml({
+      companyName: 'Co',
+      date: '1 Ocak 2026',
+      critical: [{ title: 'Nakit Kritik', detail: 'D', severity: 'critical', amount: 500_000 }],
+      warnings: [],
+      dashboardUrl: 'https://example.com',
+    })
+    expect(html).toContain('500.000')
+    expect(html).toContain('₺')
+  })
+
+  it('escapes date string when it contains angle brackets', () => {
+    const html = buildAlertDigestHtml({
+      companyName: 'Co',
+      date: '<b>1 Ocak 2026</b>',
+      critical: [],
+      warnings: [{ title: 'W', detail: 'D', severity: 'warning' }],
+      dashboardUrl: 'https://example.com',
+    })
+    // Date is passed to escapeHtml
+    expect(html).not.toContain('<b>1 Ocak 2026</b>')
+    expect(html).toContain('&lt;b&gt;')
+  })
+})
+
+// ── renderAlertRow — consistent output structure ──────────────────────────────
+
+describe('renderAlertRow — consistent output structure', () => {
+  it('always returns a string', () => {
+    const result = renderAlertRow({ title: 'T', detail: 'D', severity: 'info' })
+    expect(typeof result).toBe('string')
+  })
+
+  it('always contains the detail text', () => {
+    const detail = 'Unique detail text 12345'
+    const html = renderAlertRow({ title: 'T', detail, severity: 'warning' })
+    expect(html).toContain('Unique detail text 12345')
+  })
+
+  it('always contains the title text', () => {
+    const title = 'Unique Title XYZ'
+    const html = renderAlertRow({ title, detail: 'D', severity: 'critical' })
+    expect(html).toContain('Unique Title XYZ')
+  })
+
+  it('output is not empty', () => {
+    const html = renderAlertRow({ title: 'T', detail: 'D', severity: 'info' })
+    expect(html.trim().length).toBeGreaterThan(0)
+  })
+
+  it('all three severity levels produce different HTML', () => {
+    const critical = renderAlertRow({ title: 'T', detail: 'D', severity: 'critical' })
+    const warning  = renderAlertRow({ title: 'T', detail: 'D', severity: 'warning' })
+    const info     = renderAlertRow({ title: 'T', detail: 'D', severity: 'info' })
+    // All different because badge colors differ
+    expect(critical).not.toBe(warning)
+    expect(warning).not.toBe(info)
+    expect(critical).not.toBe(info)
+  })
+})

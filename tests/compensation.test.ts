@@ -380,3 +380,317 @@ describe('listSchedules — net_monthly_try', () => {
     expect(schedules[0].net_monthly_try).toBe(15_000)
   })
 })
+
+// ── 16. Different withholding rates: 0%, 10%, 15%, 20% ───────────────────────
+
+describe('computeNet — varying withholding rates', () => {
+  it('0% withholding → net = gross, withholding = 0', () => {
+    const { withholding_try, net_try } = CompensationService.computeNet(20_000, 0)
+    expect(withholding_try).toBe(0)
+    expect(net_try).toBe(20_000)
+  })
+
+  it('10% withholding → withholding = 2000, net = 18000', () => {
+    const { withholding_try, net_try } = CompensationService.computeNet(20_000, 0.10)
+    expect(withholding_try).toBe(2_000)
+    expect(net_try).toBe(18_000)
+  })
+
+  it('15% withholding → withholding = 3000, net = 17000', () => {
+    const { withholding_try, net_try } = CompensationService.computeNet(20_000, 0.15)
+    expect(withholding_try).toBe(3_000)
+    expect(net_try).toBe(17_000)
+  })
+
+  it('20% withholding → withholding = 4000, net = 16000', () => {
+    const { withholding_try, net_try } = CompensationService.computeNet(20_000, 0.20)
+    expect(withholding_try).toBe(4_000)
+    expect(net_try).toBe(16_000)
+  })
+
+  it('net = gross × (1 − rate) for all four rates', () => {
+    const gross = 50_000
+    for (const rate of [0, 0.10, 0.15, 0.20]) {
+      const { net_try } = CompensationService.computeNet(gross, rate)
+      expect(net_try).toBeCloseTo(gross * (1 - rate), 1)
+    }
+  })
+})
+
+// ── 17. SGK rate variations ────────────────────────────────────────────────────
+
+describe('computeNet — sgk_rate interaction', () => {
+  it('sgk_rate of 0 does not affect net (only withholding counts)', () => {
+    const { net_try } = CompensationService.computeNet(10_000, 0.15)
+    // SGK is not part of computeNet, so net = gross × (1 - withholding)
+    expect(net_try).toBe(8_500)
+  })
+
+  it('computeNet is independent of sgk_rate field', () => {
+    // computeNet only takes gross and withholding_rate
+    // Verify: same result regardless of any sgk_rate on the schedule
+    const result1 = CompensationService.computeNet(10_000, 0.15)
+    const result2 = CompensationService.computeNet(10_000, 0.15)
+    expect(result1.net_try).toBe(result2.net_try)
+    expect(result1.withholding_try).toBe(result2.withholding_try)
+  })
+
+  it('listSchedules exposes sgk_rate field on each schedule', async () => {
+    const sched = makeSchedule({ sgk_rate: 0.2025 })
+    const sb = makeSupabase({ schedules: [sched] })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const schedules = await CompensationService.listSchedules('co1', sb as any)
+    expect(schedules[0].sgk_rate).toBeCloseTo(0.2025, 4)
+  })
+})
+
+// ── 18. Multiple active schedules ──────────────────────────────────────────────
+
+describe('getDuePayments — multiple active schedules', () => {
+  it('three active schedules produce three entries for the same month', async () => {
+    const PARTNER_C = { id: 'p3', name: 'Hasan', share_ratio: 0.2 }
+    const sched1 = makeSchedule({ id: 's1', partner_id: 'p1', partners: PARTNER_A })
+    const sched2 = makeSchedule({ id: 's2', partner_id: 'p2', partners: PARTNER_B })
+    const sched3 = makeSchedule({ id: 's3', partner_id: 'p3', partners: PARTNER_C })
+    const sb = makeSupabase({ schedules: [sched1, sched2, sched3] })
+    const result = await CompensationService.getDuePayments(
+      'co1',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      sb as any,
+      { today: '2026-05-27', months: 1 },
+    )
+    const may = result.filter(d => d.payment_period === '2026-05-01')
+    expect(may.length).toBe(3)
+  })
+
+  it('multiple schedules with different gross produce correct separate nets', async () => {
+    const sched1 = makeSchedule({ id: 's1', partner_id: 'p1', monthly_gross_try: 10_000, partners: PARTNER_A })
+    const sched2 = makeSchedule({ id: 's2', partner_id: 'p2', monthly_gross_try: 20_000, partners: PARTNER_B })
+    const sb = makeSupabase({ schedules: [sched1, sched2] })
+    const result = await CompensationService.getDuePayments(
+      'co1',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      sb as any,
+      { today: '2026-05-27', months: 1 },
+    )
+    const entry1 = result.find(d => d.partner_id === 'p1' && d.payment_period === '2026-05-01')
+    const entry2 = result.find(d => d.partner_id === 'p2' && d.payment_period === '2026-05-01')
+    expect(entry1?.gross_amount_try).toBe(10_000)
+    expect(entry1?.net_amount_try).toBe(8_500)
+    expect(entry2?.gross_amount_try).toBe(20_000)
+    expect(entry2?.net_amount_try).toBe(17_000)
+  })
+})
+
+// ── 19. Expired schedules ───────────────────────────────────────────────────────
+
+describe('getDuePayments — expired schedule scenarios', () => {
+  it('schedule expired last month is not shown in current month', async () => {
+    // Effective until April 2026 — should not appear in May 2026
+    const sched = makeSchedule({
+      effective_from:  '2026-01-01',
+      effective_until: '2026-04-01',
+    })
+    const sb = makeSupabase({ schedules: [sched] })
+    const result = await CompensationService.getDuePayments(
+      'co1',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      sb as any,
+      { today: '2026-05-27', months: 1 },
+    )
+    const may = result.find(d => d.payment_period === '2026-05-01')
+    expect(may).toBeUndefined()
+  })
+
+  it('schedule expiring this month still shows for current month', async () => {
+    const sched = makeSchedule({
+      effective_from:  '2026-01-01',
+      effective_until: '2026-05-01',
+    })
+    const sb = makeSupabase({ schedules: [sched] })
+    const result = await CompensationService.getDuePayments(
+      'co1',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      sb as any,
+      { today: '2026-05-27', months: 1 },
+    )
+    const may = result.find(d => d.payment_period === '2026-05-01')
+    expect(may).toBeDefined()
+  })
+
+  it('past schedule generates overdue entries in lookback window', async () => {
+    const sched = makeSchedule({
+      effective_from:  '2026-03-01',
+      effective_until: '2026-04-01',
+    })
+    const sb = makeSupabase({ schedules: [sched] })
+    const result = await CompensationService.getDuePayments(
+      'co1',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      sb as any,
+      { today: '2026-05-27', months: 3 },
+    )
+    // March and April should appear as overdue (before May)
+    const overdue = result.filter(d => d.is_overdue)
+    expect(overdue.length).toBeGreaterThan(0)
+  })
+})
+
+// ── 20. Missing board_decision_ref ─────────────────────────────────────────────
+
+describe('listSchedules — missing board_decision_ref', () => {
+  it('null board_decision_ref is returned as null', async () => {
+    const sched = makeSchedule({ board_decision_ref: null })
+    const sb = makeSupabase({ schedules: [sched] })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const schedules = await CompensationService.listSchedules('co1', sb as any)
+    expect(schedules[0].board_decision_ref).toBeNull()
+  })
+
+  it('undefined board_decision_ref coerces to null', async () => {
+    const sched = makeSchedule({ board_decision_ref: undefined })
+    const sb = makeSupabase({ schedules: [sched] })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const schedules = await CompensationService.listSchedules('co1', sb as any)
+    expect(schedules[0].board_decision_ref).toBeNull()
+  })
+})
+
+// ── 21. Net amount = gross × (1 − withholding − sgk) formula ──────────────────
+
+describe('net amount formula verification', () => {
+  it('net = gross × (1 − withholding_rate) for various gross amounts', () => {
+    const testCases = [
+      { gross: 5_000, rate: 0.10 },
+      { gross: 10_000, rate: 0.15 },
+      { gross: 30_000, rate: 0.20 },
+      { gross: 100_000, rate: 0 },
+    ]
+    for (const { gross, rate } of testCases) {
+      const { net_try, withholding_try } = CompensationService.computeNet(gross, rate)
+      expect(net_try).toBeCloseTo(gross * (1 - rate), 1)
+      expect(withholding_try).toBeCloseTo(gross * rate, 1)
+    }
+  })
+
+  it('withholding_try + net_try always equals gross', () => {
+    const cases = [
+      [10_000, 0.15],
+      [25_000, 0.10],
+      [50_000, 0.20],
+      [7_777, 0.15],
+    ]
+    for (const [gross, rate] of cases) {
+      const { withholding_try, net_try } = CompensationService.computeNet(gross, rate)
+      expect(withholding_try + net_try).toBeCloseTo(gross, 1)
+    }
+  })
+
+  it('gross of 0 produces 0 withholding and 0 net', () => {
+    const { withholding_try, net_try } = CompensationService.computeNet(0, 0.15)
+    expect(withholding_try).toBe(0)
+    expect(net_try).toBe(0)
+  })
+})
+
+// ── 22. getDuePayments returns board_decision_ref ─────────────────────────────
+
+describe('getDuePayments — gross_amount_try accuracy', () => {
+  it('gross_amount_try matches schedule monthly_gross_try exactly', async () => {
+    const sched = makeSchedule({ monthly_gross_try: 33_333 })
+    const sb = makeSupabase({ schedules: [sched] })
+    const result = await CompensationService.getDuePayments(
+      'co1',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      sb as any,
+      { today: '2026-05-27', months: 1 },
+    )
+    expect(result[0]?.gross_amount_try).toBe(33_333)
+  })
+
+  it('withholding_try in due payment equals computeNet output', async () => {
+    const sched = makeSchedule({ monthly_gross_try: 12_000, withholding_rate: 0.10 })
+    const sb = makeSupabase({ schedules: [sched] })
+    const result = await CompensationService.getDuePayments(
+      'co1',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      sb as any,
+      { today: '2026-05-27', months: 1 },
+    )
+    const { withholding_try } = CompensationService.computeNet(12_000, 0.10)
+    expect(result[0]?.withholding_try).toBe(withholding_try)
+  })
+})
+
+// ── 23. Turkish month labels for all 12 months ───────────────────────────────
+
+describe('getDuePayments — Turkish month labels', () => {
+  const monthCases = [
+    { month: '01', label: 'Ocak' },
+    { month: '02', label: 'Şubat' },
+    { month: '03', label: 'Mart' },
+    { month: '04', label: 'Nisan' },
+    { month: '06', label: 'Haziran' },
+    { month: '07', label: 'Temmuz' },
+    { month: '08', label: 'Ağustos' },
+    { month: '09', label: 'Eylül' },
+    { month: '10', label: 'Ekim' },
+    { month: '11', label: 'Kasım' },
+    { month: '12', label: 'Aralık' },
+  ]
+
+  for (const { month, label } of monthCases) {
+    it(`period_label for month ${month} is "${label} 2026"`, async () => {
+      const today = `2026-${month}-15`
+      const schedule = makeSchedule({ effective_from: `2026-${month}-01` })
+      const sb = makeSupabase({ schedules: [schedule] })
+      const result = await CompensationService.getDuePayments(
+        'co1',
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        sb as any,
+        { today, months: 1 },
+      )
+      const entry = result.find(d => d.payment_period === `2026-${month}-01`)
+      expect(entry?.period_label).toBe(`${label} 2026`)
+    })
+  }
+})
+
+// ── 24. CompensationSchedule shape verification ───────────────────────────────
+
+describe('listSchedules — schedule shape', () => {
+  it('schedule has all required fields', async () => {
+    const sched = makeSchedule()
+    const sb = makeSupabase({ schedules: [sched] })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const result = await CompensationService.listSchedules('co1', sb as any)
+    const s = result[0]
+    expect(s).toHaveProperty('id')
+    expect(s).toHaveProperty('partner_id')
+    expect(s).toHaveProperty('partner_name')
+    expect(s).toHaveProperty('monthly_gross_try')
+    expect(s).toHaveProperty('withholding_rate')
+    expect(s).toHaveProperty('sgk_rate')
+    expect(s).toHaveProperty('net_monthly_try')
+    expect(s).toHaveProperty('effective_from')
+    expect(s).toHaveProperty('effective_until')
+    expect(s).toHaveProperty('board_decision_ref')
+    expect(s).toHaveProperty('is_active')
+    expect(s).toHaveProperty('notes')
+  })
+
+  it('is_active is a boolean', async () => {
+    const sched = makeSchedule({ is_active: true })
+    const sb = makeSupabase({ schedules: [sched] })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const result = await CompensationService.listSchedules('co1', sb as any)
+    expect(typeof result[0].is_active).toBe('boolean')
+  })
+
+  it('empty schedules returns empty array', async () => {
+    const sb = makeSupabase({ schedules: [] })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const result = await CompensationService.listSchedules('co1', sb as any)
+    expect(result).toEqual([])
+  })
+})

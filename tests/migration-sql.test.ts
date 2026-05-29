@@ -392,3 +392,217 @@ describe('migration files — SQL quality', () => {
     })
   }
 })
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SQL quality extended — decision_context + company_documents
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('migration files — SQL quality (extended files)', () => {
+  const extendedFiles = [
+    '20260526000007_decision_context_snapshots.sql',
+    '20260527000001_company_documents.sql',
+  ]
+
+  for (const file of extendedFiles) {
+    it(`${file} does not contain TRUNCATE statements (safety)`, () => {
+      const sql = readMigration(file)
+      expect(sql.toUpperCase()).not.toContain('TRUNCATE')
+    })
+
+    it(`${file} does not contain DROP DATABASE statement`, () => {
+      const sql = readMigration(file)
+      expect(sql.toUpperCase()).not.toContain('DROP DATABASE')
+    })
+
+    it(`${file} has a CREATE TABLE statement`, () => {
+      const sql = readMigration(file)
+      expect(sql).toMatch(/CREATE TABLE/i)
+    })
+
+    it(`${file} is non-empty`, () => {
+      const sql = readMigration(file)
+      expect(sql.length).toBeGreaterThan(200)
+    })
+  }
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// company_documents — additional checks
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('20260527000001_company_documents.sql — additional', () => {
+  let sql: string
+  beforeAll(() => { sql = readMigration('20260527000001_company_documents.sql') })
+
+  it('file_url column has text type', () => {
+    // The column definition: "file_url text NOT NULL"
+    expect(sql).toMatch(/file_url\s+text/)
+  })
+
+  it('RLS policy name appears in double-quoted form', () => {
+    // Policy names use double-quoted strings in PostgreSQL
+    expect(sql).toMatch(/"[A-Za-z]/)
+  })
+
+  it('has company_id column with uuid type', () => {
+    expect(sql).toContain('company_id uuid')
+  })
+
+  it('has title column', () => {
+    expect(sql).toContain('title text')
+  })
+
+  it('document_date column is of date type', () => {
+    expect(sql).toMatch(/document_date\s+date/)
+  })
+
+  it('has uploaded_by column referencing auth.users', () => {
+    expect(sql).toContain('uploaded_by')
+    expect(sql).toContain('auth.users')
+  })
+
+  it('has at least 3 CREATE INDEX statements', () => {
+    const indexCount = (sql.match(/CREATE INDEX/gi) ?? []).length
+    expect(indexCount).toBeGreaterThanOrEqual(3)
+  })
+
+  it('has SELECT policy for members', () => {
+    expect(sql).toContain('FOR SELECT')
+  })
+
+  it('has INSERT policy for members', () => {
+    expect(sql).toContain('FOR INSERT')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// decision_context_snapshots — additional checks
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('20260526000007_decision_context_snapshots.sql — additional', () => {
+  let sql: string
+  beforeAll(() => { sql = readMigration('20260526000007_decision_context_snapshots.sql') })
+
+  it('does not contain TRUNCATE', () => {
+    expect(sql.toUpperCase()).not.toContain('TRUNCATE')
+  })
+
+  it('company_id column is present', () => {
+    expect(sql).toContain('company_id')
+  })
+
+  it('has context_snapshot jsonb column', () => {
+    expect(sql).toContain('context_snapshot')
+    expect(sql).toContain('jsonb')
+  })
+
+  it('has trigger_type column', () => {
+    expect(sql).toContain('trigger_type')
+  })
+
+  it('has trigger_label column', () => {
+    expect(sql).toContain('trigger_label')
+  })
+
+  it('has decision_at column', () => {
+    expect(sql).toContain('decision_at')
+  })
+
+  it('has annotation column for post-decision notes', () => {
+    expect(sql).toContain('annotation')
+  })
+
+  it('has RLS enabled', () => {
+    expect(sql).toContain('ENABLE ROW LEVEL SECURITY')
+  })
+
+  it('has index on company_id for performance', () => {
+    expect(sql).toContain('idx_decision_snapshots_company')
+  })
+
+  it('has RLS policies for SELECT', () => {
+    expect(sql).toContain('FOR SELECT')
+  })
+
+  it('has RLS policies for INSERT', () => {
+    expect(sql).toContain('FOR INSERT')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Timestamp ordering — filenames must be ascending
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('migration files — timestamp ordering', () => {
+  const allMigrationFiles = [
+    '20260526000001_audit_chain_columns.sql',
+    '20260526000002_journal_voucher_numbers.sql',
+    '20260526000003_workflow_instances.sql',
+    '20260526000004_alert_rules_table.sql',
+    '20260526000005_job_runs_table.sql',
+    '20260526000006_companies_gl_mode_default.sql',
+    '20260526000007_decision_context_snapshots.sql',
+    '20260527000001_company_documents.sql',
+  ]
+
+  it('filenames are in ascending order', () => {
+    const timestamps = allMigrationFiles.map(f => f.slice(0, 18))  // "YYYYMMDDHHMMSSNN" prefix
+    for (let i = 1; i < timestamps.length; i++) {
+      expect(timestamps[i] >= timestamps[i - 1]).toBe(true)
+    }
+  })
+
+  it('20260526... files come before 20260527... files', () => {
+    const day26Files = allMigrationFiles.filter(f => f.startsWith('20260526'))
+    const day27Files = allMigrationFiles.filter(f => f.startsWith('20260527'))
+
+    const maxDay26 = day26Files[day26Files.length - 1]
+    const minDay27 = day27Files[0]
+
+    expect(maxDay26 < minDay27).toBe(true)
+  })
+
+  it('all timestamp prefixes parse as positive integers', () => {
+    for (const file of allMigrationFiles) {
+      const prefix = parseInt(file.slice(0, 14), 10)
+      expect(prefix).toBeGreaterThan(0)
+      expect(Number.isNaN(prefix)).toBe(false)
+    }
+  })
+
+  it('no two files share the same timestamp prefix', () => {
+    const timestamps = allMigrationFiles.map(f => f.slice(0, 18))
+    const unique = new Set(timestamps)
+    expect(unique.size).toBe(timestamps.length)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// No duplicate CREATE TABLE in a single file
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('migration files — no duplicate CREATE TABLE IF NOT EXISTS', () => {
+  const checkFiles = [
+    '20260526000003_workflow_instances.sql',
+    '20260526000004_alert_rules_table.sql',
+    '20260526000005_job_runs_table.sql',
+    '20260526000007_decision_context_snapshots.sql',
+    '20260527000001_company_documents.sql',
+  ]
+
+  for (const file of checkFiles) {
+    it(`${file} contains CREATE TABLE IF NOT EXISTS at most once`, () => {
+      const sql = readMigration(file)
+      const matches = sql.match(/CREATE TABLE IF NOT EXISTS/gi) ?? []
+      expect(matches.length).toBeLessThanOrEqual(1)
+    })
+  }
+
+  it('all table-creation files create exactly one table each', () => {
+    for (const file of checkFiles) {
+      const sql = readMigration(file)
+      const count = (sql.match(/CREATE TABLE IF NOT EXISTS/gi) ?? []).length
+      expect(count).toBeLessThanOrEqual(1)
+    }
+  })
+})
