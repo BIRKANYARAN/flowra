@@ -18,6 +18,17 @@ import {
   deriveBudgetFromPrior,
   computeBudgetTrend,
   computeRunRate,
+  classifyRevenueVariance,
+  classifyExpenseVariance,
+  computeFullYearForecast,
+  computeBudgetAttainment,
+  computePaceAdjustedBudget,
+  classifyPaceVsBudget,
+  computeTotalVariance,
+  findLargestVarianceItem,
+  computeVarianceHealthScore,
+  classifyVarianceHealth,
+  generateVarianceNarrative,
   type BudgetLine,
   type BudgetPeriod,
 } from '../lib/services/finance/budget-variance.service'
@@ -718,5 +729,357 @@ describe('Integration: full period analysis', () => {
     )
     expect(rr.run_rate_revenue).toBeCloseTo((480_000 / 5) * 12)
     expect(rr.run_rate_expenses).toBeCloseTo((180_000 / 5) * 12)
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 14. classifyRevenueVariance
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe('classifyRevenueVariance', () => {
+  it('96. returns no_budget for null', () => {
+    expect(classifyRevenueVariance(null)).toBe('no_budget')
+  })
+
+  it('97. returns favorable when >= 5%', () => {
+    expect(classifyRevenueVariance(5)).toBe('favorable')
+    expect(classifyRevenueVariance(10)).toBe('favorable')
+    expect(classifyRevenueVariance(50)).toBe('favorable')
+  })
+
+  it('98. returns on_track when within (-5, 5)', () => {
+    expect(classifyRevenueVariance(0)).toBe('on_track')
+    expect(classifyRevenueVariance(-4.9)).toBe('on_track')
+    expect(classifyRevenueVariance(4.9)).toBe('on_track')
+  })
+
+  it('99. returns minor_shortfall for [-15, -5]', () => {
+    // -5 is NOT > -5, so falls into minor_shortfall (on_track requires > -5)
+    expect(classifyRevenueVariance(-5)).toBe('minor_shortfall')
+    expect(classifyRevenueVariance(-5.1)).toBe('minor_shortfall')
+    expect(classifyRevenueVariance(-14.9)).toBe('minor_shortfall')
+  })
+
+  it('100. returns major_shortfall for [-25, -15)', () => {
+    // -15 is NOT > -15, so it falls into major_shortfall
+    expect(classifyRevenueVariance(-15)).toBe('major_shortfall')
+    expect(classifyRevenueVariance(-15.1)).toBe('major_shortfall')
+    expect(classifyRevenueVariance(-24.9)).toBe('major_shortfall')
+  })
+
+  it('101. returns critical_shortfall when <= -25%', () => {
+    // -25 is NOT > -25, so it falls into critical_shortfall
+    expect(classifyRevenueVariance(-25)).toBe('critical_shortfall')
+    expect(classifyRevenueVariance(-25.1)).toBe('critical_shortfall')
+    expect(classifyRevenueVariance(-100)).toBe('critical_shortfall')
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 15. classifyExpenseVariance
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe('classifyExpenseVariance', () => {
+  it('102. returns no_budget for null', () => {
+    expect(classifyExpenseVariance(null)).toBe('no_budget')
+  })
+
+  it('103. returns under_budget when <= -5%', () => {
+    expect(classifyExpenseVariance(-5)).toBe('under_budget')
+    expect(classifyExpenseVariance(-10)).toBe('under_budget')
+    expect(classifyExpenseVariance(-50)).toBe('under_budget')
+  })
+
+  it('104. returns on_track within (-5, 5)', () => {
+    expect(classifyExpenseVariance(0)).toBe('on_track')
+    expect(classifyExpenseVariance(-4.9)).toBe('on_track')
+    expect(classifyExpenseVariance(4.9)).toBe('on_track')
+  })
+
+  it('105. returns minor_overrun for [5, 15)', () => {
+    expect(classifyExpenseVariance(5)).toBe('minor_overrun')
+    expect(classifyExpenseVariance(14.9)).toBe('minor_overrun')
+  })
+
+  it('106. returns major_overrun for [15, 25)', () => {
+    expect(classifyExpenseVariance(15)).toBe('major_overrun')
+    expect(classifyExpenseVariance(24.9)).toBe('major_overrun')
+  })
+
+  it('107. returns critical_overrun when >= 25%', () => {
+    expect(classifyExpenseVariance(25)).toBe('critical_overrun')
+    expect(classifyExpenseVariance(50)).toBe('critical_overrun')
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 16. computeFullYearForecast
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe('computeFullYearForecast', () => {
+  it('108. returns null when monthsElapsed = 0', () => {
+    expect(computeFullYearForecast(500_000, 0)).toBeNull()
+  })
+
+  it('109. extrapolates correctly for 5 months', () => {
+    expect(computeFullYearForecast(500_000, 5)).toBeCloseTo((500_000 / 5) * 12)
+  })
+
+  it('110. returns same value for 12 months', () => {
+    expect(computeFullYearForecast(1_200_000, 12)).toBeCloseTo(1_200_000)
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 17. computeBudgetAttainment
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe('computeBudgetAttainment', () => {
+  it('111. returns null when budget = 0', () => {
+    expect(computeBudgetAttainment(50_000, 0)).toBeNull()
+  })
+
+  it('112. returns 100 when actual = budget', () => {
+    expect(computeBudgetAttainment(100_000, 100_000)).toBeCloseTo(100)
+  })
+
+  it('113. caps at 200% for extremely large actuals', () => {
+    expect(computeBudgetAttainment(1_000_000, 100_000)).toBeCloseTo(200)
+  })
+
+  it('114. returns 50 when actual is half of budget', () => {
+    expect(computeBudgetAttainment(50_000, 100_000)).toBeCloseTo(50)
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 18. computePaceAdjustedBudget
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe('computePaceAdjustedBudget', () => {
+  it('115. returns null when monthsElapsed < 0', () => {
+    expect(computePaceAdjustedBudget(1_200_000, -1)).toBeNull()
+  })
+
+  it('116. returns 0 when monthsElapsed = 0', () => {
+    expect(computePaceAdjustedBudget(1_200_000, 0)).toBeCloseTo(0)
+  })
+
+  it('117. returns half of annual budget at 6 months', () => {
+    expect(computePaceAdjustedBudget(1_200_000, 6)).toBeCloseTo(600_000)
+  })
+
+  it('118. returns full budget at 12 months', () => {
+    expect(computePaceAdjustedBudget(1_200_000, 12)).toBeCloseTo(1_200_000)
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 19. classifyPaceVsBudget
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe('classifyPaceVsBudget', () => {
+  it('119. returns no_data when paceAdjustedBudget is null', () => {
+    expect(classifyPaceVsBudget(500_000, null)).toBe('no_data')
+  })
+
+  it('120. returns ahead when ytdActual >= paceAdjustedBudget * 1.05', () => {
+    expect(classifyPaceVsBudget(105_000, 100_000)).toBe('ahead')
+    expect(classifyPaceVsBudget(110_000, 100_000)).toBe('ahead')
+  })
+
+  it('121. returns on_pace within [0.95, 1.05)', () => {
+    expect(classifyPaceVsBudget(100_000, 100_000)).toBe('on_pace')
+    expect(classifyPaceVsBudget(95_000, 100_000)).toBe('on_pace')
+    expect(classifyPaceVsBudget(104_999, 100_000)).toBe('on_pace')
+  })
+
+  it('122. returns behind within [0.80, 0.95)', () => {
+    expect(classifyPaceVsBudget(90_000, 100_000)).toBe('behind')
+    expect(classifyPaceVsBudget(80_000, 100_000)).toBe('behind')
+  })
+
+  it('123. returns significantly_behind when < 0.80', () => {
+    expect(classifyPaceVsBudget(79_999, 100_000)).toBe('significantly_behind')
+    expect(classifyPaceVsBudget(0, 100_000)).toBe('significantly_behind')
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 20. computeTotalVariance
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe('computeTotalVariance', () => {
+  it('124. sums actuals and budgets correctly', () => {
+    const items = [
+      { actual: 100, budget: 90 },
+      { actual: 200, budget: 210 },
+    ]
+    const result = computeTotalVariance(items)
+    expect(result.total_actual).toBe(300)
+    expect(result.total_budget).toBe(300)
+    expect(result.total_variance).toBe(0)
+  })
+
+  it('125. returns null total_variance_pct when total_budget = 0', () => {
+    const items = [{ actual: 100, budget: 0 }]
+    const result = computeTotalVariance(items)
+    expect(result.total_variance_pct).toBeNull()
+  })
+
+  it('126. handles empty items array', () => {
+    const result = computeTotalVariance([])
+    expect(result.total_actual).toBe(0)
+    expect(result.total_budget).toBe(0)
+    expect(result.total_variance).toBe(0)
+    expect(result.total_variance_pct).toBeNull()
+  })
+
+  it('127. computes variance pct correctly', () => {
+    const items = [{ actual: 120, budget: 100 }]
+    const result = computeTotalVariance(items)
+    expect(result.total_variance_pct).toBeCloseTo(20)
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 21. findLargestVarianceItem
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe('findLargestVarianceItem', () => {
+  it('128. returns null for empty array', () => {
+    expect(findLargestVarianceItem([])).toBeNull()
+  })
+
+  it('129. returns sole item for single-element array', () => {
+    const items = [{ label: 'rent', variance: 5000 }]
+    expect(findLargestVarianceItem(items)).toEqual(items[0])
+  })
+
+  it('130. returns item with largest absolute variance', () => {
+    const items = [
+      { label: 'rent', variance: 5000 },
+      { label: 'salary', variance: -15000 },
+      { label: 'marketing', variance: 3000 },
+    ]
+    expect(findLargestVarianceItem(items)?.label).toBe('salary')
+  })
+
+  it('131. handles negative variances (largest absolute)', () => {
+    const items = [
+      { label: 'a', variance: -1000 },
+      { label: 'b', variance: 500 },
+    ]
+    expect(findLargestVarianceItem(items)?.label).toBe('a')
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 22. computeVarianceHealthScore
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe('computeVarianceHealthScore', () => {
+  it('132. returns 100 for empty classifications', () => {
+    expect(computeVarianceHealthScore([])).toBe(100)
+  })
+
+  it('133. deducts 20 for each critical_shortfall', () => {
+    expect(computeVarianceHealthScore(['critical_shortfall'])).toBe(80)
+    expect(computeVarianceHealthScore(['critical_shortfall', 'critical_shortfall'])).toBe(60)
+  })
+
+  it('134. deducts 20 for critical_overrun', () => {
+    expect(computeVarianceHealthScore(['critical_overrun'])).toBe(80)
+  })
+
+  it('135. deducts 10 for major_shortfall or major_overrun', () => {
+    expect(computeVarianceHealthScore(['major_shortfall'])).toBe(90)
+    expect(computeVarianceHealthScore(['major_overrun'])).toBe(90)
+  })
+
+  it('136. deducts 5 for minor_shortfall or minor_overrun', () => {
+    expect(computeVarianceHealthScore(['minor_shortfall'])).toBe(95)
+    expect(computeVarianceHealthScore(['minor_overrun'])).toBe(95)
+  })
+
+  it('137. floors at 0 for many critical issues', () => {
+    const many = Array(10).fill('critical_overrun')
+    expect(computeVarianceHealthScore(many)).toBe(0)
+  })
+
+  it('138. mixed: critical + major + minor', () => {
+    const score = computeVarianceHealthScore(['critical_shortfall', 'major_overrun', 'minor_shortfall'])
+    expect(score).toBe(100 - 20 - 10 - 5) // 65
+  })
+
+  it('139. on_track and favorable classifications do not deduct', () => {
+    expect(computeVarianceHealthScore(['on_track', 'favorable', 'under_budget'])).toBe(100)
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 23. classifyVarianceHealth
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe('classifyVarianceHealth', () => {
+  it('140. returns healthy for score >= 80', () => {
+    expect(classifyVarianceHealth(100)).toBe('healthy')
+    expect(classifyVarianceHealth(80)).toBe('healthy')
+  })
+
+  it('141. returns moderate for score >= 60 and < 80', () => {
+    expect(classifyVarianceHealth(79)).toBe('moderate')
+    expect(classifyVarianceHealth(60)).toBe('moderate')
+  })
+
+  it('142. returns concerning for score >= 40 and < 60', () => {
+    expect(classifyVarianceHealth(59)).toBe('concerning')
+    expect(classifyVarianceHealth(40)).toBe('concerning')
+  })
+
+  it('143. returns critical for score < 40', () => {
+    expect(classifyVarianceHealth(39)).toBe('critical')
+    expect(classifyVarianceHealth(0)).toBe('critical')
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 24. generateVarianceNarrative
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe('generateVarianceNarrative', () => {
+  it('144. returns Turkish no-budget message when hasBudget = false', () => {
+    const result = generateVarianceNarrative('healthy', 10, -5, false)
+    expect(result).toContain('Bütçe verisi bulunamadı')
+  })
+
+  it('145. healthy narrative mentions sağlıklı', () => {
+    const result = generateVarianceNarrative('healthy', 5, -3, true)
+    expect(result).toContain('sağlıklı')
+  })
+
+  it('146. moderate narrative mentions orta', () => {
+    const result = generateVarianceNarrative('moderate', -8, 8, true)
+    expect(result).toContain('orta')
+  })
+
+  it('147. concerning narrative mentions endişe', () => {
+    const result = generateVarianceNarrative('concerning', -20, 20, true)
+    expect(result).toContain('endişe')
+  })
+
+  it('148. critical narrative mentions kritik', () => {
+    const result = generateVarianceNarrative('critical', -30, 30, true)
+    expect(result).toContain('kritik')
+  })
+
+  it('149. includes revenue variance info when revenueVariancePct is provided', () => {
+    const result = generateVarianceNarrative('healthy', 10, null, true)
+    expect(result).toContain('Gelir')
+  })
+
+  it('150. includes expense variance info when expenseVariancePct is provided', () => {
+    const result = generateVarianceNarrative('healthy', null, -5, true)
+    expect(result).toContain('Giderler')
   })
 })

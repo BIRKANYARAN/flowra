@@ -365,6 +365,182 @@ export function computeRunRate(
   return { run_rate_revenue, run_rate_expenses, run_rate_net_income }
 }
 
+// ── New variance classification & forecasting helpers (Batch-36) ─────────────
+
+/**
+ * Classify variance significance for REVENUE lines.
+ * favorable: actual > budget by >= 5%
+ * on_track: within ±5%
+ * minor_shortfall: -5% to -15%
+ * major_shortfall: -15% to -25%
+ * critical_shortfall: < -25%
+ * no_budget: null variance pct
+ */
+export function classifyRevenueVariance(
+  variancePct: number | null,
+): 'favorable' | 'on_track' | 'minor_shortfall' | 'major_shortfall' | 'critical_shortfall' | 'no_budget' {
+  if (variancePct === null) return 'no_budget'
+  if (variancePct >= 5) return 'favorable'
+  if (variancePct > -5) return 'on_track'
+  if (variancePct > -15) return 'minor_shortfall'
+  if (variancePct > -25) return 'major_shortfall'
+  return 'critical_shortfall'
+}
+
+/**
+ * Classify variance significance for EXPENSE lines.
+ * under_budget: actual < budget by >= 5% (favorable)
+ * on_track: within ±5%
+ * minor_overrun: +5% to +15%
+ * major_overrun: +15% to +25%
+ * critical_overrun: > +25%
+ * no_budget: null variance pct
+ */
+export function classifyExpenseVariance(
+  variancePct: number | null,
+): 'under_budget' | 'on_track' | 'minor_overrun' | 'major_overrun' | 'critical_overrun' | 'no_budget' {
+  if (variancePct === null) return 'no_budget'
+  if (variancePct <= -5) return 'under_budget'
+  if (variancePct < 5) return 'on_track'
+  if (variancePct < 15) return 'minor_overrun'
+  if (variancePct < 25) return 'major_overrun'
+  return 'critical_overrun'
+}
+
+/**
+ * Compute full-year forecast based on YTD actuals.
+ * Returns null if monthsElapsed === 0.
+ */
+export function computeFullYearForecast(ytdActual: number, monthsElapsed: number): number | null {
+  if (monthsElapsed === 0) return null
+  return (ytdActual / monthsElapsed) * 12
+}
+
+/**
+ * Compute budget attainment: min(actual / budget, 2.0) * 100.
+ * Returns null if budget === 0.
+ */
+export function computeBudgetAttainment(actual: number, budget: number): number | null {
+  if (budget === 0) return null
+  return Math.min(actual / budget, 2.0) * 100
+}
+
+/**
+ * Compute pace-adjusted budget: annualBudget * (monthsElapsed / 12).
+ * Returns null if monthsElapsed < 0.
+ */
+export function computePaceAdjustedBudget(annualBudget: number, monthsElapsed: number): number | null {
+  if (monthsElapsed < 0) return null
+  return annualBudget * (monthsElapsed / 12)
+}
+
+/**
+ * Classify pace vs actual.
+ */
+export function classifyPaceVsBudget(
+  ytdActual: number,
+  paceAdjustedBudget: number | null,
+): 'ahead' | 'on_pace' | 'behind' | 'significantly_behind' | 'no_data' {
+  if (paceAdjustedBudget === null) return 'no_data'
+  if (ytdActual >= paceAdjustedBudget * 1.05) return 'ahead'
+  if (ytdActual >= paceAdjustedBudget * 0.95) return 'on_pace'
+  if (ytdActual >= paceAdjustedBudget * 0.80) return 'behind'
+  return 'significantly_behind'
+}
+
+/**
+ * Compute total variance across all categories.
+ */
+export function computeTotalVariance(
+  items: Array<{ actual: number; budget: number }>,
+): { total_actual: number; total_budget: number; total_variance: number; total_variance_pct: number | null } {
+  let total_actual = 0
+  let total_budget = 0
+  for (const item of items) {
+    total_actual += item.actual
+    total_budget += item.budget
+  }
+  const total_variance = total_actual - total_budget
+  const total_variance_pct = total_budget === 0 ? null : (total_variance / total_budget) * 100
+  return { total_actual, total_budget, total_variance, total_variance_pct }
+}
+
+/**
+ * Find the largest absolute variance item.
+ * Returns null if items is empty.
+ */
+export function findLargestVarianceItem<T extends { variance: number; label: string }>(
+  items: T[],
+): T | null {
+  if (items.length === 0) return null
+  let largest = items[0]
+  for (let i = 1; i < items.length; i++) {
+    if (Math.abs(items[i].variance) > Math.abs(largest.variance)) {
+      largest = items[i]
+    }
+  }
+  return largest
+}
+
+/**
+ * Compute variance health score (0-100).
+ * Deductions: critical: -20, major: -10, minor: -5. Floor at 0.
+ */
+export function computeVarianceHealthScore(
+  classifications: string[],
+): number {
+  let score = 100
+  for (const c of classifications) {
+    if (c === 'critical_shortfall' || c === 'critical_overrun') score -= 20
+    else if (c === 'major_shortfall' || c === 'major_overrun') score -= 10
+    else if (c === 'minor_shortfall' || c === 'minor_overrun') score -= 5
+  }
+  return Math.max(0, score)
+}
+
+/**
+ * Classify overall variance health.
+ * healthy: >= 80, moderate: >= 60, concerning: >= 40, critical: < 40
+ */
+export function classifyVarianceHealth(score: number): 'healthy' | 'moderate' | 'concerning' | 'critical' {
+  if (score >= 80) return 'healthy'
+  if (score >= 60) return 'moderate'
+  if (score >= 40) return 'concerning'
+  return 'critical'
+}
+
+/**
+ * Generate Turkish narrative for budget variance.
+ */
+export function generateVarianceNarrative(
+  health: ReturnType<typeof classifyVarianceHealth>,
+  revenueVariancePct: number | null,
+  expenseVariancePct: number | null,
+  hasBudget: boolean,
+): string {
+  if (!hasBudget) {
+    return 'Bütçe verisi bulunamadı. Varyans analizi için lütfen bütçe planı oluşturun.'
+  }
+  const revStr = revenueVariancePct !== null
+    ? `Gelir bütçeye göre %${Math.abs(revenueVariancePct).toFixed(1)} ${revenueVariancePct >= 0 ? 'fazla' : 'eksik'}.`
+    : ''
+  const expStr = expenseVariancePct !== null
+    ? `Giderler bütçeye göre %${Math.abs(expenseVariancePct).toFixed(1)} ${expenseVariancePct <= 0 ? 'altında' : 'üzerinde'}.`
+    : ''
+  const parts = [revStr, expStr].filter(Boolean).join(' ')
+  if (health === 'healthy') {
+    return `Bütçe performansı sağlıklı. ${parts}`.trim()
+  }
+  if (health === 'moderate') {
+    return `Bütçe performansı orta düzeyde. ${parts} Takip önerilir.`.trim()
+  }
+  if (health === 'concerning') {
+    return `Bütçe performansı endişe verici. ${parts} Acil düzeltici eylem gereklidir.`.trim()
+  }
+  // critical
+  return `Bütçe performansı kritik. ${parts} Derhal müdahale edilmesi gerekmektedir.`.trim()
+}
+
 // ── DB Service ────────────────────────────────────────────────────────────────
 
 /** Expense categories tracked for budget analysis */

@@ -1,42 +1,33 @@
-// ═══════════════════════════════════════════════════════════════════════════════
-// GET /api/commercial/product-profitability?months=12
-//
-// Returns a per-product profitability waterfall:
-//   Revenue → COGS → Gross Profit → Attributed OpEx → Contribution Margin
-//
+// ── /api/commercial/product-profitability ─────────────────────────────────────
+// GET — Returns ProductProfitabilityReport: per-product P&L and profitability.
 // Query params:
-//   months  (optional, default 12) — analysis window in months
-//
-// Auth: any authenticated company member.
-// Cache: revalidate every 3600 seconds.
-// ═══════════════════════════════════════════════════════════════════════════════
+//   months  (optional, default 6) — analysis window in months
+// Access: manager+ only.
 
-export const revalidate = 3600
+export const revalidate = 1800
 
 import { NextRequest, NextResponse } from 'next/server'
 import { resolveApiAuth } from '@/lib/api-auth'
+import { apiError } from '@/lib/api-utils'
 import { ProductProfitabilityService } from '@/lib/services/commercial/product-profitability.service'
-import { REQUEST_ID_HEADER } from '@/middleware'
-import { toErrorResponse } from '@/types/errors'
 
 export async function GET(req: NextRequest) {
   const auth = await resolveApiAuth(req)
   if (!auth.ok) return auth.response
+
   const { companyId, supabase, ctx } = auth
 
   const monthsParam = req.nextUrl.searchParams.get('months')
-  const months      = monthsParam ? Math.max(1, Math.min(24, parseInt(monthsParam, 10) || 12)) : 12
+  const periodMonths = monthsParam
+    ? Math.max(1, Math.min(24, parseInt(monthsParam, 10) || 6))
+    : 6
 
   try {
-    const report = await ProductProfitabilityService.getReport(companyId, supabase, { months })
-
-    return NextResponse.json(
-      { report },
-      { headers: { [REQUEST_ID_HEADER]: ctx.requestId } },
-    )
-
+    const service = new ProductProfitabilityService(supabase)
+    const report  = await service.getReport(companyId, periodMonths)
+    return NextResponse.json({ report })
   } catch (err) {
-    const { body, status } = toErrorResponse(err)
-    return NextResponse.json(body, { status, headers: { [REQUEST_ID_HEADER]: ctx.requestId } })
+    console.error('[product-profitability]', err)
+    return apiError(ctx, 'Ürün karlılık raporu hesaplanamadı', 500)
   }
 }
