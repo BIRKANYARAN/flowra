@@ -535,3 +535,207 @@ describe('findPeakBurnMonth — additional edge cases', () => {
     expect(result.month).toBe('Ocak 2026')
   })
 })
+
+// ── computeBurnTrend — exact ratio boundaries ─────────────────────────────────
+
+describe('computeBurnTrend — exact ratio boundaries', () => {
+  it('ratio=1.10 → stable (not accelerating, boundary not crossed)', () => {
+    // current=11000, avg=10000 → ratio=1.1 → NOT > 1.1
+    expect(computeBurnTrend(11_000, 10_000, 3)).toBe('stable')
+  })
+
+  it('ratio=1.101 → accelerating', () => {
+    // current=11010, avg=10000 → ratio=1.101 → > 1.1
+    expect(computeBurnTrend(11_010, 10_000, 3)).toBe('accelerating')
+  })
+
+  it('ratio=0.90 → stable (not decelerating, boundary not crossed)', () => {
+    // current=9000, avg=10000 → ratio=0.9 → NOT < 0.9
+    expect(computeBurnTrend(9_000, 10_000, 3)).toBe('stable')
+  })
+
+  it('ratio=0.899 → decelerating', () => {
+    // current=8990, avg=10000 → ratio=0.899 → < 0.9
+    expect(computeBurnTrend(8_990, 10_000, 3)).toBe('decelerating')
+  })
+
+  it('ratio exactly 1.0 → stable', () => {
+    expect(computeBurnTrend(10_000, 10_000, 3)).toBe('stable')
+  })
+
+  it('ratio 1.05 → stable (within ±10%)', () => {
+    expect(computeBurnTrend(10_500, 10_000, 3)).toBe('stable')
+  })
+
+  it('ratio 0.95 → stable (within ±10%)', () => {
+    expect(computeBurnTrend(9_500, 10_000, 3)).toBe('stable')
+  })
+})
+
+// ── computeBurnTrend — avgBurn edge cases ─────────────────────────────────────
+
+describe('computeBurnTrend — avgBurn edge cases', () => {
+  it('avgBurn=0 with monthCount=5 → insufficient_data', () => {
+    expect(computeBurnTrend(5_000, 0, 5)).toBe('insufficient_data')
+  })
+
+  it('avgBurn=0 with monthCount=3 → insufficient_data', () => {
+    expect(computeBurnTrend(0, 0, 3)).toBe('insufficient_data')
+  })
+
+  it('avgBurn negative with monthCount=4 → insufficient_data', () => {
+    expect(computeBurnTrend(5_000, -1_000, 4)).toBe('insufficient_data')
+  })
+
+  it('avgBurn very small positive with large currentBurn → accelerating', () => {
+    // ratio = 10000 / 1 = 10000 → far above 1.1
+    expect(computeBurnTrend(10_000, 1, 3)).toBe('accelerating')
+  })
+})
+
+// ── computeBurnTrend — all 4 return values verified ──────────────────────────
+
+describe('computeBurnTrend — all 4 return values verified', () => {
+  it('returns "insufficient_data" when monthCount < 3', () => {
+    const result = computeBurnTrend(10_000, 9_000, 1)
+    expect(result).toBe('insufficient_data')
+  })
+
+  it('returns "accelerating" when current > avg by >10%', () => {
+    const result = computeBurnTrend(12_000, 10_000, 3)
+    expect(result).toBe('accelerating')
+  })
+
+  it('returns "decelerating" when current < avg by >10%', () => {
+    const result = computeBurnTrend(8_000, 10_000, 3)
+    expect(result).toBe('decelerating')
+  })
+
+  it('returns "stable" when current is within ±10% of avg', () => {
+    const result = computeBurnTrend(10_200, 10_000, 3)
+    expect(result).toBe('stable')
+  })
+})
+
+// ── computeRunway — various cash/burn combinations ────────────────────────────
+
+describe('computeRunway — various cash/burn combinations', () => {
+  it('240000 / 20000 = 12 months', () => {
+    expect(computeRunway(240_000, 20_000)).toBeCloseTo(12, 1)
+  })
+
+  it('500000 / 50000 = 10 months', () => {
+    expect(computeRunway(500_000, 50_000)).toBeCloseTo(10, 1)
+  })
+
+  it('75000 / 25000 = 3 months', () => {
+    expect(computeRunway(75_000, 25_000)).toBeCloseTo(3, 1)
+  })
+
+  it('result is cashBalance / avgNetBurn', () => {
+    const cash = 300_000
+    const burn = 40_000
+    const expected = cash / burn
+    expect(computeRunway(cash, burn)).toBeCloseTo(expected, 1)
+  })
+})
+
+// ── computeRunway — cashBalance exactly 0 ────────────────────────────────────
+
+describe('computeRunway — cashBalance exactly 0', () => {
+  it('cashBalance=0 → returns null', () => {
+    expect(computeRunway(0, 10_000)).toBeNull()
+  })
+
+  it('cashBalance=0 with large burn → still null', () => {
+    expect(computeRunway(0, 1_000_000)).toBeNull()
+  })
+})
+
+// ── computeRunway — avgNetBurn exactly 0 ─────────────────────────────────────
+
+describe('computeRunway — avgNetBurn exactly 0', () => {
+  it('avgNetBurn=0 → returns null', () => {
+    expect(computeRunway(100_000, 0)).toBeNull()
+  })
+
+  it('avgNetBurn=0 with large cash → still null', () => {
+    expect(computeRunway(10_000_000, 0)).toBeNull()
+  })
+})
+
+// ── findPeakBurnMonth — single month array ────────────────────────────────────
+
+describe('findPeakBurnMonth — single month array', () => {
+  it('returns that month label and gross_burn_try', () => {
+    const months: MonthlyBurnData[] = [
+      { month: '2026-03', label: 'Mart 2026', gross_burn_try: 42_000, revenue_try: 20_000, net_burn_try: 22_000, cash_balance_try: null },
+    ]
+    const result = findPeakBurnMonth(months)
+    expect(result.month).toBe('Mart 2026')
+    expect(result.try).toBe(42_000)
+  })
+
+  it('single month with 0 burn still returns its data', () => {
+    const months: MonthlyBurnData[] = [
+      { month: '2026-04', label: 'Nisan 2026', gross_burn_try: 0, revenue_try: 5_000, net_burn_try: -5_000, cash_balance_try: 50_000 },
+    ]
+    const result = findPeakBurnMonth(months)
+    expect(result.month).toBe('Nisan 2026')
+    expect(result.try).toBe(0)
+  })
+})
+
+// ── findPeakBurnMonth — all equal burns ───────────────────────────────────────
+
+describe('findPeakBurnMonth — all equal burns', () => {
+  it('all equal burns → result is non-null', () => {
+    const months: MonthlyBurnData[] = [
+      { month: '2026-01', label: 'Ocak 2026',   gross_burn_try: 15_000, revenue_try: 10_000, net_burn_try: 5_000, cash_balance_try: null },
+      { month: '2025-12', label: 'Aralık 2025', gross_burn_try: 15_000, revenue_try: 10_000, net_burn_try: 5_000, cash_balance_try: null },
+      { month: '2025-11', label: 'Kasım 2025',  gross_burn_try: 15_000, revenue_try: 10_000, net_burn_try: 5_000, cash_balance_try: null },
+    ]
+    const result = findPeakBurnMonth(months)
+    expect(result.month).not.toBeNull()
+    expect(result.try).toBe(15_000)
+  })
+})
+
+// ── findPeakBurnMonth — tie-breaking ─────────────────────────────────────────
+
+describe('findPeakBurnMonth — tie-breaking', () => {
+  it('first occurrence wins when equal', () => {
+    const months: MonthlyBurnData[] = [
+      { month: '2026-02', label: 'Şubat 2026', gross_burn_try: 20_000, revenue_try: 10_000, net_burn_try: 10_000, cash_balance_try: null },
+      { month: '2026-01', label: 'Ocak 2026',  gross_burn_try: 20_000, revenue_try: 10_000, net_burn_try: 10_000, cash_balance_try: null },
+    ]
+    const result = findPeakBurnMonth(months)
+    expect(result.month).toBe('Şubat 2026')
+    expect(result.try).toBe(20_000)
+  })
+})
+
+// ── findPeakBurnMonth — returns correct label string ─────────────────────────
+
+describe('findPeakBurnMonth — returns correct label string', () => {
+  it('label matches MonthlyBurnData.label of peak month', () => {
+    const months: MonthlyBurnData[] = [
+      { month: '2026-01', label: 'Ocak 2026',    gross_burn_try: 5_000,  revenue_try: 3_000, net_burn_try: 2_000, cash_balance_try: null },
+      { month: '2025-12', label: 'Aralık 2025',  gross_burn_try: 35_000, revenue_try: 3_000, net_burn_try: 32_000, cash_balance_try: null },
+      { month: '2025-11', label: 'Kasım 2025',   gross_burn_try: 10_000, revenue_try: 3_000, net_burn_try: 7_000, cash_balance_try: null },
+    ]
+    const result = findPeakBurnMonth(months)
+    // Peak is Aralık 2025 with 35k
+    expect(result.month).toBe('Aralık 2025')
+  })
+
+  it('label is a string not the month key', () => {
+    const months: MonthlyBurnData[] = [
+      { month: '2026-05', label: 'Mayıs 2026', gross_burn_try: 99_000, revenue_try: 50_000, net_burn_try: 49_000, cash_balance_try: null },
+    ]
+    const result = findPeakBurnMonth(months)
+    // Should return the label 'Mayıs 2026', not the key '2026-05'
+    expect(result.month).toBe('Mayıs 2026')
+    expect(result.month).not.toBe('2026-05')
+  })
+})

@@ -302,3 +302,380 @@ describe('FinanceService.getFinancialSummary — assembly', () => {
     expect(summary).toHaveProperty('period')
   })
 })
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FinancialSummary — corporate tax rate field
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('FinancialSummary — corporate tax rate field', () => {
+  beforeEach(() => {
+    vi.spyOn(FinanceService, 'getGrossProfit').mockResolvedValue(GROSS_STUB as never)
+    vi.spyOn(FinanceService, 'getOperatingExpenses').mockResolvedValue(EXPENSES_STUB as never)
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+    vi.resetModules()
+  })
+
+  it('corporate_tax_rate is 25 (default) when matrah_try > 0', async () => {
+    const taxMod = await import('../lib/services/tax.service')
+    vi.spyOn(taxMod.TaxService, 'getKdvNet').mockResolvedValue(VAT_STUB as never)
+
+    const summary = await FinanceService.getFinancialSummary(USER, CO, PERIOD)
+    // Default rate should be 25, and matrah = 220k > 0
+    expect(summary.corporate_tax_rate).toBe(25)
+    expect(summary.matrah_try).toBeGreaterThan(0)
+  })
+
+  it('corporate_tax_rate is 0.22 when overridden to 22', async () => {
+    const taxMod = await import('../lib/services/tax.service')
+    vi.spyOn(taxMod.TaxService, 'getKdvNet').mockResolvedValue(VAT_STUB as never)
+
+    const summary = await FinanceService.getFinancialSummary(USER, CO, PERIOD, { corporate_tax_rate: 22 })
+    expect(summary.corporate_tax_rate).toBe(22)
+  })
+
+  it('corporate_tax_try is rate × matrah / 100', async () => {
+    const taxMod = await import('../lib/services/tax.service')
+    vi.spyOn(taxMod.TaxService, 'getKdvNet').mockResolvedValue(VAT_STUB as never)
+
+    const summary = await FinanceService.getFinancialSummary(USER, CO, PERIOD)
+    // matrah = 220k, rate = 25 → tax = 55k
+    expect(summary.corporate_tax_try).toBeCloseTo(summary.matrah_try * summary.corporate_tax_rate / 100, 0)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FinancialSummary — zero revenue scenario
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('FinancialSummary — zero revenue scenario', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+    vi.resetModules()
+  })
+
+  it('all revenue = 0 → gross_profit = 0', async () => {
+    vi.spyOn(FinanceService, 'getGrossProfit').mockResolvedValue({
+      revenue_try: 0, cost_try: 0, gross_profit_try: 0,
+    } as never)
+    vi.spyOn(FinanceService, 'getOperatingExpenses').mockResolvedValue({
+      total_try: 0, deductible_try: 0, non_deductible_try: 0,
+    } as never)
+    const taxMod = await import('../lib/services/tax.service')
+    vi.spyOn(taxMod.TaxService, 'getKdvNet').mockResolvedValue({
+      sales_vat_try: 0, purchase_vat_try: 0, expense_vat_try: 0, net_vat_try: 0,
+    } as never)
+
+    const summary = await FinanceService.getFinancialSummary(USER, CO, PERIOD)
+
+    expect(summary.revenue_try).toBe(0)
+    expect(summary.gross_profit_try).toBe(0)
+  })
+
+  it('all revenue = 0 → corporate_tax_try >= 0', async () => {
+    vi.spyOn(FinanceService, 'getGrossProfit').mockResolvedValue({
+      revenue_try: 0, cost_try: 0, gross_profit_try: 0,
+    } as never)
+    vi.spyOn(FinanceService, 'getOperatingExpenses').mockResolvedValue({
+      total_try: 0, deductible_try: 0, non_deductible_try: 0,
+    } as never)
+    const taxMod = await import('../lib/services/tax.service')
+    vi.spyOn(taxMod.TaxService, 'getKdvNet').mockResolvedValue({
+      sales_vat_try: 0, purchase_vat_try: 0, expense_vat_try: 0, net_vat_try: 0,
+    } as never)
+
+    const summary = await FinanceService.getFinancialSummary(USER, CO, PERIOD)
+    expect(summary.corporate_tax_try).toBeGreaterThanOrEqual(0)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FinancialSummary — zero expenses scenario
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('FinancialSummary — zero expenses scenario', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+    vi.resetModules()
+  })
+
+  it('expenses = 0 → gross_profit = revenue', async () => {
+    vi.spyOn(FinanceService, 'getGrossProfit').mockResolvedValue({
+      revenue_try: 500_000, cost_try: 0, gross_profit_try: 500_000,
+    } as never)
+    vi.spyOn(FinanceService, 'getOperatingExpenses').mockResolvedValue({
+      total_try: 0, deductible_try: 0, non_deductible_try: 0,
+    } as never)
+    const taxMod = await import('../lib/services/tax.service')
+    vi.spyOn(taxMod.TaxService, 'getKdvNet').mockResolvedValue(VAT_STUB as never)
+
+    const summary = await FinanceService.getFinancialSummary(USER, CO, PERIOD)
+
+    expect(summary.gross_profit_try).toBe(500_000)
+    expect(summary.expenses_total_try).toBe(0)
+  })
+
+  it('zero deductible expenses → matrah = revenue - cost', async () => {
+    vi.spyOn(FinanceService, 'getGrossProfit').mockResolvedValue({
+      revenue_try: 400_000, cost_try: 100_000, gross_profit_try: 300_000,
+    } as never)
+    vi.spyOn(FinanceService, 'getOperatingExpenses').mockResolvedValue({
+      total_try: 0, deductible_try: 0, non_deductible_try: 0,
+    } as never)
+    const taxMod = await import('../lib/services/tax.service')
+    vi.spyOn(taxMod.TaxService, 'getKdvNet').mockResolvedValue(VAT_STUB as never)
+
+    const summary = await FinanceService.getFinancialSummary(USER, CO, PERIOD)
+    // matrah = 400k - 100k - 0 = 300k
+    expect(summary.matrah_try).toBe(300_000)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FinancialSummary — high deductible vs non-deductible split
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('FinancialSummary — high deductible vs non-deductible split', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+    vi.resetModules()
+  })
+
+  it('deductible + non_deductible = total for 80/20 split', async () => {
+    vi.spyOn(FinanceService, 'getGrossProfit').mockResolvedValue(GROSS_STUB as never)
+    vi.spyOn(FinanceService, 'getOperatingExpenses').mockResolvedValue({
+      total_try: 200_000, deductible_try: 160_000, non_deductible_try: 40_000,
+    } as never)
+    const taxMod = await import('../lib/services/tax.service')
+    vi.spyOn(taxMod.TaxService, 'getKdvNet').mockResolvedValue(VAT_STUB as never)
+
+    const summary = await FinanceService.getFinancialSummary(USER, CO, PERIOD)
+    expect(summary.deductible_expenses_try + summary.non_deductible_expenses_try)
+      .toBe(summary.expenses_total_try)
+  })
+
+  it('all expenses non-deductible → matrah not reduced by them', async () => {
+    vi.spyOn(FinanceService, 'getGrossProfit').mockResolvedValue({
+      revenue_try: 500_000, cost_try: 200_000, gross_profit_try: 300_000,
+    } as never)
+    vi.spyOn(FinanceService, 'getOperatingExpenses').mockResolvedValue({
+      total_try: 100_000, deductible_try: 0, non_deductible_try: 100_000,
+    } as never)
+    const taxMod = await import('../lib/services/tax.service')
+    vi.spyOn(taxMod.TaxService, 'getKdvNet').mockResolvedValue(VAT_STUB as never)
+
+    const summary = await FinanceService.getFinancialSummary(USER, CO, PERIOD)
+    // matrah = 500k - 200k - 0 = 300k (non-deductible not subtracted)
+    expect(summary.matrah_try).toBe(300_000)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FinancialSummary — net_vat_try calculation
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('FinancialSummary — net_vat_try calculation', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+    vi.resetModules()
+  })
+
+  it('net_vat = sales_vat - purchase_vat - expense_vat', async () => {
+    vi.spyOn(FinanceService, 'getGrossProfit').mockResolvedValue(GROSS_STUB as never)
+    vi.spyOn(FinanceService, 'getOperatingExpenses').mockResolvedValue(EXPENSES_STUB as never)
+    const taxMod = await import('../lib/services/tax.service')
+    vi.spyOn(taxMod.TaxService, 'getKdvNet').mockResolvedValue({
+      sales_vat_try: 80_000, purchase_vat_try: 30_000, expense_vat_try: 10_000, net_vat_try: 40_000,
+    } as never)
+
+    const summary = await FinanceService.getFinancialSummary(USER, CO, PERIOD)
+    expect(summary.net_vat_try).toBe(40_000)
+    expect(summary.net_vat_try).toBe(summary.sales_vat_try - summary.purchase_vat_try - summary.expense_vat_try)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FinancialSummary — period fields preserved
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('FinancialSummary — period fields preserved', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+    vi.resetModules()
+  })
+
+  it('period.from and period.to match input period', async () => {
+    vi.spyOn(FinanceService, 'getGrossProfit').mockResolvedValue(GROSS_STUB as never)
+    vi.spyOn(FinanceService, 'getOperatingExpenses').mockResolvedValue(EXPENSES_STUB as never)
+    const taxMod = await import('../lib/services/tax.service')
+    vi.spyOn(taxMod.TaxService, 'getKdvNet').mockResolvedValue(VAT_STUB as never)
+    const customPeriod = { from: '2025-04-01', to: '2025-06-30' }
+
+    const summary = await FinanceService.getFinancialSummary(USER, CO, customPeriod)
+
+    expect(summary.period.from).toBe('2025-04-01')
+    expect(summary.period.to).toBe('2025-06-30')
+  })
+
+  it('period object reference is preserved in summary', async () => {
+    vi.spyOn(FinanceService, 'getGrossProfit').mockResolvedValue(GROSS_STUB as never)
+    vi.spyOn(FinanceService, 'getOperatingExpenses').mockResolvedValue(EXPENSES_STUB as never)
+    const taxMod = await import('../lib/services/tax.service')
+    vi.spyOn(taxMod.TaxService, 'getKdvNet').mockResolvedValue(VAT_STUB as never)
+
+    const summary = await FinanceService.getFinancialSummary(USER, CO, PERIOD)
+
+    expect(summary.period).toBeDefined()
+    expect(summary.period.from).toBe(PERIOD.from)
+    expect(summary.period.to).toBe(PERIOD.to)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FinancialSummary — large numbers
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('FinancialSummary — large numbers', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+    vi.resetModules()
+  })
+
+  it('revenue 10M, expenses 3M — gross profit = 7M', async () => {
+    vi.spyOn(FinanceService, 'getGrossProfit').mockResolvedValue({
+      revenue_try: 10_000_000, cost_try: 3_000_000, gross_profit_try: 7_000_000,
+    } as never)
+    vi.spyOn(FinanceService, 'getOperatingExpenses').mockResolvedValue({
+      total_try: 1_000_000, deductible_try: 800_000, non_deductible_try: 200_000,
+    } as never)
+    const taxMod = await import('../lib/services/tax.service')
+    vi.spyOn(taxMod.TaxService, 'getKdvNet').mockResolvedValue({
+      sales_vat_try: 1_800_000, purchase_vat_try: 540_000, expense_vat_try: 180_000, net_vat_try: 1_080_000,
+    } as never)
+
+    const summary = await FinanceService.getFinancialSummary(USER, CO, PERIOD)
+
+    expect(summary.gross_profit_try).toBe(7_000_000)
+    expect(summary.expenses_total_try).toBe(1_000_000)
+  })
+
+  it('revenue 10M, cost 3M, deductible 800k → matrah = 6.2M', async () => {
+    vi.spyOn(FinanceService, 'getGrossProfit').mockResolvedValue({
+      revenue_try: 10_000_000, cost_try: 3_000_000, gross_profit_try: 7_000_000,
+    } as never)
+    vi.spyOn(FinanceService, 'getOperatingExpenses').mockResolvedValue({
+      total_try: 1_000_000, deductible_try: 800_000, non_deductible_try: 200_000,
+    } as never)
+    const taxMod = await import('../lib/services/tax.service')
+    vi.spyOn(taxMod.TaxService, 'getKdvNet').mockResolvedValue({
+      sales_vat_try: 1_800_000, purchase_vat_try: 540_000, expense_vat_try: 180_000, net_vat_try: 1_080_000,
+    } as never)
+
+    const summary = await FinanceService.getFinancialSummary(USER, CO, PERIOD)
+    // matrah = 10M - 3M - 0.8M = 6.2M
+    expect(summary.matrah_try).toBe(6_200_000)
+    // tax = 6.2M × 25% = 1.55M
+    expect(summary.corporate_tax_try).toBe(1_550_000)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FinancialSummary — additional field verification
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('FinancialSummary — additional field verification', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+    vi.resetModules()
+  })
+
+  it('matrah_try = revenue - cost - deductible_expenses', async () => {
+    vi.spyOn(FinanceService, 'getGrossProfit').mockResolvedValue(GROSS_STUB as never)
+    vi.spyOn(FinanceService, 'getOperatingExpenses').mockResolvedValue(EXPENSES_STUB as never)
+    const taxMod = await import('../lib/services/tax.service')
+    vi.spyOn(taxMod.TaxService, 'getKdvNet').mockResolvedValue(VAT_STUB as never)
+
+    const summary = await FinanceService.getFinancialSummary(USER, CO, PERIOD)
+    // matrah = 500k - 200k - 80k = 220k
+    expect(summary.matrah_try).toBe(220_000)
+  })
+
+  it('corporate_tax_rate field is a number', async () => {
+    vi.spyOn(FinanceService, 'getGrossProfit').mockResolvedValue(GROSS_STUB as never)
+    vi.spyOn(FinanceService, 'getOperatingExpenses').mockResolvedValue(EXPENSES_STUB as never)
+    const taxMod = await import('../lib/services/tax.service')
+    vi.spyOn(taxMod.TaxService, 'getKdvNet').mockResolvedValue(VAT_STUB as never)
+
+    const summary = await FinanceService.getFinancialSummary(USER, CO, PERIOD)
+    expect(typeof summary.corporate_tax_rate).toBe('number')
+  })
+
+  it('all monetary fields are numbers', async () => {
+    vi.spyOn(FinanceService, 'getGrossProfit').mockResolvedValue(GROSS_STUB as never)
+    vi.spyOn(FinanceService, 'getOperatingExpenses').mockResolvedValue(EXPENSES_STUB as never)
+    const taxMod = await import('../lib/services/tax.service')
+    vi.spyOn(taxMod.TaxService, 'getKdvNet').mockResolvedValue(VAT_STUB as never)
+
+    const summary = await FinanceService.getFinancialSummary(USER, CO, PERIOD)
+    expect(typeof summary.revenue_try).toBe('number')
+    expect(typeof summary.cost_try).toBe('number')
+    expect(typeof summary.gross_profit_try).toBe('number')
+    expect(typeof summary.matrah_try).toBe('number')
+    expect(typeof summary.corporate_tax_try).toBe('number')
+    expect(typeof summary.net_after_tax_try).toBe('number')
+  })
+
+  it('calling with different userId does not break assembly', async () => {
+    vi.spyOn(FinanceService, 'getGrossProfit').mockResolvedValue(GROSS_STUB as never)
+    vi.spyOn(FinanceService, 'getOperatingExpenses').mockResolvedValue(EXPENSES_STUB as never)
+    const taxMod = await import('../lib/services/tax.service')
+    vi.spyOn(taxMod.TaxService, 'getKdvNet').mockResolvedValue(VAT_STUB as never)
+
+    const summary = await FinanceService.getFinancialSummary('other-user', CO, PERIOD)
+    expect(summary.revenue_try).toBe(500_000)
+  })
+
+  it('calling with different companyId does not break assembly', async () => {
+    vi.spyOn(FinanceService, 'getGrossProfit').mockResolvedValue(GROSS_STUB as never)
+    vi.spyOn(FinanceService, 'getOperatingExpenses').mockResolvedValue(EXPENSES_STUB as never)
+    const taxMod = await import('../lib/services/tax.service')
+    vi.spyOn(taxMod.TaxService, 'getKdvNet').mockResolvedValue(VAT_STUB as never)
+
+    const summary = await FinanceService.getFinancialSummary(USER, 'different-co', PERIOD)
+    expect(summary.expenses_total_try).toBe(120_000)
+  })
+
+  it('net_after_tax_try equals matrah minus tax', async () => {
+    vi.spyOn(FinanceService, 'getGrossProfit').mockResolvedValue(GROSS_STUB as never)
+    vi.spyOn(FinanceService, 'getOperatingExpenses').mockResolvedValue(EXPENSES_STUB as never)
+    const taxMod = await import('../lib/services/tax.service')
+    vi.spyOn(taxMod.TaxService, 'getKdvNet').mockResolvedValue(VAT_STUB as never)
+
+    const summary = await FinanceService.getFinancialSummary(USER, CO, PERIOD)
+    expect(summary.net_after_tax_try).toBe(summary.matrah_try - summary.corporate_tax_try)
+  })
+
+  it('40% tax rate on 220k matrah → 88k tax, 132k net', async () => {
+    vi.spyOn(FinanceService, 'getGrossProfit').mockResolvedValue(GROSS_STUB as never)
+    vi.spyOn(FinanceService, 'getOperatingExpenses').mockResolvedValue(EXPENSES_STUB as never)
+    const taxMod = await import('../lib/services/tax.service')
+    vi.spyOn(taxMod.TaxService, 'getKdvNet').mockResolvedValue(VAT_STUB as never)
+
+    const summary = await FinanceService.getFinancialSummary(USER, CO, PERIOD, { corporate_tax_rate: 40 })
+    expect(summary.corporate_tax_try).toBe(88_000)
+    expect(summary.net_after_tax_try).toBe(132_000)
+  })
+
+  it('5% tax rate on 220k matrah → 11k tax, 209k net', async () => {
+    vi.spyOn(FinanceService, 'getGrossProfit').mockResolvedValue(GROSS_STUB as never)
+    vi.spyOn(FinanceService, 'getOperatingExpenses').mockResolvedValue(EXPENSES_STUB as never)
+    const taxMod = await import('../lib/services/tax.service')
+    vi.spyOn(taxMod.TaxService, 'getKdvNet').mockResolvedValue(VAT_STUB as never)
+
+    const summary = await FinanceService.getFinancialSummary(USER, CO, PERIOD, { corporate_tax_rate: 5 })
+    expect(summary.corporate_tax_try).toBe(11_000)
+    expect(summary.net_after_tax_try).toBe(209_000)
+  })
+})

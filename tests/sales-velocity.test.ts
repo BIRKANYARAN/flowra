@@ -547,3 +547,225 @@ describe('classifyStockUrgency — exact boundary values for all levels', () => 
     }
   })
 })
+
+// ── computeDailyVelocity — formulas ──────────────────────────────────────────
+
+describe('computeDailyVelocity — formulas', () => {
+  it('100 units / 10 days = 10 per day', () => {
+    expect(computeDailyVelocity(100, 10)).toBe(10)
+  })
+
+  it('0 units / 30 days = 0 per day', () => {
+    expect(computeDailyVelocity(0, 30)).toBe(0)
+  })
+
+  it('observationDays=0 → 0 (guard clause)', () => {
+    expect(computeDailyVelocity(100, 0)).toBe(0)
+  })
+
+  it('observationDays=-1 → 0 (negative days)', () => {
+    expect(computeDailyVelocity(100, -1)).toBe(0)
+  })
+
+  it('60 units / 30 days = 2 per day', () => {
+    expect(computeDailyVelocity(60, 30)).toBe(2)
+  })
+})
+
+// ── computeDailyVelocity — fractional velocity ────────────────────────────────
+
+describe('computeDailyVelocity — fractional velocity', () => {
+  it('5 units / 3 days = 5/3 (not rounded)', () => {
+    const result = computeDailyVelocity(5, 3)
+    expect(result).toBeCloseTo(5 / 3, 5)
+  })
+
+  it('1 unit / 7 days ≈ 0.1429 (not rounded)', () => {
+    const result = computeDailyVelocity(1, 7)
+    expect(result).toBeCloseTo(1 / 7, 4)
+  })
+
+  it('result is a number', () => {
+    expect(typeof computeDailyVelocity(10, 3)).toBe('number')
+  })
+})
+
+// ── computeDaysToStockout — formulas ──────────────────────────────────────────
+
+describe('computeDaysToStockout — formulas', () => {
+  it('qty=100, velocity=10 → 10 days', () => {
+    expect(computeDaysToStockout(100, 10)).toBe(10)
+  })
+
+  it('qty=1, velocity=0.5 → 2 days', () => {
+    expect(computeDaysToStockout(1, 0.5)).toBe(2)
+  })
+
+  it('qty=50, velocity=5 → 10 days', () => {
+    expect(computeDaysToStockout(50, 5)).toBe(10)
+  })
+
+  it('velocity=0 → null (no movement)', () => {
+    expect(computeDaysToStockout(100, 0)).toBeNull()
+  })
+
+  it('velocity=-1 → null (invalid velocity)', () => {
+    expect(computeDaysToStockout(100, -1)).toBeNull()
+  })
+})
+
+// ── computeDaysToStockout — already out ───────────────────────────────────────
+
+describe('computeDaysToStockout — already out', () => {
+  it('qty=0, velocity=5 → 0 (already out)', () => {
+    expect(computeDaysToStockout(0, 5)).toBe(0)
+  })
+
+  it('qty=-5, velocity=5 → 0 (negative qty treated as out)', () => {
+    expect(computeDaysToStockout(-5, 5)).toBe(0)
+  })
+
+  it('qty=0, velocity=0.001 → 0 (out of stock)', () => {
+    expect(computeDaysToStockout(0, 0.001)).toBe(0)
+  })
+})
+
+// ── computeSafetyStock — formula verification ─────────────────────────────────
+
+describe('computeSafetyStock — formula verification', () => {
+  it('velocity=10, lead=7, safety=1.5 → Math.ceil(10*7*1.5) = 105', () => {
+    expect(computeSafetyStock(10, 7, 1.5)).toBe(105)
+  })
+
+  it('velocity=5, lead=5, safety=1.5 → Math.ceil(37.5) = 38', () => {
+    expect(computeSafetyStock(5, 5, 1.5)).toBe(38)
+  })
+
+  it('velocity=0, lead=10, safety=1.5 → 0', () => {
+    expect(computeSafetyStock(0, 10, 1.5)).toBe(0)
+  })
+})
+
+// ── computeSafetyStock — custom safetyFactor ─────────────────────────────────
+
+describe('computeSafetyStock — custom safetyFactor', () => {
+  it('safetyFactor=2.0 → Math.ceil(velocity*lead*2.0)', () => {
+    // velocity=10, lead=5 → Math.ceil(10*5*2) = 100
+    expect(computeSafetyStock(10, 5, 2.0)).toBe(100)
+  })
+
+  it('safetyFactor=1.0 → Math.ceil(velocity*lead)', () => {
+    // velocity=10, lead=5 → Math.ceil(50) = 50
+    expect(computeSafetyStock(10, 5, 1.0)).toBe(50)
+  })
+
+  it('safetyFactor=3.0 → triple the base stock', () => {
+    // velocity=4, lead=5, safety=3 → Math.ceil(60) = 60
+    expect(computeSafetyStock(4, 5, 3.0)).toBe(60)
+  })
+})
+
+// ── computeSafetyStock — ceiling applied ──────────────────────────────────────
+
+describe('computeSafetyStock — ceiling applied', () => {
+  it('velocity=1.1, lead=3, safety=1.5 → Math.ceil(4.95) = 5', () => {
+    expect(computeSafetyStock(1.1, 3, 1.5)).toBe(5)
+  })
+
+  it('velocity=0.5, lead=3, safety=1.5 → Math.ceil(2.25) = 3', () => {
+    expect(computeSafetyStock(0.5, 3, 1.5)).toBe(3)
+  })
+
+  it('result is always an integer (ceiling applied)', () => {
+    const result = computeSafetyStock(1.3, 4, 1.5)
+    expect(result).toBe(Math.ceil(result))
+  })
+})
+
+// ── computeReorderPoint — formula ────────────────────────────────────────────
+
+describe('computeReorderPoint — formula', () => {
+  it('velocity=5, lead=10, safety=1.5 → safetyStock=75, reorderPoint=75+50=125', () => {
+    // safetyStock = Math.ceil(5*10*1.5) = Math.ceil(75) = 75
+    // base demand  = Math.ceil(5*10) = 50
+    // reorderPoint = 75 + 50 = 125
+    expect(computeReorderPoint(5, 10, 1.5)).toBe(125)
+  })
+
+  it('velocity=10, lead=7, safety=1.5 → reorderPoint = 105 + 70 = 175', () => {
+    expect(computeReorderPoint(10, 7, 1.5)).toBe(175)
+  })
+
+  it('velocity=0, lead=10, safety=1.5 → 0 (no movement)', () => {
+    expect(computeReorderPoint(0, 10, 1.5)).toBe(0)
+  })
+
+  it('result is always an integer', () => {
+    const result = computeReorderPoint(3.3, 5, 1.5)
+    expect(result).toBe(Math.ceil(result))
+  })
+})
+
+// ── classifyStockUrgency — exact boundaries ───────────────────────────────────
+
+describe('classifyStockUrgency — exact boundaries', () => {
+  it('7 → critical (at the <=7 boundary)', () => {
+    expect(classifyStockUrgency(7)).toBe('critical')
+  })
+
+  it('8 → urgent (just above critical boundary)', () => {
+    expect(classifyStockUrgency(8)).toBe('urgent')
+  })
+
+  it('14 → urgent (at the <=14 boundary)', () => {
+    expect(classifyStockUrgency(14)).toBe('urgent')
+  })
+
+  it('15 → low (just above urgent boundary)', () => {
+    expect(classifyStockUrgency(15)).toBe('low')
+  })
+
+  it('30 → low (at the <=30 boundary)', () => {
+    expect(classifyStockUrgency(30)).toBe('low')
+  })
+
+  it('31 → healthy (just above low boundary)', () => {
+    expect(classifyStockUrgency(31)).toBe('healthy')
+  })
+})
+
+// ── classifyStockUrgency — all 5 values verified ──────────────────────────────
+
+describe('classifyStockUrgency — all 5 values verified', () => {
+  it('null → no_movement', () => {
+    expect(classifyStockUrgency(null)).toBe('no_movement')
+  })
+
+  it('0 → critical', () => {
+    expect(classifyStockUrgency(0)).toBe('critical')
+  })
+
+  it('7 → critical', () => {
+    expect(classifyStockUrgency(7)).toBe('critical')
+  })
+
+  it('8 → urgent', () => {
+    expect(classifyStockUrgency(8)).toBe('urgent')
+  })
+
+  it('14 → urgent', () => {
+    expect(classifyStockUrgency(14)).toBe('urgent')
+  })
+
+  it('15 → low', () => {
+    expect(classifyStockUrgency(15)).toBe('low')
+  })
+
+  it('30 → low', () => {
+    expect(classifyStockUrgency(30)).toBe('low')
+  })
+
+  it('31 → healthy', () => {
+    expect(classifyStockUrgency(31)).toBe('healthy')
+  })
+})

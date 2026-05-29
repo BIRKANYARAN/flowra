@@ -547,3 +547,187 @@ describe('computeWeightedAvgRate — additional edge cases', () => {
     expect(computeWeightedAvgRate(t)).toBeNull()
   })
 })
+
+// ── calculateMonthlyPayment — interest-free formula ───────────────────────────
+
+describe('calculateMonthlyPayment — interest-free formula', () => {
+  it('rate=0, principal=12000, term=12 → 1000 per month', () => {
+    expect(calculateMonthlyPayment(12_000, 0, 12)).toBeCloseTo(1000, 2)
+  })
+
+  it('rate=0, principal=6000, term=6 → 1000 per month', () => {
+    expect(calculateMonthlyPayment(6_000, 0, 6)).toBeCloseTo(1000, 2)
+  })
+
+  it('rate=0, principal=5000, term=4 → 1250 per month', () => {
+    expect(calculateMonthlyPayment(5_000, 0, 4)).toBeCloseTo(1250, 2)
+  })
+
+  it('rate=0, principal=100, term=3 → 33.33 per month (round2 applied)', () => {
+    expect(calculateMonthlyPayment(100, 0, 3)).toBeCloseTo(33.33, 1)
+  })
+})
+
+// ── calculateMonthlyPayment — PMT formula verification ────────────────────────
+
+describe('calculateMonthlyPayment — PMT formula verification', () => {
+  it('principal=100000, rate=0.12, term=12 → ~8884.88', () => {
+    // r = 0.12/12 = 0.01; factor = (1.01)^12 ≈ 1.126825
+    // PMT = 100000 * 0.01 * 1.126825 / (1.126825 - 1) ≈ 8884.88
+    expect(calculateMonthlyPayment(100_000, 0.12, 12)).toBeCloseTo(8884.88, 1)
+  })
+
+  it('principal=10000, rate=0.12, term=12 → ~888.49', () => {
+    expect(calculateMonthlyPayment(10_000, 0.12, 12)).toBeCloseTo(888.49, 1)
+  })
+
+  it('PMT with interest is always greater than interest-free monthly payment', () => {
+    const withInterest = calculateMonthlyPayment(100_000, 0.12, 12)
+    const withoutInterest = calculateMonthlyPayment(100_000, 0, 12)
+    expect(withInterest).toBeGreaterThan(withoutInterest)
+  })
+})
+
+// ── calculateMonthlyPayment — high rate ───────────────────────────────────────
+
+describe('calculateMonthlyPayment — high rate', () => {
+  it('principal=50000, rate=0.24, term=24 → payment > 50000/24', () => {
+    const payment = calculateMonthlyPayment(50_000, 0.24, 24)
+    expect(payment).toBeGreaterThan(50_000 / 24)
+  })
+
+  it('principal=0 → 0 (guard clause)', () => {
+    expect(calculateMonthlyPayment(0, 0.12, 12)).toBe(0)
+  })
+
+  it('term=0 → 0 (guard clause)', () => {
+    expect(calculateMonthlyPayment(100_000, 0.12, 0)).toBe(0)
+  })
+
+  it('negative principal → 0 (guard clause)', () => {
+    expect(calculateMonthlyPayment(-100_000, 0.12, 12)).toBe(0)
+  })
+})
+
+// ── buildAmortizationSchedule — row count ─────────────────────────────────────
+
+describe('buildAmortizationSchedule — row count', () => {
+  it('interest-free loan paying off in exactly 12 months → 12 rows', () => {
+    // 12000 outstanding, 0% rate, 1000/month → pays off in 12 rows
+    const schedule = buildAmortizationSchedule(12_000, 0, 1_000, '2025-01')
+    expect(schedule.length).toBe(12)
+  })
+
+  it('interest-free loan with 6 months → 6 rows', () => {
+    const schedule = buildAmortizationSchedule(6_000, 0, 1_000, '2025-01')
+    expect(schedule.length).toBe(6)
+  })
+
+  it('outstanding=0 → [] (empty guard)', () => {
+    const schedule = buildAmortizationSchedule(0, 0.12, 1_000, '2025-01')
+    expect(schedule).toEqual([])
+  })
+
+  it('monthlyPayment=0 → [] (empty guard)', () => {
+    const schedule = buildAmortizationSchedule(10_000, 0.12, 0, '2025-01')
+    expect(schedule).toEqual([])
+  })
+})
+
+// ── buildAmortizationSchedule — period_number is sequential ───────────────────
+
+describe('buildAmortizationSchedule — period_number is sequential', () => {
+  it('first row period_number = 1', () => {
+    const schedule = buildAmortizationSchedule(12_000, 0, 1_000, '2025-01')
+    expect(schedule[0].period_number).toBe(1)
+  })
+
+  it('second row period_number = 2', () => {
+    const schedule = buildAmortizationSchedule(12_000, 0, 1_000, '2025-01')
+    expect(schedule[1].period_number).toBe(2)
+  })
+
+  it('period_number increments by 1 for each row', () => {
+    const schedule = buildAmortizationSchedule(12_000, 0, 1_000, '2025-01')
+    for (let i = 0; i < schedule.length; i++) {
+      expect(schedule[i].period_number).toBe(i + 1)
+    }
+  })
+})
+
+// ── buildAmortizationSchedule — closing balance decreases monotonically ────────
+
+describe('buildAmortizationSchedule — closing balance decreases monotonically', () => {
+  it('each row closing < opening balance', () => {
+    const schedule = buildAmortizationSchedule(12_000, 0.12, 2_000, '2025-01')
+    for (const row of schedule) {
+      expect(row.closing_balance_try).toBeLessThan(row.opening_balance_try)
+    }
+  })
+
+  it('closing balance of row N is the opening balance of row N+1', () => {
+    const schedule = buildAmortizationSchedule(12_000, 0.12, 2_000, '2025-01')
+    for (let i = 0; i < schedule.length - 1; i++) {
+      expect(schedule[i + 1].opening_balance_try).toBeCloseTo(schedule[i].closing_balance_try, 1)
+    }
+  })
+})
+
+// ── buildAmortizationSchedule — final row closing near 0 ─────────────────────
+
+describe('buildAmortizationSchedule — final row closing near 0', () => {
+  it('interest-free 12-month loan → last row closing_balance_try < 1', () => {
+    const schedule = buildAmortizationSchedule(12_000, 0, 1_000, '2025-01')
+    const lastRow = schedule[schedule.length - 1]
+    expect(lastRow.closing_balance_try).toBeLessThan(1)
+  })
+
+  it('interest-free 3-month loan → fully paid off', () => {
+    const schedule = buildAmortizationSchedule(3_000, 0, 1_000, '2025-01')
+    expect(schedule.length).toBe(3)
+    const lastRow = schedule[schedule.length - 1]
+    expect(lastRow.closing_balance_try).toBeLessThan(1)
+  })
+})
+
+// ── computeWeightedAvgRate — empty array → null ───────────────────────────────
+
+describe('computeWeightedAvgRate — empty array → null', () => {
+  it('empty array → null', () => {
+    expect(computeWeightedAvgRate([])).toBeNull()
+  })
+
+  it('all zero balances → null', () => {
+    const t = [makeTranche(0, 0.10), makeTranche(0, 0.20)]
+    expect(computeWeightedAvgRate(t)).toBeNull()
+  })
+})
+
+// ── computeWeightedAvgRate — weighted formula ─────────────────────────────────
+
+describe('computeWeightedAvgRate — weighted formula', () => {
+  it('100k@12% + 50k@6% → weighted=(12000+3000)/150000 = 10%', () => {
+    const t = [makeTranche(100_000, 0.12), makeTranche(50_000, 0.06)]
+    // weighted = (100000*0.12 + 50000*0.06) / 150000 = (12000+3000)/150000 = 0.10
+    expect(computeWeightedAvgRate(t)).toBeCloseTo(0.10, 2)
+  })
+
+  it('equal weights → simple average of rates', () => {
+    const t = [makeTranche(50_000, 0.10), makeTranche(50_000, 0.20)]
+    expect(computeWeightedAvgRate(t)).toBeCloseTo(0.15, 2)
+  })
+
+  it('single tranche → returns its own rate', () => {
+    const t = [makeTranche(100_000, 0.18)]
+    expect(computeWeightedAvgRate(t)).toBeCloseTo(0.18, 5)
+  })
+
+  it('larger balance pulls the weighted average toward its rate', () => {
+    // 90% at 10%, 10% at 20% → weighted closer to 10%
+    const t = [makeTranche(900_000, 0.10), makeTranche(100_000, 0.20)]
+    const result = computeWeightedAvgRate(t)
+    expect(result!).toBeCloseTo(0.11, 2)
+    expect(result!).toBeGreaterThan(0.10)
+    expect(result!).toBeLessThan(0.20)
+  })
+})

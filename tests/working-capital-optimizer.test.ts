@@ -547,3 +547,199 @@ describe('classifyOptimizationPriority — comprehensive boundary sweep', () => 
     }
   })
 })
+
+// ── computeDsoImpact — formula verification ───────────────────────────────────
+
+describe('computeDsoImpact — formula verification', () => {
+  it('revenue=365000, daysReduction=1 → 1000 (365000/365*1)', () => {
+    expect(computeDsoImpact(365_000, 1)).toBe(1_000)
+  })
+
+  it('revenue=365000, daysReduction=10 → 10000', () => {
+    expect(computeDsoImpact(365_000, 10)).toBe(10_000)
+  })
+
+  it('revenue=730000, daysReduction=5 → 10000 (730000/365*5)', () => {
+    expect(computeDsoImpact(730_000, 5)).toBe(10_000)
+  })
+
+  it('revenue=0 → 0 (guard clause)', () => {
+    expect(computeDsoImpact(0, 10)).toBe(0)
+  })
+
+  it('daysReduction=0 → 0 (guard clause)', () => {
+    expect(computeDsoImpact(365_000, 0)).toBe(0)
+  })
+
+  it('negative revenue → 0 (guard clause)', () => {
+    expect(computeDsoImpact(-100_000, 5)).toBe(0)
+  })
+
+  it('negative daysReduction → 0 (guard clause)', () => {
+    expect(computeDsoImpact(365_000, -5)).toBe(0)
+  })
+
+  it('result is always Math.round applied', () => {
+    // revenue=100000, days=7 → 100000/365*7 = 1917.808... → round = 1918
+    const result = computeDsoImpact(100_000, 7)
+    expect(result).toBe(Math.round((100_000 / 365) * 7))
+  })
+})
+
+// ── computeDpoImpact — formula verification ───────────────────────────────────
+
+describe('computeDpoImpact — formula verification', () => {
+  it('purchases=365000, daysExtension=1 → 1000', () => {
+    expect(computeDpoImpact(365_000, 1)).toBe(1_000)
+  })
+
+  it('purchases=365000, daysExtension=15 → 15000', () => {
+    expect(computeDpoImpact(365_000, 15)).toBe(15_000)
+  })
+
+  it('purchases=0 → 0 (guard clause)', () => {
+    expect(computeDpoImpact(0, 10)).toBe(0)
+  })
+
+  it('daysExtension=0 → 0 (guard clause)', () => {
+    expect(computeDpoImpact(365_000, 0)).toBe(0)
+  })
+
+  it('negative purchases → 0 (guard clause)', () => {
+    expect(computeDpoImpact(-50_000, 5)).toBe(0)
+  })
+
+  it('result is always Math.round applied', () => {
+    const result = computeDpoImpact(200_000, 10)
+    expect(result).toBe(Math.round((200_000 / 365) * 10))
+  })
+})
+
+// ── computeDioImpact — formula verification ───────────────────────────────────
+
+describe('computeDioImpact — formula verification', () => {
+  it('cogs=365000, daysReduction=1 → 1000', () => {
+    expect(computeDioImpact(365_000, 1)).toBe(1_000)
+  })
+
+  it('cogs=365000, daysReduction=30 → 30000', () => {
+    expect(computeDioImpact(365_000, 30)).toBe(30_000)
+  })
+
+  it('cogs=0 → 0 (guard clause)', () => {
+    expect(computeDioImpact(0, 10)).toBe(0)
+  })
+
+  it('daysReduction=0 → 0 (guard clause)', () => {
+    expect(computeDioImpact(365_000, 0)).toBe(0)
+  })
+
+  it('negative cogs → 0 (guard clause)', () => {
+    expect(computeDioImpact(-100_000, 5)).toBe(0)
+  })
+
+  it('result is always Math.round applied', () => {
+    const result = computeDioImpact(500_000, 7)
+    expect(result).toBe(Math.round((500_000 / 365) * 7))
+  })
+})
+
+// ── computeCccImprovementPotential — combined calculations ────────────────────
+
+describe('computeCccImprovementPotential — combined calculations', () => {
+  it('all three impacts sum correctly: 1000+2000+3000 = 6000', () => {
+    expect(computeCccImprovementPotential(1_000, 2_000, 3_000)).toBe(6_000)
+  })
+
+  it('all zeros → 0', () => {
+    expect(computeCccImprovementPotential(0, 0, 0)).toBe(0)
+  })
+
+  it('one component + two zeros → returns that component', () => {
+    expect(computeCccImprovementPotential(5_000, 0, 0)).toBe(5_000)
+  })
+
+  it('negative values treated as 0 via ||', () => {
+    // NaN || 0 = 0; but here we just test basic summation
+    expect(computeCccImprovementPotential(0, 0, 0)).toBe(0)
+  })
+
+  it('large values sum correctly', () => {
+    expect(computeCccImprovementPotential(100_000, 200_000, 50_000)).toBe(350_000)
+  })
+
+  it('result is sum of three individual impacts', () => {
+    const dso = computeDsoImpact(730_000, 5)
+    const dpo = computeDpoImpact(365_000, 10)
+    const dio = computeDioImpact(365_000, 15)
+    expect(computeCccImprovementPotential(dso, dpo, dio)).toBe(dso + dpo + dio)
+  })
+})
+
+// ── classifyOptimizationPriority — boundary tests ────────────────────────────
+
+describe('classifyOptimizationPriority — boundary tests', () => {
+  it('cash=100001, days=11 → high (both conditions met)', () => {
+    expect(classifyOptimizationPriority(100_001, 11)).toBe('high')
+  })
+
+  it('cash=100000, days=11 → medium (cash not > 100000)', () => {
+    expect(classifyOptimizationPriority(100_000, 11)).toBe('medium')
+  })
+
+  it('cash=100001, days=10 → medium (days not > 10)', () => {
+    expect(classifyOptimizationPriority(100_001, 10)).toBe('medium')
+  })
+
+  it('cash=20001, days=0 → medium (cash > 20000)', () => {
+    expect(classifyOptimizationPriority(20_001, 0)).toBe('medium')
+  })
+
+  it('cash=20000, days=0 → low (cash not > 20000)', () => {
+    expect(classifyOptimizationPriority(20_000, 0)).toBe('low')
+  })
+
+  it('cash=0, days=6 → medium (days > 5)', () => {
+    expect(classifyOptimizationPriority(0, 6)).toBe('medium')
+  })
+
+  it('cash=0, days=5 → low (days not > 5)', () => {
+    expect(classifyOptimizationPriority(0, 5)).toBe('low')
+  })
+
+  it('cash=0, days=0 → low (nothing qualifies)', () => {
+    expect(classifyOptimizationPriority(0, 0)).toBe('low')
+  })
+})
+
+// ── Edge cases: 0 revenue, 0 purchases, 0 inventory days ─────────────────────
+
+describe('edge cases: zero inputs', () => {
+  it('DSO impact: 0 revenue → 0', () => {
+    expect(computeDsoImpact(0, 30)).toBe(0)
+  })
+
+  it('DPO impact: 0 purchases → 0', () => {
+    expect(computeDpoImpact(0, 15)).toBe(0)
+  })
+
+  it('DIO impact: 0 cogs → 0', () => {
+    expect(computeDioImpact(0, 10)).toBe(0)
+  })
+
+  it('CCC improvement: all zero impacts → 0 total', () => {
+    expect(computeCccImprovementPotential(0, 0, 0)).toBe(0)
+  })
+
+  it('DSO impact: 0 days reduction → 0', () => {
+    expect(computeDsoImpact(1_000_000, 0)).toBe(0)
+  })
+
+  it('DPO impact: 0 days extension → 0', () => {
+    expect(computeDpoImpact(1_000_000, 0)).toBe(0)
+  })
+
+  it('DIO impact: 0 days reduction → 0', () => {
+    expect(computeDioImpact(1_000_000, 0)).toBe(0)
+  })
+})

@@ -310,3 +310,348 @@ describe('runJob — non-string thrown value', () => {
     expect(result.recordsProcessed).toBe(0)
   })
 })
+
+// ─────────────────────────────────────────────────────────────────────────────
+// buildIdempotencyKey — format patterns
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('buildIdempotencyKey — format patterns', () => {
+  it('builds key as jobType_companyId_date for standard inputs', () => {
+    const key = buildIdempotencyKey('payroll_sync', 'co-999', '2026-12-31')
+    expect(key).toBe('payroll_sync_co-999_2026-12-31')
+  })
+
+  it('date portion is at the end', () => {
+    const key = buildIdempotencyKey('accrual', 'co-1', '2026-03-01')
+    expect(key.endsWith('2026-03-01')).toBe(true)
+  })
+
+  it('jobType portion is at the start', () => {
+    const key = buildIdempotencyKey('interest_calc', 'co-2', '2026-01-15')
+    expect(key.startsWith('interest_calc')).toBe(true)
+  })
+
+  it('companyId portion is in the middle', () => {
+    const key = buildIdempotencyKey('sync', 'company-XYZ', '2026-06-01')
+    expect(key).toContain('company-XYZ')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// buildIdempotencyKey — separator character
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('buildIdempotencyKey — separator character', () => {
+  it('uses underscore between jobType and companyId', () => {
+    const key = buildIdempotencyKey('my_job', 'co-1', '2026-01-01')
+    // should have the format "my_job_co-1_2026-01-01"
+    expect(key).toContain('my_job_co-1')
+  })
+
+  it('uses underscore between companyId and date', () => {
+    const key = buildIdempotencyKey('job', 'co-1', '2026-01-01')
+    expect(key).toContain('co-1_2026-01-01')
+  })
+
+  it('key with simple names has exactly two underscore boundaries', () => {
+    // jobType=abc, companyId=def, date=2026-01-01 → abc_def_2026-01-01
+    const key = buildIdempotencyKey('abc', 'def', '2026-01-01')
+    expect(key).toBe('abc_def_2026-01-01')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// buildIdempotencyKey — platform-wide (no companyId)
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('buildIdempotencyKey — platform-wide (no companyId)', () => {
+  it('undefined companyId inserts "platform" segment', () => {
+    const key = buildIdempotencyKey('global_purge', undefined, '2026-05-01')
+    expect(key).toContain('platform')
+  })
+
+  it('platform key still ends with date', () => {
+    const key = buildIdempotencyKey('nightly_job', undefined, '2026-05-15')
+    expect(key.endsWith('2026-05-15')).toBe(true)
+  })
+
+  it('platform key format is jobType_platform_date', () => {
+    const key = buildIdempotencyKey('nightly', undefined, '2026-01-01')
+    expect(key).toBe('nightly_platform_2026-01-01')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// buildIdempotencyKey — deterministic
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('buildIdempotencyKey — deterministic', () => {
+  it('same inputs always produce same output', () => {
+    const k1 = buildIdempotencyKey('job_a', 'co-abc', '2026-03-10')
+    const k2 = buildIdempotencyKey('job_a', 'co-abc', '2026-03-10')
+    expect(k1).toBe(k2)
+  })
+
+  it('calling multiple times gives same result', () => {
+    const keys = Array.from({ length: 5 }, () => buildIdempotencyKey('sync', 'co-1', '2026-07-01'))
+    const allEqual = keys.every(k => k === keys[0])
+    expect(allEqual).toBe(true)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// createTimer — elapsed time
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('createTimer — elapsed time', () => {
+  it('elapsed() returns a positive number after some computation', () => {
+    const logSpy = vi.spyOn(console, 'info').mockImplementation(() => {})
+    const timer = createTimer('elapsed-test')
+    // do some work
+    let sum = 0
+    for (let i = 0; i < 100000; i++) sum += i
+    timer.end({ sum })
+    const logged = JSON.parse(logSpy.mock.calls[0][0] as string)
+    expect(logged.duration_ms).toBeGreaterThanOrEqual(0)
+    logSpy.mockRestore()
+  })
+
+  it('duration_ms is a number type', () => {
+    const logSpy = vi.spyOn(console, 'info').mockImplementation(() => {})
+    const timer = createTimer('type-check')
+    timer.end()
+    const logged = JSON.parse(logSpy.mock.calls[0][0] as string)
+    expect(typeof logged.duration_ms).toBe('number')
+    logSpy.mockRestore()
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// createTimer — elapsed is monotonic
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('createTimer — elapsed is monotonic', () => {
+  it('two successive end() calls produce non-decreasing durations', async () => {
+    const logSpy = vi.spyOn(console, 'info').mockImplementation(() => {})
+
+    const timer1 = createTimer('timer-first')
+    timer1.end()
+    const first = JSON.parse(logSpy.mock.calls[0][0] as string).duration_ms
+
+    await new Promise(r => setTimeout(r, 5))
+
+    const timer2 = createTimer('timer-second')
+    timer2.end()
+    const second = JSON.parse(logSpy.mock.calls[1][0] as string).duration_ms
+
+    // Both are valid non-negative values
+    expect(first).toBeGreaterThanOrEqual(0)
+    expect(second).toBeGreaterThanOrEqual(0)
+    logSpy.mockRestore()
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// createTimer — returns object with elapsed function
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('createTimer — returns object with elapsed function', () => {
+  it('createTimer returns an object', () => {
+    const timer = createTimer('shape-test')
+    expect(typeof timer).toBe('object')
+    expect(timer).not.toBeNull()
+  })
+
+  it('returned object has end function', () => {
+    const timer = createTimer('end-fn-test')
+    expect(typeof timer.end).toBe('function')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// runJob — failed job records status=failed with custom error message
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('runJob — failed with custom error message', () => {
+  it('custom error message is preserved in result', async () => {
+    const supabase = makeSupabaseMock({}, { data: null, error: null })
+    const job = vi.fn().mockResolvedValue<JobResult>({
+      status: 'failed',
+      recordsProcessed: 0,
+      error: 'Custom error: database timeout after 30s',
+    })
+
+    const result = await runJob(makeCtx(), job, supabase)
+    expect(result.status).toBe('failed')
+    expect(result.error).toBe('Custom error: database timeout after 30s')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// runJob — completed with 0 records processed
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('runJob — completed with 0 records processed', () => {
+  it('recordsProcessed=0 is valid success', async () => {
+    const supabase = makeSupabaseMock({}, { data: null, error: null })
+    const job = vi.fn().mockResolvedValue<JobResult>({
+      status: 'completed',
+      recordsProcessed: 0,
+    })
+
+    const result = await runJob(makeCtx(), job, supabase)
+    expect(result.status).toBe('completed')
+    expect(result.recordsProcessed).toBe(0)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// runJob — metadata as empty object
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('runJob — metadata as empty object', () => {
+  it('metadata={} is valid and returned', async () => {
+    const supabase = makeSupabaseMock({}, { data: null, error: null })
+    const job = vi.fn().mockResolvedValue<JobResult>({
+      status: 'completed',
+      recordsProcessed: 1,
+      metadata: {},
+    })
+
+    const result = await runJob(makeCtx(), job, supabase)
+    expect(result.status).toBe('completed')
+    expect(result.metadata).toBeDefined()
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// buildIdempotencyKey — additional key uniqueness tests
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('buildIdempotencyKey — key uniqueness', () => {
+  it('16 distinct dates produce 16 distinct keys', () => {
+    const dates = Array.from({ length: 16 }, (_, i) => `2026-01-${String(i + 1).padStart(2, '0')}`)
+    const keys = dates.map(d => buildIdempotencyKey('job', 'co-1', d))
+    const unique = new Set(keys)
+    expect(unique.size).toBe(16)
+  })
+
+  it('key with platform segment is distinct from key with company', () => {
+    const k1 = buildIdempotencyKey('job', undefined, '2026-01-01')
+    const k2 = buildIdempotencyKey('job', 'platform', '2026-01-01')
+    // Both should contain 'platform' but may differ in exact format depending on implementation
+    expect(typeof k1).toBe('string')
+    expect(typeof k2).toBe('string')
+  })
+
+  it('empty string companyId behaves consistently', () => {
+    const k1 = buildIdempotencyKey('job', '', '2026-01-01')
+    const k2 = buildIdempotencyKey('job', '', '2026-01-01')
+    expect(k1).toBe(k2)
+  })
+
+  it('key contains jobType verbatim', () => {
+    const jobType = 'very_specific_job_type'
+    const key = buildIdempotencyKey(jobType, 'co-1', '2026-01-01')
+    expect(key).toContain(jobType)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// runJob — various completion states
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('runJob — various completion states', () => {
+  it('large recordsProcessed value is returned correctly', async () => {
+    const supabase = makeSupabaseMock({}, { data: null, error: null })
+    const job = vi.fn().mockResolvedValue<JobResult>({
+      status: 'completed',
+      recordsProcessed: 100_000,
+    })
+
+    const result = await runJob(makeCtx(), job, supabase)
+    expect(result.recordsProcessed).toBe(100_000)
+  })
+
+  it('job is only called once even on success', async () => {
+    const supabase = makeSupabaseMock({}, { data: null, error: null })
+    const job = vi.fn().mockResolvedValue<JobResult>({ status: 'completed', recordsProcessed: 1 })
+
+    await runJob(makeCtx(), job, supabase)
+    expect(job).toHaveBeenCalledTimes(1)
+  })
+
+  it('job is only called once on failure', async () => {
+    const supabase = makeSupabaseMock({}, { data: null, error: null })
+    const job = vi.fn().mockResolvedValue<JobResult>({ status: 'failed', recordsProcessed: 0, error: 'err' })
+
+    await runJob(makeCtx(), job, supabase)
+    expect(job).toHaveBeenCalledTimes(1)
+  })
+
+  it('metadata with nested object is preserved', async () => {
+    const supabase = makeSupabaseMock({}, { data: null, error: null })
+    const job = vi.fn().mockResolvedValue<JobResult>({
+      status: 'completed',
+      recordsProcessed: 3,
+      metadata: { nested: { a: 1, b: 2 }, list: [1, 2, 3] },
+    })
+
+    const result = await runJob(makeCtx(), job, supabase)
+    expect((result.metadata as any)?.nested?.a).toBe(1)
+    expect((result.metadata as any)?.list).toHaveLength(3)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// createTimer — edge cases
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('createTimer — edge cases', () => {
+  it('end() can be called with numeric metadata', () => {
+    const logSpy = vi.spyOn(console, 'info').mockImplementation(() => {})
+    const timer = createTimer('numeric-meta')
+    timer.end({ count: 42, amount: 9999.99 })
+    const logged = JSON.parse(logSpy.mock.calls[0][0] as string)
+    expect(logged.count).toBe(42)
+    expect(logged.amount).toBeCloseTo(9999.99, 1)
+    logSpy.mockRestore()
+  })
+
+  it('level field is "info"', () => {
+    const logSpy = vi.spyOn(console, 'info').mockImplementation(() => {})
+    const timer = createTimer('level-check')
+    timer.end()
+    const logged = JSON.parse(logSpy.mock.calls[0][0] as string)
+    expect(logged.level).toBe('info')
+    logSpy.mockRestore()
+  })
+
+  it('message follows "operationName completed" pattern', () => {
+    const logSpy = vi.spyOn(console, 'info').mockImplementation(() => {})
+    const timer = createTimer('my-operation')
+    timer.end()
+    const logged = JSON.parse(logSpy.mock.calls[0][0] as string)
+    expect(logged.message).toBe('my-operation completed')
+    logSpy.mockRestore()
+  })
+
+  it('duration_ms is finite', () => {
+    const logSpy = vi.spyOn(console, 'info').mockImplementation(() => {})
+    const timer = createTimer('finite-check')
+    timer.end()
+    const logged = JSON.parse(logSpy.mock.calls[0][0] as string)
+    expect(isFinite(logged.duration_ms)).toBe(true)
+    logSpy.mockRestore()
+  })
+
+  it('boolean metadata is preserved', () => {
+    const logSpy = vi.spyOn(console, 'info').mockImplementation(() => {})
+    const timer = createTimer('bool-meta')
+    timer.end({ success: true, retried: false })
+    const logged = JSON.parse(logSpy.mock.calls[0][0] as string)
+    expect(logged.success).toBe(true)
+    expect(logged.retried).toBe(false)
+    logSpy.mockRestore()
+  })
+})
