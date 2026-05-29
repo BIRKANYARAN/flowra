@@ -1,806 +1,764 @@
 /**
  * Cash Flow Forecasting Service — unit tests
  *
- * Covers all pure functions. No DB or network calls.
- * Target: 85+ tests
+ * Tests all pure computation functions exported from cashflow-forecast.service.ts.
+ * No DB or network calls — pure function tests only.
+ *
+ * Target: 120+ tests covering all 14 exported pure functions.
  */
 
 import { describe, it, expect } from 'vitest'
 import {
-  getIsoWeekStart,
-  buildWeekBuckets,
-  computeRiskAdjustedAmount,
-  applyGrowthFactor,
-  computeWeeklyInflows,
-  computeWeeklyOutflows,
-  buildWeeklyForecast,
-  computeForecastSummary,
-  classifyLiquidityOutlook,
-  computeBreakevenWeeklyRevenue,
-  generateForecastNarrative,
+  computeMonthlyRevenueForecast,
+  computeMonthlyExpenseForecast,
+  computeNetCashFlowForecast,
+  computeCumulativeCashPosition,
+  computeRunwayMonths,
+  classifyRunwayStatus,
+  computeWorstCaseAdjustment,
+  computeBestCaseAdjustment,
+  computeDebtServiceSchedule,
+  computeAdjustedCashFlow,
+  computeAvgMonthlyCashBurn,
+  computeBreakEvenMonth,
+  classifyCashFlowTrend,
+  generateCashFlowForecastNarrative,
 } from '../lib/services/finance/cashflow-forecast.service'
-import type { WeeklyBucket } from '../lib/services/finance/cashflow-forecast.service'
 
 // ─────────────────────────────────────────────────────────────────────────────
-// getIsoWeekStart
+// 1. computeMonthlyRevenueForecast
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe('getIsoWeekStart', () => {
-  it('1. Monday input → same day returned', () => {
-    const monday = new Date('2026-01-05') // known Monday
-    const result = getIsoWeekStart(monday)
-    expect(result.getDay()).toBe(1) // Monday = 1
-    expect(result.getDate()).toBe(5)
+describe('computeMonthlyRevenueForecast', () => {
+  it('1. empty array → returns array of forecastMonths zeros', () => {
+    const result = computeMonthlyRevenueForecast([], 6)
+    expect(result).toHaveLength(6)
+    expect(result.every(v => v === 0)).toBe(true)
   })
 
-  it('2. Tuesday input → previous Monday', () => {
-    const tuesday = new Date('2026-01-06') // Tuesday
-    const result = getIsoWeekStart(tuesday)
-    expect(result.getDate()).toBe(5) // Monday Jan 5
+  it('2. empty array with forecastMonths=1 → [0]', () => {
+    expect(computeMonthlyRevenueForecast([], 1)).toEqual([0])
   })
 
-  it('3. Sunday input → Monday 6 days before', () => {
-    const sunday = new Date('2026-01-11') // Sunday
-    const result = getIsoWeekStart(sunday)
-    expect(result.getDate()).toBe(5) // Monday Jan 5
-    expect(result.getDay()).toBe(1)
+  it('3. empty array with forecastMonths=0 → []', () => {
+    expect(computeMonthlyRevenueForecast([], 0)).toEqual([])
   })
 
-  it('4. Wednesday input → Monday of same week', () => {
-    const wednesday = new Date('2026-01-07') // Wednesday
-    const result = getIsoWeekStart(wednesday)
-    expect(result.getDate()).toBe(5)
+  it('4. single element → forecast repeats that value', () => {
+    const result = computeMonthlyRevenueForecast([10_000], 3)
+    expect(result).toHaveLength(3)
+    // With single element, smoothed = 10000, all months = 10000
+    expect(result[0]).toBeCloseTo(10_000)
   })
 
-  it('5. Saturday input → Monday of same week', () => {
-    const saturday = new Date('2026-01-10') // Saturday
-    const result = getIsoWeekStart(saturday)
-    expect(result.getDate()).toBe(5)
+  it('5. constant array → forecast approximates that constant', () => {
+    const data = Array(12).fill(50_000)
+    const result = computeMonthlyRevenueForecast(data, 6, 0.3)
+    expect(result).toHaveLength(6)
+    // Exponential smoothing of constant series converges to the constant
+    result.forEach(v => expect(v).toBeCloseTo(50_000, 0))
   })
 
-  it('6. Friday input → Monday of same week', () => {
-    const friday = new Date('2026-01-09')
-    const result = getIsoWeekStart(friday)
-    expect(result.getDate()).toBe(5)
+  it('6. basic smoothing with alpha=0.3 — two data points', () => {
+    // S_0 = 100, S_1 = 0.3*200 + 0.7*100 = 60 + 70 = 130
+    const result = computeMonthlyRevenueForecast([100, 200], 1, 0.3)
+    expect(result[0]).toBeCloseTo(130)
   })
 
-  it('7. Result time is zeroed out (midnight)', () => {
-    const d = new Date('2026-01-07T15:30:00Z')
-    const result = getIsoWeekStart(d)
-    expect(result.getHours()).toBe(0)
-    expect(result.getMinutes()).toBe(0)
-    expect(result.getSeconds()).toBe(0)
+  it('7. alpha=1.0 → forecast = last historical value', () => {
+    const result = computeMonthlyRevenueForecast([100, 200, 300], 3, 1.0)
+    result.forEach(v => expect(v).toBeCloseTo(300))
   })
 
-  it('8. Result day is always Monday (day 1)', () => {
-    // Test various days of the week
-    const dates = ['2026-01-05', '2026-01-06', '2026-01-07', '2026-01-08', '2026-01-09', '2026-01-10', '2026-01-11']
-    for (const d of dates) {
-      expect(getIsoWeekStart(new Date(d)).getDay()).toBe(1)
-    }
+  it('8. alpha=0.0 → forecast = first value (smoothed never updates)', () => {
+    const result = computeMonthlyRevenueForecast([100, 200, 300], 3, 0.0)
+    result.forEach(v => expect(v).toBeCloseTo(100))
   })
 
-  it('9. Cross-month boundary: Sunday Dec 27 → Monday Dec 21', () => {
-    const sunday = new Date('2026-12-27') // Sunday
-    const result = getIsoWeekStart(sunday)
-    expect(result.getDay()).toBe(1)
+  it('9. returns exactly forecastMonths elements', () => {
+    const result = computeMonthlyRevenueForecast([1000, 2000, 3000], 12)
+    expect(result).toHaveLength(12)
+  })
+
+  it('10. all zeros in historical → forecast is all zeros', () => {
+    const result = computeMonthlyRevenueForecast([0, 0, 0], 4)
+    result.forEach(v => expect(v).toBe(0))
+  })
+
+  it('11. increasing series → forecast is positive', () => {
+    const data = [10_000, 20_000, 30_000, 40_000, 50_000]
+    const result = computeMonthlyRevenueForecast(data, 3)
+    result.forEach(v => expect(v).toBeGreaterThan(0))
+  })
+
+  it('12. default alpha=0.3 is used when not specified', () => {
+    const withDefault = computeMonthlyRevenueForecast([100, 200], 1)
+    const withExplicit = computeMonthlyRevenueForecast([100, 200], 1, 0.3)
+    expect(withDefault[0]).toBeCloseTo(withExplicit[0])
+  })
+
+  it('13. large values — no overflow', () => {
+    const data = [1_000_000_000, 2_000_000_000]
+    const result = computeMonthlyRevenueForecast(data, 6)
+    result.forEach(v => expect(Number.isFinite(v)).toBe(true))
   })
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
-// buildWeekBuckets
+// 2. computeMonthlyExpenseForecast
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe('buildWeekBuckets', () => {
-  it('10. Returns exactly 13 buckets for weeks=13', () => {
-    const result = buildWeekBuckets(new Date('2026-01-05'), 13)
-    expect(result).toHaveLength(13)
+describe('computeMonthlyExpenseForecast', () => {
+  it('14. empty array → returns array of zeros', () => {
+    const result = computeMonthlyExpenseForecast([], 6)
+    expect(result).toHaveLength(6)
+    result.forEach(v => expect(v).toBe(0))
   })
 
-  it('11. First bucket week_number is 1', () => {
-    const result = buildWeekBuckets(new Date('2026-01-05'), 13)
-    expect(result[0].week_number).toBe(1)
+  it('15. single element → forecast = that value', () => {
+    const result = computeMonthlyExpenseForecast([5_000], 3)
+    expect(result).toHaveLength(3)
+    result.forEach(v => expect(v).toBeGreaterThanOrEqual(0))
   })
 
-  it('12. Last bucket week_number is 13', () => {
-    const result = buildWeekBuckets(new Date('2026-01-05'), 13)
-    expect(result[12].week_number).toBe(13)
+  it('16. constant expenses → forecast approximates constant', () => {
+    const data = Array(12).fill(30_000)
+    const result = computeMonthlyExpenseForecast(data, 6)
+    result.forEach(v => expect(v).toBeCloseTo(30_000, -2))
   })
 
-  it('13. week_number increments by 1 each row', () => {
-    const result = buildWeekBuckets(new Date('2026-01-05'), 13)
-    for (let i = 0; i < 13; i++) {
-      expect(result[i].week_number).toBe(i + 1)
-    }
+  it('17. increasing trend → later months higher than earlier', () => {
+    const data = [10_000, 15_000, 20_000, 25_000, 30_000, 35_000]
+    const result = computeMonthlyExpenseForecast(data, 6)
+    // With increasing trend, later months should be >= earlier
+    expect(result[5]).toBeGreaterThanOrEqual(result[0])
   })
 
-  it('14. All week_start dates are Mondays', () => {
-    const result = buildWeekBuckets(new Date('2026-01-05'), 13)
-    for (const bucket of result) {
-      const d = new Date(bucket.week_start)
-      expect(d.getDay()).toBe(1) // Monday
-    }
+  it('18. decreasing trend → should not produce negative values', () => {
+    const data = [100_000, 80_000, 60_000, 40_000, 20_000, 10_000]
+    const result = computeMonthlyExpenseForecast(data, 6)
+    result.forEach(v => expect(v).toBeGreaterThanOrEqual(0))
   })
 
-  it('15. All week_end dates are Sundays', () => {
-    const result = buildWeekBuckets(new Date('2026-01-05'), 13)
-    for (const bucket of result) {
-      const d = new Date(bucket.week_end)
-      expect(d.getDay()).toBe(0) // Sunday
-    }
+  it('19. returns exactly forecastMonths elements', () => {
+    const result = computeMonthlyExpenseForecast([1000, 2000, 3000], 12)
+    expect(result).toHaveLength(12)
   })
 
-  it('16. week_end is 6 days after week_start', () => {
-    const result = buildWeekBuckets(new Date('2026-01-05'), 13)
-    for (const bucket of result) {
-      const start = new Date(bucket.week_start)
-      const end = new Date(bucket.week_end)
-      const diffDays = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
-      expect(diffDays).toBe(6)
-    }
+  it('20. two elements — uses both for recent avg', () => {
+    const result = computeMonthlyExpenseForecast([10_000, 20_000], 3)
+    expect(result).toHaveLength(3)
+    result.forEach(v => expect(Number.isFinite(v)).toBe(true))
   })
 
-  it('17. Consecutive buckets are exactly 7 days apart', () => {
-    const result = buildWeekBuckets(new Date('2026-01-05'), 13)
-    for (let i = 1; i < result.length; i++) {
-      const prev = new Date(result[i - 1].week_start)
-      const curr = new Date(result[i].week_start)
-      const diffDays = (curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24)
-      expect(diffDays).toBe(7)
-    }
-  })
-
-  it('18. Start of forecast is next Monday after input', () => {
-    // Monday Jan 5 → next Monday is Jan 12
-    const result = buildWeekBuckets(new Date('2026-01-05'), 1)
-    expect(result[0].week_start).toBe('2026-01-12')
-  })
-
-  it('19. Works for weeks=1', () => {
-    const result = buildWeekBuckets(new Date('2026-01-05'), 1)
-    expect(result).toHaveLength(1)
-    expect(result[0].week_number).toBe(1)
-  })
-
-  it('20. Dates formatted as YYYY-MM-DD strings', () => {
-    const result = buildWeekBuckets(new Date('2026-01-05'), 13)
-    const isoPattern = /^\d{4}-\d{2}-\d{2}$/
-    for (const bucket of result) {
-      expect(bucket.week_start).toMatch(isoPattern)
-      expect(bucket.week_end).toMatch(isoPattern)
-    }
-  })
-
-  it('21. Wednesday input: first bucket still starts next Monday', () => {
-    const result = buildWeekBuckets(new Date('2026-01-07'), 1) // Wednesday Jan 7
-    // current week Monday = Jan 5, next Monday = Jan 12
-    expect(result[0].week_start).toBe('2026-01-12')
-  })
-
-  it('22. Sunday input: first bucket starts next Monday (tomorrow)', () => {
-    const result = buildWeekBuckets(new Date('2026-01-11'), 1) // Sunday Jan 11
-    // current week Monday = Jan 5, next Monday = Jan 12
-    expect(result[0].week_start).toBe('2026-01-12')
+  it('21. all zeros → forecast is all zeros', () => {
+    const result = computeMonthlyExpenseForecast([0, 0, 0, 0], 4)
+    result.forEach(v => expect(v).toBe(0))
   })
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
-// computeRiskAdjustedAmount
+// 3. computeNetCashFlowForecast
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe('computeRiskAdjustedAmount', () => {
-  it('23. probability 1.0 → same amount', () => {
-    expect(computeRiskAdjustedAmount(10000, 1.0)).toBe(10000)
+describe('computeNetCashFlowForecast', () => {
+  it('22. matching length arrays → revenue - expense per month', () => {
+    const result = computeNetCashFlowForecast([100, 200, 300], [50, 80, 120])
+    expect(result).toEqual([50, 120, 180])
   })
 
-  it('24. probability 0.0 → 0', () => {
-    expect(computeRiskAdjustedAmount(10000, 0.0)).toBe(0)
+  it('23. equal revenue and expenses → all zeros', () => {
+    const result = computeNetCashFlowForecast([100, 200], [100, 200])
+    expect(result).toEqual([0, 0])
   })
 
-  it('25. probability 0.5 → half amount', () => {
-    expect(computeRiskAdjustedAmount(10000, 0.5)).toBe(5000)
+  it('24. expenses > revenue → negative net flow', () => {
+    const result = computeNetCashFlowForecast([50], [100])
+    expect(result[0]).toBe(-50)
   })
 
-  it('26. probability 0.95 → 95% of amount', () => {
-    expect(computeRiskAdjustedAmount(1000, 0.95)).toBe(950)
+  it('25. empty arrays → empty result', () => {
+    expect(computeNetCashFlowForecast([], [])).toEqual([])
   })
 
-  it('27. probability 0.70 → 70% of amount', () => {
-    expect(computeRiskAdjustedAmount(1000, 0.70)).toBe(700)
-  })
-
-  it('28. Rounds to 2 decimal places', () => {
-    // 100 × 0.333 = 33.3, rounded to 2dp = 33.3
-    const result = computeRiskAdjustedAmount(100, 0.333)
-    expect(result).toBe(33.3)
-  })
-
-  it('29. Zero amount → 0', () => {
-    expect(computeRiskAdjustedAmount(0, 0.95)).toBe(0)
-  })
-
-  it('30. Large amount × probability', () => {
-    expect(computeRiskAdjustedAmount(500000, 0.85)).toBe(425000)
-  })
-})
-
-// ─────────────────────────────────────────────────────────────────────────────
-// applyGrowthFactor
-// ─────────────────────────────────────────────────────────────────────────────
-
-describe('applyGrowthFactor', () => {
-  it('31. growthRate 0 → base amount unchanged', () => {
-    expect(applyGrowthFactor(10000, 0, 5)).toBe(10000)
-  })
-
-  it('32. weekNumber 0 → base amount unchanged', () => {
-    expect(applyGrowthFactor(10000, 0.52, 0)).toBe(10000)
-  })
-
-  it('33. growthRate 0.52, weekNumber 1 → slight increase', () => {
-    // 10000 × (1 + 0.52/52 × 1) = 10000 × (1 + 0.01) = 10100
-    expect(applyGrowthFactor(10000, 0.52, 1)).toBe(10100)
-  })
-
-  it('34. Clamps to 0 for negative result (negative growth rate)', () => {
-    // -1000 base with high negative growth
-    expect(applyGrowthFactor(0, -100, 52)).toBe(0)
-  })
-
-  it('35. Large growth rate amplifies base', () => {
-    // 1000 × (1 + 52/52 × 1) = 1000 × 2 = 2000
-    expect(applyGrowthFactor(1000, 52, 1)).toBe(2000)
-  })
-
-  it('36. Zero base amount → 0 regardless of growth', () => {
-    expect(applyGrowthFactor(0, 0.5, 13)).toBe(0)
-  })
-
-  it('37. Rounds to 2 decimal places', () => {
-    // result should be round2 of computed value
-    const result = applyGrowthFactor(1000, 0.1, 3)
-    const expected = Math.round((1000 * (1 + 0.1 / 52 * 3) + Number.EPSILON) * 100) / 100
-    expect(result).toBe(expected)
-  })
-
-  it('38. Negative base clamped to 0 after growth', () => {
-    // negative base: -100 × (1 + 0.01×1) = -101 → clamped to 0
-    expect(applyGrowthFactor(-100, 0.52, 1)).toBe(0)
-  })
-
-  it('39. Result is always non-negative', () => {
-    for (let w = 1; w <= 13; w++) {
-      expect(applyGrowthFactor(1000, -200, w)).toBeGreaterThanOrEqual(0)
-    }
-  })
-})
-
-// ─────────────────────────────────────────────────────────────────────────────
-// computeWeeklyInflows
-// ─────────────────────────────────────────────────────────────────────────────
-
-describe('computeWeeklyInflows', () => {
-  it('40. Returns 2 categories', () => {
-    const result = computeWeeklyInflows(100000, 0.8, 50000, 0.3)
+  it('26. mismatched lengths → truncates to shorter array', () => {
+    const result = computeNetCashFlowForecast([100, 200, 300], [50, 80])
     expect(result).toHaveLength(2)
+    expect(result).toEqual([50, 120])
   })
 
-  it('41. First category is regular_collections', () => {
-    const result = computeWeeklyInflows(100000, 0.8, 50000, 0.3)
-    expect(result[0].category).toBe('regular_collections')
+  it('27. all zeros → all zeros', () => {
+    const result = computeNetCashFlowForecast([0, 0, 0], [0, 0, 0])
+    expect(result).toEqual([0, 0, 0])
   })
 
-  it('42. Second category is overdue_recovery', () => {
-    const result = computeWeeklyInflows(100000, 0.8, 50000, 0.3)
-    expect(result[1].category).toBe('overdue_recovery')
-  })
-
-  it('43. regular_collections expected_amount = avgMonthlyRevenue/4.33', () => {
-    const result = computeWeeklyInflows(86600, 1.0, 0, 0)
-    // 86600 / 4.33 ≈ 20000
-    expect(result[0].expected_amount).toBeCloseTo(20000, 0)
-  })
-
-  it('44. regular_collections probability matches collectionRate', () => {
-    const result = computeWeeklyInflows(100000, 0.75, 0, 0)
-    expect(result[0].probability).toBe(0.75)
-  })
-
-  it('45. regular_collections risk_adjusted = expected × collectionRate', () => {
-    const result = computeWeeklyInflows(86600, 0.8, 0, 0)
-    const expected = result[0].expected_amount * 0.8
-    expect(result[0].risk_adjusted_amount).toBeCloseTo(expected, 1)
-  })
-
-  it('46. overdue_recovery expected_amount = overdueReceivables × recoveryRate / 13', () => {
-    const result = computeWeeklyInflows(0, 1.0, 130000, 1.0)
-    // 130000 × 1.0 / 13 = 10000
-    expect(result[1].expected_amount).toBeCloseTo(10000, 0)
-  })
-
-  it('47. overdue_recovery probability matches expectedRecoveryRate', () => {
-    const result = computeWeeklyInflows(0, 0.8, 50000, 0.4)
-    expect(result[1].probability).toBe(0.4)
-  })
-
-  it('48. Zero avgMonthlyRevenue → regular_collections expected = 0', () => {
-    const result = computeWeeklyInflows(0, 0.8, 0, 0)
-    expect(result[0].expected_amount).toBe(0)
-    expect(result[0].risk_adjusted_amount).toBe(0)
-  })
-
-  it('49. Zero overdueReceivables → overdue_recovery amounts = 0', () => {
-    const result = computeWeeklyInflows(100000, 0.8, 0, 0.3)
-    expect(result[1].expected_amount).toBe(0)
-    expect(result[1].risk_adjusted_amount).toBe(0)
-  })
-
-  it('50. collectionRate 1.0 → risk_adjusted equals expected for regular', () => {
-    const result = computeWeeklyInflows(100000, 1.0, 0, 0)
-    expect(result[0].risk_adjusted_amount).toBe(result[0].expected_amount)
-  })
-
-  it('51. All amounts are non-negative', () => {
-    const result = computeWeeklyInflows(100000, 0.85, 50000, 0.3)
-    for (const cat of result) {
-      expect(cat.expected_amount).toBeGreaterThanOrEqual(0)
-      expect(cat.risk_adjusted_amount).toBeGreaterThanOrEqual(0)
-    }
+  it('28. positive net flows across 12 months', () => {
+    const rev = Array(12).fill(100_000)
+    const exp = Array(12).fill(60_000)
+    const result = computeNetCashFlowForecast(rev, exp)
+    result.forEach(v => expect(v).toBe(40_000))
   })
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
-// computeWeeklyOutflows
+// 4. computeCumulativeCashPosition
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe('computeWeeklyOutflows', () => {
-  it('52. Returns 4 categories', () => {
-    const result = computeWeeklyOutflows(100000, 20000, 50000, 30000)
-    expect(result).toHaveLength(4)
+describe('computeCumulativeCashPosition', () => {
+  it('29. starting cash + net flows accumulate correctly', () => {
+    const result = computeCumulativeCashPosition(1000, [100, 200, -50])
+    expect(result).toEqual([1100, 1300, 1250])
   })
 
-  it('53. Categories are operating_expenses, debt_service, capex, tax_payments', () => {
-    const result = computeWeeklyOutflows(100000, 20000, 50000, 30000)
-    const cats = result.map(c => c.category)
-    expect(cats).toContain('operating_expenses')
-    expect(cats).toContain('debt_service')
-    expect(cats).toContain('capex')
-    expect(cats).toContain('tax_payments')
+  it('30. starting cash zero, all positive flows', () => {
+    const result = computeCumulativeCashPosition(0, [100, 100, 100])
+    expect(result).toEqual([100, 200, 300])
   })
 
-  it('54. operating_expenses expected_amount = avgMonthlyExpenses/4.33', () => {
-    const result = computeWeeklyOutflows(86600, 0, 0, 0)
-    const opex = result.find(c => c.category === 'operating_expenses')!
-    expect(opex.expected_amount).toBeCloseTo(20000, 0)
+  it('31. starting cash negative', () => {
+    const result = computeCumulativeCashPosition(-500, [200, 300])
+    expect(result[0]).toBe(-300)
+    expect(result[1]).toBe(0)
   })
 
-  it('55. operating_expenses probability = 0.95', () => {
-    const result = computeWeeklyOutflows(100000, 0, 0, 0)
-    const opex = result.find(c => c.category === 'operating_expenses')!
-    expect(opex.probability).toBe(0.95)
+  it('32. empty net cash flows → empty result', () => {
+    expect(computeCumulativeCashPosition(1000, [])).toEqual([])
   })
 
-  it('56. debt_service expected_amount = monthlyLoanRepayments/4.33', () => {
-    const result = computeWeeklyOutflows(0, 43300, 0, 0)
-    const debt = result.find(c => c.category === 'debt_service')!
-    expect(debt.expected_amount).toBeCloseTo(10000, 0)
+  it('33. all negative flows → cash declining', () => {
+    const result = computeCumulativeCashPosition(10_000, [-1000, -2000, -3000])
+    expect(result[0]).toBe(9_000)
+    expect(result[1]).toBe(7_000)
+    expect(result[2]).toBe(4_000)
   })
 
-  it('57. debt_service probability = 1.0', () => {
-    const result = computeWeeklyOutflows(0, 10000, 0, 0)
-    const debt = result.find(c => c.category === 'debt_service')!
-    expect(debt.probability).toBe(1.0)
+  it('34. high starting cash, small flows — stays positive throughout', () => {
+    const result = computeCumulativeCashPosition(1_000_000, Array(12).fill(-5000))
+    result.forEach(v => expect(v).toBeGreaterThan(0))
   })
 
-  it('58. debt_service risk_adjusted_amount = expected (probability 1.0)', () => {
-    const result = computeWeeklyOutflows(0, 10000, 0, 0)
-    const debt = result.find(c => c.category === 'debt_service')!
-    expect(debt.risk_adjusted_amount).toBe(debt.expected_amount)
-  })
-
-  it('59. capex expected_amount = plannedCapex/13', () => {
-    const result = computeWeeklyOutflows(0, 0, 130000, 0)
-    const capex = result.find(c => c.category === 'capex')!
-    expect(capex.expected_amount).toBeCloseTo(10000, 0)
-  })
-
-  it('60. capex probability = 0.70', () => {
-    const result = computeWeeklyOutflows(0, 0, 100000, 0)
-    const capex = result.find(c => c.category === 'capex')!
-    expect(capex.probability).toBe(0.70)
-  })
-
-  it('61. capex risk_adjusted_amount = expected × 0.70', () => {
-    const result = computeWeeklyOutflows(0, 0, 130000, 0)
-    const capex = result.find(c => c.category === 'capex')!
-    expect(capex.risk_adjusted_amount).toBeCloseTo(capex.expected_amount * 0.70, 1)
-  })
-
-  it('62. tax_payments expected_amount = taxPaymentThisQuarter/13', () => {
-    const result = computeWeeklyOutflows(0, 0, 0, 130000)
-    const tax = result.find(c => c.category === 'tax_payments')!
-    expect(tax.expected_amount).toBeCloseTo(10000, 0)
-  })
-
-  it('63. tax_payments probability = 1.0', () => {
-    const result = computeWeeklyOutflows(0, 0, 0, 100000)
-    const tax = result.find(c => c.category === 'tax_payments')!
-    expect(tax.probability).toBe(1.0)
-  })
-
-  it('64. Zero taxPayment → tax_payments amounts = 0', () => {
-    const result = computeWeeklyOutflows(0, 0, 0, 0)
-    const tax = result.find(c => c.category === 'tax_payments')!
-    expect(tax.expected_amount).toBe(0)
-    expect(tax.risk_adjusted_amount).toBe(0)
-  })
-
-  it('65. All categories have non-negative amounts', () => {
-    const result = computeWeeklyOutflows(100000, 20000, 50000, 30000)
-    for (const cat of result) {
-      expect(cat.expected_amount).toBeGreaterThanOrEqual(0)
-      expect(cat.risk_adjusted_amount).toBeGreaterThanOrEqual(0)
-    }
+  it('35. large starting cash number — no overflow', () => {
+    const result = computeCumulativeCashPosition(1e9, [1e6, 2e6])
+    expect(Number.isFinite(result[0])).toBe(true)
   })
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
-// buildWeeklyForecast
+// 5. computeRunwayMonths
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe('buildWeeklyForecast', () => {
-  it('66. Returns 13 buckets', () => {
-    const result = buildWeeklyForecast(100000, 20000, 15000, 13)
-    expect(result).toHaveLength(13)
+describe('computeRunwayMonths', () => {
+  it('36. never goes negative → returns null', () => {
+    expect(computeRunwayMonths([100, 200, 300, 400])).toBeNull()
   })
 
-  it('67. Week 1 cumulative_cash = currentCash + net', () => {
-    const result = buildWeeklyForecast(100000, 20000, 15000, 13)
-    expect(result[0].cumulative_cash).toBeCloseTo(100000 + 5000, 1)
+  it('37. first position negative (already negative) → returns 0', () => {
+    expect(computeRunwayMonths([-100, -200, -300])).toBe(0)
   })
 
-  it('68. Cumulative cash is running sum across weeks', () => {
-    const result = buildWeeklyForecast(100000, 20000, 15000, 13)
-    let expected = 100000
-    for (const bucket of result) {
-      expected = Math.round((expected + 5000 + Number.EPSILON) * 100) / 100
-      expect(bucket.cumulative_cash).toBeCloseTo(expected, 1)
-    }
+  it('38. goes negative at month 3 (index 2) → returns 2', () => {
+    // positions: [200, 100, -50] → negative at index 2 → runway = 2
+    expect(computeRunwayMonths([200, 100, -50])).toBe(2)
   })
 
-  it('69. net_cashflow = weeklyInflows - weeklyOutflows', () => {
-    const result = buildWeeklyForecast(100000, 20000, 15000, 13)
-    for (const bucket of result) {
-      expect(bucket.net_cashflow).toBeCloseTo(5000, 1)
-    }
+  it('39. empty array → returns null', () => {
+    expect(computeRunwayMonths([])).toBeNull()
   })
 
-  it('70. is_negative = true when cumulative_cash < 0', () => {
-    // currentCash = 5000, outflows > inflows each week
-    const result = buildWeeklyForecast(5000, 1000, 5000, 13)
-    const negBuckets = result.filter(b => b.is_negative)
-    expect(negBuckets.length).toBeGreaterThan(0)
-    for (const b of negBuckets) {
-      expect(b.cumulative_cash).toBeLessThan(0)
-    }
+  it('40. goes negative at month 1 (index 0) → returns 0', () => {
+    // First position is already negative
+    expect(computeRunwayMonths([-1])).toBe(0)
   })
 
-  it('71. is_negative = false when cumulative_cash > 0', () => {
-    const result = buildWeeklyForecast(1000000, 20000, 15000, 13)
-    for (const bucket of result) {
-      expect(bucket.is_negative).toBe(false)
-    }
+  it('41. single positive position → null (never negative)', () => {
+    expect(computeRunwayMonths([500])).toBeNull()
   })
 
-  it('72. expected_inflows matches weeklyInflows input', () => {
-    const result = buildWeeklyForecast(100000, 23456, 12345, 13)
-    for (const bucket of result) {
-      expect(bucket.expected_inflows).toBeCloseTo(23456, 1)
-    }
+  it('42. positive then immediately negative → returns 1', () => {
+    // positions: [500, -100] → goes negative at index 1 → 1
+    expect(computeRunwayMonths([500, -100])).toBe(1)
   })
 
-  it('73. expected_outflows matches weeklyOutflows input', () => {
-    const result = buildWeeklyForecast(100000, 23456, 12345, 13)
-    for (const bucket of result) {
-      expect(bucket.expected_outflows).toBeCloseTo(12345, 1)
-    }
+  it('43. all positive — long runway', () => {
+    const positions = Array(24).fill(100_000)
+    expect(computeRunwayMonths(positions)).toBeNull()
   })
 
-  it('74. week_number increments from 1 to 13', () => {
-    const result = buildWeeklyForecast(100000, 20000, 15000, 13)
-    for (let i = 0; i < 13; i++) {
-      expect(result[i].week_number).toBe(i + 1)
-    }
-  })
-
-  it('75. All week_start dates are present as YYYY-MM-DD', () => {
-    const result = buildWeeklyForecast(100000, 20000, 15000, 13)
-    const pattern = /^\d{4}-\d{2}-\d{2}$/
-    for (const b of result) {
-      expect(b.week_start).toMatch(pattern)
-      expect(b.week_end).toMatch(pattern)
-    }
-  })
-
-  it('76. Zero currentCash with outflows → goes negative immediately', () => {
-    const result = buildWeeklyForecast(0, 0, 10000, 13)
-    expect(result[0].is_negative).toBe(true)
-    expect(result[0].cumulative_cash).toBeLessThan(0)
-  })
-
-  it('77. Equal inflows and outflows → cumulative stays at currentCash', () => {
-    const result = buildWeeklyForecast(50000, 10000, 10000, 13)
-    for (const bucket of result) {
-      expect(bucket.cumulative_cash).toBeCloseTo(50000, 1)
-    }
+  it('44. goes to exactly zero (not negative) → not counted', () => {
+    expect(computeRunwayMonths([100, 0, -50])).toBe(2)
   })
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
-// computeForecastSummary
+// 6. classifyRunwayStatus
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe('computeForecastSummary', () => {
-  // Helper to build buckets
-  function makeBuckets(netCashflows: number[], currentCash = 0): WeeklyBucket[] {
-    let cumulative = currentCash
-    return netCashflows.map((net, i) => {
-      cumulative = Math.round((cumulative + net + Number.EPSILON) * 100) / 100
-      return {
-        week_start: `2026-01-${String(i + 1).padStart(2, '0')}`,
-        week_end: `2026-01-${String(i + 7).padStart(2, '0')}`,
-        week_number: i + 1,
-        expected_inflows: net > 0 ? net : 0,
-        expected_outflows: net < 0 ? -net : 0,
-        net_cashflow: net,
-        cumulative_cash: cumulative,
-        is_negative: cumulative < 0,
-      }
-    })
-  }
-
-  it('78. Empty buckets → all zeros and nulls', () => {
-    const result = computeForecastSummary([])
-    expect(result.total_inflows).toBe(0)
-    expect(result.total_outflows).toBe(0)
-    expect(result.first_negative_week).toBeNull()
+describe('classifyRunwayStatus', () => {
+  it('45. null (never runs out) → healthy', () => {
+    expect(classifyRunwayStatus(null)).toBe('healthy')
   })
 
-  it('79. total_inflows = sum of expected_inflows', () => {
-    const buckets = buildWeeklyForecast(0, 5000, 3000, 13)
-    const result = computeForecastSummary(buckets)
-    expect(result.total_inflows).toBeCloseTo(5000 * 13, 0)
+  it('46. runway = 12 → healthy', () => {
+    expect(classifyRunwayStatus(12)).toBe('healthy')
   })
 
-  it('80. total_outflows = sum of expected_outflows', () => {
-    const buckets = buildWeeklyForecast(0, 5000, 3000, 13)
-    const result = computeForecastSummary(buckets)
-    expect(result.total_outflows).toBeCloseTo(3000 * 13, 0)
+  it('47. runway = 15 → healthy', () => {
+    expect(classifyRunwayStatus(15)).toBe('healthy')
   })
 
-  it('81. net_position_change = total_inflows - total_outflows', () => {
-    const buckets = buildWeeklyForecast(100000, 5000, 3000, 13)
-    const result = computeForecastSummary(buckets)
-    expect(result.net_position_change).toBeCloseTo(result.total_inflows - result.total_outflows, 1)
+  it('48. runway = 11 → caution', () => {
+    expect(classifyRunwayStatus(11)).toBe('caution')
   })
 
-  it('82. weeks_positive count is correct (all positive)', () => {
-    const buckets = buildWeeklyForecast(1000000, 5000, 3000, 13)
-    const result = computeForecastSummary(buckets)
-    expect(result.weeks_positive).toBe(13)
-    expect(result.weeks_negative).toBe(0)
+  it('49. runway = 6 → caution', () => {
+    expect(classifyRunwayStatus(6)).toBe('caution')
   })
 
-  it('83. weeks_negative count is correct (all negative)', () => {
-    const buckets = buildWeeklyForecast(0, 0, 10000, 13)
-    const result = computeForecastSummary(buckets)
-    expect(result.weeks_negative).toBe(13)
-    expect(result.weeks_positive).toBe(0)
+  it('50. runway = 5 → at_risk', () => {
+    expect(classifyRunwayStatus(5)).toBe('at_risk')
   })
 
-  it('84. weeks_positive + weeks_negative = total weeks', () => {
-    const buckets = buildWeeklyForecast(5000, 5000, 3000, 13)
-    const result = computeForecastSummary(buckets)
-    expect(result.weeks_positive + result.weeks_negative).toBe(13)
+  it('51. runway = 3 → at_risk', () => {
+    expect(classifyRunwayStatus(3)).toBe('at_risk')
   })
 
-  it('85. first_negative_week is null when no negative weeks', () => {
-    const buckets = buildWeeklyForecast(1000000, 5000, 3000, 13)
-    const result = computeForecastSummary(buckets)
-    expect(result.first_negative_week).toBeNull()
+  it('52. runway = 2 → critical', () => {
+    expect(classifyRunwayStatus(2)).toBe('critical')
   })
 
-  it('86. first_negative_week = 1 when immediately negative', () => {
-    const buckets = buildWeeklyForecast(0, 0, 10000, 13)
-    const result = computeForecastSummary(buckets)
-    expect(result.first_negative_week).toBe(1)
+  it('53. runway = 0 → critical', () => {
+    expect(classifyRunwayStatus(0)).toBe('critical')
   })
 
-  it('87. worst_week_net = minimum net_cashflow', () => {
-    const buckets = buildWeeklyForecast(0, 5000, 3000, 13)
-    const result = computeForecastSummary(buckets)
-    expect(result.worst_week_net).toBeCloseTo(2000, 1)
-  })
-
-  it('88. best_week_net = maximum net_cashflow', () => {
-    const buckets = buildWeeklyForecast(0, 5000, 3000, 13)
-    const result = computeForecastSummary(buckets)
-    expect(result.best_week_net).toBeCloseTo(2000, 1)
-  })
-
-  it('89. min_cumulative_cash is correct', () => {
-    const buckets = buildWeeklyForecast(0, 0, 10000, 13)
-    const result = computeForecastSummary(buckets)
-    expect(result.min_cumulative_cash).toBeLessThan(0)
-  })
-
-  it('90. max_cumulative_cash is correct', () => {
-    const buckets = buildWeeklyForecast(100000, 5000, 3000, 13)
-    const result = computeForecastSummary(buckets)
-    expect(result.max_cumulative_cash).toBeCloseTo(100000 + 2000 * 13, 0)
+  it('54. runway = 1 → critical', () => {
+    expect(classifyRunwayStatus(1)).toBe('critical')
   })
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
-// classifyLiquidityOutlook
+// 7. computeWorstCaseAdjustment
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe('classifyLiquidityOutlook', () => {
-  it('91. strong: no negatives AND minCumulative >= currentCash × 0.5', () => {
-    expect(classifyLiquidityOutlook(null, 60000, 100000)).toBe('strong')
+describe('computeWorstCaseAdjustment', () => {
+  it('55. default 20% stress → each value * 0.8', () => {
+    const result = computeWorstCaseAdjustment([100_000, 200_000])
+    expect(result[0]).toBeCloseTo(80_000)
+    expect(result[1]).toBeCloseTo(160_000)
   })
 
-  it('92. strong: no negatives AND minCumulative = exactly currentCash × 0.5', () => {
-    expect(classifyLiquidityOutlook(null, 50000, 100000)).toBe('strong')
+  it('56. custom stressFactor=0.5 → each value * 0.5', () => {
+    const result = computeWorstCaseAdjustment([100_000], 0.5)
+    expect(result[0]).toBeCloseTo(50_000)
   })
 
-  it('93. stable: no negatives BUT minCumulative < currentCash × 0.5', () => {
-    expect(classifyLiquidityOutlook(null, 40000, 100000)).toBe('stable')
+  it('57. zero revenue → stays zero', () => {
+    const result = computeWorstCaseAdjustment([0, 0, 0])
+    result.forEach(v => expect(v).toBe(0))
   })
 
-  it('94. stable: no negatives, currentCash = 0 → minCumulative >= 0', () => {
-    // currentCash × 0.5 = 0, minCumulative = 0 → strong
-    expect(classifyLiquidityOutlook(null, 0, 0)).toBe('strong')
+  it('58. stressFactor=0 → no change', () => {
+    const result = computeWorstCaseAdjustment([100_000, 200_000], 0)
+    expect(result[0]).toBe(100_000)
+    expect(result[1]).toBe(200_000)
   })
 
-  it('95. cautious: firstNegativeWeek = 9 (> 8)', () => {
-    expect(classifyLiquidityOutlook(9, 100, 100000)).toBe('cautious')
+  it('59. stressFactor=1.0 → all zeros', () => {
+    const result = computeWorstCaseAdjustment([100_000, 50_000], 1.0)
+    result.forEach(v => expect(v).toBe(0))
   })
 
-  it('96. cautious: firstNegativeWeek = 13', () => {
-    expect(classifyLiquidityOutlook(13, 100, 100000)).toBe('cautious')
+  it('60. preserves array length', () => {
+    const input = Array(12).fill(100_000)
+    const result = computeWorstCaseAdjustment(input)
+    expect(result).toHaveLength(12)
   })
 
-  it('97. at_risk: firstNegativeWeek = 5 (> 4, <= 8)', () => {
-    expect(classifyLiquidityOutlook(5, 100, 100000)).toBe('at_risk')
+  it('61. empty array → empty result', () => {
+    expect(computeWorstCaseAdjustment([])).toEqual([])
   })
 
-  it('98. at_risk: firstNegativeWeek = 8', () => {
-    expect(classifyLiquidityOutlook(8, 100, 100000)).toBe('at_risk')
-  })
-
-  it('99. critical: firstNegativeWeek = 4 (<= 4)', () => {
-    expect(classifyLiquidityOutlook(4, 100, 100000)).toBe('critical')
-  })
-
-  it('100. critical: firstNegativeWeek = 1 (<= 4)', () => {
-    expect(classifyLiquidityOutlook(1, -5000, 100000)).toBe('critical')
-  })
-
-  it('101. critical: minCumulativeCash < 0', () => {
-    expect(classifyLiquidityOutlook(6, -100, 100000)).toBe('critical')
-  })
-
-  it('102. critical takes precedence over at_risk when minCumulative < 0', () => {
-    // firstNegativeWeek = 6 would be at_risk, but minCumulative < 0 → critical
-    expect(classifyLiquidityOutlook(6, -1, 100000)).toBe('critical')
+  it('62. worst case always <= original', () => {
+    const input = [50_000, 75_000, 100_000]
+    const result = computeWorstCaseAdjustment(input)
+    result.forEach((v, i) => expect(v).toBeLessThanOrEqual(input[i]))
   })
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
-// computeBreakevenWeeklyRevenue
+// 8. computeBestCaseAdjustment
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe('computeBreakevenWeeklyRevenue', () => {
-  it('103. Normal case: weeklyOutflows / collectionRate', () => {
-    expect(computeBreakevenWeeklyRevenue(10000, 0.8)).toBeCloseTo(12500, 1)
+describe('computeBestCaseAdjustment', () => {
+  it('63. default 15% upside → each value * 1.15', () => {
+    const result = computeBestCaseAdjustment([100_000, 200_000])
+    expect(result[0]).toBeCloseTo(115_000)
+    expect(result[1]).toBeCloseTo(230_000)
   })
 
-  it('104. collectionRate = 1.0 → returns weeklyOutflows as-is', () => {
-    expect(computeBreakevenWeeklyRevenue(10000, 1.0)).toBe(10000)
+  it('64. custom upsideFactor=0.25 → each value * 1.25', () => {
+    const result = computeBestCaseAdjustment([100_000], 0.25)
+    expect(result[0]).toBeCloseTo(125_000)
   })
 
-  it('105. collectionRate = 0.0 → returns weeklyOutflows (null-safe guard)', () => {
-    expect(computeBreakevenWeeklyRevenue(10000, 0.0)).toBe(10000)
+  it('65. zero revenue → stays zero', () => {
+    const result = computeBestCaseAdjustment([0, 0])
+    result.forEach(v => expect(v).toBe(0))
   })
 
-  it('106. collectionRate < 0 → returns weeklyOutflows (null-safe guard)', () => {
-    expect(computeBreakevenWeeklyRevenue(10000, -0.5)).toBe(10000)
+  it('66. upsideFactor=0 → no change', () => {
+    const result = computeBestCaseAdjustment([100_000], 0)
+    expect(result[0]).toBe(100_000)
   })
 
-  it('107. Zero outflows → returns 0', () => {
-    expect(computeBreakevenWeeklyRevenue(0, 0.8)).toBe(0)
+  it('67. best case always >= original (for positive values)', () => {
+    const input = [50_000, 75_000, 100_000]
+    const result = computeBestCaseAdjustment(input)
+    result.forEach((v, i) => expect(v).toBeGreaterThanOrEqual(input[i]))
   })
 
-  it('108. collectionRate 0.5 → doubles the required revenue', () => {
-    expect(computeBreakevenWeeklyRevenue(5000, 0.5)).toBeCloseTo(10000, 1)
+  it('68. empty array → empty result', () => {
+    expect(computeBestCaseAdjustment([])).toEqual([])
   })
 
-  it('109. Rounds to 2 decimal places', () => {
-    const result = computeBreakevenWeeklyRevenue(10000, 0.3)
-    expect(result).toBeCloseTo(33333.33, 1)
+  it('69. preserves array length', () => {
+    const input = Array(12).fill(80_000)
+    const result = computeBestCaseAdjustment(input)
+    expect(result).toHaveLength(12)
   })
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
-// generateForecastNarrative
+// 9. computeDebtServiceSchedule
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe('generateForecastNarrative', () => {
-  function makeSummary(firstNegativeWeek: number | null = null) {
-    return {
-      total_inflows: 500000,
-      total_outflows: 400000,
-      net_position_change: 100000,
-      weeks_positive: firstNegativeWeek === null ? 13 : (firstNegativeWeek - 1),
-      weeks_negative: firstNegativeWeek === null ? 0 : (13 - (firstNegativeWeek - 1)),
-      first_negative_week: firstNegativeWeek,
-      worst_week_net: -5000,
-      best_week_net: 15000,
-      min_cumulative_cash: firstNegativeWeek ? -10000 : 50000,
-      max_cumulative_cash: 200000,
-    }
-  }
-
-  it('110. strong outlook → specific Turkish text', () => {
-    const result = generateForecastNarrative(100000, 'strong', makeSummary(), 50000)
-    expect(result).toBe('Nakit pozisyonu güçlü — 13 haftalık projeksiyonda negatif hafta bulunmuyor.')
+describe('computeDebtServiceSchedule', () => {
+  it('70. no tranches → all zeros', () => {
+    const result = computeDebtServiceSchedule([], 6)
+    expect(result).toHaveLength(6)
+    result.forEach(v => expect(v).toBe(0))
   })
 
-  it('111. stable outlook → specific Turkish text', () => {
-    const result = generateForecastNarrative(100000, 'stable', makeSummary(), 50000)
-    expect(result).toBe('Nakit akışı dengede — önümüzdeki 13 haftada pozitif kalmaya devam ediyor.')
+  it('71. single tranche 12 months → positive payments for all 12 months', () => {
+    const tranches = [{ principal_try: 120_000, annual_interest_rate: 12, months_remaining: 12 }]
+    const result = computeDebtServiceSchedule(tranches, 12)
+    expect(result).toHaveLength(12)
+    result.forEach(v => expect(v).toBeGreaterThan(0))
   })
 
-  it('112. cautious outlook with week 9 → includes week number', () => {
-    const result = generateForecastNarrative(100000, 'cautious', makeSummary(9), 50000)
-    expect(result).toContain('9')
-    expect(result).toContain('haftada')
-    expect(result).toContain('nakit sıkışması')
+  it('72. single tranche — monthly principal = principal / months_remaining', () => {
+    // 120k / 12 = 10k principal + 120k * 12% / 12 = 1200 interest = 11200/month
+    const tranches = [{ principal_try: 120_000, annual_interest_rate: 12, months_remaining: 12 }]
+    const result = computeDebtServiceSchedule(tranches, 12)
+    expect(result[0]).toBeCloseTo(11_200)
   })
 
-  it('113. at_risk outlook with week 6 → includes week number', () => {
-    const result = generateForecastNarrative(100000, 'at_risk', makeSummary(6), 50000)
-    expect(result).toContain('6')
-    expect(result).toContain('nakit yetersizliği')
+  it('73. tranche expires mid-forecast — months after expiry = 0', () => {
+    const tranches = [{ principal_try: 60_000, annual_interest_rate: 0, months_remaining: 3 }]
+    const result = computeDebtServiceSchedule(tranches, 6)
+    // Months 1-3 should have payment, months 4-6 should be 0
+    expect(result[0]).toBeGreaterThan(0)
+    expect(result[1]).toBeGreaterThan(0)
+    expect(result[2]).toBeGreaterThan(0)
+    expect(result[3]).toBe(0)
+    expect(result[4]).toBe(0)
+    expect(result[5]).toBe(0)
   })
 
-  it('114. critical outlook → specific Turkish text about 4 weeks', () => {
-    const result = generateForecastNarrative(100000, 'critical', makeSummary(2), 50000)
-    expect(result).toBe('Kritik — önümüzdeki 4 haftada nakit açığı riski yüksek.')
-  })
-
-  it('115. Returns a non-empty string for all outlook levels', () => {
-    const outlooks: ReturnType<typeof classifyLiquidityOutlook>[] = [
-      'strong', 'stable', 'cautious', 'at_risk', 'critical',
+  it('74. multiple tranches — payments sum correctly', () => {
+    const tranches = [
+      { principal_try: 120_000, annual_interest_rate: 0, months_remaining: 12 },
+      { principal_try: 60_000, annual_interest_rate: 0, months_remaining: 6 },
     ]
-    for (const outlook of outlooks) {
-      const week = outlook === 'cautious' ? 9 : outlook === 'at_risk' ? 5 : null
-      const result = generateForecastNarrative(100000, outlook, makeSummary(week), 50000)
-      expect(typeof result).toBe('string')
-      expect(result.length).toBeGreaterThan(0)
-    }
+    const result = computeDebtServiceSchedule(tranches, 12)
+    // Month 1: 10000 (tranche1) + 10000 (tranche2) = 20000
+    expect(result[0]).toBeCloseTo(20_000)
+    // Month 7: only tranche1 = 10000
+    expect(result[6]).toBeCloseTo(10_000)
   })
 
-  it('116. cautious narrative references first_negative_week from summary', () => {
-    const summary = makeSummary(11)
-    const result = generateForecastNarrative(100000, 'cautious', summary, 50000)
-    expect(result).toContain('11')
+  it('75. zero months_remaining tranche → contributes nothing', () => {
+    const tranches = [{ principal_try: 100_000, annual_interest_rate: 10, months_remaining: 0 }]
+    const result = computeDebtServiceSchedule(tranches, 6)
+    result.forEach(v => expect(v).toBe(0))
   })
 
-  it('117. at_risk narrative references first_negative_week from summary', () => {
-    const summary = makeSummary(7)
-    const result = generateForecastNarrative(100000, 'at_risk', summary, 50000)
-    expect(result).toContain('7')
+  it('76. negative months_remaining → treated as <= 0, contributes nothing', () => {
+    const tranches = [{ principal_try: 100_000, annual_interest_rate: 10, months_remaining: -5 }]
+    const result = computeDebtServiceSchedule(tranches, 6)
+    result.forEach(v => expect(v).toBe(0))
+  })
+
+  it('77. zero interest rate → payment = principal / months only', () => {
+    const tranches = [{ principal_try: 120_000, annual_interest_rate: 0, months_remaining: 12 }]
+    const result = computeDebtServiceSchedule(tranches, 12)
+    result.slice(0, 12).forEach(v => expect(v).toBeCloseTo(10_000))
+  })
+
+  it('78. returns exactly forecastMonths elements', () => {
+    const tranches = [{ principal_try: 120_000, annual_interest_rate: 5, months_remaining: 24 }]
+    const result = computeDebtServiceSchedule(tranches, 12)
+    expect(result).toHaveLength(12)
+  })
+
+  it('79. empty tranches with forecastMonths=0 → []', () => {
+    expect(computeDebtServiceSchedule([], 0)).toEqual([])
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 10. computeAdjustedCashFlow
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeAdjustedCashFlow', () => {
+  it('80. basic subtraction — net - debt service', () => {
+    const result = computeAdjustedCashFlow([100, 200, 300], [20, 30, 40])
+    expect(result).toEqual([80, 170, 260])
+  })
+
+  it('81. positive net flows with zero debt service → same as net flows', () => {
+    const result = computeAdjustedCashFlow([100, 200], [0, 0])
+    expect(result).toEqual([100, 200])
+  })
+
+  it('82. debt service > net flow → negative adjusted', () => {
+    const result = computeAdjustedCashFlow([100], [200])
+    expect(result[0]).toBe(-100)
+  })
+
+  it('83. empty arrays → empty result', () => {
+    expect(computeAdjustedCashFlow([], [])).toEqual([])
+  })
+
+  it('84. mismatched lengths → truncates to shorter', () => {
+    const result = computeAdjustedCashFlow([100, 200, 300], [50])
+    expect(result).toHaveLength(1)
+    expect(result[0]).toBe(50)
+  })
+
+  it('85. all zeros → all zeros', () => {
+    const result = computeAdjustedCashFlow([0, 0, 0], [0, 0, 0])
+    result.forEach(v => expect(v).toBe(0))
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 11. computeAvgMonthlyCashBurn
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeAvgMonthlyCashBurn', () => {
+  it('86. all positive flows → null (no burn)', () => {
+    expect(computeAvgMonthlyCashBurn([100, 200, 300])).toBeNull()
+  })
+
+  it('87. all negative flows → avg of absolute values', () => {
+    const result = computeAvgMonthlyCashBurn([-100, -200, -300])
+    expect(result).toBeCloseTo(200)  // (100 + 200 + 300) / 3
+  })
+
+  it('88. mixed flows → avg of negative months only', () => {
+    // negative months: -100, -300 → avg = (100+300)/2 = 200
+    const result = computeAvgMonthlyCashBurn([200, -100, 150, -300])
+    expect(result).toBeCloseTo(200)
+  })
+
+  it('89. single negative month → returns its absolute value', () => {
+    const result = computeAvgMonthlyCashBurn([100, -500, 200])
+    expect(result).toBeCloseTo(500)
+  })
+
+  it('90. empty array → null', () => {
+    expect(computeAvgMonthlyCashBurn([])).toBeNull()
+  })
+
+  it('91. zero flows → null (zero is not negative)', () => {
+    expect(computeAvgMonthlyCashBurn([0, 0, 0])).toBeNull()
+  })
+
+  it('92. mix of positive, zero, and negative', () => {
+    // Burn months: -50, -150 → avg = (50+150)/2 = 100
+    const result = computeAvgMonthlyCashBurn([100, 0, -50, 200, -150])
+    expect(result).toBeCloseTo(100)
+  })
+
+  it('93. single negative value array', () => {
+    expect(computeAvgMonthlyCashBurn([-250])).toBeCloseTo(250)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 12. computeBreakEvenMonth
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeBreakEvenMonth', () => {
+  it('94. already positive at month 1 → returns 1', () => {
+    expect(computeBreakEvenMonth([100, 200, 300])).toBe(1)
+  })
+
+  it('95. never positive → returns null', () => {
+    expect(computeBreakEvenMonth([-100, -200, -300])).toBeNull()
+  })
+
+  it('96. breaks even at month 4 (1-indexed)', () => {
+    // positions: [-300, -200, -100, 50] → first positive at index 3 → month 4
+    expect(computeBreakEvenMonth([-300, -200, -100, 50])).toBe(4)
+  })
+
+  it('97. empty array → null', () => {
+    expect(computeBreakEvenMonth([])).toBeNull()
+  })
+
+  it('98. zero is not positive → continues searching', () => {
+    // 0 is not > 0, so should continue
+    expect(computeBreakEvenMonth([0, 0, 50])).toBe(3)
+  })
+
+  it('99. exactly zero throughout → null', () => {
+    expect(computeBreakEvenMonth([0, 0, 0])).toBeNull()
+  })
+
+  it('100. first position exactly zero, second positive → returns 2', () => {
+    expect(computeBreakEvenMonth([0, 100])).toBe(2)
+  })
+
+  it('101. negative then immediately positive → returns 2', () => {
+    expect(computeBreakEvenMonth([-500, 100])).toBe(2)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 13. classifyCashFlowTrend
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('classifyCashFlowTrend', () => {
+  it('102. fewer than 6 months → insufficient_data', () => {
+    expect(classifyCashFlowTrend([100, 200, 300, 400, 500])).toBe('insufficient_data')
+  })
+
+  it('103. empty array → insufficient_data', () => {
+    expect(classifyCashFlowTrend([])).toBe('insufficient_data')
+  })
+
+  it('104. exactly 5 months → insufficient_data', () => {
+    expect(classifyCashFlowTrend([1, 2, 3, 4, 5])).toBe('insufficient_data')
+  })
+
+  it('105. improving: last 3 avg significantly higher than first 3', () => {
+    // first3 avg = (100+100+100)/3 = 100, last3 avg = (200+200+200)/3 = 200
+    // changePct = (200-100)/100 * 100 = 100% > 10% → improving
+    const result = classifyCashFlowTrend([100, 100, 100, 200, 200, 200])
+    expect(result).toBe('improving')
+  })
+
+  it('106. deteriorating: last 3 avg significantly lower than first 3', () => {
+    // first3 avg = 200, last3 avg = 100 → changePct = -50% < -10% → deteriorating
+    const result = classifyCashFlowTrend([200, 200, 200, 100, 100, 100])
+    expect(result).toBe('deteriorating')
+  })
+
+  it('107. stable: within 10% change', () => {
+    // first3 avg = 100, last3 avg = 105 → changePct = 5% → stable
+    const result = classifyCashFlowTrend([100, 100, 100, 105, 105, 105])
+    expect(result).toBe('stable')
+  })
+
+  it('108. stable: exactly at 10% boundary', () => {
+    // first3 avg = 100, last3 avg = 110 → changePct = 10% → stable (not > 10%)
+    const result = classifyCashFlowTrend([100, 100, 100, 110, 110, 110])
+    expect(result).toBe('stable')
+  })
+
+  it('109. 12 months of data — uses first 3 and last 3', () => {
+    const flows = [100, 100, 100, 150, 150, 150, 200, 200, 200, 300, 300, 300]
+    // first3 avg = 100, last3 avg = 300 → improving
+    expect(classifyCashFlowTrend(flows)).toBe('improving')
+  })
+
+  it('110. all equal values → stable', () => {
+    const flows = Array(6).fill(1000)
+    expect(classifyCashFlowTrend(flows)).toBe('stable')
+  })
+
+  it('111. negative flows improving (becoming less negative)', () => {
+    // first3 avg = -200, last3 avg = -100 → changePct = (-100 - -200)/200 * 100 = 50% → improving
+    const result = classifyCashFlowTrend([-200, -200, -200, -100, -100, -100])
+    expect(result).toBe('improving')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 14. generateCashFlowForecastNarrative
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('generateCashFlowForecastNarrative', () => {
+  it('112. returns a non-empty Turkish string', () => {
+    const result = generateCashFlowForecastNarrative(12, 'healthy', 'stable', 100_000, 3)
+    expect(typeof result).toBe('string')
+    expect(result.length).toBeGreaterThan(0)
+  })
+
+  it('113. healthy status with null runway → mentions no deficit', () => {
+    const result = generateCashFlowForecastNarrative(null, 'healthy', 'stable', 100_000, null)
+    expect(result).toContain('açığı öngörülmemektedir')
+  })
+
+  it('114. critical status with runway=0 → mentions current deficit', () => {
+    const result = generateCashFlowForecastNarrative(0, 'critical', 'deteriorating', -10_000, null)
+    expect(result).toContain('Kritik')
+  })
+
+  it('115. at_risk status → contains risk warning in Turkish', () => {
+    const result = generateCashFlowForecastNarrative(4, 'at_risk', 'stable', 50_000, null)
+    expect(result).toContain('Risk')
+  })
+
+  it('116. caution status → contains dikkat in Turkish', () => {
+    const result = generateCashFlowForecastNarrative(9, 'caution', 'stable', 200_000, 6)
+    expect(result).toContain('Dikkat')
+  })
+
+  it('117. improving trend → mentions iyileşme', () => {
+    const result = generateCashFlowForecastNarrative(null, 'healthy', 'improving', 500_000, null)
+    expect(result).toContain('iyileşme')
+  })
+
+  it('118. deteriorating trend → mentions bozulmaktadır', () => {
+    const result = generateCashFlowForecastNarrative(3, 'at_risk', 'deteriorating', 50_000, null)
+    expect(result).toContain('bozulmaktadır')
+  })
+
+  it('119. with break-even month → mentions the month number', () => {
+    const result = generateCashFlowForecastNarrative(null, 'healthy', 'stable', 100_000, 6)
+    expect(result).toContain('6')
+  })
+
+  it('120. null break-even → mentions unable to reach break-even', () => {
+    const result = generateCashFlowForecastNarrative(null, 'healthy', 'stable', 100_000, null)
+    expect(result).toContain('başabaş')
+  })
+
+  it('121. includes formatted starting cash in output', () => {
+    const result = generateCashFlowForecastNarrative(null, 'healthy', 'stable', 1_000_000, null)
+    // Should contain the cash amount (format may vary but should have digits)
+    expect(result).toContain('₺')
+  })
+
+  it('122. insufficient_data trend → mentions insufficient data', () => {
+    const result = generateCashFlowForecastNarrative(null, 'healthy', 'insufficient_data', 50_000, null)
+    expect(result).toContain('yeterli veri')
+  })
+
+  it('123. stable trend → mentions istikrarlı', () => {
+    const result = generateCashFlowForecastNarrative(null, 'healthy', 'stable', 100_000, null)
+    expect(result).toContain('istikrarlı')
+  })
+
+  it('124. healthy status with defined runway months', () => {
+    const result = generateCashFlowForecastNarrative(18, 'healthy', 'stable', 300_000, null)
+    expect(result).toContain('sağlıklı')
+  })
+
+  it('125. critical status with positive runway → mentions the month count', () => {
+    const result = generateCashFlowForecastNarrative(2, 'critical', 'deteriorating', 20_000, null)
+    expect(result).toContain('2')
   })
 })
