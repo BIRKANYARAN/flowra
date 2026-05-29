@@ -25,7 +25,7 @@ import { fmtPct }                      from '@/lib/format'
 import { HealthScorecardService }      from '@/lib/services/finance/health-scorecard.service'
 import type { HealthScorecard, FinancialRatio } from '@/lib/services/finance/health-scorecard.service'
 import { PeriodComparisonService }     from '@/lib/services/finance/period-comparison.service'
-import type { PeriodComparisonReport, MetricComparison } from '@/lib/services/finance/period-comparison.service'
+import type { PeriodComparison, MetricComparison } from '@/lib/services/finance/period-comparison.service'
 import { SeasonalityService }           from '@/lib/services/finance/seasonality.service'
 import type { SeasonalityReport }       from '@/lib/services/finance/seasonality.service'
 import FiscalYearSummaryClient          from './_fiscal/FiscalYearSummaryClient'
@@ -86,25 +86,30 @@ function RiskPill({ label, value, level }: { label: string; value: string; level
 
 // ── Period Comparison section ─────────────────────────────────────────────────
 
-function DirectionArrow({ direction, isPositive }: { direction: MetricComparison['direction']; isPositive: boolean }) {
+// direction helper derived from change_pct (new interface has no direction field)
+function directionFrom(changePct: number): 'up' | 'down' | 'flat' {
+  if (changePct > 1)  return 'up'
+  if (changePct < -1) return 'down'
+  return 'flat'
+}
+
+function DirectionArrow({ changePct, isFavorable }: { changePct: number; isFavorable: boolean }) {
+  const direction = directionFrom(changePct)
   if (direction === 'flat') {
     return <span className="text-[#94a3b8] font-bold">—</span>
   }
-  const isGood = (direction === 'up' && isPositive) || (direction === 'down' && !isPositive)
+  const isGood = (direction === 'up' && isFavorable) || (direction === 'down' && !isFavorable)
   const color   = isGood ? 'text-pos-text' : 'text-neg'
   const arrow   = direction === 'up' ? '▲' : '▼'
   return <span className={`font-bold ${color}`}>{arrow}</span>
 }
 
-function ChangeBadge({ changePct, direction, isPositive }: {
-  changePct: number | null
-  direction: MetricComparison['direction']
-  isPositive: boolean
+function ChangeBadge({ changePct, isFavorable }: {
+  changePct: number
+  isFavorable: boolean
 }) {
-  if (changePct === null) {
-    return <span className="text-[10px] text-[#94a3b8] bg-[#f1f5f9] px-1.5 py-0.5 rounded">—</span>
-  }
-  const isGood = (direction === 'up' && isPositive) || (direction === 'down' && !isPositive)
+  const direction = directionFrom(changePct)
+  const isGood = (direction === 'up' && isFavorable) || (direction === 'down' && !isFavorable)
   const colors  = isGood
     ? 'bg-pos-light text-pos-text'
     : direction === 'flat'
@@ -118,10 +123,10 @@ function ChangeBadge({ changePct, direction, isPositive }: {
   )
 }
 
-function ComparisonTable({ report }: { report: PeriodComparisonReport }) {
-  // Show revenue, expense, gross_profit, net_income only (skip margins for compact view)
-  const mainMetrics = ['revenue', 'expense', 'gross_profit', 'net_income']
-  const rows = report.comparisons.filter(c => mainMetrics.includes(c.metric))
+function ComparisonTable({ comparison }: { comparison: PeriodComparison }) {
+  // Show revenue, expenses, gross_profit, net_income only (skip margins for compact view)
+  const mainMetrics = new Set(['revenue_try', 'expenses_try', 'gross_profit_try', 'net_income_try'])
+  const rows = comparison.comparisons.filter(c => mainMetrics.has(c.metric_name))
 
   return (
     <div className="overflow-x-auto">
@@ -129,15 +134,15 @@ function ComparisonTable({ report }: { report: PeriodComparisonReport }) {
         <thead>
           <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] border-b border-[#e2e8f0]">
             <th className="text-left px-4 py-2">Metrik</th>
-            <th className="text-right px-4 py-2">{report.current.period_label}</th>
-            <th className="text-right px-4 py-2">{report.prior.period_label}</th>
+            <th className="text-right px-4 py-2">{comparison.current_period.period}</th>
+            <th className="text-right px-4 py-2">{comparison.prior_period.period}</th>
             <th className="text-center px-4 py-2">Değişim</th>
             <th className="text-center px-4 py-2">%</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-[#f1f5f9]">
           {rows.map((c) => (
-            <tr key={c.metric} className="hover:bg-[#f8fafc]/60">
+            <tr key={c.metric_name} className="hover:bg-[#f8fafc]/60">
               <td className="px-4 py-2 font-semibold text-[#334155]">{c.label}</td>
               <td className="px-4 py-2 text-right tabular-nums font-semibold text-[#0f172a]">
                 {fmt(c.current_value)}
@@ -146,13 +151,12 @@ function ComparisonTable({ report }: { report: PeriodComparisonReport }) {
                 {fmt(c.prior_value)}
               </td>
               <td className="px-4 py-2 text-center">
-                <DirectionArrow direction={c.direction} isPositive={c.is_positive} />
+                <DirectionArrow changePct={c.change_pct} isFavorable={c.is_favorable} />
               </td>
               <td className="px-4 py-2 text-center">
                 <ChangeBadge
                   changePct={c.change_pct}
-                  direction={c.direction}
-                  isPositive={c.is_positive}
+                  isFavorable={c.is_favorable}
                 />
               </td>
             </tr>
@@ -169,8 +173,8 @@ function PeriodComparisonSection({
   currentYear,
   currentMonth,
 }: {
-  yoy: PeriodComparisonReport | null
-  mom: PeriodComparisonReport | null
+  yoy: PeriodComparison | null
+  mom: PeriodComparison | null
   currentYear: number
   currentMonth: number
 }) {
@@ -189,18 +193,18 @@ function PeriodComparisonSection({
             <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#f1f5f9] bg-[#f8fafc]">
               <div>
                 <span className="text-[10px] font-black uppercase tracking-widest text-[#64748b]">
-                  Yıllık Karşılaştırma — {yoy.current.period_label} / {yoy.prior.period_label}
+                  Yıllık Karşılaştırma — {yoy.current_period.period} / {yoy.prior_period.period}
                 </span>
               </div>
               <span className="text-[9px] font-semibold text-[#94a3b8] bg-[#f1f5f9] px-2 py-0.5 rounded-full">YoY</span>
             </div>
-            {/* Summary line */}
+            {/* Headline */}
             <div className="px-4 py-2.5 border-b border-[#f1f5f9] bg-blue-50/40">
               <p className="text-[11px] text-[#334155] leading-snug">
-                <span className="text-[#94a3b8] mr-1.5">—</span>{yoy.summary_line}
+                <span className="text-[#94a3b8] mr-1.5">—</span>{yoy.headline}
               </p>
             </div>
-            <ComparisonTable report={yoy} />
+            <ComparisonTable comparison={yoy} />
           </div>
         )}
 
@@ -215,13 +219,13 @@ function PeriodComparisonSection({
               </div>
               <span className="text-[9px] font-semibold text-[#94a3b8] bg-[#f1f5f9] px-2 py-0.5 rounded-full">MoY</span>
             </div>
-            {/* Summary line */}
+            {/* Headline */}
             <div className="px-4 py-2.5 border-b border-[#f1f5f9] bg-blue-50/40">
               <p className="text-[11px] text-[#334155] leading-snug">
-                <span className="text-[#94a3b8] mr-1.5">—</span>{mom.summary_line}
+                <span className="text-[#94a3b8] mr-1.5">—</span>{mom.headline}
               </p>
             </div>
-            <ComparisonTable report={mom} />
+            <ComparisonTable comparison={mom} />
           </div>
         )}
       </div>
@@ -411,8 +415,8 @@ export async function OverviewTab({ userId, companyId, glMode = 'shadow' }: Prop
     sq(() => PeriodService.getCurrent(companyId, supabase), null),
     sq(() => AnnualSummaryService.getSummary(companyId, userId, supabase, { yearsBack: 3 }), null as AnnualSummary | null),
     sq(() => HealthScorecardService.getScorecard(companyId, userId, supabase, { from: ytdFrom, to: today }), null as HealthScorecard | null),
-    sq(() => PeriodComparisonService.getYearComparison(companyId, year, supabase), null as PeriodComparisonReport | null),
-    sq(() => PeriodComparisonService.getMonthComparison(companyId, year, now.getMonth() + 1, supabase), null as PeriodComparisonReport | null),
+    sq(async () => { const svc = new PeriodComparisonService(supabase); const r = await svc.getReport(companyId); return r.yoy_comparison }, null as PeriodComparison | null),
+    sq(async () => { const svc = new PeriodComparisonService(supabase); const r = await svc.getReport(companyId); return r.mom_comparison }, null as PeriodComparison | null),
     sq(() => SeasonalityService.getReport(companyId, supabase), null as SeasonalityReport | null),
   ])
   const runway = await sq(

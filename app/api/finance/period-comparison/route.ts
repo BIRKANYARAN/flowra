@@ -1,21 +1,14 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // GET /api/finance/period-comparison
 //
-// Period-over-Period Comparison — YoY or MoM financial metrics.
+// Returns full period comparison report: MoM, YoY, YTD comparisons,
+// 12-month series, trend streak, and CMGR.
 //
-// Query params:
-//   type   'yoy' | 'mom'   (required)
-//   year   number          (required)
-//   month  number          (optional — required for month comparison)
-//
-// Returns:
-//   { report: PeriodComparisonReport }
-//
-// Auth: any authenticated company member.
-// Cache: revalidate every 300 seconds.
+// Auth: manager+ access
+// Cache: revalidate every 3600 seconds
 // ─────────────────────────────────────────────────────────────────────────────
 
-export const revalidate = 300
+export const revalidate = 3600
 
 import { NextRequest, NextResponse } from 'next/server'
 import { resolveApiAuth }            from '@/lib/api-auth'
@@ -27,34 +20,9 @@ export async function GET(req: NextRequest) {
   if (!auth.ok) return auth.response
   const { companyId, supabase, ctx } = auth
 
-  const url  = new URL(req.url)
-  const type = url.searchParams.get('type') ?? 'yoy'
-  const year = parseInt(url.searchParams.get('year') ?? String(new Date().getFullYear()), 10)
-
-  if (isNaN(year) || year < 2000 || year > 2100) {
-    return NextResponse.json(
-      { error: 'Invalid year parameter', code: 'INVALID_PARAM' },
-      { status: 400, headers: { [REQUEST_ID_HEADER]: ctx.requestId } },
-    )
-  }
-
   try {
-    let report
-
-    if (type === 'yoy' && url.searchParams.has('month')) {
-      // Month-level YoY: specified month vs same month prior year
-      const month = parseInt(url.searchParams.get('month')!, 10)
-      if (isNaN(month) || month < 1 || month > 12) {
-        return NextResponse.json(
-          { error: 'Invalid month parameter (1–12)', code: 'INVALID_PARAM' },
-          { status: 400, headers: { [REQUEST_ID_HEADER]: ctx.requestId } },
-        )
-      }
-      report = await PeriodComparisonService.getMonthComparison(companyId, year, month, supabase)
-    } else {
-      // Annual YoY: full year vs prior year
-      report = await PeriodComparisonService.getYearComparison(companyId, year, supabase)
-    }
+    const service = new PeriodComparisonService(supabase)
+    const report  = await service.getReport(companyId)
 
     return NextResponse.json(
       { report },
