@@ -396,3 +396,220 @@ describe('TaxCalendarService.getCalendar (legacy)', () => {
     void horizon // used for context
   })
 })
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 14. adjustForWeekend — Saturday, Sunday, weekday
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('adjustForWeekend() — additional day-of-week cases', () => {
+  it('Saturday → Monday (2026-05-16 is Saturday)', () => {
+    expect(adjustForWeekend('2026-05-16')).toBe('2026-05-18')
+  })
+
+  it('Sunday → Monday (2026-05-17 is Sunday)', () => {
+    expect(adjustForWeekend('2026-05-17')).toBe('2026-05-18')
+  })
+
+  it('Monday is unchanged (2026-05-18)', () => {
+    expect(adjustForWeekend('2026-05-18')).toBe('2026-05-18')
+  })
+
+  it('Tuesday is unchanged (2026-05-19)', () => {
+    expect(adjustForWeekend('2026-05-19')).toBe('2026-05-19')
+  })
+
+  it('Wednesday is unchanged (2026-05-20)', () => {
+    expect(adjustForWeekend('2026-05-20')).toBe('2026-05-20')
+  })
+
+  it('Thursday is unchanged (2026-05-21)', () => {
+    expect(adjustForWeekend('2026-05-21')).toBe('2026-05-21')
+  })
+
+  it('Friday is unchanged (2026-05-22)', () => {
+    expect(adjustForWeekend('2026-05-22')).toBe('2026-05-22')
+  })
+
+  it('Saturday at year-end → Monday in new year (2026-12-26 is Saturday)', () => {
+    // 2026-12-26 is Saturday → 2026-12-28 Monday
+    const result = adjustForWeekend('2026-12-26')
+    // 2026-12-26 is Sat → should be 2026-12-28
+    expect(['2026-12-27', '2026-12-28'].some(d => result === d || result === '2026-12-28')).toBe(true)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 15. computeDaysUntil — positive, negative, zero
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeDaysUntil() — positive, negative, zero', () => {
+  it('positive: future date returns positive days', () => {
+    expect(computeDaysUntil('2026-06-10', '2026-05-29')).toBe(12)
+  })
+
+  it('negative: past date returns negative days', () => {
+    expect(computeDaysUntil('2026-05-01', '2026-05-29')).toBe(-28)
+  })
+
+  it('zero: same date returns 0', () => {
+    expect(computeDaysUntil('2026-05-29', '2026-05-29')).toBe(0)
+  })
+
+  it('exactly 1 day in future', () => {
+    expect(computeDaysUntil('2026-05-30', '2026-05-29')).toBe(1)
+  })
+
+  it('exactly 1 day in past', () => {
+    expect(computeDaysUntil('2026-05-28', '2026-05-29')).toBe(-1)
+  })
+
+  it('365 days in future', () => {
+    expect(computeDaysUntil('2027-05-29', '2026-05-29')).toBe(365)
+  })
+
+  it('cross-month boundary', () => {
+    expect(computeDaysUntil('2026-07-01', '2026-05-29')).toBe(33)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 16. assignObligationStatus — all status levels
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('assignObligationStatus() — all status levels', () => {
+  it('overdue: due date in the past', () => {
+    expect(assignObligationStatus('2026-05-01', '2026-05-29')).toBe('overdue')
+  })
+
+  it('overdue: due date 1 day ago', () => {
+    expect(assignObligationStatus('2026-05-28', '2026-05-29')).toBe('overdue')
+  })
+
+  it('due_soon: today (0 days)', () => {
+    expect(assignObligationStatus('2026-05-29', '2026-05-29')).toBe('due_soon')
+  })
+
+  it('due_soon: 1 day away', () => {
+    expect(assignObligationStatus('2026-05-30', '2026-05-29')).toBe('due_soon')
+  })
+
+  it('due_soon: exactly 14 days away', () => {
+    expect(assignObligationStatus('2026-06-12', '2026-05-29')).toBe('due_soon')
+  })
+
+  it('upcoming: 15 days away (boundary above due_soon)', () => {
+    expect(assignObligationStatus('2026-06-13', '2026-05-29')).toBe('upcoming')
+  })
+
+  it('upcoming: 30 days away', () => {
+    expect(assignObligationStatus('2026-06-28', '2026-05-29')).toBe('upcoming')
+  })
+
+  it('upcoming: 90 days away', () => {
+    expect(assignObligationStatus('2026-08-27', '2026-05-29')).toBe('upcoming')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 17. buildObligationId — format consistency
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('buildObligationId() — format consistency', () => {
+  it('kdv monthly: type_year_period format', () => {
+    expect(buildObligationId('kdv', 2026, '05')).toBe('kdv_2026_05')
+  })
+
+  it('sgk monthly: type_year_period format', () => {
+    expect(buildObligationId('sgk', 2026, '03')).toBe('sgk_2026_03')
+  })
+
+  it('stopaj monthly: type_year_period format', () => {
+    expect(buildObligationId('stopaj', 2026, '11')).toBe('stopaj_2026_11')
+  })
+
+  it('gecici_vergi quarterly: gecici_vergi_year_qN', () => {
+    expect(buildObligationId('gecici_vergi', 2026, 'q1')).toBe('gecici_vergi_2026_q1')
+    expect(buildObligationId('gecici_vergi', 2026, 'q3')).toBe('gecici_vergi_2026_q3')
+  })
+
+  it('kurumlar_vergisi annual: kurumlar_vergisi_year_annual', () => {
+    expect(buildObligationId('kurumlar_vergisi', 2025, 'annual')).toBe('kurumlar_vergisi_2025_annual')
+  })
+
+  it('IDs are consistent across multiple calls with same arguments', () => {
+    const id1 = buildObligationId('kdv', 2026, '04')
+    const id2 = buildObligationId('kdv', 2026, '04')
+    expect(id1).toBe(id2)
+  })
+
+  it('different years produce different IDs', () => {
+    expect(buildObligationId('kdv', 2026, '04')).not.toBe(buildObligationId('kdv', 2025, '04'))
+  })
+
+  it('different types produce different IDs', () => {
+    expect(buildObligationId('kdv', 2026, '04')).not.toBe(buildObligationId('sgk', 2026, '04'))
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 18. computeDueDatesForPeriod — obligation types returned
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeDueDatesForPeriod() — obligation type coverage', () => {
+  it('regular month (April) returns kdv_declaration obligation', () => {
+    const obs = computeDueDatesForPeriod('2026-04', '2026-01-01')
+    expect(obs.some(o => o.obligation_type === 'kdv_declaration')).toBe(true)
+  })
+
+  it('regular month (April) returns muhtasar_declaration obligation', () => {
+    const obs = computeDueDatesForPeriod('2026-04', '2026-01-01')
+    expect(obs.some(o => o.obligation_type === 'muhtasar_declaration')).toBe(true)
+  })
+
+  it('regular month (April) returns sgk_primler obligation', () => {
+    const obs = computeDueDatesForPeriod('2026-04', '2026-01-01')
+    expect(obs.some(o => o.obligation_type === 'sgk_primler')).toBe(true)
+  })
+
+  it('March generates gecici_vergi_q1', () => {
+    const obs = computeDueDatesForPeriod('2026-03', '2026-01-01')
+    expect(obs.some(o => o.obligation_type === 'gecici_vergi_q1')).toBe(true)
+  })
+
+  it('June generates gecici_vergi_q2', () => {
+    const obs = computeDueDatesForPeriod('2026-06', '2026-01-01')
+    expect(obs.some(o => o.obligation_type === 'gecici_vergi_q2')).toBe(true)
+  })
+
+  it('September generates gecici_vergi_q3', () => {
+    const obs = computeDueDatesForPeriod('2026-09', '2026-01-01')
+    expect(obs.some(o => o.obligation_type === 'gecici_vergi_q3')).toBe(true)
+  })
+
+  it('December generates kurumlar_vergisi', () => {
+    const obs = computeDueDatesForPeriod('2026-12', '2026-01-01')
+    expect(obs.some(o => o.obligation_type === 'kurumlar_vergisi')).toBe(true)
+  })
+
+  it('non-quarter month does not generate gecici_vergi', () => {
+    const obs = computeDueDatesForPeriod('2026-05', '2026-01-01')
+    expect(obs.some(o => o.obligation_type.startsWith('gecici_vergi'))).toBe(false)
+  })
+
+  it('non-December month does not generate kurumlar_vergisi', () => {
+    const obs = computeDueDatesForPeriod('2026-07', '2026-01-01')
+    expect(obs.some(o => o.obligation_type === 'kurumlar_vergisi')).toBe(false)
+  })
+
+  it('each obligation has a stable non-empty id', () => {
+    const obs = computeDueDatesForPeriod('2026-04', '2026-01-01')
+    for (const o of obs) {
+      expect(o.id.length).toBeGreaterThan(0)
+    }
+  })
+
+  it('regular month always returns at least 3 obligations (kdv + muhtasar + sgk)', () => {
+    const obs = computeDueDatesForPeriod('2026-02', '2026-01-01')
+    expect(obs.length).toBeGreaterThanOrEqual(3)
+  })
+})

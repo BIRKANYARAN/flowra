@@ -415,3 +415,274 @@ describe('findTopCrossSellOpportunities', () => {
     expect(result.length).toBe(10)
   })
 })
+
+// ── computeSupport — formula: count / total × 100 ────────────────────────────
+
+describe('computeSupport — formula verification', () => {
+  it('1 / 4 = 25%', () => {
+    const r = computeSupport(1, 4)
+    expect(r).not.toBeNull()
+    expect(r!).toBeCloseTo(25, 5)
+  })
+
+  it('10 / 10 = 100%', () => {
+    expect(computeSupport(10, 10)).toBeCloseTo(100, 5)
+  })
+
+  it('0 / 100 = 0%', () => {
+    expect(computeSupport(0, 100)).toBeCloseTo(0, 5)
+  })
+
+  it('3 / 10 = 30%', () => {
+    expect(computeSupport(3, 10)).toBeCloseTo(30, 5)
+  })
+
+  it('5 / 20 = 25%', () => {
+    expect(computeSupport(5, 20)).toBeCloseTo(25, 5)
+  })
+
+  it('returns null when totalTransactions = 0', () => {
+    expect(computeSupport(3, 0)).toBeNull()
+  })
+
+  it('returns null when both zero', () => {
+    expect(computeSupport(0, 0)).toBeNull()
+  })
+})
+
+// ── computeConfidence — formula: itemset / antecedent × 100 ──────────────────
+
+describe('computeConfidence — formula verification', () => {
+  it('2 / 5 = 40%', () => {
+    expect(computeConfidence(5, 2)).toBeCloseTo(40, 5)
+  })
+
+  it('5 / 5 = 100%', () => {
+    expect(computeConfidence(5, 5)).toBeCloseTo(100, 5)
+  })
+
+  it('1 / 10 = 10%', () => {
+    expect(computeConfidence(10, 1)).toBeCloseTo(10, 5)
+  })
+
+  it('returns null when antecedentTransactions = 0', () => {
+    expect(computeConfidence(0, 5)).toBeNull()
+  })
+
+  it('returns null when both are 0', () => {
+    expect(computeConfidence(0, 0)).toBeNull()
+  })
+
+  it('0 itemset / nonzero antecedent = 0%', () => {
+    expect(computeConfidence(10, 0)).toBeCloseTo(0, 5)
+  })
+})
+
+// ── computeLift — formula: confidence / consequentSupport ────────────────────
+
+describe('computeLift — formula: confidence / consequentSupport', () => {
+  it('lift = 1 when confidence equals consequentSupport (independent)', () => {
+    expect(computeLift(40, 40)).toBeCloseTo(1.0, 5)
+  })
+
+  it('lift > 1 for positive association (confidence=60, support=20)', () => {
+    const r = computeLift(60, 20)
+    expect(r).not.toBeNull()
+    expect(r!).toBeGreaterThan(1)
+    expect(r!).toBeCloseTo(3.0, 5)
+  })
+
+  it('lift < 1 for negative association (confidence=10, support=50)', () => {
+    const r = computeLift(10, 50)
+    expect(r).not.toBeNull()
+    expect(r!).toBeLessThan(1)
+    expect(r!).toBeCloseTo(0.2, 5)
+  })
+
+  it('returns null if confidence is null', () => {
+    expect(computeLift(null, 30)).toBeNull()
+  })
+
+  it('returns null if consequentSupport is null', () => {
+    expect(computeLift(60, null)).toBeNull()
+  })
+
+  it('returns null if consequentSupport = 0 (division by zero)', () => {
+    expect(computeLift(50, 0)).toBeNull()
+  })
+
+  it('lift = 2 when confidence = 2 × consequentSupport', () => {
+    expect(computeLift(50, 25)).toBeCloseTo(2.0, 5)
+  })
+})
+
+// ── classifyAssociationStrength — all 5 categories ───────────────────────────
+
+describe('classifyAssociationStrength — all classification levels', () => {
+  it('insufficient_data when both lift and confidence are null', () => {
+    expect(classifyAssociationStrength(null, null)).toBe('insufficient_data')
+  })
+
+  it('insufficient_data when only lift is null', () => {
+    expect(classifyAssociationStrength(null, 80)).toBe('insufficient_data')
+  })
+
+  it('strong: lift=3, confidence=70', () => {
+    expect(classifyAssociationStrength(3, 70)).toBe('strong')
+  })
+
+  it('strong at exact boundary: lift=2, confidence=50', () => {
+    expect(classifyAssociationStrength(2, 50)).toBe('strong')
+  })
+
+  it('not strong if lift=2 but confidence=49 → moderate', () => {
+    expect(classifyAssociationStrength(2, 49)).toBe('moderate')
+  })
+
+  it('moderate: lift=1.8, confidence=40', () => {
+    expect(classifyAssociationStrength(1.8, 40)).toBe('moderate')
+  })
+
+  it('moderate at boundary: lift=1.5, confidence=30', () => {
+    expect(classifyAssociationStrength(1.5, 30)).toBe('moderate')
+  })
+
+  it('weak: lift=1.2, confidence=20', () => {
+    expect(classifyAssociationStrength(1.2, 20)).toBe('weak')
+  })
+
+  it('weak: lift just above 1 (1.01)', () => {
+    expect(classifyAssociationStrength(1.01, 5)).toBe('weak')
+  })
+
+  it('none: lift = 1.0 exactly', () => {
+    expect(classifyAssociationStrength(1.0, 60)).toBe('none')
+  })
+
+  it('none: lift < 1 (negative association)', () => {
+    expect(classifyAssociationStrength(0.7, 80)).toBe('none')
+  })
+
+  it('none: lift = 0', () => {
+    expect(classifyAssociationStrength(0, 100)).toBe('none')
+  })
+})
+
+// ── computeItemsetPairs — with single-item transactions ───────────────────────
+
+describe('computeItemsetPairs — single-item and multi-item edge cases', () => {
+  it('single-item transactions produce no pairs', () => {
+    const txns = [
+      { transaction_id: 'T1', product_ids: ['A'] },
+      { transaction_id: 'T2', product_ids: ['B'] },
+      { transaction_id: 'T3', product_ids: ['C'] },
+    ]
+    expect(computeItemsetPairs(txns).size).toBe(0)
+  })
+
+  it('empty transaction list → empty map', () => {
+    expect(computeItemsetPairs([]).size).toBe(0)
+  })
+
+  it('pair keys are sorted alphabetically (smaller first)', () => {
+    const txns = [{ transaction_id: 'T1', product_ids: ['Z', 'A', 'M'] }]
+    const pairs = computeItemsetPairs(txns)
+    expect(pairs.has('A|M')).toBe(true)
+    expect(pairs.has('A|Z')).toBe(true)
+    expect(pairs.has('M|Z')).toBe(true)
+    // Check none have wrong order
+    expect(pairs.has('M|A')).toBe(false)
+    expect(pairs.has('Z|A')).toBe(false)
+  })
+
+  it('3-item transaction produces exactly 3 pairs', () => {
+    const txns = [{ transaction_id: 'T1', product_ids: ['X', 'Y', 'Z'] }]
+    expect(computeItemsetPairs(txns).size).toBe(3)
+  })
+
+  it('4-item transaction produces exactly 6 pairs', () => {
+    const txns = [{ transaction_id: 'T1', product_ids: ['A', 'B', 'C', 'D'] }]
+    expect(computeItemsetPairs(txns).size).toBe(6)
+  })
+
+  it('duplicate product IDs within a transaction are deduplicated', () => {
+    const txns = [{ transaction_id: 'T1', product_ids: ['A', 'B', 'A'] }]
+    const pairs = computeItemsetPairs(txns)
+    expect(pairs.size).toBe(1)
+    expect(pairs.get('A|B')).toBe(1)
+  })
+
+  it('pair count accumulates across transactions', () => {
+    const txns = [
+      { transaction_id: 'T1', product_ids: ['A', 'B'] },
+      { transaction_id: 'T2', product_ids: ['A', 'B'] },
+      { transaction_id: 'T3', product_ids: ['A', 'B'] },
+    ]
+    expect(computeItemsetPairs(txns).get('A|B')).toBe(3)
+  })
+})
+
+// ── findTopCrossSellOpportunities — ranking by lift ───────────────────────────
+
+describe('findTopCrossSellOpportunities — ranking and output shape', () => {
+  const rules = [
+    { antecedent: 'p1', consequent: 'p2', confidence_pct: 50, lift: 1.5 },
+    { antecedent: 'p3', consequent: 'p4', confidence_pct: 80, lift: 4.0 },
+    { antecedent: 'p5', consequent: 'p6', confidence_pct: 65, lift: 2.5 },
+  ]
+  const names = new Map([['p1', 'Product A'], ['p2', 'Product B'], ['p3', 'Product C'], ['p4', 'Product D'], ['p5', 'Product E'], ['p6', 'Product F']])
+
+  it('results maintain the input order (rules already sorted by lift before passing)', () => {
+    const sorted = [...rules].sort((a, b) => (b.lift ?? 0) - (a.lift ?? 0))
+    const result = findTopCrossSellOpportunities(sorted, names, 10)
+    expect(result[0].lift).toBe(4.0)
+    expect(result[1].lift).toBe(2.5)
+    expect(result[2].lift).toBe(1.5)
+  })
+
+  it('topN=1 returns only first rule', () => {
+    const result = findTopCrossSellOpportunities(rules, names, 1)
+    expect(result.length).toBe(1)
+  })
+
+  it('each result has if_buying, also_buy, confidence_pct, lift, strength', () => {
+    const result = findTopCrossSellOpportunities(rules, names, 1)
+    expect(result[0]).toHaveProperty('if_buying')
+    expect(result[0]).toHaveProperty('also_buy')
+    expect(result[0]).toHaveProperty('confidence_pct')
+    expect(result[0]).toHaveProperty('lift')
+    expect(result[0]).toHaveProperty('strength')
+  })
+
+  it('falls back to product_id string when name is not in map', () => {
+    const result = findTopCrossSellOpportunities(
+      [{ antecedent: 'unknown1', consequent: 'unknown2', confidence_pct: 60, lift: 2.0 }],
+      new Map(),
+      5,
+    )
+    expect(result[0].if_buying).toBe('unknown1')
+    expect(result[0].also_buy).toBe('unknown2')
+  })
+
+  it('strength is computed correctly: lift=4, conf=80 → strong', () => {
+    const result = findTopCrossSellOpportunities(
+      [{ antecedent: 'x', consequent: 'y', confidence_pct: 80, lift: 4.0 }],
+      new Map([['x', 'X'], ['y', 'Y']]),
+      5,
+    )
+    expect(result[0].strength).toBe('strong')
+  })
+
+  it('strength is computed correctly: lift=1.6, conf=35 → moderate', () => {
+    const result = findTopCrossSellOpportunities(
+      [{ antecedent: 'x', consequent: 'y', confidence_pct: 35, lift: 1.6 }],
+      new Map(),
+      5,
+    )
+    expect(result[0].strength).toBe('moderate')
+  })
+
+  it('empty rules → empty result', () => {
+    expect(findTopCrossSellOpportunities([], new Map(), 10)).toEqual([])
+  })
+})

@@ -392,3 +392,179 @@ describe('buildRecommendations — extended', () => {
   })
 
 })
+
+// ── computeCashConcentration — single account and equal distribution ──────────
+
+describe('computeCashConcentration — single account / equal distribution', () => {
+  it('single account with any balance → 100%', () => {
+    expect(computeCashConcentration([500_000])).toBe(100)
+  })
+
+  it('single account with zero balance → 0 (total is 0)', () => {
+    expect(computeCashConcentration([0])).toBe(0)
+  })
+
+  it('two equal accounts → 50%', () => {
+    expect(computeCashConcentration([1_000, 1_000])).toBe(50)
+  })
+
+  it('four equal accounts → 25%', () => {
+    expect(computeCashConcentration([250, 250, 250, 250])).toBe(25)
+  })
+
+  it('empty balances array → 0', () => {
+    expect(computeCashConcentration([])).toBe(0)
+  })
+
+  it('three accounts 60/30/10 split → 60%', () => {
+    expect(computeCashConcentration([600, 300, 100])).toBe(60)
+  })
+
+  it('result is exactly 100 for a single positive account', () => {
+    expect(computeCashConcentration([999_999])).toBe(100)
+  })
+})
+
+// ── isIdleCash — custom threshold behaviour ───────────────────────────────────
+
+describe('isIdleCash — threshold boundary cases', () => {
+  it('balance = 100_001, outflows = 0, days = 100 → true', () => {
+    expect(isIdleCash(100_001, 0, 100)).toBe(true)
+  })
+
+  it('balance = 100_000 (not strictly greater) → false', () => {
+    expect(isIdleCash(100_000, 0, 100)).toBe(false)
+  })
+
+  it('zero balance always → false', () => {
+    expect(isIdleCash(0, 0, 999)).toBe(false)
+  })
+
+  it('outflows = 9_999 (under 10K) → true when other conditions met', () => {
+    expect(isIdleCash(200_000, 9_999, 35)).toBe(true)
+  })
+
+  it('outflows = 10_000 (not strictly less than 10K) → false', () => {
+    expect(isIdleCash(200_000, 10_000, 35)).toBe(false)
+  })
+
+  it('days = 31 (over 30) → true when other conditions met', () => {
+    expect(isIdleCash(200_000, 5_000, 31)).toBe(true)
+  })
+
+  it('days = 30 (not strictly greater) → false', () => {
+    expect(isIdleCash(200_000, 5_000, 30)).toBe(false)
+  })
+})
+
+// ── computeRunwayMonths — formula verification ────────────────────────────────
+
+describe('computeRunwayMonths — formula: cash / burn', () => {
+  it('300_000 / 100_000 = 3 months', () => {
+    expect(computeRunwayMonths(300_000, 100_000)).toBe(3)
+  })
+
+  it('0 cash / 100_000 burn = 0 months', () => {
+    expect(computeRunwayMonths(0, 100_000)).toBe(0)
+  })
+
+  it('zero burn (avgMonthlyExpenses = 0) → null', () => {
+    expect(computeRunwayMonths(1_000_000, 0)).toBeNull()
+  })
+
+  it('negative burn → null (≤ 0 guard)', () => {
+    expect(computeRunwayMonths(500_000, -10_000)).toBeNull()
+  })
+
+  it('1_000_000 / 500_000 = 2 months', () => {
+    expect(computeRunwayMonths(1_000_000, 500_000)).toBe(2)
+  })
+
+  it('very large runway: 10_000_000 / 10_000 = 1000', () => {
+    expect(computeRunwayMonths(10_000_000, 10_000)).toBe(1000)
+  })
+
+  it('fractional result rounds to 2 decimal places', () => {
+    // 100_000 / 30_000 = 3.3333... → rounds to 3.33
+    const result = computeRunwayMonths(100_000, 30_000)
+    expect(result).toBeCloseTo(3.33, 1)
+  })
+})
+
+// ── computeObligationCoverage — above and below 1.0 ──────────────────────────
+
+describe('computeObligationCoverage — above/below 1.0', () => {
+  it('cash > obligations → ratio > 1.0', () => {
+    const result = computeObligationCoverage(200_000, 100_000)
+    expect(result).toBeGreaterThan(1.0)
+  })
+
+  it('cash < obligations → ratio < 1.0', () => {
+    const result = computeObligationCoverage(50_000, 100_000)
+    expect(result).toBeLessThan(1.0)
+  })
+
+  it('cash = obligations → ratio = 1.0', () => {
+    expect(computeObligationCoverage(100_000, 100_000)).toBe(1)
+  })
+
+  it('zero obligations → null', () => {
+    expect(computeObligationCoverage(500_000, 0)).toBeNull()
+  })
+
+  it('negative obligations → null (≤ 0 guard)', () => {
+    expect(computeObligationCoverage(500_000, -50_000)).toBeNull()
+  })
+
+  it('zero cash and non-zero obligations → 0', () => {
+    expect(computeObligationCoverage(0, 100_000)).toBe(0)
+  })
+
+  it('ratio = 0.5 when cash is half of obligations', () => {
+    expect(computeObligationCoverage(50_000, 100_000)).toBeCloseTo(0.5, 1)
+  })
+})
+
+// ── buildRecommendations — return type and non-empty array ────────────────────
+
+describe('buildRecommendations — return type and structure', () => {
+  it('always returns an Array', () => {
+    expect(Array.isArray(buildRecommendations(0, false, 0, null))).toBe(true)
+  })
+
+  it('returns array of strings', () => {
+    const result = buildRecommendations(500_000, true, 600_000, 1)
+    for (const rec of result) {
+      expect(typeof rec).toBe('string')
+    }
+  })
+
+  it('non-empty array when concentrated=true', () => {
+    const result = buildRecommendations(1_000_000, true, 0, 12)
+    expect(result.length).toBeGreaterThan(0)
+  })
+
+  it('non-empty array when totalCash=0', () => {
+    const result = buildRecommendations(0, false, 0, null)
+    expect(result.length).toBeGreaterThan(0)
+  })
+
+  it('empty array when all metrics are healthy', () => {
+    // large cash, not concentrated, no idle, good runway
+    const result = buildRecommendations(5_000_000, false, 0, 36)
+    expect(result).toHaveLength(0)
+  })
+
+  it('all recs are non-empty strings', () => {
+    const result = buildRecommendations(100_000, true, 600_000, 1)
+    for (const rec of result) {
+      expect(rec.length).toBeGreaterThan(0)
+    }
+  })
+
+  it('concentration recommendation contains Turkish text', () => {
+    const result = buildRecommendations(1_000_000, true, 0, 12)
+    const hasConc = result.some(r => r.includes('yoğun') || r.includes('hesap'))
+    expect(hasConc).toBe(true)
+  })
+})

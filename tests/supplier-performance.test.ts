@@ -397,3 +397,152 @@ describe('isOverdue — additional status and date coverage', () => {
     expect(isOverdue('2026-05-28', 'cancelled', '2026-05-29')).toBe(false)
   })
 })
+
+// ── computeFulfillmentRate — formula verification ─────────────────────────────
+
+describe('computeFulfillmentRate — formula: received / (total - cancelled) × 100', () => {
+  it('exact formula: 3 received, 5 total, 0 cancelled = 3/5 × 100 = 60%', () => {
+    expect(computeFulfillmentRate(3, 5, 0)).toBe(60)
+  })
+
+  it('100% when all non-cancelled are received', () => {
+    expect(computeFulfillmentRate(10, 10, 0)).toBe(100)
+  })
+
+  it('0% when 0 received and cancellations present', () => {
+    expect(computeFulfillmentRate(0, 8, 3)).toBe(0)
+  })
+
+  it('edge case: total = cancelled → nonCancelled = 0 → returns 0', () => {
+    expect(computeFulfillmentRate(0, 4, 4)).toBe(0)
+  })
+
+  it('result is rounded to 2 decimal places', () => {
+    // 2 / 3 × 100 = 66.67
+    const r = computeFulfillmentRate(2, 3, 0)
+    expect(r).toBeCloseTo(66.67, 1)
+  })
+
+  it('cancellations reduce denominator correctly', () => {
+    // 6 received, 10 total, 4 cancelled → 6/6 = 100%
+    expect(computeFulfillmentRate(6, 10, 4)).toBe(100)
+  })
+
+  it('0 ordered and 0 cancelled → 0 (empty state)', () => {
+    expect(computeFulfillmentRate(0, 0, 0)).toBe(0)
+  })
+})
+
+// ── computeOnTimeRate — formula verification ──────────────────────────────────
+
+describe('computeOnTimeRate — formula: onTimeCount / receivedCount × 100', () => {
+  it('exact formula: 7 on-time, 10 received = 70%', () => {
+    expect(computeOnTimeRate(7, 10)).toBe(70)
+  })
+
+  it('returns null when receivedCount = 0 (avoid division by zero)', () => {
+    expect(computeOnTimeRate(0, 0)).toBeNull()
+  })
+
+  it('returns null even when onTimeCount is positive but received = 0', () => {
+    expect(computeOnTimeRate(5, 0)).toBeNull()
+  })
+
+  it('100% when all received are on-time', () => {
+    expect(computeOnTimeRate(7, 7)).toBe(100)
+  })
+
+  it('0% when none are on-time', () => {
+    expect(computeOnTimeRate(0, 7)).toBe(0)
+  })
+
+  it('fractional result is rounded to 2dp: 1/7 ≈ 14.29%', () => {
+    const r = computeOnTimeRate(1, 7)
+    expect(r).not.toBeNull()
+    expect(r!).toBeCloseTo(14.29, 1)
+  })
+
+  it('large numbers: 99/100 = 99%', () => {
+    expect(computeOnTimeRate(99, 100)).toBe(99)
+  })
+})
+
+// ── isOverdue — same-day is NOT overdue ───────────────────────────────────────
+
+describe('isOverdue — boundary: same-day expected date is not overdue', () => {
+  it('same-day expectedDate and today → false (not yet past)', () => {
+    expect(isOverdue('2026-06-15', 'ordered', '2026-06-15')).toBe(false)
+  })
+
+  it('one day before today → true (past)', () => {
+    expect(isOverdue('2026-06-14', 'ordered', '2026-06-15')).toBe(true)
+  })
+
+  it('one day after today → false (future)', () => {
+    expect(isOverdue('2026-06-16', 'ordered', '2026-06-15')).toBe(false)
+  })
+
+  it('draft with same-day expected → false', () => {
+    expect(isOverdue('2026-06-15', 'draft', '2026-06-15')).toBe(false)
+  })
+
+  it('partially_received with same-day → false', () => {
+    expect(isOverdue('2026-06-15', 'partially_received', '2026-06-15')).toBe(false)
+  })
+
+  it('yesterday as expected, received status → always false', () => {
+    expect(isOverdue('2026-06-14', 'received', '2026-06-15')).toBe(false)
+  })
+})
+
+// ── gradeSupplierPerformance — all 5 grade levels ────────────────────────────
+
+describe('gradeSupplierPerformance — all grade levels with exact thresholds', () => {
+  it('grade excellent: fulfillment=100, onTime=100, poCount=5', () => {
+    expect(gradeSupplierPerformance(100, 100, 5)).toBe('excellent')
+  })
+
+  it('grade excellent: fulfillment=95 exactly, onTime=90 exactly, poCount=3', () => {
+    expect(gradeSupplierPerformance(95, 90, 3)).toBe('excellent')
+  })
+
+  it('grade good: fulfillment=90, onTime=80, poCount=5', () => {
+    expect(gradeSupplierPerformance(90, 80, 5)).toBe('good')
+  })
+
+  it('grade good: fulfillment=85 exactly, onTime=75 exactly, poCount=4', () => {
+    expect(gradeSupplierPerformance(85, 75, 4)).toBe('good')
+  })
+
+  it('grade fair: fulfillment=70 exactly, onTime=null, poCount=3', () => {
+    expect(gradeSupplierPerformance(70, null, 3)).toBe('fair')
+  })
+
+  it('grade fair: fulfillment=80, onTime=50, poCount=5 (onTime fails good threshold)', () => {
+    expect(gradeSupplierPerformance(80, 50, 5)).toBe('fair')
+  })
+
+  it('grade poor: fulfillment=69, onTime=null, poCount=5', () => {
+    expect(gradeSupplierPerformance(69, null, 5)).toBe('poor')
+  })
+
+  it('grade poor: fulfillment=0, onTime=0, poCount=10', () => {
+    expect(gradeSupplierPerformance(0, 0, 10)).toBe('poor')
+  })
+
+  it('grade insufficient_data: poCount=1', () => {
+    expect(gradeSupplierPerformance(99, 99, 1)).toBe('insufficient_data')
+  })
+
+  it('grade insufficient_data: poCount=2 (just below threshold)', () => {
+    expect(gradeSupplierPerformance(100, 100, 2)).toBe('insufficient_data')
+  })
+
+  it('grade excellent when onTime is null and fulfillment >= 95', () => {
+    expect(gradeSupplierPerformance(96, null, 10)).toBe('excellent')
+  })
+
+  it('grade good when onTime is null and fulfillment is between 85 and 94', () => {
+    expect(gradeSupplierPerformance(87, null, 6)).toBe('good')
+  })
+})

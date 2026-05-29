@@ -372,3 +372,197 @@ describe('setRateLimitAdapter — custom counting adapter', () => {
     expect(r.remaining).toBe(42)
   })
 })
+
+// ── RATE_LIMIT_PRESETS — key existence and field types ────────────────────────
+
+describe('RATE_LIMIT_PRESETS — key existence', () => {
+  it('has exactly 4 preset keys', () => {
+    expect(Object.keys(RATE_LIMIT_PRESETS).length).toBe(4)
+  })
+
+  it('each preset has a "limit" field that is a number', () => {
+    for (const [, opts] of Object.entries(RATE_LIMIT_PRESETS)) {
+      expect(typeof opts.limit).toBe('number')
+    }
+  })
+
+  it('each preset has a "windowMs" field that is a number', () => {
+    for (const [, opts] of Object.entries(RATE_LIMIT_PRESETS)) {
+      expect(typeof opts.windowMs).toBe('number')
+    }
+  })
+
+  it('auth limit is strictly less than api_write limit', () => {
+    expect(RATE_LIMIT_PRESETS.auth.limit).toBeLessThan(RATE_LIMIT_PRESETS.api_write.limit)
+  })
+
+  it('pdf limit is strictly less than api_write limit', () => {
+    expect(RATE_LIMIT_PRESETS.pdf.limit).toBeLessThan(RATE_LIMIT_PRESETS.api_write.limit)
+  })
+
+  it('auth preset limit value is reasonable (> 0, < 1000)', () => {
+    expect(RATE_LIMIT_PRESETS.auth.limit).toBeGreaterThan(0)
+    expect(RATE_LIMIT_PRESETS.auth.limit).toBeLessThan(1000)
+  })
+
+  it('all windowMs values are positive', () => {
+    for (const [, opts] of Object.entries(RATE_LIMIT_PRESETS)) {
+      expect(opts.windowMs).toBeGreaterThan(0)
+    }
+  })
+
+  it('all limit values are at least 1', () => {
+    for (const [, opts] of Object.entries(RATE_LIMIT_PRESETS)) {
+      expect(opts.limit).toBeGreaterThanOrEqual(1)
+    }
+  })
+})
+
+// ── rateLimit — custom adapter that always allows ─────────────────────────────
+
+describe('rateLimit — custom adapter always-allow', () => {
+  it('always-allow adapter permits 1000 consecutive requests', () => {
+    const alwaysAllow: RateLimitAdapter = {
+      check: (_id, opts) => ({ allowed: true, remaining: opts.limit, resetAt: Date.now() + opts.windowMs }),
+    }
+    setRateLimitAdapter(alwaysAllow)
+    for (let i = 0; i < 1000; i++) {
+      expect(rateLimit('flood', { limit: 1, windowMs: 1 }).allowed).toBe(true)
+    }
+  })
+
+  it('always-allow adapter returns remaining equal to limit on each call', () => {
+    const alwaysAllow: RateLimitAdapter = {
+      check: (_id, opts) => ({ allowed: true, remaining: opts.limit, resetAt: Date.now() + opts.windowMs }),
+    }
+    setRateLimitAdapter(alwaysAllow)
+    const limit = 5
+    const r = rateLimit('test', { limit, windowMs: 60_000 })
+    expect(r.remaining).toBe(limit)
+  })
+
+  it('always-allow adapter allows even with limit=1 after many calls', () => {
+    let callCount = 0
+    const countingAlwaysAllow: RateLimitAdapter = {
+      check: () => {
+        callCount++
+        return { allowed: true, remaining: 99, resetAt: Date.now() + 60_000 }
+      },
+    }
+    setRateLimitAdapter(countingAlwaysAllow)
+    for (let i = 0; i < 20; i++) {
+      rateLimit('counter-test', { limit: 1, windowMs: 1 })
+    }
+    expect(callCount).toBe(20)
+  })
+})
+
+// ── rateLimit — burst behaviour ───────────────────────────────────────────────
+
+describe('rateLimit — burst behaviour', () => {
+  it('allows first N requests and denies N+1', () => {
+    const N = 7
+    const opts = { limit: N, windowMs: 60_000 }
+    const id = 'burst-test'
+    for (let i = 0; i < N; i++) {
+      expect(rateLimit(id, opts).allowed).toBe(true)
+    }
+    expect(rateLimit(id, opts).allowed).toBe(false)
+  })
+
+  it('after limit+1 is denied, remaining is still 0', () => {
+    const opts = { limit: 3, windowMs: 60_000 }
+    const id = 'burst-remaining'
+    rateLimit(id, opts) // 1
+    rateLimit(id, opts) // 2
+    rateLimit(id, opts) // 3 — limit hit
+    const r = rateLimit(id, opts) // 4 — over
+    expect(r.remaining).toBe(0)
+    expect(r.allowed).toBe(false)
+  })
+
+  it('requests beyond 2× limit still return remaining=0', () => {
+    const opts = { limit: 2, windowMs: 60_000 }
+    const id = 'burst-deep'
+    for (let i = 0; i < 10; i++) {
+      rateLimit(id, opts)
+    }
+    const r = rateLimit(id, opts)
+    expect(r.remaining).toBe(0)
+  })
+
+  it('burst with limit=1: second call is always denied', () => {
+    const opts = { limit: 1, windowMs: 60_000 }
+    rateLimit('burst-one', opts)
+    expect(rateLimit('burst-one', opts).allowed).toBe(false)
+  })
+})
+
+// ── rateLimit — key independence ──────────────────────────────────────────────
+
+describe('rateLimit — different keys are independent', () => {
+  it('filling key A does not affect key B', () => {
+    const opts = { limit: 2, windowMs: 60_000 }
+    rateLimit('key-A', opts)
+    rateLimit('key-A', opts)
+    rateLimit('key-A', opts) // over limit for A
+    const r = rateLimit('key-B', opts) // B is fresh
+    expect(r.allowed).toBe(true)
+  })
+
+  it('100 unique keys each allow their own first request', () => {
+    const opts = { limit: 1, windowMs: 60_000 }
+    for (let i = 0; i < 100; i++) {
+      expect(rateLimit(`unique-key-${i}`, opts).allowed).toBe(true)
+    }
+  })
+
+  it('exhausting one preset key does not affect a different preset key for same user', () => {
+    // Exhaust auth for 'shared'
+    for (let i = 0; i < 10; i++) {
+      rateLimit('shared', 'auth')
+    }
+    rateLimit('shared', 'auth') // over
+    // pdf for same user should still be unaffected
+    const r = rateLimit('shared', 'pdf')
+    expect(r.allowed).toBe(true)
+  })
+
+  it('two users with same custom opts do not share counters', () => {
+    const opts = { limit: 1, windowMs: 60_000 }
+    rateLimit('alice', opts) // Alice: 1/1 — limit hit
+    const r = rateLimit('bob', opts) // Bob: 1/1 — fresh
+    expect(r.allowed).toBe(true)
+  })
+})
+
+// ── RATE_LIMIT_PRESETS — reasonable values ────────────────────────────────────
+
+describe('RATE_LIMIT_PRESETS — value reasonableness', () => {
+  it('auth limit is 10 (brute-force protection should be strict)', () => {
+    expect(RATE_LIMIT_PRESETS.auth.limit).toBe(10)
+  })
+
+  it('pdf limit is 20', () => {
+    expect(RATE_LIMIT_PRESETS.pdf.limit).toBe(20)
+  })
+
+  it('api_write limit is 60', () => {
+    expect(RATE_LIMIT_PRESETS.api_write.limit).toBe(60)
+  })
+
+  it('api_read limit is 300', () => {
+    expect(RATE_LIMIT_PRESETS.api_read.limit).toBe(300)
+  })
+
+  it('auth windowMs is 60 seconds', () => {
+    expect(RATE_LIMIT_PRESETS.auth.windowMs).toBe(60_000)
+  })
+
+  it('preset limits form a strictly ascending sequence: auth < pdf < api_write < api_read', () => {
+    const { auth, pdf, api_write, api_read } = RATE_LIMIT_PRESETS
+    expect(auth.limit).toBeLessThan(pdf.limit)
+    expect(pdf.limit).toBeLessThan(api_write.limit)
+    expect(api_write.limit).toBeLessThan(api_read.limit)
+  })
+})

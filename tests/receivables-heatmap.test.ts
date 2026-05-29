@@ -390,3 +390,146 @@ describe('buildBucketTotals — multi-customer aggregation', () => {
     expect(current.pct_of_total).toBe(100)
   })
 })
+
+// ── assignReceivableBucket — exact boundary days 29/30/31/59/60/61/89/90/91 ───
+
+describe('assignReceivableBucket — exact boundary days', () => {
+  it('29 days → days_1_30 (still within 30-day window)', () => {
+    const today   = '2026-06-01'
+    const saleDay = '2026-05-03'  // 29 days ago
+    expect(assignReceivableBucket(saleDay, today)).toBe('days_1_30')
+  })
+
+  it('30 days → days_1_30 (boundary inclusive)', () => {
+    const today   = '2026-06-01'
+    const saleDay = '2026-05-02'  // 30 days ago
+    expect(assignReceivableBucket(saleDay, today)).toBe('days_1_30')
+  })
+
+  it('31 days → days_31_60 (just past 30-day boundary)', () => {
+    const today   = '2026-06-01'
+    const saleDay = '2026-05-01'  // 31 days ago
+    expect(assignReceivableBucket(saleDay, today)).toBe('days_31_60')
+  })
+
+  it('59 days → days_31_60', () => {
+    const today   = '2026-06-01'
+    const saleDay = '2026-04-03'  // 59 days ago
+    expect(assignReceivableBucket(saleDay, today)).toBe('days_31_60')
+  })
+
+  it('60 days → days_31_60 (boundary inclusive)', () => {
+    const today   = '2026-06-01'
+    const saleDay = '2026-04-02'  // 60 days ago
+    expect(assignReceivableBucket(saleDay, today)).toBe('days_31_60')
+  })
+
+  it('61 days → days_61_90', () => {
+    const today   = '2026-06-01'
+    const saleDay = '2026-04-01'  // 61 days ago
+    expect(assignReceivableBucket(saleDay, today)).toBe('days_61_90')
+  })
+
+  it('89 days → days_61_90', () => {
+    const today   = '2026-06-01'
+    const saleDay = '2026-03-04'  // 89 days ago
+    expect(assignReceivableBucket(saleDay, today)).toBe('days_61_90')
+  })
+
+  it('90 days → days_61_90 (boundary inclusive)', () => {
+    const today   = '2026-06-01'
+    const saleDay = '2026-03-03'  // 90 days ago
+    expect(assignReceivableBucket(saleDay, today)).toBe('days_61_90')
+  })
+
+  it('91 days → days_91_plus', () => {
+    const today   = '2026-06-01'
+    const saleDay = '2026-03-02'  // 91 days ago
+    expect(assignReceivableBucket(saleDay, today)).toBe('days_91_plus')
+  })
+
+  it('today === saleDate (0 days) → current', () => {
+    expect(assignReceivableBucket('2026-06-01', '2026-06-01')).toBe('current')
+  })
+
+  it('future date (negative days) → current', () => {
+    expect(assignReceivableBucket('2026-06-10', '2026-06-01')).toBe('current')
+  })
+})
+
+// ── buildBucketTotals — customers in different buckets ────────────────────────
+
+describe('buildBucketTotals — customers spread across all 5 buckets', () => {
+  it('five customers each in a different bucket → each bucket total matches', () => {
+    const customers = [
+      makeCustomer({ customer_name: 'A', total_outstanding_try: 100, buckets: { current: 100, days_1_30: 0, days_31_60: 0, days_61_90: 0, days_91_plus: 0 } }),
+      makeCustomer({ customer_name: 'B', total_outstanding_try: 200, buckets: { current: 0, days_1_30: 200, days_31_60: 0, days_61_90: 0, days_91_plus: 0 } }),
+      makeCustomer({ customer_name: 'C', total_outstanding_try: 300, buckets: { current: 0, days_1_30: 0, days_31_60: 300, days_61_90: 0, days_91_plus: 0 } }),
+      makeCustomer({ customer_name: 'D', total_outstanding_try: 150, buckets: { current: 0, days_1_30: 0, days_31_60: 0, days_61_90: 150, days_91_plus: 0 } }),
+      makeCustomer({ customer_name: 'E', total_outstanding_try: 250, buckets: { current: 0, days_1_30: 0, days_31_60: 0, days_61_90: 0, days_91_plus: 250 } }),
+    ]
+    const totals = buildBucketTotals(customers)
+    expect(totals.find(t => t.bucket === 'current')!.total_try).toBe(100)
+    expect(totals.find(t => t.bucket === 'days_1_30')!.total_try).toBe(200)
+    expect(totals.find(t => t.bucket === 'days_31_60')!.total_try).toBe(300)
+    expect(totals.find(t => t.bucket === 'days_61_90')!.total_try).toBe(150)
+    expect(totals.find(t => t.bucket === 'days_91_plus')!.total_try).toBe(250)
+  })
+
+  it('each bucket pct sums to 100 across all 5 buckets (different amounts)', () => {
+    const customers = [
+      makeCustomer({ customer_name: 'A', total_outstanding_try: 500, buckets: { current: 500, days_1_30: 0, days_31_60: 0, days_61_90: 0, days_91_plus: 0 } }),
+      makeCustomer({ customer_name: 'B', total_outstanding_try: 500, buckets: { current: 0, days_1_30: 500, days_31_60: 0, days_61_90: 0, days_91_plus: 0 } }),
+    ]
+    const totals  = buildBucketTotals(customers)
+    const sumPct  = totals.reduce((s, t) => s + t.pct_of_total, 0)
+    expect(sumPct).toBeCloseTo(100, 1)
+  })
+
+  it('count = 0 for buckets with no customers contributing', () => {
+    const customers = [
+      makeCustomer({ total_outstanding_try: 400, buckets: { current: 400, days_1_30: 0, days_31_60: 0, days_61_90: 0, days_91_plus: 0 } }),
+    ]
+    const totals = buildBucketTotals(customers)
+    expect(totals.find(t => t.bucket === 'days_91_plus')!.count).toBe(0)
+    expect(totals.find(t => t.bucket === 'days_31_60')!.count).toBe(0)
+  })
+})
+
+// ── computeCustomerRiskScore — various overdue ratios ────────────────────────
+
+describe('computeCustomerRiskScore — various overdue ratios', () => {
+  const empty: Record<AgingBucket, number> = { current: 0, days_1_30: 0, days_31_60: 0, days_61_90: 0, days_91_plus: 0 }
+
+  it('10% in days_91_plus, oldest = 95 → base=10, bonus=20, total=30', () => {
+    const buckets = { ...empty, current: 900, days_91_plus: 100 }
+    expect(computeCustomerRiskScore(buckets, 1000, 95)).toBe(30)
+  })
+
+  it('50% in days_61_90, oldest = 65 → base=50, bonus=10, total=60', () => {
+    const buckets = { ...empty, current: 500, days_61_90: 500 }
+    expect(computeCustomerRiskScore(buckets, 1000, 65)).toBe(60)
+  })
+
+  it('100% in days_61_90, oldest = 62 → base=100, bonus=10, capped at 100', () => {
+    const buckets = { ...empty, days_61_90: 1000 }
+    expect(computeCustomerRiskScore(buckets, 1000, 62)).toBe(100)
+  })
+
+  it('split 40% days_61_90 and 20% days_91_plus, oldest = 50 → base=60, bonus=0, total=60', () => {
+    const buckets = { ...empty, current: 400, days_61_90: 400, days_91_plus: 200 }
+    expect(computeCustomerRiskScore(buckets, 1000, 50)).toBe(60)
+  })
+
+  it('result is always an integer (Math.round applied)', () => {
+    const buckets = { ...empty, current: 333, days_91_plus: 667 }
+    const score   = computeCustomerRiskScore(buckets, 1000, 91)
+    expect(Number.isInteger(score)).toBe(true)
+  })
+
+  it('score capped at 100 regardless of inputs', () => {
+    const buckets = { ...empty, days_61_90: 500, days_91_plus: 500 }
+    const score   = computeCustomerRiskScore(buckets, 1000, 120)
+    expect(score).toBeLessThanOrEqual(100)
+  })
+})

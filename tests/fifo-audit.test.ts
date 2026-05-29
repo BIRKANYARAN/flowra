@@ -391,3 +391,205 @@ describe('integration: score → grade pipeline', () => {
     expect(classifyLotHealth(false, false, null)).toBe('clean')
   })
 })
+
+// ── isOverConsumed — additional edge cases ────────────────────────────────────
+
+describe('isOverConsumed — additional edge cases', () => {
+  it('equal qty is NOT over-consumed (strict greater-than)', () => {
+    expect(isOverConsumed(50, 50)).toBe(false)
+  })
+
+  it('0 available and 0 allocated is NOT over-consumed', () => {
+    expect(isOverConsumed(0, 0)).toBe(false)
+  })
+
+  it('fractional: 10.1 available, 10.2 allocated is over-consumed', () => {
+    expect(isOverConsumed(10.1, 10.2)).toBe(true)
+  })
+
+  it('fractional: 10.2 available, 10.1 allocated is NOT over-consumed', () => {
+    expect(isOverConsumed(10.2, 10.1)).toBe(false)
+  })
+
+  it('very large numbers: 999999 available, 999999 allocated is NOT over-consumed', () => {
+    expect(isOverConsumed(999999, 999999)).toBe(false)
+  })
+
+  it('very large numbers: 999999 available, 1000000 allocated IS over-consumed', () => {
+    expect(isOverConsumed(999999, 1000000)).toBe(true)
+  })
+})
+
+// ── computeConsumedPct — additional edge cases ────────────────────────────────
+
+describe('computeConsumedPct — at 0%, 50%, 100%, above 100%', () => {
+  it('0% — nothing allocated from a full lot', () => {
+    expect(computeConsumedPct(500, 0)).toBe(0)
+  })
+
+  it('50% — half of lot consumed', () => {
+    expect(computeConsumedPct(100, 50)).toBeCloseTo(50, 1)
+  })
+
+  it('100% — lot exactly fully consumed', () => {
+    expect(computeConsumedPct(75, 75)).toBe(100)
+  })
+
+  it('>100% — over-consumed capped at 100', () => {
+    expect(computeConsumedPct(50, 75)).toBe(100)
+  })
+
+  it('extremely over-consumed (10× available) still returns 100', () => {
+    expect(computeConsumedPct(10, 100)).toBe(100)
+  })
+
+  it('1 unit allocated from 1000 available → 0.1%', () => {
+    expect(computeConsumedPct(1000, 1)).toBeCloseTo(0.1, 1)
+  })
+})
+
+// ── computeCostDrift — null when entryCost is 0 ───────────────────────────────
+
+describe('computeCostDrift — null guard', () => {
+  it('returns null when entry cost is 0 (regardless of current)', () => {
+    expect(computeCostDrift(0, 200)).toBeNull()
+  })
+
+  it('returns null when both are 0', () => {
+    expect(computeCostDrift(0, 0)).toBeNull()
+  })
+
+  it('does NOT return null when entry cost is positive', () => {
+    expect(computeCostDrift(1, 1)).not.toBeNull()
+  })
+
+  it('drift of 0 when costs are equal', () => {
+    expect(computeCostDrift(250, 250)).toBeCloseTo(0, 1)
+  })
+
+  it('drift is +50% when current is 1.5× entry', () => {
+    expect(computeCostDrift(200, 300)).toBeCloseTo(50, 1)
+  })
+
+  it('drift is -50% when current is half of entry', () => {
+    expect(computeCostDrift(200, 100)).toBeCloseTo(-50, 1)
+  })
+})
+
+// ── classifyLotHealth — all four statuses ────────────────────────────────────
+
+describe('classifyLotHealth — all health statuses', () => {
+  it('returns "clean" when no flags and drift within threshold', () => {
+    expect(classifyLotHealth(false, false, 0)).toBe('clean')
+  })
+
+  it('returns "clean" when drift is null', () => {
+    expect(classifyLotHealth(false, false, null)).toBe('clean')
+  })
+
+  it('returns "cost_drift" when drift is 21 (just above 20)', () => {
+    expect(classifyLotHealth(false, false, 21)).toBe('cost_drift')
+  })
+
+  it('returns "cost_drift" when drift is -21 (just below -20)', () => {
+    expect(classifyLotHealth(false, false, -21)).toBe('cost_drift')
+  })
+
+  it('returns "orphaned" when lot has no purchase item', () => {
+    expect(classifyLotHealth(false, true, null)).toBe('orphaned')
+  })
+
+  it('returns "orphaned" even when cost drift is very high', () => {
+    expect(classifyLotHealth(false, true, 99)).toBe('orphaned')
+  })
+
+  it('returns "over_consumed" when allocated exceeds available', () => {
+    expect(classifyLotHealth(true, false, null)).toBe('over_consumed')
+  })
+
+  it('over_consumed beats orphaned + cost_drift simultaneously', () => {
+    expect(classifyLotHealth(true, true, 99)).toBe('over_consumed')
+  })
+})
+
+// ── computeIntegrityScore — all-healthy and all-bad lots ─────────────────────
+
+describe('computeIntegrityScore — all healthy vs all bad', () => {
+  it('all healthy: 50 lots, 0 issues → 100', () => {
+    expect(computeIntegrityScore(50, 0, 0, 0)).toBe(100)
+  })
+
+  it('all over-consumed: 5 lots, 5 over-consumed → 0 (clamped)', () => {
+    expect(computeIntegrityScore(5, 5, 0, 0)).toBe(0)
+  })
+
+  it('all orphaned: 10 lots, 10 orphaned → 0 (clamped)', () => {
+    expect(computeIntegrityScore(10, 0, 10, 0)).toBe(0)
+  })
+
+  it('all cost-drift: 20 lots, 20 cost-drift → 0 (clamped)', () => {
+    expect(computeIntegrityScore(20, 0, 0, 20)).toBe(0)
+  })
+
+  it('single lot, 1 over-consumed → 80', () => {
+    expect(computeIntegrityScore(1, 1, 0, 0)).toBe(80)
+  })
+
+  it('single lot, 1 orphaned → 90', () => {
+    expect(computeIntegrityScore(1, 0, 1, 0)).toBe(90)
+  })
+
+  it('single lot, 1 cost-drift → 95', () => {
+    expect(computeIntegrityScore(1, 0, 0, 1)).toBe(95)
+  })
+
+  it('result always clamped to [0, 100]', () => {
+    const score = computeIntegrityScore(3, 3, 3, 3)
+    expect(score).toBeGreaterThanOrEqual(0)
+    expect(score).toBeLessThanOrEqual(100)
+  })
+})
+
+// ── scoreToGrade — all grade boundaries ──────────────────────────────────────
+
+describe('scoreToGrade — all grade boundaries', () => {
+  it('score 90 → A', () => expect(scoreToGrade(90)).toBe('A'))
+  it('score 91 → A', () => expect(scoreToGrade(91)).toBe('A'))
+  it('score 100 → A', () => expect(scoreToGrade(100)).toBe('A'))
+
+  it('score 80 → B', () => expect(scoreToGrade(80)).toBe('B'))
+  it('score 85 → B', () => expect(scoreToGrade(85)).toBe('B'))
+  it('score 89 → B', () => expect(scoreToGrade(89)).toBe('B'))
+
+  it('score 70 → C', () => expect(scoreToGrade(70)).toBe('C'))
+  it('score 75 → C', () => expect(scoreToGrade(75)).toBe('C'))
+  it('score 79 → C', () => expect(scoreToGrade(79)).toBe('C'))
+
+  it('score 60 → D', () => expect(scoreToGrade(60)).toBe('D'))
+  it('score 65 → D', () => expect(scoreToGrade(65)).toBe('D'))
+  it('score 69 → D', () => expect(scoreToGrade(69)).toBe('D'))
+
+  it('score 59 → F', () => expect(scoreToGrade(59)).toBe('F'))
+  it('score 30 → F', () => expect(scoreToGrade(30)).toBe('F'))
+  it('score 0 → F', () => expect(scoreToGrade(0)).toBe('F'))
+
+  it('boundary 90/89: 90 is A, 89 is B', () => {
+    expect(scoreToGrade(90)).toBe('A')
+    expect(scoreToGrade(89)).toBe('B')
+  })
+
+  it('boundary 80/79: 80 is B, 79 is C', () => {
+    expect(scoreToGrade(80)).toBe('B')
+    expect(scoreToGrade(79)).toBe('C')
+  })
+
+  it('boundary 70/69: 70 is C, 69 is D', () => {
+    expect(scoreToGrade(70)).toBe('C')
+    expect(scoreToGrade(69)).toBe('D')
+  })
+
+  it('boundary 60/59: 60 is D, 59 is F', () => {
+    expect(scoreToGrade(60)).toBe('D')
+    expect(scoreToGrade(59)).toBe('F')
+  })
+})

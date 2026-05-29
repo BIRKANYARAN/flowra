@@ -402,3 +402,216 @@ describe('estimateSgkContribution (legacy)', () => {
     expect(estimateSgkContribution(0)).toBe(0)
   })
 })
+
+// ── computeSgkEmployerContribution — formula: gross × 20.25% ─────────────────
+
+describe('computeSgkEmployerContribution — SGK employer formula', () => {
+  it('gross 10_000 at default 20.25% = 2_025', () => {
+    expect(computeSgkEmployerContribution(10_000)).toBeCloseTo(2_025, 2)
+  })
+
+  it('gross 50_000 × 0.2025 = 10_125', () => {
+    expect(computeSgkEmployerContribution(50_000)).toBeCloseTo(10_125, 2)
+  })
+
+  it('gross 22_104 (minimum wage) × 0.2025 ≈ 4_476.06', () => {
+    expect(computeSgkEmployerContribution(22_104)).toBeCloseTo(22_104 * 0.2025, 2)
+  })
+
+  it('custom rate 0.10 → gross × 0.10', () => {
+    expect(computeSgkEmployerContribution(80_000, 0.10)).toBeCloseTo(8_000, 2)
+  })
+
+  it('result is never negative for zero gross', () => {
+    expect(computeSgkEmployerContribution(0)).toBe(0)
+  })
+
+  it('result is never negative for negative gross (edge)', () => {
+    expect(computeSgkEmployerContribution(-5_000)).toBeGreaterThanOrEqual(0)
+  })
+
+  it('scales linearly: doubling gross doubles contribution', () => {
+    const c1 = computeSgkEmployerContribution(30_000)
+    const c2 = computeSgkEmployerContribution(60_000)
+    expect(c2).toBeCloseTo(c1 * 2, 2)
+  })
+})
+
+// ── computeNetSalaryFromGross — deduction formula ────────────────────────────
+
+describe('computeNetSalaryFromGross — net = gross × (1 - taxRate - sgkRate)', () => {
+  it('gross 10_000 with defaults: net = 10_000 × 0.71 = 7_100', () => {
+    expect(computeNetSalaryFromGross(10_000)).toBeCloseTo(7_100, 2)
+  })
+
+  it('gross 22_104 with defaults: net ≈ 22_104 × 0.71', () => {
+    expect(computeNetSalaryFromGross(22_104)).toBeCloseTo(22_104 * 0.71, 1)
+  })
+
+  it('gross 100_000, tax=0.20, sgk=0.14 → net = 100_000 × 0.66 = 66_000', () => {
+    expect(computeNetSalaryFromGross(100_000, 0.20, 0.14)).toBeCloseTo(66_000, 2)
+  })
+
+  it('gross-to-net ratio is < 1 (net < gross)', () => {
+    const gross = 50_000
+    const net   = computeNetSalaryFromGross(gross)
+    expect(net).toBeLessThan(gross)
+  })
+
+  it('net clamps to 0 when deductions exceed 100%', () => {
+    expect(computeNetSalaryFromGross(50_000, 0.70, 0.50)).toBe(0)
+  })
+
+  it('net equals gross when both rates are 0', () => {
+    expect(computeNetSalaryFromGross(75_000, 0, 0)).toBe(75_000)
+  })
+})
+
+// ── computeGrossToNetRatio — ratio < 1 scenarios ─────────────────────────────
+
+describe('computeGrossToNetRatio — always less than 100% under standard deductions', () => {
+  it('ratio is < 100 for any nonzero deduction', () => {
+    const net   = computeNetSalaryFromGross(100_000)
+    const ratio = computeGrossToNetRatio(net, 100_000)
+    expect(ratio).not.toBeNull()
+    expect(ratio!).toBeLessThan(100)
+  })
+
+  it('returns null when grossSalary is 0', () => {
+    expect(computeGrossToNetRatio(0, 0)).toBeNull()
+  })
+
+  it('returns null when grossSalary is 0 but net > 0', () => {
+    expect(computeGrossToNetRatio(5_000, 0)).toBeNull()
+  })
+
+  it('50% net-to-gross ratio → returns 50', () => {
+    expect(computeGrossToNetRatio(50_000, 100_000)).toBeCloseTo(50, 5)
+  })
+
+  it('min-wage typical ratio is around 71%', () => {
+    const net   = computeNetSalaryFromGross(22_104)
+    const ratio = computeGrossToNetRatio(net, 22_104)
+    expect(ratio).not.toBeNull()
+    expect(ratio!).toBeCloseTo(71, 0)
+  })
+})
+
+// ── computeTotalEmploymentCostMultiplier — always > 1 ────────────────────────
+
+describe('computeTotalEmploymentCostMultiplier — must be greater than 1', () => {
+  it('default rate returns 1.2025 (greater than 1)', () => {
+    const m = computeTotalEmploymentCostMultiplier(100_000)
+    expect(m).toBeGreaterThan(1)
+    expect(m).toBeCloseTo(1.2025, 4)
+  })
+
+  it('custom rate 0.30 → multiplier = 1.30', () => {
+    expect(computeTotalEmploymentCostMultiplier(100_000, 0.30)).toBeCloseTo(1.30, 4)
+  })
+
+  it('custom rate 0.00 → multiplier = 1.00 (minimum = 1)', () => {
+    expect(computeTotalEmploymentCostMultiplier(100_000, 0.00)).toBeCloseTo(1.00, 4)
+  })
+
+  it('total cost to company = gross × multiplier > gross', () => {
+    const gross      = 40_000
+    const multiplier = computeTotalEmploymentCostMultiplier(gross)
+    const totalCost  = gross * multiplier
+    expect(totalCost).toBeGreaterThan(gross)
+  })
+
+  it('employer SGK is the extra cost: totalCost - gross = SGK employer contribution', () => {
+    const gross      = 100_000
+    const multiplier = computeTotalEmploymentCostMultiplier(gross)
+    const totalCost  = gross * multiplier
+    const sgk        = computeSgkEmployerContribution(gross)
+    expect(totalCost - gross).toBeCloseTo(sgk, 2)
+  })
+})
+
+// ── computeRevenuePerHeadcount — formula ─────────────────────────────────────
+
+describe('computeRevenuePerHeadcount — revenue / headcount', () => {
+  it('500_000 revenue, 5 headcount = 100_000 per head', () => {
+    expect(computeRevenuePerHeadcount(500_000, 5)).toBe(100_000)
+  })
+
+  it('returns null when headcount = 0', () => {
+    expect(computeRevenuePerHeadcount(1_000_000, 0)).toBeNull()
+  })
+
+  it('zero revenue, nonzero headcount = 0 per head', () => {
+    expect(computeRevenuePerHeadcount(0, 10)).toBe(0)
+  })
+
+  it('increasing headcount decreases revenue per head', () => {
+    const r1 = computeRevenuePerHeadcount(1_000_000, 5)
+    const r2 = computeRevenuePerHeadcount(1_000_000, 10)
+    expect(r1!).toBeGreaterThan(r2!)
+  })
+})
+
+// ── computePersonnelCostPerHead — formula ────────────────────────────────────
+
+describe('computePersonnelCostPerHead — cost / headcount', () => {
+  it('300_000 cost, 10 headcount = 30_000 per head', () => {
+    expect(computePersonnelCostPerHead(300_000, 10)).toBe(30_000)
+  })
+
+  it('returns null when headcount = 0', () => {
+    expect(computePersonnelCostPerHead(300_000, 0)).toBeNull()
+  })
+
+  it('zero cost, nonzero headcount = 0', () => {
+    expect(computePersonnelCostPerHead(0, 5)).toBe(0)
+  })
+})
+
+// ── classifyPersonnelCostTrend — all levels ───────────────────────────────────
+
+describe('classifyPersonnelCostTrend — all five levels', () => {
+  it('null → insufficient_data', () => {
+    expect(classifyPersonnelCostTrend(null)).toBe('insufficient_data')
+  })
+
+  it('-10% → decreasing', () => {
+    expect(classifyPersonnelCostTrend(-10)).toBe('decreasing')
+  })
+
+  it('-5.1% → decreasing', () => {
+    expect(classifyPersonnelCostTrend(-5.1)).toBe('decreasing')
+  })
+
+  it('-5% exactly → stable', () => {
+    expect(classifyPersonnelCostTrend(-5)).toBe('stable')
+  })
+
+  it('0% → stable', () => {
+    expect(classifyPersonnelCostTrend(0)).toBe('stable')
+  })
+
+  it('+5% exactly → stable', () => {
+    expect(classifyPersonnelCostTrend(5)).toBe('stable')
+  })
+
+  it('+5.1% → growing', () => {
+    expect(classifyPersonnelCostTrend(5.1)).toBe('growing')
+  })
+
+  it('+12% → growing', () => {
+    expect(classifyPersonnelCostTrend(12)).toBe('growing')
+  })
+
+  it('+15% exactly → growing', () => {
+    expect(classifyPersonnelCostTrend(15)).toBe('growing')
+  })
+
+  it('+15.1% → rapidly_growing', () => {
+    expect(classifyPersonnelCostTrend(15.1)).toBe('rapidly_growing')
+  })
+
+  it('+100% → rapidly_growing', () => {
+    expect(classifyPersonnelCostTrend(100)).toBe('rapidly_growing')
+  })
+})

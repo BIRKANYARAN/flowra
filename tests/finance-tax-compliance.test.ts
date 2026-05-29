@@ -381,3 +381,203 @@ describe('classifyTaxObligationStatus', () => {
     expect(classifyTaxObligationStatus('2025-03-02', '2025-01-31', false)).toBe('upcoming')
   })
 })
+
+// ── computeKdvDueDate — all 12 months ─────────────────────────────────────────
+
+describe('computeKdvDueDate — all 12 months produce correct next-month 26th', () => {
+  it('February → March 26', () => {
+    expect(computeKdvDueDate(2025, 2)).toBe('2025-03-26')
+  })
+
+  it('March → April 26', () => {
+    expect(computeKdvDueDate(2025, 3)).toBe('2025-04-26')
+  })
+
+  it('April → May 26', () => {
+    expect(computeKdvDueDate(2025, 4)).toBe('2025-05-26')
+  })
+
+  it('May → June 26', () => {
+    expect(computeKdvDueDate(2025, 5)).toBe('2025-06-26')
+  })
+
+  it('July → August 26', () => {
+    expect(computeKdvDueDate(2025, 7)).toBe('2025-08-26')
+  })
+
+  it('August → September 26', () => {
+    expect(computeKdvDueDate(2025, 8)).toBe('2025-09-26')
+  })
+
+  it('September → October 26', () => {
+    expect(computeKdvDueDate(2025, 9)).toBe('2025-10-26')
+  })
+
+  it('October → November 26', () => {
+    expect(computeKdvDueDate(2025, 10)).toBe('2025-11-26')
+  })
+
+  it('month zero pads correctly for single-digit months', () => {
+    // March → April: month 04
+    const result = computeKdvDueDate(2025, 3)
+    expect(result.slice(5, 7)).toBe('04')
+  })
+
+  it('year rolls over cleanly from Dec to Jan of new year', () => {
+    expect(computeKdvDueDate(2099, 12)).toBe('2100-01-26')
+  })
+})
+
+// ── computeCorporateTaxProvision — 25% rate ───────────────────────────────────
+
+describe('computeGecikmeTaxEstimate — corporate tax provision at 25%', () => {
+  it('profit of 400_000 at 25% = 100_000', () => {
+    expect(computeGecikmeTaxEstimate(400_000, 0.25)).toBe(100_000)
+  })
+
+  it('profit of 200_000 at 25% = 50_000', () => {
+    expect(computeGecikmeTaxEstimate(200_000, 0.25)).toBe(50_000)
+  })
+
+  it('profit of 1 TRY at 25% = 0.25', () => {
+    expect(computeGecikmeTaxEstimate(1, 0.25)).toBeCloseTo(0.25, 5)
+  })
+
+  it('profit of 80_000 at 25% = 20_000', () => {
+    expect(computeGecikmeTaxEstimate(80_000)).toBe(20_000)
+  })
+
+  it('loss of -100_000 returns 0 — no negative tax', () => {
+    expect(computeGecikmeTaxEstimate(-100_000, 0.25)).toBe(0)
+  })
+
+  it('tax estimate grows linearly with profit', () => {
+    const t1 = computeGecikmeTaxEstimate(100_000)
+    const t2 = computeGecikmeTaxEstimate(200_000)
+    expect(t2).toBeCloseTo(t1 * 2, 5)
+  })
+})
+
+// ── computeQuarterlyTaxDueDate — Geçici Vergi all quarters ───────────────────
+
+describe('computeQuarterlyTaxDueDate — quarterly date accuracy', () => {
+  it('Q1 for year 2026 = 2026-05-17', () => {
+    expect(computeQuarterlyTaxDueDate(2026, 1)).toBe('2026-05-17')
+  })
+
+  it('Q2 for year 2026 = 2026-08-17', () => {
+    expect(computeQuarterlyTaxDueDate(2026, 2)).toBe('2026-08-17')
+  })
+
+  it('Q3 for year 2026 = 2026-11-17', () => {
+    expect(computeQuarterlyTaxDueDate(2026, 3)).toBe('2026-11-17')
+  })
+
+  it('Q4 for year 2026 = 2027-02-17 (next year)', () => {
+    expect(computeQuarterlyTaxDueDate(2026, 4)).toBe('2027-02-17')
+  })
+
+  it('Q1 and Q3 are both in the same calendar year', () => {
+    const q1 = computeQuarterlyTaxDueDate(2025, 1)
+    const q3 = computeQuarterlyTaxDueDate(2025, 3)
+    expect(q1.slice(0, 4)).toBe('2025')
+    expect(q3.slice(0, 4)).toBe('2025')
+  })
+
+  it('Q4 year-rollover: result year is input year + 1', () => {
+    const q4 = computeQuarterlyTaxDueDate(2025, 4)
+    expect(q4.slice(0, 4)).toBe('2026')
+  })
+
+  it('month for Q1 is 05 (May)', () => {
+    expect(computeQuarterlyTaxDueDate(2025, 1).slice(5, 7)).toBe('05')
+  })
+
+  it('month for Q2 is 08 (August)', () => {
+    expect(computeQuarterlyTaxDueDate(2025, 2).slice(5, 7)).toBe('08')
+  })
+
+  it('month for Q3 is 11 (November)', () => {
+    expect(computeQuarterlyTaxDueDate(2025, 3).slice(5, 7)).toBe('11')
+  })
+
+  it('month for Q4 is 02 (February)', () => {
+    expect(computeQuarterlyTaxDueDate(2025, 4).slice(5, 7)).toBe('02')
+  })
+})
+
+// ── computeGecikmeToplam — faiz + ceza composition ───────────────────────────
+
+describe('computeGecikmeToplam — total = faiz + ceza + principal', () => {
+  it('total equals principal + interest + penalty (first offense)', () => {
+    const r = computeGecikmeToplam(2000, 30, 4.5, true)
+    expect(r.total).toBeCloseTo(r.principal + r.interest + r.penalty, 1)
+  })
+
+  it('total equals principal + interest + penalty (repeat offense)', () => {
+    const r = computeGecikmeToplam(2000, 30, 4.5, false)
+    expect(r.total).toBeCloseTo(r.principal + r.interest + r.penalty, 1)
+  })
+
+  it('60 days late at 4.5% monthly = 2 months interest', () => {
+    // interest = 1000 × 0.045 × (60/30) = 90
+    const r = computeGecikmeToplam(1000, 60, 4.5, false)
+    expect(r.interest).toBeCloseTo(90, 1)
+  })
+
+  it('penalty doubles from first-offense to repeat-offense', () => {
+    const first  = computeGecikmeToplam(1000, 10, 4.5, true)
+    const repeat = computeGecikmeToplam(1000, 10, 4.5, false)
+    expect(repeat.penalty).toBeCloseTo(first.penalty * 2, 1)
+  })
+
+  it('zero principal → interest=0, penalty=0, total=0', () => {
+    const r = computeGecikmeToplam(0, 30, 4.5, true)
+    expect(r.principal).toBe(0)
+    expect(r.interest).toBe(0)
+    expect(r.penalty).toBe(0)
+    expect(r.total).toBe(0)
+  })
+
+  it('principal is returned unchanged in result', () => {
+    const r = computeGecikmeToplam(1234.56, 20)
+    expect(r.principal).toBeCloseTo(1234.56, 2)
+  })
+})
+
+// ── classifyTaxObligationStatus — all 4 levels ────────────────────────────────
+
+describe('classifyTaxObligationStatus — all four status levels', () => {
+  it('paid status takes priority over everything else', () => {
+    // Even when overdue, paid wins
+    expect(classifyTaxObligationStatus('2020-01-01', '2025-12-31', true)).toBe('paid')
+  })
+
+  it('overdue: today one day past due', () => {
+    expect(classifyTaxObligationStatus('2025-05-26', '2025-05-27', false)).toBe('overdue')
+  })
+
+  it('overdue: today a full month past due', () => {
+    expect(classifyTaxObligationStatus('2025-04-26', '2025-05-26', false)).toBe('overdue')
+  })
+
+  it('due_soon: exactly 7 days out', () => {
+    expect(classifyTaxObligationStatus('2025-06-07', '2025-05-31', false)).toBe('due_soon')
+  })
+
+  it('due_soon: today is same as due date (0 days)', () => {
+    expect(classifyTaxObligationStatus('2025-05-29', '2025-05-29', false)).toBe('due_soon')
+  })
+
+  it('due_soon: 3 days until due', () => {
+    expect(classifyTaxObligationStatus('2025-06-03', '2025-05-31', false)).toBe('due_soon')
+  })
+
+  it('upcoming: 8 days out is not due_soon', () => {
+    expect(classifyTaxObligationStatus('2025-06-08', '2025-05-31', false)).toBe('upcoming')
+  })
+
+  it('upcoming: due in 60 days', () => {
+    expect(classifyTaxObligationStatus('2025-07-30', '2025-05-31', false)).toBe('upcoming')
+  })
+})
