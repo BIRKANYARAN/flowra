@@ -598,7 +598,7 @@ function ConcentrationWarnings({
 }: {
   concentrationMonth?: string
   concentrationPartner?: string
-  schedule: DebtMaturityReport['schedule']
+  schedule: Array<{ month: string; label: string; maturing_try: number; tranche_count: number; partner_ids: string[] }>
 }) {
   const warnings: string[] = []
 
@@ -631,7 +631,7 @@ function ConcentrationWarnings({
   )
 }
 
-function MaturityScheduleTable({ schedule }: { schedule: DebtMaturityReport['schedule'] }) {
+function MaturityScheduleTable({ schedule }: { schedule: Array<{ month: string; label: string; maturing_try: number; tranche_count: number; partner_ids: string[] }> }) {
   const nonEmpty = schedule.filter(s => s.maturing_try > 0)
 
   if (nonEmpty.length === 0) {
@@ -697,44 +697,80 @@ function VadeTakvimi() {
 
   if (!report) return null
 
-  const total = report.total_outstanding
+  // Map new DebtMaturityReport shape to local display variables
+  const total = report.total_outstanding_try
+  const ladder = report.maturity_ladder
+  const getBucket = (key: string) => ladder.find(b => b.bucket_key === key)
+  const overdueTry  = getBucket('overdue')?.principal_try ?? 0
+  const immTry      = getBucket('days_0_30')?.principal_try ?? 0
+  const shortTry    = getBucket('days_31_90')?.principal_try ?? 0
+  const medTry      = (getBucket('days_91_180')?.principal_try ?? 0) +
+                      (getBucket('days_181_365')?.principal_try ?? 0)
+  const longTry     = getBucket('over_1_year')?.principal_try ?? 0
+
   const buckets: BucketBarItem[] = [
     {
       label: 'Vadesi Geçmiş',
-      amount: report.overdue_try,
-      pct: total > 0 ? (report.overdue_try / total) * 100 : 0,
+      amount: overdueTry,
+      pct: total > 0 ? (overdueTry / total) * 100 : 0,
       color: 'bg-red-400',
       textColor: 'text-white',
     },
     {
       label: '0–30 gün',
-      amount: report.immediate_try,
-      pct: total > 0 ? (report.immediate_try / total) * 100 : 0,
+      amount: immTry,
+      pct: total > 0 ? (immTry / total) * 100 : 0,
       color: 'bg-orange-400',
       textColor: 'text-white',
     },
     {
       label: '31–90 gün',
-      amount: report.short_term_try,
-      pct: total > 0 ? (report.short_term_try / total) * 100 : 0,
+      amount: shortTry,
+      pct: total > 0 ? (shortTry / total) * 100 : 0,
       color: 'bg-amber-400',
       textColor: 'text-white',
     },
     {
       label: '91–365 gün',
-      amount: report.medium_term_try,
-      pct: total > 0 ? (report.medium_term_try / total) * 100 : 0,
+      amount: medTry,
+      pct: total > 0 ? (medTry / total) * 100 : 0,
       color: 'bg-yellow-300',
       textColor: 'text-yellow-900',
     },
     {
-      label: '1–3 yıl',
-      amount: report.long_term_try,
-      pct: total > 0 ? (report.long_term_try / total) * 100 : 0,
+      label: '1 yıl+',
+      amount: longTry,
+      pct: total > 0 ? (longTry / total) * 100 : 0,
       color: 'bg-emerald-400',
       textColor: 'text-white',
     },
   ]
+
+  // Derive a 0-100 score from refinancing_risk for the chip
+  const riskScoreMap: Record<string, number> = {
+    no_debt: 100,
+    low: 80,
+    moderate: 50,
+    high: 25,
+    critical: 5,
+  }
+  const refinancingScore = riskScoreMap[report.refinancing_risk] ?? 50
+
+  // Compute next-12m pct from ladder buckets
+  const near12m = overdueTry + immTry + shortTry + medTry
+  const next12mPct = total > 0 ? (near12m / total) * 100 : 0
+
+  // Build a schedule-like array from maturity cliffs for concentration warnings
+  const scheduleForWarnings = report.maturity_cliffs.map(c => ({
+    month: c.date.substring(0, 7),
+    label: c.date,
+    maturing_try: c.amount_try,
+    tranche_count: 1,
+    partner_ids: [],
+  }))
+
+  // Concentration partner from highest concentration entry
+  const topPartner = report.concentration_by_partner.find(p => p.pct_of_total > 50)
 
   return (
     <div className="flex flex-col gap-4">
@@ -743,28 +779,28 @@ function VadeTakvimi() {
 
       {/* Score + next 12m pct */}
       <div className="flex items-center gap-3 flex-wrap">
-        <RefinancingScoreChip score={report.refinancing_score} />
+        <RefinancingScoreChip score={refinancingScore} />
         {total > 0 && (
           <span className="text-[0.7rem] text-[#64748b]">
             12 aylık vade oranı:{' '}
-            <strong className="text-[#334155]">%{report.next_12m_pct.toFixed(1)}</strong>
+            <strong className="text-[#334155]">%{next12mPct.toFixed(1)}</strong>
           </span>
         )}
       </div>
 
       {/* Concentration warnings */}
       <ConcentrationWarnings
-        concentrationMonth={report.concentration_month}
-        concentrationPartner={report.concentration_partner}
-        schedule={report.schedule}
+        concentrationMonth={report.maturity_cliffs[0]?.date.substring(0, 7)}
+        concentrationPartner={topPartner?.partner_name}
+        schedule={scheduleForWarnings}
       />
 
-      {/* 36-month schedule */}
+      {/* Maturity cliffs summary (replaces 36-month schedule) */}
       <div>
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
-          36 Aylık Vade Takvimi
+          Vade Dağılımı
         </div>
-        <MaturityScheduleTable schedule={report.schedule} />
+        <MaturityScheduleTable schedule={scheduleForWarnings} />
       </div>
     </div>
   )

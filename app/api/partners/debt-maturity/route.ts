@@ -1,13 +1,14 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 // GET /api/partners/debt-maturity
 //
-// Returns the debt maturity timeline report: per-tranche maturity buckets,
-// 36-month schedule, concentration risk, and refinancing pressure score.
+// Returns the debt maturity ladder report: per-tranche maturity buckets,
+// partner schedules, maturity cliffs, weighted average maturity, refinancing
+// risk, and concentration metrics.
 //
 // Role guard: admin only.
 // ═══════════════════════════════════════════════════════════════════════════════
 
-export const revalidate = 300
+export const revalidate = 3600
 
 import { NextRequest, NextResponse } from 'next/server'
 import { REQUEST_ID_HEADER } from '@/middleware'
@@ -35,7 +36,8 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const report = await DebtMaturityService.compute(companyId, supabase)
+    const service = new DebtMaturityService(supabase)
+    const report  = await service.getReport(companyId)
     return NextResponse.json(
       { report },
       { headers: { [REQUEST_ID_HEADER]: ctx.requestId } },
