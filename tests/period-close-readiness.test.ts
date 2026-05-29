@@ -359,3 +359,256 @@ describe('buildCloseCheckSummary', () => {
     expect(s.non_blocking_failures.every(c => !c.is_blocking)).toBe(true)
   })
 })
+
+// ── computeCloseReadinessScore — additional boundary tests ────────────────────
+
+describe('computeCloseReadinessScore — scoring formula boundary', () => {
+  test('one blocking + one non-blocking fail → 100 - 20 - 8 = 72', () => {
+    const checks: CloseCheck[] = [
+      makeCheck({ id: 'c1', status: 'failed', is_blocking: true }),
+      makeCheck({ id: 'c2', status: 'failed', is_blocking: false }),
+    ]
+    expect(computeCloseReadinessScore(checks)).toBe(72)
+  })
+
+  test('five warnings → 100 - 15 = 85', () => {
+    const checks = Array.from({ length: 5 }, (_, i) =>
+      makeCheck({ id: `w${i}`, status: 'warning', is_blocking: false })
+    )
+    expect(computeCloseReadinessScore(checks)).toBe(85)
+  })
+
+  test('three blocking fails → 100 - 60 = 40', () => {
+    const checks = Array.from({ length: 3 }, (_, i) =>
+      makeCheck({ id: `bf${i}`, status: 'failed', is_blocking: true })
+    )
+    expect(computeCloseReadinessScore(checks)).toBe(40)
+  })
+
+  test('mix of skipped and passed → still 100', () => {
+    const checks: CloseCheck[] = [
+      makeCheck({ id: 's1', status: 'skipped', is_blocking: true }),
+      makeCheck({ id: 's2', status: 'skipped', is_blocking: false }),
+      makeCheck({ id: 'p1', status: 'passed',  is_blocking: true }),
+      makeCheck({ id: 'p2', status: 'passed',  is_blocking: false }),
+    ]
+    expect(computeCloseReadinessScore(checks)).toBe(100)
+  })
+
+  test('exactly 5 blocking fails → score floors to 0 (100 - 100 = 0)', () => {
+    const checks = Array.from({ length: 5 }, (_, i) =>
+      makeCheck({ id: `b${i}`, status: 'failed', is_blocking: true })
+    )
+    expect(computeCloseReadinessScore(checks)).toBe(0)
+  })
+
+  test('score is an integer (no floats)', () => {
+    const score = computeCloseReadinessScore(mixedChecks)
+    expect(Number.isInteger(score)).toBe(true)
+  })
+
+  test('single warning → 97', () => {
+    const checks: CloseCheck[] = [
+      makeCheck({ id: 'w1', status: 'warning', is_blocking: false }),
+    ]
+    expect(computeCloseReadinessScore(checks)).toBe(97)
+  })
+
+  test('single non-blocking fail → 92', () => {
+    const checks: CloseCheck[] = [
+      makeCheck({ id: 'f1', status: 'failed', is_blocking: false }),
+    ]
+    expect(computeCloseReadinessScore(checks)).toBe(92)
+  })
+
+  test('single blocking fail → 80', () => {
+    const checks: CloseCheck[] = [
+      makeCheck({ id: 'bf1', status: 'failed', is_blocking: true }),
+    ]
+    expect(computeCloseReadinessScore(checks)).toBe(80)
+  })
+
+  test('result is always between 0 and 100 inclusive', () => {
+    const scores = [
+      computeCloseReadinessScore([]),
+      computeCloseReadinessScore(allPassed),
+      computeCloseReadinessScore(mixedChecks),
+      computeCloseReadinessScore(twoBlockingFails),
+      computeCloseReadinessScore(allWarnings),
+    ]
+    for (const s of scores) {
+      expect(s).toBeGreaterThanOrEqual(0)
+      expect(s).toBeLessThanOrEqual(100)
+    }
+  })
+})
+
+// ── classifyCloseReadiness — boundary tests ────────────────────────────────────
+
+describe('classifyCloseReadiness — boundary scores', () => {
+  test('score 89 without blocking fails → near_ready', () => {
+    expect(classifyCloseReadiness(89)).toBe('near_ready')
+  })
+
+  test('score 90 without checks → ready', () => {
+    expect(classifyCloseReadiness(90)).toBe('ready')
+  })
+
+  test('score 90 with blocking fail → needs_work (override)', () => {
+    const blockFail: CloseCheck[] = [
+      makeCheck({ id: 'bf', status: 'failed', is_blocking: true }),
+    ]
+    expect(classifyCloseReadiness(90, blockFail)).toBe('needs_work')
+  })
+
+  test('score 100 with all passed → ready', () => {
+    expect(classifyCloseReadiness(100, allPassed)).toBe('ready')
+  })
+
+  test('score 50 → needs_work (lower boundary)', () => {
+    expect(classifyCloseReadiness(50)).toBe('needs_work')
+  })
+
+  test('score 70 → near_ready (lower boundary)', () => {
+    expect(classifyCloseReadiness(70)).toBe('near_ready')
+  })
+
+  test('score 1 → not_ready', () => {
+    expect(classifyCloseReadiness(1)).toBe('not_ready')
+  })
+
+  test('score 100 with blocking warning check → ready (warning does not block)', () => {
+    const warningBlocking: CloseCheck[] = [
+      makeCheck({ id: 'wbl', status: 'warning', is_blocking: true }),
+    ]
+    expect(classifyCloseReadiness(97, warningBlocking)).toBe('ready')
+  })
+
+  test('return type is one of four valid strings', () => {
+    const validResults = ['ready', 'near_ready', 'needs_work', 'not_ready']
+    for (const score of [0, 25, 50, 70, 80, 90, 100]) {
+      expect(validResults).toContain(classifyCloseReadiness(score))
+    }
+  })
+})
+
+// ── isReadyToClose — thorough check ──────────────────────────────────────────
+
+describe('isReadyToClose — thorough coverage', () => {
+  test('many passed + one blocking failed → false', () => {
+    const checks: CloseCheck[] = [
+      ...allPassed,
+      makeCheck({ id: 'extra-fail', status: 'failed', is_blocking: true }),
+    ]
+    expect(isReadyToClose(checks)).toBe(false)
+  })
+
+  test('only skipped blocking checks → true', () => {
+    const checks: CloseCheck[] = [
+      makeCheck({ id: 's1', status: 'skipped', is_blocking: true }),
+      makeCheck({ id: 's2', status: 'skipped', is_blocking: true }),
+    ]
+    expect(isReadyToClose(checks)).toBe(true)
+  })
+
+  test('failed but non-blocking only → true', () => {
+    const checks: CloseCheck[] = [
+      makeCheck({ id: 'nb1', status: 'failed', is_blocking: false }),
+      makeCheck({ id: 'nb2', status: 'failed', is_blocking: false }),
+      makeCheck({ id: 'nb3', status: 'failed', is_blocking: false }),
+    ]
+    expect(isReadyToClose(checks)).toBe(true)
+  })
+
+  test('returns boolean', () => {
+    expect(typeof isReadyToClose(allPassed)).toBe('boolean')
+    expect(typeof isReadyToClose(oneBlockingFail)).toBe('boolean')
+  })
+})
+
+// ── computeChecksPassed — additional tests ────────────────────────────────────
+
+describe('computeChecksPassed — additional coverage', () => {
+  test('total equals checks.length always', () => {
+    const lengths = [0, 1, 3, 5, 10]
+    for (const len of lengths) {
+      const checks = Array.from({ length: len }, (_, i) =>
+        makeCheck({ id: `c${i}`, status: 'passed', is_blocking: false })
+      )
+      expect(computeChecksPassed(checks).total).toBe(len)
+    }
+  })
+
+  test('passed + failed + warnings can be less than total (skipped not counted)', () => {
+    const r = computeChecksPassed(withSkipped)
+    expect(r.passed + r.failed + r.warnings).toBeLessThan(r.total)
+  })
+
+  test('single blocking failure counted in failed', () => {
+    const r = computeChecksPassed(oneBlockingFail)
+    expect(r.failed).toBe(1)
+  })
+
+  test('single non-blocking failure counted in failed too', () => {
+    const r = computeChecksPassed(oneNonBlockingFail)
+    expect(r.failed).toBe(1)
+  })
+
+  test('warnings field counts all warning-status checks regardless of blocking', () => {
+    const checks: CloseCheck[] = [
+      makeCheck({ id: 'w-block', status: 'warning', is_blocking: true }),
+      makeCheck({ id: 'w-noblock', status: 'warning', is_blocking: false }),
+    ]
+    const r = computeChecksPassed(checks)
+    expect(r.warnings).toBe(2)
+  })
+})
+
+// ── buildCloseCheckSummary — additional coverage ──────────────────────────────
+
+describe('buildCloseCheckSummary — additional coverage', () => {
+  test('returns object with all 4 required keys', () => {
+    const s = buildCloseCheckSummary([])
+    expect(s).toHaveProperty('blocking_failures')
+    expect(s).toHaveProperty('non_blocking_failures')
+    expect(s).toHaveProperty('warnings')
+    expect(s).toHaveProperty('passed')
+  })
+
+  test('skipped items are not in any bucket', () => {
+    const s = buildCloseCheckSummary(withSkipped)
+    const allBucket = [
+      ...s.blocking_failures,
+      ...s.non_blocking_failures,
+      ...s.warnings,
+      ...s.passed,
+    ]
+    expect(allBucket.some(c => c.status === 'skipped')).toBe(false)
+  })
+
+  test('id field preserved in blocking_failures bucket', () => {
+    const s = buildCloseCheckSummary(twoBlockingFails)
+    expect(s.blocking_failures.map(c => c.id).sort()).toEqual(['c1', 'c2'])
+  })
+
+  test('large list properly partitioned', () => {
+    const checks: CloseCheck[] = [
+      makeCheck({ id: 'bf1', status: 'failed',  is_blocking: true }),
+      makeCheck({ id: 'bf2', status: 'failed',  is_blocking: true }),
+      makeCheck({ id: 'nf1', status: 'failed',  is_blocking: false }),
+      makeCheck({ id: 'w1',  status: 'warning', is_blocking: false }),
+      makeCheck({ id: 'w2',  status: 'warning', is_blocking: false }),
+      makeCheck({ id: 'p1',  status: 'passed',  is_blocking: false }),
+      makeCheck({ id: 'p2',  status: 'passed',  is_blocking: true }),
+      makeCheck({ id: 'sk1', status: 'skipped', is_blocking: false }),
+    ]
+    const s = buildCloseCheckSummary(checks)
+    expect(s.blocking_failures).toHaveLength(2)
+    expect(s.non_blocking_failures).toHaveLength(1)
+    expect(s.warnings).toHaveLength(2)
+    expect(s.passed).toHaveLength(2)
+    // skipped excluded
+    const total = s.blocking_failures.length + s.non_blocking_failures.length + s.warnings.length + s.passed.length
+    expect(total).toBe(7) // 8 checks - 1 skipped
+  })
+})

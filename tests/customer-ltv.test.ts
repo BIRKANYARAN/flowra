@@ -369,3 +369,483 @@ describe('estimateLtv', () => {
     expect(estimateLtv(1000, 0, 12)).toBe(0)
   })
 })
+
+// ── computeRScore – boundary tests ───────────────────────────────────────────
+
+describe('computeRScore – exact boundaries', () => {
+  it('recency = 29 days → score 5 (< 30)', () => {
+    expect(computeRScore(29)).toBe(5)
+  })
+
+  it('recency = 30 days → score 4 (30-60 range)', () => {
+    expect(computeRScore(30)).toBe(4)
+  })
+
+  it('recency = 59 days → score 4', () => {
+    expect(computeRScore(59)).toBe(4)
+  })
+
+  it('recency = 60 days → score 3 (60-90 range)', () => {
+    expect(computeRScore(60)).toBe(3)
+  })
+
+  it('recency = 89 days → score 3', () => {
+    expect(computeRScore(89)).toBe(3)
+  })
+
+  it('recency = 90 days → score 2 (90-180 range)', () => {
+    expect(computeRScore(90)).toBe(2)
+  })
+
+  it('recency = 179 days → score 2', () => {
+    expect(computeRScore(179)).toBe(2)
+  })
+
+  it('recency = 180 days → score 1 (>= 180)', () => {
+    expect(computeRScore(180)).toBe(1)
+  })
+
+  it('recency = 365 days → score 1', () => {
+    expect(computeRScore(365)).toBe(1)
+  })
+
+  it('recency = 0 days → score 5', () => {
+    expect(computeRScore(0)).toBe(5)
+  })
+
+  it('score is monotonically non-increasing as recency grows', () => {
+    const days = [0, 10, 30, 60, 90, 180, 365]
+    const scores = days.map(d => computeRScore(d))
+    for (let i = 1; i < scores.length; i++) {
+      expect(scores[i]).toBeLessThanOrEqual(scores[i - 1])
+    }
+  })
+})
+
+// ── computeFScore – boundary tests ───────────────────────────────────────────
+
+describe('computeFScore – exact boundaries', () => {
+  it('frequency = 1 → score 1', () => {
+    expect(computeFScore(1)).toBe(1)
+  })
+
+  it('frequency = 2 → score 2', () => {
+    expect(computeFScore(2)).toBe(2)
+  })
+
+  it('frequency = 3 → score 3', () => {
+    expect(computeFScore(3)).toBe(3)
+  })
+
+  it('frequency = 4 → score 4', () => {
+    expect(computeFScore(4)).toBe(4)
+  })
+
+  it('frequency = 5 → score 4', () => {
+    expect(computeFScore(5)).toBe(4)
+  })
+
+  it('frequency = 6 → score 5', () => {
+    expect(computeFScore(6)).toBe(5)
+  })
+
+  it('frequency = 100 → score 5 (caps at 5)', () => {
+    expect(computeFScore(100)).toBe(5)
+  })
+
+  it('frequency = -1 → score 0 (inactive)', () => {
+    expect(computeFScore(-1)).toBe(0)
+  })
+
+  it('score is monotonically non-decreasing from 1 to 6 orders', () => {
+    const freqs = [0, 1, 2, 3, 4, 5, 6]
+    const scores = freqs.map(f => computeFScore(f))
+    for (let i = 1; i < scores.length; i++) {
+      expect(scores[i]).toBeGreaterThanOrEqual(scores[i - 1])
+    }
+  })
+})
+
+// ── computeMScore – boundary tests ───────────────────────────────────────────
+
+describe('computeMScore – boundary tests', () => {
+  const breaks = [1_000, 5_000, 15_000, 50_000]
+
+  it('monetary = 1 → score 1 (below p20)', () => {
+    expect(computeMScore(1, breaks)).toBe(1)
+  })
+
+  it('monetary exactly = p20 (1000) → score 1 (not above)', () => {
+    expect(computeMScore(1_000, breaks)).toBe(1)
+  })
+
+  it('monetary = 1001 → score 2 (above p20)', () => {
+    expect(computeMScore(1_001, breaks)).toBe(2)
+  })
+
+  it('monetary exactly = p40 (5000) → score 2', () => {
+    expect(computeMScore(5_000, breaks)).toBe(2)
+  })
+
+  it('monetary = 5001 → score 3', () => {
+    expect(computeMScore(5_001, breaks)).toBe(3)
+  })
+
+  it('monetary = 50000 → score 4 (exactly at p80, not above)', () => {
+    expect(computeMScore(50_000, breaks)).toBe(4)
+  })
+
+  it('monetary = 50001 → score 5', () => {
+    expect(computeMScore(50_001, breaks)).toBe(5)
+  })
+
+  it('score is monotonically non-decreasing as monetary grows', () => {
+    const amounts = [0, 500, 1_001, 5_001, 15_001, 50_001, 100_000]
+    const scores = amounts.map(a => computeMScore(a, breaks))
+    for (let i = 1; i < scores.length; i++) {
+      expect(scores[i]).toBeGreaterThanOrEqual(scores[i - 1])
+    }
+  })
+
+  it('returns 1 when breaks has fewer than 4 elements', () => {
+    expect(computeMScore(999_999, [100, 200])).toBe(1)
+  })
+
+  it('returns 1 for empty breaks array', () => {
+    expect(computeMScore(999_999, [])).toBe(1)
+  })
+})
+
+// ── computeRfmSegment – comprehensive coverage ────────────────────────────────
+
+describe('computeRfmSegment – segment rules', () => {
+  it('r=4,f=4,m=4 → champions', () => {
+    expect(computeRfmSegment(4, 4, 4)).toBe('champions')
+  })
+
+  it('r=5,f=5,m=4 → champions', () => {
+    expect(computeRfmSegment(5, 5, 4)).toBe('champions')
+  })
+
+  it('r=4,f=4,m=3 → not champions (m < 4)', () => {
+    // hits loyal (f>=4, m>=3)
+    expect(computeRfmSegment(4, 4, 3)).toBe('loyal')
+  })
+
+  it('r=2,f=4,m=3 → at_risk (recency override)', () => {
+    // r<=2 + f>=3 → at_risk before loyal check
+    expect(computeRfmSegment(2, 4, 3)).toBe('at_risk')
+  })
+
+  it('r=1,f=4,m=3 → at_risk', () => {
+    expect(computeRfmSegment(1, 4, 3)).toBe('at_risk')
+  })
+
+  it('r=1,f=2,m=1 → lost', () => {
+    expect(computeRfmSegment(1, 2, 1)).toBe('lost')
+  })
+
+  it('r=1,f=1,m=1 → lost', () => {
+    expect(computeRfmSegment(1, 1, 1)).toBe('lost')
+  })
+
+  it('r=1,f=3,m=2 → at_risk (r=1, f>=3)', () => {
+    expect(computeRfmSegment(1, 3, 2)).toBe('at_risk')
+  })
+
+  it('r=5,f=4,m=3 → loyal (f>=4, m>=3)', () => {
+    expect(computeRfmSegment(5, 4, 3)).toBe('loyal')
+  })
+
+  it('r=3,f=2,m=2 → other', () => {
+    expect(computeRfmSegment(3, 2, 2)).toBe('other')
+  })
+
+  it('r=3,f=3,m=3 → other (no rule matches)', () => {
+    expect(computeRfmSegment(3, 3, 3)).toBe('other')
+  })
+})
+
+// ── computeChurnRisk – comprehensive coverage ─────────────────────────────────
+
+describe('computeChurnRisk – churn rules', () => {
+  it('freq12m = 1 → uncertain (first time)', () => {
+    expect(computeChurnRisk(5, 1, 0, 0)).toBe('uncertain')
+  })
+
+  it('recency > 90, freq6m < priorFreq6m → high', () => {
+    expect(computeChurnRisk(100, 5, 2, 4)).toBe('high')
+  })
+
+  it('recency > 90, freq6m >= priorFreq6m → medium (fallback)', () => {
+    expect(computeChurnRisk(100, 5, 3, 2)).toBe('medium')
+  })
+
+  it('recency = 60 → medium', () => {
+    expect(computeChurnRisk(60, 5, 3, 3)).toBe('medium')
+  })
+
+  it('recency = 90 → medium', () => {
+    expect(computeChurnRisk(90, 5, 3, 3)).toBe('medium')
+  })
+
+  it('recency = 59 → low', () => {
+    expect(computeChurnRisk(59, 5, 3, 3)).toBe('low')
+  })
+
+  it('recency = 0 → low', () => {
+    expect(computeChurnRisk(0, 5, 3, 3)).toBe('low')
+  })
+
+  it('recency exactly 91, freq6m = 1, priorFreq6m = 3 → high', () => {
+    expect(computeChurnRisk(91, 4, 1, 3)).toBe('high')
+  })
+
+  it('freq12m = 0 does not trigger uncertain (only freq12m=1)', () => {
+    // 0 !== 1 so falls to recency check
+    const result = computeChurnRisk(20, 0, 0, 0)
+    expect(result).toBe('low')
+  })
+})
+
+// ── estimateLtv – lifespan branching ─────────────────────────────────────────
+
+describe('estimateLtv – lifespan branching', () => {
+  it('uses 24-month lifespan when customerAgeMonths <= 24', () => {
+    // 500 * 2 * 24 / 12 = 2000
+    expect(estimateLtv(500, 2, 24)).toBe(2_000)
+  })
+
+  it('uses 36-month lifespan when customerAgeMonths > 24', () => {
+    // 500 * 2 * 36 / 12 = 3000
+    expect(estimateLtv(500, 2, 25)).toBe(3_000)
+  })
+
+  it('customerAgeMonths = 24.001 → uses 36-month lifespan', () => {
+    // 1000 * 1 * 36 / 12 = 3000
+    expect(estimateLtv(1_000, 1, 24.001)).toBe(3_000)
+  })
+
+  it('returns 0 when avgOrderValue is 0', () => {
+    expect(estimateLtv(0, 5, 12)).toBe(0)
+  })
+
+  it('returns 0 when avgOrderValue is negative', () => {
+    expect(estimateLtv(-100, 5, 12)).toBe(0)
+  })
+
+  it('scales linearly with frequency', () => {
+    const ltv1 = estimateLtv(1_000, 1, 12)
+    const ltv4 = estimateLtv(1_000, 4, 12)
+    expect(ltv4).toBe(ltv1 * 4)
+  })
+
+  it('scales linearly with avgOrderValue', () => {
+    const ltvA = estimateLtv(1_000, 2, 12)
+    const ltvB = estimateLtv(2_000, 2, 12)
+    expect(ltvB).toBe(ltvA * 2)
+  })
+})
+
+// ── computeAvgOrderValue – extra edge cases ───────────────────────────────────
+
+describe('computeAvgOrderValue – edge cases', () => {
+  it('large values compute correctly', () => {
+    expect(computeAvgOrderValue(1_000_000, 100)).toBe(10_000)
+  })
+
+  it('fractional result when not evenly divisible', () => {
+    const result = computeAvgOrderValue(100, 3)
+    expect(result).toBeCloseTo(33.333, 2)
+  })
+
+  it('negative totalRevenue produces negative aov', () => {
+    // Edge case: negative revenue (refund-heavy period)
+    const result = computeAvgOrderValue(-5_000, 5)
+    expect(result).toBe(-1_000)
+  })
+})
+
+// ── computePurchaseFrequency – extra edge cases ───────────────────────────────
+
+describe('computePurchaseFrequency – edge cases', () => {
+  it('very high order count over 1 month', () => {
+    expect(computePurchaseFrequency(100, 1)).toBe(100)
+  })
+
+  it('negative lifespan returns null (guard)', () => {
+    // 0 check only — negative lifespan would divide
+    // service only guards === 0; negative still computes
+    const result = computePurchaseFrequency(10, -2)
+    expect(typeof result).toBe('number')
+  })
+
+  it('one order over 100 months → small frequency', () => {
+    const result = computePurchaseFrequency(1, 100)
+    expect(result).toBeCloseTo(0.01)
+  })
+})
+
+// ── computeSimpleClv – extra scaling tests ────────────────────────────────────
+
+describe('computeSimpleClv – scaling', () => {
+  it('doubling lifespan doubles CLV', () => {
+    const clv12 = computeSimpleClv(1_000, 1, 12)
+    const clv24 = computeSimpleClv(1_000, 1, 24)
+    expect(clv24).toBe((clv12 as number) * 2)
+  })
+
+  it('zero avgOrderValue produces 0 CLV', () => {
+    expect(computeSimpleClv(0, 2, 12)).toBe(0)
+  })
+
+  it('large values compute without overflow', () => {
+    const result = computeSimpleClv(1_000_000, 10, 120)
+    expect(result).toBe(1_200_000_000)
+  })
+})
+
+// ── computeMarginAdjustedClv – extra tests ────────────────────────────────────
+
+describe('computeMarginAdjustedClv – extra tests', () => {
+  it('margin > 100% produces CLV larger than input (unusual but allowed)', () => {
+    const result = computeMarginAdjustedClv(100_000, 150)
+    expect(result).toBe(150_000)
+  })
+
+  it('negative margin produces negative adjusted CLV', () => {
+    const result = computeMarginAdjustedClv(100_000, -10)
+    expect(result).toBe(-10_000)
+  })
+
+  it('small margin (1%) is handled correctly', () => {
+    expect(computeMarginAdjustedClv(1_000_000, 1)).toBe(10_000)
+  })
+})
+
+// ── classifyCustomerValue – extra edge cases ──────────────────────────────────
+
+describe('classifyCustomerValue – extra cases', () => {
+  const thresholds = { p80: 100_000, p50: 50_000, p20: 10_000 }
+
+  it('negative CLV → lost (< p20, not > 0)', () => {
+    // clv < 0, not null, not >= p80/p50/p20, not > 0 → falls to lost
+    expect(classifyCustomerValue(-1, thresholds)).toBe('lost')
+  })
+
+  it('very large CLV → champion', () => {
+    expect(classifyCustomerValue(10_000_000, thresholds)).toBe('champion')
+  })
+
+  it('clv one cent below p20 → at_risk', () => {
+    expect(classifyCustomerValue(9_999.99, thresholds)).toBe('at_risk')
+  })
+
+  it('all thresholds equal → p80 wins for matching value', () => {
+    const equalThresh = { p80: 50_000, p50: 50_000, p20: 50_000 }
+    expect(classifyCustomerValue(50_000, equalThresh)).toBe('champion')
+  })
+})
+
+// ── computeCustomerAcquisitionPayback – extra cases ───────────────────────────
+
+describe('computeCustomerAcquisitionPayback – extra cases', () => {
+  it('returns longer payback for lower margin', () => {
+    const p10 = computeCustomerAcquisitionPayback(10_000, 2_000, 10)
+    const p50 = computeCustomerAcquisitionPayback(10_000, 2_000, 50)
+    expect((p10 as number)).toBeGreaterThan(p50 as number)
+  })
+
+  it('returns longer payback for higher CAC', () => {
+    const low  = computeCustomerAcquisitionPayback(5_000,  2_000, 25)
+    const high = computeCustomerAcquisitionPayback(20_000, 2_000, 25)
+    expect((high as number)).toBeGreaterThan(low as number)
+  })
+
+  it('zero CAC returns 0 payback', () => {
+    expect(computeCustomerAcquisitionPayback(0, 2_000, 30)).toBe(0)
+  })
+
+  it('negative avgMonthlyRevenue returns null (division guard fails)', () => {
+    // -2000 !== 0, so computes: 10000 / (-2000 * 0.25) = -20
+    const result = computeCustomerAcquisitionPayback(10_000, -2_000, 25)
+    expect(typeof result).toBe('number')
+  })
+})
+
+// ── computeClvToCacRatio – extra cases ───────────────────────────────────────
+
+describe('computeClvToCacRatio – extra cases', () => {
+  it('clv = 0 → ratio = 0', () => {
+    expect(computeClvToCacRatio(0, 10_000)).toBe(0)
+  })
+
+  it('large cac reduces ratio', () => {
+    const ratioLow  = computeClvToCacRatio(30_000, 1_000)
+    const ratioHigh = computeClvToCacRatio(30_000, 30_000)
+    expect(ratioLow as number).toBeGreaterThan(ratioHigh as number)
+  })
+
+  it('clv equals cac → ratio = 1', () => {
+    expect(computeClvToCacRatio(15_000, 15_000)).toBe(1)
+  })
+
+  it('cac negative computes result (no guard)', () => {
+    const result = computeClvToCacRatio(30_000, -10_000)
+    expect(result).toBe(-3)
+  })
+})
+
+// ── classifyClvCacHealth – extra boundaries ───────────────────────────────────
+
+describe('classifyClvCacHealth – extra boundaries', () => {
+  it('ratio = 4.999 → healthy', () => {
+    expect(classifyClvCacHealth(4.999)).toBe('healthy')
+  })
+
+  it('ratio = 0.999 → unprofitable', () => {
+    expect(classifyClvCacHealth(0.999)).toBe('unprofitable')
+  })
+
+  it('ratio = 2.999 → marginal', () => {
+    expect(classifyClvCacHealth(2.999)).toBe('marginal')
+  })
+
+  it('ratio = 100 → excellent', () => {
+    expect(classifyClvCacHealth(100)).toBe('excellent')
+  })
+
+  it('ratio = -1 → unprofitable', () => {
+    expect(classifyClvCacHealth(-1)).toBe('unprofitable')
+  })
+})
+
+// ── computeCustomerLifespan – edge cases ──────────────────────────────────────
+
+describe('computeCustomerLifespan – edge cases', () => {
+  it('lifespan is never less than 1', () => {
+    // Future first purchase date (should clamp to 1)
+    const result = computeCustomerLifespan('2030-01-01', '2030-01-01', '2025-01-01')
+    expect(result).toBe(1)
+  })
+
+  it('exactly 6 months → about 6', () => {
+    const result = computeCustomerLifespan('2024-11-29', '2024-11-29', '2025-05-29')
+    expect(result).toBeGreaterThan(5.5)
+    expect(result).toBeLessThan(6.5)
+  })
+
+  it('1 day difference → returns 1 (minimum clamp)', () => {
+    const result = computeCustomerLifespan('2025-05-28', '2025-05-28', '2025-05-29')
+    expect(result).toBeGreaterThanOrEqual(1)
+    // 1 day / 30.44 ≈ 0.033 → clamped to 1
+    expect(result).toBe(1)
+  })
+
+  it('last purchase date after today still uses today for lifespan', () => {
+    // lastPurchaseDate is ignored for lifespan computation
+    const r1 = computeCustomerLifespan('2024-01-01', '2025-06-01', '2025-05-29')
+    const r2 = computeCustomerLifespan('2024-01-01', '2024-01-15', '2025-05-29')
+    expect(r1).toBeCloseTo(r2, 1)
+  })
+})

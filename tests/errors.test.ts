@@ -263,3 +263,303 @@ describe('toErrorResponse — extended', () => {
     expect(JSON.stringify(body)).not.toContain('internal secret')
   })
 })
+
+// ── ERROR_CODES — validation / expense group ──────────────────────────────────
+
+describe('ERROR_CODES — validation group', () => {
+  it('VALIDATION_ERROR returns 422 as BUSINESS', () => {
+    expect(ERROR_CODES.VALIDATION_ERROR.httpStatus).toBe(422)
+    expect(ERROR_CODES.VALIDATION_ERROR.type).toBe('BUSINESS')
+  })
+
+  it('MISSING_REQUIRED_FIELD returns 422', () => {
+    expect(ERROR_CODES.MISSING_REQUIRED_FIELD.httpStatus).toBe(422)
+  })
+
+  it('INVALID_INPUT returns 422', () => {
+    expect(ERROR_CODES.INVALID_INPUT.httpStatus).toBe(422)
+  })
+
+  it('IDEMPOTENCY_KEY_MISSING returns 422', () => {
+    expect(ERROR_CODES.IDEMPOTENCY_KEY_MISSING.httpStatus).toBe(422)
+  })
+})
+
+describe('ERROR_CODES — expense group', () => {
+  it('EXPENSE_NOT_FOUND returns 404 as BUSINESS', () => {
+    expect(ERROR_CODES.EXPENSE_NOT_FOUND.httpStatus).toBe(404)
+    expect(ERROR_CODES.EXPENSE_NOT_FOUND.type).toBe('BUSINESS')
+  })
+
+  it('INVALID_AMOUNT returns 422', () => {
+    expect(ERROR_CODES.INVALID_AMOUNT.httpStatus).toBe(422)
+  })
+})
+
+describe('ERROR_CODES — purchase group', () => {
+  it('PURCHASE_NOT_FOUND returns 404', () => {
+    expect(ERROR_CODES.PURCHASE_NOT_FOUND.httpStatus).toBe(404)
+    expect(ERROR_CODES.PURCHASE_NOT_FOUND.type).toBe('BUSINESS')
+  })
+
+  it('PURCHASE_NOT_DRAFT returns 409', () => {
+    expect(ERROR_CODES.PURCHASE_NOT_DRAFT.httpStatus).toBe(409)
+  })
+
+  it('PURCHASE_NO_LINES returns 422', () => {
+    expect(ERROR_CODES.PURCHASE_NO_LINES.httpStatus).toBe(422)
+  })
+
+  it('PURCHASE_ALLOC_FAILED returns 422', () => {
+    expect(ERROR_CODES.PURCHASE_ALLOC_FAILED.httpStatus).toBe(422)
+  })
+})
+
+describe('ERROR_CODES — period / audit group', () => {
+  it('PERIOD_LOCKED returns 409 as BUSINESS', () => {
+    expect(ERROR_CODES.PERIOD_LOCKED.httpStatus).toBe(409)
+    expect(ERROR_CODES.PERIOD_LOCKED.type).toBe('BUSINESS')
+  })
+
+  it('ROLLBACK_NOT_SUPPORTED returns 422', () => {
+    expect(ERROR_CODES.ROLLBACK_NOT_SUPPORTED.httpStatus).toBe(422)
+  })
+
+  it('ROLLBACK_ENTITY_NOT_FOUND returns 404', () => {
+    expect(ERROR_CODES.ROLLBACK_ENTITY_NOT_FOUND.httpStatus).toBe(404)
+  })
+})
+
+describe('ERROR_CODES — FX group', () => {
+  it('FX_UNAVAILABLE is SYSTEM error', () => {
+    expect(ERROR_CODES.FX_UNAVAILABLE.type).toBe('SYSTEM')
+    expect(ERROR_CODES.FX_UNAVAILABLE.httpStatus).toBe(503)
+  })
+
+  it('FX_RATE_NOT_FOUND is BUSINESS error', () => {
+    expect(ERROR_CODES.FX_RATE_NOT_FOUND.type).toBe('BUSINESS')
+    expect(ERROR_CODES.FX_RATE_NOT_FOUND.httpStatus).toBe(422)
+  })
+})
+
+describe('ERROR_CODES — system group (extended)', () => {
+  it('DB_QUERY_FAILED returns 500 as SYSTEM', () => {
+    expect(ERROR_CODES.DB_QUERY_FAILED.httpStatus).toBe(500)
+    expect(ERROR_CODES.DB_QUERY_FAILED.type).toBe('SYSTEM')
+  })
+
+  it('STORAGE_UPLOAD_FAILED returns 500 as SYSTEM', () => {
+    expect(ERROR_CODES.STORAGE_UPLOAD_FAILED.httpStatus).toBe(500)
+    expect(ERROR_CODES.STORAGE_UPLOAD_FAILED.type).toBe('SYSTEM')
+  })
+})
+
+// ── AppError — toLogContext detailed tests ─────────────────────────────────────
+
+describe('AppError — toLogContext', () => {
+  it('includes all four required log keys', () => {
+    const err = new AppError('DB_INSERT_FAILED', 'insert error', { table: 'sales' })
+    const ctx = err.toLogContext()
+    expect(ctx).toHaveProperty('error_type')
+    expect(ctx).toHaveProperty('error_code')
+    expect(ctx).toHaveProperty('error_msg')
+    expect(ctx).toHaveProperty('details')
+  })
+
+  it('error_msg matches the message passed to constructor', () => {
+    const err = new AppError('VALIDATION_ERROR', 'hatalı giriş')
+    expect(err.toLogContext().error_msg).toBe('hatalı giriş')
+  })
+
+  it('details is undefined when no details passed', () => {
+    const err = new AppError('NO_ITEMS', 'no items')
+    expect(err.toLogContext().details).toBeUndefined()
+  })
+
+  it('details carries full object reference', () => {
+    const detail = { product: 'p1', qty: -5 }
+    const err = new AppError('NEGATIVE_STOCK', 'stok negatif', detail)
+    expect(err.toLogContext().details).toEqual(detail)
+  })
+})
+
+// ── AppError — constructor and type derivation ────────────────────────────────
+
+describe('AppError — type derivation from code', () => {
+  it('SYSTEM code → type is SYSTEM', () => {
+    expect(new AppError('DB_READ_FAILED', 'err').type).toBe('SYSTEM')
+  })
+
+  it('SECURITY code → type is SECURITY', () => {
+    expect(new AppError('FORBIDDEN', 'forbidden').type).toBe('SECURITY')
+  })
+
+  it('BUSINESS code → type is BUSINESS', () => {
+    expect(new AppError('NO_ITEMS', 'no items').type).toBe('BUSINESS')
+  })
+
+  it('httpStatus derived from ERROR_CODES registry', () => {
+    const err = new AppError('RATE_LIMITED', 'too many requests')
+    expect(err.httpStatus).toBe(429)
+  })
+
+  it('two AppErrors with different codes are independent', () => {
+    const e1 = new AppError('UNAUTHORIZED', 'unauth')
+    const e2 = new AppError('FORBIDDEN', 'forbidden')
+    expect(e1.httpStatus).not.toBe(e2.httpStatus)
+    expect(e1.type).toBe(e2.type) // both SECURITY
+  })
+})
+
+// ── isAppError — comprehensive type guard tests ───────────────────────────────
+
+describe('isAppError — comprehensive', () => {
+  it('returns true for any AppError code', () => {
+    const codes: Array<keyof typeof ERROR_CODES> = [
+      'UNAUTHORIZED', 'DB_INSERT_FAILED', 'PROFORMA_NOT_FOUND', 'VALIDATION_ERROR',
+    ]
+    for (const code of codes) {
+      expect(isAppError(new AppError(code, 'msg'))).toBe(true)
+    }
+  })
+
+  it('returns false for undefined', () => {
+    expect(isAppError(undefined)).toBe(false)
+  })
+
+  it('returns false for numbers', () => {
+    expect(isAppError(404)).toBe(false)
+  })
+
+  it('returns false for arrays', () => {
+    expect(isAppError([])).toBe(false)
+  })
+
+  it('returns false for Error subclasses that are not AppError', () => {
+    class CustomError extends Error {}
+    expect(isAppError(new CustomError('custom'))).toBe(false)
+  })
+})
+
+// ── toErrorResponse — edge cases ──────────────────────────────────────────────
+
+describe('toErrorResponse — additional edge cases', () => {
+  it('body always has code property', () => {
+    const { body } = toErrorResponse(new AppError('VALIDATION_ERROR', 'bad input'))
+    expect(body).toHaveProperty('code')
+  })
+
+  it('body always has error property', () => {
+    const { body } = toErrorResponse(new AppError('VALIDATION_ERROR', 'bad input'))
+    expect(body).toHaveProperty('error')
+  })
+
+  it('status is always a number', () => {
+    expect(typeof toErrorResponse(new AppError('FORBIDDEN', 'no')).status).toBe('number')
+    expect(typeof toErrorResponse(new Error('unknown')).status).toBe('number')
+  })
+
+  it('FORBIDDEN AppError → 403 status', () => {
+    const { status } = toErrorResponse(new AppError('FORBIDDEN', 'no access'))
+    expect(status).toBe(403)
+  })
+
+  it('RATE_LIMITED AppError → 429 status', () => {
+    const { status } = toErrorResponse(new AppError('RATE_LIMITED', 'slow down'))
+    expect(status).toBe(429)
+  })
+
+  it('object with no code → 500 fallback', () => {
+    const { status } = toErrorResponse({ message: 'some message' })
+    expect(status).toBe(500)
+  })
+})
+
+// ── ERROR_CODES — structural invariants ───────────────────────────────────────
+
+describe('ERROR_CODES — structural invariants', () => {
+  it('every entry has a type property', () => {
+    for (const [key, entry] of Object.entries(ERROR_CODES)) {
+      expect(typeof entry.type).toBe('string'), `${key} missing type`
+    }
+  })
+
+  it('every entry has an httpStatus property', () => {
+    for (const [key, entry] of Object.entries(ERROR_CODES)) {
+      expect(typeof entry.httpStatus).toBe('number'), `${key} missing httpStatus`
+    }
+  })
+
+  it('all SYSTEM errors return 5xx status', () => {
+    for (const entry of Object.values(ERROR_CODES)) {
+      if (entry.type === 'SYSTEM') {
+        expect(entry.httpStatus).toBeGreaterThanOrEqual(500)
+        expect(entry.httpStatus).toBeLessThan(600)
+      }
+    }
+  })
+
+  it('all SECURITY errors return 4xx status', () => {
+    for (const entry of Object.values(ERROR_CODES)) {
+      if (entry.type === 'SECURITY') {
+        expect(entry.httpStatus).toBeGreaterThanOrEqual(400)
+        expect(entry.httpStatus).toBeLessThan(500)
+      }
+    }
+  })
+
+  it('all BUSINESS errors return 4xx status', () => {
+    for (const entry of Object.values(ERROR_CODES)) {
+      if (entry.type === 'BUSINESS') {
+        expect(entry.httpStatus).toBeGreaterThanOrEqual(400)
+        expect(entry.httpStatus).toBeLessThan(500)
+      }
+    }
+  })
+
+  it('error code count is > 30 (registry is sufficiently populated)', () => {
+    expect(Object.keys(ERROR_CODES).length).toBeGreaterThan(30)
+  })
+
+  it('no httpStatus is 0 or negative', () => {
+    for (const entry of Object.values(ERROR_CODES)) {
+      expect(entry.httpStatus).toBeGreaterThan(0)
+    }
+  })
+
+  it('IDEMPOTENCY codes share the same httpStatus', () => {
+    expect(ERROR_CODES.IDEMPOTENCY_MISMATCH.httpStatus).toBe(
+      ERROR_CODES.IDEMPOTENCY_PENDING.httpStatus
+    )
+  })
+})
+
+// ── AppError — message immutability ───────────────────────────────────────────
+
+describe('AppError — message and immutability', () => {
+  it('message is accessible via .message', () => {
+    const err = new AppError('VALIDATION_ERROR', 'test message')
+    expect(err.message).toBe('test message')
+  })
+
+  it('code is accessible via .code', () => {
+    const err = new AppError('NO_ITEMS', 'no items')
+    expect(err.code).toBe('NO_ITEMS')
+  })
+
+  it('can be thrown and caught as Error', () => {
+    expect(() => {
+      throw new AppError('UNAUTHORIZED', 'no access')
+    }).toThrowError('no access')
+  })
+
+  it('caught AppError is recognized by isAppError', () => {
+    let caught: unknown
+    try {
+      throw new AppError('FORBIDDEN', 'forbidden')
+    } catch (e) {
+      caught = e
+    }
+    expect(isAppError(caught)).toBe(true)
+  })
+})

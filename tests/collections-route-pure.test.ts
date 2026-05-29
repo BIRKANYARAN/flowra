@@ -268,3 +268,304 @@ describe('computeCollectionRiskScore', () => {
     expect(s2).toBeCloseTo(s1 * 2, 5)
   })
 })
+
+// ─────────────────────────────────────────────────────────────────────────────
+// sanitizePaidAmount — stress & type coercion corner cases
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('sanitizePaidAmount — type coercion corner cases', () => {
+  it('object input → NaN coercion → 0', () => {
+    // Number({}) = NaN → 0
+    expect(sanitizePaidAmount({} as unknown as number)).toBe(0)
+  })
+
+  it('array [] → Number([]) = 0 → 0', () => {
+    expect(sanitizePaidAmount([] as unknown as number)).toBe(0)
+  })
+
+  it('array [5] → Number([5]) = 5 → 5', () => {
+    expect(sanitizePaidAmount([5] as unknown as number)).toBe(5)
+  })
+
+  it('negative Infinity → 0 (clamped)', () => {
+    expect(sanitizePaidAmount(-Infinity)).toBe(0)
+  })
+
+  it('returns null (not 0) for undefined input', () => {
+    const result = sanitizePaidAmount(undefined)
+    expect(result).toBeNull()
+    expect(result).not.toBe(0)
+  })
+
+  it('returns null (not 0) for null input', () => {
+    const result = sanitizePaidAmount(null)
+    expect(result).toBeNull()
+  })
+
+  it('string "1e3" (scientific notation) → 1000', () => {
+    expect(sanitizePaidAmount('1e3' as unknown as number)).toBe(1000)
+  })
+
+  it('string "0.5" → 0.5', () => {
+    expect(sanitizePaidAmount('0.5' as unknown as number)).toBe(0.5)
+  })
+
+  it('large integer string → parsed correctly', () => {
+    expect(sanitizePaidAmount('999999' as unknown as number)).toBe(999999)
+  })
+
+  it('output is never NaN', () => {
+    const inputs: Array<number | string | null | undefined> = [
+      null, undefined, NaN, '', 'abc', -5, 0, 100, '500', '3.14',
+    ]
+    for (const v of inputs) {
+      const result = sanitizePaidAmount(v as number)
+      if (result !== null) {
+        expect(isNaN(result)).toBe(false)
+      }
+    }
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeCollectionRiskScore — formula component isolation
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeCollectionRiskScore — formula component isolation', () => {
+  it('time component weight is 0.6 per day', () => {
+    // days = 1, amount = 0 → 1 × 0.6 = 0.6
+    const score = computeCollectionRiskScore(
+      { due_date: '2025-03-01', total_try: 0 },
+      '2025-03-02',
+    )
+    expect(score).toBeCloseTo(0.6, 5)
+  })
+
+  it('amount component weight is 0.4 per 10k', () => {
+    // days = 0, amount = 10_000 → (10000/10000) × 0.4 = 0.4
+    const score = computeCollectionRiskScore(
+      { due_date: '2025-03-01', total_try: 10_000 },
+      '2025-03-01',
+    )
+    expect(score).toBeCloseTo(0.4, 5)
+  })
+
+  it('combined 5 days + ₺50k = 5×0.6 + 5×0.4 = 5', () => {
+    const score = computeCollectionRiskScore(
+      { due_date: '2025-01-01', total_try: 50_000 },
+      '2025-01-06',
+    )
+    expect(score).toBeCloseTo(5.0, 5)
+  })
+
+  it('returns 0 for both empty dates and zero amount', () => {
+    const score = computeCollectionRiskScore(
+      { due_date: null, sale_date: null, total_try: 0 },
+      '2025-01-01',
+    )
+    expect(score).toBe(0)
+  })
+
+  it('negative days clamped to 0 (future due date)', () => {
+    // due_date is far in the future
+    const score = computeCollectionRiskScore(
+      { due_date: '2099-12-31', total_try: 0 },
+      '2025-01-01',
+    )
+    expect(score).toBe(0)
+  })
+
+  it('score is finite for very large amounts', () => {
+    const score = computeCollectionRiskScore(
+      { due_date: '2025-01-01', total_try: 1_000_000_000 },
+      '2025-01-01',
+    )
+    expect(isFinite(score)).toBe(true)
+  })
+
+  it('score is always non-negative', () => {
+    const inputs = [
+      { due_date: '2025-12-31', total_try: 0 },
+      { due_date: null, sale_date: null, total_try: 0 },
+      { due_date: '2099-01-01', total_try: 0 },
+    ]
+    for (const row of inputs) {
+      expect(computeCollectionRiskScore(row, '2025-01-01')).toBeGreaterThanOrEqual(0)
+    }
+  })
+
+  it('due_date takes precedence over sale_date', () => {
+    // due_date is 10 days ago, sale_date is 30 days ago
+    const score = computeCollectionRiskScore(
+      { due_date: '2025-01-21', sale_date: '2025-01-01', total_try: 0 },
+      '2025-01-31',
+    )
+    // uses due_date → days=10 → 10×0.6 = 6.0
+    expect(score).toBeCloseTo(6.0, 5)
+    // if sale_date was used: days=30 → 30×0.6 = 18.0 (different)
+  })
+
+  it('due_date empty string → refDate is empty string → days = 0 (sale_date NOT used)', () => {
+    // due_date = '' — ?? picks '' (not null/undefined), refDate = ''
+    // '' is falsy so the ternary gives days = 0
+    const score = computeCollectionRiskScore(
+      { due_date: '', sale_date: '2025-01-01', total_try: 0 },
+      '2025-01-11',
+    )
+    // refDate = '' → falsy → days = 0 → score = 0
+    expect(score).toBeCloseTo(0, 5)
+  })
+
+  it('amount 1 TRY → (1/10000) × 0.4 = 0.00004', () => {
+    const score = computeCollectionRiskScore(
+      { due_date: '2025-06-01', total_try: 1 },
+      '2025-06-01',
+    )
+    expect(score).toBeCloseTo(0.00004, 6)
+  })
+
+  it('7-day overdue ₺0 → 7×0.6 = 4.2', () => {
+    const score = computeCollectionRiskScore(
+      { due_date: '2025-02-01', total_try: 0 },
+      '2025-02-08',
+    )
+    expect(score).toBeCloseTo(4.2, 5)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Integration: sanitizePaidAmount + computeCollectionRiskScore together
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('collections pure utils — integration patterns', () => {
+  it('sanitizePaidAmount output is safe to use in risk score numerics', () => {
+    const paid = sanitizePaidAmount(NaN)  // → 0
+    // Use in a hypothetical outstanding = total - paid scenario
+    const outstanding = 10_000 - (paid ?? 0)
+    expect(outstanding).toBe(10_000)
+    expect(isNaN(outstanding)).toBe(false)
+  })
+
+  it('null paid amount (no update) does not corrupt a risk score computation', () => {
+    const paid = sanitizePaidAmount(null)  // → null (no update)
+    const totalTry = 5_000
+    // When paid is null, use totalTry unchanged
+    const effectiveTry = paid !== null ? totalTry - paid : totalTry
+    const score = computeCollectionRiskScore(
+      { due_date: '2025-01-01', total_try: effectiveTry },
+      '2025-01-06',
+    )
+    // days=5, effectiveTry=5000 → 5×0.6 + 0.5×0.4 = 3.2
+    expect(score).toBeCloseTo(3.2, 5)
+  })
+
+  it('partial payment reduces outstanding and lowers risk score', () => {
+    const totalTry = 50_000
+    const fullScore = computeCollectionRiskScore(
+      { due_date: '2025-01-01', total_try: totalTry },
+      '2025-01-11',
+    )
+    const paid = sanitizePaidAmount(30_000) ?? 0
+    const remaining = totalTry - paid  // 20_000
+    const partialScore = computeCollectionRiskScore(
+      { due_date: '2025-01-01', total_try: remaining },
+      '2025-01-11',
+    )
+    expect(partialScore).toBeLessThan(fullScore)
+  })
+
+  it('sanitizePaidAmount result type is compatible with risk score input', () => {
+    const paid = sanitizePaidAmount(5_000)
+    expect(typeof paid).toBe('number')
+    const score = computeCollectionRiskScore(
+      { due_date: '2025-01-01', total_try: paid! },
+      '2025-01-01',
+    )
+    expect(isFinite(score)).toBe(true)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// sanitizePaidAmount — boundary probing
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('sanitizePaidAmount — boundary probing', () => {
+  it('Number.EPSILON → tiny positive → returned as-is', () => {
+    expect(sanitizePaidAmount(Number.EPSILON)).toBe(Number.EPSILON)
+  })
+
+  it('Number.MAX_SAFE_INTEGER → returned as-is', () => {
+    expect(sanitizePaidAmount(Number.MAX_SAFE_INTEGER)).toBe(Number.MAX_SAFE_INTEGER)
+  })
+
+  it('Number.MIN_SAFE_INTEGER (negative) → 0', () => {
+    expect(sanitizePaidAmount(Number.MIN_SAFE_INTEGER)).toBe(0)
+  })
+
+  it('-0 → treated as 0 (Math.max(0, -0) = 0)', () => {
+    expect(sanitizePaidAmount(-0)).toBe(0)
+  })
+
+  it('string "NaN" → NaN → 0', () => {
+    // Number('NaN') = NaN → 0
+    expect(sanitizePaidAmount('NaN' as unknown as number)).toBe(0)
+  })
+
+  it('string "Infinity" → Infinity (valid JS number)', () => {
+    expect(sanitizePaidAmount('Infinity' as unknown as number)).toBe(Infinity)
+  })
+
+  it('integer coercion: 1.9 → 1.9 (not rounded)', () => {
+    expect(sanitizePaidAmount(1.9)).toBe(1.9)
+  })
+
+  it('0.0001 → 0.0001 (not rounded to 0)', () => {
+    expect(sanitizePaidAmount(0.0001)).toBeCloseTo(0.0001, 6)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeCollectionRiskScore — date arithmetic precision
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeCollectionRiskScore — date arithmetic precision', () => {
+  it('2 days → 2×0.6 = 1.2 time component', () => {
+    const score = computeCollectionRiskScore(
+      { due_date: '2025-05-01', total_try: 0 },
+      '2025-05-03',
+    )
+    expect(score).toBeCloseTo(1.2, 5)
+  })
+
+  it('month boundary: Jan 31 to Feb 1 = 1 day', () => {
+    const score = computeCollectionRiskScore(
+      { due_date: '2025-01-31', total_try: 0 },
+      '2025-02-01',
+    )
+    expect(score).toBeCloseTo(0.6, 5)
+  })
+
+  it('year boundary: Dec 31 to Jan 1 = 1 day', () => {
+    const score = computeCollectionRiskScore(
+      { due_date: '2024-12-31', total_try: 0 },
+      '2025-01-01',
+    )
+    expect(score).toBeCloseTo(0.6, 5)
+  })
+
+  it('result is a number (not NaN) for valid inputs', () => {
+    const score = computeCollectionRiskScore(
+      { due_date: '2025-03-15', total_try: 10_000 },
+      '2025-03-20',
+    )
+    expect(isNaN(score)).toBe(false)
+  })
+
+  it('result is finite for all valid inputs', () => {
+    const score = computeCollectionRiskScore(
+      { due_date: '2025-03-15', total_try: 100_000 },
+      '2025-04-01',
+    )
+    expect(isFinite(score)).toBe(true)
+  })
+})
