@@ -137,10 +137,19 @@ export class ResolutionsService {
     companyId: string,
     userId:    string,
     supabase:  SupabaseClient,
+    reason?:   string,
   ): Promise<GovernanceResolution> {
+    const updates: Record<string, unknown> = {
+      status:      'rejected',
+      approved_by: userId,
+      approved_at: new Date().toISOString(),
+    }
+    if (reason) {
+      updates.metadata = { rejection_reason: reason, rejected_by: userId }
+    }
     const { data, error } = await supabase
       .from('governance_resolutions')
-      .update({ status: 'rejected', approved_by: userId, approved_at: new Date().toISOString() })
+      .update(updates)
       .eq('id', id)
       .eq('company_id', companyId)
       .eq('status', 'draft')
@@ -156,6 +165,7 @@ export class ResolutionsService {
     userId:    string,
     linkedCorporateActionId: string | undefined,
     supabase:  SupabaseClient,
+    notes?:    string,
   ): Promise<GovernanceResolution> {
     const updates: Record<string, unknown> = {
       status:         'implemented',
@@ -163,6 +173,9 @@ export class ResolutionsService {
     }
     if (linkedCorporateActionId) {
       updates.linked_corporate_action_id = linkedCorporateActionId
+    }
+    if (notes) {
+      updates.metadata = { implementation_notes: notes, implemented_by: userId }
     }
     const { data, error } = await supabase
       .from('governance_resolutions')
@@ -174,5 +187,38 @@ export class ResolutionsService {
       .single()
     if (error) throw error
     return data as GovernanceResolution
+  }
+
+  static async linkToAction(
+    id:        string,
+    actionId:  string,
+    companyId: string,
+    supabase:  SupabaseClient,
+  ): Promise<GovernanceResolution> {
+    const { data, error } = await supabase
+      .from('governance_resolutions')
+      .update({ linked_corporate_action_id: actionId })
+      .eq('id', id)
+      .eq('company_id', companyId)
+      .select()
+      .single()
+    if (error) throw error
+    return data as GovernanceResolution
+  }
+
+  // ── Pure helpers ─────────────────────────────────────────────────────────────
+
+  static canApprove(res: Pick<GovernanceResolution, 'status'>): boolean {
+    return res.status === 'draft'
+  }
+
+  static canImplement(res: Pick<GovernanceResolution, 'status'>): boolean {
+    return res.status === 'approved'
+  }
+
+  static computeVotingResult(outcome: VotingOutcome): 'passed' | 'failed' | 'tie' {
+    if (outcome.in_favor > outcome.against) return 'passed'
+    if (outcome.against > outcome.in_favor) return 'failed'
+    return 'tie'
   }
 }

@@ -22,17 +22,17 @@ export interface GovernanceObligation {
   is_informational: boolean    // statutory_ref items are informational only
 }
 
-function daysBetween(a: string, b: string): number {
+export function daysBetween(a: string, b: string): number {
   return Math.round((new Date(b).getTime() - new Date(a).getTime()) / 86_400_000)
 }
 
-function toStatus(daysUntil: number): ObligationStatus {
+export function toStatus(daysUntil: number): ObligationStatus {
   if (daysUntil < 0)  return 'overdue'
   if (daysUntil === 0) return 'due_today'
   return 'upcoming'
 }
 
-function toSeverity(daysUntil: number, source: ObligationSource): ObligationSeverity {
+export function toSeverity(daysUntil: number, source: ObligationSource): ObligationSeverity {
   if (source === 'statutory_ref') return 'info'
   if (daysUntil < 0)   return 'critical'
   if (daysUntil <= 7)  return 'critical'
@@ -269,5 +269,42 @@ export class GovernanceClockService {
       .eq('id', id)
       .eq('company_id', companyId)
     if (error) throw error
+  }
+
+  /**
+   * Deletes a user-declared obligation.
+   * Only obligations with source='user' may be deleted.
+   * Throws if the record does not exist, belongs to another company,
+   * or is system-generated.
+   */
+  static async deleteObligation(
+    id:        string,
+    companyId: string,
+    userId:    string,
+    supabase:  SupabaseClient,
+  ): Promise<void> {
+    // First fetch to verify ownership + source
+    const { data, error: fetchError } = await supabase
+      .from('governance_obligations')
+      .select('id, source')
+      .eq('id', id)
+      .eq('company_id', companyId)
+      .maybeSingle()
+
+    if (fetchError) throw fetchError
+    if (!data) throw new Error('Yükümlülük bulunamadı')
+    if ((data as { id: string; source: string }).source !== 'user') {
+      throw new Error('Yalnızca kullanıcı tarafından eklenen yükümlülükler silinebilir')
+    }
+
+    const { error } = await supabase
+      .from('governance_obligations')
+      .delete()
+      .eq('id', id)
+      .eq('company_id', companyId)
+
+    if (error) throw error
+
+    void userId // audit: caller identity available for future audit log
   }
 }

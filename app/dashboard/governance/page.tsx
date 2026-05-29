@@ -9,15 +9,11 @@ import CommitmentsTab        from './_components/CommitmentsTab'
 import DecisionContextTab    from './_components/DecisionContextTab'
 import AuditTrailTab         from './_components/AuditTrailTab'
 import AuditHashChainPanel   from './_components/AuditHashChainPanel'
+import GovernanceClockTab    from './_components/GovernanceClockTab'
+import StakeholderCapitalTab from './_components/StakeholderCapitalTab'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
-type TabId = 'calendar' | 'actions' | 'resolutions' | 'audit' | 'exports' | 'commitments' | 'decisions' | 'audit-trail'
-
-interface GovernanceObligation {
-  id: string; source: string; title: string; description: string
-  due_date: string; status: string; severity: string; days_until: number
-  action_href: string | null; is_informational: boolean; metadata: Record<string, unknown>
-}
+type TabId = 'calendar' | 'actions' | 'resolutions' | 'audit' | 'exports' | 'commitments' | 'decisions' | 'audit-trail' | 'capital'
 
 interface CorporateAction {
   id: string; action_type: string; action_date: string; title: string
@@ -31,7 +27,6 @@ interface GovernanceResolution {
   voting_outcome: { in_favor: number; against: number; abstained: number; total: number } | null
   approved_at: string | null; implemented_at: string | null; created_at: string
 }
-
 const TABS: { id: TabId; label: string; icon: string }[] = [
   { id: 'calendar',    label: 'Takvim',              icon: '📅' },
   { id: 'actions',     label: 'Kurumsal Aksiyonlar', icon: '🏛️' },
@@ -41,6 +36,7 @@ const TABS: { id: TabId; label: string; icon: string }[] = [
   { id: 'commitments', label: 'Taahhütler',          icon: '📋' },
   { id: 'decisions',    label: 'Karar Geçmişi',       icon: '🧠' },
   { id: 'audit-trail', label: 'Denetim İzi',          icon: '🔍' },
+  { id: 'capital',     label: 'Sermaye Hesapları',    icon: '💰' },
 ]
 
 const ACTION_TYPE_LABELS: Record<string, string> = {
@@ -70,199 +66,6 @@ const RESOLUTION_STATUS_LABELS: Record<string, string> = {
 
 function fmtDate(d: string) {
   return new Date(d).toLocaleDateString('tr-TR', { day: '2-digit', month: 'long', year: 'numeric' })
-}
-
-function severityBadge(s: string) {
-  if (s === 'critical') return 'bg-red-100 text-red-700'
-  if (s === 'warning')  return 'bg-amber-100 text-amber-700'
-  return 'bg-gray-100 text-gray-600'
-}
-
-// ── Calendar Tab ───────────────────────────────────────────────────────────────
-function CalendarTab() {
-  const [obligations, setObligations] = useState<GovernanceObligation[]>([])
-  const [loading, setLoading]         = useState(true)
-  const [showAddForm, setShowAddForm] = useState(false)
-  const [newObl, setNewObl] = useState({ title: '', due_date: '', description: '', obligation_type: 'contractual' })
-  const [saving, setSaving] = useState(false)
-
-  const load = useCallback(async () => {
-    setLoading(true)
-    try {
-      const r = await fetch('/api/governance/clock?horizon=90')
-      if (r.ok) { const d = await r.json(); setObligations(d.obligations ?? []) }
-    } finally { setLoading(false) }
-  }, [])
-
-  useEffect(() => { load() }, [load])
-
-  async function markComplete(id: string) {
-    if (!id.startsWith('declared_')) return
-    const oblId = id.replace('declared_', '')
-    await fetch(`/api/governance/obligations/${oblId}/complete`, { method: 'POST' })
-    load()
-  }
-
-  async function addObligation() {
-    if (!newObl.title || !newObl.due_date) return
-    setSaving(true)
-    try {
-      await fetch('/api/governance/obligations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newObl),
-      })
-      setNewObl({ title: '', due_date: '', description: '', obligation_type: 'contractual' })
-      setShowAddForm(false)
-      load()
-    } finally { setSaving(false) }
-  }
-
-  const overdue   = obligations.filter(o => o.status === 'overdue')
-  const dueToday  = obligations.filter(o => o.status === 'due_today')
-  const upcoming  = obligations.filter(o => o.status === 'upcoming')
-
-  if (loading) return <div className="py-12 text-center text-sm text-gray-500">Yükleniyor…</div>
-
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-base font-semibold text-gray-900">Yönetişim Takvimi</h2>
-          <p className="text-xs text-gray-500 mt-0.5">Önümüzdeki 90 gün içindeki yükümlülükler</p>
-        </div>
-        <button
-          onClick={() => setShowAddForm(!showAddForm)}
-          className="text-xs bg-violet-600 text-white px-3 py-1.5 rounded-lg hover:bg-violet-700 transition-colors"
-        >
-          + Yükümlülük Ekle
-        </button>
-      </div>
-
-      {/* Add form */}
-      {showAddForm && (
-        <div className="border border-violet-200 rounded-xl p-4 bg-violet-50 space-y-3">
-          <h3 className="text-sm font-medium text-violet-900">Yeni Yükümlülük</h3>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs text-gray-600 mb-1 block">Başlık *</label>
-              <input className="w-full border rounded-lg px-3 py-1.5 text-sm" value={newObl.title}
-                onChange={e => setNewObl(p => ({ ...p, title: e.target.value }))} placeholder="Kira sözleşmesi yenileme" />
-            </div>
-            <div>
-              <label className="text-xs text-gray-600 mb-1 block">Son Tarih *</label>
-              <input type="date" className="w-full border rounded-lg px-3 py-1.5 text-sm" value={newObl.due_date}
-                onChange={e => setNewObl(p => ({ ...p, due_date: e.target.value }))} />
-            </div>
-            <div>
-              <label className="text-xs text-gray-600 mb-1 block">Tür</label>
-              <select className="w-full border rounded-lg px-3 py-1.5 text-sm" value={newObl.obligation_type}
-                onChange={e => setNewObl(p => ({ ...p, obligation_type: e.target.value }))}>
-                <option value="contractual">Sözleşmesel</option>
-                <option value="statutory">Yasal (Bilgi amaçlı)</option>
-                <option value="internal">İç</option>
-              </select>
-            </div>
-            <div>
-              <label className="text-xs text-gray-600 mb-1 block">Açıklama</label>
-              <input className="w-full border rounded-lg px-3 py-1.5 text-sm" value={newObl.description}
-                onChange={e => setNewObl(p => ({ ...p, description: e.target.value }))} placeholder="Opsiyonel" />
-            </div>
-          </div>
-          <div className="flex gap-2 pt-1">
-            <button onClick={addObligation} disabled={saving}
-              className="text-xs bg-violet-600 text-white px-4 py-1.5 rounded-lg hover:bg-violet-700 disabled:opacity-50">
-              {saving ? 'Kaydediliyor…' : 'Kaydet'}
-            </button>
-            <button onClick={() => setShowAddForm(false)} className="text-xs text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-100">
-              İptal
-            </button>
-          </div>
-        </div>
-      )}
-
-      {obligations.length === 0 && (
-        <div className="py-12 text-center text-sm text-gray-400">
-          Önümüzdeki 90 günde bekleyen yükümlülük yok.
-        </div>
-      )}
-
-      {/* Overdue */}
-      {overdue.length > 0 && (
-        <div>
-          <h3 className="text-xs font-semibold text-red-600 uppercase tracking-wider mb-2">Gecikmiş — {overdue.length}</h3>
-          <div className="space-y-2">
-            {overdue.map(o => <ObligationRow key={o.id} o={o} onComplete={markComplete} />)}
-          </div>
-        </div>
-      )}
-
-      {/* Due today */}
-      {dueToday.length > 0 && (
-        <div>
-          <h3 className="text-xs font-semibold text-amber-600 uppercase tracking-wider mb-2">Bugün Son Günü — {dueToday.length}</h3>
-          <div className="space-y-2">
-            {dueToday.map(o => <ObligationRow key={o.id} o={o} onComplete={markComplete} />)}
-          </div>
-        </div>
-      )}
-
-      {/* Upcoming */}
-      {upcoming.length > 0 && (
-        <div>
-          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Yaklaşan — {upcoming.length}</h3>
-          <div className="space-y-2">
-            {upcoming.map(o => <ObligationRow key={o.id} o={o} onComplete={markComplete} />)}
-          </div>
-        </div>
-      )}
-
-      {/* Informational notice */}
-      <p className="text-xs text-gray-400 bg-gray-50 rounded-lg px-3 py-2">
-        ℹ️ &quot;Bilgi Amaçlı&quot; olarak işaretlenen yasal tarihler referans niteliğindedir. Kesin tarihler ve yükümlülükler için mali müşavirinize danışın.
-      </p>
-    </div>
-  )
-}
-
-function ObligationRow({ o, onComplete }: { o: GovernanceObligation; onComplete: (id: string) => void }) {
-  const isUserDeclared = o.id.startsWith('declared_')
-  return (
-    <div className={cn(
-      'flex items-start gap-3 p-3 rounded-xl border',
-      o.status === 'overdue'   ? 'border-red-200 bg-red-50'   :
-      o.status === 'due_today' ? 'border-amber-200 bg-amber-50' :
-                                  'border-gray-200 bg-white',
-    )}>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-900 truncate">{o.title}</span>
-          {o.is_informational && (
-            <span className="text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded font-medium shrink-0">BİLGİ AMAÇLI</span>
-          )}
-          <span className={cn('text-[10px] px-1.5 py-0.5 rounded font-semibold uppercase tracking-wide shrink-0', severityBadge(o.severity))}>
-            {o.days_until < 0 ? `${Math.abs(o.days_until)} gün gecikmeli` :
-             o.days_until === 0 ? 'Bugün son gün' :
-             `${o.days_until} gün kaldı`}
-          </span>
-        </div>
-        {o.description && <p className="text-xs text-gray-500 mt-0.5 truncate">{o.description}</p>}
-        <p className="text-xs text-gray-400 mt-0.5">{fmtDate(o.due_date)}</p>
-      </div>
-      <div className="flex gap-1 shrink-0">
-        {o.action_href && (
-          <a href={o.action_href} className="text-xs text-violet-600 hover:underline px-2 py-1">Git →</a>
-        )}
-        {isUserDeclared && (
-          <button onClick={() => onComplete(o.id)}
-            className="text-xs text-green-700 bg-green-50 border border-green-200 px-2 py-1 rounded-lg hover:bg-green-100">
-            ✓ Tamamla
-          </button>
-        )}
-      </div>
-    </div>
-  )
 }
 
 // ── Corporate Actions Tab ──────────────────────────────────────────────────────
@@ -692,7 +495,7 @@ export default function GovernancePage() {
 
       {/* Tab content */}
       <div>
-        {activeTab === 'calendar'    && <CalendarTab />}
+        {activeTab === 'calendar'    && <GovernanceClockTab />}
         {activeTab === 'actions'     && <ActionsTab />}
         {activeTab === 'resolutions' && <ResolutionsTab />}
         {activeTab === 'audit'       && <AuditReadinessTab />}
@@ -705,6 +508,7 @@ export default function GovernancePage() {
             <AuditTrailTab />
           </div>
         )}
+        {activeTab === 'capital' && <StakeholderCapitalTab />}
       </div>
     </div>
   )

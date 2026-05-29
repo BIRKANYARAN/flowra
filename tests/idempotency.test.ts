@@ -640,3 +640,26 @@ describe('computePayloadHash — array vs object disambiguation', () => {
     expect(h1).not.toBe(h2)
   })
 })
+
+describe('computePayloadHash — additional determinism checks', () => {
+  it('hash of number 1 is always same', () => {
+    const h1 = computePayloadHash(1)
+    const h2 = computePayloadHash(1)
+    expect(h1).toBe(h2)
+  })
+
+  it('hash of true is always same', () => {
+    expect(computePayloadHash(true)).toBe(computePayloadHash(true))
+  })
+
+  it('hash of empty object is always same', () => {
+    expect(computePayloadHash({})).toBe(computePayloadHash({}))
+  })
+
+  it('hash of complex object is same across 3 calls', () => {
+    const p = { z: [3, 2, 1], a: { b: true, c: null }, m: 'test' }
+    const hashes = [computePayloadHash(p), computePayloadHash(p), computePayloadHash(p)]
+    expect(hashes[0]).toBe(hashes[1])
+    expect(hashes[1]).toBe(hashes[2])
+  })
+})

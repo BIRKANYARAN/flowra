@@ -13,6 +13,30 @@ export const CORPORATE_ACTION_TYPES = [
 
 export type CorporateActionType = typeof CORPORATE_ACTION_TYPES[number]
 
+export const CORPORATE_ACTION_TYPE_LABELS: Record<CorporateActionType, string> = {
+  CAPITAL_INCREASE:              'Sermaye Artırımı',
+  CAPITAL_CALL:                  'Sermaye Çağrısı',
+  CAPITAL_DECREASE:              'Sermaye Azaltımı',
+  DIVIDEND_DECLARATION:          'Temettü Kararı',
+  DIVIDEND_PAYMENT:              'Temettü Ödemesi',
+  PARTNER_ADMISSION:             'Ortak Kabulü',
+  PARTNER_EXIT:                  'Ortak Çıkışı',
+  EQUITY_RATIO_CHANGE:           'Hisse Oranı Değişikliği',
+  BOARD_APPOINTMENT:             'Yönetici Atanması',
+  BOARD_REMOVAL:                 'Yönetici Görevden Alınması',
+  AUDITOR_APPOINTMENT:           'Denetçi Atanması',
+  ANNUAL_ACCOUNTS_APPROVAL:      'Yıllık Hesapların Onayı',
+  BUDGET_APPROVAL:               'Bütçe Onayı',
+  SIGNIFICANT_ASSET_PURCHASE:    'Önemli Varlık Alımı',
+  SIGNIFICANT_ASSET_DISPOSAL:    'Önemli Varlık Satışı',
+  PARTNER_LOAN_AUTHORIZATION:    'Ortak Borcu Yetkilendirmesi',
+  COMPENSATION_AUTHORIZATION:    'Huzur Hakkı Yetkilendirmesi',
+  PARTNERSHIP_AGREEMENT_AMENDMENT: 'Ortaklık Sözleşmesi Değişikliği',
+  COMPANY_RESTRUCTURE:           'Şirket Yeniden Yapılanması',
+  OTHER:                         'Diğer',
+}
+
+// Keep backward-compatible alias
 export const ACTION_TYPE_LABELS: Record<CorporateActionType, string> = {
   CAPITAL_INCREASE:              'Sermaye Artırımı',
   CAPITAL_CALL:                  'Sermaye Çağrısı',
@@ -140,4 +164,86 @@ export class CorporateActionsService {
     }
     return counts
   }
+
+  /** Returns count and total_amount grouped by action_type */
+  static async getSummaryByType(
+    companyId: string,
+    supabase: SupabaseClient,
+  ): Promise<Array<{ action_type: CorporateActionType; count: number; total_amount: number }>> {
+    const { data, error } = await supabase
+      .from('corporate_actions')
+      .select('action_type, financial_amount')
+      .eq('company_id', companyId)
+    if (error) return []
+    const map = new Map<CorporateActionType, { count: number; total_amount: number }>()
+    for (const row of data ?? []) {
+      const existing = map.get(row.action_type as CorporateActionType) ?? { count: 0, total_amount: 0 }
+      map.set(row.action_type as CorporateActionType, {
+        count:        existing.count + 1,
+        total_amount: existing.total_amount + (Number(row.financial_amount) || 0),
+      })
+    }
+    return Array.from(map.entries()).map(([action_type, stats]) => ({ action_type, ...stats }))
+  }
+
+  /** Sets the resolution_reference on a committed action */
+  static async linkToResolution(
+    id: string,
+    resolutionId: string,
+    companyId: string,
+    supabase: SupabaseClient,
+  ): Promise<CorporateAction | null> {
+    const { data, error } = await supabase
+      .from('corporate_actions')
+      .update({ resolution_reference: resolutionId })
+      .eq('id', id)
+      .eq('company_id', companyId)
+      .select()
+      .single()
+    if (error) return null
+    return data as CorporateAction
+  }
+
+  /** Fetch all actions linked to a specific resolution reference */
+  static async getByResolutionReference(
+    resolutionReference: string,
+    companyId: string,
+    supabase: SupabaseClient,
+  ): Promise<CorporateAction[]> {
+    const { data, error } = await supabase
+      .from('corporate_actions')
+      .select('*')
+      .eq('company_id', companyId)
+      .eq('resolution_reference', resolutionReference)
+      .order('action_date', { ascending: false })
+    if (error) return []
+    return (data ?? []) as CorporateAction[]
+  }
+}
+
+// ── Pure helpers ────────────────────────────────────────────────────────────────
+
+export type FinancialImpactLevel = 'major' | 'significant' | 'moderate' | 'minor'
+
+/**
+ * Classify a financial amount into an impact level.
+ * major        > 500,000
+ * significant  > 100,000
+ * moderate     > 10,000
+ * minor        ≤ 10,000 (including 0 / null)
+ */
+export function classifyFinancialImpact(amount: number | null | undefined): FinancialImpactLevel {
+  const n = Number(amount) || 0
+  if (n > 500_000) return 'major'
+  if (n > 100_000) return 'significant'
+  if (n > 10_000)  return 'moderate'
+  return 'minor'
+}
+
+/**
+ * Return the Turkish label for a corporate action type.
+ * Falls back to the raw type string if not found.
+ */
+export function formatActionType(type: string): string {
+  return CORPORATE_ACTION_TYPE_LABELS[type as CorporateActionType] ?? type
 }

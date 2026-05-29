@@ -610,3 +610,93 @@ describe('computeBackfillStatus — stress tests', () => {
     }
   })
 })
+
+describe('computeBackfillStatus — zero-heavy scenarios', () => {
+  it('all zeros operational, all zeros journaled → complete', () => {
+    const r = computeBackfillStatus(
+      { sales: 0, expenses: 0, purchases: 0 },
+      { sales: 0, expenses: 0, purchases: 0 },
+    )
+    expect(r.backfill_complete).toBe(true)
+    expect(r.total_missing).toBe(0)
+    expect(r.missing).toEqual({ sales: 0, expenses: 0, purchases: 0 })
+  })
+
+  it('one zero category, others have data — only non-zero categories counted', () => {
+    const r = computeBackfillStatus(
+      { sales: 20, expenses: 0, purchases: 10 },
+      { sales: 15, expenses: 0, purchases: 10 },
+    )
+    expect(r.missing.sales).toBe(5)
+    expect(r.missing.expenses).toBe(0)
+    expect(r.missing.purchases).toBe(0)
+    expect(r.total_missing).toBe(5)
+  })
+
+  it('all journaled, nothing operational → complete (over-journaled)', () => {
+    const r = computeBackfillStatus(
+      { sales: 0, expenses: 0, purchases: 0 },
+      { sales: 100, expenses: 50, purchases: 25 },
+    )
+    expect(r.backfill_complete).toBe(true)
+    expect(r.total_missing).toBe(0)
+  })
+})
+
+describe('computeBackfillStatus — structured logging-friendly output', () => {
+  it('result can be JSON-serialized', () => {
+    const r = computeBackfillStatus(
+      { sales: 10, expenses: 5, purchases: 3 },
+      { sales: 8,  expenses: 5, purchases: 3 },
+    )
+    const json = JSON.stringify(r)
+    expect(typeof json).toBe('string')
+    expect(json).toContain('backfill_complete')
+    expect(json).toContain('total_missing')
+    expect(json).toContain('missing')
+  })
+
+  it('JSON round-trip preserves values', () => {
+    const r = computeBackfillStatus(
+      { sales: 30, expenses: 20, purchases: 10 },
+      { sales: 25, expenses: 20, purchases: 8  },
+    )
+    const parsed = JSON.parse(JSON.stringify(r))
+    expect(parsed.backfill_complete).toBe(r.backfill_complete)
+    expect(parsed.total_missing).toBe(r.total_missing)
+    expect(parsed.missing.sales).toBe(r.missing.sales)
+    expect(parsed.missing.expenses).toBe(r.missing.expenses)
+    expect(parsed.missing.purchases).toBe(r.missing.purchases)
+  })
+})
+
+describe('computeBackfillStatus — edge: single digit counts', () => {
+  it('1 operational, 1 journaled → complete', () => {
+    const r = computeBackfillStatus(
+      { sales: 1, expenses: 1, purchases: 1 },
+      { sales: 1, expenses: 1, purchases: 1 },
+    )
+    expect(r.backfill_complete).toBe(true)
+    expect(r.total_missing).toBe(0)
+  })
+
+  it('9 operational, 8 journaled → 3 total missing (one per category)', () => {
+    const r = computeBackfillStatus(
+      { sales: 9, expenses: 9, purchases: 9 },
+      { sales: 8, expenses: 8, purchases: 8 },
+    )
+    expect(r.missing.sales).toBe(1)
+    expect(r.missing.expenses).toBe(1)
+    expect(r.missing.purchases).toBe(1)
+    expect(r.total_missing).toBe(3)
+  })
+
+  it('5 operational, 0 journaled → 15 total missing', () => {
+    const r = computeBackfillStatus(
+      { sales: 5, expenses: 5, purchases: 5 },
+      { sales: 0, expenses: 0, purchases: 0 },
+    )
+    expect(r.total_missing).toBe(15)
+    expect(r.backfill_complete).toBe(false)
+  })
+})

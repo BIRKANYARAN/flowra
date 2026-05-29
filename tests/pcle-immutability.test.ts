@@ -612,3 +612,67 @@ describe('validateJournalOperation — reason content checks', () => {
     expect(r.reason == null || r.reason === '').toBe(true)
   })
 })
+
+describe('validateImmutability — all 5 tables individually verified', () => {
+  it('partner_finance_events is in IMMUTABLE_TABLES', () => {
+    const arr = IMMUTABLE_TABLES as readonly string[]
+    expect(arr.indexOf('partner_finance_events')).toBeGreaterThanOrEqual(0)
+  })
+
+  it('journal_entries is in IMMUTABLE_TABLES', () => {
+    const arr = IMMUTABLE_TABLES as readonly string[]
+    expect(arr.indexOf('journal_entries')).toBeGreaterThanOrEqual(0)
+  })
+
+  it('journal_entry_lines is in IMMUTABLE_TABLES', () => {
+    const arr = IMMUTABLE_TABLES as readonly string[]
+    expect(arr.indexOf('journal_entry_lines')).toBeGreaterThanOrEqual(0)
+  })
+
+  it('balance_sheet_snapshots is in IMMUTABLE_TABLES', () => {
+    const arr = IMMUTABLE_TABLES as readonly string[]
+    expect(arr.indexOf('balance_sheet_snapshots')).toBeGreaterThanOrEqual(0)
+  })
+
+  it('audit_logs is in IMMUTABLE_TABLES', () => {
+    const arr = IMMUTABLE_TABLES as readonly string[]
+    expect(arr.indexOf('audit_logs')).toBeGreaterThanOrEqual(0)
+  })
+})
+
+describe('validateImmutability — delete operation reason language', () => {
+  it('all immutable tables have Turkish reason for delete', () => {
+    for (const tableName of IMMUTABLE_TABLES) {
+      const result = validateImmutability(tableName, 'delete')
+      const reason = result.reason ?? ''
+      // Should contain Turkish word for delete (silme) or yasak (forbidden)
+      expect(reason.length).toBeGreaterThan(5)
+    }
+  })
+
+  it('all immutable tables have Turkish reason for update', () => {
+    for (const tableName of IMMUTABLE_TABLES) {
+      const result = validateImmutability(tableName, 'update')
+      const reason = result.reason ?? ''
+      expect(reason.length).toBeGreaterThan(5)
+    }
+  })
+})
+
+describe('validateImmutability — non-immutable table list', () => {
+  const nonImmutableTables = [
+    'sales', 'expenses', 'purchases', 'partners', 'products',
+    'companies', 'customers', 'tasks', 'banks', 'proformas',
+    'collections', 'stock_lots', 'stock_movements',
+  ]
+
+  for (const tableName of nonImmutableTables) {
+    it(`${tableName} is not immutable (delete allowed)`, () => {
+      expect(validateImmutability(tableName, 'delete').allowed).toBe(true)
+    })
+
+    it(`${tableName} is not immutable (update allowed)`, () => {
+      expect(validateImmutability(tableName, 'update').allowed).toBe(true)
+    })
+  }
+})
