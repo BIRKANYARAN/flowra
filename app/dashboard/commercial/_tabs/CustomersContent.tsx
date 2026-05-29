@@ -21,6 +21,7 @@ import {
   type ConcentrationRiskReport,
 } from '@/lib/services/commercial/concentration-risk.service'
 import CustomerIntelligenceTable from './_intelligence/CustomerIntelligenceTable'
+import RfmSegmentationClient from './_rfm/RfmSegmentationClient'
 import CustomerLtvClient from './_ltv/CustomerLtvClient'
 import CustomerConcentrationClient from './_concentration/CustomerConcentrationClient'
 import SegmentProfitabilityClient from './_segments/SegmentProfitabilityClient'
@@ -125,6 +126,9 @@ export async function CustomersContent({ companyId }: Props) {
 
       {/* ── Kohort Tutma & Churn Analizi ─────────────────────────────────── */}
       <CohortRetentionClient companyId={companyId} />
+
+      {/* ── Müşteri RFM Segmentasyonu ─────────────────────────────────────── */}
+      <RfmSegmentationClient companyId={companyId} />
 
       {/* ── Müşteri Yaşam Boyu Değeri (CLV / LTV) ───────────────────────── */}
       <CustomerLtvClient />

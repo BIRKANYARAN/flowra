@@ -13,6 +13,7 @@
 //   7. Finansal raporlar linkleri
 
 import Link                      from 'next/link'
+import { PeriodCloseReadinessClient } from '@/app/dashboard/finance/_tabs/_period-close-readiness/PeriodCloseReadinessClient'
 import { PeriodCloseChecklistClient } from '@/app/dashboard/finance/_tabs/_close/PeriodCloseChecklistClient'
 import IncomeStatementClient     from '@/app/dashboard/finance/_tabs/_income/IncomeStatementClient'
 import BankReconciliationClient  from '@/app/dashboard/finance/_tabs/_reconciliation/BankReconciliationClient'
@@ -451,6 +452,9 @@ export async function CFOTab({ userId, companyId }: Props) {
 
   return (
     <div className="space-y-4">
+
+      {/* ── Period Close Readiness Scorecard — single-view CFO readiness check ── */}
+      <PeriodCloseReadinessClient companyId={companyId} />
 
       {/* ── Period Close Enforcement Checklist — most important CFO workflow ───── */}
       <PeriodCloseChecklistClient companyId={companyId} />
