@@ -16,6 +16,7 @@ import { NarrativeFooter }          from '@/components/ds'
 import { WorkingCapitalSection }    from '@/components/dashboard/WorkingCapitalSection'
 import { RetainedEarningsClient }   from './_retained/RetainedEarningsClient'
 import { WorkingCapitalOptimizerClient } from './_wc-optimizer/WorkingCapitalOptimizerClient'
+import { CccScorecardClient }           from './_ccc/CccScorecardClient'
 
 // ── Formatters ────────────────────────────────────────────────────────────────
 
@@ -376,6 +377,9 @@ export async function BalanceTab({ userId, companyId, glMode = 'shadow' }: Props
 
       {/* Working Capital Analysis — CCC, liquidity ratios, 12-month trend */}
       <WorkingCapitalSection />
+
+      {/* CCC Efficiency Scorecard — composite score, benchmarks, 6-month trend */}
+      <CccScorecardClient companyId={companyId} />
 
       {/* Working Capital Optimization — actionable recommendations with cash impact */}
       <WorkingCapitalOptimizerClient companyId={companyId} />
