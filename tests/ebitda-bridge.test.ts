@@ -582,6 +582,286 @@ describe('generateBridgeNarrative', () => {
   })
 })
 
+// ── Additional computeEbitda tests ────────────────────────────────────────────
+
+describe('computeEbitda — additional', () => {
+  it('large positive GP and zero opex → EBITDA = GP', () => {
+    expect(computeEbitda(1_000_000, 0)).toBe(1_000_000)
+  })
+
+  it('both negative inputs → subtraction still works', () => {
+    // -20_000 - (-5_000) = -15_000
+    expect(computeEbitda(-20_000, -5_000)).toBe(-15_000)
+  })
+
+  it('floating point values handled correctly', () => {
+    expect(computeEbitda(123_456.78, 45_678.9)).toBeCloseTo(77_777.88)
+  })
+})
+
+// ── Additional computeEbitdaMargin tests ──────────────────────────────────────
+
+describe('computeEbitdaMargin — additional', () => {
+  it('small revenue large ebitda → margin > 100%', () => {
+    // EBITDA > revenue is unusual but math should work
+    expect(computeEbitdaMargin(120_000, 100_000)).toBeCloseTo(120)
+  })
+
+  it('negative ebitda and positive revenue → negative margin fraction', () => {
+    expect(computeEbitdaMargin(-5_000, 200_000)).toBeCloseTo(-2.5)
+  })
+
+  it('very small revenue not zero → returns number not null', () => {
+    const result = computeEbitdaMargin(1, 1)
+    expect(result).not.toBeNull()
+    expect(result).toBeCloseTo(100)
+  })
+})
+
+// ── Additional computeVolumeEffect tests ──────────────────────────────────────
+
+describe('computeVolumeEffect — additional', () => {
+  it('very high prior margin → proportionally large volume effect', () => {
+    // 50% EBITDA margin on revenue +50k
+    expect(computeVolumeEffect(100_000, 150_000, 50)).toBeCloseTo(25_000)
+  })
+
+  it('prior margin at boundary 0 → always zero effect', () => {
+    expect(computeVolumeEffect(200_000, 350_000, 0)).toBe(0)
+  })
+
+  it('large revenue decline with prior margin 30%', () => {
+    // (50k - 200k) × 0.30 = -45_000
+    expect(computeVolumeEffect(200_000, 50_000, 30)).toBeCloseTo(-45_000)
+  })
+})
+
+// ── Additional computePriceMixEffect tests ────────────────────────────────────
+
+describe('computePriceMixEffect — additional', () => {
+  it('large revenue base amplifies small margin shift', () => {
+    // 1M revenue × 0.5% margin shift
+    expect(computePriceMixEffect(1_000_000, 30, 30.5)).toBeCloseTo(5_000)
+  })
+
+  it('zero current revenue → zero effect even with margin diff', () => {
+    expect(computePriceMixEffect(0, 25, 30)).toBe(0)
+  })
+
+  it('prior null, current valid → null', () => {
+    expect(computePriceMixEffect(100_000, null, 25)).toBeNull()
+  })
+})
+
+// ── Additional computeCostEffect tests ────────────────────────────────────────
+
+describe('computeCostEffect — additional', () => {
+  it('opex grew faster than revenue → negative effect', () => {
+    // priorRatio = 0.20; current expected = 200k×0.20 = 40k; actual = 60k → -(60k-40k) = -20k
+    expect(computeCostEffect(100_000, 20_000, 200_000, 60_000)).toBeCloseTo(-20_000)
+  })
+
+  it('very high prior opex ratio reduces expected current cost baseline', () => {
+    // priorRatio = 0.80; expected = 150k×0.80 = 120k; actual = 100k → -(100k-120k) = 20k
+    expect(computeCostEffect(100_000, 80_000, 150_000, 100_000)).toBeCloseTo(20_000)
+  })
+
+  it('current revenue zero with prior revenue non-zero → valid calculation', () => {
+    // priorRatio = 0.30; expected = 0×0.30 = 0; actual = 5k → -(5k-0) = -5k
+    expect(computeCostEffect(100_000, 30_000, 0, 5_000)).toBeCloseTo(-5_000)
+  })
+})
+
+// ── Additional computeResidualEffect tests ────────────────────────────────────
+
+describe('computeResidualEffect — additional', () => {
+  it('large positive total, negative effects → large positive residual', () => {
+    // total=50k; vol=-5k, price=-10k, cost=-15k → residual = 50k - (-5k-10k-15k) = 80k
+    expect(computeResidualEffect(0, 50_000, -5_000, -10_000, -15_000)).toBeCloseTo(80_000)
+  })
+
+  it('residual sign matches gap direction', () => {
+    // total change = 10k; vol+price+cost = 12k → residual = -2k
+    expect(computeResidualEffect(10_000, 20_000, 6_000, 4_000, 2_000)).toBeCloseTo(-2_000)
+  })
+
+  it('turnaround scenario: prior negative, effects all present', () => {
+    const prior = -5_000
+    const current = 15_000
+    const vol = 8_000, price = 5_000, cost = 7_000
+    const residual = computeResidualEffect(prior, current, vol, price, cost)
+    expect(residual).toBeCloseTo(20_000 - (vol + price + cost))
+  })
+})
+
+// ── Additional computeEbitdaChange tests ──────────────────────────────────────
+
+describe('computeEbitdaChange — additional', () => {
+  it('both negative, current less negative → positive change', () => {
+    expect(computeEbitdaChange(-30_000, -10_000)).toBe(20_000)
+  })
+
+  it('both negative, current more negative → negative change', () => {
+    expect(computeEbitdaChange(-10_000, -30_000)).toBe(-20_000)
+  })
+
+  it('large absolute values', () => {
+    expect(computeEbitdaChange(1_000_000, 2_500_000)).toBe(1_500_000)
+  })
+})
+
+// ── Additional validateBridgeReconciliation tests ─────────────────────────────
+
+describe('validateBridgeReconciliation — additional', () => {
+  it('all effects exactly sum → gap = 0', () => {
+    // 5k + 3k + 2k + 0k = 10k total
+    expect(validateBridgeReconciliation(10_000, 5_000, 3_000, 2_000, 0)).toBeCloseTo(0)
+  })
+
+  it('residual negative compensates positive effects → gap = 0', () => {
+    // 10k total; vol=15k, price=5k, cost=2k, residual=-12k → sum=10k, gap=0
+    expect(validateBridgeReconciliation(10_000, 15_000, 5_000, 2_000, -12_000)).toBeCloseTo(0)
+  })
+
+  it('all effects zero and total zero → gap = 0', () => {
+    expect(validateBridgeReconciliation(0, 0, 0, 0, 0)).toBe(0)
+  })
+})
+
+// ── Additional classifyEbitdaTrend tests ──────────────────────────────────────
+
+describe('classifyEbitdaTrend — additional', () => {
+  it('turnaround: both negative is NOT turnaround', () => {
+    // both negative → neither turnaround condition met → use % change
+    expect(classifyEbitdaTrend(-20_000, -10_000)).toBe('strong_growth') // +100% improvement
+  })
+
+  it('prior negative, current = 0 → insufficient_data on % calc but current not > 0 → stable case', () => {
+    // prior < 0, current = 0 → not turnaround (current not > 0), not deterioration (current not < 0)
+    // prior !== 0 so uses % change: (0 - (-10k)) / 10k * 100 = +100% → strong_growth
+    expect(classifyEbitdaTrend(-10_000, 0)).toBe('strong_growth')
+  })
+
+  it('boundary: exactly +25% is strong_growth', () => {
+    expect(classifyEbitdaTrend(80_000, 100_000)).toBe('strong_growth')
+  })
+
+  it('just below +25% (24.9%) is growth', () => {
+    // 100_000 → 124_900 = +24.9%
+    expect(classifyEbitdaTrend(100_000, 124_900)).toBe('growth')
+  })
+
+  it('exactly -10% is decline (not stable, uses > -10% for stable)', () => {
+    // 100k → 90k = exactly -10% → changePct = -10 → not > -10 → not stable → decline
+    expect(classifyEbitdaTrend(100_000, 90_000)).toBe('decline')
+  })
+
+  it('exactly -25% is decline boundary (>= -25)', () => {
+    expect(classifyEbitdaTrend(100_000, 75_000)).toBe('decline')
+  })
+
+  it('negative prior, negative current, improving → strong_growth', () => {
+    // -100k → -50k = +100% improvement
+    expect(classifyEbitdaTrend(-100_000, -50_000)).toBe('strong_growth')
+  })
+})
+
+// ── Additional computeBridgeContributions tests ────────────────────────────────
+
+describe('computeBridgeContributions — additional', () => {
+  it('all effects null → contributions object with all null values (not null itself)', () => {
+    const result = computeBridgeContributions(10_000, null, null, null)
+    expect(result).not.toBeNull()
+    expect(result!.volume_contribution_pct).toBeNull()
+    expect(result!.price_mix_contribution_pct).toBeNull()
+    expect(result!.cost_contribution_pct).toBeNull()
+  })
+
+  it('single dominant effect → 100% contribution', () => {
+    const result = computeBridgeContributions(50_000, 50_000, 0, 0)
+    expect(result!.volume_contribution_pct).toBeCloseTo(100)
+  })
+
+  it('negative total change with positive volume → negative contribution %', () => {
+    const result = computeBridgeContributions(-10_000, 5_000, null, null)
+    expect(result!.volume_contribution_pct).toBeCloseTo(-50)
+  })
+})
+
+// ── Additional identifyPrimaryDriver tests ────────────────────────────────────
+
+describe('identifyPrimaryDriver — additional', () => {
+  it('cost null with volume and price tied → mixed', () => {
+    expect(identifyPrimaryDriver(10_000, 10_000, null)).toBe('mixed')
+  })
+
+  it('small gap between two leaders within 5% tolerance → mixed', () => {
+    // 100 and 95 → 95 >= 100 × 0.95 → tied → mixed
+    expect(identifyPrimaryDriver(100, 95, 10)).toBe('mixed')
+  })
+
+  it('volume clearly dominates over tied cost and price_mix', () => {
+    // volume=1000, price=50, cost=50 → vol clearly >0.95×1000=950 alone → volume
+    expect(identifyPrimaryDriver(1_000, 50, 50)).toBe('volume')
+  })
+})
+
+// ── Additional classifyEbitdaMarginHealth tests ────────────────────────────────
+
+describe('classifyEbitdaMarginHealth — additional', () => {
+  it('boundary just above 25% → excellent', () => {
+    expect(classifyEbitdaMarginHealth(25.1)).toBe('excellent')
+  })
+
+  it('boundary just below 15% → moderate', () => {
+    expect(classifyEbitdaMarginHealth(14.9)).toBe('moderate')
+  })
+
+  it('boundary just below 8% → low', () => {
+    expect(classifyEbitdaMarginHealth(7.9)).toBe('low')
+  })
+
+  it('boundary just below 3% → negative', () => {
+    expect(classifyEbitdaMarginHealth(2.9)).toBe('negative')
+  })
+
+  it('very high margin → excellent', () => {
+    expect(classifyEbitdaMarginHealth(80)).toBe('excellent')
+  })
+})
+
+// ── Additional generateBridgeNarrative tests ──────────────────────────────────
+
+describe('generateBridgeNarrative — additional', () => {
+  it('deterioration with margin info omitted from message focus', () => {
+    const result = generateBridgeNarrative('deterioration', 'volume', -25_000, -8)
+    // Should focus on urgency
+    expect(result).toContain('negatif')
+  })
+
+  it('turnaround without margin → no margin in narrative', () => {
+    const result = generateBridgeNarrative('turnaround', 'cost', 20_000, null)
+    expect(result).not.toContain('null')
+    expect(result).toContain('negatif')
+  })
+
+  it('severe_decline narrative length is substantial', () => {
+    const result = generateBridgeNarrative('severe_decline', 'volume', -100_000, 1)
+    expect(result.length).toBeGreaterThan(30)
+  })
+
+  it('positive change amount formatted in narrative', () => {
+    const result = generateBridgeNarrative('growth', 'cost', 25_000, 18)
+    expect(typeof result).toBe('string')
+    expect(result.length).toBeGreaterThan(10)
+  })
+
+  it('insufficient_data driver with valid trend returns non-empty string', () => {
+    const result = generateBridgeNarrative('stable', 'insufficient_data', 500, 15)
+    expect(result.length).toBeGreaterThan(0)
+  })
+})
+
 // ── Integration: bridge reconciliation consistency ─────────────────────────────
 
 describe('bridge reconciliation integration', () => {
