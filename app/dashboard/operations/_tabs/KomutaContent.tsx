@@ -10,6 +10,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase-server'
 import { fmtTRY, fmtDate } from '@/lib/format'
 import { OpsHeatmapClient } from './_heatmap/OpsHeatmapClient'
+import { OpsCommandClient } from './_command/OpsCommandClient'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -431,6 +432,17 @@ export async function KomutaContent({ companyId }: Props) {
             <span className="text-xs font-semibold text-[#334155]">{label}</span>
           </Link>
         ))}
+      </div>
+
+      {/* OPS Command Center — Daily Metrics Aggregator */}
+      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+        <div className="px-4 pt-4 pb-2 border-b border-[#e2e8f0]">
+          <h2 className="text-xs font-black uppercase tracking-widest text-[#64748b]">Günlük Operasyon Komutası</h2>
+          <p className="text-[10px] text-[#94a3b8] mt-0.5">Satışlar · Tahsilat · Giderler · Stok</p>
+        </div>
+        <div className="p-4">
+          <OpsCommandClient companyId={companyId} />
+        </div>
       </div>
 
       {/* Operational KPI Heatmap */}

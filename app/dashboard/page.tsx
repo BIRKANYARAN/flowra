@@ -42,7 +42,8 @@ import { PeriodSummaryWidget }   from './_shared/PeriodSummaryWidget'
 import { CeoIntelligencePanel }  from './_shared/CeoIntelligencePanel'
 import { InsightPanel }          from '@/components/dashboard/InsightPanel'
 import { KpiTargetPanel }        from './_shared/KpiTargetPanel'
-import { KpiScorecardPanel }     from './_components/KpiScorecardPanel'
+import { KpiScorecardPanel }         from './_components/KpiScorecardPanel'
+import { ExecutiveSummaryPanel }     from './_components/ExecutiveSummaryPanel'
 import { AlertFeedPanel }        from './_shared/AlertFeedPanel'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -547,6 +548,9 @@ export default async function DashboardPage() {
 
       {/* ── PERIOD SUMMARY — CFO-to-CEO financial brief ─────────────────── */}
       <PeriodSummaryWidget from={from} to={to} />
+
+      {/* ── EXECUTIVE SUMMARY — unified one-stop CEO report ────────────── */}
+      <ExecutiveSummaryPanel />
 
       {/* ── CEO INTELLIGENCE PANEL — multi-signal health brief ───────────── */}
       <CeoIntelligencePanel />
