@@ -356,3 +356,251 @@ describe('computeVendorPaymentHealthScore', () => {
     expect(highTrust).toBeGreaterThan(highOnTime)
   })
 })
+
+// ── computeEarlyPaymentCost — boundary & additional coverage ──────────────────
+
+describe('computeEarlyPaymentCost — boundary and additional cases', () => {
+  it('returns null when discountPct is exactly 0', () => {
+    expect(computeEarlyPaymentCost(0, 30, 10)).toBeNull()
+  })
+
+  it('returns null when standardDays === discountDays (zero float period)', () => {
+    expect(computeEarlyPaymentCost(1, 15, 15)).toBeNull()
+  })
+
+  it('returns null when standardDays is 1 less than discountDays', () => {
+    expect(computeEarlyPaymentCost(2, 9, 10)).toBeNull()
+  })
+
+  it('handles very small float period (1 day) — produces large cost', () => {
+    // (1/99) * (365/1) * 100 ≈ 368.69
+    const result = computeEarlyPaymentCost(1, 11, 10)!
+    expect(result).toBeGreaterThan(300)
+  })
+
+  it('handles very large discount percentage (50%)', () => {
+    // (50/50) * (365/20) * 100 = 1 * 18.25 * 100 = 1825
+    const result = computeEarlyPaymentCost(50, 30, 10)!
+    expect(result).toBeCloseTo(1825, 0)
+  })
+
+  it('3/10 net 45 — longer terms reduce annualised cost', () => {
+    const cost30 = computeEarlyPaymentCost(3, 30, 10)!
+    const cost45 = computeEarlyPaymentCost(3, 45, 10)!
+    expect(cost45).toBeLessThan(cost30)
+  })
+
+  it('result is proportional to 365/floatDays', () => {
+    // float=10 vs float=20: cost should be exactly 2x
+    const cost10 = computeEarlyPaymentCost(2, 20, 10)!
+    const cost20 = computeEarlyPaymentCost(2, 40, 20)!
+    expect(cost10).toBeCloseTo(cost20 * 2, 1)
+  })
+
+  it('returns a finite number for valid inputs', () => {
+    const result = computeEarlyPaymentCost(1, 60, 10)
+    expect(Number.isFinite(result!)).toBe(true)
+  })
+})
+
+// ── classifyEarlyPaymentDecision — additional cases ───────────────────────────
+
+describe('classifyEarlyPaymentDecision — additional cases', () => {
+  it('boundary at equality → skip_discount', () => {
+    expect(classifyEarlyPaymentDecision(20, 20)).toBe('skip_discount')
+  })
+
+  it('1 basis point above borrowingRate → take_discount', () => {
+    expect(classifyEarlyPaymentDecision(20.01, 20)).toBe('take_discount')
+  })
+
+  it('very high borrowing rate still checks correctly', () => {
+    // 500% cost > 400% borrowing → take_discount
+    expect(classifyEarlyPaymentDecision(500, 400)).toBe('take_discount')
+  })
+
+  it('zero earlyPaymentCost with positive borrowingRate → skip_discount', () => {
+    // cost=0 is not > 25 → skip
+    // Note: cost=0 is only possible if discountPct=0 → normally null, but testing direct call
+    expect(classifyEarlyPaymentDecision(0, 25)).toBe('skip_discount')
+  })
+
+  it('2/10 net 30 at exactly 37.24% borrowing → skip_discount (at boundary)', () => {
+    const cost = computeEarlyPaymentCost(2, 30, 10)! // ~37.24
+    // Borrowing rate just above cost → skip
+    expect(classifyEarlyPaymentDecision(cost, cost + 1)).toBe('skip_discount')
+  })
+})
+
+// ── computeActualDpo — additional cases ──────────────────────────────────────
+
+describe('computeActualDpo — additional cases', () => {
+  it('returns 0 avgPaymentDays when provided (valid with purchases > 0)', () => {
+    expect(computeActualDpo(1, 1000, 0)).toBe(0)
+  })
+
+  it('returns null when totalPurchases is exactly 0', () => {
+    expect(computeActualDpo(50, 0, 30)).toBeNull()
+  })
+
+  it('returns large avgPaymentDays for very slow payers', () => {
+    expect(computeActualDpo(100, 5000, 180)).toBe(180)
+  })
+
+  it('totalPaid value does not affect return (only totalPurchases matters)', () => {
+    expect(computeActualDpo(999999, 1, 45)).toBe(45)
+    expect(computeActualDpo(0, 1, 45)).toBe(45)
+  })
+})
+
+// ── computeDpoOpportunity — additional cases ──────────────────────────────────
+
+describe('computeDpoOpportunity — additional cases', () => {
+  it('returns exact zero for same current and target DPO regardless of purchases', () => {
+    expect(computeDpoOpportunity(60, 60, 1_000_000)).toBe(0)
+  })
+
+  it('returns correct negative for DPO compression', () => {
+    // currentDpo=60, targetDpo=45, annual=3_650_000
+    // = 3_650_000/365 * (45-60) = 10_000 * -15 = -150_000
+    expect(computeDpoOpportunity(60, 45, 3_650_000)).toBeCloseTo(-150_000, 0)
+  })
+
+  it('large annual purchase amplifies opportunity significantly', () => {
+    const bigCo  = computeDpoOpportunity(30, 45, 10_000_000)
+    const smCo   = computeDpoOpportunity(30, 45, 100_000)
+    expect(bigCo).toBeGreaterThan(smCo)
+  })
+
+  it('1-day DPO extension on 365,000 TRY annual = 1,000 TRY freed', () => {
+    expect(computeDpoOpportunity(30, 31, 365_000)).toBeCloseTo(1_000, 1)
+  })
+
+  it('negative annual purchases produce negative result for extension (edge case)', () => {
+    // Edge: negative purchases → result is negative even with extension
+    expect(computeDpoOpportunity(30, 45, -365_000)).toBeLessThan(0)
+  })
+})
+
+// ── classifyPaymentBehavior — boundary table ──────────────────────────────────
+
+describe('classifyPaymentBehavior — detailed boundary table', () => {
+  const cases: [number, string][] = [
+    [-100, 'early_payer'],
+    [-4,   'early_payer'],
+    [-3.1, 'early_payer'],
+    [-3,   'on_time'],
+    [-2,   'on_time'],
+    [0,    'on_time'],
+    [3,    'on_time'],
+    [3.9,  'on_time'],     // 3.9 ≤ 3? No — classifyPaymentBehavior checks integer-ish
+    [4,    'slightly_late'],
+    [7,    'slightly_late'],
+    [14,   'slightly_late'],
+    [15,   'late'],
+    [22,   'late'],
+    [30,   'late'],
+    [31,   'very_late'],
+    [100,  'very_late'],
+  ]
+
+  for (const [input, expected] of cases) {
+    // 3.9: still <= 3 check is non-integer, but 3.9 > 3 → slightly_late
+    // Let's handle the 3.9 case specially
+    if (input === 3.9) {
+      it(`classifyPaymentBehavior(${input}) → slightly_late (3.9 > 3)`, () => {
+        expect(classifyPaymentBehavior(input)).toBe('slightly_late')
+      })
+    } else {
+      it(`classifyPaymentBehavior(${input}) → ${expected}`, () => {
+        expect(classifyPaymentBehavior(input)).toBe(expected)
+      })
+    }
+  }
+})
+
+// ── computeSupplierTrustScore — detailed cases ────────────────────────────────
+
+describe('computeSupplierTrustScore — detailed cases', () => {
+  it('score with avgDaysLate=15 and 100% on-time rate (edge: late but all on-time)', () => {
+    // latePenaltyScore = max(0, (30-15)/30*100) = 50
+    // base = 100*0.7 + 50*0.3 = 70 + 15 = 85
+    expect(computeSupplierTrustScore(15, 100, 10)).toBeCloseTo(85, 1)
+  })
+
+  it('score with avgDaysLate=0 and 0% on-time rate (no late, never on time)', () => {
+    // latePenaltyScore = max(0, (30-0)/30*100) = 100
+    // base = 0*0.7 + 100*0.3 = 30
+    expect(computeSupplierTrustScore(0, 0, 10)).toBeCloseTo(30, 1)
+  })
+
+  it('exactly 3 transactions does NOT apply 0.5 multiplier', () => {
+    // totalTransactions=3: base * 1.0 (not < 3)
+    const score3  = computeSupplierTrustScore(0, 100, 3)
+    const score2  = computeSupplierTrustScore(0, 100, 2)
+    expect(score3).toBeGreaterThan(score2)
+  })
+
+  it('exactly 2 transactions applies 0.5 multiplier', () => {
+    const score3 = computeSupplierTrustScore(0, 100, 3)
+    const score2 = computeSupplierTrustScore(0, 100, 2)
+    expect(score2).toBeCloseTo(score3 * 0.5, 1)
+  })
+
+  it('avgDaysLate=30 gives 0 latePenaltyScore', () => {
+    // max(0, (30-30)/30*100) = max(0,0) = 0
+    // base = 50*0.7 + 0*0.3 = 35
+    expect(computeSupplierTrustScore(30, 50, 10)).toBeCloseTo(35, 1)
+  })
+
+  it('avgDaysLate between 0 and 30 is linear', () => {
+    const s0  = computeSupplierTrustScore(0,  100, 10)
+    const s15 = computeSupplierTrustScore(15, 100, 10)
+    const s30 = computeSupplierTrustScore(30, 100, 10)
+    expect(s0).toBeGreaterThan(s15)
+    expect(s15).toBeGreaterThan(s30)
+  })
+})
+
+// ── computeOptimalPaymentTiming — additional cases ────────────────────────────
+
+describe('computeOptimalPaymentTiming — additional cases', () => {
+  it('discountDays=0 means discount due same day as invoice', () => {
+    const result = computeOptimalPaymentTiming('2025-06-01', 30, 0, 2, 50)
+    expect(result.discount_due_date).toBe('2025-06-01')
+  })
+
+  it('high borrowing rate of 100% still takes discount if cost > 100', () => {
+    // 50/50 * 365/1 * 100 = 36500% → take_discount
+    const result = computeOptimalPaymentTiming('2025-01-01', 11, 10, 50, 100)
+    expect(result.decision).toBe('take_discount')
+  })
+
+  it('savings_if_discount is always null (no invoice amount param)', () => {
+    const r1 = computeOptimalPaymentTiming('2025-01-01', 30, 10, 2, 10)
+    const r2 = computeOptimalPaymentTiming('2025-01-01', 30)
+    expect(r1.savings_if_discount).toBeNull()
+    expect(r2.savings_if_discount).toBeNull()
+  })
+
+  it('February 28 + 30 days crosses month correctly', () => {
+    const result = computeOptimalPaymentTiming('2025-02-28', 30)
+    expect(result.standard_due_date).toBe('2025-03-30')
+  })
+
+  it('only discountDays provided without discountPct → insufficient_data', () => {
+    // No discountPct → epCost = null → insufficient_data
+    const result = computeOptimalPaymentTiming('2025-01-01', 30, 10, undefined, 25)
+    expect(result.decision).toBe('insufficient_data')
+  })
+
+  it('discount_due_date is null when discountDays is not provided', () => {
+    const result = computeOptimalPaymentTiming('2025-01-01', 30)
+    expect(result.discount_due_date).toBeNull()
+  })
+
+  it('recommended_pay_date equals standard_due_date for insufficient_data', () => {
+    const result = computeOptimalPaymentTiming('2025-06-15', 45)
+    expect(result.recommended_pay_date).toBe(result.standard_due_date)
+  })
+})

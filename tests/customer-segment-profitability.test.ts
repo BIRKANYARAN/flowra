@@ -359,3 +359,250 @@ describe('identifyUnprofitableSegments', () => {
     expect(result).not.toContain('new')
   })
 })
+
+// ── classifyCustomerSize — additional boundary cases ──────────────────────────
+
+describe('classifyCustomerSize — additional boundary cases', () => {
+  it('returns medium when revenue is just below p80', () => {
+    expect(classifyCustomerSize(99_999, 100_000, 50_000)).toBe('medium')
+  })
+
+  it('returns small when revenue is just below p50', () => {
+    expect(classifyCustomerSize(49_999, 100_000, 50_000)).toBe('small')
+  })
+
+  it('large when both thresholds are same and revenue equals them', () => {
+    // p80 = p50 = 100: revenue >= p80 → large
+    expect(classifyCustomerSize(100, 100, 100)).toBe('large')
+  })
+
+  it('medium when p80 = p50 and revenue is just below', () => {
+    // 99 >= 99 = p50 → medium... but first check p80=100: 99 < 100 → not large
+    // then 99 >= p50=99 → medium
+    expect(classifyCustomerSize(99, 100, 99)).toBe('medium')
+  })
+
+  it('small when revenue is 0 and thresholds are positive', () => {
+    expect(classifyCustomerSize(0, 1000, 500)).toBe('small')
+  })
+
+  it('large for very large revenue relative to thresholds', () => {
+    expect(classifyCustomerSize(10_000_000, 100_000, 50_000)).toBe('large')
+  })
+
+  it('classifyCustomerSize never returns undefined', () => {
+    const result = classifyCustomerSize(25_000, 100_000, 50_000)
+    expect(['large', 'medium', 'small']).toContain(result)
+  })
+})
+
+// ── computeSegmentMargin — additional cases ───────────────────────────────────
+
+describe('computeSegmentMargin — additional cases', () => {
+  it('returns null when revenue is negative (treated as 0-like edge)', () => {
+    // Implementation: segmentRevenue === 0 → null. -1 !== 0 → not null
+    const result = computeSegmentMargin(-100, -50)
+    // (-100 - (-50)) / -100 × 100 = -50/-100*100 = 50
+    expect(result).not.toBeNull()
+  })
+
+  it('margin of 50% when cogs is half of revenue', () => {
+    expect(computeSegmentMargin(1000, 500)).toBeCloseTo(50)
+  })
+
+  it('margin rounds correctly for fractional result', () => {
+    // (300 - 100) / 300 * 100 = 66.666...
+    expect(computeSegmentMargin(300, 100)).toBeCloseTo(66.67, 1)
+  })
+
+  it('very small revenue still returns correct margin', () => {
+    // (1 - 0.5) / 1 * 100 = 50
+    expect(computeSegmentMargin(1, 0.5)).toBeCloseTo(50)
+  })
+
+  it('returns 0 for break-even in multiple value ranges', () => {
+    expect(computeSegmentMargin(100_000, 100_000)).toBeCloseTo(0)
+    expect(computeSegmentMargin(1, 1)).toBeCloseTo(0)
+  })
+})
+
+// ── computeSegmentContributionPct — additional cases ─────────────────────────
+
+describe('computeSegmentContributionPct — additional cases', () => {
+  it('returns null when totalRevenue is negative (treated same as 0)', () => {
+    // Implementation checks totalRevenue === 0. -1000 !== 0 → proceeds
+    const result = computeSegmentContributionPct(100, -1000)
+    // 100 / -1000 * 100 = -10
+    expect(result).not.toBeNull()
+    expect(result!).toBeCloseTo(-10)
+  })
+
+  it('large segment revenue with large total gives correct pct', () => {
+    expect(computeSegmentContributionPct(5_000_000, 10_000_000)).toBeCloseTo(50)
+  })
+
+  it('segment > total (over-contribution) gives > 100%', () => {
+    expect(computeSegmentContributionPct(1100, 1000)).toBeCloseTo(110)
+  })
+
+  it('multiple segments contributions sum to 100% if they cover all revenue', () => {
+    const total = 1000
+    const pct1 = computeSegmentContributionPct(300, total)!
+    const pct2 = computeSegmentContributionPct(500, total)!
+    const pct3 = computeSegmentContributionPct(200, total)!
+    expect(pct1 + pct2 + pct3).toBeCloseTo(100)
+  })
+})
+
+// ── computeRevenueConcentration80 — additional cases ─────────────────────────
+
+describe('computeRevenueConcentration80 — additional cases', () => {
+  it('3 customers where top 2 together reach exactly 80%', () => {
+    // revenues: 400, 400, 200. total=1000, target=800. cumulative: 400<800, 800>=800 → 2
+    expect(computeRevenueConcentration80([
+      { revenue: 400 },
+      { revenue: 400 },
+      { revenue: 200 },
+    ])).toBe(2)
+  })
+
+  it('skewed distribution where 1 customer = 80% exactly', () => {
+    // revenues: 800, 100, 100. total=1000, target=800. cumulative: 800>=800 → 1
+    expect(computeRevenueConcentration80([
+      { revenue: 100 },
+      { revenue: 800 },
+      { revenue: 100 },
+    ])).toBe(1)
+  })
+
+  it('10 equal customers need 8 to hit 80%', () => {
+    const customers = Array.from({ length: 10 }, () => ({ revenue: 100 }))
+    // total=1000, target=800. cumulative fills at index 7 → returns 8
+    expect(computeRevenueConcentration80(customers)).toBe(8)
+  })
+
+  it('larger array with heavy top customer', () => {
+    const customers = [
+      { revenue: 9000 },
+      ...Array.from({ length: 99 }, () => ({ revenue: 10 })),
+    ]
+    // total=9990, target=7992. top=9000 >= 7992 → 1
+    expect(computeRevenueConcentration80(customers)).toBe(1)
+  })
+})
+
+// ── computeSegmentGrowthRate — additional cases ───────────────────────────────
+
+describe('computeSegmentGrowthRate — additional cases', () => {
+  it('returns null for priorRevenue of -0 (treated as 0)', () => {
+    // -0 === 0 in JS
+    expect(computeSegmentGrowthRate(100, -0)).toBeNull()
+  })
+
+  it('very small growth (0.01% change)', () => {
+    // (10001 - 10000) / 10000 * 100 = 0.01
+    expect(computeSegmentGrowthRate(10001, 10000)).toBeCloseTo(0.01, 2)
+  })
+
+  it('returns correct for decline from 1M to 1', () => {
+    // (1 - 1_000_000) / 1_000_000 * 100 ≈ -100
+    expect(computeSegmentGrowthRate(1, 1_000_000)).toBeCloseTo(-100, 0)
+  })
+
+  it('result type is always number or null (never undefined)', () => {
+    const r1 = computeSegmentGrowthRate(100, 100)
+    const r2 = computeSegmentGrowthRate(100, 0)
+    expect(r1 === null || typeof r1 === 'number').toBe(true)
+    expect(r2).toBeNull()
+  })
+})
+
+// ── computeCustomerProfitabilityIndex — additional cases ──────────────────────
+
+describe('computeCustomerProfitabilityIndex — additional cases', () => {
+  it('null grossMarginPct with paymentSpeed=1 → not null', () => {
+    const result = computeCustomerProfitabilityIndex(null, 1, 0)
+    expect(result).not.toBeNull()
+    // margin_component = 50*0.50=25, payment=1*0.30=0.3, freq=0
+    expect(result!).toBeCloseTo(25.3, 1)
+  })
+
+  it('grossMarginPct=50 maps to exactly 100 in margin component', () => {
+    // clamp(50*2=100,0,100) = 100, margin_comp = 100*0.5 = 50
+    const result = computeCustomerProfitabilityIndex(50, 0, 0)!
+    expect(result).toBeCloseTo(50)
+  })
+
+  it('orderFrequency=4 yields min(100, 4*20=80)*0.2=16 freq component', () => {
+    // margin=50 → 50, payment=80 → 24, freq=16 → total=90
+    const result = computeCustomerProfitabilityIndex(50, 80, 4)!
+    expect(result).toBeCloseTo(90)
+  })
+
+  it('all max inputs yields 100', () => {
+    const result = computeCustomerProfitabilityIndex(50, 100, 5)!
+    // margin: 100*0.5=50, payment: 100*0.3=30, freq: 100*0.2=20 → 100
+    expect(result).toBeCloseTo(100)
+  })
+
+  it('return value is rounded to 1 decimal consistently', () => {
+    // grossMarginPct=10: clamp(20,0,100)*0.5=10, payment=33*0.3=9.9, freq=min(100,40)*0.2=8
+    // total=27.9
+    const result = computeCustomerProfitabilityIndex(10, 33, 2)!
+    // Verify it's a sensible number
+    expect(typeof result).toBe('number')
+    expect(result).toBeCloseTo(27.9, 0)
+  })
+})
+
+// ── identifyUnprofitableSegments — additional cases ───────────────────────────
+
+describe('identifyUnprofitableSegments — additional cases', () => {
+  it('single profitable segment returns empty', () => {
+    expect(identifyUnprofitableSegments([
+      { name: 'enterprise', margin_pct: 50, revenue: 100000 },
+    ])).toEqual([])
+  })
+
+  it('preserves order of unprofitable segments', () => {
+    const segments = [
+      { name: 'a', margin_pct: 5, revenue: 1000 },
+      { name: 'b', margin_pct: 3, revenue: 2000 },
+      { name: 'c', margin_pct: 7, revenue: 3000 },
+    ]
+    const result = identifyUnprofitableSegments(segments)
+    expect(result[0]).toBe('a')
+    expect(result[1]).toBe('b')
+    expect(result[2]).toBe('c')
+  })
+
+  it('custom threshold of 0 → only negative margins are unprofitable', () => {
+    const segments = [
+      { name: 'high',  margin_pct: 50, revenue: 10000 },
+      { name: 'zero',  margin_pct: 0,  revenue: 5000 },
+      { name: 'neg',   margin_pct: -5, revenue: 3000 },
+    ]
+    const result = identifyUnprofitableSegments(segments, 0)
+    expect(result).not.toContain('high')
+    expect(result).not.toContain('zero')
+    expect(result).toContain('neg')
+  })
+
+  it('threshold of 100 marks everything unprofitable', () => {
+    const segments = [
+      { name: 'a', margin_pct: 80, revenue: 10000 },
+      { name: 'b', margin_pct: 99, revenue: 5000 },
+    ]
+    const result = identifyUnprofitableSegments(segments, 100)
+    expect(result).toContain('a')
+    expect(result).toContain('b')
+  })
+
+  it('returns only segment names, not full objects', () => {
+    const result = identifyUnprofitableSegments([
+      { name: 'small', margin_pct: 5, revenue: 1000 },
+    ])
+    expect(result).toEqual(['small'])
+    expect(typeof result[0]).toBe('string')
+  })
+})

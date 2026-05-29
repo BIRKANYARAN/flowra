@@ -359,3 +359,200 @@ describe('Cross-function consistency', () => {
     expect(pulse).toBe('strong')
   })
 })
+
+// ── computeDodChange — additional precision and edge cases ────────────────────
+
+describe('computeDodChange — additional precision and edge cases', () => {
+  it('both today and yesterday are positive floats', () => {
+    expect(computeDodChange(1.25, 1.00)).toBeCloseTo(25)
+  })
+
+  it('today is much smaller than yesterday → very negative result', () => {
+    // (1 - 1000) / 1000 * 100 = -99.9
+    expect(computeDodChange(1, 1000)).toBeCloseTo(-99.9, 1)
+  })
+
+  it('yesterday is 0.001 — avoids null (not exactly 0)', () => {
+    const result = computeDodChange(1, 0.001)
+    expect(result).not.toBeNull()
+    expect(result!).toBeCloseTo(99900)
+  })
+
+  it('result sign matches direction of change', () => {
+    expect(computeDodChange(200, 100)!).toBeGreaterThan(0)  // increase
+    expect(computeDodChange(50,  100)!).toBeLessThan(0)     // decrease
+  })
+
+  it('negative today with positive yesterday gives negative result', () => {
+    // (-100 - 200) / 200 * 100 = -150
+    expect(computeDodChange(-100, 200)).toBeCloseTo(-150)
+  })
+})
+
+// ── computeWowChange — additional precision and edge cases ────────────────────
+
+describe('computeWowChange — additional precision and edge cases', () => {
+  it('tripling revenue week over week = +200%', () => {
+    expect(computeWowChange(3000, 1000)).toBeCloseTo(200)
+  })
+
+  it('75% drop week over week = -75%', () => {
+    expect(computeWowChange(250, 1000)).toBeCloseTo(-75)
+  })
+
+  it('very small lastWeek = 0.01 avoids null guard', () => {
+    const result = computeWowChange(1, 0.01)
+    expect(result).not.toBeNull()
+    expect(result!).toBeCloseTo(9900)
+  })
+
+  it('both negative values: today=-100, yesterday=-50 → +100% (increase in magnitude)', () => {
+    // (-100 - (-50)) / |-50| * 100 = -50/50*100 = -100
+    // Actually: (thisWeek - lastWeek) / lastWeek * 100 = (-100 - (-50)) / (-50) * 100 = -50/-50*100 = 100
+    expect(computeWowChange(-100, -50)).toBeCloseTo(100)
+  })
+
+  it('result is symmetric with computeDodChange for same inputs', () => {
+    const dod = computeDodChange(1200, 1000)
+    const wow = computeWowChange(1200, 1000)
+    expect(dod).toBeCloseTo(wow!)
+  })
+})
+
+// ── classifyOpsPulse — comprehensive decision table ───────────────────────────
+
+describe('classifyOpsPulse — comprehensive decision table', () => {
+  it('critical: overdue=6, stock=4 (minimum critical thresholds)', () => {
+    expect(classifyOpsPulse(50, true, 6, 4)).toBe('critical')
+  })
+
+  it('critical: overdue=100, stock=100 (maximum severity)', () => {
+    expect(classifyOpsPulse(null, true, 100, 100)).toBe('critical')
+  })
+
+  it('not critical when overdue=6, stock=3 (stock threshold not met)', () => {
+    expect(classifyOpsPulse(null, true, 6, 3)).not.toBe('critical')
+  })
+
+  it('not critical when overdue=5, stock=4 (overdue threshold not met)', () => {
+    expect(classifyOpsPulse(null, true, 5, 4)).not.toBe('critical')
+  })
+
+  it('slow: sales DoD = -50% → very slow', () => {
+    expect(classifyOpsPulse(-50, true, 0, 0)).toBe('slow')
+  })
+
+  it('slow: no sales today and DoD is null', () => {
+    expect(classifyOpsPulse(null, false, 0, 0)).toBe('slow')
+  })
+
+  it('slow: no sales even with positive DoD', () => {
+    // hasSalesToday=false: triggers slow before strong check
+    expect(classifyOpsPulse(100, false, 0, 0)).toBe('slow')
+  })
+
+  it('strong: DoD=+1% and no stock critical items', () => {
+    expect(classifyOpsPulse(1, true, 0, 0)).toBe('strong')
+  })
+
+  it('strong: DoD=+1000% and no stock (extreme growth)', () => {
+    expect(classifyOpsPulse(1000, true, 0, 0)).toBe('strong')
+  })
+
+  it('normal: DoD=+10% but stock_critical=1 prevents strong', () => {
+    expect(classifyOpsPulse(10, true, 0, 1)).toBe('normal')
+  })
+
+  it('normal: DoD=-19% (not quite slow) with sales', () => {
+    expect(classifyOpsPulse(-19, true, 0, 0)).toBe('normal')
+  })
+
+  it('normal: DoD=0, has sales, no issues', () => {
+    expect(classifyOpsPulse(0, true, 0, 0)).toBe('normal')
+  })
+
+  it('normal: DoD=null but has sales and no critical issues', () => {
+    expect(classifyOpsPulse(null, true, 1, 1)).toBe('normal')
+  })
+
+  it('all 4 possible return values are correct strings', () => {
+    const validValues = ['strong', 'normal', 'slow', 'critical'] as const
+    const results = [
+      classifyOpsPulse(10, true, 0, 0),
+      classifyOpsPulse(-5, true, 0, 0),
+      classifyOpsPulse(-50, true, 0, 0),
+      classifyOpsPulse(null, false, 10, 10),
+    ]
+    for (const r of results) {
+      expect(validValues).toContain(r)
+    }
+  })
+})
+
+// ── computeFillRate — additional precision cases ──────────────────────────────
+
+describe('computeFillRate — additional precision cases', () => {
+  it('3 of 7 = 42.857...%', () => {
+    expect(computeFillRate(3, 7)).toBeCloseTo(42.86, 1)
+  })
+
+  it('returns 0 when ordersTotal is 0 regardless of fulfilled', () => {
+    expect(computeFillRate(100, 0)).toBe(0)
+    expect(computeFillRate(0,   0)).toBe(0)
+  })
+
+  it('fill rate increases monotonically as fulfilled increases', () => {
+    const r5  = computeFillRate(5,  10)
+    const r7  = computeFillRate(7,  10)
+    const r10 = computeFillRate(10, 10)
+    expect(r10).toBeGreaterThan(r7)
+    expect(r7).toBeGreaterThan(r5)
+  })
+
+  it('negative fulfilled (returns/corrections) gives negative fill rate', () => {
+    // Edge: returns reduce fulfilled count
+    expect(computeFillRate(-1, 10)).toBeCloseTo(-10)
+  })
+
+  it('very large counts still work', () => {
+    expect(computeFillRate(1_000_000, 1_000_000)).toBeCloseTo(100)
+    expect(computeFillRate(950_000,   1_000_000)).toBeCloseTo(95)
+  })
+})
+
+// ── computeDailyCollectionRate — additional precision cases ───────────────────
+
+describe('computeDailyCollectionRate — additional precision cases', () => {
+  it('1/3 collection rate ≈ 33.33%', () => {
+    expect(computeDailyCollectionRate(1000, 3000)).toBeCloseTo(33.33, 1)
+  })
+
+  it('due is 0 with collected = 0 → null', () => {
+    expect(computeDailyCollectionRate(0, 0)).toBeNull()
+  })
+
+  it('due is positive and collected=0 → 0% (not null)', () => {
+    const result = computeDailyCollectionRate(0, 5000)
+    expect(result).not.toBeNull()
+    expect(result!).toBeCloseTo(0)
+  })
+
+  it('collection rate > 100% for over-collection (advance payments)', () => {
+    expect(computeDailyCollectionRate(15000, 10000)).toBeCloseTo(150)
+  })
+
+  it('negative collected amount → negative rate', () => {
+    // Refund scenario
+    expect(computeDailyCollectionRate(-1000, 10000)).toBeCloseTo(-10)
+  })
+
+  it('result scales linearly with collected amount', () => {
+    const half = computeDailyCollectionRate(5000, 10000)!
+    const full = computeDailyCollectionRate(10000, 10000)!
+    expect(full).toBeCloseTo(half * 2, 1)
+  })
+
+  it('1 TRY due, 1 TRY collected → 100%', () => {
+    expect(computeDailyCollectionRate(1, 1)).toBeCloseTo(100)
+  })
+})

@@ -351,3 +351,184 @@ describe('computeBudgetPacing', () => {
     expect(result!).toBeGreaterThan(100)
   })
 })
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeBudgetVariance — additional boundary tests
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeBudgetVariance — additional boundary tests', () => {
+  it('negative actual and negative budget', () => {
+    // actual=-100, budget=-50 → variance = -50
+    expect(computeBudgetVariance(-100, -50)).toBeCloseTo(-50, 2)
+  })
+
+  it('returns exactly 0 for very small equal floats', () => {
+    expect(computeBudgetVariance(100.01, 100.01)).toBeCloseTo(0, 2)
+  })
+
+  it('handles very large numbers without overflow', () => {
+    const result = computeBudgetVariance(1e15, 1e15 - 1)
+    expect(result).toBeCloseTo(1, 0)
+  })
+
+  it('result is always a number (not NaN or Infinity)', () => {
+    const result = computeBudgetVariance(100_000, 50_000)
+    expect(isFinite(result)).toBe(true)
+    expect(isNaN(result)).toBe(false)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeBudgetVariancePct — additional boundary tests
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeBudgetVariancePct — additional boundary tests', () => {
+  it('1 actual vs 100 budget → -99%', () => {
+    expect(computeBudgetVariancePct(1, 100)).toBeCloseTo(-99, 1)
+  })
+
+  it('200 actual vs 100 budget → 100%', () => {
+    expect(computeBudgetVariancePct(200, 100)).toBeCloseTo(100, 1)
+  })
+
+  it('999 actual vs 1000 budget → -0.1%', () => {
+    expect(computeBudgetVariancePct(999, 1000)).toBeCloseTo(-0.1, 1)
+  })
+
+  it('result is rounded to 2 decimal places', () => {
+    const result = computeBudgetVariancePct(333, 1000)
+    // 333/1000 = -66.7%
+    const dp = String(Math.abs(result ?? 0)).split('.')[1]?.length ?? 0
+    expect(dp).toBeLessThanOrEqual(2)
+  })
+
+  it('negative actual and positive budget → large negative percent', () => {
+    const result = computeBudgetVariancePct(-50_000, 100_000)
+    expect(result).toBeCloseTo(-150, 1)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// classifyBudgetAdherence — additional edge cases
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('classifyBudgetAdherence — additional edge cases', () => {
+  it('0% variance → on_target for both metric types', () => {
+    expect(classifyBudgetAdherence(0, 'revenue')).toBe('on_target')
+    expect(classifyBudgetAdherence(0, 'expense')).toBe('on_target')
+  })
+
+  it('large positive expense variance (>15%) → off_track', () => {
+    expect(classifyBudgetAdherence(50, 'expense')).toBe('off_track')
+  })
+
+  it('large negative revenue variance (<-15%) → off_track', () => {
+    expect(classifyBudgetAdherence(-50, 'revenue')).toBe('off_track')
+  })
+
+  it('large positive revenue variance (>15%) → strongly_favorable', () => {
+    expect(classifyBudgetAdherence(100, 'revenue')).toBe('strongly_favorable')
+  })
+
+  it('large negative expense variance (<-15%) → strongly_favorable', () => {
+    expect(classifyBudgetAdherence(-100, 'expense')).toBe('strongly_favorable')
+  })
+
+  it('returns no_budget regardless of metricType when variancePct is null', () => {
+    expect(classifyBudgetAdherence(null, 'revenue')).toBe('no_budget')
+    expect(classifyBudgetAdherence(null, 'expense')).toBe('no_budget')
+  })
+
+  it('always returns one of the six valid adherence values', () => {
+    const validAdherences = ['on_target', 'favorable', 'strongly_favorable', 'at_risk', 'off_track', 'no_budget']
+    const variances = [null, -50, -15, -5, 0, 5, 15, 50]
+    const types = ['revenue', 'expense'] as const
+    for (const v of variances) {
+      for (const t of types) {
+        expect(validAdherences).toContain(classifyBudgetAdherence(v, t))
+      }
+    }
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeBudgetHealthScore — additional boundary tests
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeBudgetHealthScore — additional boundary tests', () => {
+  it('single strongly_favorable item: 100 + 5 = clamped to 100', () => {
+    expect(computeBudgetHealthScore(['strongly_favorable'])).toBe(100)
+  })
+
+  it('ten strongly_favorable items still clamps to 100', () => {
+    const items = Array<'strongly_favorable'>(10).fill('strongly_favorable')
+    expect(computeBudgetHealthScore(items)).toBe(100)
+  })
+
+  it('one off_track + one strongly_favorable: 100 - 20 + 5 = 85', () => {
+    expect(computeBudgetHealthScore(['off_track', 'strongly_favorable'])).toBe(85)
+  })
+
+  it('twenty at_risk items: 100 - 20*10 = 0 clamped', () => {
+    const items = Array<'at_risk'>(20).fill('at_risk')
+    expect(computeBudgetHealthScore(items)).toBe(0)
+  })
+
+  it('mixed: all six types of adherence', () => {
+    // on_target=0, favorable=0, strongly_favorable=+5, at_risk=-10, off_track=-20, no_budget=0
+    // Score = 100 + 5 - 10 - 20 = 75
+    expect(computeBudgetHealthScore([
+      'on_target', 'favorable', 'strongly_favorable',
+      'at_risk', 'off_track', 'no_budget',
+    ])).toBe(75)
+  })
+
+  it('score is always an integer', () => {
+    const items: Array<'on_target' | 'at_risk'> = ['on_target', 'at_risk']
+    expect(Number.isInteger(computeBudgetHealthScore(items))).toBe(true)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeBudgetPacing — additional boundary tests
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeBudgetPacing — additional boundary tests', () => {
+  it('very behind pace: actual=0, budget=10k, months=12 → 0%', () => {
+    const result = computeBudgetPacing(0, 10_000, 12)
+    expect(result).toBeCloseTo(0, 1)
+  })
+
+  it('very ahead of pace: actual=3M, budget=10k, months=1 → very large %', () => {
+    const result = computeBudgetPacing(3_000_000, 10_000, 1)
+    expect(result).not.toBeNull()
+    expect(result!).toBeCloseTo(30_000, 0)
+  })
+
+  it('pacing rounds to 2 decimal places', () => {
+    const result = computeBudgetPacing(1_000_000, 300_000, 3)
+    // 1M / (300k * 3) = 1M / 900k ≈ 111.11%
+    const dp = String(result).split('.')[1]?.length ?? 0
+    expect(dp).toBeLessThanOrEqual(2)
+  })
+
+  it('negative actual YTD results in negative pacing percentage', () => {
+    const result = computeBudgetPacing(-50_000, 100_000, 3)
+    expect(result).not.toBeNull()
+    expect(result!).toBeLessThan(0)
+  })
+
+  it('returns null when only months is 0', () => {
+    expect(computeBudgetPacing(100_000, 50_000, 0)).toBeNull()
+  })
+
+  it('returns null when only monthly budget is 0', () => {
+    expect(computeBudgetPacing(100_000, 0, 6)).toBeNull()
+  })
+
+  it('pacing at exactly 50% pace', () => {
+    // actual = 30k, budget = 10k/month, elapsed = 6 months → expected = 60k → pacing = 50%
+    const result = computeBudgetPacing(30_000, 10_000, 6)
+    expect(result).toBeCloseTo(50, 1)
+  })
+})

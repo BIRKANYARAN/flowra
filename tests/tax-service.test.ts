@@ -358,3 +358,203 @@ describe('computeKDVFromRows() — additional edge cases', () => {
     expect(r.net_vat_try).toBe(r.output_vat_try - r.input_vat_try)
   })
 })
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeFilingDueDate() — additional boundary tests
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeFilingDueDate() — additional boundary tests', () => {
+  it('April → 26th of May', () => {
+    expect(computeFilingDueDate('2026-04-30')).toBe('2026-05-26')
+  })
+
+  it('June → 26th of July', () => {
+    expect(computeFilingDueDate('2026-06-30')).toBe('2026-07-26')
+  })
+
+  it('August → 26th of September', () => {
+    expect(computeFilingDueDate('2026-08-31')).toBe('2026-09-26')
+  })
+
+  it('September → 26th of October', () => {
+    expect(computeFilingDueDate('2026-09-30')).toBe('2026-10-26')
+  })
+
+  it('March → 26th of April', () => {
+    expect(computeFilingDueDate('2026-03-31')).toBe('2026-04-26')
+  })
+
+  it('July → 26th of August', () => {
+    expect(computeFilingDueDate('2026-07-31')).toBe('2026-08-26')
+  })
+
+  it('always returns YYYY-MM-26 format', () => {
+    const months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
+    for (const m of months) {
+      const result = computeFilingDueDate(`2026-${m}-01`)
+      expect(result).toMatch(/^\d{4}-\d{2}-26$/)
+    }
+  })
+
+  it('due date is always in the next month', () => {
+    // For May, due is June (month 6)
+    const result = computeFilingDueDate('2026-05-15')
+    expect(result.startsWith('2026-06')).toBe(true)
+  })
+
+  it('Dec → Jan next year (year boundary)', () => {
+    const result = computeFilingDueDate('2025-12-01')
+    expect(result).toBe('2026-01-26')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeKdv() — additional boundary tests
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeKdv() — additional boundary tests', () => {
+  it('large positive net VAT', () => {
+    const r = computeKdv({ sales_vat_try: 1_000_000, purchase_vat_try: 0, expense_vat_try: 0 })
+    expect(r.net_vat_try).toBe(1_000_000)
+  })
+
+  it('large negative net VAT (heavy input credits)', () => {
+    const r = computeKdv({ sales_vat_try: 0, purchase_vat_try: 500_000, expense_vat_try: 500_000 })
+    expect(r.net_vat_try).toBe(-1_000_000)
+  })
+
+  it('purchase_vat_try alone reduces net', () => {
+    const r = computeKdv({ sales_vat_try: 10_000, purchase_vat_try: 8_000, expense_vat_try: 0 })
+    expect(r.net_vat_try).toBe(2_000)
+  })
+
+  it('expense_vat_try alone reduces net', () => {
+    const r = computeKdv({ sales_vat_try: 10_000, purchase_vat_try: 0, expense_vat_try: 6_000 })
+    expect(r.net_vat_try).toBe(4_000)
+  })
+
+  it('all three non-zero deductions', () => {
+    const r = computeKdv({ sales_vat_try: 50_000, purchase_vat_try: 10_000, expense_vat_try: 15_000 })
+    expect(r.net_vat_try).toBe(25_000)
+  })
+
+  it('passthrough: input fields are preserved in output', () => {
+    const r = computeKdv({ sales_vat_try: 500, purchase_vat_try: 200, expense_vat_try: 100 })
+    expect(r.sales_vat_try).toBe(500)
+    expect(r.purchase_vat_try).toBe(200)
+    expect(r.expense_vat_try).toBe(100)
+  })
+
+  it('fractional rounding: 0.1 + 0.2 normalized', () => {
+    const r = computeKdv({ sales_vat_try: 0.3, purchase_vat_try: 0.1, expense_vat_try: 0.1 })
+    const dp = String(Math.abs(r.net_vat_try)).split('.')[1]?.length ?? 0
+    expect(dp).toBeLessThanOrEqual(2)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeCorporateTax() — additional boundary tests
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeCorporateTax() — additional boundary tests', () => {
+  it('standard 25% rate on known numbers', () => {
+    const r = computeCorporateTax({
+      revenue_try: 500_000, cost_try: 200_000, deductible_expenses_try: 100_000, rate_percent: 25,
+    })
+    // matrah = 200_000, tax = 50_000, net = 150_000
+    expect(r.matrah_try).toBe(200_000)
+    expect(r.tax_try).toBe(50_000)
+    expect(r.net_after_tax_try).toBe(150_000)
+  })
+
+  it('20% rate: historically was the standard', () => {
+    const r = computeCorporateTax({
+      revenue_try: 100_000, cost_try: 0, deductible_expenses_try: 0, rate_percent: 20,
+    })
+    expect(r.tax_try).toBeCloseTo(20_000, 2)
+    expect(r.net_after_tax_try).toBeCloseTo(80_000, 2)
+  })
+
+  it('net_after_tax_try = matrah - tax', () => {
+    const r = computeCorporateTax({
+      revenue_try: 300_000, cost_try: 100_000, deductible_expenses_try: 50_000, rate_percent: 25,
+    })
+    expect(r.net_after_tax_try).toBeCloseTo(r.matrah_try - r.tax_try, 2)
+  })
+
+  it('small positive matrah → correct tax (rounds to 2dp)', () => {
+    // matrah = 10, tax = 10 * 0.25 = 2.50
+    const r = computeCorporateTax({
+      revenue_try: 110, cost_try: 100, deductible_expenses_try: 0, rate_percent: 25,
+    })
+    expect(r.matrah_try).toBeCloseTo(10, 2)
+    expect(r.tax_try).toBeCloseTo(2.5, 2)
+    expect(r.net_after_tax_try).toBeCloseTo(7.5, 2)
+  })
+
+  it('rate_percent=50 → tax is half of matrah', () => {
+    const r = computeCorporateTax({
+      revenue_try: 200_000, cost_try: 0, deductible_expenses_try: 0, rate_percent: 50,
+    })
+    expect(r.tax_try).toBe(100_000)
+    expect(r.net_after_tax_try).toBe(100_000)
+  })
+
+  it('result object always has all four fields', () => {
+    const r = computeCorporateTax({
+      revenue_try: 100, cost_try: 0, deductible_expenses_try: 0, rate_percent: 25,
+    })
+    expect(r).toHaveProperty('matrah_try')
+    expect(r).toHaveProperty('tax_try')
+    expect(r).toHaveProperty('net_after_tax_try')
+    expect(r).toHaveProperty('rate_percent')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// nextCorporateTaxAdvanceDue() — additional boundary tests
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('nextCorporateTaxAdvanceDue() — additional boundary tests', () => {
+  it('October 1 → October 17', () => {
+    expect(nextCorporateTaxAdvanceDue('2026-10-01')).toBe('2026-10-17')
+  })
+
+  it('October 17 → January 17 next year', () => {
+    expect(nextCorporateTaxAdvanceDue('2026-10-17')).toBe('2027-01-17')
+  })
+
+  it('July 17 → October 17', () => {
+    expect(nextCorporateTaxAdvanceDue('2026-07-17')).toBe('2026-10-17')
+  })
+
+  it('January 17 → April 17', () => {
+    expect(nextCorporateTaxAdvanceDue('2026-01-17')).toBe('2026-04-17')
+  })
+
+  it('February 1 → April 17', () => {
+    expect(nextCorporateTaxAdvanceDue('2026-02-01')).toBe('2026-04-17')
+  })
+
+  it('November 1 → January 17 next year', () => {
+    expect(nextCorporateTaxAdvanceDue('2026-11-01')).toBe('2027-01-17')
+  })
+
+  it('due date is always on 17th of a month', () => {
+    const dates = ['2026-01-01', '2026-04-01', '2026-07-01', '2026-10-01']
+    for (const d of dates) {
+      const result = nextCorporateTaxAdvanceDue(d)
+      expect(result.endsWith('-17')).toBe(true)
+    }
+  })
+
+  it('due month is always one of Jan, Apr, Jul, Oct', () => {
+    const validMonths = ['01', '04', '07', '10']
+    const inputDates = ['2026-02-15', '2026-05-20', '2026-08-08', '2026-11-30']
+    for (const d of inputDates) {
+      const result = nextCorporateTaxAdvanceDue(d)
+      const month = result.slice(5, 7)
+      expect(validMonths).toContain(month)
+    }
+  })
+})

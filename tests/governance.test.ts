@@ -359,3 +359,209 @@ describe('buildPayloadSummary — extended cases', () => {
     expect(result).not.toMatch(/K$/)
   })
 })
+
+// ── computeResolutionDays — large-span and precision tests ────────────────────
+
+describe('computeResolutionDays — large-span and precision tests', () => {
+  it('100 days span returns 100', () => {
+    expect(computeResolutionDays(
+      '2026-01-01T00:00:00Z',
+      '2026-04-11T00:00:00Z',
+    )).toBe(100)
+  })
+
+  it('exactly 48 hours returns 2', () => {
+    expect(computeResolutionDays(
+      '2026-05-01T12:00:00Z',
+      '2026-05-03T12:00:00Z',
+    )).toBe(2)
+  })
+
+  it('23h59m59s returns 0 (floor of <1 day)', () => {
+    expect(computeResolutionDays(
+      '2026-06-01T00:00:00Z',
+      '2026-06-01T23:59:59Z',
+    )).toBe(0)
+  })
+
+  it('returns null for null resolvedAt regardless of initiatedAt', () => {
+    expect(computeResolutionDays('2020-01-01T00:00:00Z', null)).toBeNull()
+    expect(computeResolutionDays('2025-12-31T00:00:00Z', null)).toBeNull()
+  })
+
+  it('leap year: Feb 29 to Mar 1 = 1 day', () => {
+    expect(computeResolutionDays(
+      '2024-02-29T00:00:00Z',
+      '2024-03-01T00:00:00Z',
+    )).toBe(1)
+  })
+
+  it('resolvedAt before initiatedAt returns 0 (Math.max clamping)', () => {
+    const result = computeResolutionDays(
+      '2026-05-10T00:00:00Z',
+      '2026-05-01T00:00:00Z',
+    )
+    expect(result).toBe(0)
+  })
+
+  it('very old workflow (10 years) computes correctly', () => {
+    // 2016-01-01 to 2026-01-01 ≈ 3652 days (includes 2 leap years: 2016, 2020, 2024)
+    const result = computeResolutionDays(
+      '2016-01-01T00:00:00Z',
+      '2026-01-01T00:00:00Z',
+    )
+    expect(result).toBeGreaterThan(3650)
+  })
+})
+
+// ── computeGovernanceScore — extended scoring scenarios ───────────────────────
+
+describe('computeGovernanceScore — extended scenarios', () => {
+  it('75% resolution rate: 0.75 × 40 = 30 points', () => {
+    const score = computeGovernanceScore(75, 0, false, false)
+    // resolution=30, stale=30 → 60
+    expect(score).toBe(60)
+  })
+
+  it('25% resolution rate contributes 10 points', () => {
+    const with25  = computeGovernanceScore(25, 1, false, false)
+    const with0   = computeGovernanceScore(0,  1, false, false)
+    expect(with25 - with0).toBe(10)
+  })
+
+  it('stale=0 bonus is exactly 30 points regardless of other values', () => {
+    for (const rate of [0, 50, 100]) {
+      const noStale   = computeGovernanceScore(rate, 0, false, false)
+      const withStale = computeGovernanceScore(rate, 1, false, false)
+      expect(noStale - withStale).toBe(30)
+    }
+  })
+
+  it('all 4 components in isolation sum to 100', () => {
+    const resolution = computeGovernanceScore(100, 1, false, false)  // 40
+    const stale      = computeGovernanceScore(0,   0, false, false)  // 30
+    const period     = computeGovernanceScore(0,   1, true,  false)  // 20
+    const audit      = computeGovernanceScore(0,   1, false, true)   // 10
+    expect(resolution + stale + period + audit).toBe(100)
+  })
+
+  it('resolution rate of 10% → Math.round(0.1*40)=4 points', () => {
+    const score = computeGovernanceScore(10, 1, false, false)
+    expect(score).toBe(4)
+  })
+
+  it('resolution rate of 33% → Math.round(0.33*40)=13 points', () => {
+    const score = computeGovernanceScore(33, 1, false, false)
+    expect(score).toBe(13)
+  })
+
+  it('multiple stale items all give same 0 contribution', () => {
+    const one    = computeGovernanceScore(0, 1, false, false)
+    const twenty = computeGovernanceScore(0, 20, false, false)
+    expect(one).toBe(twenty)
+  })
+
+  it('score is non-negative for all valid input combinations', () => {
+    const combos = [
+      [0, 0, false, false],
+      [0, 5, true,  true],
+      [100, 0, true, true],
+      [50, 3, true, false],
+    ] as [number, number, boolean, boolean][]
+    for (const [r, s, p, a] of combos) {
+      expect(computeGovernanceScore(r, s, p, a)).toBeGreaterThanOrEqual(0)
+    }
+  })
+})
+
+// ── WORKFLOW_TYPE_LABELS — extended coverage ──────────────────────────────────
+
+describe('WORKFLOW_TYPE_LABELS — extended coverage', () => {
+  it('no label contains only whitespace', () => {
+    for (const label of Object.values(WORKFLOW_TYPE_LABELS)) {
+      expect(label.trim().length).toBeGreaterThan(0)
+    }
+  })
+
+  it('all label keys are snake_case strings', () => {
+    for (const key of Object.keys(WORKFLOW_TYPE_LABELS)) {
+      expect(key).toMatch(/^[a-z_]+$/)
+    }
+  })
+
+  it('label for dividend_declaration is exactly "Temettü Beyanı"', () => {
+    expect(WORKFLOW_TYPE_LABELS['dividend_declaration']).toBe('Temettü Beyanı')
+  })
+
+  it('label for large_expense is exactly "Büyük Masraf Onayı"', () => {
+    expect(WORKFLOW_TYPE_LABELS['large_expense']).toBe('Büyük Masraf Onayı')
+  })
+
+  it('all 8 workflow types map to Turkish labels', () => {
+    const expectedKeys = [
+      'dividend_declaration', 'expense_approval', 'partner_loan_entry',
+      'period_close', 'period_lock', 'equity_payment',
+      'compensation_payment', 'large_expense',
+    ]
+    for (const key of expectedKeys) {
+      expect(WORKFLOW_TYPE_LABELS[key]).toBeDefined()
+      expect(typeof WORKFLOW_TYPE_LABELS[key]).toBe('string')
+    }
+  })
+
+  it('unknown workflow type key returns undefined', () => {
+    expect(WORKFLOW_TYPE_LABELS['nonexistent_workflow']).toBeUndefined()
+  })
+
+  it('labels are unique (no two workflow types share a label)', () => {
+    const labels = Object.values(WORKFLOW_TYPE_LABELS)
+    const unique = new Set(labels)
+    expect(unique.size).toBe(labels.length)
+  })
+})
+
+// ── buildPayloadSummary — additional precision tests ──────────────────────────
+
+describe('buildPayloadSummary — additional precision tests', () => {
+  it('exact boundary: amount_try=999 → no K suffix', () => {
+    const result = buildPayloadSummary({ amount_try: 999 })
+    expect(result).not.toMatch(/K/)
+    expect(result).toMatch(/999/)
+  })
+
+  it('exact boundary: amount_try=1000 → K suffix', () => {
+    const result = buildPayloadSummary({ amount_try: 1000 })
+    expect(result).toMatch(/K|1\.000/)
+  })
+
+  it('amount_try=1_500_000 → formats with K', () => {
+    const result = buildPayloadSummary({ amount_try: 1_500_000 })
+    expect(result).toMatch(/1\.500K|1500K/)
+  })
+
+  it('description exactly 60 chars → not truncated', () => {
+    const desc = 'A'.repeat(60)
+    const result = buildPayloadSummary({ description: desc })
+    expect(result).toBe(desc)
+    expect(result).not.toMatch(/…/)
+  })
+
+  it('description of 61 chars → truncated with ellipsis', () => {
+    const desc = 'A'.repeat(61)
+    const result = buildPayloadSummary({ description: desc })
+    expect(result.endsWith('…')).toBe(true)
+    expect(result.length).toBeLessThanOrEqual(61)
+  })
+
+  it('partner_name with only spaces → treated as falsy → falls through', () => {
+    const result = buildPayloadSummary({ partner_name: '   ', description: 'FallbackDesc' })
+    // Trimmed partner_name is empty → falls through to description
+    expect(result).toBe('FallbackDesc')
+  })
+
+  it('amount_try = 100 (three-digit) → formatted without K', () => {
+    const result = buildPayloadSummary({ amount_try: 100 })
+    expect(result).toMatch(/₺/)
+    expect(result).not.toMatch(/K/)
+  })
+})

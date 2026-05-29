@@ -351,3 +351,215 @@ describe('classifyComplianceStatus()', () => {
     }
   })
 })
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Additional boundary tests: computeKdvNetObligation
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeKdvNetObligation() — extra boundary tests', () => {
+  it('both arguments are floating point; result is exact', () => {
+    // 0.1 + 0.2 precision check
+    expect(computeKdvNetObligation(0.3, 0.1)).toBeCloseTo(0.2, 5)
+  })
+
+  it('output fractionally greater than input → positive result', () => {
+    expect(computeKdvNetObligation(1000.01, 1000.00)).toBeCloseTo(0.01, 2)
+  })
+
+  it('output fractionally less than input → returns 0 (not negative)', () => {
+    expect(computeKdvNetObligation(999.99, 1000.00)).toBe(0)
+  })
+
+  it('extremely large values maintain positive result', () => {
+    expect(computeKdvNetObligation(1e9, 1e8)).toBe(9e8)
+  })
+
+  it('returns 0 for output=0 and input=0', () => {
+    expect(computeKdvNetObligation(0, 0)).toBe(0)
+  })
+
+  it('result type is always number', () => {
+    expect(typeof computeKdvNetObligation(100, 50)).toBe('number')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Additional boundary tests: computeCorporateTaxProvision
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeCorporateTaxProvision() — extra boundary tests', () => {
+  it('returns 0 for exactly 0 net income', () => {
+    expect(computeCorporateTaxProvision(0)).toBe(0)
+  })
+
+  it('returns 0 for net income of -1', () => {
+    expect(computeCorporateTaxProvision(-1)).toBe(0)
+  })
+
+  it('returns 0 for net income of -1e9', () => {
+    expect(computeCorporateTaxProvision(-1_000_000_000)).toBe(0)
+  })
+
+  it('20% rate is always applied for positive net income', () => {
+    for (const income of [1, 100, 1000, 99999]) {
+      expect(computeCorporateTaxProvision(income)).toBeCloseTo(income * 0.2, 4)
+    }
+  })
+
+  it('result is non-negative for any input', () => {
+    const inputs = [-1e6, -1, 0, 1, 1e6]
+    for (const i of inputs) {
+      expect(computeCorporateTaxProvision(i)).toBeGreaterThanOrEqual(0)
+    }
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Additional boundary tests: computeGeciVergi
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeGeciVergi() — extra boundary tests', () => {
+  it('returns 0 when cumulative exactly equals prior payments', () => {
+    // 200_000 * 0.20 * 0.25 = 10_000; if paid 10_000 already → 0
+    expect(computeGeciVergi(200_000, 1, 10_000)).toBe(0)
+  })
+
+  it('Q1 with very small income', () => {
+    // 100 * 0.20 * 0.25 = 5
+    expect(computeGeciVergi(100, 1, 0)).toBe(5)
+  })
+
+  it('Q4 with very large income', () => {
+    // 10_000_000 * 0.20 * 1.00 = 2_000_000
+    expect(computeGeciVergi(10_000_000, 4, 0)).toBe(2_000_000)
+  })
+
+  it('all quarters produce strictly increasing cumulative amounts', () => {
+    const income = 1_000_000
+    const q1 = computeGeciVergi(income, 1, 0)
+    const q2 = computeGeciVergi(income, 2, 0)
+    const q3 = computeGeciVergi(income, 3, 0)
+    const q4 = computeGeciVergi(income, 4, 0)
+    expect(q1).toBeLessThan(q2)
+    expect(q2).toBeLessThan(q3)
+    expect(q3).toBeLessThan(q4)
+  })
+
+  it('Q2 cumulative minus Q1 payment equals incremental Q2 obligation', () => {
+    const income = 800_000
+    const q1Pay = computeGeciVergi(income, 1, 0)          // = 800k * 0.20 * 0.25 = 40k
+    const q2Due = computeGeciVergi(income, 2, q1Pay)      // = 800k * 0.20 * 0.50 - 40k = 40k
+    expect(q2Due).toBeCloseTo(40_000, 0)
+  })
+
+  it('floor is always 0, never negative', () => {
+    const results = [
+      computeGeciVergi(100_000, 1, 1_000_000),
+      computeGeciVergi(0, 2, 5_000),
+      computeGeciVergi(-999_999, 4, 0),
+    ]
+    for (const r of results) {
+      expect(r).toBeGreaterThanOrEqual(0)
+    }
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Additional boundary tests: computeComplianceScore
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeComplianceScore() — extra boundary tests', () => {
+  it('single overdue obligation of 0 TRY → score 0', () => {
+    expect(computeComplianceScore([{ status: 'overdue', amount_try: 0 }])).toBe(0)
+  })
+
+  it('large variety of obligations produces a score in [0, 100]', () => {
+    const obligations = [
+      { status: 'on_time' as const, amount_try: 10_000 },
+      { status: 'overdue' as const, amount_try: 5_000 },
+      { status: 'upcoming_7d' as const, amount_try: 2_000 },
+      { status: 'upcoming_30d' as const, amount_try: 1_000 },
+      { status: 'not_due' as const, amount_try: 50_000 },
+    ]
+    const score = computeComplianceScore(obligations)
+    expect(score).toBeGreaterThanOrEqual(0)
+    expect(score).toBeLessThanOrEqual(100)
+  })
+
+  it('three equal-weight obligations at different statuses → weighted avg', () => {
+    // on_time=100, upcoming_7d=80, overdue=0 → all zero amounts → equal weight → avg=60
+    const score = computeComplianceScore([
+      { status: 'on_time', amount_try: 0 },
+      { status: 'upcoming_7d', amount_try: 0 },
+      { status: 'overdue', amount_try: 0 },
+    ])
+    expect(score).toBe(60)
+  })
+
+  it('upcoming_7d with heavy weight drags score below 100', () => {
+    const score = computeComplianceScore([
+      { status: 'on_time', amount_try: 1 },
+      { status: 'upcoming_7d', amount_try: 9_999 },
+    ])
+    // Weighted: (100*1 + 80*9999) / 10000 ≈ 80.02 → 80
+    expect(score).toBeCloseTo(80, 0)
+  })
+
+  it('result is always integer', () => {
+    const testCases = [
+      [{ status: 'on_time' as const, amount_try: 7 }],
+      [{ status: 'overdue' as const, amount_try: 3 }],
+      [{ status: 'upcoming_30d' as const, amount_try: 11 }, { status: 'on_time' as const, amount_try: 7 }],
+    ]
+    for (const obs of testCases) {
+      expect(Number.isInteger(computeComplianceScore(obs))).toBe(true)
+    }
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Additional boundary tests: classifyComplianceStatus
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('classifyComplianceStatus() — extra boundary tests', () => {
+  it('score 81 → compliant', () => {
+    expect(classifyComplianceStatus(81)).toBe('compliant')
+  })
+
+  it('score 61 → attention', () => {
+    expect(classifyComplianceStatus(61)).toBe('attention')
+  })
+
+  it('score 41 → risk', () => {
+    expect(classifyComplianceStatus(41)).toBe('risk')
+  })
+
+  it('score 1 → critical', () => {
+    expect(classifyComplianceStatus(1)).toBe('critical')
+  })
+
+  it('full sweep of boundary values returns correct status', () => {
+    const expectations: [number, string][] = [
+      [100, 'compliant'],
+      [80,  'compliant'],
+      [79,  'attention'],
+      [60,  'attention'],
+      [59,  'risk'],
+      [40,  'risk'],
+      [39,  'critical'],
+      [0,   'critical'],
+    ]
+    for (const [score, expected] of expectations) {
+      expect(classifyComplianceStatus(score)).toBe(expected)
+    }
+  })
+
+  it('score decremented by 1 at each boundary flips the status', () => {
+    expect(classifyComplianceStatus(80)).toBe('compliant')
+    expect(classifyComplianceStatus(79)).toBe('attention')
+    expect(classifyComplianceStatus(60)).toBe('attention')
+    expect(classifyComplianceStatus(59)).toBe('risk')
+    expect(classifyComplianceStatus(40)).toBe('risk')
+    expect(classifyComplianceStatus(39)).toBe('critical')
+  })
+})
