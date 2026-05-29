@@ -566,3 +566,173 @@ describe('RATE_LIMIT_PRESETS — value reasonableness', () => {
     expect(api_write.limit).toBeLessThan(api_read.limit)
   })
 })
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Inline custom RateLimitOptions (not a preset string)
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('rateLimit() with inline RateLimitOptions', () => {
+  beforeEach(() => setRateLimitAdapter(new FreshInMemoryAdapter()))
+
+  it('custom limit=1 — first call allowed, second blocked', () => {
+    const opts = { limit: 1, windowMs: 60_000 }
+    const r1 = rateLimit('id-custom-1', opts)
+    const r2 = rateLimit('id-custom-1', opts)
+    expect(r1.allowed).toBe(true)
+    expect(r2.allowed).toBe(false)
+  })
+
+  it('custom limit=5 — 5 calls allowed, 6th blocked', () => {
+    const opts = { limit: 5, windowMs: 60_000 }
+    const id = 'id-custom-5'
+    for (let i = 0; i < 5; i++) {
+      expect(rateLimit(id, opts).allowed).toBe(true)
+    }
+    expect(rateLimit(id, opts).allowed).toBe(false)
+  })
+
+  it('different identifiers with same options are independent', () => {
+    const opts = { limit: 1, windowMs: 60_000 }
+    const r1 = rateLimit('id-a', opts)
+    const r2 = rateLimit('id-b', opts)
+    expect(r1.allowed).toBe(true)
+    expect(r2.allowed).toBe(true)
+  })
+
+  it('remaining decrements on each call', () => {
+    const opts = { limit: 3, windowMs: 60_000 }
+    const id = 'id-rem'
+    const r1 = rateLimit(id, opts)
+    const r2 = rateLimit(id, opts)
+    const r3 = rateLimit(id, opts)
+    expect(r1.remaining).toBe(2)
+    expect(r2.remaining).toBe(1)
+    expect(r3.remaining).toBe(0)
+  })
+
+  it('remaining never goes below 0', () => {
+    const opts = { limit: 1, windowMs: 60_000 }
+    const id = 'id-floor'
+    rateLimit(id, opts)  // 1st — allowed, remaining=0
+    const r = rateLimit(id, opts)  // 2nd — blocked, remaining=0
+    expect(r.remaining).toBe(0)
+    expect(r.remaining).toBeGreaterThanOrEqual(0)
+  })
+
+  it('resetAt is in the future', () => {
+    const opts = { limit: 5, windowMs: 60_000 }
+    const r = rateLimit('id-reset', opts)
+    expect(r.resetAt).toBeGreaterThan(Date.now())
+  })
+
+  it('resetAt is within windowMs of now', () => {
+    const opts = { limit: 5, windowMs: 30_000 }
+    const before = Date.now()
+    const r = rateLimit('id-reset2', opts)
+    expect(r.resetAt).toBeLessThanOrEqual(before + 30_000 + 100)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Adapter swap — setRateLimitAdapter
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('setRateLimitAdapter() — custom adapter', () => {
+  beforeEach(() => setRateLimitAdapter(new FreshInMemoryAdapter()))
+
+  it('custom adapter returning allowed=false is respected', () => {
+    const alwaysDeny: RateLimitAdapter = {
+      check: () => ({ allowed: false, remaining: 0, resetAt: Date.now() + 1000 }),
+    }
+    setRateLimitAdapter(alwaysDeny)
+    const r = rateLimit('any-id', 'api_read')
+    expect(r.allowed).toBe(false)
+    expect(r.remaining).toBe(0)
+  })
+
+  it('custom adapter always allowing is respected', () => {
+    const alwaysAllow: RateLimitAdapter = {
+      check: () => ({ allowed: true, remaining: 999, resetAt: Date.now() + 1000 }),
+    }
+    setRateLimitAdapter(alwaysAllow)
+    const r = rateLimit('any-id', 'auth')
+    expect(r.allowed).toBe(true)
+    expect(r.remaining).toBe(999)
+  })
+
+  it('swapping back to a FreshInMemoryAdapter restores counting', () => {
+    const alwaysDeny: RateLimitAdapter = {
+      check: () => ({ allowed: false, remaining: 0, resetAt: Date.now() + 1000 }),
+    }
+    setRateLimitAdapter(alwaysDeny)
+    expect(rateLimit('x', 'auth').allowed).toBe(false)
+
+    setRateLimitAdapter(new FreshInMemoryAdapter())
+    expect(rateLimit('x', 'auth').allowed).toBe(true)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// rateLimit() — all 4 presets by name
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('rateLimit() — named presets allowed on first call', () => {
+  beforeEach(() => setRateLimitAdapter(new FreshInMemoryAdapter()))
+
+  it('auth preset: first call is allowed', () => {
+    expect(rateLimit('uid-auth', 'auth').allowed).toBe(true)
+  })
+
+  it('pdf preset: first call is allowed', () => {
+    expect(rateLimit('uid-pdf', 'pdf').allowed).toBe(true)
+  })
+
+  it('api_write preset: first call is allowed', () => {
+    expect(rateLimit('uid-write', 'api_write').allowed).toBe(true)
+  })
+
+  it('api_read preset: first call is allowed', () => {
+    expect(rateLimit('uid-read', 'api_read').allowed).toBe(true)
+  })
+
+  it('auth preset: 10th call allowed, 11th blocked', () => {
+    const id = 'brute-force-uid'
+    for (let i = 0; i < 10; i++) {
+      expect(rateLimit(id, 'auth').allowed).toBe(true)
+    }
+    expect(rateLimit(id, 'auth').allowed).toBe(false)
+  })
+
+  it('pdf preset: 20th call allowed, 21st blocked', () => {
+    const id = 'pdf-heavy-uid'
+    for (let i = 0; i < 20; i++) {
+      expect(rateLimit(id, 'pdf').allowed).toBe(true)
+    }
+    expect(rateLimit(id, 'pdf').allowed).toBe(false)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RATE_LIMIT_PRESETS — window sizes
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('RATE_LIMIT_PRESETS — window sizes all 60s', () => {
+  it('pdf windowMs is 60 seconds', () => {
+    expect(RATE_LIMIT_PRESETS.pdf.windowMs).toBe(60_000)
+  })
+
+  it('api_write windowMs is 60 seconds', () => {
+    expect(RATE_LIMIT_PRESETS.api_write.windowMs).toBe(60_000)
+  })
+
+  it('api_read windowMs is 60 seconds', () => {
+    expect(RATE_LIMIT_PRESETS.api_read.windowMs).toBe(60_000)
+  })
+
+  it('all presets share the same windowMs', () => {
+    const windows = Object.values(RATE_LIMIT_PRESETS).map(p => p.windowMs)
+    const unique = new Set(windows)
+    expect(unique.size).toBe(1)
+    expect([...unique][0]).toBe(60_000)
+  })
+})

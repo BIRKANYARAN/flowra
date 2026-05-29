@@ -568,3 +568,232 @@ describe('computePhaseCompletion — null/zero equivalents', () => {
   })
 
 })
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computePhaseCompletion — skipped steps
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computePhaseCompletion() — skipped step handling', () => {
+  it('blocking step with status=skipped → NOT counted as pass → incomplete', () => {
+    const steps = [
+      makeStep({ id: 's1', is_blocking: true, status: 'skipped' }),
+    ]
+    expect(computePhaseCompletion(steps)).toBe(false)
+  })
+
+  it('blocking step pass + blocking step skipped → incomplete', () => {
+    const steps = [
+      makeStep({ id: 's1', is_blocking: true, status: 'pass' }),
+      makeStep({ id: 's2', is_blocking: true, status: 'skipped' }),
+    ]
+    expect(computePhaseCompletion(steps)).toBe(false)
+  })
+
+  it('non-blocking step skipped does not affect completion', () => {
+    const steps = [
+      makeStep({ id: 's1', is_blocking: true,  status: 'pass' }),
+      makeStep({ id: 's2', is_blocking: false, status: 'skipped' }),
+    ]
+    expect(computePhaseCompletion(steps)).toBe(true)
+  })
+
+  it('blocking step with status=pending → incomplete', () => {
+    const steps = [
+      makeStep({ id: 's1', is_blocking: true, status: 'pending' }),
+    ]
+    expect(computePhaseCompletion(steps)).toBe(false)
+  })
+
+  it('blocking step with status=manual → incomplete', () => {
+    const steps = [
+      makeStep({ id: 's1', is_blocking: true, status: 'manual' }),
+    ]
+    expect(computePhaseCompletion(steps)).toBe(false)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeOverallPct — edge cases
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeOverallPct() — additional cases', () => {
+  it('single phase with 0 total_steps → 0', () => {
+    const phase = makePhase(1, [])
+    expect(computeOverallPct([phase])).toBe(0)
+  })
+
+  it('all steps passed → 100', () => {
+    const steps = [
+      makeStep({ status: 'pass' }),
+      makeStep({ id: 's2', status: 'pass' }),
+    ]
+    const phase = makePhase(1, steps)
+    expect(computeOverallPct([phase])).toBe(100)
+  })
+
+  it('no steps passed → 0', () => {
+    const steps = [
+      makeStep({ status: 'fail' }),
+      makeStep({ id: 's2', status: 'pending' }),
+    ]
+    const phase = makePhase(1, steps)
+    expect(computeOverallPct([phase])).toBe(0)
+  })
+
+  it('50% passed across single phase → 50', () => {
+    const steps = [
+      makeStep({ id: 's1', status: 'pass' }),
+      makeStep({ id: 's2', status: 'fail' }),
+    ]
+    const phase = makePhase(1, steps)
+    expect(computeOverallPct([phase])).toBe(50)
+  })
+
+  it('75% passed → 75', () => {
+    const steps = [
+      makeStep({ id: 's1', status: 'pass' }),
+      makeStep({ id: 's2', status: 'pass' }),
+      makeStep({ id: 's3', status: 'pass' }),
+      makeStep({ id: 's4', status: 'fail' }),
+    ]
+    const phase = makePhase(1, steps)
+    expect(computeOverallPct([phase])).toBe(75)
+  })
+
+  it('4 phases: 2 fully passed, 2 fully failed → 50', () => {
+    const passStep = (id: string) => makeStep({ id, status: 'pass', is_blocking: true })
+    const failStep = (id: string) => makeStep({ id, status: 'fail', is_blocking: true })
+    const p1 = makePhase(1, [passStep('a'), passStep('b')])
+    const p2 = makePhase(2, [passStep('c'), passStep('d')])
+    const p3 = makePhase(3, [failStep('e'), failStep('f')])
+    const p4 = makePhase(4, [failStep('g'), failStep('h')])
+    expect(computeOverallPct([p1, p2, p3, p4])).toBe(50)
+  })
+
+  it('uses Math.round — 1 of 3 passed → 33', () => {
+    const steps = [
+      makeStep({ id: 's1', status: 'pass' }),
+      makeStep({ id: 's2', status: 'fail' }),
+      makeStep({ id: 's3', status: 'fail' }),
+    ]
+    const phase = makePhase(1, steps)
+    expect(computeOverallPct([phase])).toBe(33)
+  })
+
+  it('2 of 3 passed → 67 (rounded)', () => {
+    const steps = [
+      makeStep({ id: 's1', status: 'pass' }),
+      makeStep({ id: 's2', status: 'pass' }),
+      makeStep({ id: 's3', status: 'fail' }),
+    ]
+    const phase = makePhase(1, steps)
+    expect(computeOverallPct([phase])).toBe(67)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// determineCurrentPhase() — additional cases
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('determineCurrentPhase() — additional cases', () => {
+  it('phase 1 incomplete → returns 1', () => {
+    const p1 = makePhase(1, [makeStep({ status: 'fail', is_blocking: true })])
+    const p2 = makePhase(2, [makeStep({ id: 's2', status: 'pass', is_blocking: true })])
+    const p3 = makePhase(3, [makeStep({ id: 's3', status: 'pass', is_blocking: true })])
+    const p4 = makePhase(4, [makeStep({ id: 's4', status: 'pass', is_blocking: true })])
+    expect(determineCurrentPhase([p1, p2, p3, p4])).toBe(1)
+  })
+
+  it('phase 1 complete, phase 2 incomplete → returns 2', () => {
+    const p1 = makePhase(1, [makeStep({ status: 'pass', is_blocking: true })])
+    const p2 = makePhase(2, [makeStep({ id: 's2', status: 'fail', is_blocking: true })])
+    const p3 = makePhase(3, [makeStep({ id: 's3', status: 'pass', is_blocking: true })])
+    const p4 = makePhase(4, [makeStep({ id: 's4', status: 'pass', is_blocking: true })])
+    expect(determineCurrentPhase([p1, p2, p3, p4])).toBe(2)
+  })
+
+  it('phases 1-3 complete, phase 4 incomplete → returns 4', () => {
+    const p1 = makePhase(1, [makeStep({ status: 'pass', is_blocking: true })])
+    const p2 = makePhase(2, [makeStep({ id: 's2', status: 'pass', is_blocking: true })])
+    const p3 = makePhase(3, [makeStep({ id: 's3', status: 'pass', is_blocking: true })])
+    const p4 = makePhase(4, [makeStep({ id: 's4', status: 'fail', is_blocking: true })])
+    expect(determineCurrentPhase([p1, p2, p3, p4])).toBe(4)
+  })
+
+  it('all phases complete → returns 4', () => {
+    const p1 = makePhase(1, [makeStep({ status: 'pass', is_blocking: true })])
+    const p2 = makePhase(2, [makeStep({ id: 's2', status: 'pass', is_blocking: true })])
+    const p3 = makePhase(3, [makeStep({ id: 's3', status: 'pass', is_blocking: true })])
+    const p4 = makePhase(4, [makeStep({ id: 's4', status: 'pass', is_blocking: true })])
+    expect(determineCurrentPhase([p1, p2, p3, p4])).toBe(4)
+  })
+
+  it('empty phase array → returns 4 (loop exits without finding incomplete)', () => {
+    expect(determineCurrentPhase([])).toBe(4)
+  })
+
+  it('only phase 3 incomplete → returns 3', () => {
+    const p1 = makePhase(1, [makeStep({ status: 'pass', is_blocking: true })])
+    const p2 = makePhase(2, [makeStep({ id: 's2', status: 'pass', is_blocking: true })])
+    const p3 = makePhase(3, [makeStep({ id: 's3', status: 'pending', is_blocking: true })])
+    const p4 = makePhase(4, [makeStep({ id: 's4', status: 'pass', is_blocking: true })])
+    expect(determineCurrentPhase([p1, p2, p3, p4])).toBe(3)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// WizardStep shape — field defaults and validation
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('WizardStep — shape tests', () => {
+  it('makeStep with no overrides has expected defaults', () => {
+    const step = makeStep()
+    expect(step.id).toBe('test_step')
+    expect(step.phase).toBe(1)
+    expect(step.status).toBe('pending')
+    expect(step.is_blocking).toBe(true)
+    expect(step.is_auto).toBe(true)
+  })
+
+  it('optional detail field is undefined when not provided', () => {
+    const step = makeStep()
+    expect(step.detail).toBeUndefined()
+  })
+
+  it('optional action_label is undefined when not provided', () => {
+    const step = makeStep()
+    expect(step.action_label).toBeUndefined()
+  })
+
+  it('optional action_href is undefined when not provided', () => {
+    const step = makeStep()
+    expect(step.action_href).toBeUndefined()
+  })
+
+  it('overrides are applied correctly', () => {
+    const step = makeStep({
+      id: 'custom_step',
+      phase: 3,
+      status: 'pass',
+      is_blocking: false,
+      detail: 'Detail text',
+      action_label: 'Fix it',
+      action_href: '/path/to/fix',
+    })
+    expect(step.id).toBe('custom_step')
+    expect(step.phase).toBe(3)
+    expect(step.status).toBe('pass')
+    expect(step.is_blocking).toBe(false)
+    expect(step.detail).toBe('Detail text')
+    expect(step.action_label).toBe('Fix it')
+    expect(step.action_href).toBe('/path/to/fix')
+  })
+
+  it('all 5 StepStatus values are valid for WizardStep', () => {
+    const statuses: Array<WizardStep['status']> = ['pass', 'fail', 'pending', 'manual', 'skipped']
+    for (const status of statuses) {
+      const step = makeStep({ status })
+      expect(step.status).toBe(status)
+    }
+  })
+})

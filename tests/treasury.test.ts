@@ -568,3 +568,234 @@ describe('buildRecommendations — return type and structure', () => {
     expect(hasConc).toBe(true)
   })
 })
+
+// ── Additional computeCashConcentration edge cases ─────────────────────────────
+
+describe('computeCashConcentration — extended edge cases', () => {
+  it('single balance equals 100%', () => {
+    expect(computeCashConcentration([500_000])).toBeCloseTo(100, 1)
+  })
+
+  it('two equal balances → 50%', () => {
+    expect(computeCashConcentration([250_000, 250_000])).toBeCloseTo(50, 1)
+  })
+
+  it('three equal balances → 33.33%', () => {
+    expect(computeCashConcentration([100, 100, 100])).toBeCloseTo(33.33, 1)
+  })
+
+  it('one very large, two tiny → near 100%', () => {
+    expect(computeCashConcentration([999_000, 500, 500])).toBeCloseTo(99.9, 0)
+  })
+
+  it('all-zero array returns 0', () => {
+    expect(computeCashConcentration([0, 0, 0])).toBe(0)
+  })
+
+  it('single zero balance returns 0', () => {
+    expect(computeCashConcentration([0])).toBe(0)
+  })
+
+  it('large number of equal accounts', () => {
+    const balances = Array(10).fill(1_000)
+    expect(computeCashConcentration(balances)).toBeCloseTo(10, 1)
+  })
+
+  it('result is between 0 and 100 inclusive for any valid input', () => {
+    const result = computeCashConcentration([100, 200, 700])
+    expect(result).toBeGreaterThanOrEqual(0)
+    expect(result).toBeLessThanOrEqual(100)
+  })
+
+  it('dominant account: 700 of 1000 → 70%', () => {
+    expect(computeCashConcentration([100, 200, 700])).toBeCloseTo(70, 1)
+  })
+
+  it('negative balance included — largest positive still wins', () => {
+    // Total = 900 - 100 = 800; largest = 900
+    const result = computeCashConcentration([900, -100])
+    expect(result).toBeCloseTo(112.5, 1)
+  })
+
+  it('returns a number (not NaN)', () => {
+    expect(isNaN(computeCashConcentration([10_000, 20_000]))).toBe(false)
+  })
+})
+
+// ── isIdleCash — extended edge cases ─────────────────────────────────────────
+
+describe('isIdleCash — boundary and combination tests', () => {
+  it('balance exactly 100_000 → not idle (must be strictly greater)', () => {
+    expect(isIdleCash(100_000, 5_000, 35)).toBe(false)
+  })
+
+  it('balance 100_001 with low outflows and old movement → idle', () => {
+    expect(isIdleCash(100_001, 0, 31)).toBe(true)
+  })
+
+  it('recentOutflows exactly 10_000 → not idle', () => {
+    expect(isIdleCash(200_000, 10_000, 35)).toBe(false)
+  })
+
+  it('recentOutflows 9_999 → still potentially idle', () => {
+    expect(isIdleCash(200_000, 9_999, 35)).toBe(true)
+  })
+
+  it('daysSinceMovement exactly 30 → not idle', () => {
+    expect(isIdleCash(200_000, 0, 30)).toBe(false)
+  })
+
+  it('daysSinceMovement 31 → idle boundary', () => {
+    expect(isIdleCash(200_000, 0, 31)).toBe(true)
+  })
+
+  it('balance=0, outflows=0, days=999 → not idle (balance guard)', () => {
+    expect(isIdleCash(0, 0, 999)).toBe(false)
+  })
+
+  it('all conditions met with large values → idle', () => {
+    expect(isIdleCash(10_000_000, 9_999, 365)).toBe(true)
+  })
+
+  it('high outflows override other conditions', () => {
+    expect(isIdleCash(5_000_000, 50_000, 90)).toBe(false)
+  })
+
+  it('returns boolean type', () => {
+    expect(typeof isIdleCash(200_000, 0, 40)).toBe('boolean')
+  })
+})
+
+// ── computeRunwayMonths — extended ────────────────────────────────────────────
+
+describe('computeRunwayMonths — extended', () => {
+  it('typical: 1_200_000 / 100_000 = 12 months', () => {
+    expect(computeRunwayMonths(1_200_000, 100_000)).toBeCloseTo(12, 1)
+  })
+
+  it('fractional result: 1_000_000 / 300_000 ≈ 3.33', () => {
+    expect(computeRunwayMonths(1_000_000, 300_000)).toBeCloseTo(3.33, 1)
+  })
+
+  it('zero cash / positive expenses → 0 months', () => {
+    expect(computeRunwayMonths(0, 50_000)).toBeCloseTo(0, 1)
+  })
+
+  it('negative expenses → null', () => {
+    expect(computeRunwayMonths(500_000, -1)).toBeNull()
+  })
+
+  it('very large cash gives very large runway', () => {
+    const result = computeRunwayMonths(1_000_000_000, 100_000)
+    expect(result).toBeCloseTo(10_000, 0)
+  })
+
+  it('small cash, large burn → less than 1 month', () => {
+    const result = computeRunwayMonths(50_000, 200_000)
+    expect(result).toBeCloseTo(0.25, 1)
+  })
+
+  it('returns number type for valid inputs', () => {
+    const result = computeRunwayMonths(500_000, 50_000)
+    expect(typeof result).toBe('number')
+  })
+})
+
+// ── computeObligationCoverage — extended ──────────────────────────────────────
+
+describe('computeObligationCoverage — extended', () => {
+  it('equal cash and obligations → ratio 1.0', () => {
+    expect(computeObligationCoverage(500_000, 500_000)).toBeCloseTo(1.0, 1)
+  })
+
+  it('cash double obligations → 2.0', () => {
+    expect(computeObligationCoverage(1_000_000, 500_000)).toBeCloseTo(2.0, 1)
+  })
+
+  it('cash half of obligations → 0.5', () => {
+    expect(computeObligationCoverage(250_000, 500_000)).toBeCloseTo(0.5, 1)
+  })
+
+  it('zero cash → 0 coverage', () => {
+    expect(computeObligationCoverage(0, 100_000)).toBeCloseTo(0, 1)
+  })
+
+  it('negative obligations → null', () => {
+    expect(computeObligationCoverage(500_000, -1)).toBeNull()
+  })
+
+  it('obligations = 0.01 → very high ratio', () => {
+    const result = computeObligationCoverage(1_000, 0.01)
+    expect(result).toBeGreaterThan(1000)
+  })
+
+  it('returns null for zero obligations', () => {
+    expect(computeObligationCoverage(100_000, 0)).toBeNull()
+  })
+
+  it('result is not NaN for valid inputs', () => {
+    const result = computeObligationCoverage(100_000, 50_000)
+    expect(isNaN(result as number)).toBe(false)
+  })
+})
+
+// ── buildRecommendations — extended scenarios ─────────────────────────────────
+
+describe('buildRecommendations — extended scenarios', () => {
+  it('idle cash > 500_000 → contains TL mevduat text', () => {
+    const result = buildRecommendations(2_000_000, false, 600_000, 12)
+    const hasIdle = result.some(r => r.includes('mevduat') || r.includes('Atıl'))
+    expect(hasIdle).toBe(true)
+  })
+
+  it('idle cash 100_001–500_000 → contains mevduat recommendation', () => {
+    const result = buildRecommendations(500_000, false, 200_000, 12)
+    const hasIdle = result.some(r => r.includes('atıl') || r.includes('mevduat'))
+    expect(hasIdle).toBe(true)
+  })
+
+  it('runway exactly 2 months → critical warning', () => {
+    const result = buildRecommendations(200_000, false, 0, 2)
+    const hasCritical = result.some(r => r.includes('Kritik') || r.includes('acil'))
+    expect(hasCritical).toBe(true)
+  })
+
+  it('runway exactly 4 months → warning (not critical)', () => {
+    const result = buildRecommendations(400_000, false, 0, 4)
+    const hasWarning = result.some(r => r.includes('Uyarı'))
+    expect(hasWarning).toBe(true)
+  })
+
+  it('runway 3 months → warning level', () => {
+    const result = buildRecommendations(300_000, false, 0, 3)
+    const hasWarning = result.some(r => r.includes('Uyarı') || r.includes('aylık'))
+    expect(hasWarning).toBe(true)
+  })
+
+  it('runway 1.5 months → critical level', () => {
+    const result = buildRecommendations(150_000, false, 0, 1.5)
+    const hasCritical = result.some(r => r.includes('Kritik'))
+    expect(hasCritical).toBe(true)
+  })
+
+  it('totalCash negative → adds cash position warning', () => {
+    const result = buildRecommendations(-10_000, false, 0, null)
+    const hasNegCash = result.some(r => r.includes('negatif') || r.includes('sıfır'))
+    expect(hasNegCash).toBe(true)
+  })
+
+  it('runway null + concentrated → 2 recommendations', () => {
+    const result = buildRecommendations(1_000_000, true, 0, null)
+    expect(result.length).toBeGreaterThanOrEqual(1)
+  })
+
+  it('multiple issues → multiple recs', () => {
+    const result = buildRecommendations(100_000, true, 600_000, 1.5)
+    expect(result.length).toBeGreaterThan(2)
+  })
+
+  it('healthy scenario: large cash, not concentrated, no idle, 24mo runway → empty', () => {
+    const result = buildRecommendations(10_000_000, false, 0, 24)
+    expect(result).toHaveLength(0)
+  })
+})

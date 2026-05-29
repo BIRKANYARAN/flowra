@@ -569,3 +569,275 @@ describe('computeYearGrowth + computeYoyLabel pipeline', () => {
     expect(label).toContain('▼')
   })
 })
+
+// ── computeYearGrowth — extended ──────────────────────────────────────────────
+
+describe('computeYearGrowth — extended', () => {
+  it('100% growth: current = 2 × prior', () => {
+    expect(computeYearGrowth(200_000, 100_000)).toBeCloseTo(100, 1)
+  })
+
+  it('50% growth', () => {
+    expect(computeYearGrowth(150_000, 100_000)).toBeCloseTo(50, 1)
+  })
+
+  it('0% growth: current === prior', () => {
+    expect(computeYearGrowth(100_000, 100_000)).toBeCloseTo(0, 1)
+  })
+
+  it('-50% decline: current = half of prior', () => {
+    expect(computeYearGrowth(50_000, 100_000)).toBeCloseTo(-50, 1)
+  })
+
+  it('-100% decline: current = 0', () => {
+    expect(computeYearGrowth(0, 100_000)).toBeCloseTo(-100, 1)
+  })
+
+  it('positive prior → result is a number', () => {
+    const result = computeYearGrowth(120_000, 80_000)
+    expect(typeof result).toBe('number')
+  })
+
+  it('prior = 0 → returns null', () => {
+    expect(computeYearGrowth(500_000, 0)).toBeNull()
+  })
+
+  it('negative prior (unusual) → still computes using Math.abs', () => {
+    const result = computeYearGrowth(100_000, -100_000)
+    // (100000 - (-100000)) / |-100000| * 100 = 200
+    expect(result).toBeCloseTo(200, 1)
+  })
+
+  it('very small growth: 100_001 vs 100_000 ≈ 0.001%', () => {
+    const result = computeYearGrowth(100_001, 100_000)
+    expect(result).toBeCloseTo(0.001, 3)
+  })
+})
+
+// ── computeYoyLabel — extended ────────────────────────────────────────────────
+
+describe('computeYoyLabel — extended', () => {
+  it('null → "—"', () => {
+    expect(computeYoyLabel(null)).toBe('—')
+  })
+
+  it('exactly 0 → "▲ +0.0%"', () => {
+    expect(computeYoyLabel(0)).toBe('▲ +0.0%')
+  })
+
+  it('positive 12.3 → "▲ +12.3%"', () => {
+    expect(computeYoyLabel(12.3)).toBe('▲ +12.3%')
+  })
+
+  it('negative -5.1 → "▼ -5.1%"', () => {
+    expect(computeYoyLabel(-5.1)).toBe('▼ -5.1%')
+  })
+
+  it('large positive 200.0 → contains ▲', () => {
+    expect(computeYoyLabel(200)).toContain('▲')
+  })
+
+  it('large negative -99.9 → contains ▼', () => {
+    expect(computeYoyLabel(-99.9)).toContain('▼')
+  })
+
+  it('result always contains %', () => {
+    expect(computeYoyLabel(25)).toContain('%')
+    expect(computeYoyLabel(-25)).toContain('%')
+  })
+
+  it('positive label contains + sign', () => {
+    expect(computeYoyLabel(10)).toContain('+')
+  })
+
+  it('0.05 rounds to 0.1% or 0.0% — contains ▲', () => {
+    expect(computeYoyLabel(0.05)).toContain('▲')
+  })
+})
+
+// ── computeQuarterlyRevenue — extended ───────────────────────────────────────
+
+describe('computeQuarterlyRevenue — extended', () => {
+  it('empty array → all quarters have 0 revenue', () => {
+    const result = computeQuarterlyRevenue([])
+    for (const q of result) {
+      expect(q.revenue_try).toBe(0)
+    }
+  })
+
+  it('empty array → 4 quarters returned', () => {
+    expect(computeQuarterlyRevenue([])).toHaveLength(4)
+  })
+
+  it('Q1 boundary: March (03) goes to Q1', () => {
+    const result = computeQuarterlyRevenue([
+      { period_key: '2025-03', revenue_try: 1000, cogs_try: 0, expenses_try: 0, net_income_try: 1000, cash_end_try: 0 },
+    ])
+    const q1 = result.find(q => q.quarter === 'Q1')
+    expect(q1?.revenue_try).toBe(1000)
+  })
+
+  it('Q2 boundary: April (04) goes to Q2', () => {
+    const result = computeQuarterlyRevenue([
+      { period_key: '2025-04', revenue_try: 2000, cogs_try: 0, expenses_try: 0, net_income_try: 2000, cash_end_try: 0 },
+    ])
+    const q2 = result.find(q => q.quarter === 'Q2')
+    expect(q2?.revenue_try).toBe(2000)
+  })
+
+  it('Q3 boundary: October (10) goes to Q4', () => {
+    const result = computeQuarterlyRevenue([
+      { period_key: '2025-10', revenue_try: 3000, cogs_try: 0, expenses_try: 0, net_income_try: 3000, cash_end_try: 0 },
+    ])
+    const q4 = result.find(q => q.quarter === 'Q4')
+    expect(q4?.revenue_try).toBe(3000)
+  })
+
+  it('margin_pct is 0 when revenue is 0', () => {
+    const result = computeQuarterlyRevenue([])
+    for (const q of result) {
+      expect(q.margin_pct).toBe(0)
+    }
+  })
+
+  it('margin_pct is 100% when net = revenue', () => {
+    const result = computeQuarterlyRevenue([
+      { period_key: '2025-01', revenue_try: 1000, cogs_try: 0, expenses_try: 0, net_income_try: 1000, cash_end_try: 0 },
+    ])
+    const q1 = result.find(q => q.quarter === 'Q1')
+    expect(q1?.margin_pct).toBeCloseTo(100, 1)
+  })
+
+  it('multiple months in same quarter accumulate correctly', () => {
+    const result = computeQuarterlyRevenue([
+      { period_key: '2025-01', revenue_try: 300, cogs_try: 0, expenses_try: 0, net_income_try: 100, cash_end_try: 0 },
+      { period_key: '2025-02', revenue_try: 400, cogs_try: 0, expenses_try: 0, net_income_try: 150, cash_end_try: 0 },
+      { period_key: '2025-03', revenue_try: 300, cogs_try: 0, expenses_try: 0, net_income_try: 100, cash_end_try: 0 },
+    ])
+    const q1 = result.find(q => q.quarter === 'Q1')
+    expect(q1?.revenue_try).toBe(1000)
+  })
+
+  it('quarters are returned in order Q1-Q4', () => {
+    const result = computeQuarterlyRevenue([])
+    expect(result[0].quarter).toBe('Q1')
+    expect(result[1].quarter).toBe('Q2')
+    expect(result[2].quarter).toBe('Q3')
+    expect(result[3].quarter).toBe('Q4')
+  })
+})
+
+// ── computeBestMonth & computeWorstMonth — extended ───────────────────────────
+
+describe('computeBestMonth — extended', () => {
+  it('single period → returns that period', () => {
+    const result = computeBestMonth([
+      { period_key: '2025-06', revenue_try: 50_000, cogs_try: 0, expenses_try: 0, net_income_try: 0, cash_end_try: 0 },
+    ])
+    expect(result?.month).toBe('2025-06')
+    expect(result?.value).toBe(50_000)
+  })
+
+  it('all equal revenues → returns first encountered (reduce behavior)', () => {
+    const periods = [
+      { period_key: '2025-01', revenue_try: 1000, cogs_try: 0, expenses_try: 0, net_income_try: 0, cash_end_try: 0 },
+      { period_key: '2025-02', revenue_try: 1000, cogs_try: 0, expenses_try: 0, net_income_try: 0, cash_end_try: 0 },
+    ]
+    const result = computeBestMonth(periods)
+    expect(result?.value).toBe(1000)
+  })
+
+  it('correctly identifies max among ascending values', () => {
+    const periods = [
+      { period_key: '2025-01', revenue_try: 100, cogs_try: 0, expenses_try: 0, net_income_try: 0, cash_end_try: 0 },
+      { period_key: '2025-06', revenue_try: 999, cogs_try: 0, expenses_try: 0, net_income_try: 0, cash_end_try: 0 },
+      { period_key: '2025-12', revenue_try: 500, cogs_try: 0, expenses_try: 0, net_income_try: 0, cash_end_try: 0 },
+    ]
+    expect(computeBestMonth(periods)?.month).toBe('2025-06')
+  })
+
+  it('empty → null', () => {
+    expect(computeBestMonth([])).toBeNull()
+  })
+})
+
+describe('computeWorstMonth — extended', () => {
+  it('single period → returns that period', () => {
+    const result = computeWorstMonth([
+      { period_key: '2025-06', revenue_try: 10_000, cogs_try: 0, expenses_try: 0, net_income_try: 0, cash_end_try: 0 },
+    ])
+    expect(result?.month).toBe('2025-06')
+  })
+
+  it('correctly identifies min among values', () => {
+    const periods = [
+      { period_key: '2025-01', revenue_try: 5000, cogs_try: 0, expenses_try: 0, net_income_try: 0, cash_end_try: 0 },
+      { period_key: '2025-02', revenue_try: 200, cogs_try: 0, expenses_try: 0, net_income_try: 0, cash_end_try: 0 },
+      { period_key: '2025-03', revenue_try: 3000, cogs_try: 0, expenses_try: 0, net_income_try: 0, cash_end_try: 0 },
+    ]
+    expect(computeWorstMonth(periods)?.month).toBe('2025-02')
+    expect(computeWorstMonth(periods)?.value).toBe(200)
+  })
+
+  it('empty → null', () => {
+    expect(computeWorstMonth([])).toBeNull()
+  })
+})
+
+// ── computeAnnualMetrics — extended ───────────────────────────────────────────
+
+describe('computeAnnualMetrics — extended', () => {
+  it('empty periods → all zero metrics', () => {
+    const result = computeAnnualMetrics([])
+    expect(result.revenue_try).toBe(0)
+    expect(result.net_income_try).toBe(0)
+    expect(result.gross_margin_pct).toBe(0)
+  })
+
+  it('single month with cogs: gross_profit = revenue - cogs', () => {
+    const result = computeAnnualMetrics([
+      { period_key: '2025-01', revenue_try: 100_000, cogs_try: 40_000, expenses_try: 20_000, net_income_try: 40_000, cash_end_try: 50_000 },
+    ])
+    expect(result.gross_profit_try).toBe(60_000)
+  })
+
+  it('gross_margin_pct when revenue = 0 → 0', () => {
+    const result = computeAnnualMetrics([
+      { period_key: '2025-01', revenue_try: 0, cogs_try: 0, expenses_try: 0, net_income_try: 0, cash_end_try: 0 },
+    ])
+    expect(result.gross_margin_pct).toBe(0)
+  })
+
+  it('ebitda = gross_profit - expenses', () => {
+    const result = computeAnnualMetrics([
+      { period_key: '2025-01', revenue_try: 100_000, cogs_try: 30_000, expenses_try: 20_000, net_income_try: 50_000, cash_end_try: 0 },
+    ])
+    expect(result.ebitda_try).toBe(50_000) // (100000-30000) - 20000
+  })
+
+  it('cash_end_try is from the last period', () => {
+    const result = computeAnnualMetrics([
+      { period_key: '2025-01', revenue_try: 100_000, cogs_try: 0, expenses_try: 0, net_income_try: 0, cash_end_try: 10_000 },
+      { period_key: '2025-02', revenue_try: 100_000, cogs_try: 0, expenses_try: 0, net_income_try: 0, cash_end_try: 25_000 },
+    ])
+    expect(result.cash_end_try).toBe(25_000)
+  })
+
+  it('net_margin_pct = net_income / revenue * 100', () => {
+    const result = computeAnnualMetrics([
+      { period_key: '2025-01', revenue_try: 100_000, cogs_try: 0, expenses_try: 0, net_income_try: 20_000, cash_end_try: 0 },
+    ])
+    expect(result.net_margin_pct).toBeCloseTo(20, 1)
+  })
+
+  it('sums multiple periods correctly', () => {
+    const result = computeAnnualMetrics([
+      { period_key: '2025-01', revenue_try: 50_000, cogs_try: 10_000, expenses_try: 5_000, net_income_try: 35_000, cash_end_try: 0 },
+      { period_key: '2025-02', revenue_try: 50_000, cogs_try: 10_000, expenses_try: 5_000, net_income_try: 35_000, cash_end_try: 0 },
+    ])
+    expect(result.revenue_try).toBe(100_000)
+    expect(result.cogs_try).toBe(20_000)
+    expect(result.expenses_try).toBe(10_000)
+    expect(result.net_income_try).toBe(70_000)
+  })
+})

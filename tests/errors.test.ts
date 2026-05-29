@@ -563,3 +563,313 @@ describe('AppError — message and immutability', () => {
     expect(isAppError(caught)).toBe(true)
   })
 })
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AppError — toClientJSON and toLogContext
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('AppError.toClientJSON()', () => {
+  it('returns error, code, type fields', () => {
+    const err = new AppError('UNAUTHORIZED', 'Yetki yok')
+    const json = err.toClientJSON()
+    expect(json.error).toBe('Yetki yok')
+    expect(json.code).toBe('UNAUTHORIZED')
+    expect(json.type).toBe('SECURITY')
+  })
+
+  it('never leaks details field', () => {
+    const err = new AppError('DB_INSERT_FAILED', 'kayıt hatası', { sql: 'SELECT *' })
+    const json = err.toClientJSON()
+    expect(json).not.toHaveProperty('details')
+    expect(json).not.toHaveProperty('httpStatus')
+  })
+
+  it('toClientJSON returns plain object with exactly 3 keys', () => {
+    const err = new AppError('FORBIDDEN', 'Erişim engellendi')
+    const json = err.toClientJSON()
+    expect(Object.keys(json).sort()).toEqual(['code', 'error', 'type'])
+  })
+
+  it('toClientJSON.type reflects BUSINESS for a business error', () => {
+    const err = new AppError('NO_ITEMS', 'Kalem yok')
+    expect(err.toClientJSON().type).toBe('BUSINESS')
+  })
+
+  it('toClientJSON.type reflects SYSTEM for a system error', () => {
+    const err = new AppError('DB_QUERY_FAILED', 'Sorgu hatası')
+    expect(err.toClientJSON().type).toBe('SYSTEM')
+  })
+})
+
+describe('AppError.toLogContext()', () => {
+  it('returns error_type, error_code, error_msg, details', () => {
+    const err = new AppError('STORAGE_UPLOAD_FAILED', 'Yükleme başarısız', { file: 'x.pdf' })
+    const ctx = err.toLogContext()
+    expect(ctx.error_type).toBe('SYSTEM')
+    expect(ctx.error_code).toBe('STORAGE_UPLOAD_FAILED')
+    expect(ctx.error_msg).toBe('Yükleme başarısız')
+    expect(ctx.details).toEqual({ file: 'x.pdf' })
+  })
+
+  it('details is undefined when no details provided', () => {
+    const err = new AppError('INVALID_INPUT', 'Geçersiz giriş')
+    const ctx = err.toLogContext()
+    expect(ctx.details).toBeUndefined()
+  })
+
+  it('toLogContext includes all 4 keys', () => {
+    const err = new AppError('RPC_FAILED', 'RPC hatası')
+    const ctx = err.toLogContext()
+    expect(Object.keys(ctx).sort()).toEqual(['details', 'error_code', 'error_msg', 'error_type'])
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ERROR_CODES — exhaustive type/status checks for remaining codes
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('ERROR_CODES — purchase/partner codes', () => {
+  it('PURCHASE_NOT_FOUND is 404 BUSINESS', () => {
+    expect(ERROR_CODES.PURCHASE_NOT_FOUND.httpStatus).toBe(404)
+    expect(ERROR_CODES.PURCHASE_NOT_FOUND.type).toBe('BUSINESS')
+  })
+
+  it('PURCHASE_NOT_DRAFT is 409 BUSINESS', () => {
+    expect(ERROR_CODES.PURCHASE_NOT_DRAFT.httpStatus).toBe(409)
+    expect(ERROR_CODES.PURCHASE_NOT_DRAFT.type).toBe('BUSINESS')
+  })
+
+  it('PURCHASE_NO_LINES is 422 BUSINESS', () => {
+    expect(ERROR_CODES.PURCHASE_NO_LINES.httpStatus).toBe(422)
+    expect(ERROR_CODES.PURCHASE_NO_LINES.type).toBe('BUSINESS')
+  })
+
+  it('PURCHASE_ALLOC_FAILED is 422 BUSINESS', () => {
+    expect(ERROR_CODES.PURCHASE_ALLOC_FAILED.httpStatus).toBe(422)
+    expect(ERROR_CODES.PURCHASE_ALLOC_FAILED.type).toBe('BUSINESS')
+  })
+
+  it('PARTNER_NOT_FOUND is 404 BUSINESS', () => {
+    expect(ERROR_CODES.PARTNER_NOT_FOUND.httpStatus).toBe(404)
+    expect(ERROR_CODES.PARTNER_NOT_FOUND.type).toBe('BUSINESS')
+  })
+
+  it('PARTNER_SHARE_RATIO_INVALID is 422 BUSINESS', () => {
+    expect(ERROR_CODES.PARTNER_SHARE_RATIO_INVALID.httpStatus).toBe(422)
+    expect(ERROR_CODES.PARTNER_SHARE_RATIO_INVALID.type).toBe('BUSINESS')
+  })
+
+  it('PARTNER_TX_NOT_FOUND is 404 BUSINESS', () => {
+    expect(ERROR_CODES.PARTNER_TX_NOT_FOUND.httpStatus).toBe(404)
+    expect(ERROR_CODES.PARTNER_TX_NOT_FOUND.type).toBe('BUSINESS')
+  })
+
+  it('PARTNER_SHARE_RATIO_SUM is 422 BUSINESS', () => {
+    expect(ERROR_CODES.PARTNER_SHARE_RATIO_SUM.httpStatus).toBe(422)
+    expect(ERROR_CODES.PARTNER_SHARE_RATIO_SUM.type).toBe('BUSINESS')
+  })
+})
+
+describe('ERROR_CODES — audit/rollback codes', () => {
+  it('AUDIT_FORBIDDEN is 403 SECURITY', () => {
+    expect(ERROR_CODES.AUDIT_FORBIDDEN.httpStatus).toBe(403)
+    expect(ERROR_CODES.AUDIT_FORBIDDEN.type).toBe('SECURITY')
+  })
+
+  it('ROLLBACK_NOT_SUPPORTED is 422 BUSINESS', () => {
+    expect(ERROR_CODES.ROLLBACK_NOT_SUPPORTED.httpStatus).toBe(422)
+    expect(ERROR_CODES.ROLLBACK_NOT_SUPPORTED.type).toBe('BUSINESS')
+  })
+
+  it('ROLLBACK_ENTITY_NOT_FOUND is 404 BUSINESS', () => {
+    expect(ERROR_CODES.ROLLBACK_ENTITY_NOT_FOUND.httpStatus).toBe(404)
+    expect(ERROR_CODES.ROLLBACK_ENTITY_NOT_FOUND.type).toBe('BUSINESS')
+  })
+
+  it('PERIOD_LOCKED is 409 BUSINESS', () => {
+    expect(ERROR_CODES.PERIOD_LOCKED.httpStatus).toBe(409)
+    expect(ERROR_CODES.PERIOD_LOCKED.type).toBe('BUSINESS')
+  })
+
+  it('COMPANY_NOT_RESOLVED is 500 SYSTEM', () => {
+    expect(ERROR_CODES.COMPANY_NOT_RESOLVED.httpStatus).toBe(500)
+    expect(ERROR_CODES.COMPANY_NOT_RESOLVED.type).toBe('SYSTEM')
+  })
+})
+
+describe('ERROR_CODES — security codes', () => {
+  it('UNAUTHORIZED is 401 SECURITY', () => {
+    expect(ERROR_CODES.UNAUTHORIZED.httpStatus).toBe(401)
+    expect(ERROR_CODES.UNAUTHORIZED.type).toBe('SECURITY')
+  })
+
+  it('FORBIDDEN is 403 SECURITY', () => {
+    expect(ERROR_CODES.FORBIDDEN.httpStatus).toBe(403)
+    expect(ERROR_CODES.FORBIDDEN.type).toBe('SECURITY')
+  })
+
+  it('RATE_LIMITED is 429 SECURITY', () => {
+    expect(ERROR_CODES.RATE_LIMITED.httpStatus).toBe(429)
+    expect(ERROR_CODES.RATE_LIMITED.type).toBe('SECURITY')
+  })
+})
+
+describe('ERROR_CODES — system DB codes', () => {
+  it('DB_INSERT_FAILED is 500 SYSTEM', () => {
+    expect(ERROR_CODES.DB_INSERT_FAILED.httpStatus).toBe(500)
+    expect(ERROR_CODES.DB_INSERT_FAILED.type).toBe('SYSTEM')
+  })
+
+  it('DB_UPDATE_FAILED is 500 SYSTEM', () => {
+    expect(ERROR_CODES.DB_UPDATE_FAILED.httpStatus).toBe(500)
+    expect(ERROR_CODES.DB_UPDATE_FAILED.type).toBe('SYSTEM')
+  })
+
+  it('DB_READ_FAILED is 500 SYSTEM', () => {
+    expect(ERROR_CODES.DB_READ_FAILED.httpStatus).toBe(500)
+    expect(ERROR_CODES.DB_READ_FAILED.type).toBe('SYSTEM')
+  })
+
+  it('DB_QUERY_FAILED is 500 SYSTEM', () => {
+    expect(ERROR_CODES.DB_QUERY_FAILED.httpStatus).toBe(500)
+    expect(ERROR_CODES.DB_QUERY_FAILED.type).toBe('SYSTEM')
+  })
+
+  it('STORAGE_UPLOAD_FAILED is 500 SYSTEM', () => {
+    expect(ERROR_CODES.STORAGE_UPLOAD_FAILED.httpStatus).toBe(500)
+    expect(ERROR_CODES.STORAGE_UPLOAD_FAILED.type).toBe('SYSTEM')
+  })
+
+  it('RPC_FAILED is 500 SYSTEM', () => {
+    expect(ERROR_CODES.RPC_FAILED.httpStatus).toBe(500)
+    expect(ERROR_CODES.RPC_FAILED.type).toBe('SYSTEM')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// toErrorResponse — additional coverage
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('toErrorResponse() — additional edge cases', () => {
+  it('AppError RATE_LIMITED → 429 status', () => {
+    const err = new AppError('RATE_LIMITED', 'Çok fazla istek')
+    const { status } = toErrorResponse(err)
+    expect(status).toBe(429)
+  })
+
+  it('AppError UNAUTHORIZED → 401 status', () => {
+    const err = new AppError('UNAUTHORIZED', 'Kimlik doğrulama gerekli')
+    const { status } = toErrorResponse(err)
+    expect(status).toBe(401)
+  })
+
+  it('AppError FX_UNAVAILABLE → 503 status', () => {
+    const err = new AppError('FX_UNAVAILABLE', 'Kur servisi erişilemiyor')
+    const { status } = toErrorResponse(err)
+    expect(status).toBe(503)
+  })
+
+  it('unknown Error → 500 status with safe body', () => {
+    const err = new Error('Disk full')
+    const { status, body } = toErrorResponse(err)
+    expect(status).toBe(500)
+    expect(body).toHaveProperty('error')
+    expect(body).not.toHaveProperty('stack')
+  })
+
+  it('null → 500 status', () => {
+    const { status } = toErrorResponse(null)
+    expect(status).toBe(500)
+  })
+
+  it('plain string → 500 status', () => {
+    const { status } = toErrorResponse('something went wrong')
+    expect(status).toBe(500)
+  })
+
+  it('AppError body contains code field', () => {
+    const err = new AppError('PRODUCT_NOT_FOUND', 'Ürün bulunamadı')
+    const { body } = toErrorResponse(err)
+    expect(body).toHaveProperty('code', 'PRODUCT_NOT_FOUND')
+  })
+
+  it('AppError body contains type field', () => {
+    const err = new AppError('EXPENSE_NOT_FOUND', 'Masraf yok')
+    const { body } = toErrorResponse(err)
+    expect(body).toHaveProperty('type', 'BUSINESS')
+  })
+
+  it('system error body code is SYSTEM_ERROR', () => {
+    const { body } = toErrorResponse(undefined)
+    expect((body as Record<string, unknown>).code).toBe('SYSTEM_ERROR')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// isAppError — additional guards
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('isAppError() — additional edge cases', () => {
+  it('plain Error is NOT AppError', () => {
+    expect(isAppError(new Error('plain'))).toBe(false)
+  })
+
+  it('null is NOT AppError', () => {
+    expect(isAppError(null)).toBe(false)
+  })
+
+  it('undefined is NOT AppError', () => {
+    expect(isAppError(undefined)).toBe(false)
+  })
+
+  it('plain object is NOT AppError', () => {
+    expect(isAppError({ code: 'UNAUTHORIZED', message: 'x' })).toBe(false)
+  })
+
+  it('string is NOT AppError', () => {
+    expect(isAppError('UNAUTHORIZED')).toBe(false)
+  })
+
+  it('AppError with SYSTEM type is AppError', () => {
+    const err = new AppError('DB_INSERT_FAILED', 'hata')
+    expect(isAppError(err)).toBe(true)
+  })
+
+  it('AppError with SECURITY type is AppError', () => {
+    const err = new AppError('FORBIDDEN', 'yasak')
+    expect(isAppError(err)).toBe(true)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AppError — httpStatus derived from code, not type
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('AppError — httpStatus comes from ERROR_CODES, not ErrorType default', () => {
+  it('PROFORMA_NOT_FOUND is 404 even though type is BUSINESS (default 422)', () => {
+    const err = new AppError('PROFORMA_NOT_FOUND', 'bulunamadı')
+    expect(err.httpStatus).toBe(404)
+    expect(err.type).toBe('BUSINESS')
+  })
+
+  it('ALREADY_CONVERTED is 409 even though type is BUSINESS (default 422)', () => {
+    const err = new AppError('ALREADY_CONVERTED', 'zaten dönüştürüldü')
+    expect(err.httpStatus).toBe(409)
+  })
+
+  it('PERIOD_LOCKED is 409 not 422', () => {
+    const err = new AppError('PERIOD_LOCKED', 'dönem kilitli')
+    expect(err.httpStatus).toBe(409)
+    expect(err.type).toBe('BUSINESS')
+  })
+
+  it('INSUFFICIENT_STOCK is 409 not 422', () => {
+    const err = new AppError('INSUFFICIENT_STOCK', 'yetersiz stok')
+    expect(err.httpStatus).toBe(409)
+  })
+
+  it('NEGATIVE_STOCK is 409 not 422', () => {
+    const err = new AppError('NEGATIVE_STOCK', 'negatif stok')
+    expect(err.httpStatus).toBe(409)
+  })
+})

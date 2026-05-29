@@ -570,3 +570,226 @@ describe('computeSkuPricingHealth — additional integration tests', () => {
     }
   })
 })
+
+// ── computeEffectivePrice — extended ─────────────────────────────────────────
+
+describe('computeEffectivePrice — extended', () => {
+  it('100 / 10 = 10', () => {
+    expect(computeEffectivePrice(100, 10)).toBeCloseTo(10, 2)
+  })
+
+  it('0 revenue / 5 qty = 0', () => {
+    expect(computeEffectivePrice(0, 5)).toBeCloseTo(0, 2)
+  })
+
+  it('fractional: 1000 / 3 ≈ 333.33', () => {
+    expect(computeEffectivePrice(1000, 3)).toBeCloseTo(333.33, 1)
+  })
+
+  it('qty = 0 → null', () => {
+    expect(computeEffectivePrice(999, 0)).toBeNull()
+  })
+
+  it('large revenue with small qty', () => {
+    expect(computeEffectivePrice(1_000_000, 1)).toBeCloseTo(1_000_000, 0)
+  })
+
+  it('returns number type for valid inputs', () => {
+    expect(typeof computeEffectivePrice(500, 5)).toBe('number')
+  })
+
+  it('negative revenue (refund scenario) → negative effective price', () => {
+    expect(computeEffectivePrice(-500, 5)).toBeCloseTo(-100, 1)
+  })
+})
+
+// ── computeDiscountRate — extended ────────────────────────────────────────────
+
+describe('computeDiscountRate — extended', () => {
+  it('no discount: list = effective → 0%', () => {
+    expect(computeDiscountRate(100, 100)).toBeCloseTo(0, 1)
+  })
+
+  it('50% discount: list=200, effective=100', () => {
+    expect(computeDiscountRate(200, 100)).toBeCloseTo(50, 1)
+  })
+
+  it('100% discount: effective=0', () => {
+    expect(computeDiscountRate(100, 0)).toBeCloseTo(100, 1)
+  })
+
+  it('list = 0 → null', () => {
+    expect(computeDiscountRate(0, 50)).toBeNull()
+  })
+
+  it('effective > list → clamped to 0 (negative discount not allowed)', () => {
+    expect(computeDiscountRate(100, 150)).toBe(0)
+  })
+
+  it('result is between 0 and 100', () => {
+    const result = computeDiscountRate(1000, 750)
+    expect(result).toBeGreaterThanOrEqual(0)
+    expect(result).toBeLessThanOrEqual(100)
+  })
+
+  it('25% discount: list=100, effective=75', () => {
+    expect(computeDiscountRate(100, 75)).toBeCloseTo(25, 1)
+  })
+})
+
+// ── classifyDiscountDiscipline — extended ────────────────────────────────────
+
+describe('classifyDiscountDiscipline — extended', () => {
+  it('0% → disciplined', () => {
+    expect(classifyDiscountDiscipline(0)).toBe('disciplined')
+  })
+
+  it('4.9% → disciplined (just below 5)', () => {
+    expect(classifyDiscountDiscipline(4.9)).toBe('disciplined')
+  })
+
+  it('5% → moderate (boundary)', () => {
+    expect(classifyDiscountDiscipline(5)).toBe('moderate')
+  })
+
+  it('14.9% → moderate (just below 15)', () => {
+    expect(classifyDiscountDiscipline(14.9)).toBe('moderate')
+  })
+
+  it('15% → aggressive (boundary)', () => {
+    expect(classifyDiscountDiscipline(15)).toBe('aggressive')
+  })
+
+  it('29.9% → aggressive (just below 30)', () => {
+    expect(classifyDiscountDiscipline(29.9)).toBe('aggressive')
+  })
+
+  it('30% → distressed (boundary)', () => {
+    expect(classifyDiscountDiscipline(30)).toBe('distressed')
+  })
+
+  it('100% → distressed', () => {
+    expect(classifyDiscountDiscipline(100)).toBe('distressed')
+  })
+
+  it('50% → distressed', () => {
+    expect(classifyDiscountDiscipline(50)).toBe('distressed')
+  })
+
+  it('10% → moderate', () => {
+    expect(classifyDiscountDiscipline(10)).toBe('moderate')
+  })
+})
+
+// ── computePriceRealization — extended ───────────────────────────────────────
+
+describe('computePriceRealization — extended', () => {
+  it('actual = list → 100%', () => {
+    expect(computePriceRealization(1000, 1000)).toBeCloseTo(100, 1)
+  })
+
+  it('actual = half of list → 50%', () => {
+    expect(computePriceRealization(500, 1000)).toBeCloseTo(50, 1)
+  })
+
+  it('actual = 0 → 0%', () => {
+    expect(computePriceRealization(0, 1000)).toBeCloseTo(0, 1)
+  })
+
+  it('list = 0 → null', () => {
+    expect(computePriceRealization(500, 0)).toBeNull()
+  })
+
+  it('actual > list → > 100%', () => {
+    const result = computePriceRealization(1100, 1000)
+    expect(result).toBeCloseTo(110, 1)
+  })
+
+  it('returns number type for valid inputs', () => {
+    expect(typeof computePriceRealization(800, 1000)).toBe('number')
+  })
+})
+
+// ── computePriceVariance — extended ──────────────────────────────────────────
+
+describe('computePriceVariance — extended', () => {
+  it('current > prior → positive variance', () => {
+    expect(computePriceVariance(110, 100)).toBeCloseTo(10, 1)
+  })
+
+  it('current < prior → negative variance', () => {
+    expect(computePriceVariance(90, 100)).toBeCloseTo(-10, 1)
+  })
+
+  it('current = prior → 0%', () => {
+    expect(computePriceVariance(100, 100)).toBeCloseTo(0, 1)
+  })
+
+  it('prior = 0 → null', () => {
+    expect(computePriceVariance(100, 0)).toBeNull()
+  })
+
+  it('100% increase', () => {
+    expect(computePriceVariance(200, 100)).toBeCloseTo(100, 1)
+  })
+
+  it('-100% decline: current = 0', () => {
+    expect(computePriceVariance(0, 100)).toBeCloseTo(-100, 1)
+  })
+
+  it('small variance: 101 vs 100 → 1%', () => {
+    expect(computePriceVariance(101, 100)).toBeCloseTo(1, 1)
+  })
+})
+
+// ── classifyPricingPressure — extended ───────────────────────────────────────
+
+describe('classifyPricingPressure — extended', () => {
+  it('both null → insufficient_data', () => {
+    expect(classifyPricingPressure(null, null)).toBe('insufficient_data')
+  })
+
+  it('high discount + null variance → under_pressure', () => {
+    expect(classifyPricingPressure(null, 25)).toBe('under_pressure')
+  })
+
+  it('high discount + variance -10 → under_pressure', () => {
+    expect(classifyPricingPressure(-10, 25)).toBe('under_pressure')
+  })
+
+  it('high discount (>=25) + variance exactly -5 → under_pressure', () => {
+    expect(classifyPricingPressure(-5, 25)).toBe('under_pressure')
+  })
+
+  it('discount 20% (>=20 but <25) + stable variance → compressing', () => {
+    expect(classifyPricingPressure(0, 20)).toBe('compressing')
+  })
+
+  it('variance -6% (< -5) → compressing', () => {
+    expect(classifyPricingPressure(-6, null)).toBe('compressing')
+  })
+
+  it('variance +10% → expanding', () => {
+    expect(classifyPricingPressure(10, null)).toBe('expanding')
+  })
+
+  it('variance +5.1% → expanding', () => {
+    expect(classifyPricingPressure(5.1, null)).toBe('expanding')
+  })
+
+  it('variance 0%, discount 5% → stable', () => {
+    expect(classifyPricingPressure(0, 5)).toBe('stable')
+  })
+
+  it('variance exactly 5%, discount 14% → stable', () => {
+    expect(classifyPricingPressure(5, 14)).toBe('stable')
+  })
+
+  it('variance -5% (boundary), discount 10% → stable', () => {
+    expect(classifyPricingPressure(-5, 10)).toBe('stable')
+  })
+
+  it('variance 3%, discount null → stable (variance in range)', () => {
+    expect(classifyPricingPressure(3, null)).toBe('stable')
+  })
+})

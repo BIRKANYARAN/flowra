@@ -563,3 +563,239 @@ describe('classifyComplianceStatus() — extra boundary tests', () => {
     expect(classifyComplianceStatus(39)).toBe('critical')
   })
 })
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 6. computeKdvNetObligation — additional edge cases
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeKdvNetObligation() — extended cases', () => {
+  it('very large output and small input → correct difference', () => {
+    expect(computeKdvNetObligation(1_000_000, 1)).toBe(999_999)
+  })
+
+  it('both zero → 0', () => {
+    expect(computeKdvNetObligation(0, 0)).toBe(0)
+  })
+
+  it('output is 0, input is positive → 0 (never negative)', () => {
+    expect(computeKdvNetObligation(0, 50_000)).toBe(0)
+  })
+
+  it('output by 1 more than input → returns 1', () => {
+    expect(computeKdvNetObligation(10_001, 10_000)).toBe(1)
+  })
+
+  it('fractional values — output 1000.50, input 500.25 → 500.25', () => {
+    expect(computeKdvNetObligation(1000.50, 500.25)).toBeCloseTo(500.25, 1)
+  })
+
+  it('input exceeds output by large margin → clamped to 0', () => {
+    expect(computeKdvNetObligation(100, 99_000)).toBe(0)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 7. computeCorporateTaxProvision — additional edge cases
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeCorporateTaxProvision() — extended cases', () => {
+  it('net income of 1 → 0.20', () => {
+    expect(computeCorporateTaxProvision(1)).toBeCloseTo(0.20, 5)
+  })
+
+  it('net income of 1_000_000 → 200_000', () => {
+    expect(computeCorporateTaxProvision(1_000_000)).toBe(200_000)
+  })
+
+  it('net income of exactly 0 → returns 0 (floor at zero)', () => {
+    expect(computeCorporateTaxProvision(0)).toBe(0)
+  })
+
+  it('negative net income of -1 → returns 0', () => {
+    expect(computeCorporateTaxProvision(-1)).toBe(0)
+  })
+
+  it('very negative income → 0', () => {
+    expect(computeCorporateTaxProvision(-9_999_999)).toBe(0)
+  })
+
+  it('fractional income → fraction of 0.20', () => {
+    expect(computeCorporateTaxProvision(1_234.56)).toBeCloseTo(246.912, 2)
+  })
+
+  it('rate is exactly 20%', () => {
+    // Verify the rate by checking 100 → 20
+    expect(computeCorporateTaxProvision(100)).toBeCloseTo(20, 5)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 8. computeGeciVergi — extended cases
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeGeciVergi() — extended cases', () => {
+  it('Q1: income=0, no prior → 0', () => {
+    expect(computeGeciVergi(0, 1, 0)).toBe(0)
+  })
+
+  it('Q4 with equal prior payments → 0 (already fully paid)', () => {
+    // YTD income 100k, Q4 fraction=1.0 → cumulative = 100k*0.20 = 20k
+    // prior payments = 20k → result = 0
+    expect(computeGeciVergi(100_000, 4, 20_000)).toBe(0)
+  })
+
+  it('Q4 with over-payment → 0 (floored, not negative)', () => {
+    expect(computeGeciVergi(100_000, 4, 25_000)).toBe(0)
+  })
+
+  it('Q2 fraction is 0.50: income=200k → cumulative=20k, prior=5k → 15k', () => {
+    // 200k * 0.20 * 0.50 = 20k; minus 5k = 15k
+    expect(computeGeciVergi(200_000, 2, 5_000)).toBe(15_000)
+  })
+
+  it('Q3 fraction is 0.75: income=400k → cumulative=60k, prior=0 → 60k', () => {
+    // 400k * 0.20 * 0.75 = 60k
+    expect(computeGeciVergi(400_000, 3, 0)).toBe(60_000)
+  })
+
+  it('negative net income → cumulative ≤ 0 → always returns 0', () => {
+    expect(computeGeciVergi(-500_000, 1, 0)).toBe(0)
+  })
+
+  it('zero income → all quarters return 0', () => {
+    expect(computeGeciVergi(0, 1, 0)).toBe(0)
+    expect(computeGeciVergi(0, 2, 0)).toBe(0)
+    expect(computeGeciVergi(0, 3, 0)).toBe(0)
+    expect(computeGeciVergi(0, 4, 0)).toBe(0)
+  })
+
+  it('Q1 cumulative = 25% × 20% = 5% of income', () => {
+    // 1_000 * 0.20 * 0.25 = 50
+    expect(computeGeciVergi(1_000, 1, 0)).toBeCloseTo(50, 5)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 9. computeComplianceScore — extended weight-based edge cases
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeComplianceScore() — extended weight-based cases', () => {
+  it('single on_time obligation → 100', () => {
+    expect(computeComplianceScore([{ status: 'on_time', amount_try: 1_000 }])).toBe(100)
+  })
+
+  it('single overdue obligation → 0', () => {
+    expect(computeComplianceScore([{ status: 'overdue', amount_try: 1_000 }])).toBe(0)
+  })
+
+  it('single upcoming_7d → 80', () => {
+    expect(computeComplianceScore([{ status: 'upcoming_7d', amount_try: 1_000 }])).toBe(80)
+  })
+
+  it('single upcoming_30d → 60', () => {
+    expect(computeComplianceScore([{ status: 'upcoming_30d', amount_try: 1_000 }])).toBe(60)
+  })
+
+  it('only not_due obligations → 100 (all filtered out)', () => {
+    expect(computeComplianceScore([
+      { status: 'not_due', amount_try: 500_000 },
+      { status: 'not_due', amount_try: 200_000 },
+    ])).toBe(100)
+  })
+
+  it('equal amounts: on_time + overdue → 50', () => {
+    // weight equally: (100 + 0) / 2 = 50
+    expect(computeComplianceScore([
+      { status: 'on_time', amount_try: 5_000 },
+      { status: 'overdue', amount_try: 5_000 },
+    ])).toBe(50)
+  })
+
+  it('heavier on_time weight → score biased towards 100', () => {
+    // on_time=90000, overdue=10000 → (100*90k + 0*10k)/100k = 90
+    expect(computeComplianceScore([
+      { status: 'on_time', amount_try: 90_000 },
+      { status: 'overdue', amount_try: 10_000 },
+    ])).toBe(90)
+  })
+
+  it('heavier overdue weight → score biased towards 0', () => {
+    // on_time=10000, overdue=90000 → (100*10k + 0*90k)/100k = 10
+    expect(computeComplianceScore([
+      { status: 'on_time', amount_try: 10_000 },
+      { status: 'overdue', amount_try: 90_000 },
+    ])).toBe(10)
+  })
+
+  it('all zero amounts → equal-weight average used', () => {
+    // 3 obligations: on_time, upcoming_7d, overdue → (100+80+0)/3 = 60
+    expect(computeComplianceScore([
+      { status: 'on_time',     amount_try: 0 },
+      { status: 'upcoming_7d', amount_try: 0 },
+      { status: 'overdue',     amount_try: 0 },
+    ])).toBe(60)
+  })
+
+  it('mixing not_due with overdue: only overdue counted → 0', () => {
+    expect(computeComplianceScore([
+      { status: 'not_due', amount_try: 999_999 },
+      { status: 'overdue', amount_try: 1 },
+    ])).toBe(0)
+  })
+
+  it('not_due mixed with on_time: only on_time counted → 100', () => {
+    expect(computeComplianceScore([
+      { status: 'not_due', amount_try: 999_999 },
+      { status: 'on_time', amount_try: 1 },
+    ])).toBe(100)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 10. classifyComplianceStatus — monotonicity and all return values
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('classifyComplianceStatus() — monotonicity checks', () => {
+  it('99 → compliant', () => {
+    expect(classifyComplianceStatus(99)).toBe('compliant')
+  })
+
+  it('80 → compliant (exact lower boundary)', () => {
+    expect(classifyComplianceStatus(80)).toBe('compliant')
+  })
+
+  it('79 → attention (just below compliant)', () => {
+    expect(classifyComplianceStatus(79)).toBe('attention')
+  })
+
+  it('60 → attention (exact lower boundary)', () => {
+    expect(classifyComplianceStatus(60)).toBe('attention')
+  })
+
+  it('59 → risk (just below attention)', () => {
+    expect(classifyComplianceStatus(59)).toBe('risk')
+  })
+
+  it('40 → risk (exact lower boundary)', () => {
+    expect(classifyComplianceStatus(40)).toBe('risk')
+  })
+
+  it('39 → critical (just below risk)', () => {
+    expect(classifyComplianceStatus(39)).toBe('critical')
+  })
+
+  it('1 → critical', () => {
+    expect(classifyComplianceStatus(1)).toBe('critical')
+  })
+
+  it('0 → critical', () => {
+    expect(classifyComplianceStatus(0)).toBe('critical')
+  })
+
+  it('classifyComplianceStatus returns one of 4 valid strings', () => {
+    const valid = new Set(['compliant', 'attention', 'risk', 'critical'])
+    for (const score of [0, 20, 39, 40, 59, 60, 79, 80, 100]) {
+      expect(valid.has(classifyComplianceStatus(score))).toBe(true)
+    }
+  })
+})

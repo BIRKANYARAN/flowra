@@ -569,3 +569,173 @@ describe('computeCollectionRiskScore — date arithmetic precision', () => {
     expect(isFinite(score)).toBe(true)
   })
 })
+
+// ── sanitizePaidAmount — extended edge cases ──────────────────────────────────
+
+describe('sanitizePaidAmount — extended edge cases', () => {
+  it('string "0" returns 0', () => {
+    expect(sanitizePaidAmount('0')).toBe(0)
+  })
+
+  it('string "100" returns 100', () => {
+    expect(sanitizePaidAmount('100')).toBe(100)
+  })
+
+  it('string "1234.56" returns 1234.56', () => {
+    expect(sanitizePaidAmount('1234.56')).toBeCloseTo(1234.56, 2)
+  })
+
+  it('string "-50" returns 0 (negative floor)', () => {
+    expect(sanitizePaidAmount('-50')).toBe(0)
+  })
+
+  it('string "abc" returns 0 (non-numeric)', () => {
+    expect(sanitizePaidAmount('abc')).toBe(0)
+  })
+
+  it('string "" returns 0 (empty string)', () => {
+    expect(sanitizePaidAmount('')).toBe(0)
+  })
+
+  it('null returns null', () => {
+    expect(sanitizePaidAmount(null)).toBeNull()
+  })
+
+  it('undefined returns null', () => {
+    expect(sanitizePaidAmount(undefined)).toBeNull()
+  })
+
+  it('number 0 returns 0', () => {
+    expect(sanitizePaidAmount(0)).toBe(0)
+  })
+
+  it('number 9999.99 returns 9999.99', () => {
+    expect(sanitizePaidAmount(9999.99)).toBeCloseTo(9999.99, 2)
+  })
+
+  it('number -1 returns 0', () => {
+    expect(sanitizePaidAmount(-1)).toBe(0)
+  })
+
+  it('very large number returns that number', () => {
+    expect(sanitizePaidAmount(1_000_000)).toBe(1_000_000)
+  })
+
+  it('string "  " (whitespace) returns 0', () => {
+    expect(sanitizePaidAmount('  ')).toBe(0)
+  })
+
+  it('returns number type (not null) for valid positive string', () => {
+    const result = sanitizePaidAmount('500')
+    expect(typeof result).toBe('number')
+  })
+
+  it('NaN coerced value returns 0', () => {
+    expect(sanitizePaidAmount(NaN)).toBe(0)
+  })
+})
+
+// ── computeCollectionRiskScore — extended cases ───────────────────────────────
+
+describe('computeCollectionRiskScore — extended cases', () => {
+  it('same day (due=today, days=0) → score based purely on amount', () => {
+    const score = computeCollectionRiskScore(
+      { due_date: '2025-06-01', total_try: 10_000 },
+      '2025-06-01',
+    )
+    // days=0 → 0*0.6 + (10000/10000)*0.4 = 0.4
+    expect(score).toBeCloseTo(0.4, 5)
+  })
+
+  it('30 days overdue, 50_000 TRY → expected score', () => {
+    const score = computeCollectionRiskScore(
+      { due_date: '2025-05-01', total_try: 50_000 },
+      '2025-05-31',
+    )
+    // days=30, amt=50000 → 30*0.6 + (50000/10000)*0.4 = 18 + 2 = 20
+    expect(score).toBeCloseTo(20, 1)
+  })
+
+  it('90 days overdue, 0 TRY → score = 54', () => {
+    const score = computeCollectionRiskScore(
+      { due_date: '2025-01-01', total_try: 0 },
+      '2025-04-01',
+    )
+    // days=90 → 90*0.6 = 54
+    expect(score).toBeCloseTo(54, 1)
+  })
+
+  it('uses sale_date when due_date is absent', () => {
+    const score = computeCollectionRiskScore(
+      { sale_date: '2025-05-01', total_try: 0 },
+      '2025-05-11',
+    )
+    // days=10 → 10*0.6 = 6
+    expect(score).toBeCloseTo(6, 1)
+  })
+
+  it('prefers due_date over sale_date', () => {
+    const score = computeCollectionRiskScore(
+      { due_date: '2025-05-20', sale_date: '2025-05-01', total_try: 0 },
+      '2025-05-21',
+    )
+    // due_date=May20, today=May21 → days=1 → 0.6
+    expect(score).toBeCloseTo(0.6, 5)
+  })
+
+  it('missing both dates → days=0, score depends on amount', () => {
+    const score = computeCollectionRiskScore(
+      { total_try: 20_000 },
+      '2025-06-01',
+    )
+    // days=0, amt=20000 → 0 + 2*0.4 = 0.8
+    expect(score).toBeCloseTo(0.8, 5)
+  })
+
+  it('null total_try treated as 0 → score only from days', () => {
+    const score = computeCollectionRiskScore(
+      { due_date: '2025-06-01', total_try: null },
+      '2025-06-06',
+    )
+    // days=5 → 5*0.6 + 0 = 3
+    expect(score).toBeCloseTo(3, 5)
+  })
+
+  it('future due_date → days clamped to 0', () => {
+    const score = computeCollectionRiskScore(
+      { due_date: '2025-12-31', total_try: 5_000 },
+      '2025-06-01',
+    )
+    // days=0 (future, max(0,...)) → 0 + (5000/10000)*0.4 = 0.2
+    expect(score).toBeCloseTo(0.2, 5)
+  })
+
+  it('large amount drives score up significantly', () => {
+    const score = computeCollectionRiskScore(
+      { due_date: '2025-06-01', total_try: 1_000_000 },
+      '2025-06-01',
+    )
+    // days=0 → (1000000/10000)*0.4 = 40
+    expect(score).toBeCloseTo(40, 1)
+  })
+
+  it('score is always non-negative', () => {
+    const score = computeCollectionRiskScore(
+      { due_date: '2099-01-01', total_try: 0 },
+      '2025-06-01',
+    )
+    expect(score).toBeGreaterThanOrEqual(0)
+  })
+
+  it('score increases with more overdue days', () => {
+    const s1 = computeCollectionRiskScore({ due_date: '2025-05-25', total_try: 0 }, '2025-06-01')
+    const s2 = computeCollectionRiskScore({ due_date: '2025-05-01', total_try: 0 }, '2025-06-01')
+    expect(s2).toBeGreaterThan(s1)
+  })
+
+  it('score increases with larger amounts', () => {
+    const s1 = computeCollectionRiskScore({ due_date: '2025-05-01', total_try: 10_000 }, '2025-06-01')
+    const s2 = computeCollectionRiskScore({ due_date: '2025-05-01', total_try: 100_000 }, '2025-06-01')
+    expect(s2).toBeGreaterThan(s1)
+  })
+})

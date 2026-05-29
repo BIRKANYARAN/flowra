@@ -567,3 +567,193 @@ describe('transitionWorkflow — reject action per workflow type', () => {
     })
   }
 })
+
+// ─────────────────────────────────────────────────────────────────────────────
+// transitionWorkflow — terminal statuses block all actions
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('transitionWorkflow — terminal statuses reject everything', () => {
+  const terminalStatuses = ['approved', 'rejected', 'expired', 'executed'] as const
+  const actions = ['approve', 'reject', 'expire'] as const
+
+  for (const status of terminalStatuses) {
+    for (const action of actions) {
+      it(`${status} + ${action} → INVALID_TRANSITION`, () => {
+        const result = transitionWorkflow(
+          { status, workflow_type: 'expense_approval' },
+          action,
+          APPROVER,
+          INITIATOR,
+        )
+        expect(result.success).toBe(false)
+        expect(result.error).toBe('INVALID_TRANSITION')
+      })
+    }
+  }
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// transitionWorkflow — self-approval blocked for approve AND reject
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('transitionWorkflow — self-approval rule', () => {
+  it('approve by initiator → SELF_APPROVAL_NOT_ALLOWED', () => {
+    const result = transitionWorkflow(
+      { status: 'pending', workflow_type: 'expense_approval' },
+      'approve',
+      INITIATOR,
+      INITIATOR,
+    )
+    expect(result.success).toBe(false)
+    expect(result.error).toBe('SELF_APPROVAL_NOT_ALLOWED')
+  })
+
+  it('reject by initiator → SELF_APPROVAL_NOT_ALLOWED', () => {
+    const result = transitionWorkflow(
+      { status: 'pending', workflow_type: 'expense_approval' },
+      'reject',
+      INITIATOR,
+      INITIATOR,
+    )
+    expect(result.success).toBe(false)
+    expect(result.error).toBe('SELF_APPROVAL_NOT_ALLOWED')
+  })
+
+  it('expire by initiator (same as system check) → INVALID_TRANSITION (not system)', () => {
+    const result = transitionWorkflow(
+      { status: 'pending', workflow_type: 'expense_approval' },
+      'expire',
+      INITIATOR,  // not 'system'
+      INITIATOR,
+    )
+    expect(result.success).toBe(false)
+    expect(result.error).toBe('INVALID_TRANSITION')
+  })
+
+  it('self-approval check applies to partner_loan_entry too', () => {
+    const result = transitionWorkflow(
+      { status: 'pending', workflow_type: 'partner_loan_entry' },
+      'approve',
+      INITIATOR,
+      INITIATOR,
+    )
+    expect(result.success).toBe(false)
+    expect(result.error).toBe('SELF_APPROVAL_NOT_ALLOWED')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// getExpiryDate — expiry window tests
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('getExpiryDate() — expiry window per type', () => {
+  const BASE = '2025-01-01T00:00:00.000Z'
+
+  it('expense_approval → 48 hours later', () => {
+    const result = getExpiryDate('expense_approval', BASE)
+    const diff = new Date(result).getTime() - new Date(BASE).getTime()
+    expect(diff).toBe(48 * 3_600_000)
+  })
+
+  it('partner_loan_entry → 48 hours later', () => {
+    const result = getExpiryDate('partner_loan_entry', BASE)
+    const diff = new Date(result).getTime() - new Date(BASE).getTime()
+    expect(diff).toBe(48 * 3_600_000)
+  })
+
+  it('dividend_declaration → 48 hours later', () => {
+    const result = getExpiryDate('dividend_declaration', BASE)
+    const diff = new Date(result).getTime() - new Date(BASE).getTime()
+    expect(diff).toBe(48 * 3_600_000)
+  })
+
+  it('period_close → 168 hours (7 days) later', () => {
+    const result = getExpiryDate('period_close', BASE)
+    const diff = new Date(result).getTime() - new Date(BASE).getTime()
+    expect(diff).toBe(168 * 3_600_000)
+  })
+
+  it('period_lock → 168 hours (7 days) later', () => {
+    const result = getExpiryDate('period_lock', BASE)
+    const diff = new Date(result).getTime() - new Date(BASE).getTime()
+    expect(diff).toBe(168 * 3_600_000)
+  })
+
+  it('returns ISO string format', () => {
+    const result = getExpiryDate('expense_approval', BASE)
+    expect(result).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/)
+  })
+
+  it('period_close expiry window (168h) is 3.5× longer than expense_approval (48h)', () => {
+    const expenseExpiry = new Date(getExpiryDate('expense_approval', BASE)).getTime()
+    const periodExpiry  = new Date(getExpiryDate('period_close', BASE)).getTime()
+    const base = new Date(BASE).getTime()
+    expect(periodExpiry - base).toBe(3.5 * (expenseExpiry - base))
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// isExpired — boolean logic
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('isExpired()', () => {
+  it('past expires_at → true', () => {
+    expect(isExpired({ expires_at: '2000-01-01T00:00:00.000Z' })).toBe(true)
+  })
+
+  it('future expires_at → false', () => {
+    expect(isExpired({ expires_at: '2099-12-31T23:59:59.000Z' })).toBe(false)
+  })
+
+  it('very recent past → true', () => {
+    const oneSecondAgo = new Date(Date.now() - 1000).toISOString()
+    expect(isExpired({ expires_at: oneSecondAgo })).toBe(true)
+  })
+
+  it('far future → false', () => {
+    const oneDayLater = new Date(Date.now() + 86_400_000).toISOString()
+    expect(isExpired({ expires_at: oneDayLater })).toBe(false)
+  })
+
+  it('getExpiryDate result for expense_approval starting now is NOT expired', () => {
+    const now = new Date().toISOString()
+    const expiresAt = getExpiryDate('expense_approval', now)
+    expect(isExpired({ expires_at: expiresAt })).toBe(false)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// transitionWorkflow — result shape
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('transitionWorkflow — result shape', () => {
+  it('successful approve: success=true, new_status set, no error', () => {
+    const r = transitionWorkflow(
+      { status: 'pending', workflow_type: 'expense_approval' },
+      'approve', APPROVER, INITIATOR,
+    )
+    expect(r.success).toBe(true)
+    expect(r.new_status).toBeDefined()
+    expect(r.error).toBeUndefined()
+  })
+
+  it('failed transition: success=false, error set, new_status undefined', () => {
+    const r = transitionWorkflow(
+      { status: 'approved', workflow_type: 'expense_approval' },
+      'approve', APPROVER, INITIATOR,
+    )
+    expect(r.success).toBe(false)
+    expect(r.error).toBeDefined()
+    expect(r.new_status).toBeUndefined()
+  })
+
+  it('system expire: success=true, new_status=expired, no error', () => {
+    const r = transitionWorkflow(
+      { status: 'pending', workflow_type: 'period_close' },
+      'expire', 'system', INITIATOR,
+    )
+    expect(r.success).toBe(true)
+    expect(r.new_status).toBe('expired')
+    expect(r.error).toBeUndefined()
+  })
+})

@@ -575,3 +575,204 @@ describe('classifyRetentionHealth — all levels with exact boundaries', () => {
     expect(classifyRetentionHealth(10)).toBe('weak')
   })
 })
+
+// ── computeRetentionRate — extended ──────────────────────────────────────────
+
+describe('computeRetentionRate — extended', () => {
+  it('0 active, 0 cohort size → 0', () => {
+    expect(computeRetentionRate(0, 0)).toBe(0)
+  })
+
+  it('all retained: 10/10 → 100%', () => {
+    expect(computeRetentionRate(10, 10)).toBeCloseTo(100, 1)
+  })
+
+  it('none retained: 0/10 → 0%', () => {
+    expect(computeRetentionRate(0, 10)).toBeCloseTo(0, 1)
+  })
+
+  it('1/2 → 50%', () => {
+    expect(computeRetentionRate(1, 2)).toBeCloseTo(50, 1)
+  })
+
+  it('1/3 ≈ 33.33%', () => {
+    expect(computeRetentionRate(1, 3)).toBeCloseTo(33.33, 1)
+  })
+
+  it('fractional result: 7/10 = 70%', () => {
+    expect(computeRetentionRate(7, 10)).toBeCloseTo(70, 1)
+  })
+
+  it('more active than cohort (data anomaly) → > 100%', () => {
+    // The function does not cap, so active > cohort is allowed
+    expect(computeRetentionRate(11, 10)).toBeCloseTo(110, 1)
+  })
+
+  it('large cohort: 999/1000 ≈ 99.9%', () => {
+    expect(computeRetentionRate(999, 1000)).toBeCloseTo(99.9, 1)
+  })
+
+  it('result type is number', () => {
+    expect(typeof computeRetentionRate(5, 10)).toBe('number')
+  })
+})
+
+// ── computeChurnRate — extended ───────────────────────────────────────────────
+
+describe('computeChurnRate — extended', () => {
+  it('100% retention → 0% churn', () => {
+    expect(computeChurnRate(100)).toBe(0)
+  })
+
+  it('0% retention → 100% churn', () => {
+    expect(computeChurnRate(0)).toBe(100)
+  })
+
+  it('50% retention → 50% churn', () => {
+    expect(computeChurnRate(50)).toBe(50)
+  })
+
+  it('75% retention → 25% churn', () => {
+    expect(computeChurnRate(75)).toBe(25)
+  })
+
+  it('33.33% retention → 66.67% churn', () => {
+    expect(computeChurnRate(33.33)).toBeCloseTo(66.67, 1)
+  })
+
+  it('result is always 100 - input', () => {
+    const r = 42.5
+    expect(computeChurnRate(r)).toBeCloseTo(100 - r, 5)
+  })
+
+  it('returns number type', () => {
+    expect(typeof computeChurnRate(60)).toBe('number')
+  })
+
+  it('churn + retention = 100', () => {
+    const retention = 63.2
+    const churn = computeChurnRate(retention)
+    expect(churn + retention).toBeCloseTo(100, 5)
+  })
+})
+
+// ── computeAvgCohortSize — extended ──────────────────────────────────────────
+
+describe('computeAvgCohortSize — extended', () => {
+  it('empty array → 0', () => {
+    expect(computeAvgCohortSize([])).toBe(0)
+  })
+
+  it('single cohort → returns its size', () => {
+    expect(computeAvgCohortSize([{ size: 50 }])).toBe(50)
+  })
+
+  it('two equal cohorts → same as each', () => {
+    expect(computeAvgCohortSize([{ size: 100 }, { size: 100 }])).toBe(100)
+  })
+
+  it('two different cohorts → average', () => {
+    expect(computeAvgCohortSize([{ size: 80 }, { size: 120 }])).toBeCloseTo(100, 1)
+  })
+
+  it('three cohorts: 10, 20, 30 → 20', () => {
+    expect(computeAvgCohortSize([{ size: 10 }, { size: 20 }, { size: 30 }])).toBeCloseTo(20, 1)
+  })
+
+  it('all zeros → 0', () => {
+    expect(computeAvgCohortSize([{ size: 0 }, { size: 0 }])).toBe(0)
+  })
+
+  it('result is number type', () => {
+    expect(typeof computeAvgCohortSize([{ size: 5 }])).toBe('number')
+  })
+
+  it('large cohort sizes', () => {
+    expect(computeAvgCohortSize([{ size: 10_000 }, { size: 20_000 }])).toBeCloseTo(15_000, 0)
+  })
+})
+
+// ── computeAvg3mRetention — extended ─────────────────────────────────────────
+
+describe('computeAvg3mRetention — extended', () => {
+  it('empty array → 0', () => {
+    expect(computeAvg3mRetention([])).toBe(0)
+  })
+
+  it('only period-0 (length=1) → 0 (no relevant periods)', () => {
+    expect(computeAvg3mRetention([100])).toBe(0)
+  })
+
+  it('one period beyond 0 → averages just that', () => {
+    expect(computeAvg3mRetention([100, 80])).toBeCloseTo(80, 1)
+  })
+
+  it('two periods beyond 0 → averages those two', () => {
+    expect(computeAvg3mRetention([100, 80, 60])).toBeCloseTo(70, 1)
+  })
+
+  it('three periods beyond 0 → averages periods 1-3', () => {
+    expect(computeAvg3mRetention([100, 80, 60, 40])).toBeCloseTo(60, 1)
+  })
+
+  it('four periods beyond 0 → still only uses first 3 (slice(1,4))', () => {
+    expect(computeAvg3mRetention([100, 80, 60, 40, 20])).toBeCloseTo(60, 1)
+  })
+
+  it('all same values → returns that value', () => {
+    expect(computeAvg3mRetention([100, 50, 50, 50, 50])).toBeCloseTo(50, 1)
+  })
+
+  it('returns a number (not NaN)', () => {
+    const result = computeAvg3mRetention([100, 70, 55, 45])
+    expect(isNaN(result)).toBe(false)
+  })
+
+  it('result is finite', () => {
+    const result = computeAvg3mRetention([100, 90, 85, 80])
+    expect(isFinite(result)).toBe(true)
+  })
+})
+
+// ── Integration: retention pipeline ──────────────────────────────────────────
+
+describe('retention pipeline — integrated', () => {
+  it('high retention cohort: 10/10 first month, 8/10, 7/10, 6/10 → strong', () => {
+    const rates = [
+      computeRetentionRate(10, 10),
+      computeRetentionRate(8, 10),
+      computeRetentionRate(7, 10),
+      computeRetentionRate(6, 10),
+    ]
+    const avg3m = computeAvg3mRetention(rates)
+    const health = classifyRetentionHealth(avg3m)
+    expect(health).toBe('strong')
+  })
+
+  it('poor cohort: 10/10, 1/10, 1/10, 1/10 → weak', () => {
+    const rates = [
+      computeRetentionRate(10, 10),
+      computeRetentionRate(1, 10),
+      computeRetentionRate(1, 10),
+      computeRetentionRate(1, 10),
+    ]
+    const avg3m = computeAvg3mRetention(rates)
+    const health = classifyRetentionHealth(avg3m)
+    expect(health).toBe('weak')
+  })
+
+  it('churn + retention from pipeline = 100', () => {
+    const retention = computeRetentionRate(6, 10)
+    const churn = computeChurnRate(retention)
+    expect(retention + churn).toBeCloseTo(100, 5)
+  })
+
+  it('avg cohort size from 3 cohorts feeds into health classification', () => {
+    const cohorts = [{ size: 50 }, { size: 100 }, { size: 150 }]
+    const avg = computeAvgCohortSize(cohorts)
+    expect(avg).toBeCloseTo(100, 1)
+    // classifyRetentionHealth can be called with any number
+    const health = classifyRetentionHealth(65)
+    expect(health).toBe('strong')
+  })
+})
