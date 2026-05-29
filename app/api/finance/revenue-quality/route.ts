@@ -1,22 +1,18 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// GET /api/finance/working-capital-optimization
+// GET /api/finance/revenue-quality
 //
-// Returns working capital optimization report: gap analysis for receivables,
-// inventory, and payables vs Turkish SME benchmarks, with cash release
-// potential estimates and actionable Turkish recommendations.
-//
-// Returns: { report: WorkingCapitalOptimizationReport }
+// Returns Revenue Quality Score report — 5-dimension scoring of revenue health.
 //
 // Auth: resolveApiAuth, manager+
-// Cache: revalidate every 1800 seconds.
+// Cache: revalidate every 3600 seconds
 // ─────────────────────────────────────────────────────────────────────────────
 
-export const revalidate = 1800
+export const revalidate = 3600
 
-import { NextRequest, NextResponse }             from 'next/server'
-import { resolveApiAuth }                        from '@/lib/api-auth'
-import { WorkingCapitalOptimizationService }     from '@/lib/services/finance/working-capital-optimization.service'
-import { REQUEST_ID_HEADER }                     from '@/middleware'
+import { NextRequest, NextResponse } from 'next/server'
+import { resolveApiAuth } from '@/lib/api-auth'
+import { RevenueQualityService } from '@/lib/services/finance/revenue-quality.service'
+import { REQUEST_ID_HEADER } from '@/middleware'
 
 export async function GET(req: NextRequest) {
   const auth = await resolveApiAuth(req)
@@ -24,7 +20,7 @@ export async function GET(req: NextRequest) {
   const { companyId, supabase, ctx } = auth
 
   try {
-    const service = new WorkingCapitalOptimizationService(supabase)
+    const service = new RevenueQualityService(supabase)
     const report  = await service.getReport(companyId)
 
     return NextResponse.json(
