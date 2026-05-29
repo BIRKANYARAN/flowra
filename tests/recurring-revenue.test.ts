@@ -363,3 +363,339 @@ describe('computeRecurringRevenueRatio', () => {
     expect(ratio).toBe(2)
   })
 })
+
+// ── identifyRecurringCustomers — extended ─────────────────────────────────────
+
+describe('identifyRecurringCustomers — extended', () => {
+
+  it('exact boundary: purchase_count = minMonthlyPurchases → included', () => {
+    const customers = [
+      { customer_id: 'c_exact', purchase_count: 2, months_with_purchases: 3, total_months_active: 6 },
+    ]
+    // ratio = 3/6 = 0.5 ≥ 0.5, count = 2 ≥ 2 → included
+    expect(identifyRecurringCustomers(customers, 2, 0.5)).toContain('c_exact')
+  })
+
+  it('exact boundary: ratio exactly = minRecurringRatio → included', () => {
+    const customers = [
+      { customer_id: 'c_border', purchase_count: 4, months_with_purchases: 2, total_months_active: 4 },
+    ]
+    // ratio = 2/4 = 0.5, count=4 ≥ 2
+    expect(identifyRecurringCustomers(customers, 2, 0.5)).toContain('c_border')
+  })
+
+  it('just below ratio threshold → excluded', () => {
+    const customers = [
+      { customer_id: 'c_below', purchase_count: 4, months_with_purchases: 2, total_months_active: 5 },
+    ]
+    // ratio = 2/5 = 0.4 < 0.5 → excluded
+    expect(identifyRecurringCustomers(customers, 2, 0.5)).not.toContain('c_below')
+  })
+
+  it('returns ids in order matching filter result', () => {
+    const customers = [
+      { customer_id: 'r1', purchase_count: 5, months_with_purchases: 5, total_months_active: 6 },
+      { customer_id: 'o1', purchase_count: 1, months_with_purchases: 1, total_months_active: 6 },
+      { customer_id: 'r2', purchase_count: 4, months_with_purchases: 4, total_months_active: 6 },
+    ]
+    const result = identifyRecurringCustomers(customers)
+    expect(result).toEqual(['r1', 'r2'])
+  })
+
+  it('high minRecurringRatio (0.9) excludes occasional buyers', () => {
+    const customers = [
+      { customer_id: 'c1', purchase_count: 5, months_with_purchases: 5, total_months_active: 6 },
+    ]
+    // ratio = 5/6 ≈ 0.833 < 0.9 → excluded
+    expect(identifyRecurringCustomers(customers, 2, 0.9)).not.toContain('c1')
+  })
+
+  it('high minRecurringRatio (0.8) includes 5/6 ratio customer', () => {
+    const customers = [
+      { customer_id: 'c_hi', purchase_count: 5, months_with_purchases: 5, total_months_active: 6 },
+    ]
+    // ratio = 5/6 ≈ 0.833 ≥ 0.8 → included
+    expect(identifyRecurringCustomers(customers, 2, 0.8)).toContain('c_hi')
+  })
+
+  it('customer with 100% ratio (every month active) → always included', () => {
+    const customers = [
+      { customer_id: 'perfect', purchase_count: 6, months_with_purchases: 6, total_months_active: 6 },
+    ]
+    expect(identifyRecurringCustomers(customers)).toContain('perfect')
+  })
+
+  it('large list — performance: 1000 customers, only high-ratio included', () => {
+    const customers = Array.from({ length: 1000 }, (_, i) => ({
+      customer_id:           `c${i}`,
+      purchase_count:        i % 10 === 0 ? 5 : 1,
+      months_with_purchases: i % 10 === 0 ? 5 : 1,
+      total_months_active:   6,
+    }))
+    const result = identifyRecurringCustomers(customers)
+    // Every 10th customer (100 customers) should be recurring
+    expect(result).toHaveLength(100)
+  })
+
+  it('minMonthlyPurchases = 1 → any customer with 1+ purchase can qualify', () => {
+    const customers = [
+      { customer_id: 'single', purchase_count: 1, months_with_purchases: 1, total_months_active: 1 },
+    ]
+    // ratio = 1/1 = 1.0 ≥ 0.5, count ≥ 1
+    expect(identifyRecurringCustomers(customers, 1, 0.5)).toContain('single')
+  })
+
+})
+
+// ── computeMrr — extended ─────────────────────────────────────────────────────
+
+describe('computeMrr — extended', () => {
+
+  it('sums fractional revenue correctly', () => {
+    const customers = [
+      { customer_id: 'c1', avg_monthly_revenue: 1_000.50 },
+      { customer_id: 'c2', avg_monthly_revenue: 999.50 },
+    ]
+    expect(computeMrr(customers)).toBeCloseTo(2_000)
+  })
+
+  it('10 equal customers → MRR = 10 × individual', () => {
+    const customers = Array.from({ length: 10 }, (_, i) => ({
+      customer_id:         `c${i}`,
+      avg_monthly_revenue: 5_000,
+    }))
+    expect(computeMrr(customers)).toBe(50_000)
+  })
+
+  it('customer with 0 revenue → does not change MRR', () => {
+    const customers = [
+      { customer_id: 'c1', avg_monthly_revenue: 10_000 },
+      { customer_id: 'c2', avg_monthly_revenue: 0 },
+    ]
+    expect(computeMrr(customers)).toBe(10_000)
+  })
+
+})
+
+// ── computeArr — extended ─────────────────────────────────────────────────────
+
+describe('computeArr — extended', () => {
+
+  it('fractional MRR → ARR = mrr × 12', () => {
+    expect(computeArr(1_500.75)).toBeCloseTo(18_009)
+  })
+
+  it('ARR is always 12× MRR', () => {
+    const mrr = 37_500
+    expect(computeArr(mrr)).toBe(mrr * 12)
+  })
+
+  it('large SME MRR → correct ARR', () => {
+    expect(computeArr(500_000)).toBe(6_000_000)
+  })
+
+})
+
+// ── computeChurnRate — extended ───────────────────────────────────────────────
+
+describe('computeChurnRate — extended', () => {
+
+  it('1 out of 20 → 5%', () => {
+    expect(computeChurnRate(1, 20)).toBeCloseTo(5)
+  })
+
+  it('10 out of 100 → 10%', () => {
+    expect(computeChurnRate(10, 100)).toBeCloseTo(10)
+  })
+
+  it('fractional inputs → result proportional', () => {
+    expect(computeChurnRate(3, 60)).toBeCloseTo(5)
+  })
+
+  it('more churned than start → churn rate > 100', () => {
+    // Unusual but mathematically valid
+    expect(computeChurnRate(150, 100)).toBeCloseTo(150)
+  })
+
+})
+
+// ── computeExpansionRevenue — extended ────────────────────────────────────────
+
+describe('computeExpansionRevenue — extended', () => {
+
+  it('multiple expanding customers with varying amounts', () => {
+    const customers = [
+      { customer_id: 'c1', prior_month_revenue: 1_000, current_month_revenue: 5_000 },   // +4000
+      { customer_id: 'c2', prior_month_revenue: 2_000, current_month_revenue: 2_001 },   // +1
+      { customer_id: 'c3', prior_month_revenue: 0,     current_month_revenue: 3_000 },   // +3000 (new)
+    ]
+    expect(computeExpansionRevenue(customers)).toBe(7_001)
+  })
+
+  it('all flat → 0 expansion', () => {
+    const customers = Array.from({ length: 5 }, (_, i) => ({
+      customer_id: `c${i}`, prior_month_revenue: 1_000, current_month_revenue: 1_000,
+    }))
+    expect(computeExpansionRevenue(customers)).toBe(0)
+  })
+
+  it('large expansion from single customer', () => {
+    const customers = [
+      { customer_id: 'whale', prior_month_revenue: 1_000, current_month_revenue: 1_000_000 },
+    ]
+    expect(computeExpansionRevenue(customers)).toBe(999_000)
+  })
+
+})
+
+// ── computeContractionRevenue — extended ──────────────────────────────────────
+
+describe('computeContractionRevenue — extended', () => {
+
+  it('single customer drops to 0 → full prior is contraction', () => {
+    const customers = [
+      { customer_id: 'c1', prior_month_revenue: 5_000, current_month_revenue: 0 },
+    ]
+    expect(computeContractionRevenue(customers)).toBe(5_000)
+  })
+
+  it('multiple contracting customers summed', () => {
+    const customers = [
+      { customer_id: 'c1', prior_month_revenue: 3_000, current_month_revenue: 1_000 },  // 2000
+      { customer_id: 'c2', prior_month_revenue: 7_000, current_month_revenue: 5_000 },  // 2000
+      { customer_id: 'c3', prior_month_revenue: 2_000, current_month_revenue: 4_000 },  // expanding: skip
+    ]
+    expect(computeContractionRevenue(customers)).toBe(4_000)
+  })
+
+  it('result is always non-negative', () => {
+    const customers = [
+      { customer_id: 'c1', prior_month_revenue: 10_000, current_month_revenue: 100 },
+    ]
+    expect(computeContractionRevenue(customers)).toBeGreaterThanOrEqual(0)
+  })
+
+})
+
+// ── computeNetRevenueRetention — extended ─────────────────────────────────────
+
+describe('computeNetRevenueRetention — extended', () => {
+
+  it('NRR > 100 when expansion > churn + contraction', () => {
+    const nrr = computeNetRevenueRetention(100_000, 20_000, 5_000, 5_000)
+    expect(nrr).toBeGreaterThan(100)
+  })
+
+  it('NRR = 100 when expansion exactly offsets contraction + churn', () => {
+    // 10000 + 2000 - 1000 - 1000 = 10000 → 100%
+    const nrr = computeNetRevenueRetention(10_000, 2_000, 1_000, 1_000)
+    expect(nrr).toBeCloseTo(100)
+  })
+
+  it('NRR < 100 when churn exceeds expansion', () => {
+    const nrr = computeNetRevenueRetention(10_000, 0, 0, 1_000)
+    expect(nrr).toBeLessThan(100)
+  })
+
+  it('large values: NRR computed accurately', () => {
+    // 1M starting, 200k expansion, 0 contraction, 0 churn → NRR = 120%
+    const nrr = computeNetRevenueRetention(1_000_000, 200_000, 0, 0)
+    expect(nrr).toBeCloseTo(120)
+  })
+
+})
+
+// ── computeGrossRevenueRetention — extended ───────────────────────────────────
+
+describe('computeGrossRevenueRetention — extended', () => {
+
+  it('GRR with churn only → below 100', () => {
+    const grr = computeGrossRevenueRetention(10_000, 0, 2_000)
+    expect(grr).toBe(80)
+  })
+
+  it('GRR with both churn and contraction → below 100', () => {
+    const grr = computeGrossRevenueRetention(10_000, 2_000, 2_000)
+    expect(grr).toBe(60)
+  })
+
+  it('GRR never exceeds 100 by design', () => {
+    // Even with 0 churn and 0 contraction → exactly 100
+    const grr = computeGrossRevenueRetention(50_000, 0, 0)
+    expect(grr).toBe(100)
+  })
+
+  it('GRR: total churn + contraction = startingMrr → 0%', () => {
+    const grr = computeGrossRevenueRetention(10_000, 5_000, 5_000)
+    expect(grr).toBe(0)
+  })
+
+  it('large values → GRR proportional', () => {
+    // 500k - 100k churn / 500k = 80%
+    const grr = computeGrossRevenueRetention(500_000, 0, 100_000)
+    expect(grr).toBe(80)
+  })
+
+})
+
+// ── classifyNrrHealth — extended ──────────────────────────────────────────────
+
+describe('classifyNrrHealth — extended', () => {
+
+  it('120 is excellent, 119 is good', () => {
+    expect(classifyNrrHealth(120)).toBe('excellent')
+    expect(classifyNrrHealth(119)).toBe('good')
+  })
+
+  it('100 is good, 99 is neutral', () => {
+    expect(classifyNrrHealth(100)).toBe('good')
+    expect(classifyNrrHealth(99)).toBe('neutral')
+  })
+
+  it('90 is neutral, 89 is at_risk', () => {
+    expect(classifyNrrHealth(90)).toBe('neutral')
+    expect(classifyNrrHealth(89)).toBe('at_risk')
+  })
+
+  it('70 is at_risk, 69 is declining', () => {
+    expect(classifyNrrHealth(70)).toBe('at_risk')
+    expect(classifyNrrHealth(69)).toBe('declining')
+  })
+
+  it('negative NRR → declining', () => {
+    expect(classifyNrrHealth(-50)).toBe('declining')
+  })
+
+  it('very high NRR (200) → excellent', () => {
+    expect(classifyNrrHealth(200)).toBe('excellent')
+  })
+
+})
+
+// ── computeRecurringRevenueRatio — extended ───────────────────────────────────
+
+describe('computeRecurringRevenueRatio — extended', () => {
+
+  it('25% ratio — MRR is a quarter of total', () => {
+    expect(computeRecurringRevenueRatio(25_000, 100_000)).toBe(25)
+  })
+
+  it('75% ratio', () => {
+    expect(computeRecurringRevenueRatio(75_000, 100_000)).toBe(75)
+  })
+
+  it('fractional: 1/3 → ~33.3%', () => {
+    expect(computeRecurringRevenueRatio(1, 3)).toBeCloseTo(33.33, 1)
+  })
+
+  it('0% when mrr=0 and total>0', () => {
+    expect(computeRecurringRevenueRatio(0, 100_000)).toBe(0)
+  })
+
+  it('can exceed 100% if MRR > total (unusual but no guard)', () => {
+    // Function does not cap at 100
+    const ratio = computeRecurringRevenueRatio(15_000, 10_000)
+    expect(ratio).toBeCloseTo(150)
+  })
+
+})

@@ -141,3 +141,471 @@ describe('AnnualSummaryService — pure metric tests', () => {
     expect(m.net_margin_pct).toBe(0)
   })
 })
+
+// ── Extended tests: all fields and edge cases ─────────────────────────────────
+
+describe('AnnualMetrics — field correctness', () => {
+
+  it('year field stored correctly', () => {
+    const m = buildAnnualMetrics(2024, 100_000, 40_000, 20_000, 30_000)
+    expect(m.year).toBe(2024)
+  })
+
+  it('revenue_try stored as given', () => {
+    const m = buildAnnualMetrics(2025, 500_000, 0, 0, 0)
+    expect(m.revenue_try).toBe(500_000)
+  })
+
+  it('cogs_try stored correctly', () => {
+    const m = buildAnnualMetrics(2025, 500_000, 200_000, 0, 0)
+    expect(m.cogs_try).toBe(200_000)
+  })
+
+  it('gross_profit_try = revenue - cogs', () => {
+    const m = buildAnnualMetrics(2025, 500_000, 200_000, 0, 0)
+    expect(m.gross_profit_try).toBe(300_000)
+  })
+
+  it('net_income_try stored correctly', () => {
+    const m = buildAnnualMetrics(2025, 500_000, 0, 0, 75_000)
+    expect(m.net_income_try).toBe(75_000)
+  })
+
+  it('cash_try equals net_income_try (proxy)', () => {
+    const m = buildAnnualMetrics(2025, 500_000, 0, 0, 120_000)
+    expect(m.cash_try).toBe(m.net_income_try)
+  })
+
+  it('expenses_try stored correctly', () => {
+    const m = buildAnnualMetrics(2025, 500_000, 0, 150_000, 0)
+    expect(m.expenses_try).toBe(150_000)
+  })
+
+  it('gross_margin_pct = 0 when revenue = 0', () => {
+    const m = buildAnnualMetrics(2025, 0, 0, 0, 0)
+    expect(m.gross_margin_pct).toBe(0)
+  })
+
+  it('net_margin_pct = 0 when revenue = 0', () => {
+    const m = buildAnnualMetrics(2025, 0, 0, 0, 50_000)
+    expect(m.net_margin_pct).toBe(0)
+  })
+
+  it('50% gross margin', () => {
+    const m = buildAnnualMetrics(2025, 200_000, 100_000, 0, 0)
+    expect(m.gross_margin_pct).toBeCloseTo(50)
+  })
+
+  it('100% gross margin when cogs = 0', () => {
+    const m = buildAnnualMetrics(2025, 100_000, 0, 0, 0)
+    expect(m.gross_margin_pct).toBeCloseTo(100)
+  })
+
+  it('negative gross profit (cogs > revenue)', () => {
+    const m = buildAnnualMetrics(2025, 100_000, 150_000, 0, 0)
+    expect(m.gross_profit_try).toBe(-50_000)
+    expect(m.gross_margin_pct).toBeCloseTo(-50)
+  })
+
+  it('net_income_growth_pct = null when no prior', () => {
+    const m = buildAnnualMetrics(2025, 100_000, 0, 0, 50_000)
+    expect(m.net_income_growth_pct).toBeNull()
+  })
+
+  it('net_income_growth_pct computed from prior', () => {
+    // 200k from 100k → 100% growth
+    const m = buildAnnualMetrics(2025, 200_000, 0, 0, 200_000, null, 100_000)
+    expect(m.net_income_growth_pct).toBeCloseTo(100)
+  })
+
+  it('net_income_growth_pct = null when prior net = 0', () => {
+    const m = buildAnnualMetrics(2025, 200_000, 0, 0, 100_000, null, 0)
+    expect(m.net_income_growth_pct).toBeNull()
+  })
+
+  it('revenue_growth_pct = null when prior = 0', () => {
+    const m = buildAnnualMetrics(2025, 300_000, 0, 0, 0, 0, null)
+    expect(m.revenue_growth_pct).toBeNull()
+  })
+
+  it('revenue_growth_pct negative when declined', () => {
+    // 200k from 500k → -60%
+    const m = buildAnnualMetrics(2025, 200_000, 0, 0, 0, 500_000, null)
+    expect(m.revenue_growth_pct).toBeCloseTo(-60)
+  })
+
+  it('revenue_growth_pct with negative prior (loss year)', () => {
+    // current=100k, prior=-200k (loss) → (100k-(-200k))/abs(-200k) = 300/200 = 150%
+    const m = buildAnnualMetrics(2025, 100_000, 0, 0, 0, -200_000, null)
+    expect(m.revenue_growth_pct).toBeCloseTo(150)
+  })
+
+  it('gross_margin_pct close to 0 when cogs ≈ revenue', () => {
+    const m = buildAnnualMetrics(2025, 100_000, 99_900, 0, 0)
+    expect(m.gross_margin_pct).toBeCloseTo(0.1)
+  })
+
+  it('net_margin_pct is negative for a loss year', () => {
+    const m = buildAnnualMetrics(2025, 100_000, 0, 0, -20_000)
+    expect(m.net_margin_pct).toBeCloseTo(-20)
+  })
+
+})
+
+describe('AnnualMetrics — best year helpers', () => {
+
+  it('single year → it is the best revenue year', () => {
+    const years = [buildAnnualMetrics(2025, 400_000, 0, 0, 100_000)]
+    const revenues = years.map(y => y.revenue_try)
+    const bestYear = years[revenues.indexOf(Math.max(...revenues))].year
+    expect(bestYear).toBe(2025)
+  })
+
+  it('best revenue year identified from 4-year list', () => {
+    const years = [
+      buildAnnualMetrics(2026, 500_000, 0, 0, 100_000),
+      buildAnnualMetrics(2025, 900_000, 0, 0, 200_000),  // best
+      buildAnnualMetrics(2024, 700_000, 0, 0, 150_000),
+      buildAnnualMetrics(2023, 300_000, 0, 0, 50_000),
+    ]
+    const revenues = years.map(y => y.revenue_try)
+    const bestIdx  = revenues.indexOf(Math.max(...revenues))
+    expect(years[bestIdx].year).toBe(2025)
+  })
+
+  it('best net income year identified correctly', () => {
+    const years = [
+      buildAnnualMetrics(2026, 500_000, 0, 0, 50_000),
+      buildAnnualMetrics(2025, 300_000, 0, 0, 300_000), // best net
+      buildAnnualMetrics(2024, 800_000, 0, 0, -10_000),
+    ]
+    const nets    = years.map(y => y.net_income_try)
+    const bestIdx = nets.indexOf(Math.max(...nets))
+    expect(years[bestIdx].year).toBe(2025)
+  })
+
+  it('all years have same revenue → first index wins (Math.max behavior)', () => {
+    const years = [
+      buildAnnualMetrics(2026, 100_000, 0, 0, 0),
+      buildAnnualMetrics(2025, 100_000, 0, 0, 0),
+    ]
+    const revenues = years.map(y => y.revenue_try)
+    const bestIdx  = revenues.indexOf(Math.max(...revenues))
+    // indexOf returns first match → year 2026 (index 0)
+    expect(years[bestIdx].year).toBe(2026)
+  })
+
+  it('all zero revenues → best year is first', () => {
+    const years = [
+      buildAnnualMetrics(2025, 0, 0, 0, 0),
+      buildAnnualMetrics(2024, 0, 0, 0, 0),
+    ]
+    const revenues = years.map(y => y.revenue_try)
+    expect(Math.max(...revenues)).toBe(0)
+  })
+
+})
+
+describe('AnnualMetrics — consistency and invariants', () => {
+
+  it('gross_profit = revenue - cogs for arbitrary values', () => {
+    const revenue = 1_234_567
+    const cogs    = 789_012
+    const m       = buildAnnualMetrics(2025, revenue, cogs, 0, 0)
+    expect(m.gross_profit_try).toBe(revenue - cogs)
+  })
+
+  it('cash_try is always equal to net_income_try', () => {
+    for (const netIncome of [0, 50_000, -30_000, 1_000_000]) {
+      const m = buildAnnualMetrics(2025, 500_000, 0, 0, netIncome)
+      expect(m.cash_try).toBe(m.net_income_try)
+    }
+  })
+
+  it('year field is integer and matches input', () => {
+    for (const year of [2020, 2023, 2025, 2026]) {
+      const m = buildAnnualMetrics(year, 100_000, 0, 0, 0)
+      expect(m.year).toBe(year)
+      expect(Number.isInteger(m.year)).toBe(true)
+    }
+  })
+
+  it('growth = null for oldest year in multi-year sequence', () => {
+    const oldest = buildAnnualMetrics(2023, 400_000, 0, 0, 100_000)
+    // No prior passed → both growth fields null
+    expect(oldest.revenue_growth_pct).toBeNull()
+    expect(oldest.net_income_growth_pct).toBeNull()
+  })
+
+  it('both growth fields are independent — one null does not affect other', () => {
+    // Pass priorRevenue but no priorNet
+    const m = buildAnnualMetrics(2025, 600_000, 0, 0, 150_000, 500_000, null)
+    expect(m.revenue_growth_pct).not.toBeNull()
+    expect(m.net_income_growth_pct).toBeNull()
+  })
+
+  it('gross_margin_pct + (100 - gross_margin_pct) = 100 for simple case', () => {
+    // margin = 40% → cogs ratio = 60%
+    const m = buildAnnualMetrics(2025, 100_000, 60_000, 0, 0)
+    expect(m.gross_margin_pct).toBeCloseTo(40)
+    expect(100 - m.gross_margin_pct).toBeCloseTo(60)
+  })
+
+  it('zero cogs → gross_profit_try = revenue_try', () => {
+    const m = buildAnnualMetrics(2025, 500_000, 0, 0, 0)
+    expect(m.gross_profit_try).toBe(500_000)
+  })
+
+  it('exact 10% growth: 110k from 100k', () => {
+    const m = buildAnnualMetrics(2025, 110_000, 0, 0, 0, 100_000, null)
+    expect(m.revenue_growth_pct).toBeCloseTo(10)
+  })
+
+  it('exact 50% growth: 150k from 100k', () => {
+    const m = buildAnnualMetrics(2025, 150_000, 0, 0, 0, 100_000, null)
+    expect(m.revenue_growth_pct).toBeCloseTo(50)
+  })
+
+  it('exact 200% growth: 300k from 100k', () => {
+    const m = buildAnnualMetrics(2025, 300_000, 0, 0, 0, 100_000, null)
+    expect(m.revenue_growth_pct).toBeCloseTo(200)
+  })
+
+  it('net margin: positive net income → positive net_margin_pct', () => {
+    const m = buildAnnualMetrics(2025, 200_000, 0, 0, 40_000)
+    expect(m.net_margin_pct).toBeGreaterThan(0)
+  })
+
+  it('expenses_try field is stored as-is (no computation)', () => {
+    const m = buildAnnualMetrics(2025, 500_000, 200_000, 75_000, 100_000)
+    expect(m.expenses_try).toBe(75_000)
+  })
+
+})
+
+// ── Extended tests: growth boundaries ────────────────────────────────────────
+
+describe('AnnualMetrics — growth rate boundaries', () => {
+
+  it('revenue flat yoy → 0% growth', () => {
+    const m = buildAnnualMetrics(2025, 300_000, 0, 0, 0, 300_000, null)
+    expect(m.revenue_growth_pct).toBeCloseTo(0)
+  })
+
+  it('revenue_growth_pct: 1% growth', () => {
+    const m = buildAnnualMetrics(2025, 101_000, 0, 0, 0, 100_000, null)
+    expect(m.revenue_growth_pct).toBeCloseTo(1)
+  })
+
+  it('net_income_growth_pct: 1% growth', () => {
+    const m = buildAnnualMetrics(2025, 0, 0, 0, 101_000, null, 100_000)
+    expect(m.net_income_growth_pct).toBeCloseTo(1)
+  })
+
+  it('revenue tripled → 200% growth', () => {
+    const m = buildAnnualMetrics(2025, 300_000, 0, 0, 0, 100_000, null)
+    expect(m.revenue_growth_pct).toBeCloseTo(200)
+  })
+
+  it('net income tripled → 200% growth', () => {
+    const m = buildAnnualMetrics(2025, 0, 0, 0, 300_000, null, 100_000)
+    expect(m.net_income_growth_pct).toBeCloseTo(200)
+  })
+
+  it('net_income_growth_pct positive when profit recovers from loss', () => {
+    // Prior = -100k (loss), current = +50k → (50k - (-100k))/100k = 150%
+    const m = buildAnnualMetrics(2025, 200_000, 0, 0, 50_000, null, -100_000)
+    expect(m.net_income_growth_pct).toBeCloseTo(150)
+  })
+
+  it('revenue_growth_pct null when prior not provided (undefined-equivalent)', () => {
+    const m = buildAnnualMetrics(2024, 400_000, 0, 0, 0)
+    expect(m.revenue_growth_pct).toBeNull()
+  })
+
+  it('revenue_growth_pct and net_income_growth_pct both null when no prior', () => {
+    const m = buildAnnualMetrics(2023, 100_000, 0, 0, 50_000)
+    expect(m.revenue_growth_pct).toBeNull()
+    expect(m.net_income_growth_pct).toBeNull()
+  })
+
+  it('small revenue growth: 1000 → 1001 is 0.1%', () => {
+    const m = buildAnnualMetrics(2025, 1_001, 0, 0, 0, 1_000, null)
+    expect(m.revenue_growth_pct).toBeCloseTo(0.1, 1)
+  })
+
+  it('large contraction: 1M → 100k → -90% growth', () => {
+    const m = buildAnnualMetrics(2025, 100_000, 0, 0, 0, 1_000_000, null)
+    expect(m.revenue_growth_pct).toBeCloseTo(-90)
+  })
+
+})
+
+// ── Extended tests: margin calculations ──────────────────────────────────────
+
+describe('AnnualMetrics — margin precision', () => {
+
+  it('gross margin 33.33%: revenue=300k, cogs=200k', () => {
+    const m = buildAnnualMetrics(2025, 300_000, 200_000, 0, 0)
+    expect(m.gross_margin_pct).toBeCloseTo(33.33, 1)
+  })
+
+  it('gross margin 66.67%: revenue=300k, cogs=100k', () => {
+    const m = buildAnnualMetrics(2025, 300_000, 100_000, 0, 0)
+    expect(m.gross_margin_pct).toBeCloseTo(66.67, 1)
+  })
+
+  it('net margin 25%: revenue=200k, net=50k', () => {
+    const m = buildAnnualMetrics(2025, 200_000, 0, 0, 50_000)
+    expect(m.net_margin_pct).toBeCloseTo(25)
+  })
+
+  it('net margin 5%: revenue=1M, net=50k', () => {
+    const m = buildAnnualMetrics(2025, 1_000_000, 0, 0, 50_000)
+    expect(m.net_margin_pct).toBeCloseTo(5)
+  })
+
+  it('gross margin stays non-negative when cogs = revenue', () => {
+    const m = buildAnnualMetrics(2025, 100_000, 100_000, 0, 0)
+    expect(m.gross_margin_pct).toBeCloseTo(0)
+  })
+
+  it('gross_profit_try is always revenue - cogs regardless of sign', () => {
+    const cases: Array<[number, number]> = [
+      [0, 0], [100_000, 0], [100_000, 100_000], [100_000, 150_000],
+    ]
+    cases.forEach(([rev, cogs]) => {
+      const m = buildAnnualMetrics(2025, rev, cogs, 0, 0)
+      expect(m.gross_profit_try).toBe(rev - cogs)
+    })
+  })
+
+})
+
+// ── Extended tests: multi-year sequence ──────────────────────────────────────
+
+describe('AnnualMetrics — multi-year sequence', () => {
+
+  it('three years show correct growth chain', () => {
+    // 2023: 100k, 2024: 200k (+100%), 2025: 300k (+50%)
+    const m2023 = buildAnnualMetrics(2023, 100_000, 0, 0, 0)
+    const m2024 = buildAnnualMetrics(2024, 200_000, 0, 0, 0, 100_000, null)
+    const m2025 = buildAnnualMetrics(2025, 300_000, 0, 0, 0, 200_000, null)
+
+    expect(m2023.revenue_growth_pct).toBeNull()
+    expect(m2024.revenue_growth_pct).toBeCloseTo(100)
+    expect(m2025.revenue_growth_pct).toBeCloseTo(50)
+  })
+
+  it('decline sequence: revenue halves each year', () => {
+    const m2 = buildAnnualMetrics(2025, 250_000, 0, 0, 0, 500_000, null)
+    expect(m2.revenue_growth_pct).toBeCloseTo(-50)
+  })
+
+  it('five-year sequence best year is correctly identified', () => {
+    const years = [
+      buildAnnualMetrics(2026, 400_000, 0, 0, 0),
+      buildAnnualMetrics(2025, 800_000, 0, 0, 0), // best
+      buildAnnualMetrics(2024, 600_000, 0, 0, 0),
+      buildAnnualMetrics(2023, 300_000, 0, 0, 0),
+      buildAnnualMetrics(2022, 200_000, 0, 0, 0),
+    ]
+    const revenues = years.map(y => y.revenue_try)
+    const bestIdx  = revenues.indexOf(Math.max(...revenues))
+    expect(years[bestIdx].year).toBe(2025)
+  })
+
+  it('newest year first ordering maintained by constructor', () => {
+    const years = [
+      buildAnnualMetrics(2026, 100_000, 0, 0, 0),
+      buildAnnualMetrics(2025, 90_000,  0, 0, 0),
+      buildAnnualMetrics(2024, 80_000,  0, 0, 0),
+    ]
+    expect(years[0].year > years[1].year).toBe(true)
+    expect(years[1].year > years[2].year).toBe(true)
+  })
+
+})
+
+// ── Extended tests: specific field invariants ─────────────────────────────────
+
+describe('AnnualMetrics — specific field invariants', () => {
+
+  it('gross_margin_pct is always a number (not null) when revenue > 0', () => {
+    const m = buildAnnualMetrics(2025, 500_000, 200_000, 0, 0)
+    expect(typeof m.gross_margin_pct).toBe('number')
+    expect(m.gross_margin_pct).not.toBeNaN()
+  })
+
+  it('net_margin_pct is always a number (not null) when revenue > 0', () => {
+    const m = buildAnnualMetrics(2025, 500_000, 0, 0, 80_000)
+    expect(typeof m.net_margin_pct).toBe('number')
+    expect(m.net_margin_pct).not.toBeNaN()
+  })
+
+  it('revenue_try and cogs_try are independent fields', () => {
+    const m = buildAnnualMetrics(2025, 300_000, 120_000, 0, 0)
+    expect(m.revenue_try).toBe(300_000)
+    expect(m.cogs_try).toBe(120_000)
+  })
+
+  it('zero cogs → gross_profit_try equals revenue_try', () => {
+    const m = buildAnnualMetrics(2025, 450_000, 0, 0, 0)
+    expect(m.gross_profit_try).toBe(m.revenue_try)
+  })
+
+  it('cogs equals revenue → gross_profit_try = 0', () => {
+    const m = buildAnnualMetrics(2025, 200_000, 200_000, 0, 0)
+    expect(m.gross_profit_try).toBe(0)
+    expect(m.gross_margin_pct).toBeCloseTo(0)
+  })
+
+  it('net_margin_pct can be > 100% (unusual but mathematically valid)', () => {
+    // net income > revenue (e.g., one-time gain)
+    const m = buildAnnualMetrics(2025, 100_000, 0, 0, 200_000)
+    expect(m.net_margin_pct).toBeCloseTo(200)
+  })
+
+  it('all numeric fields are finite numbers', () => {
+    const m = buildAnnualMetrics(2025, 500_000, 200_000, 100_000, 80_000)
+    const numericFields = [
+      m.revenue_try, m.cogs_try, m.gross_profit_try, m.gross_margin_pct,
+      m.expenses_try, m.net_income_try, m.net_margin_pct, m.cash_try,
+    ]
+    numericFields.forEach(v => {
+      expect(typeof v).toBe('number')
+      expect(Number.isFinite(v)).toBe(true)
+    })
+  })
+
+  it('revenue_growth_pct is finite when prior is non-zero', () => {
+    const m = buildAnnualMetrics(2025, 600_000, 0, 0, 0, 500_000, null)
+    expect(Number.isFinite(m.revenue_growth_pct!)).toBe(true)
+  })
+
+  it('net_income_growth_pct is finite when prior is non-zero', () => {
+    const m = buildAnnualMetrics(2025, 0, 0, 0, 120_000, null, 100_000)
+    expect(Number.isFinite(m.net_income_growth_pct!)).toBe(true)
+  })
+
+  it('gross_profit_try = 0 when revenue = cogs = 0', () => {
+    const m = buildAnnualMetrics(2025, 0, 0, 0, 0)
+    expect(m.gross_profit_try).toBe(0)
+  })
+
+  it('cash_try = 0 when net_income = 0', () => {
+    const m = buildAnnualMetrics(2025, 500_000, 200_000, 100_000, 0)
+    expect(m.cash_try).toBe(0)
+  })
+
+  it('negative net_income → negative cash_try', () => {
+    const m = buildAnnualMetrics(2025, 100_000, 50_000, 80_000, -30_000)
+    expect(m.cash_try).toBe(-30_000)
+  })
+
+  it('expenses_try = 0 when 0 expenses passed', () => {
+    const m = buildAnnualMetrics(2025, 200_000, 100_000, 0, 50_000)
+    expect(m.expenses_try).toBe(0)
+  })
+
+})

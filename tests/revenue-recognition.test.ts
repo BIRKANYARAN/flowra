@@ -624,3 +624,303 @@ describe('generateRecognitionNarrative', () => {
   })
 
 })
+
+// ── Additional boundary tests ─────────────────────────────────────────────────
+
+describe('computeEarnedRevenue — edge cases', () => {
+
+  it('100. accrual_basis: very small amount → returns same', () => {
+    expect(computeEarnedRevenue(0.01, 0, 'accrual_basis')).toBeCloseTo(0.01)
+  })
+
+  it('101. cash_basis: very small paid amount → returns paid', () => {
+    expect(computeEarnedRevenue(100_000, 0.50, 'cash_basis')).toBeCloseTo(0.50)
+  })
+
+  it('102. accrual_basis: large TRY amount → returns total', () => {
+    expect(computeEarnedRevenue(10_000_000, 3_000_000, 'accrual_basis')).toBe(10_000_000)
+  })
+
+  it('103. cash_basis: exact same amount as total → returns paid', () => {
+    expect(computeEarnedRevenue(75_000, 75_000, 'cash_basis')).toBe(75_000)
+  })
+
+})
+
+describe('computeUnearnedRevenue — edge cases', () => {
+
+  it('104. cash_basis: tiny partial → unearned ≈ total', () => {
+    expect(computeUnearnedRevenue(100_000, 1, 'cash_basis')).toBeCloseTo(99_999)
+  })
+
+  it('105. cash_basis: 99.99% paid → unearned ≈ 0.01%', () => {
+    expect(computeUnearnedRevenue(100_000, 99_999, 'cash_basis')).toBeCloseTo(1)
+  })
+
+  it('106. accrual_basis: large amount → always 0', () => {
+    expect(computeUnearnedRevenue(5_000_000, 0, 'accrual_basis')).toBe(0)
+  })
+
+})
+
+describe('classifyRecognitionStatus — edge cases', () => {
+
+  it('107. accrual_basis: zero total, zero paid → fully_recognized (0 ≥ 0)', () => {
+    expect(classifyRecognitionStatus(0, 0, 'accrual_basis')).toBe('fully_recognized')
+  })
+
+  it('108. cash_basis: total=0, paid>0 → deferred (paid > total)', () => {
+    expect(classifyRecognitionStatus(0, 1, 'cash_basis')).toBe('deferred')
+  })
+
+  it('109. cash_basis: total=0, paid=0 → fully_recognized', () => {
+    expect(classifyRecognitionStatus(0, 0, 'cash_basis')).toBe('fully_recognized')
+  })
+
+  it('110. deferred check precedes method check', () => {
+    // Even for accrual, if paid > total it's deferred
+    expect(classifyRecognitionStatus(100, 101, 'accrual_basis')).toBe('deferred')
+  })
+
+})
+
+describe('computeRecognitionGap — edge cases', () => {
+
+  it('111. large accrual, tiny cash → very large positive gap', () => {
+    expect(computeRecognitionGap(1_000_000, 1)).toBeCloseTo(999_999)
+  })
+
+  it('112. tiny accrual, zero cash → gap equals accrual', () => {
+    expect(computeRecognitionGap(0.01, 0)).toBeCloseTo(0.01)
+  })
+
+  it('113. both values equal (non-zero) → 0 gap', () => {
+    expect(computeRecognitionGap(250_000, 250_000)).toBe(0)
+  })
+
+})
+
+describe('computeCumulativeReceivables — edge cases', () => {
+
+  it('114. large spikes — AR can grow and shrink', () => {
+    // M1: 500k sales, 0 cash → AR=500k
+    // M2: 0 sales, 600k cash → cumSales=500k, cumCash=600k → AR=0 (floored)
+    expect(computeCumulativeReceivables([500_000, 0], [0, 600_000])).toEqual([500_000, 0])
+  })
+
+  it('115. all zeros → all zeros', () => {
+    expect(computeCumulativeReceivables([0, 0, 0], [0, 0, 0])).toEqual([0, 0, 0])
+  })
+
+  it('116. six months of steady build-up', () => {
+    const result = computeCumulativeReceivables(
+      [100, 100, 100, 100, 100, 100],
+      [0,   0,   0,   0,   0,   0],
+    )
+    expect(result).toEqual([100, 200, 300, 400, 500, 600])
+  })
+
+  it('117. six months of steady collection — AR decreases to 0', () => {
+    // 600 total sales spread, 100 per month collected
+    const result = computeCumulativeReceivables(
+      [100, 100, 100, 100, 100, 100],
+      [100, 100, 100, 100, 100, 100],
+    )
+    expect(result).toEqual([0, 0, 0, 0, 0, 0])
+  })
+
+})
+
+describe('computeRevenueRecognitionRate — edge cases', () => {
+
+  it('118. exactly 25% → 25', () => {
+    expect(computeRevenueRecognitionRate(25_000, 100_000)).toBeCloseTo(25)
+  })
+
+  it('119. exactly 50% → 50', () => {
+    expect(computeRevenueRecognitionRate(50_000, 100_000)).toBeCloseTo(50)
+  })
+
+  it('120. tiny amounts: 1 / 3 → ~33.3%', () => {
+    expect(computeRevenueRecognitionRate(1, 3)).toBeCloseTo(33.33, 1)
+  })
+
+  it('121. non-zero earned, total is same → 100', () => {
+    expect(computeRevenueRecognitionRate(999, 999)).toBeCloseTo(100)
+  })
+
+})
+
+describe('computeDeferredRevenueBalance — edge cases', () => {
+
+  it('122. single sale with exact payment → 0', () => {
+    expect(computeDeferredRevenueBalance([{ total_try: 200_000, paid_amount_try: 200_000 }])).toBe(0)
+  })
+
+  it('123. all underpaid → 0', () => {
+    expect(computeDeferredRevenueBalance([
+      { total_try: 100, paid_amount_try: 50 },
+      { total_try: 200, paid_amount_try: 100 },
+    ])).toBe(0)
+  })
+
+  it('124. large overpayment → correct excess', () => {
+    expect(computeDeferredRevenueBalance([
+      { total_try: 1_000, paid_amount_try: 1_000_000 },
+    ])).toBe(999_000)
+  })
+
+  it('125. three sales: mix → only overpaid ones counted', () => {
+    // 300 overpaid + 0 (exact) + 0 (under)
+    expect(computeDeferredRevenueBalance([
+      { total_try: 100, paid_amount_try: 400 },  // +300
+      { total_try: 100, paid_amount_try: 100 },  // +0
+      { total_try: 200, paid_amount_try: 100 },  // not counted
+    ])).toBe(300)
+  })
+
+})
+
+describe('computeAccrualCashDelta — edge cases', () => {
+
+  it('126. 12 months period — avg delta correct', () => {
+    const result = computeAccrualCashDelta(1_200_000, 1_000_000, 12)
+    expect(result.absolute_delta).toBe(200_000)
+    expect(result.avg_monthly_delta).toBeCloseTo(200_000 / 12)
+  })
+
+  it('127. negative accrual (unusual) — ratio computed correctly', () => {
+    const result = computeAccrualCashDelta(-100_000, 0, 3)
+    expect(result.absolute_delta).toBe(-100_000)
+    // ratio = (-100000 - 0) / -100000 * 100 = 100%
+    expect(result.delta_ratio_pct).toBeCloseTo(100)
+  })
+
+  it('128. delta_ratio_pct equals (accrual-cash)/accrual×100 when accrual≠0', () => {
+    const result = computeAccrualCashDelta(500_000, 300_000, 5)
+    expect(result.delta_ratio_pct).toBeCloseTo((200_000 / 500_000) * 100)
+  })
+
+})
+
+describe('buildMonthlyRecognition — edge cases', () => {
+
+  it('129. single month with payment in different month → cash_received is payment month', () => {
+    const salesByMonth = new Map([
+      ['2025-03', { total_try: 100_000, paid_amount_try: 0 }],
+    ])
+    const paymentsByMonth = new Map([['2025-04', 100_000]])
+    // month array only has 2025-03
+    const result = buildMonthlyRecognition(salesByMonth, paymentsByMonth, ['2025-03'])
+    expect(result[0].cash_received).toBe(0) // payment month not in months array
+  })
+
+  it('130. order of months is preserved', () => {
+    const months = ['2025-06', '2025-05', '2025-04']  // reverse order
+    const result = buildMonthlyRecognition(new Map(), new Map(), months)
+    expect(result.map(r => r.year_month)).toEqual(months)
+  })
+
+  it('131. cumulative_receivables stays 0 after being cleared', () => {
+    const salesByMonth = new Map([
+      ['2025-01', { total_try: 200_000, paid_amount_try: 200_000 }],
+      ['2025-02', { total_try: 0, paid_amount_try: 0 }],
+    ])
+    const paymentsByMonth = new Map([['2025-01', 200_000]])
+    const result = buildMonthlyRecognition(salesByMonth, paymentsByMonth, ['2025-01', '2025-02'])
+    expect(result[0].cumulative_receivables).toBe(0)
+    expect(result[1].cumulative_receivables).toBe(0)
+  })
+
+})
+
+describe('classifyRevenueQualityFromRecognition — edge cases', () => {
+
+  it('132. exactly 30 → poor_quality (boundary)', () => {
+    expect(classifyRevenueQualityFromRecognition(30, 70_000, 100_000)).toBe('poor_quality')
+  })
+
+  it('133. 1% → uncollectable_risk', () => {
+    expect(classifyRevenueQualityFromRecognition(1, 99_000, 100_000)).toBe('uncollectable_risk')
+  })
+
+  it('134. 99% → high_quality', () => {
+    expect(classifyRevenueQualityFromRecognition(99, 1_000, 100_000)).toBe('high_quality')
+  })
+
+  it('135. _recognitionGap and _accrualRevenue args do not affect result', () => {
+    // Same rate with wildly different gap/accrual — result should be same
+    expect(classifyRevenueQualityFromRecognition(75, 999_999, 1)).toBe('good_quality')
+    expect(classifyRevenueQualityFromRecognition(75, 0, 999_999)).toBe('good_quality')
+  })
+
+})
+
+describe('computeAvgCollectionLag — edge cases', () => {
+
+  it('136. payment before sale (invalid data) → 0 days (floor)', () => {
+    const result = computeAvgCollectionLag([
+      { sale_date: '2025-06-15', payment_date: '2025-06-01' },
+    ])
+    expect(result).toBeCloseTo(0)  // Math.max(0, negative) = 0
+  })
+
+  it('137. exactly 1 year lag → ~365 days', () => {
+    const result = computeAvgCollectionLag([
+      { sale_date: '2024-01-01', payment_date: '2025-01-01' },
+    ])
+    expect(result).toBeGreaterThanOrEqual(365)
+    expect(result).toBeLessThanOrEqual(366)  // leap year tolerance
+  })
+
+  it('138. four paid sales → correct average', () => {
+    // 5, 10, 15, 20 → avg 12.5
+    const result = computeAvgCollectionLag([
+      { sale_date: '2025-01-01', payment_date: '2025-01-06' },
+      { sale_date: '2025-01-01', payment_date: '2025-01-11' },
+      { sale_date: '2025-01-01', payment_date: '2025-01-16' },
+      { sale_date: '2025-01-01', payment_date: '2025-01-21' },
+    ])
+    expect(result).toBeCloseTo(12.5)
+  })
+
+  it('139. all entries have null payment_date → null', () => {
+    expect(computeAvgCollectionLag([
+      { sale_date: '2025-01-01', payment_date: null },
+      { sale_date: '2025-02-01', payment_date: null },
+      { sale_date: '2025-03-01', payment_date: null },
+    ])).toBeNull()
+  })
+
+})
+
+describe('generateRecognitionNarrative — edge cases', () => {
+
+  it('140. high_quality: all params ignored except quality', () => {
+    const n1 = generateRecognitionNarrative('high_quality', 91, 100, 0)
+    const n2 = generateRecognitionNarrative('high_quality', 99, 0, 99999)
+    expect(n1).toBe(n2)
+  })
+
+  it('141. uncollectable_risk: includes gap value in text', () => {
+    const result = generateRecognitionNarrative('uncollectable_risk', 5, 12345, 0)
+    expect(result).toContain('12345')
+  })
+
+  it('142. mixed: shows integer-rounded rate', () => {
+    // toFixed(0) on 63.7 → '64'
+    const result = generateRecognitionNarrative('mixed', 63.7, 36_300, 0)
+    expect(result).toContain('64')
+  })
+
+  it('143. good_quality returns expected Turkish string', () => {
+    const result = generateRecognitionNarrative('good_quality', 80, 20_000, 0)
+    expect(result).toContain('iyi')
+  })
+
+  it('144. poor_quality returns expected Turkish string', () => {
+    const result = generateRecognitionNarrative('poor_quality', 38, 62_000, 0)
+    expect(result).toContain('Dikkat')
+  })
+
+})

@@ -432,3 +432,290 @@ describe('computeRiskTrend', () => {
     expect(computeRiskTrend(65, 70)).toBe('stable')
   })
 })
+
+// ── Additional scoreDebtConcentration tests ───────────────────────────────────
+
+describe('scoreDebtConcentration — additional', () => {
+  it('returns ~92.5 for 5% share', () => {
+    // share = 0.05, score = 100 - 7.5 = 92.5
+    expect(scoreDebtConcentration(50_000, 1_000_000)).toBeCloseTo(92.5, 1)
+  })
+
+  it('returns 55 for ~30% share', () => {
+    // share = 0.3, score = 100 - 45 = 55
+    expect(scoreDebtConcentration(300_000, 1_000_000)).toBeCloseTo(55, 1)
+  })
+
+  it('returns ~70 for 20% share', () => {
+    // share = 0.2, score = 100 - 30 = 70
+    expect(scoreDebtConcentration(200_000, 1_000_000)).toBeCloseTo(70, 1)
+  })
+
+  it('score decreases monotonically as partner loan increases', () => {
+    const totals = 1_000_000
+    const loans = [0, 100_000, 200_000, 400_000, 600_000, 800_000, 1_000_000]
+    const scores = loans.map(l => scoreDebtConcentration(l, totals))
+    for (let i = 1; i < scores.length; i++) {
+      expect(scores[i]).toBeLessThanOrEqual(scores[i - 1])
+    }
+  })
+
+  it('formula: score = max(0, 100 - share * 150)', () => {
+    // Verify formula exactly for share = 0.2 (200K / 1M)
+    const expected = Math.max(0, 100 - 0.2 * 150)
+    expect(scoreDebtConcentration(200_000, 1_000_000)).toBeCloseTo(expected, 2)
+  })
+
+  it('score is 100 when partner loan is tiny fraction of total', () => {
+    const score = scoreDebtConcentration(100, 10_000_000)
+    // share ≈ 0.00001, score ≈ 100
+    expect(score).toBeGreaterThan(99.99)
+  })
+})
+
+// ── Additional scoreRepaymentTimeliness tests ─────────────────────────────────
+
+describe('scoreRepaymentTimeliness — additional', () => {
+  it('returns 70 for perfect timeliness but 30 days late', () => {
+    // timeliness = 1*70=70, punctuality = max(0, 30-30)=0
+    expect(scoreRepaymentTimeliness(10, 10, 30)).toBe(70)
+  })
+
+  it('returns ~35 for 50% on-time with 0 days late', () => {
+    // timeliness = 0.5*70=35, punctuality = 30
+    // total = 65
+    expect(scoreRepaymentTimeliness(5, 10, 0)).toBeCloseTo(65, 1)
+  })
+
+  it('returns 30 for 0 payments on time but 0 days late', () => {
+    // timeliness = 0, punctuality = 30
+    expect(scoreRepaymentTimeliness(0, 0, 0)).toBe(30)
+  })
+
+  it('score is between 0 and 100 for any valid input', () => {
+    const cases = [
+      [10, 10, 0], [5, 10, 15], [0, 0, 0], [0, 5, 100], [10, 10, 100],
+    ]
+    for (const [on, total, late] of cases) {
+      const s = scoreRepaymentTimeliness(on, total, late)
+      expect(s).toBeGreaterThanOrEqual(0)
+      expect(s).toBeLessThanOrEqual(100)
+    }
+  })
+})
+
+// ── Additional scoreEquityFulfillment tests ───────────────────────────────────
+
+describe('scoreEquityFulfillment — additional', () => {
+  it('returns 75 when 75% paid', () => {
+    expect(scoreEquityFulfillment(750_000, 1_000_000)).toBeCloseTo(75, 1)
+  })
+
+  it('returns 10 when 10% paid', () => {
+    expect(scoreEquityFulfillment(100_000, 1_000_000)).toBeCloseTo(10, 1)
+  })
+
+  it('is monotonically increasing with paid amount', () => {
+    const committed = 1_000_000
+    const paids = [0, 100_000, 250_000, 500_000, 750_000, 900_000, 1_000_000]
+    const scores = paids.map(p => scoreEquityFulfillment(p, committed))
+    for (let i = 1; i < scores.length; i++) {
+      expect(scores[i]).toBeGreaterThanOrEqual(scores[i - 1])
+    }
+  })
+})
+
+// ── Additional scoreLiquidityContribution tests ───────────────────────────────
+
+describe('scoreLiquidityContribution — additional', () => {
+  it('returns 60 when partner provides 100% of loans but 0% equity', () => {
+    const score = scoreLiquidityContribution(1_000_000, 1_000_000, 0, 1_000_000)
+    expect(score).toBeCloseTo(60, 1)
+  })
+
+  it('returns 40 when partner provides 0 loans but 100% equity', () => {
+    const score = scoreLiquidityContribution(0, 1_000_000, 1_000_000, 1_000_000)
+    expect(score).toBeCloseTo(40, 1)
+  })
+
+  it('returns neutral 50 when only loans exist in company and partner has none', () => {
+    // totalEquityPaid = 0, totalPartnerLoans > 0, partner loans = 0
+    // loanShare = 0, equityShare = 0 / max(1,0) = 0
+    const score = scoreLiquidityContribution(0, 1_000_000, 0, 0)
+    // totalEquityPaid = 0, but totalPartnerLoans > 0 → not (<=0 && <=0)
+    // loanShare = 0, equityShare = 0 → 0
+    expect(score).toBe(0)
+  })
+
+  it('score is always between 0 and 100', () => {
+    const cases: [number, number, number, number][] = [
+      [0, 0, 0, 0],
+      [500_000, 1_000_000, 500_000, 1_000_000],
+      [1_000_000, 1_000_000, 1_000_000, 1_000_000],
+      [0, 0, 1_000_000, 1_000_000],
+    ]
+    for (const [pl, tpl, pe, te] of cases) {
+      const s = scoreLiquidityContribution(pl, tpl, pe, te)
+      expect(s).toBeGreaterThanOrEqual(0)
+      expect(s).toBeLessThanOrEqual(100)
+    }
+  })
+})
+
+// ── Additional scoreLoanToEquityRatio tests ───────────────────────────────────
+
+describe('scoreLoanToEquityRatio — additional', () => {
+  it('returns 60 when ratio is 2.0', () => {
+    // ratio = 2, score = 100 - 40 = 60
+    expect(scoreLoanToEquityRatio(2_000_000, 1_000_000)).toBeCloseTo(60, 1)
+  })
+
+  it('returns 40 when ratio is 3.0', () => {
+    // ratio = 3, score = 100 - 60 = 40
+    expect(scoreLoanToEquityRatio(3_000_000, 1_000_000)).toBeCloseTo(40, 1)
+  })
+
+  it('decreases monotonically as loan balance increases', () => {
+    const equity = 1_000_000
+    const loans = [0, 1_000_000, 2_000_000, 3_000_000, 5_000_000, 10_000_000]
+    const scores = loans.map(l => scoreLoanToEquityRatio(l, equity))
+    for (let i = 1; i < scores.length; i++) {
+      expect(scores[i]).toBeLessThanOrEqual(scores[i - 1])
+    }
+  })
+
+  it('score is always between 0 and 100', () => {
+    const cases: [number, number][] = [
+      [0, 0], [0, 1_000_000], [5_000_000, 1_000_000], [10_000_000, 100_000],
+    ]
+    for (const [loan, equity] of cases) {
+      const s = scoreLoanToEquityRatio(loan, equity)
+      expect(s).toBeGreaterThanOrEqual(0)
+      expect(s).toBeLessThanOrEqual(100)
+    }
+  })
+})
+
+// ── Additional scoreDurationStability tests ───────────────────────────────────
+
+describe('scoreDurationStability — additional', () => {
+  it('returns ~33.3 for 20 months', () => {
+    // 20 * 100 / 60 = 33.33
+    expect(scoreDurationStability(20)).toBeCloseTo(33.33, 1)
+  })
+
+  it('returns ~83.3 for 50 months', () => {
+    // 50 * 100 / 60 = 83.33
+    expect(scoreDurationStability(50)).toBeCloseTo(83.33, 1)
+  })
+
+  it('increases monotonically from 0 to 60 months', () => {
+    const months = [0, 6, 12, 18, 24, 36, 48, 60]
+    const scores = months.map(m => scoreDurationStability(m))
+    for (let i = 1; i < scores.length; i++) {
+      expect(scores[i]).toBeGreaterThanOrEqual(scores[i - 1])
+    }
+  })
+
+  it('caps at 100 for any value >= 60', () => {
+    const months = [60, 70, 100, 200, 1000]
+    for (const m of months) {
+      expect(scoreDurationStability(m)).toBe(100)
+    }
+  })
+})
+
+// ── computeCompositeRiskScore — additional ────────────────────────────────────
+
+describe('computeCompositeRiskScore — additional', () => {
+  it('weights durationStability at 10%', () => {
+    const score = computeCompositeRiskScore({
+      debtConcentration: 0, repaymentTimeliness: 0, equityFulfillment: 0,
+      liquidityContribution: 0, loanToEquity: 0, durationStability: 100,
+    })
+    expect(score).toBeCloseTo(10, 1)
+  })
+
+  it('weights loanToEquity at 10%', () => {
+    const score = computeCompositeRiskScore({
+      debtConcentration: 0, repaymentTimeliness: 0, equityFulfillment: 0,
+      liquidityContribution: 0, loanToEquity: 100, durationStability: 0,
+    })
+    expect(score).toBeCloseTo(10, 1)
+  })
+
+  it('weights equityFulfillment at 20%', () => {
+    const score = computeCompositeRiskScore({
+      debtConcentration: 0, repaymentTimeliness: 0, equityFulfillment: 100,
+      liquidityContribution: 0, loanToEquity: 0, durationStability: 0,
+    })
+    expect(score).toBeCloseTo(20, 1)
+  })
+
+  it('sum of individual weight contributions = total composite', () => {
+    const input = {
+      debtConcentration: 80, repaymentTimeliness: 70, equityFulfillment: 60,
+      liquidityContribution: 50, loanToEquity: 90, durationStability: 40,
+    }
+    // 80*0.25 + 70*0.20 + 60*0.20 + 50*0.15 + 90*0.10 + 40*0.10
+    // = 20 + 14 + 12 + 7.5 + 9 + 4 = 66.5
+    expect(computeCompositeRiskScore(input)).toBeCloseTo(66.5, 1)
+  })
+})
+
+// ── classifyRiskGrade and classifyRiskLevel — integration ─────────────────────
+
+describe('classifyRiskGrade + classifyRiskLevel integration', () => {
+  it('grade/level pairs are self-consistent for all grades', () => {
+    const cases: Array<['A' | 'B' | 'C' | 'D' | 'F', 'low' | 'moderate' | 'elevated' | 'high' | 'critical']> = [
+      ['A', 'low'], ['B', 'moderate'], ['C', 'elevated'], ['D', 'high'], ['F', 'critical'],
+    ]
+    for (const [grade, level] of cases) {
+      expect(classifyRiskLevel(grade)).toBe(level)
+    }
+  })
+
+  it('score 80 → grade A → risk level low', () => {
+    const grade = classifyRiskGrade(80)
+    expect(grade).toBe('A')
+    expect(classifyRiskLevel(grade)).toBe('low')
+  })
+
+  it('score 64 → grade C → risk level elevated', () => {
+    const grade = classifyRiskGrade(64)
+    expect(grade).toBe('C')
+    expect(classifyRiskLevel(grade)).toBe('elevated')
+  })
+
+  it('score 0 → grade F → risk level critical', () => {
+    const grade = classifyRiskGrade(0)
+    expect(grade).toBe('F')
+    expect(classifyRiskLevel(grade)).toBe('critical')
+  })
+})
+
+// ── computeRiskTrend — additional edge cases ──────────────────────────────────
+
+describe('computeRiskTrend — additional', () => {
+  it('returns improving for large improvement (e.g. 0 → 100)', () => {
+    expect(computeRiskTrend(100, 0)).toBe('improving')
+  })
+
+  it('returns deteriorating for large decline (e.g. 100 → 0)', () => {
+    expect(computeRiskTrend(0, 100)).toBe('deteriorating')
+  })
+
+  it('returns stable for identical scores', () => {
+    expect(computeRiskTrend(50, 50)).toBe('stable')
+    expect(computeRiskTrend(100, 100)).toBe('stable')
+    expect(computeRiskTrend(0, 0)).toBe('stable')
+  })
+
+  it('+6 from prior = improving', () => {
+    expect(computeRiskTrend(76, 70)).toBe('improving')
+  })
+
+  it('-6 from prior = deteriorating', () => {
+    expect(computeRiskTrend(64, 70)).toBe('deteriorating')
+  })
+})
