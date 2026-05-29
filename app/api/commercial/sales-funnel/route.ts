@@ -2,7 +2,7 @@
 // GET — Returns SalesFunnelReport: proforma → sale → payment funnel analytics.
 // Access: manager+ only.
 
-export const revalidate = 300 // 5 minutes
+export const revalidate = 1800 // 30 minutes
 
 import { NextRequest, NextResponse } from 'next/server'
 import { resolveApiAuth } from '@/lib/api-auth'
@@ -16,9 +16,11 @@ export async function GET(req: NextRequest) {
 
   const { companyId, supabase } = auth
 
+  const periodMonths = Number(req.nextUrl.searchParams.get('period_months') ?? '3') || 3
+
   try {
     const service = new SalesFunnelService(supabase)
-    const report  = await service.getReport(companyId)
+    const report  = await service.getReportV2(companyId, periodMonths)
     return NextResponse.json({ report })
   } catch (err) {
     console.error('[sales-funnel]', err)
