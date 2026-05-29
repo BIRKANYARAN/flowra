@@ -44,6 +44,7 @@ import { InsightPanel }          from '@/components/dashboard/InsightPanel'
 import { KpiTargetPanel }        from './_shared/KpiTargetPanel'
 import { KpiScorecardPanel }         from './_components/KpiScorecardPanel'
 import { ExecutiveSummaryPanel }     from './_components/ExecutiveSummaryPanel'
+import { AlertCenterClient }         from './_components/AlertCenterClient'
 import { AlertFeedPanel }        from './_shared/AlertFeedPanel'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -551,6 +552,9 @@ export default async function DashboardPage() {
 
       {/* ── EXECUTIVE SUMMARY — unified one-stop CEO report ────────────── */}
       <ExecutiveSummaryPanel />
+
+      {/* ── ALERT CENTER — configurable KPI alert rules engine ──────────── */}
+      <AlertCenterClient companyId={companyId} />
 
       {/* ── CEO INTELLIGENCE PANEL — multi-signal health brief ───────────── */}
       <CeoIntelligencePanel />
