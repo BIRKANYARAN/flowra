@@ -1,37 +1,46 @@
-// ── /api/finance/expense-intelligence ────────────────────────────────────────
-// GET ?from=YYYY-MM-DD&to=YYYY-MM-DD
+// ── GET /api/finance/expense-intelligence ─────────────────────────────────────
 //
-// Returns ExpenseIntelligenceReport — category breakdown + trend analysis.
-// Access: any authenticated member.
+// Returns ExpenseEfficiencyReport — spending efficiency, category mix,
+// fixed/variable split, run-rate projections and savings opportunities.
+//
+// Query params:
+//   ?months=3   — analysis window in months (default: 3)
+//
+// Returns:
+//   { report: ExpenseEfficiencyReport }
+//
+// Auth: manager+ (resolveApiAuth).
+// Cache: revalidate every 1800 seconds.
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 1800
 
 import { NextRequest, NextResponse } from 'next/server'
 import { resolveApiAuth } from '@/lib/api-auth'
-import { apiError, reqCtx } from '@/lib/api-utils'
 import { ExpenseIntelligenceService } from '@/lib/services/finance/expense-intelligence.service'
+import { REQUEST_ID_HEADER } from '@/middleware'
 
 export async function GET(req: NextRequest) {
-  const ctx  = reqCtx(req)
   const auth = await resolveApiAuth(req)
   if (!auth.ok) return auth.response
+  const { companyId, supabase, ctx } = auth
 
-  const { companyId, supabase } = auth
-  const { searchParams }        = new URL(req.url)
-
-  const now      = new Date()
-  const from     = searchParams.get('from') ?? `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
-  const to       = searchParams.get('to')   ?? now.toISOString().slice(0, 10)
+  const monthsParam  = req.nextUrl.searchParams.get('months')
+  const periodMonths = monthsParam
+    ? Math.max(1, Math.min(24, parseInt(monthsParam, 10) || 3))
+    : 3
 
   try {
-    const report = await ExpenseIntelligenceService.getReport(
-      companyId,
-      supabase,
-      { from, to },
+    const service = new ExpenseIntelligenceService(supabase)
+    const report  = await service.getReport(companyId, periodMonths)
+    return NextResponse.json(
+      { report },
+      { headers: { [REQUEST_ID_HEADER]: ctx.requestId } },
     )
-    return NextResponse.json(report)
   } catch (err) {
-    console.error('[expense-intelligence]', err)
-    return apiError(ctx, 'Gider analizi hesaplanamadı', 500)
+    const msg = err instanceof Error ? err.message : String(err)
+    return NextResponse.json(
+      { error: msg, code: 'SERVICE_ERROR', type: 'SYSTEM' },
+      { status: 500, headers: { [REQUEST_ID_HEADER]: ctx.requestId } },
+    )
   }
 }
