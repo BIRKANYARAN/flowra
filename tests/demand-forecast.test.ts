@@ -534,3 +534,156 @@ describe('generateDemandForecastNarrative', () => {
     expect(result).toContain('5.0')
   })
 })
+
+// ── computeOptimalOrderQuantity — additional EOQ tests ────────────────────────
+
+describe('computeOptimalOrderQuantity — EOQ formula additional cases', () => {
+  it('EOQ formula: sqrt(2 * D * S / H)', () => {
+    // D=800, S=100, C=20, rate=0.25 → H=5 → sqrt(32000) ≈ 178.89
+    const result = computeOptimalOrderQuantity(800, 100, 20, 0.25)
+    expect(result).toBeCloseTo(Math.sqrt((2 * 800 * 100) / 5), 4)
+  })
+
+  it('negative annualDemand → null', () => {
+    expect(computeOptimalOrderQuantity(-100, 50, 10)).toBeNull()
+  })
+
+  it('negative unitCost with positive holdingRate → H negative → null', () => {
+    // H = -10 * 0.25 = -2.5 → ≤ 0 → null
+    expect(computeOptimalOrderQuantity(1000, 50, -10, 0.25)).toBeNull()
+  })
+
+  it('doubling annual demand increases EOQ by sqrt(2)', () => {
+    const eoq1 = computeOptimalOrderQuantity(1000, 50, 10, 0.25)!
+    const eoq2 = computeOptimalOrderQuantity(2000, 50, 10, 0.25)!
+    expect(eoq2 / eoq1).toBeCloseTo(Math.sqrt(2), 4)
+  })
+
+  it('doubling order cost increases EOQ by sqrt(2)', () => {
+    const eoq1 = computeOptimalOrderQuantity(1000, 50, 10, 0.25)!
+    const eoq2 = computeOptimalOrderQuantity(1000, 100, 10, 0.25)!
+    expect(eoq2 / eoq1).toBeCloseTo(Math.sqrt(2), 4)
+  })
+
+  it('large D, large S → returns a valid positive number', () => {
+    const result = computeOptimalOrderQuantity(100_000, 500, 50, 0.20)
+    expect(result).not.toBeNull()
+    expect(result!).toBeGreaterThan(0)
+  })
+
+  it('holdingRateAnnual=1.0: EOQ = sqrt(2*D*S/C)', () => {
+    // H = unitCost * 1.0 = unitCost
+    // D=1000, S=50, C=10 → sqrt(2*1000*50/10) = sqrt(10000) = 100
+    const result = computeOptimalOrderQuantity(1000, 50, 10, 1.0)
+    expect(result).toBeCloseTo(100, 4)
+  })
+})
+
+// ── computeDemandTrend — additional linear regression scenarios ───────────────
+
+describe('computeDemandTrend — additional scenarios', () => {
+  it('strongly growing series: [1,2,3,4,5,6,7,8,9,10] → growing', () => {
+    expect(computeDemandTrend([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])).toBe('growing')
+  })
+
+  it('strongly declining series: [100,80,60,40,20] → declining', () => {
+    expect(computeDemandTrend([100, 80, 60, 40, 20])).toBe('declining')
+  })
+
+  it('zigzag series with upward drift → growing', () => {
+    // Values: 10, 15, 12, 20, 18, 25 — positive slope overall
+    expect(computeDemandTrend([10, 15, 12, 20, 18, 25])).toBe('growing')
+  })
+
+  it('nearly flat slight up → stable (slope/mean < 0.05)', () => {
+    // [100, 101, 102] → slope = 1, mean ≈ 101, normalizedSlope ≈ 0.0099 < 0.05
+    expect(computeDemandTrend([100, 101, 102])).toBe('stable')
+  })
+
+  it('exactly 3 equal points → stable', () => {
+    expect(computeDemandTrend([50, 50, 50])).toBe('stable')
+  })
+
+  it('series of length 3 with declining trend', () => {
+    expect(computeDemandTrend([300, 200, 100])).toBe('declining')
+  })
+
+  it('returns insufficient_data for exactly 2 points', () => {
+    expect(computeDemandTrend([10, 20])).toBe('insufficient_data')
+  })
+
+  it('large constant series → stable', () => {
+    const vals = Array.from({ length: 12 }, () => 1000)
+    expect(computeDemandTrend(vals)).toBe('stable')
+  })
+})
+
+// ── generateDemandForecastNarrative — coverage text combinations ──────────────
+
+describe('generateDemandForecastNarrative — additional combinations', () => {
+  it('declining + highly_volatile + critical → all labels appear', () => {
+    const result = generateDemandForecastNarrative('Ürün B', 'declining', 'highly_volatile', 'critical', 0.3)
+    expect(result).toContain('Ürün B')
+    expect(result).toContain('düşüş')
+    expect(result).toContain('kritik')
+  })
+
+  it('growing + very_stable + low → contains positive labels', () => {
+    const result = generateDemandForecastNarrative('Ürün C', 'growing', 'very_stable', 'low', 6.0)
+    expect(result).toContain('artış')
+    expect(result).toContain('6.0')
+  })
+
+  it('stable + moderate + medium → does not throw', () => {
+    expect(() => generateDemandForecastNarrative('X', 'stable', 'moderate', 'medium', 2.5)).not.toThrow()
+  })
+
+  it('insufficient_data trend → contains fallback text', () => {
+    const result = generateDemandForecastNarrative('X', 'insufficient_data', 'no_data', 'no_data', null)
+    expect(result.length).toBeGreaterThan(10)
+  })
+
+  it('coverage 0.0 months → contains "0.0"', () => {
+    const result = generateDemandForecastNarrative('X', 'stable', 'stable', 'critical', 0.0)
+    expect(result).toContain('0.0')
+  })
+
+  it('coverage 12.5 months → contains "12.5"', () => {
+    const result = generateDemandForecastNarrative('X', 'growing', 'stable', 'low', 12.5)
+    expect(result).toContain('12.5')
+  })
+
+  it('result always ends with a period', () => {
+    const result = generateDemandForecastNarrative('Y', 'growing', 'stable', 'low', 3.0)
+    expect(result.endsWith('.')).toBe(true)
+  })
+})
+
+// ── computeInventoryCoverage — additional cases ───────────────────────────────
+
+describe('computeInventoryCoverage — additional cases', () => {
+  it('large stock / small demand → large months value', () => {
+    expect(computeInventoryCoverage(1000, 10)).toBe(100)
+  })
+
+  it('stock < demand → fractional coverage < 1', () => {
+    const coverage = computeInventoryCoverage(50, 100)
+    expect(coverage).toBeCloseTo(0.5, 5)
+  })
+
+  it('stock = demand → exactly 1 month', () => {
+    expect(computeInventoryCoverage(200, 200)).toBe(1)
+  })
+
+  it('demand negative → null', () => {
+    expect(computeInventoryCoverage(100, -1)).toBeNull()
+  })
+
+  it('stock 0, demand 50 → 0 months', () => {
+    expect(computeInventoryCoverage(0, 50)).toBe(0)
+  })
+
+  it('stock 250, demand 100 → 2.5 months', () => {
+    expect(computeInventoryCoverage(250, 100)).toBe(2.5)
+  })
+})

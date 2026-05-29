@@ -535,3 +535,205 @@ describe('computeWeekendRatio', () => {
     expect(computeWeekendRatio(days)).toBeCloseTo(650 / 300, 4)
   })
 })
+
+// ── computeIntensity — formula clamping verification ─────────────────────────
+
+describe('computeIntensity — formula and clamping', () => {
+  it('formula: (value / maxValue) * 100', () => {
+    // 40 / 80 * 100 = 50
+    expect(computeIntensity(40, 80)).toBeCloseTo(50, 5)
+  })
+
+  it('75 of 200 → 37.5', () => {
+    expect(computeIntensity(75, 200)).toBeCloseTo(37.5, 5)
+  })
+
+  it('value exactly maxValue → 100 (not above)', () => {
+    expect(computeIntensity(250, 250)).toBe(100)
+  })
+
+  it('value 1 above maxValue → still 100 (clamped)', () => {
+    expect(computeIntensity(101, 100)).toBe(100)
+  })
+
+  it('maxValue=0 with value=0 → 0 (guard)', () => {
+    expect(computeIntensity(0, 0)).toBe(0)
+  })
+
+  it('maxValue=0 with value=99 → 0 (guard)', () => {
+    expect(computeIntensity(99, 0)).toBe(0)
+  })
+
+  it('value=33, maxValue=100 → 33', () => {
+    expect(computeIntensity(33, 100)).toBeCloseTo(33, 5)
+  })
+
+  it('result is always in [0, 100] range', () => {
+    const cases = [
+      [0, 0], [0, 100], [100, 100], [200, 100], [-50, 100],
+      [50, 200], [1, 1000],
+    ]
+    for (const [v, m] of cases) {
+      const r = computeIntensity(v!, m!)
+      expect(r).toBeGreaterThanOrEqual(0)
+      expect(r).toBeLessThanOrEqual(100)
+    }
+  })
+})
+
+// ── computeWeekNumber — formula floor(daysDiff/7) ─────────────────────────────
+
+describe('computeWeekNumber — formula floor(daysDiff / 7)', () => {
+  it('same date → 0', () => {
+    expect(computeWeekNumber('2026-03-01', '2026-03-01')).toBe(0)
+  })
+
+  it('1 day later → floor(1/7) = 0', () => {
+    expect(computeWeekNumber('2026-03-02', '2026-03-01')).toBe(0)
+  })
+
+  it('7 days later → floor(7/7) = 1', () => {
+    expect(computeWeekNumber('2026-03-08', '2026-03-01')).toBe(1)
+  })
+
+  it('8 days later → floor(8/7) = 1', () => {
+    expect(computeWeekNumber('2026-03-09', '2026-03-01')).toBe(1)
+  })
+
+  it('14 days later → floor(14/7) = 2', () => {
+    expect(computeWeekNumber('2026-03-15', '2026-03-01')).toBe(2)
+  })
+
+  it('41 days later → floor(41/7) = 5', () => {
+    expect(computeWeekNumber('2026-04-11', '2026-03-01')).toBe(5)
+  })
+
+  it('result is always a non-negative integer for dates from start onward', () => {
+    // Use string-only date arithmetic to avoid timezone issues
+    const startMs = new Date('2026-01-01').getTime()
+    for (let d = 0; d < 91; d++) {
+      const dateStr = new Date(startMs + d * 86_400_000).toISOString().slice(0, 10)
+      const wn = computeWeekNumber(dateStr, '2026-01-01')
+      expect(wn).toBeGreaterThanOrEqual(0)
+      expect(Number.isInteger(wn)).toBe(true)
+    }
+  })
+})
+
+// ── computeDowIndex — all 7 days of the week ─────────────────────────────────
+
+describe('computeDowIndex — all 7 weekdays', () => {
+  it('Monday (2026-06-01) → 0', () => {
+    expect(computeDowIndex('2026-06-01')).toBe(0)
+  })
+
+  it('Tuesday (2026-06-02) → 1', () => {
+    expect(computeDowIndex('2026-06-02')).toBe(1)
+  })
+
+  it('Wednesday (2026-06-03) → 2', () => {
+    expect(computeDowIndex('2026-06-03')).toBe(2)
+  })
+
+  it('Thursday (2026-06-04) → 3', () => {
+    expect(computeDowIndex('2026-06-04')).toBe(3)
+  })
+
+  it('Friday (2026-06-05) → 4', () => {
+    expect(computeDowIndex('2026-06-05')).toBe(4)
+  })
+
+  it('Saturday (2026-06-06) → 5', () => {
+    expect(computeDowIndex('2026-06-06')).toBe(5)
+  })
+
+  it('Sunday (2026-06-07) → 6', () => {
+    expect(computeDowIndex('2026-06-07')).toBe(6)
+  })
+
+  it('Monday 7 weeks later same index as original Monday', () => {
+    const mon1 = computeDowIndex('2026-06-01')
+    const mon2 = computeDowIndex('2026-07-20')  // also Monday
+    expect(mon1).toBe(mon2)
+  })
+})
+
+// ── findBestDow — edge cases and tie-breaking ─────────────────────────────────
+
+describe('findBestDow — additional edge cases', () => {
+  it('all same values → returns 0 (first occurrence wins)', () => {
+    expect(findBestDow([10, 10, 10, 10, 10, 10, 10])).toBe(0)
+  })
+
+  it('single element array → 0', () => {
+    expect(findBestDow([999])).toBe(0)
+  })
+
+  it('two elements: first greater → 0', () => {
+    expect(findBestDow([100, 50])).toBe(0)
+  })
+
+  it('two elements: second greater → 1', () => {
+    expect(findBestDow([50, 100])).toBe(1)
+  })
+
+  it('[0,0,0,0,0,0,100] → 6 (Sunday)', () => {
+    expect(findBestDow([0, 0, 0, 0, 0, 0, 100])).toBe(6)
+  })
+
+  it('[100,0,0,0,0,0,0] → 0 (Monday)', () => {
+    expect(findBestDow([100, 0, 0, 0, 0, 0, 0])).toBe(0)
+  })
+
+  it('tie at indices 2 and 5: first wins → 2', () => {
+    expect(findBestDow([1, 2, 99, 3, 4, 99, 5])).toBe(2)
+  })
+})
+
+// ── computeWeekendRatio — additional ratio verification ───────────────────────
+
+describe('computeWeekendRatio — additional cases', () => {
+  it('returns a number type', () => {
+    const days: DayData[] = [
+      makeDay({ day_of_week: 0, revenue: 1000 }),
+      makeDay({ day_of_week: 5, revenue: 500 }),
+    ]
+    expect(typeof computeWeekendRatio(days)).toBe('number')
+  })
+
+  it('ratio is always non-negative', () => {
+    const days: DayData[] = [
+      makeDay({ day_of_week: 0, revenue: 0 }),
+      makeDay({ day_of_week: 5, revenue: 0 }),
+    ]
+    expect(computeWeekendRatio(days)).toBeGreaterThanOrEqual(0)
+  })
+
+  it('all weekdays only → 0/weekdayAvg = 0', () => {
+    const days: DayData[] = [
+      makeDay({ day_of_week: 0, revenue: 500 }),
+      makeDay({ day_of_week: 1, revenue: 500 }),
+      makeDay({ day_of_week: 2, revenue: 500 }),
+      makeDay({ day_of_week: 3, revenue: 500 }),
+      makeDay({ day_of_week: 4, revenue: 500 }),
+    ]
+    // weekendAvg = 0, weekdayAvg = 500 → ratio = 0
+    expect(computeWeekendRatio(days)).toBeCloseTo(0, 5)
+  })
+
+  it('only weekend days → 1.0 (guard for no weekdays)', () => {
+    const days: DayData[] = [
+      makeDay({ day_of_week: 5, revenue: 800 }),
+      makeDay({ day_of_week: 6, revenue: 1200 }),
+    ]
+    expect(computeWeekendRatio(days)).toBe(1.0)
+  })
+
+  it('weekdayAvg = weekendAvg → ratio = 1.0', () => {
+    const days: DayData[] = [
+      makeDay({ day_of_week: 0, revenue: 700 }),
+      makeDay({ day_of_week: 5, revenue: 700 }),
+    ]
+    expect(computeWeekendRatio(days)).toBeCloseTo(1.0, 5)
+  })
+})

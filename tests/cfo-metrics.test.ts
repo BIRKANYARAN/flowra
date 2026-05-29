@@ -519,3 +519,428 @@ describe('computeRunwayForecast', () => {
     expect(result.safe_months).toBe(6)
   })
 })
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeCashMetrics — additional edge cases
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeCashMetrics — edge cases', () => {
+  it('zero burn expenses + zero allTimeReceived → true_cash = 0', () => {
+    const input: CashInputs = {
+      allTimeReceived: 0,
+      allTimePaidExpenses: [],
+      unpaidExpenses: [],
+      periodReceived: 0,
+      periodPaidExpenses: [],
+      trailingBurnExpenses: [],
+      trailingMonths: 3,
+    }
+    const result = computeCashMetrics(input)
+    expect(result.true_cash_position).toBe(0)
+    expect(result.monthly_burn_rate).toBe(0)
+    expect(result.distributable_cash).toBe(0)
+  })
+
+  it('large cash balance: true_cash_position computed correctly', () => {
+    const input: CashInputs = {
+      allTimeReceived: 50_000_000,
+      allTimePaidExpenses: [
+        { amount_try: 10_000_000, expense_type: 'operational' },
+        { amount_try:  5_000_000, expense_type: 'fixed' },
+      ],
+      unpaidExpenses: [],
+      periodReceived: 1_000_000,
+      periodPaidExpenses: [],
+      trailingBurnExpenses: [],
+      trailingMonths: 3,
+    }
+    const result = computeCashMetrics(input)
+    expect(result.true_cash_position).toBe(35_000_000)
+  })
+
+  it('null expense_type treated as operational (not financing)', () => {
+    const input: CashInputs = {
+      allTimeReceived: 100_000,
+      allTimePaidExpenses: [
+        { amount_try: 10_000, expense_type: null }, // null type → not financing → counts
+      ],
+      unpaidExpenses: [],
+      periodReceived: 0,
+      periodPaidExpenses: [],
+      trailingBurnExpenses: [],
+      trailingMonths: 3,
+    }
+    const result = computeCashMetrics(input)
+    // null is not in FINANCING_EXPENSE_TYPES → included in operational
+    expect(result.true_cash_position).toBe(90_000)
+  })
+
+  it('all financing expenses: true_cash = allTimeReceived', () => {
+    const input: CashInputs = {
+      allTimeReceived: 200_000,
+      allTimePaidExpenses: [
+        { amount_try: 50_000,  expense_type: 'partner_financing' },
+        { amount_try: 30_000,  expense_type: 'loan_repayment' },
+        { amount_try: 20_000,  expense_type: 'dividend' },
+        { amount_try: 10_000,  expense_type: 'internal_transfer' },
+        { amount_try: 15_000,  expense_type: 'principal' },
+        { amount_try: 25_000,  expense_type: 'partner_loan' },
+      ],
+      unpaidExpenses: [],
+      periodReceived: 0,
+      periodPaidExpenses: [],
+      trailingBurnExpenses: [],
+      trailingMonths: 3,
+    }
+    const result = computeCashMetrics(input)
+    expect(result.true_cash_position).toBe(200_000)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeBurnMetrics — trend classification and additional cases
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeBurnMetrics — burn trend and edge cases', () => {
+  const TODAY = '2026-06-01'
+
+  it('monthlyBurn negative (edge guard): returns null runway (treated as <= 0)', () => {
+    // negative burn is nonsensical; the guard is monthlyBurn <= 0
+    const result = computeBurnMetrics(100_000, -1000, TODAY)
+    expect(result.runway_months).toBeNull()
+    expect(result.runway_days).toBeNull()
+  })
+
+  it('distributable = 0 and burn > 0: runway = 0, exhaustion_date = today', () => {
+    const result = computeBurnMetrics(0, 5_000, TODAY)
+    expect(result.runway_months).toBe(0)
+    expect(result.runway_days).toBe(0)
+    expect(result.cash_exhaustion_date).toBe(TODAY)
+  })
+
+  it('runway_months is rounded to 2dp', () => {
+    // 10_000 / 3_000 = 3.3333...
+    const result = computeBurnMetrics(10_000, 3_000, TODAY)
+    expect(result.runway_months).toBeCloseTo(3.33, 1)
+  })
+
+  it('runway_days = round(runway_months * 30.44)', () => {
+    // 2 months * 30.44 = 60.88 → round = 61
+    const result = computeBurnMetrics(20_000, 10_000, TODAY)
+    expect(result.runway_months).toBe(2)
+    expect(result.runway_days).toBe(Math.round(2 * 30.44))
+  })
+
+  it('very large cash, small burn → exhaustion far in future', () => {
+    const result = computeBurnMetrics(1_000_000, 100, TODAY)
+    // 10_000 months runway
+    expect(result.runway_months).toBe(10_000)
+    expect(result.cash_exhaustion_date).not.toBeNull()
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeReceivableMetrics — overdue ratio and additional cases
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeReceivableMetrics — overdue ratio and edge cases', () => {
+  const TODAY = '2026-06-01'
+
+  it('due_date used for aging when present (not sale_date)', () => {
+    const input: ReceivableInputs = {
+      periodInvoiced: 0,
+      periodCollected: 0,
+      outstanding: [
+        {
+          // sale_date is recent, but due_date is 90+ days ago → overdue
+          amount_try: 8_000,
+          sale_date: '2026-05-20',
+          due_date:  '2026-01-01',  // far in the past
+          amount_paid: 0,
+        },
+      ],
+      today: TODAY,
+    }
+    const result = computeReceivableMetrics(input)
+    expect(result.overdue_90d).toBe(8_000)
+  })
+
+  it('partially paid invoice: net outstanding counted in aging', () => {
+    const input: ReceivableInputs = {
+      periodInvoiced: 10_000,
+      periodCollected: 3_000,
+      outstanding: [
+        {
+          amount_try: 10_000,
+          sale_date: '2025-12-01',  // well over 90d before 2026-06-01
+          amount_paid: 3_000,
+        },
+      ],
+      today: TODAY,
+    }
+    const result = computeReceivableMetrics(input)
+    // Net = 7_000
+    expect(result.total_outstanding).toBe(7_000)
+    expect(result.overdue_90d).toBe(7_000)
+  })
+
+  it('multiple invoices: total_outstanding sums correctly', () => {
+    const input: ReceivableInputs = {
+      periodInvoiced: 100_000,
+      periodCollected: 50_000,
+      outstanding: [
+        { amount_try: 20_000, sale_date: '2026-05-01', amount_paid: 5_000 },
+        { amount_try: 15_000, sale_date: '2026-04-01', amount_paid: 0     },
+        { amount_try: 10_000, sale_date: '2026-05-25', amount_paid: 10_000 }, // fully paid → 0
+      ],
+      today: TODAY,
+    }
+    const result = computeReceivableMetrics(input)
+    // net: 15_000 + 15_000 + 0 = 30_000
+    expect(result.total_outstanding).toBe(30_000)
+  })
+
+  it('collection_rate_pct formula: collected/invoiced * 100', () => {
+    const input: ReceivableInputs = {
+      periodInvoiced: 80_000,
+      periodCollected: 60_000,
+      outstanding: [],
+      today: TODAY,
+    }
+    const result = computeReceivableMetrics(input)
+    expect(result.collection_rate_pct).toBeCloseTo(75, 1)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeTaxMetrics — with zero revenue
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeTaxMetrics — zero revenue edge cases', () => {
+  it('zero accountingProfit and zero kdvNet → all zeros', () => {
+    const input: TaxInputs = { kdvNet: 0, accountingProfit: 0, taxRate: 25 }
+    const result = computeTaxMetrics(input)
+    expect(result.kdv_net).toBe(0)
+    expect(result.corporate_tax_estimate).toBe(0)
+    expect(result.total_fiscal_obligation).toBe(0)
+  })
+
+  it('very small profit: tax rounds to 2dp', () => {
+    const input: TaxInputs = { kdvNet: 0, accountingProfit: 1, taxRate: 25 }
+    const result = computeTaxMetrics(input)
+    expect(result.corporate_tax_estimate).toBeCloseTo(0.25, 1)
+  })
+
+  it('different tax rates: 20% rate', () => {
+    const input: TaxInputs = { kdvNet: 0, accountingProfit: 500_000, taxRate: 20 }
+    const result = computeTaxMetrics(input)
+    expect(result.corporate_tax_estimate).toBe(100_000)
+  })
+
+  it('kdv_net reflects raw value even when negative', () => {
+    const input: TaxInputs = { kdvNet: -12_345, accountingProfit: 100_000, taxRate: 25 }
+    const result = computeTaxMetrics(input)
+    expect(result.kdv_net).toBe(-12_345)
+    // total_fiscal_obligation uses max(0, kdvNet) = 0 for payable
+    expect(result.total_fiscal_obligation).toBe(result.corporate_tax_estimate)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computePartnerMetrics — multiple partners
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computePartnerMetrics — multiple partners', () => {
+  it('multiple capital_in transactions accumulate correctly', () => {
+    const input: PartnerInputs = {
+      transactions: [
+        { tx_type: 'capital_in', amount_try: 200_000 },
+        { tx_type: 'capital_in', amount_try: 150_000 },
+        { tx_type: 'capital_in', amount_try:  50_000 },
+      ],
+    }
+    const result = computePartnerMetrics(input)
+    expect(result.total_equity).toBe(400_000)
+  })
+
+  it('multiple loans and repayments: net_loans is correct', () => {
+    const input: PartnerInputs = {
+      transactions: [
+        { tx_type: 'loan_to_company', amount_try: 100_000 },
+        { tx_type: 'loan_to_company', amount_try:  50_000 },
+        { tx_type: 'loan_repayment',  amount_try:  30_000 },
+        { tx_type: 'loan_repayment',  amount_try:  20_000 },
+      ],
+    }
+    const result = computePartnerMetrics(input)
+    expect(result.total_loans).toBe(100_000) // (100k + 50k) - (30k + 20k)
+  })
+
+  it('multiple dividends: total_dividends accumulates', () => {
+    const input: PartnerInputs = {
+      transactions: [
+        { tx_type: 'capital_in', amount_try: 500_000 },
+        { tx_type: 'dividend',   amount_try:  25_000 },
+        { tx_type: 'dividend',   amount_try:  25_000 },
+        { tx_type: 'dividend',   amount_try:  50_000 },
+      ],
+    }
+    const result = computePartnerMetrics(input)
+    expect(result.total_dividends).toBe(100_000)
+  })
+
+  it('empty transactions: all zeros', () => {
+    const result = computePartnerMetrics({ transactions: [] })
+    expect(result.total_equity).toBe(0)
+    expect(result.total_loans).toBe(0)
+    expect(result.total_dividends).toBe(0)
+    expect(result.company_owes).toBe(0)
+  })
+
+  it('unknown tx_type is ignored', () => {
+    const input: PartnerInputs = {
+      transactions: [
+        { tx_type: 'capital_in',    amount_try: 100_000 },
+        { tx_type: 'unknown_type',  amount_try: 999_999 }, // should be ignored
+      ],
+    }
+    const result = computePartnerMetrics(input)
+    expect(result.total_equity).toBe(100_000)
+    expect(result.company_owes).toBe(100_000)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeStockMetrics — empty lots and additional coverage
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeStockMetrics — empty lots and additional coverage', () => {
+  it('single lot: fifo_value = qty * cost', () => {
+    const input: StockInputs = {
+      lots: [{ qty_remaining: 25, cost_price_try: 400 }],
+      monthlyBurn: 2_000,
+    }
+    const result = computeStockMetrics(input)
+    expect(result.fifo_value).toBe(10_000)
+    expect(result.coverage_months).toBe(5)
+  })
+
+  it('fractional qty and cost: result rounded to 2dp', () => {
+    const input: StockInputs = {
+      lots: [
+        { qty_remaining: 3.5, cost_price_try: 100.25 },
+      ],
+      monthlyBurn: 1_000,
+    }
+    const result = computeStockMetrics(input)
+    // 3.5 * 100.25 = 350.875 → round2 = 350.88
+    expect(result.fifo_value).toBeCloseTo(350.88, 1)
+  })
+
+  it('multiple lots: fifo_value sums all', () => {
+    const input: StockInputs = {
+      lots: [
+        { qty_remaining: 10, cost_price_try: 50   },
+        { qty_remaining: 20, cost_price_try: 75   },
+        { qty_remaining:  5, cost_price_try: 200  },
+      ],
+      monthlyBurn: 5_000,
+    }
+    const result = computeStockMetrics(input)
+    // 500 + 1500 + 1000 = 3000
+    expect(result.fifo_value).toBe(3_000)
+    expect(result.coverage_months).toBeCloseTo(0.6, 1)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeRunwayForecast — monotonic months and additional coverage
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeRunwayForecast — monotonic and forecast structure', () => {
+  const START_DATE = new Date('2026-01-01T00:00:00Z')
+
+  function makeInput(overrides: Partial<MonthlyForecastInput> = {}): MonthlyForecastInput {
+    return {
+      startingCash:            200_000,
+      monthlyBurn:             20_000,
+      outstandingReceivables:  0,
+      collectionRatePct:       100,
+      projectedMonthlyRevenue: 0,
+      projectedCollectionRate: 100,
+      taxObligation:           0,
+      months:                  6,
+      ...overrides,
+    }
+  }
+
+  it('month entries are 1-indexed sequentially', () => {
+    const result = computeRunwayForecast(makeInput({ months: 5 }), START_DATE)
+    expect(result.months.map(m => m.month)).toEqual([1, 2, 3, 4, 5])
+  })
+
+  it('month_label strings are non-empty for all months', () => {
+    const result = computeRunwayForecast(makeInput({ months: 4 }), START_DATE)
+    for (const m of result.months) {
+      expect(typeof m.month_label).toBe('string')
+      expect(m.month_label.length).toBeGreaterThan(0)
+    }
+  })
+
+  it('end_cash is monotonically decreasing with no revenue', () => {
+    // No revenue, constant burn → end_cash strictly decreasing
+    const result = computeRunwayForecast(
+      makeInput({ startingCash: 120_000, monthlyBurn: 30_000, months: 4, outstandingReceivables: 0 }),
+      START_DATE,
+    )
+    const endCashes = result.months.map(m => m.end_cash)
+    for (let i = 1; i < endCashes.length; i++) {
+      expect(endCashes[i]).toBeLessThan(endCashes[i - 1])
+    }
+  })
+
+  it('projectedMonthlyRevenue reduces the burn rate effect each month', () => {
+    const result = computeRunwayForecast(
+      makeInput({
+        startingCash: 50_000,
+        monthlyBurn: 20_000,
+        projectedMonthlyRevenue: 20_000,
+        projectedCollectionRate: 100,
+        outstandingReceivables: 0,
+        months: 4,
+      }),
+      START_DATE,
+    )
+    // Revenue = burn → end_cash stays constant at 50_000 each month
+    for (const m of result.months) {
+      expect(m.end_cash).toBeCloseTo(50_000, 1)
+      expect(m.is_exhausted).toBe(false)
+    }
+    expect(result.exhaustion_month).toBeNull()
+    expect(result.safe_months).toBe(4)
+  })
+
+  it('partial collection rate: only fraction of receivables collected in month 1', () => {
+    const result = computeRunwayForecast(
+      makeInput({
+        startingCash: 50_000,
+        monthlyBurn: 10_000,
+        outstandingReceivables: 40_000,
+        collectionRatePct: 50,
+        months: 2,
+      }),
+      START_DATE,
+    )
+    // Month 1: cash_in = 40_000 * 50% = 20_000
+    expect(result.months[0].cash_in).toBe(20_000)
+  })
+
+  it('exhaustion_date is null when cash never runs out', () => {
+    const result = computeRunwayForecast(
+      makeInput({ startingCash: 10_000_000, monthlyBurn: 1, months: 12 }),
+      START_DATE,
+    )
+    expect(result.exhaustion_month).toBeNull()
+    expect(result.exhaustion_date).toBeNull()
+  })
+})

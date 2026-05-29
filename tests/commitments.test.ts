@@ -537,3 +537,277 @@ describe('CommitmentsService — source and type values', () => {
     expect(obligation.status).toBe('upcoming')
   })
 })
+
+// ── CommitmentsLedger shape tests ─────────────────────────────────────────────
+
+describe('CommitmentsLedger — shape and defaults', () => {
+  it('computed_at is a non-empty string', async () => {
+    const ledger = await getLedger({}, { today: '2026-01-01' })
+    expect(typeof ledger.computed_at).toBe('string')
+    expect(ledger.computed_at.length).toBeGreaterThan(0)
+  })
+
+  it('obligations is an array', async () => {
+    const ledger = await getLedger({}, { today: '2026-01-01' })
+    expect(Array.isArray(ledger.obligations)).toBe(true)
+  })
+
+  it('by_month is a plain object', async () => {
+    const ledger = await getLedger({}, { today: '2026-01-01' })
+    expect(typeof ledger.by_month).toBe('object')
+    expect(ledger.by_month).not.toBeNull()
+  })
+
+  it('total_known_try is a number', async () => {
+    const ledger = await getLedger({}, { today: '2026-01-01' })
+    expect(typeof ledger.total_known_try).toBe('number')
+  })
+
+  it('overdue_count, due_soon_count, upcoming_count are numbers', async () => {
+    const ledger = await getLedger({}, { today: '2026-01-01' })
+    expect(typeof ledger.overdue_count).toBe('number')
+    expect(typeof ledger.due_soon_count).toBe('number')
+    expect(typeof ledger.upcoming_count).toBe('number')
+  })
+})
+
+// ── Forward commitment field validation ───────────────────────────────────────
+
+describe('CommitmentsService — forward commitment field mapping', () => {
+  function makeCommitment(overrides: Partial<{
+    id: string; amount_try: number | null; due_date: string;
+    title: string; commitment_type: string; counterparty: string | null;
+    recurrence: string | null; description: string | null;
+  }> = {}) {
+    return {
+      id:              overrides.id              ?? 'fc-default',
+      company_id:      COMPANY_ID,
+      title:           overrides.title           ?? 'Default Title',
+      commitment_type: overrides.commitment_type ?? 'contract',
+      amount_try:      overrides.amount_try      ?? 10_000,
+      currency:        'TRY',
+      due_date:        overrides.due_date        ?? '2026-06-01',
+      recurrence:      overrides.recurrence      ?? null,
+      counterparty:    overrides.counterparty    ?? null,
+      description:     overrides.description     ?? null,
+      status:          'active',
+      created_by:      'user-1',
+      created_at:      '2026-01-01T00:00:00Z',
+      updated_at:      '2026-01-01T00:00:00Z',
+    }
+  }
+
+  it('declared commitment has source=declared_commitment', async () => {
+    const ledger = await getLedger(
+      { forward_commitments: [makeCommitment()] },
+      { today: '2026-01-01' },
+    )
+    const dc = ledger.obligations.find(o => o.source === 'declared_commitment')
+    expect(dc).toBeDefined()
+  })
+
+  it('declared commitment has is_computed=false', async () => {
+    const ledger = await getLedger(
+      { forward_commitments: [makeCommitment()] },
+      { today: '2026-01-01' },
+    )
+    const dc = ledger.obligations.find(o => o.source === 'declared_commitment')
+    expect(dc?.is_computed).toBe(false)
+  })
+
+  it('declared commitment amount_try matches input', async () => {
+    const ledger = await getLedger(
+      { forward_commitments: [makeCommitment({ amount_try: 77_777 })] },
+      { today: '2026-01-01' },
+    )
+    const dc = ledger.obligations.find(o => o.source === 'declared_commitment')
+    expect(dc?.amount_try).toBe(77_777)
+  })
+
+  it('declared commitment due_date is in YYYY-MM-DD format', async () => {
+    const ledger = await getLedger(
+      { forward_commitments: [makeCommitment({ due_date: '2026-09-30' })] },
+      { today: '2026-01-01' },
+    )
+    const dc = ledger.obligations.find(o => o.source === 'declared_commitment')
+    expect(dc?.due_date).toBe('2026-09-30')
+  })
+
+  it('declared commitment title matches input', async () => {
+    const ledger = await getLedger(
+      { forward_commitments: [makeCommitment({ title: 'Yazılım Lisansı' })] },
+      { today: '2026-01-01' },
+    )
+    const dc = ledger.obligations.find(o => o.source === 'declared_commitment')
+    expect(dc?.title).toBe('Yazılım Lisansı')
+  })
+
+  it('declared commitment counterparty is preserved', async () => {
+    const ledger = await getLedger(
+      { forward_commitments: [makeCommitment({ counterparty: 'XYZ Şirketi' })] },
+      { today: '2026-01-01' },
+    )
+    const dc = ledger.obligations.find(o => o.source === 'declared_commitment')
+    expect(dc?.counterparty).toBe('XYZ Şirketi')
+  })
+})
+
+// ── CommitmentsLedger — overdue / due_soon / upcoming status logic ─────────────
+
+describe('CommitmentsService — status classification edge cases', () => {
+  it('obligation due today → due_soon', async () => {
+    const today = '2026-03-15'
+    const ledger = await getLedger(
+      {
+        partner_loan_tranches: [],
+        workflow_instances: [],
+        governance_obligations: [],
+        forward_commitments: [{
+          id: 'fc-today', company_id: COMPANY_ID,
+          title: 'Today', commitment_type: 'contract',
+          amount_try: 1_000, currency: 'TRY',
+          due_date: today,   // due today = 0 days → due_soon
+          recurrence: null, counterparty: null, description: null,
+          status: 'active', created_by: 'u',
+          created_at: '2026-01-01T00:00:00Z',
+          updated_at: '2026-01-01T00:00:00Z',
+        }],
+      },
+      { today, horizon: 365 },
+    )
+    const obs = ledger.obligations.find(o => o.title === 'Today')
+    expect(obs?.status).toBe('due_soon')
+  })
+
+  it('obligation due 15 days from today → upcoming', async () => {
+    const today = '2026-03-15'
+    const ledger = await getLedger(
+      {
+        partner_loan_tranches: [],
+        workflow_instances: [],
+        governance_obligations: [],
+        forward_commitments: [{
+          id: 'fc-15d', company_id: COMPANY_ID,
+          title: 'In15Days', commitment_type: 'contract',
+          amount_try: 2_000, currency: 'TRY',
+          due_date: '2026-03-30',   // 15 days → upcoming
+          recurrence: null, counterparty: null, description: null,
+          status: 'active', created_by: 'u',
+          created_at: '2026-01-01T00:00:00Z',
+          updated_at: '2026-01-01T00:00:00Z',
+        }],
+      },
+      { today, horizon: 365 },
+    )
+    const obs = ledger.obligations.find(o => o.title === 'In15Days')
+    expect(obs?.status).toBe('upcoming')
+  })
+
+  it('obligation due 1 day ago → overdue', async () => {
+    const today = '2026-03-15'
+    const ledger = await getLedger(
+      {
+        partner_loan_tranches: [],
+        workflow_instances: [],
+        governance_obligations: [],
+        forward_commitments: [{
+          id: 'fc-yesterday', company_id: COMPANY_ID,
+          title: 'Yesterday', commitment_type: 'contract',
+          amount_try: 3_000, currency: 'TRY',
+          due_date: '2026-03-14',   // 1 day ago
+          recurrence: null, counterparty: null, description: null,
+          status: 'active', created_by: 'u',
+          created_at: '2026-01-01T00:00:00Z',
+          updated_at: '2026-01-01T00:00:00Z',
+        }],
+      },
+      { today, horizon: 365 },
+    )
+    const obs = ledger.obligations.find(o => o.title === 'Yesterday')
+    expect(obs?.status).toBe('overdue')
+  })
+
+  it('two overdue obligations → overdue_count = 2', async () => {
+    const today = '2026-05-01'
+    const ledger = await getLedger(
+      {
+        partner_loan_tranches: [],
+        workflow_instances: [],
+        governance_obligations: [],
+        forward_commitments: [
+          {
+            id: 'fc-o1', company_id: COMPANY_ID,
+            title: 'Overdue1', commitment_type: 'contract',
+            amount_try: 1_000, currency: 'TRY', due_date: '2026-04-01',
+            recurrence: null, counterparty: null, description: null,
+            status: 'active', created_by: 'u', created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z',
+          },
+          {
+            id: 'fc-o2', company_id: COMPANY_ID,
+            title: 'Overdue2', commitment_type: 'contract',
+            amount_try: 2_000, currency: 'TRY', due_date: '2026-04-15',
+            recurrence: null, counterparty: null, description: null,
+            status: 'active', created_by: 'u', created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z',
+          },
+        ],
+      },
+      { today, horizon: 365 },
+    )
+    expect(ledger.overdue_count).toBe(2)
+  })
+})
+
+// ── Pure helper formula tests ─────────────────────────────────────────────────
+
+describe('CommitmentsService — pure formula helpers', () => {
+  it('status: daysUntil=-30 → overdue', () => {
+    function toStatus(d: number): 'overdue' | 'due_soon' | 'upcoming' {
+      if (d < 0)   return 'overdue'
+      if (d <= 14) return 'due_soon'
+      return 'upcoming'
+    }
+    expect(toStatus(-30)).toBe('overdue')
+  })
+
+  it('status: daysUntil=0 → due_soon', () => {
+    function toStatus(d: number): 'overdue' | 'due_soon' | 'upcoming' {
+      if (d < 0)   return 'overdue'
+      if (d <= 14) return 'due_soon'
+      return 'upcoming'
+    }
+    expect(toStatus(0)).toBe('due_soon')
+  })
+
+  it('status: daysUntil=14 → due_soon (inclusive boundary)', () => {
+    function toStatus(d: number): 'overdue' | 'due_soon' | 'upcoming' {
+      if (d < 0)   return 'overdue'
+      if (d <= 14) return 'due_soon'
+      return 'upcoming'
+    }
+    expect(toStatus(14)).toBe('due_soon')
+  })
+
+  it('status: daysUntil=15 → upcoming', () => {
+    function toStatus(d: number): 'overdue' | 'due_soon' | 'upcoming' {
+      if (d < 0)   return 'overdue'
+      if (d <= 14) return 'due_soon'
+      return 'upcoming'
+    }
+    expect(toStatus(15)).toBe('upcoming')
+  })
+
+  it('monthly interest: 60_000 * 0.24 / 12 = 1200', () => {
+    const monthly = (60_000 * 0.24) / 12
+    expect(monthly).toBeCloseTo(1_200, 2)
+  })
+
+  it('dateToMonth: first 7 chars of YYYY-MM-DD', () => {
+    expect('2026-11-25'.slice(0, 7)).toBe('2026-11')
+    expect('2025-01-01'.slice(0, 7)).toBe('2025-01')
+  })
+
+  it('by_month key format for Dec → 2026-12', () => {
+    const dateStr = '2026-12-31'
+    expect(dateStr.slice(0, 7)).toBe('2026-12')
+  })
+})

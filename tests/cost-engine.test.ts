@@ -510,3 +510,174 @@ describe('Final unit cost identity (the value that lands on stock_lots)', () => 
     expect(sumBase).toBe(r.total_base_try)
   })
 })
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Penny-perfect reconciliation: Σ allocated_cost_try === Σ overhead exactly
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('penny-perfect reconciliation invariant', () => {
+  it('3 lines equal value: Σ allocated_cost_try === total overhead', () => {
+    const lines = [
+      { id: 'a', product_id: 'P1', quantity: 2, unit_price: 500 },
+      { id: 'b', product_id: 'P2', quantity: 2, unit_price: 500 },
+      { id: 'c', product_id: 'P3', quantity: 2, unit_price: 500 },
+    ]
+    const costs = [{ amount_try: 300, allocation_method: 'by_value' as CostAllocationMethod }]
+    const r = allocate(1, lines, costs)
+    expect(round4(sum(r.per_line_alloc_try))).toBe(300)
+    // Each line should get equal share since equal value
+    expect(r.per_line_alloc_try[0]).toBeCloseTo(100, 1)
+    expect(r.per_line_alloc_try[1]).toBeCloseTo(100, 1)
+  })
+
+  it('5 lines by_quantity: Σ allocated === overhead', () => {
+    const lines = [
+      { id: 'a', product_id: 'P1', quantity: 1,  unit_price: 100 },
+      { id: 'b', product_id: 'P2', quantity: 3,  unit_price: 200 },
+      { id: 'c', product_id: 'P3', quantity: 7,  unit_price: 50  },
+      { id: 'd', product_id: 'P4', quantity: 2,  unit_price: 400 },
+      { id: 'e', product_id: 'P5', quantity: 11, unit_price: 10  },
+    ]
+    const costs = [{ amount_try: 1000, allocation_method: 'by_quantity' as CostAllocationMethod }]
+    const r = allocate(1, lines, costs)
+    expect(round4(sum(r.per_line_alloc_try))).toBe(1000)
+  })
+
+  it('5 lines by_value: Σ allocated === overhead', () => {
+    const lines = [
+      { id: 'a', product_id: 'P1', quantity: 1,  unit_price: 100 },
+      { id: 'b', product_id: 'P2', quantity: 3,  unit_price: 200 },
+      { id: 'c', product_id: 'P3', quantity: 7,  unit_price: 50  },
+      { id: 'd', product_id: 'P4', quantity: 2,  unit_price: 400 },
+      { id: 'e', product_id: 'P5', quantity: 11, unit_price: 10  },
+    ]
+    const costs = [{ amount_try: 777.77, allocation_method: 'by_value' as CostAllocationMethod }]
+    const r = allocate(1, lines, costs)
+    expect(round4(sum(r.per_line_alloc_try))).toBe(777.77)
+  })
+
+  it('multiple mixed costs: Σ allocated === Σ all overheads', () => {
+    const lines = [
+      { id: 'a', product_id: 'P1', quantity: 4, unit_price: 250 },
+      { id: 'b', product_id: 'P2', quantity: 6, unit_price: 100 },
+      { id: 'c', product_id: 'P3', quantity: 2, unit_price: 750 },
+    ]
+    const costs = [
+      { amount_try: 200,   allocation_method: 'by_quantity' as CostAllocationMethod },
+      { amount_try: 350.5, allocation_method: 'by_value' as CostAllocationMethod },
+      { amount_try: 99.99, allocation_method: 'by_quantity' as CostAllocationMethod },
+    ]
+    const totalOverhead = 200 + 350.5 + 99.99
+    const r = allocate(1, lines, costs)
+    expect(round4(sum(r.per_line_alloc_try))).toBe(round4(totalOverhead))
+  })
+
+  it('one item with zero base value in by_value falls back to equal split', () => {
+    // Two lines: one has zero value (free goods), one has nonzero
+    // When a single line has zero value but total > 0, weight falls through to
+    // proportional. This test ensures the fallback to equal split only triggers
+    // when ALL lines have zero value.
+    const lines = [
+      { id: 'a', product_id: 'P1', quantity: 5, unit_price: 100 },
+      { id: 'b', product_id: 'P2', quantity: 3, unit_price: 0   }, // zero price
+    ]
+    const costs = [{ amount_try: 100, allocation_method: 'by_value' as CostAllocationMethod }]
+    const r = allocate(1, lines, costs)
+    // Total base = 500; line A gets 100% of weight since line B has 0 value
+    // last-line residual absorbs rounding
+    expect(round4(sum(r.per_line_alloc_try))).toBe(100)
+    expect(r.per_line_alloc_try[0]).toBeCloseTo(100, 1)
+    expect(r.per_line_alloc_try[1]).toBeCloseTo(0, 1)
+  })
+
+  it('all lines zero value in by_value → equal split fallback', () => {
+    const lines = [
+      { id: 'a', product_id: 'P1', quantity: 5, unit_price: 0 },
+      { id: 'b', product_id: 'P2', quantity: 3, unit_price: 0 },
+    ]
+    const costs = [{ amount_try: 60, allocation_method: 'by_value' as CostAllocationMethod }]
+    const r = allocate(1, lines, costs)
+    // Equal split: 30 each
+    expect(round4(sum(r.per_line_alloc_try))).toBe(60)
+    expect(r.per_line_alloc_try[0]).toBeCloseTo(30, 1)
+    expect(r.per_line_alloc_try[1]).toBeCloseTo(30, 1)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// final_unit_cost_try × qty ≈ final_total_try for each line
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('unit cost × qty ≈ total cost identity', () => {
+  it('5 lines: (base + alloc) / qty × qty ≈ base + alloc within 0.01', () => {
+    const lines = [
+      { id: 'a', product_id: 'P1', quantity: 3,  unit_price: 100.5  },
+      { id: 'b', product_id: 'P2', quantity: 7,  unit_price: 250.33 },
+      { id: 'c', product_id: 'P3', quantity: 11, unit_price: 50.0   },
+      { id: 'd', product_id: 'P4', quantity: 2,  unit_price: 999.99 },
+      { id: 'e', product_id: 'P5', quantity: 5,  unit_price: 1.0    },
+    ]
+    const costs = [
+      { amount_try: 500, allocation_method: 'by_value' as CostAllocationMethod },
+    ]
+    const r = allocate(32.50, lines, costs)
+
+    for (let i = 0; i < lines.length; i++) {
+      const finalTotal = round4(r.per_line_base_try[i] + r.per_line_alloc_try[i])
+      const qty        = lines[i].quantity
+      const perUnit    = round4(finalTotal / qty)
+      const roundtrip  = round4(perUnit * qty)
+      expect(Math.abs(roundtrip - finalTotal)).toBeLessThanOrEqual(0.01)
+    }
+  })
+
+  it('single expensive line: unit × qty = total exactly', () => {
+    const lines = [{ id: 'a', product_id: 'P1', quantity: 10, unit_price: 1000 }]
+    const costs = [{ amount_try: 500, allocation_method: 'by_quantity' as CostAllocationMethod }]
+    const r = allocate(1, lines, costs)
+    const finalTotal = round4(r.per_line_base_try[0] + r.per_line_alloc_try[0])
+    const perUnit    = round4(finalTotal / 10)
+    expect(round4(perUnit * 10)).toBe(finalTotal)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// by_value with fractional costs and rounding consistency
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('by_value fractional cost rounding', () => {
+  it('fractional overhead produces rounded per-line values', () => {
+    const lines = [
+      { id: 'a', product_id: 'P1', quantity: 1, unit_price: 100 },
+      { id: 'b', product_id: 'P2', quantity: 1, unit_price: 200 },
+      { id: 'c', product_id: 'P3', quantity: 1, unit_price: 300 },
+    ]
+    // Total base = 600; overhead = 1/3 = 0.3333… TRY
+    const costs = [{ amount_try: 1 / 3, allocation_method: 'by_value' as CostAllocationMethod }]
+    const r = allocate(1, lines, costs)
+    // Σ alloc must exactly equal overhead (penny-perfect via last-line residual)
+    expect(round4(sum(r.per_line_alloc_try))).toBe(round4(1 / 3))
+  })
+
+  it('large overhead with many decimal places: Σ alloc stays exact', () => {
+    const lines = [
+      { id: 'a', product_id: 'P1', quantity: 3, unit_price: 333.33 },
+      { id: 'b', product_id: 'P2', quantity: 7, unit_price: 111.11 },
+    ]
+    const costs = [{ amount_try: 123.456, allocation_method: 'by_value' as CostAllocationMethod }]
+    const r = allocate(1, lines, costs)
+    expect(round4(sum(r.per_line_alloc_try))).toBe(round4(123.456))
+  })
+
+  it('rounding is consistent: re-running same inputs produces same result', () => {
+    const lines = [
+      { id: 'a', product_id: 'P1', quantity: 5, unit_price: 200 },
+      { id: 'b', product_id: 'P2', quantity: 5, unit_price: 200 },
+    ]
+    const costs = [{ amount_try: 99.99, allocation_method: 'by_value' as CostAllocationMethod }]
+    const r1 = allocate(1, lines, costs)
+    const r2 = allocate(1, lines, costs)
+    expect(r1.per_line_alloc_try).toEqual(r2.per_line_alloc_try)
+    expect(r1.total_overhead_try).toBe(r2.total_overhead_try)
+  })
+})

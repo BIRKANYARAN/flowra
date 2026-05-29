@@ -508,3 +508,303 @@ describe('composite — all checks fail', () => {
     expect(names).toContain('Journal kayıt mevcut')
   })
 })
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Truth table: all 8 combinations of the 3 blocking conditions
+// canClosePeriod = is_balanced AND no_abnormal AND has_entries
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('canClosePeriod truth table — all 8 combinations', () => {
+  function makeCombination(
+    balanced: boolean,
+    hasNonAbnormal: boolean,
+    hasEntries: boolean,
+  ): ReturnType<typeof computeTrialBalanceChecks> {
+    // Build accounts to match the desired flags
+    const accounts: ReturnType<typeof makeAccount>[] = []
+
+    if (hasEntries) {
+      // A single account with nonzero debit so has_entries = true
+      const debit = hasNonAbnormal ? 100 : 0
+      accounts.push(makeAccount('102', 'Bankalar', debit, 0, 'debit'))
+    }
+
+    if (!hasNonAbnormal) {
+      // Add an account with balance < -0.01 to trigger the abnormal flag
+      accounts.push({
+        account_code: '999', account_name: 'Bad', account_name_tr: 'Bad',
+        class: 'asset', debit_try: 0, credit_try: 0, balance_try: -1,
+        normal_balance: 'debit',
+      })
+    }
+
+    return computeTrialBalanceChecks(makeTB(accounts, balanced, balanced ? 0 : 100))
+  }
+
+  // All three conditions true → canClose = true
+  it('T T T → can_close_period = true', () => {
+    const r = makeCombination(true, true, true)
+    expect(r.can_close_period).toBe(true)
+  })
+
+  // One condition false at a time
+  it('F T T → can_close_period = false (not balanced)', () => {
+    const r = makeCombination(false, true, true)
+    expect(r.can_close_period).toBe(false)
+  })
+
+  it('T F T → can_close_period = false (has abnormal balance)', () => {
+    const r = makeCombination(true, false, true)
+    expect(r.can_close_period).toBe(false)
+  })
+
+  it('T T F → can_close_period = false (no entries)', () => {
+    const r = makeCombination(true, true, false)
+    expect(r.can_close_period).toBe(false)
+  })
+
+  // Two conditions false
+  it('F F T → can_close_period = false', () => {
+    const r = makeCombination(false, false, true)
+    expect(r.can_close_period).toBe(false)
+  })
+
+  it('F T F → can_close_period = false', () => {
+    const r = makeCombination(false, true, false)
+    expect(r.can_close_period).toBe(false)
+  })
+
+  it('T F F → can_close_period = false', () => {
+    const r = makeCombination(true, false, false)
+    expect(r.can_close_period).toBe(false)
+  })
+
+  // All three false
+  it('F F F → can_close_period = false', () => {
+    const r = makeCombination(false, false, false)
+    expect(r.can_close_period).toBe(false)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Profit check boundary: discrepancy exactly at ₺1 boundary
+// profitDiff < 1 → passed; profitDiff >= 1 → failed (but does NOT block close)
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('profit check boundary values', () => {
+  function makeTBWithProfitDiff(diff: number): ReturnType<typeof computeTrialBalanceChecks> {
+    // 600 revenue 10000, 590 ledger profit = 10000 + diff
+    const accounts = [
+      makeAccount('102', 'Bankalar', 10_000, 0, 'debit'),
+      makeAccount('600', 'Satışlar', 0, 10_000, 'credit'),
+      // ledger profit via 590 (credit normal)
+      {
+        account_code: '590', account_name: 'Net Kar', account_name_tr: 'Net Kar',
+        class: 'asset' as const,
+        debit_try: 0, credit_try: 0,
+        balance_try: 10_000 + diff,
+        normal_balance: 'credit' as const,
+      },
+    ]
+    return computeTrialBalanceChecks(makeTB(accounts, true, 0))
+  }
+
+  it('profitDiff of 0.99 → profit check passes (< 1)', () => {
+    const r = makeTBWithProfitDiff(0.99)
+    const profitCheck = r.checks.find(c => c.name === 'Dönem kârı tutarlı')!
+    expect(profitCheck.passed).toBe(true)
+  })
+
+  it('profitDiff of exactly 1.0 → profit check fails (>= 1)', () => {
+    const r = makeTBWithProfitDiff(1.0)
+    const profitCheck = r.checks.find(c => c.name === 'Dönem kârı tutarlı')!
+    expect(profitCheck.passed).toBe(false)
+  })
+
+  it('profitDiff of 1.01 → profit check fails', () => {
+    const r = makeTBWithProfitDiff(1.01)
+    const profitCheck = r.checks.find(c => c.name === 'Dönem kârı tutarlı')!
+    expect(profitCheck.passed).toBe(false)
+  })
+
+  it('failing profit check does NOT block canClosePeriod when other conditions pass', () => {
+    // profit diff = 5 → profit check fails, but close is still allowed
+    const accounts = [
+      makeAccount('102', 'Bankalar', 10_000, 0, 'debit'),
+      makeAccount('600', 'Satışlar', 0, 10_000, 'credit'),
+      {
+        account_code: '590', account_name: 'Net Kar', account_name_tr: 'Net Kar',
+        class: 'asset' as const,
+        debit_try: 0, credit_try: 0,
+        balance_try: 10_005,
+        normal_balance: 'credit' as const,
+      },
+    ]
+    const r = computeTrialBalanceChecks(makeTB(accounts, true, 0))
+    const profitCheck = r.checks.find(c => c.name === 'Dönem kârı tutarlı')!
+    expect(profitCheck.passed).toBe(false)
+    // But period can still close
+    expect(r.can_close_period).toBe(true)
+  })
+
+  it('profitDiff of 0.50 → passes profit check', () => {
+    const r = makeTBWithProfitDiff(0.50)
+    const profitCheck = r.checks.find(c => c.name === 'Dönem kârı tutarlı')!
+    expect(profitCheck.passed).toBe(true)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Abnormal balance boundary: exactly -0.01 blocks; -0.009 does not
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('abnormal balance boundary', () => {
+  function makeTBWithBalance(balance: number): ReturnType<typeof computeTrialBalanceChecks> {
+    const accounts = [
+      {
+        account_code: '102', account_name: 'Bankalar', account_name_tr: 'Bankalar',
+        class: 'asset' as const,
+        debit_try: 100, credit_try: 0,
+        balance_try: balance,
+        normal_balance: 'debit' as const,
+      },
+    ]
+    return computeTrialBalanceChecks(makeTB(accounts, true, 0))
+  }
+
+  it('balance_try of exactly -0.01 → abnormal check passes (not strictly < -0.01)', () => {
+    // Service uses `balance_try < -0.01` (strict), so -0.01 is NOT flagged
+    const r = makeTBWithBalance(-0.01)
+    const check = r.checks.find(c => c.name === 'Anormal bakiye yok')!
+    expect(check.passed).toBe(true)
+  })
+
+  it('balance_try of -0.011 → abnormal check fails (strictly < -0.01)', () => {
+    const r = makeTBWithBalance(-0.011)
+    const check = r.checks.find(c => c.name === 'Anormal bakiye yok')!
+    expect(check.passed).toBe(false)
+    expect(r.can_close_period).toBe(false)
+  })
+
+  it('balance_try of -0.009 → abnormal check passes (not strictly < -0.01)', () => {
+    const r = makeTBWithBalance(-0.009)
+    const check = r.checks.find(c => c.name === 'Anormal bakiye yok')!
+    expect(check.passed).toBe(true)
+  })
+
+  it('balance_try of 0 → abnormal check passes', () => {
+    const r = makeTBWithBalance(0)
+    const check = r.checks.find(c => c.name === 'Anormal bakiye yok')!
+    expect(check.passed).toBe(true)
+  })
+
+  it('balance_try of -0.005 → abnormal check passes (not strictly < -0.01)', () => {
+    const r = makeTBWithBalance(-0.005)
+    const check = r.checks.find(c => c.name === 'Anormal bakiye yok')!
+    expect(check.passed).toBe(true)
+  })
+
+  it('balance_try of -100 → abnormal check fails, listed in detail', () => {
+    const r = makeTBWithBalance(-100)
+    const check = r.checks.find(c => c.name === 'Anormal bakiye yok')!
+    expect(check.passed).toBe(false)
+    expect(check.detail).toContain('102')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// has_entries logic
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('has_entries logic', () => {
+  it('all-zero balances → has_entries = false', () => {
+    const accounts = [
+      makeAccount('102', 'Bankalar', 0, 0, 'debit'),
+      makeAccount('600', 'Satışlar', 0, 0, 'credit'),
+    ]
+    const r = computeTrialBalanceChecks(makeTB(accounts, true, 0))
+    const check = r.checks.find(c => c.name === 'Journal kayıt mevcut')!
+    expect(check.passed).toBe(false)
+    expect(r.can_close_period).toBe(false)
+  })
+
+  it('single account with nonzero debit → has_entries = true', () => {
+    const accounts = [makeAccount('102', 'Bankalar', 1, 0, 'debit')]
+    const r = computeTrialBalanceChecks(makeTB(accounts, true, 0))
+    const check = r.checks.find(c => c.name === 'Journal kayıt mevcut')!
+    expect(check.passed).toBe(true)
+  })
+
+  it('single account with nonzero credit only → has_entries = true', () => {
+    const accounts = [makeAccount('600', 'Satışlar', 0, 1, 'credit')]
+    const r = computeTrialBalanceChecks(makeTB(accounts, true, 0))
+    const check = r.checks.find(c => c.name === 'Journal kayıt mevcut')!
+    expect(check.passed).toBe(true)
+  })
+
+  it('empty accounts array → has_entries = false', () => {
+    const r = computeTrialBalanceChecks(makeTB([], true, 0))
+    const check = r.checks.find(c => c.name === 'Journal kayıt mevcut')!
+    expect(check.passed).toBe(false)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Deeply nested accounts with mix of normal/abnormal balances
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('deeply nested accounts — mixed normal and abnormal', () => {
+  it('5 accounts: 4 normal, 1 abnormal → close blocked', () => {
+    const accounts = [
+      makeAccount('101', 'Kasa',        5_000, 0,      'debit'),
+      makeAccount('102', 'Bankalar',   10_000, 0,      'debit'),
+      makeAccount('120', 'Alıcılar',   20_000, 15_000, 'debit'),
+      makeAccount('153', 'Stok',        8_000, 0,      'debit'),
+      // This one will have balance -50 → abnormal
+      {
+        account_code: '320', account_name: 'Borçlar', account_name_tr: 'Borçlar',
+        class: 'liability' as const,
+        debit_try: 0, credit_try: 0,
+        balance_try: -50,
+        normal_balance: 'credit' as const,
+      },
+    ]
+    const r = computeTrialBalanceChecks(makeTB(accounts, true, 0))
+    const abnormal = r.checks.find(c => c.name === 'Anormal bakiye yok')!
+    expect(abnormal.passed).toBe(false)
+    expect(r.can_close_period).toBe(false)
+  })
+
+  it('5 accounts all with normal balances → abnormal check passes', () => {
+    const accounts = [
+      makeAccount('101', 'Kasa',          5_000, 0,       'debit'),
+      makeAccount('102', 'Bankalar',     10_000, 0,       'debit'),
+      makeAccount('120', 'Alıcılar',     20_000, 5_000,   'debit'),
+      makeAccount('600', 'Satışlar',          0, 30_000,  'credit'),
+      makeAccount('620', 'SMM',          15_000, 0,       'debit'),
+    ]
+    const r = computeTrialBalanceChecks(makeTB(accounts, true, 0))
+    const abnormal = r.checks.find(c => c.name === 'Anormal bakiye yok')!
+    expect(abnormal.passed).toBe(true)
+  })
+
+  it('multiple abnormal accounts → all listed in check detail', () => {
+    const accounts = [
+      {
+        account_code: '101', account_name: 'Kasa', account_name_tr: 'Kasa',
+        class: 'asset' as const, debit_try: 0, credit_try: 0,
+        balance_try: -200, normal_balance: 'debit' as const,
+      },
+      {
+        account_code: '102', account_name: 'Bankalar', account_name_tr: 'Bankalar',
+        class: 'asset' as const, debit_try: 0, credit_try: 0,
+        balance_try: -50, normal_balance: 'debit' as const,
+      },
+    ]
+    const r = computeTrialBalanceChecks(makeTB(accounts, true, 0))
+    const abnormal = r.checks.find(c => c.name === 'Anormal bakiye yok')!
+    expect(abnormal.passed).toBe(false)
+    expect(abnormal.detail).toContain('101')
+    expect(abnormal.detail).toContain('102')
+  })
+})

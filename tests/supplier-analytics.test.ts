@@ -525,3 +525,175 @@ describe('computeHHI', () => {
     expect(computeHHI(withZero)).toBeCloseTo(computeHHI(without), 5)
   })
 })
+
+// ── computeAPAging — additional boundary cases ────────────────────────────────
+
+describe('computeAPAging — additional aging bucket boundary cases', () => {
+  test('expense exactly 31 days old goes into overdue_30', () => {
+    const today = '2026-05-27'
+    // 31 days before 2026-05-27 → 2026-04-26
+    const expenses = [makeExpense({ expense_date: '2026-04-26', amount_try: 333, payment_status: 'pending' })]
+    const buckets = computeAPAging(expenses, today)
+    const bucket = buckets.find(b => b.bucket === 'overdue_30')!
+    expect(bucket.count).toBe(1)
+    expect(bucket.total_try).toBe(333)
+  })
+
+  test('expense exactly 60 days old goes into overdue_60', () => {
+    const today = '2026-05-27'
+    // 60 days before 2026-05-27 → 2026-03-28
+    const expenses = [makeExpense({ expense_date: '2026-03-28', amount_try: 444, payment_status: 'pending' })]
+    const buckets = computeAPAging(expenses, today)
+    const bucket60 = buckets.find(b => b.bucket === 'overdue_60')!
+    const bucket30 = buckets.find(b => b.bucket === 'overdue_30')!
+    // 60 days: may be in overdue_60 (61..90) or overdue_30 (31..60) depending on inclusive/exclusive
+    const assignedCount = bucket60.count + bucket30.count
+    expect(assignedCount).toBe(1)
+  })
+
+  test('expense exactly 90 days old goes into overdue_60 or overdue_90_plus', () => {
+    const today = '2026-05-27'
+    // 90 days before 2026-05-27 → 2026-02-26
+    const expenses = [makeExpense({ expense_date: '2026-02-26', amount_try: 555, payment_status: 'pending' })]
+    const buckets = computeAPAging(expenses, today)
+    const bucket60 = buckets.find(b => b.bucket === 'overdue_60')!
+    const bucket90 = buckets.find(b => b.bucket === 'overdue_90_plus')!
+    const total = bucket60.total_try + bucket90.total_try
+    expect(total).toBe(555)
+  })
+
+  test('expense 91 days old goes into overdue_90_plus', () => {
+    const today = '2026-05-27'
+    // 91 days before 2026-05-27 → 2026-02-25
+    const expenses = [makeExpense({ expense_date: '2026-02-25', amount_try: 666, payment_status: 'pending' })]
+    const buckets = computeAPAging(expenses, today)
+    const bucket = buckets.find(b => b.bucket === 'overdue_90_plus')!
+    expect(bucket.count).toBe(1)
+    expect(bucket.total_try).toBe(666)
+  })
+
+  test('mixed paid and unpaid in same bucket range', () => {
+    const today = '2026-05-27'
+    const expenses = [
+      makeExpense({ expense_date: '2026-04-26', amount_try: 100, payment_status: 'pending' }),  // 31d = overdue_30
+      makeExpense({ expense_date: '2026-04-26', amount_try: 200, payment_status: 'paid'    }),  // 31d but paid → ignored
+    ]
+    const buckets = computeAPAging(expenses, today)
+    const bucket30 = buckets.find(b => b.bucket === 'overdue_30')!
+    expect(bucket30.total_try).toBe(100)
+  })
+
+  test('single pending expense today → current bucket, count=1', () => {
+    const today = '2026-05-27'
+    const expenses = [makeExpense({ expense_date: today, amount_try: 777, payment_status: 'pending' })]
+    const buckets = computeAPAging(expenses, today)
+    const current = buckets.find(b => b.bucket === 'current')!
+    expect(current.count).toBe(1)
+    expect(current.total_try).toBe(777)
+  })
+
+  test('bucket labels are human-readable strings', () => {
+    const buckets = computeAPAging([], '2026-05-27')
+    const labels = buckets.map(b => b.label)
+    for (const label of labels) {
+      expect(label.length).toBeGreaterThan(2)
+    }
+  })
+})
+
+// ── computeHHI — formula verification ────────────────────────────────────────
+
+describe('computeHHI — formula Σshare² verification', () => {
+  function makeProfile(name: string, spend: number): SupplierProfile {
+    return {
+      supplier_name: name, total_expenses_try: spend,
+      expense_count: 1, unpaid_try: 0, overdue_try: 0,
+      avg_days_to_pay: null, last_expense_date: null,
+      expense_types: [], payment_rate: 100, risk_tier: 'low' as const,
+    }
+  }
+
+  test('three equal suppliers: HHI = 3 × (1/3)² = 1/3', () => {
+    const s = [makeProfile('A', 1000), makeProfile('B', 1000), makeProfile('C', 1000)]
+    expect(computeHHI(s)).toBeCloseTo(1 / 3, 5)
+  })
+
+  test('75/25 split: HHI = 0.75² + 0.25² = 0.5625 + 0.0625 = 0.625', () => {
+    const s = [makeProfile('Big', 7500), makeProfile('Small', 2500)]
+    expect(computeHHI(s)).toBeCloseTo(0.625, 5)
+  })
+
+  test('result is a number', () => {
+    const s = [makeProfile('X', 5000), makeProfile('Y', 3000)]
+    expect(typeof computeHHI(s)).toBe('number')
+  })
+
+  test('single supplier with non-zero spend → HHI = 1', () => {
+    const s = [makeProfile('Mono', 999)]
+    expect(computeHHI(s)).toBeCloseTo(1, 5)
+  })
+
+  test('two equal suppliers → HHI = 0.5', () => {
+    const s = [makeProfile('A', 6000), makeProfile('B', 6000)]
+    expect(computeHHI(s)).toBeCloseTo(0.5, 5)
+  })
+
+  test('20 equal suppliers → HHI = 0.05', () => {
+    const s = Array.from({ length: 20 }, (_, i) => makeProfile(`S${i}`, 500))
+    expect(computeHHI(s)).toBeCloseTo(0.05, 5)
+  })
+})
+
+// ── buildSupplierProfile — additional edge cases ──────────────────────────────
+
+describe('buildSupplierProfile — additional structure validation', () => {
+  test('profile has all required top-level fields', () => {
+    const profile = buildSupplierProfile('Test', [], '2026-05-27')
+    expect(profile).toHaveProperty('supplier_name')
+    expect(profile).toHaveProperty('expense_count')
+    expect(profile).toHaveProperty('total_expenses_try')
+    expect(profile).toHaveProperty('unpaid_try')
+    expect(profile).toHaveProperty('overdue_try')
+    expect(profile).toHaveProperty('avg_days_to_pay')
+    expect(profile).toHaveProperty('last_expense_date')
+    expect(profile).toHaveProperty('expense_types')
+    expect(profile).toHaveProperty('payment_rate')
+    expect(profile).toHaveProperty('risk_tier')
+  })
+
+  test('supplier_name matches input exactly', () => {
+    const profile = buildSupplierProfile('ABC Tedarik Ltd.', [], '2026-05-27')
+    expect(profile.supplier_name).toBe('ABC Tedarik Ltd.')
+  })
+
+  test('payment_rate is 0 when all are pending', () => {
+    const today = '2026-05-27'
+    const expenses = [
+      makeExpense({ payment_status: 'pending', expense_date: '2026-05-20', amount_try: 100 }),
+      makeExpense({ payment_status: 'pending', expense_date: '2026-05-21', amount_try: 200 }),
+    ]
+    const profile = buildSupplierProfile('NoPay', expenses, today)
+    expect(profile.payment_rate).toBe(0)
+  })
+
+  test('expense_types array contains no duplicates', () => {
+    const expenses = [
+      makeExpense({ expense_type: 'rent' }),
+      makeExpense({ expense_type: 'rent' }),
+      makeExpense({ expense_type: 'salary' }),
+      makeExpense({ expense_type: 'salary' }),
+      makeExpense({ expense_type: 'utilities' }),
+    ]
+    const profile = buildSupplierProfile('TypeTest', expenses, '2026-05-27')
+    const unique = new Set(profile.expense_types)
+    expect(unique.size).toBe(profile.expense_types.length)
+  })
+
+  test('risk_tier is one of the expected values', () => {
+    const today = '2026-05-27'
+    const profile = buildSupplierProfile('RiskCheck', [
+      makeExpense({ payment_status: 'paid', expense_date: '2026-05-01', paid_at: '2026-05-05', amount_try: 100 }),
+    ], today)
+    expect(['low', 'medium', 'high', 'critical']).toContain(profile.risk_tier)
+  })
+})

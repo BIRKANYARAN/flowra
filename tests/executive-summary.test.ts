@@ -519,3 +519,157 @@ describe('buildExecutiveStatusLine — fallback content', () => {
     expect(line).toContain('—')
   })
 })
+
+// ── computeOverallHealthScore — additional formula verification ───────────────
+
+describe('computeOverallHealthScore — precise formula checks', () => {
+
+  it('finance=100 commercial=0 ops=0 partners=0 → 35', () => {
+    expect(computeOverallHealthScore(100, 0, 0, 0)).toBe(35)
+  })
+
+  it('finance=0 commercial=100 ops=0 partners=0 → 25', () => {
+    expect(computeOverallHealthScore(0, 100, 0, 0)).toBe(25)
+  })
+
+  it('finance=0 commercial=0 ops=100 partners=0 → 20', () => {
+    expect(computeOverallHealthScore(0, 0, 100, 0)).toBe(20)
+  })
+
+  it('finance=0 commercial=0 ops=0 partners=100 → 20', () => {
+    expect(computeOverallHealthScore(0, 0, 0, 100)).toBe(20)
+  })
+
+  it('all inputs 100 → 100 (weights sum to 1)', () => {
+    expect(computeOverallHealthScore(100, 100, 100, 100)).toBe(100)
+  })
+
+  it('all inputs 0 → 0', () => {
+    expect(computeOverallHealthScore(0, 0, 0, 0)).toBe(0)
+  })
+
+  it('finance=60 commercial=60 ops=60 partners=60 → 60', () => {
+    expect(computeOverallHealthScore(60, 60, 60, 60)).toBe(60)
+  })
+
+  it('mixed: finance=90 commercial=50 ops=70 partners=80 → computed value', () => {
+    // 90*0.35 + 50*0.25 + 70*0.20 + 80*0.20
+    // = 31.5 + 12.5 + 14 + 16 = 74
+    expect(computeOverallHealthScore(90, 50, 70, 80)).toBe(74)
+  })
+
+  it('mixed: finance=40 commercial=60 ops=80 partners=20 → computed value', () => {
+    // 40*0.35 + 60*0.25 + 80*0.20 + 20*0.20
+    // = 14 + 15 + 16 + 4 = 49
+    expect(computeOverallHealthScore(40, 60, 80, 20)).toBe(49)
+  })
+
+  it('result is a number type', () => {
+    const result = computeOverallHealthScore(50, 50, 50, 50)
+    expect(typeof result).toBe('number')
+  })
+
+  it('finance=1 commercial=1 ops=1 partners=1 → 1', () => {
+    expect(computeOverallHealthScore(1, 1, 1, 1)).toBe(1)
+  })
+
+  it('only ops=100, partners=100 → 40 (ops+partners = 40%)', () => {
+    expect(computeOverallHealthScore(0, 0, 100, 100)).toBe(40)
+  })
+
+  it('only finance=100, commercial=100 → 60 (finance+commercial = 60%)', () => {
+    expect(computeOverallHealthScore(100, 100, 0, 0)).toBe(60)
+  })
+})
+
+// ── classifyOverallHealth — classification ladder verification ────────────────
+
+describe('classifyOverallHealth — classification ladder', () => {
+
+  it('score 81 → excellent', () => {
+    expect(classifyOverallHealth(81)).toBe('excellent')
+  })
+
+  it('score 90 → excellent', () => {
+    expect(classifyOverallHealth(90)).toBe('excellent')
+  })
+
+  it('score 70 → good', () => {
+    expect(classifyOverallHealth(70)).toBe('good')
+  })
+
+  it('score 66 → good', () => {
+    expect(classifyOverallHealth(66)).toBe('good')
+  })
+
+  it('score 55 → fair', () => {
+    expect(classifyOverallHealth(55)).toBe('fair')
+  })
+
+  it('score 51 → fair', () => {
+    expect(classifyOverallHealth(51)).toBe('fair')
+  })
+
+  it('score 45 → poor', () => {
+    expect(classifyOverallHealth(45)).toBe('poor')
+  })
+
+  it('score 36 → poor', () => {
+    expect(classifyOverallHealth(36)).toBe('poor')
+  })
+
+  it('score 20 → critical', () => {
+    expect(classifyOverallHealth(20)).toBe('critical')
+  })
+
+  it('score 1 → critical', () => {
+    expect(classifyOverallHealth(1)).toBe('critical')
+  })
+
+  it('result is always a string', () => {
+    const levels = [0, 10, 35, 50, 65, 80, 100]
+    for (const s of levels) {
+      expect(typeof classifyOverallHealth(s)).toBe('string')
+    }
+  })
+})
+
+// ── computeFinanceScore — combined positive/negative net margin ───────────────
+
+describe('computeFinanceScore — net margin positive and negative cases', () => {
+
+  it('positive net margin 8% → score above 0', () => {
+    const score = computeFinanceScore(0, 0, 8)
+    expect(score).toBeGreaterThan(0)
+  })
+
+  it('negative net margin -5% → treated as 0 → same as 0% net', () => {
+    const negScore = computeFinanceScore(0, 0, -5)
+    const zeroScore = computeFinanceScore(0, 0, 0)
+    expect(negScore).toBe(zeroScore)
+  })
+
+  it('net margin exactly 10% → normNet=50 → contribution = 50/3 ≈ 16.67', () => {
+    expect(computeFinanceScore(0, 0, 10)).toBeCloseTo(16.67, 1)
+  })
+
+  it('net margin exactly 20% → normNet=100 → contribution = 100/3 ≈ 33.33', () => {
+    expect(computeFinanceScore(0, 0, 20)).toBeCloseTo(33.33, 1)
+  })
+
+  it('net margin 25% (above cap) → same score as 20%', () => {
+    expect(computeFinanceScore(0, 0, 25)).toBe(computeFinanceScore(0, 0, 20))
+  })
+
+  it('all three at perfect values (gross=50, runway=12, net=20) → 100', () => {
+    expect(computeFinanceScore(50, 12, 20)).toBe(100)
+  })
+
+  it('all three at zero → 0', () => {
+    expect(computeFinanceScore(0, 0, 0)).toBe(0)
+  })
+
+  it('gross=30 → normGross=60, runway=0, net=0 → score = 60/3 = 20', () => {
+    expect(computeFinanceScore(30, 0, 0)).toBeCloseTo(20, 1)
+  })
+})

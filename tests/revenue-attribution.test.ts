@@ -510,3 +510,197 @@ describe('rankAndSort — comprehensive sorting', () => {
     expect(result[1].trend).toBe('declining')
   })
 })
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeTrend — boundary values for all 4 types
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeTrend — boundary value tests', () => {
+  // new: prior=0 and current>0
+  it('new: prior=0, current=1 → "new" (minimum nonzero current)', () => {
+    expect(computeTrend(1, 0)).toBe('new')
+  })
+
+  it('new: prior=0, current=999999 → "new"', () => {
+    expect(computeTrend(999_999, 0)).toBe('new')
+  })
+
+  // growing: changePct > 10 (strictly)
+  it('growing: +10.001% → "growing" (just above boundary)', () => {
+    // 10001/10000 - 1 = 0.01% → wait, that's 0.01
+    // To get just above 10%: prior=10000, current=11001 → 10.01%
+    expect(computeTrend(11001, 10000)).toBe('growing')
+  })
+
+  it('growing boundary: +10% exactly → "stable" (not growing)', () => {
+    expect(computeTrend(11000, 10000)).toBe('stable')
+  })
+
+  // declining: changePct < -10 (strictly)
+  it('declining: -10.001% → "declining" (just below boundary)', () => {
+    // prior=10000, current=8999 → (8999-10000)/10000*100 = -10.01%
+    expect(computeTrend(8999, 10000)).toBe('declining')
+  })
+
+  it('declining boundary: -10% exactly → "stable" (not declining)', () => {
+    expect(computeTrend(9000, 10000)).toBe('stable')
+  })
+
+  // stable: various cases in the middle band
+  it('stable: -9.99% → "stable"', () => {
+    // prior=10000, current=9001 → -9.99%
+    expect(computeTrend(9001, 10000)).toBe('stable')
+  })
+
+  it('stable: +9.99% → "stable"', () => {
+    // prior=10000, current=10999 → +9.99%
+    expect(computeTrend(10999, 10000)).toBe('stable')
+  })
+
+  // Edge: prior=0, current=0 → stable
+  it('stable: both 0 → "stable"', () => {
+    expect(computeTrend(0, 0)).toBe('stable')
+  })
+
+  // Large values
+  it('growing: large numbers +50% → "growing"', () => {
+    expect(computeTrend(1_500_000, 1_000_000)).toBe('growing')
+  })
+
+  it('declining: nearly to zero → "declining"', () => {
+    expect(computeTrend(1, 10000)).toBe('declining')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeConcentrationPct — all edge cases
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeConcentrationPct — edge cases', () => {
+  function makeContributor(name: string, pct: number): RevenueContributor {
+    return { name, total_try: pct * 100, pct_of_total: pct, transaction_count: 1, avg_transaction_try: pct * 100, trend: 'stable', rank: 1 }
+  }
+
+  it('empty array → null', () => {
+    expect(computeConcentrationPct([])).toBeNull()
+  })
+
+  it('1 item → returns that item pct_of_total', () => {
+    const result = computeConcentrationPct([makeContributor('A', 60)])
+    expect(result).toBe(60)
+  })
+
+  it('exactly 3 items → sum of all 3 pct_of_total', () => {
+    const result = computeConcentrationPct([
+      makeContributor('A', 40),
+      makeContributor('B', 30),
+      makeContributor('C', 20),
+    ])
+    expect(result).toBe(90)
+  })
+
+  it('more than 3 items → only slices first 3', () => {
+    const result = computeConcentrationPct([
+      makeContributor('A', 40),
+      makeContributor('B', 30),
+      makeContributor('C', 20),
+      makeContributor('D', 10), // should be ignored
+    ])
+    expect(result).toBe(90)
+  })
+
+  it('2 items → sum of both', () => {
+    const result = computeConcentrationPct([
+      makeContributor('A', 55),
+      makeContributor('B', 25),
+    ])
+    expect(result).toBe(80)
+  })
+
+  it('concentration of 100% → returns 100', () => {
+    const result = computeConcentrationPct([makeContributor('A', 100)])
+    expect(result).toBe(100)
+  })
+
+  it('zero pct items → returns 0', () => {
+    const result = computeConcentrationPct([
+      makeContributor('A', 0),
+      makeContributor('B', 0),
+      makeContributor('C', 0),
+    ])
+    expect(result).toBe(0)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// rankAndSort — additional edge cases
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('rankAndSort — additional edge cases', () => {
+  function makeInput(name: string, total: number): Omit<RevenueContributor, 'rank'> {
+    return { name, total_try: total, pct_of_total: 10, transaction_count: 1, avg_transaction_try: total, trend: 'stable' }
+  }
+
+  it('single item gets rank 1', () => {
+    const result = rankAndSort([makeInput('Solo', 5000)])
+    expect(result).toHaveLength(1)
+    expect(result[0].rank).toBe(1)
+    expect(result[0].name).toBe('Solo')
+  })
+
+  it('empty array returns empty array', () => {
+    const result = rankAndSort([])
+    expect(result).toHaveLength(0)
+  })
+
+  it('descending order: highest total_try gets rank 1', () => {
+    const input = [
+      makeInput('Low',  1000),
+      makeInput('High', 9000),
+      makeInput('Mid',  5000),
+    ]
+    const result = rankAndSort(input)
+    expect(result[0].name).toBe('High')
+    expect(result[0].rank).toBe(1)
+    expect(result[1].name).toBe('Mid')
+    expect(result[1].rank).toBe(2)
+    expect(result[2].name).toBe('Low')
+    expect(result[2].rank).toBe(3)
+  })
+
+  it('equal revenues: both get unique sequential ranks', () => {
+    const input = [makeInput('A', 5000), makeInput('B', 5000)]
+    const result = rankAndSort(input)
+    const ranks = result.map(r => r.rank).sort()
+    expect(ranks).toEqual([1, 2])
+  })
+
+  it('ranks are always 1-indexed and sequential', () => {
+    const input = [
+      makeInput('A', 100),
+      makeInput('B', 200),
+      makeInput('C', 300),
+      makeInput('D', 400),
+    ]
+    const result = rankAndSort(input)
+    const ranks = result.map(r => r.rank).sort((a, b) => a - b)
+    expect(ranks).toEqual([1, 2, 3, 4])
+  })
+
+  it('does not mutate input array', () => {
+    const input = [makeInput('A', 1000), makeInput('B', 9000)]
+    const inputCopy = [...input]
+    rankAndSort(input)
+    expect(input[0].name).toBe(inputCopy[0].name)
+    expect(input[1].name).toBe(inputCopy[1].name)
+  })
+
+  it('zero total_try items sort after nonzero items', () => {
+    const input = [makeInput('Zero', 0), makeInput('Positive', 5000)]
+    const result = rankAndSort(input)
+    expect(result[0].name).toBe('Positive')
+    expect(result[0].rank).toBe(1)
+    expect(result[1].name).toBe('Zero')
+    expect(result[1].rank).toBe(2)
+  })
+})

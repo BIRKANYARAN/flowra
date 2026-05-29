@@ -517,3 +517,215 @@ describe('full cutover pipeline scenario', () => {
     expect(rollback.is_reversible).toBe(true)
   })
 })
+
+// ─────────────────────────────────────────────────────────────────────────────
+// isForwardProgression — all valid transitions
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('isForwardProgression', () => {
+  it('shadow → parallel is forward', () => {
+    expect(isForwardProgression('shadow', 'parallel')).toBe(true)
+  })
+
+  it('parallel → gl_primary is forward', () => {
+    expect(isForwardProgression('parallel', 'gl_primary')).toBe(true)
+  })
+
+  it('shadow → gl_primary is forward (skip)', () => {
+    expect(isForwardProgression('shadow', 'gl_primary')).toBe(true)
+  })
+
+  it('shadow → shadow is NOT forward (same level)', () => {
+    expect(isForwardProgression('shadow', 'shadow')).toBe(false)
+  })
+
+  it('parallel → parallel is NOT forward', () => {
+    expect(isForwardProgression('parallel', 'parallel')).toBe(false)
+  })
+
+  it('gl_primary → parallel is NOT forward (rollback)', () => {
+    expect(isForwardProgression('gl_primary', 'parallel')).toBe(false)
+  })
+
+  it('gl_primary → shadow is NOT forward (rollback)', () => {
+    expect(isForwardProgression('gl_primary', 'shadow')).toBe(false)
+  })
+
+  it('parallel → shadow is NOT forward (rollback)', () => {
+    expect(isForwardProgression('parallel', 'shadow')).toBe(false)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// isRollback — reverse transitions
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('isRollback', () => {
+  it('parallel → shadow is rollback', () => {
+    expect(isRollback('parallel', 'shadow')).toBe(true)
+  })
+
+  it('gl_primary → parallel is rollback', () => {
+    expect(isRollback('gl_primary', 'parallel')).toBe(true)
+  })
+
+  it('gl_primary → shadow is rollback', () => {
+    expect(isRollback('gl_primary', 'shadow')).toBe(true)
+  })
+
+  it('shadow → parallel is NOT rollback (forward)', () => {
+    expect(isRollback('shadow', 'parallel')).toBe(false)
+  })
+
+  it('shadow → gl_primary is NOT rollback (forward)', () => {
+    expect(isRollback('shadow', 'gl_primary')).toBe(false)
+  })
+
+  it('shadow → shadow is NOT rollback (same level)', () => {
+    expect(isRollback('shadow', 'shadow')).toBe(false)
+  })
+
+  it('gl_primary → gl_primary is NOT rollback (same level)', () => {
+    expect(isRollback('gl_primary', 'gl_primary')).toBe(false)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// modeLabel — returns non-empty string for each mode
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('modeLabel', () => {
+  it('returns non-empty string for "shadow"', () => {
+    const label = modeLabel('shadow')
+    expect(typeof label).toBe('string')
+    expect(label.length).toBeGreaterThan(0)
+    expect(label).toContain('Shadow')
+  })
+
+  it('returns non-empty string for "parallel"', () => {
+    const label = modeLabel('parallel')
+    expect(typeof label).toBe('string')
+    expect(label.length).toBeGreaterThan(0)
+    expect(label).toContain('Parallel')
+  })
+
+  it('returns non-empty string for "gl_primary"', () => {
+    const label = modeLabel('gl_primary')
+    expect(typeof label).toBe('string')
+    expect(label.length).toBeGreaterThan(0)
+    expect(label).toContain('GL Primary')
+  })
+
+  it('each mode returns a distinct label', () => {
+    const labels = new Set([modeLabel('shadow'), modeLabel('parallel'), modeLabel('gl_primary')])
+    expect(labels.size).toBe(3)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SHADOW_AUDIT_THRESHOLDS — expected keys
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('SHADOW_AUDIT_THRESHOLDS', () => {
+  it('has WARN_THRESHOLD_PCT key', () => {
+    expect(SHADOW_AUDIT_THRESHOLDS).toHaveProperty('WARN_THRESHOLD_PCT')
+  })
+
+  it('has CRIT_THRESHOLD_PCT key', () => {
+    expect(SHADOW_AUDIT_THRESHOLDS).toHaveProperty('CRIT_THRESHOLD_PCT')
+  })
+
+  it('has ABS_EPSILON_TRY key', () => {
+    expect(SHADOW_AUDIT_THRESHOLDS).toHaveProperty('ABS_EPSILON_TRY')
+  })
+
+  it('WARN_THRESHOLD_PCT < CRIT_THRESHOLD_PCT', () => {
+    expect(SHADOW_AUDIT_THRESHOLDS.WARN_THRESHOLD_PCT).toBeLessThan(SHADOW_AUDIT_THRESHOLDS.CRIT_THRESHOLD_PCT)
+  })
+
+  it('all thresholds are positive numbers', () => {
+    expect(SHADOW_AUDIT_THRESHOLDS.WARN_THRESHOLD_PCT).toBeGreaterThan(0)
+    expect(SHADOW_AUDIT_THRESHOLDS.CRIT_THRESHOLD_PCT).toBeGreaterThan(0)
+    expect(SHADOW_AUDIT_THRESHOLDS.ABS_EPSILON_TRY).toBeGreaterThan(0)
+  })
+
+  it('WARN_THRESHOLD_PCT is 1.0', () => {
+    expect(SHADOW_AUDIT_THRESHOLDS.WARN_THRESHOLD_PCT).toBe(1.0)
+  })
+
+  it('CRIT_THRESHOLD_PCT is 5.0', () => {
+    expect(SHADOW_AUDIT_THRESHOLDS.CRIT_THRESHOLD_PCT).toBe(5.0)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeRollbackAssessment — structure validation
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeRollbackAssessment — structure validation', () => {
+  it('parallel → shadow: result has expected structure', () => {
+    const r = computeRollbackAssessment('parallel', 'shadow', 100, COMPANY_ID)
+    expect(r).toHaveProperty('from_mode')
+    expect(r).toHaveProperty('to_mode')
+    expect(r).toHaveProperty('risk')
+    expect(r).toHaveProperty('is_reversible')
+    expect(r).toHaveProperty('journal_entries_at_risk')
+    expect(r).toHaveProperty('instructions')
+    expect(r).toHaveProperty('warnings')
+    expect(r).toHaveProperty('sql_commands')
+  })
+
+  it('parallel → shadow with entries: risk = medium', () => {
+    const r = computeRollbackAssessment('parallel', 'shadow', 1, COMPANY_ID)
+    expect(r.risk).toBe('medium')
+    expect(r.is_reversible).toBe(true)
+  })
+
+  it('parallel → shadow with zero entries: risk = low', () => {
+    const r = computeRollbackAssessment('parallel', 'shadow', 0, COMPANY_ID)
+    expect(r.risk).toBe('low')
+  })
+
+  it('gl_primary → parallel with entries: risk = high', () => {
+    const r = computeRollbackAssessment('gl_primary', 'parallel', 500, COMPANY_ID)
+    expect(r.risk).toBe('high')
+    expect(r.is_reversible).toBe(true)
+  })
+
+  it('gl_primary → shadow: risk = critical', () => {
+    const r = computeRollbackAssessment('gl_primary', 'shadow', 200, COMPANY_ID)
+    expect(r.risk).toBe('critical')
+    expect(r.is_reversible).toBe(true)
+  })
+
+  it('same mode → same mode: risk = none, no-op', () => {
+    const r = computeRollbackAssessment('parallel', 'parallel', 100, COMPANY_ID)
+    expect(r.risk).toBe('none')
+    expect(r.journal_entries_at_risk).toBe(0)
+  })
+
+  it('forward progression returns risk = none', () => {
+    const r = computeRollbackAssessment('shadow', 'parallel', 0, COMPANY_ID)
+    expect(r.risk).toBe('none')
+    expect(r.from_mode).toBe('shadow')
+    expect(r.to_mode).toBe('parallel')
+  })
+
+  it('sql_commands array contains companyId for real rollbacks', () => {
+    const r = computeRollbackAssessment('parallel', 'shadow', 100, COMPANY_ID)
+    const sqlJoined = r.sql_commands.join('\n')
+    expect(sqlJoined).toContain(COMPANY_ID)
+  })
+
+  it('instructions array is non-empty for all rollback scenarios', () => {
+    const scenarios: Array<[import('../lib/admin/gl-rollback').GlMode, import('../lib/admin/gl-rollback').GlMode]> = [
+      ['parallel', 'shadow'],
+      ['gl_primary', 'parallel'],
+      ['gl_primary', 'shadow'],
+    ]
+    for (const [from, to] of scenarios) {
+      const r = computeRollbackAssessment(from, to, 0, COMPANY_ID)
+      expect(r.instructions.length).toBeGreaterThan(0)
+    }
+  })
+})
