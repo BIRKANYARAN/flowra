@@ -410,3 +410,204 @@ describe('report metadata', () => {
     expect(report.total_outstanding_try).toBeCloseTo(13000, 1)
   })
 })
+
+// ── 16. All customers already paid → empty result ─────────────────────────────
+
+describe('all customers paid — empty result', () => {
+  it('all sales with payment_status paid are excluded → empty receivables', async () => {
+    // makeSupabase returns all rows from the 'sales' table when queried.
+    // Since the service filters in('payment_status', ['pending','partial','overdue'])
+    // via mock chain (which returns ALL rows regardless), we use an empty sales
+    // table to simulate no open receivables.
+    const supabase = makeSupabase({ sales: [] })
+    const report = await ReceivablesPriorityService.getReport(
+      COMPANY,
+      supabase as Parameters<typeof ReceivablesPriorityService.getReport>[1],
+      { today: TODAY },
+    )
+    expect(report.receivables).toHaveLength(0)
+    expect(report.total_outstanding_try).toBe(0)
+    expect(report.priority_outstanding_try).toBe(0)
+  })
+
+  it('empty sales → all by_urgency counts are 0', async () => {
+    const supabase = makeSupabase({ sales: [] })
+    const report = await ReceivablesPriorityService.getReport(
+      COMPANY,
+      supabase as Parameters<typeof ReceivablesPriorityService.getReport>[1],
+      { today: TODAY },
+    )
+    expect(report.by_urgency.critical).toBe(0)
+    expect(report.by_urgency.urgent).toBe(0)
+    expect(report.by_urgency.follow_up).toBe(0)
+    expect(report.by_urgency.routine).toBe(0)
+  })
+})
+
+// ── 17. Customer with very high overdue amount ────────────────────────────────
+
+describe('customer with very high overdue amount', () => {
+  it('outstanding > 100k AND overdue → urgency = critical or urgent', async () => {
+    const supabase = makeSupabase({
+      sales: [
+        { id: 'big', customer_name: 'Big Debtor', total_try: 500_000, paid_amount: 0,
+          sale_date: '2024-01-01', due_date: '2024-01-10', payment_status: 'overdue' },
+      ],
+    })
+    const report = await ReceivablesPriorityService.getReport(
+      COMPANY,
+      supabase as Parameters<typeof ReceivablesPriorityService.getReport>[1],
+      { today: TODAY },
+    )
+    expect(report.receivables).toHaveLength(1)
+    const r = report.receivables[0]
+    expect(['urgent', 'critical']).toContain(r.urgency)
+    expect(r.outstanding_try).toBeCloseTo(500_000, 0)
+  })
+
+  it('very large outstanding → appears in priority_outstanding_try', async () => {
+    const supabase = makeSupabase({
+      sales: [
+        { id: 'x1', customer_name: 'VIP', total_try: 1_000_000, paid_amount: 0,
+          sale_date: '2024-01-01', due_date: '2024-01-05', payment_status: 'overdue' },
+      ],
+    })
+    const report = await ReceivablesPriorityService.getReport(
+      COMPANY,
+      supabase as Parameters<typeof ReceivablesPriorityService.getReport>[1],
+      { today: TODAY },
+    )
+    expect(report.priority_outstanding_try).toBeGreaterThan(0)
+    expect(report.total_outstanding_try).toBeCloseTo(1_000_000, 0)
+  })
+})
+
+// ── 18. Customer with mixed paid/unpaid ───────────────────────────────────────
+
+describe('mixed paid/unpaid receivables', () => {
+  it('outstanding_try = total_try − paid_amount', async () => {
+    const supabase = makeSupabase({
+      sales: [
+        { id: 'm1', customer_name: 'Partial Co', total_try: 20_000, paid_amount: 15_000,
+          sale_date: '2024-01-10', due_date: '2024-02-10', payment_status: 'partial' },
+      ],
+    })
+    const report = await ReceivablesPriorityService.getReport(
+      COMPANY,
+      supabase as Parameters<typeof ReceivablesPriorityService.getReport>[1],
+      { today: TODAY },
+    )
+    expect(report.receivables).toHaveLength(1)
+    expect(report.receivables[0].outstanding_try).toBeCloseTo(5_000, 1)
+  })
+
+  it('two receivables with partial payments — totals are correct', async () => {
+    const supabase = makeSupabase({
+      sales: [
+        { id: 'p1', customer_name: 'A', total_try: 10_000, paid_amount: 4_000,
+          sale_date: '2024-01-10', due_date: '2024-02-28', payment_status: 'partial' },
+        { id: 'p2', customer_name: 'B', total_try: 8_000,  paid_amount: 8_000,
+          sale_date: '2024-01-12', due_date: '2024-02-28', payment_status: 'partial' },
+      ],
+    })
+    const report = await ReceivablesPriorityService.getReport(
+      COMPANY,
+      supabase as Parameters<typeof ReceivablesPriorityService.getReport>[1],
+      { today: TODAY },
+    )
+    // p1 outstanding: 6000; p2 outstanding: 0 → clamped to 0 by Math.max
+    const totalOutstanding = report.receivables.reduce((s, r) => s + r.outstanding_try, 0)
+    expect(totalOutstanding).toBeCloseTo(report.total_outstanding_try, 1)
+  })
+})
+
+// ── 19. Sorting by priority score descending ──────────────────────────────────
+
+describe('sorting by priority score descending', () => {
+  it('receivables are sorted by priority_rank ascending (1 = highest urgency)', async () => {
+    const supabase = makeSupabase({
+      sales: [
+        { id: 'low1',  customer_name: 'Low Risk',  total_try: 1_000,  paid_amount: 0,
+          sale_date: '2024-02-10', due_date: '2024-03-10', payment_status: 'pending' },
+        { id: 'high1', customer_name: 'High Risk', total_try: 200_000, paid_amount: 0,
+          sale_date: '2024-01-01', due_date: '2024-01-10', payment_status: 'overdue' },
+      ],
+    })
+    const report = await ReceivablesPriorityService.getReport(
+      COMPANY,
+      supabase as Parameters<typeof ReceivablesPriorityService.getReport>[1],
+      { today: TODAY },
+    )
+    const ranks = report.receivables.map(r => r.priority_rank)
+    // ranks should be [1, 2, 3, ...] in order
+    for (let i = 1; i < ranks.length; i++) {
+      expect(ranks[i]).toBeGreaterThan(ranks[i - 1])
+    }
+  })
+
+  it('higher urgency receivable appears before lower urgency', async () => {
+    const supabase = makeSupabase({
+      sales: [
+        { id: 'routine1', customer_name: 'Routine', total_try: 1_000, paid_amount: 0,
+          sale_date: '2024-02-10', due_date: '2024-04-01', payment_status: 'pending' },
+        { id: 'urgent1',  customer_name: 'Urgent',  total_try: 500_000, paid_amount: 0,
+          sale_date: '2024-01-01', due_date: '2024-01-05', payment_status: 'overdue' },
+      ],
+    })
+    const report = await ReceivablesPriorityService.getReport(
+      COMPANY,
+      supabase as Parameters<typeof ReceivablesPriorityService.getReport>[1],
+      { today: TODAY },
+    )
+    const ids = report.receivables.map(r => r.sale_id)
+    // urgent1 should appear before routine1
+    expect(ids.indexOf('urgent1')).toBeLessThan(ids.indexOf('routine1'))
+  })
+})
+
+// ── 20. Zero-amount invoice handling ─────────────────────────────────────────
+
+describe('zero-amount and small-amount invoices', () => {
+  it('zero total_try → outstanding_try = 0 (clamped by Math.max)', async () => {
+    const { score } = ReceivablesPriorityService.scoreReceivable({
+      outstanding_try: 0,
+      days_overdue: null,
+      customer_risk_tier: 'low',
+      customer_on_time_rate: 0.9,
+    })
+    // Score should still be computed correctly
+    expect(score).toBeGreaterThanOrEqual(0)
+    expect(score).toBeLessThanOrEqual(100)
+  })
+
+  it('paid_amount > total_try → outstanding clamped to 0', async () => {
+    const supabase = makeSupabase({
+      sales: [
+        { id: 'overpaid', customer_name: 'Overpaid Co', total_try: 100, paid_amount: 200,
+          sale_date: '2024-01-15', due_date: '2024-02-15', payment_status: 'partial' },
+      ],
+    })
+    const report = await ReceivablesPriorityService.getReport(
+      COMPANY,
+      supabase as Parameters<typeof ReceivablesPriorityService.getReport>[1],
+      { today: TODAY },
+    )
+    // outstanding = Math.max(0, 100 - 200) = 0
+    if (report.receivables.length > 0) {
+      expect(report.receivables[0].outstanding_try).toBe(0)
+    }
+    expect(report.total_outstanding_try).toBeGreaterThanOrEqual(0)
+  })
+
+  it('small amount (1 TRY) outstanding → score is still valid', () => {
+    const { score, urgency } = ReceivablesPriorityService.scoreReceivable({
+      outstanding_try: 1,
+      days_overdue: null,
+      customer_risk_tier: 'medium',
+      customer_on_time_rate: null,
+    })
+    expect(score).toBeGreaterThanOrEqual(0)
+    expect(score).toBeLessThanOrEqual(100)
+    expect(urgency).toBe('routine')  // small amount, no overdue, medium risk
+  })
+})

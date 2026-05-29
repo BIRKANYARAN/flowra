@@ -484,3 +484,223 @@ describe('amountScore + dateScore + nameScore — full confidence matrix', () =>
     expect(conf).toBeGreaterThanOrEqual(0.7)
   })
 })
+
+// ── amountScore — exact match = max score ────────────────────────────────────
+
+describe('amountScore — exact match returns maximum score', () => {
+  it('exact match: amountScore = 0.5 (the maximum)', () => {
+    expect(amountScore(10_000, 10_000)).toBe(0.5)
+  })
+
+  it('amountScore cannot exceed 0.5', () => {
+    const result = amountScore(5_000, 5_000)
+    expect(result).toBeLessThanOrEqual(0.5)
+  })
+
+  it('amountScore is always 0 or 0.5 (binary, not partial)', () => {
+    const exact  = amountScore(1_000, 1_000)
+    const close  = amountScore(1_000, 1_050) // 5% → still 0.5
+    const far    = amountScore(1_000, 1_060) // 6% → 0
+
+    expect(exact).toBe(0.5)
+    expect(close).toBe(0.5)
+    expect(far).toBe(0)
+  })
+
+  it('exact match for large amount (₺1M) still returns 0.5', () => {
+    expect(amountScore(1_000_000, 1_000_000)).toBe(0.5)
+  })
+})
+
+// ── amountScore — 5% difference = partial score ──────────────────────────────
+
+describe('amountScore — 5% difference boundary', () => {
+  it('exactly 5% difference (below bank) → 0.5', () => {
+    // |10_000 - 9_500| / 10_000 = 5% → ≤ 5% → 0.5
+    expect(amountScore(10_000, 9_500)).toBe(0.5)
+  })
+
+  it('exactly 5% difference (above bank) → 0.5', () => {
+    expect(amountScore(10_000, 10_500)).toBe(0.5)
+  })
+
+  it('just over 5% → 0', () => {
+    // |10_000 - 9_499| / 10_000 = 5.01% → 0
+    expect(amountScore(10_000, 9_499)).toBe(0)
+  })
+
+  it('2% difference → 0.5', () => {
+    expect(amountScore(50_000, 51_000)).toBe(0.5)
+  })
+})
+
+// ── amountScore — large difference = 0 ───────────────────────────────────────
+
+describe('amountScore — large difference returns 0', () => {
+  it('50% difference → 0', () => {
+    expect(amountScore(100_000, 50_000)).toBe(0)
+  })
+
+  it('100% difference (double) → 0', () => {
+    expect(amountScore(10_000, 20_000)).toBe(0)
+  })
+
+  it('completely different amounts → 0', () => {
+    expect(amountScore(1_000, 999_999)).toBe(0)
+  })
+
+  it('zero record amount with non-zero bank → 0', () => {
+    // pct = |5000 - 0| / 5000 = 100% → 0
+    expect(amountScore(5_000, 0)).toBe(0)
+  })
+})
+
+// ── dateScore — within 3 days = 0.3 ──────────────────────────────────────────
+
+describe('dateScore — within 3 days returns 0.3', () => {
+  it('0 days apart (same date) → 0.3', () => {
+    expect(dateScore('2026-06-01', '2026-06-01')).toBe(0.3)
+  })
+
+  it('1 day apart → 0.3', () => {
+    expect(dateScore('2026-06-01', '2026-06-02')).toBe(0.3)
+  })
+
+  it('2 days apart → 0.3', () => {
+    expect(dateScore('2026-06-01', '2026-06-03')).toBe(0.3)
+  })
+
+  it('3 days apart (boundary) → 0.3', () => {
+    expect(dateScore('2026-06-01', '2026-06-04')).toBe(0.3)
+  })
+
+  it('dateScore ≤ 0.3 always', () => {
+    expect(dateScore('2026-01-01', '2026-01-01')).toBeLessThanOrEqual(0.3)
+  })
+})
+
+// ── dateScore — beyond 3 days = 0 ────────────────────────────────────────────
+
+describe('dateScore — beyond 3 days returns 0', () => {
+  it('4 days apart → 0', () => {
+    expect(dateScore('2026-06-01', '2026-06-05')).toBe(0)
+  })
+
+  it('7 days apart → 0', () => {
+    expect(dateScore('2026-06-01', '2026-06-08')).toBe(0)
+  })
+
+  it('30 days apart → 0', () => {
+    expect(dateScore('2026-01-01', '2026-01-31')).toBe(0)
+  })
+
+  it('completely different months → 0', () => {
+    expect(dateScore('2026-01-15', '2026-06-15')).toBe(0)
+  })
+})
+
+// ── nameScore — match = score ─────────────────────────────────────────────────
+
+describe('nameScore — match returns 0.2', () => {
+  it('name found in description → 0.2', () => {
+    expect(nameScore('Payment from ACME Corporation', 'ACME Corporation')).toBe(0.2)
+  })
+
+  it('case-insensitive match → 0.2', () => {
+    expect(nameScore('TRANSFER FROM toyota', 'Toyota')).toBe(0.2)
+  })
+
+  it('partial word match (≥4 chars) → 0.2', () => {
+    // 'Shopify' appears in description (≥4 chars matches 'shopify')
+    expect(nameScore('Shopify payment received', 'Shopify Inc')).toBe(0.2)
+  })
+
+  it('nameScore ≤ 0.2 always', () => {
+    expect(nameScore('Payment ABC Corp', 'ABC Corp')).toBeLessThanOrEqual(0.2)
+  })
+})
+
+// ── nameScore — no match = 0 ──────────────────────────────────────────────────
+
+describe('nameScore — no match returns 0', () => {
+  it('name not in description → 0', () => {
+    expect(nameScore('Transfer from XYZ', 'ABC Corp')).toBe(0)
+  })
+
+  it('null name → 0', () => {
+    expect(nameScore('Any description', null)).toBe(0)
+  })
+
+  it('empty description with valid name → 0', () => {
+    expect(nameScore('', 'SomeName')).toBe(0)
+  })
+
+  it('name with all short words (< 4 chars) and no full match → 0', () => {
+    // 'Ltd' is 3 chars — filtered out; no word ≥ 4 chars → checks full name
+    // name='Ltd Co' → words=['Ltd','Co'] all < 4 → fallback to full name includes check
+    // 'Ltd Co' not in 'Bank Transfer' → 0
+    expect(nameScore('Bank Transfer received', 'Ltd Co')).toBe(0)
+  })
+})
+
+// ── daysDiff — same day = 0 ───────────────────────────────────────────────────
+
+describe('daysDiff — same day returns 0', () => {
+  it('same date string → 0', () => {
+    expect(daysDiff('2026-03-15', '2026-03-15')).toBe(0)
+  })
+
+  it('same date, start of year → 0', () => {
+    expect(daysDiff('2026-01-01', '2026-01-01')).toBe(0)
+  })
+
+  it('same date, end of year → 0', () => {
+    expect(daysDiff('2026-12-31', '2026-12-31')).toBe(0)
+  })
+})
+
+// ── daysDiff — 1 day apart = 1 ───────────────────────────────────────────────
+
+describe('daysDiff — 1 day apart returns 1', () => {
+  it('consecutive days → 1', () => {
+    expect(daysDiff('2026-05-01', '2026-05-02')).toBe(1)
+  })
+
+  it('end of month to start of next → 1', () => {
+    expect(daysDiff('2026-04-30', '2026-05-01')).toBe(1)
+  })
+
+  it('symmetric: reversed order → still 1', () => {
+    expect(daysDiff('2026-05-02', '2026-05-01')).toBe(1)
+  })
+})
+
+// ── computeStatus — threshold (≥ 0.7 total confidence = auto-match) ──────────
+
+describe('computeStatus — reconciled vs discrepancy thresholds', () => {
+  it('0 total lines → not_started', () => {
+    expect(computeStatus(0, 0, 0, 0, 0)).toBe('not_started')
+  })
+
+  it('discrepancy exactly 1 TRY with all matched → reconciled', () => {
+    // unmatchedCount=0 but discrepancy=1 which is not < 1 → not reconciled
+    // Actually: condition is discrepancyTry < 1, so 1.0 → false → proceed to discrepancy check
+    const status = computeStatus(5, 5, 1.0, 50_000, 25_000)
+    // totalVolume=75k, 1/75k=0.0013% < 5% → minor
+    expect(status).toBe('minor_discrepancies')
+  })
+
+  it('all matched, discrepancy=0 → reconciled', () => {
+    expect(computeStatus(3, 3, 0, 10_000, 5_000)).toBe('reconciled')
+  })
+
+  it('discrepancy ≥ 5% → major_discrepancies', () => {
+    // volume=10k, discrepancy=600 (6%) → major
+    expect(computeStatus(2, 1, 600, 6_000, 4_000)).toBe('major_discrepancies')
+  })
+
+  it('discrepancy < 5% with some unmatched → minor_discrepancies', () => {
+    // volume=200k, discrepancy=8k (4%) → minor
+    expect(computeStatus(10, 7, 8_000, 130_000, 70_000)).toBe('minor_discrepancies')
+  })
+})

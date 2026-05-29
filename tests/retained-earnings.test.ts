@@ -498,3 +498,123 @@ describe('multi-period rollforward chain', () => {
   })
 
 })
+
+// ── computePeriodLegalReserve — edge cases zero income / already-at-cap ───────
+
+describe('computePeriodLegalReserve — zero income and already-at-cap', () => {
+
+  it('76. zero net income → always 0 reserve regardless of cap headroom', () => {
+    // Even if there is plenty of room, no income = no reserve
+    expect(computePeriodLegalReserve(0, 500_000, 0)).toBe(0)
+  })
+
+  it('77. net income = 1, paidInCapital = 0 → cap = 0, reserve = 0', () => {
+    expect(computePeriodLegalReserve(1, 0, 0)).toBe(0)
+  })
+
+  it('78. already at cap (existing = 20% of paidInCapital) → 0 reserve', () => {
+    expect(computePeriodLegalReserve(200_000, 250_000, 50_000)).toBe(0)
+  })
+
+  it('79. existing just 1 cent below cap → takes only the remaining 0.01 TRY', () => {
+    // paidInCapital 100 → cap 20; existing = 19.99 → gap = 0.01
+    // proposed = 1000 × 0.05 = 50 → capped at 0.01
+    const result = computePeriodLegalReserve(1_000, 100, 19.99)
+    expect(result).toBeCloseTo(0.01, 2)
+  })
+
+  it('80. 5% rate: proposed = net × 0.05 exactly when gap is large', () => {
+    // paidInCapital 1_000_000 → cap 200_000; existing = 0 → gap = 200_000
+    // netIncome = 60_000 → proposed = 3_000 < gap → result = 3_000
+    const result = computePeriodLegalReserve(60_000, 1_000_000, 0)
+    expect(result).toBeCloseTo(60_000 * 0.05, 2)
+  })
+
+})
+
+// ── retained earnings accumulation across multiple periods ────────────────────
+
+describe('retained earnings accumulation — multi-period scenarios', () => {
+
+  it('81. four consecutive profitable periods accumulate correctly', () => {
+    let opening = 0
+    const incomes   = [50_000, 60_000, 40_000, 70_000]
+    const reserves  = incomes.map(ni => computePeriodLegalReserve(ni, 200_000, 0))
+    const closings: number[] = []
+    for (let i = 0; i < incomes.length; i++) {
+      const closing = computeClosingBalance(opening, incomes[i], reserves[i], 0, 0, 0)
+      closings.push(closing)
+      opening = closing
+    }
+    // Each closing should be greater than the previous
+    for (let i = 1; i < closings.length; i++) {
+      expect(closings[i]).toBeGreaterThan(closings[i - 1])
+    }
+  })
+
+  it('82. loss period after accumulated profit reduces closing', () => {
+    const p1 = buildRollforwardLine('2025-01', 0, 100_000, 5_000, 0, 0, 0)
+    const p2 = buildRollforwardLine('2025-02', p1.closing_try, -20_000, 0, 0, 0, 0)
+    expect(p2.closing_try).toBeLessThan(p1.closing_try)
+    expect(p2.is_deficit).toBe(false) // still positive
+  })
+
+  it('83. repeated small losses eventually cause a deficit', () => {
+    let opening = 10_000
+    for (let i = 0; i < 6; i++) {
+      opening = computeClosingBalance(opening, -2_000, 0, 0, 0, 0)
+    }
+    // 10_000 - 6 × 2_000 = -2_000
+    expect(opening).toBeCloseTo(-2_000, 2)
+    expect(isAccumulatedDeficit(opening)).toBe(true)
+  })
+
+  it('84. dividend distribution across 3 periods', () => {
+    let opening = 200_000
+    const dividends = [20_000, 30_000, 10_000]
+    for (const div of dividends) {
+      opening = computeClosingBalance(opening, 50_000, 2_500, div, 0, 0)
+    }
+    // 200_000 + 3×50_000 - 3×2_500 - 60_000 = 200_000 + 150_000 - 7_500 - 60_000 = 282_500
+    expect(opening).toBeCloseTo(282_500, 2)
+  })
+
+  it('85. compensation (huzur hakkı) reduces closing consistently', () => {
+    const withComp    = computeClosingBalance(100_000, 50_000, 2_500, 10_000, 5_000, 0)
+    const withoutComp = computeClosingBalance(100_000, 50_000, 2_500, 10_000, 0, 0)
+    expect(withoutComp - withComp).toBeCloseTo(5_000, 2)
+  })
+
+})
+
+// ── withholding tax / boundary scenarios ──────────────────────────────────────
+
+describe('equity coverage ratio — boundary values', () => {
+
+  it('86. ratio rounds to 2 decimal places', () => {
+    const ratio = computeEquityCoverageRatio(100_000, 30_000)
+    // 100_000 / 30_000 = 3.333... → rounds to 3.33
+    expect(ratio).toBeCloseTo(3.33, 2)
+  })
+
+  it('87. liabilities = 1 TRY → very large positive ratio', () => {
+    const ratio = computeEquityCoverageRatio(500_000, 1)
+    expect(ratio).toBeGreaterThan(100_000)
+  })
+
+  it('88. negative equity, small liabilities → large negative ratio', () => {
+    const ratio = computeEquityCoverageRatio(-100_000, 100)
+    expect(ratio).toBeLessThan(-100)
+  })
+
+  it('89. equity = liabilities → ratio = 1', () => {
+    const ratio = computeEquityCoverageRatio(75_000, 75_000)
+    expect(ratio).toBeCloseTo(1.0, 2)
+  })
+
+  it('90. zero equity with non-zero liabilities → ratio = 0', () => {
+    const ratio = computeEquityCoverageRatio(0, 50_000)
+    expect(ratio).toBeCloseTo(0, 2)
+  })
+
+})

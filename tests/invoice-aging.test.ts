@@ -485,3 +485,226 @@ describe('estimateCollectionDays — exhaustive tier boundaries', () => {
     expect([...values].sort((a, b) => a - b)).toEqual([15, 25, 45, 75])
   })
 })
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeAgingDays — explicit day range tests (0, 30, 60, 90, 91+)
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeAgingDays — key day ranges', () => {
+
+  it('returns 0 for same-day due date', () => {
+    expect(computeAgingDays('2026-01-01', '2026-06-15', '2026-06-15')).toBe(0)
+  })
+
+  it('returns 30 for due_date 30 days before asOf', () => {
+    expect(computeAgingDays('2026-01-01', '2026-05-01', '2026-05-31')).toBe(30)
+  })
+
+  it('returns 60 for due_date 60 days before asOf', () => {
+    expect(computeAgingDays('2026-01-01', '2026-04-01', '2026-05-31')).toBe(60)
+  })
+
+  it('returns 90 for due_date 90 days before asOf', () => {
+    expect(computeAgingDays('2026-01-01', '2026-03-02', '2026-05-31')).toBe(90)
+  })
+
+  it('returns 91 for due_date 91 days before asOf', () => {
+    expect(computeAgingDays('2026-01-01', '2026-03-01', '2026-05-31')).toBe(91)
+  })
+
+  it('returns negative days for future due date', () => {
+    // due 15 days from now
+    const days = computeAgingDays('2026-01-01', '2026-06-30', '2026-06-15')
+    expect(days).toBeLessThan(0)
+    expect(days).toBe(-15)
+  })
+
+  it('no due_date — uses created_at, returns 0 for same day', () => {
+    expect(computeAgingDays('2026-06-15', null, '2026-06-15')).toBe(0)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// assignAgingBucket — all 5 bucket boundaries exactly
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('assignAgingBucket — all 5 bucket boundary checks', () => {
+
+  // Boundary 0: current
+  it('boundary 0 → current', () => {
+    expect(assignAgingBucket(0)).toBe('current')
+  })
+
+  // Boundary 1: start of overdue_30
+  it('boundary 1 → overdue_30', () => {
+    expect(assignAgingBucket(1)).toBe('overdue_30')
+  })
+
+  // Boundary 30: end of overdue_30
+  it('boundary 30 → overdue_30', () => {
+    expect(assignAgingBucket(30)).toBe('overdue_30')
+  })
+
+  // Boundary 31: start of overdue_60
+  it('boundary 31 → overdue_60', () => {
+    expect(assignAgingBucket(31)).toBe('overdue_60')
+  })
+
+  // Boundary 60: end of overdue_60
+  it('boundary 60 → overdue_60', () => {
+    expect(assignAgingBucket(60)).toBe('overdue_60')
+  })
+
+  // Boundary 61: start of overdue_90
+  it('boundary 61 → overdue_90', () => {
+    expect(assignAgingBucket(61)).toBe('overdue_90')
+  })
+
+  // Boundary 90: end of overdue_90
+  it('boundary 90 → overdue_90', () => {
+    expect(assignAgingBucket(90)).toBe('overdue_90')
+  })
+
+  // Boundary 91: start of overdue_90plus
+  it('boundary 91 → overdue_90plus', () => {
+    expect(assignAgingBucket(91)).toBe('overdue_90plus')
+  })
+
+  // Negative value → current
+  it('negative value → current', () => {
+    expect(assignAgingBucket(-1)).toBe('current')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeInvoiceUrgency — urgency capped at 100
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeInvoiceUrgency — capped at 100', () => {
+
+  it('max aging + max amount + penalty = capped at 100', () => {
+    // aging=1000 → min(500,50)=50; amount=10M → min(1000,30)=30; penalty=20 → 100
+    const score = computeInvoiceUrgency(1000, 10_000_000, 0)
+    expect(score).toBe(100)
+  })
+
+  it('very old invoice with large amount still caps at 100', () => {
+    const score = computeInvoiceUrgency(500, 5_000_000, 10)
+    expect(score).toBe(100)
+  })
+
+  it('score never exceeds 100 for any combination of inputs', () => {
+    const testCases = [
+      [200, 500_000, 0],
+      [100, 300_000, 0],
+      [50, 0, 0],
+      [91, 200_000, 30],
+    ]
+    for (const [aging, amount, reliability] of testCases) {
+      expect(computeInvoiceUrgency(aging, amount, reliability)).toBeLessThanOrEqual(100)
+    }
+  })
+
+  it('urgency is always a non-negative integer', () => {
+    const cases = [
+      [0, 0, 100],
+      [30, 50_000, 70],
+      [91, 0, 0],
+    ]
+    for (const [a, b, c] of cases) {
+      const score = computeInvoiceUrgency(a, b, c)
+      expect(score).toBeGreaterThanOrEqual(0)
+      expect(Number.isInteger(score)).toBe(true)
+    }
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// estimateCollectionDays — monotonically decreasing with score
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('estimateCollectionDays — monotonically decreasing with reliability score', () => {
+
+  it('higher reliability always gives ≤ collection days than lower reliability', () => {
+    // tiers: poor<average<good<excellent
+    const poor    = estimateCollectionDays(30)
+    const average = estimateCollectionDays(55)
+    const good    = estimateCollectionDays(70)
+    const excellent = estimateCollectionDays(85)
+
+    expect(poor).toBeGreaterThanOrEqual(average)
+    expect(average).toBeGreaterThanOrEqual(good)
+    expect(good).toBeGreaterThanOrEqual(excellent)
+  })
+
+  it('score 0 gives maximum collection days (75)', () => {
+    expect(estimateCollectionDays(0)).toBe(75)
+  })
+
+  it('score 100 gives minimum collection days (15)', () => {
+    expect(estimateCollectionDays(100)).toBe(15)
+  })
+
+  it('all outputs are positive numbers', () => {
+    const scores = [0, 10, 49, 50, 64, 65, 79, 80, 100]
+    for (const s of scores) {
+      expect(estimateCollectionDays(s)).toBeGreaterThan(0)
+    }
+  })
+
+  it('function returns one of exactly 4 possible values', () => {
+    const allScores = Array.from({ length: 101 }, (_, i) => i)
+    const outputs = new Set(allScores.map(estimateCollectionDays))
+    expect(outputs.size).toBe(4)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computePortfolioRisk — weighted average formula verification
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computePortfolioRisk — weighted average formula', () => {
+
+  it('weighted average: (u1*a1 + u2*a2) / (a1+a2)', () => {
+    // (60*200 + 40*300) / 500 = (12000+12000)/500 = 48
+    const risk = computePortfolioRisk([
+      { urgency: 60, amount_try: 200 },
+      { urgency: 40, amount_try: 300 },
+    ])
+    expect(risk).toBeCloseTo(48, 1)
+  })
+
+  it('single-invoice portfolio: risk = its urgency', () => {
+    expect(computePortfolioRisk([{ urgency: 73, amount_try: 500_000 }])).toBe(73)
+  })
+
+  it('equal weights: risk is arithmetic mean of urgencies', () => {
+    // All same amount → plain average
+    const risk = computePortfolioRisk([
+      { urgency: 20, amount_try: 100 },
+      { urgency: 80, amount_try: 100 },
+    ])
+    expect(risk).toBe(50)
+  })
+
+  it('all zero amounts: risk = 0', () => {
+    expect(computePortfolioRisk([
+      { urgency: 100, amount_try: 0 },
+      { urgency: 50, amount_try: 0 },
+    ])).toBe(0)
+  })
+
+  it('3-invoice weighted average computed correctly', () => {
+    // (10*1000 + 50*2000 + 90*1000) / 4000 = (10000+100000+90000)/4000 = 50
+    const risk = computePortfolioRisk([
+      { urgency: 10, amount_try: 1_000 },
+      { urgency: 50, amount_try: 2_000 },
+      { urgency: 90, amount_try: 1_000 },
+    ])
+    expect(risk).toBe(50)
+  })
+
+  it('empty list returns 0', () => {
+    expect(computePortfolioRisk([])).toBe(0)
+  })
+})

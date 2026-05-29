@@ -477,3 +477,336 @@ describe('computeEqualization — entry field consistency', () => {
     }
   })
 })
+
+// ── 11. Case A — remainder split pro-rata by share_ratio ─────────────────────
+
+describe('computeEqualization — Case A: remainder split pro-rata by share_ratio', () => {
+  // A: share=0.5, contributed 100k → per_unit=200k; eq_needed=300k
+  // B: share=0.5, contributed 400k → per_unit=800k; eq_needed=0
+  // distributable=400k > 300k (eq_needed) → Case A
+  // remaining = 400k - 300k = 100k → split 50/50
+
+  it('remaining after equalization split exactly by share_ratio (50/50)', () => {
+    const r = computeEqualization({
+      partners: [p('a', 'Alice', 0.5, 100_000), p('b', 'Bob', 0.5, 400_000)],
+      distributable: 400_000,
+    })
+    const alice = r.entries.find(e => e.partner_id === 'a')!
+    const bob   = r.entries.find(e => e.partner_id === 'b')!
+
+    expect(r.remaining_after_eq).toBe(100_000)
+    // Remainder 100k split 50/50 by share_ratio
+    expect(alice.pro_rata_share).toBeCloseTo(50_000, 0)
+    expect(bob.pro_rata_share).toBeCloseTo(50_000, 0)
+  })
+
+  it('remainder split 60/40 when share_ratios differ', () => {
+    // A: share=0.6, contributed=300k → per_unit=500k
+    // B: share=0.4, contributed=400k → per_unit=1000k ← baseline
+    // eq_A = (1000k-500k)*0.6 = 300k; eq_B=0
+    // distributable=500k → remaining=200k split 60/40
+    const r = computeEqualization({
+      partners: [p('a', 'A', 0.6, 300_000), p('b', 'B', 0.4, 400_000)],
+      distributable: 500_000,
+    })
+    const a = r.entries.find(e => e.partner_id === 'a')!
+    const b = r.entries.find(e => e.partner_id === 'b')!
+
+    expect(r.remaining_after_eq).toBeCloseTo(200_000, 0)
+    expect(a.pro_rata_share).toBeCloseTo(120_000, 0)   // 200k * 0.6
+    expect(b.pro_rata_share).toBeCloseTo(80_000, 0)    // 200k * 0.4
+    expect(a.total_payout + b.total_payout).toBeCloseTo(500_000, 1)
+  })
+
+  it('large distributable — eq paid first then big remainder split pro-rata', () => {
+    // 3 partners; total eq needed = 300k; distributable=1_300_000
+    // remaining = 1_000k; split 40/40/20
+    const r = computeEqualization({
+      partners: [
+        p('a', 'A', 0.4, 200_000),
+        p('b', 'B', 0.4, 400_000),
+        p('c', 'C', 0.2, 100_000),
+      ],
+      distributable: 1_300_000,
+    })
+    const a = r.entries.find(e => e.partner_id === 'a')!
+    const b = r.entries.find(e => e.partner_id === 'b')!
+    const c = r.entries.find(e => e.partner_id === 'c')!
+
+    expect(r.remaining_after_eq).toBeCloseTo(1_000_000, 0)
+    expect(a.pro_rata_share).toBeCloseTo(400_000, 0)
+    expect(b.pro_rata_share).toBeCloseTo(400_000, 0)
+    expect(c.pro_rata_share).toBeCloseTo(200_000, 0)
+    expect(a.total_payout + b.total_payout + c.total_payout).toBeCloseTo(1_300_000, 1)
+  })
+})
+
+// ── 12. Case B — distributable < Σ eq_needed: proportional payout ────────────
+
+describe('computeEqualization — Case B: proportional payment when distributable < Σ eq_needed', () => {
+  // 50/50: Alice eq_needed=300k; Bob eq_needed=0; Σ eq_needed=300k
+  // distributable=100k < 300k → all goes proportionally to under-funded partners
+
+  it('single under-funded partner gets 100% when distributable < eq_needed', () => {
+    const r = computeEqualization({
+      partners: [p('a', 'Alice', 0.5, 100_000), p('b', 'Bob', 0.5, 400_000)],
+      distributable: 100_000,
+    })
+    const alice = r.entries.find(e => e.partner_id === 'a')!
+    const bob   = r.entries.find(e => e.partner_id === 'b')!
+
+    expect(r.remaining_after_eq).toBe(0)
+    expect(alice.equalization_amount).toBe(100_000)
+    expect(alice.pro_rata_share).toBe(0)
+    expect(bob.equalization_amount).toBe(0)
+    expect(bob.pro_rata_share).toBe(0)
+  })
+
+  it('two under-funded partners split partial distributable by eq_needed proportion', () => {
+    // A: eq_needed=200k; C: eq_needed=100k; Σ=300k; distributable=60k
+    // A gets 60k*(200/300)=40k; C gets 60k*(100/300)=20k
+    const r = computeEqualization({
+      partners: [
+        p('a', 'A', 0.4, 200_000),
+        p('b', 'B', 0.4, 400_000),
+        p('c', 'C', 0.2, 100_000),
+      ],
+      distributable: 60_000,
+    })
+    const a = r.entries.find(e => e.partner_id === 'a')!
+    const b = r.entries.find(e => e.partner_id === 'b')!
+    const c = r.entries.find(e => e.partner_id === 'c')!
+
+    expect(r.remaining_after_eq).toBe(0)
+    expect(a.equalization_amount).toBeCloseTo(40_000, 0)
+    expect(b.equalization_amount).toBe(0)
+    expect(c.equalization_amount).toBeCloseTo(20_000, 0)
+    expect(a.total_payout + b.total_payout + c.total_payout).toBeCloseTo(60_000, 1)
+  })
+
+  it('no pro_rata_share in Case B — all distributable is equalization', () => {
+    const r = computeEqualization({
+      partners: [p('a', 'A', 0.5, 0), p('b', 'B', 0.5, 400_000)],
+      distributable: 100_000,
+    })
+    for (const e of r.entries) {
+      expect(e.pro_rata_share).toBe(0)
+    }
+  })
+})
+
+// ── 13. 3-partner scenario with exact numbers ─────────────────────────────────
+
+describe('computeEqualization — 3-partner scenarios', () => {
+  // Partners: 1/3 each; A=100k, B=300k, C=200k
+  // per_unit_A=300k, per_unit_B=900k, per_unit_C=600k
+  // baseline=900k
+  // eq_A=(900k-300k)*1/3=200k, eq_B=0, eq_C=(900k-600k)*1/3=100k
+  // total_eq_needed=300k
+
+  it('3 equal-share partners: baseline set by highest per-unit', () => {
+    const r = computeEqualization({
+      partners: [
+        p('a', 'A', 1/3, 100_000),
+        p('b', 'B', 1/3, 300_000),
+        p('c', 'C', 1/3, 200_000),
+      ],
+    })
+    expect(r.baseline_per_unit).toBeCloseTo(900_000, 0)
+    expect(r.total_equalization).toBeCloseTo(300_000, 0)
+  })
+
+  it('3-partner: payouts sum to distributable (invariant check)', () => {
+    const dist = 300_000
+    const r = computeEqualization({
+      partners: [
+        p('a', 'A', 1/3, 100_000),
+        p('b', 'B', 1/3, 300_000),
+        p('c', 'C', 1/3, 200_000),
+      ],
+      distributable: dist,
+    })
+    const total = r.entries.reduce((s, e) => s + e.total_payout, 0)
+    expect(Math.abs(total - dist)).toBeLessThanOrEqual(0.01)
+  })
+
+  it('3-partner Case A: excess beyond eq goes to all 3 pro-rata (1/3 each)', () => {
+    const r = computeEqualization({
+      partners: [
+        p('a', 'A', 1/3, 100_000),
+        p('b', 'B', 1/3, 300_000),
+        p('c', 'C', 1/3, 200_000),
+      ],
+      distributable: 600_000,
+    })
+    const a = r.entries.find(e => e.partner_id === 'a')!
+    const b = r.entries.find(e => e.partner_id === 'b')!
+    const c = r.entries.find(e => e.partner_id === 'c')!
+
+    // Remaining = 600k - 300k = 300k; split 1/3 each = 100k each
+    expect(a.pro_rata_share).toBeCloseTo(100_000, 0)
+    expect(b.pro_rata_share).toBeCloseTo(100_000, 0)
+    expect(c.pro_rata_share).toBeCloseTo(100_000, 0)
+  })
+})
+
+// ── 14. Single partner edge case ──────────────────────────────────────────────
+
+describe('computeEqualization — single partner edge cases', () => {
+  it('single partner: all distributable becomes pro_rata_share (no equalization)', () => {
+    const r = computeEqualization({
+      partners: [p('a', 'Solo', 1.0, 250_000)],
+      distributable: 80_000,
+    })
+    const solo = r.entries[0]
+    expect(solo.equalization_amount).toBe(0)
+    expect(solo.pro_rata_share).toBe(80_000)
+    expect(solo.total_payout).toBe(80_000)
+  })
+
+  it('single partner: eq_needed is always 0 (only contributor = baseline)', () => {
+    const amounts = [0, 1_000, 100_000, 999_999]
+    for (const amt of amounts) {
+      const r = computeEqualization({ partners: [p('x', 'X', 1.0, amt)] })
+      expect(r.entries[0].equalization_amount).toBe(0)
+      expect(r.total_equalization).toBe(0)
+    }
+  })
+
+  it('single partner with share_ratio < 1: distributable still fully assigned', () => {
+    // A single partner with 0.6 share — totalRatio = 0.6 but still sole partner
+    const r = computeEqualization({
+      partners: [p('a', 'Sole', 0.6, 300_000)],
+      distributable: 50_000,
+    })
+    const total = r.entries.reduce((s, e) => s + e.total_payout, 0)
+    // total_payout must equal distributable
+    expect(Math.abs(total - 50_000)).toBeLessThanOrEqual(0.01)
+  })
+})
+
+// ── 15. Equal contributions — no equalization needed ─────────────────────────
+
+describe('computeEqualization — equal contributions (no equalization needed)', () => {
+  it('4 equal partners, equal contributions: total_equalization=0', () => {
+    const r = computeEqualization({
+      partners: [
+        p('a', 'A', 0.25, 100_000),
+        p('b', 'B', 0.25, 100_000),
+        p('c', 'C', 0.25, 100_000),
+        p('d', 'D', 0.25, 100_000),
+      ],
+      distributable: 40_000,
+    })
+    expect(r.total_equalization).toBe(0)
+    expect(r.remaining_after_eq).toBe(40_000)
+    for (const e of r.entries) {
+      expect(e.equalization_amount).toBe(0)
+      expect(e.pro_rata_share).toBeCloseTo(10_000, 0)
+    }
+  })
+
+  it('unequal shares but equal per-unit contribution: total_equalization=0', () => {
+    // A: 0.3, 150k → per_unit=500k; B: 0.7, 350k → per_unit=500k
+    const r = computeEqualization({
+      partners: [p('a', 'A', 0.3, 150_000), p('b', 'B', 0.7, 350_000)],
+      distributable: 100_000,
+    })
+    expect(r.total_equalization).toBe(0)
+    const a = r.entries.find(e => e.partner_id === 'a')!
+    const b = r.entries.find(e => e.partner_id === 'b')!
+    expect(a.equalization_amount).toBe(0)
+    expect(b.equalization_amount).toBe(0)
+    expect(a.pro_rata_share).toBeCloseTo(30_000, 0)  // 100k * 0.3
+    expect(b.pro_rata_share).toBeCloseTo(70_000, 0)  // 100k * 0.7
+  })
+})
+
+// ── 16. Σ total_payout = distributable invariant ─────────────────────────────
+
+describe('computeEqualization — Σ total_payout invariant across scenarios', () => {
+  const scenarios: Array<{ label: string; partners: ReturnType<typeof p>[]; dist: number }> = [
+    { label: 'Case A simple', partners: [p('a', 'A', 0.5, 100_000), p('b', 'B', 0.5, 400_000)], dist: 400_000 },
+    { label: 'Case B partial', partners: [p('a', 'A', 0.5, 100_000), p('b', 'B', 0.5, 400_000)], dist: 150_000 },
+    { label: 'Zero dist', partners: [p('a', 'A', 0.5, 100_000), p('b', 'B', 0.5, 400_000)], dist: 0 },
+    { label: '3-partner Case A', partners: [p('a', 'A', 0.4, 200_000), p('b', 'B', 0.4, 400_000), p('c', 'C', 0.2, 100_000)], dist: 700_000 },
+    { label: '3-partner Case B', partners: [p('a', 'A', 0.4, 200_000), p('b', 'B', 0.4, 400_000), p('c', 'C', 0.2, 100_000)], dist: 50_000 },
+    { label: 'Equal partners', partners: [p('a', 'A', 0.5, 300_000), p('b', 'B', 0.5, 300_000)], dist: 100_000 },
+  ]
+
+  for (const { label, partners, dist } of scenarios) {
+    it(`Σ total_payout = distributable: ${label}`, () => {
+      const r = computeEqualization({ partners, distributable: dist })
+      const total = r.entries.reduce((s, e) => s + e.total_payout, 0)
+      expect(Math.abs(total - dist)).toBeLessThanOrEqual(0.01)
+    })
+  }
+})
+
+// ── 17. Fractional share ratios ───────────────────────────────────────────────
+
+describe('computeEqualization — fractional share ratios', () => {
+  it('share ratios as 1/3 each work correctly (floating point)', () => {
+    const r = computeEqualization({
+      partners: [
+        p('a', 'A', 1/3, 100_000),
+        p('b', 'B', 1/3, 100_000),
+        p('c', 'C', 1/3, 100_000),
+      ],
+      distributable: 99_999,
+    })
+    const total = r.entries.reduce((s, e) => s + e.total_payout, 0)
+    expect(Math.abs(total - 99_999)).toBeLessThanOrEqual(0.01)
+  })
+
+  it('very small share (0.01) partner receives proportional payout', () => {
+    // A: 0.99, B: 0.01 — same per_unit (no equalization)
+    const r = computeEqualization({
+      partners: [p('a', 'Big', 0.99, 990_000), p('b', 'Small', 0.01, 10_000)],
+      distributable: 100_000,
+    })
+    const big   = r.entries.find(e => e.partner_id === 'a')!
+    const small = r.entries.find(e => e.partner_id === 'b')!
+
+    // per_unit_A=1_000_000; per_unit_B=1_000_000 → balanced
+    expect(r.total_equalization).toBe(0)
+    expect(big.pro_rata_share).toBeCloseTo(99_000, 0)
+    expect(small.pro_rata_share).toBeCloseTo(1_000, 0)
+    expect(big.total_payout + small.total_payout).toBeCloseTo(100_000, 1)
+  })
+})
+
+// ── 18. Near-zero distributable ───────────────────────────────────────────────
+
+describe('computeEqualization — near-zero distributable', () => {
+  it('distributable=1 TRY still allocates correctly', () => {
+    const r = computeEqualization({
+      partners: [p('a', 'A', 0.5, 100_000), p('b', 'B', 0.5, 400_000)],
+      distributable: 1,
+    })
+    // eq_needed_A=300k; distributable=1 < 300k → Case B
+    const a = r.entries.find(e => e.partner_id === 'a')!
+    const total = r.entries.reduce((s, e) => s + e.total_payout, 0)
+    expect(a.equalization_amount).toBeCloseTo(1, 1)
+    expect(Math.abs(total - 1)).toBeLessThanOrEqual(0.01)
+  })
+
+  it('distributable=0.01 TRY (one kuruş): total payout = 0.01', () => {
+    const r = computeEqualization({
+      partners: [p('a', 'A', 0.5, 100_000), p('b', 'B', 0.5, 400_000)],
+      distributable: 0.01,
+    })
+    const total = r.entries.reduce((s, e) => s + e.total_payout, 0)
+    expect(Math.abs(total - 0.01)).toBeLessThanOrEqual(0.01)
+  })
+
+  it('negative distributable treated as zero: payouts all 0', () => {
+    const r = computeEqualization({
+      partners: [p('a', 'A', 0.5, 100_000), p('b', 'B', 0.5, 400_000)],
+      distributable: -1_000,
+    })
+    for (const e of r.entries) {
+      expect(e.total_payout).toBe(0)
+    }
+  })
+})

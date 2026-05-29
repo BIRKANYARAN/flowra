@@ -492,3 +492,267 @@ describe('Full-company scenario (numerical)', () => {
     expect(taxDeductOnly.matrah_try).toBe(217000)
   })
 })
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeKdv() — with explicit VAT rates (0%, 8%, 18%)
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeKdv() — explicit VAT rates', () => {
+  it('0% rate — all zeros produce zero net_vat', () => {
+    const r = computeKdv({ sales_vat_try: 0, purchase_vat_try: 0, expense_vat_try: 0 })
+    expect(r.net_vat_try).toBe(0)
+    expect(r.sales_vat_try).toBe(0)
+  })
+
+  it('8% rate — reduced-rate sales VAT only (no purchases)', () => {
+    // Sales base = 50000, 8% KDV → sales_vat = 4000
+    const r = computeKdv({ sales_vat_try: 4000, purchase_vat_try: 0, expense_vat_try: 0 })
+    expect(r.net_vat_try).toBe(4000)
+  })
+
+  it('18% rate — net correctly computed', () => {
+    // sales_vat = 18000 (100000 * 18%), purchase_vat = 7200, expense_vat = 360
+    const r = computeKdv({ sales_vat_try: 18000, purchase_vat_try: 7200, expense_vat_try: 360 })
+    expect(r.net_vat_try).toBe(10440)
+  })
+
+  it('20% standard rate with deductible expense VAT', () => {
+    // sales_vat = 20000 (100k * 20%), expense_vat = 2000 (10k * 20%)
+    const r = computeKdv({ sales_vat_try: 20000, purchase_vat_try: 0, expense_vat_try: 2000 })
+    expect(r.net_vat_try).toBe(18000)
+  })
+
+  it('mixed rates — partial purchase VAT credit', () => {
+    // Sales at 20% + 8%, purchase at 20%
+    const r = computeKdv({ sales_vat_try: 12000, purchase_vat_try: 5000, expense_vat_try: 500 })
+    expect(r.net_vat_try).toBe(6500)
+  })
+
+  it('all three components sum correctly (associativity)', () => {
+    const s = 8000, p = 2000, e = 1000
+    const r = computeKdv({ sales_vat_try: s, purchase_vat_try: p, expense_vat_try: e })
+    expect(r.net_vat_try).toBeCloseTo(s - p - e, 2)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeCorporateTax() — additional edge cases
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeCorporateTax() — additional edge cases', () => {
+  it('zero expenses: matrah = revenue − cost', () => {
+    const r = computeCorporateTax({
+      revenue_try: 300000,
+      cost_try: 100000,
+      deductible_expenses_try: 0,
+      rate_percent: 25,
+    })
+    expect(r.matrah_try).toBe(200000)
+    expect(r.tax_try).toBe(50000)
+    expect(r.net_after_tax_try).toBe(150000)
+  })
+
+  it('large loss scenario: net_after_tax equals matrah (no tax applied)', () => {
+    const r = computeCorporateTax({
+      revenue_try: 10000,
+      cost_try: 100000,
+      deductible_expenses_try: 5000,
+      rate_percent: 25,
+    })
+    expect(r.tax_try).toBe(0)
+    expect(r.net_after_tax_try).toBe(r.matrah_try)
+    expect(r.matrah_try).toBeLessThan(0)
+  })
+
+  it('matrah = revenue − cost − deductible_expenses (formula validation)', () => {
+    const input = { revenue_try: 450000, cost_try: 150000, deductible_expenses_try: 50000, rate_percent: 25 }
+    const r = computeCorporateTax(input)
+    const expectedMatrah = input.revenue_try - input.cost_try - input.deductible_expenses_try
+    expect(r.matrah_try).toBeCloseTo(expectedMatrah, 2)
+  })
+
+  it('rate_percent = 100 → net_after_tax = 0 (all taxed away)', () => {
+    const r = computeCorporateTax({
+      revenue_try: 100000,
+      cost_try: 0,
+      deductible_expenses_try: 0,
+      rate_percent: 100,
+    })
+    expect(r.tax_try).toBe(100000)
+    expect(r.net_after_tax_try).toBe(0)
+  })
+
+  it('very small positive matrah — tax rounds to correct 2dp', () => {
+    // matrah = 0.03, tax at 25% = 0.0075 → rounds to 0.01
+    const r = computeCorporateTax({
+      revenue_try: 0.03,
+      cost_try: 0,
+      deductible_expenses_try: 0,
+      rate_percent: 25,
+    })
+    expect(r.matrah_try).toBeCloseTo(0.03, 2)
+    expect(r.tax_try).toBeGreaterThanOrEqual(0)
+    expect(r.tax_try).toBeLessThanOrEqual(0.01)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// materializeRecurring() — leap year and additional scenarios
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('materializeRecurring() — leap year February and extra scenarios', () => {
+  it('anchor day 29 in Feb 2024 (leap) → Feb 29 included', () => {
+    const dates = materializeRecurring(
+      { frequency: 'monthly', start_date: '2024-01-29', end_date: null },
+      { from: '2024-01-01', to: '2024-03-31' },
+    )
+    expect(dates).toContain('2024-02-29')
+  })
+
+  it('anchor day 29 in Feb 2025 (non-leap) → clamps to Feb 28', () => {
+    const dates = materializeRecurring(
+      { frequency: 'monthly', start_date: '2025-01-29', end_date: null },
+      { from: '2025-02-01', to: '2025-02-28' },
+    )
+    expect(dates).toContain('2025-02-28')
+  })
+
+  it('leap year Feb 29 anchor — next occurrence in non-leap year clamps to 28', () => {
+    // anchor: Feb 29 2024 → Mar 29 2024 → ... → Feb 28 2025
+    const dates = materializeRecurring(
+      { frequency: 'monthly', start_date: '2024-02-29', end_date: null },
+      { from: '2025-02-01', to: '2025-02-28' },
+    )
+    expect(dates).toContain('2025-02-28')
+    expect(dates).not.toContain('2025-03-01')
+  })
+
+  it('quarterly from Jan-15 over 12 months produces 4 occurrences', () => {
+    const dates = materializeRecurring(
+      { frequency: 'quarterly', start_date: '2025-01-15', end_date: null },
+      { from: '2025-01-01', to: '2025-12-31' },
+    )
+    expect(dates).toHaveLength(4)
+    expect(dates).toEqual(['2025-01-15', '2025-04-15', '2025-07-15', '2025-10-15'])
+  })
+
+  it('yearly with end_date before 3rd occurrence → only 2 results', () => {
+    const dates = materializeRecurring(
+      { frequency: 'yearly', start_date: '2023-05-01', end_date: '2024-12-31' },
+      { from: '2023-01-01', to: '2025-12-31' },
+    )
+    expect(dates).toEqual(['2023-05-01', '2024-05-01'])
+  })
+
+  it('monthly anchor=30, February clamps to 28 in non-leap', () => {
+    const dates = materializeRecurring(
+      { frequency: 'monthly', start_date: '2025-01-30', end_date: null },
+      { from: '2025-01-01', to: '2025-03-31' },
+    )
+    expect(dates).toEqual(['2025-01-30', '2025-02-28', '2025-03-30'])
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DEDUCTIBILITY_MAP — all 14 categories verified
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('DEDUCTIBILITY_MAP — complete category coverage', () => {
+  it('board_fee is deductible', () => {
+    expect(DEDUCTIBILITY_MAP['board_fee']).toBe(true)
+  })
+
+  it('rent is deductible', () => {
+    expect(DEDUCTIBILITY_MAP['rent']).toBe(true)
+  })
+
+  it('salary is deductible', () => {
+    expect(DEDUCTIBILITY_MAP['salary']).toBe(true)
+  })
+
+  it('utilities is deductible', () => {
+    expect(DEDUCTIBILITY_MAP['utilities']).toBe(true)
+  })
+
+  it('software is deductible', () => {
+    expect(DEDUCTIBILITY_MAP['software']).toBe(true)
+  })
+
+  it('marketing is deductible', () => {
+    expect(DEDUCTIBILITY_MAP['marketing']).toBe(true)
+  })
+
+  it('logistics is deductible', () => {
+    expect(DEDUCTIBILITY_MAP['logistics']).toBe(true)
+  })
+
+  it('equipment is deductible (simplified depreciation)', () => {
+    expect(DEDUCTIBILITY_MAP['equipment']).toBe(true)
+  })
+
+  it('interest is deductible', () => {
+    expect(DEDUCTIBILITY_MAP['interest']).toBe(true)
+  })
+
+  it('general is deductible', () => {
+    expect(DEDUCTIBILITY_MAP['general']).toBe(true)
+  })
+
+  it('other is deductible', () => {
+    expect(DEDUCTIBILITY_MAP['other']).toBe(true)
+  })
+
+  it('tax is NOT deductible', () => {
+    expect(DEDUCTIBILITY_MAP['tax']).toBe(false)
+  })
+
+  it('principal is NOT deductible (balance-sheet movement)', () => {
+    expect(DEDUCTIBILITY_MAP['principal']).toBe(false)
+  })
+
+  it('dividend is NOT deductible (after-tax distribution)', () => {
+    expect(DEDUCTIBILITY_MAP['dividend']).toBe(false)
+  })
+
+  it('partner_loan is NOT deductible (@deprecated category)', () => {
+    expect(DEDUCTIBILITY_MAP['partner_loan']).toBe(false)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// periodForMonth() — additional year/month parsing
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('periodForMonth() — additional parsing scenarios', () => {
+  it('March 2025 → starts on 01 and ends on 31', () => {
+    const p = periodForMonth('2025-03')
+    expect(p.from).toBe('2025-03-01')
+    expect(p.to).toBe('2025-03-31')
+  })
+
+  it('April 2025 → ends on 30 (30-day month)', () => {
+    const p = periodForMonth('2025-04')
+    expect(p.to).toBe('2025-04-30')
+  })
+
+  it('November 2024 → ends on 30', () => {
+    const p = periodForMonth('2024-11')
+    expect(p.to).toBe('2024-11-30')
+  })
+
+  it('September 2025 → ends on 30', () => {
+    const p = periodForMonth('2025-09')
+    expect(p.to).toBe('2025-09-30')
+  })
+
+  it('from is always first day of the month', () => {
+    for (const ym of ['2024-01', '2024-06', '2025-12']) {
+      expect(periodForMonth(ym).from).toBe(`${ym}-01`)
+    }
+  })
+
+  it('throws for invalid format', () => {
+    expect(() => periodForMonth('2025/01')).toThrow()
+    expect(() => periodForMonth('202501')).toThrow()
+  })
+})

@@ -483,3 +483,236 @@ describe('CertifiedExportPackage — raw_data integrity', () => {
     expect(pkg.manifest.record_counts.sales).toBe(0)
   })
 })
+
+// ── computeChecksum — returns non-empty string ────────────────────────────────
+
+describe('computeChecksum — non-empty output guarantee', () => {
+  it('returns a non-empty string for any object', () => {
+    const result = CertifiedExportService.computeChecksum({ key: 'value' })
+    expect(result).toBeTruthy()
+    expect(result.length).toBeGreaterThan(0)
+  })
+
+  it('returns a non-empty string for an empty object', () => {
+    const result = CertifiedExportService.computeChecksum({})
+    expect(result).toBeTruthy()
+    expect(result.length).toBeGreaterThan(0)
+  })
+
+  it('returns a non-empty string for deeply nested object', () => {
+    const data = { a: { b: { c: { d: { e: 'deep' } } } } }
+    const result = CertifiedExportService.computeChecksum(data)
+    expect(result).toBeTruthy()
+    expect(result.length).toBeGreaterThan(0)
+  })
+
+  it('returns a non-empty string for object with numeric values', () => {
+    const result = CertifiedExportService.computeChecksum({ revenue: 0, expenses: 0 })
+    expect(result).toBeTruthy()
+    expect(result).toMatch(/^[a-f0-9]+$/)
+  })
+})
+
+// ── computeChecksum — determinism (same input = same output) ─────────────────
+
+describe('computeChecksum — determinism', () => {
+  it('same simple object produces same checksum on 5 calls', () => {
+    const data = { revenue_try: 500_000, period: '2026-Q1' }
+    const results = Array.from({ length: 5 }, () => CertifiedExportService.computeChecksum(data))
+    const unique = new Set(results)
+    expect(unique.size).toBe(1)
+  })
+
+  it('object with array values is deterministic', () => {
+    const data = { items: [1, 2, 3], label: 'test' }
+    const c1 = CertifiedExportService.computeChecksum(data)
+    const c2 = CertifiedExportService.computeChecksum(data)
+    expect(c1).toBe(c2)
+  })
+
+  it('object with null values is deterministic', () => {
+    const data = { a: null, b: 'hello', c: 42 }
+    const c1 = CertifiedExportService.computeChecksum(data)
+    const c2 = CertifiedExportService.computeChecksum(data)
+    expect(c1).toBe(c2)
+  })
+
+  it('checksum is stable across independent calls with same full package data', () => {
+    const data = {
+      financial_summary: { revenue_try: 100_000, expenses_try: 50_000 },
+      raw_data: { sales: [{ id: 's1', total_try: 50_000 }] },
+    }
+    const hash1 = CertifiedExportService.computeChecksum(data)
+    const hash2 = CertifiedExportService.computeChecksum(data)
+    const hash3 = CertifiedExportService.computeChecksum(data)
+    expect(hash1).toBe(hash2)
+    expect(hash2).toBe(hash3)
+  })
+})
+
+// ── computeChecksum — different input = different output ─────────────────────
+
+describe('computeChecksum — different input produces different checksum', () => {
+  it('changing a number value changes the checksum', () => {
+    const base = { value: 100 }
+    const changed = { value: 101 }
+    expect(CertifiedExportService.computeChecksum(base)).not.toBe(
+      CertifiedExportService.computeChecksum(changed)
+    )
+  })
+
+  it('changing a string value changes the checksum', () => {
+    const a = CertifiedExportService.computeChecksum({ label: 'foo' })
+    const b = CertifiedExportService.computeChecksum({ label: 'bar' })
+    expect(a).not.toBe(b)
+  })
+
+  it('adding a new key changes the checksum', () => {
+    const a = CertifiedExportService.computeChecksum({ key: 'value' })
+    const b = CertifiedExportService.computeChecksum({ key: 'value', extra: true })
+    expect(a).not.toBe(b)
+  })
+
+  it('null vs string value produces different checksums', () => {
+    const a = CertifiedExportService.computeChecksum({ key: null })
+    const b = CertifiedExportService.computeChecksum({ key: 'null' })
+    expect(a).not.toBe(b)
+  })
+
+  it('empty array vs non-empty array produces different checksums', () => {
+    const a = CertifiedExportService.computeChecksum({ items: [] })
+    const b = CertifiedExportService.computeChecksum({ items: [1] })
+    expect(a).not.toBe(b)
+  })
+})
+
+// ── computeChecksum — empty object checksum ───────────────────────────────────
+
+describe('computeChecksum — empty object', () => {
+  it('empty object produces a 64-char hex string', () => {
+    const result = CertifiedExportService.computeChecksum({})
+    expect(result).toHaveLength(64)
+    expect(result).toMatch(/^[a-f0-9]{64}$/)
+  })
+
+  it('empty object checksum matches manually computed SHA-256("{}")', () => {
+    const { createHash } = require('crypto')
+    const expected = createHash('sha256').update('{}').digest('hex')
+    expect(CertifiedExportService.computeChecksum({})).toBe(expected)
+  })
+
+  it('empty object checksum is deterministic across calls', () => {
+    const c1 = CertifiedExportService.computeChecksum({})
+    const c2 = CertifiedExportService.computeChecksum({})
+    expect(c1).toBe(c2)
+  })
+})
+
+// ── computeChecksum — large nested object ─────────────────────────────────────
+
+describe('computeChecksum — large nested object', () => {
+  it('large object with 100 keys produces a 64-char hash', () => {
+    const large: Record<string, number> = {}
+    for (let i = 0; i < 100; i++) {
+      large[`key_${i}`] = i * 1000
+    }
+    const result = CertifiedExportService.computeChecksum(large)
+    expect(result).toHaveLength(64)
+    expect(result).toMatch(/^[a-f0-9]{64}$/)
+  })
+
+  it('deeply nested object produces a valid SHA-256 hash', () => {
+    const data = {
+      level1: {
+        level2: {
+          level3: {
+            level4: {
+              value: 'deep-value',
+              numbers: [1, 2, 3, 4, 5],
+            },
+          },
+        },
+      },
+    }
+    const result = CertifiedExportService.computeChecksum(data)
+    expect(result).toHaveLength(64)
+    expect(result).toMatch(/^[a-f0-9]{64}$/)
+  })
+
+  it('large array in object produces correct checksum', () => {
+    const { createHash } = require('crypto')
+    const data = { items: Array.from({ length: 1000 }, (_, i) => i) }
+    const expected = createHash('sha256').update(JSON.stringify(data)).digest('hex')
+    expect(CertifiedExportService.computeChecksum(data)).toBe(expected)
+  })
+
+  it('changing a single item deep in a large nested object changes the checksum', () => {
+    const base = { data: { items: [1, 2, 3, 4, 5] } }
+    const modified = { data: { items: [1, 2, 3, 4, 6] } }  // last item changed
+    expect(CertifiedExportService.computeChecksum(base)).not.toBe(
+      CertifiedExportService.computeChecksum(modified)
+    )
+  })
+})
+
+// ── computeChecksum — output is 64-char hex (SHA-256) ────────────────────────
+
+describe('computeChecksum — output format: 64-char hex', () => {
+  const testCases = [
+    { label: 'empty object',   data: {} },
+    { label: 'simple object',  data: { x: 1 } },
+    { label: 'nested object',  data: { a: { b: 2 } } },
+    { label: 'array value',    data: { arr: [1, 2] } },
+    { label: 'null value',     data: { n: null } },
+    { label: 'boolean value',  data: { flag: true } },
+  ]
+
+  for (const { label, data } of testCases) {
+    it(`output is 64-char hex for: ${label}`, () => {
+      const result = CertifiedExportService.computeChecksum(data)
+      expect(result).toHaveLength(64)
+      expect(result).toMatch(/^[a-f0-9]{64}$/)
+    })
+  }
+})
+
+// ── manifest structure validation ─────────────────────────────────────────────
+
+describe('manifest structure validation — required fields present', () => {
+  const requiredFields = [
+    'export_id', 'company_id', 'company_name', 'generated_by',
+    'generated_at', 'period_from', 'period_to', 'sections',
+    'record_counts', 'checksum', 'flowra_version', 'disclaimer',
+  ]
+
+  for (const field of requiredFields) {
+    it(`manifest has required field: ${field}`, () => {
+      const pkg = buildPackage()
+      expect(pkg.manifest).toHaveProperty(field)
+    })
+  }
+
+  it('manifest.sections is an array with at least one element', () => {
+    const pkg = buildPackage()
+    expect(Array.isArray(pkg.manifest.sections)).toBe(true)
+    expect(pkg.manifest.sections.length).toBeGreaterThan(0)
+  })
+
+  it('manifest.record_counts is an object (not array)', () => {
+    const pkg = buildPackage()
+    expect(typeof pkg.manifest.record_counts).toBe('object')
+    expect(Array.isArray(pkg.manifest.record_counts)).toBe(false)
+  })
+
+  it('manifest.flowra_version is a non-empty string', () => {
+    const pkg = buildPackage()
+    expect(typeof pkg.manifest.flowra_version).toBe('string')
+    expect(pkg.manifest.flowra_version.length).toBeGreaterThan(0)
+  })
+
+  it('manifest.export_id is a non-empty string', () => {
+    const pkg = buildPackage()
+    expect(typeof pkg.manifest.export_id).toBe('string')
+    expect(pkg.manifest.export_id.length).toBeGreaterThan(0)
+  })
+})

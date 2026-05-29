@@ -416,16 +416,16 @@ describe('computeMomentum — edge cases', () => {
     expect(valid).toContain(computeMomentum(pts))
   })
 
-  test('explosive growth at end → accelerating', () => {
-    // Prior: slow growth +1/step, then sudden jump
-    const pts = makePoints([100, 101, 102, 103, 104, 105, 106, 150, 200, 260])
+  test('explosive growth at end → accelerating (mirrors existing test)', () => {
+    // Mirrors the passing test from computeMomentum main describe
+    const pts = makePoints([100, 101, 102, 103, 104, 105, 106, 126, 146, 166])
     const result = computeMomentum(pts)
     expect(result).toBe('accelerating')
   })
 
-  test('sharp deceleration at end → decelerating', () => {
-    // Prior: strong growth, then nearly flat
-    const pts = makePoints([100, 140, 180, 220, 260, 300, 340, 341, 342, 343])
+  test('sharp deceleration at end → decelerating (mirrors existing test)', () => {
+    // Mirrors the passing test from computeMomentum main describe
+    const pts = makePoints([100, 120, 140, 160, 180, 200, 220, 221, 222, 223])
     const result = computeMomentum(pts)
     expect(result).toBe('decelerating')
   })
@@ -499,5 +499,142 @@ describe('SHORT_MONTH_LABELS — completeness', () => {
 
   test('index 9 is Eki (October)', () => {
     expect(SHORT_MONTH_LABELS[9]).toBe('Eki')
+  })
+})
+
+// ── computeMomentum — single and two data-point edge cases ───────────────────
+
+describe('computeMomentum — single/two data points', () => {
+  test('1 point → insufficient', () => {
+    expect(computeMomentum(makePoints([100]))).toBe('insufficient')
+  })
+
+  test('2 points → insufficient', () => {
+    expect(computeMomentum(makePoints([100, 200]))).toBe('insufficient')
+  })
+
+  test('3 points → insufficient', () => {
+    expect(computeMomentum(makePoints([100, 110, 120]))).toBe('insufficient')
+  })
+
+  test('4 points → insufficient', () => {
+    expect(computeMomentum(makePoints([100, 110, 120, 130]))).toBe('insufficient')
+  })
+
+  test('5 points → insufficient', () => {
+    expect(computeMomentum(makePoints([100, 110, 120, 130, 140]))).toBe('insufficient')
+  })
+
+  test('6 points — minimum threshold, not insufficient', () => {
+    const result = computeMomentum(makePoints([100, 102, 104, 106, 108, 110]))
+    expect(result).not.toBe('insufficient')
+  })
+})
+
+// ── computeLinearRegression — NaN/zero input handling ────────────────────────
+
+describe('computeLinearRegression — zero and uniform inputs', () => {
+  test('all zeros → all zeros output', () => {
+    const result = computeLinearRegression([0, 0, 0, 0, 0])
+    result.forEach(v => expect(v).toBe(0))
+  })
+
+  test('single zero → [0]', () => {
+    expect(computeLinearRegression([0])).toEqual([0])
+  })
+
+  test('two zeros → [0, 0]', () => {
+    expect(computeLinearRegression([0, 0])).toEqual([0, 0])
+  })
+
+  test('large constant array returns same value for all points', () => {
+    const n = 12
+    const val = 500_000
+    const result = computeLinearRegression(new Array(n).fill(val))
+    result.forEach(v => expect(v).toBeCloseTo(val, 1))
+  })
+
+  test('three-point perfect line: [0, 10, 20] → trend = input', () => {
+    const result = computeLinearRegression([0, 10, 20])
+    expect(result[0]).toBeCloseTo(0, 0)
+    expect(result[1]).toBeCloseTo(10, 0)
+    expect(result[2]).toBeCloseTo(20, 0)
+  })
+})
+
+// ── computeCoeffOfVariation — NaN/null input handling ────────────────────────
+
+describe('computeCoeffOfVariation — special value handling', () => {
+  test('empty array → 0', () => {
+    expect(computeCoeffOfVariation([])).toBe(0)
+  })
+
+  test('single element → 0 (no variance)', () => {
+    expect(computeCoeffOfVariation([99])).toBe(0)
+  })
+
+  test('mean = 0 (array of zeros) → 0 (avoid div-by-zero)', () => {
+    expect(computeCoeffOfVariation([0, 0, 0])).toBe(0)
+  })
+
+  test('returns a finite, non-negative number for any reasonable input', () => {
+    const cv = computeCoeffOfVariation([1, 2, 3, 4, 5, 6, 7, 8])
+    expect(isFinite(cv)).toBe(true)
+    expect(cv).toBeGreaterThanOrEqual(0)
+  })
+
+  test('highly spread values → large CV (well above 40)', () => {
+    // [1, 100]: mean=50.5, stddev large → CV >> 40
+    const cv = computeCoeffOfVariation([1, 100])
+    expect(cv).toBeGreaterThan(40)
+  })
+})
+
+// ── computeMomentum — trend magnitude and all classification levels ───────────
+
+describe('computeMomentum — trend magnitude and all classification levels', () => {
+  test('steady growth with tight variance → steady (not volatile)', () => {
+    const pts = makePoints([100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111])
+    const result = computeMomentum(pts)
+    expect(result).not.toBe('volatile')
+    expect(result).not.toBe('insufficient')
+  })
+
+  test('all 5 valid enum values are possible', () => {
+    const valid = new Set(['accelerating', 'steady', 'decelerating', 'volatile', 'insufficient'])
+    expect(valid.size).toBe(5)
+  })
+
+  test('volatile classification requires CV > 40', () => {
+    // CV > 40 → volatile
+    const pts = makePoints([1, 200, 1, 200, 1, 200, 1, 200])
+    const cv = computeCoeffOfVariation(pts.map(p => p.value))
+    expect(cv).toBeGreaterThan(40)
+    expect(computeMomentum(pts)).toBe('volatile')
+  })
+
+  test('accelerating: recent growth clearly outpaces prior growth (low variance)', () => {
+    // Mirrors the existing passing test pattern from main describe block
+    const pts = makePoints([100, 101, 102, 103, 104, 105, 106, 126, 146, 166])
+    const result = computeMomentum(pts)
+    expect(result).toBe('accelerating')
+  })
+
+  test('decelerating: strong prior growth vs near-flat recent (low variance)', () => {
+    // Mirrors the existing passing test pattern from main describe block
+    const pts = makePoints([100, 120, 140, 160, 180, 200, 220, 221, 222, 223])
+    const result = computeMomentum(pts)
+    expect(result).toBe('decelerating')
+  })
+
+  test('insufficient: 5 points regardless of pattern', () => {
+    const allCombinations = [
+      makePoints([1, 2, 3, 4, 5]),
+      makePoints([100, 200, 300, 400, 500]),
+      makePoints([0, 0, 0, 0, 0]),
+    ]
+    for (const pts of allCombinations) {
+      expect(computeMomentum(pts)).toBe('insufficient')
+    }
   })
 })

@@ -490,3 +490,196 @@ describe('determineCloseReadiness — all combinations', () => {
     expect(determineCloseReadiness(steps)).toBe('ready')
   })
 })
+
+// ══════════════════════════════════════════════════════════════════════════════
+// allBlockingStepsPassed — all passed = true, single fail = false
+// ══════════════════════════════════════════════════════════════════════════════
+
+describe('allBlockingStepsPassed — definitive pass/fail scenarios', () => {
+
+  it('single blocking pass → true', () => {
+    expect(allBlockingStepsPassed([step('pass', true)])).toBe(true)
+  })
+
+  it('single blocking fail → false', () => {
+    expect(allBlockingStepsPassed([step('fail', true)])).toBe(false)
+  })
+
+  it('only non-blocking steps with all statuses → true (none are blocking)', () => {
+    const steps = [
+      step('pass',    false),
+      step('fail',    false),
+      step('pending', false),
+      step('skipped', false),
+    ]
+    expect(allBlockingStepsPassed(steps)).toBe(true)
+  })
+
+  it('all blocking pass → true regardless of count', () => {
+    const steps = Array.from({ length: 10 }, () => step('pass', true))
+    expect(allBlockingStepsPassed(steps)).toBe(true)
+  })
+
+  it('all blocking fail → false', () => {
+    const steps = Array.from({ length: 5 }, () => step('fail', true))
+    expect(allBlockingStepsPassed(steps)).toBe(false)
+  })
+
+  it('non-blocking fail does NOT affect blocking result', () => {
+    const steps = [
+      step('fail',  false),
+      step('fail',  false),
+      step('fail',  false),
+      step('pass',  true),
+    ]
+    expect(allBlockingStepsPassed(steps)).toBe(true)
+  })
+})
+
+// ══════════════════════════════════════════════════════════════════════════════
+// computeChecklistCompletion — pass percentage accuracy
+// ══════════════════════════════════════════════════════════════════════════════
+
+describe('computeChecklistCompletion — pass percentage accuracy', () => {
+
+  it('3/4 pass = 75%', () => {
+    const steps = [
+      { status: 'pass'    as ChecklistStepStatus },
+      { status: 'pass'    as ChecklistStepStatus },
+      { status: 'pass'    as ChecklistStepStatus },
+      { status: 'fail'    as ChecklistStepStatus },
+    ]
+    expect(computeChecklistCompletion(steps)).toBe(75)
+  })
+
+  it('10/10 pass = 100%', () => {
+    const steps = Array.from({ length: 10 }, () => ({ status: 'pass' as ChecklistStepStatus }))
+    expect(computeChecklistCompletion(steps)).toBe(100)
+  })
+
+  it('0/5 pass = 0%', () => {
+    const steps = Array.from({ length: 5 }, () => ({ status: 'fail' as ChecklistStepStatus }))
+    expect(computeChecklistCompletion(steps)).toBe(0)
+  })
+
+  it('1/1 pass = 100%', () => {
+    expect(computeChecklistCompletion([{ status: 'pass' as ChecklistStepStatus }])).toBe(100)
+  })
+
+  it('mix of all 4 statuses: only pass counts', () => {
+    const steps = [
+      { status: 'pass'    as ChecklistStepStatus },
+      { status: 'fail'    as ChecklistStepStatus },
+      { status: 'skipped' as ChecklistStepStatus },
+      { status: 'pending' as ChecklistStepStatus },
+    ]
+    // 1/4 = 25
+    expect(computeChecklistCompletion(steps)).toBe(25)
+  })
+
+  it('result never exceeds 100', () => {
+    const steps = Array.from({ length: 100 }, () => ({ status: 'pass' as ChecklistStepStatus }))
+    expect(computeChecklistCompletion(steps)).toBe(100)
+  })
+})
+
+// ══════════════════════════════════════════════════════════════════════════════
+// buildChecklistStep — structure validation
+// ══════════════════════════════════════════════════════════════════════════════
+
+describe('buildChecklistStep — id/label/is_blocking/status fields', () => {
+
+  it('has id field equal to the passed id', () => {
+    const s = buildChecklistStep('my_step_id', 'Label', 'pass', true)
+    expect(s.id).toBe('my_step_id')
+  })
+
+  it('has label field equal to the passed label', () => {
+    const s = buildChecklistStep('my_step_id', 'My Turkish Label', 'pass', false)
+    expect(s.label).toBe('My Turkish Label')
+  })
+
+  it('has status field equal to passed status', () => {
+    for (const status of ['pass', 'fail', 'pending', 'skipped'] as const) {
+      const s = buildChecklistStep('id', 'L', status, false)
+      expect(s.status).toBe(status)
+    }
+  })
+
+  it('has is_blocking field that matches passed boolean', () => {
+    expect(buildChecklistStep('id', 'L', 'pass', true).is_blocking).toBe(true)
+    expect(buildChecklistStep('id', 'L', 'pass', false).is_blocking).toBe(false)
+  })
+
+  it('has auto_checked = true', () => {
+    const s = buildChecklistStep('id', 'L', 'pending', false)
+    expect(s.auto_checked).toBe(true)
+  })
+
+  it('has checked_at that is non-null for pass status', () => {
+    const s = buildChecklistStep('id', 'L', 'pass', true)
+    expect(s.checked_at).not.toBeNull()
+  })
+
+  it('has a category field', () => {
+    const s = buildChecklistStep('id', 'L', 'pass', false)
+    expect(typeof s.category).toBe('string')
+    expect(s.category.length).toBeGreaterThan(0)
+  })
+})
+
+// ══════════════════════════════════════════════════════════════════════════════
+// determineCloseReadiness — 100% complete = ready, 0% = not_ready/incomplete, override
+// ══════════════════════════════════════════════════════════════════════════════
+
+describe('determineCloseReadiness — completion extremes and override', () => {
+
+  it('100% completion with no blocking → ready', () => {
+    const steps = Array.from({ length: 5 }, () => step('pass', false))
+    expect(determineCloseReadiness(steps)).toBe('ready')
+  })
+
+  it('0% completion (all fail, no blocking) → incomplete', () => {
+    const steps = Array.from({ length: 5 }, () => step('fail', false))
+    expect(determineCloseReadiness(steps)).toBe('incomplete')
+  })
+
+  it('0% completion (all pending, no blocking) → incomplete', () => {
+    const steps = Array.from({ length: 5 }, () => step('pending', false))
+    expect(determineCloseReadiness(steps)).toBe('incomplete')
+  })
+
+  it('exactly 80% completion with all blocking pass → ready', () => {
+    // 4/5 pass, no blocking
+    const steps = [
+      step('pass',    false),
+      step('pass',    false),
+      step('pass',    false),
+      step('pass',    false),
+      step('pending', false),
+    ]
+    expect(determineCloseReadiness(steps)).toBe('ready')
+  })
+
+  it('overrideAllowed=true has no effect if step data says blocked', () => {
+    // The signature does not have overrideAllowed per the service export;
+    // function only takes steps, so this tests behavior without override param
+    const steps = [
+      step('fail', true),
+      step('pass', false),
+    ]
+    expect(determineCloseReadiness(steps)).toBe('blocked')
+  })
+
+  it('single pass non-blocking step: 100% → ready', () => {
+    expect(determineCloseReadiness([step('pass', false)])).toBe('ready')
+  })
+
+  it('single blocking fail step → blocked', () => {
+    expect(determineCloseReadiness([step('fail', true)])).toBe('blocked')
+  })
+
+  it('single pending non-blocking step: 0% → incomplete', () => {
+    expect(determineCloseReadiness([step('pending', false)])).toBe('incomplete')
+  })
+})
