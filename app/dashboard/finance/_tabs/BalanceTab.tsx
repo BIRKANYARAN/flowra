@@ -19,6 +19,7 @@ import { WorkingCapitalOptimizerClient } from './_wc-optimizer/WorkingCapitalOpt
 import { CccScorecardClient }           from './_ccc/CccScorecardClient'
 import { BalanceRatiosClient }          from './_balance-ratios/BalanceRatiosClient'
 import { FxExposureClient }            from './_fx/FxExposureClient'
+import { CapitalStructureClient }      from './_capital/CapitalStructureClient'
 
 // ── Formatters ────────────────────────────────────────────────────────────────
 
@@ -382,6 +383,9 @@ export async function BalanceTab({ userId, companyId, glMode = 'shadow' }: Props
 
       {/* FX Exposure & Currency Risk Analysis — multi-currency receivables/payables */}
       <FxExposureClient companyId={companyId} />
+
+      {/* Capital Structure & Debt Capacity Analysis — DSCR, leverage score, debt headroom */}
+      <CapitalStructureClient companyId={companyId} />
 
       {/* Working Capital Analysis — CCC, liquidity ratios, 12-month trend */}
       <WorkingCapitalSection />

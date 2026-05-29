@@ -13,6 +13,7 @@ import { InventoryValuationClient } from './_inventory-valuation/InventoryValuat
 import { PriceOptimizationClient } from './_price-optimization/PriceOptimizationClient'
 import { ProductProfitabilityWaterfall } from './_product-profitability/ProductProfitabilityWaterfall'
 import { AbcAnalysisClient } from './_abc/AbcAnalysisClient'
+import MarketBasketClient from '@/app/dashboard/commercial/_tabs/_basket/MarketBasketClient'
 
 function CommandBarSkeleton() {
   return (
@@ -281,6 +282,9 @@ export async function CatalogContent({ companyId, userId }: Props) {
 
       {/* ── ABC Stok Analizi ─────────────────────────────────────────────────── */}
       <AbcAnalysisClient companyId={companyId} />
+
+      {/* ── Sepet Analizi — Çapraz Satış Fırsatları ─────────────────────────── */}
+      <MarketBasketClient companyId={companyId} />
 
       {/* ── Ürün Kârlılık Şelalesi ────────────────────────────────────────────── */}
       <ProductProfitabilityWaterfall />
