@@ -23,6 +23,7 @@ import { PayablesAgingSection } from './_ap-aging/PayablesAgingSection'
 import { SupplierPaymentTermsClient } from './_supplier-terms/SupplierPaymentTermsClient'
 import { VendorConcentrationClient } from './_vendor/VendorConcentrationClient'
 import { SupplierTermsClient } from './_supplier-terms/SupplierTermsClient'
+import { PayrollAnalyticsClient } from '@/app/dashboard/finance/_tabs/_payroll/PayrollAnalyticsClient'
 
 function CommandBarSkeleton() {
   return (
@@ -519,6 +520,9 @@ export async function ExpensesContent({ companyId }: Props) {
 
       {/* ── Tedarikçi Konsantrasyon Riski ────────────────────────────────────── */}
       <VendorConcentrationClient companyId={companyId} />
+
+      {/* ── Personel Maliyeti Analizi ─────────────────────────────────────────── */}
+      <PayrollAnalyticsClient companyId={companyId} />
 
       {/* ── Tedarikçi Ödeme Koşulları Optimizer ──────────────────────────────── */}
       <SupplierTermsClient companyId={companyId} />

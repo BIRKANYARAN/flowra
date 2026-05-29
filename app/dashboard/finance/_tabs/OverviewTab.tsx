@@ -32,6 +32,7 @@ import FiscalYearSummaryClient          from './_fiscal/FiscalYearSummaryClient'
 import FxExposureClient                 from './_fx/FxExposureClient'
 import MarginBridgeClient               from './_bridge/MarginBridgeClient'
 import PricingIntelligenceClient        from './_pricing/PricingIntelligenceClient'
+import FinancialHealthScoreClient       from './_health/FinancialHealthScoreClient'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -488,6 +489,9 @@ export async function OverviewTab({ userId, companyId, glMode = 'shadow' }: Prop
 
   return (
     <div className="space-y-4">
+
+      {/* ── Zone 0: Financial Health Score (Most Important Indicator) ────────── */}
+      <FinancialHealthScoreClient companyId={companyId} />
 
       {/* ── GL Mode + Period header strip ─────────────────────────────────────── */}
       <div className="flex items-center justify-between gap-3 px-1">

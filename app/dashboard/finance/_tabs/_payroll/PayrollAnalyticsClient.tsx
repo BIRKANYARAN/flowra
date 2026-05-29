@@ -3,24 +3,21 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // PayrollAnalyticsClient
 //
-// Payroll analytics dashboard — salary expense trends, payroll-to-revenue
-// ratio, SGK compliance, and headcount cost efficiency.
+// Personel Maliyeti Analizi (Payroll & Compensation Analytics)
 //
-// Features:
-//   - Period selector: 6 / 12 months
-//   - Summary strip: Current Month Payroll / Payroll Ratio% / YTD Payroll / YTD SGK Estimate
-//   - Payroll ratio status badge: lean / healthy / elevated / high
-//   - SGK deadline card
-//   - Salary trend arrow
-//   - Monthly breakdown table with color-coded Payroll% column
-//   - "Salary is largest expense" warning
-//   - Empty state
+// Displays:
+//   - Header: "Personel Maliyeti Analizi"
+//   - 4 KPI cards: Personel Maliyet Oranı / Aylık Personel Maliyeti /
+//                  Trend / Verimlilik Derecesi
+//   - Cost breakdown: Maaşlar / SGK İşveren / Huzur Hakkı / Diğer (bars)
+//   - Benchmark reference with current position highlighted
+//   - SGK reference section: employer rate / min wage 2025
+//   - Loading / error / empty states
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useState }   from 'react'
-import { useQuery }   from '@tanstack/react-query'
-import { fmtTRY, fmtPct, fmtDelta, fmtDate } from '@/lib/format'
-import type { PayrollAnalyticsReport } from '@/lib/services/finance/payroll-analytics.service'
+import { useQuery }  from '@tanstack/react-query'
+import { fmtTRY, fmtPct } from '@/lib/format'
+import type { PersonnelCostReport } from '@/lib/services/finance/payroll-analytics.service'
 
 // ── Props ─────────────────────────────────────────────────────────────────────
 
@@ -28,69 +25,110 @@ interface Props {
   companyId: string
 }
 
-// ── Ratio status badge ────────────────────────────────────────────────────────
+// ── Efficiency badge ──────────────────────────────────────────────────────────
 
-type RatioStatus = 'lean' | 'healthy' | 'elevated' | 'high' | 'unknown'
+type Efficiency =
+  | 'excellent'
+  | 'good'
+  | 'acceptable'
+  | 'high'
+  | 'excessive'
+  | 'insufficient_data'
 
-function RatioStatusBadge({ status }: { status: RatioStatus }) {
-  const config: Record<RatioStatus, { label: string; cls: string }> = {
-    lean:     { label: 'Düşük (<20%)',    cls: 'bg-green-100 text-green-800 border-green-200' },
-    healthy:  { label: 'Sağlıklı (20–35%)', cls: 'bg-teal-100 text-teal-800 border-teal-200' },
-    elevated: { label: 'Yüksek (35–50%)', cls: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
-    high:     { label: 'Kritik (>50%)',   cls: 'bg-red-100 text-red-800 border-red-200' },
-    unknown:  { label: 'Veri Yok',        cls: 'bg-slate-100 text-slate-600 border-slate-200' },
+function EfficiencyBadge({ value }: { value: Efficiency }) {
+  const cfg: Record<Efficiency, { label: string; cls: string }> = {
+    excellent:        { label: 'Mükemmel (≤%15)',   cls: 'bg-[#dcfce7] text-[#166534] border-[#86efac]' },
+    good:             { label: 'İyi (≤%25)',         cls: 'bg-[#d1fae5] text-[#065f46] border-[#6ee7b7]' },
+    acceptable:       { label: 'Kabul Edilebilir (≤%35)', cls: 'bg-[#fef9c3] text-[#854d0e] border-[#fde047]' },
+    high:             { label: 'Yüksek (≤%50)',      cls: 'bg-[#ffedd5] text-[#9a3412] border-[#fdba74]' },
+    excessive:        { label: 'Aşırı (>%50)',       cls: 'bg-[#fee2e2] text-[#991b1b] border-[#fca5a5]' },
+    insufficient_data:{ label: 'Veri Yetersiz',      cls: 'bg-[#f1f5f9] text-[#64748b] border-[#cbd5e1]' },
   }
-  const cfg = config[status]
+  const c = cfg[value]
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full border text-[11px] font-bold ${cfg.cls}`}>
-      {cfg.label}
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full border text-[11px] font-bold ${c.cls}`}>
+      {c.label}
     </span>
   )
 }
 
-// ── Trend arrow ───────────────────────────────────────────────────────────────
+// ── Trend badge ───────────────────────────────────────────────────────────────
 
-type SalaryTrend = 'increasing' | 'stable' | 'decreasing' | 'insufficient_data'
+type TrendClass =
+  | 'decreasing'
+  | 'stable'
+  | 'growing'
+  | 'rapidly_growing'
+  | 'insufficient_data'
 
-function TrendArrow({ trend }: { trend: SalaryTrend }) {
-  const config: Record<SalaryTrend, { icon: string; cls: string; label: string }> = {
-    increasing:        { icon: '↑', cls: 'text-red-600',   label: 'Artıyor' },
-    stable:            { icon: '→', cls: 'text-slate-500', label: 'Sabit' },
-    decreasing:        { icon: '↓', cls: 'text-green-600', label: 'Azalıyor' },
-    insufficient_data: { icon: '—', cls: 'text-slate-400', label: 'Yetersiz Veri' },
+function TrendBadge({ value, pct }: { value: TrendClass; pct: number | null }) {
+  const cfg: Record<TrendClass, { icon: string; label: string; cls: string }> = {
+    decreasing:        { icon: '↓', label: 'Azalıyor',     cls: 'text-[#16a34a]' },
+    stable:            { icon: '→', label: 'Sabit',         cls: 'text-[#64748b]' },
+    growing:           { icon: '↑', label: 'Artıyor',       cls: 'text-[#d97706]' },
+    rapidly_growing:   { icon: '↑↑', label: 'Hızlı Artış', cls: 'text-[#dc2626]' },
+    insufficient_data: { icon: '—', label: 'Yetersiz Veri', cls: 'text-[#94a3b8]' },
   }
-  const cfg = config[trend]
+  const c = cfg[value]
   return (
-    <span className={`font-black text-lg ${cfg.cls}`} title={cfg.label}>
-      {cfg.icon}
-      <span className="text-[11px] font-semibold ml-1">{cfg.label}</span>
+    <span className={`font-black text-base ${c.cls}`}>
+      {c.icon}
+      <span className="text-[11px] font-semibold ml-1">
+        {c.label}{pct !== null ? ` (${pct > 0 ? '+' : ''}${pct.toFixed(1)}%)` : ''}
+      </span>
     </span>
   )
 }
 
-// ── Payroll ratio color ────────────────────────────────────────────────────────
+// ── Benchmark bar ──────────────────────────────────────────────────────────────
 
-function ratioColor(ratio: number | null): string {
-  if (ratio === null) return 'text-slate-400'
-  if (ratio < 20)  return 'text-green-700'
-  if (ratio < 35)  return 'text-teal-700'
-  if (ratio <= 50) return 'text-yellow-700'
-  return 'text-red-700'
-}
-
-// ── Summary KPI card ──────────────────────────────────────────────────────────
-
-function KpiCard({ label, value, sub, colorClass = '' }: {
+function BenchmarkBar({
+  label,
+  threshold,
+  currentRatio,
+  bgClass,
+}: {
   label: string
-  value: string
-  sub?: string
-  colorClass?: string
+  threshold: number
+  currentRatio: number | null
+  bgClass: string
 }) {
+  const isActive = currentRatio !== null && currentRatio <= threshold
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
-      <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">{label}</div>
-      {sub && <div className="text-[10px] text-[#94a3b8]">{sub}</div>}
-      <div className={`text-lg font-black tabular-nums text-[#0f172a] mt-1 ${colorClass}`}>{value}</div>
+    <div className="flex items-center gap-2">
+      <div className={`h-3 rounded flex-1 ${bgClass} ${isActive ? 'ring-2 ring-[#0f172a] ring-offset-1' : 'opacity-60'}`}>
+        <div className="sr-only">{threshold}%</div>
+      </div>
+      <span className={`text-[10px] font-semibold whitespace-nowrap ${isActive ? 'text-[#0f172a]' : 'text-[#94a3b8]'}`}>
+        {label} ≤%{threshold}
+      </span>
+    </div>
+  )
+}
+
+// ── Cost breakdown bar ─────────────────────────────────────────────────────────
+
+function BreakdownBar({
+  label,
+  amount,
+  maxAmount,
+  colorClass,
+}: {
+  label: string
+  amount: number
+  maxAmount: number
+  colorClass: string
+}) {
+  const pct = maxAmount > 0 ? Math.max(2, (amount / maxAmount) * 100) : 2
+  return (
+    <div className="flex items-center gap-3">
+      <div className="w-32 text-xs text-[#64748b] shrink-0 truncate">{label}</div>
+      <div className="flex-1 bg-[#f1f5f9] rounded overflow-hidden h-4">
+        <div className={`h-4 rounded ${colorClass}`} style={{ width: `${pct}%` }} />
+      </div>
+      <div className="w-28 text-right text-xs font-bold tabular-nums text-[#1e293b] shrink-0">
+        {amount > 0 ? fmtTRY(amount) : '—'}
+      </div>
     </div>
   )
 }
@@ -98,225 +136,267 @@ function KpiCard({ label, value, sub, colorClass = '' }: {
 // ── Main component ─────────────────────────────────────────────────────────────
 
 export function PayrollAnalyticsClient({ companyId }: Props) {
-  const [months, setMonths] = useState<6 | 12>(12)
-
-  const { data, isLoading, isError } = useQuery<{ report: PayrollAnalyticsReport }>({
-    queryKey: ['payroll-analytics', companyId, months],
+  const { data, isLoading, isError } = useQuery<{ report: PersonnelCostReport }>({
+    queryKey: ['payroll-analytics', companyId],
     queryFn:  async () => {
-      const res = await fetch(`/api/finance/payroll-analytics?months=${months}`)
-      if (!res.ok) throw new Error('Maaş verisi yüklenemedi')
+      const res = await fetch(`/api/finance/payroll-analytics?mode=personnel`)
+      if (!res.ok) throw new Error('Personel maliyet verisi yüklenemedi')
       return res.json()
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 60 * 1000,
   })
 
-  // ── Loading state ─────────────────────────────────────────────────────────
+  // ── Loading ────────────────────────────────────────────────────────────────
   if (isLoading) {
     return (
       <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm">
         <div className="animate-pulse space-y-3">
-          <div className="h-4 bg-[#f1f5f9] rounded w-48" />
-          <div className="h-24 bg-[#f1f5f9] rounded" />
+          <div className="h-4 bg-[#f1f5f9] rounded w-56" />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-20 bg-[#f1f5f9] rounded" />
+            ))}
+          </div>
           <div className="h-32 bg-[#f1f5f9] rounded" />
         </div>
       </div>
     )
   }
 
-  // ── Error state ───────────────────────────────────────────────────────────
+  // ── Error ──────────────────────────────────────────────────────────────────
   if (isError || !data?.report) {
     return (
       <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm text-center">
-        <p className="text-sm text-[#64748b] font-medium">Maaş verisi yüklenirken hata oluştu.</p>
-      </div>
-    )
-  }
-
-  const report = data.report
-
-  // ── Empty state ────────────────────────────────────────────────────────────
-  const hasSalaryData = report.monthly_data.some(m => m.salary_try > 0)
-  if (!hasSalaryData) {
-    return (
-      <div className="bg-white border border-[#e2e8f0] rounded p-8 shadow-sm text-center">
-        <div className="w-10 h-10 rounded-full bg-[#f1f5f9] mx-auto mb-3 flex items-center justify-center">
-          <span className="text-[#94a3b8] text-lg font-bold">—</span>
-        </div>
-        <p className="text-sm text-[#64748b] font-medium">Maaş gider verisi bulunamadı</p>
-        <p className="text-[#94a3b8] text-xs mt-1">
-          Gider kategorisi &quot;maaş&quot; olan kayıt eklendiğinde analiz otomatik hesaplanır.
+        <p className="text-sm text-[#64748b] font-medium">
+          Personel maliyet verisi yüklenirken hata oluştu.
+        </p>
+        <p className="text-[10px] text-[#94a3b8] mt-1">
+          Admin yetkisi gereklidir veya veri mevcut değil.
         </p>
       </div>
     )
   }
 
+  const { report } = data
+  const cm = report.current_month
+  const bd = cm.breakdown
+
+  // ── Empty state ────────────────────────────────────────────────────────────
+  if (cm.total_personnel_cost === 0 && report.ytd.total_personnel_cost === 0) {
+    return (
+      <div className="bg-white border border-[#e2e8f0] rounded p-8 shadow-sm text-center">
+        <p className="text-sm text-[#64748b] font-medium">Personel gider verisi bulunamadı</p>
+        <p className="text-[#94a3b8] text-xs mt-1">
+          Gider kategorisi &quot;salary&quot; veya &quot;board_fee&quot; olan kayıt eklendiğinde analiz
+          otomatik hesaplanır.
+        </p>
+      </div>
+    )
+  }
+
+  // Breakdown bar max
+  const maxBreakdown = Math.max(bd.gross_salaries, bd.sgk_employer, bd.huzur_hakki, bd.other_personnel, 1)
+
+  const currentRatio = cm.personnel_cost_ratio_pct
+
   return (
     <div className="space-y-4">
 
-      {/* ── Header + period selector ────────────────────────────────────────── */}
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h3 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
-            Maaş / Bordro Analitiği
-          </h3>
-        </div>
-        <div className="flex gap-1 border border-[#e2e8f0] rounded overflow-hidden">
-          {([6, 12] as const).map(m => (
-            <button
-              key={m}
-              onClick={() => setMonths(m)}
-              className={`px-3 py-1 text-[11px] font-bold transition-colors ${
-                months === m
-                  ? 'bg-[#0f172a] text-white'
-                  : 'bg-white text-[#64748b] hover:bg-[#f8fafc]'
-              }`}
-            >
-              {m} Ay
-            </button>
-          ))}
-        </div>
+      {/* ── Header ──────────────────────────────────────────────────────────── */}
+      <div>
+        <h3 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+          Personel Maliyeti Analizi
+        </h3>
+        <p className="text-[10px] text-[#94a3b8] mt-0.5">
+          Maaş · SGK İşveren · Huzur Hakkı · Türk KOBİ Kıyaslama
+        </p>
       </div>
 
-      {/* ── Salary is largest expense warning ────────────────────────────── */}
-      {report.salary_as_largest_expense && (
-        <div className="rounded border border-yellow-200 bg-yellow-50 px-4 py-3 flex items-start gap-3">
-          <span className="w-1.5 h-1.5 rounded-full bg-yellow-500 shrink-0 mt-1.5" />
-          <p className="text-xs font-semibold text-yellow-800">
-            Maaş giderleri bu ay en büyük gider kalemi
-          </p>
-        </div>
-      )}
-
-      {/* ── Summary KPI strip ────────────────────────────────────────────── */}
+      {/* ── 4 KPI cards ─────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <KpiCard
-          label="Bu Ay Maaş"
-          value={fmtTRY(report.current_month_salary_try, 0)}
-          sub="Aylık bordro toplamı"
-        />
-        <KpiCard
-          label="Maaş / Ciro Oranı"
-          value={
-            report.current_payroll_ratio_pct !== null
-              ? fmtPct(report.current_payroll_ratio_pct)
-              : '—'
-          }
-          sub="Bu ay"
-          colorClass={ratioColor(report.current_payroll_ratio_pct)}
-        />
-        <KpiCard
-          label="YTD Maaş Toplamı"
-          value={fmtTRY(report.ytd_salary_try, 0)}
-          sub="Yıl başından bugüne"
-        />
-        <KpiCard
-          label="YTD SGK Tahmini"
-          value={fmtTRY(report.ytd_sgk_estimate_try, 0)}
-          sub="İşveren ~%20,5"
-        />
-      </div>
 
-      {/* ── Ratio status + trend row ──────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm flex flex-wrap items-center gap-4">
-        <div>
-          <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">Oran Durumu</div>
-          <RatioStatusBadge status={report.payroll_ratio_status} />
-        </div>
-        <div className="w-px h-8 bg-[#e2e8f0] hidden sm:block" />
-        <div>
-          <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">Maaş Trendi</div>
-          <TrendArrow trend={report.salary_trend} />
-        </div>
-        <div className="w-px h-8 bg-[#e2e8f0] hidden sm:block" />
-        <div>
-          <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">Aylık Ortalama</div>
-          <span className="text-sm font-black tabular-nums text-[#0f172a]">
-            {fmtTRY(report.avg_monthly_salary_try, 0)}
-          </span>
-        </div>
-      </div>
-
-      {/* ── SGK deadline card ─────────────────────────────────────────────── */}
-      {report.next_sgk_due_date && (
-        <div className="bg-blue-50 border border-blue-200 rounded px-4 py-3 flex items-start gap-3">
-          <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0 mt-1.5" />
-          <div>
-            <p className="text-xs font-semibold text-blue-800">
-              Bir sonraki SGK ödemesi:{' '}
-              <span className="font-black">{fmtDate(report.next_sgk_due_date)}</span>
-              {report.current_month_salary_try > 0 && (
-                <> — ~{fmtTRY(report.current_month_salary_try * 0.205, 0)}</>
-              )}
-            </p>
-            <p className="text-[10px] text-blue-600 mt-0.5">
-              İşveren SGK payı tahmini (%20,5 oran ile hesaplanmıştır)
-            </p>
+        {/* Personel Maliyet Oranı */}
+        <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
+          <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">
+            Personel Maliyet Oranı
+          </div>
+          <div className="text-[10px] text-[#94a3b8]">Bu ay / Ciro</div>
+          <div className="text-lg font-black tabular-nums text-[#0f172a] mt-1">
+            {currentRatio !== null ? fmtPct(currentRatio) : '—'}
           </div>
         </div>
-      )}
 
-      {/* ── Monthly breakdown table ───────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-5 shadow-sm overflow-x-auto">
-        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">
-          Aylık Maaş Dağılımı — Son {months} Ay
+        {/* Aylık Personel Maliyeti */}
+        <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
+          <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">
+            Aylık Personel Maliyeti
+          </div>
+          <div className="text-[10px] text-[#94a3b8]">Toplam (maaş+SGK+huzur)</div>
+          <div className="text-lg font-black tabular-nums text-neg mt-1">
+            {fmtTRY(cm.total_personnel_cost)}
+          </div>
         </div>
-        <table className="w-full text-xs border-collapse min-w-[560px]">
-          <thead>
-            <tr className="border-b border-[#e2e8f0]">
-              {['Dönem', 'Maaş', 'Ciro', 'Bordro / Ciro', 'Aylık Değişim'].map(h => (
-                <th
-                  key={h}
-                  className="text-right first:text-left py-2 px-2 text-[10px] font-black uppercase tracking-wide text-[#94a3b8] whitespace-nowrap"
-                >
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {report.monthly_data.map((row) => {
-              const ratioClass = row.payroll_ratio_pct === null
-                ? 'text-slate-400'
-                : row.payroll_ratio_pct < 20
-                ? 'text-green-700 font-bold'
-                : row.payroll_ratio_pct < 35
-                ? 'text-teal-700 font-bold'
-                : row.payroll_ratio_pct <= 50
-                ? 'text-yellow-700 font-bold'
-                : 'text-red-700 font-bold'
 
-              const growthClass = row.payroll_growth_pct === null
-                ? 'text-slate-400'
-                : row.payroll_growth_pct > 0
-                ? 'text-red-600'
-                : row.payroll_growth_pct < 0
-                ? 'text-green-600'
-                : 'text-slate-500'
+        {/* Trend */}
+        <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
+          <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">
+            Trend
+          </div>
+          <div className="text-[10px] text-[#94a3b8]">Önceki aya göre</div>
+          <div className="mt-2">
+            <TrendBadge value={cm.trend_class} pct={cm.cost_trend_pct} />
+          </div>
+        </div>
 
-              return (
-                <tr key={row.month_key} className="border-t border-[#f1f5f9] hover:bg-[#f8fafc]">
-                  <td className="py-2 px-2 text-left text-[11px] font-semibold text-[#334155] whitespace-nowrap">
-                    {row.month_label}
-                  </td>
-                  <td className="py-2 px-2 text-right tabular-nums text-[11px] text-[#1e293b]">
-                    {row.salary_try > 0 ? fmtTRY(row.salary_try, 0) : '—'}
-                  </td>
-                  <td className="py-2 px-2 text-right tabular-nums text-[11px] text-[#1e293b]">
-                    {row.revenue_try > 0 ? fmtTRY(row.revenue_try, 0) : '—'}
-                  </td>
-                  <td className={`py-2 px-2 text-right tabular-nums text-[11px] ${ratioClass}`}>
-                    {row.payroll_ratio_pct !== null ? fmtPct(row.payroll_ratio_pct) : '—'}
-                  </td>
-                  <td className={`py-2 px-2 text-right tabular-nums text-[11px] ${growthClass}`}>
-                    {row.payroll_growth_pct !== null
-                      ? fmtDelta(row.payroll_growth_pct)
-                      : '—'}
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
+        {/* Verimlilik Derecesi */}
+        <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
+          <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">
+            Verimlilik Derecesi
+          </div>
+          <div className="text-[10px] text-[#94a3b8]">Türk KOBİ kıyaslama</div>
+          <div className="mt-2">
+            <EfficiencyBadge value={cm.efficiency} />
+          </div>
+        </div>
+
+      </div>
+
+      {/* ── Cost breakdown bars ──────────────────────────────────────────────── */}
+      <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm space-y-3">
+        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
+          Maliyet Dağılımı — Bu Ay
+        </div>
+        <BreakdownBar
+          label="Maaşlar (Brüt)"
+          amount={bd.gross_salaries}
+          maxAmount={maxBreakdown}
+          colorClass="bg-neg"
+        />
+        <BreakdownBar
+          label="SGK İşveren Payı"
+          amount={bd.sgk_employer}
+          maxAmount={maxBreakdown}
+          colorClass="bg-warn"
+        />
+        <BreakdownBar
+          label="Huzur Hakkı"
+          amount={bd.huzur_hakki}
+          maxAmount={maxBreakdown}
+          colorClass="bg-info"
+        />
+        <BreakdownBar
+          label="Diğer Personel"
+          amount={bd.other_personnel}
+          maxAmount={maxBreakdown}
+          colorClass="bg-[#94a3b8]"
+        />
+        <div className="flex items-center justify-between pt-2 border-t border-[#f1f5f9] text-xs">
+          <span className="text-[#64748b]">Toplam Bu Ay</span>
+          <span className="font-black text-neg tabular-nums">{fmtTRY(cm.total_personnel_cost)}</span>
+        </div>
+      </div>
+
+      {/* ── YTD summary ──────────────────────────────────────────────────────── */}
+      <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
+        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
+          Yıl Başından Bugüne (YTD)
+        </div>
+        <div className="grid grid-cols-3 gap-4">
+          <div>
+            <div className="text-[10px] text-[#94a3b8]">YTD Toplam</div>
+            <div className="text-sm font-black tabular-nums text-[#0f172a] mt-0.5">
+              {fmtTRY(report.ytd.total_personnel_cost)}
+            </div>
+          </div>
+          <div>
+            <div className="text-[10px] text-[#94a3b8]">Aylık Ortalama</div>
+            <div className="text-sm font-black tabular-nums text-[#0f172a] mt-0.5">
+              {fmtTRY(report.ytd.avg_monthly_cost)}
+            </div>
+          </div>
+          <div>
+            <div className="text-[10px] text-[#94a3b8]">YTD Maliyet Oranı</div>
+            <div className="text-sm font-black tabular-nums text-[#0f172a] mt-0.5">
+              {report.ytd.personnel_cost_ratio_pct !== null
+                ? fmtPct(report.ytd.personnel_cost_ratio_pct)
+                : '—'}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Benchmark reference ──────────────────────────────────────────────── */}
+      <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm space-y-2">
+        <div className="flex items-center justify-between mb-3">
+          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+            Türk KOBİ Kıyaslaması
+          </div>
+          {currentRatio !== null && (
+            <span className="text-[10px] text-[#64748b]">
+              Mevcut: <strong className="text-[#0f172a]">{fmtPct(currentRatio)}</strong>
+            </span>
+          )}
+        </div>
+        <BenchmarkBar
+          label="Mükemmel"
+          threshold={report.benchmarks.excellent_threshold}
+          currentRatio={currentRatio}
+          bgClass="bg-[#86efac]"
+        />
+        <BenchmarkBar
+          label="İyi"
+          threshold={report.benchmarks.good_threshold}
+          currentRatio={currentRatio}
+          bgClass="bg-[#6ee7b7]"
+        />
+        <BenchmarkBar
+          label="Kabul Edilebilir"
+          threshold={report.benchmarks.acceptable_threshold}
+          currentRatio={currentRatio}
+          bgClass="bg-[#fde047]"
+        />
+        <div className="pt-1 text-[9px] text-[#cbd5e1]">
+          Kaynak: {report.benchmarks.industry} — Personel maliyeti / net ciro oranı
+        </div>
+      </div>
+
+      {/* ── SGK reference ────────────────────────────────────────────────────── */}
+      <div className="bg-[#eff6ff] border border-[#bfdbfe] rounded p-4 shadow-sm">
+        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#1e40af] mb-3">
+          SGK Referans Bilgileri — 2025
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+          <div>
+            <div className="text-[#3b82f6] font-semibold">İşveren SGK Oranı</div>
+            <div className="font-black text-[#1e3a8a] mt-0.5">
+              %{(report.sgk_reference.employer_rate * 100).toFixed(2)}
+            </div>
+          </div>
+          <div>
+            <div className="text-[#3b82f6] font-semibold">İşçi SGK Oranı</div>
+            <div className="font-black text-[#1e3a8a] mt-0.5">
+              %{(report.sgk_reference.employee_rate * 100).toFixed(0)}
+            </div>
+          </div>
+          <div>
+            <div className="text-[#3b82f6] font-semibold">Asgari Ücret (Brüt)</div>
+            <div className="font-black text-[#1e3a8a] mt-0.5 tabular-nums">
+              {fmtTRY(report.sgk_reference.min_wage_try)}
+            </div>
+          </div>
+          <div>
+            <div className="text-[#3b82f6] font-semibold">Tipik Brüt→Net</div>
+            <div className="font-black text-[#1e3a8a] mt-0.5">
+              ~%{report.sgk_reference.typical_gross_to_net_pct}
+            </div>
+          </div>
+        </div>
+        <div className="mt-2 text-[9px] text-[#93c5fd]">
+          Asgari ücrette işveren toplam maliyeti:{' '}
+          {fmtTRY(
+            report.sgk_reference.min_wage_try * (1 + report.sgk_reference.employer_rate)
+          )} / kişi/ay
+        </div>
       </div>
 
     </div>

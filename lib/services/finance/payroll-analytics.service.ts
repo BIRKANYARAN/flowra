@@ -1,11 +1,25 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // lib/services/finance/payroll-analytics.service.ts
 //
-// Payroll Analytics Service — tracks salary expense trends, payroll-to-revenue
-// ratio, SGK compliance timeline, and headcount cost efficiency.
+// Payroll & Compensation Analytics Service
+//
+// Tracks personnel costs (maaş/huzur hakkı/SGK) as % of revenue,
+// benchmarks against Turkish SME norms, and provides headcount cost
+// efficiency metrics.
 //
 // SGK rule (Turkish law): monthly SGK premiums are due by the 26th of the
 // FOLLOWING month.
+//
+// Pure exported functions (testable):
+//   computePersonnelCostRatio, classifyPersonnelCostEfficiency,
+//   computeSgkEmployerContribution, computeNetSalaryFromGross,
+//   computeGrossToNetRatio, computeTotalEmploymentCostMultiplier,
+//   computeRevenuePerHeadcount, computePersonnelCostPerHead,
+//   computePersonnelCostTrend, classifyPersonnelCostTrend
+//
+// Legacy exports (backward-compat):
+//   computePayrollRatio, classifyPayrollRatio,
+//   computePayrollGrowth, computeSalaryExpenseShare, estimateSgkContribution
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -64,7 +78,152 @@ function monthRange(year: number, month: number): { from: string; to: string } {
   return { from, to }
 }
 
-// ── Pure exported functions ────────────────────────────────────────────────────
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// NEW: Pure computation functions — personnel cost analytics
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+/**
+ * Personnel cost ratio: total personnel cost / total revenue × 100.
+ * Returns null if totalRevenue === 0.
+ */
+export function computePersonnelCostRatio(
+  totalPersonnelCost: number,
+  totalRevenue: number,
+): number | null {
+  if (totalRevenue === 0) return null
+  return (totalPersonnelCost / totalRevenue) * 100
+}
+
+/**
+ * Classify personnel cost efficiency against Turkish SME benchmarks.
+ * insufficient_data: null
+ * excellent:  <= 15%
+ * good:       <= 25%
+ * acceptable: <= 35%
+ * high:       <= 50%
+ * excessive:  > 50%
+ */
+export function classifyPersonnelCostEfficiency(
+  ratioPct: number | null,
+): 'excellent' | 'good' | 'acceptable' | 'high' | 'excessive' | 'insufficient_data' {
+  if (ratioPct === null) return 'insufficient_data'
+  if (ratioPct <= 15) return 'excellent'
+  if (ratioPct <= 25) return 'good'
+  if (ratioPct <= 35) return 'acceptable'
+  if (ratioPct <= 50) return 'high'
+  return 'excessive'
+}
+
+/**
+ * SGK employer contribution: grossSalary × sgkRate.
+ * Default sgkRate = 0.2025 (20.25% Turkish employer SGK rate for 2025).
+ * Never negative.
+ */
+export function computeSgkEmployerContribution(
+  grossSalary: number,
+  sgkRate = 0.2025,
+): number {
+  const result = grossSalary * sgkRate
+  return Math.max(0, result)
+}
+
+/**
+ * Net salary from gross.
+ * net = grossSalary × (1 - incomeTaxRate - sgkEmployeeRate)
+ * Clamped to [0, grossSalary].
+ */
+export function computeNetSalaryFromGross(
+  grossSalary: number,
+  incomeTaxRate = 0.15,
+  sgkEmployeeRate = 0.14,
+): number {
+  const net = grossSalary * (1 - incomeTaxRate - sgkEmployeeRate)
+  return Math.min(Math.max(net, 0), grossSalary)
+}
+
+/**
+ * Gross-to-net ratio: (netSalary / grossSalary) × 100.
+ * Returns null if grossSalary === 0.
+ */
+export function computeGrossToNetRatio(
+  netSalary: number,
+  grossSalary: number,
+): number | null {
+  if (grossSalary === 0) return null
+  return (netSalary / grossSalary) * 100
+}
+
+/**
+ * Total employment cost multiplier: 1 + sgkEmployerRate.
+ * Total cost to company = grossSalary × multiplier.
+ * Always >= 1.
+ */
+export function computeTotalEmploymentCostMultiplier(
+  grossSalary: number,
+  sgkEmployerRate = 0.2025,
+): number {
+  void grossSalary  // parameter available for future per-salary adjustments
+  return Math.max(1, 1 + sgkEmployerRate)
+}
+
+/**
+ * Revenue per headcount: totalRevenue / headcount.
+ * Returns null if headcount === 0.
+ */
+export function computeRevenuePerHeadcount(
+  totalRevenue: number,
+  headcount: number,
+): number | null {
+  if (headcount === 0) return null
+  return totalRevenue / headcount
+}
+
+/**
+ * Personnel cost per headcount: totalPersonnelCost / headcount.
+ * Returns null if headcount === 0.
+ */
+export function computePersonnelCostPerHead(
+  totalPersonnelCost: number,
+  headcount: number,
+): number | null {
+  if (headcount === 0) return null
+  return totalPersonnelCost / headcount
+}
+
+/**
+ * Month-over-month personnel cost trend (%).
+ * ((currentMonthCost - priorMonthCost) / priorMonthCost) × 100.
+ * Returns null if priorMonthCost === 0.
+ */
+export function computePersonnelCostTrend(
+  currentMonthCost: number,
+  priorMonthCost: number,
+): number | null {
+  if (priorMonthCost === 0) return null
+  return ((currentMonthCost - priorMonthCost) / priorMonthCost) * 100
+}
+
+/**
+ * Classify personnel cost trend direction.
+ * insufficient_data: null
+ * decreasing:      < -5%
+ * stable:          -5% to +5%
+ * growing:         +5% to +15%
+ * rapidly_growing: > +15%
+ */
+export function classifyPersonnelCostTrend(
+  changePct: number | null,
+): 'decreasing' | 'stable' | 'growing' | 'rapidly_growing' | 'insufficient_data' {
+  if (changePct === null) return 'insufficient_data'
+  if (changePct < -5)  return 'decreasing'
+  if (changePct <= 5)  return 'stable'
+  if (changePct <= 15) return 'growing'
+  return 'rapidly_growing'
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// LEGACY: Backward-compatible pure functions (used by existing client + tests)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 /**
  * Compute payroll ratio: salary_expenses / total_revenue × 100.
@@ -173,11 +332,64 @@ function classifySalaryTrend(
   return 'stable'
 }
 
-// ── Service class ──────────────────────────────────────────────────────────────
+// ── Re-export TR_MONTHS for convenience ───────────────────────────────────────
+export { TR_MONTHS }
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// PayrollAnalyticsService — legacy monthly breakdown + new personnel cost report
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// Personnel expense categories tracked
+const PERSONNEL_CATEGORIES = new Set([
+  'salary', 'maaş', 'personnel', 'personel',
+  'sgk', 'huzur_hakki', 'huzur hakki', 'compensation', 'board_fee',
+])
+
+// SGK / huzur hakkı specific categories
+const HUZUR_CATEGORIES = new Set(['huzur_hakki', 'huzur hakki', 'board_fee'])
+const SGK_CATEGORIES   = new Set(['sgk'])
+
+// Report shape returned by getReport
+export interface PersonnelCostReport {
+  current_month: {
+    total_personnel_cost: number
+    breakdown: {
+      gross_salaries: number
+      sgk_employer: number
+      huzur_hakki: number
+      other_personnel: number
+    }
+    revenue_this_month: number
+    personnel_cost_ratio_pct: number | null
+    efficiency: ReturnType<typeof classifyPersonnelCostEfficiency>
+    cost_trend_pct: number | null
+    trend_class: ReturnType<typeof classifyPersonnelCostTrend>
+  }
+  ytd: {
+    total_personnel_cost: number
+    avg_monthly_cost: number
+    personnel_cost_ratio_pct: number | null
+  }
+  benchmarks: {
+    excellent_threshold: 15
+    good_threshold: 25
+    acceptable_threshold: 35
+    industry: 'Turkish SME'
+  }
+  sgk_reference: {
+    employer_rate: number
+    employee_rate: number
+    min_wage_try: number
+    typical_gross_to_net_pct: number
+  }
+}
 
 export class PayrollAnalyticsService {
   constructor(private readonly supabase: AnyClient) {}
 
+  /**
+   * Legacy method — returns month-by-month breakdown for the existing client.
+   */
   async getReport(
     companyId: string,
     periodMonths = 12,
@@ -368,7 +580,177 @@ export class PayrollAnalyticsService {
       salary_as_largest_expense:   salaryAsLargestExpense,
     }
   }
-}
 
-// ── Re-export TR_MONTHS for convenience ───────────────────────────────────────
-export { TR_MONTHS }
+  /**
+   * Get full personnel cost analytics report.
+   * Includes current month breakdown, YTD, benchmarks, and SGK reference.
+   */
+  async getPersonnelReport(companyId: string): Promise<PersonnelCostReport> {
+    const now          = new Date()
+    const currentYear  = now.getFullYear()
+    const currentMonth = now.getMonth() + 1
+
+    // ── Date bounds ──────────────────────────────────────────────────────────
+    const { from: currFrom, to: currTo } = monthRange(currentYear, currentMonth)
+
+    // Prior month
+    const priorDate   = new Date(currentYear, currentMonth - 2, 1)
+    const priorYear   = priorDate.getFullYear()
+    const priorMonth  = priorDate.getMonth() + 1
+    const { from: priorFrom, to: priorTo } = monthRange(priorYear, priorMonth)
+
+    // YTD: Jan 1 to today
+    const ytdFrom = `${currentYear}-01-01`
+    const ytdTo   = now.toISOString().slice(0, 10)
+
+    // ── Fetch current month personnel expenses ───────────────────────────────
+    const [currExpRes, priorExpRes, ytdExpRes, currSalesRes, ytdSalesRes] = await Promise.allSettled([
+      this.supabase
+        .from('expenses')
+        .select('category, amount_try')
+        .eq('company_id', companyId)
+        .is('deleted_at', null)
+        .gte('expense_date', currFrom)
+        .lte('expense_date', currTo),
+
+      this.supabase
+        .from('expenses')
+        .select('category, amount_try')
+        .eq('company_id', companyId)
+        .is('deleted_at', null)
+        .gte('expense_date', priorFrom)
+        .lte('expense_date', priorTo),
+
+      this.supabase
+        .from('expenses')
+        .select('category, amount_try')
+        .eq('company_id', companyId)
+        .is('deleted_at', null)
+        .gte('expense_date', ytdFrom)
+        .lte('expense_date', ytdTo),
+
+      this.supabase
+        .from('sales')
+        .select('total_try')
+        .eq('company_id', companyId)
+        .is('deleted_at', null)
+        .gte('sale_date', currFrom)
+        .lte('sale_date', currTo)
+        .not('payment_status', 'eq', 'cancelled'),
+
+      this.supabase
+        .from('sales')
+        .select('total_try')
+        .eq('company_id', companyId)
+        .is('deleted_at', null)
+        .gte('sale_date', ytdFrom)
+        .lte('sale_date', ytdTo)
+        .not('payment_status', 'eq', 'cancelled'),
+    ])
+
+    // ── Aggregate helpers ────────────────────────────────────────────────────
+    function sumPersonnel(rows: Array<{ category: string | null; amount_try: number }>) {
+      let grossSalaries    = 0
+      let sgkEmployer      = 0
+      let huzurHakki       = 0
+      let otherPersonnel   = 0
+
+      for (const row of rows) {
+        const cat    = String(row.category ?? '').toLowerCase()
+        const amount = Number(row.amount_try) || 0
+
+        if (!PERSONNEL_CATEGORIES.has(cat)) continue
+
+        if (SGK_CATEGORIES.has(cat)) {
+          sgkEmployer += amount
+        } else if (HUZUR_CATEGORIES.has(cat)) {
+          huzurHakki += amount
+        } else if (cat === 'salary' || cat === 'maaş' || cat === 'personnel' || cat === 'personel') {
+          grossSalaries += amount
+        } else {
+          otherPersonnel += amount
+        }
+      }
+
+      // If no explicit SGK rows, estimate from gross salaries
+      if (sgkEmployer === 0 && grossSalaries > 0) {
+        sgkEmployer = computeSgkEmployerContribution(grossSalaries)
+      }
+
+      const total = grossSalaries + sgkEmployer + huzurHakki + otherPersonnel
+      return { total, grossSalaries, sgkEmployer, huzurHakki, otherPersonnel }
+    }
+
+    // Current month
+    const currRows = currExpRes.status === 'fulfilled' ? (currExpRes.value?.data ?? []) : []
+    const currData = sumPersonnel(currRows as Array<{ category: string | null; amount_try: number }>)
+
+    // Prior month (for trend)
+    const priorRows = priorExpRes.status === 'fulfilled' ? (priorExpRes.value?.data ?? []) : []
+    const priorData = sumPersonnel(priorRows as Array<{ category: string | null; amount_try: number }>)
+
+    // Current month revenue
+    const currRevenue = currSalesRes.status === 'fulfilled'
+      ? ((currSalesRes.value?.data ?? []) as Array<{ total_try: number }>)
+          .reduce((s, r) => s + (Number(r.total_try) || 0), 0)
+      : 0
+
+    // YTD personnel cost
+    const ytdRows = ytdExpRes.status === 'fulfilled' ? (ytdExpRes.value?.data ?? []) : []
+    const ytdData = sumPersonnel(ytdRows as Array<{ category: string | null; amount_try: number }>)
+
+    // YTD revenue
+    const ytdRevenue = ytdSalesRes.status === 'fulfilled'
+      ? ((ytdSalesRes.value?.data ?? []) as Array<{ total_try: number }>)
+          .reduce((s, r) => s + (Number(r.total_try) || 0), 0)
+      : 0
+
+    // YTD average monthly cost (months elapsed so far this year)
+    const monthsElapsed = currentMonth
+    const avgMonthlyCost = monthsElapsed > 0 ? ytdData.total / monthsElapsed : 0
+
+    // Ratios & trend
+    const costRatioPct = computePersonnelCostRatio(currData.total, currRevenue)
+    const trendPct     = computePersonnelCostTrend(currData.total, priorData.total)
+    const ytdRatioPct  = computePersonnelCostRatio(ytdData.total, ytdRevenue)
+
+    // Typical gross-to-net at minimum wage: 22104 gross → net = 22104 × (1 - 0.15 - 0.14)
+    const minWageGross = 22104
+    const minWageNet   = computeNetSalaryFromGross(minWageGross)
+    const grossToNetPct = computeGrossToNetRatio(minWageNet, minWageGross) ?? 71
+
+    return {
+      current_month: {
+        total_personnel_cost:      currData.total,
+        breakdown: {
+          gross_salaries:          currData.grossSalaries,
+          sgk_employer:            currData.sgkEmployer,
+          huzur_hakki:             currData.huzurHakki,
+          other_personnel:         currData.otherPersonnel,
+        },
+        revenue_this_month:        currRevenue,
+        personnel_cost_ratio_pct:  costRatioPct,
+        efficiency:                classifyPersonnelCostEfficiency(costRatioPct),
+        cost_trend_pct:            trendPct,
+        trend_class:               classifyPersonnelCostTrend(trendPct),
+      },
+      ytd: {
+        total_personnel_cost:      ytdData.total,
+        avg_monthly_cost:          avgMonthlyCost,
+        personnel_cost_ratio_pct:  ytdRatioPct,
+      },
+      benchmarks: {
+        excellent_threshold:  15,
+        good_threshold:       25,
+        acceptable_threshold: 35,
+        industry:             'Turkish SME',
+      },
+      sgk_reference: {
+        employer_rate:            0.2025,
+        employee_rate:            0.14,
+        min_wage_try:             minWageGross,
+        typical_gross_to_net_pct: Math.round(grossToNetPct),
+      },
+    }
+  }
+}
