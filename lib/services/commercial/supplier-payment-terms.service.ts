@@ -1,20 +1,10 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 // lib/services/commercial/supplier-payment-terms.service.ts
 //
-// Supplier Payment Terms Analytics — analyses how well the company pays its
-// suppliers (vendors). Mirrors the customer-side PaymentBehaviorService but
-// from the accounts-payable perspective.
+// Supplier Payment Terms Analysis — analyses payment terms with suppliers,
+// tracks early payment discount opportunities, and optimises cash outflows.
 //
 // Pure helper exports allow deterministic unit testing without DB access.
-//
-// Score formula (our payment discipline toward each supplier):
-//   Base: 100
-//   early       : +3 each (bonus capped at +15)
-//   on_time     :  0
-//   late_30     : -5 each
-//   late_60     : -15 each
-//   late_90plus : -25 each
-//   Clamped 0-100
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -24,13 +14,291 @@ type AnyClient = SupabaseClient<any>
 
 // ── Public types ───────────────────────────────────────────────────────────────
 
-export type SupplierPaymentTiming =
-  | 'early'
-  | 'on_time'
-  | 'late_30'
-  | 'late_60'
-  | 'late_90plus'
-  | 'unpaid'
+export interface PaymentTermsProfile {
+  vendor_name: string
+  total_spend_try: number
+  avg_payment_days: number | null        // avg days from invoice to payment
+  agreed_terms_days: number | null       // days stated on invoice/contract
+  early_payment_discount_pct: number | null  // if vendor offers early pay discount
+  on_time_payment_rate: number           // 0-1
+  late_payment_count: number
+  total_transactions: number
+}
+
+export interface DiscountOpportunity {
+  vendor_name: string
+  outstanding_amount: number
+  discount_pct: number
+  discount_amount: number                // outstanding × discount_pct / 100
+  days_to_capture: number                // how many days left to capture
+  annualized_return_pct: number          // (discount / amount) × (365 / days) × 100
+  should_capture: boolean                // annualized_return > cost_of_capital
+}
+
+export interface SupplierPaymentTermsReport {
+  analysis_period_days: number
+  vendor_profiles: PaymentTermsProfile[]
+  discount_opportunities: DiscountOpportunity[]
+  total_discount_opportunity: ReturnType<typeof computeTotalDiscountOpportunity>
+  supplier_concentration: ReturnType<typeof computeSupplierConcentration>
+  avg_payment_days_portfolio: number | null
+  on_time_rate_portfolio: number
+  optimization_score: number
+  payment_terms_health: ReturnType<typeof classifyPaymentTermsHealth>
+  narrative: string
+}
+
+// ── Pure helpers ───────────────────────────────────────────────────────────────
+
+/**
+ * Average days between invoice_date and payment_date for paid items.
+ * Returns null if no paid items exist.
+ */
+export function computeAvgPaymentDays(
+  payments: Array<{ invoice_date: string; payment_date: string | null }>,
+): number | null {
+  const paid = payments.filter(p => p.payment_date !== null)
+  if (paid.length === 0) return null
+
+  const sum = paid.reduce((acc, p) => {
+    const invoice = new Date(p.invoice_date.slice(0, 10))
+    const payment = new Date(p.payment_date!.slice(0, 10))
+    const days = Math.round((payment.getTime() - invoice.getTime()) / 86_400_000)
+    return acc + days
+  }, 0)
+
+  return Math.round((sum / paid.length) * 10) / 10
+}
+
+/**
+ * Fraction of payments made on time.
+ * On-time: payment_date <= due_date (or invoice_date + 30 if no due_date).
+ * Rate = on_time / total; 0 if no items.
+ */
+export function computeOnTimePaymentRate(
+  payments: Array<{ due_date: string | null; payment_date: string | null; invoice_date: string }>,
+): number {
+  if (payments.length === 0) return 0
+
+  let onTime = 0
+
+  for (const p of payments) {
+    const paid = p.payment_date ? new Date(p.payment_date.slice(0, 10)) : null
+
+    // If not paid yet, count as not on time
+    if (!paid) continue
+
+    let due: Date
+    if (p.due_date) {
+      due = new Date(p.due_date.slice(0, 10))
+    } else {
+      due = new Date(p.invoice_date.slice(0, 10))
+      due.setDate(due.getDate() + 30)
+    }
+
+    if (paid <= due) onTime++
+  }
+
+  return payments.length > 0 ? onTime / payments.length : 0
+}
+
+/**
+ * Early payment discount amount: outstandingAmount × discountPct / 100.
+ */
+export function computeEarlyPaymentDiscount(
+  outstandingAmount: number,
+  discountPct: number,
+): number {
+  return outstandingAmount * discountPct / 100
+}
+
+/**
+ * Annualized return from capturing a discount:
+ * (discountPct / 100) / daysToCapture × 365 × 100
+ * Returns null if daysToCapture <= 0.
+ */
+export function computeAnnualizedDiscountReturn(
+  discountPct: number,
+  daysToCapture: number,
+): number | null {
+  if (daysToCapture <= 0) return null
+  return (discountPct / 100) / daysToCapture * 365 * 100
+}
+
+/**
+ * Whether it's attractive to capture the discount.
+ * True if annualizedReturnPct is not null AND > costOfCapitalPct.
+ */
+export function classifyDiscountAttractiveness(
+  annualizedReturnPct: number | null,
+  costOfCapitalPct: number,
+): boolean {
+  return annualizedReturnPct !== null && annualizedReturnPct > costOfCapitalPct
+}
+
+/**
+ * Difference between actual and agreed payment days.
+ * Positive = paying later than agreed, negative = paying early.
+ * Returns null if either input is null.
+ */
+export function computePaymentStretch(
+  actualPaymentDays: number | null,
+  agreedTermsDays: number | null,
+): number | null {
+  if (actualPaymentDays === null || agreedTermsDays === null) return null
+  return actualPaymentDays - agreedTermsDays
+}
+
+/**
+ * Classify overall payment behaviour toward suppliers.
+ *   excellent: onTimeRate >= 0.95 AND (stretch <= 0 OR stretch is null)
+ *   good:      onTimeRate >= 0.80
+ *   fair:      onTimeRate >= 0.60
+ *   poor:      otherwise
+ */
+export function classifyPaymentBehavior(
+  onTimeRate: number,
+  paymentStretch: number | null,
+): 'excellent' | 'good' | 'fair' | 'poor' {
+  if (onTimeRate >= 0.95 && (paymentStretch === null || paymentStretch <= 0)) return 'excellent'
+  if (onTimeRate >= 0.80) return 'good'
+  if (onTimeRate >= 0.60) return 'fair'
+  return 'poor'
+}
+
+/**
+ * Supplier spend concentration metrics.
+ *   top_vendor_pct: highest single-vendor spend as % of total
+ *   hhi: Herfindahl-Hirschman Index = Σ(share²)
+ * Returns 0/0 if empty or total = 0.
+ */
+export function computeSupplierConcentration(
+  profiles: PaymentTermsProfile[],
+): { top_vendor_pct: number; hhi: number } {
+  if (profiles.length === 0) return { top_vendor_pct: 0, hhi: 0 }
+  const total = profiles.reduce((s, p) => s + p.total_spend_try, 0)
+  if (total === 0) return { top_vendor_pct: 0, hhi: 0 }
+
+  const maxSpend = Math.max(...profiles.map(p => p.total_spend_try))
+  const top_vendor_pct = (maxSpend / total) * 100
+
+  const hhi = profiles.reduce((s, p) => {
+    const share = p.total_spend_try / total
+    return s + share * share
+  }, 0)
+
+  return { top_vendor_pct, hhi }
+}
+
+/**
+ * Aggregate discount opportunity metrics.
+ */
+export function computeTotalDiscountOpportunity(
+  opportunities: DiscountOpportunity[],
+): { total_discount_available: number; total_capturable: number; capturable_count: number } {
+  const total_discount_available = opportunities.reduce((s, o) => s + o.discount_amount, 0)
+  const capturable = opportunities.filter(o => o.should_capture)
+  const total_capturable = capturable.reduce((s, o) => s + o.discount_amount, 0)
+  return {
+    total_discount_available,
+    total_capturable,
+    capturable_count: capturable.length,
+  }
+}
+
+/**
+ * Payment optimization score 0-100:
+ *   on-time contribution (50 pts):
+ *     >= 0.95 → 50  |  >= 0.80 → 40  |  >= 0.60 → 25  |  else → 10
+ *   stretch contribution (30 pts):
+ *     negative → 30  |  0-5 → 25  |  5-15 → 15  |  else → 5  |  null → 15
+ *   opportunities contribution (20 pts):
+ *     capturable% >= 80 → 20  |  >= 50 → 15  |  >= 20 → 10  |  else → 5
+ *     (if no opportunities exist → 10)
+ */
+export function computePaymentOptimizationScore(
+  avgPaymentStretch: number | null,
+  onTimeRate: number,
+  capturableOpportunitiesPct: number,
+): number {
+  // on-time contribution (50 pts)
+  let onTimePts: number
+  if (onTimeRate >= 0.95)      onTimePts = 50
+  else if (onTimeRate >= 0.80) onTimePts = 40
+  else if (onTimeRate >= 0.60) onTimePts = 25
+  else                         onTimePts = 10
+
+  // stretch contribution (30 pts)
+  let stretchPts: number
+  if (avgPaymentStretch === null) {
+    stretchPts = 15
+  } else if (avgPaymentStretch < 0) {
+    stretchPts = 30
+  } else if (avgPaymentStretch <= 5) {
+    stretchPts = 25
+  } else if (avgPaymentStretch <= 15) {
+    stretchPts = 15
+  } else {
+    stretchPts = 5
+  }
+
+  // opportunities contribution (20 pts)
+  // capturableOpportunitiesPct === 0 means no opportunities → 10
+  let oppPts: number
+  if (capturableOpportunitiesPct === 0) {
+    oppPts = 10
+  } else if (capturableOpportunitiesPct >= 80) {
+    oppPts = 20
+  } else if (capturableOpportunitiesPct >= 50) {
+    oppPts = 15
+  } else if (capturableOpportunitiesPct >= 20) {
+    oppPts = 10
+  } else {
+    oppPts = 5
+  }
+
+  return onTimePts + stretchPts + oppPts
+}
+
+/**
+ * Classify payment terms health from optimization score.
+ *   excellent: >= 80  |  good: >= 60  |  fair: >= 40  |  poor: < 40
+ */
+export function classifyPaymentTermsHealth(
+  score: number,
+): 'excellent' | 'good' | 'fair' | 'poor' {
+  if (score >= 80) return 'excellent'
+  if (score >= 60) return 'good'
+  if (score >= 40) return 'fair'
+  return 'poor'
+}
+
+/**
+ * Generate a Turkish narrative describing the payment terms health.
+ */
+export function generatePaymentTermsNarrative(
+  health: ReturnType<typeof classifyPaymentTermsHealth>,
+  totalDiscountOpportunity: number,
+  onTimeRate: number,
+  vendorCount: number,
+): string {
+  const discount = Math.round(totalDiscountOpportunity).toLocaleString('tr-TR')
+
+  switch (health) {
+    case 'excellent':
+      return `Tedarikçi ödeme yönetimi mükemmel — vade takibi ve iskonto fırsatları değerlendiriliyor.`
+    case 'good':
+      return `Ödeme performansı iyi — ₺${discount}₺ iskonto fırsatı mevcut.`
+    case 'fair':
+      return `Ödeme zamanlaması iyileştirilebilir — vade aşımı tedarikçi ilişkilerini etkiliyor.`
+    case 'poor':
+      return `Ödeme sorunları kritik — tedarikçilerle ilişki yönetimi risk altında.`
+  }
+}
+
+// ── Legacy type exports (backwards compatibility) ─────────────────────────────
+// These types were part of the original service and are referenced by
+// app/dashboard/operations/_tabs/_supplier-terms/SupplierPaymentTermsClient.tsx
 
 export type SupplierPaymentClass = 'excellent' | 'good' | 'average' | 'poor'
 
@@ -70,302 +338,201 @@ export interface SupplierPaymentSummary {
   }>
 }
 
-// ── Pure helpers ───────────────────────────────────────────────────────────────
-
-/**
- * Compute days between expense creation and payment.
- * Returns null if paidAt is null (unpaid).
- */
-export function computeSupplierDaysToPay(
-  createdAt: string,
-  paidAt: string | null,
-): number | null {
-  if (!paidAt) return null
-  const created = new Date(createdAt.slice(0, 10))
-  const paid    = new Date(paidAt.slice(0, 10))
-  return Math.round((paid.getTime() - created.getTime()) / 86_400_000)
-}
-
-/**
- * Classify when we paid relative to the implicit or explicit due date.
- *
- * If dueDate is null: implicit due = createdAt + 30 days.
- *
- * Buckets:
- *   early       : paid > 5 days before due
- *   on_time     : paid within [-5, +5] days of due
- *   late_30     : paid 6-30 days after due
- *   late_60     : paid 31-60 days after due
- *   late_90plus : paid 61+ days after due
- *   unpaid      : not yet paid
- */
-export function classifySupplierPaymentTiming(
-  createdAt: string,
-  paidAt: string | null,
-  dueDate: string | null,
-): SupplierPaymentTiming {
-  if (!paidAt) return 'unpaid'
-
-  const paid = new Date(paidAt.slice(0, 10))
-
-  let due: Date
-  if (dueDate) {
-    due = new Date(dueDate.slice(0, 10))
-  } else {
-    due = new Date(createdAt.slice(0, 10))
-    due.setDate(due.getDate() + 30)
-  }
-
-  // Positive = paid AFTER due (late), negative = paid BEFORE due (early)
-  const delta = Math.round((paid.getTime() - due.getTime()) / 86_400_000)
-
-  if (delta < -5)          return 'early'
-  if (delta <= 5)          return 'on_time'
-  if (delta <= 30)         return 'late_30'
-  if (delta <= 60)         return 'late_60'
-  return                          'late_90plus'
-}
-
-/**
- * Compute payment discipline score 0-100.
- * Returns 100 for empty history (not penalized).
- */
-export function computeSupplierPaymentScore(
-  timings: SupplierPaymentTiming[],
-): number {
-  if (timings.length === 0) return 100
-
-  let score = 100
-  let earlyCount = 0
-
-  for (const t of timings) {
-    switch (t) {
-      case 'early':       earlyCount++; break
-      case 'late_30':     score -= 5;   break
-      case 'late_60':     score -= 15;  break
-      case 'late_90plus': score -= 25;  break
-      case 'unpaid':      score -= 25;  break
-      default: break
-    }
-  }
-
-  // Early-payment bonus: +3 per early, capped at +15
-  score += Math.min(earlyCount * 3, 15)
-
-  return Math.max(0, Math.min(100, score))
-}
-
-/**
- * Classify score into a payment class.
- *   excellent : ≥ 80
- *   good      : 65-79
- *   average   : 50-64
- *   poor      : < 50
- */
-export function classifySupplierPaymentClass(score: number): SupplierPaymentClass {
-  if (score >= 80) return 'excellent'
-  if (score >= 65) return 'good'
-  if (score >= 50) return 'average'
-  return 'poor'
-}
-
-/**
- * Compute simple DPO: average days to pay across all paid expenses.
- * Returns null if the array is empty.
- */
-export function computeSupplierDpo(
-  paidExpenses: Array<{ days_to_pay: number }>,
-): number | null {
-  if (paidExpenses.length === 0) return null
-  const sum = paidExpenses.reduce((s, e) => s + e.days_to_pay, 0)
-  return Math.round((sum / paidExpenses.length) * 10) / 10
-}
-
 // ── Internal row shape ─────────────────────────────────────────────────────────
 
 interface ExpenseRow {
   id: string
-  supplier_name: string | null
-  amount_try: number
+  title: string | null
+  amount: number
+  currency: string
+  category: string | null
+  expense_date: string | null
   payment_status: string
   created_at: string
-  paid_at: string | null
-  due_date: string | null
+  updated_at: string
+  deleted_at: string | null
 }
+
+const DEFAULT_DISCOUNT_PCT = 2
+const COST_OF_CAPITAL_PCT  = 20
+const EARLY_PAY_WINDOW_DAYS = 10   // assume 10 days left to capture
 
 // ── Service class ──────────────────────────────────────────────────────────────
 
 export class SupplierPaymentTermsService {
-  constructor(private supabase: AnyClient) {}
+  constructor(private readonly supabase: AnyClient) {}
 
-  async getSummary(companyId: string): Promise<SupplierPaymentSummary> {
-    const { data, error } = await this.supabase
-      .from('expenses')
-      .select('id, supplier_name, amount_try, payment_status, created_at, paid_at, due_date')
-      .eq('company_id', companyId)
-      .is('deleted_at', null)
-      .not('supplier_name', 'is', null)
-      .neq('supplier_name', '')
-      .order('created_at', { ascending: false })
-      .limit(2000)
+  async getReport(companyId: string): Promise<SupplierPaymentTermsReport> {
+    const ANALYSIS_DAYS = 90
+    const since = new Date()
+    since.setDate(since.getDate() - ANALYSIS_DAYS)
+    const sinceIso = since.toISOString().slice(0, 10)
 
-    if (error) throw new Error(`SupplierPaymentTermsService.getSummary: ${error.message}`)
+    const [expenseResult] = await Promise.allSettled([
+      this.supabase
+        .from('expenses')
+        .select('id, title, amount, currency, category, expense_date, payment_status, created_at, updated_at, deleted_at')
+        .eq('company_id', companyId)
+        .is('deleted_at', null)
+        .gte('expense_date', sinceIso)
+        .order('expense_date', { ascending: false })
+        .limit(2000),
+    ])
 
-    const rows = (data ?? []) as ExpenseRow[]
+    const rows: ExpenseRow[] =
+      expenseResult.status === 'fulfilled' && expenseResult.value.data
+        ? (expenseResult.value.data as ExpenseRow[])
+        : []
 
-    // ── Group by supplier_name ──────────────────────────────────────────────
+    // ── Derive payment_date proxy: if paid → use updated_at, else null ──────
+    // expenses schema has no paid_at column; use updated_at as proxy when paid
 
-    const bySupplier = new Map<string, ExpenseRow[]>()
-    for (const row of rows) {
-      const key = (row.supplier_name ?? '').trim()
-      if (!key) continue
-      if (!bySupplier.has(key)) bySupplier.set(key, [])
-      bySupplier.get(key)!.push(row)
+    interface EnrichedRow extends ExpenseRow {
+      vendor_name: string
+      invoice_date: string
+      payment_date: string | null
+      due_date: string | null
     }
 
-    // ── Build SupplierProfile for each supplier ─────────────────────────────
-
-    const allSuppliers: SupplierProfile[] = []
-    const allPaidForDpo: Array<{ days_to_pay: number }> = []
-
-    for (const [name, supplierRows] of bySupplier.entries()) {
-      const timings: SupplierPaymentTiming[] = []
-      const paidDays: number[] = []
-      let paidCount   = 0
-      let unpaidCount = 0
-      let totalAmt    = 0
-      let outstandingTry = 0
-
-      for (const row of supplierRows) {
-        totalAmt += Number(row.amount_try)
-
-        const isPaid = row.payment_status === 'paid' && row.paid_at !== null
-
-        if (isPaid) {
-          paidCount++
-          const days = computeSupplierDaysToPay(row.created_at, row.paid_at)
-          if (days !== null) {
-            paidDays.push(days)
-            allPaidForDpo.push({ days_to_pay: days })
-          }
-          const timing = classifySupplierPaymentTiming(
-            row.created_at,
-            row.paid_at,
-            row.due_date ?? null,
-          )
-          timings.push(timing)
-        } else {
-          unpaidCount++
-          outstandingTry += Number(row.amount_try)
-          timings.push('unpaid')
-        }
-      }
-
-      const avgDaysToPay = paidDays.length > 0
-        ? Math.round((paidDays.reduce((s, d) => s + d, 0) / paidDays.length) * 10) / 10
-        : null
-
-      const score = computeSupplierPaymentScore(timings)
-      const paymentClass = classifySupplierPaymentClass(score)
-
-      // Timing breakdown counts
-      const breakdown = {
-        early:       0,
-        on_time:     0,
-        late_30:     0,
-        late_60:     0,
-        late_90plus: 0,
-        unpaid:      0,
-      }
-      for (const t of timings) breakdown[t]++
-
-      allSuppliers.push({
-        supplier_name: name,
-        total_expenses_count: supplierRows.length,
-        total_amount_try: Math.round(totalAmt * 100) / 100,
-        paid_count: paidCount,
-        unpaid_count: unpaidCount,
-        avg_days_to_pay: avgDaysToPay,
-        payment_score: score,
-        payment_class: paymentClass,
-        timing_breakdown: breakdown,
-        outstanding_try: Math.round(outstandingTry * 100) / 100,
-      })
-    }
-
-    // Sort by total_amount_try desc
-    allSuppliers.sort((a, b) => b.total_amount_try - a.total_amount_try)
-
-    // ── Aggregates ──────────────────────────────────────────────────────────
-
-    const totalOutstanding = allSuppliers.reduce((s, p) => s + p.outstanding_try, 0)
-    const overallDpo = computeSupplierDpo(allPaidForDpo)
-
-    // Weighted average score by transaction count
-    const totalTxCount = allSuppliers.reduce((s, p) => s + p.total_expenses_count, 0)
-    const overallScore = totalTxCount > 0
-      ? allSuppliers.reduce((s, p) => s + p.payment_score * p.total_expenses_count, 0) / totalTxCount
-      : 100
-
-    const excellentSuppliers = allSuppliers.filter(p => p.payment_class === 'excellent').length
-    const poorSuppliers      = allSuppliers.filter(p => p.payment_class === 'poor').length
-
-    // Top 5 creditors by outstanding
-    const topCreditors = [...allSuppliers]
-      .sort((a, b) => b.outstanding_try - a.outstanding_try)
-      .slice(0, 5)
-
-    // ── 6-month trend ───────────────────────────────────────────────────────
-
-    const now      = new Date()
-    const months6: string[] = []
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
-      months6.push(d.toISOString().slice(0, 7))  // "YYYY-MM"
-    }
-
-    const trendMap = new Map<string, { days: number[]; lateCount: number }>()
-    for (const m of months6) {
-      trendMap.set(m, { days: [], lateCount: 0 })
-    }
-
-    for (const row of rows) {
-      const ym = row.created_at.slice(0, 7)
-      if (!trendMap.has(ym)) continue
-
-      const bucket = trendMap.get(ym)!
-      if (row.payment_status === 'paid' && row.paid_at !== null) {
-        const days = computeSupplierDaysToPay(row.created_at, row.paid_at)
-        if (days !== null) {
-          bucket.days.push(days)
-          const timing = classifySupplierPaymentTiming(row.created_at, row.paid_at, row.due_date ?? null)
-          if (timing !== 'early' && timing !== 'on_time') bucket.lateCount++
-        }
-      }
-    }
-
-    const paymentTrend = months6.map(month => {
-      const b = trendMap.get(month)!
-      const avgDays = b.days.length > 0
-        ? Math.round((b.days.reduce((s, d) => s + d, 0) / b.days.length) * 10) / 10
-        : null
+    const enriched: EnrichedRow[] = rows.map(r => {
+      const isPaid = r.payment_status === 'paid'
       return {
-        month,
-        avg_days_to_pay: avgDays,
-        late_count: b.lateCount,
+        ...r,
+        vendor_name: (r.title ?? r.category ?? 'Diğer').trim() || 'Diğer',
+        invoice_date: (r.expense_date ?? r.created_at.slice(0, 10)),
+        payment_date: isPaid ? r.updated_at.slice(0, 10) : null,
+        due_date: null,  // expenses table has no due_date column
       }
     })
 
+    // ── Group by vendor ──────────────────────────────────────────────────────
+
+    const byVendor = new Map<string, EnrichedRow[]>()
+    for (const r of enriched) {
+      if (!byVendor.has(r.vendor_name)) byVendor.set(r.vendor_name, [])
+      byVendor.get(r.vendor_name)!.push(r)
+    }
+
+    // ── Build profiles ───────────────────────────────────────────────────────
+
+    const vendor_profiles: PaymentTermsProfile[] = []
+
+    for (const [vendor, vendorRows] of byVendor.entries()) {
+      const totalSpend = vendorRows.reduce((s, r) => s + Number(r.amount), 0)
+      const avgPaymentDays = computeAvgPaymentDays(vendorRows)
+      const onTimeRate = computeOnTimePaymentRate(vendorRows)
+
+      const lateCount = vendorRows.filter(r => {
+        if (!r.payment_date) return false
+        const paid = new Date(r.payment_date)
+        const due  = new Date(r.invoice_date)
+        due.setDate(due.getDate() + 30)
+        return paid > due
+      }).length
+
+      vendor_profiles.push({
+        vendor_name: vendor,
+        total_spend_try: Math.round(totalSpend * 100) / 100,
+        avg_payment_days: avgPaymentDays,
+        agreed_terms_days: 30,   // standard NET-30 assumption; no contract data available
+        early_payment_discount_pct: DEFAULT_DISCOUNT_PCT,
+        on_time_payment_rate: onTimeRate,
+        late_payment_count: lateCount,
+        total_transactions: vendorRows.length,
+      })
+    }
+
+    // Sort by spend descending
+    vendor_profiles.sort((a, b) => b.total_spend_try - a.total_spend_try)
+
+    // ── Discount opportunities (unpaid items only) ───────────────────────────
+
+    const discount_opportunities: DiscountOpportunity[] = []
+
+    for (const [vendor, vendorRows] of byVendor.entries()) {
+      const unpaid = vendorRows.filter(r => r.payment_status !== 'paid')
+      if (unpaid.length === 0) continue
+
+      const outstanding = unpaid.reduce((s, r) => s + Number(r.amount), 0)
+      const discountPct = DEFAULT_DISCOUNT_PCT
+      const discountAmt = computeEarlyPaymentDiscount(outstanding, discountPct)
+      const daysToCapture = EARLY_PAY_WINDOW_DAYS
+      const annualized = computeAnnualizedDiscountReturn(discountPct, daysToCapture) ?? 0
+      const shouldCapture = classifyDiscountAttractiveness(annualized, COST_OF_CAPITAL_PCT)
+
+      discount_opportunities.push({
+        vendor_name: vendor,
+        outstanding_amount: Math.round(outstanding * 100) / 100,
+        discount_pct: discountPct,
+        discount_amount: Math.round(discountAmt * 100) / 100,
+        days_to_capture: daysToCapture,
+        annualized_return_pct: annualized,
+        should_capture: shouldCapture,
+      })
+    }
+
+    // Sort by discount_amount descending
+    discount_opportunities.sort((a, b) => b.discount_amount - a.discount_amount)
+
+    // ── Portfolio aggregates ─────────────────────────────────────────────────
+
+    const total_discount_opportunity = computeTotalDiscountOpportunity(discount_opportunities)
+    const supplier_concentration     = computeSupplierConcentration(vendor_profiles)
+
+    const paidProfiles = vendor_profiles.filter(p => p.avg_payment_days !== null)
+    const avg_payment_days_portfolio: number | null =
+      paidProfiles.length > 0
+        ? Math.round(
+            paidProfiles.reduce((s, p) => s + p.avg_payment_days!, 0) / paidProfiles.length * 10
+          ) / 10
+        : null
+
+    const totalTx    = vendor_profiles.reduce((s, p) => s + p.total_transactions, 0)
+    const on_time_rate_portfolio: number =
+      totalTx > 0
+        ? vendor_profiles.reduce((s, p) => s + p.on_time_payment_rate * p.total_transactions, 0) / totalTx
+        : 0
+
+    // Avg payment stretch across vendors that have agreed terms
+    const profilesWithStretch = vendor_profiles
+      .map(p => computePaymentStretch(p.avg_payment_days, p.agreed_terms_days))
+      .filter((s): s is number => s !== null)
+
+    const avgPaymentStretch: number | null =
+      profilesWithStretch.length > 0
+        ? profilesWithStretch.reduce((s, v) => s + v, 0) / profilesWithStretch.length
+        : null
+
+    const totalOpps      = discount_opportunities.length
+    const capturableOpps = total_discount_opportunity.capturable_count
+    const capturablePct  = totalOpps > 0 ? (capturableOpps / totalOpps) * 100 : 0
+
+    const optimization_score = computePaymentOptimizationScore(
+      avgPaymentStretch,
+      on_time_rate_portfolio,
+      capturablePct,
+    )
+
+    const payment_terms_health = classifyPaymentTermsHealth(optimization_score)
+
+    const narrative = generatePaymentTermsNarrative(
+      payment_terms_health,
+      total_discount_opportunity.total_discount_available,
+      on_time_rate_portfolio,
+      vendor_profiles.length,
+    )
+
     return {
-      total_suppliers:       allSuppliers.length,
-      overall_dpo:           overallDpo,
-      overall_payment_score: Math.round(overallScore * 10) / 10,
-      excellent_suppliers:   excellentSuppliers,
-      poor_suppliers:        poorSuppliers,
-      total_outstanding_try: Math.round(totalOutstanding * 100) / 100,
-      top_creditors:         topCreditors,
-      all_suppliers:         allSuppliers,
-      payment_trend:         paymentTrend,
+      analysis_period_days: ANALYSIS_DAYS,
+      vendor_profiles,
+      discount_opportunities,
+      total_discount_opportunity,
+      supplier_concentration,
+      avg_payment_days_portfolio,
+      on_time_rate_portfolio,
+      optimization_score,
+      payment_terms_health,
+      narrative,
     }
   }
 }

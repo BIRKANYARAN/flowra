@@ -1,528 +1,325 @@
-// ── QuarterlyTab — Çeyreklik CFO Raporu ─────────────────────────────────────
+'use client'
+
+// ─────────────────────────────────────────────────────────────────────────────
+// QuarterlyTab — Çeyreklik Finansal Özet
 //
-// Zones:
-//   1. YTD command strip (4 KPIs)
-//   2. Quarter grid (table with QoQ delta)
-//   3. Geçici vergi schedule
-//   4. Monthly sales breakdown
+// Features:
+//   1. Rolling 4Q KPI strip (revenue, EBITDA, trend badge)
+//   2. Quarterly timeline table with QoQ growth indicators
+//   3. Current quarter KPIs (margins, tax rate)
+//   4. Best/worst quarter callout
+//   5. Turkish narrative footer
+// ─────────────────────────────────────────────────────────────────────────────
 
-import Link                                         from 'next/link'
-import { NarrativeFooter, DataTable, DataTh, DataTd } from '@/components/ds'
-import { getQuarterlyReport, type QuarterResult } from '@/lib/finance/financial-core'
-import { normalizeAnalytics } from '@/lib/normalize'
-import { createClient }       from '@/lib/supabase-server'
-import { fmtTRY as fmt, fmtDateMed as fmtDate } from '@/lib/format'
+import { useQuery }  from '@tanstack/react-query'
+import {
+  KpiStrip,
+  KpiCell,
+  Panel,
+  PanelHeader,
+  NarrativeFooter,
+  SkeletonPanel,
+  EmptySlate,
+  DataTable,
+  DataTh,
+  DataTd,
+} from '@/components/ds'
+import { fmtTRY } from '@/lib/format'
+import type {
+  QuarterlySummaryReport,
+  QuarterlyData,
+} from '@/lib/services/finance/quarterly-summary.service'
 
-// ── Formatters ────────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
-/** Local 0-1 ratio → percent string. Canonical fmtPct takes value-already-in-pct. */
-function pct(r: number): string {
-  return `%${(r * 100).toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}`
+function fmtPct(val: number | null, decimals = 1): string {
+  if (val === null) return '—'
+  return `%${val.toFixed(decimals)}`
 }
-function delta(curr: number, prev: number): { text: string; color: string } {
-  if (prev === 0) return { text: '—', color: 'text-[#94a3b8]' }
-  const pct  = ((curr - prev) / Math.abs(prev)) * 100
-  const sign = pct >= 0 ? '+' : ''
-  return { text: `${sign}${pct.toFixed(1)}%`, color: pct >= 0 ? 'text-pos-text' : 'text-neg' }
+
+function growthBadge(val: number | null): { text: string; cls: string } {
+  if (val === null) return { text: '—', cls: 'text-[#94a3b8]' }
+  const sign = val >= 0 ? '+' : ''
+  return {
+    text: `${sign}${val.toFixed(1)}%`,
+    cls:  val >= 0 ? 'text-pos-text font-semibold' : 'text-neg font-semibold',
+  }
 }
-function addDays(dateStr: string, n: number): string {
-  const d = new Date(dateStr); d.setDate(d.getDate() + n)
-  return d.toISOString().slice(0, 10)
+
+function trendBadge(trend: QuarterlySummaryReport['trend']): { label: string; cls: string } {
+  const map: Record<QuarterlySummaryReport['trend'], { label: string; cls: string }> = {
+    improving:        { label: 'Yükseliş', cls: 'bg-pos-light text-pos-text border-pos-light' },
+    stable:           { label: 'Stabil',   cls: 'bg-[#f1f5f9] text-[#475569] border-[#e2e8f0]' },
+    declining:        { label: 'Düşüş',    cls: 'bg-neg-light text-neg-text border-neg-light' },
+    insufficient_data:{ label: 'Yetersiz Veri', cls: 'bg-[#f8fafc] text-[#94a3b8] border-[#e2e8f0]' },
+  }
+  return map[trend]
 }
 
-// ── Component ─────────────────────────────────────────────────────────────────
-
-interface Props { userId: string; companyId: string }
-
-export async function QuarterlyTab({ userId, companyId }: Props) {
-  const currentYear = new Date().getFullYear()
-  const today       = new Date().toISOString().slice(0, 10)
-  const supabase    = createClient()
-
-  function sq<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
-    return fn().catch(() => fallback)
+function performanceBadge(
+  p: QuarterlySummaryReport['current_performance'],
+): { label: string; cls: string } {
+  const map: Record<typeof p, { label: string; cls: string }> = {
+    exceptional: { label: 'Olağanüstü', cls: 'bg-pos-light text-pos-text border-pos-light' },
+    strong:      { label: 'Güçlü',      cls: 'bg-teal-100 text-teal-800 border-teal-200' },
+    solid:       { label: 'Sağlam',     cls: 'bg-[#f1f5f9] text-[#475569] border-[#e2e8f0]' },
+    weak:        { label: 'Zayıf',      cls: 'bg-warn-light text-warn-text border-warn-light' },
+    declining:   { label: 'Gerileme',   cls: 'bg-neg-light text-neg-text border-neg-light' },
   }
+  return map[p]
+}
 
-  const ZERO_REPORT = {
-    year: currentYear,
-    quarters: [] as QuarterResult[],
-    ytd: { revenue: 0, gross_profit: 0, net_profit: 0, matrah: 0, corporate_tax: 0, net_after_tax: 0, total_gecici: 0 },
-  }
-  const ZERO_PREV = {
-    year: currentYear - 1,
-    quarters: [] as QuarterResult[],
-    ytd: { revenue: 0, gross_profit: 0, net_profit: 0, matrah: 0, corporate_tax: 0, net_after_tax: 0, total_gecici: 0 },
-  }
+// ── Main component ────────────────────────────────────────────────────────────
 
-  // Current month bounds for close readiness checks
-  const currentMonth = today.slice(0, 7)  // YYYY-MM
-  const monthStart   = `${currentMonth}-01`
-  const monthEnd     = today
+interface Props { companyId?: string }
 
-  const [report, prevReport, analyticsRaw, overdueCount, missingCategoryCount, unconfirmedExpenses] = await Promise.all([
-    sq(() => getQuarterlyReport(userId, companyId, currentYear), ZERO_REPORT),
-    sq(() => getQuarterlyReport(userId, companyId, currentYear - 1), ZERO_PREV),
-    sq(async () => {
-      const { data } = await supabase.rpc('get_sales_analytics', { p_user_id: userId, p_company_id: companyId })
-      return data as unknown
-    }, null as unknown),
-    // Check 1: How many sales are overdue/unpaid
-    sq(async () => {
-      const { count } = await supabase
-        .from('sales')
-        .select('*', { count: 'exact', head: true })
-        .eq('company_id', companyId)
-        .in('payment_status', ['pending', 'partial', 'overdue'])
-        .not('is_deleted', 'eq', true)
-      return count ?? 0
-    }, 0),
-    // Check 2: Expenses this month missing a category
-    sq(async () => {
-      const { count } = await supabase
-        .from('expenses')
-        .select('*', { count: 'exact', head: true })
-        .eq('company_id', companyId)
-        .gte('expense_date', monthStart)
-        .lte('expense_date', monthEnd)
-        .or('expense_type.is.null,expense_type.eq.')
-        .not('is_deleted', 'eq', true)
-      return count ?? 0
-    }, 0),
-    // Check 3: Expenses this month not yet marked paid
-    sq(async () => {
-      const { count } = await supabase
-        .from('expenses')
-        .select('*', { count: 'exact', head: true })
-        .eq('company_id', companyId)
-        .gte('expense_date', monthStart)
-        .lte('expense_date', monthEnd)
-        .neq('payment_status', 'paid')
-        .not('is_deleted', 'eq', true)
-      return count ?? 0
-    }, 0),
-  ])
-
-  const a       = normalizeAnalytics(analyticsRaw)
-  const monthly = a.monthly_sales
-  const ytd     = report.ytd
-  const qs      = report.quarters
-  const prevQs  = prevReport.quarters
-  const prevYtd = prevReport.ytd
-  const convRate = a.total_proformas > 0
-    ? Math.round((a.converted_proformas / a.total_proformas) * 100) : 0
-
-  // YoY helper: same-index quarter from prior year
-  const yoyRevDelta = (qIdx: number) => {
-    const prev = prevQs[qIdx]
-    if (!prev || prev.revenue === 0) return null
-    return delta(qs[qIdx]?.revenue ?? 0, prev.revenue)
-  }
-  const ytdYoY = prevYtd.revenue > 0 ? delta(ytd.revenue, prevYtd.revenue) : null
-
-  // ── Period Close Readiness ─────────────────────────────────────────────────
-  const pastDueGecici = qs.filter((q: QuarterResult) => q.gecici_due_date && q.gecici_due_date < today && q.gecici_vergi > 0)
-
-  const closeChecks: Array<{
-    id:       string
-    label:    string
-    detail:   string
-    ok:       boolean
-    warning?: boolean
-  }> = [
-    {
-      id:     'overdue-sales',
-      label:  'Vadesi geçmiş tahsilat yok',
-      detail: overdueCount === 0
-        ? 'Tüm satışlar tahsil edildi veya vade içinde'
-        : `${overdueCount} satış hâlâ ödenmemiş — tahsilat başlatın`,
-      ok:     overdueCount === 0,
-      warning: overdueCount > 0 && overdueCount <= 3,
+export function QuarterlyTab({ companyId }: Props) {
+  const { data, isLoading, isError } = useQuery<{ report: QuarterlySummaryReport }>({
+    queryKey: ['quarterly-summary', companyId],
+    queryFn:  async () => {
+      const res = await fetch('/api/finance/quarterly-summary')
+      if (!res.ok) throw new Error(await res.text())
+      return res.json()
     },
-    {
-      id:     'expense-categories',
-      label:  'Tüm masraflar kategorize edildi',
-      detail: missingCategoryCount === 0
-        ? `${currentMonth} masrafları kategorize edilmiş`
-        : `${missingCategoryCount} masrafın kategorisi eksik — gider türü atayın`,
-      ok:     missingCategoryCount === 0,
-    },
-    {
-      id:     'expenses-paid',
-      label:  'Ay içi masraflar ödendi',
-      detail: unconfirmedExpenses === 0
-        ? `${currentMonth} masraflarının tamamı kapatıldı`
-        : `${unconfirmedExpenses} masraf henüz ödenmedi olarak işaretli`,
-      ok:     unconfirmedExpenses === 0,
-      warning: true,
-    },
-    {
-      id:     'gecici-vergi',
-      label:  'Geçici vergi takvimi güncel',
-      detail: pastDueGecici.length === 0
-        ? 'Gecikmiş geçici vergi kaydı yok'
-        : `${pastDueGecici.length} geçici vergi dönemi geçti — beyan yapıldı mı?`,
-      ok:     pastDueGecici.length === 0,
-    },
-    {
-      id:     'ytd-revenue',
-      label:  'YTD ciro kaydı mevcut',
-      detail: ytd.revenue > 0
-        ? `${currentYear} YTD ciro: ${fmt(ytd.revenue)}`
-        : 'Bu yıl için henüz satış kaydı yok',
-      ok:     ytd.revenue > 0,
-      warning: true,
-    },
-  ]
+    staleTime: 60 * 60 * 1_000,   // matches revalidate = 3600
+  })
 
-  const passCount = closeChecks.filter(c => c.ok).length
-  const readinessScore = Math.round((passCount / closeChecks.length) * 100)
-  const readinessLabel = readinessScore >= 100 ? 'Hazır' : readinessScore >= 60 ? 'Kısmen Hazır' : 'Eksikler Var'
-  const readinessBadgeClass = readinessScore >= 100
-    ? 'bg-pos-light text-pos-text border-pos-light'
-    : readinessScore >= 60
-    ? 'bg-warn-light text-warn-text border-warn-light'
-    : 'bg-neg-light text-neg-text border-neg-light'
-
-  // ── C8: Quarterly Pressure Brief ────────────────────────────────────────────
-  const quarterlyBriefLines: string[] = []
-
-  // 1. Revenue trajectory vs prior year
-  if (ytdYoY && prevYtd.revenue > 0) {
-    const yoyNum = ((ytd.revenue - prevYtd.revenue) / prevYtd.revenue) * 100
-    if (yoyNum >= 10) {
-      quarterlyBriefLines.push(`YTD ciro geçen yılın aynı dönemine göre ${ytdYoY.text} büyüdü — gelir ivmesi güçlü; marj kalitesinin korunduğunu çeyrek bazında doğrulayın.`)
-    } else if (yoyNum >= 0) {
-      quarterlyBriefLines.push(`YTD ciro geçen yılın aynı dönemine göre ${ytdYoY.text} artıyor — büyüme var ancak ivme sınırlı; gider artışını gelirle orantılı tutun.`)
-    } else {
-      quarterlyBriefLines.push(`YTD ciro geçen yılın aynı dönemine göre ${ytdYoY.text} geride — gelir daralması sürdürülüyorsa gider yapısının yeniden değerlendirilmesi gerekir.`)
-    }
-  } else if (ytd.revenue > 0) {
-    quarterlyBriefLines.push(`YTD ciro ${fmt(ytd.revenue)} — geçen yıl karşılaştırma verisi yok; bu dönem baz yıl olarak kaydedilecek.`)
+  if (isLoading) return <SkeletonPanel rows={8} />
+  if (isError || !data?.report) {
+    return (
+      <EmptySlate
+        title="Çeyreklik veri yüklenemedi"
+        sub="Sayfa yenilenerek tekrar denenebilir."
+      />
+    )
   }
 
-  // 2. Margin quality signal
-  if (ytd.revenue > 0) {
-    const ytdNetMargin = ytd.net_profit / ytd.revenue
-    if (ytdNetMargin >= 0.15) {
-      quarterlyBriefLines.push(`Net marj ${pct(ytdNetMargin)} — güçlü kârlılık; temettü kapasitesi ve yatırım tampon mevcut.`)
-    } else if (ytdNetMargin >= 0.05) {
-      quarterlyBriefLines.push(`Net marj ${pct(ytdNetMargin)} — kâr pozitif ancak ince; gider artışı veya gelir düşüşü marjı hızla eritebilir.`)
-    } else if (ytdNetMargin >= 0) {
-      quarterlyBriefLines.push(`Net marj ${pct(ytdNetMargin)} — neredeyse başabaş; vergi yükümlülükleri ve operasyonel tampon minimum düzeyde.`)
-    } else {
-      quarterlyBriefLines.push(`Net marj negatif (${pct(ytdNetMargin)}) — YTD zarar; vergi matrahı oluşmaz ancak gider yapısı mevcut gelirle örtüşmüyor.`)
-    }
-  }
+  const { report } = data
+  const {
+    current_quarter,
+    current_kpis,
+    current_performance,
+    quarters,
+    qoq_growth,
+    rolling_4q_revenue,
+    rolling_4q_ebitda,
+    trend,
+    best_quarter,
+    worst_quarter,
+    narrative,
+  } = report
 
-  // 3. Gecici vergi compliance
-  if (pastDueGecici.length > 0) {
-    quarterlyBriefLines.push(`${pastDueGecici.length} geçici vergi dönemi vadesi geçti — beyan yapılmadıysa gecikme zammı ve vergi cezası riski doğuyor.`)
-  } else if (ytd.total_gecici > 0) {
-    const remaining = Math.max(0, ytd.corporate_tax - ytd.total_gecici)
-    if (remaining > 0) {
-      quarterlyBriefLines.push(`${fmt(ytd.total_gecici)} geçici vergi ödendi; yıl sonunda ${fmt(remaining)} kurumlar vergisi mahsubu kalan — nakit planlamasında ayrılmış olmalı.`)
-    } else {
-      quarterlyBriefLines.push(`Ödenen geçici vergiler tahmini kurumlar vergisini karşılıyor — yıl sonu nakit çıkışı minimal görünüyor.`)
-    }
-  }
+  const tb   = trendBadge(trend)
+  const pb   = performanceBadge(current_performance)
 
-  // 4. Close readiness
-  const failCount = closeChecks.length - passCount
-  if (failCount === 0) {
-    quarterlyBriefLines.push('Dönem kapanış kontrolleri tam geçti — finansal tablolar onaylanmaya hazır.')
-  } else {
-    const failLabels = closeChecks.filter(c => !c.ok).map(c => c.label).join(', ')
-    quarterlyBriefLines.push(`${failCount} kapanış kontrolü eksik (${failLabels}) — raporlar kesinleştirilmeden önce giderilmeli.`)
-  }
-
+  // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <div className="space-y-4">
 
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
-          <h2 className="text-lg font-black text-[#0f172a] tracking-tight">CFO Raporu {currentYear}</h2>
-          <p className="text-xs text-[#94a3b8] mt-0.5">Çeyreklik P&L · Vergi Takvimi · Aylık Satışlar</p>
+          <h2 className="text-lg font-black text-[#0f172a] tracking-tight">
+            Çeyreklik Özet
+          </h2>
+          <p className="text-xs text-[#94a3b8] mt-0.5">
+            Son 8 çeyrek · QoQ büyüme · Trend analizi
+          </p>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="text-xs bg-[#f1f5f9] text-[#64748b] px-2.5 py-1 rounded font-semibold">
-            {convRate}% dönüşüm · {a.total_sales} satış
+        <div className="flex items-center gap-2">
+          <span className={`text-xs font-bold border px-2.5 py-1 rounded ${pb.cls}`}>
+            {current_quarter.label}: {pb.label}
+          </span>
+          <span className={`text-xs font-bold border px-2.5 py-1 rounded ${tb.cls}`}>
+            {tb.label}
           </span>
         </div>
       </div>
 
-      {/* Zone 1 — YTD strip */}
-      <div className="grid grid-cols-4 gap-3">
-        {[
-          {
-            label: 'YTD Ciro', value: fmt(ytd.revenue), tone: 'text-[#0f172a]',
-            sub: ytdYoY ? ytdYoY.text + ' yıllık' : undefined, subColor: ytdYoY?.color,
-          },
-          {
-            label: 'Brüt Kâr', value: fmt(ytd.gross_profit),
-            tone: ytd.gross_profit >= 0 ? 'text-pos-text' : 'text-neg',
-          },
-          {
-            label: 'Vergi Sonrası Net', value: fmt(ytd.net_after_tax),
-            tone: ytd.net_after_tax >= 0 ? 'text-pos-text' : 'text-neg',
-          },
-          {
-            label: 'Tahmini KV', value: fmt(ytd.corporate_tax),
-            tone: ytd.corporate_tax > 0 ? 'text-warn-text' : 'text-[#94a3b8]',
-          },
-        ].map(c => (
-          <div key={c.label} className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{c.label}</div>
-            <div className={`text-xl font-black tabular-nums leading-none ${c.tone}`}>{c.value}</div>
-            {'sub' in c && c.sub && (
-              <div className={`text-[10px] font-semibold mt-1 leading-none ${c.subColor ?? 'text-[#94a3b8]'}`}>{c.sub}</div>
-            )}
-          </div>
-        ))}
-      </div>
+      {/* Zone 1 — Rolling 4Q KPI strip */}
+      <KpiStrip>
+        <KpiCell
+          label="Son 4Ç Ciro"
+          value={fmtTRY(rolling_4q_revenue)}
+          tone="neutral"
+        />
+        <KpiCell
+          label="Son 4Ç EBITDA"
+          value={fmtTRY(rolling_4q_ebitda)}
+          tone={rolling_4q_ebitda >= 0 ? 'ok' : 'critical'}
+        />
+        <KpiCell
+          label="Brüt Marj"
+          value={fmtPct(current_kpis.gross_margin_pct)}
+          tone={
+            (current_kpis.gross_margin_pct ?? 0) >= 30 ? 'ok' :
+            (current_kpis.gross_margin_pct ?? 0) >= 15 ? 'warn' :
+            'critical'
+          }
+          sub="Güncel çeyrek"
+        />
+        <KpiCell
+          label="EBITDA Marj"
+          value={fmtPct(current_kpis.ebitda_margin_pct)}
+          tone={
+            (current_kpis.ebitda_margin_pct ?? 0) >= 15 ? 'ok' :
+            (current_kpis.ebitda_margin_pct ?? 0) >= 5  ? 'warn' :
+            'critical'
+          }
+          sub="Güncel çeyrek"
+        />
+      </KpiStrip>
 
-      {/* C8 — Quarterly Pressure Brief */}
-      {quarterlyBriefLines.length > 0 && (
-        <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded p-4 shadow-sm">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Çeyreklik Baskı Özeti</div>
-          <div className="space-y-1.5">
-            {quarterlyBriefLines.map((line, i) => (
-              <p key={i} className="text-xs text-[#334155] leading-relaxed">
-                {i > 0 && <span className="text-[#94a3b8] mr-1">—</span>}{line}
-              </p>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Zone 2 — Quarter grid */}
-      {qs.length > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
-          <div className="px-4 py-3 border-b border-[#e2e8f0]">
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Çeyreklik Performans</div>
-            <p className="text-[10px] text-[#94a3b8] mt-0.5">Ciro · Brüt Kâr · Net Kâr · Marjlar</p>
-          </div>
-          <DataTable minWidth="620px">
+      {/* Zone 2 — Quarterly timeline table */}
+      {quarters.length > 0 && (
+        <Panel>
+          <PanelHeader
+            label="Çeyreklik Performans Tablosu"
+            sub="Ciro · Brüt Kâr · EBITDA · QoQ Büyüme"
+          />
+          <DataTable minWidth="700px">
             <thead>
               <tr>
                 <DataTh>Çeyrek</DataTh>
                 <DataTh align="right">Ciro</DataTh>
-                <DataTh align="right">YoY</DataTh>
-                <DataTh align="right" className="text-brand-light">Brüt Kâr</DataTh>
-                <DataTh align="right" className="text-pos">Net Kâr</DataTh>
+                <DataTh align="right">QoQ</DataTh>
+                <DataTh align="right">Brüt Kâr</DataTh>
+                <DataTh align="right">EBITDA</DataTh>
                 <DataTh align="right">Brüt Marj</DataTh>
-                <DataTh align="right">Net Marj</DataTh>
-                <DataTh align="right" className="text-warn">KV Matrahı</DataTh>
+                <DataTh align="right">EBITDA Marj</DataTh>
+                <DataTh align="right">Performans</DataTh>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#f1f5f9]">
-              {qs.map((q: QuarterResult, i: number) => {
-                const prev = i > 0 ? qs[i - 1] : null
-                const revDelta = prev && prev.revenue > 0 ? delta(q.revenue, prev.revenue) : null
-                const yoy      = yoyRevDelta(i)
-                const isFuture = !q.is_past_quarter && q.period.from > today
+              {quarters.map((q) => {
+                const qoq   = q.qoq_growth?.revenue_growth_pct ?? null
+                const badge = growthBadge(qoq)
+                const perf  = performanceBadge(q.performance as QuarterlySummaryReport['current_performance'])
                 return (
-                  <tr key={q.label} className={`hover:bg-[#f8fafc]/60 ${isFuture ? 'opacity-40' : ''}`}>
+                  <tr key={q.label} className="hover:bg-[#f8fafc]/60">
                     <DataTd>
-                      <div className="font-black text-[#0f172a]">{q.label}</div>
-                      {isFuture && <div className="text-[9px] text-[#94a3b8]">Henüz başlamadı</div>}
+                      <span className="font-black text-[#0f172a]">{q.label}</span>
                     </DataTd>
                     <DataTd align="right">
-                      <div className="font-mono font-bold text-[#0f172a]">{fmt(q.revenue)}</div>
-                      {revDelta && <div className={`text-[10px] font-semibold ${revDelta.color}`}>{revDelta.text} QoQ</div>}
+                      <span className="font-mono font-bold text-[#0f172a]">
+                        {fmtTRY(q.revenue)}
+                      </span>
                     </DataTd>
                     <DataTd align="right">
-                      {yoy
-                        ? <span className={`text-xs font-black tabular-nums ${yoy.color}`}>{yoy.text}</span>
-                        : <span className="text-[#cbd5e1] text-xs">—</span>}
+                      <span className={`text-xs ${badge.cls}`}>{badge.text}</span>
                     </DataTd>
                     <DataTd align="right" className={`font-mono font-bold ${q.gross_profit >= 0 ? 'text-brand' : 'text-neg'}`}>
-                      {fmt(q.gross_profit)}
+                      {fmtTRY(q.gross_profit)}
                     </DataTd>
-                    <DataTd align="right" className={`font-mono font-bold ${q.net_profit >= 0 ? 'text-pos-text' : 'text-neg'}`}>
-                      {fmt(q.net_profit)}
+                    <DataTd align="right" className={`font-mono font-bold ${q.ebitda >= 0 ? 'text-pos-text' : 'text-neg'}`}>
+                      {fmtTRY(q.ebitda)}
                     </DataTd>
-                    <DataTd align="right" className={`font-mono ${q.gross_margin >= 0.3 ? 'text-pos-text' : q.gross_margin >= 0.1 ? 'text-warn-text' : 'text-neg'}`}>
-                      {q.revenue > 0 ? pct(q.gross_margin) : '—'}
+                    <DataTd align="right" className="font-mono text-[#64748b]">
+                      {fmtPct(q.kpis.gross_margin_pct)}
                     </DataTd>
-                    <DataTd align="right" className={`font-mono ${q.net_margin >= 0 ? 'text-[#64748b]' : 'text-neg'}`}>
-                      {q.revenue > 0 ? pct(q.net_margin) : '—'}
+                    <DataTd align="right" className="font-mono text-[#64748b]">
+                      {fmtPct(q.kpis.ebitda_margin_pct)}
                     </DataTd>
-                    <DataTd align="right" className={`font-mono ${q.matrah > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>
-                      {q.matrah > 0 ? fmt(q.matrah) : '—'}
+                    <DataTd align="right">
+                      <span className={`text-[10px] font-bold border px-1.5 py-0.5 rounded ${perf.cls}`}>
+                        {perf.label}
+                      </span>
                     </DataTd>
                   </tr>
                 )
               })}
-              {/* YTD row */}
-              <tr className="bg-brand-subtle/40 font-black border-t-2 border-brand/10">
-                <DataTd className="text-brand font-black">YTD Toplam</DataTd>
-                <DataTd align="right" className="font-mono font-black text-[#0f172a]">{fmt(ytd.revenue)}</DataTd>
-                <DataTd align="right">
-                  {ytdYoY
-                    ? <span className={`text-xs font-black ${ytdYoY.color}`}>{ytdYoY.text}</span>
-                    : <span className="text-[#cbd5e1] text-xs">—</span>}
-                </DataTd>
-                <DataTd align="right" className={`font-mono font-black ${ytd.gross_profit >= 0 ? 'text-brand' : 'text-neg'}`}>{fmt(ytd.gross_profit)}</DataTd>
-                <DataTd align="right" className={`font-mono font-black ${ytd.net_profit >= 0 ? 'text-pos-text' : 'text-neg'}`}>{fmt(ytd.net_profit)}</DataTd>
-                <DataTd align="right" className="font-mono text-[#64748b]">
-                  {ytd.revenue > 0 ? pct(ytd.gross_profit / ytd.revenue) : '—'}
-                </DataTd>
-                <DataTd align="right" className="font-mono text-[#64748b]">
-                  {ytd.revenue > 0 ? pct(ytd.net_profit / ytd.revenue) : '—'}
-                </DataTd>
-                <DataTd align="right" className={`font-mono font-black ${ytd.matrah > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>{ytd.matrah > 0 ? fmt(ytd.matrah) : '—'}</DataTd>
-              </tr>
             </tbody>
           </DataTable>
-        </div>
+        </Panel>
       )}
 
-      {/* Zone 3 — Gecici vergi schedule */}
-      {qs.some((q: QuarterResult) => q.gecici_vergi > 0) && (
-        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
-          <div className="px-4 py-3 border-b border-[#e2e8f0] flex items-center justify-between">
-            <div>
-              <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Geçici Vergi Takvimi {currentYear}</div>
-              <p className="text-[10px] text-[#94a3b8] mt-0.5">Kurumlar vergisi matrahı üzerinden %25 · yıllık beyan Nisan ayında</p>
+      {/* Zone 3 — Current quarter KPI detail */}
+      <Panel>
+        <PanelHeader
+          label={`${current_quarter.label} — KPI Detayı`}
+          sub="Marjlar · Vergi oranı · OpEx oranı"
+        />
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-4">
+          {[
+            { label: 'Brüt Marj',      value: fmtPct(current_kpis.gross_margin_pct) },
+            { label: 'EBITDA Marj',    value: fmtPct(current_kpis.ebitda_margin_pct) },
+            { label: 'Net Marj',       value: fmtPct(current_kpis.net_margin_pct) },
+            { label: 'OpEx Oranı',     value: fmtPct(current_kpis.opex_ratio_pct) },
+            { label: 'Eff. Vergi',     value: fmtPct(current_kpis.tax_rate_effective_pct) },
+            { label: 'Gelir/Personel', value: current_kpis.revenue_per_employee !== null
+                ? fmtTRY(current_kpis.revenue_per_employee) : '—' },
+          ].map(c => (
+            <div key={c.label} className="bg-[#f8fafc] rounded px-3 py-2.5">
+              <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+                {c.label}
+              </div>
+              <div className="text-sm font-black tabular-nums text-[#0f172a]">{c.value}</div>
             </div>
-            <span className="text-xs font-bold text-warn-text bg-warn-light border border-warn-light px-2.5 py-1 rounded">
-              Toplam {fmt(ytd.total_gecici)}
-            </span>
-          </div>
-          <div className="divide-y divide-[#f1f5f9]">
-            {qs.filter((q: QuarterResult) => q.gecici_vergi > 0 || q.gecici_due_date).map((q: QuarterResult) => {
-              if (!q.gecici_due_date) return null
-              const isPast   = q.gecici_due_date <= today
-              const isUrgent = !isPast && q.gecici_due_date <= addDays(today, 30)
+          ))}
+        </div>
+      </Panel>
+
+      {/* Zone 4 — QoQ growth detail (current quarter) */}
+      {qoq_growth && (
+        <Panel>
+          <PanelHeader
+            label="QoQ Büyüme Analizi"
+            sub={`${current_quarter.label} — bir önceki çeyreğe göre`}
+          />
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4">
+            {([
+              ['Ciro',       qoq_growth.revenue_growth_pct],
+              ['Brüt Kâr',   qoq_growth.gross_profit_growth_pct],
+              ['EBITDA',     qoq_growth.ebitda_growth_pct],
+              ['Net Kâr',    qoq_growth.net_income_growth_pct],
+            ] as Array<[string, number | null]>).map(([label, val]) => {
+              const b = growthBadge(val)
               return (
-                <div key={q.label} className={`px-4 py-3 flex items-center justify-between gap-4 ${isUrgent ? 'bg-warn-light/40' : ''}`}>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-black text-[#1e293b]">{q.label} Geçici Vergi</span>
-                      {isPast && <span className="text-[9px] bg-[#f1f5f9] text-[#94a3b8] px-1.5 py-0.5 rounded">Geçti</span>}
-                      {isUrgent && !isPast && <span className="text-[9px] bg-warn-light text-warn-text font-bold px-1.5 py-0.5 rounded">30 gün içinde</span>}
-                    </div>
-                    <div className="text-[10px] text-[#94a3b8] mt-0.5">Son ödeme: {fmtDate(q.gecici_due_date)} · Matrah: {fmt(q.matrah)}</div>
-                  </div>
-                  <div className={`text-base font-black tabular-nums ${isPast ? 'text-[#94a3b8]' : isUrgent ? 'text-warn-text' : 'text-warn-text'}`}>
-                    {fmt(q.gecici_vergi)}
-                  </div>
+                <div key={label} className="bg-[#f8fafc] rounded px-3 py-2.5">
+                  <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{label}</div>
+                  <div className={`text-base font-black tabular-nums ${b.cls}`}>{b.text}</div>
                 </div>
               )
             })}
-            <div className="px-4 py-3 flex items-center justify-between bg-[#f8fafc]">
-              <div>
-                <div className="text-xs font-black text-[#334155]">Yıl Sonu Kurumlar Vergisi Tahmini</div>
-                <div className="text-[10px] text-[#94a3b8] mt-0.5">Nisan {currentYear + 1} · Yıllık matrah × %25 − ödenen geçici vergiler</div>
+          </div>
+        </Panel>
+      )}
+
+      {/* Zone 5 — Best / Worst quarter */}
+      {(best_quarter || worst_quarter) && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {best_quarter && (
+            <div className="bg-pos-light/30 border border-pos-light rounded p-4">
+              <div className="text-[0.6rem] font-black uppercase tracking-widest text-pos-text mb-1">
+                En İyi Çeyrek
               </div>
-              <div className="text-base font-black text-warn-text tabular-nums">
-                {fmt(Math.max(0, ytd.corporate_tax - ytd.total_gecici))}
+              <div className="text-sm font-black text-[#0f172a]">{best_quarter.label}</div>
+              <div className="text-base font-black tabular-nums text-pos-text mt-1">
+                {fmtTRY(best_quarter.revenue)}
               </div>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Zone 4 — Monthly breakdown */}
-      {monthly.length > 0 ? (
-        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
-          <div className="px-4 py-3 border-b border-[#e2e8f0] flex items-center justify-between">
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Aylık Satış Detayı</div>
-            <span className="text-[10px] text-[#94a3b8]">{a.total_sales} satış · {a.total_proformas} teklif</span>
-          </div>
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="bg-[#f8fafc] border-b border-[#e2e8f0]">
-                <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ay</th>
-                <th className="text-center px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Satış</th>
-                <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ciro (TRY)</th>
-                <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-pos">Kâr (TRY)</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#f1f5f9]">
-              {[...monthly].reverse().map(m => (
-                <tr key={m.month} className="hover:bg-[#f8fafc]/60 transition-colors">
-                  <td className="px-4 py-3 font-semibold text-[#1e293b]">{m.month}</td>
-                  <td className="px-4 py-3 text-center text-[#64748b] tabular-nums">{m.count}</td>
-                  <td className="px-4 py-3 text-right font-mono text-[#334155]">{fmt(m.revenue_try)}</td>
-                  <td className={`px-4 py-3 text-right font-mono font-bold ${m.profit >= 0 ? 'text-pos-text' : 'text-neg'}`}>
-                    {fmt(m.profit)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <div className="bg-white border border-[#e2e8f0] rounded text-center py-16 shadow-sm">
-          <p className="text-[#64748b] font-medium text-sm">Henüz satış verisi yok.</p>
-          <p className="text-[#94a3b8] text-xs mt-1">Satış kaydedildiğinde çeyreklik analiz otomatik hesaplanır.</p>
-        </div>
-      )}
-
-      {/* Zone 5 — Period Close Readiness */}
-      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
-        <div className="px-4 py-3 border-b border-[#e2e8f0] flex items-center justify-between">
-          <div>
-            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Dönem Kapanış Kontrolü</div>
-            <p className="text-[10px] text-[#94a3b8] mt-0.5">Dönem kapatmadan önce kontrol edilmesi gereken kalemler</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs tabular-nums text-[#64748b]">{passCount}/{closeChecks.length}</span>
-            <span className={`text-xs font-bold border px-2.5 py-1 rounded ${readinessBadgeClass}`}>
-              {readinessLabel}
-            </span>
-          </div>
-        </div>
-
-        {/* Progress bar */}
-        <div className="h-1.5 bg-[#f1f5f9] w-full">
-          <div
-            className={`h-full transition-all duration-500 ${
-              readinessScore >= 100 ? 'bg-pos-light' : readinessScore >= 60 ? 'bg-warn' : 'bg-neg'
-            }`}
-            style={{ width: `${readinessScore}%` }}
-          />
-        </div>
-
-        <div className="divide-y divide-[#f1f5f9]">
-          {closeChecks.map(check => {
-            const icon = check.ok
-              ? <span className="text-pos text-base leading-none">✓</span>
-              : check.warning
-              ? <span className="text-warn text-base leading-none">⚠</span>
-              : <span className="text-neg text-base leading-none">✗</span>
-
-            const labelClass = check.ok ? 'text-[#1e293b]' : check.warning ? 'text-warn-text' : 'text-neg-text'
-            const detailClass = check.ok ? 'text-[#94a3b8]' : check.warning ? 'text-warn-text' : 'text-neg'
-
-            return (
-              <div key={check.id} className={`px-4 py-3 flex items-start gap-3 ${!check.ok && !check.warning ? 'bg-neg-light/30' : !check.ok ? 'bg-warn-light/30' : ''}`}>
-                <div className="mt-0.5 w-5 shrink-0 flex justify-center">{icon}</div>
-                <div className="min-w-0 flex-1">
-                  <div className={`text-xs font-bold ${labelClass}`}>{check.label}</div>
-                  <div className={`text-[10px] mt-0.5 ${detailClass}`}>{check.detail}</div>
-                </div>
+          )}
+          {worst_quarter && (
+            <div className="bg-warn-light/30 border border-warn-light rounded p-4">
+              <div className="text-[0.6rem] font-black uppercase tracking-widest text-warn-text mb-1">
+                En Zayıf Çeyrek
               </div>
-            )
-          })}
+              <div className="text-sm font-black text-[#0f172a]">{worst_quarter.label}</div>
+              <div className="text-base font-black tabular-nums text-warn-text mt-1">
+                {fmtTRY(worst_quarter.revenue)}
+              </div>
+            </div>
+          )}
         </div>
+      )}
 
-        {readinessScore >= 100 && (
-          <div className="px-4 py-3 bg-pos-light/40 border-t border-pos-light text-center">
-            <p className="text-xs text-pos-text font-bold">✓ Tüm kontroller geçti — dönem kapatılabilir</p>
-          </div>
-        )}
-      </div>
-
-      {/* Cross-navigation */}
+      {/* Narrative footer */}
       <NarrativeFooter
-        narrative="Geçici vergi nakit planlamasını doğrudan etkiler — çeyrek matrahı büyüyorsa nakit rezervi buna göre ayrılmalı."
+        narrative={narrative}
         links={[
-          { label: 'Aylık P&L',     href: '/dashboard/finance?tab=pnl' },
-          { label: 'KDV/KV',        href: '/dashboard/finance?tab=tax' },
-          { label: 'Gelir Tablosu', href: '/dashboard/reports/income-statement' },
+          { label: 'Aylık P&L',      href: '/dashboard/finance?tab=pnl' },
+          { label: 'Yıllık Özet',    href: '/dashboard/finance?tab=annual' },
+          { label: 'Gelir Tablosu',  href: '/dashboard/reports/income-statement' },
         ]}
       />
     </div>
