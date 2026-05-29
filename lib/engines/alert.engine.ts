@@ -66,6 +66,9 @@ export interface AlertInputs {
   // DSR
   debtServiceRatio:     number
   partnerLoanConcentration: number  // 0-1: largest single partner's share of total loan
+
+  // Receivable concentration
+  maxCustomerReceivableShare?: number  // 0-1: largest single customer's share of total receivables
 }
 
 const SEVERITY_ORDER: Record<AlertSeverity, number> = { critical: 0, warning: 1, info: 2 }
@@ -315,6 +318,24 @@ export function evaluateAlerts(inputs: AlertInputs): DecisionAlert[] {
     })
   }
 
+  // ── RECEIVABLE_CONCENTRATION ──────────────────────────────────────────────
+  // Single customer holds >40% of total receivables — concentration risk
+  if ((inputs.maxCustomerReceivableShare ?? 0) > 0.40 && inputs.totalReceivables > 0) {
+    const pct = round2((inputs.maxCustomerReceivableShare ?? 0) * 100)
+    alerts.push({
+      id:           'RECEIVABLE_CONCENTRATION',
+      rule_type:    'RECEIVABLE_CONCENTRATION',
+      severity:     'warning',
+      title:        `Alacak konsantrasyonu yüksek: %${pct}`,
+      detail:       'Tek müşteri toplam alacakların %40+\'ını oluşturuyor — tahsilat riski',
+      actionLabel:  'Tahsilat Sayfası',
+      actionHref:   '/dashboard/commercial?tab=collections',
+      amount:       round2((inputs.maxCustomerReceivableShare ?? 0) * inputs.totalReceivables),
+      triggeredAt:  now,
+      resolvedWhen: 'Alacak konsantrasyonu %40\'ın altına düştüğünde',
+    })
+  }
+
   // ── CONCENTRATION ──────────────────────────────────────────────────────────
   if (inputs.partnerLoanConcentration > 0.80) {
     alerts.push({
@@ -435,7 +456,45 @@ export function evaluateCFOAlerts(inputs: CFOAccuracyInputs, companyId: string):
   })
 }
 
-// ── Helpers ────────────────────────────────────────────────────────────────
+// ── Exported Pure Helpers ─────────────────────────────────────────────────
+
+/**
+ * Classify alert severity based on days overdue and amount.
+ * - critical: daysOverdue > 60 and amount > 500, OR daysOverdue > 30 and amount > 10_000
+ * - warning:  daysOverdue > 0 and amount > 0
+ * - info:     everything else (including 0/negative inputs)
+ */
+export function classifyAlertSeverity(daysOverdue: number, amount: number): 'info' | 'warning' | 'critical' {
+  if (daysOverdue <= 0 || amount <= 0) return 'info'
+  if (daysOverdue > 60 && amount > 500) return 'critical'
+  if (daysOverdue > 30 && amount > 10_000) return 'critical'
+  return 'warning'
+}
+
+/**
+ * Build a stable alert ID: `${type}_${resourceId}`.
+ * Spaces in either argument are replaced with underscores.
+ */
+export function buildAlertId(type: string, resourceId: string): string {
+  const safeType = type.replace(/\s+/g, '_')
+  const safeId   = resourceId.replace(/\s+/g, '_')
+  return `${safeType}_${safeId}`
+}
+
+/**
+ * Sort alerts: critical first, then warning, then info.
+ * Within the same severity, sort by amount descending (undefined amount = 0).
+ * Returns a new array; does not mutate the input.
+ */
+export function sortAlertsByPriority(alerts: DecisionAlert[]): DecisionAlert[] {
+  return [...alerts].sort((a, b) => {
+    const sevDiff = SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity]
+    if (sevDiff !== 0) return sevDiff
+    return (b.amount ?? 0) - (a.amount ?? 0)
+  })
+}
+
+// ── Private Helpers ────────────────────────────────────────────────────────
 
 function fmtK(n: number): string {
   const abs = Math.abs(n)

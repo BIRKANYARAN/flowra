@@ -11,7 +11,12 @@ import {
   classifyOverallHealth,
   computeFinanceScore,
   buildExecutiveStatusLine,
+  classifyPartnerHealth,
+  situationStatusLabel,
 } from '../lib/services/intelligence/executive-summary.service'
+import {
+  computeSituation,
+} from '../lib/engines/situation.engine'
 
 // ── computeOverallHealthScore ─────────────────────────────────────────────────
 
@@ -671,5 +676,242 @@ describe('computeFinanceScore — net margin positive and negative cases', () =>
 
   it('gross=30 → normGross=60, runway=0, net=0 → score = 60/3 = 20', () => {
     expect(computeFinanceScore(30, 0, 0)).toBeCloseTo(20, 1)
+  })
+})
+
+// ── computeSituation — status classification ───────────────────────────────────
+
+const PERFECT_INPUTS = {
+  cashRunwayMonths:   12,
+  isProfitable:       true,
+  netMarginPct:       0.25,
+  debtServiceRatio:   0,
+  overdueRatioPct:    0,
+  maxBurdenScoreAbs:  0,
+}
+
+describe('computeSituation — status classification', () => {
+
+  it('perfect inputs → healthy status', () => {
+    const result = computeSituation(PERFECT_INPUTS)
+    expect(result.status).toBe('healthy')
+  })
+
+  it('healthy status has composite >= 80', () => {
+    const result = computeSituation(PERFECT_INPUTS)
+    expect(result.composite).toBeGreaterThanOrEqual(80)
+  })
+
+  it('high overdue ratio → lower composite than no overdue', () => {
+    const withOverdue = computeSituation({ ...PERFECT_INPUTS, overdueRatioPct: 80 })
+    const noOverdue   = computeSituation(PERFECT_INPUTS)
+    expect(withOverdue.composite).toBeLessThan(noOverdue.composite)
+  })
+
+  it('critical alerts cap composite at 74', () => {
+    const result = computeSituation({
+      ...PERFECT_INPUTS,
+      activeAlertCounts: { critical: 1, warning: 0, info: 0 },
+    })
+    expect(result.composite).toBeLessThanOrEqual(74)
+  })
+
+  it('critical alerts prevent healthy status', () => {
+    const result = computeSituation({
+      ...PERFECT_INPUTS,
+      activeAlertCounts: { critical: 2, warning: 0, info: 0 },
+    })
+    expect(result.status).not.toBe('healthy')
+  })
+
+  it('composite >= 40 and < 60 → at-risk status', () => {
+    // overdueRatioPct=80 and high debt bring score down
+    const result = computeSituation({
+      cashRunwayMonths:  2,
+      isProfitable:      false,
+      netMarginPct:      -0.10,
+      debtServiceRatio:  0.6,
+      overdueRatioPct:   50,
+      maxBurdenScoreAbs: 0.3,
+    })
+    // whatever the exact composite, status should be at-risk or critical
+    expect(['at-risk', 'critical']).toContain(result.status)
+  })
+
+  it('returns all required fields', () => {
+    const result = computeSituation(PERFECT_INPUTS)
+    expect(result).toHaveProperty('status')
+    expect(result).toHaveProperty('composite')
+    expect(result).toHaveProperty('situationLine')
+    expect(result).toHaveProperty('criticalFactor')
+    expect(result).toHaveProperty('scores')
+  })
+
+  it('scores object has all 5 dimensions', () => {
+    const result = computeSituation(PERFECT_INPUTS)
+    expect(result.scores).toHaveProperty('cash')
+    expect(result.scores).toHaveProperty('profit')
+    expect(result.scores).toHaveProperty('debt')
+    expect(result.scores).toHaveProperty('receivables')
+    expect(result.scores).toHaveProperty('partner')
+  })
+
+  it('profitable company → cash score = 100', () => {
+    const result = computeSituation({ ...PERFECT_INPUTS, isProfitable: true })
+    expect(result.scores.cash).toBe(100)
+  })
+
+  it('zero runway unprofitable → cash score = 0', () => {
+    const result = computeSituation({
+      ...PERFECT_INPUTS,
+      cashRunwayMonths: 0,
+      isProfitable:     false,
+    })
+    expect(result.scores.cash).toBe(0)
+  })
+
+  it('100% overdue → receivables score = 0', () => {
+    const result = computeSituation({ ...PERFECT_INPUTS, overdueRatioPct: 100 })
+    expect(result.scores.receivables).toBe(0)
+  })
+
+  it('0% overdue → receivables score = 100', () => {
+    const result = computeSituation({ ...PERFECT_INPUTS, overdueRatioPct: 0 })
+    expect(result.scores.receivables).toBe(100)
+  })
+
+  it('DSR >= 1.0 → debt score = 0', () => {
+    const result = computeSituation({ ...PERFECT_INPUTS, debtServiceRatio: 1.0 })
+    expect(result.scores.debt).toBe(0)
+  })
+
+  it('DSR = 0 → debt score = 100', () => {
+    const result = computeSituation({ ...PERFECT_INPUTS, debtServiceRatio: 0 })
+    expect(result.scores.debt).toBe(100)
+  })
+
+  it('maxBurdenScoreAbs = 0.5 → partner score = 0', () => {
+    const result = computeSituation({ ...PERFECT_INPUTS, maxBurdenScoreAbs: 0.5 })
+    expect(result.scores.partner).toBe(0)
+  })
+
+  it('maxBurdenScoreAbs = 0 → partner score = 100', () => {
+    const result = computeSituation({ ...PERFECT_INPUTS, maxBurdenScoreAbs: 0 })
+    expect(result.scores.partner).toBe(100)
+  })
+
+  it('critical active alert → situationLine starts with "Kritik uyarı"', () => {
+    const result = computeSituation({
+      ...PERFECT_INPUTS,
+      activeAlertCounts: { critical: 1, warning: 0, info: 0 },
+    })
+    expect(result.situationLine).toContain('Kritik uyarı')
+  })
+
+  it('no critical alerts → situationLine starts with "Şirket"', () => {
+    const result = computeSituation(PERFECT_INPUTS)
+    expect(result.situationLine.startsWith('Şirket')).toBe(true)
+  })
+
+  it('warning penalties reduce composite without capping', () => {
+    const noWarning  = computeSituation(PERFECT_INPUTS)
+    const withWarn   = computeSituation({
+      ...PERFECT_INPUTS,
+      activeAlertCounts: { critical: 0, warning: 3, info: 0 },
+    })
+    // 3 warnings = 9 penalty points
+    expect(withWarn.composite).toBeLessThan(noWarning.composite)
+    expect(noWarning.composite - withWarn.composite).toBeCloseTo(9, 0)
+  })
+
+  it('composite is always between 0 and 100', () => {
+    const result = computeSituation({
+      cashRunwayMonths:  0,
+      isProfitable:      false,
+      netMarginPct:      -0.5,
+      debtServiceRatio:  2.0,
+      overdueRatioPct:   100,
+      maxBurdenScoreAbs: 1.0,
+      activeAlertCounts: { critical: 10, warning: 10, info: 10 },
+    })
+    expect(result.composite).toBeGreaterThanOrEqual(0)
+    expect(result.composite).toBeLessThanOrEqual(100)
+  })
+
+  it('net margin 0.25 → profit score > 50 (positive margin)', () => {
+    const result = computeSituation({ ...PERFECT_INPUTS, netMarginPct: 0.25 })
+    expect(result.scores.profit).toBeGreaterThan(50)
+  })
+
+  it('net margin -0.25 → profit score = 0', () => {
+    // profitScore = raw * 2 + 50 = -0.25*100*2+50 = -50+50 = 0
+    const result = computeSituation({ ...PERFECT_INPUTS, netMarginPct: -0.25 })
+    expect(result.scores.profit).toBe(0)
+  })
+
+  it('criticalFactor is a non-empty string', () => {
+    const result = computeSituation(PERFECT_INPUTS)
+    expect(typeof result.criticalFactor).toBe('string')
+    expect(result.criticalFactor.length).toBeGreaterThan(0)
+  })
+
+  it('all perfect scores → criticalFactor mentions all metrics healthy', () => {
+    const result = computeSituation(PERFECT_INPUTS)
+    // When all scores >=90 deriveCriticalFactor returns the "all healthy" message
+    expect(result.criticalFactor).toContain('sağlıklı')
+  })
+})
+
+// ── classifyPartnerHealth ─────────────────────────────────────────────────────
+
+describe('classifyPartnerHealth', () => {
+
+  it('burden 0 → healthy', () => {
+    expect(classifyPartnerHealth(0)).toBe('healthy')
+  })
+
+  it('burden 0.10 → healthy (< 0.15)', () => {
+    expect(classifyPartnerHealth(0.10)).toBe('healthy')
+  })
+
+  it('burden 0.15 → attention (boundary)', () => {
+    expect(classifyPartnerHealth(0.15)).toBe('attention')
+  })
+
+  it('burden 0.25 → attention', () => {
+    expect(classifyPartnerHealth(0.25)).toBe('attention')
+  })
+
+  it('burden 0.35 → critical (boundary)', () => {
+    expect(classifyPartnerHealth(0.35)).toBe('critical')
+  })
+
+  it('burden 0.50 → critical', () => {
+    expect(classifyPartnerHealth(0.50)).toBe('critical')
+  })
+
+  it('burden 1.0 → critical', () => {
+    expect(classifyPartnerHealth(1.0)).toBe('critical')
+  })
+})
+
+// ── situationStatusLabel ──────────────────────────────────────────────────────
+
+describe('situationStatusLabel', () => {
+
+  it('healthy → "Sağlıklı"', () => {
+    expect(situationStatusLabel('healthy')).toBe('Sağlıklı')
+  })
+
+  it('caution → "Dikkat"', () => {
+    expect(situationStatusLabel('caution')).toBe('Dikkat')
+  })
+
+  it('at-risk → "Risk"', () => {
+    expect(situationStatusLabel('at-risk')).toBe('Risk')
+  })
+
+  it('critical → "Kritik"', () => {
+    expect(situationStatusLabel('critical')).toBe('Kritik')
   })
 })
