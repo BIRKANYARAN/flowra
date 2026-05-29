@@ -1,38 +1,44 @@
-// ─────────────────────────────────────────────────────────────────────────────
-// GET /api/commercial/price-optimization
+// ── GET /api/commercial/price-optimization ────────────────────────────────────
 //
-// Price Optimization Engine — data-driven pricing analysis per product.
+// Price & Discount Optimization Analytics — per-product discount rates, price
+// realization, revenue lost to discounts, price consistency, and optimal
+// price recommendations.
 //
-// Returns:
-//   { report: PriceOptimizationReport }
+// Query params:
+//   period_months  number (default 6) — lookback window (1–24)
 //
-// Auth: any authenticated company member.
-// Cache: revalidate every 3600 seconds.
+// Returns: { report: PriceOptimizationReport }
+//
+// Auth: manager+ only.
+// Cache: revalidate every 3600 seconds (1 hour).
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const revalidate = 3600
 
 import { NextRequest, NextResponse } from 'next/server'
 import { resolveApiAuth } from '@/lib/api-auth'
+import { apiError, reqCtx } from '@/lib/api-utils'
 import { PriceOptimizationService } from '@/lib/services/commercial/price-optimization.service'
-import { REQUEST_ID_HEADER } from '@/middleware'
 
 export async function GET(req: NextRequest) {
+  const ctx  = reqCtx(req)
   const auth = await resolveApiAuth(req)
   if (!auth.ok) return auth.response
-  const { companyId, supabase, ctx } = auth
+
+  const { companyId, supabase } = auth
+
+  const { searchParams } = new URL(req.url)
+  const periodParam = searchParams.get('period_months')
+  const periodMonths = periodParam
+    ? Math.max(1, Math.min(24, parseInt(periodParam, 10) || 6))
+    : 6
 
   try {
-    const report = await PriceOptimizationService.getReport(companyId, supabase)
-    return NextResponse.json(
-      { report },
-      { headers: { [REQUEST_ID_HEADER]: ctx.requestId } },
-    )
+    const service = new PriceOptimizationService(supabase)
+    const report  = await service.getReport(companyId, periodMonths)
+    return NextResponse.json({ report })
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err)
-    return NextResponse.json(
-      { error: msg, code: 'SERVICE_ERROR', type: 'SYSTEM' },
-      { status: 500, headers: { [REQUEST_ID_HEADER]: ctx.requestId } },
-    )
+    console.error('[price-optimization]', err)
+    return apiError(ctx, 'Fiyat optimizasyonu analizi hesaplanamadı', 500)
   }
 }
