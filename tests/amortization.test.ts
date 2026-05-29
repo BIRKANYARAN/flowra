@@ -406,3 +406,144 @@ describe('amortization cross-function consistency', () => {
   })
 
 })
+
+// ── calculateMonthlyPayment — PMT formula verification ────────────────────────
+
+describe('calculateMonthlyPayment — PMT formula verification', () => {
+  it('PMT formula: P × r(1+r)^n / ((1+r)^n - 1) matches function output', () => {
+    const P = 100_000, annualRate = 0.12, n = 12
+    const r = annualRate / 12
+    const factor = Math.pow(1 + r, n)
+    const expected = (P * r * factor) / (factor - 1)
+    expect(calculateMonthlyPayment(P, annualRate, n)).toBeCloseTo(expected, 1)
+  })
+
+  it('zero rate returns principal / term (interest-free)', () => {
+    const P = 60_000, term = 12
+    expect(calculateMonthlyPayment(P, 0, term)).toBeCloseTo(5000, 2)
+  })
+
+  it('single payment term (n=1) at 12% annual: payment = P × 1.01', () => {
+    const P = 10_000, annualRate = 0.12, n = 1
+    // r = 0.01 per month; PMT = P × 0.01 × 1.01 / (1.01 - 1) = P × 1.01
+    expect(calculateMonthlyPayment(P, annualRate, n)).toBeCloseTo(10_100, 0)
+  })
+
+  it('single payment at zero rate: payment = full principal', () => {
+    expect(calculateMonthlyPayment(50_000, 0, 1)).toBeCloseTo(50_000, 2)
+  })
+
+  it('PMT for 24-month loan at 24% annual rate', () => {
+    const P = 120_000, r = 0.24 / 12, n = 24
+    const factor = Math.pow(1 + r, n)
+    const expected = (P * r * factor) / (factor - 1)
+    expect(calculateMonthlyPayment(P, 0.24, n)).toBeCloseTo(expected, 1)
+  })
+
+  it('total interest paid > 0 for positive rate', () => {
+    const P = 100_000, rate = 0.12, n = 12
+    const payment = calculateMonthlyPayment(P, rate, n)
+    expect(payment * n - P).toBeGreaterThan(0)
+  })
+
+  it('higher rate → proportionally higher total interest', () => {
+    const P = 100_000, n = 12
+    const payLow  = calculateMonthlyPayment(P, 0.10, n)
+    const payHigh = calculateMonthlyPayment(P, 0.30, n)
+    const interestLow  = payLow  * n - P
+    const interestHigh = payHigh * n - P
+    expect(interestHigh).toBeGreaterThan(interestLow)
+  })
+})
+
+// ── buildAmortizationSchedule — length and first/last payment ─────────────────
+
+describe('buildAmortizationSchedule — first and last payment mechanics', () => {
+  it('schedule length equals termMonths for zero-rate exact-fit loan', () => {
+    // 12000 at 0% with 1000/month → exactly 12 periods
+    const schedule = buildAmortizationSchedule(12_000, 0, 1000, '2026-01', 12)
+    expect(schedule).toHaveLength(12)
+  })
+
+  it('first payment interest = opening_balance × monthly_rate', () => {
+    const P = 10_000, annualRate = 0.12
+    const monthlyRate = annualRate / 12  // 0.01
+    const payment = calculateMonthlyPayment(P, annualRate, 12)
+    const schedule = buildAmortizationSchedule(P, annualRate, payment, '2030-01', 12)
+    const expectedFirstInterest = P * monthlyRate
+    expect(schedule[0].interest_try).toBeCloseTo(expectedFirstInterest, 1)
+  })
+
+  it('last payment reduces balance to approximately 0', () => {
+    const P = 12_000, annualRate = 0.12, term = 12
+    const payment = calculateMonthlyPayment(P, annualRate, term)
+    const schedule = buildAmortizationSchedule(P, annualRate, payment, '2030-01', term)
+    expect(schedule[schedule.length - 1].closing_balance_try).toBeLessThan(1)
+  })
+
+  it('zero-rate schedule: all interest rows are exactly 0', () => {
+    const schedule = buildAmortizationSchedule(6_000, 0, 1000, '2026-01', 6)
+    schedule.forEach(row => expect(row.interest_try).toBe(0))
+  })
+
+  it('positive-rate schedule: first row interest > 0', () => {
+    const schedule = buildAmortizationSchedule(10_000, 0.24, 1000, '2026-01', 12)
+    expect(schedule[0].interest_try).toBeGreaterThan(0)
+  })
+
+  it('schedule stops early if balance reaches near-zero before maxMonths', () => {
+    // 500 at 0%, 300/month → 2 periods (500 and 200 paid off in row 2)
+    const schedule = buildAmortizationSchedule(500, 0, 300, '2026-01', 12)
+    expect(schedule.length).toBeLessThan(12)
+    expect(schedule.length).toBeGreaterThanOrEqual(1)
+  })
+
+  it('maxMonths=1 produces exactly 1 row even if balance remains', () => {
+    const schedule = buildAmortizationSchedule(10_000, 0, 100, '2026-01', 1)
+    expect(schedule).toHaveLength(1)
+  })
+})
+
+// ── computeWeightedAvgRate — additional cases ─────────────────────────────────
+
+describe('computeWeightedAvgRate — additional edge cases', () => {
+  it('single tranche with large balance returns its own rate', () => {
+    const t = [makeTranche(1_000_000, 0.36)]
+    expect(computeWeightedAvgRate(t)).toBeCloseTo(0.36, 5)
+  })
+
+  it('two equal-balance tranches → arithmetic mean', () => {
+    const t = [makeTranche(50_000, 0.12), makeTranche(50_000, 0.24)]
+    expect(computeWeightedAvgRate(t)).toBeCloseTo(0.18, 5)
+  })
+
+  it('zero-principal tranche is excluded from computation', () => {
+    // Zero balance tranche should not pull the average
+    const t = [makeTranche(100_000, 0.20), makeTranche(0, 0.50)]
+    expect(computeWeightedAvgRate(t)).toBeCloseTo(0.20, 5)
+  })
+
+  it('tranche with rate 0 included when balance > 0', () => {
+    // 50k @ 0% + 50k @ 0.20% → weighted = 0.10
+    const t = [makeTranche(50_000, 0), makeTranche(50_000, 0.20)]
+    expect(computeWeightedAvgRate(t)).toBeCloseTo(0.10, 5)
+  })
+
+  it('result is always between the minimum and maximum rate', () => {
+    const rates = [0.05, 0.10, 0.20, 0.30]
+    const t = rates.map(r => makeTranche(25_000, r))
+    const result = computeWeightedAvgRate(t)
+    expect(result!).toBeGreaterThanOrEqual(0.05)
+    expect(result!).toBeLessThanOrEqual(0.30)
+  })
+
+  it('all tranches with same rate returns that exact rate', () => {
+    const t = [makeTranche(10_000, 0.15), makeTranche(20_000, 0.15), makeTranche(30_000, 0.15)]
+    expect(computeWeightedAvgRate(t)).toBeCloseTo(0.15, 5)
+  })
+
+  it('all-zero outstanding array → null', () => {
+    const t = [makeTranche(0, 0.15), makeTranche(0, 0.25)]
+    expect(computeWeightedAvgRate(t)).toBeNull()
+  })
+})

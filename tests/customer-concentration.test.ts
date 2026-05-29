@@ -415,3 +415,235 @@ describe('computeHhiTrend — pure', () => {
   })
 
 })
+
+// ── computeHHI — extreme values ───────────────────────────────────────────────
+
+describe('computeHHI — extreme and edge cases', () => {
+  it('single customer 100% → HHI = 10000 (monopoly)', () => {
+    expect(computeHHI([100])).toBe(10000)
+  })
+
+  it('two equal customers 50% each → HHI = 5000', () => {
+    expect(computeHHI([50, 50])).toBe(5000)
+  })
+
+  it('HHI = 0 for empty array', () => {
+    expect(computeHHI([])).toBe(0)
+  })
+
+  it('three equal customers 33.33% each → HHI ≈ 3333', () => {
+    expect(computeHHI([33.33, 33.33, 33.34])).toBeCloseTo(3333, 0)
+  })
+
+  it('HHI increases when concentration increases', () => {
+    const balanced   = computeHHI([25, 25, 25, 25])   // 4 equal → 2500
+    const unbalanced = computeHHI([70, 10, 10, 10])   // one dominant → 5200
+    expect(unbalanced).toBeGreaterThan(balanced)
+  })
+
+  it('HHI is commutative (order does not matter)', () => {
+    expect(computeHHI([30, 50, 20])).toBe(computeHHI([20, 30, 50]))
+  })
+
+  it('sum of squares formula: 30²+40²+30² = 900+1600+900 = 3400', () => {
+    expect(computeHHI([30, 40, 30])).toBe(3400)
+  })
+
+  it('single-digit share: 5% → HHI = 25', () => {
+    expect(computeHHI([5])).toBe(25)
+  })
+})
+
+// ── classifyConcentration — all boundaries ────────────────────────────────────
+
+describe('classifyConcentration — complete boundary coverage', () => {
+  it('HHI 0 → unconcentrated', () => {
+    expect(classifyConcentration(0)).toBe('unconcentrated')
+  })
+
+  it('HHI 1 → unconcentrated', () => {
+    expect(classifyConcentration(1)).toBe('unconcentrated')
+  })
+
+  it('HHI 1499 → unconcentrated (just below moderate threshold)', () => {
+    expect(classifyConcentration(1499)).toBe('unconcentrated')
+  })
+
+  it('HHI 1500 → moderate (exact lower boundary)', () => {
+    expect(classifyConcentration(1500)).toBe('moderate')
+  })
+
+  it('HHI 2000 → moderate', () => {
+    expect(classifyConcentration(2000)).toBe('moderate')
+  })
+
+  it('HHI 2499 → moderate (just below concentrated threshold)', () => {
+    expect(classifyConcentration(2499)).toBe('moderate')
+  })
+
+  it('HHI 2500 → concentrated (exact lower boundary)', () => {
+    expect(classifyConcentration(2500)).toBe('concentrated')
+  })
+
+  it('HHI 3000 → concentrated', () => {
+    expect(classifyConcentration(3000)).toBe('concentrated')
+  })
+
+  it('HHI 3999 → concentrated (just below highly_concentrated threshold)', () => {
+    expect(classifyConcentration(3999)).toBe('concentrated')
+  })
+
+  it('HHI 4000 → highly_concentrated (exact lower boundary)', () => {
+    expect(classifyConcentration(4000)).toBe('highly_concentrated')
+  })
+
+  it('HHI 5000 → highly_concentrated', () => {
+    expect(classifyConcentration(5000)).toBe('highly_concentrated')
+  })
+
+  it('HHI 10000 → highly_concentrated (monopoly)', () => {
+    expect(classifyConcentration(10000)).toBe('highly_concentrated')
+  })
+})
+
+// ── classifyCustomerTier — all tier boundaries ────────────────────────────────
+
+describe('classifyCustomerTier — all tier boundaries', () => {
+  it('100% → tier1 (monopoly customer)', () => {
+    expect(classifyCustomerTier(100)).toBe('tier1')
+  })
+
+  it('20.1% → tier1 (just above tier2 boundary)', () => {
+    expect(classifyCustomerTier(20.1)).toBe('tier1')
+  })
+
+  it('exactly 20% → tier2 (boundary: >20 is tier1, so 20 is tier2)', () => {
+    expect(classifyCustomerTier(20)).toBe('tier2')
+  })
+
+  it('19.9% → tier2', () => {
+    expect(classifyCustomerTier(19.9)).toBe('tier2')
+  })
+
+  it('exactly 5% → tier2 (boundary: >=5 is tier2)', () => {
+    expect(classifyCustomerTier(5)).toBe('tier2')
+  })
+
+  it('4.99% → tier3 (just below tier2 boundary)', () => {
+    expect(classifyCustomerTier(4.99)).toBe('tier3')
+  })
+
+  it('exactly 1% → tier3 (boundary: >=1 is tier3)', () => {
+    expect(classifyCustomerTier(1)).toBe('tier3')
+  })
+
+  it('0.99% → tier4 (just below tier3 boundary)', () => {
+    expect(classifyCustomerTier(0.99)).toBe('tier4')
+  })
+
+  it('0% → tier4', () => {
+    expect(classifyCustomerTier(0)).toBe('tier4')
+  })
+
+  it('50% → tier1 (dominant partner)', () => {
+    expect(classifyCustomerTier(50)).toBe('tier1')
+  })
+
+  it('10% → tier2 (mid-tier)', () => {
+    expect(classifyCustomerTier(10)).toBe('tier2')
+  })
+
+  it('2% → tier3 (small customer)', () => {
+    expect(classifyCustomerTier(2)).toBe('tier3')
+  })
+
+  it('0.1% → tier4 (very small customer)', () => {
+    expect(classifyCustomerTier(0.1)).toBe('tier4')
+  })
+})
+
+// ── computeHhiTrend — direction and empty handling ────────────────────────────
+
+describe('computeHhiTrend — direction and edge handling', () => {
+  function makeMonthly(months: string[], hhis: number[]): MonthlyHhi[] {
+    return months.map((month, i) => ({
+      month,
+      label: month,
+      hhi: hhis[i],
+      level: classifyConcentration(hhis[i]),
+    }))
+  }
+
+  it('empty array → insufficient', () => {
+    expect(computeHhiTrend([])).toBe('insufficient')
+  })
+
+  it('3 months → insufficient', () => {
+    const data = makeMonthly(
+      ['2025-01', '2025-02', '2025-03'],
+      [1000, 1100, 1200],
+    )
+    expect(computeHhiTrend(data)).toBe('insufficient')
+  })
+
+  it('5 months → insufficient', () => {
+    const data = makeMonthly(
+      ['2025-01', '2025-02', '2025-03', '2025-04', '2025-05'],
+      [2000, 2000, 2000, 2000, 2000],
+    )
+    expect(computeHhiTrend(data)).toBe('insufficient')
+  })
+
+  it('6 months with improving HHI → improving', () => {
+    const data = makeMonthly(
+      ['2025-01', '2025-02', '2025-03', '2025-04', '2025-05', '2025-06'],
+      [4000, 4000, 4000, 1000, 1000, 1000],
+    )
+    expect(computeHhiTrend(data)).toBe('improving')
+  })
+
+  it('6 months with worsening HHI → worsening', () => {
+    const data = makeMonthly(
+      ['2025-01', '2025-02', '2025-03', '2025-04', '2025-05', '2025-06'],
+      [1000, 1000, 1000, 5000, 5000, 5000],
+    )
+    expect(computeHhiTrend(data)).toBe('worsening')
+  })
+
+  it('6 months with stable HHI (diff = 0) → stable', () => {
+    const data = makeMonthly(
+      ['2025-01', '2025-02', '2025-03', '2025-04', '2025-05', '2025-06'],
+      [3000, 3000, 3000, 3000, 3000, 3000],
+    )
+    expect(computeHhiTrend(data)).toBe('stable')
+  })
+
+  it('diff exactly +100 → stable (boundary: not > 100)', () => {
+    // prior avg 2000, last avg 2100 → diff=100 → stable
+    const data = makeMonthly(
+      ['2025-01', '2025-02', '2025-03', '2025-04', '2025-05', '2025-06'],
+      [2000, 2000, 2000, 2100, 2100, 2100],
+    )
+    expect(computeHhiTrend(data)).toBe('stable')
+  })
+
+  it('diff exactly -100 → stable (boundary: not < -100)', () => {
+    // prior avg 2200, last avg 2100 → diff=-100 → stable
+    const data = makeMonthly(
+      ['2025-01', '2025-02', '2025-03', '2025-04', '2025-05', '2025-06'],
+      [2200, 2200, 2200, 2100, 2100, 2100],
+    )
+    expect(computeHhiTrend(data)).toBe('stable')
+  })
+
+  it('more than 6 months: uses only last 6 for trend computation', () => {
+    // Months 1-3: old HHI=5000, months 4-6: prior HHI=2000, months 7-9: last HHI=500
+    const data = makeMonthly(
+      ['2024-07', '2024-08', '2024-09', '2024-10', '2024-11', '2024-12', '2025-01', '2025-02', '2025-03'],
+      [5000, 5000, 5000, 2000, 2000, 2000, 500, 500, 500],
+    )
+    // After slicing last 6: months 2024-10 to 2025-03
+    // prior3 = [2000,2000,2000] avg=2000, last3=[500,500,500] avg=500 → diff=-1500 → improving
+    expect(computeHhiTrend(data)).toBe('improving')
+  })
+})

@@ -404,3 +404,355 @@ describe('assembleSituationReport', () => {
     }
   })
 })
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeCashScore — boundary values
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeCashScore — additional boundary values', () => {
+  it('1 month runway → 10', () => {
+    expect(computeCashScore(1)).toBe(10)
+  })
+
+  it('2 months runway → 20', () => {
+    expect(computeCashScore(2)).toBe(20)
+  })
+
+  it('9 months runway → 90', () => {
+    expect(computeCashScore(9)).toBe(90)
+  })
+
+  it('10 months runway → exactly 100 (ceiling boundary)', () => {
+    expect(computeCashScore(10)).toBe(100)
+  })
+
+  it('11 months runway → 100 (above ceiling, clamped)', () => {
+    expect(computeCashScore(11)).toBe(100)
+  })
+
+  it('0.5 months runway → 5 (fractional runway)', () => {
+    expect(computeCashScore(0.5)).toBeCloseTo(5, 1)
+  })
+
+  it('null input returns exactly 50 (default neutral)', () => {
+    expect(computeCashScore(null)).toBe(50)
+  })
+
+  it('very large runway (100 months) → 100 (clamped)', () => {
+    expect(computeCashScore(100)).toBe(100)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeProfitScore — boundary values
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeProfitScore — additional boundary values', () => {
+  it('25% margin → exactly 100 (ceiling boundary: 25×2+50=100)', () => {
+    expect(computeProfitScore(25)).toBe(100)
+  })
+
+  it('26% margin → 100 (clamped at ceiling)', () => {
+    expect(computeProfitScore(26)).toBe(100)
+  })
+
+  it('-25% margin → exactly 0 (floor boundary: -25×2+50=0)', () => {
+    expect(computeProfitScore(-25)).toBe(0)
+  })
+
+  it('-26% margin → 0 (clamped at floor)', () => {
+    expect(computeProfitScore(-26)).toBe(0)
+  })
+
+  it('10% margin → 70 (10×2+50)', () => {
+    expect(computeProfitScore(10)).toBe(70)
+  })
+
+  it('-10% margin → 30 (-10×2+50)', () => {
+    expect(computeProfitScore(-10)).toBe(30)
+  })
+
+  it('null input returns exactly 50 (neutral)', () => {
+    expect(computeProfitScore(null)).toBe(50)
+  })
+
+  it('very large positive margin → 100 (clamped)', () => {
+    expect(computeProfitScore(999)).toBe(100)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeDebtScore — boundary values
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeDebtScore — additional boundary values', () => {
+  it('DSR 0.1 → 90 (100 - 0.1×100)', () => {
+    expect(computeDebtScore(0.1)).toBeCloseTo(90, 1)
+  })
+
+  it('DSR 0.25 → 75', () => {
+    expect(computeDebtScore(0.25)).toBeCloseTo(75, 1)
+  })
+
+  it('DSR 0.75 → 25', () => {
+    expect(computeDebtScore(0.75)).toBeCloseTo(25, 1)
+  })
+
+  it('DSR exactly 1 → 0 (floor boundary)', () => {
+    expect(computeDebtScore(1)).toBe(0)
+  })
+
+  it('DSR 1.1 → 0 (beyond floor, clamped)', () => {
+    expect(computeDebtScore(1.1)).toBe(0)
+  })
+
+  it('null DSR returns exactly 100 (no debt assumption)', () => {
+    expect(computeDebtScore(null)).toBe(100)
+  })
+
+  it('negative DSR → clamped at 100 (DSR cannot be negative; no worse than null)', () => {
+    // -0.5 DSR: 100 - (-0.5×100) = 150, clamped to 100
+    expect(computeDebtScore(-0.5)).toBe(100)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeReceivablesScore — boundary values
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeReceivablesScore — additional boundary values', () => {
+  it('0.1 overdue ratio → 90', () => {
+    expect(computeReceivablesScore(0.1)).toBeCloseTo(90, 1)
+  })
+
+  it('0.25 overdue ratio → 75', () => {
+    expect(computeReceivablesScore(0.25)).toBeCloseTo(75, 1)
+  })
+
+  it('0.75 overdue ratio → 25', () => {
+    expect(computeReceivablesScore(0.75)).toBeCloseTo(25, 1)
+  })
+
+  it('1.0 overdue ratio → exactly 0 (floor boundary)', () => {
+    expect(computeReceivablesScore(1.0)).toBe(0)
+  })
+
+  it('overdue ratio > 1 → 0 (clamped at floor)', () => {
+    expect(computeReceivablesScore(1.5)).toBe(0)
+  })
+
+  it('null overdue ratio returns exactly 50 (neutral)', () => {
+    expect(computeReceivablesScore(null)).toBe(50)
+  })
+
+  it('negative overdue ratio → clamped at 100', () => {
+    // -0.5: 100 - (-0.5 × 100) = 150, clamped to 100
+    expect(computeReceivablesScore(-0.5)).toBe(100)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computePartnerScore — boundary values
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computePartnerScore — additional boundary values', () => {
+  it('burden 0.1 → 80 (100 - 0.1×200)', () => {
+    expect(computePartnerScore(0.1)).toBeCloseTo(80, 1)
+  })
+
+  it('burden 0.4 → 20 (100 - 0.4×200)', () => {
+    expect(computePartnerScore(0.4)).toBeCloseTo(20, 1)
+  })
+
+  it('burden exactly 0.5 → 0 (floor boundary: 100 - 0.5×200)', () => {
+    expect(computePartnerScore(0.5)).toBe(0)
+  })
+
+  it('burden 0.6 → 0 (clamped at floor)', () => {
+    expect(computePartnerScore(0.6)).toBe(0)
+  })
+
+  it('negative burden -0.1 → 80 (absolute value used)', () => {
+    expect(computePartnerScore(-0.1)).toBeCloseTo(80, 1)
+  })
+
+  it('negative burden -0.5 → 0 (absolute value at boundary)', () => {
+    expect(computePartnerScore(-0.5)).toBe(0)
+  })
+
+  it('null burden returns exactly 50 (neutral)', () => {
+    expect(computePartnerScore(null)).toBe(50)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeCompositeScore — weighted average formula
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeCompositeScore — weighted average formula', () => {
+  it('known mix: cash=80, profit=60, debt=100, receivables=40, partner=20 → expected', () => {
+    // 80×0.30 + 60×0.25 + 100×0.20 + 40×0.15 + 20×0.10
+    // = 24 + 15 + 20 + 6 + 2 = 67
+    const components: SituationComponent[] = [
+      { key: 'cash',        label: '', score: 80,  weight: 0.30, weighted_score: 24, input_value: null, input_label: '' },
+      { key: 'profit',      label: '', score: 60,  weight: 0.25, weighted_score: 15, input_value: null, input_label: '' },
+      { key: 'debt',        label: '', score: 100, weight: 0.20, weighted_score: 20, input_value: null, input_label: '' },
+      { key: 'receivables', label: '', score: 40,  weight: 0.15, weighted_score: 6,  input_value: null, input_label: '' },
+      { key: 'partner',     label: '', score: 20,  weight: 0.10, weighted_score: 2,  input_value: null, input_label: '' },
+    ]
+    expect(computeCompositeScore(components)).toBeCloseTo(67, 1)
+  })
+
+  it('single component returns that component weighted_score', () => {
+    const components: SituationComponent[] = [
+      { key: 'cash', label: '', score: 80, weight: 0.30, weighted_score: 24, input_value: null, input_label: '' },
+    ]
+    expect(computeCompositeScore(components)).toBe(24)
+  })
+
+  it('empty components array → 0', () => {
+    expect(computeCompositeScore([])).toBe(0)
+  })
+
+  it('result is rounded to 2 decimal places', () => {
+    const components: SituationComponent[] = [
+      { key: 'cash',        label: '', score: 33, weight: 0.30, weighted_score: 9.9,  input_value: null, input_label: '' },
+      { key: 'profit',      label: '', score: 33, weight: 0.25, weighted_score: 8.25, input_value: null, input_label: '' },
+      { key: 'debt',        label: '', score: 33, weight: 0.20, weighted_score: 6.6,  input_value: null, input_label: '' },
+      { key: 'receivables', label: '', score: 33, weight: 0.15, weighted_score: 4.95, input_value: null, input_label: '' },
+      { key: 'partner',     label: '', score: 33, weight: 0.10, weighted_score: 3.3,  input_value: null, input_label: '' },
+    ]
+    const result = computeCompositeScore(components)
+    const decimals = result.toString().includes('.') ? result.toString().split('.')[1].length : 0
+    expect(decimals).toBeLessThanOrEqual(2)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// classifySituation — all 4 levels at exact thresholds
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('classifySituation — exact threshold boundaries', () => {
+  it('score exactly 80 → healthy (inclusive lower bound of healthy tier)', () => {
+    expect(classifySituation(80)).toBe('healthy')
+  })
+
+  it('score 79.99 → caution (just below healthy threshold)', () => {
+    expect(classifySituation(79.99)).toBe('caution')
+  })
+
+  it('score exactly 60 → caution (inclusive lower bound of caution tier)', () => {
+    expect(classifySituation(60)).toBe('caution')
+  })
+
+  it('score 59.99 → at_risk (just below caution threshold)', () => {
+    expect(classifySituation(59.99)).toBe('at_risk')
+  })
+
+  it('score exactly 40 → at_risk (inclusive lower bound of at_risk tier)', () => {
+    expect(classifySituation(40)).toBe('at_risk')
+  })
+
+  it('score 39.99 → critical (just below at_risk threshold)', () => {
+    expect(classifySituation(39.99)).toBe('critical')
+  })
+
+  it('score 100 → healthy (maximum possible score)', () => {
+    expect(classifySituation(100)).toBe('healthy')
+  })
+
+  it('score 0 → critical (minimum possible score)', () => {
+    expect(classifySituation(0)).toBe('critical')
+  })
+
+  it('score 1 → critical', () => {
+    expect(classifySituation(1)).toBe('critical')
+  })
+
+  it('score 39 → critical', () => {
+    expect(classifySituation(39)).toBe('critical')
+  })
+
+  it('score 41 → at_risk', () => {
+    expect(classifySituation(41)).toBe('at_risk')
+  })
+
+  it('score 59 → at_risk', () => {
+    expect(classifySituation(59)).toBe('at_risk')
+  })
+
+  it('score 61 → caution', () => {
+    expect(classifySituation(61)).toBe('caution')
+  })
+
+  it('score 79 → caution', () => {
+    expect(classifySituation(79)).toBe('caution')
+  })
+
+  it('score 81 → healthy', () => {
+    expect(classifySituation(81)).toBe('healthy')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// buildSituationLine — null input_value branches
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('buildSituationLine — null input_value branches', () => {
+  const makeComponent = (
+    key: SituationComponent['key'],
+    score: number,
+    inputValue: number | null = null,
+  ): SituationComponent => ({
+    key,
+    label:          key,
+    score,
+    weight:         0.20,
+    weighted_score: score * 0.20,
+    input_value:    inputValue,
+    input_label:    String(inputValue ?? 'Veri yok'),
+  })
+
+  it('cash key with null input → contains "nakit durumu belirsiz"', () => {
+    const line = buildSituationLine('caution', makeComponent('cash', 30, null))
+    expect(line).toContain('nakit durumu belirsiz')
+  })
+
+  it('profit key with null input → contains "kârlılık verisi yok"', () => {
+    const line = buildSituationLine('caution', makeComponent('profit', 40, null))
+    expect(line).toContain('kârlılık verisi yok')
+  })
+
+  it('receivables key with null input → contains "alacak tahsilat riski"', () => {
+    const line = buildSituationLine('at_risk', makeComponent('receivables', 30, null))
+    expect(line).toContain('alacak tahsilat riski')
+  })
+
+  it('debt key → always shows "borç servisi yükümlülüğü yüksek" regardless of input_value', () => {
+    const lineNull = buildSituationLine('at_risk', makeComponent('debt', 20, null))
+    const lineVal  = buildSituationLine('at_risk', makeComponent('debt', 20, 0.8))
+    expect(lineNull).toContain('borç servisi yükümlülüğü yüksek')
+    expect(lineVal).toContain('borç servisi yükümlülüğü yüksek')
+  })
+
+  it('partner key → always shows "ortak finansman dengesizliği"', () => {
+    const line = buildSituationLine('caution', makeComponent('partner', 40, null))
+    expect(line).toContain('ortak finansman dengesizliği')
+  })
+
+  it('unknown status key → fallback uses the status string itself', () => {
+    const line = buildSituationLine('unknown_status', makeComponent('cash', 50, 5))
+    expect(line).toContain('unknown_status')
+  })
+
+  it('receivables with value 0.3 → line contains "30" (as percentage)', () => {
+    const line = buildSituationLine('caution', makeComponent('receivables', 60, 0.3))
+    expect(line).toContain('30')
+    expect(line).toContain('vadesi geçmiş')
+  })
+
+  it('cash with value 7.5 → line contains "7.5"', () => {
+    const line = buildSituationLine('caution', makeComponent('cash', 75, 7.5))
+    expect(line).toContain('7.5')
+  })
+})

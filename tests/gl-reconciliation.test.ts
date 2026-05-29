@@ -407,3 +407,183 @@ describe('Chaining pure functions for a full reconciliation item', () => {
     expect(label).toContain('1')
   })
 })
+
+// ── computeDiscrepancy — null input handling ───────────────────────────────────
+
+describe('computeDiscrepancy — null input handling', () => {
+  it('null gl returns null', () => {
+    expect(computeDiscrepancy(null, 500)).toBeNull()
+  })
+
+  it('null ops returns null', () => {
+    expect(computeDiscrepancy(200, null)).toBeNull()
+  })
+
+  it('both null returns null', () => {
+    expect(computeDiscrepancy(null, null)).toBeNull()
+  })
+
+  it('zero discrepancy when both equal', () => {
+    expect(computeDiscrepancy(1000, 1000)).toBe(0)
+  })
+
+  it('large positive discrepancy when gl >> ops', () => {
+    expect(computeDiscrepancy(1_000_000, 100)).toBe(999_900)
+  })
+
+  it('large negative discrepancy when ops >> gl', () => {
+    expect(computeDiscrepancy(0, 1_000_000)).toBe(-1_000_000)
+  })
+
+  it('fractional values handled correctly', () => {
+    expect(computeDiscrepancy(100.5, 100.0)).toBeCloseTo(0.5, 5)
+  })
+
+  it('negative gl and positive ops', () => {
+    expect(computeDiscrepancy(-500, 500)).toBe(-1000)
+  })
+})
+
+// ── computeDiscrepancyPct — formula verification ───────────────────────────────
+
+describe('computeDiscrepancyPct — formula (gl - ops) / |ops| × 100', () => {
+  it('returns null when ops is 0', () => {
+    expect(computeDiscrepancyPct(100, 0)).toBeNull()
+  })
+
+  it('returns 0 when gl === ops', () => {
+    expect(computeDiscrepancyPct(500, 500)).toBe(0)
+  })
+
+  it('+10% when gl is 110% of ops', () => {
+    expect(computeDiscrepancyPct(110, 100)).toBeCloseTo(10, 5)
+  })
+
+  it('-10% when gl is 90% of ops', () => {
+    expect(computeDiscrepancyPct(90, 100)).toBeCloseTo(-10, 5)
+  })
+
+  it('+100% when gl is twice ops', () => {
+    expect(computeDiscrepancyPct(200, 100)).toBeCloseTo(100, 5)
+  })
+
+  it('-100% when gl is 0 and ops is positive', () => {
+    expect(computeDiscrepancyPct(0, 100)).toBeCloseTo(-100, 5)
+  })
+
+  it('uses absolute value of ops for negative ops', () => {
+    // (100 - (-100)) / 100 × 100 = 200
+    expect(computeDiscrepancyPct(100, -100)).toBeCloseTo(200, 5)
+  })
+
+  it('very small ops causes very large pct', () => {
+    const pct = computeDiscrepancyPct(1000, 1)
+    expect(pct).toBeCloseTo(99900, 0)
+  })
+
+  it('result is in percentage units not fraction', () => {
+    const pct = computeDiscrepancyPct(105, 100)
+    expect(pct).toBeCloseTo(5, 1)
+    expect(pct!).toBeGreaterThan(1)  // definitely not 0.05
+  })
+
+  it('symmetric: pct(gl, ops) = -pct(ops, gl) when magnitudes equal', () => {
+    const pct1 = computeDiscrepancyPct(120, 100)
+    const pct2 = computeDiscrepancyPct(100, 120)
+    expect(pct1).toBeCloseTo(20, 5)
+    expect(pct2).toBeCloseTo(-100 * 20 / 120, 5)
+  })
+})
+
+// ── assignReconciliationStatus — threshold levels ─────────────────────────────
+
+describe('assignReconciliationStatus — all threshold levels', () => {
+  it('null discrepancy → no_gl_data', () => {
+    expect(assignReconciliationStatus(null, 100)).toBe('no_gl_data')
+  })
+
+  it('discrepancy of 0 → balanced (regardless of threshold)', () => {
+    expect(assignReconciliationStatus(0, 100)).toBe('balanced')
+    expect(assignReconciliationStatus(0, 0)).toBe('balanced')
+  })
+
+  it('discrepancy exactly at threshold → balanced (≤ threshold)', () => {
+    expect(assignReconciliationStatus(100, 100)).toBe('balanced')
+    expect(assignReconciliationStatus(-100, 100)).toBe('balanced')
+  })
+
+  it('discrepancy one unit above threshold → discrepancy', () => {
+    expect(assignReconciliationStatus(101, 100)).toBe('discrepancy')
+    expect(assignReconciliationStatus(-101, 100)).toBe('discrepancy')
+  })
+
+  it('very large threshold: even large discrepancy is balanced', () => {
+    expect(assignReconciliationStatus(999_998, 1_000_000)).toBe('balanced')
+  })
+
+  it('very large discrepancy beyond very large threshold → discrepancy', () => {
+    expect(assignReconciliationStatus(1_000_001, 1_000_000)).toBe('discrepancy')
+  })
+
+  it('threshold 500 (cash threshold): 499 → balanced, 501 → discrepancy', () => {
+    expect(assignReconciliationStatus(499, 500)).toBe('balanced')
+    expect(assignReconciliationStatus(501, 500)).toBe('discrepancy')
+  })
+
+  it('never returns "skipped" from pure function call', () => {
+    const result = assignReconciliationStatus(50, 100)
+    expect(result).not.toBe('skipped')
+  })
+})
+
+// ── buildStatusLabel — all combinations ──────────────────────────────────────
+
+describe('buildStatusLabel — all combinations of allBalanced + discrepancyCount', () => {
+  it('allBalanced=true, count=0 → "Dengeli"', () => {
+    expect(buildStatusLabel(true, 0)).toBe('Dengeli')
+  })
+
+  it('allBalanced=true, count=1 → "Dengeli" (count ignored when balanced)', () => {
+    expect(buildStatusLabel(true, 1)).toBe('Dengeli')
+  })
+
+  it('allBalanced=true, count=99 → "Dengeli" (count ignored)', () => {
+    expect(buildStatusLabel(true, 99)).toBe('Dengeli')
+  })
+
+  it('allBalanced=false, count=0 → contains "0 Uyuşmazlık"', () => {
+    const label = buildStatusLabel(false, 0)
+    expect(label).toContain('0')
+    expect(label).toContain('Uyuşmazlık')
+  })
+
+  it('allBalanced=false, count=1 → contains "1 Uyuşmazlık"', () => {
+    const label = buildStatusLabel(false, 1)
+    expect(label).toContain('1')
+    expect(label).toContain('Uyuşmazlık')
+  })
+
+  it('allBalanced=false, count=2 → contains "2 Uyuşmazlık"', () => {
+    const label = buildStatusLabel(false, 2)
+    expect(label).toContain('2')
+    expect(label).toContain('Uyuşmazlık')
+  })
+
+  it('allBalanced=false, count=4 → contains "4 Uyuşmazlık"', () => {
+    const label = buildStatusLabel(false, 4)
+    expect(label).toContain('4')
+  })
+
+  it('"Dengeli" label does not mention Uyuşmazlık', () => {
+    const label = buildStatusLabel(true, 0)
+    expect(label).not.toContain('Uyuşmazlık')
+  })
+
+  it('discrepancy label is non-empty string', () => {
+    expect(buildStatusLabel(false, 3).length).toBeGreaterThan(0)
+  })
+
+  it('balanced label is non-empty string', () => {
+    expect(buildStatusLabel(true, 0).length).toBeGreaterThan(0)
+  })
+})

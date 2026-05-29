@@ -420,3 +420,158 @@ describe('computeAvgCohortSize — additional cases', () => {
     expect(computeAvgCohortSize([{ size: 10 }, { size: 11 }])).toBe(10.5)
   })
 })
+
+// ── retention + churn always sum to 100 ──────────────────────────────────────
+
+describe('retention + churn complement property', () => {
+  it('sum is exactly 100 at 0% retention', () => {
+    const r = computeRetentionRate(0, 100)
+    expect(r + computeChurnRate(r)).toBe(100)
+  })
+
+  it('sum is exactly 100 at 50% retention', () => {
+    const r = computeRetentionRate(50, 100)
+    expect(r + computeChurnRate(r)).toBe(100)
+  })
+
+  it('sum is exactly 100 at 100% retention', () => {
+    const r = computeRetentionRate(100, 100)
+    expect(r + computeChurnRate(r)).toBe(100)
+  })
+
+  it('sum is 100 for fractional retention (1/3 cohort)', () => {
+    const r = computeRetentionRate(1, 3)
+    expect(r + computeChurnRate(r)).toBeCloseTo(100, 10)
+  })
+
+  it('sum is 100 for any retention value passed directly to computeChurnRate', () => {
+    for (const pct of [0, 10, 20, 33.33, 50, 60, 75, 90, 100]) {
+      expect(pct + computeChurnRate(pct)).toBeCloseTo(100, 10)
+    }
+  })
+})
+
+// ── computeRetentionRate — 0%, 50%, 100% explicit ────────────────────────────
+
+describe('computeRetentionRate — explicit 0%, 50%, 100% values', () => {
+  it('0 active out of 100 → 0%', () => {
+    expect(computeRetentionRate(0, 100)).toBe(0)
+  })
+
+  it('50 active out of 100 → 50%', () => {
+    expect(computeRetentionRate(50, 100)).toBe(50)
+  })
+
+  it('100 active out of 100 → 100%', () => {
+    expect(computeRetentionRate(100, 100)).toBe(100)
+  })
+
+  it('zero cohort size always returns 0', () => {
+    expect(computeRetentionRate(0, 0)).toBe(0)
+    expect(computeRetentionRate(5, 0)).toBe(0)
+    expect(computeRetentionRate(100, 0)).toBe(0)
+  })
+})
+
+// ── computeAvgCohortSize — formula verification ───────────────────────────────
+
+describe('computeAvgCohortSize — formula sum/count', () => {
+  it('formula: sum of sizes divided by count', () => {
+    // (100 + 200 + 300) / 3 = 200
+    expect(computeAvgCohortSize([{ size: 100 }, { size: 200 }, { size: 300 }])).toBe(200)
+  })
+
+  it('single cohort: avg equals that cohort size', () => {
+    expect(computeAvgCohortSize([{ size: 77 }])).toBe(77)
+  })
+
+  it('two equal cohorts: avg equals each individual size', () => {
+    expect(computeAvgCohortSize([{ size: 50 }, { size: 50 }])).toBe(50)
+  })
+
+  it('returns 0 for empty array', () => {
+    expect(computeAvgCohortSize([])).toBe(0)
+  })
+})
+
+// ── computeAvg3mRetention — fewer than 3 periods ─────────────────────────────
+
+describe('computeAvg3mRetention — fewer than 3 follow-up periods', () => {
+  it('no follow-up periods (only offset 0): returns 0', () => {
+    expect(computeAvg3mRetention([100])).toBe(0)
+  })
+
+  it('one follow-up period: avg equals that period value', () => {
+    expect(computeAvg3mRetention([100, 70])).toBe(70)
+  })
+
+  it('two follow-up periods: avg of indexes 1 and 2', () => {
+    // (60 + 40) / 2 = 50
+    expect(computeAvg3mRetention([100, 60, 40])).toBeCloseTo(50, 5)
+  })
+
+  it('three follow-up periods: avg of indexes 1, 2, 3', () => {
+    // (90 + 60 + 30) / 3 = 60
+    expect(computeAvg3mRetention([100, 90, 60, 30])).toBe(60)
+  })
+
+  it('period 0 value of 100 does not affect the avg', () => {
+    const withHighAcq = computeAvg3mRetention([100, 40])
+    const withLowAcq  = computeAvg3mRetention([0,   40])
+    // Both should yield 40 — period 0 is always excluded
+    expect(withHighAcq).toBe(40)
+    expect(withLowAcq).toBe(40)
+  })
+})
+
+// ── classifyRetentionHealth — all levels with exact boundaries ────────────────
+
+describe('classifyRetentionHealth — all levels with exact boundaries', () => {
+  it('exactly 60 → strong', () => {
+    expect(classifyRetentionHealth(60)).toBe('strong')
+  })
+
+  it('60.0001 → strong', () => {
+    expect(classifyRetentionHealth(60.0001)).toBe('strong')
+  })
+
+  it('100 → strong (maximum)', () => {
+    expect(classifyRetentionHealth(100)).toBe('strong')
+  })
+
+  it('59.9999 → good (just below strong)', () => {
+    expect(classifyRetentionHealth(59.9999)).toBe('good')
+  })
+
+  it('exactly 40 → good', () => {
+    expect(classifyRetentionHealth(40)).toBe('good')
+  })
+
+  it('50 → good (midpoint)', () => {
+    expect(classifyRetentionHealth(50)).toBe('good')
+  })
+
+  it('39.9999 → fair (just below good)', () => {
+    expect(classifyRetentionHealth(39.9999)).toBe('fair')
+  })
+
+  it('exactly 20 → fair', () => {
+    expect(classifyRetentionHealth(20)).toBe('fair')
+  })
+
+  it('30 → fair (midpoint)', () => {
+    expect(classifyRetentionHealth(30)).toBe('fair')
+  })
+
+  it('19.9999 → weak (just below fair)', () => {
+    expect(classifyRetentionHealth(19.9999)).toBe('weak')
+  })
+
+  it('0 → weak (minimum)', () => {
+    expect(classifyRetentionHealth(0)).toBe('weak')
+  })
+
+  it('10 → weak', () => {
+    expect(classifyRetentionHealth(10)).toBe('weak')
+  })
+})

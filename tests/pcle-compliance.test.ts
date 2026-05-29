@@ -401,3 +401,285 @@ describe('checkDistributionCompliance — return type', () => {
     expect(allMessages).toMatch(/TTK/)
   })
 })
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PCLEDistribution static constants
+// ─────────────────────────────────────────────────────────────────────────────
+
+import { PCLEDistribution } from '../lib/services/pcle/pcle.distribution'
+
+describe('PCLEDistribution — static constants (Turkish law)', () => {
+  it('WITHHOLDING_RATE is 0.10 (GVK 94: 10%)', () => {
+    expect(PCLEDistribution.WITHHOLDING_RATE).toBe(0.10)
+  })
+
+  it('LEGAL_RESERVE_RATE is 0.05 (TTK 519: 5% of net income)', () => {
+    expect(PCLEDistribution.LEGAL_RESERVE_RATE).toBe(0.05)
+  })
+
+  it('LEGAL_RESERVE_CAP_PCT is 0.20 (TTK 519: cap at 20% of paid-in capital)', () => {
+    expect(PCLEDistribution.LEGAL_RESERVE_CAP_PCT).toBe(0.20)
+  })
+
+  it('WITHHOLDING_RATE is exactly 10/100 (not 0.09 or 0.11)', () => {
+    expect(PCLEDistribution.WITHHOLDING_RATE).not.toBe(0.09)
+    expect(PCLEDistribution.WITHHOLDING_RATE).not.toBe(0.11)
+    expect(PCLEDistribution.WITHHOLDING_RATE * 100).toBe(10)
+  })
+
+  it('LEGAL_RESERVE_RATE is exactly 5/100', () => {
+    expect(PCLEDistribution.LEGAL_RESERVE_RATE * 100).toBe(5)
+  })
+
+  it('LEGAL_RESERVE_CAP_PCT is exactly 20/100', () => {
+    expect(PCLEDistribution.LEGAL_RESERVE_CAP_PCT * 100).toBe(20)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PCLEDistribution.computeDistributable — layer computation
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('PCLEDistribution.computeDistributable — distribution layers', () => {
+  it('gross → after legal_reserve: reserve = 5% of gross_net_income', () => {
+    const result = PCLEDistribution.computeDistributable({
+      gross_net_income_try:    100_000,
+      paid_in_capital_try:     1_000_000,
+      existing_reserves_try:   0,
+      board_retained_try:      0,
+      unpaid_compensation_try: 0,
+    })
+    // reserve_cap = 1_000_000 × 0.20 - 0 = 200_000
+    // legal_reserve = min(100_000 × 0.05, 200_000) = min(5000, 200_000) = 5000
+    expect(result.legal_reserve_try).toBeCloseTo(5_000, 1)
+  })
+
+  it('after_reserve → distributable_gross subtracts board_retained and unpaid_compensation', () => {
+    const result = PCLEDistribution.computeDistributable({
+      gross_net_income_try:    100_000,
+      paid_in_capital_try:     1_000_000,
+      existing_reserves_try:   0,
+      board_retained_try:      10_000,
+      unpaid_compensation_try: 5_000,
+    })
+    // distributable_gross = 100_000 - 5_000 - 10_000 - 5_000 = 80_000
+    expect(result.distributable_gross_try).toBeCloseTo(80_000, 1)
+  })
+
+  it('after_withholding: withholding_tax = 10% of distributable_gross', () => {
+    const result = PCLEDistribution.computeDistributable({
+      gross_net_income_try:    100_000,
+      paid_in_capital_try:     1_000_000,
+      existing_reserves_try:   200_000,  // already at cap, no additional reserve
+      board_retained_try:      0,
+      unpaid_compensation_try: 0,
+    })
+    // legal_reserve = 0 (existing_reserves >= cap)
+    // distributable_gross = 100_000
+    // withholding = 10_000
+    // distributable_net = 90_000
+    expect(result.withholding_tax_try).toBeCloseTo(10_000, 1)
+    expect(result.distributable_net_try).toBeCloseTo(90_000, 1)
+  })
+
+  it('is_distributable is true when distributable_net > 0.01', () => {
+    const result = PCLEDistribution.computeDistributable({
+      gross_net_income_try:    100_000,
+      paid_in_capital_try:     500_000,
+      existing_reserves_try:   100_000,  // at cap
+      board_retained_try:      0,
+      unpaid_compensation_try: 0,
+    })
+    expect(result.is_distributable).toBe(true)
+  })
+
+  it('is_distributable is false and block_reason set when gross_net_income <= 0', () => {
+    const result = PCLEDistribution.computeDistributable({
+      gross_net_income_try:    0,
+      paid_in_capital_try:     500_000,
+      existing_reserves_try:   0,
+      board_retained_try:      0,
+      unpaid_compensation_try: 0,
+    })
+    expect(result.is_distributable).toBe(false)
+    expect(result.block_reason).not.toBeNull()
+    expect(result.block_reason).toContain('TTK 509')
+  })
+
+  it('legal_reserve is 0 when gross_net_income <= 0 (no reserve on loss)', () => {
+    const result = PCLEDistribution.computeDistributable({
+      gross_net_income_try:    -50_000,
+      paid_in_capital_try:     500_000,
+      existing_reserves_try:   0,
+      board_retained_try:      0,
+      unpaid_compensation_try: 0,
+    })
+    expect(result.legal_reserve_try).toBe(0)
+  })
+
+  it('legal_reserve capped at 20% of capital gap (not more than cap allows)', () => {
+    // existing_reserves = 0, capital = 100_000, cap = 20_000
+    // 5% of 1_000_000 = 50_000, but cap = 20_000 → reserve = 20_000
+    const result = PCLEDistribution.computeDistributable({
+      gross_net_income_try:    1_000_000,
+      paid_in_capital_try:     100_000,
+      existing_reserves_try:   0,
+      board_retained_try:      0,
+      unpaid_compensation_try: 0,
+    })
+    expect(result.legal_reserve_try).toBeCloseTo(20_000, 1)
+  })
+
+  it('withholding is 0 when distributable_gross <= 0', () => {
+    const result = PCLEDistribution.computeDistributable({
+      gross_net_income_try:    10_000,
+      paid_in_capital_try:     500_000,
+      existing_reserves_try:   0,
+      board_retained_try:      5_000,
+      unpaid_compensation_try: 6_000,  // total deductions > income
+    })
+    // distributable_gross = 10_000 - 500 - 5_000 - 6_000 = -1_500
+    expect(result.withholding_tax_try).toBe(0)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PCLEDistribution.computePerPartnerDistribution — proportional allocation
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('PCLEDistribution.computePerPartnerDistribution — proportional allocation', () => {
+  const partners = [
+    { partner_id: 'p1', partner_name: 'Ali', share_ratio: 0.6 },
+    { partner_id: 'p2', partner_name: 'Veli', share_ratio: 0.4 },
+  ]
+
+  it('proportional net allocation: 60/40 split of distributable_net', () => {
+    const result = PCLEDistribution.computePerPartnerDistribution(100_000, partners)
+    expect(result[0].net_entitlement_try).toBeCloseTo(60_000, 1)
+    expect(result[1].net_entitlement_try).toBeCloseTo(40_000, 1)
+  })
+
+  it('gross_entitlement = net / (1 - WITHHOLDING_RATE)', () => {
+    const result = PCLEDistribution.computePerPartnerDistribution(100_000, partners)
+    // net for p1 = 60_000; gross = 60_000 / 0.9 ≈ 66_666.67
+    expect(result[0].gross_entitlement_try).toBeCloseTo(66_666.67, 0)
+  })
+
+  it('withholding = gross - net per partner', () => {
+    const result = PCLEDistribution.computePerPartnerDistribution(100_000, partners)
+    for (const p of result) {
+      expect(p.withholding_try).toBeCloseTo(p.gross_entitlement_try - p.net_entitlement_try, 1)
+    }
+  })
+
+  it('zero distributable_net → all entitlements are 0', () => {
+    const result = PCLEDistribution.computePerPartnerDistribution(0, partners)
+    for (const p of result) {
+      expect(p.net_entitlement_try).toBe(0)
+      expect(p.gross_entitlement_try).toBe(0)
+      expect(p.withholding_try).toBe(0)
+    }
+  })
+
+  it('single partner with ratio 1 receives full distributable_net', () => {
+    const singlePartner = [{ partner_id: 'p1', partner_name: 'Solo', share_ratio: 1 }]
+    const result = PCLEDistribution.computePerPartnerDistribution(50_000, singlePartner)
+    expect(result[0].net_entitlement_try).toBeCloseTo(50_000, 1)
+  })
+
+  it('partner share_ratio preserved in output', () => {
+    const result = PCLEDistribution.computePerPartnerDistribution(100_000, partners)
+    expect(result[0].share_ratio).toBe(0.6)
+    expect(result[1].share_ratio).toBe(0.4)
+  })
+
+  it('zero total_ratio → all partners get 0 entitlement', () => {
+    const zeroPartners = [
+      { partner_id: 'p1', partner_name: 'Ali', share_ratio: 0 },
+      { partner_id: 'p2', partner_name: 'Veli', share_ratio: 0 },
+    ]
+    const result = PCLEDistribution.computePerPartnerDistribution(100_000, zeroPartners)
+    for (const p of result) {
+      expect(p.net_entitlement_try).toBe(0)
+    }
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// checkDistributionCompliance — additional violation scenarios
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('checkDistributionCompliance — additional violation scenarios', () => {
+  it('dividend exactly equal to distributableNet → no TTK_509 violation', () => {
+    const violations = checkDistributionCompliance(baseParams({
+      distributableNet: 100_000,
+      dividendAmount:   100_000,
+    }))
+    expect(violations.find(v => v.rule === 'TTK_509_NO_PROFIT')).toBeUndefined()
+  })
+
+  it('dividend 1 unit above distributableNet → TTK_509 violation', () => {
+    const violations = checkDistributionCompliance(baseParams({
+      distributableNet: 100_000,
+      dividendAmount:   100_001,
+    }))
+    expect(violations.find(v => v.rule === 'TTK_509_NO_PROFIT')).toBeDefined()
+  })
+
+  it('legalReservesDone=true bypasses TTK_519 even when balance below cap', () => {
+    const violations = checkDistributionCompliance(baseParams({
+      legalReservesDone:   true,
+      legalReserveBalance: 0,       // well below cap
+      paidInCapital:       500_000,
+    }))
+    expect(violations.find(v => v.rule === 'TTK_519_RESERVE_REQUIRED')).toBeUndefined()
+  })
+
+  it('legalReserveBalance >= 20% of capital bypasses TTK_519 even when not done', () => {
+    const violations = checkDistributionCompliance(baseParams({
+      legalReservesDone:   false,
+      legalReserveBalance: 200_000, // exactly 20% of 1_000_000
+      paidInCapital:       1_000_000,
+    }))
+    expect(violations.find(v => v.rule === 'TTK_519_RESERVE_REQUIRED')).toBeUndefined()
+  })
+
+  it('isCompensationPayment=true with boardDecisionRef → no TTK_394 violation', () => {
+    const violations = checkDistributionCompliance(baseParams({
+      isCompensationPayment: true,
+      boardDecisionRef:      'YK-2026-001',
+    }))
+    expect(violations.find(v => v.rule === 'TTK_394_BOARD_REQUIRED')).toBeUndefined()
+  })
+
+  it('isCompensationPayment=false regardless of boardDecisionRef → no TTK_394', () => {
+    const violations = checkDistributionCompliance(baseParams({
+      isCompensationPayment: false,
+      boardDecisionRef:      null,
+    }))
+    expect(violations.find(v => v.rule === 'TTK_394_BOARD_REQUIRED')).toBeUndefined()
+  })
+
+  it('all violations are blocking (no soft-warning violations returned)', () => {
+    const violations = checkDistributionCompliance({
+      distributableNet:      -5_000,
+      dividendAmount:        10_000,
+      legalReservesDone:     false,
+      legalReserveBalance:   0,
+      paidInCapital:         500_000,
+      boardDecisionRef:      null,
+      isCompensationPayment: true,
+    })
+    expect(violations.every(v => v.blocking === true)).toBe(true)
+  })
+
+  it('negative distributableNet triggers both NEGATIVE_DISTRIBUTION and TTK_509_NO_PROFIT', () => {
+    const violations = checkDistributionCompliance(baseParams({
+      distributableNet: -1_000,
+      dividendAmount:   5_000,
+    }))
+    const rules = violations.map(v => v.rule)
+    expect(rules).toContain('NEGATIVE_DISTRIBUTION')
+    expect(rules).toContain('TTK_509_NO_PROFIT')
+  })
+})

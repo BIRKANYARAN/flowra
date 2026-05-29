@@ -416,3 +416,284 @@ describe('computeDivergence — duplicate source_ids', () => {
     expect(result.sales.missing).toBe(0)
   })
 })
+
+// ── 11. All records matched → no divergence ───────────────────────────────────
+
+describe('computeDivergence — all records matched produces no divergence', () => {
+  it('all sales matched → sales.missing is 0', () => {
+    const ops: OperationalIds = {
+      sales:     [makeSale('s1', 100), makeSale('s2', 200)],
+      expenses:  [],
+      purchases: [],
+    }
+    const journaled = [makeJournaled('sale', 's1'), makeJournaled('sale', 's2')]
+    const result = computeDivergence(ops, journaled)
+    expect(result.sales.missing).toBe(0)
+    expect(result.sales.missing_amount_try).toBe(0)
+    expect(result.sales.with_entries).toBe(2)
+  })
+
+  it('all expenses matched → expenses.missing is 0', () => {
+    const ops: OperationalIds = {
+      sales:     [],
+      expenses:  [{ id: 'e1', amount_try: 400 }, { id: 'e2', amount_try: 600 }],
+      purchases: [],
+    }
+    const journaled = [makeJournaled('expense', 'e1'), makeJournaled('expense', 'e2')]
+    const result = computeDivergence(ops, journaled)
+    expect(result.expenses.missing).toBe(0)
+    expect(result.expenses.with_entries).toBe(2)
+  })
+
+  it('all purchases matched → purchases.missing is 0', () => {
+    const ops: OperationalIds = {
+      sales:     [],
+      expenses:  [],
+      purchases: [{ id: 'p1', amount_try: 1_000 }],
+    }
+    const journaled = [makeJournaled('purchase', 'p1')]
+    const result = computeDivergence(ops, journaled)
+    expect(result.purchases.missing).toBe(0)
+    expect(result.purchases.with_entries).toBe(1)
+  })
+})
+
+// ── 12. Missing journal entries appear in divergence ─────────────────────────
+
+describe('computeDivergence — missing journal entries', () => {
+  it('sales without journal entries appear in missing count', () => {
+    const ops: OperationalIds = {
+      sales:     [makeSale('unmatched-1', 500), makeSale('unmatched-2', 300)],
+      expenses:  [],
+      purchases: [],
+    }
+    const result = computeDivergence(ops, [])
+    expect(result.sales.missing).toBe(2)
+    expect(result.sales.missing_amount_try).toBe(800)
+  })
+
+  it('expenses without journal entries appear in missing count', () => {
+    const ops: OperationalIds = {
+      sales:     [],
+      expenses:  [{ id: 'e1', amount_try: 750 }],
+      purchases: [],
+    }
+    const result = computeDivergence(ops, [])
+    expect(result.expenses.missing).toBe(1)
+    expect(result.expenses.missing_amount_try).toBe(750)
+  })
+
+  it('purchases without journal entries appear in missing count', () => {
+    const ops: OperationalIds = {
+      sales:     [],
+      expenses:  [],
+      purchases: [{ id: 'p1', amount_try: 2_000 }, { id: 'p2', amount_try: 3_000 }],
+    }
+    const result = computeDivergence(ops, [])
+    expect(result.purchases.missing).toBe(2)
+    expect(result.purchases.missing_amount_try).toBe(5_000)
+  })
+})
+
+// ── 13. Extra journal entries (ghost references) ──────────────────────────────
+
+describe('computeDivergence — extra journal entries (ghost references)', () => {
+  it('journal entries for non-existent sales do not inflate with_entries', () => {
+    const ops: OperationalIds = { sales: [], expenses: [], purchases: [] }
+    const journaled = [
+      makeJournaled('sale', 'ghost-1'),
+      makeJournaled('sale', 'ghost-2'),
+    ]
+    const result = computeDivergence(ops, journaled)
+    expect(result.sales.with_entries).toBe(0)
+    expect(result.sales.total).toBe(0)
+    expect(result.sales.missing).toBe(0)
+  })
+
+  it('extra journal entries for non-existent expenses are ignored', () => {
+    const ops: OperationalIds = {
+      sales:     [],
+      expenses:  [{ id: 'e1', amount_try: 100 }],
+      purchases: [],
+    }
+    const journaled = [
+      makeJournaled('expense', 'e1'),
+      makeJournaled('expense', 'ghost-expense'),
+    ]
+    const result = computeDivergence(ops, journaled)
+    expect(result.expenses.total).toBe(1)
+    expect(result.expenses.with_entries).toBe(1)
+    expect(result.expenses.missing).toBe(0)
+  })
+})
+
+// ── 14. Mixed case (some matched, some missing, some extra) ───────────────────
+
+describe('computeDivergence — mixed matched/missing/ghost entries', () => {
+  it('correctly handles a mixed scenario across all source types', () => {
+    const ops: OperationalIds = {
+      sales:     [makeSale('s1', 100), makeSale('s2', 200), makeSale('s3', 300)],
+      expenses:  [{ id: 'e1', amount_try: 50 }, { id: 'e2', amount_try: 75 }],
+      purchases: [{ id: 'p1', amount_try: 1_000 }],
+    }
+    const journaled: JournaledRef[] = [
+      makeJournaled('sale',     's1'),          // matched
+      makeJournaled('sale',     'ghost-sale'),  // extra (ghost)
+      makeJournaled('expense',  'e2'),          // matched
+      makeJournaled('purchase', 'ghost-p'),     // extra (ghost)
+    ]
+    const result = computeDivergence(ops, journaled)
+
+    // Sales: s1 matched, s2 and s3 missing
+    expect(result.sales.total).toBe(3)
+    expect(result.sales.with_entries).toBe(1)
+    expect(result.sales.missing).toBe(2)
+    expect(result.sales.missing_amount_try).toBe(500)  // s2 + s3
+
+    // Expenses: e2 matched, e1 missing
+    expect(result.expenses.total).toBe(2)
+    expect(result.expenses.with_entries).toBe(1)
+    expect(result.expenses.missing).toBe(1)
+    expect(result.expenses.missing_amount_try).toBe(50)
+
+    // Purchases: p1 missing (ghost entry with different id)
+    expect(result.purchases.total).toBe(1)
+    expect(result.purchases.with_entries).toBe(0)
+    expect(result.purchases.missing).toBe(1)
+    expect(result.purchases.missing_amount_try).toBe(1_000)
+  })
+})
+
+// ── 15. Empty inputs edge cases ───────────────────────────────────────────────
+
+describe('computeDivergence — empty inputs edge cases', () => {
+  it('all empty operational and empty journaled → all zeros', () => {
+    const result = computeDivergence({ sales: [], expenses: [], purchases: [] }, [])
+    expect(result.sales.total).toBe(0)
+    expect(result.sales.missing).toBe(0)
+    expect(result.expenses.total).toBe(0)
+    expect(result.expenses.missing).toBe(0)
+    expect(result.purchases.total).toBe(0)
+    expect(result.purchases.missing).toBe(0)
+  })
+
+  it('empty operational with non-empty journaled → ghost refs ignored, all zeros', () => {
+    const journaled = [
+      makeJournaled('sale', 'x'), makeJournaled('expense', 'y'), makeJournaled('purchase', 'z'),
+    ]
+    const result = computeDivergence({ sales: [], expenses: [], purchases: [] }, journaled)
+    expect(result.sales.total).toBe(0)
+    expect(result.expenses.total).toBe(0)
+    expect(result.purchases.total).toBe(0)
+  })
+
+  it('non-empty operational with empty journaled → all missing', () => {
+    const ops: OperationalIds = {
+      sales:     [makeSale('s1', 100)],
+      expenses:  [{ id: 'e1', amount_try: 200 }],
+      purchases: [{ id: 'p1', amount_try: 300 }],
+    }
+    const result = computeDivergence(ops, [])
+    expect(result.sales.missing).toBe(1)
+    expect(result.expenses.missing).toBe(1)
+    expect(result.purchases.missing).toBe(1)
+  })
+})
+
+// ── 16. Divergence count matches unmatched records ────────────────────────────
+
+describe('computeDivergence — divergence count invariant', () => {
+  it('missing count = total - with_entries for sales', () => {
+    const ops: OperationalIds = {
+      sales: Array.from({ length: 7 }, (_, i) => makeSale(`s${i}`, 100)),
+      expenses: [],
+      purchases: [],
+    }
+    const journaled = Array.from({ length: 4 }, (_, i) => makeJournaled('sale', `s${i}`))
+    const result = computeDivergence(ops, journaled)
+    expect(result.sales.missing).toBe(result.sales.total - result.sales.with_entries)
+  })
+
+  it('missing count = total - with_entries for expenses', () => {
+    const ops: OperationalIds = {
+      sales: [],
+      expenses: Array.from({ length: 5 }, (_, i) => ({ id: `e${i}`, amount_try: 50 })),
+      purchases: [],
+    }
+    const journaled = Array.from({ length: 3 }, (_, i) => makeJournaled('expense', `e${i}`))
+    const result = computeDivergence(ops, journaled)
+    expect(result.expenses.missing).toBe(result.expenses.total - result.expenses.with_entries)
+  })
+
+  it('missing count = total - with_entries for purchases', () => {
+    const ops: OperationalIds = {
+      sales: [],
+      expenses: [],
+      purchases: Array.from({ length: 6 }, (_, i) => ({ id: `p${i}`, amount_try: 100 })),
+    }
+    const journaled = Array.from({ length: 2 }, (_, i) => makeJournaled('purchase', `p${i}`))
+    const result = computeDivergence(ops, journaled)
+    expect(result.purchases.missing).toBe(result.purchases.total - result.purchases.with_entries)
+  })
+})
+
+// ── 17. source_type filtering — sales vs expenses vs purchases ────────────────
+
+describe('computeDivergence — source_type filtering', () => {
+  it('sale journal entry does not match an expense operational record', () => {
+    const ops: OperationalIds = {
+      sales: [],
+      expenses: [{ id: 'shared', amount_try: 100 }],
+      purchases: [],
+    }
+    const journaled = [makeJournaled('sale', 'shared')]
+    const result = computeDivergence(ops, journaled)
+    expect(result.expenses.with_entries).toBe(0)
+    expect(result.expenses.missing).toBe(1)
+  })
+
+  it('purchase journal entry does not match a sale operational record', () => {
+    const ops: OperationalIds = {
+      sales: [makeSale('shared', 200)],
+      expenses: [],
+      purchases: [],
+    }
+    const journaled = [makeJournaled('purchase', 'shared')]
+    const result = computeDivergence(ops, journaled)
+    expect(result.sales.with_entries).toBe(0)
+    expect(result.sales.missing).toBe(1)
+  })
+
+  it('expense journal entry does not match a purchase operational record', () => {
+    const ops: OperationalIds = {
+      sales: [],
+      expenses: [],
+      purchases: [{ id: 'shared', amount_try: 300 }],
+    }
+    const journaled = [makeJournaled('expense', 'shared')]
+    const result = computeDivergence(ops, journaled)
+    expect(result.purchases.with_entries).toBe(0)
+    expect(result.purchases.missing).toBe(1)
+  })
+
+  it('each source_type is completely independent', () => {
+    // Same ID exists in all three operational types, each has its own journal entry
+    const ops: OperationalIds = {
+      sales:     [makeSale('id-x', 100)],
+      expenses:  [{ id: 'id-x', amount_try: 200 }],
+      purchases: [{ id: 'id-x', amount_try: 300 }],
+    }
+    const journaled = [
+      makeJournaled('sale',     'id-x'),
+      makeJournaled('expense',  'id-x'),
+      makeJournaled('purchase', 'id-x'),
+    ]
+    const result = computeDivergence(ops, journaled)
+    expect(result.sales.with_entries).toBe(1)
+    expect(result.expenses.with_entries).toBe(1)
+    expect(result.purchases.with_entries).toBe(1)
+    expect(result.sales.missing).toBe(0)
+    expect(result.expenses.missing).toBe(0)
+    expect(result.purchases.missing).toBe(0)
+  })
+})

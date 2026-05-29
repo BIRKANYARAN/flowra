@@ -416,3 +416,167 @@ describe('classifyInventoryEfficiency — extended mid-range', () => {
     expect(classifyInventoryEfficiency(null)).toBe('unknown')
   })
 })
+
+// ── assignAbcTier — exact decimal boundary precision ─────────────────────────
+
+describe('assignAbcTier — exact decimal boundary precision', () => {
+  it('returns A for 79.9 (below the 80 boundary)', () => {
+    expect(assignAbcTier(79.9)).toBe('A')
+  })
+
+  it('returns B for 80.0 (exactly at A/B boundary, rule: <=80 → A, so 80 → A)', () => {
+    // Rule: <= 80 → A. So 80.0 itself is A.
+    expect(assignAbcTier(80.0)).toBe('A')
+  })
+
+  it('returns B for 80.1 (just above A boundary)', () => {
+    expect(assignAbcTier(80.1)).toBe('B')
+  })
+
+  it('returns B for 94.9 (just below 95 boundary)', () => {
+    expect(assignAbcTier(94.9)).toBe('B')
+  })
+
+  it('returns B for 95.0 (exactly at B/C boundary, rule: <=95 → B, so 95 → B)', () => {
+    // Rule: <= 95 → B. So 95.0 itself is B.
+    expect(assignAbcTier(95.0)).toBe('B')
+  })
+
+  it('returns C for 95.1 (just above 95 boundary)', () => {
+    expect(assignAbcTier(95.1)).toBe('C')
+  })
+
+  it('A score > B score confirms A is higher priority', () => {
+    expect(abcTierToScore('A')).toBeGreaterThan(abcTierToScore('B'))
+  })
+
+  it('B score > C score confirms B is higher priority', () => {
+    expect(abcTierToScore('B')).toBeGreaterThan(abcTierToScore('C'))
+  })
+})
+
+// ── computeTopNRevenuePct — top-1 of many and formula verification ────────────
+
+describe('computeTopNRevenuePct — top-1 of many and formula', () => {
+  it('top-1 of a 10-item array equals first item / total × 100', () => {
+    const revenues = [500, 400, 300, 200, 100, 90, 80, 70, 60, 50]
+    const total = revenues.reduce((s, v) => s + v, 0)  // 1850
+    const expected = (500 / total) * 100
+    expect(computeTopNRevenuePct(revenues, 1)).toBeCloseTo(expected, 4)
+  })
+
+  it('top-3 of 10 uses only first 3 items in descending array', () => {
+    const revenues = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10]
+    const total = revenues.reduce((s, v) => s + v, 0)  // 550
+    const expected = (100 + 90 + 80) / total * 100
+    expect(computeTopNRevenuePct(revenues, 3)).toBeCloseTo(expected, 4)
+  })
+
+  it('returns 100 when n equals array length', () => {
+    expect(computeTopNRevenuePct([200, 300, 500], 3)).toBeCloseTo(100, 5)
+  })
+
+  it('two-item equal split: top-1 → 50%', () => {
+    expect(computeTopNRevenuePct([1000, 1000], 1)).toBeCloseTo(50, 5)
+  })
+
+  it('formula: (sum of top-n) / total × 100', () => {
+    // [600, 250, 150], n=2 → (600+250)/1000 × 100 = 85%
+    expect(computeTopNRevenuePct([600, 250, 150], 2)).toBeCloseTo(85, 5)
+  })
+})
+
+// ── abcTierToScore — numeric values confirmed ─────────────────────────────────
+
+describe('abcTierToScore — numeric values confirmed', () => {
+  it('A returns exactly 100', () => {
+    expect(abcTierToScore('A')).toBe(100)
+  })
+
+  it('B returns exactly 60', () => {
+    expect(abcTierToScore('B')).toBe(60)
+  })
+
+  it('C returns exactly 20', () => {
+    expect(abcTierToScore('C')).toBe(20)
+  })
+
+  it('the difference between A and B is 40', () => {
+    expect(abcTierToScore('A') - abcTierToScore('B')).toBe(40)
+  })
+
+  it('the difference between B and C is 40', () => {
+    expect(abcTierToScore('B') - abcTierToScore('C')).toBe(40)
+  })
+})
+
+// ── computeInventoryEfficiency — formula verification ─────────────────────────
+
+describe('computeInventoryEfficiency — formula verification', () => {
+  it('formula: (stockValue / revenue) × 100', () => {
+    // 80000 / 200000 × 100 = 40
+    const result = computeInventoryEfficiency(80_000, 200_000)
+    expect(result).not.toBeNull()
+    expect(result!).toBeCloseTo(40, 5)
+  })
+
+  it('result doubles when stock value doubles', () => {
+    const r1 = computeInventoryEfficiency(50_000, 100_000)
+    const r2 = computeInventoryEfficiency(100_000, 100_000)
+    expect(r2!).toBeCloseTo(r1! * 2, 5)
+  })
+
+  it('result halves when revenue doubles', () => {
+    const r1 = computeInventoryEfficiency(50_000, 100_000)
+    const r2 = computeInventoryEfficiency(50_000, 200_000)
+    expect(r2!).toBeCloseTo(r1! / 2, 5)
+  })
+})
+
+// ── classifyInventoryEfficiency — all five levels confirmed ───────────────────
+
+describe('classifyInventoryEfficiency — all five classification levels', () => {
+  it('null input → unknown', () => {
+    expect(classifyInventoryEfficiency(null)).toBe('unknown')
+  })
+
+  it('value 0 → under_invested', () => {
+    expect(classifyInventoryEfficiency(0)).toBe('under_invested')
+  })
+
+  it('value 49 → under_invested', () => {
+    expect(classifyInventoryEfficiency(49)).toBe('under_invested')
+  })
+
+  it('value 50 → optimal (inclusive lower bound)', () => {
+    expect(classifyInventoryEfficiency(50)).toBe('optimal')
+  })
+
+  it('value 75 → optimal (midpoint)', () => {
+    expect(classifyInventoryEfficiency(75)).toBe('optimal')
+  })
+
+  it('value 100 → optimal (inclusive upper bound)', () => {
+    expect(classifyInventoryEfficiency(100)).toBe('optimal')
+  })
+
+  it('value 101 → over_invested (just above optimal upper bound)', () => {
+    expect(classifyInventoryEfficiency(101)).toBe('over_invested')
+  })
+
+  it('value 175 → over_invested (midpoint)', () => {
+    expect(classifyInventoryEfficiency(175)).toBe('over_invested')
+  })
+
+  it('value 200 → over_invested (inclusive upper bound of over_invested)', () => {
+    expect(classifyInventoryEfficiency(200)).toBe('over_invested')
+  })
+
+  it('value 201 → excessive (just above over_invested upper bound)', () => {
+    expect(classifyInventoryEfficiency(201)).toBe('excessive')
+  })
+
+  it('value 999 → excessive (well above boundary)', () => {
+    expect(classifyInventoryEfficiency(999)).toBe('excessive')
+  })
+})

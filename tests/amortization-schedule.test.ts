@@ -421,3 +421,171 @@ describe('amortization-schedule cross-function integration', () => {
   })
 
 })
+
+// ── computeMonthlyInterest — formula: principal × (annualRate / 12 / 100) ─────
+
+describe('computeMonthlyInterest — formula and edge cases', () => {
+  it('formula: principal × (annualRate / 12 / 100)', () => {
+    // 60000 × (18 / 12 / 100) = 60000 × 0.015 = 900
+    expect(computeMonthlyInterest(60_000, 18)).toBeCloseTo(900, 2)
+  })
+
+  it('zero annual rate → interest is 0', () => {
+    expect(computeMonthlyInterest(500_000, 0)).toBe(0)
+  })
+
+  it('zero principal → interest is 0', () => {
+    expect(computeMonthlyInterest(0, 24)).toBe(0)
+  })
+
+  it('result matches manual calculation: 240000 at 30% → 6000', () => {
+    // 240000 × (30 / 12 / 100) = 240000 × 0.025 = 6000
+    expect(computeMonthlyInterest(240_000, 30)).toBeCloseTo(6_000, 2)
+  })
+
+  it('very small rate: 1% annual on 100000 → ~83.33', () => {
+    // 100000 × (1 / 12 / 100) ≈ 83.33
+    expect(computeMonthlyInterest(100_000, 1)).toBeCloseTo(83.33, 1)
+  })
+})
+
+// ── computeMonthlyPayment — formula verification ──────────────────────────────
+
+describe('computeMonthlyPayment — formula verification', () => {
+  it('zero rate: payment = principal / months', () => {
+    expect(computeMonthlyPayment(36_000, 0, 36)).toBeCloseTo(1000, 2)
+  })
+
+  it('zero months: returns 0', () => {
+    expect(computeMonthlyPayment(100_000, 20, 0)).toBe(0)
+  })
+
+  it('1-month term: payment = principal + 1 month interest', () => {
+    const principal = 50_000
+    const rate = 24
+    const interest = computeMonthlyInterest(principal, rate)
+    expect(computeMonthlyPayment(principal, rate, 1)).toBeCloseTo(principal + interest, 1)
+  })
+
+  it('standard amortization formula: 120000 @ 24% / 12mo ≈ 11347', () => {
+    // P × r / (1 - (1+r)^-n) with r=0.02, n=12
+    expect(computeMonthlyPayment(120_000, 24, 12)).toBeCloseTo(11_347, 0)
+  })
+
+  it('longer term produces lower payment for same principal and rate', () => {
+    const short = computeMonthlyPayment(200_000, 20, 12)
+    const long  = computeMonthlyPayment(200_000, 20, 60)
+    expect(long).toBeLessThan(short)
+  })
+
+  it('very large term (360 months): payment is finite and positive', () => {
+    const result = computeMonthlyPayment(1_000_000, 15, 360)
+    expect(result).toBeGreaterThan(0)
+    expect(isFinite(result)).toBe(true)
+  })
+})
+
+// ── computeRemainingBalance — formula: principal - (payment - interest) ────────
+
+describe('computeRemainingBalance — formula and behavior', () => {
+  it('balance decreases by (payment - interest) each month', () => {
+    const balance = 100_000
+    const payment = 5_000
+    const interest = computeMonthlyInterest(balance, 24)
+    const principalPayment = payment - interest
+    const expected = balance - principalPayment
+    expect(computeRemainingBalance(balance, principalPayment)).toBeCloseTo(expected, 2)
+  })
+
+  it('paying zero principal leaves balance unchanged', () => {
+    expect(computeRemainingBalance(80_000, 0)).toBeCloseTo(80_000, 2)
+  })
+
+  it('paying more than balance clamps to zero', () => {
+    expect(computeRemainingBalance(1_000, 2_000)).toBe(0)
+  })
+
+  it('paying exactly the balance results in zero', () => {
+    expect(computeRemainingBalance(50_000, 50_000)).toBe(0)
+  })
+
+  it('result is always non-negative', () => {
+    expect(computeRemainingBalance(0, 0)).toBeGreaterThanOrEqual(0)
+    expect(computeRemainingBalance(100, 50)).toBeGreaterThanOrEqual(0)
+    expect(computeRemainingBalance(50, 100)).toBeGreaterThanOrEqual(0)
+  })
+})
+
+// ── computeTotalInterestCost — formula: payment × term - principal ─────────────
+
+describe('computeTotalInterestCost — formula verification', () => {
+  it('formula: payment × months - principal', () => {
+    const payment = 5_000
+    const months = 24
+    const principal = 100_000
+    const expected = Math.max(0, payment * months - principal)
+    expect(computeTotalInterestCost(payment, months, principal)).toBeCloseTo(expected, 1)
+  })
+
+  it('zero rate: payment × months ≈ principal → interest ≈ 0', () => {
+    const payment = computeMonthlyPayment(12_000, 0, 12)
+    expect(computeTotalInterestCost(payment, 12, 12_000)).toBeCloseTo(0, 1)
+  })
+
+  it('interest is always non-negative', () => {
+    expect(computeTotalInterestCost(1_000, 12, 12_001)).toBeGreaterThanOrEqual(0)
+  })
+
+  it('higher rate on same term → higher total interest', () => {
+    const p1 = computeMonthlyPayment(100_000, 10, 12)
+    const p2 = computeMonthlyPayment(100_000, 40, 12)
+    const i1 = computeTotalInterestCost(p1, 12, 100_000)
+    const i2 = computeTotalInterestCost(p2, 12, 100_000)
+    expect(i2).toBeGreaterThan(i1)
+  })
+})
+
+// ── computeMonthlyCoverage — coverage ratio formula ───────────────────────────
+
+describe('computeMonthlyCoverage — coverage ratio', () => {
+  it('returns null when total debt service is zero', () => {
+    expect(computeMonthlyCoverage(10_000, 0, 0)).toBeNull()
+  })
+
+  it('DSCR = income / (principal + interest)', () => {
+    // income 20000, principal 5000, interest 2000 → 20000/7000 ≈ 2.857
+    const result = computeMonthlyCoverage(20_000, 5_000, 2_000)
+    expect(result).toBeCloseTo(20_000 / 7_000, 2)
+  })
+
+  it('DSCR < 1 when income is less than debt service', () => {
+    // income 3000, debt service 5000 → 0.6
+    const result = computeMonthlyCoverage(3_000, 3_000, 2_000)
+    expect(result).not.toBeNull()
+    expect(result!).toBeLessThan(1)
+  })
+
+  it('DSCR = 1.0 when income exactly equals debt service', () => {
+    expect(computeMonthlyCoverage(7_000, 5_000, 2_000)).toBeCloseTo(1.0, 2)
+  })
+
+  it('DSCR > 1 when income exceeds debt service', () => {
+    const result = computeMonthlyCoverage(15_000, 5_000, 2_000)
+    expect(result).not.toBeNull()
+    expect(result!).toBeGreaterThan(1)
+  })
+
+  it('coverage with only interest (no principal payment)', () => {
+    // income 12000, principal 0, interest 3000 → DSCR = 4
+    expect(computeMonthlyCoverage(12_000, 0, 3_000)).toBeCloseTo(4, 2)
+  })
+
+  it('very large term: payment still finite and coverage computable', () => {
+    const payment = computeMonthlyPayment(1_000_000, 15, 360)
+    const interest = computeMonthlyInterest(1_000_000, 15)
+    const principal = payment - interest
+    const result = computeMonthlyCoverage(50_000, principal, interest)
+    expect(result).not.toBeNull()
+    expect(isFinite(result!)).toBe(true)
+  })
+})
