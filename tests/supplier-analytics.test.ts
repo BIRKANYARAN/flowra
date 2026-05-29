@@ -103,6 +103,90 @@ describe('computeAPAging', () => {
     expect(buckets.find(b => b.bucket === 'overdue_60')!.total_try).toBe(300)
     expect(buckets.find(b => b.bucket === 'overdue_90_plus')!.total_try).toBe(400)
   })
+
+  test('partial status is treated as unpaid (included in aging)', () => {
+    const today = '2026-05-27'
+    const expenses = [makeExpense({ expense_date: '2026-05-20', amount_try: 888, payment_status: 'partial' })]
+    const buckets = computeAPAging(expenses, today)
+    const current = buckets.find(b => b.bucket === 'current')!
+    expect(current.count).toBe(1)
+    expect(current.total_try).toBe(888)
+  })
+
+  test('expense with null expense_date is skipped', () => {
+    const today = '2026-05-27'
+    const expenses = [makeExpense({ expense_date: null, amount_try: 500, payment_status: 'pending' })]
+    const buckets = computeAPAging(expenses, today)
+    const total = buckets.reduce((s, b) => s + b.total_try, 0)
+    expect(total).toBe(0)
+  })
+
+  test('expense with null amount_try is counted as zero', () => {
+    const today = '2026-05-27'
+    const expenses = [makeExpense({ expense_date: '2026-05-20', amount_try: null, payment_status: 'pending' })]
+    const buckets = computeAPAging(expenses, today)
+    const current = buckets.find(b => b.bucket === 'current')!
+    expect(current.count).toBe(1)
+    expect(current.total_try).toBe(0)
+  })
+
+  test('all buckets start with count=0 and total_try=0 for empty input', () => {
+    const buckets = computeAPAging([], '2026-05-27')
+    for (const b of buckets) {
+      expect(b.count).toBe(0)
+      expect(b.total_try).toBe(0)
+    }
+  })
+
+  test('expense exactly 30 days old goes into current', () => {
+    const today = '2026-05-27'
+    const expenses = [makeExpense({ expense_date: '2026-04-27', amount_try: 111, payment_status: 'pending' })]
+    const buckets = computeAPAging(expenses, today)
+    const current = buckets.find(b => b.bucket === 'current')!
+    expect(current.count).toBe(1)
+  })
+
+  test('expense exactly 61 days old goes into overdue_60', () => {
+    const today = '2026-05-27'
+    // 61 days before 2026-05-27 → 2026-03-27
+    const expenses = [makeExpense({ expense_date: '2026-03-27', amount_try: 222, payment_status: 'pending' })]
+    const buckets = computeAPAging(expenses, today)
+    const bucket60 = buckets.find(b => b.bucket === 'overdue_60')!
+    expect(bucket60.count).toBe(1)
+    expect(bucket60.total_try).toBe(222)
+  })
+
+  test('all paid expenses yields all-zero buckets', () => {
+    const today = '2026-05-27'
+    const expenses = [
+      makeExpense({ payment_status: 'paid', expense_date: '2026-01-01', amount_try: 500 }),
+      makeExpense({ payment_status: 'paid', expense_date: '2026-03-01', amount_try: 300 }),
+      makeExpense({ payment_status: 'paid', expense_date: '2026-05-01', amount_try: 200 }),
+    ]
+    const buckets = computeAPAging(expenses, today)
+    const total = buckets.reduce((s, b) => s + b.total_try, 0)
+    expect(total).toBe(0)
+  })
+
+  test('each bucket has required label field', () => {
+    const buckets = computeAPAging([], '2026-05-27')
+    for (const b of buckets) {
+      expect(typeof b.label).toBe('string')
+      expect(b.label.length).toBeGreaterThan(0)
+    }
+  })
+
+  test('large number of expenses aggregates correctly', () => {
+    const today = '2026-05-27'
+    // 100 pending expenses from 10 days ago
+    const expenses = Array.from({ length: 100 }, () =>
+      makeExpense({ expense_date: '2026-05-17', amount_try: 100, payment_status: 'pending' }),
+    )
+    const buckets = computeAPAging(expenses, today)
+    const current = buckets.find(b => b.bucket === 'current')!
+    expect(current.count).toBe(100)
+    expect(current.total_try).toBe(10_000)
+  })
 })
 
 // ── buildSupplierProfile ──────────────────────────────────────────────────────
@@ -199,6 +283,101 @@ describe('buildSupplierProfile', () => {
     const profile = buildSupplierProfile('Test', expenses, '2026-05-27')
     expect(profile.last_expense_date).toBe('2026-05-15')
   })
+
+  test('expense_count matches number of input expenses', () => {
+    const expenses = [
+      makeExpense({ payment_status: 'paid' }),
+      makeExpense({ payment_status: 'pending' }),
+      makeExpense({ payment_status: 'partial' }),
+    ]
+    const profile = buildSupplierProfile('Count Test', expenses, '2026-05-27')
+    expect(profile.expense_count).toBe(3)
+  })
+
+  test('total_expenses_try is sum of all expense amounts', () => {
+    const expenses = [
+      makeExpense({ amount_try: 100, payment_status: 'paid' }),
+      makeExpense({ amount_try: 200, payment_status: 'pending' }),
+      makeExpense({ amount_try: 300, payment_status: 'partial' }),
+    ]
+    const profile = buildSupplierProfile('Sum Test', expenses, '2026-05-27')
+    expect(profile.total_expenses_try).toBe(600)
+  })
+
+  test('unpaid_try is sum of pending + partial amounts only', () => {
+    const today = '2026-05-27'
+    const expenses = [
+      makeExpense({ amount_try: 100, payment_status: 'paid', expense_date: '2026-05-01' }),
+      makeExpense({ amount_try: 200, payment_status: 'pending', expense_date: '2026-05-20' }),
+      makeExpense({ amount_try: 300, payment_status: 'partial', expense_date: '2026-05-20' }),
+    ]
+    const profile = buildSupplierProfile('Unpaid Test', expenses, today)
+    expect(profile.unpaid_try).toBe(500)
+  })
+
+  test('avg_days_to_pay is null when no paid expenses have both dates', () => {
+    const today = '2026-05-27'
+    const expenses = [
+      makeExpense({ payment_status: 'paid', expense_date: null, paid_at: '2026-04-10' }),
+      makeExpense({ payment_status: 'paid', expense_date: '2026-04-01', paid_at: null }),
+    ]
+    const profile = buildSupplierProfile('NoDates', expenses, today)
+    expect(profile.avg_days_to_pay).toBeNull()
+  })
+
+  test('risk_tier medium when payment_rate is between 70 and 85', () => {
+    const today = '2026-05-27'
+    // 7 paid, 1 recent pending (payment_rate = 87.5%?) — let's get 75%: 3 paid, 1 pending
+    // Actually medium: unpaid=0 but paymentRate < 85
+    // 5 paid, 1 recent pending → rate = 83.33%
+    const expenses = [
+      makeExpense({ payment_status: 'paid',    expense_date: '2026-05-01', paid_at: '2026-05-05', amount_try: 100 }),
+      makeExpense({ payment_status: 'paid',    expense_date: '2026-05-02', paid_at: '2026-05-06', amount_try: 100 }),
+      makeExpense({ payment_status: 'paid',    expense_date: '2026-05-03', paid_at: '2026-05-07', amount_try: 100 }),
+      makeExpense({ payment_status: 'paid',    expense_date: '2026-05-04', paid_at: '2026-05-08', amount_try: 100 }),
+      makeExpense({ payment_status: 'paid',    expense_date: '2026-05-05', paid_at: '2026-05-09', amount_try: 100 }),
+      makeExpense({ payment_status: 'pending', expense_date: '2026-05-20', amount_try: 100 }), // recent, not overdue
+    ]
+    const profile = buildSupplierProfile('Medium Risk', expenses, today)
+    // payment_rate = 5/6 * 100 ≈ 83.33 — not <70 so not high, but <85 so medium (if no overdue)
+    expect(profile.overdue_try).toBe(0)
+    expect(profile.risk_tier).toBe('medium')
+  })
+
+  test('overdue_try is 0 for expenses only 30 days old', () => {
+    const today = '2026-05-27'
+    const expenses = [
+      makeExpense({ expense_date: '2026-04-27', payment_status: 'pending', amount_try: 999 }),
+    ]
+    const profile = buildSupplierProfile('Recent', expenses, today)
+    expect(profile.overdue_try).toBe(0)
+  })
+
+  test('payment_rate rounds to 2 decimal places', () => {
+    const today = '2026-05-27'
+    // 2 paid out of 3 → 66.666...% → should round to 66.67
+    const expenses = [
+      makeExpense({ payment_status: 'paid',    expense_date: '2026-05-01', paid_at: '2026-05-05', amount_try: 100 }),
+      makeExpense({ payment_status: 'paid',    expense_date: '2026-05-02', paid_at: '2026-05-06', amount_try: 100 }),
+      makeExpense({ payment_status: 'pending', expense_date: '2026-05-20', amount_try: 100 }),
+    ]
+    const profile = buildSupplierProfile('Rounding', expenses, today)
+    expect(profile.payment_rate).toBeCloseTo(66.67, 1)
+  })
+
+  test('expense_types is empty array when all expense_type are null', () => {
+    const expenses = [
+      makeExpense({ expense_type: null }),
+      makeExpense({ expense_type: null }),
+    ]
+    const profile = buildSupplierProfile('NoType', expenses, '2026-05-27')
+    expect(profile.expense_types).toEqual([])
+  })
+
+  test('last_expense_date is null for empty expense list', () => {
+    const profile = buildSupplierProfile('NoDate', [], '2026-05-27')
+    expect(profile.last_expense_date).toBeNull()
+  })
 })
 
 // ── computeHHI ────────────────────────────────────────────────────────────────
@@ -242,5 +421,107 @@ describe('computeHHI', () => {
       },
     ]
     expect(computeHHI(suppliers)).toBe(0)
+  })
+
+  test('two equal suppliers yield HHI = 0.5', () => {
+    const suppliers: SupplierProfile[] = [
+      {
+        supplier_name: 'A', total_expenses_try: 5000,
+        expense_count: 1, unpaid_try: 0, overdue_try: 0,
+        avg_days_to_pay: null, last_expense_date: null,
+        expense_types: [], payment_rate: 100, risk_tier: 'low',
+      },
+      {
+        supplier_name: 'B', total_expenses_try: 5000,
+        expense_count: 1, unpaid_try: 0, overdue_try: 0,
+        avg_days_to_pay: null, last_expense_date: null,
+        expense_types: [], payment_rate: 100, risk_tier: 'low',
+      },
+    ]
+    expect(computeHHI(suppliers)).toBeCloseTo(0.5, 5)
+  })
+
+  test('dominant supplier (80/20 split) gives high HHI', () => {
+    const suppliers: SupplierProfile[] = [
+      {
+        supplier_name: 'Big', total_expenses_try: 8000,
+        expense_count: 10, unpaid_try: 0, overdue_try: 0,
+        avg_days_to_pay: null, last_expense_date: null,
+        expense_types: [], payment_rate: 100, risk_tier: 'low',
+      },
+      {
+        supplier_name: 'Small', total_expenses_try: 2000,
+        expense_count: 2, unpaid_try: 0, overdue_try: 0,
+        avg_days_to_pay: null, last_expense_date: null,
+        expense_types: [], payment_rate: 100, risk_tier: 'low',
+      },
+    ]
+    // (0.8)^2 + (0.2)^2 = 0.64 + 0.04 = 0.68
+    const hhi = computeHHI(suppliers)
+    expect(hhi).toBeCloseTo(0.68, 5)
+  })
+
+  test('4 suppliers with equal share yield HHI = 0.25', () => {
+    const suppliers: SupplierProfile[] = Array.from({ length: 4 }, (_, i) => ({
+      supplier_name: `S${i}`, total_expenses_try: 2500,
+      expense_count: 1, unpaid_try: 0, overdue_try: 0,
+      avg_days_to_pay: null, last_expense_date: null,
+      expense_types: [], payment_rate: 100, risk_tier: 'low' as const,
+    }))
+    expect(computeHHI(suppliers)).toBeCloseTo(0.25, 5)
+  })
+
+  test('10 equal suppliers yield HHI = 0.1', () => {
+    const suppliers: SupplierProfile[] = Array.from({ length: 10 }, (_, i) => ({
+      supplier_name: `T${i}`, total_expenses_try: 1000,
+      expense_count: 1, unpaid_try: 0, overdue_try: 0,
+      avg_days_to_pay: null, last_expense_date: null,
+      expense_types: [], payment_rate: 100, risk_tier: 'low' as const,
+    }))
+    expect(computeHHI(suppliers)).toBeCloseTo(0.1, 5)
+  })
+
+  test('HHI is always between 0 and 1 inclusive', () => {
+    const single: SupplierProfile[] = [{
+      supplier_name: 'X', total_expenses_try: 1000,
+      expense_count: 1, unpaid_try: 0, overdue_try: 0,
+      avg_days_to_pay: null, last_expense_date: null,
+      expense_types: [], payment_rate: 100, risk_tier: 'low',
+    }]
+    const many: SupplierProfile[] = Array.from({ length: 100 }, (_, i) => ({
+      supplier_name: `S${i}`, total_expenses_try: 10,
+      expense_count: 1, unpaid_try: 0, overdue_try: 0,
+      avg_days_to_pay: null, last_expense_date: null,
+      expense_types: [], payment_rate: 100, risk_tier: 'low' as const,
+    }))
+    expect(computeHHI(single)).toBeLessThanOrEqual(1)
+    expect(computeHHI(single)).toBeGreaterThanOrEqual(0)
+    expect(computeHHI(many)).toBeLessThanOrEqual(1)
+    expect(computeHHI(many)).toBeGreaterThanOrEqual(0)
+  })
+
+  test('HHI is higher for concentrated spend than for even distribution', () => {
+    const concentrated: SupplierProfile[] = [
+      { supplier_name: 'Big',   total_expenses_try: 9000, expense_count: 1, unpaid_try: 0, overdue_try: 0, avg_days_to_pay: null, last_expense_date: null, expense_types: [], payment_rate: 100, risk_tier: 'low' },
+      { supplier_name: 'Small', total_expenses_try: 1000, expense_count: 1, unpaid_try: 0, overdue_try: 0, avg_days_to_pay: null, last_expense_date: null, expense_types: [], payment_rate: 100, risk_tier: 'low' },
+    ]
+    const even: SupplierProfile[] = [
+      { supplier_name: 'A', total_expenses_try: 5000, expense_count: 1, unpaid_try: 0, overdue_try: 0, avg_days_to_pay: null, last_expense_date: null, expense_types: [], payment_rate: 100, risk_tier: 'low' },
+      { supplier_name: 'B', total_expenses_try: 5000, expense_count: 1, unpaid_try: 0, overdue_try: 0, avg_days_to_pay: null, last_expense_date: null, expense_types: [], payment_rate: 100, risk_tier: 'low' },
+    ]
+    expect(computeHHI(concentrated)).toBeGreaterThan(computeHHI(even))
+  })
+
+  test('a supplier with zero spend does not affect HHI result', () => {
+    const withZero: SupplierProfile[] = [
+      { supplier_name: 'A',    total_expenses_try: 5000, expense_count: 1, unpaid_try: 0, overdue_try: 0, avg_days_to_pay: null, last_expense_date: null, expense_types: [], payment_rate: 100, risk_tier: 'low' },
+      { supplier_name: 'B',    total_expenses_try: 5000, expense_count: 1, unpaid_try: 0, overdue_try: 0, avg_days_to_pay: null, last_expense_date: null, expense_types: [], payment_rate: 100, risk_tier: 'low' },
+      { supplier_name: 'Zero', total_expenses_try: 0,    expense_count: 0, unpaid_try: 0, overdue_try: 0, avg_days_to_pay: null, last_expense_date: null, expense_types: [], payment_rate: 0,   risk_tier: 'low' },
+    ]
+    const without: SupplierProfile[] = [
+      { supplier_name: 'A', total_expenses_try: 5000, expense_count: 1, unpaid_try: 0, overdue_try: 0, avg_days_to_pay: null, last_expense_date: null, expense_types: [], payment_rate: 100, risk_tier: 'low' },
+      { supplier_name: 'B', total_expenses_try: 5000, expense_count: 1, unpaid_try: 0, overdue_try: 0, avg_days_to_pay: null, last_expense_date: null, expense_types: [], payment_rate: 100, risk_tier: 'low' },
+    ]
+    expect(computeHHI(withZero)).toBeCloseTo(computeHHI(without), 5)
   })
 })

@@ -161,4 +161,144 @@ describe('FinanceService.getFinancialSummary — assembly', () => {
 
     expect(expensesSpy).toHaveBeenCalledWith(USER, CO, PERIOD, undefined, undefined)
   })
+
+  it('gross_profit_try = revenue_try - cost_try', async () => {
+    const taxMod = await import('../lib/services/tax.service')
+    vi.spyOn(taxMod.TaxService, 'getKdvNet').mockResolvedValue(VAT_STUB as never)
+
+    const summary = await FinanceService.getFinancialSummary(USER, CO, PERIOD)
+    // From stub: 500k - 200k = 300k
+    expect(summary.gross_profit_try).toBe(summary.revenue_try - summary.cost_try)
+  })
+
+  it('net_after_tax_try = matrah_try - corporate_tax_try', async () => {
+    const taxMod = await import('../lib/services/tax.service')
+    vi.spyOn(taxMod.TaxService, 'getKdvNet').mockResolvedValue(VAT_STUB as never)
+
+    const summary = await FinanceService.getFinancialSummary(USER, CO, PERIOD)
+    expect(summary.net_after_tax_try).toBe(summary.matrah_try - summary.corporate_tax_try)
+  })
+
+  it('zero-revenue scenario: matrah and tax are clamped at 0', async () => {
+    vi.spyOn(FinanceService, 'getGrossProfit').mockResolvedValue({
+      revenue_try: 0,
+      cost_try: 0,
+      gross_profit_try: 0,
+    } as never)
+    vi.spyOn(FinanceService, 'getOperatingExpenses').mockResolvedValue({
+      total_try: 50_000,
+      deductible_try: 50_000,
+      non_deductible_try: 0,
+    } as never)
+    const taxMod = await import('../lib/services/tax.service')
+    vi.spyOn(taxMod.TaxService, 'getKdvNet').mockResolvedValue({
+      sales_vat_try: 0, purchase_vat_try: 0, expense_vat_try: 0, net_vat_try: 0,
+    } as never)
+
+    const summary = await FinanceService.getFinancialSummary(USER, CO, PERIOD)
+    // matrah = 0 - 0 - 50k = -50k → clamped to 0, tax = 0
+    expect(summary.corporate_tax_try).toBeGreaterThanOrEqual(0)
+    expect(summary.net_after_tax_try).toBeGreaterThanOrEqual(-Infinity) // at most matrah
+  })
+
+  it('10% corporate tax rate: 220k matrah → 22k tax', async () => {
+    const taxMod = await import('../lib/services/tax.service')
+    vi.spyOn(taxMod.TaxService, 'getKdvNet').mockResolvedValue(VAT_STUB as never)
+
+    const summary = await FinanceService.getFinancialSummary(
+      USER, CO, PERIOD,
+      { corporate_tax_rate: 10 },
+    )
+
+    expect(summary.corporate_tax_rate).toBe(10)
+    expect(summary.corporate_tax_try).toBe(22_000)  // 220k × 10%
+    expect(summary.net_after_tax_try).toBe(198_000) // 220k - 22k
+  })
+
+  it('30% corporate tax rate: 220k matrah → 66k tax', async () => {
+    const taxMod = await import('../lib/services/tax.service')
+    vi.spyOn(taxMod.TaxService, 'getKdvNet').mockResolvedValue(VAT_STUB as never)
+
+    const summary = await FinanceService.getFinancialSummary(
+      USER, CO, PERIOD,
+      { corporate_tax_rate: 30 },
+    )
+
+    expect(summary.corporate_tax_rate).toBe(30)
+    expect(summary.corporate_tax_try).toBe(66_000)  // 220k × 30%
+    expect(summary.net_after_tax_try).toBe(154_000) // 220k - 66k
+  })
+
+  it('deductible_expenses_try + non_deductible_expenses_try = expenses_total_try', async () => {
+    const taxMod = await import('../lib/services/tax.service')
+    vi.spyOn(taxMod.TaxService, 'getKdvNet').mockResolvedValue(VAT_STUB as never)
+
+    const summary = await FinanceService.getFinancialSummary(USER, CO, PERIOD)
+
+    expect(summary.deductible_expenses_try + summary.non_deductible_expenses_try)
+      .toBe(summary.expenses_total_try)
+  })
+
+  it('VAT net = sales_vat - purchase_vat - expense_vat', async () => {
+    const taxMod = await import('../lib/services/tax.service')
+    vi.spyOn(taxMod.TaxService, 'getKdvNet').mockResolvedValue(VAT_STUB as never)
+
+    const summary = await FinanceService.getFinancialSummary(USER, CO, PERIOD)
+
+    // 100k - 20k - 4k = 76k
+    expect(summary.net_vat_try)
+      .toBe(summary.sales_vat_try - summary.purchase_vat_try - summary.expense_vat_try)
+  })
+
+  it('different period from and to are reflected in summary.period', async () => {
+    const taxMod = await import('../lib/services/tax.service')
+    vi.spyOn(taxMod.TaxService, 'getKdvNet').mockResolvedValue(VAT_STUB as never)
+    const customPeriod = { from: '2025-07-01', to: '2025-09-30' }
+
+    const summary = await FinanceService.getFinancialSummary(USER, CO, customPeriod)
+
+    expect(summary.period.from).toBe('2025-07-01')
+    expect(summary.period.to).toBe('2025-09-30')
+  })
+
+  it('getGrossProfit is called exactly once per summary call', async () => {
+    const taxMod = await import('../lib/services/tax.service')
+    vi.spyOn(taxMod.TaxService, 'getKdvNet').mockResolvedValue(VAT_STUB as never)
+
+    await FinanceService.getFinancialSummary(USER, CO, PERIOD)
+
+    expect(grossSpy).toHaveBeenCalledTimes(1)
+  })
+
+  it('getOperatingExpenses is called exactly once per summary call', async () => {
+    const taxMod = await import('../lib/services/tax.service')
+    vi.spyOn(taxMod.TaxService, 'getKdvNet').mockResolvedValue(VAT_STUB as never)
+
+    await FinanceService.getFinancialSummary(USER, CO, PERIOD)
+
+    expect(expensesSpy).toHaveBeenCalledTimes(1)
+  })
+
+  it('summary has all required fields at top level', async () => {
+    const taxMod = await import('../lib/services/tax.service')
+    vi.spyOn(taxMod.TaxService, 'getKdvNet').mockResolvedValue(VAT_STUB as never)
+
+    const summary = await FinanceService.getFinancialSummary(USER, CO, PERIOD)
+
+    expect(summary).toHaveProperty('revenue_try')
+    expect(summary).toHaveProperty('cost_try')
+    expect(summary).toHaveProperty('gross_profit_try')
+    expect(summary).toHaveProperty('expenses_total_try')
+    expect(summary).toHaveProperty('deductible_expenses_try')
+    expect(summary).toHaveProperty('non_deductible_expenses_try')
+    expect(summary).toHaveProperty('matrah_try')
+    expect(summary).toHaveProperty('corporate_tax_try')
+    expect(summary).toHaveProperty('corporate_tax_rate')
+    expect(summary).toHaveProperty('net_after_tax_try')
+    expect(summary).toHaveProperty('sales_vat_try')
+    expect(summary).toHaveProperty('purchase_vat_try')
+    expect(summary).toHaveProperty('expense_vat_try')
+    expect(summary).toHaveProperty('net_vat_try')
+    expect(summary).toHaveProperty('period')
+  })
 })

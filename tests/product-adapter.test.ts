@@ -60,6 +60,35 @@ describe('getSalePrice', () => {
   it('returns decimal price without rounding', () => {
     expect(getSalePrice({ default_sale_price: 99.99 })).toBe(99.99)
   })
+
+  it('negative catalog_price also treated as absent', () => {
+    expect(getSalePrice({ catalog_price: -1 })).toBeNull()
+  })
+
+  it('both fields zero returns null', () => {
+    expect(getSalePrice({ default_sale_price: 0, catalog_price: 0 })).toBeNull()
+  })
+
+  it('positive default_sale_price wins even when catalog_price is also positive', () => {
+    expect(getSalePrice({ default_sale_price: 1, catalog_price: 9999 })).toBe(1)
+  })
+
+  it('returns small fractional price (e.g. 0.01)', () => {
+    expect(getSalePrice({ default_sale_price: 0.01 })).toBe(0.01)
+  })
+
+  it('Infinity default_sale_price is not a valid price', () => {
+    // isPositiveFiniteNumber requires Number.isFinite
+    expect(getSalePrice({ default_sale_price: Infinity })).toBeNull()
+  })
+
+  it('NaN default_sale_price falls through to catalog_price', () => {
+    expect(getSalePrice({ default_sale_price: NaN, catalog_price: 55 })).toBe(55)
+  })
+
+  it('catalog_price NaN also returns null', () => {
+    expect(getSalePrice({ catalog_price: NaN })).toBeNull()
+  })
 })
 
 // ── getSaleCurrency ───────────────────────────────────────────────────────
@@ -105,6 +134,30 @@ describe('getSaleCurrency', () => {
     // The regex is /^[A-Z]{3}$/ — lowercase should fail
     expect(getSaleCurrency({ default_sale_currency: 'usd' as string })).toBeNull()
   })
+
+  it('returns JPY as a valid currency code', () => {
+    expect(getSaleCurrency({ default_sale_currency: 'JPY' })).toBe('JPY')
+  })
+
+  it('invalid default falls through to valid cost_currency', () => {
+    expect(getSaleCurrency({ default_sale_currency: 'bad' as string, cost_currency: 'EUR' })).toBe('EUR')
+  })
+
+  it('both invalid returns null', () => {
+    expect(getSaleCurrency({ default_sale_currency: '!!' as string, cost_currency: '??' as string })).toBeNull()
+  })
+
+  it('empty string is not a valid currency code', () => {
+    expect(getSaleCurrency({ default_sale_currency: '' as string })).toBeNull()
+  })
+
+  it('undefined input returns null', () => {
+    expect(getSaleCurrency(undefined)).toBeNull()
+  })
+
+  it('CHF is accepted as valid currency code', () => {
+    expect(getSaleCurrency({ cost_currency: 'CHF' })).toBe('CHF')
+  })
 })
 
 // ── getSaleVatRate ────────────────────────────────────────────────────────
@@ -146,6 +199,26 @@ describe('getSaleVatRate', () => {
   it('DEFAULT_VAT_RATE_TR constant is 20', () => {
     expect(DEFAULT_VAT_RATE_TR).toBe(20)
   })
+
+  it('returns 8 for the reduced standard rate', () => {
+    expect(getSaleVatRate({ default_sale_vat_rate: 8 })).toBe(8)
+  })
+
+  it('returns negative value as fallback (negative rate fails isFinite+>=0 check)', () => {
+    expect(getSaleVatRate({ default_sale_vat_rate: -5 })).toBe(DEFAULT_VAT_RATE_TR)
+  })
+
+  it('returns DEFAULT_VAT_RATE_TR when rate is -Infinity', () => {
+    expect(getSaleVatRate({ default_sale_vat_rate: -Infinity })).toBe(DEFAULT_VAT_RATE_TR)
+  })
+
+  it('fractional VAT rate is returned as-is', () => {
+    expect(getSaleVatRate({ default_sale_vat_rate: 18.5 })).toBe(18.5)
+  })
+
+  it('DEFAULT_VAT_RATE_TR is a number constant', () => {
+    expect(typeof DEFAULT_VAT_RATE_TR).toBe('number')
+  })
 })
 
 // ── isProductActive ───────────────────────────────────────────────────────
@@ -178,6 +251,23 @@ describe('isProductActive', () => {
       default_sale_currency: 'TRY',
     })).toBe(true)
   })
+
+  it('returns false when is_active is false even with valid price', () => {
+    expect(isProductActive({
+      is_active: false,
+      default_sale_price: 500,
+    })).toBe(false)
+  })
+
+  it('returns true for a minimal object with no is_active key (legacy)', () => {
+    const legacy = { default_sale_price: 100 }
+    expect(isProductActive(legacy)).toBe(true)
+  })
+
+  it('treats null is_active as truthy (not explicitly false)', () => {
+    // is_active: null is not === false → active
+    expect(isProductActive({ is_active: null as unknown as boolean })).toBe(true)
+  })
 })
 
 // ── getLegacyProductCost ──────────────────────────────────────────────────
@@ -205,6 +295,22 @@ describe('getLegacyProductCost', () => {
 
   it('returns fractional cost correctly', () => {
     expect(getLegacyProductCost({ unit_cost: 12.50 })).toBe(12.50)
+  })
+
+  it('returns null for Infinity', () => {
+    expect(getLegacyProductCost({ unit_cost: Infinity })).toBeNull()
+  })
+
+  it('returns null for NaN', () => {
+    expect(getLegacyProductCost({ unit_cost: NaN })).toBeNull()
+  })
+
+  it('returns large positive cost', () => {
+    expect(getLegacyProductCost({ unit_cost: 999_999 })).toBe(999_999)
+  })
+
+  it('returns smallest positive fractional cost', () => {
+    expect(getLegacyProductCost({ unit_cost: 0.01 })).toBe(0.01)
   })
 })
 
@@ -243,5 +349,35 @@ describe('product-adapter — migration scenario', () => {
       default_sale_price: 999,
     }
     expect(isProductActive(row)).toBe(false)
+  })
+
+  it('all fields missing: getSalePrice and getSaleCurrency return null, getSaleVatRate returns default', () => {
+    const row = {}
+    expect(getSalePrice(row)).toBeNull()
+    expect(getSaleCurrency(row)).toBeNull()
+    expect(getSaleVatRate(row)).toBe(DEFAULT_VAT_RATE_TR)
+    expect(isProductActive(row)).toBe(true)  // legacy = active
+    expect(getLegacyProductCost(row)).toBeNull()
+  })
+
+  it('canonical price overrides legacy even when legacy is larger', () => {
+    const row = { default_sale_price: 1, catalog_price: 9999 }
+    expect(getSalePrice(row)).toBe(1)
+  })
+
+  it('inactive product with zero cost: all fields return appropriate defaults/nulls', () => {
+    const row = { is_active: false, unit_cost: 0, catalog_price: 0 }
+    expect(isProductActive(row)).toBe(false)
+    expect(getLegacyProductCost(row)).toBeNull()
+    expect(getSalePrice(row)).toBeNull()
+  })
+
+  it('partially migrated row: canonical price but legacy currency', () => {
+    const row = {
+      default_sale_price:    250,
+      cost_currency:         'TRY',  // legacy currency (no canonical yet)
+    }
+    expect(getSalePrice(row)).toBe(250)
+    expect(getSaleCurrency(row)).toBe('TRY')
   })
 })

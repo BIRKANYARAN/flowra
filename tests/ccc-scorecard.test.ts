@@ -4,6 +4,7 @@
 // Unit tests for all 5 pure functions in ccc-scorecard.service.ts
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { describe, it, expect } from 'vitest'
 import {
   computeDsoScore,
   computeDpoScore,
@@ -16,140 +17,289 @@ import {
 // ── computeDsoScore ───────────────────────────────────────────────────────────
 
 describe('computeDsoScore', () => {
-  test('0 days = 100', () => {
+  it('0 days = 100', () => {
     expect(computeDsoScore(0)).toBe(100)
   })
 
-  test('30 days = 80', () => {
+  it('30 days = 80', () => {
     expect(computeDsoScore(30)).toBe(80)
   })
 
-  test('60 days = 60', () => {
+  it('60 days = 60', () => {
     expect(computeDsoScore(60)).toBe(60)
   })
 
-  test('90 days = 40', () => {
+  it('90 days = 40', () => {
     expect(computeDsoScore(90)).toBe(40)
   })
 
-  test('120 days = 20', () => {
+  it('120 days = 20', () => {
     expect(computeDsoScore(120)).toBe(20)
   })
 
-  test('120+ days = 20 (clamp at minimum)', () => {
+  it('120+ days = 20 (clamp at minimum)', () => {
     expect(computeDsoScore(150)).toBe(20)
     expect(computeDsoScore(200)).toBe(20)
   })
 
-  test('negative days = 100 (clamp at maximum)', () => {
+  it('negative days = 100 (clamp at maximum)', () => {
     expect(computeDsoScore(-5)).toBe(100)
   })
 
-  test('interpolation: 15 days = 90 (midpoint 0→30 segment)', () => {
+  it('interpolation: 15 days = 90 (midpoint 0→30 segment)', () => {
     // 0d→100, 30d→80 → 15d = 100 + 0.5*(80-100) = 90
     expect(computeDsoScore(15)).toBe(90)
   })
 
-  test('interpolation: 45 days = 70 (midpoint 30→60 segment)', () => {
+  it('interpolation: 45 days = 70 (midpoint 30→60 segment)', () => {
     // 30d→80, 60d→60 → 45d = 80 + 0.5*(60-80) = 70
     expect(computeDsoScore(45)).toBe(70)
   })
 
-  test('interpolation: 75 days = 50 (midpoint 60→90 segment)', () => {
+  it('interpolation: 75 days = 50 (midpoint 60→90 segment)', () => {
     // 60d→60, 90d→40 → 75d = 60 + 0.5*(40-60) = 50
     expect(computeDsoScore(75)).toBe(50)
   })
 
-  test('interpolation: 105 days = 30 (midpoint 90→120 segment)', () => {
+  it('interpolation: 105 days = 30 (midpoint 90→120 segment)', () => {
     // 90d→40, 120d→20 → 105d = 40 + 0.5*(20-40) = 30
     expect(computeDsoScore(105)).toBe(30)
+  })
+
+  // ── Threshold boundary tests ────────────────────────────────────────────────
+
+  it('exactly at 30-day boundary returns 80', () => {
+    expect(computeDsoScore(30)).toBe(80)
+  })
+
+  it('exactly at 60-day boundary returns 60', () => {
+    expect(computeDsoScore(60)).toBe(60)
+  })
+
+  it('exactly at 90-day boundary returns 40', () => {
+    expect(computeDsoScore(90)).toBe(40)
+  })
+
+  it('one day before 30 (29d) returns a score between 80 and 100', () => {
+    const s = computeDsoScore(29)
+    expect(s).toBeGreaterThan(80)
+    expect(s).toBeLessThanOrEqual(100)
+  })
+
+  it('one day past 120 (121d) is still clamped to 20', () => {
+    expect(computeDsoScore(121)).toBe(20)
+  })
+
+  // ── Large and extreme values ────────────────────────────────────────────────
+
+  it('very large DSO (1000 days) is clamped to 20', () => {
+    expect(computeDsoScore(1000)).toBe(20)
+  })
+
+  it('very negative DSO (-100 days) is clamped to 100', () => {
+    expect(computeDsoScore(-100)).toBe(100)
+  })
+
+  // ── Monotonicity ────────────────────────────────────────────────────────────
+
+  it('score is monotonically non-increasing as DSO days increase', () => {
+    const points = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 200]
+    for (let i = 0; i < points.length - 1; i++) {
+      expect(computeDsoScore(points[i]!)).toBeGreaterThanOrEqual(computeDsoScore(points[i + 1]!))
+    }
+  })
+
+  // ── Quarter-point interpolation ─────────────────────────────────────────────
+
+  it('7.5 days = 95 (quarter-point in 0→30 segment)', () => {
+    // 0d→100, 30d→80 → t=0.25 → 100 + 0.25*(80-100) = 95
+    expect(computeDsoScore(7.5)).toBe(95)
+  })
+
+  it('22.5 days = 85 (three-quarter point in 0→30 segment)', () => {
+    // t = 0.75 → 100 + 0.75*(80-100) = 85
+    expect(computeDsoScore(22.5)).toBe(85)
+  })
+
+  // ── Rounding ────────────────────────────────────────────────────────────────
+
+  it('fractional days round to nearest integer score', () => {
+    // All returned values should be integers (Math.round used internally)
+    const testDays = [1.3, 14.7, 33.1, 57.8, 88.9, 111.5]
+    for (const d of testDays) {
+      expect(Number.isInteger(computeDsoScore(d))).toBe(true)
+    }
   })
 })
 
 // ── computeDpoScore ───────────────────────────────────────────────────────────
 
 describe('computeDpoScore', () => {
-  test('0 days = 0', () => {
+  it('0 days = 0', () => {
     expect(computeDpoScore(0)).toBe(0)
   })
 
-  test('30 days = 40', () => {
+  it('30 days = 40', () => {
     expect(computeDpoScore(30)).toBe(40)
   })
 
-  test('45 days = 70', () => {
+  it('45 days = 70', () => {
     expect(computeDpoScore(45)).toBe(70)
   })
 
-  test('60 days = 90', () => {
+  it('60 days = 90', () => {
     expect(computeDpoScore(60)).toBe(90)
   })
 
-  test('90 days = 100', () => {
+  it('90 days = 100', () => {
     expect(computeDpoScore(90)).toBe(100)
   })
 
-  test('90+ days = 100 (clamp at maximum)', () => {
+  it('90+ days = 100 (clamp at maximum)', () => {
     expect(computeDpoScore(120)).toBe(100)
     expect(computeDpoScore(180)).toBe(100)
   })
 
-  test('negative days = 0 (clamp at minimum)', () => {
+  it('negative days = 0 (clamp at minimum)', () => {
     expect(computeDpoScore(-10)).toBe(0)
   })
 
-  test('interpolation: 15 days = 20 (midpoint 0→30 segment)', () => {
+  it('interpolation: 15 days = 20 (midpoint 0→30 segment)', () => {
     // 0d→0, 30d→40 → 15d = 0 + 0.5*(40-0) = 20
     expect(computeDpoScore(15)).toBe(20)
   })
 
-  test('interpolation: 37.5 days ≈ midpoint 30→45 segment', () => {
+  it('interpolation: 37.5 days ≈ midpoint 30→45 segment', () => {
     // 30d→40, 45d→70 → t=0.5 → 40 + 0.5*(70-40) = 55
     expect(computeDpoScore(37.5)).toBe(55)
   })
 
-  test('interpolation: 52.5 days ≈ midpoint 45→60 segment', () => {
+  it('interpolation: 52.5 days ≈ midpoint 45→60 segment', () => {
     // 45d→70, 60d→90 → t=0.5 → 70 + 0.5*(90-70) = 80
     expect(computeDpoScore(52.5)).toBe(80)
   })
 
-  test('interpolation: 75 days ≈ midpoint 60→90 segment', () => {
+  it('interpolation: 75 days ≈ midpoint 60→90 segment', () => {
     // 60d→90, 90d→100 → t=0.5 → 90 + 0.5*(100-90) = 95
     expect(computeDpoScore(75)).toBe(95)
+  })
+
+  // ── Threshold boundary tests ────────────────────────────────────────────────
+
+  it('exactly at 45-day boundary returns 70', () => {
+    expect(computeDpoScore(45)).toBe(70)
+  })
+
+  it('one day before 30 (29d) returns a score less than 40', () => {
+    const s = computeDpoScore(29)
+    expect(s).toBeLessThan(40)
+    expect(s).toBeGreaterThanOrEqual(0)
+  })
+
+  it('one day past 90 (91d) is still clamped to 100', () => {
+    expect(computeDpoScore(91)).toBe(100)
+  })
+
+  // ── Large and extreme values ────────────────────────────────────────────────
+
+  it('very large DPO (999 days) is clamped to 100', () => {
+    expect(computeDpoScore(999)).toBe(100)
+  })
+
+  it('very negative DPO (-999 days) is clamped to 0', () => {
+    expect(computeDpoScore(-999)).toBe(0)
+  })
+
+  // ── Monotonicity ────────────────────────────────────────────────────────────
+
+  it('score is monotonically non-decreasing as DPO days increase', () => {
+    const points = [0, 10, 20, 30, 37.5, 45, 52.5, 60, 75, 90, 120, 200]
+    for (let i = 0; i < points.length - 1; i++) {
+      expect(computeDpoScore(points[i]!)).toBeLessThanOrEqual(computeDpoScore(points[i + 1]!))
+    }
+  })
+
+  // ── Quarter-point interpolation ─────────────────────────────────────────────
+
+  it('7.5 days = 10 (quarter-point in 0→30 segment)', () => {
+    // t = 0.25 → 0 + 0.25*40 = 10
+    expect(computeDpoScore(7.5)).toBe(10)
+  })
+
+  it('22.5 days = 30 (three-quarter point in 0→30 segment)', () => {
+    // t = 0.75 → 0 + 0.75*40 = 30
+    expect(computeDpoScore(22.5)).toBe(30)
+  })
+
+  // ── Rounding ────────────────────────────────────────────────────────────────
+
+  it('fractional days round to nearest integer score', () => {
+    const testDays = [1.3, 14.7, 33.1, 47.8, 58.9, 81.5]
+    for (const d of testDays) {
+      expect(Number.isInteger(computeDpoScore(d))).toBe(true)
+    }
   })
 })
 
 // ── computeDioScore ───────────────────────────────────────────────────────────
 
 describe('computeDioScore', () => {
-  test('0 days = 100 (same curve as DSO)', () => {
+  it('0 days = 100 (same curve as DSO)', () => {
     expect(computeDioScore(0)).toBe(100)
   })
 
-  test('30 days = 80', () => {
+  it('30 days = 80', () => {
     expect(computeDioScore(30)).toBe(80)
   })
 
-  test('60 days = 60', () => {
+  it('60 days = 60', () => {
     expect(computeDioScore(60)).toBe(60)
   })
 
-  test('90 days = 40', () => {
+  it('90 days = 40', () => {
     expect(computeDioScore(90)).toBe(40)
   })
 
-  test('120 days = 20', () => {
+  it('120 days = 20', () => {
     expect(computeDioScore(120)).toBe(20)
   })
 
-  test('120+ days = 20 (clamp)', () => {
+  it('120+ days = 20 (clamp)', () => {
     expect(computeDioScore(999)).toBe(20)
   })
 
-  test('mirrors DSO exactly', () => {
+  it('mirrors DSO exactly', () => {
     const testValues = [0, 15, 30, 45, 60, 75, 90, 105, 120, 150]
     for (const v of testValues) {
       expect(computeDioScore(v)).toBe(computeDsoScore(v))
+    }
+  })
+
+  // ── Extended mirroring and edge cases ──────────────────────────────────────
+
+  it('negative DIO mirrors negative DSO (both return 100)', () => {
+    expect(computeDioScore(-1)).toBe(100)
+    expect(computeDioScore(-50)).toBe(100)
+  })
+
+  it('DIO monotonically non-increasing like DSO', () => {
+    const points = [0, 15, 30, 45, 60, 75, 90, 105, 120, 200]
+    for (let i = 0; i < points.length - 1; i++) {
+      expect(computeDioScore(points[i]!)).toBeGreaterThanOrEqual(computeDioScore(points[i + 1]!))
+    }
+  })
+
+  it('DIO returns integer scores for fractional days', () => {
+    const testDays = [0.5, 12.3, 31.7, 68.1, 95.9, 119.4]
+    for (const d of testDays) {
+      expect(Number.isInteger(computeDioScore(d))).toBe(true)
+    }
+  })
+
+  it('DIO is exactly equivalent to DSO for same input — delegated implementation', () => {
+    // Explicitly verify the delegation is correct for the full range
+    for (let d = 0; d <= 120; d += 5) {
+      expect(computeDioScore(d)).toBe(computeDsoScore(d))
     }
   })
 })
@@ -157,77 +307,182 @@ describe('computeDioScore', () => {
 // ── computeCccEfficiencyScore ─────────────────────────────────────────────────
 
 describe('computeCccEfficiencyScore', () => {
-  test('all 100 → 100', () => {
+  it('all 100 → 100', () => {
     expect(computeCccEfficiencyScore(100, 100, 100)).toBe(100)
   })
 
-  test('all 0 → 0', () => {
+  it('all 0 → 0', () => {
     expect(computeCccEfficiencyScore(0, 0, 0)).toBe(0)
   })
 
-  test('weighted average: 40% DSO + 30% DPO + 30% DIO', () => {
+  it('weighted average: 40% DSO + 30% DPO + 30% DIO', () => {
     // DSO=80, DPO=60, DIO=70 → 0.4*80 + 0.3*60 + 0.3*70 = 32 + 18 + 21 = 71
     expect(computeCccEfficiencyScore(80, 60, 70)).toBe(71)
   })
 
-  test('all equal: score = that value', () => {
+  it('all equal: score = that value', () => {
     expect(computeCccEfficiencyScore(50, 50, 50)).toBe(50)
     expect(computeCccEfficiencyScore(75, 75, 75)).toBe(75)
   })
 
-  test('DSO-only impact: 100/0/0 → 40', () => {
+  it('DSO-only impact: 100/0/0 → 40', () => {
     // 0.4*100 + 0.3*0 + 0.3*0 = 40
     expect(computeCccEfficiencyScore(100, 0, 0)).toBe(40)
   })
 
-  test('DPO-only impact: 0/100/0 → 30', () => {
+  it('DPO-only impact: 0/100/0 → 30', () => {
     // 0.4*0 + 0.3*100 + 0.3*0 = 30
     expect(computeCccEfficiencyScore(0, 100, 0)).toBe(30)
   })
 
-  test('DIO-only impact: 0/0/100 → 30', () => {
+  it('DIO-only impact: 0/0/100 → 30', () => {
     // 0.4*0 + 0.3*0 + 0.3*100 = 30
     expect(computeCccEfficiencyScore(0, 0, 100)).toBe(30)
   })
 
-  test('benchmark scenario: DSO=30d→80, DPO=45d→70, DIO=30d→80 → score', () => {
+  it('benchmark scenario: DSO=30d→80, DPO=45d→70, DIO=30d→80 → score', () => {
     // 0.4*80 + 0.3*70 + 0.3*80 = 32 + 21 + 24 = 77
     expect(computeCccEfficiencyScore(80, 70, 80)).toBe(77)
+  })
+
+  // ── Weight verification ─────────────────────────────────────────────────────
+
+  it('DPO and DIO have identical weight (both 30%)', () => {
+    // Swap DPO and DIO values — should give the same result
+    expect(computeCccEfficiencyScore(50, 80, 20)).toBe(computeCccEfficiencyScore(50, 20, 80))
+  })
+
+  it('DSO has greater weight than DPO alone and DIO alone', () => {
+    // 40% > 30%
+    const dsoOnly  = computeCccEfficiencyScore(100, 0, 0)  // 40
+    const dpoOnly  = computeCccEfficiencyScore(0, 100, 0)  // 30
+    const dioOnly  = computeCccEfficiencyScore(0, 0, 100)  // 30
+    expect(dsoOnly).toBeGreaterThan(dpoOnly)
+    expect(dsoOnly).toBeGreaterThan(dioOnly)
+    expect(dpoOnly).toBe(dioOnly)
+  })
+
+  it('weights sum to 100%: 100/100/100 → 100', () => {
+    // 0.4 + 0.3 + 0.3 = 1.0
+    expect(computeCccEfficiencyScore(100, 100, 100)).toBe(100)
+  })
+
+  // ── Grade boundary scenarios ────────────────────────────────────────────────
+
+  it('score of exactly 80 is grade-A boundary', () => {
+    // Achievable with: DSO=100, DPO=100, DIO=100/3 ≈ many combos
+    // Simple: DSO=50, DPO=100, DIO=100 → 0.4*50+0.3*100+0.3*100 = 20+30+30 = 80
+    expect(computeCccEfficiencyScore(50, 100, 100)).toBe(80)
+  })
+
+  it('score rounds correctly near grade boundaries', () => {
+    // Fractional inputs that would produce .5 boundary
+    // DSO=83.33, DPO=50, DIO=50 → 0.4*83.33 + 0.3*50 + 0.3*50 = 33.33+15+15 = 63.33 → 63
+    const s = computeCccEfficiencyScore(83.33, 50, 50)
+    expect(Number.isInteger(s)).toBe(true)
+  })
+
+  // ── Large/extreme values ────────────────────────────────────────────────────
+
+  it('over 100 inputs still produce mathematically correct output', () => {
+    // The function does not clamp inputs — pure math
+    // 0.4*200 + 0.3*200 + 0.3*200 = 80+60+60 = 200 → Math.round(200)
+    expect(computeCccEfficiencyScore(200, 200, 200)).toBe(200)
+  })
+
+  it('negative component scores produce negative efficiency score', () => {
+    // edge: if caller passes negative (e.g. bug in score computation)
+    expect(computeCccEfficiencyScore(-100, 0, 0)).toBe(-40)
   })
 })
 
 // ── computeCccBenchmarkDelta ──────────────────────────────────────────────────
 
 describe('computeCccBenchmarkDelta', () => {
-  test('at benchmark → delta = 0', () => {
+  it('at benchmark → delta = 0', () => {
     expect(computeCccBenchmarkDelta(CCC_BENCHMARKS.ccc)).toBe(0)
   })
 
-  test('above benchmark → positive delta (bad)', () => {
+  it('above benchmark → positive delta (bad)', () => {
     expect(computeCccBenchmarkDelta(30)).toBe(15)   // 30 - 15 = 15
     expect(computeCccBenchmarkDelta(45)).toBe(30)   // 45 - 15 = 30
   })
 
-  test('below benchmark → negative delta (good)', () => {
+  it('below benchmark → negative delta (good)', () => {
     expect(computeCccBenchmarkDelta(0)).toBe(-15)   // 0 - 15 = -15
     expect(computeCccBenchmarkDelta(-5)).toBe(-20)  // -5 - 15 = -20
   })
 
-  test('default benchmark = 15', () => {
+  it('default benchmark = 15', () => {
     expect(computeCccBenchmarkDelta(20)).toBe(5)    // 20 - 15 = 5
   })
 
-  test('custom benchmark parameter', () => {
+  it('custom benchmark parameter', () => {
     expect(computeCccBenchmarkDelta(30, 20)).toBe(10)   // 30 - 20 = 10
     expect(computeCccBenchmarkDelta(10, 20)).toBe(-10)  // 10 - 20 = -10
     expect(computeCccBenchmarkDelta(20, 20)).toBe(0)    // 20 - 20 = 0
   })
 
-  test('large positive delta', () => {
+  it('large positive delta', () => {
     expect(computeCccBenchmarkDelta(100)).toBe(85)  // 100 - 15 = 85
   })
 
-  test('large negative delta', () => {
+  it('large negative delta', () => {
     expect(computeCccBenchmarkDelta(-60)).toBe(-75) // -60 - 15 = -75
+  })
+
+  // ── Fractional CCC values ────────────────────────────────────────────────────
+
+  it('fractional actual CCC days (0.5 above benchmark)', () => {
+    // 15.5 - 15 = 0.5 → Math.round(0.5 * 100)/100 = 0.5
+    expect(computeCccBenchmarkDelta(15.5)).toBe(0.5)
+  })
+
+  it('fractional actual CCC days (decimal below benchmark)', () => {
+    // 14.75 - 15 = -0.25
+    expect(computeCccBenchmarkDelta(14.75)).toBe(-0.25)
+  })
+
+  // ── Custom benchmark edge cases ──────────────────────────────────────────────
+
+  it('benchmark of 0 → delta equals actual CCC', () => {
+    expect(computeCccBenchmarkDelta(25, 0)).toBe(25)
+    expect(computeCccBenchmarkDelta(-10, 0)).toBe(-10)
+  })
+
+  it('negative benchmark value', () => {
+    // benchmark = -5, actual = 10 → delta = 10 - (-5) = 15
+    expect(computeCccBenchmarkDelta(10, -5)).toBe(15)
+  })
+
+  it('actual equals zero, default benchmark', () => {
+    expect(computeCccBenchmarkDelta(0)).toBe(-15)
+  })
+
+  it('very large actual CCC produces proportional delta', () => {
+    expect(computeCccBenchmarkDelta(500)).toBe(485) // 500 - 15 = 485
+  })
+
+  // ── CCC_BENCHMARKS constant correctness ─────────────────────────────────────
+
+  it('CCC_BENCHMARKS.ccc equals DSO + DIO - DPO', () => {
+    const expected = CCC_BENCHMARKS.dso + CCC_BENCHMARKS.dio - CCC_BENCHMARKS.dpo
+    expect(CCC_BENCHMARKS.ccc).toBe(expected)
+  })
+
+  it('CCC_BENCHMARKS.dso = 30', () => {
+    expect(CCC_BENCHMARKS.dso).toBe(30)
+  })
+
+  it('CCC_BENCHMARKS.dpo = 45', () => {
+    expect(CCC_BENCHMARKS.dpo).toBe(45)
+  })
+
+  it('CCC_BENCHMARKS.dio = 30', () => {
+    expect(CCC_BENCHMARKS.dio).toBe(30)
+  })
+
+  it('CCC_BENCHMARKS.ccc = 15', () => {
+    expect(CCC_BENCHMARKS.ccc).toBe(15)
   })
 })

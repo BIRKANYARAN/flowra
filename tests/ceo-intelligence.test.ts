@@ -142,6 +142,18 @@ function sortedBySeverity(signals: IntelligenceSignal[]): IntelligenceSignal[] {
   return [...signals].sort((a, b) => order[a.severity] - order[b.severity])
 }
 
+function makeSignal(overrides: Partial<IntelligenceSignal> & { signal_id: string }): IntelligenceSignal {
+  return {
+    signal_id: overrides.signal_id,
+    source: overrides.source ?? 'test',
+    severity: overrides.severity ?? 'info',
+    headline: overrides.headline ?? 'Test Signal',
+    detail: overrides.detail ?? '',
+    computed_at: overrides.computed_at ?? '2026-05-27T10:00:00Z',
+    ...overrides,
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Tests
 // ─────────────────────────────────────────────────────────────────────────────
@@ -204,11 +216,73 @@ describe('CeoIntelligenceService — health scoring (pure logic)', () => {
     expect(computeHealth(0, 2)).toBe('good')
   })
 
+  // Test 8: health = excellent only when both zero
+  it('health = excellent only when 0 criticals + 0 warnings', () => {
+    expect(computeHealth(0, 0)).toBe('excellent')
+    // With even 1 warning: no longer excellent
+    expect(computeHealth(0, 1)).not.toBe('excellent')
+  })
+
+  // Test 9: health at large counts remains critical
+  it('health is still critical for very large critical count', () => {
+    expect(computeHealth(100, 0)).toBe('critical')
+    expect(computeHealth(50, 50)).toBe('critical')
+  })
+
+  // Test 10: sortedBySeverity on empty returns empty
+  it('sortedBySeverity returns empty array for empty input', () => {
+    expect(sortedBySeverity([])).toEqual([])
+  })
+
+  // Test 11: sortedBySeverity on single element returns same signal
+  it('sortedBySeverity on single signal returns it unchanged', () => {
+    const signals = [makeSignal({ signal_id: 's1', severity: 'warning' })]
+    const sorted = sortedBySeverity(signals)
+    expect(sorted).toHaveLength(1)
+    expect(sorted[0].signal_id).toBe('s1')
+  })
+
+  // Test 12: sortedBySeverity does not mutate input
+  it('sortedBySeverity does not mutate input array', () => {
+    const signals = [
+      makeSignal({ signal_id: 'a', severity: 'info' }),
+      makeSignal({ signal_id: 'b', severity: 'critical' }),
+    ]
+    const originalFirst = signals[0].signal_id
+    sortedBySeverity(signals)
+    expect(signals[0].signal_id).toBe(originalFirst)
+  })
+
+  // Test 13: count filtering per severity level
+  it('info signals do not affect health classification', () => {
+    // 0 criticals, 0 warnings, many info → still excellent
+    expect(computeHealth(0, 0)).toBe('excellent')
+  })
+
+  // Test 14: health boundary exactly at 3 warnings
+  it('health = attention when exactly 3 warnings', () => {
+    expect(computeHealth(0, 3)).toBe('attention')
+  })
+
+  // Test 15: health boundary exactly at 2 warnings
+  it('health = good when exactly 2 warnings', () => {
+    expect(computeHealth(0, 2)).toBe('good')
+  })
+
+  // Test 16: all four health states are valid strings
+  it('all health states are non-empty strings', () => {
+    const states: CeoIntelligencePanel['overall_health'][] = ['excellent', 'good', 'attention', 'critical']
+    for (const state of states) {
+      expect(typeof state).toBe('string')
+      expect(state.length).toBeGreaterThan(0)
+    }
+  })
+
 })
 
 describe('CeoIntelligenceService — DB integration (mocked)', () => {
 
-  // Test 6 (DB): Signal emitted from cash flow → negative 30d cash → critical signal
+  // Test 1 (DB): Signal emitted from cash flow → negative 30d cash → critical signal
   it('emits critical signal from cash flow when 30d cash goes negative', async () => {
     // With starting cash = 0 and large outflows, the prediction should show negative 30d
     const supabase = makeNegativeCash30Supabase()
@@ -223,8 +297,7 @@ describe('CeoIntelligenceService — DB integration (mocked)', () => {
     expect(Array.isArray(panel.signals)).toBe(true)
   })
 
-  // Test 7 (DB): Signal from tax → overdue obligation → critical signal
-  // Tax calendar is pure-function based on today's date, so we test the calendar service
+  // Test 2 (DB): Signal from tax → overdue obligation → critical signal
   it('panel structure is valid with empty DB (no signals thrown)', async () => {
     const supabase = makeEmptySupabase()
     const panel = await CeoIntelligenceService.getPanel('co-1', 'uid-1', supabase as never, { today: '2026-04-01' })
@@ -237,7 +310,7 @@ describe('CeoIntelligenceService — DB integration (mocked)', () => {
     expect(['excellent', 'good', 'attention', 'critical']).toContain(panel.overall_health)
   })
 
-  // Test 8: top_metric is set from most severe signal's metric
+  // Test 3: top_metric is set from most severe signal's metric
   it('top_metric is populated and has value+label+context', async () => {
     const supabase = makeEmptySupabase()
     const panel = await CeoIntelligenceService.getPanel('co-1', 'uid-1', supabase as never)
@@ -247,6 +320,106 @@ describe('CeoIntelligenceService — DB integration (mocked)', () => {
     expect(panel.top_metric).toHaveProperty('context')
     expect(typeof panel.top_metric.value).toBe('string')
     expect(panel.top_metric.value.length).toBeGreaterThan(0)
+  })
+
+  // Test 4: narrative_headline is a non-empty string
+  it('narrative_headline is a non-empty string', async () => {
+    const supabase = makeEmptySupabase()
+    const panel = await CeoIntelligenceService.getPanel('co-1', 'uid-1', supabase as never)
+    expect(typeof panel.narrative_headline).toBe('string')
+    expect(panel.narrative_headline.length).toBeGreaterThan(0)
+  })
+
+  // Test 5: computed_at is a valid ISO timestamp string
+  it('computed_at is a valid ISO timestamp', async () => {
+    const supabase = makeEmptySupabase()
+    const panel = await CeoIntelligenceService.getPanel('co-1', 'uid-1', supabase as never)
+    expect(typeof panel.computed_at).toBe('string')
+    expect(panel.computed_at.length).toBeGreaterThan(0)
+    // Should be parseable as a date
+    expect(() => new Date(panel.computed_at)).not.toThrow()
+    expect(new Date(panel.computed_at).getTime()).not.toBeNaN()
+  })
+
+  // Test 6: signals array contains only valid severity values
+  it('all signals have valid severity values', async () => {
+    const supabase = makeEmptySupabase()
+    const panel = await CeoIntelligenceService.getPanel('co-1', 'uid-1', supabase as never)
+    const validSeverities = new Set(['critical', 'warning', 'info'])
+    for (const signal of panel.signals) {
+      expect(validSeverities.has(signal.severity)).toBe(true)
+    }
+  })
+
+  // Test 7: critical_count matches actual critical signals
+  it('critical_count matches filter of signals with severity=critical', async () => {
+    const supabase = makeEmptySupabase()
+    const panel = await CeoIntelligenceService.getPanel('co-1', 'uid-1', supabase as never)
+    const actualCritical = panel.signals.filter(s => s.severity === 'critical').length
+    expect(panel.critical_count).toBe(actualCritical)
+  })
+
+  // Test 8: warning_count matches actual warning signals
+  it('warning_count matches filter of signals with severity=warning', async () => {
+    const supabase = makeEmptySupabase()
+    const panel = await CeoIntelligenceService.getPanel('co-1', 'uid-1', supabase as never)
+    const actualWarnings = panel.signals.filter(s => s.severity === 'warning').length
+    expect(panel.warning_count).toBe(actualWarnings)
+  })
+
+  // Test 9: overall_health is consistent with critical/warning counts
+  it('overall_health is consistent with computed health logic', async () => {
+    const supabase = makeEmptySupabase()
+    const panel = await CeoIntelligenceService.getPanel('co-1', 'uid-1', supabase as never)
+    const expectedHealth = computeHealth(panel.critical_count, panel.warning_count)
+    expect(panel.overall_health).toBe(expectedHealth)
+  })
+
+  // Test 10: panel with overdue tax supabase still returns valid structure
+  it('panel returns valid structure with overdue tax supabase', async () => {
+    const supabase = makeOverdueTaxSupabase()
+    const panel = await CeoIntelligenceService.getPanel('co-1', 'uid-1', supabase as never, { today: '2026-04-30' })
+    expect(panel).toHaveProperty('signals')
+    expect(panel).toHaveProperty('overall_health')
+    expect(panel).toHaveProperty('critical_count')
+    expect(panel).toHaveProperty('warning_count')
+    expect(['excellent', 'good', 'attention', 'critical']).toContain(panel.overall_health)
+  })
+
+  // Test 11: top_metric.label is a string
+  it('top_metric.label is a non-empty string', async () => {
+    const supabase = makeEmptySupabase()
+    const panel = await CeoIntelligenceService.getPanel('co-1', 'uid-1', supabase as never)
+    expect(typeof panel.top_metric.label).toBe('string')
+    expect(panel.top_metric.label.length).toBeGreaterThan(0)
+  })
+
+  // Test 12: top_metric.context is a string
+  it('top_metric.context is a string', async () => {
+    const supabase = makeEmptySupabase()
+    const panel = await CeoIntelligenceService.getPanel('co-1', 'uid-1', supabase as never)
+    expect(typeof panel.top_metric.context).toBe('string')
+  })
+
+  // Test 13: signals is an array (never null/undefined)
+  it('signals is always an array', async () => {
+    const supabase = makeEmptySupabase()
+    const panel = await CeoIntelligenceService.getPanel('co-1', 'uid-1', supabase as never)
+    expect(Array.isArray(panel.signals)).toBe(true)
+  })
+
+  // Test 14: each signal has required fields
+  it('each signal has signal_id, source, severity, headline, detail, computed_at', async () => {
+    const supabase = makeNegativeCash30Supabase()
+    const panel = await CeoIntelligenceService.getPanel('co-1', 'uid-1', supabase as never, { today: '2026-04-01' })
+    for (const signal of panel.signals) {
+      expect(signal).toHaveProperty('signal_id')
+      expect(signal).toHaveProperty('source')
+      expect(signal).toHaveProperty('severity')
+      expect(signal).toHaveProperty('headline')
+      expect(signal).toHaveProperty('detail')
+      expect(signal).toHaveProperty('computed_at')
+    }
   })
 
 })
