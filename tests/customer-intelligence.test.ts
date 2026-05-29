@@ -276,4 +276,184 @@ describe('computePortfolioRisk', () => {
     expect(portfolio.total_overdue_try).toBe(0)
     expect(portfolio.avg_days_to_pay_portfolio).toBeNull()
   })
+
+  // 13. avg_days_to_pay_portfolio excludes profiles with null avg
+  it('avg_days_to_pay_portfolio excludes profiles where avg_days_to_pay is null', () => {
+    const profiles: CustomerPaymentProfile[] = [
+      {
+        customer_name: 'WithData', total_sales: 2, total_revenue_try: 5000,
+        total_paid_try: 5000, total_outstanding_try: 0,
+        avg_days_to_pay: 10, avg_days_overdue: -1, on_time_rate: 1,
+        overdue_sales_count: 0, overdue_amount_try: 0, last_overdue_date: null,
+        recent_avg_days_to_pay: 10, trend: 'stable',
+        risk_tier: 'low', last_sale_date: '2025-03-01', first_sale_date: '2024-12-01',
+      },
+      {
+        customer_name: 'NoData', total_sales: 0, total_revenue_try: 0,
+        total_paid_try: 0, total_outstanding_try: 0,
+        avg_days_to_pay: null, avg_days_overdue: null, on_time_rate: 0,
+        overdue_sales_count: 0, overdue_amount_try: 0, last_overdue_date: null,
+        recent_avg_days_to_pay: null, trend: 'insufficient_data',
+        risk_tier: 'low', last_sale_date: null, first_sale_date: null,
+      },
+    ]
+    const portfolio = CustomerIntelligenceService.computePortfolioRisk(profiles)
+    // Only WithData contributes; 10 / 1 = 10
+    expect(portfolio.avg_days_to_pay_portfolio).toBe(10)
+  })
+
+  // 14. All medium-risk customers
+  it('counts all medium-risk customers in medium_risk_count', () => {
+    const makeProfile = (name: string): CustomerPaymentProfile => ({
+      customer_name: name, total_sales: 1, total_revenue_try: 3000,
+      total_paid_try: 3000, total_outstanding_try: 0,
+      avg_days_to_pay: 50, avg_days_overdue: null, on_time_rate: 0.6,
+      overdue_sales_count: 0, overdue_amount_try: 0, last_overdue_date: null,
+      recent_avg_days_to_pay: 50, trend: 'stable',
+      risk_tier: 'medium', last_sale_date: '2025-01-01', first_sale_date: '2024-06-01',
+    })
+    const portfolio = CustomerIntelligenceService.computePortfolioRisk([
+      makeProfile('Cust1'), makeProfile('Cust2'), makeProfile('Cust3'),
+    ])
+    expect(portfolio.medium_risk_count).toBe(3)
+    expect(portfolio.critical_count).toBe(0)
+    expect(portfolio.high_risk_count).toBe(0)
+    expect(portfolio.low_risk_count).toBe(0)
+    expect(portfolio.total_customers).toBe(3)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 15. getProfile — single customer lookup
+// ─────────────────────────────────────────────────────────────────────────────
+describe('getProfile — single customer lookup', () => {
+  it('returns null when no sales exist for the customer', async () => {
+    const supabase = makeMockSupabase([])
+    const profile = await CustomerIntelligenceService.getProfile('co_1', 'Acme Ltd', supabase)
+    expect(profile).toBeNull()
+  })
+
+  it('returns a profile for a customer with sales', async () => {
+    const supabase = makeMockSupabase([
+      makeSale({
+        customer_name: 'Acme Ltd',
+        payment_status: 'paid',
+        sale_date: '2025-01-01',
+        paid_at: '2025-01-15',
+        total_try: 3000,
+        paid_amount: 3000,
+      }),
+    ])
+    const profile = await CustomerIntelligenceService.getProfile('co_1', 'Acme Ltd', supabase)
+    expect(profile).not.toBeNull()
+    expect(profile!.customer_name).toBe('Acme Ltd')
+    expect(profile!.total_sales).toBe(1)
+    expect(profile!.total_revenue_try).toBe(3000)
+  })
+
+  it('correctly computes avg_days_to_pay for a single-customer query', async () => {
+    const supabase = makeMockSupabase([
+      makeSale({
+        customer_name: 'Solo Corp',
+        payment_status: 'paid',
+        sale_date: '2025-02-01',
+        paid_at: '2025-02-06',
+        total_try: 1000,
+        paid_amount: 1000,
+      }),
+    ])
+    const profile = await CustomerIntelligenceService.getProfile('co_1', 'Solo Corp', supabase)
+    expect(profile!.avg_days_to_pay).toBe(5)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 16. Multiple customers → correct grouping
+// ─────────────────────────────────────────────────────────────────────────────
+describe('getProfiles — multiple customers grouped correctly', () => {
+  it('returns separate profiles per customer_name', async () => {
+    const supabase = makeMockSupabase([
+      makeSale({ customer_name: 'Alpha', total_try: 1000, paid_amount: 1000, payment_status: 'paid', sale_date: '2025-01-01', paid_at: '2025-01-10' }),
+      makeSale({ customer_name: 'Beta',  total_try: 2000, paid_amount: 2000, payment_status: 'paid', sale_date: '2025-01-01', paid_at: '2025-01-20' }),
+      makeSale({ customer_name: 'Alpha', total_try: 500,  paid_amount: 0,   payment_status: 'pending', sale_date: '2025-02-01' }),
+    ])
+    const profiles = await CustomerIntelligenceService.getProfiles('co_1', supabase)
+    expect(profiles).toHaveLength(2)
+    const alpha = profiles.find(p => p.customer_name === 'Alpha')!
+    const beta  = profiles.find(p => p.customer_name === 'Beta')!
+    expect(alpha.total_sales).toBe(2)
+    expect(beta.total_sales).toBe(1)
+    expect(beta.avg_days_to_pay).toBe(19)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 17. Null customer_name → grouped as 'Bilinmiyor'
+// ─────────────────────────────────────────────────────────────────────────────
+describe('getProfiles — null customer_name falls back to Bilinmiyor', () => {
+  it('groups rows with null customer_name under "Bilinmiyor"', async () => {
+    const supabase = makeMockSupabase([
+      makeSale({ customer_name: null, total_try: 500, paid_amount: 0, payment_status: 'pending' }),
+    ])
+    const profiles = await CustomerIntelligenceService.getProfiles('co_1', supabase)
+    expect(profiles).toHaveLength(1)
+    expect(profiles[0].customer_name).toBe('Bilinmiyor')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 18. High risk tier: overdue_amount > 0 OR avg_days_overdue > 14
+// ─────────────────────────────────────────────────────────────────────────────
+describe('risk_tier — high', () => {
+  it('assigns high when avg_days_overdue > 14 but <= 30 and no current overdue', async () => {
+    // Paid 20 days after due_date → avg_days_overdue = 20
+    const supabase = makeMockSupabase([
+      makeSale({
+        payment_status: 'paid',
+        sale_date: '2025-01-01',
+        due_date:  '2025-01-10',
+        paid_at:   '2025-01-30',  // 20 days late
+        total_try: 2000, paid_amount: 2000,
+      }),
+    ])
+    const [profile] = await CustomerIntelligenceService.getProfiles('co_1', supabase)
+    expect(profile.risk_tier).toBe('high')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 19. Medium risk tier: on_time_rate < 0.7
+// ─────────────────────────────────────────────────────────────────────────────
+describe('risk_tier — medium', () => {
+  it('assigns medium when on_time_rate < 0.7 with no overdue amount', async () => {
+    // All paid slightly late (after due_date) → on_time_rate = 0
+    const supabase = makeMockSupabase([
+      makeSale({ payment_status: 'paid', sale_date: '2025-01-01', due_date: '2025-01-15', paid_at: '2025-01-16', total_try: 500, paid_amount: 500 }),
+      makeSale({ payment_status: 'paid', sale_date: '2025-02-01', due_date: '2025-02-15', paid_at: '2025-02-16', total_try: 500, paid_amount: 500 }),
+    ])
+    const [profile] = await CustomerIntelligenceService.getProfiles('co_1', supabase)
+    expect(profile.on_time_rate).toBe(0)
+    // avg_days_overdue = 1 (both paid 1 day late) → not > 14, no overdue amount
+    // → medium because on_time_rate < 0.7
+    expect(profile.risk_tier).toBe('medium')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 20. Trend stable: within ±5 days
+// ─────────────────────────────────────────────────────────────────────────────
+describe('trend — stable', () => {
+  it('returns stable when recent avg differs from prior by 5 days or less', async () => {
+    const today = '2025-04-01'
+    // Prior: avg 10 days, Recent: avg 12 days → delta 2 → stable
+    const sales: MockSaleRow[] = [
+      makeSale({ payment_status: 'paid', sale_date: '2024-11-01', paid_at: '2024-11-11', total_try: 1000, paid_amount: 1000 }),
+      makeSale({ payment_status: 'paid', sale_date: '2024-11-15', paid_at: '2024-11-25', total_try: 1000, paid_amount: 1000 }),
+      makeSale({ payment_status: 'paid', sale_date: '2025-02-01', paid_at: '2025-02-13', total_try: 1000, paid_amount: 1000 }),
+      makeSale({ payment_status: 'paid', sale_date: '2025-02-15', paid_at: '2025-02-26', total_try: 1000, paid_amount: 1000 }),
+    ]
+    const supabase = makeMockSupabase(sales)
+    const [profile] = await CustomerIntelligenceService.getProfiles('co_1', supabase, { today })
+    expect(profile.trend).toBe('stable')
+  })
 })

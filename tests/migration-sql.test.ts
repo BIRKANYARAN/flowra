@@ -232,3 +232,163 @@ describe('20260526000006_companies_gl_mode_default.sql — content', () => {
     expect(downSection).toContain('DROP COLUMN IF EXISTS gl_mode')
   })
 })
+
+// ─────────────────────────────────────────────────────────────────────────────
+// audit_chain_columns specific checks
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('20260526000001_audit_chain_columns.sql — content', () => {
+  let sql: string
+  beforeAll(() => { sql = readMigration('20260526000001_audit_chain_columns.sql') })
+
+  it('contains ADD COLUMN statement', () => {
+    expect(sql).toMatch(/ADD COLUMN/i)
+  })
+
+  it('references audit-related columns', () => {
+    // Audit chain columns involve things like created_by, updated_at or chain fields
+    expect(sql.toLowerCase()).toMatch(/audit|chain|created_at|updated_at|created_by/)
+  })
+
+  it('migrate:down section exists and is non-trivial', () => {
+    const downIdx = sql.indexOf('-- migrate:down')
+    const downSection = sql.slice(downIdx)
+    expect(downSection.trim().length).toBeGreaterThan('-- migrate:down'.length)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// journal_voucher_numbers specific checks
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('20260526000002_journal_voucher_numbers.sql — content', () => {
+  let sql: string
+  beforeAll(() => { sql = readMigration('20260526000002_journal_voucher_numbers.sql') })
+
+  it('references voucher_number or sequence', () => {
+    expect(sql.toLowerCase()).toMatch(/voucher|sequence|serial|nextval/)
+  })
+
+  it('has migrate:up with actual SQL (CREATE or ALTER)', () => {
+    const upSection = sql.slice(0, sql.indexOf('-- migrate:down'))
+    expect(upSection).toMatch(/CREATE|ALTER|INSERT/i)
+  })
+
+  it('migrate:down is reversible (has DROP or ALTER)', () => {
+    const downSection = sql.slice(sql.indexOf('-- migrate:down'))
+    expect(downSection).toMatch(/DROP|ALTER/i)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// decision_context_snapshots specific checks
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('20260526000007_decision_context_snapshots.sql — content', () => {
+  it('exists on disk', () => {
+    expect(migrationExists('20260526000007_decision_context_snapshots.sql')).toBe(true)
+  })
+
+  it('references decision_context or snapshots table', () => {
+    const sql = readMigration('20260526000007_decision_context_snapshots.sql')
+    expect(sql.toLowerCase()).toMatch(/decision_context|snapshot/)
+  })
+
+  it('has CREATE TABLE statement', () => {
+    const sql = readMigration('20260526000007_decision_context_snapshots.sql')
+    expect(sql).toMatch(/CREATE TABLE/i)
+  })
+
+  it('is non-empty', () => {
+    const sql = readMigration('20260526000007_decision_context_snapshots.sql')
+    expect(sql.length).toBeGreaterThan(100)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// company_documents migration checks
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('20260527000001_company_documents.sql — content', () => {
+  it('exists on disk', () => {
+    expect(migrationExists('20260527000001_company_documents.sql')).toBe(true)
+  })
+
+  it('creates company_documents table', () => {
+    const sql = readMigration('20260527000001_company_documents.sql')
+    expect(sql).toContain('company_documents')
+    expect(sql).toMatch(/CREATE TABLE/i)
+  })
+
+  it('contains SQL statements', () => {
+    const sql = readMigration('20260527000001_company_documents.sql')
+    expect(sql).toMatch(/CREATE TABLE|ALTER TABLE/i)
+  })
+
+  it('has document_type column', () => {
+    const sql = readMigration('20260527000001_company_documents.sql')
+    expect(sql).toContain('document_type')
+  })
+
+  it('has file_url column', () => {
+    const sql = readMigration('20260527000001_company_documents.sql')
+    expect(sql).toContain('file_url')
+  })
+
+  it('has is_audit_required column', () => {
+    const sql = readMigration('20260527000001_company_documents.sql')
+    expect(sql).toContain('is_audit_required')
+  })
+
+  it('has deleted_at for soft delete support', () => {
+    const sql = readMigration('20260527000001_company_documents.sql')
+    expect(sql).toContain('deleted_at')
+  })
+
+  it('has RLS enabled', () => {
+    const sql = readMigration('20260527000001_company_documents.sql')
+    expect(sql).toContain('ENABLE ROW LEVEL SECURITY')
+  })
+
+  it('references company_documents throughout', () => {
+    const sql = readMigration('20260527000001_company_documents.sql')
+    // The table name appears multiple times (CREATE + indexes + policies)
+    const occurrences = (sql.match(/company_documents/g) ?? []).length
+    expect(occurrences).toBeGreaterThan(3)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// General SQL quality checks on all migration files
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('migration files — SQL quality', () => {
+  const allFiles = [
+    '20260526000001_audit_chain_columns.sql',
+    '20260526000002_journal_voucher_numbers.sql',
+    '20260526000003_workflow_instances.sql',
+    '20260526000004_alert_rules_table.sql',
+    '20260526000005_job_runs_table.sql',
+    '20260526000006_companies_gl_mode_default.sql',
+  ]
+
+  for (const file of allFiles) {
+    it(`${file} down section comes after up section`, () => {
+      const sql = readMigration(file)
+      const upIdx   = sql.indexOf('-- migrate:up')
+      const downIdx = sql.indexOf('-- migrate:down')
+      expect(upIdx).toBeGreaterThan(-1)
+      expect(downIdx).toBeGreaterThan(upIdx)
+    })
+
+    it(`${file} does not contain TRUNCATE statements (safety)`, () => {
+      const sql = readMigration(file)
+      expect(sql.toUpperCase()).not.toContain('TRUNCATE')
+    })
+
+    it(`${file} does not contain DROP DATABASE statement`, () => {
+      const sql = readMigration(file)
+      expect(sql.toUpperCase()).not.toContain('DROP DATABASE')
+    })
+  }
+})

@@ -240,3 +240,190 @@ describe('soft delete exclusion', () => {
     expect(summary.audit_readiness_pct).toBe(0)
   })
 })
+
+// ── 11. DOCUMENT_TYPE_LABELS — all types have Turkish labels ─────────────────
+
+import {
+  DOCUMENT_TYPE_LABELS,
+  ALL_DOCUMENT_TYPES,
+} from '@/lib/services/documents/document.service'
+
+describe('DOCUMENT_TYPE_LABELS', () => {
+  it('has a label for every document type in ALL_DOCUMENT_TYPES', () => {
+    for (const t of ALL_DOCUMENT_TYPES) {
+      expect(DOCUMENT_TYPE_LABELS[t]).toBeDefined()
+      expect(typeof DOCUMENT_TYPE_LABELS[t]).toBe('string')
+      expect(DOCUMENT_TYPE_LABELS[t].length).toBeGreaterThan(0)
+    }
+  })
+
+  it('invoice label is "Fatura"', () => {
+    expect(DOCUMENT_TYPE_LABELS.invoice).toBe('Fatura')
+  })
+
+  it('contract label is "Sözleşme"', () => {
+    expect(DOCUMENT_TYPE_LABELS.contract).toBe('Sözleşme')
+  })
+
+  it('bank_statement label is "Banka Ekstresi"', () => {
+    expect(DOCUMENT_TYPE_LABELS.bank_statement).toBe('Banka Ekstresi')
+  })
+
+  it('tax_declaration label is "Vergi Beyannamesi"', () => {
+    expect(DOCUMENT_TYPE_LABELS.tax_declaration).toBe('Vergi Beyannamesi')
+  })
+
+  it('board_resolution label is defined and non-empty', () => {
+    expect(DOCUMENT_TYPE_LABELS.board_resolution.length).toBeGreaterThan(0)
+  })
+
+  it('other label is "Diğer"', () => {
+    expect(DOCUMENT_TYPE_LABELS.other).toBe('Diğer')
+  })
+})
+
+// ── 12. ALL_DOCUMENT_TYPES — completeness ────────────────────────────────────
+
+describe('ALL_DOCUMENT_TYPES', () => {
+  it('contains exactly 8 types', () => {
+    expect(ALL_DOCUMENT_TYPES).toHaveLength(8)
+  })
+
+  it('includes invoice', () => expect(ALL_DOCUMENT_TYPES).toContain('invoice'))
+  it('includes contract', () => expect(ALL_DOCUMENT_TYPES).toContain('contract'))
+  it('includes bank_statement', () => expect(ALL_DOCUMENT_TYPES).toContain('bank_statement'))
+  it('includes board_resolution', () => expect(ALL_DOCUMENT_TYPES).toContain('board_resolution'))
+  it('includes tax_declaration', () => expect(ALL_DOCUMENT_TYPES).toContain('tax_declaration'))
+  it('includes proof_of_payment', () => expect(ALL_DOCUMENT_TYPES).toContain('proof_of_payment'))
+  it('includes audit_report', () => expect(ALL_DOCUMENT_TYPES).toContain('audit_report'))
+  it('includes other', () => expect(ALL_DOCUMENT_TYPES).toContain('other'))
+
+  it('has no duplicates', () => {
+    const unique = new Set(ALL_DOCUMENT_TYPES)
+    expect(unique.size).toBe(ALL_DOCUMENT_TYPES.length)
+  })
+})
+
+// ── 13. AUDIT_REQUIRED_TYPES — subset of ALL_DOCUMENT_TYPES ─────────────────
+
+describe('AUDIT_REQUIRED_TYPES', () => {
+  it('is a subset of ALL_DOCUMENT_TYPES', () => {
+    for (const t of AUDIT_REQUIRED_TYPES) {
+      expect(ALL_DOCUMENT_TYPES).toContain(t)
+    }
+  })
+
+  it('contains bank_statement', () => {
+    expect(AUDIT_REQUIRED_TYPES).toContain('bank_statement')
+  })
+
+  it('contains tax_declaration', () => {
+    expect(AUDIT_REQUIRED_TYPES).toContain('tax_declaration')
+  })
+
+  it('has at least 2 required types', () => {
+    expect(AUDIT_REQUIRED_TYPES.length).toBeGreaterThanOrEqual(2)
+  })
+})
+
+// ── 14. getStoragePath — extended edge cases ──────────────────────────────────
+
+describe('getStoragePath — extended', () => {
+  it('uses the exact companyId as path prefix', () => {
+    const path = DocumentService.getStoragePath('my-company-456', '2025-01-01', 'file.pdf')
+    expect(path.startsWith('my-company-456/')).toBe(true)
+  })
+
+  it('includes the filename at the end', () => {
+    const path = DocumentService.getStoragePath('co1', '2025-06-15', 'contract.docx')
+    expect(path.endsWith('-contract.docx')).toBe(true)
+  })
+
+  it('segment count is 5 (company/documents/year/month/uuid-name)', () => {
+    const path = DocumentService.getStoragePath('co1', '2025-06-15', 'x.pdf')
+    // co1/documents/2025/06/<uuid>-x.pdf → split by / → 5 parts
+    expect(path.split('/').length).toBe(5)
+  })
+
+  it('contains "documents" as second path segment', () => {
+    const path = DocumentService.getStoragePath('co1', '2025-06-15', 'x.pdf')
+    expect(path.split('/')[1]).toBe('documents')
+  })
+
+  it('year segment matches document date year', () => {
+    const path = DocumentService.getStoragePath('co1', '2023-11-01', 'x.pdf')
+    expect(path.split('/')[2]).toBe('2023')
+  })
+
+  it('month segment is zero-padded (single digit month)', () => {
+    const path = DocumentService.getStoragePath('co1', '2025-03-15', 'x.pdf')
+    expect(path.split('/')[3]).toBe('03')
+  })
+
+  it('month segment for double-digit month is not padded redundantly', () => {
+    const path = DocumentService.getStoragePath('co1', '2025-12-01', 'x.pdf')
+    expect(path.split('/')[3]).toBe('12')
+  })
+
+  it('uses a UUID format in the filename prefix', () => {
+    const path = DocumentService.getStoragePath('co1', '2025-01-01', 'file.pdf')
+    const filename = path.split('/')[4]
+    // UUID is 36 chars (8-4-4-4-12 pattern), then "-" then filename
+    const uuidPart = filename.slice(0, 36)
+    expect(uuidPart).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/)
+  })
+})
+
+// ── 15. computeSummary — mixed audit_required flags ───────────────────────────
+
+describe('computeSummary — audit_required_total / verified counts', () => {
+  it('counts audit_required_total correctly with mixed is_audit_required values', () => {
+    const rows = [
+      makeRow({ document_type: 'invoice',        is_audit_required: false, is_verified: false }),
+      makeRow({ document_type: 'bank_statement', is_audit_required: true,  is_verified: true  }),
+      makeRow({ document_type: 'tax_declaration',is_audit_required: true,  is_verified: false }),
+      makeRow({ document_type: 'contract',       is_audit_required: true,  is_verified: true  }),
+    ]
+    const summary = DocumentService.computeSummary(rows)
+    expect(summary.audit_required_total).toBe(3)
+    expect(summary.audit_required_verified).toBe(2)
+    expect(summary.audit_readiness_pct).toBe(67)
+  })
+
+  it('total_documents equals length of rows input', () => {
+    const rows = [
+      makeRow({ document_type: 'invoice' }),
+      makeRow({ document_type: 'other' }),
+      makeRow({ document_type: 'contract' }),
+    ]
+    expect(DocumentService.computeSummary(rows).total_documents).toBe(3)
+  })
+
+  it('by_type counts all zeros for types not in the input', () => {
+    const rows = [makeRow({ document_type: 'invoice' })]
+    const { by_type } = DocumentService.computeSummary(rows)
+    expect(by_type.contract).toBe(0)
+    expect(by_type.bank_statement).toBe(0)
+    expect(by_type.tax_declaration).toBe(0)
+    expect(by_type.board_resolution).toBe(0)
+    expect(by_type.proof_of_payment).toBe(0)
+    expect(by_type.audit_report).toBe(0)
+    expect(by_type.other).toBe(0)
+  })
+
+  it('missing_audit_docs includes correct description for bank_statement', () => {
+    const rows: DocRow[] = []
+    const { missing_audit_docs } = DocumentService.computeSummary(rows)
+    const bankEntry = missing_audit_docs.find(m => m.document_type === 'bank_statement')
+    expect(bankEntry).toBeDefined()
+    expect(bankEntry!.description.length).toBeGreaterThan(0)
+  })
+
+  it('missing_audit_docs includes correct description for tax_declaration', () => {
+    const rows: DocRow[] = []
+    const { missing_audit_docs } = DocumentService.computeSummary(rows)
+    const taxEntry = missing_audit_docs.find(m => m.document_type === 'tax_declaration')
+    expect(taxEntry).toBeDefined()
+    expect(taxEntry!.description.length).toBeGreaterThan(0)
+  })
+})

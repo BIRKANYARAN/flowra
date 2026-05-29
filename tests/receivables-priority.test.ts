@@ -232,3 +232,181 @@ describe('empty receivables', () => {
     expect(report.by_urgency.routine).toBe(0)
   })
 })
+
+// ── 11. Score clamping: score never exceeds 100 or goes below 0 ───────────────
+
+describe('score clamping', () => {
+  it('score does not exceed 100 even with all positive adjustments', () => {
+    const { score } = ReceivablesPriorityService.scoreReceivable({
+      outstanding_try: 5000,
+      days_overdue: null,      // +20
+      customer_risk_tier: 'low',   // +30
+      customer_on_time_rate: 0.95, // +10 (> 0.8)
+      // total: 50 + 30 + 20 + 10 = 110 → clamped to 100
+    })
+    expect(score).toBe(100)
+  })
+
+  it('score does not go below 0 with all negative adjustments', () => {
+    const { score } = ReceivablesPriorityService.scoreReceivable({
+      outstanding_try: 5000,
+      days_overdue: 90,           // -25
+      customer_risk_tier: 'critical', // -30
+      customer_on_time_rate: 0.2,  // -10 (< 0.5)
+      // total: 50 - 30 - 25 - 10 = -15 → clamped to 0
+    })
+    expect(score).toBe(0)
+  })
+
+  it('unknown risk tier has no score adjustment (stays at base)', () => {
+    // unknown tier → +0, not overdue → +20, no on_time_rate → no adj = 70
+    const { score } = ReceivablesPriorityService.scoreReceivable({
+      outstanding_try: 5000,
+      days_overdue: null,
+      customer_risk_tier: 'unknown',
+      customer_on_time_rate: null,
+    })
+    expect(score).toBe(70)
+  })
+})
+
+// ── 12. Urgency: large outstanding amount triggers urgent ─────────────────────
+
+describe('urgency for large amounts', () => {
+  it('outstanding > 100k triggers urgent even with no overdue and low risk', () => {
+    const { urgency } = ReceivablesPriorityService.scoreReceivable({
+      outstanding_try: 150_000,
+      days_overdue: null,
+      customer_risk_tier: 'low',
+      customer_on_time_rate: 0.95,
+    })
+    expect(urgency).toBe('urgent')
+  })
+
+  it('outstanding <= 100k with low risk and not overdue stays routine', () => {
+    const { urgency } = ReceivablesPriorityService.scoreReceivable({
+      outstanding_try: 99_999,
+      days_overdue: null,
+      customer_risk_tier: 'low',
+      customer_on_time_rate: 0.9,
+    })
+    expect(urgency).toBe('routine')
+  })
+
+  it('31-60 days overdue → -10 score adjustment', () => {
+    // base 50, medium +10, 31-60d -10, no on_time adj → 50
+    const { score } = ReceivablesPriorityService.scoreReceivable({
+      outstanding_try: 5000,
+      days_overdue: 45,
+      customer_risk_tier: 'medium',
+      customer_on_time_rate: null,
+    })
+    expect(score).toBe(50)
+  })
+})
+
+// ── 13. Urgency: high-risk customer not overdue → follow_up ──────────────────
+
+describe('high risk urgency', () => {
+  it('high risk customer not overdue → urgency = follow_up', () => {
+    const { urgency } = ReceivablesPriorityService.scoreReceivable({
+      outstanding_try: 5000,
+      days_overdue: null,
+      customer_risk_tier: 'high',
+      customer_on_time_rate: 0.6,
+    })
+    expect(urgency).toBe('follow_up')
+  })
+
+  it('high risk + 31-60d overdue → urgency = follow_up', () => {
+    // critical condition requires customer_risk_tier='critical'
+    // high + overdue 60d → follow_up (not urgent since outstanding <= 100k and not critical tier)
+    // Actually: days_overdue > 60 → urgent
+    const { urgency } = ReceivablesPriorityService.scoreReceivable({
+      outstanding_try: 5000,
+      days_overdue: 45,
+      customer_risk_tier: 'high',
+      customer_on_time_rate: null,
+    })
+    expect(urgency).toBe('follow_up')
+  })
+})
+
+// ── 14. recommended_action: large outstanding urgent action ───────────────────
+
+describe('recommended_action content', () => {
+  it('urgent + large amount mentions üst yönetim', () => {
+    const { recommended_action } = ReceivablesPriorityService.scoreReceivable({
+      outstanding_try: 200_000,
+      days_overdue: 10,
+      customer_risk_tier: 'medium',
+      customer_on_time_rate: 0.7,
+    })
+    // urgent because outstanding > 100k
+    expect(recommended_action).toMatch(/üst yönetim/i)
+  })
+
+  it('urgent + 60+ days overdue mentions hukuki', () => {
+    const { recommended_action } = ReceivablesPriorityService.scoreReceivable({
+      outstanding_try: 5000,
+      days_overdue: 65,
+      customer_risk_tier: 'medium',
+      customer_on_time_rate: null,
+    })
+    // 65 days overdue → urgent (60+d rule)
+    expect(recommended_action).toMatch(/[Hh]ukuki/i)
+  })
+
+  it('follow_up + overdue mentions hatırlatma', () => {
+    const { recommended_action } = ReceivablesPriorityService.scoreReceivable({
+      outstanding_try: 3000,
+      days_overdue: 5,
+      customer_risk_tier: 'medium',
+      customer_on_time_rate: 0.75,
+    })
+    expect(recommended_action).toMatch(/hatırlatma|vade/i)
+  })
+
+  it('follow_up + not overdue but high risk mentions takip', () => {
+    const { recommended_action } = ReceivablesPriorityService.scoreReceivable({
+      outstanding_try: 3000,
+      days_overdue: null,
+      customer_risk_tier: 'high',
+      customer_on_time_rate: 0.6,
+    })
+    expect(recommended_action).toMatch(/takip|vade|uyarılmalı/i)
+  })
+})
+
+// ── 15. report.computed_at is a valid ISO date string ─────────────────────────
+
+describe('report metadata', () => {
+  it('computed_at is a valid ISO timestamp', async () => {
+    const supabase = makeSupabase({ sales: [] })
+    const report = await ReceivablesPriorityService.getReport(
+      COMPANY,
+      supabase as Parameters<typeof ReceivablesPriorityService.getReport>[1],
+      { today: TODAY },
+    )
+    expect(() => new Date(report.computed_at)).not.toThrow()
+    expect(new Date(report.computed_at).getTime()).toBeGreaterThan(0)
+  })
+
+  it('total_outstanding_try = sum of all receivables outstanding', async () => {
+    const supabase = makeSupabase({
+      sales: [
+        { id: 's1', customer_name: 'A', total_try: 10000, paid_amount: 2000,
+          sale_date: '2024-01-15', due_date: '2024-02-15', payment_status: 'partial' },
+        { id: 's2', customer_name: 'B', total_try: 5000,  paid_amount: 0,
+          sale_date: '2024-01-20', due_date: '2024-02-20', payment_status: 'pending' },
+      ],
+    })
+    const report = await ReceivablesPriorityService.getReport(
+      COMPANY,
+      supabase as Parameters<typeof ReceivablesPriorityService.getReport>[1],
+      { today: TODAY },
+    )
+    // outstanding: (10000 - 2000) + (5000 - 0) = 13000
+    expect(report.total_outstanding_try).toBeCloseTo(13000, 1)
+  })
+})
