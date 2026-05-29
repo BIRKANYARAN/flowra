@@ -164,7 +164,7 @@ export async function TaxTab({ userId, companyId }: Props) {
       <TaxComplianceDashboardClient companyId={companyId} />
 
       {/* ── Vergi Takvimi (client island — TanStack Query) ───────────────────── */}
-      <TaxCalendarClient year={currentYear} />
+      <TaxCalendarClient companyId={companyId} />
 
       {/* ── Vergi Rezervi ────────────────────────────────────────────────────── */}
       <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
