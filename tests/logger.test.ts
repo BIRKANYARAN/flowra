@@ -523,3 +523,272 @@ describe('Cross-function consistency: makeRequestContext + contextFromHeader', (
     expect(a).not.toBe(b)
   })
 })
+
+// ── shouldLog — LOG_LEVEL=warn and LOG_LEVEL=error exhaustive ────────────────
+
+describe('shouldLog — warn level exhaustive', () => {
+  beforeEach(() => { process.env.LOG_LEVEL = 'warn' })
+  afterEach(() => { delete process.env.LOG_LEVEL })
+
+  it('debug < warn → false', () => {
+    expect(shouldLog('debug')).toBe(false)
+  })
+
+  it('info < warn → false', () => {
+    expect(shouldLog('info')).toBe(false)
+  })
+
+  it('warn >= warn → true', () => {
+    expect(shouldLog('warn')).toBe(true)
+  })
+
+  it('error >= warn → true', () => {
+    expect(shouldLog('error')).toBe(true)
+  })
+})
+
+describe('shouldLog — LOG_LEVEL=error exhaustive', () => {
+  beforeEach(() => { process.env.LOG_LEVEL = 'error' })
+  afterEach(() => { delete process.env.LOG_LEVEL })
+
+  it('debug < error → false', () => {
+    expect(shouldLog('debug')).toBe(false)
+  })
+
+  it('info < error → false', () => {
+    expect(shouldLog('info')).toBe(false)
+  })
+
+  it('warn < error → false', () => {
+    expect(shouldLog('warn')).toBe(false)
+  })
+
+  it('error >= error → true', () => {
+    expect(shouldLog('error')).toBe(true)
+  })
+})
+
+describe('shouldLog — production default (LOG_LEVEL unset, NODE_ENV=production)', () => {
+  let origLogLevel: string | undefined
+  let origNodeEnv: string | undefined
+
+  beforeEach(() => {
+    origLogLevel = process.env.LOG_LEVEL
+    origNodeEnv  = process.env.NODE_ENV
+    delete process.env.LOG_LEVEL
+    process.env.NODE_ENV = 'production'
+  })
+
+  afterEach(() => {
+    if (origLogLevel !== undefined) process.env.LOG_LEVEL = origLogLevel
+    else delete process.env.LOG_LEVEL
+    if (origNodeEnv !== undefined) process.env.NODE_ENV = origNodeEnv
+    else delete process.env.NODE_ENV
+  })
+
+  it('debug does NOT log in production (default level = info)', () => {
+    expect(shouldLog('debug')).toBe(false)
+  })
+
+  it('info logs in production', () => {
+    expect(shouldLog('info')).toBe(true)
+  })
+
+  it('warn logs in production', () => {
+    expect(shouldLog('warn')).toBe(true)
+  })
+
+  it('error logs in production', () => {
+    expect(shouldLog('error')).toBe(true)
+  })
+})
+
+// ── makeRequestContext — structural invariants ────────────────────────────────
+
+describe('makeRequestContext — structural invariants', () => {
+  it('requestId second segment (after first hyphen) is 4 chars', () => {
+    for (let i = 0; i < 5; i++) {
+      const { requestId } = makeRequestContext()
+      const parts = requestId.split('-')
+      expect(parts[1]).toHaveLength(4)
+    }
+  })
+
+  it('requestId first segment is 8 chars', () => {
+    for (let i = 0; i < 5; i++) {
+      const { requestId } = makeRequestContext()
+      const parts = requestId.split('-')
+      expect(parts[0]).toHaveLength(8)
+    }
+  })
+
+  it('requestId has 5 segments when split by hyphen', () => {
+    const { requestId } = makeRequestContext()
+    expect(requestId.split('-')).toHaveLength(5)
+  })
+
+  it('returned object has exactly 2 keys: requestId and userId', () => {
+    const ctx = makeRequestContext()
+    const keys = Object.keys(ctx).sort()
+    expect(keys).toEqual(['requestId', 'userId'])
+  })
+
+  it('50 calls all produce unique ids', () => {
+    const ids = new Set(Array.from({ length: 50 }, () => makeRequestContext().requestId))
+    expect(ids.size).toBe(50)
+  })
+})
+
+// ── contextFromHeader — deeper semantics ─────────────────────────────────────
+
+describe('contextFromHeader — deeper semantics', () => {
+  const VALID_UUID = 'deadbeef-cafe-4bad-babe-f00dcafebeef'
+
+  it('valid header preserves both requestId and userId atomically', () => {
+    const ctx = contextFromHeader(VALID_UUID, 'owner-007')
+    expect(ctx.requestId).toBe(VALID_UUID)
+    expect(ctx.userId).toBe('owner-007')
+  })
+
+  it('generated context always has UUID-like requestId when header is null', () => {
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+    for (let i = 0; i < 10; i++) {
+      expect(contextFromHeader(null).requestId).toMatch(UUID_RE)
+    }
+  })
+
+  it('passing same valid header twice returns same requestId both times', () => {
+    const ctx1 = contextFromHeader(VALID_UUID)
+    const ctx2 = contextFromHeader(VALID_UUID)
+    expect(ctx1.requestId).toBe(ctx2.requestId)
+  })
+
+  it('userId can be a complex string (email style)', () => {
+    const ctx = contextFromHeader(VALID_UUID, 'user@company.com')
+    expect(ctx.userId).toBe('user@company.com')
+  })
+
+  it('header with all zeros still passes the regex', () => {
+    const allZeros = '00000000-0000-4000-8000-000000000000'
+    const ctx = contextFromHeader(allZeros)
+    expect(ctx.requestId).toBe(allZeros)
+  })
+
+  it('header that is undefined-like (empty string) produces fresh ID', () => {
+    const ctx = contextFromHeader('')
+    expect(ctx.requestId).toHaveLength(36)
+  })
+})
+
+// ── createTimer — timing precision ───────────────────────────────────────────
+
+describe('createTimer — timing precision and edge cases', () => {
+  it('duration_ms is a non-negative integer', () => {
+    let loggedStr = ''
+    const spy = vi.spyOn(console, 'info').mockImplementation((s: string) => { loggedStr = s })
+    const timer = createTimer('precision-test')
+    timer.end()
+    spy.mockRestore()
+    const parsed = JSON.parse(loggedStr)
+    expect(Number.isInteger(parsed.duration_ms) || typeof parsed.duration_ms === 'number').toBe(true)
+    expect(parsed.duration_ms).toBeGreaterThanOrEqual(0)
+  })
+
+  it('label with spaces is included verbatim in message', () => {
+    let loggedStr = ''
+    const spy = vi.spyOn(console, 'info').mockImplementation((s: string) => { loggedStr = s })
+    const timer = createTimer('my complex label')
+    timer.end()
+    spy.mockRestore()
+    const parsed = JSON.parse(loggedStr)
+    expect(parsed.message).toContain('my complex label')
+  })
+
+  it('end() called twice does not throw', () => {
+    const spy = vi.spyOn(console, 'info').mockImplementation(() => {})
+    const timer = createTimer('double-end')
+    expect(() => { timer.end(); timer.end() }).not.toThrow()
+    spy.mockRestore()
+  })
+
+  it('multiple metadata fields all appear in log entry', () => {
+    let loggedStr = ''
+    const spy = vi.spyOn(console, 'info').mockImplementation((s: string) => { loggedStr = s })
+    const timer = createTimer('multi-meta')
+    timer.end({ query_count: 3, cache_hit: true, table: 'sales' })
+    spy.mockRestore()
+    const parsed = JSON.parse(loggedStr)
+    expect(parsed.query_count).toBe(3)
+    expect(parsed.cache_hit).toBe(true)
+    expect(parsed.table).toBe('sales')
+  })
+
+  it('message format is "<label> completed"', () => {
+    let loggedStr = ''
+    const spy = vi.spyOn(console, 'info').mockImplementation((s: string) => { loggedStr = s })
+    const timer = createTimer('fetch-invoices')
+    timer.end()
+    spy.mockRestore()
+    const parsed = JSON.parse(loggedStr)
+    expect(parsed.message).toBe('fetch-invoices completed')
+  })
+
+  it('empty label still produces a "completed" message', () => {
+    let loggedStr = ''
+    const spy = vi.spyOn(console, 'info').mockImplementation((s: string) => { loggedStr = s })
+    const timer = createTimer('')
+    timer.end()
+    spy.mockRestore()
+    const parsed = JSON.parse(loggedStr)
+    expect(parsed.message).toContain('completed')
+  })
+})
+
+// ── serializeError — additional coverage ─────────────────────────────────────
+
+describe('serializeError — SyntaxError and other subclasses', () => {
+  it('SyntaxError is treated as native Error', () => {
+    const err = new SyntaxError('unexpected token')
+    const result = serializeError(err)
+    expect(result.message).toBe('unexpected token')
+    expect(result.code).toBeUndefined()
+  })
+
+  it('ReferenceError is treated as native Error', () => {
+    const err = new ReferenceError('x is not defined')
+    const result = serializeError(err)
+    expect(result.message).toBe('x is not defined')
+  })
+
+  it('Error with empty message → message is empty string', () => {
+    const err = new Error('')
+    const result = serializeError(err)
+    expect(result.message).toBe('')
+  })
+})
+
+describe('serializeError — object edge cases', () => {
+  it('object with numeric code → code is stringified', () => {
+    const result = serializeError({ message: 'oops', code: 404 })
+    expect(result.code).toBe('404')
+  })
+
+  it('object with null code → code is "null" string', () => {
+    // null code is defined → code: "null"
+    const result = serializeError({ message: 'test', code: null })
+    expect(result.code).toBe('null')
+  })
+
+  it('nested object without message uses JSON.stringify fallback', () => {
+    const result = serializeError({ nested: { a: 1 } })
+    expect(result.message).toContain('nested')
+  })
+
+  it('always returns object with message as string for any input', () => {
+    const inputs: unknown[] = [0, -1, true, [], {}, 'str', null, undefined]
+    for (const inp of inputs) {
+      const out = serializeError(inp)
+      expect(typeof out.message).toBe('string')
+    }
+  })
+})

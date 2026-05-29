@@ -553,3 +553,308 @@ describe('computeBreakevenHeadcount', () => {
     expect(computeBreakevenHeadcount(0, 30_000)).toBe(0)
   })
 })
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// SGK formula verification
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+describe('computeEmployerSgk — formula verification', () => {
+  it('formula: gross × 20.25% at default rate', () => {
+    // 20_000 × 0.2025 = 4050
+    expect(computeEmployerSgk(20_000)).toBeCloseTo(4050, 2)
+  })
+
+  it('formula: gross × 20.25% for 1 TRY gross', () => {
+    expect(computeEmployerSgk(1)).toBeCloseTo(0.2025, 4)
+  })
+
+  it('proportional: doubling gross doubles SGK', () => {
+    const s1 = computeEmployerSgk(10_000)
+    const s2 = computeEmployerSgk(20_000)
+    expect(s2).toBeCloseTo(s1 * 2, 2)
+  })
+
+  it('custom rate of 0% produces 0 SGK', () => {
+    expect(computeEmployerSgk(50_000, 0)).toBe(0)
+  })
+
+  it('custom rate of 100% produces SGK equal to gross', () => {
+    expect(computeEmployerSgk(10_000, 100)).toBeCloseTo(10_000, 2)
+  })
+})
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Unemployment insurance formula verification
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+describe('computeEmployerUnemploymentInsurance — formula verification', () => {
+  it('formula: gross × 2.0% at default rate', () => {
+    // 25_000 × 0.02 = 500
+    expect(computeEmployerUnemploymentInsurance(25_000)).toBeCloseTo(500, 2)
+  })
+
+  it('proportional: 3× gross gives 3× UI', () => {
+    const u1 = computeEmployerUnemploymentInsurance(10_000)
+    const u3 = computeEmployerUnemploymentInsurance(30_000)
+    expect(u3).toBeCloseTo(u1 * 3, 2)
+  })
+
+  it('0% rate produces 0 UI regardless of gross', () => {
+    expect(computeEmployerUnemploymentInsurance(100_000, 0)).toBe(0)
+  })
+})
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Total employer cost = gross + SGK + UI
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+describe('computeTotalEmployerCost — gross + SGK + UI identity', () => {
+  it('total = gross + SGK + UI for any gross', () => {
+    const gross = 15_000
+    const sgk = computeEmployerSgk(gross)
+    const ui  = computeEmployerUnemploymentInsurance(gross)
+    const total = computeTotalEmployerCost(gross)
+    expect(total).toBeCloseTo(gross + sgk + ui, 2)
+  })
+
+  it('total = gross + SGK + UI for 40,000 TRY', () => {
+    const gross = 40_000
+    const sgk = computeEmployerSgk(gross)
+    const ui  = computeEmployerUnemploymentInsurance(gross)
+    const total = computeTotalEmployerCost(gross)
+    expect(total).toBeCloseTo(gross + sgk + ui, 2)
+  })
+
+  it('total is always >= gross (taxes add to cost)', () => {
+    for (const g of [0, 5_000, 25_000, 100_000]) {
+      expect(computeTotalEmployerCost(g)).toBeGreaterThanOrEqual(g)
+    }
+  })
+
+  it('multiplier is approximately 1.2225 (1 + 0.2025 + 0.02)', () => {
+    const gross = 10_000
+    const total = computeTotalEmployerCost(gross)
+    expect(total / gross).toBeCloseTo(1.2225, 4)
+  })
+})
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// computeMinViableSalary — inverse formula
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+describe('computeMinViableSalary — inverse formula verification', () => {
+  it('inverse of total cost: salary × multiplier × headcount = budget', () => {
+    const revenue = 200_000
+    const headcount = 4
+    const ratio = 25
+    const salary = computeMinViableSalary(revenue, headcount, ratio)
+    // verify: salary × 1.2225 × headcount ≤ revenue × ratio%
+    const totalCost = salary * 1.2225 * headcount
+    const budget = revenue * (ratio / 100)
+    expect(totalCost).toBeCloseTo(budget, 0)
+  })
+
+  it('formula: revenue × ratio% / headcount / multiplier', () => {
+    // 100_000 × 25% = 25_000; /5 = 5_000; /1.2225 ≈ 4089.98
+    const result = computeMinViableSalary(100_000, 5, 25)
+    const expected = (100_000 * 0.25) / 5 / 1.2225
+    expect(result).toBeCloseTo(expected, 0)
+  })
+
+  it('larger revenue → larger min viable salary (proportional)', () => {
+    const s1 = computeMinViableSalary(100_000, 5, 25)
+    const s2 = computeMinViableSalary(200_000, 5, 25)
+    expect(s2).toBeCloseTo(s1 * 2, 0)
+  })
+
+  it('higher ratio% → higher min viable salary', () => {
+    const s25 = computeMinViableSalary(100_000, 5, 25)
+    const s35 = computeMinViableSalary(100_000, 5, 35)
+    expect(s35).toBeGreaterThan(s25)
+  })
+
+  it('returns 0 for 0% target ratio', () => {
+    expect(computeMinViableSalary(100_000, 5, 0)).toBeCloseTo(0, 2)
+  })
+})
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// computeRevenuePerHead — formula verification
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+describe('computeRevenuePerHead — formula verification', () => {
+  it('formula: monthly_revenue / headcount', () => {
+    // 300_000 / 6 = 50_000
+    expect(computeRevenuePerHead(300_000, 6)).toBeCloseTo(50_000, 2)
+  })
+
+  it('returns null for headcount = 0', () => {
+    expect(computeRevenuePerHead(500_000, 0)).toBeNull()
+  })
+
+  it('returns full revenue for headcount = 1', () => {
+    expect(computeRevenuePerHead(123_456, 1)).toBeCloseTo(123_456, 2)
+  })
+
+  it('inversely proportional: double headcount halves revenue per head', () => {
+    const rph1 = computeRevenuePerHead(120_000, 2)
+    const rph2 = computeRevenuePerHead(120_000, 4)
+    expect(rph1!).toBeCloseTo((rph2 ?? 0) * 2, 2)
+  })
+
+  it('proportional: double revenue doubles revenue per head', () => {
+    const rph1 = computeRevenuePerHead(100_000, 5)
+    const rph2 = computeRevenuePerHead(200_000, 5)
+    expect(rph2!).toBeCloseTo((rph1 ?? 0) * 2, 2)
+  })
+
+  it('non-null result is always a positive number for positive revenue', () => {
+    const result = computeRevenuePerHead(50_000, 3)
+    expect(result).not.toBeNull()
+    expect(result!).toBeGreaterThan(0)
+  })
+})
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// classifyHeadcountEfficiency — all five levels at exact boundaries
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+describe('classifyHeadcountEfficiency — all five levels at exact boundaries', () => {
+  // excellent: ≤ 15
+  it('exactly 15% → excellent (boundary inclusive)', () => {
+    expect(classifyHeadcountEfficiency(15)).toBe('excellent')
+  })
+
+  it('0% → excellent', () => {
+    expect(classifyHeadcountEfficiency(0)).toBe('excellent')
+  })
+
+  it('14.99% → excellent', () => {
+    expect(classifyHeadcountEfficiency(14.99)).toBe('excellent')
+  })
+
+  // good: 15 < x ≤ 25
+  it('15.01% → good (just above excellent boundary)', () => {
+    expect(classifyHeadcountEfficiency(15.01)).toBe('good')
+  })
+
+  it('exactly 25% → good (boundary inclusive)', () => {
+    expect(classifyHeadcountEfficiency(25)).toBe('good')
+  })
+
+  it('20% → good (mid-range)', () => {
+    expect(classifyHeadcountEfficiency(20)).toBe('good')
+  })
+
+  // acceptable: 25 < x ≤ 35
+  it('25.01% → acceptable (just above good boundary)', () => {
+    expect(classifyHeadcountEfficiency(25.01)).toBe('acceptable')
+  })
+
+  it('exactly 35% → acceptable (boundary inclusive)', () => {
+    expect(classifyHeadcountEfficiency(35)).toBe('acceptable')
+  })
+
+  it('30% → acceptable (mid-range)', () => {
+    expect(classifyHeadcountEfficiency(30)).toBe('acceptable')
+  })
+
+  // high: 35 < x ≤ 50
+  it('35.01% → high (just above acceptable boundary)', () => {
+    expect(classifyHeadcountEfficiency(35.01)).toBe('high')
+  })
+
+  it('exactly 50% → high (boundary inclusive)', () => {
+    expect(classifyHeadcountEfficiency(50)).toBe('high')
+  })
+
+  it('45% → high (mid-range)', () => {
+    expect(classifyHeadcountEfficiency(45)).toBe('high')
+  })
+
+  // excessive: > 50
+  it('50.01% → excessive (just above high boundary)', () => {
+    expect(classifyHeadcountEfficiency(50.01)).toBe('excessive')
+  })
+
+  it('100% → excessive', () => {
+    expect(classifyHeadcountEfficiency(100)).toBe('excessive')
+  })
+
+  it('always returns one of the five valid values', () => {
+    const valid = ['excellent', 'good', 'acceptable', 'high', 'excessive']
+    const ratios = [0, 10, 15, 15.01, 20, 25, 25.01, 30, 35, 35.01, 45, 50, 50.01, 75, 100]
+    for (const r of ratios) {
+      expect(valid).toContain(classifyHeadcountEfficiency(r))
+    }
+  })
+})
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// generateHeadcountScenarios — structure and values
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+describe('generateHeadcountScenarios — structure and value assertions', () => {
+  it('returns exactly 5 scenarios for any valid input', () => {
+    expect(generateHeadcountScenarios(3, 20_000, null)).toHaveLength(5)
+    expect(generateHeadcountScenarios(0, 10_000, 50_000)).toHaveLength(5)
+    expect(generateHeadcountScenarios(10, 50_000, 1_000_000)).toHaveLength(5)
+  })
+
+  it('scenario deltas: -1, 0, +1, +2, +3 from current', () => {
+    const current = 5
+    const scenarios = generateHeadcountScenarios(current, 25_000, null)
+    const headcounts = scenarios.map(s => s.headcount)
+    expect(headcounts).toContain(4)  // -1
+    expect(headcounts).toContain(5)  // current
+    expect(headcounts).toContain(6)  // +1
+    expect(headcounts).toContain(7)  // +2
+    expect(headcounts).toContain(8)  // +3
+  })
+
+  it('scenario with delta -1 is named "1 Çıkarma"', () => {
+    const scenarios = generateHeadcountScenarios(5, 25_000, null)
+    const minus1 = scenarios.find(s => s.headcount === 4)
+    expect(minus1?.name).toBe('1 Çıkarma')
+  })
+
+  it('scenario with delta +3 name contains the delta', () => {
+    const scenarios = generateHeadcountScenarios(5, 25_000, null)
+    const plus3 = scenarios.find(s => s.name.includes('+3'))
+    expect(plus3).toBeDefined()
+  })
+
+  it('monthly_cost = total_employer_cost × headcount', () => {
+    const gross = 30_000
+    const scenarios = generateHeadcountScenarios(3, gross, 500_000)
+    for (const s of scenarios) {
+      if (s.headcount > 0) {
+        const expected = computeTotalEmployerCost(gross) * s.headcount
+        expect(s.monthly_cost_try).toBeCloseTo(expected, 2)
+      }
+    }
+  })
+
+  it('annual_cost = monthly_cost × 12 for all scenarios', () => {
+    const scenarios = generateHeadcountScenarios(4, 25_000, 300_000)
+    for (const s of scenarios) {
+      expect(s.annual_cost_try).toBeCloseTo(s.monthly_cost_try * 12, 2)
+    }
+  })
+
+  it('revenue_per_head_try is non-null when revenue is provided', () => {
+    const scenarios = generateHeadcountScenarios(3, 25_000, 200_000)
+    for (const s of scenarios) {
+      if (s.headcount > 0) {
+        expect(s.revenue_per_head_try).not.toBeNull()
+      }
+    }
+  })
+
+  it('headcount never negative even for headcount=1 with -1 delta', () => {
+    const scenarios = generateHeadcountScenarios(1, 25_000, null)
+    for (const s of scenarios) {
+      expect(s.headcount).toBeGreaterThanOrEqual(0)
+    }
+  })
+})

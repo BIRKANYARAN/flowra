@@ -557,3 +557,236 @@ describe('computeCostConcentrationIndex — extended', () => {
     expect(computeCostConcentrationIndex(cats)).toBeCloseTo(10000)
   })
 })
+
+// ── EXPENSE_TYPE_TO_BEHAVIOR — key presence checks ────────────────────────────
+
+describe('EXPENSE_TYPE_TO_BEHAVIOR — known entries', () => {
+  it('has entry for salary', () => {
+    expect(classifyExpenseBehavior('salary')).toBe('fixed')
+  })
+
+  it('has entry for rent', () => {
+    expect(classifyExpenseBehavior('rent')).toBe('fixed')
+  })
+
+  it('has entry for software', () => {
+    expect(classifyExpenseBehavior('software')).toBe('fixed')
+  })
+
+  it('has entry for cogs (variable)', () => {
+    expect(classifyExpenseBehavior('cogs')).toBe('variable')
+  })
+
+  it('has entry for logistics (variable)', () => {
+    expect(classifyExpenseBehavior('logistics')).toBe('variable')
+  })
+
+  it('has entry for marketing (semi_variable)', () => {
+    expect(classifyExpenseBehavior('marketing')).toBe('semi_variable')
+  })
+
+  it('has entry for utilities (semi_variable)', () => {
+    expect(classifyExpenseBehavior('utilities')).toBe('semi_variable')
+  })
+})
+
+// ── classifyExpenseBehavior — all three behavior types ────────────────────────
+
+describe('classifyExpenseBehavior — all three behavior types reachable', () => {
+  it('"fixed" is reachable via salary', () => {
+    expect(classifyExpenseBehavior('salary')).toBe('fixed')
+  })
+
+  it('"fixed" is reachable via depreciation', () => {
+    expect(classifyExpenseBehavior('depreciation')).toBe('fixed')
+  })
+
+  it('"variable" is reachable via cogs', () => {
+    expect(classifyExpenseBehavior('cogs')).toBe('variable')
+  })
+
+  it('"variable" is reachable via commission', () => {
+    expect(classifyExpenseBehavior('commission')).toBe('variable')
+  })
+
+  it('"semi_variable" is reachable via marketing', () => {
+    expect(classifyExpenseBehavior('marketing')).toBe('semi_variable')
+  })
+
+  it('"semi_variable" is reachable via maintenance', () => {
+    expect(classifyExpenseBehavior('maintenance')).toBe('semi_variable')
+  })
+
+  it('"semi_variable" is the default for unknown types', () => {
+    expect(classifyExpenseBehavior('totally-unknown-xyz')).toBe('semi_variable')
+  })
+
+  it('trim is applied before lookup — "  rent  " resolves to fixed', () => {
+    expect(classifyExpenseBehavior('  rent  ')).toBe('fixed')
+  })
+})
+
+// ── computeContributionMargin — additional formula verification ───────────────
+
+describe('computeContributionMargin — formula: revenue - variableCosts', () => {
+  it('zero revenue and zero costs → 0', () => {
+    expect(computeContributionMargin(0, 0)).toBe(0)
+  })
+
+  it('revenue=100k, variableCosts=40k → CM=60k', () => {
+    expect(computeContributionMargin(100_000, 40_000)).toBe(60_000)
+  })
+
+  it('variableCosts > revenue → negative CM', () => {
+    expect(computeContributionMargin(30_000, 50_000)).toBe(-20_000)
+  })
+
+  it('variableCosts = 0 → CM equals revenue', () => {
+    expect(computeContributionMargin(75_000, 0)).toBe(75_000)
+  })
+
+  it('result type is number', () => {
+    expect(typeof computeContributionMargin(100_000, 40_000)).toBe('number')
+  })
+})
+
+// ── computeContributionMarginRatio — formula verification ─────────────────────
+
+describe('computeContributionMarginRatio — formula: (revenue - varCosts)/revenue × 100', () => {
+  it('revenue=100k, varCosts=0 → 100%', () => {
+    expect(computeContributionMarginRatio(100_000, 0)).toBeCloseTo(100)
+  })
+
+  it('revenue=100k, varCosts=50k → 50%', () => {
+    expect(computeContributionMarginRatio(100_000, 50_000)).toBeCloseTo(50)
+  })
+
+  it('revenue=100k, varCosts=75k → 25%', () => {
+    expect(computeContributionMarginRatio(100_000, 75_000)).toBeCloseTo(25)
+  })
+
+  it('revenue=0 → null', () => {
+    expect(computeContributionMarginRatio(0, 50_000)).toBeNull()
+  })
+
+  it('revenue equals variableCosts → 0%', () => {
+    expect(computeContributionMarginRatio(50_000, 50_000)).toBeCloseTo(0)
+  })
+})
+
+// ── computeBreakevenRevenue — formula verification ────────────────────────────
+
+describe('computeBreakevenRevenue — formula: fixedCosts / (CMR/100)', () => {
+  it('fixedCosts=80k, CMR=40% → breakeven = 200k', () => {
+    expect(computeBreakevenRevenue(80_000, 40)).toBeCloseTo(200_000)
+  })
+
+  it('fixedCosts=50k, CMR=100% → breakeven = 50k', () => {
+    expect(computeBreakevenRevenue(50_000, 100)).toBeCloseTo(50_000)
+  })
+
+  it('CMR=null → null', () => {
+    expect(computeBreakevenRevenue(50_000, null)).toBeNull()
+  })
+
+  it('CMR=0 → null', () => {
+    expect(computeBreakevenRevenue(50_000, 0)).toBeNull()
+  })
+
+  it('fixedCosts=0 with positive CMR → 0', () => {
+    expect(computeBreakevenRevenue(0, 80)).toBeCloseTo(0)
+  })
+})
+
+// ── computeMarginOfSafety — formula verification ──────────────────────────────
+
+describe('computeMarginOfSafety — formula: (actual - breakeven)/actual × 100', () => {
+  it('actual=200k, breakeven=100k → 50%', () => {
+    expect(computeMarginOfSafety(200_000, 100_000)).toBeCloseTo(50)
+  })
+
+  it('actual=100k, breakeven=100k → 0%', () => {
+    expect(computeMarginOfSafety(100_000, 100_000)).toBeCloseTo(0)
+  })
+
+  it('actual=80k, breakeven=100k → -25% (below breakeven)', () => {
+    expect(computeMarginOfSafety(80_000, 100_000)).toBeCloseTo(-25)
+  })
+
+  it('actual=0 → null', () => {
+    expect(computeMarginOfSafety(0, 50_000)).toBeNull()
+  })
+
+  it('breakeven=null → null', () => {
+    expect(computeMarginOfSafety(100_000, null)).toBeNull()
+  })
+})
+
+// ── computeOperatingLeverageRatio — formula verification ──────────────────────
+
+describe('computeOperatingLeverageRatio — formula: CM / EBIT', () => {
+  it('CM=60k, EBIT=30k → DOL=2.0', () => {
+    expect(computeOperatingLeverageRatio(60_000, 30_000)).toBeCloseTo(2.0)
+  })
+
+  it('CM=EBIT → DOL=1.0', () => {
+    expect(computeOperatingLeverageRatio(50_000, 50_000)).toBeCloseTo(1.0)
+  })
+
+  it('EBIT=0 → null', () => {
+    expect(computeOperatingLeverageRatio(100_000, 0)).toBeNull()
+  })
+
+  it('negative CM and negative EBIT → positive DOL', () => {
+    // (-60k) / (-20k) = 3.0
+    expect(computeOperatingLeverageRatio(-60_000, -20_000)).toBeCloseTo(3.0)
+  })
+
+  it('result type is number when EBIT != 0', () => {
+    const result = computeOperatingLeverageRatio(100_000, 25_000)
+    expect(typeof result).toBe('number')
+  })
+})
+
+// ── computeCostConcentrationIndex — one dominant vs uniform ──────────────────
+
+describe('computeCostConcentrationIndex — dominant vs uniform scenarios', () => {
+  it('one dominant category (90%): HHI > 8000', () => {
+    const cats = [
+      { name: 'salary', amount: 90_000 },
+      { name: 'rent',   amount: 10_000 },
+    ]
+    // 0.9²+0.1² = 0.81+0.01 = 0.82 → 8200
+    expect(computeCostConcentrationIndex(cats)).toBeCloseTo(8200)
+  })
+
+  it('uniform 2-category: HHI = 5000', () => {
+    const cats = [
+      { name: 'A', amount: 50_000 },
+      { name: 'B', amount: 50_000 },
+    ]
+    expect(computeCostConcentrationIndex(cats)).toBeCloseTo(5000)
+  })
+
+  it('dominant one category increases HHI vs uniform split', () => {
+    const dominated = computeCostConcentrationIndex([
+      { name: 'A', amount: 80_000 },
+      { name: 'B', amount: 20_000 },
+    ])
+    const uniform = computeCostConcentrationIndex([
+      { name: 'A', amount: 50_000 },
+      { name: 'B', amount: 50_000 },
+    ])
+    expect(dominated).toBeGreaterThan(uniform)
+  })
+
+  it('single category → maximum index (10000)', () => {
+    expect(computeCostConcentrationIndex([{ name: 'all', amount: 100_000 }])).toBeCloseTo(10000)
+  })
+
+  it('many small equal categories → low index (< 1500 = diversified)', () => {
+    const cats = Array.from({ length: 10 }, (_, i) => ({ name: `cat${i}`, amount: 1000 }))
+    // 10 equal → HHI = 0.1 × 10000 = 1000
+    expect(computeCostConcentrationIndex(cats)).toBeCloseTo(1000)
+  })
+})

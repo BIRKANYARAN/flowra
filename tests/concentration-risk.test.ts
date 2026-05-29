@@ -542,3 +542,152 @@ describe('ConcentrationRiskService.getReport — additional integration tests', 
     expect(report.has_dominant_customer).toBe(false)
   })
 })
+
+// ── computeHHI — formula verification ────────────────────────────────────────
+
+describe('ConcentrationRiskService.computeHHI — formula verification', () => {
+  it('formula: HHI = Σ share² (0-1 fractions)', () => {
+    const shares = [0.5, 0.3, 0.2]
+    const expected = 0.5 * 0.5 + 0.3 * 0.3 + 0.2 * 0.2
+    expect(ConcentrationRiskService.computeHHI(shares)).toBeCloseTo(expected, 8)
+  })
+
+  it('single customer 100% (as fraction 1.0) → 10000 on 0-1 scale = 1.0', () => {
+    // On 0-1 scale: 1.0² = 1.0
+    expect(ConcentrationRiskService.computeHHI([1.0])).toBeCloseTo(1.0)
+  })
+
+  it('two equal customers 50% each → HHI = 0.5² + 0.5² = 0.50', () => {
+    expect(ConcentrationRiskService.computeHHI([0.5, 0.5])).toBeCloseTo(0.5, 4)
+  })
+
+  it('HHI increases monotonically as market concentrates', () => {
+    // Uniform 5 → uniform 4 → uniform 3 → uniform 2 → monopoly
+    const hhi5 = ConcentrationRiskService.computeHHI([0.2, 0.2, 0.2, 0.2, 0.2])
+    const hhi4 = ConcentrationRiskService.computeHHI([0.25, 0.25, 0.25, 0.25])
+    const hhi3 = ConcentrationRiskService.computeHHI([1/3, 1/3, 1/3])
+    const hhi2 = ConcentrationRiskService.computeHHI([0.5, 0.5])
+    const hhi1 = ConcentrationRiskService.computeHHI([1.0])
+    expect(hhi5).toBeLessThan(hhi4)
+    expect(hhi4).toBeLessThan(hhi3)
+    expect(hhi3).toBeLessThan(hhi2)
+    expect(hhi2).toBeLessThan(hhi1)
+  })
+
+  it('specific asymmetric: [0.6, 0.25, 0.15] → 0.36+0.0625+0.0225 = 0.445', () => {
+    const expected = 0.6 * 0.6 + 0.25 * 0.25 + 0.15 * 0.15
+    expect(ConcentrationRiskService.computeHHI([0.6, 0.25, 0.15])).toBeCloseTo(expected, 6)
+  })
+
+  it('result type is number for any non-empty array', () => {
+    const cases = [[0.5, 0.5], [1.0], [0.2, 0.2, 0.2, 0.2, 0.2]]
+    for (const shares of cases) {
+      expect(typeof ConcentrationRiskService.computeHHI(shares)).toBe('number')
+    }
+  })
+})
+
+// ── getHhhStatus — all classification levels ──────────────────────────────────
+
+describe('ConcentrationRiskService.getHhhStatus — all classification levels', () => {
+  it('returns "low" for values strictly below 0.15', () => {
+    for (const v of [0, 0.01, 0.05, 0.10, 0.14, 0.1499]) {
+      expect(ConcentrationRiskService.getHhhStatus(v)).toBe('low')
+    }
+  })
+
+  it('returns "moderate" for values in [0.15, 0.25]', () => {
+    for (const v of [0.15, 0.16, 0.20, 0.24, 0.25]) {
+      expect(ConcentrationRiskService.getHhhStatus(v)).toBe('moderate')
+    }
+  })
+
+  it('returns "high" for values strictly above 0.25', () => {
+    for (const v of [0.2501, 0.30, 0.40, 0.50, 0.75, 1.0]) {
+      expect(ConcentrationRiskService.getHhhStatus(v)).toBe('high')
+    }
+  })
+
+  it('boundary 0.15 inclusive → moderate', () => {
+    expect(ConcentrationRiskService.getHhhStatus(0.15)).toBe('moderate')
+  })
+
+  it('boundary 0.25 inclusive → moderate', () => {
+    expect(ConcentrationRiskService.getHhhStatus(0.25)).toBe('moderate')
+  })
+
+  it('just below moderate lower bound → low', () => {
+    expect(ConcentrationRiskService.getHhhStatus(0.14999)).toBe('low')
+  })
+
+  it('just above moderate upper bound → high', () => {
+    expect(ConcentrationRiskService.getHhhStatus(0.25001)).toBe('high')
+  })
+
+  it('return type is always string', () => {
+    for (const v of [0, 0.15, 0.25, 1.0]) {
+      expect(typeof ConcentrationRiskService.getHhhStatus(v)).toBe('string')
+    }
+  })
+})
+
+// ── getRiskLabel — all boundaries ────────────────────────────────────────────
+
+describe('ConcentrationRiskService.getRiskLabel — all share percentage boundaries', () => {
+  it('0% → minor', () => {
+    expect(ConcentrationRiskService.getRiskLabel(0)).toBe('minor')
+  })
+
+  it('9.99% → minor', () => {
+    expect(ConcentrationRiskService.getRiskLabel(9.99)).toBe('minor')
+  })
+
+  it('10% → minor (boundary: must be >10 for significant)', () => {
+    expect(ConcentrationRiskService.getRiskLabel(10)).toBe('minor')
+  })
+
+  it('10.01% → significant', () => {
+    expect(ConcentrationRiskService.getRiskLabel(10.01)).toBe('significant')
+  })
+
+  it('19.99% → significant', () => {
+    expect(ConcentrationRiskService.getRiskLabel(19.99)).toBe('significant')
+  })
+
+  it('20% → significant (boundary: must be >20 for major)', () => {
+    expect(ConcentrationRiskService.getRiskLabel(20)).toBe('significant')
+  })
+
+  it('20.01% → major', () => {
+    expect(ConcentrationRiskService.getRiskLabel(20.01)).toBe('major')
+  })
+
+  it('39.99% → major', () => {
+    expect(ConcentrationRiskService.getRiskLabel(39.99)).toBe('major')
+  })
+
+  it('40% → major (boundary: must be >40 for dominant)', () => {
+    expect(ConcentrationRiskService.getRiskLabel(40)).toBe('major')
+  })
+
+  it('40.01% → dominant', () => {
+    expect(ConcentrationRiskService.getRiskLabel(40.01)).toBe('dominant')
+  })
+
+  it('100% → dominant', () => {
+    expect(ConcentrationRiskService.getRiskLabel(100)).toBe('dominant')
+  })
+
+  it('all 4 labels are reachable', () => {
+    const results = new Set([
+      ConcentrationRiskService.getRiskLabel(5),
+      ConcentrationRiskService.getRiskLabel(15),
+      ConcentrationRiskService.getRiskLabel(25),
+      ConcentrationRiskService.getRiskLabel(50),
+    ])
+    expect(results.has('minor')).toBe(true)
+    expect(results.has('significant')).toBe(true)
+    expect(results.has('major')).toBe(true)
+    expect(results.has('dominant')).toBe(true)
+  })
+})

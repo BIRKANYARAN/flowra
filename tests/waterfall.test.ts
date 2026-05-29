@@ -542,3 +542,168 @@ describe('PCLELiability.computeWaterfall', () => {
     }
   })
 })
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeBurdenScores — additional formula tests
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('PCLELiability.computeBurdenScores — formula invariants', () => {
+  it('excess = net_loan - (total_loans × share_ratio)', () => {
+    const loans = [
+      mkLoan('A', 'Partner A', 0.4, 80_000),
+      mkLoan('B', 'Partner B', 0.6, 60_000),
+    ]
+    const total = 140_000
+    const scores = PCLELiability.computeBurdenScores(loans)
+    const a = scores.find(s => s.partner_id === 'A')!
+    const b = scores.find(s => s.partner_id === 'B')!
+    expect(a.excess).toBeCloseTo(80_000 - total * 0.4, 0)
+    expect(b.excess).toBeCloseTo(60_000 - total * 0.6, 0)
+  })
+
+  it('burden_pct = (excess / total_loans) * 100', () => {
+    const loans = [
+      mkLoan('A', 'Partner A', 0.5, 150_000),
+      mkLoan('B', 'Partner B', 0.5,  50_000),
+    ]
+    const total = 200_000
+    const scores = PCLELiability.computeBurdenScores(loans)
+    const a = scores.find(s => s.partner_id === 'A')!
+    // excess A = 150k - 100k = 50k, burden_pct = 50k/200k*100 = 25
+    expect(a.burden_pct).toBeCloseTo(25, 1)
+  })
+
+  it('perfectly balanced 3-partner: all excess = 0', () => {
+    const loans = [
+      mkLoan('A', 'A', 0.20, 20_000),
+      mkLoan('B', 'B', 0.50, 50_000),
+      mkLoan('C', 'C', 0.30, 30_000),
+    ]
+    const scores = PCLELiability.computeBurdenScores(loans)
+    for (const s of scores) {
+      expect(Math.abs(s.excess)).toBeLessThan(1)
+    }
+  })
+
+  it('expected_loan for 100% partner = total_loans', () => {
+    const loans = [mkLoan('A', 'Solo', 1.0, 999_999)]
+    const scores = PCLELiability.computeBurdenScores(loans)
+    expect(scores[0].expected_loan).toBeCloseTo(999_999, 0)
+  })
+
+  it('returns same length as input array', () => {
+    const loans = [
+      mkLoan('A', 'A', 0.25, 10_000),
+      mkLoan('B', 'B', 0.25, 20_000),
+      mkLoan('C', 'C', 0.25, 30_000),
+      mkLoan('D', 'D', 0.25, 40_000),
+    ]
+    expect(PCLELiability.computeBurdenScores(loans)).toHaveLength(4)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeWaterfall — Phase 1 priority scenarios
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('PCLELiability.computeWaterfall — Phase 1 priority', () => {
+  it('overfinanced partner receives phase1 allocation before underfinanced', () => {
+    // A (40%) loans 80k, B (60%) loans 20k — total 100k
+    // expected A = 40k, expected B = 60k
+    // excess A = +40k (overfinanced), excess B = -40k (underfinanced)
+    const loans = [
+      mkLoan('A', 'Partner A', 0.4, 80_000),
+      mkLoan('B', 'Partner B', 0.6, 20_000),
+    ]
+    const result = PCLELiability.computeWaterfall(120_000, loans)
+    const a = result.allocations.find(x => x.partner_id === 'A')!
+    expect(a.phase1_try).toBeGreaterThan(0)
+  })
+
+  it('when cash < total overfinanced excess — phase 1 uses all available cash', () => {
+    // Only one overfinanced partner with excess 100k, available_cash = 30k
+    const loans = [
+      mkLoan('A', 'A', 0.5, 150_000),  // excess = +50k
+      mkLoan('B', 'B', 0.5,  50_000),  // excess = -50k
+    ]
+    const result = PCLELiability.computeWaterfall(30_000, loans)
+    // All 30k consumed in phase 1 since cash < 50k excess
+    expect(result.total_allocated_try).toBeCloseTo(30_000, 0)
+    const a = result.allocations.find(x => x.partner_id === 'A')!
+    expect(a.phase1_try).toBeGreaterThan(0)
+  })
+
+  it('perfect balance: no phase1 allocations, only phase2', () => {
+    const loans = [
+      mkLoan('A', 'A', 0.5, 50_000),
+      mkLoan('B', 'B', 0.5, 50_000),
+    ]
+    const result = PCLELiability.computeWaterfall(60_000, loans)
+    for (const alloc of result.allocations) {
+      expect(alloc.phase1_try).toBeCloseTo(0, 0)
+    }
+    expect(result.total_allocated_try).toBeCloseTo(60_000, 0)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeWaterfall — Phase 2 pro-rata
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('PCLELiability.computeWaterfall — Phase 2 pro-rata', () => {
+  it('two balanced partners: phase2 allocations respect share_ratio', () => {
+    const loans = [
+      mkLoan('A', 'A', 0.3, 30_000),
+      mkLoan('B', 'B', 0.7, 70_000),
+    ]
+    const result = PCLELiability.computeWaterfall(50_000, loans)
+    const a = result.allocations.find(x => x.partner_id === 'A')!
+    const b = result.allocations.find(x => x.partner_id === 'B')!
+    // Phase2 ratio should be 0.3/0.7
+    expect(a.phase2_try / b.phase2_try).toBeCloseTo(0.3 / 0.7, 1)
+  })
+
+  it('very large cash: all loans repaid, remaining = cash - total_debt', () => {
+    const loans = [
+      mkLoan('A', 'A', 0.5, 100_000),
+      mkLoan('B', 'B', 0.5, 100_000),
+    ]
+    const result = PCLELiability.computeWaterfall(500_000, loans)
+    expect(result.total_allocated_try).toBeCloseTo(200_000, 0)
+    expect(result.remaining_after_debt).toBeCloseTo(300_000, 0)
+  })
+
+  it('zero available cash: no repayments, remaining = 0', () => {
+    const loans = [mkLoan('A', 'A', 1.0, 100_000)]
+    const result = PCLELiability.computeWaterfall(0, loans)
+    expect(result.total_allocated_try).toBe(0)
+    expect(result.remaining_after_debt).toBe(0)
+    for (const alloc of result.allocations) {
+      expect(alloc.allocated_try).toBe(0)
+      expect(alloc.phase1_try).toBe(0)
+      expect(alloc.phase2_try).toBe(0)
+    }
+  })
+
+  it('single partner: no equalization needed, all cash goes to phase2', () => {
+    const loans = [mkLoan('SOLO', 'Solo Partner', 1.0, 80_000)]
+    const result = PCLELiability.computeWaterfall(40_000, loans)
+    const alloc = result.allocations.find(x => x.partner_id === 'SOLO')!
+    // No burden imbalance with single partner → phase1 = 0
+    expect(alloc.phase1_try).toBeCloseTo(0, 0)
+    expect(alloc.phase2_try).toBeCloseTo(40_000, 0)
+    expect(alloc.allocated_try).toBeCloseTo(40_000, 0)
+  })
+
+  it('very large cash clears all debt: remaining = availableCash - totalDebt', () => {
+    const loans = [
+      mkLoan('A', 'A', 0.4, 40_000),
+      mkLoan('B', 'B', 0.3, 30_000),
+      mkLoan('C', 'C', 0.3, 30_000),
+    ]
+    const totalDebt = 100_000
+    const available = 1_000_000
+    const result = PCLELiability.computeWaterfall(available, loans)
+    expect(result.remaining_after_debt).toBeCloseTo(available - totalDebt, 0)
+  })
+})

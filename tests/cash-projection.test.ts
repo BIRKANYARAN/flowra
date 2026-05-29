@@ -545,3 +545,281 @@ describe('detectNegativeCashWeeks — additional', () => {
     expect(detectNegativeCashWeeks([{ cumulative_cash: 1 }])).toEqual([])
   })
 })
+
+// ── getWeekStart — Monday / Wednesday / Sunday ─────────────────────────────────
+
+describe('getWeekStart — Monday, Wednesday, Sunday correctness', () => {
+  it('Monday input returns same Monday', () => {
+    // 2026-06-01 is a Monday
+    expect(getWeekStart('2026-06-01')).toBe('2026-06-01')
+  })
+
+  it('Wednesday input returns prior Monday', () => {
+    // 2026-06-03 is Wednesday; Monday of that week is 2026-06-01
+    expect(getWeekStart('2026-06-03')).toBe('2026-06-01')
+  })
+
+  it('Sunday input returns prior Monday (6 days back)', () => {
+    // 2026-06-07 is Sunday; Monday of that week is 2026-06-01
+    expect(getWeekStart('2026-06-07')).toBe('2026-06-01')
+  })
+
+  it('Thursday returns prior Monday', () => {
+    // 2026-06-04 is Thursday
+    expect(getWeekStart('2026-06-04')).toBe('2026-06-01')
+  })
+
+  it('result is always a Monday (DOW = 1)', () => {
+    const dates = [
+      '2026-06-01', '2026-06-02', '2026-06-03',
+      '2026-06-04', '2026-06-05', '2026-06-06', '2026-06-07',
+    ]
+    for (const d of dates) {
+      const monday = getWeekStart(d)
+      const dow = new Date(monday + 'T00:00:00Z').getUTCDay()
+      expect(dow).toBe(1)
+    }
+  })
+
+  it('always returns a date on or before the input', () => {
+    const testDates = ['2026-01-15', '2026-03-25', '2026-07-10', '2026-12-30']
+    for (const d of testDates) {
+      const weekStart = getWeekStart(d)
+      expect(weekStart <= d).toBe(true)
+    }
+  })
+
+  it('week start is within 7 days before input', () => {
+    const d = '2026-06-07'
+    const ws = getWeekStart(d)
+    const diff =
+      (new Date(d + 'T00:00:00Z').getTime() - new Date(ws + 'T00:00:00Z').getTime()) /
+      (1000 * 60 * 60 * 24)
+    expect(diff).toBeLessThanOrEqual(6)
+    expect(diff).toBeGreaterThanOrEqual(0)
+  })
+})
+
+// ── nextMonday — from Friday / Monday ─────────────────────────────────────────
+
+describe('nextMonday — from Friday and Monday inputs', () => {
+  it('returns next Monday from a Friday (2026-05-29 → 2026-06-01)', () => {
+    expect(nextMonday('2026-05-29')).toBe('2026-06-01')
+  })
+
+  it('returns next Monday from a Monday (not same day — one week later)', () => {
+    // 2026-06-01 is Monday → next Monday is 2026-06-08
+    expect(nextMonday('2026-06-01')).toBe('2026-06-08')
+  })
+
+  it('result is always a Monday (DOW = 1)', () => {
+    const inputs = ['2026-06-01', '2026-06-03', '2026-06-05', '2026-06-06', '2026-06-07']
+    for (const d of inputs) {
+      const nm = nextMonday(d)
+      const dow = new Date(nm + 'T00:00:00Z').getUTCDay()
+      expect(dow).toBe(1)
+    }
+  })
+
+  it('result is always strictly after input date', () => {
+    const inputs = ['2026-05-25', '2026-05-26', '2026-05-27', '2026-05-28', '2026-05-29', '2026-05-30', '2026-05-31']
+    for (const d of inputs) {
+      expect(nextMonday(d) > d).toBe(true)
+    }
+  })
+
+  it('result is within 8 days of input', () => {
+    const d = '2026-06-07' // Sunday
+    const nm = nextMonday(d)
+    const diff =
+      (new Date(nm + 'T00:00:00Z').getTime() - new Date(d + 'T00:00:00Z').getTime()) /
+      (1000 * 60 * 60 * 24)
+    expect(diff).toBeLessThanOrEqual(8)
+    expect(diff).toBeGreaterThanOrEqual(1)
+  })
+})
+
+// ── addWeeks — identity and 4-weeks later ─────────────────────────────────────
+
+describe('addWeeks — identity and 4-weeks-later', () => {
+  it('addWeeks(date, 0) returns same date (identity)', () => {
+    expect(addWeeks('2026-06-01', 0)).toBe('2026-06-01')
+    expect(addWeeks('2026-12-31', 0)).toBe('2026-12-31')
+    expect(addWeeks('2026-01-01', 0)).toBe('2026-01-01')
+  })
+
+  it('addWeeks(date, 4) returns date exactly 28 days later', () => {
+    // 2026-06-01 + 28 days = 2026-06-29
+    expect(addWeeks('2026-06-01', 4)).toBe('2026-06-29')
+  })
+
+  it('addWeeks(date, 4) across month boundary', () => {
+    // 2026-05-11 + 28 days = 2026-06-08
+    expect(addWeeks('2026-05-11', 4)).toBe('2026-06-08')
+  })
+
+  it('addWeeks(date, 4) across year boundary', () => {
+    // 2025-12-08 + 28 days = 2026-01-05
+    expect(addWeeks('2025-12-08', 4)).toBe('2026-01-05')
+  })
+
+  it('result format is always YYYY-MM-DD', () => {
+    const result = addWeeks('2026-06-01', 4)
+    expect(result).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+  })
+
+  it('addWeeks with negative weeks goes back in time', () => {
+    expect(addWeeks('2026-06-29', -4)).toBe('2026-06-01')
+  })
+
+  it('addWeeks(date, 1) preserves day-of-week', () => {
+    // 2026-06-01 is Monday; +1 week = 2026-06-08 (also Monday)
+    const d = '2026-06-01'
+    const plus1 = addWeeks(d, 1)
+    const dow1 = new Date(d + 'T00:00:00Z').getUTCDay()
+    const dow2 = new Date(plus1 + 'T00:00:00Z').getUTCDay()
+    expect(dow1).toBe(dow2)
+  })
+})
+
+// ── assignToWeek — various bucket assignments ─────────────────────────────────
+
+describe('assignToWeek — various bucket assignments', () => {
+  const firstMonday = '2026-06-01'
+  const weekStarts = Array.from({ length: 13 }, (_, i) => addWeeks(firstMonday, i))
+
+  it('date in week 2 (Monday of week 2) → index 1', () => {
+    expect(assignToWeek(addWeeks(firstMonday, 1), weekStarts)).toBe(1)
+  })
+
+  it('date mid-week in week 3 → index 2', () => {
+    // week 3 starts at addWeeks(firstMonday, 2); Wednesday of that week
+    const w3start = addWeeks(firstMonday, 2)
+    const d = new Date(w3start + 'T00:00:00Z')
+    d.setUTCDate(d.getUTCDate() + 2) // Wednesday
+    const wed = d.toISOString().slice(0, 10)
+    expect(assignToWeek(wed, weekStarts)).toBe(2)
+  })
+
+  it('date in week 7 (index 6) → 6', () => {
+    const w7start = addWeeks(firstMonday, 6)
+    expect(assignToWeek(w7start, weekStarts)).toBe(6)
+  })
+
+  it('date before first week start returns -1', () => {
+    expect(assignToWeek('2026-05-31', weekStarts)).toBe(-1)
+    expect(assignToWeek('2026-01-01', weekStarts)).toBe(-1)
+  })
+
+  it('date on last week start (index 12) → 12', () => {
+    const w13start = addWeeks(firstMonday, 12)
+    expect(assignToWeek(w13start, weekStarts)).toBe(12)
+  })
+
+  it('date after last week start → still index 12 (open-ended last bucket)', () => {
+    expect(assignToWeek('2026-12-31', weekStarts)).toBe(12)
+  })
+
+  it('result is always in range [-1, 12] for 13-week window', () => {
+    const dates = ['2026-05-01', '2026-06-01', '2026-07-15', '2026-08-31', '2027-01-01']
+    for (const d of dates) {
+      const idx = assignToWeek(d, weekStarts)
+      expect(idx).toBeGreaterThanOrEqual(-1)
+      expect(idx).toBeLessThanOrEqual(12)
+    }
+  })
+})
+
+// ── computeWeekLabel — format consistency ─────────────────────────────────────
+
+describe('computeWeekLabel — format consistency', () => {
+  it('first week is H1', () => {
+    expect(computeWeekLabel(0)).toBe('H1')
+  })
+
+  it('last week of 13-week window is H13', () => {
+    expect(computeWeekLabel(12)).toBe('H13')
+  })
+
+  it('every label starts with H', () => {
+    for (let i = 0; i <= 12; i++) {
+      expect(computeWeekLabel(i)).toMatch(/^H/)
+    }
+  })
+
+  it('label number equals index + 1', () => {
+    for (let i = 0; i <= 12; i++) {
+      const label = computeWeekLabel(i)
+      const num = parseInt(label.slice(1), 10)
+      expect(num).toBe(i + 1)
+    }
+  })
+
+  it('all 13 labels are distinct', () => {
+    const labels = Array.from({ length: 13 }, (_, i) => computeWeekLabel(i))
+    expect(new Set(labels).size).toBe(13)
+  })
+
+  it('label format is H followed by digits only (no spaces)', () => {
+    for (let i = 0; i <= 12; i++) {
+      expect(computeWeekLabel(i)).toMatch(/^H\d+$/)
+    }
+  })
+})
+
+// ── detectNegativeCashWeeks — indices of negative cumulative_cash ──────────────
+
+describe('detectNegativeCashWeeks — indices of negative cumulative_cash', () => {
+  it('returns index 0 when only first week is negative', () => {
+    const weeks = [{ cumulative_cash: -100 }, { cumulative_cash: 200 }]
+    expect(detectNegativeCashWeeks(weeks)).toEqual([0])
+  })
+
+  it('returns [2, 4] for non-consecutive negatives', () => {
+    const weeks = [
+      { cumulative_cash: 100 },
+      { cumulative_cash: 200 },
+      { cumulative_cash: -50 },  // 2
+      { cumulative_cash: 100 },
+      { cumulative_cash: -25 },  // 4
+    ]
+    expect(detectNegativeCashWeeks(weeks)).toEqual([2, 4])
+  })
+
+  it('zero cumulative is not negative (boundary)', () => {
+    const weeks = [
+      { cumulative_cash: 0 },
+      { cumulative_cash: -1 },
+      { cumulative_cash: 0 },
+    ]
+    expect(detectNegativeCashWeeks(weeks)).toEqual([1])
+  })
+
+  it('all 13 weeks negative → returns [0,1,2,...,12]', () => {
+    const weeks = Array.from({ length: 13 }, () => ({ cumulative_cash: -1 }))
+    const result = detectNegativeCashWeeks(weeks)
+    expect(result).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
+  })
+
+  it('only last week (index 12) is negative', () => {
+    const weeks = [
+      ...Array.from({ length: 12 }, () => ({ cumulative_cash: 1000 })),
+      { cumulative_cash: -1 },
+    ]
+    expect(detectNegativeCashWeeks(weeks)).toEqual([12])
+  })
+
+  it('result indices are in ascending order', () => {
+    const weeks = Array.from({ length: 13 }, (_, i) => ({
+      cumulative_cash: i % 2 === 0 ? -1 : 1,
+    }))
+    const result = detectNegativeCashWeeks(weeks)
+    for (let i = 1; i < result.length; i++) {
+      expect(result[i]).toBeGreaterThan(result[i - 1])
+    }
+  })
+
+  it('returns empty array when only week has exactly 0 cumulative cash', () => {
+    expect(detectNegativeCashWeeks([{ cumulative_cash: 0 }])).toEqual([])
+  })
+})

@@ -560,3 +560,339 @@ describe('computeKpiTrend — lower_is_better edge cases', () => {
     expect(result).toBe('improving')
   })
 })
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeAchievementPct — formula: actual / target × 100
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeAchievementPct — formula verification', () => {
+  it('formula: actual / target × 100', () => {
+    // 60 / 80 × 100 = 75
+    expect(computeAchievementPct(60, 80)).toBeCloseTo(75, 1)
+  })
+
+  it('formula: 1 / 4 × 100 = 25%', () => {
+    expect(computeAchievementPct(1, 4)).toBeCloseTo(25, 1)
+  })
+
+  it('formula: 3 / 4 × 100 = 75%', () => {
+    expect(computeAchievementPct(3, 4)).toBeCloseTo(75, 1)
+  })
+
+  it('formula for over-achievement: 200 / 100 × 100 = 200%', () => {
+    expect(computeAchievementPct(200, 100)).toBeCloseTo(200, 1)
+  })
+
+  it('zero target returns null (guard against division by zero)', () => {
+    expect(computeAchievementPct(100, 0)).toBeNull()
+    expect(computeAchievementPct(0, 0)).toBeNull()
+  })
+
+  it('zero actual with non-zero target returns 0%', () => {
+    expect(computeAchievementPct(0, 500)).toBeCloseTo(0, 1)
+  })
+
+  it('proportional: doubling actual doubles achievement pct', () => {
+    const p1 = computeAchievementPct(50, 100)
+    const p2 = computeAchievementPct(100, 100)
+    expect(p2!).toBeCloseTo((p1 ?? 0) * 2, 1)
+  })
+
+  it('large values: 5_000_000 / 4_000_000 = 125%', () => {
+    expect(computeAchievementPct(5_000_000, 4_000_000)).toBeCloseTo(125, 1)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// classifyAchievement — all classification levels at exact boundaries
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('classifyAchievement — all classification levels at exact boundaries', () => {
+  // achieved: ≥ 100
+  it('exactly 100% → achieved', () => {
+    expect(classifyAchievement(100)).toBe('achieved')
+  })
+
+  it('100.01% → achieved', () => {
+    expect(classifyAchievement(100.01)).toBe('achieved')
+  })
+
+  it('200% → achieved', () => {
+    expect(classifyAchievement(200)).toBe('achieved')
+  })
+
+  // near_target: 90 ≤ x < 100
+  it('exactly 90% → near_target', () => {
+    expect(classifyAchievement(90)).toBe('near_target')
+  })
+
+  it('95% → near_target', () => {
+    expect(classifyAchievement(95)).toBe('near_target')
+  })
+
+  it('99.9% → near_target (just below achieved)', () => {
+    expect(classifyAchievement(99.9)).toBe('near_target')
+  })
+
+  // below_target: 70 ≤ x < 90
+  it('exactly 70% → below_target', () => {
+    expect(classifyAchievement(70)).toBe('below_target')
+  })
+
+  it('80% → below_target', () => {
+    expect(classifyAchievement(80)).toBe('below_target')
+  })
+
+  it('89.9% → below_target (just below near_target)', () => {
+    expect(classifyAchievement(89.9)).toBe('below_target')
+  })
+
+  // at_risk: < 70
+  it('69.9% → at_risk (just below below_target)', () => {
+    expect(classifyAchievement(69.9)).toBe('at_risk')
+  })
+
+  it('50% → at_risk', () => {
+    expect(classifyAchievement(50)).toBe('at_risk')
+  })
+
+  it('0% → at_risk', () => {
+    expect(classifyAchievement(0)).toBe('at_risk')
+  })
+
+  it('negative achievement % → at_risk', () => {
+    expect(classifyAchievement(-10)).toBe('at_risk')
+  })
+
+  // null → no_data
+  it('null → no_data', () => {
+    expect(classifyAchievement(null)).toBe('no_data')
+  })
+
+  it('result is always one of the five valid statuses', () => {
+    const valid = ['achieved', 'near_target', 'below_target', 'at_risk', 'no_data']
+    const pcts: Array<number | null> = [null, -10, 0, 50, 69.9, 70, 89.9, 90, 99.9, 100, 150]
+    for (const p of pcts) {
+      expect(valid).toContain(classifyAchievement(p))
+    }
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeKpiTrend — direction (improving / declining / stable)
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeKpiTrend — direction correctness', () => {
+  it('higher_is_better: moving toward target = improving', () => {
+    // oldest: 60 (dist=40), newest: 90 (dist=10) → relChange = (10-40)/40 = -0.75 → improving
+    expect(computeKpiTrend([60, 90], 100, 'higher_is_better')).toBe('improving')
+  })
+
+  it('higher_is_better: moving away from target = declining', () => {
+    // oldest: 90 (dist=10), newest: 60 (dist=40) → relChange = 3 → declining
+    expect(computeKpiTrend([90, 60], 100, 'higher_is_better')).toBe('declining')
+  })
+
+  it('higher_is_better: flat trend = stable', () => {
+    // oldest: 80 (dist=20), newest: 80 (dist=20) → relChange = 0 → stable
+    expect(computeKpiTrend([80, 80], 100, 'higher_is_better')).toBe('stable')
+  })
+
+  it('lower_is_better: moving toward target = improving', () => {
+    // target=5, oldest: 50 (dist=45), newest: 10 (dist=5) → relChange = (5-45)/45 → improving
+    expect(computeKpiTrend([50, 10], 5, 'lower_is_better')).toBe('improving')
+  })
+
+  it('lower_is_better: moving away from target = declining', () => {
+    // target=5, oldest: 10 (dist=5), newest: 50 (dist=45) → relChange = (45-5)/5 = 8 → declining
+    expect(computeKpiTrend([10, 50], 5, 'lower_is_better')).toBe('declining')
+  })
+
+  it('fewer than 2 actuals → stable', () => {
+    expect(computeKpiTrend([], 100, 'higher_is_better')).toBe('stable')
+    expect(computeKpiTrend([90], 100, 'higher_is_better')).toBe('stable')
+  })
+
+  it('oldest at baseline 0 (≈ 0 distance from very small target) → stable', () => {
+    // oldest = target for higher_is_better: dist = 0 → stable
+    expect(computeKpiTrend([100, 90], 100, 'higher_is_better')).toBe('stable')
+  })
+
+  it('result is always one of three valid trend values', () => {
+    const valid = ['improving', 'stable', 'declining']
+    const cases: Array<[number[], number, 'higher_is_better' | 'lower_is_better']> = [
+      [[50, 90], 100, 'higher_is_better'],
+      [[90, 50], 100, 'higher_is_better'],
+      [[80, 80], 100, 'higher_is_better'],
+      [[50, 10], 5, 'lower_is_better'],
+    ]
+    for (const [actuals, target, dir] of cases) {
+      expect(valid).toContain(computeKpiTrend(actuals, target, dir))
+    }
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// scorecardGrade — all letter grades
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('scorecardGrade — all letter grades A / B / C / D / F', () => {
+  // A: ≥ 80
+  it('grade A for score 80 (boundary)', () => {
+    expect(scorecardGrade(80)).toBe('A')
+  })
+
+  it('grade A for score 90', () => {
+    expect(scorecardGrade(90)).toBe('A')
+  })
+
+  it('grade A for score 100', () => {
+    expect(scorecardGrade(100)).toBe('A')
+  })
+
+  // B: 65 ≤ score < 80
+  it('grade B for score 65 (boundary)', () => {
+    expect(scorecardGrade(65)).toBe('B')
+  })
+
+  it('grade B for score 72', () => {
+    expect(scorecardGrade(72)).toBe('B')
+  })
+
+  it('grade B for score 79 (just below A)', () => {
+    expect(scorecardGrade(79)).toBe('B')
+  })
+
+  // C: 50 ≤ score < 65
+  it('grade C for score 50 (boundary)', () => {
+    expect(scorecardGrade(50)).toBe('C')
+  })
+
+  it('grade C for score 57', () => {
+    expect(scorecardGrade(57)).toBe('C')
+  })
+
+  it('grade C for score 64 (just below B)', () => {
+    expect(scorecardGrade(64)).toBe('C')
+  })
+
+  // D: 35 ≤ score < 50
+  it('grade D for score 35 (boundary)', () => {
+    expect(scorecardGrade(35)).toBe('D')
+  })
+
+  it('grade D for score 42', () => {
+    expect(scorecardGrade(42)).toBe('D')
+  })
+
+  it('grade D for score 49 (just below C)', () => {
+    expect(scorecardGrade(49)).toBe('D')
+  })
+
+  // F: < 35
+  it('grade F for score 34 (just below D)', () => {
+    expect(scorecardGrade(34)).toBe('F')
+  })
+
+  it('grade F for score 20', () => {
+    expect(scorecardGrade(20)).toBe('F')
+  })
+
+  it('grade F for score 0', () => {
+    expect(scorecardGrade(0)).toBe('F')
+  })
+
+  it('result is always one of A/B/C/D/F', () => {
+    const valid = ['A', 'B', 'C', 'D', 'F']
+    const scores = [0, 20, 34, 35, 49, 50, 64, 65, 79, 80, 100]
+    for (const s of scores) {
+      expect(valid).toContain(scorecardGrade(s))
+    }
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeScorecardHealth — weighted average formula
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeScorecardHealth — weighted average formula', () => {
+  it('score map: achieved=100, near_target=80, below_target=50, at_risk=20, no_data=0', () => {
+    // Single items confirm each score value
+    expect(computeScorecardHealth(['achieved'])).toBe(100)
+    expect(computeScorecardHealth(['near_target'])).toBe(80)
+    expect(computeScorecardHealth(['below_target'])).toBe(50)
+    expect(computeScorecardHealth(['at_risk'])).toBe(20)
+    expect(computeScorecardHealth(['no_data'])).toBe(0)
+  })
+
+  it('average of two equal statuses = that status score', () => {
+    expect(computeScorecardHealth(['achieved', 'achieved'])).toBe(100)
+    expect(computeScorecardHealth(['at_risk', 'at_risk'])).toBe(20)
+  })
+
+  it('average formula: sum / count', () => {
+    // achieved(100) + near_target(80) + below_target(50) + at_risk(20) + no_data(0) = 250 / 5 = 50
+    const result = computeScorecardHealth([
+      'achieved', 'near_target', 'below_target', 'at_risk', 'no_data',
+    ])
+    expect(result).toBeCloseTo(50, 5)
+  })
+
+  it('3 achieved + 1 at_risk = (300 + 20) / 4 = 80', () => {
+    const result = computeScorecardHealth(['achieved', 'achieved', 'achieved', 'at_risk'])
+    expect(result).toBeCloseTo(80, 5)
+  })
+
+  it('2 near_target + 2 at_risk = (80+80+20+20)/4 = 50', () => {
+    const result = computeScorecardHealth(['near_target', 'near_target', 'at_risk', 'at_risk'])
+    expect(result).toBeCloseTo(50, 5)
+  })
+
+  it('empty → 0', () => {
+    expect(computeScorecardHealth([])).toBe(0)
+  })
+
+  it('result is within [0, 100] for any valid input', () => {
+    const testCases: Array<Array<'achieved' | 'near_target' | 'below_target' | 'at_risk' | 'no_data'>> = [
+      [],
+      ['achieved'],
+      ['no_data'],
+      ['achieved', 'no_data'],
+      ['near_target', 'below_target', 'at_risk'],
+    ]
+    for (const c of testCases) {
+      const h = computeScorecardHealth(c)
+      expect(h).toBeGreaterThanOrEqual(0)
+      expect(h).toBeLessThanOrEqual(100)
+    }
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeAchievementPct — zero target edge case
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeAchievementPct — zero target edge case', () => {
+  it('returns null when target is exactly 0', () => {
+    expect(computeAchievementPct(0, 0)).toBeNull()
+  })
+
+  it('returns null when target is 0 and actual is positive', () => {
+    expect(computeAchievementPct(1_000_000, 0)).toBeNull()
+  })
+
+  it('returns null when target is 0 and actual is negative', () => {
+    expect(computeAchievementPct(-500, 0)).toBeNull()
+  })
+
+  it('classifying null → no_data', () => {
+    const pct = computeAchievementPct(100, 0)
+    expect(classifyAchievement(pct)).toBe('no_data')
+  })
+
+  it('non-zero tiny target still computes result (not null)', () => {
+    const result = computeAchievementPct(1, 0.001)
+    expect(result).not.toBeNull()
+    expect(result!).toBeCloseTo(100_000, 0)
+  })
+})

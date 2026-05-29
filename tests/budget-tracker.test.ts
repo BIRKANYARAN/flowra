@@ -532,3 +532,238 @@ describe('computeBudgetPacing — additional boundary tests', () => {
     expect(result).toBeCloseTo(50, 1)
   })
 })
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeBudgetVariancePct — formula verification
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeBudgetVariancePct — formula verification', () => {
+  it('formula: (actual - budget) / budget × 100', () => {
+    // (150_000 - 100_000) / 100_000 × 100 = 50
+    expect(computeBudgetVariancePct(150_000, 100_000)).toBeCloseTo(50, 1)
+  })
+
+  it('formula gives 33.33% for 133.33k actual vs 100k budget', () => {
+    expect(computeBudgetVariancePct(133_333, 100_000)).toBeCloseTo(33.33, 1)
+  })
+
+  it('symmetry: 110% actual gives +10%; 90% actual gives -10%', () => {
+    const pos = computeBudgetVariancePct(110, 100)
+    const neg = computeBudgetVariancePct(90, 100)
+    expect(pos).toBeCloseTo(10, 1)
+    expect(neg).toBeCloseTo(-10, 1)
+  })
+
+  it('returns 0 when actual exactly equals budget', () => {
+    expect(computeBudgetVariancePct(75_000, 75_000)).toBeCloseTo(0, 2)
+  })
+
+  it('small budget: 550 actual vs 500 budget = 10%', () => {
+    expect(computeBudgetVariancePct(550, 500)).toBeCloseTo(10, 1)
+  })
+
+  it('result is null for zero budget regardless of actual', () => {
+    expect(computeBudgetVariancePct(999_999, 0)).toBeNull()
+    expect(computeBudgetVariancePct(0, 0)).toBeNull()
+    expect(computeBudgetVariancePct(-999, 0)).toBeNull()
+  })
+
+  it('50% under budget gives -50%', () => {
+    expect(computeBudgetVariancePct(50_000, 100_000)).toBeCloseTo(-50, 1)
+  })
+
+  it('triple budget gives +200%', () => {
+    expect(computeBudgetVariancePct(300_000, 100_000)).toBeCloseTo(200, 1)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// classifyBudgetAdherence — all levels at exact boundaries
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('classifyBudgetAdherence — all levels at exact boundaries', () => {
+  // Revenue thresholds: ≤5 → on_target, 5<x≤15 → favorable, >15 → strongly_favorable
+  //                     -5<x≤0 → on_target, -15≤x<-5 → at_risk, <-15 → off_track
+
+  it('revenue: exactly +5% → on_target (boundary inclusive)', () => {
+    expect(classifyBudgetAdherence(5, 'revenue')).toBe('on_target')
+  })
+
+  it('revenue: +5.001% → favorable (just above on_target)', () => {
+    expect(classifyBudgetAdherence(5.001, 'revenue')).toBe('favorable')
+  })
+
+  it('revenue: exactly +15% → favorable (boundary inclusive)', () => {
+    expect(classifyBudgetAdherence(15, 'revenue')).toBe('favorable')
+  })
+
+  it('revenue: +15.001% → strongly_favorable (just above favorable)', () => {
+    expect(classifyBudgetAdherence(15.001, 'revenue')).toBe('strongly_favorable')
+  })
+
+  it('revenue: exactly -5% → on_target (boundary inclusive)', () => {
+    expect(classifyBudgetAdherence(-5, 'revenue')).toBe('on_target')
+  })
+
+  it('revenue: -5.001% → at_risk (just below on_target)', () => {
+    expect(classifyBudgetAdherence(-5.001, 'revenue')).toBe('at_risk')
+  })
+
+  it('revenue: exactly -15% → at_risk (boundary inclusive)', () => {
+    expect(classifyBudgetAdherence(-15, 'revenue')).toBe('at_risk')
+  })
+
+  it('revenue: -15.001% → off_track (just below at_risk)', () => {
+    expect(classifyBudgetAdherence(-15.001, 'revenue')).toBe('off_track')
+  })
+
+  // Expense thresholds: negative = favorable (under budget)
+  it('expense: exactly +5% → on_target (boundary inclusive)', () => {
+    expect(classifyBudgetAdherence(5, 'expense')).toBe('on_target')
+  })
+
+  it('expense: +5.001% → at_risk (over budget by just a hair)', () => {
+    expect(classifyBudgetAdherence(5.001, 'expense')).toBe('at_risk')
+  })
+
+  it('expense: exactly +15% → at_risk (boundary inclusive)', () => {
+    expect(classifyBudgetAdherence(15, 'expense')).toBe('at_risk')
+  })
+
+  it('expense: +15.001% → off_track (just above at_risk boundary)', () => {
+    expect(classifyBudgetAdherence(15.001, 'expense')).toBe('off_track')
+  })
+
+  it('expense: exactly -5% → on_target (boundary inclusive)', () => {
+    expect(classifyBudgetAdherence(-5, 'expense')).toBe('on_target')
+  })
+
+  it('expense: -5.001% → favorable (just below on_target for expense)', () => {
+    expect(classifyBudgetAdherence(-5.001, 'expense')).toBe('favorable')
+  })
+
+  it('expense: exactly -15% → favorable (boundary inclusive)', () => {
+    expect(classifyBudgetAdherence(-15, 'expense')).toBe('favorable')
+  })
+
+  it('expense: -15.001% → strongly_favorable (just below favorable boundary)', () => {
+    expect(classifyBudgetAdherence(-15.001, 'expense')).toBe('strongly_favorable')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeBudgetHealthScore — all favorable/unfavorable line combinations
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeBudgetHealthScore — all favorable/unfavorable line combinations', () => {
+  it('all favorable items: score stays at 100 (favorable has no effect)', () => {
+    const items = Array<'favorable'>(5).fill('favorable')
+    expect(computeBudgetHealthScore(items)).toBe(100)
+  })
+
+  it('all on_target items: score stays at 100', () => {
+    const items = Array<'on_target'>(10).fill('on_target')
+    expect(computeBudgetHealthScore(items)).toBe(100)
+  })
+
+  it('3 strongly_favorable items: clamped to 100 (100 + 3×5 = 115 → 100)', () => {
+    const items = Array<'strongly_favorable'>(3).fill('strongly_favorable')
+    expect(computeBudgetHealthScore(items)).toBe(100)
+  })
+
+  it('2 off_track + 2 strongly_favorable: 100 - 40 + 10 = 70', () => {
+    const items: Array<'off_track' | 'strongly_favorable'> = [
+      'off_track', 'off_track', 'strongly_favorable', 'strongly_favorable',
+    ]
+    expect(computeBudgetHealthScore(items)).toBe(70)
+  })
+
+  it('4 at_risk + 1 off_track: 100 - 40 - 20 = 40', () => {
+    const items: Array<'at_risk' | 'off_track'> = [
+      'at_risk', 'at_risk', 'at_risk', 'at_risk', 'off_track',
+    ]
+    expect(computeBudgetHealthScore(items)).toBe(40)
+  })
+
+  it('3 off_track + 3 strongly_favorable: 100 - 60 + 15 = 55', () => {
+    const items: Array<'off_track' | 'strongly_favorable'> = [
+      'off_track', 'off_track', 'off_track',
+      'strongly_favorable', 'strongly_favorable', 'strongly_favorable',
+    ]
+    expect(computeBudgetHealthScore(items)).toBe(55)
+  })
+
+  it('mixed realistic scenario: 1 off_track, 2 at_risk, 1 favorable → 100 - 20 - 20 = 60', () => {
+    const items: Array<'off_track' | 'at_risk' | 'favorable'> = [
+      'off_track', 'at_risk', 'at_risk', 'favorable',
+    ]
+    expect(computeBudgetHealthScore(items)).toBe(60)
+  })
+
+  it('result never exceeds 100 with bonus items', () => {
+    const items: Array<'strongly_favorable'> = Array(20).fill('strongly_favorable')
+    expect(computeBudgetHealthScore(items)).toBe(100)
+  })
+
+  it('result never goes below 0 with many penalties', () => {
+    const items: Array<'off_track'> = Array(20).fill('off_track')
+    expect(computeBudgetHealthScore(items)).toBe(0)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeBudgetPacing — formula and pacing below/above 1.0 (100%)
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeBudgetPacing — formula and pacing below/above 1.0', () => {
+  it('formula: actualYtd / (monthlyBudget × monthsElapsed) × 100', () => {
+    // 48_000 / (10_000 × 6) × 100 = 80%
+    const result = computeBudgetPacing(48_000, 10_000, 6)
+    expect(result).toBeCloseTo(80, 1)
+  })
+
+  it('pacing exactly 1.0 (100%) means on pace', () => {
+    const result = computeBudgetPacing(60_000, 10_000, 6)
+    expect(result).toBeCloseTo(100, 1)
+  })
+
+  it('pacing below 100%: actuals lag budget (50k actual vs 60k expected → 83.33%)', () => {
+    const result = computeBudgetPacing(50_000, 10_000, 6)
+    expect(result).not.toBeNull()
+    expect(result!).toBeCloseTo(83.33, 1)
+    expect(result!).toBeLessThan(100)
+  })
+
+  it('pacing above 100%: actuals ahead of budget (70k actual vs 60k expected → 116.67%)', () => {
+    const result = computeBudgetPacing(70_000, 10_000, 6)
+    expect(result).not.toBeNull()
+    expect(result!).toBeCloseTo(116.67, 1)
+    expect(result!).toBeGreaterThan(100)
+  })
+
+  it('pacing at 200% (double the expected YTD)', () => {
+    const result = computeBudgetPacing(120_000, 10_000, 6)
+    expect(result).toBeCloseTo(200, 1)
+  })
+
+  it('pacing at 25% (severely behind)', () => {
+    const result = computeBudgetPacing(15_000, 10_000, 6)
+    expect(result).toBeCloseTo(25, 1)
+  })
+
+  it('1 month elapsed: actual = budget → 100%', () => {
+    expect(computeBudgetPacing(25_000, 25_000, 1)).toBeCloseTo(100, 1)
+  })
+
+  it('12 months elapsed: full year check', () => {
+    // 1.2M actual / (100k monthly × 12) = 100%
+    const result = computeBudgetPacing(1_200_000, 100_000, 12)
+    expect(result).toBeCloseTo(100, 1)
+  })
+
+  it('proportional: doubling actual doubles pacing percentage', () => {
+    const r1 = computeBudgetPacing(30_000, 10_000, 6) // 50%
+    const r2 = computeBudgetPacing(60_000, 10_000, 6) // 100%
+    expect(r2).toBeCloseTo((r1 ?? 0) * 2, 1)
+  })
+})

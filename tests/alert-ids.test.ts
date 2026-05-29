@@ -551,3 +551,251 @@ describe('evaluateAlerts — additional rule coverage', () => {
   })
 
 })
+
+// ─────────────────────────────────────────────────────────────────────────────
+// evaluateAlerts — empty results and multi-violation scenarios
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('evaluateAlerts — empty results and multi-violation', () => {
+  it('returns empty array with all-safe inputs', () => {
+    const safe: AlertInputs = {
+      overdueCount30:           0,
+      overdueTotal30:           0,
+      overdueCount60:           0,
+      overdueTotal60:           0,
+      totalReceivables:         0,
+      cashRunwayDays:          -1,
+      monthlyNetIncome:         0,
+      maxBurdenScoreAbs:        0,
+      nextTrancheDueDays:      -1,
+      nextTrancheAmount:        0,
+      openPeriodDaysOverdue:   -1,
+      kdvPayable:               0,
+      taxDueDays:              -1,
+      bsImbalanceTry:           0,
+      legalReserveDeficit:      0,
+      equityGapTry:             0,
+      equityCallOverdueDays:   -1,
+      debtServiceRatio:         0,
+      partnerLoanConcentration: 0,
+    }
+    expect(evaluateAlerts(safe)).toHaveLength(0)
+  })
+
+  it('multiple simultaneous violations all appear in result', () => {
+    const alerts = evaluateAlerts({
+      ...BASE_INPUTS,
+      overdueCount30:    3,
+      overdueTotal30:    10_000,
+      overdueCount60:    1,
+      overdueTotal60:    5_000,
+      cashRunwayDays:    20,
+      bsImbalanceTry:    500,
+      debtServiceRatio:  0.80,
+      legalReserveDeficit: 2_000,
+    })
+    const ruleTypes = alerts.map(a => a.rule_type)
+    expect(ruleTypes).toContain('RECEIVABLE_30')
+    expect(ruleTypes).toContain('RECEIVABLE_60')
+    expect(ruleTypes).toContain('CASH_RUNWAY_30')
+    expect(ruleTypes).toContain('BS_IMBALANCED')
+    expect(ruleTypes).toContain('DSR_HIGH')
+    expect(ruleTypes).toContain('LEGAL_RESERVE_LOW')
+  })
+
+  it('each alert in multi-violation set has stable id', () => {
+    const inputs = {
+      ...BASE_INPUTS,
+      overdueCount30:   1,
+      overdueTotal30:   1_000,
+      cashRunwayDays:   10,
+      legalReserveDeficit: 500,
+    }
+    const ids1 = evaluateAlerts(inputs).map(a => a.id)
+    const ids2 = evaluateAlerts(inputs).map(a => a.id)
+    expect(ids1).toEqual(ids2)
+  })
+
+  it('critical severity alerts all appear before warning severity alerts', () => {
+    const alerts = evaluateAlerts({
+      ...BASE_INPUTS,
+      overdueCount60: 2,
+      overdueTotal60: 20_000,
+      cashRunwayDays: 5,
+      overdueCount30: 1,
+      overdueTotal30: 2_000,
+      openPeriodDaysOverdue: 15,
+    })
+    let seenWarning = false
+    for (const alert of alerts) {
+      if (alert.severity === 'warning') seenWarning = true
+      if (seenWarning) {
+        expect(alert.severity).not.toBe('critical')
+      }
+    }
+  })
+
+  it('alert ids are unique within a single call', () => {
+    const alerts = evaluateAlerts({
+      ...BASE_INPUTS,
+      overdueCount30: 1,
+      overdueTotal30: 1_000,
+      overdueCount60: 1,
+      overdueTotal60: 5_000,
+      cashRunwayDays: 10,
+      bsImbalanceTry: 200,
+    })
+    const ids = alerts.map(a => a.id)
+    const uniqueIds = new Set(ids)
+    expect(uniqueIds.size).toBe(ids.length)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// evaluateAlerts — critical vs warning severity distinction
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('evaluateAlerts — critical vs warning severity distinction', () => {
+  it('RECEIVABLE_60 is critical, RECEIVABLE_30 is warning', () => {
+    const alerts = evaluateAlerts({
+      ...BASE_INPUTS,
+      overdueCount60: 1,
+      overdueTotal60: 5_000,
+      overdueCount30: 1,
+      overdueTotal30: 2_000,
+    })
+    const r60 = alerts.find(a => a.rule_type === 'RECEIVABLE_60')
+    const r30 = alerts.find(a => a.rule_type === 'RECEIVABLE_30')
+    expect(r60?.severity).toBe('critical')
+    expect(r30?.severity).toBe('warning')
+  })
+
+  it('CASH_RUNWAY_30 is critical, CASH_RUNWAY_90 is warning', () => {
+    const r30 = evaluateAlerts({ ...BASE_INPUTS, cashRunwayDays: 15 })
+      .find(a => a.rule_type === 'CASH_RUNWAY_30')
+    const r90 = evaluateAlerts({ ...BASE_INPUTS, cashRunwayDays: 60 })
+      .find(a => a.rule_type === 'CASH_RUNWAY_90')
+    expect(r30?.severity).toBe('critical')
+    expect(r90?.severity).toBe('warning')
+  })
+
+  it('DSR_HIGH is critical, DSR_STRAINED is warning', () => {
+    const high = evaluateAlerts({ ...BASE_INPUTS, debtServiceRatio: 0.75 })
+      .find(a => a.rule_type === 'DSR_HIGH')
+    const strained = evaluateAlerts({ ...BASE_INPUTS, debtServiceRatio: 0.60 })
+      .find(a => a.rule_type === 'DSR_STRAINED')
+    expect(high?.severity).toBe('critical')
+    expect(strained?.severity).toBe('warning')
+  })
+
+  it('BS_IMBALANCED in evaluateAlerts is critical', () => {
+    const alert = evaluateAlerts({ ...BASE_INPUTS, bsImbalanceTry: 200 })
+      .find(a => a.rule_type === 'BS_IMBALANCED')
+    expect(alert?.severity).toBe('critical')
+  })
+
+  it('PARTNER_BURDEN is warning', () => {
+    const alert = evaluateAlerts({ ...BASE_INPUTS, maxBurdenScoreAbs: 0.25 })
+      .find(a => a.rule_type === 'PARTNER_BURDEN')
+    expect(alert?.severity).toBe('warning')
+  })
+
+  it('PERIOD_NOT_CLOSED is warning', () => {
+    const alert = evaluateAlerts({ ...BASE_INPUTS, openPeriodDaysOverdue: 20 })
+      .find(a => a.rule_type === 'PERIOD_NOT_CLOSED')
+    expect(alert?.severity).toBe('warning')
+  })
+
+  it('TAX_DUE_SOON is critical', () => {
+    const alert = evaluateAlerts({ ...BASE_INPUTS, taxDueDays: 2, kdvPayable: 5_000 })
+      .find(a => a.rule_type === 'TAX_DUE_SOON')
+    expect(alert?.severity).toBe('critical')
+  })
+
+  it('EQUITY_GAP_OVERDUE is warning', () => {
+    const alert = evaluateAlerts({ ...BASE_INPUTS, equityGapTry: 10_000, equityCallOverdueDays: 3 })
+      .find(a => a.rule_type === 'EQUITY_GAP_OVERDUE')
+    expect(alert?.severity).toBe('warning')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// evaluateCFOAlerts — balanced vs imbalanced trial balance
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('evaluateCFOAlerts — balanced trial balance returns no alert', () => {
+  it('trialBalanceImbalance = 0 → no BS_IMBALANCED or BS_ROUNDING', () => {
+    const alerts = evaluateCFOAlerts({
+      trialBalanceImbalance: 0,
+      cashBookBalance:       50_000,
+      bankStatementBalance:  50_000,
+      fifoIntegrityIssues:   0,
+      legalReserveShortfall: 0,
+    }, COMPANY_A)
+    expect(alerts.some(a => a.rule_type === 'BS_IMBALANCED')).toBe(false)
+    expect(alerts.some(a => a.rule_type === 'BS_ROUNDING')).toBe(false)
+  })
+
+  it('trialBalanceImbalance = 0.009 (below 0.01) → no rounding alert', () => {
+    const alerts = evaluateCFOAlerts({
+      trialBalanceImbalance: 0.009,
+      cashBookBalance:       50_000,
+      bankStatementBalance:  undefined,
+      fifoIntegrityIssues:   0,
+      legalReserveShortfall: 0,
+    }, COMPANY_A)
+    expect(alerts.some(a => a.rule_type === 'BS_ROUNDING')).toBe(false)
+  })
+
+  it('trialBalanceImbalance = 1.00 → BS_IMBALANCED (critical, not rounding)', () => {
+    const alerts = evaluateCFOAlerts({
+      trialBalanceImbalance: 1.00,
+      cashBookBalance:       50_000,
+      bankStatementBalance:  undefined,
+      fifoIntegrityIssues:   0,
+      legalReserveShortfall: 0,
+    }, COMPANY_A)
+    expect(alerts.some(a => a.rule_type === 'BS_IMBALANCED' && a.severity === 'critical')).toBe(true)
+    expect(alerts.some(a => a.rule_type === 'BS_ROUNDING')).toBe(false)
+  })
+
+  it('trialBalanceImbalance = 0.50 → BS_ROUNDING (warning), not BS_IMBALANCED', () => {
+    const alerts = evaluateCFOAlerts({
+      trialBalanceImbalance: 0.50,
+      cashBookBalance:       50_000,
+      bankStatementBalance:  undefined,
+      fifoIntegrityIssues:   0,
+      legalReserveShortfall: 0,
+    }, COMPANY_A)
+    expect(alerts.some(a => a.rule_type === 'BS_ROUNDING' && a.severity === 'warning')).toBe(true)
+    expect(alerts.some(a => a.rule_type === 'BS_IMBALANCED')).toBe(false)
+  })
+
+  it('FIFO_INTEGRITY critical severity with multiple issues', () => {
+    const alerts = evaluateCFOAlerts({
+      trialBalanceImbalance: 0,
+      cashBookBalance:       50_000,
+      bankStatementBalance:  undefined,
+      fifoIntegrityIssues:   5,
+      legalReserveShortfall: 0,
+    }, COMPANY_A)
+    const alert = alerts.find(a => a.rule_type === 'FIFO_INTEGRITY')
+    expect(alert).toBeDefined()
+    expect(alert?.severity).toBe('critical')
+  })
+
+  it('CFO alerts sorted critical before warning', () => {
+    const alerts = evaluateCFOAlerts({
+      trialBalanceImbalance: 2.00,  // critical
+      cashBookBalance:       50_000,
+      bankStatementBalance:  49_000, // gap > 100 → warning
+      fifoIntegrityIssues:   0,
+      legalReserveShortfall: 1_000, // warning
+    }, COMPANY_A)
+    const severities = alerts.map(a => a.severity)
+    const ORDER: Record<string, number> = { critical: 0, warning: 1, info: 2 }
+    for (let i = 0; i < severities.length - 1; i++) {
+      expect(ORDER[severities[i]]).toBeLessThanOrEqual(ORDER[severities[i + 1]])
+    }
+  })
+})
