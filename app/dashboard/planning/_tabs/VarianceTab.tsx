@@ -1,19 +1,37 @@
 // ── VarianceTab — Gerçek vs Plan ───────────────────────────────────────────────
-// Server wrapper. Renders client island for TanStack Query data fetching.
-// Shows scenario forecasts vs actual financial results.
+// Server wrapper. Renders client islands for TanStack Query data fetching.
+// Shows scenario forecasts vs actual financial results, plus forecast accuracy.
 
-import { VarianceClient } from './_variance/VarianceClient'
-import { NarrativeFooter } from '@/components/ds'
+import { createClient }           from '@/lib/supabase-server'
+import { resolveCompanyId }       from '@/lib/resolve-company'
+import { VarianceClient }         from './_variance/VarianceClient'
+import { ForecastAccuracyClient } from './_forecast/ForecastAccuracyClient'
+import { NarrativeFooter }        from '@/components/ds'
 
-export function VarianceTab() {
+export async function VarianceTab() {
+  const supabase = createClient()
+  let companyId: string | null = null
+  try {
+    const { data } = await supabase.auth.getUser()
+    if (data?.user) companyId = await resolveCompanyId(data.user.id, supabase)
+  } catch { /* non-fatal */ }
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-8">
       <VarianceClient />
+
+      {/* Forecast accuracy analysis */}
+      {companyId && (
+        <div className="border-t border-[#e2e8f0] pt-6">
+          <ForecastAccuracyClient companyId={companyId} />
+        </div>
+      )}
+
       <NarrativeFooter
         narrative="Senaryo tahminlerinizi gerçekleşen finansallarla karşılaştırın — planlama sürecinizi geliştirin."
         links={[
-          { label: 'Senaryolar',     href: '/dashboard/planning?tab=scenarios' },
-          { label: 'Gerçek P&L',    href: '/dashboard/finance?tab=pnl' },
+          { label: 'Senaryolar',        href: '/dashboard/planning?tab=scenarios' },
+          { label: 'Gerçek P&L',        href: '/dashboard/finance?tab=pnl' },
           { label: 'Nakit Projeksiyonu', href: '/dashboard/planning?tab=cash-projection' },
         ]}
       />

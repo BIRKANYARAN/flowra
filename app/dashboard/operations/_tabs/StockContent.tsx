@@ -13,6 +13,7 @@ import { ReorderAlertService }                      from '@/lib/services/invento
 import type { ReorderAlertReport }                  from '@/lib/services/inventory/reorder-alert.service'
 import { FifoAuditClient }                          from './_fifo/FifoAuditClient'
 import { SalesVelocityClient }                      from './_velocity/SalesVelocityClient'
+import InventoryTurnoverClient                      from './_inventory/InventoryTurnoverClient'
 
 function holdingDays(entryDate: string): number {
   const today = new Date()
@@ -95,6 +96,9 @@ export async function StockContent({ companyId, userId }: Props) {
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Stok Zekası</div>
         <p className="text-xs text-[#94a3b8] mt-0.5">FIFO lot değerlemesi · stok hareketleri · portföy özeti</p>
       </div>
+
+      {/* Stok Devir Analizi — turnover ratio, DIO, dead stock, shrinkage, reorder alerts */}
+      <InventoryTurnoverClient companyId={companyId} />
 
       {/* Yeniden Sipariş Uyarıları — reorder alert summary + action table */}
       {reorderReport && (reorderReport.out_of_stock_count > 0 || reorderReport.critical_count > 0 || reorderReport.low_count > 0) && (
