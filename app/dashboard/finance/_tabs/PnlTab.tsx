@@ -11,6 +11,7 @@ import Link                          from 'next/link'
 import { PayrollAnalyticsClient }   from '@/app/dashboard/finance/_tabs/_payroll/PayrollAnalyticsClient'
 import { RevenueRecognitionClient } from '@/app/dashboard/finance/_tabs/_recognition/RevenueRecognitionClient'
 import { MarginTrendClient }        from '@/app/dashboard/finance/_tabs/_margin-trend/MarginTrendClient'
+import { EbitdaBridgeClient }       from '@/app/dashboard/finance/_tabs/_ebitda/EbitdaBridgeClient'
 import { FinanceService }           from '@/lib/services/finance.service'
 import { periodForMonth }           from '@/lib/services/finance-rules'
 import { fmtTRY, fmtTRY as fmt, fmtMonthShort as fmtMonth } from '@/lib/format'
@@ -448,6 +449,9 @@ export async function PnlTab({ userId, companyId, glMode = 'shadow' }: Props) {
 
     {/* Kâr Marjı Trend Analizi */}
     <MarginTrendClient companyId={companyId} />
+
+    {/* EBITDA Köprüsü & Faaliyet Kaldıracı */}
+    <EbitdaBridgeClient companyId={companyId} />
 
     {/* Gelir Tanıma — Tahakkuk vs Nakit */}
     <RevenueRecognitionClient companyId={companyId} />
