@@ -22,6 +22,7 @@ import {
 } from '@/lib/services/commercial/concentration-risk.service'
 import CustomerIntelligenceTable from './_intelligence/CustomerIntelligenceTable'
 import RfmSegmentationClient from './_rfm/RfmSegmentationClient'
+import CustomerSegmentProfitabilityClient from './_segment/SegmentProfitabilityClient'
 import CustomerLtvClient from './_ltv/CustomerLtvClient'
 import CustomerConcentrationClient from './_concentration/CustomerConcentrationClient'
 import SegmentProfitabilityClient from './_segments/SegmentProfitabilityClient'
@@ -129,6 +130,9 @@ export async function CustomersContent({ companyId }: Props) {
 
       {/* ── Müşteri RFM Segmentasyonu ─────────────────────────────────────── */}
       <RfmSegmentationClient companyId={companyId} />
+
+      {/* ── Müşteri Segment Kârlılığı (Tip Bazlı) ───────────────────────── */}
+      <CustomerSegmentProfitabilityClient companyId={companyId} />
 
       {/* ── Müşteri Yaşam Boyu Değeri (CLV / LTV) ───────────────────────── */}
       <CustomerLtvClient />

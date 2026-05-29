@@ -24,6 +24,7 @@ import { SupplierPaymentTermsClient } from './_supplier-terms/SupplierPaymentTer
 import { VendorConcentrationClient } from './_vendor/VendorConcentrationClient'
 import { SupplierTermsClient } from './_supplier-terms/SupplierTermsClient'
 import { PayrollAnalyticsClient } from '@/app/dashboard/finance/_tabs/_payroll/PayrollAnalyticsClient'
+import { OperationalEfficiencyClient } from './_efficiency/OperationalEfficiencyClient'
 
 function CommandBarSkeleton() {
   return (
@@ -211,6 +212,9 @@ export async function ExpensesContent({ companyId }: Props) {
 
   return (
     <div className="max-w-4xl space-y-4">
+      {/* ── Operational Efficiency (ops-wide benchmarking) ─────────────────────── */}
+      <OperationalEfficiencyClient companyId={companyId} />
+
       <ObservationRail context="expenses" maxItems={3} />
 
       <Suspense fallback={<CommandBarSkeleton />}>
