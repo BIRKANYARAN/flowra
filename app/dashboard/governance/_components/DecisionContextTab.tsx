@@ -4,6 +4,10 @@ import { useState, useEffect, useCallback } from 'react'
 import { cn }      from '@/components/ui'
 import { fmtTRY }  from '@/lib/format'
 import type { DecisionContextSnapshot, ContextSnapshot } from '@/lib/services/decision-context/decision-context.service'
+import {
+  classifySnapshotAge,
+  computeSnapshotDrift,
+} from '@/lib/services/decision-context/decision-context.service'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -45,6 +49,18 @@ const TREND_ICON: Record<string, string> = {
   up:     '↑',
   down:   '↓',
   stable: '→',
+}
+
+const AGE_STYLES: Record<'fresh' | 'stale' | 'outdated', string> = {
+  fresh:    'bg-green-100  text-green-700  border-green-200',
+  stale:    'bg-amber-100  text-amber-700  border-amber-200',
+  outdated: 'bg-gray-100   text-gray-500   border-gray-200',
+}
+
+const AGE_LABELS: Record<'fresh' | 'stale' | 'outdated', string> = {
+  fresh:    'Güncel',
+  stale:    'Eski',
+  outdated: 'Eskimiş',
 }
 
 // ── Context detail panel ──────────────────────────────────────────────────────
@@ -140,15 +156,19 @@ function ContextDetail({ snapshot }: { snapshot: ContextSnapshot }) {
 function SnapshotCard({
   snap,
   onAnnotated,
+  driftScore,
 }: {
   snap:        DecisionContextSnapshot
   onAnnotated: () => void
+  driftScore?: number
 }) {
   const [expanded,    setExpanded]    = useState(false)
   const [showAnnotate, setShowAnnotate] = useState(false)
   const [annotation,  setAnnotation]  = useState(snap.annotation ?? '')
   const [saving,      setSaving]      = useState(false)
   const ctx = snap.context_snapshot
+
+  const ageBadge = classifySnapshotAge(snap.decision_at, new Date().toISOString())
 
   async function saveAnnotation() {
     if (!annotation.trim()) return
@@ -185,6 +205,14 @@ function SnapshotCard({
             <span className={cn('text-[11px] px-2 py-0.5 rounded border font-semibold', statusStyle)}>
               {STATUS_TR[ctx.financial_state.situation_status] ?? ctx.financial_state.situation_status}
             </span>
+            <span className={cn('text-[11px] px-2 py-0.5 rounded border font-medium', AGE_STYLES[ageBadge])}>
+              {AGE_LABELS[ageBadge]}
+            </span>
+            {driftScore !== undefined && (
+              <span className="text-[11px] px-2 py-0.5 rounded border border-blue-200 bg-blue-50 text-blue-700 font-medium">
+                Drift: {driftScore}
+              </span>
+            )}
           </div>
           <p className="text-sm font-medium text-gray-900 mt-1 leading-snug">{snap.trigger_label}</p>
           {snap.annotation && (
@@ -326,7 +354,7 @@ export default function DecisionContextTab() {
           onClick={() => setShowCapture(v => !v)}
           className="text-xs bg-violet-600 text-white px-3 py-1.5 rounded-lg hover:bg-violet-700 transition-colors"
         >
-          + Anlık Durum Kaydet
+          Anlık Görüntü Al
         </button>
       </div>
 
@@ -382,25 +410,60 @@ export default function DecisionContextTab() {
         </div>
       )}
 
+      {/* Drift summary banner — shown when >=2 snapshots */}
+      {!loading && snapshots.length >= 2 && (() => {
+        const drift = computeSnapshotDrift(
+          snapshots[1].context_snapshot,
+          snapshots[0].context_snapshot,
+        )
+        const driftColor =
+          drift >= 40 ? 'bg-red-50 border-red-200 text-red-700' :
+          drift >= 20 ? 'bg-amber-50 border-amber-200 text-amber-700' :
+                        'bg-green-50 border-green-200 text-green-700'
+        return (
+          <div className={cn('text-xs px-3 py-2 rounded-lg border', driftColor)}>
+            Son iki anlık görüntü arasındaki finansal sapma skoru: <strong>{drift}/100</strong>
+            {drift >= 40 && ' — Önemli değişimler var.'}
+            {drift >= 20 && drift < 40 && ' — Orta düzeyde değişimler var.'}
+            {drift < 20 && ' — Finansal durum görece sabit.'}
+          </div>
+        )
+      })()}
+
       {/* Timeline */}
       {loading ? (
         <div className="py-12 text-center text-sm text-gray-500">Yükleniyor…</div>
       ) : snapshots.length === 0 ? (
-        <div className="py-12 text-center">
+        <div className="py-12 text-center space-y-3">
           <p className="text-sm text-gray-400">Henüz karar bağlamı kaydı yok.</p>
-          <p className="text-xs text-gray-400 mt-1">
-            Önemli bir karar alındığında &quot;Anlık Durum Kaydet&quot; butonunu kullanın.
+          <p className="text-xs text-gray-400">
+            İlk anlık görüntüyü almak için butona tıklayın.
           </p>
+          <button
+            onClick={() => setShowCapture(true)}
+            className="text-xs bg-violet-600 text-white px-4 py-1.5 rounded-lg hover:bg-violet-700 transition-colors"
+          >
+            Anlık Görüntü Al
+          </button>
         </div>
       ) : (
         <div className="space-y-3">
-          {snapshots.map(snap => (
-            <SnapshotCard
-              key={snap.id}
-              snap={snap}
-              onAnnotated={load}
-            />
-          ))}
+          {snapshots.map((snap, idx) => {
+            const driftScore = idx < snapshots.length - 1
+              ? computeSnapshotDrift(
+                  snapshots[idx + 1].context_snapshot,
+                  snap.context_snapshot,
+                )
+              : undefined
+            return (
+              <SnapshotCard
+                key={snap.id}
+                snap={snap}
+                onAnnotated={load}
+                driftScore={driftScore}
+              />
+            )
+          })}
         </div>
       )}
 

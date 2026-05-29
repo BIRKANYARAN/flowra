@@ -2,7 +2,8 @@
 
 import { useState, useCallback, useEffect } from 'react'
 import { cn } from '@/components/ui'
-import type { AuditCheckItem, AuditReadinessReport } from '@/lib/services/governance/audit-readiness.service'
+import type { AuditCheckItem, AuditReadinessReport, AuditCheckCategory } from '@/lib/services/governance/audit-readiness.service'
+import { gradeLabel, countNeedsReview } from '@/lib/services/governance/audit-readiness.service'
 import {
   DOCUMENT_TYPE_LABELS,
   AUDIT_REQUIRED_TYPES,
@@ -259,6 +260,7 @@ export default function AuditReadinessTab() {
   const [acknowledging, setAcknowledging] = useState<string | null>(null)
   const [error, setError]             = useState<string | null>(null)
   const [docSummary, setDocSummary]   = useState<DocumentSummary | null>(null)
+  const [activeCategory, setActiveCategory] = useState<AuditCheckCategory | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -317,6 +319,8 @@ export default function AuditReadinessTab() {
   }
 
   const categories: CategoryKey[] = ['accounting', 'partner', 'governance', 'tax']
+  const needsReviewCount = countNeedsReview(report.items)
+  const visibleCategories = activeCategory ? [activeCategory] : categories
 
   return (
     <div className="space-y-6">
@@ -325,7 +329,7 @@ export default function AuditReadinessTab() {
         <div>
           <h2 className="text-base font-semibold text-gray-900">Denetim Hazırlık Raporu</h2>
           <p className="text-xs text-gray-500 mt-0.5">
-            Hesaplandı: {new Date(report.computed_at).toLocaleString('tr-TR')}
+            Son Denetim Kontrolü: {new Date(report.computed_at).toLocaleString('tr-TR')}
           </p>
         </div>
         <button
@@ -341,7 +345,7 @@ export default function AuditReadinessTab() {
         <div className="flex items-center gap-6">
           <ScoreRing score={report.score} grade={report.grade} />
           <div className="flex-1">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <div className={cn(
                 'text-3xl font-bold px-3 py-1 rounded-xl border',
                 GRADE_COLORS[report.grade] ?? GRADE_COLORS.F,
@@ -350,19 +354,49 @@ export default function AuditReadinessTab() {
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-900">
-                  {report.grade === 'A' ? 'Mükemmel Hazırlık' :
-                   report.grade === 'B' ? 'İyi Hazırlık' :
-                   report.grade === 'C' ? 'Orta Hazırlık' :
-                   report.grade === 'D' ? 'Yetersiz Hazırlık' :
-                   'Kritik Eksiklikler'}
+                  {gradeLabel(report.grade)}
                 </p>
                 <p className="text-xs text-gray-500 mt-0.5">
                   {report.items.filter(i => i.status === 'pass').length} / {report.items.filter(i => i.status !== 'skip').length} kontrol geçildi
                 </p>
               </div>
+              {needsReviewCount > 0 && (
+                <span className="ml-auto text-xs font-semibold px-2.5 py-1 rounded-lg bg-yellow-100 text-yellow-800 border border-yellow-300">
+                  {needsReviewCount} kontrol inceleme bekliyor
+                </span>
+              )}
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Category filter buttons */}
+      <div className="flex flex-wrap gap-2">
+        <button
+          onClick={() => setActiveCategory(null)}
+          className={cn(
+            'text-xs px-3 py-1.5 rounded-lg border transition-colors font-medium',
+            activeCategory === null
+              ? 'bg-gray-900 text-white border-gray-900'
+              : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50',
+          )}
+        >
+          Tümü
+        </button>
+        {categories.map(cat => (
+          <button
+            key={cat}
+            onClick={() => setActiveCategory(cat === activeCategory ? null : cat)}
+            className={cn(
+              'text-xs px-3 py-1.5 rounded-lg border transition-colors font-medium',
+              activeCategory === cat
+                ? 'bg-violet-600 text-white border-violet-600'
+                : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50',
+            )}
+          >
+            {CATEGORY_LABELS[cat]}
+          </button>
+        ))}
       </div>
 
       {/* Category breakdown */}
@@ -373,8 +407,15 @@ export default function AuditReadinessTab() {
       </div>
 
       {/* Checklist by category */}
-      {categories.map(cat => {
+      {visibleCategories.map(cat => {
         const catItems = report.items.filter(i => i.category === cat)
+        if (catItems.length === 0) {
+          return (
+            <div key={cat} className="py-6 text-center text-sm text-gray-400 border border-dashed border-gray-200 rounded-xl">
+              Bu kategoride kontrol bulunmuyor.
+            </div>
+          )
+        }
         return (
           <div key={cat} className="space-y-2">
             <div className="flex items-center gap-2">

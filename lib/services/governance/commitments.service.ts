@@ -89,18 +89,49 @@ export interface ForwardCommitment {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function daysBetween(from: string, to: string): number {
+export function daysBetween(from: string, to: string): number {
   return Math.round(
     (new Date(to).getTime() - new Date(from).getTime()) / 86_400_000,
   )
 }
 
-function toObligationStatus(
+export function toObligationStatus(
   daysUntil: number,
-): 'upcoming' | 'due_soon' | 'overdue' {
+): 'overdue' | 'due_soon' | 'upcoming' {
   if (daysUntil < 0)   return 'overdue'
   if (daysUntil <= 14) return 'due_soon'
   return 'upcoming'
+}
+
+/** Compute total financial exposure from all active forward commitments (null amounts ignored) */
+export function computeTotalExposure(obligations: ForwardObligation[]): number {
+  return obligations.reduce((sum, o) => sum + (o.amount_try ?? 0), 0)
+}
+
+/** Filter obligations by status */
+export function filterObligationsByStatus(
+  obligations: ForwardObligation[],
+  status: string,
+): ForwardObligation[] {
+  return obligations.filter(o => o.status === status)
+}
+
+/** Sort obligations by urgency: overdue first, then due_soon, then upcoming; within each group sort by due_date ascending */
+export function sortByUrgency(obligations: ForwardObligation[]): ForwardObligation[] {
+  const order: Record<string, number> = { overdue: 0, due_soon: 1, upcoming: 2 }
+  return [...obligations].sort((a, b) => {
+    const diff = (order[a.status] ?? 3) - (order[b.status] ?? 3)
+    if (diff !== 0) return diff
+    return a.due_date.localeCompare(b.due_date)
+  })
+}
+
+/** Returns a Turkish summary string: "X vadesi geçmiş, Y yaklaşan, Z toplam" */
+export function buildLedgerSummary(obligations: ForwardObligation[]): string {
+  const overdue  = obligations.filter(o => o.status === 'overdue').length
+  const dueSoon  = obligations.filter(o => o.status === 'due_soon').length
+  const total    = obligations.length
+  return `${overdue} vadesi geçmiş, ${dueSoon} yaklaşan, ${total} toplam`
 }
 
 function addMonths(yyyyMm: string, n: number): string {

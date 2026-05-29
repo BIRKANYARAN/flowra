@@ -561,5 +561,53 @@ export class AuditReadinessService {
   }
 }
 
+// ── Additional pure helpers ───────────────────────────────────────────────────
+
+/**
+ * Returns the most critical failing check across all items.
+ * Priority: 'fail' > 'warn' > 'needs_review'. Returns null if all pass/skip.
+ */
+export function findCriticalFailure(items: AuditCheckItem[]): AuditCheckItem | null {
+  const priority: Record<AuditCheckStatus, number> = {
+    fail:         3,
+    warn:         2,
+    needs_review: 1,
+    pass:         0,
+    skip:         0,
+  }
+
+  let best: AuditCheckItem | null = null
+  for (const item of items) {
+    const p = priority[item.status]
+    if (p === 0) continue
+    if (best === null || p > priority[best.status]) best = item
+  }
+  return best
+}
+
+/** Returns all items belonging to the given category. */
+export function filterByCategory(
+  items: AuditCheckItem[],
+  cat:   AuditCheckCategory,
+): AuditCheckItem[] {
+  return items.filter(i => i.category === cat)
+}
+
+/** Returns the count of items with status 'needs_review'. */
+export function countNeedsReview(items: AuditCheckItem[]): number {
+  return items.filter(i => i.status === 'needs_review').length
+}
+
+/** Returns a human-readable Turkish readiness label for the given grade. */
+export function gradeLabel(grade: AuditReadinessReport['grade']): string {
+  switch (grade) {
+    case 'A': return 'Denetim Hazır'
+    case 'B': return 'Büyük Ölçüde Hazır'
+    case 'C': return 'Kısmen Hazır'
+    case 'D': return 'Eksikler Var'
+    case 'F': return 'Denetim Hazır Değil'
+  }
+}
+
 // ── Re-export helpers for testing ─────────────────────────────────────────────
 export { computeScore, toGrade, categoryStats }

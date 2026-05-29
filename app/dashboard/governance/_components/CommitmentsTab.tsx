@@ -3,6 +3,12 @@
 import { useState, useCallback, useEffect } from 'react'
 import { cn } from '@/components/ui'
 import { fmtTRY, fmtDate } from '@/lib/format'
+import {
+  computeTotalExposure,
+  filterObligationsByStatus,
+  sortByUrgency,
+  buildLedgerSummary,
+} from '@/lib/services/governance/commitments.service'
 import type { CommitmentsLedger, ForwardObligation } from '@/lib/services/governance/commitments.service'
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -439,10 +445,21 @@ function AddCommitmentForm({ onSaved, onCancel }: { onSaved: () => void; onCance
 
 // ── Main CommitmentsTab ────────────────────────────────────────────────────────
 
+type StatusFilter = 'all' | 'overdue' | 'due_soon' | 'upcoming'
+
+const STATUS_FILTER_LABELS: Record<StatusFilter, string> = {
+  all:      'Tümü',
+  overdue:  'Vadesi Geçmiş',
+  due_soon: 'Yakında',
+  upcoming: 'Yaklaşan',
+}
+
 export default function CommitmentsTab() {
-  const [ledger, setLedger]         = useState<CommitmentsLedger | null>(null)
-  const [loading, setLoading]       = useState(true)
-  const [showAddForm, setShowAddForm] = useState(false)
+  const [ledger, setLedger]               = useState<CommitmentsLedger | null>(null)
+  const [loading, setLoading]             = useState(true)
+  const [showAddForm, setShowAddForm]     = useState(false)
+  const [statusFilter, setStatusFilter]   = useState<StatusFilter>('all')
+  const [sortUrgency, setSortUrgency]     = useState(false)
   const today = todayStr()
 
   const load = useCallback(async () => {
@@ -494,9 +511,22 @@ export default function CommitmentsTab() {
     (s, v) => s + v.total_try, 0,
   )
 
-  const overdue  = ledger.obligations.filter(o => o.status === 'overdue')
-  const dueSoon  = ledger.obligations.filter(o => o.status === 'due_soon')
-  const upcoming = ledger.obligations.filter(o => o.status === 'upcoming')
+  const totalExposure = computeTotalExposure(ledger.obligations)
+  const ledgerSummary = buildLedgerSummary(ledger.obligations)
+
+  // Apply status filter
+  const filteredObligations = statusFilter === 'all'
+    ? ledger.obligations
+    : filterObligationsByStatus(ledger.obligations, statusFilter)
+
+  // Apply urgency sort
+  const displayObligations = sortUrgency
+    ? sortByUrgency(filteredObligations)
+    : filteredObligations
+
+  const overdue  = displayObligations.filter(o => o.status === 'overdue')
+  const dueSoon  = displayObligations.filter(o => o.status === 'due_soon')
+  const upcoming = displayObligations.filter(o => o.status === 'upcoming')
 
   return (
     <div className="space-y-6">
@@ -506,6 +536,9 @@ export default function CommitmentsTab() {
           <h2 className="text-base font-semibold text-gray-900">Taahhüt ve Yükümlülük Defteri</h2>
           <p className="text-xs text-gray-500 mt-0.5">
             Bilinen tüm ileriye dönük finansal yükümlülükler — otomatik hesaplanan ve beyan edilen
+          </p>
+          <p className="text-xs text-gray-400 mt-0.5">
+            {ledgerSummary} · <span className="font-medium text-gray-600">₺{fmtTRY(totalExposure)} toplam taahhüt</span>
           </p>
         </div>
         <button
@@ -553,16 +586,62 @@ export default function CommitmentsTab() {
       {/* ── 2. Monthly outlook table ─────────────────────────────────────────── */}
       <MonthlyOutlookTable byMonth={ledger.by_month} />
 
-      {/* ── 3. Obligation list ───────────────────────────────────────────────── */}
+      {/* ── 3. Summary row ───────────────────────────────────────────────────── */}
+      <div className="flex flex-wrap gap-3 p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-600">
+        <span className="font-medium text-gray-800">Özet:</span>
+        <span className="text-red-600 font-semibold">{ledger.overdue_count} vadesi geçmiş</span>
+        <span className="text-gray-300">·</span>
+        <span className="text-amber-600 font-semibold">{ledger.due_soon_count} yakında (14 gün)</span>
+        <span className="text-gray-300">·</span>
+        <span className="text-gray-700 font-semibold">₺{fmtTRY(totalExposure)} toplam maruz kalım</span>
+      </div>
+
+      {/* ── 4. Obligation list ───────────────────────────────────────────────── */}
       <div>
+        {/* Filter pills + sort toggle */}
+        <div className="flex flex-wrap items-center gap-2 mb-3">
+          <div className="flex gap-1">
+            {(Object.keys(STATUS_FILTER_LABELS) as StatusFilter[]).map(f => (
+              <button
+                key={f}
+                onClick={() => setStatusFilter(f)}
+                className={cn(
+                  'text-xs px-2.5 py-1 rounded-full border transition-colors',
+                  statusFilter === f
+                    ? f === 'overdue'  ? 'bg-red-100 text-red-700 border-red-300 font-semibold'
+                    : f === 'due_soon' ? 'bg-amber-100 text-amber-700 border-amber-300 font-semibold'
+                    : f === 'upcoming' ? 'bg-gray-200 text-gray-700 border-gray-300 font-semibold'
+                    : 'bg-violet-100 text-violet-700 border-violet-300 font-semibold'
+                    : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50',
+                )}
+              >
+                {STATUS_FILTER_LABELS[f]}
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={() => setSortUrgency(v => !v)}
+            className={cn(
+              'text-xs px-2.5 py-1 rounded-full border transition-colors ml-auto',
+              sortUrgency
+                ? 'bg-violet-100 text-violet-700 border-violet-300 font-semibold'
+                : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50',
+            )}
+          >
+            {sortUrgency ? '↑ Aciliyete Göre Sıralı' : '↕ Aciliyete Göre Sırala'}
+          </button>
+        </div>
+
         <h3 className="text-sm font-semibold text-gray-800 mb-3">
           Tüm Yükümlülükler
-          <span className="ml-2 text-xs font-normal text-gray-400">({ledger.obligations.length} adet)</span>
+          <span className="ml-2 text-xs font-normal text-gray-400">({displayObligations.length} adet)</span>
         </h3>
 
-        {ledger.obligations.length === 0 && (
+        {displayObligations.length === 0 && (
           <div className="py-10 text-center text-sm text-gray-400">
-            Önümüzdeki 12 ay için kayıtlı yükümlülük yok.
+            {statusFilter === 'all'
+              ? 'Önümüzdeki 12 ay için kayıtlı yükümlülük yok.'
+              : `"${STATUS_FILTER_LABELS[statusFilter]}" filtresinde yükümlülük yok.`}
           </div>
         )}
 
