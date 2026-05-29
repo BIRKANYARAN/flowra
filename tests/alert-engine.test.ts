@@ -319,4 +319,291 @@ describe('CFO accuracy alerts', () => {
     const alerts = evaluateCFOAlerts(CLEAN_CFO, TEST_COMPANY_ID)
     expect(alerts).toHaveLength(0)
   })
+
+  it('trialBalanceImbalance exactly 1.0 → fires BS_IMBALANCED (boundary: >= 1.0)', () => {
+    const alerts = evaluateCFOAlerts({ ...CLEAN_CFO, trialBalanceImbalance: 1.0 }, TEST_COMPANY_ID)
+    const imbalanced = alerts.find(a => a.rule_type === 'BS_IMBALANCED')
+    expect(imbalanced).toBeDefined()
+    expect(imbalanced!.severity).toBe('critical')
+  })
+
+  it('trialBalanceImbalance exactly 0.99 → fires BS_ROUNDING, not BS_IMBALANCED', () => {
+    const alerts = evaluateCFOAlerts({ ...CLEAN_CFO, trialBalanceImbalance: 0.99 }, TEST_COMPANY_ID)
+    const rounding   = alerts.find(a => a.rule_type === 'BS_ROUNDING')
+    const imbalanced = alerts.find(a => a.rule_type === 'BS_IMBALANCED')
+    expect(rounding).toBeDefined()
+    expect(rounding!.severity).toBe('warning')
+    expect(imbalanced).toBeUndefined()
+  })
+
+  it('trialBalanceImbalance 0.0 → no BS_ROUNDING (boundary: >= 0.01 required)', () => {
+    const alerts = evaluateCFOAlerts({ ...CLEAN_CFO, trialBalanceImbalance: 0.0 }, TEST_COMPANY_ID)
+    expect(alerts.find(a => a.rule_type === 'BS_ROUNDING')).toBeUndefined()
+    expect(alerts.find(a => a.rule_type === 'BS_IMBALANCED')).toBeUndefined()
+  })
+
+  it('trialBalanceImbalance exactly 0.01 → fires BS_ROUNDING (boundary: just inside)', () => {
+    const alerts = evaluateCFOAlerts({ ...CLEAN_CFO, trialBalanceImbalance: 0.01 }, TEST_COMPANY_ID)
+    expect(alerts.find(a => a.rule_type === 'BS_ROUNDING')).toBeDefined()
+  })
+
+  it('bankStatementBalance missing (undefined) → no BANK_RECONCILIATION_GAP', () => {
+    const inputs: typeof CLEAN_CFO = { ...CLEAN_CFO }
+    delete (inputs as any).bankStatementBalance
+    const alerts = evaluateCFOAlerts(inputs, TEST_COMPANY_ID)
+    expect(alerts.find(a => a.rule_type === 'BANK_RECONCILIATION_GAP')).toBeUndefined()
+  })
+
+  it('bank gap exactly 100 → no BANK_RECONCILIATION_GAP (boundary: > 100 required)', () => {
+    const alerts = evaluateCFOAlerts({
+      ...CLEAN_CFO,
+      cashBookBalance:      100_000,
+      bankStatementBalance: 99_900,  // gap = 100, NOT > 100
+    }, TEST_COMPANY_ID)
+    expect(alerts.find(a => a.rule_type === 'BANK_RECONCILIATION_GAP')).toBeUndefined()
+  })
+
+  it('bank gap 101 → fires BANK_RECONCILIATION_GAP (boundary: just over)', () => {
+    const alerts = evaluateCFOAlerts({
+      ...CLEAN_CFO,
+      cashBookBalance:      100_000,
+      bankStatementBalance: 99_899,  // gap = 101
+    }, TEST_COMPANY_ID)
+    expect(alerts.find(a => a.rule_type === 'BANK_RECONCILIATION_GAP')).toBeDefined()
+  })
+
+  it('bank gap with reversed sign (statement > book) still detected', () => {
+    // Uses Math.abs — so direction doesn't matter
+    const alerts = evaluateCFOAlerts({
+      ...CLEAN_CFO,
+      cashBookBalance:      99_800,
+      bankStatementBalance: 100_000,  // gap = 200 > 100 (reversed)
+    }, TEST_COMPANY_ID)
+    expect(alerts.find(a => a.rule_type === 'BANK_RECONCILIATION_GAP')).toBeDefined()
+  })
+
+  it('fifoIntegrityIssues 0 → no FIFO_INTEGRITY', () => {
+    const alerts = evaluateCFOAlerts({ ...CLEAN_CFO, fifoIntegrityIssues: 0 }, TEST_COMPANY_ID)
+    expect(alerts.find(a => a.rule_type === 'FIFO_INTEGRITY')).toBeUndefined()
+  })
+
+  it('fifoIntegrityIssues 1 → fires FIFO_INTEGRITY', () => {
+    const alerts = evaluateCFOAlerts({ ...CLEAN_CFO, fifoIntegrityIssues: 1 }, TEST_COMPANY_ID)
+    expect(alerts.find(a => a.rule_type === 'FIFO_INTEGRITY')).toBeDefined()
+  })
+
+  it('legalReserveShortfall 0 → no LEGAL_RESERVE_SHORTFALL', () => {
+    const alerts = evaluateCFOAlerts({ ...CLEAN_CFO, legalReserveShortfall: 0 }, TEST_COMPANY_ID)
+    expect(alerts.find(a => a.rule_type === 'LEGAL_RESERVE_SHORTFALL')).toBeUndefined()
+  })
+
+  it('legalReserveShortfall 1 (smallest positive) → fires LEGAL_RESERVE_SHORTFALL', () => {
+    const alerts = evaluateCFOAlerts({ ...CLEAN_CFO, legalReserveShortfall: 1 }, TEST_COMPANY_ID)
+    expect(alerts.find(a => a.rule_type === 'LEGAL_RESERVE_SHORTFALL')).toBeDefined()
+  })
+
+  it('all CFO alerts fire together with all bad inputs', () => {
+    const alerts = evaluateCFOAlerts({
+      trialBalanceImbalance:  5.00,   // BS_IMBALANCED
+      cashBookBalance:        100_000,
+      bankStatementBalance:   99_700, // BANK_RECONCILIATION_GAP
+      fifoIntegrityIssues:    2,      // FIFO_INTEGRITY
+      legalReserveShortfall:  10_000, // LEGAL_RESERVE_SHORTFALL
+    }, TEST_COMPANY_ID)
+    expect(alerts.length).toBe(4)
+    const ruleTypes = alerts.map(a => a.rule_type)
+    expect(ruleTypes).toContain('BS_IMBALANCED')
+    expect(ruleTypes).toContain('BANK_RECONCILIATION_GAP')
+    expect(ruleTypes).toContain('FIFO_INTEGRITY')
+    expect(ruleTypes).toContain('LEGAL_RESERVE_SHORTFALL')
+  })
+
+  it('CFO alerts sorted critical-first', () => {
+    const alerts = evaluateCFOAlerts({
+      trialBalanceImbalance:  5.00,  // critical
+      cashBookBalance:        100_000,
+      bankStatementBalance:   99_700, // warning
+      fifoIntegrityIssues:    2,      // critical
+      legalReserveShortfall:  1_000,  // warning
+    }, TEST_COMPANY_ID)
+    const firstWarningIdx = alerts.findIndex(a => a.severity === 'warning')
+    const lastCriticalIdx = alerts.reduce((last, a, i) => a.severity === 'critical' ? i : last, -1)
+    if (firstWarningIdx !== -1 && lastCriticalIdx !== -1) {
+      expect(firstWarningIdx).toBeGreaterThan(lastCriticalIdx)
+    }
+  })
+
+  it('each CFO alert has an id, triggeredAt, actionHref, and actionLabel', () => {
+    const alerts = evaluateCFOAlerts({
+      ...CLEAN_CFO,
+      fifoIntegrityIssues: 1,
+    }, TEST_COMPANY_ID)
+    alerts.forEach(alert => {
+      expect(typeof alert.id).toBe('string')
+      expect(alert.id.length).toBeGreaterThan(0)
+      expect(typeof alert.triggeredAt).toBe('string')
+      expect(typeof alert.actionHref).toBe('string')
+      expect(typeof alert.actionLabel).toBe('string')
+    })
+  })
+})
+
+// ── evaluateAlerts — additional boundary + coverage tests ────────────────────
+
+describe('evaluateAlerts — additional boundary tests', () => {
+
+  it('overdueCount30 = 0 (exactly 0) → no RECEIVABLE_30 even if total is high', () => {
+    // Rule requires overdueCount30 > 0
+    const alerts = evaluateAlerts({ ...CLEAN, overdueCount30: 0, overdueTotal30: 100_000 })
+    expect(alerts.find(a => a.rule_type === 'RECEIVABLE_30')).toBeUndefined()
+  })
+
+  it('overdueCount60 = 0 (exactly 0) → no RECEIVABLE_60 even if total is high', () => {
+    const alerts = evaluateAlerts({ ...CLEAN, overdueCount60: 0, overdueTotal60: 100_000 })
+    expect(alerts.find(a => a.rule_type === 'RECEIVABLE_60')).toBeUndefined()
+  })
+
+  it('overdueTotal30 exactly 500 → no RECEIVABLE_30 (> 500 required)', () => {
+    const alerts = evaluateAlerts({ ...CLEAN, overdueCount30: 1, overdueTotal30: 500 })
+    expect(alerts.find(a => a.rule_type === 'RECEIVABLE_30')).toBeUndefined()
+  })
+
+  it('overdueTotal30 exactly 501 → fires RECEIVABLE_30', () => {
+    const alerts = evaluateAlerts({ ...CLEAN, overdueCount30: 1, overdueTotal30: 501 })
+    expect(alerts.find(a => a.rule_type === 'RECEIVABLE_30')).toBeDefined()
+  })
+
+  it('cashRunwayDays = -1 → no runway alert (profitable)', () => {
+    const alerts = evaluateAlerts({ ...CLEAN, cashRunwayDays: -1 })
+    expect(alerts.find(a => a.rule_type === 'CASH_RUNWAY_30')).toBeUndefined()
+    expect(alerts.find(a => a.rule_type === 'CASH_RUNWAY_90')).toBeUndefined()
+  })
+
+  it('cashRunwayDays = 0 → fires CASH_RUNWAY_30 (boundary: <= 30)', () => {
+    const alerts = evaluateAlerts({ ...CLEAN, cashRunwayDays: 0 })
+    expect(alerts.find(a => a.rule_type === 'CASH_RUNWAY_30')).toBeDefined()
+  })
+
+  it('cashRunwayDays = 30 → fires CASH_RUNWAY_30 (boundary: exactly 30)', () => {
+    const alerts = evaluateAlerts({ ...CLEAN, cashRunwayDays: 30 })
+    expect(alerts.find(a => a.rule_type === 'CASH_RUNWAY_30')).toBeDefined()
+  })
+
+  it('cashRunwayDays = 31 → fires CASH_RUNWAY_90 not CASH_RUNWAY_30', () => {
+    const alerts = evaluateAlerts({ ...CLEAN, cashRunwayDays: 31 })
+    expect(alerts.find(a => a.rule_type === 'CASH_RUNWAY_90')).toBeDefined()
+    expect(alerts.find(a => a.rule_type === 'CASH_RUNWAY_30')).toBeUndefined()
+  })
+
+  it('cashRunwayDays = 90 → fires CASH_RUNWAY_90 (boundary: <= 90)', () => {
+    const alerts = evaluateAlerts({ ...CLEAN, cashRunwayDays: 90 })
+    expect(alerts.find(a => a.rule_type === 'CASH_RUNWAY_90')).toBeDefined()
+  })
+
+  it('cashRunwayDays = 91 → no runway alert (> 90 days is ok)', () => {
+    const alerts = evaluateAlerts({ ...CLEAN, cashRunwayDays: 91 })
+    expect(alerts.find(a => a.rule_type === 'CASH_RUNWAY_90')).toBeUndefined()
+    expect(alerts.find(a => a.rule_type === 'CASH_RUNWAY_30')).toBeUndefined()
+  })
+
+  it('maxBurdenScoreAbs = 0.20 → no PARTNER_BURDEN (> 0.20 required)', () => {
+    const alerts = evaluateAlerts({ ...CLEAN, maxBurdenScoreAbs: 0.20 })
+    expect(alerts.find(a => a.rule_type === 'PARTNER_BURDEN')).toBeUndefined()
+  })
+
+  it('maxBurdenScoreAbs = 0.201 → fires PARTNER_BURDEN', () => {
+    const alerts = evaluateAlerts({ ...CLEAN, maxBurdenScoreAbs: 0.201 })
+    expect(alerts.find(a => a.rule_type === 'PARTNER_BURDEN')).toBeDefined()
+  })
+
+  it('nextTrancheDueDays = 14 → fires PARTNER_LOAN_DUE (boundary: <= 14)', () => {
+    const alerts = evaluateAlerts({ ...CLEAN, nextTrancheDueDays: 14, nextTrancheAmount: 10_000 })
+    expect(alerts.find(a => a.rule_type === 'PARTNER_LOAN_DUE')).toBeDefined()
+  })
+
+  it('nextTrancheDueDays = 15 → no PARTNER_LOAN_DUE (> 14 days)', () => {
+    const alerts = evaluateAlerts({ ...CLEAN, nextTrancheDueDays: 15, nextTrancheAmount: 10_000 })
+    expect(alerts.find(a => a.rule_type === 'PARTNER_LOAN_DUE')).toBeUndefined()
+  })
+
+  it('nextTrancheDueDays = -1 → no PARTNER_LOAN_DUE (no tranche due)', () => {
+    const alerts = evaluateAlerts({ ...CLEAN, nextTrancheDueDays: -1 })
+    expect(alerts.find(a => a.rule_type === 'PARTNER_LOAN_DUE')).toBeUndefined()
+  })
+
+  it('openPeriodDaysOverdue = 10 → no PERIOD_NOT_CLOSED (> 10 required)', () => {
+    const alerts = evaluateAlerts({ ...CLEAN, openPeriodDaysOverdue: 10 })
+    expect(alerts.find(a => a.rule_type === 'PERIOD_NOT_CLOSED')).toBeUndefined()
+  })
+
+  it('openPeriodDaysOverdue = 11 → fires PERIOD_NOT_CLOSED', () => {
+    const alerts = evaluateAlerts({ ...CLEAN, openPeriodDaysOverdue: 11 })
+    expect(alerts.find(a => a.rule_type === 'PERIOD_NOT_CLOSED')).toBeDefined()
+  })
+
+  it('partnerLoanConcentration = 0.80 → no CONCENTRATION (> 0.80 required)', () => {
+    const alerts = evaluateAlerts({ ...CLEAN, partnerLoanConcentration: 0.80 })
+    expect(alerts.find(a => a.rule_type === 'CONCENTRATION')).toBeUndefined()
+  })
+
+  it('partnerLoanConcentration = 0.81 → fires CONCENTRATION', () => {
+    const alerts = evaluateAlerts({ ...CLEAN, partnerLoanConcentration: 0.81 })
+    expect(alerts.find(a => a.rule_type === 'CONCENTRATION')).toBeDefined()
+  })
+
+  it('each alert has required fields', () => {
+    const alerts = evaluateAlerts({
+      ...CLEAN,
+      overdueCount30: 2,
+      overdueTotal30: 50_000,
+      cashRunwayDays: 20,
+    })
+    alerts.forEach(alert => {
+      expect(typeof alert.id).toBe('string')
+      expect(typeof alert.rule_type).toBe('string')
+      expect(typeof alert.severity).toBe('string')
+      expect(typeof alert.title).toBe('string')
+      expect(typeof alert.detail).toBe('string')
+      expect(typeof alert.actionLabel).toBe('string')
+      expect(typeof alert.actionHref).toBe('string')
+      expect(typeof alert.triggeredAt).toBe('string')
+    })
+  })
+
+  it('equityCallOverdueDays exactly 0 → no EQUITY_GAP_OVERDUE (> 0 required)', () => {
+    const alerts = evaluateAlerts({ ...CLEAN, equityGapTry: 50_000, equityCallOverdueDays: 0 })
+    expect(alerts.find(a => a.rule_type === 'EQUITY_GAP_OVERDUE')).toBeUndefined()
+  })
+
+  it('equityCallOverdueDays = 1 → fires EQUITY_GAP_OVERDUE', () => {
+    const alerts = evaluateAlerts({ ...CLEAN, equityGapTry: 50_000, equityCallOverdueDays: 1 })
+    expect(alerts.find(a => a.rule_type === 'EQUITY_GAP_OVERDUE')).toBeDefined()
+  })
+
+  it('RECEIVABLE_30 amount field matches overdueTotal30', () => {
+    const alerts = evaluateAlerts({ ...CLEAN, overdueCount30: 2, overdueTotal30: 75_000 })
+    const alert = alerts.find(a => a.rule_type === 'RECEIVABLE_30')
+    expect(alert?.amount).toBe(75_000)
+  })
+
+  it('RECEIVABLE_60 amount field matches overdueTotal60', () => {
+    const alerts = evaluateAlerts({ ...CLEAN, overdueCount60: 1, overdueTotal60: 120_000 })
+    const alert = alerts.find(a => a.rule_type === 'RECEIVABLE_60')
+    expect(alert?.amount).toBe(120_000)
+  })
+
+  it('DSR_STRAINED not fired when DSR = 0.70 exactly (boundary <= 0.70)', () => {
+    const alerts = evaluateAlerts({ ...CLEAN, debtServiceRatio: 0.70 })
+    const strained = alerts.find(a => a.rule_type === 'DSR_STRAINED')
+    const high     = alerts.find(a => a.rule_type === 'DSR_HIGH')
+    expect(strained).toBeDefined()  // 0.70 is > 0.50 and <= 0.70 → strained
+    expect(high).toBeUndefined()    // 0.70 is NOT > 0.70
+  })
+
+  it('monthlyNetIncome < 0 (loss) makes runway detail mention "zarar"', () => {
+    const alerts = evaluateAlerts({ ...CLEAN, cashRunwayDays: 20, monthlyNetIncome: -10_000 })
+    const alert = alerts.find(a => a.rule_type === 'CASH_RUNWAY_30')
+    expect(alert).toBeDefined()
+    expect(alert!.detail).toContain('zarar')
+  })
 })

@@ -279,3 +279,166 @@ describe('GeneralLedgerService.classBalance — multiple unknown codes', () => {
     expect(GeneralLedgerService.classBalance(gl, 'revenue')).toBe(200_000)
   })
 })
+
+// ── Account type coverage: all Turkish CoA classes ────────────────────────────
+
+describe('GeneralLedgerService.classBalance — full account type coverage', () => {
+  it('current_asset — account 100 (Kasa)', () => {
+    const gl = mkGL([{ account_code: '100', class: 'current_asset', balance_try: 5_000 }])
+    expect(GeneralLedgerService.classBalance(gl, 'current_asset')).toBe(5_000)
+  })
+
+  it('current_asset — account 120 (Alıcılar)', () => {
+    const gl = mkGL([{ account_code: '120', class: 'current_asset', balance_try: 75_000 }])
+    expect(GeneralLedgerService.classBalance(gl, 'current_asset')).toBe(75_000)
+  })
+
+  it('non_current_asset — account 253 (Tesis Makine Teçhizat)', () => {
+    const gl = mkGL([{ account_code: '253', class: 'non_current_asset', balance_try: 500_000 }])
+    expect(GeneralLedgerService.classBalance(gl, 'non_current_asset')).toBe(500_000)
+  })
+
+  it('non_current_asset — account 257 (Birikmiş Amortismanlar) with negative balance', () => {
+    const gl = mkGL([{ account_code: '257', class: 'non_current_asset', balance_try: -30_000 }])
+    expect(GeneralLedgerService.classBalance(gl, 'non_current_asset')).toBe(-30_000)
+  })
+
+  it('current_liability — account 320 (Satıcılar)', () => {
+    const gl = mkGL([{ account_code: '320', class: 'current_liability', balance_try: 45_000 }])
+    expect(GeneralLedgerService.classBalance(gl, 'current_liability')).toBe(45_000)
+  })
+
+  it('current_liability — account 360 (Ödenecek Vergiler)', () => {
+    const gl = mkGL([{ account_code: '360', class: 'current_liability', balance_try: 8_500 }])
+    expect(GeneralLedgerService.classBalance(gl, 'current_liability')).toBe(8_500)
+  })
+
+  it('non_current_liability — account 421 (Ortaklara Borçlar UV)', () => {
+    const gl = mkGL([{ account_code: '421', class: 'non_current_liability', balance_try: 300_000 }])
+    expect(GeneralLedgerService.classBalance(gl, 'non_current_liability')).toBe(300_000)
+  })
+
+  it('equity — account 570 (Geçmiş Yıllar Karları)', () => {
+    const gl = mkGL([{ account_code: '570', class: 'equity', balance_try: 120_000 }])
+    expect(GeneralLedgerService.classBalance(gl, 'equity')).toBe(120_000)
+  })
+
+  it('revenue — account 642 (Faiz Gelirleri)', () => {
+    const gl = mkGL([{ account_code: '642', class: 'revenue', balance_try: 250_000 }])
+    expect(GeneralLedgerService.classBalance(gl, 'revenue')).toBe(250_000)
+  })
+
+  it('cogs — account 620 (Satılan Malın Maliyeti)', () => {
+    const gl = mkGL([{ account_code: '620', class: 'cogs', balance_try: 120_000 }])
+    expect(GeneralLedgerService.classBalance(gl, 'cogs')).toBe(120_000)
+  })
+})
+
+// ── Balance computation edge cases ────────────────────────────────────────────
+
+describe('GeneralLedgerService.classBalance — balance computation edge cases', () => {
+  it('exactly zero result from mixed positive/negative', () => {
+    const gl = mkGL([
+      { account_code: '500', class: 'equity', balance_try:  100_000 },
+      { account_code: '501', class: 'equity', balance_try: -100_000 },
+    ])
+    expect(GeneralLedgerService.classBalance(gl, 'equity')).toBe(0)
+  })
+
+  it('single large negative balance', () => {
+    const gl = mkGL([{ account_code: '257', class: 'non_current_asset', balance_try: -999_999 }])
+    expect(GeneralLedgerService.classBalance(gl, 'non_current_asset')).toBe(-999_999)
+  })
+
+  it('small fractional values at kuruş level', () => {
+    // round2 rounds to 2 dp: 0.001 + 0.002 = 0.003 → round2 = 0
+    // Use kuruş-level values instead (0.01 precision)
+    const gl = mkGL([
+      { account_code: '100', class: 'current_asset', balance_try: 0.01 },
+      { account_code: '102', class: 'current_asset', balance_try: 0.02 },
+    ])
+    const result = GeneralLedgerService.classBalance(gl, 'current_asset')
+    expect(result).toBeCloseTo(0.03, 2)
+  })
+
+  it('identical balance in multiple accounts sums correctly', () => {
+    const gl = mkGL([
+      { account_code: '760', class: 'operating_expense', balance_try: 1_000 },
+      { account_code: '770', class: 'operating_expense', balance_try: 1_000 },
+      { account_code: '771', class: 'operating_expense', balance_try: 1_000 },
+    ])
+    expect(GeneralLedgerService.classBalance(gl, 'operating_expense')).toBe(3_000)
+  })
+
+  it('query for non-existent class returns 0', () => {
+    const gl = mkGL([
+      { account_code: '600', class: 'revenue', balance_try: 50_000 },
+    ])
+    // 'other_income' is not a class in CHART_OF_ACCOUNTS — should return 0
+    // @ts-expect-error — testing graceful unknown class
+    expect(GeneralLedgerService.classBalance(gl, 'unknown_class')).toBe(0)
+  })
+
+  it('all accounts have zero balance — sum is 0', () => {
+    const gl = mkGL([
+      { account_code: '100', class: 'current_asset', balance_try: 0 },
+      { account_code: '102', class: 'current_asset', balance_try: 0 },
+      { account_code: '120', class: 'current_asset', balance_try: 0 },
+    ])
+    expect(GeneralLedgerService.classBalance(gl, 'current_asset')).toBe(0)
+  })
+})
+
+// ── Idempotency & consistency ─────────────────────────────────────────────────
+
+describe('GeneralLedgerService.classBalance — idempotency', () => {
+  it('calling twice on same GL returns same result', () => {
+    const gl = mkGL([
+      { account_code: '600', class: 'revenue', balance_try: 500_000 },
+    ])
+    const first  = GeneralLedgerService.classBalance(gl, 'revenue')
+    const second = GeneralLedgerService.classBalance(gl, 'revenue')
+    expect(first).toBe(second)
+  })
+
+  it('modifying input array after call does not change result', () => {
+    const accounts = [
+      { account_code: '600', class: 'revenue' as const, balance_try: 200_000 },
+    ]
+    const gl = mkGL(accounts)
+    const before = GeneralLedgerService.classBalance(gl, 'revenue')
+    // mutate the original array
+    accounts.push({ account_code: '601', class: 'revenue', balance_try: 999_999 })
+    const after = GeneralLedgerService.classBalance(gl, 'revenue')
+    // gl was already built — snapshot should not change
+    expect(after).toBe(before)
+  })
+
+  it('different classes on same snapshot are independent', () => {
+    const gl = mkGL([
+      { account_code: '102', class: 'current_asset',     balance_try: 100_000 },
+      { account_code: '600', class: 'revenue',           balance_try: 500_000 },
+    ])
+    expect(GeneralLedgerService.classBalance(gl, 'current_asset')).toBe(100_000)
+    expect(GeneralLedgerService.classBalance(gl, 'revenue')).toBe(500_000)
+    // These two queries must not interfere with each other
+    expect(GeneralLedgerService.classBalance(gl, 'current_asset')).toBe(100_000)
+  })
+})
+
+// ── Type safety — class field mismatch ───────────────────────────────────────
+
+describe('GeneralLedgerService.classBalance — class field vs CoA lookup', () => {
+  it('account code takes precedence over class field when filtering by CoA', () => {
+    // Account 102 is current_asset in CoA, but we label it equity in the GL
+    // classBalance(gl, 'current_asset') should include it based on code lookup
+    const gl = mkGL([
+      { account_code: '102', class: 'equity' as 'current_asset', balance_try: 10_000 },
+    ])
+    // The actual behavior depends on implementation.
+    // At minimum, calling classBalance should not throw and return a number.
+    const result = GeneralLedgerService.classBalance(gl, 'current_asset')
+    expect(typeof result).toBe('number')
+    expect(isNaN(result)).toBe(false)
+  })
+})

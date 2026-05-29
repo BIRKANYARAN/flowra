@@ -318,4 +318,245 @@ describe('computeMultiScenario — scenario ordering', () => {
     const result = computeMultiScenario(mkInput())
     expect(result.pessimistic.total_opex).toBeGreaterThan(result.base.total_opex)
   })
+
+  it('optimistic total_net > base total_net', () => {
+    const result = computeMultiScenario(mkInput())
+    expect(result.optimistic.total_net).toBeGreaterThan(result.base.total_net)
+  })
+
+  it('pessimistic total_net < base total_net', () => {
+    const result = computeMultiScenario(mkInput())
+    expect(result.pessimistic.total_net).toBeLessThan(result.base.total_net)
+  })
+})
+
+// ── computeStrategicScenario — period boundaries ──────────────────────────────
+
+describe('computeStrategicScenario — period boundaries', () => {
+  it('period_months = 1 returns exactly 1 month', () => {
+    const result = computeStrategicScenario(mkInput({ period_months: 1 }))
+    expect(result.months).toHaveLength(1)
+  })
+
+  it('period_months = 24 returns exactly 24 months', () => {
+    const result = computeStrategicScenario(mkInput({ period_months: 24 }))
+    expect(result.months).toHaveLength(24)
+  })
+
+  it('period_months = 6 cum_net at last month equals total_net', () => {
+    const result = computeStrategicScenario(mkInput({ period_months: 6 }))
+    const lastMonth = result.months[5]
+    expect(lastMonth.cum_net).toBeCloseTo(result.total_net, 1)
+  })
+
+  it('zero revenue: all months have revenue = 0 (uniform)', () => {
+    const result = computeStrategicScenario(mkInput({ target_annual_revenue: 0 }))
+    result.months.forEach(m => expect(m.revenue).toBe(0))
+  })
+
+  it('zero expenses: opex is 0 when no expenses', () => {
+    const result = computeStrategicScenario(mkInput({ base_monthly_expenses: [] }))
+    result.months.forEach(m => expect(m.opex).toBe(0))
+  })
+
+  it('zero revenue, zero expenses: ebitda = 0 every month', () => {
+    const result = computeStrategicScenario(mkInput({
+      target_annual_revenue: 0,
+      base_monthly_expenses: [],
+    }))
+    result.months.forEach(m => expect(m.ebitda).toBe(0))
+  })
+})
+
+// ── computeStrategicScenario — pressure_status ────────────────────────────────
+
+describe('computeStrategicScenario — pressure_status from DSR', () => {
+  it('no debt → DSR = 0 → pressure_status = healthy', () => {
+    const result = computeStrategicScenario(mkInput())
+    result.months.forEach(m => {
+      expect(m.pressure_status).toBe('healthy')
+      expect(m.dsr).toBe(0)
+    })
+  })
+
+  it('small debt with high revenue → DSR < 0.30 → healthy', () => {
+    const result = computeStrategicScenario(mkInput({
+      target_annual_revenue: 10_000_000,
+      debt_tranches: [{ label: 'Small', monthly_interest: 1_000, monthly_repayment: 1_000, remaining_months: 12 }],
+    }))
+    result.months.forEach(m => {
+      expect(m.pressure_status).toBe('healthy')
+    })
+  })
+
+  it('large debt with low revenue → DSR >= 0.80 → insolvent', () => {
+    const result = computeStrategicScenario(mkInput({
+      target_annual_revenue: 120_000,  // 10K/month
+      debt_tranches: [{ label: 'Heavy', monthly_interest: 5_000, monthly_repayment: 5_000, remaining_months: 12 }],
+    }))
+    // debt service = 10K, revenue = 10K → DSR = 1.0 → insolvent
+    result.months.forEach(m => {
+      expect(m.pressure_status).toBe('insolvent')
+    })
+  })
+})
+
+// ── computeStrategicScenario — tax_rate override ──────────────────────────────
+
+describe('computeStrategicScenario — tax_rate override', () => {
+  it('tax_rate = 0 → tax = 0 for all profitable months', () => {
+    const result = computeStrategicScenario(mkInput({ tax_rate: 0 }))
+    result.months.forEach(m => {
+      if (m.ebt > 0) expect(m.tax).toBe(0)
+    })
+  })
+
+  it('tax_rate = 50 → tax = 50% of ebt when profitable', () => {
+    const result = computeStrategicScenario(mkInput({ tax_rate: 50 }))
+    for (const m of result.months) {
+      if (m.ebt > 0) {
+        expect(m.tax).toBeCloseTo(m.ebt * 0.50, 0)
+      }
+    }
+  })
+
+  it('higher tax_rate → lower net_income for same revenue/expense', () => {
+    const low  = computeStrategicScenario(mkInput({ tax_rate: 10 }))
+    const high = computeStrategicScenario(mkInput({ tax_rate: 40 }))
+    expect(high.total_net).toBeLessThan(low.total_net)
+  })
+
+  it('total_net = total_ebitda - total_interest - total_tax', () => {
+    const result = computeStrategicScenario(mkInput())
+    expect(result.total_net).toBeCloseTo(
+      result.total_ebitda - result.total_interest - result.total_tax, 0
+    )
+  })
+})
+
+// ── computeStrategicScenario — monotonicity of cum_net ───────────────────────
+
+describe('computeStrategicScenario — cum_net monotonicity', () => {
+  it('profitable scenario: cum_net is non-decreasing', () => {
+    const result = computeStrategicScenario(mkInput({
+      target_annual_revenue: 5_000_000,
+      base_monthly_expenses: [{ category: 'salary', amount_try: 50_000 }],
+    }))
+    for (let i = 1; i < result.months.length; i++) {
+      expect(result.months[i].cum_net).toBeGreaterThanOrEqual(result.months[i - 1].cum_net)
+    }
+  })
+
+  it('loss scenario: cum_net is non-increasing', () => {
+    const result = computeStrategicScenario(mkInput({
+      target_annual_revenue: 12_000,  // ₺1K/month
+      base_monthly_expenses: [{ category: 'salary', amount_try: 100_000 }],
+    }))
+    for (let i = 1; i < result.months.length; i++) {
+      expect(result.months[i].cum_net).toBeLessThanOrEqual(result.months[i - 1].cum_net)
+    }
+  })
+})
+
+// ── computeStrategicScenario — multiple expense categories ───────────────────
+
+describe('computeStrategicScenario — multiple expense categories', () => {
+  it('opex = sum of all expense categories', () => {
+    const result = computeStrategicScenario(mkInput({
+      base_monthly_expenses: [
+        { category: 'salary',    amount_try: 40_000 },
+        { category: 'rent',      amount_try: 10_000 },
+        { category: 'software',  amount_try:  5_000 },
+        { category: 'marketing', amount_try:  5_000 },
+      ],
+    }))
+    result.months.forEach(m => {
+      expect(m.opex).toBeCloseTo(60_000, 0)
+    })
+  })
+
+  it('overriding to 0 effectively removes a category', () => {
+    const result = computeStrategicScenario(mkInput({
+      base_monthly_expenses: [
+        { category: 'salary', amount_try: 50_000 },
+        { category: 'rent',   amount_try: 10_000 },
+      ],
+      expense_overrides: { rent: 0 },
+    }))
+    result.months.forEach(m => {
+      expect(m.opex).toBeCloseTo(50_000, 0)
+    })
+  })
+
+  it('monthly_compensation of 0 does not change opex', () => {
+    const base = computeStrategicScenario(mkInput())
+    const withZeroComp = computeStrategicScenario(mkInput({ monthly_compensation: 0 }))
+    expect(withZeroComp.months[0].opex).toBeCloseTo(base.months[0].opex, 0)
+  })
+})
+
+// ── computeStrategicScenario — avg_dsr calculation ───────────────────────────
+
+describe('computeStrategicScenario — avg_dsr', () => {
+  it('no debt → avg_dsr = 0', () => {
+    const result = computeStrategicScenario(mkInput())
+    expect(result.avg_dsr).toBe(0)
+  })
+
+  it('avg_dsr = total_debt_service / total_revenue when revenue > 0', () => {
+    const result = computeStrategicScenario(mkInput({
+      debt_tranches: [{ label: 'Loan', monthly_interest: 5_000, monthly_repayment: 5_000, remaining_months: 12 }],
+    }))
+    if (result.total_revenue > 0) {
+      expect(result.avg_dsr).toBeCloseTo(result.total_debt_service / result.total_revenue, 2)
+    }
+  })
+
+  it('avg_dsr = 0 when total_revenue = 0 and no debt', () => {
+    const result = computeStrategicScenario(mkInput({
+      target_annual_revenue: 0,
+      base_monthly_expenses: [],
+    }))
+    expect(result.avg_dsr).toBe(0)
+  })
+})
+
+// ── computeMultiScenario — recommended selection logic ───────────────────────
+
+describe('computeMultiScenario — recommended selection', () => {
+  it('for healthy scenario, optimistic is recommended (highest net + viable)', () => {
+    const result = computeMultiScenario(mkInput({
+      target_annual_revenue: 5_000_000,
+      base_monthly_expenses: [{ category: 'salary', amount_try: 50_000 }],
+    }))
+    // All scenarios are viable; optimistic has highest net
+    expect(result.recommended).toBe('optimistic')
+  })
+
+  it('recommendation_reason contains TRY amount', () => {
+    const result = computeMultiScenario(mkInput())
+    expect(result.recommendation_reason).toMatch(/₺/)
+  })
+
+  it('base scenario scenario_name is "Baz"', () => {
+    const result = computeMultiScenario(mkInput())
+    expect(result.base.scenario_name).toBe('Baz')
+  })
+
+  it('optimistic scenario scenario_name is "İyimser"', () => {
+    const result = computeMultiScenario(mkInput())
+    expect(result.optimistic.scenario_name).toBe('İyimser')
+  })
+
+  it('pessimistic scenario scenario_name is "Kötümser"', () => {
+    const result = computeMultiScenario(mkInput())
+    expect(result.pessimistic.scenario_name).toBe('Kötümser')
+  })
+
+  it('all three scenarios have the same period_months', () => {
+    const result = computeMultiScenario(mkInput({ period_months: 6 }))
+    expect(result.base.months).toHaveLength(6)
+    expect(result.optimistic.months).toHaveLength(6)
+    expect(result.pessimistic.months).toHaveLength(6)
+  })
 })

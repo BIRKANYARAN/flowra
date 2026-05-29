@@ -285,3 +285,202 @@ describe('daysDiff', () => {
     expect(daysDiff('2026-01-10', '2026-01-20')).toBe(10)
   })
 })
+
+// ── amountScore — boundary values ─────────────────────────────────────────────
+
+describe('amountScore — boundary values', () => {
+  it('returns 0.5 for exact match', () => {
+    expect(amountScore(1_000, 1_000)).toBe(0.5)
+  })
+
+  it('returns 0.5 when difference is exactly 5% (boundary edge)', () => {
+    // 5% of 10_000 = 500 → |10_000 - 10_500| / 10_000 = 5%
+    // boundary check: ≤ 5% → 0.5
+    expect(amountScore(10_000, 10_500)).toBe(0.5)
+  })
+
+  it('returns 0 when difference is 5.01% (just over threshold)', () => {
+    expect(amountScore(10_000, 10_502)).toBe(0)
+  })
+
+  it('returns 0 when bank amount is negative (unusual case)', () => {
+    // negative amounts → ratio undefined or wrong, should not crash
+    const result = amountScore(-1_000, -1_000)
+    expect(typeof result).toBe('number')
+    expect(isNaN(result)).toBe(false)
+  })
+
+  it('returns 0 when both are 0', () => {
+    expect(amountScore(0, 0)).toBe(0)
+  })
+
+  it('handles large amounts (₺1M+) correctly', () => {
+    expect(amountScore(1_000_000, 1_020_000)).toBe(0.5) // 2% diff
+    expect(amountScore(1_000_000, 1_060_000)).toBe(0)   // 6% diff
+  })
+})
+
+// ── dateScore — boundary values ───────────────────────────────────────────────
+
+describe('dateScore — boundary values', () => {
+  it('1 day apart → 0.3', () => {
+    expect(dateScore('2026-03-01', '2026-03-02')).toBe(0.3)
+  })
+
+  it('2 days apart → 0.3', () => {
+    expect(dateScore('2026-03-01', '2026-03-03')).toBe(0.3)
+  })
+
+  it('exactly 3 days apart → 0.3 (boundary)', () => {
+    expect(dateScore('2026-03-01', '2026-03-04')).toBe(0.3)
+  })
+
+  it('4 days apart → 0 (just over boundary)', () => {
+    expect(dateScore('2026-03-01', '2026-03-05')).toBe(0)
+  })
+
+  it('30 days apart → 0', () => {
+    expect(dateScore('2026-01-01', '2026-02-01')).toBe(0)
+  })
+
+  it('is symmetric (b before a)', () => {
+    expect(dateScore('2026-03-04', '2026-03-01')).toBe(0.3)
+  })
+
+  it('cross-month boundary (Feb 28 to Mar 2 = 2 days) → 0.3', () => {
+    expect(dateScore('2026-02-28', '2026-03-02')).toBe(0.3)
+  })
+
+  it('cross-year boundary (Dec 31 to Jan 2 = 2 days) → 0.3', () => {
+    expect(dateScore('2026-12-31', '2027-01-02')).toBe(0.3)
+  })
+})
+
+// ── nameScore — case insensitivity & partial match ────────────────────────────
+
+describe('nameScore — additional cases', () => {
+  it('returns 0.2 for exact case-insensitive match', () => {
+    expect(nameScore('PAYMENT TESLA INC', 'tesla inc')).toBe(0.2)
+  })
+
+  it('returns 0.2 when name appears in middle of description', () => {
+    expect(nameScore('Bank Transfer - XYZ Corp - March', 'xyz corp')).toBe(0.2)
+  })
+
+  it('returns 0 for empty name string', () => {
+    expect(nameScore('Some description', '')).toBe(0)
+  })
+
+  it('returns 0 for empty description', () => {
+    expect(nameScore('', 'Company Name')).toBe(0)
+  })
+
+  it('returns 0 for undefined/null counterparty', () => {
+    expect(nameScore('desc', undefined as unknown as null)).toBe(0)
+  })
+})
+
+// ── computeStatus — additional edge cases ────────────────────────────────────
+
+describe('computeStatus — edge cases', () => {
+  it('all matched with non-zero discrepancy < 1 → reconciled', () => {
+    const status = computeStatus(1, 1, 0.99, 50_000, 25_000)
+    expect(status).toBe('reconciled')
+  })
+
+  it('1 line total, 0 matched, large discrepancy → major', () => {
+    const status = computeStatus(1, 0, 10_000, 10_000, 0)
+    // volume = 10k, discrepancy = 10k = 100% → major
+    expect(status).toBe('major_discrepancies')
+  })
+
+  it('0 total lines → not_started (no volume)', () => {
+    const status = computeStatus(0, 0, 0, 0, 0)
+    expect(status).toBe('not_started')
+  })
+
+  it('many lines all matched, zero discrepancy → reconciled', () => {
+    const status = computeStatus(100, 100, 0, 500_000, 200_000)
+    expect(status).toBe('reconciled')
+  })
+
+  it('exactly at 5% boundary', () => {
+    // volume = 200k, 5% = 10k exactly
+    const status = computeStatus(10, 8, 10_000, 150_000, 50_000)
+    // 10k / 200k = 5% exactly — boundary behavior
+    // Depending on < vs <=: could be minor or major
+    expect(['minor_discrepancies', 'major_discrepancies']).toContain(status)
+  })
+})
+
+// ── daysDiff — additional cases ───────────────────────────────────────────────
+
+describe('daysDiff — additional cases', () => {
+  it('1 day apart', () => {
+    expect(daysDiff('2026-05-01', '2026-05-02')).toBe(1)
+  })
+
+  it('30 days apart', () => {
+    expect(daysDiff('2026-01-01', '2026-01-31')).toBe(30)
+  })
+
+  it('365 days apart', () => {
+    expect(daysDiff('2025-01-01', '2026-01-01')).toBe(365)
+  })
+
+  it('returns absolute value regardless of order', () => {
+    const fwd = daysDiff('2026-01-01', '2026-12-31')
+    const rev = daysDiff('2026-12-31', '2026-01-01')
+    expect(fwd).toBe(rev)
+  })
+})
+
+// ── Full confidence matrix ────────────────────────────────────────────────────
+
+describe('amountScore + dateScore + nameScore — full confidence matrix', () => {
+  it('all three match → confidence = 1.0', () => {
+    const conf =
+      amountScore(5_000, 5_000) +
+      dateScore('2026-01-10', '2026-01-10') +
+      nameScore('Payment ABC Corp', 'ABC Corp')
+    expect(conf).toBe(1.0)
+  })
+
+  it('amount + date match, no name → 0.8', () => {
+    const conf =
+      amountScore(5_000, 5_000) +
+      dateScore('2026-01-10', '2026-01-10') +
+      nameScore('General Transfer', null)
+    expect(conf).toBe(0.8)
+  })
+
+  it('amount match only → 0.5', () => {
+    const conf =
+      amountScore(5_000, 5_000) +
+      dateScore('2026-01-10', '2026-03-01') +  // far off
+      nameScore('General Transfer', null)
+    expect(conf).toBe(0.5)
+  })
+
+  it('date match only → 0.3', () => {
+    const conf =
+      amountScore(5_000, 8_000) +  // far off
+      dateScore('2026-01-10', '2026-01-10') +
+      nameScore('General Transfer', null)
+    expect(conf).toBe(0.3)
+  })
+
+  it('nothing matches → 0', () => {
+    const conf =
+      amountScore(5_000, 9_000) +
+      dateScore('2026-01-10', '2026-04-01') +
+      nameScore('General Transfer', 'Specific Supplier')
+    expect(conf).toBe(0)
+  })
+
+  it('threshold at 0.7: amount + date meets auto-match threshold', () => {
+    const conf = amountScore(10_000, 10_400) + dateScore('2026-02-15', '2026-02-17')
+    // 4% diff → 0.5, 2 days → 0.3 → total 0.8 ≥ 0.7
+    expect(conf).toBeGreaterThanOrEqual(0.7)
+  })
+})

@@ -315,3 +315,198 @@ describe('rankAndSort', () => {
     expect(result).not.toBe(input)
   })
 })
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeTrend — large value and precision edge cases
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeTrend — large values and precision', () => {
+  it('very large values: current=1_000_000, prior=500_000 → growing (+100%)', () => {
+    expect(computeTrend(1_000_000, 500_000)).toBe('growing')
+  })
+
+  it('very large values: current=500_000, prior=1_000_000 → declining (-50%)', () => {
+    expect(computeTrend(500_000, 1_000_000)).toBe('declining')
+  })
+
+  it('prior = 1 (minimal base): current=2 → growing (+100%)', () => {
+    expect(computeTrend(2, 1)).toBe('growing')
+  })
+
+  it('prior = 1000, current = 1001 → stable (only +0.1% change)', () => {
+    expect(computeTrend(1001, 1000)).toBe('stable')
+  })
+
+  it('prior = 1000, current = 899 → declining (-10.1%)', () => {
+    expect(computeTrend(899, 1000)).toBe('declining')
+  })
+
+  it('prior = 1000, current = 1101 → growing (+10.1%)', () => {
+    expect(computeTrend(1101, 1000)).toBe('growing')
+  })
+
+  it('negative current revenue is treated as decline (edge case)', () => {
+    // Negative revenue is unusual but the math should handle it
+    // -100 vs 1000 = -110% → declining
+    expect(computeTrend(-100, 1000)).toBe('declining')
+  })
+
+  it('both prior and current = 1 → stable (0% change)', () => {
+    expect(computeTrend(1, 1)).toBe('stable')
+  })
+
+  it('fractional precision: 10.0001% → growing', () => {
+    // 10000.01 / 10000 = +0.0001% above 10% threshold
+    expect(computeTrend(11000.01, 10000)).toBe('growing')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeConcentrationPct — edge cases and large inputs
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeConcentrationPct — additional edge cases', () => {
+  it('all zero pct_of_total with many items returns 0', () => {
+    const contributors = Array.from({ length: 10 }, () => makeContributor({ pct_of_total: 0 }))
+    expect(computeConcentrationPct(contributors)).toBe(0)
+  })
+
+  it('three items with pct 0, 0, 100 → sum is 100', () => {
+    const contributors = [
+      makeContributor({ pct_of_total: 0 }),
+      makeContributor({ pct_of_total: 0 }),
+      makeContributor({ pct_of_total: 100 }),
+    ]
+    expect(computeConcentrationPct(contributors)).toBe(100)
+  })
+
+  it('10 items: only sums first 3 regardless of count', () => {
+    const contributors = Array.from({ length: 10 }, (_, i) =>
+      makeContributor({ pct_of_total: 10 })
+    )
+    expect(computeConcentrationPct(contributors)).toBe(30)
+  })
+
+  it('result is non-negative for non-negative inputs', () => {
+    const contributors = [
+      makeContributor({ pct_of_total: 50 }),
+      makeContributor({ pct_of_total: 30 }),
+      makeContributor({ pct_of_total: 20 }),
+    ]
+    const result = computeConcentrationPct(contributors)
+    expect(result).toBeGreaterThanOrEqual(0)
+  })
+
+  it('does not throw for array with exactly 3 items', () => {
+    const contributors = [
+      makeContributor({ pct_of_total: 33 }),
+      makeContributor({ pct_of_total: 33 }),
+      makeContributor({ pct_of_total: 34 }),
+    ]
+    expect(() => computeConcentrationPct(contributors)).not.toThrow()
+  })
+
+  it('order matters: slices first 3, not highest 3', () => {
+    // If array is pre-sorted descending (as rankAndSort would do), first 3 are top 3
+    const contributors = [
+      makeContributor({ pct_of_total: 40 }),
+      makeContributor({ pct_of_total: 30 }),
+      makeContributor({ pct_of_total: 20 }),
+      makeContributor({ pct_of_total: 5 }),
+      makeContributor({ pct_of_total: 5 }),
+    ]
+    // Slices first 3: 40 + 30 + 20 = 90
+    expect(computeConcentrationPct(contributors)).toBe(90)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// rankAndSort — comprehensive sorting
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('rankAndSort — comprehensive sorting', () => {
+  it('already sorted descending remains correct', () => {
+    const input = [
+      makeInput('A', 5000),
+      makeInput('B', 3000),
+      makeInput('C', 1000),
+    ]
+    const result = rankAndSort(input)
+    expect(result[0].name).toBe('A')
+    expect(result[1].name).toBe('B')
+    expect(result[2].name).toBe('C')
+  })
+
+  it('reverse-sorted input gets correctly reordered', () => {
+    const input = [
+      makeInput('C', 1000),
+      makeInput('B', 3000),
+      makeInput('A', 5000),
+    ]
+    const result = rankAndSort(input)
+    expect(result[0].name).toBe('A')
+    expect(result[2].name).toBe('C')
+  })
+
+  it('all ranks are consecutive positive integers starting from 1', () => {
+    const input = [makeInput('A', 9000), makeInput('B', 6000), makeInput('C', 3000), makeInput('D', 1000)]
+    const result = rankAndSort(input)
+    result.forEach((r, i) => {
+      expect(r.rank).toBe(i + 1)
+      expect(r.rank).toBeGreaterThan(0)
+    })
+  })
+
+  it('single very large total_try item has rank 1', () => {
+    const input = [makeInput('Big', Number.MAX_SAFE_INTEGER)]
+    const result = rankAndSort(input)
+    expect(result[0].rank).toBe(1)
+    expect(result[0].total_try).toBe(Number.MAX_SAFE_INTEGER)
+  })
+
+  it('avg_transaction_try is preserved in output', () => {
+    const input = [{
+      name: 'Test',
+      total_try: 10000,
+      pct_of_total: 50,
+      transaction_count: 4,
+      avg_transaction_try: 2500 as number | null,
+      trend: 'stable' as const,
+    }]
+    const result = rankAndSort(input)
+    expect(result[0].avg_transaction_try).toBe(2500)
+  })
+
+  it('null avg_transaction_try is preserved', () => {
+    const input = [{
+      name: 'No Avg',
+      total_try: 5000,
+      pct_of_total: 100,
+      transaction_count: 0,
+      avg_transaction_try: null as number | null,
+      trend: 'stable' as const,
+    }]
+    const result = rankAndSort(input)
+    expect(result[0].avg_transaction_try).toBeNull()
+  })
+
+  it('ties: both items with same total_try get different ranks', () => {
+    const input = [makeInput('X', 5000), makeInput('Y', 5000), makeInput('Z', 5000)]
+    const result = rankAndSort(input)
+    const ranks = result.map(r => r.rank)
+    expect(new Set(ranks).size).toBe(3)  // all unique ranks
+    expect(ranks).toContain(1)
+    expect(ranks).toContain(2)
+    expect(ranks).toContain(3)
+  })
+
+  it('trend value is correctly preserved through sort', () => {
+    const input = [
+      { name: 'G', total_try: 2000, pct_of_total: 20, transaction_count: 5, avg_transaction_try: 400, trend: 'growing' as const },
+      { name: 'D', total_try: 1000, pct_of_total: 10, transaction_count: 3, avg_transaction_try: 333, trend: 'declining' as const },
+    ]
+    const result = rankAndSort(input)
+    expect(result[0].trend).toBe('growing')
+    expect(result[1].trend).toBe('declining')
+  })
+})

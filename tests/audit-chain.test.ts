@@ -320,4 +320,174 @@ describe('stampAuditRow', () => {
       stampAuditRow('row-uuid-2', 'company-uuid', row, mockFailing)
     ).resolves.not.toThrow()
   })
+
+  it('calls update with prev_hash matching previous row hash', async () => {
+    let capturedUpdate: { content_hash: string; prev_hash: string | null } | null = null
+    const prevRowHash = 'a'.repeat(64)
+
+    const mockSupabase = {
+      from: () => ({
+        select: () => ({
+          eq: () => ({
+            neq: () => ({
+              order: () => ({
+                limit: () => ({
+                  maybeSingle: () => Promise.resolve({
+                    data: { content_hash: prevRowHash },
+                    error: null,
+                  }),
+                }),
+              }),
+            }),
+          }),
+        }),
+        update: (vals: { content_hash: string; prev_hash: string | null }) => {
+          capturedUpdate = vals
+          return { eq: () => Promise.resolve({ error: null }) }
+        },
+      }),
+    }
+
+    const row = {
+      action: 'update', resource_type: 'invoice', resource_id: 'inv-999',
+      old_values: { amount: 100 }, new_values: { amount: 200 },
+      created_at: '2025-06-01T12:00:00Z',
+    }
+
+    await stampAuditRow('row-new', 'company-uuid', row, mockSupabase)
+
+    expect(capturedUpdate).not.toBeNull()
+    expect(capturedUpdate!.prev_hash).toBe(prevRowHash)
+    // content_hash is derived from payload + prevHash → should still be 64 chars
+    expect(capturedUpdate!.content_hash).toHaveLength(64)
+    expect(capturedUpdate!.content_hash).toMatch(/^[0-9a-f]{64}$/)
+  })
+})
+
+// ── verifyAuditChain — large chain ────────────────────────────────────────────
+
+describe('verifyAuditChain — large valid chain', () => {
+  it('50-row valid chain reports ok=true, broken_links=0', async () => {
+    const rows = await buildChain(50)
+    const result = await verifyAuditChain('co1', '2025-01-01', '2025-12-31', makeMockSupabase(rows))
+    expect(result.ok).toBe(true)
+    expect(result.total_checked).toBe(50)
+    expect(result.broken_links).toBe(0)
+  })
+
+  it('last row of large chain is also valid', async () => {
+    const rows = await buildChain(20)
+    const result = await verifyAuditChain('co1', '2025-01-01', '2025-12-31', makeMockSupabase(rows))
+    expect(result.ok).toBe(true)
+    expect(result.broken_links).toBe(0)
+    expect(result.first_broken).toBeUndefined()
+  })
+})
+
+// ── verifyAuditChain — tamper at different positions ─────────────────────────
+
+describe('verifyAuditChain — tamper at end', () => {
+  it('tamper last row detected as broken', async () => {
+    const rows = await buildChain(5)
+    rows[4] = { ...rows[4], content_hash: 'f'.repeat(64) }
+    const result = await verifyAuditChain('co1', '2025-01-01', '2025-12-31', makeMockSupabase(rows))
+    expect(result.ok).toBe(false)
+    expect(result.broken_links).toBeGreaterThan(0)
+  })
+
+  it('tamper middle row detected', async () => {
+    const rows = await buildChain(7)
+    rows[3] = { ...rows[3], new_values: { amount: 99999 } }
+    // content_hash still reflects old payload → mismatch
+    const result = await verifyAuditChain('co1', '2025-01-01', '2025-12-31', makeMockSupabase(rows))
+    expect(result.ok).toBe(false)
+    expect(result.first_broken?.id).toBe('row-3')
+  })
+
+  it('changing action field (not just new_values) is also detected', async () => {
+    const rows = await buildChain(3)
+    rows[1] = { ...rows[1], action: 'delete' }  // was 'create'
+    const result = await verifyAuditChain('co1', '2025-01-01', '2025-12-31', makeMockSupabase(rows))
+    expect(result.ok).toBe(false)
+    expect(result.first_broken?.id).toBe('row-1')
+  })
+
+  it('changing resource_id is also detected', async () => {
+    const rows = await buildChain(4)
+    rows[2] = { ...rows[2], resource_id: 'tampered-resource-id' }
+    const result = await verifyAuditChain('co1', '2025-01-01', '2025-12-31', makeMockSupabase(rows))
+    expect(result.ok).toBe(false)
+    expect(result.first_broken?.id).toBe('row-2')
+  })
+})
+
+// ── ChainVerifyResult fields ──────────────────────────────────────────────────
+
+describe('verifyAuditChain — result fields', () => {
+  it('intact chain: first_broken is undefined', async () => {
+    const rows = await buildChain(5)
+    const result = await verifyAuditChain('co1', '2025-01-01', '2025-12-31', makeMockSupabase(rows))
+    expect(result.first_broken).toBeUndefined()
+  })
+
+  it('broken chain: first_broken has expected_hash and actual_hash', async () => {
+    const rows = await buildChain(3)
+    rows[1] = { ...rows[1], content_hash: '1234'.repeat(16) }
+    const result = await verifyAuditChain('co1', '2025-01-01', '2025-12-31', makeMockSupabase(rows))
+    expect(result.first_broken).toBeDefined()
+    expect(typeof result.first_broken!.expected_hash).toBe('string')
+    expect(typeof result.first_broken!.actual_hash).toBe('string')
+    expect(result.first_broken!.expected_hash).toHaveLength(64)
+  })
+
+  it('result always has is_supported, total_checked, broken_links, ok', async () => {
+    const rows = await buildChain(2)
+    const result = await verifyAuditChain('co1', '2025-01-01', '2025-12-31', makeMockSupabase(rows))
+    expect(typeof result.is_supported).toBe('boolean')
+    expect(typeof result.total_checked).toBe('number')
+    expect(typeof result.broken_links).toBe('number')
+    expect(typeof result.ok).toBe('boolean')
+  })
+
+  it('total_checked counts all rows (including null-hash rows)', async () => {
+    const rows = await buildChain(5)
+    // Even though null-hash rows are skipped in verification, total_checked reflects all rows in the result
+    const result = await verifyAuditChain('co1', '2025-01-01', '2025-12-31', makeMockSupabase(rows))
+    expect(result.total_checked).toBe(5)
+  })
+})
+
+// ── SHA-256 additional edge cases ─────────────────────────────────────────────
+
+describe('SHA-256 — additional edge cases', () => {
+  it('hash of pipe-separated empty strings is valid 64-char hex', async () => {
+    const h = await sha256hex('|||')
+    expect(h).toHaveLength(64)
+    expect(h).toMatch(/^[0-9a-f]{64}$/)
+  })
+
+  it('unicode input produces valid hash', async () => {
+    const h = await sha256hex('create|sale|müşteri-123|null|null|2025-01-01T00:00:00Z')
+    expect(h).toHaveLength(64)
+    expect(h).toMatch(/^[0-9a-f]{64}$/)
+  })
+
+  it('long JSON payload produces valid hash', async () => {
+    const bigPayload = JSON.stringify({ key: 'x'.repeat(10000) })
+    const h = await sha256hex(bigPayload)
+    expect(h).toHaveLength(64)
+    expect(h).toMatch(/^[0-9a-f]{64}$/)
+  })
+
+  it('hashes are not all zeros or all f — real output', async () => {
+    const h = await sha256hex('non-empty string')
+    expect(h).not.toBe('0'.repeat(64))
+    expect(h).not.toBe('f'.repeat(64))
+  })
+
+  it('order of pipe fields matters — different order → different hash', async () => {
+    const h1 = await sha256hex('create|sale|id1|null|null|2025-01-01T10:00:00Z')
+    const h2 = await sha256hex('sale|create|id1|null|null|2025-01-01T10:00:00Z')
+    expect(h1).not.toBe(h2)
+  })
 })
