@@ -392,3 +392,146 @@ describe('Integration: burn trend + runway + peak combination', () => {
   })
 
 })
+
+// ── computeBurnTrend — isCostMetric-independent, parameter sweep ──────────────
+
+describe('computeBurnTrend — parameter sweep', () => {
+  it('monthCount=2 → insufficient_data', () => {
+    expect(computeBurnTrend(10_000, 9_000, 2)).toBe('insufficient_data')
+  })
+
+  it('monthCount=3 with avgBurn=0 → insufficient_data', () => {
+    expect(computeBurnTrend(0, 0, 3)).toBe('insufficient_data')
+  })
+
+  it('current > avg by exactly 10% (ratio=1.1) → stable (boundary not crossed)', () => {
+    expect(computeBurnTrend(11_000, 10_000, 3)).toBe('stable')
+  })
+
+  it('current > avg by 10.01% → accelerating', () => {
+    expect(computeBurnTrend(11_001, 10_000, 3)).toBe('accelerating')
+  })
+
+  it('current < avg by exactly 10% (ratio=0.9) → stable (boundary not crossed)', () => {
+    expect(computeBurnTrend(9_000, 10_000, 3)).toBe('stable')
+  })
+
+  it('current < avg by 10.01% → decelerating', () => {
+    expect(computeBurnTrend(8_999, 10_000, 3)).toBe('decelerating')
+  })
+
+  it('current = 0, avgBurn > 0 → decelerating (ratio = 0)', () => {
+    expect(computeBurnTrend(0, 10_000, 3)).toBe('decelerating')
+  })
+
+  it('very large current burn vs small avg → accelerating', () => {
+    expect(computeBurnTrend(1_000_000, 10_000, 3)).toBe('accelerating')
+  })
+
+  it('monthCount=10, ratio=0.85 → decelerating', () => {
+    expect(computeBurnTrend(8_500, 10_000, 10)).toBe('decelerating')
+  })
+
+  it('monthCount=10, ratio=1.15 → accelerating', () => {
+    expect(computeBurnTrend(11_500, 10_000, 10)).toBe('accelerating')
+  })
+})
+
+// ── computeRunway — additional parameter sweep ────────────────────────────────
+
+describe('computeRunway — additional parameter sweep', () => {
+  it('cashBalance=1, avgNetBurn=1 → 1 month', () => {
+    expect(computeRunway(1, 1)).toBeCloseTo(1, 2)
+  })
+
+  it('cashBalance=1_000_000, avgNetBurn=1 → 1_000_000 months', () => {
+    expect(computeRunway(1_000_000, 1)).toBeCloseTo(1_000_000, 0)
+  })
+
+  it('cashBalance=0 → null', () => {
+    expect(computeRunway(0, 5_000)).toBeNull()
+  })
+
+  it('cashBalance=null → null', () => {
+    expect(computeRunway(null, 5_000)).toBeNull()
+  })
+
+  it('avgNetBurn=0.01 → very long runway', () => {
+    const result = computeRunway(100, 0.01)
+    expect(result).not.toBeNull()
+    expect(result!).toBeCloseTo(10_000, 0)
+  })
+
+  it('cashBalance=10, avgNetBurn=100 → 0.1 months', () => {
+    expect(computeRunway(10, 100)).toBeCloseTo(0.1, 2)
+  })
+
+  it('negative avgNetBurn (profit > burn) → null', () => {
+    expect(computeRunway(500_000, -20_000)).toBeNull()
+  })
+
+  it('round2 applied: 100_000 / 30_000 = 3.3333... → 3.33', () => {
+    const result = computeRunway(100_000, 30_000)
+    expect(result).toBeCloseTo(3.33, 1)
+  })
+})
+
+// ── findPeakBurnMonth — additional ───────────────────────────────────────────
+
+describe('findPeakBurnMonth — additional edge cases', () => {
+  it('single month returns its label and gross_burn_try', () => {
+    const months: MonthlyBurnData[] = [
+      { month: '2026-05', label: 'Mayıs 2026', gross_burn_try: 77_000, revenue_try: 50_000, net_burn_try: 27_000, cash_balance_try: null },
+    ]
+    const result = findPeakBurnMonth(months)
+    expect(result.month).toBe('Mayıs 2026')
+    expect(result.try).toBe(77_000)
+  })
+
+  it('uses gross_burn_try not net_burn_try for peak', () => {
+    // Month A has lower gross but higher net; Month B should win on gross
+    const months: MonthlyBurnData[] = [
+      { month: '2026-01', label: 'Ocak 2026',   gross_burn_try: 30_000, revenue_try: 1_000,  net_burn_try: 29_000, cash_balance_try: null },
+      { month: '2025-12', label: 'Aralık 2025', gross_burn_try: 50_000, revenue_try: 40_000, net_burn_try: 10_000, cash_balance_try: null },
+    ]
+    const result = findPeakBurnMonth(months)
+    expect(result.month).toBe('Aralık 2025')
+    expect(result.try).toBe(50_000)
+  })
+
+  it('three equal burns → first month label returned', () => {
+    const months: MonthlyBurnData[] = [
+      { month: '2026-03', label: 'Mart 2026',   gross_burn_try: 20_000, revenue_try: 0, net_burn_try: 20_000, cash_balance_try: null },
+      { month: '2026-02', label: 'Şubat 2026',  gross_burn_try: 20_000, revenue_try: 0, net_burn_try: 20_000, cash_balance_try: null },
+      { month: '2026-01', label: 'Ocak 2026',   gross_burn_try: 20_000, revenue_try: 0, net_burn_try: 20_000, cash_balance_try: null },
+    ]
+    const result = findPeakBurnMonth(months)
+    expect(result.month).toBe('Mart 2026')
+  })
+
+  it('empty array returns null for both fields', () => {
+    const result = findPeakBurnMonth([])
+    expect(result.month).toBeNull()
+    expect(result.try).toBeNull()
+  })
+
+  it('peak with 0 gross_burn in some months', () => {
+    const months: MonthlyBurnData[] = [
+      { month: '2026-01', label: 'Ocak 2026',   gross_burn_try: 0,      revenue_try: 100, net_burn_try: -100, cash_balance_try: null },
+      { month: '2025-12', label: 'Aralık 2025', gross_burn_try: 1_000,  revenue_try: 500, net_burn_try: 500,  cash_balance_try: null },
+      { month: '2025-11', label: 'Kasım 2025',  gross_burn_try: 0,      revenue_try: 200, net_burn_try: -200, cash_balance_try: null },
+    ]
+    const result = findPeakBurnMonth(months)
+    expect(result.month).toBe('Aralık 2025')
+    expect(result.try).toBe(1_000)
+  })
+
+  it('two months — earlier higher burn wins', () => {
+    const months: MonthlyBurnData[] = [
+      { month: '2026-01', label: 'Ocak 2026',   gross_burn_try: 40_000, revenue_try: 20_000, net_burn_try: 20_000, cash_balance_try: null },
+      { month: '2025-12', label: 'Aralık 2025', gross_burn_try: 20_000, revenue_try: 20_000, net_burn_try: 0,      cash_balance_try: null },
+    ]
+    const result = findPeakBurnMonth(months)
+    expect(result.month).toBe('Ocak 2026')
+  })
+})

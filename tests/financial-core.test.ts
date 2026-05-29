@@ -328,3 +328,274 @@ describe('geciciDueDate + quarterPeriod coherence', () => {
     expect(quarters[3].to).toBe('2025-12-31')
   })
 })
+
+// ── geciciDueDate — multi-year and format coverage ────────────────────────────
+
+describe('geciciDueDate — multi-year coverage', () => {
+  it('Q1 2024 → 2024-05-17', () => {
+    expect(geciciDueDate(2024, 1)).toBe('2024-05-17')
+  })
+
+  it('Q2 2024 → 2024-08-17', () => {
+    expect(geciciDueDate(2024, 2)).toBe('2024-08-17')
+  })
+
+  it('Q3 2024 → 2024-11-17', () => {
+    expect(geciciDueDate(2024, 3)).toBe('2024-11-17')
+  })
+
+  it('Q1 2026 → 2026-05-17', () => {
+    expect(geciciDueDate(2026, 1)).toBe('2026-05-17')
+  })
+
+  it('Q2 2026 → 2026-08-17', () => {
+    expect(geciciDueDate(2026, 2)).toBe('2026-08-17')
+  })
+
+  it('Q3 2026 → 2026-11-17', () => {
+    expect(geciciDueDate(2026, 3)).toBe('2026-11-17')
+  })
+
+  it('day portion is always -17 for 2025', () => {
+    expect(geciciDueDate(2025, 1).slice(-2)).toBe('17')
+    expect(geciciDueDate(2025, 2).slice(-2)).toBe('17')
+    expect(geciciDueDate(2025, 3).slice(-2)).toBe('17')
+  })
+
+  it('result format is always YYYY-MM-17 (last 3 chars are -17)', () => {
+    const years = [2023, 2025, 2027, 2030]
+    const quarters = [1, 2, 3] as const
+    for (const year of years) {
+      for (const q of quarters) {
+        expect(geciciDueDate(year, q)).toMatch(/^\d{4}-\d{2}-17$/)
+      }
+    }
+  })
+
+  it('month mapping is correct for all 3 quarters', () => {
+    // Q1→05, Q2→08, Q3→11
+    const mapping: Array<[1|2|3, string]> = [[1, '05'], [2, '08'], [3, '11']]
+    for (const [q, expectedMonth] of mapping) {
+      expect(geciciDueDate(2026, q).slice(5, 7)).toBe(expectedMonth)
+    }
+  })
+
+  it('year is embedded correctly for a past year (2020)', () => {
+    expect(geciciDueDate(2020, 2)).toBe('2020-08-17')
+  })
+
+  it('year is embedded correctly for a future year (2035)', () => {
+    expect(geciciDueDate(2035, 3)).toBe('2035-11-17')
+  })
+})
+
+// ── quarterPeriod — multi-year boundary coverage ──────────────────────────────
+
+describe('quarterPeriod — Q1-Q4 boundaries for years 2024 and 2026', () => {
+  it('Q1 2024 → 2024-01-01 to 2024-03-31', () => {
+    const p = quarterPeriod(2024, 1)
+    expect(p.from).toBe('2024-01-01')
+    expect(p.to).toBe('2024-03-31')
+  })
+
+  it('Q2 2024 → 2024-04-01 to 2024-06-30', () => {
+    const p = quarterPeriod(2024, 2)
+    expect(p.from).toBe('2024-04-01')
+    expect(p.to).toBe('2024-06-30')
+  })
+
+  it('Q3 2024 → 2024-07-01 to 2024-09-30', () => {
+    const p = quarterPeriod(2024, 3)
+    expect(p.from).toBe('2024-07-01')
+    expect(p.to).toBe('2024-09-30')
+  })
+
+  it('Q4 2024 → 2024-10-01 to 2024-12-31', () => {
+    const p = quarterPeriod(2024, 4)
+    expect(p.from).toBe('2024-10-01')
+    expect(p.to).toBe('2024-12-31')
+  })
+
+  it('Q1 2026 → 2026-01-01 to 2026-03-31', () => {
+    const p = quarterPeriod(2026, 1)
+    expect(p.from).toBe('2026-01-01')
+    expect(p.to).toBe('2026-03-31')
+  })
+
+  it('Q3 2026 → 2026-07-01 to 2026-09-30', () => {
+    const p = quarterPeriod(2026, 3)
+    expect(p.from).toBe('2026-07-01')
+    expect(p.to).toBe('2026-09-30')
+  })
+
+  it('Q4 2026 → 2026-10-01 to 2026-12-31', () => {
+    const p = quarterPeriod(2026, 4)
+    expect(p.from).toBe('2026-10-01')
+    expect(p.to).toBe('2026-12-31')
+  })
+
+  it('Q2-Q3 boundary: Q2 ends Jun 30, Q3 starts Jul 1 (no gap)', () => {
+    const q2 = quarterPeriod(2025, 2)
+    const q3 = quarterPeriod(2025, 3)
+    expect(q2.to).toBe('2025-06-30')
+    expect(q3.from).toBe('2025-07-01')
+  })
+
+  it('Q3-Q4 boundary: Q3 ends Sep 30, Q4 starts Oct 1 (no gap)', () => {
+    const q3 = quarterPeriod(2025, 3)
+    const q4 = quarterPeriod(2025, 4)
+    expect(q3.to).toBe('2025-09-30')
+    expect(q4.from).toBe('2025-10-01')
+  })
+})
+
+// ── cashflowPressureSeverity — exhaustive sign combinations ───────────────────
+
+describe('cashflowPressureSeverity — exhaustive net/cumulative sign grid', () => {
+  it('net=0, cumulative=0 → ok (zero is not negative)', () => {
+    expect(cashflowPressureSeverity(0, 0)).toBe('ok')
+  })
+
+  it('net=0, cumulative=1 → ok (positive cumulative, break-even month)', () => {
+    expect(cashflowPressureSeverity(0, 1)).toBe('ok')
+  })
+
+  it('net=0, cumulative=-1 → critical (cumulative is negative)', () => {
+    expect(cashflowPressureSeverity(0, -1)).toBe('critical')
+  })
+
+  it('net=1, cumulative=0 → ok (positive net, zero cumulative)', () => {
+    expect(cashflowPressureSeverity(1, 0)).toBe('ok')
+  })
+
+  it('net=1, cumulative=1 → ok (both positive)', () => {
+    expect(cashflowPressureSeverity(1, 1)).toBe('ok')
+  })
+
+  it('net=1, cumulative=-1 → critical (cumulative negative wins)', () => {
+    expect(cashflowPressureSeverity(1, -1)).toBe('critical')
+  })
+
+  it('net=-1, cumulative=0 → warn (net negative, cumulative zero is not negative)', () => {
+    expect(cashflowPressureSeverity(-1, 0)).toBe('warn')
+  })
+
+  it('net=-1, cumulative=1 → warn (net negative, cumulative still positive)', () => {
+    expect(cashflowPressureSeverity(-1, 1)).toBe('warn')
+  })
+
+  it('net=-1, cumulative=-1 → critical (cumulative negative takes priority)', () => {
+    expect(cashflowPressureSeverity(-1, -1)).toBe('critical')
+  })
+
+  it('large positive net and large negative cumulative → critical', () => {
+    expect(cashflowPressureSeverity(1_000_000, -1)).toBe('critical')
+  })
+
+  it('tiny negative net and large positive cumulative → warn', () => {
+    expect(cashflowPressureSeverity(-0.01, 1_000_000)).toBe('warn')
+  })
+})
+
+// ── geciciDueDate — format validation for multiple years ──────────────────────
+
+describe('geciciDueDate — format YYYY-MM-17 across years', () => {
+  it('Q1 result always ends in -05-17 regardless of year', () => {
+    for (const year of [2020, 2024, 2025, 2026, 2030]) {
+      expect(geciciDueDate(year, 1)).toMatch(/^\d{4}-05-17$/)
+    }
+  })
+
+  it('Q2 result always ends in -08-17 regardless of year', () => {
+    for (const year of [2020, 2024, 2025, 2026, 2030]) {
+      expect(geciciDueDate(year, 2)).toMatch(/^\d{4}-08-17$/)
+    }
+  })
+
+  it('Q3 result always ends in -11-17 regardless of year', () => {
+    for (const year of [2020, 2024, 2025, 2026, 2030]) {
+      expect(geciciDueDate(year, 3)).toMatch(/^\d{4}-11-17$/)
+    }
+  })
+
+  it('all due dates are valid ISO date strings (parseable)', () => {
+    const quarters = [1, 2, 3] as const
+    for (const q of quarters) {
+      const dateStr = geciciDueDate(2025, q)
+      expect(isNaN(new Date(dateStr).getTime())).toBe(false)
+    }
+  })
+
+  it('due dates are ordered chronologically within a year', () => {
+    const d1 = geciciDueDate(2025, 1)  // May 17
+    const d2 = geciciDueDate(2025, 2)  // Aug 17
+    const d3 = geciciDueDate(2025, 3)  // Nov 17
+    expect(d1 < d2).toBe(true)
+    expect(d2 < d3).toBe(true)
+  })
+
+  it('Q1 2026 due date (May 17) is later than Q3 2025 due date (Nov 17 previous year)', () => {
+    expect(geciciDueDate(2026, 1) > geciciDueDate(2025, 3)).toBe(true)
+  })
+})
+
+// ── quarterPeriod — year boundary and month mapping coverage ──────────────────
+
+describe('quarterPeriod — year boundaries and month mappings', () => {
+  it('from month for Q1 is "01" (January)', () => {
+    expect(quarterPeriod(2025, 1).from.slice(5, 7)).toBe('01')
+  })
+
+  it('from month for Q2 is "04" (April)', () => {
+    expect(quarterPeriod(2025, 2).from.slice(5, 7)).toBe('04')
+  })
+
+  it('from month for Q3 is "07" (July)', () => {
+    expect(quarterPeriod(2025, 3).from.slice(5, 7)).toBe('07')
+  })
+
+  it('from month for Q4 is "10" (October)', () => {
+    expect(quarterPeriod(2025, 4).from.slice(5, 7)).toBe('10')
+  })
+
+  it('to month for Q1 is "03" (March)', () => {
+    expect(quarterPeriod(2025, 1).to.slice(5, 7)).toBe('03')
+  })
+
+  it('to month for Q2 is "06" (June)', () => {
+    expect(quarterPeriod(2025, 2).to.slice(5, 7)).toBe('06')
+  })
+
+  it('to month for Q3 is "09" (September)', () => {
+    expect(quarterPeriod(2025, 3).to.slice(5, 7)).toBe('09')
+  })
+
+  it('to month for Q4 is "12" (December)', () => {
+    expect(quarterPeriod(2025, 4).to.slice(5, 7)).toBe('12')
+  })
+
+  it('Q1 ends on 31st (March has 31 days)', () => {
+    expect(quarterPeriod(2025, 1).to.slice(-2)).toBe('31')
+  })
+
+  it('Q4 ends on 31st (December has 31 days)', () => {
+    expect(quarterPeriod(2025, 4).to.slice(-2)).toBe('31')
+  })
+
+  it('Q2 ends on 30th (June has 30 days)', () => {
+    expect(quarterPeriod(2025, 2).to.slice(-2)).toBe('30')
+  })
+
+  it('Q3 ends on 30th (September has 30 days)', () => {
+    expect(quarterPeriod(2025, 3).to.slice(-2)).toBe('30')
+  })
+
+  it('Q1 2025 and Q1 2026 have same month pattern, different year', () => {
+    const p25 = quarterPeriod(2025, 1)
+    const p26 = quarterPeriod(2026, 1)
+    expect(p25.from.slice(5)).toBe(p26.from.slice(5))
+    expect(p25.to.slice(5)).toBe(p26.to.slice(5))
+    expect(p25.from.slice(0, 4)).toBe('2025')
+    expect(p26.from.slice(0, 4)).toBe('2026')
+  })
+})

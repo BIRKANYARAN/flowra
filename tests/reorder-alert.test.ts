@@ -389,3 +389,205 @@ describe('sortAlerts', () => {
   })
 
 })
+
+// ── assignAlertLevel — precise boundary values ────────────────────────────────
+
+describe('assignAlertLevel — precise boundary values', () => {
+  it('qty=0 with no reorder point → out_of_stock (qty check before null check)', () => {
+    expect(assignAlertLevel(0, null)).toBe('out_of_stock')
+  })
+
+  it('qty=0 with reorder_point=50 → out_of_stock', () => {
+    expect(assignAlertLevel(0, 50)).toBe('out_of_stock')
+  })
+
+  it('qty=-100 → out_of_stock regardless of reorder_point', () => {
+    expect(assignAlertLevel(-100, 10)).toBe('out_of_stock')
+  })
+
+  it('qty=1 reorder_point=null → no_threshold', () => {
+    expect(assignAlertLevel(1, null)).toBe('no_threshold')
+  })
+
+  it('qty=100 reorder_point=0 → adequate (reorder_point <= 0 returns adequate)', () => {
+    expect(assignAlertLevel(100, 0)).toBe('adequate')
+  })
+
+  it('qty=1 reorder_point=0 → adequate (0 point = no threshold configured)', () => {
+    expect(assignAlertLevel(1, 0)).toBe('adequate')
+  })
+
+  it('qty exactly equals reorder_point → critical', () => {
+    expect(assignAlertLevel(25, 25)).toBe('critical')
+  })
+
+  it('qty one unit above reorder_point → low (if ≤ 1.5×)', () => {
+    // point=20, 1.5×point=30, qty=21 → low
+    expect(assignAlertLevel(21, 20)).toBe('low')
+  })
+
+  it('qty exactly 1.5× reorder_point → low (boundary inclusive)', () => {
+    // point=20, qty=30 → 30 ≤ 30 → low
+    expect(assignAlertLevel(30, 20)).toBe('low')
+  })
+
+  it('qty one unit above 1.5× reorder_point → adequate', () => {
+    // point=20, 1.5×=30, qty=31 → adequate
+    expect(assignAlertLevel(31, 20)).toBe('adequate')
+  })
+
+  it('large reorder_point scenario: qty=999, point=1000 → critical', () => {
+    expect(assignAlertLevel(999, 1000)).toBe('critical')
+  })
+
+  it('large reorder_point scenario: qty=1000, point=1000 → critical (exact equal)', () => {
+    expect(assignAlertLevel(1000, 1000)).toBe('critical')
+  })
+
+  it('large reorder_point scenario: qty=1500, point=1000 → low (=1.5×)', () => {
+    expect(assignAlertLevel(1500, 1000)).toBe('low')
+  })
+
+  it('large reorder_point scenario: qty=1501, point=1000 → adequate', () => {
+    expect(assignAlertLevel(1501, 1000)).toBe('adequate')
+  })
+})
+
+// ── computeDaysRemaining — additional ────────────────────────────────────────
+
+describe('computeDaysRemaining — additional cases', () => {
+  it('null consumption → null (no data)', () => {
+    expect(computeDaysRemaining(50, null)).toBeNull()
+  })
+
+  it('zero consumption → null (infinite days, treated as unknown)', () => {
+    expect(computeDaysRemaining(50, 0)).toBeNull()
+  })
+
+  it('negative consumption → null (guard)', () => {
+    expect(computeDaysRemaining(50, -2)).toBeNull()
+  })
+
+  it('exact division: 60 / 4 = 15 days', () => {
+    expect(computeDaysRemaining(60, 4)).toBe(15)
+  })
+
+  it('floor applied: 11 / 3 = 3.67 → 3', () => {
+    expect(computeDaysRemaining(11, 3)).toBe(3)
+  })
+
+  it('zero stock, positive consumption → 0 days', () => {
+    expect(computeDaysRemaining(0, 2)).toBe(0)
+  })
+
+  it('very high stock relative to consumption → large result', () => {
+    expect(computeDaysRemaining(3650, 1)).toBe(3650)
+  })
+
+  it('fractional consumption 0.25/day: 10 / 0.25 = 40 days', () => {
+    expect(computeDaysRemaining(10, 0.25)).toBe(40)
+  })
+
+  it('consumption of 7/day: 100 / 7 = 14.28 → floor → 14', () => {
+    expect(computeDaysRemaining(100, 7)).toBe(14)
+  })
+})
+
+// ── computeSuggestedOrderQty — additional ────────────────────────────────────
+
+describe('computeSuggestedOrderQty — additional formula checks', () => {
+  it('explicit reorder_qty=10 takes priority over consumption', () => {
+    expect(computeSuggestedOrderQty(10, 100)).toBe(10)
+  })
+
+  it('reorder_qty=0 falls through to consumption-based fallback', () => {
+    // 0 is not > 0, so use consumption: 2×2×14=56
+    expect(computeSuggestedOrderQty(0, 2)).toBe(56)
+  })
+
+  it('consumption fallback formula: 2 × daily × 14 = 28 days of stock', () => {
+    // consumption = 2/day → 2×2×14 = 56
+    expect(computeSuggestedOrderQty(null, 2)).toBe(56)
+  })
+
+  it('consumption = 0.5/day → 2×0.5×14 = 14', () => {
+    expect(computeSuggestedOrderQty(null, 0.5)).toBe(14)
+  })
+
+  it('consumption = 10/day → 2×10×14 = 280', () => {
+    expect(computeSuggestedOrderQty(null, 10)).toBe(280)
+  })
+
+  it('both reorder_qty and consumption null → null', () => {
+    expect(computeSuggestedOrderQty(null, null)).toBeNull()
+  })
+
+  it('ceil applied: 2×0.5×14=14.0 → no ceil needed, exact 14', () => {
+    expect(computeSuggestedOrderQty(null, 0.5)).toBe(14)
+  })
+
+  it('ceil applied: 2×0.8×14=22.4 → ceil → 23', () => {
+    expect(computeSuggestedOrderQty(null, 0.8)).toBe(23)
+  })
+
+  it('negative reorder_qty with zero consumption → null', () => {
+    expect(computeSuggestedOrderQty(-10, 0)).toBeNull()
+  })
+})
+
+// ── sortAlerts — additional ───────────────────────────────────────────────────
+
+describe('sortAlerts — additional ordering scenarios', () => {
+  it('does not mutate original array (pure function)', () => {
+    const alerts = [
+      makeAlert({ alert_level: 'low', product_id: 'a' }),
+      makeAlert({ alert_level: 'critical', product_id: 'b' }),
+    ]
+    const copy = alerts.map(a => ({ ...a }))
+    sortAlerts(alerts)
+    expect(alerts[0].product_id).toBe(copy[0].product_id)
+  })
+
+  it('all same level sorted by days (ascending)', () => {
+    const alerts: ReorderAlert[] = [
+      makeAlert({ alert_level: 'critical', product_id: 'p30', days_of_stock_remaining: 30 }),
+      makeAlert({ alert_level: 'critical', product_id: 'p5',  days_of_stock_remaining: 5 }),
+      makeAlert({ alert_level: 'critical', product_id: 'p15', days_of_stock_remaining: 15 }),
+    ]
+    const sorted = sortAlerts(alerts)
+    expect(sorted.map(a => a.product_id)).toEqual(['p5', 'p15', 'p30'])
+  })
+
+  it('out_of_stock always before adequate regardless of days', () => {
+    const alerts: ReorderAlert[] = [
+      makeAlert({ alert_level: 'adequate',     product_id: 'adeq', days_of_stock_remaining: 1 }),
+      makeAlert({ alert_level: 'out_of_stock', product_id: 'oos',  days_of_stock_remaining: 999 }),
+    ]
+    const sorted = sortAlerts(alerts)
+    expect(sorted[0].alert_level).toBe('out_of_stock')
+  })
+
+  it('no_threshold always last in sort', () => {
+    const alerts: ReorderAlert[] = [
+      makeAlert({ alert_level: 'no_threshold', product_id: 'nt' }),
+      makeAlert({ alert_level: 'adequate',     product_id: 'ad' }),
+      makeAlert({ alert_level: 'low',          product_id: 'lo' }),
+    ]
+    const sorted = sortAlerts(alerts)
+    expect(sorted[sorted.length - 1].alert_level).toBe('no_threshold')
+  })
+
+  it('single alert returns array of length 1', () => {
+    const result = sortAlerts([makeAlert({ alert_level: 'low' })])
+    expect(result).toHaveLength(1)
+  })
+
+  it('days_remaining=0 comes before days_remaining=1 in same level', () => {
+    const alerts: ReorderAlert[] = [
+      makeAlert({ alert_level: 'critical', product_id: 'p1', days_of_stock_remaining: 1 }),
+      makeAlert({ alert_level: 'critical', product_id: 'p0', days_of_stock_remaining: 0 }),
+    ]
+    const sorted = sortAlerts(alerts)
+    expect(sorted[0].product_id).toBe('p0')
+  })
+})

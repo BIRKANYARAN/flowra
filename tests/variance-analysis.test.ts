@@ -385,3 +385,240 @@ describe('aggregateYtd', () => {
     expect(ytd.actual_vs_budget_dir).toBe('neutral')
   })
 })
+
+// ── computeVariancePct — additional edge cases ────────────────────────────────
+
+describe('computeVariancePct — edge cases', () => {
+  it('returns null when actual is undefined', () => {
+    // @ts-expect-error testing runtime
+    expect(computeVariancePct(undefined, 100)).toBeNull()
+  })
+
+  it('returns null when both are undefined', () => {
+    // @ts-expect-error testing runtime
+    expect(computeVariancePct(undefined, undefined)).toBeNull()
+  })
+
+  it('variance with negative actual and positive reference', () => {
+    // (-50 - 100) / |100| × 100 = -150
+    expect(computeVariancePct(-50, 100)).toBe(-150)
+  })
+
+  it('variance with both negative actual and reference', () => {
+    // (-80 - (-100)) / |-100| × 100 = 20
+    expect(computeVariancePct(-80, -100)).toBe(20)
+  })
+
+  it('zero actual with zero reference returns null', () => {
+    expect(computeVariancePct(0, 0)).toBeNull()
+  })
+
+  it('positive actual with negative reference: result sign is correct', () => {
+    // (50 - (-200)) / |-200| × 100 = (250/200)*100 = 125
+    expect(computeVariancePct(50, -200)).toBe(125)
+  })
+
+  it('rounds to exactly 2 decimal places', () => {
+    // (101 - 99) / 99 × 100 = 2.0202... → round2 = 2.02
+    expect(computeVariancePct(101, 99)).toBeCloseTo(2.02, 1)
+  })
+
+  it('very small numbers remain correct', () => {
+    // (0.11 - 0.10) / 0.10 × 100 = 10
+    expect(computeVariancePct(0.11, 0.10)).toBeCloseTo(10, 1)
+  })
+
+  it('handles integer 1 actual vs large budget correctly', () => {
+    // (1 - 1000) / 1000 × 100 = -99.9
+    expect(computeVariancePct(1, 1000)).toBeCloseTo(-99.9, 1)
+  })
+})
+
+// ── classifyVarianceDirection — cost metric focus ─────────────────────────────
+
+describe('classifyVarianceDirection — cost metric boundary checks', () => {
+  it('cost metric with pct = 1 (above neutral) is unfavorable', () => {
+    expect(classifyVarianceDirection(1, true)).toBe('unfavorable')
+  })
+
+  it('cost metric with pct = -1 (below neutral) is favorable', () => {
+    expect(classifyVarianceDirection(-1, true)).toBe('favorable')
+  })
+
+  it('revenue metric with pct = 1 is favorable', () => {
+    expect(classifyVarianceDirection(1, false)).toBe('favorable')
+  })
+
+  it('revenue metric with pct = -1 is unfavorable', () => {
+    expect(classifyVarianceDirection(-1, false)).toBe('unfavorable')
+  })
+
+  it('cost metric: pct = 0.99 is still neutral', () => {
+    expect(classifyVarianceDirection(0.99, true)).toBe('neutral')
+  })
+
+  it('cost metric: pct = -0.99 is still neutral', () => {
+    expect(classifyVarianceDirection(-0.99, true)).toBe('neutral')
+  })
+
+  it('null pct always returns no_data regardless of isCostMetric', () => {
+    expect(classifyVarianceDirection(null, true)).toBe('no_data')
+    expect(classifyVarianceDirection(null, false)).toBe('no_data')
+  })
+
+  it('very large negative pct on cost metric is favorable', () => {
+    expect(classifyVarianceDirection(-500, true)).toBe('favorable')
+  })
+
+  it('very large positive pct on revenue metric is favorable', () => {
+    expect(classifyVarianceDirection(500, false)).toBe('favorable')
+  })
+})
+
+// ── computeForecastAccuracy — additional scenarios ────────────────────────────
+
+describe('computeForecastAccuracy — additional', () => {
+  it('array with exact 100 variance → score 0', () => {
+    expect(computeForecastAccuracy([100])).toBe(0)
+  })
+
+  it('array with 99 variance → score 1', () => {
+    expect(computeForecastAccuracy([99])).toBe(1)
+  })
+
+  it('array with -99 variance → score 1 (absolute value)', () => {
+    expect(computeForecastAccuracy([-99])).toBe(1)
+  })
+
+  it('two elements — averages scores correctly', () => {
+    // [20, -30] → scores [80, 70] → avg = 75
+    expect(computeForecastAccuracy([20, -30])).toBeCloseTo(75, 1)
+  })
+
+  it('all valid with 0 variance → 100 accuracy', () => {
+    expect(computeForecastAccuracy([0, 0, 0, 0])).toBe(100)
+  })
+
+  it('single very large negative → clamps at 0', () => {
+    expect(computeForecastAccuracy([-200])).toBe(0)
+  })
+
+  it('array of 12 zeros (full year perfect forecast)', () => {
+    expect(computeForecastAccuracy(Array(12).fill(0))).toBe(100)
+  })
+
+  it('mixed: one null and one valid 0 → accuracy 100 from single valid', () => {
+    expect(computeForecastAccuracy([null, 0])).toBe(100)
+  })
+})
+
+// ── buildVarianceCell — additional field structure checks ─────────────────────
+
+describe('buildVarianceCell — field structure validation', () => {
+  it('cell contains all required keys', () => {
+    const cell = buildVarianceCell(100, 100, 100, false)
+    expect(cell).toHaveProperty('actual')
+    expect(cell).toHaveProperty('budget')
+    expect(cell).toHaveProperty('forecast')
+    expect(cell).toHaveProperty('actual_vs_budget_pct')
+    expect(cell).toHaveProperty('actual_vs_forecast_pct')
+    expect(cell).toHaveProperty('budget_vs_forecast_pct')
+    expect(cell).toHaveProperty('actual_vs_budget_dir')
+    expect(cell).toHaveProperty('actual_vs_forecast_dir')
+  })
+
+  it('null budget → actual_vs_budget_pct is null and direction is no_data', () => {
+    const cell = buildVarianceCell(100, null, 100, false)
+    expect(cell.actual_vs_budget_pct).toBeNull()
+    expect(cell.actual_vs_budget_dir).toBe('no_data')
+  })
+
+  it('null forecast → actual_vs_forecast_pct is null and direction is no_data', () => {
+    const cell = buildVarianceCell(100, 100, null, false)
+    expect(cell.actual_vs_forecast_pct).toBeNull()
+    expect(cell.actual_vs_forecast_dir).toBe('no_data')
+  })
+
+  it('cost metric with actual < budget: favorable direction', () => {
+    const cell = buildVarianceCell(70, 100, 100, true)
+    expect(cell.actual_vs_budget_dir).toBe('favorable')
+    expect(cell.actual_vs_forecast_dir).toBe('favorable')
+  })
+
+  it('budget_vs_forecast is computed from budget and forecast only (actual irrelevant)', () => {
+    const cell1 = buildVarianceCell(200, 110, 100, false)
+    const cell2 = buildVarianceCell(50, 110, 100, false)
+    expect(cell1.budget_vs_forecast_pct).toBe(cell2.budget_vs_forecast_pct)
+  })
+
+  it('stores negative actual correctly', () => {
+    const cell = buildVarianceCell(-500, -400, -450, false)
+    expect(cell.actual).toBe(-500)
+    expect(cell.budget).toBe(-400)
+  })
+})
+
+// ── aggregateYtd — additional multi-cell scenarios ────────────────────────────
+
+describe('aggregateYtd — multi-cell and edge cases', () => {
+  it('three cells with all data: sums correctly', () => {
+    const cells: VarianceCell[] = [
+      buildVarianceCell(100, 110, 105, false),
+      buildVarianceCell(200, 210, 205, false),
+      buildVarianceCell(300, 280, 295, false),
+    ]
+    const ytd = aggregateYtd(cells, false)
+    expect(ytd.actual).toBe(600)
+    expect(ytd.budget).toBe(600)
+    expect(ytd.forecast).toBe(605)
+  })
+
+  it('empty cells array returns all nulls', () => {
+    const ytd = aggregateYtd([], false)
+    expect(ytd.actual).toBeNull()
+    expect(ytd.budget).toBeNull()
+    expect(ytd.forecast).toBeNull()
+    expect(ytd.actual_vs_budget_dir).toBe('no_data')
+  })
+
+  it('cost metric: multiple cells aggregate and direction is correct', () => {
+    const cells: VarianceCell[] = [
+      buildVarianceCell(50, 60, null, true),
+      buildVarianceCell(50, 60, null, true),
+      buildVarianceCell(50, 60, null, true),
+    ]
+    const ytd = aggregateYtd(cells, true)
+    expect(ytd.actual).toBe(150)
+    expect(ytd.budget).toBe(180)
+    // 150 < 180 → -16.67% → favorable for cost
+    expect(ytd.actual_vs_budget_dir).toBe('favorable')
+  })
+
+  it('all null actuals result in null ytd actual', () => {
+    const cells: VarianceCell[] = [
+      buildVarianceCell(null, 100, null, false),
+      buildVarianceCell(null, 200, null, false),
+    ]
+    const ytd = aggregateYtd(cells, false)
+    expect(ytd.actual).toBeNull()
+    expect(ytd.budget).toBe(300)
+  })
+
+  it('forecast sums only non-null values', () => {
+    const cells: VarianceCell[] = [
+      buildVarianceCell(100, 100, 90, false),
+      buildVarianceCell(100, 100, null, false),
+      buildVarianceCell(100, 100, 110, false),
+    ]
+    const ytd = aggregateYtd(cells, false)
+    // hasForecast = true for cells with 90 and 110
+    expect(ytd.forecast).toBe(200)
+  })
+
+  it('single cell with all zeros produces neutral direction (pct=0)', () => {
+    const cells: VarianceCell[] = [buildVarianceCell(100, 100, 100, false)]
+    const ytd = aggregateYtd(cells, false)
+    expect(ytd.actual_vs_budget_dir).toBe('neutral')
+    expect(ytd.actual_vs_forecast_dir).toBe('neutral')
+  })
+})

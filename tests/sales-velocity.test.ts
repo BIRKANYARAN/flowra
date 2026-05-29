@@ -370,3 +370,180 @@ describe('classifyStockUrgency', () => {
     expect(samples).toEqual(order)
   })
 })
+
+// ── computeDailyVelocity — additional large/zero edge cases ───────────────────
+
+describe('computeDailyVelocity — edge cases and large values', () => {
+  it('returns 0 when observationDays is 0 (zero days window)', () => {
+    expect(computeDailyVelocity(500, 0)).toBe(0)
+  })
+
+  it('returns 0 when both qty and days are 0', () => {
+    expect(computeDailyVelocity(0, 0)).toBe(0)
+  })
+
+  it('handles 1000 units sold over 100 days = 10/day', () => {
+    expect(computeDailyVelocity(1000, 100)).toBe(10)
+  })
+
+  it('handles very large qty and large days', () => {
+    expect(computeDailyVelocity(1_000_000, 365)).toBeCloseTo(2739.73, 1)
+  })
+
+  it('returns fractional velocity for odd division', () => {
+    expect(computeDailyVelocity(7, 14)).toBeCloseTo(0.5, 5)
+  })
+
+  it('computes 30-day window correctly', () => {
+    expect(computeDailyVelocity(60, 30)).toBe(2)
+  })
+})
+
+// ── computeDaysToStockout — zero velocity = infinite stockout ─────────────────
+
+describe('computeDaysToStockout — zero velocity and other edge cases', () => {
+  it('returns null when velocity is exactly 0 (infinite stockout)', () => {
+    expect(computeDaysToStockout(100, 0)).toBeNull()
+  })
+
+  it('returns null when velocity is slightly above 0 but very small... actually no, small velocity returns large value', () => {
+    // 0.001 velocity → 1 unit takes 1000 days
+    expect(computeDaysToStockout(1, 0.001)).toBeCloseTo(1000, 1)
+  })
+
+  it('returns 0 when currentQty is exactly 0 with positive velocity', () => {
+    expect(computeDaysToStockout(0, 10)).toBe(0)
+  })
+
+  it('returns 0 for negative qty (over-sold scenario)', () => {
+    expect(computeDaysToStockout(-10, 5)).toBe(0)
+  })
+
+  it('handles stockout exactly at 7.5 days (fractional critical zone)', () => {
+    expect(computeDaysToStockout(15, 2)).toBeCloseTo(7.5, 5)
+  })
+
+  it('large stock with unit velocity → large days to stockout', () => {
+    expect(computeDaysToStockout(365, 1)).toBeCloseTo(365, 5)
+  })
+})
+
+// ── computeSafetyStock — safety factor variations ─────────────────────────────
+
+describe('computeSafetyStock — safety factor variations', () => {
+  it('safety factor 1.0 gives base coverage without buffer', () => {
+    // 5 × 10 × 1.0 = 50
+    expect(computeSafetyStock(5, 10, 1.0)).toBe(50)
+  })
+
+  it('safety factor 2.0 gives 2× base coverage', () => {
+    // 5 × 10 × 2.0 = 100
+    expect(computeSafetyStock(5, 10, 2.0)).toBe(100)
+  })
+
+  it('safety factor 0.5 reduces buffer below lead time coverage', () => {
+    // 4 × 10 × 0.5 = 20
+    expect(computeSafetyStock(4, 10, 0.5)).toBe(20)
+  })
+
+  it('safety factor 3.0 triples the base', () => {
+    // 2 × 7 × 3.0 = 42
+    expect(computeSafetyStock(2, 7, 3.0)).toBe(42)
+  })
+
+  it('default factor is 1.5', () => {
+    // Explicit vs implicit should match
+    expect(computeSafetyStock(4, 10)).toBe(computeSafetyStock(4, 10, 1.5))
+  })
+
+  it('result increases monotonically with safety factor', () => {
+    const f1 = computeSafetyStock(3, 7, 1.0)
+    const f15 = computeSafetyStock(3, 7, 1.5)
+    const f2 = computeSafetyStock(3, 7, 2.0)
+    expect(f15).toBeGreaterThanOrEqual(f1)
+    expect(f2).toBeGreaterThanOrEqual(f15)
+  })
+})
+
+// ── computeReorderPoint — formula verification ────────────────────────────────
+
+describe('computeReorderPoint — formula: safetyStock + ceil(velocity × lead)', () => {
+  it('formula holds with default factor 1.5', () => {
+    const v = 3, l = 7
+    const ss = computeSafetyStock(v, l)         // ceil(3 × 7 × 1.5) = ceil(31.5) = 32
+    const rp = computeReorderPoint(v, l)
+    expect(rp).toBe(ss + Math.ceil(v * l))        // 32 + 21 = 53
+  })
+
+  it('formula holds with factor 1.0', () => {
+    const v = 5, l = 6, f = 1.0
+    const ss = computeSafetyStock(v, l, f)       // ceil(5 × 6 × 1.0) = 30
+    const rp = computeReorderPoint(v, l, f)
+    expect(rp).toBe(ss + Math.ceil(v * l))
+  })
+
+  it('formula holds with factor 2.0', () => {
+    const v = 2, l = 14, f = 2.0
+    const ss = computeSafetyStock(v, l, f)
+    const rp = computeReorderPoint(v, l, f)
+    expect(rp).toBe(ss + Math.ceil(v * l))
+  })
+
+  it('reorder point is always >= safety stock when velocity > 0', () => {
+    const ss = computeSafetyStock(2, 10, 1.5)
+    const rp = computeReorderPoint(2, 10, 1.5)
+    expect(rp).toBeGreaterThanOrEqual(ss)
+  })
+
+  it('returns integer for non-integer velocity', () => {
+    expect(Number.isInteger(computeReorderPoint(2.3, 5, 1.5))).toBe(true)
+  })
+})
+
+// ── classifyStockUrgency — all urgency levels with exact boundary values ───────
+
+describe('classifyStockUrgency — exact boundary values for all levels', () => {
+  it('0 days → critical (already stocked out)', () => {
+    expect(classifyStockUrgency(0)).toBe('critical')
+  })
+
+  it('7 days → critical (≤7 boundary)', () => {
+    expect(classifyStockUrgency(7)).toBe('critical')
+  })
+
+  it('8 days → urgent (just above critical boundary)', () => {
+    expect(classifyStockUrgency(8)).toBe('urgent')
+  })
+
+  it('14 days → urgent (≤14 boundary)', () => {
+    expect(classifyStockUrgency(14)).toBe('urgent')
+  })
+
+  it('15 days → low (just above urgent boundary)', () => {
+    expect(classifyStockUrgency(15)).toBe('low')
+  })
+
+  it('30 days → low (≤30 boundary)', () => {
+    expect(classifyStockUrgency(30)).toBe('low')
+  })
+
+  it('31 days → healthy (just above low boundary)', () => {
+    expect(classifyStockUrgency(31)).toBe('healthy')
+  })
+
+  it('null → no_movement (zero velocity)', () => {
+    expect(classifyStockUrgency(null)).toBe('no_movement')
+  })
+
+  it('500 days → healthy (very well stocked)', () => {
+    expect(classifyStockUrgency(500)).toBe('healthy')
+  })
+
+  it('result is always a valid urgency string', () => {
+    const valid = ['no_movement', 'critical', 'urgent', 'low', 'healthy']
+    const testCases: Array<number|null> = [null, 0, 1, 7, 8, 14, 15, 30, 31, 100]
+    for (const d of testCases) {
+      expect(valid).toContain(classifyStockUrgency(d))
+    }
+  })
+})

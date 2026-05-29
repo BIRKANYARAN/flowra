@@ -381,3 +381,225 @@ describe('product-adapter — migration scenario', () => {
     expect(getSaleCurrency(row)).toBe('TRY')
   })
 })
+
+// ── getSalePrice — null/undefined and fallback priority ──────────────────────
+
+describe('getSalePrice — null/undefined input and fallbacks', () => {
+  it('null product returns null', () => {
+    expect(getSalePrice(null)).toBeNull()
+  })
+
+  it('undefined product returns null', () => {
+    expect(getSalePrice(undefined)).toBeNull()
+  })
+
+  it('empty object returns null (no price fields)', () => {
+    expect(getSalePrice({})).toBeNull()
+  })
+
+  it('default_sale_price=0 falls through to catalog_price', () => {
+    expect(getSalePrice({ default_sale_price: 0, catalog_price: 100 })).toBe(100)
+  })
+
+  it('default_sale_price=0 with no catalog_price → null', () => {
+    expect(getSalePrice({ default_sale_price: 0 })).toBeNull()
+  })
+
+  it('catalog_price=0 returns null (0 is absent)', () => {
+    expect(getSalePrice({ catalog_price: 0 })).toBeNull()
+  })
+
+  it('negative default_sale_price with positive catalog_price returns catalog_price', () => {
+    expect(getSalePrice({ default_sale_price: -1, catalog_price: 55 })).toBe(55)
+  })
+
+  it('Infinity default_sale_price falls to catalog_price', () => {
+    expect(getSalePrice({ default_sale_price: Infinity, catalog_price: 75 })).toBe(75)
+  })
+
+  it('NaN default_sale_price falls to catalog_price', () => {
+    expect(getSalePrice({ default_sale_price: NaN, catalog_price: 30 })).toBe(30)
+  })
+
+  it('both prices present: returns default_sale_price (canonical priority)', () => {
+    expect(getSalePrice({ default_sale_price: 99, catalog_price: 150 })).toBe(99)
+  })
+
+  it('very small positive default_sale_price is valid', () => {
+    expect(getSalePrice({ default_sale_price: 0.001 })).toBe(0.001)
+  })
+})
+
+// ── getSaleCurrency — default fallback and validity checks ───────────────────
+
+describe('getSaleCurrency — TRY default and validity', () => {
+  it('returns null for null input (no TRY default at adapter level)', () => {
+    expect(getSaleCurrency(null)).toBeNull()
+  })
+
+  it('returns null for undefined input', () => {
+    expect(getSaleCurrency(undefined)).toBeNull()
+  })
+
+  it('returns TRY when explicitly set as default_sale_currency', () => {
+    expect(getSaleCurrency({ default_sale_currency: 'TRY' })).toBe('TRY')
+  })
+
+  it('TRY as cost_currency fallback is accepted', () => {
+    expect(getSaleCurrency({ cost_currency: 'TRY' })).toBe('TRY')
+  })
+
+  it('invalid default_sale_currency falls to valid cost_currency', () => {
+    expect(getSaleCurrency({ default_sale_currency: 'XX' as string, cost_currency: 'TRY' })).toBe('TRY')
+  })
+
+  it('both fields null → returns null', () => {
+    expect(getSaleCurrency({ default_sale_currency: undefined, cost_currency: undefined })).toBeNull()
+  })
+
+  it('4-letter code rejected as default, valid cost_currency returned', () => {
+    expect(getSaleCurrency({ default_sale_currency: 'EURO' as string, cost_currency: 'EUR' })).toBe('EUR')
+  })
+
+  it('USD is a valid 3-letter code', () => {
+    expect(getSaleCurrency({ default_sale_currency: 'USD' })).toBe('USD')
+  })
+})
+
+// ── getSaleVatRate — DEFAULT_VAT_RATE_TR and edge cases ──────────────────────
+
+describe('getSaleVatRate — default fallback and edge values', () => {
+  it('DEFAULT_VAT_RATE_TR is exactly 20', () => {
+    expect(DEFAULT_VAT_RATE_TR).toBe(20)
+  })
+
+  it('DEFAULT_VAT_RATE_TR is a number (not string)', () => {
+    expect(typeof DEFAULT_VAT_RATE_TR).toBe('number')
+  })
+
+  it('DEFAULT_VAT_RATE_TR is between 0 and 100', () => {
+    expect(DEFAULT_VAT_RATE_TR).toBeGreaterThan(0)
+    expect(DEFAULT_VAT_RATE_TR).toBeLessThan(100)
+  })
+
+  it('explicit 0 rate is returned (zero-rated)', () => {
+    expect(getSaleVatRate({ default_sale_vat_rate: 0 })).toBe(0)
+  })
+
+  it('explicit 10 rate is returned', () => {
+    expect(getSaleVatRate({ default_sale_vat_rate: 10 })).toBe(10)
+  })
+
+  it('explicit 20 rate is returned (same as default)', () => {
+    expect(getSaleVatRate({ default_sale_vat_rate: 20 })).toBe(20)
+  })
+
+  it('null product → DEFAULT_VAT_RATE_TR', () => {
+    expect(getSaleVatRate(null)).toBe(DEFAULT_VAT_RATE_TR)
+  })
+
+  it('undefined product → DEFAULT_VAT_RATE_TR', () => {
+    expect(getSaleVatRate(undefined)).toBe(DEFAULT_VAT_RATE_TR)
+  })
+
+  it('missing vat rate field → DEFAULT_VAT_RATE_TR', () => {
+    expect(getSaleVatRate({})).toBe(DEFAULT_VAT_RATE_TR)
+  })
+
+  it('negative vat rate → DEFAULT_VAT_RATE_TR (fails >= 0 check)', () => {
+    expect(getSaleVatRate({ default_sale_vat_rate: -1 })).toBe(DEFAULT_VAT_RATE_TR)
+  })
+
+  it('NaN vat rate → DEFAULT_VAT_RATE_TR', () => {
+    expect(getSaleVatRate({ default_sale_vat_rate: NaN })).toBe(DEFAULT_VAT_RATE_TR)
+  })
+
+  it('Infinity vat rate → DEFAULT_VAT_RATE_TR (fails isFinite)', () => {
+    expect(getSaleVatRate({ default_sale_vat_rate: Infinity })).toBe(DEFAULT_VAT_RATE_TR)
+  })
+})
+
+// ── isProductActive — various is_active values ────────────────────────────────
+
+describe('isProductActive — is_active value matrix', () => {
+  it('is_active=true → active', () => {
+    expect(isProductActive({ is_active: true })).toBe(true)
+  })
+
+  it('is_active=false → inactive', () => {
+    expect(isProductActive({ is_active: false })).toBe(false)
+  })
+
+  it('is_active=null → active (null is not false, treated as legacy active)', () => {
+    expect(isProductActive({ is_active: null as unknown as boolean })).toBe(true)
+  })
+
+  it('is_active=undefined → active (missing field = legacy = active)', () => {
+    expect(isProductActive({ is_active: undefined })).toBe(true)
+  })
+
+  it('null product → false (no product = not active)', () => {
+    expect(isProductActive(null)).toBe(false)
+  })
+
+  it('undefined product → false', () => {
+    expect(isProductActive(undefined)).toBe(false)
+  })
+
+  it('empty object → active (legacy row with no is_active)', () => {
+    expect(isProductActive({})).toBe(true)
+  })
+
+  it('is_active=false even with all other positive fields → inactive', () => {
+    expect(isProductActive({
+      is_active: false,
+      default_sale_price: 500,
+      default_sale_currency: 'TRY',
+      unit_cost: 100,
+    })).toBe(false)
+  })
+})
+
+// ── getLegacyProductCost — fallback priority ─────────────────────────────────
+
+describe('getLegacyProductCost — priority and edge values', () => {
+  it('null product → null', () => {
+    expect(getLegacyProductCost(null)).toBeNull()
+  })
+
+  it('undefined product → null', () => {
+    expect(getLegacyProductCost(undefined)).toBeNull()
+  })
+
+  it('empty object → null (no unit_cost)', () => {
+    expect(getLegacyProductCost({})).toBeNull()
+  })
+
+  it('unit_cost=0 → null (treated as absent)', () => {
+    expect(getLegacyProductCost({ unit_cost: 0 })).toBeNull()
+  })
+
+  it('unit_cost=negative → null (not a valid cost)', () => {
+    expect(getLegacyProductCost({ unit_cost: -100 })).toBeNull()
+  })
+
+  it('unit_cost=positive number → returned as-is', () => {
+    expect(getLegacyProductCost({ unit_cost: 42 })).toBe(42)
+  })
+
+  it('unit_cost=0.001 (tiny positive) → returned', () => {
+    expect(getLegacyProductCost({ unit_cost: 0.001 })).toBe(0.001)
+  })
+
+  it('unit_cost=Infinity → null (not finite)', () => {
+    expect(getLegacyProductCost({ unit_cost: Infinity })).toBeNull()
+  })
+
+  it('unit_cost=NaN → null (not a number)', () => {
+    expect(getLegacyProductCost({ unit_cost: NaN })).toBeNull()
+  })
+
+  it('unit_cost=1_000_000 (large value) → returned', () => {
+    expect(getLegacyProductCost({ unit_cost: 1_000_000 })).toBe(1_000_000)
+  })
+})

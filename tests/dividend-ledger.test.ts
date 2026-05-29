@@ -381,3 +381,230 @@ describe('sumByPartner', () => {
     expect(a.total_gross_try + b.total_gross_try).toBe(100_000)
   })
 })
+
+// ── computePartnerGrossDividend — formula: profit × share/100 ────────────────
+
+describe('computePartnerGrossDividend — formula correctness', () => {
+  it('gross = distributableProfit × sharePct / 100 for 25% partner', () => {
+    expect(computePartnerGrossDividend(200_000, 25)).toBe(50_000)
+  })
+
+  it('gross = distributableProfit × sharePct / 100 for 75% partner', () => {
+    expect(computePartnerGrossDividend(200_000, 75)).toBe(150_000)
+  })
+
+  it('100% single-partner gets the full distributable amount', () => {
+    expect(computePartnerGrossDividend(350_000, 100)).toBe(350_000)
+  })
+
+  it('0% partner receives nothing', () => {
+    expect(computePartnerGrossDividend(1_000_000, 0)).toBe(0)
+  })
+
+  it('zero distributable → zero gross regardless of share', () => {
+    expect(computePartnerGrossDividend(0, 50)).toBe(0)
+  })
+
+  it('rounds to 2 decimal places', () => {
+    // 100_000 × 33.33 / 100 = 33330.00
+    expect(computePartnerGrossDividend(100_000, 33.33)).toBeCloseTo(33_330, 1)
+  })
+
+  it('three partners sum to full amount (25+25+50 = 100%)', () => {
+    const profit = 100_000
+    const a = computePartnerGrossDividend(profit, 25)
+    const b = computePartnerGrossDividend(profit, 25)
+    const c = computePartnerGrossDividend(profit, 50)
+    expect(a + b + c).toBe(100_000)
+  })
+})
+
+// ── computeWithholdingTax — 10% rule (GVK 94) ────────────────────────────────
+
+describe('computeWithholdingTax — 10% of gross (GVK 94)', () => {
+  it('10% of 100_000 = 10_000', () => {
+    expect(computeWithholdingTax(100_000)).toBe(10_000)
+  })
+
+  it('10% of 250_000 = 25_000', () => {
+    expect(computeWithholdingTax(250_000)).toBe(25_000)
+  })
+
+  it('10% of 1234.56 rounds to 2 decimal places', () => {
+    // 1234.56 × 0.10 = 123.456 → rounds to 123.46
+    expect(computeWithholdingTax(1234.56)).toBe(123.46)
+  })
+
+  it('returns 0 for gross = 0', () => {
+    expect(computeWithholdingTax(0)).toBe(0)
+  })
+
+  it('returns 0 for negative gross', () => {
+    expect(computeWithholdingTax(-10_000)).toBe(0)
+  })
+
+  it('withholding is always 10% of gross for large amounts', () => {
+    const gross = 5_000_000
+    expect(computeWithholdingTax(gross)).toBe(500_000)
+  })
+})
+
+// ── computeNetDividend — net = 90% of gross ───────────────────────────────────
+
+describe('computeNetDividend — net = 90% of gross', () => {
+  it('net = 90% of 100_000 → 90_000', () => {
+    expect(computeNetDividend(100_000)).toBe(90_000)
+  })
+
+  it('net = 90% of 50_000 → 45_000', () => {
+    expect(computeNetDividend(50_000)).toBe(45_000)
+  })
+
+  it('net = 90% of 1 → 0.9', () => {
+    expect(computeNetDividend(1)).toBeCloseTo(0.9, 5)
+  })
+
+  it('net of 0 gross → 0', () => {
+    expect(computeNetDividend(0)).toBe(0)
+  })
+
+  it('gross - withholding = net (consistency check)', () => {
+    const gross = 75_000
+    const withholding = computeWithholdingTax(gross)
+    const net = computeNetDividend(gross)
+    expect(net).toBeCloseTo(gross - withholding, 2)
+  })
+
+  it('net is always less than gross when gross > 0', () => {
+    expect(computeNetDividend(200_000)).toBeLessThan(200_000)
+  })
+
+  it('for 250_000 gross, net = 225_000 (90%)', () => {
+    expect(computeNetDividend(250_000)).toBe(225_000)
+  })
+})
+
+// ── validateDividendDeclaration — TTK 509 compliance ─────────────────────────
+
+describe('validateDividendDeclaration — TTK 509 rules', () => {
+  it('returns valid when proposal equals profit (exact equality)', () => {
+    const result = validateDividendDeclaration(100_000, 100_000)
+    expect(result.valid).toBe(true)
+    expect(result.reason).toBeNull()
+  })
+
+  it('returns valid when proposal is less than profit', () => {
+    const result = validateDividendDeclaration(50_000, 100_000)
+    expect(result.valid).toBe(true)
+    expect(result.reason).toBeNull()
+  })
+
+  it('returns invalid when proposal exceeds profit by 1 TL', () => {
+    const result = validateDividendDeclaration(100_001, 100_000)
+    expect(result.valid).toBe(false)
+    expect(result.reason).not.toBeNull()
+  })
+
+  it('invalid reason includes TTK 509 reference', () => {
+    const result = validateDividendDeclaration(200_000, 100_000)
+    expect(result.reason).toContain('TTK 509')
+  })
+
+  it('returns valid for 0 proposal and 0 profit', () => {
+    const result = validateDividendDeclaration(0, 0)
+    expect(result.valid).toBe(true)
+  })
+
+  it('returns invalid when profit is 0 but proposal > 0', () => {
+    const result = validateDividendDeclaration(1, 0)
+    expect(result.valid).toBe(false)
+  })
+
+  it('valid case has reason=null', () => {
+    const result = validateDividendDeclaration(1, 100)
+    expect(result.reason).toBeNull()
+  })
+
+  it('invalid case has reason as non-empty string', () => {
+    const result = validateDividendDeclaration(100, 50)
+    expect(typeof result.reason).toBe('string')
+    expect((result.reason as string).length).toBeGreaterThan(0)
+  })
+})
+
+// ── computePerPartnerAmount — sharePct=100 and zero distributions ─────────────
+
+describe('computePerPartnerAmount — edge cases', () => {
+  it('single partner with share_ratio=1.0 receives full gross', () => {
+    const result = computePerPartnerAmount(100_000, [{ name: 'Solo', share_ratio: 1.0 }])
+    expect(result).toHaveLength(1)
+    expect(result[0].gross_try).toBe(100_000)
+    expect(result[0].withholding_try).toBe(10_000)
+    expect(result[0].net_try).toBe(90_000)
+  })
+
+  it('returns empty array for zero gross', () => {
+    const result = computePerPartnerAmount(0, [{ name: 'A', share_ratio: 0.5 }])
+    expect(result).toHaveLength(0)
+  })
+
+  it('returns empty array for empty partner list', () => {
+    expect(computePerPartnerAmount(100_000, [])).toHaveLength(0)
+  })
+
+  it('paid is false by default for all partners', () => {
+    const partners = [
+      { name: 'A', share_ratio: 0.5 },
+      { name: 'B', share_ratio: 0.5 },
+    ]
+    const result = computePerPartnerAmount(100_000, partners)
+    for (const pp of result) {
+      expect(pp.paid).toBe(false)
+    }
+  })
+})
+
+// ── sumByPartner — multiple partners and zero distributions ───────────────────
+
+describe('sumByPartner — aggregation correctness', () => {
+  it('returns empty for empty entries', () => {
+    expect(sumByPartner([])).toHaveLength(0)
+  })
+
+  it('excludes cancelled entries from totals', () => {
+    const cancelledEntry: DividendLedgerEntry = {
+      ...makeDeclaredEntry('c1', [{ partner_name: 'A', share_ratio: 1, gross_try: 50_000, withholding_try: 5_000, net_try: 45_000, paid: false }]),
+      event_type: 'cancelled',
+    }
+    const result = sumByPartner([cancelledEntry])
+    expect(result).toHaveLength(0)
+  })
+
+  it('includes both declared and paid entries in totals', () => {
+    const pp = [{ partner_name: 'X', share_ratio: 1, gross_try: 100_000, withholding_try: 10_000, net_try: 90_000, paid: false }]
+    const declared = makeDeclaredEntry('d1', pp, 100_000)
+    const pp2 = [{ partner_name: 'X', share_ratio: 1, gross_try: 50_000, withholding_try: 5_000, net_try: 45_000, paid: true }]
+    const paid = makePaidEntry('p1', pp2, 50_000)
+    const result = sumByPartner([declared, paid])
+    const x = result.find(r => r.partner_name === 'X')!
+    expect(x.total_gross_try).toBe(150_000)
+    expect(x.total_net_try).toBe(135_000)
+    expect(x.total_withholding_try).toBe(15_000)
+  })
+
+  it('aggregates 3 separate declared entries for same partner', () => {
+    const makeEntry = (id: string, gross: number) => {
+      const pp = [{ partner_name: 'Z', share_ratio: 1, gross_try: gross, withholding_try: gross * 0.1, net_try: gross * 0.9, paid: false }]
+      return makeDeclaredEntry(id, pp, gross)
+    }
+    const result = sumByPartner([
+      makeEntry('e1', 100_000),
+      makeEntry('e2', 200_000),
+      makeEntry('e3', 300_000),
+    ])
+    const z = result.find(r => r.partner_name === 'Z')!
+    expect(z.total_gross_try).toBe(600_000)
+    expect(z.total_withholding_try).toBe(60_000)
+    expect(z.total_net_try).toBe(540_000)
+  })
+})
