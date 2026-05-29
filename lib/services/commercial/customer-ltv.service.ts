@@ -377,6 +377,156 @@ export class CustomerLtvService {
   }
 }
 
+// ── CLV pure helpers (exported for unit tests) ────────────────────────────────
+
+/**
+ * Average order value: totalRevenue / orderCount.
+ * Returns null if orderCount === 0.
+ */
+export function computeAvgOrderValue(
+  totalRevenue: number,
+  orderCount: number,
+): number | null {
+  if (orderCount === 0) return null
+  return totalRevenue / orderCount
+}
+
+/**
+ * Purchase frequency: orders per month.
+ * Returns null if customerLifespanMonths === 0.
+ */
+export function computePurchaseFrequency(
+  orderCount: number,
+  customerLifespanMonths: number,
+): number | null {
+  if (customerLifespanMonths === 0) return null
+  return orderCount / customerLifespanMonths
+}
+
+/**
+ * Customer lifespan in months between firstPurchaseDate and today (or provided today).
+ * Uses: months = daysDiff / 30.44. Minimum 1 month.
+ */
+export function computeCustomerLifespan(
+  firstPurchaseDate: string,
+  lastPurchaseDate: string,
+  today?: string,
+): number {
+  const todayStr = today ?? new Date().toISOString().slice(0, 10)
+  const firstMs  = new Date(firstPurchaseDate).getTime()
+  const todayMs  = new Date(todayStr).getTime()
+  // Use today to measure lifespan from acquisition to now.
+  // lastPurchaseDate is accepted but lifespan is first→today.
+  void lastPurchaseDate
+  const months = (todayMs - firstMs) / (1000 * 60 * 60 * 24 * 30.44)
+  return Math.max(1, months)
+}
+
+/**
+ * Simple CLV: avgOrderValue × purchaseFrequency × customerLifespanMonths.
+ * Returns null if avgOrderValue or purchaseFrequency is null, or if lifespan <= 0.
+ */
+export function computeSimpleClv(
+  avgOrderValue: number | null,
+  purchaseFrequency: number | null,
+  customerLifespanMonths: number,
+): number | null {
+  if (avgOrderValue === null || purchaseFrequency === null) return null
+  if (customerLifespanMonths <= 0) return null
+  return avgOrderValue * purchaseFrequency * customerLifespanMonths
+}
+
+/**
+ * Margin-adjusted CLV: simpleClv × (grossMarginPct / 100).
+ * Returns null if simpleClv is null.
+ */
+export function computeMarginAdjustedClv(
+  simpleClv: number | null,
+  grossMarginPct: number,
+): number | null {
+  if (simpleClv === null) return null
+  return simpleClv * (grossMarginPct / 100)
+}
+
+export type CustomerValueClass =
+  | 'champion'
+  | 'loyal'
+  | 'potential'
+  | 'at_risk'
+  | 'lost'
+  | 'insufficient_data'
+
+/**
+ * Classify customer value based on CLV and percentile thresholds.
+ * insufficient_data: clv null
+ * champion: clv >= p80
+ * loyal: clv >= p50
+ * potential: clv >= p20
+ * at_risk: clv > 0 but < p20
+ * lost: clv === 0
+ */
+export function classifyCustomerValue(
+  clv: number | null,
+  percentileThresholds: { p80: number; p50: number; p20: number },
+): CustomerValueClass {
+  if (clv === null) return 'insufficient_data'
+  if (clv >= percentileThresholds.p80) return 'champion'
+  if (clv >= percentileThresholds.p50) return 'loyal'
+  if (clv >= percentileThresholds.p20) return 'potential'
+  if (clv > 0) return 'at_risk'
+  return 'lost'
+}
+
+/**
+ * Compute customer acquisition payback period in months.
+ * = cac / (avgMonthlyRevenue × grossMarginPct / 100)
+ * Returns null if avgMonthlyRevenue === 0 or grossMarginPct === 0.
+ */
+export function computeCustomerAcquisitionPayback(
+  cac: number,
+  avgMonthlyRevenue: number,
+  grossMarginPct: number,
+): number | null {
+  if (avgMonthlyRevenue === 0 || grossMarginPct === 0) return null
+  return cac / (avgMonthlyRevenue * (grossMarginPct / 100))
+}
+
+/**
+ * CLV to CAC ratio: clv / cac.
+ * Returns null if clv is null or cac === 0.
+ * Benchmark: ratio >= 3 is healthy for B2B.
+ */
+export function computeClvToCacRatio(
+  clv: number | null,
+  cac: number,
+): number | null {
+  if (clv === null || cac === 0) return null
+  return clv / cac
+}
+
+export type ClvCacHealth =
+  | 'excellent'
+  | 'healthy'
+  | 'marginal'
+  | 'unprofitable'
+  | 'insufficient_data'
+
+/**
+ * Classify CLV/CAC health.
+ * insufficient_data: null
+ * excellent: >= 5
+ * healthy: >= 3
+ * marginal: >= 1
+ * unprofitable: < 1
+ */
+export function classifyClvCacHealth(ratio: number | null): ClvCacHealth {
+  if (ratio === null) return 'insufficient_data'
+  if (ratio >= 5) return 'excellent'
+  if (ratio >= 3) return 'healthy'
+  if (ratio >= 1) return 'marginal'
+  return 'unprofitable'
+}
+
 // ── Empty report helper ────────────────────────────────────────────────────────
 
 function buildEmptyReport(companyId: string, asOfDate: string): CustomerLtvReport {

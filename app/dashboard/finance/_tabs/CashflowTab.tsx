@@ -26,6 +26,7 @@ import type { WaterfallSegment } from '@/lib/services/finance/cashflow-waterfall
 import { CashProjectionSection } from '@/app/dashboard/finance/_components/CashProjectionSection'
 import { CashflowWaterfallClient }   from '@/app/dashboard/finance/_tabs/_waterfall/CashflowWaterfallClient'
 import { CashSensitivityClient }     from '@/app/dashboard/finance/_tabs/_sensitivity/CashSensitivityClient'
+import { CashForecastClient }        from '@/app/dashboard/finance/_tabs/_cashforecast/CashForecastClient'
 
 // ── Waterfall color map ───────────────────────────────────────────────────────
 const SEGMENT_COLOR: Record<WaterfallSegment['color_class'], { bar: string; text: string; bg: string }> = {
@@ -99,6 +100,9 @@ export async function CashflowTab({ userId, companyId }: Props) {
 
   return (
     <div className="space-y-4">
+
+      {/* Zone 0 — 13-Week Cash Flow Forecast */}
+      <CashForecastClient companyId={companyId} />
 
       {/* Zone 1 — Command strip (6 KPIs) */}
       <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">

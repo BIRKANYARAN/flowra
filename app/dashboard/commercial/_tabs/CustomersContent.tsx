@@ -126,14 +126,14 @@ export async function CustomersContent({ companyId }: Props) {
       {/* ── Kohort Tutma & Churn Analizi ─────────────────────────────────── */}
       <CohortRetentionClient companyId={companyId} />
 
+      {/* ── Müşteri Yaşam Boyu Değeri (CLV / LTV) ───────────────────────── */}
+      <CustomerLtvClient />
+
       {/* ── Müşteri Kredi Skoru ───────────────────────────────────────────── */}
       <CustomerCreditClient companyId={companyId} />
 
       {/* ── Müşteri Yoğunlaşma Analizi (HHI) ────────────────────────────── */}
       <CustomerConcentrationClient />
-
-      {/* ── Müşteri Değer Analizi (LTV) ──────────────────────────────────── */}
-      <CustomerLtvClient />
 
       {/* ── Müşteri Yoğunlaşma Riski (HHI) ──────────────────────────────── */}
       {concentrationReport && concentrationReport.customer_count > 0 && (
