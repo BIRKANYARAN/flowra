@@ -1,67 +1,86 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { resolveApiAuth } from '@/lib/api-auth'
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/ledger/journal-entries
+//
+// Returns journal entries for the requested date range plus a trial balance.
+//
+// Query params:
+//   ?from=YYYY-MM-DD  (default: first day of current month)
+//   ?to=YYYY-MM-DD    (default: today)
+//
+// Auth: admin only (resolveApiAuth + requireRole admin)
+// Cache: revalidate 300 seconds
+// ─────────────────────────────────────────────────────────────────────────────
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 300
 
-// GET /api/ledger/journal-entries?period_id=&from_date=&to_date=&source_type=&limit=50&offset=0
+import { NextRequest, NextResponse }  from 'next/server'
+import { resolveApiAuth }             from '@/lib/api-auth'
+import { requireRole }                from '@/lib/require-role'
+import { JournalEntryService }        from '@/lib/services/ledger/journal-entry.service'
+import { REQUEST_ID_HEADER }          from '@/middleware'
+
+function currentMonthBounds(): { from: string; to: string } {
+  const now   = new Date()
+  const year  = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day   = String(now.getDate()).padStart(2, '0')
+  return {
+    from: `${year}-${month}-01`,
+    to:   `${year}-${month}-${day}`,
+  }
+}
+
 export async function GET(req: NextRequest) {
+  const auth = await resolveApiAuth(req)
+  if (!auth.ok) return auth.response
+  const { uid, companyId, supabase, ctx } = auth
+
+  // Admin-only route
   try {
-    const auth = await resolveApiAuth(req)
-    if (!auth.ok) return auth.response
-    const { companyId, supabase } = auth
+    await requireRole(uid, companyId, 'admin', supabase)
+  } catch {
+    return NextResponse.json(
+      { error: 'Forbidden: admin role required', code: 'FORBIDDEN', type: 'SECURITY' },
+      { status: 403, headers: { [REQUEST_ID_HEADER]: ctx.requestId } },
+    )
+  }
 
-    const params      = req.nextUrl.searchParams
-    const periodId    = params.get('period_id')   ?? null
-    const fromDate    = params.get('from_date')    ?? null
-    const toDate      = params.get('to_date')      ?? null
-    const sourceType  = params.get('source_type')  ?? null
-    const rawLimit    = parseInt(params.get('limit')  ?? '50', 10)
-    const rawOffset   = parseInt(params.get('offset') ?? '0',  10)
-    const limit       = Math.min(isFinite(rawLimit)  ? Math.max(1, rawLimit)  : 50,  200)
-    const offset      = isFinite(rawOffset) ? Math.max(0, rawOffset) : 0
+  const defaults = currentMonthBounds()
+  const from     = req.nextUrl.searchParams.get('from') ?? defaults.from
+  const to       = req.nextUrl.searchParams.get('to')   ?? defaults.to
 
-    const buildQuery = (withVoucher: boolean) => {
-      const selectFields = withVoucher
-        ? `id, source_type, source_id, entry_date, description, reference, voucher_number,
-           is_adjustment, is_reversal, is_voided, created_at,
-           journal_entry_lines (
-             id, account_code, account_name, debit_try, credit_try, description
-           )`
-        : `id, source_type, source_id, entry_date, description, reference,
-           is_adjustment, is_reversal, is_voided, created_at,
-           journal_entry_lines (
-             id, account_code, account_name, debit_try, credit_try, description
-           )`
-      let q = supabase
-        .from('journal_entries')
-        .select(selectFields, { count: 'exact' })
-        .eq('company_id', companyId)
-        .order('entry_date', { ascending: false })
-        .order('created_at', { ascending: false })
-        .range(offset, offset + limit - 1)
-      if (periodId)   q = q.eq('period_id',   periodId)
-      if (sourceType) q = q.eq('source_type', sourceType)
-      if (fromDate)   q = q.gte('entry_date', fromDate)
-      if (toDate)     q = q.lte('entry_date', toDate)
-      return q
-    }
+  // Validate date format
+  const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
+  if (!DATE_RE.test(from) || !DATE_RE.test(to)) {
+    return NextResponse.json(
+      { error: 'Invalid date format. Expected YYYY-MM-DD.', code: 'INVALID_PARAM', type: 'CLIENT' },
+      { status: 400, headers: { [REQUEST_ID_HEADER]: ctx.requestId } },
+    )
+  }
 
-    // Try with voucher_number first; fall back if migration is pending and column doesn't exist yet.
-    let { data, error, count } = await buildQuery(true)
-    if (error && error.message?.includes('voucher_number')) {
-      console.warn('[ledger/journal-entries] voucher_number column missing, retrying without it')
-      ;({ data, error, count } = await buildQuery(false))
-    }
-    if (error) {
-      console.warn('[ledger/journal-entries] query error (table may not exist):', error.message)
-      return NextResponse.json({ entries: [], total: 0 })
-    }
+  try {
+    const service       = new JournalEntryService(supabase)
+    const [entries, trialBalance] = await Promise.all([
+      service.getEntriesForPeriod(companyId, from, to),
+      service.verifyTrialBalance(companyId, to),
+    ])
 
-    // `count` is the true total rows matching the filters (not the page size).
-    // Use it for proper pagination on the client side.
-    return NextResponse.json({ entries: data ?? [], total: count ?? (data ?? []).length })
-  } catch (e) {
-    console.error('[ledger/journal-entries] error:', e)
-    return NextResponse.json({ error: 'Internal error' }, { status: 500 })
+    return NextResponse.json(
+      {
+        entries,
+        trial_balance: {
+          balanced:     trialBalance.balanced,
+          debit_total:  trialBalance.debit_total,
+          credit_total: trialBalance.credit_total,
+        },
+      },
+      { headers: { [REQUEST_ID_HEADER]: ctx.requestId } },
+    )
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    return NextResponse.json(
+      { error: msg, code: 'SERVICE_ERROR', type: 'SYSTEM' },
+      { status: 500, headers: { [REQUEST_ID_HEADER]: ctx.requestId } },
+    )
   }
 }
