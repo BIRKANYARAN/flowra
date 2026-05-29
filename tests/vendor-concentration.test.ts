@@ -78,6 +78,40 @@ describe('computeVendorHHI', () => {
     const hhi = computeVendorHHI(vendors)
     expect(hhi).toBeCloseTo(3333, 0)
   })
+
+  it('HHI is highest possible (10000) when one vendor has everything', () => {
+    const vendors = [{ spend_try: 9999 }, { spend_try: 0 }, { spend_try: 0 }]
+    expect(computeVendorHHI(vendors)).toBeCloseTo(10_000, 0)
+  })
+
+  it('HHI decreases as vendors become more equal', () => {
+    const unequal = [{ spend_try: 900 }, { spend_try: 100 }]          // 82/18 → ~6820
+    const equal   = [{ spend_try: 500 }, { spend_try: 500 }]          // 50/50 → 5000
+    expect(computeVendorHHI(unequal)).toBeGreaterThan(computeVendorHHI(equal))
+  })
+
+  it('formula: sum of squared share percentages', () => {
+    const vendors = [{ spend_try: 300 }, { spend_try: 700 }]
+    const total = 1000
+    const expected = (300 / total * 100) ** 2 + (700 / total * 100) ** 2
+    expect(computeVendorHHI(vendors)).toBeCloseTo(expected, 5)
+  })
+
+  it('five equal vendors → HHI = 2000', () => {
+    const vendors = Array.from({ length: 5 }, () => ({ spend_try: 200 }))
+    expect(computeVendorHHI(vendors)).toBeCloseTo(2000, 0)
+  })
+
+  it('two vendors at 75/25 → HHI = 5625 + 625 = 6250', () => {
+    const vendors = [{ spend_try: 750 }, { spend_try: 250 }]
+    expect(computeVendorHHI(vendors)).toBeCloseTo(6250, 0)
+  })
+
+  it('is symmetric — order of vendors does not matter', () => {
+    const v1 = [{ spend_try: 200 }, { spend_try: 800 }]
+    const v2 = [{ spend_try: 800 }, { spend_try: 200 }]
+    expect(computeVendorHHI(v1)).toBeCloseTo(computeVendorHHI(v2), 5)
+  })
 })
 
 // ── classifyVendorConcentration ───────────────────────────────────────────────
@@ -122,6 +156,33 @@ describe('classifyVendorConcentration', () => {
     expect(classifyVendorConcentration(2499.9)).toBe('moderate')
     expect(classifyVendorConcentration(3999.9)).toBe('concentrated')
   })
+
+  it('HHI = 0 → diversified', () => {
+    expect(classifyVendorConcentration(0)).toBe('diversified')
+  })
+
+  it('HHI = 10000 (monopoly) → highly_concentrated', () => {
+    expect(classifyVendorConcentration(10_000)).toBe('highly_concentrated')
+  })
+
+  it('result is always one of the 4 valid levels', () => {
+    const validLevels = ['diversified', 'moderate', 'concentrated', 'highly_concentrated']
+    for (const hhi of [0, 500, 1000, 1500, 2000, 2500, 3500, 4000, 7000, 10000]) {
+      expect(validLevels).toContain(classifyVendorConcentration(hhi))
+    }
+  })
+
+  it('mid-range values map to expected buckets', () => {
+    expect(classifyVendorConcentration(750)).toBe('diversified')
+    expect(classifyVendorConcentration(1750)).toBe('moderate')
+    expect(classifyVendorConcentration(3000)).toBe('concentrated')
+    expect(classifyVendorConcentration(5000)).toBe('highly_concentrated')
+  })
+
+  it('1499.999 → diversified, 1500.001 → moderate', () => {
+    expect(classifyVendorConcentration(1499.999)).toBe('diversified')
+    expect(classifyVendorConcentration(1500.001)).toBe('moderate')
+  })
 })
 
 // ── isSingleSourceDependent ───────────────────────────────────────────────────
@@ -161,6 +222,31 @@ describe('isSingleSourceDependent', () => {
   it('threshold of 100 → nothing is single source risk', () => {
     expect(isSingleSourceDependent(99.9, 100)).toBe(false)
     expect(isSingleSourceDependent(100, 100)).toBe(false)
+  })
+
+  it('default threshold 60: value 59.99 → false', () => {
+    expect(isSingleSourceDependent(59.99)).toBe(false)
+  })
+
+  it('default threshold 60: value 60.01 → true', () => {
+    expect(isSingleSourceDependent(60.01)).toBe(true)
+  })
+
+  it('returns false for 0 pct regardless of threshold', () => {
+    for (const t of [0, 30, 60, 90, 100]) {
+      expect(isSingleSourceDependent(0, t)).toBe(false)
+    }
+  })
+
+  it('high custom threshold 95: returns true only above 95', () => {
+    expect(isSingleSourceDependent(94, 95)).toBe(false)
+    expect(isSingleSourceDependent(95, 95)).toBe(false)
+    expect(isSingleSourceDependent(95.01, 95)).toBe(true)
+  })
+
+  it('works correctly with fractional percentages', () => {
+    expect(isSingleSourceDependent(60.0001, 60)).toBe(true)
+    expect(isSingleSourceDependent(59.9999, 60)).toBe(false)
   })
 })
 
@@ -218,6 +304,27 @@ describe('classifyVendorTier', () => {
 
   it('2.5% → tier3', () => {
     expect(classifyVendorTier(2.5)).toBe('tier3')
+  })
+
+  it('0.001% → tier4 (tiny vendor)', () => {
+    expect(classifyVendorTier(0.001)).toBe('tier4')
+  })
+
+  it('result is always one of the 4 valid tiers', () => {
+    const validTiers = ['tier1', 'tier2', 'tier3', 'tier4']
+    for (const pct of [0, 0.5, 1, 2, 5, 10, 20, 25, 50, 100]) {
+      expect(validTiers).toContain(classifyVendorTier(pct))
+    }
+  })
+
+  it('tier transitions at exact boundaries', () => {
+    // 0.99 → tier4, 1.0 → tier3, 4.99 → tier3, 5.0 → tier2, 20.0 → tier2, 20.01 → tier1
+    expect(classifyVendorTier(0.99)).toBe('tier4')
+    expect(classifyVendorTier(1.00)).toBe('tier3')
+    expect(classifyVendorTier(4.99)).toBe('tier3')
+    expect(classifyVendorTier(5.00)).toBe('tier2')
+    expect(classifyVendorTier(20.00)).toBe('tier2')
+    expect(classifyVendorTier(20.01)).toBe('tier1')
   })
 })
 
@@ -297,5 +404,47 @@ describe('computeVendorPareto80', () => {
     // 5 equal vendors at 20% each — need 4 to reach 80%
     const vendors = Array.from({ length: 5 }, () => ({ spend_try: 200 }))
     expect(computeVendorPareto80(vendors)).toBe(4)
+  })
+
+  it('result is always ≤ total number of vendors', () => {
+    const vendors = Array.from({ length: 8 }, (_, i) => ({ spend_try: (i + 1) * 100 }))
+    const result  = computeVendorPareto80(vendors)
+    expect(result).toBeLessThanOrEqual(vendors.length)
+  })
+
+  it('result is always ≥ 1 when there is any spend', () => {
+    const vendors = [{ spend_try: 1000 }, { spend_try: 500 }]
+    expect(computeVendorPareto80(vendors)).toBeGreaterThanOrEqual(1)
+  })
+
+  it('90/10 split: 1 vendor reaches 80%', () => {
+    const vendors = [{ spend_try: 900 }, { spend_try: 100 }]
+    expect(computeVendorPareto80(vendors)).toBe(1)
+  })
+
+  it('equal four vendors at 25% → need 4 to clear 80% (25+25+25+25=100)', () => {
+    const vendors = Array.from({ length: 4 }, () => ({ spend_try: 250 }))
+    // 25+25 = 50%, 50+25 = 75% (< 80%), 75+25 = 100% (≥ 80%) → 4 vendors
+    expect(computeVendorPareto80(vendors)).toBe(4)
+  })
+
+  it('single vendor always returns 1 (regardless of spend amount)', () => {
+    for (const spend of [1, 100, 1_000_000]) {
+      expect(computeVendorPareto80([{ spend_try: spend }])).toBe(1)
+    }
+  })
+
+  it('large realistic vendor mix', () => {
+    // One dominant vendor at 50%, then several smaller ones
+    const vendors = [
+      { spend_try: 500 },  // 50%
+      { spend_try: 200 },  // 20% → cumulative 70%
+      { spend_try: 150 },  // 15% → cumulative 85% ≥ 80%
+      { spend_try: 100 },  // 10%
+      { spend_try: 50  },  // 5%
+    ]
+    // After sort: [500, 200, 150, 100, 50]
+    // 50% → 70% → 85% → stops at 3
+    expect(computeVendorPareto80(vendors)).toBe(3)
   })
 })

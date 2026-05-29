@@ -190,6 +190,96 @@ describe('CapitalAccountService.compute', () => {
     expect(result.total_partner_debt_try).toBe(43_000)   // 25_000 + 18_000
   })
 
+  it('no partners → empty accounts array', async () => {
+    const supabase = mockSupabase({
+      partners:               [],
+      partner_finance_events: [],
+      partner_loan_tranches:  [],
+    })
+
+    const result = await CapitalAccountService.compute('co1', supabase, TOTAL_EQUITY)
+    expect(result.accounts).toHaveLength(0)
+    expect(result.total_partner_debt_try).toBe(0)
+  })
+
+  it('partner with no events has all zero financials', async () => {
+    const supabase = mockSupabase({
+      partners:               [PARTNER_A],
+      partner_finance_events: [],
+      partner_loan_tranches:  [],
+    })
+
+    const result = await CapitalAccountService.compute('co1', supabase, TOTAL_EQUITY)
+    const a = result.accounts.find(x => x.partner_id === 'p1')!
+
+    expect(a.equity_contributed_try).toBe(0)
+    expect(a.distributions_received_try).toBe(0)
+    expect(a.loan_repayments_received_try).toBe(0)
+    expect(a.total_received_try).toBe(0)
+    expect(a.net_invested_try).toBe(0)
+    expect(a.loan_balance_try).toBe(0)
+  })
+
+  it('LOAN_DISBURSEMENT events are tracked in total_loaned_try', async () => {
+    const supabase = mockSupabase({
+      partners:               [PARTNER_A],
+      partner_finance_events: BASE_EVENTS,
+      partner_loan_tranches:  [],
+    })
+
+    const result = await CapitalAccountService.compute('co1', supabase, TOTAL_EQUITY)
+    const a = result.accounts.find(x => x.partner_id === 'p1')!
+    expect(a.total_loaned_try).toBe(30_000)
+  })
+
+  it('unknown event types are ignored (no crash)', async () => {
+    const supabase = mockSupabase({
+      partners:               [PARTNER_A],
+      partner_finance_events: [
+        { partner_id: 'p1', event_type: 'EQUITY_PAYMENT', amount_try: 50_000 },
+        { partner_id: 'p1', event_type: 'UNKNOWN_TYPE',   amount_try: 99_999 },
+      ],
+      partner_loan_tranches:  [],
+    })
+
+    expect(async () => {
+      await CapitalAccountService.compute('co1', supabase, TOTAL_EQUITY)
+    }).not.toThrow()
+    const result = await CapitalAccountService.compute('co1', supabase, TOTAL_EQUITY)
+    const a = result.accounts.find(x => x.partner_id === 'p1')!
+    expect(a.equity_contributed_try).toBe(50_000)
+  })
+
+  it('total_equity_try equals the passed totalEquity value', async () => {
+    const supabase = mockSupabase({
+      partners:               [PARTNER_A],
+      partner_finance_events: [],
+      partner_loan_tranches:  [],
+    })
+
+    const result = await CapitalAccountService.compute('co1', supabase, 750_000)
+    expect(result.total_equity_try).toBe(750_000)
+  })
+
+  it('book_equity sums to total_equity across all active partners with ratio=1', async () => {
+    const supabase = mockSupabase({
+      partners:               [PARTNER_A, PARTNER_B],
+      partner_finance_events: [],
+      partner_loan_tranches:  [],
+    })
+
+    const result = await CapitalAccountService.compute('co1', supabase, TOTAL_EQUITY)
+    const totalBook = result.accounts.reduce((s, a) => s + a.book_equity_try, 0)
+    // 0.6 + 0.4 = 1.0 → sum should equal TOTAL_EQUITY
+    expect(totalBook).toBeCloseTo(TOTAL_EQUITY)
+  })
+
+  it('computed_at is a valid ISO timestamp', async () => {
+    const supabase = mockSupabase({ partners: [], partner_finance_events: [], partner_loan_tranches: [] })
+    const result = await CapitalAccountService.compute('co1', supabase, 0)
+    expect(() => new Date(result.computed_at).toISOString()).not.toThrow()
+  })
+
 })
 
 describe('CapitalAccountService.computeExitScenario', () => {
@@ -284,6 +374,104 @@ describe('CapitalAccountService.computeExitScenario', () => {
     scenario.per_partner.forEach(p => {
       expect(p.exit_value_try).toBe(0)
     })
+  })
+
+  it('exit at 0x multiple: enterprise_value = 0, distributable = 0', () => {
+    const scenario = CapitalAccountService.computeExitScenario(baseAccounts, 500_000, 43_000, 0)
+    expect(scenario.enterprise_value_try).toBe(0)
+    expect(scenario.distributable_value_try).toBe(0)
+    scenario.per_partner.forEach(p => {
+      expect(p.exit_value_try).toBe(0)
+    })
+  })
+
+  it('exit with zero debt: distributable = enterprise_value', () => {
+    const scenario = CapitalAccountService.computeExitScenario(baseAccounts, 500_000, 0, 1.0)
+    expect(scenario.distributable_value_try).toBe(500_000)
+    const exitA = scenario.per_partner.find(p => p.partner_id === 'p1')!
+    const exitB = scenario.per_partner.find(p => p.partner_id === 'p2')!
+    expect(exitA.exit_value_try).toBe(300_000)   // 500_000 × 0.6
+    expect(exitB.exit_value_try).toBe(200_000)   // 500_000 × 0.4
+  })
+
+  it('per_partner array length equals accounts length', () => {
+    const scenario = CapitalAccountService.computeExitScenario(baseAccounts, 500_000, 43_000, 2.0)
+    expect(scenario.per_partner).toHaveLength(baseAccounts.length)
+  })
+
+  it('exit value at 2x is exactly double exit value at 1x (when debt is 0)', () => {
+    const s1x = CapitalAccountService.computeExitScenario(baseAccounts, 500_000, 0, 1.0)
+    const s2x = CapitalAccountService.computeExitScenario(baseAccounts, 500_000, 0, 2.0)
+
+    const a1x = s1x.per_partner.find(p => p.partner_id === 'p1')!
+    const a2x = s2x.per_partner.find(p => p.partner_id === 'p1')!
+    expect(a2x.exit_value_try).toBeCloseTo(a1x.exit_value_try * 2)
+  })
+
+  it('net_exit_gain_try is negative when exit_value < net_invested', () => {
+    // tiny multiple → exit barely covers anything
+    const scenario = CapitalAccountService.computeExitScenario(baseAccounts, 500_000, 0, 0.1)
+    // enterprise = 50_000; distributable = 50_000
+    // exitA = 50_000 × 0.6 = 30_000; net_invested = 115_000 → gain = -85_000
+    const exitA = scenario.per_partner.find(p => p.partner_id === 'p1')!
+    expect(exitA.net_exit_gain_try).toBeLessThan(0)
+  })
+
+  it('empty accounts: returns empty per_partner array', () => {
+    const scenario = CapitalAccountService.computeExitScenario([], 500_000, 0, 2.0)
+    expect(scenario.per_partner).toHaveLength(0)
+    // enterprise = 500_000 × 2.0 = 1_000_000; no debt → distributable = 1_000_000
+    expect(scenario.distributable_value_try).toBe(1_000_000)
+  })
+
+  it('enterprise_value = totalEquity × multiple (formula check)', () => {
+    const eq = 300_000
+    const mult = 3.5
+    const scenario = CapitalAccountService.computeExitScenario(baseAccounts, eq, 0, mult)
+    expect(scenario.enterprise_value_try).toBeCloseTo(eq * mult)
+  })
+
+  it('senior_claims_try equals passed totalDebtTry', () => {
+    const scenario = CapitalAccountService.computeExitScenario(baseAccounts, 500_000, 99_000, 1.0)
+    expect(scenario.senior_claims_try).toBe(99_000)
+  })
+
+  it('valuation_multiple is preserved in output', () => {
+    const multiple = 4.25
+    const scenario = CapitalAccountService.computeExitScenario(baseAccounts, 500_000, 0, multiple)
+    expect(scenario.valuation_multiple).toBe(multiple)
+  })
+
+  it('monotonicity: higher multiple → higher exit_value for each partner', () => {
+    const sLow  = CapitalAccountService.computeExitScenario(baseAccounts, 500_000, 0, 1.0)
+    const sMid  = CapitalAccountService.computeExitScenario(baseAccounts, 500_000, 0, 2.0)
+    const sHigh = CapitalAccountService.computeExitScenario(baseAccounts, 500_000, 0, 5.0)
+
+    for (const id of ['p1', 'p2']) {
+      const low  = sLow.per_partner.find(p => p.partner_id === id)!.exit_value_try
+      const mid  = sMid.per_partner.find(p => p.partner_id === id)!.exit_value_try
+      const high = sHigh.per_partner.find(p => p.partner_id === id)!.exit_value_try
+      expect(low).toBeLessThan(mid)
+      expect(mid).toBeLessThan(high)
+    }
+  })
+
+  it('sum of per_partner exit_values = distributable_value_try', () => {
+    const scenario = CapitalAccountService.computeExitScenario(baseAccounts, 500_000, 43_000, 2.0)
+    const sumExit = scenario.per_partner.reduce((s, p) => s + p.exit_value_try, 0)
+    expect(sumExit).toBeCloseTo(scenario.distributable_value_try)
+  })
+
+  it('partner_name is preserved in per_partner output', () => {
+    const scenario = CapitalAccountService.computeExitScenario(baseAccounts, 500_000, 0, 1.0)
+    const exitA = scenario.per_partner.find(p => p.partner_id === 'p1')!
+    expect(exitA.partner_name).toBe('Ortak A')
+  })
+
+  it('share_ratio is preserved in per_partner output', () => {
+    const scenario = CapitalAccountService.computeExitScenario(baseAccounts, 500_000, 0, 1.0)
+    const exitA = scenario.per_partner.find(p => p.partner_id === 'p1')!
+    expect(exitA.share_ratio).toBe(0.6)
   })
 
 })

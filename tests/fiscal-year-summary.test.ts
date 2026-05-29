@@ -89,6 +89,40 @@ describe('computeYearGrowth', () => {
     const g = computeYearGrowth(2_000_000, 1_000_000)
     expect(g).toBeCloseTo(100)
   })
+
+  it('returns -100% when current is 0 and prior is positive', () => {
+    const g = computeYearGrowth(0, 500)
+    expect(g).toBeCloseTo(-100)
+  })
+
+  it('returns +200% growth when current is 3x prior', () => {
+    const g = computeYearGrowth(300, 100)
+    expect(g).toBeCloseTo(200)
+  })
+
+  it('returns exact -50% when halved', () => {
+    const g = computeYearGrowth(500_000, 1_000_000)
+    expect(g).toBeCloseTo(-50)
+  })
+
+  it('symmetry: growth from 100→200 is not inverse of 200→100', () => {
+    const up   = computeYearGrowth(200, 100)!   // +100%
+    const down = computeYearGrowth(100, 200)!   // -50%
+    expect(up).toBeCloseTo(100)
+    expect(down).toBeCloseTo(-50)
+    expect(up).not.toBeCloseTo(down)
+  })
+
+  it('small fractional values', () => {
+    const g = computeYearGrowth(1.05, 1.00)
+    expect(g).toBeCloseTo(5)
+  })
+
+  it('very large prior with tiny current → returns a valid number', () => {
+    const g = computeYearGrowth(1, 1_000_000)
+    expect(g).not.toBeNull()
+    expect(g).toBeCloseTo(-99.9999, 3)
+  })
 })
 
 // ── computeYoyLabel ───────────────────────────────────────────────────────────
@@ -113,6 +147,31 @@ describe('computeYoyLabel', () => {
   it('rounds to one decimal place', () => {
     expect(computeYoyLabel(12.345)).toBe('▲ +12.3%')
     expect(computeYoyLabel(-5.678)).toBe('▼ -5.7%')
+  })
+
+  it('handles very large positive growth', () => {
+    const label = computeYoyLabel(1000)
+    expect(label).toContain('▲')
+    expect(label).toContain('+')
+    expect(label).toContain('1000')
+  })
+
+  it('handles very large negative growth', () => {
+    const label = computeYoyLabel(-99.9)
+    expect(label).toContain('▼')
+    expect(label).toContain('-')
+  })
+
+  it('formats small positive fraction correctly', () => {
+    expect(computeYoyLabel(0.1)).toBe('▲ +0.1%')
+  })
+
+  it('formats small negative fraction correctly', () => {
+    expect(computeYoyLabel(-0.1)).toBe('▼ -0.1%')
+  })
+
+  it('does not return "—" for 0 (zero is valid growth)', () => {
+    expect(computeYoyLabel(0)).not.toBe('—')
   })
 })
 
@@ -174,6 +233,62 @@ describe('computeQuarterlyRevenue', () => {
     const mTotal  = full12.reduce((s, m) => s + m.revenue_try, 0)
     expect(qTotal).toBe(mTotal)
   })
+
+  it('Q2 correctly includes April (month 04)', () => {
+    const aprilOnly = [makeMonth('2025-04', 50_000)]
+    const result = computeQuarterlyRevenue(aprilOnly)
+    const q2 = result.find(q => q.quarter === 'Q2')!
+    expect(q2.revenue_try).toBe(50_000)
+  })
+
+  it('Q2 correctly includes June (month 06)', () => {
+    const juneOnly = [makeMonth('2025-06', 75_000)]
+    const result = computeQuarterlyRevenue(juneOnly)
+    const q2 = result.find(q => q.quarter === 'Q2')!
+    expect(q2.revenue_try).toBe(75_000)
+  })
+
+  it('Q3 correctly includes July (month 07)', () => {
+    const julyOnly = [makeMonth('2025-07', 90_000)]
+    const result = computeQuarterlyRevenue(julyOnly)
+    const q3 = result.find(q => q.quarter === 'Q3')!
+    expect(q3.revenue_try).toBe(90_000)
+  })
+
+  it('Q4 correctly includes December (month 12)', () => {
+    const decOnly = [makeMonth('2025-12', 120_000)]
+    const result = computeQuarterlyRevenue(decOnly)
+    const q4 = result.find(q => q.quarter === 'Q4')!
+    expect(q4.revenue_try).toBe(120_000)
+  })
+
+  it('non-adjacent months in same quarter aggregate correctly', () => {
+    const q1Months = [
+      makeMonth('2025-01', 10_000),
+      makeMonth('2025-03', 20_000),
+      // Feb missing
+    ]
+    const result = computeQuarterlyRevenue(q1Months)
+    const q1 = result.find(q => q.quarter === 'Q1')!
+    expect(q1.revenue_try).toBe(30_000)
+  })
+
+  it('negative net_income is included in quarterly aggregation', () => {
+    const months = [
+      makeMonth('2025-07', 50_000, 0, 0, -10_000),
+      makeMonth('2025-08', 60_000, 0, 0,  20_000),
+    ]
+    const result = computeQuarterlyRevenue(months)
+    const q3 = result.find(q => q.quarter === 'Q3')!
+    expect(q3.net_income_try).toBe(10_000)
+  })
+
+  it('Q1 margin_pct is negative when Q1 net is negative', () => {
+    const months = [makeMonth('2025-01', 100_000, 0, 0, -20_000)]
+    const result = computeQuarterlyRevenue(months)
+    const q1 = result.find(q => q.quarter === 'Q1')!
+    expect(q1.margin_pct).toBeCloseTo(-20)
+  })
 })
 
 // ── computeBestMonth / computeWorstMonth ──────────────────────────────────────
@@ -196,6 +311,52 @@ describe('computeBestMonth', () => {
     expect(result!.month).toBe('2025-06')
     expect(result!.value).toBe(50_000)
   })
+
+  it('returns the first month when all revenues are equal', () => {
+    const equal = [
+      makeMonth('2025-01', 100_000),
+      makeMonth('2025-02', 100_000),
+      makeMonth('2025-03', 100_000),
+    ]
+    const result = computeBestMonth(equal)
+    expect(result).not.toBeNull()
+    expect(result!.value).toBe(100_000)
+  })
+
+  it('returns correct best when first month is best', () => {
+    const months = [
+      makeMonth('2025-01', 200_000),
+      makeMonth('2025-02',  50_000),
+    ]
+    const result = computeBestMonth(months)
+    expect(result!.month).toBe('2025-01')
+    expect(result!.value).toBe(200_000)
+  })
+
+  it('returns correct best when last month is best', () => {
+    const months = [
+      makeMonth('2025-01',  50_000),
+      makeMonth('2025-12', 200_000),
+    ]
+    const result = computeBestMonth(months)
+    expect(result!.month).toBe('2025-12')
+    expect(result!.value).toBe(200_000)
+  })
+
+  it('handles zero revenue months — does not confuse with best', () => {
+    const months = [
+      makeMonth('2025-01',       0),
+      makeMonth('2025-02', 100_000),
+    ]
+    const result = computeBestMonth(months)
+    expect(result!.month).toBe('2025-02')
+  })
+
+  it('returns the value field (not the month object itself)', () => {
+    const result = computeBestMonth(full12)
+    expect(typeof result!.month).toBe('string')
+    expect(typeof result!.value).toBe('number')
+  })
 })
 
 describe('computeWorstMonth', () => {
@@ -215,6 +376,43 @@ describe('computeWorstMonth', () => {
     const result = computeWorstMonth(single)
     expect(result!.month).toBe('2025-03')
     expect(result!.value).toBe(25_000)
+  })
+
+  it('returns the first month when all revenues are equal', () => {
+    const equal = [
+      makeMonth('2025-04', 50_000),
+      makeMonth('2025-05', 50_000),
+    ]
+    const result = computeWorstMonth(equal)
+    expect(result).not.toBeNull()
+    expect(result!.value).toBe(50_000)
+  })
+
+  it('returns correct worst when first month is worst', () => {
+    const months = [
+      makeMonth('2025-01',  10_000),
+      makeMonth('2025-02', 200_000),
+    ]
+    const result = computeWorstMonth(months)
+    expect(result!.month).toBe('2025-01')
+    expect(result!.value).toBe(10_000)
+  })
+
+  it('handles zero revenue → zero is worst', () => {
+    const months = [
+      makeMonth('2025-01',       0),
+      makeMonth('2025-02', 100_000),
+    ]
+    const result = computeWorstMonth(months)
+    expect(result!.month).toBe('2025-01')
+    expect(result!.value).toBe(0)
+  })
+
+  it('best and worst are different months in full12', () => {
+    const best  = computeBestMonth(full12)
+    const worst = computeWorstMonth(full12)
+    expect(best!.month).not.toBe(worst!.month)
+    expect(best!.value).toBeGreaterThan(worst!.value)
   })
 })
 
@@ -297,5 +495,77 @@ describe('computeAnnualMetrics', () => {
     expect(result.net_income_try).toBe(35_000)
     expect(result.net_margin_pct).toBeCloseTo(35)
     expect(result.cash_end_try).toBe(8_000)
+  })
+
+  it('gross_margin_pct is in range [0,100] for normal inputs', () => {
+    const result = computeAnnualMetrics(full12)
+    expect(result.gross_margin_pct).toBeGreaterThanOrEqual(0)
+    expect(result.gross_margin_pct).toBeLessThanOrEqual(100)
+  })
+
+  it('ebitda can be negative when expenses > gross_profit', () => {
+    const highExpenses = [makeMonth('2025-01', 100_000, 60_000, 80_000, undefined, 0)]
+    const result = computeAnnualMetrics(highExpenses)
+    // gross_profit = 40_000; expenses = 80_000; ebitda = -40_000
+    expect(result.ebitda_try).toBeCloseTo(-40_000)
+  })
+
+  it('net_margin_pct is negative when net_income is negative', () => {
+    const lossy = [makeMonth('2025-01', 100_000, 0, 0, -30_000, 5_000)]
+    const result = computeAnnualMetrics(lossy)
+    expect(result.net_margin_pct).toBeCloseTo(-30)
+  })
+
+  it('2-period aggregate: cash_end is from the second period', () => {
+    const months = [
+      makeMonth('2025-01', 100_000, 0, 0, undefined, 5_000),
+      makeMonth('2025-02', 120_000, 0, 0, undefined, 8_000),
+    ]
+    const result = computeAnnualMetrics(months)
+    expect(result.cash_end_try).toBe(8_000)
+  })
+
+  it('cogs_try is zero when all months have zero cogs', () => {
+    const noCogs = full12.map(m => ({ ...m, cogs_try: 0 }))
+    const result = computeAnnualMetrics(noCogs)
+    expect(result.cogs_try).toBe(0)
+  })
+
+  it('gross_profit equals revenue when cogs is zero', () => {
+    const noCogs = full12.map(m => ({ ...m, cogs_try: 0 }))
+    const result = computeAnnualMetrics(noCogs)
+    expect(result.gross_profit_try).toBe(result.revenue_try)
+  })
+
+  it('annual revenue is sum of quarterly revenues', () => {
+    const annual    = computeAnnualMetrics(full12)
+    const quarterly = computeQuarterlyRevenue(full12)
+    const qTotal    = quarterly.reduce((s, q) => s + q.revenue_try, 0)
+    expect(annual.revenue_try).toBe(qTotal)
+  })
+})
+
+// ── Integration: growth + label pipeline ──────────────────────────────────────
+
+describe('computeYearGrowth + computeYoyLabel pipeline', () => {
+  it('full pipeline: current > prior → positive label with arrow', () => {
+    const annual2025 = computeAnnualMetrics(full12)
+    const prior2024  = 900_000
+    const growth     = computeYearGrowth(annual2025.revenue_try, prior2024)
+    const label      = computeYoyLabel(growth)
+    expect(label).toContain('▲')
+    expect(label).toContain('+')
+  })
+
+  it('full pipeline: prior = 0 → label is "—"', () => {
+    const growth = computeYearGrowth(500_000, 0)
+    const label  = computeYoyLabel(growth)
+    expect(label).toBe('—')
+  })
+
+  it('full pipeline: decline → ▼ label', () => {
+    const growth = computeYearGrowth(800_000, 1_000_000)
+    const label  = computeYoyLabel(growth)
+    expect(label).toContain('▼')
   })
 })

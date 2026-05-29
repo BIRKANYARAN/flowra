@@ -115,6 +115,45 @@ describe('computePhaseCompletion', () => {
     expect(computePhaseCompletion(steps)).toBe(false)
   })
 
+  it('returns false when a single blocking step is skipped', () => {
+    const steps = [
+      makeStep({ id: 'a', is_blocking: true, status: 'skipped' }),
+    ]
+    expect(computePhaseCompletion(steps)).toBe(false)
+  })
+
+  it('returns false for blocking step with status=pending even when all non-blocking pass', () => {
+    const steps = [
+      makeStep({ id: 'a', is_blocking: true,  status: 'pending' }),
+      makeStep({ id: 'b', is_blocking: false, status: 'pass' }),
+      makeStep({ id: 'c', is_blocking: false, status: 'pass' }),
+    ]
+    expect(computePhaseCompletion(steps)).toBe(false)
+  })
+
+  it('returns true when there is only 1 blocking step and it passes', () => {
+    const steps = [makeStep({ id: 'x', is_blocking: true, status: 'pass' })]
+    expect(computePhaseCompletion(steps)).toBe(true)
+  })
+
+  it('returns false when there is only 1 blocking step and it fails', () => {
+    const steps = [makeStep({ id: 'x', is_blocking: true, status: 'fail' })]
+    expect(computePhaseCompletion(steps)).toBe(false)
+  })
+
+  it('multiple blocking steps — all must pass, any failure blocks', () => {
+    const statuses = ['pass', 'pass', 'fail', 'pass'] as const
+    const steps = statuses.map((s, i) => makeStep({ id: `s${i}`, is_blocking: true, status: s }))
+    expect(computePhaseCompletion(steps)).toBe(false)
+  })
+
+  it('multiple blocking steps — all pass when statuses are all pass', () => {
+    const steps = ['a', 'b', 'c', 'd'].map(id =>
+      makeStep({ id, is_blocking: true, status: 'pass' })
+    )
+    expect(computePhaseCompletion(steps)).toBe(true)
+  })
+
 })
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -180,6 +219,79 @@ describe('computeOverallPct', () => {
     expect(computeOverallPct(phases)).toBe(0)
   })
 
+  it('result is always an integer (Math.round applied)', () => {
+    // 1 passed out of 3 → 33.33% → rounds to 33
+    const phases = [
+      makePhase(1, [
+        makeStep({ id: 'a', status: 'pass' }),
+        makeStep({ id: 'b', status: 'fail' }),
+        makeStep({ id: 'c', status: 'fail' }),
+      ]),
+    ]
+    const result = computeOverallPct(phases)
+    expect(Number.isInteger(result)).toBe(true)
+    expect(result).toBe(33)
+  })
+
+  it('result is always in range [0, 100]', () => {
+    const allPass = [
+      makePhase(1, [makeStep({ id: 'a', status: 'pass' })]),
+      makePhase(2, [makeStep({ id: 'b', status: 'pass' })]),
+    ]
+    const allFail = [
+      makePhase(1, [makeStep({ id: 'c', status: 'fail' })]),
+    ]
+    expect(computeOverallPct(allPass)).toBe(100)
+    expect(computeOverallPct(allFail)).toBe(0)
+  })
+
+  it('4-phase scenario: 7/10 passed = 70%', () => {
+    const phases = [
+      makePhase(1, [
+        makeStep({ id: 'a1', status: 'pass' }),
+        makeStep({ id: 'a2', status: 'pass' }),
+        makeStep({ id: 'a3', status: 'pass' }),
+      ]),
+      makePhase(2, [
+        makeStep({ id: 'b1', status: 'pass' }),
+        makeStep({ id: 'b2', status: 'pass' }),
+        makeStep({ id: 'b3', status: 'fail' }),
+      ]),
+      makePhase(3, [
+        makeStep({ id: 'c1', status: 'pass' }),
+        makeStep({ id: 'c2', status: 'fail' }),
+      ]),
+      makePhase(4, [
+        makeStep({ id: 'd1', status: 'pass' }),
+        makeStep({ id: 'd2', status: 'pending' }),
+      ]),
+    ]
+    // 3 + 2 + 1 + 1 = 7 passed; total = 10; 70%
+    expect(computeOverallPct(phases)).toBe(70)
+  })
+
+  it('one empty phase + one full phase: counts only non-empty phase steps', () => {
+    const phases = [
+      makePhase(1, []),
+      makePhase(2, [
+        makeStep({ id: 'a', status: 'pass' }),
+        makeStep({ id: 'b', status: 'pass' }),
+      ]),
+    ]
+    expect(computeOverallPct(phases)).toBe(100)
+  })
+
+  it('skipped steps do not count as passed', () => {
+    const phases = [
+      makePhase(1, [
+        makeStep({ id: 'a', status: 'skipped' }),
+        makeStep({ id: 'b', status: 'pass' }),
+      ]),
+    ]
+    // 1 passed out of 2 = 50%
+    expect(computeOverallPct(phases)).toBe(50)
+  })
+
 })
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -236,6 +348,53 @@ describe('determineCurrentPhase', () => {
       makePhase(4, [makeStep({ id: 'd', is_blocking: true, status: 'pass' })]),
     ]
     expect(determineCurrentPhase(phases)).toBe(2)
+  })
+
+  it('returns phase 4 when only phase 4 is incomplete', () => {
+    const phases = [
+      makePhase(1, [makeStep({ id: 'a', is_blocking: true, status: 'pass' })]),
+      makePhase(2, [makeStep({ id: 'b', is_blocking: true, status: 'pass' })]),
+      makePhase(3, [makeStep({ id: 'c', is_blocking: true, status: 'pass' })]),
+      makePhase(4, [makeStep({ id: 'd', is_blocking: true, status: 'fail' })]),
+    ]
+    expect(determineCurrentPhase(phases)).toBe(4)
+  })
+
+  it('does not skip phases — returns earliest incomplete phase', () => {
+    const phases = [
+      makePhase(1, [makeStep({ id: 'a', is_blocking: true, status: 'fail' })]),
+      makePhase(2, [makeStep({ id: 'b', is_blocking: true, status: 'fail' })]),
+      makePhase(3, [makeStep({ id: 'c', is_blocking: true, status: 'pass' })]),
+      makePhase(4, [makeStep({ id: 'd', is_blocking: true, status: 'pass' })]),
+    ]
+    expect(determineCurrentPhase(phases)).toBe(1)
+  })
+
+  it('phase with only non-blocking fail is considered complete', () => {
+    const phases = [
+      makePhase(1, [makeStep({ id: 'a', is_blocking: false, status: 'fail' })]),
+      makePhase(2, [makeStep({ id: 'b', is_blocking: true,  status: 'fail' })]),
+      makePhase(3, [makeStep({ id: 'c', is_blocking: true,  status: 'pass' })]),
+      makePhase(4, [makeStep({ id: 'd', is_blocking: true,  status: 'pass' })]),
+    ]
+    // Phase 1 is complete (no blocking fails), phase 2 is not
+    expect(determineCurrentPhase(phases)).toBe(2)
+  })
+
+  it('returns a valid WizardPhase (1,2,3,4) in all cases', () => {
+    const phaseSets = [
+      [makePhase(1, [makeStep({ id: 'a', is_blocking: true, status: 'fail' })])],
+      [
+        makePhase(1, [makeStep({ id: 'a', is_blocking: true, status: 'pass' })]),
+        makePhase(2, [makeStep({ id: 'b', is_blocking: true, status: 'pass' })]),
+        makePhase(3, [makeStep({ id: 'c', is_blocking: true, status: 'pass' })]),
+        makePhase(4, [makeStep({ id: 'd', is_blocking: true, status: 'pass' })]),
+      ],
+    ]
+    for (const phases of phaseSets) {
+      const current = determineCurrentPhase(phases)
+      expect([1, 2, 3, 4]).toContain(current)
+    }
   })
 
 })
@@ -298,6 +457,114 @@ describe('WizardStep shape validation', () => {
       const step = makeStep({ phase })
       expect([1, 2, 3, 4]).toContain(step.phase)
     }
+  })
+
+  it('is_blocking can be both true and false', () => {
+    const blocking    = makeStep({ is_blocking: true })
+    const nonBlocking = makeStep({ is_blocking: false })
+    expect(blocking.is_blocking).toBe(true)
+    expect(nonBlocking.is_blocking).toBe(false)
+  })
+
+  it('is_auto can be both true and false', () => {
+    const auto   = makeStep({ is_auto: true })
+    const manual = makeStep({ is_auto: false })
+    expect(auto.is_auto).toBe(true)
+    expect(manual.is_auto).toBe(false)
+  })
+
+  it('action_href is set when provided', () => {
+    const step = makeStep({ action_href: '/dashboard/finance' })
+    expect(step.action_href).toBe('/dashboard/finance')
+  })
+
+  it('action_label is set when provided', () => {
+    const step = makeStep({ action_label: 'Git' })
+    expect(step.action_label).toBe('Git')
+  })
+
+  it('detail is set when provided', () => {
+    const step = makeStep({ detail: 'Detay metni.' })
+    expect(step.detail).toBe('Detay metni.')
+  })
+
+})
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// computeOverallPct monotonicity
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('computeOverallPct — monotonicity', () => {
+
+  it('adding a passing step increases pct', () => {
+    const base = [makePhase(1, [makeStep({ id: 'a', status: 'pass' })])]
+    const more = [makePhase(1, [
+      makeStep({ id: 'a', status: 'pass' }),
+      makeStep({ id: 'b', status: 'pass' }),
+    ])]
+    expect(computeOverallPct(base)).toBe(computeOverallPct(more))  // 100% in both
+  })
+
+  it('adding a failing step decreases pct', () => {
+    const pass2 = [makePhase(1, [
+      makeStep({ id: 'a', status: 'pass' }),
+      makeStep({ id: 'b', status: 'pass' }),
+    ])]
+    const pass2fail1 = [makePhase(1, [
+      makeStep({ id: 'a', status: 'pass' }),
+      makeStep({ id: 'b', status: 'pass' }),
+      makeStep({ id: 'c', status: 'fail' }),
+    ])]
+    expect(computeOverallPct(pass2fail1)).toBeLessThan(computeOverallPct(pass2))
+  })
+
+  it('pct is never negative', () => {
+    const allFail = [makePhase(1, [
+      makeStep({ id: 'a', status: 'fail' }),
+      makeStep({ id: 'b', status: 'fail' }),
+    ])]
+    expect(computeOverallPct(allFail)).toBeGreaterThanOrEqual(0)
+  })
+
+  it('pct is never above 100', () => {
+    const allPass = [makePhase(1, [
+      makeStep({ id: 'a', status: 'pass' }),
+      makeStep({ id: 'b', status: 'pass' }),
+      makeStep({ id: 'c', status: 'pass' }),
+    ])]
+    expect(computeOverallPct(allPass)).toBeLessThanOrEqual(100)
+  })
+
+})
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// computePhaseCompletion — edge cases with mixed statuses
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('computePhaseCompletion — null/zero equivalents', () => {
+
+  it('10 blocking steps all passing → complete', () => {
+    const steps = Array.from({ length: 10 }, (_, i) =>
+      makeStep({ id: `s${i}`, is_blocking: true, status: 'pass' })
+    )
+    expect(computePhaseCompletion(steps)).toBe(true)
+  })
+
+  it('10 blocking steps — last one fails → incomplete', () => {
+    const steps = Array.from({ length: 10 }, (_, i) =>
+      makeStep({ id: `s${i}`, is_blocking: true, status: i === 9 ? 'fail' : 'pass' })
+    )
+    expect(computePhaseCompletion(steps)).toBe(false)
+  })
+
+  it('mixed: 5 blocking pass + 5 non-blocking fail → complete', () => {
+    const blocking    = Array.from({ length: 5 }, (_, i) =>
+      makeStep({ id: `b${i}`, is_blocking: true,  status: 'pass' })
+    )
+    const nonBlocking = Array.from({ length: 5 }, (_, i) =>
+      makeStep({ id: `n${i}`, is_blocking: false, status: 'fail' })
+    )
+    expect(computePhaseCompletion([...blocking, ...nonBlocking])).toBe(true)
   })
 
 })

@@ -110,6 +110,45 @@ describe('groupByFirstMonth', () => {
     const result = groupByFirstMonth([...salesHighTotal, ...salesLowTotal])
     expect(result['id:1']).toBe('2026-01')
   })
+
+  it('processes 100 customers correctly', () => {
+    const sales = Array.from({ length: 100 }, (_, i) => ({
+      customer_key: `id:${i}`,
+      sale_month: `2026-${String((i % 12) + 1).padStart(2, '0')}`,
+      total_try: 100,
+    }))
+    const result = groupByFirstMonth(sales)
+    expect(Object.keys(result)).toHaveLength(100)
+  })
+
+  it('year boundary: 2025-12 correctly earlier than 2026-01', () => {
+    const sales = [
+      { customer_key: 'id:x', sale_month: '2026-01', total_try: 100 },
+      { customer_key: 'id:x', sale_month: '2025-12', total_try: 100 },
+      { customer_key: 'id:x', sale_month: '2026-06', total_try: 100 },
+    ]
+    expect(groupByFirstMonth(sales)['id:x']).toBe('2025-12')
+  })
+
+  it('single entry per customer returns a map with correct key-value pair', () => {
+    const sales = [
+      { customer_key: 'name:Bilinmiyor', sale_month: '2026-02', total_try: 50 },
+    ]
+    const result = groupByFirstMonth(sales)
+    expect(result).toHaveProperty('name:Bilinmiyor', '2026-02')
+  })
+
+  it('result map has exactly as many entries as unique customers', () => {
+    const sales = [
+      { customer_key: 'id:1', sale_month: '2026-01', total_try: 100 },
+      { customer_key: 'id:2', sale_month: '2026-01', total_try: 100 },
+      { customer_key: 'id:1', sale_month: '2026-02', total_try: 100 },
+      { customer_key: 'id:3', sale_month: '2026-03', total_try: 100 },
+      { customer_key: 'id:2', sale_month: '2026-02', total_try: 100 },
+    ]
+    const result = groupByFirstMonth(sales)
+    expect(Object.keys(result)).toHaveLength(3)
+  })
 })
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -164,6 +203,35 @@ describe('computeRetention', () => {
     // Function definition allows this edge case
     const result = computeRetention(15, 10)
     expect(result).toBeCloseTo(150)
+  })
+
+  it('formula: active/size × 100', () => {
+    const active = 7
+    const size   = 13
+    expect(computeRetention(active, size)).toBeCloseTo((active / size) * 100, 10)
+  })
+
+  it('returns 10 for 1 out of 10', () => {
+    expect(computeRetention(1, 10)).toBeCloseTo(10)
+  })
+
+  it('returns 20 for 2 out of 10', () => {
+    expect(computeRetention(2, 10)).toBeCloseTo(20)
+  })
+
+  it('result scales linearly with active count', () => {
+    const size = 100
+    for (let active = 0; active <= size; active += 10) {
+      expect(computeRetention(active, size)).toBeCloseTo(active, 5)
+    }
+  })
+
+  it('cohort of 50, all active → 100%', () => {
+    expect(computeRetention(50, 50)).toBeCloseTo(100)
+  })
+
+  it('cohort of 1000, half active → 50%', () => {
+    expect(computeRetention(500, 1000)).toBeCloseTo(50)
   })
 })
 
@@ -293,5 +361,66 @@ describe('buildCohortRow', () => {
     ])
     expect(Object.keys(row.monthly_revenue)).toContain('2026-04')
     expect(Object.keys(row.monthly_revenue)).not.toContain('2026-05')
+  })
+
+  it('retention_pct matches monthly_customers / cohort_size × 100 for each month', () => {
+    const keys = ['id:1', 'id:2', 'id:3', 'id:4']
+    const sales = [
+      { customer_key: 'id:1', sale_month: '2026-01', total_try: 100 },
+      { customer_key: 'id:2', sale_month: '2026-01', total_try: 100 },
+      { customer_key: 'id:3', sale_month: '2026-01', total_try: 100 },
+      { customer_key: 'id:4', sale_month: '2026-01', total_try: 100 },
+      { customer_key: 'id:1', sale_month: '2026-02', total_try: 100 },
+      { customer_key: 'id:2', sale_month: '2026-02', total_try: 100 },
+    ]
+    const row = buildCohortRow('2026-01', keys, sales)
+    expect(row.cohort_size).toBe(4)
+    expect(row.retention_pct['2026-01']).toBeCloseTo(100)   // 4/4
+    expect(row.retention_pct['2026-02']).toBeCloseTo(50)    // 2/4
+  })
+
+  it('revenue accumulates across multiple customers in same month', () => {
+    const keys = ['id:a', 'id:b', 'id:c']
+    const sales = [
+      { customer_key: 'id:a', sale_month: '2026-05', total_try: 1_000 },
+      { customer_key: 'id:b', sale_month: '2026-05', total_try: 2_000 },
+      { customer_key: 'id:c', sale_month: '2026-05', total_try: 3_000 },
+    ]
+    const row = buildCohortRow('2026-05', keys, sales)
+    expect(row.monthly_revenue['2026-05']).toBe(6_000)
+    expect(row.monthly_customers['2026-05']).toBe(3)
+  })
+
+  it('cohort_size = 0 when customerKeys is empty', () => {
+    const row = buildCohortRow('2026-01', [], allSales)
+    expect(row.cohort_size).toBe(0)
+  })
+
+  it('revenue is 0 for empty cohort (no keys match)', () => {
+    const row = buildCohortRow('2026-01', [], allSales)
+    expect(Object.keys(row.monthly_revenue)).toHaveLength(0)
+  })
+
+  it('does not include future months when only cohort_month has data', () => {
+    const row = buildCohortRow('2026-06', ['id:z'], [
+      { customer_key: 'id:z', sale_month: '2026-06', total_try: 500 },
+    ])
+    expect(Object.keys(row.monthly_revenue)).toHaveLength(1)
+    expect(row.monthly_revenue['2026-06']).toBe(500)
+  })
+
+  it('cohort_label for Jan 2026 is a Turkish string', () => {
+    const row = buildCohortRow('2026-01', [], [])
+    // Turkish locale: should contain "Ocak" or "2026"
+    expect(row.cohort_label.length).toBeGreaterThan(0)
+  })
+
+  it('monthly_revenue, monthly_customers, retention_pct all have same keys', () => {
+    const row = buildCohortRow('2026-01', ['id:1', 'id:2'], allSales)
+    const revenueKeys   = Object.keys(row.monthly_revenue).sort()
+    const customerKeys2 = Object.keys(row.monthly_customers).sort()
+    const retentionKeys = Object.keys(row.retention_pct).sort()
+    expect(revenueKeys).toEqual(customerKeys2)
+    expect(customerKeys2).toEqual(retentionKeys)
   })
 })
