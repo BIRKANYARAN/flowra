@@ -1,199 +1,121 @@
 'use client'
 
 // ─────────────────────────────────────────────────────────────────────────────
-// DistributionSimulatorTab — Kâr Dağıtımı Simülatörü
+// DistributionSimulatorTab — Ortak Dağıtım Simülatörü
 //
-// Shows the 4-layer profit distribution waterfall with Turkish legal compliance:
-//   Gross Net Income → − Legal Reserve (TTK 519) → − Board Retained
-//   → − Unpaid Compensation → = Distributable Gross
-//   → − Withholding Tax 10% (GVK 94) → = Net Distributable
+// Simulates different dividend/distribution scenarios for partners under
+// various financial constraints (TTK compliance, tax withholding, legal reserves).
 //
 // Features:
-//   - Current scenario waterfall visualization
-//   - TTK 509 / legal reserve compliance banners
-//   - Scenario comparison: Conservative / Balanced / Maximum
-//   - Per-partner allocation table
+//   - Distributable profit summary + legal reserve required
+//   - 4 scenario cards (Full, Conservative 50%, Requested, Debt-First)
+//   - Per-partner breakdown per scenario (compact table)
+//   - Compliance/blocking reason badges
+//   - Optimal scenario highlighted (green border)
+//   - Custom amount input + "Simulate" button (POST /api/partners/distribution-simulator)
 //
-// Data: GET /api/partners/distribution-simulator
+// Data:
+//   GET  /api/partners/distribution-simulator — standard scenarios
+//   POST /api/partners/distribution-simulator — custom simulation
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
+import { useQuery, useMutation } from '@tanstack/react-query'
 import { fmtTRY } from '@/lib/format'
 import type {
-  DistributionSimulatorReport,
+  DistributionSimulationResult,
   DistributionScenario,
-  PartnerAllocation,
-} from '@/lib/services/pcle/profit-distribution.service'
+} from '@/lib/services/pcle/distribution-simulator.service'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface ApiResponse {
-  report: DistributionSimulatorReport
+  result: DistributionSimulationResult
 }
 
 // ── Fetch ─────────────────────────────────────────────────────────────────────
 
-async function fetchReport(): Promise<DistributionSimulatorReport> {
+async function fetchScenarios(): Promise<DistributionSimulationResult> {
   const res = await fetch('/api/partners/distribution-simulator')
   const data = await res.json()
   if (!res.ok) throw new Error((data as { error?: string }).error ?? `HTTP ${res.status}`)
-  return (data as ApiResponse).report
+  return (data as ApiResponse).result
+}
+
+async function postSimulation(requestedDistribution: number): Promise<DistributionSimulationResult> {
+  const res = await fetch('/api/partners/distribution-simulator', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ requested_distribution: requestedDistribution }),
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error((data as { error?: string }).error ?? `HTTP ${res.status}`)
+  return (data as ApiResponse).result
 }
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-function WaterfallRow({
-  label,
-  amount,
-  base,
-  color,
-  isResult,
-  sign,
-}: {
-  label: string
-  amount: number
-  base: number
-  color: string
-  isResult?: boolean
-  sign?: '+' | '-' | '='
-}) {
-  const pct = base > 0 ? Math.abs(amount / base) * 100 : 0
-  return (
-    <div
-      className={[
-        'flex items-center gap-3 py-2.5 px-3 rounded',
-        isResult ? 'bg-[#f0fdf4] border border-[#bbf7d0]' : 'bg-[#f8fafc]',
-      ].join(' ')}
-    >
-      <div className="w-5 text-center text-xs font-black text-[#94a3b8] flex-shrink-0">
-        {sign ?? ''}
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="text-xs font-semibold text-[#334155] truncate">{label}</div>
-        {base > 0 && (
-          <div className="mt-1 h-1.5 rounded-full bg-[#e2e8f0] overflow-hidden">
-            <div
-              className={`h-full rounded-full ${color}`}
-              style={{ width: `${Math.min(pct, 100).toFixed(1)}%` }}
-            />
-          </div>
-        )}
-      </div>
-      <div className="text-right flex-shrink-0">
-        <div
-          className={[
-            'text-sm font-black tabular-nums',
-            isResult ? 'text-[#16a34a]' : amount < 0 ? 'text-[#dc2626]' : 'text-[#0f172a]',
-          ].join(' ')}
-        >
-          {fmtTRY(Math.abs(amount))}
-        </div>
-        {base > 0 && (
-          <div className="text-[0.6rem] text-[#94a3b8] tabular-nums">
-            %{pct.toFixed(1)}
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
-function WaterfallCard({ scenario }: { scenario: DistributionScenario }) {
-  const base = scenario.gross_net_income
-
-  return (
-    <div className="flex flex-col gap-1.5">
-      <WaterfallRow
-        label="Vergi Sonrası Net Gelir"
-        amount={scenario.gross_net_income}
-        base={base}
-        color="bg-[#3b82f6]"
-        sign="+"
-      />
-      <WaterfallRow
-        label="Yasal Yedek Ayrımı (TTK 519)"
-        amount={-scenario.legal_reserve_allocation}
-        base={base}
-        color="bg-[#f59e0b]"
-        sign="-"
-      />
-      <WaterfallRow
-        label="Yönetim Kurulu Kararı (Tutulan)"
-        amount={-scenario.board_retained_amount}
-        base={base}
-        color="bg-[#8b5cf6]"
-        sign="-"
-      />
-      <WaterfallRow
-        label="Ödenmemiş Huzur Hakkı"
-        amount={-scenario.unpaid_compensation}
-        base={base}
-        color="bg-[#f97316]"
-        sign="-"
-      />
-      <div className="border-t border-dashed border-[#e2e8f0] my-1" />
-      <WaterfallRow
-        label="Brüt Dağıtılabilir Kâr"
-        amount={scenario.distributable_gross}
-        base={base}
-        color="bg-[#06b6d4]"
-        sign="="
-      />
-      <WaterfallRow
-        label="Stopaj Vergisi (%10 GVK 94)"
-        amount={-scenario.withholding_tax}
-        base={base}
-        color="bg-[#ef4444]"
-        sign="-"
-      />
-      <div className="border-t border-dashed border-[#e2e8f0] my-1" />
-      <WaterfallRow
-        label="Net Dağıtılabilir Kâr"
-        amount={scenario.distributable_net}
-        base={base}
-        color="bg-[#22c55e]"
-        isResult
-        sign="="
-      />
-    </div>
-  )
-}
-
-function PartnerTable({ allocations }: { allocations: PartnerAllocation[] }) {
-  if (allocations.length === 0) {
+function ComplianceBadge({ compliant }: { compliant: boolean }) {
+  if (compliant) {
     return (
-      <p className="text-xs text-[#94a3b8] py-4 text-center">
-        Ortak bulunamadı.
-      </p>
+      <span className="inline-flex items-center gap-1 text-[0.6rem] font-bold px-2 py-0.5 rounded-full bg-[#f0fdf4] border border-[#bbf7d0] text-[#16a34a]">
+        Uyumlu
+      </span>
     )
   }
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-xs">
+    <span className="inline-flex items-center gap-1 text-[0.6rem] font-bold px-2 py-0.5 rounded-full bg-[#fef2f2] border border-[#fecaca] text-[#dc2626]">
+      Uyumsuz
+    </span>
+  )
+}
+
+function BlockingReasonBox({ reason }: { reason: string }) {
+  return (
+    <div className="mt-2 flex items-start gap-2 bg-[#fef2f2] border border-[#fecaca] rounded-lg px-3 py-2">
+      <span className="text-[#dc2626] text-xs mt-0.5 flex-shrink-0">!</span>
+      <p className="text-[0.65rem] text-[#dc2626] font-medium leading-relaxed">{reason}</p>
+    </div>
+  )
+}
+
+function PartnerBreakdownTable({
+  distributions,
+}: {
+  distributions: DistributionScenario['per_partner_distributions']
+}) {
+  if (distributions.length === 0) {
+    return <p className="text-[0.65rem] text-[#94a3b8] py-2">Ortak bulunamadı.</p>
+  }
+  return (
+    <div className="overflow-x-auto mt-2">
+      <table className="w-full text-[0.65rem]">
         <thead>
           <tr className="border-b border-[#e2e8f0]">
-            <th className="text-left pb-2 text-[#64748b] font-semibold">Ortak</th>
-            <th className="text-right pb-2 text-[#64748b] font-semibold">Pay %</th>
-            <th className="text-right pb-2 text-[#64748b] font-semibold">Brüt Hak</th>
-            <th className="text-right pb-2 text-[#64748b] font-semibold">Stopaj</th>
-            <th className="text-right pb-2 text-[#64748b] font-semibold">Net Hak</th>
+            <th className="text-left pb-1 text-[#64748b] font-semibold">Ortak ID</th>
+            <th className="text-right pb-1 text-[#64748b] font-semibold">Pay %</th>
+            <th className="text-right pb-1 text-[#64748b] font-semibold">Brüt</th>
+            <th className="text-right pb-1 text-[#64748b] font-semibold">Stopaj</th>
+            <th className="text-right pb-1 text-[#64748b] font-semibold">Net</th>
           </tr>
         </thead>
         <tbody>
-          {allocations.map(a => (
-            <tr key={a.partner_id} className="border-b border-[#f1f5f9] hover:bg-[#f8fafc]">
-              <td className="py-2 font-medium text-[#0f172a]">{a.partner_name}</td>
-              <td className="py-2 text-right text-[#64748b] tabular-nums">
-                %{a.share_pct.toFixed(1)}
+          {distributions.map(d => (
+            <tr key={d.partner_id} className="border-b border-[#f1f5f9] hover:bg-[#f8fafc]">
+              <td className="py-1 font-mono text-[#334155] truncate max-w-[80px]">
+                {d.partner_id.slice(0, 8)}…
               </td>
-              <td className="py-2 text-right tabular-nums text-[#0f172a]">
-                {fmtTRY(a.gross_allocation)}
+              <td className="py-1 text-right tabular-nums text-[#64748b]">
+                %{d.share_pct.toFixed(1)}
               </td>
-              <td className="py-2 text-right tabular-nums text-[#dc2626]">
-                {fmtTRY(a.withholding_tax)}
+              <td className="py-1 text-right tabular-nums text-[#0f172a]">
+                {fmtTRY(d.gross_try)}
               </td>
-              <td className="py-2 text-right tabular-nums font-bold text-[#16a34a]">
-                {fmtTRY(a.net_allocation)}
+              <td className="py-1 text-right tabular-nums text-[#dc2626]">
+                {fmtTRY(d.withholding_try)}
+              </td>
+              <td className="py-1 text-right tabular-nums font-bold text-[#16a34a]">
+                {fmtTRY(d.net_try)}
               </td>
             </tr>
           ))}
@@ -203,67 +125,89 @@ function PartnerTable({ allocations }: { allocations: PartnerAllocation[] }) {
   )
 }
 
-function ScenarioComparisonTable({
-  scenarios,
+function ScenarioCard({
+  scenario,
+  isOptimal,
 }: {
-  scenarios: DistributionSimulatorReport['scenarios']
+  scenario: DistributionScenario
+  isOptimal: boolean
 }) {
-  const rows: { key: keyof typeof scenarios; label: string; pct: string }[] = [
-    { key: 'conservative', label: 'Muhafazakar', pct: '%20 tutulan' },
-    { key: 'balanced',     label: 'Dengeli',     pct: '%10 tutulan' },
-    { key: 'maximum',      label: 'Maksimum',    pct: '%0 tutulan'  },
-  ]
-
-  const allPartnerIds = scenarios.maximum.partner_allocations.map(p => p.partner_id)
+  const [expanded, setExpanded] = useState(false)
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-xs">
-        <thead>
-          <tr className="border-b border-[#e2e8f0]">
-            <th className="text-left pb-2 text-[#64748b] font-semibold">Senaryo</th>
-            <th className="text-right pb-2 text-[#64748b] font-semibold">Brüt Dağıtılabilir</th>
-            <th className="text-right pb-2 text-[#64748b] font-semibold">Net Dağıtılabilir</th>
-            {scenarios.maximum.partner_allocations.map(p => (
-              <th key={p.partner_id} className="text-right pb-2 text-[#64748b] font-semibold">
-                {p.partner_name} (Net)
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map(({ key, label, pct }) => {
-            const s = scenarios[key]
-            return (
-              <tr key={key} className="border-b border-[#f1f5f9] hover:bg-[#f8fafc]">
-                <td className="py-2 font-medium text-[#0f172a]">
-                  {label}
-                  <span className="ml-1 text-[#94a3b8] font-normal">({pct})</span>
-                </td>
-                <td className="py-2 text-right tabular-nums text-[#0f172a]">
-                  {fmtTRY(s.distributable_gross)}
-                </td>
-                <td
-                  className={[
-                    'py-2 text-right tabular-nums font-bold',
-                    s.can_distribute ? 'text-[#16a34a]' : 'text-[#dc2626]',
-                  ].join(' ')}
-                >
-                  {fmtTRY(s.distributable_net)}
-                </td>
-                {allPartnerIds.map(pid => {
-                  const alloc = s.partner_allocations.find(a => a.partner_id === pid)
-                  return (
-                    <td key={pid} className="py-2 text-right tabular-nums text-[#334155]">
-                      {alloc ? fmtTRY(alloc.net_allocation) : '—'}
-                    </td>
-                  )
-                })}
-              </tr>
-            )
-          })}
-        </tbody>
-      </table>
+    <div
+      className={[
+        'rounded-xl border p-4 flex flex-col gap-2 transition-shadow',
+        isOptimal
+          ? 'border-[#86efac] ring-1 ring-[#86efac] bg-[#f0fdf4]'
+          : 'border-[#e2e8f0] bg-white',
+      ].join(' ')}
+    >
+      {/* Header */}
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <div className="flex items-center gap-2">
+            <h3 className="text-xs font-black text-[#0f172a]">{scenario.name}</h3>
+            {isOptimal && (
+              <span className="text-[0.6rem] font-bold px-1.5 py-0.5 rounded-full bg-[#bbf7d0] text-[#15803d]">
+                Optimal
+              </span>
+            )}
+          </div>
+          <p className="text-[0.65rem] text-[#94a3b8] mt-0.5 line-clamp-2">{scenario.description}</p>
+        </div>
+        <ComplianceBadge compliant={scenario.is_legally_compliant} />
+      </div>
+
+      {/* Key metrics */}
+      <div className="grid grid-cols-3 gap-2">
+        <div className="bg-[#f8fafc] rounded-lg p-2">
+          <p className="text-[0.6rem] text-[#64748b] font-semibold">Brüt Dağıtım</p>
+          <p className="text-xs font-black text-[#0f172a] tabular-nums mt-0.5">
+            {fmtTRY(scenario.gross_distribution_try)}
+          </p>
+        </div>
+        <div className="bg-[#f8fafc] rounded-lg p-2">
+          <p className="text-[0.6rem] text-[#64748b] font-semibold">Stopaj (%10)</p>
+          <p className="text-xs font-black text-[#dc2626] tabular-nums mt-0.5">
+            -{fmtTRY(scenario.withholding_tax_try)}
+          </p>
+        </div>
+        <div className="bg-[#f0fdf4] rounded-lg p-2">
+          <p className="text-[0.6rem] text-[#64748b] font-semibold">Net Dağıtım</p>
+          <p className="text-xs font-black text-[#16a34a] tabular-nums mt-0.5">
+            {fmtTRY(scenario.net_distribution_try)}
+          </p>
+        </div>
+      </div>
+
+      {/* Legal reserve row */}
+      <div className="flex items-center justify-between text-[0.65rem]">
+        <span className="text-[#64748b]">Yasal Yedek (TTK 519):</span>
+        <span className="font-semibold text-[#78350f] tabular-nums">
+          {fmtTRY(scenario.legal_reserve_required_try)}
+        </span>
+      </div>
+
+      {/* Blocking reason */}
+      {scenario.blocking_reason && (
+        <BlockingReasonBox reason={scenario.blocking_reason} />
+      )}
+
+      {/* Partner breakdown toggle */}
+      {scenario.per_partner_distributions.length > 0 && (
+        <button
+          type="button"
+          onClick={() => setExpanded(e => !e)}
+          className="text-left text-[0.65rem] text-[#3b82f6] font-semibold hover:underline mt-1"
+        >
+          {expanded ? 'Ortakları Gizle' : `Ortak Dağılımı (${scenario.per_partner_distributions.length} ortak)`}
+        </button>
+      )}
+
+      {expanded && (
+        <PartnerBreakdownTable distributions={scenario.per_partner_distributions} />
+      )}
     </div>
   )
 }
@@ -271,136 +215,158 @@ function ScenarioComparisonTable({
 // ── Main component ────────────────────────────────────────────────────────────
 
 export function DistributionSimulatorTab() {
-  const { data, isLoading, error } = useQuery<DistributionSimulatorReport, Error>({
-    queryKey: ['distribution-simulator'],
-    queryFn: fetchReport,
-    staleTime: 5 * 60 * 1000,
+  const [customAmount, setCustomAmount] = useState('')
+  const [customResult, setCustomResult] = useState<DistributionSimulationResult | null>(null)
+
+  const {
+    data,
+    isLoading,
+    error,
+  } = useQuery<DistributionSimulationResult, Error>({
+    queryKey: ['distribution-simulator-v2'],
+    queryFn: fetchScenarios,
+    staleTime: 0,
   })
+
+  const mutation = useMutation<DistributionSimulationResult, Error, number>({
+    mutationFn: postSimulation,
+    onSuccess: result => {
+      setCustomResult(result)
+    },
+  })
+
+  const handleSimulate = () => {
+    const amount = parseFloat(customAmount.replace(/[^0-9.,]/g, '').replace(',', '.'))
+    if (!isNaN(amount) && amount >= 0) {
+      mutation.mutate(amount)
+    }
+  }
+
+  const activeData = customResult ?? data
+
+  // ── Loading ────────────────────────────────────────────────────────────────
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-16 text-xs text-[#94a3b8]">
-        Simülasyon hesaplanıyor...
+      <div className="flex flex-col gap-4 animate-pulse">
+        {[1, 2, 3].map(i => (
+          <div key={i} className="h-32 rounded-xl bg-[#f1f5f9]" />
+        ))}
       </div>
     )
   }
 
+  // ── Error ──────────────────────────────────────────────────────────────────
+
   if (error) {
     return (
-      <div className="bg-[#fef2f2] border border-[#fecaca] rounded px-4 py-3 text-xs text-[#dc2626] font-medium">
+      <div className="bg-[#fef2f2] border border-[#fecaca] rounded-lg px-4 py-3 text-xs text-[#dc2626] font-medium">
         {error.message}
       </div>
     )
   }
 
-  if (!data) return null
+  if (!activeData) return null
 
-  const { current_scenario: s, scenarios } = data
+  const { input_summary, scenarios, optimal_scenario, compliance_warnings } = activeData
 
   return (
     <div className="flex flex-col gap-6">
 
-      {/* ── Compliance banners ──────────────────────────────────────────────── */}
+      {/* ── Summary KPI strip ──────────────────────────────────────────────── */}
 
-      {!s.can_distribute && (
-        <div className="flex items-center gap-3 bg-[#fef2f2] border border-[#fecaca] rounded-lg px-4 py-3">
-          <span className="text-base">⛔</span>
-          <div>
-            <p className="text-xs font-bold text-[#dc2626]">
-              Dağıtılabilir kâr yok — TTK 509 uyarısı
-            </p>
-            <p className="text-[0.65rem] text-[#ef4444] mt-0.5">
-              Net dağıtılabilir tutar sıfır veya negatif. Temettü dağıtımı yasal olarak mümkün değil.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {s.ttk_509_violated && (
-        <div className="flex items-center gap-3 bg-[#fff7ed] border border-[#fed7aa] rounded-lg px-4 py-3">
-          <span className="text-base">⚠</span>
-          <div>
-            <p className="text-xs font-bold text-[#c2410c]">
-              TTK 509 İhlali — Brüt Dağıtılabilir Negatif
-            </p>
-            <p className="text-[0.65rem] text-[#ea580c] mt-0.5">
-              Kesintiler net geliri aşıyor. Dağıtım gerçekleştirilemez.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {s.legal_reserve_satisfied && (
-        <div className="inline-flex items-center gap-1.5 self-start bg-[#f0fdf4] border border-[#bbf7d0] rounded-full px-3 py-1">
-          <span className="text-[0.65rem]">✓</span>
-          <span className="text-[0.65rem] font-bold text-[#16a34a]">Yasal Yedek Tamamlandı</span>
-        </div>
-      )}
-
-      {/* ── Waterfall ──────────────────────────────────────────────────────── */}
-
-      <div className="bg-white border border-[#e2e8f0] rounded-xl p-5">
-        <div className="mb-4">
-          <h2 className="text-sm font-black text-[#0f172a]">Kâr Dağıtım Kademesi</h2>
-          <p className="text-[0.65rem] text-[#94a3b8] mt-0.5">
-            TTK 519 yasal yedek · YK kararı · GVK 94 stopaj
+      <div className="grid grid-cols-3 gap-3">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl p-4">
+          <p className="text-[0.65rem] text-[#64748b] font-semibold">Net Kâr</p>
+          <p className="text-base font-black text-[#0f172a] tabular-nums mt-1">
+            {fmtTRY(input_summary.net_profit_try)}
           </p>
         </div>
-        <WaterfallCard scenario={s} />
-
-        {/* Legal reserve detail */}
-        <div className="mt-4 p-3 bg-[#fffbeb] rounded-lg border border-[#fef3c7]">
-          <p className="text-[0.65rem] font-semibold text-[#92400e]">TTK 519 Yasal Yedek</p>
-          <div className="mt-1 grid grid-cols-2 gap-2 text-[0.65rem] text-[#78350f]">
-            <span>Mevcut yedek:</span>
-            <span className="text-right font-semibold tabular-nums">
-              {fmtTRY(s.existing_legal_reserve)}
-            </span>
-            <span>Ödenmiş sermaye:</span>
-            <span className="text-right font-semibold tabular-nums">
-              {fmtTRY(s.paid_in_capital)}
-            </span>
-            <span>Hedef (%20):</span>
-            <span className="text-right font-semibold tabular-nums">
-              {fmtTRY(s.paid_in_capital * 0.20)}
-            </span>
-            <span>Bu dönem ayrım:</span>
-            <span className="text-right font-semibold tabular-nums text-[#d97706]">
-              {fmtTRY(s.legal_reserve_allocation)}
-            </span>
-          </div>
+        <div className="bg-white border border-[#e2e8f0] rounded-xl p-4">
+          <p className="text-[0.65rem] text-[#64748b] font-semibold">Azami Dağıtılabilir</p>
+          <p className="text-base font-black text-[#0f172a] tabular-nums mt-1">
+            {fmtTRY(input_summary.max_distributable_try)}
+          </p>
+        </div>
+        <div className="bg-[#fffbeb] border border-[#fef3c7] rounded-xl p-4">
+          <p className="text-[0.65rem] text-[#92400e] font-semibold">Yasal Yedek Gerekli</p>
+          <p className="text-base font-black text-[#92400e] tabular-nums mt-1">
+            {fmtTRY(input_summary.legal_reserve_required_try)}
+          </p>
         </div>
       </div>
 
-      {/* ── Scenario comparison ─────────────────────────────────────────────── */}
+      {/* ── Compliance warnings ────────────────────────────────────────────── */}
 
-      <div className="bg-white border border-[#e2e8f0] rounded-xl p-5">
-        <div className="mb-4">
-          <h2 className="text-sm font-black text-[#0f172a]">Senaryo Karşılaştırması</h2>
-          <p className="text-[0.65rem] text-[#94a3b8] mt-0.5">
-            YK kararı (tutulan pay) değişimine göre net dağıtılabilir tutar
-          </p>
+      {compliance_warnings.length > 0 && (
+        <div className="flex flex-col gap-1.5">
+          {compliance_warnings.map((w, i) => (
+            <div
+              key={i}
+              className="flex items-start gap-2 bg-[#fff7ed] border border-[#fed7aa] rounded-lg px-3 py-2"
+            >
+              <span className="text-[#c2410c] text-xs mt-0.5 flex-shrink-0">!</span>
+              <p className="text-[0.65rem] text-[#c2410c] font-medium">{w}</p>
+            </div>
+          ))}
         </div>
-        <ScenarioComparisonTable scenarios={scenarios} />
+      )}
+
+      {/* ── Scenario cards ─────────────────────────────────────────────────── */}
+
+      <div>
+        <h2 className="text-sm font-black text-[#0f172a] mb-3">Dağıtım Senaryoları</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {scenarios.map(scenario => (
+            <ScenarioCard
+              key={scenario.name}
+              scenario={scenario}
+              isOptimal={
+                optimal_scenario !== null &&
+                optimal_scenario.name === scenario.name
+              }
+            />
+          ))}
+        </div>
       </div>
 
-      {/* ── Per-partner allocation ──────────────────────────────────────────── */}
+      {/* ── Custom simulation ───────────────────────────────────────────────── */}
 
       <div className="bg-white border border-[#e2e8f0] rounded-xl p-5">
-        <div className="mb-4">
-          <h2 className="text-sm font-black text-[#0f172a]">Ortak Bazlı Dağıtım</h2>
-          <p className="text-[0.65rem] text-[#94a3b8] mt-0.5">
-            Mevcut senaryoda her ortağın brüt ve net hakkı
-          </p>
+        <h2 className="text-sm font-black text-[#0f172a] mb-1">Özel Tutar Simülasyonu</h2>
+        <p className="text-[0.65rem] text-[#94a3b8] mb-3">
+          Dağıtmak istediğiniz tutarı girin — TTK 509/519 ve GVK 94 uyumluluğu anında hesaplanır
+        </p>
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            value={customAmount}
+            onChange={e => setCustomAmount(e.target.value)}
+            placeholder="Örn: 500.000"
+            className="flex-1 border border-[#e2e8f0] rounded-lg px-3 py-2 text-sm text-[#0f172a] placeholder-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#3b82f6] focus:border-transparent"
+          />
+          <button
+            type="button"
+            onClick={handleSimulate}
+            disabled={mutation.isPending}
+            className="px-4 py-2 bg-[#0f172a] text-white text-xs font-bold rounded-lg hover:bg-[#1e293b] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {mutation.isPending ? 'Hesaplanıyor…' : 'Simüle Et'}
+          </button>
         </div>
-        <PartnerTable allocations={s.partner_allocations} />
+
+        {mutation.isError && (
+          <p className="mt-2 text-[0.65rem] text-[#dc2626] font-medium">
+            {mutation.error.message}
+          </p>
+        )}
+
+        {customResult && (
+          <p className="mt-2 text-[0.65rem] text-[#16a34a] font-medium">
+            Simülasyon tamamlandı — {customResult.scenarios.length} senaryo hesaplandı
+          </p>
+        )}
       </div>
-
-      {/* ── Footer ──────────────────────────────────────────────────────────── */}
-
-      <p className="text-[0.6rem] text-[#94a3b8] text-right">
-        Hesaplanma: {new Date(data.computed_at).toLocaleString('tr-TR')}
-      </p>
 
     </div>
   )
