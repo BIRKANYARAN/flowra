@@ -7,345 +7,768 @@
 import { describe, it, expect } from 'vitest'
 import {
   computeInventoryTurnover,
-  computeDaysInventoryOutstanding,
+  computeDio,
   classifyTurnoverHealth,
-  computeShrinkageRate,
-  classifyShrinkageLevel,
+  computeWeightedAvgInventoryAge,
+  identifySlowMovingItems,
+  classifySlowMovingSeverity,
   computeDeadStockValue,
-  computeReorderAlert,
-  computeInventoryValueAccuracy,
-} from '../lib/services/inventory/inventory-turnover.service'
+  computeCarryingCostEstimate,
+  computeInventoryToRevenueRatio,
+  classifyInventoryToRevenueRatio,
+  computeStockCoverageDays,
+  computeReorderUrgency,
+  generateInventoryNarrative,
+  computeInventoryConcentration,
+} from '../lib/services/commercial/inventory-turnover.service'
 
-// ── computeInventoryTurnover ──────────────────────────────────────────────────
+// ── Helper: create an ISO date N days ago ─────────────────────────────────────
+function daysAgoISO(n: number): string {
+  const d = new Date()
+  d.setDate(d.getDate() - n)
+  return d.toISOString()
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// computeInventoryTurnover
+// ══════════════════════════════════════════════════════════════════════════════
 
 describe('computeInventoryTurnover', () => {
-  it('returns correct ratio for normal inputs', () => {
-    expect(computeInventoryTurnover(120_000, 20_000)).toBeCloseTo(6, 5)
-  })
-
   it('returns null when avgInventoryValue is 0', () => {
-    expect(computeInventoryTurnover(50_000, 0)).toBeNull()
+    expect(computeInventoryTurnover(100_000, 0)).toBeNull()
   })
 
-  it('returns 0 when COGS is 0 and inventory > 0', () => {
-    expect(computeInventoryTurnover(0, 10_000)).toBeCloseTo(0, 5)
+  it('returns null when avgInventoryValue is negative', () => {
+    expect(computeInventoryTurnover(100_000, -1)).toBeNull()
   })
 
-  it('computes fractional ratio correctly', () => {
-    // 15_000 / 5_000 = 3.0
-    expect(computeInventoryTurnover(15_000, 5_000)).toBeCloseTo(3.0, 5)
+  it('computes correct ratio for normal values', () => {
+    expect(computeInventoryTurnover(120_000, 10_000)).toBeCloseTo(12)
+  })
+
+  it('returns correct ratio: 6x', () => {
+    expect(computeInventoryTurnover(60_000, 10_000)).toBeCloseTo(6)
+  })
+
+  it('returns correct ratio: less than 1x', () => {
+    expect(computeInventoryTurnover(5_000, 10_000)).toBeCloseTo(0.5)
+  })
+
+  it('returns correct ratio: exactly 3x', () => {
+    expect(computeInventoryTurnover(30_000, 10_000)).toBeCloseTo(3)
+  })
+
+  it('returns 0 when COGS is 0', () => {
+    expect(computeInventoryTurnover(0, 10_000)).toBeCloseTo(0)
+  })
+
+  it('handles large values without overflow', () => {
+    const result = computeInventoryTurnover(1_000_000_000, 100_000_000)
+    expect(result).toBeCloseTo(10)
+  })
+
+  it('returns fractional result correctly', () => {
+    expect(computeInventoryTurnover(100, 300)).toBeCloseTo(1 / 3, 5)
   })
 })
 
-// ── computeDaysInventoryOutstanding ──────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+// computeDio
+// ══════════════════════════════════════════════════════════════════════════════
 
-describe('computeDaysInventoryOutstanding', () => {
-  it('returns 365 / ratio for normal turnover', () => {
-    // ratio = 6 → 365 / 6 ≈ 60.83
-    expect(computeDaysInventoryOutstanding(6)).toBeCloseTo(60.833, 2)
+describe('computeDio', () => {
+  it('returns null for null turnover', () => {
+    expect(computeDio(null)).toBeNull()
   })
 
-  it('returns null when turnoverRatio is null', () => {
-    expect(computeDaysInventoryOutstanding(null)).toBeNull()
+  it('returns null for zero turnover', () => {
+    expect(computeDio(0)).toBeNull()
   })
 
-  it('returns null when turnoverRatio is 0', () => {
-    expect(computeDaysInventoryOutstanding(0)).toBeNull()
+  it('returns null for negative turnover', () => {
+    expect(computeDio(-1)).toBeNull()
   })
 
-  it('returns 365 for turnover ratio of 1', () => {
-    expect(computeDaysInventoryOutstanding(1)).toBeCloseTo(365, 3)
+  it('returns 365 for 1x turnover', () => {
+    expect(computeDio(1)).toBeCloseTo(365)
   })
 
-  it('returns 73 for turnover ratio of 5', () => {
-    expect(computeDaysInventoryOutstanding(5)).toBeCloseTo(73, 1)
+  it('returns ~30.4 days for 12x turnover', () => {
+    expect(computeDio(12)).toBeCloseTo(365 / 12)
+  })
+
+  it('returns ~60.8 for 6x turnover', () => {
+    expect(computeDio(6)).toBeCloseTo(365 / 6)
+  })
+
+  it('returns ~121.7 for 3x turnover', () => {
+    expect(computeDio(3)).toBeCloseTo(365 / 3)
+  })
+
+  it('returns > 365 for < 1x turnover', () => {
+    expect(computeDio(0.5)).toBeCloseTo(730)
   })
 })
 
-// ── classifyTurnoverHealth ────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+// classifyTurnoverHealth
+// ══════════════════════════════════════════════════════════════════════════════
 
 describe('classifyTurnoverHealth', () => {
   it('returns insufficient_data for null', () => {
     expect(classifyTurnoverHealth(null)).toBe('insufficient_data')
   })
 
-  it('returns excellent for ratio >= 12 (2 × default benchmark)', () => {
+  it('returns excellent for >= 12', () => {
     expect(classifyTurnoverHealth(12)).toBe('excellent')
+    expect(classifyTurnoverHealth(24)).toBe('excellent')
+    expect(classifyTurnoverHealth(100)).toBe('excellent')
   })
 
-  it('returns excellent for ratio > 12', () => {
-    expect(classifyTurnoverHealth(15)).toBe('excellent')
-  })
-
-  it('returns good for ratio exactly 6.0 (benchmark)', () => {
-    expect(classifyTurnoverHealth(6.0)).toBe('good')
-  })
-
-  it('returns good for ratio between 6 and 12', () => {
+  it('returns good for >= 6 and < 12', () => {
+    expect(classifyTurnoverHealth(6)).toBe('good')
+    expect(classifyTurnoverHealth(11.9)).toBe('good')
     expect(classifyTurnoverHealth(9)).toBe('good')
   })
 
-  it('returns adequate for ratio exactly 3.0 (0.5 × benchmark)', () => {
-    expect(classifyTurnoverHealth(3.0)).toBe('adequate')
+  it('returns moderate for >= 3 and < 6', () => {
+    expect(classifyTurnoverHealth(3)).toBe('moderate')
+    expect(classifyTurnoverHealth(5.99)).toBe('moderate')
+    expect(classifyTurnoverHealth(4)).toBe('moderate')
   })
 
-  it('returns adequate for ratio between 3 and 6', () => {
-    expect(classifyTurnoverHealth(4.5)).toBe('adequate')
+  it('returns slow for >= 1 and < 3', () => {
+    expect(classifyTurnoverHealth(1)).toBe('slow')
+    expect(classifyTurnoverHealth(2.99)).toBe('slow')
   })
 
-  it('returns slow for ratio exactly 1.5 (0.25 × benchmark)', () => {
-    expect(classifyTurnoverHealth(1.5)).toBe('slow')
+  it('returns very_slow for < 1', () => {
+    expect(classifyTurnoverHealth(0.99)).toBe('very_slow')
+    expect(classifyTurnoverHealth(0)).toBe('very_slow')
+    expect(classifyTurnoverHealth(0.1)).toBe('very_slow')
   })
 
-  it('returns slow for ratio between 1.5 and 3', () => {
-    expect(classifyTurnoverHealth(2.0)).toBe('slow')
-  })
-
-  it('returns stagnant for ratio below 1.5', () => {
-    expect(classifyTurnoverHealth(1.0)).toBe('stagnant')
-  })
-
-  it('returns stagnant for ratio of 0', () => {
-    expect(classifyTurnoverHealth(0)).toBe('stagnant')
-  })
-
-  it('uses custom benchmark correctly — excellent at 2× custom', () => {
-    // benchmark = 4 → excellent at >= 8
-    expect(classifyTurnoverHealth(8, 4)).toBe('excellent')
-  })
-
-  it('uses custom benchmark correctly — good at benchmark value', () => {
-    expect(classifyTurnoverHealth(4, 4)).toBe('good')
-  })
-
-  it('uses custom benchmark correctly — adequate at 0.5× benchmark', () => {
-    expect(classifyTurnoverHealth(2, 4)).toBe('adequate')
+  it('boundary: 11.999 → good, not excellent', () => {
+    expect(classifyTurnoverHealth(11.999)).toBe('good')
   })
 })
 
-// ── computeShrinkageRate ──────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+// computeWeightedAvgInventoryAge
+// ══════════════════════════════════════════════════════════════════════════════
 
-describe('computeShrinkageRate', () => {
-  it('computes shrinkage rate for normal inputs', () => {
-    // opening=100, purchases=50, sales=30 → expected=120
-    // closing=114 → shrinkage=6 → rate = 6/120 × 100 = 5%
-    expect(computeShrinkageRate(100, 50, 30, 114)).toBeCloseTo(5, 5)
+describe('computeWeightedAvgInventoryAge', () => {
+  it('returns null for empty array', () => {
+    expect(computeWeightedAvgInventoryAge([])).toBeNull()
   })
 
-  it('returns null when expected closing stock is 0', () => {
-    // opening=0, purchases=0, sales=0 → expected=0
-    expect(computeShrinkageRate(0, 0, 0, 0)).toBeNull()
+  it('returns null when all weights are zero', () => {
+    const lots = [
+      { qty_remaining: 0, entry_date: daysAgoISO(30), entry_cost_try: 100 },
+      { qty_remaining: 10, entry_date: daysAgoISO(30), entry_cost_try: 0 },
+    ]
+    expect(computeWeightedAvgInventoryAge(lots)).toBeNull()
   })
 
-  it('returns 0 when physical count matches expected', () => {
-    // opening=100, purchases=20, sales=30 → expected=90 → closing=90 → shrinkage=0
-    expect(computeShrinkageRate(100, 20, 30, 90)).toBeCloseTo(0, 5)
+  it('returns approximately correct age for a single lot', () => {
+    const lots = [
+      { qty_remaining: 10, entry_date: daysAgoISO(60), entry_cost_try: 100 },
+    ]
+    const result = computeWeightedAvgInventoryAge(lots)
+    expect(result).not.toBeNull()
+    expect(result!).toBeCloseTo(60, 0)
   })
 
-  it('returns negative value for over-count (closing > expected)', () => {
-    // opening=50, purchases=10, sales=20 → expected=40 → closing=45 → shrinkage=-5
-    // rate = -5/40 × 100 = -12.5%
-    expect(computeShrinkageRate(50, 10, 20, 45)).toBeCloseTo(-12.5, 5)
+  it('weights correctly — expensive lots pull age toward their date', () => {
+    // Lot A: 100 days old, weight = 1 × 1000 = 1000
+    // Lot B: 10 days old,  weight = 1 × 100  = 100
+    // Weighted avg = (100×1000 + 10×100) / (1000+100) = 101000/1100 ≈ 91.8
+    const lots = [
+      { qty_remaining: 1, entry_date: daysAgoISO(100), entry_cost_try: 1000 },
+      { qty_remaining: 1, entry_date: daysAgoISO(10),  entry_cost_try: 100  },
+    ]
+    const result = computeWeightedAvgInventoryAge(lots)
+    expect(result).not.toBeNull()
+    expect(result!).toBeCloseTo((100 * 1000 + 10 * 100) / (1000 + 100), 0)
   })
 
-  it('handles exact boundary — expected equals positive opening only', () => {
-    // opening=100, purchases=0, sales=0 → expected=100, closing=97 → rate=3%
-    expect(computeShrinkageRate(100, 0, 0, 97)).toBeCloseTo(3, 5)
-  })
-})
-
-// ── classifyShrinkageLevel ────────────────────────────────────────────────────
-
-describe('classifyShrinkageLevel', () => {
-  it('returns insufficient_data for null', () => {
-    expect(classifyShrinkageLevel(null)).toBe('insufficient_data')
+  it('equal weight lots average their ages', () => {
+    const lots = [
+      { qty_remaining: 1, entry_date: daysAgoISO(40), entry_cost_try: 100 },
+      { qty_remaining: 1, entry_date: daysAgoISO(60), entry_cost_try: 100 },
+    ]
+    const result = computeWeightedAvgInventoryAge(lots)
+    expect(result).not.toBeNull()
+    expect(result!).toBeCloseTo(50, 0)
   })
 
-  it('returns none for 0% shrinkage', () => {
-    expect(classifyShrinkageLevel(0)).toBe('none')
-  })
-
-  it('returns none for negative shrinkage (over-count)', () => {
-    expect(classifyShrinkageLevel(-5)).toBe('none')
-  })
-
-  it('returns acceptable for 0.5% shrinkage', () => {
-    expect(classifyShrinkageLevel(0.5)).toBe('acceptable')
-  })
-
-  it('returns acceptable for exactly 1% (boundary)', () => {
-    expect(classifyShrinkageLevel(1)).toBe('acceptable')
-  })
-
-  it('returns elevated for 1.001% (just above boundary)', () => {
-    expect(classifyShrinkageLevel(1.001)).toBe('elevated')
-  })
-
-  it('returns elevated for 2% shrinkage', () => {
-    expect(classifyShrinkageLevel(2)).toBe('elevated')
-  })
-
-  it('returns elevated for exactly 3% (boundary)', () => {
-    expect(classifyShrinkageLevel(3)).toBe('elevated')
-  })
-
-  it('returns critical for 3.001% (just above 3% boundary)', () => {
-    expect(classifyShrinkageLevel(3.001)).toBe('critical')
-  })
-
-  it('returns critical for 10% shrinkage', () => {
-    expect(classifyShrinkageLevel(10)).toBe('critical')
+  it('ignores lots with zero qty and nonzero cost', () => {
+    const lots = [
+      { qty_remaining: 0, entry_date: daysAgoISO(200), entry_cost_try: 5000 },
+      { qty_remaining: 5, entry_date: daysAgoISO(30),  entry_cost_try: 100 },
+    ]
+    const result = computeWeightedAvgInventoryAge(lots)
+    expect(result).not.toBeNull()
+    expect(result!).toBeCloseTo(30, 0)
   })
 })
 
-// ── computeDeadStockValue ─────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+// identifySlowMovingItems
+// ══════════════════════════════════════════════════════════════════════════════
+
+describe('identifySlowMovingItems', () => {
+  const makeItem = (id: string, daysSince: number | null) => ({
+    product_id:         id,
+    product_name:       `Product ${id}`,
+    qty_in_stock:       10,
+    stock_value_try:    1000,
+    last_movement_date: daysSince !== null ? daysAgoISO(daysSince) : null,
+  })
+
+  it('returns items with null last_movement_date', () => {
+    const items = [makeItem('a', null), makeItem('b', 30)]
+    const result = identifySlowMovingItems(items)
+    expect(result.map(i => i.product_id)).toContain('a')
+    expect(result.map(i => i.product_id)).not.toContain('b')
+  })
+
+  it('returns items at exactly 90 days (default threshold)', () => {
+    const items = [makeItem('a', 90), makeItem('b', 89)]
+    const result = identifySlowMovingItems(items)
+    expect(result.map(i => i.product_id)).toContain('a')
+    expect(result.map(i => i.product_id)).not.toContain('b')
+  })
+
+  it('returns nothing for all recent items', () => {
+    const items = [makeItem('a', 5), makeItem('b', 20), makeItem('c', 89)]
+    expect(identifySlowMovingItems(items)).toHaveLength(0)
+  })
+
+  it('returns all items when all are old', () => {
+    const items = [makeItem('a', 100), makeItem('b', 200), makeItem('c', 91)]
+    expect(identifySlowMovingItems(items)).toHaveLength(3)
+  })
+
+  it('respects custom threshold', () => {
+    const items = [makeItem('a', 60), makeItem('b', 59)]
+    const result = identifySlowMovingItems(items, 60)
+    expect(result.map(i => i.product_id)).toContain('a')
+    expect(result.map(i => i.product_id)).not.toContain('b')
+  })
+
+  it('returns empty for empty input', () => {
+    expect(identifySlowMovingItems([])).toHaveLength(0)
+  })
+})
+
+// ══════════════════════════════════════════════════════════════════════════════
+// classifySlowMovingSeverity
+// ══════════════════════════════════════════════════════════════════════════════
+
+describe('classifySlowMovingSeverity', () => {
+  it('returns dead_stock for null', () => {
+    expect(classifySlowMovingSeverity(null)).toBe('dead_stock')
+  })
+
+  it('returns active for < 30 days', () => {
+    expect(classifySlowMovingSeverity(0)).toBe('active')
+    expect(classifySlowMovingSeverity(29)).toBe('active')
+    expect(classifySlowMovingSeverity(1)).toBe('active')
+  })
+
+  it('returns watch for >= 30 and < 60', () => {
+    expect(classifySlowMovingSeverity(30)).toBe('watch')
+    expect(classifySlowMovingSeverity(59)).toBe('watch')
+  })
+
+  it('returns slow for >= 60 and < 90', () => {
+    expect(classifySlowMovingSeverity(60)).toBe('slow')
+    expect(classifySlowMovingSeverity(89)).toBe('slow')
+  })
+
+  it('returns very_slow for >= 90 and < 180', () => {
+    expect(classifySlowMovingSeverity(90)).toBe('very_slow')
+    expect(classifySlowMovingSeverity(179)).toBe('very_slow')
+  })
+
+  it('returns dead_stock for >= 180', () => {
+    expect(classifySlowMovingSeverity(180)).toBe('dead_stock')
+    expect(classifySlowMovingSeverity(365)).toBe('dead_stock')
+    expect(classifySlowMovingSeverity(1000)).toBe('dead_stock')
+  })
+
+  it('boundary: exactly 30 is watch, not active', () => {
+    expect(classifySlowMovingSeverity(30)).toBe('watch')
+  })
+
+  it('boundary: exactly 180 is dead_stock, not very_slow', () => {
+    expect(classifySlowMovingSeverity(180)).toBe('dead_stock')
+  })
+})
+
+// ══════════════════════════════════════════════════════════════════════════════
+// computeDeadStockValue
+// ══════════════════════════════════════════════════════════════════════════════
 
 describe('computeDeadStockValue', () => {
-  it('returns all zeros for empty items array', () => {
-    const result = computeDeadStockValue([])
-    expect(result.dead_stock_count).toBe(0)
-    expect(result.dead_stock_value).toBe(0)
-    expect(result.dead_stock_pct_of_total).toBe(0)
-    expect(result.items).toHaveLength(0)
+  it('returns 0 for empty array', () => {
+    expect(computeDeadStockValue([])).toBe(0)
   })
 
-  it('marks never-sold items (null last_sale_date) as dead', () => {
-    const result = computeDeadStockValue([
-      { product_id: 'p1', last_sale_date: null, stock_value: 5000, qty_on_hand: 10 },
-    ])
-    expect(result.dead_stock_count).toBe(1)
-    expect(result.dead_stock_value).toBe(5000)
-    expect(result.items[0].is_dead).toBe(true)
-    expect(result.items[0].days_since_sale).toBeNull()
+  it('counts items with null last_movement_date', () => {
+    const items = [
+      { qty_in_stock: 5, stock_value_try: 500, last_movement_date: null },
+    ]
+    expect(computeDeadStockValue(items)).toBe(500)
   })
 
-  it('marks items with last sale >= 90 days ago as dead', () => {
-    const ninetyDaysAgo = new Date()
-    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 95)
-    const dateStr = ninetyDaysAgo.toISOString().slice(0, 10)
-
-    const result = computeDeadStockValue([
-      { product_id: 'p2', last_sale_date: dateStr, stock_value: 3000, qty_on_hand: 5 },
-    ])
-    expect(result.items[0].is_dead).toBe(true)
+  it('counts items with >= 180 days no movement', () => {
+    const items = [
+      { qty_in_stock: 5, stock_value_try: 1000, last_movement_date: daysAgoISO(180) },
+      { qty_in_stock: 3, stock_value_try: 600,  last_movement_date: daysAgoISO(200) },
+    ]
+    expect(computeDeadStockValue(items)).toBeCloseTo(1600)
   })
 
-  it('does NOT mark items sold within 90 days as dead', () => {
-    const recentDate = new Date()
-    recentDate.setDate(recentDate.getDate() - 30)
-    const dateStr = recentDate.toISOString().slice(0, 10)
-
-    const result = computeDeadStockValue([
-      { product_id: 'p3', last_sale_date: dateStr, stock_value: 2000, qty_on_hand: 4 },
-    ])
-    expect(result.items[0].is_dead).toBe(false)
+  it('does not count items with < 180 days', () => {
+    const items = [
+      { qty_in_stock: 5, stock_value_try: 1000, last_movement_date: daysAgoISO(179) },
+      { qty_in_stock: 3, stock_value_try: 600,  last_movement_date: daysAgoISO(10) },
+    ]
+    expect(computeDeadStockValue(items)).toBe(0)
   })
 
-  it('computes dead_stock_pct_of_total correctly with multiple items', () => {
-    const oldDate    = '2000-01-01'
-    const recentDate = new Date()
-    recentDate.setDate(recentDate.getDate() - 10)
-    const recent = recentDate.toISOString().slice(0, 10)
-
-    const result = computeDeadStockValue([
-      { product_id: 'p1', last_sale_date: oldDate,  stock_value: 4000, qty_on_hand: 8 },
-      { product_id: 'p2', last_sale_date: recent,   stock_value: 6000, qty_on_hand: 12 },
-    ])
-    // total = 10_000, dead = 4_000 → 40%
-    expect(result.dead_stock_count).toBe(1)
-    expect(result.dead_stock_value).toBe(4000)
-    expect(result.dead_stock_pct_of_total).toBeCloseTo(40, 3)
+  it('handles mixed old and recent items', () => {
+    const items = [
+      { qty_in_stock: 5, stock_value_try: 1000, last_movement_date: daysAgoISO(200) }, // dead
+      { qty_in_stock: 5, stock_value_try: 500,  last_movement_date: daysAgoISO(30) },  // active
+      { qty_in_stock: 5, stock_value_try: 750,  last_movement_date: null },             // dead
+    ]
+    expect(computeDeadStockValue(items)).toBeCloseTo(1750)
   })
 
-  it('respects custom deadStockDays threshold', () => {
-    const fortyfiveDaysAgo = new Date()
-    fortyfiveDaysAgo.setDate(fortyfiveDaysAgo.getDate() - 45)
-    const dateStr = fortyfiveDaysAgo.toISOString().slice(0, 10)
-
-    // default 90d: NOT dead
-    const result90 = computeDeadStockValue(
-      [{ product_id: 'px', last_sale_date: dateStr, stock_value: 1000, qty_on_hand: 2 }],
-      90,
-    )
-    expect(result90.items[0].is_dead).toBe(false)
-
-    // custom 30d: dead
-    const result30 = computeDeadStockValue(
-      [{ product_id: 'px', last_sale_date: dateStr, stock_value: 1000, qty_on_hand: 2 }],
-      30,
-    )
-    expect(result30.items[0].is_dead).toBe(true)
-  })
-
-  it('returns 0 pct when total inventory value is 0 (avoid divide by zero)', () => {
-    const result = computeDeadStockValue([
-      { product_id: 'p1', last_sale_date: null, stock_value: 0, qty_on_hand: 5 },
-    ])
-    expect(result.dead_stock_pct_of_total).toBe(0)
+  it('boundary: exactly 180 days counts as dead stock', () => {
+    const items = [
+      { qty_in_stock: 1, stock_value_try: 999, last_movement_date: daysAgoISO(180) },
+    ]
+    expect(computeDeadStockValue(items)).toBeCloseTo(999)
   })
 })
 
-// ── computeReorderAlert ───────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+// computeCarryingCostEstimate
+// ══════════════════════════════════════════════════════════════════════════════
 
-describe('computeReorderAlert', () => {
-  it('returns critical when currentQty < safetyStock', () => {
-    expect(computeReorderAlert(5, 20, 10)).toBe('critical')
+describe('computeCarryingCostEstimate', () => {
+  it('uses default 25% rate', () => {
+    expect(computeCarryingCostEstimate(100_000)).toBeCloseTo(25_000)
   })
 
-  it('returns reorder_now when currentQty < safetyStock is false but <= reorderPoint', () => {
-    // safetyStock=10, reorderPoint=20, currentQty=15 → 15 >= 10 (not critical), 15 <= 20
-    expect(computeReorderAlert(15, 20, 10)).toBe('reorder_now')
+  it('uses custom rate', () => {
+    expect(computeCarryingCostEstimate(200_000, 30)).toBeCloseTo(60_000)
   })
 
-  it('returns reorder_now when currentQty equals reorderPoint', () => {
-    expect(computeReorderAlert(20, 20, 10)).toBe('reorder_now')
+  it('returns 0 for zero inventory', () => {
+    expect(computeCarryingCostEstimate(0)).toBe(0)
   })
 
-  it('returns watch when currentQty <= reorderPoint × 1.5', () => {
-    // reorderPoint=20 → 1.5× = 30 → currentQty=25
-    expect(computeReorderAlert(25, 20, 10)).toBe('watch')
+  it('uses 10% rate correctly', () => {
+    expect(computeCarryingCostEstimate(50_000, 10)).toBeCloseTo(5_000)
   })
 
-  it('returns watch at boundary reorderPoint × 1.5', () => {
-    expect(computeReorderAlert(30, 20, 10)).toBe('watch')
-  })
-
-  it('returns healthy when currentQty > reorderPoint × 1.5', () => {
-    expect(computeReorderAlert(50, 20, 10)).toBe('healthy')
-  })
-
-  it('returns healthy when all thresholds are 0 and qty is positive', () => {
-    expect(computeReorderAlert(1, 0, 0)).toBe('healthy')
+  it('handles fractional rate', () => {
+    expect(computeCarryingCostEstimate(100_000, 12.5)).toBeCloseTo(12_500)
   })
 })
 
-// ── computeInventoryValueAccuracy ─────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+// computeInventoryToRevenueRatio
+// ══════════════════════════════════════════════════════════════════════════════
 
-describe('computeInventoryValueAccuracy', () => {
-  it('returns 100 when book equals market value', () => {
-    expect(computeInventoryValueAccuracy(50_000, 50_000)).toBeCloseTo(100, 5)
+describe('computeInventoryToRevenueRatio', () => {
+  it('returns null when monthlyRevenue is 0', () => {
+    expect(computeInventoryToRevenueRatio(100_000, 0)).toBeNull()
   })
 
-  it('returns null when marketValue is 0', () => {
-    expect(computeInventoryValueAccuracy(10_000, 0)).toBeNull()
+  it('returns null when monthlyRevenue is negative', () => {
+    expect(computeInventoryToRevenueRatio(100_000, -1)).toBeNull()
   })
 
-  it('returns value > 100 when book exceeds market (overvalued)', () => {
-    // book=120_000, market=100_000 → 120%
-    expect(computeInventoryValueAccuracy(120_000, 100_000)).toBeCloseTo(120, 5)
+  it('returns 1 when inventory equals monthly revenue', () => {
+    expect(computeInventoryToRevenueRatio(50_000, 50_000)).toBeCloseTo(1)
   })
 
-  it('returns value < 100 when book is below market (undervalued)', () => {
-    // book=80_000, market=100_000 → 80%
-    expect(computeInventoryValueAccuracy(80_000, 100_000)).toBeCloseTo(80, 5)
+  it('returns 0.5 when inventory is half monthly revenue', () => {
+    expect(computeInventoryToRevenueRatio(25_000, 50_000)).toBeCloseTo(0.5)
   })
 
-  it('returns 0 when bookValue is 0', () => {
-    expect(computeInventoryValueAccuracy(0, 100_000)).toBeCloseTo(0, 5)
+  it('returns 3.0 for overstocked scenario', () => {
+    expect(computeInventoryToRevenueRatio(300_000, 100_000)).toBeCloseTo(3.0)
   })
 
-  it('handles fractional result correctly', () => {
-    // book=1_000, market=3_000 → 33.33…%
-    expect(computeInventoryValueAccuracy(1_000, 3_000)).toBeCloseTo(33.333, 2)
+  it('returns fractional months correctly', () => {
+    expect(computeInventoryToRevenueRatio(15_000, 100_000)).toBeCloseTo(0.15)
+  })
+})
+
+// ══════════════════════════════════════════════════════════════════════════════
+// classifyInventoryToRevenueRatio
+// ══════════════════════════════════════════════════════════════════════════════
+
+describe('classifyInventoryToRevenueRatio', () => {
+  it('returns insufficient_data for null', () => {
+    expect(classifyInventoryToRevenueRatio(null)).toBe('insufficient_data')
+  })
+
+  it('returns lean for < 0.5', () => {
+    expect(classifyInventoryToRevenueRatio(0)).toBe('lean')
+    expect(classifyInventoryToRevenueRatio(0.49)).toBe('lean')
+  })
+
+  it('returns normal for >= 0.5 and < 1.5', () => {
+    expect(classifyInventoryToRevenueRatio(0.5)).toBe('normal')
+    expect(classifyInventoryToRevenueRatio(1.0)).toBe('normal')
+    expect(classifyInventoryToRevenueRatio(1.49)).toBe('normal')
+  })
+
+  it('returns heavy for >= 1.5 and < 3.0', () => {
+    expect(classifyInventoryToRevenueRatio(1.5)).toBe('heavy')
+    expect(classifyInventoryToRevenueRatio(2.99)).toBe('heavy')
+  })
+
+  it('returns overstocked for >= 3.0', () => {
+    expect(classifyInventoryToRevenueRatio(3.0)).toBe('overstocked')
+    expect(classifyInventoryToRevenueRatio(10)).toBe('overstocked')
+  })
+
+  it('boundary: 0.5 is normal not lean', () => {
+    expect(classifyInventoryToRevenueRatio(0.5)).toBe('normal')
+  })
+
+  it('boundary: 1.5 is heavy not normal', () => {
+    expect(classifyInventoryToRevenueRatio(1.5)).toBe('heavy')
+  })
+})
+
+// ══════════════════════════════════════════════════════════════════════════════
+// computeStockCoverageDays
+// ══════════════════════════════════════════════════════════════════════════════
+
+describe('computeStockCoverageDays', () => {
+  it('returns null when avgDailySales is 0', () => {
+    expect(computeStockCoverageDays(100, 0)).toBeNull()
+  })
+
+  it('returns null when avgDailySales is negative', () => {
+    expect(computeStockCoverageDays(100, -1)).toBeNull()
+  })
+
+  it('computes correct coverage days', () => {
+    expect(computeStockCoverageDays(90, 3)).toBeCloseTo(30)
+  })
+
+  it('caps at 365 days', () => {
+    expect(computeStockCoverageDays(1000, 0.1)).toBe(365)
+  })
+
+  it('returns exactly 365 when calculation is exactly 365', () => {
+    expect(computeStockCoverageDays(365, 1)).toBe(365)
+  })
+
+  it('returns value just below 365 for borderline case', () => {
+    expect(computeStockCoverageDays(364.9, 1)).toBeCloseTo(364.9)
+  })
+
+  it('handles fractional daily sales', () => {
+    expect(computeStockCoverageDays(15, 0.5)).toBeCloseTo(30)
+  })
+
+  it('returns 0 when qty is 0', () => {
+    expect(computeStockCoverageDays(0, 5)).toBeCloseTo(0)
+  })
+})
+
+// ══════════════════════════════════════════════════════════════════════════════
+// computeReorderUrgency
+// ══════════════════════════════════════════════════════════════════════════════
+
+describe('computeReorderUrgency', () => {
+  it('returns 100 for null coverage', () => {
+    expect(computeReorderUrgency(null)).toBe(100)
+  })
+
+  it('returns 100 for 0 days coverage', () => {
+    expect(computeReorderUrgency(0)).toBe(100)
+  })
+
+  it('returns 90 for exactly 7 days', () => {
+    expect(computeReorderUrgency(7)).toBe(90)
+  })
+
+  it('returns 90 for 1 day coverage', () => {
+    expect(computeReorderUrgency(1)).toBe(90)
+  })
+
+  it('returns 70 for exactly 14 days', () => {
+    expect(computeReorderUrgency(14)).toBe(70)
+  })
+
+  it('returns 70 for 8 days', () => {
+    expect(computeReorderUrgency(8)).toBe(70)
+  })
+
+  it('returns 50 for exactly 30 days', () => {
+    expect(computeReorderUrgency(30)).toBe(50)
+  })
+
+  it('returns 50 for 15 days', () => {
+    expect(computeReorderUrgency(15)).toBe(50)
+  })
+
+  it('returns 30 for exactly 60 days', () => {
+    expect(computeReorderUrgency(60)).toBe(30)
+  })
+
+  it('returns 30 for 31 days', () => {
+    expect(computeReorderUrgency(31)).toBe(30)
+  })
+
+  it('returns 15 for exactly 90 days', () => {
+    expect(computeReorderUrgency(90)).toBe(15)
+  })
+
+  it('returns 15 for 61 days', () => {
+    expect(computeReorderUrgency(61)).toBe(15)
+  })
+
+  it('returns 5 for 91 days', () => {
+    expect(computeReorderUrgency(91)).toBe(5)
+  })
+
+  it('returns 5 for 365 days', () => {
+    expect(computeReorderUrgency(365)).toBe(5)
+  })
+
+  it('returns 5 for any value > 90', () => {
+    expect(computeReorderUrgency(200)).toBe(5)
+    expect(computeReorderUrgency(100)).toBe(5)
+  })
+
+  it('boundary: 7 → 90, 8 → 70', () => {
+    expect(computeReorderUrgency(7)).toBe(90)
+    expect(computeReorderUrgency(8)).toBe(70)
+  })
+
+  it('boundary: 14 → 70, 15 → 50', () => {
+    expect(computeReorderUrgency(14)).toBe(70)
+    expect(computeReorderUrgency(15)).toBe(50)
+  })
+
+  it('boundary: 30 → 50, 31 → 30', () => {
+    expect(computeReorderUrgency(30)).toBe(50)
+    expect(computeReorderUrgency(31)).toBe(30)
+  })
+
+  it('boundary: 60 → 30, 61 → 15', () => {
+    expect(computeReorderUrgency(60)).toBe(30)
+    expect(computeReorderUrgency(61)).toBe(15)
+  })
+
+  it('boundary: 90 → 15, 91 → 5', () => {
+    expect(computeReorderUrgency(90)).toBe(15)
+    expect(computeReorderUrgency(91)).toBe(5)
+  })
+})
+
+// ══════════════════════════════════════════════════════════════════════════════
+// computeInventoryConcentration
+// ══════════════════════════════════════════════════════════════════════════════
+
+describe('computeInventoryConcentration', () => {
+  it('returns null for empty array', () => {
+    expect(computeInventoryConcentration([])).toBeNull()
+  })
+
+  it('returns null when total is 0', () => {
+    const items = [{ stock_value_try: 0 }, { stock_value_try: 0 }]
+    expect(computeInventoryConcentration(items)).toBeNull()
+  })
+
+  it('returns 100 when there is only 1 item', () => {
+    const items = [{ stock_value_try: 5000 }]
+    expect(computeInventoryConcentration(items)).toBeCloseTo(100)
+  })
+
+  it('top 5 default: correctly concentrates top 5', () => {
+    const items = [
+      { stock_value_try: 1000 },
+      { stock_value_try: 900 },
+      { stock_value_try: 800 },
+      { stock_value_try: 700 },
+      { stock_value_try: 600 },
+      { stock_value_try: 100 },
+      { stock_value_try: 50 },
+    ]
+    const total    = 4150
+    const top5     = 1000 + 900 + 800 + 700 + 600
+    const expected = (top5 / total) * 100
+    expect(computeInventoryConcentration(items)).toBeCloseTo(expected)
+  })
+
+  it('custom topN = 3', () => {
+    const items = [
+      { stock_value_try: 300 },
+      { stock_value_try: 200 },
+      { stock_value_try: 100 },
+      { stock_value_try: 50 },
+      { stock_value_try: 50 },
+    ]
+    const total    = 700
+    const top3     = 300 + 200 + 100
+    const expected = (top3 / total) * 100
+    expect(computeInventoryConcentration(items, 3)).toBeCloseTo(expected)
+  })
+
+  it('topN = 1 returns share of most valuable product', () => {
+    const items = [
+      { stock_value_try: 600 },
+      { stock_value_try: 400 },
+    ]
+    expect(computeInventoryConcentration(items, 1)).toBeCloseTo(60)
+  })
+
+  it('all equal items: top 5 of 10 is 50%', () => {
+    const items = Array.from({ length: 10 }, () => ({ stock_value_try: 100 }))
+    expect(computeInventoryConcentration(items)).toBeCloseTo(50)
+  })
+
+  it('topN greater than array length returns 100', () => {
+    const items = [{ stock_value_try: 500 }, { stock_value_try: 500 }]
+    expect(computeInventoryConcentration(items, 10)).toBeCloseTo(100)
+  })
+})
+
+// ══════════════════════════════════════════════════════════════════════════════
+// generateInventoryNarrative
+// ══════════════════════════════════════════════════════════════════════════════
+
+describe('generateInventoryNarrative', () => {
+  it('returns a non-empty string', () => {
+    const result = generateInventoryNarrative({
+      turnoverRatio:    6,
+      diodays:          60.8,
+      deadStockValue:   5000,
+      slowMovingCount:  3,
+      totalStockValue:  100_000,
+    })
+    expect(typeof result).toBe('string')
+    expect(result.length).toBeGreaterThan(0)
+  })
+
+  it('includes turnover ratio in output', () => {
+    const result = generateInventoryNarrative({
+      turnoverRatio:    8.5,
+      diodays:          43,
+      deadStockValue:   0,
+      slowMovingCount:  0,
+      totalStockValue:  50_000,
+    })
+    expect(result).toContain('8.5')
+  })
+
+  it('handles null turnoverRatio gracefully', () => {
+    const result = generateInventoryNarrative({
+      turnoverRatio:    null,
+      diodays:          null,
+      deadStockValue:   0,
+      slowMovingCount:  0,
+      totalStockValue:  10_000,
+    })
+    expect(result).toBeTruthy()
+    expect(result).toContain('hesaplanamadı')
+  })
+
+  it('includes slow-moving count when > 0', () => {
+    const result = generateInventoryNarrative({
+      turnoverRatio:    3,
+      diodays:          121,
+      deadStockValue:   12_000,
+      slowMovingCount:  5,
+      totalStockValue:  80_000,
+    })
+    expect(result).toContain('5')
+  })
+
+  it('mentions no slow stock when count is 0', () => {
+    const result = generateInventoryNarrative({
+      turnoverRatio:    12,
+      diodays:          30,
+      deadStockValue:   0,
+      slowMovingCount:  0,
+      totalStockValue:  200_000,
+    })
+    expect(result).toContain('tespit edilmedi')
+  })
+
+  it('contains Turkish text', () => {
+    const result = generateInventoryNarrative({
+      turnoverRatio:    4,
+      diodays:          91,
+      deadStockValue:   8000,
+      slowMovingCount:  2,
+      totalStockValue:  60_000,
+    })
+    expect(result).toMatch(/stok/i)
+  })
+})
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Edge / integration-style cross-function tests
+// ══════════════════════════════════════════════════════════════════════════════
+
+describe('cross-function edge cases', () => {
+  it('full pipeline: zero inventory leads to null turnover and DIO', () => {
+    const turnover = computeInventoryTurnover(50_000, 0)
+    expect(turnover).toBeNull()
+    const dio = computeDio(turnover)
+    expect(dio).toBeNull()
+    expect(classifyTurnoverHealth(turnover)).toBe('insufficient_data')
+  })
+
+  it('reorderUrgency is 100 when stockCoverage is null', () => {
+    const coverage = computeStockCoverageDays(100, 0)
+    expect(coverage).toBeNull()
+    expect(computeReorderUrgency(coverage)).toBe(100)
+  })
+
+  it('a product sold daily has high coverage and low urgency', () => {
+    const coverage = computeStockCoverageDays(200, 2) // 100 days
+    expect(coverage).not.toBeNull()
+    expect(coverage!).toBeCloseTo(100)
+    expect(computeReorderUrgency(coverage)).toBe(5)
+  })
+
+  it('dead stock severity + dead stock value both agree', () => {
+    const items = [
+      { qty_in_stock: 10, stock_value_try: 2000, last_movement_date: daysAgoISO(200) },
+    ]
+    const deadVal = computeDeadStockValue(items)
+    expect(deadVal).toBeCloseTo(2000)
+    const severity = classifySlowMovingSeverity(200)
+    expect(severity).toBe('dead_stock')
+  })
+
+  it('carrying cost scales linearly with inventory value', () => {
+    const c1 = computeCarryingCostEstimate(100_000)
+    const c2 = computeCarryingCostEstimate(200_000)
+    expect(c2).toBeCloseTo(c1 * 2)
+  })
+
+  it('inventory-to-revenue classification aligns with ratio value', () => {
+    expect(classifyInventoryToRevenueRatio(computeInventoryToRevenueRatio(40_000, 100_000))).toBe('lean')
+    expect(classifyInventoryToRevenueRatio(computeInventoryToRevenueRatio(100_000, 100_000))).toBe('normal')
+    expect(classifyInventoryToRevenueRatio(computeInventoryToRevenueRatio(200_000, 100_000))).toBe('heavy')
+    expect(classifyInventoryToRevenueRatio(computeInventoryToRevenueRatio(400_000, 100_000))).toBe('overstocked')
   })
 })
