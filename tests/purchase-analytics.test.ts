@@ -578,3 +578,193 @@ describe('detectCostTrend — additional patterns', () => {
     expect(detectCostTrend([0, 100, 100, 100])).toBe('stable')
   })
 })
+
+// ── computeLeadTimeDays — extended cases ──────────────────────────────────────
+
+describe('computeLeadTimeDays — extended cases', () => {
+  it('same day order and receipt → 0 days', () => {
+    expect(computeLeadTimeDays('2024-03-15', '2024-03-15')).toBe(0)
+  })
+
+  it('1 day lead time', () => {
+    expect(computeLeadTimeDays('2024-03-14', '2024-03-15')).toBe(1)
+  })
+
+  it('7 days lead time', () => {
+    expect(computeLeadTimeDays('2024-03-01', '2024-03-08')).toBe(7)
+  })
+
+  it('null receivedAt → returns null', () => {
+    expect(computeLeadTimeDays('2024-03-01', null)).toBeNull()
+  })
+
+  it('30 day lead time (month boundary)', () => {
+    expect(computeLeadTimeDays('2024-01-31', '2024-03-01')).toBe(30)
+  })
+
+  it('cross-year lead time', () => {
+    // Dec 1 to Jan 1 = 31 days
+    expect(computeLeadTimeDays('2023-12-01', '2024-01-01')).toBe(31)
+  })
+
+  it('handles datetime strings with time component (uses only date part)', () => {
+    expect(computeLeadTimeDays('2024-03-01T08:00:00', '2024-03-08T17:30:00')).toBe(7)
+  })
+
+  it('46 days lead time', () => {
+    expect(computeLeadTimeDays('2024-01-01', '2024-02-16')).toBe(46)
+  })
+})
+
+// ── computeCostVariancePct — extended ─────────────────────────────────────────
+
+describe('computeCostVariancePct — extended', () => {
+  it('+10% increase', () => {
+    expect(computeCostVariancePct(110, 100)).toBeCloseTo(10, 1)
+  })
+
+  it('-20% decrease', () => {
+    expect(computeCostVariancePct(80, 100)).toBeCloseTo(-20, 1)
+  })
+
+  it('0% change (same cost)', () => {
+    expect(computeCostVariancePct(100, 100)).toBeCloseTo(0, 1)
+  })
+
+  it('null prior → returns null', () => {
+    expect(computeCostVariancePct(100, null)).toBeNull()
+  })
+
+  it('zero prior → returns null', () => {
+    expect(computeCostVariancePct(100, 0)).toBeNull()
+  })
+
+  it('+100% doubling', () => {
+    expect(computeCostVariancePct(200, 100)).toBeCloseTo(100, 1)
+  })
+
+  it('fractional costs', () => {
+    expect(computeCostVariancePct(105.5, 100)).toBeCloseTo(5.5, 1)
+  })
+
+  it('very small variance', () => {
+    expect(computeCostVariancePct(100.01, 100)).toBeCloseTo(0.01, 2)
+  })
+})
+
+// ── classifyLeadTime — all boundaries ────────────────────────────────────────
+
+describe('classifyLeadTime — all boundaries', () => {
+  it('null → pending', () => {
+    expect(classifyLeadTime(null)).toBe('pending')
+  })
+
+  it('0 days → fast', () => {
+    expect(classifyLeadTime(0)).toBe('fast')
+  })
+
+  it('7 days → fast (boundary)', () => {
+    expect(classifyLeadTime(7)).toBe('fast')
+  })
+
+  it('8 days → normal', () => {
+    expect(classifyLeadTime(8)).toBe('normal')
+  })
+
+  it('21 days → normal (boundary)', () => {
+    expect(classifyLeadTime(21)).toBe('normal')
+  })
+
+  it('22 days → slow', () => {
+    expect(classifyLeadTime(22)).toBe('slow')
+  })
+
+  it('45 days → slow (boundary)', () => {
+    expect(classifyLeadTime(45)).toBe('slow')
+  })
+
+  it('46 days → very_slow', () => {
+    expect(classifyLeadTime(46)).toBe('very_slow')
+  })
+
+  it('200 days → very_slow', () => {
+    expect(classifyLeadTime(200)).toBe('very_slow')
+  })
+
+  it('negative days (future receipt) → fast (≤ 7)', () => {
+    // negative is ≤ 7, so fast
+    expect(classifyLeadTime(-1)).toBe('fast')
+  })
+})
+
+// ── computePurchaseFrequency — extended ───────────────────────────────────────
+
+describe('computePurchaseFrequency — extended', () => {
+  it('0 observation days → 0', () => {
+    expect(computePurchaseFrequency(10, 0)).toBe(0)
+  })
+
+  it('negative observation days → 0', () => {
+    expect(computePurchaseFrequency(10, -1)).toBe(0)
+  })
+
+  it('1 order in 30 days → 1 per month', () => {
+    expect(computePurchaseFrequency(1, 30)).toBeCloseTo(1, 3)
+  })
+
+  it('6 orders in 180 days → 1 per month', () => {
+    expect(computePurchaseFrequency(6, 180)).toBeCloseTo(1, 3)
+  })
+
+  it('12 orders in 30 days → 12 per month', () => {
+    expect(computePurchaseFrequency(12, 30)).toBeCloseTo(12, 3)
+  })
+
+  it('0 orders → 0 per month', () => {
+    expect(computePurchaseFrequency(0, 180)).toBe(0)
+  })
+
+  it('high frequency: 60 orders in 90 days → 20 per month', () => {
+    expect(computePurchaseFrequency(60, 90)).toBeCloseTo(20, 3)
+  })
+})
+
+// ── detectCostTrend — extended edge cases ─────────────────────────────────────
+
+describe('detectCostTrend — extended edge cases', () => {
+  it('empty array → insufficient_data', () => {
+    expect(detectCostTrend([])).toBe('insufficient_data')
+  })
+
+  it('single data point → insufficient_data', () => {
+    expect(detectCostTrend([100])).toBe('insufficient_data')
+  })
+
+  it('7 steady values → stable', () => {
+    expect(detectCostTrend([50, 50, 50, 50, 50, 50, 50])).toBe('stable')
+  })
+
+  it('doubling trend (prior=[100,100], last3=[200,200,200]) → increasing', () => {
+    expect(detectCostTrend([100, 100, 200, 200, 200])).toBe('increasing')
+  })
+
+  it('halving trend → decreasing', () => {
+    expect(detectCostTrend([200, 200, 100, 100, 100])).toBe('decreasing')
+  })
+
+  it('prior3=[100,105,110], last3=[115,120,125]: ~15% increase → increasing', () => {
+    // avgPrior ≈ 105, avgLast3 ≈ 120, change = 14.3% > 5% → increasing
+    expect(detectCostTrend([100, 105, 110, 115, 120, 125])).toBe('increasing')
+  })
+
+  it('prior3=[200,195,190], last3=[185,180,175]: ~8% decrease → decreasing', () => {
+    // avgPrior = (200+195+190)/3 = 195, avgLast3 = (185+180+175)/3 = 180
+    // change = (180-195)/195 * 100 ≈ -7.7% → decreasing
+    expect(detectCostTrend([200, 195, 190, 185, 180, 175])).toBe('decreasing')
+  })
+
+  it('exactly 4 data points: prior=[100], last3=[103,103,103] → within 5% → stable', () => {
+    // avgPrior=100, avgLast3=103, change=3% → stable
+    expect(detectCostTrend([100, 103, 103, 103])).toBe('stable')
+  })
+})

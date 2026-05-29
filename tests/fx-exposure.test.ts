@@ -578,3 +578,227 @@ describe('classifyHedgeRecommendation — extended', () => {
     expect(classifyHedgeRecommendation(200, 500_000)).toBe('urgent_hedge')
   })
 })
+
+// ── computeFxImpact — extended coverage ──────────────────────────────────────
+
+describe('computeFxImpact — extended coverage', () => {
+  it('no rate change → impact is 0', () => {
+    expect(computeFxImpact(10_000, 32, 32)).toBe(0)
+  })
+
+  it('TRY depreciated: currentRate > originalRate → positive (gain on foreign asset)', () => {
+    expect(computeFxImpact(1000, 30, 35)).toBe(5000)
+  })
+
+  it('TRY appreciated: currentRate < originalRate → negative', () => {
+    expect(computeFxImpact(1000, 35, 30)).toBe(-5000)
+  })
+
+  it('zero foreign amount → impact is always 0', () => {
+    expect(computeFxImpact(0, 10, 50)).toBe(0)
+  })
+
+  it('large position with small rate move', () => {
+    // 500000 USD × (32.5 - 32.0) = 250000
+    expect(computeFxImpact(500_000, 32.0, 32.5)).toBeCloseTo(250_000, 1)
+  })
+
+  it('fractional amounts', () => {
+    expect(computeFxImpact(100.5, 10, 11)).toBeCloseTo(100.5, 1)
+  })
+
+  it('negative foreign amount (short position) × rate up → negative impact', () => {
+    // short 1000 units, rate goes up → loss
+    expect(computeFxImpact(-1000, 30, 35)).toBe(-5000)
+  })
+})
+
+// ── computeNetFxExposure — extended ──────────────────────────────────────────
+
+describe('computeNetFxExposure — extended', () => {
+  it('zero receivables and payables → 0', () => {
+    expect(computeNetFxExposure(0, 0)).toBe(0)
+  })
+
+  it('receivables > payables → positive net', () => {
+    expect(computeNetFxExposure(500_000, 200_000)).toBe(300_000)
+  })
+
+  it('payables > receivables → negative net', () => {
+    expect(computeNetFxExposure(100_000, 300_000)).toBe(-200_000)
+  })
+
+  it('equal receivables and payables → 0', () => {
+    expect(computeNetFxExposure(250_000, 250_000)).toBe(0)
+  })
+
+  it('large numbers do not overflow', () => {
+    expect(computeNetFxExposure(1e9, 1e8)).toBeCloseTo(9e8, 0)
+  })
+})
+
+// ── computeFxRiskRatio — extended ────────────────────────────────────────────
+
+describe('computeFxRiskRatio — extended', () => {
+  it('null when revenue is exactly 0', () => {
+    expect(computeFxRiskRatio(100_000, 0)).toBeNull()
+  })
+
+  it('100% ratio when |exposure| equals revenue', () => {
+    expect(computeFxRiskRatio(500_000, 500_000)).toBeCloseTo(100, 1)
+  })
+
+  it('ratio uses absolute value: negative exposure gives same ratio as positive', () => {
+    const pos = computeFxRiskRatio(100_000, 500_000)
+    const neg = computeFxRiskRatio(-100_000, 500_000)
+    expect(pos).toBeCloseTo(neg!, 5)
+  })
+
+  it('very small exposure → near-zero ratio', () => {
+    expect(computeFxRiskRatio(100, 1_000_000)).toBeCloseTo(0.01, 3)
+  })
+
+  it('50% ratio when exposure is half of revenue', () => {
+    expect(computeFxRiskRatio(250_000, 500_000)).toBeCloseTo(50, 1)
+  })
+})
+
+// ── classifyFxRisk — all boundary values ─────────────────────────────────────
+
+describe('classifyFxRisk — all boundary values', () => {
+  it('null → insufficient_data', () => {
+    expect(classifyFxRisk(null)).toBe('insufficient_data')
+  })
+
+  it('0% → minimal', () => {
+    expect(classifyFxRisk(0)).toBe('minimal')
+  })
+
+  it('4.99% → minimal', () => {
+    expect(classifyFxRisk(4.99)).toBe('minimal')
+  })
+
+  it('5% → low', () => {
+    expect(classifyFxRisk(5)).toBe('low')
+  })
+
+  it('14.9% → low', () => {
+    expect(classifyFxRisk(14.9)).toBe('low')
+  })
+
+  it('15% → moderate', () => {
+    expect(classifyFxRisk(15)).toBe('moderate')
+  })
+
+  it('29.9% → moderate', () => {
+    expect(classifyFxRisk(29.9)).toBe('moderate')
+  })
+
+  it('30% → significant', () => {
+    expect(classifyFxRisk(30)).toBe('significant')
+  })
+
+  it('49.9% → significant', () => {
+    expect(classifyFxRisk(49.9)).toBe('significant')
+  })
+
+  it('50% → critical', () => {
+    expect(classifyFxRisk(50)).toBe('critical')
+  })
+
+  it('999% → critical', () => {
+    expect(classifyFxRisk(999)).toBe('critical')
+  })
+})
+
+// ── computeCurrencyDiversification — edge cases ───────────────────────────────
+
+describe('computeCurrencyDiversification — edge cases', () => {
+  it('empty array → hhi=0, dominant=null, try_pct=0, foreign_pct=0', () => {
+    const result = computeCurrencyDiversification([])
+    expect(result.hhi).toBe(0)
+    expect(result.dominant_currency).toBeNull()
+    expect(result.try_pct).toBe(0)
+    expect(result.foreign_pct).toBe(0)
+  })
+
+  it('single TRY entry → hhi=1, try_pct=100, foreign_pct=0, dominant=null', () => {
+    const result = computeCurrencyDiversification([{ currency: 'TRY', amount_try: 100_000 }])
+    expect(result.hhi).toBeCloseTo(1, 5)
+    expect(result.try_pct).toBeCloseTo(100, 1)
+    expect(result.foreign_pct).toBeCloseTo(0, 1)
+    expect(result.dominant_currency).toBeNull()
+  })
+
+  it('single USD entry → hhi=1, try_pct=0, foreign_pct=100, dominant=USD', () => {
+    const result = computeCurrencyDiversification([{ currency: 'USD', amount_try: 50_000 }])
+    expect(result.hhi).toBeCloseTo(1, 5)
+    expect(result.try_pct).toBeCloseTo(0, 1)
+    expect(result.foreign_pct).toBeCloseTo(100, 1)
+    expect(result.dominant_currency).toBe('USD')
+  })
+
+  it('equal TRY and USD → hhi = 0.5, try_pct = 50, foreign_pct = 50', () => {
+    const result = computeCurrencyDiversification([
+      { currency: 'TRY', amount_try: 50_000 },
+      { currency: 'USD', amount_try: 50_000 },
+    ])
+    expect(result.hhi).toBeCloseTo(0.5, 3)
+    expect(result.try_pct).toBeCloseTo(50, 1)
+    expect(result.foreign_pct).toBeCloseTo(50, 1)
+  })
+
+  it('try_pct + foreign_pct = 100 for mixed portfolio', () => {
+    const result = computeCurrencyDiversification([
+      { currency: 'TRY', amount_try: 30_000 },
+      { currency: 'USD', amount_try: 40_000 },
+      { currency: 'EUR', amount_try: 30_000 },
+    ])
+    expect(result.try_pct + result.foreign_pct).toBeCloseTo(100, 1)
+  })
+
+  it('dominant_currency is the largest non-TRY currency', () => {
+    const result = computeCurrencyDiversification([
+      { currency: 'TRY', amount_try: 100_000 },
+      { currency: 'USD', amount_try: 80_000 },
+      { currency: 'EUR', amount_try: 20_000 },
+    ])
+    expect(result.dominant_currency).toBe('USD')
+  })
+
+  it('negative amounts treated as absolute values for HHI calc', () => {
+    const result = computeCurrencyDiversification([
+      { currency: 'USD', amount_try: -50_000 },
+      { currency: 'EUR', amount_try: 50_000 },
+    ])
+    expect(result.hhi).toBeCloseTo(0.5, 3)
+  })
+})
+
+// ── computeScenarioFxLoss — sign semantics ────────────────────────────────────
+
+describe('computeScenarioFxLoss — sign semantics', () => {
+  it('net liability (negative TRY exposure) + depreciation → positive loss', () => {
+    // netForeignExposureTry = -100_000 (owe foreign currency)
+    // depreciation 10% → loss = -100_000 * 0.1 * -1 = +10_000
+    expect(computeScenarioFxLoss(-100_000, 10)).toBeCloseTo(10_000, 1)
+  })
+
+  it('net asset (positive TRY exposure) + depreciation → negative (gain)', () => {
+    expect(computeScenarioFxLoss(100_000, 10)).toBeCloseTo(-10_000, 1)
+  })
+
+  it('0% depreciation → 0 loss regardless of exposure', () => {
+    expect(Math.abs(computeScenarioFxLoss(500_000, 0))).toBe(0)
+  })
+
+  it('30% depreciation on 200_000 TRY net liability → 60_000 loss', () => {
+    expect(computeScenarioFxLoss(-200_000, 30)).toBeCloseTo(60_000, 1)
+  })
+
+  it('loss scales linearly with depreciation pct', () => {
+    const base = computeScenarioFxLoss(-100_000, 10)
+    const double = computeScenarioFxLoss(-100_000, 20)
+    expect(double).toBeCloseTo(base * 2, 3)
+  })
+})
