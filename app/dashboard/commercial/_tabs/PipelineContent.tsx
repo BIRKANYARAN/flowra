@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Suspense } from 'react'
 import { NarrativeFooter } from '@/components/ds'
 import { createClient } from '@/lib/supabase-server'
+import PipelineVelocityClient from './_pipeline/PipelineVelocityClient'
 import SalesFlowClient, {
   type Proforma,
   type Sale,
@@ -121,6 +122,9 @@ export async function PipelineContent({ companyId }: Props) {
 
   return (
     <div className="space-y-4">
+      {/* ── Pipeline Velocity Analysis ───────────────────────────────────── */}
+      <PipelineVelocityClient companyId={companyId} />
+
       <Suspense fallback={<CommandBarSkeleton />}>
         <SalesFlowCommandBar companyId={companyId} />
       </Suspense>

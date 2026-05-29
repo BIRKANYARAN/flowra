@@ -43,6 +43,7 @@ import { CapitalStatementTab } from '@/app/dashboard/partners/_components/Capita
 import { DistributionSimulatorTab } from '@/app/dashboard/partners/_components/DistributionSimulatorTab'
 import { ContributionTimelineTab }  from '@/app/dashboard/partners/_components/ContributionTimelineTab'
 import { EquityWaterfallTab }       from '@/app/dashboard/partners/_components/EquityWaterfallTab'
+import { RiskCompositeTab }         from '@/app/dashboard/partners/_components/RiskCompositeTab'
 import { PartnersContextBar } from '@/app/dashboard/partners/_shared/PartnersContextBar'
 import { PartnerFinanceActions } from '@/app/dashboard/partners/_components/PartnerFinanceActions'
 
@@ -306,6 +307,7 @@ export default function PartnersPage() {
     'distribution-simulator': { title: 'Kâr Dağıtımı Simülatörü', sub: 'TTK 519 yasal yedek · GVK 94 stopaj · 4 katmanlı dağıtım güvenliği · Senaryo karşılaştırması' },
     contributions: { title: 'Taahhüt Takvimi', sub: 'Sermaye taahhüt doluluk oranı · TTK 588 yasal faiz riski · Ortak bazlı katkı geçmişi' },
     'equity-waterfall': { title: 'Getiri Projeksiyonu', sub: 'Sermaye riski · Geri dönüş oranı · MOIC · Başa baş süre · 24 aylık projeksiyon' },
+    'risk-composite':   { title: 'Risk Kompozit Skorlama', sub: '6 boyutlu ağırlıklı risk değerlendirmesi · Ortak bazında kompozit skor ve derece' },
   }
 
   const TABS: { id: TabId; label: string }[] = [
@@ -326,6 +328,7 @@ export default function PartnersPage() {
     { id: 'distribution-simulator', label: 'Kâr Dağıtımı' },
     { id: 'contributions',          label: 'Taahhüt Takvimi' },
     { id: 'equity-waterfall',       label: 'Getiri Projeksiyonu' },
+    { id: 'risk-composite',         label: 'Risk Skoru'          },
   ]
 
   // ── Render ────────────────────────────────────────────────────────────────────
@@ -523,6 +526,10 @@ export default function PartnersPage() {
 
       {activeTab === 'equity-waterfall' && (
         <EquityWaterfallTab companyId="" />
+      )}
+
+      {activeTab === 'risk-composite' && (
+        <RiskCompositeTab companyId="" />
       )}
 
     </div>
