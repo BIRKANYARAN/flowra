@@ -314,6 +314,283 @@ async function computePeriod(
   }
 }
 
+// ── NEW v2: Spec-compliant pure exports (lowercase names, 365-day default) ────
+//
+// These are the canonical exported functions described in the spec.
+// The UPPERCASE variants (computeDSO etc.) above are retained for legacy compat.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Compute Days Sales Outstanding (DSO).
+ * avgReceivables / annualRevenue × periodDays
+ * Returns null if annualRevenue === 0.
+ */
+export function computeDso(
+  avgReceivables: number,
+  annualRevenue: number,
+  periodDays = 365,
+): number | null {
+  if (annualRevenue === 0) return null
+  return round2((avgReceivables / annualRevenue) * periodDays)
+}
+
+/**
+ * Compute Days Inventory Outstanding (DIO).
+ * Returns null if annualCogs === 0.
+ */
+export function computeDio(
+  avgInventory: number,
+  annualCogs: number,
+  periodDays = 365,
+): number | null {
+  if (annualCogs === 0) return null
+  return round2((avgInventory / annualCogs) * periodDays)
+}
+
+/**
+ * Compute Days Payable Outstanding (DPO).
+ * Returns null if annualCogs === 0.
+ */
+export function computeDpo(
+  avgPayables: number,
+  annualCogs: number,
+  periodDays = 365,
+): number | null {
+  if (annualCogs === 0) return null
+  return round2((avgPayables / annualCogs) * periodDays)
+}
+
+/**
+ * Compute Cash Conversion Cycle (CCC = DSO + DIO - DPO).
+ * Returns null if any input is null.
+ */
+export function computeCcc(
+  dso: number | null,
+  dio: number | null,
+  dpo: number | null,
+): number | null {
+  if (dso === null || dio === null || dpo === null) return null
+  return round2(dso + dio - dpo)
+}
+
+/**
+ * Classify CCC health.
+ * 'excellent': < 0  'good': 0–30  'moderate': 31–60  'poor': 61–90  'critical': > 90  'insufficient_data': null
+ */
+export function classifyCccHealth(
+  ccc: number | null,
+): 'excellent' | 'good' | 'moderate' | 'poor' | 'critical' | 'insufficient_data' {
+  if (ccc === null) return 'insufficient_data'
+  if (ccc < 0)   return 'excellent'
+  if (ccc <= 30) return 'good'
+  if (ccc <= 60) return 'moderate'
+  if (ccc <= 90) return 'poor'
+  return 'critical'
+}
+
+/**
+ * Classify current ratio health.
+ * 'strong': >= 2.0  'adequate': >= 1.5  'tight': >= 1.0  'critical': < 1.0  'insufficient_data': null
+ */
+export function classifyCurrentRatioHealth(
+  ratio: number | null,
+): 'strong' | 'adequate' | 'tight' | 'critical' | 'insufficient_data' {
+  if (ratio === null) return 'insufficient_data'
+  if (ratio >= 2.0) return 'strong'
+  if (ratio >= 1.5) return 'adequate'
+  if (ratio >= 1.0) return 'tight'
+  return 'critical'
+}
+
+/**
+ * Classify quick ratio health.
+ * 'strong': >= 1.5  'adequate': >= 1.0  'tight': >= 0.7  'critical': < 0.7  'insufficient_data': null
+ */
+export function classifyQuickRatioHealth(
+  ratio: number | null,
+): 'strong' | 'adequate' | 'tight' | 'critical' | 'insufficient_data' {
+  if (ratio === null) return 'insufficient_data'
+  if (ratio >= 1.5) return 'strong'
+  if (ratio >= 1.0) return 'adequate'
+  if (ratio >= 0.7) return 'tight'
+  return 'critical'
+}
+
+/**
+ * Compute working capital turnover: revenue / avgWorkingCapital.
+ * Returns null if avgWorkingCapital === 0.
+ */
+export function computeWorkingCapitalTurnover(
+  revenue: number,
+  avgWorkingCapital: number,
+): number | null {
+  if (avgWorkingCapital === 0) return null
+  return round2(revenue / avgWorkingCapital)
+}
+
+/**
+ * Compute Net Operating Working Capital (NOWC).
+ * NOWC = receivables + inventory - payables
+ */
+export function computeNowc(
+  receivables: number,
+  inventory: number,
+  payables: number,
+): number {
+  return round2(receivables + inventory - payables)
+}
+
+/**
+ * Compute required working capital for target DSO/DIO/DPO.
+ * targetWC = (revenue × targetDso / 365) + (cogs × targetDio / 365) - (cogs × targetDpo / 365)
+ */
+export function computeTargetWorkingCapital(
+  annualRevenue: number,
+  annualCogs: number,
+  targetDso: number,
+  targetDio: number,
+  targetDpo: number,
+): number {
+  const recTarget = (annualRevenue / 365) * targetDso
+  const invTarget = (annualCogs   / 365) * targetDio
+  const payTarget = (annualCogs   / 365) * targetDpo
+  return round2(recTarget + invTarget - payTarget)
+}
+
+/**
+ * Compute working capital gap: currentNowc - targetWorkingCapital.
+ * Positive = excess (opportunity to free cash).
+ * Negative = deficit (needs more funding).
+ */
+export function computeWorkingCapitalGap(
+  currentNowc: number,
+  targetWorkingCapital: number,
+): number {
+  return round2(currentNowc - targetWorkingCapital)
+}
+
+/**
+ * Compute cash freed if DSO reduced by N days.
+ * cashFreed = (annualRevenue / 365) × dayReduction
+ */
+export function computeCashFreedByDsoReduction(
+  annualRevenue: number,
+  dayReduction: number,
+): number {
+  return round2((annualRevenue / 365) * dayReduction)
+}
+
+/**
+ * Compute cash freed if DIO reduced by N days.
+ */
+export function computeCashFreedByDioReduction(
+  annualCogs: number,
+  dayReduction: number,
+): number {
+  return round2((annualCogs / 365) * dayReduction)
+}
+
+/**
+ * Compute additional cash if DPO extended by N days.
+ */
+export function computeCashFromDpoExtension(
+  annualCogs: number,
+  dayExtension: number,
+): number {
+  return round2((annualCogs / 365) * dayExtension)
+}
+
+/**
+ * Generate working capital optimization recommendations (Turkish strings).
+ * Compares current DSO/DIO/DPO vs benchmarks.
+ */
+export function generateWcOptimizationRecommendations(
+  dso: number | null,
+  dio: number | null,
+  dpo: number | null,
+  benchmarkDso = 30,
+  benchmarkDio = 45,
+  benchmarkDpo = 30,
+): string[] {
+  const recs: string[] = []
+
+  if (dso !== null && dso > benchmarkDso) {
+    const excess = Math.round(dso - benchmarkDso)
+    recs.push(
+      `Alacak tahsilat süreniz (${Math.round(dso)} gün) hedefin ${excess} gün üzerinde — ` +
+      `erken ödeme indirimi ve sıkı tahsilat takibi ile DSO'yu ${benchmarkDso} güne indirin.`,
+    )
+  }
+
+  if (dio !== null && dio > benchmarkDio) {
+    const excess = Math.round(dio - benchmarkDio)
+    recs.push(
+      `Stok devir süreniz (${Math.round(dio)} gün) hedefin ${excess} gün üzerinde — ` +
+      `talep bazlı sipariş ve ABC analizi ile stok optimizasyonu yapın.`,
+    )
+  }
+
+  if (dpo !== null && dpo < benchmarkDpo) {
+    const gap = Math.round(benchmarkDpo - dpo)
+    recs.push(
+      `Borç ödeme süreniz (${Math.round(dpo)} gün) hedefin ${gap} gün altında — ` +
+      `tedarikçilerle vade uzatma müzakeresi yaparak nakit tutma sürenizi artırın.`,
+    )
+  }
+
+  if (recs.length === 0) {
+    recs.push(
+      'Çalışma sermayesi döngüsü hedefler dahilinde — mevcut performansı koruyun.',
+    )
+  }
+
+  return recs
+}
+
+/**
+ * Classify overall working capital health.
+ * 'healthy': ccc < 30 AND currentRatio >= 1.5
+ * 'moderate': ccc < 60 AND currentRatio >= 1.0
+ * 'strained': ccc < 90 OR currentRatio < 1.0
+ * 'critical': ccc >= 90 OR currentRatio < 0.5 OR workingCapital < 0
+ * 'insufficient_data': both ccc and currentRatio are null
+ */
+export function classifyWorkingCapitalHealth(
+  ccc: number | null,
+  currentRatio: number | null,
+  workingCapital: number,
+): 'healthy' | 'moderate' | 'strained' | 'critical' | 'insufficient_data' {
+  if (ccc === null && currentRatio === null) return 'insufficient_data'
+
+  // Critical conditions
+  if (workingCapital < 0) return 'critical'
+  if (currentRatio !== null && currentRatio < 0.5) return 'critical'
+  if (ccc !== null && ccc >= 90) return 'critical'
+
+  // Healthy: both good
+  if (
+    (ccc === null || ccc < 30) &&
+    (currentRatio === null || currentRatio >= 1.5)
+  ) {
+    if (ccc !== null && currentRatio !== null) return 'healthy'
+  }
+  if (ccc !== null && ccc < 30 && currentRatio !== null && currentRatio >= 1.5) {
+    return 'healthy'
+  }
+
+  // Moderate
+  const cccOk    = ccc === null || ccc < 60
+  const ratioOk  = currentRatio === null || currentRatio >= 1.0
+  if (cccOk && ratioOk) return 'moderate'
+
+  // Strained: ccc < 90 or ratio < 1.0
+  if ((ccc !== null && ccc < 90) || (currentRatio !== null && currentRatio < 1.0)) {
+    return 'strained'
+  }
+
+  return 'moderate'
+}
+
 // ── NEW: 12-Month Report types and pure exports ───────────────────────────────
 
 export interface WorkingCapitalMonth {
