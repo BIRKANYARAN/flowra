@@ -508,3 +508,370 @@ describe('Integration: total_cash=₺300K, expenses=₺150K/mo, revenue=₺180K/
     }
   })
 })
+
+// ── computeCurrentRatio — extended ───────────────────────────────────────────
+
+describe('computeCurrentRatio — extended', () => {
+
+  it('90. large ratio when assets greatly exceed liabilities', () => {
+    expect(computeCurrentRatio(5_000_000, 100_000)).toBe(50)
+  })
+
+  it('91. very small ratio when liabilities dominate', () => {
+    // 1000 / 10_000_000 = 0.0001
+    expect(computeCurrentRatio(1_000, 10_000_000)).toBeCloseTo(0.0001, 4)
+  })
+
+  it('92. exact 1.5 ratio (adequate boundary)', () => {
+    expect(computeCurrentRatio(150_000, 100_000)).toBe(1.5)
+  })
+
+  it('93. exact 2.0 ratio (strong boundary)', () => {
+    expect(computeCurrentRatio(200_000, 100_000)).toBe(2)
+  })
+
+  it('94. fractional result not rounded — raw division', () => {
+    // 100_000 / 75_000 = 1.333...
+    expect(computeCurrentRatio(100_000, 75_000)).toBeCloseTo(1.333, 2)
+  })
+
+})
+
+// ── computeQuickRatio — extended ─────────────────────────────────────────────
+
+describe('computeQuickRatio — extended', () => {
+
+  it('95. large inventory wipes out most of the quick ratio', () => {
+    // (100_000 - 90_000) / 50_000 = 0.2
+    expect(computeQuickRatio(100_000, 90_000, 50_000)).toBeCloseTo(0.2, 2)
+  })
+
+  it('96. quick ratio 1.5 boundary', () => {
+    // (200_000 - 50_000) / 100_000 = 1.5
+    expect(computeQuickRatio(200_000, 50_000, 100_000)).toBe(1.5)
+  })
+
+  it('97. quick < current when inventory > 0', () => {
+    const quick   = computeQuickRatio(300_000, 50_000, 100_000) ?? 0
+    const current = computeCurrentRatio(300_000, 100_000) ?? 0
+    expect(quick).toBeLessThan(current)
+  })
+
+  it('98. zero inventory makes quick ratio equal to current ratio', () => {
+    const quick   = computeQuickRatio(200_000, 0, 100_000)
+    const current = computeCurrentRatio(200_000, 100_000)
+    expect(quick).toBe(current)
+  })
+
+})
+
+// ── computeCashRatio — extended ───────────────────────────────────────────────
+
+describe('computeCashRatio — extended', () => {
+
+  it('99. very conservative: cash 10% of liabilities → 0.1', () => {
+    expect(computeCashRatio(10_000, 100_000)).toBeCloseTo(0.1, 2)
+  })
+
+  it('100. cash ratio ordering: current > quick > cash for same inputs', () => {
+    const assets = 300_000
+    const inventory = 50_000
+    const liab = 100_000
+    const cash = 80_000
+
+    const current = computeCurrentRatio(assets, liab) ?? 0
+    const quick   = computeQuickRatio(assets, inventory, liab) ?? 0
+    const cashR   = computeCashRatio(cash, liab) ?? 0
+
+    expect(current).toBeGreaterThanOrEqual(quick)
+    expect(quick).toBeGreaterThanOrEqual(cashR)
+  })
+
+  it('101. cash ratio matches obligation coverage concept', () => {
+    // Both measure cash / obligations
+    expect(computeCashRatio(500_000, 250_000)).toBeCloseTo(2, 2)
+  })
+
+})
+
+// ── classifyLiquidityPosition — extended ─────────────────────────────────────
+
+describe('classifyLiquidityPosition — extended', () => {
+
+  it('102. insolvent even with very high ratio if net_liquidity < 0', () => {
+    expect(classifyLiquidityPosition(10.0, -1)).toBe('insolvent')
+  })
+
+  it('103. critical when ratio exactly 0', () => {
+    expect(classifyLiquidityPosition(0, 0)).toBe('critical')
+  })
+
+  it('104. strong at ratio 2.0 (exact boundary)', () => {
+    expect(classifyLiquidityPosition(2.0, 100_000)).toBe('strong')
+  })
+
+  it('105. adequate just below 2.0 (1.999)', () => {
+    expect(classifyLiquidityPosition(1.999, 100_000)).toBe('adequate')
+  })
+
+  it('106. tight at exactly 1.0', () => {
+    expect(classifyLiquidityPosition(1.0, 50_000)).toBe('tight')
+  })
+
+  it('107. tight at 1.499', () => {
+    expect(classifyLiquidityPosition(1.499, 50_000)).toBe('tight')
+  })
+
+  it('108. critical at 0.999', () => {
+    expect(classifyLiquidityPosition(0.999, 50_000)).toBe('critical')
+  })
+
+  it('109. net_liquidity = 0 is NOT insolvent (needs < 0)', () => {
+    expect(classifyLiquidityPosition(2.0, 0)).not.toBe('insolvent')
+  })
+
+})
+
+// ── computeCashVelocity — extended ────────────────────────────────────────────
+
+describe('computeCashVelocity — extended', () => {
+
+  it('110. velocity 5 turns/month (very high turnover)', () => {
+    expect(computeCashVelocity(500_000, 100_000)).toBe(5)
+  })
+
+  it('111. velocity 0.1 (cash much larger than monthly revenue)', () => {
+    expect(computeCashVelocity(50_000, 500_000)).toBe(0.1)
+  })
+
+  it('112. velocity 0.5 when revenue is half of cash', () => {
+    expect(computeCashVelocity(100_000, 200_000)).toBe(0.5)
+  })
+
+  it('113. large velocity with tiny cash', () => {
+    // 1_000_000 / 100 = 10_000 turns
+    expect(computeCashVelocity(1_000_000, 100)).toBe(10_000)
+  })
+
+})
+
+// ── computeDaysCashOnHand — extended ──────────────────────────────────────────
+
+describe('computeDaysCashOnHand — extended', () => {
+
+  it('114. 14 days exactly (low boundary)', () => {
+    // 14 days: cash = 14 * (expenses/30) → cash = expenses × 14/30
+    const expenses = 300_000
+    const cash = expenses * 14 / 30
+    expect(computeDaysCashOnHand(cash, expenses)).toBeCloseTo(14, 1)
+  })
+
+  it('115. 60 days exactly (good boundary)', () => {
+    const expenses = 300_000
+    const cash = expenses * 60 / 30 // = 2 months of expenses
+    expect(computeDaysCashOnHand(cash, expenses)).toBeCloseTo(60, 1)
+  })
+
+  it('116. 180 days (6 months) — strong position', () => {
+    const expenses = 100_000
+    const cash = expenses * 6  // 6 months
+    expect(computeDaysCashOnHand(cash, expenses)).toBeCloseTo(180, 1)
+  })
+
+  it('117. less than 1 day when nearly depleted', () => {
+    // cash = 3_000, expenses = 100_000 → 3000 / (100000/30) = 0.9 days
+    expect(computeDaysCashOnHand(3_000, 100_000)).toBeCloseTo(0.9, 1)
+  })
+
+})
+
+// ── classifyDaysCashOnHand — extended ─────────────────────────────────────────
+
+describe('classifyDaysCashOnHand — extended', () => {
+
+  it('118. exactly 89 days → good (not excellent)', () => {
+    expect(classifyDaysCashOnHand(89)).toBe('good')
+  })
+
+  it('119. exactly 59 days → adequate (not good)', () => {
+    expect(classifyDaysCashOnHand(59)).toBe('adequate')
+  })
+
+  it('120. exactly 29 days → low (not adequate)', () => {
+    expect(classifyDaysCashOnHand(29)).toBe('low')
+  })
+
+  it('121. exactly 13 days → critical (not low)', () => {
+    expect(classifyDaysCashOnHand(13)).toBe('critical')
+  })
+
+  it('122. very large value → excellent', () => {
+    expect(classifyDaysCashOnHand(365)).toBe('excellent')
+  })
+
+  it('123. decimal value in critical zone', () => {
+    expect(classifyDaysCashOnHand(5.5)).toBe('critical')
+  })
+
+})
+
+// ── computeCashBurnRate — extended ────────────────────────────────────────────
+
+describe('computeCashBurnRate — extended', () => {
+
+  it('124. very large burn rate when expenses far exceed revenue', () => {
+    expect(computeCashBurnRate(0, 1_000_000)).toBe(1_000_000)
+  })
+
+  it('125. cash generation: revenue 2× expenses → negative burn', () => {
+    expect(computeCashBurnRate(200_000, 100_000)).toBe(-100_000)
+  })
+
+  it('126. fractional amounts', () => {
+    expect(computeCashBurnRate(10_000.50, 10_500.75)).toBeCloseTo(500.25, 1)
+  })
+
+  it('127. burn rate with both zero inputs', () => {
+    expect(computeCashBurnRate(0, 0)).toBe(0)
+  })
+
+})
+
+// ── estimateRunwayFromCash — extended ─────────────────────────────────────────
+
+describe('estimateRunwayFromCash — extended', () => {
+
+  it('128. 12-month runway (classic startup metric)', () => {
+    expect(estimateRunwayFromCash(1_200_000, 100_000)).toBe(12)
+  })
+
+  it('129. 18-month runway (healthy startup)', () => {
+    expect(estimateRunwayFromCash(900_000, 50_000)).toBe(18)
+  })
+
+  it('130. null when burn = 0 (not burning)', () => {
+    expect(estimateRunwayFromCash(1_000_000, 0)).toBeNull()
+  })
+
+  it('131. null when burn negative (profitable)', () => {
+    expect(estimateRunwayFromCash(1_000_000, -50_000)).toBeNull()
+  })
+
+  it('132. very small burn → very long runway', () => {
+    expect(estimateRunwayFromCash(1_000_000, 1_000)).toBe(1_000)
+  })
+
+})
+
+// ── computeCashConcentrationRisk — extended ───────────────────────────────────
+
+describe('computeCashConcentrationRisk — extended', () => {
+
+  it('133. five equal accounts → 20% each', () => {
+    const result = computeCashConcentrationRisk([100_000, 100_000, 100_000, 100_000, 100_000])
+    expect(result).toBe(20)
+  })
+
+  it('134. heavily concentrated: 95% in one account', () => {
+    expect(computeCashConcentrationRisk([950_000, 50_000])).toBe(95)
+  })
+
+  it('135. three accounts with 60/25/15 split', () => {
+    // largest is 60_000, total = 100_000 → 60%
+    expect(computeCashConcentrationRisk([60_000, 25_000, 15_000])).toBe(60)
+  })
+
+  it('136. exactly two equal accounts: 50/50', () => {
+    expect(computeCashConcentrationRisk([500_000, 500_000])).toBe(50)
+  })
+
+  it('137. single zero balance → 0 (single account rule)', () => {
+    expect(computeCashConcentrationRisk([0])).toBe(0)
+  })
+
+})
+
+// ── computeWorkingCapitalTurnover — extended ──────────────────────────────────
+
+describe('computeWorkingCapitalTurnover — extended', () => {
+
+  it('138. high turnover: revenue 10× NWC', () => {
+    // NWC = 50k, annual = 500k → 10x
+    expect(computeWorkingCapitalTurnover(500_000, 100_000, 50_000)).toBe(10)
+  })
+
+  it('139. low turnover: revenue 0.5× NWC', () => {
+    // NWC = 100k, annual = 50k → 0.5x
+    expect(computeWorkingCapitalTurnover(50_000, 150_000, 50_000)).toBe(0.5)
+  })
+
+  it('140. null when liabilities equal assets (NWC = 0)', () => {
+    expect(computeWorkingCapitalTurnover(1_000_000, 200_000, 200_000)).toBeNull()
+  })
+
+  it('141. null when liabilities exceed assets (negative NWC)', () => {
+    expect(computeWorkingCapitalTurnover(1_000_000, 100_000, 200_000)).toBeNull()
+  })
+
+  it('142. zero revenue → 0 turnover', () => {
+    expect(computeWorkingCapitalTurnover(0, 200_000, 100_000)).toBe(0)
+  })
+
+})
+
+// ── computeTreasuryHealthScore — extended ─────────────────────────────────────
+
+describe('computeTreasuryHealthScore — extended', () => {
+
+  it('143. days=90, ratio=2.0, net_liquidity=totalCash → near max score', () => {
+    const score = computeTreasuryHealthScore(90, 2.0, 100_000, 100_000)
+    expect(score).toBeGreaterThan(80)
+  })
+
+  it('144. days=14, ratio=1.0, low net_liquidity → moderate score', () => {
+    const score = computeTreasuryHealthScore(14, 1.0, 10_000, 200_000)
+    expect(score).toBeGreaterThan(0)
+    expect(score).toBeLessThan(70)
+  })
+
+  it('145. days=60, ratio=null, positive net_liquidity → partial score', () => {
+    const score = computeTreasuryHealthScore(60, null, 50_000, 100_000)
+    expect(score).toBeGreaterThan(0)
+    expect(score).toBeLessThanOrEqual(100)
+  })
+
+  it('146. days=null, ratio=null, net_liquidity=0, totalCash=0 → partial base score', () => {
+    // null days → raw=40, null ratio → raw=35, liquidity=0/0 → 0 → 40*0.4 + 35*0.35 = 28.25 → rounds to 28.3
+    const score = computeTreasuryHealthScore(null, null, 0, 0)
+    expect(score).toBeCloseTo(28.3, 0)
+  })
+
+  it('147. days=89, ratio=1.999, large net_liquidity → just below top tier but still high', () => {
+    const score = computeTreasuryHealthScore(89, 1.999, 500_000, 200_000)
+    // days 89 < 90 → 75 raw; ratio 1.999 < 2.0 → 75 raw
+    expect(score).toBeGreaterThan(60)
+    expect(score).toBeLessThanOrEqual(100)
+  })
+
+  it('148. score is always integer (rounded to 1 decimal)', () => {
+    const score = computeTreasuryHealthScore(45, 1.3, 30_000, 100_000)
+    const rounded = Math.round(score * 10) / 10
+    expect(score).toBe(rounded)
+  })
+
+  it('149. net_liquidity > totalCash → liquidityRaw capped at 100', () => {
+    // liquidity ratio = 200_000 / 100_000 × 50 = 100 → capped at 100
+    const score1 = computeTreasuryHealthScore(60, 1.5, 200_000, 100_000)
+    const score2 = computeTreasuryHealthScore(60, 1.5, 1_000_000, 100_000)
+    // Both should give same score since liquidityRaw is capped at 100
+    expect(score1).toBe(score2)
+  })
+
+  it('150. total_cash=0 but net_liquidity > 0 → liquidityRaw = 50', () => {
+    // Covers the totalCash === 0 branch (netLiquidity > 0 → raw = 50)
+    const score = computeTreasuryHealthScore(null, null, 10_000, 0)
+    // daysCash null → 40, ratio null → 35, liquidity → 50 → 40*0.4 + 35*0.35 + 50*0.25 = 16+12.25+12.5 = 40.75
+    expect(score).toBeCloseTo(40.75, 1)
+  })
+
+})
