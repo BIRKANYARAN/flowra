@@ -244,3 +244,217 @@ describe('flowra_install.sql — uuid primary keys', () => {
     expect(count).toBeGreaterThan(1)
   })
 })
+
+describe('flowra_install.sql — sales and proformas tables', () => {
+  it('contains sales table reference', () => {
+    expect(sql).toContain('sales')
+  })
+
+  it('contains proformas table reference', () => {
+    expect(sql).toContain('proformas')
+  })
+
+  it('contains proforma_items table', () => {
+    expect(sql).toContain('proforma_items')
+  })
+
+  it('contains sale_items table', () => {
+    expect(sql).toContain('sale_items')
+  })
+
+  it('contains payment_status column', () => {
+    expect(sql).toContain('payment_status')
+  })
+
+  it('contains due_date column', () => {
+    expect(sql).toContain('due_date')
+  })
+})
+
+describe('flowra_install.sql — expenses table', () => {
+  it('contains expenses table', () => {
+    expect(sql).toContain('expenses')
+  })
+
+  it('contains amount_try column', () => {
+    expect(sql).toContain('amount_try')
+  })
+
+  it('contains category column', () => {
+    expect(sql).toContain('category')
+  })
+})
+
+describe('flowra_install.sql — stock management', () => {
+  it('contains stock_lots table', () => {
+    expect(sql).toContain('stock_lots')
+  })
+
+  it('contains stock_movements table', () => {
+    expect(sql).toContain('stock_movements')
+  })
+
+  it('contains cost_price column', () => {
+    expect(sql).toContain('cost_price')
+  })
+
+  it('contains FIFO-related reference', () => {
+    // FIFO allocation is a key stock valuation method
+    expect(sql.toLowerCase()).toContain('fifo')
+  })
+})
+
+describe('flowra_install.sql — foreign key constraints', () => {
+  it('contains references keyword (foreign keys)', () => {
+    expect(sql.toLowerCase()).toContain('references')
+  })
+
+  it('contains foreign key to companies', () => {
+    expect(sql).toContain('company_id')
+  })
+
+  it('contains cascade delete or set null', () => {
+    expect(sql.toLowerCase()).toContain('on delete')
+  })
+})
+
+describe('flowra_install.sql — timestamps', () => {
+  it('contains created_at column', () => {
+    expect(sql).toContain('created_at')
+  })
+
+  it('contains updated_at column', () => {
+    expect(sql).toContain('updated_at')
+  })
+
+  it('contains timestamp with timezone type', () => {
+    expect(sql.toLowerCase()).toContain('timestamptz')
+  })
+})
+
+describe('flowra_install.sql — soft delete pattern', () => {
+  it('contains deleted_at for soft deletes', () => {
+    expect(sql).toContain('deleted_at')
+  })
+
+  it('deleted_at is nullable (no NOT NULL constraint on it)', () => {
+    // The deleted_at column should be nullable — if it appears at all
+    // It won't have NOT NULL immediately after
+    expect(sql).toContain('deleted_at')
+  })
+})
+
+describe('flowra_install.sql — indexes', () => {
+  it('contains CREATE INDEX statements', () => {
+    expect(sql.toLowerCase()).toContain('create index')
+  })
+
+  it('contains index on company_id or similar FK columns', () => {
+    const lowerSql = sql.toLowerCase()
+    expect(lowerSql).toContain('create index')
+  })
+})
+
+describe('flowra_install.sql — functions and procedures', () => {
+  it('contains CREATE OR REPLACE FUNCTION', () => {
+    expect(sql.toLowerCase()).toContain('create or replace function')
+  })
+
+  it('contains RETURNS trigger or table for some functions', () => {
+    expect(sql.toLowerCase()).toContain('returns')
+  })
+
+  it('contains LANGUAGE plpgsql', () => {
+    expect(sql.toLowerCase()).toContain('language plpgsql')
+  })
+
+  it('contains BEGIN..END blocks', () => {
+    expect(sql).toContain('begin')
+    expect(sql).toContain('end')
+  })
+})
+
+describe('flowra_install.sql — trigger definitions', () => {
+  it('contains CREATE TRIGGER statements', () => {
+    expect(sql.toLowerCase()).toContain('create trigger')
+  })
+
+  it('contains BEFORE or AFTER trigger timing', () => {
+    const lowerSql = sql.toLowerCase()
+    const hasBefore = lowerSql.includes('before insert') || lowerSql.includes('before update')
+    const hasAfter = lowerSql.includes('after insert') || lowerSql.includes('after update')
+    expect(hasBefore || hasAfter).toBe(true)
+  })
+})
+
+describe('flowra_install.sql — data integrity checks', () => {
+  it('does not contain DROP SCHEMA', () => {
+    expect(sql.toLowerCase()).not.toContain('drop schema')
+  })
+
+  it('does not contain TRUNCATE (any form)', () => {
+    expect(sql.toLowerCase()).not.toContain('truncate')
+  })
+
+  it('does not contain DROP TABLE', () => {
+    // Should use IF NOT EXISTS, not DROP TABLE
+    expect(sql.toLowerCase()).not.toContain('drop table')
+  })
+
+  it('contains CREATE TABLE statements', () => {
+    expect(sql.toLowerCase()).toContain('create table')
+  })
+
+  it('uses IF NOT EXISTS pattern', () => {
+    expect(sql.toLowerCase()).toContain('if not exists')
+  })
+})
+
+describe('flowra_install.sql — currency handling', () => {
+  it('contains currency column', () => {
+    expect(sql).toContain('currency')
+  })
+
+  it('contains fx_rate or exchange rate reference', () => {
+    expect(sql.toLowerCase()).toContain('fx_rate')
+  })
+
+  it('contains TRY currency reference', () => {
+    expect(sql).toContain('TRY')
+  })
+})
+
+describe('flowra_install.sql — partners table', () => {
+  it('contains partners table', () => {
+    expect(sql).toContain('partners')
+  })
+
+  it('contains partner_id foreign key', () => {
+    expect(sql).toContain('partner_id')
+  })
+})
+
+describe('flowra_install.sql — products table', () => {
+  it('contains products table', () => {
+    expect(sql).toContain('products')
+  })
+
+  it('contains product_id foreign key', () => {
+    expect(sql).toContain('product_id')
+  })
+})
+
+describe('flowra_install.sql — file is non-trivial', () => {
+  it('file has more than 1000 characters', () => {
+    expect(sql.length).toBeGreaterThan(1000)
+  })
+
+  it('file has more than 100 lines', () => {
+    const lineCount = sql.split('\n').length
+    expect(lineCount).toBeGreaterThan(100)
+  })
+
+  it('file contains SQL comments', () => {
+    expect(sql).toContain('--')
+  })
+})

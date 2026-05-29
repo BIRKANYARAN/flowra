@@ -711,3 +711,411 @@ describe('computeVelocityAcceleration', () => {
     expect(computeVelocityAcceleration(daily)).toBeNull()
   })
 })
+
+// ── Additional aggregateDailySales tests ──────────────────────────────────────
+
+describe('aggregateDailySales — extended', () => {
+
+  it('87. 10 sales on same date → count is 10', () => {
+    const sales = Array.from({ length: 10 }, () => ({
+      sale_date: '2025-06-15',
+      total: 1000,
+    }))
+    const result = aggregateDailySales(sales)
+    expect(result.get('2025-06-15')?.count).toBe(10)
+    expect(result.get('2025-06-15')?.revenue).toBe(10000)
+  })
+
+  it('88. large dataset with many dates', () => {
+    const sales = Array.from({ length: 30 }, (_, i) => ({
+      sale_date: `2025-01-${String(i + 1).padStart(2, '0')}`,
+      total: (i + 1) * 100,
+    }))
+    const result = aggregateDailySales(sales)
+    expect(result.size).toBe(30)
+  })
+
+  it('89. decimal total values accumulate correctly', () => {
+    const result = aggregateDailySales([
+      { sale_date: '2025-01-01', total: 100.50 },
+      { sale_date: '2025-01-01', total: 200.25 },
+    ])
+    expect(result.get('2025-01-01')?.revenue).toBeCloseTo(300.75)
+  })
+
+  it('90. datetime with time component still normalized to date', () => {
+    const result = aggregateDailySales([
+      { sale_date: '2025-05-20T08:00:00', total: 500 },
+      { sale_date: '2025-05-20T23:59:59', total: 300 },
+    ])
+    expect(result.size).toBe(1)
+    expect(result.get('2025-05-20')?.revenue).toBe(800)
+  })
+})
+
+// ── Additional buildDailyDataPoints tests ─────────────────────────────────────
+
+describe('buildDailyDataPoints — extended', () => {
+
+  it('91. avg_order_value computed as revenue/count', () => {
+    const map = new Map([['2025-02-10', { revenue: 6000, count: 4 }]])
+    const result = buildDailyDataPoints(map, '2025-02-10', '2025-02-10')
+    expect(result[0].avg_order_value).toBe(1500)
+  })
+
+  it('92. first and last dates in range match start/end', () => {
+    const map = new Map<string, { revenue: number; count: number }>()
+    const result = buildDailyDataPoints(map, '2025-03-01', '2025-03-10')
+    expect(result[0].date).toBe('2025-03-01')
+    expect(result[result.length - 1].date).toBe('2025-03-10')
+  })
+
+  it('93. only sales-map dates have non-zero revenue', () => {
+    const map = new Map([
+      ['2025-01-05', { revenue: 1000, count: 1 }],
+      ['2025-01-08', { revenue: 2000, count: 2 }],
+    ])
+    const result = buildDailyDataPoints(map, '2025-01-04', '2025-01-10')
+    const nonZero = result.filter(d => d.revenue_try > 0)
+    expect(nonZero).toHaveLength(2)
+  })
+
+  it('94. range spanning month boundary', () => {
+    const map = new Map<string, { revenue: number; count: number }>()
+    const result = buildDailyDataPoints(map, '2025-01-30', '2025-02-02')
+    expect(result).toHaveLength(4)
+    expect(result[2].date).toBe('2025-02-01')
+  })
+})
+
+// ── Additional getIsoWeekStart tests ──────────────────────────────────────────
+
+describe('getIsoWeekStart — extended', () => {
+
+  it('95. Thursday maps to same Monday', () => {
+    // 2025-01-09 is Thursday
+    expect(getIsoWeekStart('2025-01-09')).toBe('2025-01-06')
+  })
+
+  it('96. second Monday in year', () => {
+    expect(getIsoWeekStart('2025-01-13')).toBe('2025-01-13')
+  })
+
+  it('97. end of month date maps to correct week', () => {
+    // 2025-03-31 is Monday
+    const result = getIsoWeekStart('2025-03-31')
+    expect(result).toBe('2025-03-31')
+  })
+
+  it('98. last day of year 2024-12-31 (Tuesday) → correct Monday', () => {
+    // 2024-12-31 is Tuesday → back 1 day → 2024-12-30 (Monday)
+    expect(getIsoWeekStart('2024-12-31')).toBe('2024-12-30')
+  })
+})
+
+// ── Additional classifyVelocityTrend tests ────────────────────────────────────
+
+describe('classifyVelocityTrend — extended', () => {
+
+  it('99. 0 slope with nonzero mean → stable', () => {
+    expect(classifyVelocityTrend(0, 500)).toBe('stable')
+  })
+
+  it('100. slope much larger than mean → accelerating', () => {
+    // mean=10, threshold=0.5; slope=100 → accelerating
+    expect(classifyVelocityTrend(100, 10)).toBe('accelerating')
+  })
+
+  it('101. negative slope smaller than -threshold → declining', () => {
+    // mean=200, threshold=10; slope=-50 → declining
+    expect(classifyVelocityTrend(-50, 200)).toBe('declining')
+  })
+
+  it('102. very small positive slope → growing', () => {
+    // mean=1000, threshold=50; slope=1 → 0 < 1 < 50 → growing
+    expect(classifyVelocityTrend(1, 1000)).toBe('growing')
+  })
+
+  it('103. very small negative slope → slowing', () => {
+    // mean=1000, threshold=50; slope=-1 → slowing
+    expect(classifyVelocityTrend(-1, 1000)).toBe('slowing')
+  })
+})
+
+// ── Additional computeWowGrowth tests ────────────────────────────────────────
+
+describe('computeWowGrowth — extended', () => {
+
+  it('104. 100% growth (doubling)', () => {
+    const weeks: WeeklyDataPoint[] = [
+      { week_start: '2025-01-06', week_end: '2025-01-12', revenue_try: 500, order_count: 5, avg_order_value: 100, active_days: 5 },
+      { week_start: '2025-01-13', week_end: '2025-01-19', revenue_try: 1000, order_count: 5, avg_order_value: 200, active_days: 5 },
+    ]
+    expect(computeWowGrowth(weeks)).toBeCloseTo(100)
+  })
+
+  it('105. 0% growth (flat)', () => {
+    const weeks: WeeklyDataPoint[] = [
+      { week_start: '2025-01-06', week_end: '2025-01-12', revenue_try: 800, order_count: 4, avg_order_value: 200, active_days: 4 },
+      { week_start: '2025-01-13', week_end: '2025-01-19', revenue_try: 800, order_count: 4, avg_order_value: 200, active_days: 4 },
+    ]
+    expect(computeWowGrowth(weeks)).toBe(0)
+  })
+
+  it('106. uses the two most recent weeks from unsorted input', () => {
+    // Provide 3 weeks out of order; growth should be between latest two
+    const weeks: WeeklyDataPoint[] = [
+      { week_start: '2025-01-20', week_end: '2025-01-26', revenue_try: 3000, order_count: 10, avg_order_value: 300, active_days: 5 },
+      { week_start: '2025-01-06', week_end: '2025-01-12', revenue_try: 500,  order_count: 5,  avg_order_value: 100, active_days: 4 },
+      { week_start: '2025-01-13', week_end: '2025-01-19', revenue_try: 1000, order_count: 8,  avg_order_value: 125, active_days: 5 },
+    ]
+    // Last two (sorted): 1000 → 3000 → 200%
+    expect(computeWowGrowth(weeks)).toBeCloseTo(200)
+  })
+})
+
+// ── Additional computeMovingAverage tests ────────────────────────────────────
+
+describe('computeMovingAverage — extended', () => {
+
+  it('107. window=2 averages pairs correctly at full window', () => {
+    const result = computeMovingAverage([10, 30, 50, 70], 2)
+    // index 0: [10]=10; index 1: [10,30]=20; index 2: [30,50]=40; index 3: [50,70]=60
+    expect(result[0]).toBe(10)
+    expect(result[1]).toBe(20)
+    expect(result[2]).toBe(40)
+    expect(result[3]).toBe(60)
+  })
+
+  it('108. large window smooths to same value for uniform input', () => {
+    const vals = Array.from({ length: 20 }, () => 100)
+    const result = computeMovingAverage(vals, 10)
+    for (const v of result) {
+      expect(v).toBe(100)
+    }
+  })
+
+  it('109. all zeros → all zeros in output', () => {
+    const result = computeMovingAverage([0, 0, 0, 0], 3)
+    expect(result).toEqual([0, 0, 0, 0])
+  })
+})
+
+// ── Additional computeTrendSlope tests ───────────────────────────────────────
+
+describe('computeTrendSlope — extended', () => {
+
+  it('110. two equal values → slope 0', () => {
+    expect(computeTrendSlope([200, 200])).toBe(0)
+  })
+
+  it('111. two increasing values → positive slope', () => {
+    expect(computeTrendSlope([100, 200])).toBeGreaterThan(0)
+  })
+
+  it('112. two decreasing values → negative slope', () => {
+    expect(computeTrendSlope([200, 100])).toBeLessThan(0)
+  })
+
+  it('113. lastN=1 → returns 0 (single value)', () => {
+    expect(computeTrendSlope([10, 20, 30, 40], 1)).toBe(0)
+  })
+
+  it('114. large N that exceeds array length uses all values', () => {
+    const vals = [10, 20, 30]
+    const slope = computeTrendSlope(vals, 100) // lastN > length
+    expect(slope).toBeGreaterThan(0) // still ascending
+  })
+})
+
+// ── Additional computeVelocityMetrics tests ───────────────────────────────────
+
+describe('computeVelocityMetrics — extended', () => {
+
+  it('115. daily_avg_orders divides total orders by day count', () => {
+    const daily = [
+      makeDailyPoint('2025-01-01', 100, 4),
+      makeDailyPoint('2025-01-02', 200, 6),
+    ]
+    const result = computeVelocityMetrics(daily)
+    expect(result.daily_avg_orders).toBe(5) // (4+6)/2
+  })
+
+  it('116. peak_day with multiple same-max picks first', () => {
+    // Two days both 500; first should win
+    const daily = [
+      makeDailyPoint('2025-01-01', 500),
+      makeDailyPoint('2025-01-02', 500),
+    ]
+    const result = computeVelocityMetrics(daily)
+    expect(result.peak_day_revenue).toBe(500)
+    // First encountered wins (2025-01-01)
+    expect(result.peak_day_date).toBe('2025-01-01')
+  })
+
+  it('117. single zero-revenue day → low_day_revenue is 0', () => {
+    const daily = [makeDailyPoint('2025-01-01', 0, 0)]
+    const result = computeVelocityMetrics(daily)
+    expect(result.low_day_revenue).toBe(0)
+  })
+
+  it('118. cv is positive when there is variance', () => {
+    const daily = [
+      makeDailyPoint('2025-01-01', 100),
+      makeDailyPoint('2025-01-02', 900),
+    ]
+    const result = computeVelocityMetrics(daily)
+    expect(result.coefficient_of_variation).toBeGreaterThan(0)
+  })
+})
+
+// ── Additional computeBusinessDayAvg tests ────────────────────────────────────
+
+describe('computeBusinessDayAvg — extended', () => {
+
+  it('119. single Monday → returns that day revenue', () => {
+    const daily = [makeDailyPoint('2025-01-06', 2000)] // Monday
+    expect(computeBusinessDayAvg(daily)).toBe(2000)
+  })
+
+  it('120. mixed week: correct business days only', () => {
+    // Mon=100, Tue=200, Sat=1000, Sun=2000 → avg of Mon+Tue = 150
+    const daily = [
+      makeDailyPoint('2025-01-06', 100), // Mon
+      makeDailyPoint('2025-01-07', 200), // Tue
+      makeDailyPoint('2025-01-11', 1000), // Sat — excluded
+      makeDailyPoint('2025-01-12', 2000), // Sun — excluded
+    ]
+    expect(computeBusinessDayAvg(daily)).toBe(150)
+  })
+
+  it('121. all 5 weekdays with same revenue → returns that revenue', () => {
+    const daily = [
+      makeDailyPoint('2025-01-06', 500),
+      makeDailyPoint('2025-01-07', 500),
+      makeDailyPoint('2025-01-08', 500),
+      makeDailyPoint('2025-01-09', 500),
+      makeDailyPoint('2025-01-10', 500),
+    ]
+    expect(computeBusinessDayAvg(daily)).toBe(500)
+  })
+})
+
+// ── Additional computeSalesConsistencyScore tests ─────────────────────────────
+
+describe('computeSalesConsistencyScore — extended', () => {
+
+  it('122. 1 active day out of 10 → 10', () => {
+    const daily = [
+      makeDailyPoint('2025-01-01', 500, 1),
+      ...Array.from({ length: 9 }, (_, i) =>
+        makeDailyPoint(`2025-01-${String(i + 2).padStart(2, '0')}`, 0, 0),
+      ),
+    ]
+    expect(computeSalesConsistencyScore(daily, 10)).toBe(10)
+  })
+
+  it('123. totalDays > daily.length → score reflects proper proportion', () => {
+    // 5 active days but totalDays=20 → 25%
+    const daily = Array.from({ length: 5 }, (_, i) =>
+      makeDailyPoint(`2025-01-${String(i + 1).padStart(2, '0')}`, 100),
+    )
+    expect(computeSalesConsistencyScore(daily, 20)).toBe(25)
+  })
+})
+
+// ── Additional detectAnomalyDays tests ───────────────────────────────────────
+
+describe('detectAnomalyDays — extended', () => {
+
+  it('124. exactly 3 data points (minimum) runs without error', () => {
+    const daily = [
+      makeDailyPoint('2025-01-01', 100),
+      makeDailyPoint('2025-01-02', 100),
+      makeDailyPoint('2025-01-03', 100),
+    ]
+    const result = detectAnomalyDays(daily)
+    expect(Array.isArray(result)).toBe(true)
+  })
+
+  it('125. returned anomalies have z_score > 2 or < -2', () => {
+    const daily = [
+      ...Array.from({ length: 9 }, (_, i) =>
+        makeDailyPoint(`2025-01-${String(i + 1).padStart(2, '0')}`, 100),
+      ),
+      makeDailyPoint('2025-01-10', 5000),
+    ]
+    const result = detectAnomalyDays(daily)
+    for (const a of result) {
+      expect(Math.abs(a.z_score)).toBeGreaterThan(2)
+    }
+  })
+
+  it('126. is_positive=false for below-mean anomaly', () => {
+    // All days at 1000, one day at 0 (very below)
+    const daily = Array.from({ length: 20 }, (_, i) =>
+      makeDailyPoint(
+        new Date(new Date('2025-01-01').getTime() + i * 86400000).toISOString().slice(0, 10),
+        i === 0 ? 0 : 1000,
+        i === 0 ? 0 : 1,
+      ),
+    )
+    const result = detectAnomalyDays(daily)
+    const negAnomaly = result.find(a => a.revenue === 0)
+    if (negAnomaly) {
+      expect(negAnomaly.is_positive).toBe(false)
+    }
+  })
+})
+
+// ── Additional computeVelocityAcceleration tests ──────────────────────────────
+
+describe('computeVelocityAcceleration — extended', () => {
+
+  it('127. exactly 200% acceleration when last7=300 prior7=100', () => {
+    const daily = [
+      ...Array.from({ length: 7 }, (_, i) =>
+        makeDailyPoint(`2025-01-${String(i + 1).padStart(2, '0')}`, 100),
+      ),
+      ...Array.from({ length: 7 }, (_, i) =>
+        makeDailyPoint(`2025-01-${String(i + 8).padStart(2, '0')}`, 300),
+      ),
+    ]
+    expect(computeVelocityAcceleration(daily)).toBe(200)
+  })
+
+  it('128. exactly -50% deceleration when last7=50 prior7=100', () => {
+    const daily = [
+      ...Array.from({ length: 7 }, (_, i) =>
+        makeDailyPoint(`2025-01-${String(i + 1).padStart(2, '0')}`, 100),
+      ),
+      ...Array.from({ length: 7 }, (_, i) =>
+        makeDailyPoint(`2025-01-${String(i + 8).padStart(2, '0')}`, 50),
+      ),
+    ]
+    expect(computeVelocityAcceleration(daily)).toBe(-50)
+  })
+
+  it('129. 15 days returns non-null value', () => {
+    const daily = Array.from({ length: 15 }, (_, i) =>
+      makeDailyPoint(
+        new Date(new Date('2025-01-01').getTime() + i * 86400000).toISOString().slice(0, 10),
+        200,
+      ),
+    )
+    expect(computeVelocityAcceleration(daily)).not.toBeNull()
+  })
+
+  it('130. result is number when both periods have revenue', () => {
+    const daily = [
+      ...Array.from({ length: 7 }, (_, i) =>
+        makeDailyPoint(`2025-02-${String(i + 1).padStart(2, '0')}`, 500),
+      ),
+      ...Array.from({ length: 7 }, (_, i) =>
+        makeDailyPoint(`2025-02-${String(i + 8).padStart(2, '0')}`, 750),
+      ),
+    ]
+    const result = computeVelocityAcceleration(daily)
+    expect(typeof result).toBe('number')
+  })
+})

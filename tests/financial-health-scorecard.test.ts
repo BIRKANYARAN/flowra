@@ -819,3 +819,355 @@ describe('buildDimensionScores', () => {
     }
   })
 })
+
+// ── computeLiquidityScore – boundary tests ────────────────────────────────────
+
+describe('computeLiquidityScore – boundaries', () => {
+
+  it('132. runway exactly 12 → runwayPts = 50', () => {
+    expect(computeLiquidityScore(12, null)).toBe(75)  // 50 + 25(null ratio)
+  })
+
+  it('133. runway 11.99 → runwayPts = 40', () => {
+    expect(computeLiquidityScore(11.99, null)).toBe(65)  // 40 + 25
+  })
+
+  it('134. runway exactly 6 → runwayPts = 40', () => {
+    expect(computeLiquidityScore(6, null)).toBe(65)  // 40 + 25
+  })
+
+  it('135. runway 5.99 → runwayPts = 30', () => {
+    expect(computeLiquidityScore(5.99, null)).toBe(55)  // 30 + 25
+  })
+
+  it('136. runway exactly 3 → runwayPts = 30', () => {
+    expect(computeLiquidityScore(3, null)).toBe(55)  // 30 + 25
+  })
+
+  it('137. runway 2.99 → runwayPts = 15', () => {
+    expect(computeLiquidityScore(2.99, null)).toBe(40)  // 15 + 25
+  })
+
+  it('138. runway exactly 1 → runwayPts = 15', () => {
+    expect(computeLiquidityScore(1, null)).toBe(40)  // 15 + 25
+  })
+
+  it('139. runway 0.99 → runwayPts = 0', () => {
+    expect(computeLiquidityScore(0.99, null)).toBe(25)  // 0 + 25
+  })
+
+  it('140. currentRatio exactly 2 → ratioPts = 50', () => {
+    expect(computeLiquidityScore(null, 2)).toBe(75)  // 25 + 50
+  })
+
+  it('141. currentRatio 1.99 → ratioPts = 40', () => {
+    expect(computeLiquidityScore(null, 1.99)).toBe(65)  // 25 + 40
+  })
+
+  it('142. currentRatio exactly 1.5 → ratioPts = 40', () => {
+    expect(computeLiquidityScore(null, 1.5)).toBe(65)  // 25 + 40
+  })
+
+  it('143. currentRatio exactly 1.0 → ratioPts = 30', () => {
+    expect(computeLiquidityScore(null, 1.0)).toBe(55)  // 25 + 30
+  })
+
+  it('144. currentRatio 0.99 → ratioPts = 15', () => {
+    expect(computeLiquidityScore(null, 0.99)).toBe(40)  // 25 + 15
+  })
+
+  it('145. currentRatio exactly 0.5 → ratioPts = 15', () => {
+    expect(computeLiquidityScore(null, 0.5)).toBe(40)  // 25 + 15
+  })
+
+  it('146. currentRatio 0.49 → ratioPts = 0', () => {
+    expect(computeLiquidityScore(null, 0.49)).toBe(25)  // 25 + 0
+  })
+
+  it('147. runway = 24, ratio = 3.0 → full score 100', () => {
+    expect(computeLiquidityScore(24, 3.0)).toBe(100)  // 50 + 50
+  })
+
+  it('148. runway = 0, ratio = 0 → score 0', () => {
+    expect(computeLiquidityScore(0, 0)).toBe(0)  // 0 + 0
+  })
+
+})
+
+// ── computeProfitabilityScore – boundary tests ────────────────────────────────
+
+describe('computeProfitabilityScore – boundaries', () => {
+
+  it('149. grossMarginPct exactly 50 → gmPts = 60', () => {
+    expect(computeProfitabilityScore(50, null)).toBe(80)  // 60 + 20(null)
+  })
+
+  it('150. grossMarginPct 49.9 → gmPts = 48', () => {
+    expect(computeProfitabilityScore(49.9, null)).toBe(68)  // 48 + 20
+  })
+
+  it('151. grossMarginPct exactly 35 → gmPts = 48', () => {
+    expect(computeProfitabilityScore(35, null)).toBe(68)  // 48 + 20
+  })
+
+  it('152. grossMarginPct 34.9 → gmPts = 36', () => {
+    expect(computeProfitabilityScore(34.9, null)).toBe(56)  // 36 + 20
+  })
+
+  it('153. grossMarginPct exactly 20 → gmPts = 36', () => {
+    expect(computeProfitabilityScore(20, null)).toBe(56)  // 36 + 20
+  })
+
+  it('154. grossMarginPct 19.9 → gmPts = 20', () => {
+    expect(computeProfitabilityScore(19.9, null)).toBe(40)  // 20 + 20
+  })
+
+  it('155. grossMarginPct exactly 10 → gmPts = 20', () => {
+    expect(computeProfitabilityScore(10, null)).toBe(40)  // 20 + 20
+  })
+
+  it('156. grossMarginPct 9.9 → gmPts = 5', () => {
+    expect(computeProfitabilityScore(9.9, null)).toBe(25)  // 5 + 20
+  })
+
+  it('157. netMarginPct exactly 15 → nmPts = 40', () => {
+    expect(computeProfitabilityScore(null, 15)).toBe(70)  // 30 + 40
+  })
+
+  it('158. netMarginPct 14.9 → nmPts = 32', () => {
+    expect(computeProfitabilityScore(null, 14.9)).toBe(62)  // 30 + 32
+  })
+
+  it('159. netMarginPct exactly 8 → nmPts = 32', () => {
+    expect(computeProfitabilityScore(null, 8)).toBe(62)  // 30 + 32
+  })
+
+  it('160. netMarginPct exactly 3 → nmPts = 20', () => {
+    expect(computeProfitabilityScore(null, 3)).toBe(50)  // 30 + 20
+  })
+
+  it('161. netMarginPct exactly 0 → nmPts = 10', () => {
+    expect(computeProfitabilityScore(null, 0)).toBe(40)  // 30 + 10
+  })
+
+  it('162. netMarginPct negative → nmPts = 0', () => {
+    expect(computeProfitabilityScore(null, -1)).toBe(30)  // 30 + 0
+  })
+
+  it('163. both at maximum → 100', () => {
+    expect(computeProfitabilityScore(60, 20)).toBe(100)  // 60 + 40
+  })
+
+  it('164. both at minimum → 5', () => {
+    expect(computeProfitabilityScore(5, -5)).toBe(5)  // 5 + 0
+  })
+
+})
+
+// ── computeReceivablesScore – boundary tests ──────────────────────────────────
+
+describe('computeReceivablesScore – boundaries', () => {
+
+  it('165. dsoDays exactly 30 → dsoPts = 60', () => {
+    expect(computeReceivablesScore(30, null)).toBe(80)  // 60 + 20
+  })
+
+  it('166. dsoDays 30.1 → dsoPts = 45', () => {
+    expect(computeReceivablesScore(30.1, null)).toBe(65)  // 45 + 20
+  })
+
+  it('167. dsoDays exactly 60 → dsoPts = 45', () => {
+    expect(computeReceivablesScore(60, null)).toBe(65)  // 45 + 20
+  })
+
+  it('168. dsoDays 60.1 → dsoPts = 30', () => {
+    expect(computeReceivablesScore(60.1, null)).toBe(50)  // 30 + 20
+  })
+
+  it('169. dsoDays exactly 120 → dsoPts = 15', () => {
+    expect(computeReceivablesScore(120, null)).toBe(35)  // 15 + 20
+  })
+
+  it('170. dsoDays 120.1 → dsoPts = 0', () => {
+    expect(computeReceivablesScore(120.1, null)).toBe(20)  // 0 + 20
+  })
+
+  it('171. overdueRevenuePct exactly 5 → overduePts = 40', () => {
+    expect(computeReceivablesScore(null, 5)).toBe(70)  // 30 + 40
+  })
+
+  it('172. overdueRevenuePct exactly 15 → overduePts = 32', () => {
+    expect(computeReceivablesScore(null, 15)).toBe(62)  // 30 + 32
+  })
+
+  it('173. overdueRevenuePct exactly 30 → overduePts = 20', () => {
+    expect(computeReceivablesScore(null, 30)).toBe(50)  // 30 + 20
+  })
+
+  it('174. overdueRevenuePct exactly 50 → overduePts = 10', () => {
+    expect(computeReceivablesScore(null, 50)).toBe(40)  // 30 + 10
+  })
+
+  it('175. overdueRevenuePct 50.1 → overduePts = 0', () => {
+    expect(computeReceivablesScore(null, 50.1)).toBe(30)  // 30 + 0
+  })
+
+})
+
+// ── computeEfficiencyScore – boundary tests ───────────────────────────────────
+
+describe('computeEfficiencyScore – boundaries', () => {
+
+  it('176. CCC = null → 50', () => {
+    expect(computeEfficiencyScore(null)).toBe(50)
+  })
+
+  it('177. CCC exactly 0 → 100', () => {
+    expect(computeEfficiencyScore(0)).toBe(100)
+  })
+
+  it('178. CCC negative (excellent) → 100', () => {
+    expect(computeEfficiencyScore(-10)).toBe(100)
+  })
+
+  it('179. CCC exactly 15 → 85', () => {
+    expect(computeEfficiencyScore(15)).toBe(85)
+  })
+
+  it('180. CCC 15.1 → 70', () => {
+    expect(computeEfficiencyScore(15.1)).toBe(70)
+  })
+
+  it('181. CCC exactly 30 → 70', () => {
+    expect(computeEfficiencyScore(30)).toBe(70)
+  })
+
+  it('182. CCC 30.1 → 50', () => {
+    expect(computeEfficiencyScore(30.1)).toBe(50)
+  })
+
+  it('183. CCC exactly 60 → 50', () => {
+    expect(computeEfficiencyScore(60)).toBe(50)
+  })
+
+  it('184. CCC 60.1 → 30', () => {
+    expect(computeEfficiencyScore(60.1)).toBe(30)
+  })
+
+  it('185. CCC exactly 90 → 30', () => {
+    expect(computeEfficiencyScore(90)).toBe(30)
+  })
+
+  it('186. CCC 90.1 → 10', () => {
+    expect(computeEfficiencyScore(90.1)).toBe(10)
+  })
+
+  it('187. CCC = 1 → 85 (within <=15 bucket)', () => {
+    expect(computeEfficiencyScore(1)).toBe(85)
+  })
+
+})
+
+// ── computeDebtBurdenScore – boundary tests ───────────────────────────────────
+
+describe('computeDebtBurdenScore – boundaries', () => {
+
+  it('188. DSR exactly 0.1 → dsrPts = 60', () => {
+    expect(computeDebtBurdenScore(0.1, null)).toBe(80)  // 60 + 20
+  })
+
+  it('189. DSR exactly 0.2 → dsrPts = 48', () => {
+    expect(computeDebtBurdenScore(0.2, null)).toBe(68)  // 48 + 20
+  })
+
+  it('190. DSR exactly 0.3 → dsrPts = 36', () => {
+    expect(computeDebtBurdenScore(0.3, null)).toBe(56)  // 36 + 20
+  })
+
+  it('191. DSR exactly 0.5 → dsrPts = 20', () => {
+    expect(computeDebtBurdenScore(0.5, null)).toBe(40)  // 20 + 20
+  })
+
+  it('192. DSR 0.51 → dsrPts = 5', () => {
+    expect(computeDebtBurdenScore(0.51, null)).toBe(25)  // 5 + 20
+  })
+
+  it('193. loanToRev exactly 50 → loanPts = 40', () => {
+    expect(computeDebtBurdenScore(null, 50)).toBe(70)  // 30 + 40
+  })
+
+  it('194. loanToRev exactly 100 → loanPts = 32', () => {
+    expect(computeDebtBurdenScore(null, 100)).toBe(62)  // 30 + 32
+  })
+
+  it('195. loanToRev exactly 200 → loanPts = 20', () => {
+    expect(computeDebtBurdenScore(null, 200)).toBe(50)  // 30 + 20
+  })
+
+  it('196. loanToRev exactly 400 → loanPts = 10', () => {
+    expect(computeDebtBurdenScore(null, 400)).toBe(40)  // 30 + 10
+  })
+
+  it('197. loanToRev 400.1 → loanPts = 0', () => {
+    expect(computeDebtBurdenScore(null, 400.1)).toBe(30)  // 30 + 0
+  })
+
+  it('198. both at max → 100', () => {
+    expect(computeDebtBurdenScore(0.05, 10)).toBe(100)  // 60 + 40
+  })
+
+})
+
+// ── computeGrowthScore – boundary tests ──────────────────────────────────────
+
+describe('computeGrowthScore – boundaries', () => {
+
+  it('199. momRevGrowthPct exactly 10 → momPts = 50', () => {
+    expect(computeGrowthScore(10, null)).toBe(75)  // 50 + 25
+  })
+
+  it('200. momRevGrowthPct exactly 5 → momPts = 40', () => {
+    expect(computeGrowthScore(5, null)).toBe(65)  // 40 + 25
+  })
+
+  it('201. momRevGrowthPct exactly 0 → momPts = 30', () => {
+    expect(computeGrowthScore(0, null)).toBe(55)  // 30 + 25
+  })
+
+  it('202. momRevGrowthPct exactly -5 → momPts = 15', () => {
+    expect(computeGrowthScore(-5, null)).toBe(40)  // 15 + 25
+  })
+
+  it('203. momRevGrowthPct -5.1 → momPts = 0', () => {
+    expect(computeGrowthScore(-5.1, null)).toBe(25)  // 0 + 25
+  })
+
+  it('204. yoyRevGrowthPct exactly 30 → yoyPts = 50', () => {
+    expect(computeGrowthScore(null, 30)).toBe(75)  // 25 + 50
+  })
+
+  it('205. yoyRevGrowthPct exactly 15 → yoyPts = 40', () => {
+    expect(computeGrowthScore(null, 15)).toBe(65)  // 25 + 40
+  })
+
+  it('206. yoyRevGrowthPct exactly 5 → yoyPts = 30', () => {
+    expect(computeGrowthScore(null, 5)).toBe(55)  // 25 + 30
+  })
+
+  it('207. yoyRevGrowthPct exactly 0 → yoyPts = 15', () => {
+    expect(computeGrowthScore(null, 0)).toBe(40)  // 25 + 15
+  })
+
+  it('208. yoyRevGrowthPct negative → yoyPts = 0', () => {
+    expect(computeGrowthScore(null, -1)).toBe(25)  // 25 + 0
+  })
+
+  it('209. both maximum → 100', () => {
+    expect(computeGrowthScore(15, 50)).toBe(100)  // 50 + 50
+  })
+
+  it('210. both at floor → 0', () => {
+    expect(computeGrowthScore(-10, -20)).toBe(0)  // 0 + 0
+  })
+
+})

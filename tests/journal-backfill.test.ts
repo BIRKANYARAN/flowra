@@ -473,3 +473,140 @@ describe('computeBackfillStatus — real-world scenarios', () => {
     expect(result.total_missing).toBe(0)
   })
 })
+
+describe('computeBackfillStatus — missing values add up correctly', () => {
+  it('sales 10 missing, expenses 5 missing, purchases 3 missing = 18 total', () => {
+    const result = computeBackfillStatus(
+      { sales: 20, expenses: 15, purchases: 10 },
+      { sales: 10, expenses: 10, purchases: 7  },
+    )
+    expect(result.missing.sales).toBe(10)
+    expect(result.missing.expenses).toBe(5)
+    expect(result.missing.purchases).toBe(3)
+    expect(result.total_missing).toBe(18)
+  })
+
+  it('large asymmetric missing counts', () => {
+    const result = computeBackfillStatus(
+      { sales: 5000, expenses: 100, purchases: 20 },
+      { sales: 1000, expenses: 100, purchases: 10 },
+    )
+    expect(result.missing.sales).toBe(4000)
+    expect(result.missing.expenses).toBe(0)
+    expect(result.missing.purchases).toBe(10)
+    expect(result.total_missing).toBe(4010)
+  })
+
+  it('total_missing = 0 is the only condition for backfill_complete=true', () => {
+    const completeResult = computeBackfillStatus(
+      { sales: 10, expenses: 10, purchases: 10 },
+      { sales: 10, expenses: 10, purchases: 10 },
+    )
+    expect(completeResult.total_missing).toBe(0)
+    expect(completeResult.backfill_complete).toBe(true)
+  })
+
+  it('total_missing equals exact arithmetic sum', () => {
+    const result = computeBackfillStatus(
+      { sales: 100, expenses: 50, purchases: 25 },
+      { sales: 97,  expenses: 44, purchases: 21 },
+    )
+    const expected = (100 - 97) + (50 - 44) + (25 - 21)
+    expect(result.total_missing).toBe(expected)
+  })
+})
+
+describe('computeBackfillStatus — progressive journaling simulation', () => {
+  it('step 1: nothing journaled yet', () => {
+    const r = computeBackfillStatus(
+      { sales: 100, expenses: 50, purchases: 30 },
+      { sales: 0, expenses: 0, purchases: 0 },
+    )
+    expect(r.total_missing).toBe(180)
+    expect(r.backfill_complete).toBe(false)
+  })
+
+  it('step 2: half journaled', () => {
+    const r = computeBackfillStatus(
+      { sales: 100, expenses: 50, purchases: 30 },
+      { sales: 50, expenses: 25, purchases: 15 },
+    )
+    expect(r.total_missing).toBe(90)
+    expect(r.backfill_complete).toBe(false)
+  })
+
+  it('step 3: nearly complete (1 missing)', () => {
+    const r = computeBackfillStatus(
+      { sales: 100, expenses: 50, purchases: 30 },
+      { sales: 99, expenses: 50, purchases: 30 },
+    )
+    expect(r.total_missing).toBe(1)
+    expect(r.backfill_complete).toBe(false)
+  })
+
+  it('step 4: fully journaled', () => {
+    const r = computeBackfillStatus(
+      { sales: 100, expenses: 50, purchases: 30 },
+      { sales: 100, expenses: 50, purchases: 30 },
+    )
+    expect(r.total_missing).toBe(0)
+    expect(r.backfill_complete).toBe(true)
+  })
+})
+
+describe('computeBackfillStatus — purchases specific edge cases', () => {
+  it('purchases zero in both → no missing', () => {
+    const r = computeBackfillStatus(
+      { sales: 10, expenses: 5, purchases: 0 },
+      { sales: 10, expenses: 5, purchases: 0 },
+    )
+    expect(r.missing.purchases).toBe(0)
+    expect(r.backfill_complete).toBe(true)
+  })
+
+  it('purchases only category with data', () => {
+    const r = computeBackfillStatus(
+      { sales: 0, expenses: 0, purchases: 50 },
+      { sales: 0, expenses: 0, purchases: 40 },
+    )
+    expect(r.missing.purchases).toBe(10)
+    expect(r.total_missing).toBe(10)
+    expect(r.backfill_complete).toBe(false)
+  })
+
+  it('expenses only category with data', () => {
+    const r = computeBackfillStatus(
+      { sales: 0, expenses: 30, purchases: 0 },
+      { sales: 0, expenses: 20, purchases: 0 },
+    )
+    expect(r.missing.expenses).toBe(10)
+    expect(r.total_missing).toBe(10)
+    expect(r.backfill_complete).toBe(false)
+  })
+})
+
+describe('computeBackfillStatus — stress tests', () => {
+  it('100 calls with same args produce same result', () => {
+    const op = { sales: 500, expenses: 300, purchases: 100 }
+    const j  = { sales: 450, expenses: 300, purchases: 95  }
+    for (let i = 0; i < 100; i++) {
+      const r = computeBackfillStatus(op, j)
+      expect(r.missing.sales).toBe(50)
+      expect(r.missing.expenses).toBe(0)
+      expect(r.missing.purchases).toBe(5)
+      expect(r.total_missing).toBe(55)
+    }
+  })
+
+  it('sequential different inputs produce correct independent results', () => {
+    const cases = [
+      { op: { sales: 10, expenses: 5, purchases: 3 }, j: { sales: 10, expenses: 5, purchases: 3 }, total: 0 },
+      { op: { sales: 10, expenses: 5, purchases: 3 }, j: { sales: 9,  expenses: 5, purchases: 3 }, total: 1 },
+      { op: { sales: 10, expenses: 5, purchases: 3 }, j: { sales: 8,  expenses: 4, purchases: 3 }, total: 3 },
+    ]
+    for (const c of cases) {
+      const r = computeBackfillStatus(c.op, c.j)
+      expect(r.total_missing).toBe(c.total)
+    }
+  })
+})

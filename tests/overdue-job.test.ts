@@ -308,3 +308,232 @@ describe('markOverdue — preserves all qualifying IDs', () => {
     expect(ids).toContain('q-5')
   })
 })
+
+describe('markOverdue — return value type safety', () => {
+  it('returns an array', () => {
+    const result = markOverdue([], AS_OF)
+    expect(Array.isArray(result)).toBe(true)
+  })
+
+  it('returns string array for qualifying sales', () => {
+    const sales: Sale[] = [
+      sale({ id: 'type-check-1', due_date: '2026-01-15', payment_status: 'unpaid' }),
+      sale({ id: 'type-check-2', due_date: '2026-02-15', payment_status: 'partial' }),
+    ]
+    const ids = markOverdue(sales, AS_OF)
+    expect(ids.every(id => typeof id === 'string')).toBe(true)
+  })
+
+  it('does not return Sale objects, only IDs', () => {
+    const sales: Sale[] = [
+      sale({ id: 'obj-check', due_date: '2026-01-15', payment_status: 'unpaid' }),
+    ]
+    const ids = markOverdue(sales, AS_OF)
+    // Should be string IDs, not objects
+    expect(typeof ids[0]).toBe('string')
+    expect(ids[0]).toBe('obj-check')
+  })
+
+  it('empty result is empty array, not null/undefined', () => {
+    const result = markOverdue([], AS_OF)
+    expect(result).not.toBeNull()
+    expect(result).not.toBeUndefined()
+    expect(result).toEqual([])
+  })
+})
+
+describe('markOverdue — asOf date variations', () => {
+  it('asOf in early year marks old unpaid sales', () => {
+    const asOf = '2026-01-15'
+    const sales: Sale[] = [
+      sale({ id: 'jan-early', due_date: '2026-01-14', payment_status: 'unpaid' }),
+      sale({ id: 'jan-same',  due_date: '2026-01-15', payment_status: 'unpaid' }),
+    ]
+    const ids = markOverdue(sales, asOf)
+    expect(ids).toContain('jan-early')
+    expect(ids).not.toContain('jan-same')
+  })
+
+  it('asOf at year boundary', () => {
+    const asOf = '2026-01-01'
+    const sales: Sale[] = [
+      sale({ id: 'dec-31', due_date: '2025-12-31', payment_status: 'unpaid' }),
+      sale({ id: 'jan-01', due_date: '2026-01-01', payment_status: 'unpaid' }),
+      sale({ id: 'jan-02', due_date: '2026-01-02', payment_status: 'unpaid' }),
+    ]
+    const ids = markOverdue(sales, asOf)
+    expect(ids).toContain('dec-31')
+    expect(ids).not.toContain('jan-01')
+    expect(ids).not.toContain('jan-02')
+  })
+
+  it('asOf in far future marks all past unpaid sales', () => {
+    const asOf = '2030-12-31'
+    const sales: Sale[] = [
+      sale({ id: 'old-1', due_date: '2020-01-01', payment_status: 'unpaid' }),
+      sale({ id: 'old-2', due_date: '2025-06-15', payment_status: 'partial' }),
+      sale({ id: 'old-3', due_date: '2026-05-25', payment_status: 'unpaid' }),
+    ]
+    const ids = markOverdue(sales, asOf)
+    expect(ids).toHaveLength(3)
+  })
+
+  it('asOf in far past marks nothing (all sales are future)', () => {
+    const asOf = '2020-01-01'
+    const sales: Sale[] = [
+      sale({ id: 'future-a', due_date: '2026-01-01', payment_status: 'unpaid' }),
+      sale({ id: 'future-b', due_date: '2025-01-01', payment_status: 'partial' }),
+    ]
+    const ids = markOverdue(sales, asOf)
+    expect(ids).toHaveLength(0)
+  })
+})
+
+describe('markOverdue — single sale scenarios', () => {
+  it('single unpaid past sale is returned', () => {
+    const sales: Sale[] = [sale({ id: 'single-1', due_date: '2026-01-01', payment_status: 'unpaid' })]
+    const ids = markOverdue(sales, AS_OF)
+    expect(ids).toEqual(['single-1'])
+  })
+
+  it('single partial past sale is returned', () => {
+    const sales: Sale[] = [sale({ id: 'single-2', due_date: '2026-01-01', payment_status: 'partial' })]
+    const ids = markOverdue(sales, AS_OF)
+    expect(ids).toEqual(['single-2'])
+  })
+
+  it('single paid past sale is not returned', () => {
+    const sales: Sale[] = [sale({ id: 'single-3', due_date: '2026-01-01', payment_status: 'paid' })]
+    const ids = markOverdue(sales, AS_OF)
+    expect(ids).toEqual([])
+  })
+
+  it('single sale on asOf date is not returned', () => {
+    const sales: Sale[] = [sale({ id: 'single-4', due_date: AS_OF, payment_status: 'unpaid' })]
+    const ids = markOverdue(sales, AS_OF)
+    expect(ids).toEqual([])
+  })
+
+  it('single future sale is not returned', () => {
+    const sales: Sale[] = [sale({ id: 'single-5', due_date: '2027-01-01', payment_status: 'unpaid' })]
+    const ids = markOverdue(sales, AS_OF)
+    expect(ids).toEqual([])
+  })
+})
+
+describe('markOverdue — filter does not mutate input', () => {
+  it('original sales array is not modified', () => {
+    const sales: Sale[] = [
+      sale({ id: 'm1', due_date: '2026-01-01', payment_status: 'unpaid' }),
+      sale({ id: 'm2', due_date: '2026-01-02', payment_status: 'paid' }),
+    ]
+    const originalLength = sales.length
+    const originalFirst = { ...sales[0] }
+    markOverdue(sales, AS_OF)
+    expect(sales.length).toBe(originalLength)
+    expect(sales[0].id).toBe(originalFirst.id)
+    expect(sales[0].payment_status).toBe(originalFirst.payment_status)
+  })
+
+  it('input sale objects retain their properties after call', () => {
+    const s = sale({ id: 'intact', due_date: '2026-01-01', payment_status: 'unpaid' })
+    const salesArr = [s]
+    markOverdue(salesArr, AS_OF)
+    expect(s.id).toBe('intact')
+    expect(s.payment_status).toBe('unpaid')
+  })
+})
+
+describe('markOverdue — exact date string comparison', () => {
+  it('lexicographic date comparison: 2026-05-25 < 2026-05-26 is true', () => {
+    expect('2026-05-25' < '2026-05-26').toBe(true)
+  })
+
+  it('lexicographic date comparison: 2026-05-26 < 2026-05-26 is false', () => {
+    expect('2026-05-26' < '2026-05-26').toBe(false)
+  })
+
+  it('sale with due 2026-04-30 and asOf 2026-05-01 is returned', () => {
+    const sales: Sale[] = [sale({ id: 'apr-30', due_date: '2026-04-30', payment_status: 'unpaid' })]
+    const ids = markOverdue(sales, '2026-05-01')
+    expect(ids).toContain('apr-30')
+  })
+
+  it('sale with due 2026-05-31 and asOf 2026-05-31 is NOT returned (same day)', () => {
+    const sales: Sale[] = [sale({ id: 'may-31', due_date: '2026-05-31', payment_status: 'unpaid' })]
+    const ids = markOverdue(sales, '2026-05-31')
+    expect(ids).not.toContain('may-31')
+  })
+})
+
+describe('markOverdue — Sale interface properties', () => {
+  it('Sale interface has id field', () => {
+    const s: Sale = { id: 'test-id', due_date: '2026-01-01', payment_status: 'unpaid' }
+    expect(s.id).toBe('test-id')
+  })
+
+  it('Sale interface has due_date field', () => {
+    const s: Sale = { id: 'test-id', due_date: '2026-01-01', payment_status: 'unpaid' }
+    expect(s.due_date).toBe('2026-01-01')
+  })
+
+  it('Sale interface has payment_status field', () => {
+    const s: Sale = { id: 'test-id', due_date: '2026-01-01', payment_status: 'unpaid' }
+    expect(s.payment_status).toBe('unpaid')
+  })
+
+  it('markOverdue uses id from Sale interface', () => {
+    const s: Sale = { id: 'uuid-sale-123', due_date: '2026-01-01', payment_status: 'unpaid' }
+    const ids = markOverdue([s], AS_OF)
+    expect(ids[0]).toBe('uuid-sale-123')
+  })
+})
+
+describe('markOverdue — comprehensive status x date matrix', () => {
+  const tests: Array<{ status: string; date: string; asOf: string; expected: boolean; desc: string }> = [
+    { status: 'unpaid',  date: '2026-05-25', asOf: '2026-05-26', expected: true,  desc: 'unpaid + past' },
+    { status: 'partial', date: '2026-05-25', asOf: '2026-05-26', expected: true,  desc: 'partial + past' },
+    { status: 'paid',    date: '2026-05-25', asOf: '2026-05-26', expected: false, desc: 'paid + past' },
+    { status: 'overdue', date: '2026-05-25', asOf: '2026-05-26', expected: false, desc: 'overdue + past' },
+    { status: 'unpaid',  date: '2026-05-26', asOf: '2026-05-26', expected: false, desc: 'unpaid + same day' },
+    { status: 'unpaid',  date: '2026-05-27', asOf: '2026-05-26', expected: false, desc: 'unpaid + future' },
+    { status: 'partial', date: '2026-05-26', asOf: '2026-05-26', expected: false, desc: 'partial + same day' },
+    { status: 'partial', date: '2026-05-27', asOf: '2026-05-26', expected: false, desc: 'partial + future' },
+  ]
+
+  for (const { status, date, asOf, expected, desc } of tests) {
+    it(`${desc} → expected=${expected}`, () => {
+      const sales: Sale[] = [sale({ id: `matrix-${desc}`, due_date: date, payment_status: status })]
+      const ids = markOverdue(sales, asOf)
+      if (expected) {
+        expect(ids).toContain(`matrix-${desc}`)
+      } else {
+        expect(ids).not.toContain(`matrix-${desc}`)
+      }
+    })
+  }
+})
+
+describe('markOverdue — order preservation', () => {
+  it('result order matches input order for qualifying sales', () => {
+    const sales: Sale[] = [
+      sale({ id: 'first',  due_date: '2026-01-01', payment_status: 'unpaid' }),
+      sale({ id: 'second', due_date: '2026-02-01', payment_status: 'unpaid' }),
+      sale({ id: 'third',  due_date: '2026-03-01', payment_status: 'unpaid' }),
+    ]
+    const ids = markOverdue(sales, AS_OF)
+    expect(ids[0]).toBe('first')
+    expect(ids[1]).toBe('second')
+    expect(ids[2]).toBe('third')
+  })
+
+  it('non-qualifying sales do not affect order of qualifying ones', () => {
+    const sales: Sale[] = [
+      sale({ id: 'q-a',   due_date: '2026-01-01', payment_status: 'unpaid' }),
+      sale({ id: 'nq-b',  due_date: '2026-01-01', payment_status: 'paid' }),
+      sale({ id: 'q-c',   due_date: '2026-02-01', payment_status: 'unpaid' }),
+    ]
+    const ids = markOverdue(sales, AS_OF)
+    expect(ids).toEqual(['q-a', 'q-c'])
+  })
+})

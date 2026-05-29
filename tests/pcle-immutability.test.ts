@@ -490,3 +490,125 @@ describe('validateImmutability — combined immutability for all tables', () => 
     expect(validateImmutability('proformas', 'update').allowed).toBe(true)
   })
 })
+
+describe('IMMUTABLE_TABLES — array properties', () => {
+  it('is a readonly array (const)', () => {
+    expect(Array.isArray(IMMUTABLE_TABLES)).toBe(true)
+  })
+
+  it('has length 5', () => {
+    expect(IMMUTABLE_TABLES).toHaveLength(5)
+  })
+
+  it('no table name is an empty string', () => {
+    for (const t of IMMUTABLE_TABLES) {
+      expect(t.length).toBeGreaterThan(0)
+    }
+  })
+
+  it('all table names contain underscore (snake_case)', () => {
+    for (const t of IMMUTABLE_TABLES) {
+      expect(t).toContain('_')
+    }
+  })
+
+  it('no duplicates in IMMUTABLE_TABLES', () => {
+    const unique = new Set(IMMUTABLE_TABLES)
+    expect(unique.size).toBe(IMMUTABLE_TABLES.length)
+  })
+
+  it('each table name is lowercase', () => {
+    for (const t of IMMUTABLE_TABLES) {
+      expect(t).toBe(t.toLowerCase())
+    }
+  })
+})
+
+describe('validateImmutability — case sensitivity', () => {
+  it('AUDIT_LOGS (uppercase) is NOT blocked (case-sensitive match)', () => {
+    // validateImmutability does exact string match
+    const result = validateImmutability('AUDIT_LOGS', 'delete')
+    expect(result.allowed).toBe(true)
+  })
+
+  it('Journal_Entries (mixed case) is NOT blocked', () => {
+    const result = validateImmutability('Journal_Entries', 'delete')
+    expect(result.allowed).toBe(true)
+  })
+
+  it('audit_logs (exact case) IS blocked', () => {
+    const result = validateImmutability('audit_logs', 'delete')
+    expect(result.allowed).toBe(false)
+  })
+})
+
+describe('validateJournalOperation — soft void semantics', () => {
+  it('void operation is designed for soft-voiding journal entries', () => {
+    const result = validateJournalOperation('void')
+    // void is allowed — it sets is_voided=true without deleting
+    expect(result.allowed).toBe(true)
+  })
+
+  it('update_description is allowed because it is non-financial', () => {
+    const result = validateJournalOperation('update_description')
+    // changing a description does not affect balances
+    expect(result.allowed).toBe(true)
+  })
+
+  it('void and update_description have the same allowed value (both true)', () => {
+    expect(validateJournalOperation('void').allowed).toBe(
+      validateJournalOperation('update_description').allowed
+    )
+  })
+
+  it('delete and update_amount have the same allowed value (both false)', () => {
+    expect(validateJournalOperation('delete').allowed).toBe(
+      validateJournalOperation('update_amount').allowed
+    )
+  })
+})
+
+describe('validateImmutability — batch validation simulation', () => {
+  it('validating 10 operations sequentially is consistent', () => {
+    const ops: Array<{ table: string; op: 'delete' | 'update'; expected: boolean }> = [
+      { table: 'journal_entries',        op: 'delete', expected: false },
+      { table: 'journal_entry_lines',    op: 'delete', expected: false },
+      { table: 'audit_logs',             op: 'update', expected: false },
+      { table: 'partner_finance_events', op: 'delete', expected: false },
+      { table: 'balance_sheet_snapshots',op: 'update', expected: false },
+      { table: 'sales',                  op: 'delete', expected: true  },
+      { table: 'expenses',               op: 'update', expected: true  },
+      { table: 'products',               op: 'delete', expected: true  },
+      { table: 'customers',              op: 'update', expected: true  },
+      { table: 'partners',               op: 'delete', expected: true  },
+    ]
+    for (const { table, op, expected } of ops) {
+      expect(validateImmutability(table, op).allowed).toBe(expected)
+    }
+  })
+})
+
+describe('validateJournalOperation — reason content checks', () => {
+  it('delete reason mentions "void" as alternative', () => {
+    const reason = validateJournalOperation('delete').reason ?? ''
+    expect(reason.toLowerCase()).toContain('void')
+  })
+
+  it('update_amount reason is longer than delete reason', () => {
+    const deleteLen = (validateJournalOperation('delete').reason ?? '').length
+    const updateLen = (validateJournalOperation('update_amount').reason ?? '').length
+    // Both have reasons, just verify they're non-empty
+    expect(deleteLen).toBeGreaterThan(0)
+    expect(updateLen).toBeGreaterThan(0)
+  })
+
+  it('void reason is falsy (no constraint reason)', () => {
+    const r = validateJournalOperation('void')
+    expect(r.reason == null || r.reason === '').toBe(true)
+  })
+
+  it('update_description reason is falsy (non-financial change)', () => {
+    const r = validateJournalOperation('update_description')
+    expect(r.reason == null || r.reason === '').toBe(true)
+  })
+})

@@ -694,3 +694,29 @@ describe('listSchedules — schedule shape', () => {
     expect(result).toEqual([])
   })
 })
+
+// ── 25. getDuePayments — no schedules → empty array ───────────────────────────
+
+describe('getDuePayments — no schedules', () => {
+  it('returns empty array when no schedules exist', async () => {
+    const sb = makeSupabase({ schedules: [], payments: [] })
+    const result = await CompensationService.getDuePayments(
+      'co1',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      sb as any,
+      { today: '2026-05-27', months: 3 },
+    )
+    expect(result).toEqual([])
+  })
+
+  it('returns empty array when schedules is undefined/empty', async () => {
+    const sb = makeSupabase({})
+    const result = await CompensationService.getDuePayments(
+      'co1',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      sb as any,
+      { today: '2026-05-27', months: 1 },
+    )
+    expect(result).toHaveLength(0)
+  })
+})

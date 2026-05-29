@@ -348,8 +348,8 @@ describe('classifyPipelineHealth', () => {
     expect(classifyPipelineHealth(39, 17)).toBe('average')
   })
 
-  it('conv=null + days=29 → average (days <= 28)', () => {
-    expect(classifyPipelineHealth(null, 29)).toBe('average')
+  it('conv=null + days=27 → average (days <= benchmark*2=28)', () => {
+    expect(classifyPipelineHealth(null, 27)).toBe('average')
   })
 
   it('conv=null + days=30 → underperforming (days > 28, conv null → fails average conv check)', () => {

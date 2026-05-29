@@ -524,3 +524,119 @@ describe('computePayloadHash — consistency with stableStringify', () => {
     expect(computePayloadHash(original)).toBe(computePayloadHash(copy))
   })
 })
+
+describe('computePayloadHash — hash stability for financial data', () => {
+  it('TRY amounts as numbers are stable', () => {
+    const p = { amount_try: 1500.75, currency: 'TRY' }
+    expect(computePayloadHash(p)).toBe(computePayloadHash(p))
+  })
+
+  it('two amounts 1500.75 vs 1500.76 differ', () => {
+    const p1 = { amount_try: 1500.75, currency: 'TRY' }
+    const p2 = { amount_try: 1500.76, currency: 'TRY' }
+    expect(computePayloadHash(p1)).not.toBe(computePayloadHash(p2))
+  })
+
+  it('date strings in ISO format are stable', () => {
+    const p = { date: '2026-05-26', type: 'sale' }
+    expect(computePayloadHash(p)).toBe(computePayloadHash(p))
+  })
+
+  it('different date formats produce different hashes', () => {
+    const p1 = { date: '2026-05-26' }
+    const p2 = { date: '26.05.2026' }
+    expect(computePayloadHash(p1)).not.toBe(computePayloadHash(p2))
+  })
+
+  it('batch of proforma items with key-order independence', () => {
+    const items1 = [
+      { product_id: 'p1', qty: 5, unit_price: 100 },
+      { product_id: 'p2', qty: 2, unit_price: 250 },
+    ]
+    const items2 = [
+      { unit_price: 100, qty: 5, product_id: 'p1' },
+      { unit_price: 250, qty: 2, product_id: 'p2' },
+    ]
+    expect(computePayloadHash({ items: items1 })).toBe(computePayloadHash({ items: items2 }))
+  })
+
+  it('reordering item array changes hash', () => {
+    const items1 = [{ id: 'A' }, { id: 'B' }]
+    const items2 = [{ id: 'B' }, { id: 'A' }]
+    expect(computePayloadHash({ items: items1 })).not.toBe(computePayloadHash({ items: items2 }))
+  })
+
+  it('vat_rate differences detected', () => {
+    const p1 = { amount: 100, vat_rate: 8 }
+    const p2 = { amount: 100, vat_rate: 18 }
+    expect(computePayloadHash(p1)).not.toBe(computePayloadHash(p2))
+  })
+
+  it('company_id difference detected', () => {
+    const base = { amount: 500, currency: 'TRY', date: '2026-05-01' }
+    const p1 = { ...base, company_id: 'comp-001' }
+    const p2 = { ...base, company_id: 'comp-002' }
+    expect(computePayloadHash(p1)).not.toBe(computePayloadHash(p2))
+  })
+})
+
+describe('computePayloadHash — string length sensitivity', () => {
+  it('single char string hash is valid', () => {
+    const h = computePayloadHash('a')
+    expect(h.startsWith('h_')).toBe(true)
+  })
+
+  it('very long string produces valid hash', () => {
+    const longStr = 'x'.repeat(10000)
+    const h = computePayloadHash(longStr)
+    expect(h.startsWith('h_')).toBe(true)
+    expect(h.length).toBeGreaterThan(2)
+  })
+
+  it('strings differing only in length produce different hashes', () => {
+    const h1 = computePayloadHash('abc')
+    const h2 = computePayloadHash('abcd')
+    expect(h1).not.toBe(h2)
+  })
+
+  it('strings with same chars but different case differ', () => {
+    const h1 = computePayloadHash('ABC')
+    const h2 = computePayloadHash('abc')
+    expect(h1).not.toBe(h2)
+  })
+
+  it('object with very long string value produces valid hash', () => {
+    const longVal = 'note_' + 'a'.repeat(5000)
+    const h = computePayloadHash({ description: longVal })
+    expect(h.startsWith('h_')).toBe(true)
+  })
+})
+
+describe('computePayloadHash — array vs object disambiguation', () => {
+  it('[1] and {0:1} produce different hashes', () => {
+    // Arrays serialize differently than objects
+    const h1 = computePayloadHash([1])
+    const h2 = computePayloadHash({ '0': 1 })
+    expect(h1).not.toBe(h2)
+  })
+
+  it('nested array [[1,2]] vs nested object {a:[1,2]} differ', () => {
+    expect(computePayloadHash([[1, 2]])).not.toBe(computePayloadHash({ a: [1, 2] }))
+  })
+
+  it('array of one element vs same element directly differ', () => {
+    const h1 = computePayloadHash([{ id: 1 }])
+    const h2 = computePayloadHash({ id: 1 })
+    expect(h1).not.toBe(h2)
+  })
+
+  it('empty array vs array with single null element differ', () => {
+    expect(computePayloadHash([])).not.toBe(computePayloadHash([null]))
+  })
+
+  it('array vs object with same JSON structure differ', () => {
+    const h1 = computePayloadHash([1, 2, 3])
+    const h2 = computePayloadHash({ '0': 1, '1': 2, '2': 3 })
+    expect(h1).not.toBe(h2)
+  })
+})

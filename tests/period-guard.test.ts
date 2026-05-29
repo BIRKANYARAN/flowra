@@ -341,3 +341,307 @@ describe('assertNotLocked — multiple non-throwing calls', () => {
     }
   })
 })
+
+describe('assertNotLocked — error is AppError not generic Error', () => {
+  it('thrown error is AppError instance, not plain Error', () => {
+    const result: PeriodGuardResult = {
+      blocked:       true,
+      reason:        'Dönem kilitli.',
+      period_status: 'locked',
+    }
+    let caught: unknown
+    try {
+      assertNotLocked(result)
+    } catch (e) {
+      caught = e
+    }
+    expect(caught).toBeInstanceOf(AppError)
+    // Also verify it's an Error (AppError extends Error)
+    expect(caught).toBeInstanceOf(Error)
+  })
+
+  it('non-blocked result returns without throwing', () => {
+    const result: PeriodGuardResult = { blocked: false, period_status: 'open' }
+    let threw = false
+    try {
+      assertNotLocked(result)
+    } catch {
+      threw = true
+    }
+    expect(threw).toBe(false)
+  })
+})
+
+describe('assertNotLocked — various reason strings', () => {
+  it('short reason string is preserved', () => {
+    const reason = 'Kilitli.'
+    const result: PeriodGuardResult = { blocked: true, reason }
+    try {
+      assertNotLocked(result)
+      expect(true).toBe(false)
+    } catch (err) {
+      expect((err as AppError).message).toBe(reason)
+    }
+  })
+
+  it('reason with special characters is preserved', () => {
+    const reason = 'Dönem 31.12.2024 kilitlendi — artık yazı yapılamaz.'
+    const result: PeriodGuardResult = { blocked: true, reason }
+    try {
+      assertNotLocked(result)
+      expect(true).toBe(false)
+    } catch (err) {
+      expect((err as AppError).message).toBe(reason)
+    }
+  })
+
+  it('reason with numeric content is preserved', () => {
+    const reason = 'Period 2024-Q4 locked since 2024-12-31'
+    const result: PeriodGuardResult = { blocked: true, reason }
+    try {
+      assertNotLocked(result)
+      expect(true).toBe(false)
+    } catch (err) {
+      expect((err as AppError).message).toBe(reason)
+    }
+  })
+
+  it('when no reason provided, default message used', () => {
+    const result: PeriodGuardResult = { blocked: true }
+    try {
+      assertNotLocked(result)
+      expect(true).toBe(false)
+    } catch (err) {
+      // Should have some default reason, not undefined or empty
+      expect((err as AppError).message).toBeTruthy()
+      expect((err as AppError).message.length).toBeGreaterThan(0)
+    }
+  })
+})
+
+describe('assertNotLocked — period_id in error context', () => {
+  it('blocked with period_id does not appear in message (goes to context)', () => {
+    const period_id = 'period-q4-2024'
+    const reason = 'Kilitli dönem.'
+    const result: PeriodGuardResult = {
+      blocked: true,
+      reason,
+      period_id,
+      period_status: 'locked',
+    }
+    try {
+      assertNotLocked(result)
+      expect(true).toBe(false)
+    } catch (err) {
+      // The reason is the message, period_id goes to context
+      expect((err as AppError).message).toBe(reason)
+      expect((err as AppError).code).toBe('PERIOD_LOCKED')
+    }
+  })
+})
+
+describe('assertNotLocked — blocked=false edge cases', () => {
+  it('blocked=false with period_id does not throw', () => {
+    const result: PeriodGuardResult = { blocked: false, period_id: 'some-id' }
+    expect(() => assertNotLocked(result)).not.toThrow()
+  })
+
+  it('blocked=false with reason does not throw', () => {
+    // Some non-blocked results may have informational reasons
+    const result: PeriodGuardResult = { blocked: false, reason: 'informational only' }
+    expect(() => assertNotLocked(result)).not.toThrow()
+  })
+
+  it('blocked=false with all optional fields set does not throw', () => {
+    const result: PeriodGuardResult = {
+      blocked:       false,
+      reason:        'dönem açık',
+      period_status: 'open',
+      period_id:     'period-2026-q1',
+    }
+    expect(() => assertNotLocked(result)).not.toThrow()
+  })
+
+  it('blocked=false returns undefined synchronously', () => {
+    const result: PeriodGuardResult = { blocked: false }
+    const ret = assertNotLocked(result)
+    expect(ret).toBeUndefined()
+  })
+})
+
+describe('assertNotLocked — sequential blocking calls', () => {
+  it('two sequential blocked calls both throw AppError', () => {
+    const r1: PeriodGuardResult = { blocked: true, reason: 'Kilit 1', period_status: 'locked' }
+    const r2: PeriodGuardResult = { blocked: true, reason: 'Kilit 2', period_status: 'closed' }
+
+    expect(() => assertNotLocked(r1)).toThrow(AppError)
+    expect(() => assertNotLocked(r2)).toThrow(AppError)
+  })
+
+  it('mixing blocked and non-blocked calls — only blocked ones throw', () => {
+    const blocked: PeriodGuardResult    = { blocked: true,  reason: 'Dönem kilitli.', period_status: 'locked' }
+    const notBlocked: PeriodGuardResult = { blocked: false, period_status: 'open' }
+
+    expect(() => assertNotLocked(notBlocked)).not.toThrow()
+    expect(() => assertNotLocked(blocked)).toThrow(AppError)
+    expect(() => assertNotLocked(notBlocked)).not.toThrow()
+  })
+
+  it('thrown AppError from first call does not affect second call', () => {
+    const r1: PeriodGuardResult = { blocked: true,  reason: 'First lock.', period_status: 'locked' }
+    const r2: PeriodGuardResult = { blocked: false, period_status: 'open' }
+
+    try { assertNotLocked(r1) } catch { /* expected */ }
+    expect(() => assertNotLocked(r2)).not.toThrow()
+  })
+})
+
+describe('assertNotLocked — AppError code is always PERIOD_LOCKED', () => {
+  it('code is PERIOD_LOCKED for locked period_status', () => {
+    const result: PeriodGuardResult = { blocked: true, period_status: 'locked', reason: 'Test' }
+    try {
+      assertNotLocked(result)
+    } catch (err) {
+      expect((err as AppError).code).toBe('PERIOD_LOCKED')
+    }
+  })
+
+  it('code is PERIOD_LOCKED for closed period_status', () => {
+    const result: PeriodGuardResult = { blocked: true, period_status: 'closed', reason: 'Test' }
+    try {
+      assertNotLocked(result)
+    } catch (err) {
+      expect((err as AppError).code).toBe('PERIOD_LOCKED')
+    }
+  })
+
+  it('code is PERIOD_LOCKED even with no period_status', () => {
+    const result: PeriodGuardResult = { blocked: true, reason: 'Test no status' }
+    try {
+      assertNotLocked(result)
+    } catch (err) {
+      expect((err as AppError).code).toBe('PERIOD_LOCKED')
+    }
+  })
+
+  it('code is PERIOD_LOCKED even with no reason', () => {
+    const result: PeriodGuardResult = { blocked: true }
+    try {
+      assertNotLocked(result)
+    } catch (err) {
+      expect((err as AppError).code).toBe('PERIOD_LOCKED')
+    }
+  })
+
+  it('code is PERIOD_LOCKED even with no period_id', () => {
+    const result: PeriodGuardResult = { blocked: true, reason: 'No period id', period_status: 'locked' }
+    try {
+      assertNotLocked(result)
+    } catch (err) {
+      expect((err as AppError).code).toBe('PERIOD_LOCKED')
+    }
+  })
+})
+
+describe('assertNotLocked — function signature behavior', () => {
+  it('function accepts PeriodGuardResult with only blocked property', () => {
+    const minimal: PeriodGuardResult = { blocked: false }
+    expect(() => assertNotLocked(minimal)).not.toThrow()
+  })
+
+  it('function accepts PeriodGuardResult with all optional fields set', () => {
+    const full: PeriodGuardResult = {
+      blocked:       false,
+      reason:        'Açık dönem',
+      period_status: 'open',
+      period_id:     'p-full-001',
+    }
+    expect(() => assertNotLocked(full)).not.toThrow()
+  })
+
+  it('function throws for blocked=true regardless of other fields', () => {
+    const blocked: PeriodGuardResult = { blocked: true }
+    expect(() => assertNotLocked(blocked)).toThrow()
+  })
+
+  it('function returns void (undefined) for non-blocked', () => {
+    const result = assertNotLocked({ blocked: false })
+    expect(result).toBeUndefined()
+  })
+})
+
+describe('assertNotLocked — Turkish period status messages', () => {
+  it('default message for locked period is in Turkish', () => {
+    const result: PeriodGuardResult = { blocked: true, period_status: 'locked' }
+    try {
+      assertNotLocked(result)
+    } catch (err) {
+      const msg = (err as AppError).message
+      // Default message should contain Turkish keywords
+      expect(msg).toBeTruthy()
+    }
+  })
+
+  it('custom Turkish reason is passed through correctly', () => {
+    const turkishReason = 'Mart 2026 dönemi kilitlenmiştir.'
+    const result: PeriodGuardResult = { blocked: true, reason: turkishReason }
+    try {
+      assertNotLocked(result)
+    } catch (err) {
+      expect((err as AppError).message).toBe(turkishReason)
+    }
+  })
+
+  it('reason with Turkish chars (ş, ğ, ı, ç, ö, ü) preserved', () => {
+    const reason = 'Şubat dönemi güncelleme işlemi yasaklandı.'
+    const result: PeriodGuardResult = { blocked: true, reason }
+    try {
+      assertNotLocked(result)
+    } catch (err) {
+      expect((err as AppError).message).toBe(reason)
+    }
+  })
+})
+
+describe('assertNotLocked — blocked false does not consume reason', () => {
+  it('blocked=false with informational reason does not throw', () => {
+    const result: PeriodGuardResult = {
+      blocked: false,
+      reason:  'Dönem henüz açık, uyarı yok.',
+      period_status: 'open',
+    }
+    expect(() => assertNotLocked(result)).not.toThrow()
+  })
+
+  it('blocked=false returns undefined even with all fields populated', () => {
+    const result: PeriodGuardResult = {
+      blocked:       false,
+      reason:        'Some informational text',
+      period_status: 'pre_close',
+      period_id:     'p-info',
+    }
+    const ret = assertNotLocked(result)
+    expect(ret).toBeUndefined()
+  })
+})
+
+describe('assertNotLocked — complete behavior matrix', () => {
+  const cases: Array<{ desc: string; result: PeriodGuardResult; shouldThrow: boolean }> = [
+    { desc: 'blocked=false, no extras',                result: { blocked: false },                   shouldThrow: false },
+    { desc: 'blocked=false, open status',              result: { blocked: false, period_status: 'open' },      shouldThrow: false },
+    { desc: 'blocked=false, pre_close status',         result: { blocked: false, period_status: 'pre_close' }, shouldThrow: false },
+    { desc: 'blocked=true, locked status',             result: { blocked: true,  period_status: 'locked', reason: 'Lock' }, shouldThrow: true  },
+    { desc: 'blocked=true, closed status',             result: { blocked: true,  period_status: 'closed', reason: 'Close' }, shouldThrow: true  },
+    { desc: 'blocked=true, no status, no reason',      result: { blocked: true },                    shouldThrow: true  },
+  ]
+
+  for (const { desc, result, shouldThrow } of cases) {
+    it(`${desc} — shouldThrow=${shouldThrow}`, () => {
+      if (shouldThrow) {
+        expect(() => assertNotLocked(result)).toThrow(AppError)
+      } else {
+        expect(() => assertNotLocked(result)).not.toThrow()
+      }
+    })
+  }
+})

@@ -229,113 +229,307 @@ describe('ProformaAnalyticsService.getMetrics — edge cases', () => {
     // current win_rate = 100%, prior win_rate = 50% → improving
     expect(m.win_rate_trend).toBe('improving')
   })
+
+  it('win_rate_trend insufficient_data when no prior proformas', async () => {
+    const proformas = [makeProforma({ id: 'p1', status: 'converted' })]
+    const sales = [makeSale('p1', '2025-02-01')]
+    const supabase = makeMockSupabase(proformas, sales, []) // no prior
+    const m = await ProformaAnalyticsService.getMetrics('c1', supabase, period)
+    expect(m.win_rate_trend).toBe('insufficient_data')
+  })
+
+  it('avg_deal_size_try is null when no conversions', async () => {
+    const proformas = [makeProforma({ id: 'p1', status: 'sent' })]
+    const supabase = makeMockSupabase(proformas, [], [])
+    const m = await ProformaAnalyticsService.getMetrics('c1', supabase, period)
+    expect(m.avg_deal_size_try).toBeNull()
+  })
+
+  it('fastest_conversion_days is null when no conversions', async () => {
+    const proformas = [makeProforma({ id: 'p1', status: 'rejected' })]
+    const supabase = makeMockSupabase(proformas, [], [])
+    const m = await ProformaAnalyticsService.getMetrics('c1', supabase, period)
+    expect(m.fastest_conversion_days).toBeNull()
+    expect(m.avg_days_to_convert).toBeNull()
+  })
+
+  it('expired proformas counted in expired_count', async () => {
+    const proformas = [
+      makeProforma({ id: 'p1', status: 'expired' }),
+      makeProforma({ id: 'p2', status: 'expired' }),
+      makeProforma({ id: 'p3', status: 'converted' }),
+    ]
+    const sales = [makeSale('p3', '2025-02-01')]
+    const supabase = makeMockSupabase(proformas, sales, [])
+    const m = await ProformaAnalyticsService.getMetrics('c1', supabase, period)
+    expect(m.expired_count).toBe(2)
+    expect(m.converted_count).toBe(1)
+  })
+
+  it('total_proformas matches input count', async () => {
+    const proformas = [
+      makeProforma({ id: 'p1', status: 'sent' }),
+      makeProforma({ id: 'p2', status: 'converted' }),
+      makeProforma({ id: 'p3', status: 'rejected' }),
+    ]
+    const sales = [makeSale('p2', '2025-02-01')]
+    const supabase = makeMockSupabase(proformas, sales, [])
+    const m = await ProformaAnalyticsService.getMetrics('c1', supabase, period)
+    expect(m.total_proformas).toBe(3)
+  })
+
+  it('conversion_rate_pct counts converted out of total', async () => {
+    const proformas = [
+      makeProforma({ id: 'p1', status: 'converted' }),
+      makeProforma({ id: 'p2', status: 'converted' }),
+      makeProforma({ id: 'p3', status: 'sent' }),
+      makeProforma({ id: 'p4', status: 'rejected' }),
+    ]
+    const sales = [makeSale('p1', '2025-02-01'), makeSale('p2', '2025-02-05')]
+    const supabase = makeMockSupabase(proformas, sales, [])
+    const m = await ProformaAnalyticsService.getMetrics('c1', supabase, period)
+    // conversion_rate = 2 / 4 × 100 = 50
+    expect(m.conversion_rate_pct).toBe(50)
+  })
 })
 
 // ── computeWinRate (new exported pure version) ────────────────────────────────
 
 describe('computeWinRate — pure export', () => {
 
-  it('9. 5 converted, 5 expired → 50', () => {
+  it('5 converted, 5 expired → 50', () => {
     expect(computeWinRate(5, 5)).toBe(50)
   })
 
-  it('10. 10 converted, 0 expired → 100', () => {
+  it('10 converted, 0 expired → 100', () => {
     expect(computeWinRate(10, 0)).toBe(100)
   })
 
-  it('11. 0 converted, 0 expired → null', () => {
+  it('0 converted, 0 expired → null', () => {
     expect(computeWinRate(0, 0)).toBeNull()
   })
 
-  it('12. 0 converted, 10 expired → 0', () => {
+  it('0 converted, 10 expired → 0', () => {
     expect(computeWinRate(0, 10)).toBe(0)
   })
 
+  it('1 converted, 3 expired → 25', () => {
+    expect(computeWinRate(1, 3)).toBe(25)
+  })
+
+  it('3 converted, 1 expired → 75', () => {
+    expect(computeWinRate(3, 1)).toBe(75)
+  })
+
+  it('rounds to 1 decimal: 2 of 3 → 66.7', () => {
+    expect(computeWinRate(2, 1)).toBe(66.7)
+  })
+
+  it('rounds to 1 decimal: 1 of 3 → 33.3', () => {
+    expect(computeWinRate(1, 2)).toBe(33.3)
+  })
+
+  it('7 converted, 3 expired → 70', () => {
+    expect(computeWinRate(7, 3)).toBe(70)
+  })
+
+  it('large values: 900 of 1000 → 90', () => {
+    expect(computeWinRate(900, 100)).toBe(90)
+  })
+
+  it('1 converted, 99 expired → 1', () => {
+    expect(computeWinRate(1, 99)).toBe(1)
+  })
+
+  it('50 converted, 50 expired → 50', () => {
+    expect(computeWinRate(50, 50)).toBe(50)
+  })
 })
 
 // ── computeMedian ─────────────────────────────────────────────────────────────
 
 describe('computeMedian — pure export', () => {
 
-  it('13. [1, 2, 3] → 2', () => {
+  it('[1, 2, 3] → 2', () => {
     expect(computeMedian([1, 2, 3])).toBe(2)
   })
 
-  it('14. [1, 2, 3, 4] → 2.5', () => {
+  it('[1, 2, 3, 4] → 2.5', () => {
     expect(computeMedian([1, 2, 3, 4])).toBe(2.5)
   })
 
-  it('15. [] → null', () => {
+  it('[] → null', () => {
     expect(computeMedian([])).toBeNull()
   })
 
-  it('16. [5] → 5', () => {
+  it('[5] → 5', () => {
     expect(computeMedian([5])).toBe(5)
   })
 
+  it('[3, 1, 2] (unsorted) → 2', () => {
+    expect(computeMedian([3, 1, 2])).toBe(2)
+  })
+
+  it('[10, 10, 10, 10] → 10', () => {
+    expect(computeMedian([10, 10, 10, 10])).toBe(10)
+  })
+
+  it('[1, 100] → 50.5', () => {
+    expect(computeMedian([1, 100])).toBe(50.5)
+  })
+
+  it('[5, 5, 5, 5, 5] → 5', () => {
+    expect(computeMedian([5, 5, 5, 5, 5])).toBe(5)
+  })
+
+  it('odd length array picks middle element', () => {
+    expect(computeMedian([10, 20, 30, 40, 50])).toBe(30)
+  })
+
+  it('even length array averages two middle elements', () => {
+    expect(computeMedian([10, 20, 30, 40])).toBe(25)
+  })
+
+  it('[0, 0, 0] → 0', () => {
+    expect(computeMedian([0, 0, 0])).toBe(0)
+  })
+
+  it('handles negative numbers', () => {
+    expect(computeMedian([-5, 0, 5])).toBe(0)
+  })
+
+  it('[2] single element → 2', () => {
+    expect(computeMedian([2])).toBe(2)
+  })
+
+  it('unsorted 6 elements picks correct median', () => {
+    expect(computeMedian([6, 3, 1, 4, 2, 5])).toBe(3.5)
+  })
 })
 
 // ── assignSizeBucket ──────────────────────────────────────────────────────────
 
 describe('assignSizeBucket — pure export', () => {
 
-  it('17. 5000 → "<10K"', () => {
+  it('5000 → "<10K"', () => {
     expect(assignSizeBucket(5_000)).toBe('<10K')
   })
 
-  it('18. 25000 → "10K-50K"', () => {
+  it('25000 → "10K-50K"', () => {
     expect(assignSizeBucket(25_000)).toBe('10K-50K')
   })
 
-  it('19. 100000 → "50K-200K"', () => {
+  it('100000 → "50K-200K"', () => {
     expect(assignSizeBucket(100_000)).toBe('50K-200K')
   })
 
-  it('20. 250000 → "200K+"', () => {
+  it('250000 → "200K+"', () => {
     expect(assignSizeBucket(250_000)).toBe('200K+')
   })
 
+  it('0 → "<10K"', () => {
+    expect(assignSizeBucket(0)).toBe('<10K')
+  })
+
+  it('9999 → "<10K"', () => {
+    expect(assignSizeBucket(9_999)).toBe('<10K')
+  })
+
+  it('10000 boundary → "10K-50K"', () => {
+    expect(assignSizeBucket(10_000)).toBe('10K-50K')
+  })
+
+  it('49999 → "10K-50K"', () => {
+    expect(assignSizeBucket(49_999)).toBe('10K-50K')
+  })
+
+  it('50000 boundary → "50K-200K"', () => {
+    expect(assignSizeBucket(50_000)).toBe('50K-200K')
+  })
+
+  it('199999 → "50K-200K"', () => {
+    expect(assignSizeBucket(199_999)).toBe('50K-200K')
+  })
+
+  it('200000 boundary → "200K+"', () => {
+    expect(assignSizeBucket(200_000)).toBe('200K+')
+  })
+
+  it('1000000 → "200K+"', () => {
+    expect(assignSizeBucket(1_000_000)).toBe('200K+')
+  })
 })
 
 // ── assignTimeBucket ──────────────────────────────────────────────────────────
 
 describe('assignTimeBucket — pure export', () => {
 
-  it('21. 3 days → "<7 gün"', () => {
+  it('3 days → "<7 gün"', () => {
     expect(assignTimeBucket(3)).toBe('<7 gün')
   })
 
-  it('22. 7 days → "7-14 gün"', () => {
+  it('7 days → "7-14 gün"', () => {
     expect(assignTimeBucket(7)).toBe('7-14 gün')
   })
 
-  it('23. 30 days → "14-30 gün"', () => {
+  it('30 days → "14-30 gün"', () => {
     expect(assignTimeBucket(30)).toBe('14-30 gün')
   })
 
-  it('24. 31 days → "30+ gün"', () => {
+  it('31 days → "30+ gün"', () => {
     expect(assignTimeBucket(31)).toBe('30+ gün')
   })
 
+  it('0 days → "<7 gün"', () => {
+    expect(assignTimeBucket(0)).toBe('<7 gün')
+  })
+
+  it('6 days → "<7 gün"', () => {
+    expect(assignTimeBucket(6)).toBe('<7 gün')
+  })
+
+  it('8 days → "7-14 gün"', () => {
+    expect(assignTimeBucket(8)).toBe('7-14 gün')
+  })
+
+  it('13 days → "7-14 gün"', () => {
+    expect(assignTimeBucket(13)).toBe('7-14 gün')
+  })
+
+  it('14 days → "14-30 gün"', () => {
+    expect(assignTimeBucket(14)).toBe('14-30 gün')
+  })
+
+  it('20 days → "14-30 gün"', () => {
+    expect(assignTimeBucket(20)).toBe('14-30 gün')
+  })
+
+  it('60 days → "30+ gün"', () => {
+    expect(assignTimeBucket(60)).toBe('30+ gün')
+  })
+
+  it('365 days → "30+ gün"', () => {
+    expect(assignTimeBucket(365)).toBe('30+ gün')
+  })
 })
 
 // ── buildMonthlyTrend ─────────────────────────────────────────────────────────
 
 describe('buildMonthlyTrend — pure export', () => {
 
-  it('25. returns 6 months by default', () => {
+  it('returns 6 months by default', () => {
     const result = buildMonthlyTrend([], '2025-06', 6)
     expect(result).toHaveLength(6)
   })
 
-  it('26. no proformas → win_rate_pct null for all months', () => {
+  it('no proformas → win_rate_pct null for all months', () => {
     const result = buildMonthlyTrend([], '2025-06', 6)
     for (const m of result) {
       expect(m.win_rate_pct).toBeNull()
     }
   })
 
-  it('27. proforma counted in correct month bucket', () => {
+  it('proforma counted in correct month bucket', () => {
     const proformas = [
       { created_at: '2025-06-10T10:00:00Z', status: 'converted', converted_at: null },
       { created_at: '2025-06-15T10:00:00Z', status: 'expired',   converted_at: null },
@@ -347,7 +541,7 @@ describe('buildMonthlyTrend — pure export', () => {
     expect(jun.expired).toBe(1)
   })
 
-  it('28. win_rate_pct = 50 when 1 converted, 1 expired', () => {
+  it('win_rate_pct = 50 when 1 converted, 1 expired', () => {
     const proformas = [
       { created_at: '2025-06-10T10:00:00Z', status: 'converted', converted_at: null },
       { created_at: '2025-06-15T10:00:00Z', status: 'expired',   converted_at: null },
@@ -357,7 +551,7 @@ describe('buildMonthlyTrend — pure export', () => {
     expect(jun.win_rate_pct).toBe(50)
   })
 
-  it('29. proforma outside of range not counted', () => {
+  it('proforma outside of range not counted', () => {
     const proformas = [
       { created_at: '2024-01-01T10:00:00Z', status: 'converted', converted_at: null },
     ]
@@ -366,9 +560,100 @@ describe('buildMonthlyTrend — pure export', () => {
     expect(total).toBe(0)
   })
 
-  it('30. last month key equals endYearMonth', () => {
+  it('last month key equals endYearMonth', () => {
     const result = buildMonthlyTrend([], '2025-06', 6)
     expect(result[result.length - 1].month).toBe('2025-06')
   })
 
+  it('first month is 5 months before endYearMonth for monthCount=6', () => {
+    const result = buildMonthlyTrend([], '2025-06', 6)
+    expect(result[0].month).toBe('2025-01')
+  })
+
+  it('months span year boundary when endYearMonth is early in year', () => {
+    const result = buildMonthlyTrend([], '2025-02', 4)
+    expect(result[0].month).toBe('2024-11')
+    expect(result[result.length - 1].month).toBe('2025-02')
+  })
+
+  it('label format is "Mon YYYY" in Turkish', () => {
+    const result = buildMonthlyTrend([], '2025-01', 1)
+    expect(result[0].label).toBe('Oca 2025')
+  })
+
+  it('label for December is "Ara YYYY"', () => {
+    const result = buildMonthlyTrend([], '2025-12', 1)
+    expect(result[0].label).toBe('Ara 2025')
+  })
+
+  it('label for June is "Haz YYYY"', () => {
+    const result = buildMonthlyTrend([], '2025-06', 1)
+    expect(result[0].label).toBe('Haz 2025')
+  })
+
+  it('all proformas in same month → that month has high count', () => {
+    const proformas = Array.from({ length: 5 }, (_, i) => ({
+      created_at: `2025-03-${String(i + 1).padStart(2, '0')}`,
+      status: 'converted',
+      converted_at: null,
+    }))
+    const result = buildMonthlyTrend(proformas, '2025-06', 6)
+    const mar = result.find(m => m.month === '2025-03')!
+    expect(mar.created).toBe(5)
+    expect(mar.converted).toBe(5)
+  })
+
+  it('no proformas in a month → created=0, win_rate_pct=null', () => {
+    const result = buildMonthlyTrend([], '2025-06', 3)
+    for (const m of result) {
+      expect(m.created).toBe(0)
+      expect(m.win_rate_pct).toBeNull()
+    }
+  })
+
+  it('monthCount=1 returns a single month', () => {
+    const result = buildMonthlyTrend([], '2025-06', 1)
+    expect(result).toHaveLength(1)
+    expect(result[0].month).toBe('2025-06')
+  })
+
+  it('monthCount=12 returns 12 months', () => {
+    const result = buildMonthlyTrend([], '2025-12', 12)
+    expect(result).toHaveLength(12)
+    expect(result[0].month).toBe('2025-01')
+    expect(result[11].month).toBe('2025-12')
+  })
+
+  it('expired proformas counted in expired field', () => {
+    const proformas = [
+      { created_at: '2025-04-15', status: 'expired', converted_at: null },
+      { created_at: '2025-04-20', status: 'expired', converted_at: null },
+    ]
+    const result = buildMonthlyTrend(proformas, '2025-06', 3)
+    const apr = result.find(m => m.month === '2025-04')!
+    expect(apr.expired).toBe(2)
+    expect(apr.win_rate_pct).toBe(0)
+  })
+
+  it('draft/sent proformas counted in created but not converted or expired', () => {
+    const proformas = [
+      { created_at: '2025-05-10', status: 'sent',  converted_at: null },
+      { created_at: '2025-05-15', status: 'draft', converted_at: null },
+    ]
+    const result = buildMonthlyTrend(proformas, '2025-06', 3)
+    const may = result.find(m => m.month === '2025-05')!
+    expect(may.created).toBe(2)
+    expect(may.converted).toBe(0)
+    expect(may.expired).toBe(0)
+    expect(may.win_rate_pct).toBeNull() // no decided proformas
+  })
+
+  it('win_rate_pct = 100 when all proformas in month converted', () => {
+    const proformas = [
+      { created_at: '2025-06-10', status: 'converted', converted_at: null },
+      { created_at: '2025-06-20', status: 'converted', converted_at: null },
+    ]
+    const result = buildMonthlyTrend(proformas, '2025-06', 1)
+    expect(result[0].win_rate_pct).toBe(100)
+  })
 })

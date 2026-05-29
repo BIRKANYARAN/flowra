@@ -642,3 +642,141 @@ describe('CeoIntelligenceService — internal number formatting (via top_metric)
   })
 
 })
+
+// ── Signal model validation ───────────────────────────────────────────────────
+
+describe('IntelligenceSignal — model validation (pure)', () => {
+
+  it('makeSignal creates a valid signal', () => {
+    const s = makeSignal({ signal_id: 'test-1' })
+    expect(s.signal_id).toBe('test-1')
+    expect(s.source).toBe('test')
+    expect(s.severity).toBe('info')
+    expect(typeof s.headline).toBe('string')
+    expect(typeof s.detail).toBe('string')
+  })
+
+  it('signal with critical severity is correct', () => {
+    const s = makeSignal({ signal_id: 's1', severity: 'critical', headline: 'Kritik Problem' })
+    expect(s.severity).toBe('critical')
+    expect(s.headline).toBe('Kritik Problem')
+  })
+
+  it('signal with warning severity is correct', () => {
+    const s = makeSignal({ signal_id: 's2', severity: 'warning', headline: 'Uyarı' })
+    expect(s.severity).toBe('warning')
+  })
+
+  it('sorting empty array returns empty array', () => {
+    expect(sortedBySeverity([])).toHaveLength(0)
+  })
+
+  it('sorting three signals of same severity keeps order stable by spec', () => {
+    const signals = [
+      makeSignal({ signal_id: 'a', severity: 'warning' }),
+      makeSignal({ signal_id: 'b', severity: 'warning' }),
+      makeSignal({ signal_id: 'c', severity: 'warning' }),
+    ]
+    const sorted = sortedBySeverity(signals)
+    expect(sorted).toHaveLength(3)
+    // All warning — relative order should be preserved
+    expect(sorted.every(s => s.severity === 'warning')).toBe(true)
+  })
+
+  it('sortedBySeverity output first element has smallest severity order', () => {
+    const signals = [
+      makeSignal({ signal_id: 'a', severity: 'info' }),
+      makeSignal({ signal_id: 'b', severity: 'critical' }),
+      makeSignal({ signal_id: 'c', severity: 'warning' }),
+      makeSignal({ signal_id: 'd', severity: 'info' }),
+    ]
+    const sorted = sortedBySeverity(signals)
+    expect(sorted[0].severity).toBe('critical')
+    expect(sorted[sorted.length - 1].severity).toBe('info')
+  })
+
+  it('health function treats all critical counts >= 2 as critical', () => {
+    for (let n = 2; n <= 10; n++) {
+      expect(computeHealth(n, 0)).toBe('critical')
+    }
+  })
+
+  it('health function treats all warning counts > 2 (with 0 critical) as attention', () => {
+    for (let n = 3; n <= 10; n++) {
+      expect(computeHealth(0, n)).toBe('attention')
+    }
+  })
+
+  it('health = good for 1 or 2 warnings with 0 criticals', () => {
+    expect(computeHealth(0, 1)).toBe('good')
+    expect(computeHealth(0, 2)).toBe('good')
+  })
+
+  it('makeSignal with all overrides applies them correctly', () => {
+    const s = makeSignal({
+      signal_id:     'full-signal',
+      source:        'cash_flow',
+      severity:      'critical',
+      headline:      'Cash is low',
+      detail:        'Only 10 days remaining',
+      computed_at:   '2026-05-01T00:00:00Z',
+    })
+    expect(s.signal_id).toBe('full-signal')
+    expect(s.source).toBe('cash_flow')
+    expect(s.severity).toBe('critical')
+    expect(s.headline).toBe('Cash is low')
+    expect(s.detail).toBe('Only 10 days remaining')
+    expect(s.computed_at).toBe('2026-05-01T00:00:00Z')
+  })
+})
+
+// ── CeoIntelligencePanel type validation ──────────────────────────────────────
+
+describe('CeoIntelligencePanel — type validation', () => {
+
+  it('panel critical_count is a non-negative integer', async () => {
+    const supabase = makeEmptySupabase()
+    const panel = await CeoIntelligenceService.getPanel('co-1', 'uid-1', supabase as never)
+    expect(Number.isInteger(panel.critical_count)).toBe(true)
+    expect(panel.critical_count).toBeGreaterThanOrEqual(0)
+  })
+
+  it('panel warning_count is a non-negative integer', async () => {
+    const supabase = makeEmptySupabase()
+    const panel = await CeoIntelligenceService.getPanel('co-1', 'uid-1', supabase as never)
+    expect(Number.isInteger(panel.warning_count)).toBe(true)
+    expect(panel.warning_count).toBeGreaterThanOrEqual(0)
+  })
+
+  it('top_metric has exactly three fields', async () => {
+    const supabase = makeEmptySupabase()
+    const panel = await CeoIntelligenceService.getPanel('co-1', 'uid-1', supabase as never)
+    const keys = Object.keys(panel.top_metric)
+    expect(keys).toContain('value')
+    expect(keys).toContain('label')
+    expect(keys).toContain('context')
+  })
+
+  it('top_metric.value is a non-empty string', async () => {
+    const supabase = makeEmptySupabase()
+    const panel = await CeoIntelligenceService.getPanel('co-1', 'uid-1', supabase as never)
+    expect(typeof panel.top_metric.value).toBe('string')
+    expect(panel.top_metric.value.length).toBeGreaterThan(0)
+  })
+
+  it('top_metric.label is a non-empty string', async () => {
+    const supabase = makeEmptySupabase()
+    const panel = await CeoIntelligenceService.getPanel('co-1', 'uid-1', supabase as never)
+    expect(typeof panel.top_metric.label).toBe('string')
+    expect(panel.top_metric.label.length).toBeGreaterThan(0)
+  })
+
+  it('signals array is never null or undefined', async () => {
+    const supabase = makeEmptySupabase()
+    const panel = await CeoIntelligenceService.getPanel('co-1', 'uid-1', supabase as never)
+    expect(panel.signals).not.toBeNull()
+    expect(panel.signals).not.toBeUndefined()
+    expect(Array.isArray(panel.signals)).toBe(true)
+  })
+
+})

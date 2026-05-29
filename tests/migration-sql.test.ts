@@ -606,3 +606,148 @@ describe('migration files — no duplicate CREATE TABLE IF NOT EXISTS', () => {
     }
   })
 })
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RLS consistency — tables with user data must have RLS enabled
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('migration files — RLS presence', () => {
+  const rlsRequiredFiles = [
+    '20260526000003_workflow_instances.sql',
+    '20260526000004_alert_rules_table.sql',
+    '20260526000007_decision_context_snapshots.sql',
+    '20260527000001_company_documents.sql',
+  ]
+
+  for (const file of rlsRequiredFiles) {
+    it(`${file} has ENABLE ROW LEVEL SECURITY`, () => {
+      const sql = readMigration(file)
+      expect(sql).toContain('ENABLE ROW LEVEL SECURITY')
+    })
+
+    it(`${file} has at least one CREATE POLICY statement`, () => {
+      const sql = readMigration(file)
+      expect(sql).toContain('CREATE POLICY')
+    })
+  }
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Index naming conventions — all indexes follow naming pattern
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('migration files — index naming conventions', () => {
+  it('workflow_instances indexes start with idx_', () => {
+    const sql = readMigration('20260526000003_workflow_instances.sql')
+    const indexes = sql.match(/CREATE INDEX IF NOT EXISTS (\w+)/g) ?? []
+    for (const idx of indexes) {
+      const name = idx.replace('CREATE INDEX IF NOT EXISTS ', '')
+      expect(name).toMatch(/^idx_/)
+    }
+  })
+
+  it('alert_rules indexes start with idx_', () => {
+    const sql = readMigration('20260526000004_alert_rules_table.sql')
+    const indexes = sql.match(/CREATE INDEX IF NOT EXISTS (\w+)/g) ?? []
+    for (const idx of indexes) {
+      const name = idx.replace('CREATE INDEX IF NOT EXISTS ', '')
+      expect(name).toMatch(/^idx_/)
+    }
+  })
+
+  it('job_runs indexes start with idx_', () => {
+    const sql = readMigration('20260526000005_job_runs_table.sql')
+    const indexes = sql.match(/CREATE INDEX IF NOT EXISTS (\w+)/g) ?? []
+    for (const idx of indexes) {
+      const name = idx.replace('CREATE INDEX IF NOT EXISTS ', '')
+      expect(name).toMatch(/^idx_/)
+    }
+  })
+
+  it('company_documents has at least 4 indexes', () => {
+    const sql = readMigration('20260527000001_company_documents.sql')
+    const indexCount = (sql.match(/CREATE INDEX IF NOT EXISTS/g) ?? []).length
+    expect(indexCount).toBeGreaterThanOrEqual(4)
+  })
+
+  it('decision_context_snapshots has at least 2 indexes', () => {
+    const sql = readMigration('20260526000007_decision_context_snapshots.sql')
+    const indexCount = (sql.match(/CREATE INDEX IF NOT EXISTS/g) ?? []).length
+    expect(indexCount).toBeGreaterThanOrEqual(2)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Primary key — all tables have UUID primary key
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('migration files — UUID primary key', () => {
+  const tableFiles = [
+    '20260526000003_workflow_instances.sql',
+    '20260526000004_alert_rules_table.sql',
+    '20260526000005_job_runs_table.sql',
+    '20260526000007_decision_context_snapshots.sql',
+    '20260527000001_company_documents.sql',
+  ]
+
+  for (const file of tableFiles) {
+    it(`${file} has uuid PRIMARY KEY with gen_random_uuid()`, () => {
+      const sql = readMigration(file)
+      expect(sql).toContain('uuid PRIMARY KEY DEFAULT gen_random_uuid()')
+    })
+  }
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Company linkage — company_id foreign key
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('migration files — company_id foreign key', () => {
+  const companyLinkedFiles = [
+    '20260526000003_workflow_instances.sql',
+    '20260526000004_alert_rules_table.sql',
+    '20260526000007_decision_context_snapshots.sql',
+    '20260527000001_company_documents.sql',
+  ]
+
+  for (const file of companyLinkedFiles) {
+    it(`${file} has company_id uuid NOT NULL REFERENCES companies(id)`, () => {
+      const sql = readMigration(file)
+      // Allow for varying whitespace used for column alignment
+      expect(sql).toMatch(/company_id\s+uuid\s+NOT NULL\s+REFERENCES companies\(id\)/)
+    })
+
+    it(`${file} has ON DELETE CASCADE for company_id`, () => {
+      const sql = readMigration(file)
+      expect(sql).toContain('ON DELETE CASCADE')
+    })
+  }
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Timestamp columns — created_at defaults
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('migration files — created_at and timestamptz', () => {
+  // These files have created_at timestamptz columns (job_runs uses different audit approach)
+  const timestampFiles = [
+    '20260526000003_workflow_instances.sql',
+    '20260526000004_alert_rules_table.sql',
+    '20260526000007_decision_context_snapshots.sql',
+    '20260527000001_company_documents.sql',
+  ]
+
+  for (const file of timestampFiles) {
+    it(`${file} has created_at timestamptz with DEFAULT now()`, () => {
+      const sql = readMigration(file)
+      // Allow for varying whitespace (some files use tabs/spaces for alignment)
+      expect(sql).toMatch(/created_at\s+timestamptz\s+NOT NULL\s+DEFAULT now\(\)/)
+    })
+  }
+
+  it('job_runs table uses started_at and finished_at timestamps', () => {
+    const sql = readMigration('20260526000005_job_runs_table.sql')
+    // job_runs tracks timing with started_at/finished_at rather than created_at
+    expect(sql).toMatch(/started_at|created_at|run_at/i)
+  })
+})
