@@ -1,210 +1,346 @@
-/**
- * FX Exposure Service — pure function tests.
- *
- * Tests all exported pure helpers:
- *   computeFxGainLoss
- *   computeFxExposureRatio
- *   classifyFxExposureRisk
- *   computeNaturalHedgeRatio
- *   computeNetFxExposure
- *
- * Run with:  npx vitest run tests/fx-exposure.test.ts
- */
+// ─────────────────────────────────────────────────────────────────────────────
+// tests/fx-exposure.test.ts
+//
+// Unit tests for all pure functions in fx-exposure.service.ts:
+//   - computeFxImpact
+//   - computeNetFxExposure
+//   - computeFxRiskRatio
+//   - classifyFxRisk
+//   - computeCurrencyDiversification
+//   - computeScenarioFxLoss
+//   - classifyHedgeRecommendation
+//
+// Run with:  npx vitest run tests/fx-exposure.test.ts
+// ─────────────────────────────────────────────────────────────────────────────
 
 import { describe, it, expect } from 'vitest'
 import {
-  computeFxGainLoss,
-  computeFxExposureRatio,
-  classifyFxExposureRisk,
-  computeNaturalHedgeRatio,
+  computeFxImpact,
   computeNetFxExposure,
+  computeFxRiskRatio,
+  classifyFxRisk,
+  computeCurrencyDiversification,
+  computeScenarioFxLoss,
+  classifyHedgeRecommendation,
 } from '../lib/services/finance/fx-exposure.service'
 
-// ── computeFxGainLoss ─────────────────────────────────────────────────────────
+// ── computeFxImpact ───────────────────────────────────────────────────────────
 
-describe('computeFxGainLoss', () => {
-
-  it('gain: TRY weakened (current > entry) → positive result', () => {
-    // 1000 USD at entry ₺32, current ₺38 → gain 6000
-    const result = computeFxGainLoss(1000, 32, 38)
-    expect(result).toBe(6000)
+describe('computeFxImpact', () => {
+  it('gain: rate increases (TRY depreciated) → positive impact', () => {
+    // 1000 USD, original rate 32, current rate 38 → impact = 1000×6 = 6000
+    expect(computeFxImpact(1000, 32, 38)).toBe(6000)
   })
 
-  it('loss: TRY strengthened (current < entry) → negative result', () => {
-    // 500 USD at entry ₺38, current ₺32 → loss -3000
-    const result = computeFxGainLoss(500, 38, 32)
-    expect(result).toBe(-3000)
+  it('loss: rate decreases (TRY strengthened) → negative impact', () => {
+    // 500 USD, original 38, current 32 → impact = 500×(-6) = -3000
+    expect(computeFxImpact(500, 38, 32)).toBe(-3000)
   })
 
-  it('zero change: same entry and current rate → zero gain/loss', () => {
-    const result = computeFxGainLoss(1000, 35, 35)
-    expect(result).toBe(0)
+  it('zero impact when rate unchanged', () => {
+    expect(computeFxImpact(1000, 35, 35)).toBe(0)
   })
 
-  it('zero amount: no exposure → zero regardless of rates', () => {
-    const result = computeFxGainLoss(0, 30, 40)
-    expect(result).toBe(0)
+  it('zero amount → zero impact regardless of rates', () => {
+    expect(computeFxImpact(0, 30, 40)).toBe(0)
   })
 
-  it('EUR: gain when rate moves from 35 to 42 on 200 units', () => {
-    // (42 - 35) × 200 = 1400
-    const result = computeFxGainLoss(200, 35, 42)
-    expect(result).toBe(1400)
+  it('EUR: rate 35→42 on 200 units → gain 1400', () => {
+    expect(computeFxImpact(200, 35, 42)).toBe(1400)
   })
 
-  it('GBP: fractional amounts compute correctly', () => {
-    // 100 GBP, entry 45.50, current 47.25 → (47.25-45.50)×100 = 175
-    const result = computeFxGainLoss(100, 45.5, 47.25)
-    expect(result).toBe(175)
+  it('GBP: fractional rates compute correctly', () => {
+    // 100 GBP, 45.5→47.25 → 100×1.75 = 175
+    expect(computeFxImpact(100, 45.5, 47.25)).toBeCloseTo(175, 2)
   })
-
-})
-
-// ── computeFxExposureRatio ────────────────────────────────────────────────────
-
-describe('computeFxExposureRatio', () => {
-
-  it('normal case: 30000 foreign out of 100000 total → 30%', () => {
-    const result = computeFxExposureRatio(30000, 100000)
-    expect(result).toBe(30)
-  })
-
-  it('100% foreign exposure → 100', () => {
-    const result = computeFxExposureRatio(50000, 50000)
-    expect(result).toBe(100)
-  })
-
-  it('zero total revenue → returns 0 (no division by zero)', () => {
-    const result = computeFxExposureRatio(5000, 0)
-    expect(result).toBe(0)
-  })
-
-  it('zero foreign revenue → returns 0', () => {
-    const result = computeFxExposureRatio(0, 80000)
-    expect(result).toBe(0)
-  })
-
-  it('small ratio rounds to 2 decimals', () => {
-    const result = computeFxExposureRatio(1, 3)
-    expect(result).toBe(33.33)
-  })
-
-})
-
-// ── classifyFxExposureRisk ────────────────────────────────────────────────────
-
-describe('classifyFxExposureRisk', () => {
-
-  it('0% → minimal', () => {
-    expect(classifyFxExposureRisk(0)).toBe('minimal')
-  })
-
-  it('9.99% → minimal (just below threshold)', () => {
-    expect(classifyFxExposureRisk(9.99)).toBe('minimal')
-  })
-
-  it('10% → moderate (boundary — exactly at threshold)', () => {
-    expect(classifyFxExposureRisk(10)).toBe('moderate')
-  })
-
-  it('20% → moderate', () => {
-    expect(classifyFxExposureRisk(20)).toBe('moderate')
-  })
-
-  it('29.99% → moderate (just below elevated threshold)', () => {
-    expect(classifyFxExposureRisk(29.99)).toBe('moderate')
-  })
-
-  it('30% → elevated (boundary)', () => {
-    expect(classifyFxExposureRisk(30)).toBe('elevated')
-  })
-
-  it('45% → elevated', () => {
-    expect(classifyFxExposureRisk(45)).toBe('elevated')
-  })
-
-  it('60% → elevated (boundary — exactly at upper threshold)', () => {
-    expect(classifyFxExposureRisk(60)).toBe('elevated')
-  })
-
-  it('60.01% → high (just above elevated threshold)', () => {
-    expect(classifyFxExposureRisk(60.01)).toBe('high')
-  })
-
-  it('80% → high', () => {
-    expect(classifyFxExposureRisk(80)).toBe('high')
-  })
-
-  it('100% → high', () => {
-    expect(classifyFxExposureRisk(100)).toBe('high')
-  })
-
-})
-
-// ── computeNaturalHedgeRatio ──────────────────────────────────────────────────
-
-describe('computeNaturalHedgeRatio', () => {
-
-  it('perfectly hedged: expenses equal revenue → 100%', () => {
-    const result = computeNaturalHedgeRatio(50000, 50000)
-    expect(result).toBe(100)
-  })
-
-  it('50% hedged: expenses half of revenue → 50%', () => {
-    const result = computeNaturalHedgeRatio(25000, 50000)
-    expect(result).toBe(50)
-  })
-
-  it('no expenses → 0%', () => {
-    const result = computeNaturalHedgeRatio(0, 40000)
-    expect(result).toBe(0)
-  })
-
-  it('zero revenue → null (cannot compute ratio)', () => {
-    const result = computeNaturalHedgeRatio(5000, 0)
-    expect(result).toBeNull()
-  })
-
-  it('over-hedged: expenses > revenue → ratio > 100', () => {
-    // 120 000 expenses vs 100 000 revenue → 120%
-    const result = computeNaturalHedgeRatio(120000, 100000)
-    expect(result).toBe(120)
-  })
-
-  it('fractional result rounds to 2 decimals', () => {
-    const result = computeNaturalHedgeRatio(10, 30)
-    expect(result).toBe(33.33)
-  })
-
 })
 
 // ── computeNetFxExposure ──────────────────────────────────────────────────────
 
 describe('computeNetFxExposure', () => {
-
-  it('net long: revenue > expenses → positive exposure', () => {
-    const result = computeNetFxExposure(80000, 20000)
-    expect(result).toBe(60000)
+  it('positive: more receivables than payables', () => {
+    expect(computeNetFxExposure(80000, 20000)).toBe(60000)
   })
 
-  it('net short: expenses > revenue → negative exposure', () => {
-    const result = computeNetFxExposure(20000, 80000)
-    expect(result).toBe(-60000)
+  it('negative: more payables than receivables', () => {
+    expect(computeNetFxExposure(20000, 80000)).toBe(-60000)
   })
 
-  it('balanced: revenue equals expenses → zero exposure', () => {
-    const result = computeNetFxExposure(50000, 50000)
-    expect(result).toBe(0)
+  it('zero when equal receivables and payables', () => {
+    expect(computeNetFxExposure(50000, 50000)).toBe(0)
   })
 
-  it('no expenses → net exposure equals full foreign revenue', () => {
-    const result = computeNetFxExposure(45000, 0)
-    expect(result).toBe(45000)
+  it('all receivables, no payables', () => {
+    expect(computeNetFxExposure(45000, 0)).toBe(45000)
   })
 
-  it('no revenue → net exposure is negative of expenses', () => {
-    const result = computeNetFxExposure(0, 30000)
-    expect(result).toBe(-30000)
+  it('no receivables, only payables → negative', () => {
+    expect(computeNetFxExposure(0, 30000)).toBe(-30000)
   })
 
+  it('zero inputs → zero', () => {
+    expect(computeNetFxExposure(0, 0)).toBe(0)
+  })
+})
+
+// ── computeFxRiskRatio ────────────────────────────────────────────────────────
+
+describe('computeFxRiskRatio', () => {
+  it('normal case: |net| / revenue × 100', () => {
+    // |30000| / 100000 × 100 = 30%
+    expect(computeFxRiskRatio(30000, 100000)).toBeCloseTo(30)
+  })
+
+  it('negative net exposure uses absolute value', () => {
+    // |-30000| / 100000 × 100 = 30%
+    expect(computeFxRiskRatio(-30000, 100000)).toBeCloseTo(30)
+  })
+
+  it('zero revenue → null', () => {
+    expect(computeFxRiskRatio(5000, 0)).toBeNull()
+  })
+
+  it('zero net exposure → 0%', () => {
+    expect(computeFxRiskRatio(0, 100000)).toBe(0)
+  })
+
+  it('net > revenue → ratio > 100%', () => {
+    expect(computeFxRiskRatio(150000, 100000)).toBeCloseTo(150)
+  })
+
+  it('small net exposure computes fractionally', () => {
+    // 1 / 3 × 100 ≈ 33.33
+    expect(computeFxRiskRatio(1, 3)).toBeCloseTo(33.33, 1)
+  })
+})
+
+// ── classifyFxRisk ────────────────────────────────────────────────────────────
+
+describe('classifyFxRisk', () => {
+  it('null → insufficient_data', () => {
+    expect(classifyFxRisk(null)).toBe('insufficient_data')
+  })
+
+  it('0% → minimal', () => {
+    expect(classifyFxRisk(0)).toBe('minimal')
+  })
+
+  it('4.99% → minimal', () => {
+    expect(classifyFxRisk(4.99)).toBe('minimal')
+  })
+
+  it('5% → low (boundary)', () => {
+    expect(classifyFxRisk(5)).toBe('low')
+  })
+
+  it('10% → low', () => {
+    expect(classifyFxRisk(10)).toBe('low')
+  })
+
+  it('14.99% → low', () => {
+    expect(classifyFxRisk(14.99)).toBe('low')
+  })
+
+  it('15% → moderate (boundary)', () => {
+    expect(classifyFxRisk(15)).toBe('moderate')
+  })
+
+  it('20% → moderate', () => {
+    expect(classifyFxRisk(20)).toBe('moderate')
+  })
+
+  it('29.99% → moderate', () => {
+    expect(classifyFxRisk(29.99)).toBe('moderate')
+  })
+
+  it('30% → significant (boundary)', () => {
+    expect(classifyFxRisk(30)).toBe('significant')
+  })
+
+  it('45% → significant', () => {
+    expect(classifyFxRisk(45)).toBe('significant')
+  })
+
+  it('49.99% → significant', () => {
+    expect(classifyFxRisk(49.99)).toBe('significant')
+  })
+
+  it('50% → critical (boundary)', () => {
+    expect(classifyFxRisk(50)).toBe('critical')
+  })
+
+  it('80% → critical', () => {
+    expect(classifyFxRisk(80)).toBe('critical')
+  })
+
+  it('100% → critical', () => {
+    expect(classifyFxRisk(100)).toBe('critical')
+  })
+})
+
+// ── computeCurrencyDiversification ───────────────────────────────────────────
+
+describe('computeCurrencyDiversification', () => {
+  it('all TRY → 100% try_pct, 0% foreign_pct, no dominant_currency', () => {
+    const result = computeCurrencyDiversification([
+      { currency: 'TRY', amount_try: 100000 },
+    ])
+    expect(result.try_pct).toBeCloseTo(100)
+    expect(result.foreign_pct).toBeCloseTo(0)
+    expect(result.dominant_currency).toBeNull()
+  })
+
+  it('all USD → 0% try_pct, 100% foreign_pct, dominant=USD', () => {
+    const result = computeCurrencyDiversification([
+      { currency: 'USD', amount_try: 50000 },
+    ])
+    expect(result.try_pct).toBeCloseTo(0)
+    expect(result.foreign_pct).toBeCloseTo(100)
+    expect(result.dominant_currency).toBe('USD')
+  })
+
+  it('mixed TRY+USD → correct split', () => {
+    const result = computeCurrencyDiversification([
+      { currency: 'TRY', amount_try: 60000 },
+      { currency: 'USD', amount_try: 40000 },
+    ])
+    expect(result.try_pct).toBeCloseTo(60)
+    expect(result.foreign_pct).toBeCloseTo(40)
+    expect(result.dominant_currency).toBe('USD')
+  })
+
+  it('dominant_currency is largest non-TRY by amount', () => {
+    const result = computeCurrencyDiversification([
+      { currency: 'TRY', amount_try: 50000 },
+      { currency: 'USD', amount_try: 30000 },
+      { currency: 'EUR', amount_try: 20000 },
+    ])
+    expect(result.dominant_currency).toBe('USD')
+  })
+
+  it('HHI is 1.0 when single currency', () => {
+    const result = computeCurrencyDiversification([
+      { currency: 'TRY', amount_try: 100000 },
+    ])
+    expect(result.hhi).toBeCloseTo(1)
+  })
+
+  it('HHI < 1.0 for multiple currencies', () => {
+    const result = computeCurrencyDiversification([
+      { currency: 'TRY', amount_try: 50000 },
+      { currency: 'USD', amount_try: 50000 },
+    ])
+    expect(result.hhi).toBeCloseTo(0.5)
+  })
+
+  it('empty array → all zeros, no dominant', () => {
+    const result = computeCurrencyDiversification([])
+    expect(result.hhi).toBe(0)
+    expect(result.dominant_currency).toBeNull()
+    expect(result.try_pct).toBe(0)
+    expect(result.foreign_pct).toBe(0)
+  })
+
+  it('total zero (zero amounts) → all zeros', () => {
+    const result = computeCurrencyDiversification([
+      { currency: 'USD', amount_try: 0 },
+    ])
+    expect(result.hhi).toBe(0)
+    expect(result.try_pct).toBe(0)
+    expect(result.foreign_pct).toBe(0)
+  })
+
+  it('try_pct + foreign_pct = 100 for mixed', () => {
+    const result = computeCurrencyDiversification([
+      { currency: 'TRY', amount_try: 70000 },
+      { currency: 'EUR', amount_try: 30000 },
+    ])
+    expect(result.try_pct + result.foreign_pct).toBeCloseTo(100)
+  })
+})
+
+// ── computeScenarioFxLoss ─────────────────────────────────────────────────────
+
+describe('computeScenarioFxLoss', () => {
+  it('net liability (negative exposure): depreciation causes loss (positive result)', () => {
+    // net = -100000 (net liability), 20% depreciation
+    // = -100000 × 20/100 × -1 = +20000 (loss)
+    expect(computeScenarioFxLoss(-100000, 20)).toBeCloseTo(20000)
+  })
+
+  it('net asset (positive exposure): depreciation causes gain (negative result)', () => {
+    // net = +100000 (net asset), 20% depreciation
+    // = 100000 × 20/100 × -1 = -20000 (gain, i.e. negative loss)
+    expect(computeScenarioFxLoss(100000, 20)).toBeCloseTo(-20000)
+  })
+
+  it('zero net exposure → zero loss', () => {
+    expect(computeScenarioFxLoss(0, 20)).toBeCloseTo(0)
+  })
+
+  it('10% depreciation scenario', () => {
+    // net = -500000, 10% → loss = 50000
+    expect(computeScenarioFxLoss(-500000, 10)).toBeCloseTo(50000)
+  })
+
+  it('30% depreciation scenario', () => {
+    // net = -200000, 30% → loss = 60000
+    expect(computeScenarioFxLoss(-200000, 30)).toBeCloseTo(60000)
+  })
+
+  it('zero depreciation → zero loss', () => {
+    expect(computeScenarioFxLoss(-100000, 0)).toBe(0)
+  })
+})
+
+// ── classifyHedgeRecommendation ───────────────────────────────────────────────
+
+describe('classifyHedgeRecommendation', () => {
+  it('null ratio → no_action', () => {
+    expect(classifyHedgeRecommendation(null, 50000)).toBe('no_action')
+  })
+
+  it('ratio = 0% → no_action', () => {
+    expect(classifyHedgeRecommendation(0, 50000)).toBe('no_action')
+  })
+
+  it('ratio < 5% → no_action', () => {
+    expect(classifyHedgeRecommendation(4.9, 50000)).toBe('no_action')
+  })
+
+  it('ratio = 5% → monitor (boundary)', () => {
+    expect(classifyHedgeRecommendation(5, 50000)).toBe('monitor')
+  })
+
+  it('ratio 10% with real exposure → monitor', () => {
+    expect(classifyHedgeRecommendation(10, 100000)).toBe('monitor')
+  })
+
+  it('ratio 14.9% → monitor', () => {
+    expect(classifyHedgeRecommendation(14.9, 100000)).toBe('monitor')
+  })
+
+  it('net exposure near zero → natural_hedge even with significant ratio', () => {
+    expect(classifyHedgeRecommendation(25, 0.5)).toBe('natural_hedge')
+  })
+
+  it('ratio 15% with real exposure → forward_contract (boundary)', () => {
+    expect(classifyHedgeRecommendation(15, 100000)).toBe('forward_contract')
+  })
+
+  it('ratio 35% → forward_contract', () => {
+    expect(classifyHedgeRecommendation(35, 200000)).toBe('forward_contract')
+  })
+
+  it('ratio 49.9% → forward_contract', () => {
+    expect(classifyHedgeRecommendation(49.9, 300000)).toBe('forward_contract')
+  })
+
+  it('ratio 50% → urgent_hedge (boundary)', () => {
+    expect(classifyHedgeRecommendation(50, 500000)).toBe('urgent_hedge')
+  })
+
+  it('ratio 80% → urgent_hedge', () => {
+    expect(classifyHedgeRecommendation(80, 800000)).toBe('urgent_hedge')
+  })
 })

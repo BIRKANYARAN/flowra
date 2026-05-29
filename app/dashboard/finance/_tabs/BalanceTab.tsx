@@ -18,6 +18,7 @@ import { RetainedEarningsClient }   from './_retained/RetainedEarningsClient'
 import { WorkingCapitalOptimizerClient } from './_wc-optimizer/WorkingCapitalOptimizerClient'
 import { CccScorecardClient }           from './_ccc/CccScorecardClient'
 import { BalanceRatiosClient }          from './_balance-ratios/BalanceRatiosClient'
+import { FxExposureClient }            from './_fx/FxExposureClient'
 
 // ── Formatters ────────────────────────────────────────────────────────────────
 
@@ -378,6 +379,9 @@ export async function BalanceTab({ userId, companyId, glMode = 'shadow' }: Props
 
       {/* Balance Sheet Ratio Analysis — liquidity, solvency, efficiency ratios */}
       <BalanceRatiosClient companyId={companyId} />
+
+      {/* FX Exposure & Currency Risk Analysis — multi-currency receivables/payables */}
+      <FxExposureClient companyId={companyId} />
 
       {/* Working Capital Analysis — CCC, liquidity ratios, 12-month trend */}
       <WorkingCapitalSection />

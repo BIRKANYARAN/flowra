@@ -11,6 +11,7 @@ import { normalizeSaleRow } from '@/lib/normalize'
 import { fmtTRY as fmt, fmtPct }   from '@/lib/format'
 import { SalesTable }       from './SalesTable'
 import { RevenueAttributionService, type RevenueContributor } from '@/lib/services/commercial/revenue-attribution.service'
+import RecurringRevenueClient from './_recurring/RecurringRevenueClient'
 
 interface Props { companyId: string }
 
@@ -111,6 +112,9 @@ export async function SalesContent({ companyId }: Props) {
 
   return (
     <div className="max-w-4xl space-y-4">
+
+      {/* ── Zone 0: Tekrarlayan Gelir Analizi (MRR/ARR/NRR) ─────────────── */}
+      <RecurringRevenueClient companyId={companyId} />
 
       {/* ── Gelir Kaynakları (90d Revenue Attribution) ───────────────────── */}
       {attribution && attribution.total_revenue_try > 0 && (
