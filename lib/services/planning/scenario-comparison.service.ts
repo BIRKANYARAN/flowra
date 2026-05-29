@@ -353,9 +353,395 @@ export function buildComparisonReport(
   }
 }
 
-// ── DB service ────────────────────────────────────────────────────────────────
+// ═════════════════════════════════════════════════════════════════════════════
+// NEW EXPORTS: Multi-Scenario Comparison Engine
+// ScenarioSummary, rank/recommend/delta/risk functions, ScenarioComparisonService class
+// ═════════════════════════════════════════════════════════════════════════════
 
-export const ScenarioComparisonService = {
+// ── ScenarioSummary ──────────────────────────────────────────────────────────
+
+export interface ScenarioSummary {
+  id:                   string
+  name:                 string
+  total_revenue:        number
+  total_net_income:     number
+  net_margin_pct:       number | null
+  runway_months:        number | null
+  break_even_month:     number | null
+  peak_cash:            number
+  min_cash:             number
+  debt_clearance_month: number | null
+  is_baseline:          boolean
+}
+
+// ── computeScenarioRank ───────────────────────────────────────────────────────
+
+/**
+ * Rank a scenario among all scenarios. Rank 1 = best.
+ *
+ * Composite score weights:
+ *   revenue:  descending sort × 0.25
+ *   margin:   descending sort × 0.30
+ *   runway:   descending sort × 0.25
+ *   risk:     ascending min_cash (higher = less risk) × 0.20
+ *
+ * Returns 1-indexed rank from 1 to N.
+ */
+export function computeScenarioRank(
+  scenario:     ScenarioSummary,
+  allScenarios: ScenarioSummary[],
+): number {
+  const n = allScenarios.length
+  if (n === 0) return 1
+
+  // Build sorted indices for each dimension (descending = higher is better, position 0 = best)
+  const byRevenue = [...allScenarios].sort((a, b) => b.total_revenue - a.total_revenue)
+  const byMargin  = [...allScenarios].sort((a, b) => {
+    const ma = a.net_margin_pct ?? -Infinity
+    const mb = b.net_margin_pct ?? -Infinity
+    return mb - ma
+  })
+  const byRunway  = [...allScenarios].sort((a, b) => {
+    const ra = a.runway_months ?? -Infinity
+    const rb = b.runway_months ?? -Infinity
+    return rb - ra
+  })
+  const byRisk    = [...allScenarios].sort((a, b) => b.min_cash - a.min_cash)
+
+  // 1-indexed positions
+  const revPos     = byRevenue.findIndex(s => s.id === scenario.id) + 1
+  const marginPos  = byMargin.findIndex(s  => s.id === scenario.id) + 1
+  const runwayPos  = byRunway.findIndex(s  => s.id === scenario.id) + 1
+  const riskPos    = byRisk.findIndex(s    => s.id === scenario.id) + 1
+
+  const compositeScore =
+    revPos    * 0.25 +
+    marginPos * 0.30 +
+    runwayPos * 0.25 +
+    riskPos   * 0.20
+
+  // Rank all scenarios by composite score, then find this scenario's rank
+  const scored = allScenarios.map(s => {
+    const rp = byRevenue.findIndex(x => x.id === s.id) + 1
+    const mp = byMargin.findIndex(x  => x.id === s.id) + 1
+    const wp = byRunway.findIndex(x  => x.id === s.id) + 1
+    const kp = byRisk.findIndex(x    => x.id === s.id) + 1
+    return { id: s.id, score: rp * 0.25 + mp * 0.30 + wp * 0.25 + kp * 0.20 }
+  }).sort((a, b) => a.score - b.score)
+
+  void compositeScore // suppress unused warning — used indirectly via scored
+  return scored.findIndex(s => s.id === scenario.id) + 1
+}
+
+// ── recommendScenario ─────────────────────────────────────────────────────────
+
+/**
+ * Returns the ID of the recommended scenario, or null if empty.
+ *
+ * Logic:
+ *   1. Filter: runway_months >= 6 AND min_cash >= 0  (solvent scenarios only)
+ *   2. Among solvent: pick highest net_margin_pct
+ *   3. If no solvent: pick highest min_cash  (least bad)
+ *   4. Tie-break: pick highest total_revenue
+ */
+export function recommendScenario(scenarios: ScenarioSummary[]): string | null {
+  if (scenarios.length === 0) return null
+
+  const solvent = scenarios.filter(
+    s =>
+      (s.runway_months === null || s.runway_months >= 6) &&
+      s.min_cash >= 0,
+  )
+
+  const pool = solvent.length > 0 ? solvent : scenarios
+
+  // Compare function: among pool, prefer higher margin; tie-break by revenue
+  const best = pool.reduce<ScenarioSummary | null>((acc, s) => {
+    if (acc === null) return s
+
+    if (solvent.length > 0) {
+      // Solvent path: maximize net_margin_pct
+      const aMargin = acc.net_margin_pct ?? -Infinity
+      const sMargin = s.net_margin_pct   ?? -Infinity
+      if (sMargin > aMargin) return s
+      if (sMargin === aMargin && s.total_revenue > acc.total_revenue) return s
+      return acc
+    } else {
+      // Insolvent path: maximize min_cash
+      if (s.min_cash > acc.min_cash) return s
+      if (s.min_cash === acc.min_cash && s.total_revenue > acc.total_revenue) return s
+      return acc
+    }
+  }, null)
+
+  return best?.id ?? null
+}
+
+// ── computeScenarioDelta ──────────────────────────────────────────────────────
+
+/**
+ * Compute delta between a comparison scenario and a baseline.
+ */
+export function computeScenarioDelta(
+  baseline:   ScenarioSummary,
+  comparison: ScenarioSummary,
+): {
+  revenue_delta:         number
+  revenue_delta_pct:     number | null
+  net_income_delta:      number
+  net_income_delta_pct:  number | null
+  runway_delta_months:   number | null
+  is_revenue_better:     boolean
+  is_margin_better:      boolean
+  is_runway_better:      boolean
+} {
+  const revenue_delta     = comparison.total_revenue    - baseline.total_revenue
+  const net_income_delta  = comparison.total_net_income - baseline.total_net_income
+
+  const revenue_delta_pct = baseline.total_revenue !== 0
+    ? ((revenue_delta / Math.abs(baseline.total_revenue)) * 100)
+    : null
+
+  const net_income_delta_pct = baseline.total_net_income !== 0
+    ? ((net_income_delta / Math.abs(baseline.total_net_income)) * 100)
+    : null
+
+  const runway_delta_months =
+    comparison.runway_months !== null && baseline.runway_months !== null
+      ? comparison.runway_months - baseline.runway_months
+      : null
+
+  const compMargin  = comparison.net_margin_pct ?? null
+  const baseMargin  = baseline.net_margin_pct   ?? null
+  const is_margin_better =
+    compMargin !== null && baseMargin !== null
+      ? compMargin > baseMargin
+      : false
+
+  return {
+    revenue_delta,
+    revenue_delta_pct,
+    net_income_delta,
+    net_income_delta_pct,
+    runway_delta_months,
+    is_revenue_better: revenue_delta > 0,
+    is_margin_better,
+    is_runway_better:  runway_delta_months !== null ? runway_delta_months > 0 : false,
+  }
+}
+
+// ── computeRiskAdjustedReturn ─────────────────────────────────────────────────
+
+/**
+ * Risk-adjusted return.
+ *   = (netIncome / max(1, totalCapital)) × max(0.1, 1 + minCash / max(1, totalCapital))
+ *
+ * Returns null when totalCapital === 0.
+ */
+export function computeRiskAdjustedReturn(
+  netIncome:    number,
+  minCash:      number,
+  totalCapital: number,
+): number | null {
+  if (totalCapital === 0) return null
+  const capital     = Math.max(1, totalCapital)
+  const baseReturn  = netIncome / capital
+  const penalty     = Math.max(0.1, 1 + minCash / capital)
+  return baseReturn * penalty
+}
+
+// ── classifyScenarioRisk ──────────────────────────────────────────────────────
+
+/**
+ * Classify scenario risk level based on min cash and runway.
+ *
+ *   critical:  minCash < 0 OR runwayMonths < 3
+ *   high:      minCash < 50_000 OR runwayMonths < 6
+ *   moderate:  minCash < 200_000 OR runwayMonths < 12
+ *   low:       else
+ */
+export function classifyScenarioRisk(
+  minCash:      number,
+  runwayMonths: number | null,
+): 'low' | 'moderate' | 'high' | 'critical' {
+  if (minCash < 0 || (runwayMonths !== null && runwayMonths < 3)) return 'critical'
+  if (minCash < 50_000 || (runwayMonths !== null && runwayMonths < 6)) return 'high'
+  if (minCash < 200_000 || (runwayMonths !== null && runwayMonths < 12)) return 'moderate'
+  return 'low'
+}
+
+// ── ScenarioComparisonService class ──────────────────────────────────────────
+
+type RiskLevel = ReturnType<typeof classifyScenarioRisk>
+type DeltaResult = ReturnType<typeof computeScenarioDelta>
+
+export class ScenarioComparisonService {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  constructor(private supabase: SupabaseClient<any>) {}
+
+  /**
+   * Build a full multi-scenario comparison report.
+   */
+  async getReport(
+    companyId:   string,
+    scenarioIds?: string[],
+  ): Promise<{
+    scenarios: Array<{
+      scenario:           ScenarioSummary
+      rank:               number
+      risk:               RiskLevel
+      is_recommended:     boolean
+      delta_from_baseline: DeltaResult | null
+    }>
+    recommended_id: string | null
+    baseline_id:    string | null
+    comparison_axes: {
+      best_revenue_scenario: string | null
+      best_margin_scenario:  string | null
+      best_runway_scenario:  string | null
+      safest_scenario:       string | null
+    }
+  }> {
+    // ── Fetch scenarios from DB ────────────────────────────────────────────────
+    let query = this.supabase
+      .from('simulation_scenarios')
+      .select('id, name, summary, monthly_breakdown, is_baseline, created_at, updated_at')
+      .eq('company_id', companyId)
+      .is('deleted_at', null)
+      .order('is_baseline', { ascending: false })
+      .order('updated_at', { ascending: false })
+      .limit(5)
+
+    if (scenarioIds && scenarioIds.length > 0) {
+      query = this.supabase
+        .from('simulation_scenarios')
+        .select('id, name, summary, monthly_breakdown, is_baseline, created_at, updated_at')
+        .eq('company_id', companyId)
+        .is('deleted_at', null)
+        .in('id', scenarioIds.slice(0, 5))
+        .order('is_baseline', { ascending: false })
+        .order('updated_at', { ascending: false })
+    }
+
+    const { data, error } = await query
+    if (error) throw new Error(`[ScenarioComparisonService] DB error: ${error.message}`)
+
+    const rows = (data ?? []) as Array<{
+      id:                string
+      name:              string
+      summary:           Record<string, unknown> | null
+      monthly_breakdown: unknown[] | null
+      is_baseline:       boolean | null
+      created_at:        string
+      updated_at:        string
+    }>
+
+    // ── Build ScenarioSummary from each row ───────────────────────────────────
+    const summaries: ScenarioSummary[] = rows.map(row => {
+      const s = row.summary ?? {}
+
+      function num(v: unknown): number {
+        const n = Number(v)
+        return isFinite(n) ? n : 0
+      }
+      function numOrNull(v: unknown): number | null {
+        if (v === null || v === undefined) return null
+        const n = Number(v)
+        return isFinite(n) ? n : null
+      }
+
+      const totalRevenue   = num(s['total_revenue_try'] ?? s['total_revenue'] ?? s['projected_revenue_12m'])
+      const totalNetIncome = num(s['net_income_try']    ?? s['total_net_income'] ?? s['net_income'])
+
+      const netMarginPct: number | null =
+        totalRevenue > 0
+          ? numOrNull(s['net_margin_pct']) ?? ((totalNetIncome / totalRevenue) * 100)
+          : numOrNull(s['net_margin_pct'])
+
+      // Compute min/peak cash from monthly_breakdown or summary
+      let peakCash = num(s['peak_cash_try'] ?? s['peak_cash'])
+      let minCash  = num(s['min_cash_try']  ?? s['min_cash'])
+
+      if (Array.isArray(row.monthly_breakdown) && row.monthly_breakdown.length > 0) {
+        const cashValues: number[] = []
+        for (const entry of row.monthly_breakdown as Record<string, unknown>[]) {
+          const cv = entry['cash'] ?? entry['cash_balance'] ?? entry['cash_try'] ?? entry['closing_cash']
+          if (cv !== undefined && cv !== null) {
+            const n = Number(cv)
+            if (isFinite(n)) cashValues.push(n)
+          }
+        }
+        if (cashValues.length > 0) {
+          peakCash = Math.max(...cashValues)
+          minCash  = Math.min(...cashValues)
+        }
+      }
+
+      return {
+        id:                   row.id,
+        name:                 row.name,
+        total_revenue:        totalRevenue,
+        total_net_income:     totalNetIncome,
+        net_margin_pct:       netMarginPct,
+        runway_months:        numOrNull(s['runway_months'] ?? s['cash_runway_months']),
+        break_even_month:     numOrNull(s['break_even_month'] ?? s['breakeven_month']),
+        peak_cash:            peakCash,
+        min_cash:             minCash,
+        debt_clearance_month: numOrNull(s['debt_clearance_month']),
+        is_baseline:          row.is_baseline ?? false,
+      }
+    })
+
+    // ── Compute derived fields ────────────────────────────────────────────────
+    const recommendedId = recommendScenario(summaries)
+    const baseline      = summaries.find(s => s.is_baseline) ?? null
+    const baselineId    = baseline?.id ?? null
+
+    const result = summaries.map(s => ({
+      scenario:            s,
+      rank:                computeScenarioRank(s, summaries),
+      risk:                classifyScenarioRisk(s.min_cash, s.runway_months),
+      is_recommended:      s.id === recommendedId,
+      delta_from_baseline: baseline && s.id !== baselineId
+        ? computeScenarioDelta(baseline, s)
+        : null,
+    }))
+
+    // ── Comparison axes ───────────────────────────────────────────────────────
+    const bestRevenue = summaries.reduce<ScenarioSummary | null>(
+      (acc, s) => (acc === null || s.total_revenue > acc.total_revenue) ? s : acc, null,
+    )
+    const bestMargin = summaries.reduce<ScenarioSummary | null>((acc, s) => {
+      const am = acc?.net_margin_pct ?? -Infinity
+      const sm = s.net_margin_pct    ?? -Infinity
+      return sm > am ? s : acc
+    }, null)
+    const bestRunway = summaries.reduce<ScenarioSummary | null>((acc, s) => {
+      const ar = acc?.runway_months ?? -Infinity
+      const sr = s.runway_months    ?? -Infinity
+      return sr > ar ? s : acc
+    }, null)
+    const safest = summaries.reduce<ScenarioSummary | null>(
+      (acc, s) => (acc === null || s.min_cash > acc.min_cash) ? s : acc, null,
+    )
+
+    return {
+      scenarios:       result,
+      recommended_id:  recommendedId,
+      baseline_id:     baselineId,
+      comparison_axes: {
+        best_revenue_scenario: bestRevenue?.id ?? null,
+        best_margin_scenario:  bestMargin?.id  ?? null,
+        best_runway_scenario:  bestRunway?.id  ?? null,
+        safest_scenario:       safest?.id      ?? null,
+      },
+    }
+  }
+}
+
+// ── Original object-style DB service (used by existing route) ────────────────
+
+export const ScenarioComparisonServiceLegacy = {
   /**
    * Load scenarios from DB and build comparison report.
    * @param companyId  Company UUID

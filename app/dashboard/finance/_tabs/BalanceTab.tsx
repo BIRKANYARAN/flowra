@@ -17,6 +17,7 @@ import { WorkingCapitalSection }    from '@/components/dashboard/WorkingCapitalS
 import { RetainedEarningsClient }   from './_retained/RetainedEarningsClient'
 import { WorkingCapitalOptimizerClient } from './_wc-optimizer/WorkingCapitalOptimizerClient'
 import { CccScorecardClient }           from './_ccc/CccScorecardClient'
+import { BalanceRatiosClient }          from './_balance-ratios/BalanceRatiosClient'
 
 // ── Formatters ────────────────────────────────────────────────────────────────
 
@@ -374,6 +375,9 @@ export async function BalanceTab({ userId, companyId, glMode = 'shadow' }: Props
           { label: 'Yönetim Paketi',     href: `/documents/income-statement/${bs.as_of_date.slice(0,7)}` },
         ]}
       />
+
+      {/* Balance Sheet Ratio Analysis — liquidity, solvency, efficiency ratios */}
+      <BalanceRatiosClient companyId={companyId} />
 
       {/* Working Capital Analysis — CCC, liquidity ratios, 12-month trend */}
       <WorkingCapitalSection />

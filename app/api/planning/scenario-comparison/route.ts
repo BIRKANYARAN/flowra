@@ -10,15 +10,16 @@
 // Returns:
 //   { report: ScenarioComparisonReport }
 //
-// Auth: any authenticated company member.
-// Cache: revalidate every 300 seconds.
+// Auth: manager+ (resolveApiAuth)
+// Cache: force-dynamic, revalidate every 1800 seconds (30 min)
 // ─────────────────────────────────────────────────────────────────────────────
 
-export const revalidate = 300
+export const dynamic    = 'force-dynamic'
+export const revalidate = 1800
 
 import { NextRequest, NextResponse } from 'next/server'
 import { resolveApiAuth }            from '@/lib/api-auth'
-import { ScenarioComparisonService } from '@/lib/services/planning/scenario-comparison.service'
+import { ScenarioComparisonServiceLegacy } from '@/lib/services/planning/scenario-comparison.service'
 import { REQUEST_ID_HEADER }         from '@/middleware'
 
 export async function GET(req: NextRequest) {
@@ -40,7 +41,7 @@ export async function GET(req: NextRequest) {
   )
 
   try {
-    const report = await ScenarioComparisonService.getReport(
+    const report = await ScenarioComparisonServiceLegacy.getReport(
       companyId,
       supabase,
       ids,
