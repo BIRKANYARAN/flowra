@@ -53,6 +53,63 @@ describe('groupByFirstMonth', () => {
     expect(result['name:Ahmet']).toBe('2026-03')
     expect(result['name:Ahmet2']).toBe('2026-01')
   })
+
+  it('uses string comparison for months (YYYY-MM), correctly finds minimum', () => {
+    const sales = [
+      { customer_key: 'id:1', sale_month: '2025-12', total_try: 100 },
+      { customer_key: 'id:1', sale_month: '2026-01', total_try: 200 },
+    ]
+    expect(groupByFirstMonth(sales)['id:1']).toBe('2025-12')
+  })
+
+  it('handles a single customer with many repeated months — takes earliest', () => {
+    const sales = [
+      { customer_key: 'id:5', sale_month: '2026-06', total_try: 100 },
+      { customer_key: 'id:5', sale_month: '2026-06', total_try: 100 },
+      { customer_key: 'id:5', sale_month: '2026-04', total_try: 100 },
+      { customer_key: 'id:5', sale_month: '2026-04', total_try: 100 },
+    ]
+    expect(groupByFirstMonth(sales)['id:5']).toBe('2026-04')
+  })
+
+  it('handles many customers — each gets their own correct first month', () => {
+    const sales = Array.from({ length: 5 }, (_, i) => ({
+      customer_key: `id:${i}`,
+      sale_month: `2026-0${i + 1}`,
+      total_try: 100,
+    }))
+    const result = groupByFirstMonth(sales)
+    for (let i = 0; i < 5; i++) {
+      expect(result[`id:${i}`]).toBe(`2026-0${i + 1}`)
+    }
+  })
+
+  it('correctly handles id: prefixed keys vs name: prefixed keys', () => {
+    const sales = [
+      { customer_key: 'id:abc', sale_month: '2026-05', total_try: 300 },
+      { customer_key: 'name:abc', sale_month: '2026-03', total_try: 200 },
+    ]
+    const result = groupByFirstMonth(sales)
+    expect(result['id:abc']).toBe('2026-05')
+    expect(result['name:abc']).toBe('2026-03')
+  })
+
+  it('does not include duplicates — each customer key appears once in result', () => {
+    const sales = [
+      { customer_key: 'id:1', sale_month: '2026-01', total_try: 100 },
+      { customer_key: 'id:1', sale_month: '2026-02', total_try: 100 },
+      { customer_key: 'id:1', sale_month: '2026-03', total_try: 100 },
+    ]
+    const result = groupByFirstMonth(sales)
+    expect(Object.keys(result)).toHaveLength(1)
+  })
+
+  it('total_try is not used in grouping — only sale_month matters', () => {
+    const salesHighTotal = [{ customer_key: 'id:1', sale_month: '2026-05', total_try: 99999 }]
+    const salesLowTotal  = [{ customer_key: 'id:1', sale_month: '2026-01', total_try: 1 }]
+    const result = groupByFirstMonth([...salesHighTotal, ...salesLowTotal])
+    expect(result['id:1']).toBe('2026-01')
+  })
 })
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -79,6 +136,34 @@ describe('computeRetention', () => {
 
   it('returns 0 when no active customers', () => {
     expect(computeRetention(0, 10)).toBe(0)
+  })
+
+  it('returns 100 for cohort of 1 with 1 active', () => {
+    expect(computeRetention(1, 1)).toBe(100)
+  })
+
+  it('returns 33.33 for 1 out of 3 active', () => {
+    expect(computeRetention(1, 3)).toBeCloseTo(33.33, 1)
+  })
+
+  it('returns 25 for 1 out of 4 active', () => {
+    expect(computeRetention(1, 4)).toBeCloseTo(25)
+  })
+
+  it('returns value between 0 and 100 for valid inputs', () => {
+    const result = computeRetention(7, 20)
+    expect(result).toBeGreaterThanOrEqual(0)
+    expect(result).toBeLessThanOrEqual(100)
+  })
+
+  it('returns 0 for cohort size 0 regardless of active count', () => {
+    expect(computeRetention(100, 0)).toBe(0)
+  })
+
+  it('can return > 100 if activeCustomers > cohortSize (no clamping)', () => {
+    // Function definition allows this edge case
+    const result = computeRetention(15, 10)
+    expect(result).toBeCloseTo(150)
   })
 })
 
@@ -149,5 +234,64 @@ describe('buildCohortRow', () => {
     expect(Object.keys(row.monthly_revenue)).toHaveLength(0)
     expect(Object.keys(row.monthly_customers)).toHaveLength(0)
     expect(Object.keys(row.retention_pct)).toHaveLength(0)
+  })
+
+  it('cohort_size deduplicates customer keys (Set)', () => {
+    const duplicateKeys = ['id:1', 'id:1', 'id:2']
+    const row = buildCohortRow('2026-01', duplicateKeys, allSales)
+    expect(row.cohort_size).toBe(2)
+  })
+
+  it('excludes customers not in customerKeys list', () => {
+    const row = buildCohortRow('2026-01', ['id:1'], allSales)
+    // id:2 and id:3 should be excluded
+    expect(row.monthly_revenue['2026-01']).toBe(1000)
+    expect(row.cohort_size).toBe(1)
+  })
+
+  it('handles single customer cohort correctly', () => {
+    const singleSales = [
+      { customer_key: 'id:solo', sale_month: '2026-01', total_try: 2000 },
+      { customer_key: 'id:solo', sale_month: '2026-02', total_try: 1500 },
+    ]
+    const row = buildCohortRow('2026-01', ['id:solo'], singleSales)
+    expect(row.cohort_size).toBe(1)
+    expect(row.monthly_revenue['2026-01']).toBe(2000)
+    expect(row.retention_pct['2026-01']).toBe(100)
+    expect(row.retention_pct['2026-02']).toBe(100)
+  })
+
+  it('months with no cohort activity have no entries in monthly_revenue', () => {
+    const row = buildCohortRow('2026-01', ['id:1'], [
+      { customer_key: 'id:1', sale_month: '2026-01', total_try: 500 },
+      // No sale in Feb
+      { customer_key: 'id:1', sale_month: '2026-03', total_try: 300 },
+    ])
+    expect(row.monthly_revenue['2026-02']).toBeUndefined()
+    expect(row.monthly_revenue['2026-03']).toBe(300)
+  })
+
+  it('multiple sales in same month by same customer counted once for active customers', () => {
+    const sales = [
+      { customer_key: 'id:1', sale_month: '2026-01', total_try: 100 },
+      { customer_key: 'id:1', sale_month: '2026-01', total_try: 200 },
+    ]
+    const row = buildCohortRow('2026-01', ['id:1'], sales)
+    expect(row.monthly_customers['2026-01']).toBe(1)
+    expect(row.monthly_revenue['2026-01']).toBe(300)
+  })
+
+  it('cohort_label is a non-empty string (Turkish month name)', () => {
+    const row = buildCohortRow('2026-03', ['id:1'], [])
+    expect(row.cohort_label).toBeTruthy()
+    expect(row.cohort_label).toContain('2026')
+  })
+
+  it('months_tracked only includes months with data', () => {
+    const row = buildCohortRow('2026-04', ['id:7'], [
+      { customer_key: 'id:7', sale_month: '2026-04', total_try: 999 },
+    ])
+    expect(Object.keys(row.monthly_revenue)).toContain('2026-04')
+    expect(Object.keys(row.monthly_revenue)).not.toContain('2026-05')
   })
 })

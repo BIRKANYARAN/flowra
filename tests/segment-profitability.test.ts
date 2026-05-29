@@ -36,6 +36,34 @@ describe('computeSegmentMargin', () => {
   it('returns 0 for negative revenue (guard)', () => {
     expect(computeSegmentMargin(-100, 50)).toBe(0)
   })
+
+  it('returns 50% margin for equal revenue and cogs split', () => {
+    expect(computeSegmentMargin(1000, 500)).toBeCloseTo(50)
+  })
+
+  it('returns 0 when both revenue and cogs are 0', () => {
+    expect(computeSegmentMargin(0, 0)).toBe(0)
+  })
+
+  it('handles fractional values correctly', () => {
+    expect(computeSegmentMargin(333.33, 166.67)).toBeCloseTo(50, 0)
+  })
+
+  it('returns 100% for pure digital product (no cogs)', () => {
+    expect(computeSegmentMargin(5000, 0)).toBeCloseTo(100)
+  })
+
+  it('large revenue with tiny cogs → near 100%', () => {
+    expect(computeSegmentMargin(100000, 1)).toBeCloseTo(99.999, 2)
+  })
+
+  it('revenue exactly 1, cogs exactly 1 → 0% margin', () => {
+    expect(computeSegmentMargin(1, 1)).toBeCloseTo(0)
+  })
+
+  it('returns 25% for 750/1000 COGS ratio', () => {
+    expect(computeSegmentMargin(1000, 750)).toBeCloseTo(25)
+  })
 })
 
 // ── classifySegmentPerformance ────────────────────────────────────────────────
@@ -84,6 +112,26 @@ describe('classifySegmentPerformance', () => {
   it('classifies negative margin as loss_leader', () => {
     expect(classifySegmentPerformance(-15)).toBe('loss_leader')
   })
+
+  it('classifies 100% margin as star', () => {
+    expect(classifySegmentPerformance(100)).toBe('star')
+  })
+
+  it('classifies 80% margin as star', () => {
+    expect(classifySegmentPerformance(80)).toBe('star')
+  })
+
+  it('classifies exactly 25% as profitable (not marginal)', () => {
+    expect(classifySegmentPerformance(25)).toBe('profitable')
+  })
+
+  it('classifies exactly 10% as marginal (not loss_leader)', () => {
+    expect(classifySegmentPerformance(10)).toBe('marginal')
+  })
+
+  it('classifies -100% margin as loss_leader', () => {
+    expect(classifySegmentPerformance(-100)).toBe('loss_leader')
+  })
 })
 
 // ── computeSegmentShare ───────────────────────────────────────────────────────
@@ -104,6 +152,31 @@ describe('computeSegmentShare', () => {
 
   it('returns 0 when segment revenue is 0', () => {
     expect(computeSegmentShare(0, 1000)).toBeCloseTo(0)
+  })
+
+  it('returns 50 for equal segments', () => {
+    expect(computeSegmentShare(500, 1000)).toBeCloseTo(50)
+  })
+
+  it('returns 10 for 10% segment', () => {
+    expect(computeSegmentShare(100, 1000)).toBeCloseTo(10)
+  })
+
+  it('returns 0 for negative total revenue (guard)', () => {
+    expect(computeSegmentShare(100, -500)).toBe(0)
+  })
+
+  it('returns 0 when both segment and total are 0', () => {
+    expect(computeSegmentShare(0, 0)).toBe(0)
+  })
+
+  it('returns correct fractional share', () => {
+    // 1/3 of total
+    expect(computeSegmentShare(333.33, 999.99)).toBeCloseTo(33.33, 1)
+  })
+
+  it('handles large numbers correctly', () => {
+    expect(computeSegmentShare(1_000_000, 5_000_000)).toBeCloseTo(20)
   })
 })
 
@@ -131,6 +204,28 @@ describe('computeSegmentGrowth', () => {
   it('returns large positive growth for new segment', () => {
     // 500 / 10 × 100 = 5000% (prior tiny base)
     expect(computeSegmentGrowth(510, 10)).toBeCloseTo(5000)
+  })
+
+  it('returns -100% when current revenue drops to 0', () => {
+    expect(computeSegmentGrowth(0, 100)).toBeCloseTo(-100)
+  })
+
+  it('returns 100% for doubling revenue', () => {
+    expect(computeSegmentGrowth(200, 100)).toBeCloseTo(100)
+  })
+
+  it('works with fractional revenue values', () => {
+    expect(computeSegmentGrowth(150.5, 100)).toBeCloseTo(50.5)
+  })
+
+  it('prior revenue negative (edge case) — uses abs for denominator', () => {
+    // priorRevenue = -100, currentRevenue = 50
+    // (50 - (-100)) / |(-100)| × 100 = 150%
+    expect(computeSegmentGrowth(50, -100)).toBeCloseTo(150)
+  })
+
+  it('very small growth percentage near 0', () => {
+    expect(computeSegmentGrowth(1001, 1000)).toBeCloseTo(0.1)
   })
 })
 
@@ -195,5 +290,38 @@ describe('computePareto80Segments', () => {
   it('returns 0 when total revenue is 0', () => {
     const segs = [{ revenue_try: 0 }, { revenue_try: 0 }]
     expect(computePareto80Segments(segs)).toBe(0)
+  })
+
+  it('assumes input is pre-sorted descending (first segment largest)', () => {
+    // If sorted correctly, first segment = 900/1000 = 90% → 1
+    const segs = [
+      { revenue_try: 900 },
+      { revenue_try: 100 },
+    ]
+    expect(computePareto80Segments(segs)).toBe(1)
+  })
+
+  it('handles ten equal segments — need 8 to reach 80%', () => {
+    const segs = Array.from({ length: 10 }, () => ({ revenue_try: 100 }))
+    expect(computePareto80Segments(segs)).toBe(8)
+  })
+
+  it('handles very many segments with small share each', () => {
+    // 100 segments at 1% each → need 80 to reach 80%
+    const segs = Array.from({ length: 100 }, () => ({ revenue_try: 10 }))
+    expect(computePareto80Segments(segs)).toBe(80)
+  })
+
+  it('handles single segment with 0 revenue → returns 0 (no total)', () => {
+    expect(computePareto80Segments([{ revenue_try: 0 }])).toBe(0)
+  })
+
+  it('handles segments with mixed large/small values', () => {
+    const segs = [
+      { revenue_try: 500 }, // 50%
+      { revenue_try: 300 }, // 30%  → cumulative 80% → done at 2
+      { revenue_try: 200 }, // 20%
+    ]
+    expect(computePareto80Segments(segs)).toBe(2)
   })
 })
