@@ -25,6 +25,7 @@ import CustomerLtvClient from './_ltv/CustomerLtvClient'
 import CustomerConcentrationClient from './_concentration/CustomerConcentrationClient'
 import SegmentProfitabilityClient from './_segments/SegmentProfitabilityClient'
 import CohortRetentionClient from './_cohort/CohortRetentionClient'
+import CustomerCreditClient from './_credit/CustomerCreditClient'
 
 interface Props { companyId: string }
 
@@ -124,6 +125,9 @@ export async function CustomersContent({ companyId }: Props) {
 
       {/* ── Kohort Tutma & Churn Analizi ─────────────────────────────────── */}
       <CohortRetentionClient companyId={companyId} />
+
+      {/* ── Müşteri Kredi Skoru ───────────────────────────────────────────── */}
+      <CustomerCreditClient companyId={companyId} />
 
       {/* ── Müşteri Yoğunlaşma Analizi (HHI) ────────────────────────────── */}
       <CustomerConcentrationClient />

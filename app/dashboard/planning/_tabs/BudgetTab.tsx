@@ -19,6 +19,7 @@ import { fmtTRY, fmtPct } from '@/lib/format'
 import type { BudgetVarianceReport, MonthlyVariance } from '@/lib/services/finance/budget-variance.service'
 import type { ExpenseForecastReport } from '@/lib/services/finance/expense-forecast.service'
 import type { VarianceReport, VarianceRow, VarianceCell, VarianceDirection } from '@/lib/services/planning/variance-analysis.service'
+import { BudgetTrackerClient } from './_budget/BudgetTrackerClient'
 
 // ── Small helpers ─────────────────────────────────────────────────────────────
 
@@ -536,7 +537,11 @@ function VarianceAnalysisPanel(): JSX.Element {
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export function BudgetTab() {
+interface BudgetTabProps {
+  companyId?: string
+}
+
+export function BudgetTab({ companyId }: BudgetTabProps = {}) {
   const permissions = usePermissions()
   const isAdmin = permissions.canManageSettings
 
@@ -655,6 +660,9 @@ export function BudgetTab() {
 
   return (
     <div className="space-y-5">
+
+      {/* Budget Tracker — primary content */}
+      {companyId && <BudgetTrackerClient companyId={companyId} />}
 
       {/* Header */}
       <div className="flex items-center justify-between">

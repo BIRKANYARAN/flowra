@@ -146,7 +146,7 @@ export default async function PlanningPage({ searchParams }: PageProps) {
         )}
         {activeTab === 'tasks' && <TasksContent companyId={companyId} />}
         {/* budget: monthly budget targets vs actuals */}
-        {activeTab === 'budget' && <BudgetTab />}
+        {activeTab === 'budget' && <BudgetTab companyId={companyId} />}
         {/* calendar: annual financial calendar */}
         {activeTab === 'calendar' && <CalendarContent companyId={companyId} />}
       </Suspense>
