@@ -1,14 +1,21 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // GET /api/finance/period-comparison
 //
-// Returns full period comparison report: MoM, YoY, YTD comparisons,
-// 12-month series, trend streak, and CMGR.
+// Returns PeriodComparisonReport — rolling MoM financial comparison including
+// revenue/expense/profit changes, rolling 3-month averages, CMGR, and Turkish
+// narrative.
 //
-// Auth: manager+ access
-// Cache: revalidate every 3600 seconds
+// Query params:
+//   months (optional): number of months in rolling window, 1-24, default 6
+//
+// Returns:
+//   { report: PeriodComparisonReport }
+//
+// Auth: manager+ (resolveApiAuth).
+// Cache: revalidate every 300 seconds.
 // ─────────────────────────────────────────────────────────────────────────────
 
-export const revalidate = 3600
+export const revalidate = 300
 
 import { NextRequest, NextResponse } from 'next/server'
 import { resolveApiAuth }            from '@/lib/api-auth'
@@ -20,9 +27,19 @@ export async function GET(req: NextRequest) {
   if (!auth.ok) return auth.response
   const { companyId, supabase, ctx } = auth
 
+  // Parse optional months param (1-24)
+  const monthsParam = req.nextUrl.searchParams.get('months')
+  let months = 6
+  if (monthsParam !== null) {
+    const parsed = parseInt(monthsParam, 10)
+    if (!isNaN(parsed) && parsed >= 1 && parsed <= 24) {
+      months = parsed
+    }
+  }
+
   try {
     const service = new PeriodComparisonService(supabase)
-    const report  = await service.getReport(companyId)
+    const report  = await service.getReport(companyId, months)
 
     return NextResponse.json(
       { report },

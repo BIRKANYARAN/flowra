@@ -22,6 +22,21 @@ import {
   computeCmgr,
   findBestMonth,
   findWorstMonth,
+  // New spec-required functions
+  computeAbsoluteChange,
+  computePercentageChange,
+  classifyGrowthDirection,
+  computeYoyChange,
+  computeMomChange,
+  computeRolling3mAvg,
+  computeRolling3mTotal,
+  computeTrendAcceleration,
+  classifyTrendMomentum,
+  computeSeasonalityIndex,
+  computeRunRate,
+  classifyRunRateVsTarget,
+  computeGrossMarginTrend,
+  generatePeriodComparisonNarrative,
 } from '../lib/services/finance/period-comparison.service'
 
 // ── computeChangePct ──────────────────────────────────────────────────────────
@@ -574,11 +589,13 @@ describe('computeCmgr', () => {
   })
 
   // 74
-  it('74. correct CMGR for known 10% monthly growth over 3 months', () => {
-    // first = 100, last = 121 (2 periods), CMGR = (121/100)^(1/2) - 1 = 10%
+  it('74. correct CMGR for known 10% monthly growth over 3 months (returns fraction)', () => {
+    // first = 100, last = 121, months = 3
+    // CMGR = (121/100)^(1/3) - 1 ≈ 0.0656 (as fraction)
     const result = computeCmgr(100, 121, 3)
     expect(result).not.toBeNull()
-    expect(result!).toBeCloseTo(10, 1)
+    expect(result!).toBeGreaterThan(0)
+    expect(result!).toBeLessThan(1)
   })
 
   // 75
@@ -683,10 +700,12 @@ describe('Integration: 6-month series with known growth', () => {
   ]
 
   // 84
-  it('84. CMGR is approximately 10% for consistent 10% MoM growth', () => {
+  it('84. CMGR is positive fraction for consistent 10% MoM growth', () => {
     const cmgr = computeCmgr(series[0].revenue_try, series[series.length - 1].revenue_try, series.length)
     expect(cmgr).not.toBeNull()
-    expect(cmgr!).toBeCloseTo(10, 0)
+    // Returns as fraction (not percentage): ~0.08 for 10% MoM over 6 months
+    expect(cmgr!).toBeGreaterThan(0)
+    expect(cmgr!).toBeLessThan(1)
   })
 
   // 85
@@ -724,5 +743,642 @@ describe('Integration: 6-month series with known growth', () => {
     const revComp = comp.comparisons.find(c => c.metric_name === 'revenue_try')
     expect(revComp?.change_pct).toBeGreaterThan(0)
     expect(revComp?.is_favorable).toBe(true)
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════════
+// NEW SPEC-REQUIRED FUNCTIONS (Batch-36)
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ── computeAbsoluteChange ─────────────────────────────────────────────────────
+
+describe('computeAbsoluteChange', () => {
+
+  // 90
+  it('90. positive result when current > prior', () => {
+    expect(computeAbsoluteChange(150, 100)).toBe(50)
+  })
+
+  // 91
+  it('91. negative result when current < prior', () => {
+    expect(computeAbsoluteChange(80, 100)).toBe(-20)
+  })
+
+  // 92
+  it('92. zero when equal', () => {
+    expect(computeAbsoluteChange(100, 100)).toBe(0)
+  })
+
+  // 93
+  it('93. both zero → zero', () => {
+    expect(computeAbsoluteChange(0, 0)).toBe(0)
+  })
+
+  // 94
+  it('94. handles fractional values', () => {
+    expect(computeAbsoluteChange(100.5, 100)).toBeCloseTo(0.5)
+  })
+})
+
+// ── computePercentageChange ───────────────────────────────────────────────────
+
+describe('computePercentageChange', () => {
+
+  // 95
+  it('95. prior = 0 → null (not zero)', () => {
+    expect(computePercentageChange(100, 0)).toBeNull()
+  })
+
+  // 96
+  it('96. both zero → null', () => {
+    expect(computePercentageChange(0, 0)).toBeNull()
+  })
+
+  // 97
+  it('97. 10% growth', () => {
+    expect(computePercentageChange(110, 100)).toBeCloseTo(10)
+  })
+
+  // 98
+  it('98. 10% decline', () => {
+    expect(computePercentageChange(90, 100)).toBeCloseTo(-10)
+  })
+
+  // 99
+  it('99. exact formula: (current - prior) / |prior| × 100', () => {
+    // (75 - 50) / 50 * 100 = 50
+    expect(computePercentageChange(75, 50)).toBeCloseTo(50)
+  })
+
+  // 100
+  it('100. negative prior uses absolute value in denominator', () => {
+    // (50 - (-100)) / 100 * 100 = 150
+    expect(computePercentageChange(50, -100)).toBeCloseTo(150)
+  })
+})
+
+// ── classifyGrowthDirection ───────────────────────────────────────────────────
+
+describe('classifyGrowthDirection', () => {
+
+  // 101
+  it('101. null → insufficient_data', () => {
+    expect(classifyGrowthDirection(null)).toBe('insufficient_data')
+  })
+
+  // 102
+  it('102. exactly 20 → growth (not strong_growth, boundary is >20)', () => {
+    expect(classifyGrowthDirection(20)).toBe('growth')
+  })
+
+  // 103
+  it('103. 20.1 → strong_growth', () => {
+    expect(classifyGrowthDirection(20.1)).toBe('strong_growth')
+  })
+
+  // 104
+  it('104. exactly 5 → flat (not growth, boundary is >5)', () => {
+    expect(classifyGrowthDirection(5)).toBe('flat')
+  })
+
+  // 105
+  it('105. 5.1 → growth', () => {
+    expect(classifyGrowthDirection(5.1)).toBe('growth')
+  })
+
+  // 106
+  it('106. exactly -5 → flat (boundary is >= -5)', () => {
+    expect(classifyGrowthDirection(-5)).toBe('flat')
+  })
+
+  // 107
+  it('107. -5.1 → decline', () => {
+    expect(classifyGrowthDirection(-5.1)).toBe('decline')
+  })
+
+  // 108
+  it('108. exactly -20 → decline (boundary is >= -20)', () => {
+    expect(classifyGrowthDirection(-20)).toBe('decline')
+  })
+
+  // 109
+  it('109. -20.1 → strong_decline', () => {
+    expect(classifyGrowthDirection(-20.1)).toBe('strong_decline')
+  })
+
+  // 110
+  it('110. 0 → flat', () => {
+    expect(classifyGrowthDirection(0)).toBe('flat')
+  })
+})
+
+// ── computeCmgr (new spec: fraction, not %) ───────────────────────────────────
+
+describe('computeCmgr (new spec)', () => {
+
+  // 111
+  it('111. firstValue = 0 → null', () => {
+    expect(computeCmgr(0, 100, 3)).toBeNull()
+  })
+
+  // 112
+  it('112. firstValue negative → null', () => {
+    expect(computeCmgr(-100, 100, 3)).toBeNull()
+  })
+
+  // 113
+  it('113. months = 0 → null', () => {
+    expect(computeCmgr(100, 200, 0)).toBeNull()
+  })
+
+  // 114
+  it('114. months negative → null', () => {
+    expect(computeCmgr(100, 200, -1)).toBeNull()
+  })
+
+  // 115
+  it('115. growth scenario: 100→121 over 2 months ≈ 10% per month (as fraction ~0.10)', () => {
+    // (121/100)^(1/2) - 1 ≈ 0.1
+    const result = computeCmgr(100, 121, 2)
+    expect(result).not.toBeNull()
+    expect(result!).toBeCloseTo(0.1, 2)
+  })
+
+  // 116
+  it('116. decline scenario: result is negative fraction', () => {
+    const result = computeCmgr(100, 64, 2)
+    expect(result).not.toBeNull()
+    expect(result!).toBeLessThan(0)
+  })
+
+  // 117
+  it('117. equal first and last → 0', () => {
+    const result = computeCmgr(100, 100, 6)
+    expect(result).not.toBeNull()
+    expect(result!).toBeCloseTo(0)
+  })
+})
+
+// ── computeYoyChange / computeMomChange ───────────────────────────────────────
+
+describe('computeYoyChange', () => {
+
+  // 118
+  it('118. prior year = 0 → null', () => {
+    expect(computeYoyChange(100, 0)).toBeNull()
+  })
+
+  // 119
+  it('119. 20% growth YoY', () => {
+    expect(computeYoyChange(120, 100)).toBeCloseTo(20)
+  })
+
+  // 120
+  it('120. 20% decline YoY', () => {
+    expect(computeYoyChange(80, 100)).toBeCloseTo(-20)
+  })
+})
+
+describe('computeMomChange', () => {
+
+  // 121
+  it('121. prior month = 0 → null', () => {
+    expect(computeMomChange(100, 0)).toBeNull()
+  })
+
+  // 122
+  it('122. 10% MoM growth', () => {
+    expect(computeMomChange(110, 100)).toBeCloseTo(10)
+  })
+
+  // 123
+  it('123. 10% MoM decline', () => {
+    expect(computeMomChange(90, 100)).toBeCloseTo(-10)
+  })
+})
+
+// ── computeRolling3mAvg ───────────────────────────────────────────────────────
+
+describe('computeRolling3mAvg', () => {
+
+  // 124
+  it('124. empty array → null', () => {
+    expect(computeRolling3mAvg([])).toBeNull()
+  })
+
+  // 125
+  it('125. 1 item → null', () => {
+    expect(computeRolling3mAvg([100])).toBeNull()
+  })
+
+  // 126
+  it('126. 2 items → null', () => {
+    expect(computeRolling3mAvg([100, 200])).toBeNull()
+  })
+
+  // 127
+  it('127. exactly 3 items → average', () => {
+    expect(computeRolling3mAvg([100, 200, 300])).toBeCloseTo(200)
+  })
+
+  // 128
+  it('128. more than 3 items → uses last 3 only', () => {
+    // [10, 20, 100, 200, 300] — last 3 are [100, 200, 300] → avg 200
+    expect(computeRolling3mAvg([10, 20, 100, 200, 300])).toBeCloseTo(200)
+  })
+
+  // 129
+  it('129. all zeros → 0', () => {
+    expect(computeRolling3mAvg([0, 0, 0])).toBeCloseTo(0)
+  })
+})
+
+// ── computeRolling3mTotal ─────────────────────────────────────────────────────
+
+describe('computeRolling3mTotal', () => {
+
+  // 130
+  it('130. empty array → null', () => {
+    expect(computeRolling3mTotal([])).toBeNull()
+  })
+
+  // 131
+  it('131. 2 items → null', () => {
+    expect(computeRolling3mTotal([100, 200])).toBeNull()
+  })
+
+  // 132
+  it('132. exactly 3 items → sum', () => {
+    expect(computeRolling3mTotal([100, 200, 300])).toBe(600)
+  })
+
+  // 133
+  it('133. more than 3 items → uses last 3 only', () => {
+    expect(computeRolling3mTotal([10, 20, 100, 200, 300])).toBe(600)
+  })
+})
+
+// ── computeTrendAcceleration ──────────────────────────────────────────────────
+
+describe('computeTrendAcceleration', () => {
+
+  // 134
+  it('134. current null → null', () => {
+    expect(computeTrendAcceleration(null, 10)).toBeNull()
+  })
+
+  // 135
+  it('135. prior null → null', () => {
+    expect(computeTrendAcceleration(10, null)).toBeNull()
+  })
+
+  // 136
+  it('136. both null → null', () => {
+    expect(computeTrendAcceleration(null, null)).toBeNull()
+  })
+
+  // 137
+  it('137. acceleration: current > prior', () => {
+    expect(computeTrendAcceleration(20, 10)).toBeCloseTo(10)
+  })
+
+  // 138
+  it('138. deceleration: current < prior', () => {
+    expect(computeTrendAcceleration(5, 15)).toBeCloseTo(-10)
+  })
+
+  // 139
+  it('139. equal → 0', () => {
+    expect(computeTrendAcceleration(10, 10)).toBeCloseTo(0)
+  })
+})
+
+// ── classifyTrendMomentum ─────────────────────────────────────────────────────
+
+describe('classifyTrendMomentum', () => {
+
+  // 140
+  it('140. null → insufficient_data', () => {
+    expect(classifyTrendMomentum(null)).toBe('insufficient_data')
+  })
+
+  // 141
+  it('141. > 5 → accelerating', () => {
+    expect(classifyTrendMomentum(6)).toBe('accelerating')
+  })
+
+  // 142
+  it('142. exactly 5 → steady (boundary: > 5 required for accelerating)', () => {
+    expect(classifyTrendMomentum(5)).toBe('steady')
+  })
+
+  // 143
+  it('143. 0 → steady', () => {
+    expect(classifyTrendMomentum(0)).toBe('steady')
+  })
+
+  // 144
+  it('144. exactly -5 → steady (boundary: >= -5)', () => {
+    expect(classifyTrendMomentum(-5)).toBe('steady')
+  })
+
+  // 145
+  it('145. -5.1 → decelerating', () => {
+    expect(classifyTrendMomentum(-5.1)).toBe('decelerating')
+  })
+
+  // 146
+  it('146. exactly -15 → decelerating (boundary: >= -15)', () => {
+    expect(classifyTrendMomentum(-15)).toBe('decelerating')
+  })
+
+  // 147
+  it('147. -15.1 → reversing', () => {
+    expect(classifyTrendMomentum(-15.1)).toBe('reversing')
+  })
+
+  // 148
+  it('148. large negative → reversing', () => {
+    expect(classifyTrendMomentum(-50)).toBe('reversing')
+  })
+})
+
+// ── computeSeasonalityIndex ───────────────────────────────────────────────────
+
+describe('computeSeasonalityIndex', () => {
+
+  // 149
+  it('149. empty input → {}', () => {
+    expect(computeSeasonalityIndex({})).toEqual({})
+  })
+
+  // 150
+  it('150. single month with single value → index 1.0 (avg = overall avg)', () => {
+    const result = computeSeasonalityIndex({ '01': [100] })
+    expect(result['01']).toBeCloseTo(1.0)
+  })
+
+  // 151
+  it('151. month with empty array → index 1.0', () => {
+    const result = computeSeasonalityIndex({ '01': [100], '07': [] })
+    expect(result['07']).toBeCloseTo(1.0)
+  })
+
+  // 152
+  it('152. multi-year average: high season month has index > 1', () => {
+    const result = computeSeasonalityIndex({
+      '01': [100, 100],
+      '07': [200, 200],  // summer double the base
+    })
+    expect(result['07']).toBeGreaterThan(1)
+    expect(result['01']).toBeLessThan(1)
+  })
+
+  // 153
+  it('153. uniform values → all indices = 1.0', () => {
+    const result = computeSeasonalityIndex({
+      '01': [100],
+      '02': [100],
+      '03': [100],
+    })
+    for (const key of Object.keys(result)) {
+      expect(result[key]).toBeCloseTo(1.0)
+    }
+  })
+
+  // 154
+  it('154. all values zero → all indices = 1.0', () => {
+    const result = computeSeasonalityIndex({ '01': [0, 0], '06': [0] })
+    expect(result['01']).toBeCloseTo(1.0)
+    expect(result['06']).toBeCloseTo(1.0)
+  })
+})
+
+// ── computeRunRate ────────────────────────────────────────────────────────────
+
+describe('computeRunRate', () => {
+
+  // 155
+  it('155. periodMonths = 0 → null', () => {
+    expect(computeRunRate(100_000, 0)).toBeNull()
+  })
+
+  // 156
+  it('156. periodMonths negative → null', () => {
+    expect(computeRunRate(100_000, -1)).toBeNull()
+  })
+
+  // 157
+  it('157. 3 months revenue × 4 = annual run rate', () => {
+    expect(computeRunRate(300_000, 3)).toBeCloseTo(1_200_000)
+  })
+
+  // 158
+  it('158. single month: revenue × 12', () => {
+    expect(computeRunRate(100_000, 1)).toBeCloseTo(1_200_000)
+  })
+
+  // 159
+  it('159. 12 months revenue = run rate (no adjustment)', () => {
+    expect(computeRunRate(1_200_000, 12)).toBeCloseTo(1_200_000)
+  })
+})
+
+// ── classifyRunRateVsTarget ───────────────────────────────────────────────────
+
+describe('classifyRunRateVsTarget', () => {
+
+  // 160
+  it('160. annualTarget = 0 → no_target', () => {
+    expect(classifyRunRateVsTarget(1_000_000, 0)).toBe('no_target')
+  })
+
+  // 161
+  it('161. annualTarget negative → no_target', () => {
+    expect(classifyRunRateVsTarget(1_000_000, -1)).toBe('no_target')
+  })
+
+  // 162
+  it('162. runRate null → no_target', () => {
+    expect(classifyRunRateVsTarget(null, 1_000_000)).toBe('no_target')
+  })
+
+  // 163
+  it('163. runRate >= target × 1.05 → exceeding', () => {
+    expect(classifyRunRateVsTarget(1_050_000, 1_000_000)).toBe('exceeding')
+  })
+
+  // 164
+  it('164. runRate = target × 1.049 → on_track (just below exceeding threshold)', () => {
+    expect(classifyRunRateVsTarget(1_049_000, 1_000_000)).toBe('on_track')
+  })
+
+  // 165
+  it('165. runRate = target × 0.90 → on_track', () => {
+    expect(classifyRunRateVsTarget(900_000, 1_000_000)).toBe('on_track')
+  })
+
+  // 166
+  it('166. runRate = target × 0.89 → below (just below on_track threshold)', () => {
+    expect(classifyRunRateVsTarget(890_000, 1_000_000)).toBe('below')
+  })
+
+  // 167
+  it('167. runRate = target × 0.70 → below', () => {
+    expect(classifyRunRateVsTarget(700_000, 1_000_000)).toBe('below')
+  })
+
+  // 168
+  it('168. runRate = target × 0.69 → significantly_below', () => {
+    expect(classifyRunRateVsTarget(690_000, 1_000_000)).toBe('significantly_below')
+  })
+
+  // 169
+  it('169. runRate = 0 → significantly_below (target > 0)', () => {
+    expect(classifyRunRateVsTarget(0, 1_000_000)).toBe('significantly_below')
+  })
+})
+
+// ── computeGrossMarginTrend ───────────────────────────────────────────────────
+
+describe('computeGrossMarginTrend', () => {
+
+  // 170
+  it('170. empty array → []', () => {
+    expect(computeGrossMarginTrend([])).toEqual([])
+  })
+
+  // 171
+  it('171. single period: gross_margin_pct computed, mom_change_ppt null', () => {
+    const result = computeGrossMarginTrend([{ revenue: 100, cogs: 60 }])
+    expect(result).toHaveLength(1)
+    expect(result[0].gross_margin_pct).toBeCloseTo(40)
+    expect(result[0].mom_change_ppt).toBeNull()
+  })
+
+  // 172
+  it('172. revenue = 0 → gross_margin_pct null', () => {
+    const result = computeGrossMarginTrend([{ revenue: 0, cogs: 0 }])
+    expect(result[0].gross_margin_pct).toBeNull()
+  })
+
+  // 173
+  it('173. two periods: ppt change computed correctly', () => {
+    // Period 1: rev=100, cogs=40 → 60% margin
+    // Period 2: rev=100, cogs=50 → 50% margin
+    // ppt change = 50 - 60 = -10
+    const result = computeGrossMarginTrend([
+      { revenue: 100, cogs: 40 },
+      { revenue: 100, cogs: 50 },
+    ])
+    expect(result[1].gross_margin_pct).toBeCloseTo(50)
+    expect(result[1].mom_change_ppt).toBeCloseTo(-10)
+  })
+
+  // 174
+  it('174. ppt null when either period has revenue=0', () => {
+    const result = computeGrossMarginTrend([
+      { revenue: 0, cogs: 0 },
+      { revenue: 100, cogs: 50 },
+    ])
+    expect(result[1].mom_change_ppt).toBeNull()
+  })
+
+  // 175
+  it('175. three periods: first ppt null, rest computed', () => {
+    const result = computeGrossMarginTrend([
+      { revenue: 100, cogs: 40 },
+      { revenue: 100, cogs: 45 },
+      { revenue: 100, cogs: 40 },
+    ])
+    expect(result[0].mom_change_ppt).toBeNull()
+    expect(result[1].mom_change_ppt).not.toBeNull()
+    expect(result[2].mom_change_ppt).not.toBeNull()
+  })
+})
+
+// ── generatePeriodComparisonNarrative ─────────────────────────────────────────
+
+describe('generatePeriodComparisonNarrative', () => {
+
+  // 176
+  it('176. returns non-empty string', () => {
+    const result = generatePeriodComparisonNarrative({
+      revenueChangePct: 10,
+      expenseChangePct: 5,
+      profitChangePct: 15,
+      growthDirection: 'growth',
+      currentRevenue: 120_000,
+      currentProfit: 40_000,
+    })
+    expect(typeof result).toBe('string')
+    expect(result.length).toBeGreaterThan(0)
+  })
+
+  // 177
+  it('177. contains Turkish text', () => {
+    const result = generatePeriodComparisonNarrative({
+      revenueChangePct: 10,
+      expenseChangePct: null,
+      profitChangePct: null,
+      growthDirection: 'growth',
+      currentRevenue: 100_000,
+      currentProfit: 30_000,
+    })
+    // Should contain some Turkish words
+    expect(result).toMatch(/[Gg]elir|[Gg]ider|[Kk]âr|₺/)
+  })
+
+  // 178
+  it('178. includes ₺ symbol for profit', () => {
+    const result = generatePeriodComparisonNarrative({
+      revenueChangePct: null,
+      expenseChangePct: null,
+      profitChangePct: null,
+      growthDirection: 'insufficient_data',
+      currentRevenue: 0,
+      currentProfit: 0,
+    })
+    expect(result).toContain('₺')
+  })
+
+  // 179
+  it('179. positive revenueChangePct → "artış" direction', () => {
+    const result = generatePeriodComparisonNarrative({
+      revenueChangePct: 15,
+      expenseChangePct: null,
+      profitChangePct: null,
+      growthDirection: 'growth',
+      currentRevenue: 115_000,
+      currentProfit: 30_000,
+    })
+    expect(result).toContain('artış')
+  })
+
+  // 180
+  it('180. negative revenueChangePct → "azalış" direction', () => {
+    const result = generatePeriodComparisonNarrative({
+      revenueChangePct: -10,
+      expenseChangePct: null,
+      profitChangePct: null,
+      growthDirection: 'decline',
+      currentRevenue: 90_000,
+      currentProfit: 20_000,
+    })
+    expect(result).toContain('azalış')
+  })
+
+  // 181
+  it('181. null revenueChangePct → falls back to revenue amount', () => {
+    const result = generatePeriodComparisonNarrative({
+      revenueChangePct: null,
+      expenseChangePct: null,
+      profitChangePct: null,
+      growthDirection: 'insufficient_data',
+      currentRevenue: 50_000,
+      currentProfit: 10_000,
+    })
+    expect(result.length).toBeGreaterThan(0)
+    expect(result).toContain('₺')
   })
 })

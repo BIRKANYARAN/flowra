@@ -415,8 +415,8 @@ export async function OverviewTab({ userId, companyId, glMode = 'shadow' }: Prop
     sq(() => PeriodService.getCurrent(companyId, supabase), null),
     sq(() => AnnualSummaryService.getSummary(companyId, userId, supabase, { yearsBack: 3 }), null as AnnualSummary | null),
     sq(() => HealthScorecardService.getScorecard(companyId, userId, supabase, { from: ytdFrom, to: today }), null as HealthScorecard | null),
-    sq(async () => { const svc = new PeriodComparisonService(supabase); const r = await svc.getReport(companyId); return r.yoy_comparison }, null as PeriodComparison | null),
-    sq(async () => { const svc = new PeriodComparisonService(supabase); const r = await svc.getReport(companyId); return r.mom_comparison }, null as PeriodComparison | null),
+    sq(async () => { const svc = new PeriodComparisonService(supabase); const r = await svc.getReport(companyId); return r.yoy_comparison ?? null }, null as PeriodComparison | null),
+    sq(async () => { const svc = new PeriodComparisonService(supabase); const r = await svc.getReport(companyId); return r.mom_comparison ?? null }, null as PeriodComparison | null),
     sq(() => SeasonalityService.getReport(companyId, supabase), null as SeasonalityReport | null),
   ])
   const runway = await sq(

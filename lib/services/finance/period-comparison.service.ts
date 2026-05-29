@@ -1,26 +1,11 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // lib/services/finance/period-comparison.service.ts
 //
-// Period Performance Comparison — MoM, YoY, and YTD financial comparison.
+// Period-over-Period Financial Comparison — MoM, YoY, rolling-window analysis,
+// CMGR, seasonality indexing, run rate, and Turkish narrative generation.
 //
-// Pure functions exported for testing:
-//   computeChangePct         — safe % change (0 if prior = 0)
-//   computeChangeAbsolute    — current - prior
-//   classifySignificance     — material / moderate / minor
-//   isFavorableMetricChange  — higher revenue/profit = good; higher expense ratio = bad
-//   buildMetricComparison    — construct full MetricComparison
-//   buildPeriodMetrics       — construct PeriodMetrics from raw values
-//   determineOverallTrend    — improving / stable / declining
-//   generateComparisonHeadline — Turkish headline string
-//   identifyKeyDriver        — Turkish key driver sentence
-//   buildPeriodComparison    — full PeriodComparison
-//   computeTrendStreak       — consecutive improving / declining months
-//   computeCmgr              — compound monthly growth rate
-//   findBestMonth            — highest revenue month
-//   findWorstMonth           — lowest revenue month
-//
-// Class: PeriodComparisonService
-//   getReport(companyId) → PeriodComparisonReport
+// Pure helpers are exported for unit testing (no DB required).
+// PeriodComparisonService class handles DB-connected report generation.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -28,7 +13,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyClient = SupabaseClient<any>
 
-// ── Interfaces ────────────────────────────────────────────────────────────────
+// ── Legacy interfaces (kept for backward compatibility) ───────────────────────
 
 export interface PeriodMetrics {
   period: string                    // YYYY-MM or "YTD-YYYY"
@@ -66,23 +51,362 @@ export interface PeriodComparison {
   key_driver: string
 }
 
+// ── New report interface (Batch-36) ───────────────────────────────────────────
+
 export interface PeriodComparisonReport {
-  current_month: string             // YYYY-MM
-  mom_comparison: PeriodComparison
-  yoy_comparison: PeriodComparison | null
-  ytd_comparison: PeriodComparison | null
-  monthly_series: PeriodMetrics[]
-  trend_streak: number
-  cmgr_pct: number | null
-  best_month: PeriodMetrics | null
-  worst_month: PeriodMetrics | null
+  // Legacy fields retained for backward compatibility with OverviewTab.tsx
+  mom_comparison?: PeriodComparison | null
+  yoy_comparison?: PeriodComparison | null
+  ytd_comparison?: PeriodComparison | null
+  monthly_series_legacy?: PeriodMetrics[]
+  trend_streak?: number
+  cmgr_pct?: number | null
+  best_month?: PeriodMetrics | null
+  worst_month?: PeriodMetrics | null
+
+  current_period: {
+    label: string       // e.g. "Mayıs 2025"
+    revenue_try: number
+    expenses_try: number
+    gross_profit_try: number
+    net_profit_try: number
+    gross_margin_pct: number | null
+    net_margin_pct: number | null
+  }
+  prior_period: {
+    label: string
+    revenue_try: number
+    expenses_try: number
+    gross_profit_try: number
+    net_profit_try: number
+    gross_margin_pct: number | null
+    net_margin_pct: number | null
+  }
+  changes: {
+    revenue_change_pct: number | null
+    expense_change_pct: number | null
+    profit_change_pct: number | null
+    gross_margin_change_ppt: number | null  // percentage points
+    growth_direction: ReturnType<typeof classifyGrowthDirection>
+    trend_momentum: ReturnType<typeof classifyTrendMomentum>
+  }
+  rolling_3m: {
+    avg_revenue: number | null
+    total_revenue: number | null
+  }
+  run_rate: number | null
+  cmgr_3m: number | null
+  monthly_series: Array<{
+    period: string     // YYYY-MM
+    revenue_try: number
+    expenses_try: number
+    net_profit_try: number
+    mom_revenue_change_pct: number | null
+  }>
+  narrative: string
 }
 
-// ── Pure exported functions ───────────────────────────────────────────────────
+// ── Pure functions (spec-required) ───────────────────────────────────────────
+
+/**
+ * Compute absolute change between two periods.
+ * Returns current - prior (can be negative).
+ */
+export function computeAbsoluteChange(current: number, prior: number): number {
+  return current - prior
+}
+
+/**
+ * Compute percentage change between two periods.
+ * Returns null if prior = 0.
+ * Formula: (current - prior) / |prior| × 100
+ */
+export function computePercentageChange(
+  current: number,
+  prior: number,
+): number | null {
+  if (prior === 0) return null
+  return ((current - prior) / Math.abs(prior)) * 100
+}
+
+/**
+ * Classify growth direction based on percentage change.
+ * strong_growth:       > 20%
+ * growth:              > 5%
+ * flat:                >= -5%
+ * decline:             >= -20%
+ * strong_decline:      < -20%
+ * insufficient_data:   null input
+ */
+export function classifyGrowthDirection(
+  changePct: number | null,
+): 'strong_growth' | 'growth' | 'flat' | 'decline' | 'strong_decline' | 'insufficient_data' {
+  if (changePct === null) return 'insufficient_data'
+  if (changePct > 20) return 'strong_growth'
+  if (changePct > 5) return 'growth'
+  if (changePct >= -5) return 'flat'
+  if (changePct >= -20) return 'decline'
+  return 'strong_decline'
+}
+
+/**
+ * Compute compound monthly growth rate (CMGR) over N months.
+ * Returns null if firstValue <= 0 or months <= 0.
+ * Formula: (lastValue / firstValue)^(1/months) - 1  (as fraction)
+ */
+export function computeCmgr(
+  firstValue: number,
+  lastValue: number,
+  months: number,
+): number | null {
+  if (firstValue <= 0 || months <= 1) return null
+  return Math.pow(lastValue / firstValue, 1 / months) - 1
+}
+
+/**
+ * Compute Year-over-Year (YoY) percentage change.
+ * Returns null if priorYearValue = 0.
+ */
+export function computeYoyChange(
+  currentYearValue: number,
+  priorYearValue: number,
+): number | null {
+  return computePercentageChange(currentYearValue, priorYearValue)
+}
+
+/**
+ * Compute Month-over-Month (MoM) percentage change.
+ * Returns null if priorMonthValue = 0.
+ */
+export function computeMomChange(
+  currentMonthValue: number,
+  priorMonthValue: number,
+): number | null {
+  return computePercentageChange(currentMonthValue, priorMonthValue)
+}
+
+/**
+ * Compute rolling 3-month average.
+ * Returns null if values.length < 3.
+ * Uses the last 3 values in the array.
+ */
+export function computeRolling3mAvg(values: number[]): number | null {
+  if (values.length < 3) return null
+  const last3 = values.slice(-3)
+  return (last3[0] + last3[1] + last3[2]) / 3
+}
+
+/**
+ * Compute rolling 3-month total.
+ * Returns null if values.length < 3.
+ * Uses the last 3 values in the array.
+ */
+export function computeRolling3mTotal(values: number[]): number | null {
+  if (values.length < 3) return null
+  const last3 = values.slice(-3)
+  return last3[0] + last3[1] + last3[2]
+}
+
+/**
+ * Compute trend acceleration: current growth minus prior growth.
+ * Returns null if either input is null.
+ * Positive = accelerating, negative = decelerating.
+ */
+export function computeTrendAcceleration(
+  currentGrowthPct: number | null,
+  priorGrowthPct: number | null,
+): number | null {
+  if (currentGrowthPct === null || priorGrowthPct === null) return null
+  return currentGrowthPct - priorGrowthPct
+}
+
+/**
+ * Classify trend momentum based on acceleration.
+ * accelerating:      > 5% acceleration
+ * steady:            >= -5%
+ * decelerating:      >= -15%
+ * reversing:         < -15% (was growing, now declining)
+ * insufficient_data: null
+ */
+export function classifyTrendMomentum(
+  acceleration: number | null,
+): 'accelerating' | 'steady' | 'decelerating' | 'reversing' | 'insufficient_data' {
+  if (acceleration === null) return 'insufficient_data'
+  if (acceleration > 5) return 'accelerating'
+  if (acceleration >= -5) return 'steady'
+  if (acceleration >= -15) return 'decelerating'
+  return 'reversing'
+}
+
+/**
+ * Compute seasonality index for each month.
+ * monthlyValues: Record<'MM', number[]> — key is zero-padded month (01-12),
+ *   values are all historical observations for that month.
+ * Returns a Record<'MM', number> where each entry = avg_for_month / overall_avg.
+ * Months with no data get index 1.0.
+ * Returns empty object if no data at all.
+ */
+export function computeSeasonalityIndex(
+  monthlyValues: Record<string, number[]>,
+): Record<string, number> {
+  const result: Record<string, number> = {}
+
+  // Collect all values to compute overall average
+  const allValues: number[] = []
+  for (const vals of Object.values(monthlyValues)) {
+    for (const v of vals) {
+      allValues.push(v)
+    }
+  }
+
+  if (allValues.length === 0) return result
+
+  const overallAvg = allValues.reduce((s, v) => s + v, 0) / allValues.length
+
+  if (overallAvg === 0) {
+    // All zeros: every index is 1.0
+    for (const key of Object.keys(monthlyValues)) {
+      result[key] = 1.0
+    }
+    return result
+  }
+
+  for (const [month, vals] of Object.entries(monthlyValues)) {
+    if (vals.length === 0) {
+      result[month] = 1.0
+    } else {
+      const monthAvg = vals.reduce((s, v) => s + v, 0) / vals.length
+      result[month] = monthAvg / overallAvg
+    }
+  }
+
+  return result
+}
+
+/**
+ * Compute revenue run rate (annualized).
+ * Returns null if periodMonths <= 0.
+ * Formula: periodRevenue / periodMonths × 12
+ */
+export function computeRunRate(
+  periodRevenue: number,
+  periodMonths: number,
+): number | null {
+  if (periodMonths <= 0) return null
+  return (periodRevenue / periodMonths) * 12
+}
+
+/**
+ * Classify run rate vs annual target.
+ * no_target:           annualTarget <= 0 or runRate null
+ * exceeding:           runRate >= annualTarget × 1.05
+ * on_track:            runRate >= annualTarget × 0.90
+ * below:               runRate >= annualTarget × 0.70
+ * significantly_below: runRate < annualTarget × 0.70
+ */
+export function classifyRunRateVsTarget(
+  runRate: number | null,
+  annualTarget: number,
+): 'exceeding' | 'on_track' | 'below' | 'significantly_below' | 'no_target' {
+  if (annualTarget <= 0 || runRate === null) return 'no_target'
+  if (runRate >= annualTarget * 1.05) return 'exceeding'
+  if (runRate >= annualTarget * 0.90) return 'on_track'
+  if (runRate >= annualTarget * 0.70) return 'below'
+  return 'significantly_below'
+}
+
+/**
+ * Compute gross margin trend across periods.
+ * gross_margin_pct = (revenue - cogs) / revenue × 100; null if revenue = 0
+ * mom_change_ppt   = current_gross_margin_pct - prior_gross_margin_pct (in pp); null for first
+ */
+export function computeGrossMarginTrend(
+  periods: Array<{ revenue: number; cogs: number }>,
+): Array<{ gross_margin_pct: number | null; mom_change_ppt: number | null }> {
+  if (periods.length === 0) return []
+
+  const margins: Array<number | null> = periods.map(p => {
+    if (p.revenue === 0) return null
+    return ((p.revenue - p.cogs) / p.revenue) * 100
+  })
+
+  return margins.map((gm, i) => ({
+    gross_margin_pct: gm,
+    mom_change_ppt:
+      i === 0
+        ? null
+        : gm === null || margins[i - 1] === null
+          ? null
+          : gm - (margins[i - 1] as number),
+  }))
+}
+
+/**
+ * Generate Turkish narrative for period comparison.
+ * E.g. "Gelir geçen aya göre %X artış/azalış gösterdi. Net kâr ₺Y."
+ */
+export function generatePeriodComparisonNarrative(params: {
+  revenueChangePct: number | null
+  expenseChangePct: number | null
+  profitChangePct: number | null
+  growthDirection: ReturnType<typeof classifyGrowthDirection>
+  currentRevenue: number
+  currentProfit: number
+}): string {
+  const {
+    revenueChangePct,
+    expenseChangePct,
+    profitChangePct,
+    currentRevenue,
+    currentProfit,
+  } = params
+
+  const parts: string[] = []
+
+  // Revenue narrative
+  if (revenueChangePct !== null) {
+    const absPct = Math.abs(revenueChangePct).toFixed(1)
+    const direction = revenueChangePct >= 0 ? 'artış' : 'azalış'
+    parts.push(`Gelir geçen aya göre %${absPct} ${direction} gösterdi.`)
+  } else {
+    parts.push(
+      `Gelir: ₺${currentRevenue.toLocaleString('tr-TR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}.`,
+    )
+  }
+
+  // Expense narrative
+  if (expenseChangePct !== null) {
+    const absPct = Math.abs(expenseChangePct).toFixed(1)
+    const direction = expenseChangePct >= 0 ? 'arttı' : 'azaldı'
+    parts.push(`Giderler %${absPct} ${direction}.`)
+  }
+
+  // Profit narrative
+  if (profitChangePct !== null) {
+    const absPct = Math.abs(profitChangePct).toFixed(1)
+    const direction = profitChangePct >= 0 ? 'artış' : 'azalış'
+    parts.push(`Kâr %${absPct} ${direction} ile`)
+  }
+
+  parts.push(
+    `Net kâr ₺${currentProfit.toLocaleString('tr-TR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}.`,
+  )
+
+  return parts.join(' ').trim()
+}
+
+// ── Legacy pure functions (kept for backward compatibility) ───────────────────
 
 /**
  * Compute percentage change from prior to current.
  * Returns 0 if prior = 0 to avoid Infinity/NaN.
+ * @deprecated Use computePercentageChange (returns null for 0 prior).
  */
 export function computeChangePct(current: number, prior: number): number {
   if (prior === 0) return 0
@@ -91,6 +415,7 @@ export function computeChangePct(current: number, prior: number): number {
 
 /**
  * Compute absolute change from prior to current.
+ * @deprecated Use computeAbsoluteChange.
  */
 export function computeChangeAbsolute(current: number, prior: number): number {
   return current - prior
@@ -111,9 +436,6 @@ export function classifySignificance(changePct: number): MetricComparison['signi
 
 /**
  * Determine if a metric change is favorable.
- * Favorable metrics (higher = better): revenue, gross_profit, ebitda, net_income,
- *   gross_margin_pct, net_margin_pct, avg_order_value, order_count, avg_monthly_revenue
- * Unfavorable metrics (lower = better): expenses, expense_ratio
  */
 export function isFavorableMetricChange(
   metricName: string,
@@ -152,8 +474,6 @@ export function buildMetricComparison(
 
 /**
  * Build PeriodMetrics from raw data.
- * If cogsEstimate is not provided, it is estimated at 40% of revenue.
- * monthsInPeriod defaults to 1 (single month).
  */
 export function buildPeriodMetrics(
   period: string,
@@ -165,9 +485,9 @@ export function buildPeriodMetrics(
 ): PeriodMetrics {
   const months   = monthsInPeriod ?? 1
   const cogs     = cogsEstimate ?? revenue * 0.4
-  const opex     = expenses - cogs                    // opex = expenses excl. COGS
+  const opex     = expenses - cogs
   const gross_profit = revenue - cogs
-  const ebitda       = revenue - opex                 // revenue - (expenses - cogs) = revenue - expenses + cogs
+  const ebitda       = revenue - opex
   const net_income   = revenue - expenses
 
   const gross_margin_pct  = revenue > 0 ? (gross_profit / revenue) * 100 : 0
@@ -195,9 +515,6 @@ export function buildPeriodMetrics(
 
 /**
  * Determine overall trend by comparing current vs prior metrics.
- * improving: revenue up AND net_margin improved
- * declining: revenue down OR net_margin degraded > 5pp
- * stable: otherwise
  */
 export function determineOverallTrend(
   currentMetrics: PeriodMetrics,
@@ -215,7 +532,7 @@ export function determineOverallTrend(
 }
 
 /**
- * Generate a Turkish comparison headline summarising the key movements.
+ * Generate a Turkish comparison headline.
  */
 export function generateComparisonHeadline(
   comparisonType: 'mom' | 'yoy' | 'ytd',
@@ -249,7 +566,6 @@ export function generateComparisonHeadline(
 
 /**
  * Identify the Turkish key driver sentence from a list of comparisons.
- * Finds the most material (highest |change_pct|) comparison.
  */
 export function identifyKeyDriver(comparisons: MetricComparison[]): string {
   if (comparisons.length === 0) return 'Karşılaştırma verisi mevcut değil.'
@@ -275,12 +591,12 @@ export function buildPeriodComparison(
   prior: PeriodMetrics,
 ): PeriodComparison {
   const metricDefs: Array<{ name: string; label: string; cur: number; prr: number }> = [
-    { name: 'revenue_try',       label: 'Ciro',             cur: current.revenue_try,       prr: prior.revenue_try },
-    { name: 'expenses_try',      label: 'Giderler',          cur: current.expenses_try,      prr: prior.expenses_try },
-    { name: 'gross_profit_try',  label: 'Brüt Kâr',         cur: current.gross_profit_try,  prr: prior.gross_profit_try },
-    { name: 'net_income_try',    label: 'Net Gelir',         cur: current.net_income_try,    prr: prior.net_income_try },
-    { name: 'gross_margin_pct',  label: 'Brüt Marj (%)',    cur: current.gross_margin_pct,  prr: prior.gross_margin_pct },
-    { name: 'expense_ratio_pct', label: 'Gider Oranı (%)',  cur: current.expense_ratio_pct, prr: prior.expense_ratio_pct },
+    { name: 'revenue_try',       label: 'Ciro',            cur: current.revenue_try,       prr: prior.revenue_try },
+    { name: 'expenses_try',      label: 'Giderler',         cur: current.expenses_try,      prr: prior.expenses_try },
+    { name: 'gross_profit_try',  label: 'Brüt Kâr',        cur: current.gross_profit_try,  prr: prior.gross_profit_try },
+    { name: 'net_income_try',    label: 'Net Gelir',        cur: current.net_income_try,    prr: prior.net_income_try },
+    { name: 'gross_margin_pct',  label: 'Brüt Marj (%)',   cur: current.gross_margin_pct,  prr: prior.gross_margin_pct },
+    { name: 'expense_ratio_pct', label: 'Gider Oranı (%)', cur: current.expense_ratio_pct, prr: prior.expense_ratio_pct },
   ]
 
   const comparisons = metricDefs.map(m =>
@@ -312,7 +628,6 @@ export function computeTrendStreak(monthlySeries: PeriodMetrics[]): number {
 
   let streak = 0
 
-  // Walk from end to start
   for (let i = monthlySeries.length - 1; i >= 1; i--) {
     const cur  = monthlySeries[i]
     const prev = monthlySeries[i - 1]
@@ -330,21 +645,6 @@ export function computeTrendStreak(monthlySeries: PeriodMetrics[]): number {
   }
 
   return streak
-}
-
-/**
- * Compute compound monthly growth rate (CMGR).
- * CMGR = (last/first)^(1/n) - 1 where n = months - 1.
- * Returns null if first = 0 or n < 1.
- */
-export function computeCmgr(
-  firstMonthRevenue: number,
-  lastMonthRevenue: number,
-  months: number,
-): number | null {
-  const n = months - 1
-  if (firstMonthRevenue === 0 || n < 1) return null
-  return (Math.pow(lastMonthRevenue / firstMonthRevenue, 1 / n) - 1) * 100
 }
 
 /**
@@ -393,6 +693,25 @@ function monthDateRange(periodKey: string): { from: string; to: string } {
     from: `${periodKey}-01`,
     to:   `${periodKey}-${String(lastDay).padStart(2, '0')}`,
   }
+}
+
+/** Format a YYYY-MM string as Turkish month label, e.g. "Mayıs 2025" */
+function formatTurkishMonthLabel(yyyyMm: string): string {
+  const [year, month] = yyyyMm.split('-').map(Number)
+  const date = new Date(year, month - 1, 1)
+  return date.toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })
+}
+
+/** Compute gross margin % — simplified (no COGS available → 100%) */
+function simpleGrossMarginPct(revenue: number): number | null {
+  if (revenue === 0) return null
+  return 100
+}
+
+/** Compute net margin % */
+function simpleNetMarginPct(revenue: number, netProfit: number): number | null {
+  if (revenue === 0) return null
+  return (netProfit / revenue) * 100
 }
 
 /** Fetch revenue, expenses, and order count for a date range */
@@ -445,136 +764,180 @@ async function fetchPeriodData(
 export class PeriodComparisonService {
   constructor(private readonly supabase: AnyClient) {}
 
-  async getReport(companyId: string): Promise<PeriodComparisonReport> {
-    const now          = new Date()
-    const currentMonth = formatMonthKey(now.getFullYear(), now.getMonth() + 1)
+  /**
+   * Get the period comparison report.
+   * @param companyId  Company UUID
+   * @param months     Number of months to include in the rolling window (default 6, max 24)
+   */
+  async getReport(
+    companyId: string,
+    months = 6,
+  ): Promise<PeriodComparisonReport> {
+    const safeMonths = Math.max(1, Math.min(24, months))
+    const now = new Date()
+    const currentYear = now.getFullYear()
+    const currentMonth = now.getMonth() + 1
+    const currentPeriodKey = formatMonthKey(currentYear, currentMonth)
 
-    // Build list of 13 months: last 12 + same month last year (for YoY)
-    const last12Months: string[] = []
-    for (let i = 11; i >= 0; i--) {
-      last12Months.push(addMonths(currentMonth, -i))
+    // Build ordered list of YYYY-MM keys for the window
+    const periodKeys: string[] = []
+    for (let i = safeMonths - 1; i >= 0; i--) {
+      periodKeys.push(addMonths(currentPeriodKey, -i))
     }
-    const sameMonthPriorYear = subtractYear(currentMonth)
 
-    // Fetch all needed periods in parallel
-    const allPeriods = Array.from(new Set([...last12Months, sameMonthPriorYear]))
+    // We also need one month before the window for the first MoM change
+    const preMoMKey = addMonths(periodKeys[0], -1)
+    const allKeys = [preMoMKey, ...periodKeys]
 
-    const periodDataMap = new Map<string, { revenue: number; expenses: number; orderCount: number }>()
+    // Fetch all needed sales + expenses in one date range query
+    const windowStart = `${allKeys[0]}-01`
+    const { to: windowEnd } = monthDateRange(allKeys[allKeys.length - 1])
 
-    await Promise.all(
-      allPeriods.map(async (pk) => {
-        const range = monthDateRange(pk)
-        const data  = await fetchPeriodData(companyId, this.supabase, range.from, range.to)
-        periodDataMap.set(pk, data)
-      }),
+    const [salesResult, expensesResult] = await Promise.allSettled([
+      this.supabase
+        .from('sales')
+        .select('total_try, sale_date')
+        .eq('company_id', companyId)
+        .is('deleted_at', null)
+        .gte('sale_date', windowStart)
+        .lte('sale_date', windowEnd),
+
+      this.supabase
+        .from('expenses')
+        .select('amount_try, expense_date')
+        .eq('company_id', companyId)
+        .is('deleted_at', null)
+        .gte('expense_date', windowStart)
+        .lte('expense_date', windowEnd),
+    ])
+
+    // Aggregate by YYYY-MM
+    const revenueByMonth: Record<string, number> = {}
+    const expensesByMonth: Record<string, number> = {}
+
+    if (salesResult.status === 'fulfilled' && salesResult.value?.data) {
+      for (const row of salesResult.value.data) {
+        if (!row.sale_date) continue
+        const period = (row.sale_date as string).substring(0, 7)
+        revenueByMonth[period] = (revenueByMonth[period] ?? 0) + (Number(row.total_try) || 0)
+      }
+    }
+
+    if (expensesResult.status === 'fulfilled' && expensesResult.value?.data) {
+      for (const row of expensesResult.value.data) {
+        if (!row.expense_date) continue
+        const period = (row.expense_date as string).substring(0, 7)
+        expensesByMonth[period] = (expensesByMonth[period] ?? 0) + (Number(row.amount_try) || 0)
+      }
+    }
+
+    // Build monthly_series for the requested window
+    const monthly_series: PeriodComparisonReport['monthly_series'] = periodKeys.map(
+      (period, idx) => {
+        const revenue_try = revenueByMonth[period] ?? 0
+        const expenses_try = expensesByMonth[period] ?? 0
+        const net_profit_try = revenue_try - expenses_try
+
+        let mom_revenue_change_pct: number | null = null
+        const priorKey = idx === 0 ? preMoMKey : periodKeys[idx - 1]
+        const priorRevenue = revenueByMonth[priorKey] ?? 0
+        mom_revenue_change_pct = computeMomChange(revenue_try, priorRevenue)
+
+        return { period, revenue_try, expenses_try, net_profit_try, mom_revenue_change_pct }
+      },
     )
 
-    // Build monthly series (last 12 months)
-    const monthly_series: PeriodMetrics[] = last12Months.map((pk) => {
-      const d = periodDataMap.get(pk) ?? { revenue: 0, expenses: 0, orderCount: 0 }
-      return buildPeriodMetrics(pk, d.revenue, d.expenses, d.orderCount)
+    // Current and prior periods
+    const curPeriodKey   = periodKeys[periodKeys.length - 1]
+    const priorPeriodKey = periodKeys[periodKeys.length - 2] ?? preMoMKey
+
+    const curRevenue  = revenueByMonth[curPeriodKey] ?? 0
+    const curExpenses = expensesByMonth[curPeriodKey] ?? 0
+    const curNetProfit = curRevenue - curExpenses
+
+    const priorRevenue  = revenueByMonth[priorPeriodKey] ?? 0
+    const priorExpenses = expensesByMonth[priorPeriodKey] ?? 0
+    const priorNetProfit = priorRevenue - priorExpenses
+
+    const current_period: PeriodComparisonReport['current_period'] = {
+      label:            formatTurkishMonthLabel(curPeriodKey),
+      revenue_try:      curRevenue,
+      expenses_try:     curExpenses,
+      gross_profit_try: curRevenue,   // simplified: no COGS
+      net_profit_try:   curNetProfit,
+      gross_margin_pct: simpleGrossMarginPct(curRevenue),
+      net_margin_pct:   simpleNetMarginPct(curRevenue, curNetProfit),
+    }
+
+    const prior_period: PeriodComparisonReport['prior_period'] = {
+      label:            formatTurkishMonthLabel(priorPeriodKey),
+      revenue_try:      priorRevenue,
+      expenses_try:     priorExpenses,
+      gross_profit_try: priorRevenue, // simplified: no COGS
+      net_profit_try:   priorNetProfit,
+      gross_margin_pct: simpleGrossMarginPct(priorRevenue),
+      net_margin_pct:   simpleNetMarginPct(priorRevenue, priorNetProfit),
+    }
+
+    // Changes
+    const revenue_change_pct = computeMomChange(curRevenue, priorRevenue)
+    const expense_change_pct = computeMomChange(curExpenses, priorExpenses)
+    const profit_change_pct  = computeMomChange(curNetProfit, priorNetProfit)
+
+    const curGmPct   = current_period.gross_margin_pct
+    const priorGmPct = prior_period.gross_margin_pct
+    const gross_margin_change_ppt =
+      curGmPct !== null && priorGmPct !== null ? curGmPct - priorGmPct : null
+
+    const growth_direction = classifyGrowthDirection(revenue_change_pct)
+
+    // Trend momentum: compare last two MoM values in series
+    const lastMom  = monthly_series[monthly_series.length - 1]?.mom_revenue_change_pct ?? null
+    const priorMom = monthly_series[monthly_series.length - 2]?.mom_revenue_change_pct ?? null
+    const acceleration = computeTrendAcceleration(lastMom, priorMom)
+    const trend_momentum = classifyTrendMomentum(acceleration)
+
+    // Rolling 3m
+    const revenueValues = monthly_series.map(s => s.revenue_try)
+    const avg_revenue   = computeRolling3mAvg(revenueValues)
+    const total_revenue = computeRolling3mTotal(revenueValues)
+
+    // Run rate (current month × 12)
+    const run_rate = computeRunRate(curRevenue, 1)
+
+    // CMGR over last 3 months (need 4 data points)
+    let cmgr_3m: number | null = null
+    if (monthly_series.length >= 4) {
+      const firstRevenue = monthly_series[monthly_series.length - 4].revenue_try
+      cmgr_3m = computeCmgr(firstRevenue, curRevenue, 3)
+    }
+
+    // Narrative
+    const narrative = generatePeriodComparisonNarrative({
+      revenueChangePct: revenue_change_pct,
+      expenseChangePct: expense_change_pct,
+      profitChangePct:  profit_change_pct,
+      growthDirection:  growth_direction,
+      currentRevenue:   curRevenue,
+      currentProfit:    curNetProfit,
     })
 
-    // Current and prior month
-    const currentMonthData = periodDataMap.get(currentMonth) ?? { revenue: 0, expenses: 0, orderCount: 0 }
-    const priorMonthKey    = addMonths(currentMonth, -1)
-    const priorMonthData   = periodDataMap.get(priorMonthKey) ?? { revenue: 0, expenses: 0, orderCount: 0 }
-
-    const currentMetrics = buildPeriodMetrics(currentMonth, currentMonthData.revenue, currentMonthData.expenses, currentMonthData.orderCount)
-    const priorMoMMetrics = buildPeriodMetrics(priorMonthKey, priorMonthData.revenue, priorMonthData.expenses, priorMonthData.orderCount)
-
-    // MoM comparison
-    const mom_comparison = buildPeriodComparison('mom', currentMetrics, priorMoMMetrics)
-
-    // YoY comparison (same month last year)
-    let yoy_comparison: PeriodComparison | null = null
-    const priorYearData = periodDataMap.get(sameMonthPriorYear) ?? { revenue: 0, expenses: 0, orderCount: 0 }
-    const priorYearMetrics = buildPeriodMetrics(sameMonthPriorYear, priorYearData.revenue, priorYearData.expenses, priorYearData.orderCount)
-    // Only include if there's any data from prior year
-    if (priorYearData.revenue > 0 || priorYearData.expenses > 0) {
-      yoy_comparison = buildPeriodComparison('yoy', currentMetrics, priorYearMetrics)
-    }
-
-    // YTD comparison
-    let ytd_comparison: PeriodComparison | null = null
-    const currentYearMonth = now.getMonth() + 1 // 1-based month
-
-    if (currentYearMonth > 1) {
-      // Current YTD: Jan through current month
-      const currentYear     = now.getFullYear()
-      const priorYear       = currentYear - 1
-      let currentYtdRevenue = 0
-      let currentYtdExpenses = 0
-      let currentYtdOrders  = 0
-      let priorYtdRevenue   = 0
-      let priorYtdExpenses  = 0
-      let priorYtdOrders    = 0
-
-      for (let m = 1; m <= currentYearMonth; m++) {
-        const curKey  = formatMonthKey(currentYear, m)
-        const priorKey = formatMonthKey(priorYear, m)
-
-        const curData   = periodDataMap.get(curKey) ?? { revenue: 0, expenses: 0, orderCount: 0 }
-        // We may not have fetched prior year months other than same month; fetch inline if missing
-        let priorData   = periodDataMap.get(priorKey)
-        if (!priorData) {
-          const range = monthDateRange(priorKey)
-          priorData   = await fetchPeriodData(companyId, this.supabase, range.from, range.to)
-          periodDataMap.set(priorKey, priorData)
-        }
-
-        currentYtdRevenue  += curData.revenue
-        currentYtdExpenses += curData.expenses
-        currentYtdOrders   += curData.orderCount
-        priorYtdRevenue    += priorData.revenue
-        priorYtdExpenses   += priorData.expenses
-        priorYtdOrders     += priorData.orderCount
-      }
-
-      const currentYtdKey = `YTD-${currentYear}`
-      const priorYtdKey   = `YTD-${priorYear}`
-
-      const currentYtdMetrics = buildPeriodMetrics(
-        currentYtdKey,
-        currentYtdRevenue,
-        currentYtdExpenses,
-        currentYtdOrders,
-        undefined,
-        currentYearMonth,
-      )
-      const priorYtdMetrics = buildPeriodMetrics(
-        priorYtdKey,
-        priorYtdRevenue,
-        priorYtdExpenses,
-        priorYtdOrders,
-        undefined,
-        currentYearMonth,
-      )
-
-      ytd_comparison = buildPeriodComparison('ytd', currentYtdMetrics, priorYtdMetrics)
-    }
-
-    // Trend streak and CMGR
-    const trend_streak = computeTrendStreak(monthly_series)
-    const cmgr_raw     = computeCmgr(
-      monthly_series[0]?.revenue_try ?? 0,
-      monthly_series[monthly_series.length - 1]?.revenue_try ?? 0,
-      monthly_series.length,
-    )
-    const cmgr_pct   = cmgr_raw
-    const best_month  = findBestMonth(monthly_series)
-    const worst_month = findWorstMonth(monthly_series)
-
     return {
-      current_month: currentMonth,
-      mom_comparison,
-      yoy_comparison,
-      ytd_comparison,
+      current_period,
+      prior_period,
+      changes: {
+        revenue_change_pct,
+        expense_change_pct,
+        profit_change_pct,
+        gross_margin_change_ppt,
+        growth_direction,
+        trend_momentum,
+      },
+      rolling_3m: { avg_revenue, total_revenue },
+      run_rate,
+      cmgr_3m,
       monthly_series,
-      trend_streak,
-      cmgr_pct,
-      best_month,
-      worst_month,
+      narrative,
     }
   }
 }
