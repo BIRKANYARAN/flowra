@@ -3,55 +3,83 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // MarginTrendClient
 //
-// Profit Margin Trend Decomposition dashboard.
+// Margin Trend Analysis dashboard — gross, operating, and net margin over 12
+// months with anomaly indicators and Turkish SME benchmark comparison.
 //
 // Features:
-//   - 3 margin KPI tiles: Brüt Marj / EBITDA Marjı / Net Marj (trailing 12m avg)
-//     with trend arrows (expanding=green / contracting=red / stable=gray)
-//   - Monthly trend table (last 12 months):
-//     Month | Revenue | Gross Margin% | EBITDA% | Net% | Gross Δ
-//     Color arrows on delta column; best period gold, worst period red
-//   - Margin drivers section: top 3 drivers with TRY impact and Turkish description
-//   - Overall trend banner: "Brüt marj [genişliyor / daralıyor / stabil seyrediyor]"
-//   - Empty state: "Marj verisi hesaplanamadı"
+//   - KPI tiles: latest gross / operating / net margin with avg and health badge
+//   - Monthly CSS bar chart for gross margin trend (color-coded)
+//   - Rolling average overlay line
+//   - Anomaly month badges
+//   - Benchmark gap indicator vs Turkish SME average
+//   - Best / worst month highlights
+//   - Turkish narrative summary
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useQuery } from '@tanstack/react-query'
-import { fmtTRY, fmtPct, fmtDelta, fmtMonthShort } from '@/lib/format'
-import type { MarginTrendReport, MarginPeriod } from '@/lib/services/finance/margin-trend.service'
+import type {
+  MarginTrendReport,
+  MonthlyMarginPoint,
+} from '@/lib/services/finance/margin-trend.service'
+import {
+  TURKISH_SME_GROSS_MARGIN_BENCHMARK,
+  TURKISH_SME_NET_MARGIN_BENCHMARK,
+} from '@/lib/services/finance/margin-trend.service'
 
-// ── Trend arrow ───────────────────────────────────────────────────────────────
+// ── Types ─────────────────────────────────────────────────────────────────────
 
-type TrendDir = 'expanding' | 'contracting' | 'stable' | 'insufficient_data'
+type MarginTrend = 'expanding' | 'contracting' | 'volatile' | 'stable' | 'insufficient_data'
+type MarginHealth = 'excellent' | 'strong' | 'adequate' | 'thin' | 'negative' | 'insufficient_data'
 
-function TrendArrow({ trend, size = 'md' }: { trend: TrendDir; size?: 'sm' | 'md' }) {
-  const config: Record<TrendDir, { icon: string; cls: string; label: string }> = {
-    expanding:         { icon: '↑', cls: 'text-green-600',  label: 'Genişliyor' },
-    contracting:       { icon: '↓', cls: 'text-red-600',    label: 'Daralıyor' },
-    stable:            { icon: '→', cls: 'text-slate-400',  label: 'Stabil' },
-    insufficient_data: { icon: '—', cls: 'text-slate-300',  label: 'Yetersiz Veri' },
-  }
-  const c = config[trend]
-  const iconCls = size === 'sm' ? 'text-sm' : 'text-xl'
-  const lblCls  = size === 'sm' ? 'text-[9px]' : 'text-[11px]'
+// ── Formatters ────────────────────────────────────────────────────────────────
+
+function fmtPct(v: number | null, decimals = 1): string {
+  if (v === null) return '—'
+  return `%${v.toFixed(decimals)}`
+}
+
+function fmtMonthShort(ym: string): string {
+  const MONTHS = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara']
+  const [, m] = ym.split('-')
+  return MONTHS[(parseInt(m, 10) - 1)] ?? ym
+}
+
+// ── Trend badge ───────────────────────────────────────────────────────────────
+
+const TREND_CONFIG: Record<MarginTrend, { label: string; cls: string; dot: string }> = {
+  expanding:         { label: 'Genişliyor',        cls: 'bg-green-50 border-green-300 text-green-800',    dot: 'bg-green-500' },
+  contracting:       { label: 'Daralıyor',          cls: 'bg-red-50 border-red-300 text-red-800',          dot: 'bg-red-500' },
+  volatile:          { label: 'Dalgalı',            cls: 'bg-amber-50 border-amber-300 text-amber-800',    dot: 'bg-amber-500' },
+  stable:            { label: 'Stabil',             cls: 'bg-slate-50 border-slate-300 text-slate-600',    dot: 'bg-slate-400' },
+  insufficient_data: { label: 'Yetersiz Veri',      cls: 'bg-slate-50 border-slate-200 text-slate-400',    dot: 'bg-slate-300' },
+}
+
+function TrendBadge({ trend }: { trend: MarginTrend }) {
+  const cfg = TREND_CONFIG[trend]
   return (
-    <span className={`font-black ${iconCls} ${c.cls}`} title={c.label}>
-      {c.icon}
-      <span className={`font-semibold ml-0.5 ${lblCls}`}>{c.label}</span>
+    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[10px] font-bold ${cfg.cls}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+      {cfg.label}
     </span>
   )
 }
 
-// ── Delta cell ────────────────────────────────────────────────────────────────
+// ── Health badge ──────────────────────────────────────────────────────────────
 
-function DeltaCell({ delta }: { delta: number | null }) {
-  if (delta === null) return <span className="text-[#94a3b8]">—</span>
-  const isPos = delta > 0
-  const cls = delta > 1 ? 'text-green-600' : delta < -1 ? 'text-red-600' : 'text-slate-400'
-  const icon = delta > 1 ? '↑' : delta < -1 ? '↓' : '→'
+const HEALTH_CONFIG: Record<MarginHealth, { label: string; cls: string }> = {
+  excellent:         { label: 'Mükemmel',      cls: 'bg-emerald-100 text-emerald-800 border-emerald-300' },
+  strong:            { label: 'Güçlü',          cls: 'bg-green-100 text-green-800 border-green-300' },
+  adequate:          { label: 'Yeterli',        cls: 'bg-blue-100 text-blue-800 border-blue-300' },
+  thin:              { label: 'İnce',           cls: 'bg-amber-100 text-amber-800 border-amber-300' },
+  negative:          { label: 'Negatif',        cls: 'bg-red-100 text-red-800 border-red-300' },
+  insufficient_data: { label: 'Yetersiz Veri', cls: 'bg-slate-100 text-slate-500 border-slate-200' },
+}
+
+function HealthBadge({ health }: { health: MarginHealth }) {
+  const cfg = HEALTH_CONFIG[health]
   return (
-    <span className={`font-bold tabular-nums ${cls}`}>
-      {icon} {isPos ? '+' : ''}{delta.toFixed(1)}pp
+    <span className={`inline-flex items-center px-2 py-0.5 rounded border text-[10px] font-bold ${cfg.cls}`}>
+      {cfg.label}
     </span>
   )
 }
@@ -60,52 +88,108 @@ function DeltaCell({ delta }: { delta: number | null }) {
 
 function KpiTile({
   label,
-  subtitle,
   value,
-  trend,
-  accent,
+  avg,
+  benchmark,
+  accentCls,
 }: {
-  label:    string
-  subtitle: string
-  value:    number | null
-  trend:    TrendDir
-  accent:   string
+  label:      string
+  value:      number | null
+  avg:        number | null
+  benchmark:  number
+  accentCls:  string
 }) {
+  const gap = value !== null ? value - benchmark : null
+  const gapCls = gap === null ? '' : gap >= 0 ? 'text-green-600' : 'text-red-600'
+
   return (
-    <div className={`bg-white border border-l-4 border-[#e2e8f0] ${accent} rounded px-4 py-4 shadow-sm`}>
-      <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">{label}</div>
-      <div className="text-[10px] text-[#94a3b8] mb-2">{subtitle}</div>
-      <div className="text-2xl font-black tabular-nums text-[#0f172a] mb-2">
-        {value !== null ? fmtPct(value) : '—'}
+    <div className={`bg-white border border-[#e2e8f0] border-l-4 ${accentCls} rounded px-4 py-4 shadow-sm`}>
+      <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{label}</div>
+      <div className="text-2xl font-black tabular-nums text-[#0f172a] mb-1">
+        {fmtPct(value)}
       </div>
-      <TrendArrow trend={trend} size="sm" />
+      <div className="text-[10px] text-[#94a3b8]">
+        12A ort: <span className="font-semibold text-[#475569]">{fmtPct(avg)}</span>
+      </div>
+      {gap !== null && (
+        <div className={`text-[10px] font-semibold mt-0.5 ${gapCls}`}>
+          {gap >= 0 ? '+' : ''}{gap.toFixed(1)}pp KOBİ ort.
+        </div>
+      )}
     </div>
   )
 }
 
-// ── Driver badge ──────────────────────────────────────────────────────────────
+// ── Bar chart ─────────────────────────────────────────────────────────────────
 
-type DriverType =
-  | 'cogs_increase' | 'cogs_decrease'
-  | 'opex_increase' | 'opex_decrease'
-  | 'revenue_growth' | 'revenue_decline'
+function MarginBarChart({
+  points,
+  rolling,
+  anomalyMonths,
+  bestMonth,
+  worstMonth,
+}: {
+  points:        MonthlyMarginPoint[]
+  rolling:       Array<number | null>
+  anomalyMonths: string[]
+  bestMonth:     MonthlyMarginPoint | null
+  worstMonth:    MonthlyMarginPoint | null
+}) {
+  const allMargins = points
+    .map(p => p.gross_margin_pct)
+    .filter((v): v is number => v !== null)
+  const maxVal = allMargins.length > 0 ? Math.max(...allMargins, 5) : 100
+  const minVal = Math.min(...allMargins.map(v => Math.min(v, 0)), 0)
+  const range  = maxVal - minVal || 1
 
-const DRIVER_STYLE: Record<DriverType, { dot: string; badge: string }> = {
-  cogs_increase:   { dot: 'bg-red-500',    badge: 'bg-red-50 border-red-200 text-red-800' },
-  cogs_decrease:   { dot: 'bg-green-500',  badge: 'bg-green-50 border-green-200 text-green-800' },
-  opex_increase:   { dot: 'bg-orange-500', badge: 'bg-orange-50 border-orange-200 text-orange-800' },
-  opex_decrease:   { dot: 'bg-teal-500',   badge: 'bg-teal-50 border-teal-200 text-teal-800' },
-  revenue_growth:  { dot: 'bg-blue-500',   badge: 'bg-blue-50 border-blue-200 text-blue-800' },
-  revenue_decline: { dot: 'bg-red-400',    badge: 'bg-red-50 border-red-200 text-red-700' },
-}
+  const anomalySet = new Set(anomalyMonths)
 
-// ── Overall trend banner ──────────────────────────────────────────────────────
+  return (
+    <div className="flex items-end gap-1 h-32 mt-2">
+      {points.map((p, i) => {
+        const gm          = p.gross_margin_pct
+        const barHeight   = gm !== null ? Math.max(2, ((gm - minVal) / range) * 100) : 0
+        const isBest      = bestMonth?.year_month === p.year_month
+        const isWorst     = worstMonth?.year_month === p.year_month
+        const isAnomaly   = anomalySet.has(p.year_month)
 
-const OVERALL_TREND_CONFIG: Record<TrendDir, { text: string; cls: string; dotCls: string }> = {
-  expanding:         { text: 'Brüt marj son 12 ayda genişliyor.',         cls: 'bg-green-50 border-green-200 text-green-800',  dotCls: 'bg-green-500' },
-  contracting:       { text: 'Brüt marj son 12 ayda daralıyor.',          cls: 'bg-red-50 border-red-200 text-red-800',        dotCls: 'bg-red-500' },
-  stable:            { text: 'Brüt marj son 12 ayda stabil seyrediyor.',  cls: 'bg-slate-50 border-slate-200 text-slate-600',  dotCls: 'bg-slate-400' },
-  insufficient_data: { text: 'Brüt marj trendi için yeterli veri yok.',   cls: 'bg-slate-50 border-slate-200 text-slate-500',  dotCls: 'bg-slate-300' },
+        const barCls = isBest
+          ? 'bg-amber-400'
+          : isWorst
+          ? 'bg-red-400'
+          : isAnomaly
+          ? 'bg-orange-400'
+          : 'bg-[#3b82f6]'
+
+        const rollingPct  = rolling[i]
+        const rollingHeight = rollingPct !== null
+          ? Math.max(2, ((rollingPct - minVal) / range) * 100)
+          : null
+
+        return (
+          <div key={p.year_month} className="flex-1 flex flex-col items-center gap-0.5 relative">
+            {/* Rolling avg dot */}
+            {rollingHeight !== null && (
+              <div
+                className="absolute w-1.5 h-1.5 rounded-full bg-slate-500 z-10"
+                style={{ bottom: `${rollingHeight}%`, transform: 'translateY(50%)' }}
+                title={`3A ort: ${fmtPct(rollingPct)}`}
+              />
+            )}
+            <div
+              className={`w-full rounded-sm ${barCls} transition-all`}
+              style={{ height: `${barHeight}%` }}
+              title={`${p.year_month}: ${fmtPct(gm)}${isAnomaly ? ' (anomali)' : ''}`}
+            />
+            {isAnomaly && (
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-[8px] text-orange-600 font-bold">!</div>
+            )}
+            <div className="text-[8px] text-[#94a3b8] font-medium">{fmtMonthShort(p.year_month)}</div>
+          </div>
+        )
+      })}
+    </div>
+  )
 }
 
 // ── Main component ─────────────────────────────────────────────────────────────
@@ -116,156 +200,185 @@ interface Props {
 
 export function MarginTrendClient({ companyId }: Props) {
   const { data, isLoading, isError } = useQuery<{ report: MarginTrendReport }>({
-    queryKey:  ['margin-trend', companyId],
+    queryKey:  ['margin-trend-v2', companyId],
     queryFn:   async () => {
       const res = await fetch('/api/finance/margin-trend')
       if (!res.ok) throw new Error('Marj trendi verisi yüklenemedi')
       return res.json()
     },
-    staleTime: 10 * 60 * 1000,
+    staleTime: 15 * 60 * 1000,
   })
 
-  // ── Loading ────────────────────────────────────────────────────────────────
   if (isLoading) {
     return (
       <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm">
         <div className="animate-pulse space-y-3">
           <div className="h-4 bg-[#f1f5f9] rounded w-64" />
           <div className="grid grid-cols-3 gap-3">
-            <div className="h-24 bg-[#f1f5f9] rounded" />
-            <div className="h-24 bg-[#f1f5f9] rounded" />
-            <div className="h-24 bg-[#f1f5f9] rounded" />
+            {[0, 1, 2].map(i => <div key={i} className="h-24 bg-[#f1f5f9] rounded" />)}
           </div>
-          <div className="h-48 bg-[#f1f5f9] rounded" />
+          <div className="h-40 bg-[#f1f5f9] rounded" />
+          <div className="h-24 bg-[#f1f5f9] rounded" />
         </div>
       </div>
     )
   }
 
-  // ── Error / empty ──────────────────────────────────────────────────────────
   if (isError || !data?.report) {
     return (
       <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm text-center">
         <p className="text-sm text-[#64748b] font-medium">Marj verisi hesaplanamadı</p>
-        <p className="text-xs text-[#94a3b8] mt-1">Satış ve gider verileri mevcut olduğunda otomatik hesaplanır.</p>
+        <p className="text-xs text-[#94a3b8] mt-1">
+          Satış ve gider verileri mevcut olduğunda otomatik hesaplanır.
+        </p>
       </div>
     )
   }
 
-  const report = data.report
-  const overall = OVERALL_TREND_CONFIG[report.overall_gross_margin_trend]
-
-  // Determine overall gross/ebitda/net trend from current period delta
-  const cur = report.current
-  const grossTrend:  TrendDir = cur ? cur.gross_margin_trend : 'insufficient_data'
-
-  // For EBITDA and Net: classify from current period's delta
-  function trendFromDelta(delta: number | null): TrendDir {
-    if (delta === null) return 'insufficient_data'
-    if (delta > 1)  return 'expanding'
-    if (delta < -1) return 'contracting'
-    return 'stable'
-  }
-  const ebitdaTrend: TrendDir = trendFromDelta(cur?.ebitda_margin_delta ?? null)
-  const netTrend:    TrendDir = trendFromDelta(cur?.net_margin_delta ?? null)
-
-  const bestPeriod  = report.best_gross_margin_period
-  const worstPeriod = report.worst_gross_margin_period
+  const r = data.report
+  const latestOpMargin = r.monthly_points[r.monthly_points.length - 1]?.operating_margin_pct ?? null
+  const avgOpMargin    = (() => {
+    const vals = r.monthly_points.map(p => p.operating_margin_pct).filter((v): v is number => v !== null)
+    return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null
+  })()
 
   return (
     <div className="space-y-4">
 
-      {/* ── Section header ──────────────────────────────────────────────────── */}
-      <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
-        Kâr Marjı Trend Analizi — Son 12 Ay
+      {/* ── Header ─────────────────────────────────────────────────────────── */}
+      <div className="flex items-center justify-between">
+        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+          Kâr Marjı Trend Analizi — Son 12 Ay
+        </div>
+        <HealthBadge health={r.margin_health as MarginHealth} />
       </div>
 
-      {/* ── Overall trend banner ─────────────────────────────────────────────── */}
-      <div className={`rounded border px-4 py-3 flex items-center gap-3 ${overall.cls}`}>
-        <span className={`w-2 h-2 rounded-full shrink-0 ${overall.dotCls}`} />
-        <span className="text-[12px] font-semibold">{overall.text}</span>
+      {/* ── Narrative banner ────────────────────────────────────────────────── */}
+      <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-3">
+        <p className="text-[12px] font-semibold text-[#334155]">{r.narrative}</p>
       </div>
 
-      {/* ── 3 KPI tiles ──────────────────────────────────────────────────────── */}
+      {/* ── KPI tiles ───────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-3 gap-3">
         <KpiTile
           label="Brüt Marj"
-          subtitle="12 aylık ortalama"
-          value={report.trailing_12m_avg_gross_margin}
-          trend={grossTrend}
-          accent="border-l-[#059669]"
+          value={r.latest_gross_margin_pct}
+          avg={r.avg_gross_margin_pct}
+          benchmark={TURKISH_SME_GROSS_MARGIN_BENCHMARK}
+          accentCls="border-l-[#059669]"
         />
         <KpiTile
-          label="EBITDA Marjı"
-          subtitle="12 aylık ortalama"
-          value={
-            report.periods.length > 0
-              ? (report.periods
-                  .map(p => p.ebitda_margin_pct)
-                  .filter((v): v is number => v !== null)
-                  .reduce((a, b, _, arr) => a + b / arr.length, 0) || null)
-              : null
-          }
-          trend={ebitdaTrend}
-          accent="border-l-[#3b82f6]"
+          label="Faaliyet Marjı"
+          value={latestOpMargin}
+          avg={avgOpMargin}
+          benchmark={12.0}
+          accentCls="border-l-[#3b82f6]"
         />
         <KpiTile
           label="Net Marj"
-          subtitle="12 aylık ortalama"
-          value={report.trailing_12m_avg_net_margin}
-          trend={netTrend}
-          accent="border-l-[#d97706]"
+          value={r.latest_net_margin_pct}
+          avg={r.avg_net_margin_pct}
+          benchmark={TURKISH_SME_NET_MARGIN_BENCHMARK}
+          accentCls="border-l-[#d97706]"
         />
       </div>
 
-      {/* ── Monthly trend table ───────────────────────────────────────────────── */}
+      {/* ── Trend badges ─────────────────────────────────────────────────────── */}
+      <div className="flex flex-wrap gap-2 items-center">
+        <span className="text-[10px] text-[#94a3b8] font-semibold">Brüt Marj Trendi:</span>
+        <TrendBadge trend={r.gross_margin_trend as MarginTrend} />
+        <span className="text-[10px] text-[#94a3b8] font-semibold ml-2">Net Marj Trendi:</span>
+        <TrendBadge trend={r.net_margin_trend as MarginTrend} />
+        {r.anomaly_months.length > 0 && (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-bold bg-orange-50 border-orange-300 text-orange-800 ml-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
+            {r.anomaly_months.length} anomali ay
+          </span>
+        )}
+      </div>
+
+      {/* ── Bar chart ────────────────────────────────────────────────────────── */}
+      <div className="bg-white border border-[#e2e8f0] rounded p-5 shadow-sm">
+        <div className="flex items-center justify-between mb-1">
+          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+            Aylık Brüt Marj
+          </div>
+          <div className="flex gap-3 text-[9px] text-[#94a3b8]">
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-amber-400 inline-block" /> En İyi</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-red-400 inline-block" /> En Kötü</span>
+            <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-slate-500 inline-block" /> 3A Ort.</span>
+            <span className="flex items-center gap-1 text-orange-600 font-bold">! Anomali</span>
+          </div>
+        </div>
+
+        <MarginBarChart
+          points={r.monthly_points}
+          rolling={r.rolling_avg_gross_margin}
+          anomalyMonths={r.anomaly_months}
+          bestMonth={r.best_month}
+          worstMonth={r.worst_month}
+        />
+
+        {/* Benchmark line label */}
+        <div className="mt-2 text-[9px] text-[#94a3b8] flex gap-4">
+          <span>KOBİ Brüt Marj Kıyası: <span className="font-bold text-[#64748b]">%{TURKISH_SME_GROSS_MARGIN_BENCHMARK}</span></span>
+          {r.gross_margin_benchmark_gap !== null && (
+            <span className={r.gross_margin_benchmark_gap >= 0 ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}>
+              {r.gross_margin_benchmark_gap >= 0 ? '+' : ''}{r.gross_margin_benchmark_gap.toFixed(1)}pp kıyasla
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* ── Monthly detail table ─────────────────────────────────────────────── */}
       <div className="bg-white border border-[#e2e8f0] rounded p-5 shadow-sm overflow-x-auto">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">
           Aylık Marj Detayı
         </div>
-        <table className="w-full text-xs border-collapse min-w-[640px]">
+        <table className="w-full text-xs border-collapse min-w-[560px]">
           <thead>
             <tr className="border-b border-[#e2e8f0]">
-              {['Dönem', 'Ciro', 'Brüt Marj', 'EBITDA', 'Net Marj', 'Brüt Δ'].map(h => (
-                <th key={h} className="text-right py-2 px-2 first:text-left text-[10px] font-black uppercase tracking-wide text-[#94a3b8] whitespace-nowrap">
+              {['Ay', 'Brüt Marj', 'Faaliyet Marjı', 'Net Marj', '3A Ort. (Brüt)'].map(h => (
+                <th key={h} className="text-right py-2 px-2 first:text-left text-[10px] font-black uppercase tracking-wide text-[#94a3b8]">
                   {h}
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {[...report.periods].reverse().map((p: MarginPeriod) => {
-              const isBest  = p.period_key === bestPeriod
-              const isWorst = p.period_key === worstPeriod
-              const rowCls  = isBest
-                ? 'bg-yellow-50 border-t border-yellow-200'
+            {[...r.monthly_points].reverse().map((p, ri) => {
+              const origIdx      = r.monthly_points.length - 1 - ri
+              const rollingVal   = r.rolling_avg_gross_margin[origIdx]
+              const isBest       = r.best_month?.year_month === p.year_month
+              const isWorst      = r.worst_month?.year_month === p.year_month
+              const isAnomaly    = r.anomaly_months.includes(p.year_month)
+              const rowCls = isBest
+                ? 'border-t border-[#f1f5f9] bg-yellow-50'
                 : isWorst
-                ? 'bg-red-50 border-t border-red-100'
+                ? 'border-t border-[#f1f5f9] bg-red-50'
+                : isAnomaly
+                ? 'border-t border-[#f1f5f9] bg-orange-50'
                 : 'border-t border-[#f1f5f9]'
 
               return (
-                <tr key={p.period_key} className={rowCls}>
+                <tr key={p.year_month} className={rowCls}>
                   <td className="py-1.5 px-2 text-left">
-                    <span className="text-[11px] font-semibold text-[#334155]">
-                      {fmtMonthShort(p.period_key)}
-                    </span>
-                    {isBest  && <span className="ml-1 text-[9px] text-yellow-700 font-bold">★ En İyi</span>}
-                    {isWorst && <span className="ml-1 text-[9px] text-red-600 font-bold">▼ En Kötü</span>}
-                  </td>
-                  <td className="py-1.5 px-2 text-right text-[11px] tabular-nums text-[#475569]">
-                    {fmtTRY(p.revenue_try, 0)}
+                    <span className="text-[11px] font-semibold text-[#334155]">{p.year_month}</span>
+                    {isBest    && <span className="ml-1 text-[9px] text-amber-700 font-bold">★</span>}
+                    {isWorst   && <span className="ml-1 text-[9px] text-red-600 font-bold">▼</span>}
+                    {isAnomaly && <span className="ml-1 text-[9px] text-orange-600 font-bold">!</span>}
                   </td>
                   <td className="py-1.5 px-2 text-right text-[11px] tabular-nums font-semibold text-[#1e293b]">
-                    {p.gross_margin_pct !== null ? fmtPct(p.gross_margin_pct) : '—'}
+                    {fmtPct(p.gross_margin_pct)}
                   </td>
                   <td className="py-1.5 px-2 text-right text-[11px] tabular-nums text-[#475569]">
-                    {p.ebitda_margin_pct !== null ? fmtPct(p.ebitda_margin_pct) : '—'}
+                    {fmtPct(p.operating_margin_pct)}
                   </td>
                   <td className="py-1.5 px-2 text-right text-[11px] tabular-nums text-[#475569]">
-                    {p.net_margin_pct !== null ? fmtPct(p.net_margin_pct) : '—'}
+                    {fmtPct(p.net_margin_pct)}
                   </td>
-                  <td className="py-1.5 px-2 text-right text-[11px]">
-                    <DeltaCell delta={p.gross_margin_delta} />
+                  <td className="py-1.5 px-2 text-right text-[11px] tabular-nums text-[#64748b]">
+                    {fmtPct(rollingVal)}
                   </td>
                 </tr>
               )
@@ -273,39 +386,29 @@ export function MarginTrendClient({ companyId }: Props) {
           </tbody>
         </table>
         <div className="text-[9px] text-[#94a3b8] mt-3 font-semibold">
-          Δ = bir önceki aya göre puan farkı (pp). ★ En yüksek brüt marjlı dönem. ▼ En düşük brüt marjlı dönem.
+          ★ En yüksek brüt marjlı ay · ▼ En düşük brüt marjlı ay · ! Anomali (±2σ)
         </div>
       </div>
 
-      {/* ── Margin drivers ───────────────────────────────────────────────────── */}
-      {report.margin_drivers.length > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded p-5 shadow-sm">
-          <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">
-            Marj Sürücüleri — Son vs 3 Ay Önce
-          </div>
-          <div className="space-y-3">
-            {report.margin_drivers.map((d, idx) => {
-              const style = DRIVER_STYLE[d.driver] ?? { dot: 'bg-slate-400', badge: 'bg-slate-50 border-slate-200 text-slate-700' }
-              return (
-                <div key={idx} className="flex items-start gap-3">
-                  <span className={`w-2 h-2 rounded-full shrink-0 mt-1.5 ${style.dot}`} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[11px] font-semibold text-[#334155]">{d.description}</p>
-                  </div>
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] font-bold shrink-0 ${style.badge}`}>
-                    {fmtTRY(d.impact_try, 0)}
-                  </span>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Empty drivers state */}
-      {report.margin_drivers.length === 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm text-center">
-          <p className="text-[11px] text-[#94a3b8]">Marj sürücüsü analizi için yeterli tarihsel veri yok.</p>
+      {/* ── Best / worst highlights ──────────────────────────────────────────── */}
+      {(r.best_month || r.worst_month) && (
+        <div className="grid grid-cols-2 gap-3">
+          {r.best_month && (
+            <div className="bg-amber-50 border border-amber-200 rounded px-4 py-3">
+              <div className="text-[9px] font-black uppercase tracking-widest text-amber-600 mb-1">En İyi Ay</div>
+              <div className="text-[13px] font-bold text-amber-900">{r.best_month.year_month}</div>
+              <div className="text-xl font-black text-amber-700">{fmtPct(r.best_month.gross_margin_pct)}</div>
+              <div className="text-[9px] text-amber-600 mt-0.5">brüt marj</div>
+            </div>
+          )}
+          {r.worst_month && (
+            <div className="bg-red-50 border border-red-200 rounded px-4 py-3">
+              <div className="text-[9px] font-black uppercase tracking-widest text-red-600 mb-1">En Kötü Ay</div>
+              <div className="text-[13px] font-bold text-red-900">{r.worst_month.year_month}</div>
+              <div className="text-xl font-black text-red-700">{fmtPct(r.worst_month.gross_margin_pct)}</div>
+              <div className="text-[9px] text-red-600 mt-0.5">brüt marj</div>
+            </div>
+          )}
         </div>
       )}
 

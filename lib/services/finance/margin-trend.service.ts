@@ -1,20 +1,13 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // lib/services/finance/margin-trend.service.ts
 //
-// Profit Margin Trend Decomposition
+// Margin Trend Analysis Service
 //
-// Tracks gross margin, EBITDA margin, and net margin across 12 months,
-// decomposes margin drivers (COGS changes, OpEx changes, revenue mix).
+// Tracks gross margin, operating margin, and net margin trends over 12 months,
+// with anomaly detection and benchmarking against Turkish SME averages.
 //
-// Pure functions exported for testing:
-//   computeEbitdaMargin   — ebitda / revenue × 100; null if revenue = 0
-//   computeMarginDelta    — current - prior; null if either is null
-//   classifyMarginTrend   — expanding | contracting | stable | insufficient_data
-//   computeCogsRatio      — cogs / revenue × 100; null if revenue = 0
-//   computeOpexRatio      — opex / revenue × 100; null if revenue = 0
-//
-// Class: MarginTrendService
-//   getReport(companyId): Promise<MarginTrendReport>
+// Pure functions exported for testing.
+// Class: MarginTrendService → getReport(companyId): Promise<MarginTrendReport>
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -22,70 +15,330 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyClient = SupabaseClient<any>
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+// ── Turkish SME Benchmarks ─────────────────────────────────────────────────────
 
-export interface MarginPeriod {
-  period_key:   string
-  period_label: string
-  revenue_try:      number
-  cogs_try:         number
-  gross_profit_try: number
-  opex_try:         number
-  ebitda_try:       number
-  net_income_try:   number
+export const TURKISH_SME_GROSS_MARGIN_BENCHMARK     = 28.0   // %28 typical
+export const TURKISH_SME_NET_MARGIN_BENCHMARK       = 8.0    // %8 typical
+export const TURKISH_SME_OPERATING_MARGIN_BENCHMARK = 12.0   // %12 typical
 
-  gross_margin_pct:  number | null
-  ebitda_margin_pct: number | null
-  net_margin_pct:    number | null
-  cogs_ratio_pct:    number | null
-  opex_ratio_pct:    number | null
+// ── Types ──────────────────────────────────────────────────────────────────────
 
-  gross_margin_delta:  number | null    // vs prior period
-  ebitda_margin_delta: number | null
-  net_margin_delta:    number | null
-
-  gross_margin_trend: 'expanding' | 'contracting' | 'stable' | 'insufficient_data'
+export interface MonthlyMarginPoint {
+  year_month:           string         // YYYY-MM
+  revenue:              number
+  cogs:                 number
+  operating_expenses:   number
+  net_income:           number
+  gross_margin_pct:     number | null  // (revenue-cogs)/revenue × 100
+  operating_margin_pct: number | null  // (revenue-cogs-opex)/revenue × 100
+  net_margin_pct:       number | null  // net_income/revenue × 100
 }
 
 export interface MarginTrendReport {
-  periods: MarginPeriod[]           // last 12 months
-  current: MarginPeriod | null      // most recent period
-  trailing_12m_avg_gross_margin: number | null
-  trailing_12m_avg_net_margin:   number | null
-  best_gross_margin_period:  string | null
-  worst_gross_margin_period: string | null
-  overall_gross_margin_trend: 'expanding' | 'contracting' | 'stable' | 'insufficient_data'
-  margin_drivers: Array<{
-    driver: 'cogs_increase' | 'cogs_decrease' | 'opex_increase' | 'opex_decrease' | 'revenue_growth' | 'revenue_decline'
-    impact_try: number
-    description: string   // Turkish
-  }>
+  monthly_points:             MonthlyMarginPoint[]
+  rolling_avg_gross_margin:   Array<number | null>   // 3-month rolling
+  gross_margin_trend:         ReturnType<typeof classifyMarginTrend>
+  net_margin_trend:           ReturnType<typeof classifyMarginTrend>
+  avg_gross_margin_pct:       number | null
+  avg_net_margin_pct:         number | null
+  latest_gross_margin_pct:    number | null
+  latest_net_margin_pct:      number | null
+  gross_margin_benchmark_gap: number | null          // vs Turkish SME benchmark
+  margin_health:              ReturnType<typeof classifyMarginHealth>
+  anomaly_months:             string[]               // YYYY-MM of anomalous months
+  best_month:                 MonthlyMarginPoint | null
+  worst_month:                MonthlyMarginPoint | null
+  narrative:                  string
 }
 
-// ── Turkish month names ───────────────────────────────────────────────────────
+// ── Pure exported functions ────────────────────────────────────────────────────
 
-const MONTH_NAMES: Record<string, string> = {
-  '01': 'Ocak',    '02': 'Şubat',   '03': 'Mart',
-  '04': 'Nisan',   '05': 'Mayıs',   '06': 'Haziran',
-  '07': 'Temmuz',  '08': 'Ağustos', '09': 'Eylül',
-  '10': 'Ekim',    '11': 'Kasım',   '12': 'Aralık',
+/**
+ * Gross margin: (revenue - cogs) / revenue × 100.
+ * Returns null if revenue === 0.
+ */
+export function computeGrossMarginPct(revenue: number, cogs: number): number | null {
+  if (revenue === 0) return null
+  return ((revenue - cogs) / revenue) * 100
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function periodLabel(periodKey: string): string {
-  const [year, month] = periodKey.split('-')
-  return `${MONTH_NAMES[month] ?? month} ${year}`
+/**
+ * Operating margin: (revenue - cogs - opex) / revenue × 100.
+ * Returns null if revenue === 0.
+ */
+export function computeOperatingMarginPct(
+  revenue: number,
+  cogs: number,
+  opex: number,
+): number | null {
+  if (revenue === 0) return null
+  return ((revenue - cogs - opex) / revenue) * 100
 }
 
-function periodBounds(periodKey: string): { from: string; to: string } {
-  const [y, m] = periodKey.split('-').map(Number)
-  const lastDay = new Date(y, m, 0).getDate()
-  return {
-    from: `${periodKey}-01`,
-    to:   `${periodKey}-${String(lastDay).padStart(2, '0')}`,
+/**
+ * Net margin: netIncome / revenue × 100.
+ * Returns null if revenue === 0.
+ */
+export function computeNetMarginPct(revenue: number, netIncome: number): number | null {
+  if (revenue === 0) return null
+  return (netIncome / revenue) * 100
+}
+
+/**
+ * Margin change: currentPct - priorPct.
+ * Returns null if either is null.
+ */
+export function computeMarginChange(
+  currentPct: number | null,
+  priorPct: number | null,
+): number | null {
+  if (currentPct === null || priorPct === null) return null
+  return currentPct - priorPct
+}
+
+/**
+ * Rolling average margin over a sliding window.
+ * Returns a same-length array. First (window-1) entries use available non-null points.
+ * Null if all values in the window are null.
+ */
+export function computeRollingAvgMargin(
+  points: Array<number | null>,
+  window: number,
+): Array<number | null> {
+  return points.map((_, idx) => {
+    const start  = Math.max(0, idx - window + 1)
+    const slice  = points.slice(start, idx + 1)
+    const nonNull = slice.filter((v): v is number => v !== null)
+    if (nonNull.length === 0) return null
+    return nonNull.reduce((a, b) => a + b, 0) / nonNull.length
+  })
+}
+
+/**
+ * Population standard deviation of non-null values.
+ * Returns null if fewer than 2 non-null values.
+ */
+export function computeStddev(values: Array<number | null>): number | null {
+  const nonNull = values.filter((v): v is number => v !== null)
+  if (nonNull.length < 2) return null
+  const mean = nonNull.reduce((a, b) => a + b, 0) / nonNull.length
+  const variance = nonNull.reduce((sum, v) => sum + (v - mean) ** 2, 0) / nonNull.length
+  return Math.sqrt(variance)
+}
+
+/**
+ * Detect anomaly: |current - rollingAvg| > threshold × stddev.
+ * Returns false if any input is null or stddev === 0.
+ */
+export function detectMarginAnomaly(
+  currentMargin: number | null,
+  rollingAvgMargin: number | null,
+  stddev: number | null,
+  threshold: number = 2.0,
+): boolean {
+  if (
+    currentMargin === null ||
+    rollingAvgMargin === null ||
+    stddev === null ||
+    stddev === 0
+  ) return false
+  return Math.abs(currentMargin - rollingAvgMargin) > threshold * stddev
+}
+
+/**
+ * Classify margin trend using linear regression slope on non-null values.
+ * CV > 0.3 (and mean != 0) → volatile (checked before direction).
+ * slope > 0.5 pp/month → expanding
+ * slope < -0.5 pp/month → contracting
+ * else → stable
+ * < minPoints non-null → insufficient_data
+ */
+export function classifyMarginTrend(
+  margins: Array<number | null>,
+  minPoints: number = 3,
+): 'expanding' | 'contracting' | 'volatile' | 'stable' | 'insufficient_data' {
+  const nonNull = margins
+    .map((v, i) => ({ v, i }))
+    .filter((p): p is { v: number; i: number } => p.v !== null)
+
+  if (nonNull.length < minPoints) return 'insufficient_data'
+
+  const n    = nonNull.length
+  const vals = nonNull.map(p => p.v)
+  const idxs = nonNull.map(p => p.i)
+
+  const mean = vals.reduce((a, b) => a + b, 0) / n
+
+  // Coefficient of variation check (volatile)
+  const stddev = Math.sqrt(vals.reduce((sum, v) => sum + (v - mean) ** 2, 0) / n)
+  if (mean !== 0 && Math.abs(stddev / mean) > 0.3) return 'volatile'
+
+  // Linear regression slope
+  const meanIdx = idxs.reduce((a, b) => a + b, 0) / n
+  let num = 0, den = 0
+  for (let j = 0; j < n; j++) {
+    num += (idxs[j] - meanIdx) * (vals[j] - mean)
+    den += (idxs[j] - meanIdx) ** 2
   }
+  const slope = den === 0 ? 0 : num / den
+
+  if (slope > 0.5)  return 'expanding'
+  if (slope < -0.5) return 'contracting'
+  return 'stable'
 }
+
+/**
+ * Benchmark gap: currentMargin - benchmarkPct.
+ * Returns null if currentMargin is null.
+ */
+export function computeMarginBenchmarkGap(
+  currentMargin: number | null,
+  benchmarkPct: number,
+): number | null {
+  if (currentMargin === null) return null
+  return currentMargin - benchmarkPct
+}
+
+/**
+ * Classify overall margin health.
+ * Priority: insufficient_data → negative → excellent → strong → adequate → thin → negative (catch-all)
+ */
+export function classifyMarginHealth(
+  grossMarginPct: number | null,
+  netMarginPct: number | null,
+): 'excellent' | 'strong' | 'adequate' | 'thin' | 'negative' | 'insufficient_data' {
+  if (grossMarginPct === null && netMarginPct === null) return 'insufficient_data'
+
+  // Net margin negative check (uses netMarginPct if available; if null treat as 0 for this check)
+  if (netMarginPct !== null && netMarginPct < 0) return 'negative'
+
+  const gm = grossMarginPct ?? 0
+  const nm = netMarginPct ?? 0
+
+  if (gm >= 50 && nm >= 15) return 'excellent'
+  if (gm >= 35 && nm >= 8)  return 'strong'
+  if (gm >= 20 && nm >= 3)  return 'adequate'
+  if (gm >= 10 || nm >= 0)  return 'thin'
+  return 'negative'
+}
+
+/**
+ * Month with the highest gross_margin_pct. null if all null or empty.
+ */
+export function findBestMarginMonth(
+  points: MonthlyMarginPoint[],
+): MonthlyMarginPoint | null {
+  let best: MonthlyMarginPoint | null = null
+  for (const p of points) {
+    if (p.gross_margin_pct === null) continue
+    if (best === null || p.gross_margin_pct > (best.gross_margin_pct ?? -Infinity)) {
+      best = p
+    }
+  }
+  return best
+}
+
+/**
+ * Month with the lowest gross_margin_pct. null if all null or empty.
+ */
+export function findWorstMarginMonth(
+  points: MonthlyMarginPoint[],
+): MonthlyMarginPoint | null {
+  let worst: MonthlyMarginPoint | null = null
+  for (const p of points) {
+    if (p.gross_margin_pct === null) continue
+    if (worst === null || p.gross_margin_pct < (worst.gross_margin_pct ?? Infinity)) {
+      worst = p
+    }
+  }
+  return worst
+}
+
+/**
+ * Average of non-null values. null if empty or all null.
+ */
+export function computeAverageMargin(values: Array<number | null>): number | null {
+  const nonNull = values.filter((v): v is number => v !== null)
+  if (nonNull.length === 0) return null
+  return nonNull.reduce((a, b) => a + b, 0) / nonNull.length
+}
+
+/**
+ * Generate a deterministic Turkish narrative based on health + trend.
+ */
+export function generateMarginNarrative(
+  health: ReturnType<typeof classifyMarginHealth>,
+  trend: ReturnType<typeof classifyMarginTrend>,
+  latestGrossMargin: number | null,
+  latestNetMargin: number | null,
+  benchmarkGap: number | null,
+): string {
+  // Negative health takes precedence
+  if (health === 'negative') {
+    return 'Net kar marjı negatif — operasyonel gider yapısı acil inceleme gerektiriyor.'
+  }
+
+  if (health === 'insufficient_data') {
+    return 'Marj analizi için yeterli veri bulunmuyor. Satış ve gider kayıtları tamamlandığında otomatik hesaplanacak.'
+  }
+
+  const trendText: Record<ReturnType<typeof classifyMarginTrend>, string> = {
+    expanding:          'genişliyor',
+    contracting:        'daralıyor',
+    volatile:           'dalgalı bir seyir izliyor',
+    stable:             'stabil seyrediyor',
+    insufficient_data:  'değerlendirme için yeterli veri yok',
+  }
+
+  const healthLabel: Record<ReturnType<typeof classifyMarginHealth>, string> = {
+    excellent:          'mükemmel',
+    strong:             'güçlü',
+    adequate:           'yeterli',
+    thin:               'ince',
+    negative:           'negatif',
+    insufficient_data:  'belirsiz',
+  }
+
+  const gm  = latestGrossMargin !== null ? `%${latestGrossMargin.toFixed(1)} brüt` : null
+  const nm  = latestNetMargin   !== null ? `%${latestNetMargin.toFixed(1)} net`    : null
+  const marginStr = [gm, nm].filter(Boolean).join(', ')
+
+  const benchmarkStr = benchmarkGap !== null
+    ? benchmarkGap >= 0
+      ? ` Türk KOBİ ortalamasının ${Math.abs(benchmarkGap).toFixed(1)} puan üzerinde.`
+      : ` Türk KOBİ ortalamasının ${Math.abs(benchmarkGap).toFixed(1)} puan altında.`
+    : ''
+
+  // Special combo overrides
+  if (health === 'excellent' && trend === 'expanding') {
+    return `Brüt ve net kar marjları mükemmel seviyede ve genişliyor.${benchmarkStr}`
+  }
+
+  if (health === 'excellent' && trend === 'contracting') {
+    return `Marjlar hâlâ mükemmel seviyede, ancak son aylarda daralma eğilimi dikkat çekiyor.${benchmarkStr}`
+  }
+
+  if (health === 'thin' && trend === 'contracting') {
+    return `Marjlar inceliyor — son aylarda baskı altında.${benchmarkStr}`
+  }
+
+  if (health === 'adequate' && trend === 'stable') {
+    return `Marjlar yeterli seviyede ve stabil seyrediyor.${benchmarkStr}`
+  }
+
+  if (health === 'thin' && trend === 'volatile') {
+    return `Marjlar ince ve dalgalı — gelir-gider dengesinin yakından izlenmesi önerilir.${benchmarkStr}`
+  }
+
+  if (trend === 'volatile') {
+    return `Marjlar dalgalı bir seyir izliyor${marginStr ? ` (${marginStr})` : ''}. Gelir ve maliyet yapısındaki değişkenlik incelenmeli.${benchmarkStr}`
+  }
+
+  // Generic fallback
+  return `Kar marjları ${healthLabel[health]} seviyede ve ${trendText[trend]}${marginStr ? ` (${marginStr})` : ''}.${benchmarkStr}`
+}
+
+// ── Internal helpers ───────────────────────────────────────────────────────────
 
 function lastNMonthKeys(n: number): string[] {
   const keys: string[] = []
@@ -97,7 +350,16 @@ function lastNMonthKeys(n: number): string[] {
   return keys
 }
 
-// ── Expense types excluded from OpEx (non-operating) ─────────────────────────
+function monthBounds(yearMonth: string): { from: string; to: string } {
+  const [y, m] = yearMonth.split('-').map(Number)
+  const lastDay = new Date(y, m, 0).getDate()
+  return {
+    from: `${yearMonth}-01`,
+    to:   `${yearMonth}-${String(lastDay).padStart(2, '0')}`,
+  }
+}
+
+// Expense types that are NOT operating expenses
 const NON_OPEX_TYPES = new Set([
   'partner_financing',
   'loan_repayment',
@@ -107,111 +369,136 @@ const NON_OPEX_TYPES = new Set([
   'tax',
 ])
 
-// ── Pure exported functions ───────────────────────────────────────────────────
-
-/**
- * Compute EBITDA margin: ebitda / revenue × 100.
- * Returns null if revenue = 0.
- */
-export function computeEbitdaMargin(
-  ebitdaTry: number,
-  revenueTry: number,
-): number | null {
-  if (revenueTry === 0) return null
-  return (ebitdaTry / revenueTry) * 100
-}
-
-/**
- * Compute margin expansion/contraction vs prior period.
- * Returns null if either margin is null.
- */
-export function computeMarginDelta(
-  currentMarginPct: number | null,
-  priorMarginPct: number | null,
-): number | null {
-  if (currentMarginPct === null || priorMarginPct === null) return null
-  return currentMarginPct - priorMarginPct
-}
-
-/**
- * Classify margin trend direction.
- * delta > +1%: 'expanding'
- * delta < -1%: 'contracting'
- * within ±1%: 'stable'
- * null: 'insufficient_data'
- */
-export function classifyMarginTrend(
-  delta: number | null,
-): 'expanding' | 'contracting' | 'stable' | 'insufficient_data' {
-  if (delta === null) return 'insufficient_data'
-  if (delta > 1)  return 'expanding'
-  if (delta < -1) return 'contracting'
-  return 'stable'
-}
-
-/**
- * Compute COGS ratio: cogs / revenue × 100.
- * Returns null if revenue = 0.
- */
-export function computeCogsRatio(
-  cogsTry: number,
-  revenueTry: number,
-): number | null {
-  if (revenueTry === 0) return null
-  return (cogsTry / revenueTry) * 100
-}
-
-/**
- * Compute opex ratio: opex / revenue × 100.
- * Returns null if revenue = 0.
- */
-export function computeOpexRatio(
-  opexTry: number,
-  revenueTry: number,
-): number | null {
-  if (revenueTry === 0) return null
-  return (opexTry / revenueTry) * 100
-}
-
-// ── Raw period data ───────────────────────────────────────────────────────────
-
-interface RawPeriodData {
-  revenue: number
-  cogs:    number
-  opex:    number
-}
-
-// ── Service class ─────────────────────────────────────────────────────────────
+// ── Service class ──────────────────────────────────────────────────────────────
 
 export class MarginTrendService {
-  private supabase: AnyClient
+  constructor(private readonly supabase: AnyClient) {}
 
-  constructor(supabase: AnyClient) {
-    this.supabase = supabase
+  async getReport(companyId: string): Promise<MarginTrendReport> {
+    const monthKeys = lastNMonthKeys(12)
+
+    // Fetch all months in parallel using Promise.allSettled for resilience
+    const monthDataResults = await Promise.allSettled(
+      monthKeys.map(ym => this.fetchMonthData(companyId, ym)),
+    )
+
+    // Build monthly points
+    const monthly_points: MonthlyMarginPoint[] = monthKeys.map((ym, i) => {
+      const result = monthDataResults[i]
+      if (result.status === 'rejected') {
+        return {
+          year_month:           ym,
+          revenue:              0,
+          cogs:                 0,
+          operating_expenses:   0,
+          net_income:           0,
+          gross_margin_pct:     null,
+          operating_margin_pct: null,
+          net_margin_pct:       null,
+        }
+      }
+      const { revenue, cogs, opex } = result.value
+      const netIncome = revenue - cogs - opex
+
+      return {
+        year_month:           ym,
+        revenue,
+        cogs,
+        operating_expenses:   opex,
+        net_income:           netIncome,
+        gross_margin_pct:     computeGrossMarginPct(revenue, cogs),
+        operating_margin_pct: computeOperatingMarginPct(revenue, cogs, opex),
+        net_margin_pct:       computeNetMarginPct(revenue, netIncome),
+      }
+    })
+
+    // Derived analytics
+    const grossMargins = monthly_points.map(p => p.gross_margin_pct)
+    const netMargins   = monthly_points.map(p => p.net_margin_pct)
+
+    const rolling_avg_gross_margin = computeRollingAvgMargin(grossMargins, 3)
+
+    const gross_margin_trend = classifyMarginTrend(grossMargins)
+    const net_margin_trend   = classifyMarginTrend(netMargins)
+
+    const avg_gross_margin_pct   = computeAverageMargin(grossMargins)
+    const avg_net_margin_pct     = computeAverageMargin(netMargins)
+
+    const latestPoint = monthly_points[monthly_points.length - 1] ?? null
+    const latest_gross_margin_pct = latestPoint?.gross_margin_pct ?? null
+    const latest_net_margin_pct   = latestPoint?.net_margin_pct   ?? null
+
+    const gross_margin_benchmark_gap = computeMarginBenchmarkGap(
+      latest_gross_margin_pct,
+      TURKISH_SME_GROSS_MARGIN_BENCHMARK,
+    )
+
+    const margin_health = classifyMarginHealth(latest_gross_margin_pct, latest_net_margin_pct)
+
+    // Anomaly detection: flag months where gross margin deviates > 2σ from rolling avg
+    const grossStddev = computeStddev(grossMargins)
+    const anomaly_months: string[] = monthly_points
+      .filter((p, i) =>
+        detectMarginAnomaly(
+          p.gross_margin_pct,
+          rolling_avg_gross_margin[i],
+          grossStddev,
+          2.0,
+        ),
+      )
+      .map(p => p.year_month)
+
+    const best_month  = findBestMarginMonth(monthly_points)
+    const worst_month = findWorstMarginMonth(monthly_points)
+
+    const narrative = generateMarginNarrative(
+      margin_health,
+      gross_margin_trend,
+      latest_gross_margin_pct,
+      latest_net_margin_pct,
+      gross_margin_benchmark_gap,
+    )
+
+    return {
+      monthly_points,
+      rolling_avg_gross_margin,
+      gross_margin_trend,
+      net_margin_trend,
+      avg_gross_margin_pct,
+      avg_net_margin_pct,
+      latest_gross_margin_pct,
+      latest_net_margin_pct,
+      gross_margin_benchmark_gap,
+      margin_health,
+      anomaly_months,
+      best_month,
+      worst_month,
+      narrative,
+    }
   }
 
-  /**
-   * Fetch revenue, COGS (via sale_item_allocations), and OpEx for a month range.
-   */
-  private async fetchPeriodData(
+  // ── Private: fetch one month's raw data ──────────────────────────────────────
+
+  private async fetchMonthData(
     companyId: string,
-    from: string,
-    to: string,
-  ): Promise<RawPeriodData> {
-    // ── 1. Revenue ─────────────────────────────────────────────────────────────
+    yearMonth: string,
+  ): Promise<{ revenue: number; cogs: number; opex: number }> {
+    const { from, to } = monthBounds(yearMonth)
+
+    // 1. Revenue from sales
     const salesQ = this.supabase
       .from('sales')
-      .select('total_try')
+      .select('total, total_try, total_cost')
       .eq('company_id', companyId)
       .is('deleted_at', null)
       .gte('sale_date', from)
       .lte('sale_date', to)
       .not('payment_status', 'eq', 'cancelled')
 
-    // ── 2. Sale IDs for COGS lookup ────────────────────────────────────────────
+    // 2. Sale IDs for COGS lookup
     const saleIdsQ = this.supabase
       .from('sales')
-      .select('id')
+      .select('id, total_cost')
       .eq('company_id', companyId)
       .is('deleted_at', null)
       .gte('sale_date', from)
@@ -219,7 +506,7 @@ export class MarginTrendService {
       .not('payment_status', 'eq', 'cancelled')
       .limit(5000)
 
-    // ── 3. Expenses ────────────────────────────────────────────────────────────
+    // 3. Expenses (OpEx)
     const expQ = this.supabase
       .from('expenses')
       .select('amount_try, expense_type')
@@ -228,18 +515,23 @@ export class MarginTrendService {
       .gte('expense_date', from)
       .lte('expense_date', to)
 
-    const [salesRes, saleIdsRes, expRes] = await Promise.all([salesQ, saleIdsQ, expQ])
+    const [salesRes, saleIdsRes, expRes] = await Promise.allSettled([salesQ, saleIdsQ, expQ])
 
     // Revenue
-    const revenue = (salesRes.data ?? []).reduce(
-      (s: number, r: { total_try: number }) => s + Number(r.total_try ?? 0),
+    const salesData = salesRes.status === 'fulfilled' ? (salesRes.value.data ?? []) : []
+    const revenue = salesData.reduce(
+      (s: number, r: Record<string, unknown>) =>
+        s + Number(r.total_try ?? r.total ?? 0),
       0,
     )
 
-    // COGS via sale_item_allocations
+    // COGS: try sale_item_allocations first, fallback to total_cost
     let cogs = 0
-    const saleIds = (saleIdsRes.data ?? []).map((r: { id: string }) => r.id)
+    const saleRows = saleIdsRes.status === 'fulfilled' ? (saleIdsRes.value.data ?? []) : []
+    const saleIds  = saleRows.map((r: Record<string, unknown>) => String(r.id))
+
     if (saleIds.length > 0) {
+      // Try allocation-based COGS
       const saleItemsRes = await this.supabase
         .from('sale_items')
         .select('id')
@@ -247,7 +539,11 @@ export class MarginTrendService {
         .in('sale_id', saleIds)
         .limit(10000)
 
-      const saleItemIds = (saleItemsRes.data ?? []).map((si: { id: string }) => si.id)
+      const saleItemIds = (saleItemsRes.data ?? []).map(
+        (si: Record<string, unknown>) => String(si.id),
+      )
+
+      let cogsFromAllocations = 0
       if (saleItemIds.length > 0) {
         const allocRes = await this.supabase
           .from('sale_item_allocations')
@@ -258,17 +554,31 @@ export class MarginTrendService {
 
         for (const r of (allocRes.data ?? [])) {
           const lot      = r.stock_lots as { cost_price_try?: number } | null
-          const unitCost = r.cost_price_try !== null && r.cost_price_try !== undefined
-            ? Number(r.cost_price_try)
-            : (lot?.cost_price_try !== undefined ? Number(lot.cost_price_try) : 0)
-          cogs += Number(r.qty_allocated ?? 0) * unitCost
+          const unitCost =
+            r.cost_price_try !== null && r.cost_price_try !== undefined
+              ? Number(r.cost_price_try)
+              : lot?.cost_price_try !== undefined
+              ? Number(lot.cost_price_try)
+              : 0
+          cogsFromAllocations += Number(r.qty_allocated ?? 0) * unitCost
         }
+      }
+
+      if (cogsFromAllocations > 0) {
+        cogs = cogsFromAllocations
+      } else {
+        // Fallback: sum total_cost from sales rows
+        cogs = saleRows.reduce(
+          (s: number, r: Record<string, unknown>) => s + Number(r.total_cost ?? 0),
+          0,
+        )
       }
     }
 
-    // OpEx: exclude financing, tax, and interest
+    // OpEx: exclude non-operating types
     let opex = 0
-    for (const row of (expRes.data ?? [])) {
+    const expData = expRes.status === 'fulfilled' ? (expRes.value.data ?? []) : []
+    for (const row of expData) {
       const t      = String(row.expense_type ?? '')
       const amount = Number(row.amount_try ?? 0)
       if (NON_OPEX_TYPES.has(t)) continue
@@ -277,210 +587,4 @@ export class MarginTrendService {
 
     return { revenue, cogs, opex }
   }
-
-  /**
-   * Build a MarginPeriod from raw data and optional prior margin values.
-   */
-  private buildPeriod(
-    periodKey: string,
-    raw: RawPeriodData,
-    priorGrossMargin: number | null,
-    priorEbitdaMargin: number | null,
-    priorNetMargin: number | null,
-  ): MarginPeriod {
-    const { revenue, cogs, opex } = raw
-    const grossProfit = revenue - cogs
-    const ebitda      = grossProfit - opex
-
-    // Net income: ebt = ebitda, tax = 20% if positive
-    const tax       = ebitda > 0 ? ebitda * 0.20 : 0
-    const netIncome = ebitda - tax
-
-    const gross_margin_pct  = revenue > 0 ? (grossProfit / revenue) * 100 : null
-    const ebitda_margin_pct = computeEbitdaMargin(ebitda, revenue)
-    const net_margin_pct    = revenue > 0 ? (netIncome / revenue) * 100 : null
-    const cogs_ratio_pct    = computeCogsRatio(cogs, revenue)
-    const opex_ratio_pct    = computeOpexRatio(opex, revenue)
-
-    const gross_margin_delta  = computeMarginDelta(gross_margin_pct, priorGrossMargin)
-    const ebitda_margin_delta = computeMarginDelta(ebitda_margin_pct, priorEbitdaMargin)
-    const net_margin_delta    = computeMarginDelta(net_margin_pct, priorNetMargin)
-
-    return {
-      period_key:       periodKey,
-      period_label:     periodLabel(periodKey),
-      revenue_try:      revenue,
-      cogs_try:         cogs,
-      gross_profit_try: grossProfit,
-      opex_try:         opex,
-      ebitda_try:       ebitda,
-      net_income_try:   netIncome,
-      gross_margin_pct,
-      ebitda_margin_pct,
-      net_margin_pct,
-      cogs_ratio_pct,
-      opex_ratio_pct,
-      gross_margin_delta,
-      ebitda_margin_delta,
-      net_margin_delta,
-      gross_margin_trend: classifyMarginTrend(gross_margin_delta),
-    }
-  }
-
-  /**
-   * Get margin trend report for the last 12 months.
-   */
-  async getReport(companyId: string): Promise<MarginTrendReport> {
-    const periodKeys = lastNMonthKeys(12)
-
-    // Fetch all 12 months in parallel
-    const rawDataArr = await Promise.all(
-      periodKeys.map(pk => {
-        const { from, to } = periodBounds(pk)
-        return this.fetchPeriodData(companyId, from, to)
-      }),
-    )
-
-    // Build periods with deltas (each vs its prior)
-    const periods: MarginPeriod[] = []
-    for (let i = 0; i < periodKeys.length; i++) {
-      const raw     = rawDataArr[i]
-      const priorRaw = i > 0 ? rawDataArr[i - 1] : null
-
-      // Compute prior margins
-      let priorGross: number | null  = null
-      let priorEbitda: number | null = null
-      let priorNet: number | null    = null
-
-      if (priorRaw) {
-        const pGross = priorRaw.revenue - priorRaw.cogs
-        priorGross  = priorRaw.revenue > 0 ? (pGross / priorRaw.revenue) * 100 : null
-        const pEbitda = pGross - priorRaw.opex
-        priorEbitda = priorRaw.revenue > 0 ? (pEbitda / priorRaw.revenue) * 100 : null
-        const pTax  = pEbitda > 0 ? pEbitda * 0.20 : 0
-        const pNet  = pEbitda - pTax
-        priorNet    = priorRaw.revenue > 0 ? (pNet / priorRaw.revenue) * 100 : null
-      }
-
-      periods.push(this.buildPeriod(periodKeys[i], raw, priorGross, priorEbitda, priorNet))
-    }
-
-    const current = periods.length > 0 ? periods[periods.length - 1] : null
-
-    // ── Trailing 12m averages ─────────────────────────────────────────────────
-    const grossMargins = periods
-      .map(p => p.gross_margin_pct)
-      .filter((v): v is number => v !== null)
-    const netMargins = periods
-      .map(p => p.net_margin_pct)
-      .filter((v): v is number => v !== null)
-
-    const trailing_12m_avg_gross_margin = grossMargins.length > 0
-      ? grossMargins.reduce((a, b) => a + b, 0) / grossMargins.length
-      : null
-    const trailing_12m_avg_net_margin = netMargins.length > 0
-      ? netMargins.reduce((a, b) => a + b, 0) / netMargins.length
-      : null
-
-    // ── Best / worst gross margin periods ─────────────────────────────────────
-    let bestKey:  string | null = null
-    let worstKey: string | null = null
-    let bestVal  = -Infinity
-    let worstVal =  Infinity
-    for (const p of periods) {
-      if (p.gross_margin_pct !== null) {
-        if (p.gross_margin_pct > bestVal)  { bestVal  = p.gross_margin_pct; bestKey  = p.period_key }
-        if (p.gross_margin_pct < worstVal) { worstVal = p.gross_margin_pct; worstKey = p.period_key }
-      }
-    }
-
-    // ── Overall trend: first 3 months vs last 3 months ────────────────────────
-    let overall_gross_margin_trend: MarginTrendReport['overall_gross_margin_trend'] = 'insufficient_data'
-    if (periods.length >= 6) {
-      const first3 = periods.slice(0, 3)
-        .map(p => p.gross_margin_pct)
-        .filter((v): v is number => v !== null)
-      const last3 = periods.slice(-3)
-        .map(p => p.gross_margin_pct)
-        .filter((v): v is number => v !== null)
-
-      if (first3.length >= 2 && last3.length >= 2) {
-        const avgFirst = first3.reduce((a, b) => a + b, 0) / first3.length
-        const avgLast  = last3.reduce((a, b) => a + b, 0)  / last3.length
-        overall_gross_margin_trend = classifyMarginTrend(avgLast - avgFirst)
-      }
-    }
-
-    // ── Margin drivers: compare most recent vs 3 months ago ──────────────────
-    type DriverEntry = {
-      driver: 'cogs_increase' | 'cogs_decrease' | 'opex_increase' | 'opex_decrease' | 'revenue_growth' | 'revenue_decline'
-      impact_try: number
-      description: string
-    }
-    const margin_drivers: DriverEntry[] = []
-
-    if (periods.length >= 4) {
-      const recent = periods[periods.length - 1]
-      const prior3 = periods[periods.length - 4]
-
-      const cogsDiff    = recent.cogs_try - prior3.cogs_try
-      const opexDiff    = recent.opex_try - prior3.opex_try
-      const revenueDiff = recent.revenue_try - prior3.revenue_try
-
-      const candidates: DriverEntry[] = []
-
-      if (revenueDiff !== 0) {
-        candidates.push({
-          driver:      revenueDiff > 0 ? 'revenue_growth' : 'revenue_decline',
-          impact_try:  Math.abs(revenueDiff),
-          description: revenueDiff > 0
-            ? `Ciro ${_fmtK(Math.abs(revenueDiff))} artışı brüt marjı destekledi`
-            : `Ciro ${_fmtK(Math.abs(revenueDiff))} düşüşü marj baskısı yarattı`,
-        })
-      }
-
-      if (cogsDiff !== 0) {
-        candidates.push({
-          driver:      cogsDiff > 0 ? 'cogs_increase' : 'cogs_decrease',
-          impact_try:  Math.abs(cogsDiff),
-          description: cogsDiff > 0
-            ? `SMM ${_fmtK(Math.abs(cogsDiff))} artışı brüt marjı daralttı`
-            : `SMM ${_fmtK(Math.abs(cogsDiff))} düşüşü brüt marjı genişletti`,
-        })
-      }
-
-      if (opexDiff !== 0) {
-        candidates.push({
-          driver:      opexDiff > 0 ? 'opex_increase' : 'opex_decrease',
-          impact_try:  Math.abs(opexDiff),
-          description: opexDiff > 0
-            ? `Operasyonel giderler ${_fmtK(Math.abs(opexDiff))} artarak EBITDA marjını daralttı`
-            : `Operasyonel giderler ${_fmtK(Math.abs(opexDiff))} azalarak EBITDA marjını genişletti`,
-        })
-      }
-
-      // Sort by absolute impact descending, take top 3
-      candidates.sort((a, b) => b.impact_try - a.impact_try)
-      margin_drivers.push(...candidates.slice(0, 3))
-    }
-
-    return {
-      periods,
-      current,
-      trailing_12m_avg_gross_margin,
-      trailing_12m_avg_net_margin,
-      best_gross_margin_period:  bestKey,
-      worst_gross_margin_period: worstKey,
-      overall_gross_margin_trend,
-      margin_drivers,
-    }
-  }
-}
-
-// ── Internal helpers ──────────────────────────────────────────────────────────
-
-function _fmtK(value: number): string {
-  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M₺`
-  if (value >= 1_000)     return `${(value / 1_000).toFixed(0)}K₺`
-  return `${value.toFixed(0)}₺`
 }

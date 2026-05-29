@@ -1,14 +1,14 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // GET /api/finance/margin-trend
 //
-// Returns profit margin trend decomposition report: gross, EBITDA, and net
-// margins across the last 12 months with driver analysis.
+// Returns MarginTrendReport: gross, operating, and net margin trends over
+// 12 months with anomaly detection and Turkish SME benchmark comparison.
 //
-// Auth: resolveApiAuth, manager+
-// Cache: revalidate every 3600 seconds
+// Auth: manager+ (resolveApiAuth)
+// Cache: revalidate every 1800 seconds
 // ─────────────────────────────────────────────────────────────────────────────
 
-export const revalidate = 3600
+export const revalidate = 1800
 
 import { NextRequest, NextResponse } from 'next/server'
 import { resolveApiAuth } from '@/lib/api-auth'
