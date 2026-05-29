@@ -55,6 +55,55 @@ export interface BurdenScore {
   burden_pct:    number  // excess / total_loans (signed percentage)
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Pure helper functions (exported for testing)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Phase 1: compute excess loan above fair share for one partner.
+ * Returns positive value if overfinanced (loan > expected), negative if underfinanced.
+ * excess = loanOutstanding - (totalLoans × sharePct/100)
+ */
+export function computeExcessLoan(
+  loanOutstanding: number,
+  totalLoans: number,
+  sharePct: number,  // 0-100
+): number {
+  return loanOutstanding - (totalLoans * sharePct / 100)
+}
+
+/**
+ * Phase 2: compute pro-rata allocation for one partner in one iteration.
+ * Caps allocation at the partner's remaining loan (never over-allocate).
+ * alloc = min(remainingCash × partnerShareRatio/totalActiveRatio, partnerLoan)
+ */
+export function computeProRataAllocation(
+  partnerLoan: number,
+  partnerShareRatio: number,
+  totalActiveRatio: number,
+  remainingCash: number,
+): number {
+  if (totalActiveRatio <= 0 || partnerLoan <= 0) return 0
+  const entitled = remainingCash * (partnerShareRatio / totalActiveRatio)
+  return Math.min(entitled, partnerLoan)
+}
+
+/**
+ * Normalize share ratios for active partners (those with loan > 0).
+ * Returns an array of normalized ratios (0–1) summing to 1 for partners with loan > 0.
+ * Partners with loan = 0 receive ratio 0.
+ */
+export function normalizeShareRatios(
+  partners: Array<{ share_pct: number; loan: number }>
+): number[] {
+  const activeTotal = partners.reduce(
+    (s, p) => (p.loan > 0 ? s + p.share_pct : s),
+    0,
+  )
+  if (activeTotal <= 0) return partners.map(() => 0)
+  return partners.map(p => (p.loan > 0 ? p.share_pct / activeTotal : 0))
+}
+
 export class PCLELiability {
   /**
    * Compute burden scores for each partner.

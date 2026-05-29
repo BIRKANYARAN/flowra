@@ -120,6 +120,66 @@ export function checkDistributionCompliance(params: {
   return violations
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Exported pure helpers — usable in tests and non-class contexts
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Compute legal reserve required this period (TTK 519).
+ * Returns 5% of periodProfit, capped so total reserves don't exceed 20% of
+ * paidInCapital. Returns 0 if profit is non-positive or cap already reached.
+ */
+export function computeLegalReserve(
+  periodProfit: number,
+  existingReserves: number,
+  paidInCapital: number,
+): number {
+  if (periodProfit <= 0) return 0
+  const cap = round2(Math.max(0, paidInCapital * 0.20 - existingReserves))
+  if (cap <= 0) return 0
+  return round2(Math.min(periodProfit * 0.05, cap))
+}
+
+/**
+ * Compute the full distributable-net waterfall.
+ * Returns distributableGross, withholdingTax, distributableNet, and a blocked
+ * flag (true when distributableNet < 0 — hard-blocked under TTK 509).
+ */
+export function computeDistributableNet(
+  grossProfit: number,
+  legalReserve: number,
+  boardRetained: number,
+  unpaidCompensation: number,
+  withholdingRate: number = 0.10,
+): {
+  distributableGross: number
+  withholdingTax: number
+  distributableNet: number
+  blocked: boolean
+} {
+  const distributableGross = round2(grossProfit - legalReserve - boardRetained - unpaidCompensation)
+  const withholdingTax     = distributableGross > 0 ? round2(distributableGross * withholdingRate) : 0
+  const distributableNet   = round2(distributableGross - withholdingTax)
+  return {
+    distributableGross,
+    withholdingTax,
+    distributableNet,
+    blocked: distributableNet < 0,
+  }
+}
+
+/**
+ * Per-partner distribution: distributableNet × (sharePct / 100).
+ * Returns 0 if distributableNet is 0 or negative.
+ */
+export function allocateDistribution(
+  distributableNet: number,
+  sharePct: number,
+): number {
+  if (distributableNet <= 0) return 0
+  return round2(distributableNet * (sharePct / 100))
+}
+
 export class PCLEDistribution {
   // GVK 94 — dividend withholding rate
   static readonly WITHHOLDING_RATE = 0.10

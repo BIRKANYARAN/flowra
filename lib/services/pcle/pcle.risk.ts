@@ -56,12 +56,50 @@ export interface CompanyRiskSummary {
   concentration_warning: string | null  // set when any partner provides >80% of total loans
 }
 
-function scoreToGrade(score: number): RiskGrade {
+export function scoreToGrade(score: number): RiskGrade {
   if (score >= 90) return 'A'
   if (score >= 75) return 'B'
   if (score >= 60) return 'C'
   if (score >= 40) return 'D'
   return 'F'
+}
+
+// Turkish risk label for each grade
+export function gradeToRiskLabel(grade: RiskGrade): string {
+  switch (grade) {
+    case 'A': return 'Düşük Risk'
+    case 'B': return 'Kabul Edilebilir'
+    case 'C': return 'Orta Risk'
+    case 'D': return 'Yüksek Risk'
+    case 'F': return 'Kritik'
+  }
+}
+
+// Aggregate partner grades to company grade (weighted average, worst-case tie-break)
+export function computeCompanyRiskGrade(
+  partnerGrades: Array<{ grade: RiskGrade; weight: number }>
+): RiskGrade {
+  if (partnerGrades.length === 0) return 'A'
+
+  const GRADE_SCORE: Record<RiskGrade, number> = { A: 95, B: 82, C: 67, D: 50, F: 20 }
+  const totalWeight = partnerGrades.reduce((s, g) => s + g.weight, 0)
+  if (totalWeight === 0) return 'A'
+
+  const weightedAvg = partnerGrades.reduce(
+    (s, g) => s + GRADE_SCORE[g.grade] * g.weight, 0
+  ) / totalWeight
+
+  const baseGrade = scoreToGrade(weightedAvg)
+
+  // Worst-case tie-break: if any partner has a grade worse than baseGrade, bump up by one
+  const GRADE_ORDER: RiskGrade[] = ['A', 'B', 'C', 'D', 'F']
+  const baseIdx = GRADE_ORDER.indexOf(baseGrade)
+  const worstIdx = Math.max(...partnerGrades.map(g => GRADE_ORDER.indexOf(g.grade)))
+  // Apply worst-case bias: if worst grade is more than 1 step below base, use one step below base
+  if (worstIdx > baseIdx + 1) {
+    return GRADE_ORDER[Math.min(baseIdx + 1, 4)]
+  }
+  return baseGrade
 }
 
 export class PCLERisk {
