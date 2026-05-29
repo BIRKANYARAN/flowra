@@ -303,3 +303,279 @@ describe('calculateTotals', () => {
     expect(t.grand_total).toBe(round2(sumOfLines))
   })
 })
+
+// ── round2 — additional precision and negative tests ─────────────────────────
+
+describe('round2 — additional precision', () => {
+  it('rounds 1.234 to 1.23', () => {
+    expect(round2(1.234)).toBe(1.23)
+  })
+
+  it('rounds 1.235 to 1.24 (half-up rounding via EPSILON)', () => {
+    expect(round2(1.235)).toBe(1.24)
+  })
+
+  it('rounds 1.2349 to 1.23', () => {
+    expect(round2(1.2349)).toBe(1.23)
+  })
+
+  it('handles many decimal places: 3.14159265 → 3.14', () => {
+    expect(round2(3.14159265)).toBe(3.14)
+  })
+
+  it('handles negative with many decimal places: -2.7777 → -2.78', () => {
+    expect(round2(-2.7777)).toBe(-2.78)
+  })
+
+  it('rounds negative -1.235 → -1.23 (EPSILON pushes it just above midpoint)', () => {
+    expect(round2(-1.235)).toBe(-1.23)
+  })
+
+  it('handles 0.005 → 0.01 (banker-like but EPSILON-adjusted)', () => {
+    expect(round2(0.005)).toBe(0.01)
+  })
+
+  it('-0.005 → -0 (rounds to negative zero due to EPSILON)', () => {
+    // With EPSILON, round2(-0.005) = -0 (negative zero in JS)
+    // Object.is(-0, 0) = false but toBeCloseTo handles this
+    expect(round2(-0.005)).toBeCloseTo(0, 2)
+  })
+
+  it('very large negative: -999999.999 → -1000000', () => {
+    expect(round2(-999999.999)).toBe(-1000000)
+  })
+
+  it('result is always a finite number', () => {
+    for (const v of [0, 1.111, -99.999, 1_000_000]) {
+      expect(isFinite(round2(v))).toBe(true)
+    }
+  })
+})
+
+// ── n — comprehensive coercion tests ─────────────────────────────────────────
+
+describe('n — comprehensive coercion', () => {
+  it('null → 0', () => {
+    expect(n(null)).toBe(0)
+  })
+
+  it('undefined → 0', () => {
+    expect(n(undefined)).toBe(0)
+  })
+
+  it('NaN → 0', () => {
+    expect(n(NaN)).toBe(0)
+  })
+
+  it('empty string → 0', () => {
+    expect(n('')).toBe(0)
+  })
+
+  it('whitespace string → 0', () => {
+    expect(n('   ')).toBe(0)
+  })
+
+  it('non-numeric string → 0', () => {
+    expect(n('hello')).toBe(0)
+  })
+
+  it('Infinity → 0 (not finite)', () => {
+    expect(n(Infinity)).toBe(0)
+  })
+
+  it('-Infinity → 0 (not finite)', () => {
+    expect(n(-Infinity)).toBe(0)
+  })
+
+  it('string "Infinity" → 0', () => {
+    expect(n('Infinity')).toBe(0)
+  })
+
+  it('string "-Infinity" → 0', () => {
+    expect(n('-Infinity')).toBe(0)
+  })
+
+  it('valid integer → passes through', () => {
+    expect(n(42)).toBe(42)
+  })
+
+  it('valid float → passes through', () => {
+    expect(n(3.14)).toBe(3.14)
+  })
+
+  it('negative number → passes through', () => {
+    expect(n(-7.5)).toBe(-7.5)
+  })
+
+  it('string numeric "100.5" → 100.5', () => {
+    expect(n('100.5')).toBe(100.5)
+  })
+
+  it('string "0" → 0', () => {
+    expect(n('0')).toBe(0)
+  })
+
+  it('object → 0 (NaN)', () => {
+    expect(n({})).toBe(0)
+  })
+})
+
+// ── calculateLine — KDV rates and discount scenarios ─────────────────────────
+
+describe('calculateLine — KDV rates and discount scenarios', () => {
+  it('KDV 0%: no tax, line_total equals line_subtotal', () => {
+    const line = calculateLine({ price: 500, quantity: 2, discount_percent: 0, kdv: 0 })
+    expect(line.line_vat).toBe(0)
+    expect(line.line_total).toBe(line.line_subtotal)
+    expect(line.line_total).toBe(1000)
+  })
+
+  it('KDV 8%: price=100, qty=1 → vat=8, total=108', () => {
+    const line = calculateLine({ price: 100, quantity: 1, discount_percent: 0, kdv: 8 })
+    expect(line.line_vat).toBe(8)
+    expect(line.line_total).toBe(108)
+  })
+
+  it('KDV 18%: price=100, qty=1 → vat=18, total=118', () => {
+    const line = calculateLine({ price: 100, quantity: 1, discount_percent: 0, kdv: 18 })
+    expect(line.line_vat).toBe(18)
+    expect(line.line_total).toBe(118)
+  })
+
+  it('discount=0: price unchanged, no discount applied', () => {
+    const line = calculateLine({ price: 200, quantity: 3, discount_percent: 0, kdv: 20 })
+    expect(line.discounted_unit_price).toBe(200)
+    expect(line.line_subtotal).toBe(600)
+    expect(line.discount_percent).toBe(0)
+  })
+
+  it('discount=50%: halves the effective price', () => {
+    const line = calculateLine({ price: 200, quantity: 4, discount_percent: 50, kdv: 0 })
+    expect(line.discounted_unit_price).toBe(100)
+    expect(line.line_subtotal).toBe(400) // 200 * 0.5 * 4
+  })
+
+  it('discount=100%: price becomes 0, total is 0', () => {
+    const line = calculateLine({ price: 300, quantity: 5, discount_percent: 100, kdv: 18 })
+    expect(line.discounted_unit_price).toBe(0)
+    expect(line.line_subtotal).toBe(0)
+    expect(line.line_vat).toBe(0)
+    expect(line.line_total).toBe(0)
+  })
+
+  it('discount > 100 is clamped to 100', () => {
+    const line = calculateLine({ price: 100, quantity: 1, discount_percent: 200, kdv: 0 })
+    expect(line.discount_percent).toBe(100)
+    expect(line.line_subtotal).toBe(0)
+  })
+
+  it('negative discount clamped to 0', () => {
+    const line = calculateLine({ price: 100, quantity: 1, discount_percent: -50, kdv: 18 })
+    expect(line.discount_percent).toBe(0)
+    expect(line.line_subtotal).toBe(100)
+  })
+
+  it('KDV 20%: price=500, qty=2, discount=10% → subtotal=900, vat=180, total=1080', () => {
+    const line = calculateLine({ price: 500, quantity: 2, discount_percent: 10, kdv: 20 })
+    expect(line.line_subtotal).toBe(900)  // 500 * 0.9 * 2
+    expect(line.line_vat).toBe(180)       // 900 * 0.2
+    expect(line.line_total).toBe(1080)
+  })
+
+  it('line_total = line_subtotal + line_vat invariant holds', () => {
+    const line = calculateLine({ price: 99.99, quantity: 3, discount_percent: 15, kdv: 8 })
+    expect(line.line_total).toBe(round2(line.line_subtotal + line.line_vat))
+  })
+})
+
+// ── calculateTotals — aggregation and margin tests ───────────────────────────
+
+describe('calculateTotals — aggregation correctness', () => {
+  it('empty array returns all zeros', () => {
+    const t = calculateTotals([])
+    expect(t.grand_total).toBe(0)
+    expect(t.subtotal).toBe(0)
+    expect(t.kdv_total).toBe(0)
+    expect(t.total_discount).toBe(0)
+    expect(t.lines).toHaveLength(0)
+  })
+
+  it('single item: grand_total = line_total', () => {
+    const items: LineInput[] = [{ price: 100, quantity: 2, discount_percent: 10, kdv: 18 }]
+    const t = calculateTotals(items)
+    const line = calculateLine(items[0])
+    expect(t.grand_total).toBe(line.line_total)
+  })
+
+  it('multiple items: grand_total = sum of line_totals', () => {
+    const items: LineInput[] = [
+      { price: 100, quantity: 1, discount_percent: 0, kdv: 18 },
+      { price: 200, quantity: 2, discount_percent: 10, kdv: 8 },
+      { price: 50,  quantity: 5, discount_percent: 0, kdv: 20 },
+    ]
+    const t = calculateTotals(items)
+    const expectedGrand = round2(items.reduce((s, i) => s + calculateLine(i).line_total, 0))
+    expect(t.grand_total).toBe(expectedGrand)
+  })
+
+  it('subtotal = sum of line_subtotals', () => {
+    const items: LineInput[] = [
+      { price: 300, quantity: 2, discount_percent: 5, kdv: 18 },
+      { price: 150, quantity: 3, discount_percent: 0, kdv: 8 },
+    ]
+    const t = calculateTotals(items)
+    const expectedSub = round2(items.reduce((s, i) => s + calculateLine(i).line_subtotal, 0))
+    expect(t.subtotal).toBe(expectedSub)
+  })
+
+  it('kdv_total = sum of line_vats', () => {
+    const items: LineInput[] = [
+      { price: 500, quantity: 1, discount_percent: 0, kdv: 20 },
+      { price: 100, quantity: 2, discount_percent: 0, kdv: 8 },
+    ]
+    const t = calculateTotals(items)
+    const expectedKdv = round2(items.reduce((s, i) => s + calculateLine(i).line_vat, 0))
+    expect(t.kdv_total).toBe(expectedKdv)
+  })
+
+  it('total_discount = sum of (price*qty - discounted_subtotal)', () => {
+    const items: LineInput[] = [
+      { price: 100, quantity: 2, discount_percent: 20, kdv: 0 },
+    ]
+    // gross = 200, discounted = 200*0.8 = 160, discount = 40
+    const t = calculateTotals(items)
+    expect(t.total_discount).toBe(40)
+  })
+
+  it('no discounts → total_discount = 0', () => {
+    const items: LineInput[] = [
+      { price: 100, quantity: 1, discount_percent: 0, kdv: 18 },
+      { price: 200, quantity: 2, discount_percent: 0, kdv: 20 },
+    ]
+    const t = calculateTotals(items)
+    expect(t.total_discount).toBe(0)
+  })
+
+  it('kdv_breakdown groups correctly for mixed rates', () => {
+    const items: LineInput[] = [
+      { price: 100, quantity: 1, discount_percent: 0, kdv: 18 },
+      { price: 100, quantity: 1, discount_percent: 0, kdv: 8 },
+      { price: 100, quantity: 2, discount_percent: 0, kdv: 18 },
+    ]
+    const t = calculateTotals(items)
+    // 18% group: 18 + 36 = 54
+    expect(t.kdv_breakdown['18']).toBe(54)
+    // 8% group: 8
+    expect(t.kdv_breakdown['8']).toBe(8)
+  })
+
+  it('lines array length matches items array length', () => {
+    const items: LineInput[] = [
+      { price: 10, quantity: 1, discount_percent: 0, kdv: 0 },
+      { price: 20, quantity: 2, discount_percent: 0, kdv: 0 },
+      { price: 30, quantity: 3, discount_percent: 0, kdv: 0 },
+    ]
+    const t = calculateTotals(items)
+    expect(t.lines).toHaveLength(3)
+  })
+})

@@ -327,3 +327,263 @@ describe('computeGeciVergiDueDate', () => {
     expect(result.slice(5, 7)).toBe('11')
   })
 })
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeKdvReserve — input > output (negative net) and zero KDV
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeKdvReserve — input > output and zero scenarios', () => {
+  it('input KDV > output KDV → reserve is 0 (no liability)', () => {
+    expect(computeKdvReserve(5_000, 10_000)).toBe(0)
+  })
+
+  it('input KDV >> output KDV → still 0 (clamp at 0)', () => {
+    expect(computeKdvReserve(1_000, 100_000)).toBe(0)
+  })
+
+  it('zero output KDV with zero input → 0 reserve', () => {
+    expect(computeKdvReserve(0, 0)).toBe(0)
+  })
+
+  it('zero output with positive input → 0 reserve', () => {
+    expect(computeKdvReserve(0, 50_000)).toBe(0)
+  })
+
+  it('equal output and input → 0 reserve', () => {
+    expect(computeKdvReserve(25_000, 25_000)).toBe(0)
+  })
+
+  it('10% buffer is always applied on positive net', () => {
+    const net = 20_000
+    const reserve = computeKdvReserve(30_000, 10_000)
+    // net = 20_000, reserved = 20_000 × 1.1 = 22_000
+    expect(reserve).toBeCloseTo(net * 1.1, 5)
+  })
+
+  it('returns a non-negative value in all cases', () => {
+    expect(computeKdvReserve(0, 0)).toBeGreaterThanOrEqual(0)
+    expect(computeKdvReserve(0, 50_000)).toBeGreaterThanOrEqual(0)
+    expect(computeKdvReserve(50_000, 0)).toBeGreaterThanOrEqual(0)
+    expect(computeKdvReserve(50_000, 50_000)).toBeGreaterThanOrEqual(0)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeCoverageStatus — all levels with explicit thresholds
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeCoverageStatus — all coverage levels', () => {
+  it('null → unknown', () => {
+    expect(computeCoverageStatus(null)).toBe('unknown')
+  })
+
+  it('120 (boundary) → adequate', () => {
+    expect(computeCoverageStatus(120)).toBe('adequate')
+  })
+
+  it('121 (above boundary) → adequate', () => {
+    expect(computeCoverageStatus(121)).toBe('adequate')
+  })
+
+  it('119.99 (just below adequate threshold) → tight', () => {
+    expect(computeCoverageStatus(119.99)).toBe('tight')
+  })
+
+  it('100 (mid-tight zone) → tight', () => {
+    expect(computeCoverageStatus(100)).toBe('tight')
+  })
+
+  it('80 (boundary) → tight', () => {
+    expect(computeCoverageStatus(80)).toBe('tight')
+  })
+
+  it('79.99 (just below tight threshold) → insufficient', () => {
+    expect(computeCoverageStatus(79.99)).toBe('insufficient')
+  })
+
+  it('50 (mid-insufficient zone) → insufficient', () => {
+    expect(computeCoverageStatus(50)).toBe('insufficient')
+  })
+
+  it('0 → insufficient', () => {
+    expect(computeCoverageStatus(0)).toBe('insufficient')
+  })
+
+  it('negative value → insufficient', () => {
+    expect(computeCoverageStatus(-5)).toBe('insufficient')
+  })
+
+  it('very high value (500%) → adequate', () => {
+    expect(computeCoverageStatus(500)).toBe('adequate')
+  })
+
+  it('exactly 80 is tight not insufficient', () => {
+    expect(computeCoverageStatus(80)).not.toBe('insufficient')
+  })
+
+  it('exactly 120 is adequate not tight', () => {
+    expect(computeCoverageStatus(120)).not.toBe('tight')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// assignTaxStatus — all severity levels
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('assignTaxStatus — all severity levels', () => {
+  it('overdue: days = -1, amount > 0', () => {
+    expect(assignTaxStatus(-1, 10_000)).toBe('overdue')
+  })
+
+  it('overdue: days = -100, amount > 0', () => {
+    expect(assignTaxStatus(-100, 1)).toBe('overdue')
+  })
+
+  it('due_soon: days = 0, amount > 0 (due today)', () => {
+    expect(assignTaxStatus(0, 5_000)).toBe('due_soon')
+  })
+
+  it('due_soon: days = 7 (one week away), amount > 0', () => {
+    expect(assignTaxStatus(7, 5_000)).toBe('due_soon')
+  })
+
+  it('due_soon: days = 14 (boundary), amount > 0', () => {
+    expect(assignTaxStatus(14, 5_000)).toBe('due_soon')
+  })
+
+  it('upcoming: days = 15 (just past due_soon boundary)', () => {
+    expect(assignTaxStatus(15, 5_000)).toBe('upcoming')
+  })
+
+  it('upcoming: days = 30, amount > 0', () => {
+    expect(assignTaxStatus(30, 5_000)).toBe('upcoming')
+  })
+
+  it('upcoming: days = 365, amount > 0', () => {
+    expect(assignTaxStatus(365, 5_000)).toBe('upcoming')
+  })
+
+  it('paid: amount = 0 regardless of days (overdue case)', () => {
+    expect(assignTaxStatus(-5, 0)).toBe('paid')
+  })
+
+  it('paid: amount = 0 regardless of days (due_soon case)', () => {
+    expect(assignTaxStatus(10, 0)).toBe('paid')
+  })
+
+  it('paid: amount = 0 regardless of days (upcoming case)', () => {
+    expect(assignTaxStatus(30, 0)).toBe('paid')
+  })
+
+  it('paid: negative amount treated as paid', () => {
+    expect(assignTaxStatus(5, -1)).toBe('paid')
+  })
+
+  it('due_soon boundary: 13 days → due_soon', () => {
+    expect(assignTaxStatus(13, 100)).toBe('due_soon')
+  })
+
+  it('upcoming boundary: 14 is due_soon, 15 is upcoming', () => {
+    expect(assignTaxStatus(14, 100)).toBe('due_soon')
+    expect(assignTaxStatus(15, 100)).toBe('upcoming')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeGeciVergiDueDate — all 12 months and multiple years
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeGeciVergiDueDate — all 12 months', () => {
+  it('month 1 (January) → Q1 due: YYYY-05-17', () => {
+    expect(computeGeciVergiDueDate(2026, 1)).toBe('2026-05-17')
+  })
+
+  it('month 2 (February) → Q1 due: YYYY-05-17', () => {
+    expect(computeGeciVergiDueDate(2026, 2)).toBe('2026-05-17')
+  })
+
+  it('month 3 (March) → Q1 due: YYYY-05-17', () => {
+    expect(computeGeciVergiDueDate(2026, 3)).toBe('2026-05-17')
+  })
+
+  it('month 4 (April) → Q2 due: YYYY-08-17', () => {
+    expect(computeGeciVergiDueDate(2026, 4)).toBe('2026-08-17')
+  })
+
+  it('month 5 (May) → Q2 due: YYYY-08-17', () => {
+    expect(computeGeciVergiDueDate(2026, 5)).toBe('2026-08-17')
+  })
+
+  it('month 6 (June) → Q2 due: YYYY-08-17', () => {
+    expect(computeGeciVergiDueDate(2026, 6)).toBe('2026-08-17')
+  })
+
+  it('month 7 (July) → Q3 due: YYYY-11-17', () => {
+    expect(computeGeciVergiDueDate(2026, 7)).toBe('2026-11-17')
+  })
+
+  it('month 8 (August) → Q3 due: YYYY-11-17', () => {
+    expect(computeGeciVergiDueDate(2026, 8)).toBe('2026-11-17')
+  })
+
+  it('month 9 (September) → Q3 due: YYYY-11-17', () => {
+    expect(computeGeciVergiDueDate(2026, 9)).toBe('2026-11-17')
+  })
+
+  it('month 10 (October) → Q4: null', () => {
+    expect(computeGeciVergiDueDate(2026, 10)).toBeNull()
+  })
+
+  it('month 11 (November) → Q4: null', () => {
+    expect(computeGeciVergiDueDate(2026, 11)).toBeNull()
+  })
+
+  it('month 12 (December) → Q4: null', () => {
+    expect(computeGeciVergiDueDate(2026, 12)).toBeNull()
+  })
+})
+
+describe('computeGeciVergiDueDate — different years', () => {
+  it('year 2024 month 1 → 2024-05-17', () => {
+    expect(computeGeciVergiDueDate(2024, 1)).toBe('2024-05-17')
+  })
+
+  it('year 2025 month 4 → 2025-08-17', () => {
+    expect(computeGeciVergiDueDate(2025, 4)).toBe('2025-08-17')
+  })
+
+  it('year 2027 month 7 → 2027-11-17', () => {
+    expect(computeGeciVergiDueDate(2027, 7)).toBe('2027-11-17')
+  })
+
+  it('year 2028 (leap year) month 2 → 2028-05-17', () => {
+    expect(computeGeciVergiDueDate(2028, 2)).toBe('2028-05-17')
+  })
+
+  it('year 2030 month 10 → null (Q4)', () => {
+    expect(computeGeciVergiDueDate(2030, 10)).toBeNull()
+  })
+
+  it('year 2023 month 6 → 2023-08-17', () => {
+    expect(computeGeciVergiDueDate(2023, 6)).toBe('2023-08-17')
+  })
+
+  it('year 2029 month 9 → 2029-11-17', () => {
+    expect(computeGeciVergiDueDate(2029, 9)).toBe('2029-11-17')
+  })
+
+  it('all Q4 months (10,11,12) always return null regardless of year', () => {
+    for (const month of [10, 11, 12]) {
+      expect(computeGeciVergiDueDate(2025, month)).toBeNull()
+      expect(computeGeciVergiDueDate(2026, month)).toBeNull()
+      expect(computeGeciVergiDueDate(2027, month)).toBeNull()
+    }
+  })
+
+  it('due date always contains the year parameter in YYYY prefix', () => {
+    const result2025 = computeGeciVergiDueDate(2025, 1)!
+    const result2026 = computeGeciVergiDueDate(2026, 1)!
+    expect(result2025.startsWith('2025')).toBe(true)
+    expect(result2026.startsWith('2026')).toBe(true)
+  })
+})

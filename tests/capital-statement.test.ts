@@ -326,3 +326,257 @@ describe('computeYtdSummary', () => {
     expect(summary.total_contributions_ytd).toBe(60_000)
   })
 })
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeNetIncome — zero revenue and loss scenarios
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeNetIncome — zero revenue and loss scenarios', () => {
+  it('zero revenue with non-zero expenses → negative net income', () => {
+    expect(computeNetIncome(0, 100_000)).toBe(-100_000)
+  })
+
+  it('zero revenue with zero expenses → zero net income', () => {
+    expect(computeNetIncome(0, 0)).toBe(0)
+  })
+
+  it('loss scenario: expenses > revenue produces negative result', () => {
+    const result = computeNetIncome(200_000, 350_000)
+    expect(result).toBe(-150_000)
+    expect(result).toBeLessThan(0)
+  })
+
+  it('large loss scenario with precise rounding', () => {
+    const result = computeNetIncome(1_000_000, 1_500_000)
+    expect(result).toBe(-500_000)
+  })
+
+  it('fractional revenue and expenses round to 2 dp', () => {
+    // 100000.333 - 50000.222 = 50000.111 → rounds to 50000.11
+    const result = computeNetIncome(100_000.333, 50_000.222)
+    expect(result).toBeCloseTo(50_000.11, 1)
+  })
+
+  it('profit scenario: revenue > expenses', () => {
+    expect(computeNetIncome(500_000, 200_000)).toBe(300_000)
+  })
+
+  it('breakeven: revenue == expenses → 0', () => {
+    expect(computeNetIncome(75_000, 75_000)).toBe(0)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// allocateProfit — boundary percentages and negative income
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('allocateProfit — boundary percentages', () => {
+  it('0% share always yields 0 regardless of net income', () => {
+    expect(allocateProfit(999_999, 0)).toBe(0)
+    expect(Math.abs(allocateProfit(-999_999, 0))).toBe(0)
+    expect(allocateProfit(0, 0)).toBe(0)
+  })
+
+  it('100% share yields exact net income', () => {
+    expect(allocateProfit(250_000, 100)).toBe(250_000)
+    expect(allocateProfit(-50_000, 100)).toBe(-50_000)
+    expect(allocateProfit(0, 100)).toBe(0)
+  })
+
+  it('50% share yields half net income', () => {
+    expect(allocateProfit(400_000, 50)).toBe(200_000)
+    expect(allocateProfit(-200_000, 50)).toBe(-100_000)
+  })
+
+  it('33.33% share with large income rounds to 2dp', () => {
+    const result = allocateProfit(1_000_000, 33.33)
+    expect(result).toBeCloseTo(333_300, 0)
+  })
+
+  it('allocateProfit with negative income (loss) is negative', () => {
+    const result = allocateProfit(-120_000, 40)
+    expect(result).toBe(-48_000)
+    expect(result).toBeLessThan(0)
+  })
+
+  it('allocateProfit with zero income is zero for all share percentages', () => {
+    expect(allocateProfit(0, 0)).toBe(0)
+    expect(allocateProfit(0, 25)).toBe(0)
+    expect(allocateProfit(0, 50)).toBe(0)
+    expect(allocateProfit(0, 100)).toBe(0)
+  })
+
+  it('66.67% share is approximately double of 33.33% share (within rounding)', () => {
+    const share33 = allocateProfit(100_000, 33.33)
+    const share67 = allocateProfit(100_000, 66.67)
+    // Due to independent rounding of each computation, allow ±20 TRY tolerance
+    expect(Math.abs(share67 - share33 * 2)).toBeLessThanOrEqual(20)
+  })
+
+  it('result is a finite number', () => {
+    const result = allocateProfit(500_000, 33.33)
+    expect(isFinite(result)).toBe(true)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// buildCapitalStatementLine — field validation
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('buildCapitalStatementLine — field validation', () => {
+  it('returns object with all required fields', () => {
+    const line = buildCapitalStatementLine('2026-01', 0, 0, 0, 0, 0, 0)
+    const requiredFields = [
+      'period_key', 'period_label',
+      'opening_equity', 'equity_contributions', 'profit_allocation',
+      'dividends_declared', 'compensation_paid', 'other_adjustments',
+      'closing_equity',
+    ]
+    for (const field of requiredFields) {
+      expect(line).toHaveProperty(field)
+    }
+  })
+
+  it('period_label for February is Şubat', () => {
+    const line = buildCapitalStatementLine('2026-02', 0, 0, 0, 0, 0, 0)
+    expect(line.period_label).toBe('Şubat 2026')
+  })
+
+  it('period_label for March is Mart', () => {
+    const line = buildCapitalStatementLine('2026-03', 0, 0, 0, 0, 0, 0)
+    expect(line.period_label).toBe('Mart 2026')
+  })
+
+  it('period_label for April is Nisan', () => {
+    const line = buildCapitalStatementLine('2026-04', 0, 0, 0, 0, 0, 0)
+    expect(line.period_label).toBe('Nisan 2026')
+  })
+
+  it('period_label for June is Haziran', () => {
+    const line = buildCapitalStatementLine('2026-06', 0, 0, 0, 0, 0, 0)
+    expect(line.period_label).toBe('Haziran 2026')
+  })
+
+  it('period_label for July is Temmuz', () => {
+    const line = buildCapitalStatementLine('2026-07', 0, 0, 0, 0, 0, 0)
+    expect(line.period_label).toBe('Temmuz 2026')
+  })
+
+  it('period_label for August is Ağustos', () => {
+    const line = buildCapitalStatementLine('2026-08', 0, 0, 0, 0, 0, 0)
+    expect(line.period_label).toBe('Ağustos 2026')
+  })
+
+  it('period_label for September is Eylül', () => {
+    const line = buildCapitalStatementLine('2026-09', 0, 0, 0, 0, 0, 0)
+    expect(line.period_label).toBe('Eylül 2026')
+  })
+
+  it('period_label for October is Ekim', () => {
+    const line = buildCapitalStatementLine('2026-10', 0, 0, 0, 0, 0, 0)
+    expect(line.period_label).toBe('Ekim 2026')
+  })
+
+  it('period_label for November is Kasım', () => {
+    const line = buildCapitalStatementLine('2026-11', 0, 0, 0, 0, 0, 0)
+    expect(line.period_label).toBe('Kasım 2026')
+  })
+
+  it('all numeric fields are finite numbers', () => {
+    const line = buildCapitalStatementLine('2026-06', 100_000, 20_000, 15_000, 5_000, 3_000, 0)
+    expect(isFinite(line.opening_equity)).toBe(true)
+    expect(isFinite(line.equity_contributions)).toBe(true)
+    expect(isFinite(line.profit_allocation)).toBe(true)
+    expect(isFinite(line.dividends_declared)).toBe(true)
+    expect(isFinite(line.compensation_paid)).toBe(true)
+    expect(isFinite(line.other_adjustments)).toBe(true)
+    expect(isFinite(line.closing_equity)).toBe(true)
+  })
+
+  it('zero-opening equity with profit only: closing equals profit', () => {
+    const line = buildCapitalStatementLine('2026-01', 0, 0, 75_000, 0, 0, 0)
+    expect(line.closing_equity).toBe(75_000)
+  })
+
+  it('closing_equity can be negative (heavy loss + dividends)', () => {
+    const line = buildCapitalStatementLine('2026-06', 50_000, 0, -30_000, 40_000, 0, 0)
+    // 50000 + 0 + (-30000) - 40000 - 0 + 0 = -20000
+    expect(line.closing_equity).toBe(-20_000)
+    expect(line.closing_equity).toBeLessThan(0)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeYtdSummary — aggregation and empty array
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeYtdSummary — empty array and aggregation', () => {
+  it('empty array returns all zeros for numeric fields', () => {
+    const summary = computeYtdSummary([])
+    expect(summary.total_contributions_ytd).toBe(0)
+    expect(summary.total_dividends_ytd).toBe(0)
+    expect(summary.total_compensation_ytd).toBe(0)
+    expect(summary.net_equity_change_ytd).toBe(0)
+    expect(summary.current_equity).toBe(0)
+  })
+
+  it('single line: current_equity equals the line closing_equity', () => {
+    const line = buildCapitalStatementLine('2026-01', 100_000, 20_000, 10_000, 5_000, 2_000, 0)
+    const summary = computeYtdSummary([line])
+    expect(summary.current_equity).toBe(line.closing_equity)
+  })
+
+  it('12 months aggregation sums all contributions correctly', () => {
+    const lines: CapitalStatementLine[] = []
+    let opening = 0
+    for (let m = 1; m <= 12; m++) {
+      const pk = `2026-${String(m).padStart(2, '0')}`
+      const line = buildCapitalStatementLine(pk, opening, 10_000, 5_000, 1_000, 500, 0)
+      lines.push(line)
+      opening = line.closing_equity
+    }
+    const summary = computeYtdSummary(lines)
+    expect(summary.total_contributions_ytd).toBe(120_000)
+    expect(summary.total_dividends_ytd).toBe(12_000)
+    expect(summary.total_compensation_ytd).toBe(6_000)
+  })
+
+  it('net_equity_change_ytd equals last closing minus first opening', () => {
+    const lines = [
+      buildCapitalStatementLine('2026-01', 50_000, 10_000, 5_000, 2_000, 1_000, 0),
+      buildCapitalStatementLine('2026-02', 62_000, 5_000, 3_000, 1_000, 500,   0),
+      buildCapitalStatementLine('2026-03', 68_500, 0,     8_000, 0,     500,   0),
+    ]
+    const summary = computeYtdSummary(lines)
+    const expectedChange = lines[2].closing_equity - lines[0].opening_equity
+    expect(summary.net_equity_change_ytd).toBeCloseTo(expectedChange, 2)
+  })
+
+  it('total_dividends_ytd sums all months dividends', () => {
+    const lines = [
+      buildCapitalStatementLine('2026-01', 0, 0, 0, 5_000,  0, 0),
+      buildCapitalStatementLine('2026-02', 0, 0, 0, 3_000,  0, 0),
+      buildCapitalStatementLine('2026-03', 0, 0, 0, 7_500,  0, 0),
+    ]
+    const summary = computeYtdSummary(lines)
+    expect(summary.total_dividends_ytd).toBe(15_500)
+  })
+
+  it('total_compensation_ytd sums all months compensation', () => {
+    const lines = [
+      buildCapitalStatementLine('2026-01', 0, 0, 0, 0, 2_000, 0),
+      buildCapitalStatementLine('2026-02', 0, 0, 0, 0, 2_000, 0),
+      buildCapitalStatementLine('2026-03', 0, 0, 0, 0, 2_000, 0),
+    ]
+    const summary = computeYtdSummary(lines)
+    expect(summary.total_compensation_ytd).toBe(6_000)
+  })
+
+  it('all returned fields are finite numbers', () => {
+    const lines = [buildCapitalStatementLine('2026-01', 100_000, 10_000, 5_000, 2_000, 1_000, 0)]
+    const summary = computeYtdSummary(lines)
+    for (const val of Object.values(summary)) {
+      expect(isFinite(val as number)).toBe(true)
+    }
+  })
+})

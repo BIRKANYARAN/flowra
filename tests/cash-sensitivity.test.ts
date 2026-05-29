@@ -379,3 +379,255 @@ describe('classifyStressImpact — additional', () => {
     expect(classifyStressImpact(12, 1)).toBe('critical')
   })
 })
+
+// ── applyRevenueShock — positive/negative/zero shocks ────────────────────────
+
+describe('applyRevenueShock — comprehensive shock scenarios', () => {
+  it('zero base with any shock → 0', () => {
+    expect(applyRevenueShock(0, 50)).toBe(0)
+  })
+
+  it('zero shock → no change', () => {
+    expect(applyRevenueShock(300_000, 0)).toBe(300_000)
+  })
+
+  it('100% shock → 0 revenue', () => {
+    expect(applyRevenueShock(1_000_000, 100)).toBe(0)
+  })
+
+  it('10% shock: 100_000 → 90_000', () => {
+    expect(applyRevenueShock(100_000, 10)).toBe(90_000)
+  })
+
+  it('20% shock: 250_000 → 200_000', () => {
+    expect(applyRevenueShock(250_000, 20)).toBe(200_000)
+  })
+
+  it('25% shock: 400_000 → 300_000', () => {
+    expect(applyRevenueShock(400_000, 25)).toBe(300_000)
+  })
+
+  it('30% shock: 100_000 → 70_000', () => {
+    expect(applyRevenueShock(100_000, 30)).toBe(70_000)
+  })
+
+  it('5% shock: 1_000 → 950', () => {
+    expect(applyRevenueShock(1_000, 5)).toBe(950)
+  })
+
+  it('result rounds to 2dp for fractional results', () => {
+    const result = applyRevenueShock(100_000, 33)
+    // 100_000 * (1 - 0.33) = 67_000 exactly
+    expect(result).toBeCloseTo(67_000, 1)
+  })
+
+  it('higher shock always produces lower revenue (monotone)', () => {
+    const base = 500_000
+    expect(applyRevenueShock(base, 30)).toBeLessThan(applyRevenueShock(base, 20))
+    expect(applyRevenueShock(base, 20)).toBeLessThan(applyRevenueShock(base, 10))
+  })
+
+  it('shock result is numeric and finite', () => {
+    const r = applyRevenueShock(123_456, 15)
+    expect(isFinite(r)).toBe(true)
+  })
+})
+
+// ── applyCollectionsDelay — formula verification ──────────────────────────────
+
+describe('applyCollectionsDelay — formula verification', () => {
+  it('delayed = daily × days; result = cash - delayed', () => {
+    // 500/day × 20 days = 10_000 delayed; 80_000 - 10_000 = 70_000
+    expect(applyCollectionsDelay(80_000, 500, 20)).toBe(70_000)
+  })
+
+  it('zero delay → cash unchanged', () => {
+    expect(applyCollectionsDelay(50_000, 3_000, 0)).toBe(50_000)
+  })
+
+  it('zero daily avg → cash unchanged regardless of delay', () => {
+    expect(applyCollectionsDelay(50_000, 0, 45)).toBe(50_000)
+  })
+
+  it('large delay can make cash negative', () => {
+    // 100/day × 1000 days = 100_000 delayed; 50_000 - 100_000 = -50_000
+    expect(applyCollectionsDelay(50_000, 100, 1000)).toBe(-50_000)
+  })
+
+  it('15-day delay with 2_000/day: 100_000 → 70_000', () => {
+    expect(applyCollectionsDelay(100_000, 2_000, 15)).toBe(70_000)
+  })
+
+  it('30-day delay with 1_000/day: 60_000 → 30_000', () => {
+    expect(applyCollectionsDelay(60_000, 1_000, 30)).toBe(30_000)
+  })
+
+  it('45-day delay with 500/day: 30_000 → 7_500', () => {
+    expect(applyCollectionsDelay(30_000, 500, 45)).toBe(7_500)
+  })
+
+  it('result rounds to 2 decimal places', () => {
+    const result = applyCollectionsDelay(100_000, 333.33, 3)
+    // delayed = 999.99; result = 99_000.01
+    expect(result).toBeCloseTo(99_000.01, 1)
+  })
+
+  it('zero cash minus any delay → negative', () => {
+    expect(applyCollectionsDelay(0, 1_000, 10)).toBe(-10_000)
+  })
+})
+
+// ── applyExpenseSurge — surge formula verification ───────────────────────────
+
+describe('applyExpenseSurge — surge formula verification', () => {
+  it('zero surge → expenses unchanged', () => {
+    expect(applyExpenseSurge(100_000, 0)).toBe(100_000)
+  })
+
+  it('zero base expenses → 0 regardless of surge', () => {
+    expect(applyExpenseSurge(0, 50)).toBe(0)
+  })
+
+  it('5% surge: 100_000 → 105_000', () => {
+    expect(applyExpenseSurge(100_000, 5)).toBe(105_000)
+  })
+
+  it('10% surge: 100_000 → 110_000', () => {
+    expect(applyExpenseSurge(100_000, 10)).toBe(110_000)
+  })
+
+  it('15% surge: 100_000 → 115_000', () => {
+    expect(applyExpenseSurge(100_000, 15)).toBe(115_000)
+  })
+
+  it('20% surge: 100_000 → 120_000', () => {
+    expect(applyExpenseSurge(100_000, 20)).toBe(120_000)
+  })
+
+  it('100% surge doubles the expenses', () => {
+    expect(applyExpenseSurge(75_000, 100)).toBe(150_000)
+  })
+
+  it('higher surge always produces higher expenses', () => {
+    const base = 200_000
+    expect(applyExpenseSurge(base, 20)).toBeGreaterThan(applyExpenseSurge(base, 10))
+  })
+
+  it('result is always >= base (for positive surge)', () => {
+    const base = 50_000
+    for (const s of [0, 5, 10, 20]) {
+      expect(applyExpenseSurge(base, s)).toBeGreaterThanOrEqual(base)
+    }
+  })
+
+  it('result is rounded to 2dp', () => {
+    const result = applyExpenseSurge(33_333.33, 7)
+    const dp = String(result).split('.')[1]?.length ?? 0
+    expect(dp).toBeLessThanOrEqual(2)
+  })
+})
+
+// ── computeStressedRunway — exact calculation and null cases ──────────────────
+
+describe('computeStressedRunway — exact calculation and null cases', () => {
+  it('returns null when burn <= 0', () => {
+    expect(computeStressedRunway(100_000, 0)).toBeNull()
+    expect(computeStressedRunway(100_000, -1)).toBeNull()
+  })
+
+  it('returns null when cash <= 0', () => {
+    expect(computeStressedRunway(0, 50_000)).toBeNull()
+    expect(computeStressedRunway(-1, 50_000)).toBeNull()
+  })
+
+  it('runway = cash / burn: 120_000 / 30_000 = 4 months', () => {
+    expect(computeStressedRunway(120_000, 30_000)).toBe(4)
+  })
+
+  it('runway rounded to 2dp: 100_000 / 60_000 = 1.67', () => {
+    expect(computeStressedRunway(100_000, 60_000)).toBe(1.67)
+  })
+
+  it('runway = 1 when cash = burn', () => {
+    expect(computeStressedRunway(50_000, 50_000)).toBe(1)
+  })
+
+  it('large cash / small burn = many months', () => {
+    expect(computeStressedRunway(3_650_000, 100_000)).toBe(36.5)
+  })
+
+  it('small cash / large burn = fraction of a month', () => {
+    // 5_000 / 50_000 = 0.1
+    expect(computeStressedRunway(5_000, 50_000)).toBe(0.1)
+  })
+
+  it('result is always non-negative when not null', () => {
+    const result = computeStressedRunway(200_000, 80_000)
+    expect(result).not.toBeNull()
+    expect(result!).toBeGreaterThanOrEqual(0)
+  })
+
+  it('very tiny runway rounds to 0', () => {
+    // 10 / 1_000_000 = 0.00001 → round2 = 0
+    expect(computeStressedRunway(10, 1_000_000)).toBe(0)
+  })
+})
+
+// ── classifyStressImpact — all levels with exact deltas ───────────────────────
+
+describe('classifyStressImpact — all levels with exact deltas', () => {
+  it('delta = 0 → resilient', () => {
+    expect(classifyStressImpact(5, 5)).toBe('resilient')
+  })
+
+  it('delta = +1 → resilient (improved)', () => {
+    expect(classifyStressImpact(4, 5)).toBe('resilient')
+  })
+
+  it('delta = -0.5 → moderate', () => {
+    expect(classifyStressImpact(5, 4.5)).toBe('moderate')
+  })
+
+  it('delta = -3 → moderate (at boundary >= -3)', () => {
+    expect(classifyStressImpact(6, 3)).toBe('moderate')
+  })
+
+  it('delta = -3.01 → vulnerable (just below -3)', () => {
+    expect(classifyStressImpact(6.01, 3)).toBe('vulnerable')
+  })
+
+  it('delta = -4 → vulnerable', () => {
+    expect(classifyStressImpact(8, 4)).toBe('vulnerable')
+  })
+
+  it('delta = -6 → vulnerable (at boundary >= -6)', () => {
+    expect(classifyStressImpact(10, 4)).toBe('vulnerable')
+  })
+
+  it('delta = -6.01 → critical (just below -6)', () => {
+    expect(classifyStressImpact(10.01, 4)).toBe('critical')
+  })
+
+  it('delta = -10 → critical', () => {
+    expect(classifyStressImpact(12, 2)).toBe('critical')
+  })
+
+  it('both null → unknown', () => {
+    expect(classifyStressImpact(null, null)).toBe('unknown')
+  })
+
+  it('base null, stressed non-null → unknown', () => {
+    expect(classifyStressImpact(null, 5)).toBe('unknown')
+  })
+
+  it('base non-null, stressed null → unknown', () => {
+    expect(classifyStressImpact(5, null)).toBe('unknown')
+  })
+
+  it('result is always one of the five valid impact levels', () => {
+    const valid = ['resilient', 'moderate', 'vulnerable', 'critical', 'unknown']
+    for (const [b, s] of [[6,6],[6,4],[6,2],[6,0],[null,null]] as [number|null, number|null][]) {
+      expect(valid).toContain(classifyStressImpact(b, s))
+    }
+  })
+})

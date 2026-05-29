@@ -290,3 +290,260 @@ describe('buildSeasonalityRecommendation — pure', () => {
     }
   })
 })
+
+// ── TURKISH_MONTHS — all 12 individual month names ───────────────────────────
+
+describe('TURKISH_MONTHS — all 12 month names', () => {
+  it('index 0 is Ocak (January)', () => {
+    expect(TURKISH_MONTHS[0]).toBe('Ocak')
+  })
+
+  it('index 1 is Şubat (February)', () => {
+    expect(TURKISH_MONTHS[1]).toBe('Şubat')
+  })
+
+  it('index 2 is Mart (March)', () => {
+    expect(TURKISH_MONTHS[2]).toBe('Mart')
+  })
+
+  it('index 3 is Nisan (April)', () => {
+    expect(TURKISH_MONTHS[3]).toBe('Nisan')
+  })
+
+  it('index 4 is Mayıs (May)', () => {
+    expect(TURKISH_MONTHS[4]).toBe('Mayıs')
+  })
+
+  it('index 5 is Haziran (June)', () => {
+    expect(TURKISH_MONTHS[5]).toBe('Haziran')
+  })
+
+  it('index 6 is Temmuz (July)', () => {
+    expect(TURKISH_MONTHS[6]).toBe('Temmuz')
+  })
+
+  it('index 7 is Ağustos (August)', () => {
+    expect(TURKISH_MONTHS[7]).toBe('Ağustos')
+  })
+
+  it('index 8 is Eylül (September)', () => {
+    expect(TURKISH_MONTHS[8]).toBe('Eylül')
+  })
+
+  it('index 9 is Ekim (October)', () => {
+    expect(TURKISH_MONTHS[9]).toBe('Ekim')
+  })
+
+  it('index 10 is Kasım (November)', () => {
+    expect(TURKISH_MONTHS[10]).toBe('Kasım')
+  })
+
+  it('index 11 is Aralık (December)', () => {
+    expect(TURKISH_MONTHS[11]).toBe('Aralık')
+  })
+
+  it('array is frozen / not mutated between tests', () => {
+    // Verify repeated access gives same results
+    expect(TURKISH_MONTHS[0]).toBe('Ocak')
+    expect(TURKISH_MONTHS[11]).toBe('Aralık')
+  })
+
+  it('month name for month number 6 (Haziran) is at index 5', () => {
+    // month numbers are 1-indexed: TURKISH_MONTHS[monthNumber - 1]
+    expect(TURKISH_MONTHS[6 - 1]).toBe('Haziran')
+  })
+
+  it('month name for month number 12 (Aralık) is at index 11', () => {
+    expect(TURKISH_MONTHS[12 - 1]).toBe('Aralık')
+  })
+
+  it('month name for month number 1 (Ocak) is at index 0', () => {
+    expect(TURKISH_MONTHS[1 - 1]).toBe('Ocak')
+  })
+})
+
+// ── computeSeasonalIndex — additional edge cases ──────────────────────────────
+
+describe('computeSeasonalIndex — edge cases and precision', () => {
+  it('overallAvg=0 with monthAvg=0 → 100', () => {
+    expect(computeSeasonalIndex(0, 0)).toBe(100)
+  })
+
+  it('overallAvg=0 with non-zero monthAvg → 100', () => {
+    expect(computeSeasonalIndex(12345, 0)).toBe(100)
+  })
+
+  it('equal monthAvg and overallAvg always returns exactly 100', () => {
+    for (const v of [1, 100, 9999, 0.5, 10000]) {
+      if (v > 0) expect(computeSeasonalIndex(v, v)).toBe(100)
+    }
+  })
+
+  it('monthAvg=200, overallAvg=100 → 200 (double average)', () => {
+    expect(computeSeasonalIndex(200, 100)).toBe(200)
+  })
+
+  it('monthAvg=25, overallAvg=100 → 25 (quarter average)', () => {
+    expect(computeSeasonalIndex(25, 100)).toBe(25)
+  })
+
+  it('result is rounded to 2 decimal places (not more)', () => {
+    const result = computeSeasonalIndex(100, 3)
+    const dp = String(result).split('.')[1]?.length ?? 0
+    expect(dp).toBeLessThanOrEqual(2)
+  })
+
+  it('1.5x average month → 150', () => {
+    expect(computeSeasonalIndex(150, 100)).toBe(150)
+  })
+
+  it('large scale: 5_000_000 / 2_500_000 → 200', () => {
+    expect(computeSeasonalIndex(5_000_000, 2_500_000)).toBe(200)
+  })
+
+  it('monthAvg slightly above overall → index slightly above 100', () => {
+    const result = computeSeasonalIndex(101, 100)
+    expect(result).toBe(101)
+  })
+
+  it('monthAvg slightly below overall → index slightly below 100', () => {
+    const result = computeSeasonalIndex(99, 100)
+    expect(result).toBe(99)
+  })
+
+  it('index = 0 when monthAvg = 0 and overallAvg > 0', () => {
+    expect(computeSeasonalIndex(0, 500)).toBe(0)
+  })
+})
+
+// ── computeSeasonalityStrength — additional boundary tests ───────────────────
+
+describe('computeSeasonalityStrength — boundary and precision', () => {
+  it('spread of exactly 0 → weak', () => {
+    expect(computeSeasonalityStrength([100, 100])).toBe('weak')
+  })
+
+  it('spread of exactly 19 → weak (below 20 boundary)', () => {
+    expect(computeSeasonalityStrength([100, 119])).toBe('weak')
+  })
+
+  it('spread of exactly 20 → moderate (>= 20)', () => {
+    expect(computeSeasonalityStrength([100, 120])).toBe('moderate')
+  })
+
+  it('spread of exactly 50 → moderate (not strong, requires > 50)', () => {
+    expect(computeSeasonalityStrength([100, 150])).toBe('moderate')
+  })
+
+  it('spread of exactly 51 → strong (> 50)', () => {
+    expect(computeSeasonalityStrength([100, 151])).toBe('strong')
+  })
+
+  it('spread of 100 → strong', () => {
+    expect(computeSeasonalityStrength([50, 150])).toBe('strong')
+  })
+
+  it('12 identical indices → spread = 0 → weak', () => {
+    const indices = Array(12).fill(100)
+    expect(computeSeasonalityStrength(indices)).toBe('weak')
+  })
+
+  it('length 0 → insufficient_data', () => {
+    expect(computeSeasonalityStrength([])).toBe('insufficient_data')
+  })
+
+  it('length 1 → insufficient_data', () => {
+    expect(computeSeasonalityStrength([100])).toBe('insufficient_data')
+  })
+
+  it('length 2 with spread > 50 → strong', () => {
+    expect(computeSeasonalityStrength([50, 101])).toBe('strong')
+  })
+
+  it('moderate range: spread = 35 → moderate', () => {
+    expect(computeSeasonalityStrength([82, 117])).toBe('moderate')
+  })
+
+  it('extreme values: [0, 500] → strong', () => {
+    expect(computeSeasonalityStrength([0, 500])).toBe('strong')
+  })
+})
+
+// ── buildSeasonalityRecommendation — all strength levels and month combos ─────
+
+describe('buildSeasonalityRecommendation — all strength/season combos', () => {
+  it('insufficient_data returns 12-month data message regardless of months', () => {
+    const r = buildSeasonalityRecommendation(7, 1, 'insufficient_data')
+    expect(r).toContain('12 aylık')
+  })
+
+  it('weak always returns istikrarlı regardless of peak/trough', () => {
+    expect(buildSeasonalityRecommendation(1, 7, 'weak')).toContain('istikrarlı')
+    expect(buildSeasonalityRecommendation(null, null, 'weak')).toContain('istikrarlı')
+    expect(buildSeasonalityRecommendation(12, 6, 'weak')).toContain('istikrarlı')
+  })
+
+  it('strong + peak in July (7, summer) → Yaz ayları message', () => {
+    const r = buildSeasonalityRecommendation(7, 1, 'strong')
+    expect(r).toContain('Yaz ayları')
+  })
+
+  it('strong + peak in August (8, summer) → Yaz ayları message', () => {
+    const r = buildSeasonalityRecommendation(8, 2, 'strong')
+    expect(r).toContain('Yaz ayları')
+  })
+
+  it('strong + trough in December (12, winter), peak not summer → kış message', () => {
+    // peak=3 (spring, not summer) so winter-trough branch fires
+    const r = buildSeasonalityRecommendation(3, 12, 'strong')
+    expect(r.toLowerCase()).toContain('kış')
+  })
+
+  it('strong + trough in February (2, winter), peak not summer → kış message', () => {
+    // peak=10 (autumn, not summer) so winter-trough branch fires
+    const r = buildSeasonalityRecommendation(10, 2, 'strong')
+    expect(r.toLowerCase()).toContain('kış')
+  })
+
+  it('strong + peak in spring (May=5) → İlkbahar message', () => {
+    const r = buildSeasonalityRecommendation(5, 10, 'strong')
+    expect(r).toContain('İlkbahar')
+  })
+
+  it('strong + peak in March (3, spring) → İlkbahar message', () => {
+    const r = buildSeasonalityRecommendation(3, 9, 'strong')
+    expect(r).toContain('İlkbahar')
+  })
+
+  it('strong + peak in autumn (November=11) → Sonbahar message', () => {
+    const r = buildSeasonalityRecommendation(11, 4, 'strong')
+    expect(r).toContain('Sonbahar')
+  })
+
+  it('moderate + peak in summer + no trough → Yaz ayları message', () => {
+    const r = buildSeasonalityRecommendation(6, null, 'moderate')
+    expect(r).toContain('Yaz ayları')
+  })
+
+  it('all strengths return non-empty strings', () => {
+    const strengths: Array<'strong' | 'moderate' | 'weak' | 'insufficient_data'> = [
+      'strong', 'moderate', 'weak', 'insufficient_data',
+    ]
+    for (const s of strengths) {
+      const r = buildSeasonalityRecommendation(6, 1, s)
+      expect(r.length).toBeGreaterThan(0)
+    }
+  })
+
+  it('trough in autumn with no peak → Sonbahar trough message', () => {
+    const r = buildSeasonalityRecommendation(null, 9, 'strong')
+    expect(r).toContain('Sonbahar')
+  })
+
+  it('peak in winter (December=12) → checks winter-related message', () => {
+    // December is winter; trough not winter so it should hit the generic peak branch
+    const r = buildSeasonalityRecommendation(12, 6, 'strong')
+    expect(typeof r).toBe('string')
+    expect(r.length).toBeGreaterThan(5)
+  })
+})
