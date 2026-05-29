@@ -443,3 +443,240 @@ describe('computeHitRate', () => {
     expect(result!).toBe(50)
   })
 })
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeForecastError — additional edge cases
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeForecastError — additional edge cases', () => {
+  it('formula: forecast minus actual (not actual minus forecast)', () => {
+    // verify direction: forecast=150, actual=100 → error=50
+    expect(computeForecastError(150, 100)).toBe(50)
+    // actual=150, forecast=100 → error=-50
+    expect(computeForecastError(100, 150)).toBe(-50)
+  })
+
+  it('handles zero forecast and non-zero actual', () => {
+    expect(computeForecastError(0, 100)).toBe(-100)
+  })
+
+  it('handles non-zero forecast and zero actual', () => {
+    expect(computeForecastError(100, 0)).toBe(100)
+  })
+
+  it('both zero returns zero', () => {
+    expect(computeForecastError(0, 0)).toBe(0)
+  })
+
+  it('very large values do not lose precision', () => {
+    expect(computeForecastError(10_000_000, 9_999_999)).toBe(1)
+  })
+
+  it('both negative: forecast=-80, actual=-100 → error=20', () => {
+    expect(computeForecastError(-80, -100)).toBe(20)
+  })
+
+  it('decimal values return precise result', () => {
+    expect(computeForecastError(100.5, 99.5)).toBeCloseTo(1.0, 5)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeMape — formula verification
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeMape — formula verification', () => {
+  it('uses absolute errors divided by absolute actuals (not signed)', () => {
+    // forecast=90 actual=100 → |(90-100)|/|100| = 10%
+    // forecast=110 actual=100 → |(110-100)|/|100| = 10%
+    // MAPE = (10+10)/2 = 10%
+    const result = computeMape([90, 110], [100, 100])
+    expect(result).toBeCloseTo(10, 2)
+  })
+
+  it('large under-forecast: forecast=1, actual=100 → MAPE=99%', () => {
+    const result = computeMape([1], [100])
+    expect(result).toBeCloseTo(99, 1)
+  })
+
+  it('MAPE of perfect forecast is 0', () => {
+    const result = computeMape([100, 200, 300], [100, 200, 300])
+    expect(result).toBeCloseTo(0, 8)
+  })
+
+  it('averages errors across all valid months', () => {
+    // 3 months: 10%, 20%, 30% → MAPE = 20%
+    const result = computeMape([110, 120, 130], [100, 100, 100])
+    expect(result).toBeCloseTo(20, 1)
+  })
+
+  it('result is always non-negative for valid inputs', () => {
+    const result = computeMape([90, 110, 80, 120], [100, 100, 100, 100])
+    expect(result).toBeGreaterThanOrEqual(0)
+  })
+
+  it('negative actual values are handled via Math.abs', () => {
+    // forecast=-90, actual=-100 → |(-90-(-100))| / |-100| = 10/100 = 10%
+    const result = computeMape([-90], [-100])
+    expect(result).toBeCloseTo(10, 2)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeBias — formula verification
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeBias — formula verification', () => {
+  it('bias = mean of (forecast - actual) across all months', () => {
+    // [(120-100) + (80-100)] / 2 = [20 + (-20)] / 2 = 0
+    const result = computeBias([120, 80], [100, 100])
+    expect(result).toBe(0)
+  })
+
+  it('single pair: bias = forecast - actual', () => {
+    expect(computeBias([130], [100])).toBeCloseTo(30, 8)
+  })
+
+  it('large positive bias indicates chronic overforecasting', () => {
+    const result = computeBias([150, 160, 170], [100, 100, 100])
+    expect(result).toBeGreaterThan(0)
+    expect(result).toBeCloseTo(60, 1)
+  })
+
+  it('large negative bias indicates chronic underforecasting', () => {
+    const result = computeBias([50, 40, 60], [100, 100, 100])
+    expect(result).toBeLessThan(0)
+    expect(result).toBeCloseTo(-50, 1)
+  })
+
+  it('bias for 12-month equal over/under = 0', () => {
+    const forecasts = Array.from({ length: 12 }, (_, i) => (i % 2 === 0 ? 110 : 90))
+    const actuals   = Array(12).fill(100)
+    const result = computeBias(forecasts, actuals)
+    expect(result).toBeCloseTo(0, 8)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// classifyForecastAccuracy — boundary precision
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('classifyForecastAccuracy — boundary precision', () => {
+  it('5.001 → good (just above excellent threshold)', () => {
+    expect(classifyForecastAccuracy(5.001)).toBe('good')
+  })
+
+  it('10.001 → acceptable (just above good threshold)', () => {
+    expect(classifyForecastAccuracy(10.001)).toBe('acceptable')
+  })
+
+  it('20.001 → poor (just above acceptable threshold)', () => {
+    expect(classifyForecastAccuracy(20.001)).toBe('poor')
+  })
+
+  it('30.001 → unreliable (just above poor threshold)', () => {
+    expect(classifyForecastAccuracy(30.001)).toBe('unreliable')
+  })
+
+  it('4.999 → excellent (just below good threshold)', () => {
+    expect(classifyForecastAccuracy(4.999)).toBe('excellent')
+  })
+
+  it('very high MAPE (500%) → unreliable', () => {
+    expect(classifyForecastAccuracy(500)).toBe('unreliable')
+  })
+
+  it('MAPE = 0 → excellent (perfect forecast)', () => {
+    expect(classifyForecastAccuracy(0)).toBe('excellent')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// classifyForecastBias — all levels with various magnitudes
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('classifyForecastBias — all levels with various magnitudes', () => {
+  it('strong over_forecast: 50% normalized bias', () => {
+    // bias=50, avgActual=100 → 50% > 5% → over_forecast
+    expect(classifyForecastBias(50, 100)).toBe('over_forecast')
+  })
+
+  it('strong under_forecast: -50% normalized bias', () => {
+    expect(classifyForecastBias(-50, 100)).toBe('under_forecast')
+  })
+
+  it('exactly 5.001% normalized → over_forecast', () => {
+    expect(classifyForecastBias(5.001, 100)).toBe('over_forecast')
+  })
+
+  it('exactly -5.001% normalized → under_forecast', () => {
+    expect(classifyForecastBias(-5.001, 100)).toBe('under_forecast')
+  })
+
+  it('zero bias is always unbiased regardless of avgActual', () => {
+    expect(classifyForecastBias(0, 1)).toBe('unbiased')
+    expect(classifyForecastBias(0, 1000000)).toBe('unbiased')
+  })
+
+  it('large avgActual makes small absolute bias unbiased', () => {
+    // bias=100, avgActual=10000 → normalized = 1% → unbiased
+    expect(classifyForecastBias(100, 10000)).toBe('unbiased')
+  })
+
+  it('small avgActual makes same absolute bias over_forecast', () => {
+    // bias=100, avgActual=1000 → normalized = 10% → over_forecast
+    expect(classifyForecastBias(100, 1000)).toBe('over_forecast')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// computeHitRate — additional tolerance scenarios
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('computeHitRate — additional tolerance scenarios', () => {
+  it('single hit with 20% custom tolerance', () => {
+    const result = computeHitRate([{ error_pct: 18 }], 20)
+    expect(result).toBe(100)
+  })
+
+  it('single miss with 20% custom tolerance', () => {
+    const result = computeHitRate([{ error_pct: 25 }], 20)
+    expect(result).toBe(0)
+  })
+
+  it('3 hits out of 4 → 75%', () => {
+    const result = computeHitRate([
+      { error_pct: 2 },
+      { error_pct: -3 },
+      { error_pct: 7 },
+      { error_pct: 50 },
+    ])
+    expect(result).toBeCloseTo(75, 1)
+  })
+
+  it('negative error_pct within tolerance is a hit', () => {
+    const result = computeHitRate([{ error_pct: -9 }], 10)
+    expect(result).toBe(100)
+  })
+
+  it('negative error_pct outside tolerance is a miss', () => {
+    const result = computeHitRate([{ error_pct: -11 }], 10)
+    expect(result).toBe(0)
+  })
+
+  it('hit rate is percentage 0–100 (never outside range)', () => {
+    const cases = [
+      [],
+      [{ error_pct: 0 }],
+      [{ error_pct: 100 }],
+      [{ error_pct: null }],
+    ]
+    for (const c of cases) {
+      const result = computeHitRate(c)
+      if (result !== null) {
+        expect(result).toBeGreaterThanOrEqual(0)
+        expect(result).toBeLessThanOrEqual(100)
+      }
+    }
+  })
+})

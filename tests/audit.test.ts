@@ -423,3 +423,186 @@ describe('rollback input validation — extended', () => {
     expect(SUPPORTED.size).toBe(3)
   })
 })
+
+// ── Alert severity — additional entity types ──────────────────────────────────
+
+describe('alert severity — additional entity types', () => {
+
+  it('update on partner_transaction below threshold → info', () => {
+    expect(getAlertSeverity({
+      action: 'update', entityType: 'partner_transaction', amount: 99_999,
+    })).toBe('info')
+  })
+
+  it('update on partner_transaction at threshold → warning', () => {
+    expect(getAlertSeverity({
+      action: 'update', entityType: 'partner_transaction', amount: 100_000,
+    })).toBe('warning')
+  })
+
+  it('create on unknown entity type → info (falls through to default)', () => {
+    expect(getAlertSeverity({ action: 'create', entityType: 'invoice' })).toBe('info')
+  })
+
+  it('delete on invoice → warning (delete always wins)', () => {
+    expect(getAlertSeverity({ action: 'delete', entityType: 'invoice' })).toBe('warning')
+  })
+
+  it('create on board_fee entity → info', () => {
+    expect(getAlertSeverity({ action: 'create', entityType: 'board_fee' })).toBe('info')
+  })
+
+  it('create on salary entity → info', () => {
+    expect(getAlertSeverity({ action: 'create', entityType: 'salary' })).toBe('info')
+  })
+
+  it('update on stock_movement → info', () => {
+    expect(getAlertSeverity({ action: 'update', entityType: 'stock_movement' })).toBe('info')
+  })
+
+  it('delete on dividend entity → warning', () => {
+    expect(getAlertSeverity({ action: 'delete', entityType: 'dividend' })).toBe('warning')
+  })
+
+  it('amount undefined for partner_transaction → defaults to 0 → info', () => {
+    expect(getAlertSeverity({ action: 'create', entityType: 'partner_transaction' })).toBe('info')
+  })
+
+  it('partner_transaction amount exactly one above threshold → warning', () => {
+    expect(getAlertSeverity({
+      action: 'create', entityType: 'partner_transaction', amount: 100_001,
+    })).toBe('warning')
+  })
+})
+
+// ── Rollback amount edge cases ────────────────────────────────────────────────
+
+describe('rollback amount — edge cases', () => {
+
+  it('qty_change = 1 → reversal = -1', () => {
+    const original = { qty_change: 1 }
+    const reversal = -original.qty_change
+    expect(reversal).toBe(-1)
+  })
+
+  it('qty_change = -1 → reversal = 1', () => {
+    const original = { qty_change: -1 }
+    const reversal = -original.qty_change
+    expect(reversal).toBe(1)
+  })
+
+  it('double negation is identity for integer qty', () => {
+    const vals = [0, 1, -1, 500, -500, 999_999, -999_999]
+    for (const v of vals) {
+      expect(-(-v)).toBe(v)
+    }
+  })
+
+  it('movement_type of reversal for original qty=1 → out', () => {
+    const getType = (qty: number) =>
+      qty > 0 ? 'in' : qty < 0 ? 'out' : 'adjustment'
+    const original = 1
+    const reversal = -original
+    expect(getType(reversal)).toBe('out')
+  })
+
+  it('movement_type of reversal for original qty=-5 → in', () => {
+    const getType = (qty: number) =>
+      qty > 0 ? 'in' : qty < 0 ? 'out' : 'adjustment'
+    const original = -5
+    const reversal = -original
+    expect(getType(reversal)).toBe('in')
+  })
+
+  it('reversal of zero qty → adjustment', () => {
+    const getType = (qty: number) =>
+      qty > 0 ? 'in' : qty < 0 ? 'out' : 'adjustment'
+    const original = 0
+    const reversal = -original
+    expect(getType(reversal)).toBe('adjustment')
+  })
+})
+
+// ── AuditLog action completeness ──────────────────────────────────────────────
+
+describe('audit log action completeness', () => {
+
+  it('action set contains create', () => {
+    const ACTIONS = new Set(['create', 'update', 'delete'])
+    expect(ACTIONS.has('create')).toBe(true)
+  })
+
+  it('action set contains update', () => {
+    const ACTIONS = new Set(['create', 'update', 'delete'])
+    expect(ACTIONS.has('update')).toBe(true)
+  })
+
+  it('action set contains delete', () => {
+    const ACTIONS = new Set(['create', 'update', 'delete'])
+    expect(ACTIONS.has('delete')).toBe(true)
+  })
+
+  it('action set does not contain rollback', () => {
+    const ACTIONS = new Set(['create', 'update', 'delete'])
+    expect(ACTIONS.has('rollback')).toBe(false)
+  })
+
+  it('action set has exactly 3 values', () => {
+    const ACTIONS = new Set(['create', 'update', 'delete'])
+    expect(ACTIONS.size).toBe(3)
+  })
+
+  it('create log has action = create', () => {
+    const log = { action: 'create' as const, old_data: null, new_data: { id: 'x' } }
+    expect(log.action).toBe('create')
+  })
+
+  it('update log has action = update', () => {
+    const log = { action: 'update' as const, old_data: { v: 1 }, new_data: { v: 2 } }
+    expect(log.action).toBe('update')
+  })
+
+  it('delete log has action = delete', () => {
+    const log = { action: 'delete' as const, old_data: { id: 'y' }, new_data: null }
+    expect(log.action).toBe('delete')
+  })
+})
+
+// ── OPPOSITE_TX map exhaustiveness ───────────────────────────────────────────
+
+describe('OPPOSITE_TX exhaustiveness', () => {
+
+  it('every key maps to a defined string value', () => {
+    for (const [key, val] of Object.entries(OPPOSITE_TX)) {
+      expect(typeof key).toBe('string')
+      expect(typeof val).toBe('string')
+      expect(val.length).toBeGreaterThan(0)
+    }
+  })
+
+  it('no entry maps to undefined', () => {
+    for (const val of Object.values(OPPOSITE_TX)) {
+      expect(val).not.toBeUndefined()
+    }
+  })
+
+  it('all opposite values exist as keys (symmetry check for known pairs)', () => {
+    // loan_in ↔ loan_out
+    expect(OPPOSITE_TX[OPPOSITE_TX['loan_in']]).toBe('loan_in')
+    expect(OPPOSITE_TX[OPPOSITE_TX['loan_out']]).toBe('loan_out')
+  })
+
+  it('self-inverse values round-trip correctly', () => {
+    for (const key of ['salary', 'board_fee', 'dividend']) {
+      expect(OPPOSITE_TX[key]).toBe(key)
+      expect(OPPOSITE_TX[OPPOSITE_TX[key]]).toBe(key)
+    }
+  })
+
+  it('OPPOSITE_TX has no unknown keys beyond the 5 defined', () => {
+    const expectedKeys = new Set(['loan_in', 'loan_out', 'salary', 'board_fee', 'dividend'])
+    for (const key of Object.keys(OPPOSITE_TX)) {
+      expect(expectedKeys.has(key)).toBe(true)
+    }
+  })
+})

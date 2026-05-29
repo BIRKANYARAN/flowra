@@ -460,3 +460,246 @@ describe('computeAlertHealthScore', () => {
   })
 
 })
+
+// ── ALERT_RULES — structural integrity ────────────────────────────────────────
+
+describe('ALERT_RULES — structural integrity', () => {
+  it('all rule ids are unique', () => {
+    const ids = ALERT_RULES.map(r => r.id)
+    const unique = new Set(ids)
+    expect(unique.size).toBe(ids.length)
+  })
+
+  it('every rule has a valid severity (info | warning | critical)', () => {
+    const valid = new Set(['info', 'warning', 'critical'])
+    for (const rule of ALERT_RULES) {
+      expect(valid.has(rule.severity)).toBe(true)
+    }
+  })
+
+  it('every rule has a valid category', () => {
+    const valid = new Set(['cash', 'receivables', 'inventory', 'partners', 'compliance', 'revenue', 'expenses', 'performance'])
+    for (const rule of ALERT_RULES) {
+      expect(valid.has(rule.category)).toBe(true)
+    }
+  })
+
+  it('is_blocking is boolean for every rule', () => {
+    for (const rule of ALERT_RULES) {
+      expect(typeof rule.is_blocking).toBe('boolean')
+    }
+  })
+
+  it('default_threshold is a finite number for every rule', () => {
+    for (const rule of ALERT_RULES) {
+      expect(Number.isFinite(rule.default_threshold)).toBe(true)
+    }
+  })
+
+  it('cash_runway_90 has category cash and severity warning', () => {
+    const rule = ALERT_RULES.find(r => r.id === 'cash_runway_90')!
+    expect(rule.category).toBe('cash')
+    expect(rule.severity).toBe('warning')
+  })
+
+  it('overdue_60 has category receivables and severity critical', () => {
+    const rule = ALERT_RULES.find(r => r.id === 'overdue_60')!
+    expect(rule.category).toBe('receivables')
+    expect(rule.severity).toBe('critical')
+  })
+
+  it('kdv_due_soon has category compliance', () => {
+    const rule = ALERT_RULES.find(r => r.id === 'kdv_due_soon')!
+    expect(rule.category).toBe('compliance')
+  })
+
+  it('partner_loan_due has default_threshold of 14', () => {
+    const rule = ALERT_RULES.find(r => r.id === 'partner_loan_due')!
+    expect(rule.default_threshold).toBe(14)
+  })
+})
+
+// ── createAlert — full field validation ───────────────────────────────────────
+
+describe('createAlert — full field validation', () => {
+  it('inventory rule: stock_critical has critical severity', () => {
+    const alert = createAlert('stock_critical', 'Stok', 'Detay')
+    expect(alert.severity).toBe('critical')
+    expect(alert.category).toBe('inventory')
+  })
+
+  it('compliance rule: kdv_due_soon has warning severity', () => {
+    const alert = createAlert('kdv_due_soon', 'KDV', 'Beyanname yaklaşıyor')
+    expect(alert.severity).toBe('warning')
+    expect(alert.category).toBe('compliance')
+  })
+
+  it('partners rule: partner_loan_due has critical severity', () => {
+    const alert = createAlert('partner_loan_due', 'Vade', 'Yaklaşıyor')
+    expect(alert.severity).toBe('critical')
+    expect(alert.category).toBe('partners')
+  })
+
+  it('alert id format is {category}_{ruleId}', () => {
+    const alert = createAlert('overdue_60', 'T', 'D')
+    expect(alert.id).toBe('receivables_overdue_60')
+  })
+
+  it('amount override is preserved in alert', () => {
+    const alert = createAlert('overdue_60', 'T', 'D', { amount: 50_000 })
+    expect(alert.amount).toBe(50_000)
+  })
+
+  it('days override is preserved in alert', () => {
+    const alert = createAlert('cash_runway_30', 'T', 'D', { days: 20 })
+    expect(alert.days).toBe(20)
+  })
+
+  it('returns well-formed Alert object with all required fields', () => {
+    const alert = createAlert('equity_gap', 'Sermaye', 'Boşluk var')
+    expect(alert.id).toBeTruthy()
+    expect(alert.severity).toBeTruthy()
+    expect(alert.category).toBeTruthy()
+    expect(alert.title).toBe('Sermaye')
+    expect(alert.detail).toBe('Boşluk var')
+    expect(alert.action_label).toBeTruthy()
+    expect(alert.action_href).toBeTruthy()
+    expect(alert.triggered_at).toBeTruthy()
+  })
+})
+
+// ── prioritizeAlerts — complete ordering ─────────────────────────────────────
+
+describe('prioritizeAlerts — complete ordering', () => {
+  it('partners before inventory within same severity', () => {
+    const alerts = [
+      makeAlert({ id: 'inv', severity: 'warning', category: 'inventory' }),
+      makeAlert({ id: 'par', severity: 'warning', category: 'partners' }),
+    ]
+    const sorted = prioritizeAlerts(alerts)
+    expect(sorted[0].category).toBe('partners')
+    expect(sorted[1].category).toBe('inventory')
+  })
+
+  it('revenue before expenses within same severity', () => {
+    const alerts = [
+      makeAlert({ id: 'exp', severity: 'info', category: 'expenses' }),
+      makeAlert({ id: 'rev', severity: 'info', category: 'revenue' }),
+    ]
+    const sorted = prioritizeAlerts(alerts)
+    expect(sorted[0].category).toBe('revenue')
+  })
+
+  it('critical cash beats critical expenses', () => {
+    const alerts = [
+      makeAlert({ id: 'e', severity: 'critical', category: 'expenses' }),
+      makeAlert({ id: 'c', severity: 'critical', category: 'cash' }),
+    ]
+    const sorted = prioritizeAlerts(alerts)
+    expect(sorted[0].category).toBe('cash')
+  })
+
+  it('preserves all alerts (no items dropped)', () => {
+    const alerts = Array.from({ length: 5 }, (_, i) =>
+      makeAlert({ id: `a${i}`, severity: 'warning' }),
+    )
+    expect(prioritizeAlerts(alerts)).toHaveLength(5)
+  })
+
+  it('mixed severities: all criticals before all warnings', () => {
+    const alerts = [
+      makeAlert({ id: 'w1', severity: 'warning',  category: 'cash' }),
+      makeAlert({ id: 'c1', severity: 'critical', category: 'expenses' }),
+      makeAlert({ id: 'w2', severity: 'warning',  category: 'inventory' }),
+      makeAlert({ id: 'c2', severity: 'critical', category: 'performance' }),
+    ]
+    const sorted = prioritizeAlerts(alerts)
+    const criticals = sorted.filter(a => a.severity === 'critical')
+    const warnings  = sorted.filter(a => a.severity === 'warning')
+    expect(sorted.indexOf(criticals[0])).toBeLessThan(sorted.indexOf(warnings[0]))
+  })
+})
+
+// ── computeAlertSummary — edge cases ─────────────────────────────────────────
+
+describe('computeAlertSummary — edge cases', () => {
+  it('all info alerts: critical and warning are 0', () => {
+    const alerts = [
+      makeAlert({ id: 'a', severity: 'info' }),
+      makeAlert({ id: 'b', severity: 'info' }),
+    ]
+    const s = computeAlertSummary(alerts)
+    expect(s.critical).toBe(0)
+    expect(s.warning).toBe(0)
+    expect(s.info).toBe(2)
+  })
+
+  it('total equals critical + warning + info', () => {
+    const alerts = [
+      makeAlert({ id: 'c', severity: 'critical' }),
+      makeAlert({ id: 'w', severity: 'warning' }),
+      makeAlert({ id: 'i', severity: 'info' }),
+    ]
+    const s = computeAlertSummary(alerts)
+    expect(s.total).toBe(s.critical + s.warning + s.info)
+  })
+
+  it('by_category.performance is non-negative and counts performance alerts', () => {
+    const alerts = [makeAlert({ id: 'p', category: 'performance' })]
+    const s = computeAlertSummary(alerts)
+    expect(s.by_category.performance).toBe(1)
+  })
+
+  it('single critical alert: total=1, critical=1', () => {
+    const s = computeAlertSummary([makeAlert({ severity: 'critical' })])
+    expect(s.total).toBe(1)
+    expect(s.critical).toBe(1)
+    expect(s.warning).toBe(0)
+    expect(s.info).toBe(0)
+  })
+})
+
+// ── computeAlertHealthScore — deduction mechanics ─────────────────────────────
+
+describe('computeAlertHealthScore — deduction mechanics', () => {
+  it('5 warnings: 100 - 25 = 75', () => {
+    const alerts = Array.from({ length: 5 }, (_, i) =>
+      makeAlert({ id: `w${i}`, severity: 'warning' }),
+    )
+    expect(computeAlertHealthScore(alerts)).toBe(75)
+  })
+
+  it('10 info alerts: 100 - 10 = 90', () => {
+    const alerts = Array.from({ length: 10 }, (_, i) =>
+      makeAlert({ id: `i${i}`, severity: 'info' }),
+    )
+    expect(computeAlertHealthScore(alerts)).toBe(90)
+  })
+
+  it('3 critical + 2 warning: 100 - 45 - 10 = 45', () => {
+    const alerts = [
+      makeAlert({ id: 'c1', severity: 'critical' }),
+      makeAlert({ id: 'c2', severity: 'critical' }),
+      makeAlert({ id: 'c3', severity: 'critical' }),
+      makeAlert({ id: 'w1', severity: 'warning' }),
+      makeAlert({ id: 'w2', severity: 'warning' }),
+    ]
+    expect(computeAlertHealthScore(alerts)).toBe(45)
+  })
+
+  it('exactly 7 criticals clamped to 0 (7×15=105)', () => {
+    const alerts = Array.from({ length: 7 }, (_, i) =>
+      makeAlert({ id: `c${i}`, severity: 'critical' }),
+    )
+    expect(computeAlertHealthScore(alerts)).toBe(0)
+  })
+
+  it('1 critical + 1 warning + 1 info = 100 - 15 - 5 - 1 = 79', () => {
+    const alerts = [
+      makeAlert({ id: 'c', severity: 'critical' }),
+      makeAlert({ id: 'w', severity: 'warning' }),
+      makeAlert({ id: 'i', severity: 'info' }),
+    ]
+    expect(computeAlertHealthScore(alerts)).toBe(79)
+  })
+})

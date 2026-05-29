@@ -442,3 +442,205 @@ describe('GeneralLedgerService.classBalance — class field vs CoA lookup', () =
     expect(isNaN(result)).toBe(false)
   })
 })
+
+// ── accountClass helper — return values for known codes ──────────────────────
+
+import { accountClass, accountsByClass, CHART_OF_ACCOUNTS as CoA } from '../lib/accounting/chart-of-accounts'
+
+describe('accountClass helper — known code mappings', () => {
+  it('100 → current_asset (Kasa)', () => {
+    expect(accountClass('100')).toBe('current_asset')
+  })
+
+  it('102 → current_asset (Bankalar)', () => {
+    expect(accountClass('102')).toBe('current_asset')
+  })
+
+  it('120 → current_asset (Alıcılar)', () => {
+    expect(accountClass('120')).toBe('current_asset')
+  })
+
+  it('500 → equity (Sermaye)', () => {
+    expect(accountClass('500')).toBe('equity')
+  })
+
+  it('600 → revenue (Yurt İçi Satışlar)', () => {
+    expect(accountClass('600')).toBe('revenue')
+  })
+
+  it('620 → cogs (Satılan Malın Maliyeti)', () => {
+    expect(accountClass('620')).toBe('cogs')
+  })
+
+  it('391 → current_liability (Hesaplanan KDV)', () => {
+    expect(accountClass('391')).toBe('current_liability')
+  })
+
+  it('unknown code → null', () => {
+    expect(accountClass('999')).toBeNull()
+  })
+
+  it('empty string → null', () => {
+    expect(accountClass('')).toBeNull()
+  })
+
+  it('770 → operating_expense', () => {
+    expect(accountClass('770')).toBe('operating_expense')
+  })
+
+  it('780 → financing', () => {
+    expect(accountClass('780')).toBe('financing')
+  })
+
+  it('253 → non_current_asset', () => {
+    expect(accountClass('253')).toBe('non_current_asset')
+  })
+
+  it('421 → non_current_liability', () => {
+    expect(accountClass('421')).toBe('non_current_liability')
+  })
+})
+
+// ── accountsByClass — non-empty arrays for all classes ───────────────────────
+
+describe('accountsByClass — non-empty arrays for all known classes', () => {
+  it('current_asset has at least one account', () => {
+    expect(accountsByClass('current_asset').length).toBeGreaterThan(0)
+  })
+
+  it('non_current_asset has at least one account', () => {
+    expect(accountsByClass('non_current_asset').length).toBeGreaterThan(0)
+  })
+
+  it('current_liability has at least one account', () => {
+    expect(accountsByClass('current_liability').length).toBeGreaterThan(0)
+  })
+
+  it('non_current_liability has at least one account', () => {
+    expect(accountsByClass('non_current_liability').length).toBeGreaterThan(0)
+  })
+
+  it('equity has at least one account', () => {
+    expect(accountsByClass('equity').length).toBeGreaterThan(0)
+  })
+
+  it('revenue has at least one account', () => {
+    expect(accountsByClass('revenue').length).toBeGreaterThan(0)
+  })
+
+  it('cogs has at least one account', () => {
+    expect(accountsByClass('cogs').length).toBeGreaterThan(0)
+  })
+
+  it('operating_expense has at least one account', () => {
+    expect(accountsByClass('operating_expense').length).toBeGreaterThan(0)
+  })
+
+  it('financing has at least one account', () => {
+    expect(accountsByClass('financing').length).toBeGreaterThan(0)
+  })
+
+  it('all returned accounts have the correct class field', () => {
+    const assets = accountsByClass('current_asset')
+    for (const a of assets) {
+      expect(a.class).toBe('current_asset')
+    }
+  })
+
+  it('all returned accounts have a non-empty code', () => {
+    const liabilities = accountsByClass('current_liability')
+    for (const a of liabilities) {
+      expect(a.code.length).toBeGreaterThan(0)
+    }
+  })
+})
+
+// ── CHART_OF_ACCOUNTS — 20+ entries ──────────────────────────────────────────
+
+describe('CHART_OF_ACCOUNTS — completeness', () => {
+  it('has 20 or more entries', () => {
+    expect(CoA.length).toBeGreaterThanOrEqual(20)
+  })
+
+  it('every entry has a non-empty code', () => {
+    for (const a of CoA) {
+      expect(typeof a.code).toBe('string')
+      expect(a.code.length).toBeGreaterThan(0)
+    }
+  })
+
+  it('every entry has a non-empty name', () => {
+    for (const a of CoA) {
+      expect(typeof a.name).toBe('string')
+      expect(a.name.length).toBeGreaterThan(0)
+    }
+  })
+
+  it('every entry has a valid class', () => {
+    const VALID_CLASSES = new Set([
+      'current_asset', 'non_current_asset', 'current_liability',
+      'non_current_liability', 'equity', 'revenue', 'cogs',
+      'operating_expense', 'financing',
+    ])
+    for (const a of CoA) {
+      expect(VALID_CLASSES.has(a.class)).toBe(true)
+    }
+  })
+
+  it('every entry has a valid normal_balance', () => {
+    for (const a of CoA) {
+      expect(['debit', 'credit']).toContain(a.normal_balance)
+    }
+  })
+
+  it('no duplicate account codes', () => {
+    const codes = CoA.map(a => a.code)
+    const unique = new Set(codes)
+    expect(unique.size).toBe(codes.length)
+  })
+
+  it('contains key Turkish SME accounts: 100, 102, 120, 320, 500, 600, 620', () => {
+    const codes = new Set(CoA.map(a => a.code))
+    for (const code of ['100', '102', '120', '320', '500', '600', '620']) {
+      expect(codes.has(code)).toBe(true)
+    }
+  })
+})
+
+// ── classBalance — multiple accounts of mixed classes ─────────────────────────
+
+describe('classBalance — mixed-class GL, only queried class summed', () => {
+  it('sums only current_asset accounts from a fully mixed GL', () => {
+    const gl = mkGL([
+      { account_code: '100', class: 'current_asset',       balance_try:  5_000 },
+      { account_code: '102', class: 'current_asset',       balance_try: 15_000 },
+      { account_code: '320', class: 'current_liability',   balance_try: 20_000 },
+      { account_code: '500', class: 'equity',              balance_try: 50_000 },
+      { account_code: '600', class: 'revenue',             balance_try: 100_000 },
+      { account_code: '770', class: 'operating_expense',   balance_try: 40_000 },
+      { account_code: '620', class: 'cogs',                balance_try: 30_000 },
+    ])
+    expect(GeneralLedgerService.classBalance(gl, 'current_asset')).toBe(20_000)
+    expect(GeneralLedgerService.classBalance(gl, 'equity')).toBe(50_000)
+    expect(GeneralLedgerService.classBalance(gl, 'cogs')).toBe(30_000)
+  })
+
+  it('empty GL returns 0 for all classes', () => {
+    const gl = mkGL([])
+    const classes = [
+      'current_asset', 'non_current_asset', 'current_liability',
+      'non_current_liability', 'equity', 'revenue', 'cogs',
+      'operating_expense', 'financing',
+    ] as const
+    for (const cls of classes) {
+      expect(GeneralLedgerService.classBalance(gl, cls)).toBe(0)
+    }
+  })
+
+  it('single account GL returns 0 for all other classes', () => {
+    const gl = mkGL([{ account_code: '600', class: 'revenue', balance_try: 100_000 }])
+    expect(GeneralLedgerService.classBalance(gl, 'current_asset')).toBe(0)
+    expect(GeneralLedgerService.classBalance(gl, 'operating_expense')).toBe(0)
+    expect(GeneralLedgerService.classBalance(gl, 'cogs')).toBe(0)
+  })
+})

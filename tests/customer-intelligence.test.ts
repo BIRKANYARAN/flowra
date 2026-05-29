@@ -457,3 +457,231 @@ describe('trend — stable', () => {
     expect(profile.trend).toBe('stable')
   })
 })
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 21. computePortfolioRisk — empty profiles
+// ─────────────────────────────────────────────────────────────────────────────
+describe('computePortfolioRisk — empty profiles', () => {
+  it('returns total_customers = 0', () => {
+    const p = CustomerIntelligenceService.computePortfolioRisk([])
+    expect(p.total_customers).toBe(0)
+  })
+
+  it('returns all count fields as 0', () => {
+    const p = CustomerIntelligenceService.computePortfolioRisk([])
+    expect(p.critical_count).toBe(0)
+    expect(p.high_risk_count).toBe(0)
+    expect(p.medium_risk_count).toBe(0)
+    expect(p.low_risk_count).toBe(0)
+  })
+
+  it('returns portfolio_on_time_rate = 0', () => {
+    const p = CustomerIntelligenceService.computePortfolioRisk([])
+    expect(p.portfolio_on_time_rate).toBe(0)
+  })
+
+  it('returns total_overdue_try = 0', () => {
+    const p = CustomerIntelligenceService.computePortfolioRisk([])
+    expect(p.total_overdue_try).toBe(0)
+  })
+
+  it('returns avg_days_to_pay_portfolio = null', () => {
+    const p = CustomerIntelligenceService.computePortfolioRisk([])
+    expect(p.avg_days_to_pay_portfolio).toBeNull()
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 22. computePortfolioRisk — all low-risk profiles
+// ─────────────────────────────────────────────────────────────────────────────
+describe('computePortfolioRisk — all low-risk profiles', () => {
+  function makeLowProfile(name: string, avgDays: number): CustomerPaymentProfile {
+    return {
+      customer_name: name, total_sales: 2, total_revenue_try: 5000,
+      total_paid_try: 5000, total_outstanding_try: 0,
+      avg_days_to_pay: avgDays, avg_days_overdue: -3, on_time_rate: 1,
+      overdue_sales_count: 0, overdue_amount_try: 0, last_overdue_date: null,
+      recent_avg_days_to_pay: avgDays, trend: 'stable',
+      risk_tier: 'low', last_sale_date: '2025-03-01', first_sale_date: '2024-01-01',
+    }
+  }
+
+  it('low_risk_count equals total_customers', () => {
+    const profiles = [makeLowProfile('A', 5), makeLowProfile('B', 10), makeLowProfile('C', 8)]
+    const p = CustomerIntelligenceService.computePortfolioRisk(profiles)
+    expect(p.low_risk_count).toBe(3)
+    expect(p.critical_count).toBe(0)
+    expect(p.high_risk_count).toBe(0)
+    expect(p.medium_risk_count).toBe(0)
+  })
+
+  it('portfolio_on_time_rate = 1 when all on_time_rate = 1', () => {
+    const profiles = [makeLowProfile('A', 5), makeLowProfile('B', 7)]
+    const p = CustomerIntelligenceService.computePortfolioRisk(profiles)
+    expect(p.portfolio_on_time_rate).toBeCloseTo(1)
+  })
+
+  it('total_overdue_try = 0 when all low-risk', () => {
+    const profiles = [makeLowProfile('A', 5), makeLowProfile('B', 7)]
+    const p = CustomerIntelligenceService.computePortfolioRisk(profiles)
+    expect(p.total_overdue_try).toBe(0)
+  })
+
+  it('avg_days_to_pay_portfolio is average of individual avg_days_to_pay', () => {
+    const profiles = [makeLowProfile('A', 10), makeLowProfile('B', 20)]
+    const p = CustomerIntelligenceService.computePortfolioRisk(profiles)
+    expect(p.avg_days_to_pay_portfolio).toBeCloseTo(15)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 23. computePortfolioRisk — all high-risk profiles
+// ─────────────────────────────────────────────────────────────────────────────
+describe('computePortfolioRisk — all high-risk profiles', () => {
+  function makeHighProfile(name: string, overdue: number): CustomerPaymentProfile {
+    return {
+      customer_name: name, total_sales: 3, total_revenue_try: 8000,
+      total_paid_try: 5000, total_outstanding_try: overdue,
+      avg_days_to_pay: 20, avg_days_overdue: 20, on_time_rate: 0.5,
+      overdue_sales_count: 1, overdue_amount_try: overdue, last_overdue_date: '2025-01-15',
+      recent_avg_days_to_pay: 22, trend: 'deteriorating',
+      risk_tier: 'high', last_sale_date: '2025-02-01', first_sale_date: '2024-06-01',
+    }
+  }
+
+  it('high_risk_count equals total_customers when all high', () => {
+    const profiles = [makeHighProfile('X', 1000), makeHighProfile('Y', 2000)]
+    const p = CustomerIntelligenceService.computePortfolioRisk(profiles)
+    expect(p.high_risk_count).toBe(2)
+    expect(p.critical_count).toBe(0)
+    expect(p.low_risk_count).toBe(0)
+    expect(p.medium_risk_count).toBe(0)
+  })
+
+  it('total_overdue_try sums all overdue amounts', () => {
+    const profiles = [makeHighProfile('X', 1000), makeHighProfile('Y', 2000), makeHighProfile('Z', 500)]
+    const p = CustomerIntelligenceService.computePortfolioRisk(profiles)
+    expect(p.total_overdue_try).toBe(3500)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 24. PortfolioRisk shape validation
+// ─────────────────────────────────────────────────────────────────────────────
+describe('computePortfolioRisk — PortfolioRisk shape validation', () => {
+  it('returned object has risk_level-related fields', () => {
+    const p = CustomerIntelligenceService.computePortfolioRisk([])
+    expect(p).toHaveProperty('total_customers')
+    expect(p).toHaveProperty('critical_count')
+    expect(p).toHaveProperty('high_risk_count')
+    expect(p).toHaveProperty('medium_risk_count')
+    expect(p).toHaveProperty('low_risk_count')
+  })
+
+  it('returned object has avg_score-equivalent: avg_days_to_pay_portfolio', () => {
+    const p = CustomerIntelligenceService.computePortfolioRisk([])
+    expect(p).toHaveProperty('avg_days_to_pay_portfolio')
+  })
+
+  it('returned object has high_risk_count field', () => {
+    const p = CustomerIntelligenceService.computePortfolioRisk([])
+    expect(typeof p.high_risk_count).toBe('number')
+  })
+
+  it('all count fields are non-negative integers for any input', () => {
+    const profiles: CustomerPaymentProfile[] = [
+      {
+        customer_name: 'T1', total_sales: 1, total_revenue_try: 1000,
+        total_paid_try: 1000, total_outstanding_try: 0,
+        avg_days_to_pay: 5, avg_days_overdue: null, on_time_rate: 1,
+        overdue_sales_count: 0, overdue_amount_try: 0, last_overdue_date: null,
+        recent_avg_days_to_pay: 5, trend: 'stable',
+        risk_tier: 'low', last_sale_date: '2025-01-01', first_sale_date: '2025-01-01',
+      },
+    ]
+    const p = CustomerIntelligenceService.computePortfolioRisk(profiles)
+    expect(p.total_customers).toBeGreaterThanOrEqual(0)
+    expect(p.critical_count).toBeGreaterThanOrEqual(0)
+    expect(p.high_risk_count).toBeGreaterThanOrEqual(0)
+    expect(p.medium_risk_count).toBeGreaterThanOrEqual(0)
+    expect(p.low_risk_count).toBeGreaterThanOrEqual(0)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 25. computePortfolioRisk — risk level changes as high-risk count increases
+// ─────────────────────────────────────────────────────────────────────────────
+describe('computePortfolioRisk — risk level changes as high-risk count increases', () => {
+  function makeProfile(tier: CustomerPaymentProfile['risk_tier']): CustomerPaymentProfile {
+    return {
+      customer_name: `cust-${tier}`, total_sales: 1, total_revenue_try: 1000,
+      total_paid_try: 500, total_outstanding_try: 500,
+      avg_days_to_pay: 30, avg_days_overdue: 10, on_time_rate: 0.5,
+      overdue_sales_count: 1, overdue_amount_try: 500, last_overdue_date: '2025-01-01',
+      recent_avg_days_to_pay: 30, trend: 'stable',
+      risk_tier: tier, last_sale_date: '2025-01-01', first_sale_date: '2024-01-01',
+    }
+  }
+
+  it('adding more critical profiles increases critical_count', () => {
+    const p1 = CustomerIntelligenceService.computePortfolioRisk([makeProfile('critical')])
+    const p2 = CustomerIntelligenceService.computePortfolioRisk([makeProfile('critical'), makeProfile('critical')])
+    expect(p2.critical_count).toBeGreaterThan(p1.critical_count)
+  })
+
+  it('adding more high profiles increases high_risk_count', () => {
+    const p1 = CustomerIntelligenceService.computePortfolioRisk([makeProfile('high')])
+    const p2 = CustomerIntelligenceService.computePortfolioRisk([makeProfile('high'), makeProfile('high'), makeProfile('high')])
+    expect(p2.high_risk_count).toBeGreaterThan(p1.high_risk_count)
+  })
+
+  it('count fields sum to total_customers', () => {
+    const profiles = [
+      makeProfile('critical'), makeProfile('high'), makeProfile('medium'),
+      makeProfile('low'), makeProfile('low'),
+    ]
+    const p = CustomerIntelligenceService.computePortfolioRisk(profiles)
+    const sum = p.critical_count + p.high_risk_count + p.medium_risk_count + p.low_risk_count
+    expect(sum).toBe(p.total_customers)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 26. computePortfolioRisk — deterministic (same input = same output)
+// ─────────────────────────────────────────────────────────────────────────────
+describe('computePortfolioRisk — deterministic', () => {
+  const profiles: CustomerPaymentProfile[] = [
+    {
+      customer_name: 'Alpha', total_sales: 5, total_revenue_try: 15000,
+      total_paid_try: 12000, total_outstanding_try: 3000,
+      avg_days_to_pay: 18, avg_days_overdue: 5, on_time_rate: 0.6,
+      overdue_sales_count: 1, overdue_amount_try: 3000, last_overdue_date: '2025-01-10',
+      recent_avg_days_to_pay: 20, trend: 'stable',
+      risk_tier: 'high', last_sale_date: '2025-02-01', first_sale_date: '2024-01-01',
+    },
+    {
+      customer_name: 'Beta', total_sales: 2, total_revenue_try: 5000,
+      total_paid_try: 5000, total_outstanding_try: 0,
+      avg_days_to_pay: 7, avg_days_overdue: null, on_time_rate: 1,
+      overdue_sales_count: 0, overdue_amount_try: 0, last_overdue_date: null,
+      recent_avg_days_to_pay: 7, trend: 'stable',
+      risk_tier: 'low', last_sale_date: '2025-03-01', first_sale_date: '2024-06-01',
+    },
+  ]
+
+  it('produces identical results for the same input on first call', () => {
+    const p1 = CustomerIntelligenceService.computePortfolioRisk(profiles)
+    const p2 = CustomerIntelligenceService.computePortfolioRisk(profiles)
+    expect(p1.total_customers).toBe(p2.total_customers)
+    expect(p1.high_risk_count).toBe(p2.high_risk_count)
+    expect(p1.low_risk_count).toBe(p2.low_risk_count)
+    expect(p1.total_overdue_try).toBe(p2.total_overdue_try)
+    expect(p1.portfolio_on_time_rate).toBeCloseTo(p2.portfolio_on_time_rate)
+  })
+
+  it('produces the same avg_days_to_pay_portfolio on repeated calls', () => {
+    const r1 = CustomerIntelligenceService.computePortfolioRisk(profiles)
+    const r2 = CustomerIntelligenceService.computePortfolioRisk(profiles)
+    expect(r1.avg_days_to_pay_portfolio).toBe(r2.avg_days_to_pay_portfolio)
+  })
+})

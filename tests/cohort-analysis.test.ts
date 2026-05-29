@@ -424,3 +424,158 @@ describe('buildCohortRow', () => {
     expect(customerKeys2).toEqual(retentionKeys)
   })
 })
+
+// ═══════════════════════════════════════════════════════════════════════════
+// computeRetention — additional edge cases
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe('computeRetention — additional edge cases', () => {
+
+  it('returns 0% for 0 active out of 100', () => {
+    expect(computeRetention(0, 100)).toBe(0)
+  })
+
+  it('returns 100% for 100 active out of 100', () => {
+    expect(computeRetention(100, 100)).toBe(100)
+  })
+
+  it('returns 50% for 50 active out of 100', () => {
+    expect(computeRetention(50, 100)).toBe(50)
+  })
+
+  it('formula is active/size × 100 for non-zero cohort', () => {
+    const active = 3
+    const size = 7
+    expect(computeRetention(active, size)).toBeCloseTo((3 / 7) * 100, 1)
+  })
+
+  it('cohort size 0 with active 0 → 0 (no division by zero)', () => {
+    expect(computeRetention(0, 0)).toBe(0)
+  })
+
+  it('cohort size 0 with active 1 → 0 (guard against div-by-zero)', () => {
+    expect(computeRetention(1, 0)).toBe(0)
+  })
+
+  it('can exceed 100% when active > size (no clamping in this function)', () => {
+    expect(computeRetention(11, 10)).toBeCloseTo(110)
+  })
+
+  it('result is a number for any non-negative integer inputs', () => {
+    for (const [a, s] of [[0,1],[1,1],[5,10],[10,5],[0,0]]) {
+      expect(typeof computeRetention(a, s)).toBe('number')
+    }
+  })
+
+  it('2 out of 3 active → ~66.67%', () => {
+    expect(computeRetention(2, 3)).toBeCloseTo(66.67, 1)
+  })
+
+  it('1 out of 2 active → 50%', () => {
+    expect(computeRetention(1, 2)).toBeCloseTo(50, 1)
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════════
+// groupByFirstMonth — additional edge cases
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe('groupByFirstMonth — additional edge cases', () => {
+
+  it('customer with sales in only one month maps to that month', () => {
+    const sales = [{ customer_key: 'id:X', sale_month: '2026-09', total_try: 1000 }]
+    expect(groupByFirstMonth(sales)['id:X']).toBe('2026-09')
+  })
+
+  it('picks the earlier of two months (alphabetical YYYY-MM comparison)', () => {
+    const sales = [
+      { customer_key: 'id:1', sale_month: '2026-10', total_try: 100 },
+      { customer_key: 'id:1', sale_month: '2026-02', total_try: 100 },
+    ]
+    expect(groupByFirstMonth(sales)['id:1']).toBe('2026-02')
+  })
+
+  it('three customers, each with a different first month', () => {
+    const sales = [
+      { customer_key: 'id:A', sale_month: '2025-01', total_try: 100 },
+      { customer_key: 'id:B', sale_month: '2025-06', total_try: 100 },
+      { customer_key: 'id:C', sale_month: '2025-12', total_try: 100 },
+    ]
+    const result = groupByFirstMonth(sales)
+    expect(result['id:A']).toBe('2025-01')
+    expect(result['id:B']).toBe('2025-06')
+    expect(result['id:C']).toBe('2025-12')
+  })
+
+  it('returns only customer_key as key (not sale_month)', () => {
+    const sales = [{ customer_key: 'id:K', sale_month: '2026-03', total_try: 500 }]
+    const result = groupByFirstMonth(sales)
+    expect(Object.keys(result)).toContain('id:K')
+    expect(Object.keys(result)).not.toContain('2026-03')
+  })
+
+  it('two different customers, same first sale month — both mapped correctly', () => {
+    const sales = [
+      { customer_key: 'id:1', sale_month: '2026-05', total_try: 100 },
+      { customer_key: 'id:2', sale_month: '2026-05', total_try: 200 },
+    ]
+    const result = groupByFirstMonth(sales)
+    expect(result['id:1']).toBe('2026-05')
+    expect(result['id:2']).toBe('2026-05')
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════════
+// buildCohortRow — additional structure tests
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe('buildCohortRow — additional structure tests', () => {
+
+  it('returns a CohortRow object with required keys', () => {
+    const row = buildCohortRow('2026-01', [], [])
+    expect(row).toHaveProperty('cohort_month')
+    expect(row).toHaveProperty('cohort_label')
+    expect(row).toHaveProperty('cohort_size')
+    expect(row).toHaveProperty('monthly_revenue')
+    expect(row).toHaveProperty('monthly_customers')
+    expect(row).toHaveProperty('retention_pct')
+  })
+
+  it('cohort_month matches the input cohort month', () => {
+    const row = buildCohortRow('2026-07', ['id:1'], [
+      { customer_key: 'id:1', sale_month: '2026-07', total_try: 500 },
+    ])
+    expect(row.cohort_month).toBe('2026-07')
+  })
+
+  it('cohort_size is 0 when no customer keys passed', () => {
+    const row = buildCohortRow('2026-01', [], [])
+    expect(row.cohort_size).toBe(0)
+  })
+
+  it('cohort_size equals unique customer keys (deduplication)', () => {
+    const keys = ['id:1', 'id:2', 'id:1', 'id:3']
+    const row = buildCohortRow('2026-01', keys, [])
+    expect(row.cohort_size).toBe(3)
+  })
+
+  it('monthly_revenue is empty when no matching sales', () => {
+    const row = buildCohortRow('2026-01', ['id:1'], [
+      { customer_key: 'id:UNRELATED', sale_month: '2026-01', total_try: 9999 },
+    ])
+    expect(Object.keys(row.monthly_revenue)).toHaveLength(0)
+  })
+
+  it('retention_pct for cohort_month itself is always 100 when all members sold', () => {
+    const keys = ['id:A', 'id:B', 'id:C']
+    const sales = keys.map(k => ({ customer_key: k, sale_month: '2026-02', total_try: 100 }))
+    const row = buildCohortRow('2026-02', keys, sales)
+    expect(row.retention_pct['2026-02']).toBeCloseTo(100)
+  })
+
+  it('cohort_label is a non-empty string', () => {
+    const row = buildCohortRow('2026-11', ['id:1'], [])
+    expect(typeof row.cohort_label).toBe('string')
+    expect(row.cohort_label.length).toBeGreaterThan(0)
+  })
+})

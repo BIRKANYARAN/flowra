@@ -427,3 +427,197 @@ describe('computeSummary — audit_required_total / verified counts', () => {
     expect(taxEntry!.description.length).toBeGreaterThan(0)
   })
 })
+
+// ── 16. ALL_DOCUMENT_TYPES — additional coverage ─────────────────────────────
+
+describe('ALL_DOCUMENT_TYPES — additional coverage', () => {
+  it('includes tax_return-equivalent: tax_declaration', () => {
+    expect(ALL_DOCUMENT_TYPES).toContain('tax_declaration')
+  })
+
+  it('includes financial_statement-equivalent: bank_statement', () => {
+    expect(ALL_DOCUMENT_TYPES).toContain('bank_statement')
+  })
+
+  it('includes audit_report', () => {
+    expect(ALL_DOCUMENT_TYPES).toContain('audit_report')
+  })
+
+  it('includes proof_of_payment', () => {
+    expect(ALL_DOCUMENT_TYPES).toContain('proof_of_payment')
+  })
+
+  it('is an array (not a Set)', () => {
+    expect(Array.isArray(ALL_DOCUMENT_TYPES)).toBe(true)
+  })
+
+  it('all entries are non-empty strings', () => {
+    for (const t of ALL_DOCUMENT_TYPES) {
+      expect(typeof t).toBe('string')
+      expect(t.length).toBeGreaterThan(0)
+    }
+  })
+
+  it('no entry contains spaces (snake_case)', () => {
+    for (const t of ALL_DOCUMENT_TYPES) {
+      expect(t).not.toContain(' ')
+    }
+  })
+})
+
+// ── 17. AUDIT_REQUIRED_TYPES — additional coverage ───────────────────────────
+
+describe('AUDIT_REQUIRED_TYPES — additional coverage', () => {
+  it('every entry is a valid DocumentType in ALL_DOCUMENT_TYPES', () => {
+    for (const t of AUDIT_REQUIRED_TYPES) {
+      expect(ALL_DOCUMENT_TYPES).toContain(t)
+    }
+  })
+
+  it('is an array', () => {
+    expect(Array.isArray(AUDIT_REQUIRED_TYPES)).toBe(true)
+  })
+
+  it('has no duplicates', () => {
+    const unique = new Set(AUDIT_REQUIRED_TYPES)
+    expect(unique.size).toBe(AUDIT_REQUIRED_TYPES.length)
+  })
+
+  it('is strictly smaller than ALL_DOCUMENT_TYPES (true subset)', () => {
+    expect(AUDIT_REQUIRED_TYPES.length).toBeLessThan(ALL_DOCUMENT_TYPES.length)
+  })
+
+  it('DOCUMENT_TYPE_LABELS has a label for each AUDIT_REQUIRED_TYPE', () => {
+    for (const t of AUDIT_REQUIRED_TYPES) {
+      expect(DOCUMENT_TYPE_LABELS[t]).toBeDefined()
+      expect(DOCUMENT_TYPE_LABELS[t].length).toBeGreaterThan(0)
+    }
+  })
+})
+
+// ── 18. computeSummary — empty array ─────────────────────────────────────────
+
+describe('computeSummary — empty array edge cases', () => {
+  it('returns by_type with all 8 keys set to 0', () => {
+    const { by_type } = DocumentService.computeSummary([])
+    for (const t of ALL_DOCUMENT_TYPES) {
+      expect(by_type[t]).toBe(0)
+    }
+  })
+
+  it('returns empty by_period', () => {
+    const { by_period } = DocumentService.computeSummary([])
+    expect(Object.keys(by_period)).toHaveLength(0)
+  })
+
+  it('returns empty missing_audit_docs array shape is array', () => {
+    const { missing_audit_docs } = DocumentService.computeSummary([])
+    expect(Array.isArray(missing_audit_docs)).toBe(true)
+  })
+
+  it('all numeric fields are 0 for empty input', () => {
+    const s = DocumentService.computeSummary([])
+    expect(s.total_documents).toBe(0)
+    expect(s.total_size_bytes).toBe(0)
+    expect(s.audit_required_total).toBe(0)
+    expect(s.audit_required_verified).toBe(0)
+    expect(s.audit_readiness_pct).toBe(0)
+  })
+})
+
+// ── 19. computeSummary — verified/unverified counts ──────────────────────────
+
+describe('computeSummary — verified / unverified counts', () => {
+  it('counts is_verified correctly (3 verified out of 5)', () => {
+    const rows = [
+      makeRow({ document_type: 'invoice',        is_audit_required: true,  is_verified: true  }),
+      makeRow({ document_type: 'contract',       is_audit_required: true,  is_verified: true  }),
+      makeRow({ document_type: 'bank_statement', is_audit_required: true,  is_verified: true  }),
+      makeRow({ document_type: 'tax_declaration',is_audit_required: true,  is_verified: false }),
+      makeRow({ document_type: 'other',          is_audit_required: true,  is_verified: false }),
+    ]
+    const s = DocumentService.computeSummary(rows)
+    expect(s.audit_required_total).toBe(5)
+    expect(s.audit_required_verified).toBe(3)
+    expect(s.audit_readiness_pct).toBe(60)
+  })
+
+  it('audit_readiness_pct rounds correctly (2/3 ≈ 67%)', () => {
+    const rows = [
+      makeRow({ document_type: 'bank_statement', is_audit_required: true, is_verified: true  }),
+      makeRow({ document_type: 'tax_declaration',is_audit_required: true, is_verified: true  }),
+      makeRow({ document_type: 'audit_report',   is_audit_required: true, is_verified: false }),
+    ]
+    const s = DocumentService.computeSummary(rows)
+    expect(s.audit_readiness_pct).toBe(67)
+  })
+
+  it('non-audit documents do not affect audit_required_total', () => {
+    const rows = [
+      makeRow({ document_type: 'invoice',  is_audit_required: false, is_verified: true }),
+      makeRow({ document_type: 'contract', is_audit_required: false, is_verified: true }),
+    ]
+    const s = DocumentService.computeSummary(rows)
+    expect(s.audit_required_total).toBe(0)
+    expect(s.audit_required_verified).toBe(0)
+    expect(s.audit_readiness_pct).toBe(0)
+  })
+})
+
+// ── 20. computeSummary — by_period grouping ───────────────────────────────────
+
+describe('computeSummary — by_period grouping', () => {
+  it('groups correctly across three distinct periods', () => {
+    const rows = [
+      makeRow({ document_type: 'invoice',        period_year: 2025, period_month: 1  }),
+      makeRow({ document_type: 'contract',       period_year: 2025, period_month: 1  }),
+      makeRow({ document_type: 'bank_statement', period_year: 2025, period_month: 6  }),
+      makeRow({ document_type: 'other',          period_year: 2024, period_month: 12 }),
+    ]
+    const { by_period } = DocumentService.computeSummary(rows)
+    expect(by_period['2025-01']).toBe(2)
+    expect(by_period['2025-06']).toBe(1)
+    expect(by_period['2024-12']).toBe(1)
+  })
+
+  it('all 12 months in one year grouped independently', () => {
+    const rows = Array.from({ length: 12 }, (_, i) =>
+      makeRow({ document_type: 'invoice', period_year: 2024, period_month: i + 1 }),
+    )
+    const { by_period } = DocumentService.computeSummary(rows)
+    expect(Object.keys(by_period)).toHaveLength(12)
+    for (let m = 1; m <= 12; m++) {
+      const key = `2024-${String(m).padStart(2, '0')}`
+      expect(by_period[key]).toBe(1)
+    }
+  })
+})
+
+// ── 21. getStoragePath — companyId as path prefix ────────────────────────────
+
+describe('getStoragePath — companyId as path prefix', () => {
+  it('preserves hyphenated companyId', () => {
+    const path = DocumentService.getStoragePath('my-company-id', '2025-01-01', 'x.pdf')
+    expect(path.startsWith('my-company-id/')).toBe(true)
+  })
+
+  it('preserves UUID-style companyId', () => {
+    const id = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee'
+    const path = DocumentService.getStoragePath(id, '2025-01-01', 'x.pdf')
+    expect(path.startsWith(id + '/')).toBe(true)
+  })
+
+  it('last segment ends with provided filename', () => {
+    const path = DocumentService.getStoragePath('co1', '2025-06-15', 'report.xlsx')
+    expect(path.endsWith('-report.xlsx')).toBe(true)
+  })
+
+  it('produces unique paths on every call', () => {
+    const paths = new Set(
+      Array.from({ length: 10 }, () =>
+        DocumentService.getStoragePath('co1', '2025-01-01', 'file.pdf'),
+      ),
+    )
+    expect(paths.size).toBe(10)
+  })
+})

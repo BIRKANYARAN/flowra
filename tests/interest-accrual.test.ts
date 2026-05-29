@@ -446,3 +446,173 @@ describe('interest accrual cross-function consistency', () => {
     expect(hasVukRisk(false, 1_000_000, '2020-01-01', '2026-01-01')).toBe(false)
   })
 })
+
+// ── daysInMonth — all 12 months exhaustive ───────────────────────────────────
+
+describe('daysInMonth — all 12 months exhaustive', () => {
+  it('March has 31 days', () => {
+    expect(daysInMonth(2026, 3)).toBe(31)
+  })
+
+  it('May has 31 days', () => {
+    expect(daysInMonth(2026, 5)).toBe(31)
+  })
+
+  it('August has 31 days', () => {
+    expect(daysInMonth(2026, 8)).toBe(31)
+  })
+
+  it('February 2000 (leap year divisible by 400) has 29 days', () => {
+    expect(daysInMonth(2000, 2)).toBe(29)
+  })
+
+  it('February 2100 (not a leap year) has 28 days', () => {
+    expect(daysInMonth(2100, 2)).toBe(28)
+  })
+
+  it('September has 30 days in any year', () => {
+    expect(daysInMonth(2025, 9)).toBe(30)
+    expect(daysInMonth(2026, 9)).toBe(30)
+  })
+
+  it('31-day months: Jan, Mar, May, Jul, Aug, Oct, Dec', () => {
+    const months31 = [1, 3, 5, 7, 8, 10, 12]
+    for (const m of months31) {
+      expect(daysInMonth(2026, m)).toBe(31)
+    }
+  })
+
+  it('30-day months: Apr, Jun, Sep, Nov', () => {
+    const months30 = [4, 6, 9, 11]
+    for (const m of months30) {
+      expect(daysInMonth(2026, m)).toBe(30)
+    }
+  })
+})
+
+// ── isLeapYear — additional precision cases ───────────────────────────────────
+
+describe('isLeapYear — additional precision cases', () => {
+  it('2024 divisible by 4 and not 100 → leap', () => {
+    expect(isLeapYear(2024)).toBe(true)
+  })
+
+  it('2100 divisible by 100 but not 400 → not leap', () => {
+    expect(isLeapYear(2100)).toBe(false)
+  })
+
+  it('2000 divisible by 400 → leap', () => {
+    expect(isLeapYear(2000)).toBe(true)
+  })
+
+  it('2023 not divisible by 4 → not leap', () => {
+    expect(isLeapYear(2023)).toBe(false)
+  })
+
+  it('1800 divisible by 100 but not 400 → not leap', () => {
+    expect(isLeapYear(1800)).toBe(false)
+  })
+
+  it('1600 divisible by 400 → leap', () => {
+    expect(isLeapYear(1600)).toBe(true)
+  })
+
+  it('every 4th year from 2024 to 2036 is leap', () => {
+    expect(isLeapYear(2028)).toBe(true)
+    expect(isLeapYear(2032)).toBe(true)
+    expect(isLeapYear(2036)).toBe(true)
+  })
+})
+
+// ── computeDailyInterest — formula precision ─────────────────────────────────
+
+describe('computeDailyInterest — formula precision', () => {
+  it('formula: principal × annualRatePct / 100 / 365', () => {
+    const principal = 200_000
+    const rate = 36.5 // 36.5% annual
+    const expected = 200_000 * (36.5 / 100) / 365
+    expect(computeDailyInterest(principal, rate)).toBeCloseTo(expected, 6)
+  })
+
+  it('1% annual on 365 TRY = exactly 0.01 per day', () => {
+    expect(computeDailyInterest(365, 1)).toBeCloseTo(0.01, 6)
+  })
+
+  it('100% annual on 100 TRY ≈ 0.2739 per day', () => {
+    expect(computeDailyInterest(100, 100)).toBeCloseTo(100 / 365, 6)
+  })
+
+  it('scales proportionally with rate doubling', () => {
+    const r10 = computeDailyInterest(100_000, 10)
+    const r20 = computeDailyInterest(100_000, 20)
+    expect(r20).toBeCloseTo(r10 * 2, 8)
+  })
+
+  it('scales proportionally with principal tripling', () => {
+    const p100 = computeDailyInterest(100_000, 20)
+    const p300 = computeDailyInterest(300_000, 20)
+    expect(p300).toBeCloseTo(p100 * 3, 8)
+  })
+})
+
+// ── computeMonthlyAccrual — month-specific checks ─────────────────────────────
+
+describe('computeMonthlyAccrual — month-specific checks', () => {
+  it('July has 31 days: 50 × 31 = 1550', () => {
+    expect(computeMonthlyAccrual(50, 2026, 7)).toBe(1550)
+  })
+
+  it('September has 30 days: 100 × 30 = 3000', () => {
+    expect(computeMonthlyAccrual(100, 2026, 9)).toBe(3000)
+  })
+
+  it('February 2000 (leap, 29 days): 10 × 29 = 290', () => {
+    expect(computeMonthlyAccrual(10, 2000, 2)).toBe(290)
+  })
+
+  it('February 2100 (non-leap, 28 days): 10 × 28 = 280', () => {
+    expect(computeMonthlyAccrual(10, 2100, 2)).toBe(280)
+  })
+
+  it('result equals dailyInterest × daysInMonth(year, month)', () => {
+    const daily = computeDailyInterest(500_000, 25)
+    for (const m of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]) {
+      const monthly = computeMonthlyAccrual(daily, 2026, m)
+      const expectedDays = daysInMonth(2026, m)
+      // round2 applied — allow 0.01 difference
+      expect(monthly).toBeCloseTo(daily * expectedDays, 1)
+    }
+  })
+})
+
+// ── hasVukRisk — boundary & parameter sensitivity ───────────────────────────
+
+describe('hasVukRisk — boundary & parameter sensitivity', () => {
+  it('exactly 365 days is NOT risky (must be strictly >365)', () => {
+    expect(hasVukRisk(true, 100_000, '2025-05-29', '2026-05-29')).toBe(false)
+  })
+
+  it('366 days IS risky when all other conditions met', () => {
+    expect(hasVukRisk(true, 100_000, '2025-05-28', '2026-05-29')).toBe(true)
+  })
+
+  it('principal 50_000 exactly is NOT risky (must be strictly >50K)', () => {
+    expect(hasVukRisk(true, 50_000, '2024-01-01', '2026-01-01')).toBe(false)
+  })
+
+  it('principal 50_001 IS risky when all other conditions met', () => {
+    expect(hasVukRisk(true, 50_001, '2024-01-01', '2026-01-01')).toBe(true)
+  })
+
+  it('non-zero rate (isZeroRate=false) short-circuits to false', () => {
+    expect(hasVukRisk(false, 999_999, '2020-01-01', '2026-01-01')).toBe(false)
+  })
+
+  it('zero principal returns false regardless of other conditions', () => {
+    expect(hasVukRisk(true, 0, '2020-01-01', '2026-01-01')).toBe(false)
+  })
+
+  it('2-year loan with zero rate and large principal → true', () => {
+    expect(hasVukRisk(true, 500_000, '2024-01-01', '2026-01-15')).toBe(true)
+  })
+})

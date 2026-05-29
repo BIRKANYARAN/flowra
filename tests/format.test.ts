@@ -11,6 +11,8 @@ import {
   formatTRY,
   fmtMoney,
   fmtCompact,
+  fmtDense,
+  fmtKpi,
   fmtDate,
   fmtDateMed,
   fmtMonth,
@@ -455,5 +457,287 @@ describe('toneFromPct', () => {
   it('uses custom warningThreshold', () => {
     expect(toneFromPct(15, 10)).toBe('positive')   // 15 ≥ 10 → positive
     expect(toneFromPct(8, 10)).toBe('warning')     // 0 < 8 < 10 → warning
+  })
+})
+
+// ── sym — all supported currencies ───────────────────────────────────────────
+
+describe('sym — all supported currencies', () => {
+  it('TRY → ₺', () => expect(sym('TRY')).toBe('₺'))
+  it('USD → $', () => expect(sym('USD')).toBe('$'))
+  it('EUR → €', () => expect(sym('EUR')).toBe('€'))
+  it('GBP → £', () => expect(sym('GBP')).toBe('£'))
+  it('CHF → Fr', () => expect(sym('CHF')).toBe('Fr'))
+  it('unknown code → ₺ (default fallback)', () => expect(sym('XYZ')).toBe('₺'))
+  it('empty string → ₺ (default fallback)', () => expect(sym('')).toBe('₺'))
+  it('lowercase usd → ₺ (case-sensitive fallback)', () => expect(sym('usd')).toBe('₺'))
+})
+
+// ── fmtNum — decimal precision ─────────────────────────────────────────────────
+
+describe('fmtNum — decimal precision', () => {
+  it('0 decimals: integer result without fraction', () => {
+    const result = fmtNum(1234.56, 0)
+    // tr-TR: "1.235" or "1.234" (depending on rounding); must not contain comma decimal
+    expect(result).not.toMatch(/,\d+$/)
+  })
+
+  it('1 decimal: one digit after separator', () => {
+    const result = fmtNum(1234.56, 1)
+    // tr-TR comma as decimal: "1.234,6"
+    expect(result).toMatch(/,\d$/)
+  })
+
+  it('2 decimals: two digits after separator (default)', () => {
+    const result = fmtNum(1234.5, 2)
+    expect(result).toMatch(/,\d{2}$/)
+  })
+
+  it('4 decimals: four digits after separator', () => {
+    const result = fmtNum(1.23456, 4)
+    expect(result).toMatch(/,\d{4}$/)
+  })
+
+  it('no ₺ symbol in output', () => {
+    expect(fmtNum(1000, 2)).not.toContain('₺')
+  })
+
+  it('large value uses thousands separator (period in tr-TR)', () => {
+    const result = fmtNum(1_000_000, 0)
+    // tr-TR: "1.000.000"
+    expect(result).toContain('.')
+  })
+
+  it('zero with 0 decimals returns "0"', () => {
+    expect(fmtNum(0, 0)).toBe('0')
+  })
+
+  it('NaN returns 0 string', () => {
+    expect(fmtNum(NaN, 2)).toContain('0')
+  })
+})
+
+// ── fmtTRY — symbol and formatting ───────────────────────────────────────────
+
+describe('fmtTRY — symbol and formatting', () => {
+  it('1_234_567 with decimals=2 contains thousands separators', () => {
+    const result = fmtTRY(1_234_567)
+    expect(result).toContain('1')
+    // tr-TR uses period as thousands separator
+    expect(result).toMatch(/₺1\./)
+  })
+
+  it('decimals=0 removes fraction part', () => {
+    const result = fmtTRY(1234.99, 0)
+    expect(result).not.toMatch(/,\d/)
+  })
+
+  it('fmtTRY(0) returns ₺0 variant', () => {
+    expect(fmtTRY(0)).toMatch(/₺0/)
+  })
+
+  it('fmtTRY(1) with 2 decimals returns ₺1,00', () => {
+    expect(fmtTRY(1)).toMatch(/₺1,00/)
+  })
+
+  it('always starts with ₺ prefix', () => {
+    for (const v of [0, 1, 100, 1000, -500]) {
+      expect(fmtTRY(v)).toMatch(/^₺/)
+    }
+  })
+})
+
+// ── formatTRY — legacy suffix format ─────────────────────────────────────────
+
+describe('formatTRY — legacy suffix format', () => {
+  it('formatTRY is NOT same as fmtTRY output', () => {
+    expect(formatTRY(1000)).not.toBe(fmtTRY(1000))
+  })
+
+  it('formatTRY uses comma as decimal separator (tr-TR)', () => {
+    const result = formatTRY(1234.56)
+    expect(result).toContain(',')
+  })
+
+  it('large values include thousands separator before TL', () => {
+    const result = formatTRY(1_000_000)
+    expect(result).toMatch(/ TL$/)
+    expect(result).toContain('1')
+  })
+
+  it('formatTRY(0) contains "0" and ends with " TL"', () => {
+    expect(formatTRY(0)).toMatch(/0/)
+    expect(formatTRY(0)).toMatch(/ TL$/)
+  })
+})
+
+// ── fmtCompact — K and M suffixes ─────────────────────────────────────────────
+
+describe('fmtCompact — K and M suffixes', () => {
+  it('exactly 1_000_000 → contains M', () => {
+    expect(fmtCompact(1_000_000)).toContain('M')
+  })
+
+  it('exactly 100_000 → contains K', () => {
+    expect(fmtCompact(100_000)).toContain('K')
+  })
+
+  it('500_000 → contains K', () => {
+    expect(fmtCompact(500_000)).toContain('K')
+  })
+
+  it('99_999 → no K or M (full number)', () => {
+    const result = fmtCompact(99_999)
+    expect(result).not.toContain('K')
+    expect(result).not.toContain('M')
+  })
+
+  it('2_000_000 → ₺2,0M', () => {
+    const result = fmtCompact(2_000_000)
+    expect(result).toContain('M')
+    expect(result).toContain('₺')
+  })
+
+  it('USD 200_000 → contains $', () => {
+    expect(fmtCompact(200_000, 'USD')).toContain('$')
+  })
+
+  it('EUR 1_500_000 → contains € and M', () => {
+    const result = fmtCompact(1_500_000, 'EUR')
+    expect(result).toContain('€')
+    expect(result).toContain('M')
+  })
+
+  it('negative million shows minus sign and M', () => {
+    const result = fmtCompact(-2_000_000)
+    expect(result).toContain('-')
+    expect(result).toContain('M')
+  })
+})
+
+// ── fmtPct — format percentage ────────────────────────────────────────────────
+
+describe('fmtPct — format percentage', () => {
+  it('fmtPct(0) starts with % and contains 0', () => {
+    const r = fmtPct(0)
+    expect(r).toMatch(/^%/)
+    expect(r).toContain('0')
+  })
+
+  it('fmtPct(100) contains 100', () => {
+    expect(fmtPct(100)).toContain('100')
+  })
+
+  it('fmtPct(12.5) with default 1 decimal → %12,5', () => {
+    expect(fmtPct(12.5)).toBe('%12,5')
+  })
+
+  it('fmtPct(0, 2) has two decimal digits', () => {
+    const r = fmtPct(0, 2)
+    expect(r).toMatch(/,\d{2}/)
+  })
+
+  it('negative percentage contains number and %', () => {
+    const r = fmtPct(-10)
+    expect(r).toContain('10')
+    expect(r).toContain('%')
+  })
+
+  it('fmtPct(33.333, 1) rounds to 1 decimal', () => {
+    const r = fmtPct(33.333, 1)
+    expect(r).toMatch(/,\d$/)
+  })
+})
+
+// ── fmtDate — edge cases ───────────────────────────────────────────────────────
+
+describe('fmtDate — edge cases', () => {
+  it('null → "—"', () => {
+    expect(fmtDate(null)).toBe('—')
+  })
+
+  it('undefined → "—"', () => {
+    expect(fmtDate(undefined)).toBe('—')
+  })
+
+  it('valid YYYY-MM-DD returns numeric date with dots', () => {
+    const result = fmtDate('2025-06-15')
+    expect(result).toMatch(/\d{2}\.\d{2}\.\d{4}/)
+  })
+
+  it('accepts Date object and formats correctly', () => {
+    const result = fmtDate(new Date(2025, 4, 15)) // May 15 2025
+    expect(result).toContain('2025')
+  })
+
+  it('different months format correctly', () => {
+    expect(fmtDate('2025-01-01')).toContain('2025')
+    expect(fmtDate('2025-12-31')).toContain('2025')
+  })
+})
+
+// ── fmtMonthShort — format YYYY-MM ────────────────────────────────────────────
+
+describe('fmtMonthShort — format YYYY-MM', () => {
+  it('fmtMonthShort("2025-01") contains "25" (year abbreviation)', () => {
+    const r = fmtMonthShort('2025-01')
+    expect(r).toContain('25')
+  })
+
+  it('returns a string shorter than 15 chars', () => {
+    expect(fmtMonthShort('2025-05').length).toBeLessThan(15)
+  })
+
+  it('does not throw for invalid input', () => {
+    expect(() => fmtMonthShort('bad-input')).not.toThrow()
+  })
+
+  it('different months produce different output', () => {
+    const jan = fmtMonthShort('2025-01')
+    const jun = fmtMonthShort('2025-06')
+    expect(jan).not.toBe(jun)
+  })
+})
+
+// ── fmtKpi — strip format without ₺ ──────────────────────────────────────────
+
+describe('fmtKpi — strip format without ₺', () => {
+  it('does not include ₺ symbol', () => {
+    expect(fmtKpi(1_000_000)).not.toContain('₺')
+    expect(fmtKpi(50_000)).not.toContain('₺')
+    expect(fmtKpi(1000)).not.toContain('₺')
+  })
+
+  it('1_000_000 → contains M', () => {
+    expect(fmtKpi(1_000_000)).toContain('M')
+  })
+
+  it('10_000 → contains K', () => {
+    expect(fmtKpi(10_000)).toContain('K')
+  })
+
+  it('9_999 → formatted as integer (no K or M)', () => {
+    const r = fmtKpi(9_999)
+    expect(r).not.toContain('K')
+    expect(r).not.toContain('M')
+  })
+
+  it('0 → "0"', () => {
+    expect(fmtKpi(0)).toBe('0')
+  })
+
+  it('2_500_000 → contains M', () => {
+    expect(fmtKpi(2_500_000)).toContain('M')
+  })
+
+  it('negative large value still contains M', () => {
+    expect(fmtKpi(-1_000_000)).toContain('M')
+  })
+
+  it('values < 10_000 formatted as integers (no suffix)', () => {
+    const r = fmtKpi(5_000)
+    expect(r).not.toContain('K')
+    expect(r).not.toContain('M')
+    expect(r).toContain('5')
   })
 })
