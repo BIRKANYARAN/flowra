@@ -26,6 +26,36 @@ describe('computeBudgetVariance', () => {
   it('returns zero when actual equals budget', () => {
     expect(computeBudgetVariance(100_000, 100_000)).toBe(0)
   })
+
+  it('handles zero actual — variance is negative budget', () => {
+    expect(computeBudgetVariance(0, 50_000)).toBe(-50_000)
+  })
+
+  it('handles zero budget — variance equals actual', () => {
+    expect(computeBudgetVariance(30_000, 0)).toBe(30_000)
+  })
+
+  it('handles both zero — returns zero', () => {
+    expect(computeBudgetVariance(0, 0)).toBe(0)
+  })
+
+  it('handles large values without precision loss', () => {
+    expect(computeBudgetVariance(10_000_000, 9_500_000)).toBe(500_000)
+  })
+
+  it('handles negative actual (write-off scenario)', () => {
+    expect(computeBudgetVariance(-5_000, 10_000)).toBe(-15_000)
+  })
+
+  it('rounds to 2 decimal places', () => {
+    // 1000.005 - 0 = 1000.01 after round2
+    const result = computeBudgetVariance(1000.005, 0)
+    expect(result).toBeCloseTo(1000.01, 2)
+  })
+
+  it('small fractional values are computed correctly', () => {
+    expect(computeBudgetVariance(100.25, 99.75)).toBeCloseTo(0.5, 2)
+  })
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -49,6 +79,33 @@ describe('computeBudgetVariancePct', () => {
 
   it('returns 0 when actual equals budget', () => {
     expect(computeBudgetVariancePct(100_000, 100_000)).toBe(0)
+  })
+
+  it('handles 100% over budget (actual = 2× budget)', () => {
+    expect(computeBudgetVariancePct(200_000, 100_000)).toBeCloseTo(100, 1)
+  })
+
+  it('handles 100% under budget (actual = 0)', () => {
+    expect(computeBudgetVariancePct(0, 100_000)).toBeCloseTo(-100, 1)
+  })
+
+  it('handles small budget amounts — no division errors', () => {
+    expect(computeBudgetVariancePct(110, 100)).toBeCloseTo(10, 1)
+  })
+
+  it('returns null when both actual and budget are zero', () => {
+    expect(computeBudgetVariancePct(0, 0)).toBeNull()
+  })
+
+  it('computes fractional percentage correctly', () => {
+    // (105 - 100) / 100 = 5%
+    expect(computeBudgetVariancePct(105_000, 100_000)).toBeCloseTo(5, 2)
+  })
+
+  it('handles negative budget (unusual but possible)', () => {
+    // (-50 - (-100)) / |-100| = 50/100 = 50%
+    const result = computeBudgetVariancePct(-50_000, -100_000)
+    expect(result).not.toBeNull()
   })
 })
 
@@ -124,6 +181,30 @@ describe('classifyBudgetAdherence', () => {
     expect(classifyBudgetAdherence(15, 'revenue')).toBe('favorable')
     expect(classifyBudgetAdherence(-15, 'revenue')).toBe('at_risk')
   })
+
+  it('boundary: 5.01% revenue variance is favorable (just over threshold)', () => {
+    expect(classifyBudgetAdherence(5.01, 'revenue')).toBe('favorable')
+  })
+
+  it('boundary: 15.01% revenue variance is strongly_favorable (just over threshold)', () => {
+    expect(classifyBudgetAdherence(15.01, 'revenue')).toBe('strongly_favorable')
+  })
+
+  it('boundary: -5.01% revenue variance is at_risk (just over threshold)', () => {
+    expect(classifyBudgetAdherence(-5.01, 'revenue')).toBe('at_risk')
+  })
+
+  it('boundary: -15.01% revenue variance is off_track (just over threshold)', () => {
+    expect(classifyBudgetAdherence(-15.01, 'revenue')).toBe('off_track')
+  })
+
+  it('extreme positive expense variance (200%) is off_track', () => {
+    expect(classifyBudgetAdherence(200, 'expense')).toBe('off_track')
+  })
+
+  it('extreme negative revenue variance (-200%) is off_track', () => {
+    expect(classifyBudgetAdherence(-200, 'revenue')).toBe('off_track')
+  })
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -167,6 +248,39 @@ describe('computeBudgetHealthScore', () => {
   it('on_target and favorable items do not change score', () => {
     expect(computeBudgetHealthScore(['on_target', 'favorable', 'on_target'])).toBe(100)
   })
+
+  it('no_budget items do not affect score', () => {
+    expect(computeBudgetHealthScore(['no_budget', 'no_budget', 'no_budget'])).toBe(100)
+  })
+
+  it('single off_track item deducts 20, resulting in 80', () => {
+    expect(computeBudgetHealthScore(['off_track'])).toBe(80)
+  })
+
+  it('single at_risk item deducts 10, resulting in 90', () => {
+    expect(computeBudgetHealthScore(['at_risk'])).toBe(90)
+  })
+
+  it('5 off_track items result in 0 (100 - 5×20 = 0)', () => {
+    const items = Array<'off_track'>(5).fill('off_track')
+    expect(computeBudgetHealthScore(items)).toBe(0)
+  })
+
+  it('strongly_favorable bonus can partially restore score after deductions', () => {
+    // 100 - 20 - 20 + 5 + 5 = 70
+    expect(computeBudgetHealthScore(['off_track', 'off_track', 'strongly_favorable', 'strongly_favorable'])).toBe(70)
+  })
+
+  it('mixed list of all adherence types computes correctly', () => {
+    // on_target=0, favorable=0, strongly_favorable=+5, at_risk=-10, off_track=-20, no_budget=0
+    // 100 + 5 - 10 - 20 = 75
+    expect(computeBudgetHealthScore(['on_target', 'favorable', 'strongly_favorable', 'at_risk', 'off_track', 'no_budget'])).toBe(75)
+  })
+
+  it('large number of at_risk items clamps to 0', () => {
+    const items = Array<'at_risk'>(15).fill('at_risk')
+    expect(computeBudgetHealthScore(items)).toBe(0)
+  })
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -207,5 +321,33 @@ describe('computeBudgetPacing', () => {
 
   it('returns 100 for perfect pacing (actual = expected)', () => {
     expect(computeBudgetPacing(30_000, 10_000, 3)).toBeCloseTo(100, 1)
+  })
+
+  it('handles zero actual YTD — returns 0 pacing', () => {
+    const result = computeBudgetPacing(0, 10_000, 6)
+    expect(result).toBeCloseTo(0, 1)
+  })
+
+  it('handles single month elapsed correctly', () => {
+    // 12_000 / (10_000 × 1) = 120%
+    expect(computeBudgetPacing(12_000, 10_000, 1)).toBeCloseTo(120, 1)
+  })
+
+  it('handles 12 months elapsed (full year)', () => {
+    // 120_000 / (10_000 × 12) = 100%
+    expect(computeBudgetPacing(120_000, 10_000, 12)).toBeCloseTo(100, 1)
+  })
+
+  it('handles fractional results correctly (rounds to 2 decimals)', () => {
+    // 100_000 / (30_000 × 3) = 111.11...%
+    const result = computeBudgetPacing(100_000, 30_000, 3)
+    expect(result).not.toBeNull()
+    expect(result!).toBeCloseTo(111.11, 1)
+  })
+
+  it('very high actual YTD produces >100 pacing', () => {
+    const result = computeBudgetPacing(500_000, 10_000, 3)
+    expect(result).not.toBeNull()
+    expect(result!).toBeGreaterThan(100)
   })
 })

@@ -204,3 +204,171 @@ describe('setRateLimitAdapter — custom adapter', () => {
     expect(rateLimit('any', { limit: 1000, windowMs: 60_000 }).allowed).toBe(false)
   })
 })
+
+// ── RATE_LIMIT_PRESETS — extended shape checks ────────────────────────────────
+
+describe('RATE_LIMIT_PRESETS — extended checks', () => {
+  it('pdf preset has limit=20 per 60s', () => {
+    expect(RATE_LIMIT_PRESETS.pdf.limit).toBe(20)
+    expect(RATE_LIMIT_PRESETS.pdf.windowMs).toBe(60_000)
+  })
+
+  it('api_write preset has limit=60 per 60s', () => {
+    expect(RATE_LIMIT_PRESETS.api_write.limit).toBe(60)
+    expect(RATE_LIMIT_PRESETS.api_write.windowMs).toBe(60_000)
+  })
+
+  it('api_read preset has limit=300 per 60s', () => {
+    expect(RATE_LIMIT_PRESETS.api_read.limit).toBe(300)
+    expect(RATE_LIMIT_PRESETS.api_read.windowMs).toBe(60_000)
+  })
+
+  it('all presets use 60_000ms window (1 minute)', () => {
+    for (const [, opts] of Object.entries(RATE_LIMIT_PRESETS)) {
+      expect(opts.windowMs).toBe(60_000)
+    }
+  })
+
+  it('api_read limit is 5x higher than api_write', () => {
+    expect(RATE_LIMIT_PRESETS.api_read.limit / RATE_LIMIT_PRESETS.api_write.limit).toBe(5)
+  })
+
+  it('object keys match expected preset names exactly', () => {
+    const keys = Object.keys(RATE_LIMIT_PRESETS).sort()
+    expect(keys).toEqual(['api_read', 'api_write', 'auth', 'pdf'].sort())
+  })
+})
+
+// ── rateLimit() — key namespacing behaviour ─────────────────────────────────
+
+describe('rateLimit — key namespacing', () => {
+  it('same user with different presets do not share counters', () => {
+    const opts = { limit: 1, windowMs: 60_000 }
+    rateLimit('shared-user', 'auth')     // uses key "auth:shared-user"
+    rateLimit('shared-user', 'pdf')      // uses key "pdf:shared-user"
+    const r = rateLimit('shared-user', opts)  // uses key "custom:shared-user"
+    // All three are different keys — none should be rate-limited yet
+    expect(r.allowed).toBe(true)
+  })
+
+  it('custom opts with identical identifiers share the "custom:" namespace', () => {
+    const opts = { limit: 2, windowMs: 60_000 }
+    rateLimit('ns-test', opts) // 1
+    rateLimit('ns-test', opts) // 2
+    const r = rateLimit('ns-test', opts) // 3 — over limit
+    expect(r.allowed).toBe(false)
+  })
+})
+
+// ── rateLimit() — high-volume stress ──────────────────────────────────────────
+
+describe('rateLimit — high-volume requests', () => {
+  it('exactly limit requests are allowed, limit+1 is denied', () => {
+    const limit = 50
+    const opts = { limit, windowMs: 60_000 }
+    const id = 'hv-test'
+    for (let i = 0; i < limit; i++) {
+      expect(rateLimit(id, opts).allowed).toBe(true)
+    }
+    expect(rateLimit(id, opts).allowed).toBe(false)
+  })
+
+  it('remaining decrements monotonically from limit-1 to 0', () => {
+    const limit = 5
+    const opts = { limit, windowMs: 60_000 }
+    const id = 'mono-test'
+    let prev = limit
+    for (let i = 0; i < limit; i++) {
+      const r = rateLimit(id, opts)
+      expect(r.remaining).toBe(prev - 1)
+      prev = r.remaining
+    }
+  })
+
+  it('remaining never goes below 0 after limit is exceeded', () => {
+    const opts = { limit: 2, windowMs: 60_000 }
+    const id = 'floor-test'
+    rateLimit(id, opts)
+    rateLimit(id, opts)
+    rateLimit(id, opts)
+    const r = rateLimit(id, opts)
+    expect(r.remaining).toBe(0)
+  })
+})
+
+// ── rateLimit() — result shape ─────────────────────────────────────────────────
+
+describe('rateLimit — result shape', () => {
+  it('result has allowed, remaining, resetAt fields', () => {
+    const r = rateLimit('shape-test', { limit: 5, windowMs: 60_000 })
+    expect(r).toHaveProperty('allowed')
+    expect(r).toHaveProperty('remaining')
+    expect(r).toHaveProperty('resetAt')
+  })
+
+  it('allowed is boolean', () => {
+    const r = rateLimit('bool-test', { limit: 5, windowMs: 60_000 })
+    expect(typeof r.allowed).toBe('boolean')
+  })
+
+  it('remaining is a non-negative integer', () => {
+    const r = rateLimit('int-test', { limit: 5, windowMs: 60_000 })
+    expect(typeof r.remaining).toBe('number')
+    expect(r.remaining).toBeGreaterThanOrEqual(0)
+    expect(Number.isInteger(r.remaining)).toBe(true)
+  })
+
+  it('resetAt is a positive Unix timestamp in milliseconds', () => {
+    const r = rateLimit('ts-shape-test', { limit: 5, windowMs: 60_000 })
+    expect(typeof r.resetAt).toBe('number')
+    expect(r.resetAt).toBeGreaterThan(1_000_000_000_000)  // > Jan 2001 in ms
+  })
+})
+
+// ── rateLimit() — preset pdf enforcement ──────────────────────────────────────
+
+describe('rateLimit — pdf preset enforcement', () => {
+  it('pdf preset allows exactly 20 requests', () => {
+    for (let i = 0; i < 20; i++) {
+      expect(rateLimit('pdf-user', 'pdf').allowed).toBe(true)
+    }
+    expect(rateLimit('pdf-user', 'pdf').allowed).toBe(false)
+  })
+})
+
+// ── rateLimit() — api_write preset enforcement ────────────────────────────────
+
+describe('rateLimit — api_write preset enforcement', () => {
+  it('api_write preset allows exactly 60 requests', () => {
+    for (let i = 0; i < 60; i++) {
+      expect(rateLimit('writer', 'api_write').allowed).toBe(true)
+    }
+    expect(rateLimit('writer', 'api_write').allowed).toBe(false)
+  })
+})
+
+// ── setRateLimitAdapter — counting adapter ────────────────────────────────────
+
+describe('setRateLimitAdapter — custom counting adapter', () => {
+  it('custom adapter receives the correct namespaced identifier', () => {
+    const received: string[] = []
+    const recordingAdapter: RateLimitAdapter = {
+      check: (id, opts) => {
+        received.push(id)
+        return { allowed: true, remaining: opts.limit, resetAt: Date.now() + opts.windowMs }
+      },
+    }
+    setRateLimitAdapter(recordingAdapter)
+    rateLimit('my-company', 'auth')
+    expect(received[0]).toBe('auth:my-company')
+  })
+
+  it('custom adapter with fixed remaining returns that value', () => {
+    const fixedAdapter: RateLimitAdapter = {
+      check: () => ({ allowed: true, remaining: 42, resetAt: Date.now() + 60_000 }),
+    }
+    setRateLimitAdapter(fixedAdapter)
+    const r = rateLimit('any-id', 'api_read')
+    expect(r.remaining).toBe(42)
+  })
+})

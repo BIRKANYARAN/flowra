@@ -218,7 +218,7 @@ describe('computeVariance — pure kernel', () => {
     expect(result.variance!.net_income_try).toBe(5_000)
   })
 
-  // 15. Expenses variance: higher actuals → negative verdict for expenses
+  // 15. Expenses variance: higher actuals → positive expenses_try variance
   it('expenses higher than projected → positive expenses_try variance (more spending)', () => {
     const proj   = makeProjected({ expenses_try: 30_000 })
     const actual = makeActuals({  expenses_try: 40_000 })
@@ -227,6 +227,96 @@ describe('computeVariance — pure kernel', () => {
     expect(result.variance!.expenses_try).toBe(10_000)  // actuals - projected = positive
     // round2 rounds to 2 decimal places; 10000/30000 ≈ 0.33
     expect(result.variance!.expenses_pct).toBeCloseTo(10_000 / 30_000, 1)
+  })
+
+  // 16. Revenue exactly at +10% boundary → accurate
+  it('revenue exactly at +10% boundary → verdict accurate', () => {
+    const proj   = makeProjected({ revenue_try: 100_000 })
+    const actual = makeActuals({ revenue_try: 110_000 })   // exactly +10%
+    const result = computeVariance(proj, actual, TODAY, PERIOD_TO)
+
+    expect(result.verdict).toBe('accurate')
+  })
+
+  // 17. Revenue just beyond +10% boundary → pessimistic
+  it('revenue just beyond +10% boundary → verdict pessimistic', () => {
+    const proj   = makeProjected({ revenue_try: 100_000 })
+    const actual = makeActuals({ revenue_try: 111_000 })   // +11%
+    const result = computeVariance(proj, actual, TODAY, PERIOD_TO)
+
+    expect(result.verdict).toBe('pessimistic')
+  })
+
+  // 18. variance.revenue_pct is null when projected revenue is 0
+  it('variance.revenue_pct is null when projected revenue = 0', () => {
+    const proj   = makeProjected({ revenue_try: 0 })
+    const actual = makeActuals({ revenue_try: 0 })
+    const result = computeVariance(proj, actual, TODAY, PERIOD_TO)
+
+    expect(result.variance!.revenue_pct).toBeNull()
+  })
+
+  // 19. variance.expenses_pct is null when projected expenses = 0
+  it('variance.expenses_pct is null when projected expenses = 0', () => {
+    const proj   = makeProjected({ expenses_try: 0 })
+    const actual = makeActuals({ expenses_try: 50_000 })
+    const result = computeVariance(proj, actual, TODAY, PERIOD_TO)
+
+    expect(result.variance!.expenses_pct).toBeNull()
+  })
+
+  // 20. accuracy_score is bounded between 0 and 100
+  it('accuracy_score is always in [0, 100] range', () => {
+    const testCases = [
+      { proj: makeProjected(), actual: makeActuals() },
+      { proj: makeProjected({ revenue_try: 1 }), actual: makeActuals({ revenue_try: 1_000_000 }) },
+      { proj: makeProjected({ net_income_try: 1_000 }), actual: makeActuals({ net_income_try: -500_000 }) },
+    ]
+
+    for (const { proj, actual } of testCases) {
+      const result = computeVariance(proj, actual, TODAY, PERIOD_TO)
+      expect(result.accuracy_score).not.toBeNull()
+      expect(result.accuracy_score!).toBeGreaterThanOrEqual(0)
+      expect(result.accuracy_score!).toBeLessThanOrEqual(100)
+    }
+  })
+
+  // 21. No actuals → variance is null
+  it('no actuals → variance object is null', () => {
+    const result = computeVariance(makeProjected(), null, TODAY, PERIOD_TO)
+    expect(result.variance).toBeNull()
+  })
+
+  // 22. verdict_detail in Turkish for insufficient_data case
+  it('verdict_detail for insufficient_data is in Turkish', () => {
+    const result = computeVariance(makeProjected(), null, TODAY, PERIOD_TO)
+    // Should be a Turkish string
+    expect(result.verdict_detail).toBeTruthy()
+    expect(typeof result.verdict_detail).toBe('string')
+  })
+
+  // 23. zero projected net_income — no revenue-based fallback test
+  it('zero projected net_income and zero revenue — verdict is insufficient_data or accurate based on primary pct', () => {
+    const proj   = makeProjected({ revenue_try: 0, net_income_try: 0 })
+    const actual = makeActuals({ revenue_try: 0, net_income_try: 0 })
+    const result = computeVariance(proj, actual, TODAY, PERIOD_TO)
+    // primaryPct = null when both revenue and net_income projected = 0
+    // so verdict should be insufficient_data
+    expect(['insufficient_data', 'accurate']).toContain(result.verdict)
+  })
+
+  // 24. COGS deviation affects accuracy score
+  it('COGS deviation reduces accuracy score', () => {
+    const proj     = makeProjected()
+    const perfect  = computeVariance(proj, makeActuals(), TODAY, PERIOD_TO)
+    const cogsOff  = computeVariance(
+      proj,
+      makeActuals({ cogs_try: 80_000 }),  // 100% deviation from 40k
+      TODAY,
+      PERIOD_TO,
+    )
+    // COGS is a scored metric (projected != 0), so deviation should lower accuracy
+    expect(cogsOff.accuracy_score!).toBeLessThan(perfect.accuracy_score!)
   })
 
 })

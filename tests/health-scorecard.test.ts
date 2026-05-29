@@ -214,3 +214,338 @@ describe('zero revenue handling', () => {
     expect(net?.value).toBeNull()
   })
 })
+
+// ── 13. gradeRatio — quick_ratio thresholds ────────────────────────────────────
+
+describe('gradeRatio — quick_ratio', () => {
+  it('grades 1.2 as A (≥ 1.0)', () => {
+    expect(HealthScorecardService.gradeRatio('quick_ratio', 1.2)).toBe('A')
+  })
+
+  it('grades 0.8 as B (0.75 ≤ x < 1.0)', () => {
+    expect(HealthScorecardService.gradeRatio('quick_ratio', 0.8)).toBe('B')
+  })
+
+  it('grades 0.6 as C (0.5 ≤ x < 0.75)', () => {
+    expect(HealthScorecardService.gradeRatio('quick_ratio', 0.6)).toBe('C')
+  })
+
+  it('grades 0.3 as D (0.25 ≤ x < 0.5)', () => {
+    expect(HealthScorecardService.gradeRatio('quick_ratio', 0.3)).toBe('D')
+  })
+
+  it('grades 0.1 as F (< 0.25)', () => {
+    expect(HealthScorecardService.gradeRatio('quick_ratio', 0.1)).toBe('F')
+  })
+
+  it('grades exactly 1.0 as A (boundary)', () => {
+    expect(HealthScorecardService.gradeRatio('quick_ratio', 1.0)).toBe('A')
+  })
+})
+
+// ── 14. gradeRatio — cash_ratio thresholds ────────────────────────────────────
+
+describe('gradeRatio — cash_ratio', () => {
+  it('grades 0.6 as A (≥ 0.5)', () => {
+    expect(HealthScorecardService.gradeRatio('cash_ratio', 0.6)).toBe('A')
+  })
+
+  it('grades 0.3 as B (0.25 ≤ x < 0.5)', () => {
+    expect(HealthScorecardService.gradeRatio('cash_ratio', 0.3)).toBe('B')
+  })
+
+  it('grades 0.15 as C (0.1 ≤ x < 0.25)', () => {
+    expect(HealthScorecardService.gradeRatio('cash_ratio', 0.15)).toBe('C')
+  })
+
+  it('grades 0.07 as D (0.05 ≤ x < 0.1)', () => {
+    expect(HealthScorecardService.gradeRatio('cash_ratio', 0.07)).toBe('D')
+  })
+
+  it('grades 0.02 as F (< 0.05)', () => {
+    expect(HealthScorecardService.gradeRatio('cash_ratio', 0.02)).toBe('F')
+  })
+})
+
+// ── 15. gradeRatio — gross_margin_pct thresholds ──────────────────────────────
+
+describe('gradeRatio — gross_margin_pct', () => {
+  it('grades 45 as A (≥ 40)', () => {
+    expect(HealthScorecardService.gradeRatio('gross_margin_pct', 45)).toBe('A')
+  })
+
+  it('grades 35 as B (30 ≤ x < 40)', () => {
+    expect(HealthScorecardService.gradeRatio('gross_margin_pct', 35)).toBe('B')
+  })
+
+  it('grades 25 as C (20 ≤ x < 30)', () => {
+    expect(HealthScorecardService.gradeRatio('gross_margin_pct', 25)).toBe('C')
+  })
+
+  it('grades 15 as D (10 ≤ x < 20)', () => {
+    expect(HealthScorecardService.gradeRatio('gross_margin_pct', 15)).toBe('D')
+  })
+
+  it('grades 5 as F (< 10)', () => {
+    expect(HealthScorecardService.gradeRatio('gross_margin_pct', 5)).toBe('F')
+  })
+
+  it('grades 0 as F (zero margin)', () => {
+    expect(HealthScorecardService.gradeRatio('gross_margin_pct', 0)).toBe('F')
+  })
+})
+
+// ── 16. gradeRatio — roe_pct thresholds ──────────────────────────────────────
+
+describe('gradeRatio — roe_pct', () => {
+  it('grades 25 as A (≥ 20)', () => {
+    expect(HealthScorecardService.gradeRatio('roe_pct', 25)).toBe('A')
+  })
+
+  it('grades 17 as B (15 ≤ x < 20)', () => {
+    expect(HealthScorecardService.gradeRatio('roe_pct', 17)).toBe('B')
+  })
+
+  it('grades 12 as C (10 ≤ x < 15)', () => {
+    expect(HealthScorecardService.gradeRatio('roe_pct', 12)).toBe('C')
+  })
+
+  it('grades 7 as D (5 ≤ x < 10)', () => {
+    expect(HealthScorecardService.gradeRatio('roe_pct', 7)).toBe('D')
+  })
+
+  it('grades 2 as F (< 5)', () => {
+    expect(HealthScorecardService.gradeRatio('roe_pct', 2)).toBe('F')
+  })
+})
+
+// ── 17. gradeRatio — asset_turnover thresholds ────────────────────────────────
+
+describe('gradeRatio — asset_turnover', () => {
+  it('grades 2.5 as A (≥ 2.0)', () => {
+    expect(HealthScorecardService.gradeRatio('asset_turnover', 2.5)).toBe('A')
+  })
+
+  it('grades 1.7 as B (1.5 ≤ x < 2.0)', () => {
+    expect(HealthScorecardService.gradeRatio('asset_turnover', 1.7)).toBe('B')
+  })
+
+  it('grades 1.2 as C (1.0 ≤ x < 1.5)', () => {
+    expect(HealthScorecardService.gradeRatio('asset_turnover', 1.2)).toBe('C')
+  })
+
+  it('grades 0.7 as D (0.5 ≤ x < 1.0)', () => {
+    expect(HealthScorecardService.gradeRatio('asset_turnover', 0.7)).toBe('D')
+  })
+
+  it('grades 0.3 as F (< 0.5)', () => {
+    expect(HealthScorecardService.gradeRatio('asset_turnover', 0.3)).toBe('F')
+  })
+})
+
+// ── 18. gradeRatio — receivables_turnover thresholds ─────────────────────────
+
+describe('gradeRatio — receivables_turnover', () => {
+  it('grades 15 as A (≥ 12)', () => {
+    expect(HealthScorecardService.gradeRatio('receivables_turnover', 15)).toBe('A')
+  })
+
+  it('grades 10 as B (8 ≤ x < 12)', () => {
+    expect(HealthScorecardService.gradeRatio('receivables_turnover', 10)).toBe('B')
+  })
+
+  it('grades 7 as C (6 ≤ x < 8)', () => {
+    expect(HealthScorecardService.gradeRatio('receivables_turnover', 7)).toBe('C')
+  })
+
+  it('grades 5 as D (4 ≤ x < 6)', () => {
+    expect(HealthScorecardService.gradeRatio('receivables_turnover', 5)).toBe('D')
+  })
+
+  it('grades 3 as F (< 4)', () => {
+    expect(HealthScorecardService.gradeRatio('receivables_turnover', 3)).toBe('F')
+  })
+})
+
+// ── 19. gradeRatio — debt_service_ratio thresholds ───────────────────────────
+
+describe('gradeRatio — debt_service_ratio', () => {
+  it('grades 0.1 as A (≤ 0.2)', () => {
+    expect(HealthScorecardService.gradeRatio('debt_service_ratio', 0.1)).toBe('A')
+  })
+
+  it('grades 0.3 as B (≤ 0.35)', () => {
+    expect(HealthScorecardService.gradeRatio('debt_service_ratio', 0.3)).toBe('B')
+  })
+
+  it('grades 0.45 as C (≤ 0.5)', () => {
+    expect(HealthScorecardService.gradeRatio('debt_service_ratio', 0.45)).toBe('C')
+  })
+
+  it('grades 0.6 as D (≤ 0.7)', () => {
+    expect(HealthScorecardService.gradeRatio('debt_service_ratio', 0.6)).toBe('D')
+  })
+
+  it('grades 0.9 as F (> 0.7)', () => {
+    expect(HealthScorecardService.gradeRatio('debt_service_ratio', 0.9)).toBe('F')
+  })
+
+  it('grades 0.0 as A (zero debt service is excellent)', () => {
+    expect(HealthScorecardService.gradeRatio('debt_service_ratio', 0.0)).toBe('A')
+  })
+})
+
+// ── 20. gradeRatio — unknown key returns null ─────────────────────────────────
+
+describe('gradeRatio — unknown / invalid key', () => {
+  it('returns null for an unrecognised ratio key', () => {
+    expect(HealthScorecardService.gradeRatio('unknown_ratio', 5)).toBeNull()
+  })
+
+  it('returns null for empty string key', () => {
+    expect(HealthScorecardService.gradeRatio('', 100)).toBeNull()
+  })
+})
+
+// ── 21. computeOverallScore — mixed grades ────────────────────────────────────
+
+describe('computeOverallScore — mixed grades', () => {
+  it('A+F average = 60 (100+20)/2', () => {
+    const ratios: FinancialRatio[] = [
+      { key: 'a', name: '', value: 1, unit: 'ratio', grade: 'A', description: '', benchmark: '', trend: null },
+      { key: 'b', name: '', value: 0, unit: 'ratio', grade: 'F', description: '', benchmark: '', trend: null },
+    ]
+    expect(HealthScorecardService.computeOverallScore(ratios)).toBe(60)
+  })
+
+  it('A+B+C average = (100+80+60)/3 = 80', () => {
+    const ratios: FinancialRatio[] = [
+      { key: 'a', name: '', value: 1, unit: 'ratio', grade: 'A', description: '', benchmark: '', trend: null },
+      { key: 'b', name: '', value: 1, unit: 'ratio', grade: 'B', description: '', benchmark: '', trend: null },
+      { key: 'c', name: '', value: 1, unit: 'ratio', grade: 'C', description: '', benchmark: '', trend: null },
+    ]
+    expect(HealthScorecardService.computeOverallScore(ratios)).toBe(80)
+  })
+
+  it('returns 0 for empty array', () => {
+    expect(HealthScorecardService.computeOverallScore([])).toBe(0)
+  })
+
+  it('single D grade ratio → score = 40', () => {
+    const ratios: FinancialRatio[] = [
+      { key: 'a', name: '', value: 0.3, unit: 'ratio', grade: 'D', description: '', benchmark: '', trend: null },
+    ]
+    expect(HealthScorecardService.computeOverallScore(ratios)).toBe(40)
+  })
+})
+
+// ── 22. computeCategoryGrade — all B ratios → B ───────────────────────────────
+
+describe('computeCategoryGrade — grade propagation', () => {
+  it('all B ratios → category grade B', () => {
+    const ratios: FinancialRatio[] = [
+      { key: 'current_ratio', name: '', value: 1.7, unit: 'ratio', grade: 'B', description: '', benchmark: '', trend: null },
+      { key: 'quick_ratio',   name: '', value: 0.8, unit: 'ratio', grade: 'B', description: '', benchmark: '', trend: null },
+    ]
+    expect(HealthScorecardService.computeCategoryGrade(ratios, ['current_ratio', 'quick_ratio'])).toBe('B')
+  })
+
+  it('keys not in ratios array → N/A', () => {
+    const ratios: FinancialRatio[] = [
+      { key: 'current_ratio', name: '', value: 2.5, unit: 'ratio', grade: 'A', description: '', benchmark: '', trend: null },
+    ]
+    expect(HealthScorecardService.computeCategoryGrade(ratios, ['quick_ratio'])).toBe('N/A')
+  })
+
+  it('subset of keys used — ignores keys not in filter', () => {
+    const ratios: FinancialRatio[] = [
+      { key: 'current_ratio', name: '', value: 2.5, unit: 'ratio', grade: 'A', description: '', benchmark: '', trend: null },
+      { key: 'quick_ratio',   name: '', value: 0.1, unit: 'ratio', grade: 'F', description: '', benchmark: '', trend: null },
+    ]
+    // Only current_ratio in keys → grade A
+    expect(HealthScorecardService.computeCategoryGrade(ratios, ['current_ratio'])).toBe('A')
+  })
+})
+
+// ── 23. scorecard overall_grade mapping ───────────────────────────────────────
+
+describe('scorecard overall_grade mapping via computeOverallScore', () => {
+  it('score ≥ 90 → A', () => {
+    const ratios: FinancialRatio[] = Array.from({ length: 5 }, (_, i) => ({
+      key: `r${i}`, name: '', value: 100, unit: 'ratio' as const,
+      grade: 'A' as const, description: '', benchmark: '', trend: null,
+    }))
+    expect(HealthScorecardService.computeOverallScore(ratios)).toBeGreaterThanOrEqual(90)
+  })
+
+  it('all D grades → score 40 → D overall', () => {
+    const ratios: FinancialRatio[] = Array.from({ length: 4 }, (_, i) => ({
+      key: `r${i}`, name: '', value: 0.3, unit: 'ratio' as const,
+      grade: 'D' as const, description: '', benchmark: '', trend: null,
+    }))
+    expect(HealthScorecardService.computeOverallScore(ratios)).toBe(40)
+  })
+
+  it('mix A+B = (100+80)/2 = 90 → boundary', () => {
+    const ratios: FinancialRatio[] = [
+      { key: 'a', name: '', value: 1, unit: 'ratio', grade: 'A', description: '', benchmark: '', trend: null },
+      { key: 'b', name: '', value: 1, unit: 'ratio', grade: 'B', description: '', benchmark: '', trend: null },
+    ]
+    expect(HealthScorecardService.computeOverallScore(ratios)).toBe(90)
+  })
+})
+
+// ── 24. Scorecard structure validation ───────────────────────────────────────
+
+describe('getScorecard — structure', () => {
+  it('returns scorecard with all required top-level keys', async () => {
+    const supabase = makeSupabase({
+      sales:                 [{ total_try: 200000, cogs: 100000, payment_status: 'paid', sale_date: '2024-06-15' }],
+      expenses:              [{ amount_try: 30000, expense_date: '2024-06-10', category: 'rent' }],
+      stock_lots:            [{ qty_remaining: 100, cost_price_try: 50 }],
+      partner_transactions:  [{ tx_type: 'capital_in', amount_try: 500000 }],
+      partner_loan_tranches: [],
+    })
+    const scorecard = await HealthScorecardService.getScorecard(
+      'co1', 'u1', supabase as Parameters<typeof HealthScorecardService.getScorecard>[2],
+      { from: '2024-06-01', to: '2024-06-30' },
+    )
+    expect(scorecard).toHaveProperty('overall_grade')
+    expect(scorecard).toHaveProperty('overall_score')
+    expect(scorecard).toHaveProperty('ratios')
+    expect(scorecard).toHaveProperty('categories')
+    expect(scorecard).toHaveProperty('computed_at')
+    expect(scorecard.ratios).toHaveLength(10)
+  })
+
+  it('categories object has all four category keys', async () => {
+    const supabase = makeSupabase({
+      sales:                 [],
+      expenses:              [],
+      stock_lots:            [],
+      partner_transactions:  [],
+      partner_loan_tranches: [],
+    })
+    const scorecard = await HealthScorecardService.getScorecard(
+      'co1', 'u1', supabase as Parameters<typeof HealthScorecardService.getScorecard>[2],
+      { from: '2024-06-01', to: '2024-06-30' },
+    )
+    expect(scorecard.categories).toHaveProperty('liquidity')
+    expect(scorecard.categories).toHaveProperty('profitability')
+    expect(scorecard.categories).toHaveProperty('efficiency')
+    expect(scorecard.categories).toHaveProperty('leverage')
+  })
+
+  it('period_from and period_to match input period', async () => {
+    const supabase = makeSupabase({
+      sales: [], expenses: [], stock_lots: [],
+      partner_transactions: [], partner_loan_tranches: [],
+    })
+    const scorecard = await HealthScorecardService.getScorecard(
+      'co1', 'u1', supabase as Parameters<typeof HealthScorecardService.getScorecard>[2],
+      { from: '2024-03-01', to: '2024-03-31' },
+    )
+    expect(scorecard.period_from).toBe('2024-03-01')
+    expect(scorecard.period_to).toBe('2024-03-31')
+  })
+})

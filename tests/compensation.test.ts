@@ -228,3 +228,155 @@ describe('getDuePayments — effective_until in past', () => {
     expect(may).toBeUndefined()
   })
 })
+
+// ── 9. computeNet — 100% withholding ─────────────────────────────────────────
+
+describe('computeNet — extreme rates', () => {
+  it('100% withholding → net = 0, withholding = gross', () => {
+    const { withholding_try, net_try } = CompensationService.computeNet(20_000, 1.0)
+    expect(withholding_try).toBe(20_000)
+    expect(net_try).toBe(0)
+  })
+
+  it('withholding + net always sums to gross', () => {
+    const gross = 37_500
+    const rate  = 0.22
+    const { withholding_try, net_try } = CompensationService.computeNet(gross, rate)
+    expect(withholding_try + net_try).toBeCloseTo(gross, 2)
+  })
+
+  it('very small gross still returns correct proportions', () => {
+    const { withholding_try, net_try } = CompensationService.computeNet(100, 0.10)
+    expect(withholding_try).toBe(10)
+    expect(net_try).toBe(90)
+  })
+})
+
+// ── 10. Multiple schedules produce multiple payment dues ──────────────────────
+
+describe('getDuePayments — multiple partners', () => {
+  it('two active schedules produce two separate due entries for same month', async () => {
+    const sched1 = makeSchedule({ id: 's1', partner_id: 'p1', partners: PARTNER_A })
+    const sched2 = makeSchedule({ id: 's2', partner_id: 'p2', partners: PARTNER_B })
+    const sb = makeSupabase({ schedules: [sched1, sched2] })
+    const result = await CompensationService.getDuePayments(
+      'co1',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      sb as any,
+      { today: '2026-05-27', months: 1 },
+    )
+    const may = result.filter(d => d.payment_period === '2026-05-01')
+    expect(may.length).toBe(2)
+  })
+
+  it('partner names are preserved in due payment entries', async () => {
+    const sched = makeSchedule({ id: 's1', partner_id: 'p1', partners: PARTNER_A })
+    const sb = makeSupabase({ schedules: [sched] })
+    const result = await CompensationService.getDuePayments(
+      'co1',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      sb as any,
+      { today: '2026-05-27', months: 1 },
+    )
+    const entry = result.find(d => d.partner_id === 'p1')
+    expect(entry?.partner_name).toBe('Ali')
+  })
+})
+
+// ── 11. period_label format ───────────────────────────────────────────────────
+
+describe('getDuePayments — period_label', () => {
+  it('period label for May 2026 is "Mayıs 2026"', async () => {
+    const sb = makeSupabase({ schedules: [makeSchedule()] })
+    const result = await CompensationService.getDuePayments(
+      'co1',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      sb as any,
+      { today: '2026-05-27', months: 1 },
+    )
+    const may = result.find(d => d.payment_period === '2026-05-01')
+    expect(may?.period_label).toBe('Mayıs 2026')
+  })
+
+  it('period label for January 2026 is "Ocak 2026"', async () => {
+    const schedule = makeSchedule({ effective_from: '2026-01-01' })
+    const sb = makeSupabase({ schedules: [schedule] })
+    const result = await CompensationService.getDuePayments(
+      'co1',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      sb as any,
+      { today: '2026-01-31', months: 1 },
+    )
+    const jan = result.find(d => d.payment_period === '2026-01-01')
+    expect(jan?.period_label).toBe('Ocak 2026')
+  })
+})
+
+// ── 12. getDuePayments returns schedule_id on entries ─────────────────────────
+
+describe('getDuePayments — schedule_id linkage', () => {
+  it('each due payment references its schedule_id', async () => {
+    const schedule = makeSchedule({ id: 's99' })
+    const sb = makeSupabase({ schedules: [schedule] })
+    const result = await CompensationService.getDuePayments(
+      'co1',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      sb as any,
+      { today: '2026-05-27', months: 1 },
+    )
+    const entry = result[0]
+    expect(entry?.schedule_id).toBe('s99')
+  })
+})
+
+// ── 13. existing_payment_id is null when no prior payment ────────────────────
+
+describe('getDuePayments — no prior payment', () => {
+  it('no payment recorded → existing_payment_id is null', async () => {
+    const sb = makeSupabase({ schedules: [makeSchedule()], payments: [] })
+    const result = await CompensationService.getDuePayments(
+      'co1',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      sb as any,
+      { today: '2026-05-27', months: 1 },
+    )
+    const may = result.find(d => d.payment_period === '2026-05-01')
+    expect(may?.existing_payment_id).toBeNull()
+    expect(may?.existing_payment_status).toBeNull()
+  })
+})
+
+// ── 14. computeNet — rounding boundary ───────────────────────────────────────
+
+describe('computeNet — rounding', () => {
+  it('gross 333, rate 1/3 — withholding + net = gross', () => {
+    const { withholding_try, net_try } = CompensationService.computeNet(333, 1 / 3)
+    expect(withholding_try + net_try).toBeCloseTo(333, 1)
+  })
+
+  it('gross 1, rate 0.5 → withholding 0.5, net 0.5', () => {
+    const { withholding_try, net_try } = CompensationService.computeNet(1, 0.5)
+    expect(withholding_try).toBeCloseTo(0.5, 2)
+    expect(net_try).toBeCloseTo(0.5, 2)
+  })
+})
+
+// ── 15. listSchedules — net_monthly_try field ────────────────────────────────
+
+describe('listSchedules — net_monthly_try', () => {
+  it('single schedule with 20% withholding → net = 80% of gross', async () => {
+    const sched = makeSchedule({ monthly_gross_try: 50_000, withholding_rate: 0.20 })
+    const sb = makeSupabase({ schedules: [sched] })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const schedules = await CompensationService.listSchedules('co1', sb as any)
+    expect(schedules[0].net_monthly_try).toBe(40_000)
+  })
+
+  it('zero withholding → net equals gross in listSchedules', async () => {
+    const sched = makeSchedule({ monthly_gross_try: 15_000, withholding_rate: 0 })
+    const sb = makeSupabase({ schedules: [sched] })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const schedules = await CompensationService.listSchedules('co1', sb as any)
+    expect(schedules[0].net_monthly_try).toBe(15_000)
+  })
+})

@@ -51,7 +51,7 @@ describe('computePeriodLegalReserve', () => {
     expect(result).toBeCloseTo(2_000, 2)
   })
 
-  it('6. full 5% when gap is large enough', () => {
+  it('6. returns 0 when paidInCapital is zero (cap = 0)', () => {
     // zero paid-in capital → 20% of 0 = 0, cap 0 → result 0
     expect(computePeriodLegalReserve(50_000, 0, 0)).toBe(0)
   })
@@ -63,38 +63,80 @@ describe('computePeriodLegalReserve', () => {
     expect(result).toBeCloseTo(5_000, 2)
   })
 
+  it('8. large paid-in capital → large cap, full 5% applies', () => {
+    // paidInCapital 5M → cap 1M; existing 0 → gap 1M
+    // netIncome 100k → proposed 5k < 1M → result 5k
+    const result = computePeriodLegalReserve(100_000, 5_000_000, 0)
+    expect(result).toBeCloseTo(5_000, 2)
+  })
+
+  it('9. exactly at the 20% cap — returns 0 (no more room)', () => {
+    // paidInCapital 500k → cap = 100k; existing 100k → gap 0
+    expect(computePeriodLegalReserve(200_000, 500_000, 100_000)).toBe(0)
+  })
+
+  it('10. very small net income — returns tiny reserve correctly', () => {
+    // netIncome 100 × 0.05 = 5
+    const result = computePeriodLegalReserve(100, 10_000, 0)
+    expect(result).toBeCloseTo(5, 2)
+  })
+
 })
 
 // ── computeClosingBalance ─────────────────────────────────────────────────────
 
 describe('computeClosingBalance', () => {
 
-  it('8. normal: opening + netIncome - legalReserve - dividends - compensation', () => {
+  it('11. normal: opening + netIncome - legalReserve - dividends - compensation', () => {
     const result = computeClosingBalance(100_000, 50_000, 2_500, 10_000, 5_000, 0)
     expect(result).toBeCloseTo(100_000 + 50_000 - 2_500 - 10_000 - 5_000, 2)
   })
 
-  it('9. positive adjustments increase the closing balance', () => {
+  it('12. positive adjustments increase the closing balance', () => {
     const withAdj    = computeClosingBalance(50_000, 20_000, 1_000, 0, 0, 5_000)
     const withoutAdj = computeClosingBalance(50_000, 20_000, 1_000, 0, 0, 0)
     expect(withAdj - withoutAdj).toBeCloseTo(5_000, 2)
   })
 
-  it('10. negative result when deductions exceed opening + income', () => {
+  it('13. negative result when deductions exceed opening + income', () => {
     const result = computeClosingBalance(0, 10_000, 500, 50_000, 0, 0)
     expect(result).toBeLessThan(0)
     expect(result).toBeCloseTo(0 + 10_000 - 500 - 50_000, 2)
   })
 
-  it('11. zero deductions: closing = opening + netIncome', () => {
+  it('14. zero deductions: closing = opening + netIncome', () => {
     const result = computeClosingBalance(100_000, 30_000, 0, 0, 0, 0)
     expect(result).toBeCloseTo(130_000, 2)
   })
 
-  it('12. compensation reduces closing balance', () => {
+  it('15. compensation reduces closing balance', () => {
     const withComp    = computeClosingBalance(80_000, 20_000, 1_000, 5_000, 3_000, 0)
     const withoutComp = computeClosingBalance(80_000, 20_000, 1_000, 5_000, 0, 0)
     expect(withoutComp - withComp).toBeCloseTo(3_000, 2)
+  })
+
+  it('16. all values zero → closing is zero', () => {
+    expect(computeClosingBalance(0, 0, 0, 0, 0, 0)).toBe(0)
+  })
+
+  it('17. negative opening balance carried forward', () => {
+    const result = computeClosingBalance(-50_000, 20_000, 0, 0, 0, 0)
+    expect(result).toBeCloseTo(-30_000, 2)
+  })
+
+  it('18. negative adjustments reduce closing balance', () => {
+    const withNegAdj = computeClosingBalance(100_000, 10_000, 0, 0, 0, -5_000)
+    expect(withNegAdj).toBeCloseTo(105_000, 2)
+  })
+
+  it('19. large values produce correct result', () => {
+    const result = computeClosingBalance(1_000_000, 500_000, 25_000, 100_000, 50_000, 0)
+    expect(result).toBeCloseTo(1_325_000, 2)
+  })
+
+  it('20. fractional values rounded to 2 decimal places', () => {
+    const result = computeClosingBalance(100.5, 20.5, 0.5, 0.5, 0.5, 0)
+    expect(result).toBeCloseTo(119.5, 2)
   })
 
 })
@@ -103,20 +145,28 @@ describe('computeClosingBalance', () => {
 
 describe('isAccumulatedDeficit', () => {
 
-  it('13. positive closing → not a deficit', () => {
+  it('21. positive closing → not a deficit', () => {
     expect(isAccumulatedDeficit(100_000)).toBe(false)
   })
 
-  it('14. negative closing → accumulated deficit', () => {
+  it('22. negative closing → accumulated deficit', () => {
     expect(isAccumulatedDeficit(-1)).toBe(true)
   })
 
-  it('15. zero closing → not a deficit', () => {
+  it('23. zero closing → not a deficit', () => {
     expect(isAccumulatedDeficit(0)).toBe(false)
   })
 
-  it('16. large negative value is deficit', () => {
+  it('24. large negative value is deficit', () => {
     expect(isAccumulatedDeficit(-1_000_000)).toBe(true)
+  })
+
+  it('25. small positive value is not deficit', () => {
+    expect(isAccumulatedDeficit(0.01)).toBe(false)
+  })
+
+  it('26. very small negative value is deficit', () => {
+    expect(isAccumulatedDeficit(-0.01)).toBe(true)
   })
 
 })
@@ -125,24 +175,40 @@ describe('isAccumulatedDeficit', () => {
 
 describe('computeEquityCoverageRatio', () => {
 
-  it('17. normal: ratio = closing / totalLiabilities', () => {
+  it('27. normal: ratio = closing / totalLiabilities', () => {
     const ratio = computeEquityCoverageRatio(200_000, 100_000)
     expect(ratio).toBeCloseTo(2.0, 2)
   })
 
-  it('18. returns null when totalLiabilities = 0', () => {
+  it('28. returns null when totalLiabilities = 0', () => {
     expect(computeEquityCoverageRatio(500_000, 0)).toBeNull()
   })
 
-  it('19. negative equity results in negative ratio', () => {
+  it('29. negative equity results in negative ratio', () => {
     const ratio = computeEquityCoverageRatio(-50_000, 100_000)
     expect(ratio).toBeCloseTo(-0.5, 2)
   })
 
-  it('20. ratio < 1 when equity is less than liabilities', () => {
+  it('30. ratio < 1 when equity is less than liabilities', () => {
     const ratio = computeEquityCoverageRatio(40_000, 100_000)
     expect(ratio).toBeCloseTo(0.4, 2)
     expect(ratio!).toBeLessThan(1)
+  })
+
+  it('31. ratio = 1 when equity equals liabilities', () => {
+    const ratio = computeEquityCoverageRatio(100_000, 100_000)
+    expect(ratio).toBeCloseTo(1.0, 2)
+  })
+
+  it('32. large numbers produce correct ratio', () => {
+    const ratio = computeEquityCoverageRatio(3_000_000, 1_000_000)
+    expect(ratio).toBeCloseTo(3.0, 2)
+  })
+
+  it('33. very small equity over very large liabilities — fractional ratio', () => {
+    const ratio = computeEquityCoverageRatio(1_000, 1_000_000)
+    // 1000 / 1_000_000 = 0.001, round2 → 0
+    expect(ratio).toBeCloseTo(0, 2)
   })
 
 })
@@ -151,35 +217,35 @@ describe('computeEquityCoverageRatio', () => {
 
 describe('buildRollforwardLine', () => {
 
-  it('21. line closing matches computed closing balance', () => {
+  it('34. line closing matches computed closing balance', () => {
     const line = buildRollforwardLine('2025-01', 100_000, 50_000, 2_500, 10_000, 5_000, 0)
     const expected = computeClosingBalance(100_000, 50_000, 2_500, 10_000, 5_000, 0)
     expect(line.closing_try).toBeCloseTo(expected, 2)
   })
 
-  it('22. is_deficit = false when closing is positive', () => {
+  it('35. is_deficit = false when closing is positive', () => {
     const line = buildRollforwardLine('2025-02', 50_000, 20_000, 1_000, 0, 0, 0)
     expect(line.is_deficit).toBe(false)
   })
 
-  it('23. is_deficit = true when closing is negative', () => {
+  it('36. is_deficit = true when closing is negative', () => {
     const line = buildRollforwardLine('2025-03', 0, -30_000, 0, 0, 0, 0)
     expect(line.is_deficit).toBe(true)
     expect(line.closing_try).toBeLessThan(0)
   })
 
-  it('24. period_label for monthly key includes month name', () => {
+  it('37. period_label for monthly key includes month name (Ocak)', () => {
     const line = buildRollforwardLine('2025-01', 0, 0, 0, 0, 0, 0)
     expect(line.period_label).toContain('Ocak')
     expect(line.period_label).toContain('2025')
   })
 
-  it('25. period_label for annual key ends with "Yılı"', () => {
+  it('38. period_label for annual key ends with "Yılı"', () => {
     const line = buildRollforwardLine('2025', 0, 0, 0, 0, 0, 0)
     expect(line.period_label).toBe('2025 Yılı')
   })
 
-  it('26. numeric fields are rounded to 2 decimal places', () => {
+  it('39. numeric fields are rounded to 2 decimal places', () => {
     const line = buildRollforwardLine('2025-04', 1.005, 2.005, 0.005, 0.005, 0.005, 0.005)
     // opening_try should equal Math.round(1.005 * 100) / 100
     expect(line.opening_try).toBe(Math.round(1.005 * 100) / 100)
@@ -187,24 +253,24 @@ describe('buildRollforwardLine', () => {
     expect(line.closing_try).toBeCloseTo(Math.round(line.closing_try * 100) / 100, 5)
   })
 
-  it('27. adjustments increase closing balance', () => {
+  it('40. adjustments increase closing balance', () => {
     const withAdj    = buildRollforwardLine('2025-05', 10_000, 5_000, 250, 0, 0, 2_000)
     const withoutAdj = buildRollforwardLine('2025-05', 10_000, 5_000, 250, 0, 0, 0)
     expect(withAdj.closing_try - withoutAdj.closing_try).toBeCloseTo(2_000, 2)
   })
 
-  it('28. period_key is stored on the line exactly as passed', () => {
+  it('41. period_key is stored on the line exactly as passed', () => {
     const line = buildRollforwardLine('2024-12', 0, 0, 0, 0, 0, 0)
     expect(line.period_key).toBe('2024-12')
   })
 
-  it('29. zero-income period: closing = opening', () => {
+  it('42. zero-income period: closing = opening', () => {
     const line = buildRollforwardLine('2025-06', 75_000, 0, 0, 0, 0, 0)
     expect(line.closing_try).toBeCloseTo(75_000, 2)
     expect(line.is_deficit).toBe(false)
   })
 
-  it('30. all deductions together produce expected closing', () => {
+  it('43. all deductions together produce expected closing', () => {
     const opening      = 500_000
     const netIncome    = 100_000
     const legalReserve = 5_000
@@ -215,6 +281,27 @@ describe('buildRollforwardLine', () => {
     expect(line.closing_try).toBeCloseTo(
       opening + netIncome - legalReserve - dividends - compensation + adjustments, 2
     )
+  })
+
+  it('44. December period label is Aralık', () => {
+    const line = buildRollforwardLine('2025-12', 0, 0, 0, 0, 0, 0)
+    expect(line.period_label).toContain('Aralık')
+  })
+
+  it('45. net_income_try field stored correctly on the line', () => {
+    const line = buildRollforwardLine('2025-08', 0, 75_000, 0, 0, 0, 0)
+    expect(line.net_income_try).toBeCloseTo(75_000, 2)
+  })
+
+  it('46. dividends_try field stored correctly on the line', () => {
+    const line = buildRollforwardLine('2025-09', 100_000, 50_000, 0, 20_000, 0, 0)
+    expect(line.dividends_try).toBeCloseTo(20_000, 2)
+  })
+
+  it('47. large loss period transitions from profit to deficit', () => {
+    const line = buildRollforwardLine('2025-10', 10_000, -50_000, 0, 0, 0, 0)
+    expect(line.closing_try).toBeCloseTo(-40_000, 2)
+    expect(line.is_deficit).toBe(true)
   })
 
 })
