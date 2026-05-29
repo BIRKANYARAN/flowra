@@ -583,3 +583,266 @@ describe('computeDebtConcentrationByPartner', () => {
     expect(sum).toBeCloseTo(100, 0)
   })
 })
+
+// ── computeDaysToMaturity: extended boundary tests ────────────────────────────
+
+describe('computeDaysToMaturity — extended', () => {
+  it('leap year day count: 2024-02-01 → 2024-03-01 = 29 days', () => {
+    expect(computeDaysToMaturity('2024-02-01', '2024-03-01')).toBe(29)
+  })
+
+  it('non-leap year: 2025-02-01 → 2025-03-01 = 28 days', () => {
+    expect(computeDaysToMaturity('2025-02-01', '2025-03-01')).toBe(28)
+  })
+
+  it('exactly 91 days ahead', () => {
+    expect(computeDaysToMaturity('2026-05-01', '2026-07-31')).toBe(91)
+  })
+
+  it('exactly 181 days ahead', () => {
+    expect(computeDaysToMaturity('2026-01-01', '2026-07-01')).toBe(181)
+  })
+
+  it('exactly 366 days ahead', () => {
+    expect(computeDaysToMaturity('2026-01-01', '2027-01-02')).toBe(366)
+  })
+
+  it('repayment date with time component uses only date part', () => {
+    // Should still work even with time component in string
+    const result = computeDaysToMaturity('2026-05-01', '2026-06-01T10:00:00Z')
+    expect(result).toBe(31)
+  })
+})
+
+// ── classifyMaturityBucket: all boundary values ───────────────────────────────
+
+describe('classifyMaturityBucket — all boundaries', () => {
+  it('exactly -1 → overdue', () => {
+    expect(classifyMaturityBucket(-1)).toBe('overdue')
+  })
+
+  it('exactly 0 → days_0_30', () => {
+    expect(classifyMaturityBucket(0)).toBe('days_0_30')
+  })
+
+  it('exactly 30 → days_0_30', () => {
+    expect(classifyMaturityBucket(30)).toBe('days_0_30')
+  })
+
+  it('exactly 31 → days_31_90', () => {
+    expect(classifyMaturityBucket(31)).toBe('days_31_90')
+  })
+
+  it('exactly 90 → days_31_90', () => {
+    expect(classifyMaturityBucket(90)).toBe('days_31_90')
+  })
+
+  it('exactly 91 → days_91_180', () => {
+    expect(classifyMaturityBucket(91)).toBe('days_91_180')
+  })
+
+  it('exactly 180 → days_91_180', () => {
+    expect(classifyMaturityBucket(180)).toBe('days_91_180')
+  })
+
+  it('exactly 181 → days_181_365', () => {
+    expect(classifyMaturityBucket(181)).toBe('days_181_365')
+  })
+
+  it('exactly 365 → days_181_365', () => {
+    expect(classifyMaturityBucket(365)).toBe('days_181_365')
+  })
+
+  it('exactly 366 → over_1_year', () => {
+    expect(classifyMaturityBucket(366)).toBe('over_1_year')
+  })
+})
+
+// ── computeEstimatedInterestToMaturity: extended ──────────────────────────────
+
+describe('computeEstimatedInterestToMaturity — extended', () => {
+  it('1 day at 36.5% annual = principal × 0.365 / 365 = principal × 0.001', () => {
+    const result = computeEstimatedInterestToMaturity(100_000, 36.5, 1)
+    expect(result).toBeCloseTo(100, 1)
+  })
+
+  it('very high Turkish rate (60% annual) over 180 days', () => {
+    const result = computeEstimatedInterestToMaturity(500_000, 60, 180)
+    const expected = 500_000 * (0.60 / 365) * 180
+    expect(result).toBeCloseTo(expected, 0)
+  })
+
+  it('result rounds to 2 decimal places', () => {
+    const result = computeEstimatedInterestToMaturity(100_000, 12, 45)
+    const decimalPart = String(result).split('.')[1]
+    expect(decimalPart?.length ?? 0).toBeLessThanOrEqual(2)
+  })
+
+  it('interest at 90 days = 3 × interest at 30 days (linear scaling)', () => {
+    const i30  = computeEstimatedInterestToMaturity(100_000, 12, 30)
+    const i90  = computeEstimatedInterestToMaturity(100_000, 12, 90)
+    expect(i90).toBeCloseTo(i30 * 3, 0)
+  })
+})
+
+// ── classifyRefinancingRisk: full boundary sweep ──────────────────────────────
+
+describe('classifyRefinancingRisk — boundary sweep', () => {
+  it('ratio 0.15 (15%) → low', () => {
+    expect(classifyRefinancingRisk(1_000_000, 150_000)).toBe('low')
+  })
+
+  it('ratio just above 0.15 → moderate', () => {
+    expect(classifyRefinancingRisk(1_000_000, 150_001)).toBe('moderate')
+  })
+
+  it('ratio 0.30 (30%) → moderate', () => {
+    expect(classifyRefinancingRisk(1_000_000, 300_000)).toBe('moderate')
+  })
+
+  it('ratio just above 0.30 → high', () => {
+    expect(classifyRefinancingRisk(1_000_000, 300_001)).toBe('high')
+  })
+
+  it('ratio 0.50 (50%) → high (boundary: NOT critical)', () => {
+    expect(classifyRefinancingRisk(1_000_000, 500_000)).toBe('high')
+  })
+
+  it('ratio just above 0.50 → critical', () => {
+    expect(classifyRefinancingRisk(1_000_000, 500_001)).toBe('critical')
+  })
+
+  it('100% due → critical', () => {
+    expect(classifyRefinancingRisk(1_000_000, 1_000_000)).toBe('critical')
+  })
+
+  it('all 5 statuses reachable', () => {
+    expect(classifyRefinancingRisk(0, 0)).toBe('no_debt')
+    expect(classifyRefinancingRisk(1_000_000, 100_000)).toBe('low')
+    expect(classifyRefinancingRisk(1_000_000, 200_000)).toBe('moderate')
+    expect(classifyRefinancingRisk(1_000_000, 400_000)).toBe('high')
+    expect(classifyRefinancingRisk(1_000_000, 600_000)).toBe('critical')
+  })
+})
+
+// ── computeWeightedAverageMaturity: extended ──────────────────────────────────
+
+describe('computeWeightedAverageMaturity — extended', () => {
+  it('all tranches overdue → null', () => {
+    const tranches = [
+      { outstanding_try: 100_000, days_to_maturity: -30 },
+      { outstanding_try: 200_000, days_to_maturity: -90 },
+    ]
+    expect(computeWeightedAverageMaturity(tranches)).toBeNull()
+  })
+
+  it('mix of overdue and future: overdue excluded', () => {
+    const tranches = [
+      { outstanding_try: 100_000, days_to_maturity: -30 }, // excluded
+      { outstanding_try: 200_000, days_to_maturity: 60 },  // included
+    ]
+    // WAM = 60 days / 30 = 2 months
+    const result = computeWeightedAverageMaturity(tranches)
+    expect(result).toBeCloseTo(2, 1)
+  })
+
+  it('WAM rounds to 2 decimal places', () => {
+    const tranches = [{ outstanding_try: 100_000, days_to_maturity: 100 }]
+    const result = computeWeightedAverageMaturity(tranches)!
+    const decimalPart = String(result).split('.')[1]
+    expect(decimalPart?.length ?? 0).toBeLessThanOrEqual(2)
+  })
+
+  it('three tranches with equal weight: WAM = average maturity', () => {
+    const tranches = [
+      { outstanding_try: 100_000, days_to_maturity: 30 },
+      { outstanding_try: 100_000, days_to_maturity: 60 },
+      { outstanding_try: 100_000, days_to_maturity: 90 },
+    ]
+    // WAM = (30+60+90)/3 / 30 = 60/30 = 2 months
+    expect(computeWeightedAverageMaturity(tranches)).toBeCloseTo(2, 1)
+  })
+})
+
+// ── buildMaturityLadder: extended ─────────────────────────────────────────────
+
+describe('buildMaturityLadder — extended', () => {
+  it('bucket_key values are all 6 expected keys', () => {
+    const buckets = buildMaturityLadder([])
+    const keys = buckets.map(b => b.bucket_key)
+    expect(keys).toContain('overdue')
+    expect(keys).toContain('days_0_30')
+    expect(keys).toContain('days_31_90')
+    expect(keys).toContain('days_91_180')
+    expect(keys).toContain('days_181_365')
+    expect(keys).toContain('over_1_year')
+  })
+
+  it('tranches in boundary day positions are classified correctly', () => {
+    const tranches = [
+      { tranche_id: 't1', outstanding_try: 100_000, interest_rate_annual_pct: 0, expected_repayment_date: null, days_to_maturity: 30 },   // days_0_30
+      { tranche_id: 't2', outstanding_try: 100_000, interest_rate_annual_pct: 0, expected_repayment_date: null, days_to_maturity: 31 },   // days_31_90
+      { tranche_id: 't3', outstanding_try: 100_000, interest_rate_annual_pct: 0, expected_repayment_date: null, days_to_maturity: 90 },   // days_31_90
+      { tranche_id: 't4', outstanding_try: 100_000, interest_rate_annual_pct: 0, expected_repayment_date: null, days_to_maturity: 180 },  // days_91_180
+      { tranche_id: 't5', outstanding_try: 100_000, interest_rate_annual_pct: 0, expected_repayment_date: null, days_to_maturity: 365 },  // days_181_365
+      { tranche_id: 't6', outstanding_try: 100_000, interest_rate_annual_pct: 0, expected_repayment_date: null, days_to_maturity: 366 },  // over_1_year
+    ]
+    const buckets = buildMaturityLadder(tranches)
+    expect(buckets.find(b => b.bucket_key === 'days_0_30')!.tranche_count).toBe(1)
+    expect(buckets.find(b => b.bucket_key === 'days_31_90')!.tranche_count).toBe(2)
+    expect(buckets.find(b => b.bucket_key === 'days_91_180')!.tranche_count).toBe(1)
+    expect(buckets.find(b => b.bucket_key === 'days_181_365')!.tranche_count).toBe(1)
+    expect(buckets.find(b => b.bucket_key === 'over_1_year')!.tranche_count).toBe(1)
+  })
+
+  it('tranche with interest rate accumulates interest in bucket', () => {
+    const tranches = [{
+      tranche_id: 't1',
+      outstanding_try: 100_000,
+      interest_rate_annual_pct: 12,
+      expected_repayment_date: null,
+      days_to_maturity: 90,
+    }]
+    const buckets = buildMaturityLadder(tranches)
+    const b = buckets.find(b => b.bucket_key === 'days_31_90')!
+    expect(b.interest_try).toBeGreaterThan(0)
+    expect(b.total_try).toBeGreaterThan(b.principal_try)
+  })
+})
+
+// ── computeDebtServiceNextDays: extended ─────────────────────────────────────
+
+describe('computeDebtServiceNextDays — extended', () => {
+  it('day 0 tranche is included in the window', () => {
+    const tranches = [{ outstanding_try: 50_000, interest_rate_annual_pct: 0, days_to_maturity: 0 }]
+    expect(computeDebtServiceNextDays(tranches, 30)).toBe(50_000)
+  })
+
+  it('day 30 tranche included in 30-day window', () => {
+    const tranches = [{ outstanding_try: 100_000, interest_rate_annual_pct: 0, days_to_maturity: 30 }]
+    expect(computeDebtServiceNextDays(tranches, 30)).toBe(100_000)
+  })
+
+  it('day 31 tranche excluded from 30-day window', () => {
+    const tranches = [{ outstanding_try: 100_000, interest_rate_annual_pct: 0, days_to_maturity: 31 }]
+    expect(computeDebtServiceNextDays(tranches, 30)).toBe(0)
+  })
+
+  it('window = 0: includes only day-0 tranches', () => {
+    const tranches = [
+      { outstanding_try: 100_000, interest_rate_annual_pct: 0, days_to_maturity: 0 },
+      { outstanding_try: 50_000,  interest_rate_annual_pct: 0, days_to_maturity: 1 },
+    ]
+    expect(computeDebtServiceNextDays(tranches, 0)).toBe(100_000)
+  })
+
+  it('result is non-negative for all valid inputs', () => {
+    const tranches = [
+      { outstanding_try: 100_000, interest_rate_annual_pct: 12, days_to_maturity: 30 },
+      { outstanding_try: 50_000,  interest_rate_annual_pct: 0,  days_to_maturity: null },
+      { outstanding_try: 75_000,  interest_rate_annual_pct: 8,  days_to_maturity: -10 },
+    ]
+    const result = computeDebtServiceNextDays(tranches, 90)
+    expect(result).toBeGreaterThanOrEqual(0)
+  })
+})
