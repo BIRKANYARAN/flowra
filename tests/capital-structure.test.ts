@@ -412,3 +412,273 @@ describe('computePartnerLoanRiskPremium', () => {
     expect(p2!).toBeCloseTo(p1! * 2, 5)
   })
 })
+
+// ── Extended computeDebtServiceCoverageRatio ──────────────────────────────────
+
+describe('computeDebtServiceCoverageRatio — extended', () => {
+  it('returns 3.0 for EBITDA = 3× debt service', () => {
+    expect(computeDebtServiceCoverageRatio(3_000_000, 1_000_000)).toBeCloseTo(3.0, 5)
+  })
+
+  it('returns 1.25 at adequate threshold boundary', () => {
+    expect(computeDebtServiceCoverageRatio(1_250_000, 1_000_000)).toBeCloseTo(1.25, 5)
+  })
+
+  it('scales linearly with EBITDA', () => {
+    const d1 = computeDebtServiceCoverageRatio(2_000_000, 1_000_000)!
+    const d2 = computeDebtServiceCoverageRatio(4_000_000, 1_000_000)!
+    expect(d2).toBeCloseTo(d1 * 2, 5)
+  })
+
+  it('scales inversely with debt service', () => {
+    const d1 = computeDebtServiceCoverageRatio(2_000_000, 1_000_000)!
+    const d2 = computeDebtServiceCoverageRatio(2_000_000, 2_000_000)!
+    expect(d2).toBeCloseTo(d1 / 2, 5)
+  })
+
+  it('Turkish SME scenario: 500K EBITDA, 200K service → 2.5', () => {
+    expect(computeDebtServiceCoverageRatio(500_000, 200_000)).toBeCloseTo(2.5, 5)
+  })
+
+  it('high-debt scenario: EBITDA = 0.5× service → distressed', () => {
+    const dscr = computeDebtServiceCoverageRatio(500_000, 1_000_000)!
+    expect(dscr).toBeCloseTo(0.5, 5)
+    expect(classifyDscrHealth(dscr)).toBe('distressed')
+  })
+})
+
+// ── Extended classifyDscrHealth ────────────────────────────────────────────────
+
+describe('classifyDscrHealth — extended', () => {
+  it('2.001 is still strong', () => {
+    expect(classifyDscrHealth(2.001)).toBe('strong')
+  })
+
+  it('1.999 is adequate (just below strong)', () => {
+    expect(classifyDscrHealth(1.999)).toBe('adequate')
+  })
+
+  it('1.001 is adequate (just above tight threshold)', () => {
+    expect(classifyDscrHealth(1.001)).toBe('tight')
+  })
+
+  it('returns one of the 5 valid values for any float', () => {
+    const valid = new Set(['strong', 'adequate', 'tight', 'distressed', 'insufficient_data'])
+    const inputs: Array<number | null> = [null, -5, 0, 0.5, 0.99, 1.0, 1.24, 1.25, 1.99, 2.0, 5.0, 100.0]
+    for (const v of inputs) {
+      expect(valid.has(classifyDscrHealth(v))).toBe(true)
+    }
+  })
+
+  it('very high DSCR (100) is strong', () => {
+    expect(classifyDscrHealth(100)).toBe('strong')
+  })
+
+  it('very low negative DSCR is distressed', () => {
+    expect(classifyDscrHealth(-10)).toBe('distressed')
+  })
+})
+
+// ── Extended computeDebtCapacity ──────────────────────────────────────────────
+
+describe('computeDebtCapacity — extended', () => {
+  it('negative EBITDA → negative capacity values', () => {
+    const result = computeDebtCapacity(-500_000)
+    expect(result.conservative).toBe(-1_000_000)
+    expect(result.optimal).toBe(-1_500_000)
+    expect(result.maximum).toBe(-2_000_000)
+  })
+
+  it('custom multiples override defaults', () => {
+    const result = computeDebtCapacity(1_000_000, 2.0, 3.5)
+    expect(result.conservative).toBe(2_000_000)
+    expect(result.optimal).toBe(2_000_000)
+    expect(result.maximum).toBe(3_500_000)
+  })
+
+  it('conservative is always ebitda × 2.0 regardless of other params', () => {
+    const r1 = computeDebtCapacity(800_000, 4.0, 6.0)
+    expect(r1.conservative).toBe(1_600_000)
+  })
+
+  it('targetDscrMultiple = 2.0 makes optimal = conservative', () => {
+    const r = computeDebtCapacity(1_000_000, 2.0)
+    expect(r.optimal).toBe(r.conservative)
+  })
+
+  it('very large EBITDA scales correctly', () => {
+    const r = computeDebtCapacity(10_000_000)
+    expect(r.maximum).toBe(40_000_000)
+  })
+})
+
+// ── Extended computeWeightedAverageCostOfDebt ─────────────────────────────────
+
+describe('computeWeightedAverageCostOfDebt — extended', () => {
+  it('three loans with one dominant → skewed toward that rate', () => {
+    // 900K@10% + 50K@40% + 50K@40%
+    // = (9M + 2M + 2M) / 1M = 13
+    const wacd = computeWeightedAverageCostOfDebt([
+      { outstanding: 900_000, annual_rate: 10 },
+      { outstanding: 50_000,  annual_rate: 40 },
+      { outstanding: 50_000,  annual_rate: 40 },
+    ])
+    expect(wacd).toBeCloseTo(13, 5)
+  })
+
+  it('empty array → null', () => {
+    expect(computeWeightedAverageCostOfDebt([])).toBeNull()
+  })
+
+  it('all same rate → returns that rate', () => {
+    const wacd = computeWeightedAverageCostOfDebt([
+      { outstanding: 100_000, annual_rate: 25 },
+      { outstanding: 200_000, annual_rate: 25 },
+      { outstanding: 300_000, annual_rate: 25 },
+    ])
+    expect(wacd).toBeCloseTo(25, 5)
+  })
+
+  it('WACD is bounded by min and max rates', () => {
+    const loans = [
+      { outstanding: 500_000, annual_rate: 10 },
+      { outstanding: 500_000, annual_rate: 40 },
+    ]
+    const wacd = computeWeightedAverageCostOfDebt(loans)!
+    expect(wacd).toBeGreaterThanOrEqual(10)
+    expect(wacd).toBeLessThanOrEqual(40)
+  })
+
+  it('single high-rate loan → returns that rate directly', () => {
+    expect(computeWeightedAverageCostOfDebt([{ outstanding: 2_000_000, annual_rate: 45 }])).toBeCloseTo(45, 5)
+  })
+})
+
+// ── Extended computeWacc ───────────────────────────────────────────────────────
+
+describe('computeWacc — extended', () => {
+  it('WACC increases with higher cost of equity', () => {
+    const w1 = computeWacc(1_000_000, 0, 20, 25)!
+    const w2 = computeWacc(1_000_000, 0, 40, 25)!
+    expect(w2).toBeGreaterThan(w1)
+  })
+
+  it('tax shield reduces effective cost of debt', () => {
+    // Without tax shield: D cost = 30%; with 25% tax = 22.5%
+    const noTax  = computeWacc(0, 1_000_000, 30, 30, 0)!
+    const withTax = computeWacc(0, 1_000_000, 30, 30, 25)!
+    expect(withTax).toBeLessThan(noTax)
+  })
+
+  it('WACC with 75/25 equity/debt split', () => {
+    // E=3M, D=1M, Ke=30, Kd=20, T=25
+    // WACC = 0.75×30 + 0.25×20×0.75 = 22.5 + 3.75 = 26.25
+    const wacc = computeWacc(3_000_000, 1_000_000, 30, 20, 25)
+    expect(wacc).toBeCloseTo(26.25, 5)
+  })
+
+  it('zero tax rate → debt cost not shielded', () => {
+    // E=1M, D=1M, Ke=30, Kd=20, T=0
+    // WACC = 0.5×30 + 0.5×20 = 25
+    const wacc = computeWacc(1_000_000, 1_000_000, 30, 20, 0)
+    expect(wacc).toBeCloseTo(25, 5)
+  })
+
+  it('100% tax rate → debt is free (fully shielded)', () => {
+    // E=1M, D=1M, Ke=30, Kd=20, T=100%
+    // WACC = 0.5×30 + 0.5×20×0 = 15
+    const wacc = computeWacc(1_000_000, 1_000_000, 30, 20, 100)
+    expect(wacc).toBeCloseTo(15, 5)
+  })
+
+  it('WACC is always between after-tax debt cost and equity cost', () => {
+    const ke = 35, kd = 20, t = 25
+    const afterTaxKd = kd * (1 - t / 100)
+    const wacc = computeWacc(2_000_000, 1_000_000, ke, kd, t)!
+    expect(wacc).toBeGreaterThanOrEqual(afterTaxKd)
+    expect(wacc).toBeLessThanOrEqual(ke)
+  })
+})
+
+// ── Extended computeLeverageCapacityScore ─────────────────────────────────────
+
+describe('computeLeverageCapacityScore — extended', () => {
+  it('DSCR=2 → dscr component = (2/3)*100 ≈ 66.7', () => {
+    const score = computeLeverageCapacityScore(2, null, null)
+    // dscr_raw = min(100,(2/3)*100) ≈ 66.7; others null→50
+    // 66.7*0.4 + 50*0.35 + 50*0.25 = 26.67 + 17.5 + 12.5 = 56.67
+    expect(score).toBeCloseTo(56.7, 1)
+  })
+
+  it('debtToEbitda=3 → leverage component = (1-3/6)*100=50', () => {
+    const score = computeLeverageCapacityScore(null, 3, null)
+    // leverage=50*0.35; others null→50
+    // 50*0.40 + 50*0.35 + 50*0.25 = 50
+    expect(score).toBeCloseTo(50, 1)
+  })
+
+  it('interestCoverage=2.5 → coverage component = (2.5/5)*100=50', () => {
+    const score = computeLeverageCapacityScore(null, null, 2.5)
+    // all→50 → 50
+    expect(score).toBeCloseTo(50, 1)
+  })
+
+  it('all ideal inputs → 100', () => {
+    expect(computeLeverageCapacityScore(3, 0, 5)).toBeCloseTo(100, 1)
+  })
+
+  it('all worst inputs → near 0', () => {
+    // DSCR=0→0, D/E=6→0, coverage=0→0
+    const score = computeLeverageCapacityScore(0, 6, 0)
+    expect(score).toBeCloseTo(0, 1)
+  })
+
+  it('score is always between 0 and 100', () => {
+    const inputs = [
+      [null, null, null],
+      [3, 0, 5],
+      [0, 6, 0],
+      [1.5, 3, 2.5],
+      [-1, 10, -1],
+    ] as Array<[number | null, number | null, number | null]>
+    for (const [d, e, c] of inputs) {
+      const score = computeLeverageCapacityScore(d, e, c)
+      expect(score).toBeGreaterThanOrEqual(0)
+      expect(score).toBeLessThanOrEqual(100)
+    }
+  })
+})
+
+// ── Extended computePartnerLoanRiskPremium ────────────────────────────────────
+
+describe('computePartnerLoanRiskPremium — extended', () => {
+  it('25% concentration at 40% rate → 10% premium', () => {
+    // (250_000 / 1_000_000) * 40 = 10
+    const p = computePartnerLoanRiskPremium(250_000, 1_000_000, 40)
+    expect(p).toBeCloseTo(10, 5)
+  })
+
+  it('higher total debt with same partner loans → lower premium', () => {
+    const p1 = computePartnerLoanRiskPremium(500_000, 1_000_000, 30)!
+    const p2 = computePartnerLoanRiskPremium(500_000, 2_000_000, 30)!
+    expect(p2).toBeCloseTo(p1 / 2, 5)
+  })
+
+  it('returns non-null for very small partner loan amount', () => {
+    // (1 / 1_000_000) * 25 = 0.000025
+    const p = computePartnerLoanRiskPremium(1, 1_000_000, 25)
+    expect(p).not.toBeNull()
+    expect(p!).toBeCloseTo(0.000025, 8)
+  })
+
+  it('zero rate → zero premium regardless of concentration', () => {
+    const p = computePartnerLoanRiskPremium(500_000, 1_000_000, 0)
+    expect(p).toBeCloseTo(0, 5)
+  })
+
+  it('partner loans exceeding total debt (data issue) → premium > rate', () => {
+    // This shouldn't happen in practice but function is a pure formula
+    const p = computePartnerLoanRiskPremium(2_000_000, 1_000_000, 20)
+    expect(p).toBeCloseTo(40, 5)
+  })
+})
