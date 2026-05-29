@@ -2,14 +2,27 @@
  * Tests for lib/services/pcle/dividend-ledger.service.ts
  *
  * Pure function tests — no DB required.
- * Tests cover:
- *   - computePerPartnerAmount: 50/50, unequal 3-way, zero gross
- *   - computeWithholding:      normal, zero, large amount
- *   - sumByPartner:            no entries, single entry, multi-entry aggregation
+ *
+ * Section 1 (new pure functions):
+ *   - computePartnerGrossDividend: normal / zero share / zero distributable
+ *   - computeWithholdingTax:       10% of various amounts
+ *   - computeNetDividend:          gross - withholding
+ *   - computeDividendYield:        normal / zero capital → null / over 100%
+ *   - validateDividendDeclaration: valid / exceeds profit / exact equal
+ *
+ * Section 2 (legacy helpers — kept for backward compat):
+ *   - computePerPartnerAmount
+ *   - computeWithholding (alias)
+ *   - sumByPartner
  */
 
 import { describe, it, expect } from 'vitest'
 import {
+  computePartnerGrossDividend,
+  computeWithholdingTax,
+  computeNetDividend,
+  computeDividendYield,
+  validateDividendDeclaration,
   computePerPartnerAmount,
   computeWithholding,
   sumByPartner,
@@ -64,7 +77,146 @@ function makePaidEntry(
   }
 }
 
-// ── computePerPartnerAmount ───────────────────────────────────────────────────
+// ── computePartnerGrossDividend ───────────────────────────────────────────────
+
+describe('computePartnerGrossDividend', () => {
+  it('computes gross for a 50% partner on ₺100,000 distributable', () => {
+    expect(computePartnerGrossDividend(100_000, 50)).toBe(50_000)
+  })
+
+  it('computes gross for a 33.33% partner on ₺300,000 distributable', () => {
+    expect(computePartnerGrossDividend(300_000, 33.33)).toBeCloseTo(99_990, 1)
+  })
+
+  it('returns 0 when share ratio is 0', () => {
+    expect(computePartnerGrossDividend(100_000, 0)).toBe(0)
+  })
+
+  it('returns 0 when distributable amount is 0', () => {
+    expect(computePartnerGrossDividend(0, 60)).toBe(0)
+  })
+
+  it('handles 100% single-partner company', () => {
+    expect(computePartnerGrossDividend(250_000, 100)).toBe(250_000)
+  })
+})
+
+// ── computeWithholdingTax ─────────────────────────────────────────────────────
+
+describe('computeWithholdingTax', () => {
+  it('computes 10% withholding on ₺100,000', () => {
+    expect(computeWithholdingTax(100_000)).toBe(10_000)
+  })
+
+  it('computes 10% withholding on ₺50,000', () => {
+    expect(computeWithholdingTax(50_000)).toBe(5_000)
+  })
+
+  it('returns 0 for zero gross amount', () => {
+    expect(computeWithholdingTax(0)).toBe(0)
+  })
+
+  it('returns 0 for negative gross amount', () => {
+    expect(computeWithholdingTax(-5_000)).toBe(0)
+  })
+
+  it('rounds to 2 decimal places (GVK 94 precision)', () => {
+    // 3333.33 * 0.10 = 333.333 → rounds to 333.33
+    expect(computeWithholdingTax(3333.33)).toBe(333.33)
+  })
+
+  it('handles large amount correctly', () => {
+    expect(computeWithholdingTax(1_000_000)).toBe(100_000)
+  })
+})
+
+// ── computeNetDividend ────────────────────────────────────────────────────────
+
+describe('computeNetDividend', () => {
+  it('returns gross - 10% withholding for ₺100,000', () => {
+    expect(computeNetDividend(100_000)).toBe(90_000)
+  })
+
+  it('returns gross - 10% withholding for ₺50,000', () => {
+    expect(computeNetDividend(50_000)).toBe(45_000)
+  })
+
+  it('returns 0 for zero gross', () => {
+    expect(computeNetDividend(0)).toBe(0)
+  })
+
+  it('returns correct net for decimal amount', () => {
+    // 1234.56 - 123.46 = 1111.10
+    const gross = 1234.56
+    const withholding = Math.round(gross * 0.10 * 100) / 100  // 123.46
+    expect(computeNetDividend(gross)).toBe(Math.round((gross - withholding) * 100) / 100)
+  })
+})
+
+// ── computeDividendYield ──────────────────────────────────────────────────────
+
+describe('computeDividendYield', () => {
+  it('computes yield as (dividends / capital) × 100', () => {
+    // ₺20,000 net dividends on ₺100,000 capital = 20%
+    expect(computeDividendYield(20_000, 100_000)).toBe(20)
+  })
+
+  it('returns null when paid-in capital is 0', () => {
+    expect(computeDividendYield(10_000, 0)).toBeNull()
+  })
+
+  it('allows yield over 100% (not clamped)', () => {
+    // ₺150,000 net on ₺100,000 capital = 150%
+    expect(computeDividendYield(150_000, 100_000)).toBe(150)
+  })
+
+  it('returns 0 when dividends are 0 but capital is positive', () => {
+    expect(computeDividendYield(0, 100_000)).toBe(0)
+  })
+
+  it('rounds yield to 2 decimal places', () => {
+    // 10000 / 30000 × 100 = 33.333... → 33.33
+    expect(computeDividendYield(10_000, 30_000)).toBe(33.33)
+  })
+})
+
+// ── validateDividendDeclaration ───────────────────────────────────────────────
+
+describe('validateDividendDeclaration', () => {
+  it('returns valid when gross is less than distributable profit', () => {
+    const result = validateDividendDeclaration(80_000, 100_000)
+    expect(result.valid).toBe(true)
+    expect(result.reason).toBeNull()
+  })
+
+  it('returns valid when gross exactly equals distributable profit', () => {
+    const result = validateDividendDeclaration(100_000, 100_000)
+    expect(result.valid).toBe(true)
+    expect(result.reason).toBeNull()
+  })
+
+  it('returns invalid with Turkish reason when gross exceeds distributable profit', () => {
+    const result = validateDividendDeclaration(150_000, 100_000)
+    expect(result.valid).toBe(false)
+    expect(result.reason).not.toBeNull()
+    // Should reference TTK 509
+    expect(result.reason).toContain('TTK 509')
+  })
+
+  it('invalid reason message mentions dağıtılabilir kâr', () => {
+    const result = validateDividendDeclaration(200_000, 50_000)
+    expect(result.valid).toBe(false)
+    expect(result.reason).toContain('dağıtılabilir kâr')
+  })
+
+  it('returns valid when distributable profit is 0 and gross is 0', () => {
+    const result = validateDividendDeclaration(0, 0)
+    expect(result.valid).toBe(true)
+    expect(result.reason).toBeNull()
+  })
+})
+
+// ── Legacy: computePerPartnerAmount ──────────────────────────────────────────
 
 describe('computePerPartnerAmount', () => {
   it('splits 50/50 correctly — two equal partners', () => {
@@ -139,9 +291,9 @@ describe('computePerPartnerAmount', () => {
   })
 })
 
-// ── computeWithholding ────────────────────────────────────────────────────────
+// ── Legacy: computeWithholding ────────────────────────────────────────────────
 
-describe('computeWithholding', () => {
+describe('computeWithholding (legacy alias)', () => {
   it('computes 10% withholding on a normal amount', () => {
     expect(computeWithholding(100_000)).toBe(10_000)
   })
@@ -159,12 +311,11 @@ describe('computeWithholding', () => {
   })
 
   it('rounds to 2 decimal places', () => {
-    // 3333.33 * 0.10 = 333.333 → rounds to 333.33
     expect(computeWithholding(3333.33)).toBe(333.33)
   })
 })
 
-// ── sumByPartner ──────────────────────────────────────────────────────────────
+// ── Legacy: sumByPartner ──────────────────────────────────────────────────────
 
 describe('sumByPartner', () => {
   it('returns empty array for no entries', () => {
