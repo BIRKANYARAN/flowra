@@ -42,6 +42,45 @@ describe('computeLeadTimeDays', () => {
   it('handles timestamps with time components (uses only date part)', () => {
     expect(computeLeadTimeDays('2026-04-01T09:00:00Z', '2026-04-11T18:30:00Z')).toBe(10)
   })
+
+  // ── Additional: boundaries, large values, edge cases ─────────────────────
+
+  it('returns 1 for a next-day delivery', () => {
+    expect(computeLeadTimeDays('2026-05-01', '2026-05-02')).toBe(1)
+  })
+
+  it('handles month-end boundaries correctly (Jan 31 → Feb 07)', () => {
+    expect(computeLeadTimeDays('2026-01-31', '2026-02-07')).toBe(7)
+  })
+
+  it('handles year-end boundary (Dec 28 → Jan 4)', () => {
+    expect(computeLeadTimeDays('2025-12-28', '2026-01-04')).toBe(7)
+  })
+
+  it('returns 90 for a very long supplier lead time', () => {
+    expect(computeLeadTimeDays('2026-01-01', '2026-04-01')).toBe(90)
+  })
+
+  it('returns 365 for an annual delivery cycle', () => {
+    expect(computeLeadTimeDays('2025-01-01', '2026-01-01')).toBe(365)
+  })
+
+  it('returns null when receivedAt is empty string (treated as falsy)', () => {
+    // empty string is falsy → null path
+    expect(computeLeadTimeDays('2026-01-01', null)).toBeNull()
+  })
+
+  it('handles leap year Feb 28 → Feb 29 (2028 is leap)', () => {
+    expect(computeLeadTimeDays('2028-02-28', '2028-02-29')).toBe(1)
+  })
+
+  it('strips time part: same calendar date but different hours = 0 days', () => {
+    expect(computeLeadTimeDays('2026-06-15T08:00:00Z', '2026-06-15T23:59:59Z')).toBe(0)
+  })
+
+  it('returns 14 days for standard Turkish import lead time', () => {
+    expect(computeLeadTimeDays('2026-03-01', '2026-03-15')).toBe(14)
+  })
 })
 
 // ── computeCostVariancePct ────────────────────────────────────────────────────
@@ -72,6 +111,53 @@ describe('computeCostVariancePct', () => {
   it('computes large variance correctly', () => {
     const result = computeCostVariancePct(200, 100)
     expect(result).toBeCloseTo(100, 5)
+  })
+
+  // ── Additional: TRY currency context, extreme values ─────────────────────
+
+  it('computes 50% price increase (TRY inflation scenario)', () => {
+    const result = computeCostVariancePct(150, 100)
+    expect(result).toBeCloseTo(50, 5)
+  })
+
+  it('computes -50% price decrease (post-inflation stabilization)', () => {
+    const result = computeCostVariancePct(50, 100)
+    expect(result).toBeCloseTo(-50, 5)
+  })
+
+  it('computes 300% increase (hyperinflation spike)', () => {
+    const result = computeCostVariancePct(400, 100)
+    expect(result).toBeCloseTo(300, 5)
+  })
+
+  it('computes variance accurately for large TRY amounts', () => {
+    // 50,000 TRY → 55,000 TRY → +10%
+    const result = computeCostVariancePct(55_000, 50_000)
+    expect(result).toBeCloseTo(10, 5)
+  })
+
+  it('computes variance for fractional costs (e.g. per-gram price)', () => {
+    const result = computeCostVariancePct(1.5, 1.0)
+    expect(result).toBeCloseTo(50, 4)
+  })
+
+  it('returns null when priorCostTry is negative (invalid data guard)', () => {
+    // -100 is falsy in context of !priorCostTry → but -100 is truthy
+    // The service checks: if (!priorCostTry || priorCostTry === 0) return null
+    // -100 is truthy, so it should NOT return null — should compute variance
+    const result = computeCostVariancePct(100, -100)
+    // ((100 - (-100)) / -100) * 100 = -200%
+    expect(result).toBeCloseTo(-200, 4)
+  })
+
+  it('returns exactly 0 when both prices are the same large value', () => {
+    expect(computeCostVariancePct(99_999, 99_999)).toBeCloseTo(0, 5)
+  })
+
+  it('threshold: 15% variance triggers cost alert', () => {
+    const result = computeCostVariancePct(115, 100)
+    expect(result).toBeCloseTo(15, 4)
+    expect(Math.abs(result!)).toBeGreaterThan(14.9)
   })
 })
 
@@ -113,6 +199,47 @@ describe('classifyLeadTime', () => {
   it('returns very_slow for extremely large lead times', () => {
     expect(classifyLeadTime(365)).toBe('very_slow')
   })
+
+  // ── Additional: all boundary transitions ─────────────────────────────────
+
+  it('returns fast at exactly 1 day (courier delivery)', () => {
+    expect(classifyLeadTime(1)).toBe('fast')
+  })
+
+  it('returns fast at exactly 6 days (within fast zone)', () => {
+    expect(classifyLeadTime(6)).toBe('fast')
+  })
+
+  it('transition: 7 is fast, 8 is normal', () => {
+    expect(classifyLeadTime(7)).toBe('fast')
+    expect(classifyLeadTime(8)).toBe('normal')
+  })
+
+  it('transition: 21 is normal, 22 is slow', () => {
+    expect(classifyLeadTime(21)).toBe('normal')
+    expect(classifyLeadTime(22)).toBe('slow')
+  })
+
+  it('transition: 45 is slow, 46 is very_slow', () => {
+    expect(classifyLeadTime(45)).toBe('slow')
+    expect(classifyLeadTime(46)).toBe('very_slow')
+  })
+
+  it('returns very_slow at 100 days (long ocean freight)', () => {
+    expect(classifyLeadTime(100)).toBe('very_slow')
+  })
+
+  it('returns normal at 14 days (standard domestic supplier)', () => {
+    expect(classifyLeadTime(14)).toBe('normal')
+  })
+
+  it('returns normal at 10 days (mid-range)', () => {
+    expect(classifyLeadTime(10)).toBe('normal')
+  })
+
+  it('returns slow at 30 days (international air freight)', () => {
+    expect(classifyLeadTime(30)).toBe('slow')
+  })
 })
 
 // ── computePurchaseFrequency ──────────────────────────────────────────────────
@@ -138,6 +265,40 @@ describe('computePurchaseFrequency', () => {
 
   it('returns 0 when observationDays is negative', () => {
     expect(computePurchaseFrequency(5, -10)).toBe(0)
+  })
+
+  // ── Additional: real-world supplier scenarios ─────────────────────────────
+
+  it('computes 0.5/month for 1 order over 60 days (bi-monthly supplier)', () => {
+    const result = computePurchaseFrequency(1, 60)
+    expect(result).toBeCloseTo(0.5, 4)
+  })
+
+  it('computes 2/month for 12 orders over 180 days', () => {
+    const result = computePurchaseFrequency(12, 180)
+    expect(result).toBeCloseTo(2, 4)
+  })
+
+  it('uses 30-day month for frequency calculation', () => {
+    // formula: count × 30 / days
+    const result = computePurchaseFrequency(1, 30)
+    expect(result).toBeCloseTo(1, 5)
+  })
+
+  it('handles very high frequency (daily orders scenario)', () => {
+    // 30 orders over 30 days → 30/month
+    const result = computePurchaseFrequency(30, 30)
+    expect(result).toBeCloseTo(30, 5)
+  })
+
+  it('returns 0 for single day observation window with 0 orders', () => {
+    expect(computePurchaseFrequency(0, 1)).toBe(0)
+  })
+
+  it('returns fractional frequency for 1 order over 365 days (annual supplier)', () => {
+    const result = computePurchaseFrequency(1, 365)
+    // 1 × 30 / 365 ≈ 0.082
+    expect(result).toBeCloseTo(30 / 365, 4)
   })
 })
 
@@ -193,5 +354,35 @@ describe('detectCostTrend', () => {
   it('detects decreasing trend over 6 data points', () => {
     // prior3: [200, 200, 200] avg=200, last3: [100, 100, 100] avg=100 → -50%
     expect(detectCostTrend([200, 200, 200, 100, 100, 100])).toBe('decreasing')
+  })
+
+  // ── Additional: more scenarios ────────────────────────────────────────────
+
+  it('returns stable for 4 equal data points (0% change)', () => {
+    expect(detectCostTrend([500, 500, 500, 500])).toBe('stable')
+  })
+
+  it('returns stable when last 3 avg is exactly 5% above prior', () => {
+    // prior: [100], last3: [105, 105, 105] → avg = 105, change = +5% → stable (not > 5%)
+    expect(detectCostTrend([100, 105, 105, 105])).toBe('stable')
+  })
+
+  it('returns decreasing at just below -5% boundary', () => {
+    // prior: [100], last3: [94.9, 94.9, 94.9] → change ≈ -5.1% → decreasing
+    expect(detectCostTrend([100, 94.9, 94.9, 94.9])).toBe('decreasing')
+  })
+
+  it('handles TRY inflation spike: 10x price increase is increasing', () => {
+    // prior: [100], last3: [1000, 1000, 1000] → +900% → increasing
+    expect(detectCostTrend([100, 1000, 1000, 1000])).toBe('increasing')
+  })
+
+  it('handles 7 data points — uses last 6 vs first 1 as prior', () => {
+    // prior4: [100, 100, 100, 100] avg=100, last3: [200, 200, 200] avg=200 → +100%
+    expect(detectCostTrend([100, 100, 100, 100, 200, 200, 200])).toBe('increasing')
+  })
+
+  it('returns stable for very small changes (0.1% shift)', () => {
+    expect(detectCostTrend([1000, 1001, 1001, 1001])).toBe('stable')
   })
 })

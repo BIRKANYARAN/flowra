@@ -86,6 +86,55 @@ describe('assignAlertLevel', () => {
     expect(assignAlertLevel(0, null)).toBe('out_of_stock')
   })
 
+  // ── Additional: boundary precision and Turkish stock management scenarios ─
+
+  it('returns critical at 1 unit below reorder_point', () => {
+    expect(assignAlertLevel(9, 10)).toBe('critical')
+  })
+
+  it('returns critical at 1 unit (near-zero but not zero)', () => {
+    expect(assignAlertLevel(1, 10)).toBe('critical')
+  })
+
+  it('boundary: exactly 1.5× reorder_point is low, just above is adequate', () => {
+    expect(assignAlertLevel(15, 10)).toBe('low')
+    expect(assignAlertLevel(16, 10)).toBe('adequate')
+  })
+
+  it('returns adequate for very high stock relative to reorder_point', () => {
+    expect(assignAlertLevel(1000, 10)).toBe('adequate')
+  })
+
+  it('returns no_threshold for stock > 0 with no reorder_point set', () => {
+    expect(assignAlertLevel(500, null)).toBe('no_threshold')
+  })
+
+  it('returns out_of_stock for -1 qty (over-allocated scenario)', () => {
+    expect(assignAlertLevel(-1, null)).toBe('out_of_stock')
+  })
+
+  it('returns adequate for reorder_point of 0 even with minimal stock', () => {
+    // reorder_point = 0 means "not configured" — no alarm
+    expect(assignAlertLevel(1, 0)).toBe('adequate')
+  })
+
+  it('handles large reorder_point: 1000 units threshold', () => {
+    expect(assignAlertLevel(900, 1000)).toBe('critical')
+    expect(assignAlertLevel(1001, 1000)).toBe('low')
+    expect(assignAlertLevel(1501, 1000)).toBe('adequate')
+  })
+
+  it('Türkçe urgency labels — out_of_stock maps to Stok Bitti scenario', () => {
+    // Confirm the alert level assigned matches the Turkish label expectation
+    const level = assignAlertLevel(0, 50)
+    expect(level).toBe('out_of_stock')
+  })
+
+  it('Türkçe urgency labels — critical maps to Kritik scenario', () => {
+    const level = assignAlertLevel(5, 20)
+    expect(level).toBe('critical')
+  })
+
 })
 
 // ── computeDaysRemaining ─────────────────────────────────────────────────────
@@ -115,6 +164,42 @@ describe('computeDaysRemaining', () => {
 
   it('returns 1 when just enough for 1 day', () => {
     expect(computeDaysRemaining(10, 10)).toBe(1)
+  })
+
+  // ── Additional: floor behavior, edge cases ────────────────────────────────
+
+  it('uses floor: 10 / 3 = 3.33 → 3', () => {
+    expect(computeDaysRemaining(10, 3)).toBe(3)
+  })
+
+  it('uses floor: 7 / 2 = 3.5 → 3', () => {
+    expect(computeDaysRemaining(7, 2)).toBe(3)
+  })
+
+  it('returns negative value for negative current_qty (over-sold scenario, floor applied)', () => {
+    // Math.floor(-5/2) = Math.floor(-2.5) = -3
+    expect(computeDaysRemaining(-5, 2)).toBe(-3)
+  })
+
+  it('returns exact 30 days when stock = 30 × consumption', () => {
+    expect(computeDaysRemaining(30, 1)).toBe(30)
+  })
+
+  it('returns 7 days for weekly stock at daily velocity of 1', () => {
+    expect(computeDaysRemaining(7, 1)).toBe(7)
+  })
+
+  it('handles fractional consumption (0.5 units/day)', () => {
+    // 15 / 0.5 = 30 → 30
+    expect(computeDaysRemaining(15, 0.5)).toBe(30)
+  })
+
+  it('returns large number for overstocked product (10000 units, 1/day)', () => {
+    expect(computeDaysRemaining(10_000, 1)).toBe(10_000)
+  })
+
+  it('returns 0 for both zero inputs with null guard', () => {
+    expect(computeDaysRemaining(0, null)).toBeNull()
   })
 
 })
@@ -148,6 +233,44 @@ describe('computeSuggestedOrderQty', () => {
   it('rounds up fractional consumption result', () => {
     // 2 × 0.7 × 14 = 19.6 → ceil → 20
     expect(computeSuggestedOrderQty(null, 0.7)).toBe(20)
+  })
+
+  // ── Additional: formula verification, priority ────────────────────────────
+
+  it('prefers reorder_qty over consumption-based fallback', () => {
+    // Even with high consumption, explicit reorder_qty takes precedence
+    expect(computeSuggestedOrderQty(100, 10)).toBe(100)
+  })
+
+  it('fallback formula: 2 × consumption × 14', () => {
+    // 2 × 1 × 14 = 28
+    expect(computeSuggestedOrderQty(null, 1)).toBe(28)
+  })
+
+  it('fallback formula: 2 × 5 × 14 = 140', () => {
+    expect(computeSuggestedOrderQty(null, 5)).toBe(140)
+  })
+
+  it('ceiling: 2 × 0.1 × 14 = 2.8 → ceil → 3', () => {
+    expect(computeSuggestedOrderQty(null, 0.1)).toBe(3)
+  })
+
+  it('returns null when reorder_qty is negative (invalid data)', () => {
+    // -5 is not > 0, so falls through to consumption
+    expect(computeSuggestedOrderQty(-5, null)).toBeNull()
+  })
+
+  it('returns consumption-based qty when reorder_qty is negative but consumption is valid', () => {
+    // reorder_qty=-5 not > 0, consumption=2 → 2 × 2 × 14 = 56
+    expect(computeSuggestedOrderQty(-5, 2)).toBe(56)
+  })
+
+  it('returns reorder_qty of 1 (minimum positive threshold)', () => {
+    expect(computeSuggestedOrderQty(1, null)).toBe(1)
+  })
+
+  it('handles very large reorder_qty (warehouse-scale)', () => {
+    expect(computeSuggestedOrderQty(10_000, 5)).toBe(10_000)
   })
 
 })
@@ -202,6 +325,67 @@ describe('sortAlerts', () => {
 
   it('returns empty array when input is empty', () => {
     expect(sortAlerts([])).toEqual([])
+  })
+
+  // ── Additional: complex ordering scenarios ────────────────────────────────
+
+  it('returns single-element array unchanged', () => {
+    const alerts = [makeAlert({ alert_level: 'critical', product_id: 'only' })]
+    expect(sortAlerts(alerts)).toHaveLength(1)
+    expect(sortAlerts(alerts)[0].product_id).toBe('only')
+  })
+
+  it('out_of_stock with known days comes before out_of_stock with null days', () => {
+    const alerts: ReorderAlert[] = [
+      makeAlert({ alert_level: 'out_of_stock', product_id: 'nodays', days_of_stock_remaining: null }),
+      makeAlert({ alert_level: 'out_of_stock', product_id: 'days0',  days_of_stock_remaining: 0 }),
+    ]
+    const sorted = sortAlerts(alerts)
+    expect(sorted[0].product_id).toBe('days0')
+    expect(sorted[1].product_id).toBe('nodays')
+  })
+
+  it('critical products sorted correctly across different days_remaining', () => {
+    const alerts: ReorderAlert[] = [
+      makeAlert({ alert_level: 'critical', product_id: 'c5', days_of_stock_remaining: 5 }),
+      makeAlert({ alert_level: 'critical', product_id: 'c1', days_of_stock_remaining: 1 }),
+      makeAlert({ alert_level: 'critical', product_id: 'c3', days_of_stock_remaining: 3 }),
+    ]
+    const sorted = sortAlerts(alerts)
+    expect(sorted.map(a => a.product_id)).toEqual(['c1', 'c3', 'c5'])
+  })
+
+  it('severity ordering: out_of_stock always beats critical, even with fewer days', () => {
+    const alerts: ReorderAlert[] = [
+      makeAlert({ alert_level: 'critical',    product_id: 'crit', days_of_stock_remaining: 1 }),
+      makeAlert({ alert_level: 'out_of_stock', product_id: 'oos',  days_of_stock_remaining: 100 }),
+    ]
+    const sorted = sortAlerts(alerts)
+    expect(sorted[0].alert_level).toBe('out_of_stock')
+    expect(sorted[1].alert_level).toBe('critical')
+  })
+
+  it('two null days_remaining at same level maintain stable-ish order', () => {
+    const alerts: ReorderAlert[] = [
+      makeAlert({ alert_level: 'adequate', product_id: 'a1', days_of_stock_remaining: null }),
+      makeAlert({ alert_level: 'adequate', product_id: 'a2', days_of_stock_remaining: null }),
+    ]
+    const sorted = sortAlerts(alerts)
+    // Both null → treated as Infinity, relative order stable
+    expect(sorted).toHaveLength(2)
+    expect(sorted.every(a => a.alert_level === 'adequate')).toBe(true)
+  })
+
+  it('mixed levels + varying days produce correct global sort', () => {
+    const alerts: ReorderAlert[] = [
+      makeAlert({ alert_level: 'adequate',     product_id: 'ad',  days_of_stock_remaining: 60  }),
+      makeAlert({ alert_level: 'low',          product_id: 'lo',  days_of_stock_remaining: 20  }),
+      makeAlert({ alert_level: 'out_of_stock', product_id: 'oos', days_of_stock_remaining: 0   }),
+      makeAlert({ alert_level: 'critical',     product_id: 'cr',  days_of_stock_remaining: 3   }),
+      makeAlert({ alert_level: 'no_threshold', product_id: 'nt',  days_of_stock_remaining: null }),
+    ]
+    const sorted = sortAlerts(alerts)
+    expect(sorted.map(a => a.product_id)).toEqual(['oos', 'cr', 'lo', 'ad', 'nt'])
   })
 
 })

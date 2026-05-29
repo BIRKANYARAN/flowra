@@ -43,6 +43,33 @@ describe('computeDsoImpact', () => {
   it('negative days returns 0', () => {
     expect(computeDsoImpact(500_000, -5)).toBe(0)
   })
+
+  it('730K revenue × 1 day ≈ 2,000 TRY', () => {
+    const result = computeDsoImpact(730_000, 1)
+    expect(result).toBe(2_000)
+  })
+
+  it('result is always a non-negative integer (Math.round applied)', () => {
+    const result = computeDsoImpact(100_001, 7)
+    expect(result).toBeGreaterThanOrEqual(0)
+    expect(Number.isInteger(result)).toBe(true)
+  })
+
+  it('large revenue 10M × 15 days yields expected range', () => {
+    const result = computeDsoImpact(10_000_000, 15)
+    // 10_000_000 / 365 × 15 ≈ 410,959
+    expect(result).toBeGreaterThan(410_000)
+    expect(result).toBeLessThan(412_000)
+  })
+
+  it('both negative → returns 0', () => {
+    expect(computeDsoImpact(-1_000, -5)).toBe(0)
+  })
+
+  it('365K revenue × 365 days = 365,000 (full year)', () => {
+    const result = computeDsoImpact(365_000, 365)
+    expect(result).toBe(365_000)
+  })
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -71,6 +98,31 @@ describe('computeDpoImpact', () => {
 
   it('negative purchases returns 0', () => {
     expect(computeDpoImpact(-100_000, 10)).toBe(0)
+  })
+
+  it('negative days extension returns 0', () => {
+    expect(computeDpoImpact(500_000, -10)).toBe(0)
+  })
+
+  it('result is always a non-negative integer', () => {
+    const result = computeDpoImpact(999_999, 30)
+    expect(result).toBeGreaterThanOrEqual(0)
+    expect(Number.isInteger(result)).toBe(true)
+  })
+
+  it('large purchases 5M × 45 days yields expected range', () => {
+    const result = computeDpoImpact(5_000_000, 45)
+    // 5_000_000 / 365 × 45 ≈ 616,438
+    expect(result).toBeGreaterThan(615_000)
+    expect(result).toBeLessThan(618_000)
+  })
+
+  it('both negative → returns 0', () => {
+    expect(computeDpoImpact(-500, -5)).toBe(0)
+  })
+
+  it('365K purchases × 30 days = 30,000 TRY', () => {
+    expect(computeDpoImpact(365_000, 30)).toBe(30_000)
   })
 })
 
@@ -103,6 +155,31 @@ describe('computeDioImpact', () => {
   it('negative COGS returns 0', () => {
     expect(computeDioImpact(-200_000, 10)).toBe(0)
   })
+
+  it('negative days returns 0', () => {
+    expect(computeDioImpact(200_000, -10)).toBe(0)
+  })
+
+  it('result is always a non-negative integer', () => {
+    const result = computeDioImpact(1_234_567, 14)
+    expect(result).toBeGreaterThanOrEqual(0)
+    expect(Number.isInteger(result)).toBe(true)
+  })
+
+  it('365K COGS × 365 days = 365,000 (full year)', () => {
+    expect(computeDioImpact(365_000, 365)).toBe(365_000)
+  })
+
+  it('large COGS 8M × 90 days yields expected range', () => {
+    const result = computeDioImpact(8_000_000, 90)
+    // 8_000_000 / 365 × 90 ≈ 1,972,602
+    expect(result).toBeGreaterThan(1_970_000)
+    expect(result).toBeLessThan(1_975_000)
+  })
+
+  it('both negative → returns 0', () => {
+    expect(computeDioImpact(-1_000, -5)).toBe(0)
+  })
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -129,6 +206,23 @@ describe('computeCccImprovementPotential', () => {
   it('handles large values', () => {
     const result = computeCccImprovementPotential(500_000, 300_000, 200_000)
     expect(result).toBe(1_000_000)
+  })
+
+  it('sum is associative — order does not matter', () => {
+    const a = computeCccImprovementPotential(10_000, 20_000, 30_000)
+    const b = computeCccImprovementPotential(30_000, 10_000, 20_000)
+    expect(a).toBe(b)
+  })
+
+  it('result is always a number', () => {
+    const result = computeCccImprovementPotential(1, 2, 3)
+    expect(typeof result).toBe('number')
+    expect(isNaN(result)).toBe(false)
+  })
+
+  it('very large values do not overflow', () => {
+    const result = computeCccImprovementPotential(1_000_000_000, 1_000_000_000, 1_000_000_000)
+    expect(result).toBe(3_000_000_000)
   })
 })
 
@@ -190,5 +284,28 @@ describe('classifyOptimizationPriority', () => {
 
   it('boundary: 6 days → medium', () => {
     expect(classifyOptimizationPriority(0, 6)).toBe('medium')
+  })
+
+  it('boundary: 100,001 cash AND 11 days → high', () => {
+    expect(classifyOptimizationPriority(100_001, 11)).toBe('high')
+  })
+
+  it('returns one of high | medium | low (type check)', () => {
+    const validValues = ['high', 'medium', 'low']
+    const cases = [
+      [0, 0], [5_000, 3], [25_000, 6], [150_000, 15],
+    ]
+    for (const [cash, days] of cases) {
+      const result = classifyOptimizationPriority(cash, days)
+      expect(validValues).toContain(result)
+    }
+  })
+
+  it('medium: cash=0 and days=6 qualifies via days-only condition', () => {
+    expect(classifyOptimizationPriority(0, 6)).toBe('medium')
+  })
+
+  it('low: cash=19_999, days=5 → below both medium thresholds', () => {
+    expect(classifyOptimizationPriority(19_999, 5)).toBe('low')
   })
 })
