@@ -696,3 +696,207 @@ describe('Integration: 6-month known trend', () => {
   })
 
 })
+
+// ── Extra computeRollingAverage edge cases ────────────────────────────────────
+
+describe('computeRollingAverage extra', () => {
+
+  it('94. n=2 on [10, 20, 30, 40] returns avg of last 2: 35', () => {
+    expect(computeRollingAverage([10, 20, 30, 40], 2)).toBeCloseTo(35, 5)
+  })
+
+  it('95. all-zero array returns 0', () => {
+    expect(computeRollingAverage([0, 0, 0, 0], 3)).toBe(0)
+  })
+
+  it('96. negative n returns 0', () => {
+    expect(computeRollingAverage([10, 20, 30], -1)).toBe(0)
+  })
+
+})
+
+// ── Extra computeLinearSlope edge cases ───────────────────────────────────────
+
+describe('computeLinearSlope extra', () => {
+
+  it('97. two elements [5, 15] → slope 10', () => {
+    expect(computeLinearSlope([5, 15])).toBeCloseTo(10, 4)
+  })
+
+  it('98. four elements [2, 4, 6, 8] → slope 2', () => {
+    expect(computeLinearSlope([2, 4, 6, 8])).toBeCloseTo(2, 4)
+  })
+
+  it('99. all same values → slope 0', () => {
+    expect(computeLinearSlope([7, 7, 7, 7, 7])).toBeCloseTo(0, 5)
+  })
+
+})
+
+// ── Extra classifyExpenseMomentum edge cases ──────────────────────────────────
+
+describe('classifyExpenseMomentum extra', () => {
+
+  it('100. exactly 2 data points is not insufficient_data', () => {
+    // slope=0, avg=100, cv=0 → stable
+    expect(classifyExpenseMomentum(0, 100, 0, 2)).toBe('stable')
+  })
+
+  it('101. CV exactly 0.40 → not volatile (must be > 0.40)', () => {
+    // cv = 0.40 is NOT > 0.40 → falls through to slope check
+    // slope=0, avg=100 → stable
+    expect(classifyExpenseMomentum(0, 100, 0.40, 3)).toBe('stable')
+  })
+
+  it('102. CV = 0.401 → volatile', () => {
+    expect(classifyExpenseMomentum(0, 100, 0.401, 3)).toBe('volatile')
+  })
+
+  it('103. zero avg → threshold = 0, any positive slope → accelerating (if cv ok)', () => {
+    // threshold = 0 * 0.05 = 0; slope = 0.001 > 0 → accelerating
+    expect(classifyExpenseMomentum(0.001, 0, 0, 3)).toBe('accelerating')
+  })
+
+  it('104. decelerating exactly at -5.001 of avg', () => {
+    // avg=100, threshold=5, slope=-5.001 → decelerating
+    expect(classifyExpenseMomentum(-5.001, 100, 0.1, 3)).toBe('decelerating')
+  })
+
+})
+
+// ── Extra computeMomChangePct ─────────────────────────────────────────────────
+
+describe('computeMomChangePct extra', () => {
+
+  it('105. large decrease: from 500k to 100k = -80%', () => {
+    expect(computeMomChangePct(100_000, 500_000)).toBeCloseTo(-80, 4)
+  })
+
+  it('106. tiny increase: from 10000 to 10001 ≈ 0.01%', () => {
+    expect(computeMomChangePct(10_001, 10_000)).toBeCloseTo(0.01, 4)
+  })
+
+})
+
+// ── Extra detectExpenseSpike ──────────────────────────────────────────────────
+
+describe('detectExpenseSpike extra', () => {
+
+  it('107. current exactly 1.5× avg = NOT a spike (must be strictly greater)', () => {
+    // 1.5 × 100 = 150; current=150 is NOT > 150
+    expect(detectExpenseSpike(150, 100, 100)).toBe(false)
+  })
+
+  it('108. current = 151 exceeds avg condition and prior condition', () => {
+    // 151 > 150 (1.5×100) AND 151 > 130 (1.3×100) → spike
+    expect(detectExpenseSpike(151, 100, 100)).toBe(true)
+  })
+
+  it('109. both prior and avg are zero — no spike (division-safe)', () => {
+    // 0 > 0*1.5=0? No (not strictly greater). returns false
+    expect(detectExpenseSpike(0, 0, 0)).toBe(false)
+  })
+
+})
+
+// ── Extra computeYtdVariance ──────────────────────────────────────────────────
+
+describe('computeYtdVariance extra', () => {
+
+  it('110. fractional months work correctly', () => {
+    // 5k/mo run rate × 2.5 months = 12.5k; actual=15k → variance=2.5k
+    expect(computeYtdVariance(15_000, 5_000, 2.5)).toBeCloseTo(2_500)
+  })
+
+  it('111. negative actual (credit note) produces negative variance', () => {
+    // actual=-5k, runRate=10k, elapsed=1 → budget=10k → variance=-15k
+    expect(computeYtdVariance(-5_000, 10_000, 1)).toBe(-15_000)
+  })
+
+})
+
+// ── Extra classifyOverallExpenseTrend ─────────────────────────────────────────
+
+describe('classifyOverallExpenseTrend extra', () => {
+
+  it('112. 2 accelerating out of 3 = rising (66.7% > 50%)', () => {
+    expect(classifyOverallExpenseTrend(['accelerating', 'accelerating', 'volatile'])).toBe('rising')
+  })
+
+  it('113. exactly 1 of 2 accelerating = 50% → not > 50% → mixed', () => {
+    expect(classifyOverallExpenseTrend(['accelerating', 'stable'])).toBe('mixed')
+  })
+
+  it('114. single stable item → stable', () => {
+    expect(classifyOverallExpenseTrend(['stable'])).toBe('stable')
+  })
+
+  it('115. single accelerating → rising (1/1 = 100% > 50%)', () => {
+    expect(classifyOverallExpenseTrend(['accelerating'])).toBe('rising')
+  })
+
+  it('116. all volatile → stable (no accelerating or decelerating)', () => {
+    expect(classifyOverallExpenseTrend(['volatile', 'volatile', 'volatile'])).toBe('stable')
+  })
+
+})
+
+// ── Extra computeMonthsUntilExpenseRisk ───────────────────────────────────────
+
+describe('computeMonthsUntilExpenseRisk extra', () => {
+
+  it('117. returns null when expenses >= revenue and not accelerating', () => {
+    expect(computeMonthsUntilExpenseRisk(100_000, 0, 100_000)).toBeNull()
+  })
+
+  it('118. returns a value when expenses = half revenue and fast growth', () => {
+    // expenses=50k, revenue=200k, growth=25%/mo
+    const months = computeMonthsUntilExpenseRisk(50_000, 0.25, 200_000, 0)
+    expect(months).not.toBeNull()
+    expect(months!).toBeGreaterThan(0)
+  })
+
+  it('119. returns null beyond 120 months if growth too slow vs revenue growth', () => {
+    // expenses very slow growth vs revenue equally fast
+    const months = computeMonthsUntilExpenseRisk(10_000, 0.001, 1_000_000, 0.001)
+    expect(months).toBeNull()
+  })
+
+})
+
+// ── Extra buildCategoryMetrics ────────────────────────────────────────────────
+
+describe('buildCategoryMetrics extra', () => {
+
+  it('120. 2-element array: current = last, prior = first', () => {
+    const m = buildCategoryMetrics('general', 'Genel', [
+      { month: '2026-03', amount: 5_000 },
+      { month: '2026-04', amount: 8_000 },
+    ])
+    expect(m.current_month_try).toBe(8_000)
+    expect(m.prior_month_try).toBe(5_000)
+  })
+
+  it('121. 4-element array: three_month_avg uses last 3', () => {
+    const m = buildCategoryMetrics('rent', 'Kira', [
+      { month: '2026-01', amount: 1_000 },
+      { month: '2026-02', amount: 10_000 },
+      { month: '2026-03', amount: 20_000 },
+      { month: '2026-04', amount: 30_000 },
+    ])
+    // last 3: 10k, 20k, 30k → avg = 20k
+    expect(m.three_month_avg_try).toBeCloseTo(20_000, 2)
+  })
+
+  it('122. all-zero data: momentum is insufficient_data or stable', () => {
+    const m = buildCategoryMetrics('software', 'Yazılım', [
+      { month: '2026-01', amount: 0 },
+      { month: '2026-02', amount: 0 },
+      { month: '2026-03', amount: 0 },
+    ])
+    // CV and slope both 0; momentum: stable (dataPointCount=3 >= 2, cv=0, slope=0)
+    expect(m.momentum).toBe('stable')
+    expect(m.monthly_run_rate_try).toBe(0)
+  })
+
+})

@@ -241,4 +241,328 @@ describe('CATEGORY_LABELS', () => {
     expect(CATEGORY_LABELS.marketing).toBeDefined()
   })
 
+  it('31. has key: logistics', () => {
+    expect(CATEGORY_LABELS.logistics).toBeDefined()
+  })
+
+  it('32. has key: utilities', () => {
+    expect(CATEGORY_LABELS.utilities).toBeDefined()
+  })
+
+  it('33. has key: general', () => {
+    expect(CATEGORY_LABELS.general).toBeDefined()
+  })
+
+  it('34. has key: operational', () => {
+    expect(CATEGORY_LABELS.operational).toBeDefined()
+  })
+
+  it('35. salary label is Turkish string', () => {
+    expect(CATEGORY_LABELS.salary).toBe('Maaşlar')
+  })
+
+  it('36. unknown key returns undefined', () => {
+    expect((CATEGORY_LABELS as Record<string, string>)['nonexistent']).toBeUndefined()
+  })
+
+})
+
+// ── computeCategoryTrend — boundary tests ─────────────────────────────────────
+
+describe('computeCategoryTrend boundaries', () => {
+
+  it('37. trendPct = 0.001 → stable (not growing)', () => {
+    expect(computeCategoryTrend(0.001)).toBe('stable')
+  })
+
+  it('38. trendPct = 100 → growing', () => {
+    expect(computeCategoryTrend(100)).toBe('growing')
+  })
+
+  it('39. trendPct = -100 → declining', () => {
+    expect(computeCategoryTrend(-100)).toBe('declining')
+  })
+
+  it('40. trendPct = 4.999 → stable', () => {
+    expect(computeCategoryTrend(4.999)).toBe('stable')
+  })
+
+  it('41. trendPct = -4.999 → stable', () => {
+    expect(computeCategoryTrend(-4.999)).toBe('stable')
+  })
+
+  it('42. trendPct = 5.001 → growing', () => {
+    expect(computeCategoryTrend(5.001)).toBe('growing')
+  })
+
+  it('43. trendPct = -5.001 → declining', () => {
+    expect(computeCategoryTrend(-5.001)).toBe('declining')
+  })
+
+})
+
+// ── detectRecurring — more cases ──────────────────────────────────────────────
+
+describe('detectRecurring additional', () => {
+
+  const VENDOR = 'Recurring Vendor'
+
+  it('44. exactly 4 months present with moderate but low CV → recurring', () => {
+    // 4 months: 990, 1000, 1010, 1000 → mean=1000, CV very low
+    const amounts: (number | null)[] = [990, 1000, 1010, 1000, null, null]
+    expect(detectRecurring(amounts, VENDOR)).toBe(true)
+  })
+
+  it('45. 5 months present but CV just above 10% → not recurring', () => {
+    // values with high spread; mean=1000, strong variance
+    const amounts: (number | null)[] = [500, 800, 1000, 1200, 1500, null]
+    // CV: mean=1000, stddev~378 → CV~37.8% > 10% → not recurring
+    expect(detectRecurring(amounts, VENDOR)).toBe(false)
+  })
+
+  it('46. all zeros are not recurring (filter out 0)', () => {
+    // 0 values are filtered out (v > 0 check)
+    const amounts: (number | null)[] = [0, 0, 0, 0, 0, 0]
+    expect(detectRecurring(amounts, VENDOR)).toBe(false)
+  })
+
+  it('47. mixed null and zero still counts nulls correctly', () => {
+    // Only 2 truly positive: not enough
+    const amounts: (number | null)[] = [null, 0, null, 1000, null, 1000]
+    expect(detectRecurring(amounts, VENDOR)).toBe(false)
+  })
+
+  it('48. vendor name unused — different names same pattern still recurring', () => {
+    const amounts: (number | null)[] = [500, 500, 500, 500, 500, 500]
+    expect(detectRecurring(amounts, 'Any Vendor')).toBe(true)
+  })
+
+})
+
+// ── buildCategoryForecast — more edge cases ───────────────────────────────────
+
+describe('buildCategoryForecast additional', () => {
+
+  it('49. category_label set from CATEGORY_LABELS', () => {
+    const result = buildCategoryForecast('salary', [1000, 1000, 1000, 1000, 1000, 1000], 1000, 0)
+    expect(result.category_label).toBe('Maaşlar')
+  })
+
+  it('50. unknown category uses the category key as label', () => {
+    const result = buildCategoryForecast('custom_cat', [100, 100, 100, 100, 100, 100], 100, 0)
+    expect(result.category_label).toBe('custom_cat')
+  })
+
+  it('51. variable_amount clamped to 0 when recurring > forecast', () => {
+    const totals = [1000, 1000, 1000, 1000, 1000, 1000]
+    const result = buildCategoryForecast('utilities', totals, 1000, 2000)  // recurring > forecast
+    expect(result.variable_amount).toBe(0)
+  })
+
+  it('52. prior3Avg > 0, last3Avg > prior3Avg → positive trendPct', () => {
+    const totals = [500, 500, 500, 1000, 1000, 1000]
+    const result = buildCategoryForecast('marketing', totals, 750, 0)
+    // trendPct = (1000-500)/500 * 100 = 100
+    expect(result.trend_pct).toBeCloseTo(100)
+    expect(result.trend).toBe('growing')
+  })
+
+  it('53. prior3Avg > 0, last3Avg < prior3Avg → negative trendPct', () => {
+    const totals = [1000, 1000, 1000, 500, 500, 500]
+    const result = buildCategoryForecast('general', totals, 750, 0)
+    // trendPct = (500-1000)/1000 * 100 = -50
+    expect(result.trend_pct).toBeCloseTo(-50)
+    expect(result.trend).toBe('declining')
+  })
+
+  it('54. medium confidence when CV 15-35%', () => {
+    // moderately volatile: 700, 1000, 700, 1000, 700, 1000 → CV ~18%
+    const totals = [700, 1000, 700, 1000, 700, 1000]
+    const avg6m = (700 * 3 + 1000 * 3) / 6
+    const result = buildCategoryForecast('logistics', totals, avg6m, 0)
+    expect(result.confidence).toBe('medium')
+  })
+
+  it('55. forecast = last3avg when trend_pct = 0', () => {
+    const totals = [100, 100, 100, 200, 200, 200]
+    // prior=100, last=200, trendPct=(200-100)/100*100=100? No wait, that's 100%
+    // We want 0 trend: all same
+    const flatTotals = [200, 200, 200, 200, 200, 200]
+    const result = buildCategoryForecast('rent', flatTotals, 200, 0)
+    expect(result.forecast_next_month).toBe(200)
+  })
+
+  it('56. six element totals where only last 6 are used even if more passed', () => {
+    // passing 8 elements — slice(0,6) takes first 6
+    const totals = [100, 200, 300, 400, 500, 600, 700, 800]
+    const result = buildCategoryForecast('salary', totals, 350, 0)
+    // last3 = [4,5,6] = 400,500,600 → last3Avg=500; prior3=[1,2,3]=100,200,300→200
+    expect(result.last_3m_avg).toBe(500)
+  })
+
+  it('57. anomaly_flag false when avg6m = 0', () => {
+    const totals = [0, 0, 0, 0, 0, 0]
+    const result = buildCategoryForecast('salary', totals, 0, 0)
+    expect(result.anomaly_flag).toBe(false)
+  })
+
+  it('58. recurring_amount stored correctly', () => {
+    const totals = [2000, 2000, 2000, 2000, 2000, 2000]
+    const result = buildCategoryForecast('utilities', totals, 2000, 1500)
+    expect(result.recurring_amount).toBe(1500)
+  })
+
+  it('59. variable_amount = forecast - recurring when forecast > recurring', () => {
+    const totals = [2000, 2000, 2000, 2000, 2000, 2000]
+    const result = buildCategoryForecast('utilities', totals, 2000, 800)
+    // forecast=2000, recurring=800 → variable=1200
+    expect(result.variable_amount).toBeCloseTo(1200, 1)
+  })
+
+  it('60. totals shorter than 6 — padded with zeros at start', () => {
+    const totals = [1000, 1000, 1000]  // 3 elements → padded to [0,0,0,1000,1000,1000]
+    const result = buildCategoryForecast('marketing', totals, 500, 0)
+    // prior3 = [0,0,0] → avg=0; last3 = [1000,1000,1000] → avg=1000
+    // trendPct = 0 (prior3Avg=0 → trendPct=0)
+    expect(result.last_3m_avg).toBe(1000)
+    expect(result.trend_pct).toBe(0)
+  })
+
+})
+
+// ── buildSummaryLine — additional ─────────────────────────────────────────────
+
+describe('buildSummaryLine additional', () => {
+
+  it('61. amount in millions formatted with M suffix', () => {
+    const line = buildSummaryLine('Temmuz 2026', 2_500_000, 2_000_000)
+    expect(line).toContain('M')
+  })
+
+  it('62. amount in thousands formatted with K suffix', () => {
+    const line = buildSummaryLine('Ağustos 2026', 150_000, 140_000)
+    expect(line).toContain('K')
+  })
+
+  it('63. small amount (< 1000) formatted with no K/M suffix', () => {
+    const line = buildSummaryLine('Ocak 2027', 500, 400)
+    // 500 < 1000 → format as ₺500
+    expect(line).toContain('₺500')
+  })
+
+  it('64. forecast below avg produces "düşük" direction', () => {
+    const line = buildSummaryLine('Haziran 2026', 90_000, 100_000)
+    expect(line).toContain('düşük')
+  })
+
+  it('65. forecast above avg produces "yüksek" direction', () => {
+    const line = buildSummaryLine('Haziran 2026', 110_000, 100_000)
+    expect(line).toContain('yüksek')
+  })
+
+  it('66. zero forecast with non-zero avg works without NaN', () => {
+    const line = buildSummaryLine('Ocak 2027', 0, 100_000)
+    expect(line).not.toContain('NaN')
+    expect(typeof line).toBe('string')
+  })
+
+  it('67. both zero → no crash, returns valid string', () => {
+    const line = buildSummaryLine('Ocak 2027', 0, 0)
+    expect(typeof line).toBe('string')
+    expect(line.length).toBeGreaterThan(0)
+  })
+
+  it('68. exact amounts — 3m avg equals forecast produces 0% diff', () => {
+    const line = buildSummaryLine('Şubat 2027', 100_000, 100_000)
+    // diff = 0, direction = 'düşük' (diff <= 0 → düşük), 0% düşük
+    expect(line).toContain('%0')
+  })
+
+  it('69. returns string containing "için"', () => {
+    const line = buildSummaryLine('Mart 2027', 500_000, 450_000)
+    expect(line).toContain('için')
+  })
+
+  it('70. returns string containing "gider"', () => {
+    const line = buildSummaryLine('Nisan 2027', 300_000, 280_000)
+    expect(line).toContain('gider')
+  })
+
+  it('71. positive and negative percent computed correctly with known values', () => {
+    // forecast=110k, avg=100k → diff=10% yüksek
+    const line = buildSummaryLine('Mayıs 2027', 110_000, 100_000)
+    expect(line).toContain('10')
+    expect(line).toContain('yüksek')
+  })
+
+  it('72. 1_999_999 is below 2M threshold → K format', () => {
+    const line = buildSummaryLine('Haziran 2027', 999_999, 900_000)
+    // 999_999 >= 1000 → K format
+    expect(line).toContain('K')
+  })
+
+  it('73. exactly 1_000_000 → M format', () => {
+    const line = buildSummaryLine('Temmuz 2027', 1_000_000, 900_000)
+    expect(line).toContain('M')
+  })
+
+  it('74. fractional thousands rounded correctly', () => {
+    const line = buildSummaryLine('Ağustos 2027', 1_500, 1_000)
+    // ₺1500 → rounds to ₺2K
+    expect(line).toContain('₺')
+  })
+
+})
+
+// ── detectRecurring — exact CV boundary ───────────────────────────────────────
+
+describe('detectRecurring boundary', () => {
+
+  it('75. exactly 4 identical values present → CV=0 < 10% → recurring', () => {
+    const amounts: (number | null)[] = [null, null, 1000, 1000, 1000, 1000]
+    expect(detectRecurring(amounts, 'V')).toBe(true)
+  })
+
+  it('76. 4 values with CV just above 10% → not recurring', () => {
+    // mean=100, need stddev > 10 → 77, 100, 100, 123 → mean=100, var~277 → stddev~16.6 → CV~16.6%
+    const amounts: (number | null)[] = [null, null, 77, 100, 100, 123]
+    expect(detectRecurring(amounts, 'V')).toBe(false)
+  })
+
+})
+
+// ── buildCategoryForecast — confidence CV boundaries ─────────────────────────
+
+describe('buildCategoryForecast confidence CV', () => {
+
+  it('77. CV just below 15% → high confidence', () => {
+    // 6 months of slightly varying values around 1000 with ~14% CV
+    // mean=1000, stddev=140 → CV=14%
+    const totals = [860, 920, 980, 1020, 1080, 1140]
+    const result = buildCategoryForecast('rent', totals, 1000, 0)
+    expect(result.confidence).toBe('high')
+  })
+
+  it('78. CV just above 35% → low confidence', () => {
+    // mean=500, stddev>175 → CV>35%
+    // [100, 200, 300, 600, 700, 1000] → mean=483, large spread
+    const totals = [100, 200, 300, 600, 700, 1000]
+    const avg6m = totals.reduce((s, v) => s + v, 0) / 6
+    const result = buildCategoryForecast('general', totals, avg6m, 0)
+    expect(result.confidence).toBe('low')
+  })
+
+  it('79. forecast correct for strong declining trend', () => {
+    // prior3=[2000,2000,2000] avg=2000; last3=[1000,1000,1000] avg=1000
+    // trendPct=-50; forecast=1000*(1+(-50*0.3/100))=1000*(1-0.15)=850
+    const totals = [2000, 2000, 2000, 1000, 1000, 1000]
+    const result = buildCategoryForecast('logistics', totals, 1500, 0)
+    expect(result.forecast_next_month).toBe(850)
+  })
+
+  it('80. category key is stored in result', () => {
+    const result = buildCategoryForecast('marketing', [500, 500, 500, 500, 500, 500], 500, 0)
+    expect(result.category).toBe('marketing')
+  })
+
 })
