@@ -1,515 +1,855 @@
-// tests/scenario-comparison.test.ts
-// Unit tests for lib/services/planning/scenario-comparison.service.ts pure functions
+/**
+ * Scenario Comparison Engine — unit tests
+ *
+ * Tests all pure computation functions in:
+ *   lib/services/finance/scenario-comparison.service.ts
+ *
+ * No DB or network calls — pure function tests only.
+ * Target: 100+ tests
+ */
 
 import { describe, it, expect } from 'vitest'
 import {
-  computeScenarioRank,
-  recommendScenario,
-  computeScenarioDelta,
-  computeRiskAdjustedReturn,
+  computeGrossProfitMarginPct,
+  computeNetMarginPct,
+  computeEbitdaMarginPct,
+  computeDeltaPct,
+  computeRunwayFromCashFlow,
+  computeBreakevenMonth,
+  computeSensitivityImpact,
   classifyScenarioRisk,
-  // legacy helpers
-  findBestScenario,
-  computeBaselineDelta,
-  computeImpliedCagr,
-  buildRecommendationReason,
-  extractMetricsFromSummary,
-  buildComparisonReport,
-  type ScenarioSummary,
-  type ScenarioSnapshot,
-} from '@/lib/services/planning/scenario-comparison.service'
+  selectRecommendedScenario,
+  computeComparisonMatrix,
+  rankScenariosByMetric,
+  computeScenarioSpread,
+  generateComparisonNarrative,
+  buildScenarioMetricsFromSummary,
+  type ScenarioMetrics,
+} from '../lib/services/finance/scenario-comparison.service'
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ── Fixture helpers ────────────────────────────────────────────────────────────
 
-function makeScenarioSummary(
-  overrides: Partial<ScenarioSummary> & { id: string; name: string },
-): ScenarioSummary {
+function makeMetrics(overrides: Partial<ScenarioMetrics> = {}): ScenarioMetrics {
   return {
-    total_revenue:        500_000,
-    total_net_income:     100_000,
-    net_margin_pct:       20,
-    runway_months:        12,
-    break_even_month:     6,
-    peak_cash:            800_000,
-    min_cash:             200_000,
-    debt_clearance_month: null,
-    is_baseline:          false,
-    ...overrides,
+    scenario_id:        overrides.scenario_id        ?? 'sc-1',
+    scenario_name:      overrides.scenario_name      ?? 'Test Senaryo',
+    is_baseline:        overrides.is_baseline        ?? false,
+    total_revenue:      overrides.total_revenue      ?? 1_000_000,
+    total_cogs:         overrides.total_cogs         ?? 400_000,
+    gross_profit:       overrides.gross_profit       ?? 600_000,
+    total_expenses:     overrides.total_expenses     ?? 200_000,
+    ebitda:             overrides.ebitda             ?? 400_000,
+    net_income:         overrides.net_income         ?? 300_000,
+    tax_amount:         overrides.tax_amount         ?? 100_000,
+    ending_cash:        overrides.ending_cash        ?? 500_000,
+    break_even_month:   overrides.break_even_month   ?? null,
+    runway_months:      overrides.runway_months      !== undefined ? overrides.runway_months : 24,
+    peak_cash:          overrides.peak_cash          ?? 600_000,
+    min_cash:           overrides.min_cash           ?? 100_000,
+    gross_margin_pct:   overrides.gross_margin_pct   !== undefined ? overrides.gross_margin_pct : 60,
+    net_margin_pct:     overrides.net_margin_pct     !== undefined ? overrides.net_margin_pct   : 30,
+    total_debt_service: overrides.total_debt_service ?? 50_000,
+    dscr_avg:           overrides.dscr_avg           !== undefined ? overrides.dscr_avg         : 2.5,
   }
 }
 
-// ── computeScenarioRank ───────────────────────────────────────────────────────
+// ── computeGrossProfitMarginPct ───────────────────────────────────────────────
 
-describe('computeScenarioRank', () => {
-  it('single scenario returns rank 1', () => {
-    const s = makeScenarioSummary({ id: 'a', name: 'A' })
-    expect(computeScenarioRank(s, [s])).toBe(1)
+describe('computeGrossProfitMarginPct', () => {
+
+  it('1. normal: revenue 1M, cogs 400k → 60%', () => {
+    expect(computeGrossProfitMarginPct(1_000_000, 400_000)).toBeCloseTo(60)
   })
 
-  it('best scenario on all axes gets rank 1', () => {
-    const best = makeScenarioSummary({
-      id: 'best', name: 'Best',
-      total_revenue: 1_000_000, net_margin_pct: 30, runway_months: 24, min_cash: 500_000,
-    })
-    const worst = makeScenarioSummary({
-      id: 'worst', name: 'Worst',
-      total_revenue: 100_000, net_margin_pct: 5, runway_months: 3, min_cash: 10_000,
-    })
-    const all = [best, worst]
-    expect(computeScenarioRank(best, all)).toBe(1)
-    expect(computeScenarioRank(worst, all)).toBe(2)
+  it('2. zero revenue → null', () => {
+    expect(computeGrossProfitMarginPct(0, 0)).toBeNull()
   })
 
-  it('worst on all axes gets last rank', () => {
-    const s1 = makeScenarioSummary({ id: 's1', name: 'S1', total_revenue: 900_000, net_margin_pct: 25, runway_months: 20, min_cash: 400_000 })
-    const s2 = makeScenarioSummary({ id: 's2', name: 'S2', total_revenue: 600_000, net_margin_pct: 15, runway_months: 12, min_cash: 250_000 })
-    const s3 = makeScenarioSummary({ id: 's3', name: 'S3', total_revenue: 100_000, net_margin_pct: 2, runway_months: 2, min_cash: 5_000 })
-    const all = [s1, s2, s3]
-    expect(computeScenarioRank(s3, all)).toBe(3)
+  it('3. zero revenue with positive cogs → null', () => {
+    expect(computeGrossProfitMarginPct(0, 50_000)).toBeNull()
   })
 
-  it('null net_margin_pct is treated as last for margin rank', () => {
-    const good  = makeScenarioSummary({ id: 'g', name: 'G', net_margin_pct: 20 })
-    const nullM = makeScenarioSummary({ id: 'n', name: 'N', net_margin_pct: null })
-    const all = [good, nullM]
-    expect(computeScenarioRank(good, all)).toBe(1)
-    expect(computeScenarioRank(nullM, all)).toBe(2)
+  it('4. cogs > revenue → negative margin', () => {
+    const result = computeGrossProfitMarginPct(100_000, 120_000)
+    expect(result).toBeCloseTo(-20)
   })
 
-  it('null runway_months is treated as last for runway rank', () => {
-    const good  = makeScenarioSummary({ id: 'g', name: 'G', runway_months: 12 })
-    const nullR = makeScenarioSummary({ id: 'n', name: 'N', runway_months: null })
-    const all = [good, nullR]
-    expect(computeScenarioRank(good, all)).toBe(1)
-    expect(computeScenarioRank(nullR, all)).toBe(2)
+  it('5. cogs = 0 → 100% margin', () => {
+    expect(computeGrossProfitMarginPct(200_000, 0)).toBeCloseTo(100)
   })
 
-  it('returns value between 1 and N for each scenario', () => {
-    const scenarios = [
-      makeScenarioSummary({ id: 'a', name: 'A' }),
-      makeScenarioSummary({ id: 'b', name: 'B', total_revenue: 800_000 }),
-      makeScenarioSummary({ id: 'c', name: 'C', total_revenue: 200_000 }),
-    ]
-    for (const s of scenarios) {
-      const rank = computeScenarioRank(s, scenarios)
-      expect(rank).toBeGreaterThanOrEqual(1)
-      expect(rank).toBeLessThanOrEqual(3)
-    }
+  it('6. cogs = revenue → 0% margin', () => {
+    expect(computeGrossProfitMarginPct(500_000, 500_000)).toBeCloseTo(0)
   })
 
-  it('all ranks are unique for clearly different scenarios', () => {
-    const scenarios = [
-      makeScenarioSummary({ id: 'a', name: 'A', total_revenue: 1_000_000, net_margin_pct: 30, runway_months: 24, min_cash: 500_000 }),
-      makeScenarioSummary({ id: 'b', name: 'B', total_revenue:   600_000, net_margin_pct: 18, runway_months: 12, min_cash: 200_000 }),
-      makeScenarioSummary({ id: 'c', name: 'C', total_revenue:   200_000, net_margin_pct:  5, runway_months:  4, min_cash:  20_000 }),
-    ]
-    const ranks = scenarios.map(s => computeScenarioRank(s, scenarios))
-    expect(new Set(ranks).size).toBe(3)
+  it('7. small numbers precision', () => {
+    expect(computeGrossProfitMarginPct(3, 1)).toBeCloseTo(66.667)
   })
 
-  it('margin weight (0.30) has greater influence than safety (0.20)', () => {
-    // s1 wins on margin, s2 wins on safety; s1 should rank higher overall
-    const s1 = makeScenarioSummary({ id: 's1', name: 'S1', net_margin_pct: 40, min_cash: 50_000,  total_revenue: 500_000, runway_months: 10 })
-    const s2 = makeScenarioSummary({ id: 's2', name: 'S2', net_margin_pct: 5,  min_cash: 500_000, total_revenue: 500_000, runway_months: 10 })
-    const all = [s1, s2]
-    expect(computeScenarioRank(s1, all)).toBe(1)
-  })
 })
 
-// ── recommendScenario ─────────────────────────────────────────────────────────
+// ── computeNetMarginPct ───────────────────────────────────────────────────────
 
-describe('recommendScenario', () => {
-  it('returns null for empty array', () => {
-    expect(recommendScenario([])).toBeNull()
+describe('computeNetMarginPct', () => {
+
+  it('8. normal: 300k net / 1M revenue → 30%', () => {
+    expect(computeNetMarginPct(1_000_000, 300_000)).toBeCloseTo(30)
   })
 
-  it('solvent scenario wins over insolvent one', () => {
-    const solvent = makeScenarioSummary({
-      id: 'solvent', name: 'Solvent',
-      min_cash: 100_000, runway_months: 10, net_margin_pct: 15,
-    })
-    const insolvent = makeScenarioSummary({
-      id: 'insolvent', name: 'Insolvent',
-      min_cash: -50_000, runway_months: 2, net_margin_pct: 30,
-    })
-    const result = recommendScenario([insolvent, solvent])
-    expect(result).toBe('solvent')
+  it('9. zero revenue → null', () => {
+    expect(computeNetMarginPct(0, 100_000)).toBeNull()
   })
 
-  it('among solvent scenarios picks highest net_margin_pct', () => {
-    const lowMargin  = makeScenarioSummary({ id: 'lm', name: 'LM', min_cash: 200_000, runway_months: 12, net_margin_pct: 10 })
-    const highMargin = makeScenarioSummary({ id: 'hm', name: 'HM', min_cash: 200_000, runway_months: 12, net_margin_pct: 25 })
-    expect(recommendScenario([lowMargin, highMargin])).toBe('hm')
+  it('10. zero revenue and zero income → null', () => {
+    expect(computeNetMarginPct(0, 0)).toBeNull()
   })
 
-  it('null net_margin_pct treated as -Infinity (loses to any real margin)', () => {
-    const nullMargin = makeScenarioSummary({ id: 'nm', name: 'NM', min_cash: 200_000, runway_months: 12, net_margin_pct: null })
-    const hasMargin  = makeScenarioSummary({ id: 'hm', name: 'HM', min_cash: 200_000, runway_months: 12, net_margin_pct: 1 })
-    expect(recommendScenario([nullMargin, hasMargin])).toBe('hm')
+  it('11. negative net income → negative margin', () => {
+    expect(computeNetMarginPct(1_000_000, -50_000)).toBeCloseTo(-5)
   })
 
-  it('when no solvent scenarios, picks highest min_cash', () => {
-    const bad1 = makeScenarioSummary({ id: 'b1', name: 'B1', min_cash: -100_000, runway_months: 1 })
-    const bad2 = makeScenarioSummary({ id: 'b2', name: 'B2', min_cash: -10_000, runway_months: 1 })
-    expect(recommendScenario([bad1, bad2])).toBe('b2')
+  it('12. net income = revenue → 100%', () => {
+    expect(computeNetMarginPct(500_000, 500_000)).toBeCloseTo(100)
   })
 
-  it('tie-break on margin uses total_revenue', () => {
-    const highRev = makeScenarioSummary({ id: 'hr', name: 'HR', min_cash: 200_000, runway_months: 12, net_margin_pct: 20, total_revenue: 800_000 })
-    const lowRev  = makeScenarioSummary({ id: 'lr', name: 'LR', min_cash: 200_000, runway_months: 12, net_margin_pct: 20, total_revenue: 400_000 })
-    expect(recommendScenario([lowRev, highRev])).toBe('hr')
+  it('13. very small net income', () => {
+    expect(computeNetMarginPct(1_000_000, 1_000)).toBeCloseTo(0.1)
   })
 
-  it('single solvent scenario is always recommended', () => {
-    const s = makeScenarioSummary({ id: 'only', name: 'Only', min_cash: 500_000, runway_months: 18 })
-    expect(recommendScenario([s])).toBe('only')
-  })
-
-  it('runway_months === null scenario is considered solvent (not penalised)', () => {
-    const noRunway = makeScenarioSummary({ id: 'nr', name: 'NR', min_cash: 200_000, runway_months: null, net_margin_pct: 30 })
-    const hasRunway = makeScenarioSummary({ id: 'hr', name: 'HR', min_cash: 200_000, runway_months: 6, net_margin_pct: 10 })
-    // noRunway has higher margin → should win among solvents
-    expect(recommendScenario([noRunway, hasRunway])).toBe('nr')
-  })
-
-  it('scenario with runway < 6 is treated as insolvent', () => {
-    const shortRunway = makeScenarioSummary({ id: 'sr', name: 'SR', min_cash: 500_000, runway_months: 4, net_margin_pct: 40 })
-    const longRunway  = makeScenarioSummary({ id: 'lr', name: 'LR', min_cash: 100_000, runway_months: 8, net_margin_pct: 10 })
-    expect(recommendScenario([shortRunway, longRunway])).toBe('lr')
-  })
 })
 
-// ── computeScenarioDelta ──────────────────────────────────────────────────────
+// ── computeEbitdaMarginPct ────────────────────────────────────────────────────
 
-describe('computeScenarioDelta', () => {
-  it('computes positive revenue delta correctly', () => {
-    const baseline   = makeScenarioSummary({ id: 'b', name: 'B', total_revenue: 500_000 })
-    const comparison = makeScenarioSummary({ id: 'c', name: 'C', total_revenue: 600_000 })
-    const delta = computeScenarioDelta(baseline, comparison)
-    expect(delta.revenue_delta).toBe(100_000)
-    expect(delta.is_revenue_better).toBe(true)
+describe('computeEbitdaMarginPct', () => {
+
+  it('14. normal: 400k ebitda / 1M revenue → 40%', () => {
+    expect(computeEbitdaMarginPct(1_000_000, 400_000)).toBeCloseTo(40)
   })
 
-  it('computes negative revenue delta correctly', () => {
-    const baseline   = makeScenarioSummary({ id: 'b', name: 'B', total_revenue: 500_000 })
-    const comparison = makeScenarioSummary({ id: 'c', name: 'C', total_revenue: 400_000 })
-    const delta = computeScenarioDelta(baseline, comparison)
-    expect(delta.revenue_delta).toBe(-100_000)
-    expect(delta.is_revenue_better).toBe(false)
+  it('15. zero revenue → null', () => {
+    expect(computeEbitdaMarginPct(0, 400_000)).toBeNull()
   })
 
-  it('revenue_delta_pct is null when baseline revenue is 0', () => {
-    const baseline   = makeScenarioSummary({ id: 'b', name: 'B', total_revenue: 0 })
-    const comparison = makeScenarioSummary({ id: 'c', name: 'C', total_revenue: 100_000 })
-    const delta = computeScenarioDelta(baseline, comparison)
-    expect(delta.revenue_delta_pct).toBeNull()
+  it('16. zero revenue and zero ebitda → null', () => {
+    expect(computeEbitdaMarginPct(0, 0)).toBeNull()
   })
 
-  it('revenue_delta_pct calculates correctly (20%)', () => {
-    const baseline   = makeScenarioSummary({ id: 'b', name: 'B', total_revenue: 500_000 })
-    const comparison = makeScenarioSummary({ id: 'c', name: 'C', total_revenue: 600_000 })
-    const delta = computeScenarioDelta(baseline, comparison)
-    expect(delta.revenue_delta_pct).toBeCloseTo(20, 2)
+  it('17. negative ebitda → negative margin', () => {
+    expect(computeEbitdaMarginPct(1_000_000, -100_000)).toBeCloseTo(-10)
   })
 
-  it('net_income_delta_pct is null when baseline net_income is 0', () => {
-    const baseline   = makeScenarioSummary({ id: 'b', name: 'B', total_net_income: 0 })
-    const comparison = makeScenarioSummary({ id: 'c', name: 'C', total_net_income: 50_000 })
-    const delta = computeScenarioDelta(baseline, comparison)
-    expect(delta.net_income_delta_pct).toBeNull()
+  it('18. ebitda > revenue → margin > 100% (unusual but valid)', () => {
+    const result = computeEbitdaMarginPct(500_000, 600_000)
+    expect(result).toBeCloseTo(120)
   })
 
-  it('runway_delta_months is null when either runway is null', () => {
-    const baseline   = makeScenarioSummary({ id: 'b', name: 'B', runway_months: null })
-    const comparison = makeScenarioSummary({ id: 'c', name: 'C', runway_months: 12 })
-    const delta = computeScenarioDelta(baseline, comparison)
-    expect(delta.runway_delta_months).toBeNull()
-  })
-
-  it('runway_delta_months calculates correctly', () => {
-    const baseline   = makeScenarioSummary({ id: 'b', name: 'B', runway_months: 8 })
-    const comparison = makeScenarioSummary({ id: 'c', name: 'C', runway_months: 14 })
-    const delta = computeScenarioDelta(baseline, comparison)
-    expect(delta.runway_delta_months).toBe(6)
-    expect(delta.is_runway_better).toBe(true)
-  })
-
-  it('is_margin_better is false when either margin is null', () => {
-    const baseline   = makeScenarioSummary({ id: 'b', name: 'B', net_margin_pct: null })
-    const comparison = makeScenarioSummary({ id: 'c', name: 'C', net_margin_pct: 20 })
-    const delta = computeScenarioDelta(baseline, comparison)
-    expect(delta.is_margin_better).toBe(false)
-  })
-
-  it('is_margin_better is true when comparison margin is higher', () => {
-    const baseline   = makeScenarioSummary({ id: 'b', name: 'B', net_margin_pct: 10 })
-    const comparison = makeScenarioSummary({ id: 'c', name: 'C', net_margin_pct: 20 })
-    const delta = computeScenarioDelta(baseline, comparison)
-    expect(delta.is_margin_better).toBe(true)
-  })
-
-  it('all delta fields are computed for zero-revenue baseline with negative net income', () => {
-    const baseline   = makeScenarioSummary({ id: 'b', name: 'B', total_revenue: 0, total_net_income: -50_000 })
-    const comparison = makeScenarioSummary({ id: 'c', name: 'C', total_revenue: 0, total_net_income: -30_000 })
-    const delta = computeScenarioDelta(baseline, comparison)
-    // net_income_delta = -30_000 - (-50_000) = +20_000
-    expect(delta.net_income_delta).toBe(20_000)
-    // net_income_delta_pct = (20_000 / |-50_000|) * 100 = +40% (improvement)
-    expect(delta.net_income_delta_pct).toBeCloseTo(40, 1)
-  })
 })
 
-// ── computeRiskAdjustedReturn ─────────────────────────────────────────────────
+// ── computeDeltaPct ───────────────────────────────────────────────────────────
 
-describe('computeRiskAdjustedReturn', () => {
-  it('returns null when totalCapital is 0', () => {
-    expect(computeRiskAdjustedReturn(100_000, 50_000, 0)).toBeNull()
+describe('computeDeltaPct', () => {
+
+  it('19. positive growth: 100 → 120 = +20%', () => {
+    expect(computeDeltaPct(100, 120)).toBeCloseTo(20)
   })
 
-  it('positive income and positive minCash produces positive return', () => {
-    const result = computeRiskAdjustedReturn(100_000, 200_000, 1_000_000)
-    expect(result).not.toBeNull()
-    expect(result!).toBeGreaterThan(0)
+  it('20. decline: 100 → 80 = -20%', () => {
+    expect(computeDeltaPct(100, 80)).toBeCloseTo(-20)
   })
 
-  it('negative minCash reduces the return via safety factor penalty', () => {
-    const normalReturn  = computeRiskAdjustedReturn(100_000, 0,           1_000_000)
-    const penaltyReturn = computeRiskAdjustedReturn(100_000, -500_000,    1_000_000)
-    expect(penaltyReturn!).toBeLessThan(normalReturn!)
+  it('21. zero base → null', () => {
+    expect(computeDeltaPct(0, 100)).toBeNull()
   })
 
-  it('safety factor is clamped to 0.1 minimum for very negative minCash', () => {
-    // safety = max(0.1, 1 + (-10_000_000) / 1_000_000) = max(0.1, -9) = 0.1
-    const result = computeRiskAdjustedReturn(100_000, -10_000_000, 1_000_000)
-    expect(result).not.toBeNull()
-    const baseReturn = 100_000 / Math.max(1, 1_000_000)
-    expect(result!).toBeCloseTo(baseReturn * 0.1, 10)
+  it('22. zero base and zero new → null', () => {
+    expect(computeDeltaPct(0, 0)).toBeNull()
   })
 
-  it('larger capital with same income reduces the return ratio', () => {
-    const highCapital = computeRiskAdjustedReturn(100_000, 100_000, 10_000_000)
-    const lowCapital  = computeRiskAdjustedReturn(100_000, 100_000,  1_000_000)
-    // Both have positive minCash, so penalty factor varies slightly; base return ratio should differ
-    expect(highCapital!).toBeLessThan(lowCapital!)
+  it('23. negative base: -100 → -50 = +50%', () => {
+    // (b - a) / |a| = (-50 - (-100)) / 100 = 50%
+    expect(computeDeltaPct(-100, -50)).toBeCloseTo(50)
   })
 
-  it('zero net income with positive minCash returns a non-negative number', () => {
-    const result = computeRiskAdjustedReturn(0, 100_000, 1_000_000)
-    expect(result).not.toBeNull()
-    expect(result!).toBe(0)
+  it('24. negative base: -100 → -150 = -50%', () => {
+    expect(computeDeltaPct(-100, -150)).toBeCloseTo(-50)
   })
+
+  it('25. equal values → 0%', () => {
+    expect(computeDeltaPct(500, 500)).toBeCloseTo(0)
+  })
+
+  it('26. large values', () => {
+    expect(computeDeltaPct(1_000_000, 1_500_000)).toBeCloseTo(50)
+  })
+
+})
+
+// ── computeRunwayFromCashFlow ─────────────────────────────────────────────────
+
+describe('computeRunwayFromCashFlow', () => {
+
+  it('27. never goes negative → null', () => {
+    expect(computeRunwayFromCashFlow(100_000, [10_000, 10_000, 10_000])).toBeNull()
+  })
+
+  it('28. first month goes negative → returns 1', () => {
+    expect(computeRunwayFromCashFlow(50_000, [-60_000])).toBe(1)
+  })
+
+  it('29. second month negative', () => {
+    expect(computeRunwayFromCashFlow(100_000, [10_000, -120_000])).toBe(2)
+  })
+
+  it('30. exact zero at month 3 - not negative → null', () => {
+    // 100k - 40k - 40k - 20k = 0 (not negative, not < 0)
+    expect(computeRunwayFromCashFlow(100_000, [-40_000, -40_000, -20_000])).toBeNull()
+  })
+
+  it('31. negative at month 3', () => {
+    expect(computeRunwayFromCashFlow(100_000, [-30_000, -30_000, -50_000])).toBe(3)
+  })
+
+  it('32. empty monthly flows → null', () => {
+    expect(computeRunwayFromCashFlow(0, [])).toBeNull()
+  })
+
+  it('33. starting cash = 0, negative first flow → month 1', () => {
+    expect(computeRunwayFromCashFlow(0, [-1])).toBe(1)
+  })
+
+  it('34. starting cash = 0, positive flows only → null', () => {
+    expect(computeRunwayFromCashFlow(0, [10_000, 20_000])).toBeNull()
+  })
+
+  it('35. negative then recovers: still first negative counts', () => {
+    // 100k - 120k = -20k (month 1 negative), then +200k
+    expect(computeRunwayFromCashFlow(100_000, [-120_000, 200_000])).toBe(1)
+  })
+
+  it('36. exactly one month of cash, next breaks it', () => {
+    expect(computeRunwayFromCashFlow(10_000, [-5_000, -5_000, -5_000])).toBe(3)
+  })
+
+})
+
+// ── computeBreakevenMonth ─────────────────────────────────────────────────────
+
+describe('computeBreakevenMonth', () => {
+
+  it('37. never positive → null', () => {
+    expect(computeBreakevenMonth([-1000, -2000, -3000])).toBeNull()
+  })
+
+  it('38. first month already positive → month 1', () => {
+    expect(computeBreakevenMonth([100, 200])).toBe(1)
+  })
+
+  it('39. break-even at month 3', () => {
+    expect(computeBreakevenMonth([-100, -50, 0])).toBe(3)
+  })
+
+  it('40. break-even at month 2', () => {
+    expect(computeBreakevenMonth([-100, 10, 50])).toBe(2)
+  })
+
+  it('41. empty array → null', () => {
+    expect(computeBreakevenMonth([])).toBeNull()
+  })
+
+  it('42. all negative → null', () => {
+    expect(computeBreakevenMonth([-5, -4, -3, -2, -1])).toBeNull()
+  })
+
+  it('43. exactly zero at month 4', () => {
+    expect(computeBreakevenMonth([-10, -5, -1, 0])).toBe(4)
+  })
+
+})
+
+// ── computeSensitivityImpact ──────────────────────────────────────────────────
+
+describe('computeSensitivityImpact', () => {
+
+  it('44. basic: 1M × 0.1 × 1 = 100k', () => {
+    expect(computeSensitivityImpact(1_000_000, 0.1, 1)).toBeCloseTo(100_000)
+  })
+
+  it('45. high elasticity: 1M × 0.1 × 2 = 200k', () => {
+    expect(computeSensitivityImpact(1_000_000, 0.1, 2)).toBeCloseTo(200_000)
+  })
+
+  it('46. zero base → 0', () => {
+    expect(computeSensitivityImpact(0, 0.5, 3)).toBeCloseTo(0)
+  })
+
+  it('47. zero factor → 0', () => {
+    expect(computeSensitivityImpact(1_000_000, 0, 5)).toBeCloseTo(0)
+  })
+
+  it('48. negative factor (decline scenario)', () => {
+    expect(computeSensitivityImpact(500_000, -0.2, 1.5)).toBeCloseTo(-150_000)
+  })
+
+  it('49. fractional elasticity', () => {
+    expect(computeSensitivityImpact(100, 0.5, 0.5)).toBeCloseTo(25)
+  })
+
 })
 
 // ── classifyScenarioRisk ──────────────────────────────────────────────────────
 
 describe('classifyScenarioRisk', () => {
-  it('returns critical when minCash < 0', () => {
-    expect(classifyScenarioRisk(-1, null)).toBe('critical')
+
+  it('50. low risk: runway 24, dscr 3, margin 10%', () => {
+    const m = makeMetrics({ runway_months: 24, dscr_avg: 3, net_margin_pct: 10 })
+    expect(classifyScenarioRisk(m)).toBe('low')
   })
 
-  it('returns critical when minCash = 0', () => {
-    // minCash = 0 is NOT < 0, but runway = null → check logic: 0 < 50000 → high
-    // Actually: minCash=0 is not < 0 and runway=null → min_cash < 50000 → high
-    expect(classifyScenarioRisk(0, null)).toBe('high')
+  it('51. low risk at boundary: runway 13, dscr 2, margin 5', () => {
+    const m = makeMetrics({ runway_months: 13, dscr_avg: 2, net_margin_pct: 5 })
+    expect(classifyScenarioRisk(m)).toBe('low')
   })
 
-  it('returns critical when runwayMonths < 3', () => {
-    expect(classifyScenarioRisk(500_000, 2)).toBe('critical')
-    expect(classifyScenarioRisk(500_000, 0)).toBe('critical')
+  it('52. not low: runway 12 (not > 12)', () => {
+    const m = makeMetrics({ runway_months: 12, dscr_avg: 3, net_margin_pct: 10 })
+    expect(classifyScenarioRisk(m)).not.toBe('low')
   })
 
-  it('returns critical when runwayMonths = 2 exactly', () => {
-    expect(classifyScenarioRisk(300_000, 2)).toBe('critical')
+  it('53. moderate risk: runway 9, dscr 1.8, margin 2%', () => {
+    const m = makeMetrics({ runway_months: 9, dscr_avg: 1.8, net_margin_pct: 2 })
+    expect(classifyScenarioRisk(m)).toBe('moderate')
   })
 
-  it('returns high when minCash < 50000 (and >= 0)', () => {
-    expect(classifyScenarioRisk(49_999, null)).toBe('high')
-    expect(classifyScenarioRisk(0, null)).toBe('high')
+  it('54. moderate at boundary: runway 7, dscr 1.5, margin 0', () => {
+    const m = makeMetrics({ runway_months: 7, dscr_avg: 1.5, net_margin_pct: 0 })
+    expect(classifyScenarioRisk(m)).toBe('moderate')
   })
 
-  it('returns high when runwayMonths < 6 (and >= 3)', () => {
-    expect(classifyScenarioRisk(200_000, 5)).toBe('high')
-    expect(classifyScenarioRisk(200_000, 3)).toBe('high')
+  it('55. not moderate: margin < 0 → falls to high', () => {
+    const m = makeMetrics({ runway_months: 9, dscr_avg: 2, net_margin_pct: -1 })
+    expect(classifyScenarioRisk(m)).not.toBe('moderate')
   })
 
-  it('returns moderate when minCash < 200000 (and >= 50000)', () => {
-    expect(classifyScenarioRisk(50_000, null)).toBe('moderate')
-    expect(classifyScenarioRisk(199_999, null)).toBe('moderate')
+  it('56. high risk via runway > 3', () => {
+    const m = makeMetrics({ runway_months: 4, dscr_avg: 0.8, net_margin_pct: -15 })
+    expect(classifyScenarioRisk(m)).toBe('high')
   })
 
-  it('returns moderate when runwayMonths < 12 (and >= 6)', () => {
-    expect(classifyScenarioRisk(250_000, 6)).toBe('moderate')
-    expect(classifyScenarioRisk(250_000, 11)).toBe('moderate')
+  it('57. high risk via dscr + margin', () => {
+    const m = makeMetrics({ runway_months: null, dscr_avg: 1, net_margin_pct: -5 })
+    expect(classifyScenarioRisk(m)).toBe('high')
   })
 
-  it('returns low when minCash >= 200000 and runway >= 12 or null', () => {
-    expect(classifyScenarioRisk(200_000, null)).toBe('low')
-    expect(classifyScenarioRisk(200_000, 12)).toBe('low')
-    expect(classifyScenarioRisk(500_000, 24)).toBe('low')
+  it('58. very_high: null runway, null dscr', () => {
+    const m = makeMetrics({ runway_months: null, dscr_avg: null, net_margin_pct: -20 })
+    expect(classifyScenarioRisk(m)).toBe('very_high')
   })
 
-  it('returns low when runway is null and minCash >= 200000', () => {
-    expect(classifyScenarioRisk(300_000, null)).toBe('low')
+  it('59. very_high: runway 2, dscr 0.5', () => {
+    const m = makeMetrics({ runway_months: 2, dscr_avg: 0.5, net_margin_pct: -30 })
+    expect(classifyScenarioRisk(m)).toBe('very_high')
   })
 
-  it('minCash boundary at exactly -1 is critical', () => {
-    expect(classifyScenarioRisk(-1, null)).toBe('critical')
+  it('60. very_high: all nulls', () => {
+    const m = makeMetrics({ runway_months: null, dscr_avg: null, net_margin_pct: null })
+    expect(classifyScenarioRisk(m)).toBe('very_high')
   })
 
-  it('runway boundary: exactly 3 months is critical (runwayMonths < 3 is false at 3)', () => {
-    // runwayMonths < 3 is false when runwayMonths = 3
-    // So: min_cash (assuming >= 50000) with runway = 3 → runway < 6 → high
-    expect(classifyScenarioRisk(500_000, 3)).toBe('high')
+  it('61. very_high: runway null, dscr 0.9 and margin -11', () => {
+    const m = makeMetrics({ runway_months: null, dscr_avg: 0.9, net_margin_pct: -11 })
+    expect(classifyScenarioRisk(m)).toBe('very_high')
   })
+
 })
 
-// ── Legacy helpers (backward-compat) ─────────────────────────────────────────
+// ── selectRecommendedScenario ─────────────────────────────────────────────────
 
-describe('findBestScenario', () => {
-  it('returns scenario with highest value when higher_is_better=true', () => {
-    expect(findBestScenario(['a', 'b', 'c'], { a: 100, b: 200, c: 150 }, true)).toBe('b')
+describe('selectRecommendedScenario', () => {
+
+  const priorities = { profitability: 1/3, liquidity: 1/3, growth: 1/3 }
+
+  it('62. empty array → null', () => {
+    expect(selectRecommendedScenario([], priorities)).toBeNull()
   })
 
-  it('ignores null values', () => {
-    expect(findBestScenario(['a', 'b'], { a: 100, b: null }, true)).toBe('a')
+  it('63. single scenario → returns its id', () => {
+    const s = makeMetrics({ scenario_id: 'only' })
+    expect(selectRecommendedScenario([s], priorities)).toBe('only')
   })
 
-  it('returns null for empty scenario list', () => {
-    expect(findBestScenario([], {}, true)).toBeNull()
+  it('64. scenario with better net_margin wins on profitability weight', () => {
+    const a = makeMetrics({ scenario_id: 'a', net_margin_pct: 10, runway_months: 12, total_revenue: 1_000_000 })
+    const b = makeMetrics({ scenario_id: 'b', net_margin_pct: 30, runway_months: 12, total_revenue: 1_000_000 })
+    const result = selectRecommendedScenario([a, b], { profitability: 0.9, liquidity: 0.05, growth: 0.05 })
+    expect(result).toBe('b')
   })
 
-  it('returns scenario with lowest value when higher_is_better=false', () => {
-    expect(findBestScenario(['a', 'b'], { a: 100, b: 200 }, false)).toBe('a')
+  it('65. scenario with better runway wins on liquidity weight', () => {
+    const a = makeMetrics({ scenario_id: 'a', net_margin_pct: 5, runway_months: 6,  total_revenue: 1_000_000 })
+    const b = makeMetrics({ scenario_id: 'b', net_margin_pct: 5, runway_months: 24, total_revenue: 1_000_000 })
+    const result = selectRecommendedScenario([a, b], { profitability: 0.05, liquidity: 0.9, growth: 0.05 })
+    expect(result).toBe('b')
   })
 
-  it('returns null when all values are null', () => {
-    expect(findBestScenario(['a', 'b'], { a: null, b: null }, true)).toBeNull()
-  })
-})
-
-describe('computeBaselineDelta', () => {
-  it('returns 10 for value=110, baseline=100', () => {
-    expect(computeBaselineDelta(110, 100)).toBeCloseTo(10, 5)
+  it('66. scenario with higher revenue wins on growth weight', () => {
+    const a = makeMetrics({ scenario_id: 'a', net_margin_pct: 5, runway_months: 12, total_revenue: 500_000 })
+    const b = makeMetrics({ scenario_id: 'b', net_margin_pct: 5, runway_months: 12, total_revenue: 2_000_000 })
+    const result = selectRecommendedScenario([a, b], { profitability: 0.05, liquidity: 0.05, growth: 0.9 })
+    expect(result).toBe('b')
   })
 
-  it('returns null when value is null', () => {
-    expect(computeBaselineDelta(null, 100)).toBeNull()
+  it('67. null net_margin treated as 0 in normalization', () => {
+    const a = makeMetrics({ scenario_id: 'a', net_margin_pct: null, runway_months: 12, total_revenue: 1_000_000 })
+    const b = makeMetrics({ scenario_id: 'b', net_margin_pct: 10,   runway_months: 12, total_revenue: 1_000_000 })
+    const result = selectRecommendedScenario([a, b], { profitability: 0.9, liquidity: 0.05, growth: 0.05 })
+    expect(result).toBe('b')
   })
 
-  it('returns null when baseline is null', () => {
-    expect(computeBaselineDelta(100, null)).toBeNull()
+  it('68. null runway treated as 0 in normalization', () => {
+    const a = makeMetrics({ scenario_id: 'a', runway_months: null, total_revenue: 1_000_000 })
+    const b = makeMetrics({ scenario_id: 'b', runway_months: 12,   total_revenue: 1_000_000 })
+    const result = selectRecommendedScenario([a, b], { profitability: 0.05, liquidity: 0.9, growth: 0.05 })
+    expect(result).toBe('b')
   })
 
-  it('returns null when baseline is 0 (avoid div-by-zero)', () => {
-    expect(computeBaselineDelta(100, 0)).toBeNull()
+  it('69. all identical metrics → returns first scenario id', () => {
+    const a = makeMetrics({ scenario_id: 'a', net_margin_pct: 20, runway_months: 12, total_revenue: 1_000_000 })
+    const b = makeMetrics({ scenario_id: 'b', net_margin_pct: 20, runway_months: 12, total_revenue: 1_000_000 })
+    const result = selectRecommendedScenario([a, b], priorities)
+    expect(result).toBe('a')
   })
 
-  it('returns negative delta for worse value', () => {
-    expect(computeBaselineDelta(90, 100)).toBeCloseTo(-10, 5)
-  })
-})
-
-describe('computeImpliedCagr', () => {
-  it('returns ~21 for month1=100, month12=121', () => {
-    expect(computeImpliedCagr(100, 121)).toBeCloseTo(21, 1)
-  })
-
-  it('returns null when month1Revenue is null', () => {
-    expect(computeImpliedCagr(null, 121)).toBeNull()
-  })
-
-  it('returns null when month1Revenue is 0', () => {
-    expect(computeImpliedCagr(0, 121)).toBeNull()
-  })
-
-  it('returns 0 for flat revenue', () => {
-    expect(computeImpliedCagr(100, 100)).toBeCloseTo(0, 5)
-  })
-})
-
-describe('extractMetricsFromSummary', () => {
-  it('returns empty object without throwing for null input', () => {
-    expect(() => extractMetricsFromSummary(null)).not.toThrow()
-    expect(extractMetricsFromSummary(null)).toEqual({})
-  })
-
-  it('extracts total_revenue from summary', () => {
-    const result = extractMetricsFromSummary({ total_revenue: 500_000 })
-    expect(result.projected_revenue_12m).toBe(500_000)
-  })
-
-  it('extracts runway_months from summary', () => {
-    const result = extractMetricsFromSummary({ runway_months: 8 })
-    expect(result.runway_months).toBe(8)
-  })
-})
-
-describe('buildRecommendationReason', () => {
-  it('returns non-empty Turkish string for a valid scenario', () => {
-    const scenario: ScenarioSnapshot = {
-      id:                    'sc1',
-      name:                  'Optimistik Plan',
-      is_baseline:           false,
-      created_at:            '2026-01-01T00:00:00Z',
-      tags:                  [],
-      projected_revenue_12m: 1_200_000,
-      projected_net_income:  240_000,
-      breakeven_month:       3,
-      runway_months:         10,
-      debt_clearance_month:  null,
-      peak_dsr:              0.35,
-      implied_cagr_pct:      15,
-    }
-    const reason = buildRecommendationReason(scenario, [scenario])
-    expect(typeof reason).toBe('string')
-    expect(reason.length).toBeGreaterThan(0)
-    expect(reason).toContain('Optimistik Plan')
-  })
-
-  it('returns fallback Turkish string when scenario is null', () => {
-    const reason = buildRecommendationReason(null, [])
-    expect(reason.length).toBeGreaterThan(0)
-  })
-})
-
-describe('buildComparisonReport', () => {
-  const makeSnapshot = (overrides: Partial<ScenarioSnapshot> & { id: string; name: string }): ScenarioSnapshot => ({
-    is_baseline:           false,
-    created_at:            '2026-01-01T00:00:00Z',
-    tags:                  [],
-    projected_revenue_12m: null,
-    projected_net_income:  null,
-    breakeven_month:       null,
-    runway_months:         null,
-    debt_clearance_month:  null,
-    peak_dsr:              null,
-    implied_cagr_pct:      null,
-    ...overrides,
-  })
-
-  it('identifies baseline scenario correctly', () => {
-    const snapshots = [
-      makeSnapshot({ id: 'base', name: 'Baz', is_baseline: true, projected_net_income: 100_000 }),
-      makeSnapshot({ id: 'opt',  name: 'İyimser',               projected_net_income: 200_000 }),
+  it('70. five scenarios - scenario with best composite score wins', () => {
+    const scenarios = [
+      makeMetrics({ scenario_id: '1', net_margin_pct: 5,  runway_months: 6,  total_revenue: 500_000 }),
+      makeMetrics({ scenario_id: '2', net_margin_pct: 10, runway_months: 9,  total_revenue: 700_000 }),
+      makeMetrics({ scenario_id: '3', net_margin_pct: 15, runway_months: 12, total_revenue: 900_000 }),
+      makeMetrics({ scenario_id: '4', net_margin_pct: 20, runway_months: 18, total_revenue: 1_100_000 }),
+      makeMetrics({ scenario_id: '5', net_margin_pct: 25, runway_months: 24, total_revenue: 1_500_000 }),
     ]
-    const report = buildComparisonReport('company-1', snapshots)
-    expect(report.baseline_id).toBe('base')
+    expect(selectRecommendedScenario(scenarios, priorities)).toBe('5')
   })
 
-  it('recommends scenario with highest net income when both qualify', () => {
-    const snapshots = [
-      makeSnapshot({ id: 'a', name: 'A', runway_months: 8, peak_dsr: 0.5, projected_net_income: 100_000 }),
-      makeSnapshot({ id: 'b', name: 'B', runway_months: 9, peak_dsr: 0.4, projected_net_income: 200_000 }),
-    ]
-    const report = buildComparisonReport('company-1', snapshots)
-    expect(report.recommended_scenario_id).toBe('b')
+})
+
+// ── computeComparisonMatrix ───────────────────────────────────────────────────
+
+describe('computeComparisonMatrix', () => {
+
+  it('71. empty scenarios → empty array', () => {
+    expect(computeComparisonMatrix([])).toEqual([])
   })
 
-  it('computes comparison rows for all metrics', () => {
-    const snapshots = [
-      makeSnapshot({ id: 'a', name: 'A', projected_net_income: 100_000 }),
-    ]
-    const report = buildComparisonReport('company-1', snapshots)
-    expect(report.comparison_rows.length).toBeGreaterThan(0)
+  it('72. single scenario (no baseline) → empty comparisons', () => {
+    const s = makeMetrics({ scenario_id: 'a', is_baseline: false })
+    const result = computeComparisonMatrix([s])
+    expect(result).toHaveLength(0)
   })
+
+  it('73. baseline + 1 other → 1 comparison', () => {
+    const base  = makeMetrics({ scenario_id: 'base', is_baseline: true,  total_revenue: 1_000_000 })
+    const other = makeMetrics({ scenario_id: 'opt1', is_baseline: false, total_revenue: 1_200_000 })
+    const result = computeComparisonMatrix([base, other])
+    expect(result).toHaveLength(1)
+    expect(result[0].scenario_a.scenario_id).toBe('base')
+    expect(result[0].scenario_b.scenario_id).toBe('opt1')
+  })
+
+  it('74. revenue_delta_pct correct: 1M → 1.2M = +20%', () => {
+    const base  = makeMetrics({ scenario_id: 'base', is_baseline: true,  total_revenue: 1_000_000 })
+    const other = makeMetrics({ scenario_id: 'opt1', is_baseline: false, total_revenue: 1_200_000 })
+    const result = computeComparisonMatrix([base, other])
+    expect(result[0].revenue_delta_pct).toBeCloseTo(20)
+  })
+
+  it('75. cash_delta: 500k → 700k = +200k', () => {
+    const base  = makeMetrics({ scenario_id: 'base', is_baseline: true,  ending_cash: 500_000 })
+    const other = makeMetrics({ scenario_id: 'opt1', is_baseline: false, ending_cash: 700_000 })
+    const result = computeComparisonMatrix([base, other])
+    expect(result[0].cash_delta).toBe(200_000)
+  })
+
+  it('76. no baseline: uses first scenario as reference', () => {
+    const a = makeMetrics({ scenario_id: 'a', is_baseline: false, total_revenue: 1_000_000 })
+    const b = makeMetrics({ scenario_id: 'b', is_baseline: false, total_revenue: 1_100_000 })
+    const c = makeMetrics({ scenario_id: 'c', is_baseline: false, total_revenue: 1_200_000 })
+    const result = computeComparisonMatrix([a, b, c])
+    expect(result).toHaveLength(2)
+    result.forEach(r => expect(r.scenario_a.scenario_id).toBe('a'))
+  })
+
+  it('77. runway_delta: both non-null', () => {
+    const base  = makeMetrics({ scenario_id: 'base', is_baseline: true,  runway_months: 12 })
+    const other = makeMetrics({ scenario_id: 'opt1', is_baseline: false, runway_months: 18 })
+    const result = computeComparisonMatrix([base, other])
+    expect(result[0].runway_delta_months).toBe(6)
+  })
+
+  it('78. runway_delta: base null → null', () => {
+    const base  = makeMetrics({ scenario_id: 'base', is_baseline: true,  runway_months: null })
+    const other = makeMetrics({ scenario_id: 'opt1', is_baseline: false, runway_months: 12 })
+    const result = computeComparisonMatrix([base, other])
+    expect(result[0].runway_delta_months).toBeNull()
+  })
+
+  it('79. ebitda_delta_pct: 400k → 500k = +25%', () => {
+    const base  = makeMetrics({ scenario_id: 'base', is_baseline: true,  ebitda: 400_000 })
+    const other = makeMetrics({ scenario_id: 'opt1', is_baseline: false, ebitda: 500_000 })
+    const result = computeComparisonMatrix([base, other])
+    expect(result[0].ebitda_delta_pct).toBeCloseTo(25)
+  })
+
+  it('80. 3 scenarios with baseline → 2 comparisons', () => {
+    const base = makeMetrics({ scenario_id: 'base', is_baseline: true })
+    const s1   = makeMetrics({ scenario_id: 's1',   is_baseline: false })
+    const s2   = makeMetrics({ scenario_id: 's2',   is_baseline: false })
+    const result = computeComparisonMatrix([base, s1, s2])
+    expect(result).toHaveLength(2)
+  })
+
+  it('81. zero base revenue → revenue_delta null', () => {
+    const base  = makeMetrics({ scenario_id: 'base', is_baseline: true,  total_revenue: 0 })
+    const other = makeMetrics({ scenario_id: 'opt1', is_baseline: false, total_revenue: 100_000 })
+    const result = computeComparisonMatrix([base, other])
+    expect(result[0].revenue_delta_pct).toBeNull()
+  })
+
+  it('82. negative net income delta pct', () => {
+    const base  = makeMetrics({ scenario_id: 'base', is_baseline: true,  net_income: 200_000 })
+    const other = makeMetrics({ scenario_id: 'opt1', is_baseline: false, net_income: 100_000 })
+    const result = computeComparisonMatrix([base, other])
+    expect(result[0].net_income_delta_pct).toBeCloseTo(-50)
+  })
+
+})
+
+// ── rankScenariosByMetric ─────────────────────────────────────────────────────
+
+describe('rankScenariosByMetric', () => {
+
+  it('83. rank by net_income DESC', () => {
+    const scenarios = [
+      makeMetrics({ scenario_id: 'a', net_income: 100_000 }),
+      makeMetrics({ scenario_id: 'b', net_income: 300_000 }),
+      makeMetrics({ scenario_id: 'c', net_income: 200_000 }),
+    ]
+    const result = rankScenariosByMetric(scenarios, 'net_income')
+    expect(result.map(s => s.scenario_id)).toEqual(['b', 'c', 'a'])
+  })
+
+  it('84. rank by ebitda DESC', () => {
+    const scenarios = [
+      makeMetrics({ scenario_id: 'a', ebitda: 50_000 }),
+      makeMetrics({ scenario_id: 'b', ebitda: 200_000 }),
+    ]
+    const result = rankScenariosByMetric(scenarios, 'ebitda')
+    expect(result[0].scenario_id).toBe('b')
+  })
+
+  it('85. rank by ending_cash DESC', () => {
+    const scenarios = [
+      makeMetrics({ scenario_id: 'a', ending_cash: 500_000 }),
+      makeMetrics({ scenario_id: 'b', ending_cash: 100_000 }),
+      makeMetrics({ scenario_id: 'c', ending_cash: 800_000 }),
+    ]
+    const result = rankScenariosByMetric(scenarios, 'ending_cash')
+    expect(result.map(s => s.scenario_id)).toEqual(['c', 'a', 'b'])
+  })
+
+  it('86. null runway_months last', () => {
+    const scenarios = [
+      makeMetrics({ scenario_id: 'a', runway_months: null }),
+      makeMetrics({ scenario_id: 'b', runway_months: 12 }),
+      makeMetrics({ scenario_id: 'c', runway_months: 6 }),
+    ]
+    const result = rankScenariosByMetric(scenarios, 'runway_months')
+    expect(result[result.length - 1].scenario_id).toBe('a')
+    expect(result[0].scenario_id).toBe('b')
+  })
+
+  it('87. null gross_margin_pct last', () => {
+    const scenarios = [
+      makeMetrics({ scenario_id: 'a', gross_margin_pct: null }),
+      makeMetrics({ scenario_id: 'b', gross_margin_pct: 40 }),
+    ]
+    const result = rankScenariosByMetric(scenarios, 'gross_margin_pct')
+    expect(result[0].scenario_id).toBe('b')
+    expect(result[1].scenario_id).toBe('a')
+  })
+
+  it('88. all nulls — still returns array of same length', () => {
+    const scenarios = [
+      makeMetrics({ scenario_id: 'a', runway_months: null }),
+      makeMetrics({ scenario_id: 'b', runway_months: null }),
+    ]
+    const result = rankScenariosByMetric(scenarios, 'runway_months')
+    expect(result).toHaveLength(2)
+  })
+
+  it('89. empty array → empty', () => {
+    expect(rankScenariosByMetric([], 'net_income')).toEqual([])
+  })
+
+  it('90. does not mutate original array', () => {
+    const original = [
+      makeMetrics({ scenario_id: 'a', net_income: 100 }),
+      makeMetrics({ scenario_id: 'b', net_income: 300 }),
+    ]
+    const firstId = original[0].scenario_id
+    rankScenariosByMetric(original, 'net_income')
+    expect(original[0].scenario_id).toBe(firstId)
+  })
+
+})
+
+// ── computeScenarioSpread ─────────────────────────────────────────────────────
+
+describe('computeScenarioSpread', () => {
+
+  it('91. single scenario → null', () => {
+    const s = [makeMetrics({ net_income: 100_000 })]
+    expect(computeScenarioSpread(s, 'net_income')).toBeNull()
+  })
+
+  it('92. empty array → null', () => {
+    expect(computeScenarioSpread([], 'net_income')).toBeNull()
+  })
+
+  it('93. two scenarios: min/max/range', () => {
+    const scenarios = [
+      makeMetrics({ scenario_id: 'a', net_income: 100_000 }),
+      makeMetrics({ scenario_id: 'b', net_income: 300_000 }),
+    ]
+    const result = computeScenarioSpread(scenarios, 'net_income')
+    expect(result).not.toBeNull()
+    expect(result!.min).toBe(100_000)
+    expect(result!.max).toBe(300_000)
+    expect(result!.range).toBe(200_000)
+  })
+
+  it('94. CV calculation: two values 100k and 300k → CV ≈ 0.5', () => {
+    const scenarios = [
+      makeMetrics({ scenario_id: 'a', net_income: 100_000 }),
+      makeMetrics({ scenario_id: 'b', net_income: 300_000 }),
+    ]
+    const result = computeScenarioSpread(scenarios, 'net_income')!
+    // mean = 200k, stddev = 100k, CV = 100k/200k = 0.5
+    expect(result.cv).toBeCloseTo(0.5)
+  })
+
+  it('95. zero mean → cv null', () => {
+    const scenarios = [
+      makeMetrics({ scenario_id: 'a', net_income: -100_000 }),
+      makeMetrics({ scenario_id: 'b', net_income:  100_000 }),
+    ]
+    const result = computeScenarioSpread(scenarios, 'net_income')!
+    expect(result.cv).toBeNull()
+  })
+
+  it('96. all same values → range 0, cv 0', () => {
+    const scenarios = [
+      makeMetrics({ scenario_id: 'a', ending_cash: 500_000 }),
+      makeMetrics({ scenario_id: 'b', ending_cash: 500_000 }),
+      makeMetrics({ scenario_id: 'c', ending_cash: 500_000 }),
+    ]
+    const result = computeScenarioSpread(scenarios, 'ending_cash')!
+    expect(result.range).toBe(0)
+    expect(result.cv).toBeCloseTo(0)
+  })
+
+  it('97. ending_cash spread with 3 scenarios', () => {
+    const scenarios = [
+      makeMetrics({ scenario_id: 'a', ending_cash: 200_000 }),
+      makeMetrics({ scenario_id: 'b', ending_cash: 500_000 }),
+      makeMetrics({ scenario_id: 'c', ending_cash: 800_000 }),
+    ]
+    const result = computeScenarioSpread(scenarios, 'ending_cash')!
+    expect(result.min).toBe(200_000)
+    expect(result.max).toBe(800_000)
+    expect(result.range).toBe(600_000)
+  })
+
+})
+
+// ── generateComparisonNarrative ───────────────────────────────────────────────
+
+describe('generateComparisonNarrative', () => {
+
+  it('98. with recommendation: mentions count and name', () => {
+    const text = generateComparisonNarrative(3, 'Optimist', 'profitability', [])
+    expect(text).toContain('3 senaryo')
+    expect(text).toContain('Optimist')
+  })
+
+  it('99. no recommendation: fallback message', () => {
+    const text = generateComparisonNarrative(2, null, 'profitability', [])
+    expect(text).toContain('belirleyici bir fark bulunamadı')
+  })
+
+  it('100. very_high risk scenario: adds warning', () => {
+    const risks = [{ name: 'Kötümser', risk: 'very_high' }]
+    const text = generateComparisonNarrative(2, 'İyimser', 'liquidity', risks)
+    expect(text).toContain('Dikkat')
+    expect(text).toContain('Kötümser')
+  })
+
+  it('101. moderate risk: no Dikkat warning', () => {
+    const risks = [{ name: 'Orta', risk: 'moderate' }]
+    const text = generateComparisonNarrative(2, 'İyimser', 'profitability', risks)
+    expect(text).not.toContain('Dikkat')
+  })
+
+  it('102. multiple very_high risks: all names mentioned', () => {
+    const risks = [
+      { name: 'Senaryo A', risk: 'very_high' },
+      { name: 'Senaryo B', risk: 'very_high' },
+    ]
+    const text = generateComparisonNarrative(3, 'Best', 'liquidity', risks)
+    expect(text).toContain('Senaryo A')
+    expect(text).toContain('Senaryo B')
+  })
+
+  it('103. returns non-empty string always', () => {
+    const text = generateComparisonNarrative(0, null, 'profitability', [])
+    expect(typeof text).toBe('string')
+    expect(text.length).toBeGreaterThan(0)
+  })
+
+  it('104. single scenario with recommendation', () => {
+    const text = generateComparisonNarrative(1, 'Tek Senaryo', 'profitability', [])
+    expect(text).toContain('Tek Senaryo')
+  })
+
+  it('105. high risk does not trigger warning (only very_high does)', () => {
+    const risks = [{ name: 'Riskli', risk: 'high' }]
+    const text = generateComparisonNarrative(2, 'Best', 'profitability', risks)
+    expect(text).not.toContain('Dikkat')
+  })
+
+})
+
+// ── buildScenarioMetricsFromSummary ──────────────────────────────────────────
+
+describe('buildScenarioMetricsFromSummary', () => {
+
+  it('106. basic build: derived gross_profit correct', () => {
+    const m = buildScenarioMetricsFromSummary('sc-1', 'Test', false, {
+      total_revenue: 1_000_000,
+      total_cogs:    400_000,
+    })
+    expect(m.gross_profit).toBe(600_000)
+  })
+
+  it('107. ebitda derived: gross_profit - total_expenses', () => {
+    const m = buildScenarioMetricsFromSummary('sc-1', 'Test', false, {
+      total_revenue:   1_000_000,
+      total_cogs:      400_000,
+      total_expenses:  200_000,
+    })
+    // gross_profit = 600k, ebitda = 600k - 200k = 400k
+    expect(m.ebitda).toBe(400_000)
+  })
+
+  it('108. gross_margin_pct derived correctly', () => {
+    const m = buildScenarioMetricsFromSummary('sc-1', 'Test', false, {
+      total_revenue: 1_000_000,
+      total_cogs:    600_000,
+    })
+    expect(m.gross_margin_pct).toBeCloseTo(40)
+  })
+
+  it('109. net_margin_pct derived correctly', () => {
+    const m = buildScenarioMetricsFromSummary('sc-1', 'Test', false, {
+      total_revenue: 1_000_000,
+      net_income:    250_000,
+    })
+    expect(m.net_margin_pct).toBeCloseTo(25)
+  })
+
+  it('110. zero revenue → null margins', () => {
+    const m = buildScenarioMetricsFromSummary('sc-1', 'Test', false, {
+      total_revenue: 0,
+      total_cogs:    0,
+      net_income:    0,
+    })
+    expect(m.gross_margin_pct).toBeNull()
+    expect(m.net_margin_pct).toBeNull()
+  })
+
+  it('111. runway_months always null', () => {
+    const m = buildScenarioMetricsFromSummary('sc-1', 'Test', false, {
+      total_revenue: 1_000_000,
+    })
+    expect(m.runway_months).toBeNull()
+  })
+
+  it('112. missing summary fields default to 0', () => {
+    const m = buildScenarioMetricsFromSummary('sc-1', 'Empty', true, {})
+    expect(m.total_revenue).toBe(0)
+    expect(m.total_cogs).toBe(0)
+    expect(m.net_income).toBe(0)
+    expect(m.ending_cash).toBe(0)
+    expect(m.tax_amount).toBe(0)
+    expect(m.total_debt_service).toBe(0)
+  })
+
+  it('113. scenario_id and name set correctly', () => {
+    const m = buildScenarioMetricsFromSummary('my-id', 'My Scenario', true, {})
+    expect(m.scenario_id).toBe('my-id')
+    expect(m.scenario_name).toBe('My Scenario')
+    expect(m.is_baseline).toBe(true)
+  })
+
+  it('114. dscr_avg passed through', () => {
+    const m = buildScenarioMetricsFromSummary('sc-1', 'Test', false, {
+      dscr_avg: 2.5,
+    })
+    expect(m.dscr_avg).toBe(2.5)
+  })
+
+  it('115. break_even_month passed through', () => {
+    const m = buildScenarioMetricsFromSummary('sc-1', 'Test', false, {
+      break_even_month: 6,
+    })
+    expect(m.break_even_month).toBe(6)
+  })
+
+  it('116. null dscr_avg handled', () => {
+    const m = buildScenarioMetricsFromSummary('sc-1', 'Test', false, {
+      dscr_avg: null,
+    })
+    expect(m.dscr_avg).toBeNull()
+  })
+
+  it('117. negative net_income produces negative margin', () => {
+    const m = buildScenarioMetricsFromSummary('sc-1', 'Test', false, {
+      total_revenue: 1_000_000,
+      net_income:    -50_000,
+    })
+    expect(m.net_margin_pct).toBeCloseTo(-5)
+  })
+
+  it('118. peak_cash and min_cash passed through', () => {
+    const m = buildScenarioMetricsFromSummary('sc-1', 'Test', false, {
+      peak_cash: 800_000,
+      min_cash:  50_000,
+    })
+    expect(m.peak_cash).toBe(800_000)
+    expect(m.min_cash).toBe(50_000)
+  })
+
+  it('119. gross_profit = revenue when cogs = 0', () => {
+    const m = buildScenarioMetricsFromSummary('sc-1', 'Test', false, {
+      total_revenue: 500_000,
+      total_cogs:    0,
+    })
+    expect(m.gross_profit).toBe(500_000)
+    expect(m.gross_margin_pct).toBeCloseTo(100)
+  })
+
+  it('120. is_baseline=false set correctly', () => {
+    const m = buildScenarioMetricsFromSummary('sc-2', 'Opt', false, {})
+    expect(m.is_baseline).toBe(false)
+  })
+
 })
