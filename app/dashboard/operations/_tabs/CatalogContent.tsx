@@ -12,6 +12,7 @@ import type { ProductMarginReport } from '@/lib/services/inventory/product-margi
 import { InventoryValuationClient } from './_inventory-valuation/InventoryValuationClient'
 import { PriceOptimizationClient } from './_price-optimization/PriceOptimizationClient'
 import { ProductProfitabilityWaterfall } from './_product-profitability/ProductProfitabilityWaterfall'
+import { AbcAnalysisClient } from './_abc/AbcAnalysisClient'
 
 function CommandBarSkeleton() {
   return (
@@ -277,6 +278,9 @@ export async function CatalogContent({ companyId, userId }: Props) {
           </div>
         </div>
       )}
+
+      {/* ── ABC Stok Analizi ─────────────────────────────────────────────────── */}
+      <AbcAnalysisClient companyId={companyId} />
 
       {/* ── Ürün Kârlılık Şelalesi ────────────────────────────────────────────── */}
       <ProductProfitabilityWaterfall />

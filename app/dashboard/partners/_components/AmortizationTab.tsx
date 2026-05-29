@@ -23,7 +23,7 @@
 
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { fmtTRY } from '@/lib/format'
+import { fmtTRY, fmtDate } from '@/lib/format'
 import type {
   LoanAmortizationReport,
   TrancheAmortization,
@@ -31,6 +31,10 @@ import type {
 } from '@/lib/services/pcle/amortization.service'
 import type { DebtMaturityReport } from '@/lib/services/pcle/debt-maturity.service'
 import type { InterestAccrualReport } from '@/lib/services/pcle/interest-accrual.service'
+import type {
+  AmortizationReport,
+  LoanAmortizationSchedule,
+} from '@/lib/services/pcle/amortization-schedule.service'
 
 // ── API fetch hooks ───────────────────────────────────────────────────────────
 
@@ -105,6 +109,22 @@ function useInterestAccrualReport() {
       return json.report
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
+  })
+}
+
+function useAmortizationScheduleReport(companyId: string) {
+  return useQuery<AmortizationReport>({
+    queryKey: ['amortization-schedule', companyId],
+    queryFn: async () => {
+      const res = await fetch('/api/partners/amortization-schedule')
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({})) as { error?: string }
+        throw new Error(body.error ?? `HTTP ${res.status}`)
+      }
+      const json = await res.json() as { report: AmortizationReport }
+      return json.report
+    },
+    staleTime: 60 * 60 * 1000, // 1 hour
   })
 }
 
@@ -750,6 +770,206 @@ function VadeTakvimi() {
   )
 }
 
+// ── Full Amortization Schedule — per-tranche expandable schedule ──────────────
+
+function ScheduleDetailTable({
+  rows,
+  alreadyPaid,
+}: {
+  rows: LoanAmortizationSchedule['rows']
+  alreadyPaid: number
+}) {
+  if (rows.length === 0) {
+    return (
+      <p className="text-xs text-[#94a3b8] py-3 text-center">
+        Amortisman takvimi hesaplanamadı.
+      </p>
+    )
+  }
+
+  return (
+    <div className="overflow-x-auto mt-3">
+      <table className="w-full text-xs border-collapse">
+        <thead>
+          <tr className="border-b border-[#e2e8f0]">
+            <th className="py-1.5 px-2 text-left font-semibold text-[#64748b] whitespace-nowrap">#</th>
+            <th className="py-1.5 px-2 text-left font-semibold text-[#64748b] whitespace-nowrap">Dönem</th>
+            <th className="py-1.5 px-2 text-right font-semibold text-[#64748b] whitespace-nowrap">Açılış</th>
+            <th className="py-1.5 px-2 text-right font-semibold text-[#64748b] whitespace-nowrap">Ödeme</th>
+            <th className="py-1.5 px-2 text-right font-semibold text-[#64748b] whitespace-nowrap">Anapara</th>
+            <th className="py-1.5 px-2 text-right font-semibold text-[#64748b] whitespace-nowrap">Faiz</th>
+            <th className="py-1.5 px-2 text-right font-semibold text-[#64748b] whitespace-nowrap">Kapanış</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => {
+            const isPast = row.period_number <= alreadyPaid
+            const isCurrent = row.period_number === alreadyPaid + 1
+            const rowCls = isPast
+              ? 'bg-[#f1f5f9] text-[#94a3b8]'
+              : isCurrent
+              ? 'bg-blue-50 font-semibold text-[#0f172a]'
+              : 'bg-white text-[#334155]'
+
+            return (
+              <tr key={row.period_number} className={`border-b border-[#f1f5f9] ${rowCls}`}>
+                <td className="py-1 px-2 tabular-nums">{row.period_number}</td>
+                <td className="py-1 px-2 whitespace-nowrap">
+                  {fmtDate(row.period_date)}
+                  {isCurrent && (
+                    <span className="ml-1.5 text-[0.55rem] font-black uppercase tracking-widest text-blue-500">
+                      Şimdi
+                    </span>
+                  )}
+                </td>
+                <td className="py-1 px-2 text-right tabular-nums">{fmtTRY(row.opening_balance_try)}</td>
+                <td className="py-1 px-2 text-right tabular-nums font-semibold">{fmtTRY(row.monthly_payment_try)}</td>
+                <td className="py-1 px-2 text-right tabular-nums">{fmtTRY(row.principal_try)}</td>
+                <td className="py-1 px-2 text-right tabular-nums text-amber-600">{fmtTRY(row.interest_try)}</td>
+                <td className="py-1 px-2 text-right tabular-nums">{fmtTRY(row.closing_balance_try)}</td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+function ScheduleCard({ schedule }: { schedule: LoanAmortizationSchedule }) {
+  const rateFmt = schedule.annual_rate_pct > 0
+    ? `%${schedule.annual_rate_pct.toFixed(1)} / yıl`
+    : 'Faizsiz'
+
+  return (
+    <details className="rounded border border-[#e2e8f0] overflow-hidden group">
+      <summary className="list-none cursor-pointer bg-white hover:bg-[#f8fafc] transition-colors px-4 py-3">
+        <div className="flex items-center gap-3">
+          <span className="text-[#94a3b8] text-xs transition-transform group-open:rotate-90" aria-hidden>
+            ▶
+          </span>
+          <div className="flex-1 grid grid-cols-2 gap-x-4 gap-y-0.5 sm:grid-cols-5">
+            <div>
+              <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">Ortak</div>
+              <div className="text-xs font-semibold text-[#0f172a] truncate">{schedule.partner_name}</div>
+            </div>
+            <div>
+              <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">Anapara</div>
+              <div className="text-xs font-semibold text-[#0f172a] tabular-nums">{fmtTRY(schedule.principal_try)}</div>
+            </div>
+            <div>
+              <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">Faiz Oranı</div>
+              <div className="text-xs font-semibold text-[#0f172a]">{rateFmt}</div>
+            </div>
+            <div>
+              <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">Aylık Ödeme</div>
+              <div className="text-xs font-semibold text-[#0f172a] tabular-nums">{fmtTRY(schedule.monthly_payment_try)}</div>
+            </div>
+            <div>
+              <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">Toplam Maliyet</div>
+              <div className="text-xs font-semibold text-amber-600 tabular-nums">{fmtTRY(schedule.total_cost_try)}</div>
+            </div>
+          </div>
+          <div className="text-right shrink-0">
+            <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">Kalan Bakiye</div>
+            <div className="text-xs font-semibold text-[#0f172a] tabular-nums">{fmtTRY(schedule.remaining_balance_try)}</div>
+          </div>
+        </div>
+      </summary>
+
+      <div className="border-t border-[#e2e8f0] px-4 pb-4 bg-[#f8fafc]">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 pb-1 text-xs">
+          <div>
+            <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">Toplam Ay</div>
+            <div className="font-semibold text-[#0f172a]">{schedule.total_months} ay</div>
+          </div>
+          <div>
+            <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">Geçen Ay</div>
+            <div className="font-semibold text-[#0f172a]">{schedule.already_paid_months} ay</div>
+          </div>
+          <div>
+            <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">Toplam Faiz</div>
+            <div className="font-semibold text-amber-600 tabular-nums">{fmtTRY(schedule.total_interest_try)}</div>
+          </div>
+          <div>
+            <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">Başlangıç</div>
+            <div className="font-semibold text-[#0f172a]">{fmtDate(schedule.start_date)}</div>
+          </div>
+        </div>
+        <ScheduleDetailTable rows={schedule.rows} alreadyPaid={schedule.already_paid_months} />
+      </div>
+    </details>
+  )
+}
+
+function FullAmortizationSchedule() {
+  // companyId not available in this component, pass empty string — hook uses the API which resolves it
+  const { data: report, isLoading, isError, error } = useAmortizationScheduleReport('')
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col gap-2">
+        {[1, 2, 3].map(i => (
+          <div key={i} className="h-12 rounded bg-[#f1f5f9] animate-pulse" />
+        ))}
+      </div>
+    )
+  }
+
+  if (isError) {
+    return (
+      <div className="rounded border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700 font-medium">
+        {error instanceof Error ? error.message : 'Amortisman takvimi yüklenemedi'}
+      </div>
+    )
+  }
+
+  if (!report || report.schedules.length === 0) {
+    return (
+      <p className="text-xs text-[#94a3b8] py-3 text-center">
+        Tam amortisman takvimi için aktif borç dilimi bulunamadı.
+      </p>
+    )
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      {/* Per-tranche expandable cards */}
+      {report.schedules.map(s => (
+        <ScheduleCard key={s.tranche_id} schedule={s} />
+      ))}
+
+      {/* Total debt service strip */}
+      <div className="grid grid-cols-3 gap-3 pt-1">
+        <div className="rounded border border-[#e2e8f0] bg-[#f8fafc] px-4 py-3">
+          <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+            Aylık Toplam Servis
+          </div>
+          <div className="text-base font-black text-[#0f172a] tabular-nums">
+            {fmtTRY(report.total_monthly_debt_service_try)}
+          </div>
+        </div>
+        <div className="rounded border border-[#e2e8f0] bg-[#f8fafc] px-4 py-3">
+          <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+            Toplam Kalan Bakiye
+          </div>
+          <div className="text-base font-black text-[#0f172a] tabular-nums">
+            {fmtTRY(report.total_remaining_balance_try)}
+          </div>
+        </div>
+        <div className="rounded border border-[#e2e8f0] bg-[#f8fafc] px-4 py-3">
+          <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
+            Kalan Toplam Faiz
+          </div>
+          <div className="text-base font-black text-amber-600 tabular-nums">
+            {fmtTRY(report.total_interest_remaining_try)}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Main tab component ────────────────────────────────────────────────────────
 
 export function AmortizationTab() {
@@ -836,6 +1056,14 @@ export function AmortizationTab() {
           Vade Takvimi
         </div>
         <VadeTakvimi />
+      </div>
+
+      {/* ── Tam Amortisman Takvimi ────────────────────────────────────────── */}
+      <div className="border-t border-[#e2e8f0] pt-4">
+        <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
+          Tam Amortisman Takvimi
+        </div>
+        <FullAmortizationSchedule />
       </div>
     </div>
   )
