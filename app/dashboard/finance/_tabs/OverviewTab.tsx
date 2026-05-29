@@ -33,6 +33,8 @@ import FxExposureClient                 from './_fx/FxExposureClient'
 import MarginBridgeClient               from './_bridge/MarginBridgeClient'
 import PricingIntelligenceClient        from './_pricing/PricingIntelligenceClient'
 import FinancialHealthScoreClient       from './_health/FinancialHealthScoreClient'
+import CostCenterClient                 from './_costs/CostCenterClient'
+import { ProductMixClient }             from './_product-mix/ProductMixClient'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -948,6 +950,12 @@ export async function OverviewTab({ userId, companyId, glMode = 'shadow' }: Prop
 
       {/* Zone 12 — Fiyatlama Sağlığı */}
       <PricingIntelligenceClient companyId={companyId} />
+
+      {/* Zone 13 — Maliyet Merkezi Analizi */}
+      <CostCenterClient companyId={companyId} />
+
+      {/* Zone 14 — Ürün Karması Kârlılığı */}
+      <ProductMixClient companyId={companyId} />
 
       {/* Quick actions */}
       <div className="flex flex-wrap gap-2 pt-1">
