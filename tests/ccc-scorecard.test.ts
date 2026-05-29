@@ -486,3 +486,176 @@ describe('computeCccBenchmarkDelta', () => {
     expect(CCC_BENCHMARKS.ccc).toBe(15)
   })
 })
+
+// ── New: CCC_BENCHMARKS structure validation ──────────────────────────────────
+
+describe('CCC_BENCHMARKS — structure and field validation', () => {
+
+  it('CCC_BENCHMARKS has dso field', () => {
+    expect(CCC_BENCHMARKS).toHaveProperty('dso')
+  })
+
+  it('CCC_BENCHMARKS has dpo field', () => {
+    expect(CCC_BENCHMARKS).toHaveProperty('dpo')
+  })
+
+  it('CCC_BENCHMARKS has dio field', () => {
+    expect(CCC_BENCHMARKS).toHaveProperty('dio')
+  })
+
+  it('CCC_BENCHMARKS has ccc field', () => {
+    expect(CCC_BENCHMARKS).toHaveProperty('ccc')
+  })
+
+  it('all benchmark values are positive numbers', () => {
+    expect(CCC_BENCHMARKS.dso).toBeGreaterThan(0)
+    expect(CCC_BENCHMARKS.dpo).toBeGreaterThan(0)
+    expect(CCC_BENCHMARKS.dio).toBeGreaterThan(0)
+    expect(CCC_BENCHMARKS.ccc).toBeGreaterThan(0)
+  })
+
+})
+
+// ── New: DSO score behavior tests ─────────────────────────────────────────────
+
+describe('computeDsoScore — score decreases as DSO increases', () => {
+
+  it('score at benchmark (30d) is 80', () => {
+    expect(computeDsoScore(CCC_BENCHMARKS.dso)).toBe(80)
+  })
+
+  it('score strictly decreases from 0d to 30d', () => {
+    expect(computeDsoScore(0)).toBeGreaterThan(computeDsoScore(15))
+    expect(computeDsoScore(15)).toBeGreaterThan(computeDsoScore(29))
+    expect(computeDsoScore(29)).toBeGreaterThan(computeDsoScore(30))
+  })
+
+  it('score strictly decreases from 30d to 60d', () => {
+    expect(computeDsoScore(30)).toBeGreaterThan(computeDsoScore(45))
+    expect(computeDsoScore(45)).toBeGreaterThan(computeDsoScore(60))
+  })
+
+  it('score at 0d (best) is greater than score at benchmark', () => {
+    expect(computeDsoScore(0)).toBeGreaterThan(computeDsoScore(CCC_BENCHMARKS.dso))
+  })
+
+  it('score decreases as DSO increases beyond benchmark', () => {
+    const atBenchmark = computeDsoScore(30)
+    const over = computeDsoScore(60)
+    expect(atBenchmark).toBeGreaterThan(over)
+  })
+
+  it('score at 120d is minimum (20)', () => {
+    expect(computeDsoScore(120)).toBe(20)
+    expect(computeDsoScore(200)).toBe(20)
+  })
+
+})
+
+// ── New: DPO score behavior tests ─────────────────────────────────────────────
+
+describe('computeDpoScore — score increases as DPO increases', () => {
+
+  it('score at benchmark (45d) is 70', () => {
+    expect(computeDpoScore(CCC_BENCHMARKS.dpo)).toBe(70)
+  })
+
+  it('score strictly increases from 0d to 45d', () => {
+    expect(computeDpoScore(0)).toBeLessThan(computeDpoScore(15))
+    expect(computeDpoScore(15)).toBeLessThan(computeDpoScore(30))
+    expect(computeDpoScore(30)).toBeLessThan(computeDpoScore(45))
+  })
+
+  it('score at 90d+ is maximum (100)', () => {
+    expect(computeDpoScore(90)).toBe(100)
+    expect(computeDpoScore(200)).toBe(100)
+  })
+
+  it('score at benchmark is greater than score at 0d', () => {
+    expect(computeDpoScore(CCC_BENCHMARKS.dpo)).toBeGreaterThan(computeDpoScore(0))
+  })
+
+  it('higher DPO always means equal or higher score', () => {
+    expect(computeDpoScore(60)).toBeGreaterThanOrEqual(computeDpoScore(45))
+    expect(computeDpoScore(45)).toBeGreaterThanOrEqual(computeDpoScore(30))
+    expect(computeDpoScore(30)).toBeGreaterThanOrEqual(computeDpoScore(15))
+  })
+
+})
+
+// ── New: computeCccEfficiencyScore — formula coverage ────────────────────────
+
+describe('computeCccEfficiencyScore — combined formula', () => {
+
+  it('formula: 40% DSO + 30% DPO + 30% DIO', () => {
+    // Verify by computing with known inputs
+    const dso = 80, dpo = 50, dio = 60
+    const expected = Math.round(dso * 0.4 + dpo * 0.3 + dio * 0.3)
+    expect(computeCccEfficiencyScore(dso, dpo, dio)).toBe(expected)
+  })
+
+  it('DSO score 80, DPO score 70, DIO score 80 → 77', () => {
+    // 0.4*80 + 0.3*70 + 0.3*80 = 32 + 21 + 24 = 77
+    expect(computeCccEfficiencyScore(80, 70, 80)).toBe(77)
+  })
+
+  it('result is an integer (Math.round applied)', () => {
+    expect(Number.isInteger(computeCccEfficiencyScore(75, 65, 55))).toBe(true)
+  })
+
+  it('increasing any component score increases efficiency score', () => {
+    const base = computeCccEfficiencyScore(50, 50, 50)
+    const higherDso = computeCccEfficiencyScore(80, 50, 50)
+    expect(higherDso).toBeGreaterThan(base)
+  })
+
+  it('DSO has largest single-component impact (40% weight)', () => {
+    const dsoImpact = computeCccEfficiencyScore(100, 0, 0)  // 40
+    const dpoImpact = computeCccEfficiencyScore(0, 100, 0)  // 30
+    const dioImpact = computeCccEfficiencyScore(0, 0, 100)  // 30
+    expect(dsoImpact).toBeGreaterThan(dpoImpact)
+    expect(dsoImpact).toBeGreaterThan(dioImpact)
+  })
+
+})
+
+// ── New: computeCccBenchmarkDelta — actual > benchmark ───────────────────────
+
+describe('computeCccBenchmarkDelta — actual worse than benchmark', () => {
+
+  it('actual CCC > benchmark → positive delta (worse than benchmark)', () => {
+    // benchmark = 15; actual = 30 → delta = +15 (bad)
+    expect(computeCccBenchmarkDelta(30)).toBeGreaterThan(0)
+  })
+
+  it('actual CCC < benchmark → negative delta (better than benchmark)', () => {
+    // benchmark = 15; actual = 5 → delta = -10 (good)
+    expect(computeCccBenchmarkDelta(5)).toBeLessThan(0)
+  })
+
+  it('actual CCC = benchmark → delta = 0', () => {
+    expect(computeCccBenchmarkDelta(15)).toBe(0)
+  })
+
+  it('delta = actual - benchmark (positive when actual > benchmark)', () => {
+    const actual = 40
+    const benchmark = CCC_BENCHMARKS.ccc   // 15
+    const delta = computeCccBenchmarkDelta(actual)
+    expect(delta).toBe(actual - benchmark)
+  })
+
+  it('large actual (100d) vs benchmark (15d) → delta = 85', () => {
+    expect(computeCccBenchmarkDelta(100)).toBe(85)
+  })
+
+  it('negative actual (very efficient: CCC < 0) → large negative delta', () => {
+    expect(computeCccBenchmarkDelta(-10)).toBe(-25)  // -10 - 15 = -25
+  })
+
+  it('custom benchmark: actual > custom_benchmark → positive delta', () => {
+    // actual = 50, custom benchmark = 20 → delta = 30
+    expect(computeCccBenchmarkDelta(50, 20)).toBe(30)
+    expect(computeCccBenchmarkDelta(50, 20)).toBeGreaterThan(0)
+  })
+
+})

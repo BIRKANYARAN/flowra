@@ -442,3 +442,177 @@ describe('validateSimulationInput()', () => {
     expect(validateSimulationInput({ ...validInput, tax_rate: 0 })).toHaveLength(0)
   })
 })
+
+// ─────────────────────────────────────────────────────────────────────────────
+// buildMonthList() — additional sequence and boundary tests
+// ─────────────────────────────────────────────────────────────────────────────
+describe('buildMonthList() — extended sequence tests', () => {
+  it('generates correct YYYY-MM sequence starting 2025-01 for 6 months', () => {
+    const list = buildMonthList('2025-01', 6)
+    expect(list).toEqual(['2025-01', '2025-02', '2025-03', '2025-04', '2025-05', '2025-06'])
+  })
+
+  it('year boundary: 2025-11 + 3 = [2025-11, 2025-12, 2026-01]', () => {
+    expect(buildMonthList('2025-11', 3)).toEqual(['2025-11', '2025-12', '2026-01'])
+  })
+
+  it('December start: 2025-12 + 3 rolls into 2026', () => {
+    expect(buildMonthList('2025-12', 3)).toEqual(['2025-12', '2026-01', '2026-02'])
+  })
+
+  it('all months in sequence are unique', () => {
+    const list = buildMonthList('2025-01', 12)
+    expect(new Set(list).size).toBe(12)
+  })
+
+  it('each month string matches YYYY-MM format', () => {
+    const list = buildMonthList('2026-03', 9)
+    list.forEach(m => expect(m).toMatch(/^\d{4}-\d{2}$/))
+  })
+
+  it('count = 1 returns only the start month', () => {
+    expect(buildMonthList('2026-06', 1)).toEqual(['2026-06'])
+  })
+
+  it('padding: months below 10 are zero-padded', () => {
+    const list = buildMonthList('2025-07', 4)
+    expect(list[0]).toBe('2025-07')
+    expect(list[1]).toBe('2025-08')
+    expect(list[2]).toBe('2025-09')
+    expect(list[3]).toBe('2025-10')
+  })
+
+  it('consecutive list: each entry is exactly 1 month after previous', () => {
+    const list = buildMonthList('2026-01', 12)
+    for (let i = 1; i < list.length; i++) {
+      const [py, pm] = list[i - 1].split('-').map(Number)
+      const [cy, cm] = list[i].split('-').map(Number)
+      const expectedYear  = pm === 12 ? py + 1 : py
+      const expectedMonth = pm === 12 ? 1 : pm + 1
+      expect(cy).toBe(expectedYear)
+      expect(cm).toBe(expectedMonth)
+    }
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// buildSimulationPeriod() — additional from/to date range tests
+// ─────────────────────────────────────────────────────────────────────────────
+describe('buildSimulationPeriod() — date range tests', () => {
+  it('period from = first month day 01', () => {
+    const p = buildSimulationPeriod('2026-05', 3)
+    expect(p.from).toBe('2026-05-01')
+  })
+
+  it('period to = last day of last month in range', () => {
+    const p = buildSimulationPeriod('2026-05', 3)
+    expect(p.to).toBe('2026-07-31')
+  })
+
+  it('Feb in non-leap year ends on 28', () => {
+    const p = buildSimulationPeriod('2025-02', 1)
+    expect(p.to).toBe('2025-02-28')
+  })
+
+  it('Feb in leap year ends on 29', () => {
+    const p = buildSimulationPeriod('2024-02', 1)
+    expect(p.to).toBe('2024-02-29')
+  })
+
+  it('9 month range crosses year boundary', () => {
+    const p = buildSimulationPeriod('2025-07', 9)
+    expect(p.from).toBe('2025-07-01')
+    expect(p.to).toBe('2026-03-31')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// groupExpensesByMonth() — additional grouping tests
+// ─────────────────────────────────────────────────────────────────────────────
+describe('groupExpensesByMonth() — additional tests', () => {
+  it('single line creates a map with one entry', () => {
+    const lines: import('../types').ExpenseLineComputed[] = [makeExpenseLine('2026-03', 4000, true, 0)]
+    const map = groupExpensesByMonth(lines)
+    expect(map.size).toBe(1)
+    expect(map.get('2026-03')?.total).toBe(4000)
+  })
+
+  it('deductible is 0 when is_deductible = false', () => {
+    const lines: import('../types').ExpenseLineComputed[] = [makeExpenseLine('2026-04', 2000, false, 0)]
+    const map = groupExpensesByMonth(lines)
+    expect(map.get('2026-04')?.deductible).toBe(0)
+    expect(map.get('2026-04')?.total).toBe(2000)
+  })
+
+  it('three months produce three distinct map keys', () => {
+    const lines: import('../types').ExpenseLineComputed[] = [
+      makeExpenseLine('2026-01', 1000),
+      makeExpenseLine('2026-02', 2000),
+      makeExpenseLine('2026-03', 3000),
+    ]
+    const map = groupExpensesByMonth(lines)
+    expect(map.size).toBe(3)
+  })
+
+  it('VAT accumulates for multiple deductible lines in same month', () => {
+    const lines: import('../types').ExpenseLineComputed[] = [
+      makeExpenseLine('2026-01', 5000, true, 20),    // vat = 1000
+      makeExpenseLine('2026-01', 3000, true, 20),    // vat = 600
+    ]
+    const map = groupExpensesByMonth(lines)
+    expect(map.get('2026-01')?.expense_vat).toBeCloseTo(1600, 1)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// validateSimulationInput() — additional boundary tests
+// ─────────────────────────────────────────────────────────────────────────────
+describe('validateSimulationInput() — additional edge cases', () => {
+  const base = { product_id: 'prod-1', quantity: 50, sale_price: 100, discount_rate: 0, period_months: 6 as const }
+
+  it('valid full input with optional fields passes', () => {
+    const input = { ...base, tax_rate: 20, kdv_rate: 18, start_month: '2026-03' }
+    expect(validateSimulationInput(input)).toHaveLength(0)
+  })
+
+  it('period_months = 1 is valid', () => {
+    expect(validateSimulationInput({ ...base, period_months: 1 as const })).toHaveLength(0)
+  })
+
+  it('period_months = 12 is valid', () => {
+    expect(validateSimulationInput({ ...base, period_months: 12 as const })).toHaveLength(0)
+  })
+
+  it('period_months = 2 is invalid (not in allowed set)', () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect(validateSimulationInput({ ...base, period_months: 2 as any }).length).toBeGreaterThan(0)
+  })
+
+  it('negative sale_price returns error', () => {
+    expect(validateSimulationInput({ ...base, sale_price: -10 }).length).toBeGreaterThan(0)
+  })
+
+  it('discount_rate = 99 is valid (just under 100)', () => {
+    expect(validateSimulationInput({ ...base, discount_rate: 99 })).toHaveLength(0)
+  })
+
+  it('kdv_rate = 0 is valid', () => {
+    expect(validateSimulationInput({ ...base, kdv_rate: 0 })).toHaveLength(0)
+  })
+
+  it('kdv_rate > 100 is invalid', () => {
+    expect(validateSimulationInput({ ...base, kdv_rate: 101 }).length).toBeGreaterThan(0)
+  })
+
+  it('start_month in correct YYYY-MM format → no error', () => {
+    expect(validateSimulationInput({ ...base, start_month: '2027-01' })).toHaveLength(0)
+  })
+
+  it('start_month with wrong format → error', () => {
+    expect(validateSimulationInput({ ...base, start_month: '27-01' }).length).toBeGreaterThan(0)
+  })
+
+  it('product_id as empty string → error', () => {
+    expect(validateSimulationInput({ ...base, product_id: '' }).length).toBeGreaterThan(0)
+  })
+})

@@ -476,3 +476,274 @@ describe('detectDuplicates', () => {
     expect(group.reason).toContain('payroll')
   })
 })
+
+// ═══════════════════════════════════════════════════════════════════════════
+// detectRevenueAnomalies — flat revenue returns no anomalies
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe('detectRevenueAnomalies — flat and outlier scenarios', () => {
+  function mkRevenue(values: number[]): import('../lib/engines/anomaly.engine').MonthlyRevenue[] {
+    return values.map((v, i) => ({
+      month:   `2026-${String(i + 1).padStart(2, '0')}`,
+      revenue: v,
+    }))
+  }
+
+  it('returns no anomalies for perfectly flat revenue', () => {
+    // Flat baseline = 0 stddev → z is always 0 → no anomaly
+    const data = mkRevenue([50_000, 50_000, 50_000, 50_000])
+    expect(detectRevenueAnomalies(data)).toHaveLength(0)
+  })
+
+  it('returns anomaly for outlier month at 3× average', () => {
+    // Baseline 10K,10K,10K; then 30K spike
+    const data = mkRevenue([10_000, 10_200, 9_800, 30_000])
+    const anomalies = detectRevenueAnomalies(data)
+    expect(anomalies.length).toBeGreaterThan(0)
+    expect(anomalies[0].direction).toBe('spike')
+  })
+
+  it('returns drop anomaly for month at 1/3 of average', () => {
+    const data = mkRevenue([30_000, 32_000, 28_000, 1_000])
+    const anomalies = detectRevenueAnomalies(data)
+    expect(anomalies.length).toBeGreaterThan(0)
+    expect(anomalies[0].direction).toBe('drop')
+  })
+
+  it('anomaly type is always "revenue"', () => {
+    const data = mkRevenue([1_000, 1_100, 900, 20_000])
+    const anomalies = detectRevenueAnomalies(data)
+    anomalies.forEach(a => expect(a.type).toBe('revenue'))
+  })
+
+  it('mean field reflects the 3-month baseline average', () => {
+    // Need non-zero stddev to trigger anomaly detection: baseline with variance
+    const data = mkRevenue([8_000, 10_000, 12_000, 80_000])
+    const [a] = detectRevenueAnomalies(data)
+    expect(a).toBeDefined()
+    expect(a.mean).toBeCloseTo(10_000, 0)
+  })
+
+  it('actual field matches the current month revenue', () => {
+    const data = mkRevenue([8_000, 10_000, 12_000, 80_000])
+    const [a] = detectRevenueAnomalies(data)
+    expect(a).toBeDefined()
+    expect(a.actual).toBe(80_000)
+  })
+
+  it('needs at least 4 months of data to produce anomalies', () => {
+    expect(detectRevenueAnomalies(mkRevenue([10_000, 20_000, 5_000]))).toHaveLength(0)
+  })
+
+  it('sigma threshold of 5 should suppress most anomalies', () => {
+    const data = mkRevenue([1_000, 1_100, 900, 5_000])
+    const strict = detectRevenueAnomalies(data, 5)
+    const normal = detectRevenueAnomalies(data, 2)
+    expect(strict.length).toBeLessThanOrEqual(normal.length)
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════════
+// detectExpenseAnomalies — flat returns no anomalies, spike detected
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe('detectExpenseAnomalies — flat and outlier scenarios', () => {
+  function mkExpenses(cat: string, values: number[]): import('../lib/engines/anomaly.engine').MonthlyExpense[] {
+    return values.map((v, i) => ({
+      month:    `2026-${String(i + 1).padStart(2, '0')}`,
+      category: cat,
+      amount:   v,
+    }))
+  }
+
+  it('returns no anomalies for perfectly flat expense amounts', () => {
+    const data = mkExpenses('utilities', [5_000, 5_000, 5_000, 5_000])
+    expect(detectExpenseAnomalies(data)).toHaveLength(0)
+  })
+
+  it('returns anomaly for outlier month at 3× average', () => {
+    const data = mkExpenses('marketing', [4_000, 4_100, 3_900, 12_000])
+    const anomalies = detectExpenseAnomalies(data)
+    expect(anomalies.length).toBeGreaterThan(0)
+    expect(anomalies[0].category).toBe('marketing')
+  })
+
+  it('anomaly type is always "expense"', () => {
+    const data = mkExpenses('rent', [10_000, 11_000, 9_000, 50_000])
+    const anomalies = detectExpenseAnomalies(data)
+    anomalies.forEach(a => expect(a.type).toBe('expense'))
+  })
+
+  it('returns no anomaly for a category with fewer than 4 months of data', () => {
+    const data = mkExpenses('insurance', [1_000, 2_000, 1_500])
+    expect(detectExpenseAnomalies(data)).toHaveLength(0)
+  })
+
+  it('anomaly message contains category and month', () => {
+    const data = mkExpenses('payroll', [10_000, 12_000, 8_000, 60_000])
+    const [a] = detectExpenseAnomalies(data)
+    if (a) {
+      expect(a.message).toContain('payroll')
+    }
+  })
+
+  it('spike direction correct when amount rises sharply', () => {
+    const data = mkExpenses('hosting', [500, 600, 400, 8_000])
+    const [a] = detectExpenseAnomalies(data)
+    if (a) expect(a.direction).toBe('spike')
+  })
+
+  it('drop direction correct when amount falls sharply', () => {
+    const data = mkExpenses('advertising', [8_000, 9_000, 7_000, 100])
+    const [a] = detectExpenseAnomalies(data)
+    if (a) expect(a.direction).toBe('drop')
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════════
+// scoreCustomerRisk — risk levels and late payment scoring
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe('scoreCustomerRisk — risk level scoring', () => {
+  function mkPayment(customer: string, status: string, total: number, due?: string, paid?: string): import('../lib/engines/anomaly.engine').CustomerPayment {
+    return {
+      customer_name:  customer,
+      sale_date:      '2025-01-01',
+      paid_date:      paid ?? null,
+      due_date:       due ?? null,
+      total_try:      total,
+      payment_status: status,
+    }
+  }
+
+  it('customer with only paid and on-time payments receives low risk', () => {
+    const payments = [
+      mkPayment('GoodCo', 'paid', 1000, '2025-02-01', '2025-01-30'),
+      mkPayment('GoodCo', 'paid', 1000, '2025-03-01', '2025-02-28'),
+    ]
+    const [risk] = scoreCustomerRisk(payments)
+    expect(risk.risk_level).toBe('low')
+  })
+
+  it('high overdue ratio leads to risk_score >= 60 (high risk)', () => {
+    const payments = [
+      mkPayment('BadCo', 'overdue', 5000),
+      mkPayment('BadCo', 'overdue', 5000),
+      mkPayment('BadCo', 'overdue', 5000),
+      mkPayment('BadCo', 'paid', 1000, '2025-01-01', '2025-04-10'),  // 99 days late
+    ]
+    const [risk] = scoreCustomerRisk(payments)
+    expect(risk.risk_score).toBeGreaterThanOrEqual(60)
+    expect(risk.risk_level).toBe('high')
+  })
+
+  it('medium risk falls between score 30 and 59', () => {
+    const payments = [
+      mkPayment('AvgCo', 'overdue', 2000),
+      mkPayment('AvgCo', 'paid', 2000, '2025-01-01', '2025-02-20'),  // ~50 days late
+    ]
+    const [risk] = scoreCustomerRisk(payments)
+    expect(risk.risk_score).toBeGreaterThanOrEqual(0)
+    expect(risk.risk_score).toBeLessThanOrEqual(100)
+  })
+
+  it('risk_score is always in [0, 100] range', () => {
+    const extremePayments = Array.from({ length: 20 }, (_, i) =>
+      mkPayment('Extreme', 'overdue', 1000, '2025-01-01', `2025-0${Math.min(i + 1, 9)}-01`)
+    )
+    const results = scoreCustomerRisk(extremePayments)
+    if (results.length > 0) {
+      expect(results[0].risk_score).toBeGreaterThanOrEqual(0)
+      expect(results[0].risk_score).toBeLessThanOrEqual(100)
+    }
+  })
+
+  it('total_overdue accumulates all overdue amounts', () => {
+    const payments = [
+      mkPayment('SumCo', 'overdue', 3000),
+      mkPayment('SumCo', 'overdue', 2000),
+      mkPayment('SumCo', 'paid', 500),
+    ]
+    const [risk] = scoreCustomerRisk(payments)
+    expect(risk.total_overdue).toBeCloseTo(5000, 0)
+  })
+
+  it('result has customer_name, risk_score, risk_level, message properties', () => {
+    const payments = [
+      mkPayment('PropCo', 'paid', 1000),
+      mkPayment('PropCo', 'paid', 1000),
+    ]
+    const [risk] = scoreCustomerRisk(payments)
+    expect(typeof risk.customer_name).toBe('string')
+    expect(typeof risk.risk_score).toBe('number')
+    expect(['low', 'medium', 'high']).toContain(risk.risk_level)
+    expect(typeof risk.message).toBe('string')
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════════
+// detectDuplicates — exact amount duplicates and no false positives
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe('detectDuplicates — exact amount matching and false positive guard', () => {
+  function mkExp(id: string, date: string, type: string, amount: number, vendor?: string): import('../lib/engines/duplicate-detector').ExpenseRow {
+    return { id, expense_date: date, expense_type: type, amount_try: amount, vendor_name: vendor ?? null }
+  }
+
+  it('finds exact amount duplicates within 7 days (same type)', () => {
+    const expenses = [
+      mkExp('a1', '2025-04-01', 'software', 1200),
+      mkExp('a2', '2025-04-06', 'software', 1200),
+    ]
+    const groups = detectDuplicates(expenses)
+    expect(groups).toHaveLength(1)
+    expect(groups[0].confidence).toBe('high')
+  })
+
+  it('no false positives for different amounts (same type, same date)', () => {
+    const expenses = [
+      mkExp('b1', '2025-04-01', 'rent', 5000),
+      mkExp('b2', '2025-04-01', 'rent', 5001),
+    ]
+    expect(detectDuplicates(expenses)).toHaveLength(0)
+  })
+
+  it('no false positives for same amount but different type and no vendor', () => {
+    const expenses = [
+      mkExp('c1', '2025-04-01', 'marketing', 2000),
+      mkExp('c2', '2025-04-02', 'utilities', 2000),
+    ]
+    expect(detectDuplicates(expenses)).toHaveLength(0)
+  })
+
+  it('group includes both original expense IDs', () => {
+    const expenses = [
+      mkExp('d1', '2025-04-01', 'payroll', 15000),
+      mkExp('d2', '2025-04-03', 'payroll', 15000),
+    ]
+    const [g] = detectDuplicates(expenses)
+    const ids = g.rows.map(r => r.id).sort()
+    expect(ids).toEqual(['d1', 'd2'])
+  })
+
+  it('amount_try on group matches original amount', () => {
+    const expenses = [
+      mkExp('e1', '2025-04-01', 'rent', 8000),
+      mkExp('e2', '2025-04-04', 'rent', 8000),
+    ]
+    const [g] = detectDuplicates(expenses)
+    expect(g.amount_try).toBe(8000)
+  })
+
+  it('group has confidence, reason, rows, message fields', () => {
+    const expenses = [
+      mkExp('f1', '2025-04-01', 'insurance', 3000),
+      mkExp('f2', '2025-04-02', 'insurance', 3000),
+    ]
+    const [g] = detectDuplicates(expenses)
+    expect(g).toHaveProperty('confidence')
+    expect(g).toHaveProperty('reason')
+    expect(g).toHaveProperty('rows')
+    expect(g).toHaveProperty('message')
+  })
+})

@@ -483,3 +483,142 @@ describe('buildRatioTrend – extended', () => {
   })
 
 })
+
+// ── New: computeRatioDirection — monotonic and single-value tests ──────────────
+
+describe('computeRatioDirection — monotonic and single-value edge cases', () => {
+
+  it('monotonically increasing (6 pts, higher-is-better) → improving', () => {
+    // prior avg = (10+20+30)/3 = 20; recent avg = (40+50+60)/3 = 50 → +150% → improving
+    const pts = [10, 20, 30, 40, 50, 60]
+    expect(computeRatioDirection(pts, true)).toBe('improving')
+  })
+
+  it('monotonically decreasing (6 pts, higher-is-better) → deteriorating', () => {
+    const pts = [60, 50, 40, 30, 20, 10]
+    expect(computeRatioDirection(pts, true)).toBe('deteriorating')
+  })
+
+  it('monotonically increasing (6 pts, lower-is-better DSO) → deteriorating', () => {
+    // DSO going up is bad
+    const pts = [10, 20, 30, 40, 50, 60]
+    expect(computeRatioDirection(pts, false)).toBe('deteriorating')
+  })
+
+  it('monotonically decreasing (6 pts, lower-is-better DSO) → improving', () => {
+    const pts = [60, 50, 40, 30, 20, 10]
+    expect(computeRatioDirection(pts, false)).toBe('improving')
+  })
+
+  it('flat array (all same) → stable', () => {
+    const pts = [25, 25, 25, 25, 25, 25]
+    expect(computeRatioDirection(pts, true)).toBe('stable')
+  })
+
+  it('single value → insufficient', () => {
+    expect(computeRatioDirection([99], true)).toBe('insufficient')
+  })
+
+  it('two valid values → insufficient', () => {
+    expect(computeRatioDirection([10, 20], false)).toBe('insufficient')
+  })
+
+  it('three valid values → insufficient (no 6-point window)', () => {
+    expect(computeRatioDirection([10, 20, 30], true)).toBe('insufficient')
+  })
+
+})
+
+// ── New: computeAvg12m — fewer / exactly 12 values tests ─────────────────────
+
+describe('computeAvg12m — fewer vs exactly 12 values', () => {
+
+  it('fewer than 12 values (3 values) → averages correctly', () => {
+    // Only 3 values provided
+    expect(computeAvg12m([10, 20, 30])).toBe(20)
+  })
+
+  it('exactly 12 values → average of all 12', () => {
+    // 1..12 avg = 6.5
+    const vals = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+    expect(computeAvg12m(vals)).toBeCloseTo(6.5, 1)
+  })
+
+  it('fewer than 12 with some nulls → only non-null contribute', () => {
+    // [10, null, 30] → avg = 20
+    expect(computeAvg12m([10, null, 30])).toBe(20)
+  })
+
+  it('12 values all same → returns that value', () => {
+    const vals = Array(12).fill(42) as number[]
+    expect(computeAvg12m(vals)).toBe(42)
+  })
+
+  it('1 value → returns that value directly', () => {
+    expect(computeAvg12m([77])).toBe(77)
+  })
+
+})
+
+// ── New: buildRatioTrend — structure validation ───────────────────────────────
+
+describe('buildRatioTrend — structure validation', () => {
+
+  const mk12 = ['2025-06', '2025-07', '2025-08', '2025-09', '2025-10', '2025-11',
+               '2025-12', '2026-01', '2026-02', '2026-03', '2026-04', '2026-05']
+
+  it('result has direction field', () => {
+    const vals = new Map<string, number | null>(mk12.map(ym => [ym, 50]))
+    const trend = buildRatioTrend('k', 'l', 'd', '%', true, mk12, vals)
+    expect(trend).toHaveProperty('direction')
+  })
+
+  it('result has avg_12m field', () => {
+    const vals = new Map<string, number | null>(mk12.map(ym => [ym, 30]))
+    const trend = buildRatioTrend('k', 'l', 'd', '%', true, mk12, vals)
+    expect(trend).toHaveProperty('avg_12m')
+    expect(trend.avg_12m).not.toBeNull()
+  })
+
+  it('result has current field', () => {
+    const vals = new Map<string, number | null>(mk12.map(ym => [ym, 40]))
+    const trend = buildRatioTrend('k', 'l', 'd', '%', true, mk12, vals)
+    expect(trend).toHaveProperty('current')
+  })
+
+  it('result has points array', () => {
+    const vals = new Map<string, number | null>(mk12.map(ym => [ym, 10]))
+    const trend = buildRatioTrend('k', 'l', 'd', 'x', true, mk12, vals)
+    expect(Array.isArray(trend.points)).toBe(true)
+    expect(trend.points.length).toBe(12)
+  })
+
+  it('result has direction_label field', () => {
+    const vals = new Map<string, number | null>(mk12.map(ym => [ym, 50]))
+    const trend = buildRatioTrend('k', 'l', 'd', '%', true, mk12, vals)
+    expect(trend).toHaveProperty('direction_label')
+    expect(typeof trend.direction_label).toBe('string')
+  })
+
+  it('avg_12m matches manual average when all values equal', () => {
+    const vals = new Map<string, number | null>(mk12.map(ym => [ym, 60]))
+    const trend = buildRatioTrend('k', 'l', 'd', '%', true, mk12, vals)
+    expect(trend.avg_12m).toBe(60)
+  })
+
+  it('formatRatioValue % type appends % sign', () => {
+    expect(formatRatioValue(25, '%')).toContain('%')
+    expect(formatRatioValue(25, '%')).toBe('25.0%')
+  })
+
+  it('formatRatioValue x type appends x', () => {
+    expect(formatRatioValue(1.5, 'x')).toContain('x')
+    expect(formatRatioValue(1.5, 'x')).toBe('1.5x')
+  })
+
+  it('formatRatioValue gün type appends gün', () => {
+    expect(formatRatioValue(30, 'gün')).toContain('gün')
+    expect(formatRatioValue(30, 'gün')).toBe('30 gün')
+  })
+
+})

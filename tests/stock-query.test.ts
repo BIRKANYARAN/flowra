@@ -466,3 +466,115 @@ describe('Zero-qty row semantics (CRITICAL)', () => {
       .toBe('zero_qty_with_in_or_out')
   })
 })
+
+// ── New: additional deriveMovementType coverage ────────────────────────────────
+
+describe('deriveMovementType — additional coverage', () => {
+
+  it('large positive qty → in', () => {
+    expect(deriveMovementType(999_999)).toBe('in')
+  })
+
+  it('large negative qty → out', () => {
+    expect(deriveMovementType(-999_999)).toBe('out')
+  })
+
+  it('fractional positive (0.001) → in', () => {
+    expect(deriveMovementType(0.001)).toBe('in')
+  })
+
+  it('fractional negative (-0.001) → out', () => {
+    expect(deriveMovementType(-0.001)).toBe('out')
+  })
+
+  it('result is one of the three valid movement types', () => {
+    const validTypes = new Set(['in', 'out', 'adjustment'])
+    for (const qty of [100, -1, 0, 0.5, -0.5]) {
+      expect(validTypes.has(deriveMovementType(qty))).toBe(true)
+    }
+  })
+
+  it('exactly zero → adjustment (never in or out)', () => {
+    const result = deriveMovementType(0)
+    expect(result).not.toBe('in')
+    expect(result).not.toBe('out')
+    expect(result).toBe('adjustment')
+  })
+
+})
+
+// ── New: additional validateMovementRow coverage ───────────────────────────────
+
+describe('validateMovementRow — additional coverage', () => {
+
+  it('valid purchase row (positive qty, in, purchase ref) → null', () => {
+    expect(validateMovementRow({ refType: 'purchase', qtyChange: 50, movementType: 'in' })).toBeNull()
+  })
+
+  it('valid sale row (negative qty, out, sale ref) → null', () => {
+    expect(validateMovementRow({ refType: 'sale', qtyChange: -10, movementType: 'out' })).toBeNull()
+  })
+
+  it('valid write_off row (negative qty, out) → null', () => {
+    expect(validateMovementRow({ refType: 'write_off', qtyChange: -5, movementType: 'out' })).toBeNull()
+  })
+
+  it('valid return row (positive qty, in) → null', () => {
+    expect(validateMovementRow({ refType: 'return', qtyChange: 3, movementType: 'in' })).toBeNull()
+  })
+
+  it('missing movement_type (undefined) → missing_movement_type', () => {
+    const a = validateMovementRow({ refType: 'purchase', qtyChange: 10, movementType: undefined })
+    expect(a?.kind).toBe('missing_movement_type')
+  })
+
+  it('zero qty with out movement_type → zero_qty_with_in_or_out', () => {
+    const a = validateMovementRow({ refType: 'adjustment', qtyChange: 0, movementType: 'out' })
+    expect(a?.kind).toBe('zero_qty_with_in_or_out')
+  })
+
+  it('in but negative qty → sign_type_mismatch kind', () => {
+    const a = validateMovementRow({ refType: 'purchase', qtyChange: -5, movementType: 'in' })
+    expect(a?.kind).toBe('sign_type_mismatch')
+    expect(a?.message).toContain('negative')
+  })
+
+  it('out but positive qty → sign_type_mismatch kind', () => {
+    const a = validateMovementRow({ refType: 'adjustment', qtyChange: 5, movementType: 'out' })
+    expect(a?.kind).toBe('sign_type_mismatch')
+    expect(a?.message).toContain('positive')
+  })
+
+  it('write_off with positive qty → business_direction_conflict', () => {
+    const a = validateMovementRow({ refType: 'write_off', qtyChange: 3, movementType: 'in' })
+    expect(a?.kind).toBe('business_direction_conflict')
+  })
+
+  it('purchase with negative qty → business_direction_conflict', () => {
+    const a = validateMovementRow({ refType: 'purchase', qtyChange: -10, movementType: 'out' })
+    expect(a?.kind).toBe('business_direction_conflict')
+  })
+
+  it('anomaly object has kind, refType, qtyChange, movementType, message', () => {
+    const a = validateMovementRow({ refType: 'sale', qtyChange: 5, movementType: 'in' })
+    expect(a).not.toBeNull()
+    expect(a).toHaveProperty('kind')
+    expect(a).toHaveProperty('refType')
+    expect(a).toHaveProperty('qtyChange')
+    expect(a).toHaveProperty('movementType')
+    expect(a).toHaveProperty('message')
+  })
+
+  it('all valid movement types accepted for adjustment refType at zero', () => {
+    expect(validateMovementRow({ refType: 'adjustment', qtyChange: 0, movementType: 'adjustment' })).toBeNull()
+  })
+
+  it('adjustment with positive qty → null (positive adjustments are valid)', () => {
+    expect(validateMovementRow({ refType: 'adjustment', qtyChange: 5, movementType: 'adjustment' })).toBeNull()
+  })
+
+  it('adjustment with negative qty → null (negative adjustments are valid)', () => {
+    expect(validateMovementRow({ refType: 'adjustment', qtyChange: -5, movementType: 'adjustment' })).toBeNull()
+  })
+
+})

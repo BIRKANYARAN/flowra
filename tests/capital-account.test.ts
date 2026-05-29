@@ -475,3 +475,134 @@ describe('CapitalAccountService.computeExitScenario', () => {
   })
 
 })
+
+// ── New: computeExitScenario — ownership edge cases ───────────────────────────
+
+describe('CapitalAccountService.computeExitScenario — ownership edge cases', () => {
+
+  const zeroOwnerAccount = [{
+    partner_id: 'p_zero',
+    partner_name: 'Zero Owner',
+    share_ratio: 0,
+    is_active: true,
+    equity_contributed_try: 10_000,
+    total_received_try: 0,
+    distributions_received_try: 0,
+    loan_repayments_received_try: 0,
+    net_invested_try: 10_000,
+    book_equity_try: 0,
+    loan_balance_try: 0,
+    net_position_try: 0,
+    total_loaned_try: 0,
+  }]
+
+  const fullOwnerAccount = [{
+    partner_id: 'p_full',
+    partner_name: 'Full Owner',
+    share_ratio: 1,
+    is_active: true,
+    equity_contributed_try: 200_000,
+    total_received_try: 50_000,
+    distributions_received_try: 50_000,
+    loan_repayments_received_try: 0,
+    net_invested_try: 150_000,
+    book_equity_try: 500_000,
+    loan_balance_try: 0,
+    net_position_try: 500_000,
+    total_loaned_try: 0,
+  }]
+
+  it('0% ownership → exit_value_try = 0 regardless of distributable', () => {
+    const scenario = CapitalAccountService.computeExitScenario(zeroOwnerAccount, 500_000, 0, 2.0)
+    const p = scenario.per_partner[0]!
+    expect(p.exit_value_try).toBe(0)
+  })
+
+  it('0% ownership → net_exit_gain_try = 0 - net_invested (negative)', () => {
+    const scenario = CapitalAccountService.computeExitScenario(zeroOwnerAccount, 500_000, 0, 2.0)
+    const p = scenario.per_partner[0]!
+    // exit_value = 0; net_invested = 10_000 → gain = 0 - 10_000 = -10_000
+    expect(p.net_exit_gain_try).toBe(-10_000)
+  })
+
+  it('100% ownership → exit_value_try = distributable_value_try', () => {
+    const scenario = CapitalAccountService.computeExitScenario(fullOwnerAccount, 500_000, 0, 1.0)
+    const p = scenario.per_partner[0]!
+    // distributable = 500_000 × 1 − 0 = 500_000; share = 1.0
+    expect(p.exit_value_try).toBe(scenario.distributable_value_try)
+    expect(p.exit_value_try).toBe(500_000)
+  })
+
+  it('exit at book value (1x): enterprise_value = totalEquity', () => {
+    const scenario = CapitalAccountService.computeExitScenario(fullOwnerAccount, 500_000, 0, 1.0)
+    expect(scenario.enterprise_value_try).toBe(500_000)
+    expect(scenario.valuation_multiple).toBe(1.0)
+  })
+
+  it('exit at premium (3x): enterprise_value = 3 × totalEquity', () => {
+    const scenario = CapitalAccountService.computeExitScenario(fullOwnerAccount, 500_000, 0, 3.0)
+    expect(scenario.enterprise_value_try).toBe(1_500_000)
+  })
+
+  it('multiple partners where share_ratios sum to 1 — exit values sum to distributable', () => {
+    // Three equal partners
+    const threePartners = [0.5, 0.3, 0.2].map((ratio, i) => ({
+      partner_id: `p${i}`,
+      partner_name: `Partner ${i}`,
+      share_ratio: ratio,
+      is_active: true,
+      equity_contributed_try: 100_000,
+      total_received_try: 0,
+      distributions_received_try: 0,
+      loan_repayments_received_try: 0,
+      net_invested_try: 100_000,
+      book_equity_try: 1_000_000 * ratio,
+      loan_balance_try: 0,
+      net_position_try: 1_000_000 * ratio,
+      total_loaned_try: 0,
+    }))
+
+    const scenario = CapitalAccountService.computeExitScenario(threePartners, 1_000_000, 0, 2.0)
+    const sumExitValues = scenario.per_partner.reduce((s, p) => s + p.exit_value_try, 0)
+    expect(sumExitValues).toBeCloseTo(scenario.distributable_value_try)
+  })
+
+  it('exit scenario result has enterprise_value_try, senior_claims_try, distributable_value_try fields', () => {
+    const scenario = CapitalAccountService.computeExitScenario(fullOwnerAccount, 500_000, 10_000, 2.0)
+    expect(scenario).toHaveProperty('enterprise_value_try')
+    expect(scenario).toHaveProperty('senior_claims_try')
+    expect(scenario).toHaveProperty('distributable_value_try')
+    expect(scenario).toHaveProperty('per_partner')
+    expect(scenario).toHaveProperty('valuation_multiple')
+  })
+
+  it('per_partner entries each have net_proceeds equivalent (exit_value_try) field', () => {
+    const scenario = CapitalAccountService.computeExitScenario(fullOwnerAccount, 500_000, 0, 1.0)
+    const p = scenario.per_partner[0]!
+    // The interface has: exit_value_try, net_exit_gain_try, share_ratio, partner_id, partner_name
+    expect(p).toHaveProperty('exit_value_try')
+    expect(p).toHaveProperty('net_exit_gain_try')
+    expect(p).toHaveProperty('partner_id')
+    expect(p).toHaveProperty('partner_name')
+    expect(p).toHaveProperty('share_ratio')
+  })
+
+  it('senior_claims_try is 0 when totalDebtTry is 0', () => {
+    const scenario = CapitalAccountService.computeExitScenario(fullOwnerAccount, 500_000, 0, 2.0)
+    expect(scenario.senior_claims_try).toBe(0)
+  })
+
+  it('exit at book value with debt: distributable = equity − debt when multiple = 1', () => {
+    const scenario = CapitalAccountService.computeExitScenario(fullOwnerAccount, 500_000, 100_000, 1.0)
+    // enterprise = 500_000, claims = 100_000, distributable = 400_000
+    expect(scenario.distributable_value_try).toBe(400_000)
+  })
+
+  it('100% owner net_exit_gain = exit_value - net_invested', () => {
+    const scenario = CapitalAccountService.computeExitScenario(fullOwnerAccount, 500_000, 0, 1.0)
+    const p = scenario.per_partner[0]!
+    // exit = 500_000, net_invested = 150_000, gain = 350_000
+    expect(p.net_exit_gain_try).toBe(350_000)
+  })
+
+})

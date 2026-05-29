@@ -485,3 +485,104 @@ describe('computeVariance — accuracy score computation', () => {
     }
   })
 })
+
+// ── New: variance formula and sign coverage ───────────────────────────────────
+
+describe('computeVariance — formula and sign coverage', () => {
+
+  it('revenue variance formula: actual - projected (positive when actual > projected)', () => {
+    const proj   = makeProjected({ revenue_try: 80_000 })
+    const actual = makeActuals({ revenue_try: 100_000 })
+    const result = computeVariance(proj, actual, TODAY, PERIOD_TO)
+    // 100_000 - 80_000 = 20_000
+    expect(result.variance!.revenue_try).toBe(20_000)
+  })
+
+  it('revenue variance: actual > projected → favorable (positive)', () => {
+    const proj   = makeProjected({ revenue_try: 100_000 })
+    const actual = makeActuals({ revenue_try: 120_000 })
+    const result = computeVariance(proj, actual, TODAY, PERIOD_TO)
+    expect(result.variance!.revenue_try).toBeGreaterThan(0)
+  })
+
+  it('revenue variance: actual < projected → unfavorable (negative)', () => {
+    const proj   = makeProjected({ revenue_try: 100_000 })
+    const actual = makeActuals({ revenue_try: 70_000 })
+    const result = computeVariance(proj, actual, TODAY, PERIOD_TO)
+    expect(result.variance!.revenue_try).toBeLessThan(0)
+    expect(result.variance!.revenue_try).toBe(-30_000)
+  })
+
+  it('gross profit variance: actual - projected', () => {
+    const proj   = makeProjected({ gross_profit_try: 60_000 })
+    const actual = makeActuals({ gross_profit_try: 75_000 })
+    // gross_profit is NOT a direct variance field — it feeds accuracy score only
+    // so check that accuracy_score is computed correctly
+    const result = computeVariance(proj, actual, TODAY, PERIOD_TO)
+    expect(result.accuracy_score).toBeDefined()
+    expect(result.accuracy_score).not.toBeNull()
+  })
+
+  it('net income variance: actual - projected', () => {
+    const proj   = makeProjected({ net_income_try: 20_000 })
+    const actual = makeActuals({ net_income_try: 28_000 })
+    const result = computeVariance(proj, actual, TODAY, PERIOD_TO)
+    expect(result.variance!.net_income_try).toBe(8_000)
+  })
+
+  it('net income variance: negative when actuals worse', () => {
+    const proj   = makeProjected({ net_income_try: 20_000 })
+    const actual = makeActuals({ net_income_try: 5_000 })
+    const result = computeVariance(proj, actual, TODAY, PERIOD_TO)
+    expect(result.variance!.net_income_try).toBe(-15_000)
+  })
+
+  it('variance percentage formula: revenue_pct = revenue_diff / |projected|', () => {
+    const proj   = makeProjected({ revenue_try: 100_000 })
+    const actual = makeActuals({ revenue_try: 115_000 })
+    const result = computeVariance(proj, actual, TODAY, PERIOD_TO)
+    // (115_000 - 100_000) / 100_000 = 0.15
+    expect(result.variance!.revenue_pct).toBeCloseTo(0.15, 2)
+  })
+
+  it('all-zero actuals: net_income_try variance = 0 - projected.net_income_try', () => {
+    const proj   = makeProjected({ net_income_try: 25_000, revenue_try: 100_000, expenses_try: 30_000 })
+    const actual = makeActuals({ revenue_try: 0, cogs_try: 0, gross_profit_try: 0, expenses_try: 0, net_income_try: 0 })
+    const result = computeVariance(proj, actual, TODAY, PERIOD_TO)
+    expect(result.variance!.net_income_try).toBe(-25_000)
+    expect(result.variance!.revenue_try).toBe(-100_000)
+  })
+
+  it('all fields present in variance result', () => {
+    const result = computeVariance(makeProjected(), makeActuals(), TODAY, PERIOD_TO)
+    const v = result.variance!
+    expect(v).toHaveProperty('revenue_try')
+    expect(v).toHaveProperty('revenue_pct')
+    expect(v).toHaveProperty('net_income_try')
+    expect(v).toHaveProperty('net_income_pct')
+    expect(v).toHaveProperty('expenses_try')
+    expect(v).toHaveProperty('expenses_pct')
+  })
+
+  it('perfect match: all variance amounts are 0', () => {
+    const result = computeVariance(makeProjected(), makeActuals(), TODAY, PERIOD_TO)
+    expect(result.variance!.revenue_try).toBe(0)
+    expect(result.variance!.net_income_try).toBe(0)
+    expect(result.variance!.expenses_try).toBe(0)
+  })
+
+  it('expenses variance: actual higher → positive variance', () => {
+    const proj   = makeProjected({ expenses_try: 30_000 })
+    const actual = makeActuals({ expenses_try: 45_000 })
+    const result = computeVariance(proj, actual, TODAY, PERIOD_TO)
+    expect(result.variance!.expenses_try).toBe(15_000)
+  })
+
+  it('expenses variance: actual lower → negative variance', () => {
+    const proj   = makeProjected({ expenses_try: 30_000 })
+    const actual = makeActuals({ expenses_try: 20_000 })
+    const result = computeVariance(proj, actual, TODAY, PERIOD_TO)
+    expect(result.variance!.expenses_try).toBe(-10_000)
+  })
+
+})

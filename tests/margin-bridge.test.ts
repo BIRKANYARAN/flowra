@@ -486,3 +486,186 @@ describe('computeGrossProfitChangePct — extended', () => {
     expect(computeGrossProfitChangePct(40_000, 50_000)).toBeCloseTo(-20, 5)
   })
 })
+
+// ── Price Effect — formula verification ──────────────────────────────────────
+
+describe('computePriceEffect — formula: (currentAvgPrice - priorAvgPrice) × priorQty', () => {
+  it('basic formula: (120 - 100) × 300 = 6_000', () => {
+    expect(computePriceEffect(120, 100, 300)).toBe(6_000)
+  })
+
+  it('price drop: (80 - 100) × 150 = -3_000', () => {
+    expect(computePriceEffect(80, 100, 150)).toBe(-3_000)
+  })
+
+  it('no price change: any qty → 0', () => {
+    expect(computePriceEffect(200, 200, 999)).toBe(0)
+  })
+
+  it('zero prior qty → always zero regardless of price direction', () => {
+    expect(computePriceEffect(500, 100, 0)).toBe(0)
+    // (100 - 500) * 0 = -0 in JS; use toBeCloseTo to handle -0 === 0
+    expect(computePriceEffect(100, 500, 0)).toBeCloseTo(0, 10)
+  })
+
+  it('linear in qty: doubling qty doubles effect', () => {
+    const e1 = computePriceEffect(130, 100, 100)
+    const e2 = computePriceEffect(130, 100, 200)
+    expect(e2).toBeCloseTo(e1 * 2, 5)
+  })
+
+  it('linear in price delta: doubling price delta doubles effect', () => {
+    const e1 = computePriceEffect(110, 100, 200)   // delta 10
+    const e2 = computePriceEffect(120, 100, 200)   // delta 20
+    expect(e2).toBeCloseTo(e1 * 2, 5)
+  })
+
+  it('negative effects are returned as negative numbers', () => {
+    expect(computePriceEffect(50, 200, 100)).toBeLessThan(0)
+  })
+
+  it('positive effects are returned as positive numbers', () => {
+    expect(computePriceEffect(200, 50, 100)).toBeGreaterThan(0)
+  })
+})
+
+// ── Volume Effect — formula verification ─────────────────────────────────────
+
+describe('computeVolumeEffect — formula: priorGPPerUnit × (currentQty - priorQty)', () => {
+  it('basic formula: 50 × (200 - 100) = 5_000', () => {
+    expect(computeVolumeEffect(50, 200, 100)).toBe(5_000)
+  })
+
+  it('volume shrinkage: 40 × (50 - 100) = -2_000', () => {
+    expect(computeVolumeEffect(40, 50, 100)).toBe(-2_000)
+  })
+
+  it('no volume change: any margin → 0', () => {
+    expect(computeVolumeEffect(999, 300, 300)).toBe(0)
+  })
+
+  it('zero margin per unit → 0 regardless of volume change', () => {
+    expect(computeVolumeEffect(0, 500, 100)).toBe(0)
+  })
+
+  it('negative margin × positive volume delta → negative effect', () => {
+    // loss item sold more → worse
+    expect(computeVolumeEffect(-15, 200, 100)).toBe(-1_500)
+  })
+
+  it('linear in volume delta', () => {
+    const e1 = computeVolumeEffect(30, 110, 100)  // delta=10 → 300
+    const e2 = computeVolumeEffect(30, 120, 100)  // delta=20 → 600
+    expect(e2).toBeCloseTo(e1 * 2, 5)
+  })
+})
+
+// ── Mix Effect — formula verification ────────────────────────────────────────
+
+describe('computeMixEffect — formula: totalGPChange - priceEffect - volumeEffect', () => {
+  it('basic: 30_000 - 12_000 - 10_000 = 8_000', () => {
+    expect(computeMixEffect(30_000, 12_000, 10_000)).toBe(8_000)
+  })
+
+  it('zero when price + volume explain all of the GP change', () => {
+    expect(computeMixEffect(15_000, 10_000, 5_000)).toBe(0)
+  })
+
+  it('negative mix when over-explained by price + volume', () => {
+    // total=5_000, price=8_000, volume=4_000 → mix=-7_000
+    expect(computeMixEffect(5_000, 8_000, 4_000)).toBe(-7_000)
+  })
+
+  it('additivity: mix + price + volume = total', () => {
+    const total = 100_000, price = 40_000, volume = 35_000
+    const mix = computeMixEffect(total, price, volume)
+    expect(mix + price + volume).toBeCloseTo(total, 5)
+  })
+
+  it('handles all-negative inputs', () => {
+    // total=-50_000, price=-20_000, volume=-15_000 → mix=-15_000
+    expect(computeMixEffect(-50_000, -20_000, -15_000)).toBe(-15_000)
+  })
+})
+
+// ── classifyBridgeComponent — all classification levels ──────────────────────
+
+describe('classifyBridgeComponent — classification levels at boundaries', () => {
+  it('exactly 1% → neutral (≤ 1%)', () => {
+    // 1000 / 100_000 = 1.0% → neutral
+    expect(classifyBridgeComponent(1_000, 100_000)).toBe('neutral')
+  })
+
+  it('just above 1% → favorable for positive', () => {
+    // 1001 / 100_000 = 1.001% → favorable
+    expect(classifyBridgeComponent(1_001, 100_000)).toBe('favorable')
+  })
+
+  it('just above 1% → unfavorable for negative', () => {
+    expect(classifyBridgeComponent(-1_001, 100_000)).toBe('unfavorable')
+  })
+
+  it('zero effect → always neutral', () => {
+    expect(classifyBridgeComponent(0, 500_000)).toBe('neutral')
+  })
+
+  it('zero revenue + zero effect → neutral', () => {
+    expect(classifyBridgeComponent(0, 0)).toBe('neutral')
+  })
+
+  it('large positive effect is favorable', () => {
+    expect(classifyBridgeComponent(50_000, 100_000)).toBe('favorable')
+  })
+
+  it('large negative effect is unfavorable', () => {
+    expect(classifyBridgeComponent(-50_000, 100_000)).toBe('unfavorable')
+  })
+
+  it('negative effect at exactly -1% → neutral', () => {
+    expect(classifyBridgeComponent(-1_000, 100_000)).toBe('neutral')
+  })
+})
+
+// ── computeGrossProfitChangePct — formula and zero baseline ──────────────────
+
+describe('computeGrossProfitChangePct — zero baseline and negative values', () => {
+  it('zero prior GP → returns null (no meaningful base)', () => {
+    expect(computeGrossProfitChangePct(10_000, 0)).toBeNull()
+  })
+
+  it('both zero → returns null', () => {
+    expect(computeGrossProfitChangePct(0, 0)).toBeNull()
+  })
+
+  it('positive prior, positive current — 50% improvement', () => {
+    expect(computeGrossProfitChangePct(15_000, 10_000)).toBeCloseTo(50, 2)
+  })
+
+  it('positive prior, lower current — 25% deterioration', () => {
+    expect(computeGrossProfitChangePct(7_500, 10_000)).toBeCloseTo(-25, 2)
+  })
+
+  it('negative prior (losses getting worse): more negative current', () => {
+    // current = -15_000, prior = -10_000 → (-15_000 + 10_000) / 10_000 * 100 = -50%
+    expect(computeGrossProfitChangePct(-15_000, -10_000)).toBeCloseTo(-50, 2)
+  })
+
+  it('negative prior (losses improving): less negative current', () => {
+    // current = -5_000, prior = -10_000 → (-5_000 + 10_000) / 10_000 * 100 = +50%
+    expect(computeGrossProfitChangePct(-5_000, -10_000)).toBeCloseTo(50, 2)
+  })
+
+  it('result is a number (not null) when prior is non-zero', () => {
+    const result = computeGrossProfitChangePct(8_000, 5_000)
+    expect(result).not.toBeNull()
+    expect(typeof result).toBe('number')
+  })
+
+  it('100% improvement when GP doubles', () => {
+    expect(computeGrossProfitChangePct(20_000, 10_000)).toBeCloseTo(100, 2)
+  })
+
+  it('-100% when GP goes to zero from positive prior', () => {
+    expect(computeGrossProfitChangePct(0, 10_000)).toBeCloseTo(-100, 2)
+  })
+})

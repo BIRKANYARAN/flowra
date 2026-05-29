@@ -436,3 +436,276 @@ describe('buildThreeScenarios', () => {
     }
   })
 })
+
+// ── SEASONAL_PRESETS — structure and keys ─────────────────────────────────────
+
+describe('SEASONAL_PRESETS — structure', () => {
+  it('has keys: uniform, retail_turkey, service_b2b', () => {
+    expect(SEASONAL_PRESETS).toHaveProperty('uniform')
+    expect(SEASONAL_PRESETS).toHaveProperty('retail_turkey')
+    expect(SEASONAL_PRESETS).toHaveProperty('service_b2b')
+  })
+
+  it('each preset has exactly 12 monthly weights', () => {
+    for (const key of Object.keys(SEASONAL_PRESETS) as (keyof typeof SEASONAL_PRESETS)[]) {
+      expect(SEASONAL_PRESETS[key]).toHaveLength(12)
+    }
+  })
+
+  it('uniform weights are all equal (1/12)', () => {
+    const expected = 1 / 12
+    SEASONAL_PRESETS.uniform.forEach(w => expect(w).toBeCloseTo(expected, 5))
+  })
+
+  it('retail_turkey weights sum to approximately 1.0', () => {
+    const sum = SEASONAL_PRESETS.retail_turkey.reduce((s, w) => s + w, 0)
+    expect(sum).toBeCloseTo(1.0, 5)
+  })
+
+  it('service_b2b weights sum to approximately 1.0', () => {
+    const sum = SEASONAL_PRESETS.service_b2b.reduce((s, w) => s + w, 0)
+    expect(sum).toBeCloseTo(1.0, 5)
+  })
+
+  it('all preset weights are positive', () => {
+    for (const key of Object.keys(SEASONAL_PRESETS) as (keyof typeof SEASONAL_PRESETS)[]) {
+      SEASONAL_PRESETS[key].forEach(w => expect(w).toBeGreaterThan(0))
+    }
+  })
+
+  it('retail_turkey has higher weights in Oct (index 9) than Jan (index 0)', () => {
+    // October (index 9) should be higher than January (index 0) for Turkish retail
+    expect(SEASONAL_PRESETS.retail_turkey[9]).toBeGreaterThanOrEqual(SEASONAL_PRESETS.retail_turkey[0])
+  })
+})
+
+// ── distributeRevenue — uniform model detailed ────────────────────────────────
+
+describe('distributeRevenue uniform — detailed arithmetic', () => {
+  it('distributes 1_200_000 equally: each month is 100_000', () => {
+    const result = distributeRevenue(1_200_000, 'uniform')
+    result.forEach(v => expect(v).toBeCloseTo(100_000, 1))
+  })
+
+  it('returns exactly 12 elements', () => {
+    expect(distributeRevenue(600_000, 'uniform')).toHaveLength(12)
+  })
+
+  it('sum of uniform distribution equals total annual revenue', () => {
+    const total = 840_000
+    const sum = distributeRevenue(total, 'uniform').reduce((s, v) => s + v, 0)
+    expect(sum).toBeCloseTo(total, 1)
+  })
+
+  it('uniform with odd total: distribution is still approximately equal', () => {
+    // 1_000_001 / 12 ≈ 83_333.4
+    const result = distributeRevenue(1_000_001, 'uniform')
+    const min = Math.min(...result)
+    const max = Math.max(...result)
+    expect(max - min).toBeLessThanOrEqual(1)   // rounding at most ₺1 apart
+  })
+
+  it('zero total annual → all months are 0', () => {
+    const result = distributeRevenue(0, 'uniform')
+    result.forEach(v => expect(v).toBe(0))
+  })
+})
+
+// ── distributeRevenue — seasonal model ───────────────────────────────────────
+
+describe('distributeRevenue seasonal — uses retail_turkey preset', () => {
+  it('seasonal: returns 12 monthly values', () => {
+    expect(distributeRevenue(1_000_000, 'seasonal')).toHaveLength(12)
+  })
+
+  it('seasonal: values are NOT all equal (unlike uniform)', () => {
+    const result = distributeRevenue(1_200_000, 'seasonal')
+    const allEqual = result.every(v => Math.abs(v - result[0]) < 1)
+    expect(allEqual).toBe(false)
+  })
+
+  it('seasonal: sum is close to total annual (within ±10)', () => {
+    const sum = distributeRevenue(1_000_000, 'seasonal').reduce((s, v) => s + v, 0)
+    expect(Math.abs(sum - 1_000_000)).toBeLessThanOrEqual(10)
+  })
+
+  it('seasonal: months with higher weights produce higher revenue', () => {
+    const result = distributeRevenue(1_200_000, 'seasonal')
+    // June (index 5) has weight 0.10 and January (index 0) has 0.06
+    expect(result[5]).toBeGreaterThan(result[0])
+  })
+})
+
+// ── computeDebtPressureTimeline — detailed checks ────────────────────────────
+
+describe('computeDebtPressureTimeline — 12 month projection', () => {
+  it('generates exactly 12 periods when 12 entries are provided', () => {
+    const income  = Array(12).fill(100_000)
+    const service = Array(12).fill(20_000)
+    const result = computeDebtPressureTimeline({ projectedMonthlyNetIncome: income, monthlyDebtService: service, startMonth: '2025-01' })
+    expect(result.periods).toHaveLength(12)
+  })
+
+  it('month labels advance correctly from start month', () => {
+    const income  = Array(12).fill(100_000)
+    const service = Array(12).fill(20_000)
+    const result = computeDebtPressureTimeline({ projectedMonthlyNetIncome: income, monthlyDebtService: service, startMonth: '2025-01' })
+    expect(result.periods[0].month).toBe('2025-01')
+    expect(result.periods[11].month).toBe('2025-12')
+  })
+
+  it('year boundary: month labels cross year correctly', () => {
+    const income  = Array(3).fill(100_000)
+    const service = Array(3).fill(10_000)
+    const result = computeDebtPressureTimeline({ projectedMonthlyNetIncome: income, monthlyDebtService: service, startMonth: '2025-11' })
+    expect(result.periods[0].month).toBe('2025-11')
+    expect(result.periods[1].month).toBe('2025-12')
+    expect(result.periods[2].month).toBe('2026-01')
+  })
+
+  it('DSR < 0.30 → healthy status', () => {
+    const result = computeDebtPressureTimeline({
+      projectedMonthlyNetIncome: [100_000],
+      monthlyDebtService: [25_000],   // 0.25 < 0.30
+      startMonth: '2025-01',
+    })
+    expect(result.periods[0].status).toBe('healthy')
+  })
+
+  it('DSR between 0.30 and 0.49 → strained status', () => {
+    const result = computeDebtPressureTimeline({
+      projectedMonthlyNetIncome: [100_000],
+      monthlyDebtService: [40_000],   // 0.40
+      startMonth: '2025-01',
+    })
+    expect(result.periods[0].status).toBe('strained')
+  })
+
+  it('DSR between 0.50 and 0.69 → critical status', () => {
+    const result = computeDebtPressureTimeline({
+      projectedMonthlyNetIncome: [100_000],
+      monthlyDebtService: [60_000],   // 0.60
+      startMonth: '2025-01',
+    })
+    expect(result.periods[0].status).toBe('critical')
+  })
+
+  it('months_insolvent counts correctly', () => {
+    // dsr: 80_000/10_000=8.0(insolvent), 5_000/10_000=0.5(critical), 80_000/10_000=8.0(insolvent)
+    const result = computeDebtPressureTimeline({
+      projectedMonthlyNetIncome: [10_000, 10_000, 10_000],
+      monthlyDebtService:        [80_000,  5_000, 80_000],
+      startMonth: '2025-01',
+    })
+    expect(result.months_insolvent).toBe(2)
+    expect(result.months_critical).toBe(1)
+  })
+
+  it('peak_dsr is set to maximum DSR value', () => {
+    const result = computeDebtPressureTimeline({
+      projectedMonthlyNetIncome: [100_000, 100_000],
+      monthlyDebtService:        [20_000, 80_000],   // 0.2, 0.8
+      startMonth: '2025-01',
+    })
+    expect(result.peak_dsr).toBeCloseTo(0.8, 1)
+  })
+})
+
+// ── buildThreeScenarios — detailed variant checks ────────────────────────────
+
+describe('buildThreeScenarios — variant names and multipliers', () => {
+  const baseMonthlyRevenue  = Array(12).fill(100_000)
+  const baseMonthlyExpenses = Array(12).fill(70_000)
+  const taxRate = 0.25
+
+  it('returns all three scenario keys: base, optimistic, pessimistic', () => {
+    const result = buildThreeScenarios({ baseMonthlyRevenue, baseMonthlyExpenses, taxRate })
+    expect(result).toHaveProperty('base')
+    expect(result).toHaveProperty('optimistic')
+    expect(result).toHaveProperty('pessimistic')
+  })
+
+  it('base scenario multiplier is 1.0', () => {
+    const { base } = buildThreeScenarios({ baseMonthlyRevenue, baseMonthlyExpenses, taxRate })
+    expect(base.multiplier).toBe(1.0)
+  })
+
+  it('optimistic multiplier = 1 + growthFactor (default 1.15)', () => {
+    const { optimistic } = buildThreeScenarios({ baseMonthlyRevenue, baseMonthlyExpenses, taxRate })
+    expect(optimistic.multiplier).toBeCloseTo(1.15, 5)
+  })
+
+  it('pessimistic multiplier = 1 - stressFactor (default 0.80)', () => {
+    const { pessimistic } = buildThreeScenarios({ baseMonthlyRevenue, baseMonthlyExpenses, taxRate })
+    expect(pessimistic.multiplier).toBeCloseTo(0.80, 5)
+  })
+
+  it('custom growthFactor/stressFactor are reflected in multipliers', () => {
+    const result = buildThreeScenarios({ baseMonthlyRevenue, baseMonthlyExpenses, taxRate, growthFactor: 0.25, stressFactor: 0.30 })
+    expect(result.optimistic.multiplier).toBeCloseTo(1.25, 5)
+    expect(result.pessimistic.multiplier).toBeCloseTo(0.70, 5)
+  })
+
+  it('base scenario monthly_revenue length is 12', () => {
+    const { base } = buildThreeScenarios({ baseMonthlyRevenue, baseMonthlyExpenses, taxRate })
+    expect(base.monthly_revenue).toHaveLength(12)
+    expect(base.monthly_net).toHaveLength(12)
+  })
+
+  it('runway_months is null when business is profitable', () => {
+    const { base } = buildThreeScenarios({ baseMonthlyRevenue, baseMonthlyExpenses, taxRate, initialCash: 1_000_000 })
+    expect(base.runway_months).toBeNull()
+  })
+
+  it('runway_months is set when cash goes negative', () => {
+    const expenses = Array(12).fill(130_000)  // losses every month
+    const { base } = buildThreeScenarios({ baseMonthlyRevenue, baseMonthlyExpenses: expenses, taxRate, initialCash: 50_000 })
+    expect(base.runway_months).not.toBeNull()
+  })
+
+  it('scenario names are correct strings', () => {
+    const { base, optimistic, pessimistic } = buildThreeScenarios({ baseMonthlyRevenue, baseMonthlyExpenses, taxRate })
+    expect(base.name).toBe('base')
+    expect(optimistic.name).toBe('optimistic')
+    expect(pessimistic.name).toBe('pessimistic')
+  })
+})
+
+// ── computeForecast — monthly_breakdown array ─────────────────────────────────
+
+describe('computeForecast — monthly_breakdown structure', () => {
+  it('base scenario has exactly 12 monthly entries', () => {
+    const result = computeForecast(mkInputs())
+    expect(result.base).toHaveLength(12)
+  })
+
+  it('each month object has label property as non-empty string', () => {
+    const result = computeForecast(mkInputs())
+    result.base.forEach(m => {
+      expect(typeof m.label).toBe('string')
+      expect(m.label.length).toBeGreaterThan(0)
+    })
+  })
+
+  it('revenue is consistent across all months for fixed inputs', () => {
+    // With fixed avgMonthlyRevenue, all 12 months have the same revenue
+    const result = computeForecast(mkInputs({ avgMonthlyRevenue: 50_000 }))
+    result.base.forEach(m => expect(m.revenue).toBeCloseTo(50_000, 0))
+  })
+
+  it('net is revenue minus (expenses + debtService) each month', () => {
+    const inputs = mkInputs({ avgMonthlyRevenue: 100_000, avgMonthlyExpenses: 70_000, monthlyDebtService: 5_000 })
+    const result = computeForecast(inputs)
+    result.base.forEach(m => expect(m.net).toBeCloseTo(100_000 - 70_000 - 5_000, 0))
+  })
+
+  it('optimistic scenario has higher monthly revenue than base', () => {
+    const result = computeForecast(mkInputs({ avgMonthlyRevenue: 100_000, optimisticGrowthFactor: 0.20 }))
+    result.optimistic.forEach(m => expect(m.revenue).toBeCloseTo(120_000, 0))
+  })
+
+  it('pessimistic scenario has lower monthly revenue than base', () => {
+    const result = computeForecast(mkInputs({ avgMonthlyRevenue: 100_000, pessimisticStressFactor: 0.10 }))
+    result.pessimistic.forEach(m => expect(m.revenue).toBeCloseTo(90_000, 0))
+  })
+})

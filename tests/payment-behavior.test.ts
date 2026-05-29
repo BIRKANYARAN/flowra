@@ -489,3 +489,147 @@ describe('predictPaymentDate — pure', () => {
   })
 
 })
+
+// ── computeDaysToPay — additional formula verification ────────────────────────
+
+describe('computeDaysToPay — formula verification', () => {
+  it('exact 45-day gap is computed correctly', () => {
+    expect(computeDaysToPay('2026-01-01', '2026-02-15')).toBe(45)
+  })
+
+  it('same-day payment always returns 0', () => {
+    const pairs: [string, string][] = [
+      ['2026-01-15', '2026-01-15'],
+      ['2025-06-30', '2025-06-30'],
+      ['2024-12-31', '2024-12-31'],
+    ]
+    pairs.forEach(([s, p]) => expect(computeDaysToPay(s, p)).toBe(0))
+  })
+
+  it('31-day month gap: Jan 1 → Feb 1 = 31 days', () => {
+    expect(computeDaysToPay('2026-01-01', '2026-02-01')).toBe(31)
+  })
+
+  it('28-day Feb (non-leap): Feb 1 → Mar 1 = 28 days', () => {
+    expect(computeDaysToPay('2025-02-01', '2025-03-01')).toBe(28)
+  })
+
+  it('29-day Feb (leap year): Feb 1 → Mar 1 = 29 days', () => {
+    expect(computeDaysToPay('2024-02-01', '2024-03-01')).toBe(29)
+  })
+
+  it('result is an integer (no fractional days)', () => {
+    const result = computeDaysToPay('2026-03-10', '2026-04-20')
+    expect(Number.isInteger(result)).toBe(true)
+  })
+})
+
+// ── predictPaymentDate — formula: saleDate + avgDays ─────────────────────────
+
+describe('predictPaymentDate — formula: saleDate + avgDaysToPay', () => {
+  it('saleDate + 0 = same date (immediate payment expectation)', () => {
+    expect(predictPaymentDate('2026-06-15', 0)).toBe('2026-06-15')
+  })
+
+  it('saleDate + 14 = two weeks later', () => {
+    expect(predictPaymentDate('2026-06-01', 14)).toBe('2026-06-15')
+  })
+
+  it('null avgDaysToPay returns null (no prediction possible)', () => {
+    expect(predictPaymentDate('2026-06-01', null)).toBeNull()
+  })
+
+  it('saleDate + 31 crosses into next month', () => {
+    expect(predictPaymentDate('2026-06-01', 31)).toBe('2026-07-02')
+  })
+
+  it('result is always in YYYY-MM-DD format when avgDays is not null', () => {
+    const res = predictPaymentDate('2026-08-20', 45)
+    expect(res).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+  })
+
+  it('large avgDaysToPay crosses year boundary', () => {
+    const res = predictPaymentDate('2026-11-01', 120)
+    expect(res).not.toBeNull()
+    expect(res!.startsWith('2027')).toBe(true)
+  })
+})
+
+// ── computeReliabilityScore — all on-time vs all late ────────────────────────
+
+describe('computeReliabilityScore — all on-time vs all late extremes', () => {
+  it('all on-time payments (5 records) returns 100', () => {
+    const payments = Array.from({ length: 5 }, () => ({ days_to_pay: 15 }))
+    expect(computeReliabilityScore(payments)).toBe(100)
+  })
+
+  it('all late >90 days (5 records) returns 0', () => {
+    const payments = Array.from({ length: 5 }, () => ({ days_to_pay: 120 }))
+    expect(computeReliabilityScore(payments)).toBe(0)
+  })
+
+  it('single 31-day payment yields score 95', () => {
+    expect(computeReliabilityScore([{ days_to_pay: 31 }])).toBe(95)
+  })
+
+  it('single 61-day payment yields score 90', () => {
+    expect(computeReliabilityScore([{ days_to_pay: 61 }])).toBe(90)
+  })
+
+  it('single 91-day payment yields score 80', () => {
+    expect(computeReliabilityScore([{ days_to_pay: 91 }])).toBe(80)
+  })
+
+  it('empty history yields 100 (neutral — no data = no penalty)', () => {
+    expect(computeReliabilityScore([])).toBe(100)
+  })
+
+  it('score is always an integer', () => {
+    const result = computeReliabilityScore([{ days_to_pay: 45 }, { days_to_pay: 10 }])
+    expect(Number.isInteger(result)).toBe(true)
+  })
+})
+
+// ── classifyPaymentBehavior — all classification levels at exact boundaries ──
+
+describe('classifyPaymentBehavior — all boundary values', () => {
+  it('score=85 + avg=20 → excellent (both criteria met exactly)', () => {
+    expect(classifyPaymentBehavior(85, 20)).toBe('excellent')
+  })
+
+  it('score=86 + avg=19 → excellent', () => {
+    expect(classifyPaymentBehavior(86, 19)).toBe('excellent')
+  })
+
+  it('score=70 → good (lower boundary of good)', () => {
+    expect(classifyPaymentBehavior(70, null)).toBe('good')
+  })
+
+  it('score=69 → average (just under good)', () => {
+    expect(classifyPaymentBehavior(69, null)).toBe('average')
+  })
+
+  it('score=50 → average (lower boundary of average)', () => {
+    expect(classifyPaymentBehavior(50, null)).toBe('average')
+  })
+
+  it('score=49 → poor (just under average)', () => {
+    expect(classifyPaymentBehavior(49, null)).toBe('poor')
+  })
+
+  it('score=30 → poor (lower boundary of poor)', () => {
+    expect(classifyPaymentBehavior(30, null)).toBe('poor')
+  })
+
+  it('score=29 → unreliable (just under poor)', () => {
+    expect(classifyPaymentBehavior(29, null)).toBe('unreliable')
+  })
+
+  it('score=0 → unreliable (absolute minimum)', () => {
+    expect(classifyPaymentBehavior(0, null)).toBe('unreliable')
+  })
+
+  it('score=100 + avg=0 → excellent (maximum score)', () => {
+    expect(classifyPaymentBehavior(100, 0)).toBe('excellent')
+  })
+})
