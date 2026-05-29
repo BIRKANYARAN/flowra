@@ -14,6 +14,61 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { AccountingPeriod, PeriodStatus, PeriodCloseChecklist } from '@/types/dto'
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Pure helper functions (no I/O, easily testable)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Returns true when the period status is 'locked' */
+export function isPeriodLocked(status: string): boolean {
+  return status === 'locked'
+}
+
+/** Returns true when the period status is 'open' */
+export function isPeriodOpen(status: string): boolean {
+  return status === 'open'
+}
+
+/**
+ * Number of calendar days between periodEnd and today.
+ * Returns 0 if same date, positive if periodEnd is in the past,
+ * negative if periodEnd is in the future.
+ */
+export function daysSincePeriodEnd(periodEnd: string, today: string): number {
+  const end = new Date(periodEnd)
+  const now = new Date(today)
+  // Normalise to midnight UTC to avoid DST drift
+  end.setUTCHours(0, 0, 0, 0)
+  now.setUTCHours(0, 0, 0, 0)
+  return Math.round((now.getTime() - end.getTime()) / 86_400_000)
+}
+
+/** Turkish label for each PeriodStatus value */
+export function formatPeriodStatus(status: string): string {
+  switch (status) {
+    case 'open':      return 'Açık'
+    case 'pre_close': return 'Ön Kapanış'
+    case 'closed':    return 'Kapalı'
+    case 'locked':    return 'Kilitli'
+    default:          return status
+  }
+}
+
+/**
+ * Whether a period can be moved to 'closed'.
+ * Requires: status is 'open' or 'pre_close', AND checklist is complete.
+ */
+export function canClosePeriod(status: string, checklistComplete: boolean): boolean {
+  return (status === 'open' || status === 'pre_close') && checklistComplete
+}
+
+/**
+ * Whether a period can be moved to 'locked'.
+ * Only closed periods may be locked.
+ */
+export function canLockPeriod(status: string): boolean {
+  return status === 'closed'
+}
 import { BalanceSheetService } from './balance-sheet.service'
 import { TaxService } from './tax.service'
 

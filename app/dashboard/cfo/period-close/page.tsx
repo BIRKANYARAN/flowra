@@ -8,6 +8,7 @@ import Link from 'next/link'
 import { Skeleton } from '@/components/ds'
 import { fmtDate as fmt } from '@/lib/format'
 import type { PeriodCloseReadiness, PeriodCloseCheck } from '@/lib/services/ledger/period-close-enhanced.service'
+import { PeriodCloseTab } from '@/app/dashboard/cfo/_tabs/PeriodCloseTab'
 
 interface Period {
   id:           string
@@ -180,6 +181,12 @@ export default function PeriodClosePage() {
           ← CFO Cockpit
         </Link>
       </div>
+
+      {/* Period Close Wizard Tab */}
+      <section>
+        <h2 className="text-base font-bold text-[#0f172a] mb-3">Dönem Kapanış Wizard</h2>
+        <PeriodCloseTab />
+      </section>
 
       {error && (
         <div className="bg-neg-light border border-neg-light rounded px-4 py-3 text-xs text-neg-text">{error}</div>

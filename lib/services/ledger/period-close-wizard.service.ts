@@ -90,6 +90,62 @@ export function determineCurrentPhase(phases: WizardPhaseResult[]): WizardPhase 
   return 4
 }
 
+// ── Additional pure helpers ────────────────────────────────────────────────────
+
+/** 5 mandatory step IDs — must all pass before period can close */
+const MANDATORY_STEP_IDS = [
+  'sales_all_invoiced',
+  'expenses_all_entered',
+  'trial_balance_balanced',
+  'journal_entries_paired',
+  'partner_compensation_recorded',
+] as const
+
+/**
+ * Returns true if all 5 mandatory steps have status='pass'.
+ */
+export function allMandatoryPass(steps: WizardStep[]): boolean {
+  for (const id of MANDATORY_STEP_IDS) {
+    const step = steps.find(s => s.id === id)
+    if (!step || step.status !== 'pass') return false
+  }
+  return true
+}
+
+/**
+ * Returns null if there are no blockers, otherwise returns a Turkish message:
+ * "X adım tamamlanmadan dönem kapatılamaz: ..."
+ */
+export function getBlockerMessage(steps: WizardStep[]): string | null {
+  const blockers = steps.filter(
+    s => s.is_blocking && (s.status === 'fail' || s.status === 'pending'),
+  )
+  if (blockers.length === 0) return null
+  const names = blockers.map(s => s.label).join(', ')
+  return `${blockers.length} adım tamamlanmadan dönem kapatılamaz: ${names}`
+}
+
+/**
+ * Returns a count of steps for each StepStatus value.
+ */
+export function countByStatus(steps: WizardStep[]): Record<StepStatus, number> {
+  const result: Record<StepStatus, number> = {
+    pass: 0, fail: 0, pending: 0, manual: 0, skipped: 0,
+  }
+  for (const s of steps) {
+    result[s.status] = (result[s.status] ?? 0) + 1
+  }
+  return result
+}
+
+/**
+ * Estimates minutes to complete remaining steps.
+ * 5 minutes per pending or fail step; 0 for pass/skipped/manual.
+ */
+export function estimateMinutesToClose(steps: WizardStep[]): number {
+  return steps.filter(s => s.status === 'pending' || s.status === 'fail').length * 5
+}
+
 // ── Step builder helpers ───────────────────────────────────────────────────────
 
 function makeStep(
