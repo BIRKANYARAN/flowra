@@ -2,10 +2,10 @@
 // GET /api/finance/revenue-recognition
 //
 // Returns revenue recognition report: accrual vs cash basis comparison,
-// collection efficiency, deferred revenue, and pipeline backlog.
+// deferred revenue, monthly recognition trend, and collection lag.
 //
 // Query params:
-//   ?period=2025-01   (default: current month, format: YYYY-MM)
+//   ?method=accrual_basis|cash_basis  (default: accrual_basis)
 //
 // Auth: resolveApiAuth, manager+
 // Cache: revalidate every 1800 seconds
@@ -15,7 +15,10 @@ export const revalidate = 1800
 
 import { NextRequest, NextResponse } from 'next/server'
 import { resolveApiAuth } from '@/lib/api-auth'
-import { RevenueRecognitionService } from '@/lib/services/finance/revenue-recognition.service'
+import {
+  RevenueRecognitionService,
+  type RecognitionMethod,
+} from '@/lib/services/finance/revenue-recognition.service'
 import { REQUEST_ID_HEADER } from '@/middleware'
 
 export async function GET(req: NextRequest) {
@@ -23,19 +26,24 @@ export async function GET(req: NextRequest) {
   if (!auth.ok) return auth.response
   const { companyId, supabase, ctx } = auth
 
-  const periodRaw = req.nextUrl.searchParams.get('period') ?? undefined
+  const methodRaw = req.nextUrl.searchParams.get('method') ?? 'accrual_basis'
 
-  // Validate period format if provided
-  if (periodRaw && !/^\d{4}-\d{2}$/.test(periodRaw)) {
+  if (methodRaw !== 'accrual_basis' && methodRaw !== 'cash_basis') {
     return NextResponse.json(
-      { error: 'Invalid period format. Expected YYYY-MM.', code: 'INVALID_PARAM', type: 'CLIENT' },
+      {
+        error: 'Invalid method. Expected accrual_basis or cash_basis.',
+        code:  'INVALID_PARAM',
+        type:  'CLIENT',
+      },
       { status: 400, headers: { [REQUEST_ID_HEADER]: ctx.requestId } },
     )
   }
 
+  const method = methodRaw as RecognitionMethod
+
   try {
     const service = new RevenueRecognitionService(supabase)
-    const report  = await service.getReport(companyId, periodRaw)
+    const report  = await service.getReport(companyId, method)
 
     return NextResponse.json(
       { report },

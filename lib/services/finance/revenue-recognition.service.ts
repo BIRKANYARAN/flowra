@@ -3,365 +3,441 @@
 //
 // Revenue Recognition & Accrual Tracking
 //
-// Distinguishes three revenue bases:
-//   Accrual   — confirmed/paid/partial/overdue sales (earned regardless of cash)
-//   Cash      — Σ amount_paid for the same period (actually collected)
-//   Deferred  — proforma/draft/unconverted sales (not yet earned)
+// Tracks when revenue is earned vs. when cash is received.
+// Supports both cash-basis and accrual-basis reporting with deferred revenue.
 //
-// Pure functions exported for testing:
-//   computeAccrualCashDiff         — accrual - cash (A/R creation proxy)
-//   computeCollectionEfficiency    — cash / accrual × 100 (null if accrual = 0)
-//   classifyCollectionEfficiency   — excellent / good / fair / poor / unknown
-//   computeDeferredRatio           — deferred / accrual × 100
-//   computeRevenueBacklog          — pipeline × (win_rate / 100)
+// Pure exported functions (testable without DB):
+//   computeEarnedRevenue           — accrual: total; cash: paid
+//   computeUnearnedRevenue         — accrual: 0; cash: total - paid
+//   classifyRecognitionStatus      — fully_recognized / partially_recognized / unrecognized / deferred
+//   computeRecognitionGap          — accrual - cash
+//   computeCumulativeReceivables   — running AR balance floored at 0
+//   computeRevenueRecognitionRate  — earned / total × 100, null guard
+//   computeDeferredRevenueBalance  — Σ over-payments (paid > total)
+//   computeAccrualCashDelta        — absolute delta, monthly avg, ratio
+//   buildMonthlyRecognition        — monthly accrual/cash/gap/AR array
+//   classifyRevenueQualityFromRecognition — 5-tier quality
+//   computeAvgCollectionLag        — avg days sale_date → payment_date
+//   generateRecognitionNarrative   — Turkish quality narrative
 //
 // Class: RevenueRecognitionService
-//   getReport(companyId, periodKey?)  → RevenueRecognitionReport
+//   getReport(companyId, method?) → RevenueRecognitionReport
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { periodKeyToDateRange } from './income-statement.service'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyClient = SupabaseClient<any>
 
-// ── Turkish month names ───────────────────────────────────────────────────────
+// ── Core types ────────────────────────────────────────────────────────────────
 
-const MONTH_NAMES: Record<string, string> = {
-  '01': 'Ocak',    '02': 'Şubat', '03': 'Mart',
-  '04': 'Nisan',   '05': 'Mayıs', '06': 'Haziran',
-  '07': 'Temmuz',  '08': 'Ağustos', '09': 'Eylül',
-  '10': 'Ekim',    '11': 'Kasım',   '12': 'Aralık',
+export type RecognitionMethod = 'cash_basis' | 'accrual_basis'
+
+export interface SaleRecognition {
+  sale_id: string
+  sale_date: string
+  customer_name: string | null
+  total_try: number
+  paid_amount_try: number
+  earned_revenue: number
+  unearned_revenue: number
+  deferred_revenue: number
+  recognition_status: 'fully_recognized' | 'partially_recognized' | 'unrecognized' | 'deferred'
 }
 
-function periodLabel(periodKey: string): string {
-  const [year, month] = periodKey.split('-')
-  return `${MONTH_NAMES[month] ?? month} ${year}`
+export interface MonthlyRecognition {
+  year_month: string
+  earned_revenue_accrual: number
+  earned_revenue_cash: number
+  cash_received: number
+  recognition_gap: number
+  cumulative_receivables: number
 }
 
-function priorMonth(periodKey: string): string {
-  const [y, m] = periodKey.split('-').map(Number)
-  if (m === 1) return `${y - 1}-12`
-  return `${y}-${String(m - 1).padStart(2, '0')}`
+// ── Pure exported functions ───────────────────────────────────────────────────
+
+/**
+ * Compute earned revenue for a sale.
+ * accrual: totalTry (fully recognized when sale is made)
+ * cash: paidAmountTry (only recognized when received)
+ */
+export function computeEarnedRevenue(
+  totalTry: number,
+  paidAmountTry: number,
+  method: RecognitionMethod,
+): number {
+  if (method === 'accrual_basis') return totalTry
+  return paidAmountTry
 }
+
+/**
+ * Compute unearned revenue for a sale.
+ * accrual: 0 (full revenue already recognized)
+ * cash: max(0, totalTry - paidAmountTry)
+ */
+export function computeUnearnedRevenue(
+  totalTry: number,
+  paidAmountTry: number,
+  method: RecognitionMethod,
+): number {
+  if (method === 'accrual_basis') return 0
+  return Math.max(0, totalTry - paidAmountTry)
+}
+
+/**
+ * Classify recognition status for a sale.
+ * fully_recognized: paidAmountTry >= totalTry OR method=accrual
+ * partially_recognized: method=cash AND 0 < paidAmountTry < totalTry
+ * unrecognized: method=cash AND paidAmountTry === 0
+ * deferred: paidAmountTry > totalTry (over-paid / prepayment)
+ */
+export function classifyRecognitionStatus(
+  totalTry: number,
+  paidAmountTry: number,
+  method: RecognitionMethod,
+): SaleRecognition['recognition_status'] {
+  if (paidAmountTry > totalTry) return 'deferred'
+  if (method === 'accrual_basis') return 'fully_recognized'
+  if (paidAmountTry >= totalTry) return 'fully_recognized'
+  if (paidAmountTry > 0) return 'partially_recognized'
+  return 'unrecognized'
+}
+
+/**
+ * Compute recognition gap: accrualRevenue - cashRevenue.
+ * Positive = more earned than received; negative = cash > accrual.
+ */
+export function computeRecognitionGap(
+  accrualRevenue: number,
+  cashRevenue: number,
+): number {
+  return accrualRevenue - cashRevenue
+}
+
+/**
+ * Compute running AR balance for each month.
+ * cumulative[i] = Σ(sales[0..i]) - Σ(cash[0..i]), floored at 0.
+ * Returns same-length array as input.
+ */
+export function computeCumulativeReceivables(
+  monthlySales: number[],
+  monthlyCashReceived: number[],
+): number[] {
+  let cumSales = 0
+  let cumCash  = 0
+  return monthlySales.map((sale, i) => {
+    cumSales += sale
+    cumCash  += monthlyCashReceived[i] ?? 0
+    return Math.max(0, cumSales - cumCash)
+  })
+}
+
+/**
+ * Compute revenue recognition rate: earnedRevenue / totalRevenue × 100.
+ * Returns null if totalRevenue === 0 (division-by-zero guard).
+ */
+export function computeRevenueRecognitionRate(
+  earnedRevenue: number,
+  totalRevenue: number,
+): number | null {
+  if (totalRevenue === 0) return null
+  return (earnedRevenue / totalRevenue) * 100
+}
+
+/**
+ * Compute deferred revenue balance.
+ * Sum of (paid - total) for sales where paid > total (over-payments / prepayments).
+ */
+export function computeDeferredRevenueBalance(
+  sales: Array<{ total_try: number; paid_amount_try: number }>,
+): number {
+  return sales.reduce((sum, s) => {
+    const overpaid = s.paid_amount_try - s.total_try
+    return sum + (overpaid > 0 ? overpaid : 0)
+  }, 0)
+}
+
+/**
+ * Compute accrual-to-cash delta over a multi-month period.
+ */
+export function computeAccrualCashDelta(
+  accrualRevenue: number,
+  cashRevenue: number,
+  periodMonths: number,
+): {
+  absolute_delta: number
+  avg_monthly_delta: number
+  delta_ratio_pct: number | null
+} {
+  const absolute_delta   = accrualRevenue - cashRevenue
+  const avg_monthly_delta = periodMonths > 0 ? absolute_delta / periodMonths : 0
+  const delta_ratio_pct  = accrualRevenue !== 0
+    ? (absolute_delta / accrualRevenue) * 100
+    : null
+
+  return { absolute_delta, avg_monthly_delta, delta_ratio_pct }
+}
+
+/**
+ * Build monthly recognition array from aggregated month data.
+ * Missing months default to 0. Includes cumulative receivables.
+ */
+export function buildMonthlyRecognition(
+  salesByMonth: Map<string, { total_try: number; paid_amount_try: number }>,
+  paymentsByMonth: Map<string, number>,
+  months: string[],
+): MonthlyRecognition[] {
+  const monthlySalesArr  = months.map(m => salesByMonth.get(m)?.total_try ?? 0)
+  const monthlyCashArr   = months.map(m => paymentsByMonth.get(m) ?? 0)
+  const cumulativeAR     = computeCumulativeReceivables(monthlySalesArr, monthlyCashArr)
+
+  return months.map((year_month, i) => {
+    const entry          = salesByMonth.get(year_month)
+    const accrual        = entry?.total_try ?? 0
+    const cashPaid       = entry?.paid_amount_try ?? 0
+    const cashReceived   = paymentsByMonth.get(year_month) ?? 0
+
+    return {
+      year_month,
+      earned_revenue_accrual: accrual,
+      earned_revenue_cash:    cashPaid,
+      cash_received:          cashReceived,
+      recognition_gap:        computeRecognitionGap(accrual, cashPaid),
+      cumulative_receivables: cumulativeAR[i],
+    }
+  })
+}
+
+/**
+ * Classify revenue quality from recognition rate and gap.
+ * high_quality:      recognitionRate >= 90%
+ * good_quality:      recognitionRate >= 70%
+ * mixed:             recognitionRate >= 50%
+ * poor_quality:      recognitionRate >= 30%
+ * uncollectable_risk: recognitionRate < 30% OR null
+ */
+export function classifyRevenueQualityFromRecognition(
+  recognitionRate: number | null,
+  _recognitionGap: number,
+  _accrualRevenue: number,
+): 'high_quality' | 'good_quality' | 'mixed' | 'poor_quality' | 'uncollectable_risk' {
+  if (recognitionRate === null || recognitionRate < 30) return 'uncollectable_risk'
+  if (recognitionRate >= 90) return 'high_quality'
+  if (recognitionRate >= 70) return 'good_quality'
+  if (recognitionRate >= 50) return 'mixed'
+  return 'poor_quality'
+}
+
+/**
+ * Compute average collection lag in days.
+ * Average days from sale_date to payment_date for paid sales.
+ * Returns null if no paid sales.
+ */
+export function computeAvgCollectionLag(
+  sales: Array<{ sale_date: string; payment_date: string | null }>,
+): number | null {
+  const paid = sales.filter(s => s.payment_date !== null)
+  if (paid.length === 0) return null
+
+  const totalDays = paid.reduce((sum, s) => {
+    const saleMs    = new Date(s.sale_date).getTime()
+    const paymentMs = new Date(s.payment_date!).getTime()
+    const days      = Math.max(0, (paymentMs - saleMs) / (1000 * 60 * 60 * 24))
+    return sum + days
+  }, 0)
+
+  return totalDays / paid.length
+}
+
+/**
+ * Generate Turkish narrative for revenue recognition quality.
+ */
+export function generateRecognitionNarrative(
+  quality: ReturnType<typeof classifyRevenueQualityFromRecognition>,
+  recognitionRate: number | null,
+  gap: number,
+  deferredBalance: number,
+): string {
+  const rate = recognitionRate !== null ? recognitionRate.toFixed(0) : null
+
+  switch (quality) {
+    case 'high_quality':
+      return 'Gelir tahsilatı mükemmel — nakit ve tahakkuk gelirleri örtüşüyor.'
+    case 'good_quality':
+      return 'Gelir kalitesi iyi — tahsilatlar büyük ölçüde gerçekleşiyor.'
+    case 'mixed':
+      return `Karma tablo — fatura edilen gelirlerin %${rate} tahsil edildi.`
+    case 'poor_quality':
+      return 'Dikkat: Tahakkuk gelirlerin büyük bölümü nakit dönmüyor.'
+    case 'uncollectable_risk':
+      return `Kritik: Tahsilat riski yüksek — ₺${gap}₺ tahakkuk-nakit farkı.`
+  }
+
+  // Suppress unused variable warning
+  void deferredBalance
+}
+
+// ── Report types ──────────────────────────────────────────────────────────────
+
+export interface RevenueRecognitionReport {
+  period_label: string
+  method: RecognitionMethod
+  total_accrual_revenue: number
+  total_cash_revenue: number
+  recognition_rate_pct: number | null
+  recognition_gap: number
+  deferred_revenue_balance: number
+  monthly_recognition: MonthlyRecognition[]
+  recognition_quality: ReturnType<typeof classifyRevenueQualityFromRecognition>
+  avg_collection_lag_days: number | null
+  accrual_cash_delta: ReturnType<typeof computeAccrualCashDelta>
+  narrative: string
+}
+
+// ── Internal helpers ──────────────────────────────────────────────────────────
 
 function currentMonthKey(): string {
   const now = new Date()
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
 }
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-
-export interface RevenueBasis {
-  period_key:                   string
-  period_label:                 string
-  accrual_revenue_try:          number        // confirmed + paid + partial + overdue sales
-  cash_revenue_try:             number        // Σ amount_paid (actually collected)
-  deferred_revenue_try:         number        // proforma/draft pipeline value
-  accrual_cash_diff_try:        number        // accrual - cash (A/R creation)
-  collection_efficiency_pct:    number | null
-  collection_efficiency_class:  'excellent' | 'good' | 'fair' | 'poor' | 'unknown'
-  deferred_ratio_pct:           number
+function priorMonthKey(ym: string): string {
+  const [y, m] = ym.split('-').map(Number)
+  if (m === 1) return `${y - 1}-12`
+  return `${y}-${String(m - 1).padStart(2, '0')}`
 }
 
-export interface RevenueRecognitionReport {
-  period_key:              string
-  period_label:            string
-  current:                 RevenueBasis
-  prior_period:            RevenueBasis | null
-  revenue_backlog_try:     number          // pipeline × (win_rate / 100)
-  raw_pipeline_try:        number          // unadjusted proforma values
-  pipeline_win_rate_pct:   number | null
-  monthly_trend:           RevenueBasis[]  // last 6 months
-  efficiency_trend:        'improving' | 'stable' | 'declining' | 'insufficient_data'
+/** Build last-N month keys ending at `endMonth`, oldest first */
+function lastNMonths(n: number, endMonth: string): string[] {
+  const keys: string[] = []
+  let cur = endMonth
+  for (let i = 0; i < n; i++) {
+    keys.unshift(cur)
+    cur = priorMonthKey(cur)
+  }
+  return keys
 }
 
-// ── Pure exported functions ───────────────────────────────────────────────────
-
-/**
- * Compute accrual-to-cash difference: accrual_revenue - cash_revenue.
- * Positive value = uncollected A/R created this period.
- */
-export function computeAccrualCashDiff(
-  accrualRevenueTry: number,
-  cashRevenueTry: number,
-): number {
-  return accrualRevenueTry - cashRevenueTry
-}
-
-/**
- * Compute collection efficiency: cash_revenue / accrual_revenue × 100.
- * Returns null if accrual_revenue = 0 (division-by-zero guard).
- */
-export function computeCollectionEfficiency(
-  cashRevenueTry: number,
-  accrualRevenueTry: number,
-): number | null {
-  if (accrualRevenueTry === 0) return null
-  return (cashRevenueTry / accrualRevenueTry) * 100
-}
-
-/**
- * Classify collection efficiency percentage:
- *   ≥90%   → 'excellent'
- *   70–89% → 'good'
- *   50–69% → 'fair'
- *   <50%   → 'poor'
- *   null   → 'unknown'
- */
-export function classifyCollectionEfficiency(
-  efficiencyPct: number | null,
-): 'excellent' | 'good' | 'fair' | 'poor' | 'unknown' {
-  if (efficiencyPct === null) return 'unknown'
-  if (efficiencyPct >= 90) return 'excellent'
-  if (efficiencyPct >= 70) return 'good'
-  if (efficiencyPct >= 50) return 'fair'
-  return 'poor'
-}
-
-/**
- * Compute deferred revenue ratio: deferred / accrual × 100.
- * Returns 0 if accrual_revenue = 0.
- */
-export function computeDeferredRatio(
-  deferredRevenueTry: number,
-  accrualRevenueTry: number,
-): number {
-  if (accrualRevenueTry === 0) return 0
-  return (deferredRevenueTry / accrualRevenueTry) * 100
-}
-
-/**
- * Compute adjusted revenue backlog: pipeline × (win_rate / 100).
- * This is forward-looking potential revenue weighted by historical win rate.
- */
-export function computeRevenueBacklog(
-  activePipelineTry: number,
-  historicalWinRatePct: number,
-): number {
-  return activePipelineTry * (historicalWinRatePct / 100)
-}
-
-// ── Internal helpers ──────────────────────────────────────────────────────────
-
-/** Sales statuses that count toward accrual revenue */
-const ACCRUAL_STATUSES = ['confirmed', 'paid', 'partial', 'overdue', 'unpaid']
-
-/** Sales statuses that count as pipeline / deferred */
-const DEFERRED_STATUSES = ['proforma', 'draft']
-
-interface RawPeriodData {
-  accrual:  number
-  cash:     number
-  deferred: number
-}
-
-// ── Main service class ────────────────────────────────────────────────────────
+// ── Service class ─────────────────────────────────────────────────────────────
 
 export class RevenueRecognitionService {
-  private supabase: AnyClient
+  constructor(private readonly supabase: AnyClient) {}
 
-  constructor(supabase: AnyClient) {
-    this.supabase = supabase
-  }
-
-  /**
-   * Fetch raw accrual, cash, and deferred figures for a date range.
-   *
-   * Accrual: confirmed/paid/partial/overdue sales total_try in range.
-   * Cash:    Σ COALESCE(amount_paid, total_try) for paid status; amount_paid for partial.
-   * Deferred: total_try of proforma/draft/unconverted sales (pipeline).
-   */
-  private async fetchPeriodData(
-    companyId: string,
-    fromDate: string,
-    toDate: string,
-  ): Promise<RawPeriodData> {
-    // ── Accrual + cash sales (earned revenue in the period) ───────────────────
-    const accrualRes = await this.supabase
-      .from('sales')
-      .select('total_try, amount_paid, payment_status')
-      .eq('company_id', companyId)
-      .is('deleted_at', null)
-      .gte('sale_date', fromDate)
-      .lte('sale_date', toDate)
-      .in('payment_status', ACCRUAL_STATUSES)
-      .limit(5000)
-
-    let accrual = 0
-    let cash = 0
-
-    for (const row of (accrualRes.data ?? [])) {
-      const total = Number(row.total_try ?? 0)
-      const paid  = row.amount_paid !== null && row.amount_paid !== undefined
-        ? Number(row.amount_paid)
-        : 0
-
-      accrual += total
-
-      // Cash = amount actually collected
-      const status = String(row.payment_status ?? '')
-      if (status === 'paid') {
-        // Fully paid — collected = total_try (or amount_paid if set)
-        cash += paid > 0 ? paid : total
-      } else if (status === 'partial') {
-        // Partial — use amount_paid directly
-        cash += paid
-      }
-      // unpaid / overdue / confirmed → no cash collected
-    }
-
-    // ── Deferred: proforma / draft pipeline (company-level, not period-scoped) ─
-    // Note: deferred is pipeline across ALL time (not bounded to period)
-    // but we still filter to avoid old converted ones
-    const deferredRes = await this.supabase
-      .from('sales')
-      .select('total_try')
-      .eq('company_id', companyId)
-      .is('deleted_at', null)
-      .in('payment_status', DEFERRED_STATUSES)
-      .limit(5000)
-
-    const deferred = (deferredRes.data ?? []).reduce(
-      (s: number, r: { total_try: number }) => s + Number(r.total_try ?? 0),
-      0,
-    )
-
-    return { accrual, cash, deferred }
-  }
-
-  /**
-   * Build a RevenueBasis from raw period data.
-   */
-  private buildRevenueBasis(periodKey: string, data: RawPeriodData): RevenueBasis {
-    const diff       = computeAccrualCashDiff(data.accrual, data.cash)
-    const efficiency = computeCollectionEfficiency(data.cash, data.accrual)
-    const effClass   = classifyCollectionEfficiency(efficiency)
-    const deferred_ratio = computeDeferredRatio(data.deferred, data.accrual)
-
-    return {
-      period_key:                  periodKey,
-      period_label:                periodLabel(periodKey),
-      accrual_revenue_try:         data.accrual,
-      cash_revenue_try:            data.cash,
-      deferred_revenue_try:        data.deferred,
-      accrual_cash_diff_try:       diff,
-      collection_efficiency_pct:   efficiency,
-      collection_efficiency_class: effClass,
-      deferred_ratio_pct:          deferred_ratio,
-    }
-  }
-
-  /**
-   * Compute win rate from historical proforma conversions (inline).
-   * Win rate = converted / (converted + rejected) × 100.
-   * Falls back to null if insufficient data.
-   */
-  private async computeWinRate(companyId: string): Promise<number | null> {
-    const res = await this.supabase
-      .from('proformas')
-      .select('status')
-      .eq('company_id', companyId)
-      .is('deleted_at', null)
-      .in('status', ['converted', 'rejected', 'accepted', 'approved'])
-      .limit(1000)
-
-    const rows = (res.data ?? []) as Array<{ status: string }>
-    const converted = rows.filter(r => r.status === 'converted').length
-    const rejected  = rows.filter(r => r.status === 'rejected').length
-    const total     = converted + rejected
-
-    if (total < 5) return null  // insufficient sample
-    return (converted / total) * 100
-  }
-
-  /**
-   * Derive efficiency trend from 6 months of RevenueBasis.
-   * Compares last 2 months vs 2 months before that.
-   */
-  private classifyEfficiencyTrend(trend: RevenueBasis[]): RevenueRecognitionReport['efficiency_trend'] {
-    const withData = trend.filter(b => b.collection_efficiency_pct !== null)
-    if (withData.length < 3) return 'insufficient_data'
-
-    // Last 2 months avg vs previous 2 months avg
-    const recent = withData.slice(-2).map(b => b.collection_efficiency_pct as number)
-    const prior  = withData.slice(-4, -2).map(b => b.collection_efficiency_pct as number)
-
-    if (prior.length < 2) return 'insufficient_data'
-
-    const recentAvg = recent.reduce((a, b) => a + b, 0) / recent.length
-    const priorAvg  = prior.reduce((a, b) => a + b, 0) / prior.length
-
-    const delta = recentAvg - priorAvg
-    if (delta > 5)  return 'improving'
-    if (delta < -5) return 'declining'
-    return 'stable'
-  }
-
-  /**
-   * Get a full RevenueRecognitionReport.
-   * @param companyId  Company UUID
-   * @param periodKey  "YYYY-MM" format (defaults to current month)
-   */
   async getReport(
     companyId: string,
-    periodKey?: string,
+    method: RecognitionMethod = 'accrual_basis',
   ): Promise<RevenueRecognitionReport> {
-    const pk = periodKey ?? currentMonthKey()
-    const { start, end } = periodKeyToDateRange(pk)
+    const endMonth = currentMonthKey()
+    const months   = lastNMonths(6, endMonth)
 
-    const priorKey          = priorMonth(pk)
-    const { start: pStart, end: pEnd } = periodKeyToDateRange(priorKey)
+    const sixMonthsAgo = months[0] + '-01'
+    const endDate      = endMonth + '-31'
 
-    // Build last-6-months keys (oldest → newest)
-    const trendKeys: string[] = []
-    for (let i = 5; i >= 0; i--) {
-      let k = pk
-      for (let j = 0; j < i; j++) k = priorMonth(k)
-      trendKeys.push(k)
-    }
-
-    // Fetch current + prior + 6-month trend + win rate in parallel
-    const [
-      currentData,
-      priorData,
-      winRate,
-      ...trendDataArr
-    ] = await Promise.all([
-      this.fetchPeriodData(companyId, start, end),
-      this.fetchPeriodData(companyId, pStart, pEnd),
-      this.computeWinRate(companyId),
-      ...trendKeys.map(k => {
-        const { start: ts, end: te } = periodKeyToDateRange(k)
-        return this.fetchPeriodData(companyId, ts, te)
-      }),
+    // ── Fetch sales (last 6 months) ─────────────────────────────────────────
+    const [salesResult] = await Promise.allSettled([
+      this.supabase
+        .from('sales')
+        .select('id, sale_date, customer_name, total_try, amount_paid, payment_status, paid_at')
+        .eq('company_id', companyId)
+        .is('deleted_at', null)
+        .gte('sale_date', sixMonthsAgo)
+        .lte('sale_date', endDate)
+        .order('sale_date', { ascending: true })
+        .limit(5000),
     ])
 
-    // Build bases
-    const current     = this.buildRevenueBasis(pk, currentData)
-    const priorBasis  = this.buildRevenueBasis(priorKey, priorData)
-    const monthlyTrend: RevenueBasis[] = trendKeys.map((k, i) =>
-      this.buildRevenueBasis(k, trendDataArr[i]),
+    type SaleRow = {
+      id: string
+      sale_date: string
+      customer_name: string | null
+      total_try: number | null
+      amount_paid: number | null
+      payment_status: string | null
+      paid_at: string | null
+    }
+
+    const salesRows: SaleRow[] = salesResult.status === 'fulfilled'
+      ? ((salesResult.value.data ?? []) as SaleRow[])
+      : []
+
+    // ── Aggregate by month ──────────────────────────────────────────────────
+    const salesByMonth   = new Map<string, { total_try: number; paid_amount_try: number }>()
+    const paymentsByMonth = new Map<string, number>()
+
+    // Collection lag data (sale_date → paid_at)
+    const lagSales: Array<{ sale_date: string; payment_date: string | null }> = []
+
+    // Deferred balance input
+    const allSalesForDeferred: Array<{ total_try: number; paid_amount_try: number }> = []
+
+    let totalAccrual = 0
+    let totalCash    = 0
+
+    for (const row of salesRows) {
+      const total  = Number(row.total_try ?? 0)
+      const paid   = Number(row.amount_paid ?? 0)
+      const mk     = row.sale_date.slice(0, 7)  // YYYY-MM
+
+      // Accumulate monthly accrual (total) and cash (paid)
+      const existing = salesByMonth.get(mk) ?? { total_try: 0, paid_amount_try: 0 }
+      salesByMonth.set(mk, {
+        total_try:      existing.total_try + total,
+        paid_amount_try: existing.paid_amount_try + paid,
+      })
+
+      // Cash received in month (payment date approximation: paid_at ?? sale_date for paid status)
+      const status = row.payment_status ?? ''
+      if (status === 'paid' && row.paid_at) {
+        const payMonth = row.paid_at.slice(0, 7)
+        paymentsByMonth.set(payMonth, (paymentsByMonth.get(payMonth) ?? 0) + (paid > 0 ? paid : total))
+      } else if (status === 'paid') {
+        // No paid_at — approximate: use sale_date month
+        paymentsByMonth.set(mk, (paymentsByMonth.get(mk) ?? 0) + (paid > 0 ? paid : total))
+      } else if (status === 'partial' && paid > 0) {
+        paymentsByMonth.set(mk, (paymentsByMonth.get(mk) ?? 0) + paid)
+      }
+
+      // Collection lag
+      lagSales.push({
+        sale_date:    row.sale_date,
+        payment_date: row.paid_at,
+      })
+
+      // Deferred balance
+      allSalesForDeferred.push({ total_try: total, paid_amount_try: paid })
+
+      // Totals
+      totalAccrual += total
+      totalCash    += paid
+    }
+
+    // ── Compute derived metrics ─────────────────────────────────────────────
+    const recognitionRate   = computeRevenueRecognitionRate(totalCash, totalAccrual)
+    const recognitionGap    = computeRecognitionGap(totalAccrual, totalCash)
+    const deferredBalance   = computeDeferredRevenueBalance(allSalesForDeferred)
+    const quality           = classifyRevenueQualityFromRecognition(
+      recognitionRate, recognitionGap, totalAccrual,
+    )
+    const avgLag            = computeAvgCollectionLag(lagSales)
+    const delta             = computeAccrualCashDelta(totalAccrual, totalCash, months.length)
+    const monthlyRecognition = buildMonthlyRecognition(salesByMonth, paymentsByMonth, months)
+    const narrative          = generateRecognitionNarrative(
+      quality, recognitionRate, recognitionGap, deferredBalance,
     )
 
-    // Pipeline = deferred value from current data
-    const rawPipeline = current.deferred_revenue_try
-    const backlog     = winRate !== null
-      ? computeRevenueBacklog(rawPipeline, winRate)
-      : rawPipeline  // no win rate → use raw
-
-    const efficiencyTrend = this.classifyEfficiencyTrend(monthlyTrend)
-
     return {
-      period_key:            pk,
-      period_label:          periodLabel(pk),
-      current,
-      prior_period:          priorBasis,
-      revenue_backlog_try:   backlog,
-      raw_pipeline_try:      rawPipeline,
-      pipeline_win_rate_pct: winRate,
-      monthly_trend:         monthlyTrend,
-      efficiency_trend:      efficiencyTrend,
+      period_label:            'Son 6 Ay',
+      method,
+      total_accrual_revenue:   totalAccrual,
+      total_cash_revenue:      totalCash,
+      recognition_rate_pct:    recognitionRate,
+      recognition_gap:         recognitionGap,
+      deferred_revenue_balance: deferredBalance,
+      monthly_recognition:     monthlyRecognition,
+      recognition_quality:     quality,
+      avg_collection_lag_days: avgLag,
+      accrual_cash_delta:      delta,
+      narrative,
     }
   }
 }
