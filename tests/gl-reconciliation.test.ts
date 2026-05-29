@@ -48,6 +48,38 @@ describe('computeDiscrepancy', () => {
   it('handles both zero', () => {
     expect(computeDiscrepancy(0, 0)).toBe(0)
   })
+
+  it('handles very large amounts', () => {
+    expect(computeDiscrepancy(10_000_000, 9_999_000)).toBe(1000)
+  })
+
+  it('returns exact negative when gl is zero and ops positive', () => {
+    expect(computeDiscrepancy(0, 1000)).toBe(-1000)
+  })
+
+  it('returns positive when gl large and ops small', () => {
+    expect(computeDiscrepancy(5000, 0)).toBe(5000)
+  })
+
+  it('handles negative gl value (contra accounts)', () => {
+    expect(computeDiscrepancy(-100, 50)).toBe(-150)
+  })
+
+  it('handles negative ops value', () => {
+    expect(computeDiscrepancy(100, -50)).toBe(150)
+  })
+
+  it('floating point: 100.01 - 100.00 ≈ 0.01', () => {
+    const result = computeDiscrepancy(100.01, 100.00)
+    expect(result).toBeCloseTo(0.01, 5)
+  })
+
+  it('commutative test: computeDiscrepancy(a, b) = -computeDiscrepancy(b, a)', () => {
+    const ab = computeDiscrepancy(300, 200)
+    const ba = computeDiscrepancy(200, 300)
+    expect(ab).toBe(100)
+    expect(ba).toBe(-100)
+  })
 })
 
 // ── computeDiscrepancyPct ─────────────────────────────────────────────────────
@@ -78,6 +110,33 @@ describe('computeDiscrepancyPct', () => {
     const result = computeDiscrepancyPct(50, -100)
     expect(result).toBeCloseTo(150, 5)
   })
+
+  it('returns -75 when gl=50 and ops=200', () => {
+    const pct = computeDiscrepancyPct(50, 200)
+    expect(pct).toBeCloseTo(-75, 5)
+  })
+
+  it('very large pct when ops is tiny', () => {
+    // gl=100, ops=1 → pct = (100-1)/1×100 = 9900
+    const pct = computeDiscrepancyPct(100, 1)
+    expect(pct).toBeCloseTo(9900)
+  })
+
+  it('result is in percentage points (not fraction)', () => {
+    const pct = computeDiscrepancyPct(110, 100)
+    expect(pct).toBeCloseTo(10)   // 10% not 0.1
+  })
+
+  it('handles floating-point ops', () => {
+    // (0.11 - 0.10) / 0.10 × 100 = 10%
+    const pct = computeDiscrepancyPct(0.11, 0.10)
+    expect(pct).toBeCloseTo(10, 3)
+  })
+
+  it('exactly +200% when gl = 3 × ops', () => {
+    // (300 - 100) / 100 × 100 = 200
+    expect(computeDiscrepancyPct(300, 100)).toBeCloseTo(200)
+  })
 })
 
 // ── assignReconciliationStatus ────────────────────────────────────────────────
@@ -105,10 +164,41 @@ describe('assignReconciliationStatus', () => {
 
   it("returns 'balanced' for zero discrepancy regardless of threshold", () => {
     expect(assignReconciliationStatus(0, 1)).toBe<ReconciliationStatus>('balanced')
+    expect(assignReconciliationStatus(0, 0)).toBe<ReconciliationStatus>('balanced')
+    expect(assignReconciliationStatus(0, 1000)).toBe<ReconciliationStatus>('balanced')
   })
 
   it("returns 'discrepancy' for discrepancy just above threshold", () => {
     expect(assignReconciliationStatus(100.01, 100)).toBe<ReconciliationStatus>('discrepancy')
+  })
+
+  it("returns 'balanced' for discrepancy just below threshold", () => {
+    expect(assignReconciliationStatus(99.99, 100)).toBe<ReconciliationStatus>('balanced')
+  })
+
+  it("uses absolute value: -threshold equals threshold boundary", () => {
+    expect(assignReconciliationStatus(-100, 100)).toBe<ReconciliationStatus>('balanced')
+  })
+
+  it("just outside negative boundary: -100.01 with threshold 100 → discrepancy", () => {
+    expect(assignReconciliationStatus(-100.01, 100)).toBe<ReconciliationStatus>('discrepancy')
+  })
+
+  it("zero threshold: any non-zero discrepancy is a discrepancy", () => {
+    expect(assignReconciliationStatus(0.01, 0)).toBe<ReconciliationStatus>('discrepancy')
+    expect(assignReconciliationStatus(-0.01, 0)).toBe<ReconciliationStatus>('discrepancy')
+  })
+
+  it('produces one of 3 valid status values (not skipped from pure fn)', () => {
+    const validValues: ReconciliationStatus[] = ['balanced', 'discrepancy', 'no_gl_data']
+    expect(validValues).toContain(assignReconciliationStatus(50, 100))
+    expect(validValues).toContain(assignReconciliationStatus(200, 100))
+    expect(validValues).toContain(assignReconciliationStatus(null, 100))
+  })
+
+  it('handles very large discrepancy and threshold', () => {
+    expect(assignReconciliationStatus(999_999, 1_000_000)).toBe<ReconciliationStatus>('balanced')
+    expect(assignReconciliationStatus(1_000_001, 1_000_000)).toBe<ReconciliationStatus>('discrepancy')
   })
 })
 
@@ -141,6 +231,26 @@ describe('buildStatusLabel', () => {
     // Even if count is non-zero (shouldn't happen, but guard against it)
     const label = buildStatusLabel(true, 99)
     expect(label).toBe('Dengeli')
+  })
+
+  it('0 discrepancies with allBalanced=false → still shows 0', () => {
+    const label = buildStatusLabel(false, 0)
+    expect(label).toContain('0')
+  })
+
+  it('label is non-empty string for both branches', () => {
+    expect(buildStatusLabel(true, 0).length).toBeGreaterThan(0)
+    expect(buildStatusLabel(false, 3).length).toBeGreaterThan(0)
+  })
+
+  it('balanced label does not contain "Uyuşmazlık"', () => {
+    const label = buildStatusLabel(true, 0)
+    expect(label).not.toContain('Uyuşmazlık')
+  })
+
+  it('discrepancy label contains count at start', () => {
+    const label = buildStatusLabel(false, 4)
+    expect(label.startsWith('4')).toBe(true)
   })
 })
 
@@ -179,6 +289,22 @@ describe('Trial balance isBalanced invariant', () => {
     expect(tb.imbalance).toBe(2000)
     expect(tb.is_balanced).toBe(false)
   })
+
+  it('imbalance of exactly 1 TRY is NOT balanced (< 1, not <= 1)', () => {
+    const tb = makeTrialBalance(10_001, 10_000)
+    expect(tb.is_balanced).toBe(false)
+  })
+
+  it('imbalance of 0.99 TRY IS balanced (< 1)', () => {
+    const tb = makeTrialBalance(10_000.99, 10_000)
+    expect(tb.is_balanced).toBe(true)
+  })
+
+  it('large equal amounts are balanced', () => {
+    const tb = makeTrialBalance(1_000_000, 1_000_000)
+    expect(tb.is_balanced).toBe(true)
+    expect(tb.imbalance).toBe(0)
+  })
 })
 
 // ── Edge cases ────────────────────────────────────────────────────────────────
@@ -197,5 +323,87 @@ describe('Edge cases', () => {
   it('computeDiscrepancyPct returns negative for ops > gl', () => {
     const pct = computeDiscrepancyPct(50, 200)
     expect(pct).toBeCloseTo(-75, 5)
+  })
+
+  it('null discrepancy propagates correctly through status chain', () => {
+    const disc = computeDiscrepancy(null, 100)
+    const status = assignReconciliationStatus(disc, 100)
+    expect(disc).toBeNull()
+    expect(status).toBe('no_gl_data')
+  })
+
+  it('balanced when both gl and ops are large equal values', () => {
+    const disc = computeDiscrepancy(999_999, 999_999)
+    const status = assignReconciliationStatus(disc, 100)
+    expect(disc).toBe(0)
+    expect(status).toBe('balanced')
+  })
+
+  it('discrepancy pct with null ops returns null', () => {
+    expect(computeDiscrepancyPct(100, 0)).toBeNull()
+  })
+
+  it('buildStatusLabel with large discrepancy count', () => {
+    const label = buildStatusLabel(false, 100)
+    expect(label).toContain('100')
+  })
+
+  it('computeDiscrepancy handles decimal rounding edge', () => {
+    // JavaScript floating point: 0.1 + 0.2 = 0.30000000000000004
+    const result = computeDiscrepancy(0.3, 0.1 + 0.2)
+    // Should be extremely close to 0 (floating point rounding)
+    expect(Math.abs(result!)).toBeLessThan(1e-10)
+  })
+})
+
+// ── Integration-style: chaining pure functions ────────────────────────────────
+
+describe('Chaining pure functions for a full reconciliation item', () => {
+  function buildReconciliationItem(
+    glAmount: number | null,
+    opsAmount: number | null,
+    threshold: number,
+  ) {
+    const disc    = computeDiscrepancy(glAmount, opsAmount)
+    const discPct = glAmount !== null && opsAmount !== null && opsAmount !== 0
+      ? computeDiscrepancyPct(glAmount, opsAmount)
+      : null
+    const status  = assignReconciliationStatus(disc, threshold)
+    return { discrepancy: disc, discrepancy_pct: discPct, status }
+  }
+
+  it('balanced item: gl ≈ ops within threshold', () => {
+    const item = buildReconciliationItem(1000, 990, 100)
+    expect(item.status).toBe('balanced')
+    expect(item.discrepancy).toBe(10)
+    expect(item.discrepancy_pct).toBeCloseTo(1.01, 1)
+  })
+
+  it('discrepancy item: gl differs from ops by > threshold', () => {
+    const item = buildReconciliationItem(1500, 1000, 100)
+    expect(item.status).toBe('discrepancy')
+    expect(item.discrepancy).toBe(500)
+    expect(item.discrepancy_pct).toBe(50)
+  })
+
+  it('no_gl_data item: gl is null', () => {
+    const item = buildReconciliationItem(null, 1000, 100)
+    expect(item.status).toBe('no_gl_data')
+    expect(item.discrepancy).toBeNull()
+    expect(item.discrepancy_pct).toBeNull()
+  })
+
+  it('summary label reflects discrepancy count correctly', () => {
+    const items = [
+      buildReconciliationItem(1000, 990, 100),   // balanced
+      buildReconciliationItem(2000, 1000, 100),  // discrepancy
+      buildReconciliationItem(null, 500, 100),   // no_gl_data
+    ]
+    const discCount = items.filter(i => i.status === 'discrepancy').length
+    const allBalanced = items.every(i => i.status === 'balanced')
+    const label = buildStatusLabel(allBalanced, discCount)
+    expect(discCount).toBe(1)
+    expect(allBalanced).toBe(false)
+    expect(label).toContain('1')
   })
 })

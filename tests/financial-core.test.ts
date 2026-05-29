@@ -64,6 +64,51 @@ describe('cashflowPressureSeverity — priority: cumulative < 0 → critical', (
   })
 })
 
+describe('cashflowPressureSeverity — warn boundary tests', () => {
+  it('net = -1 (just below zero) and cumulative = 0 → warn', () => {
+    expect(cashflowPressureSeverity(-1, 0)).toBe('warn')
+  })
+
+  it('net = -0.01 and cumulative = 1 → warn', () => {
+    expect(cashflowPressureSeverity(-0.01, 1)).toBe('warn')
+  })
+
+  it('net = 0 and cumulative = 1 → ok (zero net is NOT warn)', () => {
+    expect(cashflowPressureSeverity(0, 1)).toBe('ok')
+  })
+
+  it('net very negative (-1M) but cumulative positive → warn', () => {
+    expect(cashflowPressureSeverity(-1_000_000, 10_000_000)).toBe('warn')
+  })
+})
+
+describe('cashflowPressureSeverity — output always one of 3 valid values', () => {
+  const cases: Array<[number, number]> = [
+    [0, 0], [1, 1], [-1, -1],
+    [100, -100], [-100, 100],
+    [0, 1], [0, -1], [1, 0], [-1, 0],
+  ]
+
+  for (const [net, cumulative] of cases) {
+    it(`net=${net}, cumulative=${cumulative} → valid severity`, () => {
+      const result = cashflowPressureSeverity(net, cumulative)
+      expect(['ok', 'warn', 'critical']).toContain(result)
+    })
+  }
+})
+
+describe('cashflowPressureSeverity — priority order is critical > warn > ok', () => {
+  it('cumulative < 0 always beats net < 0 (critical over warn)', () => {
+    // Both negative → critical wins because cumulative check runs first
+    expect(cashflowPressureSeverity(-100, -50)).toBe('critical')
+  })
+
+  it('net < 0 beats net >= 0 (warn over ok)', () => {
+    expect(cashflowPressureSeverity(-1, 100)).toBe('warn')
+    expect(cashflowPressureSeverity(1, 100)).toBe('ok')
+  })
+})
+
 // ── geciciDueDate ─────────────────────────────────────────────────────────────
 
 describe('geciciDueDate — Turkish Geçici Vergi due dates', () => {
@@ -102,6 +147,34 @@ describe('geciciDueDate — Turkish Geçici Vergi due dates', () => {
 
   it('year is correctly embedded in output', () => {
     expect(geciciDueDate(2028, 3)).toContain('2028')
+  })
+
+  it('Q1 month is 05 (May)', () => {
+    expect(geciciDueDate(2025, 1).slice(5, 7)).toBe('05')
+  })
+
+  it('Q2 month is 08 (August)', () => {
+    expect(geciciDueDate(2025, 2).slice(5, 7)).toBe('08')
+  })
+
+  it('Q3 month is 11 (November)', () => {
+    expect(geciciDueDate(2025, 3).slice(5, 7)).toBe('11')
+  })
+
+  it('result is parseable as a valid date', () => {
+    const d = new Date(geciciDueDate(2025, 1))
+    expect(isNaN(d.getTime())).toBe(false)
+  })
+
+  it('different years produce same month-day pattern', () => {
+    expect(geciciDueDate(2020, 1).slice(5)).toBe(geciciDueDate(2025, 1).slice(5))
+    expect(geciciDueDate(2020, 2).slice(5)).toBe(geciciDueDate(2025, 2).slice(5))
+    expect(geciciDueDate(2020, 3).slice(5)).toBe(geciciDueDate(2025, 3).slice(5))
+  })
+
+  it('Q3 due date is before year end (Nov 17 < Dec 31)', () => {
+    const q3 = geciciDueDate(2025, 3)
+    expect(q3 < '2025-12-31').toBe(true)
   })
 })
 
@@ -183,5 +256,75 @@ describe('quarterPeriod — quarter boundary dates', () => {
     const q2 = quarterPeriod(2025, 2)
     expect(q1.to).toBe('2025-03-31')
     expect(q2.from).toBe('2025-04-01')
+  })
+
+  it('from is before to for all quarters', () => {
+    for (const q of [1, 2, 3, 4] as const) {
+      const p = quarterPeriod(2025, q)
+      expect(p.from < p.to).toBe(true)
+    }
+  })
+
+  it('from and to are 10 characters (YYYY-MM-DD)', () => {
+    for (const q of [1, 2, 3, 4] as const) {
+      const p = quarterPeriod(2025, q)
+      expect(p.from).toHaveLength(10)
+      expect(p.to).toHaveLength(10)
+    }
+  })
+
+  it('handles year 2000 (leap year and Y2K boundary)', () => {
+    const p = quarterPeriod(2000, 1)
+    expect(p.from).toBe('2000-01-01')
+    expect(p.to).toBe('2000-03-31')
+  })
+
+  it('handles year 2099 (far future)', () => {
+    const p = quarterPeriod(2099, 4)
+    expect(p.from).toBe('2099-10-01')
+    expect(p.to).toBe('2099-12-31')
+  })
+
+  it('geciciDueDate for Q1 falls within Q2 period (May 17 is in Q2)', () => {
+    const q2 = quarterPeriod(2025, 2)
+    const q1Due = geciciDueDate(2025, 1)
+    // May 17 should be within Apr 1 – Jun 30
+    expect(q1Due >= q2.from).toBe(true)
+    expect(q1Due <= q2.to).toBe(true)
+  })
+
+  it('geciciDueDate for Q2 falls within Q3 period (Aug 17 is in Q3)', () => {
+    const q3 = quarterPeriod(2025, 3)
+    const q2Due = geciciDueDate(2025, 2)
+    expect(q2Due >= q3.from).toBe(true)
+    expect(q2Due <= q3.to).toBe(true)
+  })
+})
+
+// ── Cross-function: geciciDueDate + quarterPeriod coherence ───────────────────
+
+describe('geciciDueDate + quarterPeriod coherence', () => {
+  it('Q1 due date (May) is in Q2 period — filing happens next quarter', () => {
+    const due  = geciciDueDate(2025, 1)
+    const q2   = quarterPeriod(2025, 2)
+    expect(due).toMatch(/^2025-05-17/)
+    expect(due >= q2.from && due <= q2.to).toBe(true)
+  })
+
+  it('Q3 due date (Nov) is in Q4 period', () => {
+    const due = geciciDueDate(2025, 3)
+    const q4  = quarterPeriod(2025, 4)
+    expect(due >= q4.from && due <= q4.to).toBe(true)
+  })
+
+  it('all 4 quarters cover a non-overlapping full year', () => {
+    const quarters = ([1, 2, 3, 4] as const).map(q => quarterPeriod(2025, q))
+    // No overlaps: each from > previous to
+    for (let i = 1; i < 4; i++) {
+      expect(quarters[i].from > quarters[i - 1].to).toBe(true)
+    }
+    // Full year coverage: Q1 starts Jan 1, Q4 ends Dec 31
+    expect(quarters[0].from).toBe('2025-01-01')
+    expect(quarters[3].to).toBe('2025-12-31')
   })
 })
