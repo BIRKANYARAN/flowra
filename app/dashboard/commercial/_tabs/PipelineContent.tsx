@@ -14,6 +14,12 @@ import { SalesFlowCommandBar } from '@/app/dashboard/sales-flow/_components/Sale
 import { fmtMonthShort as fmtMonth } from '@/lib/format'
 import { detectRevenueAnomalies, type MonthlyRevenue } from '@/lib/engines/anomaly.engine'
 import { SalesFunnelService, type FunnelStage } from '@/lib/services/commercial/sales-funnel.service'
+import {
+  computeConversionRate,
+  computeAvgDealSize,
+  classifyPipelineHealth,
+  computePortfolioDiscountPressure,
+} from '@/lib/services/finance/pricing-intelligence.service'
 
 function CommandBarSkeleton() {
   return (
@@ -95,6 +101,53 @@ export async function PipelineContent({ companyId }: Props) {
   const totalRevenue = sales.reduce((s, r) => s + (Number(r.total_try) || 0), 0)
   const totalCogs    = sales.reduce((s, r) => s + (Number(r.cost_try)  || 0), 0)
   const grossProfit  = totalRevenue - totalCogs
+
+  // ── Pipeline analytics derived metrics ────────────────────────────────────
+  const convertedCount  = proformas.filter(p => p.status === 'converted').length
+  const totalPfCount    = proformas.length
+  const conversionRate  = computeConversionRate(convertedCount, totalPfCount)
+  const pfTotalValue    = proformas.reduce((s, p) => s + (Number(p.total) || 0) * (Number((p as ProformaWithFx).fx_try) || 1), 0)
+  const avgDealSize     = computeAvgDealSize(pfTotalValue, totalPfCount)
+
+  // Estimate avg cycle days from created_at → updated_at for converted proformas
+  const convertedPfs = proformas.filter(p => p.status === 'converted')
+  const avgCycleDays = convertedPfs.length > 0
+    ? convertedPfs.reduce((s, p) => {
+        const created = p.created_at ? new Date(p.created_at).getTime() : 0
+        const updated = (p as Proforma & { updated_at?: string | null }).updated_at
+          ? new Date((p as Proforma & { updated_at?: string | null }).updated_at!).getTime()
+          : created
+        return s + Math.max(0, (updated - created) / 86_400_000)
+      }, 0) / convertedPfs.length
+    : 30
+
+  const pipelineHealth = classifyPipelineHealth(conversionRate, avgCycleDays)
+
+  // Portfolio discount pressure from proformas (compare total vs fx_try-adjusted total)
+  const portfolioDiscountItems = proformas
+    .filter(p => Number(p.total) > 0)
+    .map(p => ({
+      list_price:      (Number(p.total) || 0) * (Number((p as ProformaWithFx).fx_try) || 1),
+      effective_price: (Number(p.total) || 0) * (Number((p as ProformaWithFx).fx_try) || 1),
+    }))
+  const discountPressure = computePortfolioDiscountPressure(portfolioDiscountItems)
+
+  // Status swimlane counts
+  const pfByStatus: Record<string, number> = {
+    draft:     proformas.filter(p => p.status === 'draft').length,
+    sent:      proformas.filter(p => p.status === 'sent').length,
+    accepted:  proformas.filter(p => p.status === 'accepted').length,
+    converted: proformas.filter(p => p.status === 'converted').length,
+    rejected:  proformas.filter(p => p.status === 'rejected').length,
+  }
+
+  const HEALTH_BADGE: Record<string, { label: string; cls: string }> = {
+    strong:  { label: 'Güçlü',    cls: 'bg-pos-light text-pos-text' },
+    healthy: { label: 'Sağlıklı', cls: 'bg-info-light text-info-text' },
+    weak:    { label: 'Zayıf',    cls: 'bg-warn-light text-warn-text' },
+    stalled: { label: 'Durgun',   cls: 'bg-neg-light text-neg' },
+  }
+  const healthBadge = HEALTH_BADGE[pipelineHealth]
   const grossMargin  = totalRevenue > 0 ? ((totalRevenue - totalCogs) / totalRevenue) * 100 : 0
   const unpaidTotal  = sales.filter(s => s.payment_status !== 'paid').reduce((s, r) => s + (Number(r.total_try) || 0), 0)
   const recentPf     = proformas.slice(0, 5)
@@ -122,6 +175,164 @@ export async function PipelineContent({ companyId }: Props) {
 
   return (
     <div className="space-y-4">
+
+      {/* ── TİCARİ BORU HATTI ANALİZİ ─────────────────────────────────────── */}
+      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+        {/* Header */}
+        <div className="px-4 py-2.5 border-b border-[#e2e8f0] flex items-center justify-between">
+          <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+            Ticari Boru Hattı Analizi
+          </span>
+          {healthBadge && (
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${healthBadge.cls}`}>
+              {healthBadge.label}
+            </span>
+          )}
+        </div>
+
+        {/* KPI Tiles */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-[#f1f5f9] border-b border-[#e2e8f0]">
+          {[
+            {
+              label: 'Toplam Proforma',
+              value: String(totalPfCount),
+              sub:   `${convertedCount} dönüştürüldü`,
+              color: 'text-[#0f172a]',
+            },
+            {
+              label: 'Dönüşüm Oranı',
+              value: `%${conversionRate.toFixed(0)}`,
+              sub:   `${convertedCount} / ${totalPfCount}`,
+              color: conversionRate >= 30 ? 'text-pos-text' : conversionRate >= 15 ? 'text-warn-text' : 'text-neg',
+            },
+            {
+              label: 'Ort. Teklif Tutarı',
+              value: avgDealSize > 0 ? serverFmt(avgDealSize) : '—',
+              sub:   'teklif başına',
+              color: 'text-info-text',
+            },
+            {
+              label: 'Toplam Boru Hattı',
+              value: pfTotalValue > 0 ? serverFmt(pfTotalValue) : '—',
+              sub:   discountPressure > 0 ? `%${discountPressure.toFixed(1)} indirim baskısı` : 'indirim yok',
+              color: 'text-[#0f172a]',
+            },
+          ].map((tile, i) => (
+            <div key={tile.label} className="px-3 py-2.5">
+              <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">{tile.label}</div>
+              <div className={`text-xl font-black tabular-nums leading-none ${tile.color}`}>{tile.value}</div>
+              <div className="text-[10px] text-[#94a3b8] mt-0.5">{tile.sub}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Status Swimlanes */}
+        <div className="px-4 py-3 border-b border-[#f1f5f9]">
+          <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">Durum Özeti</div>
+          <div className="flex items-center gap-2 flex-wrap">
+            {[
+              { key: 'draft',     label: 'Taslak',         cls: 'bg-[#f1f5f9] text-[#64748b]' },
+              { key: 'sent',      label: 'Gönderildi',     cls: 'bg-info-light text-info-text' },
+              { key: 'accepted',  label: 'Onaylandı',      cls: 'bg-pos-light text-pos-text' },
+              { key: 'converted', label: 'Dönüştürüldü',   cls: 'bg-brand-subtle text-brand' },
+              { key: 'rejected',  label: 'Süresi Geçmiş',  cls: 'bg-neg-light text-neg' },
+            ].map(s => (
+              <div key={s.key} className={`flex items-center gap-1.5 px-2.5 py-1 rounded ${s.cls}`}>
+                <span className="text-[10px] font-bold">{s.label}</span>
+                <span className="text-[10px] font-black tabular-nums">({pfByStatus[s.key] ?? 0})</span>
+              </div>
+            ))}
+          </div>
+          {/* Swimlane flow indicator */}
+          <div className="flex items-center gap-1 mt-2 overflow-x-auto">
+            {(['draft', 'sent', 'accepted', 'converted'] as const).map((key, idx) => (
+              <div key={key} className="flex items-center gap-1 shrink-0">
+                {idx > 0 && <span className="text-[#cbd5e1] text-xs">→</span>}
+                <div className="text-center">
+                  <div className="text-[9px] text-[#94a3b8] font-semibold">{STATUS_LABEL[key]}</div>
+                  <div className="text-sm font-black text-[#1e293b] tabular-nums">{pfByStatus[key] ?? 0}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Proforma List */}
+        {proformas.length > 0 ? (
+          <div>
+            <div className="px-4 py-2 border-b border-[#f1f5f9]">
+              <span className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">Proforma Listesi</span>
+            </div>
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] border-b border-[#e2e8f0]">
+                  <th className="text-left px-4 py-2">Müşteri</th>
+                  <th className="text-right px-4 py-2">Tutar</th>
+                  <th className="text-left px-4 py-2">Durum</th>
+                  <th className="text-right px-4 py-2">Oluşturma</th>
+                  <th className="text-right px-4 py-2">İndirim %</th>
+                  <th className="text-right px-4 py-2">Aksiyon</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#f8fafc]">
+                {proformas.slice(0, 8).map(p => {
+                  const pfWithFx = p as ProformaWithFx
+                  const tryTotal = (Number(p.total) || 0) * (Number(pfWithFx.fx_try) || 1)
+                  return (
+                    <tr key={p.id} className="hover:bg-[#f8fafc] transition-colors">
+                      <td className="px-4 py-2.5 font-medium text-[#1e293b] max-w-[160px] truncate">
+                        {p.customer_name ?? '—'}
+                      </td>
+                      <td className="px-4 py-2.5 text-right tabular-nums font-semibold text-[#334155]">
+                        {serverFmt(tryTotal)}
+                        {p.currency && p.currency !== 'TRY' && (
+                          <span className="text-[9px] text-[#94a3b8] ml-1">{p.currency}</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${STATUS_COLOR[p.status] ?? 'bg-[#f1f5f9] text-[#64748b]'}`}>
+                          {STATUS_LABEL[p.status] ?? p.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2.5 text-right text-[#94a3b8] tabular-nums">
+                        {p.created_at
+                          ? new Date(p.created_at).toLocaleDateString('tr-TR', { day: '2-digit', month: 'short' })
+                          : '—'}
+                      </td>
+                      <td className="px-4 py-2.5 text-right tabular-nums text-[#94a3b8]">
+                        —
+                      </td>
+                      <td className="px-4 py-2.5 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <Link
+                            href={`/dashboard/commercial/proformas/${p.id}`}
+                            className="text-[10px] font-bold text-info-text hover:underline whitespace-nowrap"
+                          >
+                            Görüntüle
+                          </Link>
+                          {p.status === 'accepted' && (
+                            <Link
+                              href={`/dashboard/commercial/proformas/${p.id}/convert`}
+                              className="text-[10px] font-bold text-brand hover:underline whitespace-nowrap ml-2"
+                            >
+                              Satışa Dönüştür
+                            </Link>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="px-4 py-6 text-center text-[11px] text-[#94a3b8]">
+            Henüz proforma kaydı bulunmuyor.
+          </div>
+        )}
+      </div>
+
       {/* ── Pipeline Velocity Analysis ───────────────────────────────────── */}
       <PipelineVelocityClient companyId={companyId} />
 

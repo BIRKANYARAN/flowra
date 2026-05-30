@@ -149,6 +149,66 @@ export function classifyPricingPressure(
   return 'stable'
 }
 
+// ── Pipeline / proforma pure helpers ─────────────────────────────────────────
+
+/**
+ * computeConversionRate
+ *
+ * Returns (converted / total) * 100. 0 if total === 0.
+ */
+export function computeConversionRate(converted: number, total: number): number {
+  if (total === 0) return 0
+  return (converted / total) * 100
+}
+
+/**
+ * computeAvgDealSize
+ *
+ * Returns totalRevenue / dealCount. 0 if dealCount === 0.
+ */
+export function computeAvgDealSize(totalRevenue: number, dealCount: number): number {
+  if (dealCount === 0) return 0
+  return totalRevenue / dealCount
+}
+
+/**
+ * classifyPipelineHealth
+ *
+ * strong:  conversion > 40 AND cycle < 14
+ * healthy: conversion > 25 AND cycle < 30
+ * stalled: conversion < 15 OR cycle > 60
+ * weak:    everything else
+ */
+export function classifyPipelineHealth(
+  conversionRate: number,
+  avgCycleDays: number,
+): 'strong' | 'healthy' | 'weak' | 'stalled' {
+  if (conversionRate > 40 && avgCycleDays < 14) return 'strong'
+  if (conversionRate > 25 && avgCycleDays < 30) return 'healthy'
+  if (conversionRate < 15 || avgCycleDays > 60) return 'stalled'
+  return 'weak'
+}
+
+/**
+ * computePortfolioDiscountPressure
+ *
+ * Weighted average discount rate across all items.
+ * Returns 0 if items array is empty or total list_price is 0.
+ */
+export function computePortfolioDiscountPressure(
+  items: Array<{ list_price: number; effective_price: number }>,
+): number {
+  if (items.length === 0) return 0
+  let totalListPrice = 0
+  let totalDiscount = 0
+  for (const item of items) {
+    totalListPrice += item.list_price
+    totalDiscount  += Math.max(0, item.list_price - item.effective_price)
+  }
+  if (totalListPrice === 0) return 0
+  return (totalDiscount / totalListPrice) * 100
+}
+
 // ── SKU health ────────────────────────────────────────────────────────────────
 
 export interface SkuPricingInput {

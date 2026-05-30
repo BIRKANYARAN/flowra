@@ -83,6 +83,63 @@ export interface CertifiedExportPackage {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Pure helpers (no I/O — safe to unit-test without a DB connection)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Build a standardised export filename with an embedded date stamp.
+ *
+ * @example
+ *   buildExportFilename('balance-sheet', 'nisan-2025', 'pdf')
+ *   // "flowra-balance-sheet-nisan-2025-20250530.pdf"
+ */
+export function buildExportFilename(
+  type: string,
+  period: string,
+  format: 'json' | 'csv' | 'pdf',
+): string {
+  const today = new Date().toISOString().slice(0, 10).replace(/-/g, '')
+  return `flowra-${type}-${period}-${today}.${format}`
+}
+
+/**
+ * Compute a SHA-256 integrity hash for an export data object.
+ * Returns the hex digest prefixed with "h_" for easy identification.
+ *
+ * Uses Node's synchronous `crypto.createHash` so it works in any runtime
+ * without async ceremony.
+ */
+export function computeExportHash(data: Record<string, unknown>): string {
+  const hex = createHash('sha256').update(JSON.stringify(data)).digest('hex')
+  return `h_${hex}`
+}
+
+/**
+ * Classify the sensitivity level of a given export type.
+ *
+ * - 'confidential' — financial statements, ledgers, trial balances
+ * - 'internal'     — executive summaries, KPIs
+ * - 'public'       — proformas, catalogues
+ */
+export function classifyExportSensitivity(
+  type: string,
+): 'public' | 'internal' | 'confidential' {
+  const confidential = new Set([
+    'balance-sheet',
+    'income-statement',
+    'cash-flow',
+    'trial-balance',
+    'general-ledger',
+  ])
+  const internal = new Set(['executive-summary', 'kpi'])
+
+  const key = type.toLowerCase()
+  if (confidential.has(key)) return 'confidential'
+  if (internal.has(key)) return 'internal'
+  return 'public'
+}
+
 export class CertifiedExportService {
   static async generate(
     userId: string,

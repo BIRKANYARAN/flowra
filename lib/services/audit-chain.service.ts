@@ -46,6 +46,57 @@ function rowPayload(row: {
   ].join('|')
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Pure helpers (no I/O — safe to unit-test without a DB connection)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Verify a single chain link in isolation.
+ *
+ * Returns `true` when:
+ *   - prevEntry is null AND entry.prev_hash is null (genesis link), or
+ *   - prevEntry.content_hash === entry.prev_hash (valid continuation).
+ */
+export function verifyChainLink(
+  entry: { content_hash: string; prev_hash: string | null },
+  prevEntry: { content_hash: string } | null,
+): boolean {
+  if (prevEntry === null) return entry.prev_hash === null
+  return prevEntry.content_hash === entry.prev_hash
+}
+
+/**
+ * Count the number of broken links in an ordered entry sequence.
+ *
+ * A "broken link" is any entry whose `prev_hash` does not match the
+ * `content_hash` of the preceding entry (or is not null for the first entry).
+ */
+export function countChainBreaks(
+  entries: Array<{ content_hash: string; prev_hash: string | null }>,
+): number {
+  let breaks = 0
+  for (let i = 0; i < entries.length; i++) {
+    const prev = i === 0 ? null : entries[i - 1]
+    if (!verifyChainLink(entries[i], prev)) breaks++
+  }
+  return breaks
+}
+
+/**
+ * Format a chain integrity report as a Turkish-language summary string.
+ */
+export function formatChainReport(
+  totalEntries: number,
+  breaks: number,
+  startDate: string,
+  endDate: string,
+): string {
+  if (breaks === 0) {
+    return `${totalEntries} kayıt doğrulandı, zincir bütün (${startDate} – ${endDate}).`
+  }
+  return `${totalEntries} kayıt incelendi, ${breaks} kırık bağ tespit edildi (${startDate} – ${endDate}). Kayıtlar değiştirilmiş olabilir.`
+}
+
 // Compute and store content_hash + prev_hash for new audit_log rows.
 // Call this immediately after inserting an audit_log row.
 export async function stampAuditRow(

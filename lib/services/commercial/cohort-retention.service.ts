@@ -102,6 +102,71 @@ export function classifyRetentionHealth(
   return 'weak'
 }
 
+/**
+ * Compute an estimated customer lifetime value.
+ *
+ * Formula: avgOrderValue * ordersPerYear * (retentionRate/100) / (1 - retentionRate/100) * marginPct/100
+ * Cap: if retentionRate >= 100, use multiplier 10 instead of the infinite geometric series.
+ * Floor: if retentionRate <= 0, return 0.
+ */
+export function computeEstimatedLTV(
+  avgOrderValue: number,
+  ordersPerYear: number,
+  retentionRate: number,  // 0-100
+  marginPct: number,      // 0-100
+): number {
+  if (retentionRate <= 0) return 0
+  const margin = marginPct / 100
+  if (retentionRate >= 100) {
+    return avgOrderValue * ordersPerYear * 10 * margin
+  }
+  const r = retentionRate / 100
+  return avgOrderValue * ordersPerYear * (r / (1 - r)) * margin
+}
+
+/**
+ * Compute a customer risk score in the range [0, 100].
+ * Higher values indicate more risk.
+ *
+ * Weights:
+ *   - Recency  (30%): daysSinceLastPurchase / 365, capped at 1
+ *   - Overdue  (40%): min(1, overdueAmountTry / 100_000)
+ *   - Behavior (30%): min(1, avgPaymentDelayDays / 90)
+ */
+export function computeCustomerRiskScore(
+  daysSinceLastPurchase: number,
+  overdueAmountTry: number,
+  avgPaymentDelayDays: number,
+): number {
+  const recency  = Math.min(1, Math.max(0, daysSinceLastPurchase / 365))
+  const overdue  = Math.min(1, Math.max(0, overdueAmountTry / 100_000))
+  const behavior = Math.min(1, Math.max(0, avgPaymentDelayDays / 90))
+  return recency * 30 + overdue * 40 + behavior * 30
+}
+
+/**
+ * Classify a customer into one of five segments based on revenue, order count,
+ * and retention rate.
+ *
+ * Rules (evaluated in order):
+ *   champion  : revenueYtd > 500_000 AND retentionRate > 80
+ *   loyal     : revenueYtd > 100_000 AND retentionRate > 60
+ *   lost      : retentionRate < 20    (implies low engagement)
+ *   new       : orderCount <= 2
+ *   at_risk   : everything else
+ */
+export function classifyCustomerSegment(
+  revenueYtd: number,
+  orderCount: number,
+  retentionRate: number,
+): 'champion' | 'loyal' | 'at_risk' | 'lost' | 'new' {
+  if (revenueYtd > 500_000 && retentionRate > 80) return 'champion'
+  if (revenueYtd > 100_000 && retentionRate > 60) return 'loyal'
+  if (retentionRate < 20) return 'lost'
+  if (orderCount <= 2) return 'new'
+  return 'at_risk'
+}
+
 // ── Internal helpers ──────────────────────────────────────────────────────────
 
 /** Format 'YYYY-MM' → Turkish month label e.g. 'Temmuz 2024' */
