@@ -185,6 +185,37 @@ export function classifyHedgeRecommendation(
   return 'monitor'
 }
 
+/**
+ * formatCurrencyExposure
+ *
+ * Returns a display-ready string for a currency exposure.
+ * e.g. "USD +$45,000 (Varlık)" or "EUR -€12,000 (Yükümlülük)"
+ */
+export function formatCurrencyExposure(
+  amount: number,
+  currency: string,
+  direction: 'asset' | 'liability',
+): string {
+  const sign        = direction === 'asset' ? '+' : '-'
+  const directionTR = direction === 'asset' ? 'Varlık' : 'Yükümlülük'
+
+  // Currency symbol map
+  const symbolMap: Record<string, string> = {
+    USD: '$',
+    EUR: '€',
+    GBP: '£',
+    TRY: '₺',
+  }
+  const symbol = symbolMap[currency] ?? currency + ' '
+
+  const absFormatted = Math.abs(amount).toLocaleString('en-US', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  })
+
+  return `${currency} ${sign}${symbol}${absFormatted} (${directionTR})`
+}
+
 // ── Internal helpers ──────────────────────────────────────────────────────────
 
 function ytdBounds(): { from: string; to: string } {

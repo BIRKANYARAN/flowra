@@ -219,6 +219,62 @@ export function buildMonthCalendar(year: number, month: number, events: Calendar
   }
 }
 
+// ── Additional pure helpers ───────────────────────────────────────────────────
+
+/**
+ * Compute days until a financial event.
+ * Positive = future, 0 = today, negative = overdue.
+ */
+export function daysUntilFinancialEvent(eventDateStr: string, todayStr: string): number {
+  return computeDaysUntil(eventDateStr, todayStr)
+}
+
+/**
+ * Classify the urgency of a financial event based on days until.
+ * overdue:  < 0
+ * critical: 0–7
+ * warning:  8–14
+ * upcoming: > 14
+ */
+export function classifyEventUrgency(
+  daysUntil: number,
+): 'overdue' | 'critical' | 'warning' | 'upcoming' {
+  if (daysUntil < 0)   return 'overdue'
+  if (daysUntil <= 7)  return 'critical'
+  if (daysUntil <= 14) return 'warning'
+  return 'upcoming'
+}
+
+/**
+ * Build a Turkish-language event summary string.
+ * e.g. "3 etkinlik: 1 kritik, 2 yaklaşan"
+ *
+ * Counts by urgency (excluding overdue for brevity):
+ *   critical  → "kritik"
+ *   warning   → "uyarı"
+ *   upcoming  → "yaklaşan"
+ *   overdue   → "gecikmiş"
+ */
+export function buildEventSummary(
+  events: Array<{ title: string; daysUntil: number }>,
+): string {
+  const total    = events.length
+  if (total === 0) return '0 etkinlik'
+
+  const counts: Record<string, number> = { overdue: 0, critical: 0, warning: 0, upcoming: 0 }
+  for (const e of events) {
+    counts[classifyEventUrgency(e.daysUntil)] = (counts[classifyEventUrgency(e.daysUntil)] ?? 0) + 1
+  }
+
+  const parts: string[] = []
+  if (counts.overdue  > 0) parts.push(`${counts.overdue} gecikmiş`)
+  if (counts.critical > 0) parts.push(`${counts.critical} kritik`)
+  if (counts.warning  > 0) parts.push(`${counts.warning} uyarı`)
+  if (counts.upcoming > 0) parts.push(`${counts.upcoming} yaklaşan`)
+
+  return `${total} etkinlik: ${parts.join(', ')}`
+}
+
 // ── Main service ──────────────────────────────────────────────────────────────
 
 export class FinancialCalendarService {

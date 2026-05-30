@@ -98,6 +98,57 @@ export function findNextAction(items: ChecklistItem[]): ChecklistItem | null {
   return null
 }
 
+// ── Additional pure helpers ───────────────────────────────────────────────────
+
+/**
+ * Compute setup completion percentages.
+ * Returns required_pct, optional_pct, total_pct.
+ * When a group has 0 items, its percentage is 100 (nothing required = done).
+ */
+export function computeSetupProgress(
+  items: Array<{ completed: boolean; required: boolean }>,
+): {
+  required_pct: number
+  optional_pct: number
+  total_pct: number
+} {
+  const required = items.filter(i => i.required)
+  const optional = items.filter(i => !i.required)
+
+  const reqComplete  = required.filter(i => i.completed).length
+  const optComplete  = optional.filter(i => i.completed).length
+  const allComplete  = items.filter(i => i.completed).length
+
+  const required_pct = required.length === 0 ? 100 : Math.round((reqComplete / required.length) * 100)
+  const optional_pct = optional.length === 0 ? 100 : Math.round((optComplete / optional.length) * 100)
+  const total_pct    = items.length    === 0 ? 100 : Math.round((allComplete  / items.length)    * 100)
+
+  return { required_pct, optional_pct, total_pct }
+}
+
+/**
+ * Check if setup is sufficient for using Flowra.
+ * True when all required items are completed.
+ */
+export function isSetupSufficient(
+  items: Array<{ completed: boolean; required: boolean }>,
+): boolean {
+  return items.filter(i => i.required).every(i => i.completed)
+}
+
+/**
+ * Build a next-step prompt in Turkish.
+ * Returns "Şimdi yapın: [label]" for the first uncompleted required item.
+ * Returns null if all required items are complete.
+ */
+export function buildNextStepPrompt(
+  items: Array<{ label: string; completed: boolean; required: boolean }>,
+): string | null {
+  const first = items.find(i => i.required && !i.completed)
+  if (!first) return null
+  return `Şimdi yapın: ${first.label}`
+}
+
 // ── DB queries ────────────────────────────────────────────────────────────────
 
 /** Count rows in a table for a given company_id. Returns 0 on error. */

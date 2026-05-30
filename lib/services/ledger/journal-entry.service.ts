@@ -223,6 +223,87 @@ export function computeNetFromGross(grossTry: number, kdvRate: number): { net: n
   return { net, kdv }
 }
 
+/**
+ * Compute KDV (VAT) amount from gross amount and KDV rate (percentage).
+ * kdvRate: e.g. 20 for %20, 10 for %10
+ * net = gross / (1 + rate/100)
+ * kdv = gross - net
+ */
+export function computeKdvAmount(
+  grossAmount: number,
+  kdvRate: number,
+): { net: number; kdv: number; gross: number } {
+  const net = round2(grossAmount / (1 + kdvRate / 100))
+  const kdv = round2(grossAmount - net)
+  return { net, kdv, gross: round2(grossAmount) }
+}
+
+// ── Entry description builder ─────────────────────────────────────────────────
+
+/**
+ * Build a Turkish-language journal entry description from source type and context.
+ */
+export function buildEntryDescription(
+  sourceType: string,
+  referenceId: string,
+  amountTry: number,
+): string {
+  const formatted = amountTry.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
+  const LABELS: Record<string, string> = {
+    sale:         'Satış faturası',
+    expense:      'Masraf',
+    purchase:     'Satın alma',
+    partner_loan: 'Ortak borç girişi',
+    payment:      'Tahsilat',
+    period_close: 'Dönem kapanışı',
+  }
+  const label = LABELS[sourceType] ?? 'Muhasebe kaydı'
+  return `${label} ${referenceId} ₺${formatted}`
+}
+
+// ── Lines-array validator (returns result object) ─────────────────────────────
+
+/**
+ * Validates that debits equal credits for a set of journal lines.
+ * Returns a result object rather than throwing.
+ * valid = discrepancy < 0.01
+ */
+export function validateJournalLines(
+  lines: Array<{ debit_try: number; credit_try: number }>,
+): { valid: boolean; total_debits: number; total_credits: number; discrepancy: number } {
+  const total_debits  = round2(lines.reduce((s, l) => s + (l.debit_try  ?? 0), 0))
+  const total_credits = round2(lines.reduce((s, l) => s + (l.credit_try ?? 0), 0))
+  const discrepancy   = round2(Math.abs(total_debits - total_credits))
+  return { valid: discrepancy < 0.01, total_debits, total_credits, discrepancy }
+}
+
+// ── Sale journal lines builder ────────────────────────────────────────────────
+
+/**
+ * Build double-entry lines for a sale with COGS:
+ *   DR 120 (Alıcılar)          gross
+ *   CR 600 (Yurt İçi Satışlar) net
+ *   CR 391 (Hesaplanan KDV)    kdv
+ *   DR 620 (COGS)              cogs
+ *   CR 153 (Stoklar)           cogs
+ */
+export function buildSaleJournalLines(params: {
+  grossAmountTry: number
+  kdvRate: number
+  cogsTry: number
+}): Array<{ account_code: string; account_name: string; debit_try: number; credit_try: number }> {
+  const { net, kdv } = computeKdvAmount(params.grossAmountTry, params.kdvRate)
+  const gross = round2(params.grossAmountTry)
+  const cogs  = round2(params.cogsTry)
+  return [
+    { account_code: '120', account_name: acctName('120'), debit_try: gross, credit_try: 0 },
+    { account_code: '600', account_name: acctName('600'), debit_try: 0,     credit_try: net },
+    { account_code: '391', account_name: acctName('391'), debit_try: 0,     credit_try: kdv },
+    { account_code: '620', account_name: acctName('620'), debit_try: cogs,  credit_try: 0 },
+    { account_code: '153', account_name: acctName('153'), debit_try: 0,     credit_try: cogs },
+  ]
+}
+
 // ── Pure journal entry builders ───────────────────────────────────────────────
 
 /**
