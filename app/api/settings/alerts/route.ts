@@ -1,13 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole }               from '@/lib/require-role'
 import { resolveApiAuth } from '@/lib/api-auth'
+import {
+  DEFAULT_THRESHOLDS,
+  mergeWithDefaults,
+  validateThreshold,
+} from '@/lib/services/settings/alert-settings.service'
+import type { AlertThreshold } from '@/lib/services/settings/alert-settings.service'
 
 export const dynamic = 'force-dynamic'
 
-// GET  /api/settings/alerts            → list all alert rules for company
-// PUT  /api/settings/alerts            → upsert one rule { rule_type, threshold_value, severity, is_active }
-// POST /api/settings/alerts/reset      → reset all rules to system defaults
+// GET   /api/settings/alerts  → { thresholds: AlertThreshold[] } merged with defaults
+// PATCH /api/settings/alerts  → { rule_type, threshold_value?, is_active? } — admin only
+// PUT   /api/settings/alerts  → alias for PATCH (backward compat)
 
+// Legacy severity-based system defaults kept for backward-compat DB merging only
 const SYSTEM_DEFAULTS: Array<{ rule_type: string; threshold_value: number; severity: string }> = [
   { rule_type: 'RECEIVABLE_30',     threshold_value: 500,  severity: 'warning'  },
   { rule_type: 'RECEIVABLE_60',     threshold_value: 500,  severity: 'critical' },
@@ -27,7 +34,7 @@ export async function GET(req: NextRequest) {
   try {
     const auth = await resolveApiAuth(req)
     if (!auth.ok) return auth.response
-    const { uid, companyId, supabase, ctx } = auth
+    const { companyId, supabase } = auth
 
     const { data, error } = await supabase
       .from('alert_rules')
@@ -36,18 +43,29 @@ export async function GET(req: NextRequest) {
       .order('rule_type')
 
     if (error) {
-      // Table may not exist yet — return system defaults
-      return NextResponse.json({ rules: SYSTEM_DEFAULTS.map(r => ({ ...r, id: null, is_active: true })) })
+      // Table may not exist yet — return service defaults
+      return NextResponse.json({
+        thresholds: DEFAULT_THRESHOLDS,
+        rules:      SYSTEM_DEFAULTS.map(r => ({ ...r, id: null, is_active: true })),
+      })
     }
 
-    // Merge: system defaults + DB overrides
+    // Merge DB rows into AlertThreshold shape via service helper
+    const storedPartials: Partial<AlertThreshold>[] = (data ?? []).map(row => ({
+      rule_type:       row.rule_type,
+      threshold_value: row.threshold_value ?? undefined,
+      is_active:       row.is_active ?? undefined,
+    }))
+    const thresholds = mergeWithDefaults(storedPartials, DEFAULT_THRESHOLDS)
+
+    // Also build legacy rules for backward compat
     const dbMap = new Map((data ?? []).map(r => [r.rule_type, r]))
-    const merged = SYSTEM_DEFAULTS.map(def => {
+    const legacyRules = SYSTEM_DEFAULTS.map(def => {
       const db = dbMap.get(def.rule_type)
       return db ?? { ...def, id: null, is_active: true }
     })
 
-    return NextResponse.json({ rules: merged })
+    return NextResponse.json({ thresholds, rules: legacyRules })
   } catch (e) {
     console.error('[settings/alerts GET]', e)
     return NextResponse.json({ error: 'Internal error' }, { status: 500 })
@@ -75,13 +93,14 @@ async function _handlePatch(req: NextRequest) {
 
     if (!rule_type) return NextResponse.json({ error: 'rule_type required' }, { status: 400 })
 
-    // Validate threshold_value: must be a number ≥ 0 if provided
+    // Validate threshold_value via service helper
     if (threshold_value !== undefined && threshold_value !== null) {
       if (typeof threshold_value !== 'number' || isNaN(threshold_value)) {
         return NextResponse.json({ error: 'threshold_value must be a number' }, { status: 400 })
       }
-      if (threshold_value < 0) {
-        return NextResponse.json({ error: 'threshold_value must be ≥ 0' }, { status: 400 })
+      const validation = validateThreshold(rule_type, threshold_value)
+      if (!validation.valid) {
+        return NextResponse.json({ error: validation.error }, { status: 400 })
       }
     }
 
@@ -120,7 +139,15 @@ async function _handlePatch(req: NextRequest) {
       return db ?? { ...def, id: null, is_active: true }
     })
 
-    return NextResponse.json({ rule: fullRule, rules: mergedAll })
+    // Build thresholds via service helper for new consumers
+    const storedPartials: Partial<AlertThreshold>[] = (allRules ?? []).map(row => ({
+      rule_type:       row.rule_type,
+      threshold_value: row.threshold_value ?? undefined,
+      is_active:       row.is_active ?? undefined,
+    }))
+    const thresholds = mergeWithDefaults(storedPartials, DEFAULT_THRESHOLDS)
+
+    return NextResponse.json({ rule: fullRule, rules: mergedAll, thresholds })
   } catch (e) {
     console.error('[settings/alerts PATCH]', e)
     return NextResponse.json({ error: 'Internal error' }, { status: 500 })
