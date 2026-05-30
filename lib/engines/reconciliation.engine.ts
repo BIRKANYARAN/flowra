@@ -1328,6 +1328,71 @@ export function buildExecutiveSummary(
   }
 }
 
+// ── Pure Helpers ──────────────────────────────────────────────────────────────
+
+/**
+ * Compute reconciliation match rate as a percentage.
+ * Returns 0 if total is 0.
+ */
+export function computeMatchRate(matched: number, total: number): number {
+  if (total === 0) return 0
+  return (matched / total) * 100
+}
+
+/**
+ * Classify reconciliation quality based on match rate.
+ * complete: >=99, good: >=95, partial: >=80, poor: <80
+ */
+export function classifyReconciliationQuality(
+  matchRate: number,
+): 'complete' | 'good' | 'partial' | 'poor' {
+  if (matchRate >= 99) return 'complete'
+  if (matchRate >= 95) return 'good'
+  if (matchRate >= 80) return 'partial'
+  return 'poor'
+}
+
+const TURKISH_MONTHS: Record<number, string> = {
+  1: 'Ocak', 2: 'Şubat', 3: 'Mart', 4: 'Nisan', 5: 'Mayıs', 6: 'Haziran',
+  7: 'Temmuz', 8: 'Ağustos', 9: 'Eylül', 10: 'Ekim', 11: 'Kasım', 12: 'Aralık',
+}
+
+/**
+ * Build a reconciliation status message in Turkish.
+ * e.g. "Nisan 2025: %98.5 eşleşme, 3 eşleşmeyen kayıt"
+ * Period must be 'YYYY-MM'.
+ */
+export function buildReconciliationStatus(
+  matchRate: number,
+  unmatchedCount: number,
+  period: string,
+): string {
+  const [year, month] = period.split('-').map(Number)
+  const monthName = TURKISH_MONTHS[month] ?? period
+  const rateFmt = Number.isInteger(matchRate)
+    ? matchRate.toString()
+    : matchRate.toFixed(1).replace('.', ',')
+  return `${monthName} ${year}: %${rateFmt} eşleşme, ${unmatchedCount} eşleşmeyen kayıt`
+}
+
+/**
+ * Classify a discrepancy between book and bank amounts.
+ * matched:    difference < 1
+ * timing:     0 < difference < 5000
+ * error:      5000 <= difference < 50000
+ * fraud_flag: difference >= 50000
+ */
+export function classifyDiscrepancyType(
+  bookAmount: number,
+  bankAmount: number,
+): 'timing' | 'error' | 'fraud_flag' | 'matched' {
+  const diff = Math.abs(bookAmount - bankAmount)
+  if (diff < 1) return 'matched'
+  if (diff < 5000) return 'timing'
+  if (diff < 50000) return 'error'
+  return 'fraud_flag'
+}
+
 // ── Engine 7: Confidence Score V2 ────────────────────────────────────────────
 export function buildConfidenceV2(
   sections: ReconciliationData,

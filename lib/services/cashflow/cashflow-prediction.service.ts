@@ -495,3 +495,85 @@ function fmtTRYCompact(n: number): string {
   if (n >= 1_000)     return `₺${(n / 1_000).toFixed(0)}K`
   return `₺${n.toFixed(0)}`
 }
+
+// ── Pure exported helpers ─────────────────────────────────────────────────────
+
+/**
+ * Compute projected end-of-month cash.
+ * opening + revenue - expenses - repayments
+ */
+export function projectEndOfMonthCash(
+  openingCash: number,
+  expectedRevenue: number,
+  expectedExpenses: number,
+  scheduledRepayments: number,
+): number {
+  return openingCash + expectedRevenue - expectedExpenses - scheduledRepayments
+}
+
+/**
+ * Classify cash flow risk based on months of expense coverage.
+ * safe:     projected > 3 months expenses
+ * watch:    projected > 1.5 months
+ * warning:  projected > 0.5 months
+ * critical: projected <= 0.5 months or negative
+ */
+export function classifyCashFlowRisk(
+  projectedCash: number,
+  monthlyExpenses: number,
+): 'safe' | 'watch' | 'warning' | 'critical' {
+  if (monthlyExpenses <= 0) return 'safe'
+  const months = projectedCash / monthlyExpenses
+  if (months > 3)   return 'safe'
+  if (months > 1.5) return 'watch'
+  if (months > 0.5) return 'warning'
+  return 'critical'
+}
+
+/**
+ * Compute weeks of cash runway.
+ * Returns null if weeklyBurnRate <= 0.
+ */
+export function computeWeeksOfCashRunway(
+  cashBalance: number,
+  weeklyBurnRate: number,
+): number | null {
+  if (weeklyBurnRate <= 0) return null
+  if (cashBalance <= 0)    return 0
+  return cashBalance / weeklyBurnRate
+}
+
+// Turkish month names
+const TR_MONTHS = [
+  'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
+  'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık',
+]
+
+/**
+ * Build a cash forecast line for display.
+ * Example (actual):    "Nisan 2025: ₺1,250,000 (Gerçekleşen)"
+ * Example (projected): "Mayıs 2025: ~₺1,180,000 (Tahmin)"
+ *
+ * @param month - ISO date string or "YYYY-MM" or Turkish "Ay YYYY"
+ */
+export function buildCashForecastLine(
+  month: string,
+  amount: number,
+  isProjected: boolean,
+): string {
+  // Normalise to Turkish month name
+  let label: string
+  const isoMatch = month.match(/^(\d{4})-(\d{2})/)
+  if (isoMatch) {
+    const year  = parseInt(isoMatch[1], 10)
+    const mIdx  = parseInt(isoMatch[2], 10) - 1
+    label = `${TR_MONTHS[mIdx]} ${year}`
+  } else {
+    label = month
+  }
+
+  const formatted = new Intl.NumberFormat('tr-TR').format(Math.round(amount))
+  const amountStr = isProjected ? `~₺${formatted}` : `₺${formatted}`
+  const suffix    = isProjected ? '(Tahmin)' : '(Gerçekleşen)'
+  return `${label}: ${amountStr} ${suffix}`
+}

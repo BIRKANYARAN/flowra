@@ -161,6 +161,104 @@ export function detectCostTrend(costs: number[]): CostTrend {
   return 'stable'
 }
 
+// ── Additional pure helpers ────────────────────────────────────────────────────
+
+/**
+ * Compute purchase order fulfillment rate as a percentage.
+ * Returns 0 if orderedItems is 0.
+ */
+export function computeFulfillmentRate(
+  receivedItems: number,
+  orderedItems: number,
+): number {
+  if (orderedItems === 0) return 0
+  return (receivedItems / orderedItems) * 100
+}
+
+/**
+ * Compute purchase cycle time in days (order to receipt).
+ * Returns null if receivedAt is null or empty.
+ */
+export function computePurchaseCycleTime(
+  orderedAt: string,
+  receivedAt: string | null,
+): number | null {
+  if (!receivedAt) return null
+  const start = new Date(orderedAt.slice(0, 10) + 'T00:00:00')
+  const end   = new Date(receivedAt.slice(0, 10) + 'T00:00:00')
+  return Math.round((end.getTime() - start.getTime()) / 86_400_000)
+}
+
+export type SupplierReliabilityClass = 'excellent' | 'good' | 'fair' | 'poor'
+
+/**
+ * Classify supplier reliability based on fulfillment rate, lead time, and on-time deliveries.
+ *   excellent : fulfillmentRate > 95 AND onTime/total > 0.9 AND avgLeadTimeDays < 7
+ *   good      : fulfillmentRate > 85 AND onTime/total > 0.7
+ *   fair      : fulfillmentRate > 70
+ *   poor      : else
+ */
+export function classifySupplierReliability(
+  fulfillmentRate: number,
+  avgLeadTimeDays: number | null,
+  onTimeDeliveries: number,
+  totalDeliveries: number,
+): SupplierReliabilityClass {
+  const onTimeRatio = totalDeliveries > 0 ? onTimeDeliveries / totalDeliveries : 0
+
+  if (
+    fulfillmentRate > 95 &&
+    onTimeRatio > 0.9 &&
+    avgLeadTimeDays !== null &&
+    avgLeadTimeDays < 7
+  ) {
+    return 'excellent'
+  }
+  if (fulfillmentRate > 85 && onTimeRatio > 0.7) {
+    return 'good'
+  }
+  if (fulfillmentRate > 70) {
+    return 'fair'
+  }
+  return 'poor'
+}
+
+/**
+ * Compute cost efficiency index: budgetedCost / actualCost * 100.
+ * Higher is better; 100 = exactly on budget; > 100 = under budget.
+ * Returns 0 if actualCost is 0.
+ */
+export function computeCostEfficiencyIndex(
+  actualCost: number,
+  budgetedCost: number,
+): number {
+  if (actualCost === 0) return 0
+  return (budgetedCost / actualCost) * 100
+}
+
+/**
+ * Build a Turkish-language supplier scorecard summary string.
+ * Example: "Tedarikçi ABC: %96.50 dolum | 5.20g ortalama teslimat | Mükemmel"
+ */
+export function buildSupplierScorecard(
+  supplier: string,
+  fulfillmentRate: number,
+  avgLeadDays: number | null,
+  reliabilityClass: string,
+): string {
+  const reliabilityLabel: Record<string, string> = {
+    excellent: 'Mükemmel',
+    good:      'İyi',
+    fair:      'Orta',
+    poor:      'Zayıf',
+  }
+  const label     = reliabilityLabel[reliabilityClass] ?? reliabilityClass
+  const leadPart  = avgLeadDays !== null
+    ? `${avgLeadDays.toFixed(2)}g ortalama teslimat`
+    : 'Teslimat süresi bilinmiyor'
+  return `Tedarikçi ${supplier}: %${fulfillmentRate.toFixed(2)} dolum | ${leadPart} | ${label}`
+}
+
 // ── Internal row shapes ────────────────────────────────────────────────────────
 
 interface PurchaseRow {

@@ -129,6 +129,48 @@ export function classifyOptimizationPriority(
   return 'low'
 }
 
+/**
+ * Compute Cash Conversion Cycle.
+ * CCC = DSO - DPO + DIO
+ */
+export function computeCCC(dso: number, dpo: number, dio: number): number {
+  return dso - dpo + dio
+}
+
+/**
+ * Classify working capital efficiency based on CCC.
+ * excellent: ccc < 0  (negative CCC = cash collected before paying suppliers)
+ * good:      0 <= ccc <= 30
+ * fair:      30 < ccc <= 60
+ * poor:      ccc > 60
+ */
+export function classifyWCEfficiency(
+  ccc: number,
+): 'excellent' | 'good' | 'fair' | 'poor' {
+  if (ccc < 0)   return 'excellent'
+  if (ccc <= 30) return 'good'
+  if (ccc <= 60) return 'fair'
+  return 'poor'
+}
+
+/**
+ * Compute optimal reorder point and whether to order now.
+ * reorderPoint = (dailyUsage * leadTimeDays) + (dailyUsage * safetyStockDays)
+ * orderNow     = currentQty <= reorderPoint
+ */
+export function computeReorderTiming(
+  currentQty: number,
+  dailyUsage: number,
+  leadTimeDays: number,
+  safetyStockDays: number,
+): { reorderPoint: number; orderNow: boolean } {
+  const reorderPoint = (dailyUsage * leadTimeDays) + (dailyUsage * safetyStockDays)
+  return {
+    reorderPoint,
+    orderNow: currentQty <= reorderPoint,
+  }
+}
+
 // ── Implementation difficulty ──────────────────────────────────────────────────
 
 function computeImplementationDifficulty(

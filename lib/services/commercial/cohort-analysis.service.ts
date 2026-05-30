@@ -139,6 +139,52 @@ export function buildCohortRow(
   }
 }
 
+// ── Additional Pure Helpers ───────────────────────────────────────────────────
+
+const TURKISH_MONTH_ABBR: Record<number, string> = {
+  1: 'Oca', 2: 'Şub', 3: 'Mar', 4: 'Nis', 5: 'May', 6: 'Haz',
+  7: 'Tem', 8: 'Ağu', 9: 'Eyl', 10: 'Eki', 11: 'Kas', 12: 'Ara',
+}
+
+/**
+ * Build a Turkish cohort label from a 'YYYY-MM' first-purchase month.
+ * e.g. '2025-01' → 'Oca 2025 Kohortu'
+ */
+export function buildCohortLabel(firstPurchaseMonth: string): string {
+  const [year, month] = firstPurchaseMonth.split('-').map(Number)
+  const abbr = TURKISH_MONTH_ABBR[month] ?? firstPurchaseMonth
+  return `${abbr} ${year} Kohortu`
+}
+
+/**
+ * Extract the last observed retention rate per cohort from a retention matrix.
+ * Each inner array is a cohort's retention values over time.
+ * Returns the last non-undefined element of each row (or 0 if empty).
+ */
+export function extractRetentionDiagonal(cohorts: Array<Array<number>>): number[] {
+  return cohorts.map(row => {
+    if (row.length === 0) return 0
+    return row[row.length - 1]
+  })
+}
+
+/**
+ * Classify cohort health based on average 3-month retention and trend slope.
+ * strong:   avg > 60 AND slope > 0
+ * stable:   avg > 40
+ * declining: avg > 20 AND slope < 0
+ * critical:  avg <= 20
+ */
+export function classifyCohortHealth(
+  avg3mRetention: number,
+  trendSlope: number,
+): 'strong' | 'stable' | 'declining' | 'critical' {
+  if (avg3mRetention > 60 && trendSlope > 0) return 'strong'
+  if (avg3mRetention > 40) return 'stable'
+  if (avg3mRetention > 20 && trendSlope < 0) return 'declining'
+  return 'critical'
+}
+
 // ── Service ───────────────────────────────────────────────────────────────────
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
