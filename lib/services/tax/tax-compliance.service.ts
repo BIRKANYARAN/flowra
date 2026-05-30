@@ -170,6 +170,77 @@ function classifyStatus(
   return 'not_due'
 }
 
+// ── New pure helpers ──────────────────────────────────────────────────────────
+
+/**
+ * Compute effective tax rate as a percentage.
+ * Returns 0 if grossProfit <= 0, else (taxPaid / grossProfit) * 100.
+ */
+export function computeEffectiveTaxRate(taxPaid: number, grossProfit: number): number {
+  if (grossProfit <= 0) return 0
+  return (taxPaid / grossProfit) * 100
+}
+
+/**
+ * Compute remaining tax liability for the year.
+ * max(0, annualTaxEstimate - sum(installmentsPaid))
+ */
+export function computeRemainingTaxLiability(
+  annualTaxEstimate: number,
+  installmentsPaid: number[],
+): number {
+  const totalPaid = installmentsPaid.reduce((s, p) => s + p, 0)
+  return Math.max(0, annualTaxEstimate - totalPaid)
+}
+
+/**
+ * Days until an event. Positive = future, negative = overdue, 0 = today.
+ */
+export function daysUntilEvent(dueDateStr: string, todayStr: string): number {
+  const [dy, dm, dd] = dueDateStr.split('-').map(Number)
+  const [ty, tm, td] = todayStr.split('-').map(Number)
+  const due   = Date.UTC(dy, dm - 1, dd)
+  const today = Date.UTC(ty, tm - 1, td)
+  return Math.round((due - today) / 86_400_000)
+}
+
+/**
+ * Generate quarterly Geçici Vergi payment schedule for a year.
+ * Q1: Feb 15, Q2: May 15, Q3: Aug 15, Q4: Nov 15
+ * amount = annualEstimate / 4 each quarter
+ * status based on comparison with today (default: '2025-05-30')
+ */
+export function generateQuarterlySchedule(
+  year: number,
+  annualEstimate: number,
+  todayStr: string = '2025-05-30',
+): Array<{ quarter: number; due_date: string; amount: number; status: 'paid' | 'pending' | 'overdue' }> {
+  const quarterDates: Array<{ quarter: number; month: number; day: number }> = [
+    { quarter: 1, month: 2,  day: 15 },
+    { quarter: 2, month: 5,  day: 15 },
+    { quarter: 3, month: 8,  day: 15 },
+    { quarter: 4, month: 11, day: 15 },
+  ]
+  const amount = annualEstimate / 4
+
+  return quarterDates.map(({ quarter, month, day }) => {
+    const due_date = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+    const days = daysUntilEvent(due_date, todayStr)
+    let status: 'paid' | 'pending' | 'overdue'
+    if (days < 0) {
+      status = 'paid'  // assume paid if past due
+    } else if (days === 0) {
+      status = 'pending'
+    } else {
+      status = 'pending'
+    }
+    // Overdue and not paid: mark overdue only if strictly past and we haven't been told paid
+    // For schedule generation purposes: past = overdue (caller marks paid), future = pending
+    if (days < 0) status = 'overdue'
+    return { quarter, due_date, amount, status }
+  })
+}
+
 // ── TaxComplianceService ──────────────────────────────────────────────────────
 
 export class TaxComplianceService {

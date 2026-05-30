@@ -24,6 +24,13 @@ import { fmtTRY as fmt, fmtMonthShort as fmtMonth, fmtDateMed as fmtDate } from 
 import { TaxCalendarClient } from './_tax-calendar/TaxCalendarClient'
 import { TaxComplianceDashboardClient } from './_tax/TaxComplianceDashboardClient'
 import { TaxComplianceClient } from './_tax-compliance/TaxComplianceClient'
+import { GecikmeHesaplayiciClient } from './_tax/GecikmeHesaplayiciClient'
+import {
+  computeKdvDeductionRate,
+  classifyKdvPosition,
+  computeKdvTrend,
+  formatKdvPeriod,
+} from '@/lib/services/tax.service'
 function addDays(dateStr: string, n: number): string {
   const d = new Date(dateStr + 'T00:00:00')
   d.setDate(d.getDate() + n)
@@ -114,6 +121,25 @@ export async function TaxTab({ userId, companyId }: Props) {
   const currentKdv    = kdvHistory[kdvHistory.length - 1]
   const kdvPos        = kdvPositionLabel(currentKdv.netVat)
   const nextDue       = nextGeciciDue(quarters, today)
+
+  // KDV Beyanı helpers
+  const kdvDeductionRate = computeKdvDeductionRate(
+    currentKdv.purchaseVat + currentKdv.expenseVat,
+    currentKdv.salesVat,
+  )
+  const kdvPosition = classifyKdvPosition(currentKdv.netVat)
+  const kdvTrend = computeKdvTrend(
+    kdvHistory.map(h => ({ output: h.salesVat, input: h.purchaseVat + h.expenseVat })),
+  )
+  const kdvPeriodMonth = now.getMonth() + 1 // 1-based
+  const kdvPeriodLabel = formatKdvPeriod(now.getFullYear(), kdvPeriodMonth)
+  // KDV filing due date: 26th of following month
+  const kdvFilingDueMonth = kdvPeriodMonth === 12 ? 1 : kdvPeriodMonth + 1
+  const kdvFilingDueYear  = kdvPeriodMonth === 12 ? now.getFullYear() + 1 : now.getFullYear()
+  const trMonths = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık']
+  const kdvFilingDueLong = `26 ${trMonths[kdvFilingDueMonth - 1]} ${kdvFilingDueYear}`
+  const kdvTrendLabel = kdvTrend === 'increasing' ? '↑ Artıyor' : kdvTrend === 'decreasing' ? '↓ Azalıyor' : '→ Stabil'
+  const kdvTrendCls   = kdvTrend === 'increasing' ? 'text-neg-text bg-neg-light border-neg-light' : kdvTrend === 'decreasing' ? 'text-pos-text bg-pos-light border-pos-light' : 'text-[#64748b] bg-[#f1f5f9] border-[#e2e8f0]'
   const kvRemaining   = Math.max(0, ytd.corporate_tax - ytd.total_gecici)
   const monthsElapsed = now.getMonth() + 1
   const projectedMatrah = monthsElapsed > 0 ? (ytd.matrah / monthsElapsed) * 12 : 0
@@ -349,6 +375,98 @@ export async function TaxTab({ userId, companyId }: Props) {
           </Link>
         </div>
       )}
+
+      {/* ── KDV Beyanı ───────────────────────────────────────────────────────── */}
+      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+        <div className="px-4 py-3 border-b border-[#e2e8f0] flex items-center justify-between">
+          <div>
+            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">VERGİ MERKEZİ</div>
+            <p className="text-[10px] text-[#94a3b8] mt-0.5">KDV Beyanı — {kdvPeriodLabel}</p>
+          </div>
+          <span className="text-[10px] font-bold px-2.5 py-1 rounded border bg-[#f8fafc] text-[#64748b] border-[#e2e8f0]">
+            {kdvPeriodLabel} ▾
+          </span>
+        </div>
+
+        {/* KDV declaration breakdown */}
+        <div className="px-4 py-4 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-[#64748b]">Hesaplanan KDV (Çıktı)</span>
+            <span className="tabular-nums text-sm font-black text-warn-text">{fmt(currentKdv.salesVat)}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-[#64748b]">İndirilecek KDV (Girdi)</span>
+            <span className="tabular-nums text-sm font-semibold text-pos-text">
+              −{fmt(currentKdv.purchaseVat + currentKdv.expenseVat)}
+            </span>
+          </div>
+          <div className="border-t border-[#e2e8f0] pt-2 flex items-center justify-between">
+            <span className="text-xs font-black text-[#1e293b]">
+              {kdvPosition === 'payable' ? 'Ödenecek KDV' : kdvPosition === 'credit' ? 'Devreden KDV' : 'Net KDV'}
+            </span>
+            <div className="flex items-center gap-2">
+              <span className={`tabular-nums text-base font-black ${
+                kdvPosition === 'payable' ? 'text-warn-text' : kdvPosition === 'credit' ? 'text-pos-text' : 'text-[#94a3b8]'
+              }`}>
+                {fmt(Math.abs(currentKdv.netVat))}
+              </span>
+              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${
+                kdvPosition === 'payable'
+                  ? 'bg-warn-light text-warn-text border-warn/20'
+                  : kdvPosition === 'credit'
+                  ? 'bg-pos-light text-pos-text border-pos-light'
+                  : 'bg-[#f1f5f9] text-[#64748b] border-[#e2e8f0]'
+              }`}>
+                {kdvPosition === 'payable' ? 'ÖDENECEK' : kdvPosition === 'credit' ? 'DEVREDİLECEK' : 'SIFIR'}
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center justify-between pt-0.5">
+            <span className="text-[10px] text-[#94a3b8]">
+              İndirim Oranı: <span className="font-semibold text-[#64748b]">%{kdvDeductionRate.toFixed(1)}</span>
+            </span>
+            <span className="text-[10px] text-[#94a3b8]">
+              Teslim tarihi: <span className="font-semibold text-[#64748b]">{kdvFilingDueLong}</span>
+            </span>
+          </div>
+        </div>
+
+        {/* KDV Trend mini chart (bar representation) */}
+        <div className="border-t border-[#e2e8f0] px-4 py-3">
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">KDV Trend (Son 4 Ay)</div>
+            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${kdvTrendCls}`}>
+              {kdvTrendLabel}
+            </span>
+          </div>
+          <div className="flex items-end gap-2 h-12">
+            {kdvHistory.slice(-4).map((row, i) => {
+              const maxNet = Math.max(...kdvHistory.slice(-4).map(r => Math.abs(r.netVat)), 1)
+              const barH   = Math.round((Math.abs(row.netVat) / maxNet) * 100)
+              const isLast = i === Math.min(3, kdvHistory.slice(-4).length - 1)
+              return (
+                <div key={row.ym} className="flex-1 flex flex-col items-center gap-1">
+                  <div className="text-[8px] text-[#94a3b8] tabular-nums">
+                    {row.netVat > 0 ? fmt(row.netVat).replace('₺', '') : '—'}
+                  </div>
+                  <div
+                    className={`w-full rounded-sm transition-all ${
+                      isLast
+                        ? (row.netVat > 0 ? 'bg-warn' : 'bg-pos')
+                        : 'bg-[#e2e8f0]'
+                    }`}
+                    style={{ height: `${Math.max(barH, 4)}%`, minHeight: '4px' }}
+                  />
+                  <div className="text-[8px] text-[#94a3b8]">{fmtMonth(row.ym)}</div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Gecikme Faizi Hesaplayıcı ────────────────────────────────────────── */}
+      <GecikmeHesaplayiciClient />
 
       {/* ── Zone 1: KPI Strip ────────────────────────────────────────────────── */}
       <div className="grid grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">

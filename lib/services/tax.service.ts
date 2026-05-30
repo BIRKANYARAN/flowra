@@ -90,6 +90,60 @@ const TR_MONTHS = [
   'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık',
 ]
 
+// ── KDV pure helpers (exported for testing and UI) ────────────────────────────
+
+/**
+ * Compute the KDV deduction rate: what percentage of output KDV is offset by input KDV.
+ * Returns 0 when outputKdv is 0 to avoid division by zero.
+ */
+export function computeKdvDeductionRate(inputKdv: number, outputKdv: number): number {
+  if (outputKdv === 0) return 0
+  return round2((inputKdv / outputKdv) * 100)
+}
+
+/**
+ * Classify the KDV position based on net KDV value.
+ * payable: net > 0 (owed to tax authority)
+ * credit:  net < 0 (recoverable credit carried forward)
+ * balanced: net === 0
+ */
+export function classifyKdvPosition(netKdv: number): 'payable' | 'credit' | 'balanced' {
+  if (netKdv > 0) return 'payable'
+  if (netKdv < 0) return 'credit'
+  return 'balanced'
+}
+
+/**
+ * Compute KDV monthly trend by comparing the last month's net KDV
+ * against the average of prior months.
+ * increasing: last > avg * 1.1
+ * decreasing: last < avg * 0.9
+ * stable: otherwise
+ * Returns 'stable' when fewer than 2 months are provided.
+ */
+export function computeKdvTrend(
+  months: Array<{ output: number; input: number }>,
+): 'increasing' | 'stable' | 'decreasing' {
+  if (months.length < 2) return 'stable'
+  const nets = months.map(m => m.output - m.input)
+  const last = nets[nets.length - 1]!
+  const prior = nets.slice(0, -1)
+  const avg = prior.reduce((s, v) => s + v, 0) / prior.length
+  if (last > avg * 1.1) return 'increasing'
+  if (last < avg * 0.9) return 'decreasing'
+  return 'stable'
+}
+
+/**
+ * Format a KDV period label in Turkish.
+ * Example: formatKdvPeriod(2025, 4) → "Nisan 2025 KDV Dönemi"
+ * Month is 1-based (1 = January, 12 = December).
+ */
+export function formatKdvPeriod(year: number, month: number): string {
+  const monthName = TR_MONTHS[(month - 1) % 12] ?? ''
+  return `${monthName} ${year} KDV Dönemi`
+}
+
 /** Returns "Mayıs 2026" format from a YYYY-MM-DD period end date. */
 function periodLabel(periodEnd: string): string {
   const [y, m] = periodEnd.split('-').map(Number)

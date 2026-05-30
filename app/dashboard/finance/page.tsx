@@ -30,29 +30,31 @@ import { resolveCompanyId }  from '@/lib/resolve-company'
 import { UnifiedTabNav }     from '@/app/dashboard/_shared/UnifiedTabNav'
 import { getGlMode }         from '@/lib/middleware/period-guard'
 
-import { PnlTab }        from './_tabs/PnlTab'
-import { BalanceTab }    from './_tabs/BalanceTab'
-import { CashflowTab }   from './_tabs/CashflowTab'
-import { TaxTab }        from './_tabs/TaxTab'
-import { RisksTab }      from './_tabs/RisksTab'
-import { CFOTab }        from './_tabs/CFOTab'
-import { BoardPackTab }  from './_tabs/BoardPackTab'
+import { PnlTab }           from './_tabs/PnlTab'
+import { BalanceTab }       from './_tabs/BalanceTab'
+import { CashflowTab }      from './_tabs/CashflowTab'
+import { TaxTab }           from './_tabs/TaxTab'
+import { RisksTab }         from './_tabs/RisksTab'
+import { CFOTab }           from './_tabs/CFOTab'
+import { BoardPackTab }     from './_tabs/BoardPackTab'
+import { CorporateTaxTab }  from './_tabs/CorporateTaxTab'
 import { FinanceContextBar } from './_shared/FinanceContextBar'
 import ReportsTab        from '@/app/dashboard/cfo/_tabs/ReportsTab'
 import { TrialBalanceTab } from '@/app/dashboard/cfo/_tabs/TrialBalanceTab'
 
 // ── Valid tabs ─────────────────────────────────────────────────────────────────
 
-type FinanceTab = 'pnl' | 'balance' | 'cashflow' | 'tax' | 'risks' | 'cfo' | 'boardpack' | 'reports' | 'mizan'
+type FinanceTab = 'pnl' | 'balance' | 'cashflow' | 'tax' | 'kurumlar-vergisi' | 'risks' | 'cfo' | 'boardpack' | 'reports' | 'mizan'
 
-const VALID_TABS: FinanceTab[] = ['pnl', 'balance', 'cashflow', 'tax', 'risks', 'cfo', 'boardpack', 'reports', 'mizan']
+const VALID_TABS: FinanceTab[] = ['pnl', 'balance', 'cashflow', 'tax', 'kurumlar-vergisi', 'risks', 'cfo', 'boardpack', 'reports', 'mizan']
 
 const FINANCE_NAV_TABS = [
   { key: 'pnl',       label: 'Kâr/Zarar'   },
   { key: 'balance',   label: 'Bilanço'      },
   { key: 'cashflow',  label: 'Nakit'        },
-  { key: 'tax',       label: 'Vergi'        },
-  { key: 'risks',     label: 'Riskler'      },
+  { key: 'tax',              label: 'Vergi'          },
+  { key: 'kurumlar-vergisi', label: 'Kurumlar V.'   },
+  { key: 'risks',            label: 'Riskler'        },
   { key: 'cfo',       label: 'CFO'          },
   { key: 'mizan',     label: 'Mizan'        },
   { key: 'boardpack', label: 'Yön. Paketi'  },
@@ -63,8 +65,9 @@ const TAB_META: Record<FinanceTab, { title: string; sub: string }> = {
   pnl:       { title: 'Kâr / Zarar',          sub: 'Ciro · Brüt Kâr · Faaliyet Kârı · Vergi Sonrası Net' },
   balance:   { title: 'Bilanço',               sub: 'Varlıklar · Yükümlülükler · Özsermaye' },
   cashflow:  { title: 'Nakit Akışı',          sub: 'Burn rate · Runway · 12 ay projeksiyon · Baskı haritası' },
-  tax:       { title: 'Vergi Merkezi',         sub: 'KDV · Geçici Vergi · Kurumlar Vergisi · Matrah Analizi' },
-  risks:     { title: 'Risk Analizi',          sub: 'Alacak yaşlandırma · Müşteri konsantrasyonu · HHI Endeksi' },
+  tax:               { title: 'Vergi Merkezi',         sub: 'KDV · Geçici Vergi · Kurumlar Vergisi · Matrah Analizi' },
+  'kurumlar-vergisi': { title: 'Kurumlar Vergisi',     sub: 'Yıllık vergi tahmini · Geçici vergi takvimi · Ödeme planı' },
+  risks:             { title: 'Risk Analizi',          sub: 'Alacak yaşlandırma · Müşteri konsantrasyonu · HHI Endeksi' },
   cfo:       { title: 'CFO Cockpit',          sub: 'Muhasebe doğruluğu · Çeyreklik · Dönem yönetimi · Mizan' },
   mizan:     { title: 'Mizan',                sub: 'Hesap Kodları · Borç/Alacak Bakiyeleri · Denge Kontrolü' },
   boardpack: { title: 'Yönetim Paketi',       sub: 'Tüm finansal tablolar · Rasyolar · Uyarılar · Belgeler' },
@@ -202,8 +205,9 @@ export default async function FinancePage({ searchParams }: PageProps) {
         {activeTab === 'pnl'       && <PnlTab      {...tabProps} />}
         {activeTab === 'balance'   && <BalanceTab  {...tabProps} />}
         {activeTab === 'cashflow'  && <CashflowTab {...tabProps} />}
-        {activeTab === 'tax'       && <TaxTab      {...tabProps} />}
-        {activeTab === 'risks'     && <RisksTab    {...tabProps} />}
+        {activeTab === 'tax'               && <TaxTab           {...tabProps} />}
+        {activeTab === 'kurumlar-vergisi'  && <CorporateTaxTab  {...tabProps} />}
+        {activeTab === 'risks'             && <RisksTab         {...tabProps} />}
         {activeTab === 'cfo'       && <CFOTab      {...tabProps} />}
         {activeTab === 'mizan'     && <TrialBalanceTab />}
         {activeTab === 'boardpack' && <BoardPackTab {...tabProps} />}
