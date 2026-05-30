@@ -16,6 +16,106 @@ import { ExpensesContent } from './_tabs/ExpensesContent'
 import { CatalogContent }  from './_tabs/CatalogContent'
 import { StockContent }    from './_tabs/StockContent'
 import { OrdersContent }   from './_tabs/OrdersContent'
+import {
+  classifyOpsPulse,
+  buildPulseSummary,
+  type OpsPulseMetrics,
+  type PulseColor,
+} from '@/lib/services/ops/ops-pulse.service'
+
+// ── OPS Komuta Paneli ─────────────────────────────────────────────────────────
+// Mock metrics — replace with real DB queries when available.
+const MOCK_PULSE: OpsPulseMetrics = {
+  today_sales_count:    14,
+  today_sales_try:      523_000,
+  overdue_collections:  5,
+  overdue_try:          180_000,
+  critical_stock_items: 2,
+  pending_purchases:    3,
+  open_tasks:           7,
+  fill_rate_pct:        94.2,
+}
+
+const PULSE_BADGE: Record<PulseColor, { bg: string; text: string; dot: string; label: string }> = {
+  green:  { bg: 'bg-[#dcfce7]', text: 'text-[#15803d]', dot: 'bg-[#22c55e]', label: 'YEŞİL' },
+  yellow: { bg: 'bg-[#fef9c3]', text: 'text-[#854d0e]', dot: 'bg-[#eab308]', label: 'SARI'  },
+  red:    { bg: 'bg-[#fee2e2]', text: 'text-[#b91c1c]', dot: 'bg-[#ef4444]', label: 'KIRMIZI' },
+}
+
+function OpsCommandPanel() {
+  const pulse   = classifyOpsPulse(MOCK_PULSE)
+  const summary = buildPulseSummary(MOCK_PULSE)
+  const badge   = PULSE_BADGE[pulse]
+  const m       = MOCK_PULSE
+
+  return (
+    <div className="border border-[#e2e8f0] rounded-lg overflow-hidden shadow-sm">
+      {/* Header row */}
+      <div className="flex items-center justify-between gap-3 px-5 py-3 bg-[#0f172a]">
+        <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+          OPS Komuta Paneli
+        </span>
+        <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ${badge.bg} ${badge.text}`}>
+          <span className={`w-2 h-2 rounded-full ${badge.dot}`} />
+          {badge.label}
+        </span>
+      </div>
+
+      {/* Summary line */}
+      <div className="px-5 py-2.5 bg-[#1e293b] border-b border-[#334155]">
+        <p className="text-[0.8rem] text-[#94a3b8] leading-snug">{summary}</p>
+      </div>
+
+      {/* KPI cards row */}
+      <div className="grid grid-cols-2 sm:grid-cols-5 divide-x divide-y sm:divide-y-0 divide-[#e2e8f0] bg-white">
+        {/* Bugün */}
+        <div className="px-4 py-4">
+          <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Bugün</div>
+          <div className="text-xl font-black text-[#0f172a]">
+            ₺{(m.today_sales_try / 1000).toFixed(0)}K
+          </div>
+          <div className="text-xs text-[#64748b] mt-0.5">{m.today_sales_count} satış</div>
+        </div>
+
+        {/* Geciken */}
+        <div className="px-4 py-4">
+          <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Geciken</div>
+          <div className={`text-xl font-black ${m.overdue_try > 0 ? 'text-[#ef4444]' : 'text-[#22c55e]'}`}>
+            ₺{(m.overdue_try / 1000).toFixed(0)}K
+          </div>
+          <div className="text-xs text-[#64748b] mt-0.5">{m.overdue_collections} müşteri</div>
+        </div>
+
+        {/* Kritik Stok */}
+        <div className="px-4 py-4">
+          <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Kritik</div>
+          <div className={`text-xl font-black ${m.critical_stock_items > 0 ? 'text-[#f97316]' : 'text-[#22c55e]'}`}>
+            {m.critical_stock_items} Stok
+          </div>
+          <div className="text-xs text-[#64748b] mt-0.5">Ürün uyarı</div>
+        </div>
+
+        {/* Doluluk */}
+        <div className="px-4 py-4">
+          <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Doluluk</div>
+          <div className={`text-xl font-black ${m.fill_rate_pct >= 95 ? 'text-[#22c55e]' : m.fill_rate_pct >= 80 ? 'text-[#eab308]' : 'text-[#ef4444]'}`}>
+            %{m.fill_rate_pct.toFixed(1)}
+          </div>
+          <div className="text-xs text-[#64748b] mt-0.5">Oranı</div>
+        </div>
+
+        {/* Açık Görev */}
+        <div className="px-4 py-4 col-span-2 sm:col-span-1">
+          <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Açık</div>
+          <div className={`text-xl font-black ${m.open_tasks > 0 ? 'text-[#6366f1]' : 'text-[#22c55e]'}`}>
+            {m.open_tasks} Görev
+          </div>
+          <div className="text-xs text-[#64748b] mt-0.5">Bekliyor</div>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 function TabSkeleton() {
   return (
@@ -102,6 +202,9 @@ export default async function OperationsPage({ searchParams }: PageProps) {
         </div>
         <OperationsContextBar companyId={companyId} />
       </div>
+
+      {/* OPS COMMAND PANEL — always visible at the top */}
+      <OpsCommandPanel />
 
       <Suspense fallback={<TabSkeleton />}>
         {activeTab === 'komuta'   && <KomutaContent  companyId={companyId} />}

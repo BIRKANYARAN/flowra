@@ -14,6 +14,7 @@ import type { ReorderAlertReport }                  from '@/lib/services/invento
 import { FifoAuditClient }                          from './_fifo/FifoAuditClient'
 import { SalesVelocityClient }                      from './_velocity/SalesVelocityClient'
 import InventoryTurnoverClient                      from './_inventory/InventoryTurnoverClient'
+import { AbcInventoryPanel }                        from './_abc/AbcInventoryPanel'
 
 function holdingDays(entryDate: string): number {
   const today = new Date()
@@ -217,6 +218,9 @@ export async function StockContent({ companyId, userId }: Props) {
           </div>
         ))}
       </div>
+
+      {/* ABC Unified Inventory View — tier classification + velocity + mock data */}
+      <AbcInventoryPanel />
 
       {/* Zero-stock alert — products completely out of stock */}
       {zeroStockCount > 0 && (

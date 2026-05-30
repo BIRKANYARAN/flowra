@@ -32,3 +32,70 @@ export function computeCollectionRiskScore(
   const amtTry = Number(row.total_try ?? 0)
   return days * 0.6 + (amtTry / 10_000) * 0.4
 }
+
+// ── New helpers ───────────────────────────────────────────────────────────────
+
+/**
+ * Classify an aging bucket from days overdue.
+ *   <=0  → 'current'
+ *   1-30 → '1_30'
+ *   31-60 → '31_60'
+ *   61-90 → '61_90'
+ *   >90  → '91_plus'
+ */
+export function classifyAgingBucket(
+  daysOverdue: number,
+): 'current' | '1_30' | '31_60' | '61_90' | '91_plus' {
+  if (daysOverdue <= 0)  return 'current'
+  if (daysOverdue <= 30) return '1_30'
+  if (daysOverdue <= 60) return '31_60'
+  if (daysOverdue <= 90) return '61_90'
+  return '91_plus'
+}
+
+/**
+ * Compute a collection priority score in [0, 100].
+ * Higher score = more urgent.
+ *
+ * Weights:
+ *   40% amount  — normalised to ₺1 000 000 cap
+ *   40% days    — normalised to 180-day cap
+ *   20% no-payment bonus — 20 pts when previousPayments === 0, else 0
+ */
+export function computeCollectionPriority(
+  amountTry: number,
+  daysOverdue: number,
+  previousPayments: number,
+): number {
+  const amountScore = Math.min(amountTry / 1_000_000, 1) * 40
+  const daysScore   = Math.min(Math.max(daysOverdue, 0) / 180, 1) * 40
+  const paymentBonus = previousPayments === 0 ? 20 : 0
+  return Math.round(Math.min(amountScore + daysScore + paymentBonus, 100))
+}
+
+/**
+ * Format an aging bucket label in Turkish.
+ */
+export function formatAgingBucket(bucket: string): string {
+  const map: Record<string, string> = {
+    current:  'Vadesi Gelmemiş',
+    '1_30':   '1-30 Gün',
+    '31_60':  '31-60 Gün',
+    '61_90':  '61-90 Gün',
+    '91_plus':'90+ Gün',
+  }
+  return map[bucket] ?? bucket
+}
+
+/**
+ * Sum receivable amounts grouped by bucket.
+ * Returns a plain Record<string, number>.
+ */
+export function sumByBucket(
+  items: Array<{ bucket: string; amount: number }>,
+): Record<string, number> {
+  return items.reduce<Record<string, number>>((acc, item) => {
+    acc[item.bucket] = (acc[item.bucket] ?? 0) + item.amount
+    return acc
+  }, {})
+}

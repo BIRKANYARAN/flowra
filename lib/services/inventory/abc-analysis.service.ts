@@ -138,6 +138,42 @@ export function classifyInventoryEfficiency(
   return 'excessive'
 }
 
+/**
+ * Compute revenue concentration: top N products as % of total.
+ * sortedRevenues must be in descending order.
+ * Returns 0 if the array is empty or total is 0.
+ */
+export function computeRevConcentration(sortedRevenues: number[], n: number): number {
+  if (sortedRevenues.length === 0) return 0
+  const total = sortedRevenues.reduce((s, v) => s + v, 0)
+  if (total === 0) return 0
+  const topN = sortedRevenues.slice(0, n).reduce((s, v) => s + v, 0)
+  return (topN / total) * 100
+}
+
+/**
+ * Classify inventory velocity based on daily sales rate.
+ *   fast   > 5  units/day
+ *   medium > 1  units/day
+ *   slow   > 0.1 units/day
+ *   dead   ≤ 0.1 units/day
+ */
+export function classifyVelocity(dailyVelocity: number): 'fast' | 'medium' | 'slow' | 'dead' {
+  if (dailyVelocity > 5)   return 'fast'
+  if (dailyVelocity > 1)   return 'medium'
+  if (dailyVelocity > 0.1) return 'slow'
+  return 'dead'
+}
+
+/**
+ * Compute weeks of stock remaining given current quantity and daily velocity.
+ * Returns null when dailyVelocity <= 0 (no movement — cannot predict).
+ */
+export function computeWeeksOfStock(currentQty: number, dailyVelocity: number): number | null {
+  if (dailyVelocity <= 0) return null
+  return currentQty / (dailyVelocity * 7)
+}
+
 // ── Internal helpers ──────────────────────────────────────────────────────────
 
 function isoDateMonthsBack(today: string, months: number): string {
