@@ -113,7 +113,7 @@ export default function IncomeStatementPage() {
           <span className="text-xs text-[#94a3b8]">—</span>
           <input type="date" value={to} onChange={e => setTo(e.target.value)}
             className="border border-[#e2e8f0] rounded px-2 py-1 text-xs" />
-          {pdfOpts && <PdfExportButton opts={pdfOpts} label="PDF İndir" />}
+          {pdfOpts && <PdfExportButton opts={pdfOpts} label="Dışa Aktar ↓" />}
           <Link href="/dashboard/finance" className="text-xs text-[#94a3b8] hover:text-brand-light font-semibold">← Finans</Link>
         </div>
       </div>

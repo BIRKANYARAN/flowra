@@ -39,12 +39,13 @@ import { CFOTab }        from './_tabs/CFOTab'
 import { BoardPackTab }  from './_tabs/BoardPackTab'
 import { FinanceContextBar } from './_shared/FinanceContextBar'
 import ReportsTab        from '@/app/dashboard/cfo/_tabs/ReportsTab'
+import { TrialBalanceTab } from '@/app/dashboard/cfo/_tabs/TrialBalanceTab'
 
 // ── Valid tabs ─────────────────────────────────────────────────────────────────
 
-type FinanceTab = 'pnl' | 'balance' | 'cashflow' | 'tax' | 'risks' | 'cfo' | 'boardpack' | 'reports'
+type FinanceTab = 'pnl' | 'balance' | 'cashflow' | 'tax' | 'risks' | 'cfo' | 'boardpack' | 'reports' | 'mizan'
 
-const VALID_TABS: FinanceTab[] = ['pnl', 'balance', 'cashflow', 'tax', 'risks', 'cfo', 'boardpack', 'reports']
+const VALID_TABS: FinanceTab[] = ['pnl', 'balance', 'cashflow', 'tax', 'risks', 'cfo', 'boardpack', 'reports', 'mizan']
 
 const FINANCE_NAV_TABS = [
   { key: 'pnl',       label: 'Kâr/Zarar'   },
@@ -53,6 +54,7 @@ const FINANCE_NAV_TABS = [
   { key: 'tax',       label: 'Vergi'        },
   { key: 'risks',     label: 'Riskler'      },
   { key: 'cfo',       label: 'CFO'          },
+  { key: 'mizan',     label: 'Mizan'        },
   { key: 'boardpack', label: 'Yön. Paketi'  },
   { key: 'reports',   label: 'CFO Paketi'   },
 ]
@@ -64,6 +66,7 @@ const TAB_META: Record<FinanceTab, { title: string; sub: string }> = {
   tax:       { title: 'Vergi Merkezi',         sub: 'KDV · Geçici Vergi · Kurumlar Vergisi · Matrah Analizi' },
   risks:     { title: 'Risk Analizi',          sub: 'Alacak yaşlandırma · Müşteri konsantrasyonu · HHI Endeksi' },
   cfo:       { title: 'CFO Cockpit',          sub: 'Muhasebe doğruluğu · Çeyreklik · Dönem yönetimi · Mizan' },
+  mizan:     { title: 'Mizan',                sub: 'Hesap Kodları · Borç/Alacak Bakiyeleri · Denge Kontrolü' },
   boardpack: { title: 'Yönetim Paketi',       sub: 'Tüm finansal tablolar · Rasyolar · Uyarılar · Belgeler' },
   reports:   { title: 'CFO Raporlama Paketi', sub: 'Aylık CFO paketi · Tüm raporlar · ZIP indirme' },
 }
@@ -202,6 +205,7 @@ export default async function FinancePage({ searchParams }: PageProps) {
         {activeTab === 'tax'       && <TaxTab      {...tabProps} />}
         {activeTab === 'risks'     && <RisksTab    {...tabProps} />}
         {activeTab === 'cfo'       && <CFOTab      {...tabProps} />}
+        {activeTab === 'mizan'     && <TrialBalanceTab />}
         {activeTab === 'boardpack' && <BoardPackTab {...tabProps} />}
         {activeTab === 'reports'   && <ReportsTab />}
       </Suspense>

@@ -3,6 +3,114 @@
 import { GeneralLedgerService, type TrialBalance } from './general-ledger.service'
 import { round2 } from '@/lib/calc'
 
+// ── Pure helpers — no DB, safe to unit-test ───────────────────────────────────
+
+export interface TrialBalanceLine {
+  account_code:   string
+  account_name:   string
+  debit_balance:  number
+  credit_balance: number
+  net_balance:    number    // debit - credit
+  normal_balance: 'debit' | 'credit'
+}
+
+/**
+ * Validates a trial balance: checks whether total debits equal total credits.
+ * Returns totals, a balanced flag and the discrepancy (0 when balanced).
+ */
+export function validateTrialBalance(lines: TrialBalanceLine[]): {
+  total_debits:  number
+  total_credits: number
+  balanced:      boolean   // |debits - credits| < 0.01
+  discrepancy:   number
+} {
+  const total_debits  = round2(lines.reduce((s, l) => s + l.debit_balance,  0))
+  const total_credits = round2(lines.reduce((s, l) => s + l.credit_balance, 0))
+  const discrepancy   = round2(Math.abs(total_debits - total_credits))
+  return { total_debits, total_credits, balanced: discrepancy < 0.01, discrepancy }
+}
+
+/**
+ * Classifies a Turkish MSUGT account code into a category and normal balance.
+ *
+ * Turkish Uniform Chart of Accounts (MSUGT):
+ *   1xx — Current assets       → debit normal
+ *   2xx — Non-current assets   → debit normal   (257 Accumulated Depreciation → credit)
+ *   3xx — Current liabilities  → credit normal
+ *   4xx — Long-term liabilities → credit normal
+ *   5xx — Equity               → credit normal
+ *   60x — Revenue              → credit normal
+ *   62x — Cost of goods sold   → debit normal
+ *   6xx (other) — Revenue/COGS → credit normal (default)
+ *   7xx — Expenses             → debit normal
+ */
+export function classifyAccount(code: string): {
+  category:       'asset' | 'liability' | 'equity' | 'revenue' | 'expense'
+  normal_balance: 'debit' | 'credit'
+} {
+  const prefix = parseInt(code.slice(0, 1), 10)
+  const n3     = code.slice(0, 3)
+
+  // Contra asset: accumulated depreciation 257 → credit normal
+  if (n3 === '257') return { category: 'asset', normal_balance: 'credit' }
+
+  if (prefix === 1 || prefix === 2) return { category: 'asset',     normal_balance: 'debit'  }
+  if (prefix === 3 || prefix === 4) return { category: 'liability', normal_balance: 'credit' }
+  if (prefix === 5)                 return { category: 'equity',    normal_balance: 'credit' }
+
+  if (prefix === 6) {
+    // 60x = revenue; 62x = COGS (expense); rest default to revenue
+    const sub = parseInt(code.slice(0, 2), 10)
+    if (sub === 62) return { category: 'expense', normal_balance: 'debit'  }
+    return { category: 'revenue', normal_balance: 'credit' }
+  }
+
+  if (prefix === 7) return { category: 'expense', normal_balance: 'debit' }
+
+  // Default fallback
+  return { category: 'asset', normal_balance: 'debit' }
+}
+
+/**
+ * Filters trial balance lines by account category (derived from account_code).
+ */
+export function filterTrialBalanceByCategory(
+  lines:    TrialBalanceLine[],
+  category: 'asset' | 'liability' | 'equity' | 'revenue' | 'expense',
+): TrialBalanceLine[] {
+  return lines.filter(l => classifyAccount(l.account_code).category === category)
+}
+
+/**
+ * Computes a high-level summary from trial balance lines.
+ * net_income = total_revenue - total_expenses
+ */
+export function computeTrialBalanceSummary(lines: TrialBalanceLine[]): {
+  total_assets:      number
+  total_liabilities: number
+  total_equity:      number
+  total_revenue:     number
+  total_expenses:    number
+  net_income:        number
+} {
+  const byCategory = (cat: 'asset' | 'liability' | 'equity' | 'revenue' | 'expense') =>
+    round2(
+      filterTrialBalanceByCategory(lines, cat)
+        .reduce((s, l) => s + Math.abs(l.net_balance), 0)
+    )
+
+  const total_assets      = byCategory('asset')
+  const total_liabilities = byCategory('liability')
+  const total_equity      = byCategory('equity')
+  const total_revenue     = byCategory('revenue')
+  const total_expenses    = byCategory('expense')
+  const net_income        = round2(total_revenue - total_expenses)
+
+  return { total_assets, total_liabilities, total_equity, total_revenue, total_expenses, net_income }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnySupabaseClient = any
 

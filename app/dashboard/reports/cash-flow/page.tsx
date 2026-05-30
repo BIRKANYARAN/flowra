@@ -7,6 +7,14 @@ import { PdfExportButton } from '@/components/reports/PdfExportButton'
 import { useWorkspace }    from '@/lib/workspace-context'
 import type { PdfReportOptions } from '@/lib/utils/pdf-report'
 import { formatTRY as fmt } from '@/lib/format'
+import { classifyCashFlowHealth } from '@/lib/services/cashflow-statement.service'
+
+const HEALTH_LABELS: Record<ReturnType<typeof classifyCashFlowHealth>, { label: string; cls: string }> = {
+  strong:        { label: 'Güçlü',       cls: 'bg-pos-light text-pos-text border-pos-light' },
+  growing:       { label: 'Büyüyen',     cls: 'bg-info-light text-info-text border-info-light' },
+  restructuring: { label: 'Yeniden Yapılanma', cls: 'bg-warn-light text-warn border-warn/20' },
+  distressed:    { label: 'Sorunlu',     cls: 'bg-neg-light text-neg border-neg-light' },
+}
 
 // Mirrors CashFlowStatement returned by CashFlowStatementService.compute()
 interface CFLine { label: string; amount: number }
@@ -106,7 +114,7 @@ export default function CashFlowPage() {
           <input type="date" value={to} onChange={e => setTo(e.target.value)}
             className="border border-[#e2e8f0] rounded px-2 py-1 text-xs" />
           {cf && (
-            <PdfExportButton label="PDF İndir" opts={{
+            <PdfExportButton label="Dışa Aktar ↓" opts={{
               companyName: ws.companyName ?? 'Şirket',
               reportTitle: 'Nakit Akış Tablosu',
               subtitle:    `${from} — ${to}`,
@@ -223,6 +231,22 @@ export default function CashFlowPage() {
               </div>
             </div>
           </div>
+
+          {/* Cash flow health badge */}
+          {(() => {
+            const health = classifyCashFlowHealth(
+              cf.operating.net_operating_try,
+              cf.investing.net_investing_try,
+              cf.financing.net_financing_try,
+            )
+            const { label, cls } = HEALTH_LABELS[health]
+            return (
+              <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded border text-xs font-semibold self-start ${cls}`}>
+                <span className="text-[10px] font-black uppercase tracking-widest">Nakit Akış Sağlığı</span>
+                <span className="font-black">{label}</span>
+              </div>
+            )
+          })()}
         </>
       )}
 

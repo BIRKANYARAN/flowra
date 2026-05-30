@@ -97,7 +97,7 @@ export default function BalanceSheetPage() {
           <label className="text-xs text-[#64748b]">Tarih itibarıyla:</label>
           <input type="date" value={asOf} onChange={e => setAsOf(e.target.value)}
             className="border border-[#e2e8f0] rounded px-2 py-1 text-xs" />
-          {bs && <PdfExportButton opts={{
+          {bs && <PdfExportButton label="Dışa Aktar ↓" opts={{
             companyName: ws.companyName ?? 'Şirket',
             reportTitle: 'Bilanço',
             subtitle: `${asOf} itibarıyla`,
@@ -123,7 +123,7 @@ export default function BalanceSheetPage() {
                 { label: 'TOPLAM ÖZKAYNAK', value: fmt(bs.equity.total_equity_try), bold: true, tone: 'positive' },
               ]},
             ],
-          } as PdfReportOptions} label="PDF İndir" />}
+          } as PdfReportOptions} />}
           <Link href="/dashboard/finance" className="text-xs text-[#94a3b8] hover:text-brand-light font-semibold">← Finans</Link>
         </div>
       </div>

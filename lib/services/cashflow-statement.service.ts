@@ -17,6 +17,46 @@ import type { Period } from '@/types'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyClient = any
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Pure formatting & validation helpers (no I/O, fully testable)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Validate the cash flow invariant:
+ *   openingCash + netChange ≈ closingCash
+ * Returns valid=true when |discrepancy| < 0.01.
+ */
+export function validateCashFlowInvariant(
+  openingCash: number,
+  netChange: number,
+  closingCash: number,
+): { valid: boolean; discrepancy: number } {
+  const expected = openingCash + netChange
+  const discrepancy = round2(closingCash - expected)
+  return { valid: Math.abs(discrepancy) < 0.01, discrepancy }
+}
+
+/**
+ * Classify cash flow health based on operating, investing, and financing sections.
+ *
+ * - 'strong':        operating > 0 (healthy core business, other sections don't change classification)
+ * - 'growing':       operating > 0 AND investing < 0 (investing in growth)
+ * - 'restructuring': operating < 0 AND financing > 0 (raising cash to cover shortfall)
+ * - 'distressed':    operating < 0 AND financing < 0 (negative on both fronts)
+ *
+ * Note: 'growing' is a sub-case of 'strong', evaluated first for precision.
+ */
+export function classifyCashFlowHealth(
+  operatingCF: number,
+  investingCF: number,
+  financingCF: number,
+): 'strong' | 'growing' | 'restructuring' | 'distressed' {
+  if (operatingCF > 0 && investingCF < 0) return 'growing'
+  if (operatingCF > 0) return 'strong'
+  if (operatingCF < 0 && financingCF > 0) return 'restructuring'
+  return 'distressed'
+}
+
 const OPERATING_EXPENSE_TYPES = [
   'operational', 'fixed', 'variable', 'salary', 'rent', 'utilities',
   'marketing', 'logistics', 'software', 'general',

@@ -20,6 +20,56 @@ import type { BalanceSheet } from '@/types/dto'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyClient = any
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Pure formatting & validation helpers (no I/O, fully testable)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Format a balance sheet line amount for display.
+ * Contra accounts (e.g. accumulated depreciation) are shown as negative values.
+ */
+export function formatBsAmount(amount: number, isContra: boolean): string {
+  const value = isContra ? -Math.abs(amount) : amount
+  return new Intl.NumberFormat('tr-TR', {
+    style: 'currency',
+    currency: 'TRY',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value)
+}
+
+/**
+ * Validate the fundamental balance sheet invariant:
+ *   Assets = Liabilities + Equity
+ * Returns balanced=true when |discrepancy| < 0.01 (penny tolerance).
+ */
+export function validateBsInvariant(
+  totalAssets: number,
+  totalLiabilities: number,
+  totalEquity: number,
+): { balanced: boolean; discrepancy: number } {
+  const discrepancy = round2(totalAssets - (totalLiabilities + totalEquity))
+  return { balanced: Math.abs(discrepancy) < 0.01, discrepancy }
+}
+
+/**
+ * Compute the current ratio (currentAssets / currentLiabilities).
+ * Returns null when currentLiabilities is zero (division-by-zero guard).
+ */
+export function computeCurrentRatio(currentAssets: number, currentLiabilities: number): number | null {
+  if (currentLiabilities === 0) return null
+  return round2(currentAssets / currentLiabilities)
+}
+
+/**
+ * Compute the debt-to-equity ratio (totalLiabilities / totalEquity).
+ * Returns null when totalEquity is zero or negative.
+ */
+export function computeDebtToEquity(totalLiabilities: number, totalEquity: number): number | null {
+  if (totalEquity <= 0) return null
+  return round2(totalLiabilities / totalEquity)
+}
+
 export class BalanceSheetService {
   /**
    * Compute the Balance Sheet as-of a given date for a company.
