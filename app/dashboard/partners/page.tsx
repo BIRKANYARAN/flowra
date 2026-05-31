@@ -310,26 +310,38 @@ export default function PartnersPage() {
     'risk-composite':   { title: 'Risk Kompozit Skorlama', sub: '6 boyutlu ağırlıklı risk değerlendirmesi · Ortak bazında kompozit skor ve derece' },
   }
 
-  const TABS: { id: TabId; label: string }[] = [
-    { id: 'partners',     label: 'Ortaklar'     },
-    { id: 'ledger',       label: 'Defter'       },
-    { id: 'waterfall',    label: 'Geri Ödeme'   },
-    { id: 'tranches',     label: 'Borç Dilimleri' },
-    { id: 'distribution', label: 'Kâr Dağıtımı' },
-    { id: 'returns',      label: 'Getiri'       },
-    { id: 'risk',         label: 'Risk'         },
-    { id: 'capital',      label: 'Sermaye Hesabı' },
-    { id: 'dividend',     label: 'Temettü'      },
-    { id: 'compensation', label: 'Huzur Hakkı'  },
-    { id: 'dilution',     label: 'Sermaye Seyreltme' },
-    { id: 'amortization',     label: 'Amortisman'       },
-    { id: 'dividend-ledger',   label: 'Dağıtım Geçmişi' },
-    { id: 'capital-statement', label: 'Sermaye Hesabı' },
-    { id: 'distribution-simulator', label: 'Kâr Dağıtımı' },
-    { id: 'contributions',          label: 'Taahhüt Takvimi' },
-    { id: 'equity-waterfall',       label: 'Getiri Projeksiyonu' },
-    { id: 'risk-composite',         label: 'Risk Skoru'          },
+  // Two-level grouped navigation: 18 flat tabs → 4 clear sections. Every tab is
+  // preserved (deep links via ?tab=<id> still work); the top bar shows 4 groups,
+  // the second row shows the active group's sub-tabs. Duplicate labels fixed.
+  const TAB_GROUPS: { label: string; tabs: { id: TabId; label: string }[] }[] = [
+    { label: 'Sermaye', tabs: [
+      { id: 'partners',          label: 'Ortaklar'        },
+      { id: 'capital',           label: 'Sermaye Hesabı'  },
+      { id: 'capital-statement', label: 'Sermaye Ekstresi' },
+      { id: 'contributions',     label: 'Taahhüt Takvimi' },
+      { id: 'dilution',          label: 'Seyreltme'       },
+    ] },
+    { label: 'Krediler', tabs: [
+      { id: 'ledger',       label: 'Defter'        },
+      { id: 'tranches',     label: 'Borç Dilimleri' },
+      { id: 'amortization', label: 'Amortisman'    },
+      { id: 'compensation', label: 'Huzur Hakkı'   },
+    ] },
+    { label: 'Dağıtım', tabs: [
+      { id: 'waterfall',              label: 'Geri Ödeme'         },
+      { id: 'distribution',           label: 'Kâr Dağıtımı'       },
+      { id: 'distribution-simulator', label: 'Dağıtım Simülatörü' },
+      { id: 'dividend',               label: 'Temettü'            },
+      { id: 'dividend-ledger',        label: 'Dağıtım Geçmişi'    },
+      { id: 'equity-waterfall',       label: 'Getiri Projeksiyonu' },
+      { id: 'returns',                label: 'Getiri'             },
+    ] },
+    { label: 'Risk', tabs: [
+      { id: 'risk',           label: 'Risk'      },
+      { id: 'risk-composite', label: 'Risk Skoru' },
+    ] },
   ]
+  const activeGroupIdx = Math.max(0, TAB_GROUPS.findIndex(g => g.tabs.some(t => t.id === activeTab)))
 
   // ── Render ────────────────────────────────────────────────────────────────────
 
@@ -367,9 +379,29 @@ export default function PartnersPage() {
 
       {/* Sticky tab nav + context bar */}
       <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm -mx-4">
-        <div className="px-4 pt-1 border-b border-[#e2e8f0]">
+        {/* Level 1 — section groups */}
+        <div className="px-4 pt-1">
+          <div className="flex items-center gap-1 overflow-x-auto scrollbar-none">
+            {TAB_GROUPS.map((g, i) => (
+              <button
+                key={g.label}
+                onClick={() => setActiveTab(g.tabs[0].id)}
+                className={[
+                  'px-3.5 py-1.5 text-xs rounded-t transition-colors whitespace-nowrap flex-shrink-0 bg-transparent border-0 cursor-pointer',
+                  i === activeGroupIdx
+                    ? 'text-[#0f172a] font-black'
+                    : 'text-[#94a3b8] hover:text-[#334155] font-semibold',
+                ].join(' ')}
+              >
+                {g.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        {/* Level 2 — sub-tabs of the active group */}
+        <div className="px-4 border-b border-[#e2e8f0]">
           <div className="flex items-center gap-0.5 overflow-x-auto scrollbar-none">
-            {TABS.map(t => (
+            {TAB_GROUPS[activeGroupIdx].tabs.map(t => (
               <button
                 key={t.id}
                 onClick={() => setActiveTab(t.id)}
