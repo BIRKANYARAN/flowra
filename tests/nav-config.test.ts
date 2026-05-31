@@ -12,7 +12,6 @@ import {
   isKnownNavHref,
   hasMinRole,
   isMobileNavItem,
-  FINANCE_TABS,
   COMMERCIAL_TABS,
   OPERATIONS_TABS,
   PLANNING_TABS,
@@ -213,14 +212,6 @@ describe('findNavItem + isKnownNavHref', () => {
 // ── Tab contracts ─────────────────────────────────────────────────────────────
 
 describe('Tab contracts — canonical key sets', () => {
-  it('FINANCE_TABS has 9 tabs', () => {
-    expect(FINANCE_TABS.length).toBe(9)
-    const keys = FINANCE_TABS.map(t => t.key)
-    expect(keys).toContain('overview')
-    expect(keys).toContain('cfo')
-    expect(keys).toContain('quarterly')
-  })
-
   it('COMMERCIAL_TABS has 5 tabs', () => {
     expect(COMMERCIAL_TABS.length).toBe(5)
     const keys = COMMERCIAL_TABS.map(t => t.key)
@@ -562,11 +553,6 @@ describe('isKnownNavHref — comprehensive', () => {
 // ── Tab keys uniqueness ───────────────────────────────────────────────────────
 
 describe('Tab key uniqueness within each center', () => {
-  it('FINANCE_TABS keys are all unique', () => {
-    const keys = FINANCE_TABS.map(t => t.key)
-    expect(new Set(keys).size).toBe(keys.length)
-  })
-
   it('COMMERCIAL_TABS keys are all unique', () => {
     const keys = COMMERCIAL_TABS.map(t => t.key)
     expect(new Set(keys).size).toBe(keys.length)
@@ -583,7 +569,7 @@ describe('Tab key uniqueness within each center', () => {
   })
 
   it('all tab keys are non-empty strings', () => {
-    const allTabs = [...FINANCE_TABS, ...COMMERCIAL_TABS, ...OPERATIONS_TABS, ...PLANNING_TABS]
+    const allTabs = [...COMMERCIAL_TABS, ...OPERATIONS_TABS, ...PLANNING_TABS]
     allTabs.forEach(tab => {
       expect(typeof tab.key).toBe('string')
       expect(tab.key.length).toBeGreaterThan(0)
@@ -591,7 +577,7 @@ describe('Tab key uniqueness within each center', () => {
   })
 
   it('all tab labels are non-empty strings', () => {
-    const allTabs = [...FINANCE_TABS, ...COMMERCIAL_TABS, ...OPERATIONS_TABS, ...PLANNING_TABS]
+    const allTabs = [...COMMERCIAL_TABS, ...OPERATIONS_TABS, ...PLANNING_TABS]
     allTabs.forEach(tab => {
       expect(typeof tab.label).toBe('string')
       expect(tab.label.length).toBeGreaterThan(0)
