@@ -39,6 +39,30 @@ function TabSkeleton() {
 const VALID_TABS = PLANNING_TABS.map(t => t.key) as string[]
 const TABS       = PLANNING_TABS.map(t => ({ key: t.key, label: t.label }))
 
+// 11 flat tabs → 4 grouped sections (2-level nav). All tabs preserved; deep
+// links (?tab=key) still resolve to the right section.
+const PLANNING_GROUPS = [
+  { label: 'Senaryolar',  tabs: [
+    { key: 'scenarios',       label: 'Senaryolar'   },
+    { key: 'scenario-compare', label: 'Karşılaştırma' },
+    { key: 'variance',        label: 'Gerçek vs Plan' },
+  ] },
+  { label: 'Projeksiyon', tabs: [
+    { key: 'cash-projection', label: 'Nakit Projeksiyonu' },
+    { key: 'breakeven',       label: 'Başabaş'   },
+    { key: 'unit-profit',     label: 'Birim Kâr' },
+  ] },
+  { label: 'Borç & Ortak', tabs: [
+    { key: 'debt-pressure',  label: 'Borç Baskısı' },
+    { key: 'partner-impact', label: 'Ortak Etkisi' },
+  ] },
+  { label: 'Plan', tabs: [
+    { key: 'budget',   label: 'Bütçe'   },
+    { key: 'calendar', label: 'Takvim'  },
+    { key: 'tasks',    label: 'Görevler' },
+  ] },
+]
+
 interface PageProps {
   searchParams: Promise<{ tab?: string }>
 }
@@ -115,7 +139,7 @@ export default async function PlanningPage({ searchParams }: PageProps) {
       {/* Sticky tab nav + context bar */}
       <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm -mx-4">
         <div className="px-4 pt-1 border-b border-[#e2e8f0]">
-          <HubTabNav tabs={TABS} activeTab={activeTab} basePath="/dashboard/planning" />
+          <HubTabNav tabs={TABS} groups={PLANNING_GROUPS} activeTab={activeTab} basePath="/dashboard/planning" />
         </div>
         <PlanningContextBar companyId={companyId} />
       </div>
