@@ -207,18 +207,8 @@ export function isKnownNavHref(href: string): boolean {
 
 // ── Tab contracts — canonical tab keys per center ─────────────────────────────
 
-/** Finance center — /dashboard/finance?tab= */
-export const FINANCE_TABS = [
-  { key: 'overview',  label: 'Genel'      },
-  { key: 'pnl',       label: 'Kâr/Zarar'  },
-  { key: 'balance',   label: 'Bilanço'    },
-  { key: 'cashflow',  label: 'Nakit'      },
-  { key: 'tax',       label: 'Vergi'      },
-  { key: 'risks',     label: 'Riskler'    },
-  { key: 'forecast',  label: 'Tahmin'     },
-  { key: 'quarterly', label: 'Çeyreklik'  },
-  { key: 'cfo',       label: 'CFO'        },
-] as const
+// FINANCE_TABS removed — the finance hub owns its own FINANCE_NAV_TABS list;
+// this stale export had 0 consumers and drifted from the rendered tabs.
 
 /** Commercial center — /dashboard/commercial?tab= */
 export const COMMERCIAL_TABS = [
