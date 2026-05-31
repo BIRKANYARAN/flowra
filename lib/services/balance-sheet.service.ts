@@ -93,7 +93,8 @@ export class BalanceSheetService {
       partnerFlowsResult,
     ] = await Promise.all([
       // Partner balances: capital, loans, repayments, dividends
-      PartnerService.getPartnerBalances(userId, companyId).catch(() => []),
+      // Thread the authenticated client explicitly (no auth-context fallback).
+      PartnerService.getPartnerBalances(userId, companyId, undefined, supabase).catch(() => []),
 
       // Receivables: unpaid/partial/overdue sales up to asOfDate.
       // Use sale_date (business invoice date), not created_at (DB insertion time).

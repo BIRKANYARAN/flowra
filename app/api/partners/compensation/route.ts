@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { resolveApiAuth } from '@/lib/api-auth'
 import { reqCtx, apiError } from '@/lib/api-utils'
 import { CompensationService } from '@/lib/services/pcle/compensation.service'
+import { isMissingSchemaError } from '@/lib/db-errors'
 
 export async function GET(req: NextRequest) {
   const ctx  = reqCtx(req)
@@ -22,12 +23,30 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const months = Math.max(1, Math.min(24, parseInt(searchParams.get('months') ?? '3', 10)))
 
-    const [schedules, due_payments] = await Promise.all([
+    // Resolve each independently so a schema gap in one (e.g. an un-applied
+    // partner_compensation_payments migration) degrades gracefully instead of
+    // failing the whole endpoint with a 500.
+    const [schedulesR, dueR] = await Promise.allSettled([
       CompensationService.listSchedules(companyId, supabase),
       CompensationService.getDuePayments(companyId, supabase, { months }),
     ])
 
-    return NextResponse.json({ schedules, due_payments })
+    // A non-schema error on either side is a genuine failure → surface it.
+    for (const r of [schedulesR, dueR]) {
+      if (r.status === 'rejected' && !isMissingSchemaError(r.reason)) {
+        console.error('[compensation GET]', r.reason)
+        return apiError(ctx, 'Huzur hakkı verileri alınamadı', 500)
+      }
+      if (r.status === 'rejected') {
+        console.error('[compensation GET] schema gap (apply partner_compensation migration):', r.reason)
+      }
+    }
+
+    const schedules    = schedulesR.status === 'fulfilled' ? schedulesR.value : []
+    const due_payments = dueR.status === 'fulfilled' ? dueR.value : []
+    const degraded     = schedulesR.status === 'rejected' || dueR.status === 'rejected'
+
+    return NextResponse.json({ schedules, due_payments, degraded })
   } catch (err) {
     console.error('[compensation GET]', err)
     return apiError(ctx, 'Huzur hakkı verileri alınamadı', 500)

@@ -318,7 +318,7 @@ export async function CFOTab({ userId, companyId }: Props) {
       sqt('Gelir Tablosu',    FinanceService.getFinancialSummary(userId, companyId, period, undefined, ctx)),
       sqt('KDV',              TaxService.getKdvNet(userId, companyId, period, ctx)),
       sqt('Kurumlar Vergisi', TaxService.getCorporateTax(userId, companyId, period, undefined, ctx)),
-      sqt('Ortak Bakiyeleri', PartnerService.getPartnerBalances(userId, companyId, ctx)),
+      sqt('Ortak Bakiyeleri', PartnerService.getPartnerBalances(userId, companyId, ctx, supabase)),
       getCfoMetrics(companyId, { from, to: today }).catch(() => ZERO_METRICS),
       getRiskEngineResult(companyId).catch(() => null),
       getQuarterlyReport(userId, companyId, new Date().getFullYear()).catch(() => ZERO_QUARTERLY),

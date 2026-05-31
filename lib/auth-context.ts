@@ -26,11 +26,17 @@ type AnySupabase = any
  * Resolve the Supabase client for a service call.
  *
  * • If the caller supplied an authenticated client (from resolveApiAuth) → use it.
- * • If not → fall back to createClient() and emit a dev-mode warning so the drift
- *   is visible during development/testing without crashing production.
+ * • If not → fall back to the cookie-based createClient(). This is CORRECT for
+ *   server components (the user's session cookie is present) but WRONG for
+ *   Bearer-token API routes (no auth cookie → anonymous client → RLS blocks).
  *
- * The `caller` string (e.g. "PartnerCrudService.listPartners") is only used for
- * the warning message — keep it short and descriptive.
+ * The fallback is now NEVER silent: the [AUTH-DRIFT] warning is emitted in
+ * production as well as dev/test, so drift is visible in production logs and can
+ * be traced to the exact caller. Known drift points must thread auth.supabase
+ * (or createClient()) explicitly so this branch is never hit at runtime.
+ *
+ * The `caller` string (e.g. "PartnerCrudService.listPartners") identifies the
+ * source in logs — keep it short and descriptive.
  */
 export function requireAuthContext(
   clientOverride: AnySupabase | undefined,
@@ -38,15 +44,15 @@ export function requireAuthContext(
 ): AnySupabase {
   if (clientOverride != null) return clientOverride
 
-  if (process.env.NODE_ENV !== 'production') {
-    // In dev/test: loud warning so missing propagation is caught immediately.
-    console.warn(
-      `[AUTH-DRIFT] ${caller} — no authenticated client supplied. ` +
-      `Falling back to createClient() (cookie-based). ` +
-      `In Bearer-token API routes this produces an unauthenticated client → RLS blocks. ` +
-      `Pass auth.supabase from resolveApiAuth() through the full call chain.`,
-    )
-  }
+  // Non-silent in ALL environments (incl. production). A missing client in a
+  // Bearer-token route yields an anonymous client and RLS-blocked queries; this
+  // warning is the breadcrumb that ties the resulting failure back to `caller`.
+  console.warn(
+    `[AUTH-DRIFT] ${caller} — no authenticated client supplied. ` +
+    `Falling back to createClient() (cookie-based). ` +
+    `In Bearer-token API routes this produces an unauthenticated client → RLS blocks. ` +
+    `Pass auth.supabase from resolveApiAuth() through the full call chain.`,
+  )
 
   return createClient()
 }

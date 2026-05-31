@@ -3,6 +3,7 @@
 // Pure computation — no side effects beyond the DB query.
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { isMissingSchemaError } from '@/lib/db-errors'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -228,9 +229,16 @@ export class SupplierAnalyticsService {
       .gte('expense_date', sixMonthsAgo)
       .order('expense_date', { ascending: true })
 
-    if (error) throw new Error(`SupplierAnalyticsService.getReport: ${error.message}`)
+    // A schema gap (e.g. expenses.supplier_name not provisioned in this DB) must
+    // degrade to an empty report, not a 500. Genuine errors still throw.
+    if (error && !isMissingSchemaError(error)) {
+      throw new Error(`SupplierAnalyticsService.getReport: ${error.message}`)
+    }
+    if (error) {
+      console.warn(`[supplier-analytics] schema gap → empty report: ${error.message}`)
+    }
 
-    const rows = (data ?? []) as ExpenseRow[]
+    const rows = (error ? [] : (data ?? [])) as ExpenseRow[]
 
     // Group rows by supplier_name
     const bySupplier = new Map<string, ExpenseRow[]>()

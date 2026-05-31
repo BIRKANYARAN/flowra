@@ -243,8 +243,8 @@ export class HealthReportService {
         .is('deleted_at', null)
         .eq('payment_status', 'overdue'),
 
-      // Partner balances for obligation metrics
-      PartnerService.getPartnerBalances(resolvedUserId, companyId),
+      // Partner balances for obligation metrics — thread the authenticated client
+      PartnerService.getPartnerBalances(resolvedUserId, companyId, undefined, supabase),
 
       // Monthly expense total (last 3 months for burn estimate)
       supabase
