@@ -16,16 +16,23 @@ import ResolutionsTab        from './_components/ResolutionsTab'
 // ── Types ──────────────────────────────────────────────────────────────────────
 type TabId = 'calendar' | 'actions' | 'resolutions' | 'audit' | 'exports' | 'commitments' | 'decisions' | 'audit-trail' | 'capital'
 
-const TABS: { id: TabId; label: string; icon: string }[] = [
-  { id: 'calendar',    label: 'Takvim',              icon: '📅' },
-  { id: 'actions',     label: 'Kurumsal Aksiyonlar', icon: '🏛️' },
-  { id: 'resolutions', label: 'Kararlar',            icon: '⚖️' },
-  { id: 'audit',       label: 'Denetim Hazırlığı',  icon: '✅' },
-  { id: 'exports',     label: 'Veri Dışa Aktarma',  icon: '📦' },
-  { id: 'commitments', label: 'Taahhütler',          icon: '📋' },
-  { id: 'decisions',    label: 'Karar Geçmişi',       icon: '🧠' },
-  { id: 'audit-trail', label: 'Denetim İzi',          icon: '🔍' },
-  { id: 'capital',     label: 'Sermaye Hesapları',    icon: '💰' },
+// 9 flat tabs → 3 grouped sections (2-level nav). All tabs preserved.
+const TAB_GROUPS: { label: string; tabs: { id: TabId; label: string; icon: string }[] }[] = [
+  { label: 'Kararlar', tabs: [
+    { id: 'calendar',    label: 'Takvim',              icon: '📅' },
+    { id: 'actions',     label: 'Kurumsal Aksiyonlar', icon: '🏛️' },
+    { id: 'resolutions', label: 'Kararlar',            icon: '⚖️' },
+    { id: 'decisions',   label: 'Karar Geçmişi',       icon: '🧠' },
+  ] },
+  { label: 'Sermaye & Taahhüt', tabs: [
+    { id: 'commitments', label: 'Taahhütler',          icon: '📋' },
+    { id: 'capital',     label: 'Sermaye Hesapları',    icon: '💰' },
+  ] },
+  { label: 'Denetim', tabs: [
+    { id: 'audit',       label: 'Denetim Hazırlığı',  icon: '✅' },
+    { id: 'audit-trail', label: 'Denetim İzi',          icon: '🔍' },
+    { id: 'exports',     label: 'Veri Dışa Aktarma',  icon: '📦' },
+  ] },
 ]
 
 // ── Main Page ──────────────────────────────────────────────────────────────────
@@ -38,6 +45,9 @@ export default function GovernancePage() {
     router.replace(`/dashboard/governance?tab=${id}`, { scroll: false })
   }
 
+  const activeGroupIdx = Math.max(0, TAB_GROUPS.findIndex(g => g.tabs.some(t => t.id === activeTab)))
+  const activeGroup    = TAB_GROUPS[activeGroupIdx]
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
       {/* Page header */}
@@ -48,9 +58,26 @@ export default function GovernancePage() {
         </p>
       </div>
 
-      {/* Tab nav */}
-      <div className="flex gap-1 border-b border-gray-200">
-        {TABS.map(t => (
+      {/* Tab nav — Level 1: section groups */}
+      <div className="flex gap-1.5 flex-wrap">
+        {TAB_GROUPS.map((g, i) => (
+          <button
+            key={g.label}
+            onClick={() => setTab(g.tabs[0].id)}
+            className={cn(
+              'px-3.5 py-1.5 text-xs rounded transition-colors',
+              i === activeGroupIdx
+                ? 'bg-violet-100 text-violet-800 font-black'
+                : 'text-gray-500 hover:text-gray-700 font-semibold',
+            )}
+          >
+            {g.label}
+          </button>
+        ))}
+      </div>
+      {/* Level 2: sub-tabs of the active group */}
+      <div className="flex gap-1 border-b border-gray-200 -mt-3">
+        {activeGroup.tabs.map(t => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
