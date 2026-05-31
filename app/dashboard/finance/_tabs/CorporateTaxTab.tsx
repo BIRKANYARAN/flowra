@@ -1,16 +1,16 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // app/dashboard/finance/_tabs/CorporateTaxTab.tsx
 //
-// Corporate tax timeline view (Kurumlar Vergisi + Geçici Vergi takvimi)
-// Displays annual tax estimate, quarterly provisional tax schedule, and
-// the upcoming 90-day tax calendar.
+// Corporate tax timeline view (Kurumlar Vergisi + Geçici Vergi takvimi).
+// Real data: TaxComplianceService.getDashboard(companyId) — real YTD corporate
+// tax provision, real Geçici Vergi obligations (dates/amounts/statuses), and the
+// upcoming 90-day obligation calendar. No hardcoded figures or dates.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { createClient } from '@/lib/supabase-server'
 import {
-  computeEffectiveTaxRate,
-  computeRemainingTaxLiability,
-  generateQuarterlySchedule,
-  daysUntilEvent,
+  TaxComplianceService,
+  type TaxObligation,
 } from '@/lib/services/tax/tax-compliance.service'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -27,10 +27,6 @@ function fmtTRY(n: number): string {
   return '₺' + n.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
 }
 
-function fmtPct(n: number): string {
-  return '%' + n.toFixed(1)
-}
-
 const TR_MONTHS_SHORT = [
   'Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz',
   'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara',
@@ -41,80 +37,20 @@ function fmtDate(iso: string): string {
   return `${d} ${TR_MONTHS_SHORT[m - 1]}`
 }
 
-// ── Calendar event helpers ────────────────────────────────────────────────────
-
 function daysLabel(days: number): string {
   if (days < 0) return `${Math.abs(days)} gün gecikti`
   if (days === 0) return 'Bugün son gün'
   return `${days} gün kaldı`
 }
 
-// ── Demo data (replace with real data fetch in production) ───────────────────
-
-const CURRENT_YEAR = 2025
-const TODAY = '2025-05-30'
-
-// Hardcoded demo figures — in production fetch from TaxComplianceService
-const ANNUAL_TAX_ESTIMATE = 378_750
-const GROSS_PROFIT = ANNUAL_TAX_ESTIMATE / 0.25  // 25% rate → grossProfit = estimate / rate
-const EFFECTIVE_RATE = computeEffectiveTaxRate(ANNUAL_TAX_ESTIMATE, GROSS_PROFIT)
-
-// Q1 is paid in this demo
-const Q1_PAID = ANNUAL_TAX_ESTIMATE / 4
-const REMAINING = computeRemainingTaxLiability(ANNUAL_TAX_ESTIMATE, [Q1_PAID])
-
-const SCHEDULE = generateQuarterlySchedule(CURRENT_YEAR, ANNUAL_TAX_ESTIMATE, TODAY)
-// Override Q1 as paid
-SCHEDULE[0].status = 'paid'
-
-// ── Calendar events (next 90 days) ────────────────────────────────────────────
-
-interface CalendarEvent {
-  due_date: string
-  label:    string
+function quarterOf(o: TaxObligation): string {
+  const m = o.obligation_id.match(/_q(\d)/)
+  return m ? `Q${m[1]}` : o.period_label
 }
 
-function buildCalendarEvents(today: string): CalendarEvent[] {
-  const events: CalendarEvent[] = []
-  // Generate KDV and Geçici Vergi events for next 90 days
-  const [y] = today.split('-').map(Number)
+// ── Obligation status badge (driven by real obligation status) ────────────────
 
-  // KDV — 26th of each following month
-  for (let m = 1; m <= 12; m++) {
-    const nextM = m === 12 ? 1  : m + 1
-    const nextY = m === 12 ? y + 1 : y
-    const dStr = `${nextY}-${String(nextM).padStart(2, '0')}-26`
-    const days = daysUntilEvent(dStr, today)
-    if (days >= 0 && days <= 90) {
-      events.push({ due_date: dStr, label: 'KDV Beyannamesi' })
-    }
-  }
-
-  // Geçici Vergi quarters: Feb 15, May 15, Aug 15, Nov 15
-  const qDates = [
-    `${y}-02-15`, `${y}-05-15`, `${y}-08-15`, `${y}-11-15`,
-  ]
-  const qLabels = [
-    'Geçici KV 1. Taksit', 'Geçici KV 2. Taksit',
-    'Geçici KV 3. Taksit', 'Geçici KV 4. Taksit',
-  ]
-  for (let i = 0; i < qDates.length; i++) {
-    const days = daysUntilEvent(qDates[i], today)
-    if (days >= 0 && days <= 90) {
-      events.push({ due_date: qDates[i], label: qLabels[i] })
-    }
-  }
-
-  return events.sort((a, b) => a.due_date.localeCompare(b.due_date))
-}
-
-const CALENDAR_EVENTS = buildCalendarEvents(TODAY)
-
-// ── Quarter status badge ──────────────────────────────────────────────────────
-
-function QuarterBadge({ status, dueDate }: { status: string; dueDate: string }) {
-  const days = daysUntilEvent(dueDate, TODAY)
-
+function StatusBadge({ status, days }: { status: TaxObligation['status']; days: number }) {
   if (status === 'paid') {
     return (
       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">
@@ -122,17 +58,17 @@ function QuarterBadge({ status, dueDate }: { status: string; dueDate: string }) 
       </span>
     )
   }
+  if (status === 'overdue' || days < 0) {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-700">
+        GECİKTİ {Math.abs(days)}g
+      </span>
+    )
+  }
   if (days === 0) {
     return (
       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">
         BUGÜN SON GÜN ⚠
-      </span>
-    )
-  }
-  if (days < 0) {
-    return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-700">
-        GECİKTİ {Math.abs(days)}g
       </span>
     )
   }
@@ -145,7 +81,31 @@ function QuarterBadge({ status, dueDate }: { status: string; dueDate: string }) 
 
 // ── Main Component ────────────────────────────────────────────────────────────
 
-export async function CorporateTaxTab(_props: CorporateTaxTabProps) {
+export async function CorporateTaxTab({ companyId }: CorporateTaxTabProps) {
+  const supabase  = createClient()
+  const dashboard = await new TaxComplianceService(supabase)
+    .getDashboard(companyId)
+    .catch(() => null)
+
+  if (!dashboard) {
+    return (
+      <div className="rounded-lg border border-[#e2e8f0] bg-white px-5 py-10 text-center">
+        <p className="text-sm font-semibold text-[#334155]">Vergi takvimi verisi yüklenemedi.</p>
+        <p className="text-xs text-[#94a3b8] mt-1">Lütfen sayfayı yenileyin veya daha sonra tekrar deneyin.</p>
+      </div>
+    )
+  }
+
+  const today        = dashboard.as_of_date
+  const year         = parseInt(today.slice(0, 4), 10)
+  const geciciSched  = dashboard.obligations.filter(o => o.obligation_type === 'gecici_vergi')
+  const calendar     = dashboard.obligations
+    .filter(o => o.days_until_due >= 0 && o.days_until_due <= 90)
+    .sort((a, b) => a.due_date.localeCompare(b.due_date))
+  const paidTry      = geciciSched
+    .filter(o => o.status === 'paid')
+    .reduce((s, o) => s + (o.amount_try ?? 0), 0)
+
   return (
     <div className="space-y-5">
 
@@ -159,17 +119,17 @@ export async function CorporateTaxTab(_props: CorporateTaxTabProps) {
                 Kurumlar Vergisi
               </div>
               <h2 className="text-base font-black text-[#0f172a]">
-                KURUMLAR VERGİSİ {CURRENT_YEAR}
+                KURUMLAR VERGİSİ {year}
               </h2>
             </div>
             <div className="flex items-center gap-4">
               <div className="text-right">
-                <div className="text-[0.65rem] text-[#94a3b8] uppercase tracking-wide">Tahmini Yıllık Vergi</div>
-                <div className="text-xl font-black text-[#0f172a]">{fmtTRY(ANNUAL_TAX_ESTIMATE)}</div>
+                <div className="text-[0.65rem] text-[#94a3b8] uppercase tracking-wide">YTD Vergi Karşılığı</div>
+                <div className="text-xl font-black text-[#0f172a]">{fmtTRY(dashboard.corporate_tax_provision_try)}</div>
               </div>
               <div className="text-right">
-                <div className="text-[0.65rem] text-[#94a3b8] uppercase tracking-wide">Efektif Oran</div>
-                <div className="text-xl font-black text-[#0f172a]">{fmtPct(EFFECTIVE_RATE)}</div>
+                <div className="text-[0.65rem] text-[#94a3b8] uppercase tracking-wide">Uyum Skoru</div>
+                <div className="text-xl font-black text-[#0f172a]">{dashboard.compliance_score} / 100</div>
               </div>
             </div>
           </div>
@@ -180,29 +140,35 @@ export async function CorporateTaxTab(_props: CorporateTaxTabProps) {
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
             Geçici Vergi Takvimi
           </div>
-          <div className="space-y-2">
-            {SCHEDULE.map((q) => (
-              <div
-                key={q.quarter}
-                className="flex items-center justify-between gap-3 py-2 border-b border-[#f1f5f9] last:border-0"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-xs font-bold text-[#64748b] w-5">Q{q.quarter}</span>
-                  <span className="text-sm text-[#334155]">{fmtDate(q.due_date)} {CURRENT_YEAR}</span>
-                  <span className="text-sm font-semibold text-[#0f172a]">{fmtTRY(q.amount)}</span>
+          {geciciSched.length === 0 ? (
+            <p className="text-sm text-[#94a3b8]">Bu yıl için geçici vergi yükümlülüğü bulunmuyor.</p>
+          ) : (
+            <div className="space-y-2">
+              {geciciSched.map((q) => (
+                <div
+                  key={q.obligation_id}
+                  className="flex items-center justify-between gap-3 py-2 border-b border-[#f1f5f9] last:border-0"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs font-bold text-[#64748b] w-7">{quarterOf(q)}</span>
+                    <span className="text-sm text-[#334155]">{fmtDate(q.due_date)} {q.due_date.slice(0, 4)}</span>
+                    <span className="text-sm font-semibold text-[#0f172a]">
+                      {q.amount_try != null ? fmtTRY(q.amount_try) : '—'}
+                    </span>
+                  </div>
+                  <StatusBadge status={q.status} days={q.days_until_due} />
                 </div>
-                <QuarterBadge status={q.status} dueDate={q.due_date} />
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
           {/* Totals row */}
           <div className="mt-3 pt-3 border-t border-[#e2e8f0] flex items-center justify-between text-sm">
             <span className="text-[#64748b]">
-              Ödenen: <span className="font-semibold text-[#0f172a]">{fmtTRY(Q1_PAID)}</span>
+              Ödenen: <span className="font-semibold text-[#0f172a]">{fmtTRY(paidTry)}</span>
             </span>
             <span className="text-[#64748b]">
-              Kalan: <span className="font-semibold text-[#0f172a]">{fmtTRY(REMAINING)}</span>
+              Bekleyen: <span className="font-semibold text-[#0f172a]">{fmtTRY(dashboard.total_pending_try)}</span>
             </span>
           </div>
         </div>
@@ -217,30 +183,27 @@ export async function CorporateTaxTab(_props: CorporateTaxTabProps) {
           <h2 className="text-base font-black text-[#0f172a]">Sonraki 90 Gün</h2>
         </div>
         <div className="px-5 py-4">
-          {CALENDAR_EVENTS.length === 0 ? (
+          {calendar.length === 0 ? (
             <p className="text-sm text-[#94a3b8]">Önümüzdeki 90 gün içinde vergi yükümlülüğü bulunmuyor.</p>
           ) : (
             <div className="space-y-2">
-              {CALENDAR_EVENTS.map((ev, i) => {
-                const days = daysUntilEvent(ev.due_date, TODAY)
-                return (
-                  <div
-                    key={i}
-                    className="flex items-center justify-between gap-3 py-2 border-b border-[#f1f5f9] last:border-0"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-semibold text-[#334155] w-14">
-                        {fmtDate(ev.due_date)}
-                      </span>
-                      <span className="text-sm text-[#64748b]">→</span>
-                      <span className="text-sm text-[#0f172a]">{ev.label}</span>
-                    </div>
-                    <span className={`text-xs font-medium ${days <= 7 ? 'text-amber-600' : 'text-[#64748b]'}`}>
-                      [{daysLabel(days)}]
+              {calendar.map((ev) => (
+                <div
+                  key={ev.obligation_id}
+                  className="flex items-center justify-between gap-3 py-2 border-b border-[#f1f5f9] last:border-0"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-semibold text-[#334155] w-14">
+                      {fmtDate(ev.due_date)}
                     </span>
+                    <span className="text-sm text-[#64748b]">→</span>
+                    <span className="text-sm text-[#0f172a]">{ev.period_label}</span>
                   </div>
-                )
-              })}
+                  <span className={`text-xs font-medium ${ev.days_until_due <= 7 ? 'text-amber-600' : 'text-[#64748b]'}`}>
+                    [{daysLabel(ev.days_until_due)}]
+                  </span>
+                </div>
+              ))}
             </div>
           )}
 
