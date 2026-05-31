@@ -261,8 +261,8 @@ export function WaterfallTab({
               return burdenPct <= 5
             })
 
-            // Phase 1 simulation: ₺100K payment
-            const SIM_PAYMENT = 100_000
+            // Phase 1/2 simulation driven by the real distributable cash entered by the user
+            const SIM_PAYMENT = waterfall.available_cash_try
             const overfinanced = positions.filter(pos => pos.excess > 0.005)
             const totalExcess  = overfinanced.reduce((s, pos) => s + pos.excess, 0)
             const phase1Allocs = positions.map(pos => {
@@ -330,10 +330,10 @@ export function WaterfallTab({
                   </table>
                 </div>
 
-                {/* Phase 1 & 2 simulation with ₺100K */}
+                {/* Phase 1 & 2 simulation driven by the real distributable cash */}
                 <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
                   <div className="px-4 py-2.5 border-b border-[#e2e8f0] bg-[#f8fafc]/60">
-                    <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ödeme Simülasyonu — ₺100.000 örnek ödeme</div>
+                    <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ödeme Simülasyonu — {fmt(waterfall.available_cash_try)} dağıtım</div>
                     <div className="text-[10px] text-[#94a3b8] mt-0.5">Faz 1: Aşırı yük normalizasyonu · Faz 2: Pay oranına göre pro-rata</div>
                   </div>
                   <table className="w-full text-xs">
