@@ -11,10 +11,11 @@ import { InventoryValuationService }                from '@/lib/services/invento
 import type { InventoryValuationReport }            from '@/lib/services/inventory/inventory-valuation.service'
 import { ReorderAlertService }                      from '@/lib/services/inventory/reorder-alert.service'
 import type { ReorderAlertReport }                  from '@/lib/services/inventory/reorder-alert.service'
+import { DemandForecastService }                    from '@/lib/services/inventory/demand-forecast.service'
+import type { DemandForecastReport }                from '@/lib/services/inventory/demand-forecast.service'
 import { FifoAuditClient }                          from './_fifo/FifoAuditClient'
 import { SalesVelocityClient }                      from './_velocity/SalesVelocityClient'
 import InventoryTurnoverClient                      from './_inventory/InventoryTurnoverClient'
-import { AbcInventoryPanel }                        from './_abc/AbcInventoryPanel'
 
 function holdingDays(entryDate: string): number {
   const today = new Date()
@@ -26,6 +27,21 @@ const TYPE_LABELS: Record<string, string> = {
   purchase: 'Alım', sale: 'Satış', adjustment: 'Düzeltme', return: 'İade',
 }
 
+// Demand-forecast display maps (labels + tone for the existing service's literal unions)
+const DEMAND_TREND_META: Record<string, { label: string; cls: string }> = {
+  growing:           { label: 'Artıyor',     cls: 'text-pos-text' },
+  stable:            { label: 'Sabit',       cls: 'text-[#64748b]' },
+  declining:         { label: 'Azalıyor',    cls: 'text-warn-text' },
+  insufficient_data: { label: 'Veri yok',    cls: 'text-[#94a3b8]' },
+}
+const STOCKOUT_RISK_META: Record<string, { label: string; cls: string }> = {
+  critical: { label: 'Kritik', cls: 'bg-neg-light text-neg-text' },
+  high:     { label: 'Yüksek', cls: 'bg-orange-50 text-orange-700' },
+  medium:   { label: 'Orta',   cls: 'bg-warn-light text-warn-text' },
+  low:      { label: 'Düşük',  cls: 'bg-pos-light text-pos-text' },
+  no_data:  { label: '—',      cls: 'text-[#94a3b8]' },
+}
+
 interface ProductRow { id: string; name: string; sku: string; unit: string; stock_qty: number; stock_alert_qty: number }
 interface StockLotRow { id: string; product_id: string; received_at: string; qty_remaining: number; cost_price: number; cost_currency: string; cost_fx_rate: number; cost_price_try: number }
 
@@ -34,7 +50,7 @@ interface Props { companyId: string; userId: string }
 export async function StockContent({ companyId, userId }: Props) {
   const supabase = createClient()
 
-  const [productsRes, movementsRes, lotsRes, inconsistencies, valuation, reorderAlertsResult] = await Promise.allSettled([
+  const [productsRes, movementsRes, lotsRes, inconsistencies, valuation, reorderAlertsResult, demandForecastResult] = await Promise.allSettled([
     supabase
       .from('products')
       .select('id, name, sku, unit, stock_qty, stock_alert_qty')
@@ -58,6 +74,7 @@ export async function StockContent({ companyId, userId }: Props) {
     StockQueryService.listInconsistentProducts(userId, companyId).catch(() => []),
     InventoryValuationService.getReport(companyId, supabase).catch(() => null),
     ReorderAlertService.getReport(companyId, supabase).catch(() => null),
+    new DemandForecastService(supabase).getReport(companyId).catch(() => null),
   ])
 
   const products  = (productsRes.status === 'fulfilled' ? (productsRes.value.data  ?? []) : []) as ProductRow[]
@@ -69,6 +86,8 @@ export async function StockContent({ companyId, userId }: Props) {
     valuation.status === 'fulfilled' ? valuation.value : null
   const reorderReport: ReorderAlertReport | null =
     reorderAlertsResult.status === 'fulfilled' ? reorderAlertsResult.value : null
+  const demandForecastReport: DemandForecastReport | null =
+    demandForecastResult.status === 'fulfilled' ? demandForecastResult.value : null
 
   interface LotMeta extends StockLotRow { days: number; costTry: number }
 
@@ -198,6 +217,86 @@ export async function StockContent({ companyId, userId }: Props) {
         </div>
       )}
 
+      {/* Talep Tahmini — demand forecast: forecasted demand, reorder point, stockout risk */}
+      {demandForecastReport && demandForecastReport.products.length > 0 && (
+        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+          <div className="px-5 py-4 border-b border-[#e2e8f0] flex items-center justify-between">
+            <div>
+              <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Talep Tahmini</span>
+              <span className="ml-2 text-[10px] text-[#94a3b8]">
+                — {demandForecastReport.period_months} aylık geçmişe dayalı 3 aylık talep projeksiyonu
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              {demandForecastReport.critical_stockout_count > 0 && (
+                <span className="text-[10px] font-black bg-neg-light text-neg-text px-2 py-0.5 rounded">
+                  {demandForecastReport.critical_stockout_count} Kritik Stok-out
+                </span>
+              )}
+              {demandForecastReport.needs_reorder_count > 0 && (
+                <span className="text-[10px] font-black bg-warn-light text-warn-text px-2 py-0.5 rounded">
+                  {demandForecastReport.needs_reorder_count} Sipariş Gerekli
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] border-b border-[#e2e8f0]">
+                  <th className="text-left px-5 py-2.5">Ürün</th>
+                  <th className="text-right px-4 py-2.5">Mevcut Stok</th>
+                  <th className="text-right px-4 py-2.5">Aylık Ort.</th>
+                  <th className="text-right px-4 py-2.5">3 Aylık Tahmin</th>
+                  <th className="text-right px-4 py-2.5">Sipariş Noktası</th>
+                  <th className="text-right px-4 py-2.5">Önerilen Sipariş</th>
+                  <th className="text-right px-4 py-2.5">Kapsam</th>
+                  <th className="text-center px-4 py-2.5">Trend</th>
+                  <th className="text-right px-5 py-2.5">Stok-out Riski</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#f1f5f9]">
+                {demandForecastReport.products.map(p => {
+                  const forecast3m = p.forecasted_next_3m.reduce((s, v) => s + v, 0)
+                  const trend = DEMAND_TREND_META[p.demand_trend] ?? DEMAND_TREND_META.insufficient_data
+                  const risk  = STOCKOUT_RISK_META[p.stockout_risk] ?? STOCKOUT_RISK_META.no_data
+                  return (
+                    <tr key={p.product_id} className={`hover:bg-[#f8fafc]/60 ${p.needs_reorder ? 'bg-warn-light/30' : ''}`}>
+                      <td className="px-5 py-3 font-semibold text-[#0f172a]">{p.product_name}</td>
+                      <td className={`px-4 py-3 text-right tabular-nums font-bold ${p.needs_reorder ? 'text-warn-text' : 'text-[#334155]'}`}>
+                        {p.current_stock_units.toLocaleString('tr-TR', { maximumFractionDigits: 3 })}
+                      </td>
+                      <td className="px-4 py-3 text-right tabular-nums text-[#64748b]">
+                        {p.avg_monthly_units.toLocaleString('tr-TR', { maximumFractionDigits: 1 })}
+                      </td>
+                      <td className="px-4 py-3 text-right tabular-nums text-[#334155]">
+                        {forecast3m.toLocaleString('tr-TR', { maximumFractionDigits: 1 })}
+                      </td>
+                      <td className="px-4 py-3 text-right tabular-nums text-[#64748b]">
+                        {p.reorder_point_units.toLocaleString('tr-TR', { maximumFractionDigits: 1 })}
+                      </td>
+                      <td className="px-4 py-3 text-right tabular-nums text-brand font-semibold">
+                        {p.optimal_order_qty != null
+                          ? p.optimal_order_qty.toLocaleString('tr-TR', { maximumFractionDigits: 1 })
+                          : '—'}
+                      </td>
+                      <td className="px-4 py-3 text-right tabular-nums text-[#64748b]">
+                        {p.coverage_months != null ? `${p.coverage_months.toLocaleString('tr-TR', { maximumFractionDigits: 1 })} ay` : '—'}
+                      </td>
+                      <td className={`px-4 py-3 text-center font-semibold ${trend.cls}`}>{trend.label}</td>
+                      <td className="px-5 py-3 text-right">
+                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded ${risk.cls}`}>{risk.label}</span>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       {/* Portfolio summary strip */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
         {[
@@ -218,9 +317,6 @@ export async function StockContent({ companyId, userId }: Props) {
           </div>
         ))}
       </div>
-
-      {/* ABC Unified Inventory View — tier classification + velocity + mock data */}
-      <AbcInventoryPanel />
 
       {/* Zero-stock alert — products completely out of stock */}
       {zeroStockCount > 0 && (

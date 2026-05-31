@@ -22,18 +22,23 @@ import {
   type OpsPulseMetrics,
   type PulseColor,
 } from '@/lib/services/ops/ops-pulse.service'
+import { OpsCommandService, type DailyOpsMetrics } from '@/lib/services/intelligence/ops-command.service'
 
 // ── OPS Komuta Paneli ─────────────────────────────────────────────────────────
-// Mock metrics — replace with real DB queries when available.
-const MOCK_PULSE: OpsPulseMetrics = {
-  today_sales_count:    14,
-  today_sales_try:      523_000,
-  overdue_collections:  5,
-  overdue_try:          180_000,
-  critical_stock_items: 2,
-  pending_purchases:    3,
-  open_tasks:           7,
-  fill_rate_pct:        94.2,
+// Maps the existing OpsCommandService.getDailyMetrics() output (DailyOpsMetrics)
+// onto the OpsPulseMetrics shape consumed by the pulse banner. Field re-mapping
+// only — no new metrics, queries, or calculations.
+function toPulseMetrics(d: DailyOpsMetrics): OpsPulseMetrics {
+  return {
+    today_sales_count:    d.sales_today_count,
+    today_sales_try:      d.sales_today_try,
+    overdue_collections:  d.collections_overdue_count,
+    overdue_try:          d.collections_overdue_try,
+    critical_stock_items: d.stock_critical_count,
+    pending_purchases:    d.pending_purchase_orders,
+    open_tasks:           d.expenses_pending_approval,
+    fill_rate_pct:        d.fill_rate_pct,
+  }
 }
 
 const PULSE_BADGE: Record<PulseColor, { bg: string; text: string; dot: string; label: string }> = {
@@ -42,11 +47,18 @@ const PULSE_BADGE: Record<PulseColor, { bg: string; text: string; dot: string; l
   red:    { bg: 'bg-[#fee2e2]', text: 'text-[#b91c1c]', dot: 'bg-[#ef4444]', label: 'KIRMIZI' },
 }
 
-function OpsCommandPanel() {
-  const pulse   = classifyOpsPulse(MOCK_PULSE)
-  const summary = buildPulseSummary(MOCK_PULSE)
+async function OpsCommandPanel({ companyId }: { companyId: string }) {
+  const supabase = createClient()
+  let m: OpsPulseMetrics
+  try {
+    const daily = await new OpsCommandService(supabase).getDailyMetrics(companyId)
+    m = toPulseMetrics(daily)
+  } catch {
+    return null
+  }
+  const pulse   = classifyOpsPulse(m)
+  const summary = buildPulseSummary(m)
   const badge   = PULSE_BADGE[pulse]
-  const m       = MOCK_PULSE
 
   return (
     <div className="border border-[#e2e8f0] rounded-lg overflow-hidden shadow-sm">
@@ -204,7 +216,9 @@ export default async function OperationsPage({ searchParams }: PageProps) {
       </div>
 
       {/* OPS COMMAND PANEL — always visible at the top */}
-      <OpsCommandPanel />
+      <Suspense fallback={<div className="h-[132px] bg-[#f1f5f9] rounded-lg animate-pulse" />}>
+        <OpsCommandPanel companyId={companyId} />
+      </Suspense>
 
       <Suspense fallback={<TabSkeleton />}>
         {activeTab === 'komuta'   && <KomutaContent  companyId={companyId} />}
