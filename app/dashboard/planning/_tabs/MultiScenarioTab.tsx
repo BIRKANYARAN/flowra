@@ -15,7 +15,7 @@ import {
   findRunwayEnd,
   distributeRevenue,
   SEASONAL_PRESETS,
-} from '@/lib/services/simulation.service'
+} from '@/lib/services/simulation.pure'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 

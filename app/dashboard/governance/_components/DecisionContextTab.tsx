@@ -7,7 +7,7 @@ import type { DecisionContextSnapshot, ContextSnapshot } from '@/lib/services/de
 import {
   classifySnapshotAge,
   computeSnapshotDrift,
-} from '@/lib/services/decision-context/decision-context.service'
+} from '@/lib/services/decision-context/decision-context.pure'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
