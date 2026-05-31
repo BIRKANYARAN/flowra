@@ -28,7 +28,6 @@ import CustomerConcentrationClient from './_concentration/CustomerConcentrationC
 import SegmentProfitabilityClient from './_segments/SegmentProfitabilityClient'
 import CohortRetentionClient from './_cohort/CohortRetentionClient'
 import CustomerCreditClient from './_credit/CustomerCreditClient'
-import CustomerAnalyticsPanel from './CustomerAnalyticsPanel'
 
 interface Props { companyId: string }
 
@@ -122,9 +121,6 @@ export async function CustomersContent({ companyId }: Props) {
           Müşteriler — {customers.length} kayıt · {sales.length} satış analiz edildi
         </span>
       </div>
-
-      {/* ── Müşteri Analitik Paneli (Segment + Risk + LTV) ───────────────── */}
-      <CustomerAnalyticsPanel />
 
       {/* ── Segment Kârlılık Analizi ─────────────────────────────────────── */}
       <SegmentProfitabilityClient companyId={companyId} />
