@@ -3,8 +3,13 @@
 // ── TrialBalanceTab — Mizan (Trial Balance) Viewer ───────────────────────────
 // Full mizan viewer with category filter pills, search, period selector,
 // grouped account table, and balance indicator.
+//
+// Real data: periods from /api/periods, balances from /api/ledger/trial-balance
+// (TrialBalanceService.compute → GeneralLedgerService.trialBalance). Account rows
+// are mapped onto the TrialBalanceLine shape the existing pure helpers expect.
 
 import { useState, useMemo } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { fmtTRY } from '@/lib/format'
 import {
   classifyAccount,
@@ -14,28 +19,51 @@ import {
   type TrialBalanceLine,
 } from '@/lib/services/ledger/trial-balance.service'
 
-// ── Mock data: 12 accounts across all categories ─────────────────────────────
+// ── Real API shapes ───────────────────────────────────────────────────────────
 
-const MOCK_LINES: TrialBalanceLine[] = [
-  // Assets (1xx)
-  { account_code: '100', account_name: 'Kasa',                    debit_balance: 45_000,   credit_balance: 12_000,  net_balance: 33_000,   normal_balance: 'debit'  },
-  { account_code: '102', account_name: 'Bankalar',                debit_balance: 280_000,  credit_balance: 95_000,  net_balance: 185_000,  normal_balance: 'debit'  },
-  { account_code: '120', account_name: 'Alıcılar',                debit_balance: 175_000,  credit_balance: 40_000,  net_balance: 135_000,  normal_balance: 'debit'  },
-  { account_code: '153', account_name: 'Ticari Mallar',           debit_balance: 92_000,   credit_balance: 30_000,  net_balance: 62_000,   normal_balance: 'debit'  },
-  // Non-current asset with contra (2xx)
-  { account_code: '253', account_name: 'Tesis Makine ve Cihazlar', debit_balance: 200_000, credit_balance: 0,       net_balance: 200_000,  normal_balance: 'debit'  },
-  { account_code: '257', account_name: 'Birikmiş Amortismanlar',  debit_balance: 0,        credit_balance: 60_000,  net_balance: -60_000,  normal_balance: 'credit' },
-  // Liabilities (3xx)
-  { account_code: '320', account_name: 'Satıcılar',               debit_balance: 25_000,   credit_balance: 110_000, net_balance: -85_000,  normal_balance: 'credit' },
-  { account_code: '360', account_name: 'Ödenecek Vergiler',       debit_balance: 5_000,    credit_balance: 38_000,  net_balance: -33_000,  normal_balance: 'credit' },
-  // Equity (5xx)
-  { account_code: '500', account_name: 'Sermaye',                 debit_balance: 0,        credit_balance: 300_000, net_balance: -300_000, normal_balance: 'credit' },
-  { account_code: '570', account_name: 'Geçmiş Yıllar Karları',  debit_balance: 0,        credit_balance: 120_000, net_balance: -120_000, normal_balance: 'credit' },
-  // Revenue (60x)
-  { account_code: '600', account_name: 'Yurt İçi Satışlar',      debit_balance: 0,        credit_balance: 450_000, net_balance: -450_000, normal_balance: 'credit' },
-  // Expense (7xx)
-  { account_code: '770', account_name: 'Genel Yönetim Giderleri', debit_balance: 83_000,  credit_balance: 0,       net_balance: 83_000,   normal_balance: 'debit'  },
-]
+interface PeriodRow {
+  id: string
+  period_start: string
+  period_end: string
+  status: string
+}
+
+interface TbAccount {
+  account_code:    string
+  account_name:    string
+  account_name_tr: string
+  debit_try:       number
+  credit_try:      number
+  balance_try:     number
+}
+
+interface TrialBalanceResponse {
+  trial_balance: { accounts: TbAccount[] }
+}
+
+/**
+ * Map real ledger accounts onto the TrialBalanceLine shape the pure helpers
+ * (validateTrialBalance / filterTrialBalanceByCategory / computeTrialBalanceSummary)
+ * consume. net_balance follows the debit-minus-credit convention the helpers use
+ * (sign only drives row colour; summary uses Math.abs). No new calculations.
+ */
+function accountsToLines(accounts: TbAccount[]): TrialBalanceLine[] {
+  return accounts.map(a => ({
+    account_code:   a.account_code,
+    account_name:   a.account_name_tr || a.account_name,
+    debit_balance:  a.debit_try,
+    credit_balance: a.credit_try,
+    net_balance:    a.debit_try - a.credit_try,
+    normal_balance: classifyAccount(a.account_code).normal_balance,
+  }))
+}
+
+function periodLabel(p: PeriodRow): string {
+  return new Date(p.period_start + 'T00:00:00').toLocaleDateString('tr-TR', {
+    month: 'long',
+    year:  'numeric',
+  })
+}
 
 // ── Category filter definition ────────────────────────────────────────────────
 
@@ -50,40 +78,69 @@ const CATEGORY_PILLS: { id: CategoryFilter; label: string }[] = [
   { id: 'expense',   label: 'Giderler'    },
 ]
 
-const PERIOD_OPTIONS = [
-  { value: '2025-04', label: 'Nisan 2025'  },
-  { value: '2025-03', label: 'Mart 2025'   },
-  { value: '2025-02', label: 'Şubat 2025'  },
-  { value: '2025-01', label: 'Ocak 2025'   },
-]
-
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function TrialBalanceTab() {
-  const [period,   setPeriod]   = useState('2025-04')
+  const [period,   setPeriod]   = useState('')          // selected period_id ('' → most recent)
   const [search,   setSearch]   = useState('')
   const [category, setCategory] = useState<CategoryFilter>('all')
   const [expanded, setExpanded] = useState<Set<CategoryFilter>>(new Set(['all', 'asset', 'liability', 'equity', 'revenue', 'expense']))
 
-  const periodLabel = PERIOD_OPTIONS.find(p => p.value === period)?.label ?? period
+  // Periods (real) — most recent first
+  const periodsQuery = useQuery({
+    queryKey: ['periods'],
+    queryFn:  () => fetch('/api/periods').then(r => {
+      if (!r.ok) throw new Error('periods')
+      return r.json() as Promise<{ periods: PeriodRow[] }>
+    }),
+  })
+  const periods = useMemo<PeriodRow[]>(() => {
+    const list = periodsQuery.data?.periods ?? []
+    return [...list].sort((a, b) => b.period_start.localeCompare(a.period_start))
+  }, [periodsQuery.data])
+
+  const activePeriod = period || periods[0]?.id || ''
+  const activePeriodLabel =
+    periods.find(p => p.id === activePeriod) != null
+      ? periodLabel(periods.find(p => p.id === activePeriod)!)
+      : 'Güncel'
+
+  // Trial balance (real) for the active period
+  const tbQuery = useQuery({
+    queryKey: ['trial-balance', activePeriod],
+    enabled:  !!activePeriod,
+    queryFn:  () => fetch(`/api/ledger/trial-balance?period_id=${activePeriod}`).then(r => {
+      if (!r.ok) throw new Error('trial-balance')
+      return r.json() as Promise<TrialBalanceResponse>
+    }),
+  })
+
+  const lines = useMemo<TrialBalanceLine[]>(
+    () => accountsToLines(tbQuery.data?.trial_balance?.accounts ?? []),
+    [tbQuery.data],
+  )
+
+  const isLoading = periodsQuery.isLoading || (!!activePeriod && tbQuery.isLoading)
+  const isError   = periodsQuery.isError || tbQuery.isError
+  const isEmpty   = !isLoading && !isError && lines.length === 0
 
   // Filter lines by category + search
   const filteredLines = useMemo<TrialBalanceLine[]>(() => {
-    let lines = MOCK_LINES
+    let result = lines
     if (category !== 'all') {
-      lines = filterTrialBalanceByCategory(lines, category)
+      result = filterTrialBalanceByCategory(result, category)
     }
     if (search.trim()) {
       const q = search.toLowerCase()
-      lines = lines.filter(
+      result = result.filter(
         l => l.account_code.includes(q) || l.account_name.toLowerCase().includes(q)
       )
     }
-    return lines
-  }, [category, search])
+    return result
+  }, [lines, category, search])
 
-  const validation = useMemo(() => validateTrialBalance(MOCK_LINES), [])
-  const summary    = useMemo(() => computeTrialBalanceSummary(MOCK_LINES), [])
+  const validation = useMemo(() => validateTrialBalance(lines), [lines])
+  const summary    = useMemo(() => computeTrialBalanceSummary(lines), [lines])
 
   // Group by category for expandable sections
   type Cat = 'asset' | 'liability' | 'equity' | 'revenue' | 'expense'
@@ -113,22 +170,27 @@ export function TrialBalanceTab() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-black text-[#0f172a] tracking-tight">
-            Mizan · {periodLabel}
+            Mizan · {activePeriodLabel}
           </h2>
           <p className="text-[0.65rem] text-[#94a3b8] mt-0.5 font-medium uppercase tracking-widest">
             Genel Muhasebe Hesap Bakiyeleri
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {/* Period selector */}
+          {/* Period selector (real periods) */}
           <select
-            value={period}
+            value={activePeriod}
             onChange={e => setPeriod(e.target.value)}
-            className="text-xs border border-[#e2e8f0] rounded px-2.5 py-1.5 bg-white text-[#334155] font-semibold focus:outline-none focus:ring-1 focus:ring-brand-light"
+            disabled={periods.length === 0}
+            className="text-xs border border-[#e2e8f0] rounded px-2.5 py-1.5 bg-white text-[#334155] font-semibold focus:outline-none focus:ring-1 focus:ring-brand-light disabled:opacity-50"
           >
-            {PERIOD_OPTIONS.map(p => (
-              <option key={p.value} value={p.value}>{p.label}</option>
-            ))}
+            {periods.length === 0 ? (
+              <option value="">Dönem yok</option>
+            ) : (
+              periods.map(p => (
+                <option key={p.id} value={p.id}>{periodLabel(p)}</option>
+              ))
+            )}
           </select>
           {/* Search */}
           <input
@@ -141,6 +203,32 @@ export function TrialBalanceTab() {
         </div>
       </div>
 
+      {/* ── Loading / error / empty states ──────────────────────────────────── */}
+      {isLoading && (
+        <div className="space-y-2 animate-pulse">
+          <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+            {[...Array(5)].map((_, i) => <div key={i} className="bg-[#f1f5f9] rounded h-14" />)}
+          </div>
+          <div className="bg-[#f1f5f9] rounded h-48" />
+        </div>
+      )}
+
+      {isError && (
+        <div className="bg-neg-light border border-neg-light rounded px-4 py-6 text-center">
+          <p className="text-xs font-semibold text-neg-text">Mizan verisi yüklenemedi.</p>
+          <p className="text-[10px] text-neg-text mt-1">Lütfen sayfayı yenileyin veya daha sonra tekrar deneyin.</p>
+        </div>
+      )}
+
+      {isEmpty && (
+        <div className="bg-white border border-[#e2e8f0] rounded px-4 py-10 text-center shadow-sm">
+          <p className="text-xs font-medium text-[#334155] mb-1">Bu dönem için journal kaydı bulunamadı.</p>
+          <p className="text-[0.65rem] text-[#94a3b8]">Mizan, defteri kebir kayıtları oluştukça dolacaktır.</p>
+        </div>
+      )}
+
+      {!isLoading && !isError && !isEmpty && (
+        <>
       {/* ── Category filter pills ───────────────────────────────────────────── */}
       <div className="flex flex-wrap gap-1.5">
         {CATEGORY_PILLS.map(pill => (
@@ -181,9 +269,9 @@ export function TrialBalanceTab() {
         // Grouped view
         <div className="space-y-2">
           {categoryGroups.map(grp => {
-            const lines = filterTrialBalanceByCategory(filteredLines.length ? filteredLines : MOCK_LINES, grp.id)
-            if (lines.length === 0) return null
-            const grpTotal = validateTrialBalance(lines)
+            const grpLines = filterTrialBalanceByCategory(filteredLines.length ? filteredLines : lines, grp.id)
+            if (grpLines.length === 0) return null
+            const grpTotal = validateTrialBalance(grpLines)
             const isOpen   = expanded.has(grp.id)
             return (
               <div key={grp.id} className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
@@ -193,7 +281,7 @@ export function TrialBalanceTab() {
                 >
                   <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#64748b]">
                     {grp.label}
-                    <span className="ml-2 text-[#94a3b8] font-semibold normal-case">{lines.length} hesap</span>
+                    <span className="ml-2 text-[#94a3b8] font-semibold normal-case">{grpLines.length} hesap</span>
                   </span>
                   <span className="text-[10px] text-[#94a3b8]">{isOpen ? '▲' : '▼'}</span>
                 </button>
@@ -209,7 +297,7 @@ export function TrialBalanceTab() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#f1f5f9]">
-                      {lines.map(line => (
+                      {grpLines.map(line => (
                         <tr key={line.account_code} className="hover:bg-[#f8fafc]/60">
                           <td className="px-4 py-2 font-mono font-semibold text-[#64748b]">{line.account_code}</td>
                           <td className="px-4 py-2 text-[#1e293b]">{line.account_name}</td>
@@ -335,6 +423,8 @@ export function TrialBalanceTab() {
           )}
         </div>
       </div>
+        </>
+      )}
 
     </div>
   )
