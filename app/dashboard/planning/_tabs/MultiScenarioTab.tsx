@@ -6,7 +6,8 @@
 // Displays up to 5 scenarios in a comparison table with debt pressure timeline.
 // Uses pure helpers from simulation.service for DSR and recommendations.
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import {
   computeMonthlyDSR,
   classifyDSR,
@@ -67,50 +68,68 @@ const DSR_TEXT: Record<ReturnType<typeof classifyDSR>, string> = {
   insolvent:'İflas',
 }
 
-// ── Mock scenarios (pre-loaded) ───────────────────────────────────────────────
+// ── Real baseline → default scenarios ─────────────────────────────────────────
 
-const MOCK_SCENARIOS: ScenarioInput[] = [
-  {
-    name:                 'Temel',
+interface Baseline {
+  base_revenue:         number   // trailing 12-month invoiced revenue (real)
+  initial_cash:         number   // true cash position (real)
+  monthly_debt_service: number   // 0 default — user-editable, never fabricated
+}
+
+const EMPTY_BASELINE: Baseline = { base_revenue: 0, initial_cash: 0, monthly_debt_service: 0 }
+
+/**
+ * Build the default three-scenario comparison (Temel / İyimser / Kötümser) from
+ * the company's real baseline. Growth / expense / seasonality deltas are
+ * scenario-design assumptions (user-editable); the financial baseline is real.
+ */
+function buildDefaultScenarios(b: Baseline): ScenarioInput[] {
+  const base = {
+    period_months:        12,
+    base_revenue:         b.base_revenue,
+    initial_cash:         b.initial_cash,
+    monthly_debt_service: b.monthly_debt_service,
+  }
+  return [
+    { name: 'Temel',    revenue_model: 'uniform'  as SeasonalPreset, growth_pct:   0, expense_multiplier: 1.0,  ...base },
+    { name: 'İyimser',  revenue_model: 'q4_heavy' as SeasonalPreset, growth_pct:  15, expense_multiplier: 1.05, ...base },
+    { name: 'Kötümser', revenue_model: 'uniform'  as SeasonalPreset, growth_pct: -25, expense_multiplier: 1.1,  ...base },
+  ]
+}
+
+/**
+ * Fetch the real baseline from EXISTING endpoints (no new API/module):
+ *   base_revenue → trailing-12-month invoiced revenue (/api/analytics/kpi)
+ *   initial_cash → true cash position (/api/cfo-metrics)
+ *   monthly_debt_service → 0 default (user-editable; no fabricated figure)
+ */
+async function fetchBaseline(): Promise<Baseline> {
+  const now  = new Date()
+  const to   = now.toISOString().slice(0, 10)
+  const from = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate()).toISOString().slice(0, 10)
+  const [kpi, cfo] = await Promise.all([
+    fetch(`/api/analytics/kpi?from=${from}&to=${to}`).then(r => (r.ok ? r.json() : null)).catch(() => null),
+    fetch('/api/cfo-metrics').then(r => (r.ok ? r.json() : null)).catch(() => null),
+  ])
+  return {
+    base_revenue:         Math.max(0, Number(kpi?.total_revenue ?? 0)),
+    initial_cash:         Math.max(0, Number(cfo?.cash?.true_cash_position ?? 0)),
+    monthly_debt_service: 0,
+  }
+}
+
+/** A blank add-scenario form pre-filled with the company's real baseline. */
+function emptyForm(b: Baseline): ScenarioInput {
+  return {
+    name:                 '',
     period_months:        12,
     revenue_model:        'uniform',
-    base_revenue:         4_800_000,
+    base_revenue:         b.base_revenue,
     growth_pct:           0,
     expense_multiplier:   1.0,
-    monthly_debt_service: 80_000,
-    initial_cash:         500_000,
-  },
-  {
-    name:                 'İyimser',
-    period_months:        12,
-    revenue_model:        'q4_heavy',
-    base_revenue:         4_800_000,
-    growth_pct:           15,
-    expense_multiplier:   1.05,
-    monthly_debt_service: 80_000,
-    initial_cash:         500_000,
-  },
-  {
-    name:                 'Kötümser',
-    period_months:        12,
-    revenue_model:        'uniform',
-    base_revenue:         4_800_000,
-    growth_pct:           -25,
-    expense_multiplier:   1.1,
-    monthly_debt_service: 80_000,
-    initial_cash:         500_000,
-  },
-]
-
-const EMPTY_FORM: ScenarioInput = {
-  name:                 '',
-  period_months:        12,
-  revenue_model:        'uniform',
-  base_revenue:         4_800_000,
-  growth_pct:           0,
-  expense_multiplier:   1.0,
-  monthly_debt_service: 80_000,
-  initial_cash:         500_000,
+    monthly_debt_service: b.monthly_debt_service,
+    initial_cash:         b.initial_cash,
+  }
 }
 
 // ── Pure compute ──────────────────────────────────────────────────────────────
@@ -208,11 +227,13 @@ function DebtTimeline({ scenario }: { scenario: ScenarioSummary }) {
 function AddScenarioForm({
   onAdd,
   onCancel,
+  baseline,
 }: {
   onAdd: (input: ScenarioInput) => void
   onCancel: () => void
+  baseline: Baseline
 }) {
-  const [form, setForm] = useState<ScenarioInput>({ ...EMPTY_FORM })
+  const [form, setForm] = useState<ScenarioInput>(() => emptyForm(baseline))
 
   function set<K extends keyof ScenarioInput>(key: K, value: ScenarioInput[K]) {
     setForm(prev => ({ ...prev, [key]: value }))
@@ -364,12 +385,22 @@ function AddScenarioForm({
 // ── Main component ────────────────────────────────────────────────────────────
 
 export function MultiScenarioTab() {
-  const [scenarioInputs, setScenarioInputs] = useState<ScenarioInput[]>(MOCK_SCENARIOS)
+  const [scenarioInputs, setScenarioInputs] = useState<ScenarioInput[] | null>(null)
   const [showForm, setShowForm]             = useState(false)
   const [selectedId, setSelectedId]         = useState<string>('s0')
 
+  // Real baseline (revenue + cash) from existing endpoints → seeds the defaults once.
+  const baselineQuery = useQuery({ queryKey: ['scenario-baseline'], queryFn: fetchBaseline })
+  const baseline = baselineQuery.data ?? EMPTY_BASELINE
+
+  useEffect(() => {
+    if (scenarioInputs === null && baselineQuery.data) {
+      setScenarioInputs(buildDefaultScenarios(baselineQuery.data))
+    }
+  }, [baselineQuery.data, scenarioInputs])
+
   const scenarios = useMemo<ScenarioSummary[]>(
-    () => scenarioInputs.map((s, i) => computeScenario(s, `s${i}`)),
+    () => (scenarioInputs ?? []).map((s, i) => computeScenario(s, `s${i}`)),
     [scenarioInputs],
   )
 
@@ -379,14 +410,24 @@ export function MultiScenarioTab() {
 
   const selected = scenarios.find(s => s.id === selectedId) ?? scenarios[0]
 
+  if (baselineQuery.isLoading || scenarioInputs === null) {
+    return (
+      <div className="space-y-3 animate-pulse">
+        <div className="h-8 w-64 bg-[#f1f5f9] rounded" />
+        <div className="h-40 bg-[#f1f5f9] rounded-xl" />
+        <div className="h-56 bg-[#f1f5f9] rounded-xl" />
+      </div>
+    )
+  }
+
   function addScenario(input: ScenarioInput) {
-    setScenarioInputs(prev => [...prev, input])
+    setScenarioInputs(prev => [...(prev ?? []), input])
     setShowForm(false)
   }
 
   function removeScenario(id: string) {
     const idx = scenarios.findIndex(s => s.id === id)
-    setScenarioInputs(prev => prev.filter((_, i) => i !== idx))
+    setScenarioInputs(prev => (prev ?? []).filter((_, i) => i !== idx))
     if (selectedId === id) setSelectedId(scenarios[0]?.id ?? 's0')
   }
 
@@ -414,7 +455,7 @@ export function MultiScenarioTab() {
 
       {/* Add form */}
       {showForm && (
-        <AddScenarioForm onAdd={addScenario} onCancel={() => setShowForm(false)} />
+        <AddScenarioForm onAdd={addScenario} onCancel={() => setShowForm(false)} baseline={baseline} />
       )}
 
       {/* Comparison table */}
