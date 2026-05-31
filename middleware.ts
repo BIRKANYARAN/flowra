@@ -65,6 +65,10 @@ const DASHBOARD_REDIRECTS: Record<string, string> = {
   // Legacy pages retired — redirect to canonical equivalents
   '/dashboard/ceo':         '/dashboard',
   '/dashboard/cfo/tax':     '/dashboard/cfo/tax/kdv',
+  '/dashboard/ops':         '/dashboard/operations?tab=komuta',
+  '/dashboard/activity':    '/dashboard/admin/audit',
+  '/dashboard/alerts':      '/dashboard',
+  '/dashboard/backups':     '/dashboard/admin',
 }
 
 export async function middleware(request: NextRequest) {
