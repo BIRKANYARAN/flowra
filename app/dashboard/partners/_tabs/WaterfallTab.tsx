@@ -5,8 +5,10 @@
 //
 // WATERFALL SİMÜLATÖRÜ — İki Fazlı Normalleştirilmiş Geri Ödeme
 //
-// Interactive simulator using pure client-side computation.
-// Mock partner data: Ahmet (45%, ₺800K), Mehmet (35%, ₺300K), Fatma (20%, ₺0)
+// Interactive simulator. Real company partners (share + outstanding loan) are
+// loaded from /api/partners; the user enters a hypothetical distributable cash
+// amount and the two-phase repayment is computed client-side with the existing
+// pure PCLE helpers. No fabricated partner data.
 //
 // Layout:
 //   1. Cash input + Hesapla button
@@ -16,6 +18,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useState, useCallback } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import {
   computeExcessLoan,
   computeProRataAllocation,
@@ -24,7 +27,7 @@ import {
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-interface MockPartner {
+interface SimPartner {
   id: string
   name: string
   share_pct: number   // 0-100
@@ -32,21 +35,21 @@ interface MockPartner {
 }
 
 interface Phase1Row {
-  partner: MockPartner
+  partner: SimPartner
   fairShare: number
   excess: number
   phase1Payment: number
 }
 
 interface Phase2Row {
-  partner: MockPartner
+  partner: SimPartner
   remainingAfterPhase1: number
   normalizedRatio: number
   phase2Payment: number
 }
 
 interface SummaryRow {
-  partner: MockPartner
+  partner: SimPartner
   phase1Payment: number
   phase2Payment: number
   totalPayment: number
@@ -64,17 +67,32 @@ interface SimResult {
   totalLoans: number
 }
 
-// ── Mock data ─────────────────────────────────────────────────────────────────
+// ── Real partner source (/api/partners) ──────────────────────────────────────
 
-const MOCK_PARTNERS: MockPartner[] = [
-  { id: 'ahmet',  name: 'Ahmet',  share_pct: 45, loan: 800_000 },
-  { id: 'mehmet', name: 'Mehmet', share_pct: 35, loan: 300_000 },
-  { id: 'fatma',  name: 'Fatma',  share_pct: 20, loan: 0       },
-]
+interface ApiPartner {
+  id:          string
+  name:        string
+  share_ratio: number                       // 0–1
+  balance:     { net_loan_try: number } | null
+}
+
+/**
+ * Map real partners onto the simulator's SimPartner shape.
+ * share_pct = share_ratio × 100; loan = outstanding net loan (clamped ≥ 0).
+ * Field re-mapping only — no new calculations.
+ */
+function toSimPartners(partners: ApiPartner[]): SimPartner[] {
+  return partners.map(p => ({
+    id:        p.id,
+    name:      p.name,
+    share_pct: (Number(p.share_ratio) || 0) * 100,
+    loan:      Math.max(0, p.balance?.net_loan_try ?? 0),
+  }))
+}
 
 // ── Pure simulation ───────────────────────────────────────────────────────────
 
-function runSimulation(availableCash: number, partners: MockPartner[]): SimResult {
+function runSimulation(availableCash: number, partners: SimPartner[]): SimResult {
   const totalLoans = partners.reduce((s, p) => s + p.loan, 0)
 
   // Phase 1 — Normalization
@@ -237,13 +255,24 @@ export function WaterfallSimulatorTab() {
   const [result, setResult]           = useState<SimResult | null>(null)
   const [lastCash, setLastCash]       = useState<number | null>(null)
 
+  // Real partners (share + outstanding loan) from /api/partners
+  const partnersQuery = useQuery({
+    queryKey: ['partners'],
+    queryFn:  () => fetch('/api/partners').then(r => {
+      if (!r.ok) throw new Error('partners')
+      return r.json() as Promise<ApiPartner[]>
+    }),
+  })
+  const partners = toSimPartners(partnersQuery.data ?? [])
+  const hasPartners = partners.length > 0
+
   const handleCalculate = useCallback(() => {
     const cash = parseFloat(inputCash.replace(/[^\d.]/g, ''))
-    if (isNaN(cash) || cash < 0) return
-    const sim = runSimulation(cash, MOCK_PARTNERS)
+    if (isNaN(cash) || cash < 0 || partners.length === 0) return
+    const sim = runSimulation(cash, partners)
     setResult(sim)
     setLastCash(cash)
-  }, [inputCash])
+  }, [inputCash, partners])
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') handleCalculate()
@@ -262,20 +291,30 @@ export function WaterfallSimulatorTab() {
           </div>
         </div>
 
-        {/* Mock partner overview */}
+        {/* Partner overview (real) */}
         <div className="px-4 py-3 border-b border-[#e2e8f0]">
-          <div className="text-[10px] font-semibold text-[#64748b] mb-2">Örnek Ortaklar</div>
-          <div className="flex flex-wrap gap-3">
-            {MOCK_PARTNERS.map(p => (
-              <div key={p.id} className="flex items-center gap-2 text-xs bg-[#f8fafc] rounded px-3 py-1.5 border border-[#e2e8f0]">
-                <span className="font-bold text-[#0f172a]">{p.name}</span>
-                <span className="text-[#94a3b8]">%{p.share_pct}</span>
-                <span className={`font-mono font-bold ${p.loan > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>
-                  {p.loan > 0 ? fmt(p.loan) : '—'}
-                </span>
-              </div>
-            ))}
-          </div>
+          <div className="text-[10px] font-semibold text-[#64748b] mb-2">Ortaklar</div>
+          {partnersQuery.isLoading ? (
+            <div className="flex gap-3">
+              {[...Array(3)].map((_, i) => <div key={i} className="h-7 w-28 bg-[#f1f5f9] rounded animate-pulse" />)}
+            </div>
+          ) : !hasPartners ? (
+            <div className="text-xs text-[#94a3b8]">
+              Kayıtlı ortak bulunamadı — simülasyon için önce Ortaklar sekmesinden ortak ekleyin.
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-3">
+              {partners.map(p => (
+                <div key={p.id} className="flex items-center gap-2 text-xs bg-[#f8fafc] rounded px-3 py-1.5 border border-[#e2e8f0]">
+                  <span className="font-bold text-[#0f172a]">{p.name}</span>
+                  <span className="text-[#94a3b8]">%{p.share_pct.toFixed(1)}</span>
+                  <span className={`font-mono font-bold ${p.loan > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>
+                    {p.loan > 0 ? fmt(p.loan) : '—'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Cash input */}
@@ -297,7 +336,8 @@ export function WaterfallSimulatorTab() {
             </div>
             <button
               onClick={handleCalculate}
-              className="bg-brand text-white text-xs font-bold px-4 py-1.5 rounded hover:bg-brand/90 transition-colors"
+              disabled={!hasPartners}
+              className="bg-brand text-white text-xs font-bold px-4 py-1.5 rounded hover:bg-brand/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Hesapla
             </button>
@@ -546,7 +586,7 @@ export function WaterfallSimulatorTab() {
             Dağıtılabilir nakit miktarını girin ve <strong>Hesapla</strong> butonuna tıklayın.
           </div>
           <div className="text-[10px] text-[#cbd5e1] mt-1">
-            Hesaplama tamamen tarayıcıda gerçekleşir — API çağrısı yapılmaz.
+            Gerçek ortak verisi (pay oranı ve güncel borç) üzerinden, girdiğiniz nakit için iki fazlı geri ödeme hesaplanır.
           </div>
         </div>
       )}
