@@ -140,6 +140,9 @@ export async function OverviewTab({ userId, companyId, glMode = 'shadow' }: Prop
   // Parallel: current + previous month metrics + YTD financial summary + period + FX + annual
   // Sequential: runway forecast must wait for current metrics (needs taxObligation)
   const currentYM = `${year}-${mon}`
+  // Compute the period-comparison report ONCE (it is ~6 queries); derive both the
+  // YoY and MoM views from the single result instead of running getReport twice.
+  const comparisonReportP = sq(() => new PeriodComparisonService(supabase).getReport(companyId), null)
   const [metrics, prevMetrics, ytdSummary, currentPeriod, annualSummary, scorecard, periodComparison, monthComparison, seasonalityReport] = await Promise.all([
     sq(() => getCfoMetrics(companyId, { from, to: today }),        ZERO_METRICS),
     sq(() => getCfoMetrics(companyId, { from: prevFrom, to: prevTo }), ZERO_METRICS),
@@ -147,8 +150,8 @@ export async function OverviewTab({ userId, companyId, glMode = 'shadow' }: Prop
     sq(() => PeriodService.getCurrent(companyId, supabase), null),
     sq(() => AnnualSummaryService.getSummary(companyId, userId, supabase, { yearsBack: 3 }), null as AnnualSummary | null),
     sq(() => HealthScorecardService.getScorecard(companyId, userId, supabase, { from: ytdFrom, to: today }), null as HealthScorecard | null),
-    sq(async () => { const svc = new PeriodComparisonService(supabase); const r = await svc.getReport(companyId); return r.yoy_comparison ?? null }, null as PeriodComparison | null),
-    sq(async () => { const svc = new PeriodComparisonService(supabase); const r = await svc.getReport(companyId); return r.mom_comparison ?? null }, null as PeriodComparison | null),
+    comparisonReportP.then(r => r?.yoy_comparison ?? null) as Promise<PeriodComparison | null>,
+    comparisonReportP.then(r => r?.mom_comparison ?? null) as Promise<PeriodComparison | null>,
     sq(() => SeasonalityService.getReport(companyId, supabase), null as SeasonalityReport | null),
   ])
   const runway = await sq(

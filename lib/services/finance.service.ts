@@ -75,6 +75,10 @@ export class FinanceService {
       .select('total_try:total, kdv_amount_try')
       .eq('company_id', companyId)
       .is('deleted_at', null)
+      // Exclude cancelled sales — they are not revenue. Mirrors the authoritative
+      // income statement (income-statement.service.ts), which already excludes them;
+      // without this, revenue/tax diverged from the P&L for cancelled-not-deleted rows.
+      .not('payment_status', 'eq', 'cancelled')
       // Use sale_date (business invoice date), not created_at (row insertion time),
       // so backdated entries are attributed to the correct period.
       .gte('sale_date', period.from)
@@ -121,6 +125,8 @@ export class FinanceService {
       .select('id')
       .eq('company_id', companyId)
       .is('deleted_at', null)
+      // Exclude cancelled sales (no COGS for a cancelled sale) — mirrors the income statement.
+      .not('payment_status', 'eq', 'cancelled')
       .gte('sale_date', period.from)
       .lte('sale_date', period.to)
 
