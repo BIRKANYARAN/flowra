@@ -30,6 +30,8 @@ describe('OverviewTab extracted sections — characterization', () => {
   })
 
   it('PeriodComparisonSection renders without crashing when there is no comparison data', () => {
-    expect(() => render(<PeriodComparisonSection yoy={null} mom={null} />)).not.toThrow()
+    expect(() => render(
+      <PeriodComparisonSection yoy={null} mom={null} currentYear={2026} currentMonth={1} />,
+    )).not.toThrow()
   })
 })
