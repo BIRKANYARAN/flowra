@@ -1095,8 +1095,10 @@ export function runValidation(sections: ReconciliationData): FinancialValidation
 
   // 1. Balance sheet: Assets = Liabilities + Equity
   const s14 = sections.section14 as any
-  const assets = s14?.total_assets ?? 0
-  const liabEquity = (s14?.total_liabilities ?? 0) + (s14?.total_equity ?? 0)
+  // buildSection14 emits *_try field names; reading total_assets/total_liabilities/
+  // total_equity (no _try) silently yielded 0=0 → this check ALWAYS passed.
+  const assets = s14?.total_assets_try ?? 0
+  const liabEquity = (s14?.total_liabilities_try ?? 0) + (s14?.equity_try ?? 0)
   const bsVariance = Math.abs(assets - liabEquity)
   checks.push({
     id: 'balance_sheet',
@@ -1137,9 +1139,11 @@ export function runValidation(sections: ReconciliationData): FinancialValidation
   })
 
   // 4. Partner finance: receivables vs liabilities vs loans
-  const s10total = (sections.section10 as any)?.total_partner_receivables ?? 0
-  const s11total = (sections.section11 as any)?.total_partner_liabilities ?? 0
-  const partnerLoans = (sections.section8 as any)?.partner_loans ?? 0
+  // Real emitted fields: section10.total_partner_loans_try (company owes partners),
+  // section11.total_partner_debt_try (partners owe company), section8.total_debt_try.
+  const s10total = (sections.section10 as any)?.total_partner_loans_try ?? 0
+  const s11total = (sections.section11 as any)?.total_partner_debt_try ?? 0
+  const partnerLoans = (sections.section8 as any)?.total_debt_try ?? 0
   const netPartner = Math.abs(s10total - s11total)
   const partnerResult: ValidationResult = netPartner < 10 ? 'PASS' : netPartner < partnerLoans * 0.1 + 1 ? 'WARNING' : 'WARNING'
   checks.push({
@@ -1166,7 +1170,9 @@ export function runValidation(sections: ReconciliationData): FinancialValidation
   })
 
   // 6. Distribution: YTD distributions <= net income
-  const ytdDist = (sections.section13 as any)?.ytd_total ?? 0
+  // buildSection13 emits total_distributed_try (not ytd_total) → over-distribution
+  // check silently always passed.
+  const ytdDist = (sections.section13 as any)?.total_distributed_try ?? 0
   const netIncome = s15?.net_profit_try ?? 0
   const distResult: ValidationResult = ytdDist <= netIncome ? 'PASS' : ytdDist <= netIncome * 1.1 ? 'WARNING' : 'FAIL'
   checks.push({

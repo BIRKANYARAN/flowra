@@ -25,13 +25,13 @@ function makeMinimal(overrides: Record<string, unknown> = {}): ReconciliationDat
     section5:  { top_items: [], total_inventory_try: 0 },
     section6:  {},
     section7:  {},
-    section8:  { partner_loans: 0 },
+    section8:  { total_debt_try: 0 },
     section9:  {},
-    section10: { total_partner_receivables: 0 },
-    section11: { total_partner_liabilities: 0 },
+    section10: { total_partner_loans_try: 0 },
+    section11: { total_partner_debt_try: 0 },
     section12: {},
     section13: { total_ytd_distributions: 0 },
-    section14: { total_assets: 0, total_liabilities: 0, total_equity: 0 },
+    section14: { total_assets_try: 0, total_liabilities_try: 0, equity_try: 0 },
     section15: { revenue_try: 0, gross_profit_try: 0, net_income_try: 0 },
     section16: {},
     section17: {},
@@ -50,7 +50,7 @@ function makeMinimal(overrides: Record<string, unknown> = {}): ReconciliationDat
 describe('runValidation — balance_sheet_check', () => {
   it('PASS when assets = liabilities + equity (zero variance)', () => {
     const sections = makeMinimal({
-      section14: { total_assets: 1_000_000, total_liabilities: 600_000, total_equity: 400_000 },
+      section14: { total_assets_try: 1_000_000, total_liabilities_try: 600_000, equity_try: 400_000 },
     })
     const v = runValidation(sections)
     expect(v.balance_sheet_check.result).toBe('PASS')
@@ -59,7 +59,7 @@ describe('runValidation — balance_sheet_check', () => {
 
   it('WARNING when variance is between ₺100 and ₺10000', () => {
     const sections = makeMinimal({
-      section14: { total_assets: 1_000_000, total_liabilities: 600_000, total_equity: 398_000 },
+      section14: { total_assets_try: 1_000_000, total_liabilities_try: 600_000, equity_try: 398_000 },
     })
     const v = runValidation(sections)
     // variance = |1_000_000 - (600_000 + 398_000)| = 2000
@@ -69,7 +69,7 @@ describe('runValidation — balance_sheet_check', () => {
 
   it('FAIL when variance exceeds ₺10000', () => {
     const sections = makeMinimal({
-      section14: { total_assets: 1_000_000, total_liabilities: 200_000, total_equity: 200_000 },
+      section14: { total_assets_try: 1_000_000, total_liabilities_try: 200_000, equity_try: 200_000 },
     })
     const v = runValidation(sections)
     // variance = |1_000_000 - 400_000| = 600_000
@@ -169,7 +169,7 @@ describe('runValidation — profit_check', () => {
 describe('runValidation — overall_status', () => {
   it('PASS when all major checks pass', () => {
     const sections = makeMinimal({
-      section14: { total_assets: 1_000_000, total_liabilities: 600_000, total_equity: 400_000 },
+      section14: { total_assets_try: 1_000_000, total_liabilities_try: 600_000, equity_try: 400_000 },
       section2:  { bank_accounts: [{ balance_try: 500_000 }], total_cash_try: 500_000 },
       section15: { revenue_try: 2_000_000, gross_profit_try: 500_000, net_income_try: 200_000 },
       // inventory_check returns WARNING when top_items is empty; provide matching items to PASS
@@ -181,7 +181,7 @@ describe('runValidation — overall_status', () => {
 
   it('FAIL when balance_sheet check FAIL', () => {
     const sections = makeMinimal({
-      section14: { total_assets: 1_000_000, total_liabilities: 200_000, total_equity: 200_000 },
+      section14: { total_assets_try: 1_000_000, total_liabilities_try: 200_000, equity_try: 200_000 },
     })
     const v = runValidation(sections)
     expect(v.overall_status).toBe('FAIL')
@@ -221,7 +221,7 @@ describe('buildConfidenceV2 — scoring mechanics', () => {
 
   it('score is at most 100', () => {
     const sections = makeMinimal({
-      section14: { total_assets: 1_000_000, total_liabilities: 600_000, total_equity: 400_000 },
+      section14: { total_assets_try: 1_000_000, total_liabilities_try: 600_000, equity_try: 400_000 },
       section2:  { bank_accounts: [{ balance_try: 500_000 }], total_cash_try: 500_000 },
       section15: { revenue_try: 2_000_000, gross_profit_try: 500_000, net_income_try: 200_000 },
       section5: {
@@ -345,7 +345,7 @@ describe('runValidation — inventory_check', () => {
 describe('runValidation — distribution_check', () => {
   it('PASS when ytd distributions <= net income', () => {
     const sections = makeMinimal({
-      section13: { ytd_total: 50_000 },
+      section13: { total_distributed_try: 50_000 },
       section15: { revenue_try: 1_000_000, gross_profit_try: 200_000, net_income_try: 100_000, net_profit_try: 100_000 },
     })
     const v = runValidation(sections)
@@ -354,7 +354,7 @@ describe('runValidation — distribution_check', () => {
 
   it('FAIL when distributions exceed net income by more than 10%', () => {
     const sections = makeMinimal({
-      section13: { ytd_total: 200_000 },
+      section13: { total_distributed_try: 200_000 },
       section15: { revenue_try: 500_000, gross_profit_try: 100_000, net_income_try: 80_000, net_profit_try: 80_000 },
     })
     const v = runValidation(sections)
@@ -364,7 +364,7 @@ describe('runValidation — distribution_check', () => {
 
   it('WARNING when distributions are between 100% and 110% of net income', () => {
     const sections = makeMinimal({
-      section13: { ytd_total: 105_000 },
+      section13: { total_distributed_try: 105_000 },
       section15: { revenue_try: 500_000, gross_profit_try: 150_000, net_income_try: 100_000, net_profit_try: 100_000 },
     })
     const v = runValidation(sections)
@@ -374,7 +374,7 @@ describe('runValidation — distribution_check', () => {
 
   it('PASS when both distributions and net income are zero', () => {
     const sections = makeMinimal({
-      section13: { ytd_total: 0 },
+      section13: { total_distributed_try: 0 },
       section15: { revenue_try: 0, gross_profit_try: 0, net_income_try: 0, net_profit_try: 0 },
     })
     const v = runValidation(sections)
@@ -387,9 +387,9 @@ describe('runValidation — distribution_check', () => {
 describe('runValidation — partner_finance_check', () => {
   it('PASS when partner receivables = partner liabilities (zero net)', () => {
     const sections = makeMinimal({
-      section10: { total_partner_receivables: 100_000 },
-      section11: { total_partner_liabilities: 100_000 },
-      section8:  { partner_loans: 0 },
+      section10: { total_partner_loans_try: 100_000 },
+      section11: { total_partner_debt_try: 100_000 },
+      section8:  { total_debt_try: 0 },
     })
     const v = runValidation(sections)
     expect(v.partner_finance_check.result).toBe('PASS')
@@ -397,9 +397,9 @@ describe('runValidation — partner_finance_check', () => {
 
   it('WARNING when net difference is above 10', () => {
     const sections = makeMinimal({
-      section10: { total_partner_receivables: 50_000 },
-      section11: { total_partner_liabilities: 10_000 },
-      section8:  { partner_loans: 0 },
+      section10: { total_partner_loans_try: 50_000 },
+      section11: { total_partner_debt_try: 10_000 },
+      section8:  { total_debt_try: 0 },
     })
     const v = runValidation(sections)
     expect(v.partner_finance_check.result).toBe('WARNING')
@@ -407,9 +407,9 @@ describe('runValidation — partner_finance_check', () => {
 
   it('variance reflects absolute net difference', () => {
     const sections = makeMinimal({
-      section10: { total_partner_receivables: 70_000 },
-      section11: { total_partner_liabilities: 50_000 },
-      section8:  { partner_loans: 0 },
+      section10: { total_partner_loans_try: 70_000 },
+      section11: { total_partner_debt_try: 50_000 },
+      section8:  { total_debt_try: 0 },
     })
     const v = runValidation(sections)
     expect(v.partner_finance_check.variance).toBeCloseTo(20_000, 0)
@@ -421,7 +421,7 @@ describe('runValidation — partner_finance_check', () => {
 describe('runValidation — boundary variance values', () => {
   it('bs variance exactly 99 → PASS (< 100 threshold)', () => {
     const sections = makeMinimal({
-      section14: { total_assets: 1_000_099, total_liabilities: 600_000, total_equity: 400_000 },
+      section14: { total_assets_try: 1_000_099, total_liabilities_try: 600_000, equity_try: 400_000 },
     })
     const v = runValidation(sections)
     // variance = 99 < 100 → PASS
@@ -430,7 +430,7 @@ describe('runValidation — boundary variance values', () => {
 
   it('bs variance exactly 100 → WARNING (≥ 100)', () => {
     const sections = makeMinimal({
-      section14: { total_assets: 1_000_100, total_liabilities: 600_000, total_equity: 400_000 },
+      section14: { total_assets_try: 1_000_100, total_liabilities_try: 600_000, equity_try: 400_000 },
     })
     const v = runValidation(sections)
     // variance = 100 → WARNING (not < 100)
@@ -510,7 +510,7 @@ describe('buildExecutiveSummary — structure', () => {
 
   it('recommendation warns about inconsistencies when validation FAIL', () => {
     const sections = makeMinimal({
-      section14: { total_assets: 1_000_000, total_liabilities: 200_000, total_equity: 200_000 },
+      section14: { total_assets_try: 1_000_000, total_liabilities_try: 200_000, equity_try: 200_000 },
     })
     const validation = runValidation(sections)
     const cs = buildConfidenceV2(sections, validation)
@@ -522,7 +522,7 @@ describe('buildExecutiveSummary — structure', () => {
   it('positive distributable profit reported when net_income > ytd_total', () => {
     const sections = makeMinimal({
       section15: { revenue_try: 500_000, gross_profit_try: 200_000, net_income_try: 100_000, net_profit_try: 100_000 },
-      section13: { ytd_total: 20_000, total_ytd_distributions: 20_000 },
+      section13: { total_distributed_try: 20_000, total_ytd_distributions: 20_000 },
     })
     const validation = runValidation(sections)
     const cs = buildConfidenceV2(sections, validation)
@@ -533,7 +533,7 @@ describe('buildExecutiveSummary — structure', () => {
   it('"Dağıtılabilir kâr yok" when net income is zero', () => {
     const sections = makeMinimal({
       section15: { revenue_try: 0, gross_profit_try: 0, net_income_try: 0, net_profit_try: 0 },
-      section13: { ytd_total: 0, total_ytd_distributions: 0 },
+      section13: { total_distributed_try: 0, total_ytd_distributions: 0 },
     })
     const validation = runValidation(sections)
     const cs = buildConfidenceV2(sections, validation)
@@ -548,7 +548,7 @@ describe('buildConfidenceV2 — grade thresholds', () => {
   it('grade is A when score ≥ 90 (all checks PASS + large assets)', () => {
     // Build a well-populated sections to maximize score
     const sections = makeMinimal({
-      section14: { total_assets: 1_000_000, total_liabilities: 600_000, total_equity: 400_000 },
+      section14: { total_assets_try: 1_000_000, total_liabilities_try: 600_000, equity_try: 400_000 },
       section2:  { bank_accounts: [{ balance_try: 500_000 }], total_cash_try: 500_000 },
       section15: { revenue_try: 2_000_000, gross_profit_try: 500_000, net_income_try: 200_000, net_profit_try: 200_000 },
       section5:  {
@@ -608,9 +608,9 @@ describe('runValidation — guard against negative/large values', () => {
   it('handles extremely large asset values', () => {
     const sections = makeMinimal({
       section14: {
-        total_assets:      1_000_000_000,
-        total_liabilities: 600_000_000,
-        total_equity:      400_000_000,
+        total_assets_try:      1_000_000_000,
+        total_liabilities_try: 600_000_000,
+        equity_try:      400_000_000,
       },
     })
     const v = runValidation(sections)
@@ -631,7 +631,7 @@ describe('runValidation — guard against negative/large values', () => {
 
   it('FAIL distribution check when net_profit_try is negative', () => {
     const sections = makeMinimal({
-      section13: { ytd_total: 10_000, total_ytd_distributions: 10_000 },
+      section13: { total_distributed_try: 10_000, total_ytd_distributions: 10_000 },
       section15: { revenue_try: 100_000, gross_profit_try: -10_000, net_income_try: -10_000, net_profit_try: -10_000 },
     })
     const v = runValidation(sections)
