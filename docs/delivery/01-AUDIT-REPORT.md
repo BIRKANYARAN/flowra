@@ -1,0 +1,84 @@
+# FLOWRA AUDIT REPORT — Phase 1 (Independent, Evidence-Based)
+
+_Produced by 10 parallel independent auditors reading the real code, + lead synthesis. Brutally honest, evidence-cited, no inflation._
+
+## Scores (0–100)
+
+| Dimension | Score |
+|---|---|
+| Architecture | **72** |
+| Ux | **64** |
+| Maintainability | **66** |
+| Performance | **60** |
+| Reliability | **38** |
+| Security | **60** |
+| Accounting Integrity | **52** |
+| Production Readiness | **34** |
+
+## Overall Verdict
+
+Flowra is a paradox: a well-architected, disciplined codebase whose flagship trust-and-automation features are silently non-functional in production. The pure layers are genuinely senior-grade — clean RSC boundaries, 52/52 RLS coverage, a single service-role wrapper, double-entry balance enforcement, a unified tested COGS kernel, and an honest 'living inventory' test that tracks known bug classes. But underneath the green CI, three whole subsystems are inert: (1) ALL FOUR scheduled crons export POST while Vercel Cron sends GET, so receivables-aging, interest accrual, workflow expiry and governance snapshots have never run; the event outbox is emitted in 4 hot paths, never drained, and its worker/RPC calls mismatch the DB schema wholesale. (2) The tamper-evidence audit-chain verifier queries columns (resource_type/old_values) the table doesn't have (it uses entity_type/old_data) and returns ok:true on the resulting error — the primary TTK integrity control reports 'healthy' no matter what; the financial-integrity guards (TTK 509/519, distributable, FIFO, period-open) have ZERO production callers; reconciliation validation reads field names the engine never emits, so balance-sheet and over-distribution checks always PASS. (3) A SECURITY DEFINER RPC (convert_proforma_to_sale) performs no membership check — a cross-tenant write/IDOR. On top of that, accounting numbers are not internally consistent: three divergent corporate-tax matrah definitions, a hardcoded 20% rate vs the system-wide 25%, COGS silently truncated past row caps, and the 'certified' auditor export reads a non-existent column so every partner-debt figure is reported as 0 — under a SHA-256 fingerprint marketed as 'imzalı/signed'. The test suite is fast and dense but structurally blind: 2 of 335 routes tested, no behavioral RLS test, no coverage tool installed, and several fixtures encode the WRONG data contract, actively masking the wiring defects. This is not production-ready as a compliance/accounting system of record; it is a strong skeleton with broken tendons. The good news: the large majority of defects are pure handler/service/SQL-text wiring fixes that need no DB credentials.
+
+## Top Strengths
+
+- RLS foundation is real and complete: 52/52 ALTER ENABLE RLS exactly matches 52 tables carrying a policy (set-diff verified), helper functions is_company_member/is_company_admin are SECURITY DEFINER + STABLE + pinned search_path, and GL/audit tables are append-only via explicit 'for update/delete using(false)' policies — immutability enforced at the DB, not app trust.
+- Service-role boundary is genuinely enforced: only lib/admin-db.ts imports the admin client, safeAdminQuery() auto-appends .eq('company_id', companyId) with synchronous UUID validation, the Bearer-token path uses the ANON key so RLS still applies, and the service-role key never reaches the client bundle.
+- Clean architecture with real mega-component cleanup: no client component transitively imports supabase-server/next-headers, services accept SupabaseClient as a parameter (isomorphic), all app/ pages <800 lines, and 323/335 routes go through centralized api-auth/require-role.
+- Double-entry GL invariant is enforced not assumed: JournalEntryService rejects any entry where |ΣDR−ΣCR|>0.01 before the RPC fires (journal-entry.service.ts:170-180,584-588), with a real pre-flight test asserting the RPC is NOT called on imbalance.
+- Intellectually honest engineering on the known COGS truncation bug: it is fully catalogued, the two authoritative sources emit explicit 'COGS likely UNDERSTATED' warnings, and tests/cogs-truncation-inventory.test.ts is a 'living inventory' that fails if a new uncatalogued truncation site appears — a senior-grade regression net.
+- schema-drift-guard.test.ts parses every migration and asserts migration tables ⊆ canonical install, directly guarding the partner_compensation_payments 500-in-prod class going forward, with KNOWN_DRIFT honestly documenting the credential-gated debt.
+- Backup/restore is the one well-engineered operational path: pre-flight referential-integrity validation returns 422 before any destructive write, admin-only, rejects cross-tenant rows, guards path traversal, and implements compensation rollback if the atomic RPC fails.
+
+## Biggest Risks
+
+- Compliance/audit fraud exposure: the tamper-evidence audit chain verifier always reports 'OK' (queries non-existent columns, swallows the error), the 'certified' export reports all partner debt as 0 under a SHA-256 fingerprint marketed as 'imzalı/signed', and the TTK 509/519 guards have zero callers — so the product makes integrity/compliance claims to auditors that the code does not back, a material legal/liability risk in a TTK accounting context.
+- Silent financial misstatement at scale: a single company/period shows up to three different corporate-tax figures (divergent matrah + 20% vs 25% rate), revenue/COGS differ between formal P&L and CFO paths (cancelled-sale handling, VAT source fields), and COGS is silently truncated past row caps — none of which throw, so larger tenants get overstated profit and tax with no user-visible error.
+- The entire automation backbone is dead in production: all 4 crons return 405, the event outbox is never drained and its RPCs mismatch the schema — meaning receivables never age, interest never accrues, monthly metrics never aggregate, and ghost expenses/idempotency keys accumulate unbounded; the system appears healthy while doing none of its scheduled work.
+- Cross-tenant data mutation via convert_proforma_to_sale (SECURITY DEFINER, no membership check) — an authenticated user supplying another tenant's proforma UUID can create a sale, decrement stock, and post GL in the victim company; only UUID unguessability mitigates it. Requires Supabase credentials to fix.
+- False CI confidence masking all of the above: 2/335 routes tested, no behavioral RLS test, no coverage tool installed, and several governance fixtures encode the WRONG data contract so the broken wiring passes green — the team will reasonably believe these controls work until a real audit or large tenant exposes them.
+- Fresh-install non-parity: 7 app-queried tables exist only in migrations, so a clean install from the canonical SQL yields guaranteed 500s on partner compensation, budgets, KPI targets, reorder thresholds, documents, alert feed, and decision snapshots.
+
+## Critical & High Defects (with evidence)
+
+| Sev | Domain | Defect | Evidence | Fix w/o DB creds |
+|---|---|---|---|---|
+| CRITICAL | database_supabase_rls | convert_proforma_to_sale is SECURITY DEFINER, granted to authenticated, with NO membership check — cross-tenant write/IDOR | supabase/FLOWRA_PRODUCTION_INSTALL.sql:2261 security definer; body selects proforma solely 'where id = p_proforma_id and deleted_at is null' (verified ~line 228 | 🔒 DB |
+| CRITICAL | governance_integrity | Admin tamper-evidence verifier queries non-existent columns and always reports OK | lib/services/audit-chain.service.ts:141 selects resource_type/resource_id/old_values/new_values; audit_logs uses entity_type (FLOWRA_PRODUCTION_INSTALL.sql:512) | ✅ |
+| CRITICAL | governance_integrity | Financial-integrity guards (TTK 509/519, distributable, period, FIFO, payment) have zero production callers | grep for assertLegalReserveAllocated/assertDividendWithinProfit/assertDistributablePositive/assertPeriodOpen/assertFifoCostImmutable/assertPaymentWithinBalance/ | ✅ |
+| CRITICAL | governance_integrity | runValidation balance-sheet & distribution checks read fields the engine never produces — always PASS | lib/engines/reconciliation.engine.ts:1098-1099 read total_assets/total_liabilities/total_equity but buildSection14 emits total_assets_try/total_liabilities_try/ | ✅ |
+| CRITICAL | jobs_backups_deploy | All 4 scheduled crons unreachable — export POST, Vercel Cron sends GET | vercel.json:2-19 schedules overdue-update/interest-accrual/workflow-expire/governance-snapshot; each route exports only POST (overdue-update/route.ts:17, intere | ✅ |
+| CRITICAL | jobs_backups_deploy | Event outbox emitted in 4 hot paths but never drained, and processor schema-mismatches the DB | EventService.emit called in sale/stock/proforma/products paths; the only drainer /api/events/process is absent from vercel.json crons. lib/services/event.servic | 🔒 DB |
+| CRITICAL | jobs_backups_deploy | processEvents calls claim_event_batch missing required p_worker_id and uses wrong column model | lib/services/event.service.ts:140 rpc('claim_event_batch',{p_batch_size}); DB sig is claim_event_batch(p_worker_id text, p_batch_size integer) with no default ( | 🔒 DB |
+| CRITICAL | jobs_backups_deploy | sale.created handler calls upsert_monthly_metrics with non-existent param names/types | lib/services/event.service.ts:50-56 passes p_user_id, p_month:'YYYY-MM' text, p_revenue_add, p_sales_add, p_currency; DB sig is (p_company_id uuid, p_year int,  | 🔒 DB |
+| CRITICAL | reporting_pdf_exports | Certified auditor export reads non-existent partner_loan_tranches.outstanding_try — all partner debt reports 0 | lib/services/export/certified-export.service.ts:184 .select('partner_id, outstanding_try, status') and :245-255 reduce over t.outstanding_try; schema flowra_FUL | ✅ |
+| CRITICAL | tests_verification | getCfoMetrics async path (30+ parallel Supabase queries feeding CFO/insights/P&L/tax) has zero test coverage | lib/finance/financial-core.ts:355 getCfoMetrics with ~30 supabase.from() calls; tests/financial-core.test.ts:9 states verbatim these DB functions are NOT tested | ✅ |
+| HIGH | database_supabase_rls | Fresh install incomplete: 7 tables exist only in migrations, all queried by app code | grep CREATE TABLE in FLOWRA_PRODUCTION_INSTALL.sql returns 0 for alert_feed, company_documents, decision_context_snapshots, kpi_targets, monthly_budgets, partne | ✅ |
+| HIGH | finance_accounting | COGS silently understated when YTD sales/sale_items exceed 2000-row cap — overstates profit & corporate tax | lib/finance/financial-core.ts:477-492 .limit(2000) on ytdSalesIds and sale_items; allocations fetched only for capped set; ytdProfit (line ~549) feeds computeTa | 🔒 DB |
+| HIGH | finance_accounting | Two divergent corporate-tax matrah definitions produce conflicting tax figures for the same company | getCfoMetrics treats ALL operational expenses as matrah-reducing (lib/finance/financial-core.ts:544-549 → cfo-metrics.ts:231-247); FinanceService.getFinancialSu | ✅ |
+| HIGH | frontend_ux_nav | Near-total absence of accessibility primitives across all navigation | components/layout/Sidebar.tsx, app/dashboard/_shared/UnifiedTabNav.tsx, components/layout/MobileBottomNav.tsx have 0 aria-current/aria-label; active tab signall | ✅ |
+| HIGH | governance_integrity | Second hash-chain service depends on a chain_hash column no migration creates | lib/services/ledger/audit-hash-chain.service.ts:201,318 read/write chain_hash/prev_chain_hash; only chain migration 20260526000001_audit_chain_columns.sql adds  | 🔒 DB |
+| HIGH | governance_integrity | Audit-chain stamping is non-atomic, unawaited, order-unsafe fire-and-forget — forks under concurrency | lib/audit.ts:84-96 calls stampAuditRow without await, .catch(()=>{}); stampAuditRow does read-latest-then-update with no lock/txn so two concurrent writes stamp | 🔒 DB |
+| HIGH | jobs_backups_deploy | Job worker RPC calls mismatch DB signatures — claim_next_job, fail_job | worker.ts:81 claim_next_job() no args but DB requires claim_next_job(p_worker_id text) no default (flowra_FULL_MIGRATION.sql:3099); worker.ts:110-114 passes p_r | 🔒 DB |
+| HIGH | jobs_backups_deploy | /api/jobs/run and /api/events/process are not scheduled anywhere | vercel.json:2-19 lists only the 4 cron paths; the idempotency-purge worker and outbox drainer have no trigger; no pg_cron equivalent in repo. | ✅ |
+| HIGH | jobs_backups_deploy | Failed events are a dead-letter black hole — never retried | processEvents claims only processed=false; on error sets status='failed'/retry_count but nothing resets failed rows or consults max_retries; no DLQ drain (lib/s | ✅ |
+| HIGH | reporting_pdf_exports | 'Certified' export checksum is a plain content hash, not tamper-evident — UI markets it as signed/verifiable | certified-export.service.ts:396-398 createHash('sha256').update(JSON.stringify(...)); UI app/dashboard/governance/_components/ExportsTab.tsx:100-113 labels it ' | ✅ |
+| HIGH | reporting_pdf_exports | Formal Income Statement hardcodes 20% corporate tax while rest of system uses 25% | lib/services/finance/income-statement.service.ts:337 taxProv = ebt>0 ? ebt*0.20 : 0 (and :350); contrast CORPORATE_TAX_RATE_TR=25 in lib/services/finance-rules. | ✅ |
+| HIGH | routes_api | Live AUTH-DRIFT: read endpoints don't thread the authenticated client into services → break under Bearer-token auth | app/api/stock/route.ts:66 calls getCurrentStock(uid,companyId,productId,ctx) leaving the clientOverride slot undefined (sig stock-query.service.ts:137-142), so  | ✅ |
+| HIGH | security_permissions | SVG logo upload is a stored-XSS vector: accepted, stored in a PUBLIC bucket, served as image/svg+xml | lib/storage.ts:19 registers image/svg+xml with empty magic bytes; :49-53 validates only '<svg'/'<!DOCTYPE svg' prefix, never strips <script>/onload; uploadLogo  | ✅ |
+| HIGH | tests_verification | Route-handler coverage effectively zero: 2 of 335 route.ts files have any test | find app/api -name route.ts = 335; only tests/collections-route-pure.test.ts (pure helper) and tests/api-schema-resilience.test.ts (2 routes) touch handlers; 0  | ✅ |
+| HIGH | tests_verification | No RLS / multi-tenant isolation behaviorally tested — only SQL-text grep assertions | Only migration-sql.test.ts/sql-validation.test.ts mention RLS; assertions are string checks like expect(sql).toContain('company_id uuid'). No test exercises a c | 🔒 DB |
+
+## Per-Domain Scores
+
+| Domain | Score | Summary |
+|---|---|---|
+| architecture | 74 | A large but genuinely well-organized Next.js App Router codebase: server/client boundaries are clean (no server-only module leaks into client bundles — services are written isomorphically with the Sup |
+| database_supabase_rls | 68 | The RLS foundation is genuinely solid: a clean 52/52 match between RLS-enabled tables and policy-covered tables (no orphan tables, no deny-all gaps), correctly-hardened helper functions (SECURITY DEFI |
+| finance_accounting | 68 | The accounting kernels are genuinely well-built: double-entry is balance-validated on every entry, COGS aggregation is unified onto one tested pure kernel (lib/finance/cogs.ts), and the team has been  |
+| routes_api | 72 | The API layer is broadly solid: a single well-designed resolveApiAuth() correctly handles both Bearer-token and cookie auth with proper RLS-scoped clients, write routes have strong field-level input v |
+| frontend_ux_nav | 68 | The navigation system is functionally solid and well-organized: middleware redirects are wrapped in a global try/catch, auth gating is centralized in the layout, URL-driven tabs are deep-linkable, and |
+| governance_integrity | 38 | The governance/integrity layer is well-written and heavily unit-tested in ISOLATION, but the tests validate contracts that the real data pipeline never satisfies, so multiple flagship controls are ine |
+| reporting_pdf_exports | 68 | The PDF rendering layer is genuinely strong: the proforma engine (generatePdf.ts) and report engine (pdf-report.ts) are institutional-quality, font-robust with Turkish/ASCII fallback, pagination-aware |
+| jobs_backups_deploy | 31 | The operational backbone is largely non-functional in production. All four scheduled crons in vercel.json export only POST, but Vercel Cron invokes via GET — they return 405 and never run. The event o |
+| tests_verification | 62 | A large, fast, assertion-dense suite (302 files, ~33k expect() calls, runs green in well under a second per cluster) that is excellent at one thing — pure financial/calc logic — and structurally blind |
+| security_permissions | 74 | The security architecture is genuinely above-average for a KOBİ SaaS: the service-role client is gated behind a single wrapper module (lib/admin-db.ts) that the rest of the codebase actually respects, |

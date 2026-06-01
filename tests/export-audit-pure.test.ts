@@ -7,6 +7,7 @@ import {
   buildExportFilename,
   computeExportHash,
   classifyExportSensitivity,
+  trancheOutstandingTry,
 } from '../lib/services/export/certified-export.service'
 import {
   verifyChainLink,
@@ -340,5 +341,19 @@ describe('formatChainReport', () => {
   it('zero total entries still returns a string', () => {
     const report = formatChainReport(0, 0, '2025-01-01', '2025-01-31')
     expect(typeof report).toBe('string')
+  })
+})
+
+describe('trancheOutstandingTry (derived partner-loan outstanding)', () => {
+  it('= principal_try − total_repaid_try', () => {
+    expect(trancheOutstandingTry({ principal_try: 100_000, total_repaid_try: 30_000 })).toBe(70_000)
+  })
+  it('is 0 when fully repaid, and never negative', () => {
+    expect(trancheOutstandingTry({ principal_try: 50_000, total_repaid_try: 50_000 })).toBe(0)
+    expect(trancheOutstandingTry({ principal_try: 50_000, total_repaid_try: 60_000 })).toBe(0)
+  })
+  it('treats missing fields as 0 (no NaN)', () => {
+    expect(trancheOutstandingTry({})).toBe(0)
+    expect(trancheOutstandingTry({ principal_try: 80_000 })).toBe(80_000)
   })
 })

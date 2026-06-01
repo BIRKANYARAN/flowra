@@ -596,3 +596,17 @@ describe('periodKeyToDateRange — additional month coverage', () => {
     expect(range).toHaveProperty('end')
   })
 })
+
+// ── Regression: corporate tax provision uses the system-wide 25% (was 20%) ──────
+import { computeTaxProvision } from '@/lib/services/finance/income-statement.service'
+
+describe('computeTaxProvision (formal P&L corporate tax — system-wide rate)', () => {
+  it('applies the 25% system rate to positive EBT (NOT the old hardcoded 20%)', () => {
+    expect(computeTaxProvision(1_000_000)).toBe(250_000)   // 25%, was 200_000
+    expect(computeTaxProvision(40_000)).toBe(10_000)
+  })
+  it('is 0 on a loss (no tax on negative or zero EBT)', () => {
+    expect(computeTaxProvision(0)).toBe(0)
+    expect(computeTaxProvision(-50_000)).toBe(0)
+  })
+})

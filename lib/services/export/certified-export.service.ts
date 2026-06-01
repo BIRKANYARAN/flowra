@@ -140,6 +140,17 @@ export function classifyExportSensitivity(
   return 'public'
 }
 
+/**
+ * Outstanding balance of a partner-loan tranche. partner_loan_tranches has NO
+ * outstanding_try column — it is DERIVED as principal_try − total_repaid_try
+ * (floored at 0; the table constraint guarantees total_repaid_try ≤ principal_try).
+ * The certified export previously read the non-existent column → reported every
+ * partner's debt as 0 under a "signed" fingerprint.
+ */
+export function trancheOutstandingTry(t: { principal_try?: number | null; total_repaid_try?: number | null }): number {
+  return Math.max(0, Number(t.principal_try ?? 0) - Number(t.total_repaid_try ?? 0))
+}
+
 export class CertifiedExportService {
   static async generate(
     userId: string,
@@ -181,7 +192,9 @@ export class CertifiedExportService {
         .is('deleted_at', null),
       supabase
         .from('partner_loan_tranches')
-        .select('partner_id, outstanding_try, status')
+        // outstanding is DERIVED: principal_try − total_repaid_try (there is no
+        // outstanding_try column — reading it returned 0 for ALL partner debt).
+        .select('partner_id, principal_try, total_repaid_try, status')
         .eq('company_id', companyId)
         .neq('status', 'repaid'),
       supabase
@@ -242,8 +255,8 @@ export class CertifiedExportService {
     // ── Build partner_summary ─────────────────────────────────────────────────
     const partners = partnerRows.map((p: { id: string; name: string; share_ratio: number; is_active: boolean }) => {
       const loanOutstanding = trancheRows
-        .filter((t: { partner_id: string; outstanding_try: number }) => t.partner_id === p.id)
-        .reduce((sum: number, t: { outstanding_try: number }) => sum + Number(t.outstanding_try ?? 0), 0)
+        .filter((t: { partner_id: string }) => t.partner_id === p.id)
+        .reduce((sum: number, t: { principal_try?: number; total_repaid_try?: number }) => sum + trancheOutstandingTry(t), 0)
       return {
         partner_id: String(p.id),
         partner_name: String(p.name),
@@ -252,7 +265,7 @@ export class CertifiedExportService {
       }
     })
     const totalPartnerDebt = trancheRows.reduce(
-      (sum: number, t: { outstanding_try: number }) => sum + Number(t.outstanding_try ?? 0), 0
+      (sum: number, t: { principal_try?: number; total_repaid_try?: number }) => sum + trancheOutstandingTry(t), 0
     )
     const partnerSummary = {
       partners,

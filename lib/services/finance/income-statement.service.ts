@@ -29,6 +29,10 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { computeCogsFromAllocations, cogsTruncationWarning } from '@/lib/finance/cogs'
+import { CORPORATE_TAX_RATE_TR } from '@/lib/services/finance-rules'
+
+// System-wide corporate tax rate as a fraction (CORPORATE_TAX_RATE_TR is a %).
+const CORP_TAX_FRACTION = CORPORATE_TAX_RATE_TR / 100
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyClient = SupabaseClient<any>
@@ -133,6 +137,15 @@ export function computeOperatingMargin(ebitda: number, revenue: number): number 
 export function computeEffectiveTaxRate(tax: number, ebt: number): number {
   if (ebt <= 0) return 0
   return (tax / ebt) * 100
+}
+
+/**
+ * Corporate tax provision on EBT: the system-wide rate × EBT when positive,
+ * else 0 (no tax on losses). Uses CORPORATE_TAX_RATE_TR (25%) — previously this
+ * was hardcoded to 20% inline, understating the formal P&L's tax by 5pp of EBT.
+ */
+export function computeTaxProvision(ebt: number): number {
+  return ebt > 0 ? ebt * CORP_TAX_FRACTION : 0
 }
 
 /**
@@ -333,8 +346,8 @@ export class IncomeStatementService {
     const ebitda = computeEbitda(gp, opex)
     const intEx  = cur.interest_expense
     const ebt    = ebitda - intEx
-    // Tax: 20% of EBT if positive
-    const taxProv = ebt > 0 ? ebt * 0.20 : 0
+    // Tax: corporate tax on positive EBT (system-wide rate, was hardcoded 20%).
+    const taxProv = computeTaxProvision(ebt)
     const netIncome = ebt - taxProv
 
     // Prior values (null when no prior)
@@ -347,7 +360,7 @@ export class IncomeStatementService {
       : null
     const pIntEx  = pri?.interest_expense    ?? null
     const pEbt    = pEbitda !== null && pIntEx !== null ? pEbitda - pIntEx : null
-    const pTax    = pEbt !== null ? (pEbt > 0 ? pEbt * 0.20 : 0) : null
+    const pTax    = pEbt !== null ? computeTaxProvision(pEbt) : null
     const pNet    = pEbt !== null && pTax !== null ? pEbt - pTax : null
 
     // Margins
