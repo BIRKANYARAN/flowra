@@ -24,26 +24,28 @@ async function sha256hex(input: string): Promise<string> {
     .join('')
 }
 
-// rowPayload mirrors the service's private rowPayload()
+// rowPayload mirrors the service's private rowPayload(), fed from the REAL
+// audit_logs columns (entity_type/entity_id/old_data/new_data) — the verifier maps
+// these into the same payload positions the stamper used.
 function rowPayload(row: {
-  action: string; resource_type: string; resource_id: string
-  old_values: unknown; new_values: unknown; created_at: string
+  action: string; entity_type: string; entity_id: string
+  old_data: unknown; new_data: unknown; created_at: string
 }): string {
   return [
-    row.action        ?? '',
-    row.resource_type ?? '',
-    row.resource_id   ?? '',
-    JSON.stringify(row.old_values ?? null),
-    JSON.stringify(row.new_values ?? null),
-    row.created_at    ?? '',
+    row.action      ?? '',
+    row.entity_type ?? '',
+    row.entity_id   ?? '',
+    JSON.stringify(row.old_data ?? null),
+    JSON.stringify(row.new_data ?? null),
+    row.created_at  ?? '',
   ].join('|')
 }
 
 // Build a valid chain of N rows, computing correct content_hash + prev_hash
 async function buildChain(n: number) {
   const rows: Array<{
-    id: string; action: string; resource_type: string; resource_id: string
-    old_values: unknown; new_values: unknown; created_at: string
+    id: string; action: string; entity_type: string; entity_id: string
+    old_data: unknown; new_data: unknown; created_at: string
     content_hash: string; prev_hash: string | null
   }> = []
 
@@ -53,10 +55,10 @@ async function buildChain(n: number) {
     const row = {
       id:            `row-${i}`,
       action:        'create',
-      resource_type: 'sale',
-      resource_id:   `sale-${i}`,
-      old_values:    null,
-      new_values:    { amount: i * 1000 },
+      entity_type:   'sale',
+      entity_id:     `sale-${i}`,
+      old_data:      null,
+      new_data:      { amount: i * 1000 },
       created_at:    `2025-01-${String(i + 1).padStart(2, '0')}T10:00:00Z`,
     }
     const contentHash = await sha256hex(rowPayload(row) + (prevHash ?? ''))
@@ -121,7 +123,7 @@ describe('verifyAuditChain — DB error handling', () => {
   it('returns is_supported=false on DB error', async () => {
     const result = await verifyAuditChain('co1', '2025-01-01', '2025-01-31', makeErrorSupabase())
     expect(result.is_supported).toBe(false)
-    expect(result.ok).toBe(true)    // no broken links found (no data)
+    expect(result.ok).toBe(false)   // an un-runnable verification must NEVER report OK
     expect(result.total_checked).toBe(0)
   })
 })
@@ -131,14 +133,14 @@ describe('verifyAuditChain — DB error handling', () => {
 describe('verifyAuditChain — pre-migration rows', () => {
   it('returns is_supported=false when rows have no content_hash field', async () => {
     const rows = [
-      { id: 'r1', action: 'create', resource_type: 'sale', resource_id: 's1',
-        old_values: null, new_values: {}, created_at: '2025-01-01T10:00:00Z',
+      { id: 'r1', action: 'create', entity_type: 'sale', entity_id: 's1',
+        old_data: null, new_data: {}, created_at: '2025-01-01T10:00:00Z',
         // No content_hash or prev_hash — pre-migration state
       },
     ]
     const result = await verifyAuditChain('co1', '2025-01-01', '2025-01-31', makeMockSupabase(rows))
     expect(result.is_supported).toBe(false)
-    expect(result.ok).toBe(true)
+    expect(result.ok).toBe(false)   // cannot attest → not OK
   })
 })
 
@@ -190,9 +192,9 @@ describe('verifyAuditChain — tampered chain detection', () => {
 
   it('detects tampered row data (new_values changed)', async () => {
     const rows = await buildChain(4)
-    // Tamper: change the new_values of row 1 but keep original content_hash
-    rows[1] = { ...rows[1], new_values: { amount: 99999 } }
-    // content_hash still reflects old new_values → mismatch
+    // Tamper: change the new_data of row 1 but keep original content_hash
+    rows[1] = { ...rows[1], new_data: { amount: 99999 } }
+    // content_hash still reflects old new_data → mismatch
     const result = await verifyAuditChain('co1', '2025-01-01', '2025-01-31', makeMockSupabase(rows))
     expect(result.ok).toBe(false)
     expect(result.first_broken?.id).toBe('row-1')
@@ -397,7 +399,7 @@ describe('verifyAuditChain — tamper at end', () => {
 
   it('tamper middle row detected', async () => {
     const rows = await buildChain(7)
-    rows[3] = { ...rows[3], new_values: { amount: 99999 } }
+    rows[3] = { ...rows[3], new_data: { amount: 99999 } }
     // content_hash still reflects old payload → mismatch
     const result = await verifyAuditChain('co1', '2025-01-01', '2025-12-31', makeMockSupabase(rows))
     expect(result.ok).toBe(false)
@@ -414,7 +416,7 @@ describe('verifyAuditChain — tamper at end', () => {
 
   it('changing resource_id is also detected', async () => {
     const rows = await buildChain(4)
-    rows[2] = { ...rows[2], resource_id: 'tampered-resource-id' }
+    rows[2] = { ...rows[2], entity_id: 'tampered-resource-id' }
     const result = await verifyAuditChain('co1', '2025-01-01', '2025-12-31', makeMockSupabase(rows))
     expect(result.ok).toBe(false)
     expect(result.first_broken?.id).toBe('row-2')
@@ -577,8 +579,8 @@ describe('verifyAuditChain — chain broken at row 3 of 5', () => {
 
   it('tampered_at_id is row-2 when that row is first broken', async () => {
     const rows = await buildChain(5)
-    rows[2] = { ...rows[2], new_values: { amount: 999_999_999 } }
-    // content_hash is now stale (doesn't match tampered new_values)
+    rows[2] = { ...rows[2], new_data: { amount: 999_999_999 } }
+    // content_hash is now stale (doesn't match tampered new_data)
 
     const result = await verifyAuditChain('co1', '2025-01-01', '2025-12-31', makeMockSupabase(rows))
     expect(result.first_broken?.id).toBe('row-2')
