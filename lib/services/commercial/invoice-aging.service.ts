@@ -9,6 +9,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { aggregateTruncationWarning } from '@/lib/finance/truncation'
 import { PaymentBehaviorService } from './payment-behavior.service'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -147,6 +148,11 @@ export class InvoiceAgingService {
       .in('payment_status', ['unpaid', 'partial', 'overdue'])
       .order('created_at', { ascending: false })
       .limit(1000)
+
+    const truncWarn = aggregateTruncationWarning('invoice-aging', [
+      { name: 'outstanding_sales', count: (rawSales ?? []).length, cap: 1000 },
+    ])
+    if (truncWarn) console.warn(truncWarn)
 
     const sales = (rawSales ?? []) as Array<{
       id: string

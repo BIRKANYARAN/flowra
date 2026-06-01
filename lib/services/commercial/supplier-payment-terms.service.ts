@@ -8,6 +8,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { aggregateTruncationWarning } from '@/lib/finance/truncation'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyClient = SupabaseClient<any>
@@ -383,6 +384,11 @@ export class SupplierPaymentTermsService {
       expenseResult.status === 'fulfilled' && expenseResult.value.data
         ? (expenseResult.value.data as ExpenseRow[])
         : []
+
+    const truncWarn = aggregateTruncationWarning('supplier-payment-terms', [
+      { name: 'expenses', count: rows.length, cap: 2000 },
+    ])
+    if (truncWarn) console.warn(truncWarn)
 
     // ── Derive payment_date proxy: if paid → use updated_at, else null ──────
     // expenses schema has no paid_at column; use updated_at as proxy when paid

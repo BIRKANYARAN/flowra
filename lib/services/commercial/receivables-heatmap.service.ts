@@ -13,6 +13,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { aggregateTruncationWarning } from '@/lib/finance/truncation'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyClient = SupabaseClient<any>
@@ -305,6 +306,12 @@ export class ReceivablesHeatmapService {
       paid_at: string | null
       payment_status: string
     }>
+
+    const truncWarn = aggregateTruncationWarning('receivables-heatmap', [
+      { name: 'open_receivables', count: (rawSales ?? []).length,   cap: 500 },
+      { name: 'trend_sales',      count: (trendSales ?? []).length, cap: 2000 },
+    ])
+    if (truncWarn) console.warn(truncWarn)
 
     for (let i = 5; i >= 0; i--) {
       const d        = new Date(today + 'T00:00:00Z')

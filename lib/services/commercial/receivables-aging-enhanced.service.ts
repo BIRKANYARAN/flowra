@@ -11,6 +11,7 @@
 // All pure helpers are exported for unit testing.
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { aggregateTruncationWarning } from '@/lib/finance/truncation'
 
 // ── Public interfaces ─────────────────────────────────────────────────────────
 
@@ -434,6 +435,20 @@ export class ReceivablesAgingEnhancedService {
               return s + Math.max(0, t - p)
             }, 0)
         : 0
+
+    // No-silent-truncation: warn if any capped query hit its row cap (outstanding
+    // totals, DSO denominator, the 6-month trend and collection efficiency would
+    // then be understated).
+    const monthlyTrunc = monthlyResult.status === 'fulfilled' ? (monthlyResult.value.data ?? []).length : 0
+    const rev30Trunc   = last30dRevenueResult.status === 'fulfilled' ? (last30dRevenueResult.value.data ?? []).length : 0
+    const priorTrunc   = priorOutstandingResult.status === 'fulfilled' ? (priorOutstandingResult.value.data ?? []).length : 0
+    const truncWarn = aggregateTruncationWarning('receivables-aging-enhanced', [
+      { name: 'outstanding', count: outstandingRows.length, cap: 5000 },
+      { name: 'revenue_30d', count: rev30Trunc,             cap: 5000 },
+      { name: 'sales_6m',    count: monthlyTrunc,           cap: 10000 },
+      { name: 'prior_month', count: priorTrunc,             cap: 5000 },
+    ])
+    if (truncWarn) console.warn(truncWarn)
 
     // ── Build customer-level aging aggregation ────────────────────────────────
 

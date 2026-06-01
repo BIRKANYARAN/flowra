@@ -15,6 +15,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { aggregateTruncationWarning } from '@/lib/finance/truncation'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyClient = SupabaseClient<any>
@@ -197,6 +198,14 @@ export class PaymentBehaviorService {
       due_date: string | null
       payment_status: string
     }>
+
+    // No-silent-truncation: warn if either capped query hit its row cap (payment
+    // timing / outstanding metrics would then be computed over a partial set).
+    const truncWarn = aggregateTruncationWarning('payment-behavior', [
+      { name: 'paid_sales',  count: (paidRaw ?? []).length, cap: 2000 },
+      { name: 'outstanding', count: (outstandingRaw ?? []).length, cap: 1000 },
+    ])
+    if (truncWarn) console.warn(truncWarn)
 
     // ── Build per-customer maps ───────────────────────────────────────────────
     type CustomerKey = string  // customer_name (normalized)
