@@ -37,6 +37,36 @@ export const BURN_EXPENSE_TYPES = new Set(['operational', 'fixed', 'variable', '
 
 import { round2 } from '@/lib/calc'
 import { computeCorporateTax } from '@/lib/services/tax.service'
+import { resolveDeductibility } from '@/lib/services/finance-rules'
+
+// ── Corporate-tax matrah: deductible operational expenses only ────────────────
+
+/** Non-operational flows excluded from P&L opex (mirrors getCfoMetrics' net reducer). */
+const NON_OPERATIONAL_FOR_MATRAH = new Set(['partner_financing', 'loan_repayment', 'dividend', 'internal_transfer'])
+
+export interface MatrahExpenseRow {
+  amount_try?:   number | null
+  expense_type?: string | null
+  category?:     string | null
+}
+
+/**
+ * Sum of OPERATIONAL and tax-DEDUCTIBLE expenses — the only opex that reduces the
+ * corporate-tax matrah. Non-deductible (KKEG) expenses — e.g. category tax /
+ * principal / dividend — reduce net profit (cash is cash) but NOT the tax base,
+ * per TTK. This matches the formal P&L (FinanceService.getFinancialSummary, via
+ * computeCorporateTax with deductible-only). getCfoMetrics previously subtracted
+ * ALL operational opex for its matrah, understating corporate tax and disagreeing
+ * with the formal P&L for the same company/period.
+ */
+export function computeDeductibleOpExpenses(rows: MatrahExpenseRow[]): number {
+  return rows.reduce((s, r) => {
+    const t = String(r.expense_type ?? '')
+    if (NON_OPERATIONAL_FOR_MATRAH.has(t)) return s
+    if (!resolveDeductibility(String(r.category ?? ''))) return s
+    return s + Number(r.amount_try ?? 0)
+  }, 0)
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Input types

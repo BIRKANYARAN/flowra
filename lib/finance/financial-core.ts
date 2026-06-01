@@ -33,6 +33,8 @@ import {
   computePartnerMetrics,
   computeStockMetrics,
   computeRunwayForecast,
+  computeDeductibleOpExpenses,
+  type MatrahExpenseRow,
   BURN_EXPENSE_TYPES,
   type CfoMetrics,
   type RunwayForecast,
@@ -435,7 +437,7 @@ export async function getCfoMetrics(
       .gte('sale_date', ytdFrom).lte('sale_date', today),
 
     // 10. YTD operational expenses
-    supabase.from('expenses').select('amount_try, expense_type')
+    supabase.from('expenses').select('amount_try, expense_type, category')
       .eq('company_id', companyId).is('deleted_at', null)
       .gte('expense_date', ytdFrom).lte('expense_date', today),
 
@@ -540,13 +542,12 @@ export async function getCfoMetrics(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const ytdRevenue = (ytdRevenueRes.data ?? []).reduce((s: number, r: any) => s + Number(r.total_try), 0)
   const ytdCogs    = computeCogsFromAllocations(ytdCogsRes.data ?? [])
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const ytdOpExpenses = (ytdExpensesRes.data ?? []).reduce((s: number, r: any) => {
-    const t = String((r as { expense_type?: string | null }).expense_type ?? '')
-    if (t === 'partner_financing' || t === 'loan_repayment' || t === 'dividend' || t === 'internal_transfer') return s
-    return s + Number(r.amount_try)
-  }, 0)
-  const ytdProfit = ytdRevenue - ytdCogs - ytdOpExpenses
+  // Corporate-tax matrah = revenue − COGS − DEDUCTIBLE operational expenses (TTK).
+  // Non-deductible (KKEG) expenses — category tax/principal/dividend/partner_loan —
+  // reduce net profit but NOT the tax base. Previously this subtracted ALL
+  // operational opex, understating corporate tax and disagreeing with the formal
+  // P&L (FinanceService.getFinancialSummary) for the same company/period.
+  const ytdMatrah = ytdRevenue - ytdCogs - computeDeductibleOpExpenses((ytdExpensesRes.data ?? []) as MatrahExpenseRow[])
 
   // salesVat from kdv_amount_try (populated by accounting_truth_v1 migration).
   // Rows without the column (pre-migration) default to 0 — safe graceful degradation.
@@ -585,7 +586,7 @@ export async function getCfoMetrics(
 
   const tax = computeTaxMetrics({
     kdvNet,
-    accountingProfit: ytdProfit,
+    accountingProfit: ytdMatrah,
     taxRate: CORPORATE_TAX_RATE_TR,
   })
 
