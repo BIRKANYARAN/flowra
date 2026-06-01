@@ -71,7 +71,9 @@ export function MobileBottomNav({ navBadges = {} }: Props) {
                   key={tab.href}
                   href={tab.href}
                   onClick={() => setOpen(false)}
-                  className={`flex flex-col items-center gap-1 py-2 px-1 rounded transition-colors ${
+                  aria-current={active ? 'page' : undefined}
+                  aria-label={badge > 0 ? `${tab.label} (${badge} bildirim)` : tab.label}
+                  className={`flex flex-col items-center gap-1 py-2 px-1 rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:ring-inset ${
                     active ? 'bg-brand-subtle text-brand' : 'text-[#64748b] hover:bg-[#f8fafc]'
                   }`}
                 >
@@ -94,7 +96,7 @@ export function MobileBottomNav({ navBadges = {} }: Props) {
       </div>
 
       {/* Primary bottom bar */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-white border-t border-[#e2e8f0] safe-area-pb">
+      <nav aria-label="Ana navigasyon" className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-white border-t border-[#e2e8f0] safe-area-pb">
         <div className="flex items-stretch">
           {PRIMARY.map(tab => {
             const active = isNavItemActive(
@@ -106,7 +108,9 @@ export function MobileBottomNav({ navBadges = {} }: Props) {
               <Link
                 key={tab.href}
                 href={tab.href}
-                className={`flex-1 flex flex-col items-center gap-0.5 py-2 px-1 transition-colors ${
+                aria-current={active ? 'page' : undefined}
+                aria-label={badge > 0 ? `${tab.label} (${badge} bildirim)` : tab.label}
+                className={`flex-1 flex flex-col items-center gap-0.5 py-2 px-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:ring-inset ${
                   active ? 'text-brand' : 'text-[#64748b] hover:text-[#334155]'
                 }`}
               >

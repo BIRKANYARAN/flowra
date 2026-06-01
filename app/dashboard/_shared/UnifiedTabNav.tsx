@@ -39,9 +39,11 @@ function TabLink({ tab, activeTab, basePath }: { tab: UnifiedTab; activeTab: str
   return (
     <Link
       href={`${basePath}?tab=${tab.key}`}
+      aria-current={isActive ? 'page' : undefined}
       className={`
         relative flex items-center gap-1.5 px-3 py-2.5 text-[13px]
         transition-colors whitespace-nowrap flex-shrink-0 rounded-none
+        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:ring-inset
         ${isActive
           ? 'text-[#0f172a] font-semibold border-b-2 border-[#0f172a] -mb-px'
           : 'text-[#94a3b8] hover:text-[#334155] font-medium'
@@ -50,7 +52,9 @@ function TabLink({ tab, activeTab, basePath }: { tab: UnifiedTab; activeTab: str
     >
       {tab.label}
       {showBadge && (
-        <span className={`
+        <span
+          aria-label={`${tab.badge} bildirim`}
+          className={`
           inline-flex items-center justify-center min-w-[16px] h-4 px-1
           text-[9px] font-black rounded-full leading-none
           ${isActive
@@ -73,35 +77,36 @@ export function UnifiedTabNav({ tabs, activeTab, basePath, groups }: Props) {
     return (
       <div>
         {/* Level 1 — section groups */}
-        <div className="flex items-center gap-1 overflow-x-auto scrollbar-none">
+        <nav aria-label="Bölümler" className="flex items-center gap-1 overflow-x-auto scrollbar-none">
           {groups.map((g, i) => (
             <Link
               key={g.label}
               href={`${basePath}?tab=${g.tabs[0].key}`}
-              className={`px-3.5 py-1.5 text-xs rounded-t transition-colors whitespace-nowrap flex-shrink-0 ${
+              aria-current={i === activeIdx ? 'true' : undefined}
+              className={`px-3.5 py-1.5 text-xs rounded-t transition-colors whitespace-nowrap flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:ring-inset ${
                 i === activeIdx ? 'text-[#0f172a] font-black' : 'text-[#94a3b8] hover:text-[#334155] font-semibold'
               }`}
             >
               {g.label}
             </Link>
           ))}
-        </div>
+        </nav>
         {/* Level 2 — sub-tabs of the active group */}
-        <div className="flex items-center gap-0.5 border-b border-[#e2e8f0] overflow-x-auto scrollbar-none pb-0">
+        <nav aria-label="Sekmeler" className="flex items-center gap-0.5 border-b border-[#e2e8f0] overflow-x-auto scrollbar-none pb-0">
           {activeGroup.tabs.map(tab => (
             <TabLink key={tab.key} tab={tab} activeTab={activeTab} basePath={basePath} />
           ))}
-        </div>
+        </nav>
       </div>
     )
   }
 
   // ── Flat mode (unchanged) ─────────────────────────────────────────────────
   return (
-    <div className="flex items-center gap-0.5 border-b border-[#e2e8f0] overflow-x-auto scrollbar-none pb-0">
+    <nav aria-label="Sekmeler" className="flex items-center gap-0.5 border-b border-[#e2e8f0] overflow-x-auto scrollbar-none pb-0">
       {tabs.map(tab => (
         <TabLink key={tab.key} tab={tab} activeTab={activeTab} basePath={basePath} />
       ))}
-    </div>
+    </nav>
   )
 }

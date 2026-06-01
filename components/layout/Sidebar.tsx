@@ -247,8 +247,10 @@ function NavLink({
     <div>
       <Link
         href={item.href}
+        aria-current={active ? 'page' : undefined}
         className={`
           flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[12px] transition-colors
+          focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50 focus-visible:ring-inset
           ${active
             ? 'bg-[#0f172a] text-white font-semibold'
             : childActive
