@@ -19,19 +19,24 @@ export interface CogsAllocationRow {
 }
 
 /**
- * Sum COGS (TRY) from sale_item_allocation rows. Single source of truth used by
- * getCfoMetrics + the income-statement / margin-trend / EBITDA-bridge services.
- *
- * Cost-per-unit precedence:
+ * The cost-per-unit for a single allocation row — the canonical, correctness-
+ * critical cost-source decision shared by every COGS computation:
  *   1. the denormalized allocation.cost_price_try (accounting_truth_v1 migration)
  *   2. the joined stock_lots.cost_price_try (pre-migration fallback)
  *   3. 0
+ * A denormalized 0 is honored (?? coalesces only null/undefined). Accepts the
+ * joined lot as an object or a single-element array (PostgREST embed shape).
+ */
+export function allocationUnitCost(r: CogsAllocationRow): number {
+  const lot = Array.isArray(r.stock_lots) ? r.stock_lots[0] : r.stock_lots
+  return Number(r.cost_price_try ?? lot?.cost_price_try ?? 0)
+}
+
+/**
+ * Sum COGS (TRY) from sale_item_allocation rows. Single source of truth used by
+ * getCfoMetrics + the income-statement / margin-trend / EBITDA-bridge services.
  * Unrounded, matching the YTD revenue/expense sums it is combined with.
  */
 export function computeCogsFromAllocations(rows: CogsAllocationRow[]): number {
-  return rows.reduce((s, r) => {
-    const lot = Array.isArray(r.stock_lots) ? r.stock_lots[0] : r.stock_lots
-    const costPerUnit = Number(r.cost_price_try ?? lot?.cost_price_try ?? 0)
-    return s + Number(r.qty_allocated ?? 0) * costPerUnit
-  }, 0)
+  return rows.reduce((s, r) => s + Number(r.qty_allocated ?? 0) * allocationUnitCost(r), 0)
 }

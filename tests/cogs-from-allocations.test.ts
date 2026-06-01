@@ -3,7 +3,19 @@
 // cost-source precedence (denormalized allocation cost → joined lot cost → 0) is
 // correctness-critical for YTD profit and tax figures.
 import { describe, it, expect } from 'vitest'
-import { computeCogsFromAllocations } from '@/lib/finance/cogs'
+import { computeCogsFromAllocations, allocationUnitCost } from '@/lib/finance/cogs'
+
+describe('allocationUnitCost (shared cost-source decision)', () => {
+  it('prefers the denormalized allocation cost, then the lot, then 0', () => {
+    expect(allocationUnitCost({ cost_price_try: 10, stock_lots: { cost_price_try: 99 } })).toBe(10)
+    expect(allocationUnitCost({ stock_lots: { cost_price_try: 5 } })).toBe(5)
+    expect(allocationUnitCost({})).toBe(0)
+  })
+  it('honors a denormalized 0 and accepts the lot as a single-element array', () => {
+    expect(allocationUnitCost({ cost_price_try: 0, stock_lots: { cost_price_try: 99 } })).toBe(0)
+    expect(allocationUnitCost({ stock_lots: [{ cost_price_try: 7 }] })).toBe(7)
+  })
+})
 
 describe('computeCogsFromAllocations', () => {
   it('uses the denormalized allocation.cost_price_try when present', () => {

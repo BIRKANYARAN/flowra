@@ -28,6 +28,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { allocationUnitCost } from '@/lib/finance/cogs'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyClient = SupabaseClient<any>
@@ -444,12 +445,8 @@ export class GrossMarginBridgeService {
             .limit(20000)
 
           for (const r of (allocData ?? []) as Array<{ sale_item_id: string; qty_allocated: number; cost_price_try: number | null; stock_lots: { cost_price_try?: number } | null }>) {
-            const lot      = r.stock_lots
-            const unitCost = r.cost_price_try !== null && r.cost_price_try !== undefined
-              ? Number(r.cost_price_try)
-              : (lot?.cost_price_try !== undefined ? Number(lot.cost_price_try) : 0)
             const existing = cogsMap.get(r.sale_item_id) ?? 0
-            cogsMap.set(r.sale_item_id, existing + Number(r.qty_allocated ?? 0) * unitCost)
+            cogsMap.set(r.sale_item_id, existing + Number(r.qty_allocated ?? 0) * allocationUnitCost(r))
           }
         } catch {
           // cogsMap stays empty — fallback applied below

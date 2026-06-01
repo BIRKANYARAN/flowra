@@ -21,6 +21,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { allocationUnitCost } from '@/lib/finance/cogs'
 import { round2 } from '@/lib/calc'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -360,9 +361,7 @@ export const FinancialRatiosService = {
     for (const cr of cogsRows) {
       const ym = (cr as { _month?: string })._month
       if (!ym || !cogsByMonth.has(ym)) continue
-      const lot       = cr.stock_lots
-      const unitCost  = cr.cost_price_try ?? (lot?.cost_price_try !== undefined ? Number(lot.cost_price_try) : 0)
-      const lineTotal = cr.qty_allocated * unitCost
+      const lineTotal = cr.qty_allocated * allocationUnitCost(cr)
       cogsByMonth.set(ym, (cogsByMonth.get(ym) ?? 0) + lineTotal)
     }
 
