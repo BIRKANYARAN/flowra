@@ -82,17 +82,21 @@ export class AlertFeedService {
     const liveAlerts = alertInputs ? evaluateAlerts(alertInputs) : []
     const liveKeys = new Set(liveAlerts.map(a => a.id))
 
+    // Fetch all unresolved alert rows ONCE — reused for both the upsert existence
+    // check (below) and the auto-resolve pass (step 3). Replaces a per-alert
+    // SELECT inside the loop (N+1 reads → a single query).
+    const { data: unresolvedRows } = await supabase
+      .from('alert_feed')
+      .select('id, alert_key, trigger_count')
+      .eq('company_id', companyId)
+      .eq('auto_resolved', false)
+    const existingByKey = new Map<string, { id: string; trigger_count: number | null }>()
+    for (const r of unresolvedRows ?? []) existingByKey.set(r.alert_key, { id: r.id, trigger_count: r.trigger_count })
+
     // 2. Upsert each live alert
     let synced = 0
     for (const alert of liveAlerts) {
-      // Try to find existing unresolved record
-      const { data: existing } = await supabase
-        .from('alert_feed')
-        .select('id, trigger_count')
-        .eq('company_id', companyId)
-        .eq('alert_key', alert.id)
-        .eq('auto_resolved', false)
-        .maybeSingle()
+      const existing = existingByKey.get(alert.id)
 
       if (existing) {
         await supabase
@@ -131,13 +135,9 @@ export class AlertFeedService {
       synced++
     }
 
-    // 3. Auto-resolve alerts whose key is no longer in live set
-    const { data: unresolvedRows } = await supabase
-      .from('alert_feed')
-      .select('id, alert_key')
-      .eq('company_id', companyId)
-      .eq('auto_resolved', false)
-
+    // 3. Auto-resolve alerts whose key is no longer in live set — reuse the rows
+    // already fetched above (newly-inserted rows all carry live keys, so they are
+    // filtered out here regardless of the snapshot timing).
     const toResolve = (unresolvedRows ?? []).filter(r => !liveKeys.has(r.alert_key))
     let resolved = 0
 

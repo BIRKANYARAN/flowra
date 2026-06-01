@@ -451,13 +451,15 @@ export class KpiScorecardService {
     // Fetch periods: 3 months ago, 2 months ago, 1 month ago, current
     const periods = [3, 2, 1, 0].map(offset => shiftPeriod(currentPk, offset))
 
-    const periodActuals: Array<Map<string, number>> = []
-
-    for (const pk of periods) {
-      const { from, to } = periodDateRange(pk)
-      const actuals = await this.fetchActuals(companyId, from, to, pk)
-      periodActuals.push(actuals)
-    }
+    // The 4 periods are independent read-only fetches — run them concurrently
+    // instead of sequentially (4 round-trips → 1 batch). Promise.all preserves
+    // order, so periodActuals[i] still corresponds to periods[i].
+    const periodActuals: Array<Map<string, number>> = await Promise.all(
+      periods.map(pk => {
+        const { from, to } = periodDateRange(pk)
+        return this.fetchActuals(companyId, from, to, pk)
+      }),
+    )
 
     // Build history arrays per KPI
     for (const def of STANDARD_KPIS) {
