@@ -32,12 +32,12 @@ import {
   computeTaxMetrics,
   computePartnerMetrics,
   computeStockMetrics,
-  computeCogsFromAllocations,
   computeRunwayForecast,
   BURN_EXPENSE_TYPES,
   type CfoMetrics,
   type RunwayForecast,
 } from '@/lib/finance/cfo-metrics'
+import { computeCogsFromAllocations } from '@/lib/finance/cogs'
 import { CORPORATE_TAX_RATE_TR } from '@/lib/services/finance-rules'
 
 // ── Canonical period type ─────────────────────────────────────────────────────

@@ -3,7 +3,7 @@
 // cost-source precedence (denormalized allocation cost → joined lot cost → 0) is
 // correctness-critical for YTD profit and tax figures.
 import { describe, it, expect } from 'vitest'
-import { computeCogsFromAllocations } from '@/lib/finance/cfo-metrics'
+import { computeCogsFromAllocations } from '@/lib/finance/cogs'
 
 describe('computeCogsFromAllocations', () => {
   it('uses the denormalized allocation.cost_price_try when present', () => {
@@ -21,6 +21,12 @@ describe('computeCogsFromAllocations', () => {
   it('honors a denormalized cost of exactly 0 (does NOT fall through to the lot)', () => {
     // ?? only coalesces null/undefined — a real 0 is an intentional value
     expect(computeCogsFromAllocations([{ qty_allocated: 2, cost_price_try: 0, stock_lots: { cost_price_try: 99 } }])).toBe(0)
+  })
+
+  it('accepts the joined lot as a single-element array (PostgREST embed shape)', () => {
+    // PostgREST may surface the to-one stock_lots embed as [{...}] instead of {...}
+    expect(computeCogsFromAllocations([{ qty_allocated: 3, stock_lots: [{ cost_price_try: 5 }] }])).toBe(15)
+    expect(computeCogsFromAllocations([{ qty_allocated: 2, stock_lots: [] }])).toBe(0) // empty array → 0
   })
 
   it('is 0 when neither cost source is available', () => {

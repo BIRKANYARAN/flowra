@@ -14,6 +14,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { computeCogsFromAllocations } from '@/lib/finance/cogs'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyClient = SupabaseClient<any>
@@ -562,16 +563,8 @@ export class EbitdaBridgeService {
           .in('sale_item_id', saleItemIds)
           .limit(20000)
 
-        for (const r of (allocRes.data ?? [])) {
-          const lot      = r.stock_lots as { cost_price_try?: number } | null
-          const unitCost =
-            r.cost_price_try !== null && r.cost_price_try !== undefined
-              ? Number(r.cost_price_try)
-              : lot?.cost_price_try !== undefined
-              ? Number(lot.cost_price_try)
-              : 0
-          cogsFromAllocations += Number(r.qty_allocated ?? 0) * unitCost
-        }
+        // Shared tested COGS cost-fallback kernel (same as getCfoMetrics).
+        cogsFromAllocations = computeCogsFromAllocations(allocRes.data ?? [])
       }
 
       if (cogsFromAllocations > 0) {

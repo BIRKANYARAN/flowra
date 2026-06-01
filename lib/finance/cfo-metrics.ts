@@ -287,31 +287,6 @@ export function computeStockMetrics(i: StockInputs): CfoMetrics['stock'] {
   }
 }
 
-// ── COGS from sale_item allocations ──────────────────────────────────────────
-
-/** A sale_item_allocation row as fetched for COGS (with optional joined lot). */
-export interface CogsAllocationRow {
-  qty_allocated?:  number | null
-  cost_price_try?: number | null
-  stock_lots?:     { cost_price_try?: number | null } | null
-}
-
-/**
- * Sum COGS (TRY) from sale_item_allocation rows.
- *
- * Cost-per-unit precedence:
- *   1. the denormalized allocation.cost_price_try (accounting_truth_v1 migration)
- *   2. the joined stock_lots.cost_price_try (pre-migration fallback)
- *   3. 0
- * Unrounded, matching the YTD revenue/expense sums it is combined with.
- */
-export function computeCogsFromAllocations(rows: CogsAllocationRow[]): number {
-  return rows.reduce((s, r) => {
-    const costPerUnit = Number(r.cost_price_try ?? r.stock_lots?.cost_price_try ?? 0)
-    return s + Number(r.qty_allocated ?? 0) * costPerUnit
-  }, 0)
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Monthly projection — runway forecast
 // ─────────────────────────────────────────────────────────────────────────────
