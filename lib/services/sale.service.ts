@@ -57,6 +57,22 @@ export class SaleService {
     try {
       const supabase = clientOverride ?? createClient()
 
+      // 1b. Ownership guard (defense-in-depth, app layer). convert_proforma_to_sale
+      // is SECURITY DEFINER and performs NO membership check — it selects the proforma
+      // by id alone and trusts the caller-supplied p_user_id, so an authenticated user
+      // could convert ANOTHER company's proforma (cross-tenant write / IDOR). Confirm
+      // the proforma is visible to THIS caller's RLS-scoped client and belongs to their
+      // company before invoking the RPC. A cross-tenant id returns no row → reject.
+      const { data: ownedProforma } = await supabase
+        .from('proformas')
+        .select('id, company_id')
+        .eq('id', input.proforma_id)
+        .is('deleted_at', null)
+        .maybeSingle()
+      if (!ownedProforma || ownedProforma.company_id !== companyId) {
+        throw new AppError('PROFORMA_NOT_FOUND', 'Proforma bulunamadı veya bu şirkete ait değil.', { proforma_id: input.proforma_id })
+      }
+
       // 2. Delegate to atomic DB function (live signature: p_proforma_id, p_user_id, p_sale_date, p_due_date, p_bank_id, p_notes, p_internal_notes)
       const today = new Date().toISOString().slice(0, 10)
       const { data: rpcResult, error } = await supabase.rpc('convert_proforma_to_sale', {
