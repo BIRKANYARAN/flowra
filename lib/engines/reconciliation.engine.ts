@@ -1211,34 +1211,41 @@ export function buildShareholderPositions(sections: ReconciliationData, asOfDate
   const s13 = sections.section13 as any
   const s15 = sections.section15 as any
 
-  const partners: Array<{name: string; ownership_pct: number; equity_value: number}> = s9?.partners ?? []
-  const distributableNet = Math.max(0, (s15?.net_profit_try ?? 0) - (s13?.ytd_total ?? 0))
+  // section9 emits `shareholders` (not `partners`); each has paid_capital_try /
+  // equity_value_try / ownership_pct / name. section13 emits total_distributed_try.
+  const shareholders: Array<{ name: string; ownership_pct: number; paid_capital_try: number; equity_value_try: number }> =
+    s9?.shareholders ?? []
+  const distributableNet = Math.max(0, (s15?.net_profit_try ?? 0) - (s13?.total_distributed_try ?? 0))
 
-  const positions: ShareholderPosition[] = partners.map(p => {
-    const recv = (s10?.partner_receivables ?? []).find((r: any) =>
+  const positions: ShareholderPosition[] = shareholders.map(p => {
+    // section10/11 emit `partners` arrays keyed by partner_name with outstanding_try
+    // (NOT partner_receivables[].balance / partner_liabilities[].balance).
+    const recv = (s10?.partners ?? []).find((r: any) =>
       r.partner_name?.toLowerCase() === p.name?.toLowerCase()
-    )?.balance ?? 0
+    )?.outstanding_try ?? 0
 
-    const liab = (s11?.partner_liabilities ?? []).find((l: any) =>
+    const liab = (s11?.partners ?? []).find((l: any) =>
       l.partner_name?.toLowerCase() === p.name?.toLowerCase()
-    )?.balance ?? 0
+    )?.outstanding_try ?? 0
 
+    // section12 tranches expose remaining_try (NOT outstanding).
     const trancheExposure = (s12?.tranches ?? [])
       .filter((t: any) => t.partner_name?.toLowerCase() === p.name?.toLowerCase())
-      .reduce((a: number, t: any) => a + (t.outstanding ?? 0), 0)
+      .reduce((a: number, t: any) => a + (t.remaining_try ?? 0), 0)
 
-    const partnerDist = (s13?.per_partner ?? []).find((d: any) =>
-      d.name?.toLowerCase() === p.name?.toLowerCase()
-    )
-    const accumulatedDist = (partnerDist?.huzur_hakki ?? 0) + (partnerDist?.temettu ?? 0)
+    // Per-partner distribution attribution is NOT carried in the snapshot
+    // (section13.history records distribution EVENTS with no partner split), so a
+    // per-shareholder accumulated figure cannot be derived here — left at 0 rather
+    // than reading a `per_partner` array that never existed.
+    const accumulatedDist = 0
 
     const distRight = r2(distributableNet * (p.ownership_pct / 100))
-    const netPos = r2(p.equity_value + recv - liab + distRight)
+    const netPos = r2(p.equity_value_try + recv - liab + distRight)
 
     return {
       partner_name:              p.name,
       ownership_pct:             p.ownership_pct,
-      paid_capital:              p.equity_value,
+      paid_capital:              p.paid_capital_try,
       capital_injections_ytd:    0,
       partner_receivables:       recv,
       partner_liabilities:       liab,
@@ -1252,7 +1259,7 @@ export function buildShareholderPositions(sections: ReconciliationData, asOfDate
 
   return {
     positions,
-    total_equity:       s9?.total_equity ?? 0,
+    total_equity:       s9?.total_capital_try ?? 0,   // section9 emits total_capital_try
     total_distributable: distributableNet,
     as_of_date:         asOfDate,
   }
