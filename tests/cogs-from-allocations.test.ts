@@ -3,7 +3,27 @@
 // cost-source precedence (denormalized allocation cost → joined lot cost → 0) is
 // correctness-critical for YTD profit and tax figures.
 import { describe, it, expect } from 'vitest'
-import { computeCogsFromAllocations, allocationUnitCost } from '@/lib/finance/cogs'
+import { computeCogsFromAllocations, allocationUnitCost, cogsTruncationWarning } from '@/lib/finance/cogs'
+
+describe('cogsTruncationWarning', () => {
+  it('returns null when no step reached its cap', () => {
+    expect(cogsTruncationWarning('x', [
+      { name: 'sales', count: 10, cap: 5000 },
+      { name: 'allocations', count: 50, cap: 20000 },
+    ])).toBeNull()
+  })
+  it('flags the tripped step(s) when a count meets or exceeds its cap', () => {
+    const w = cogsTruncationWarning('income-statement', [
+      { name: 'sales', count: 5000, cap: 5000 },        // == cap counts as tripped
+      { name: 'sale_items', count: 9000, cap: 10000 },  // under
+      { name: 'allocations', count: 20001, cap: 20000 },
+    ])
+    expect(w).toContain('income-statement')
+    expect(w).toContain('sales=5000≥5000')
+    expect(w).toContain('allocations=20001≥20000')
+    expect(w).not.toContain('sale_items')
+  })
+})
 
 describe('allocationUnitCost (shared cost-source decision)', () => {
   it('prefers the denormalized allocation cost, then the lot, then 0', () => {

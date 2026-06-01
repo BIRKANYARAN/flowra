@@ -40,3 +40,22 @@ export function allocationUnitCost(r: CogsAllocationRow): number {
 export function computeCogsFromAllocations(rows: CogsAllocationRow[]): number {
   return rows.reduce((s, r) => s + Number(r.qty_allocated ?? 0) * allocationUnitCost(r), 0)
 }
+
+/**
+ * The COGS pipeline collects sales → sale_items → allocations, each step bounded
+ * by a `.limit()`. When a step returns rows up to its cap, COGS is SILENTLY
+ * UNDERSTATED (→ overstated profit/margin/tax). This returns a human-readable
+ * warning string naming the tripped step(s), or null when nothing was truncated,
+ * so callers can log it instead of failing silently. (The proper fix — DB-side
+ * join aggregation so no cap is needed — is credential-gated.)
+ */
+export function cogsTruncationWarning(
+  label: string,
+  steps: Array<{ name: string; count: number; cap: number }>,
+): string | null {
+  const tripped = steps.filter(s => s.count >= s.cap)
+  if (tripped.length === 0) return null
+  return `[${label}] COGS likely UNDERSTATED — row cap hit: ` +
+    tripped.map(s => `${s.name}=${s.count}≥${s.cap}`).join(', ') +
+    `. Profit/margin/tax figures derived from this COGS are affected.`
+}

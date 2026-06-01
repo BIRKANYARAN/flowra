@@ -28,7 +28,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { computeCogsFromAllocations } from '@/lib/finance/cogs'
+import { computeCogsFromAllocations, cogsTruncationWarning } from '@/lib/finance/cogs'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyClient = SupabaseClient<any>
@@ -265,6 +265,8 @@ export class IncomeStatementService {
     // COGS via sale_item_allocations
     let cogs = 0
     const saleIds = (saleIdsRes.data ?? []).map((r: { id: string }) => r.id)
+    let saleItemCount = 0
+    let allocCount = 0
     if (saleIds.length > 0) {
       const saleItemsRes = await this.supabase
         .from('sale_items')
@@ -274,6 +276,7 @@ export class IncomeStatementService {
         .limit(10000)
 
       const saleItemIds = (saleItemsRes.data ?? []).map((si: { id: string }) => si.id)
+      saleItemCount = saleItemIds.length
       if (saleItemIds.length > 0) {
         const allocRes = await this.supabase
           .from('sale_item_allocations')
@@ -282,10 +285,19 @@ export class IncomeStatementService {
           .in('sale_item_id', saleItemIds)
           .limit(20000)
 
+        allocCount = (allocRes.data ?? []).length
         // Same COGS cost-fallback as getCfoMetrics — uses the shared tested kernel.
         cogs = computeCogsFromAllocations(allocRes.data ?? [])
       }
     }
+
+    // No-silent-truncation: warn (don't fail) if any COGS step hit its row cap.
+    const truncWarn = cogsTruncationWarning('income-statement', [
+      { name: 'sales',       count: saleIds.length, cap: 5000 },
+      { name: 'sale_items',  count: saleItemCount,  cap: 10000 },
+      { name: 'allocations', count: allocCount,     cap: 20000 },
+    ])
+    if (truncWarn) console.warn(truncWarn)
 
     // Expenses: split into operating vs interest
     let operatingExpenses = 0
