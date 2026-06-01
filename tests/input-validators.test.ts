@@ -26,6 +26,20 @@ describe('validateImageBytes (magic-byte enforcement)', () => {
     try { validateImageBytes(new ArrayBuffer(2 * 1024 * 1024 + 1), 'image/png'); throw new Error('should have thrown') }
     catch (e) { expect((e as StorageError).code).toBe('FILE_TOO_LARGE') }
   })
+  it('rejects scriptable SVG as stored-XSS (script / onload / javascript:)', () => {
+    const cases = [
+      '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>',
+      '<svg onload="alert(1)" xmlns="http://www.w3.org/2000/svg"></svg>',
+      '<svg xmlns="http://www.w3.org/2000/svg"><a href="javascript:alert(1)">x</a></svg>',
+      '<svg xmlns="http://www.w3.org/2000/svg"><foreignObject><body>x</body></foreignObject></svg>',
+    ]
+    for (const svg of cases) {
+      const buf = new TextEncoder().encode(svg).buffer
+      try { validateImageBytes(buf, 'image/svg+xml'); throw new Error('should have thrown for: ' + svg) }
+      catch (e) { expect((e as StorageError).code).toBe('UNSAFE_SVG') }
+    }
+  })
+
   it('accepts valid SVG text but rejects non-SVG text claiming to be SVG', () => {
     const svg = new TextEncoder().encode('<svg xmlns="http://www.w3.org/2000/svg"></svg>').buffer
     expect(() => validateImageBytes(svg, 'image/svg+xml')).not.toThrow()

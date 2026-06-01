@@ -45,13 +45,31 @@ export function validateImageBytes(buffer: ArrayBuffer, declaredMime: string): v
 
   const bytes = new Uint8Array(buffer.slice(0, 12))
 
-  // SVG is text — no magic bytes, but safe (rendered as image by browser)
+  // SVG is text/XML. It is stored in a PUBLIC bucket and served as
+  // image/svg+xml, so a malicious SVG with embedded <script>, event handlers, or
+  // javascript: URLs executes as STORED XSS when opened directly. Validate the
+  // structure AND reject anything scriptable (sanitize-by-rejection).
   if (declaredMime === 'image/svg+xml') {
-    // Basic SVG check: starts with < after optional BOM/whitespace
-    const text = new TextDecoder().decode(buffer.slice(0, 100))
+    const text = new TextDecoder().decode(buffer)
     const stripped = text.trimStart().replace(/^<\?xml[^>]*>/, '').trimStart()
     if (!stripped.startsWith('<svg') && !stripped.startsWith('<!DOCTYPE svg')) {
       throw new StorageError('Geçersiz SVG dosyası', 'INVALID_SVG')
+    }
+    const lower = text.toLowerCase()
+    const DANGEROUS: RegExp[] = [
+      /<script[\s>]/,                                   // <script>
+      /<foreignobject[\s>]/,                            // embeds arbitrary HTML
+      /<!entity/,                                       // XXE / entity expansion
+      /\son\w+\s*=/,                                    // onload= onerror= onclick= ...
+      /(?:href|xlink:href)\s*=\s*["']?\s*javascript:/,  // javascript: links
+      /url\(\s*["']?\s*javascript:/,                    // javascript: in url()
+      /<(?:iframe|embed|object|audio|video|set|animate)[\s>]/, // active/scriptable elements
+    ]
+    if (DANGEROUS.some(re => re.test(lower))) {
+      throw new StorageError(
+        'SVG dosyası güvenlik nedeniyle reddedildi (betik veya olay işleyici içeriyor).',
+        'UNSAFE_SVG',
+      )
     }
     return
   }
