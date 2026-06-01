@@ -37,6 +37,8 @@ import { fmtTRY, fmtPct, fmtDate, fmtCompact, fmtDateMed } from '@/lib/format'
 import { makeRequestContext }    from '@/lib/logger'
 import { computeHealthScore } from './_cfo/healthScore'
 import { GlMutabakatRaporu } from './_cfo/GlMutabakatRaporu'
+import { CeyreklikAnalitik } from './_cfo/CeyreklikAnalitik'
+import { GlToolsAndReports } from './_cfo/GlToolsAndReports'
 import type { CfoMetrics }       from '@/lib/finance/cfo-metrics'
 import type { QuarterResult }    from '@/lib/finance/financial-core'
 import type { AccountingPeriod, PeriodCloseChecklist } from '@/types/dto'
@@ -709,116 +711,7 @@ export async function CFOTab({ userId, companyId }: Props) {
         </Link>
       </div>
 
-      {/* Quarterly Performance section */}
-      {quarterlyReport && quarterlyReport.quarters.length > 0 && (() => {
-        const qs  = quarterlyReport.quarters
-        const ytd = quarterlyReport.ytd
-        const currentYear = quarterlyReport.year
-        function fmtPctQ(r: number): string {
-          return `%${(r * 100).toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}`
-        }
-        function deltaQ(curr: number, prev: number) {
-          if (prev === 0) return { text: '—', color: 'text-[#94a3b8]' }
-          const p = ((curr - prev) / Math.abs(prev)) * 100
-          return { text: `${p >= 0 ? '+' : ''}${p.toFixed(1)}%`, color: p >= 0 ? 'text-pos-text' : 'text-neg' }
-        }
-        const addDaysQ = (dateStr: string, n: number) => { const d = new Date(dateStr); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10) }
-        const fmtDateQ = fmtDateMed
-
-        return (
-          <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
-            <div className="px-4 py-3 border-b border-[#e2e8f0] flex items-center justify-between">
-              <div>
-                <h2 className="text-xs font-black text-[#0f172a]">Çeyreklik Analitik — {currentYear}</h2>
-                <p className="text-[10px] text-[#94a3b8] mt-0.5">YTD P&L · Çeyreklik performans · Geçici vergi takvimi</p>
-              </div>
-              <div className="grid grid-cols-2 gap-2 text-right">
-                <div>
-                  <div className="text-[9px] font-bold uppercase tracking-widest text-[#94a3b8]">YTD Ciro</div>
-                  <div className="text-xs font-black text-[#0f172a] tabular-nums">{fmtTRY(ytd.revenue)}</div>
-                </div>
-                <div>
-                  <div className="text-[9px] font-bold uppercase tracking-widest text-[#94a3b8]">Net Kâr</div>
-                  <div className={`text-xs font-black tabular-nums ${ytd.net_after_tax >= 0 ? 'text-pos-text' : 'text-neg'}`}>{fmtTRY(ytd.net_after_tax)}</div>
-                </div>
-              </div>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs min-w-[500px]">
-                <thead>
-                  <tr className="bg-[#f8fafc] border-b border-[#e2e8f0]">
-                    <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Çeyrek</th>
-                    <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ciro</th>
-                    <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-brand-light">Brüt Kâr</th>
-                    <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-pos">Net Kâr</th>
-                    <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Brüt Marj</th>
-                    <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-warn">KV Matrahı</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#f1f5f9]">
-                  {qs.map((q: QuarterResult, i: number) => {
-                    const prev = i > 0 ? qs[i - 1] : null
-                    const revDelta = prev && prev.revenue > 0 ? deltaQ(q.revenue, prev.revenue) : null
-                    const isFuture = !q.is_past_quarter && q.period.from > today
-                    return (
-                      <tr key={q.label} className={`hover:bg-[#f8fafc]/60 ${isFuture ? 'opacity-40' : ''}`}>
-                        <td className="px-4 py-2.5 font-black text-[#0f172a] text-xs">{q.label}</td>
-                        <td className="px-4 py-2.5 text-right">
-                          <div className="font-mono font-bold text-[#0f172a]">{fmtTRY(q.revenue)}</div>
-                          {revDelta && <div className={`text-[10px] font-semibold ${revDelta.color}`}>{revDelta.text}</div>}
-                        </td>
-                        <td className={`px-4 py-2.5 text-right font-mono font-bold ${q.gross_profit >= 0 ? 'text-brand' : 'text-neg'}`}>{fmtTRY(q.gross_profit)}</td>
-                        <td className={`px-4 py-2.5 text-right font-mono font-bold ${q.net_profit >= 0 ? 'text-pos-text' : 'text-neg'}`}>{fmtTRY(q.net_profit)}</td>
-                        <td className={`px-4 py-2.5 text-right font-mono ${q.gross_margin >= 0.3 ? 'text-pos-text' : q.gross_margin >= 0.1 ? 'text-warn-text' : 'text-neg'}`}>
-                          {q.revenue > 0 ? fmtPctQ(q.gross_margin) : '—'}
-                        </td>
-                        <td className={`px-4 py-2.5 text-right font-mono ${q.matrah > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>{q.matrah > 0 ? fmtTRY(q.matrah) : '—'}</td>
-                      </tr>
-                    )
-                  })}
-                  <tr className="bg-brand-subtle/40 font-black border-t-2 border-brand/10">
-                    <td className="px-4 py-2.5 text-brand font-black text-xs">YTD Toplam</td>
-                    <td className="px-4 py-2.5 text-right font-mono font-black text-[#0f172a]">{fmtTRY(ytd.revenue)}</td>
-                    <td className={`px-4 py-2.5 text-right font-mono font-black ${ytd.gross_profit >= 0 ? 'text-brand' : 'text-neg'}`}>{fmtTRY(ytd.gross_profit)}</td>
-                    <td className={`px-4 py-2.5 text-right font-mono font-black ${ytd.net_profit >= 0 ? 'text-pos-text' : 'text-neg'}`}>{fmtTRY(ytd.net_profit)}</td>
-                    <td className="px-4 py-2.5 text-right font-mono text-[#64748b]">{ytd.revenue > 0 ? fmtPctQ(ytd.gross_profit / ytd.revenue) : '—'}</td>
-                    <td className={`px-4 py-2.5 text-right font-mono font-black ${ytd.matrah > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>{ytd.matrah > 0 ? fmtTRY(ytd.matrah) : '—'}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            {/* Gecici vergi schedule if any */}
-            {qs.some((q: QuarterResult) => q.gecici_vergi > 0) && (
-              <div className="border-t border-[#e2e8f0]">
-                <div className="px-4 py-3 flex items-center justify-between">
-                  <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Geçici Vergi Takvimi {currentYear}</div>
-                  <span className="text-xs font-bold text-warn-text bg-warn-light border border-warn-light px-2 py-0.5 rounded">Toplam {fmtTRY(ytd.total_gecici)}</span>
-                </div>
-                <div className="divide-y divide-[#f1f5f9]">
-                  {qs.filter((q: QuarterResult) => q.gecici_vergi > 0 && q.gecici_due_date).map((q: QuarterResult) => {
-                    if (!q.gecici_due_date) return null
-                    const isPast   = q.gecici_due_date <= today
-                    const isUrgent = !isPast && q.gecici_due_date <= addDaysQ(today, 30)
-                    return (
-                      <div key={q.label} className={`px-4 py-2.5 flex items-center justify-between gap-4 ${isUrgent ? 'bg-warn-light/40' : ''}`}>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-[#1e293b]">{q.label} Geçici Vergi</span>
-                            {isPast && <span className="text-[9px] bg-[#f1f5f9] text-[#94a3b8] px-1.5 py-0.5 rounded">Geçti</span>}
-                            {isUrgent && !isPast && <span className="text-[9px] bg-warn-light text-warn-text font-bold px-1.5 py-0.5 rounded">30 gün içinde</span>}
-                          </div>
-                          <div className="text-[10px] text-[#94a3b8] mt-0.5">Son ödeme: {fmtDateQ(q.gecici_due_date)} · Matrah: {fmtTRY(q.matrah)}</div>
-                        </div>
-                        <div className={`text-xs font-black tabular-nums ${isPast ? 'text-[#94a3b8]' : isUrgent ? 'text-warn-text' : 'text-warn-text'}`}>{fmtTRY(q.gecici_vergi)}</div>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
-        )
-      })()}
+      <CeyreklikAnalitik quarterlyReport={quarterlyReport} today={today} />
 
       {/* Çalışma Sermayesi — Working Capital Intelligence */}
       <WorkingCapitalSection
@@ -885,64 +778,7 @@ export async function CFOTab({ userId, companyId }: Props) {
         )
       })()}
 
-      {/* GL Tools */}
-      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
-        <div className="px-4 py-2.5 border-b border-[#e2e8f0]">
-          <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">GL Araçları</span>
-        </div>
-        <div className="grid grid-cols-5 divide-x divide-[#f1f5f9]">
-          {[
-            { href: '/dashboard/cfo/trial-balance',        title: 'Mizan',              desc: 'Hesap kodları ve bakiyeler',        tag: 'TB' },
-            { href: '/dashboard/cfo/period-close',         title: 'Dönem Kapanışı',     desc: 'Kapat ve kilitle',                  tag: 'PC' },
-            { href: '/dashboard/cfo/journal-entries',      title: 'Journal',            desc: 'Çift taraflı muhasebe denetim izi', tag: 'JE' },
-            { href: '/dashboard/cfo/reconciliation',       title: 'GL Mutabakat',       desc: 'GL vs operasyonel tablo',           tag: 'RC' },
-            { href: '/dashboard/cfo/bank-reconciliation',  title: 'Banka Mutabakat',    desc: 'Banka ekstresi eşleştirme',         tag: 'BK' },
-          ].map(item => (
-            <Link key={item.href} href={item.href}
-              className="px-4 py-3 hover:bg-[#f8fafc] transition-colors">
-              <div className="flex items-center gap-2 mb-0.5">
-                <span className="text-[0.65rem] font-black text-[#94a3b8] bg-[#f1f5f9] px-1.5 py-0.5 rounded tabular-nums">{item.tag}</span>
-                <span className="text-xs font-bold text-[#0f172a]">{item.title}</span>
-              </div>
-              <div className="text-[0.65rem] text-[#94a3b8]">{item.desc}</div>
-            </Link>
-          ))}
-        </div>
-      </div>
-
-      {/* Financial Reports */}
-      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
-        <div className="px-4 py-2.5 border-b border-[#e2e8f0]">
-          <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Finansal Raporlar</span>
-        </div>
-        <div className="grid grid-cols-4 divide-x divide-[#f1f5f9]">
-          {[
-            { href: '/dashboard/reports/income-statement', title: 'Gelir Tablosu',      desc: 'P&L — Brüt kâr, net kâr' },
-            { href: '/dashboard/reports/balance-sheet',    title: 'Bilanço',            desc: 'Aktif = Pasif + Özkaynak' },
-            { href: '/dashboard/reports/cash-flow',        title: 'Nakit Akışı',        desc: 'Faaliyet / Yatırım / Finansman' },
-            { href: '/dashboard/reports/executive-summary',title: 'Yönetici Özeti',     desc: '1 sayfa PDF — CEO için' },
-          ].map(item => (
-            <Link key={item.href} href={item.href}
-              className="px-4 py-3 hover:bg-[#f8fafc] transition-colors">
-              <div className="text-xs font-bold text-[#0f172a] mb-0.5">{item.title}</div>
-              <div className="text-[0.65rem] text-[#94a3b8]">{item.desc}</div>
-            </Link>
-          ))}
-        </div>
-        <div className="grid grid-cols-3 divide-x divide-[#f1f5f9] border-t border-[#f1f5f9]">
-          {[
-            { href: '/dashboard/cfo/tax/kdv',       title: 'KDV Özeti',          desc: 'Hesaplanan − İndirilecek' },
-            { href: '/dashboard/cfo/tax/corporate', title: 'Kurumlar Vergisi',   desc: 'Geçici vergi takvimi' },
-            { href: '/dashboard/insights',           title: 'AI Analizler',       desc: 'Anomali ve kopya gider tespiti' },
-          ].map(item => (
-            <Link key={item.href} href={item.href}
-              className="px-4 py-3 hover:bg-[#f8fafc] transition-colors">
-              <div className="text-xs font-bold text-[#0f172a] mb-0.5">{item.title}</div>
-              <div className="text-[0.65rem] text-[#94a3b8]">{item.desc}</div>
-            </Link>
-          ))}
-        </div>
-      </div>
+      <GlToolsAndReports />
 
     </div>
   )
