@@ -15,7 +15,6 @@ import { NextRequest, NextResponse }    from 'next/server'
 import { requireAdmin }                 from '@/lib/require-role'
 import { AppError }                     from '@/types/errors'
 import { resolveApiAuth }               from '@/lib/api-auth'
-import { verifyAuditChain }             from '@/lib/services/audit-chain.service'
 import { getSystemAdminClient }         from '@/lib/admin-db'
 
 export async function GET(req: NextRequest) {
@@ -38,11 +37,24 @@ export async function GET(req: NextRequest) {
     const from  = url.searchParams.get('from') ?? dfl30
     const to    = url.searchParams.get('to')   ?? today
 
-    // verifyAuditChain needs cross-user access to audit_logs (audit_logs RLS is user_id=auth.uid()
-    // so we need the service-role client to read all company rows, same pattern as /api/admin/audit)
+    // Verify against the AUTHORITATIVE DB chain: a BEFORE INSERT trigger stamps
+    // content_hash/prev_hash and the verify_audit_chain RPC recomputes the SHA-256
+    // chain in-DB (migration 20260601000001). This is the single source of truth —
+    // a JS recompute would diverge on JSON/timestamp serialization.
     const adminClient = getSystemAdminClient()
-    const result = await verifyAuditChain(companyId, from, to, adminClient)
-
+    const { data, error } = await adminClient.rpc('verify_audit_chain', { p_company_id: companyId, p_from: from, p_to: to })
+    if (error) {
+      return NextResponse.json({ is_supported: false, ok: false, total_checked: 0, broken_links: 0, from, to, error: error.message })
+    }
+    const verRows = (data ?? []) as Array<{ row_id: string; created_at: string; has_hash: boolean; chain_intact: boolean }>
+    const broken = verRows.filter(r => !r.chain_intact)
+    const result = {
+      is_supported:  verRows.length === 0 || verRows.some(r => r.has_hash),
+      total_checked: verRows.length,
+      broken_links:  broken.length,
+      first_broken:  broken[0] ? { id: broken[0].row_id, created_at: broken[0].created_at } : undefined,
+      ok:            broken.length === 0,
+    }
     return NextResponse.json({ ...result, from, to })
   } catch (err) {
     console.error('[admin/audit/chain GET]', err instanceof Error ? err.message : String(err))
