@@ -377,8 +377,14 @@ describe('flowra_install.sql — data integrity checks', () => {
     expect(sql.toLowerCase()).not.toContain('drop schema')
   })
 
-  it('does not contain TRUNCATE (any form)', () => {
-    expect(sql.toLowerCase()).not.toContain('truncate')
+  it('does not contain a TRUNCATE statement (comments + REVOKE ... TRUNCATE ON ... are allowed)', () => {
+    // The guard's intent is "no destructive TRUNCATE *statement*". Evaluate actual
+    // SQL only: strip `--` line comments, then strip the privilege form
+    // `TRUNCATE ON <tables>` (used to REVOKE anon's TRUNCATE privilege — the
+    // opposite of dangerous). Any remaining `truncate` is a real statement → fail.
+    const sqlOnly = sql.toLowerCase().split('\n').map(l => l.replace(/--.*$/, '')).join('\n')
+    const stripped = sqlOnly.replace(/truncate(?=\s+on\b)/g, '')
+    expect(stripped).not.toContain('truncate')
   })
 
   it('does not contain DROP TABLE', () => {
