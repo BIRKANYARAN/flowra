@@ -40,7 +40,6 @@ type AllowedAdminTable =
 type AllowedSystemAdminTable =
   | 'fx_rates'
   | 'policy_rates'
-  | 'event_outbox'
   | 'proformas'
   | 'proforma_items'
   | 'user_settings'
@@ -171,8 +170,8 @@ export function safeSystemQuery(table: AllowedSystemAdminTable) {
 
 /**
  * Returns the service-role client only for RPCs that are themselves bounded by
- * database logic (for example claim_event_batch). Prefer safeAdminQuery() or
- * safeSystemQuery() for normal table access.
+ * database logic (for example the scheduled-job worker RPCs). Prefer
+ * safeAdminQuery() or safeSystemQuery() for normal table access.
  */
 export function getSystemAdminClient() {
   return createAdminClient()

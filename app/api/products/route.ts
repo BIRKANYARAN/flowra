@@ -93,12 +93,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const { EventService } = await import('@/lib/services/event.service')
-    await EventService.emit(supabase, uid, 'product.created', {
-      product_id: data.id,
-      product_name: payload.name,
-    })
-
     await logger.info(ctx, 'product_create:success', { id: data.id })
     return NextResponse.json({ id: data.id }, { status: 201, headers: { [REQUEST_ID_HEADER]: ctx.requestId } })
 

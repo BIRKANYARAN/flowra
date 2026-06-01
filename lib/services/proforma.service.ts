@@ -438,15 +438,6 @@ export class ProformaService {
 
     await supabase.from('proformas').update(updatePayload).eq('id', proformaId)
 
-    if (newStatus === 'sent') {
-      try {
-        const { EventService } = await import('@/lib/services/event.service')
-        await EventService.emit(supabase, userId, 'proforma.sent', {
-          proforma_id: proformaId,
-        })
-      } catch { /* never crash on event emit failure */ }
-    }
-
     await logger.info(ctx, 'proforma_status:updated', { id: proformaId, from: prf.status, to: newStatus })
     return { id: proformaId, status: newStatus }
   }

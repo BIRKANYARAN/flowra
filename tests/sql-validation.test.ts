@@ -11,21 +11,6 @@ import { join } from 'path'
 // flowra_install.sql is the base schema only — later phase features live in the full file.
 const sql = readFileSync(join(__dirname, '..', 'supabase', 'FLOWRA_FULL_INSTALL.sql'), 'utf-8')
 
-describe('flowra_install.sql — event_outbox atomic claim', () => {
-  it('contains claim_event_batch function (schema-qualified)', () => {
-    // Function is created in public schema: public.claim_event_batch
-    expect(sql).toContain('create or replace function public.claim_event_batch')
-  })
-
-  it('uses FOR UPDATE SKIP LOCKED in claim_event_batch', () => {
-    // Function definition starts after its name comment
-    const fnStart = sql.indexOf('create or replace function public.claim_event_batch')
-    const fnEnd   = sql.indexOf('$$;', fnStart)
-    const fnBody  = sql.slice(fnStart, fnEnd)
-    expect(fnBody).toContain('for update skip locked')
-  })
-})
-
 describe('flowra_install.sql — zero-cost lot validation', () => {
   it('checks for zero-cost lots before FIFO allocation', () => {
     expect(sql).toContain("raise exception 'ZERO_COST_LOT product=% lot=%'")
@@ -456,18 +441,6 @@ describe('flowra_install.sql — file is non-trivial', () => {
 
   it('file contains SQL comments', () => {
     expect(sql).toContain('--')
-  })
-})
-
-describe('flowra_install.sql — event_outbox table', () => {
-  it('contains event_outbox table', () => {
-    expect(sql).toContain('event_outbox')
-  })
-
-  it('event_outbox has a status-like field', () => {
-    expect(sql).toContain('event_outbox')
-    // This table should use the FOR UPDATE SKIP LOCKED claim pattern
-    expect(sql).toContain('claim_event_batch')
   })
 })
 

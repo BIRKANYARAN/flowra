@@ -471,15 +471,6 @@ export class StockService {
         product_id: input.product_id, qty_before: committedQtyBefore, qty_after: committedQtyAfter, type: input.reference_type,
       })
 
-      try {
-        const { EventService } = await import('@/lib/services/event.service')
-        await EventService.emit(supabase, userId, 'stock.adjusted', {
-          product_id: input.product_id,
-          delta: input.qty_change,
-          reference_type: input.reference_type,
-        })
-      } catch { /* never crash on event emit failure */ }
-
       logAudit({
         userId,
         companyId,

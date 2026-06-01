@@ -2076,20 +2076,6 @@ create table if not exists idempotency_keys (
   constraint uq_idempotency_user_key unique (user_id, idempotency_key)
 );
 
--- event_outbox
-create table if not exists event_outbox (
-  id           uuid        primary key default gen_random_uuid(),
-  company_id   uuid        references companies(id) on delete cascade,
-  event_type   text        not null,
-  payload      jsonb       not null default '{}',
-  processed    boolean     not null default false,
-  claimed_by   text,
-  claimed_at   timestamptz,
-  processed_at timestamptz,
-  error        text,
-  created_at   timestamptz not null default now()
-);
-
 -- jobs
 create table if not exists jobs (
   id           uuid        primary key default gen_random_uuid(),
@@ -2107,22 +2093,6 @@ create table if not exists jobs (
   result       jsonb,
   created_at   timestamptz not null default now(),
   updated_at   timestamptz not null default now()
-);
-
--- monthly_metrics
-create table if not exists monthly_metrics (
-  id               uuid        primary key default gen_random_uuid(),
-  company_id       uuid        not null references companies(id) on delete cascade,
-  year             integer     not null,
-  month            integer     not null,
-  revenue          numeric(14,2) not null default 0,
-  expense          numeric(14,2) not null default 0,
-  collections      numeric(14,2) not null default 0,
-  gross_profit     numeric(14,2) not null default 0,
-  sale_count       integer     not null default 0,
-  customer_count   integer     not null default 0,
-  updated_at       timestamptz not null default now(),
-  constraint uq_monthly_metrics unique (company_id, year, month)
 );
 
 -- audit_log
@@ -2368,12 +2338,6 @@ exception when duplicate_table or duplicate_object then null;
 end $$;
 
 do $$ begin
-  alter table monthly_metrics
-    add constraint uq_monthly_metrics unique (company_id, year, month);
-exception when duplicate_table or duplicate_object then null;
-end $$;
-
-do $$ begin
   alter table company_members
     add constraint chk_member_role check (role in ('admin','manager','viewer'));
 exception when duplicate_table or duplicate_object then null;
@@ -2497,9 +2461,7 @@ create index if not exists idx_tasks_due_date             on tasks(company_id, d
 create index if not exists idx_tasks_status               on tasks(company_id, status) where deleted_at is null;
 create index if not exists idx_idempotency_user_key       on idempotency_keys(user_id, idempotency_key);
 create index if not exists idx_idempotency_expires        on idempotency_keys(expires_at);
-create index if not exists idx_event_outbox_unprocessed   on event_outbox(created_at) where processed = false;
 create index if not exists idx_jobs_status_run_at         on jobs(status, run_at) where status in ('pending','running');
-create index if not exists idx_monthly_metrics_company_ym on monthly_metrics(company_id, year, month);
 create index if not exists idx_audit_log_company_id       on audit_log(company_id, created_at desc);
 create index if not exists idx_audit_log_user_id          on audit_log(user_id, created_at desc);
 create index if not exists idx_interest_rates_company     on interest_rates(company_id, currency);
@@ -2528,9 +2490,7 @@ alter table sale_item_allocations  enable row level security;
 alter table collections            enable row level security;
 alter table tasks                  enable row level security;
 alter table idempotency_keys       enable row level security;
-alter table event_outbox           enable row level security;
 alter table jobs                   enable row level security;
-alter table monthly_metrics        enable row level security;
 alter table audit_log              enable row level security;
 alter table interest_rates         enable row level security;
 
@@ -2651,20 +2611,10 @@ drop policy if exists tasks_member on tasks;
 create policy tasks_member on tasks for all
   using (is_company_member(company_id));
 
--- event_outbox
-drop policy if exists event_outbox_member on event_outbox;
-create policy event_outbox_member on event_outbox for all
-  using (company_id is null or is_company_member(company_id));
-
 -- jobs
 drop policy if exists jobs_member on jobs;
 create policy jobs_member on jobs for all
   using (company_id is null or is_company_member(company_id));
-
--- monthly_metrics
-drop policy if exists monthly_metrics_member on monthly_metrics;
-create policy monthly_metrics_member on monthly_metrics for all
-  using (is_company_member(company_id));
 
 -- audit_log (admin read-only)
 drop policy if exists audit_log_admin on audit_log;
@@ -2979,29 +2929,6 @@ begin
 end $$;
 
 
--- J4: claim_event_batch — FOR UPDATE SKIP LOCKED concurrent batch claiming
-create or replace function public.claim_event_batch(
-  p_worker_id  text,
-  p_batch_size integer default 10
-)
-returns setof event_outbox language plpgsql security definer set search_path = public
-as $$
-begin
-  return query
-  update event_outbox
-  set claimed_by = p_worker_id, claimed_at = now()
-  where id in (
-    select id from event_outbox
-    where processed = false
-      and (claimed_by is null or claimed_at < now() - interval '5 minutes')
-    order by created_at
-    limit p_batch_size
-    for update skip locked
-  )
-  returning *;
-end $$;
-
-
 -- J5: purge_expired_idempotency_keys
 create or replace function public.purge_expired_idempotency_keys()
 returns integer language plpgsql security definer set search_path = public
@@ -3011,41 +2938,6 @@ begin
   delete from idempotency_keys where expires_at < now();
   get diagnostics v_count = row_count;
   return v_count;
-end $$;
-
-
--- J6: upsert_monthly_metrics
-create or replace function public.upsert_monthly_metrics(
-  p_company_id     uuid,
-  p_year           integer,
-  p_month          integer,
-  p_revenue        numeric default null,
-  p_expense        numeric default null,
-  p_collections    numeric default null,
-  p_gross_profit   numeric default null,
-  p_sale_count     integer default null,
-  p_customer_count integer default null
-)
-returns void language plpgsql security definer set search_path = public
-as $$
-begin
-  insert into monthly_metrics (
-    company_id, year, month,
-    revenue, expense, collections, gross_profit, sale_count, customer_count
-  )
-  values (
-    p_company_id, p_year, p_month,
-    coalesce(p_revenue, 0), coalesce(p_expense, 0), coalesce(p_collections, 0),
-    coalesce(p_gross_profit, 0), coalesce(p_sale_count, 0), coalesce(p_customer_count, 0)
-  )
-  on conflict (company_id, year, month) do update set
-    revenue        = coalesce(p_revenue,        monthly_metrics.revenue),
-    expense        = coalesce(p_expense,        monthly_metrics.expense),
-    collections    = coalesce(p_collections,    monthly_metrics.collections),
-    gross_profit   = coalesce(p_gross_profit,   monthly_metrics.gross_profit),
-    sale_count     = coalesce(p_sale_count,     monthly_metrics.sale_count),
-    customer_count = coalesce(p_customer_count, monthly_metrics.customer_count),
-    updated_at     = now();
 end $$;
 
 
@@ -3174,9 +3066,7 @@ end $$;
 revoke execute on function public.bootstrap_user_company(uuid, uuid, text)       from public;
 revoke execute on function public.create_proforma_atomic(uuid, uuid, uuid, text, text, integer, text, text, numeric, numeric, numeric, numeric, text, text, numeric, jsonb, jsonb, jsonb, uuid) from public;
 revoke execute on function public.convert_proforma_to_sale(uuid, uuid, date, date, uuid, text, text) from public;
-revoke execute on function public.claim_event_batch(text, integer)               from public;
 revoke execute on function public.purge_expired_idempotency_keys()               from public;
-revoke execute on function public.upsert_monthly_metrics(uuid, integer, integer, numeric, numeric, numeric, numeric, integer, integer) from public;
 revoke execute on function public.restore_user_data(uuid, uuid, jsonb, jsonb, jsonb, jsonb, jsonb, jsonb, jsonb, jsonb, jsonb, jsonb) from public;
 revoke execute on function public.enqueue_job(text, jsonb, uuid, timestamptz)   from public;
 revoke execute on function public.claim_next_job(text)                           from public;
@@ -3194,9 +3084,7 @@ grant execute on function public.is_company_member(uuid)                        
 grant execute on function public.is_company_admin(uuid)                           to authenticated;
 
 -- service_role for server-side workers
-grant execute on function public.claim_event_batch(text, integer)                to service_role;
 grant execute on function public.purge_expired_idempotency_keys()                to service_role;
-grant execute on function public.upsert_monthly_metrics(uuid, integer, integer, numeric, numeric, numeric, numeric, integer, integer) to service_role;
 grant execute on function public.enqueue_job(text, jsonb, uuid, timestamptz)     to service_role;
 grant execute on function public.claim_next_job(text)                            to service_role;
 grant execute on function public.complete_job(uuid, jsonb)                       to service_role;

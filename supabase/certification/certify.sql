@@ -24,8 +24,6 @@ ORDER BY 1;
 -- ── 3. RPC inventory: required functions must EXIST with expected arity ───────
 WITH expected(fn, args) AS (VALUES
   ('convert_proforma_to_sale', 7),
-  ('claim_event_batch', 2),
-  ('upsert_monthly_metrics', 9),
   ('claim_next_job', 1),
   ('fail_job', 2))
 SELECT 'rpc:'||e.fn AS check,
@@ -64,22 +62,6 @@ FROM pg_extension WHERE extname='pg_cron';
 -- job_runs backlog (idempotency purge worker)
 SELECT 'job_runs_recent', CASE WHEN to_regclass('public.job_runs') IS NULL THEN 'WARN' ELSE 'PASS' END,
        COALESCE((SELECT 'last run '||max(created_at)::text FROM job_runs), 'job_runs table absent or empty');
-
--- ── 9. Event outbox: backlog + processor schema sanity ───────────────────────
-SELECT 'event_outbox_backlog',
-       CASE WHEN to_regclass('public.event_outbox') IS NULL THEN 'WARN'
-            WHEN (SELECT count(*) FROM event_outbox WHERE processed=false) > 0 THEN 'FAIL' ELSE 'PASS' END,
-       CASE WHEN to_regclass('public.event_outbox') IS NULL THEN 'event_outbox table absent'
-            ELSE COALESCE((SELECT count(*)::text FROM event_outbox WHERE processed=false),'0')||' undrained events' END;
--- Confirm event_outbox has the columns the processor must use (processed/claimed_by/error)
-SELECT 'event_outbox_schema',
-       CASE WHEN bool_and(present) THEN 'PASS' ELSE 'FAIL' END,
-       string_agg(col||'='||present::text, ' ') AS detail
-FROM (
-  SELECT col, EXISTS(SELECT 1 FROM information_schema.columns
-                     WHERE table_name='event_outbox' AND column_name=col) AS present
-  FROM (VALUES ('company_id'),('processed'),('claimed_by'),('error'),('retry_count')) v(col)
-) s;
 
 -- ── 13. Audit chain vs PRODUCTION data — recompute & count broken links ──────
 -- Mirrors lib/services/audit-chain.service.ts: content_hash =

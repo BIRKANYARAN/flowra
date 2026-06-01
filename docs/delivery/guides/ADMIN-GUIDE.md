@@ -29,6 +29,6 @@ governance snapshots. They require the `CRON_SECRET` env var (Bearer auth). Veri
 the Vercel dashboard that all four show successful runs.
 
 ## Known operational notes
-- The event-outbox worker is not yet scheduled and has a pending RPC-signature
-  alignment (see `02-CREDENTIAL-GATED-AND-DECISIONS.md`). Until then, derived monthly
-  metrics are computed on read, not via the outbox.
+- Monthly/derived metrics are computed **on read** (on demand), by design — there is
+  no background event/outbox aggregation. (The unused event-outbox subsystem was
+  removed; the scheduled **job** workers under `/api/cron/*` are unaffected.)

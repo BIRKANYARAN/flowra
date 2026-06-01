@@ -310,15 +310,6 @@ export class SaleService {
         })
       }
 
-      try {
-        const { EventService } = await import('@/lib/services/event.service')
-        await EventService.emit(supabase, userId, 'sale.created', {
-          sale_id,
-          proforma_id: input.proforma_id,
-          sale_date: input.sale_date ?? today,
-        })
-      } catch { /* never crash on event emit failure */ }
-
       logAudit({
         userId,
         companyId,

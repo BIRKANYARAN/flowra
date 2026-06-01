@@ -18,15 +18,14 @@ Each is precisely specified so it can be applied directly when unblocked.
    rejects cross-tenant proformas), but the RPC itself should add
    `is_company_member(auth.uid(), <proforma.company_id>)` and stop trusting p_user_id.
 
-3. **Event-outbox + job-runner RPC signature alignment.** The outbox is currently
-   inert (not scheduled) AND its code↔RPC signatures mismatch the deployed schema:
-   - event.service.ts claim_event_batch({p_batch_size}) vs DB (p_worker_id, p_batch_size)
-   - upsert_monthly_metrics param names/types differ
-   - worker.ts claim_next_job()/fail_job() arg mismatch
-   These need DB verification of the deployed RPC signatures before the code is
-   aligned and /api/events/process + /api/jobs/run are added to vercel.json crons.
-   Making blind code changes without confirming the live signatures risks turning an
-   inert subsystem into an actively-erroring one — deferred until DB access.
+3. **Event-outbox — RESOLVED by removal (migration `20260601000003`).** The outbox
+   was dead (never scheduled), redundant (metrics computed on-read), and its code↔RPC
+   signatures mismatched the deployed schema. Owner decision: remove rather than
+   complete. event_outbox/monthly_metrics tables + claim_event_batch/upsert_monthly_metrics
+   RPCs dropped; EventService + /api/events/process + the 4 emit call sites deleted.
+   The SEPARATE, live **job system** (lib/jobs, /api/jobs/run, claim_next_job/fail_job,
+   job_runs) is untouched — if its worker is ever scheduled, align worker.ts to the
+   live job-RPC signatures first.
 
 4. **Behavioral RLS tests.** Cross-company isolation is only asserted via SQL-text
    grep today. A real test needs a seeded test database to prove a cross-tenant
