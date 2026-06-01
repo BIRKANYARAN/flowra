@@ -32,6 +32,7 @@ import {
   computeTaxMetrics,
   computePartnerMetrics,
   computeStockMetrics,
+  computeCogsFromAllocations,
   computeRunwayForecast,
   BURN_EXPENSE_TYPES,
   type CfoMetrics,
@@ -466,29 +467,42 @@ export async function getCfoMetrics(
 
   // Phase-2 COGS — YTD-filtered via 2-step join: sale_items → sales (GAP 15 fix).
   // Step 1: collect sale_item IDs belonging to YTD sales for this company.
-  // TODO: batch this query when sale_items count exceeds ~2000 rows per year.
+  //
+  // KNOWN LIMITATION (correctness, not just perf): both steps cap at 2000 rows.
+  // A company with >2000 YTD sales OR >2000 YTD sale_items would have its COGS
+  // SILENTLY UNDERSTATED (→ overstated profit/tax). The cap is now detected and
+  // logged below so the understatement is never silent. Proper fix: push the date
+  // filter into a DB-side join/RPC (sale_item_allocations → sale_items → sales) so
+  // no ID materialization or row cap is needed — credential-gated (needs migration).
+  const ytdSalesIdsRes = await supabase
+    .from('sales')
+    .select('id')
+    .eq('company_id', companyId)
+    .is('deleted_at', null)
+    .gte('sale_date', ytdFrom)
+    .lte('sale_date', today)
+    .limit(2000)
+  const ytdSalesIds = (ytdSalesIdsRes.data ?? []).map((r: { id: string }) => r.id)
+
   const ytdSaleItemsRes = await supabase
     .from('sale_items')
     .select('id')
     .eq('company_id', companyId)
+    .in('sale_id', ytdSalesIds)
     .limit(2000)
-    .in('sale_id',
-      // Supabase JS v2 supports subquery via chained select on the same client
-      (await supabase
-        .from('sales')
-        .select('id')
-        .eq('company_id', companyId)
-        .is('deleted_at', null)
-        .gte('sale_date', ytdFrom)
-        .lte('sale_date', today)
-        .limit(2000)
-      ).data?.map((r: { id: string }) => r.id) ?? []
+  const ytdSaleItemIds = (ytdSaleItemsRes.data ?? []).map((r: { id: string }) => r.id)
+
+  if (ytdSalesIds.length >= 2000 || ytdSaleItemIds.length >= 2000) {
+    console.warn(
+      `[financial-core/cfo] COGS likely UNDERSTATED for company ${companyId}: ` +
+      `YTD rows hit the 2000 cap (sales=${ytdSalesIds.length}, sale_items=${ytdSaleItemIds.length}). ` +
+      `Profit and tax figures derived from this COGS are affected — needs the DB-side join fix.`,
     )
+  }
 
   // Step 2: fetch allocations for those sale_items only.
   // Prefer the denormalized cost_price_try on the allocation row (accounting_truth_v1
   // migration populates it). Fall back to the stock_lots JOIN for pre-migration rows.
-  const ytdSaleItemIds = (ytdSaleItemsRes.data ?? []).map((r: { id: string }) => r.id)
   const ytdCogsRes = ytdSaleItemIds.length > 0
     ? await supabase
         .from('sale_item_allocations')
@@ -504,7 +518,7 @@ export async function getCfoMetrics(
     allTimeCollectedRes.error, allTimePaidExpensesRes.error, unpaidExpensesRes.error,
     periodCollectedRes.error, periodPaidExpensesRes.error, trailingBurnRes.error,
     outstandingRes.error, periodInvoicedRes.error, ytdRevenueRes.error,
-    ytdSaleItemsRes.error, ytdCogsRes.error, ytdExpensesRes.error, ytdSalesVatRes.error,
+    ytdSalesIdsRes.error, ytdSaleItemsRes.error, ytdCogsRes.error, ytdExpensesRes.error, ytdSalesVatRes.error,
     ytdPurchaseVatRes.error, ytdExpenseVatRes.error, partnerTxRes.error,
     stockRes.error,
   ].filter(e => {
@@ -525,12 +539,7 @@ export async function getCfoMetrics(
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const ytdRevenue = (ytdRevenueRes.data ?? []).reduce((s: number, r: any) => s + Number(r.total_try), 0)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const ytdCogs    = (ytdCogsRes.data ?? []).reduce((s: number, r: any) => {
-    const lot        = (r as { stock_lots?: { cost_price_try?: number } | null }).stock_lots
-    const costPerUnit = Number((r as { cost_price_try?: number }).cost_price_try ?? lot?.cost_price_try ?? 0)
-    return s + Number(r.qty_allocated ?? 0) * costPerUnit
-  }, 0)
+  const ytdCogs    = computeCogsFromAllocations(ytdCogsRes.data ?? [])
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const ytdOpExpenses = (ytdExpensesRes.data ?? []).reduce((s: number, r: any) => {
     const t = String((r as { expense_type?: string | null }).expense_type ?? '')
