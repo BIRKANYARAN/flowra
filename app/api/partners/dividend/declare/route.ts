@@ -26,6 +26,7 @@ import { REQUEST_ID_HEADER } from '@/middleware'
 import { resolveApiAuth } from '@/lib/api-auth'
 import { round2 } from '@/lib/calc'
 import { DividendService } from '@/lib/services/pcle/dividend.service'
+import { safeGuard, assertNonNegativeAmount, assertPositiveAmount } from '@/lib/db/guards'
 
 interface DeclareEntry {
   partner_id:      string
@@ -94,14 +95,14 @@ export async function POST(req: NextRequest) {
     const gross = Number(entry.gross_try)
     const withholding = Number(entry.withholding_try)
     const net = Number(entry.net_try)
-    if (!isFinite(gross) || gross < 0) {
-      return NextResponse.json({ error: `${entry.partner_id}: gross_try geçersiz ya da negatif`, code: 'VALIDATION_ERROR', type: 'BUSINESS' }, { status: 422 })
-    }
-    if (!isFinite(withholding) || withholding < 0) {
-      return NextResponse.json({ error: `${entry.partner_id}: withholding_try geçersiz ya da negatif`, code: 'VALIDATION_ERROR', type: 'BUSINESS' }, { status: 422 })
-    }
-    if (!isFinite(net) || net <= 0) {
-      return NextResponse.json({ error: `${entry.partner_id}: net_try sıfırdan büyük olmalı`, code: 'VALIDATION_ERROR', type: 'BUSINESS' }, { status: 422 })
+    // Amount sanity via the shared, tested integrity guards (single source of truth;
+    // behaviour-preserving — same non-negative/positive rejections as before).
+    const amountErr =
+      safeGuard(() => assertNonNegativeAmount(gross,       `${entry.partner_id}: gross_try`)) ||
+      safeGuard(() => assertNonNegativeAmount(withholding, `${entry.partner_id}: withholding_try`)) ||
+      safeGuard(() => assertPositiveAmount(net,            `${entry.partner_id}: net_try`))
+    if (amountErr) {
+      return NextResponse.json({ error: amountErr.message, code: 'VALIDATION_ERROR', type: 'BUSINESS' }, { status: 422 })
     }
     // Invariant: gross - withholding must equal net (within 1 kuruş rounding tolerance)
     if (Math.abs(gross - withholding - net) > 0.02) {
