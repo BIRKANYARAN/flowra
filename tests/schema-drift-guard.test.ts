@@ -37,6 +37,10 @@ const migrationFiles = readdirSync(resolve(ROOT, 'supabase/migrations'))
 
 const migrationTables = tablesIn(migrationFiles)
 const canonicalTables = tablesIn([resolve(ROOT, 'supabase/FLOWRA_PRODUCTION_INSTALL.sql')])
+// The release-package install is the DISTRIBUTION copy operators run for a fresh
+// install. It must be a complete mirror of the canonical, or fresh installs from
+// the release package silently get a different (incomplete) schema → 500s.
+const releaseTables = tablesIn([resolve(ROOT, 'release-package/sql/FLOWRA_PRODUCTION_INSTALL.sql')])
 
 // Tables present in migrations but not yet in the canonical install.
 // Each MUST be applied to production via its migration (credential-gated) and
@@ -67,5 +71,13 @@ describe('schema drift — migrations ⊆ canonical install', () => {
   it('parsing sanity — found migration and canonical tables', () => {
     expect(migrationTables.size).toBeGreaterThan(0)
     expect(canonicalTables.size).toBeGreaterThan(30)
+  })
+
+  it('release-package install is a complete mirror of the canonical (every canonical table present)', () => {
+    // Catches the bug where the distribution copy drifts behind the canonical
+    // (it was missing 8 tables — system_logs + the 7 DRIFT FOLD tables — so a
+    // fresh install from release-package/ 500'd). Fresh-install parity, both ways.
+    const missingFromRelease = [...canonicalTables].filter(t => !releaseTables.has(t))
+    expect(missingFromRelease).toEqual([])
   })
 })

@@ -1,3 +1,7 @@
+// NOTE: this module is already server-only — it imports `cookies` from
+// 'next/headers', which the Next.js App Router refuses to bundle into a client
+// ('use client') module, so a client import fails the build. (No separate
+// `server-only` package import is needed for that guarantee.)
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
