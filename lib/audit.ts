@@ -17,7 +17,6 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { createClient }    from '@/lib/supabase-server'
-import { stampAuditRow }  from '@/lib/services/audit-chain.service'
 import { AppError }       from '@/types/errors'
 import type {
   AuditLog,
@@ -63,7 +62,12 @@ export async function logAudit(input: LogAuditInput): Promise<void> {
   // the current request's cookies (Next.js server context).
   try {
     const supabase = createClient()
-    const { data: inserted, error: insertError } = await supabase
+    // The tamper-evident content_hash/prev_hash are stamped IN-DB by the
+    // audit_logs_stamp() BEFORE INSERT trigger (migration 20260601000002) — the
+    // single source of truth. We deliberately do NOT stamp from the app: audit_logs
+    // has no UPDATE RLS policy (a post-insert UPDATE is silently denied) and a JS
+    // recompute would diverge from the Postgres digest()/jsonb canonicalization.
+    const { error: insertError } = await supabase
       .from('audit_logs')
       .insert({
         user_id:     input.userId,
@@ -75,25 +79,9 @@ export async function logAudit(input: LogAuditInput): Promise<void> {
         new_data:    input.newData  ?? null,
         ip_address:  input.ipAddress ?? null,
       })
-      .select('id, created_at')
-      .single()
 
-    if (!insertError && inserted) {
-      // Fire-and-forget tamper-evident hash stamp.
-      // stampAuditRow gracefully no-ops if content_hash column is not yet migrated.
-      stampAuditRow(
-        inserted.id,
-        input.companyId,
-        {
-          action:        input.action,
-          resource_type: input.entityType,
-          resource_id:   input.entityId,
-          old_values:    input.oldData  ?? null,
-          new_values:    input.newData  ?? null,
-          created_at:    inserted.created_at,
-        },
-        supabase,
-      ).catch(() => { /* non-fatal: hash stamp failure never blocks audit write */ })
+    if (insertError) {
+      console.error('[audit] WRITE_FAIL audit_logs:', insertError.message)
     }
   } catch (err: unknown) {
     // Log but never propagate — audit failures must not crash the main flow.

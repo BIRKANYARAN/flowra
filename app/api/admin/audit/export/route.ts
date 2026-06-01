@@ -24,7 +24,6 @@ import { safeAdminQuery }            from '@/lib/admin-db'
 import { requireAdmin }              from '@/lib/require-role'
 import { AppError }                  from '@/types/errors'
 import { resolveApiAuth }            from '@/lib/api-auth'
-import { verifyAuditChain }          from '@/lib/services/audit-chain.service'
 import { getSystemAdminClient }      from '@/lib/admin-db'
 
 const MAX_ROWS = 1000
@@ -66,15 +65,23 @@ export async function GET(req: NextRequest) {
     const filterEntityType  = url.searchParams.get('entity_type')  ?? undefined
 
     // ── Chain integrity status (for CSV header comment) ──────────────────────
+    // Verify against the AUTHORITATIVE in-DB chain (verify_audit_chain RPC) — the
+    // same source of truth the /admin/audit/chain route uses. A JS recompute would
+    // diverge from the Postgres digest()/jsonb serialization the trigger stamps.
     const adminClient = getSystemAdminClient()
-    const chainResult = await verifyAuditChain(companyId, from, to, adminClient)
-    const chainStatus = !chainResult.is_supported
-      ? 'UNSUPPORTED (pre-migration)'
-      : chainResult.total_checked === 0
+    const { data: verData, error: verErr } =
+      await adminClient.rpc('verify_audit_chain', { p_company_id: companyId, p_from: from, p_to: to })
+    const verRows = (verData ?? []) as Array<{ has_hash: boolean; chain_intact: boolean }>
+    const brokenLinks = verRows.filter(r => !r.chain_intact).length
+    const chainStatus = verErr
+      ? `UNVERIFIED (${verErr.message})`
+      : verRows.length === 0
         ? 'NO_RECORDS'
-        : chainResult.ok
-          ? 'VALID'
-          : `TAMPERED (${chainResult.broken_links} broken links)`
+        : !verRows.some(r => r.has_hash)
+          ? 'UNSUPPORTED (pre-migration)'
+          : brokenLinks === 0
+            ? 'VALID'
+            : `TAMPERED (${brokenLinks} broken links)`
     const nowIso = new Date().toISOString().replace('T', ' ').slice(0, 16)
 
     // ── Query audit logs ─────────────────────────────────────────────────────

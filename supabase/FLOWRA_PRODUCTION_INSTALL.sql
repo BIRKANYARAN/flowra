@@ -520,6 +520,25 @@ create table if not exists audit_logs (
   created_at   timestamptz not null default now()
 );
 
+-- system_logs (diagnostic application logs — written via write_system_log RPC).
+-- Kept SEPARATE from the tamper-evident audit_logs chain so diagnostics never
+-- pollute the business-audit hash chain. Not user-facing: RLS on, no policy →
+-- only service_role / the SECURITY DEFINER writer can reach it.
+create table if not exists system_logs (
+  id          uuid        primary key default gen_random_uuid(),
+  request_id  text,
+  user_id     uuid,
+  level       text        not null default 'info',
+  message     text        not null default '',
+  context     jsonb,
+  created_at  timestamptz not null default now()
+);
+create index if not exists idx_system_logs_created on system_logs (created_at desc);
+create index if not exists idx_system_logs_level   on system_logs (level, created_at desc);
+alter table system_logs enable row level security;
+revoke all on system_logs from anon, authenticated, public;
+grant  select, insert on system_logs to service_role;
+
 -- audit_log (legacy compat — kept for backward compatibility)
 create table if not exists audit_log (
   id           uuid        primary key default gen_random_uuid(),
@@ -3226,9 +3245,13 @@ AS $function$
                    coalesce(p_old::text,'null'), coalesce(p_new::text,'null'), coalesce(p_created::text,''));
 $function$
 ;
+-- search_path pinned to public, extensions so digest() (pgcrypto, in extensions)
+-- resolves regardless of the caller's active search_path; otherwise inserts under
+-- search_path='public' silently commit with content_hash=NULL (chain disabled).
 CREATE OR REPLACE FUNCTION public.audit_logs_stamp()
  RETURNS trigger
  LANGUAGE plpgsql
+ SET search_path TO 'public', 'extensions'
 AS $function$
 DECLARE v_prev text;
 BEGIN
@@ -3238,7 +3261,7 @@ BEGIN
       WHERE company_id IS NOT DISTINCT FROM NEW.company_id AND content_hash IS NOT NULL
       ORDER BY created_at DESC, id DESC LIMIT 1;
     NEW.prev_hash := v_prev;
-    NEW.content_hash := encode(digest(audit_row_payload(NEW.action, NEW.entity_type, NEW.entity_id, NEW.old_data, NEW.new_data, NEW.created_at) || coalesce(v_prev,''), 'sha256'), 'hex');
+    NEW.content_hash := encode(extensions.digest(audit_row_payload(NEW.action, NEW.entity_type, NEW.entity_id, NEW.old_data, NEW.new_data, NEW.created_at) || coalesce(v_prev,''), 'sha256'), 'hex');
   EXCEPTION WHEN OTHERS THEN NEW.content_hash := NULL; NEW.prev_hash := NULL; END;
   RETURN NEW;
 END $function$
@@ -3265,6 +3288,30 @@ BEGIN
   END LOOP;
 END $function$
 ;
+
+-- write_system_log — diagnostic logger (lib/logger.ts). Writes to system_logs,
+-- NOT audit_logs, so diagnostics never enter the tamper-evident business chain.
+CREATE OR REPLACE FUNCTION public.write_system_log(
+  p_request_id text DEFAULT NULL::text,
+  p_user_id    uuid DEFAULT NULL::uuid,
+  p_level      text DEFAULT 'info'::text,
+  p_message    text DEFAULT ''::text,
+  p_context    jsonb DEFAULT NULL::jsonb)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+BEGIN
+  INSERT INTO public.system_logs (request_id, user_id, level, message, context, created_at)
+  VALUES (p_request_id, p_user_id, p_level, p_message, p_context, now());
+EXCEPTION WHEN OTHERS THEN
+  NULL; -- logging must never crash the caller
+END;
+$function$
+;
+REVOKE ALL    ON FUNCTION public.write_system_log(text, uuid, text, text, jsonb) FROM anon, PUBLIC;
+GRANT  EXECUTE ON FUNCTION public.write_system_log(text, uuid, text, text, jsonb) TO authenticated, service_role;
 
 -- One-time backfill of pre-existing rows (idempotent: recomputes the same hashes)
 DO $bf$ DECLARE c record; r record; v_prev text; v_hash text;

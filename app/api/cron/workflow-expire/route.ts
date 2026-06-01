@@ -47,14 +47,18 @@ export async function POST(req: NextRequest) {
     // This is the governance trail proving when and why workflows expired —
     // critical for financial audit of why an expense was never approved.
     if (result.expired_workflows.length > 0) {
+      // Columns MUST match the audit_logs schema (entity_type/entity_id/old_data/new_data);
+      // there is no resource_type/old_values/description column — writing those silently fails.
       const auditRows = result.expired_workflows.map(wf => ({
-        company_id:    wf.company_id,
-        action:        'update',
-        resource_type: 'workflow',
-        resource_id:   wf.id,
-        old_values:    { status: 'pending' },
-        new_values:    { status: 'expired' },
-        description:   `Otomatik süre dolumu — ${wf.workflow_type}${wf.resource_id ? ` (kaynak: ${wf.resource_type ?? 'unknown'} ${wf.resource_id})` : ''}`,
+        company_id:  wf.company_id,
+        entity_type: 'workflow',
+        entity_id:   wf.id,
+        action:      'update',
+        old_data:    { status: 'pending' },
+        new_data:    {
+          status: 'expired',
+          note:   `Otomatik süre dolumu — ${wf.workflow_type}${wf.resource_id ? ` (kaynak: ${wf.resource_type ?? 'unknown'} ${wf.resource_id})` : ''}`,
+        },
       }))
 
       // Non-fatal: audit log failure must not prevent the main expiry from being reported

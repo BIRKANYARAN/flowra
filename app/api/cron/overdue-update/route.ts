@@ -58,18 +58,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: updateErr.message, code: 'DB_UPDATE_FAILED', run_id: runId }, { status: 500 })
     }
 
-    // Audit log for each newly overdue sale — use actual prior status (may be 'partial')
+    // Audit log for each newly overdue sale — use actual prior status (may be 'partial').
+    // Columns MUST match the audit_logs schema (entity_type/entity_id/old_data/new_data);
+    // there is no resource_type/old_values/description column — writing those silently fails.
     const auditRows = stale.map(s => ({
-      company_id:    s.company_id,
-      action:        'update',
-      resource_type: 'sale',
-      resource_id:   s.id,
-      old_values:    { payment_status: s.payment_status },
-      new_values:    { payment_status: 'overdue' },
-      description:   `Otomatik gecikmiş işaretleme — vade ${s.due_date}`,
+      company_id:  s.company_id,
+      entity_type: 'sale',
+      entity_id:   s.id,
+      action:      'update',
+      old_data:    { payment_status: s.payment_status },
+      new_data:    { payment_status: 'overdue', note: `Otomatik gecikmiş işaretleme — vade ${s.due_date}` },
     }))
 
-    await supabase.from('audit_logs').insert(auditRows)
+    const { error: auditErr } = await supabase.from('audit_logs').insert(auditRows)
+    if (auditErr) {
+      console.warn('[cron/overdue-update] audit_logs insert failed (non-fatal):', auditErr.message, { runId })
+    }
 
     console.info('[cron/overdue-update]', { runId, updated: count ?? stale.length, date: today })
     return NextResponse.json({

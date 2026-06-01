@@ -97,8 +97,15 @@ export function formatChainReport(
   return `${totalEntries} kayıt incelendi, ${breaks} kırık bağ tespit edildi (${startDate} – ${endDate}). Kayıtlar değiştirilmiş olabilir.`
 }
 
+// ⚠️ REFERENCE IMPLEMENTATION ONLY — NOT wired to production.
+// The authoritative tamper-evident hash chain is stamped IN-DB by the
+// audit_logs_stamp() BEFORE INSERT trigger and verified by the verify_audit_chain
+// RPC (migration 20260601000002). audit_logs has no UPDATE RLS policy, so this
+// post-insert UPDATE is silently denied in prod, and the JS digest here would
+// diverge from the Postgres digest()/jsonb canonicalization. Kept only as a
+// self-contained, unit-tested reference of the chain algorithm.
+//
 // Compute and store content_hash + prev_hash for new audit_log rows.
-// Call this immediately after inserting an audit_log row.
 export async function stampAuditRow(
   rowId:     string,
   companyId: string,
@@ -128,6 +135,12 @@ export async function stampAuditRow(
   }
 }
 
+// ⚠️ REFERENCE IMPLEMENTATION ONLY — NOT wired to production.
+// Production verification goes through the verify_audit_chain RPC (recomputes the
+// SHA-256 chain in-DB, byte-identical to the audit_logs_stamp() trigger). Both the
+// /admin/audit/chain and /admin/audit/export routes call that RPC. This JS verifier
+// would diverge from the Postgres digest()/jsonb format. Kept as a tested reference.
+//
 // Verify the audit chain for a company within a date range.
 // Returns a report of any broken links.
 export async function verifyAuditChain(
