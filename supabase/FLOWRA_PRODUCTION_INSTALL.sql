@@ -2857,3 +2857,190 @@ COMMENT ON COLUMN journal_entries.voucher_number IS
 --   4. Create your first admin user via Auth dashboard
 --   5. Sign in and run the onboarding flow
 -- ═══════════════════════════════════════════════════════════════════════════════
+
+-- ═══════════════════════════════════════════════════════════════════════════════
+-- DRIFT FOLD (fresh-install parity)
+--
+-- These 7 tables previously existed ONLY in supabase/migrations/ and were missing
+-- from this canonical install, so a FRESH install returned 500s on partner
+-- compensation, budgets, KPI targets, reorder thresholds, documents, alert feed
+-- and decision snapshots. Folded verbatim from their migrations (idempotent —
+-- IF NOT EXISTS). EXISTING production databases must still apply the original
+-- migrations (credential-gated). partner_compensation_schedules is NOT re-created
+-- here (already defined above with its canonical policies) — only _payments.
+-- ═══════════════════════════════════════════════════════════════════════════════
+
+-- ── alert_feed ─────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS alert_feed (
+  id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  company_id      uuid NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  alert_key       text NOT NULL,
+  alert_type      text NOT NULL,
+  severity        text NOT NULL CHECK (severity IN ('info','warning','critical')),
+  title           text NOT NULL,
+  detail          text,
+  action_label    text,
+  action_href     text,
+  amount_try      numeric(15,2),
+  due_date        date,
+  resource_type   text,
+  resource_id     text,
+  is_acknowledged boolean NOT NULL DEFAULT false,
+  acknowledged_at timestamptz,
+  acknowledged_by uuid REFERENCES auth.users(id),
+  auto_resolved   boolean NOT NULL DEFAULT false,
+  resolved_at     timestamptz,
+  first_triggered_at timestamptz NOT NULL DEFAULT now(),
+  last_triggered_at  timestamptz NOT NULL DEFAULT now(),
+  trigger_count   integer NOT NULL DEFAULT 1,
+  created_at      timestamptz NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS alert_feed_company_key_uq ON alert_feed(company_id, alert_key) WHERE auto_resolved = false;
+ALTER TABLE alert_feed ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "alert_feed_select" ON alert_feed FOR SELECT USING (company_id IN (SELECT company_id FROM company_members WHERE user_id = auth.uid()));
+CREATE POLICY "alert_feed_write" ON alert_feed FOR ALL USING (company_id IN (SELECT company_id FROM company_members WHERE user_id = auth.uid()));
+
+-- ── company_documents ────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS company_documents (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  company_id uuid NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  document_type text NOT NULL,
+  title text NOT NULL,
+  description text,
+  file_url text NOT NULL,
+  file_name text NOT NULL,
+  file_size_bytes bigint,
+  mime_type text,
+  document_date date NOT NULL,
+  period_year int,
+  period_month int,
+  linked_resource_type text,
+  linked_resource_id uuid,
+  is_audit_required boolean NOT NULL DEFAULT false,
+  is_verified boolean NOT NULL DEFAULT false,
+  verified_by uuid REFERENCES auth.users(id),
+  verified_at timestamptz,
+  retention_until date,
+  deleted_at timestamptz,
+  uploaded_by uuid NOT NULL REFERENCES auth.users(id),
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_documents_company  ON company_documents(company_id, deleted_at);
+CREATE INDEX IF NOT EXISTS idx_documents_type     ON company_documents(company_id, document_type);
+CREATE INDEX IF NOT EXISTS idx_documents_resource ON company_documents(company_id, linked_resource_type, linked_resource_id);
+CREATE INDEX IF NOT EXISTS idx_documents_period   ON company_documents(company_id, period_year, period_month);
+CREATE INDEX IF NOT EXISTS idx_documents_audit    ON company_documents(company_id, is_audit_required, is_verified);
+ALTER TABLE company_documents ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Members can view documents" ON company_documents FOR SELECT USING (company_id IN (SELECT company_id FROM company_members WHERE user_id = auth.uid()) AND deleted_at IS NULL);
+CREATE POLICY "Members can upload documents" ON company_documents FOR INSERT WITH CHECK (company_id IN (SELECT company_id FROM company_members WHERE user_id = auth.uid()));
+CREATE POLICY "Admins can update documents" ON company_documents FOR UPDATE USING (company_id IN (SELECT company_id FROM company_members WHERE user_id = auth.uid() AND role = 'admin'));
+
+-- ── decision_context_snapshots ────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS decision_context_snapshots (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  company_id uuid NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  trigger_type  text NOT NULL,
+  trigger_id    uuid,
+  trigger_label text NOT NULL,
+  decision_by uuid REFERENCES auth.users(id),
+  decision_at timestamptz NOT NULL DEFAULT now(),
+  context_snapshot jsonb NOT NULL,
+  annotation   text,
+  annotated_by uuid REFERENCES auth.users(id),
+  annotated_at timestamptz,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_decision_snapshots_company ON decision_context_snapshots(company_id, decision_at DESC);
+CREATE INDEX IF NOT EXISTS idx_decision_snapshots_trigger ON decision_context_snapshots(company_id, trigger_type);
+ALTER TABLE decision_context_snapshots ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Company members can view decision snapshots" ON decision_context_snapshots FOR SELECT USING (company_id IN (SELECT company_id FROM company_members WHERE user_id = auth.uid()));
+CREATE POLICY "Company admins can insert decision snapshots" ON decision_context_snapshots FOR INSERT WITH CHECK (company_id IN (SELECT company_id FROM company_members WHERE user_id = auth.uid() AND role = 'admin'));
+CREATE POLICY "Company admins can update decision snapshots" ON decision_context_snapshots FOR UPDATE USING (company_id IN (SELECT company_id FROM company_members WHERE user_id = auth.uid() AND role = 'admin'));
+
+-- ── kpi_targets ───────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS kpi_targets (
+  id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  company_id      uuid NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  kpi_key         text NOT NULL,
+  target_value    numeric(15,4) NOT NULL,
+  target_label    text,
+  period_type     text NOT NULL DEFAULT 'monthly' CHECK (period_type IN ('monthly','quarterly','annual','rolling')),
+  is_active       boolean NOT NULL DEFAULT true,
+  created_by      uuid REFERENCES auth.users(id),
+  created_at      timestamptz NOT NULL DEFAULT now(),
+  updated_at      timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT kpi_targets_company_key_uq UNIQUE (company_id, kpi_key)
+);
+ALTER TABLE kpi_targets ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "kpi_targets_select" ON kpi_targets FOR SELECT USING (company_id IN (SELECT company_id FROM company_members WHERE user_id = auth.uid()));
+CREATE POLICY "kpi_targets_write" ON kpi_targets FOR ALL USING (company_id IN (SELECT company_id FROM company_members WHERE user_id = auth.uid() AND role = 'admin'));
+CREATE OR REPLACE FUNCTION update_kpi_targets_updated_at() RETURNS TRIGGER LANGUAGE plpgsql AS $$ BEGIN NEW.updated_at = now(); RETURN NEW; END; $$;
+DROP TRIGGER IF EXISTS kpi_targets_updated_at ON kpi_targets;
+CREATE TRIGGER kpi_targets_updated_at BEFORE UPDATE ON kpi_targets FOR EACH ROW EXECUTE FUNCTION update_kpi_targets_updated_at();
+
+-- ── monthly_budgets ───────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS monthly_budgets (
+  id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  company_id      uuid NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  budget_year     integer NOT NULL CHECK (budget_year >= 2020 AND budget_year <= 2100),
+  budget_month    integer NOT NULL CHECK (budget_month >= 1 AND budget_month <= 12),
+  revenue_target_try    numeric(15,2) NOT NULL DEFAULT 0,
+  expense_target_try    numeric(15,2) NOT NULL DEFAULT 0,
+  gross_profit_target_try numeric(15,2) GENERATED ALWAYS AS (revenue_target_try - expense_target_try) STORED,
+  notes           text,
+  created_by      uuid REFERENCES auth.users(id),
+  created_at      timestamptz NOT NULL DEFAULT now(),
+  updated_at      timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT monthly_budgets_company_period_uq UNIQUE (company_id, budget_year, budget_month)
+);
+ALTER TABLE monthly_budgets ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "monthly_budgets_select" ON monthly_budgets FOR SELECT USING (company_id IN (SELECT company_id FROM company_members WHERE user_id = auth.uid()));
+CREATE POLICY "monthly_budgets_insert" ON monthly_budgets FOR INSERT WITH CHECK (company_id IN (SELECT company_id FROM company_members WHERE user_id = auth.uid() AND role = 'admin'));
+CREATE POLICY "monthly_budgets_update" ON monthly_budgets FOR UPDATE USING (company_id IN (SELECT company_id FROM company_members WHERE user_id = auth.uid() AND role = 'admin'));
+CREATE OR REPLACE FUNCTION update_monthly_budgets_updated_at() RETURNS TRIGGER LANGUAGE plpgsql AS $$ BEGIN NEW.updated_at = now(); RETURN NEW; END; $$;
+DROP TRIGGER IF EXISTS monthly_budgets_updated_at ON monthly_budgets;
+CREATE TRIGGER monthly_budgets_updated_at BEFORE UPDATE ON monthly_budgets FOR EACH ROW EXECUTE FUNCTION update_monthly_budgets_updated_at();
+
+-- ── product_reorder_thresholds ────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS product_reorder_thresholds (
+  id                  uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  company_id          uuid NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  product_id          uuid NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+  reorder_point_qty   numeric(10,2) NOT NULL DEFAULT 0,
+  reorder_qty         numeric(10,2) NOT NULL DEFAULT 0,
+  lead_time_days      integer NOT NULL DEFAULT 7,
+  notes               text,
+  created_at          timestamptz NOT NULL DEFAULT now(),
+  updated_at          timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT product_reorder_thresholds_uq UNIQUE (company_id, product_id)
+);
+ALTER TABLE product_reorder_thresholds ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "reorder_thresholds_select" ON product_reorder_thresholds FOR SELECT USING (company_id IN (SELECT company_id FROM company_members WHERE user_id = auth.uid()));
+CREATE POLICY "reorder_thresholds_write" ON product_reorder_thresholds FOR ALL USING (company_id IN (SELECT company_id FROM company_members WHERE user_id = auth.uid() AND role IN ('admin','manager')));
+
+-- ── partner_compensation_payments (schedules already defined above) ────────────
+CREATE TABLE IF NOT EXISTS partner_compensation_payments (
+  id                 uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+  company_id         uuid        NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  schedule_id        uuid        NOT NULL REFERENCES partner_compensation_schedules(id),
+  partner_id         uuid        NOT NULL REFERENCES partners(id),
+  payment_period     date        NOT NULL,
+  gross_amount_try   numeric(15,2) NOT NULL,
+  withholding_try    numeric(15,2) NOT NULL,
+  sgk_try            numeric(15,2) NOT NULL DEFAULT 0,
+  net_amount_try     numeric(15,2) NOT NULL,
+  payment_status     text        NOT NULL DEFAULT 'pending',
+  paid_at            timestamptz,
+  expense_id         uuid        REFERENCES expenses(id),
+  notes              text,
+  created_by         uuid        NOT NULL REFERENCES auth.users(id),
+  created_at         timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (schedule_id, payment_period)
+);
+CREATE INDEX IF NOT EXISTS idx_pcp_company  ON partner_compensation_payments (company_id, payment_period);
+CREATE INDEX IF NOT EXISTS idx_pcp_schedule ON partner_compensation_payments (schedule_id);
+ALTER TABLE partner_compensation_payments ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "pcp_select" ON partner_compensation_payments FOR SELECT USING (company_id IN (SELECT company_id FROM company_members WHERE user_id = auth.uid()));
+CREATE POLICY "pcp_insert" ON partner_compensation_payments FOR INSERT WITH CHECK (company_id IN (SELECT company_id FROM company_members WHERE user_id = auth.uid() AND role = 'admin'));
+CREATE POLICY "pcp_update" ON partner_compensation_payments FOR UPDATE USING (company_id IN (SELECT company_id FROM company_members WHERE user_id = auth.uid() AND role = 'admin'));

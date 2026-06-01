@@ -41,15 +41,12 @@ const canonicalTables = tablesIn([resolve(ROOT, 'supabase/FLOWRA_PRODUCTION_INST
 // Tables present in migrations but not yet in the canonical install.
 // Each MUST be applied to production via its migration (credential-gated) and
 // SHOULD be folded into FLOWRA_PRODUCTION_INSTALL.sql for fresh-install parity.
-const KNOWN_DRIFT = new Set([
-  'alert_feed',
-  'company_documents',
-  'decision_context_snapshots',
-  'kpi_targets',
-  'monthly_budgets',
-  'partner_compensation_payments',
-  'product_reorder_thresholds',
-])
+// All 7 previously-drifted tables are now folded into FLOWRA_PRODUCTION_INSTALL.sql
+// (the "DRIFT FOLD" section) for fresh-install parity, so the allowlist is empty.
+// NOTE: EXISTING production databases must still apply the original migrations to
+// gain these tables — that is credential-gated and out of scope for this guard,
+// which only verifies fresh-install ⊇ migration tables.
+const KNOWN_DRIFT = new Set<string>([])
 
 describe('schema drift — migrations ⊆ canonical install', () => {
   it('every migration table is in the canonical install or a documented KNOWN_DRIFT entry', () => {
