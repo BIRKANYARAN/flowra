@@ -136,22 +136,28 @@ export async function verifyAuditChain(
   to:        string,
   supabase:  AnyClient,
 ): Promise<ChainVerifyResult> {
+  // Real audit_logs columns are entity_type/entity_id/old_data/new_data — the old
+  // select used resource_type/old_values/new_values (nonexistent) → 42703 error →
+  // the catch below USED TO return ok:true, so the tamper-evidence verifier always
+  // reported "healthy". Select the real columns and map them into the same payload
+  // shape stampAuditRow hashed (it maps entityType→resource_type at the call site).
   const { data, error } = await supabase
     .from('audit_logs')
-    .select('id, action, resource_type, resource_id, old_values, new_values, created_at, content_hash, prev_hash')
+    .select('id, action, entity_type, entity_id, old_data, new_data, created_at, content_hash, prev_hash')
     .eq('company_id', companyId)
     .gte('created_at', from + 'T00:00:00Z')
     .lte('created_at', to   + 'T23:59:59Z')
     .order('created_at', { ascending: true })
 
-  if (error) return { is_supported: false, total_checked: 0, broken_links: 0, ok: true }
+  // A genuine query error means we COULD NOT verify — never report ok:true.
+  if (error) return { is_supported: false, total_checked: 0, broken_links: 0, ok: false }
 
   const rows = data ?? []
   if (rows.length === 0) return { is_supported: true, total_checked: 0, broken_links: 0, ok: true }
 
-  // Check if hash columns are present (detect pre-migration state)
+  // Hash columns absent (pre-migration): cannot attest → is_supported:false, ok:false.
   if (rows[0].content_hash === undefined) {
-    return { is_supported: false, total_checked: 0, broken_links: 0, ok: true }
+    return { is_supported: false, total_checked: 0, broken_links: 0, ok: false }
   }
 
   let brokenLinks = 0
@@ -165,7 +171,16 @@ export async function verifyAuditChain(
       continue
     }
 
-    const expected = await sha256hex(rowPayload(row) + (prevHash ?? ''))
+    // Map the real columns to the payload field names the stamper used.
+    const payload = rowPayload({
+      action:        row.action,
+      resource_type: row.entity_type,
+      resource_id:   row.entity_id,
+      old_values:    row.old_data,
+      new_values:    row.new_data,
+      created_at:    row.created_at,
+    })
+    const expected = await sha256hex(payload + (prevHash ?? ''))
     if (expected !== row.content_hash) {
       brokenLinks++
       if (!firstBroken) {
