@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
         { status: 422, headers: { [REQUEST_ID_HEADER]: ctx.requestId } }
       )
     }
-    const entries = await CostService.getCostBreakdown(productId, companyId)
+    const entries = await CostService.getCostBreakdown(productId, companyId, supabase)
     return NextResponse.json(
       { entries, count: entries.length },
       { headers: { [REQUEST_ID_HEADER]: ctx.requestId } }

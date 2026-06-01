@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
       })(),
     }
 
-    const logs = await AuditService.listLogs(uid, filters)
+    const logs = await AuditService.listLogs(uid, filters, supabase)
     return NextResponse.json(logs, { headers: { [REQUEST_ID_HEADER]: ctx.requestId } })
   } catch (err) {
     const { body, status } = toErrorResponse(err)

@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
   try {
     // "inconsistent" — bulk drift report; doesn't need product_id
     if (view === 'inconsistent') {
-      const reports = await StockQueryService.listInconsistentProducts(uid, companyId, ctx)
+      const reports = await StockQueryService.listInconsistentProducts(uid, companyId, ctx, supabase)
       return NextResponse.json(
         { reports, count: reports.length },
         { headers: { [REQUEST_ID_HEADER]: ctx.requestId } }
@@ -63,24 +63,24 @@ export async function GET(req: NextRequest) {
 
     switch (view) {
       case 'current': {
-        const snap = await StockQueryService.getCurrentStock(uid, companyId, productId, ctx)
+        const snap = await StockQueryService.getCurrentStock(uid, companyId, productId, ctx, supabase)
         return NextResponse.json(snap, { headers: { [REQUEST_ID_HEADER]: ctx.requestId } })
       }
       case 'history': {
         const limit  = Number(url.searchParams.get('limit')  ?? '') || undefined
         const offset = Number(url.searchParams.get('offset') ?? '') || undefined
-        const entries = await StockQueryService.getStockHistory(uid, companyId, productId, { limit, offset }, ctx)
+        const entries = await StockQueryService.getStockHistory(uid, companyId, productId, { limit, offset }, ctx, supabase)
         return NextResponse.json(
           { entries, count: entries.length },
           { headers: { [REQUEST_ID_HEADER]: ctx.requestId } }
         )
       }
       case 'value': {
-        const val = await StockQueryService.calculateStockValue(uid, companyId, productId, ctx)
+        const val = await StockQueryService.calculateStockValue(uid, companyId, productId, ctx, supabase)
         return NextResponse.json(val, { headers: { [REQUEST_ID_HEADER]: ctx.requestId } })
       }
       case 'consistency': {
-        const rep = await StockQueryService.checkConsistency(uid, companyId, productId, ctx)
+        const rep = await StockQueryService.checkConsistency(uid, companyId, productId, ctx, supabase)
         return NextResponse.json(rep, { headers: { [REQUEST_ID_HEADER]: ctx.requestId } })
       }
     }

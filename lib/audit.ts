@@ -142,8 +142,12 @@ export class AuditService {
   static async listLogs(
     userId:   string,
     filters?: AuditLogFilters,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    clientOverride?: any,
   ): Promise<AuditLog[]> {
-    const supabase = createClient()
+    // Thread the request's authenticated client through so Bearer-token (mobile/
+    // API) callers aren't silently downgraded to an anonymous client by createClient().
+    const supabase = clientOverride ?? createClient()
     const cap = Math.min(filters?.limit ?? 200, 500)
 
     let q = supabase
