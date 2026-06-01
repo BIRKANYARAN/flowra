@@ -81,3 +81,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Internal error' }, { status: 500 })
   }
 }
+
+// Vercel Cron invokes scheduled jobs via GET (with the Authorization: Bearer
+// CRON_SECRET header). Alias GET to the POST handler so the job actually runs —
+// previously only POST existed, so every scheduled run returned 405 and never ran.
+export const GET = POST
