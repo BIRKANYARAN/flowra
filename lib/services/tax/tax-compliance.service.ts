@@ -11,6 +11,12 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { computeKdvDueDate, computeGeciVergiDueDate, adjustForWeekend } from './tax-calendar.service'
+import { CORPORATE_TAX_RATE_TR } from '../finance-rules'
+
+// Turkish corporate / advance (geçici) tax rate as a fraction. Single source of
+// truth = CORPORATE_TAX_RATE_TR (25 for 2023+). Previously hardcoded here at 0.20
+// (stale 2022 rate), which made this dashboard disagree with every other screen.
+const CORP_TAX_FRACTION = CORPORATE_TAX_RATE_TR / 100
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyClient = SupabaseClient<any>
@@ -66,15 +72,15 @@ export function computeKdvNetObligation(
 
 /**
  * Compute corporate tax provision for a period.
- * net_income × 0.20 if net_income > 0, else 0.
+ * net_income × CORPORATE_TAX_RATE_TR (25%) if net_income > 0, else 0.
  */
 export function computeCorporateTaxProvision(netIncomeTry: number): number {
   if (netIncomeTry <= 0) return 0
-  return netIncomeTry * 0.20
+  return netIncomeTry * CORP_TAX_FRACTION
 }
 
 /**
- * Compute Geçici Vergi: net_income_ytd × 0.20 × quarterly_fraction,
+ * Compute Geçici Vergi: net_income_ytd × CORPORATE_TAX_RATE_TR (25%) × quarterly_fraction,
  * minus prior payments.
  *
  * quarterly_fraction: Q1=0.25, Q2=0.50, Q3=0.75, Q4=1.00
@@ -87,7 +93,7 @@ export function computeGeciVergi(
 ): number {
   const fractions: Record<1 | 2 | 3 | 4, number> = { 1: 0.25, 2: 0.50, 3: 0.75, 4: 1.00 }
   const fraction = fractions[quarter]
-  const cumulative = netIncomeYtd * 0.20 * fraction
+  const cumulative = netIncomeYtd * CORP_TAX_FRACTION * fraction
   return Math.max(0, cumulative - priorPayments)
 }
 

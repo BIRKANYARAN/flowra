@@ -69,8 +69,8 @@ describe('computeKdvNetObligation()', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe('computeCorporateTaxProvision()', () => {
-  it('positive net income → 20% provision', () => {
-    expect(computeCorporateTaxProvision(100_000)).toBe(20_000)
+  it('positive net income → 25% provision', () => {
+    expect(computeCorporateTaxProvision(100_000)).toBe(25_000)
   })
 
   it('zero net income → 0', () => {
@@ -81,25 +81,25 @@ describe('computeCorporateTaxProvision()', () => {
     expect(computeCorporateTaxProvision(-50_000)).toBe(0)
   })
 
-  it('small positive net income → 20%', () => {
-    expect(computeCorporateTaxProvision(1_000)).toBeCloseTo(200, 5)
+  it('small positive net income → 25%', () => {
+    expect(computeCorporateTaxProvision(1_000)).toBeCloseTo(250, 5)
   })
 
   it('large positive income computes correctly', () => {
-    expect(computeCorporateTaxProvision(1_000_000)).toBe(200_000)
+    expect(computeCorporateTaxProvision(1_000_000)).toBe(250_000)
   })
 
-  it('exactly 1 TRY net income → 0.20 provision', () => {
-    expect(computeCorporateTaxProvision(1)).toBeCloseTo(0.20, 5)
+  it('exactly 1 TRY net income → 0.25 provision', () => {
+    expect(computeCorporateTaxProvision(1)).toBeCloseTo(0.25, 5)
   })
 
-  it('very large net income → 20% provision', () => {
-    expect(computeCorporateTaxProvision(10_000_000)).toBe(2_000_000)
+  it('very large net income → 25% provision', () => {
+    expect(computeCorporateTaxProvision(10_000_000)).toBe(2_500_000)
   })
 
   it('fractional net income → fractional provision', () => {
     const result = computeCorporateTaxProvision(333.33)
-    expect(result).toBeCloseTo(66.666, 2)
+    expect(result).toBeCloseTo(83.3325, 2)
   })
 
   it('result is always non-negative', () => {
@@ -109,10 +109,10 @@ describe('computeCorporateTaxProvision()', () => {
     expect(positiveResult).toBeGreaterThanOrEqual(0)
   })
 
-  it('rate is exactly 20% — verify with multiple values', () => {
+  it('rate is exactly 25% (CORPORATE_TAX_RATE_TR) — verify with multiple values', () => {
     const incomes = [50_000, 200_000, 750_000, 1_500_000]
     for (const income of incomes) {
-      expect(computeCorporateTaxProvision(income)).toBeCloseTo(income * 0.20, 5)
+      expect(computeCorporateTaxProvision(income)).toBeCloseTo(income * 0.25, 5)
     }
   })
 })
@@ -124,33 +124,33 @@ describe('computeCorporateTaxProvision()', () => {
 describe('computeGeciVergi()', () => {
   const ytd = 400_000 // net income YTD
 
-  it('Q1 → 25% fraction × 20% tax → 20,000', () => {
-    // 400_000 × 0.20 × 0.25 = 20_000
-    expect(computeGeciVergi(ytd, 1, 0)).toBe(20_000)
+  it('Q1 → 25% fraction × 25% tax → 25,000', () => {
+    // 400_000 × 0.25 × 0.25 = 25_000
+    expect(computeGeciVergi(ytd, 1, 0)).toBe(25_000)
   })
 
-  it('Q2 → 50% fraction × 20% tax → 40,000', () => {
-    // 400_000 × 0.20 × 0.50 = 40_000
-    expect(computeGeciVergi(ytd, 2, 0)).toBe(40_000)
+  it('Q2 → 50% fraction × 25% tax → 50,000', () => {
+    // 400_000 × 0.25 × 0.50 = 50_000
+    expect(computeGeciVergi(ytd, 2, 0)).toBe(50_000)
   })
 
-  it('Q3 → 75% fraction × 20% tax → 60,000', () => {
-    // 400_000 × 0.20 × 0.75 = 60_000
-    expect(computeGeciVergi(ytd, 3, 0)).toBe(60_000)
+  it('Q3 → 75% fraction × 25% tax → 75,000', () => {
+    // 400_000 × 0.25 × 0.75 = 75_000
+    expect(computeGeciVergi(ytd, 3, 0)).toBe(75_000)
   })
 
-  it('Q4 → 100% fraction × 20% tax → 80,000', () => {
-    // 400_000 × 0.20 × 1.00 = 80_000
-    expect(computeGeciVergi(ytd, 4, 0)).toBe(80_000)
+  it('Q4 → 100% fraction × 25% tax → 100,000', () => {
+    // 400_000 × 0.25 × 1.00 = 100_000
+    expect(computeGeciVergi(ytd, 4, 0)).toBe(100_000)
   })
 
   it('prior payments deducted from cumulative amount', () => {
-    // Q2 cumulative = 40_000, paid 20_000 in Q1 → remaining = 20_000
-    expect(computeGeciVergi(ytd, 2, 20_000)).toBe(20_000)
+    // Q2 cumulative = 50_000, paid 25_000 in Q1 → remaining = 25_000
+    expect(computeGeciVergi(ytd, 2, 25_000)).toBe(25_000)
   })
 
   it('prior payments exceed cumulative → returns 0 (no negative tax)', () => {
-    // Q1 cumulative = 20_000, paid 30_000 → 0
+    // Q1 cumulative = 25_000, paid 30_000 → 0
     expect(computeGeciVergi(ytd, 1, 30_000)).toBe(0)
   })
 
@@ -164,19 +164,19 @@ describe('computeGeciVergi()', () => {
   })
 
   it('Q4 with large prior payments → floored at 0', () => {
-    // Q4 cumulative = 400_000 × 0.20 × 1.00 = 80_000
-    // prior payments = 80_000 → result = 0
-    expect(computeGeciVergi(ytd, 4, 80_000)).toBe(0)
+    // Q4 cumulative = 400_000 × 0.25 × 1.00 = 100_000
+    // prior payments = 100_000 → result = 0
+    expect(computeGeciVergi(ytd, 4, 100_000)).toBe(0)
   })
 
   it('Q4 with prior payments less than cumulative → returns remainder', () => {
-    // Q4 cumulative = 80_000, paid 60_000 → remaining = 20_000
-    expect(computeGeciVergi(ytd, 4, 60_000)).toBe(20_000)
+    // Q4 cumulative = 100_000, paid 60_000 → remaining = 40_000
+    expect(computeGeciVergi(ytd, 4, 60_000)).toBe(40_000)
   })
 
   it('small net income Q2 with zero prior payments', () => {
-    // 1000 × 0.20 × 0.50 = 100
-    expect(computeGeciVergi(1_000, 2, 0)).toBe(100)
+    // 1000 × 0.25 × 0.50 = 125
+    expect(computeGeciVergi(1_000, 2, 0)).toBe(125)
   })
 
   it('negative prior payments (data error) treated as reducing nothing — still floors at 0', () => {
@@ -400,9 +400,9 @@ describe('computeCorporateTaxProvision() — extra boundary tests', () => {
     expect(computeCorporateTaxProvision(-1_000_000_000)).toBe(0)
   })
 
-  it('20% rate is always applied for positive net income', () => {
+  it('25% rate is always applied for positive net income', () => {
     for (const income of [1, 100, 1000, 99999]) {
-      expect(computeCorporateTaxProvision(income)).toBeCloseTo(income * 0.2, 4)
+      expect(computeCorporateTaxProvision(income)).toBeCloseTo(income * 0.25, 4)
     }
   })
 
@@ -420,18 +420,18 @@ describe('computeCorporateTaxProvision() — extra boundary tests', () => {
 
 describe('computeGeciVergi() — extra boundary tests', () => {
   it('returns 0 when cumulative exactly equals prior payments', () => {
-    // 200_000 * 0.20 * 0.25 = 10_000; if paid 10_000 already → 0
-    expect(computeGeciVergi(200_000, 1, 10_000)).toBe(0)
+    // 200_000 * 0.25 * 0.25 = 12_500; if paid 12_500 already → 0
+    expect(computeGeciVergi(200_000, 1, 12_500)).toBe(0)
   })
 
   it('Q1 with very small income', () => {
-    // 100 * 0.20 * 0.25 = 5
-    expect(computeGeciVergi(100, 1, 0)).toBe(5)
+    // 100 * 0.25 * 0.25 = 6.25
+    expect(computeGeciVergi(100, 1, 0)).toBe(6.25)
   })
 
   it('Q4 with very large income', () => {
-    // 10_000_000 * 0.20 * 1.00 = 2_000_000
-    expect(computeGeciVergi(10_000_000, 4, 0)).toBe(2_000_000)
+    // 10_000_000 * 0.25 * 1.00 = 2_500_000
+    expect(computeGeciVergi(10_000_000, 4, 0)).toBe(2_500_000)
   })
 
   it('all quarters produce strictly increasing cumulative amounts', () => {
@@ -447,9 +447,9 @@ describe('computeGeciVergi() — extra boundary tests', () => {
 
   it('Q2 cumulative minus Q1 payment equals incremental Q2 obligation', () => {
     const income = 800_000
-    const q1Pay = computeGeciVergi(income, 1, 0)          // = 800k * 0.20 * 0.25 = 40k
-    const q2Due = computeGeciVergi(income, 2, q1Pay)      // = 800k * 0.20 * 0.50 - 40k = 40k
-    expect(q2Due).toBeCloseTo(40_000, 0)
+    const q1Pay = computeGeciVergi(income, 1, 0)          // = 800k * 0.25 * 0.25 = 50k
+    const q2Due = computeGeciVergi(income, 2, q1Pay)      // = 800k * 0.25 * 0.50 - 50k = 50k
+    expect(q2Due).toBeCloseTo(50_000, 0)
   })
 
   it('floor is always 0, never negative', () => {
@@ -599,12 +599,12 @@ describe('computeKdvNetObligation() — extended cases', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe('computeCorporateTaxProvision() — extended cases', () => {
-  it('net income of 1 → 0.20', () => {
-    expect(computeCorporateTaxProvision(1)).toBeCloseTo(0.20, 5)
+  it('net income of 1 → 0.25', () => {
+    expect(computeCorporateTaxProvision(1)).toBeCloseTo(0.25, 5)
   })
 
-  it('net income of 1_000_000 → 200_000', () => {
-    expect(computeCorporateTaxProvision(1_000_000)).toBe(200_000)
+  it('net income of 1_000_000 → 250_000', () => {
+    expect(computeCorporateTaxProvision(1_000_000)).toBe(250_000)
   })
 
   it('net income of exactly 0 → returns 0 (floor at zero)', () => {
@@ -619,13 +619,13 @@ describe('computeCorporateTaxProvision() — extended cases', () => {
     expect(computeCorporateTaxProvision(-9_999_999)).toBe(0)
   })
 
-  it('fractional income → fraction of 0.20', () => {
-    expect(computeCorporateTaxProvision(1_234.56)).toBeCloseTo(246.912, 2)
+  it('fractional income → fraction of 0.25', () => {
+    expect(computeCorporateTaxProvision(1_234.56)).toBeCloseTo(308.64, 2)
   })
 
-  it('rate is exactly 20%', () => {
-    // Verify the rate by checking 100 → 20
-    expect(computeCorporateTaxProvision(100)).toBeCloseTo(20, 5)
+  it('rate is exactly 25%', () => {
+    // Verify the rate by checking 100 → 25
+    expect(computeCorporateTaxProvision(100)).toBeCloseTo(25, 5)
   })
 })
 
@@ -639,23 +639,23 @@ describe('computeGeciVergi() — extended cases', () => {
   })
 
   it('Q4 with equal prior payments → 0 (already fully paid)', () => {
-    // YTD income 100k, Q4 fraction=1.0 → cumulative = 100k*0.20 = 20k
-    // prior payments = 20k → result = 0
-    expect(computeGeciVergi(100_000, 4, 20_000)).toBe(0)
-  })
-
-  it('Q4 with over-payment → 0 (floored, not negative)', () => {
+    // YTD income 100k, Q4 fraction=1.0 → cumulative = 100k*0.25 = 25k
+    // prior payments = 25k → result = 0
     expect(computeGeciVergi(100_000, 4, 25_000)).toBe(0)
   })
 
-  it('Q2 fraction is 0.50: income=200k → cumulative=20k, prior=5k → 15k', () => {
-    // 200k * 0.20 * 0.50 = 20k; minus 5k = 15k
-    expect(computeGeciVergi(200_000, 2, 5_000)).toBe(15_000)
+  it('Q4 with over-payment → 0 (floored, not negative)', () => {
+    expect(computeGeciVergi(100_000, 4, 30_000)).toBe(0)
   })
 
-  it('Q3 fraction is 0.75: income=400k → cumulative=60k, prior=0 → 60k', () => {
-    // 400k * 0.20 * 0.75 = 60k
-    expect(computeGeciVergi(400_000, 3, 0)).toBe(60_000)
+  it('Q2 fraction is 0.50: income=200k → cumulative=25k, prior=5k → 20k', () => {
+    // 200k * 0.25 * 0.50 = 25k; minus 5k = 20k
+    expect(computeGeciVergi(200_000, 2, 5_000)).toBe(20_000)
+  })
+
+  it('Q3 fraction is 0.75: income=400k → cumulative=75k, prior=0 → 75k', () => {
+    // 400k * 0.25 * 0.75 = 75k
+    expect(computeGeciVergi(400_000, 3, 0)).toBe(75_000)
   })
 
   it('negative net income → cumulative ≤ 0 → always returns 0', () => {
@@ -669,9 +669,9 @@ describe('computeGeciVergi() — extended cases', () => {
     expect(computeGeciVergi(0, 4, 0)).toBe(0)
   })
 
-  it('Q1 cumulative = 25% × 20% = 5% of income', () => {
-    // 1_000 * 0.20 * 0.25 = 50
-    expect(computeGeciVergi(1_000, 1, 0)).toBeCloseTo(50, 5)
+  it('Q1 cumulative = 25% × 25% = 6.25% of income', () => {
+    // 1_000 * 0.25 * 0.25 = 62.5
+    expect(computeGeciVergi(1_000, 1, 0)).toBeCloseTo(62.5, 5)
   })
 })
 

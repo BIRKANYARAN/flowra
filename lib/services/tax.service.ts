@@ -446,7 +446,7 @@ export class TaxService {
   ): Promise<CorporateTaxEstimate> {
     const fiscalYear   = Number(asOfDate.slice(0, 4))
     const ytdStart     = `${fiscalYear}-01-01`
-    const TAX_RATE     = 0.25
+    const TAX_RATE     = CORPORATE_TAX_RATE_TR / 100
 
     // Fetch YTD sales revenue and YTD expenses in parallel
     const [{ data: salesData, error: salesErr }, { data: expData, error: expErr }] =
