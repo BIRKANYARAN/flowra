@@ -38,7 +38,8 @@ const ACTION_LABELS: Record<string, { label: string; color: string }> = {
 
 const PAGE_SIZE = 50
 
-// ── Chain verify result type (mirrors ChainVerifyResult from audit-chain.service) ────
+// ── Chain verify result type (shape returned by /api/admin/audit/chain, which
+//    aggregates the in-DB verify_audit_chain RPC) ──────────────────────────────
 interface ChainResult {
   is_supported:  boolean
   total_checked: number
