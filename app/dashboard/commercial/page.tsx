@@ -101,8 +101,13 @@ export default async function CommercialPage({ searchParams }: PageProps) {
       </div>
 
       <Suspense fallback={<TabSkeleton />}>
-        {activeTab === 'pipeline'    && <PipelineContent    companyId={companyId} />}
-        {activeTab === 'proformas'   && <ProformasContent   companyId={companyId} />}
+        {activeTab === 'pipeline'    && (
+          <div className="space-y-6">
+            <PipelineContent  companyId={companyId} />
+            {/* Proformalar — co-located in the sales pipeline (teklif → satış lifecycle) */}
+            <ProformasContent companyId={companyId} />
+          </div>
+        )}
         {activeTab === 'sales'       && <SalesContent       companyId={companyId} />}
         {activeTab === 'collections' && <CollectionsContent companyId={companyId} />}
         {activeTab === 'customers'   && <CustomersContent   companyId={companyId} />}
