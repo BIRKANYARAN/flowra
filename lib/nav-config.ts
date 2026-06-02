@@ -229,13 +229,12 @@ export const OPERATIONS_TABS = [
 
 /** Planning center — /dashboard/planning?tab= */
 export const PLANNING_TABS = [
-  { key: 'unit-profit',     label: 'Birim Kâr'          },
+  { key: 'unit-profit',     label: 'Karlılık'           },
   { key: 'cash-projection', label: 'Nakit Projeksiyonu'  },
   { key: 'scenarios',       label: 'Senaryolar'          },
   { key: 'variance',        label: 'Gerçek vs Plan'      },
   { key: 'debt-pressure',   label: 'Borç Baskısı'       },
   { key: 'partner-impact',  label: 'Ortak Etkisi'       },
-  { key: 'breakeven',       label: 'Başabaş'             },
   { key: 'tasks',           label: 'Görevler'            },
   { key: 'budget',              label: 'Bütçe'                   },
   { key: 'calendar',            label: 'Takvim'                  },

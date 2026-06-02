@@ -47,8 +47,7 @@ const PLANNING_GROUPS = [
   ] },
   { label: 'Projeksiyon', tabs: [
     { key: 'cash-projection', label: 'Nakit Projeksiyonu' },
-    { key: 'breakeven',       label: 'Başabaş'   },
-    { key: 'unit-profit',     label: 'Birim Kâr' },
+    { key: 'unit-profit',     label: 'Karlılık' },
   ] },
   { label: 'Borç & Ortak', tabs: [
     { key: 'debt-pressure',  label: 'Borç Baskısı' },
@@ -96,7 +95,7 @@ export default async function PlanningPage({ searchParams }: PageProps) {
   const activeTab = VALID_TABS.includes(rawTab) ? rawTab : 'unit-profit'
 
   const planTitles: Record<string, string> = {
-    'unit-profit':     'Birim Karlılık',
+    'unit-profit':     'Karlılık',
     'cash-projection': 'Nakit Projeksiyonu',
     'scenarios':       'Senaryo Analizi',
     'variance':        'Gerçek vs Plan',
@@ -108,7 +107,7 @@ export default async function PlanningPage({ searchParams }: PageProps) {
     'calendar':           'Finansal Takvim',
   }
   const planSubs: Record<string, string> = {
-    'unit-profit':     'Birim karlılık · Marj analizi · Fiyat optimizasyonu',
+    'unit-profit':     'Birim kâr · Marj · Başabaş noktası · Katkı payı',
     'cash-projection': 'Nakit projeksiyonu · 12 ay görünümü · Senaryo bazlı',
     'scenarios':       'Senaryo planlama · Duyarlılık analizi · Stres testleri',
     'variance':        'Senaryo doğruluğu · Plan vs gerçekleşen · Tahmin sapması',
@@ -142,8 +141,12 @@ export default async function PlanningPage({ searchParams }: PageProps) {
 
       <Suspense fallback={<TabSkeleton />}>
         {/* unit-profit: product simulation engine */}
+        {/* Karlılık: birim kâr + başabaş analizi co-located */}
         {activeTab === 'unit-profit' && (
-          <SimulationContent companyId={companyId} userId={userId} activeTab="unit-profit" />
+          <div className="space-y-6">
+            <SimulationContent companyId={companyId} userId={userId} activeTab="unit-profit" />
+            <BreakEvenTab companyId={companyId} userId={userId} />
+          </div>
         )}
         {/* partner-impact: distribution planning + loan status */}
         {activeTab === 'partner-impact' && (
@@ -162,10 +165,6 @@ export default async function PlanningPage({ searchParams }: PageProps) {
         {/* debt-pressure: tranche ladder + DSR + concentration */}
         {activeTab === 'debt-pressure' && (
           <DebtPressureTab companyId={companyId} userId={userId} />
-        )}
-        {/* breakeven: başabaş analizi */}
-        {activeTab === 'breakeven' && (
-          <BreakEvenTab companyId={companyId} userId={userId} />
         )}
         {activeTab === 'tasks' && <TasksContent companyId={companyId} />}
         {/* budget: monthly budget targets vs actuals */}
