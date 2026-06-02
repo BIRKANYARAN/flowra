@@ -13,7 +13,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const { uid, companyId, supabase, ctx } = auth
 
   try {
-    const body   = await req.json()
+    const body = await req.json().catch(() => null)
+    if (!body || typeof body !== 'object') return NextResponse.json({ error: 'Geçersiz JSON gövdesi', code: 'VALIDATION_ERROR' }, { status: 422 })
     const status = requireString(body.status, 'status')
     const result = await ProformaService.updateStatus(uid, companyId, params.id, status, ctx, supabase)
     return NextResponse.json(result, { headers: { [REQUEST_ID_HEADER]: ctx.requestId } })

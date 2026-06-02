@@ -88,7 +88,9 @@ async function _handlePatch(req: NextRequest) {
 
     await requireRole(uid, companyId, 'admin', supabase)
 
-    const body = await req.json()
+    const body = await req.json().catch(() => null)
+
+    if (!body || typeof body !== 'object') return NextResponse.json({ error: 'Geçersiz JSON gövdesi', code: 'VALIDATION_ERROR' }, { status: 422 })
     const { rule_type, threshold_value, severity, is_active } = body
 
     if (!rule_type) return NextResponse.json({ error: 'rule_type required' }, { status: 400 })

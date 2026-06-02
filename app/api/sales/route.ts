@@ -25,8 +25,9 @@ export async function POST(req: NextRequest) {
     if (!auth.ok) return auth.response
     const { uid, companyId, supabase } = auth
 
-    const body = await req.json() as Record<string, unknown>
+    const body = await req.json().catch(() => null)
 
+    if (!body || typeof body !== 'object') return NextResponse.json({ error: 'Geçersiz JSON gövdesi', code: 'VALIDATION_ERROR' }, { status: 422 })
     // ── Validate required fields ────────────────────────────────────────────
     const customerName = typeof body.customer_name === 'string' ? body.customer_name.trim() : ''
     if (!customerName || customerName.length < 2 || customerName.length > 300) {

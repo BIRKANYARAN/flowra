@@ -59,7 +59,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    const body = await req.json()
+    const body = await req.json().catch(() => null)
+
+    if (!body || typeof body !== 'object') return NextResponse.json({ error: 'Geçersiz JSON gövdesi', code: 'VALIDATION_ERROR' }, { status: 422 })
     const { partner_id, event_type, amount_try, event_date, reference, description, metadata } = body
 
     if (!partner_id || !event_type || amount_try == null) {

@@ -133,3 +133,10 @@ A live-schema cross-reference of every service `.select()/.eq()/.is()` found a c
   `sale_item_allocations`; `expenses.vendor_name`/`supplier_name` don't exist; ledger services read
   `journal_entries.debit_try/credit_try` which live on `journal_entry_lines`). These need a re-source
   /join, not a rename → DECISION (and several reveal the GL line-level tables aren't wired yet).
+
+- **Evolution cycle 4:** route-safety audit. **Strong positive finding: zero missing-auth gaps and
+  zero broken routes** across all of `app/api/**` — every company-scoped route correctly uses
+  `resolveApiAuth` (RLS-enforcing authed client). Only gaps were 11 low-severity unguarded
+  `req.json()` body-parses (malformed JSON → 500 instead of 422); hardened all 12 occurrences across
+  partners/sales/proformas/expenses/admin-members/settings with a type-preserving
+  `.catch(() => null)` + 422 guard. No business logic changed.

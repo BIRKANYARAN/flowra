@@ -70,8 +70,8 @@ export async function POST(req: NextRequest) {
 
 
   try {
-    const body = await req.json()
-
+    const body = await req.json().catch(() => null)
+    if (!body || typeof body !== 'object') return NextResponse.json({ error: 'Geçersiz JSON gövdesi', code: 'VALIDATION_ERROR' }, { status: 422 })
     const amount       = requirePositiveNumber(body.amount, 'amount')
     const rawCurrency  = (body.currency ?? 'TRY').toString().toUpperCase()
     const currency     = ALLOWED_CURRENCIES.includes(rawCurrency) ? rawCurrency : 'TRY'

@@ -126,7 +126,9 @@ export async function POST(req: NextRequest) {
       throw e
     }
 
-    const body = await req.json()
+    const body = await req.json().catch(() => null)
+
+    if (!body || typeof body !== 'object') return NextResponse.json({ error: 'Geçersiz JSON gövdesi', code: 'VALIDATION_ERROR' }, { status: 422 })
     const email = (typeof body.email === 'string' ? body.email.trim().toLowerCase() : '')
     const role  = (typeof body.role  === 'string' ? body.role  : 'viewer') as MemberRole
 

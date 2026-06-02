@@ -70,7 +70,8 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const body = (await req.json()) as { requested_distribution?: unknown }
+    const body = await req.json().catch(() => null)
+    if (!body || typeof body !== 'object') return NextResponse.json({ error: 'Geçersiz JSON gövdesi', code: 'VALIDATION_ERROR' }, { status: 422 })
     const requestedDistribution = Number(body.requested_distribution ?? 0)
 
     if (isNaN(requestedDistribution) || requestedDistribution < 0) {

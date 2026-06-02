@@ -18,8 +18,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     const { uid, companyId, supabase, ctx } = auth
 
     const { id } = params
-    const body = await req.json() as Record<string, unknown>
-
+    const body = await req.json().catch(() => null)
+    if (!body || typeof body !== 'object') return NextResponse.json({ error: 'Geçersiz JSON gövdesi', code: 'VALIDATION_ERROR' }, { status: 422 })
     // ── Validate incoming fields FIRST (before any DB call) ──────────────────
     const patch: Record<string, unknown> = { updated_at: new Date().toISOString() }
 

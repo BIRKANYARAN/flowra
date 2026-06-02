@@ -48,7 +48,9 @@ export async function POST(req: NextRequest) {
 
     await requireAdmin(uid, companyId, supabase)
 
-    const body = await req.json()
+    const body = await req.json().catch(() => null)
+
+    if (!body || typeof body !== 'object') return NextResponse.json({ error: 'Geçersiz JSON gövdesi', code: 'VALIDATION_ERROR' }, { status: 422 })
     const { kpi_key, target_value, period_type, target_label } = body
 
     // Validate kpi_key

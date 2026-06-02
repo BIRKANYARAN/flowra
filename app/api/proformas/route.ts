@@ -13,7 +13,8 @@ export async function POST(req: NextRequest) {
 
 
   try {
-    const body = await req.json()
+    const body = await req.json().catch(() => null)
+    if (!body || typeof body !== 'object') return NextResponse.json({ error: 'Geçersiz JSON gövdesi', code: 'VALIDATION_ERROR' }, { status: 422 })
     if (!body.idempotency_key || typeof body.idempotency_key !== 'string') {
       return NextResponse.json({ error: 'idempotency_key zorunludur', code: 'IDEMPOTENCY_KEY_MISSING', type: 'BUSINESS' }, { status: 422 })
     }
@@ -38,7 +39,8 @@ export async function PATCH(req: NextRequest) {
 
 
   try {
-    const body   = await req.json()
+    const body = await req.json().catch(() => null)
+    if (!body || typeof body !== 'object') return NextResponse.json({ error: 'Geçersiz JSON gövdesi', code: 'VALIDATION_ERROR' }, { status: 422 })
     const result = await ProformaService.update(uid, companyId, body, ctx, supabase)
     return NextResponse.json(result, { headers: { [REQUEST_ID_HEADER]: ctx.requestId } })
   } catch (err) {
