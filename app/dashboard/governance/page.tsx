@@ -16,7 +16,7 @@ import ResolutionsTab        from './_components/ResolutionsTab'
 // ── Types ──────────────────────────────────────────────────────────────────────
 type TabId = 'calendar' | 'actions' | 'resolutions' | 'audit' | 'exports' | 'commitments' | 'decisions' | 'audit-trail' | 'capital'
 
-// 9 flat tabs → 3 grouped sections (2-level nav). All tabs preserved.
+// 8 tabs in 3 groups (exports folded into Denetim Hazırlığı).
 const TAB_GROUPS: { label: string; tabs: { id: TabId; label: string; icon: string }[] }[] = [
   { label: 'Kararlar', tabs: [
     { id: 'calendar',    label: 'Takvim',              icon: '📅' },
@@ -31,7 +31,6 @@ const TAB_GROUPS: { label: string; tabs: { id: TabId; label: string; icon: strin
   { label: 'Denetim', tabs: [
     { id: 'audit',       label: 'Denetim Hazırlığı',  icon: '✅' },
     { id: 'audit-trail', label: 'Denetim İzi',          icon: '🔍' },
-    { id: 'exports',     label: 'Veri Dışa Aktarma',  icon: '📦' },
   ] },
 ]
 
@@ -39,7 +38,7 @@ const TAB_GROUPS: { label: string; tabs: { id: TabId; label: string; icon: strin
 export default function GovernancePage() {
   const searchParams = useSearchParams()
   const router       = useRouter()
-  const activeTab    = (searchParams.get('tab') ?? 'calendar') as TabId
+  const activeTab    = ((searchParams.get('tab') === 'exports' ? 'audit' : (searchParams.get('tab') ?? 'calendar'))) as TabId
 
   function setTab(id: TabId) {
     router.replace(`/dashboard/governance?tab=${id}`, { scroll: false })
@@ -99,8 +98,13 @@ export default function GovernancePage() {
         {activeTab === 'calendar'    && <GovernanceClockTab />}
         {activeTab === 'actions'     && <CorporateActionsTab />}
         {activeTab === 'resolutions' && <ResolutionsTab />}
-        {activeTab === 'audit'       && <AuditReadinessTab />}
-        {activeTab === 'exports'     && <ExportsTab />}
+        {activeTab === 'audit'       && (
+          <div className="space-y-6">
+            <AuditReadinessTab />
+            {/* Sertifikalı dışa aktarma — low-frequency audit action, co-located with readiness */}
+            <ExportsTab />
+          </div>
+        )}
         {activeTab === 'commitments' && <CommitmentsTab />}
         {activeTab === 'decisions'   && <DecisionContextTab />}
         {activeTab === 'audit-trail' && (
