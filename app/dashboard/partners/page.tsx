@@ -54,7 +54,15 @@ export default function PartnersPage() {
   const router       = useRouter()
   // Tab state is URL-driven (?tab=partners|ledger|waterfall|tranches|distribution|returns).
   // URL = source of truth → deep-linkable, browser back/forward works, refresh persists tab.
-  const activeTab = (searchParams.get('tab') ?? 'partners') as TabId
+  // Tabs co-located into a host tab (UX simplification — content preserved as
+  // sections within the host). Old deep-links resolve to the host tab.
+  const TAB_ALIAS: Record<string, TabId> = {
+    amortization:  'tranches',  // loan payment schedule shown with the live tranche state
+    contributions: 'capital',   // capital commitments shown with the capital account
+    dilution:      'capital',   // dilution analysis shown with the capital account
+  }
+  const rawTab    = searchParams.get('tab') ?? 'partners'
+  const activeTab = (TAB_ALIAS[rawTab] ?? rawTab) as TabId
   function setActiveTab(id: TabId) {
     router.replace(`/dashboard/partners?tab=${id}`, { scroll: false })
   }
@@ -318,13 +326,10 @@ export default function PartnersPage() {
       { id: 'partners',          label: 'Ortaklar'        },
       { id: 'capital',           label: 'Sermaye Hesabı'  },
       { id: 'capital-statement', label: 'Sermaye Ekstresi' },
-      { id: 'contributions',     label: 'Taahhüt Takvimi' },
-      { id: 'dilution',          label: 'Seyreltme'       },
     ] },
     { label: 'Krediler', tabs: [
       { id: 'ledger',       label: 'Defter'        },
       { id: 'tranches',     label: 'Borç Dilimleri' },
-      { id: 'amortization', label: 'Amortisman'    },
     ] },
     { label: 'Dağıtım', tabs: [
       { id: 'waterfall',              label: 'Geri Ödeme'         },
@@ -480,12 +485,16 @@ export default function PartnersPage() {
       )}
 
       {activeTab === 'tranches' && (
-        <TranchesTab
-          loading={loading}
-          waterfall={waterfall}
-          partners={partners}
-          onRefresh={reloadAll}
-        />
+        <div className="space-y-5">
+          <TranchesTab
+            loading={loading}
+            waterfall={waterfall}
+            partners={partners}
+            onRefresh={reloadAll}
+          />
+          {/* Amortisman (payment schedule) — co-located with the live tranche state */}
+          <AmortizationTab />
+        </div>
       )}
 
       {activeTab === 'distribution' && (
@@ -521,7 +530,12 @@ export default function PartnersPage() {
       )}
 
       {activeTab === 'capital' && (
-        <CapitalAccountTab />
+        <div className="space-y-5">
+          <CapitalAccountTab />
+          {/* Taahhüt Takvimi (capital commitments) + Seyreltme (dilution) — co-located with the capital account */}
+          <ContributionTimelineTab companyId="" />
+          <EquityDilutionTab />
+        </div>
       )}
 
       {activeTab === 'dividend' && (
@@ -532,13 +546,7 @@ export default function PartnersPage() {
         <CompensationTab partners={partners} />
       )}
 
-      {activeTab === 'dilution' && (
-        <EquityDilutionTab />
-      )}
 
-      {activeTab === 'amortization' && (
-        <AmortizationTab />
-      )}
 
       {activeTab === 'dividend-ledger' && (
         <DividendLedgerTab />
@@ -552,9 +560,6 @@ export default function PartnersPage() {
         <DistributionSimulatorTab />
       )}
 
-      {activeTab === 'contributions' && (
-        <ContributionTimelineTab companyId="" />
-      )}
 
       {activeTab === 'equity-waterfall' && (
         <EquityWaterfallTab companyId="" />
