@@ -155,7 +155,7 @@ export class ReorderAlertService {
 
       supabase
         .from('sale_items')
-        .select('product_id, qty_sold, sales!inner(company_id, sale_date, deleted_at)')
+        .select('product_id, qty, sales!inner(company_id, sale_date, deleted_at)')
         .eq('sales.company_id', companyId)
         .is('sales.deleted_at', null)
         .gte('sales.sale_date', thirtyDaysAgo)
@@ -176,7 +176,7 @@ export class ReorderAlertService {
     }>
 
     const rawConsumption = (consumptionRes.status === 'fulfilled' ? (consumptionRes.value.data ?? []) : []) as Array<{
-      product_id: string; qty_sold: number
+      product_id: string; qty: number
     }>
 
     // ── Build lookup maps ────────────────────────────────────────────────────
@@ -195,7 +195,7 @@ export class ReorderAlertService {
     const consumptionByProduct = new Map<string, number>()
     for (const item of rawConsumption) {
       const prev = consumptionByProduct.get(item.product_id) ?? 0
-      consumptionByProduct.set(item.product_id, prev + (item.qty_sold ?? 0))
+      consumptionByProduct.set(item.product_id, prev + (item.qty ?? 0))
     }
 
     // ── Build alerts ─────────────────────────────────────────────────────────

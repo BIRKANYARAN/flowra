@@ -104,3 +104,32 @@ the UI, so collapsing changes a displayed score. **Recommended canonical:** `Fin
   `lib/db/mappers.ts`, `pcle/pcle.immutability.ts` (an *unwired* immutability guard — may be a missing
   control, not dead), `inventory/supplier-performance.service.ts` (duplicate), `lib/admin/gl-rollback.ts`,
   `lib/rate-limit.ts` (unwired rate-limiter — wiring it is the better answer than deleting).
+
+---
+
+## Schema-drift register (cycle 3)
+A live-schema cross-reference of every service `.select()/.eq()/.is()` found a class of bugs where a
+**non-existent column** is read → PostgREST 400 → `data` null → a real figure **silently shows 0**
+(the same root as the cycle-2 KDV bug). 13 found, classified:
+
+**FIXED (cycle 3 — live, unambiguous rename, non-statutory operational features that were broken):**
+- `inventory/fifo-audit.service.ts` — `sale_item_allocations.stock_lot_id,qty` → `lot_id,qty_allocated`
+  (every lot showed un-consumed → FIFO integrity scoring wrong).
+- `inventory/sales-velocity.service.ts` — `sale_item_allocations.qty` → `qty_allocated` (units sold = 0).
+- `inventory/reorder-alert.service.ts` — `sale_items.qty_sold` → `qty` (consumption = 0 → reorder alerts never fired).
+- `pcle/interest-rate-sensitivity.service.ts` — `sales.invoice_date` → `sale_date` (revenue = 0 → sensitivity empty).
+- `app/api/export/sales/route.ts` — `sale_items.unit_price_try` → `unit_price` (whole sales CSV export was 500'ing).
+
+**DEFERRED — DECISION (touch tax/dividend/shareholder-capital figures or are multi-field-broken):**
+- `tax/tax-reserve.service.ts` — 6-field drift incl. an **input-KDV deductibility policy** choice
+  (`kdv_deductible` filter doesn't exist; siblings use `kdv>0`). Coordinated fix + policy ruling.
+- `pcle/dividend-calculator.service.ts` — `accounting_periods.net_profit_try` → `period_profit_try`:
+  unambiguous rename, **but it sets the dividend distributable basis** (statutory) → with the
+  dividend-reserve DECISION.
+- `pcle/{distribution-simulator,capital-statement,dividend-ledger}.service.ts` —
+  `partner_capital_commitments.paid_amount_try` → `paid_try`: factual paid-in-capital fixes, but they
+  move **shareholder-facing capital figures** → bundle with the capital-account canonical decision.
+- ~30 more structural/ambiguous drifts (e.g. `sale_items.unit_cost` doesn't exist — cost lives in
+  `sale_item_allocations`; `expenses.vendor_name`/`supplier_name` don't exist; ledger services read
+  `journal_entries.debit_try/credit_try` which live on `journal_entry_lines`). These need a re-source
+  /join, not a rename → DECISION (and several reveal the GL line-level tables aren't wired yet).

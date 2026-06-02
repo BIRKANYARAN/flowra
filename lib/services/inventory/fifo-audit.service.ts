@@ -193,17 +193,17 @@ export class FifoAuditService {
     )
 
     // ── 3. Fetch allocation totals per lot ────────────────────────────────────
-    // sale_item_allocations.stock_lot_id → GROUP BY → SUM(qty)
+    // sale_item_allocations.lot_id → GROUP BY → SUM(qty_allocated)
     const { data: rawAllocations } = await this.supabase
       .from('sale_item_allocations')
-      .select('stock_lot_id, qty')
-      .in('stock_lot_id', lotIds)
+      .select('lot_id, qty_allocated')
+      .in('lot_id', lotIds)
 
     // Aggregate qty by lot
     const allocByLot = new Map<string, number>()
-    for (const row of (rawAllocations ?? []) as Array<{ stock_lot_id: string; qty: number }>) {
-      const prev = allocByLot.get(row.stock_lot_id) ?? 0
-      allocByLot.set(row.stock_lot_id, prev + Number(row.qty ?? 0))
+    for (const row of (rawAllocations ?? []) as Array<{ lot_id: string; qty_allocated: number }>) {
+      const prev = allocByLot.get(row.lot_id) ?? 0
+      allocByLot.set(row.lot_id, prev + Number(row.qty_allocated ?? 0))
     }
 
     // ── 4. Validate purchase_item_ids ─────────────────────────────────────────

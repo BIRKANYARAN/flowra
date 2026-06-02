@@ -175,7 +175,7 @@ export class SalesVelocityService {
       // Sales in observation window via sale_item_allocations → sale_items → sales
       this.supabase
         .from('sale_item_allocations')
-        .select('qty, sale_items!inner(product_id, sale_id, sales!inner(sale_date, company_id, deleted_at))')
+        .select('qty_allocated, sale_items!inner(product_id, sale_id, sales!inner(sale_date, company_id, deleted_at))')
         .eq('sale_items.sales.company_id', companyId)
         .is('sale_items.sales.deleted_at', null)
         .gte('sale_items.sales.sale_date', dObsAgo)
@@ -184,7 +184,7 @@ export class SalesVelocityService {
       // Sales in last 30 days (subset for units_sold_30d)
       this.supabase
         .from('sale_item_allocations')
-        .select('qty, sale_items!inner(product_id, sale_id, sales!inner(sale_date, company_id, deleted_at))')
+        .select('qty_allocated, sale_items!inner(product_id, sale_id, sales!inner(sale_date, company_id, deleted_at))')
         .eq('sale_items.sales.company_id', companyId)
         .is('sale_items.sales.deleted_at', null)
         .gte('sale_items.sales.sale_date', d30ago)
@@ -217,7 +217,7 @@ export class SalesVelocityService {
     // ── Aggregate sales in observation window ─────────────────────────────────
 
     type RawSaleAlloc = {
-      qty: number
+      qty_allocated: number
       sale_items: {
         product_id: string | null
         sale_id: string
@@ -243,7 +243,7 @@ export class SalesVelocityService {
       return {
         product_id: saleItemRaw.product_id,
         sale_date:  salesRaw?.sale_date ?? null,
-        qty:        Number(row.qty ?? 0),
+        qty:        Number(row.qty_allocated ?? 0),
       }
     }
 

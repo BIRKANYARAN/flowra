@@ -76,7 +76,7 @@ export async function GET(req: NextRequest) {
     .select(`
       sale_date, customer_name, total, paid_amount, payment_status,
       paid_at, due_date, notes,
-      sale_items ( product_name, qty, unit_price_try, discount_pct )
+      sale_items ( product_name, qty, unit_price, discount_pct )
     `)
     .eq('company_id', companyId)
     .is('deleted_at', null)

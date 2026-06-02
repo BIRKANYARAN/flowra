@@ -399,7 +399,7 @@ export class InterestRateSensitivityService {
       .from('sales')
       .select('total_try')
       .eq('company_id', companyId)
-      .gte('invoice_date', fromDate)
+      .gte('sale_date', fromDate)
       .is('deleted_at', null)
 
     const { data: expenseRows } = await this.supabase
