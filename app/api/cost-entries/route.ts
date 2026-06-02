@@ -38,7 +38,12 @@ export async function POST(req: NextRequest) {
   if (!auth.ok) return auth.response
   const { uid, companyId, supabase } = auth
 
-  const body = await req.json()
+  let body: Record<string, unknown>
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: 'Geçersiz JSON gövdesi', code: 'VALIDATION_ERROR' }, { status: 422 })
+  }
   const productId = body.product_id
   if (!productId || typeof productId !== 'string') {
     return NextResponse.json({ error: 'product_id is required' }, { status: 422 })

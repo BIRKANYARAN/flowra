@@ -28,7 +28,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { allocationUnitCost } from '@/lib/finance/cogs'
+import { allocationUnitCost, cogsTruncationWarning } from '@/lib/finance/cogs'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyClient = SupabaseClient<any>
@@ -448,8 +448,17 @@ export class GrossMarginBridgeService {
             const existing = cogsMap.get(r.sale_item_id) ?? 0
             cogsMap.set(r.sale_item_id, existing + Number(r.qty_allocated ?? 0) * allocationUnitCost(r))
           }
-        } catch {
+
+          // No-silent-truncation: warn if any COGS step hit its row cap (understates COGS).
+          const truncWarn = cogsTruncationWarning('gross-margin-bridge', [
+            { name: 'sales',       count: saleIds.length,        cap: 5000 },
+            { name: 'sale_items',  count: saleItemIds.length,    cap: 10000 },
+            { name: 'allocations', count: (allocData ?? []).length, cap: 20000 },
+          ])
+          if (truncWarn) console.warn(truncWarn)
+        } catch (err) {
           // cogsMap stays empty — fallback applied below
+          console.warn('[gross-margin-bridge] sale_item_allocations fetch failed; COGS fallback applied:', err)
         }
       }
 
@@ -469,8 +478,9 @@ export class GrossMarginBridgeService {
         entry.cogs    += cogs
         result.set(item.productId, entry)
       }
-    } catch {
+    } catch (err) {
       // Return empty map on error
+      console.warn('[gross-margin-bridge] buildProductMargins failed; returning empty map:', err)
     }
 
     return result

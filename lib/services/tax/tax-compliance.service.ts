@@ -266,7 +266,7 @@ export class TaxComplianceService {
     // ── Fetch sales for KDV (current year) ───────────────────────────────────
     const { data: salesData } = await this.supabase
       .from('sales')
-      .select('kdv_total, total_try, sale_date')
+      .select('kdv_amount_try, total_try, sale_date')
       .eq('company_id', companyId)
       .gte('sale_date', `${currentYear}-01-01`)
       .lte('sale_date', `${currentYear}-12-31`)
@@ -287,7 +287,7 @@ export class TaxComplianceService {
 
     for (const sale of (salesData ?? [])) {
       const ym = (sale.sale_date as string).slice(0, 7)
-      monthlyOutputVat.set(ym, (monthlyOutputVat.get(ym) ?? 0) + Number(sale.kdv_total ?? 0))
+      monthlyOutputVat.set(ym, (monthlyOutputVat.get(ym) ?? 0) + Number(sale.kdv_amount_try ?? 0))
     }
 
     // Estimate input VAT: deductible expense categories × 20%

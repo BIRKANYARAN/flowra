@@ -79,10 +79,28 @@ the UI, so collapsing changes a displayed score. **Recommended canonical:** `Fin
 ---
 
 ## Cycle log
-- **Evolution cycle 1 (this commit):** deleted dead `lib/finance/balance-sheet.ts` (#3); fixed the stale
-  20% corporate-tax rate in `tax/tax-compliance.service.ts` + DRY'd `tax.service.ts` (#2); added
-  `tests/corporate-tax-rate-single-source.test.ts`. All number-neutral except the intended KV-rate
-  correction (20→25%, completing the unification started by the earlier income-statement fix).
-- **Open DECISIONs (need sign-off, in priority order):** #1 net-income canonical · #2 matrah base ·
-  #5 dividend legal-reserve formula (TTK 519 cap) · #3 balance-sheet convergence · #6 health score ·
-  #4 working-capital optimizer cleanup.
+- **Evolution cycle 1:** deleted dead `lib/finance/balance-sheet.ts`; fixed the stale 20% corporate-tax
+  rate in `tax/tax-compliance.service.ts` + DRY'd `tax.service.ts`; added
+  `tests/corporate-tax-rate-single-source.test.ts`. Number-neutral except the intended KV-rate
+  correction (20→25%, completing the earlier income-statement unification).
+- **Evolution cycle 2:** 9 code-grounded SAFE items, all tsc+tests+build verifiable:
+  1. Deleted the dead `WorkingCapitalOptimizerService` runtime class (kept its types + tested pure fns;
+     the live path uses `WorkingCapitalOptimizationService`).
+  2–5. **Data-honesty:** threaded the COGS row-cap truncation warning (log-level, number-neutral) into
+     `margin-trend`, `ebitda-bridge`, `financial-ratios`, `gross-margin-bridge` — they previously
+     truncated COGS silently; also fixed two swallowed `catch {}` in gross-margin-bridge.
+  6. **Correctness (number-changing):** `tax/tax-compliance.service.ts` read a **non-existent**
+     `sales.kdv_total` → the query 400'd → the compliance dashboard's Hesaplanan KDV (output VAT) was
+     silently **0**. Fixed to `kdv_amount_try` (the real column). Same class as the prior accepted
+     non-existent-column fixes; makes KDV correct, not a policy change.
+  7–8. **Guards (zero runtime change):** `tests/period-guard-predicate.test.ts` (locks the lock/close/
+     open/adjustment write-block predicate) + `tests/fx-source-contract.test.ts` (locks the no-silent-1:1
+     rule: identity/unavailable sources + the no-rate warn).
+  9. **Reliability:** guarded `req.json()` in `POST /api/cost-entries` → 422 on malformed body (was an
+     unhandled 500).
+- **Open DECISIONs (need sign-off, priority order):** #1 net-income canonical · #2 matrah base ·
+  #5 dividend legal-reserve formula (TTK 519 cap) · #3 balance-sheet convergence · #6 health score.
+  Plus a few **test-only dead modules** whose deletion is a judgment call (discards coverage):
+  `lib/db/mappers.ts`, `pcle/pcle.immutability.ts` (an *unwired* immutability guard — may be a missing
+  control, not dead), `inventory/supplier-performance.service.ts` (duplicate), `lib/admin/gl-rollback.ts`,
+  `lib/rate-limit.ts` (unwired rate-limiter — wiring it is the better answer than deleting).

@@ -21,7 +21,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { allocationUnitCost } from '@/lib/finance/cogs'
+import { allocationUnitCost, cogsTruncationWarning } from '@/lib/finance/cogs'
 import { round2 } from '@/lib/calc'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -306,6 +306,15 @@ export const FinancialRatiosService = {
           .limit(20000)
 
         const rawAllocs = allocRes.data ?? []
+
+        // No-silent-truncation: warn if any COGS step hit its row cap (understates COGS → overstates margins).
+        const truncWarn = cogsTruncationWarning('financial-ratios', [
+          { name: 'sales',       count: allSaleIds.length,  cap: 5000 },
+          { name: 'sale_items',  count: saleItemIds.length, cap: 10000 },
+          { name: 'allocations', count: rawAllocs.length,    cap: 20000 },
+        ])
+        if (truncWarn) console.warn(truncWarn)
+
         cogsRows = rawAllocs.map((r: {
           sale_item_id: string
           qty_allocated: number

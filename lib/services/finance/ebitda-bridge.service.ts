@@ -14,7 +14,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { computeCogsFromAllocations } from '@/lib/finance/cogs'
+import { computeCogsFromAllocations, cogsTruncationWarning } from '@/lib/finance/cogs'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyClient = SupabaseClient<any>
@@ -565,6 +565,14 @@ export class EbitdaBridgeService {
 
         // Shared tested COGS cost-fallback kernel (same as getCfoMetrics).
         cogsFromAllocations = computeCogsFromAllocations(allocRes.data ?? [])
+
+        // No-silent-truncation: warn if any COGS step hit its row cap (understates COGS).
+        const truncWarn = cogsTruncationWarning('ebitda-bridge', [
+          { name: 'sales',       count: saleIds.length,        cap: 5000 },
+          { name: 'sale_items',  count: saleItemIds.length,    cap: 10000 },
+          { name: 'allocations', count: (allocRes.data ?? []).length, cap: 20000 },
+        ])
+        if (truncWarn) console.warn(truncWarn)
       }
 
       if (cogsFromAllocations > 0) {
