@@ -227,8 +227,8 @@ describe('Tab contracts — canonical key sets', () => {
     expect(keys).toContain('orders')
   })
 
-  it('PLANNING_TABS has 11 tabs (budget + calendar + scenario-compare added)', () => {
-    expect(PLANNING_TABS.length).toBe(11)
+  it('PLANNING_TABS has 10 tabs (scenario-compare removed — was an illustrative/fake-data duplicate of Senaryolar)', () => {
+    expect(PLANNING_TABS.length).toBe(10)
     const keys = PLANNING_TABS.map(t => t.key)
     expect(keys).toContain('unit-profit')
     expect(keys).toContain('variance')
@@ -236,7 +236,7 @@ describe('Tab contracts — canonical key sets', () => {
     expect(keys).toContain('breakeven')
     expect(keys).toContain('tasks')
     expect(keys).toContain('budget')
-    expect(keys).toContain('scenario-compare')
+    expect(keys).not.toContain('scenario-compare')
   })
 })
 

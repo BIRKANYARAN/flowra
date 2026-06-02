@@ -240,5 +240,4 @@ export const PLANNING_TABS = [
   { key: 'tasks',           label: 'Görevler'            },
   { key: 'budget',              label: 'Bütçe'                   },
   { key: 'calendar',            label: 'Takvim'                  },
-  { key: 'scenario-compare',    label: 'Senaryo Karşılaştırması' },
 ] as const

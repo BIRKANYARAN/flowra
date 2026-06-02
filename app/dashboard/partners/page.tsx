@@ -325,7 +325,6 @@ export default function PartnersPage() {
       { id: 'ledger',       label: 'Defter'        },
       { id: 'tranches',     label: 'Borç Dilimleri' },
       { id: 'amortization', label: 'Amortisman'    },
-      { id: 'compensation', label: 'Huzur Hakkı'   },
     ] },
     { label: 'Dağıtım', tabs: [
       { id: 'waterfall',              label: 'Geri Ödeme'         },
@@ -335,6 +334,7 @@ export default function PartnersPage() {
       { id: 'dividend-ledger',        label: 'Dağıtım Geçmişi'    },
       { id: 'equity-waterfall',       label: 'Getiri Projeksiyonu' },
       { id: 'returns',                label: 'Getiri'             },
+      { id: 'compensation',           label: 'Huzur Hakkı'        },
     ] },
     { label: 'Risk', tabs: [
       { id: 'risk',           label: 'Risk'      },

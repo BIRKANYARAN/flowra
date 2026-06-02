@@ -22,7 +22,6 @@ import { VarianceTab }        from './_tabs/VarianceTab'
 import { BreakEvenTab }       from './_tabs/BreakEvenTab'
 import { BudgetTab }          from './_tabs/BudgetTab'
 import { CalendarContent }    from './_tabs/CalendarContent'
-import { MultiScenarioTab }   from './_tabs/MultiScenarioTab'
 
 function TabSkeleton() {
   return (
@@ -44,7 +43,6 @@ const TABS       = PLANNING_TABS.map(t => ({ key: t.key, label: t.label }))
 const PLANNING_GROUPS = [
   { label: 'Senaryolar',  tabs: [
     { key: 'scenarios',       label: 'Senaryolar'   },
-    { key: 'scenario-compare', label: 'Karşılaştırma' },
     { key: 'variance',        label: 'Gerçek vs Plan' },
   ] },
   { label: 'Projeksiyon', tabs: [
@@ -108,7 +106,6 @@ export default async function PlanningPage({ searchParams }: PageProps) {
     'tasks':           'Görevler',
     'budget':          'Bütçe vs Gerçekleşen',
     'calendar':           'Finansal Takvim',
-    'scenario-compare':   'Senaryo Karşılaştırması',
   }
   const planSubs: Record<string, string> = {
     'unit-profit':     'Birim karlılık · Marj analizi · Fiyat optimizasyonu',
@@ -121,7 +118,6 @@ export default async function PlanningPage({ searchParams }: PageProps) {
     'tasks':           'Görev takibi · Vadesi yaklaşan · Öncelik sırası',
     'budget':          'Aylık bütçe hedefleri · Gelir/gider varyansı · YTD özet',
     'calendar':           'Vergi takvimleri · Dönem kapanışları · Ortak yükümlülükleri · Yönetişim',
-    'scenario-compare':   'Senaryo karşılaştırması · Borç baskısı · Önerilen senaryo',
   }
 
   return (
@@ -176,8 +172,6 @@ export default async function PlanningPage({ searchParams }: PageProps) {
         {activeTab === 'budget' && <BudgetTab companyId={companyId} />}
         {/* calendar: annual financial calendar */}
         {activeTab === 'calendar' && <CalendarContent companyId={companyId} />}
-        {/* scenario-compare: multi-scenario comparison with debt pressure */}
-        {activeTab === 'scenario-compare' && <MultiScenarioTab />}
       </Suspense>
     </div>
   )
