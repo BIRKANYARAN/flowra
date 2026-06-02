@@ -33,6 +33,7 @@ import {
 } from '@/lib/services/tax.service'
 import { lastNMonths, kdvPositionLabel, geciciStatus, nextGeciciDue } from './_tax/helpers'
 import { BeyanTakvimi } from './_tax/BeyanTakvimi'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -147,14 +148,16 @@ export async function TaxTab({ userId, companyId }: Props) {
   return (
     <div className="space-y-4">
 
+      {/* Client islands are each isolated in an ErrorBoundary so a single island's
+          render error degrades to a local fallback instead of blanking the whole tab. */}
       {/* ── Vergi Uyum Takvimi (client island — TanStack Query) ─────────────── */}
-      <TaxComplianceClient companyId={companyId} />
+      <ErrorBoundary label="tax-compliance"><TaxComplianceClient companyId={companyId} /></ErrorBoundary>
 
       {/* ── Vergi Uyum Paneli (client island — TanStack Query) ───────────────── */}
-      <TaxComplianceDashboardClient companyId={companyId} />
+      <ErrorBoundary label="tax-compliance-dashboard"><TaxComplianceDashboardClient companyId={companyId} /></ErrorBoundary>
 
       {/* ── Vergi Takvimi (client island — TanStack Query) ───────────────────── */}
-      <TaxCalendarClient companyId={companyId} />
+      <ErrorBoundary label="tax-calendar"><TaxCalendarClient companyId={companyId} /></ErrorBoundary>
 
       {/* ── Vergi Rezervi ────────────────────────────────────────────────────── */}
       <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">

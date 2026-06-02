@@ -7,7 +7,12 @@
 // Cache: revalidate every 3600 seconds.
 // ─────────────────────────────────────────────────────────────────────────────
 
-export const revalidate = 3600
+// force-dynamic: this route reads cookies (resolveApiAuth) so it MUST be dynamic.
+// Without it, `revalidate` opts the route into caching, which conflicts with the
+// cookie read and can yield a malformed/cached response that crashes the client
+// island. Matches the other tax routes (/api/finance/tax-compliance, tax-calendar).
+export const dynamic    = 'force-dynamic'
+export const revalidate = 0
 
 import { NextRequest, NextResponse } from 'next/server'
 import { resolveApiAuth } from '@/lib/api-auth'

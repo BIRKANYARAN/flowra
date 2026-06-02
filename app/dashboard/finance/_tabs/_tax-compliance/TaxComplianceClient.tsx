@@ -87,7 +87,10 @@ export function TaxComplianceClient({ companyId }: Props) {
 
   if (isLoading) return <LoadingSkeleton />
 
-  if (isError || !data) {
+  // Guard the NESTED field, not just `data`: a 200 response without `report`
+  // (e.g. an error-shaped body) would otherwise crash on `report.current_month_kdv`
+  // below and bubble to the route error boundary as a full-page "Bir hata oluştu".
+  if (isError || !data?.report?.current_month_kdv) {
     return (
       <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
         <div className="px-4 py-3 border-b border-[#e2e8f0]">

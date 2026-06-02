@@ -121,7 +121,10 @@ export function TaxComplianceDashboardClient({ companyId }: Props) {
 
   if (isLoading) return <LoadingSkeleton />
 
-  if (isError || !data) {
+  // Guard the NESTED field, not just `data`: a 200 response without `dashboard`
+  // would otherwise crash on `dashboard.compliance_status` and bubble to the route
+  // error boundary as a full-page "Bir hata oluştu".
+  if (isError || !data?.dashboard?.compliance_status) {
     return (
       <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
         <div className="px-4 py-3 border-b border-[#e2e8f0]">
