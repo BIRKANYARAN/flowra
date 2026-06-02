@@ -60,6 +60,7 @@ export default function PartnersPage() {
     amortization:  'tranches',  // loan payment schedule shown with the live tranche state
     contributions: 'capital',   // capital commitments shown with the capital account
     dilution:      'capital',   // dilution analysis shown with the capital account
+    'risk-composite': 'risk',   // composite risk score co-located with the risk view
   }
   const rawTab    = searchParams.get('tab') ?? 'partners'
   const activeTab = (TAB_ALIAS[rawTab] ?? rawTab) as TabId
@@ -343,7 +344,6 @@ export default function PartnersPage() {
     ] },
     { label: 'Risk', tabs: [
       { id: 'risk',           label: 'Risk'      },
-      { id: 'risk-composite', label: 'Risk Skoru' },
     ] },
   ]
   const activeGroupIdx = Math.max(0, TAB_GROUPS.findIndex(g => g.tabs.some(t => t.id === activeTab)))
@@ -526,6 +526,8 @@ export default function PartnersPage() {
         <div className="space-y-5">
           <LoanCovenantPanel companyId="" />
           <RiskTab loading={loading} />
+          {/* Risk Skoru (composite scorer) — co-located advisory view */}
+          <RiskCompositeTab companyId="" />
         </div>
       )}
 
@@ -565,9 +567,6 @@ export default function PartnersPage() {
         <EquityWaterfallTab companyId="" />
       )}
 
-      {activeTab === 'risk-composite' && (
-        <RiskCompositeTab companyId="" />
-      )}
 
     </div>
   )
