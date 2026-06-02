@@ -86,7 +86,7 @@ export const CFO_PACK_MANIFEST: CFOPackReport[] = [
     title_en: 'Executive Summary',
     category: 'executive',
     required: false,
-    endpoint: '/api/insights/situation-summary',
+    endpoint: '/api/reports/executive-summary',
     format:   'json',
   },
 ]

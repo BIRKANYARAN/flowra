@@ -346,7 +346,7 @@ export default function CeoCockpitPage() {
               {new Date(summary.computed_at).toLocaleString('tr-TR', { dateStyle: 'medium', timeStyle: 'short' })}
             </p>
           </div>
-          <a href="/dashboard/cfo" className="text-sm text-blue-600 hover:underline">
+          <a href="/dashboard/finance?tab=cfo" className="text-sm text-blue-600 hover:underline">
             CFO Raporları →
           </a>
         </div>
@@ -404,7 +404,7 @@ export default function CeoCockpitPage() {
             { href: '/dashboard/finance',    label: 'Finans' },
             { href: '/dashboard/commercial', label: 'Ticari' },
             { href: '/dashboard/partners',   label: 'Ortaklar' },
-            { href: '/dashboard/cfo',        label: 'CFO Paneli' },
+            { href: '/dashboard/finance?tab=cfo', label: 'CFO Paneli' },
             { href: '/dashboard/planning',   label: 'Planlama' },
           ].map(link => (
             <a
