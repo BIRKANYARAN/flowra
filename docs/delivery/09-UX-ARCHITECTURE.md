@@ -58,3 +58,23 @@ Capital accounting (Partners ↔ Governance) · debt analytics (Planning ↔ Par
 
 ## Stop condition
 The 2 zero-capability-loss consolidations are executed and deployed. The remaining redesign (which carries the rest of the >50% reduction) consists of **feature merges with accounting/governance implications** — each needs your sign-off on which surface/figure is canonical before I implement it. Pick any cluster above and I'll execute it.
+
+---
+
+## Execution status (authorized run — "do pure-UX, defer authority changes")
+
+**Done autonomously (pure UX — zero accounting/legal/tax/governance authority change, deployed). Tabs 60 → 55:**
+- DELETE Planning `Karşılaştırma` (scenario-compare) — fake/illustrative data; real view is `Senaryolar`. (−1)
+- MOVE Partners `Huzur Hakkı` (compensation) → payout group (regroup, ±0 tabs).
+- Partners `Amortisman` → `Borç Dilimleri`, and `Taahhüt Takvimi` + `Seyreltme` → `Sermaye Hesabı` — two views of the **same object** co-located (genuinely more coherent, not just stacked). (−3)
+- Governance `Veri Dışa Aktarma` (certified export) → `Denetim Hazırlığı` — one low-frequency action folded. (−1)
+
+Old deep-links to every removed tab alias to the host tab; all capabilities preserved; tsc · 25,558 tests · build green at each step.
+
+**Deferred — BUSINESS MEANING changes (need your accounting/governance sign-off; the bulk of the remaining reduction):**
+- Finance `Kurumlar V.`→`Vergi` (authoritative corporate-tax source); Partners `Temettü`+`Dağıtım Simülatörü`→`Kâr Dağıtımı` (canonical dividend-declare path); `Risk Skoru`→`Risk` (canonical scorer); `Getiri`→`Getiri Projeksiyonu` (ROI vs return_ratio); Planning `Ortak Etkisi`→Partners simulator (tax models must match); Governance `Sermaye Hesapları`→Partners (reconcile two capital-account services).
+
+**Deferred — needs INTEGRATION DESIGN (pure-UX in principle, but blind stacking would create scroll/overload, violating the anti-scroll goal — needs a unified view, not co-location):**
+- Finance `Yön. Paketi`→`CFO Paketi` (one report selector, preserve board preview); `Mizan`→CFO cockpit (placement in an already-dense view); Commercial `Proformalar`→`Pipeline` (integrate two funnels); Operations `Komuta`→banner (expandable drill-downs); Governance 9→3 (build sub-tab nav per group); cross-hub MOVES Insights→Finance tab, Documents→Governance (relocate hub-as-tab + repoint nav/deep-links).
+
+**Honest tally:** the safe-blind pure-UX reductions take Flowra 60 → 55 tabs. Reaching the 31-tab target requires the **6 accounting/governance decisions** and the **integration-design merges** above — each preserves a distinct figure or render mode, so doing them blind would either change a number or make the UX worse. Approve any cluster (e.g. "Partners canonical: dividend=approval-workflow, risk=pcle, returns=equity-waterfall") and I'll implement that consolidation end-to-end.
