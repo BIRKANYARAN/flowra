@@ -303,6 +303,17 @@ export default function IncomeStatementClient({ companyId }: Props) {
         </div>
       </div>
 
+      {/* Data-completeness warning — COGS source hit a row cap, figures may understate cost */}
+      {statement?.data_completeness_warning && (
+        <div className="flex items-start gap-2 text-xs text-[#92400e] bg-[#fffbeb] border border-[#fde68a] rounded px-3 py-2">
+          <span aria-hidden>⚠️</span>
+          <span>
+            Veri tamlığı uyarısı: bazı maliyet kayıtları satır sınırına ulaştı; satılan malın maliyeti
+            eksik, dolayısıyla kâr ve vergi olduğundan yüksek görünebilir. ({statement.data_completeness_warning})
+          </span>
+        </div>
+      )}
+
       {/* ── Table ─────────────────────────────────────────────────────────── */}
       <div className="bg-white border border-[#e2e8f0] rounded shadow-sm overflow-hidden">
 

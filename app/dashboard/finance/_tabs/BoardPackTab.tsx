@@ -551,7 +551,7 @@ export function BoardPackTab({ userId: _userId, companyId: _companyId }: Props) 
             <SectionCard title="Kâr / Zarar" docHref={d.document_links.income_statement}>
               {d.period_pnl ? (
                 <div className="space-y-0.5">
-                  <KpiRow label="Net Satışlar"     value={fmtTRY(d.period_pnl.revenue)} />
+                  <KpiRow label="Brüt Satış (KDV dâhil)" value={fmtTRY(d.period_pnl.revenue)} />
                   <KpiRow label="Brüt Kâr"         value={fmtTRY(d.period_pnl.gross_profit)} />
                   <KpiRow label="FAVÖK"             value={fmtTRY(d.period_pnl.ebitda)} />
                   <KpiRow label="Net Kâr"           value={fmtTRY(d.period_pnl.net_income)} />

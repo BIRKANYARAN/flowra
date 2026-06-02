@@ -107,7 +107,7 @@ function IncomeStatementBody({ fs }: { fs: FinancialSummary }) {
   return (
     <>
       <ISHeader>Gelirler</ISHeader>
-      <ISRow label="Net Satışlar"    amount={fs.revenue_try} bold />
+      <ISRow label="Brüt Satış (KDV dâhil)"    amount={fs.revenue_try} bold />
       <ISRow label="Satışların Maliyeti (SMM)"
         amount={-fs.cost_try} indent neg />
 
@@ -252,7 +252,7 @@ export default async function IncomeStatementDocPage({ params }: { params: Promi
         {/* Summary KPI strip */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }}>
           {[
-            { label: 'Net Satışlar',      value: fmtTRY(fs.revenue_try) },
+            { label: 'Brüt Satış (KDV dâhil)', value: fmtTRY(fs.revenue_try) },
             { label: 'Brüt Kâr',          value: fmtTRY(fs.gross_profit_try) },
             { label: 'FAVÖK',             value: fmtTRY(fs.gross_profit_try - fs.expenses_total_try) },
             { label: 'Net Kâr (Sonrası)', value: fmtTRY(fs.net_after_tax_try) },

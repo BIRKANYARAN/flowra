@@ -96,4 +96,16 @@ describe('COGS truncation inventory (guard for the silent-understatement bug cla
   it('OBSERVABLE is a subset of the catalogued sites (no stale entries)', () => {
     for (const rel of OBSERVABLE) expect(BASELINE).toContain(rel)
   })
+
+  it('the formal P&L threads the truncation warning all the way to the UI', () => {
+    // The IncomeStatement shape carries the warning, the service populates it from
+    // truncWarn, and the client renders a visible banner — so COGS understatement is
+    // never silent on screen (not just a console.warn).
+    const svc = readFileSync(join(LIB, 'services/finance/income-statement.service.ts'), 'utf8')
+    expect(svc).toMatch(/data_completeness_warning:\s*string \| null/)        // on the public interface
+    expect(svc).toContain('data_completeness_warning: truncWarn ?? null')      // populated from the cap check
+    const client = readFileSync(
+      join(ROOT, 'app/dashboard/finance/_tabs/_income/IncomeStatementClient.tsx'), 'utf8')
+    expect(client).toContain('statement?.data_completeness_warning')           // rendered as a banner
+  })
 })

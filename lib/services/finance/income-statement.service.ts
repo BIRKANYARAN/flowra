@@ -66,6 +66,8 @@ export interface IncomeStatement {
   operating_margin_pct:  number
   net_margin_pct:        number
   effective_tax_rate:    number
+  // Non-null when a COGS source hit its row cap → figures may understate cost. UI shows a banner.
+  data_completeness_warning: string | null
 }
 
 // ── Turkish month names ───────────────────────────────────────────────────────
@@ -218,6 +220,7 @@ interface PeriodData {
   cogs:              number
   operating_expenses: number
   interest_expense:  number
+  data_completeness_warning: string | null
 }
 
 // ── Main service class ────────────────────────────────────────────────────────
@@ -311,6 +314,8 @@ export class IncomeStatementService {
       { name: 'allocations', count: allocCount,     cap: 20000 },
     ])
     if (truncWarn) console.warn(truncWarn)
+    // Surface the truncation to the UI (additive; null in the normal, non-capped path)
+    // so COGS understatement → profit/tax overstatement is never silent on screen.
 
     // Expenses: split into operating vs interest
     let operatingExpenses = 0
@@ -327,7 +332,7 @@ export class IncomeStatementService {
       }
     }
 
-    return { revenue, cogs, operating_expenses: operatingExpenses, interest_expense: interestExpense }
+    return { revenue, cogs, operating_expenses: operatingExpenses, interest_expense: interestExpense, data_completeness_warning: truncWarn ?? null }
   }
 
   /**
@@ -373,7 +378,7 @@ export class IncomeStatementService {
       period_label:       periodLbl,
       prior_period_label: priorPeriodLbl,
 
-      revenue:            buildIncomeStatementLine('Net Satışlar',                    rev,      pRev,    true,  false, 0),
+      revenue:            buildIncomeStatementLine('Brüt Satış (KDV dâhil)',          rev,      pRev,    true,  false, 0),
       cogs:               buildIncomeStatementLine('Satılan Malın Maliyeti (COGS)',   cogs,     pCogs,   false, false, 1),
       gross_profit:       buildIncomeStatementLine('Brüt Kâr',                       gp,       pGp,     true,  true,  0),
       operating_expenses: buildIncomeStatementLine('Faaliyet Giderleri',             opex,     pOpex,   false, false, 1),
@@ -387,6 +392,7 @@ export class IncomeStatementService {
       operating_margin_pct: operatingMarginPct,
       net_margin_pct:       netMarginPct,
       effective_tax_rate:   effectiveTaxRate,
+      data_completeness_warning: cur.data_completeness_warning ?? null,
     }
   }
 

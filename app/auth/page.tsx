@@ -22,18 +22,36 @@ export default function AuthPage() {
   const [loading,    setLoading]    = useState(false)
   const [error,      setError]      = useState('')
   const [success,    setSuccess]    = useState('')
+  const [showResend, setShowResend] = useState(false)
+
+  async function resendConfirmation() {
+    if (!email.trim()) { setError('Lütfen önce e-posta adresinizi girin'); return }
+    setError(''); setSuccess(''); setLoading(true)
+    const { error } = await supabase.auth.resend({ type: 'signup', email: email.trim() })
+    if (error) setError(error.message)
+    else { setSuccess('Onay e-postası yeniden gönderildi. Gelen kutunuzu kontrol edin.'); setShowResend(false) }
+    setLoading(false)
+  }
 
   async function handle() {
     if (!email.trim() || !password) { setError('E-posta ve şifre zorunludur'); return }
     if (password.length < 6) { setError('Şifre en az 6 karakter olmalıdır'); return }
     if (mode === 'register' && !firstName.trim()) { setError('Ad zorunludur'); return }
 
-    setError(''); setSuccess(''); setLoading(true)
+    setError(''); setSuccess(''); setShowResend(false); setLoading(true)
 
     if (mode === 'login') {
       const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
       if (error) {
-        setError(error.message === 'Invalid login credentials' ? 'E-posta veya şifre hatalı' : error.message)
+        const code = (error as { code?: string }).code
+        if (code === 'email_not_confirmed' || error.message === 'Email not confirmed') {
+          setError('E-posta adresiniz henüz onaylanmadı. Gelen kutunuzu kontrol edin veya onay e-postasını yeniden gönderin.')
+          setShowResend(true)
+        } else if (code === 'invalid_credentials' || error.message === 'Invalid login credentials') {
+          setError('E-posta veya şifre hatalı')
+        } else {
+          setError(error.message)
+        }
         setLoading(false); return
       }
       router.refresh()
@@ -115,6 +133,13 @@ export default function AuthPage() {
           {error   && <div className="text-sm text-neg bg-neg-light border border-neg-light rounded px-3 py-2">{error}</div>}
           {success && <div className="text-sm text-pos-text bg-pos-light border border-pos-light rounded px-3 py-2">{success}</div>}
 
+          {showResend && (
+            <button type="button" onClick={resendConfirmation} disabled={loading}
+              className="w-full border border-brand-light text-brand-light py-2.5 rounded text-sm font-bold hover:bg-brand-light/10 disabled:opacity-50 transition-colors">
+              Onay e-postasını yeniden gönder
+            </button>
+          )}
+
           <button onClick={handle} disabled={loading}
             className="w-full bg-brand-light text-white py-2.5 rounded text-sm font-bold hover:bg-brand disabled:opacity-50 transition-colors">
             {loading ? 'Lütfen bekleyin...' : mode === 'login' ? 'Giriş Yap' : 'Kayıt Ol'}
@@ -122,7 +147,7 @@ export default function AuthPage() {
 
           <p className="text-center text-sm text-[#64748b]">
             {mode === 'login' ? 'Hesabın yok mu?' : 'Zaten hesabın var mı?'}{' '}
-            <button onClick={() => { setMode(m => m === 'login' ? 'register' : 'login'); setError(''); setSuccess('') }}
+            <button onClick={() => { setMode(m => m === 'login' ? 'register' : 'login'); setError(''); setSuccess(''); setShowResend(false) }}
               className="text-brand-light font-semibold hover:underline">
               {mode === 'login' ? 'Kayıt Ol' : 'Giriş Yap'}
             </button>
