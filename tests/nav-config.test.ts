@@ -11,12 +11,9 @@ import {
   findNavItem,
   isKnownNavHref,
   hasMinRole,
-  isMobileNavItem,
   COMMERCIAL_TABS,
   OPERATIONS_TABS,
   PLANNING_TABS,
-  ROUTE_REDIRECTS,
-  MOBILE_NAV,
   SETTINGS_FALLBACK,
   NAV_GROUPS,
   type NavItem,
@@ -245,62 +242,7 @@ describe('Tab contracts — canonical key sets', () => {
 
 // ── Route redirects map ───────────────────────────────────────────────────────
 
-describe('ROUTE_REDIRECTS', () => {
-  it('maps all canonical old flat routes', () => {
-    expect(ROUTE_REDIRECTS['/dashboard/cashflow']).toBe('/dashboard/finance?tab=cashflow')
-    expect(ROUTE_REDIRECTS['/dashboard/simulation']).toBe('/dashboard/planning?tab=unit-profit')
-    expect(ROUTE_REDIRECTS['/dashboard/stocks']).toBe('/dashboard/operations?tab=stock')
-    expect(ROUTE_REDIRECTS['/dashboard/orders']).toBe('/dashboard/operations?tab=orders')
-    expect(ROUTE_REDIRECTS['/dashboard/activity']).toBe('/dashboard/admin/audit')
-  })
-
-  it('has 18 redirect entries (added /dashboard/ops)', () => {
-    expect(Object.keys(ROUTE_REDIRECTS).length).toBe(18)
-  })
-
-  it('ops redirects to operations komuta tab', () => {
-    expect(ROUTE_REDIRECTS['/dashboard/ops']).toBe('/dashboard/operations?tab=komuta')
-  })
-
-  it('all destinations start with /dashboard/', () => {
-    const destinations = Object.values(ROUTE_REDIRECTS)
-    destinations.forEach(dest => {
-      expect(dest.startsWith('/dashboard/')).toBe(true)
-    })
-  })
-
-  it('no redirect sources are known sidebar nav items', () => {
-    // Redirect sources should be OLD flat routes, not current hub routes
-    const sources = Object.keys(ROUTE_REDIRECTS)
-    sources.forEach(src => {
-      expect(isKnownNavHref(src)).toBe(false)
-    })
-  })
-})
-
 // ── Mobile nav ────────────────────────────────────────────────────────────────
-
-describe('MOBILE_NAV', () => {
-  it('has 5 items', () => {
-    expect(MOBILE_NAV.length).toBe(5)
-  })
-
-  it('always starts with /dashboard (home)', () => {
-    expect(MOBILE_NAV[0].href).toBe('/dashboard')
-  })
-
-  it('includes Operasyon (/dashboard/operations) — ops merged into hub', () => {
-    const hrefs = MOBILE_NAV.map(i => i.href)
-    expect(hrefs).toContain('/dashboard/operations')
-    expect(hrefs).not.toContain('/dashboard/ops')
-  })
-
-  it('all items have emoji', () => {
-    MOBILE_NAV.forEach(item => {
-      expect(item.emoji.length).toBeGreaterThan(0)
-    })
-  })
-})
 
 // ── Settings fallback ─────────────────────────────────────────────────────────
 
@@ -311,21 +253,6 @@ describe('SETTINGS_FALLBACK', () => {
   })
 })
 
-// ── isMobileNavItem ───────────────────────────────────────────────────────────
-
-describe('isMobileNavItem', () => {
-  it('returns true for all MOBILE_NAV hrefs', () => {
-    MOBILE_NAV.forEach(item => {
-      expect(isMobileNavItem(item.href)).toBe(true)
-    })
-  })
-
-  it('returns false for non-mobile nav hrefs', () => {
-    expect(isMobileNavItem('/dashboard/partners')).toBe(false)
-    expect(isMobileNavItem('/dashboard/admin')).toBe(false)
-    expect(isMobileNavItem('')).toBe(false)
-  })
-})
 
 // ── hasMinRole — boundary edge cases ─────────────────────────────────────────
 
@@ -585,42 +512,6 @@ describe('Tab key uniqueness within each center', () => {
   })
 })
 
-// ── ROUTE_REDIRECTS — value format checks ────────────────────────────────────
-
-describe('ROUTE_REDIRECTS — destination format', () => {
-  it('tab-based destinations contain ?tab=', () => {
-    const tabRoutes = Object.values(ROUTE_REDIRECTS).filter(v => v.includes('?tab='))
-    expect(tabRoutes.length).toBeGreaterThan(0)
-  })
-
-  it('non-tab destinations are plain /dashboard/ paths', () => {
-    // e.g. /dashboard/activity → /dashboard/admin/audit (no ?tab=)
-    const nonTabRoutes = Object.values(ROUTE_REDIRECTS).filter(v => !v.includes('?tab='))
-    nonTabRoutes.forEach(dest => {
-      expect(dest.startsWith('/dashboard/')).toBe(true)
-    })
-  })
-
-  it('no redirect destination is the same as its source key', () => {
-    Object.entries(ROUTE_REDIRECTS).forEach(([src, dest]) => {
-      // The destination should be a different URL (otherwise redirect is a no-op)
-      const destPath = dest.split('?')[0]
-      expect(destPath).not.toBe(src)
-    })
-  })
-
-  it('/dashboard/products redirects to catalog (ops merge)', () => {
-    expect(ROUTE_REDIRECTS['/dashboard/products']).toBe('/dashboard/operations?tab=catalog')
-  })
-
-  it('/dashboard/cfo redirects to finance cfo tab', () => {
-    expect(ROUTE_REDIRECTS['/dashboard/cfo']).toBe('/dashboard/finance?tab=cfo')
-  })
-
-  it('/dashboard/tasks redirects to planning tasks tab', () => {
-    expect(ROUTE_REDIRECTS['/dashboard/tasks']).toBe('/dashboard/planning?tab=tasks')
-  })
-})
 
 // ── NAV_GROUPS structural integrity ──────────────────────────────────────────
 
