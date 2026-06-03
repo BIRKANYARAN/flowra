@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { ProformaInvoice } from '@/components/pdf/ProformaInvoice'
 import { PublicActions } from './PublicActions'
 import { loadPublicProformaBundle } from '@/lib/public-proforma'
+import { resolveLogoDataUri } from '@/lib/logo-data-uri'
 
 /** Coerce unknown snapshot value to string | null */
 function str(v: unknown): string | null {
@@ -97,6 +98,13 @@ export default async function PublicProformaPage({ params }: { params: { id: str
     iban: b.iban ?? '',
   }))
 
+  // Inline the logo (server-side) for the jsPDF download — avoids the browser
+  // fetching the storage CDN (which failed silently → no logo on the PDF).
+  const pdfLogoUri = await resolveLogoDataUri(mappedSettings?.logo_url)
+  const pdfSettings = mappedSettings
+    ? { ...mappedSettings, logo_url: pdfLogoUri ?? mappedSettings.logo_url }
+    : null
+
   return (
     <main className="min-h-screen bg-[#f8fafc] py-6 sm:py-10 px-2 sm:px-4 print:bg-white print:py-0 print:px-0">
       <div className="max-w-3xl mx-auto">
@@ -105,7 +113,7 @@ export default async function PublicProformaPage({ params }: { params: { id: str
           proformaNo={proforma.proforma_no ?? `PRF-${id.slice(-8).toUpperCase()}`}
           proformaId={id}
           items={mappedItems}
-          settings={mappedSettings}
+          settings={pdfSettings}
           customer={mappedCustomer}
           banks={mappedBanks}
           currency={proforma.currency ?? 'TRY'}

@@ -385,7 +385,7 @@ function tr(s: string): string {
 // ── Logo loading ──────────────────────────────────────────────────────────────
 
 function resolveLogoUrl(url: string): string {
-  if (url.startsWith('http')) return url
+  if (url.startsWith('http') || url.startsWith('data:')) return url
   const base = process.env.NEXT_PUBLIC_SUPABASE_URL
   if (!base) return url
   return `${base}/storage/v1/object/public/logos/${url}`
@@ -394,7 +394,11 @@ function resolveLogoUrl(url: string): string {
 async function loadLogo(url: string): Promise<LogoData | null> {
   if (!url?.trim()) return null
   const src = resolveLogoUrl(url.trim())
-  const fetchUrl = src + (src.includes('?') ? '&' : '?') + '_cb=' + Date.now()
+  // Data URIs are embedded inline (server-resolved) — never append a cache-buster
+  // (it would corrupt the URI). Only remote URLs get the cache-buster.
+  const fetchUrl = src.startsWith('data:')
+    ? src
+    : src + (src.includes('?') ? '&' : '?') + '_cb=' + Date.now()
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), 6000)
   try {

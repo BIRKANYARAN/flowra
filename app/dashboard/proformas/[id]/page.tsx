@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { createClient } from '@/lib/supabase-server'
+import { resolveLogoDataUri } from '@/lib/logo-data-uri'
 import { notFound } from 'next/navigation'
 import { fmtDate, sym } from '@/lib/format'
 import type { Proforma, ProformaItem, Customer, CompanyBank } from '@/types'
@@ -168,6 +169,11 @@ export default async function ProformaDetailPage({ params }: PageProps) {
     const grandTotal  = totals.grand_total
 
     // ── 8. Build clientPdfOpts — fully serializable, no undefined anywhere ───
+    // Resolve the logo to an inline data-URI on the SERVER so the PDF engine never
+    // has to fetch it from the storage CDN in the browser (that fetch failed
+    // silently → no logo on the PDF). Falls back to the raw URL on any failure.
+    const rawLogo   = safeStr(proforma.company_snapshot?.logo_url) || safeStr(settings?.logo_url)
+    const logoForPdf = (await resolveLogoDataUri(rawLogo)) ?? rawLogo
     const clientPdfOpts: ClientPdfOpts = {
       proformaNo:   no,
       createdAt,
@@ -190,7 +196,7 @@ export default async function ProformaDetailPage({ params }: PageProps) {
             website:   safeStr(proforma.company_snapshot.website)   || safeStr(settings?.website),
             taxNumber: safeStr(proforma.company_snapshot.tax_number)|| safeStr(settings?.tax_number),
             taxOffice: safeStr(proforma.company_snapshot.tax_office)|| safeStr(settings?.tax_office),
-            logoUrl:   safeStr(proforma.company_snapshot.logo_url)  || safeStr(settings?.logo_url),
+            logoUrl:   logoForPdf,
             mersisNo:  safeStr(proforma.company_snapshot.mersis_no) || safeStr(settings?.mersis_no),
           }
         : {
@@ -200,7 +206,7 @@ export default async function ProformaDetailPage({ params }: PageProps) {
             website:   safeStr(settings?.website),
             taxNumber: safeStr(settings?.tax_number),
             taxOffice: safeStr(settings?.tax_office),
-            logoUrl:   safeStr(settings?.logo_url),
+            logoUrl:   logoForPdf,
             mersisNo:  safeStr(settings?.mersis_no),
           },
       customer: proforma.customer_snapshot
