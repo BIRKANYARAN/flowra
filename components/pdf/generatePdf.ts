@@ -1,4 +1,4 @@
-import { calculateTotals, type LineInput } from '@/lib/calc'
+import { calculateTotals, round2, type LineInput } from '@/lib/calc'
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Flowra PDF Engine v7 — Institutional Brand System
@@ -568,6 +568,9 @@ export async function generatePdf(opts: PdfOptions): Promise<void> {
     .filter(k => kdvMap[k] > 0)
     .sort((a, b) => +a - +b)
   const hasDiscount   = totalDiscount > 0
+  // Ara Toplam must show the PRE-discount gross so the summary reconciles line by
+  // line: gross − İskonto + KDV = Genel Toplam. (subtotal is the post-discount net.)
+  const grossSubtotal = round2(subtotal + totalDiscount)
 
   // ── Drawing primitives ──────────────────────────────────────────────────────
 
@@ -701,7 +704,7 @@ export async function generatePdf(opts: PdfOptions): Promise<void> {
     ]
     const HDR_RX = RX - HPAD
     setF('normal', 5.5, accentDim)
-    tR('PROFORMA', HDR_RX, bandMY - 4)
+    tR(t('PROFORMA FATURA'), HDR_RX, bandMY - 4)
     setF('bold', 10, P.accentText)
     tR(proformaNo, HDR_RX, bandMY + 3)
     setF('normal', 7, accentDim)
@@ -757,7 +760,7 @@ export async function generatePdf(opts: PdfOptions): Promise<void> {
       Math.round(P.accentText[2] * 0.6),
     ]
     setF('normal', 5.5, accentDim)
-    tR('PROFORMA', HDR_RX, bandMY - 1)
+    tR(t('PROFORMA FATURA'), HDR_RX, bandMY - 1)
     setF('bold', 9, P.accentText)
     tR(proformaNo, HDR_RX, bandMY + 5)
 
@@ -1113,7 +1116,7 @@ export async function generatePdf(opts: PdfOptions): Promise<void> {
   const TXL  = RX - TW
 
   // Height calculation
-  const totLineCount = 1 + (hasDiscount ? 1 : 0) + kdvRates.length + (kdvRates.length > 1 ? 1 : 0)  // subtotal + disc + kdv lines + kdv total (only when multiple rates)
+  const totLineCount = 1 + (hasDiscount ? 2 : 0) + kdvRates.length + (kdvRates.length > 1 ? 1 : 0)  // ara toplam + (iskonto + kdv matrahı) + kdv lines + kdv total (only when multiple rates)
   const totLineH = docStyle === 'executive' ? 7.5 : 6.5
   const totBoxH  = totLineCount * totLineH + (docStyle === 'executive' ? 10 : 8)
   const gtH      = docStyle === 'executive' ? 18 : 14  // GENEL TOPLAM stripe height
@@ -1160,16 +1163,24 @@ export async function generatePdf(opts: PdfOptions): Promise<void> {
   setF('normal', docStyle === 'executive' ? 8.5 : 8, P.inkLight)
   tL(t('Ara Toplam'), TXL + CP, ty)
   setF('bold', docStyle === 'executive' ? 8.5 : 8, P.inkMid)
-  tR(money(subtotal, S), RX - CP, ty)
+  tR(money(grossSubtotal, S), RX - CP, ty)
   ty += totLineH
 
-  // İskonto
+  // İskonto + KDV Matrahı (net taxable base) — only when there is a discount, so
+  // the reader can follow gross → −iskonto → matrah → +KDV → genel toplam.
   if (hasDiscount) {
     hLine(ty - totLineH + 0.5, TXL + CP, RX - CP, P.ruleLight, 0.15)
     setF('normal', docStyle === 'executive' ? 8.5 : 8, P.inkLight)
     tL(t('İskonto'), TXL + CP, ty)
     setF('bold', docStyle === 'executive' ? 8.5 : 8, P.inkMid)
     tR('- ' + money(totalDiscount, S), RX - CP, ty)
+    ty += totLineH
+
+    hLine(ty - totLineH + 0.5, TXL + CP, RX - CP, P.ruleLight, 0.15)
+    setF('normal', docStyle === 'executive' ? 8.5 : 8, P.inkLight)
+    tL(t('KDV Matrahı'), TXL + CP, ty)
+    setF('bold', docStyle === 'executive' ? 8.5 : 8, P.inkMid)
+    tR(money(subtotal, S), RX - CP, ty)   // subtotal = net = gross − iskonto
     ty += totLineH
   }
 
@@ -1231,7 +1242,9 @@ export async function generatePdf(opts: PdfOptions): Promise<void> {
   // ══════════════════════════════════════════════════════════════════════════════
 
   const hasNotes  = notes?.trim().length > 0
-  const hasFx     = fxUsd > 0 || fxEur > 0
+  // Reference FX rates are only relevant when the proforma is in a foreign
+  // currency — hide them on TRY-only documents (clutter, not information).
+  const hasFx     = currency !== 'TRY' && (fxUsd > 0 || fxEur > 0)
   const hasPreparer = !!(preparer?.name?.trim())
 
   // "Yalnız" line — proper Turkish
@@ -1244,7 +1257,7 @@ export async function generatePdf(opts: PdfOptions): Promise<void> {
   // Estimate footer height
   const sigH       = hasPreparer ? 38 : 34
   const yalnizH    = 9
-  const validH     = 9
+  const validH     = 13   // validity + the "mali değeri yoktur" disclaimer line
   const notesH     = hasNotes ? 14 : 0
   const fxH        = hasFx ? 8 : 0
   const footerH    = yalnizH + validH + notesH + fxH + sigH
@@ -1265,13 +1278,14 @@ export async function generatePdf(opts: PdfOptions): Promise<void> {
   tL(yalnizLine, LX + CP, fi + 6)
   fi += yalnizH
 
-  // ── Geçerlilik satırı ──────────────────────────────────────────────────────
+  // ── Geçerlilik + yasal ibare satırı ────────────────────────────────────────
   fi += 2  // extra breathing room above validity
   const validLine = t('Bu proforma teklifi ') + validityDays + t(' gün geçerlidir. Son geçerlilik: ') + addDays(createdAt, validityDays)
+  const disclaimerLine = t('Bu belge proforma faturadır; mali ve hukuki değeri yoktur, fatura ve irsaliye yerine geçmez.')
 
   if (hasNotes) {
     const halfW   = CONTENT_W / 2 - 4
-    const vls     = doc.splitTextToSize(validLine, halfW) as string[]
+    const vls     = doc.splitTextToSize(validLine + ' ' + disclaimerLine, halfW) as string[]
     const nls2    = doc.splitTextToSize(t('Not: ') + notes.trim(), halfW) as string[]
     const blockH  = Math.max(vls.length, nls2.length) * 3.8 + 7
 
@@ -1294,9 +1308,14 @@ export async function generatePdf(opts: PdfOptions): Promise<void> {
   } else {
     hLine(fi, LX, RX, P.ruleLight, 0.15)
     setF('normal', 7, P.inkLight)
-    tL(validLine, LX + CP, fi + 6)
-    hLine(fi + validH, LX, RX, P.ruleLight, 0.15)
-    fi += validH
+    tL(validLine, LX + CP, fi + 5)
+    setF('normal', 6, P.inkLight)
+    const dls = doc.splitTextToSize(disclaimerLine, CONTENT_W - CP * 2) as string[]
+    let dy = fi + 9
+    dls.forEach(l => { tL(l, LX + CP, dy); dy += 3.4 })
+    const vH = Math.max(validH, (dy - fi) + 1)
+    hLine(fi + vH, LX, RX, P.ruleLight, 0.15)
+    fi += vH
   }
 
   // ── FX kur notu ────────────────────────────────────────────────────────────

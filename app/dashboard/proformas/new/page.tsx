@@ -42,7 +42,7 @@ export default function NewProformaPage() {
   const [custId,    setCustId]    = useState('')
   const [bankId,    setBankId]    = useState('')
   const [currency,  setCurrency]  = useState('TRY')
-  const [validity,  setValidity]  = useState('1')
+  const [validity,  setValidity]  = useState('15')   // makul B2B teklif geçerliliği (gün)
   const [notes,          setNotes]          = useState('')
   const [preparerName,   setPreparerName]   = useState('')
   const [preparerTitle,  setPreparerTitle]  = useState('')
