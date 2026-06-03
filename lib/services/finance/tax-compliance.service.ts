@@ -11,6 +11,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { computeCorporateTax } from '../tax.service'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyClient = SupabaseClient<any>
@@ -153,15 +154,22 @@ export function computeQuarterlyTaxDueDate(
 }
 
 /**
- * Computes Geçici Vergi (advance corporate tax) estimate.
- * Returns max(0, ytdNetProfit × taxRate). Never negative.
- * Default taxRate: 0.25 (25% Turkish corporate rate for 2025+).
+ * Computes Geçici Vergi (advance corporate tax) ESTIMATE.
+ * Base = ytdNetProfit (revenue − all expenses) — a simplified estimate, NOT the
+ * canonical real-COGS matrah of the Vergi tab. The rate + loss floor + rounding
+ * flow through the single kernel (computeCorporateTax). DP-1: labelled estimate.
+ * Default taxRate: 0.25 (25% Turkish corporate rate for 2023+).
  */
 export function computeGecikmeTaxEstimate(
   ytdNetProfit: number,
   taxRate: number = 0.25,
 ): number {
-  return Math.max(0, ytdNetProfit * taxRate)
+  return computeCorporateTax({
+    revenue_try:             ytdNetProfit,
+    cost_try:                0,
+    deductible_expenses_try: 0,
+    rate_percent:            taxRate * 100,
+  }).tax_try
 }
 
 /**

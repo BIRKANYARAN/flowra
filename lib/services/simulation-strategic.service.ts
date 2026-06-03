@@ -7,6 +7,7 @@
 
 import { round2 } from '@/lib/calc'
 import { CORPORATE_TAX_RATE_TR } from '@/lib/services/finance-rules'
+import { computeCorporateTax } from '@/lib/services/tax.service'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -209,7 +210,10 @@ export function computeStrategicScenario(
     const { interest, repayment } = monthlyDebtService(tranches, i)
     const debtSvc  = round2(interest + repayment)
     const ebt      = round2(ebitda - interest)
-    const tax      = ebt > 0 ? round2(ebt * taxRate / 100) : 0
+    // Scenario corporate tax via the single kernel (EBT-based projection estimate).
+    const tax      = computeCorporateTax({
+      revenue_try: ebt, cost_try: 0, deductible_expenses_try: 0, rate_percent: taxRate,
+    }).tax_try
     const net      = round2(ebt - tax)
     const dsr      = revenue > 0 ? round2(debtSvc / revenue) : (debtSvc > 0 ? 1 : 0)
 

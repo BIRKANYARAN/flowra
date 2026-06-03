@@ -12,11 +12,12 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { computeKdvDueDate, computeGeciVergiDueDate, adjustForWeekend } from './tax-calendar.service'
 import { CORPORATE_TAX_RATE_TR } from '../finance-rules'
+import { computeCorporateTax } from '../tax.service'
 
-// Turkish corporate / advance (geçici) tax rate as a fraction. Single source of
-// truth = CORPORATE_TAX_RATE_TR (25 for 2023+). Previously hardcoded here at 0.20
-// (stale 2022 rate), which made this dashboard disagree with every other screen.
-const CORP_TAX_FRACTION = CORPORATE_TAX_RATE_TR / 100
+// DP-1: corporate tax / matrah has ONE kernel — computeCorporateTax (lib/services/
+// tax.service.ts). matrah = revenue − COGS − deductible (+KKEG via deductible-only),
+// the loss floor, the rate (CORPORATE_TAX_RATE_TR), and rounding all live there.
+// This module must NEVER multiply a base by the rate itself.
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyClient = SupabaseClient<any>
@@ -75,8 +76,13 @@ export function computeKdvNetObligation(
  * net_income × CORPORATE_TAX_RATE_TR (25%) if net_income > 0, else 0.
  */
 export function computeCorporateTaxProvision(netIncomeTry: number): number {
-  if (netIncomeTry <= 0) return 0
-  return netIncomeTry * CORP_TAX_FRACTION
+  // matrah passed in as netIncomeTry; the kernel applies the loss floor + rate.
+  return computeCorporateTax({
+    revenue_try:             netIncomeTry,
+    cost_try:                0,
+    deductible_expenses_try: 0,
+    rate_percent:            CORPORATE_TAX_RATE_TR,
+  }).tax_try
 }
 
 /**
@@ -93,7 +99,14 @@ export function computeGeciVergi(
 ): number {
   const fractions: Record<1 | 2 | 3 | 4, number> = { 1: 0.25, 2: 0.50, 3: 0.75, 4: 1.00 }
   const fraction = fractions[quarter]
-  const cumulative = netIncomeYtd * CORP_TAX_FRACTION * fraction
+  // Annual corporate tax via the single kernel, then prorated to the quarter.
+  const annualTax  = computeCorporateTax({
+    revenue_try:             netIncomeYtd,
+    cost_try:                0,
+    deductible_expenses_try: 0,
+    rate_percent:            CORPORATE_TAX_RATE_TR,
+  }).tax_try
+  const cumulative = annualTax * fraction
   return Math.max(0, cumulative - priorPayments)
 }
 
@@ -313,7 +326,11 @@ export class TaxComplianceService {
       .filter(e => deductibleCategories.has(e.category as string))
       .reduce((s, e) => s + Number(e.amount_try ?? 0), 0)
 
-    // Estimate COGS as 60% of revenue (common approximation when cogs not available)
+    // ESTIMATE — this compliance dashboard uses a 60%-of-revenue COGS APPROXIMATION,
+    // NOT the canonical real-FIFO-COGS matrah used by the Vergi/Kurumlar tab
+    // (TaxService.getCorporateTax). The two figures will differ; this one is a
+    // quick provisional estimate. The rate/floor still flow through the single
+    // kernel via computeCorporateTaxProvision. (DP-1: labelled estimate path.)
     const ytdCogs = ytdRevenue * 0.60
     const ytdNetIncome = Math.max(0, ytdRevenue - ytdCogs - ytdDeductibleExpenses)
 

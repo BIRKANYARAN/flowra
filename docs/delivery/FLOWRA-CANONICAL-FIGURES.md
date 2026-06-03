@@ -149,3 +149,32 @@ A live-schema cross-reference of every service `.select()/.eq()/.is()` found a c
   re-source, not a rename), `products.price` is ambiguous across `list_price`/`default_sale_price`/
   `catalog_price`, and several need a JOIN (`sale_item_allocations.product_id` lives on `sale_items`).
   This is the floor: a broad sweep now yields single-digit safe items.
+
+---
+
+## ✅ DP-1 EXECUTED — corporate tax / matrah single kernel
+**Approved:** matrah = revenue − COGS − deductible (+KKEG via deductible-only); `computeCorporateTax`
+is the single kernel.
+
+**Done (numerically neutral — every path was `max(0,base)×rate`, now routed through the kernel):**
+- Routed all **6** inline rate-applications through `computeCorporateTax`: `computeCorporateTaxProvision`
+  + `computeGeciVergi` (tax/tax-compliance), `computeGecikmeTaxEstimate` (finance/tax-compliance),
+  `computeTaxProvision` (income-statement, EBT base), `estimateCorporateTax` (tax.service, all-expenses
+  base), and the strategic-simulation scenario tax. The rate, loss floor, and rounding now live in ONE
+  place. Removed the duplicate `CORP_TAX_FRACTION` constants.
+- The **already-canonical** paths were untouched: `getCorporateTax` (Vergi/Kurumlar tab — real FIFO
+  COGS) and `computeTaxMetrics` (CFO cockpit) already delegate to the kernel.
+- **Labelled the divergent-base estimates** (DP-1 step 3): the compliance dashboard's 60%-COGS proxy,
+  the geçici-vergi net-profit base, and the EBT-based P&L provision are now explicitly commented as
+  *estimates*, distinct from the canonical real-COGS matrah.
+- **Snapshot + CI guard:** `tests/dp1-corporate-tax-single-kernel.test.ts` asserts every helper equals
+  the kernel applied to its base, and that no consumer re-introduces an inline rate. A second matrah/rate
+  formula is now a red build.
+- Gate: tsc 0 · 25524 tests · build green.
+
+**DP-1b (follow-on decision — NOT executed):** should the compliance-dashboard Kurumlar Vergisi switch
+from its 60%-COGS proxy to the canonical real-FIFO-COGS computation (so it matches the Vergi tab)?
+**Trade-off:** real COGS makes the two screens agree, BUT for a KOBİ without complete FIFO inventory
+data, real COGS ≈ 0 → matrah ≈ revenue − deductible → KV **overstated** vs the 60% proxy. Recommend:
+use real COGS when FIFO coverage is adequate, else fall back to the labelled proxy — needs an
+accounting call on the coverage threshold. (Number-changing tax figure → decision package.)

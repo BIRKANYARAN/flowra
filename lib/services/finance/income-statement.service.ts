@@ -30,9 +30,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { computeCogsFromAllocations, cogsTruncationWarning } from '@/lib/finance/cogs'
 import { CORPORATE_TAX_RATE_TR } from '@/lib/services/finance-rules'
-
-// System-wide corporate tax rate as a fraction (CORPORATE_TAX_RATE_TR is a %).
-const CORP_TAX_FRACTION = CORPORATE_TAX_RATE_TR / 100
+import { computeCorporateTax } from '@/lib/services/tax.service'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyClient = SupabaseClient<any>
@@ -147,7 +145,16 @@ export function computeEffectiveTaxRate(tax: number, ebt: number): number {
  * was hardcoded to 20% inline, understating the formal P&L's tax by 5pp of EBT.
  */
 export function computeTaxProvision(ebt: number): number {
-  return ebt > 0 ? ebt * CORP_TAX_FRACTION : 0
+  // P&L operational tax provision: base = EBT (the formal income statement view).
+  // Rate + loss floor + rounding flow through the single kernel (computeCorporateTax).
+  // The Vergi/Kurumlar tab's statutory KV uses the canonical real-COGS matrah; this
+  // EBT-based provision is the operational estimate. (DP-1: single kernel.)
+  return computeCorporateTax({
+    revenue_try:             ebt,
+    cost_try:                0,
+    deductible_expenses_try: 0,
+    rate_percent:            CORPORATE_TAX_RATE_TR,
+  }).tax_try
 }
 
 /**

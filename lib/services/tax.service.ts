@@ -488,7 +488,14 @@ export class TaxService {
 
     const ytd_gross_profit_try   = round2(ytd_revenue_try - ytd_expenses_try)
     const ytd_net_before_tax_try = ytd_gross_profit_try
-    const estimated_tax_try      = round2(Math.max(0, ytd_net_before_tax_try * TAX_RATE))
+    // ESTIMATE base = revenue − all (non-tax) expenses — NOT the canonical real-COGS
+    // matrah (that's getCorporateTax). Rate + floor flow through the single kernel.
+    const estimated_tax_try      = computeCorporateTax({
+      revenue_try:             ytd_net_before_tax_try,
+      cost_try:                0,
+      deductible_expenses_try: 0,
+      rate_percent:            CORPORATE_TAX_RATE_TR,
+    }).tax_try
     const remaining_tax_try      = round2(estimated_tax_try - advance_tax_paid_try)
     const next_advance_due       = nextCorporateTaxAdvanceDue(asOfDate)
 
