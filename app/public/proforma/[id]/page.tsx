@@ -53,7 +53,8 @@ export default async function PublicProformaPage({ params }: { params: { id: str
         website:      str(cs.website),
         tax_number:   str(cs.tax_number),
         tax_office:   str(cs.tax_office),
-        logo_url:     str(cs.logo_url),
+        // Logo: frozen snapshot, else fall back to the live company logo.
+        logo_url:     str(cs.logo_url) ?? (settings?.logo_url ?? null),
         mersis_no:    str(cs.mersis_no),
       }
     : settings

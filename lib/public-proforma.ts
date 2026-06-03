@@ -58,13 +58,17 @@ export async function loadPublicProformaBundle(id: string): Promise<PublicProfor
   const proforma = proformaRow as Proforma & { company_id?: string | null }
   const companyId = proforma.company_id ?? null
 
-  let settingsQuery = safeSystemQuery('user_settings')
-    .select('company_name, address, phone, website, tax_number, tax_office, logo_url, mersis_no')
-    .is('deleted_at', null)
-    .limit(1)
-  settingsQuery = companyId
-    ? settingsQuery.eq('company_id', companyId)
-    : settingsQuery.eq('user_id', proforma.user_id)
+  // Company info (name, address, logo_url, …) lives on the `companies` table —
+  // NOT user_settings, which has no such columns. Reading user_settings here made
+  // the select 400 → settings null → the company logo never appeared on the
+  // public/PDF proforma (the snapshot is the only other source, and it is empty
+  // for proformas created before a logo was uploaded). companies.tax_id maps to
+  // the snapshot/UI's tax_number.
+  const settingsQuery = companyId
+    ? safeSystemQuery('companies')
+        .select('name, address, phone, website, tax_id, tax_office, logo_url, mersis_no')
+        .eq('id', companyId)
+    : null
 
   let banksQuery = safeSystemQuery('company_banks')
     .select('bank_name, branch_name, iban')
@@ -91,17 +95,35 @@ export async function loadPublicProformaBundle(id: string): Promise<PublicProfor
       .select('*')
       .eq('proforma_id', id)
       .order('sort_order', { ascending: true }),
-    settingsQuery.maybeSingle(),
+    settingsQuery ? settingsQuery.maybeSingle() : Promise.resolve({ data: null }),
     banksQuery,
     customerQuery,
   ])
 
   if (itemsRes.error) return null
 
+  // Map companies row → public settings shape (companies.tax_id → tax_number).
+  const c = settingsRes.data as {
+    name?: string | null; address?: string | null; phone?: string | null; website?: string | null
+    tax_id?: string | null; tax_office?: string | null; logo_url?: string | null; mersis_no?: string | null
+  } | null
+  const settings: PublicSettingsRow | null = c
+    ? {
+        company_name: c.name       ?? null,
+        address:      c.address    ?? null,
+        phone:        c.phone      ?? null,
+        website:      c.website    ?? null,
+        tax_number:   c.tax_id     ?? null,
+        tax_office:   c.tax_office ?? null,
+        logo_url:     c.logo_url   ?? null,
+        mersis_no:    c.mersis_no  ?? null,
+      }
+    : null
+
   return {
     proforma,
     items: (itemsRes.data ?? []) as ProformaItem[],
-    settings: (settingsRes.data as PublicSettingsRow | null) ?? null,
+    settings,
     banks: (banksRes.data ?? []) as PublicBankRow[],
     customer: (customerRes.data as PublicCustomerRow | null) ?? null,
   }

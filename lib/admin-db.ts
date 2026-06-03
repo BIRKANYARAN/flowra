@@ -45,6 +45,7 @@ type AllowedSystemAdminTable =
   | 'user_settings'
   | 'company_banks'
   | 'customers'
+  | 'companies'   // public proforma: company name/address/logo for the proforma's owner
 
 // ── Runtime UUID validation ───────────────────────────────────────────────────
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i

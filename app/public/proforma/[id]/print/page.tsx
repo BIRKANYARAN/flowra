@@ -46,7 +46,9 @@ export default async function PrintProformaPage({ params }: { params: { id: stri
         website:      sn_str(cs.website),
         tax_number:   sn_str(cs.tax_number),
         tax_office:   sn_str(cs.tax_office),
-        logo_url:     sn_str(cs.logo_url),
+        // Logo: prefer the frozen snapshot, but fall back to the live company logo
+        // when the snapshot is empty (proforma created before a logo was uploaded).
+        logo_url:     sn_str(cs.logo_url) ?? (settings?.logo_url ?? null),
         mersis_no:    sn_str(cs.mersis_no),
       }
     : settings
