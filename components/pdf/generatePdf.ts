@@ -391,14 +391,43 @@ function resolveLogoUrl(url: string): string {
   return `${base}/storage/v1/object/public/logos/${url}`
 }
 
+// Draw an <img> source onto a canvas → PNG data-URL + pixel dimensions.
+function rasterizeToLogoData(imgSrc: string, revoke?: () => void): Promise<LogoData | null> {
+  return new Promise<LogoData | null>(resolve => {
+    const img = new Image()
+    img.onload = () => {
+      try {
+        const w = Math.max(img.naturalWidth  || img.width,  1)
+        const h = Math.max(img.naturalHeight || img.height, 1)
+        const canvas = document.createElement('canvas')
+        canvas.width = w
+        canvas.height = h
+        const ctx = canvas.getContext('2d')
+        if (!ctx) { revoke?.(); resolve(null); return }
+        ctx.drawImage(img, 0, 0)
+        revoke?.()
+        resolve({ b64: canvas.toDataURL('image/png'), pxW: w, pxH: h })
+      } catch { revoke?.(); resolve(null) }
+    }
+    img.onerror = () => { revoke?.(); resolve(null) }
+    img.src = imgSrc
+  })
+}
+
 async function loadLogo(url: string): Promise<LogoData | null> {
   if (!url?.trim()) return null
   const src = resolveLogoUrl(url.trim())
-  // Data URIs are embedded inline (server-resolved) — never append a cache-buster
-  // (it would corrupt the URI). Only remote URLs get the cache-buster.
-  const fetchUrl = src.startsWith('data:')
-    ? src
-    : src + (src.includes('?') ? '&' : '?') + '_cb=' + Date.now()
+
+  // Data URI (server-embedded): load DIRECTLY into an <img> — no fetch(), so it is
+  // immune to the CSP `connect-src` policy that blocked the previous fetch()-based
+  // path (the reason the logo never reached the PDF). Data URIs are same-origin →
+  // no CORS, no canvas taint. This is the primary, reliable path.
+  if (src.startsWith('data:')) {
+    return rasterizeToLogoData(src)
+  }
+
+  // Remote URL fallback: fetch as a blob (avoids canvas taint), then rasterize.
+  const fetchUrl = src + (src.includes('?') ? '&' : '?') + '_cb=' + Date.now()
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), 6000)
   try {
@@ -407,25 +436,7 @@ async function loadLogo(url: string): Promise<LogoData | null> {
     if (!res.ok) return null
     const blob = await res.blob()
     const blobUrl = URL.createObjectURL(blob)
-    return await new Promise<LogoData | null>(resolve => {
-      const img = new Image()
-      img.onload = () => {
-        try {
-          const w = Math.max(img.naturalWidth  || img.width,  1)
-          const h = Math.max(img.naturalHeight || img.height, 1)
-          const canvas = document.createElement('canvas')
-          canvas.width = w
-          canvas.height = h
-          const ctx = canvas.getContext('2d')
-          if (!ctx) { URL.revokeObjectURL(blobUrl); resolve(null); return }
-          ctx.drawImage(img, 0, 0)
-          URL.revokeObjectURL(blobUrl)
-          resolve({ b64: canvas.toDataURL('image/png'), pxW: w, pxH: h })
-        } catch { URL.revokeObjectURL(blobUrl); resolve(null) }
-      }
-      img.onerror = () => { URL.revokeObjectURL(blobUrl); resolve(null) }
-      img.src = blobUrl
-    })
+    return await rasterizeToLogoData(blobUrl, () => URL.revokeObjectURL(blobUrl))
   } catch (err) { clearTimeout(timer); void err; return null }
 }
 
