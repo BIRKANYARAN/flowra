@@ -369,7 +369,7 @@ export class CompetitivePricingService {
         product_id,
         product_name,
         unit_price,
-        quantity,
+        qty,
         sales!inner(sale_date, total_try, company_id)
       `)
       .eq('sales.company_id', companyId)
@@ -391,7 +391,7 @@ export class CompetitivePricingService {
       const pid = row.product_id as string
       const pname = (row.product_name as string | null) ?? pid
       const price = Number(row.unit_price)
-      const qty = Number(row.quantity ?? 1)
+      const qty = Number(row.qty ?? 1)
       const saleDate: string = row.sales?.sale_date ?? ''
       const month = saleDate.slice(0, 7) // "YYYY-MM"
       const revenue = price * qty

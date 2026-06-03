@@ -140,3 +140,12 @@ A live-schema cross-reference of every service `.select()/.eq()/.is()` found a c
   `req.json()` body-parses (malformed JSON → 500 instead of 422); hardened all 12 occurrences across
   partners/sales/proformas/expenses/admin-members/settings with a type-preserving
   `.catch(() => null)` + 422 guard. No business logic changed.
+
+- **Evolution cycle 5:** strict re-triage of the deferred schema-drift (~14 candidates) under a
+  "pure same-table unambiguous rename on a live operational non-statutory service = SAFE" rule.
+  Only **1** qualified and was fixed: `commercial/competitive-pricing.service.ts` `sale_items.quantity
+  → qty` (live pricing analytics). The rest were correctly held as DECISION — chiefly because
+  `line_total_try → line_total` would misstate **TRY revenue for foreign-currency sales** (a currency
+  re-source, not a rename), `products.price` is ambiguous across `list_price`/`default_sale_price`/
+  `catalog_price`, and several need a JOIN (`sale_item_allocations.product_id` lives on `sale_items`).
+  This is the floor: a broad sweep now yields single-digit safe items.
