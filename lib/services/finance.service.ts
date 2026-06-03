@@ -336,12 +336,15 @@ export class FinanceService {
   }
 
   /**
-   * Net profit = Gross profit - ALL expenses (including non-deductible ones,
-   * because cash is cash). Different from `matrah` which only subtracts
-   * deductible expenses.
+   * Operating profit BEFORE TAX = Gross profit - ALL expenses (including
+   * non-deductible ones, because cash is cash). This is a PRE-TAX figure — it is
+   * NOT net income. Canonical net income (post-tax) = getFinancialSummary
+   * .net_after_tax_try (the computeNetIncome kernel). Different from `matrah`,
+   * which only subtracts deductible expenses.
    *
-   *   net_profit  = revenue - cost - all_expenses     (cash-basis-ish view)
-   *   matrah      = revenue - cost - deductible_only  (tax base)
+   *   net_profit (pre-tax) = revenue - cost - all_expenses
+   *   matrah               = revenue - cost - deductible_only  (tax base)
+   *   net income (post-tax)= EBT - corporate_tax               (computeNetIncome)
    */
   static async getNetProfit(userId: string, companyId: string, period: Period, ctx?: RequestContext, clientOverride?: AnyClient) {
     const [gross, exp] = await Promise.all([
@@ -372,7 +375,7 @@ export class FinanceService {
     clientOverride?: AnyClient,
   ): Promise<FinancialSummary> {
     // Lazy import breaks the static cycle FinanceService ↔ TaxService.
-    const { TaxService, computeCorporateTax } = await import('@/lib/services/tax.service')
+    const { TaxService, computeNetIncome } = await import('@/lib/services/tax.service')
 
     const [gross, expenses, vat] = await Promise.all([
       this.getGrossProfit(userId, companyId, period, ctx, clientOverride),
@@ -381,9 +384,17 @@ export class FinanceService {
     ])
 
     const rate   = options?.corporate_tax_rate ?? CORPORATE_TAX_RATE_TR
-    const corpTx = computeCorporateTax({
+    // DP-2: net_after_tax_try is now TRUE net income (EBT − corporate tax), via the
+    // single net-income kernel. EBT subtracts ALL expenses (deductible AND
+    // non-deductible); the corporate tax stays the DP-1 canonical matrah-based KV.
+    // Previously net_after_tax_try was `matrah − tax`, which omitted non-deductible
+    // expenses and overstated net income. (expenses.total_try already includes any
+    // interest expense rows, so interest_expense_try = 0 here.)
+    const ni = computeNetIncome({
       revenue_try:             gross.revenue_try,
-      cost_try:                gross.cost_try,
+      cogs_try:                gross.cost_try,
+      operating_expenses_try:  expenses.total_try,
+      interest_expense_try:    0,
       deductible_expenses_try: expenses.deductible_try,
       rate_percent:            rate,
     })
@@ -396,10 +407,10 @@ export class FinanceService {
       expenses_total_try:          expenses.total_try,
       deductible_expenses_try:     expenses.deductible_try,
       non_deductible_expenses_try: expenses.non_deductible_try,
-      matrah_try:                  corpTx.matrah_try,
-      corporate_tax_rate:          corpTx.rate_percent,
-      corporate_tax_try:           corpTx.tax_try,
-      net_after_tax_try:           corpTx.net_after_tax_try,
+      matrah_try:                  ni.matrah_try,
+      corporate_tax_rate:          rate,
+      corporate_tax_try:           ni.corporate_tax_try,
+      net_after_tax_try:           ni.net_income_try,
       sales_vat_try:               vat.sales_vat_try,
       purchase_vat_try:            vat.purchase_vat_try,
       expense_vat_try:             vat.expense_vat_try,

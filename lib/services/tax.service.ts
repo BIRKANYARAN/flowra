@@ -245,6 +245,51 @@ export function computeCorporateTax(i: CorporateTaxComputeInput): CorporateTaxRe
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// DP-2 — the SINGLE net-income kernel.
+//
+// Canonical net income (MSUGT "Net Dönem Kârı"):
+//   EBT (vergi öncesi kâr) = revenue − COGS − ALL operating expenses − interest
+//   corporate_tax          = computeCorporateTax(matrah).tax_try        [DP-1 kernel]
+//   net_income             = EBT − corporate_tax
+//
+// EBT subtracts every real expense (deductible AND non-deductible) plus interest,
+// so net income is true net — NOT the old `matrah − tax` (which omitted
+// non-deductible expenses and overstated net). The corporate tax is the DP-1
+// canonical, matrah-based figure. A caller that wants an EBT-based provision (the
+// operational P&L estimate) passes deductible_expenses_try = operating+interest so
+// that matrah == EBT. NO other code may compute net income.
+// ═══════════════════════════════════════════════════════════════════════════════
+export interface NetIncomeComputeInput {
+  revenue_try:             number
+  cogs_try:                number
+  operating_expenses_try:  number   // ALL operating expenses (deductible + non-deductible)
+  interest_expense_try:    number
+  deductible_expenses_try: number   // subset used for the matrah (DP-1)
+  rate_percent:            number
+}
+export interface NetIncomeResult {
+  ebt_try:           number   // revenue − COGS − operating_expenses − interest
+  matrah_try:        number
+  corporate_tax_try: number
+  net_income_try:    number   // EBT − corporate_tax
+}
+export function computeNetIncome(i: NetIncomeComputeInput): NetIncomeResult {
+  const ebt  = i.revenue_try - i.cogs_try - i.operating_expenses_try - i.interest_expense_try
+  const corp = computeCorporateTax({
+    revenue_try:             i.revenue_try,
+    cost_try:                i.cogs_try,
+    deductible_expenses_try: i.deductible_expenses_try,
+    rate_percent:            i.rate_percent,
+  })
+  return {
+    ebt_try:           round2(ebt),
+    matrah_try:        corp.matrah_try,
+    corporate_tax_try: corp.tax_try,
+    net_income_try:    round2(ebt - corp.tax_try),
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // DB-bound API
 // ═══════════════════════════════════════════════════════════════════════════════
 

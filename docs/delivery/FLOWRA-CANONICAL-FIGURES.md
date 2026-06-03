@@ -178,3 +178,32 @@ from its 60%-COGS proxy to the canonical real-FIFO-COGS computation (so it match
 data, real COGS ≈ 0 → matrah ≈ revenue − deductible → KV **overstated** vs the 60% proxy. Recommend:
 use real COGS when FIFO coverage is adequate, else fall back to the labelled proxy — needs an
 accounting call on the coverage threshold. (Number-changing tax figure → decision package.)
+
+---
+
+## ✅ DP-2 EXECUTED — net income single kernel
+**Approved:** net income = EBT − corporate_tax (EBT = revenue − COGS − all opex − interest);
+`computeNetIncome` is the single kernel; IncomeStatementService is the canonical operational owner.
+
+**Done:**
+- New pure kernel `computeNetIncome` (in tax.service.ts, beside computeCorporateTax): `net = EBT − corporate_tax`, tax via the DP-1 kernel.
+- **`finance.service.getFinancialSummary.net_after_tax_try` redefined** from `matrah − tax` to true net
+  income (`EBT − tax`) via the kernel. **NUMBER CHANGE** — it now correctly subtracts non-deductible
+  expenses (previously omitted → overstated net). `corporate_tax_try`/`matrah_try` unchanged. All 9+
+  consumers (PnlTab, CFOTab, insights, reports, alerts, cfo-pack, board-pack, governance-snapshot, …)
+  read the field by name → auto-corrected.
+- **IncomeStatementService routed through the kernel**, numerically NEUTRAL (passes deductible = opex+interest
+  so matrah == EBT → keeps its EBT-based operational provision). Prior-period too.
+- Relabelled `getNetProfit` (pre-tax operating profit, NOT net income) and period-comparison
+  (`net_profit_try` = simplified MoM trend estimate, no COGS/tax).
+- **Regression snapshot + reconciliation + CI guard** (`tests/dp2-net-income-single-kernel.test.ts`):
+  kernel values pinned; the old-vs-new delta == non-deductible expenses; finance & income-statement
+  reconcile at EBT; a second net-income formula is now a red build. Updated 8 finance-service-assembly
+  snapshots to the corrected values (e.g. 209k→169k = old matrah−tax minus the 40k non-deductible).
+- Gate: tsc 0 · 25531 tests · build green.
+
+**DP-2b (follow-on decision — NOT executed):** switch the formal P&L's tax provision from EBT-based to
+matrah-based, so IncomeStatementService net == net_after_tax_try EXACTLY (not just at EBT) and its tax
+line matches the Vergi tab. **Needs:** interest-deductibility / KKEG classification confirmed, and the
+income-statement to compute its own deductible split (its expense fetcher differs from finance.service's).
+Changes the formal P&L's displayed tax + net. Recommend: yes, once the deductibility rules are signed off.

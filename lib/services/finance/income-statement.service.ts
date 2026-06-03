@@ -30,7 +30,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { computeCogsFromAllocations, cogsTruncationWarning } from '@/lib/finance/cogs'
 import { CORPORATE_TAX_RATE_TR } from '@/lib/services/finance-rules'
-import { computeCorporateTax } from '@/lib/services/tax.service'
+import { computeCorporateTax, computeNetIncome } from '@/lib/services/tax.service'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyClient = SupabaseClient<any>
@@ -357,10 +357,22 @@ export class IncomeStatementService {
     const opex  = cur.operating_expenses
     const ebitda = computeEbitda(gp, opex)
     const intEx  = cur.interest_expense
-    const ebt    = ebitda - intEx
-    // Tax: corporate tax on positive EBT (system-wide rate, was hardcoded 20%).
-    const taxProv = computeTaxProvision(ebt)
-    const netIncome = ebt - taxProv
+    // DP-2: net income via the single kernel. The formal P&L's tax provision is the
+    // OPERATIONAL estimate (tax on EBT), so deductible = opex + interest makes
+    // matrah == EBT — numerically identical to the prior EBT-based provision. (The
+    // statutory matrah-based KV lives on the Vergi tab; unifying this provision to
+    // matrah is DP-2b.) Net income subtracts all operating expenses + interest.
+    const ni = computeNetIncome({
+      revenue_try:             rev,
+      cogs_try:                cogs,
+      operating_expenses_try:  opex,
+      interest_expense_try:    intEx,
+      deductible_expenses_try: opex + intEx,
+      rate_percent:            CORPORATE_TAX_RATE_TR,
+    })
+    const ebt       = ni.ebt_try
+    const taxProv   = ni.corporate_tax_try
+    const netIncome = ni.net_income_try
 
     // Prior values (null when no prior)
     const pRev    = pri?.revenue             ?? null
@@ -371,9 +383,20 @@ export class IncomeStatementService {
       ? computeEbitda(pGp, pOpex)
       : null
     const pIntEx  = pri?.interest_expense    ?? null
-    const pEbt    = pEbitda !== null && pIntEx !== null ? pEbitda - pIntEx : null
-    const pTax    = pEbt !== null ? computeTaxProvision(pEbt) : null
-    const pNet    = pEbt !== null && pTax !== null ? pEbt - pTax : null
+    // Prior period net income via the same single kernel (EBT-based provision).
+    const pNi     = pri !== null
+      ? computeNetIncome({
+          revenue_try:             pri.revenue,
+          cogs_try:                pri.cogs,
+          operating_expenses_try:  pri.operating_expenses,
+          interest_expense_try:    pri.interest_expense,
+          deductible_expenses_try: pri.operating_expenses + pri.interest_expense,
+          rate_percent:            CORPORATE_TAX_RATE_TR,
+        })
+      : null
+    const pEbt    = pNi?.ebt_try           ?? null
+    const pTax    = pNi?.corporate_tax_try ?? null
+    const pNet    = pNi?.net_income_try    ?? null
 
     // Margins
     const grossMarginPct     = rev > 0 ? (gp / rev) * 100 : 0

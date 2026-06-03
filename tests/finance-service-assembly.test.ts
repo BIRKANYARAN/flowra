@@ -103,8 +103,11 @@ describe('FinanceService.getFinancialSummary — assembly', () => {
 
     // matrah = 500k - 200k - 80k = 220k  (non-deductible 40k excluded)
     expect(summary.matrah_try).toBe(220_000)
-    expect(summary.corporate_tax_try).toBe(55_000)  // 220k × 25%
-    expect(summary.net_after_tax_try).toBe(165_000) // 220k - 55k
+    expect(summary.corporate_tax_try).toBe(55_000)  // 220k matrah × 25% (unchanged)
+    // DP-2: net_after_tax is now TRUE net income = EBT(180k) − tax(55k) = 125k.
+    // EBT = revenue 500k − COGS 200k − ALL expenses 120k. (Was 165k = matrah−tax,
+    // which wrongly omitted the 40k non-deductible expenses.)
+    expect(summary.net_after_tax_try).toBe(125_000)
     expect(summary.corporate_tax_rate).toBe(25)
   })
 
@@ -129,10 +132,10 @@ describe('FinanceService.getFinancialSummary — assembly', () => {
       { corporate_tax_rate: 20 }, // override to 20%
     )
 
-    // matrah = 220k, tax at 20% = 44k, net = 176k
+    // matrah = 220k, tax at 20% = 44k; DP-2 net = EBT(180k) − 44k = 136k
     expect(summary.corporate_tax_rate).toBe(20)
     expect(summary.corporate_tax_try).toBe(44_000)
-    expect(summary.net_after_tax_try).toBe(176_000)
+    expect(summary.net_after_tax_try).toBe(136_000)
   })
 
   it('period is passed through to the summary', async () => {
@@ -171,12 +174,14 @@ describe('FinanceService.getFinancialSummary — assembly', () => {
     expect(summary.gross_profit_try).toBe(summary.revenue_try - summary.cost_try)
   })
 
-  it('net_after_tax_try = matrah_try - corporate_tax_try', async () => {
+  it('net_after_tax_try = EBT − corporate_tax (true net income, DP-2)', async () => {
     const taxMod = await import('../lib/services/tax.service')
     vi.spyOn(taxMod.TaxService, 'getKdvNet').mockResolvedValue(VAT_STUB as never)
 
     const summary = await FinanceService.getFinancialSummary(USER, CO, PERIOD)
-    expect(summary.net_after_tax_try).toBe(summary.matrah_try - summary.corporate_tax_try)
+    // EBT = gross_profit − ALL expenses; net income = EBT − corporate tax.
+    const ebt = summary.gross_profit_try - summary.expenses_total_try
+    expect(summary.net_after_tax_try).toBe(ebt - summary.corporate_tax_try)
   })
 
   it('zero-revenue scenario: matrah and tax are clamped at 0', async () => {
@@ -211,8 +216,8 @@ describe('FinanceService.getFinancialSummary — assembly', () => {
     )
 
     expect(summary.corporate_tax_rate).toBe(10)
-    expect(summary.corporate_tax_try).toBe(22_000)  // 220k × 10%
-    expect(summary.net_after_tax_try).toBe(198_000) // 220k - 22k
+    expect(summary.corporate_tax_try).toBe(22_000)  // 220k matrah × 10%
+    expect(summary.net_after_tax_try).toBe(158_000) // DP-2: EBT(180k) − 22k
   })
 
   it('30% corporate tax rate: 220k matrah → 66k tax', async () => {
@@ -225,8 +230,8 @@ describe('FinanceService.getFinancialSummary — assembly', () => {
     )
 
     expect(summary.corporate_tax_rate).toBe(30)
-    expect(summary.corporate_tax_try).toBe(66_000)  // 220k × 30%
-    expect(summary.net_after_tax_try).toBe(154_000) // 220k - 66k
+    expect(summary.corporate_tax_try).toBe(66_000)  // 220k matrah × 30%
+    expect(summary.net_after_tax_try).toBe(114_000) // DP-2: EBT(180k) − 66k
   })
 
   it('deductible_expenses_try + non_deductible_expenses_try = expenses_total_try', async () => {
@@ -647,17 +652,18 @@ describe('FinancialSummary — additional field verification', () => {
     expect(summary.expenses_total_try).toBe(120_000)
   })
 
-  it('net_after_tax_try equals matrah minus tax', async () => {
+  it('net_after_tax_try equals EBT minus tax (true net income, DP-2)', async () => {
     vi.spyOn(FinanceService, 'getGrossProfit').mockResolvedValue(GROSS_STUB as never)
     vi.spyOn(FinanceService, 'getOperatingExpenses').mockResolvedValue(EXPENSES_STUB as never)
     const taxMod = await import('../lib/services/tax.service')
     vi.spyOn(taxMod.TaxService, 'getKdvNet').mockResolvedValue(VAT_STUB as never)
 
     const summary = await FinanceService.getFinancialSummary(USER, CO, PERIOD)
-    expect(summary.net_after_tax_try).toBe(summary.matrah_try - summary.corporate_tax_try)
+    const ebt = summary.gross_profit_try - summary.expenses_total_try
+    expect(summary.net_after_tax_try).toBe(ebt - summary.corporate_tax_try)
   })
 
-  it('40% tax rate on 220k matrah → 88k tax, 132k net', async () => {
+  it('40% tax rate: 220k matrah → 88k tax; DP-2 net = EBT(180k) − 88k = 92k', async () => {
     vi.spyOn(FinanceService, 'getGrossProfit').mockResolvedValue(GROSS_STUB as never)
     vi.spyOn(FinanceService, 'getOperatingExpenses').mockResolvedValue(EXPENSES_STUB as never)
     const taxMod = await import('../lib/services/tax.service')
@@ -665,10 +671,10 @@ describe('FinancialSummary — additional field verification', () => {
 
     const summary = await FinanceService.getFinancialSummary(USER, CO, PERIOD, { corporate_tax_rate: 40 })
     expect(summary.corporate_tax_try).toBe(88_000)
-    expect(summary.net_after_tax_try).toBe(132_000)
+    expect(summary.net_after_tax_try).toBe(92_000)
   })
 
-  it('5% tax rate on 220k matrah → 11k tax, 209k net', async () => {
+  it('5% tax rate: 220k matrah → 11k tax; DP-2 net = EBT(180k) − 11k = 169k', async () => {
     vi.spyOn(FinanceService, 'getGrossProfit').mockResolvedValue(GROSS_STUB as never)
     vi.spyOn(FinanceService, 'getOperatingExpenses').mockResolvedValue(EXPENSES_STUB as never)
     const taxMod = await import('../lib/services/tax.service')
@@ -676,6 +682,6 @@ describe('FinancialSummary — additional field verification', () => {
 
     const summary = await FinanceService.getFinancialSummary(USER, CO, PERIOD, { corporate_tax_rate: 5 })
     expect(summary.corporate_tax_try).toBe(11_000)
-    expect(summary.net_after_tax_try).toBe(209_000)
+    expect(summary.net_after_tax_try).toBe(169_000)
   })
 })

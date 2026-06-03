@@ -836,6 +836,10 @@ export class PeriodComparisonService {
       (period, idx) => {
         const revenue_try = revenueByMonth[period] ?? 0
         const expenses_try = expensesByMonth[period] ?? 0
+        // TREND ESTIMATE ONLY — simplified MoM net = revenue − expenses (no COGS,
+        // no tax). NOT canonical net income (that is getFinancialSummary
+        // .net_after_tax_try via computeNetIncome). Used for month-over-month
+        // direction in the comparison view, where exactness is not required. (DP-2)
         const net_profit_try = revenue_try - expenses_try
 
         let mom_revenue_change_pct: number | null = null
