@@ -26,6 +26,7 @@ import { SupplierTermsClient } from './_supplier-terms/SupplierTermsClient'
 import { PayrollAnalyticsClient } from '@/app/dashboard/finance/_tabs/_payroll/PayrollAnalyticsClient'
 import { OperationalEfficiencyClient } from './_efficiency/OperationalEfficiencyClient'
 import { ExpensesCharts } from './ExpensesCharts'
+import { DetailSection } from '@/components/dashboard/DetailSection'
 
 function CommandBarSkeleton() {
   return (
@@ -532,26 +533,23 @@ export async function ExpensesContent({ companyId }: Props) {
         }))}
       />
 
-      {/* ── Borç Yaşlandırma (AP Aging) ──────────────────────────────────────── */}
-      <PayablesAgingSection />
-
-      {/* ── Anormal Gider Tespiti ──────────────────────────────────────────────── */}
-      <ExpenseAnomalyClient companyId={companyId} />
-
-      {/* ── Tedarikçi Analizi ─────────────────────────────────────────────────── */}
-      <SupplierAnalyticsPanel />
-
-      {/* ── Tedarikçi Ödeme Koşulları ─────────────────────────────────────────── */}
-      <SupplierPaymentTermsClient companyId={companyId} />
-
-      {/* ── Tedarikçi Konsantrasyon Riski ────────────────────────────────────── */}
-      <VendorConcentrationClient companyId={companyId} />
-
-      {/* ── Personel Maliyeti Analizi ─────────────────────────────────────────── */}
-      <PayrollAnalyticsClient companyId={companyId} />
-
-      {/* ── Tedarikçi Ödeme Koşulları Optimizer ──────────────────────────────── */}
-      <SupplierTermsClient companyId={companyId} />
+      {/* ── Detaylı Analiz — deep panels, collapsed by default (load on demand) ── */}
+      <DetailSection title="Detaylı Gider Analizi" subtitle="Borç yaşlandırma · anomali · tedarikçi · bordro">
+        {/* Borç Yaşlandırma (AP Aging) */}
+        <PayablesAgingSection />
+        {/* Anormal Gider Tespiti */}
+        <ExpenseAnomalyClient companyId={companyId} />
+        {/* Tedarikçi Analizi */}
+        <SupplierAnalyticsPanel />
+        {/* Tedarikçi Ödeme Koşulları */}
+        <SupplierPaymentTermsClient companyId={companyId} />
+        {/* Tedarikçi Konsantrasyon Riski */}
+        <VendorConcentrationClient companyId={companyId} />
+        {/* Personel Maliyeti Analizi */}
+        <PayrollAnalyticsClient companyId={companyId} />
+        {/* Tedarikçi Ödeme Koşulları Optimizer */}
+        <SupplierTermsClient companyId={companyId} />
+      </DetailSection>
 
       {/* Cross-navigation */}
       <NarrativeFooter

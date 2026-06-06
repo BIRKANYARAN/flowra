@@ -28,6 +28,7 @@ import CustomerConcentrationClient from './_concentration/CustomerConcentrationC
 import SegmentProfitabilityClient from './_segments/SegmentProfitabilityClient'
 import CohortRetentionClient from './_cohort/CohortRetentionClient'
 import CustomerCreditClient from './_credit/CustomerCreditClient'
+import { DetailSection } from '@/components/dashboard/DetailSection'
 
 interface Props { companyId: string }
 
@@ -122,26 +123,23 @@ export async function CustomersContent({ companyId }: Props) {
         </span>
       </div>
 
-      {/* ── Segment Kârlılık Analizi ─────────────────────────────────────── */}
-      <SegmentProfitabilityClient companyId={companyId} />
-
-      {/* ── Kohort Tutma & Churn Analizi ─────────────────────────────────── */}
-      <CohortRetentionClient companyId={companyId} />
-
-      {/* ── Müşteri RFM Segmentasyonu ─────────────────────────────────────── */}
-      <RfmSegmentationClient companyId={companyId} />
-
-      {/* ── Müşteri Segment Kârlılığı (Tip Bazlı) ───────────────────────── */}
-      <CustomerSegmentProfitabilityClient companyId={companyId} />
-
-      {/* ── Müşteri Yaşam Boyu Değeri (CLV / LTV) ───────────────────────── */}
-      <CustomerLtvClient />
-
-      {/* ── Müşteri Kredi Skoru ───────────────────────────────────────────── */}
-      <CustomerCreditClient companyId={companyId} />
-
-      {/* ── Müşteri Yoğunlaşma Analizi (HHI) ────────────────────────────── */}
-      <CustomerConcentrationClient />
+      {/* ── Detaylı Müşteri Analizi — collapsed by default (load on demand) ── */}
+      <DetailSection title="Detaylı Müşteri Analizi" subtitle="Segment · kohort · RFM · LTV · kredi · yoğunlaşma">
+        {/* Segment Kârlılık Analizi */}
+        <SegmentProfitabilityClient companyId={companyId} />
+        {/* Kohort Tutma & Churn Analizi */}
+        <CohortRetentionClient companyId={companyId} />
+        {/* Müşteri RFM Segmentasyonu */}
+        <RfmSegmentationClient companyId={companyId} />
+        {/* Müşteri Segment Kârlılığı (Tip Bazlı) */}
+        <CustomerSegmentProfitabilityClient companyId={companyId} />
+        {/* Müşteri Yaşam Boyu Değeri (CLV / LTV) */}
+        <CustomerLtvClient />
+        {/* Müşteri Kredi Skoru */}
+        <CustomerCreditClient companyId={companyId} />
+        {/* Müşteri Yoğunlaşma Analizi (HHI) */}
+        <CustomerConcentrationClient />
+      </DetailSection>
 
       {/* ── Müşteri Yoğunlaşma Riski (HHI) ──────────────────────────────── */}
       {concentrationReport && concentrationReport.customer_count > 0 && (
