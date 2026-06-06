@@ -21,8 +21,8 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/require-role'
-import { PartnerService } from '@/lib/services/partner.service'
 import { REQUEST_ID_HEADER } from '@/middleware'
+import { logAudit, logAlert } from '@/lib/audit'
 import { resolveApiAuth } from '@/lib/api-auth'
 import { round2 } from '@/lib/calc'
 import { DividendService } from '@/lib/services/pcle/dividend.service'
@@ -118,8 +118,8 @@ export async function POST(req: NextRequest) {
 
   // ── Partner ownership pre-validation ────────────────────────────────────────
   // Verify ALL partner IDs belong to this company BEFORE any inserts.
-  // PartnerService.addTransaction also validates per-partner, but returns a 500;
-  // pre-validation here returns 422 with a clear error and prevents partial writes.
+  // The RPC re-validates ownership server-side too, but pre-validation here returns
+  // a clear 422 (vs. a 500 rollback) and lists every offending id at once.
   const requestedPartnerIds = (declarations as DeclareEntry[]).map(d => d.partner_id)
   const { data: companyPartners, error: partnerFetchErr } = await supabase
     .from('partners')
@@ -197,41 +197,64 @@ export async function POST(req: NextRequest) {
     }, { status: 422 })
   }
 
-  // Sequential inserts — first failure aborts the rest.
-  // Not true DB-level atomicity (requires a PostgreSQL function for that),
-  // but server-side orchestration prevents N parallel failures from the client.
-  let inserted = 0
-  for (const entry of declarations as DeclareEntry[]) {
-    try {
-      const notes = [
-        `Temettü beyanı`,
-        `Brüt: ₺${(entry.gross_try ?? 0).toFixed(2)}`,
-        `Stopaj (%10): ₺${(entry.withholding_try ?? 0).toFixed(2)}`,
-        `Net: ₺${entry.net_try.toFixed(2)}`,
-      ].join(' — ')
+  // ── Atomic batch insert via Postgres function ────────────────────────────────
+  // A dividend distribution is a single legal act: it must be all-or-nothing. The
+  // previous sequential loop (one insert per partner) left
+  // rows 1..N-1 committed if row N failed — a partial, unfixable distribution that
+  // could understate or overstate what was declared. declare_dividend_atomic inserts
+  // every row inside ONE transaction (SECURITY DEFINER, re-validates membership and
+  // partner→company ownership server-side), so a failure rolls the whole batch back.
+  const rpcDeclarations = (declarations as DeclareEntry[]).map(entry => ({
+    partner_id: entry.partner_id,
+    net_try:    round2(entry.net_try),
+    tx_date:    entry.tx_date,
+    notes: [
+      `Temettü beyanı`,
+      `Brüt: ₺${(entry.gross_try ?? 0).toFixed(2)}`,
+      `Stopaj (%10): ₺${(entry.withholding_try ?? 0).toFixed(2)}`,
+      `Net: ₺${entry.net_try.toFixed(2)}`,
+    ].join(' — '),
+  }))
 
-      await PartnerService.addTransaction(uid, entry.partner_id, {
-        tx_type:  'dividend',
-        amount:   entry.net_try,
-        currency: 'TRY',
-        fx_rate:  1,
-        tx_date:  entry.tx_date,
-        notes,
-      }, companyId, ctx)
+  const { data: insertedRows, error: rpcError } = await supabase.rpc('declare_dividend_atomic', {
+    p_company_id:   companyId,
+    p_user_id:      uid,
+    p_declarations: rpcDeclarations,
+  })
 
-      inserted++
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err)
-      console.error(`[dividend/declare] partner ${entry.partner_id} failed after ${inserted} inserts:`, msg)
-      return NextResponse.json(
-        { error: `Ortak ${entry.partner_id} kaydedilemedi: ${msg}`, failed_partner_id: entry.partner_id, inserted },
-        { status: 500, headers: { [REQUEST_ID_HEADER]: ctx.requestId } },
-      )
+  if (rpcError) {
+    console.error('[dividend/declare] atomic insert failed (whole batch rolled back):', rpcError.message)
+    return NextResponse.json(
+      { error: `Temettü beyanı kaydedilemedi (işlemin tamamı geri alındı): ${rpcError.message}`, code: 'DIVIDEND_INSERT_FAILED', type: 'BUSINESS' },
+      { status: 500, headers: { [REQUEST_ID_HEADER]: ctx.requestId } },
+    )
+  }
+
+  // Audit + large-transaction alerts (best-effort, fire-and-forget — mirrors the
+  // partner-transaction service). Atomicity is already guaranteed by the RPC above.
+  const rows = (insertedRows ?? []) as { tx_id: string; partner_id: string; amount_try: number }[]
+  for (const row of rows) {
+    logAudit({
+      userId:     uid,
+      companyId,
+      entityType: 'partner_transaction',
+      entityId:   row.tx_id,
+      action:     'create',
+      newData:    { tx_type: 'dividend', amount: row.amount_try, currency: 'TRY', amount_try: row.amount_try },
+    })
+    if (row.amount_try >= 10_000) {
+      logAlert({
+        actorUserId: uid,
+        entityType:  'partner_transaction',
+        entityId:    row.tx_id,
+        message:     `Büyük ortak işlemi: dividend ${row.amount_try.toLocaleString('tr-TR')} TRY`,
+        severity:    'warning',
+      })
     }
   }
 
   return NextResponse.json(
-    { success: true, inserted },
+    { success: true, inserted: rows.length },
     { headers: { [REQUEST_ID_HEADER]: ctx.requestId } },
   )
 }

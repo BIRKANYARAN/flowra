@@ -33,6 +33,13 @@ describe('DP-3 — dividend declare route (Pattern B)', () => {
     // the old non-fatal "proceed with a warning" comment must be gone
     expect(src).not.toMatch(/proceed with a logged warning/i)
   })
+
+  it('inserts the batch atomically via the Postgres function (no sequential per-partner loop)', () => {
+    // True DB-level atomicity: one RPC, whole batch rolls back on any failure.
+    expect(src).toContain("supabase.rpc('declare_dividend_atomic'")
+    // The old non-atomic sequential addTransaction loop must be gone.
+    expect(src).not.toMatch(/PartnerService\.addTransaction/)
+  })
 })
 
 describe('DP-3 — DividendService.calculate (Pattern A)', () => {
