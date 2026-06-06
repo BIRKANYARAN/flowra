@@ -7,6 +7,7 @@ import { PdfExportButton } from '@/components/reports/PdfExportButton'
 import { useWorkspace }    from '@/lib/workspace-context'
 import type { PdfReportOptions } from '@/lib/utils/pdf-report'
 import { fmtCompact as fmt } from '@/lib/format'
+import { ChartCard, BarCompare, DonutBreakdown, CHART } from '@/components/charts'
 
 interface ExecSummary {
   from: string; to: string; as_of: string; computed_at: string
@@ -215,6 +216,42 @@ export default function ExecutiveSummaryPage() {
                 tone={is && is.net_income > 0 ? 'positive' : 'negative'} />
             </div>
           </div>
+
+          {/* Visual summary — profit cascade + asset composition */}
+          {(is || bs) && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 print:hidden">
+              {is && (
+                <ChartCard title="Kâr Şelalesi" subtitle="Gelirden net kâra" className="h-48">
+                  <BarCompare
+                    colorByPoint
+                    data={[
+                      { label: 'Gelir',     value: is.revenue,      color: CHART.primary },
+                      { label: 'Brüt Kâr',  value: is.gross_profit, color: '#0891b2' },
+                      { label: 'EBITDA',    value: is.ebitda,       color: is.ebitda >= 0 ? CHART.info : CHART.neg },
+                      { label: 'Net Kâr',   value: is.net_income,   color: is.net_income >= 0 ? CHART.pos : CHART.neg },
+                    ]}
+                    series={[{ key: 'value', label: 'Tutar' }]}
+                    valueFormatter={(v) => fmt(Number(v))}
+                  />
+                </ChartCard>
+              )}
+              {bs && bs.total_assets > 0 && (
+                <ChartCard title="Varlık Kompozisyonu" subtitle="Likidite yapısı" className="h-48">
+                  <DonutBreakdown
+                    centerLabel="Varlık"
+                    centerValue={fmt(bs.total_assets)}
+                    valueFormatter={(v) => fmt(Number(v))}
+                    data={[
+                      { name: 'Nakit',     value: bs.cash_try,        color: CHART.pos },
+                      { name: 'Alacaklar', value: bs.receivables_try, color: CHART.info },
+                      { name: 'Stoklar',   value: bs.inventory_try,   color: CHART.warn },
+                      { name: 'Diğer',     value: Math.max(0, bs.total_assets - bs.cash_try - bs.receivables_try - bs.inventory_try), color: CHART.ink3 },
+                    ].filter(d => d.value > 0)}
+                  />
+                </ChartCard>
+              )}
+            </div>
+          )}
 
           {/* Balance Sheet + Cash Flow */}
           <div>
