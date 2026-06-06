@@ -336,7 +336,6 @@ export class DividendCalculatorService {
     const [
       partnersResult,
       commitmentsResult,
-      accountingPeriodsResult,
       balanceSheetResult,
       eventsResult,
     ] = await Promise.allSettled([
@@ -353,15 +352,6 @@ export class DividendCalculatorService {
         .from('partner_capital_commitments')
         .select('partner_id, committed_try, paid_try')
         .eq('company_id', companyId),
-
-      // accounting periods — most recent closed period for profit
-      this.supabase
-        .from('accounting_periods')
-        .select('net_profit_try, period_start, period_end')
-        .eq('company_id', companyId)
-        .eq('status', 'closed')
-        .order('period_end', { ascending: false })
-        .limit(1),
 
       // balance sheet snapshots — most recent for legal reserves
       this.supabase
@@ -412,17 +402,26 @@ export class DividendCalculatorService {
       }
     }
 
-    // Period profit: override > accounting_periods > 0
+    // Period profit: override, else the CANONICAL YTD net income (revenue − COGS −
+    // all opex − corporate tax) — the same basis as the dividend declaration, so the
+    // preview matches what can actually be declared. (Was accounting_periods
+    // .net_profit_try, a non-existent column → always 0.)
     let periodProfit = 0
     if (periodProfitOverride !== undefined) {
       periodProfit = periodProfitOverride
-    } else if (
-      accountingPeriodsResult.status === 'fulfilled' &&
-      !accountingPeriodsResult.value.error &&
-      (accountingPeriodsResult.value.data ?? []).length > 0
-    ) {
-      const row = accountingPeriodsResult.value.data[0] as Record<string, unknown>
-      periodProfit = Number(row.net_profit_try ?? 0)
+    } else {
+      try {
+        const { FinanceService } = await import('@/lib/services/finance.service')
+        const yr = new Date().getFullYear()
+        const summary = await FinanceService.getFinancialSummary(
+          '', companyId,
+          { from: `${yr}-01-01`, to: new Date().toISOString().slice(0, 10) },
+          undefined, undefined, this.supabase,
+        )
+        periodProfit = round2(summary.net_after_tax_try)
+      } catch {
+        periodProfit = 0
+      }
     }
 
     // Existing legal reserves

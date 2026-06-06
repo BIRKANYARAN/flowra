@@ -6,6 +6,7 @@
 
 import { describe, it, expect, vi } from 'vitest'
 import { DividendService } from '../lib/services/pcle/dividend.service'
+import { FinanceService } from '../lib/services/finance.service'
 
 // ── Mock Supabase factory ──────────────────────────────────────────────────────
 
@@ -16,13 +17,29 @@ function makeSupabase(opts: {
   expenses?:      RowData[]
   partners?:      RowData[]
   financeEvents?: RowData[]
+  commitments?:   RowData[]
 }) {
   const responses: Record<string, RowData[]> = {
     sales:                  opts.sales         ?? [],
     expenses:               opts.expenses       ?? [],
     partners:               opts.partners       ?? [],
     partner_finance_events: opts.financeEvents  ?? [],
+    // Large default paid-in capital so the TTK 519 20%-of-capital reserve cap does
+    // not bind (keeps reserve = 5% of net for these unit tests unless overridden).
+    partner_capital_commitments: opts.commitments ?? [{ paid_try: 100_000_000 }],
   }
+
+  // DP-3: net income is now the canonical figure from FinanceService. Spy it to the
+  // fixture's revenue − (non-financing) expenses, preserving each test's net basis;
+  // the precise COGS/tax pipeline is covered by FinanceService's own tests.
+  const FINANCING = new Set(['partner_financing', 'loan_repayment', 'dividend', 'internal_transfer', 'principal', 'partner_loan'])
+  const rev = (opts.sales ?? []).reduce((s, r) => s + Number((r as RowData).total_try ?? 0), 0)
+  const exp = (opts.expenses ?? []).reduce((s, r) => {
+    const t = (r as RowData).expense_type as string | undefined
+    return t && FINANCING.has(t) ? s : s + Number((r as RowData).amount_try ?? 0)
+  }, 0)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  vi.spyOn(FinanceService, 'getFinancialSummary').mockResolvedValue({ net_after_tax_try: Math.round((rev - exp) * 100) / 100 } as any)
 
   return {
     from: (table: string) => {
