@@ -19,6 +19,7 @@ import { HealthReportService } from '@/lib/services/reports/health-report.servic
 import type { CompanyHealthReport, HealthReportSection } from '@/lib/services/reports/health-report.service'
 import Link                  from 'next/link'
 import PrintButton           from './PrintButton'
+import { HealthCharts }      from './HealthCharts'
 
 export const dynamic = 'force-dynamic'
 
@@ -165,6 +166,19 @@ export default async function HealthReportPage() {
             </div>
           </div>
         </div>
+
+        {/* ── VISUAL SCORE SUMMARY ──────────────────────────────────────────── */}
+        <HealthCharts
+          overallScore={r.overall_score}
+          overallGrade={r.overall_grade}
+          sections={[
+            { title: r.sections.liquidity.title,           score: r.sections.liquidity.score },
+            { title: r.sections.profitability.title,       score: r.sections.profitability.score },
+            { title: r.sections.receivables.title,         score: r.sections.receivables.score },
+            { title: r.sections.partner_obligations.title, score: r.sections.partner_obligations.score },
+            { title: r.sections.operational.title,         score: r.sections.operational.score },
+          ]}
+        />
 
         {/* ── SECTIONS GRID ─────────────────────────────────────────────────── */}
         {/* 2-col grid, 5 items: rows of 2 + 2 + 1 */}
