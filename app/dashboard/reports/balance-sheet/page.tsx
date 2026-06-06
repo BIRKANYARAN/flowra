@@ -7,6 +7,15 @@ import { PdfExportButton } from '@/components/reports/PdfExportButton'
 import { useWorkspace } from '@/lib/workspace-context'
 import type { PdfReportOptions } from '@/lib/utils/pdf-report'
 import { formatTRY as fmt } from '@/lib/format'
+import { ChartCard, DonutBreakdown, CHART } from '@/components/charts'
+
+function compactTRY(n: number): string {
+  const a = Math.abs(n)
+  if (a >= 1e9) return '₺' + (n / 1e9).toFixed(1).replace('.', ',') + 'Mr'
+  if (a >= 1e6) return '₺' + (n / 1e6).toFixed(1).replace('.', ',') + 'M'
+  if (a >= 1e3) return '₺' + (n / 1e3).toFixed(0) + 'B'
+  return '₺' + Math.round(n).toLocaleString('tr-TR')
+}
 
 // Mirrors the nested BalanceSheet shape returned by BalanceSheetService.compute()
 interface BSAssets {
@@ -136,6 +145,24 @@ export default function BalanceSheetPage() {
 
       {error && <ErrorBanner msg={error} />}
       {loading && <Skeleton height="h-64" />}
+
+      {/* Asset composition — where value is held */}
+      {bs && !loading && (
+        <ChartCard title="Varlık Kompozisyonu" subtitle="Likidite yapısı" className="h-48 print:hidden">
+          <DonutBreakdown
+            centerLabel="Varlık"
+            centerValue={compactTRY(bs.assets.total_assets_try)}
+            valueFormatter={(v) => compactTRY(Number(v))}
+            data={[
+              { name: 'Kasa & Banka', value: bs.assets.cash_try,        color: CHART.pos },
+              { name: 'Alıcılar',     value: bs.assets.receivables_try,  color: CHART.info },
+              { name: 'Stoklar',      value: bs.assets.inventory_try,    color: CHART.warn },
+              { name: 'Diğer Dönen',  value: bs.assets.other_current_try },
+              { name: 'Duran',        value: bs.assets.total_non_current_try, color: CHART.ink3 },
+            ].filter(d => d.value > 0)}
+          />
+        </ChartCard>
+      )}
 
       {bs && !loading && (
         <div className="grid grid-cols-2 gap-4">
