@@ -8,6 +8,15 @@ import { useWorkspace }    from '@/lib/workspace-context'
 import type { PdfReportOptions } from '@/lib/utils/pdf-report'
 import { formatTRY as fmt } from '@/lib/format'
 import { classifyCashFlowHealth } from '@/lib/services/cashflow-statement.service'
+import { ChartCard, BarCompare, CHART } from '@/components/charts'
+
+function compactTRY(n: number): string {
+  const a = Math.abs(n)
+  if (a >= 1e9) return '₺' + (n / 1e9).toFixed(1).replace('.', ',') + 'Mr'
+  if (a >= 1e6) return '₺' + (n / 1e6).toFixed(1).replace('.', ',') + 'M'
+  if (a >= 1e3) return '₺' + (n / 1e3).toFixed(0) + 'B'
+  return '₺' + Math.round(n).toLocaleString('tr-TR')
+}
 
 const HEALTH_LABELS: Record<ReturnType<typeof classifyCashFlowHealth>, { label: string; cls: string }> = {
   strong:        { label: 'Güçlü',       cls: 'bg-pos-light text-pos-text border-pos-light' },
@@ -161,6 +170,21 @@ export default function CashFlowPage() {
 
       {cf && !loading && (
         <>
+          {/* Cash bridge — where cash came from / went, at a glance */}
+          <ChartCard title="Nakit Akış Köprüsü" subtitle="Faaliyet · Yatırım · Finansman" className="h-48 print:hidden">
+            <BarCompare
+              colorByPoint
+              data={[
+                { label: 'Faaliyet',  value: cf.operating.net_operating_try, color: cf.operating.net_operating_try >= 0 ? CHART.pos : CHART.neg },
+                { label: 'Yatırım',   value: cf.investing.net_investing_try, color: cf.investing.net_investing_try >= 0 ? CHART.pos : CHART.neg },
+                { label: 'Finansman', value: cf.financing.net_financing_try, color: cf.financing.net_financing_try >= 0 ? CHART.pos : CHART.neg },
+                { label: 'Net Değişim', value: cf.net_change_try, color: cf.net_change_try >= 0 ? CHART.info : CHART.warn },
+              ]}
+              series={[{ key: 'value', label: 'Tutar' }]}
+              valueFormatter={(v) => compactTRY(Number(v))}
+            />
+          </ChartCard>
+
           {/* Opening balance */}
           <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 flex items-center justify-between">
             <span className="text-xs font-semibold text-[#64748b]">Dönem Başı Nakit</span>
