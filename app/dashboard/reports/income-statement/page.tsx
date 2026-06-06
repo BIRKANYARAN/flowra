@@ -7,6 +7,7 @@ import { PdfExportButton } from '@/components/reports/PdfExportButton'
 import { useWorkspace } from '@/lib/workspace-context'
 import type { PdfReportOptions } from '@/lib/utils/pdf-report'
 import { formatTRY as fmt } from '@/lib/format'
+import { ChartCard, BarCompare, CHART } from '@/components/charts'
 
 interface PnL {
   revenue_try:                 number
@@ -24,6 +25,14 @@ interface PnL {
 function pct(n: number, d: number) {
   if (!d) return '—'
   return ((n / d) * 100).toFixed(1) + '%'
+}
+
+function compactTRY(n: number): string {
+  const a = Math.abs(n)
+  if (a >= 1e9) return '₺' + (n / 1e9).toFixed(1).replace('.', ',') + 'Mr'
+  if (a >= 1e6) return '₺' + (n / 1e6).toFixed(1).replace('.', ',') + 'M'
+  if (a >= 1e3) return '₺' + (n / 1e3).toFixed(0) + 'B'
+  return '₺' + Math.round(n).toLocaleString('tr-TR')
 }
 
 function currentPeriod() {
@@ -126,6 +135,24 @@ export default function IncomeStatementPage() {
 
       {error && <ErrorBanner msg={error} />}
       {loading && <Skeleton height="h-64" />}
+
+      {/* Profit cascade — revenue → gross → EBIT → net, at a glance */}
+      {pnl && !loading && (
+        <ChartCard title="Kâr Şelalesi" subtitle="Gelirden net kâra" className="h-44 print:hidden">
+          <BarCompare
+            layout="horizontal"
+            colorByPoint
+            data={[
+              { label: 'Net Kâr', value: pnl.net_after_tax_try, color: pnl.net_after_tax_try >= 0 ? CHART.pos : CHART.neg },
+              { label: 'EBIT',    value: ebitda,                color: ebitda >= 0 ? CHART.info : CHART.neg },
+              { label: 'Brüt Kâr', value: pnl.gross_profit_try,  color: '#0891b2' },
+              { label: 'Gelir',   value: pnl.revenue_try,       color: CHART.primary },
+            ]}
+            series={[{ key: 'value', label: 'Tutar' }]}
+            valueFormatter={(v) => compactTRY(Number(v))}
+          />
+        </ChartCard>
+      )}
 
       {pnl && !loading && (
         <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden print:border-none print:shadow-none">
