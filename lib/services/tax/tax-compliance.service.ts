@@ -317,22 +317,18 @@ export class TaxComplianceService {
       }
     }
 
-    // ── Compute YTD net income (revenue - cogs - expenses) ───────────────────
-    // Simplified: revenue from sales, minus deductible expenses
-    const ytdRevenue = (salesData ?? [])
-      .reduce((s, sale) => s + Number(sale.total_try ?? 0), 0)
-
-    const ytdDeductibleExpenses = (expensesData ?? [])
-      .filter(e => deductibleCategories.has(e.category as string))
-      .reduce((s, e) => s + Number(e.amount_try ?? 0), 0)
-
-    // ESTIMATE — this compliance dashboard uses a 60%-of-revenue COGS APPROXIMATION,
-    // NOT the canonical real-FIFO-COGS matrah used by the Vergi/Kurumlar tab
-    // (TaxService.getCorporateTax). The two figures will differ; this one is a
-    // quick provisional estimate. The rate/floor still flow through the single
-    // kernel via computeCorporateTaxProvision. (DP-1: labelled estimate path.)
-    const ytdCogs = ytdRevenue * 0.60
-    const ytdNetIncome = Math.max(0, ytdRevenue - ytdCogs - ytdDeductibleExpenses)
+    // ── YTD matrah via the CANONICAL real-FIFO-COGS path (DP-1b) ─────────────
+    // Use the same revenue/COGS/deductible source as the Vergi/Kurumlar tab
+    // (FinanceService → computeCorporateTax) so this dashboard's Geçici/Kurumlar
+    // Vergisi AGREE with it, instead of a 60%-of-revenue COGS guess. Incomplete
+    // FIFO-COGS data is surfaced separately by the COGS data-completeness warnings.
+    const { FinanceService } = await import('@/lib/services/finance.service')
+    const ytdPeriod = { from: `${currentYear}-01-01`, to: today }
+    const [ytdGross, ytdOpex] = await Promise.all([
+      FinanceService.getGrossProfit('', companyId, ytdPeriod, undefined, this.supabase),
+      FinanceService.getOperatingExpenses('', companyId, ytdPeriod, undefined, this.supabase),
+    ])
+    const ytdNetIncome = Math.max(0, ytdGross.revenue_try - ytdGross.cost_try - ytdOpex.deductible_try)
 
     // Current quarter
     const currentQuarter = Math.ceil(currentMonth / 3) as 1 | 2 | 3 | 4
