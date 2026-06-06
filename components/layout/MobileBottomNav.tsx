@@ -6,7 +6,7 @@
 
 import { useState }       from 'react'
 import Link               from 'next/link'
-import { usePathname }    from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import { useWorkspace }   from '@/lib/workspace-context'
 import { isNavItemActive, hasMinRole } from '@/lib/nav-config'
 
@@ -20,19 +20,21 @@ interface Tab {
 }
 
 const PRIMARY: Tab[] = [
-  { href: '/dashboard',           label: 'Komuta',   emoji: '⌂',  exact: true },
-  { href: '/dashboard/finance',   label: 'Finans',   emoji: '₺'               },
-  { href: '/dashboard/commercial',label: 'Ticari',   emoji: '📋'               },
-  { href: '/dashboard/operations',label: 'Operasyon',emoji: '⚙'               },
+  { href: '/dashboard',                          label: 'Kokpit',   emoji: '⌂',  exact: true },
+  { href: '/dashboard/commercial?tab=sales',     label: 'Satış',    emoji: '₺'               },
+  { href: '/dashboard/commercial?tab=collections', label: 'Tahsilat', emoji: '📥'            },
+  { href: '/dashboard/finance',                  label: 'Finans',   emoji: '📊'               },
 ]
 
 const SECONDARY: Tab[] = [
-  { href: '/dashboard/partners',  label: 'Ortaklar', emoji: '🤝', minRole: 'admin' },
-  { href: '/dashboard/planning',  label: 'Planlama', emoji: '📊'                  },
-  { href: '/dashboard/insights',  label: 'AI Analiz',emoji: '🔍'                  },
-  { href: '/dashboard/admin',     label: 'Yönetim',  emoji: '🔐', minRole: 'admin' },
-  { href: '/dashboard/settings',  label: 'Ayarlar',  emoji: '⚙'                   },
-  { href: '/dashboard/reports',   label: 'Raporlar', emoji: '📄'                  },
+  { href: '/dashboard/commercial?tab=pipeline',  label: 'Teklifler',   emoji: '📝'              },
+  { href: '/dashboard/commercial?tab=customers', label: 'Müşteriler',  emoji: '👥'              },
+  { href: '/dashboard/operations',               label: 'Gider & Stok',emoji: '⚙'               },
+  { href: '/dashboard/partners',                 label: 'Ortaklar',    emoji: '🤝', minRole: 'admin' },
+  { href: '/dashboard/planning',                 label: 'Planlama',    emoji: '📈'              },
+  { href: '/dashboard/insights',                 label: 'AI Analiz',   emoji: '🔍'              },
+  { href: '/dashboard/admin',                    label: 'Yönetim',     emoji: '🔐', minRole: 'admin' },
+  { href: '/dashboard/settings',                 label: 'Ayarlar',     emoji: '⚙'               },
 ]
 
 interface Props {
@@ -41,6 +43,7 @@ interface Props {
 
 export function MobileBottomNav({ navBadges = {} }: Props) {
   const pathname    = usePathname()
+  const search      = useSearchParams().toString()
   const [open, setOpen] = useState(false)
   const ws = useWorkspace()
   const role = ws.userRole ?? null
@@ -64,7 +67,7 @@ export function MobileBottomNav({ navBadges = {} }: Props) {
         <div className="mx-2 mb-1 bg-white rounded border border-[#e2e8f0] shadow-sm overflow-hidden">
           <div className="grid grid-cols-4 p-2 gap-1">
             {visible.map(tab => {
-              const active = isNavItemActive({ href: tab.href, label: tab.label, icon: '' }, pathname)
+              const active = isNavItemActive({ href: tab.href, label: tab.label, icon: '' }, pathname, search)
               const badge  = navBadges[tab.href] ?? 0
               return (
                 <Link
@@ -101,7 +104,8 @@ export function MobileBottomNav({ navBadges = {} }: Props) {
           {PRIMARY.map(tab => {
             const active = isNavItemActive(
               { href: tab.href, label: tab.label, icon: '', exact: tab.exact },
-              pathname
+              pathname,
+              search,
             )
             const badge = navBadges[tab.href] ?? 0
             return (

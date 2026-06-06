@@ -74,35 +74,65 @@ export interface NavGroup {
   minRole?: MemberRole
 }
 
-// ── Navigation groups — 3-group center architecture ───────────────────────────
+// ── Navigation groups — Flowra v3 "Sade Komuta" (task-first IA) ────────────────
+//
+// Replaces the old 8-center sprawl with role/task-oriented areas. Sales work is
+// split into its own clear entries (Satış · Teklifler · Tahsilat · Müşteriler) so
+// a field-sales user lands exactly where they need; the deep analytics + planning
+// + governance move under a collapsed "Gelişmiş" group so the day-to-day surface
+// stays simple. Commercial sub-areas use ?tab= URLs (isNavItemActive is tab-aware).
 
 export const NAV_GROUPS: NavGroup[] = [
 
-  // ── KOMUTA MERKEZİ (unlabeled, top) ──────────────────────────────────────
+  // ── KOKPİT (unlabeled, top) ──────────────────────────────────────────────
   {
     id: 'genel',
     items: [
-      {
-        href:  '/dashboard',
-        label: 'Komuta Merkezi',
-        icon:  'dashboard',
-        exact: true,
-      },
+      { href: '/dashboard', label: 'Kokpit', icon: 'dashboard', exact: true },
     ],
   },
 
-  // ── ANA MERKEZLER (unlabeled) ─────────────────────────────────────────────
+  // ── SATIŞ & GELİR ─────────────────────────────────────────────────────────
   {
-    id: 'merkezler',
+    id: 'gelir',
+    label: 'Satış & Gelir',
     items: [
-      { href: '/dashboard/finance',    label: 'Finans Merkezi',   icon: 'analytics'  },
-      { href: '/dashboard/commercial', label: 'Ticari Akış',      icon: 'activity'   },
-      { href: '/dashboard/operations', label: 'Operasyon',        icon: 'products'   },
-      { href: '/dashboard/partners',   label: 'Ortak Finansmanı', icon: 'partners'   },
-      { href: '/dashboard/planning',    label: 'Planlama',         icon: 'simulation' },
-      { href: '/dashboard/insights',   label: 'AI Analiz',        icon: 'analytics'  },
-      { href: '/dashboard/governance', label: 'Yönetişim',        icon: 'shield',    minRole: 'admin' as const },
-      { href: '/dashboard/documents', label: 'Belgeler',          icon: 'backup' },
+      { href: '/dashboard/commercial?tab=sales',       label: 'Satış',      icon: 'sales'       },
+      { href: '/dashboard/commercial?tab=pipeline',    label: 'Teklifler',  icon: 'proformas'   },
+      { href: '/dashboard/commercial?tab=collections', label: 'Tahsilat',   icon: 'collections' },
+      { href: '/dashboard/commercial?tab=customers',   label: 'Müşteriler', icon: 'customers'   },
+    ],
+  },
+
+  // ── OPERASYON ─────────────────────────────────────────────────────────────
+  {
+    id: 'operasyon',
+    label: 'Operasyon',
+    items: [
+      { href: '/dashboard/operations', label: 'Gider & Stok', icon: 'products' },
+      { href: '/dashboard/orders',     label: 'Siparişler',   icon: 'tasks'    },
+    ],
+  },
+
+  // ── FİNANS ────────────────────────────────────────────────────────────────
+  {
+    id: 'finans',
+    label: 'Finans',
+    items: [
+      { href: '/dashboard/finance',  label: 'Finans',   icon: 'analytics' },
+      { href: '/dashboard/partners', label: 'Ortaklar', icon: 'partners'  },
+    ],
+  },
+
+  // ── GELİŞMİŞ (deep analytics + planning + governance) ─────────────────────
+  {
+    id: 'gelismis',
+    label: 'Gelişmiş',
+    items: [
+      { href: '/dashboard/insights',   label: 'AI Analiz',  icon: 'analytics'   },
+      { href: '/dashboard/planning',   label: 'Planlama',   icon: 'simulation'  },
+      { href: '/dashboard/governance', label: 'Yönetişim',  icon: 'shield', minRole: 'admin' as const },
+      { href: '/dashboard/documents',  label: 'Belgeler',   icon: 'backup'      },
     ],
   },
 
@@ -112,14 +142,9 @@ export const NAV_GROUPS: NavGroup[] = [
     label:   'Yönetim',
     minRole: 'admin',
     items: [
-      {
-        href:  '/dashboard/admin',
-        label: 'Yönetim',
-        icon:  'shield',
-        exact: true,
-      },
+      { href: '/dashboard/admin',           label: 'Yönetim',     icon: 'shield', exact: true },
       { href: '/dashboard/admin/workflows', label: 'İş Akışları', icon: 'workflow' },
-      { href: '/dashboard/settings', label: 'Ayarlar', icon: 'settings' },
+      { href: '/dashboard/settings',        label: 'Ayarlar',     icon: 'settings' },
     ],
   },
 ]
@@ -176,12 +201,27 @@ export function getNavCount(role: MemberRole | null): number {
  * `/dashboard/commercial` and `/dashboard/commercial/something`
  * but NOT on `/dashboard/commercial-extra` (hyphen check).
  */
-export function isNavItemActive(item: NavItem, pathname: string): boolean {
-  // Strip query string from pathname (client usePathname() never includes it,
-  // but guard here for server-side and test usage).
+export function isNavItemActive(item: NavItem, pathname: string, search?: string): boolean {
+  // Strip query string from pathname (client usePathname() never includes it).
   const cleanPath = pathname.split('?')[0]
-  if (item.exact) return cleanPath === item.href
-  return cleanPath === item.href || cleanPath.startsWith(item.href + '/')
+  const [itemPath, itemQuery] = item.href.split('?')
+
+  if (item.exact) return cleanPath === itemPath
+
+  const pathMatches = cleanPath === itemPath || cleanPath.startsWith(itemPath + '/')
+  if (!pathMatches) return false
+
+  // Tab-aware: when several nav items share a path but differ by ?tab= (e.g. the
+  // Satış / Teklifler / Tahsilat / Müşteriler entries on /dashboard/commercial),
+  // only the one whose tab matches the current URL is active.
+  if (itemQuery && search !== undefined) {
+    const itemTab = new URLSearchParams(itemQuery).get('tab')
+    if (itemTab) {
+      const curTab = new URLSearchParams(search.replace(/^\?/, '')).get('tab')
+      return curTab === itemTab
+    }
+  }
+  return true
 }
 
 // ── Nav item lookup ───────────────────────────────────────────────────────────

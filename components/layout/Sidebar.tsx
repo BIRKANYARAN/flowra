@@ -14,7 +14,7 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useSupabase }   from '@/lib/hooks/useSupabase'
 import { FlowraLogo }   from '@/components/ui/FlowraLogo'
 import { Icon }         from '@/components/ui/Icon'
@@ -38,6 +38,7 @@ export interface SidebarProps {
 
 export function Sidebar({ navBadges = {} }: SidebarProps) {
   const pathname = usePathname()
+  const search   = useSearchParams().toString()
   const router   = useRouter()
   const supabase = useSupabase()
   const ws       = useWorkspace()
@@ -146,6 +147,7 @@ export function Sidebar({ navBadges = {} }: SidebarProps) {
             key={group.id}
             group={group}
             pathname={pathname}
+            search={search}
             isFirst={gi === 0}
             navBadges={navBadges}
           />
@@ -157,7 +159,7 @@ export function Sidebar({ navBadges = {} }: SidebarProps) {
             <div className="my-1.5 mx-1 border-t border-[#e2e8f0]" />
             <NavLink
               item={SETTINGS_FALLBACK}
-              active={isNavItemActive(SETTINGS_FALLBACK, pathname)}
+              active={isNavItemActive(SETTINGS_FALLBACK, pathname, search)}
               liveBadge={navBadges[SETTINGS_FALLBACK.href]}
               pathname={pathname}
             />
@@ -197,11 +199,13 @@ export function Sidebar({ navBadges = {} }: SidebarProps) {
 function NavGroupBlock({
   group,
   pathname,
+  search,
   isFirst,
   navBadges = {},
 }: {
   group:     NavGroup
   pathname:  string
+  search:    string
   isFirst:   boolean
   navBadges?: Record<string, number>
 }) {
@@ -219,7 +223,7 @@ function NavGroupBlock({
           <NavLink
             key={item.href}
             item={item}
-            active={isNavItemActive(item, pathname)}
+            active={isNavItemActive(item, pathname, search)}
             liveBadge={navBadges[item.href]}
             pathname={pathname}
           />

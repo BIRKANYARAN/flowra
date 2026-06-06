@@ -50,48 +50,48 @@ describe('hasMinRole', () => {
 // ── Group filtering ───────────────────────────────────────────────────────────
 
 describe('getGroupsForRole', () => {
-  it('admin sees all 3 groups (genel + merkezler + yonetim)', () => {
+  it('admin sees all 6 groups (genel + gelir + operasyon + finans + gelismis + yonetim)', () => {
     const groups = getGroupsForRole('admin')
-    expect(groups.length).toBe(3)
-    expect(groups.map(g => g.id)).toEqual(['genel', 'merkezler', 'yonetim'])
+    expect(groups.length).toBe(6)
+    expect(groups.map(g => g.id)).toEqual(['genel', 'gelir', 'operasyon', 'finans', 'gelismis', 'yonetim'])
   })
 
-  it('manager sees 2 groups (no yonetim)', () => {
+  it('manager sees 5 groups (no yonetim)', () => {
     const groups = getGroupsForRole('manager')
-    expect(groups.length).toBe(2)
+    expect(groups.length).toBe(5)
     expect(groups.find(g => g.id === 'yonetim')).toBeUndefined()
   })
 
-  it('viewer sees 2 groups (no yonetim)', () => {
+  it('viewer sees 5 groups (no yonetim)', () => {
     const groups = getGroupsForRole('viewer')
-    expect(groups.length).toBe(2)
+    expect(groups.length).toBe(5)
     expect(groups.find(g => g.id === 'yonetim')).toBeUndefined()
   })
 
-  it('null role sees 2 groups', () => {
+  it('null role sees 5 groups', () => {
     const groups = getGroupsForRole(null)
-    expect(groups.length).toBe(2)
+    expect(groups.length).toBe(5)
   })
 })
 
 // ── Item counts ───────────────────────────────────────────────────────────────
 
 describe('getAllItemsForRole item counts', () => {
-  // Groups: genel (1) + merkezler (8: finance, commercial, operations, partners, planning, insights + governance[admin-only] + documents) + yonetim (3 — admin only)
-  it('admin sees 12 nav items (1 genel + 8 merkezler + 3 yonetim)', () => {
-    expect(getAllItemsForRole('admin').length).toBe(12)
+  // Groups: genel(1) + gelir(4) + operasyon(2) + finans(2) + gelismis(4, governance admin-only) + yonetim(3, admin)
+  it('admin sees 16 nav items (1+4+2+2+4 + 3 yonetim)', () => {
+    expect(getAllItemsForRole('admin').length).toBe(16)
   })
 
-  it('manager sees 8 nav items (1 genel + 7 merkezler visible)', () => {
-    expect(getAllItemsForRole('manager').length).toBe(8)
+  it('manager sees 12 nav items (no yonetim, no governance)', () => {
+    expect(getAllItemsForRole('manager').length).toBe(12)
   })
 
-  it('viewer sees 8 nav items (1 genel + 7 merkezler visible)', () => {
-    expect(getAllItemsForRole('viewer').length).toBe(8)
+  it('viewer sees 12 nav items (no yonetim, no governance)', () => {
+    expect(getAllItemsForRole('viewer').length).toBe(12)
   })
 
-  it('null role sees 8 nav items', () => {
-    expect(getAllItemsForRole(null).length).toBe(8)
+  it('null role sees 12 nav items', () => {
+    expect(getAllItemsForRole(null).length).toBe(12)
   })
 
   it('getNavCount matches getAllItemsForRole length', () => {
@@ -100,26 +100,26 @@ describe('getAllItemsForRole item counts', () => {
   })
 })
 
-// ── merkezler group contains expected hubs ────────────────────────────────────
+// ── task-first areas present ──────────────────────────────────────────────────
 
-describe('merkezler group contents', () => {
-  it('contains all 6 center hubs (ops merged into operations)', () => {
+describe('navigation area contents', () => {
+  it('contains the core areas (Satış/Tahsilat tabs, finance, operations, partners)', () => {
     const items = getAllItemsForRole('viewer')
     const hrefs = items.map(i => i.href)
+    expect(hrefs).toContain('/dashboard/commercial?tab=sales')
+    expect(hrefs).toContain('/dashboard/commercial?tab=collections')
     expect(hrefs).toContain('/dashboard/finance')
-    expect(hrefs).toContain('/dashboard/commercial')
     expect(hrefs).toContain('/dashboard/operations')
     expect(hrefs).toContain('/dashboard/partners')
-    expect(hrefs).toContain('/dashboard/planning')
+    expect(hrefs).toContain('/dashboard/orders')
     expect(hrefs).toContain('/dashboard/insights')
-    // /dashboard/ops is now a redirect, not a sidebar item
     expect(hrefs).not.toContain('/dashboard/ops')
   })
 
-  it('komuta merkezi uses exact matching', () => {
+  it('kokpit uses exact matching', () => {
     const items = getAllItemsForRole('viewer')
-    const komuta = items.find(i => i.href === '/dashboard')
-    expect(komuta?.exact).toBe(true)
+    const kokpit = items.find(i => i.href === '/dashboard')
+    expect(kokpit?.exact).toBe(true)
   })
 
   it('yonetim items visible to admin only', () => {
@@ -172,13 +172,38 @@ describe('isNavItemActive', () => {
   })
 })
 
+// ── isNavItemActive — tab-aware (commercial sub-areas) ────────────────────────
+
+describe('isNavItemActive — tab-aware', () => {
+  const sales:       NavItem = { href: '/dashboard/commercial?tab=sales',       label: 'Satış',     icon: 'sales' }
+  const collections: NavItem = { href: '/dashboard/commercial?tab=collections', label: 'Tahsilat',  icon: 'collections' }
+
+  it('Satış active only when current tab is sales', () => {
+    expect(isNavItemActive(sales, '/dashboard/commercial', 'tab=sales')).toBe(true)
+    expect(isNavItemActive(sales, '/dashboard/commercial', 'tab=collections')).toBe(false)
+  })
+
+  it('Tahsilat active only when current tab is collections', () => {
+    expect(isNavItemActive(collections, '/dashboard/commercial', 'tab=collections')).toBe(true)
+    expect(isNavItemActive(collections, '/dashboard/commercial', 'tab=sales')).toBe(false)
+  })
+
+  it('different path never matches regardless of tab', () => {
+    expect(isNavItemActive(sales, '/dashboard/finance', 'tab=sales')).toBe(false)
+  })
+
+  it('leading ? in search is tolerated', () => {
+    expect(isNavItemActive(sales, '/dashboard/commercial', '?tab=sales')).toBe(true)
+  })
+})
+
 // ── findNavItem / isKnownNavHref ──────────────────────────────────────────────
 
 describe('findNavItem + isKnownNavHref', () => {
-  it('finds komuta merkezi by href', () => {
+  it('finds kokpit by href', () => {
     const item = findNavItem('/dashboard')
     expect(item).toBeDefined()
-    expect(item?.label).toBe('Komuta Merkezi')
+    expect(item?.label).toBe('Kokpit')
   })
 
   it('ops is no longer a sidebar item (merged into operations/komuta tab)', () => {
@@ -392,11 +417,11 @@ describe('findNavItem — known hrefs', () => {
   it('finds /dashboard/finance', () => {
     const item = findNavItem('/dashboard/finance')
     expect(item).toBeDefined()
-    expect(item?.label).toBe('Finans Merkezi')
+    expect(item?.label).toBe('Finans')
   })
 
-  it('finds /dashboard/commercial', () => {
-    expect(findNavItem('/dashboard/commercial')).toBeDefined()
+  it('finds the Satış commercial tab entry', () => {
+    expect(findNavItem('/dashboard/commercial?tab=sales')).toBeDefined()
   })
 
   it('finds /dashboard/operations', () => {
@@ -458,7 +483,6 @@ describe('isKnownNavHref — comprehensive', () => {
       '/dashboard/catalog',
       '/dashboard/products',
       '/dashboard/stocks',
-      '/dashboard/orders',
       '/dashboard/simulation',
       '/dashboard/tasks',
       '/dashboard/activity',
@@ -517,20 +541,20 @@ describe('Tab key uniqueness within each center', () => {
 // ── NAV_GROUPS structural integrity ──────────────────────────────────────────
 
 describe('NAV_GROUPS structural integrity', () => {
-  it('has exactly 3 groups', () => {
-    expect(NAV_GROUPS.length).toBe(3)
+  it('has exactly 6 groups', () => {
+    expect(NAV_GROUPS.length).toBe(6)
+  })
+
+  it('group ids follow the task-first order', () => {
+    expect(NAV_GROUPS.map(g => g.id)).toEqual(['genel', 'gelir', 'operasyon', 'finans', 'gelismis', 'yonetim'])
   })
 
   it('first group id is genel', () => {
     expect(NAV_GROUPS[0].id).toBe('genel')
   })
 
-  it('second group id is merkezler', () => {
-    expect(NAV_GROUPS[1].id).toBe('merkezler')
-  })
-
-  it('third group id is yonetim', () => {
-    expect(NAV_GROUPS[2].id).toBe('yonetim')
+  it('last group id is yonetim (admin)', () => {
+    expect(NAV_GROUPS[NAV_GROUPS.length - 1].id).toBe('yonetim')
   })
 
   it('all groups have an id field', () => {
