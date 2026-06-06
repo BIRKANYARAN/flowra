@@ -1,0 +1,11 @@
+// Flowra chart kit — themed recharts wrappers. Single import surface.
+export { ChartCard }       from './ChartCard'
+export { ChartTooltip }    from './ChartTooltip'
+export { AreaTrend }       from './AreaTrend'
+export type { AreaSeries } from './AreaTrend'
+export { BarCompare }      from './BarCompare'
+export type { BarSeries }  from './BarCompare'
+export { DonutBreakdown }  from './DonutBreakdown'
+export type { DonutDatum } from './DonutBreakdown'
+export { Sparkline }       from './Sparkline'
+export { CHART, CHART_SERIES } from './palette'
