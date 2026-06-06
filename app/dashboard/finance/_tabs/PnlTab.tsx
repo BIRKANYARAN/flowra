@@ -21,6 +21,7 @@ import { NarrativeFooter }          from '@/components/ds'
 import { GLIncomeStatementService } from '@/lib/services/ledger/gl-income-statement.service'
 import { MultiPeriodPnlService }    from '@/lib/services/finance/multi-period-pnl.service'
 import type { MultiPeriodPnlReport, PnlLineItem } from '@/lib/services/finance/multi-period-pnl.service'
+import { PnlCharts }               from './PnlCharts'
 
 // ── Formatters ────────────────────────────────────────────────────────────────
 
@@ -325,6 +326,17 @@ export async function PnlTab({ userId, companyId, glMode = 'shadow' }: Props) {
           </Link>
         </div>
       )}
+
+      {/* ── Visual summary — cascade · trend · expense mix ──────────────────── */}
+      <PnlCharts
+        cascade={{ revenue, gross: grossProfit, ebit: ebitda, net: netAfterTax }}
+        monthly={monthYMs.map((ym, i) => ({
+          label:   fmtMonth(ym),
+          revenue: Number((historySummaries as Array<typeof s>)[i]?.revenue_try ?? 0),
+          net:     Number((historySummaries as Array<typeof s>)[i]?.net_after_tax_try ?? 0),
+        }))}
+        expenses={expenseByCategory.map(e => ({ name: e.label, value: e.total }))}
+      />
 
     <div className="grid grid-cols-12 gap-4">
 
