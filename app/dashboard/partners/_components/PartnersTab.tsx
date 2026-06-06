@@ -7,6 +7,7 @@ import {
   pct, fmt, TX_TYPE_LABELS,
 } from '@/app/dashboard/partners/_components/types'
 import { ShareBar } from '@/app/dashboard/partners/_components/ui'
+import { ChartCard, DonutBreakdown, BarCompare, CHART } from '@/components/charts'
 
 export interface PartnersTabProps {
   loading: boolean
@@ -72,6 +73,30 @@ export function PartnersTab({
               <div className="text-xl font-black tabular-nums text-[#0f172a] leading-none">{c.value}</div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Visual summary — ownership split + capital contributed */}
+      {!loading && hasPartners && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <ChartCard title="Ortaklık Yapısı" subtitle="Pay oranına göre" className="h-52">
+            <DonutBreakdown
+              centerLabel="Ortak"
+              centerValue={String(partners.length)}
+              valueFormatter={(v) => `%${Number(v).toFixed(1)}`}
+              data={partners
+                .map(p => ({ name: p.name, value: Math.round(p.share_ratio * 1000) / 10 }))
+                .filter(d => d.value > 0)}
+            />
+          </ChartCard>
+          <ChartCard title="Konan Sermaye" subtitle="Ortağa göre" className="h-52">
+            <BarCompare
+              layout="horizontal"
+              data={partners.map(p => ({ label: p.name, value: Math.round(p.balance?.total_contributed_try ?? 0) }))}
+              series={[{ key: 'value', label: 'Katkı', color: CHART.primary }]}
+              valueFormatter={(v) => fmt(Number(v))}
+            />
+          </ChartCard>
         </div>
       )}
 
