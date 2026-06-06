@@ -14,6 +14,7 @@
 
 import React, { useEffect, useState } from 'react'
 import type { ExecutiveSummary }       from '@/lib/services/intelligence/executive-summary.service'
+import { OnboardingChecklist }         from '@/components/onboarding/OnboardingChecklist'
 
 // ── Status color maps ─────────────────────────────────────────────────────────
 
@@ -350,6 +351,9 @@ export default function CeoCockpitPage() {
             CFO Raporları →
           </a>
         </div>
+
+        {/* First-run onboarding checklist — self-hides once setup is complete */}
+        <OnboardingChecklist />
 
         {/* Situation Line */}
         <SituationLine summary={summary} />
