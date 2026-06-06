@@ -17,6 +17,15 @@ import { useQuery } from '@tanstack/react-query'
 import { usePermissions } from '@/lib/workspace-context'
 import { fmtTRY, fmtPct } from '@/lib/format'
 import type { BudgetVarianceReport, MonthlyVariance } from '@/lib/services/finance/budget-variance.service'
+import { ChartCard, BarCompare, CHART } from '@/components/charts'
+
+function compactTRYbudget(n: number): string {
+  const a = Math.abs(n)
+  if (a >= 1e9) return '₺' + (n / 1e9).toFixed(1).replace('.', ',') + 'Mr'
+  if (a >= 1e6) return '₺' + (n / 1e6).toFixed(1).replace('.', ',') + 'M'
+  if (a >= 1e3) return '₺' + (n / 1e3).toFixed(0) + 'B'
+  return '₺' + Math.round(n).toLocaleString('tr-TR')
+}
 import type { ExpenseForecastReport } from '@/lib/services/finance/expense-forecast.service'
 import { ExpenseForecastPanel } from './_budget/ExpenseForecastPanel'
 import type { VarianceReport, VarianceRow, VarianceCell, VarianceDirection } from '@/lib/services/planning/variance-analysis.service'
@@ -567,6 +576,24 @@ export function BudgetTab({ companyId }: BudgetTabProps = {}) {
             ? ' Aşağıdaki formdan aylık hedeflerinizi ekleyebilirsiniz.'
             : ' Yönetici bütçe hedefleri girdiğinde burada görünecek.'}
         </div>
+      )}
+
+      {/* Budget vs actual revenue — at a glance */}
+      {report.has_any_budget && report.months.some(m => m.budget_revenue_try !== null) && (
+        <ChartCard title="Bütçe vs Gerçekleşen" subtitle="Aylık gelir" className="h-56">
+          <BarCompare
+            data={report.months.map(m => ({
+              label:  m.label,
+              actual: Math.round(m.actual_revenue_try),
+              budget: Math.round(m.budget_revenue_try ?? 0),
+            }))}
+            series={[
+              { key: 'actual', label: 'Gerçekleşen', color: CHART.primary },
+              { key: 'budget', label: 'Hedef',       color: CHART.ink4 },
+            ]}
+            valueFormatter={(v) => compactTRYbudget(Number(v))}
+          />
+        </ChartCard>
       )}
 
       {/* 12-month variance table */}
