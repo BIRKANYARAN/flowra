@@ -401,13 +401,13 @@ export class DistributionSimulatorService {
     try {
       const { data, error } = await this.supabase
         .from('partner_capital_commitments')
-        .select('paid_amount_try')
+        .select('paid_try')
         .eq('company_id', companyId)
 
       if (error || !data) return 0
       return round2(
-        (data as Array<{ paid_amount_try: unknown }>)
-          .reduce((s, r) => s + Number(r.paid_amount_try ?? 0), 0),
+        (data as Array<{ paid_try: unknown }>)
+          .reduce((s, r) => s + Number(r.paid_try ?? 0), 0),
       )
     } catch {
       return 0

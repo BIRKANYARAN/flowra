@@ -374,15 +374,15 @@ export class CapitalStructureService {
     //    sum all non-cancelled commitments as "committed"
     const { data: commitmentRows } = await this.supabase
       .from('partner_capital_commitments')
-      .select('partner_id, amount_try')
+      .select('partner_id, committed_try')
       .eq('company_id', companyId)
-      .neq('payment_status', 'cancelled')
+      .is('deleted_at', null)   // cancelled commitments are soft-deleted (no payment_status column)
       .in('partner_id', partnerIds)
 
-    type CommitmentRow = { partner_id: string; amount_try: number }
+    type CommitmentRow = { partner_id: string; committed_try: number }
     const committedMap = new Map<string, number>()
     for (const r of (commitmentRows ?? []) as CommitmentRow[]) {
-      committedMap.set(r.partner_id, (committedMap.get(r.partner_id) ?? 0) + Number(r.amount_try))
+      committedMap.set(r.partner_id, (committedMap.get(r.partner_id) ?? 0) + Number(r.committed_try))
     }
 
     // 3. Fetch EQUITY_PAYMENT events from partner_finance_events → Σ per partner = paid_capital
@@ -405,28 +405,28 @@ export class CapitalStructureService {
         // Fallback: paid commitments
         const { data: paidRows } = await this.supabase
           .from('partner_capital_commitments')
-          .select('partner_id, paid_amount_try')
+          .select('partner_id, paid_try')
           .eq('company_id', companyId)
-          .eq('payment_status', 'paid')
+          .is('deleted_at', null)
           .in('partner_id', partnerIds)
 
-        type PaidRow = { partner_id: string; paid_amount_try: number }
+        type PaidRow = { partner_id: string; paid_try: number }
         for (const r of (paidRows ?? []) as PaidRow[]) {
-          paidMap.set(r.partner_id, (paidMap.get(r.partner_id) ?? 0) + Number(r.paid_amount_try))
+          paidMap.set(r.partner_id, (paidMap.get(r.partner_id) ?? 0) + Number(r.paid_try))
         }
       }
     } catch {
       // Fallback: paid commitments
       const { data: paidRows } = await this.supabase
         .from('partner_capital_commitments')
-        .select('partner_id, paid_amount_try')
+        .select('partner_id, paid_try')
         .eq('company_id', companyId)
-        .eq('payment_status', 'paid')
+        .is('deleted_at', null)
         .in('partner_id', partnerIds)
 
-      type PaidRow = { partner_id: string; paid_amount_try: number }
+      type PaidRow = { partner_id: string; paid_try: number }
       for (const r of (paidRows ?? []) as PaidRow[]) {
-        paidMap.set(r.partner_id, (paidMap.get(r.partner_id) ?? 0) + Number(r.paid_amount_try))
+        paidMap.set(r.partner_id, (paidMap.get(r.partner_id) ?? 0) + Number(r.paid_try))
       }
     }
 
@@ -575,31 +575,31 @@ export class EquityDilutionService {
     const [paidResult, committedResult] = await Promise.allSettled([
       (supabase as SupabaseClient)
         .from('partner_capital_commitments')
-        .select('partner_id, amount_try')
+        .select('partner_id, paid_try')
         .eq('company_id', companyId)
-        .eq('payment_status', 'paid')
+        .is('deleted_at', null)
         .in('partner_id', partnerIds),
       (supabase as SupabaseClient)
         .from('partner_capital_commitments')
-        .select('partner_id, amount_try')
+        .select('partner_id, committed_try')
         .eq('company_id', companyId)
-        .neq('payment_status', 'cancelled')
+        .is('deleted_at', null)   // cancelled = soft-deleted (no payment_status column)
         .in('partner_id', partnerIds),
     ])
 
-    const paidRows: Array<{ partner_id: string; amount_try: number }> =
+    const paidRows: Array<{ partner_id: string; paid_try: number }> =
       paidResult.status === 'fulfilled' ? (paidResult.value.data ?? []) : []
-    const committedRows: Array<{ partner_id: string; amount_try: number }> =
+    const committedRows: Array<{ partner_id: string; committed_try: number }> =
       committedResult.status === 'fulfilled' ? (committedResult.value.data ?? []) : []
 
     const paidByPartner      = new Map<string, number>()
     const committedByPartner = new Map<string, number>()
 
     for (const r of paidRows) {
-      paidByPartner.set(r.partner_id, (paidByPartner.get(r.partner_id) ?? 0) + Number(r.amount_try))
+      paidByPartner.set(r.partner_id, (paidByPartner.get(r.partner_id) ?? 0) + Number(r.paid_try))
     }
     for (const r of committedRows) {
-      committedByPartner.set(r.partner_id, (committedByPartner.get(r.partner_id) ?? 0) + Number(r.amount_try))
+      committedByPartner.set(r.partner_id, (committedByPartner.get(r.partner_id) ?? 0) + Number(r.committed_try))
     }
 
     const today = new Date().toISOString().slice(0, 10)

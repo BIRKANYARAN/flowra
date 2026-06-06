@@ -112,11 +112,12 @@ export class CapitalCallService {
     const { data: rows, error } = await supabase
       .from('partner_capital_commitments')
       .select(`
-        id, partner_id, committed_amount_try, paid_amount_try,
-        commitment_date, call_date, payment_status,
+        id, partner_id, committed_try, paid_try,
+        commitment_date, due_date,
         partners!inner(name, share_ratio)
       `)
       .eq('company_id', companyId)
+      .is('deleted_at', null)
 
     if (error) throw new Error(`getReport: ${error.message}`)
 
@@ -154,10 +155,10 @@ export class CapitalCallService {
         })
       }
       const p = partnerMap.get(pid)!
-      p.committed += Number(row.committed_amount_try)
-      p.paid      += Number(row.paid_amount_try)
-      if (row.call_date && Number(row.paid_amount_try) < Number(row.committed_amount_try)) {
-        p.call_dates.push(row.call_date)
+      p.committed += Number(row.committed_try)
+      p.paid      += Number(row.paid_try)
+      if (row.due_date && Number(row.paid_try) < Number(row.committed_try)) {
+        p.call_dates.push(row.due_date)
       }
     }
 

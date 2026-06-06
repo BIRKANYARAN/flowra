@@ -583,14 +583,14 @@ export class DividendLedgerService {
     try {
       const { data, error } = await this.supabase
         .from('partner_capital_commitments')
-        .select('partner_id, paid_amount_try')
+        .select('partner_id, paid_try')
         .eq('company_id', companyId)
 
       if (error || !data) return map
 
-      for (const row of data as Array<{ partner_id: string; paid_amount_try: unknown }>) {
+      for (const row of data as Array<{ partner_id: string; paid_try: unknown }>) {
         const existing = map.get(row.partner_id) ?? 0
-        map.set(row.partner_id, round2(existing + Number(row.paid_amount_try ?? 0)))
+        map.set(row.partner_id, round2(existing + Number(row.paid_try ?? 0)))
       }
     } catch { /* graceful fallback */ }
     return map

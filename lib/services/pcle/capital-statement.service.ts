@@ -6,7 +6,7 @@
 // Builds a running capital account for each partner showing equity evolution
 // over 12 months (the requested year). Each monthly line shows:
 //   opening_equity
-//   + equity_contributions  (from partner_capital_commitments.paid_amount_try)
+//   + equity_contributions  (from partner_capital_commitments.paid_try)
 //   + profit_allocation      (partner's share of net income for the month)
 //   - dividends_declared     (from workflow_instances dividend_declaration)
 //   - compensation_paid      (from partner_compensation_payments.net_amount_try)
@@ -227,14 +227,14 @@ async function fetchContributions(
   // Using commitment_date as the trigger date for when capital was committed/paid
   const { data, error } = await supabase
     .from('partner_capital_commitments')
-    .select('paid_amount_try')
+    .select('paid_try')
     .eq('company_id', companyId)
     .eq('partner_id', partnerId)
     .gte('commitment_date', from)
     .lte('commitment_date', to)
 
   if (error) return 0
-  return round2((data ?? []).reduce((s: number, r: { paid_amount_try: unknown }) => s + Number(r.paid_amount_try ?? 0), 0))
+  return round2((data ?? []).reduce((s: number, r: { paid_try: unknown }) => s + Number(r.paid_try ?? 0), 0))
 }
 
 /**

@@ -146,7 +146,7 @@ export function classifyCommitmentStatus(
 type AnyClient = SupabaseClient<any>
 
 type PartnerRow         = { id: string; name: string }
-type CommitmentRow      = { partner_id: string; amount_try: number; commitment_date: string | null }
+type CommitmentRow      = { partner_id: string; committed_try: number; commitment_date: string | null }
 type EventRow           = { id: string; partner_id: string; amount_try: number; event_date: string; note: string | null }
 
 export class ContributionTimelineService {
@@ -176,9 +176,9 @@ export class ContributionTimelineService {
     //    We take the most recent non-cancelled commitment date + sum amounts
     const { data: commitmentRows } = await this.supabase
       .from('partner_capital_commitments')
-      .select('partner_id, amount_try, commitment_date')
+      .select('partner_id, committed_try, commitment_date')
       .eq('company_id', companyId)
-      .neq('payment_status', 'cancelled')
+      .is('deleted_at', null)   // cancelled = soft-deleted (no payment_status column)
       .in('partner_id', partnerIds)
       .order('commitment_date', { ascending: false })
 
@@ -186,7 +186,7 @@ export class ContributionTimelineService {
     const committedMap       = new Map<string, number>()
     const commitmentDateMap  = new Map<string, string | null>()
     for (const r of (commitmentRows ?? []) as CommitmentRow[]) {
-      committedMap.set(r.partner_id, (committedMap.get(r.partner_id) ?? 0) + Number(r.amount_try))
+      committedMap.set(r.partner_id, (committedMap.get(r.partner_id) ?? 0) + Number(r.committed_try))
       // Keep the earliest commitment date (first occurrence in a capital program)
       if (!commitmentDateMap.has(r.partner_id)) {
         commitmentDateMap.set(r.partner_id, r.commitment_date ?? null)

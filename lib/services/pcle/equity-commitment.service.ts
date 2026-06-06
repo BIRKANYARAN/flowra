@@ -321,7 +321,7 @@ interface CapitalCommitmentRow {
   committed_amount: number | null
   paid_amount: number | null
   due_date: string | null
-  paid_date: string | null
+  paid_date?: string | null   // no DB column on partner_capital_commitments → undefined → null downstream
 }
 
 // ── Service Class ─────────────────────────────────────────────────────────────
@@ -350,7 +350,9 @@ export class EquityCommitmentService {
         // Partner capital commitments table (may not exist)
         this.supabase
           .from('partner_capital_commitments')
-          .select('partner_id, committed_amount, paid_amount, due_date, paid_date')
+          // Real columns are committed_try/paid_try — alias to the internal names.
+          // There is no paid_date column → it falls back to null downstream.
+          .select('partner_id, committed_amount:committed_try, paid_amount:paid_try, due_date')
           .eq('company_id', companyId)
           .is('deleted_at', null),
 

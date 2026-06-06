@@ -139,21 +139,24 @@ export class TaxReserveService {
       dividendResult,
     ] = await Promise.allSettled([
 
-      // 1. Output KDV from sales this month
+      // 1. Output KDV from sales this month (real column: kdv_amount_try; soft delete: deleted_at)
       supabase
         .from('sales')
-        .select('kdv_amount')
+        .select('kdv_amount_try')
         .eq('company_id', companyId)
-        .eq('deleted', false)
+        .is('deleted_at', null)
         .gte('sale_date', from)
         .lte('sale_date', to),
 
-      // 2. Input KDV from deductible expenses this month
+      // 2. Input KDV from expenses with VAT this month. The schema has no
+      //    deductibility flag, so (matching tax-compliance/tax-calendar) input KDV
+      //    = expenses where kdv > 0. (DP-4)
       supabase
         .from('expenses')
-        .select('kdv_amount')
+        .select('kdv')
         .eq('company_id', companyId)
-        .eq('kdv_deductible', true)
+        .gt('kdv', 0)
+        .is('deleted_at', null)
         .gte('expense_date', from)
         .lte('expense_date', to),
 
@@ -169,9 +172,9 @@ export class TaxReserveService {
       // 4. YTD net income (from financial_summaries or compute from sales/expenses)
       supabase
         .from('sales')
-        .select('total_try, kdv_total')
+        .select('total_try')
         .eq('company_id', companyId)
-        .eq('deleted', false)
+        .is('deleted_at', null)
         .gte('sale_date', ytdFrom)
         .lte('sale_date', todayStr),
 
@@ -197,11 +200,11 @@ export class TaxReserveService {
     // ── Extract values with safe fallbacks ────────────────────────────────────
 
     const outputKdv: number = salesKdvResult.status === 'fulfilled' && salesKdvResult.value.data
-      ? salesKdvResult.value.data.reduce((s: number, r: { kdv_amount?: number }) => s + (r.kdv_amount ?? 0), 0)
+      ? salesKdvResult.value.data.reduce((s: number, r: { kdv_amount_try?: number }) => s + (r.kdv_amount_try ?? 0), 0)
       : 0
 
     const inputKdv: number = expenseKdvResult.status === 'fulfilled' && expenseKdvResult.value.data
-      ? expenseKdvResult.value.data.reduce((s: number, r: { kdv_amount?: number }) => s + (r.kdv_amount ?? 0), 0)
+      ? expenseKdvResult.value.data.reduce((s: number, r: { kdv?: number }) => s + (r.kdv ?? 0), 0)
       : 0
 
     const grossSalary: number = salaryResult.status === 'fulfilled' && salaryResult.value.data

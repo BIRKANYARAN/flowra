@@ -22,6 +22,7 @@ function makeSupabase(rows: Row[]) {
       const self = () => chain
       chain.select = self
       chain.eq     = self
+      chain.is     = self
       chain.then   = (cb: (v: { data: Row[]; error: null }) => unknown) =>
         Promise.resolve(cb({ data: rows, error: null }))
       return chain
@@ -36,6 +37,7 @@ function makeSupabaseError(message: string) {
       const self = () => chain
       chain.select = self
       chain.eq     = self
+      chain.is     = self
       chain.then   = (cb: (v: { data: null; error: { message: string } }) => unknown) =>
         Promise.resolve(cb({ data: null, error: { message } }))
       return chain
@@ -49,10 +51,10 @@ function makeCommitment(overrides: Partial<Row> = {}): Row {
   return {
     id:                   'c1',
     partner_id:           'p1',
-    committed_amount_try: 100_000,
-    paid_amount_try:      100_000,
+    committed_try: 100_000,
+    paid_try:      100_000,
     commitment_date:      '2026-01-01',
-    call_date:            '2026-02-01',
+    due_date:            '2026-02-01',
     payment_status:       'paid',
     partners: { name: 'Ali', share_ratio: 0.6 },
     ...overrides,
@@ -201,7 +203,7 @@ describe('fully paid commitment', () => {
   })
 
   it('fully paid → is_overdue = false regardless of call_date in past', async () => {
-    const commitment = makeCommitment({ paid_amount_try: 100_000, call_date: '2026-01-01' })
+    const commitment = makeCommitment({ paid_try: 100_000, due_date: '2026-01-01' })
     const report = await CapitalCallService.getReport('co1', makeSupabase([commitment]) as any, { today: '2026-05-27' })
     expect(report.partners[0].is_overdue).toBe(false)
   })
@@ -223,7 +225,7 @@ describe('fully paid commitment', () => {
 
 describe('partial payment', () => {
   it('partial payment → equity_gap = committed - paid', async () => {
-    const commitment = makeCommitment({ paid_amount_try: 60_000 })
+    const commitment = makeCommitment({ paid_try: 60_000 })
     const report = await CapitalCallService.getReport('co1', makeSupabase([commitment]) as any, { today: '2026-05-27' })
     const partner = report.partners[0]
     expect(partner.equity_gap_try).toBe(40_000)
@@ -232,13 +234,13 @@ describe('partial payment', () => {
   })
 
   it('zero payment → equity_gap equals total committed', async () => {
-    const commitment = makeCommitment({ paid_amount_try: 0, call_date: null })
+    const commitment = makeCommitment({ paid_try: 0, due_date: null })
     const report = await CapitalCallService.getReport('co1', makeSupabase([commitment]) as any, { today: '2026-05-27' })
     expect(report.partners[0].equity_gap_try).toBe(100_000)
   })
 
   it('1 TRY paid → equity_gap = committed - 1', async () => {
-    const commitment = makeCommitment({ paid_amount_try: 1, call_date: null })
+    const commitment = makeCommitment({ paid_try: 1, due_date: null })
     const report = await CapitalCallService.getReport('co1', makeSupabase([commitment]) as any, { today: '2026-05-27' })
     expect(report.partners[0].equity_gap_try).toBe(99_999)
   })
@@ -249,8 +251,8 @@ describe('partial payment', () => {
 describe('overdue detection', () => {
   it('call_date in past with unpaid gap → is_overdue = true', async () => {
     const commitment = makeCommitment({
-      paid_amount_try: 0,
-      call_date:       '2026-03-01',
+      paid_try: 0,
+      due_date:       '2026-03-01',
     })
     const report = await CapitalCallService.getReport('co1', makeSupabase([commitment]) as any, { today: '2026-05-27' })
     const partner = report.partners[0]
@@ -259,19 +261,19 @@ describe('overdue detection', () => {
   })
 
   it('call_date = today → NOT overdue (boundary: today is not past)', async () => {
-    const commitment = makeCommitment({ paid_amount_try: 0, call_date: '2026-05-27' })
+    const commitment = makeCommitment({ paid_try: 0, due_date: '2026-05-27' })
     const report = await CapitalCallService.getReport('co1', makeSupabase([commitment]) as any, { today: '2026-05-27' })
     expect(report.partners[0].is_overdue).toBe(false)
   })
 
   it('call_date = tomorrow → NOT overdue', async () => {
-    const commitment = makeCommitment({ paid_amount_try: 0, call_date: '2026-05-28' })
+    const commitment = makeCommitment({ paid_try: 0, due_date: '2026-05-28' })
     const report = await CapitalCallService.getReport('co1', makeSupabase([commitment]) as any, { today: '2026-05-27' })
     expect(report.partners[0].is_overdue).toBe(false)
   })
 
   it('call_date = yesterday → overdue', async () => {
-    const commitment = makeCommitment({ paid_amount_try: 0, call_date: '2026-05-26' })
+    const commitment = makeCommitment({ paid_try: 0, due_date: '2026-05-26' })
     const report = await CapitalCallService.getReport('co1', makeSupabase([commitment]) as any, { today: '2026-05-27' })
     expect(report.partners[0].is_overdue).toBe(true)
   })
@@ -282,20 +284,20 @@ describe('overdue detection', () => {
 describe('days_overdue calculation', () => {
   it('call_date 90 days ago → days_overdue = 90', async () => {
     // call_date = 2026-02-26 → 90 days before 2026-05-27
-    const commitment = makeCommitment({ paid_amount_try: 0, call_date: '2026-02-26' })
+    const commitment = makeCommitment({ paid_try: 0, due_date: '2026-02-26' })
     const report = await CapitalCallService.getReport('co1', makeSupabase([commitment]) as any, { today: '2026-05-27' })
     const partner = report.partners[0]
     expect(partner.days_overdue).toBe(90)
   })
 
   it('days_overdue = null when not overdue', async () => {
-    const commitment = makeCommitment({ paid_amount_try: 0, call_date: '2027-01-01' })
+    const commitment = makeCommitment({ paid_try: 0, due_date: '2027-01-01' })
     const report = await CapitalCallService.getReport('co1', makeSupabase([commitment]) as any, { today: '2026-05-27' })
     expect(report.partners[0].days_overdue).toBeNull()
   })
 
   it('1 day overdue → days_overdue = 1', async () => {
-    const commitment = makeCommitment({ paid_amount_try: 0, call_date: '2026-05-26' })
+    const commitment = makeCommitment({ paid_try: 0, due_date: '2026-05-26' })
     const report = await CapitalCallService.getReport('co1', makeSupabase([commitment]) as any, { today: '2026-05-27' })
     expect(report.partners[0].days_overdue).toBe(1)
   })
@@ -305,7 +307,7 @@ describe('days_overdue calculation', () => {
 
 describe('TTK 588 applicability', () => {
   it('gap > 0 but no call_date → TTK 588 does not apply', async () => {
-    const commitment = makeCommitment({ paid_amount_try: 50_000, call_date: null })
+    const commitment = makeCommitment({ paid_try: 50_000, due_date: null })
     const report = await CapitalCallService.getReport('co1', makeSupabase([commitment]) as any, { today: '2026-05-27' })
     const partner = report.partners[0]
     expect(partner.equity_gap_try).toBe(50_000)
@@ -315,7 +317,7 @@ describe('TTK 588 applicability', () => {
   })
 
   it('call_date in future → TTK 588 does not apply', async () => {
-    const commitment = makeCommitment({ paid_amount_try: 0, call_date: '2027-01-01' })
+    const commitment = makeCommitment({ paid_try: 0, due_date: '2027-01-01' })
     const report = await CapitalCallService.getReport('co1', makeSupabase([commitment]) as any, { today: '2026-05-27' })
     const partner = report.partners[0]
     expect(partner.is_overdue).toBe(false)
@@ -323,27 +325,27 @@ describe('TTK 588 applicability', () => {
   })
 
   it('fully paid + past call_date → TTK 588 does not apply (gap = 0)', async () => {
-    const commitment = makeCommitment({ paid_amount_try: 100_000, call_date: '2026-01-01' })
+    const commitment = makeCommitment({ paid_try: 100_000, due_date: '2026-01-01' })
     const report = await CapitalCallService.getReport('co1', makeSupabase([commitment]) as any, { today: '2026-05-27' })
     expect(report.partners[0].ttk_588_applies).toBe(false)
     expect(report.partners[0].ttk_588_interest_try).toBe(0)
   })
 
   it('overdue with gap > 0 AND days > 0 → TTK 588 applies', async () => {
-    const commitment = makeCommitment({ paid_amount_try: 0, call_date: '2026-02-26' })
+    const commitment = makeCommitment({ paid_try: 0, due_date: '2026-02-26' })
     const report = await CapitalCallService.getReport('co1', makeSupabase([commitment]) as any, { today: '2026-05-27' })
     expect(report.partners[0].ttk_588_applies).toBe(true)
     expect(report.partners[0].ttk_588_interest_try).toBeGreaterThan(0)
   })
 
   it('TTK 588 interest uses default rate (9%) when not specified', async () => {
-    const commitment = makeCommitment({ paid_amount_try: 0, call_date: '2026-02-26' })
+    const commitment = makeCommitment({ paid_try: 0, due_date: '2026-02-26' })
     const report = await CapitalCallService.getReport('co1', makeSupabase([commitment]) as any, { today: '2026-05-27' })
     expect(report.partners[0].ttk_588_interest_rate).toBe(DEFAULT_TTK588_RATE)
   })
 
   it('custom TTK 588 rate is applied when provided', async () => {
-    const commitment = makeCommitment({ paid_amount_try: 0, call_date: '2026-02-26' })
+    const commitment = makeCommitment({ paid_try: 0, due_date: '2026-02-26' })
     const defaultReport = await CapitalCallService.getReport('co1', makeSupabase([commitment]) as any, { today: '2026-05-27' })
     const customReport  = await CapitalCallService.getReport('co1', makeSupabase([commitment]) as any, { today: '2026-05-27', ttk588Rate: 0.18 })
     expect(customReport.partners[0].ttk_588_interest_try).toBeGreaterThan(
@@ -356,7 +358,7 @@ describe('TTK 588 applicability', () => {
 
 describe('status classification', () => {
   it('overdue with gap → status overdue_with_interest', async () => {
-    const commitment = makeCommitment({ paid_amount_try: 0, call_date: '2026-03-01' })
+    const commitment = makeCommitment({ paid_try: 0, due_date: '2026-03-01' })
     const report = await CapitalCallService.getReport('co1', makeSupabase([commitment]) as any, { today: '2026-05-27' })
     expect(report.partners[0].status).toBe('overdue_with_interest')
   })
@@ -368,26 +370,26 @@ describe('status classification', () => {
   })
 
   it('equity_gap = 0 → partner.status = paid regardless of call_date', async () => {
-    const commitment = makeCommitment({ paid_amount_try: 100_000, call_date: '2026-01-01' })
+    const commitment = makeCommitment({ paid_try: 100_000, due_date: '2026-01-01' })
     const report = await CapitalCallService.getReport('co1', makeSupabase([commitment]) as any, { today: '2026-05-27' })
     expect(report.partners[0].equity_gap_try).toBe(0)
     expect(report.partners[0].status).toBe('paid')
   })
 
   it('due within 30 days → status due_soon', async () => {
-    const commitment = makeCommitment({ paid_amount_try: 0, call_date: '2026-06-10' })
+    const commitment = makeCommitment({ paid_try: 0, due_date: '2026-06-10' })
     const report = await CapitalCallService.getReport('co1', makeSupabase([commitment]) as any, { today: '2026-05-27' })
     expect(report.partners[0].status).toBe('due_soon')
   })
 
   it('due in 31 days → status current', async () => {
-    const commitment = makeCommitment({ paid_amount_try: 0, call_date: '2026-06-27' })
+    const commitment = makeCommitment({ paid_try: 0, due_date: '2026-06-27' })
     const report = await CapitalCallService.getReport('co1', makeSupabase([commitment]) as any, { today: '2026-05-27' })
     expect(report.partners[0].status).toBe('current')
   })
 
   it('no call_date, gap > 0 → status current', async () => {
-    const commitment = makeCommitment({ paid_amount_try: 50_000, call_date: null })
+    const commitment = makeCommitment({ paid_try: 50_000, due_date: null })
     const report = await CapitalCallService.getReport('co1', makeSupabase([commitment]) as any, { today: '2026-05-27' })
     expect(report.partners[0].status).toBe('current')
   })
@@ -398,8 +400,8 @@ describe('status classification', () => {
 describe('report totals', () => {
   it('total_equity_gap_try = sum of per-partner gaps', async () => {
     const rows = [
-      makeCommitment({ partner_id: 'p1', committed_amount_try: 100_000, paid_amount_try: 60_000, partners: { name: 'Ali',  share_ratio: 0.6 } }),
-      makeCommitment({ id: 'c2', partner_id: 'p2', committed_amount_try: 50_000, paid_amount_try: 20_000, call_date: null, partners: { name: 'Veli', share_ratio: 0.4 } }),
+      makeCommitment({ partner_id: 'p1', committed_try: 100_000, paid_try: 60_000, partners: { name: 'Ali',  share_ratio: 0.6 } }),
+      makeCommitment({ id: 'c2', partner_id: 'p2', committed_try: 50_000, paid_try: 20_000, due_date: null, partners: { name: 'Veli', share_ratio: 0.4 } }),
     ]
     const report = await CapitalCallService.getReport('co1', makeSupabase(rows) as any, { today: '2026-05-27' })
     expect(report.total_equity_gap_try).toBe(70_000)
@@ -409,8 +411,8 @@ describe('report totals', () => {
 
   it('total_committed_try sums across all partners', async () => {
     const rows = [
-      makeCommitment({ partner_id: 'p1', committed_amount_try: 200_000, paid_amount_try: 200_000, partners: { name: 'A', share_ratio: 0.5 } }),
-      makeCommitment({ id: 'c2', partner_id: 'p2', committed_amount_try: 300_000, paid_amount_try: 300_000, call_date: null, partners: { name: 'B', share_ratio: 0.5 } }),
+      makeCommitment({ partner_id: 'p1', committed_try: 200_000, paid_try: 200_000, partners: { name: 'A', share_ratio: 0.5 } }),
+      makeCommitment({ id: 'c2', partner_id: 'p2', committed_try: 300_000, paid_try: 300_000, due_date: null, partners: { name: 'B', share_ratio: 0.5 } }),
     ]
     const report = await CapitalCallService.getReport('co1', makeSupabase(rows) as any, { today: '2026-05-27' })
     expect(report.total_committed_try).toBe(500_000)
@@ -419,8 +421,8 @@ describe('report totals', () => {
 
   it('total_ttk_588_interest_try sums overdue partner interests', async () => {
     const rows = [
-      makeCommitment({ partner_id: 'p1', committed_amount_try: 100_000, paid_amount_try: 0, call_date: '2026-02-26', partners: { name: 'A', share_ratio: 0.5 } }),
-      makeCommitment({ id: 'c2', partner_id: 'p2', committed_amount_try: 100_000, paid_amount_try: 100_000, call_date: '2026-02-26', partners: { name: 'B', share_ratio: 0.5 } }),
+      makeCommitment({ partner_id: 'p1', committed_try: 100_000, paid_try: 0, due_date: '2026-02-26', partners: { name: 'A', share_ratio: 0.5 } }),
+      makeCommitment({ id: 'c2', partner_id: 'p2', committed_try: 100_000, paid_try: 100_000, due_date: '2026-02-26', partners: { name: 'B', share_ratio: 0.5 } }),
     ]
     const report = await CapitalCallService.getReport('co1', makeSupabase(rows) as any, { today: '2026-05-27' })
     // Only p1 should have interest (p2 is fully paid)
@@ -431,9 +433,9 @@ describe('report totals', () => {
 
   it('overdue_partners count reflects only truly overdue partners', async () => {
     const rows = [
-      makeCommitment({ partner_id: 'p1', paid_amount_try: 0,       call_date: '2026-03-01', partners: { name: 'A', share_ratio: 0.4 } }),
-      makeCommitment({ id: 'c2', partner_id: 'p2', paid_amount_try: 100_000, call_date: '2026-03-01', partners: { name: 'B', share_ratio: 0.3 } }),
-      makeCommitment({ id: 'c3', partner_id: 'p3', paid_amount_try: 0,       call_date: '2027-01-01', partners: { name: 'C', share_ratio: 0.3 } }),
+      makeCommitment({ partner_id: 'p1', paid_try: 0,       due_date: '2026-03-01', partners: { name: 'A', share_ratio: 0.4 } }),
+      makeCommitment({ id: 'c2', partner_id: 'p2', paid_try: 100_000, due_date: '2026-03-01', partners: { name: 'B', share_ratio: 0.3 } }),
+      makeCommitment({ id: 'c3', partner_id: 'p3', paid_try: 0,       due_date: '2027-01-01', partners: { name: 'C', share_ratio: 0.3 } }),
     ]
     const report = await CapitalCallService.getReport('co1', makeSupabase(rows) as any, { today: '2026-05-27' })
     expect(report.overdue_partners).toBe(1) // only p1
@@ -445,8 +447,8 @@ describe('report totals', () => {
 describe('multi-commitment aggregation per partner', () => {
   it('two commitments for same partner → single summary with summed amounts', async () => {
     const rows = [
-      makeCommitment({ id: 'c1', partner_id: 'p1', committed_amount_try: 50_000, paid_amount_try: 50_000, call_date: '2026-01-01', partners: { name: 'Ali', share_ratio: 0.6 } }),
-      makeCommitment({ id: 'c2', partner_id: 'p1', committed_amount_try: 50_000, paid_amount_try: 30_000, call_date: '2026-03-01', partners: { name: 'Ali', share_ratio: 0.6 } }),
+      makeCommitment({ id: 'c1', partner_id: 'p1', committed_try: 50_000, paid_try: 50_000, due_date: '2026-01-01', partners: { name: 'Ali', share_ratio: 0.6 } }),
+      makeCommitment({ id: 'c2', partner_id: 'p1', committed_try: 50_000, paid_try: 30_000, due_date: '2026-03-01', partners: { name: 'Ali', share_ratio: 0.6 } }),
     ]
     const report = await CapitalCallService.getReport('co1', makeSupabase(rows) as any, { today: '2026-05-27' })
     expect(report.partners).toHaveLength(1)
@@ -458,8 +460,8 @@ describe('multi-commitment aggregation per partner', () => {
 
   it('earliest unpaid call_date is used for overdue detection', async () => {
     const rows = [
-      makeCommitment({ id: 'c1', partner_id: 'p1', committed_amount_try: 50_000, paid_amount_try: 0, call_date: '2026-06-01', partners: { name: 'Ali', share_ratio: 0.6 } }),
-      makeCommitment({ id: 'c2', partner_id: 'p1', committed_amount_try: 50_000, paid_amount_try: 0, call_date: '2026-03-01', partners: { name: 'Ali', share_ratio: 0.6 } }),
+      makeCommitment({ id: 'c1', partner_id: 'p1', committed_try: 50_000, paid_try: 0, due_date: '2026-06-01', partners: { name: 'Ali', share_ratio: 0.6 } }),
+      makeCommitment({ id: 'c2', partner_id: 'p1', committed_try: 50_000, paid_try: 0, due_date: '2026-03-01', partners: { name: 'Ali', share_ratio: 0.6 } }),
     ]
     const report = await CapitalCallService.getReport('co1', makeSupabase(rows) as any, { today: '2026-05-27' })
     // call_date used = 2026-03-01 (earliest) → overdue
@@ -473,8 +475,8 @@ describe('multi-commitment aggregation per partner', () => {
 describe('partner sort order', () => {
   it('overdue partners appear before non-overdue', async () => {
     const rows = [
-      makeCommitment({ partner_id: 'p1', paid_amount_try: 0, call_date: '2027-01-01', partners: { name: 'Current', share_ratio: 0.5 } }),
-      makeCommitment({ id: 'c2', partner_id: 'p2', paid_amount_try: 0, call_date: '2026-03-01', partners: { name: 'Overdue', share_ratio: 0.5 } }),
+      makeCommitment({ partner_id: 'p1', paid_try: 0, due_date: '2027-01-01', partners: { name: 'Current', share_ratio: 0.5 } }),
+      makeCommitment({ id: 'c2', partner_id: 'p2', paid_try: 0, due_date: '2026-03-01', partners: { name: 'Overdue', share_ratio: 0.5 } }),
     ]
     const report = await CapitalCallService.getReport('co1', makeSupabase(rows) as any, { today: '2026-05-27' })
     expect(report.partners[0].is_overdue).toBe(true)
@@ -483,8 +485,8 @@ describe('partner sort order', () => {
 
   it('among non-overdue, higher equity gap first', async () => {
     const rows = [
-      makeCommitment({ partner_id: 'p1', committed_amount_try: 50_000, paid_amount_try: 0, call_date: null, partners: { name: 'Small', share_ratio: 0.3 } }),
-      makeCommitment({ id: 'c2', partner_id: 'p2', committed_amount_try: 200_000, paid_amount_try: 0, call_date: null, partners: { name: 'Large', share_ratio: 0.7 } }),
+      makeCommitment({ partner_id: 'p1', committed_try: 50_000, paid_try: 0, due_date: null, partners: { name: 'Small', share_ratio: 0.3 } }),
+      makeCommitment({ id: 'c2', partner_id: 'p2', committed_try: 200_000, paid_try: 0, due_date: null, partners: { name: 'Large', share_ratio: 0.7 } }),
     ]
     const report = await CapitalCallService.getReport('co1', makeSupabase(rows) as any, { today: '2026-05-27' })
     expect(report.partners[0].partner_name).toBe('Large')
@@ -517,7 +519,7 @@ describe('share ratio computation', () => {
 
 describe('Turkish TTK 588 compliance scenarios', () => {
   it('60-day overdue gap: interest accumulates at default 9% rate', async () => {
-    const commitment = makeCommitment({ paid_amount_try: 0, call_date: '2026-03-28' }) // 60 days before 2026-05-27
+    const commitment = makeCommitment({ paid_try: 0, due_date: '2026-03-28' }) // 60 days before 2026-05-27
     const report = await CapitalCallService.getReport('co1', makeSupabase([commitment]) as any, { today: '2026-05-27' })
     const partner = report.partners[0]
     const expected = CapitalCallService.computeInterest(100_000, 60, DEFAULT_TTK588_RATE)
@@ -525,7 +527,7 @@ describe('Turkish TTK 588 compliance scenarios', () => {
   })
 
   it('1-year overdue gap: significant interest burden', async () => {
-    const commitment = makeCommitment({ paid_amount_try: 0, call_date: '2025-05-27' }) // ~365 days
+    const commitment = makeCommitment({ paid_try: 0, due_date: '2025-05-27' }) // ~365 days
     const report = await CapitalCallService.getReport('co1', makeSupabase([commitment]) as any, { today: '2026-05-27' })
     const partner = report.partners[0]
     expect(partner.ttk_588_interest_try).toBeGreaterThan(8_000) // ~9% of 100k
@@ -533,9 +535,9 @@ describe('Turkish TTK 588 compliance scenarios', () => {
 
   it('large gap (1M TRY) 90-day overdue: TTK 588 interest ≈ 22k', async () => {
     const commitment = makeCommitment({
-      committed_amount_try: 1_000_000,
-      paid_amount_try:      0,
-      call_date:            '2026-02-26', // 90 days
+      committed_try: 1_000_000,
+      paid_try:      0,
+      due_date:            '2026-02-26', // 90 days
     })
     const report = await CapitalCallService.getReport('co1', makeSupabase([commitment]) as any, { today: '2026-05-27' })
     const expected = CapitalCallService.computeInterest(1_000_000, 90, DEFAULT_TTK588_RATE)
@@ -553,20 +555,20 @@ describe('Turkish TTK 588 compliance scenarios', () => {
 
 describe('boundary values', () => {
   it('committed = 0.01 TRY (minimum monetary unit) → handled without error', async () => {
-    const commitment = makeCommitment({ committed_amount_try: 0.01, paid_amount_try: 0, call_date: null })
+    const commitment = makeCommitment({ committed_try: 0.01, paid_try: 0, due_date: null })
     const report = await CapitalCallService.getReport('co1', makeSupabase([commitment]) as any, { today: '2026-05-27' })
     expect(report.partners[0].equity_gap_try).toBeCloseTo(0.01, 2)
   })
 
   it('very large commitment (100M TRY) → handled without overflow', async () => {
-    const commitment = makeCommitment({ committed_amount_try: 100_000_000, paid_amount_try: 0, call_date: null })
+    const commitment = makeCommitment({ committed_try: 100_000_000, paid_try: 0, due_date: null })
     const report = await CapitalCallService.getReport('co1', makeSupabase([commitment]) as any, { today: '2026-05-27' })
     expect(report.partners[0].equity_gap_try).toBe(100_000_000)
   })
 
   it('paid > committed → equity gap is negative (overpayment: committed - paid < 0)', async () => {
     // The service computes round2(committed - paid) without clamping
-    const commitment = makeCommitment({ committed_amount_try: 100_000, paid_amount_try: 120_000 })
+    const commitment = makeCommitment({ committed_try: 100_000, paid_try: 120_000 })
     const report = await CapitalCallService.getReport('co1', makeSupabase([commitment]) as any, { today: '2026-05-27' })
     expect(report.partners[0].equity_gap_try).toBe(-20_000)
     // Despite negative gap, TTK 588 does not apply (computeInterest guards equity_gap <= 0)
@@ -639,20 +641,20 @@ describe('three-partner scenarios', () => {
     return [
       makeCommitment({
         id: 'c1', partner_id: 'p1',
-        committed_amount_try: 300_000, paid_amount_try: 300_000,
-        call_date: '2026-01-01',
+        committed_try: 300_000, paid_try: 300_000,
+        due_date: '2026-01-01',
         partners: { name: 'Ahmet', share_ratio: 0.5 },
       }),
       makeCommitment({
         id: 'c2', partner_id: 'p2',
-        committed_amount_try: 200_000, paid_amount_try: 100_000,
-        call_date: '2026-04-01',
+        committed_try: 200_000, paid_try: 100_000,
+        due_date: '2026-04-01',
         partners: { name: 'Mehmet', share_ratio: 0.3 },
       }),
       makeCommitment({
         id: 'c3', partner_id: 'p3',
-        committed_amount_try: 100_000, paid_amount_try: 0,
-        call_date: '2027-01-01',
+        committed_try: 100_000, paid_try: 0,
+        due_date: '2027-01-01',
         partners: { name: 'Ayşe', share_ratio: 0.2 },
       }),
     ]
@@ -706,13 +708,13 @@ describe('three-partner scenarios', () => {
 
 describe('today option controls overdue detection', () => {
   it('future today date: call_date 2026-03-01 appears non-overdue if today = 2026-02-28', async () => {
-    const commitment = makeCommitment({ paid_amount_try: 0, call_date: '2026-03-01' })
+    const commitment = makeCommitment({ paid_try: 0, due_date: '2026-03-01' })
     const report = await CapitalCallService.getReport('co1', makeSupabase([commitment]) as any, { today: '2026-02-28' })
     expect(report.partners[0].is_overdue).toBe(false)
   })
 
   it('past today date: call_date 2026-03-01 overdue when today = 2026-04-01', async () => {
-    const commitment = makeCommitment({ paid_amount_try: 0, call_date: '2026-03-01' })
+    const commitment = makeCommitment({ paid_try: 0, due_date: '2026-03-01' })
     const report = await CapitalCallService.getReport('co1', makeSupabase([commitment]) as any, { today: '2026-04-01' })
     expect(report.partners[0].is_overdue).toBe(true)
     expect(report.partners[0].days_overdue).toBe(31)
@@ -723,31 +725,31 @@ describe('today option controls overdue detection', () => {
 
 describe('due_soon boundary precision', () => {
   it('call_date exactly 30 days away → due_soon', async () => {
-    const commitment = makeCommitment({ paid_amount_try: 0, call_date: '2026-06-26' })
+    const commitment = makeCommitment({ paid_try: 0, due_date: '2026-06-26' })
     const report = await CapitalCallService.getReport('co1', makeSupabase([commitment]) as any, { today: '2026-05-27' })
     expect(report.partners[0].status).toBe('due_soon')
   })
 
   it('call_date 29 days away → due_soon', async () => {
-    const commitment = makeCommitment({ paid_amount_try: 0, call_date: '2026-06-25' })
+    const commitment = makeCommitment({ paid_try: 0, due_date: '2026-06-25' })
     const report = await CapitalCallService.getReport('co1', makeSupabase([commitment]) as any, { today: '2026-05-27' })
     expect(report.partners[0].status).toBe('due_soon')
   })
 
   it('call_date 1 day away → due_soon', async () => {
-    const commitment = makeCommitment({ paid_amount_try: 0, call_date: '2026-05-28' })
+    const commitment = makeCommitment({ paid_try: 0, due_date: '2026-05-28' })
     const report = await CapitalCallService.getReport('co1', makeSupabase([commitment]) as any, { today: '2026-05-27' })
     expect(report.partners[0].status).toBe('due_soon')
   })
 
   it('call_date 31 days away → current (not due_soon)', async () => {
-    const commitment = makeCommitment({ paid_amount_try: 0, call_date: '2026-06-27' })
+    const commitment = makeCommitment({ paid_try: 0, due_date: '2026-06-27' })
     const report = await CapitalCallService.getReport('co1', makeSupabase([commitment]) as any, { today: '2026-05-27' })
     expect(report.partners[0].status).toBe('current')
   })
 
   it('call_date 60 days away → current', async () => {
-    const commitment = makeCommitment({ paid_amount_try: 0, call_date: '2026-07-26' })
+    const commitment = makeCommitment({ paid_try: 0, due_date: '2026-07-26' })
     const report = await CapitalCallService.getReport('co1', makeSupabase([commitment]) as any, { today: '2026-05-27' })
     expect(report.partners[0].status).toBe('current')
   })
@@ -810,7 +812,7 @@ describe('getReport metadata', () => {
   })
 
   it('partner summary includes all required fields', async () => {
-    const commitment = makeCommitment({ paid_amount_try: 0, call_date: '2026-03-01' })
+    const commitment = makeCommitment({ paid_try: 0, due_date: '2026-03-01' })
     const report = await CapitalCallService.getReport('co1', makeSupabase([commitment]) as any, { today: '2026-05-27' })
     const partner = report.partners[0]
     expect(partner).toHaveProperty('partner_id')
