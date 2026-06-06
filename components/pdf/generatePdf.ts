@@ -122,7 +122,11 @@ interface StyleMetrics {
   vRhythm:    number
 }
 
-interface LogoData { b64: string; pxW: number; pxH: number }
+interface LogoData { b64: string; pxW: number; pxH: number; format: 'PNG' | 'JPEG' }
+
+// Logos are rasterized at most this many px on the long edge — they print small
+// (≤40mm), so a higher raster only bloats the PDF.
+const MAX_LOGO_RASTER_PX = 800
 
 // ── Palette definitions ───────────────────────────────────────────────────────
 
@@ -391,22 +395,32 @@ function resolveLogoUrl(url: string): string {
   return `${base}/storage/v1/object/public/logos/${url}`
 }
 
-// Draw an <img> source onto a canvas → PNG data-URL + pixel dimensions.
+// Draw an <img> source onto a canvas → compact JPEG data-URL + original pixel
+// dimensions. JPEG (vs PNG) keeps the embedded logo ~10× smaller (a 640px logo
+// went from ~1.7 MB PNG to ~50 KB), and a white backfill makes transparent PNG
+// logos render correctly on the (white) invoice instead of turning black.
 function rasterizeToLogoData(imgSrc: string, revoke?: () => void): Promise<LogoData | null> {
   return new Promise<LogoData | null>(resolve => {
     const img = new Image()
     img.onload = () => {
       try {
-        const w = Math.max(img.naturalWidth  || img.width,  1)
-        const h = Math.max(img.naturalHeight || img.height, 1)
+        const ow = Math.max(img.naturalWidth  || img.width,  1)
+        const oh = Math.max(img.naturalHeight || img.height, 1)
+        // Downscale the raster (display size is ≤40mm); keep aspect ratio.
+        const scale = Math.min(1, MAX_LOGO_RASTER_PX / Math.max(ow, oh))
+        const w = Math.max(1, Math.round(ow * scale))
+        const h = Math.max(1, Math.round(oh * scale))
         const canvas = document.createElement('canvas')
         canvas.width = w
         canvas.height = h
         const ctx = canvas.getContext('2d')
         if (!ctx) { revoke?.(); resolve(null); return }
-        ctx.drawImage(img, 0, 0)
+        ctx.fillStyle = '#ffffff'
+        ctx.fillRect(0, 0, w, h)
+        ctx.drawImage(img, 0, 0, w, h)
         revoke?.()
-        resolve({ b64: canvas.toDataURL('image/png'), pxW: w, pxH: h })
+        // pxW/pxH are the ORIGINAL dimensions so the mm sizing keeps the true aspect.
+        resolve({ b64: canvas.toDataURL('image/jpeg', 0.92), pxW: ow, pxH: oh, format: 'JPEG' })
       } catch { revoke?.(); resolve(null) }
     }
     img.onerror = () => { revoke?.(); resolve(null) }
@@ -674,7 +688,7 @@ export async function generatePdf(opts: PdfOptions): Promise<void> {
       const { w, h } = logoDims(logo.pxW, logo.pxH, maxW, maxH)
       const logoY = (SM.bandH - h) / 2
       try {
-        doc.addImage(logo.b64, 'PNG', HPAD, logoY, w, h)
+        doc.addImage(logo.b64, logo.format, HPAD, logoY, w, h)
         logoEndX = HPAD + w + 4
       } catch { logo = null }
     }
@@ -741,7 +755,7 @@ export async function generatePdf(opts: PdfOptions): Promise<void> {
       const { maxW, maxH } = getLogoMaxDims()
       const { w, h } = logoDims(logo.pxW, logo.pxH, maxW, maxH)
       try {
-        doc.addImage(logo.b64, 'PNG', RX - w, startY + 5, w, h)
+        doc.addImage(logo.b64, logo.format, RX - w, startY + 5, w, h)
       } catch { /* ignore */ }
     }
 
@@ -789,7 +803,7 @@ export async function generatePdf(opts: PdfOptions): Promise<void> {
       const { maxW, maxH } = getLogoMaxDims()
       const { w, h } = logoDims(logo.pxW, logo.pxH, maxW, maxH)
       try {
-        doc.addImage(logo.b64, 'PNG', RX - w, startY - 10, w, h)
+        doc.addImage(logo.b64, logo.format, RX - w, startY - 10, w, h)
       } catch { /* ignore */ }
     }
 
