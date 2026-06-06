@@ -12,6 +12,9 @@ import { fmtTRY as fmt, fmtPct }   from '@/lib/format'
 import { SalesTable }       from './SalesTable'
 import { RevenueAttributionService, type RevenueContributor } from '@/lib/services/commercial/revenue-attribution.service'
 import RecurringRevenueClient from './_recurring/RecurringRevenueClient'
+import { SalesCharts } from './SalesCharts'
+
+const TR_MONTHS = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara']
 
 interface Props { companyId: string }
 
@@ -110,8 +113,31 @@ export async function SalesContent({ companyId }: Props) {
   // ── Total lifetime ────────────────────────────────────────────────────────
   const lifetimeRevenue = list.reduce((s, r) => s + Number((r as { total_try?: number }).total_try ?? 0), 0)
 
+  // ── 6-month sales trend (from the full list) ────────────────────────────────
+  const monthBuckets = new Map<string, { label: string; revenue: number }>()
+  {
+    const now = new Date()
+    for (let i = 5; i >= 0; i--) {
+      const d  = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+      monthBuckets.set(ym, { label: TR_MONTHS[d.getMonth()], revenue: 0 })
+    }
+    for (const r of list as Array<{ sale_date?: string; total_try?: number }>) {
+      const ym = (r.sale_date ?? '').slice(0, 7)
+      const b  = monthBuckets.get(ym)
+      if (b) b.revenue += Number(r.total_try ?? 0)
+    }
+  }
+  const salesMonthly = Array.from(monthBuckets.values()).map(b => ({ label: b.label, revenue: Math.round(b.revenue) }))
+  const salesTopCustomers = (attribution?.by_customer ?? []).slice(0, 6).map((c: RevenueContributor) => ({
+    name: c.name, value: Math.round(c.total_try),
+  }))
+
   return (
     <div className="max-w-4xl space-y-4">
+
+      {/* ── Visual summary — monthly sales + top customers ──────────────── */}
+      <SalesCharts monthly={salesMonthly} topCustomers={salesTopCustomers} />
 
       {/* ── Zone 0: Tekrarlayan Gelir Analizi (MRR/ARR/NRR) ─────────────── */}
       <RecurringRevenueClient companyId={companyId} />
