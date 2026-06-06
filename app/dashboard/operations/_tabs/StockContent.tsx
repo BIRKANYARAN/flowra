@@ -16,6 +16,7 @@ import type { DemandForecastReport }                from '@/lib/services/invento
 import { FifoAuditClient }                          from './_fifo/FifoAuditClient'
 import { SalesVelocityClient }                      from './_velocity/SalesVelocityClient'
 import InventoryTurnoverClient                      from './_inventory/InventoryTurnoverClient'
+import { StockCharts }                              from './StockCharts'
 
 function holdingDays(entryDate: string): number {
   const today = new Date()
@@ -116,6 +117,20 @@ export async function StockContent({ companyId, userId }: Props) {
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Stok Zekası</div>
         <p className="text-xs text-[#94a3b8] mt-0.5">FIFO lot değerlemesi · stok hareketleri · portföy özeti</p>
       </div>
+
+      {/* Visual summary — stock value mix + aging buckets */}
+      {valuationReport && valuationReport.total_inventory_value_try > 0 && (
+        <StockCharts
+          totalValue={valuationReport.total_inventory_value_try}
+          byProduct={valuationReport.products.slice(0, 6).map(p => ({ name: p.product_name, value: Math.round(p.total_value) }))}
+          aging={{
+            current: Math.round(valuationReport.aging_summary.current_try),
+            d30:     Math.round(valuationReport.aging_summary.aging_30_try),
+            d60:     Math.round(valuationReport.aging_summary.aging_60_try),
+            d90plus: Math.round(valuationReport.aging_summary.aging_90_plus_try),
+          }}
+        />
+      )}
 
       {/* Stok Devir Analizi — turnover ratio, DIO, dead stock, shrinkage, reorder alerts */}
       <InventoryTurnoverClient companyId={companyId} />
