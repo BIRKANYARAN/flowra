@@ -25,6 +25,7 @@ import { VendorConcentrationClient } from './_vendor/VendorConcentrationClient'
 import { SupplierTermsClient } from './_supplier-terms/SupplierTermsClient'
 import { PayrollAnalyticsClient } from '@/app/dashboard/finance/_tabs/_payroll/PayrollAnalyticsClient'
 import { OperationalEfficiencyClient } from './_efficiency/OperationalEfficiencyClient'
+import { ExpensesCharts } from './ExpensesCharts'
 
 function CommandBarSkeleton() {
   return (
@@ -157,6 +158,24 @@ export async function ExpensesContent({ companyId }: Props) {
     .map(([category, total]) => ({ category, label: CATEGORY_LABELS[category] ?? category, total }))
   const maxCatTotal = categories[0]?.total ?? 1
 
+  // ── 6-month expense trend (for the chart island) ────────────────────────────
+  const expMonthBuckets = new Map<string, { label: string; amount: number }>()
+  {
+    const now2 = new Date()
+    for (let i = 5; i >= 0; i--) {
+      const d  = new Date(now2.getFullYear(), now2.getMonth() - i, 1)
+      const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+      expMonthBuckets.set(ym, { label: fmtMonth(ym), amount: 0 })
+    }
+    for (const e of expenses) {
+      const ym = (e.expense_date ?? e.created_at ?? '').slice(0, 7)
+      const b  = expMonthBuckets.get(ym)
+      if (b) b.amount += Number(e.amount_try ?? 0)
+    }
+  }
+  const expenseMonthly = Array.from(expMonthBuckets.values()).map(b => ({ label: b.label, amount: Math.round(b.amount) }))
+  const expenseByCategory = categories.slice(0, 6).map(c => ({ name: c.label, value: Math.round(c.total) }))
+
   // Build anomaly ratio lookup for badge display
   const anomalyRatioMap: Record<string, { current: number; avg: number; ratio: number }> = {}
   for (const a of expenseAnomalies) {
@@ -220,6 +239,9 @@ export async function ExpensesContent({ companyId }: Props) {
       <Suspense fallback={<CommandBarSkeleton />}>
         <ExpensesCommandBar companyId={companyId} />
       </Suspense>
+
+      {/* ── Visual summary — monthly burn + category mix ──────────────────────── */}
+      <ExpensesCharts monthly={expenseMonthly} byCategory={expenseByCategory} totalExpense={totalTRY} />
 
       {/* ── Burn Intelligence Strip ───────────────────────────────────────────── */}
       <div className="bg-white border border-[#e2e8f0] rounded shadow-sm overflow-hidden">
