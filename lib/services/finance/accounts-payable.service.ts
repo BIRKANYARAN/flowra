@@ -311,7 +311,8 @@ export class AccountsPayableService {
       // 1. Unpaid/partial/overdue expenses
       this.supabase
         .from('expenses')
-        .select('id, vendor_name, category, amount_try, payment_status, due_date, expense_date, created_at')
+        // expenses has no vendor_name (→ title alias) / due_date columns
+        .select('id, vendor_name:title, category, amount_try, payment_status, expense_date, created_at')
         .eq('company_id', companyId)
         .is('deleted_at', null)
         .not('payment_status', 'eq', 'paid')

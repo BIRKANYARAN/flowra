@@ -444,7 +444,9 @@ export class PayablesManagementService {
       // 1. Unpaid/partial expenses
       this.supabase
         .from('expenses')
-        .select('id, vendor_name, category, amount_try, payment_status, due_date, expense_date, created_at')
+        // expenses has no vendor_name (→ title alias) and no due_date column;
+        // missing due_date → 'no_due_date' payable status (already handled downstream)
+        .select('id, vendor_name:title, category, amount_try, payment_status, expense_date, created_at')
         .eq('company_id', companyId)
         .is('deleted_at', null)
         .not('payment_status', 'eq', 'paid')
@@ -487,7 +489,6 @@ export class PayablesManagementService {
       category: string | null
       amount_try: number | null
       payment_status: string
-      due_date: string | null
       expense_date: string | null
       created_at: string
     }) => {
@@ -495,7 +496,8 @@ export class PayablesManagementService {
       const amountPaid  = 0 // expenses don't have amount_paid column
       const outstanding = computeOutstandingAmount(amountTry, amountPaid)
       const createdDate = (row.expense_date ?? row.created_at ?? today).slice(0, 10)
-      const daysUntilDue = computeDaysUntilDue(row.due_date, today)
+      // expenses have no due_date column → null → 'no_due_date' status downstream
+      const daysUntilDue = computeDaysUntilDue(null, today)
       const daysOutstanding = computeDaysOutstanding(createdDate, today)
 
       return {
@@ -506,7 +508,7 @@ export class PayablesManagementService {
         amount_try:       amountTry,
         amount_paid_try:  amountPaid,
         outstanding_try:  outstanding,
-        due_date:         row.due_date ?? null,
+        due_date:         null,   // expenses have no due_date column
         created_date:     createdDate,
         payment_status:   row.payment_status,
         days_until_due:   daysUntilDue,

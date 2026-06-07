@@ -163,7 +163,8 @@ export class APAgingService {
     // Fetch unpaid/partially-paid expenses
     const { data, error } = await supabase
       .from('expenses')
-      .select('id, vendor_name, expense_type, amount_try, expense_date, payment_status, description, category')
+      // expenses has no vendor_name — `title` is the payee/expense name (aliased)
+      .select('id, vendor_name:title, expense_type, amount_try, expense_date, payment_status, description, category')
       .eq('company_id', companyId)
       .is('deleted_at', null)
       .in('payment_status', ['pending', 'partial'])

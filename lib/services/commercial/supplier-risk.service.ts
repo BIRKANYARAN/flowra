@@ -331,7 +331,8 @@ export class SupplierRiskService {
         .lte('purchase_date', toDateStr),
       this.supabase
         .from('expenses')
-        .select('supplier_name, title, amount_try, expense_date, payment_status')
+        // expenses has no supplier_name — `title` is the payee (consumer falls back to it)
+        .select('title, amount_try, expense_date, payment_status')
         .eq('company_id', companyId)
         .gte('expense_date', fromDateStr)
         .lte('expense_date', toDateStr),

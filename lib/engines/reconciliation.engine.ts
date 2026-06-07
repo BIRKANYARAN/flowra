@@ -238,7 +238,9 @@ async function buildSection4(
 ): Promise<ReconSection4_Payables> {
   const { data: rows } = await supabase
     .from('expenses')
-    .select('amount_try, expense_date, payment_status, vendor_name, due_date')
+    // expenses has no vendor_name (→ title alias) and no due_date column;
+    // upcoming-by-due-date degrades to 0, aging by expense_date still works
+    .select('amount_try, expense_date, payment_status, vendor_name:title')
     .eq('company_id', companyId)
     .in('payment_status', ['pending', 'overdue'])
     .is('deleted_at', null)

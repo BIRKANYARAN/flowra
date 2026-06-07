@@ -262,11 +262,13 @@ export class SupplierTermsService {
     const [expensesRes] = await Promise.allSettled([
       this.supabase
         .from('expenses')
-        .select('supplier_name, amount_try, expense_type, expense_date, created_at, paid_at, payment_status, due_date')
+        // expenses has no supplier_name (→ title alias) / paid_at / due_date columns;
+        // payment-lag metrics degrade to null (guarded downstream), spend still aggregates
+        .select('supplier_name:title, amount_try, expense_type, expense_date, created_at, payment_status')
         .eq('company_id', companyId)
         .is('deleted_at', null)
-        .not('supplier_name', 'is', null)
-        .neq('supplier_name', '')
+        .not('title', 'is', null)
+        .neq('title', '')
         .order('expense_date', { ascending: false })
         .limit(2000),
     ])

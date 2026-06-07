@@ -146,7 +146,8 @@ export default async function InsightsPage() {
       .eq('company_id', companyId)
       .is('deleted_at', null),
     supabase.from('expenses')
-      .select('id, expense_date, expense_type, amount_try, vendor_name, description')
+      // expenses has no vendor_name — `title` is the payee/expense name (aliased)
+      .select('id, expense_date, expense_type, amount_try, vendor_name:title, description')
       .eq('company_id', companyId)
       .is('deleted_at', null)
       .gte('expense_date', new Date(Date.now() - 90 * 86_400_000).toISOString().slice(0, 10))

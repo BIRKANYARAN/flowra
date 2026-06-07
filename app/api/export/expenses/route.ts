@@ -76,7 +76,8 @@ export async function GET(req: NextRequest) {
 
   const { data: expenses, error } = await supabase
     .from('expenses')
-    .select('expense_date, description, expense_type, amount_try, payment_status, paid_date, notes, vendor_name')
+    // expenses has no vendor_name (→ title alias) and no paid_date column
+    .select('expense_date, description, expense_type, amount_try, payment_status, notes, vendor_name:title')
     .eq('company_id', companyId)
     .is('deleted_at', null)
     .gte('expense_date', safeFrom)
@@ -104,7 +105,7 @@ export async function GET(req: NextRequest) {
       EXPENSE_TYPE_TR[e.expense_type ?? ''] ?? e.expense_type ?? '',
       fmtAmount(e.amount_try),
       PAYMENT_STATUS_TR[e.payment_status ?? ''] ?? e.payment_status ?? '',
-      fmtDate((e as { paid_date?: string | null }).paid_date),
+      '',   // expenses have no payment-date column in this schema
       e.notes ?? '',
     ]))
   }

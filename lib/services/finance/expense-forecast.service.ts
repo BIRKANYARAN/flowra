@@ -276,7 +276,8 @@ export class ExpenseForecastService {
     const [expenseResult, budgetResult] = await Promise.allSettled([
       supabase
         .from('expenses')
-        .select('expense_date, amount_try, category, supplier_name')
+        // expenses has no supplier_name — `title` is the payee/expense name (aliased)
+        .select('expense_date, amount_try, category, supplier_name:title')
         .eq('company_id', companyId)
         .is('deleted_at', null)
         .gte('expense_date', windowFrom)

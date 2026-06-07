@@ -221,8 +221,10 @@ export class SupplierAnalyticsService {
 
     const { data, error } = await supabase
       .from('expenses')
+      // expenses has no supplier_name (→ title alias) / paid_at columns;
+      // payment-lag metrics degrade (guarded downstream), spend still aggregates
       .select(
-        'supplier_name, amount_try, expense_type, expense_date, payment_status, paid_at, updated_at',
+        'supplier_name:title, amount_try, expense_type, expense_date, payment_status, updated_at',
       )
       .eq('company_id', companyId)
       .is('deleted_at', null)

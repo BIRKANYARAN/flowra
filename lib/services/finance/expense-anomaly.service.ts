@@ -215,7 +215,8 @@ export class ExpenseAnomalyService {
     // ── Fetch expenses in window ──────────────────────────────────────────────
     const { data: rows } = await this.supabase
       .from('expenses')
-      .select('id, supplier_name, amount_try, expense_type, created_at, expense_date')
+      // expenses has no supplier_name — `title` is the payee/expense name (aliased)
+      .select('id, supplier_name:title, amount_try, expense_type, created_at, expense_date')
       .eq('company_id', companyId)
       .is('deleted_at', null)
       .gte('expense_date', windowStart)

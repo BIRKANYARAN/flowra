@@ -179,7 +179,8 @@ export class BankReconciliationService {
         .lte('sale_date', period.to),
       supabase
         .from('expenses')
-        .select('id, expense_date, amount_try, payment_status, expense_type, supplier_name')
+        // expenses has no supplier_name — `title` is the payee/expense name (aliased)
+        .select('id, expense_date, amount_try, payment_status, expense_type, supplier_name:title')
         .eq('company_id', companyId)
         .is('deleted_at', null)
         .eq('payment_status', 'paid')
@@ -403,7 +404,8 @@ export class BankReconciliationService {
       // Look in expenses (debit — outflow)
       const { data: expenses } = await supabase
         .from('expenses')
-        .select('id, expense_date, amount_try, expense_type, supplier_name')
+        // expenses has no supplier_name — `title` is the payee/expense name (aliased)
+        .select('id, expense_date, amount_try, expense_type, supplier_name:title')
         .eq('company_id', companyId)
         .is('deleted_at', null)
         .eq('payment_status', 'paid')

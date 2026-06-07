@@ -150,7 +150,8 @@ export async function CFOTab({ userId, companyId }: Props) {
       getQuarterlyReport(userId, companyId, new Date().getFullYear()).catch(() => ZERO_QUARTERLY),
       supabase
         .from('expenses')
-        .select('id, expense_date, expense_type, amount_try, vendor_name, description')
+        // expenses has no vendor_name — `title` is the payee/expense name (aliased)
+        .select('id, expense_date, expense_type, amount_try, vendor_name:title, description')
         .eq('company_id', companyId)
         .is('deleted_at', null)
         .gte('expense_date', dupFrom)
