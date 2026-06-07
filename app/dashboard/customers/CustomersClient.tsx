@@ -5,8 +5,8 @@
 // Mutations go through /api/customers.
 // After add/edit: router.refresh() re-runs the server component with fresh data.
 
-import { useState, type ChangeEvent } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, type ChangeEvent } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import type { Customer } from '@/types'
 
 export type { Customer }
@@ -38,6 +38,10 @@ export default function CustomersClient({ initialCustomers }: Props) {
   function openNew() {
     setForm({ ...EMPTY }); setEditId(null); setErr(''); setShowForm(true)
   }
+
+  // Task-first: open the new-customer form immediately when reached via "+ Yeni" (?new=1)
+  const searchParams = useSearchParams()
+  useEffect(() => { if (searchParams.get('new') === '1') openNew() }, [searchParams])
   function openEdit(c: Customer) {
     setForm({
       name: c.name, address: c.address ?? '', tax_number: c.tax_number ?? '',

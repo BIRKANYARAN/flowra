@@ -7,6 +7,7 @@
 import Link             from 'next/link'
 import { FxTicker }     from '@/components/layout/FxTicker'
 import { HeaderLeft }   from '@/components/layout/HeaderLeft'
+import { QuickCreate }  from '@/components/layout/QuickCreate'
 
 interface Props {
   companyName:  string | null
@@ -31,21 +32,12 @@ export function Header({ companyName }: Props) {
       {/* LEFT — desktop page title (pathname-aware) */}
       <HeaderLeft companyName={companyName} />
 
-      {/* CENTER — global quick actions */}
+      {/* CENTER — global task-first quick action + Tahsilat shortcut */}
       <div className="hidden md:flex items-center gap-1.5 flex-1 justify-center">
-        <Link
-          href="/dashboard/proformas/new"
-          className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#0f172a] text-white text-[11px] font-semibold hover:bg-[#334155] transition-colors whitespace-nowrap">
-          + Proforma
-        </Link>
-        <Link
-          href="/dashboard/operations?tab=expenses"
-          className="inline-flex items-center gap-1 px-2.5 py-1 rounded border border-[#e2e8f0] text-[#334155] text-[11px] font-semibold hover:bg-[#f8fafc] transition-colors whitespace-nowrap">
-          + Gider
-        </Link>
+        <QuickCreate />
         <Link
           href="/dashboard/commercial?tab=collections"
-          className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-brand-light text-white text-[11px] font-semibold hover:bg-brand transition-colors whitespace-nowrap">
+          className="inline-flex items-center gap-1 px-2.5 py-1 rounded border border-[#e2e8f0] text-[#334155] text-[11px] font-semibold hover:bg-[#f8fafc] transition-colors whitespace-nowrap">
           Tahsilat
         </Link>
       </div>

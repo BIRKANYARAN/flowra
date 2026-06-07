@@ -7,6 +7,7 @@
 //   • Delegates list rendering to the existing ExpensesClient logic (composition)
 
 import { useCallback, useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { fmtDate, fmtMoney, ErrorBanner, EmptyState, Label } from '@/components/ui'
 import { fmtTRY } from '@/lib/format'
 import { FlowraButton } from '@/components/ui-kit/FlowraButton'
@@ -252,6 +253,11 @@ export default function ExpensesIntelligenceClient({
   const [confirmExpId,  setConfirmExpId]  = useState<string | null>(null)
   const [confirmRecId,  setConfirmRecId]  = useState<string | null>(null)
   const [showAddSlider, setShowAddSlider] = useState(false)
+
+  // Task-first: open the add-expense slide-over immediately when reached via "+ Yeni" (?new=1)
+  const searchParams = useSearchParams()
+  useEffect(() => { if (searchParams.get('new') === '1') setShowAddSlider(true) }, [searchParams])
+
   const [approvalQueue, setApprovalQueue] = useState(initialApprovalQueue)
   const [approvingId,   setApprovingId]   = useState<string | null>(null)
   const [approvalError, setApprovalError] = useState('')

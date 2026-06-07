@@ -5,7 +5,7 @@
 // All filtering is done client-side (no extra API calls).
 
 import { useState, useMemo, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import type { NormalizedSaleRow } from '@/lib/normalize'
 import { formatTRY, fmtDate } from '@/lib/format'
 import { SaleCreateDrawer } from './SaleCreateDrawer'
@@ -285,6 +285,10 @@ export function SalesTable({ rows }: Props) {
   const [statusFilter, setStatusFilter] = useState('all')
   const [paymentRow,   setPaymentRow]   = useState<NormalizedSaleRow | null>(null)
   const [showCreate,   setShowCreate]   = useState(false)
+
+  // Task-first: open the create drawer immediately when reached via "+ Yeni" (?new=1)
+  const searchParams = useSearchParams()
+  useEffect(() => { if (searchParams.get('new') === '1') setShowCreate(true) }, [searchParams])
 
   // ── Filter logic ─────────────────────────────────────────────────────────────
   const filtered = useMemo(() => {
