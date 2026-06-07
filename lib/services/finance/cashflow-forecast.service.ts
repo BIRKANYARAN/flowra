@@ -482,7 +482,7 @@ export class CashFlowForecastService {
       // 3. Active loan tranches (try/catch — table may not exist)
       this.supabase
         .from('partner_loan_tranches')
-        .select('principal_try, annual_interest_rate, end_date')
+        .select('principal_try, annual_interest_rate, expected_repayment_date')
         .eq('company_id', companyId)
         .is('deleted_at', null)
         .not('principal_try', 'is', null),
@@ -548,12 +548,12 @@ export class CashFlowForecastService {
     try {
       if (loanResult.status === 'fulfilled' && loanResult.value?.data) {
         trancheData = loanResult.value.data
-          .map((row: { principal_try: unknown; annual_interest_rate: unknown; end_date: unknown }) => {
+          .map((row: { principal_try: unknown; annual_interest_rate: unknown; expected_repayment_date: unknown }) => {
             const principal = Number(row.principal_try) || 0
             const rate = Number(row.annual_interest_rate) || 0
             let monthsRemaining = 12 // default
-            if (row.end_date) {
-              const endDate = new Date(row.end_date as string)
+            if (row.expected_repayment_date) {
+              const endDate = new Date(row.expected_repayment_date as string)
               const diffMs = endDate.getTime() - now.getTime()
               const diffMonths = Math.ceil(diffMs / (1000 * 60 * 60 * 24 * 30))
               monthsRemaining = Math.max(0, diffMonths)

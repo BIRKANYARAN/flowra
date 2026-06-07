@@ -369,12 +369,13 @@ export class RetainedEarningsService {
       // Rough liability estimate: sum of partner loan tranches
       const { data: loanData } = await this.supabase
         .from('partner_loan_tranches')
-        .select('outstanding_try')
+        // outstanding is computed: principal_try − total_repaid_try (no outstanding_try column)
+        .select('principal_try, total_repaid_try')
         .eq('company_id', companyId)
         .is('deleted_at', null)
         .neq('status', 'repaid')
-      totalLiabilities = ((loanData ?? []) as Array<{ outstanding_try: unknown }>)
-        .reduce((s, r) => s + Number(r.outstanding_try ?? 0), 0)
+      totalLiabilities = ((loanData ?? []) as Array<{ principal_try: unknown; total_repaid_try: unknown }>)
+        .reduce((s, r) => s + Math.max(0, Number(r.principal_try ?? 0) - Number(r.total_repaid_try ?? 0)), 0)
       totalLiabilities = round2(totalLiabilities)
     } catch { totalLiabilities = 0 }
 

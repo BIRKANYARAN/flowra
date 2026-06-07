@@ -147,7 +147,7 @@ export class AuditReadinessService {
     // partner_loan_tranches
     const { data: tranches } = await supabase
       .from('partner_loan_tranches')
-      .select('id, interest_rate_annual, status')
+      .select('id, annual_interest_rate, status')
       .eq('company_id', companyId)
       .eq('status', 'active')
 
@@ -331,7 +331,7 @@ export class AuditReadinessService {
     // 7. loan_tranches_documented
     {
       const activeTranches = (tranches ?? [])
-      const undocumented   = activeTranches.filter(t => !t.interest_rate_annual || Number(t.interest_rate_annual) === 0)
+      const undocumented   = activeTranches.filter(t => !t.annual_interest_rate || Number(t.annual_interest_rate) === 0)
       items.push({
         key:      'loan_tranches_documented',
         label:    'Tüm ortak kredilerinde faiz oranı tanımlı',
