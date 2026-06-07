@@ -13,6 +13,7 @@
 //   7. Finansal raporlar linkleri
 
 import Link                      from 'next/link'
+import { DetailSection }         from '@/components/dashboard/DetailSection'
 import { PeriodCloseReadinessClient } from '@/app/dashboard/finance/_tabs/_period-close-readiness/PeriodCloseReadinessClient'
 import { PeriodCloseChecklistClient } from '@/app/dashboard/finance/_tabs/_close/PeriodCloseChecklistClient'
 import IncomeStatementClient     from '@/app/dashboard/finance/_tabs/_income/IncomeStatementClient'
@@ -398,16 +399,17 @@ export async function CFOTab({ userId, companyId }: Props) {
         </div>
       </div>
 
-      {/* ── Gelir Tablosu — Formal Income Statement ─────────────────────────── */}
-      <IncomeStatementClient companyId={companyId} />
-
-      {/* ── Banka Mutabakat Raporu — Book vs Bank reconciliation ────────────── */}
-      <BankReconciliationClient companyId={companyId} />
-
-      {/* GL Mutabakat Raporu */}
-      {glReconciliation && (
-        <GlMutabakatRaporu report={glReconciliation} />
-      )}
+      {/* ── Detaylı Mutabakat & Tablolar — collapsed by default (on demand) ──── */}
+      <DetailSection title="Detaylı Mutabakat & Tablolar" subtitle="Gelir tablosu · banka mutabakatı · GL mutabakatı">
+        {/* Gelir Tablosu — Formal Income Statement */}
+        <IncomeStatementClient companyId={companyId} />
+        {/* Banka Mutabakat Raporu — Book vs Bank reconciliation */}
+        <BankReconciliationClient companyId={companyId} />
+        {/* GL Mutabakat Raporu */}
+        {glReconciliation && (
+          <GlMutabakatRaporu report={glReconciliation} />
+        )}
+      </DetailSection>
 
       {/* C4: Dönem Güvence Değerlendirmesi */}
       {governanceLines.length > 0 && (
