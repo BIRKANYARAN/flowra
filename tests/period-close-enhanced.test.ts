@@ -118,6 +118,14 @@ function makeSupabase(
         return makeChain([], 0)
       }
 
+      // The trial-balance check reads debit/credit from journal_entry_lines now;
+      // alias to the journal_entries fixture so existing test rows still apply.
+      if (table === 'journal_entry_lines') {
+        const jrows = (tables as Record<string, unknown[]>)['journal_entry_lines']
+          ?? (tables as Record<string, unknown[]>)['journal_entries'] ?? []
+        return makeChain(jrows, Array.isArray(jrows) ? jrows.length : 0)
+      }
+
       const rows = (tables as Record<string, unknown[]>)[table] ?? []
       const count = Array.isArray(rows) ? rows.length : 0
       return makeChain(rows, count)

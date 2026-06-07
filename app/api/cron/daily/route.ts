@@ -70,10 +70,11 @@ export async function POST(req: NextRequest) {
     // ── Get companies that have active loan tranches ───────────────────────────
     const { data: loanCompanies } = await supabase
       .from('partner_loan_tranches')
+      // no outstanding_try column to filter on; the accrual job itself skips
+      // zero-outstanding tranches, so an interest-bearing active tranche is enough here
       .select('company_id')
       .eq('status', 'active')
       .gt('annual_interest_rate', 0)
-      .gt('outstanding_try', 0)
 
     const loanCompanyIds = [
       ...new Set(((loanCompanies ?? []) as Array<{ company_id: string }>).map(r => r.company_id)),

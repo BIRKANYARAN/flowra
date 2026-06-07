@@ -83,13 +83,15 @@ export async function GET(req: NextRequest) {
     twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12)
     const twelveMonthsAgoStr = twelveMonthsAgo.toISOString().slice(0, 10)
 
+    // Revenue = credits to gross-sales accounts (60x). debit/credit + account_code
+    // live on journal_entry_lines; company/date filter via the parent entry.
     const { data: revenueRows } = await supabase
-      .from('journal_entries')
-      .select('credit_try')
-      .eq('company_id', companyId)
-      .eq('account_class', 'income')
-      .gte('entry_date', twelveMonthsAgoStr)
-      .is('deleted_at', null)
+      .from('journal_entry_lines')
+      .select('credit_try, journal_entries!inner(company_id, entry_date, is_voided)')
+      .like('account_code', '60%')
+      .eq('journal_entries.company_id', companyId)
+      .eq('journal_entries.is_voided', false)
+      .gte('journal_entries.entry_date', twelveMonthsAgoStr)
 
     const totalRevenue12m: number = Array.isArray(revenueRows)
       ? revenueRows.reduce((s: number, r: Record<string, unknown>) => s + (Number(r.credit_try) || 0), 0)

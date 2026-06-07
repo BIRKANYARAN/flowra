@@ -121,13 +121,14 @@ export class PeriodCloseEnhancedService {
     ] = await Promise.allSettled([
 
       // 1. Journal entries for period: check DR = CR
+      // debit_try/credit_try live on journal_entry_lines; filter via the parent entry
       (supabase as SupabaseClient)
-        .from('journal_entries')
-        .select('debit_try, credit_try')
-        .eq('company_id', companyId)
-        .is('deleted_at', null)
-        .gte('entry_date', from)
-        .lte('entry_date', to),
+        .from('journal_entry_lines')
+        .select('debit_try, credit_try, journal_entries!inner(company_id, entry_date, is_voided)')
+        .eq('journal_entries.company_id', companyId)
+        .eq('journal_entries.is_voided', false)
+        .gte('journal_entries.entry_date', from)
+        .lte('journal_entries.entry_date', to),
 
       // 2. Draft sales in period
       (supabase as SupabaseClient)

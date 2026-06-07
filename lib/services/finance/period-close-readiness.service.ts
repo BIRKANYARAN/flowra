@@ -251,23 +251,25 @@ export class PeriodCloseReadinessService {
       ),
 
       // Check 1: journal entries — debit/credit balance
+      // debit_try/credit_try live on journal_entry_lines; filter via the parent entry
       safeQuery(() =>
         this.supabase
-          .from('journal_entries')
-          .select('debit_try, credit_try')
-          .eq('company_id', companyId)
-          .gte('entry_date', monthStart)
-          .lte('entry_date', monthEnd)
+          .from('journal_entry_lines')
+          .select('debit_try, credit_try, journal_entries!inner(company_id, entry_date, is_voided)')
+          .eq('journal_entries.company_id', companyId)
+          .eq('journal_entries.is_voided', false)
+          .gte('journal_entries.entry_date', monthStart)
+          .lte('journal_entries.entry_date', monthEnd)
       ),
 
-      // Check 8: partner loan tranches due this month
+      // Check 8: partner loan tranches due this month (real column: expected_repayment_date)
       safeQuery(() =>
         this.supabase
           .from('partner_loan_tranches')
           .select('id', { count: 'exact', head: true })
           .eq('company_id', companyId)
-          .gte('due_date', monthStart)
-          .lte('due_date', monthEnd)
+          .gte('expected_repayment_date', monthStart)
+          .lte('expected_repayment_date', monthEnd)
           .not('status', 'eq', 'repaid')
           .is('deleted_at', null)
       ),
