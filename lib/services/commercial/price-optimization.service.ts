@@ -352,13 +352,18 @@ export class PriceOptimizationService {
     const [itemsResult, productsResult] = await Promise.allSettled([
       this.supabase
         .from('sale_items')
+        // Real sale_items columns: unit_price (list/pre-discount), discount_pct,
+        // qty, line_total. The old select used price/discount_percent/quantity/
+        // line_total_try (none exist) → query error → empty report. Verified vs data:
+        // unit_price is the pre-discount LIST price, so the list-vs-actual discount
+        // analysis below is correct.
         .select(`
           product_id,
           product_name,
-          price,
-          discount_percent,
-          quantity,
-          line_total_try,
+          unit_price,
+          discount_pct,
+          qty,
+          line_total,
           sales!inner(
             company_id,
             deleted_at,
@@ -371,7 +376,7 @@ export class PriceOptimizationService {
 
       this.supabase
         .from('products')
-        .select('id, name, price')
+        .select('id, name, list_price')
         .eq('company_id', companyId)
         .is('deleted_at', null),
     ])
@@ -387,24 +392,24 @@ export class PriceOptimizationService {
     if (productsResult.status === 'fulfilled') {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       for (const p of (productsResult.value.data ?? []) as any[]) {
-        if (p.id) productPriceMap.set(String(p.id), { name: String(p.name ?? ''), price: Number(p.price ?? 0) })
+        if (p.id) productPriceMap.set(String(p.id), { name: String(p.name ?? ''), price: Number(p.list_price ?? 0) })
       }
     }
 
     // ── Normalise rows → RawSaleItem ──────────────────────────────────────────
     const items: RawSaleItem[] = rawRows.map(r => {
-      // list_price: sale_items.price (the list/catalogue price)
-      const listPrice = Number(r.price ?? 0)
-      // actual_price: list_price × (1 - discount_percent/100)
-      const discountPct = Number(r.discount_percent ?? 0)
+      // list_price: sale_items.unit_price (the list/pre-discount price)
+      const listPrice = Number(r.unit_price ?? 0)
+      // actual_price: list_price × (1 - discount_pct/100)
+      const discountPct = Number(r.discount_pct ?? 0)
       const actualPrice = listPrice * (1 - discountPct / 100)
       return {
         product_id:     r.product_id ? String(r.product_id) : null,
         product_name:   r.product_name ? String(r.product_name) : null,
         list_price:     listPrice,
         actual_price:   actualPrice,
-        qty:            Number(r.quantity ?? 0),
-        line_total_try: Number(r.line_total_try ?? 0),
+        qty:            Number(r.qty ?? 0),
+        line_total_try: Number(r.line_total ?? 0),
       }
     })
 
