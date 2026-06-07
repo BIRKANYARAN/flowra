@@ -383,7 +383,7 @@ export class FinancialBenchmarkingService {
       // 5. Stock lots for inventory
       this.supabase
         .from('stock_lots')
-        .select('quantity, unit_cost, created_at')
+        .select('qty_remaining, unit_cost, created_at')
         .eq('company_id', companyId),
 
       // 6. Partner loan tranches
@@ -404,7 +404,7 @@ export class FinancialBenchmarkingService {
 
     type SaleRow     = { amount: number; period: string; status?: string; paid_at?: string | null; due_date?: string | null }
     type ExpenseRow  = { amount: number; period: string; category?: string; expense_type?: string }
-    type StockLot    = { quantity: number; unit_cost: number; created_at: string }
+    type StockLot    = { qty_remaining: number; unit_cost: number; created_at: string }
     type LoanRow     = { remaining_balance?: number; outstanding_balance?: number }
     type CapitalRow  = { committed_amount: number; paid_amount?: number }
 
@@ -471,7 +471,7 @@ export class FinancialBenchmarkingService {
     const inventoryOnBalance: number | null = balance?.inventory_value ?? null
     const inventoryValue = inventoryOnBalance !== null
       ? inventoryOnBalance
-      : stockLots.reduce((s, lot) => s + (lot.quantity ?? 0) * (lot.unit_cost ?? 0), 0)
+      : stockLots.reduce((s, lot) => s + (lot.qty_remaining ?? 0) * (lot.unit_cost ?? 0), 0)
 
     const quickAssets: number | null = currentAssets !== null
       ? currentAssets - inventoryValue

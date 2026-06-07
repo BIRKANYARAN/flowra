@@ -360,7 +360,6 @@ interface RawTarget {
 interface RawSale {
   sale_date: string | null
   total: number | null
-  quantity: number | null
 }
 
 // ── Service class ─────────────────────────────────────────────────────────────
@@ -391,7 +390,10 @@ export class SalesTargetService {
 
       this.supabase
         .from('sales')
-        .select('sale_date, total, quantity')
+        // NB: the `sales` table has no `quantity` column (units live on sale_items);
+        // selecting it caused PostgREST 400 → 500. Removed — `actual_units` was never
+        // computable from `sales` alone and stays 0 (revenue/deals are unaffected).
+        .select('sale_date, total')
         .eq('company_id', companyId)
         .is('deleted_at', null)
         .gte('sale_date', `${currentYear}-01-01`)
@@ -428,8 +430,8 @@ export class SalesTargetService {
       if (!s.sale_date) continue
       const ym = s.sale_date.slice(0, 7)  // YYYY-MM
       const existing = actualsMap.get(ym)
-      const revenue  = s.total    ?? 0
-      const units    = s.quantity ?? 0
+      const revenue  = s.total ?? 0
+      const units    = 0 // `sales` has no quantity column; units not derivable here
       if (existing) {
         existing.revenue += revenue
         existing.units   += units

@@ -97,7 +97,7 @@ export class ProductMarginService {
       // Sale items in period — joined through sales for date filter
       supabase
         .from('sale_items')
-        .select('product_id, product_name, quantity, price, line_total_try, sales!inner(sale_date, company_id)')
+        .select('product_id, product_name, qty, unit_price, line_total, sales!inner(sale_date, company_id)')
         .eq('sales.company_id', companyId)
         .gte('sales.sale_date', period.from)
         .lte('sales.sale_date', period.to)
@@ -122,9 +122,9 @@ export class ProductMarginService {
     const rawSaleItems = (saleItemsResult.data ?? []) as Array<{
       product_id: string | null
       product_name: string
-      quantity: number
-      price: number
-      line_total_try: number
+      qty: number
+      unit_price: number
+      line_total: number
     }>
 
     const stockLots = (stockLotsResult.data ?? []) as Array<{
@@ -180,8 +180,8 @@ export class ProductMarginService {
       const pid  = String(item.product_id ?? '')
       if (!pid) continue
 
-      const qty     = Number(item.quantity     ?? 0)
-      const lineTry = Number(item.line_total_try != null ? item.line_total_try : item.price * qty || 0)
+      const qty     = Number(item.qty ?? 0)
+      const lineTry = Number(item.line_total != null ? item.line_total : item.unit_price * qty || 0)
 
       const prev = productAgg.get(pid) ?? { product_name: item.product_name, units_sold: 0, revenue_try: 0 }
       productAgg.set(pid, {
