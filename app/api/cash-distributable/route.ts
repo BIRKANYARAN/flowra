@@ -117,7 +117,8 @@ export async function GET(req: NextRequest) {
       // Active recurring templates — for upcoming obligation projection
       supabase
         .from('recurring_expenses')
-        .select('frequency, start_date, end_date, amount, fx_rate, expense_type, is_deductible')
+        // recurring_expenses has `category` (free text), not expense_type
+        .select('frequency, start_date, end_date, amount, fx_rate, category, is_deductible')
         .eq('company_id', companyId)
         .eq('is_active', true)
         .is('deleted_at', null)
@@ -162,7 +163,7 @@ export async function GET(req: NextRequest) {
     // same filter logic as unpaidExpenses.
     let committedUpcomingTry = 0
     for (const rec of recurringRes.data ?? []) {
-      if (rec.expense_type && CASH_EXCLUDED_EXPENSE_TYPES.has(rec.expense_type)) continue
+      if (rec.category && CASH_EXCLUDED_EXPENSE_TYPES.has(rec.category)) continue
       try {
         const occurrences = materializeRecurring(
           {

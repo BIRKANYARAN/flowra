@@ -180,13 +180,14 @@ export async function GET(req: NextRequest) {
   // ── 4. Recurring expenses: expand into all months in the window ────────────
   const { data: recurrings } = await supabase
     .from('recurring_expenses')
-    .select('id, amount, fx_rate, frequency, start_date, end_date, expense_type')
+    // recurring_expenses has `category` (free text), not expense_type
+    .select('id, amount, fx_rate, frequency, start_date, end_date, category')
     .eq('company_id', companyId)
     .eq('is_active', true)
     .is('deleted_at', null)
 
   for (const rec of recurrings ?? []) {
-    const expenseType = String(rec.expense_type ?? '')
+    const expenseType = String(rec.category ?? '')
     if (expenseType && CASH_EXCLUDED_EXPENSE_TYPES.has(expenseType)) continue
     const recStartYM = toYM(rec.start_date as string)
     const recEndYM   = rec.end_date ? toYM(rec.end_date as string) : null

@@ -86,10 +86,11 @@ export async function GET(req: NextRequest) {
         .eq('company_id', companyId).is('deleted_at', null)
         .gte('sale_date', from).lte('sale_date', to),
 
-      // Active recurring burn expenses — for projected monthly commitment
+      // Active recurring burn expenses — for projected monthly commitment.
+      // recurring_expenses has no expense_type column (real: category, free text) — all
+      // active recurring items are operating commitments; no DB enum filter applies.
       supabase.from('recurring_expenses').select('amount, fx_rate, frequency')
-        .eq('company_id', companyId).eq('is_active', true).is('deleted_at', null)
-        .in('expense_type', Array.from(BURN_EXPENSE_TYPES)),
+        .eq('company_id', companyId).eq('is_active', true).is('deleted_at', null),
     ])
 
     const allTimeReceived = (allTimeCollectedRes.data ?? []).reduce((s, r) => s + Number(r.total_try), 0)
