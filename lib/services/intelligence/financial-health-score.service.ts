@@ -390,7 +390,7 @@ export class FinancialHealthScoreService {
           .select('total_try, paid_amount')
           .eq('company_id', companyId)
           .is('deleted_at', null)
-          .in('payment_status', ['pending', 'partial', 'unpaid', 'overdue'])
+          .in('payment_status', ['pending', 'partial', 'overdue'])
           .not('payment_status', 'eq', 'cancelled'),
       ])
 

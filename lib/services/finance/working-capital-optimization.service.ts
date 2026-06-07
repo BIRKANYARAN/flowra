@@ -356,7 +356,7 @@ export class WorkingCapitalOptimizationService {
         .select('total_try, sale_date, payment_status')
         .eq('company_id', companyId)
         .is('deleted_at', null)
-        .in('payment_status', ['unpaid', 'partial', 'overdue'])
+        .in('payment_status', ['pending', 'partial', 'overdue'])
         .gte('sale_date', fromStr)
         .lte('sale_date', todayStr),
 
@@ -375,7 +375,7 @@ export class WorkingCapitalOptimizationService {
         .select('amount_try, expense_date, payment_status')
         .eq('company_id', companyId)
         .is('deleted_at', null)
-        .eq('payment_status', 'unpaid')
+        .eq('payment_status', 'pending')
         .gte('expense_date', fromStr)
         .lte('expense_date', todayStr),
 

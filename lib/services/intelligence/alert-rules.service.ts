@@ -276,7 +276,7 @@ export class AlertRulesService {
         .select('id, total_try, paid_amount, due_date, customer_name')
         .eq('company_id', companyId)
         .is('deleted_at', null)
-        .in('payment_status', ['pending', 'partial', 'overdue', 'unpaid'])
+        .in('payment_status', ['pending', 'partial', 'overdue'])
         .not('due_date', 'is', null)
         .lt('due_date', thirtyDaysAgo),
 
@@ -286,7 +286,7 @@ export class AlertRulesService {
         .select('id, total_try, paid_amount, due_date, customer_name')
         .eq('company_id', companyId)
         .is('deleted_at', null)
-        .in('payment_status', ['pending', 'partial', 'overdue', 'unpaid'])
+        .in('payment_status', ['pending', 'partial', 'overdue'])
         .not('due_date', 'is', null)
         .lt('due_date', sixtyDaysAgo),
 

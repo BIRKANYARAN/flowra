@@ -55,7 +55,7 @@ export async function runAlertDigestJob(
           .from('sales')
           .select('total_try:total, amount_paid:paid_amount, due_date, sale_date')
           .eq('company_id', companyId)
-          .in('payment_status', ['unpaid', 'partial', 'overdue'])
+          .in('payment_status', ['pending', 'partial', 'overdue'])
           .is('deleted_at', null),
         supabase
           .from('partner_loan_tranches')

@@ -184,7 +184,7 @@ export class PaymentBehaviorService {
       .select('id, customer_id, customer_name, total:total, paid_amount, sale_date, due_date, payment_status')
       .eq('company_id', companyId)
       .is('deleted_at', null)
-      .in('payment_status', ['unpaid', 'pending', 'partial', 'overdue'])
+      .in('payment_status', ['pending', 'partial', 'overdue'])
       .order('sale_date', { ascending: false })
       .limit(1000)
 

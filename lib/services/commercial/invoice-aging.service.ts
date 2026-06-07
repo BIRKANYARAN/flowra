@@ -145,7 +145,7 @@ export class InvoiceAgingService {
       .select('id, customer_id, customer_name, total, paid_amount, sale_date, created_at, due_date, payment_status')
       .eq('company_id', companyId)
       .is('deleted_at', null)
-      .in('payment_status', ['unpaid', 'partial', 'overdue'])
+      .in('payment_status', ['pending', 'partial', 'overdue'])
       .order('created_at', { ascending: false })
       .limit(1000)
 

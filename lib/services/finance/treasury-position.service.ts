@@ -451,7 +451,7 @@ export class TreasuryPositionService {
         .select('total_try, amount_paid')
         .eq('company_id', companyId)
         .is('deleted_at', null)
-        .in('payment_status', ['pending', 'partial', 'unpaid', 'overdue'])
+        .in('payment_status', ['pending', 'partial', 'overdue'])
         .gte('sale_date', from30)
         .lte('sale_date', today),
 
@@ -461,7 +461,7 @@ export class TreasuryPositionService {
         .select('amount_try, payment_status')
         .eq('company_id', companyId)
         .is('deleted_at', null)
-        .in('payment_status', ['pending', 'partial', 'unpaid'])
+        .in('payment_status', ['pending', 'partial'])
         .gte('expense_date', today)
         .lte('expense_date', to30ahead),
 

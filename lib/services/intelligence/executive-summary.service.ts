@@ -369,7 +369,7 @@ export class ExecutiveSummaryComputeService {
         .select('total_try, paid_amount, due_date')
         .eq('company_id', companyId)
         .is('deleted_at', null)
-        .in('payment_status', ['pending', 'partial', 'overdue', 'unpaid']),
+        .in('payment_status', ['pending', 'partial', 'overdue']),
 
       // Cash balance from bank_transactions
       supabase

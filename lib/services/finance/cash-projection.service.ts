@@ -237,7 +237,7 @@ export class CashProjectionService {
       .select('id, total_try:total, amount_paid:paid_amount, payment_status, due_date, sale_date')
       .eq('company_id', companyId)
       .is('deleted_at', null)
-      .in('payment_status', ['unpaid', 'partial', 'overdue'])
+      .in('payment_status', ['pending', 'partial', 'overdue'])
 
     // ── 4. Fetch payables pipeline (unpaid/partial expenses) ─────────────────
     const { data: payableRows } = await supabase
@@ -245,7 +245,7 @@ export class CashProjectionService {
       .select('id, amount_try, payment_status, due_date, expense_date')
       .eq('company_id', companyId)
       .is('deleted_at', null)
-      .in('payment_status', ['unpaid', 'pending', 'partial'])
+      .in('payment_status', ['pending', 'partial'])
 
     // ── 5. Fetch loan repayments ──────────────────────────────────────────────
     const { data: loanRows } = await supabase

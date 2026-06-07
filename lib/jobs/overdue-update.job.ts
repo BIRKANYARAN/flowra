@@ -28,7 +28,10 @@ export function markOverdue(sales: Sale[], asOf: string): string[] {
   return sales
     .filter(s =>
       s.due_date < asOf &&
-      (s.payment_status === 'unpaid' || s.payment_status === 'partial'),
+      // NB: payment_status enum is pending/partial/paid/overdue/cancelled — there is
+      // no 'unpaid' value, so `=== 'unpaid'` never matched and PENDING invoices were
+      // silently skipped (never marked overdue). Fixed to 'pending'.
+      (s.payment_status === 'pending' || s.payment_status === 'partial'),
     )
     .map(s => s.id)
 }
@@ -63,7 +66,7 @@ export async function runOverdueUpdateJob(
         .from('sales')
         .select('id, due_date, payment_status')
         .eq('company_id', companyId)
-        .in('payment_status', ['unpaid', 'partial'])
+        .in('payment_status', ['pending', 'partial'])
         .lt('due_date', today)
         .is('deleted_at', null)
         .not('due_date', 'is', null)

@@ -285,7 +285,7 @@ export class CollectionsAgingService {
       .select('customer_name, total, paid_amount, sale_date, due_date')
       .eq('company_id', companyId)
       .is('deleted_at', null)
-      .in('payment_status', ['unpaid', 'partial', 'overdue'])
+      .in('payment_status', ['pending', 'partial', 'overdue'])
       .order('sale_date', { ascending: true })
       .limit(3000)
 

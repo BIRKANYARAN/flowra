@@ -316,7 +316,7 @@ export class PeriodCloseChecklistService {
         .select('id', { count: 'exact', head: true })
         .eq('company_id', companyId)
         .is('deleted_at', null)
-        .eq('payment_status', 'unpaid')
+        .eq('payment_status', 'pending')
         .gte('sale_date', from)
         .lte('sale_date', to),
 

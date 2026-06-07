@@ -417,7 +417,7 @@ export class RevenueQualityService {
       .eq('company_id', companyId)
       .is('deleted_at', null)
       .gte('sale_date', fromDate)
-      .in('payment_status', ['paid', 'partial', 'unpaid', 'overdue', 'confirmed'])
+      .in('payment_status', ['paid', 'partial', 'pending', 'overdue', 'confirmed'])
       .order('sale_date', { ascending: true })
       .limit(5000)
 
