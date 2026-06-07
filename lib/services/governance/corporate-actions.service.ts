@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { isMissingSchemaError } from '@/lib/db-errors'
 
 export const CORPORATE_ACTION_TYPES = [
   'CAPITAL_INCREASE','CAPITAL_CALL','CAPITAL_DECREASE',
@@ -112,7 +113,8 @@ export class CorporateActionsService {
     if (opts.to)         q = q.lte('action_date', opts.to)
 
     const { data, error } = await q
-    if (error) throw error
+    // Degrade to empty if the corporate_actions table isn't provisioned yet
+    if (error) { if (isMissingSchemaError(error)) return []; throw error }
     return (data ?? []) as CorporateAction[]
   }
 

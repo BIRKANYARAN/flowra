@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { isMissingSchemaError } from '@/lib/db-errors'
 
 export type ResolutionType   = 'board' | 'general_meeting' | 'circular'
 export type ResolutionStatus = 'draft' | 'approved' | 'rejected' | 'implemented'
@@ -70,7 +71,8 @@ export class ResolutionsService {
       .limit(opts.limit ?? 100)
     if (opts.status) q = q.eq('status', opts.status)
     const { data, error } = await q
-    if (error) throw error
+    // Degrade to empty if the governance_resolutions table isn't provisioned yet
+    if (error) { if (isMissingSchemaError(error)) return []; throw error }
     return (data ?? []) as GovernanceResolution[]
   }
 
