@@ -42,8 +42,6 @@ interface AlertInsert {
   is_read:       boolean
 }
 
-const BURN_EXPENSE_TYPES = ['operational', 'fixed', 'variable']
-
 export async function POST(req: NextRequest) {
   const auth = await resolveApiAuth(req)
   if (!auth.ok) return auth.response
@@ -115,11 +113,12 @@ export async function POST(req: NextRequest) {
     //    monthly×1, quarterly×1/3, yearly×1/12
     supabase
       .from('recurring_expenses')
+      // recurring_expenses has no expense_type column (real: category, free text) —
+      // all active recurring items are operating commitments; no DB enum filter applies
       .select('amount, fx_rate, frequency, start_date, end_date')
       .eq('company_id', companyId)
       .eq('is_active', true)
-      .is('deleted_at', null)
-      .in('expense_type', BURN_EXPENSE_TYPES),
+      .is('deleted_at', null),
 
     // F. Receivable aging: 60+ day outstanding (for aged_60_plus alert)
     //    Includes amount_paid so partial payments are netted out correctly.

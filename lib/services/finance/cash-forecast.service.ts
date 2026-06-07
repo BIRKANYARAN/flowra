@@ -221,7 +221,6 @@ export class CashForecastService {
       expensesResult,
       cashSnapshotResult,
       loanTrancheResult,
-      paidExpensesResult,
     ] = await Promise.allSettled([
       // Sales last 3 months
       this.supabase
@@ -261,23 +260,14 @@ export class CashForecastService {
         .gte('expected_repayment_date', today)
         .lte('expected_repayment_date', week13EndStr)
         .order('expected_repayment_date', { ascending: true }),
-
-      // Paid expenses (for DPO calculation)
-      this.supabase
-        .from('expenses')
-        .select('expense_date, paid_at, amount_try')
-        .eq('company_id', companyId)
-        .is('deleted_at', null)
-        .not('paid_at', 'is', null)
-        .gte('expense_date', from3mo)
-        .lte('expense_date', today),
     ])
+    // NB: DPO is not derivable here — the expenses table has no payment-date
+    // column (only expense_date + payment_status), so DPO uses a neutral default.
 
     const sales3mo      = salesResult.status      === 'fulfilled' ? (salesResult.value.data      ?? []) : []
     const expenses3mo   = expensesResult.status    === 'fulfilled' ? (expensesResult.value.data   ?? []) : []
     const cashSnapshot  = cashSnapshotResult.status === 'fulfilled' ? cashSnapshotResult.value.data : null
     const loanTranches  = loanTrancheResult.status  === 'fulfilled' ? (loanTrancheResult.value.data ?? []) : []
-    const paidExpenses  = paidExpensesResult.status === 'fulfilled' ? (paidExpensesResult.value.data ?? []) : []
 
     // ── Starting cash ────────────────────────────────────────────────────────
     let startCash = cashSnapshot ? (Number(cashSnapshot.cash_and_equivalents_try) || 0) : 0
@@ -313,9 +303,10 @@ export class CashForecastService {
     )
     const historicalMonths = distinctMonths.size
 
-    // ── DSO: avg days (today - sale_date) for unpaid/overdue sales ────────────
+    // ── DSO: avg days (today - sale_date) for outstanding sales ───────────────
+    // payment_status enum = pending | partial | paid | overdue | cancelled (no 'unpaid')
     const unpaidSales = sales3mo.filter(
-      s => s.payment_status === 'unpaid' || s.payment_status === 'overdue'
+      s => s.payment_status === 'pending' || s.payment_status === 'partial' || s.payment_status === 'overdue'
     )
     let dso = 30 // default
     if (unpaidSales.length > 0) {
@@ -327,16 +318,8 @@ export class CashForecastService {
       dso = Math.max(1, Math.round(totalDays / unpaidSales.length))
     }
 
-    // ── DPO: avg days (paid_at - expense_date) for paid expenses ─────────────
-    let dpo = 30 // default
-    if (paidExpenses.length > 0) {
-      const totalDays = paidExpenses.reduce((acc, e) => {
-        const expMs  = new Date(e.expense_date as string).getTime()
-        const paidMs = new Date(e.paid_at as string).getTime()
-        return acc + Math.max(0, (paidMs - expMs) / 86_400_000)
-      }, 0)
-      dpo = Math.max(1, Math.round(totalDays / paidExpenses.length))
-    }
+    // ── DPO: not derivable (expenses has no payment-date column) → neutral default
+    const dpo = 30
 
     // ── Weekly rates ─────────────────────────────────────────────────────────
     const weeklyInflow  = computeWeeklyCollectionRate(avgMonthlySales, dso)
@@ -375,7 +358,7 @@ export class CashForecastService {
     const crisisWeek    = findCashCrisisWeek(forecast)
 
     const hasDsoData = unpaidSales.length > 0
-    const hasDpoData = paidExpenses.length > 0
+    const hasDpoData = false  // expenses has no payment-date column → no DPO signal
     const confidence = computeForecastConfidence(historicalMonths, hasDsoData, hasDpoData)
 
     return {

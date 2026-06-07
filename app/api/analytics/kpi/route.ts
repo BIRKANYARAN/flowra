@@ -161,11 +161,12 @@ export async function GET(req: NextRequest) {
     //     Uses the same strict expense_type include-list as query 8.
     supabase
       .from('recurring_expenses')
+      // recurring_expenses has no expense_type column (real: category, free text) —
+      // all active recurring items are operating commitments; no DB enum filter applies
       .select('amount, fx_rate, frequency')
       .eq('company_id', companyId)
       .eq('is_active', true)
-      .is('deleted_at', null)
-      .in('expense_type', BURN_EXPENSE_TYPES),
+      .is('deleted_at', null),
 
     // 11. Total partner capital + loans for stock_coverage_ratio denominator
     //     capital_in + loan_to_company + loan_in (legacy alias)
