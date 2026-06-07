@@ -254,10 +254,13 @@ export class InventoryTurnoverService {
         .eq('company_id', companyId)
         .is('deleted_at', null),
 
-      // Products catalog — reorder_point + safety_stock_qty columns
+      // Products catalog — stock_alert_qty IS the reorder threshold. (The table has
+      // no `reorder_point`/`safety_stock_qty` columns; the old select referenced
+      // those non-existent columns → query error → empty reorder data. Use the real
+      // `stock_alert_qty`; safety stock has no column and defaults to 0.)
       this.supabase
         .from('products')
-        .select('id, name, stock_qty, reorder_point, safety_stock_qty')
+        .select('id, name, stock_qty, stock_alert_qty')
         .eq('company_id', companyId)
         .is('deleted_at', null),
 
@@ -356,8 +359,7 @@ export class InventoryTurnoverService {
       id: string
       name: string
       stock_qty: number | null
-      reorder_point: number | null
-      safety_stock_qty: number | null
+      stock_alert_qty: number | null
     }
 
     const products = (productsRes.data ?? []) as ProductRow[]
@@ -430,8 +432,8 @@ export class InventoryTurnoverService {
     for (const prod of products) {
       const lot          = lotMap.get(prod.id)
       const currentQty   = lot?.totalQty ?? Number(prod.stock_qty ?? 0)
-      const reorderPoint = Number(prod.reorder_point ?? 0)
-      const safetyStock  = Number(prod.safety_stock_qty ?? 0)
+      const reorderPoint = Number(prod.stock_alert_qty ?? 0)
+      const safetyStock  = 0 // no safety_stock column on products; not tracked
 
       const alert = computeReorderAlert(currentQty, reorderPoint, safetyStock)
 
