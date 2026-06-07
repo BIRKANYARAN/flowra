@@ -22,6 +22,7 @@ import { GLIncomeStatementService } from '@/lib/services/ledger/gl-income-statem
 import { MultiPeriodPnlService }    from '@/lib/services/finance/multi-period-pnl.service'
 import type { MultiPeriodPnlReport, PnlLineItem } from '@/lib/services/finance/multi-period-pnl.service'
 import { PnlCharts }               from './PnlCharts'
+import { DetailSection }           from '@/components/dashboard/DetailSection'
 
 // ── Formatters ────────────────────────────────────────────────────────────────
 
@@ -460,20 +461,19 @@ export async function PnlTab({ userId, companyId, glMode = 'shadow' }: Props) {
       <MultiPeriodTable report={multiPeriodReport} />
     )}
 
-    {/* Kâr Marjı Trend Analizi */}
-    <MarginTrendClient companyId={companyId} />
-
-    {/* EBITDA Köprüsü & Faaliyet Kaldıracı */}
-    <EbitdaBridgeClient companyId={companyId} />
-
-    {/* Kârlılık Kaynağı Analizi */}
-    <ProfitabilityAttributionClient companyId={companyId} />
-
-    {/* Gelir Tanıma — Tahakkuk vs Nakit */}
-    <RevenueRecognitionClient companyId={companyId} />
-
-    {/* Maaş / Bordro Analitiği */}
-    <PayrollAnalyticsClient companyId={companyId} />
+    {/* Detaylı Analiz — deep panels, collapsed by default (load on demand) */}
+    <DetailSection title="Detaylı Kâr/Zarar Analizi" subtitle="Marj trendi · EBITDA köprüsü · kârlılık kaynağı · gelir tanıma · bordro">
+      {/* Kâr Marjı Trend Analizi */}
+      <MarginTrendClient companyId={companyId} />
+      {/* EBITDA Köprüsü & Faaliyet Kaldıracı */}
+      <EbitdaBridgeClient companyId={companyId} />
+      {/* Kârlılık Kaynağı Analizi */}
+      <ProfitabilityAttributionClient companyId={companyId} />
+      {/* Gelir Tanıma — Tahakkuk vs Nakit */}
+      <RevenueRecognitionClient companyId={companyId} />
+      {/* Maaş / Bordro Analitiği */}
+      <PayrollAnalyticsClient companyId={companyId} />
+    </DetailSection>
     </div>
   )
 }

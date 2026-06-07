@@ -17,6 +17,7 @@ import { FifoAuditClient }                          from './_fifo/FifoAuditClien
 import { SalesVelocityClient }                      from './_velocity/SalesVelocityClient'
 import InventoryTurnoverClient                      from './_inventory/InventoryTurnoverClient'
 import { StockCharts }                              from './StockCharts'
+import { DetailSection }                            from '@/components/dashboard/DetailSection'
 
 function holdingDays(entryDate: string): number {
   const today = new Date()
@@ -667,11 +668,13 @@ export async function StockContent({ companyId, userId }: Props) {
         )}
       </div>
 
-      {/* Satış Hız Analizi — velocity, stock-out predictions, reorder intelligence */}
-      <SalesVelocityClient companyId={companyId} />
-
-      {/* FIFO Lot Denetimi — integrity audit, over-consumed lots, orphaned allocations */}
-      <FifoAuditClient companyId={companyId} />
+      {/* Detaylı Analiz — deep panels, collapsed by default (load on demand) */}
+      <DetailSection title="Detaylı Stok Analizi" subtitle="Satış hızı · stok-out tahmini · FIFO lot denetimi">
+        {/* Satış Hız Analizi — velocity, stock-out predictions, reorder intelligence */}
+        <SalesVelocityClient companyId={companyId} />
+        {/* FIFO Lot Denetimi — integrity audit, over-consumed lots, orphaned allocations */}
+        <FifoAuditClient companyId={companyId} />
+      </DetailSection>
 
       {/* Cross-navigation */}
       <NarrativeFooter
