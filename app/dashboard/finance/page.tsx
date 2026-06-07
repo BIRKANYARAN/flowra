@@ -39,6 +39,7 @@ import { CFOTab }           from './_tabs/CFOTab'
 import { BoardPackTab }     from './_tabs/BoardPackTab'
 import { CorporateTaxTab }  from './_tabs/CorporateTaxTab'
 import { FinanceContextBar } from './_shared/FinanceContextBar'
+import { DetailSection }     from '@/components/dashboard/DetailSection'
 import ReportsTab        from '@/app/dashboard/cfo/_tabs/ReportsTab'
 import { TrialBalanceTab } from '@/app/dashboard/cfo/_tabs/TrialBalanceTab'
 
@@ -49,37 +50,32 @@ type FinanceTab = 'pnl' | 'balance' | 'cashflow' | 'tax' | 'kurumlar-vergisi' | 
 const VALID_TABS: FinanceTab[] = ['pnl', 'balance', 'cashflow', 'tax', 'kurumlar-vergisi', 'risks', 'cfo', 'boardpack', 'reports', 'mizan']
 
 const FINANCE_NAV_TABS = [
-  { key: 'pnl',       label: 'Kâr/Zarar'   },
-  { key: 'balance',   label: 'Bilanço'      },
-  { key: 'cashflow',  label: 'Nakit'        },
-  { key: 'tax',              label: 'Vergi'          },
-  { key: 'kurumlar-vergisi', label: 'Kurumlar V.'   },
-  { key: 'risks',            label: 'Riskler'        },
-  { key: 'cfo',       label: 'CFO'          },
-  { key: 'mizan',     label: 'Mizan'        },
-  { key: 'boardpack', label: 'Yön. Paketi'  },
-  { key: 'reports',   label: 'CFO Paketi'   },
+  { key: 'pnl',      label: 'Kâr/Zarar' },
+  { key: 'balance',  label: 'Bilanço'   },
+  { key: 'cashflow', label: 'Nakit'     },
+  { key: 'tax',      label: 'Vergi'     },
+  { key: 'risks',    label: 'Riskler'   },
+  { key: 'cfo',      label: 'CFO'       },
+  { key: 'reports',  label: 'Raporlar'  },
 ]
 
-// 10 flat tabs → 4 grouped sections (2-level nav). All tabs preserved.
+// Faz 3 merge — 10 tabs → 7. Kurumlar V. folded into Vergi; Mizan + Yön. Paketi
+// folded into Raporlar (each as a "Detaylı" panel inside the canonical tab).
 const FINANCE_GROUPS = [
   { label: 'Tablolar', tabs: [
     { key: 'pnl',      label: 'Kâr/Zarar' },
     { key: 'balance',  label: 'Bilanço'   },
     { key: 'cashflow', label: 'Nakit'     },
-    { key: 'mizan',    label: 'Mizan'     },
   ] },
   { label: 'Vergi', tabs: [
-    { key: 'tax',              label: 'KDV'      },
-    { key: 'kurumlar-vergisi', label: 'Kurumlar' },
+    { key: 'tax', label: 'Vergi' },
   ] },
   { label: 'Analiz', tabs: [
     { key: 'risks', label: 'Riskler' },
     { key: 'cfo',   label: 'CFO'     },
   ] },
   { label: 'Raporlar', tabs: [
-    { key: 'reports',   label: 'CFO Paketi'  },
-    { key: 'boardpack', label: 'Yön. Paketi' },
+    { key: 'reports', label: 'Raporlar' },
   ] },
 ]
 
@@ -156,7 +152,15 @@ export default async function FinancePage({ searchParams }: PageProps) {
   if (rawTab === 'forecast')  redirect('/dashboard/finance?tab=cashflow')
   if (rawTab === 'quarterly') redirect('/dashboard/finance?tab=cfo')
 
-  const activeTab = (VALID_TABS.includes(rawTab as FinanceTab) ? rawTab : 'pnl') as FinanceTab
+  // Faz 3 merge — fewer top tabs. Merged tabs render inside the canonical tab's
+  // "Detaylı" panel, so old deep-links still land on the right content.
+  const TAB_MERGE: Record<string, FinanceTab> = {
+    'kurumlar-vergisi': 'tax',     // Kurumlar Vergisi now under Vergi (Detaylı)
+    boardpack:          'reports', // Yönetim Paketi now under Raporlar (Detaylı)
+    mizan:              'reports', // Mizan now under Raporlar (Detaylı)
+  }
+  const mergedTab = TAB_MERGE[rawTab] ?? rawTab
+  const activeTab = (VALID_TABS.includes(mergedTab as FinanceTab) ? mergedTab : 'pnl') as FinanceTab
   const meta      = TAB_META[activeTab]
 
   // ── GL mode — show data source indicator ─────────────────────────────────
@@ -227,13 +231,27 @@ export default async function FinancePage({ searchParams }: PageProps) {
         {activeTab === 'pnl'       && <PnlTab      {...tabProps} />}
         {activeTab === 'balance'   && <BalanceTab  {...tabProps} />}
         {activeTab === 'cashflow'  && <CashflowTab {...tabProps} />}
-        {activeTab === 'tax'               && <TaxTab           {...tabProps} />}
-        {activeTab === 'kurumlar-vergisi'  && <CorporateTaxTab  {...tabProps} />}
+        {activeTab === 'tax' && (
+          <div className="space-y-5">
+            <TaxTab {...tabProps} />
+            {/* Faz 3 merge — Kurumlar Vergisi co-located under Vergi */}
+            <DetailSection title="Kurumlar Vergisi" subtitle="Kurumlar vergisi matrahı ve hesaplaması">
+              <CorporateTaxTab {...tabProps} />
+            </DetailSection>
+          </div>
+        )}
         {activeTab === 'risks'             && <RisksTab         {...tabProps} />}
         {activeTab === 'cfo'       && <CFOTab      {...tabProps} />}
-        {activeTab === 'mizan'     && <TrialBalanceTab />}
-        {activeTab === 'boardpack' && <BoardPackTab {...tabProps} />}
-        {activeTab === 'reports'   && <ReportsTab />}
+        {activeTab === 'reports' && (
+          <div className="space-y-5">
+            <ReportsTab />
+            {/* Faz 3 merge — Mizan + Yönetim Paketi co-located under Raporlar */}
+            <DetailSection title="Mizan & Yönetim Paketi" subtitle="Trial balance · yönetim kurulu paketi">
+              <TrialBalanceTab />
+              <BoardPackTab {...tabProps} />
+            </DetailSection>
+          </div>
+        )}
       </Suspense>
 
     </div>
