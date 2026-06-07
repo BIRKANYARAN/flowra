@@ -253,13 +253,14 @@ export class CashForecastService {
       // Upcoming loan repayments within next 13 weeks
       this.supabase
         .from('partner_loan_tranches')
-        .select('id, due_date, outstanding_try, status, notes')
+        // no due_date/outstanding_try columns — use expected_repayment_date; outstanding computed below
+        .select('id, expected_repayment_date, principal_try, total_repaid_try, status, notes')
         .eq('company_id', companyId)
         .in('status', ['active', 'overdue'])
-        .not('due_date', 'is', null)
-        .gte('due_date', today)
-        .lte('due_date', week13EndStr)
-        .order('due_date', { ascending: true }),
+        .not('expected_repayment_date', 'is', null)
+        .gte('expected_repayment_date', today)
+        .lte('expected_repayment_date', week13EndStr)
+        .order('expected_repayment_date', { ascending: true }),
 
       // Paid expenses (for DPO calculation)
       this.supabase
@@ -345,11 +346,12 @@ export class CashForecastService {
     const todayMs = new Date(today).getTime()
     const knownObligations: KnownObligation[] = loanTranches
       .map(t => {
-        const dueMs    = new Date(t.due_date as string).getTime()
+        const dueMs    = new Date(t.expected_repayment_date as string).getTime()
         const daysDiff = Math.max(0, (dueMs - todayMs) / 86_400_000)
         const weekNum  = Math.min(13, Math.max(1, Math.ceil(daysDiff / 7)))
-        const amount   = -(Number(t.outstanding_try) || 0) // outflow = negative
-        const label    = (t.notes as string) || `Kredi geri ödemesi (${(t.due_date as string).slice(0, 10)})`
+        const outstanding = Math.max(0, Number(t.principal_try ?? 0) - Number(t.total_repaid_try ?? 0))
+        const amount   = -outstanding // outflow = negative
+        const label    = (t.notes as string) || `Kredi geri ödemesi (${(t.expected_repayment_date as string).slice(0, 10)})`
         return { week: weekNum, amount, label }
       })
       .filter(o => o.amount !== 0)

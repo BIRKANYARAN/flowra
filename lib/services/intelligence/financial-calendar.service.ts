@@ -347,19 +347,21 @@ export class FinancialCalendarService {
     // ── Partner events ────────────────────────────────────────────────────────
     const partnerEvents: CalendarEvent[] = []
     try {
-      // Loan tranches with due_date
+      // Loan tranches — real maturity column is expected_repayment_date;
+      // outstanding is computed (no outstanding_try column): principal_try − total_repaid_try
       const { data: tranches } = await supabase
         .from('partner_loan_tranches')
-        .select('id, due_date, outstanding_try, status, notes')
+        .select('id, expected_repayment_date, principal_try, total_repaid_try, status, notes')
         .eq('company_id', companyId)
-        .not('due_date', 'is', null)
+        .not('expected_repayment_date', 'is', null)
         .neq('status', 'repaid')
-        .gte('due_date', `${year}-01-01`)
-        .lte('due_date', `${year}-12-31`)
-        .order('due_date', { ascending: true })
+        .gte('expected_repayment_date', `${year}-01-01`)
+        .lte('expected_repayment_date', `${year}-12-31`)
+        .order('expected_repayment_date', { ascending: true })
 
       for (const t of tranches ?? []) {
-        const dueDate = t.due_date as string
+        const dueDate = t.expected_repayment_date as string
+        const outstanding = Math.max(0, Number(t.principal_try ?? 0) - Number(t.total_repaid_try ?? 0))
         partnerEvents.push({
           id: `loan-${t.id}`,
           date: dueDate,
@@ -367,7 +369,7 @@ export class FinancialCalendarService {
           category: 'partner',
           title: `Kredi Vadesi — ${dueDate.slice(0, 7)}`,
           description: `Ortak kredisi geri ödeme vadesi${t.notes ? ': ' + t.notes : ''}`,
-          amount_try: t.outstanding_try ?? undefined,
+          amount_try: outstanding || undefined,
           status: assignEventStatus(dueDate, today),
           days_until: computeDaysUntil(dueDate, today),
           is_blocking: true,

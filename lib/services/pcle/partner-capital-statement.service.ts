@@ -309,7 +309,8 @@ export class PartnerCapitalStatementService {
         // active loan tranches — outstanding balances
         this.supabase
           .from('partner_loan_tranches')
-          .select('partner_id, outstanding_try, principal_try, total_repaid_try')
+          // no outstanding_try column — consumer falls back to principal_try − total_repaid_try
+          .select('partner_id, principal_try, total_repaid_try')
           .eq('company_id', companyId)
           .eq('status', 'active')
           .is('deleted_at', null),

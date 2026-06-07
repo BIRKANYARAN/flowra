@@ -35,12 +35,12 @@ export async function runInterestAccrualJob(
       // ── Query active tranches ──────────────────────────────────────────────
       const { data: tranches, error: tErr } = await supabase
         .from('partner_loan_tranches')
-        .select('id, partner_id, outstanding_try, annual_interest_rate, daily_accrual_rate')
+        // no outstanding_try/daily_accrual_rate columns — outstanding computed below; daily rate derived from annual
+        .select('id, partner_id, principal_try, total_repaid_try, annual_interest_rate')
         .eq('company_id', companyId)
         .eq('status', 'active')
         .not('annual_interest_rate', 'is', null)
         .gt('annual_interest_rate', 0)
-        .gt('outstanding_try', 0)
 
       if (tErr) {
         // If the table doesn't exist, skip gracefully
@@ -74,18 +74,17 @@ export async function runInterestAccrualJob(
       type Tranche = {
         id: string
         partner_id: string
-        outstanding_try: number
+        principal_try: number
+        total_repaid_try: number
         annual_interest_rate: number
-        daily_accrual_rate?: number
       }
 
       const newRows = (tranches as Tranche[])
         .filter(t => !doneSet.has(`tranche:${t.id}`))
         .map(t => {
-          // Prefer explicit daily_accrual_rate if provided, otherwise derive from annual
-          const dailyInterest = t.daily_accrual_rate && t.daily_accrual_rate > 0
-            ? round2(Number(t.outstanding_try) * Number(t.daily_accrual_rate))
-            : round2(Number(t.outstanding_try) * (Number(t.annual_interest_rate) / 365))
+          // outstanding = principal − repaid; daily interest derived from annual rate
+          const outstanding   = Math.max(0, Number(t.principal_try ?? 0) - Number(t.total_repaid_try ?? 0))
+          const dailyInterest = round2(outstanding * (Number(t.annual_interest_rate) / 365))
           return { dailyInterest, t }
         })
         .filter(({ dailyInterest }) => dailyInterest >= 0.01)

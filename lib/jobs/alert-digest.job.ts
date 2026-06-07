@@ -59,7 +59,8 @@ export async function runAlertDigestJob(
           .is('deleted_at', null),
         supabase
           .from('partner_loan_tranches')
-          .select('outstanding_try, due_date, annual_interest_rate')
+          // no outstanding_try/due_date columns — derive below from principal/repaid + expected_repayment_date
+          .select('principal_try, total_repaid_try, expected_repayment_date, annual_interest_rate')
           .eq('company_id', companyId)
           .eq('status', 'active'),
         supabase
@@ -83,7 +84,12 @@ export async function runAlertDigestJob(
       ])
 
       const overdueRows = salesRes.status === 'fulfilled'   ? (salesRes.value.data    ?? []) : []
-      const tranches    = trancheRes.status === 'fulfilled'  ? (trancheRes.value.data  ?? []) : []
+      const tranches    = (trancheRes.status === 'fulfilled'  ? (trancheRes.value.data  ?? []) : [])
+        .map((t: Record<string, unknown>) => ({
+          ...t,
+          due_date: t.expected_repayment_date,
+          outstanding_try: Math.max(0, Number(t.principal_try ?? 0) - Number(t.total_repaid_try ?? 0)),
+        }))
       const members     = membersRes.status === 'fulfilled'  ? (membersRes.value.data  ?? []) : []
       const companyName = (companyRes.status === 'fulfilled' ? companyRes.value.data?.name : null) ?? 'Şirket'
       const openPeriods = periodsRes.status === 'fulfilled'  ? (periodsRes.value.data  ?? []) : []
