@@ -418,12 +418,19 @@ export function SalesTable({ rows }: Props) {
         {filtered.length === 0 ? (
           <div className="bg-white border border-[#e2e8f0] rounded text-center py-12 shadow-sm">
             <p className="text-[#94a3b8] text-sm">{isFiltered ? 'Filtreyle eşleşen satış yok.' : 'Henüz satış kaydı yok.'}</p>
-            {isFiltered && (
+            {isFiltered ? (
               <button
                 onClick={clearFilters}
                 className="mt-2 text-xs text-brand-light hover:text-brand font-semibold"
               >
                 Filtreleri temizle →
+              </button>
+            ) : (
+              <button
+                onClick={() => setShowCreate(true)}
+                className="mt-3 inline-flex items-center gap-1 px-3.5 py-2 rounded-md bg-[#7c3aed] text-white text-xs font-bold hover:bg-[#6d28d9] transition-colors"
+              >
+                + Yeni Satış
               </button>
             )}
           </div>
