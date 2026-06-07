@@ -65,6 +65,29 @@ export function MobileBottomNav({ navBadges = {} }: Props) {
         open ? 'translate-y-0' : 'translate-y-full'
       }`}>
         <div className="mx-2 mb-1 bg-white rounded border border-[#e2e8f0] shadow-sm overflow-hidden">
+          {/* Hızlı Oluştur — task-first create chips */}
+          <div className="px-2 pt-2">
+            <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] px-1 pb-1">Hızlı Oluştur</div>
+            <div className="grid grid-cols-4 gap-1">
+              {[
+                { label: 'Satış',    href: '/dashboard/commercial?tab=sales&new=1',     icon: '₺' },
+                { label: 'Teklif',   href: '/dashboard/proformas/new',                  icon: '📝' },
+                { label: 'Gider',    href: '/dashboard/operations?tab=expenses&new=1',  icon: '💸' },
+                { label: 'Müşteri',  href: '/dashboard/commercial?tab=customers&new=1', icon: '👤' },
+              ].map(a => (
+                <Link
+                  key={a.href}
+                  href={a.href}
+                  onClick={() => setOpen(false)}
+                  className="flex flex-col items-center gap-1 py-2 px-1 rounded bg-[#f8fafc] hover:bg-brand-subtle transition-colors"
+                >
+                  <span className="text-base leading-none">{a.icon}</span>
+                  <span className="text-[9px] font-bold text-[#334155] leading-none">+ {a.label}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+          <div className="border-t border-[#f1f5f9] mt-2" />
           <div className="grid grid-cols-4 p-2 gap-1">
             {visible.map(tab => {
               const active = isNavItemActive({ href: tab.href, label: tab.label, icon: '' }, pathname, search)
