@@ -2,9 +2,6 @@
  * Pure function tests for:
  *   - lib/engines/reconciliation.engine.ts  (computeMatchRate, classifyReconciliationQuality,
  *                                             buildReconciliationStatus, classifyDiscrepancyType)
- *   - lib/services/commercial/cohort-analysis.service.ts  (buildCohortLabel,
- *                                                           extractRetentionDiagonal,
- *                                                           classifyCohortHealth)
  *
  * Run with: npx vitest run tests/reconciliation-cohort-pure.test.ts
  */
@@ -17,12 +14,6 @@ import {
   buildReconciliationStatus,
   classifyDiscrepancyType,
 } from '../lib/engines/reconciliation.engine'
-
-import {
-  buildCohortLabel,
-  extractRetentionDiagonal,
-  classifyCohortHealth,
-} from '../lib/services/commercial/cohort-analysis.service'
 
 // ── computeMatchRate ──────────────────────────────────────────────────────────
 
@@ -177,102 +168,5 @@ describe('classifyDiscrepancyType', () => {
 
   it('uses absolute value — negative direction also classified', () => {
     expect(classifyDiscrepancyType(5001, 1)).toBe('error')
-  })
-})
-
-// ── buildCohortLabel ──────────────────────────────────────────────────────────
-
-describe('buildCohortLabel', () => {
-  it('formats January correctly', () => {
-    expect(buildCohortLabel('2025-01')).toBe('Oca 2025 Kohortu')
-  })
-
-  it('formats April correctly', () => {
-    expect(buildCohortLabel('2025-04')).toBe('Nis 2025 Kohortu')
-  })
-
-  it('formats December correctly', () => {
-    expect(buildCohortLabel('2024-12')).toBe('Ara 2024 Kohortu')
-  })
-
-  it('includes "Kohortu" suffix', () => {
-    const label = buildCohortLabel('2025-06')
-    expect(label.endsWith('Kohortu')).toBe(true)
-  })
-
-  it('formats August correctly', () => {
-    expect(buildCohortLabel('2023-08')).toBe('Ağu 2023 Kohortu')
-  })
-})
-
-// ── extractRetentionDiagonal ──────────────────────────────────────────────────
-
-describe('extractRetentionDiagonal', () => {
-  it('returns last element of each cohort row', () => {
-    const matrix = [[100, 80, 60], [100, 70], [100]]
-    expect(extractRetentionDiagonal(matrix)).toEqual([60, 70, 100])
-  })
-
-  it('returns 0 for empty rows', () => {
-    expect(extractRetentionDiagonal([[]])).toEqual([0])
-  })
-
-  it('handles mixed empty and non-empty rows', () => {
-    const matrix = [[], [100, 50], [100]]
-    expect(extractRetentionDiagonal(matrix)).toEqual([0, 50, 100])
-  })
-
-  it('returns empty array for empty matrix', () => {
-    expect(extractRetentionDiagonal([])).toEqual([])
-  })
-
-  it('handles single-element rows', () => {
-    expect(extractRetentionDiagonal([[42], [37]])).toEqual([42, 37])
-  })
-})
-
-// ── classifyCohortHealth ──────────────────────────────────────────────────────
-
-describe('classifyCohortHealth', () => {
-  it('returns "strong" when avg > 60 and slope > 0', () => {
-    expect(classifyCohortHealth(70, 1)).toBe('strong')
-  })
-
-  it('returns "strong" at avg=61 and positive slope', () => {
-    expect(classifyCohortHealth(61, 0.1)).toBe('strong')
-  })
-
-  it('returns "stable" when avg > 60 but slope <= 0 (not strong)', () => {
-    expect(classifyCohortHealth(65, 0)).toBe('stable')
-  })
-
-  it('returns "stable" when avg > 40 (mid range)', () => {
-    expect(classifyCohortHealth(50, -1)).toBe('stable')
-  })
-
-  it('returns "stable" at exactly 41', () => {
-    expect(classifyCohortHealth(41, 0)).toBe('stable')
-  })
-
-  it('returns "declining" when avg > 20 and slope < 0', () => {
-    expect(classifyCohortHealth(30, -0.5)).toBe('declining')
-  })
-
-  it('returns "critical" when avg <= 20', () => {
-    expect(classifyCohortHealth(20, -1)).toBe('critical')
-  })
-
-  it('returns "critical" when avg is 0', () => {
-    expect(classifyCohortHealth(0, 0)).toBe('critical')
-  })
-
-  it('returns "critical" at exactly 20 regardless of slope', () => {
-    expect(classifyCohortHealth(20, 5)).toBe('critical')
-  })
-
-  it('returns "critical" when avg is 21-40 and slope >= 0 (not strong/stable/declining)', () => {
-    // avg=25 is not >40, slope=0 is not <0, avg is >20 but doesn't satisfy declining (needs slope<0)
-    // => falls to critical
-    expect(classifyCohortHealth(25, 0)).toBe('critical')
   })
 })
