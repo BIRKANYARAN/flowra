@@ -18,6 +18,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ObservationRail } from '@/app/dashboard/_shared/ObservationRail'
+import { DetailSection } from '@/components/dashboard/DetailSection'
 
 import {
   TabId, LedgerSortCol,
@@ -61,6 +62,12 @@ export default function PartnersPage() {
     contributions: 'capital',   // capital commitments shown with the capital account
     dilution:      'capital',   // dilution analysis shown with the capital account
     'risk-composite': 'risk',   // composite risk score co-located with the risk view
+    // Faz 3 merge — Dağıtım 8 sekme → 3. Old deep-links resolve to the canonical tab.
+    distribution:            'dividend',   // Kâr Dağıtımı now under Temettü
+    'distribution-simulator':'dividend',   // Simülatör now under Temettü (Detaylı)
+    'dividend-ledger':       'dividend',   // Dağıtım Geçmişi now under Temettü (Detaylı)
+    'equity-waterfall':      'waterfall',  // Getiri Projeksiyonu now under Geri Ödeme
+    returns:                 'waterfall',  // Getiri now under Geri Ödeme (Detaylı)
   }
   const rawTab    = searchParams.get('tab') ?? 'partners'
   const activeTab = (TAB_ALIAS[rawTab] ?? rawTab) as TabId
@@ -333,14 +340,9 @@ export default function PartnersPage() {
       { id: 'tranches',     label: 'Borç Dilimleri' },
     ] },
     { label: 'Dağıtım', tabs: [
-      { id: 'waterfall',              label: 'Geri Ödeme'         },
-      { id: 'distribution',           label: 'Kâr Dağıtımı'       },
-      { id: 'distribution-simulator', label: 'Dağıtım Simülatörü' },
-      { id: 'dividend',               label: 'Temettü'            },
-      { id: 'dividend-ledger',        label: 'Dağıtım Geçmişi'    },
-      { id: 'equity-waterfall',       label: 'Getiri Projeksiyonu' },
-      { id: 'returns',                label: 'Getiri'             },
-      { id: 'compensation',           label: 'Huzur Hakkı'        },
+      { id: 'dividend',     label: 'Temettü'     },
+      { id: 'waterfall',    label: 'Geri Ödeme'  },
+      { id: 'compensation', label: 'Huzur Hakkı' },
     ] },
     { label: 'Risk', tabs: [
       { id: 'risk',           label: 'Risk'      },
@@ -473,15 +475,22 @@ export default function PartnersPage() {
       )}
 
       {activeTab === 'waterfall' && (
-        <WaterfallTab
-          loading={loading}
-          waterfall={waterfall}
-          totalDebt={totalDebt}
-          availCash={availCash}
-          partners={partners}
-          onCashChange={setAvailCash}
-          onLoadWaterfall={loadWaterfall}
-        />
+        <div className="space-y-5">
+          <WaterfallTab
+            loading={loading}
+            waterfall={waterfall}
+            totalDebt={totalDebt}
+            availCash={availCash}
+            partners={partners}
+            onCashChange={setAvailCash}
+            onLoadWaterfall={loadWaterfall}
+          />
+          {/* Faz 3 merge — Getiri Projeksiyonu + Getiri co-located under Geri Ödeme */}
+          <DetailSection title="Getiri & Projeksiyon" subtitle="Özkaynak getiri şelalesi · ortak getirileri">
+            <EquityWaterfallTab companyId="" />
+            <ReturnsTab loading={loading} returns={returns} />
+          </DetailSection>
+        </div>
       )}
 
       {activeTab === 'tranches' && (
@@ -495,31 +504,6 @@ export default function PartnersPage() {
           {/* Amortisman (payment schedule) — co-located with the live tranche state */}
           <AmortizationTab />
         </div>
-      )}
-
-      {activeTab === 'distribution' && (
-        <DistributionTab
-          distrib={distrib}
-          distribLoading={distribLoading}
-          netIncomeInput={netIncomeInput}
-          boardRetainedInput={boardRetainedInput}
-          dividendConfirm={dividendConfirm}
-          dividendLoading={dividendLoading}
-          dividendError={dividendError}
-          dividendSuccess={dividendSuccess}
-          onNetIncomeChange={setNetIncomeInput}
-          onBoardRetainedChange={setBoardRetainedInput}
-          onLoadDistribution={loadDistribution}
-          onSetDividendConfirm={setDividendConfirm}
-          onDeclareDividend={handleDeclareDividend}
-        />
-      )}
-
-      {activeTab === 'returns' && (
-        <ReturnsTab
-          loading={loading}
-          returns={returns}
-        />
       )}
 
       {activeTab === 'risk' && (
@@ -541,32 +525,38 @@ export default function PartnersPage() {
       )}
 
       {activeTab === 'dividend' && (
-        <DividendTab />
+        <div className="space-y-5">
+          <DividendTab />
+          {/* Faz 3 merge — Kâr Dağıtımı + Simülatör + Dağıtım Geçmişi under Temettü */}
+          <DetailSection title="Diğer Dağıtım Araçları" subtitle="Kâr dağıtımı · simülatör · dağıtım geçmişi">
+            <DistributionTab
+              distrib={distrib}
+              distribLoading={distribLoading}
+              netIncomeInput={netIncomeInput}
+              boardRetainedInput={boardRetainedInput}
+              dividendConfirm={dividendConfirm}
+              dividendLoading={dividendLoading}
+              dividendError={dividendError}
+              dividendSuccess={dividendSuccess}
+              onNetIncomeChange={setNetIncomeInput}
+              onBoardRetainedChange={setBoardRetainedInput}
+              onLoadDistribution={loadDistribution}
+              onSetDividendConfirm={setDividendConfirm}
+              onDeclareDividend={handleDeclareDividend}
+            />
+            <DistributionSimulatorTab />
+            <DividendLedgerTab />
+          </DetailSection>
+        </div>
       )}
 
       {activeTab === 'compensation' && (
         <CompensationTab partners={partners} />
       )}
 
-
-
-      {activeTab === 'dividend-ledger' && (
-        <DividendLedgerTab />
-      )}
-
       {activeTab === 'capital-statement' && (
         <CapitalStatementTab />
       )}
-
-      {activeTab === 'distribution-simulator' && (
-        <DistributionSimulatorTab />
-      )}
-
-
-      {activeTab === 'equity-waterfall' && (
-        <EquityWaterfallTab companyId="" />
-      )}
-
 
     </div>
   )
