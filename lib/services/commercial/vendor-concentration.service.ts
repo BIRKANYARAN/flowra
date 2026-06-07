@@ -183,31 +183,22 @@ export class VendorConcentrationService {
 
     // ── Fetch expenses with supplier_name ──────────────────────────────────────
 
-    const [expensesRes, purchasesRes] = await Promise.all([
-      this.supabase
-        .from('expenses')
-        .select('supplier_name, amount_try, expense_type, expense_date, created_at')
-        .eq('company_id', companyId)
-        .is('deleted_at', null)
-        .not('supplier_name', 'is', null)
-        .neq('supplier_name', '')
-        .gte('expense_date', fromDateStr)
-        .lte('expense_date', toDateStr)
-        .limit(2000),
-      this.supabase
-        .from('purchases')
-        .select('id, supplier_name, purchase_date')
-        .eq('company_id', companyId)
-        .is('deleted_at', null)
-        .gte('purchase_date', fromDateStr)
-        .lte('purchase_date', toDateStr)
-        .limit(2000),
-    ])
+    const purchasesRes = await this.supabase
+      .from('purchases')
+      .select('id, supplier_name, purchase_date')
+      .eq('company_id', companyId)
+      .is('deleted_at', null)
+      .gte('purchase_date', fromDateStr)
+      .lte('purchase_date', toDateStr)
+      .limit(2000)
 
-    if (expensesRes.error) throw new Error(`VendorConcentrationService (expenses): ${expensesRes.error.message}`)
     if (purchasesRes.error) throw new Error(`VendorConcentrationService (purchases): ${purchasesRes.error.message}`)
 
-    const expenseRows = (expensesRes.data ?? []) as ExpenseRow[]
+    // NB: the `expenses` table has NO supplier_name column — expenses are not
+    // supplier-attributed in this schema (only `purchases` carry a supplier). The
+    // old expenses query selected/filtered a non-existent column → PostgREST 400 →
+    // 500. Vendor concentration is computed from purchases alone; expenses none.
+    const expenseRows: ExpenseRow[] = []
     const rawPurchases = purchasesRes.data ?? []
 
     // ── Enrich purchases with computed total_try from purchase_items ───────────
