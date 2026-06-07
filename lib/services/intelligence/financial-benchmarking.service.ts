@@ -396,7 +396,7 @@ export class FinancialBenchmarkingService {
       // 7. Partner capital commitments
       this.supabase
         .from('partner_capital_commitments')
-        .select('committed_amount, paid_amount')
+        .select('committed_try, paid_try')
         .eq('company_id', companyId),
     ])
 
@@ -406,7 +406,7 @@ export class FinancialBenchmarkingService {
     type ExpenseRow  = { amount: number; period: string; category?: string; expense_type?: string }
     type StockLot    = { qty_remaining: number; unit_cost: number; created_at: string }
     type LoanRow     = { remaining_balance?: number; outstanding_balance?: number }
-    type CapitalRow  = { committed_amount: number; paid_amount?: number }
+    type CapitalRow  = { committed_try: number; paid_try?: number }
 
     const salesLast12  = salesLast12Result.status  === 'fulfilled' ? (salesLast12Result.value.data  as SaleRow[]   ?? []) : [] as SaleRow[]
     const salesPrior12 = salesPrior12Result.status === 'fulfilled' ? (salesPrior12Result.value.data as SaleRow[]   ?? []) : [] as SaleRow[]
@@ -510,7 +510,7 @@ export class FinancialBenchmarkingService {
       (s, l) => s + (l.outstanding_balance ?? l.remaining_balance ?? 0), 0,
     )
     const totalCapitalCommitted = capital.reduce(
-      (s, c) => s + (c.committed_amount ?? 0), 0,
+      (s, c) => s + (c.committed_try ?? 0), 0,
     )
     const debtToEquity: number | null = totalCapitalCommitted > 0
       ? totalLoanOutstanding / totalCapitalCommitted

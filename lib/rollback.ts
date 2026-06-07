@@ -77,9 +77,14 @@ export class RollbackService {
     const supabase = requireAuthContext(clientOverride, 'RollbackService.reverseStockMovement')
 
     // 1. Fetch original movement in the resolved company scope.
+    // Real stock_movements columns: qty (not qty_change), and there is no
+    // user_id / reference_type here. The old select referenced those non-existent
+    // columns → query error → rollback always failed "not found". Select the real
+    // ones actually used below. (The compensating write goes through
+    // StockService.adjust with its own params, so it's unaffected.)
     const { data: orig, error: fetchErr } = await supabase
       .from('stock_movements')
-      .select('id, user_id, product_id, reference_type, qty_change, unit_cost, notes')
+      .select('id, product_id, qty, unit_cost')
       .eq('id', movementId)
       .eq('company_id', companyId)
       .maybeSingle()
@@ -92,7 +97,7 @@ export class RollbackService {
       )
     }
 
-    const reverseQty = -Number(orig.qty_change)
+    const reverseQty = -Number(orig.qty)
 
     // 2. Apply the compensating movement through the canonical stock path.
     const rev = await StockService.adjust(userId, {

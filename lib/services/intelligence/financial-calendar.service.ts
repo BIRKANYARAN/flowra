@@ -376,20 +376,24 @@ export class FinancialCalendarService {
         })
       }
 
-      // Capital commitments with call_date
+      // Capital commitments with a due date. NB: real columns are due_date /
+      // committed_try / paid_try (the old call_date / committed_amount_try /
+      // paid_amount_try / payment_status don't exist → query error → no capital
+      // events). "Not fully paid" is enforced below via remaining > 0; cancelled
+      // commitments are soft-deleted (deleted_at).
       const { data: commitments } = await supabase
         .from('partner_capital_commitments')
-        .select('id, call_date, committed_amount_try, paid_amount_try, payment_status')
+        .select('id, due_date, committed_try, paid_try')
         .eq('company_id', companyId)
-        .not('call_date', 'is', null)
-        .neq('payment_status', 'paid')
-        .gte('call_date', `${year}-01-01`)
-        .lte('call_date', `${year}-12-31`)
-        .order('call_date', { ascending: true })
+        .is('deleted_at', null)
+        .not('due_date', 'is', null)
+        .gte('due_date', `${year}-01-01`)
+        .lte('due_date', `${year}-12-31`)
+        .order('due_date', { ascending: true })
 
       for (const c of commitments ?? []) {
-        const callDate = c.call_date as string
-        const remaining = ((c.committed_amount_try ?? 0) - (c.paid_amount_try ?? 0))
+        const callDate = c.due_date as string
+        const remaining = ((c.committed_try ?? 0) - (c.paid_try ?? 0))
         partnerEvents.push({
           id: `capital-${c.id}`,
           date: callDate,
