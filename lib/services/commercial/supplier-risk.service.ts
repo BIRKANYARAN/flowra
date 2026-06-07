@@ -5,6 +5,7 @@
 // Pure helpers are exported for unit testing without DB.
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { purchaseTotalTry } from '@/lib/finance/purchase-total'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -49,9 +50,10 @@ export interface SupplierRiskReport {
 
 interface PurchaseRow {
   supplier_name: string | null
-  total_cost_try: number | null
+  fx_rate: number | null
   purchase_date: string | null
   status: string | null
+  purchase_items: Array<{ quantity: number | null; unit_price: number | null }> | null
 }
 
 interface ExpenseRow {
@@ -322,7 +324,8 @@ export class SupplierRiskService {
     const [purchasesRes, expensesRes] = await Promise.allSettled([
       this.supabase
         .from('purchases')
-        .select('supplier_name, total_cost_try, purchase_date, status')
+        // no total_cost_try column — compute from line items (fx_rate × Σ qty × unit_price)
+        .select('supplier_name, fx_rate, purchase_date, status, purchase_items(quantity, unit_price)')
         .eq('company_id', companyId)
         .gte('purchase_date', fromDateStr)
         .lte('purchase_date', toDateStr),
@@ -343,7 +346,7 @@ export class SupplierRiskService {
       const rows = (purchasesRes.value.data ?? []) as PurchaseRow[]
       for (const row of rows) {
         const name   = (row.supplier_name ?? '').trim() || 'Diğer Tedarikçiler'
-        const spend  = Number(row.total_cost_try ?? 0)
+        const spend  = purchaseTotalTry(row)
         const status = (row.status ?? '').toLowerCase()
         const isDelayed = status === 'overdue' || status === 'late'
         const isOutstanding = status !== 'received' && status !== 'completed' && status !== 'paid' && status !== 'cancelled'

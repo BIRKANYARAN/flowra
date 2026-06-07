@@ -23,14 +23,35 @@ import { getSystemAdminClient }           from '@/lib/admin-db'
 import { getGlMode }                      from '@/lib/middleware/period-guard'
 import { computeDivergence }             from '@/lib/admin/gl-divergence'
 import type { OperationalRecord, JournaledRef } from '@/lib/admin/gl-divergence'
+import { purchaseTotalTry } from '@/lib/finance/purchase-total'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnySupabaseClient = any
 
+type DateRange = { from: string; to: string }
+
+// sales/expenses/purchases have NO period_id column — period scoping is by date
+// range (sale_date / expense_date / purchase_date within the period bounds).
+async function resolvePeriodRange(
+  supabase:  AnySupabaseClient,
+  companyId: string,
+  periodId:  string | null,
+): Promise<DateRange | null> {
+  if (!periodId) return null
+  const { data } = await supabase
+    .from('accounting_periods')
+    .select('period_start, period_end')
+    .eq('company_id', companyId)
+    .eq('id', periodId)
+    .maybeSingle()
+  if (!data?.period_start || !data?.period_end) return null
+  return { from: data.period_start as string, to: data.period_end as string }
+}
+
 async function fetchSales(
   supabase:  AnySupabaseClient,
   companyId: string,
-  periodId?: string | null,
+  range:     DateRange | null,
 ): Promise<OperationalRecord[]> {
   let q = supabase
     .from('sales')
@@ -38,7 +59,7 @@ async function fetchSales(
     .eq('company_id', companyId)
     .is('deleted_at', null)
 
-  if (periodId) q = q.eq('period_id', periodId)
+  if (range) q = q.gte('sale_date', range.from).lte('sale_date', range.to)
 
   const { data } = await q
   return ((data ?? []) as Array<{ id: string; total_try: number | null }>).map(r => ({
@@ -50,7 +71,7 @@ async function fetchSales(
 async function fetchExpenses(
   supabase:  AnySupabaseClient,
   companyId: string,
-  periodId?: string | null,
+  range:     DateRange | null,
 ): Promise<OperationalRecord[]> {
   let q = supabase
     .from('expenses')
@@ -58,7 +79,7 @@ async function fetchExpenses(
     .eq('company_id', companyId)
     .is('deleted_at', null)
 
-  if (periodId) q = q.eq('period_id', periodId)
+  if (range) q = q.gte('expense_date', range.from).lte('expense_date', range.to)
 
   const { data } = await q
   return ((data ?? []) as Array<{ id: string; amount_try: number | null }>).map(r => ({
@@ -70,20 +91,21 @@ async function fetchExpenses(
 async function fetchPurchases(
   supabase:  AnySupabaseClient,
   companyId: string,
-  periodId?: string | null,
+  range:     DateRange | null,
 ): Promise<OperationalRecord[]> {
   let q = supabase
     .from('purchases')
-    .select('id, total_try')
+    // no total column — compute from line items (fx_rate × Σ qty × unit_price)
+    .select('id, fx_rate, purchase_items(quantity, unit_price)')
     .eq('company_id', companyId)
     .is('deleted_at', null)
 
-  if (periodId) q = q.eq('period_id', periodId)
+  if (range) q = q.gte('purchase_date', range.from).lte('purchase_date', range.to)
 
   const { data } = await q
-  return ((data ?? []) as Array<{ id: string; total_try: number | null }>).map(r => ({
+  return ((data ?? []) as Array<{ id: string; fx_rate: number | null; purchase_items: Array<{ quantity: number | null; unit_price: number | null }> | null }>).map(r => ({
     id:         r.id,
-    amount_try: r.total_try ?? 0,
+    amount_try: purchaseTotalTry(r),
   }))
 }
 
@@ -120,11 +142,14 @@ export async function GET(req: NextRequest) {
     const url      = new URL(req.url)
     const periodId = url.searchParams.get('period_id') || null
 
+    // Resolve the period's date bounds once — operational tables have no period_id
+    const range = await resolvePeriodRange(supabase, companyId, periodId)
+
     // Fetch operational records using the user-scoped client (respects RLS)
     const [sales, expenses, purchases, glMode] = await Promise.all([
-      fetchSales(supabase, companyId, periodId),
-      fetchExpenses(supabase, companyId, periodId),
-      fetchPurchases(supabase, companyId, periodId),
+      fetchSales(supabase, companyId, range),
+      fetchExpenses(supabase, companyId, range),
+      fetchPurchases(supabase, companyId, range),
       getGlMode(companyId, supabase),
     ])
 

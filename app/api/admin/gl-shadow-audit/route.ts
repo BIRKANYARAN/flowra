@@ -25,6 +25,7 @@ import { resolveApiAuth }                         from '@/lib/api-auth'
 import { getSystemAdminClient }                   from '@/lib/admin-db'
 import { getGlMode }                              from '@/lib/middleware/period-guard'
 import { FinanceService }                         from '@/lib/services/finance.service'
+import { purchaseTotalTry }                        from '@/lib/finance/purchase-total'
 import { TaxService }                             from '@/lib/services/tax.service'
 import { BalanceSheetService }                    from '@/lib/services/balance-sheet.service'
 import { GLIncomeStatementService }               from '@/lib/services/ledger/gl-income-statement.service'
@@ -64,7 +65,8 @@ async function fetchOperationalRecords(
       .is('deleted_at', null),
     supabase
       .from('purchases')
-      .select('id, total_try')
+      // no total column — compute from line items (fx_rate × Σ qty × unit_price)
+      .select('id, fx_rate, purchase_items(quantity, unit_price)')
       .eq('company_id', companyId)
       .is('deleted_at', null),
   ])
@@ -74,8 +76,8 @@ async function fetchOperationalRecords(
                  .map(r => ({ id: r.id, amount_try: r.total_try ?? 0 })),
     expenses:  ((expensesRes.data ?? []) as Array<{ id: string; amount_try: number | null }>)
                  .map(r => ({ id: r.id, amount_try: r.amount_try ?? 0 })),
-    purchases: ((purchasesRes.data ?? []) as Array<{ id: string; total_try: number | null }>)
-                 .map(r => ({ id: r.id, amount_try: r.total_try ?? 0 })),
+    purchases: ((purchasesRes.data ?? []) as Array<{ id: string; fx_rate: number | null; purchase_items: Array<{ quantity: number | null; unit_price: number | null }> | null }>)
+                 .map(r => ({ id: r.id, amount_try: purchaseTotalTry(r) })),
   }
 }
 

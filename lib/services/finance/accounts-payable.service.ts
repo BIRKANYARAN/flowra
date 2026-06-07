@@ -4,6 +4,7 @@
 // All pure helpers are exported for unit testing.
 
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { purchaseTotalTry } from '@/lib/finance/purchase-total'
 
 // ── Pure functions ────────────────────────────────────────────────────────────
 
@@ -283,7 +284,8 @@ interface RawPurchaseRow {
   supplier_name: string | null
   purchase_date: string | null
   created_at: string
-  total_amount: number | null
+  fx_rate: number | null
+  purchase_items: Array<{ quantity: number | null; unit_price: number | null }> | null
 }
 
 // ── Service class ─────────────────────────────────────────────────────────────
@@ -320,7 +322,8 @@ export class AccountsPayableService {
       // 2. Purchases not yet finalised or cancelled
       this.supabase
         .from('purchases')
-        .select('id, supplier_name, purchase_date, created_at, total_amount')
+        // no total_amount column — compute from line items (fx_rate × Σ qty × unit_price)
+        .select('id, supplier_name, purchase_date, created_at, fx_rate, purchase_items(quantity, unit_price)')
         .eq('company_id', companyId)
         .is('deleted_at', null)
         .not('status', 'eq', 'finalized')
@@ -368,7 +371,7 @@ export class AccountsPayableService {
 
     // From purchases (fallback when no expenses found, or include both)
     for (const row of purchaseRows) {
-      const amount = round2(Number(row.total_amount) || 0)
+      const amount = round2(purchaseTotalTry(row))
       if (amount <= 0) continue
 
       const dateStr   = (row.purchase_date ?? row.created_at ?? todayStr).slice(0, 10)

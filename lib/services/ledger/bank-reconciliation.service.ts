@@ -11,6 +11,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { round2 } from '@/lib/calc'
+import { purchaseTotalTry } from '@/lib/finance/purchase-total'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnySupabaseClient = any
@@ -147,7 +148,8 @@ export class BankReconciliationService {
 
       this.supabase
         .from('purchases')
-        .select('total_try, status')
+        // no total column — compute from line items (fx_rate × Σ qty × unit_price)
+        .select('status, fx_rate, purchase_items(quantity, unit_price)')
         .eq('company_id', companyId)
         .is('deleted_at', null)
         .lte('purchase_date', today),
@@ -170,9 +172,9 @@ export class BankReconciliationService {
       .reduce((s, e) => s + (Number(e.amount_try) || 0), 0)
 
     // Σ finalized purchases (status = 'received' | 'finalized' | 'completed')
-    const totalPaidPurchases = (purchases as Array<{ total_try: number; status: string | null }>)
+    const totalPaidPurchases = (purchases as Array<{ status: string | null; fx_rate: number | null; purchase_items: Array<{ quantity: number; unit_price: number }> | null }>)
       .filter(p => ['received', 'finalized', 'completed'].includes(p.status ?? ''))
-      .reduce((s, p) => s + (Number(p.total_try) || 0), 0)
+      .reduce((s, p) => s + purchaseTotalTry(p), 0)
 
     const bookBalance = round2(totalPaidSales - totalPaidExpenses - totalPaidPurchases)
 
