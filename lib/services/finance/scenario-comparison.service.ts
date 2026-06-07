@@ -452,7 +452,10 @@ export class ScenarioComparisonService {
       .select('id, name, is_baseline, summary, monthly_breakdown, inputs')
       .eq('company_id', companyId)
       .is('deleted_at', null)
-      .or('is_baseline.eq.true,status.eq.saved')
+      // NB: simulation_scenarios has no `status` column — every non-deleted row IS a
+      // saved scenario, so the old `.or('is_baseline.eq.true,status.eq.saved')`
+      // referenced a non-existent column (→ PostgREST 400 → 500) and was a no-op
+      // anyway (matches all rows). Removed; all non-deleted company scenarios load.
 
     const { data: rows, error } = await query
 
