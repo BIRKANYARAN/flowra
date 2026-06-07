@@ -138,12 +138,16 @@ export class StakeholderCapitalService {
     // 3. Fetch active loan tranches
     const { data: tranches } = await supabase
       .from('partner_loan_tranches')
-      .select('partner_id, outstanding_try, status')
+      // outstanding is computed (no outstanding_try column): principal_try − total_repaid_try
+      .select('partner_id, principal_try, total_repaid_try, status')
       .eq('company_id', companyId)
       .in('partner_id', partnerIds)
       .in('status', ['active', 'disbursed'])
 
-    const tranchesData = tranches ?? []
+    const tranchesData = (tranches ?? []).map((t: { partner_id: string; principal_try: number; total_repaid_try: number; status: string }) => ({
+      ...t,
+      outstanding_try: Math.max(0, Number(t.principal_try ?? 0) - Number(t.total_repaid_try ?? 0)),
+    }))
 
     // 4. Aggregate per partner
     const totalLoans = tranchesData.reduce(

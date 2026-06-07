@@ -174,7 +174,8 @@ export class CommitmentsService {
     // ── 1. Partner loan repayments ────────────────────────────────────────────
     const { data: tranches } = await supabase
       .from('partner_loan_tranches')
-      .select('id, partner_id, outstanding_try, expected_repayment_date, annual_interest_rate')
+      // outstanding is computed (no outstanding_try column): principal_try − total_repaid_try
+      .select('id, partner_id, principal_try, total_repaid_try, expected_repayment_date, annual_interest_rate')
       .eq('company_id', companyId)
       .neq('status', 'repaid')
       .not('expected_repayment_date', 'is', null)
@@ -193,7 +194,11 @@ export class CommitmentsService {
       for (const p of partners ?? []) partnerMap[p.id] = p.name
     }
 
-    for (const t of tranches ?? []) {
+    const trancheRows = (tranches ?? []).map((t: { id: string; partner_id: string; principal_try: number; total_repaid_try: number; expected_repayment_date: string; annual_interest_rate: number }) => ({
+      ...t,
+      outstanding_try: Math.max(0, Number(t.principal_try ?? 0) - Number(t.total_repaid_try ?? 0)),
+    }))
+    for (const t of trancheRows) {
       const daysUntil = daysBetween(today, t.expected_repayment_date)
       const name      = partnerMap[t.partner_id] ?? 'Ortak'
       obligations.push({
@@ -212,8 +217,8 @@ export class CommitmentsService {
     }
 
     // ── 2. Monthly interest accruals (next 12 months) ─────────────────────────
-    const activeTranches = (tranches ?? []).filter(
-      (t: { outstanding_try: number | null; annual_interest_rate: number | null }) =>
+    const activeTranches = trancheRows.filter(
+      (t) =>
         Number(t.outstanding_try ?? 0) > 0 &&
         Number(t.annual_interest_rate ?? 0) > 0,
     )

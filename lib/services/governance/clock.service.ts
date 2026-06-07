@@ -98,7 +98,8 @@ export class GovernanceClockService {
     // ── 2. PCLE loan repayment obligations ─────────────────────────────────────
     const { data: tranches } = await supabase
       .from('partner_loan_tranches')
-      .select('id, partner_id, outstanding_try, expected_repayment_date')
+      // outstanding is computed (no outstanding_try column): principal_try − total_repaid_try
+      .select('id, partner_id, principal_try, total_repaid_try, expected_repayment_date')
       .eq('company_id', companyId)
       .eq('status', 'active')
       .not('expected_repayment_date', 'is', null)
@@ -117,7 +118,11 @@ export class GovernanceClockService {
       for (const p of partners ?? []) partnerMap[p.id] = p.name
     }
 
-    for (const t of tranches ?? []) {
+    const trancheRows = (tranches ?? []).map((t: { id: string; partner_id: string; principal_try: number; total_repaid_try: number; expected_repayment_date: string }) => ({
+      ...t,
+      outstanding_try: Math.max(0, Number(t.principal_try ?? 0) - Number(t.total_repaid_try ?? 0)),
+    }))
+    for (const t of trancheRows) {
       const daysUntil = daysBetween(today, t.expected_repayment_date)
       const name      = partnerMap[t.partner_id] ?? 'Ortak'
       obligations.push({

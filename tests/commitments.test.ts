@@ -122,7 +122,7 @@ describe('CommitmentsService.getLedger', () => {
         partner_loan_tranches: [{
           id: 'tranche-1',
           partner_id: 'partner-1',
-          outstanding_try: 100_000,
+          principal_try: 100_000, total_repaid_try: 0,
           expected_repayment_date: '2026-06-01',
           annual_interest_rate: 0.12,
           status: 'active',
@@ -150,7 +150,7 @@ describe('CommitmentsService.getLedger', () => {
         partner_loan_tranches: [{
           id: 'tranche-2',
           partner_id: 'partner-2',
-          outstanding_try: 50_000,
+          principal_try: 50_000, total_repaid_try: 0,
           expected_repayment_date: '2025-12-01',
           annual_interest_rate: 0.15,
           status: 'active',
@@ -174,7 +174,7 @@ describe('CommitmentsService.getLedger', () => {
         partner_loan_tranches: [{
           id: 'tranche-3',
           partner_id: 'partner-3',
-          outstanding_try: 75_000,
+          principal_try: 75_000, total_repaid_try: 0,
           expected_repayment_date: '2026-01-10',  // 9 days from today
           annual_interest_rate: 0.10,
           status: 'active',
@@ -201,7 +201,7 @@ describe('CommitmentsService.getLedger', () => {
         partner_loan_tranches: [{
           id: 'tranche-4',
           partner_id: 'partner-4',
-          outstanding_try: outstanding,
+          principal_try: outstanding, total_repaid_try: 0,
           expected_repayment_date: '2027-01-01',
           annual_interest_rate: annualRate,
           status: 'active',

@@ -272,7 +272,8 @@ export class HealthScorecardService {
       // Partner loan tranches for outstanding debt
       supabase
         .from('partner_loan_tranches')
-        .select('outstanding_try, status')
+        // outstanding is computed (no outstanding_try column): principal_try − total_repaid_try
+        .select('principal_try, total_repaid_try, status')
         .eq('company_id', companyId)
         .is('deleted_at', null)
         .neq('status', 'repaid'),
@@ -283,7 +284,8 @@ export class HealthScorecardService {
     const stockLots       = (stockLotsResult.data        ?? []) as Array<{ qty_remaining: number; cost_price_try: number }>
     const openReceivables = (openReceivablesResult.data  ?? []) as Array<{ total_try: number }>
     const partnerTxs      = (partnerTxResult.data        ?? []) as Array<{ tx_type: string; amount_try: number }>
-    const partnerLoans    = (partnerLoansResult.data     ?? []) as Array<{ outstanding_try: number; status: string }>
+    const partnerLoans    = ((partnerLoansResult.data ?? []) as Array<{ principal_try: number; total_repaid_try: number; status: string }>)
+      .map(l => ({ ...l, outstanding_try: Math.max(0, Number(l.principal_try ?? 0) - Number(l.total_repaid_try ?? 0)) }))
 
     // ── Balance sheet proxies ────────────────────────────────────────────────
 

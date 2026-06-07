@@ -357,7 +357,8 @@ export class NarrativeService {
       // 6. Partner loan balances
       (supabase as SupabaseClient)
         .from('partner_loan_tranches')
-        .select('outstanding_try, partner_id')
+        // outstanding is computed (no outstanding_try column): principal_try − total_repaid_try
+        .select('principal_try, total_repaid_try, partner_id')
         .eq('company_id', companyId)
         .eq('status', 'active'),
     ])
@@ -383,9 +384,10 @@ export class NarrativeService {
       ? ((overdueReceivablesResult.value as { data: Array<{ total_try: number }> | null }).data ?? [])
       : []
 
-    const partnerLoanRows = partnerLoanResult.status === 'fulfilled'
-      ? ((partnerLoanResult.value as { data: Array<{ outstanding_try: number; partner_id: string }> | null }).data ?? [])
+    const partnerLoanRows = (partnerLoanResult.status === 'fulfilled'
+      ? ((partnerLoanResult.value as { data: Array<{ principal_try: number; total_repaid_try: number; partner_id: string }> | null }).data ?? [])
       : []
+    ).map(r => ({ ...r, outstanding_try: Math.max(0, Number(r.principal_try ?? 0) - Number(r.total_repaid_try ?? 0)) }))
 
     // ── Derive figures ────────────────────────────────────────────────────────
     const revenue_try       = currentSummary?.revenue_try ?? 0
