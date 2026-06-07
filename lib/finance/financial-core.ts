@@ -165,7 +165,8 @@ export async function getCashflowTimeline(
         .is('deleted_at', null)
         .gte('expense_date', _ymStart(startYM)).lte('expense_date', _ymEnd(endYM)),
       supabase.from('recurring_expenses')
-        .select('amount, fx_rate, frequency, start_date, end_date, expense_type')
+        // recurring_expenses has `category` (free text), not `expense_type`
+        .select('amount, fx_rate, frequency, start_date, end_date, category')
         .eq('company_id', companyId).eq('is_active', true).is('deleted_at', null),
     ])
 
@@ -190,11 +191,11 @@ export async function getCashflowTimeline(
     if (row) row.expenses += Number(e.amount_try ?? 0)
   }
   for (const rec of recurringsRes.data ?? []) {
-    const et = String(rec.expense_type ?? '')
+    const et = String(rec.category ?? '')
     if (et && _CASH_EXCLUDED.has(et)) continue
     const recStart = _toYM(rec.start_date as string)
     const recEnd   = rec.end_date ? _toYM(rec.end_date as string) : null
-    const amtTry   = Number(rec.amount) * Number(rec.fx_rate)
+    const amtTry   = Number(rec.amount) * Number(rec.fx_rate ?? 1)
     const freq     = rec.frequency as 'monthly' | 'quarterly' | 'yearly'
     const step     = freq === 'monthly' ? 1 : freq === 'quarterly' ? 3 : 12
     for (const [ym, row] of months) {
@@ -685,9 +686,10 @@ export async function getRunwayForecast(
       .eq('company_id', companyId).is('deleted_at', null)
       .gte('sale_date', from).lte('sale_date', to),
 
-    supabase.from('recurring_expenses').select('amount, fx_rate, frequency')
-      .eq('company_id', companyId).eq('is_active', true).is('deleted_at', null)
-      .in('expense_type', Array.from(BURN_EXPENSE_TYPES)),
+    // recurring_expenses has `category` (free text), not the expenses-table `expense_type`
+    // enum — filter financing/non-cash categories out in JS (see _CASH_EXCLUDED below)
+    supabase.from('recurring_expenses').select('amount, fx_rate, frequency, category')
+      .eq('company_id', companyId).eq('is_active', true).is('deleted_at', null),
   ])
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -723,6 +725,8 @@ export async function getRunwayForecast(
   const FREQ_FACTOR: Record<string, number> = { monthly: 1, quarterly: 1 / 3, yearly: 1 / 12 }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const recurringMonthlyCommit = (recurringActiveRes.data ?? []).reduce((s: number, r: any) => {
+    const cat = String(r.category ?? '')
+    if (cat && _CASH_EXCLUDED.has(cat)) return s  // skip financing/non-cash recurring items
     const amtTry = Number(r.amount ?? 0) * Number(r.fx_rate ?? 1)
     return s + amtTry * (FREQ_FACTOR[r.frequency as string] ?? 0)
   }, 0)
