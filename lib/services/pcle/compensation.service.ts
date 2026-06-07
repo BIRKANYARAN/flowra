@@ -71,6 +71,14 @@ function addMonths(ymd: string, n: number): string {
   return `${y}-${m}-01`
 }
 
+// ── Schedule rate defaults ──────────────────────────────────────────────────
+// partner_compensation_schedules stores only the gross monthly amount
+// (monthly_amount_try) plus start_date/end_date. The stoppage (stopaj) and SGK
+// rates are NOT per-schedule columns, so standard defaults are applied here.
+// (15% withholding mirrors the prior createSchedule default; SGK 0 by default.)
+const DEFAULT_WITHHOLDING_RATE = 0.15
+const DEFAULT_SGK_RATE         = 0
+
 // ── Service ───────────────────────────────────────────────────────────────────
 
 export class CompensationService {
@@ -94,20 +102,21 @@ export class CompensationService {
   ): Promise<CompensationSchedule[]> {
     const { data, error } = await supabase
       .from('partner_compensation_schedules')
+      // real columns: monthly_amount_try, start_date, end_date (no per-schedule rate columns)
       .select(`
-        id, partner_id, monthly_gross_try, withholding_rate, sgk_rate,
-        effective_from, effective_until, board_decision_ref, is_active, notes,
+        id, partner_id, monthly_amount_try,
+        start_date, end_date, board_decision_ref, is_active, notes,
         partners!inner(name)
       `)
       .eq('company_id', companyId)
-      .order('effective_from', { ascending: false })
+      .order('start_date', { ascending: false })
 
     if (error) throw new Error(`listSchedules: ${error.message}`)
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (data ?? []).map((row: any) => {
-      const gross    = Number(row.monthly_gross_try)
-      const rate     = Number(row.withholding_rate)
+      const gross    = Number(row.monthly_amount_try)
+      const rate     = DEFAULT_WITHHOLDING_RATE
       const { net_try } = CompensationService.computeNet(gross, rate)
       return {
         id:                 row.id,
@@ -115,10 +124,10 @@ export class CompensationService {
         partner_name:       row.partners?.name ?? 'Bilinmeyen',
         monthly_gross_try:  gross,
         withholding_rate:   rate,
-        sgk_rate:           Number(row.sgk_rate),
+        sgk_rate:           DEFAULT_SGK_RATE,
         net_monthly_try:    net_try,
-        effective_from:     row.effective_from,
-        effective_until:    row.effective_until ?? null,
+        effective_from:     row.start_date,
+        effective_until:    row.end_date ?? null,
         board_decision_ref: row.board_decision_ref ?? null,
         is_active:          row.is_active,
         notes:              row.notes ?? null,
@@ -143,14 +152,14 @@ export class CompensationService {
       notes?:             string
     },
   ): Promise<CompensationSchedule> {
+    // real columns only: monthly_amount_try, start_date, end_date.
+    // withholding_rate / sgk_rate are not persisted (applied as defaults on read).
     const insert = {
       company_id:         companyId,
       partner_id:         params.partner_id,
-      monthly_gross_try:  params.monthly_gross_try,
-      withholding_rate:   params.withholding_rate  ?? 0.15,
-      sgk_rate:           params.sgk_rate           ?? 0.00,
-      effective_from:     params.effective_from,
-      effective_until:    params.effective_until    ?? null,
+      monthly_amount_try: params.monthly_gross_try,
+      start_date:         params.effective_from,
+      end_date:           params.effective_until    ?? null,
       board_decision_ref: params.board_decision_ref ?? null,
       notes:              params.notes              ?? null,
       is_active:          true,
@@ -160,8 +169,8 @@ export class CompensationService {
     const { data, error } = await supabase
       .from('partner_compensation_schedules')
       .insert(insert)
-      .select(`id, partner_id, monthly_gross_try, withholding_rate, sgk_rate,
-               effective_from, effective_until, board_decision_ref, is_active, notes,
+      .select(`id, partner_id, monthly_amount_try,
+               start_date, end_date, board_decision_ref, is_active, notes,
                partners!inner(name)`)
       .single()
 
@@ -169,8 +178,8 @@ export class CompensationService {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const row: any = data
-    const gross    = Number(row.monthly_gross_try)
-    const rate     = Number(row.withholding_rate)
+    const gross    = Number(row.monthly_amount_try)
+    const rate     = params.withholding_rate ?? DEFAULT_WITHHOLDING_RATE
     const { net_try } = CompensationService.computeNet(gross, rate)
 
     return {
@@ -179,10 +188,10 @@ export class CompensationService {
       partner_name:       row.partners?.name ?? 'Bilinmeyen',
       monthly_gross_try:  gross,
       withholding_rate:   rate,
-      sgk_rate:           Number(row.sgk_rate),
+      sgk_rate:           params.sgk_rate ?? DEFAULT_SGK_RATE,
       net_monthly_try:    net_try,
-      effective_from:     row.effective_from,
-      effective_until:    row.effective_until ?? null,
+      effective_from:     row.start_date,
+      effective_until:    row.end_date ?? null,
       board_decision_ref: row.board_decision_ref ?? null,
       is_active:          row.is_active,
       notes:              row.notes ?? null,
@@ -207,9 +216,10 @@ export class CompensationService {
     // Load active schedules
     const { data: scheduleRows, error: se } = await supabase
       .from('partner_compensation_schedules')
+      // real columns: monthly_amount_try, start_date, end_date (no per-schedule rate columns)
       .select(`
-        id, partner_id, monthly_gross_try, withholding_rate, sgk_rate,
-        effective_from, effective_until, is_active,
+        id, partner_id, monthly_amount_try,
+        start_date, end_date, is_active,
         partners!inner(name)
       `)
       .eq('company_id', companyId)
@@ -240,13 +250,13 @@ export class CompensationService {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     for (const sched of (scheduleRows ?? []) as any[]) {
-      const gross = Number(sched.monthly_gross_try)
-      const rate  = Number(sched.withholding_rate)
+      const gross = Number(sched.monthly_amount_try)
+      const rate  = DEFAULT_WITHHOLDING_RATE
       const { withholding_try, net_try } = CompensationService.computeNet(gross, rate)
 
-      // Window: from max(effective_from, windowStart) to min(effective_until or today, today)
-      const schedStart  = monthStart(sched.effective_from)
-      const schedEnd    = sched.effective_until ? monthStart(sched.effective_until) : thisMonth
+      // Window: from max(start_date, windowStart) to min(end_date or today, today)
+      const schedStart  = monthStart(sched.start_date)
+      const schedEnd    = sched.end_date ? monthStart(sched.end_date) : thisMonth
       const rangeStart  = schedStart > windowStart ? schedStart : windowStart
       const rangeEnd    = schedEnd < thisMonth ? schedEnd : thisMonth
 
@@ -290,7 +300,8 @@ export class CompensationService {
     // Load schedule
     const { data: sched, error: se } = await supabase
       .from('partner_compensation_schedules')
-      .select('partner_id, monthly_gross_try, withholding_rate, sgk_rate, partners!inner(name)')
+      // real column: monthly_amount_try (no per-schedule rate columns)
+      .select('partner_id, monthly_amount_try, partners!inner(name)')
       .eq('id', scheduleId)
       .eq('company_id', companyId)
       .single()
@@ -299,9 +310,9 @@ export class CompensationService {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const s: any = sched
-    const gross  = Number(s.monthly_gross_try)
-    const rate   = Number(s.withholding_rate)
-    const sgkRate = Number(s.sgk_rate)
+    const gross  = Number(s.monthly_amount_try)
+    const rate   = DEFAULT_WITHHOLDING_RATE
+    const sgkRate = DEFAULT_SGK_RATE
     const { withholding_try, net_try } = CompensationService.computeNet(gross, rate)
     const sgk_try = round2(gross * sgkRate)
     const partnerName = s.partners?.name ?? 'Ortak'

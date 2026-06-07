@@ -45,20 +45,33 @@ function makeSupabase(opts: MockOpts) {
 const PARTNER_A = { id: 'p1', name: 'Ali', share_ratio: 0.6 }
 const PARTNER_B = { id: 'p2', name: 'Veli', share_ratio: 0.4 }
 
+// Emits REAL partner_compensation_schedules columns (monthly_amount_try,
+// start_date, end_date). Accepts legacy override keys (monthly_gross_try,
+// effective_from/until) for ergonomics and maps them. Per-schedule
+// withholding_rate/sgk_rate are NOT real columns — the service applies flat
+// defaults on read — so any such override is intentionally ignored.
 function makeSchedule(overrides: Partial<Row> = {}): Row {
+  const o = overrides as Record<string, unknown>
+  const gross = o.monthly_amount_try ?? o.monthly_gross_try ?? 10_000
+  const start = o.start_date ?? o.effective_from   ?? '2026-01-01'
+  const end   = o.end_date   ?? o.effective_until  ?? null
+  const {
+    monthly_gross_try: _g, withholding_rate: _w, sgk_rate: _s,
+    effective_from: _ef, effective_until: _eu,
+    monthly_amount_try: _ma, start_date: _sd, end_date: _ed,
+    ...rest
+  } = o
   return {
     id:                 's1',
     partner_id:         'p1',
-    monthly_gross_try:  10_000,
-    withholding_rate:   0.15,
-    sgk_rate:           0,
-    effective_from:     '2026-01-01',
-    effective_until:    null,
+    monthly_amount_try: gross,
+    start_date:         start,
+    end_date:           end,
     board_decision_ref: 'YK/2026-01',
     is_active:          true,
     notes:              null,
     partners:           PARTNER_A,
-    ...overrides,
+    ...rest,
   }
 }
 
@@ -364,20 +377,22 @@ describe('computeNet — rounding', () => {
 // ── 15. listSchedules — net_monthly_try field ────────────────────────────────
 
 describe('listSchedules — net_monthly_try', () => {
-  it('single schedule with 20% withholding → net = 80% of gross', async () => {
-    const sched = makeSchedule({ monthly_gross_try: 50_000, withholding_rate: 0.20 })
+  // The schedule table has no per-row rate column; listSchedules applies the
+  // flat default withholding rate (15%), so net = gross × 0.85.
+  it('applies default 15% withholding → net = 85% of gross', async () => {
+    const sched = makeSchedule({ monthly_gross_try: 50_000 })
     const sb = makeSupabase({ schedules: [sched] })
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const schedules = await CompensationService.listSchedules('co1', sb as any)
-    expect(schedules[0].net_monthly_try).toBe(40_000)
+    expect(schedules[0].net_monthly_try).toBe(42_500)
   })
 
-  it('zero withholding → net equals gross in listSchedules', async () => {
-    const sched = makeSchedule({ monthly_gross_try: 15_000, withholding_rate: 0 })
+  it('net_monthly_try = gross × 0.85 for a 15_000 gross schedule', async () => {
+    const sched = makeSchedule({ monthly_gross_try: 15_000 })
     const sb = makeSupabase({ schedules: [sched] })
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const schedules = await CompensationService.listSchedules('co1', sb as any)
-    expect(schedules[0].net_monthly_try).toBe(15_000)
+    expect(schedules[0].net_monthly_try).toBe(12_750)
   })
 })
 
@@ -435,12 +450,13 @@ describe('computeNet — sgk_rate interaction', () => {
     expect(result1.withholding_try).toBe(result2.withholding_try)
   })
 
-  it('listSchedules exposes sgk_rate field on each schedule', async () => {
-    const sched = makeSchedule({ sgk_rate: 0.2025 })
+  it('listSchedules exposes sgk_rate field on each schedule (flat default)', async () => {
+    const sched = makeSchedule()
     const sb = makeSupabase({ schedules: [sched] })
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const schedules = await CompensationService.listSchedules('co1', sb as any)
-    expect(schedules[0].sgk_rate).toBeCloseTo(0.2025, 4)
+    // sgk_rate is not a per-schedule column — service returns the flat default (0)
+    expect(schedules[0].sgk_rate).toBe(0)
   })
 })
 
@@ -609,7 +625,7 @@ describe('getDuePayments — gross_amount_try accuracy', () => {
   })
 
   it('withholding_try in due payment equals computeNet output', async () => {
-    const sched = makeSchedule({ monthly_gross_try: 12_000, withholding_rate: 0.10 })
+    const sched = makeSchedule({ monthly_gross_try: 12_000 })
     const sb = makeSupabase({ schedules: [sched] })
     const result = await CompensationService.getDuePayments(
       'co1',
@@ -617,7 +633,8 @@ describe('getDuePayments — gross_amount_try accuracy', () => {
       sb as any,
       { today: '2026-05-27', months: 1 },
     )
-    const { withholding_try } = CompensationService.computeNet(12_000, 0.10)
+    // getDuePayments applies the flat default withholding rate (15%)
+    const { withholding_try } = CompensationService.computeNet(12_000, 0.15)
     expect(result[0]?.withholding_try).toBe(withholding_try)
   })
 })
