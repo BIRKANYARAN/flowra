@@ -286,7 +286,6 @@ export class RfmSegmentationService {
       .select('customer_id, customer_name, sale_date, total')
       .eq('company_id', companyId)
       .is('deleted_at', null)
-      .or('is_proforma.is.null,is_proforma.eq.false')
       .gte('sale_date', cutoff24m.toISOString().slice(0, 10))
       .order('sale_date', { ascending: true })
 

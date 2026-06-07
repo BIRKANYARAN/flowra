@@ -351,7 +351,6 @@ export class SkuPerformanceService {
         `)
         .eq('sales.company_id', companyId)
         .is('sales.deleted_at', null)
-        .or('sales.is_proforma.is.null,sales.is_proforma.eq.false')
         .gte('sales.sale_date', fromDate)
         .lte('sales.sale_date', today)
         .not('product_id', 'is', null)

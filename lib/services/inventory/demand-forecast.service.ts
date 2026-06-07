@@ -326,8 +326,7 @@ export class DemandForecastService {
         .from('sale_items')
         .select('product_id, qty, sales!inner(company_id, sale_date)')
         .eq('sales.company_id', companyId)
-        .is('sales.deleted_at', null)
-        .or('sales.is_proforma.is.null,sales.is_proforma.eq.false'),
+        .is('sales.deleted_at', null),
 
       // 3. Products
       this.supabase

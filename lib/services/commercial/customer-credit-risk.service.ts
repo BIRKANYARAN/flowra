@@ -517,7 +517,6 @@ export class CustomerCreditRiskService {
       .select('customer_id, customer_name, sale_date, total, amount_paid, due_date, payment_status, paid_at')
       .eq('company_id', companyId)
       .is('deleted_at', null)
-      .or('is_proforma.is.null,is_proforma.eq.false')
       .order('sale_date', { ascending: true })
 
     if (error) throw new Error(`CustomerCreditRiskService.getReport: ${error.message}`)

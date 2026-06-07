@@ -218,7 +218,6 @@ export class CohortRetentionService {
       .select('customer_id, customer_name, sale_date, total_try:total')
       .eq('company_id', companyId)
       .is('deleted_at', null)
-      .or('is_proforma.is.null,is_proforma.eq.false')
       .order('sale_date', { ascending: true })
 
     if (error) throw new Error(`CohortRetentionService.getReport: ${error.message}`)

@@ -264,20 +264,18 @@ export class InventoryTurnoverService {
       // YTD sale items for COGS approximation + last sale date per product
       this.supabase
         .from('sale_items')
-        .select('product_id, qty, line_total, sales!inner(sale_date, company_id, deleted_at, is_proforma)')
+        .select('product_id, qty, line_total, sales!inner(sale_date, company_id, deleted_at)')
         .eq('sales.company_id', companyId)
         .is('sales.deleted_at', null)
-        .or('sales.is_proforma.is.null,sales.is_proforma.eq.false')
         .gte('sales.sale_date', yearStart)
         .lte('sales.sale_date', today),
 
       // All-time sales for last_sale_date tracking (last 365 days is enough for dead stock)
       this.supabase
         .from('sale_items')
-        .select('product_id, qty, sales!inner(sale_date, company_id, deleted_at, is_proforma)')
+        .select('product_id, qty, sales!inner(sale_date, company_id, deleted_at)')
         .eq('sales.company_id', companyId)
         .is('sales.deleted_at', null)
-        .or('sales.is_proforma.is.null,sales.is_proforma.eq.false')
         .order('sales.sale_date', { ascending: false }),
     ])
 

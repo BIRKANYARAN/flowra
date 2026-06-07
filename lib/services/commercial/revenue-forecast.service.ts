@@ -449,7 +449,6 @@ export class RevenueForecastService {
       .select('sale_date, total')
       .eq('company_id', companyId)
       .is('deleted_at', null)
-      .eq('is_proforma', false)
       .gte('sale_date', fromDate)
       .lte('sale_date', toDate)
 

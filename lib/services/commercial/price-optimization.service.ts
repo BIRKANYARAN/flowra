@@ -362,13 +362,11 @@ export class PriceOptimizationService {
           sales!inner(
             company_id,
             deleted_at,
-            is_proforma,
             sale_date
           )
         `)
         .eq('sales.company_id', companyId)
         .is('sales.deleted_at', null)
-        .or('sales.is_proforma.is.null,sales.is_proforma.eq.false')
         .gte('sales.sale_date', fromDate),
 
       this.supabase

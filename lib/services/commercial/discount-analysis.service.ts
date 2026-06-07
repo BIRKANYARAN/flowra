@@ -357,11 +357,10 @@ export class DiscountAnalysisService {
           line_total,
           sale_id,
           products(name, list_price),
-          sales!inner(sale_date, deleted_at, company_id, is_proforma)
+          sales!inner(sale_date, deleted_at, company_id)
         `)
         .eq('sales.company_id', companyId)
         .is('sales.deleted_at', null)
-        .or('sales.is_proforma.is.null,sales.is_proforma.eq.false')
         .gte('sales.sale_date', fromDate)
         .lte('sales.sale_date', today)
         .not('product_id', 'is', null)

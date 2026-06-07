@@ -275,8 +275,7 @@ export class ProductMixService {
           sales!inner(
             sale_date,
             deleted_at,
-            company_id,
-            is_proforma
+            company_id
           ),
           products(
             id,
@@ -285,7 +284,6 @@ export class ProductMixService {
         `)
         .eq('sales.company_id', companyId)
         .is('sales.deleted_at', null)
-        .or('sales.is_proforma.is.null,sales.is_proforma.eq.false')
         .gte('sales.sale_date', from)
         .lte('sales.sale_date', to)
 

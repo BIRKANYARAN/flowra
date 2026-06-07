@@ -244,7 +244,9 @@ export class RecurringRevenueService {
       .select('customer_id, customer_name, sale_date, total')
       .eq('company_id', companyId)
       .is('deleted_at', null)
-      .or('is_proforma.is.null,is_proforma.eq.false')
+      // NB: the `sales` table holds actual sales only (proformas live in the
+      // `proformas` table); there is no `is_proforma` column. The previous filter
+      // referenced that non-existent column → PostgREST 400 → 500. Removed.
       .gte('sale_date', cutoffDate)
       .order('sale_date', { ascending: true })
 

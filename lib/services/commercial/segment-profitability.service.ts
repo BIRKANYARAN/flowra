@@ -212,7 +212,6 @@ async function fetchSegmentData(
         sales!inner(
           sale_date,
           deleted_at,
-          is_proforma,
           company_id,
           customer_id,
           customer_name
@@ -220,7 +219,6 @@ async function fetchSegmentData(
       `)
       .eq('sales.company_id', companyId)
       .is('sales.deleted_at', null)
-      .or('sales.is_proforma.is.null,sales.is_proforma.eq.false')
       .gte('sales.sale_date', from)
       .lte('sales.sale_date', to)
 

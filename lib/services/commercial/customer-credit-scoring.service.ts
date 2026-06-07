@@ -430,7 +430,6 @@ export class CustomerCreditScoringService {
       .select('customer_id, customer_name, sale_date, total, paid_amount, due_date, payment_status, updated_at')
       .eq('company_id', companyId)
       .is('deleted_at', null)
-      .or('is_proforma.is.null,is_proforma.eq.false')
       .gte('sale_date', cutoff24mStr)
       .order('sale_date', { ascending: true })
 

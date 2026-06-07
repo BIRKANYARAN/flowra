@@ -220,14 +220,12 @@ export class MarginBridgeService {
           sales!inner(
             sale_date,
             deleted_at,
-            is_proforma,
             company_id,
             payment_status
           )
         `)
         .eq('sales.company_id', companyId)
         .is('sales.deleted_at', null)
-        .or('sales.is_proforma.is.null,sales.is_proforma.eq.false')
         .not('sales.payment_status', 'eq', 'cancelled')
         .gte('sales.sale_date', from)
         .lte('sales.sale_date', to)

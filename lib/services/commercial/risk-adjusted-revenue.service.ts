@@ -340,7 +340,6 @@ export class RiskAdjustedRevenueService {
       .select('id, customer_id, customer_name, total, paid_amount, payment_status, due_date, sale_date')
       .eq('company_id', companyId)
       .is('deleted_at', null)
-      .or('is_proforma.is.null,is_proforma.eq.false')
       .gte('sale_date', ytdStart)
       .lte('sale_date', asOf)
       .order('sale_date', { ascending: true })

@@ -244,10 +244,9 @@ export class AbcAnalysisService {
       // Sale items for the period
       this.supabase
         .from('sale_items')
-        .select('product_id, product_name, qty, line_total, sales!inner(sale_date, company_id, deleted_at, is_proforma)')
+        .select('product_id, product_name, qty, line_total, sales!inner(sale_date, company_id, deleted_at)')
         .eq('sales.company_id', companyId)
         .is('sales.deleted_at', null)
-        .or('sales.is_proforma.is.null,sales.is_proforma.eq.false')
         .gte('sales.sale_date', fromDate)
         .lte('sales.sale_date', today),
 

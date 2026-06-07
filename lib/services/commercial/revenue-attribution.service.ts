@@ -161,7 +161,6 @@ export class RevenueAttributionService {
       .select('customer_name, total:total, sale_date')
       .eq('company_id', companyId)
       .is('deleted_at', null)
-      .or('is_proforma.is.null,is_proforma.eq.false')
       .gte('sale_date', from90)
       .lte('sale_date', today)
 
@@ -176,10 +175,9 @@ export class RevenueAttributionService {
     try {
       const { data: itemsData, error: itemsErr } = await supabase
         .from('sale_items')
-        .select('product_name, line_total, sale_id, sales!inner(sale_date, deleted_at, is_proforma, company_id)')
+        .select('product_name, line_total, sale_id, sales!inner(sale_date, deleted_at, company_id)')
         .eq('sales.company_id', companyId)
         .is('sales.deleted_at', null)
-        .or('sales.is_proforma.is.null,sales.is_proforma.eq.false')
         .gte('sales.sale_date', from90)
         .lte('sales.sale_date', today)
 
@@ -339,7 +337,6 @@ export class RevenueAttributionService {
           .select('customer_name')
           .eq('company_id', companyId)
           .is('deleted_at', null)
-          .or('is_proforma.is.null,is_proforma.eq.false')
           .lt('sale_date', from90)
           .in('customer_name', custNamesInPeriod)
 
