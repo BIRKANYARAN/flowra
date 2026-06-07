@@ -38,11 +38,11 @@ export async function POST(req: NextRequest) {
     // Get all active tranches with an interest rate
     const { data: tranches, error: tErr } = await supabase
       .from('partner_loan_tranches')
-      .select('id, company_id, partner_id, outstanding_try, annual_interest_rate')
+      // no outstanding_try column — outstanding computed below (principal_try − total_repaid_try)
+      .select('id, company_id, partner_id, principal_try, total_repaid_try, annual_interest_rate')
       .eq('status', 'active')
       .not('annual_interest_rate', 'is', null)
       .gt('annual_interest_rate', 0)
-      .gt('outstanding_try', 0)
 
     if (tErr || !tranches?.length) {
       return NextResponse.json({ ok: true, accrued: 0, message: 'No active interest-bearing tranches' })
@@ -65,7 +65,8 @@ export async function POST(req: NextRequest) {
       .map(t => ({
         // annual_interest_rate is a decimal (0.15 = 15%) — do NOT divide by 100 again
         // round2() prevents IEEE 754 edge cases in daily interest computation
-        dailyInterest: round2(Number(t.outstanding_try) * (Number(t.annual_interest_rate) / 365)),
+        // outstanding = principal − repaid (no outstanding_try column)
+        dailyInterest: round2(Math.max(0, Number(t.principal_try ?? 0) - Number(t.total_repaid_try ?? 0)) * (Number(t.annual_interest_rate) / 365)),
         t,
       }))
       .filter(({ dailyInterest }) => dailyInterest >= 0.01)  // skip below ₺0.01

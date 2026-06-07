@@ -41,20 +41,21 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
   try {
     const { data } = await supabase
       .from('partner_loan_tranches')
+      // outstanding_try / amount_try / due_date are not columns — derive below
       .select(`
-        id, outstanding_try, amount_try, annual_interest_rate,
-        due_date, status, partner_id,
+        id, principal_try, total_repaid_try, annual_interest_rate,
+        expected_repayment_date, status, partner_id,
         partners ( name )
       `)
       .eq('company_id', companyId)
       .eq('status', 'active')
-      .order('due_date', { ascending: true, nullsFirst: false })
+      .order('expected_repayment_date', { ascending: true, nullsFirst: false })
     tranches = (data ?? []).map((t: Record<string, unknown>) => ({
       id:                   String(t.id),
-      outstanding_try:      Number(t.outstanding_try ?? 0),
-      amount_try:           Number(t.amount_try ?? 0),
+      outstanding_try:      Math.max(0, Number(t.principal_try ?? 0) - Number(t.total_repaid_try ?? 0)),
+      amount_try:           Number(t.principal_try ?? 0),
       annual_interest_rate: t.annual_interest_rate != null ? Number(t.annual_interest_rate) : null,
-      due_date:             (t.due_date as string | null) ?? null,
+      due_date:             (t.expected_repayment_date as string | null) ?? null,
       status:               String(t.status ?? ''),
       partner_id:           String(t.partner_id ?? ''),
       partner_name:         ((t.partners as { name?: string } | null)?.name) ?? null,

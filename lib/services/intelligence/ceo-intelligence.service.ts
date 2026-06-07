@@ -113,7 +113,8 @@ export class CeoIntelligenceService {
       // 6. Partner loan tranches (DSR proxy)
       (supabase as SupabaseClient)
         .from('partner_loan_tranches')
-        .select('outstanding_try, annual_interest_rate, expected_repayment_date')
+        // outstanding_try computed (no such column): principal_try − total_repaid_try
+        .select('principal_try, total_repaid_try, annual_interest_rate, expected_repayment_date')
         .eq('company_id', companyId)
         .eq('status', 'active'),
 
@@ -329,7 +330,8 @@ export class CeoIntelligenceService {
 
     // ── Signal 6: Partner debt (DSR) ──────────────────────────────────────────
     if (partnerDebtResult.status === 'fulfilled') {
-      const rows = (partnerDebtResult.value as { data: Array<{ outstanding_try: number; annual_interest_rate: number | null; expected_repayment_date: string | null }> | null }).data ?? []
+      const rows = ((partnerDebtResult.value as { data: Array<{ principal_try: number; total_repaid_try: number; annual_interest_rate: number | null; expected_repayment_date: string | null }> | null }).data ?? [])
+        .map(r => ({ ...r, outstanding_try: Math.max(0, Number(r.principal_try ?? 0) - Number(r.total_repaid_try ?? 0)) }))
       const totalDebt = rows.reduce((s, r) => s + Number(r.outstanding_try ?? 0), 0)
 
       // Check for overdue tranches

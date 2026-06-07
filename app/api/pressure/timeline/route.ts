@@ -69,6 +69,30 @@ function daysBetween(fromISO: string, toISO: string): number {
   return Math.round((new Date(toISO).getTime() - new Date(fromISO).getTime()) / 86_400_000)
 }
 
+// Projects the first recurrence on/after `fromISO` for a template that began on
+// `startISO` and repeats monthly/quarterly/yearly. Returns null if the template
+// has already ended (endISO) before the next fire date.
+function nextRecurringFireDate(
+  startISO: string,
+  frequency: string,
+  fromISO: string,
+  endISO: string | null,
+): string | null {
+  const stepMonths = frequency === 'yearly' ? 12 : frequency === 'quarterly' ? 3 : 1
+  const start = new Date(startISO + 'T00:00:00Z')
+  const from  = new Date(fromISO  + 'T00:00:00Z')
+  const d = new Date(start)
+  // Advance by whole periods until we reach or pass `from` (cap iterations defensively)
+  let guard = 0
+  while (d.getTime() < from.getTime() && guard < 1200) {
+    d.setUTCMonth(d.getUTCMonth() + stepMonths)
+    guard++
+  }
+  const fire = d.toISOString().slice(0, 10)
+  if (endISO && fire > endISO) return null
+  return fire
+}
+
 function eventSeverity(daysUntil: number, amount: number): PressureSeverity {
   if (daysUntil < 0)     return 'critical' // already overdue
   if (daysUntil <= 7)    return 'critical'
@@ -118,15 +142,16 @@ export async function GET(req: NextRequest) {
       .limit(200)
       .then(r => r.data ?? []),
 
-    // 2. Active partner loan tranches with due_date
+    // 2. Active partner loan tranches with a repayment date
+    // (no due_date/amount_try/outstanding_try columns — use expected_repayment_date; outstanding computed)
     supabase
       .from('partner_loan_tranches')
-      .select('id, due_date, amount_try, outstanding_try')
+      .select('id, expected_repayment_date, principal_try, total_repaid_try')
       .eq('company_id', companyId)
       .eq('status', 'active')
-      .not('due_date', 'is', null)
-      .lte('due_date', endISO)
-      .order('due_date', { ascending: true })
+      .not('expected_repayment_date', 'is', null)
+      .lte('expected_repayment_date', endISO)
+      .order('expected_repayment_date', { ascending: true })
       .then(r => r.data ?? []),
 
     // 3. Open accounting periods with period_end in window
@@ -141,16 +166,14 @@ export async function GET(req: NextRequest) {
       .limit(12)
       .then(r => r.data ?? []),
 
-    // 4. Recurring expenses — get templates and project fire dates
+    // 4. Recurring expense templates — fire dates are projected in JS below
+    // (no next_occurrence_date/amount_try columns; real cols: amount, fx_rate, start_date, end_date)
     supabase
       .from('recurring_expenses')
-      .select('id, description, amount_try, frequency, next_occurrence_date, category')
+      .select('id, description, amount, fx_rate, frequency, start_date, end_date, category')
       .eq('company_id', companyId)
       .eq('is_active', true)
       .is('deleted_at', null)
-      .not('next_occurrence_date', 'is', null)
-      .lte('next_occurrence_date', endISO)
-      .order('next_occurrence_date', { ascending: true })
       .limit(100)
       .then(r => r.data ?? []),
 
@@ -189,13 +212,13 @@ export async function GET(req: NextRequest) {
 
   // 2. Tranche due events
   for (const t of trancheRows as Array<{
-    id: string; due_date: string; amount_try: number; outstanding_try: number
+    id: string; expected_repayment_date: string; principal_try: number; total_repaid_try: number
   }>) {
-    if (!t.due_date) continue
-    const amt       = Number(t.outstanding_try ?? t.amount_try ?? 0)
-    const daysUntil = daysBetween(todayISO, t.due_date)
+    if (!t.expected_repayment_date) continue
+    const amt       = Math.max(0, Number(t.principal_try ?? 0) - Number(t.total_repaid_try ?? 0))
+    const daysUntil = daysBetween(todayISO, t.expected_repayment_date)
     events.push({
-      date:        t.due_date,
+      date:        t.expected_repayment_date,
       type:        'tranche_due',
       label:       `Tranche ödemesi — ${fmtAmountTRY(amt)}`,
       amount_try:  amt,
@@ -220,16 +243,18 @@ export async function GET(req: NextRequest) {
     })
   }
 
-  // 4. Recurring expense commitments
+  // 4. Recurring expense commitments — project the next fire date from start_date + frequency
   for (const r of recurringRows as Array<{
-    id: string; description: string | null; amount_try: number;
-    frequency: string; next_occurrence_date: string; category: string | null
+    id: string; description: string | null; amount: number; fx_rate: number | null;
+    frequency: string; start_date: string | null; end_date: string | null; category: string | null
   }>) {
-    if (!r.next_occurrence_date) continue
-    const amt       = Number(r.amount_try ?? 0)
-    const daysUntil = daysBetween(todayISO, r.next_occurrence_date)
+    if (!r.start_date) continue
+    const fireDate = nextRecurringFireDate(r.start_date, r.frequency, todayISO, r.end_date ?? null)
+    if (!fireDate || fireDate > endISO) continue
+    const amt       = Number(r.amount ?? 0) * Number(r.fx_rate ?? 1)
+    const daysUntil = daysBetween(todayISO, fireDate)
     events.push({
-      date:        r.next_occurrence_date,
+      date:        fireDate,
       type:        'expense_commitment',
       label:       `${r.description ?? r.category ?? 'Gider'} — ${fmtAmountTRY(amt)}`,
       amount_try:  amt,

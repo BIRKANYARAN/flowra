@@ -563,7 +563,9 @@ export class FinancialHealthScorecardService {
       // 3. Partner loan tranches — outstanding
       this.supabase
         .from('partner_loan_tranches')
-        .select('remaining_balance, monthly_payment')
+        // no remaining_balance/monthly_payment columns — outstanding = principal_try − total_repaid_try;
+        // debt service estimated from annual rate below
+        .select('principal_try, total_repaid_try, annual_interest_rate')
         .eq('company_id', companyId)
         .eq('status', 'active'),
 
@@ -651,12 +653,17 @@ export class FinancialHealthScorecardService {
     // CCC ≈ DSO + DIO - DPO; use DSO as proxy when inventory not available
     const cashConversionCycleDays: number | null = dsoDays !== null ? dsoDays : null
 
-    // Debt burden
+    // Debt burden — outstanding = principal − repaid; monthly service ≈ outstanding × annualRate/12
     const totalLoanBalance  = loans.reduce(
-      (s: number, l: { remaining_balance: number }) => s + (l.remaining_balance ?? 0), 0,
+      (s: number, l: { principal_try?: number; total_repaid_try?: number }) =>
+        s + Math.max(0, Number(l.principal_try ?? 0) - Number(l.total_repaid_try ?? 0)), 0,
     )
     const monthlyDebtService = loans.reduce(
-      (s: number, l: { monthly_payment: number }) => s + (l.monthly_payment ?? 0), 0,
+      (s: number, l: { principal_try?: number; total_repaid_try?: number; annual_interest_rate?: number }) => {
+        const outstanding = Math.max(0, Number(l.principal_try ?? 0) - Number(l.total_repaid_try ?? 0))
+        const rate = Number(l.annual_interest_rate ?? 0)
+        return s + (rate > 0 ? outstanding * rate / 12 : outstanding * 0.015)
+      }, 0,
     )
     const debtServiceRatio: number | null = currentRevenue > 0
       ? monthlyDebtService / currentRevenue

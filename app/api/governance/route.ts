@@ -88,7 +88,8 @@ export async function POST(req: NextRequest) {
           .eq('company_id', companyId)
           .is('deleted_at', null),
         supabase.from('partner_loan_tranches')
-          .select('partner_id, outstanding_try, annual_interest_rate, status')
+          // outstanding_try computed below (no such column): principal_try − total_repaid_try
+          .select('partner_id, principal_try, total_repaid_try, annual_interest_rate, status')
           .eq('company_id', companyId)
           .neq('status', 'repaid'),
         // Outstanding receivables (unpaid/partial/overdue) — use sale_date for period attribution
@@ -110,7 +111,11 @@ export async function POST(req: NextRequest) {
     const fs          = finSummary.status   === 'fulfilled' ? finSummary.value     : null
     const bs          = bsData.status       === 'fulfilled' ? bsData.value         : null
     const partnerRows = partners.status     === 'fulfilled' ? (partners.value.data  ?? []) : []
-    const trancheRows = tranches.status     === 'fulfilled' ? (tranches.value.data  ?? []) : []
+    const trancheRows = (tranches.status     === 'fulfilled' ? (tranches.value.data  ?? []) : [])
+      .map((t: { partner_id: string; principal_try: number; total_repaid_try: number; annual_interest_rate: number | null; status: string }) => ({
+        ...t,
+        outstanding_try: Math.max(0, Number(t.principal_try ?? 0) - Number(t.total_repaid_try ?? 0)),
+      }))
     const salesRows   = openSales.status    === 'fulfilled' ? (openSales.value.data ?? []) : []
     const expRows     = unpaidExpenses.status === 'fulfilled' ? (unpaidExpenses.value.data ?? []) : []
 

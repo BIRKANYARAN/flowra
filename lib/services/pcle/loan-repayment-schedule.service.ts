@@ -349,7 +349,7 @@ export class LoanRepaymentScheduleService {
         id,
         partner_id,
         principal_try,
-        outstanding_try,
+        total_repaid_try,
         disbursement_date,
         expected_repayment_date,
         interest_rate_annual_pct,
@@ -441,8 +441,9 @@ export class LoanRepaymentScheduleService {
         annualRatePct = 0
       }
 
-      const outstandingRaw = r.outstanding_try != null ? Number(r.outstanding_try) : principal
-      const outstandingTry = isNaN(outstandingRaw) ? principal : outstandingRaw
+      // outstanding is computed (no outstanding_try column): principal − total_repaid
+      const outstandingRaw = principal - (Number(r.total_repaid_try) || 0)
+      const outstandingTry = isNaN(outstandingRaw) ? principal : Math.max(0, outstandingRaw)
 
       const repayRaw = r.expected_repayment_date as string | null
       const expectedRepaymentDate = repayRaw ? repayRaw.substring(0, 10) : null

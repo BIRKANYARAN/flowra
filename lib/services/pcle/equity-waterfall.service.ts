@@ -258,7 +258,8 @@ export class EquityWaterfallService {
 
       this.supabase
         .from('partner_loan_tranches')
-        .select('partner_id, outstanding_try')
+        // outstanding_try is computed (no such column): principal_try − total_repaid_try
+        .select('partner_id, principal_try, total_repaid_try')
         .eq('company_id', companyId)
         .eq('status', 'active'),
 
@@ -285,9 +286,10 @@ export class EquityWaterfallService {
     // Loan balance map
     const loanBalanceMap = new Map<string, number>()
     if (trancheRes.status === 'fulfilled' && trancheRes.value.data) {
-      for (const t of trancheRes.value.data as LoanTrancheRow[]) {
+      for (const t of trancheRes.value.data as Array<{ partner_id: string; principal_try: number; total_repaid_try: number }>) {
         const existing = loanBalanceMap.get(t.partner_id) ?? 0
-        loanBalanceMap.set(t.partner_id, existing + Number(t.outstanding_try ?? 0))
+        const outstanding = Math.max(0, Number(t.principal_try ?? 0) - Number(t.total_repaid_try ?? 0))
+        loanBalanceMap.set(t.partner_id, existing + outstanding)
       }
     }
 

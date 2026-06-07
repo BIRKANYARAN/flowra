@@ -69,7 +69,8 @@ export async function GET(req: NextRequest) {
     // ── 4. Fetch loan tranches ─────────────────────────────────────────────────
     const { data: tranchesRaw } = await supabase
       .from('partner_loan_tranches')
-      .select('partner_id, outstanding_try, annual_interest_rate, expected_repayment_date')
+      // outstanding computed (no outstanding_try column): principal_try − total_repaid_try
+      .select('partner_id, principal_try, total_repaid_try, annual_interest_rate, expected_repayment_date')
       .eq('company_id', companyId)
       .is('deleted_at', null)
       .neq('status', 'repaid')
@@ -138,7 +139,7 @@ export async function GET(req: NextRequest) {
     for (const t of (tranchesRaw ?? [])) {
       const list = tranchesByPartner.get(t.partner_id) ?? []
       list.push({
-        principal_try:            Number(t.outstanding_try) || 0,
+        principal_try:            Math.max(0, Number(t.principal_try ?? 0) - Number(t.total_repaid_try ?? 0)),
         expected_repayment_date:  t.expected_repayment_date ?? null,
         interest_rate_annual_pct: Number(t.annual_interest_rate) || 0,
       })

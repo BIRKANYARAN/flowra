@@ -98,13 +98,15 @@ export async function GET(req: NextRequest) {
     // Fetch loan tranches outstanding per partner
     const { data: trancheRows } = await supabase
       .from('partner_loan_tranches')
-      .select('partner_id, outstanding_try')
+      // outstanding_try computed (no such column): principal_try − total_repaid_try
+      .select('partner_id, principal_try, total_repaid_try')
       .eq('company_id', companyId)
       .eq('status', 'active')
 
     const loanByPartner = new Map<string, number>()
-    for (const t of (trancheRows ?? []) as Array<{ partner_id: string; outstanding_try: number }>) {
-      loanByPartner.set(t.partner_id, (loanByPartner.get(t.partner_id) ?? 0) + Number(t.outstanding_try ?? 0))
+    for (const t of (trancheRows ?? []) as Array<{ partner_id: string; principal_try: number; total_repaid_try: number }>) {
+      const outstanding = Math.max(0, Number(t.principal_try ?? 0) - Number(t.total_repaid_try ?? 0))
+      loanByPartner.set(t.partner_id, (loanByPartner.get(t.partner_id) ?? 0) + outstanding)
     }
 
     const totalLoans = Array.from(loanByPartner.values()).reduce((s, v) => s + v, 0)
@@ -183,13 +185,14 @@ export async function GET(req: NextRequest) {
     // Fetch tranche data for DSR approximation
     const { data: trancheRows } = await supabase
       .from('partner_loan_tranches')
-      .select('outstanding_try, annual_interest_rate')
+      // outstanding_try computed (no such column): principal_try − total_repaid_try
+      .select('principal_try, total_repaid_try, annual_interest_rate')
       .eq('company_id', companyId)
       .eq('status', 'active')
 
-    const tranches = (trancheRows ?? []) as Array<{ outstanding_try: number; annual_interest_rate: number | null }>
+    const tranches = (trancheRows ?? []) as Array<{ principal_try: number; total_repaid_try: number; annual_interest_rate: number | null }>
     const monthlyDebtService = tranches.reduce((s, t) => {
-      const principal = Number(t.outstanding_try ?? 0)
+      const principal = Math.max(0, Number(t.principal_try ?? 0) - Number(t.total_repaid_try ?? 0))
       const rate      = Number(t.annual_interest_rate ?? 0)
       return s + (rate > 0 ? principal * rate / 12 : principal * 0.015)
     }, 0)

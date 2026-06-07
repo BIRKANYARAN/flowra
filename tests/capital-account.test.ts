@@ -14,7 +14,7 @@ import {
 function mockSupabase(data: {
   partners?:              Array<{ id: string; name: string; share_ratio: number; is_active: boolean }>
   partner_finance_events?: Array<{ partner_id: string; event_type: string; amount_try: number }>
-  partner_loan_tranches?: Array<{ partner_id: string; outstanding_try: number }>
+  partner_loan_tranches?: Array<{ partner_id: string; principal_try: number; total_repaid_try: number }>
 }) {
   const tableData: Record<string, unknown[]> = {
     partners:               data.partners               ?? [],
@@ -76,8 +76,8 @@ const BASE_EVENTS = [
 ]
 
 const BASE_TRANCHES = [
-  { partner_id: 'p1', outstanding_try: 25_000 },
-  { partner_id: 'p2', outstanding_try: 18_000 },
+  { partner_id: 'p1', principal_try: 25_000, total_repaid_try: 0 },
+  { partner_id: 'p2', principal_try: 18_000, total_repaid_try: 0 },
 ]
 
 const TOTAL_EQUITY = 500_000

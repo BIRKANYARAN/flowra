@@ -106,11 +106,11 @@ export class CostOfCapitalService {
     const [tranchesRes, partnersRes] = await Promise.all([
       supabase
         .from('partner_loan_tranches')
-        .select('partner_id, outstanding_try, annual_interest_rate')
+        // outstanding_try is computed (no such column): principal_try − total_repaid_try; positivity filtered in JS
+        .select('partner_id, principal_try, total_repaid_try, annual_interest_rate')
         .eq('company_id', companyId)
         .is('deleted_at', null)
-        .neq('status', 'repaid')
-        .gt('outstanding_try', 0),
+        .neq('status', 'repaid'),
 
       supabase
         .from('partners')
@@ -119,7 +119,9 @@ export class CostOfCapitalService {
         .is('deleted_at', null),
     ])
 
-    const tranches: TrancheRow[]      = tranchesRes.data  ?? []
+    const tranches: TrancheRow[]      = ((tranchesRes.data ?? []) as Array<{ partner_id: string; principal_try: number; total_repaid_try: number; annual_interest_rate: number }>)
+      .map(r => ({ partner_id: r.partner_id, annual_interest_rate: r.annual_interest_rate, outstanding_try: Math.max(0, Number(r.principal_try ?? 0) - Number(r.total_repaid_try ?? 0)) }))
+      .filter(r => r.outstanding_try > 0)
     const partnerRows: PartnerNameRow[] = partnersRes.data ?? []
 
     // Build partner name map

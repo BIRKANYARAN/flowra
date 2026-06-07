@@ -185,7 +185,8 @@ export class KpiTrackerService {
       // Active partner loan tranches (outstanding_try + monthly interest for DSR)
       supabase
         .from('partner_loan_tranches')
-        .select('outstanding_try, annual_interest_rate')
+        // outstanding_try computed (no such column): principal_try − total_repaid_try
+        .select('principal_try, total_repaid_try, annual_interest_rate')
         .eq('company_id', companyId)
         .eq('status', 'active'),
 
@@ -223,7 +224,7 @@ export class KpiTrackerService {
     let monthlyDebtService  = 0
     if (partnerDebtResult.status === 'fulfilled') {
       for (const row of (partnerDebtResult.value.data ?? [])) {
-        const outstanding = Number(row.outstanding_try ?? 0)
+        const outstanding = Math.max(0, Number(row.principal_try ?? 0) - Number(row.total_repaid_try ?? 0))
         const rate        = Number(row.annual_interest_rate ?? 0)
         partnerDebtTotal    += outstanding
         monthlyDebtService  += rate > 0

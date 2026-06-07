@@ -32,11 +32,12 @@ export async function WhatIfTab({ companyId, userId }: Props) {
   try {
     const { data: tranches } = await supabase
       .from('partner_loan_tranches')
-      .select('outstanding_try, annual_interest_rate')
+      // outstanding_try computed (no such column): principal_try − total_repaid_try
+      .select('principal_try, total_repaid_try, annual_interest_rate')
       .eq('company_id', companyId)
       .eq('status', 'active')
     monthlyDebtService = (tranches ?? []).reduce((s, t) => {
-      const p = Number(t.outstanding_try ?? 0)
+      const p = Math.max(0, Number(t.principal_try ?? 0) - Number(t.total_repaid_try ?? 0))
       const r = Number(t.annual_interest_rate ?? 0)
       return s + (r > 0 ? p * r / 12 : p * 0.015)
     }, 0)

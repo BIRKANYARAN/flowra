@@ -98,20 +98,21 @@ export async function POST(req: NextRequest) {
         // The interest-accrual cron also uses outstanding_try for the same reason.
         const { data: trancheRows } = await supabase
           .from('partner_loan_tranches')
-          .select('outstanding_try, amount_try, annual_interest_rate, status, due_date')
+          // outstanding/original derived from principal_try & total_repaid_try (no outstanding_try/amount_try/due_date columns)
+          .select('principal_try, total_repaid_try, annual_interest_rate, status, expected_repayment_date')
           .eq('company_id', companyId)
           .eq('status', 'active')
 
         for (const t of trancheRows ?? []) {
-          // outstanding_try = current balance (may be null on older rows — fall back to amount_try)
-          const outstanding    = Number((t.outstanding_try ?? t.amount_try) ?? 0)
-          const originalAmt    = Number(t.amount_try ?? 0)
+          // original = disbursed principal; outstanding = principal − repaid
+          const originalAmt    = Number(t.principal_try ?? 0)
+          const outstanding    = Math.max(0, originalAmt - Number(t.total_repaid_try ?? 0))
           // annual_interest_rate is a decimal (0.15 = 15%) — do NOT divide by 100 again
           const annualRate      = Number(t.annual_interest_rate ?? 0)
           const monthlyInterest = outstanding * annualRate / 12
-          // Remaining months from due_date
-          const remainingMonths = t.due_date
-            ? Math.max(0, Math.ceil((new Date(t.due_date as string).getTime() - Date.now()) / (30 * 86_400_000)))
+          // Remaining months from expected_repayment_date
+          const remainingMonths = t.expected_repayment_date
+            ? Math.max(0, Math.ceil((new Date(t.expected_repayment_date as string).getTime() - Date.now()) / (30 * 86_400_000)))
             : 0
           tranches.push({
             label:             `Ortak Borcu (${outstanding > 0 ? `₺${(outstanding / 1000).toFixed(0)}K bakiye` : originalAmt > 0 ? `₺${(originalAmt / 1000).toFixed(0)}K` : '?'})`,

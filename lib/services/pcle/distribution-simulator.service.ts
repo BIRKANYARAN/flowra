@@ -458,13 +458,14 @@ export class DistributionSimulatorService {
     try {
       const { data, error } = await this.supabase
         .from('partner_loan_tranches')
-        .select('outstanding_balance_try')
+        // outstanding is computed (no outstanding_balance_try column): principal_try − total_repaid_try
+        .select('principal_try, total_repaid_try')
         .eq('company_id', companyId)
 
       if (error || !data) return 0
       return round2(
-        (data as Array<{ outstanding_balance_try: unknown }>)
-          .reduce((s, r) => s + Number(r.outstanding_balance_try ?? 0), 0),
+        (data as Array<{ principal_try: unknown; total_repaid_try: unknown }>)
+          .reduce((s, r) => s + Math.max(0, Number(r.principal_try ?? 0) - Number(r.total_repaid_try ?? 0)), 0),
       )
     } catch {
       return 0

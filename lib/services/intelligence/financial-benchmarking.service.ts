@@ -389,7 +389,8 @@ export class FinancialBenchmarkingService {
       // 6. Partner loan tranches
       this.supabase
         .from('partner_loan_tranches')
-        .select('remaining_balance, outstanding_balance')
+        // outstanding is computed (no remaining_balance/outstanding_balance column): principal_try − total_repaid_try
+        .select('principal_try, total_repaid_try')
         .eq('company_id', companyId)
         .eq('status', 'active'),
 
@@ -405,7 +406,7 @@ export class FinancialBenchmarkingService {
     type SaleRow     = { amount: number; period: string; status?: string; paid_at?: string | null; due_date?: string | null }
     type ExpenseRow  = { amount: number; period: string; category?: string; expense_type?: string }
     type StockLot    = { qty_remaining: number; unit_cost: number; created_at: string }
-    type LoanRow     = { remaining_balance?: number; outstanding_balance?: number }
+    type LoanRow     = { principal_try?: number; total_repaid_try?: number }
     type CapitalRow  = { committed_try: number; paid_try?: number }
 
     const salesLast12  = salesLast12Result.status  === 'fulfilled' ? (salesLast12Result.value.data  as SaleRow[]   ?? []) : [] as SaleRow[]
@@ -507,7 +508,7 @@ export class FinancialBenchmarkingService {
 
     // Debt to equity
     const totalLoanOutstanding = loans.reduce(
-      (s, l) => s + (l.outstanding_balance ?? l.remaining_balance ?? 0), 0,
+      (s, l) => s + Math.max(0, Number(l.principal_try ?? 0) - Number(l.total_repaid_try ?? 0)), 0,
     )
     const totalCapitalCommitted = capital.reduce(
       (s, c) => s + (c.committed_try ?? 0), 0,

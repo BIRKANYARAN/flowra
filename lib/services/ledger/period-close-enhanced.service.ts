@@ -197,7 +197,8 @@ export class PeriodCloseEnhancedService {
       // 10. Partner loan tranches with overdue expected_repayment_date
       (supabase as SupabaseClient)
         .from('partner_loan_tranches')
-        .select('id, expected_repayment_date, outstanding_try')
+        // outstanding_try computed (no such column): principal_try − total_repaid_try
+        .select('id, expected_repayment_date, principal_try, total_repaid_try')
         .eq('company_id', companyId)
         .eq('status', 'active')
         .lt('expected_repayment_date', today)
@@ -396,7 +397,8 @@ export class PeriodCloseEnhancedService {
       const key = 'partner_loans_current'
       const label = 'Ortak borç taksitleri güncel'
       if (loanTranchesResult.status === 'fulfilled') {
-        const rows = (loanTranchesResult.value as { data: Array<{ id: string; expected_repayment_date: string; outstanding_try: number }> | null }).data ?? []
+        const rows = ((loanTranchesResult.value as { data: Array<{ id: string; expected_repayment_date: string; principal_try: number; total_repaid_try: number }> | null }).data ?? [])
+          .map(r => ({ ...r, outstanding_try: Math.max(0, Number(r.principal_try ?? 0) - Number(r.total_repaid_try ?? 0)) }))
         if (rows.length === 0) {
           checks.push(pass(key, label, 'partner', 'Vadesi geçmiş ortak borç taksidi bulunmuyor.', false))
         } else {

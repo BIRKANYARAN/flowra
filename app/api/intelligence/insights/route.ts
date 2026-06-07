@@ -290,11 +290,13 @@ async function fetchPartnerParams(
   // Total outstanding loans for concentration calc
   const loanRes = await supabase
     .from('partner_loan_tranches')
-    .select('partner_id, outstanding_try')
+    // outstanding_try computed (no such column): principal_try − total_repaid_try
+    .select('partner_id, principal_try, total_repaid_try')
     .eq('company_id', companyId)
     .eq('status', 'active')
 
-  const loanRows = loanRes?.data ?? []
+  const loanRows = ((loanRes?.data ?? []) as Array<{ partner_id: string; principal_try: number; total_repaid_try: number }>)
+    .map(r => ({ partner_id: r.partner_id, outstanding_try: Math.max(0, Number(r.principal_try ?? 0) - Number(r.total_repaid_try ?? 0)) }))
   const totalLoans = loanRows.reduce((s: number, r: { outstanding_try: number }) => s + Number(r.outstanding_try ?? 0), 0)
 
   const loanByPartner = new Map<string, number>()

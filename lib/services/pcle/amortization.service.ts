@@ -185,7 +185,8 @@ export class AmortizationService {
     // Fetch active / partially-repaid tranches with partner join
     const { data: rows, error } = await supabase
       .from('partner_loan_tranches')
-      .select('id, company_id, partner_id, outstanding_try, annual_interest_rate, status, disbursed_try, partners(name)')
+      // outstanding_try / disbursed_try are not columns — disbursed = principal_try, outstanding = principal_try − total_repaid_try
+      .select('id, company_id, partner_id, principal_try, total_repaid_try, annual_interest_rate, status, partners(name)')
       .eq('company_id', companyId)
       .in('status', ['active', 'partially_repaid'])
 
@@ -193,26 +194,9 @@ export class AmortizationService {
       throw new Error(`Tranche verisi alınamadı: ${error.message}`)
     }
 
-    // Try to read optional columns gracefully via a separate probe query
-    // (columns may not exist depending on schema version)
-    let optionalColsData: Record<string, { monthly_payment_try: number | null; term_months: number | null }> = {}
-    try {
-      const { data: extRows } = await supabase
-        .from('partner_loan_tranches')
-        .select('id, monthly_payment_try, term_months')
-        .eq('company_id', companyId)
-        .in('status', ['active', 'partially_repaid'])
-      if (Array.isArray(extRows)) {
-        for (const r of extRows) {
-          optionalColsData[r.id as string] = {
-            monthly_payment_try: (r as Record<string, unknown>).monthly_payment_try as number | null ?? null,
-            term_months: (r as Record<string, unknown>).term_months as number | null ?? null,
-          }
-        }
-      }
-    } catch {
-      // optional columns don't exist — silently continue
-    }
+    // monthly_payment_try / term_months are not columns in this schema —
+    // payment is derived from outstanding/rate with a default term below.
+    const optionalColsData: Record<string, { monthly_payment_try: number | null; term_months: number | null }> = {}
 
     const currentMonth = currentMonthIso()
     const tranches: TrancheAmortization[] = []
@@ -222,8 +206,8 @@ export class AmortizationService {
       const trancheId = r.id as string
       const partnersJoin = r.partners as { name?: string } | null
       const partnerName = partnersJoin?.name ?? 'Ortak'
-      const outstanding = Number(r.outstanding_try) || 0
-      const disbursed = Number(r.disbursed_try) || 0
+      const disbursed = Number(r.principal_try) || 0
+      const outstanding = Math.max(0, disbursed - (Number(r.total_repaid_try) || 0))
       const annualRate = Number(r.annual_interest_rate) || 0
 
       const ext = optionalColsData[trancheId] ?? { monthly_payment_try: null, term_months: null }

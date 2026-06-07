@@ -676,7 +676,8 @@ export class EquityWaterfallDistributionService {
 
       this.supabase
         .from('partner_loan_tranches')
-        .select('id, partner_id, outstanding_try, annual_interest_rate')
+        // outstanding_try is computed (no such column): principal_try − total_repaid_try
+        .select('id, partner_id, principal_try, total_repaid_try, annual_interest_rate')
         .eq('company_id', companyId)
         .eq('status', 'active')
         .is('deleted_at', null),
@@ -742,7 +743,7 @@ export class EquityWaterfallDistributionService {
     })
 
     // ── Loan tranches ─────────────────────────────────────────────────────────
-    const rawTranches: Array<{ id: string; partner_id: string; outstanding_try: number; annual_interest_rate: number | null }> =
+    const rawTranches: Array<{ id: string; partner_id: string; principal_try: number; total_repaid_try: number; annual_interest_rate: number | null }> =
       tranchesRes.status === 'fulfilled' ? (tranchesRes.value.data ?? []) : []
 
     // Build partner name lookup
@@ -750,7 +751,7 @@ export class EquityWaterfallDistributionService {
 
     const loanTranches = rawTranches.map(t => {
       const annualRate = Number(t.annual_interest_rate ?? 0)
-      const outstanding = Number(t.outstanding_try ?? 0)
+      const outstanding = Math.max(0, Number(t.principal_try ?? 0) - Number(t.total_repaid_try ?? 0))
       // Monthly interest accrual estimate: outstanding × rate / 12
       const interest = Math.round(outstanding * annualRate / 12 * 100) / 100
       return {

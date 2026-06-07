@@ -127,7 +127,8 @@ export class CapitalAccountService {
 
       supabase
         .from('partner_loan_tranches')
-        .select('partner_id, outstanding_try')
+        // outstanding_try is computed (no such column): principal_try − total_repaid_try
+        .select('partner_id, principal_try, total_repaid_try')
         .eq('company_id', companyId)
         .is('deleted_at', null)
         .neq('status', 'repaid'),
@@ -135,7 +136,8 @@ export class CapitalAccountService {
 
     const partners: PartnerRow[]       = partnersRes.data  ?? []
     const events: FinanceEventRow[]    = eventsRes.data    ?? []
-    const tranches: LoanTrancheRow[]   = tranchesRes.data  ?? []
+    const tranches: LoanTrancheRow[]   = ((tranchesRes.data ?? []) as Array<{ partner_id: string; principal_try: number; total_repaid_try: number }>)
+      .map(r => ({ partner_id: r.partner_id, outstanding_try: Math.max(0, Number(r.principal_try ?? 0) - Number(r.total_repaid_try ?? 0)) }))
 
     // ── Aggregate per-partner from events ─────────────────────────────────────
     type Agg = {

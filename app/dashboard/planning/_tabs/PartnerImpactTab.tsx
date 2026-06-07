@@ -59,7 +59,8 @@ export async function PartnerImpactTab({ companyId, userId }: Props) {
 
     // Active loan tranches
     supabase.from('partner_loan_tranches')
-      .select('partner_id, outstanding_try, annual_interest_rate, due_date, status')
+      // outstanding_try / due_date are computed/aliased below (no such columns)
+      .select('partner_id, principal_try, total_repaid_try, annual_interest_rate, expected_repayment_date, status')
       .eq('company_id', companyId)
       .eq('status', 'active'),
   ])
@@ -71,7 +72,14 @@ export async function PartnerImpactTab({ companyId, userId }: Props) {
 
   const salesRows = salesResult.status === 'fulfilled' ? (salesResult.value.data ?? []) : []
   const expRows   = expResult.status   === 'fulfilled' ? (expResult.value.data   ?? []) : []
-  const tranches  = trancheResult.status === 'fulfilled' ? (trancheResult.value.data ?? []) : []
+  const tranches  = (trancheResult.status === 'fulfilled' ? (trancheResult.value.data ?? []) : [])
+    .map((t: Record<string, unknown>) => ({
+      partner_id:           String(t.partner_id ?? ''),
+      annual_interest_rate: Number(t.annual_interest_rate ?? 0),
+      status:               String(t.status ?? ''),
+      due_date:             (t.expected_repayment_date as string | null) ?? null,
+      outstanding_try:      Math.max(0, Number(t.principal_try ?? 0) - Number(t.total_repaid_try ?? 0)),
+    }))
 
   const paymentsReceived = salesRows.reduce((s, r) => s + Number(r.total_try ?? 0), 0)
   const paidExpenses     = expRows.filter(e => e.payment_status === 'paid').reduce((s, e) => s + Number(e.amount_try ?? 0), 0)

@@ -687,7 +687,8 @@ export class FinancialNarrativeService {
 
         this.supabase
           .from('partner_loan_tranches')
-          .select('partner_id, outstanding_try')
+          // outstanding_try computed (no such column): principal_try − total_repaid_try
+          .select('partner_id, principal_try, total_repaid_try')
           .eq('company_id', companyId)
           .eq('status', 'active'),
       ])
@@ -763,7 +764,8 @@ export class FinancialNarrativeService {
     // Partners
     const partnerRows  = partnersRes.status === 'fulfilled' ? (partnersRes.value?.data ?? []) : []
     const partner_count = partnerRows.length
-    const loanRows     = loansRes.status === 'fulfilled' ? (loansRes.value?.data ?? []) : []
+    const loanRows     = (loansRes.status === 'fulfilled' ? (loansRes.value?.data ?? []) : [])
+      .map((r: { partner_id: string; principal_try: number; total_repaid_try: number }) => ({ partner_id: r.partner_id, outstanding_try: Math.max(0, Number(r.principal_try ?? 0) - Number(r.total_repaid_try ?? 0)) }))
     const total_partner_loans = loanRows.reduce((s: number, r: { outstanding_try: number }) => s + Number(r.outstanding_try ?? 0), 0)
 
     // Find highest risk partner (by loan concentration)

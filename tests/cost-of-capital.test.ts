@@ -59,7 +59,7 @@ describe('CostOfCapitalService.computeWACD — pure', () => {
   it('3. annual_interest_try = outstanding × annual_interest_rate', async () => {
     const supabase = makeSupabase({
       partner_loan_tranches: [
-        { partner_id: 'p1', outstanding_try: 100_000, annual_interest_rate: 0.12 },
+        { partner_id: 'p1', principal_try: 100_000, total_repaid_try: 0, annual_interest_rate: 0.12 },
       ],
       partners: [{ id: 'p1', name: 'Ortak A' }],
     })
@@ -74,7 +74,7 @@ describe('CostOfCapitalService.computeWACD — pure', () => {
   it('4. monthly_interest_try = annual_interest_try / 12', async () => {
     const supabase = makeSupabase({
       partner_loan_tranches: [
-        { partner_id: 'p1', outstanding_try: 120_000, annual_interest_rate: 0.18 },
+        { partner_id: 'p1', principal_try: 120_000, total_repaid_try: 0, annual_interest_rate: 0.18 },
       ],
       partners: [{ id: 'p1', name: 'Ortak A' }],
     })
@@ -88,7 +88,7 @@ describe('CostOfCapitalService.computeWACD — pure', () => {
   it('5. 0% rate loan → is_zero_rate = true', async () => {
     const supabase = makeSupabase({
       partner_loan_tranches: [
-        { partner_id: 'p1', outstanding_try: 50_000, annual_interest_rate: 0 },
+        { partner_id: 'p1', principal_try: 50_000, total_repaid_try: 0, annual_interest_rate: 0 },
       ],
       partners: [{ id: 'p1', name: 'Ortak A' }],
     })
@@ -103,7 +103,7 @@ describe('CostOfCapitalService.computeWACD — pure', () => {
   it('6. rate > 0.20 → is_high_rate = true', async () => {
     const supabase = makeSupabase({
       partner_loan_tranches: [
-        { partner_id: 'p1', outstanding_try: 75_000, annual_interest_rate: 0.25 },
+        { partner_id: 'p1', principal_try: 75_000, total_repaid_try: 0, annual_interest_rate: 0.25 },
       ],
       partners: [{ id: 'p1', name: 'Ortak A' }],
     })
@@ -125,8 +125,8 @@ describe('CostOfCapitalService.computeWACD — pure', () => {
   it('8. total_annual_interest_try = sum of all partner annual_interest_try', async () => {
     const supabase = makeSupabase({
       partner_loan_tranches: [
-        { partner_id: 'p1', outstanding_try: 100_000, annual_interest_rate: 0.10 },
-        { partner_id: 'p2', outstanding_try: 200_000, annual_interest_rate: 0.15 },
+        { partner_id: 'p1', principal_try: 100_000, total_repaid_try: 0, annual_interest_rate: 0.10 },
+        { partner_id: 'p2', principal_try: 200_000, total_repaid_try: 0, annual_interest_rate: 0.15 },
       ],
       partners: [
         { id: 'p1', name: 'Ortak A' },
@@ -150,8 +150,8 @@ describe('CostOfCapitalService.computeWACD — pure', () => {
   it('10. share_of_total_debt_pct across partners sums to 100', async () => {
     const supabase = makeSupabase({
       partner_loan_tranches: [
-        { partner_id: 'p1', outstanding_try: 300_000, annual_interest_rate: 0.12 },
-        { partner_id: 'p2', outstanding_try: 700_000, annual_interest_rate: 0.15 },
+        { partner_id: 'p1', principal_try: 300_000, total_repaid_try: 0, annual_interest_rate: 0.12 },
+        { partner_id: 'p2', principal_try: 700_000, total_repaid_try: 0, annual_interest_rate: 0.15 },
       ],
       partners: [
         { id: 'p1', name: 'Ortak A' },
@@ -282,7 +282,7 @@ describe('CostOfCapitalService.getReport — report fields', () => {
   it('23. total_monthly_interest_try = total_annual / 12', async () => {
     const supabase = makeSupabase({
       partner_loan_tranches: [
-        { partner_id: 'p1', outstanding_try: 120_000, annual_interest_rate: 0.12 },
+        { partner_id: 'p1', principal_try: 120_000, total_repaid_try: 0, annual_interest_rate: 0.12 },
       ],
       partners: [{ id: 'p1', name: 'Ortak A' }],
     })
@@ -292,7 +292,7 @@ describe('CostOfCapitalService.getReport — report fields', () => {
 
   it('24. partner name resolved from partners table', async () => {
     const supabase = makeSupabase({
-      partner_loan_tranches: [{ partner_id: 'p1', outstanding_try: 50_000, annual_interest_rate: 0.10 }],
+      partner_loan_tranches: [{ partner_id: 'p1', principal_try: 50_000, total_repaid_try: 0, annual_interest_rate: 0.10 }],
       partners: [{ id: 'p1', name: 'Ahmet Yılmaz' }],
     })
     const report = await CostOfCapitalService.getReport(CID, supabase as never, { today: '2026-01-15' })
@@ -301,7 +301,7 @@ describe('CostOfCapitalService.getReport — report fields', () => {
 
   it('25. unknown partner id → partner_name falls back to partner_id', async () => {
     const supabase = makeSupabase({
-      partner_loan_tranches: [{ partner_id: 'unknown-uuid', outstanding_try: 50_000, annual_interest_rate: 0.10 }],
+      partner_loan_tranches: [{ partner_id: 'unknown-uuid', principal_try: 50_000, total_repaid_try: 0, annual_interest_rate: 0.10 }],
       partners: [],
     })
     const report = await CostOfCapitalService.getReport(CID, supabase as never, { today: '2026-01-15' })
@@ -311,8 +311,8 @@ describe('CostOfCapitalService.getReport — report fields', () => {
   it('26. two loans from same partner aggregated into one', async () => {
     const supabase = makeSupabase({
       partner_loan_tranches: [
-        { partner_id: 'p1', outstanding_try: 100_000, annual_interest_rate: 0.10 },
-        { partner_id: 'p1', outstanding_try: 100_000, annual_interest_rate: 0.20 },
+        { partner_id: 'p1', principal_try: 100_000, total_repaid_try: 0, annual_interest_rate: 0.10 },
+        { partner_id: 'p1', principal_try: 100_000, total_repaid_try: 0, annual_interest_rate: 0.20 },
       ],
       partners: [{ id: 'p1', name: 'Ortak A' }],
     })
@@ -325,7 +325,7 @@ describe('CostOfCapitalService.getReport — report fields', () => {
 
   it('27. annual_interest_projection_try equals total_annual_interest_try', async () => {
     const supabase = makeSupabase({
-      partner_loan_tranches: [{ partner_id: 'p1', outstanding_try: 200_000, annual_interest_rate: 0.15 }],
+      partner_loan_tranches: [{ partner_id: 'p1', principal_try: 200_000, total_repaid_try: 0, annual_interest_rate: 0.15 }],
       partners: [{ id: 'p1', name: 'Ortak A' }],
     })
     const report = await CostOfCapitalService.getReport(CID, supabase as never, { today: '2026-01-15' })
@@ -334,7 +334,7 @@ describe('CostOfCapitalService.getReport — report fields', () => {
 
   it('28. ytd_interest_try computed proportionally to days elapsed', async () => {
     const supabase = makeSupabase({
-      partner_loan_tranches: [{ partner_id: 'p1', outstanding_try: 365_000, annual_interest_rate: 0.10 }],
+      partner_loan_tranches: [{ partner_id: 'p1', principal_try: 365_000, total_repaid_try: 0, annual_interest_rate: 0.10 }],
       partners: [{ id: 'p1', name: 'Ortak A' }],
     })
     // Jan 1 = day 1 → daysElapsed = max(1, 0) = 1 day
@@ -345,7 +345,7 @@ describe('CostOfCapitalService.getReport — report fields', () => {
 
   it('29. ytd_interest_try by June is roughly half-year accrual', async () => {
     const supabase = makeSupabase({
-      partner_loan_tranches: [{ partner_id: 'p1', outstanding_try: 365_000, annual_interest_rate: 0.10 }],
+      partner_loan_tranches: [{ partner_id: 'p1', principal_try: 365_000, total_repaid_try: 0, annual_interest_rate: 0.10 }],
       partners: [{ id: 'p1', name: 'Ortak A' }],
     })
     // July 2 ≈ day 183 → ytd ≈ 36500 × (183/365) ≈ 18300
@@ -357,9 +357,9 @@ describe('CostOfCapitalService.getReport — report fields', () => {
   it('30. zero_rate_loan_count = 2 when two partners have 0% rate', async () => {
     const supabase = makeSupabase({
       partner_loan_tranches: [
-        { partner_id: 'p1', outstanding_try: 100_000, annual_interest_rate: 0 },
-        { partner_id: 'p2', outstanding_try: 200_000, annual_interest_rate: 0 },
-        { partner_id: 'p3', outstanding_try: 300_000, annual_interest_rate: 0.10 },
+        { partner_id: 'p1', principal_try: 100_000, total_repaid_try: 0, annual_interest_rate: 0 },
+        { partner_id: 'p2', principal_try: 200_000, total_repaid_try: 0, annual_interest_rate: 0 },
+        { partner_id: 'p3', principal_try: 300_000, total_repaid_try: 0, annual_interest_rate: 0.10 },
       ],
       partners: [
         { id: 'p1', name: 'P1' },
@@ -374,7 +374,7 @@ describe('CostOfCapitalService.getReport — report fields', () => {
 
   it('31. is_high_rate = false for rate exactly 0.20', async () => {
     const supabase = makeSupabase({
-      partner_loan_tranches: [{ partner_id: 'p1', outstanding_try: 100_000, annual_interest_rate: 0.20 }],
+      partner_loan_tranches: [{ partner_id: 'p1', principal_try: 100_000, total_repaid_try: 0, annual_interest_rate: 0.20 }],
       partners: [{ id: 'p1', name: 'P1' }],
     })
     const report = await CostOfCapitalService.getReport(CID, supabase as never, { today: '2026-01-15' })
@@ -383,7 +383,7 @@ describe('CostOfCapitalService.getReport — report fields', () => {
 
   it('32. is_high_rate = true for rate 0.201', async () => {
     const supabase = makeSupabase({
-      partner_loan_tranches: [{ partner_id: 'p1', outstanding_try: 100_000, annual_interest_rate: 0.201 }],
+      partner_loan_tranches: [{ partner_id: 'p1', principal_try: 100_000, total_repaid_try: 0, annual_interest_rate: 0.201 }],
       partners: [{ id: 'p1', name: 'P1' }],
     })
     const report = await CostOfCapitalService.getReport(CID, supabase as never, { today: '2026-01-15' })
@@ -393,9 +393,9 @@ describe('CostOfCapitalService.getReport — report fields', () => {
   it('33. partners sorted by outstanding DESC', async () => {
     const supabase = makeSupabase({
       partner_loan_tranches: [
-        { partner_id: 'p1', outstanding_try: 100_000, annual_interest_rate: 0.10 },
-        { partner_id: 'p2', outstanding_try: 500_000, annual_interest_rate: 0.12 },
-        { partner_id: 'p3', outstanding_try: 300_000, annual_interest_rate: 0.08 },
+        { partner_id: 'p1', principal_try: 100_000, total_repaid_try: 0, annual_interest_rate: 0.10 },
+        { partner_id: 'p2', principal_try: 500_000, total_repaid_try: 0, annual_interest_rate: 0.12 },
+        { partner_id: 'p3', principal_try: 300_000, total_repaid_try: 0, annual_interest_rate: 0.08 },
       ],
       partners: [
         { id: 'p1', name: 'P1' },
@@ -411,8 +411,8 @@ describe('CostOfCapitalService.getReport — report fields', () => {
   it('34. total_outstanding_try = sum of all partner outstanding', async () => {
     const supabase = makeSupabase({
       partner_loan_tranches: [
-        { partner_id: 'p1', outstanding_try: 250_000, annual_interest_rate: 0.10 },
-        { partner_id: 'p2', outstanding_try: 750_000, annual_interest_rate: 0.15 },
+        { partner_id: 'p1', principal_try: 250_000, total_repaid_try: 0, annual_interest_rate: 0.10 },
+        { partner_id: 'p2', principal_try: 750_000, total_repaid_try: 0, annual_interest_rate: 0.15 },
       ],
       partners: [
         { id: 'p1', name: 'P1' },
@@ -427,8 +427,8 @@ describe('CostOfCapitalService.getReport — report fields', () => {
     // 250k×0.10 + 750k×0.15 = 25000 + 112500 = 137500 / 1000000 = 0.1375
     const supabase = makeSupabase({
       partner_loan_tranches: [
-        { partner_id: 'p1', outstanding_try: 250_000, annual_interest_rate: 0.10 },
-        { partner_id: 'p2', outstanding_try: 750_000, annual_interest_rate: 0.15 },
+        { partner_id: 'p1', principal_try: 250_000, total_repaid_try: 0, annual_interest_rate: 0.10 },
+        { partner_id: 'p2', principal_try: 750_000, total_repaid_try: 0, annual_interest_rate: 0.15 },
       ],
       partners: [
         { id: 'p1', name: 'P1' },
@@ -449,8 +449,8 @@ describe('CostOfCapitalService.getReport — report fields', () => {
   it('37. no zero-rate loans → zero_rate_loan_count = 0', async () => {
     const supabase = makeSupabase({
       partner_loan_tranches: [
-        { partner_id: 'p1', outstanding_try: 100_000, annual_interest_rate: 0.10 },
-        { partner_id: 'p2', outstanding_try: 200_000, annual_interest_rate: 0.15 },
+        { partner_id: 'p1', principal_try: 100_000, total_repaid_try: 0, annual_interest_rate: 0.10 },
+        { partner_id: 'p2', principal_try: 200_000, total_repaid_try: 0, annual_interest_rate: 0.15 },
       ],
       partners: [
         { id: 'p1', name: 'P1' },
@@ -464,7 +464,7 @@ describe('CostOfCapitalService.getReport — report fields', () => {
 
   it('38. single partner 100% share of debt', async () => {
     const supabase = makeSupabase({
-      partner_loan_tranches: [{ partner_id: 'p1', outstanding_try: 500_000, annual_interest_rate: 0.12 }],
+      partner_loan_tranches: [{ partner_id: 'p1', principal_try: 500_000, total_repaid_try: 0, annual_interest_rate: 0.12 }],
       partners: [{ id: 'p1', name: 'Tek Ortak' }],
     })
     const report = await CostOfCapitalService.getReport(CID, supabase as never, { today: '2026-01-15' })
@@ -474,9 +474,9 @@ describe('CostOfCapitalService.getReport — report fields', () => {
   it('39. three equal partners each have ~33.33% share', async () => {
     const supabase = makeSupabase({
       partner_loan_tranches: [
-        { partner_id: 'p1', outstanding_try: 100_000, annual_interest_rate: 0.10 },
-        { partner_id: 'p2', outstanding_try: 100_000, annual_interest_rate: 0.10 },
-        { partner_id: 'p3', outstanding_try: 100_000, annual_interest_rate: 0.10 },
+        { partner_id: 'p1', principal_try: 100_000, total_repaid_try: 0, annual_interest_rate: 0.10 },
+        { partner_id: 'p2', principal_try: 100_000, total_repaid_try: 0, annual_interest_rate: 0.10 },
+        { partner_id: 'p3', principal_try: 100_000, total_repaid_try: 0, annual_interest_rate: 0.10 },
       ],
       partners: [
         { id: 'p1', name: 'P1' },
@@ -492,7 +492,7 @@ describe('CostOfCapitalService.getReport — report fields', () => {
 
   it('40. monthly interest × 12 ≈ annual interest (per partner)', async () => {
     const supabase = makeSupabase({
-      partner_loan_tranches: [{ partner_id: 'p1', outstanding_try: 240_000, annual_interest_rate: 0.15 }],
+      partner_loan_tranches: [{ partner_id: 'p1', principal_try: 240_000, total_repaid_try: 0, annual_interest_rate: 0.15 }],
       partners: [{ id: 'p1', name: 'P1' }],
     })
     const report = await CostOfCapitalService.getReport(CID, supabase as never, { today: '2026-01-15' })
@@ -503,8 +503,8 @@ describe('CostOfCapitalService.getReport — report fields', () => {
   it('41. ytd_interest_accrued_try = sum of partner ytd_interest_try', async () => {
     const supabase = makeSupabase({
       partner_loan_tranches: [
-        { partner_id: 'p1', outstanding_try: 100_000, annual_interest_rate: 0.10 },
-        { partner_id: 'p2', outstanding_try: 200_000, annual_interest_rate: 0.15 },
+        { partner_id: 'p1', principal_try: 100_000, total_repaid_try: 0, annual_interest_rate: 0.10 },
+        { partner_id: 'p2', principal_try: 200_000, total_repaid_try: 0, annual_interest_rate: 0.15 },
       ],
       partners: [
         { id: 'p1', name: 'P1' },
@@ -519,8 +519,8 @@ describe('CostOfCapitalService.getReport — report fields', () => {
   it('42. all high rate loans → wacd_pct > 0.20', async () => {
     const supabase = makeSupabase({
       partner_loan_tranches: [
-        { partner_id: 'p1', outstanding_try: 500_000, annual_interest_rate: 0.30 },
-        { partner_id: 'p2', outstanding_try: 500_000, annual_interest_rate: 0.25 },
+        { partner_id: 'p1', principal_try: 500_000, total_repaid_try: 0, annual_interest_rate: 0.30 },
+        { partner_id: 'p2', principal_try: 500_000, total_repaid_try: 0, annual_interest_rate: 0.25 },
       ],
       partners: [
         { id: 'p1', name: 'P1' },
@@ -534,8 +534,8 @@ describe('CostOfCapitalService.getReport — report fields', () => {
   it('43. total_annual_interest_try = total_outstanding × wacd_pct', async () => {
     const supabase = makeSupabase({
       partner_loan_tranches: [
-        { partner_id: 'p1', outstanding_try: 200_000, annual_interest_rate: 0.10 },
-        { partner_id: 'p2', outstanding_try: 300_000, annual_interest_rate: 0.15 },
+        { partner_id: 'p1', principal_try: 200_000, total_repaid_try: 0, annual_interest_rate: 0.10 },
+        { partner_id: 'p2', principal_try: 300_000, total_repaid_try: 0, annual_interest_rate: 0.15 },
       ],
       partners: [
         { id: 'p1', name: 'P1' },
@@ -549,7 +549,7 @@ describe('CostOfCapitalService.getReport — report fields', () => {
 
   it('44. partner ytd_interest < annual_interest (partial year)', async () => {
     const supabase = makeSupabase({
-      partner_loan_tranches: [{ partner_id: 'p1', outstanding_try: 100_000, annual_interest_rate: 0.12 }],
+      partner_loan_tranches: [{ partner_id: 'p1', principal_try: 100_000, total_repaid_try: 0, annual_interest_rate: 0.12 }],
       partners: [{ id: 'p1', name: 'P1' }],
     })
     // Mid-year: ytd < annual
@@ -561,7 +561,8 @@ describe('CostOfCapitalService.getReport — report fields', () => {
     const partners = Array.from({ length: 5 }, (_, i) => ({ id: `p${i}`, name: `Partner ${i}` }))
     const tranches = partners.map(p => ({
       partner_id: p.id,
-      outstanding_try: 100_000,
+      principal_try: 100_000,
+      total_repaid_try: 0,
       annual_interest_rate: 0.10,
     }))
     const supabase = makeSupabase({ partner_loan_tranches: tranches, partners })
@@ -583,7 +584,7 @@ describe('CostOfCapitalService.getReport — report fields', () => {
 
   it('48. total_monthly_interest_try is positive when loans exist', async () => {
     const supabase = makeSupabase({
-      partner_loan_tranches: [{ partner_id: 'p1', outstanding_try: 100_000, annual_interest_rate: 0.12 }],
+      partner_loan_tranches: [{ partner_id: 'p1', principal_try: 100_000, total_repaid_try: 0, annual_interest_rate: 0.12 }],
       partners: [{ id: 'p1', name: 'P1' }],
     })
     const report = await CostOfCapitalService.getReport(CID, supabase as never, { today: '2026-01-15' })
@@ -592,7 +593,7 @@ describe('CostOfCapitalService.getReport — report fields', () => {
 
   it('49. partner outstanding set correctly for single tranche', async () => {
     const supabase = makeSupabase({
-      partner_loan_tranches: [{ partner_id: 'p1', outstanding_try: 123_456, annual_interest_rate: 0.10 }],
+      partner_loan_tranches: [{ partner_id: 'p1', principal_try: 123_456, total_repaid_try: 0, annual_interest_rate: 0.10 }],
       partners: [{ id: 'p1', name: 'P1' }],
     })
     const report = await CostOfCapitalService.getReport(CID, supabase as never, { today: '2026-01-15' })
@@ -602,8 +603,8 @@ describe('CostOfCapitalService.getReport — report fields', () => {
   it('50. two partners at same rate: WACD = that rate', async () => {
     const supabase = makeSupabase({
       partner_loan_tranches: [
-        { partner_id: 'p1', outstanding_try: 200_000, annual_interest_rate: 0.18 },
-        { partner_id: 'p2', outstanding_try: 800_000, annual_interest_rate: 0.18 },
+        { partner_id: 'p1', principal_try: 200_000, total_repaid_try: 0, annual_interest_rate: 0.18 },
+        { partner_id: 'p2', principal_try: 800_000, total_repaid_try: 0, annual_interest_rate: 0.18 },
       ],
       partners: [
         { id: 'p1', name: 'P1' },
@@ -723,7 +724,7 @@ describe('CostOfCapitalService.getReport — additional coverage', () => {
 
   it('61. partner with rate between 0 and 0.20 → both flags false', async () => {
     const supabase = makeSupabase({
-      partner_loan_tranches: [{ partner_id: 'p1', outstanding_try: 100_000, annual_interest_rate: 0.15 }],
+      partner_loan_tranches: [{ partner_id: 'p1', principal_try: 100_000, total_repaid_try: 0, annual_interest_rate: 0.15 }],
       partners: [{ id: 'p1', name: 'P1' }],
     })
     const report = await CostOfCapitalService.getReport(CID, supabase as never, { today: '2026-01-15' })
@@ -735,7 +736,7 @@ describe('CostOfCapitalService.getReport — additional coverage', () => {
     const outstanding = 500_000
     const rate = 0.16
     const supabase = makeSupabase({
-      partner_loan_tranches: [{ partner_id: 'p1', outstanding_try: outstanding, annual_interest_rate: rate }],
+      partner_loan_tranches: [{ partner_id: 'p1', principal_try: outstanding, total_repaid_try: 0, annual_interest_rate: rate }],
       partners: [{ id: 'p1', name: 'P1' }],
     })
     const report = await CostOfCapitalService.getReport(CID, supabase as never, { today: '2026-01-15' })
@@ -745,8 +746,8 @@ describe('CostOfCapitalService.getReport — additional coverage', () => {
   it('63. total_outstanding_try rounds to 2 decimal places', async () => {
     const supabase = makeSupabase({
       partner_loan_tranches: [
-        { partner_id: 'p1', outstanding_try: 100_000.333, annual_interest_rate: 0.10 },
-        { partner_id: 'p2', outstanding_try: 200_000.667, annual_interest_rate: 0.10 },
+        { partner_id: 'p1', principal_try: 100_000, total_repaid_try: 0.333, annual_interest_rate: 0.10 },
+        { partner_id: 'p2', principal_try: 200_000, total_repaid_try: 0.667, annual_interest_rate: 0.10 },
       ],
       partners: [
         { id: 'p1', name: 'P1' },
@@ -759,7 +760,7 @@ describe('CostOfCapitalService.getReport — additional coverage', () => {
 
   it('64. zero_rate_amount_try = 0 when no zero-rate loans', async () => {
     const supabase = makeSupabase({
-      partner_loan_tranches: [{ partner_id: 'p1', outstanding_try: 100_000, annual_interest_rate: 0.10 }],
+      partner_loan_tranches: [{ partner_id: 'p1', principal_try: 100_000, total_repaid_try: 0, annual_interest_rate: 0.10 }],
       partners: [{ id: 'p1', name: 'P1' }],
     })
     const report = await CostOfCapitalService.getReport(CID, supabase as never, { today: '2026-01-15' })
@@ -770,8 +771,8 @@ describe('CostOfCapitalService.getReport — additional coverage', () => {
   it('65. wacd_pct is between 0 and max rate for valid portfolio', async () => {
     const supabase = makeSupabase({
       partner_loan_tranches: [
-        { partner_id: 'p1', outstanding_try: 100_000, annual_interest_rate: 0.05 },
-        { partner_id: 'p2', outstanding_try: 100_000, annual_interest_rate: 0.25 },
+        { partner_id: 'p1', principal_try: 100_000, total_repaid_try: 0, annual_interest_rate: 0.05 },
+        { partner_id: 'p2', principal_try: 100_000, total_repaid_try: 0, annual_interest_rate: 0.25 },
       ],
       partners: [
         { id: 'p1', name: 'P1' },
@@ -786,8 +787,8 @@ describe('CostOfCapitalService.getReport — additional coverage', () => {
   it('66. partners list is sorted largest outstanding first', async () => {
     const supabase = makeSupabase({
       partner_loan_tranches: [
-        { partner_id: 'p1', outstanding_try: 50_000,  annual_interest_rate: 0.10 },
-        { partner_id: 'p2', outstanding_try: 500_000, annual_interest_rate: 0.15 },
+        { partner_id: 'p1', principal_try: 50_000, total_repaid_try: 0,  annual_interest_rate: 0.10 },
+        { partner_id: 'p2', principal_try: 500_000, total_repaid_try: 0, annual_interest_rate: 0.15 },
       ],
       partners: [
         { id: 'p1', name: 'Small' },
@@ -801,7 +802,7 @@ describe('CostOfCapitalService.getReport — additional coverage', () => {
 
   it('67. annual_interest_projection_try is positive when outstanding > 0', async () => {
     const supabase = makeSupabase({
-      partner_loan_tranches: [{ partner_id: 'p1', outstanding_try: 100_000, annual_interest_rate: 0.12 }],
+      partner_loan_tranches: [{ partner_id: 'p1', principal_try: 100_000, total_repaid_try: 0, annual_interest_rate: 0.12 }],
       partners: [{ id: 'p1', name: 'P1' }],
     })
     const report = await CostOfCapitalService.getReport(CID, supabase as never, { today: '2026-01-15' })
@@ -819,7 +820,7 @@ describe('CostOfCapitalService.getReport — additional coverage', () => {
   it('69. total_monthly_interest_try ≈ total_annual / 12', async () => {
     const supabase = makeSupabase({
       partner_loan_tranches: [
-        { partner_id: 'p1', outstanding_try: 600_000, annual_interest_rate: 0.12 },
+        { partner_id: 'p1', principal_try: 600_000, total_repaid_try: 0, annual_interest_rate: 0.12 },
       ],
       partners: [{ id: 'p1', name: 'P1' }],
     })
@@ -829,7 +830,7 @@ describe('CostOfCapitalService.getReport — additional coverage', () => {
 
   it('70. report returns all required fields', async () => {
     const supabase = makeSupabase({
-      partner_loan_tranches: [{ partner_id: 'p1', outstanding_try: 100_000, annual_interest_rate: 0.10 }],
+      partner_loan_tranches: [{ partner_id: 'p1', principal_try: 100_000, total_repaid_try: 0, annual_interest_rate: 0.10 }],
       partners: [{ id: 'p1', name: 'P1' }],
     })
     const report = await CostOfCapitalService.getReport(CID, supabase as never, { today: '2026-01-15' })
@@ -859,9 +860,9 @@ describe('CostOfCapitalService.getReport — additional coverage', () => {
     // total: 16k + 36k + 90k = 142k / 1000k = 0.142
     const supabase = makeSupabase({
       partner_loan_tranches: [
-        { partner_id: 'p1', outstanding_try: 200_000, annual_interest_rate: 0.08 },
-        { partner_id: 'p2', outstanding_try: 300_000, annual_interest_rate: 0.12 },
-        { partner_id: 'p3', outstanding_try: 500_000, annual_interest_rate: 0.18 },
+        { partner_id: 'p1', principal_try: 200_000, total_repaid_try: 0, annual_interest_rate: 0.08 },
+        { partner_id: 'p2', principal_try: 300_000, total_repaid_try: 0, annual_interest_rate: 0.12 },
+        { partner_id: 'p3', principal_try: 500_000, total_repaid_try: 0, annual_interest_rate: 0.18 },
       ],
       partners: [
         { id: 'p1', name: 'P1' },
@@ -876,9 +877,9 @@ describe('CostOfCapitalService.getReport — additional coverage', () => {
   it('73. partner with multiple tranches: combined outstanding matches sum', async () => {
     const supabase = makeSupabase({
       partner_loan_tranches: [
-        { partner_id: 'p1', outstanding_try: 100_000, annual_interest_rate: 0.10 },
-        { partner_id: 'p1', outstanding_try: 200_000, annual_interest_rate: 0.10 },
-        { partner_id: 'p1', outstanding_try: 300_000, annual_interest_rate: 0.10 },
+        { partner_id: 'p1', principal_try: 100_000, total_repaid_try: 0, annual_interest_rate: 0.10 },
+        { partner_id: 'p1', principal_try: 200_000, total_repaid_try: 0, annual_interest_rate: 0.10 },
+        { partner_id: 'p1', principal_try: 300_000, total_repaid_try: 0, annual_interest_rate: 0.10 },
       ],
       partners: [{ id: 'p1', name: 'P1' }],
     })
@@ -889,7 +890,7 @@ describe('CostOfCapitalService.getReport — additional coverage', () => {
 
   it('74. ytd_interest at late in year is close to (but not exactly) annual interest', async () => {
     const supabase = makeSupabase({
-      partner_loan_tranches: [{ partner_id: 'p1', outstanding_try: 100_000, annual_interest_rate: 0.12 }],
+      partner_loan_tranches: [{ partner_id: 'p1', principal_try: 100_000, total_repaid_try: 0, annual_interest_rate: 0.12 }],
       partners: [{ id: 'p1', name: 'P1' }],
     })
     // Dec 31 → 364 days elapsed out of 365 → ytd ≈ 99.7% of annual
@@ -902,8 +903,8 @@ describe('CostOfCapitalService.getReport — additional coverage', () => {
   it('75. total_annual_interest_try = 0 when all rates are 0', async () => {
     const supabase = makeSupabase({
       partner_loan_tranches: [
-        { partner_id: 'p1', outstanding_try: 100_000, annual_interest_rate: 0 },
-        { partner_id: 'p2', outstanding_try: 200_000, annual_interest_rate: 0 },
+        { partner_id: 'p1', principal_try: 100_000, total_repaid_try: 0, annual_interest_rate: 0 },
+        { partner_id: 'p2', principal_try: 200_000, total_repaid_try: 0, annual_interest_rate: 0 },
       ],
       partners: [
         { id: 'p1', name: 'P1' },

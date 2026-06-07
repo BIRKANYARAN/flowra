@@ -124,7 +124,8 @@ export default async function InsightsPage() {
       .in('payment_status', ['pending', 'partial', 'overdue'])
       .is('deleted_at', null),
     supabase.from('partner_loan_tranches')
-      .select('outstanding_try, due_date, partner_id, annual_interest_rate')
+      // outstanding_try / due_date are computed/aliased below (no such columns)
+      .select('principal_try, total_repaid_try, expected_repayment_date, partner_id, annual_interest_rate')
       .eq('company_id', companyId)
       .eq('status', 'active'),
     getCfoMetrics(companyId, { from, to }, supabase),
@@ -154,7 +155,13 @@ export default async function InsightsPage() {
 
   const pnl      = pnlRes.status    === 'fulfilled' ? pnlRes.value    : null
   const overdue  = overdueRes.status  === 'fulfilled' ? (overdueRes.value.data ?? [])  : []
-  const tranches = trancheRes.status  === 'fulfilled' ? (trancheRes.value.data ?? [])  : []
+  const tranches = (trancheRes.status  === 'fulfilled' ? (trancheRes.value.data ?? [])  : [])
+    .map((t: Record<string, unknown>) => ({
+      partner_id:           t.partner_id,
+      annual_interest_rate: t.annual_interest_rate,
+      due_date:             t.expected_repayment_date,
+      outstanding_try:      Math.max(0, Number(t.principal_try ?? 0) - Number(t.total_repaid_try ?? 0)),
+    }))
   const cfo      = cfoRes.status      === 'fulfilled' ? cfoRes.value      : null
 
   // ── 3. Situation + Alerts ─────────────────────────────────────────────────
