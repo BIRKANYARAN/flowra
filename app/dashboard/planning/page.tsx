@@ -132,9 +132,11 @@ export default async function PlanningPage({ searchParams }: PageProps) {
         {/* unit-profit: product simulation engine */}
         {/* Karlılık: birim kâr + başabaş analizi co-located */}
         {activeTab === 'unit-profit' && (
-          <div className="space-y-6">
+          <div className="space-y-4">
             <SimulationContent companyId={companyId} userId={userId} activeTab="unit-profit" />
-            <BreakEvenTab companyId={companyId} userId={userId} />
+            <DetailSection title="Başabaş Analizi" subtitle="Başabaş noktası · katkı payı · güvenlik marjı · hedef kâr">
+              <BreakEvenTab companyId={companyId} userId={userId} />
+            </DetailSection>
           </div>
         )}
         {/* cash-projection: 12-month trailing-based cash forecast */}

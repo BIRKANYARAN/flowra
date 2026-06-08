@@ -11,6 +11,7 @@ import { createClient } from '@/lib/supabase-server'
 import { fmtTRY, fmtDate } from '@/lib/format'
 import { OpsHeatmapClient } from './_heatmap/OpsHeatmapClient'
 import { OpsCommandClient } from './_command/OpsCommandClient'
+import { DetailSection } from '@/components/dashboard/DetailSection'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -445,8 +446,10 @@ export async function KomutaContent({ companyId }: Props) {
         </div>
       </div>
 
-      {/* Operational KPI Heatmap */}
-      <OpsHeatmapClient />
+      {/* Operational KPI Heatmap — secondary, folded (lazy-mounts on expand) */}
+      <DetailSection title="Operasyonel KPI Isı Haritası" subtitle="13 hafta × 7 gün gelir yoğunluğu">
+        <OpsHeatmapClient />
+      </DetailSection>
     </div>
   )
 }

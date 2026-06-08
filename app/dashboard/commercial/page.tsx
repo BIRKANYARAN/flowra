@@ -25,6 +25,7 @@ function TabSkeleton() {
 }
 import { PipelineContent }    from './_tabs/PipelineContent'
 import { ProformasContent }   from './_tabs/ProformasContent'
+import { DetailSection }      from '@/components/dashboard/DetailSection'
 import { SalesContent }       from './_tabs/SalesContent'
 import { CollectionsContent } from './_tabs/CollectionsContent'
 import { CustomersContent }   from './_tabs/CustomersContent'
@@ -102,10 +103,13 @@ export default async function CommercialPage({ searchParams }: PageProps) {
 
       <Suspense fallback={<TabSkeleton />}>
         {activeTab === 'pipeline'    && (
-          <div className="space-y-6">
+          <div className="space-y-4">
             <PipelineContent  companyId={companyId} />
-            {/* Proformalar — co-located in the sales pipeline (teklif → satış lifecycle) */}
-            <ProformasContent companyId={companyId} />
+            {/* Proformalar — co-located in the sales pipeline (teklif → satış lifecycle),
+                folded so the tab opens on the pipeline view; expands on demand. */}
+            <DetailSection title="Teklifler (Proformalar)" subtitle="Tüm teklifler · dönüşüm analizi · son 90 gün">
+              <ProformasContent companyId={companyId} />
+            </DetailSection>
           </div>
         )}
         {activeTab === 'sales'       && <SalesContent       companyId={companyId} />}
