@@ -35,8 +35,8 @@ export function CashProjectionSection() {
 
   if (isLoading) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm animate-pulse">
-        <div className="px-4 py-3 border-b border-[#e2e8f0]">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm animate-pulse">
+        <div className="px-4 py-3 border-b border-[#e8eaef]">
           <div className="h-3 bg-[#f1f5f9] rounded w-56" />
         </div>
         <div className="p-4 space-y-2">
@@ -50,7 +50,7 @@ export function CashProjectionSection() {
 
   if (isError || !data?.report) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
           90 Günlük Nakit Projeksiyonu
         </div>
@@ -64,9 +64,9 @@ export function CashProjectionSection() {
   const r = data.report
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-[#e2e8f0]">
+      <div className="px-4 py-3 border-b border-[#e8eaef]">
         <div className="flex items-center justify-between">
           <div>
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
@@ -87,7 +87,7 @@ export function CashProjectionSection() {
       </div>
 
       {/* KPI chips */}
-      <div className="grid grid-cols-3 divide-x divide-[#e2e8f0] border-b border-[#e2e8f0]">
+      <div className="grid grid-cols-3 divide-x divide-[#e8eaef] border-b border-[#e8eaef]">
         {[
           {
             label: 'Açılış Nakit',
@@ -127,7 +127,7 @@ export function CashProjectionSection() {
       <div className="overflow-x-auto">
         <table className="w-full text-xs">
           <thead>
-            <tr className="bg-[#f8fafc] border-b border-t border-[#e2e8f0] mt-3">
+            <tr className="bg-[#f8fafc] border-b border-t border-[#e8eaef] mt-3">
               <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Hafta</th>
               <th className="text-right px-3 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-pos">Taahhütlü Giriş</th>
               <th className="text-right px-3 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-neg">Taahhütlü Çıkış</th>
@@ -183,7 +183,7 @@ export function CashProjectionSection() {
       </div>
 
       {/* Footer: committed vs estimated breakdown */}
-      <div className="border-t border-[#e2e8f0] px-4 py-3 bg-[#f8fafc]">
+      <div className="border-t border-[#e8eaef] px-4 py-3 bg-[#f8fafc]">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
             { label: 'Taahhütlü Giriş',    value: r.total_committed_inflow,   tone: 'text-pos-text' },

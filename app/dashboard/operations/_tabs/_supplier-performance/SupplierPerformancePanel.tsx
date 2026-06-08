@@ -61,7 +61,7 @@ export function SupplierPerformancePanel() {
 
   if (loading) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
           Tedarikçi Performansı
         </div>
@@ -72,7 +72,7 @@ export function SupplierPerformancePanel() {
 
   if (error || !report) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
           Tedarikçi Performansı
         </div>
@@ -85,7 +85,7 @@ export function SupplierPerformancePanel() {
   const top8 = suppliers.slice(0, 8)
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 space-y-4 shadow-sm">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 space-y-4 shadow-sm">
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between">
         <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
@@ -95,7 +95,7 @@ export function SupplierPerformancePanel() {
       </div>
 
       {/* ── Summary KPIs ───────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-0 border border-[#e2e8f0] rounded overflow-hidden">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-0 border border-[#e8eaef] rounded overflow-hidden">
         {[
           {
             label: 'Toplam Sipariş',
@@ -131,8 +131,8 @@ export function SupplierPerformancePanel() {
           <div
             key={card.label}
             className={`p-3 ${
-              i % 3 < 2 ? 'border-b sm:border-b-0 sm:border-r border-[#e2e8f0]' : ''
-            } ${i < 3 ? 'border-b border-[#e2e8f0]' : ''}`}
+              i % 3 < 2 ? 'border-b sm:border-b-0 sm:border-r border-[#e8eaef]' : ''
+            } ${i < 3 ? 'border-b border-[#e8eaef]' : ''}`}
           >
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
               {card.label}
@@ -171,7 +171,7 @@ export function SupplierPerformancePanel() {
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-[#e2e8f0]">
+                <tr className="border-b border-[#e8eaef]">
                   <th className="text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] pb-1.5 pr-2">Tedarikçi</th>
                   <th className="text-center text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] pb-1.5 px-2">Derece</th>
                   <th className="text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] pb-1.5 px-2">Karşılama</th>

@@ -55,7 +55,7 @@ function StrengthBadge({ strength }: { strength: Strength }) {
 
 function Skeleton() {
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 space-y-3 animate-pulse">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 space-y-3 animate-pulse">
       <div className="h-3 w-64 bg-[#f1f5f9] rounded" />
       <div className="grid grid-cols-3 gap-3">
         {[0, 1, 2].map(i => (
@@ -110,7 +110,7 @@ export default function MarketBasketClient({ companyId }: Props) {
   // Empty state — not enough data
   if (!report || report.summary.rules_found === 0) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-6 text-center">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-6 text-center">
         <p className="text-sm text-[#94a3b8]">
           Yeterli ortak satış verisi bulunamadı (en az 20 çoklu satış gerekli)
         </p>
@@ -124,7 +124,7 @@ export default function MarketBasketClient({ companyId }: Props) {
   const { summary, top_cross_sell, association_rules } = report
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
       {/* Header */}
       <div className="px-4 py-3 border-b border-[#f1f5f9]">
         <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
@@ -133,7 +133,7 @@ export default function MarketBasketClient({ companyId }: Props) {
       </div>
 
       {/* Summary KPI strip */}
-      <div className="grid grid-cols-3 sm:grid-cols-5 gap-0 divide-x divide-[#e2e8f0] border-b border-[#e2e8f0]">
+      <div className="grid grid-cols-3 sm:grid-cols-5 gap-0 divide-x divide-[#e8eaef] border-b border-[#e8eaef]">
         <div className="p-3">
           <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
             Toplam İşlem

@@ -102,8 +102,8 @@ export default function AlertSettingsPage() {
       {loading && <Skeleton height="h-64" />}
 
       {!loading && (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
-          <div className="px-4 py-2.5 bg-[#f8fafc] border-b border-[#e2e8f0]">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
+          <div className="px-4 py-2.5 bg-[#f8fafc] border-b border-[#e8eaef]">
             <div className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-3 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
               <span>Kural</span>
               <span>Eşik</span>
@@ -135,7 +135,7 @@ export default function AlertSettingsPage() {
                       min="0"
                       value={rule.threshold_value ?? ''}
                       onChange={e => updateRule(rule.rule_type, { threshold_value: e.target.value === '' ? null : Number(e.target.value) })}
-                      className="w-full border border-[#e2e8f0] rounded px-2 py-1 text-xs text-right"
+                      className="w-full border border-[#e8eaef] rounded px-2 py-1 text-xs text-right"
                     />
                     {meta.unit && <span className="text-[10px] text-[#94a3b8] shrink-0">{meta.unit}</span>}
                   </div>
@@ -144,7 +144,7 @@ export default function AlertSettingsPage() {
                   <select
                     value={rule.severity}
                     onChange={e => updateRule(rule.rule_type, { severity: e.target.value as AlertRule['severity'] })}
-                    className="border border-[#e2e8f0] rounded px-2 py-1 text-xs"
+                    className="border border-[#e8eaef] rounded px-2 py-1 text-xs"
                   >
                     {SEVERITY_OPTS.map(o => (
                       <option key={o.value} value={o.value}>{o.label}</option>

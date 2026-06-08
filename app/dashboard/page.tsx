@@ -65,7 +65,7 @@ export default function HomePage() {
   if (error || !data || !lens) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="bg-white rounded-xl shadow-sm border border-[#e2e8f0] p-8 text-center max-w-md">
+        <div className="bg-white rounded-xl shadow-sm border border-[#e8eaef] p-8 text-center max-w-md">
           <p className="text-red-600 font-semibold mb-2">Kontrol paneli yüklenemedi</p>
           <p className="text-[#64748b] text-sm">{error ?? 'Bilinmeyen hata'}</p>
           <button className="mt-4 text-sm text-[#7c3aed] font-semibold hover:underline" onClick={() => window.location.reload()}>
@@ -102,11 +102,11 @@ function CockpitSkeleton() {
     <div className="space-y-3 animate-pulse">
       <div className="h-7 w-56 bg-[#e2e8f0] rounded" />
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        {Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-20 bg-white border border-[#e2e8f0] rounded-xl" />)}
+        {Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-20 bg-white border border-[#e8eaef] rounded-xl shadow-soft" />)}
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-        <div className="lg:col-span-2 h-72 bg-white border border-[#e2e8f0] rounded-xl" />
-        <div className="h-72 bg-white border border-[#e2e8f0] rounded-xl" />
+        <div className="lg:col-span-2 h-72 bg-white border border-[#e8eaef] rounded-xl shadow-soft" />
+        <div className="h-72 bg-white border border-[#e8eaef] rounded-xl shadow-soft" />
       </div>
     </div>
   )

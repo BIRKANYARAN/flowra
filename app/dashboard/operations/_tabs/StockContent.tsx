@@ -138,8 +138,8 @@ export async function StockContent({ companyId, userId }: Props) {
 
       {/* Yeniden Sipariş Uyarıları — reorder alert summary + action table */}
       {reorderReport && (reorderReport.out_of_stock_count > 0 || reorderReport.critical_count > 0 || reorderReport.low_count > 0) && (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-          <div className="px-5 py-4 border-b border-[#e2e8f0] flex items-center justify-between">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+          <div className="px-5 py-4 border-b border-[#e8eaef] flex items-center justify-between">
             <div>
               <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Yeniden Sipariş Uyarıları</span>
               <span className="ml-2 text-[10px] text-[#94a3b8]">— düşük stok tespiti ve sipariş önerileri</span>
@@ -168,7 +168,7 @@ export async function StockContent({ companyId, userId }: Props) {
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] border-b border-[#e2e8f0]">
+                <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] border-b border-[#e8eaef]">
                   <th className="text-left px-5 py-2.5">Ürün</th>
                   <th className="text-right px-4 py-2.5">Mevcut Stok</th>
                   <th className="text-right px-4 py-2.5">Kalan Gün</th>
@@ -223,7 +223,7 @@ export async function StockContent({ companyId, userId }: Props) {
 
           {/* Footer: no-threshold count */}
           {reorderReport.products_without_threshold > 0 && (
-            <div className="px-5 py-3 border-t border-[#e2e8f0] bg-[#f8fafc]">
+            <div className="px-5 py-3 border-t border-[#e8eaef] bg-[#f8fafc]">
               <span className="text-[10px] text-[#64748b]">
                 <span className="font-semibold">{reorderReport.products_without_threshold} ürün</span>
                 {' '}için yeniden sipariş eşiği tanımlanmamış — eşik belirlemek için ürün ayarlarını güncelleyin.
@@ -235,8 +235,8 @@ export async function StockContent({ companyId, userId }: Props) {
 
       {/* Talep Tahmini — demand forecast: forecasted demand, reorder point, stockout risk */}
       {demandForecastReport && demandForecastReport.products.length > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-          <div className="px-5 py-4 border-b border-[#e2e8f0] flex items-center justify-between">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+          <div className="px-5 py-4 border-b border-[#e8eaef] flex items-center justify-between">
             <div>
               <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Talep Tahmini</span>
               <span className="ml-2 text-[10px] text-[#94a3b8]">
@@ -260,7 +260,7 @@ export async function StockContent({ companyId, userId }: Props) {
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] border-b border-[#e2e8f0]">
+                <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] border-b border-[#e8eaef]">
                   <th className="text-left px-5 py-2.5">Ürün</th>
                   <th className="text-right px-4 py-2.5">Mevcut Stok</th>
                   <th className="text-right px-4 py-2.5">Aylık Ort.</th>
@@ -314,7 +314,7 @@ export async function StockContent({ companyId, userId }: Props) {
       )}
 
       {/* Portfolio summary strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
         {[
           { label: 'Toplam Stok Değeri', value: fmtTRY(portfolioValueTry),      sub: 'FIFO lot maliyeti bazlı',  color: 'text-[#0f172a]' },
           { label: 'Ürün Sayısı',        value: String(products.length),         sub: `${lots.length} açık lot`, color: 'text-[#0f172a]' },
@@ -326,7 +326,7 @@ export async function StockContent({ companyId, userId }: Props) {
             color: inconsistentItems.length > 0 ? 'text-neg' : 'text-[#94a3b8]',
           },
         ].map((card, i) => (
-          <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e2e8f0]' : ''}`}>
+          <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e8eaef]' : ''}`}>
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
             <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
             <div className="text-[10px] text-[#94a3b8] mt-1">{card.sub}</div>
@@ -392,8 +392,8 @@ export async function StockContent({ companyId, userId }: Props) {
 
       {/* Stok Değerleme — FIFO aging + product summary */}
       {valuationReport && valuationReport.total_lots > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-          <div className="px-5 py-4 border-b border-[#e2e8f0] flex items-center justify-between">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+          <div className="px-5 py-4 border-b border-[#e8eaef] flex items-center justify-between">
             <div>
               <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Stok Değerleme</span>
               <span className="ml-2 text-[10px] text-[#94a3b8]">— FIFO maliyet bazlı lot yaşlandırması</span>
@@ -404,7 +404,7 @@ export async function StockContent({ companyId, userId }: Props) {
           </div>
 
           {/* Aging buckets */}
-          <div className="grid grid-cols-4 divide-x divide-[#e2e8f0] border-b border-[#e2e8f0]">
+          <div className="grid grid-cols-4 divide-x divide-[#e8eaef] border-b border-[#e8eaef]">
             {[
               { label: 'Güncel (<30g)',  value: valuationReport.aging_summary.current_try,       color: 'text-pos-text' },
               { label: '30-60 gün',      value: valuationReport.aging_summary.aging_30_try,       color: 'text-[#0f172a]' },
@@ -422,7 +422,7 @@ export async function StockContent({ companyId, userId }: Props) {
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] border-b border-[#e2e8f0]">
+                <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] border-b border-[#e8eaef]">
                   <th className="text-left px-5 py-2.5">Ürün</th>
                   <th className="text-right px-4 py-2.5">Toplam Miktar</th>
                   <th className="text-right px-4 py-2.5">Stok Değeri (₺)</th>
@@ -465,7 +465,7 @@ export async function StockContent({ companyId, userId }: Props) {
           </div>
 
           {valuationReport.low_stock_count > 0 && (
-            <div className="px-5 py-3 border-t border-[#e2e8f0] bg-warn-light">
+            <div className="px-5 py-3 border-t border-[#e8eaef] bg-warn-light">
               <span className="text-[10px] font-semibold text-warn-text">
                 ⚠ {valuationReport.low_stock_count} ürün yeniden sipariş eşiğinin altında
               </span>
@@ -476,8 +476,8 @@ export async function StockContent({ companyId, userId }: Props) {
 
       {/* FIFO Lot Panel */}
       {lots.length > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-          <div className="px-5 py-4 border-b border-[#e2e8f0] flex items-center justify-between">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+          <div className="px-5 py-4 border-b border-[#e8eaef] flex items-center justify-between">
             <div>
               <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">FIFO Lot Paneli</span>
               <span className="ml-2 text-[10px] text-[#94a3b8]">— açık lotlar, tutma süresi ve maliyet</span>
@@ -515,7 +515,7 @@ export async function StockContent({ companyId, userId }: Props) {
                   <div className="bg-[#f8fafc] rounded overflow-hidden">
                     <table className="w-full text-xs">
                       <thead>
-                        <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] border-b border-[#e2e8f0]">
+                        <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] border-b border-[#e8eaef]">
                           <th className="text-left px-4 py-2.5">Giriş Tarihi</th>
                           <th className="text-right px-4 py-2.5">Kalan Adet</th>
                           <th className="text-right px-4 py-2.5">Birim Maliyet</th>
@@ -529,7 +529,7 @@ export async function StockContent({ companyId, userId }: Props) {
                             ? lot.cost_price_try : lot.cost_price * (lot.cost_fx_rate || 1)
                           const urgency = lot.days > 180 ? 'text-neg' : lot.days > 90 ? 'text-warn-text' : 'text-[#64748b]'
                           return (
-                            <tr key={lot.id} className="border-b border-[#e2e8f0] last:border-0">
+                            <tr key={lot.id} className="border-b border-[#e8eaef] last:border-0">
                               <td className="px-4 py-3 text-[#334155]">{fmtDateShort(lot.received_at)}</td>
                               <td className="px-4 py-3 text-right tabular-nums font-semibold text-[#1e293b]">
                                 {lot.qty_remaining.toLocaleString('tr-TR', { maximumFractionDigits: 3 })}
@@ -562,8 +562,8 @@ export async function StockContent({ companyId, userId }: Props) {
       )}
 
       {/* Current stock levels */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-        <div className="px-5 py-4 border-b border-[#e2e8f0]">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+        <div className="px-5 py-4 border-b border-[#e8eaef]">
           <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Mevcut Stok</span>
         </div>
         {products.length === 0 ? (
@@ -607,8 +607,8 @@ export async function StockContent({ companyId, userId }: Props) {
       <StockAdjustClient products={products.map(p => ({ id: p.id, name: p.name, unit: p.unit }))} />
 
       {/* Movement history */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-        <div className="px-5 py-4 border-b border-[#e2e8f0]">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+        <div className="px-5 py-4 border-b border-[#e8eaef]">
           <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Son Hareketler</span>
           <span className="ml-2 text-[10px] text-[#94a3b8]">— son 50 kayıt</span>
         </div>
@@ -621,7 +621,7 @@ export async function StockContent({ companyId, userId }: Props) {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] border-b border-[#e2e8f0]">
+                <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] border-b border-[#e8eaef]">
                   <th className="text-left px-5 py-3">Ürün</th>
                   <th className="text-center px-3 py-3">Tip</th>
                   <th className="text-right px-3 py-3">Değişim</th>

@@ -68,7 +68,7 @@ export function PartnersTab({
             { label: 'Toplam Dağıtılan', value: fmt(totalDistributed),                 color: 'text-pos-text' },
             { label: 'Eşitleme Gereken', value: fmt(equalization.total_equalization),  color: equalization.total_equalization > 0 ? 'text-warn-text' : 'text-[#94a3b8]' },
           ].map(c => (
-            <div key={c.label} className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 shadow-sm">
+            <div key={c.label} className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
               <div className={`text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5 ${c.color}`}>{c.label}</div>
               <div className="text-xl font-black tabular-nums text-[#0f172a] leading-none">{c.value}</div>
             </div>
@@ -103,7 +103,7 @@ export function PartnersTab({
       {loading && <div className="flex flex-col gap-2"><Skeleton height="h-20" /><Skeleton height="h-20" /></div>}
 
       {!loading && !hasPartners && !fetchError && (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-6 py-12 text-center">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-6 py-12 text-center">
           <div className="text-xs text-[#94a3b8]">Henüz ortak eklenmemiş.</div>
         </div>
       )}
@@ -138,7 +138,7 @@ export function PartnersTab({
               const isEditing     = editId === p.id
 
               return (
-                <div key={p.id} className={`bg-white border rounded px-4 py-3 group ${isUnderFunded ? 'border-warn-light' : 'border-[#e2e8f0]'}`}>
+                <div key={p.id} className={`bg-white border rounded px-4 py-3 group ${isUnderFunded ? 'border-warn-light' : 'border-[#e8eaef]'}`}>
                   <div className="flex items-start justify-between gap-4 flex-wrap">
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -187,12 +187,12 @@ export function PartnersTab({
                   )}
 
                   {isEditing ? (
-                    <div className="mt-3 pt-3 border-t border-[#e2e8f0] space-y-3">
+                    <div className="mt-3 pt-3 border-t border-[#e8eaef] space-y-3">
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <label className="block text-[10px] font-semibold text-[#94a3b8] uppercase tracking-wide mb-1">İsim</label>
                           <input
-                            className="w-full border border-[#e2e8f0] rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
+                            className="w-full border border-[#e8eaef] rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                             value={editForm.name}
                             onChange={e => onEditFormChange({ ...editForm, name: e.target.value })}
                             autoFocus
@@ -202,7 +202,7 @@ export function PartnersTab({
                           <label className="block text-[10px] font-semibold text-[#94a3b8] uppercase tracking-wide mb-1">Pay Oranı (%)</label>
                           <input
                             type="number" min="0.01" max="100" step="0.01"
-                            className="w-full border border-[#e2e8f0] rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
+                            className="w-full border border-[#e8eaef] rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                             value={editForm.shareRatioPct}
                             onChange={e => onEditFormChange({ ...editForm, shareRatioPct: e.target.value })}
                           />
@@ -216,7 +216,7 @@ export function PartnersTab({
                         >
                           {editSaving ? 'Kaydediliyor...' : 'Kaydet'}
                         </button>
-                        <button onClick={onCancelEdit} className="text-xs font-semibold px-3 py-1.5 rounded border border-[#e2e8f0] text-[#64748b] hover:bg-[#f8fafc] transition-colors">
+                        <button onClick={onCancelEdit} className="text-xs font-semibold px-3 py-1.5 rounded border border-[#e8eaef] text-[#64748b] hover:bg-[#f8fafc] transition-colors">
                           İptal
                         </button>
                       </div>
@@ -232,7 +232,7 @@ export function PartnersTab({
                   )}
 
                   {expandedTxId === p.id && (
-                    <div className="mt-3 pt-3 border-t border-[#e2e8f0]">
+                    <div className="mt-3 pt-3 border-t border-[#e8eaef]">
                       <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">İşlem Geçmişi</div>
                       {loadingTxId === p.id ? (
                         <div className="py-3 text-xs text-[#94a3b8]">Yükleniyor...</div>

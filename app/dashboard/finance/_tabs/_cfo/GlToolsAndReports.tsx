@@ -6,8 +6,8 @@ export function GlToolsAndReports() {
   return (
     <>
       {/* GL Tools */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
-        <div className="px-4 py-2.5 border-b border-[#e2e8f0]">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
+        <div className="px-4 py-2.5 border-b border-[#e8eaef]">
           <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">GL Araçları</span>
         </div>
         <div className="grid grid-cols-5 divide-x divide-[#f1f5f9]">
@@ -31,8 +31,8 @@ export function GlToolsAndReports() {
       </div>
 
       {/* Financial Reports */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
-        <div className="px-4 py-2.5 border-b border-[#e2e8f0]">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
+        <div className="px-4 py-2.5 border-b border-[#e8eaef]">
           <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Finansal Raporlar</span>
         </div>
         <div className="grid grid-cols-4 divide-x divide-[#f1f5f9]">

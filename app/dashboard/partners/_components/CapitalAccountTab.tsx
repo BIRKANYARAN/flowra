@@ -73,9 +73,9 @@ function AccountRow({ label, value, sub, indent = false, bold = false, tone }: {
 
 function PartnerCard({ acc }: { acc: PartnerCapitalAccount }) {
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm overflow-hidden">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm overflow-hidden">
       {/* Card header */}
-      <div className="px-4 py-3 bg-[#f8fafc] border-b border-[#e2e8f0] flex items-center justify-between">
+      <div className="px-4 py-3 bg-[#f8fafc] border-b border-[#e8eaef] flex items-center justify-between">
         <div>
           <div className="text-sm font-bold text-[#0f172a]">{acc.partner_name}</div>
           <div className="text-[0.65rem] text-[#94a3b8] mt-0.5">
@@ -128,7 +128,7 @@ function PartnerCard({ acc }: { acc: PartnerCapitalAccount }) {
           tone={acc.total_received_try > 0 ? 'negative' : 'neutral'}
         />
 
-        <div className="my-1 border-t border-[#e2e8f0]" />
+        <div className="my-1 border-t border-[#e8eaef]" />
 
         <AccountRow
           label="Net Yatırım Pozisyonu"
@@ -138,7 +138,7 @@ function PartnerCard({ acc }: { acc: PartnerCapitalAccount }) {
           tone={acc.net_invested_try > 0 ? 'warning' : 'positive'}
         />
 
-        <div className="my-1 border-t border-[#e2e8f0]" />
+        <div className="my-1 border-t border-[#e8eaef]" />
 
         <AccountRow
           label="Defter Öz Sermaye Değeri"
@@ -154,7 +154,7 @@ function PartnerCard({ acc }: { acc: PartnerCapitalAccount }) {
           tone={acc.loan_balance_try > 0 ? 'negative' : 'neutral'}
         />
 
-        <div className="my-1 border-t border-[#e2e8f0]" />
+        <div className="my-1 border-t border-[#e8eaef]" />
 
         <AccountRow
           label="Net Pozisyon"
@@ -166,7 +166,7 @@ function PartnerCard({ acc }: { acc: PartnerCapitalAccount }) {
       </div>
 
       {/* Narrative footer */}
-      <div className="px-4 py-2 bg-[#f8fafc] border-t border-[#e2e8f0]">
+      <div className="px-4 py-2 bg-[#f8fafc] border-t border-[#e8eaef]">
         <div className="text-[0.65rem] text-[#94a3b8]">
           Tüm değerler muhasebe kayıtlarından hesaplanmıştır. Gerçek nakit akışını değil defter değerini gösterir.
         </div>
@@ -196,7 +196,7 @@ function ExitScenarioSection({
   const distributable    = Math.max(0, enterpriseValue - seniorClaims)
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm overflow-hidden">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm overflow-hidden">
       {/* Section header — visually distinct from accounting facts */}
       <div className="px-4 py-3 bg-[#fffbeb] border-b border-[#fde68a] flex items-start justify-between gap-4 flex-wrap">
         <div>
@@ -246,7 +246,7 @@ function ExitScenarioSection({
       </div>
 
       {/* Summary waterfall */}
-      <div className="px-4 py-3 border-b border-[#e2e8f0] bg-[#fafafa]">
+      <div className="px-4 py-3 border-b border-[#e8eaef] bg-[#fafafa]">
         <div className="grid grid-cols-3 gap-4 text-center">
           <div>
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Firma Değeri</div>
@@ -378,15 +378,15 @@ function CapitalCommitmentSection() {
 
       {/* Summary strip */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-3 py-2.5 shadow-sm">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-3 py-2.5 shadow-sm">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Toplam Taahhüt</div>
           <div className="text-sm font-black text-[#0f172a] tabular-nums mt-1">{fmtTRY(data.total_committed_try)}</div>
         </div>
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-3 py-2.5 shadow-sm">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-3 py-2.5 shadow-sm">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ödenen</div>
           <div className="text-sm font-black text-[#16a34a] tabular-nums mt-1">{fmtTRY(data.total_paid_try)}</div>
         </div>
-        <div className={`rounded px-3 py-2.5 shadow-sm border ${data.total_equity_gap_try > 0 ? 'bg-[#fef2f2] border-[#fecaca]' : 'bg-white border-[#e2e8f0]'}`}>
+        <div className={`rounded px-3 py-2.5 shadow-sm border ${data.total_equity_gap_try > 0 ? 'bg-[#fef2f2] border-[#fecaca]' : 'bg-white border-[#e8eaef]'}`}>
           <div className={`text-[0.65rem] font-black uppercase tracking-widest ${data.total_equity_gap_try > 0 ? 'text-[#dc2626]' : 'text-[#94a3b8]'}`}>
             Eksik Taahhüt
           </div>
@@ -397,14 +397,14 @@ function CapitalCommitmentSection() {
       </div>
 
       {data.partners.length === 0 ? (
-        <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-6 text-center text-xs text-[#94a3b8]">
+        <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-4 py-6 text-center text-xs text-[#94a3b8]">
           Henüz sermaye taahhüdü kaydı bulunmuyor.
         </div>
       ) : (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm overflow-hidden">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm overflow-hidden">
           <table className="w-full text-xs">
             <thead>
-              <tr className="bg-[#f8fafc] border-b border-[#e2e8f0]">
+              <tr className="bg-[#f8fafc] border-b border-[#e8eaef]">
                 <th className="px-3 py-2 text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ortak</th>
                 <th className="px-3 py-2 text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Pay</th>
                 <th className="px-3 py-2 text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Taahhüt</th>
@@ -494,7 +494,7 @@ export function CapitalAccountTab() {
 
   if (accounts.length === 0) {
     return (
-      <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-8 text-center text-sm text-[#94a3b8]">
+      <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-4 py-8 text-center text-sm text-[#94a3b8]">
         Henüz ortak verisi bulunamadı.
       </div>
     )
@@ -505,17 +505,17 @@ export function CapitalAccountTab() {
 
       {/* Summary KPI strip */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-3 py-2.5 shadow-sm">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-3 py-2.5 shadow-sm">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Toplam Öz Sermaye</div>
           <div className="text-sm font-black text-[#0f172a] tabular-nums mt-1">{fmtTRY(total_equity_try)}</div>
           <div className="text-[0.65rem] text-[#94a3b8]">Defter değeri</div>
         </div>
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-3 py-2.5 shadow-sm">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-3 py-2.5 shadow-sm">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ortak Borç Bakiyesi</div>
           <div className="text-sm font-black text-[#dc2626] tabular-nums mt-1">{fmtTRY(total_partner_debt_try)}</div>
           <div className="text-[0.65rem] text-[#94a3b8]">Aktif trancheler</div>
         </div>
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-3 py-2.5 shadow-sm">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-3 py-2.5 shadow-sm">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Net Öz Sermaye</div>
           <div className={[
             'text-sm font-black tabular-nums mt-1',

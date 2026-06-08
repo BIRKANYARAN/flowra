@@ -84,10 +84,10 @@ async function fetchSnapshot(id: string): Promise<SnapshotDetail | null> {
 
 function StatusBadge({ status }: { status: ReconciliationSnapshot['status'] }) {
   const map = {
-    draft:            { label: 'Taslak',        cls: 'bg-[#f1f5f9] text-[#64748b] border border-[#e2e8f0]' },
+    draft:            { label: 'Taslak',        cls: 'bg-[#f1f5f9] text-[#64748b] border border-[#e8eaef]' },
     pending_approval: { label: 'Onay Bekliyor', cls: 'bg-amber-50 text-amber-700 border border-amber-200'   },
     approved:         { label: 'Onaylandı',     cls: 'bg-green-50 text-green-700 border border-green-200'   },
-    archived:         { label: 'Arşiv',         cls: 'bg-[#f8fafc] text-[#94a3b8] border border-[#e2e8f0]'  },
+    archived:         { label: 'Arşiv',         cls: 'bg-[#f8fafc] text-[#94a3b8] border border-[#e8eaef]'  },
   }
   const { label, cls } = map[status] ?? map.draft
   return (
@@ -146,7 +146,7 @@ export default async function ReconciliationDetailPage({
     <div className="min-h-screen bg-[#f8fafc]">
 
       {/* ── HEADER BAR ──────────────────────────────────────────────────────── */}
-      <div className="bg-white border-b border-[#e2e8f0] sticky top-0 z-10">
+      <div className="bg-white border-b border-[#e8eaef] sticky top-0 z-10">
         <div className="max-w-5xl mx-auto px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link
@@ -248,14 +248,14 @@ export default async function ReconciliationDetailPage({
           const checks = [v.balance_sheet_check, v.treasury_check, v.inventory_check, v.partner_finance_check, v.profit_check, v.distribution_check]
           const overallColor = v.overall_status === 'PASS' ? 'text-[#16a34a]' : v.overall_status === 'WARNING' ? 'text-[#d97706]' : 'text-[#dc2626]'
           return (
-            <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft">
-              <div className="flex items-center justify-between px-5 py-3 border-b border-[#e2e8f0] bg-[#f8fafc]">
+            <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft">
+              <div className="flex items-center justify-between px-5 py-3 border-b border-[#e8eaef] bg-[#f8fafc]">
                 <span className="text-xs font-black text-[#0f172a] uppercase tracking-widest">Finansal Doğrulama Merkezi</span>
                 <span className={`text-xs font-black ${overallColor}`}>
                   {v.overall_status === 'PASS' ? '✓ TÜM KONTROLLER GEÇTI' : v.overall_status === 'WARNING' ? '⚠ UYARILAR VAR' : '✗ HATALAR VAR'} — {v.checks_passed}/{v.checks_total}
                 </span>
               </div>
-              <div className="divide-y divide-[#e2e8f0]">
+              <div className="divide-y divide-[#e8eaef]">
                 {checks.map((c: any) => {
                   const icon = c.result === 'PASS' ? '✓' : c.result === 'WARNING' ? '⚠' : '✗'
                   const color = c.result === 'PASS' ? 'text-[#16a34a]' : c.result === 'WARNING' ? 'text-[#d97706]' : 'text-[#dc2626]'
@@ -305,7 +305,7 @@ export default async function ReconciliationDetailPage({
             return (
               <>
                 <div className="mb-4">
-                  <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-3 py-2 inline-block">
+                  <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-3 py-2 inline-block">
                     <p className="text-[10px] text-[#94a3b8] uppercase tracking-wide mb-0.5">Toplam Sermaye</p>
                     <p className="text-sm font-black text-[#0f172a]">{fmt(t9.total_capital_try)}</p>
                   </div>
@@ -371,7 +371,7 @@ export default async function ReconciliationDetailPage({
             return (
               <>
                 <div className="mb-4">
-                  <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-3 py-2 inline-block">
+                  <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-3 py-2 inline-block">
                     <p className="text-[10px] text-[#94a3b8] uppercase tracking-wide mb-0.5">Toplam Ortak Borçları</p>
                     <p className="text-sm font-black text-[#0f172a]">{fmt(t10.total_partner_loans_try)}</p>
                   </div>
@@ -401,7 +401,7 @@ export default async function ReconciliationDetailPage({
             return (
               <>
                 <div className="mb-4">
-                  <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-3 py-2 inline-block">
+                  <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-3 py-2 inline-block">
                     <p className="text-[10px] text-[#94a3b8] uppercase tracking-wide mb-0.5">Toplam Ortak Borçları</p>
                     <p className="text-sm font-black text-[#0f172a]">{fmt(t11.total_partner_debt_try)}</p>
                   </div>
@@ -428,7 +428,7 @@ export default async function ReconciliationDetailPage({
             return (
               <>
                 <div className="mb-4">
-                  <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-3 py-2 inline-block">
+                  <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-3 py-2 inline-block">
                     <p className="text-[10px] text-[#94a3b8] uppercase tracking-wide mb-0.5">Toplam Dilim Borcu</p>
                     <p className="text-sm font-black text-[#0f172a]">{fmt(t12.total_tranches_try)}</p>
                   </div>
@@ -459,19 +459,19 @@ export default async function ReconciliationDetailPage({
             return (
               <>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                  <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-3 py-2">
+                  <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-3 py-2">
                     <p className="text-[10px] text-[#94a3b8] uppercase tracking-wide mb-0.5">YTD Dağıtılan</p>
                     <p className="text-sm font-black text-[#0f172a]">{fmt(t13.total_distributed_try)}</p>
                   </div>
-                  <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-3 py-2">
+                  <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-3 py-2">
                     <p className="text-[10px] text-[#94a3b8] uppercase tracking-wide mb-0.5">Bekleyen</p>
                     <p className="text-sm font-black text-amber-700">{fmt(t13.pending_distributions_try)}</p>
                   </div>
-                  <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-3 py-2">
+                  <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-3 py-2">
                     <p className="text-[10px] text-[#94a3b8] uppercase tracking-wide mb-0.5">Dağıtılabilir</p>
                     <p className="text-sm font-black text-green-700">{fmt(t13.distributable_profit_try)}</p>
                   </div>
-                  <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-3 py-2">
+                  <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-3 py-2">
                     <p className="text-[10px] text-[#94a3b8] uppercase tracking-wide mb-0.5">Geçmiş Yıl Kârı</p>
                     <p className="text-sm font-black text-[#0f172a]">{fmt(t13.retained_earnings_try)}</p>
                   </div>
@@ -501,7 +501,7 @@ export default async function ReconciliationDetailPage({
               <>
                 <div className="grid grid-cols-2 gap-6">
                   <div>
-                    <p className="text-[10px] font-black text-[#0f172a] uppercase tracking-wide mb-2 border-b border-[#e2e8f0] pb-1">AKTİF</p>
+                    <p className="text-[10px] font-black text-[#0f172a] uppercase tracking-wide mb-2 border-b border-[#e8eaef] pb-1">AKTİF</p>
                     <KV label="Dönen Varlıklar"      value={fmt(t14.current_assets_try)} />
                     <KV label="Duran Varlıklar"      value={fmt(t14.non_current_assets_try)} />
                     <div className="flex gap-2 py-1.5 mt-1 border-t border-[#0f172a]">
@@ -510,7 +510,7 @@ export default async function ReconciliationDetailPage({
                     </div>
                   </div>
                   <div>
-                    <p className="text-[10px] font-black text-[#0f172a] uppercase tracking-wide mb-2 border-b border-[#e2e8f0] pb-1">PASİF</p>
+                    <p className="text-[10px] font-black text-[#0f172a] uppercase tracking-wide mb-2 border-b border-[#e8eaef] pb-1">PASİF</p>
                     <KV label="Kısa Vadeli Borçlar"  value={fmt(t14.short_term_liabilities)} />
                     <KV label="Uzun Vadeli Borçlar"  value={fmt(t14.long_term_liabilities)} />
                     <KV label="Toplam Yükümlülükler" value={fmt(t14.total_liabilities_try)} />
@@ -583,7 +583,7 @@ export default async function ReconciliationDetailPage({
                 ) : (
                   <div className="space-y-3">
                     {t16.findings.map((f, i) => (
-                      <div key={i} className="border border-[#e2e8f0] rounded p-3">
+                      <div key={i} className="border border-[#e8eaef] rounded p-3">
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex items-start gap-2 flex-1 min-w-0">
                             <SeverityBadge severity={f.severity} />
@@ -610,11 +610,11 @@ export default async function ReconciliationDetailPage({
 
         {/* S17 — Management Declaration */}
         <SectionBlock number={17} title="Yönetim Beyannamesi">
-          <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded p-4">
+          <div className="bg-[#f8fafc] border border-[#e8eaef] rounded p-4">
             <p className="text-xs text-[#334155] leading-relaxed whitespace-pre-wrap">
               {s.section17.declaration_text}
             </p>
-            <div className="mt-4 pt-3 border-t border-[#e2e8f0] flex items-center justify-between">
+            <div className="mt-4 pt-3 border-t border-[#e8eaef] flex items-center justify-between">
               <p className="text-[11px] text-[#94a3b8]">
                 Hazırlayan: <span className="font-medium text-[#64748b]">{s.section17.prepared_by}</span>
               </p>
@@ -630,7 +630,7 @@ export default async function ReconciliationDetailPage({
 
         {/* S18 — Shareholder Declaration */}
         <SectionBlock number={18} title="Hissedar Beyannamesi">
-          <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded p-4">
+          <div className="bg-[#f8fafc] border border-[#e8eaef] rounded p-4">
             <p className="text-xs text-[#334155] leading-relaxed whitespace-pre-wrap">
               {s.section18.declaration_text}
             </p>
@@ -661,8 +661,8 @@ export default async function ReconciliationDetailPage({
 
         {/* Confidence factors */}
         {snapshot.confidence_factors && snapshot.confidence_factors.length > 0 && (
-          <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft">
-            <div className="flex items-center gap-3 px-5 py-3 border-b border-[#e2e8f0] bg-[#f8fafc]">
+          <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft">
+            <div className="flex items-center gap-3 px-5 py-3 border-b border-[#e8eaef] bg-[#f8fafc]">
               <span className="text-xs font-black text-[#0f172a] uppercase tracking-widest">Güven Faktörleri</span>
               <ConfidenceBadge score={snapshot.confidence_score} />
             </div>
@@ -692,8 +692,8 @@ export default async function ReconciliationDetailPage({
         )}
 
         {/* ── Audit Trail ─────────────────────────────────────────────────────── */}
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft">
-          <div className="px-5 py-3 border-b border-[#e2e8f0] bg-[#f8fafc]">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft">
+          <div className="px-5 py-3 border-b border-[#e8eaef] bg-[#f8fafc]">
             <span className="text-xs font-black text-[#0f172a] uppercase tracking-widest">Denetim Geçmişi</span>
           </div>
           <div className="px-5 py-4">

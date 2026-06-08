@@ -245,7 +245,7 @@ export async function ExpensesContent({ companyId }: Props) {
       <ExpensesCharts monthly={expenseMonthly} byCategory={expenseByCategory} totalExpense={totalTRY} />
 
       {/* ── Burn Intelligence Strip ───────────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm overflow-hidden">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm overflow-hidden">
         {/* Row 1: This month vs last */}
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 border-b border-[#f1f5f9]">
           <div className="flex items-center gap-2">
@@ -303,14 +303,14 @@ export async function ExpensesContent({ companyId }: Props) {
       <p className="text-xs text-[#94a3b8]">Son 6 ay · {expenses.length} kayıt</p>
 
       {/* ── KPI Strip ─────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
         {[
           { label: 'Toplam Gider',    value: fmt(totalTRY),        sub: 'Son 6 ay (TRY)',                    color: 'text-neg' },
           { label: 'Tek Seferlik',    value: String(expenses.length), sub: 'kayıt',                          color: 'text-[#0f172a]' },
           { label: 'Aylık Sabit Yük', value: monthlyBurden > 0 ? fmt(monthlyBurden) : '—', sub: `${recurring.length} tekrarlayan şablon`, color: monthlyBurden > 0 ? 'text-warn-text' : 'text-[#94a3b8]' },
           { label: 'KDV İndirimi',    value: kdvDeductible > 0 ? fmt(kdvDeductible) : '—', sub: 'Tahmini indirilecek KDV', color: kdvDeductible > 0 ? 'text-pos-text' : 'text-[#94a3b8]' },
         ].map((card, i) => (
-          <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e2e8f0]' : ''}`}>
+          <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e8eaef]' : ''}`}>
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
             <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
             <div className="text-[10px] text-[#94a3b8] mt-1">{card.sub}</div>
@@ -320,7 +320,7 @@ export async function ExpensesContent({ companyId }: Props) {
 
       {/* ── Gider Analizi (expense-intelligence) ─────────────────────────────── */}
       {expenseIntelligence && expenseIntelligence.categories.length > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 space-y-3">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
               Gider Analizi
@@ -339,7 +339,7 @@ export async function ExpensesContent({ companyId }: Props) {
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-[#e2e8f0]">
+                <tr className="border-b border-[#e8eaef]">
                   <th className="text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] pb-1.5 pr-2">Kategori</th>
                   <th className="text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] pb-1.5 px-2">Tutar</th>
                   <th className="text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] pb-1.5 px-2">% Pay</th>
@@ -441,7 +441,7 @@ export async function ExpensesContent({ companyId }: Props) {
 
       {/* ── Category breakdown (collapsible) — with anomaly badges ───────────── */}
       {categories.length > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
           <h3 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">Kategori Özeti — Son 6 Ay</h3>
           <div className="space-y-2.5">
             {categories.map(cat => {
@@ -490,7 +490,7 @@ export async function ExpensesContent({ companyId }: Props) {
 
       {/* ── Monthly trend ─────────────────────────────────────────────────────── */}
       {trend.length > 1 && (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
           <h3 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">Aylık Gider Trendi</h3>
           <div className="flex items-end gap-2 h-20">
             {trend.map(t => {

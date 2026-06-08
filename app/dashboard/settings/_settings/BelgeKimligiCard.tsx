@@ -29,7 +29,7 @@ export function BelgeKimligiCard({
 }: Props) {
   return (
     <FlowraCard>
-      <p className="font-bold text-sm border-b border-[#e2e8f0] pb-2 mb-4">Belge Kimliği</p>
+      <p className="font-bold text-sm border-b border-[#e8eaef] pb-2 mb-4">Belge Kimliği</p>
       <p className="text-[10px] text-[#94a3b8] -mt-1 mb-4">
         Oluşturulan PDF&apos;lerin renk paleti, düzen stili ve varsayılan düzenleyici bilgisi
       </p>
@@ -51,7 +51,7 @@ export function BelgeKimligiCard({
                   className={`flex items-center gap-2 px-3 py-2 rounded border text-xs font-medium transition-colors select-none ${
                     brandColor === p.id
                       ? 'border-[#334155] bg-[#f8fafc]'
-                      : 'border-[#e2e8f0] hover:border-[#cbd5e1] bg-white'
+                      : 'border-[#e8eaef] hover:border-[#cbd5e1] bg-white'
                   }`}
                 >
                   <span
@@ -78,7 +78,7 @@ export function BelgeKimligiCard({
                   className={`text-left px-3 py-2.5 rounded border transition-colors select-none ${
                     documentStyle === s.id
                       ? 'border-[#334155] bg-[#f8fafc]'
-                      : 'border-[#e2e8f0] hover:border-[#cbd5e1] bg-white'
+                      : 'border-[#e8eaef] hover:border-[#cbd5e1] bg-white'
                   }`}
                 >
                   <div className={`text-xs font-semibold mb-0.5 ${documentStyle === s.id ? 'text-[#1e293b]' : 'text-[#334155]'}`}>
@@ -118,7 +118,7 @@ export function BelgeKimligiCard({
           </div>
 
           {/* Preview chip */}
-          <div className="mt-2 p-3 rounded border border-[#e2e8f0] bg-[#f8fafc]">
+          <div className="mt-2 p-3 rounded border border-[#e8eaef] bg-[#f8fafc]">
             <p className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">
               PDF Önizleme
             </p>
@@ -140,7 +140,7 @@ export function BelgeKimligiCard({
         </div>
       </div>
 
-      <div className="mt-4 pt-3 border-t border-[#e2e8f0] flex justify-end">
+      <div className="mt-4 pt-3 border-t border-[#e8eaef] flex justify-end">
         <FlowraButton
           variant="primary"
           onClick={onSave}

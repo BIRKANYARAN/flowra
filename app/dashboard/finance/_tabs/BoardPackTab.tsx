@@ -200,8 +200,8 @@ function SectionCard({ title, children, docHref }: {
   docHref?: string
 }) {
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
-      <div className="px-4 py-3 border-b border-[#e2e8f0] bg-[#f8fafc] flex items-center justify-between">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
+      <div className="px-4 py-3 border-b border-[#e8eaef] bg-[#f8fafc] flex items-center justify-between">
         <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#64748b]">
           {title}
         </span>
@@ -326,7 +326,7 @@ export function BoardPackTab({ userId: _userId, companyId: _companyId }: Props) 
             value={period}
             onChange={e => setPeriod(e.target.value)}
             disabled={state === 'loading'}
-            className="h-9 px-3 border border-[#e2e8f0] rounded text-xs font-semibold text-[#334155] bg-white focus:outline-none focus:ring-1 focus:ring-brand-light disabled:opacity-50"
+            className="h-9 px-3 border border-[#e8eaef] rounded text-xs font-semibold text-[#334155] bg-white focus:outline-none focus:ring-1 focus:ring-brand-light disabled:opacity-50"
           >
             {periodOptions.map(p => (
               <option key={p} value={p}>{periodDisplayLabel(p)}</option>
@@ -347,20 +347,20 @@ export function BoardPackTab({ userId: _userId, companyId: _companyId }: Props) 
             <Link
               href={d!.document_links.balance_sheet}
               target="_blank"
-              className="h-9 px-4 inline-flex items-center rounded border border-[#e2e8f0] text-xs font-semibold text-[#334155] hover:bg-[#f8fafc] transition-colors"
+              className="h-9 px-4 inline-flex items-center rounded border border-[#e8eaef] text-xs font-semibold text-[#334155] hover:bg-[#f8fafc] transition-colors"
             >
               Bilanço Belgesi
             </Link>
             <Link
               href={d!.document_links.income_statement}
               target="_blank"
-              className="h-9 px-4 inline-flex items-center rounded border border-[#e2e8f0] text-xs font-semibold text-[#334155] hover:bg-[#f8fafc] transition-colors"
+              className="h-9 px-4 inline-flex items-center rounded border border-[#e8eaef] text-xs font-semibold text-[#334155] hover:bg-[#f8fafc] transition-colors"
             >
               Gelir Tablosu Belgesi
             </Link>
             <button
               onClick={() => window.print()}
-              className="h-9 px-4 rounded bg-[#f8fafc] border border-[#e2e8f0] text-xs font-semibold text-[#334155] hover:bg-white transition-colors"
+              className="h-9 px-4 rounded bg-[#f8fafc] border border-[#e8eaef] text-xs font-semibold text-[#334155] hover:bg-white transition-colors"
             >
               Tümünü Yazdır
             </button>
@@ -370,7 +370,7 @@ export function BoardPackTab({ userId: _userId, companyId: _companyId }: Props) 
 
       {/* ── Progress indicator ──────────────────────────────────────────────── */}
       {state === 'loading' && (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-5 py-4 space-y-3">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-5 py-4 space-y-3">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
             Paket Hazırlanıyor
           </div>
@@ -409,7 +409,7 @@ export function BoardPackTab({ userId: _userId, companyId: _companyId }: Props) 
         <div className="space-y-4">
 
           {/* Intro card */}
-          <div className="bg-[#f8fafc] border border-dashed border-[#e2e8f0] rounded px-6 py-8 text-center">
+          <div className="bg-[#f8fafc] border border-dashed border-[#e8eaef] rounded px-6 py-8 text-center">
             <div className="text-2xl mb-3">📋</div>
             <div className="text-sm font-black text-[#0f172a] mb-1">
               Yönetim Paketi
@@ -421,8 +421,8 @@ export function BoardPackTab({ userId: _userId, companyId: _companyId }: Props) 
           </div>
 
           {/* Manifest checklist */}
-          <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
-            <div className="px-4 py-3 border-b border-[#e2e8f0] bg-[#f8fafc] flex items-center justify-between">
+          <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
+            <div className="px-4 py-3 border-b border-[#e8eaef] bg-[#f8fafc] flex items-center justify-between">
               <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#64748b]">
                 Pakete Dahil Edilecek Raporlar
               </span>
@@ -434,7 +434,7 @@ export function BoardPackTab({ userId: _userId, companyId: _companyId }: Props) 
               {CFO_PACK_MANIFEST.map(report => (
                 <div key={report.id} className="flex items-center justify-between px-4 py-2.5 gap-3">
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-4 h-4 rounded border border-[#e2e8f0] bg-[#f8fafc] flex-shrink-0 flex items-center justify-center">
+                    <div className="w-4 h-4 rounded border border-[#e8eaef] bg-[#f8fafc] flex-shrink-0 flex items-center justify-center">
                       <span className="text-[8px] text-[#94a3b8]">○</span>
                     </div>
                     <div className="min-w-0">
@@ -463,7 +463,7 @@ export function BoardPackTab({ userId: _userId, companyId: _companyId }: Props) 
           </div>
 
           {/* Pack download info */}
-          <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3">
+          <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
               Pack&apos;i İndir
             </div>

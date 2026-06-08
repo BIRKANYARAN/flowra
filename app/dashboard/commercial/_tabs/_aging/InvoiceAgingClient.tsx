@@ -55,7 +55,7 @@ function urgencyColor(score: number): string {
 
 function Skeleton() {
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 space-y-3 animate-pulse">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 space-y-3 animate-pulse">
       <div className="h-3 w-56 bg-[#f1f5f9] rounded" />
       <div className="flex gap-4">
         <div className="h-10 w-24 bg-[#f1f5f9] rounded" />
@@ -94,7 +94,7 @@ export default function InvoiceAgingClient({ companyId }: Props) {
 
   if (isError) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 text-xs text-[#ef4444]">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 text-xs text-[#ef4444]">
         Fatura yaşlandırma verisi yüklenemedi.
       </div>
     )
@@ -104,7 +104,7 @@ export default function InvoiceAgingClient({ companyId }: Props) {
 
   if (!report || report.all_invoices.length === 0) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-6 text-center">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-6 text-center">
         <p className="text-xs text-[#94a3b8]">Bekleyen fatura bulunamadı</p>
       </div>
     )
@@ -114,7 +114,7 @@ export default function InvoiceAgingClient({ companyId }: Props) {
   const maxBucket = Math.max(...report.bucket_summary.map(b => b.total_try), 1)
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm">
 
       {/* ── Header + date selector ─────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">
@@ -131,7 +131,7 @@ export default function InvoiceAgingClient({ companyId }: Props) {
             value={asOfDate}
             max={today}
             onChange={e => setAsOfDate(e.target.value || today)}
-            className="text-[11px] border border-[#e2e8f0] rounded px-2 py-1 text-[#334155] focus:outline-none focus:ring-1 focus:ring-[#94a3b8]"
+            className="text-[11px] border border-[#e8eaef] rounded px-2 py-1 text-[#334155] focus:outline-none focus:ring-1 focus:ring-[#94a3b8]"
           />
         </div>
       </div>

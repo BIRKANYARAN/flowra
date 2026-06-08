@@ -25,7 +25,7 @@ export function DetailSection({
   const [open, setOpen] = useState(defaultOpen)
 
   return (
-    <section className="border border-[#e2e8f0] rounded-xl bg-white shadow-sm overflow-hidden">
+    <section className="border border-[#e8eaef] rounded-xl bg-white shadow-sm overflow-hidden">
       <button
         type="button"
         onClick={() => setOpen(o => !o)}

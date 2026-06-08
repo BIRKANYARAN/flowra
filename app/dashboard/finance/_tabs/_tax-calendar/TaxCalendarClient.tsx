@@ -37,7 +37,7 @@ function statusBadgeCls(status: TaxObligation['status']): string {
     case 'overdue':  return 'bg-[#fee2e2] text-[#991b1b] border-[#fca5a5]'
     case 'due_soon': return 'bg-[#ffedd5] text-[#9a3412] border-[#fdba74]'
     case 'paid':     return 'bg-[#dcfce7] text-[#166534] border-[#86efac]'
-    default:         return 'bg-[#f1f5f9] text-[#64748b] border-[#e2e8f0]'
+    default:         return 'bg-[#f1f5f9] text-[#64748b] border-[#e8eaef]'
   }
 }
 
@@ -203,7 +203,7 @@ export function TaxCalendarClient({ companyId }: Props) {
 
       {/* Next due obligation highlight */}
       {report.next_obligation && (
-        <div className="mx-4 mb-4 px-3 py-2 rounded border bg-[#f8fafc] border-[#e2e8f0] flex items-center gap-2 text-xs">
+        <div className="mx-4 mb-4 px-3 py-2 rounded border bg-[#f8fafc] border-[#e8eaef] flex items-center gap-2 text-xs">
           <span className="text-[#94a3b8] font-semibold">Bir sonraki:</span>
           <span className="font-bold text-[#1e293b]">
             {taxTypeIcon(report.next_obligation.tax_type)}{' '}

@@ -143,7 +143,7 @@ export async function CustomersContent({ companyId }: Props) {
 
       {/* ── Müşteri Yoğunlaşma Riski (HHI) ──────────────────────────────── */}
       {concentrationReport && concentrationReport.customer_count > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 space-y-3">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
               Müşteri Yoğunlaşma Riski
@@ -210,7 +210,7 @@ export async function CustomersContent({ companyId }: Props) {
 
       {/* ── Intelligence Portfolio KPI Strip ─────────────────────────────── */}
       {intelligenceProfiles.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
           {[
             {
               label: 'Toplam Müşteri',
@@ -243,7 +243,7 @@ export async function CustomersContent({ companyId }: Props) {
                 : 'text-neg',
             },
           ].map((card, i) => (
-            <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e2e8f0]' : ''}`}>
+            <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e8eaef]' : ''}`}>
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
               <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
               <div className="text-[10px] text-[#94a3b8] mt-1">{card.sub}</div>
@@ -259,14 +259,14 @@ export async function CustomersContent({ companyId }: Props) {
 
       {/* ── Legacy KPI strip (shown only when intelligence data unavailable) ── */}
       {intelligenceProfiles.length === 0 && sales.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
           {[
             { label: 'Toplam Müşteri', value: String(customers.length), sub: `${sales.length} satış kaydı`,        color: 'text-[#0f172a]' },
             { label: 'Toplam Ciro',    value: billed > 0 ? fmt(billed) : '—', sub: 'Tüm satışlar (TRY)',           color: 'text-brand' },
             { label: 'Bekleyen Tahsilat', value: outstanding > 0 ? fmt(outstanding) : '—', sub: outstanding > 0 ? 'Ödenmemiş + kısmi' : 'Tamamı tahsil edildi', color: outstanding > 0 ? 'text-neg' : 'text-pos-text' },
             { label: 'Tahsilat Oranı', value: billed > 0 ? `%${collectionRate}` : '—', sub: billed > 0 ? `${fmt(paidTotal)} / ${fmt(billed)} tahsil edildi` : 'Satış yok', color: collectionRate >= 80 ? 'text-pos-text' : collectionRate >= 50 ? 'text-warn-text' : 'text-neg' },
           ].map((card, i) => (
-            <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e2e8f0]' : ''}`}>
+            <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e8eaef]' : ''}`}>
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
               <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
               <div className="text-[10px] text-[#94a3b8] mt-1">{card.sub}</div>
@@ -301,7 +301,7 @@ export async function CustomersContent({ companyId }: Props) {
 
       {/* Top customers bar chart */}
       {topCustomers.length > 0 && billed > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
           <h3 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">En Yüksek Cirolu Müşteriler</h3>
           <div className="space-y-2.5">
             {topCustomers.map(tc => {
@@ -328,7 +328,7 @@ export async function CustomersContent({ companyId }: Props) {
 
       {/* ── Customer Payment Risk Panel (legacy anomaly engine) ────────────── */}
       {atRiskCustomers.length > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">
             <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
               Müşteri Ödeme Riski

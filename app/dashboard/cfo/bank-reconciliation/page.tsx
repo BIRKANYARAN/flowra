@@ -85,7 +85,7 @@ interface ImportLineInput {
 // ── Status config ─────────────────────────────────────────────────────────────
 
 const STATUS_CONFIG = {
-  not_started:        { label: 'Başlanmadı',           cls: 'bg-[#f1f5f9] text-[#64748b] border-[#e2e8f0]' },
+  not_started:        { label: 'Başlanmadı',           cls: 'bg-[#f1f5f9] text-[#64748b] border-[#e8eaef]' },
   reconciled:         { label: 'Mutabık',               cls: 'bg-pos-light text-pos-text border-pos-light'   },
   minor_discrepancies:{ label: 'Küçük Farklar',         cls: 'bg-warn-light text-warn-text border-warn-light'},
   major_discrepancies:{ label: 'Büyük Farklar',         cls: 'bg-neg-light text-neg-text border-neg-light'   },
@@ -179,7 +179,7 @@ function ImportModal({ periodFrom, periodTo, onClose, onSuccess }: ImportModalPr
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl max-w-lg w-full">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#e2e8f0]">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[#e8eaef]">
           <h2 className="text-sm font-black text-[#0f172a]">Banka Ekstresi Satırı Ekle</h2>
           <button onClick={onClose} className="text-[#94a3b8] hover:text-[#475569] text-lg leading-none">×</button>
         </div>
@@ -190,7 +190,7 @@ function ImportModal({ periodFrom, periodTo, onClose, onSuccess }: ImportModalPr
             <div className="mt-1 text-[#94a3b8]">Pozitif tutar = gelen para (kredi), Negatif = giden (borç)</div>
           </div>
           <textarea
-            className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-xs font-mono text-[#1e293b] min-h-[140px] focus:outline-none focus:ring-1 focus:ring-brand-light resize-y"
+            className="w-full border border-[#e8eaef] rounded px-3 py-2 text-xs font-mono text-[#1e293b] min-h-[140px] focus:outline-none focus:ring-1 focus:ring-brand-light resize-y"
             placeholder={'2026-01-15 | Müşteri Ödemesi ABC Ltd | 15000.00 | TRF123456\n2026-01-17 | Kira Ödemesi | -8500.00 | EFT789'}
             value={raw}
             onChange={e => setRaw(e.target.value)}
@@ -199,10 +199,10 @@ function ImportModal({ periodFrom, periodTo, onClose, onSuccess }: ImportModalPr
             <div className="text-xs text-neg bg-neg-light rounded px-3 py-2">{error}</div>
           )}
         </div>
-        <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-[#e2e8f0]">
+        <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-[#e8eaef]">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-xs font-semibold text-[#64748b] border border-[#e2e8f0] rounded hover:bg-[#f8fafc] transition-colors"
+            className="px-4 py-2 text-xs font-semibold text-[#64748b] border border-[#e8eaef] rounded hover:bg-[#f8fafc] transition-colors"
           >
             İptal
           </button>
@@ -234,7 +234,7 @@ function StatusBadge({ status }: { status: ReconciliationReport['reconciliation_
 
 function KpiCard({ label, value, sub, highlight = false }: { label: string; value: string; sub?: string; highlight?: boolean }) {
   return (
-    <div className={cn('rounded border px-4 py-3', highlight ? 'bg-neg-light border-neg-light' : 'bg-white border-[#e2e8f0]')}>
+    <div className={cn('rounded border px-4 py-3', highlight ? 'bg-neg-light border-neg-light' : 'bg-white border-[#e8eaef]')}>
       <div className={cn('text-[0.65rem] font-black uppercase tracking-widest', highlight ? 'text-neg-text' : 'text-[#94a3b8]')}>{label}</div>
       <div className={cn('text-xl font-black tabular-nums mt-1', highlight ? 'text-neg-text' : 'text-[#0f172a]')}>{value}</div>
       {sub && <div className={cn('text-[10px] mt-0.5', highlight ? 'text-neg' : 'text-[#94a3b8]')}>{sub}</div>}
@@ -336,7 +336,7 @@ export default function BankReconciliationPage() {
       </div>
 
       {/* ── 1. Period Selector ────────────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Dönem Seçimi</div>
         <div className="flex items-end gap-3 flex-wrap">
           <div className="flex flex-col gap-1">
@@ -345,7 +345,7 @@ export default function BankReconciliationPage() {
               type="date"
               value={periodFrom}
               onChange={e => setPeriodFrom(e.target.value)}
-              className="border border-[#e2e8f0] rounded px-3 py-1.5 text-xs text-[#1e293b] focus:outline-none focus:ring-1 focus:ring-brand-light"
+              className="border border-[#e8eaef] rounded px-3 py-1.5 text-xs text-[#1e293b] focus:outline-none focus:ring-1 focus:ring-brand-light"
             />
           </div>
           <div className="flex flex-col gap-1">
@@ -354,13 +354,13 @@ export default function BankReconciliationPage() {
               type="date"
               value={periodTo}
               onChange={e => setPeriodTo(e.target.value)}
-              className="border border-[#e2e8f0] rounded px-3 py-1.5 text-xs text-[#1e293b] focus:outline-none focus:ring-1 focus:ring-brand-light"
+              className="border border-[#e8eaef] rounded px-3 py-1.5 text-xs text-[#1e293b] focus:outline-none focus:ring-1 focus:ring-brand-light"
             />
           </div>
           <button
             onClick={fetchReport}
             disabled={loading}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded border border-[#e2e8f0] bg-white text-xs font-semibold text-[#64748b] hover:bg-[#f8fafc] transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded border border-[#e8eaef] bg-white text-xs font-semibold text-[#64748b] hover:bg-[#f8fafc] transition-colors disabled:opacity-50"
           >
             <svg className={cn('w-3.5 h-3.5', loading && 'animate-spin')} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -378,7 +378,7 @@ export default function BankReconciliationPage() {
               <button
                 key={offset}
                 onClick={() => { setPeriodFrom(from); setPeriodTo(to) }}
-                className="px-2.5 py-1.5 rounded border border-[#e2e8f0] text-[10px] font-semibold text-[#64748b] hover:bg-[#f8fafc] transition-colors"
+                className="px-2.5 py-1.5 rounded border border-[#e8eaef] text-[10px] font-semibold text-[#64748b] hover:bg-[#f8fafc] transition-colors"
               >
                 {label}
               </button>
@@ -429,7 +429,7 @@ export default function BankReconciliationPage() {
 
           {/* Flowra vs Bank summary */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3">
+            <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">Flowra Gelirler (Satışlar)</div>
               <div className="flex items-center justify-between text-xs">
                 <span className="text-[#64748b]">Toplam</span>
@@ -440,7 +440,7 @@ export default function BankReconciliationPage() {
                 <span className="font-mono text-pos-text tabular-nums">{report.flowra_inflows_matched}/{report.flowra_inflows_total}</span>
               </div>
             </div>
-            <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3">
+            <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">Flowra Giderler</div>
               <div className="flex items-center justify-between text-xs">
                 <span className="text-[#64748b]">Toplam</span>
@@ -458,8 +458,8 @@ export default function BankReconciliationPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* Left: Bank lines */}
-            <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
-              <div className="px-4 py-2.5 border-b border-[#e2e8f0] bg-[#f8fafc] flex items-center justify-between">
+            <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
+              <div className="px-4 py-2.5 border-b border-[#e8eaef] bg-[#f8fafc] flex items-center justify-between">
                 <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
                   Banka Satırları
                 </span>
@@ -533,7 +533,7 @@ export default function BankReconciliationPage() {
                           <button
                             disabled={isLoading}
                             onClick={() => handleExclude(line.id)}
-                            className="px-2 py-1 text-[10px] font-semibold rounded bg-[#f8fafc] text-[#64748b] border border-[#e2e8f0] hover:bg-[#f1f5f9] transition-colors disabled:opacity-50"
+                            className="px-2 py-1 text-[10px] font-semibold rounded bg-[#f8fafc] text-[#64748b] border border-[#e8eaef] hover:bg-[#f1f5f9] transition-colors disabled:opacity-50"
                           >
                             {isLoading ? '…' : 'Hariç Tut'}
                           </button>
@@ -546,8 +546,8 @@ export default function BankReconciliationPage() {
             </div>
 
             {/* Right: Unmatched Flowra records */}
-            <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
-              <div className="px-4 py-2.5 border-b border-[#e2e8f0] bg-[#f8fafc] flex items-center justify-between">
+            <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
+              <div className="px-4 py-2.5 border-b border-[#e8eaef] bg-[#f8fafc] flex items-center justify-between">
                 <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
                   Eşleşmemiş Flowra Kayıtları
                 </span>

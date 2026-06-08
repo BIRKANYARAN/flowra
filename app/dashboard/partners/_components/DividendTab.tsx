@@ -68,7 +68,7 @@ function StatusBadge({ status }: { status: WorkflowHistoryItem['status'] }) {
     pending:  { cls: 'bg-warn-light text-warn-text border-warn-light', label: 'Onay Bekliyor' },
     approved: { cls: 'bg-pos-light text-pos-text border-pos-light',    label: 'Onaylandı' },
     rejected: { cls: 'bg-neg-light text-neg-text border-neg-light',    label: 'Reddedildi' },
-    expired:  { cls: 'bg-[#f1f5f9] text-[#64748b] border-[#e2e8f0]',  label: 'Süresi Doldu' },
+    expired:  { cls: 'bg-[#f1f5f9] text-[#64748b] border-[#e8eaef]',  label: 'Süresi Doldu' },
   }
   const { cls, label } = map[status] ?? map.expired
   return (
@@ -155,8 +155,8 @@ export function DividendTab() {
     <div className="space-y-5">
 
       {/* ── Section 1: Calculator ───────────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-        <div className="px-4 py-3 border-b border-[#e2e8f0] bg-[#f8fafc]">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+        <div className="px-4 py-3 border-b border-[#e8eaef] bg-[#f8fafc]">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Temettü Hesaplama</div>
           <p className="text-[10px] text-[#94a3b8] mt-0.5">TTK 509/519 uyumu · GVK 94 §4 (%10 stopaj) · Ortak bazlı dağılım</p>
         </div>
@@ -175,7 +175,7 @@ export function DividendTab() {
                 value={grossInput}
                 onChange={e => { setGrossInput(e.target.value); setCalcResult(null); setCalcError(null); setSuccessMsg(null) }}
                 onKeyDown={e => e.key === 'Enter' && handleCalculate()}
-                className="w-full px-3 py-2 border border-[#e2e8f0] rounded text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand-light/30 focus:border-brand-light"
+                className="w-full px-3 py-2 border border-[#e8eaef] rounded text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand-light/30 focus:border-brand-light"
               />
             </div>
             <button
@@ -204,7 +204,7 @@ export function DividendTab() {
             <div className="space-y-4 pt-1">
 
               {/* Summary cards */}
-              <div className="grid grid-cols-3 gap-0 border border-[#e2e8f0] rounded overflow-hidden">
+              <div className="grid grid-cols-3 gap-0 border border-[#e8eaef] rounded overflow-hidden">
                 {[
                   {
                     label: 'Brüt Temettü',
@@ -222,7 +222,7 @@ export function DividendTab() {
                     tone:  calcResult.distributable_net_try > 0 ? 'text-pos-text' : 'text-neg',
                   },
                 ].map((card, i) => (
-                  <div key={card.label} className={`p-3 ${i < 2 ? 'border-r border-[#e2e8f0]' : ''}`}>
+                  <div key={card.label} className={`p-3 ${i < 2 ? 'border-r border-[#e8eaef]' : ''}`}>
                     <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
                     <div className={`text-base font-black tabular-nums ${card.tone}`}>{card.value}</div>
                   </div>
@@ -230,7 +230,7 @@ export function DividendTab() {
               </div>
 
               {/* Compliance checks */}
-              <div className="border border-[#e2e8f0] rounded px-3 py-2 space-y-0">
+              <div className="border border-[#e8eaef] rounded px-3 py-2 space-y-0">
                 <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Yasal Uyum</div>
                 <ComplianceRow
                   ok={calcResult.ttk_509_satisfied}
@@ -264,13 +264,13 @@ export function DividendTab() {
 
               {/* Per-partner allocation */}
               {calcResult.partner_allocations.length > 0 && (
-                <div className="border border-[#e2e8f0] rounded overflow-hidden">
-                  <div className="px-3 py-2 bg-[#f8fafc] border-b border-[#e2e8f0]">
+                <div className="border border-[#e8eaef] rounded overflow-hidden">
+                  <div className="px-3 py-2 bg-[#f8fafc] border-b border-[#e8eaef]">
                     <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">Ortak Bazlı Dağılım</div>
                   </div>
                   <table className="w-full text-xs">
                     <thead>
-                      <tr className="border-b border-[#e2e8f0]">
+                      <tr className="border-b border-[#e8eaef]">
                         <th className="text-left px-3 py-2 text-[0.6rem] font-black uppercase text-[#94a3b8]">Ortak</th>
                         <th className="text-right px-3 py-2 text-[0.6rem] font-black uppercase text-[#94a3b8]">Pay %</th>
                         <th className="text-right px-3 py-2 text-[0.6rem] font-black uppercase text-[#94a3b8]">Brüt</th>
@@ -312,7 +312,7 @@ export function DividendTab() {
                     placeholder="Temettü kararı hakkında not ekleyin…"
                     value={notesInput}
                     onChange={e => setNotesInput(e.target.value)}
-                    className="w-full px-3 py-2 border border-[#e2e8f0] rounded text-xs focus:outline-none focus:ring-2 focus:ring-brand-light/30 focus:border-brand-light"
+                    className="w-full px-3 py-2 border border-[#e8eaef] rounded text-xs focus:outline-none focus:ring-2 focus:ring-brand-light/30 focus:border-brand-light"
                   />
                 </div>
 
@@ -344,8 +344,8 @@ export function DividendTab() {
       </div>
 
       {/* ── Section 2: Declaration History ─────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-        <div className="px-4 py-3 border-b border-[#e2e8f0] bg-[#f8fafc]">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+        <div className="px-4 py-3 border-b border-[#e8eaef] bg-[#f8fafc]">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Temettü Beyan Geçmişi</div>
           <p className="text-[10px] text-[#94a3b8] mt-0.5">Onay akışına gönderilmiş temettü beyanları</p>
         </div>

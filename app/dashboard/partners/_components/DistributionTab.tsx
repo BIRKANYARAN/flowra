@@ -105,7 +105,7 @@ export function DistributionTab({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Dağıtım Parametreleri</div>
         <div className="grid grid-cols-2 gap-3">
           <div>
@@ -116,7 +116,7 @@ export function DistributionTab({
               type="number"
               min="0"
               placeholder="örn. 500000"
-              className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-brand/30"
+              className="w-full border border-[#e8eaef] rounded px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-brand/30"
               value={netIncomeInput}
               onChange={e => { onNetIncomeChange(e.target.value); setPreCheck(null) }}
             />
@@ -129,7 +129,7 @@ export function DistributionTab({
               type="number"
               min="0"
               placeholder="örn. 0"
-              className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-brand/30"
+              className="w-full border border-[#e8eaef] rounded px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-brand/30"
               value={boardRetainedInput}
               onChange={e => { onBoardRetainedChange(e.target.value); setPreCheck(null) }}
             />
@@ -217,8 +217,8 @@ export function DistributionTab({
       {distrib && (
         <>
           {/* 4-Layer Distribution Breakdown */}
-          <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
-            <div className="px-4 py-2.5 border-b border-[#e2e8f0] bg-[#f8fafc]">
+          <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
+            <div className="px-4 py-2.5 border-b border-[#e8eaef] bg-[#f8fafc]">
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">4 Katmanlı Dağıtım Güvenlik Hesabı</div>
             </div>
             <div className="divide-y divide-[#f1f5f9]">
@@ -299,13 +299,13 @@ export function DistributionTab({
 
           {/* Per-partner entitlements */}
           {distrib.per_partner_distribution.length > 0 && (
-            <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
-              <div className="px-4 py-2.5 border-b border-[#e2e8f0] bg-[#f8fafc]">
+            <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
+              <div className="px-4 py-2.5 border-b border-[#e8eaef] bg-[#f8fafc]">
                 <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ortak Bazında Hak Edilenler</div>
               </div>
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="border-b border-[#e2e8f0]">
+                  <tr className="border-b border-[#e8eaef]">
                     {['Ortak', 'Pay', 'Brüt Hak', 'Stopaj', 'Net Hak'].map(h => (
                       <th key={h} className={`px-4 py-2 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] ${h === 'Ortak' ? 'text-left' : 'text-right'}`}>{h}</th>
                     ))}
@@ -348,7 +348,7 @@ export function DistributionTab({
       )}
 
       {!distrib && !distribLoading && (
-        <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-8 text-center text-xs text-[#94a3b8]">
+        <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-4 py-8 text-center text-xs text-[#94a3b8]">
           Dönem net gelirini girin ve hesapla butonuna basın.
         </div>
       )}

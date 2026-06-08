@@ -134,7 +134,7 @@ export default function PipelineVelocityClient({ companyId }: Props) {
     return (
       <div className="animate-pulse space-y-4">
         <div className="h-8 bg-[#f1f5f9] rounded w-48" />
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden h-24" />
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden h-24" />
         <div className="h-40 bg-[#f1f5f9] rounded" />
       </div>
     )
@@ -164,7 +164,7 @@ export default function PipelineVelocityClient({ companyId }: Props) {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden divide-x divide-y sm:divide-y-0 divide-[#e2e8f0]">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden divide-x divide-y sm:divide-y-0 divide-[#e8eaef]">
         <KpiCard
           label="Dönüşüm Oranı"
           value={current.conversion_rate_pct !== null ? fmtPct(current.conversion_rate_pct) : '—'}
@@ -221,7 +221,7 @@ export default function PipelineVelocityClient({ companyId }: Props) {
 
       {/* Pipeline revenue summary */}
       {summary.total_revenue_from_pipeline > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 flex items-center justify-between">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 flex items-center justify-between">
           <div>
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
               Pipeline'dan Toplam Gelir
@@ -267,8 +267,8 @@ export default function PipelineVelocityClient({ companyId }: Props) {
 
       {/* Monthly flow table */}
       {monthly_flow.length > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
-          <div className="px-4 py-2.5 border-b border-[#e2e8f0]">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
+          <div className="px-4 py-2.5 border-b border-[#e8eaef]">
             <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
               Aylık Pipeline Akışı — Son 6 Ay
             </span>
@@ -276,7 +276,7 @@ export default function PipelineVelocityClient({ companyId }: Props) {
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] border-b border-[#e2e8f0]">
+                <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] border-b border-[#e8eaef]">
                   <th className="text-left px-4 py-2">Ay</th>
                   <th className="text-right px-4 py-2">Oluştu</th>
                   <th className="text-right px-4 py-2">Dönüştü</th>

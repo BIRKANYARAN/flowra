@@ -315,7 +315,7 @@ function RolesTab() {
       </div>
       <div className="space-y-3">
         {ROLES.map(r => (
-          <div key={r.key} className="bg-[#f8fafc] border border-[#e2e8f0] rounded p-3">
+          <div key={r.key} className="bg-[#f8fafc] border border-[#e8eaef] rounded p-3">
             <div className="flex items-center gap-2 mb-2">
               <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${r.badge}`}>{r.label}</span>
             </div>
@@ -541,7 +541,7 @@ function GlModeSection({ glMode }: { glMode: 'shadow' | 'parallel' | 'gl_primary
   const upgrade = GL_MODE_UPGRADE[glMode] ?? null
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm p-4">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm p-4">
       <div className="flex items-center justify-between mb-3">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">GL Modu</div>
         <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${badge.cls}`}>
@@ -567,7 +567,7 @@ function GlModeSection({ glMode }: { glMode: 'shadow' | 'parallel' | 'gl_primary
           href="/api/admin/gl-divergence"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-white border border-[#e2e8f0] text-xs font-semibold text-[#334155] hover:text-brand transition-colors"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-white border border-[#e8eaef] text-xs font-semibold text-[#334155] hover:text-brand transition-colors"
         >
           GL Sapma Raporu (JSON) ↗
         </Link>
@@ -626,10 +626,10 @@ export default async function AdminHubPage({
       </div>
 
       {/* Tab hub container */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm overflow-hidden">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm overflow-hidden">
 
         {/* Tab pill nav */}
-        <div className="bg-[#f8fafc] border-b border-[#e2e8f0] px-3 py-2 flex items-center gap-1 flex-wrap">
+        <div className="bg-[#f8fafc] border-b border-[#e8eaef] px-3 py-2 flex items-center gap-1 flex-wrap">
           {TABS.map(t => (
             <Link
               key={t.key}
@@ -654,7 +654,7 @@ export default async function AdminHubPage({
       </div>
 
       {/* Quick settings links */}
-      <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded p-4">
+      <div className="bg-[#f8fafc] border border-[#e8eaef] rounded p-4">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Hızlı Ayarlar</div>
         <div className="flex flex-wrap gap-2">
           {[
@@ -663,7 +663,7 @@ export default async function AdminHubPage({
             { href: '/dashboard/reports',         label: 'Raporlar'        },
           ].map(s => (
             <Link key={s.href} href={s.href}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-white border border-[#e2e8f0] text-xs font-semibold text-[#334155] hover:text-brand transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-white border border-[#e8eaef] text-xs font-semibold text-[#334155] hover:text-brand transition-colors"
             >
               {s.label}
             </Link>

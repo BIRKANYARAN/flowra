@@ -74,7 +74,7 @@ export function InventoryValuationClient() {
   if (report.products.length === 0) return null
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">
         <div>
@@ -112,7 +112,7 @@ export function InventoryValuationClient() {
               : 'text-neg',
           },
         ].map((card, i) => (
-          <div key={card.label} className={`p-3 ${i < 2 ? 'border-r border-[#e2e8f0]' : ''}`}>
+          <div key={card.label} className={`p-3 ${i < 2 ? 'border-r border-[#e8eaef]' : ''}`}>
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
             <div className={`text-base font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
             <div className="text-[10px] text-[#94a3b8] mt-1 truncate">{card.sub}</div>

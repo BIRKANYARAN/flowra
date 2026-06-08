@@ -145,7 +145,7 @@ export async function CashProjectionTab({ companyId }: Props) {
       <div className="grid grid-cols-3 gap-3">
         {([
           { key: 'pessimistic', label: 'Kötümser (−20%)', summary: forecast.summary.pessimistic, accent: 'border-neg-light bg-neg-light',   text: 'text-neg-text',     sub: 'text-neg' },
-          { key: 'base',        label: 'Baz',              summary: forecast.summary.base,        accent: 'border-[#e2e8f0] bg-white',   text: 'text-[#0f172a]',    sub: 'text-[#94a3b8]' },
+          { key: 'base',        label: 'Baz',              summary: forecast.summary.base,        accent: 'border-[#e8eaef] bg-white',   text: 'text-[#0f172a]',    sub: 'text-[#94a3b8]' },
           { key: 'optimistic',  label: 'İyimser (+15%)',   summary: forecast.summary.optimistic,  accent: 'border-pos-light bg-pos-light', text: 'text-pos-text', sub: 'text-pos' },
         ] as const).map(s => (
           <div key={s.key} className={`rounded border px-4 py-3.5 ${s.accent}`}>
@@ -171,7 +171,7 @@ export async function CashProjectionTab({ companyId }: Props) {
       </div>
 
       {/* ── BASE SCENARIO — MONTHLY CASH BARS ─────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">
           <div>
             <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Baz Senaryo — Aylık Nakit Pozisyonu</span>
@@ -233,7 +233,7 @@ export async function CashProjectionTab({ companyId }: Props) {
       </div>
 
       {/* ── ASSUMPTIONS FOOTER ─────────────────────────────────────────────── */}
-      <div className="px-4 py-3 bg-[#f8fafc] border border-[#e2e8f0] rounded text-[10px] text-[#94a3b8] space-y-1">
+      <div className="px-4 py-3 bg-[#f8fafc] border border-[#e8eaef] rounded text-[10px] text-[#94a3b8] space-y-1">
         <div className="font-bold text-[#64748b] mb-1">Projeksiyon Varsayımları</div>
         <div>• Son 6 ayın aylık ortalaması baz alınmıştır (gelir + gider)</div>
         {hasTranches && <div>• Aylık borç servisi ₺{fmtK(monthlyDebtService)} tahmin edilmiştir (aktif borç dilimi faizleri)</div>}
@@ -258,7 +258,7 @@ export async function CashProjectionTab({ companyId }: Props) {
 
 function Metric({ label, value, sub, color }: { label: string; value: string; sub: string; color: string }) {
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
       <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{label}</div>
       <div className={`text-xl font-black tabular-nums leading-none ${color}`}>{value}</div>
       <div className="text-[9px] text-[#94a3b8] mt-1">{sub}</div>

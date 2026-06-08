@@ -95,7 +95,7 @@ export async function ProformasContent({ companyId }: Props) {
 
       {/* ── Dönüşüm Analizi (proforma-analytics) ──────────────────────────── */}
       {analytics && analytics.total_proformas > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 space-y-3">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
               Dönüşüm Analizi
@@ -109,7 +109,7 @@ export async function ProformasContent({ companyId }: Props) {
           </div>
 
           {/* 4 KPI cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 border border-[#e2e8f0] rounded overflow-hidden">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 border border-[#e8eaef] rounded overflow-hidden">
             {[
               {
                 label: 'Kazanma Oranı',
@@ -140,7 +140,7 @@ export async function ProformasContent({ companyId }: Props) {
                 color: 'text-[#334155]',
               },
             ].map((card, i) => (
-              <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e2e8f0]' : ''}`}>
+              <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e8eaef]' : ''}`}>
                 <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
                 <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
                 <div className="text-[10px] text-[#94a3b8] mt-1 leading-tight">{card.sub}</div>
@@ -179,14 +179,14 @@ export async function ProformasContent({ companyId }: Props) {
 
       {/* KPI strip */}
       {list.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
           {[
             { label: 'Toplam Teklif',    value: String(list.length),   sub: 'tüm zamanlar',                         color: 'text-[#0f172a]' },
             { label: 'Pipeline Değeri',  value: openCount > 0 ? formatTRY(pipelineValueTRY) : '—', sub: `${openCount} açık teklif (gönderildi/onaylandı)`, color: openCount > 0 ? 'text-info-text' : 'text-[#94a3b8]' },
             { label: 'Satışa Döndü',     value: String(convertedCount), sub: convertedCount > 0 ? 'onaylı dönüşüm' : 'Henüz yok', color: convertedCount > 0 ? 'text-pos-text' : 'text-[#94a3b8]' },
             { label: 'Dönüşüm Oranı',   value: list.length > 0 ? `%${Math.round((convertedCount / list.length) * 100)}` : '—', sub: `${draftCount} taslak`, color: 'text-[#334155]' },
           ].map((card, i) => (
-            <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e2e8f0]' : ''}`}>
+            <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e8eaef]' : ''}`}>
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
               <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
               <div className="text-[10px] text-[#94a3b8] mt-1 leading-tight">{card.sub}</div>
@@ -236,7 +236,7 @@ export async function ProformasContent({ companyId }: Props) {
 
       {/* ── Proforma Status Funnel ────────────────────────────────────── */}
       {list.length > 2 && totalNonDraft > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 shadow-sm">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Teklif Dönüşüm Hunisi</div>
           <div className="flex items-stretch gap-1">
             {[
@@ -278,7 +278,7 @@ export async function ProformasContent({ companyId }: Props) {
         <div className="flex items-center gap-2">
           <Link
             href="/dashboard/commercial?tab=pipeline"
-            className="inline-flex items-center gap-1.5 border border-[#e2e8f0] text-[#64748b] px-3.5 py-2 rounded text-xs font-semibold hover:bg-[#f8fafc] hover:text-[#1e293b] transition-colors"
+            className="inline-flex items-center gap-1.5 border border-[#e8eaef] text-[#64748b] px-3.5 py-2 rounded text-xs font-semibold hover:bg-[#f8fafc] hover:text-[#1e293b] transition-colors"
           >
             Pipeline →
           </Link>
@@ -306,8 +306,8 @@ export async function ProformasContent({ companyId }: Props) {
           }
         />
       ) : (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-          <div className="grid grid-cols-12 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] px-4 py-2.5 border-b border-[#e2e8f0]">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+          <div className="grid grid-cols-12 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] px-4 py-2.5 border-b border-[#e8eaef]">
             <div className="col-span-3">No / Revizyon</div>
             <div className="col-span-3">Müşteri</div>
             <div className="col-span-2">Durum</div>

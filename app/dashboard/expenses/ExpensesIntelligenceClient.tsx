@@ -15,7 +15,7 @@ import { FlowraInput }  from '@/components/ui-kit/FlowraInput'
 import { CURRENCIES_EXTENDED, EXPENSE_CATEGORIES, type Expense } from '@/types'
 import { CATEGORY_LABELS, type RecurringRow } from '@/app/dashboard/expenses/ExpensesClient'
 
-const IL  = 'w-full border border-[#e2e8f0] rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-colors bg-white'
+const IL  = 'w-full border border-[#e8eaef] rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-colors bg-white'
 const LAB = 'block text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5'
 
 const FREQUENCY_LABELS: Record<string, string> = {
@@ -123,7 +123,7 @@ function AddExpenseSlideOver({ onClose, onSaved, partners: initialPartners }: Ad
       <div className="fixed inset-0 bg-black/30 z-40" onClick={onClose} />
       {/* Panel */}
       <div className="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl z-50 flex flex-col overflow-hidden">
-        <div className="px-5 py-4 border-b border-[#e2e8f0] flex items-center justify-between">
+        <div className="px-5 py-4 border-b border-[#e8eaef] flex items-center justify-between">
           <h2 className="text-sm font-bold text-[#0f172a]">Yeni Gider Ekle</h2>
           <button onClick={onClose} className="text-[#94a3b8] hover:text-[#334155] text-lg leading-none p-1">✕</button>
         </div>
@@ -146,7 +146,7 @@ function AddExpenseSlideOver({ onClose, onSaved, partners: initialPartners }: Ad
                   onChange={e => setForm(f => ({ ...f, amount: e.target.value }))}
                 />
                 <select
-                  className="border border-[#e2e8f0] rounded px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 bg-white transition-colors"
+                  className="border border-[#e8eaef] rounded px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 bg-white transition-colors"
                   value={form.currency}
                   onChange={e => setForm(f => ({ ...f, currency: e.target.value }))}
                 >
@@ -200,7 +200,7 @@ function AddExpenseSlideOver({ onClose, onSaved, partners: initialPartners }: Ad
           </label>
 
           {form.is_recurring ? (
-            <div className="grid grid-cols-3 gap-4 pl-3 border-l-2 border-[#e2e8f0]">
+            <div className="grid grid-cols-3 gap-4 pl-3 border-l-2 border-[#e8eaef]">
               <div>
                 <label className={LAB}>Sıklık</label>
                 <select className={IL} value={form.frequency}
@@ -224,7 +224,7 @@ function AddExpenseSlideOver({ onClose, onSaved, partners: initialPartners }: Ad
 
           {formErr && <ErrorBanner msg={formErr} />}
         </div>
-        <div className="px-5 py-4 border-t border-[#e2e8f0] flex gap-2">
+        <div className="px-5 py-4 border-t border-[#e8eaef] flex gap-2">
           <FlowraButton variant="primary" onClick={save} loading={saving} disabled={saving}>
             {saving ? 'Kaydediliyor...' : 'Kaydet'}
           </FlowraButton>
@@ -432,8 +432,8 @@ export default function ExpensesIntelligenceClient({
         <>
           {/* One-off expenses */}
           {list.length > 0 && (
-            <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
-              <div className="grid grid-cols-12 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] px-5 py-3 border-b border-[#e2e8f0]">
+            <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
+              <div className="grid grid-cols-12 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] px-5 py-3 border-b border-[#e8eaef]">
                 <div className="col-span-4">Açıklama</div>
                 <div className="col-span-2">Kategori</div>
                 <div className="col-span-2">Tarih</div>
@@ -506,8 +506,8 @@ export default function ExpensesIntelligenceClient({
           {recurring.length > 0 && (
             <div>
               <Label className="mb-3">Tekrarlayan Giderler ({recurring.length})</Label>
-              <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
-                <div className="grid grid-cols-12 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] px-5 py-3 border-b border-[#e2e8f0]">
+              <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
+                <div className="grid grid-cols-12 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] px-5 py-3 border-b border-[#e8eaef]">
                   <div className="col-span-4">Açıklama</div>
                   <div className="col-span-2">Kategori</div>
                   <div className="col-span-2">Sıklık</div>

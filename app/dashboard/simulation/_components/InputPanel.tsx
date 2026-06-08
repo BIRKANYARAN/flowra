@@ -66,7 +66,7 @@ export function InputPanel({
   onExtraPartnerDebtChange,
 }: InputPanelProps) {
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-5 space-y-4">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-5 space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Parametreler</h2>
         <span className="text-[10px] text-[#94a3b8] italic">Sonuçlar yukarıda otomatik güncellenir ↑</span>
@@ -169,7 +169,7 @@ export function InputPanel({
           </div>
         </div>
         <div className="flex items-end">
-          <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-2.5 text-xs w-full">
+          <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-4 py-2.5 text-xs w-full">
             <span className="text-[#94a3b8] uppercase tracking-wide font-semibold block mb-0.5">Stok Tutma Süresi</span>
             <span className="font-bold text-[#334155]">
               {holdingDays} gün
@@ -186,7 +186,7 @@ export function InputPanel({
       </div>
 
       {/* ── Senaryo Katmanları ──────────────────────────────────────────────── */}
-      <div className="pt-3 border-t border-dashed border-[#e2e8f0]">
+      <div className="pt-3 border-t border-dashed border-[#e8eaef]">
         <div className="flex items-center gap-2 mb-3">
           <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Senaryo Katmanları</span>
           <span className="text-[10px] text-[#94a3b8] font-normal">— isteğe bağlı · baskı haritasını etkiler</span>

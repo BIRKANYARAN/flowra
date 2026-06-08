@@ -38,8 +38,8 @@ function StepIcon({ status }: { status: WizardStep['status'] }) {
     pass:    { icon: '✓', cls: 'text-pos-text bg-pos-light border-pos-light' },
     fail:    { icon: '✗', cls: 'text-neg-text bg-neg-light border-neg-light' },
     pending: { icon: '○', cls: 'text-warn-text bg-warn-light border-warn-light' },
-    manual:  { icon: '✎', cls: 'text-[#64748b] bg-[#f1f5f9] border-[#e2e8f0]' },
-    skipped: { icon: '—', cls: 'text-[#94a3b8] bg-[#f8fafc] border-[#e2e8f0]' },
+    manual:  { icon: '✎', cls: 'text-[#64748b] bg-[#f1f5f9] border-[#e8eaef]' },
+    skipped: { icon: '—', cls: 'text-[#94a3b8] bg-[#f8fafc] border-[#e8eaef]' },
   }
   const { icon, cls } = map[status]
   return (
@@ -56,8 +56,8 @@ function StatusChip({ status }: { status: WizardStep['status'] }) {
     pass:    { label: 'Tamamlandı',  cls: 'bg-pos-light text-pos-text border-pos-light' },
     fail:    { label: 'Başarısız',   cls: 'bg-neg-light text-neg-text border-neg-light' },
     pending: { label: 'Bekliyor',    cls: 'bg-warn-light text-warn-text border-warn-light' },
-    manual:  { label: 'Manuel Onay', cls: 'bg-[#f1f5f9] text-[#64748b] border-[#e2e8f0]' },
-    skipped: { label: 'Atlandı',     cls: 'bg-[#f8fafc] text-[#94a3b8] border-[#e2e8f0]' },
+    manual:  { label: 'Manuel Onay', cls: 'bg-[#f1f5f9] text-[#64748b] border-[#e8eaef]' },
+    skipped: { label: 'Atlandı',     cls: 'bg-[#f8fafc] text-[#94a3b8] border-[#e8eaef]' },
   }
   const { label, cls } = map[status]
   return (
@@ -82,8 +82,8 @@ function StepRow({ step, onMarkManual, isMarkingManual }: StepRowProps) {
       isFail
         ? 'bg-neg-light border-neg-light'
         : step.status === 'pass'
-        ? 'bg-pos-light/40 border-[#e2e8f0]'
-        : 'bg-white border-[#e2e8f0]'
+        ? 'bg-pos-light/40 border-[#e8eaef]'
+        : 'bg-white border-[#e8eaef]'
     }`}>
       <StepIcon status={step.status} />
       <div className="flex-1 min-w-0">
@@ -95,7 +95,7 @@ function StepRow({ step, onMarkManual, isMarkingManual }: StepRowProps) {
           </span>
           <StatusChip status={step.status} />
           {step.is_blocking && (
-            <span className="text-[9px] font-bold px-1 py-0.5 rounded bg-[#f1f5f9] text-[#94a3b8] border border-[#e2e8f0]">
+            <span className="text-[9px] font-bold px-1 py-0.5 rounded bg-[#f1f5f9] text-[#94a3b8] border border-[#e8eaef]">
               Zorunlu
             </span>
           )}
@@ -145,7 +145,7 @@ function PhaseTab({ phase, isCurrent, onClick }: PhaseTabProps) {
     ? 'border-pos-light bg-pos-light text-pos-text'
     : isCurrent
     ? 'border-brand bg-brand-subtle text-brand font-bold'
-    : 'border-[#e2e8f0] bg-[#f8fafc] text-[#94a3b8]'
+    : 'border-[#e8eaef] bg-[#f8fafc] text-[#94a3b8]'
 
   const labels: Record<WizardPhase, string> = {
     1: '1. Veri',
@@ -243,7 +243,7 @@ export function PeriodCloseWizard({ periodId }: Props) {
 
   if (isLoading) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-6 shadow-sm">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-6 shadow-sm">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">
           Dönem Kapanış Sihirbazı
         </div>
@@ -282,10 +282,10 @@ export function PeriodCloseWizard({ periodId }: Props) {
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm overflow-hidden">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm overflow-hidden">
 
       {/* Header */}
-      <div className="px-4 py-3 border-b border-[#e2e8f0] flex items-center justify-between">
+      <div className="px-4 py-3 border-b border-[#e8eaef] flex items-center justify-between">
         <div>
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
             Dönem Kapanış Sihirbazı
@@ -296,7 +296,7 @@ export function PeriodCloseWizard({ periodId }: Props) {
         </div>
         <div className="flex items-center gap-3">
           <span className={`text-[10px] font-bold px-2 py-1 rounded border ${
-            state.period_status === 'locked' ? 'bg-[#f1f5f9] text-[#64748b] border-[#e2e8f0]' :
+            state.period_status === 'locked' ? 'bg-[#f1f5f9] text-[#64748b] border-[#e8eaef]' :
             state.period_status === 'closed' ? 'bg-info-light text-info-text border-info-light' :
             'bg-warn-light text-warn-text border-warn-light'
           }`}>
@@ -327,7 +327,7 @@ export function PeriodCloseWizard({ periodId }: Props) {
       </div>
 
       {/* Phase tabs */}
-      <div className="px-4 py-2.5 border-b border-[#e2e8f0]">
+      <div className="px-4 py-2.5 border-b border-[#e8eaef]">
         <div className="grid grid-cols-4 gap-2">
           {state.phases.map(phase => (
             <PhaseTab
@@ -363,7 +363,7 @@ export function PeriodCloseWizard({ periodId }: Props) {
           <span className={`text-[10px] font-bold px-2 py-1 rounded border ${
             effectiveComplete
               ? 'bg-pos-light text-pos-text border-pos-light'
-              : 'bg-[#f1f5f9] text-[#64748b] border-[#e2e8f0]'
+              : 'bg-[#f1f5f9] text-[#64748b] border-[#e8eaef]'
           }`}>
             {effectiveComplete ? '✓ Hazır' : `${currentPhaseData.passed_steps}/${currentPhaseData.total_steps}`}
           </span>
@@ -388,7 +388,7 @@ export function PeriodCloseWizard({ periodId }: Props) {
                 ✓ Dönem başarıyla kapatıldı!
               </div>
             ) : (
-              <div className="rounded border border-[#e2e8f0] p-4 space-y-3">
+              <div className="rounded border border-[#e8eaef] p-4 space-y-3">
                 <div className="text-xs font-black text-[#0f172a]">Nihai Onay</div>
 
                 {/* Close note */}
@@ -401,7 +401,7 @@ export function PeriodCloseWizard({ periodId }: Props) {
                     onChange={e => setCloseNote(e.target.value)}
                     placeholder="Bu dönem hakkında notlarınızı buraya girin…"
                     rows={3}
-                    className="w-full text-xs border border-[#e2e8f0] rounded px-3 py-2 text-[#334155] placeholder-[#94a3b8] focus:outline-none focus:border-brand resize-none"
+                    className="w-full text-xs border border-[#e8eaef] rounded px-3 py-2 text-[#334155] placeholder-[#94a3b8] focus:outline-none focus:border-brand resize-none"
                   />
                 </div>
 
@@ -411,7 +411,7 @@ export function PeriodCloseWizard({ periodId }: Props) {
                     type="checkbox"
                     checked={cfoSignOff}
                     onChange={e => setCfoSignOff(e.target.checked)}
-                    className="mt-0.5 w-4 h-4 rounded border-[#e2e8f0] accent-[#1e293b]"
+                    className="mt-0.5 w-4 h-4 rounded border-[#e8eaef] accent-[#1e293b]"
                   />
                   <span className="text-xs text-[#334155]">
                     <strong>Dönemi kapatmak istediğinizi onaylıyor musunuz?</strong>

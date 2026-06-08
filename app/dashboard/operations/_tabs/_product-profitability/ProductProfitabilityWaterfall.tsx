@@ -66,7 +66,7 @@ export function ProductProfitabilityWaterfall() {
 
   if (isLoading) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm p-6 animate-pulse">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm p-6 animate-pulse">
         <div className="h-4 w-48 bg-[#f1f5f9] rounded mb-4" />
         <div className="grid grid-cols-4 gap-3 mb-4">
           {[...Array(4)].map((_, i) => <div key={i} className="h-14 bg-[#f1f5f9] rounded" />)}
@@ -94,7 +94,7 @@ export function ProductProfitabilityWaterfall() {
   const tiers = tiersAll.filter(t => t.count > 0)
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm">
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">
@@ -130,7 +130,7 @@ export function ProductProfitabilityWaterfall() {
             color: 'text-[#0f172a]',
           },
         ].map((card, i) => (
-          <div key={card.label} className={`p-3 ${i < 2 ? 'border-b sm:border-b-0 sm:border-r border-[#e2e8f0]' : ''}`}>
+          <div key={card.label} className={`p-3 ${i < 2 ? 'border-b sm:border-b-0 sm:border-r border-[#e8eaef]' : ''}`}>
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
             <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
           </div>

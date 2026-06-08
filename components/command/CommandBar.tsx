@@ -225,11 +225,11 @@ export function CommandBar() {
 
       {/* Panel */}
       <div
-        className="relative w-full max-w-[560px] bg-white rounded border border-[#e2e8f0] shadow-[0_24px_48px_rgba(17,24,39,0.18),0_8px_16px_rgba(17,24,39,0.08)] overflow-hidden"
+        className="relative w-full max-w-[560px] bg-white rounded border border-[#e8eaef] shadow-[0_24px_48px_rgba(17,24,39,0.18),0_8px_16px_rgba(17,24,39,0.08)] overflow-hidden"
         style={{ maxHeight: '74vh' }}
       >
         {/* ── Search row ────────────────────────────────────────────────────── */}
-        <div className="flex items-center gap-3 px-4 py-3.5 border-b border-[#e2e8f0]">
+        <div className="flex items-center gap-3 px-4 py-3.5 border-b border-[#e8eaef]">
           <svg className="w-4 h-4 text-[#94a3b8] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
@@ -244,7 +244,7 @@ export function CommandBar() {
           {smartLoading && (
             <span className="w-3 h-3 rounded-full border-2 border-brand border-t-transparent animate-spin flex-shrink-0" />
           )}
-          <kbd className="text-[9px] text-[#94a3b8] bg-[#f1f5f9] border border-[#e2e8f0] px-1.5 py-0.5 rounded font-mono leading-tight flex-shrink-0">
+          <kbd className="text-[9px] text-[#94a3b8] bg-[#f1f5f9] border border-[#e8eaef] px-1.5 py-0.5 rounded font-mono leading-tight flex-shrink-0">
             ESC
           </kbd>
         </div>
@@ -322,7 +322,7 @@ export function CommandBar() {
 
                         {/* Enter hint */}
                         {isSelected && (
-                          <kbd className="flex-shrink-0 text-[9px] text-[#94a3b8] bg-[#f1f5f9] border border-[#e2e8f0] px-1.5 py-0.5 rounded font-mono leading-tight">
+                          <kbd className="flex-shrink-0 text-[9px] text-[#94a3b8] bg-[#f1f5f9] border border-[#e8eaef] px-1.5 py-0.5 rounded font-mono leading-tight">
                             ↵
                           </kbd>
                         )}

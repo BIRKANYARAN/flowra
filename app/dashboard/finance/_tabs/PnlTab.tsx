@@ -57,7 +57,7 @@ function WRow({ label, value, sub, isTotal, isDeduction, isSub }: {
     : `text-xs font-bold ${value >= 0 ? 'text-[#1e293b]' : 'text-neg'}`
 
   return (
-    <div className={`flex items-center justify-between gap-2 py-1.5 ${isTotal ? 'border-t border-dashed border-[#e2e8f0] mt-1' : ''}`}>
+    <div className={`flex items-center justify-between gap-2 py-1.5 ${isTotal ? 'border-t border-dashed border-[#e8eaef] mt-1' : ''}`}>
       <div className="min-w-0">
         <span className={labelClass}>{label}</span>
         {sub && <span className="text-[9px] text-[#94a3b8] ml-1.5">{sub}</span>}
@@ -96,13 +96,13 @@ function MultiPeriodTable({ report }: { report: MultiPeriodPnlReport }) {
   const periods = [...report.periods].reverse()
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-5 shadow-sm overflow-x-auto">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-5 shadow-sm overflow-x-auto">
       <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">
         Çok Dönemli Karşılaştırma — Son 6 Ay
       </div>
       <table className="w-full text-xs border-collapse min-w-[600px]">
         <thead>
-          <tr className="border-b border-[#e2e8f0]">
+          <tr className="border-b border-[#e8eaef]">
             <th className="text-left py-2 pr-3 text-[10px] font-black uppercase tracking-wide text-[#94a3b8] w-40">
               Kalem
             </th>
@@ -133,7 +133,7 @@ function MultiPeriodRow({
   const isSubtotal = item.is_subtotal
 
   const rowClass = isSubtotal
-    ? 'border-t border-dashed border-[#e2e8f0] bg-[#f8fafc]'
+    ? 'border-t border-dashed border-[#e8eaef] bg-[#f8fafc]'
     : 'border-t border-[#f1f5f9]'
 
   const labelClass = isSubtotal
@@ -254,7 +254,7 @@ export async function PnlTab({ userId, companyId, glMode = 'shadow' }: Props) {
 
   if (!s && !hasGlData) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft text-center py-16 shadow-sm">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft text-center py-16 shadow-sm">
         <div className="w-8 h-8 rounded-full bg-[#f1f5f9] mx-auto mb-3 flex items-center justify-center">
           <span className="text-[#94a3b8] text-sm font-bold">—</span>
         </div>
@@ -291,7 +291,7 @@ export async function PnlTab({ userId, companyId, glMode = 'shadow' }: Props) {
             ? 'bg-pos-light border-pos-light text-pos-text'
             : glMode === 'parallel'
             ? 'bg-blue-50 border-blue-200 text-blue-700'
-            : 'bg-[#f1f5f9] border-[#e2e8f0] text-[#64748b]'
+            : 'bg-[#f1f5f9] border-[#e8eaef] text-[#64748b]'
         }`}>
           {dataSource}
         </span>
@@ -345,7 +345,7 @@ export async function PnlTab({ userId, companyId, glMode = 'shadow' }: Props) {
       <div className="col-span-7 space-y-4">
 
         {/* Main waterfall */}
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-5 shadow-sm">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-5 shadow-sm">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">
             Kâr / Zarar — {fmtMonth(currentYM)}
           </div>
@@ -377,7 +377,7 @@ export async function PnlTab({ userId, companyId, glMode = 'shadow' }: Props) {
         </div>
 
         {/* KDV Özeti */}
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">KDV Özeti</div>
           <div className="grid grid-cols-3 gap-3">
             {[
@@ -409,7 +409,7 @@ export async function PnlTab({ userId, companyId, glMode = 'shadow' }: Props) {
             { label: 'Toplam Giderler',  value: fmt(expenses),    sub: 'Kesinti + operasyonel', color: 'border-l-[#d97706]' },
             { label: 'Vergi Matrahı',    value: fmt(matrah),      sub: 'Vergi öncesi kazanç', color: matrah >= 0 ? 'border-l-brand/30' : 'border-l-[#dc2626]' },
           ].map(k => (
-            <div key={k.label} className={`bg-white border border-l-4 border-[#e2e8f0] ${k.color} rounded px-4 py-3`}>
+            <div key={k.label} className={`bg-white border border-l-4 border-[#e8eaef] ${k.color} rounded px-4 py-3`}>
               <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">{k.label}</div>
               <div className="text-[10px] text-[#94a3b8]">{k.sub}</div>
               <div className="text-lg font-black tabular-nums text-[#0f172a] mt-1">{k.value}</div>
@@ -418,7 +418,7 @@ export async function PnlTab({ userId, companyId, glMode = 'shadow' }: Props) {
         </div>
 
         {/* 6-ay mini trend */}
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">6 Aylık Net Kâr Trendi</div>
           <div className="space-y-1.5">
             {monthYMs.map((ym, i) => {

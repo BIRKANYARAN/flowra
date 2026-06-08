@@ -122,7 +122,7 @@ export async function SimulationContext({ companyId }: Props) {
           }
           return (
             <div key={kpi.label}
-              className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-3 py-2.5 hover:border-[#e2e8f0] transition-colors">
+              className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-3 py-2.5 hover:border-[#e8eaef] transition-colors">
               <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{kpi.label}</div>
               <div className={`text-base font-black tabular-nums leading-none ${colors[kpi.tone] ?? 'text-[#0f172a]'}`}>
                 {kpi.value}
@@ -140,7 +140,7 @@ export async function SimulationContext({ companyId }: Props) {
             ? 'bg-neg-light border-neg-light'
             : runwayMonths !== null && runwayMonths <= 6
             ? 'bg-warn-light border-warn-light'
-            : 'bg-[#f8fafc] border-[#e2e8f0]'
+            : 'bg-[#f8fafc] border-[#e8eaef]'
         }`}>
           <div className="flex items-center gap-3">
             <span className="text-[9px] font-black uppercase tracking-widest text-[#64748b]">

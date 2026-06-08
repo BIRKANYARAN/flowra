@@ -90,7 +90,7 @@ function KpiCard({ label, value, target, status, note }: KpiCardProps) {
   const indicator = status === 'above' ? '▲' : status === 'below' ? '▼' : '—'
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-lg p-4 flex flex-col gap-1">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 flex flex-col gap-1">
       <span className="text-[11px] font-semibold text-[#64748b] uppercase tracking-wide">{label}</span>
       <div className="flex items-baseline gap-2">
         <span className="text-xl font-black text-[#0f172a]">{value}</span>
@@ -170,7 +170,7 @@ export function OperationalEfficiencyClient({ companyId }: Props) {
 
   if (isLoading) {
     return (
-      <section className="bg-white border border-[#e2e8f0] rounded-xl p-6 animate-pulse">
+      <section className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-6 animate-pulse">
         <div className="h-5 w-48 bg-[#f1f5f9] rounded mb-4" />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
@@ -220,7 +220,7 @@ export function OperationalEfficiencyClient({ companyId }: Props) {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <section className="bg-white border border-[#e2e8f0] rounded-xl p-6 space-y-5">
+    <section className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-6 space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -231,7 +231,7 @@ export function OperationalEfficiencyClient({ companyId }: Props) {
       </div>
 
       {/* Productivity score + summary */}
-      <div className="flex items-center gap-6 p-4 bg-[#f8fafc] rounded-lg border border-[#e2e8f0]">
+      <div className="flex items-center gap-6 p-4 bg-[#f8fafc] rounded-lg border border-[#e8eaef]">
         <ScoreRing score={productivity_score} />
         <div>
           <p className="text-[13px] font-semibold text-[#0f172a]">Operasyonel Verimlilik Skoru</p>

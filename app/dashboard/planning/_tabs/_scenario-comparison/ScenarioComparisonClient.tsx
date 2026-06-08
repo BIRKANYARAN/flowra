@@ -62,7 +62,7 @@ function ScenarioChip({
         'inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-[10px] font-semibold border transition-all',
         selected
           ? 'bg-brand text-white border-brand shadow-sm'
-          : 'bg-white text-[#64748b] border-[#e2e8f0] hover:border-brand/40 hover:text-brand',
+          : 'bg-white text-[#64748b] border-[#e8eaef] hover:border-brand/40 hover:text-brand',
       ].join(' ')}
     >
       {scenario.is_baseline && (
@@ -98,7 +98,7 @@ function ComparisonMatrix({
   const metricMap = Object.fromEntries(COMPARISON_METRICS.map(m => [m.key, m]))
 
   return (
-    <div className="overflow-x-auto rounded border border-[#e2e8f0]">
+    <div className="overflow-x-auto rounded border border-[#e8eaef]">
       <table className="w-full text-[10px] min-w-[500px]">
         <thead>
           <tr className="bg-[#f8fafc]">
@@ -232,7 +232,7 @@ export function ScenarioComparisonClient() {
   // Empty state — no saved scenarios
   if (report.scenarios.length === 0) {
     return (
-      <div className="px-4 py-6 rounded border border-[#e2e8f0] bg-[#f8fafc] text-center">
+      <div className="px-4 py-6 rounded border border-[#e8eaef] bg-[#f8fafc] text-center">
         <div className="text-xs text-[#94a3b8]">Kayıtlı senaryo bulunamadı.</div>
         <div className="text-[10px] text-[#cbd5e1] mt-1">
           Yukarıdaki what-if motoruyla senaryo oluşturun ve kaydedin.

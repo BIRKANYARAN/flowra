@@ -25,9 +25,9 @@ function fmtTRY(n: number): string {
 
 function Skeleton() {
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 space-y-3 animate-pulse">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 space-y-3 animate-pulse">
       <div className="h-3 w-32 bg-[#f1f5f9] rounded" />
-      <div className="grid grid-cols-4 gap-0 border border-[#e2e8f0] rounded overflow-hidden">
+      <div className="grid grid-cols-4 gap-0 border border-[#e8eaef] rounded overflow-hidden">
         {[0, 1, 2, 3].map(i => (
           <div key={i} className="p-3 h-16 bg-[#f8fafc]" />
         ))}
@@ -99,7 +99,7 @@ function SizeTable({ buckets, total }: { buckets: SizeBucket[]; total: number })
       <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
         Anlaşma Büyüklüğü Dağılımı
       </div>
-      <div className="border border-[#e2e8f0] rounded overflow-hidden">
+      <div className="border border-[#e8eaef] rounded overflow-hidden">
         <div className="grid grid-cols-3 text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] px-3 py-1.5 border-b border-[#f1f5f9] bg-[#f8fafc]">
           <div>Aralık</div>
           <div className="text-right">Teklif</div>
@@ -214,7 +214,7 @@ export function ProformaAnalyticsClient() {
   ]
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 space-y-4">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
@@ -224,9 +224,9 @@ export function ProformaAnalyticsClient() {
       </div>
 
       {/* 4-chip summary */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 border border-[#e2e8f0] rounded overflow-hidden">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 border border-[#e8eaef] rounded overflow-hidden">
         {summaryCards.map((card, i) => (
-          <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e2e8f0]' : ''}`}>
+          <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e8eaef]' : ''}`}>
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
             <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
             <div className="text-[10px] text-[#94a3b8] mt-1 leading-tight">{card.sub}</div>

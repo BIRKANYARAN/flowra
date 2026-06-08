@@ -32,7 +32,7 @@ function fmtRatio(n: number | null): string {
 
 /** Color CCC chip: < 45 = green, 45-60 = yellow, > 60 = red */
 function cccChipClass(ccc: number | null): string {
-  if (ccc === null) return 'bg-[#f1f5f9] text-[#64748b] border-[#e2e8f0]'
+  if (ccc === null) return 'bg-[#f1f5f9] text-[#64748b] border-[#e8eaef]'
   if (ccc < 45)  return 'bg-pos-light text-pos-text border-pos-light'
   if (ccc <= 60) return 'bg-warn-light text-warn-text border-warn-light'
   return 'bg-neg-light text-neg-text border-neg-light'
@@ -40,7 +40,7 @@ function cccChipClass(ccc: number | null): string {
 
 /** Color current-ratio chip: > 1.5 = green, 1.2-1.5 = yellow, < 1.2 = red */
 function ratioChipClass(ratio: number | null): string {
-  if (ratio === null) return 'bg-[#f1f5f9] text-[#64748b] border-[#e2e8f0]'
+  if (ratio === null) return 'bg-[#f1f5f9] text-[#64748b] border-[#e8eaef]'
   if (ratio > 1.5)   return 'bg-pos-light text-pos-text border-pos-light'
   if (ratio >= 1.2)  return 'bg-warn-light text-warn-text border-warn-light'
   return 'bg-neg-light text-neg-text border-neg-light'
@@ -176,10 +176,10 @@ export function WorkingCapitalSection() {
   const current = months[0]
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
 
       {/* Header */}
-      <div className="px-4 py-3 border-b border-[#e2e8f0] flex items-center justify-between flex-wrap gap-2">
+      <div className="px-4 py-3 border-b border-[#e8eaef] flex items-center justify-between flex-wrap gap-2">
         <div>
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
             İşletme Sermayesi Analizi
@@ -200,7 +200,7 @@ export function WorkingCapitalSection() {
 
       {/* Risk flags */}
       {(negative_working_capital || high_ccc || low_current_ratio) && (
-        <div className="border-b border-[#e2e8f0] px-4 py-3 flex flex-col gap-2 bg-neg-light">
+        <div className="border-b border-[#e8eaef] px-4 py-3 flex flex-col gap-2 bg-neg-light">
           {negative_working_capital && (
             <div className="flex items-start gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-neg shrink-0 mt-1.5" />
@@ -230,7 +230,7 @@ export function WorkingCapitalSection() {
       )}
 
       {/* Top row — 4 metric chips */}
-      <div className="grid grid-cols-4 gap-3 p-4 border-b border-[#e2e8f0]">
+      <div className="grid grid-cols-4 gap-3 p-4 border-b border-[#e8eaef]">
         <MetricChip
           label="Nakit Dönüşüm Döngüsü"
           value={fmtDays(current_ccc_days)}
@@ -254,14 +254,14 @@ export function WorkingCapitalSection() {
               ? 'bg-neg-light text-neg-text border-neg-light'
               : working_capital > 0
                 ? 'bg-pos-light text-pos-text border-pos-light'
-                : 'bg-[#f1f5f9] text-[#64748b] border-[#e2e8f0]'
+                : 'bg-[#f1f5f9] text-[#64748b] border-[#e8eaef]'
           }
         />
       </div>
 
       {/* CCC decomposition */}
       {current && (
-        <div className="px-4 py-3 border-b border-[#e2e8f0] bg-[#f8fafc] text-xs text-[#64748b]">
+        <div className="px-4 py-3 border-b border-[#e8eaef] bg-[#f8fafc] text-xs text-[#64748b]">
           <span className="font-black text-[#334155] uppercase tracking-widest text-[0.6rem] mr-2">NDD Bileşenleri</span>
           <span className="font-mono tabular-nums">
             = {current.dio_days !== null ? `${current.dio_days.toFixed(1)}g stok` : '—g stok'}
@@ -277,7 +277,7 @@ export function WorkingCapitalSection() {
       {months.length > 0 ? (
         <table className="w-full text-xs">
           <thead>
-            <tr className="bg-[#f8fafc] border-b border-[#e2e8f0]">
+            <tr className="bg-[#f8fafc] border-b border-[#e8eaef]">
               <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ay</th>
               <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">NDD</th>
               <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Cari Oran</th>
@@ -297,7 +297,7 @@ export function WorkingCapitalSection() {
       )}
 
       {/* Benchmark legend */}
-      <div className="border-t border-[#e2e8f0] px-4 py-2.5 flex items-center gap-4 bg-[#f8fafc] text-[10px] text-[#94a3b8]">
+      <div className="border-t border-[#e8eaef] px-4 py-2.5 flex items-center gap-4 bg-[#f8fafc] text-[10px] text-[#94a3b8]">
         <span>Benchmark: NDD &lt; <strong>45g</strong> (sağlıklı)</span>
         <span>Cari Oran &gt; <strong>1.50</strong></span>
         <span>Asit-Test &gt; <strong>1.20</strong></span>

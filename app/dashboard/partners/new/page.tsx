@@ -18,7 +18,7 @@ import { useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
-const IL  = 'w-full border border-[#e2e8f0] rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand bg-white transition-colors'
+const IL  = 'w-full border border-[#e8eaef] rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand bg-white transition-colors'
 const LAB = 'block text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5'
 
 export default function NewPartnerPage() {
@@ -109,7 +109,7 @@ export default function NewPartnerPage() {
 
       {/* ── Form ────────────────────────────────────────────────────────────── */}
       <form onSubmit={handleSubmit} noValidate>
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-6 shadow-sm space-y-5">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-6 shadow-sm space-y-5">
 
           {/* Name */}
           <div>
@@ -188,7 +188,7 @@ export default function NewPartnerPage() {
             </button>
             <Link
               href="/dashboard/partners"
-              className="inline-flex items-center px-4 py-2.5 text-sm font-semibold rounded border border-[#e2e8f0] text-[#64748b] hover:bg-[#f8fafc] transition-colors"
+              className="inline-flex items-center px-4 py-2.5 text-sm font-semibold rounded border border-[#e8eaef] text-[#64748b] hover:bg-[#f8fafc] transition-colors"
             >
               İptal
             </Link>

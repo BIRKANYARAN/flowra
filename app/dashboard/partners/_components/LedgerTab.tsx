@@ -35,16 +35,16 @@ export function LedgerTab({
               { label: 'Toplam Temettü',    value: fmt(ledger.summary.total_dividends),        color: 'text-pos-text' },
               { label: 'Borç/Özkaynak',     value: ledger.summary.debt_to_equity_ratio !== null ? ledger.summary.debt_to_equity_ratio.toFixed(2) + '×' : '—', color: 'text-[#334155]' },
             ].map(c => (
-              <div key={c.label} className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 shadow-sm">
+              <div key={c.label} className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
                 <div className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${c.color}`}>{c.label}</div>
                 <div className="text-lg font-black tabular-nums text-[#0f172a] leading-none">{c.value}</div>
               </div>
             ))}
           </div>
-          <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
+          <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
             <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-[#e2e8f0] bg-[#f8fafc]">
+                <tr className="border-b border-[#e8eaef] bg-[#f8fafc]">
                   {([
                     { col: 'partner_name',        label: 'Ortak',       align: 'left'  },
                     { col: 'equity_contributed',   label: 'Özkaynak',    align: 'right' },

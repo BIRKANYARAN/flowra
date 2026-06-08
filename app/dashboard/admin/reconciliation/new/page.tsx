@@ -59,7 +59,7 @@ export default function NewReconciliationPage() {
   return (
     <div className="min-h-screen bg-[#f8fafc]">
       {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <div className="bg-white border-b border-[#e2e8f0]">
+      <div className="bg-white border-b border-[#e8eaef]">
         <div className="max-w-2xl mx-auto px-6 py-8">
           <div className="flex items-center gap-3 mb-4">
             <Link
@@ -85,8 +85,8 @@ export default function NewReconciliationPage() {
 
       {/* ── Form ─────────────────────────────────────────────────────────────── */}
       <div className="max-w-2xl mx-auto px-6 py-8">
-        <form onSubmit={handleSubmit} className="bg-white border border-[#e2e8f0] rounded-lg overflow-hidden">
-          <div className="px-5 py-3 border-b border-[#e2e8f0] bg-[#f8fafc]">
+        <form onSubmit={handleSubmit} className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
+          <div className="px-5 py-3 border-b border-[#e8eaef] bg-[#f8fafc]">
             <span className="text-xs font-black text-[#0f172a] uppercase tracking-widest">
               Mutabakat Bilgileri
             </span>
@@ -104,7 +104,7 @@ export default function NewReconciliationPage() {
                 value={title}
                 onChange={e => setTitle(e.target.value)}
                 placeholder="Q1 2026 Ortak Mutabakatı"
-                className="w-full px-3 py-2 text-sm text-[#0f172a] border border-[#e2e8f0] rounded focus:outline-none focus:ring-2 focus:ring-[#0f172a]/10 focus:border-[#334155] transition-colors placeholder:text-[#cbd5e1]"
+                className="w-full px-3 py-2 text-sm text-[#0f172a] border border-[#e8eaef] rounded focus:outline-none focus:ring-2 focus:ring-[#0f172a]/10 focus:border-[#334155] transition-colors placeholder:text-[#cbd5e1]"
               />
             </div>
 
@@ -119,7 +119,7 @@ export default function NewReconciliationPage() {
                 value={periodLabel}
                 onChange={e => setPeriodLabel(e.target.value)}
                 placeholder="Ocak 2026"
-                className="w-full px-3 py-2 text-sm text-[#0f172a] border border-[#e2e8f0] rounded focus:outline-none focus:ring-2 focus:ring-[#0f172a]/10 focus:border-[#334155] transition-colors placeholder:text-[#cbd5e1]"
+                className="w-full px-3 py-2 text-sm text-[#0f172a] border border-[#e8eaef] rounded focus:outline-none focus:ring-2 focus:ring-[#0f172a]/10 focus:border-[#334155] transition-colors placeholder:text-[#cbd5e1]"
               />
               <p className="text-[11px] text-[#94a3b8] mt-1">
                 Opsiyonel. Boş bırakılırsa tarihten otomatik oluşturulur.
@@ -137,7 +137,7 @@ export default function NewReconciliationPage() {
                 value={reconciliationDate}
                 onChange={e => setDate(e.target.value)}
                 required
-                className="w-full px-3 py-2 text-sm text-[#0f172a] border border-[#e2e8f0] rounded focus:outline-none focus:ring-2 focus:ring-[#0f172a]/10 focus:border-[#334155] transition-colors"
+                className="w-full px-3 py-2 text-sm text-[#0f172a] border border-[#e8eaef] rounded focus:outline-none focus:ring-2 focus:ring-[#0f172a]/10 focus:border-[#334155] transition-colors"
               />
             </div>
 
@@ -150,7 +150,7 @@ export default function NewReconciliationPage() {
 
             {/* Loading note */}
             {loading && (
-              <div className="px-4 py-3 bg-[#f8fafc] border border-[#e2e8f0] rounded text-sm text-[#64748b]">
+              <div className="px-4 py-3 bg-[#f8fafc] border border-[#e8eaef] rounded text-sm text-[#64748b]">
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 border-2 border-[#94a3b8] border-t-[#0f172a] rounded-full animate-spin flex-shrink-0" />
                   <span>19 bölüm hesaplanıyor, lütfen bekleyin…</span>
@@ -160,7 +160,7 @@ export default function NewReconciliationPage() {
           </div>
 
           {/* Footer / Submit */}
-          <div className="px-6 py-4 border-t border-[#e2e8f0] bg-[#f8fafc] flex items-center justify-between">
+          <div className="px-6 py-4 border-t border-[#e8eaef] bg-[#f8fafc] flex items-center justify-between">
             <Link
               href="/dashboard/admin/reconciliation"
               className="text-sm text-[#64748b] hover:text-[#334155] transition-colors"
@@ -190,7 +190,7 @@ export default function NewReconciliationPage() {
         </form>
 
         {/* Info box */}
-        <div className="mt-4 bg-[#f8fafc] border border-[#e2e8f0] rounded-lg px-5 py-4">
+        <div className="mt-4 bg-[#f8fafc] border border-[#e8eaef] rounded-lg px-5 py-4">
           <p className="text-xs font-semibold text-[#334155] mb-2">Bu işlem neler yapar?</p>
           <ul className="space-y-1 text-xs text-[#64748b]">
             <li>• Tüm finansal verileri seçilen tarihe göre hesaplar (19 bölüm)</li>

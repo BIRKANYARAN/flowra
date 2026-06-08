@@ -74,7 +74,7 @@ function overallStatusBadge(status: BudgetVarianceReport['overall_status']): {
     case 'over_budget':
       return { label: 'Bütçe Aşımı', cls: 'bg-neg-light border-neg-light text-neg-text' }
     case 'no_budget':
-      return { label: 'Bütçe Yok', cls: 'bg-[#f1f5f9] border-[#e2e8f0] text-[#94a3b8]' }
+      return { label: 'Bütçe Yok', cls: 'bg-[#f1f5f9] border-[#e8eaef] text-[#94a3b8]' }
   }
 }
 
@@ -149,7 +149,7 @@ function VarianceMatrixRow({ row }: { row: VarianceRow }): JSX.Element {
         </td>
       ))}
       {/* YTD */}
-      <td className="px-3 py-2 bg-[#f8fafc] border-l border-[#e2e8f0]">
+      <td className="px-3 py-2 bg-[#f8fafc] border-l border-[#e8eaef]">
         <YtdValueBlock cell={row.ytd} label={row.metric_label} />
       </td>
     </tr>
@@ -189,7 +189,7 @@ function VarianceAnalysisPanel(): JSX.Element {
 
   if (isError || !report) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 text-xs text-[#94a3b8]">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 text-xs text-[#94a3b8]">
         Varyans analizi yüklenemedi.
         {error instanceof Error ? ` (${error.message})` : ''}
         <button
@@ -203,7 +203,7 @@ function VarianceAnalysisPanel(): JSX.Element {
   }
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm">
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-[#f1f5f9]">
         <div>
@@ -221,7 +221,7 @@ function VarianceAnalysisPanel(): JSX.Element {
         <select
           value={year}
           onChange={e => setYear(parseInt(e.target.value))}
-          className="border border-[#e2e8f0] rounded px-3 py-1.5 text-xs text-[#0f172a] focus:outline-none focus:ring-1 focus:ring-brand-light"
+          className="border border-[#e8eaef] rounded px-3 py-1.5 text-xs text-[#0f172a] focus:outline-none focus:ring-1 focus:ring-brand-light"
         >
           {yearOptions.map(y => (
             <option key={y} value={y}>{y}</option>
@@ -315,7 +315,7 @@ function VarianceAnalysisPanel(): JSX.Element {
                   {m}
                 </th>
               ))}
-              <th className="text-right px-3 py-2 font-semibold text-[#64748b] bg-[#f1f5f9] border-l border-[#e2e8f0] min-w-[100px]">
+              <th className="text-right px-3 py-2 font-semibold text-[#64748b] bg-[#f1f5f9] border-l border-[#e8eaef] min-w-[100px]">
                 YTD
               </th>
             </tr>
@@ -460,7 +460,7 @@ export function BudgetTab({ companyId }: BudgetTabProps = {}) {
 
   if (error || !report) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-6 text-center text-xs text-[#94a3b8]">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-6 text-center text-xs text-[#94a3b8]">
         {error ?? 'Bütçe raporu yüklenemedi.'}
         <button
           onClick={fetchReport}
@@ -494,7 +494,7 @@ export function BudgetTab({ companyId }: BudgetTabProps = {}) {
       {/* YTD Summary strip */}
       <div className="grid grid-cols-3 gap-3">
         {/* YTD Revenue */}
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 shadow-sm">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
             YTD Gelir
           </div>
@@ -521,7 +521,7 @@ export function BudgetTab({ companyId }: BudgetTabProps = {}) {
         </div>
 
         {/* YTD Expense */}
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 shadow-sm">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
             YTD Gider
           </div>
@@ -548,7 +548,7 @@ export function BudgetTab({ companyId }: BudgetTabProps = {}) {
         </div>
 
         {/* YTD Gross Profit */}
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 shadow-sm">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
             YTD Brüt Kâr
           </div>
@@ -570,7 +570,7 @@ export function BudgetTab({ companyId }: BudgetTabProps = {}) {
 
       {/* No budget callout */}
       {!report.has_any_budget && (
-        <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-3 text-xs text-[#64748b]">
+        <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-4 py-3 text-xs text-[#64748b]">
           Henüz hiç bütçe hedefi girilmemiş.
           {isAdmin
             ? ' Aşağıdaki formdan aylık hedeflerinizi ekleyebilirsiniz.'
@@ -597,7 +597,7 @@ export function BudgetTab({ companyId }: BudgetTabProps = {}) {
       )}
 
       {/* 12-month variance table */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm overflow-x-auto">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm overflow-x-auto">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] px-4 pt-4 pb-2">
           Aylık Varyans (Son 12 Ay)
         </div>
@@ -668,7 +668,7 @@ export function BudgetTab({ companyId }: BudgetTabProps = {}) {
 
       {/* Admin budget entry form */}
       {isAdmin && (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
             Bütçe Hedefi Gir / Güncelle
           </div>
@@ -683,7 +683,7 @@ export function BudgetTab({ companyId }: BudgetTabProps = {}) {
                   max={2100}
                   value={formYear}
                   onChange={e => setFormYear(parseInt(e.target.value) || now.getFullYear())}
-                  className="w-full border border-[#e2e8f0] rounded px-3 py-1.5 text-xs text-[#0f172a] focus:outline-none focus:ring-1 focus:ring-brand-light"
+                  className="w-full border border-[#e8eaef] rounded px-3 py-1.5 text-xs text-[#0f172a] focus:outline-none focus:ring-1 focus:ring-brand-light"
                 />
               </div>
               {/* Month */}
@@ -692,7 +692,7 @@ export function BudgetTab({ companyId }: BudgetTabProps = {}) {
                 <select
                   value={formMonth}
                   onChange={e => setFormMonth(parseInt(e.target.value))}
-                  className="w-full border border-[#e2e8f0] rounded px-3 py-1.5 text-xs text-[#0f172a] focus:outline-none focus:ring-1 focus:ring-brand-light"
+                  className="w-full border border-[#e8eaef] rounded px-3 py-1.5 text-xs text-[#0f172a] focus:outline-none focus:ring-1 focus:ring-brand-light"
                 >
                   {[
                     'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
@@ -717,7 +717,7 @@ export function BudgetTab({ companyId }: BudgetTabProps = {}) {
                   value={formRevenue}
                   onChange={e => setFormRevenue(e.target.value)}
                   placeholder="0.00"
-                  className="w-full border border-[#e2e8f0] rounded px-3 py-1.5 text-xs text-[#0f172a] focus:outline-none focus:ring-1 focus:ring-brand-light"
+                  className="w-full border border-[#e8eaef] rounded px-3 py-1.5 text-xs text-[#0f172a] focus:outline-none focus:ring-1 focus:ring-brand-light"
                   required
                 />
               </div>
@@ -733,7 +733,7 @@ export function BudgetTab({ companyId }: BudgetTabProps = {}) {
                   value={formExpense}
                   onChange={e => setFormExpense(e.target.value)}
                   placeholder="0.00"
-                  className="w-full border border-[#e2e8f0] rounded px-3 py-1.5 text-xs text-[#0f172a] focus:outline-none focus:ring-1 focus:ring-brand-light"
+                  className="w-full border border-[#e8eaef] rounded px-3 py-1.5 text-xs text-[#0f172a] focus:outline-none focus:ring-1 focus:ring-brand-light"
                   required
                 />
               </div>
@@ -749,7 +749,7 @@ export function BudgetTab({ companyId }: BudgetTabProps = {}) {
                 value={formNotes}
                 onChange={e => setFormNotes(e.target.value)}
                 placeholder="Bütçe notu..."
-                className="w-full border border-[#e2e8f0] rounded px-3 py-1.5 text-xs text-[#0f172a] focus:outline-none focus:ring-1 focus:ring-brand-light"
+                className="w-full border border-[#e8eaef] rounded px-3 py-1.5 text-xs text-[#0f172a] focus:outline-none focus:ring-1 focus:ring-brand-light"
               />
             </div>
 

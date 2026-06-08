@@ -25,8 +25,8 @@ function statusChipCls(status: ObligationStatus): string {
     case 'upcoming_7d':  return 'bg-warn-light text-warn-text border-warn-light'
     case 'upcoming_30d': return 'bg-[#dbeafe] text-[#1d4ed8] border-[#bfdbfe]'
     case 'on_time':      return 'bg-pos-light text-pos-text border-pos-light'
-    case 'paid':         return 'bg-[#f1f5f9] text-[#64748b] border-[#e2e8f0]'
-    default:             return 'bg-[#f1f5f9] text-[#94a3b8] border-[#e2e8f0]'
+    case 'paid':         return 'bg-[#f1f5f9] text-[#64748b] border-[#e8eaef]'
+    default:             return 'bg-[#f1f5f9] text-[#94a3b8] border-[#e8eaef]'
   }
 }
 
@@ -76,7 +76,7 @@ function complianceBadge(status: ComplianceStatus): { label: string; cls: string
     case 'attention': return { label: 'Dikkat',  cls: 'bg-warn-light text-warn-text border-warn-light' }
     case 'risk':      return { label: 'Risk',    cls: 'bg-[#fed7aa] text-[#c2410c] border-[#fdba74]' }
     case 'critical':  return { label: 'Kritik',  cls: 'bg-neg-light text-neg-text border-neg-light' }
-    default:          return { label: '—',       cls: 'bg-[#f1f5f9] text-[#64748b] border-[#e2e8f0]' }
+    default:          return { label: '—',       cls: 'bg-[#f1f5f9] text-[#64748b] border-[#e8eaef]' }
   }
 }
 
@@ -91,8 +91,8 @@ function scoreColor(score: number): string {
 
 function LoadingSkeleton() {
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-      <div className="px-4 py-3 border-b border-[#e2e8f0]">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+      <div className="px-4 py-3 border-b border-[#e8eaef]">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Vergi Uyum Paneli</div>
       </div>
       <div className="px-4 py-8 text-center">
@@ -126,8 +126,8 @@ export function TaxComplianceDashboardClient({ companyId }: Props) {
   // error boundary as a full-page "Bir hata oluştu".
   if (isError || !data?.dashboard?.compliance_status) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-        <div className="px-4 py-3 border-b border-[#e2e8f0]">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+        <div className="px-4 py-3 border-b border-[#e8eaef]">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Vergi Uyum Paneli</div>
         </div>
         <div className="px-4 py-6 text-center">
@@ -158,10 +158,10 @@ export function TaxComplianceDashboardClient({ companyId }: Props) {
       )}
 
       {/* ── Main dashboard card ───────────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
 
         {/* Header */}
-        <div className="px-4 py-3 border-b border-[#e2e8f0] flex items-center justify-between">
+        <div className="px-4 py-3 border-b border-[#e8eaef] flex items-center justify-between">
           <div>
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
               Vergi Uyum Paneli
@@ -176,10 +176,10 @@ export function TaxComplianceDashboardClient({ companyId }: Props) {
         </div>
 
         {/* Score hero + next obligation + chips */}
-        <div className="grid grid-cols-3 gap-0 border-b border-[#e2e8f0]">
+        <div className="grid grid-cols-3 gap-0 border-b border-[#e8eaef]">
 
           {/* Compliance score */}
-          <div className="p-4 border-r border-[#e2e8f0] flex flex-col items-center justify-center">
+          <div className="p-4 border-r border-[#e8eaef] flex flex-col items-center justify-center">
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1 text-center">
               Uyum Skoru
             </div>
@@ -190,7 +190,7 @@ export function TaxComplianceDashboardClient({ companyId }: Props) {
           </div>
 
           {/* Next obligation */}
-          <div className="p-4 border-r border-[#e2e8f0]">
+          <div className="p-4 border-r border-[#e8eaef]">
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
               Bir Sonraki Yükümlülük
             </div>
@@ -245,7 +245,7 @@ export function TaxComplianceDashboardClient({ companyId }: Props) {
         ) : (
           <table className="w-full text-xs">
             <thead>
-              <tr className="bg-[#f8fafc] border-b border-[#e2e8f0]">
+              <tr className="bg-[#f8fafc] border-b border-[#e8eaef]">
                 <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Tür</th>
                 <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Dönem</th>
                 <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Son Gün</th>

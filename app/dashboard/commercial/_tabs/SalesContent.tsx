@@ -144,9 +144,9 @@ export async function SalesContent({ companyId }: Props) {
 
       {/* ── Gelir Kaynakları (90d Revenue Attribution) ───────────────────── */}
       {attribution && attribution.total_revenue_try > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm overflow-hidden">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm overflow-hidden">
           {/* Header + concentration summary */}
-          <div className="px-4 pt-4 pb-3 border-b border-[#e2e8f0]">
+          <div className="px-4 pt-4 pb-3 border-b border-[#e8eaef]">
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Gelir Kaynakları — Son 90 Gün</div>
             <div className="flex flex-wrap gap-4 items-center mt-2">
               <div>
@@ -176,7 +176,7 @@ export async function SalesContent({ companyId }: Props) {
             </div>
           </div>
 
-          <div className="grid sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-[#e2e8f0]">
+          <div className="grid sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-[#e8eaef]">
             {/* Top 5 customers */}
             <div className="p-4">
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">En İyi 5 Müşteri</div>
@@ -265,7 +265,7 @@ export async function SalesContent({ companyId }: Props) {
 
       {/* ── KPI Strip ────────────────────────────────────────────────────── */}
       {(mtdCount > 0 || list.length > 0) && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
           {[
             {
               label: 'Bu Ay Ciro (MTD)',
@@ -296,7 +296,7 @@ export async function SalesContent({ companyId }: Props) {
               color: 'text-[#0f172a]',
             },
           ].map((card, i) => (
-            <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e2e8f0]' : ''}`}>
+            <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e8eaef]' : ''}`}>
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
               <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
               <div className="text-[10px] text-[#94a3b8] mt-1 flex items-center gap-1">{card.sub}</div>
@@ -307,7 +307,7 @@ export async function SalesContent({ companyId }: Props) {
 
       {/* ── Currency breakdown (only if multi-currency) ───────────────────── */}
       {topCurrencies.length > 1 && (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Bu Ay — Para Birimi Dağılımı</div>
           <div className="flex gap-4 flex-wrap">
             {topCurrencies.map(([cur, total]) => (
@@ -328,7 +328,7 @@ export async function SalesContent({ companyId }: Props) {
         <p className="text-xs text-[#94a3b8]">{list.length} satış kaydı · tüm dönemler</p>
         <Link
           href="/dashboard/commercial?tab=collections"
-          className="border border-[#e2e8f0] px-3.5 py-2 rounded text-xs font-semibold text-[#64748b] hover:bg-[#f8fafc] hover:text-[#1e293b] transition-colors"
+          className="border border-[#e8eaef] px-3.5 py-2 rounded text-xs font-semibold text-[#64748b] hover:bg-[#f8fafc] hover:text-[#1e293b] transition-colors"
         >
           Tahsilatlar →
         </Link>

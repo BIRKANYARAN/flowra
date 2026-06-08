@@ -16,7 +16,7 @@ const btn = cva(
     variants: {
       variant: {
         primary:   'bg-brand-light hover:bg-brand text-white shadow-sm',
-        secondary: 'bg-white hover:bg-[#f8fafc] text-[#334155] border border-[#e2e8f0]',
+        secondary: 'bg-white hover:bg-[#f8fafc] text-[#334155] border border-[#e8eaef]',
         ghost:     'text-[#64748b] hover:text-[#0f172a] hover:bg-[#f8fafc]',
         danger:    'bg-neg-light hover:bg-neg-light text-neg-text border border-neg-light',
         success:   'bg-pos hover:bg-pos text-white',
@@ -61,10 +61,10 @@ export const Btn = forwardRef<HTMLButtonElement, BtnProps>(
 Btn.displayName = 'Btn'
 
 /* ── Card ─────────────────────────────────────────────────────────────────── */
-const card = cva('bg-white border border-[#e2e8f0] rounded-xl shadow-soft', {
+const card = cva('bg-white border border-[#e8eaef] rounded-xl shadow-soft', {
   variants: {
     padding:     { none: 'p-0', sm: 'p-4', md: 'p-5', lg: 'p-6' },
-    interactive: { true: 'hover:border-[#e2e8f0] cursor-pointer transition-colors', false: '' },
+    interactive: { true: 'hover:border-[#e8eaef] cursor-pointer transition-colors', false: '' },
   },
   defaultVariants: { padding: 'md', interactive: false },
 })
@@ -117,7 +117,7 @@ export const DSInput = forwardRef<HTMLInputElement, DSInputProps>(
             'focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/30',
             prefix && 'pl-8',
             suffix && 'pr-10',
-            error ? 'border-neg' : 'border-[#e2e8f0]',
+            error ? 'border-neg' : 'border-[#e8eaef]',
           )}
           {...rest}
         />
@@ -219,7 +219,7 @@ export function StatCard({ label, value, sub, accent }: {
   label: string; value: string | number; sub?: string; accent?: boolean
 }) {
   return (
-    <div className={`bg-white border rounded p-5 ${accent ? 'border-[#e2e8f0] bg-brand-subtle' : 'border-[#e2e8f0]'}`}>
+    <div className={`bg-white border rounded p-5 ${accent ? 'border-[#e8eaef] bg-brand-subtle' : 'border-[#e8eaef]'}`}>
       <div className={`text-xs font-semibold uppercase tracking-wide mb-1 ${accent ? 'text-brand-light' : 'text-[#94a3b8]'}`}>
         {label}
       </div>
@@ -251,7 +251,7 @@ export function EmptyState({ icon, title, sub, action }: {
   icon: string; title: string; sub?: string; action?: ReactNode
 }) {
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft text-center py-16 px-6">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft text-center py-16 px-6">
       <div className="text-5xl mb-3">{icon}</div>
       <p className="font-semibold text-[#334155] mb-1">{title}</p>
       {sub && <p className="text-sm text-[#94a3b8] mb-5">{sub}</p>}
@@ -311,7 +311,7 @@ export const DSSelect = forwardRef<HTMLSelectElement, DSSelectProps>(
         className={cn(
           'w-full bg-white border rounded px-3 py-2 text-sm text-[#0f172a] transition-colors',
           'focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/30',
-          error ? 'border-neg' : 'border-[#e2e8f0]',
+          error ? 'border-neg' : 'border-[#e8eaef]',
         )}
         {...rest}
       >

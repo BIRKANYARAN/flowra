@@ -140,7 +140,7 @@ export async function CashflowTab({ userId, companyId }: Props) {
             tone: runway.exhaustion_date ? 'text-neg' : 'text-pos-text',
           },
         ].map(c => (
-          <div key={c.label} className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 shadow-sm">
+          <div key={c.label} className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{c.label}</div>
             <div className={`text-xl font-black tabular-nums leading-none ${c.tone}`}>{c.value}</div>
           </div>
@@ -156,14 +156,14 @@ export async function CashflowTab({ userId, companyId }: Props) {
       )}
 
       {/* Zone 2 — Chart */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
         <CashflowChart className="w-full" />
       </div>
 
       {/* Zone 3 — Pressure timeline */}
       {timeline.pressureSignals.length > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-          <div className="px-4 py-3 border-b border-[#e2e8f0] flex items-center justify-between">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+          <div className="px-4 py-3 border-b border-[#e8eaef] flex items-center justify-between">
             <div>
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Baskı Haritası</div>
               <p className="text-[10px] text-[#94a3b8] mt-0.5">Negatif nakit akışı veya kümülatif tehlike olan gelecek aylar</p>
@@ -206,8 +206,8 @@ export async function CashflowTab({ userId, companyId }: Props) {
       )}
 
       {/* Zone 3.5 — 3-Section Cash Flow Statement Strip */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-        <div className="px-4 py-3 border-b border-[#e2e8f0]">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+        <div className="px-4 py-3 border-b border-[#e8eaef]">
           <div className="flex items-center justify-between">
             <div>
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Nakit Akış Tablosu (Dönem Özeti)</div>
@@ -224,7 +224,7 @@ export async function CashflowTab({ userId, companyId }: Props) {
             </span>
           </div>
         </div>
-        <div className="grid grid-cols-3 divide-x divide-[#e2e8f0]">
+        <div className="grid grid-cols-3 divide-x divide-[#e8eaef]">
           {[
             {
               key:    'operating',
@@ -272,7 +272,7 @@ export async function CashflowTab({ userId, companyId }: Props) {
           cashflowStatement.financing.partner_loans_repaid_try !== 0 ||
           cashflowStatement.financing.capital_injected_try !== 0 ||
           cashflowStatement.financing.dividends_paid_try !== 0) && (
-          <div className="border-t border-[#e2e8f0] px-4 py-2.5 flex flex-wrap gap-3">
+          <div className="border-t border-[#e8eaef] px-4 py-2.5 flex flex-wrap gap-3">
             {cashflowStatement.financing.partner_loans_received_try > 0 && (
               <span className="text-[10px] text-pos-text font-semibold">
                 + {fmt(cashflowStatement.financing.partner_loans_received_try)} ortak borç girişi
@@ -298,8 +298,8 @@ export async function CashflowTab({ userId, companyId }: Props) {
       </div>
 
       {/* Zone 3.8 — Nakit Akış Köprüsü (Waterfall) */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-        <div className="px-4 py-3 border-b border-[#e2e8f0]">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+        <div className="px-4 py-3 border-b border-[#e8eaef]">
           <div className="flex items-center justify-between">
             <div>
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Nakit Akış Köprüsü</div>
@@ -318,7 +318,7 @@ export async function CashflowTab({ userId, companyId }: Props) {
         </div>
 
         {/* YTD Summary — 4 numbers */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 divide-x-0 sm:divide-x divide-[#e2e8f0] border-b border-[#e2e8f0]">
+        <div className="grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 divide-x-0 sm:divide-x divide-[#e8eaef] border-b border-[#e8eaef]">
           {[
             { label: 'Faaliyet', value: waterfallReport.ytd_operating_try,  icon: '🔄' },
             { label: 'Yatırım',  value: waterfallReport.ytd_investing_try,   icon: '🏗️' },
@@ -349,7 +349,7 @@ export async function CashflowTab({ userId, companyId }: Props) {
           )
           return (
             <div>
-              <div className="px-4 py-2 bg-[#f8fafc] border-b border-[#e2e8f0] flex items-center justify-between">
+              <div className="px-4 py-2 bg-[#f8fafc] border-b border-[#e8eaef] flex items-center justify-between">
                 <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#64748b]">
                   {period.label} — Köprü Detayı
                 </span>
@@ -403,7 +403,7 @@ export async function CashflowTab({ userId, companyId }: Props) {
 
         {/* 3-month trend summary */}
         {waterfallReport.periods.length > 0 && (
-          <div className="border-t border-[#e2e8f0] px-4 py-3">
+          <div className="border-t border-[#e8eaef] px-4 py-3">
             <div className="flex items-start gap-2">
               <div className="flex gap-1.5 mt-0.5">
                 {waterfallReport.periods.map(p => {
@@ -430,7 +430,7 @@ export async function CashflowTab({ userId, companyId }: Props) {
 
       {/* Zone 4 — 12-month projection bar chart */}
       {chartMonths.length > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-4 shadow-sm">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-4 shadow-sm">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">12 Aylık Nakit Projeksiyonu</div>
           <div className="flex items-end gap-1.5 h-32">
             {chartMonths.map((mo) => {
@@ -461,13 +461,13 @@ export async function CashflowTab({ userId, companyId }: Props) {
 
       {/* Zone 5 — Monthly projection table */}
       {chartMonths.length > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-          <div className="px-4 py-3 border-b border-[#e2e8f0]">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+          <div className="px-4 py-3 border-b border-[#e8eaef]">
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Aylık Projeksiyon Detayı</div>
           </div>
           <table className="w-full text-xs">
             <thead>
-              <tr className="bg-[#f8fafc] border-b border-[#e2e8f0]">
+              <tr className="bg-[#f8fafc] border-b border-[#e8eaef]">
                 <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ay</th>
                 <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-pos">Gelen</th>
                 <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-neg">Giden</th>
@@ -509,8 +509,8 @@ export async function CashflowTab({ userId, companyId }: Props) {
       />
 
       {/* Zone 7 — Tahmin (30/60/90-day cash flow prediction) */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-        <div className="px-4 py-3 border-b border-[#e2e8f0]">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+        <div className="px-4 py-3 border-b border-[#e8eaef]">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Tahmin — 30/60/90 Günlük Nakit Projeksiyonu</div>
           <p className="text-[10px] text-[#94a3b8] mt-0.5">
             Alacak davranışı + taahhütler temelinde iyimser / baz / kötümser senaryo analizi

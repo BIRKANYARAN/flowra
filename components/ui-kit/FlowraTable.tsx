@@ -60,10 +60,10 @@ export function FlowraTable<T>({
   }
 
   return (
-    <div className={cn('bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden', className)}>
+    <div className={cn('bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden', className)}>
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-[#e2e8f0]">
+          <tr className="border-b border-[#e8eaef]">
             {columns.map(col => (
               <th
                 key={col.key}
@@ -107,7 +107,7 @@ export function FlowraTable<T>({
         </tbody>
       </table>
       {footer && (
-        <div className="border-t border-[#e2e8f0] px-5 py-3">
+        <div className="border-t border-[#e8eaef] px-5 py-3">
           {footer}
         </div>
       )}

@@ -37,7 +37,7 @@ const VERDICT_CFG = {
   accurate:          { label: 'Doğru',          bg: 'bg-pos-light',  text: 'text-pos-text',  border: 'border-pos-light'  },
   optimistic:        { label: 'İyimser',         bg: 'bg-warn-light', text: 'text-warn-text', border: 'border-warn-light' },
   pessimistic:       { label: 'Muhafazakâr',     bg: 'bg-brand-subtle', text: 'text-brand',   border: 'border-brand/20'  },
-  insufficient_data: { label: 'Veri Yok',        bg: 'bg-[#f1f5f9]',  text: 'text-[#94a3b8]', border: 'border-[#e2e8f0]'  },
+  insufficient_data: { label: 'Veri Yok',        bg: 'bg-[#f1f5f9]',  text: 'text-[#94a3b8]', border: 'border-[#e8eaef]'  },
 } as const
 
 function VerdictBadge({ verdict }: { verdict: ScenarioVariance['verdict'] }) {
@@ -132,8 +132,8 @@ function DetailRow({ v }: { v: ScenarioVariance }) {
   return (
     <tr>
       <td colSpan={6} className="px-0 py-0">
-        <div className="mx-4 mb-3 mt-1 rounded border border-[#e2e8f0] overflow-hidden bg-[#f8fafc]/60">
-          <div className="px-4 py-2 text-[9px] font-black uppercase tracking-widest text-[#94a3b8] border-b border-[#e2e8f0]">
+        <div className="mx-4 mb-3 mt-1 rounded border border-[#e8eaef] overflow-hidden bg-[#f8fafc]/60">
+          <div className="px-4 py-2 text-[9px] font-black uppercase tracking-widest text-[#94a3b8] border-b border-[#e8eaef]">
             {v.scenario_name} — Detay ({v.period_from.slice(0, 7)})
           </div>
           <table className="w-full text-[10px]">
@@ -236,7 +236,7 @@ function SummaryStrip({ variances }: { variances: ScenarioVariance[] }) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
       {kpis.map(k => (
-        <div key={k.label} className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3">
+        <div key={k.label} className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
           <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{k.label}</div>
           <div className={cn('text-xl font-black tabular-nums leading-none', k.color)}>{k.value}</div>
           <div className="text-[10px] text-[#94a3b8] mt-0.5">{k.sub}</div>
@@ -306,7 +306,7 @@ export function VarianceClient() {
       <SummaryStrip variances={variances} />
 
       {/* Comparison table */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
         <div className="px-4 py-3 border-b border-[#f1f5f9] flex items-center justify-between">
           <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">
             Senaryo Karşılaştırması

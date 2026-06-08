@@ -181,7 +181,7 @@ function TrendRow({ period, isCurrent }: { period: CccScorecardPeriod; isCurrent
 
 function EmptyState() {
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-lg px-6 py-10 text-center">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-6 py-10 text-center">
       <div className="w-10 h-10 rounded-full bg-[#f1f5f9] flex items-center justify-center mx-auto mb-3">
         <svg className="w-5 h-5 text-[#94a3b8]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -211,7 +211,7 @@ export function CccScorecardClient({ companyId }: Props) {
 
   if (isLoading) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-lg px-6 py-10 text-center">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-6 py-10 text-center">
         <div className="text-sm text-[#94a3b8] font-medium">CCC Skorkartı yükleniyor...</div>
       </div>
     )
@@ -219,7 +219,7 @@ export function CccScorecardClient({ companyId }: Props) {
 
   if (isError || !data) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-lg px-6 py-6 text-center">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-6 py-6 text-center">
         <div className="text-sm text-[#ef4444] font-medium">CCC Skorkartı yüklenemedi.</div>
       </div>
     )
@@ -314,7 +314,7 @@ export function CccScorecardClient({ companyId }: Props) {
       </div>
 
       {/* 3-Component breakdown */}
-      <div className="bg-white border border-[#e2e8f0] rounded-lg px-5 py-4 space-y-5">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-5 py-4 space-y-5">
         <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
           Bileşen Skorları
         </div>
@@ -376,8 +376,8 @@ export function CccScorecardClient({ companyId }: Props) {
 
       {/* 6-month trend table */}
       {report.periods.length > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded-lg overflow-hidden">
-          <div className="px-4 py-3 border-b border-[#e2e8f0] bg-[#f8fafc]">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
+          <div className="px-4 py-3 border-b border-[#e8eaef] bg-[#f8fafc]">
             <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#64748b]">
               6 Aylık Trend
             </span>

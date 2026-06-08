@@ -320,7 +320,7 @@ export async function CFOTab({ userId, companyId }: Props) {
         <div className="flex gap-2">
           <Link
             href="/dashboard/finance?tab=tax"
-            className="text-xs font-semibold text-[#64748b] hover:text-[#1e293b] border border-[#e2e8f0] px-3 py-1.5 rounded hover:bg-[#f8fafc] transition-colors"
+            className="text-xs font-semibold text-[#64748b] hover:text-[#1e293b] border border-[#e8eaef] px-3 py-1.5 rounded hover:bg-[#f8fafc] transition-colors"
           >
             Vergi Merkezi →
           </Link>
@@ -346,7 +346,7 @@ export async function CFOTab({ userId, companyId }: Props) {
         </div>
 
         {/* Component scores */}
-        <div className="border border-[#e2e8f0] rounded p-4 bg-white col-span-2 shadow-sm">
+        <div className="border border-[#e8eaef] rounded p-4 bg-white col-span-2 shadow-sm">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
             Bileşen Skorları
           </div>
@@ -370,7 +370,7 @@ export async function CFOTab({ userId, companyId }: Props) {
       </div>
 
       {/* Row 2: Accounting Accuracy Checks */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
         <div className="flex items-center justify-between mb-3">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
             Muhasebe Doğruluk Kontrolleri
@@ -414,7 +414,7 @@ export async function CFOTab({ userId, companyId }: Props) {
 
       {/* C4: Dönem Güvence Değerlendirmesi */}
       {governanceLines.length > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
           <div className="flex items-center justify-between mb-2.5">
             <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Dönem Güvence Değerlendirmesi</span>
             <span className="text-[9px] text-[#94a3b8]">Muhasebe bütünlüğü · Dönem süresi · Denetim sürekliliği</span>
@@ -430,7 +430,7 @@ export async function CFOTab({ userId, companyId }: Props) {
       )}
 
       {/* Period Close Status */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
         <div className="flex items-center justify-between mb-3">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Dönem Kapanış Durumu</div>
           {periodData ? (
@@ -556,7 +556,7 @@ export async function CFOTab({ userId, companyId }: Props) {
       )}
 
       {/* Row 3: Balance Sheet preview */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
         <div className="flex items-center justify-between mb-3">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
             Bilanço Özeti — {fmtDate(today)}
@@ -575,7 +575,7 @@ export async function CFOTab({ userId, companyId }: Props) {
               <BalanceLine label="Nakit"      value={balanceSheet?.assets.cash_try ?? 0} />
               <BalanceLine label="Alacaklar"  value={balanceSheet?.assets.receivables_try ?? 0} />
               <BalanceLine label="Stok"       value={balanceSheet?.assets.inventory_try ?? 0} />
-              <div className="pt-1.5 border-t border-[#e2e8f0]">
+              <div className="pt-1.5 border-t border-[#e8eaef]">
                 <BalanceLine label="TOPLAM AKTİF" value={balanceSheet?.assets.total_assets_try ?? 0} bold />
               </div>
             </div>
@@ -586,7 +586,7 @@ export async function CFOTab({ userId, companyId }: Props) {
             <div className="space-y-1.5 text-xs">
               <BalanceLine label="Ortak Borçları"  value={balanceSheet?.liabilities.partner_loans_try ?? 0} negative />
               <BalanceLine label="Vergi Borcu"     value={balanceSheet?.liabilities.tax_payable_try ?? 0} negative />
-              <div className="pt-1.5 border-t border-[#e2e8f0]">
+              <div className="pt-1.5 border-t border-[#e8eaef]">
                 <BalanceLine label="TOPLAM PASİF" value={balanceSheet?.liabilities.total_liabilities_try ?? 0} bold negative />
               </div>
             </div>
@@ -598,7 +598,7 @@ export async function CFOTab({ userId, companyId }: Props) {
               <BalanceLine label="Ortak Sermayesi"  value={balanceSheet?.equity.total_partner_capital_try ?? 0} />
               <BalanceLine label="Geçmiş Yıl Karı"  value={balanceSheet?.equity.retained_earnings_try ?? 0} />
               <BalanceLine label="Dönem Kar/Zararı" value={balanceSheet?.equity.current_period_profit_try ?? 0} />
-              <div className="pt-1.5 border-t border-[#e2e8f0]">
+              <div className="pt-1.5 border-t border-[#e8eaef]">
                 <BalanceLine label="TOPLAM ÖZKAYNAK" value={balanceSheet?.equity.total_equity_try ?? 0} bold />
               </div>
             </div>
@@ -615,7 +615,7 @@ export async function CFOTab({ userId, companyId }: Props) {
       <div className="grid grid-cols-2 gap-3">
 
         {/* Tax */}
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
             Vergi Yükümlülükleri ({today.slice(0, 4)})
           </div>
@@ -632,7 +632,7 @@ export async function CFOTab({ userId, companyId }: Props) {
               sign={corporateTaxResult?.tax_try ?? 0}
               detail="Tahmini yıllık vergi"
             />
-            <div className="pt-2 border-t border-[#e2e8f0]">
+            <div className="pt-2 border-t border-[#e8eaef]">
               <TaxRow
                 label="Toplam Vergi Yükü"
                 amount={(kdvResult?.net_vat_try ?? 0) + (corporateTaxResult?.tax_try ?? 0)}
@@ -651,7 +651,7 @@ export async function CFOTab({ userId, companyId }: Props) {
         </div>
 
         {/* Receivable aging */}
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
             Alacak Yaşlandırma — Bugün İtibarıyla
           </div>
@@ -666,7 +666,7 @@ export async function CFOTab({ userId, companyId }: Props) {
                 <span className={`font-bold ${row.color}`}>{fmt(row.value)}</span>
               </div>
             ))}
-            <div className="pt-2 border-t border-[#e2e8f0] flex items-center justify-between text-xs font-bold">
+            <div className="pt-2 border-t border-[#e8eaef] flex items-center justify-between text-xs font-bold">
               <span className="text-[#334155]">Toplam Alacak</span>
               <span className="text-[#0f172a]">{fmt(riskData?.totalOutstanding ?? 0)}</span>
             </div>
@@ -684,7 +684,7 @@ export async function CFOTab({ userId, companyId }: Props) {
       <BorcYaslandirmaOzeti companyId={companyId} supabase={supabase} />
 
       {/* Row 5: P&L Summary */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
           Gelir Tablosu Özeti — {today.slice(0, 4)} YTD
         </div>
@@ -735,7 +735,7 @@ export async function CFOTab({ userId, companyId }: Props) {
         ]
 
         return (
-          <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
+          <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
             <div className="flex items-center justify-between mb-3">
               <div>
                 <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
@@ -755,7 +755,7 @@ export async function CFOTab({ userId, companyId }: Props) {
                 </span>
               )}
             </div>
-            <div className="border border-[#e2e8f0] rounded overflow-hidden mb-3">
+            <div className="border border-[#e8eaef] rounded overflow-hidden mb-3">
               <table className="w-full text-xs">
                 <tbody className="divide-y divide-[#f1f5f9]">
                   {rows.map((row, i) => (
@@ -766,7 +766,7 @@ export async function CFOTab({ userId, companyId }: Props) {
                       </td>
                     </tr>
                   ))}
-                  <tr className="bg-[#f8fafc] border-t-2 border-[#e2e8f0]">
+                  <tr className="bg-[#f8fafc] border-t-2 border-[#e8eaef]">
                     <td className="px-4 py-2.5 font-black text-[#0f172a]">Kapanış Geçmiş Yıl Karı</td>
                     <td className={`px-4 py-2.5 text-right font-mono font-black tabular-nums ${
                       re.closing_total >= 0 ? 'text-pos-text' : 'text-neg'

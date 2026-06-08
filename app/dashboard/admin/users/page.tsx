@@ -17,7 +17,7 @@ import Link from 'next/link'
 import type { CompanyMember, MemberRole } from '@/types'
 
 // ── Style tokens ──────────────────────────────────────────────────────────────
-const IL  = 'w-full border border-[#e2e8f0] rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand bg-white transition-colors'
+const IL  = 'w-full border border-[#e8eaef] rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand bg-white transition-colors'
 const LAB = 'block text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5'
 const SEL = `${IL} cursor-pointer`
 
@@ -218,8 +218,8 @@ export default function AdminUsersPage() {
 
       {/* Invite form */}
       {showInvite && (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-6 shadow-sm mb-5 space-y-4">
-          <h3 className="font-bold text-sm border-b border-[#e2e8f0] pb-3">Kullanıcı Davet Et</h3>
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-6 shadow-sm mb-5 space-y-4">
+          <h3 className="font-bold text-sm border-b border-[#e8eaef] pb-3">Kullanıcı Davet Et</h3>
           <p className="text-xs text-[#64748b]">
             Davet edilecek kullanıcının Flowra hesabı olması gerekir.
             Henüz hesabı yoksa önce kayıt olmaları gerekir.
@@ -269,7 +269,7 @@ export default function AdminUsersPage() {
             </button>
             <button
               onClick={() => { setShowInvite(false); setInvEmail(''); setInvError(''); setInvSuccess('') }}
-              className="border border-[#e2e8f0] px-5 py-2.5 rounded text-sm font-medium hover:bg-[#f8fafc]/60 transition-colors"
+              className="border border-[#e8eaef] px-5 py-2.5 rounded text-sm font-medium hover:bg-[#f8fafc]/60 transition-colors"
             >
               İptal
             </button>
@@ -278,8 +278,8 @@ export default function AdminUsersPage() {
       )}
 
       {/* Active members */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden mb-5">
-        <div className="px-5 py-3 border-b border-[#e2e8f0]">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden mb-5">
+        <div className="px-5 py-3 border-b border-[#e8eaef]">
           <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Aktif Üyeler</span>
         </div>
         {activeMembers.length === 0 ? (
@@ -310,7 +310,7 @@ export default function AdminUsersPage() {
                   {editingId === m.id ? (
                     <>
                       <select
-                        className="border border-[#e2e8f0] rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-brand/30"
+                        className="border border-[#e8eaef] rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-brand/30"
                         value={editingRole}
                         onChange={(e: ChangeEvent<HTMLSelectElement>) => setEditingRole(e.target.value as MemberRole)}
                         autoFocus
@@ -361,8 +361,8 @@ export default function AdminUsersPage() {
 
       {/* Pending invitations */}
       {pendingMembers.length > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-          <div className="px-5 py-3 border-b border-[#e2e8f0]">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+          <div className="px-5 py-3 border-b border-[#e8eaef]">
             <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Bekleyen Davetler</span>
           </div>
           <div className="divide-y divide-[#f1f5f9]">

@@ -181,7 +181,7 @@ export function OrdersContent(_props: Props) {
           { label: 'Sipariş Verildi', value: totalOrdered,  cls: 'text-info-text' },
           { label: 'Teslim Alındı',   value: totalReceived, cls: 'text-pos-text' },
         ].map(s => (
-          <div key={s.label} className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 shadow-sm">
+          <div key={s.label} className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{s.label}</div>
             <div className={`text-xl font-black tabular-nums ${s.cls}`}>{s.value}</div>
           </div>
@@ -201,7 +201,7 @@ export function OrdersContent(_props: Props) {
 
       {/* ── New order form ─────────────────────────────────────────────── */}
       {showForm && (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-5 space-y-4">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-5 space-y-4">
           <h3 className="text-sm font-bold text-[#334155]">Yeni Satın Alma Siparişi</h3>
           {formError && (
             <div className="text-xs text-neg bg-neg-light border border-neg-light rounded px-3 py-2">{formError}</div>
@@ -211,7 +211,7 @@ export function OrdersContent(_props: Props) {
               <label className="block text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Tedarikçi *</label>
               <input
                 value={formSupplier} onChange={e => setFormSupplier(e.target.value)}
-                className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm"
+                className="w-full border border-[#e8eaef] rounded px-3 py-2 text-sm"
                 placeholder="Tedarikçi adı"
               />
             </div>
@@ -219,21 +219,21 @@ export function OrdersContent(_props: Props) {
               <label className="block text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Sipariş Tarihi</label>
               <input
                 type="date" value={formDate} onChange={e => setFormDate(e.target.value)}
-                className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm"
+                className="w-full border border-[#e8eaef] rounded px-3 py-2 text-sm"
               />
             </div>
             <div>
               <label className="block text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Beklenen Teslim</label>
               <input
                 type="date" value={formExpected} onChange={e => setFormExpected(e.target.value)}
-                className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm"
+                className="w-full border border-[#e8eaef] rounded px-3 py-2 text-sm"
               />
             </div>
             <div>
               <label className="block text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Notlar</label>
               <input
                 value={formNotes} onChange={e => setFormNotes(e.target.value)}
-                className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm"
+                className="w-full border border-[#e8eaef] rounded px-3 py-2 text-sm"
                 placeholder="Opsiyonel"
               />
             </div>
@@ -246,21 +246,21 @@ export function OrdersContent(_props: Props) {
               <div key={idx} className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-2 mb-2">
                 <input
                   value={item.name} onChange={e => setFormItems(prev => prev.map((it, i) => i === idx ? { ...it, name: e.target.value } : it))}
-                  className="border border-[#e2e8f0] rounded px-2 py-1.5 text-xs" placeholder="Ürün / hizmet adı"
+                  className="border border-[#e8eaef] rounded px-2 py-1.5 text-xs" placeholder="Ürün / hizmet adı"
                 />
                 <input
                   value={item.unit} onChange={e => setFormItems(prev => prev.map((it, i) => i === idx ? { ...it, unit: e.target.value } : it))}
-                  className="border border-[#e2e8f0] rounded px-2 py-1.5 text-xs" placeholder="adet"
+                  className="border border-[#e8eaef] rounded px-2 py-1.5 text-xs" placeholder="adet"
                 />
                 <input
                   type="number" value={item.quantity} min="0"
                   onChange={e => setFormItems(prev => prev.map((it, i) => i === idx ? { ...it, quantity: e.target.value } : it))}
-                  className="border border-[#e2e8f0] rounded px-2 py-1.5 text-xs text-right" placeholder="Miktar"
+                  className="border border-[#e8eaef] rounded px-2 py-1.5 text-xs text-right" placeholder="Miktar"
                 />
                 <input
                   type="number" value={item.unit_price} min="0"
                   onChange={e => setFormItems(prev => prev.map((it, i) => i === idx ? { ...it, unit_price: e.target.value } : it))}
-                  className="border border-[#e2e8f0] rounded px-2 py-1.5 text-xs text-right" placeholder="Birim fiyat ₺"
+                  className="border border-[#e8eaef] rounded px-2 py-1.5 text-xs text-right" placeholder="Birim fiyat ₺"
                 />
                 <button
                   onClick={() => setFormItems(prev => prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev)}
@@ -344,8 +344,8 @@ export function OrdersContent(_props: Props) {
           Henüz satın alma siparişi yok.
         </div>
       ) : (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-          <div className="divide-y divide-[#e2e8f0]">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+          <div className="divide-y divide-[#e8eaef]">
             {orders.map(order => {
               const meta  = STATUS_META[order.status]
               const next  = NEXT_STATUS[order.status]
@@ -388,7 +388,7 @@ export function OrdersContent(_props: Props) {
                         <button
                           disabled={busy}
                           onClick={() => cancelOrder(order.id)}
-                          className="text-[10px] font-bold px-2 py-1 border border-[#e2e8f0] text-[#64748b] rounded hover:border-neg hover:text-neg disabled:opacity-50"
+                          className="text-[10px] font-bold px-2 py-1 border border-[#e8eaef] text-[#64748b] rounded hover:border-neg hover:text-neg disabled:opacity-50"
                         >İptal</button>
                       )}
                     </div>
@@ -399,7 +399,7 @@ export function OrdersContent(_props: Props) {
                     <div className="px-5 pb-3 border-t border-[#f1f5f9] bg-[#f8fafc]/50">
                       <table className="w-full text-xs mt-2">
                         <thead>
-                          <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] border-b border-[#e2e8f0]">
+                          <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] border-b border-[#e8eaef]">
                             <th className="text-left py-1.5">Kalem</th>
                             <th className="text-right py-1.5">Miktar</th>
                             <th className="text-right py-1.5">Birim Fiyat</th>

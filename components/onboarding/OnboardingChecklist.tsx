@@ -57,7 +57,7 @@ export function OnboardingChecklist() {
 
   return (
     <section
-      className="bg-white border border-[#e2e8f0] rounded-lg shadow-sm overflow-hidden"
+      className="bg-white border border-[#e8eaef] rounded-lg shadow-sm overflow-hidden"
       aria-label="Kuruluma başlangıç"
     >
       {/* Header */}

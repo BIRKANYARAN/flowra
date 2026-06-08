@@ -64,7 +64,7 @@ export function MobileBottomNav({ navBadges = {} }: Props) {
       <div className={`fixed bottom-14 left-0 right-0 z-50 md:hidden transition-transform duration-200 ease-out ${
         open ? 'translate-y-0' : 'translate-y-full'
       }`}>
-        <div className="mx-2 mb-1 bg-white rounded border border-[#e2e8f0] shadow-sm overflow-hidden">
+        <div className="mx-2 mb-1 bg-white rounded border border-[#e8eaef] shadow-sm overflow-hidden">
           {/* Hızlı Oluştur — task-first create chips */}
           <div className="px-2 pt-2">
             <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] px-1 pb-1">Hızlı Oluştur</div>
@@ -122,7 +122,7 @@ export function MobileBottomNav({ navBadges = {} }: Props) {
       </div>
 
       {/* Primary bottom bar */}
-      <nav aria-label="Ana navigasyon" className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-white border-t border-[#e2e8f0] safe-area-pb">
+      <nav aria-label="Ana navigasyon" className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-white border-t border-[#e8eaef] safe-area-pb">
         <div className="flex items-stretch">
           {PRIMARY.map(tab => {
             const active = isNavItemActive(

@@ -32,7 +32,7 @@ function gradeBg(g: string | null): string {
     case 'C': return 'bg-[#fef9c3] text-[#854d0e] border-[#fef08a]'
     case 'D': return 'bg-[#ffedd5] text-[#c2410c] border-[#fed7aa]'
     case 'F': return 'bg-[#fee2e2] text-[#b91c1c] border-[#fecaca]'
-    default:  return 'bg-[#f1f5f9] text-[#64748b] border-[#e2e8f0]'
+    default:  return 'bg-[#f1f5f9] text-[#64748b] border-[#e8eaef]'
   }
 }
 
@@ -57,7 +57,7 @@ function GradeBadge({ grade, size = 'sm' }: { grade: string | null; size?: 'sm' 
 
 function SectionCard({ section }: { section: HealthReportSection }) {
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-lg p-4 flex flex-col gap-3 print:break-inside-avoid">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 flex flex-col gap-3 print:break-inside-avoid">
       {/* Header */}
       <div className="flex items-center justify-between">
         <span className="text-sm font-bold text-[#0f172a]">{section.title}</span>
@@ -145,7 +145,7 @@ export default async function HealthReportPage() {
         </div>
 
         {/* ── HEADER ────────────────────────────────────────────────────────── */}
-        <div className="flex items-start justify-between mb-6 pb-4 border-b border-[#e2e8f0]">
+        <div className="flex items-start justify-between mb-6 pb-4 border-b border-[#e8eaef]">
           <div>
             <div className="text-[10px] uppercase tracking-widest font-black text-[#94a3b8] mb-1">
               Mali Sağlık Raporu

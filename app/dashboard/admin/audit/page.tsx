@@ -17,7 +17,7 @@ import Link from 'next/link'
 import type { AuditLog } from '@/types'
 
 // ── Style tokens ──────────────────────────────────────────────────────────────
-const SEL = 'border border-[#e2e8f0] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 bg-white transition-colors cursor-pointer'
+const SEL = 'border border-[#e8eaef] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 bg-white transition-colors cursor-pointer'
 
 // ── Entity type labels ────────────────────────────────────────────────────────
 const ENTITY_LABELS: Record<string, string> = {
@@ -174,7 +174,7 @@ export default function AdminAuditPage() {
       </div>
 
       {/* ── Chain Integrity Panel ──────────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm mb-5">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm mb-5">
         <div className="flex items-start justify-between mb-3 gap-4 flex-wrap">
           <div>
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Denetim Zinciri Bütünlüğü</div>
@@ -257,7 +257,7 @@ export default function AdminAuditPage() {
                 <span>Hash kolonları bu veritabanında henüz aktif değil (migrasyon bekleniyor).</span>
               </div>
             ) : chainResult.total_checked === 0 ? (
-              <div className="flex items-center gap-2 text-xs text-[#64748b] bg-[#f8fafc] border border-[#e2e8f0] rounded px-3 py-2">
+              <div className="flex items-center gap-2 text-xs text-[#64748b] bg-[#f8fafc] border border-[#e8eaef] rounded px-3 py-2">
                 <span>Seçili aralıkta denetim kaydı bulunamadı.</span>
               </div>
             ) : chainResult.ok ? (
@@ -311,7 +311,7 @@ export default function AdminAuditPage() {
       {/* ── Audit Log Table + Filters ──────────────────────────────────────── */}
 
       {/* Filters */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm mb-5 flex flex-wrap gap-3 items-end">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm mb-5 flex flex-wrap gap-3 items-end">
         <div>
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">İşlem</div>
           <select
@@ -372,7 +372,7 @@ export default function AdminAuditPage() {
       {/* Table */}
       {!loading && (
         <>
-          <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
+          <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
             {logs.length === 0 ? (
               <div className="text-center py-12">
                 <div className="text-xs font-medium text-[#334155] mb-1">Kayıt bulunamadı</div>
@@ -381,7 +381,7 @@ export default function AdminAuditPage() {
             ) : (
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-[#e2e8f0]">
+                  <tr className="border-b border-[#e8eaef]">
                     <th className="px-4 py-2 text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Tarih</th>
                     <th className="px-4 py-2 text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Kullanıcı</th>
                     <th className="px-4 py-2 text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">İşlem</th>
@@ -430,7 +430,7 @@ export default function AdminAuditPage() {
                           </td>
                           <td className="px-4 py-2">
                             {contentHash ? (
-                              <code className="text-[10px] font-mono bg-[#f8fafc] text-[#64748b] border border-[#e2e8f0] rounded px-1.5 py-0.5" title={contentHash}>
+                              <code className="text-[10px] font-mono bg-[#f8fafc] text-[#64748b] border border-[#e8eaef] rounded px-1.5 py-0.5" title={contentHash}>
                                 {contentHash.slice(0, 8)}
                               </code>
                             ) : (
@@ -451,7 +451,7 @@ export default function AdminAuditPage() {
                                   <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
                                     Önceki Değer
                                   </div>
-                                  <pre className="text-[10px] bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-3 overflow-auto max-h-48 text-[#334155]">
+                                  <pre className="text-[10px] bg-white border border-[#e8eaef] rounded-xl shadow-soft p-3 overflow-auto max-h-48 text-[#334155]">
                                     {log.old_data ? JSON.stringify(log.old_data, null, 2) : '—'}
                                   </pre>
                                 </div>
@@ -459,7 +459,7 @@ export default function AdminAuditPage() {
                                   <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
                                     Yeni Değer
                                   </div>
-                                  <pre className="text-[10px] bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-3 overflow-auto max-h-48 text-[#334155]">
+                                  <pre className="text-[10px] bg-white border border-[#e8eaef] rounded-xl shadow-soft p-3 overflow-auto max-h-48 text-[#334155]">
                                     {log.new_data ? JSON.stringify(log.new_data, null, 2) : '—'}
                                   </pre>
                                 </div>
@@ -495,14 +495,14 @@ export default function AdminAuditPage() {
                 <button
                   onClick={() => load(offset - PAGE_SIZE)}
                   disabled={offset === 0}
-                  className="px-3 py-1.5 text-xs border border-[#e2e8f0] rounded hover:bg-[#f8fafc] disabled:opacity-40 transition-colors"
+                  className="px-3 py-1.5 text-xs border border-[#e8eaef] rounded hover:bg-[#f8fafc] disabled:opacity-40 transition-colors"
                 >
                   ← Önceki
                 </button>
                 <button
                   onClick={() => load(offset + PAGE_SIZE)}
                   disabled={offset + PAGE_SIZE >= total}
-                  className="px-3 py-1.5 text-xs border border-[#e2e8f0] rounded hover:bg-[#f8fafc] disabled:opacity-40 transition-colors"
+                  className="px-3 py-1.5 text-xs border border-[#e8eaef] rounded hover:bg-[#f8fafc] disabled:opacity-40 transition-colors"
                 >
                   Sonraki →
                 </button>

@@ -89,7 +89,7 @@ export async function CorporateTaxTab({ companyId }: CorporateTaxTabProps) {
 
   if (!dashboard) {
     return (
-      <div className="rounded-lg border border-[#e2e8f0] bg-white px-5 py-10 text-center">
+      <div className="rounded-lg border border-[#e8eaef] bg-white px-5 py-10 text-center">
         <p className="text-sm font-semibold text-[#334155]">Vergi takvimi verisi yüklenemedi.</p>
         <p className="text-xs text-[#94a3b8] mt-1">Lütfen sayfayı yenileyin veya daha sonra tekrar deneyin.</p>
       </div>
@@ -110,9 +110,9 @@ export async function CorporateTaxTab({ companyId }: CorporateTaxTabProps) {
     <div className="space-y-5">
 
       {/* ── ANNUAL SUMMARY CARD ─────────────────────────────────────────────── */}
-      <div className="rounded-lg border border-[#e2e8f0] bg-white overflow-hidden">
+      <div className="rounded-lg border border-[#e8eaef] bg-white overflow-hidden">
         {/* Header */}
-        <div className="px-5 py-3.5 border-b border-[#e2e8f0] bg-[#f8fafc]">
+        <div className="px-5 py-3.5 border-b border-[#e8eaef] bg-[#f8fafc]">
           <div className="flex items-center justify-between flex-wrap gap-2">
             <div>
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">
@@ -163,7 +163,7 @@ export async function CorporateTaxTab({ companyId }: CorporateTaxTabProps) {
           )}
 
           {/* Totals row */}
-          <div className="mt-3 pt-3 border-t border-[#e2e8f0] flex items-center justify-between text-sm">
+          <div className="mt-3 pt-3 border-t border-[#e8eaef] flex items-center justify-between text-sm">
             <span className="text-[#64748b]">
               Ödenen: <span className="font-semibold text-[#0f172a]">{fmtTRY(paidTry)}</span>
             </span>
@@ -175,8 +175,8 @@ export async function CorporateTaxTab({ companyId }: CorporateTaxTabProps) {
       </div>
 
       {/* ── UPCOMING 90-DAY CALENDAR ──────────────────────────────────────────── */}
-      <div className="rounded-lg border border-[#e2e8f0] bg-white overflow-hidden">
-        <div className="px-5 py-3.5 border-b border-[#e2e8f0] bg-[#f8fafc]">
+      <div className="rounded-lg border border-[#e8eaef] bg-white overflow-hidden">
+        <div className="px-5 py-3.5 border-b border-[#e8eaef] bg-[#f8fafc]">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">
             Vergi Takvimi
           </div>

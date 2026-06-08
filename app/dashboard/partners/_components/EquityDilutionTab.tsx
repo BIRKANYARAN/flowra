@@ -101,7 +101,7 @@ function CapitalCallCard({
   const label    = labelMap[scenario.call_pct] ?? `%${scenario.call_pct} Çağrısı`
 
   return (
-    <div className="border border-[#e2e8f0] rounded-lg p-4 flex flex-col gap-3 bg-[#f8fafc]">
+    <div className="border border-[#e8eaef] rounded-lg p-4 flex flex-col gap-3 bg-[#f8fafc]">
       {/* Header */}
       <div>
         <div className="text-xs font-black text-[#0f172a]">
@@ -111,7 +111,7 @@ function CapitalCallCard({
       </div>
 
       {/* Total additional capital */}
-      <div className="rounded bg-white border border-[#e2e8f0] px-3 py-2 text-center">
+      <div className="rounded bg-white border border-[#e8eaef] px-3 py-2 text-center">
         <div className="text-[0.65rem] text-[#94a3b8] uppercase tracking-wide font-semibold">
           Toplam Ek Sermaye
         </div>

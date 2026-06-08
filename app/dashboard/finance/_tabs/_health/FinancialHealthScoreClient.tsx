@@ -47,7 +47,7 @@ function zoneColors(
     case 'safe':              return { bg: 'bg-[#dcfce7]', text: 'text-[#15803d]', border: 'border-[#bbf7d0]', label: 'Güvenli Bölge' }
     case 'grey':              return { bg: 'bg-[#fef9c3]', text: 'text-[#854d0e]', border: 'border-[#fde047]', label: 'Gri Bölge' }
     case 'distress':          return { bg: 'bg-[#fee2e2]', text: 'text-[#991b1b]', border: 'border-[#fca5a5]', label: 'Tehlike Bölgesi' }
-    case 'insufficient_data': return { bg: 'bg-[#f1f5f9]', text: 'text-[#64748b]', border: 'border-[#e2e8f0]', label: 'Yetersiz Veri' }
+    case 'insufficient_data': return { bg: 'bg-[#f1f5f9]', text: 'text-[#64748b]', border: 'border-[#e8eaef]', label: 'Yetersiz Veri' }
   }
 }
 
@@ -155,7 +155,7 @@ export default function FinancialHealthScoreClient({ companyId }: Props) {
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
 
         {/* Flowra Health Score */}
-        <div className="bg-white border border-[#e2e8f0] rounded-lg px-5 py-4 shadow-sm">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-5 py-4 shadow-sm">
           <div className="text-[0.62rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
             Flowra Sağlık Skoru
           </div>
@@ -184,7 +184,7 @@ export default function FinancialHealthScoreClient({ companyId }: Props) {
         </div>
 
         {/* Altman Z"-Score */}
-        <div className="bg-white border border-[#e2e8f0] rounded-lg px-5 py-4 shadow-sm">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-5 py-4 shadow-sm">
           <div className="text-[0.62rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
             Altman Z"-Skoru
           </div>
@@ -210,7 +210,7 @@ export default function FinancialHealthScoreClient({ companyId }: Props) {
       </div>
 
       {/* Altman components */}
-      <div className="bg-white border border-[#e2e8f0] rounded-lg px-5 py-4 shadow-sm space-y-3">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-5 py-4 shadow-sm space-y-3">
         <div className="text-[0.62rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
           Altman Bileşenleri
         </div>
@@ -241,7 +241,7 @@ export default function FinancialHealthScoreClient({ companyId }: Props) {
       </div>
 
       {/* Key Risk Indicators */}
-      <div className="bg-white border border-[#e2e8f0] rounded-lg px-5 py-4 shadow-sm">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-5 py-4 shadow-sm">
         <div className="text-[0.62rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
           Risk Göstergeleri
         </div>
@@ -270,7 +270,7 @@ export default function FinancialHealthScoreClient({ companyId }: Props) {
       </div>
 
       {/* Inputs summary */}
-      <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-lg px-5 py-3">
+      <div className="bg-[#f8fafc] border border-[#e8eaef] rounded-lg px-5 py-3">
         <div className="text-[0.62rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
           Girdi Özeti
         </div>

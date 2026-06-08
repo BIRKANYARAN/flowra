@@ -31,7 +31,7 @@ export async function BreakEvenTab({ companyId, userId }: Props) {
 
   if (!analysis) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-6 text-center text-xs text-[#94a3b8]">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-6 text-center text-xs text-[#94a3b8]">
         Başabaş analizi yüklenemedi. Lütfen sayfayı yenileyin.
       </div>
     )
@@ -78,7 +78,7 @@ export async function BreakEvenTab({ companyId, userId }: Props) {
 
       {/* Main comparison: actual vs breakeven */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-4 shadow-sm">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-4 shadow-sm">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
             Gerçek Ciro (YTD)
           </div>
@@ -93,7 +93,7 @@ export async function BreakEvenTab({ companyId, userId }: Props) {
             ? is_above_breakeven
               ? 'bg-pos-light border-pos-light'
               : 'bg-neg-light border-neg-light'
-            : 'bg-white border-[#e2e8f0]'
+            : 'bg-white border-[#e8eaef]'
         }`}>
           <div className={`text-[0.65rem] font-black uppercase tracking-widest mb-1 ${
             is_above_breakeven ? 'text-pos-text' : 'text-neg-text'
@@ -117,7 +117,7 @@ export async function BreakEvenTab({ companyId, userId }: Props) {
 
       {/* Margin of safety + contribution margin */}
       <div className="grid grid-cols-3 gap-2">
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 shadow-sm">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
             Güvenlik Marjı
           </div>
@@ -135,7 +135,7 @@ export async function BreakEvenTab({ companyId, userId }: Props) {
             (Ciro − BE) / Ciro
           </div>
         </div>
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 shadow-sm">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
             Katkı Payı Oranı
           </div>
@@ -150,7 +150,7 @@ export async function BreakEvenTab({ companyId, userId }: Props) {
             {fmtTRY(contribution_margin_try)}
           </div>
         </div>
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 shadow-sm">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
             Değişken Maliyet Oranı
           </div>
@@ -168,7 +168,7 @@ export async function BreakEvenTab({ companyId, userId }: Props) {
       </div>
 
       {/* Fixed vs Variable cost breakdown */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
           Maliyet Yapısı Analizi
         </div>
@@ -213,14 +213,14 @@ export async function BreakEvenTab({ companyId, userId }: Props) {
             )
           })}
         </div>
-        <div className="mt-3 pt-3 border-t border-[#e2e8f0] flex items-center justify-between text-xs">
+        <div className="mt-3 pt-3 border-t border-[#e8eaef] flex items-center justify-between text-xs">
           <span className="font-black text-[#0f172a]">Toplam Maliyet Tahmini</span>
           <span className="font-black tabular-nums">{fmtTRY(estimated_fixed_costs_try + estimated_variable_costs_try)}</span>
         </div>
       </div>
 
       {/* Target profit scenario */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
           Hedef Kâr Senaryosu — %10 Net Marj
         </div>

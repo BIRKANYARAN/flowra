@@ -55,7 +55,7 @@ function StepIcon({ status }: { status: ChecklistStep['status'] }) {
     pass:    { icon: '✓', cls: 'text-pos-text bg-pos-light border-pos-light' },
     fail:    { icon: '✗', cls: 'text-neg-text bg-neg-light border-neg-light' },
     pending: { icon: '⏳', cls: 'text-warn-text bg-warn-light border-warn-light' },
-    skipped: { icon: '—', cls: 'text-[#94a3b8] bg-[#f8fafc] border-[#e2e8f0]' },
+    skipped: { icon: '—', cls: 'text-[#94a3b8] bg-[#f8fafc] border-[#e8eaef]' },
   } as const
   const { icon, cls } = map[status] ?? map.skipped
   return (
@@ -95,7 +95,7 @@ function StepRow({
   confirming: boolean
 }) {
   const isBlockingFail = step.is_blocking && step.status === 'fail'
-  const rowBg = isBlockingFail ? 'bg-neg-light/40 border-neg-light' : 'bg-white border-[#e2e8f0]'
+  const rowBg = isBlockingFail ? 'bg-neg-light/40 border-neg-light' : 'bg-white border-[#e8eaef]'
 
   return (
     <div className={`flex items-start gap-3 px-3 py-2.5 rounded-lg border ${rowBg}`}>
@@ -111,7 +111,7 @@ function StepRow({
             </span>
           )}
           {!step.auto_checked && step.status !== 'pass' && (
-            <span className="text-[9px] font-bold px-1 py-0.5 rounded border bg-[#f1f5f9] text-[#64748b] border-[#e2e8f0] uppercase tracking-wide">
+            <span className="text-[9px] font-bold px-1 py-0.5 rounded border bg-[#f1f5f9] text-[#64748b] border-[#e8eaef] uppercase tracking-wide">
               Manuel
             </span>
           )}
@@ -225,7 +225,7 @@ export function PeriodCloseChecklistClient({ companyId }: { companyId: string })
   // ── Loading / error states ────────────────────────────────────────────────
   if (isLoading) {
     return (
-      <div className="rounded-2xl border border-[#e2e8f0] bg-white p-4">
+      <div className="rounded-2xl border border-[#e8eaef] bg-white p-4">
         <div className="h-4 w-48 bg-[#f1f5f9] rounded animate-pulse mb-3" />
         <div className="h-3 w-full bg-[#f1f5f9] rounded animate-pulse mb-2" />
         <div className="h-3 w-3/4 bg-[#f1f5f9] rounded animate-pulse" />
@@ -257,7 +257,7 @@ export function PeriodCloseChecklistClient({ companyId }: { companyId: string })
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="rounded-2xl border border-[#e2e8f0] bg-white shadow-sm overflow-hidden">
+    <div className="rounded-2xl border border-[#e8eaef] bg-white shadow-sm overflow-hidden">
       {/* Header */}
       <div className="px-4 pt-4 pb-3 border-b border-[#f1f5f9]">
         <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -269,8 +269,8 @@ export function PeriodCloseChecklistClient({ companyId }: { companyId: string })
           <span className={`text-[9px] font-bold px-2 py-1 rounded-full border uppercase tracking-wide ${
             checklist.period_status === 'open'      ? 'bg-pos-light text-pos-text border-pos-light' :
             checklist.period_status === 'pre_close' ? 'bg-warn-light text-warn-text border-warn-light' :
-            checklist.period_status === 'closed'    ? 'bg-[#f1f5f9] text-[#64748b] border-[#e2e8f0]' :
-            'bg-[#f1f5f9] text-[#64748b] border-[#e2e8f0]'
+            checklist.period_status === 'closed'    ? 'bg-[#f1f5f9] text-[#64748b] border-[#e8eaef]' :
+            'bg-[#f1f5f9] text-[#64748b] border-[#e8eaef]'
           }`}>
             {checklist.period_status === 'open'      ? 'Açık' :
              checklist.period_status === 'pre_close' ? 'Ön Kapanış' :

@@ -91,7 +91,7 @@ function PartnerBreakdownTable({
     <div className="overflow-x-auto mt-2">
       <table className="w-full text-[0.65rem]">
         <thead>
-          <tr className="border-b border-[#e2e8f0]">
+          <tr className="border-b border-[#e8eaef]">
             <th className="text-left pb-1 text-[#64748b] font-semibold">Ortak ID</th>
             <th className="text-right pb-1 text-[#64748b] font-semibold">Pay %</th>
             <th className="text-right pb-1 text-[#64748b] font-semibold">Brüt</th>
@@ -140,7 +140,7 @@ function ScenarioCard({
         'rounded-xl border p-4 flex flex-col gap-2 transition-shadow',
         isOptimal
           ? 'border-[#86efac] ring-1 ring-[#86efac] bg-[#f0fdf4]'
-          : 'border-[#e2e8f0] bg-white',
+          : 'border-[#e8eaef] bg-white',
       ].join(' ')}
     >
       {/* Header */}
@@ -276,13 +276,13 @@ export function DistributionSimulatorTab() {
       {/* ── Summary KPI strip ──────────────────────────────────────────────── */}
 
       <div className="grid grid-cols-3 gap-3">
-        <div className="bg-white border border-[#e2e8f0] rounded-xl p-4">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4">
           <p className="text-[0.65rem] text-[#64748b] font-semibold">Net Kâr</p>
           <p className="text-base font-black text-[#0f172a] tabular-nums mt-1">
             {fmtTRY(input_summary.net_profit_try)}
           </p>
         </div>
-        <div className="bg-white border border-[#e2e8f0] rounded-xl p-4">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4">
           <p className="text-[0.65rem] text-[#64748b] font-semibold">Azami Dağıtılabilir</p>
           <p className="text-base font-black text-[#0f172a] tabular-nums mt-1">
             {fmtTRY(input_summary.max_distributable_try)}
@@ -332,7 +332,7 @@ export function DistributionSimulatorTab() {
 
       {/* ── Custom simulation ───────────────────────────────────────────────── */}
 
-      <div className="bg-white border border-[#e2e8f0] rounded-xl p-5">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-5">
         <h2 className="text-sm font-black text-[#0f172a] mb-1">Özel Tutar Simülasyonu</h2>
         <p className="text-[0.65rem] text-[#94a3b8] mb-3">
           Dağıtmak istediğiniz tutarı girin — TTK 509/519 ve GVK 94 uyumluluğu anında hesaplanır
@@ -343,7 +343,7 @@ export function DistributionSimulatorTab() {
             value={customAmount}
             onChange={e => setCustomAmount(e.target.value)}
             placeholder="Örn: 500.000"
-            className="flex-1 border border-[#e2e8f0] rounded-lg px-3 py-2 text-sm text-[#0f172a] placeholder-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#3b82f6] focus:border-transparent"
+            className="flex-1 border border-[#e8eaef] rounded-lg px-3 py-2 text-sm text-[#0f172a] placeholder-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-[#3b82f6] focus:border-transparent"
           />
           <button
             type="button"

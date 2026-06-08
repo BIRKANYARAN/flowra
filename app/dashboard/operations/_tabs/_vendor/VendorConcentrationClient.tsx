@@ -73,7 +73,7 @@ function hhiTextColor(level: VendorConcentrationLevel): string {
 
 function Skeleton() {
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 animate-pulse space-y-3">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 animate-pulse space-y-3">
       <div className="h-4 w-48 bg-[#f1f5f9] rounded" />
       <div className="h-16 bg-[#f1f5f9] rounded" />
       <div className="h-32 bg-[#f1f5f9] rounded" />
@@ -100,7 +100,7 @@ export function VendorConcentrationClient({ companyId }: Props) {
 
   if (isError) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 text-xs text-[#94a3b8]">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 text-xs text-[#94a3b8]">
         Tedarikçi konsantrasyon verisi yüklenemedi.
       </div>
     )
@@ -110,7 +110,7 @@ export function VendorConcentrationClient({ companyId }: Props) {
 
   if (!report || report.total_vendors === 0) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
           Tedarikçi Konsantrasyon Riski
         </div>
@@ -123,7 +123,7 @@ export function VendorConcentrationClient({ companyId }: Props) {
   const maxShare = report.vendors[0]?.spend_share_pct ?? 1
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm overflow-hidden">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm overflow-hidden">
 
       {/* ── Header ──────────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">
@@ -162,7 +162,7 @@ export function VendorConcentrationClient({ companyId }: Props) {
       {/* ── KPI strip ───────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 border-b border-[#f1f5f9]">
         {/* HHI score */}
-        <div className="p-3 border-b sm:border-b-0 sm:border-r border-[#e2e8f0]">
+        <div className="p-3 border-b sm:border-b-0 sm:border-r border-[#e8eaef]">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">HHI Skoru</div>
           <div className={`text-xl font-black tabular-nums leading-none ${hhiTextColor(report.concentration_level)}`}>
             {report.hhi.toLocaleString('tr-TR')}
@@ -173,7 +173,7 @@ export function VendorConcentrationClient({ companyId }: Props) {
         </div>
 
         {/* Total spend */}
-        <div className="p-3 border-b sm:border-b-0 sm:border-r border-[#e2e8f0]">
+        <div className="p-3 border-b sm:border-b-0 sm:border-r border-[#e8eaef]">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Toplam Alım</div>
           <div className="text-xl font-black tabular-nums leading-none text-[#0f172a]">
             {fmtTRY(report.total_spend_try)}
@@ -182,7 +182,7 @@ export function VendorConcentrationClient({ companyId }: Props) {
         </div>
 
         {/* Pareto-80 */}
-        <div className="p-3 border-b sm:border-b-0 sm:border-r border-[#e2e8f0]">
+        <div className="p-3 border-b sm:border-b-0 sm:border-r border-[#e8eaef]">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Pareto 80</div>
           <div className="text-xl font-black tabular-nums leading-none text-[#0f172a]">
             {report.pareto_80_count}
@@ -221,7 +221,7 @@ export function VendorConcentrationClient({ companyId }: Props) {
       <div className="overflow-x-auto">
         <table className="w-full text-xs">
           <thead>
-            <tr className="border-b border-[#e2e8f0]">
+            <tr className="border-b border-[#e8eaef]">
               <th className="text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] px-4 py-2">Tedarikçi</th>
               <th className="text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] px-2 py-2">Tutar</th>
               <th className="text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] px-2 py-2 min-w-[120px]">Pay %</th>
@@ -307,7 +307,7 @@ export function VendorConcentrationClient({ companyId }: Props) {
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-[#e2e8f0]">
+                <tr className="border-b border-[#e8eaef]">
                   <th className="text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] pb-1.5 pr-4">Ay</th>
                   <th className="text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] pb-1.5 px-2">HHI</th>
                   <th className="text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] pb-1.5 px-2">Tedarikçi</th>

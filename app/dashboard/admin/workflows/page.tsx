@@ -126,7 +126,7 @@ export default async function WorkflowsPage() {
 
       {/* Empty state */}
       {workflows.length === 0 && (
-        <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-12 text-center">
+        <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-4 py-12 text-center">
           <div className="text-2xl mb-2">✓</div>
           <div className="text-sm font-semibold text-[#64748b]">Bekleyen iş akışı yok</div>
           <div className="text-xs text-[#94a3b8] mt-1">
@@ -137,10 +137,10 @@ export default async function WorkflowsPage() {
 
       {/* Workflow table */}
       {workflows.length > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
           <table className="w-full text-xs">
             <thead>
-              <tr className="border-b border-[#e2e8f0] bg-[#f8fafc]">
+              <tr className="border-b border-[#e8eaef] bg-[#f8fafc]">
                 <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
                   Tür
                 </th>

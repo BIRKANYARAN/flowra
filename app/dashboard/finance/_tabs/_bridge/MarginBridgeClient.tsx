@@ -129,7 +129,7 @@ function DominantDriverBadge({ driver }: { driver: MarginBridgeReport['dominant_
     price:    { label: 'Fiyat Odaklı',   color: 'bg-blue-50 border-blue-200 text-blue-700' },
     volume:   { label: 'Hacim Odaklı',   color: 'bg-[#fefce8] border-yellow-200 text-yellow-700' },
     mix:      { label: 'Karışım Odaklı', color: 'bg-purple-50 border-purple-200 text-purple-700' },
-    balanced: { label: 'Dengeli Etki',   color: 'bg-[#f1f5f9] border-[#e2e8f0] text-[#64748b]' },
+    balanced: { label: 'Dengeli Etki',   color: 'bg-[#f1f5f9] border-[#e8eaef] text-[#64748b]' },
   }
   const { label, color } = cfg[driver]
   return (
@@ -180,7 +180,7 @@ export default function MarginBridgeClient({ companyId }: Props) {
         Brüt Kâr Köprüsü — Fiyat / Hacim / Karışım
       </div>
 
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm overflow-hidden">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm overflow-hidden">
 
         {/* ── Header: period selectors ─────────────────────────────────────── */}
         <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-b border-[#f1f5f9] bg-[#f8fafc]">
@@ -194,7 +194,7 @@ export default function MarginBridgeClient({ companyId }: Props) {
                   setCurrentPeriod(next)
                   setPriorPeriod(priorOfKey(next))
                 }}
-                className="text-xs font-semibold text-[#0f172a] border border-[#e2e8f0] rounded px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-brand-light"
+                className="text-xs font-semibold text-[#0f172a] border border-[#e8eaef] rounded px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-brand-light"
               >
                 {currentOptions.map(k => (
                   <option key={k} value={k}>{periodLabel(k)}</option>
@@ -207,7 +207,7 @@ export default function MarginBridgeClient({ companyId }: Props) {
               <select
                 value={priorPeriod}
                 onChange={e => setPriorPeriod(e.target.value)}
-                className="text-xs font-semibold text-[#0f172a] border border-[#e2e8f0] rounded px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-brand-light"
+                className="text-xs font-semibold text-[#0f172a] border border-[#e8eaef] rounded px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-brand-light"
               >
                 {months.slice(1).map(k => (
                   <option key={k} value={k}>{periodLabel(k)}</option>

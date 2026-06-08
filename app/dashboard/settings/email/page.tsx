@@ -69,13 +69,13 @@ export default function EmailSettingsPage() {
 
       {/* Status card */}
       {loading ? (
-        <div className="bg-white rounded-xl border border-[#e2e8f0] p-5 space-y-3">
+        <div className="bg-white rounded-xl border border-[#e8eaef] p-5 space-y-3">
           <Skeleton className="h-5 w-48" />
           <Skeleton className="h-4 w-72" />
           <Skeleton className="h-4 w-64" />
         </div>
       ) : config ? (
-        <div className="bg-white rounded-xl border border-[#e2e8f0] p-5 space-y-4">
+        <div className="bg-white rounded-xl border border-[#e8eaef] p-5 space-y-4">
           <h2 className="text-sm font-black uppercase tracking-widest text-[#64748b]">Durum</h2>
 
           <div className="grid grid-cols-1 gap-3">
@@ -114,7 +114,7 @@ export default function EmailSettingsPage() {
       ) : null}
 
       {/* Test email */}
-      <div className="bg-white rounded-xl border border-[#e2e8f0] p-5 space-y-4">
+      <div className="bg-white rounded-xl border border-[#e8eaef] p-5 space-y-4">
         <h2 className="text-sm font-black uppercase tracking-widest text-[#64748b]">Test E-postası</h2>
         <p className="text-sm text-[#64748b]">
           Gerçekçi bir uyarı özeti gönderek bildirim sisteminin çalıştığını doğrulayın.
@@ -126,7 +126,7 @@ export default function EmailSettingsPage() {
             placeholder="E-posta adresi (boş bırakırsanız hesabınıza gönderilir)"
             value={testEmail}
             onChange={e => setTestEmail(e.target.value)}
-            className="flex-1 text-sm border border-[#e2e8f0] rounded px-3 py-2
+            className="flex-1 text-sm border border-[#e8eaef] rounded px-3 py-2
                        focus:outline-none focus:ring-1 focus:ring-brand placeholder:text-[#94a3b8]"
           />
           <button
@@ -153,7 +153,7 @@ export default function EmailSettingsPage() {
       </div>
 
       {/* Setup guide */}
-      <div className="bg-[#f8fafc] rounded-xl border border-[#e2e8f0] p-5 space-y-3">
+      <div className="bg-[#f8fafc] rounded-xl border border-[#e8eaef] p-5 space-y-3">
         <h2 className="text-sm font-black uppercase tracking-widest text-[#64748b]">Kurulum Kılavuzu</h2>
         <div className="space-y-2 text-sm text-[#475569]">
           <Step num={1} text="resend.com adresinden ücretsiz bir Resend hesabı oluşturun" />

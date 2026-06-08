@@ -25,8 +25,8 @@ export function SectionBlock({
   children: ReactNode
 }) {
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft">
-      <div className="flex items-center gap-3 px-5 py-3 border-b border-[#e2e8f0] bg-[#f8fafc]">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft">
+      <div className="flex items-center gap-3 px-5 py-3 border-b border-[#e8eaef] bg-[#f8fafc]">
         <div className="w-6 h-6 rounded bg-[#0f172a] flex items-center justify-center flex-shrink-0">
           <span className="text-[10px] font-black text-white">
             {String(number).padStart(2, '0')}

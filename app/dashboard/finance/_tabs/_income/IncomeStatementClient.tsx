@@ -94,7 +94,7 @@ function StatementRow({
 }) {
   const isSubtotal   = line.is_subtotal
   const indentClass  = line.indent_level === 1 ? 'pl-6' : ''
-  const rowBg        = isSubtotal ? 'bg-[#f8fafc] border-t border-[#e2e8f0]' : 'hover:bg-[#fafafa]'
+  const rowBg        = isSubtotal ? 'bg-[#f8fafc] border-t border-[#e8eaef]' : 'hover:bg-[#fafafa]'
   const fontClass    = isSubtotal ? 'font-black text-[#0f172a]' : 'font-medium text-[#334155]'
   const valueFont    = isSubtotal ? 'font-black' : 'font-mono'
   const netColor     =
@@ -160,7 +160,7 @@ function MarginSummary({ statement }: { statement: IncomeStatement }) {
   ]
 
   return (
-    <div className="grid grid-cols-4 gap-2 pt-3 border-t border-[#e2e8f0]">
+    <div className="grid grid-cols-4 gap-2 pt-3 border-t border-[#e8eaef]">
       {margins.map(m => (
         <div key={m.label} className="text-center">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">
@@ -249,7 +249,7 @@ export default function IncomeStatementClient({ companyId }: Props) {
 
         <div className="flex flex-wrap items-center gap-2">
           {/* Mode toggle */}
-          <div className="flex border border-[#e2e8f0] rounded overflow-hidden">
+          <div className="flex border border-[#e8eaef] rounded overflow-hidden">
             {(['monthly', 'annual'] as const).map(m => (
               <button
                 key={m}
@@ -270,7 +270,7 @@ export default function IncomeStatementClient({ companyId }: Props) {
             <select
               value={period}
               onChange={e => setPeriod(e.target.value)}
-              className="text-xs border border-[#e2e8f0] rounded px-2 py-1.5 bg-white text-[#334155] font-semibold focus:outline-none focus:ring-1 focus:ring-[#6366f1]"
+              className="text-xs border border-[#e8eaef] rounded px-2 py-1.5 bg-white text-[#334155] font-semibold focus:outline-none focus:ring-1 focus:ring-[#6366f1]"
             >
               {monthOptions.map(pk => (
                 <option key={pk} value={pk}>{periodKeyLabel(pk)}</option>
@@ -280,7 +280,7 @@ export default function IncomeStatementClient({ companyId }: Props) {
             <select
               value={year}
               onChange={e => setYear(Number(e.target.value))}
-              className="text-xs border border-[#e2e8f0] rounded px-2 py-1.5 bg-white text-[#334155] font-semibold focus:outline-none focus:ring-1 focus:ring-[#6366f1]"
+              className="text-xs border border-[#e8eaef] rounded px-2 py-1.5 bg-white text-[#334155] font-semibold focus:outline-none focus:ring-1 focus:ring-[#6366f1]"
             >
               {yearOptions.map(y => (
                 <option key={y} value={y}>{y} Yılı</option>
@@ -294,7 +294,7 @@ export default function IncomeStatementClient({ companyId }: Props) {
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded border text-xs font-semibold transition-colors ${
               showPrior
                 ? 'bg-[#6366f1] text-white border-[#6366f1]'
-                : 'bg-white text-[#64748b] border-[#e2e8f0] hover:bg-[#f8fafc]'
+                : 'bg-white text-[#64748b] border-[#e8eaef] hover:bg-[#f8fafc]'
             }`}
           >
             <span>{showPrior ? '✓' : '+'}</span>
@@ -315,10 +315,10 @@ export default function IncomeStatementClient({ companyId }: Props) {
       )}
 
       {/* ── Table ─────────────────────────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm overflow-hidden">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm overflow-hidden">
 
         {/* Table header */}
-        <div className="border-b border-[#e2e8f0] bg-[#f8fafc]">
+        <div className="border-b border-[#e8eaef] bg-[#f8fafc]">
           <table className="w-full text-xs">
             <thead>
               <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
@@ -378,7 +378,7 @@ export default function IncomeStatementClient({ companyId }: Props) {
 
       {/* ── Margin summary ────────────────────────────────────────────────── */}
       {!isLoading && !isError && statement && (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
             Kâr Marjları
           </div>

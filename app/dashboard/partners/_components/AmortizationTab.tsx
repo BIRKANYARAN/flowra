@@ -131,7 +131,7 @@ function SummaryStrip({ report }: { report: LoanAmortizationReport }) {
       {items.map(({ label, value }) => (
         <div
           key={label}
-          className="rounded border border-[#e2e8f0] bg-[#f8fafc] px-4 py-3"
+          className="rounded border border-[#e8eaef] bg-[#f8fafc] px-4 py-3"
         >
           <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
             {label}
@@ -160,7 +160,7 @@ function ScheduleTable({ rows }: { rows: AmortizationRow[] }) {
     <div className="overflow-x-auto mt-3">
       <table className="w-full text-xs border-collapse">
         <thead>
-          <tr className="border-b border-[#e2e8f0]">
+          <tr className="border-b border-[#e8eaef]">
             <th className="py-1.5 px-2 text-left font-semibold text-[#64748b] whitespace-nowrap">#</th>
             <th className="py-1.5 px-2 text-left font-semibold text-[#64748b] whitespace-nowrap">Dönem</th>
             <th className="py-1.5 px-2 text-right font-semibold text-[#64748b] whitespace-nowrap">Açılış Bakiye</th>
@@ -218,7 +218,7 @@ function TrancheCard({ tranche }: { tranche: TrancheAmortization }) {
   const [expanded, setExpanded] = useState(false)
 
   return (
-    <div className="rounded border border-[#e2e8f0] overflow-hidden">
+    <div className="rounded border border-[#e8eaef] overflow-hidden">
       {/* Summary row (always visible) */}
       <button
         onClick={() => setExpanded(prev => !prev)}
@@ -269,7 +269,7 @@ function TrancheCard({ tranche }: { tranche: TrancheAmortization }) {
 
       {/* Expanded detail */}
       {expanded && (
-        <div className="border-t border-[#e2e8f0] px-4 pb-4 bg-[#f8fafc]">
+        <div className="border-t border-[#e8eaef] px-4 pb-4 bg-[#f8fafc]">
           {/* Tranche summary stats */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 pb-1">
             <div>
@@ -366,7 +366,7 @@ function FaizTahakkuku() {
     <div className="flex flex-col gap-4">
       {/* Portfolio summary */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        <div className="rounded border border-[#e2e8f0] bg-[#f8fafc] px-4 py-3">
+        <div className="rounded border border-[#e8eaef] bg-[#f8fafc] px-4 py-3">
           <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
             Toplam Anapara
           </div>
@@ -374,7 +374,7 @@ function FaizTahakkuku() {
             {fmtTRY(report.total_outstanding_principal)}
           </div>
         </div>
-        <div className="rounded border border-[#e2e8f0] bg-[#f8fafc] px-4 py-3">
+        <div className="rounded border border-[#e8eaef] bg-[#f8fafc] px-4 py-3">
           <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
             YTD Tahakkuk
           </div>
@@ -382,7 +382,7 @@ function FaizTahakkuku() {
             {fmtTRY(report.total_accrued_ytd)}
           </div>
         </div>
-        <div className="rounded border border-[#e2e8f0] bg-[#f8fafc] px-4 py-3">
+        <div className="rounded border border-[#e8eaef] bg-[#f8fafc] px-4 py-3">
           <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
             Ödenmemiş Faiz
           </div>
@@ -401,7 +401,7 @@ function FaizTahakkuku() {
 
       {/* Reference rate + next month obligation chips */}
       <div className="flex items-center gap-3 flex-wrap">
-        <div className="inline-flex items-center gap-1.5 rounded border border-[#e2e8f0] bg-[#f8fafc] px-3 py-1.5">
+        <div className="inline-flex items-center gap-1.5 rounded border border-[#e8eaef] bg-[#f8fafc] px-3 py-1.5">
           <span className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">
             Referans Faiz
           </span>
@@ -434,7 +434,7 @@ function FaizTahakkuku() {
         <div className="overflow-x-auto">
           <table className="w-full text-xs border-collapse">
             <thead>
-              <tr className="border-b border-[#e2e8f0]">
+              <tr className="border-b border-[#e8eaef]">
                 <th className="py-1.5 px-2 text-left font-semibold text-[#64748b] whitespace-nowrap">Ortak</th>
                 <th className="py-1.5 px-2 text-right font-semibold text-[#64748b] whitespace-nowrap">Anapara</th>
                 <th className="py-1.5 px-2 text-right font-semibold text-[#64748b] whitespace-nowrap">Faiz</th>
@@ -516,7 +516,7 @@ function ScheduleDetailTable({
     <div className="overflow-x-auto mt-3">
       <table className="w-full text-xs border-collapse">
         <thead>
-          <tr className="border-b border-[#e2e8f0]">
+          <tr className="border-b border-[#e8eaef]">
             <th className="py-1.5 px-2 text-left font-semibold text-[#64748b] whitespace-nowrap">#</th>
             <th className="py-1.5 px-2 text-left font-semibold text-[#64748b] whitespace-nowrap">Dönem</th>
             <th className="py-1.5 px-2 text-right font-semibold text-[#64748b] whitespace-nowrap">Açılış</th>
@@ -567,7 +567,7 @@ function ScheduleCard({ schedule }: { schedule: LoanAmortizationSchedule }) {
     : 'Faizsiz'
 
   return (
-    <details className="rounded border border-[#e2e8f0] overflow-hidden group">
+    <details className="rounded border border-[#e8eaef] overflow-hidden group">
       <summary className="list-none cursor-pointer bg-white hover:bg-[#f8fafc] transition-colors px-4 py-3">
         <div className="flex items-center gap-3">
           <span className="text-[#94a3b8] text-xs transition-transform group-open:rotate-90" aria-hidden>
@@ -602,7 +602,7 @@ function ScheduleCard({ schedule }: { schedule: LoanAmortizationSchedule }) {
         </div>
       </summary>
 
-      <div className="border-t border-[#e2e8f0] px-4 pb-4 bg-[#f8fafc]">
+      <div className="border-t border-[#e8eaef] px-4 pb-4 bg-[#f8fafc]">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 pb-1 text-xs">
           <div>
             <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">Toplam Ay</div>
@@ -666,7 +666,7 @@ function FullAmortizationSchedule() {
 
       {/* Total debt service strip */}
       <div className="grid grid-cols-3 gap-3 pt-1">
-        <div className="rounded border border-[#e2e8f0] bg-[#f8fafc] px-4 py-3">
+        <div className="rounded border border-[#e8eaef] bg-[#f8fafc] px-4 py-3">
           <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
             Aylık Toplam Servis
           </div>
@@ -674,7 +674,7 @@ function FullAmortizationSchedule() {
             {fmtTRY(report.total_monthly_debt_service_try)}
           </div>
         </div>
-        <div className="rounded border border-[#e2e8f0] bg-[#f8fafc] px-4 py-3">
+        <div className="rounded border border-[#e8eaef] bg-[#f8fafc] px-4 py-3">
           <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
             Toplam Kalan Bakiye
           </div>
@@ -682,7 +682,7 @@ function FullAmortizationSchedule() {
             {fmtTRY(report.total_remaining_balance_try)}
           </div>
         </div>
-        <div className="rounded border border-[#e2e8f0] bg-[#f8fafc] px-4 py-3">
+        <div className="rounded border border-[#e8eaef] bg-[#f8fafc] px-4 py-3">
           <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
             Kalan Toplam Faiz
           </div>
@@ -709,7 +709,7 @@ export function AmortizationTab() {
     return (
       <div className="flex flex-col gap-3 mt-2">
         {[1, 2, 3].map(i => (
-          <div key={i} className="h-14 rounded border border-[#e2e8f0] bg-[#f8fafc] animate-pulse" />
+          <div key={i} className="h-14 rounded border border-[#e8eaef] bg-[#f8fafc] animate-pulse" />
         ))}
       </div>
     )
@@ -727,7 +727,7 @@ export function AmortizationTab() {
 
   if (report.tranches.length === 0) {
     return (
-      <div className="rounded border border-[#e2e8f0] bg-[#f8fafc] px-6 py-8 text-center mt-2">
+      <div className="rounded border border-[#e8eaef] bg-[#f8fafc] px-6 py-8 text-center mt-2">
         <div className="text-sm font-semibold text-[#334155]">Aktif tranche bulunamadı</div>
         <div className="text-xs text-[#94a3b8] mt-1">
           Amortisman takvimi için aktif veya kısmen ödenmiş borç dilimi gereklidir.
@@ -768,7 +768,7 @@ export function AmortizationTab() {
       )}
 
       {/* ── Faiz Tahakkuku ───────────────────────────────────────────────── */}
-      <div className="border-t border-[#e2e8f0] pt-4">
+      <div className="border-t border-[#e8eaef] pt-4">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
           Faiz Tahakkuku
         </div>
@@ -776,7 +776,7 @@ export function AmortizationTab() {
       </div>
 
       {/* ── Vade Takvimi ─────────────────────────────────────────────────── */}
-      <div className="border-t border-[#e2e8f0] pt-4">
+      <div className="border-t border-[#e8eaef] pt-4">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
           Vade Takvimi
         </div>
@@ -784,7 +784,7 @@ export function AmortizationTab() {
       </div>
 
       {/* ── Tam Amortisman Takvimi ────────────────────────────────────────── */}
-      <div className="border-t border-[#e2e8f0] pt-4">
+      <div className="border-t border-[#e8eaef] pt-4">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
           Tam Amortisman Takvimi
         </div>

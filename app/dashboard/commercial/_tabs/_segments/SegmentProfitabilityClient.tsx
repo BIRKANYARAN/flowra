@@ -64,7 +64,7 @@ const PERF_CFG: Record<SegmentPerformance, { label: string; bg: string; text: st
 
 function Skeleton() {
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 space-y-3 animate-pulse">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 space-y-3 animate-pulse">
       <div className="h-3 w-48 bg-[#f1f5f9] rounded" />
       <div className="grid grid-cols-4 gap-3">
         {[0, 1, 2, 3].map(i => (
@@ -135,7 +135,7 @@ function OverviewStrip({ report }: OverviewProps) {
   ]
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 divide-x divide-[#e2e8f0] border-b border-[#e2e8f0]">
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 divide-x divide-[#e8eaef] border-b border-[#e8eaef]">
       {cards.map((card, i) => (
         <div key={card.label} className={`p-3 ${i >= 2 ? 'border-t sm:border-t-0' : ''}`}>
           <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
@@ -291,7 +291,7 @@ export default function SegmentProfitabilityClient({ companyId: _companyId }: Pr
   const report = data?.report
   if (!report || report.segments.length === 0) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-6 text-center">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-6 text-center">
         <p className="text-sm text-[#94a3b8]">Segment verisi bulunamadı</p>
         <p className="text-[10px] text-[#cbd5e1] mt-1">{periods.find(p => p.key === period)?.label}</p>
       </div>
@@ -299,7 +299,7 @@ export default function SegmentProfitabilityClient({ companyId: _companyId }: Pr
   }
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
       {/* Header */}
       <div className="px-4 py-3 border-b border-[#f1f5f9] flex items-center justify-between gap-3 flex-wrap">
         <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
@@ -310,7 +310,7 @@ export default function SegmentProfitabilityClient({ companyId: _companyId }: Pr
           <select
             value={period}
             onChange={e => setPeriod(e.target.value)}
-            className="text-[11px] font-medium text-[#334155] border border-[#e2e8f0] rounded px-2 py-1 bg-white focus:outline-none focus:border-brand"
+            className="text-[11px] font-medium text-[#334155] border border-[#e8eaef] rounded px-2 py-1 bg-white focus:outline-none focus:border-brand"
           >
             {periods.map(p => (
               <option key={p.key} value={p.key}>{p.label}</option>
@@ -323,7 +323,7 @@ export default function SegmentProfitabilityClient({ companyId: _companyId }: Pr
             className={`text-[10px] font-bold px-2.5 py-1 rounded border transition-colors ${
               includePrior
                 ? 'bg-brand text-white border-brand'
-                : 'bg-white text-[#64748b] border-[#e2e8f0] hover:border-brand hover:text-brand'
+                : 'bg-white text-[#64748b] border-[#e8eaef] hover:border-brand hover:text-brand'
             }`}
           >
             Karşılaştırma {includePrior ? 'Açık' : 'Ekle'}
@@ -338,7 +338,7 @@ export default function SegmentProfitabilityClient({ companyId: _companyId }: Pr
       <div className="px-4 pt-3 pb-1 space-y-2">
         {/* Pareto insight */}
         {report.pareto_80_count > 0 && report.segments.length > 0 && (
-          <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-3 py-2 text-[11px] text-[#334155]">
+          <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-3 py-2 text-[11px] text-[#334155]">
             En iyi{' '}
             <strong>{report.pareto_80_count}</strong>{' '}
             segment, toplam gelirin <strong>%80&apos;ini</strong> oluşturuyor

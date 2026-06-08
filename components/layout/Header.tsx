@@ -19,7 +19,7 @@ interface Props {
 
 export function Header({ companyName }: Props) {
   return (
-    <header className="h-11 bg-white border-b border-[#e2e8f0] flex items-center justify-between px-4 flex-shrink-0 sticky top-0 z-10 gap-3">
+    <header className="h-11 bg-white border-b border-[#e8eaef] flex items-center justify-between px-4 flex-shrink-0 sticky top-0 z-10 gap-3">
 
       {/* LEFT — mobile brand */}
       <div className="flex items-center gap-2 md:hidden flex-shrink-0">
@@ -37,7 +37,7 @@ export function Header({ companyName }: Props) {
       <div className="hidden md:flex items-center gap-1.5 flex-shrink-0 ml-auto">
         <Link
           href="/dashboard/commercial?tab=collections"
-          className="inline-flex items-center gap-1 px-2.5 py-1 rounded border border-[#e2e8f0] text-[#334155] text-[11px] font-semibold hover:bg-[#f8fafc] transition-colors whitespace-nowrap">
+          className="inline-flex items-center gap-1 px-2.5 py-1 rounded border border-[#e8eaef] text-[#334155] text-[11px] font-semibold hover:bg-[#f8fafc] transition-colors whitespace-nowrap">
           Tahsilat
         </Link>
         <QuickCreate />

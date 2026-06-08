@@ -44,7 +44,7 @@ const STATUS_CONFIG = {
   },
   just_started: {
     label: 'Yeni Başlandı',
-    cls:   'bg-[#f1f5f9] text-[#64748b] border-[#e2e8f0]',
+    cls:   'bg-[#f1f5f9] text-[#64748b] border-[#e8eaef]',
   },
 } as const
 
@@ -92,10 +92,10 @@ function ItemRow({ item }: { item: ChecklistItem }) {
     <div
       className={`flex items-start gap-3 px-4 py-3 rounded-lg border transition-colors ${
         isComplete
-          ? 'border-[#e2e8f0] bg-white'
+          ? 'border-[#e8eaef] bg-white'
           : isRequired
           ? 'border-warn-light bg-warn-light/30'
-          : 'border-[#e2e8f0] bg-[#fafafa] opacity-80'
+          : 'border-[#e8eaef] bg-[#fafafa] opacity-80'
       }`}
     >
       <div className="mt-0.5">
@@ -127,7 +127,7 @@ function ItemRow({ item }: { item: ChecklistItem }) {
           className={`text-xs font-semibold px-2.5 py-1.5 rounded border transition-colors flex-shrink-0 ${
             isRequired
               ? 'border-brand-light bg-brand-light text-white hover:opacity-90'
-              : 'border-[#e2e8f0] bg-white text-brand-light hover:bg-brand-subtle'
+              : 'border-[#e8eaef] bg-white text-brand-light hover:bg-brand-subtle'
           }`}
         >
           Git
@@ -201,7 +201,7 @@ export default async function SetupChecklistPage() {
       )}
 
       {/* ── Progress bar ────────────────────────────────────────────────── */}
-      <div className="rounded-xl border border-[#e2e8f0] bg-white px-5 py-4 space-y-3">
+      <div className="rounded-xl border border-[#e8eaef] bg-white px-5 py-4 space-y-3">
         <div className="flex items-center justify-between">
           <p className="text-sm font-semibold text-[#1e293b]">Zorunlu Adımlar</p>
           <p className="text-sm font-bold tabular-nums text-[#334155]">
@@ -260,9 +260,9 @@ export default async function SetupChecklistPage() {
         const allDone = done === total
 
         return (
-          <div key={cat} className="rounded-xl border border-[#e2e8f0] bg-white overflow-hidden">
+          <div key={cat} className="rounded-xl border border-[#e8eaef] bg-white overflow-hidden">
             {/* Category header */}
-            <div className={`px-5 py-3 border-b border-[#e2e8f0] flex items-center justify-between ${
+            <div className={`px-5 py-3 border-b border-[#e8eaef] flex items-center justify-between ${
               allDone ? 'bg-pos-light/20' : 'bg-[#f8fafc]'
             }`}>
               <div className="flex items-center gap-2">
@@ -294,7 +294,7 @@ export default async function SetupChecklistPage() {
       <div className="pt-2">
         <Link
           href="/dashboard/settings"
-          className="text-xs font-semibold text-brand-light hover:text-brand px-3 py-2 rounded hover:bg-brand-subtle border border-[#e2e8f0] transition-colors inline-block"
+          className="text-xs font-semibold text-brand-light hover:text-brand px-3 py-2 rounded hover:bg-brand-subtle border border-[#e8eaef] transition-colors inline-block"
         >
           ← Ayarlara Dön
         </Link>

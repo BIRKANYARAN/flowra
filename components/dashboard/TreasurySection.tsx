@@ -150,7 +150,7 @@ export function TreasurySection() {
 
   if (isLoading) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm space-y-3">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm space-y-3">
         <Skeleton className="h-6 w-48" />
         <Skeleton className="h-16 w-full" />
         <Skeleton className="h-24 w-full" />
@@ -160,7 +160,7 @@ export function TreasurySection() {
 
   if (error || !data?.report) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 shadow-sm">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Hazine Yönetimi</div>
         <p className="text-xs text-neg">Hazine verileri yüklenemedi.</p>
       </div>
@@ -189,8 +189,8 @@ export function TreasurySection() {
     <div className="space-y-3">
 
       {/* Header + Total Cash chip */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-        <div className="px-4 py-3 border-b border-[#e2e8f0] flex items-center justify-between">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+        <div className="px-4 py-3 border-b border-[#e8eaef] flex items-center justify-between">
           <div>
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Hazine Yönetimi</div>
             <p className="text-[10px] text-[#94a3b8] mt-0.5">{r.as_of_date} tarihi itibarıyla</p>
@@ -204,7 +204,7 @@ export function TreasurySection() {
         </div>
 
         {/* Coverage ratio chips */}
-        <div className="grid grid-cols-2 divide-x divide-[#e2e8f0]">
+        <div className="grid grid-cols-2 divide-x divide-[#e8eaef]">
           <div className="px-4 py-3">
             <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Nakit Runway</div>
             <div className={`text-lg font-black tabular-nums leading-none ${runwayTone}`}>
@@ -230,8 +230,8 @@ export function TreasurySection() {
       )}
 
       {/* Account list */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-        <div className="px-4 py-3 border-b border-[#e2e8f0] flex items-center justify-between">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+        <div className="px-4 py-3 border-b border-[#e8eaef] flex items-center justify-between">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
             Banka Hesapları ({r.account_count})
           </div>
@@ -250,8 +250,8 @@ export function TreasurySection() {
 
       {/* Daily cash waterfall — last 30 days */}
       {r.daily_positions.length > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-          <div className="px-4 py-3 border-b border-[#e2e8f0]">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+          <div className="px-4 py-3 border-b border-[#e8eaef]">
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Günlük Nakit Pozisyonu (Son 30 Gün)</div>
@@ -272,8 +272,8 @@ export function TreasurySection() {
 
       {/* Recommendations */}
       {r.recommendations.length > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-          <div className="px-4 py-3 border-b border-[#e2e8f0]">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+          <div className="px-4 py-3 border-b border-[#e8eaef]">
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Hazine Önerileri</div>
           </div>
           <ul className="divide-y divide-[#f1f5f9]">

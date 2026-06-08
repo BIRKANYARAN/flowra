@@ -52,7 +52,7 @@ function KpiCard({ label, value, tone }: { label: string; value: string; tone?: 
     tone === 'negative' ? 'text-[#dc2626]' :
     'text-[#0f172a]'
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 shadow-sm">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
       <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{label}</div>
       <div className={`text-lg font-black tabular-nums leading-none ${color}`}>{value}</div>
     </div>
@@ -118,7 +118,7 @@ export function RetainedEarningsClient({ companyId }: Props) {
   // ── Loading state ──────────────────────────────────────────────────────────
   if (isLoading) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-6 space-y-3">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-6 space-y-3">
         <div className="h-4 bg-[#f1f5f9] rounded animate-pulse w-48" />
         <div className="h-32 bg-[#f1f5f9] rounded animate-pulse" />
       </div>
@@ -128,7 +128,7 @@ export function RetainedEarningsClient({ companyId }: Props) {
   // ── Error state ────────────────────────────────────────────────────────────
   if (isError || !data) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 text-xs text-[#ef4444]">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 text-xs text-[#ef4444]">
         Özkaynaklar tablosu yüklenemedi. Lütfen sayfayı yenileyin.
       </div>
     )
@@ -157,7 +157,7 @@ export function RetainedEarningsClient({ companyId }: Props) {
         <select
           value={selectedYear ?? ''}
           onChange={e => setSelectedYear(e.target.value === '' ? null : Number(e.target.value))}
-          className="text-xs border border-[#e2e8f0] rounded px-2.5 py-1.5 bg-white text-[#334155] font-semibold focus:outline-none focus:ring-1 focus:ring-[#6366f1]"
+          className="text-xs border border-[#e8eaef] rounded px-2.5 py-1.5 bg-white text-[#334155] font-semibold focus:outline-none focus:ring-1 focus:ring-[#6366f1]"
         >
           {yearOptions.map(opt => (
             <option key={opt.value ?? 'all'} value={opt.value ?? ''}>
@@ -227,15 +227,15 @@ export function RetainedEarningsClient({ companyId }: Props) {
 
       {/* Rollforward table */}
       {!hasLines ? (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-8 text-center">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-8 text-center">
           <div className="text-xs font-semibold text-[#94a3b8]">Kapatılmış dönem bulunamadı</div>
           <div className="text-[10px] text-[#cbd5e1] mt-1">
             Dönem kapama işlemi tamamlandıktan sonra bu tablo güncellenir.
           </div>
         </div>
       ) : (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
-          <div className="px-4 py-3 border-b border-[#e2e8f0] bg-[#f8fafc] flex items-center justify-between">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
+          <div className="px-4 py-3 border-b border-[#e8eaef] bg-[#f8fafc] flex items-center justify-between">
             <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#64748b]">
               Geçmiş Yıllar Kârı Rollforward
             </span>
@@ -247,7 +247,7 @@ export function RetainedEarningsClient({ companyId }: Props) {
           <div className="overflow-x-auto">
             <table className="w-full min-w-[700px]">
               <thead>
-                <tr className="border-b border-[#e2e8f0] bg-[#f8fafc]">
+                <tr className="border-b border-[#e8eaef] bg-[#f8fafc]">
                   {[
                     { label: 'Dönem',        align: 'left'  },
                     { label: 'Açılış',       align: 'right' },
@@ -274,7 +274,7 @@ export function RetainedEarningsClient({ companyId }: Props) {
               {/* Totals footer */}
               {data.lines.length > 1 && (
                 <tfoot>
-                  <tr className="border-t-2 border-[#e2e8f0] bg-[#f8fafc]">
+                  <tr className="border-t-2 border-[#e8eaef] bg-[#f8fafc]">
                     <td className="px-3 py-2.5 text-xs font-black text-[#0f172a]">Toplam</td>
                     <td className="px-3 py-2.5 text-xs tabular-nums text-right font-bold text-[#475569]">
                       {fmtTRY(data.opening_total, 0)}

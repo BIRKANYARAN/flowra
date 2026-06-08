@@ -33,8 +33,8 @@ import { cn } from '@/components/ui'
 
 export const TOKENS = {
   // Card / Panel
-  panel:         'bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm',
-  panelHover:    'hover:shadow-[0_2px_6px_rgba(17,24,39,0.07)] hover:border-[#e2e8f0] transition-all',
+  panel:         'bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm',
+  panelHover:    'hover:shadow-[0_2px_6px_rgba(17,24,39,0.07)] hover:border-[#e8eaef] transition-all',
   panelCritical: 'bg-neg-light   border border-neg-light   rounded',
   panelWarn:     'bg-warn-light border border-warn-light rounded',
   panelOk:       'bg-pos-light border border-pos-light rounded',
@@ -234,7 +234,7 @@ export function KpiStrip({
       className
     )}>
       <div className={cn(
-        colClass ? `grid ${colClass} divide-x divide-[#e2e8f0]` : 'flex items-stretch divide-x divide-[#e2e8f0] overflow-x-auto scrollbar-none',
+        colClass ? `grid ${colClass} divide-x divide-[#e8eaef]` : 'flex items-stretch divide-x divide-[#e8eaef] overflow-x-auto scrollbar-none',
       )}>
         {children}
       </div>
@@ -395,7 +395,7 @@ export function SkeletonPanel({ rows = 3 }: { rows?: number }) {
 export function SkeletonKpiStrip({ cells = 4 }: { cells?: number }) {
   return (
     <div className={cn(TOKENS.panel, 'overflow-hidden')}>
-      <div className={`grid grid-cols-${cells} divide-x divide-[#e2e8f0]`}>
+      <div className={`grid grid-cols-${cells} divide-x divide-[#e8eaef]`}>
         {Array.from({ length: cells }).map((_, i) => (
           <div key={i} className="px-5 py-3.5 animate-pulse space-y-2">
             <div className="h-2 bg-[#f1f5f9] rounded-full w-16" />
@@ -440,7 +440,7 @@ export function DataTh({
 }) {
   return (
     <th className={cn(
-      'px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc]/60 border-b border-[#e2e8f0]',
+      'px-4 py-2.5 text-[9px] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc]/60 border-b border-[#e8eaef]',
       align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left',
       first && 'pl-5',
       className,
@@ -493,12 +493,12 @@ export function AlertRow({
   const accentColor =
     severity === 'critical' ? 'border-neg hover:bg-neg-light/30' :
     severity === 'warning'  ? 'border-warn hover:bg-warn-light/30' :
-    'border-[#e2e8f0] hover:bg-[#f8fafc]/60'
+    'border-[#e8eaef] hover:bg-[#f8fafc]/60'
 
   const btnClass =
     severity === 'critical'
       ? 'bg-neg text-white hover:bg-neg'
-      : 'border border-[#e2e8f0] text-[#64748b] hover:bg-[#f8fafc]'
+      : 'border border-[#e8eaef] text-[#64748b] hover:bg-[#f8fafc]'
 
   return (
     <Link
@@ -591,7 +591,7 @@ export function ContextReading({
   return (
     <div className={cn(
       'flex flex-col gap-0 flex-shrink-0 px-4 py-2.5',
-      border && 'border-l border-[#e2e8f0]',
+      border && 'border-l border-[#e8eaef]',
     )}>
       <span className="text-[8px] font-black uppercase tracking-widest text-[#94a3b8] leading-none mb-1">
         {label}
@@ -612,7 +612,7 @@ export function ContextReading({
 
 export function ContextRail({ children }: { children: ReactNode }) {
   return (
-    <div className="flex items-center gap-0 bg-[#f8fafc]/40 border-b border-[#e2e8f0] overflow-x-auto scrollbar-none">
+    <div className="flex items-center gap-0 bg-[#f8fafc]/40 border-b border-[#e8eaef] overflow-x-auto scrollbar-none">
       {children}
     </div>
   )
@@ -620,6 +620,6 @@ export function ContextRail({ children }: { children: ReactNode }) {
 
 export function ContextRailSkeleton({ className }: { className?: string }) {
   return (
-    <div className={cn('h-[46px] bg-[#f8fafc]/60 border-b border-[#e2e8f0] animate-pulse', className)} />
+    <div className={cn('h-[46px] bg-[#f8fafc]/60 border-b border-[#e8eaef] animate-pulse', className)} />
   )
 }

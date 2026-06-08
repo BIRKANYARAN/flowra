@@ -36,7 +36,7 @@ const RISK_COLORS = {
 const SEVERITY_CFG = {
   high:   { cls: 'bg-neg-light border-neg-light text-neg-text',    dot: 'bg-neg',         label: 'Yüksek' },
   medium: { cls: 'bg-warn-light border-warn-light text-warn-text', dot: 'bg-warn',        label: 'Orta'  },
-  low:    { cls: 'bg-[#f8fafc] border-[#e2e8f0] text-[#64748b]',  dot: 'bg-[#cbd5e1]',  label: 'Düşük' },
+  low:    { cls: 'bg-[#f8fafc] border-[#e8eaef] text-[#64748b]',  dot: 'bg-[#cbd5e1]',  label: 'Düşük' },
 } as const
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -191,7 +191,7 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
 
   if (risk.totalOutstanding === 0) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft text-center py-12">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft text-center py-12">
         <div className="text-xs font-medium text-[#334155] mb-1">Açık alacak yok</div>
         <div className="text-[0.65rem] text-[#94a3b8]">Tüm faturalar tahsil edilmiş görünüyor</div>
       </div>
@@ -232,7 +232,7 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
                    risk.concentration.hhi < 2500 ? 'text-warn-text' : 'text-neg',
           },
         ].map(c => (
-          <div key={c.label} className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 shadow-sm">
+          <div key={c.label} className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{c.label}</div>
             <div className={`text-xl font-black tabular-nums leading-none ${c.tone}`}>{c.value}</div>
             <div className="text-[10px] text-[#94a3b8] mt-1">{c.sub}</div>
@@ -255,7 +255,7 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
       )}
 
       {/* Zone 2 — Konsantrasyon */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
         <div className="flex items-center justify-between mb-3">
           <div>
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Konsantrasyon Analizi</div>
@@ -298,15 +298,15 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
       </div>
 
       {/* Zone 3 — Aging table */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-        <div className="px-4 py-3 border-b border-[#e2e8f0]">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+        <div className="px-4 py-3 border-b border-[#e8eaef]">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Müşteri Yaşlandırma Analizi</div>
           <p className="text-[10px] text-[#94a3b8] mt-0.5">Alacakların vade kırılımı</p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-xs min-w-[600px]">
             <thead>
-              <tr className="bg-[#f8fafc] border-b border-[#e2e8f0]">
+              <tr className="bg-[#f8fafc] border-b border-[#e8eaef]">
                 <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Müşteri</th>
                 <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Toplam</th>
                 <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-pos">Güncel</th>
@@ -340,7 +340,7 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
                 </tr>
               ))}
               {/* Totals row */}
-              <tr className="bg-[#f8fafc] font-black border-t-2 border-[#e2e8f0]">
+              <tr className="bg-[#f8fafc] font-black border-t-2 border-[#e8eaef]">
                 <td className="px-4 py-3 text-xs font-black text-[#334155]">Toplam</td>
                 <td className="px-4 py-3 text-right font-black tabular-nums text-[#0f172a]">{fmt(risk.totalOutstanding)}</td>
                 <td className="px-4 py-3 text-right font-black tabular-nums text-pos-text">
@@ -357,13 +357,13 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
 
       {/* Zone 4 — Operational Deviation Signals */}
       {allAnomalies.length > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
           <div className="flex items-center justify-between mb-3">
             <div>
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Operasyonel Sapma Sinyalleri</div>
               <div className="text-[10px] text-[#94a3b8] mt-0.5">Kural tabanlı · Son 6 ay istatistiksel sapma · ±2σ eşiği</div>
             </div>
-            <span className="text-[9px] font-black uppercase tracking-wide bg-[#f8fafc] border border-[#e2e8f0] text-[#64748b] px-2 py-0.5 rounded">
+            <span className="text-[9px] font-black uppercase tracking-wide bg-[#f8fafc] border border-[#e8eaef] text-[#64748b] px-2 py-0.5 rounded">
               {allAnomalies.filter(a => a.severity === 'high').length} yüksek · {allAnomalies.filter(a => a.severity === 'medium').length} orta
             </span>
           </div>
@@ -417,7 +417,7 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
       )}
 
       {/* Zone 5 — Pressure Assessment */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">Baskı Değerlendirmesi</div>
         <ul className="space-y-1.5">
           {guidance.map((g, i) => (

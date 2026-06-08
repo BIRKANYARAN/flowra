@@ -104,7 +104,7 @@ export async function TaxTab({ userId, companyId }: Props) {
   const trMonths = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık']
   const kdvFilingDueLong = `26 ${trMonths[kdvFilingDueMonth - 1]} ${kdvFilingDueYear}`
   const kdvTrendLabel = kdvTrend === 'increasing' ? '↑ Artıyor' : kdvTrend === 'decreasing' ? '↓ Azalıyor' : '→ Stabil'
-  const kdvTrendCls   = kdvTrend === 'increasing' ? 'text-neg-text bg-neg-light border-neg-light' : kdvTrend === 'decreasing' ? 'text-pos-text bg-pos-light border-pos-light' : 'text-[#64748b] bg-[#f1f5f9] border-[#e2e8f0]'
+  const kdvTrendCls   = kdvTrend === 'increasing' ? 'text-neg-text bg-neg-light border-neg-light' : kdvTrend === 'decreasing' ? 'text-pos-text bg-pos-light border-pos-light' : 'text-[#64748b] bg-[#f1f5f9] border-[#e8eaef]'
   const kvRemaining   = Math.max(0, ytd.corporate_tax - ytd.total_gecici)
   const monthsElapsed = now.getMonth() + 1
   const projectedMatrah = monthsElapsed > 0 ? (ytd.matrah / monthsElapsed) * 12 : 0
@@ -123,7 +123,7 @@ export async function TaxTab({ userId, companyId }: Props) {
       case 'adequate':     return { text: 'Yeterli (%120+)',   cls: 'bg-pos-light text-pos-text border-pos-light' }
       case 'tight':        return { text: 'Sınırda (%80–120)', cls: 'bg-warn-light text-warn-text border-warn-light' }
       case 'insufficient': return { text: 'Yetersiz (<%80)',   cls: 'bg-neg-light text-neg-text border-neg-light' }
-      default:             return { text: 'Bilinmiyor',        cls: 'bg-[#f1f5f9] text-[#64748b] border-[#e2e8f0]' }
+      default:             return { text: 'Bilinmiyor',        cls: 'bg-[#f1f5f9] text-[#64748b] border-[#e8eaef]' }
     }
   }
 
@@ -131,7 +131,7 @@ export async function TaxTab({ userId, companyId }: Props) {
     switch (status) {
       case 'overdue':  return 'bg-neg-light text-neg-text border-neg-light'
       case 'due_soon': return 'bg-warn-light text-warn-text border-warn-light'
-      case 'upcoming': return 'bg-[#f1f5f9] text-[#64748b] border-[#e2e8f0]'
+      case 'upcoming': return 'bg-[#f1f5f9] text-[#64748b] border-[#e8eaef]'
       default:         return 'bg-pos-light text-pos-text border-pos-light'
     }
   }
@@ -160,8 +160,8 @@ export async function TaxTab({ userId, companyId }: Props) {
       <ErrorBoundary label="tax-calendar"><TaxCalendarClient companyId={companyId} /></ErrorBoundary>
 
       {/* ── Vergi Rezervi ────────────────────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-        <div className="px-4 py-3 border-b border-[#e2e8f0] flex items-center justify-between">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+        <div className="px-4 py-3 border-b border-[#e8eaef] flex items-center justify-between">
           <div>
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Vergi Rezervi</div>
             <p className="text-[10px] text-[#94a3b8] mt-0.5">Yaklaşan vergi yükümlülükleri için nakit rezerv takibi</p>
@@ -187,7 +187,7 @@ export async function TaxTab({ userId, companyId }: Props) {
         ) : (
           <>
             {/* Coverage summary strip */}
-            <div className="grid grid-cols-4 gap-0 border-b border-[#e2e8f0]">
+            <div className="grid grid-cols-4 gap-0 border-b border-[#e8eaef]">
               {[
                 {
                   label: 'Toplam Rezerv',
@@ -219,7 +219,7 @@ export async function TaxTab({ userId, companyId }: Props) {
                 },
               ].map((card, i) => (
                 <div key={card.label}
-                  className={`p-3 ${i < 3 ? 'border-r border-[#e2e8f0]' : ''}`}>
+                  className={`p-3 ${i < 3 ? 'border-r border-[#e8eaef]' : ''}`}>
                   <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
                   <div className={`text-base font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
                 </div>
@@ -243,7 +243,7 @@ export async function TaxTab({ userId, companyId }: Props) {
             {taxReserve.items.filter(i => i.status !== 'paid').length > 0 ? (
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="bg-[#f8fafc] border-b border-[#e2e8f0]">
+                  <tr className="bg-[#f8fafc] border-b border-[#e8eaef]">
                     <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Vergi Türü</th>
                     <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Dönem</th>
                     <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Son Gün</th>
@@ -344,13 +344,13 @@ export async function TaxTab({ userId, companyId }: Props) {
       )}
 
       {/* ── KDV Beyanı ───────────────────────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-        <div className="px-4 py-3 border-b border-[#e2e8f0] flex items-center justify-between">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+        <div className="px-4 py-3 border-b border-[#e8eaef] flex items-center justify-between">
           <div>
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">VERGİ MERKEZİ</div>
             <p className="text-[10px] text-[#94a3b8] mt-0.5">KDV Beyanı — {kdvPeriodLabel}</p>
           </div>
-          <span className="text-[10px] font-bold px-2.5 py-1 rounded border bg-[#f8fafc] text-[#64748b] border-[#e2e8f0]">
+          <span className="text-[10px] font-bold px-2.5 py-1 rounded border bg-[#f8fafc] text-[#64748b] border-[#e8eaef]">
             {kdvPeriodLabel} ▾
           </span>
         </div>
@@ -367,7 +367,7 @@ export async function TaxTab({ userId, companyId }: Props) {
               −{fmt(currentKdv.purchaseVat + currentKdv.expenseVat)}
             </span>
           </div>
-          <div className="border-t border-[#e2e8f0] pt-2 flex items-center justify-between">
+          <div className="border-t border-[#e8eaef] pt-2 flex items-center justify-between">
             <span className="text-xs font-black text-[#1e293b]">
               {kdvPosition === 'payable' ? 'Ödenecek KDV' : kdvPosition === 'credit' ? 'Devreden KDV' : 'Net KDV'}
             </span>
@@ -382,7 +382,7 @@ export async function TaxTab({ userId, companyId }: Props) {
                   ? 'bg-warn-light text-warn-text border-warn/20'
                   : kdvPosition === 'credit'
                   ? 'bg-pos-light text-pos-text border-pos-light'
-                  : 'bg-[#f1f5f9] text-[#64748b] border-[#e2e8f0]'
+                  : 'bg-[#f1f5f9] text-[#64748b] border-[#e8eaef]'
               }`}>
                 {kdvPosition === 'payable' ? 'ÖDENECEK' : kdvPosition === 'credit' ? 'DEVREDİLECEK' : 'SIFIR'}
               </span>
@@ -399,7 +399,7 @@ export async function TaxTab({ userId, companyId }: Props) {
         </div>
 
         {/* KDV Trend mini chart (bar representation) */}
-        <div className="border-t border-[#e2e8f0] px-4 py-3">
+        <div className="border-t border-[#e8eaef] px-4 py-3">
           <div className="flex items-center justify-between mb-2">
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">KDV Trend (Son 4 Ay)</div>
             <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${kdvTrendCls}`}>
@@ -436,7 +436,7 @@ export async function TaxTab({ userId, companyId }: Props) {
       <GecikmeHesaplayiciClient />
 
       {/* ── Zone 1: KPI Strip ────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
+      <div className="grid grid-cols-4 gap-0 bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
         {[
           {
             label: 'Net KDV (Bu Ay)',
@@ -466,7 +466,7 @@ export async function TaxTab({ userId, companyId }: Props) {
           },
         ].map((card, i) => (
           <div key={card.label}
-            className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e2e8f0]' : ''}`}>
+            className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e8eaef]' : ''}`}>
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
             <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
             <div className="text-[10px] text-[#94a3b8] mt-1">{card.sub}</div>
@@ -477,8 +477,8 @@ export async function TaxTab({ userId, companyId }: Props) {
       {/* ── Zone 1b: KDV Özet Kartı ─────────────────────────────────────────── */}
       <div className="grid grid-cols-2 gap-3">
         {/* KDV Summary */}
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-          <div className="px-4 py-2.5 bg-[#f8fafc] border-b border-[#e2e8f0] flex items-center justify-between">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+          <div className="px-4 py-2.5 bg-[#f8fafc] border-b border-[#e8eaef] flex items-center justify-between">
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">KDV Özeti — {kdvSummary?.period_label ?? currentYM}</div>
             <Link href="/dashboard/cfo/tax/kdv" className="text-[10px] font-bold text-brand-light hover:text-brand underline-offset-2">
               Detaylı Analiz →
@@ -495,7 +495,7 @@ export async function TaxTab({ userId, companyId }: Props) {
                   <span className="text-xs text-[#64748b]">İndirilecek KDV (giriş)</span>
                   <span className="tabular-nums text-sm font-semibold text-pos-text">−{fmt(kdvSummary.input_vat_try)}</span>
                 </div>
-                <div className="flex items-center justify-between border-t border-[#e2e8f0] pt-2">
+                <div className="flex items-center justify-between border-t border-[#e8eaef] pt-2">
                   <span className="text-xs font-black text-[#1e293b]">Net KDV</span>
                   <span className={`tabular-nums text-sm font-black ${kdvSummary.vat_payable ? 'text-warn-text' : 'text-pos-text'}`}>
                     {fmt(Math.abs(kdvSummary.net_vat_try))}
@@ -522,8 +522,8 @@ export async function TaxTab({ userId, companyId }: Props) {
         </div>
 
         {/* Corporate Tax Estimate */}
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-          <div className="px-4 py-2.5 bg-[#f8fafc] border-b border-[#e2e8f0] flex items-center justify-between">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+          <div className="px-4 py-2.5 bg-[#f8fafc] border-b border-[#e8eaef] flex items-center justify-between">
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Kurumlar Vergisi Tahmini — YTD {currentYear}</div>
             <Link href="/dashboard/cfo/tax/corporate" className="text-[10px] font-bold text-brand-light hover:text-brand underline-offset-2">
               Detaylı Analiz →
@@ -540,7 +540,7 @@ export async function TaxTab({ userId, companyId }: Props) {
                   <span className="text-xs text-[#64748b]">Tahmini KV (%25)</span>
                   <span className="tabular-nums text-sm font-black text-warn-text">{fmt(corpTaxEstimate.estimated_tax_try)}</span>
                 </div>
-                <div className="flex items-center justify-between border-t border-[#e2e8f0] pt-2">
+                <div className="flex items-center justify-between border-t border-[#e8eaef] pt-2">
                   <span className="text-xs font-black text-[#1e293b]">Kalan Vergi</span>
                   <span className={`tabular-nums text-sm font-black ${corpTaxEstimate.remaining_tax_try > 0 ? 'text-warn-text' : 'text-pos-text'}`}>
                     {fmt(Math.abs(corpTaxEstimate.remaining_tax_try))}
@@ -562,14 +562,14 @@ export async function TaxTab({ userId, companyId }: Props) {
       </div>
 
       {/* ── Zone 2: Aylık KDV Geçmişi ───────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-        <div className="px-4 py-3 border-b border-[#e2e8f0]">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+        <div className="px-4 py-3 border-b border-[#e8eaef]">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Aylık KDV Geçmişi</div>
           <p className="text-[10px] text-[#94a3b8] mt-0.5">Son 6 ay · Satış KDV − İndirim = Net KDV</p>
         </div>
         <table className="w-full text-xs">
           <thead>
-            <tr className="bg-[#f8fafc] border-b border-[#e2e8f0]">
+            <tr className="bg-[#f8fafc] border-b border-[#e8eaef]">
               <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Dönem</th>
               <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-pos">Satış KDV</th>
               <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-neg">İndirilecek</th>
@@ -614,8 +614,8 @@ export async function TaxTab({ userId, companyId }: Props) {
       </div>
 
       {/* ── Zone 3: Geçici Vergi Takvimi ─────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-        <div className="px-4 py-3 border-b border-[#e2e8f0] flex items-center justify-between">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+        <div className="px-4 py-3 border-b border-[#e8eaef] flex items-center justify-between">
           <div>
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Geçici Vergi Takvimi {currentYear}</div>
             <p className="text-[10px] text-[#94a3b8] mt-0.5">Kurumlar vergisi matrahı üzerinden %25 · Q1 Mayıs · Q2 Ağustos · Q3 Kasım</p>
@@ -638,7 +638,7 @@ export async function TaxTab({ userId, companyId }: Props) {
               overdue:  { text: 'Vadesi Geçti',  cls: 'bg-neg-light text-neg-text border-neg-light' },
               urgent:   { text: '14 gün içinde', cls: 'bg-neg-light text-neg-text border-neg-light' },
               upcoming: { text: '45 gün içinde', cls: 'bg-warn-light text-warn-text border-warn-light' },
-              future:   { text: 'Bekliyor',      cls: 'bg-[#f1f5f9] text-[#64748b] border-[#e2e8f0]' },
+              future:   { text: 'Bekliyor',      cls: 'bg-[#f1f5f9] text-[#64748b] border-[#e8eaef]' },
               none:     { text: '',              cls: '' },
             }[status]
             return (
@@ -689,8 +689,8 @@ export async function TaxTab({ userId, companyId }: Props) {
 
       {/* ── Zone 4: Matrah Analizi ───────────────────────────────────────────── */}
       {ytd.revenue > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-          <div className="px-4 py-3 border-b border-[#e2e8f0]">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+          <div className="px-4 py-3 border-b border-[#e8eaef]">
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Matrah Analizi — YTD {currentYear}</div>
             <p className="text-[10px] text-[#94a3b8] mt-0.5">
               Ciro → Brüt Kâr → Matrah → KV hesabı · {monthsElapsed} ay geçti
@@ -725,7 +725,7 @@ export async function TaxTab({ userId, companyId }: Props) {
       <div className="grid grid-cols-2 gap-3">
         <Link
           href="/dashboard/cfo/tax/kdv"
-          className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 hover:border-warn/20 transition-colors shadow-sm"
+          className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 hover:border-warn/20 transition-colors shadow-sm"
         >
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">KDV Detayı</div>
           <div className="text-xs font-bold text-[#0f172a]">KDV Özeti →</div>
@@ -733,7 +733,7 @@ export async function TaxTab({ userId, companyId }: Props) {
         </Link>
         <Link
           href="/dashboard/cfo/tax/corporate"
-          className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 hover:border-warn-light transition-colors shadow-sm"
+          className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 hover:border-warn-light transition-colors shadow-sm"
         >
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Kurumlar Vergisi</div>
           <div className="text-xs font-bold text-[#0f172a]">KV Raporu →</div>

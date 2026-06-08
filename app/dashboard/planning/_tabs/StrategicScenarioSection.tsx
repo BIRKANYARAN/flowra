@@ -115,7 +115,7 @@ export async function StrategicScenarioSection({ companyId }: Props) {
         key:     'base' as const,
         label:   'Baz',
         data:    result.base,
-        accent:  'border-[#e2e8f0] bg-white',
+        accent:  'border-[#e8eaef] bg-white',
         text:    'text-[#0f172a]',
         sub:     'text-[#94a3b8]',
       },
@@ -130,7 +130,7 @@ export async function StrategicScenarioSection({ companyId }: Props) {
     ] as const
 
     return (
-      <div className="space-y-4 pt-4 border-t border-[#e2e8f0]">
+      <div className="space-y-4 pt-4 border-t border-[#e8eaef]">
         <div className="flex items-center justify-between">
           <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
             Stratejik P&amp;L Projeksiyonu (12 Ay)
@@ -173,13 +173,13 @@ export async function StrategicScenarioSection({ companyId }: Props) {
         </div>
 
         {/* Recommendation */}
-        <div className="px-4 py-3 bg-brand-subtle border border-[#e2e8f0] rounded text-xs text-brand">
+        <div className="px-4 py-3 bg-brand-subtle border border-[#e8eaef] rounded text-xs text-brand">
           <span className="font-black uppercase tracking-wide text-[9px] text-brand-light mr-2">Öneri</span>
           {result.recommendation_reason}
         </div>
 
         {/* Base scenario monthly P&L table (compact) */}
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
           <div className="px-4 py-3 border-b border-[#f1f5f9] text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">
             Baz Senaryo — Aylık P&amp;L
           </div>

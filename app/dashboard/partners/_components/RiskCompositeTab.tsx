@@ -235,7 +235,7 @@ function GradeDistributionPills({
 
 function PartnerRiskCard({ partner }: { partner: PartnerRiskResult }) {
   return (
-    <div className="border border-[#e2e8f0] rounded-lg p-4 space-y-3 bg-white">
+    <div className="border border-[#e8eaef] rounded-lg p-4 space-y-3 bg-white">
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2.5">

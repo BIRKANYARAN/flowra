@@ -63,7 +63,7 @@ function healthCfg(h: CostStructureHealth): { label: string; color: string } {
     case 'balanced':          return { label: 'Dengeli Yapı',   color: 'bg-blue-50 border-blue-200 text-blue-700' }
     case 'rigid':             return { label: 'Katı Yapı',      color: 'bg-[#fefce8] border-yellow-200 text-yellow-700' }
     case 'fragile':           return { label: 'Kırılgan Yapı',  color: 'bg-[#fee2e2] border-red-200 text-[#dc2626]' }
-    case 'insufficient_data': return { label: 'Yetersiz Veri',  color: 'bg-[#f1f5f9] border-[#e2e8f0] text-[#94a3b8]' }
+    case 'insufficient_data': return { label: 'Yetersiz Veri',  color: 'bg-[#f1f5f9] border-[#e8eaef] text-[#94a3b8]' }
   }
 }
 
@@ -96,7 +96,7 @@ function KpiCard({
   valueClass?: string
 }) {
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-3 flex flex-col gap-1">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-3 flex flex-col gap-1">
       <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">
         {label}
       </div>
@@ -134,7 +134,7 @@ export default function CostCenterClient({ companyId }: Props) {
         Maliyet Merkezi Analizi
       </div>
 
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm overflow-hidden">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm overflow-hidden">
 
         {/* ── Header ──────────────────────────────────────────────────────────── */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9] bg-[#f8fafc]">

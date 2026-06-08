@@ -66,7 +66,7 @@ function EfficiencyBadge({ cls }: { cls: EffClass }) {
 
 function Skeleton() {
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm p-4 space-y-3 animate-pulse">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm p-4 space-y-3 animate-pulse">
       <div className="h-4 bg-[#f1f5f9] rounded w-48" />
       <div className="h-8 bg-[#f1f5f9] rounded" />
       <div className="h-48 bg-[#f1f5f9] rounded" />
@@ -223,7 +223,7 @@ export function AbcAnalysisClient({ companyId }: Props) {
   // Empty state
   if (report.total_products === 0) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm px-6 py-8 text-center text-sm text-[#94a3b8]">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm px-6 py-8 text-center text-sm text-[#94a3b8]">
         Satış verisi bulunamadı
       </div>
     )
@@ -244,7 +244,7 @@ export function AbcAnalysisClient({ companyId }: Props) {
   ]
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm">
       {/* ── Header ───────────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">
         <div>

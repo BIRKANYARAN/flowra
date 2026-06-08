@@ -6,7 +6,7 @@ import { useSupabase } from '@/lib/hooks/useSupabase'
 
 type Mode = 'login' | 'register'
 
-const IL  = 'w-full border border-[#e2e8f0] rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 bg-white'
+const IL  = 'w-full border border-[#e8eaef] rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 bg-white'
 const LAB = 'block text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5'
 
 export default function AuthPage() {
@@ -77,7 +77,7 @@ export default function AuthPage() {
 
   return (
     <main className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-4">
-      <div className="w-full max-w-sm bg-white rounded border border-[#e2e8f0] shadow-sm p-8">
+      <div className="w-full max-w-sm bg-white rounded border border-[#e8eaef] shadow-sm p-8">
         {/* Logo */}
         <div className="flex items-center gap-3 mb-8">
           <div className="w-9 h-9 rounded bg-brand-light flex items-center justify-center">

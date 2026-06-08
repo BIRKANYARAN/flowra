@@ -177,9 +177,9 @@ export async function PipelineContent({ companyId }: Props) {
     <div className="space-y-4">
 
       {/* ── TİCARİ BORU HATTI ANALİZİ ─────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
         {/* Header */}
-        <div className="px-4 py-2.5 border-b border-[#e2e8f0] flex items-center justify-between">
+        <div className="px-4 py-2.5 border-b border-[#e8eaef] flex items-center justify-between">
           <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
             Ticari Boru Hattı Analizi
           </span>
@@ -191,7 +191,7 @@ export async function PipelineContent({ companyId }: Props) {
         </div>
 
         {/* KPI Tiles */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-[#f1f5f9] border-b border-[#e2e8f0]">
+        <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-[#f1f5f9] border-b border-[#e8eaef]">
           {[
             {
               label: 'Toplam Proforma',
@@ -265,7 +265,7 @@ export async function PipelineContent({ companyId }: Props) {
             </div>
             <table className="w-full text-xs">
               <thead>
-                <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] border-b border-[#e2e8f0]">
+                <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] border-b border-[#e8eaef]">
                   <th className="text-left px-4 py-2">Müşteri</th>
                   <th className="text-right px-4 py-2">Tutar</th>
                   <th className="text-left px-4 py-2">Durum</th>
@@ -342,9 +342,9 @@ export async function PipelineContent({ companyId }: Props) {
 
       {/* ── Satış Hunisi ─────────────────────────────────────────────────── */}
       {funnelReport && funnelStages.length > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
           {/* Header */}
-          <div className="px-4 py-2.5 border-b border-[#e2e8f0] flex items-center justify-between">
+          <div className="px-4 py-2.5 border-b border-[#e8eaef] flex items-center justify-between">
             <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
               Satış Hunisi — {funnelReport.analysis_period === 'last_90_days' ? 'Son 90 Gün' : 'Son 30 Gün'}
             </span>
@@ -416,7 +416,7 @@ export async function PipelineContent({ companyId }: Props) {
           </div>
 
           {/* Metrics strip */}
-          <div className="border-t border-[#e2e8f0] grid grid-cols-2 sm:grid-cols-4 divide-x divide-[#f1f5f9]">
+          <div className="border-t border-[#e8eaef] grid grid-cols-2 sm:grid-cols-4 divide-x divide-[#f1f5f9]">
             {[
               {
                 label: 'Açık Pipeline',
@@ -459,14 +459,14 @@ export async function PipelineContent({ companyId }: Props) {
       </div>
 
       {/* KPI Strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
         {[
           { label: 'Stok Değeri',  value: serverFmt(stockValue),   sub: `${stockLots.length} aktif lot`,                color: 'text-[#0f172a]' },
           { label: 'Pipeline',     value: pipelineVal > 0 ? serverFmt(pipelineVal) : '—', sub: 'gönderildi · onaylandı', color: 'text-info-text' },
           { label: 'Toplam Ciro',  value: totalRevenue > 0 ? serverFmt(totalRevenue) : '—', sub: unpaidTotal > 0 ? `${serverFmt(unpaidTotal)} tahsilat bekliyor` : 'tahsilat tamamlandı', color: 'text-[#0f172a]' },
           { label: 'Brüt Kâr',    value: totalRevenue > 0 ? serverFmt(grossProfit) : '—', sub: totalRevenue <= 0 ? 'veri yok' : totalCogs > 0 ? `%${grossMargin.toFixed(1)} marj` : 'maliyet girilmedi', color: grossProfit >= 0 ? 'text-pos-text' : 'text-neg' },
         ].map((card, i) => (
-          <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e2e8f0]' : ''}`}>
+          <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e8eaef]' : ''}`}>
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
             <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
             <div className="text-[10px] text-[#94a3b8] mt-1">{card.sub}</div>
@@ -476,13 +476,13 @@ export async function PipelineContent({ companyId }: Props) {
 
       {/* Recent proformas */}
       {recentPf.length > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
-          <div className="px-4 py-2 border-b border-[#e2e8f0]">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
+          <div className="px-4 py-2 border-b border-[#e8eaef]">
             <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Son Teklifler</span>
           </div>
           <table className="w-full text-xs">
             <thead>
-              <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] border-b border-[#e2e8f0]">
+              <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] border-b border-[#e8eaef]">
                 <th className="text-left px-4 py-2">Müşteri</th>
                 <th className="text-left px-4 py-2">Durum</th>
                 <th className="text-right px-4 py-2">Tutar</th>
@@ -539,7 +539,7 @@ export async function PipelineContent({ companyId }: Props) {
 
       {/* Monthly revenue trend */}
       {recentMonths.length > 1 && (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">Aylık Ciro Trendi — Son 6 Ay</div>
           <div className="flex items-end gap-2 h-20">
             {recentMonths.map(m => {

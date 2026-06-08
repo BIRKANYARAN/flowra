@@ -133,7 +133,7 @@ function SlideOver({ row, allRows, onClose, onAction, onExtend, onNote }: SlideO
       {/* Panel */}
       <div className="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl z-50 flex flex-col overflow-hidden">
         {/* Header */}
-        <div className={`px-5 py-4 border-b border-[#e2e8f0] ${meta.rowBg}`}>
+        <div className={`px-5 py-4 border-b border-[#e8eaef] ${meta.rowBg}`}>
           <div className="flex items-start justify-between gap-3">
             <div>
               <div className="flex items-center gap-2">
@@ -172,7 +172,7 @@ function SlideOver({ row, allRows, onClose, onAction, onExtend, onNote }: SlideO
                 </div>
               )}
               {(activeRow.amount_paid ?? 0) > 0 && (
-                <div className="flex justify-between text-xs border-t border-[#e2e8f0] pt-1.5 mt-1.5">
+                <div className="flex justify-between text-xs border-t border-[#e8eaef] pt-1.5 mt-1.5">
                   <span className="text-[#64748b] font-semibold">Kalan</span>
                   <span className="font-black text-neg tabular-nums">{fmtTRY(remaining, 0)}</span>
                 </div>
@@ -241,7 +241,7 @@ function SlideOver({ row, allRows, onClose, onAction, onExtend, onNote }: SlideO
               </button>
               <button
                 onClick={() => setActiveAction(activeAction === 'note' ? null : 'note')}
-                className="px-3 py-2 rounded text-xs font-semibold bg-[#f1f5f9] text-[#64748b] border border-[#e2e8f0] hover:brightness-95 transition-all"
+                className="px-3 py-2 rounded text-xs font-semibold bg-[#f1f5f9] text-[#64748b] border border-[#e8eaef] hover:brightness-95 transition-all"
               >
                 Not Ekle
               </button>
@@ -321,7 +321,7 @@ function SlideOver({ row, allRows, onClose, onAction, onExtend, onNote }: SlideO
 
             {/* Note form */}
             {activeAction === 'note' && (
-              <div className="bg-[#f8fafc] rounded p-3 space-y-2 border border-[#e2e8f0]">
+              <div className="bg-[#f8fafc] rounded p-3 space-y-2 border border-[#e8eaef]">
                 <label className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Not</label>
                 <div className="flex gap-2">
                   <input
@@ -329,7 +329,7 @@ function SlideOver({ row, allRows, onClose, onAction, onExtend, onNote }: SlideO
                     placeholder="Müşteri ile görüşüldü…"
                     value={noteText}
                     onChange={(e: ChangeEvent<HTMLInputElement>) => setNoteText(e.target.value)}
-                    className="flex-1 border border-[#e2e8f0] rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-brand/30 bg-white"
+                    className="flex-1 border border-[#e8eaef] rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-brand/30 bg-white"
                     autoFocus
                   />
                   <button
@@ -377,7 +377,7 @@ function PressureRow({ row, onExpand, onQuickPay, patching }: RowProps) {
 
   return (
     <div
-      className={`bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm border-l-4 ${meta.border} ${meta.rowBg}`}
+      className={`bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm border-l-4 ${meta.border} ${meta.rowBg}`}
     >
       <div className="flex items-start gap-3 px-4 py-3 flex-wrap">
         {/* Severity label */}
@@ -433,7 +433,7 @@ function PressureRow({ row, onExpand, onQuickPay, patching }: RowProps) {
         </button>
         <button
           onClick={() => onExpand(row)}
-          className="px-2.5 py-1.5 rounded text-[11px] font-semibold bg-[#f1f5f9] text-[#64748b] border border-[#e2e8f0] hover:brightness-95 transition-all"
+          className="px-2.5 py-1.5 rounded text-[11px] font-semibold bg-[#f1f5f9] text-[#64748b] border border-[#e8eaef] hover:brightness-95 transition-all"
         >
           Not Ekle
         </button>
@@ -549,7 +549,7 @@ export default function CollectionsPressureClient({ initialRows }: Props) {
   // ── Empty state ────────────────────────────────────────────────────────────
   if (rows.length === 0) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-12 text-center shadow-sm">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-12 text-center shadow-sm">
         <div className="text-xs font-medium text-[#334155] mb-1">Açık tahsilat bulunmuyor</div>
         <div className="text-[0.65rem] text-[#94a3b8]">Tüm alacaklar tahsil edildi.</div>
       </div>
@@ -567,7 +567,7 @@ export default function CollectionsPressureClient({ initialRows }: Props) {
             placeholder="Müşteri ara…"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="pl-8 pr-3 py-1.5 text-xs border border-[#e2e8f0] rounded focus:outline-none focus:ring-2 focus:ring-brand/30 bg-white w-44"
+            className="pl-8 pr-3 py-1.5 text-xs border border-[#e8eaef] rounded focus:outline-none focus:ring-2 focus:ring-brand/30 bg-white w-44"
           />
           {search && (
             <button

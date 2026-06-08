@@ -66,7 +66,7 @@ export function PayablesAgingSection() {
 
   if (loading) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
           Borç Yaşlandırma
         </div>
@@ -88,7 +88,7 @@ export function PayablesAgingSection() {
 
   if (!report || report.total_count === 0) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
           Borç Yaşlandırma
         </div>
@@ -100,9 +100,9 @@ export function PayablesAgingSection() {
   const fmt = (n: number) => fmtTRY(n)
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm overflow-hidden">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm overflow-hidden">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-[#e2e8f0] flex items-center justify-between">
+      <div className="px-4 py-3 border-b border-[#e8eaef] flex items-center justify-between">
         <div>
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
             Borç Yaşlandırma (AP Aging)
@@ -118,7 +118,7 @@ export function PayablesAgingSection() {
       </div>
 
       {/* KPI strip */}
-      <div className="grid grid-cols-3 divide-x divide-[#f1f5f9] border-b border-[#e2e8f0]">
+      <div className="grid grid-cols-3 divide-x divide-[#f1f5f9] border-b border-[#e8eaef]">
         <div className="px-4 py-2.5 text-center">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Kritik (&gt;30 Gün)</div>
           <div className={`text-sm font-black tabular-nums ${report.critical_try > 0 ? 'text-[#991b1b]' : 'text-[#94a3b8]'}`}>
@@ -141,7 +141,7 @@ export function PayablesAgingSection() {
       </div>
 
       {/* Bucket summary */}
-      <div className="px-4 py-3 border-b border-[#e2e8f0]">
+      <div className="px-4 py-3 border-b border-[#e8eaef]">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">Vade Dağılımı</div>
         <div className="grid grid-cols-5 gap-2">
           {report.buckets.map((b: APAgingBucketSummary) => (
@@ -158,7 +158,7 @@ export function PayablesAgingSection() {
       <div className="overflow-x-auto">
         <table className="w-full text-xs min-w-[560px]">
           <thead>
-            <tr className="bg-[#f8fafc] border-b border-[#e2e8f0]">
+            <tr className="bg-[#f8fafc] border-b border-[#e8eaef]">
               <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Tedarikçi</th>
               <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Tür</th>
               <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Tarih</th>
@@ -193,7 +193,7 @@ export function PayablesAgingSection() {
       </div>
 
       {report.total_count > 20 && (
-        <div className="px-4 py-2 border-t border-[#e2e8f0] text-[10px] text-[#94a3b8]">
+        <div className="px-4 py-2 border-t border-[#e8eaef] text-[10px] text-[#94a3b8]">
           Tüm {report.total_count} kayıt gösteriliyor — vadesi geçenler en üstte
         </div>
       )}

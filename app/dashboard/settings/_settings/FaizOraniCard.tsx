@@ -22,7 +22,7 @@ interface Props {
 export function FaizOraniCard({ currency, setCurrency, rate, setRate, saving, onSave, history }: Props) {
   return (
     <FlowraCard>
-      <p className="font-bold text-sm border-b border-[#e2e8f0] pb-2 mb-3">Faiz Oranı</p>
+      <p className="font-bold text-sm border-b border-[#e8eaef] pb-2 mb-3">Faiz Oranı</p>
       <p className="text-[10px] text-[#94a3b8] mb-3">
         Simülasyon ve reel kâr hesabı için para birimi bazında yıllık oran
       </p>
@@ -37,7 +37,7 @@ export function FaizOraniCard({ currency, setCurrency, rate, setRate, saving, on
             className={`text-xs border rounded-md px-2.5 py-1 font-semibold transition-colors select-none ${
               currency === c
                 ? 'border-brand-light bg-brand-light text-white'
-                : 'border-[#e2e8f0] text-[#64748b] hover:bg-[#f8fafc] hover:text-[#1e293b]'
+                : 'border-[#e8eaef] text-[#64748b] hover:bg-[#f8fafc] hover:text-[#1e293b]'
             }`}
           >
             {c}
@@ -69,7 +69,7 @@ export function FaizOraniCard({ currency, setCurrency, rate, setRate, saving, on
       </div>
 
       {history.length > 0 && (
-        <div className="mt-3 border-t border-[#e2e8f0] pt-3 space-y-1">
+        <div className="mt-3 border-t border-[#e8eaef] pt-3 space-y-1">
           <p className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">
             Geçmiş — {currency}
           </p>

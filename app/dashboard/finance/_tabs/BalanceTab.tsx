@@ -46,8 +46,8 @@ type Row = {
 
 function BSColumn({ title, rows }: { title: string; rows: Row[] }) {
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden flex flex-col">
-      <div className="px-4 py-3 border-b border-[#e2e8f0] bg-[#f8fafc] flex items-center justify-between">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden flex flex-col">
+      <div className="px-4 py-3 border-b border-[#e8eaef] bg-[#f8fafc] flex items-center justify-between">
         <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#64748b]">{title}</span>
         <span className="text-[0.6rem] text-[#94a3b8] font-medium">Tutar · Pay</span>
       </div>
@@ -55,7 +55,7 @@ function BSColumn({ title, rows }: { title: string; rows: Row[] }) {
         {rows.map((row, i) => {
           const pct = (row.pctOf && row.pctOf > 0) ? (row.amount / row.pctOf) * 100 : null
           return (
-            <div key={i} className={`flex items-center justify-between py-2 gap-2 ${row.isGrand ? 'border-t-2 border-[#e2e8f0] mt-1' : ''}`}>
+            <div key={i} className={`flex items-center justify-between py-2 gap-2 ${row.isGrand ? 'border-t-2 border-[#e8eaef] mt-1' : ''}`}>
               <div className="min-w-0 flex-1">
                 <span className={`text-xs leading-snug ${
                   row.isGrand  ? 'font-black text-[#0f172a] text-[13px]' :
@@ -262,7 +262,7 @@ export async function BalanceTab({ userId, companyId, glMode = 'shadow' }: Props
         <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[9px] font-black ${
           useGlData
             ? 'bg-pos-light border-pos-light text-pos-text'
-            : 'bg-[#f1f5f9] border-[#e2e8f0] text-[#64748b]'
+            : 'bg-[#f1f5f9] border-[#e8eaef] text-[#64748b]'
         }`}>
           {balanceSource}
         </span>
@@ -335,7 +335,7 @@ export async function BalanceTab({ userId, companyId, glMode = 'shadow' }: Props
           { label: 'Yabancı Kaynaklar',    value: fmt(bs.liabilities.total_liabilities_try), color: bs.liabilities.total_liabilities_try > 0 ? 'text-warn-text' : 'text-[#94a3b8]' },
           { label: 'Özsermaye',            value: fmt(bs.equity.total_equity_try),       color: bs.equity.total_equity_try >= 0 ? 'text-pos-text' : 'text-neg' },
         ].map(c => (
-          <div key={c.label} className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 shadow-sm">
+          <div key={c.label} className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{c.label}</div>
             <div className={`text-xl font-black tabular-nums leading-none ${c.color}`}>{c.value}</div>
           </div>

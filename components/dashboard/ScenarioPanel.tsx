@@ -90,8 +90,8 @@ export function ScenarioPanel({ inputs, baseRunwayMonths }: Props) {
   const SValue = 'text-xs text-[#94a3b8] tabular-nums'
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
-      <div className="px-4 py-3 border-b border-[#e2e8f0]">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
+      <div className="px-4 py-3 border-b border-[#e8eaef]">
         <h2 className="text-sm font-black text-[#1e293b]">Senaryo Analizi</h2>
         <p className="text-[10px] text-[#94a3b8] mt-0.5">
           Parametreleri değiştir — runway anında güncellenir
@@ -165,7 +165,7 @@ export function ScenarioPanel({ inputs, baseRunwayMonths }: Props) {
       </div>
 
       {/* Results grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 divide-x divide-[#e2e8f0] border-t border-[#e2e8f0]">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 divide-x divide-[#e8eaef] border-t border-[#e8eaef]">
         {[
           { label: 'Baz Senaryo',  runway: base_r,    delta: null },
           { label: 'A Senaryosu', runway: a_runway,   delta: deltaLabel(base_r, a_runway) },

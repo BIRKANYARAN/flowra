@@ -91,8 +91,8 @@ export function SalesVelocityClient({ companyId }: Props) {
   // Empty state
   if (report.total_products === 0) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-        <div className="px-5 py-4 border-b border-[#e2e8f0]">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+        <div className="px-5 py-4 border-b border-[#e8eaef]">
           <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
             Satış Hız Analizi
           </span>
@@ -106,9 +106,9 @@ export function SalesVelocityClient({ companyId }: Props) {
   }
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
       {/* Header */}
-      <div className="px-5 py-4 border-b border-[#e2e8f0] flex items-center justify-between">
+      <div className="px-5 py-4 border-b border-[#e8eaef] flex items-center justify-between">
         <div>
           <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
             Satış Hız Analizi
@@ -136,7 +136,7 @@ export function SalesVelocityClient({ companyId }: Props) {
       </div>
 
       {/* Alert strip */}
-      <div className="px-5 py-3 border-b border-[#e2e8f0] bg-[#fafafa] flex items-center gap-3 flex-wrap">
+      <div className="px-5 py-3 border-b border-[#e8eaef] bg-[#fafafa] flex items-center gap-3 flex-wrap">
         <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
           Stok Durumu:
         </span>
@@ -166,7 +166,7 @@ export function SalesVelocityClient({ companyId }: Props) {
       {/* Reorder alerts section */}
       {report.reorder_alerts.length > 0 && (
         <>
-          <div className="px-5 py-3 border-b border-[#e2e8f0] bg-neg-light flex items-center gap-2">
+          <div className="px-5 py-3 border-b border-[#e8eaef] bg-neg-light flex items-center gap-2">
             <span className="text-neg-text text-xs font-black uppercase tracking-widest">
               Sipariş Gerekiyor — {report.reorder_alerts.length} Ürün
             </span>
@@ -174,10 +174,10 @@ export function SalesVelocityClient({ companyId }: Props) {
               (Mevcut stok ≤ yeniden sipariş noktası)
             </span>
           </div>
-          <div className="overflow-x-auto border-b border-[#e2e8f0]">
+          <div className="overflow-x-auto border-b border-[#e8eaef]">
             <table className="w-full text-xs">
               <thead>
-                <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] border-b border-[#e2e8f0]">
+                <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] border-b border-[#e8eaef]">
                   <th className="text-left px-5 py-2.5">Ürün</th>
                   <th className="text-right px-4 py-2.5">Mevcut Stok</th>
                   <th className="text-right px-4 py-2.5">Sipariş Noktası</th>
@@ -232,7 +232,7 @@ export function SalesVelocityClient({ companyId }: Props) {
       <div className="overflow-x-auto">
         <table className="w-full text-xs">
           <thead>
-            <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] border-b border-[#e2e8f0]">
+            <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] border-b border-[#e8eaef]">
               <th className="text-left px-5 py-2.5">Ürün</th>
               <th className="text-left px-4 py-2.5">SKU</th>
               <th className="text-right px-4 py-2.5">Stok</th>
@@ -283,7 +283,7 @@ export function SalesVelocityClient({ companyId }: Props) {
       </div>
 
       {/* Footer */}
-      <div className="px-5 py-3 border-t border-[#e2e8f0] bg-[#f8fafc]">
+      <div className="px-5 py-3 border-t border-[#e8eaef] bg-[#f8fafc]">
         <span className="text-[10px] text-[#94a3b8]">
           {report.as_of_date} tarihli · Güvenlik stoku: hız × temin süresi × 1,5 tampon ·
           Sipariş noktası: güvenlik stoğu + (hız × temin süresi)

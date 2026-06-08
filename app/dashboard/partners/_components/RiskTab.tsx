@@ -138,8 +138,8 @@ const DIM_LABELS: Record<keyof PartnerRiskProfile['dimensions'], string> = {
 
 function HeatmapGrid({ profiles }: { profiles: PartnerRiskProfile[] }) {
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-      <div className="px-4 py-2.5 border-b border-[#e2e8f0] bg-[#f8fafc]/60">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+      <div className="px-4 py-2.5 border-b border-[#e8eaef] bg-[#f8fafc]/60">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Risk Isı Haritası</div>
         <div className="text-[10px] text-[#94a3b8] mt-0.5">
           Yeşil ≥70 · Turuncu 40–69 · Kırmızı &lt;40 · Not: A≥80 · B≥60 · C≥40 · D&lt;40
@@ -148,7 +148,7 @@ function HeatmapGrid({ profiles }: { profiles: PartnerRiskProfile[] }) {
       <div className="overflow-x-auto">
         <table className="w-full text-xs border-collapse">
           <thead>
-            <tr className="border-b border-[#e2e8f0]">
+            <tr className="border-b border-[#e8eaef]">
               <th className="px-3 py-2 text-left text-[9px] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] sticky left-0 z-10 min-w-[100px]">
                 Ortak
               </th>
@@ -246,12 +246,12 @@ function DimScoreCell({ dim }: { dim: NewDimension }) {
 }
 
 function NewRiskCard({ p }: { p: NewProfile }) {
-  const gradeColors = NEW_GRADE_COLORS[p.grade] ?? 'bg-[#f8fafc] text-[#64748b] border-[#e2e8f0]'
+  const gradeColors = NEW_GRADE_COLORS[p.grade] ?? 'bg-[#f8fafc] text-[#64748b] border-[#e8eaef]'
   const barColor    = NEW_GRADE_BAR[p.grade]    ?? 'bg-[#94a3b8]'
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-[#e2e8f0]">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[#e8eaef]">
         <div>
           <div className="text-sm font-bold text-[#0f172a]">{p.partner_name}</div>
           <div className="text-[10px] text-[#94a3b8]">
@@ -340,7 +340,7 @@ function PartnerRiskDashboard() {
 
   if (!report || report.profiles.length === 0) {
     return (
-      <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-6 text-center text-xs text-[#94a3b8]">
+      <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-4 py-6 text-center text-xs text-[#94a3b8]">
         Risk dashboard için yeterli veri yok.
       </div>
     )
@@ -349,7 +349,7 @@ function PartnerRiskDashboard() {
   const { profiles, avg_score, grade_distribution, flagged_partners, critical_flags } = report
 
   const avgGrade = avg_score >= 90 ? 'A' : avg_score >= 75 ? 'B' : avg_score >= 60 ? 'C' : avg_score >= 40 ? 'D' : 'F'
-  const avgGradeColors = NEW_GRADE_COLORS[avgGrade] ?? 'bg-[#f8fafc] text-[#64748b] border-[#e2e8f0]'
+  const avgGradeColors = NEW_GRADE_COLORS[avgGrade] ?? 'bg-[#f8fafc] text-[#64748b] border-[#e8eaef]'
 
   return (
     <div className="space-y-3">
@@ -370,7 +370,7 @@ function PartnerRiskDashboard() {
         </div>
 
         {/* Grade distribution */}
-        <div className="col-span-2 border border-[#e2e8f0] rounded px-3 py-2.5 bg-white">
+        <div className="col-span-2 border border-[#e8eaef] rounded px-3 py-2.5 bg-white">
           <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">Not Dağılımı</div>
           <div className="flex items-center gap-2 flex-wrap">
             {(['A', 'B', 'C', 'D', 'F'] as const).map(g => (
@@ -453,7 +453,7 @@ export function RiskTab({ loading }: RiskTabProps) {
 
   if (!rs || rs.partner_profiles.length === 0) {
     return (
-      <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-8 text-center text-sm text-[#94a3b8]">
+      <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-4 py-8 text-center text-sm text-[#94a3b8]">
         Ortak borç kaydı bulunamadı — risk skoru hesaplanamadı.
       </div>
     )
@@ -473,7 +473,7 @@ export function RiskTab({ loading }: RiskTabProps) {
       </div>
 
       {/* ── Divider ───────────────────────────────────────────────────────────── */}
-      <div className="border-t border-[#e2e8f0] pt-4">
+      <div className="border-t border-[#e8eaef] pt-4">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
           PCLE Risk Analizi
         </div>
@@ -551,10 +551,10 @@ export function RiskTab({ loading }: RiskTabProps) {
 
       {/* ── Per-Partner Risk Profiles ────────────────────────────────────────── */}
       {rs.partner_profiles.map(p => (
-        <div key={p.partner_id} className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
+        <div key={p.partner_id} className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
 
           {/* Partner header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-[#e2e8f0]">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-[#e8eaef]">
             <div className="flex items-center gap-2.5">
               <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${GRADE_DOT[p.composite_grade]}`} />
               <div>
@@ -596,7 +596,7 @@ export function RiskTab({ loading }: RiskTabProps) {
 
           {/* Recommended action */}
           {p.recommended_action && (
-            <div className="px-4 py-2 bg-[#f8fafc] border-t border-[#e2e8f0] flex items-center gap-2">
+            <div className="px-4 py-2 bg-[#f8fafc] border-t border-[#e8eaef] flex items-center gap-2">
               <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] shrink-0">Öneri</span>
               <span className="text-[11px] text-[#64748b]">{p.recommended_action}</span>
             </div>

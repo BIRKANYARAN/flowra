@@ -62,7 +62,7 @@ function KpiCard({
   }[tone]
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 shadow-sm">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
       <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
         {label}
       </div>
@@ -87,7 +87,7 @@ function QuarterlyBars({ quarters }: { quarters: QuarterlyBreakdown[] }) {
       <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">
         Çeyreklik Net Gelir
       </div>
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-4 shadow-sm">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-4 shadow-sm">
         <div className="flex items-end gap-4 h-20">
           {quarters.map(q => {
             const net      = q.net_income_try
@@ -164,11 +164,11 @@ function MonthlyTable({ rows }: { rows: MonthlyData[] }) {
       <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">
         Aylık Döküm
       </div>
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm overflow-hidden">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] border-b border-[#e2e8f0]">
+              <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] border-b border-[#e8eaef]">
                 <th className="text-left px-4 py-2">Dönem</th>
                 <th className="text-right px-4 py-2">Gelir</th>
                 <th className="text-right px-4 py-2">Gider</th>
@@ -244,7 +244,7 @@ export default function FiscalYearSummaryClient({ companyId }: Props) {
         <select
           value={year}
           onChange={e => setYear(Number(e.target.value))}
-          className="text-xs border border-[#e2e8f0] rounded px-2 py-1.5 bg-white text-[#334155] font-semibold focus:outline-none focus:ring-1 focus:ring-[#6366f1]"
+          className="text-xs border border-[#e8eaef] rounded px-2 py-1.5 bg-white text-[#334155] font-semibold focus:outline-none focus:ring-1 focus:ring-[#6366f1]"
         >
           {yearOptions.map(y => (
             <option key={y} value={y}>{y}</option>
@@ -263,7 +263,7 @@ export default function FiscalYearSummaryClient({ companyId }: Props) {
 
       {/* ── Empty state ────────────────────────────────────────────────────── */}
       {!isLoading && data && data.periods_count === 0 && (
-        <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-5 py-6 flex flex-col items-center gap-2 text-center">
+        <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-5 py-6 flex flex-col items-center gap-2 text-center">
           <span className="text-[#94a3b8] text-xl">—</span>
           <p className="text-sm font-semibold text-[#64748b]">
             Bu yıl için kapatılmış dönem bulunamadı

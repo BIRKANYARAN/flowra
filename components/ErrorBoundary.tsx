@@ -36,7 +36,7 @@ export class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       return (
         this.props.fallback ?? (
-          <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-6 text-center shadow-sm">
+          <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-6 text-center shadow-sm">
             <p className="text-xs text-[#94a3b8]">Bu bölüm yüklenemedi. Sayfayı yenileyin.</p>
           </div>
         )

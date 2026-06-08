@@ -56,7 +56,7 @@ function StatusIcon({ status }: { status: CheckStatus }) {
     passed:  { icon: '✓', cls: 'text-pos-text bg-pos-light border-pos-light' },
     failed:  { icon: '✗', cls: 'text-neg-text bg-neg-light border-neg-light' },
     warning: { icon: '⚠', cls: 'text-warn-text bg-warn-light border-warn-light' },
-    skipped: { icon: '–', cls: 'text-[#94a3b8] bg-[#f8fafc] border-[#e2e8f0]' },
+    skipped: { icon: '–', cls: 'text-[#94a3b8] bg-[#f8fafc] border-[#e8eaef]' },
   }
   const { icon, cls } = map[status]
   return (
@@ -117,8 +117,8 @@ function CheckRow({ check }: { check: CloseCheck }) {
     : check.status === 'warning'
     ? 'bg-warn-light/30 border-warn-light'
     : check.status === 'passed'
-    ? 'bg-white border-[#e2e8f0]'
-    : 'bg-[#f8fafc] border-[#e2e8f0]'
+    ? 'bg-white border-[#e8eaef]'
+    : 'bg-[#f8fafc] border-[#e8eaef]'
 
   return (
     <div className={`flex items-start gap-3 px-3 py-2.5 rounded-lg border ${rowBg}`}>
@@ -161,7 +161,7 @@ export function PeriodCloseReadinessClient({ companyId }: { companyId: string })
   // ── Loading state ─────────────────────────────────────────────────────────
   if (isLoading) {
     return (
-      <div className="rounded-2xl border border-[#e2e8f0] bg-white p-4 shadow-sm">
+      <div className="rounded-2xl border border-[#e8eaef] bg-white p-4 shadow-sm">
         <div className="h-4 w-56 bg-[#f1f5f9] rounded animate-pulse mb-3" />
         <div className="h-20 w-20 rounded-full bg-[#f1f5f9] animate-pulse mb-3" />
         <div className="space-y-2">
@@ -187,7 +187,7 @@ export function PeriodCloseReadinessClient({ companyId }: { companyId: string })
   const { checks, score, readiness, is_ready, blocking_count, check_summary, current_period } = report
 
   return (
-    <div className="rounded-2xl border border-[#e2e8f0] bg-white shadow-sm overflow-hidden">
+    <div className="rounded-2xl border border-[#e8eaef] bg-white shadow-sm overflow-hidden">
 
       {/* ── Header ──────────────────────────────────────────────────────────── */}
       <div className="px-4 pt-4 pb-3 border-b border-[#f1f5f9]">

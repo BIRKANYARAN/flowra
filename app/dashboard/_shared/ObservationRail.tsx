@@ -97,7 +97,7 @@ export function ObservationRail({ context, maxItems = 3 }: Props) {
   const headerBg =
     observations.some(o => o.severity === 'critical') ? 'bg-[#fef2f2] border-[#fecaca]' :
     observations.some(o => o.severity === 'caution')  ? 'bg-[#fffbeb] border-[#fde68a]' :
-    'bg-[#f8fafc] border-[#e2e8f0]'
+    'bg-[#f8fafc] border-[#e8eaef]'
 
   const labelColor =
     observations.some(o => o.severity === 'critical') ? 'text-[#dc2626]' :

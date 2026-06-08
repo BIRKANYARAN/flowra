@@ -77,7 +77,7 @@ function GapCard({ gap }: { gap: WorkingCapitalGap }) {
   // Receivables/inventory: we want to LOWER actual to the benchmark (−gap).
   const isPayables = gap.dimension === 'payables'
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-lg overflow-hidden">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
       {/* Card header */}
       <div className="px-4 py-3 border-b border-[#f1f5f9] flex items-start justify-between gap-3">
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
@@ -146,7 +146,7 @@ export function WorkingCapitalOptimizerClient({ companyId }: Props) {
 
   if (isLoading) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-lg px-6 py-10 text-center">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-6 py-10 text-center">
         <div className="text-sm text-[#94a3b8] font-medium">Optimizasyon analizi yükleniyor...</div>
       </div>
     )
@@ -154,7 +154,7 @@ export function WorkingCapitalOptimizerClient({ companyId }: Props) {
 
   if (isError || !data?.report) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-lg px-6 py-6 text-center">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-6 py-6 text-center">
         <div className="text-sm text-[#ef4444] font-medium">Optimizasyon raporu yüklenemedi.</div>
       </div>
     )
@@ -172,7 +172,7 @@ export function WorkingCapitalOptimizerClient({ companyId }: Props) {
   // ── Empty state — already within benchmark ─────────────────────────────────
   if (gaps.length === 0) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-lg px-6 py-8">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-6 py-8">
         <div className="flex items-center gap-3 mb-3">
           <span className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">İşletme Sermayesi Optimizasyonu</span>
         </div>
@@ -201,7 +201,7 @@ export function WorkingCapitalOptimizerClient({ companyId }: Props) {
       </div>
 
       {/* CCC summary strip */}
-      <div className="bg-white border border-[#e2e8f0] rounded-lg px-4 py-4">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-4">
         <div className="grid grid-cols-3 gap-4 mb-4">
           <div className="text-center">
             <div className="text-[10px] font-bold uppercase tracking-wider text-[#94a3b8] mb-1">Mevcut CCC</div>
@@ -246,7 +246,7 @@ export function WorkingCapitalOptimizerClient({ companyId }: Props) {
 
       {/* Summary narrative */}
       {report.top_action && (
-        <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-lg px-4 py-3">
+        <div className="bg-[#f8fafc] border border-[#e8eaef] rounded-lg px-4 py-3">
           <div className="text-[10px] font-black uppercase tracking-wider text-[#94a3b8] mb-1.5">Öncelikli Aksiyon</div>
           <p className="text-xs text-[#475569] leading-relaxed">{report.top_action.recommendation}</p>
         </div>

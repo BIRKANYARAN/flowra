@@ -131,7 +131,7 @@ function SectionCard({
   children: React.ReactNode
 }) {
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-lg overflow-hidden">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
       <div className="px-4 py-3 border-b border-[#f1f5f9] bg-[#f8fafc] flex items-center justify-between">
         <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#64748b]">{title}</span>
         {badge}
@@ -156,7 +156,7 @@ export function BalanceRatiosClient({ companyId }: Props) {
 
   if (isLoading) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-lg px-6 py-10 text-center">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-6 py-10 text-center">
         <div className="text-sm text-[#94a3b8] font-medium">Bilanço oran analizi yükleniyor...</div>
       </div>
     )
@@ -164,7 +164,7 @@ export function BalanceRatiosClient({ companyId }: Props) {
 
   if (isError || !data) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-lg px-6 py-6 text-center">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-6 py-6 text-center">
         <div className="text-sm text-[#ef4444] font-medium">Bilanço oran analizi yüklenemedi.</div>
       </div>
     )
@@ -184,7 +184,7 @@ export function BalanceRatiosClient({ companyId }: Props) {
       </div>
 
       {/* Composite score + summary strip */}
-      <div className="bg-white border border-[#e2e8f0] rounded-lg px-6 py-5 flex items-center gap-8">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-6 py-5 flex items-center gap-8">
         <ScoreMeter score={report.composite_score} />
         <div className="flex-1 grid grid-cols-2 gap-x-8 gap-y-3">
           <div>

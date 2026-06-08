@@ -112,7 +112,7 @@ export async function CatalogContent({ companyId, userId }: Props) {
 
       {/* ── Catalog KPI strip ─────────────────────────────────────────────── */}
       {products.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
           {[
             {
               label: 'Aktif Ürün',
@@ -146,7 +146,7 @@ export async function CatalogContent({ companyId, userId }: Props) {
               color: lowStockProducts.length > 0 ? 'text-warn-text' : 'text-pos-text',
             },
           ].map((card, i) => (
-            <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e2e8f0]' : ''}`}>
+            <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e8eaef]' : ''}`}>
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
               <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
               <div className="text-[10px] text-[#94a3b8] mt-1 truncate" title={card.sub}>{card.sub}</div>
@@ -184,7 +184,7 @@ export async function CatalogContent({ companyId, userId }: Props) {
 
       {/* ── Ürün Karlılığı ────────────────────────────────────────────────────── */}
       {marginReport && marginReport.products.length > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm">
           {/* Header strip */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">
             <div>

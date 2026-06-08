@@ -172,7 +172,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
       {/* ── KPI STRIP ──────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
 
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
           <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Toplam Borç</div>
           <div className={`text-xl font-black tabular-nums ${totalOutstanding > 0 ? 'text-[#0f172a]' : 'text-[#94a3b8]'}`}>
             {totalOutstanding > 0 ? fmt(totalOutstanding) : '—'}
@@ -180,7 +180,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
           <div className="text-[9px] text-[#94a3b8] mt-0.5">{tranches.length} aktif borç dilimi</div>
         </div>
 
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
           <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Aylık Borç Servisi</div>
           <div className={`text-xl font-black tabular-nums ${monthlyService > 0 ? 'text-warn' : 'text-[#94a3b8]'}`}>
             {monthlyService > 0 ? fmt(monthlyService) : '—'}
@@ -188,7 +188,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
           <div className="text-[9px] text-[#94a3b8] mt-0.5">aylık nakit çıkışı · mevcut hızda</div>
         </div>
 
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
           <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">DSR (Borç/Gelir)</div>
           <div className={`text-xl font-black tabular-nums ${dsrColor}`}>
             {monthlyService > 0 ? fmtPct(dsr) : '—'}
@@ -201,7 +201,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
           )}
         </div>
 
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
           <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Sonraki Vade</div>
           {nextDue ? (
             <>
@@ -221,7 +221,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
 
       {/* ── HAZINE BASKI DEĞERLENDİRMESİ ─────────────────────────────────── */}
       {hasTranches && pressureLines.length > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
           <div className="flex items-center justify-between mb-2.5">
             <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Hazine Baskı Değerlendirmesi</span>
             <span className="text-[9px] text-[#94a3b8]">Borç servisi · Nakit ömrü · Konsantrasyon</span>
@@ -238,11 +238,11 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
 
       {/* ── EMPTY STATE ───────────────────────────────────────────────────── */}
       {!hasTranches && (
-        <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-6 py-10 text-center">
+        <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-6 py-10 text-center">
           <div className="text-xs font-medium text-[#334155] mb-1">Aktif ortak borcu yok</div>
           <div className="text-xs text-[#94a3b8] mb-4">Ortak borçları Ortaklar → Borç Dilimleri bölümünden girilir.</div>
           <Link href="/dashboard/partners?tab=tranches"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-light hover:text-brand border border-[#e2e8f0] px-3 py-1.5 rounded hover:bg-brand-subtle transition-colors">
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-light hover:text-brand border border-[#e8eaef] px-3 py-1.5 rounded hover:bg-brand-subtle transition-colors">
             Borç Dilimi Ekle →
           </Link>
         </div>
@@ -251,7 +251,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
       {hasTranches && (
         <>
           {/* ── 12-MONTH SERVICE SCHEDULE ──────────────────────────────────── */}
-          <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
+          <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">
               <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">12 Aylık Faiz Yük Takvimi</span>
               <span className="text-[9px] text-[#94a3b8]">Varsayım: mevcut borç bakiyesi sabit kalıyor</span>
@@ -280,7 +280,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
           </div>
 
           {/* ── TRANCHE TABLE ─────────────────────────────────────────────── */}
-          <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
+          <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">
               <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Aktif Borç Dilimleri</span>
               <Link href="/dashboard/partners?tab=tranches"
@@ -336,7 +336,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
 
           {/* ── CONCENTRATION ─────────────────────────────────────────────── */}
           {sorted.length > 1 && (
-            <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3">
+            <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
               <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
                 Borç Konsantrasyonu
               </div>

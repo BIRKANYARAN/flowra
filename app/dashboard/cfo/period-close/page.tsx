@@ -197,7 +197,7 @@ export default function PeriodClosePage() {
       )}
 
       {!loading && periods.length === 0 && !error && (
-        <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-10 text-center">
+        <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-4 py-10 text-center">
           <div className="text-xs font-medium text-[#334155] mb-1">Muhasebe dönemi bulunamadı</div>
           <div className="text-xs text-[#94a3b8] mt-1">Dönem oluşturmak için Ayarlar → Dönem Yönetimi kullanın.</div>
         </div>
@@ -214,7 +214,7 @@ export default function PeriodClosePage() {
           const canClose   = isCloseEnabled(p.id)
 
           return (
-            <div key={p.id} className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
+            <div key={p.id} className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
 
               {/* Period header row */}
               <div className="px-4 py-3">
@@ -296,7 +296,7 @@ export default function PeriodClosePage() {
 
               {/* Enhanced Readiness Panel */}
               {isExpanded && (
-                <div className="border-t border-[#e2e8f0] px-4 py-3 bg-[#f8fafc]/60">
+                <div className="border-t border-[#e8eaef] px-4 py-3 bg-[#f8fafc]/60">
 
                   {/* Readiness summary header */}
                   {r && (
@@ -362,7 +362,7 @@ export default function PeriodClosePage() {
                                         type="checkbox"
                                         checked={manualOn}
                                         onChange={() => toggleManual(p.id, check.key)}
-                                        className="mt-0.5 w-4 h-4 rounded text-pos border-[#e2e8f0] cursor-pointer"
+                                        className="mt-0.5 w-4 h-4 rounded text-pos border-[#e8eaef] cursor-pointer"
                                         onClick={e => e.stopPropagation()}
                                       />
                                     ) : (

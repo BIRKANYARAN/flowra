@@ -89,7 +89,7 @@ function KpiCard({ label, value, sub, color = 'text-[#0f172a]' }: {
   color?: string
 }) {
   return (
-    <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-3 flex-1 min-w-0">
+    <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-4 py-3 flex-1 min-w-0">
       <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{label}</div>
       <div className={`text-sm font-black tabular-nums ${color}`}>{value}</div>
       {sub && <div className="text-[0.65rem] text-[#94a3b8] mt-0.5">{sub}</div>}
@@ -110,7 +110,7 @@ export default function BankReconciliationClient({ companyId }: Props) {
   })
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm space-y-4">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm space-y-4">
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="flex items-start justify-between gap-3 flex-wrap">
@@ -133,7 +133,7 @@ export default function BankReconciliationClient({ companyId }: Props) {
             value={asOfDate}
             max={todayISO()}
             onChange={e => setAsOfDate(e.target.value || todayISO())}
-            className="text-xs border border-[#e2e8f0] rounded px-2 py-1 text-[#334155] focus:outline-none focus:ring-1 focus:ring-brand-light/40"
+            className="text-xs border border-[#e8eaef] rounded px-2 py-1 text-[#334155] focus:outline-none focus:ring-1 focus:ring-brand-light/40"
           />
         </div>
       </div>
@@ -219,10 +219,10 @@ export default function BankReconciliationClient({ companyId }: Props) {
           </div>
 
           {/* Reconciliation lines table */}
-          <div className="border border-[#e2e8f0] rounded overflow-hidden">
+          <div className="border border-[#e8eaef] rounded overflow-hidden">
             <table className="w-full text-xs">
               <thead>
-                <tr className="bg-[#f8fafc] border-b border-[#e2e8f0]">
+                <tr className="bg-[#f8fafc] border-b border-[#e8eaef]">
                   <th className="text-left px-3 py-2 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Hesap</th>
                   <th className="text-right px-3 py-2 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Defter</th>
                   <th className="text-right px-3 py-2 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Banka</th>
@@ -236,7 +236,7 @@ export default function BankReconciliationClient({ companyId }: Props) {
                     key={i}
                     className={`hover:bg-[#f8fafc]/60 ${
                       line.account_name === 'TOPLAM'
-                        ? 'bg-[#f8fafc] border-t-2 border-[#e2e8f0] font-bold'
+                        ? 'bg-[#f8fafc] border-t-2 border-[#e8eaef] font-bold'
                         : ''
                     }`}
                   >

@@ -47,7 +47,7 @@ function catLabel(c: string) { return CATEGORY_LABELS[c] ?? c }
 const SEVERITY_CFG = {
   high:   { cls: 'bg-neg-light border-neg-light text-neg-text',    dot: 'bg-neg',        label: 'Yüksek' },
   medium: { cls: 'bg-warn-light border-warn-light text-warn-text', dot: 'bg-warn',       label: 'Orta'   },
-  low:    { cls: 'bg-[#f8fafc] border-[#e2e8f0] text-[#64748b]',  dot: 'bg-[#94a3b8]', label: 'Düşük'  },
+  low:    { cls: 'bg-[#f8fafc] border-[#e8eaef] text-[#64748b]',  dot: 'bg-[#94a3b8]', label: 'Düşük'  },
 } as const
 
 const STATUS_CFG = {
@@ -331,7 +331,7 @@ export default async function InsightsPage() {
       </div>
 
       {/* ── Hero: Durum + AI Narrative ───────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl p-5">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-5">
         <div className="flex items-start justify-between mb-4">
           <div>
             <p className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Durum Özeti — {period}</p>
@@ -369,7 +369,7 @@ export default async function InsightsPage() {
               </ul>
             )}
             {aiSummary.recommendation && (
-              <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-lg px-3 py-2">
+              <div className="bg-[#f8fafc] border border-[#e8eaef] rounded-lg px-3 py-2">
                 <p className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Önerilen Aksiyon</p>
                 <p className="text-xs font-semibold text-[#0f172a]">{aiSummary.recommendation}</p>
               </div>
@@ -380,7 +380,7 @@ export default async function InsightsPage() {
 
       {/* ── Aktif Uyarılar ───────────────────────────────────────────────── */}
       {alerts.length > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl p-5">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-5">
           <SectionHeader
             title="Aktif Uyarılar"
             sub={`${criticalAlerts.length} kritik · ${warningAlerts.length} uyarı`}
@@ -415,7 +415,7 @@ export default async function InsightsPage() {
       )}
 
       {/* ── Anomali Tespiti ───────────────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl p-5">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-5">
         <SectionHeader
           title="Anomali Tespiti"
           sub="Son 6 aylık veriden istatistiksel sapma — ±2σ eşiği"
@@ -459,7 +459,7 @@ export default async function InsightsPage() {
 
       {/* ── Müşteri Risk Profili ──────────────────────────────────────────── */}
       {customerRisks.length > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl p-5">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-5">
           <SectionHeader
             title="Müşteri Risk Profili"
             sub="Orta ve yüksek riskli müşteriler — ödeme gecikmesi ve tutara göre"
@@ -488,7 +488,7 @@ export default async function InsightsPage() {
       )}
 
       {/* ── Kopya Gider Tespiti ───────────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl p-5">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-5">
         <SectionHeader
           title="Kopya Gider Tespiti"
           sub="Son 90 günde aynı tutar/kategori/tarihte girilmiş olası kopyalar"
@@ -527,7 +527,7 @@ export default async function InsightsPage() {
                   <p className="text-[0.65rem] text-[#475569] mb-2">{g.message}</p>
                   <div className="flex flex-wrap gap-2">
                     {g.rows.map((row, j) => (
-                      <span key={j} className="text-[0.6rem] font-mono bg-white/80 border border-[#e2e8f0] rounded px-1.5 py-0.5 text-[#475569]">
+                      <span key={j} className="text-[0.6rem] font-mono bg-white/80 border border-[#e8eaef] rounded px-1.5 py-0.5 text-[#475569]">
                         {row.expense_date}{row.vendor_name ? ` · ${row.vendor_name}` : ''}
                       </span>
                     ))}
@@ -546,7 +546,7 @@ export default async function InsightsPage() {
       </div>
 
       {/* ── Footer bağlantılar ────────────────────────────────────────────── */}
-      <div className="grid grid-cols-3 divide-x divide-[#f1f5f9] bg-white border border-[#e2e8f0] rounded-xl overflow-hidden">
+      <div className="grid grid-cols-3 divide-x divide-[#f1f5f9] bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
         {[
           { href: '/dashboard/finance?tab=risks',  title: 'Risk Analizi',    desc: 'Alacak yaşlandırma · HHI' },
           { href: '/dashboard/finance?tab=pnl',    title: 'P&L Detayı',      desc: 'Gelir tablosu · Marjlar' },

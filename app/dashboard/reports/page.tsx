@@ -130,7 +130,7 @@ export default function ReportsHubPage() {
       )}
 
       {/* CFO Pack info */}
-      <div className="bg-brand-subtle border border-[#e2e8f0] rounded px-4 py-3">
+      <div className="bg-brand-subtle border border-[#e8eaef] rounded px-4 py-3">
         <div className="flex items-start gap-3">
           <span className="text-2xl flex-shrink-0">📦</span>
           <div>
@@ -147,7 +147,7 @@ export default function ReportsHubPage() {
       <div className="grid grid-cols-2 gap-4">
         {REPORTS.map(r => (
           <Link key={r.href} href={r.href}
-            className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 hover:border-[#e2e8f0] hover:shadow-sm transition-all group"
+            className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 hover:border-[#e8eaef] hover:shadow-sm transition-all group"
           >
             <div className="flex items-start gap-3">
               <span className="text-2xl flex-shrink-0">{r.icon}</span>
@@ -166,7 +166,7 @@ export default function ReportsHubPage() {
       </div>
 
       {/* Accountant CSV Export */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4">
         <div className="flex items-start gap-3 mb-3">
           <span className="text-2xl flex-shrink-0">📋</span>
           <div>
@@ -180,7 +180,7 @@ export default function ReportsHubPage() {
           <a
             href={`/api/export/sales?from=${from}&to=${to}`}
             download
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-[#e2e8f0] bg-[#f8fafc] text-xs font-semibold text-[#334155] hover:border-[#e2e8f0] hover:bg-brand-subtle hover:text-brand transition-colors"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-[#e8eaef] bg-[#f8fafc] text-xs font-semibold text-[#334155] hover:border-[#e8eaef] hover:bg-brand-subtle hover:text-brand transition-colors"
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M12 16l-4-4h3V4h2v8h3l-4 4z" />
@@ -191,7 +191,7 @@ export default function ReportsHubPage() {
           <a
             href={`/api/export/expenses?from=${from}&to=${to}`}
             download
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-[#e2e8f0] bg-[#f8fafc] text-xs font-semibold text-[#334155] hover:border-[#e2e8f0] hover:bg-brand-subtle hover:text-brand transition-colors"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-[#e8eaef] bg-[#f8fafc] text-xs font-semibold text-[#334155] hover:border-[#e8eaef] hover:bg-brand-subtle hover:text-brand transition-colors"
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M12 16l-4-4h3V4h2v8h3l-4 4z" />
@@ -202,7 +202,7 @@ export default function ReportsHubPage() {
           <a
             href={`/api/export/purchases?from=${from}&to=${to}`}
             download
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-[#e2e8f0] bg-[#f8fafc] text-xs font-semibold text-[#334155] hover:border-[#e2e8f0] hover:bg-brand-subtle hover:text-brand transition-colors"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-[#e8eaef] bg-[#f8fafc] text-xs font-semibold text-[#334155] hover:border-[#e8eaef] hover:bg-brand-subtle hover:text-brand transition-colors"
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M12 16l-4-4h3V4h2v8h3l-4 4z" />
@@ -213,7 +213,7 @@ export default function ReportsHubPage() {
           <a
             href="/api/export/stock"
             download
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-[#e2e8f0] bg-[#f8fafc] text-xs font-semibold text-[#334155] hover:border-[#e2e8f0] hover:bg-brand-subtle hover:text-brand transition-colors"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-[#e8eaef] bg-[#f8fafc] text-xs font-semibold text-[#334155] hover:border-[#e8eaef] hover:bg-brand-subtle hover:text-brand transition-colors"
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M12 16l-4-4h3V4h2v8h3l-4 4z" />
@@ -224,7 +224,7 @@ export default function ReportsHubPage() {
           <a
             href="/api/export/customers"
             download
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-[#e2e8f0] bg-[#f8fafc] text-xs font-semibold text-[#334155] hover:border-[#e2e8f0] hover:bg-brand-subtle hover:text-brand transition-colors"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-[#e8eaef] bg-[#f8fafc] text-xs font-semibold text-[#334155] hover:border-[#e8eaef] hover:bg-brand-subtle hover:text-brand transition-colors"
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M12 16l-4-4h3V4h2v8h3l-4 4z" />

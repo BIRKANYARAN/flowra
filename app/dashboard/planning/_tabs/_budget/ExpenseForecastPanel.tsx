@@ -81,7 +81,7 @@ export function ExpenseForecastPanel() {
 
   if (isError || !report) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 text-xs text-[#94a3b8]">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 text-xs text-[#94a3b8]">
         Gider tahmini yüklenemedi.
         {error instanceof Error ? ` (${error.message})` : ''}
         <button
@@ -95,7 +95,7 @@ export function ExpenseForecastPanel() {
   }
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm">
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-4 pb-2">
         <div>
@@ -107,13 +107,13 @@ export function ExpenseForecastPanel() {
           </div>
         </div>
         {/* Forecast month chip */}
-        <span className="text-xs font-black px-3 py-1.5 rounded border bg-[#f8fafc] border-[#e2e8f0] text-[#334155]">
+        <span className="text-xs font-black px-3 py-1.5 rounded border bg-[#f8fafc] border-[#e8eaef] text-[#334155]">
           {report.forecast_month_label}
         </span>
       </div>
 
       {/* Summary callout */}
-      <div className="mx-4 mb-3 px-4 py-3 bg-[#f8fafc] border border-[#e2e8f0] rounded text-xs text-[#334155]">
+      <div className="mx-4 mb-3 px-4 py-3 bg-[#f8fafc] border border-[#e8eaef] rounded text-xs text-[#334155]">
         {report.summary_line}
       </div>
 
@@ -163,7 +163,7 @@ export function ExpenseForecastPanel() {
           </tbody>
           {/* Total row */}
           <tfoot>
-            <tr className="border-t-2 border-[#e2e8f0] bg-[#f8fafc]">
+            <tr className="border-t-2 border-[#e8eaef] bg-[#f8fafc]">
               <td className="px-4 py-2 font-black text-[#0f172a]">Toplam</td>
               <td className="px-3 py-2 text-right tabular-nums font-bold text-[#334155]">
                 {fmtTRY(report.categories.reduce((s, c) => s + c.last_3m_avg, 0))}

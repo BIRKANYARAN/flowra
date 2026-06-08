@@ -119,7 +119,7 @@ export function RevenueRecognitionClient({ companyId }: Props) {
         </div>
         <div className="flex items-center gap-2">
           <QualityBadge quality={report.recognition_quality} />
-          <div className="flex border border-[#e2e8f0] rounded overflow-hidden">
+          <div className="flex border border-[#e8eaef] rounded overflow-hidden">
             {(['accrual_basis', 'cash_basis'] as RecognitionMethod[]).map(m => (
               <button
                 key={m}

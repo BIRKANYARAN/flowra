@@ -106,7 +106,7 @@ export default function TrialBalancePage() {
           <button
             onClick={() => window.print()}
             title="Mizanı PDF olarak kaydet veya yazdır"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-[#e2e8f0] bg-white text-xs font-semibold text-[#64748b] hover:bg-[#f8fafc] hover:border-[#e2e8f0] transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-[#e8eaef] bg-white text-xs font-semibold text-[#64748b] hover:bg-[#f8fafc] hover:border-[#e8eaef] transition-colors"
           >
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
@@ -131,8 +131,8 @@ export default function TrialBalancePage() {
 
       {/* Accounting checks */}
       {!loading && checks.length > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-          <div className="px-4 py-2.5 border-b border-[#e2e8f0] bg-[#f8fafc]">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+          <div className="px-4 py-2.5 border-b border-[#e8eaef] bg-[#f8fafc]">
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Muhasebe Doğruluk Kontrolleri</div>
           </div>
           <div className="divide-y divide-[#f1f5f9]">
@@ -159,11 +159,11 @@ export default function TrialBalancePage() {
       {/* Summary row */}
       {!loading && tb && (
         <div className="grid grid-cols-3 gap-2">
-          <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 shadow-sm">
+          <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Toplam Borç</div>
             <div className="text-xl font-black tabular-nums text-[#0f172a]">{fmt(tb.total_debit_try)}</div>
           </div>
-          <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 shadow-sm">
+          <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Toplam Alacak</div>
             <div className="text-xl font-black tabular-nums text-[#0f172a]">{fmt(tb.total_credit_try)}</div>
           </div>
@@ -185,7 +185,7 @@ export default function TrialBalancePage() {
       )}
 
       {!loading && !hasData && !error && (
-        <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-10 text-center">
+        <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-4 py-10 text-center">
           <div className="text-xs font-medium text-[#334155] mb-1">Henüz muhasebe kaydı yok</div>
           <div className="text-xs text-[#94a3b8] mt-1">
             GL modu aktifleştirildikten sonra muhasebe kayıtları burada görünür.
@@ -200,8 +200,8 @@ export default function TrialBalancePage() {
             const accounts = (grouped.get(cls) ?? []).filter(a => a.debit_try > 0 || a.credit_try > 0)
             if (accounts.length === 0) return null
             return (
-              <div key={cls} className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-                <div className="px-4 py-2.5 border-b border-[#e2e8f0] bg-[#f8fafc]">
+              <div key={cls} className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+                <div className="px-4 py-2.5 border-b border-[#e8eaef] bg-[#f8fafc]">
                   <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#64748b]">
                     {CLASS_LABELS[cls] ?? cls}
                   </div>

@@ -26,7 +26,7 @@ const SEGMENT_LABELS: Record<CustomerSegment, string> = {
 
 function Skeleton() {
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 space-y-3 animate-pulse">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 space-y-3 animate-pulse">
       <div className="h-3 w-56 bg-[#f1f5f9] rounded" />
       <div className="h-6 w-80 bg-[#f8fafc] rounded" />
       <div className="space-y-2">
@@ -197,7 +197,7 @@ export default function CustomerSegmentProfitabilityClient({ companyId }: Props)
   const activeSegments = report.segments.filter(s => s.revenue > 0)
   if (activeSegments.length === 0) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-6 text-center">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-6 text-center">
         <p className="text-sm text-[#94a3b8]">Müşteri segment verisi bulunamadı</p>
       </div>
     )
@@ -206,7 +206,7 @@ export default function CustomerSegmentProfitabilityClient({ companyId }: Props)
   const { revenue_concentration, unprofitable_segments, summary } = report
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
       {/* Header */}
       <div className="px-4 py-3 border-b border-[#f1f5f9] flex items-center justify-between gap-2 flex-wrap">
         <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
@@ -220,7 +220,7 @@ export default function CustomerSegmentProfitabilityClient({ companyId }: Props)
       {/* Pareto insight */}
       {revenue_concentration.customers_for_80pct > 0 && (
         <div className="px-4 pt-3 pb-1">
-          <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-3 py-2 text-[11px] text-[#334155]">
+          <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-3 py-2 text-[11px] text-[#334155]">
             <strong>{revenue_concentration.customers_for_80pct}</strong>{' '}
             müşteri toplam gelirin <strong>%80&apos;ini</strong> oluşturuyor
             {revenue_concentration.pareto_ratio !== null && (

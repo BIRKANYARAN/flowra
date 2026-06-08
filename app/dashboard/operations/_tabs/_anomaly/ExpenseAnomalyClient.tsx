@@ -80,7 +80,7 @@ export function ExpenseAnomalyClient({ companyId }: Props) {
   const lowCount    = report?.anomalies.filter(a => a.severity === 'low').length ?? 0
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm overflow-hidden">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm overflow-hidden">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 border-b border-[#f1f5f9]">
         <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
@@ -125,7 +125,7 @@ export function ExpenseAnomalyClient({ companyId }: Props) {
       {report && !isLoading && (
         <>
           {/* Summary strip */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 border-b border-[#e2e8f0]">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 border-b border-[#e8eaef]">
             {[
               {
                 label: 'İncelenen',
@@ -152,7 +152,7 @@ export function ExpenseAnomalyClient({ companyId }: Props) {
                 color: report.duplicate_suspects > 0 ? 'text-neg' : 'text-[#94a3b8]',
               },
             ].map((card, i) => (
-              <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e2e8f0]' : ''}`}>
+              <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e8eaef]' : ''}`}>
                 <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
                 <div className={`text-xl font-black tabular-nums leading-none ${card.color}`}>{card.value}</div>
                 <div className="text-[10px] text-[#94a3b8] mt-1">{card.sub}</div>
@@ -199,7 +199,7 @@ export function ExpenseAnomalyClient({ companyId }: Props) {
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="border-b border-[#e2e8f0]">
+                  <tr className="border-b border-[#e8eaef]">
                     <th className="text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] px-4 py-2">Tedarikçi</th>
                     <th className="text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] px-2 py-2">Tutar</th>
                     <th className="text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] px-2 py-2">Kategori</th>
@@ -270,7 +270,7 @@ export function ExpenseAnomalyClient({ companyId }: Props) {
               {report.categories_with_anomalies.map(cat => (
                 <span
                   key={cat}
-                  className="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-semibold bg-[#f1f5f9] text-[#475569] border border-[#e2e8f0]"
+                  className="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-semibold bg-[#f1f5f9] text-[#475569] border border-[#e8eaef]"
                 >
                   {cat}
                 </span>

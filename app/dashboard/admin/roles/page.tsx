@@ -57,8 +57,8 @@ export default async function RolesPage() {
         </div>
       </div>
 
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-        <div className="px-4 py-3 border-b border-[#e2e8f0] bg-[#f8fafc]">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+        <div className="px-4 py-3 border-b border-[#e8eaef] bg-[#f8fafc]">
           <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
             Şirket Üyeleri ve Roller
           </h2>
@@ -68,7 +68,7 @@ export default async function RolesPage() {
             Henüz üye yok.
           </div>
         ) : (
-          <div className="divide-y divide-[#e2e8f0]">
+          <div className="divide-y divide-[#e8eaef]">
             {(members ?? []).map((m) => (
               <div key={m.user_id} className="flex items-center gap-3 px-4 py-3">
                 <div className="w-8 h-8 rounded bg-brand-subtle flex items-center justify-center flex-shrink-0">

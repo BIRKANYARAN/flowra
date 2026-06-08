@@ -112,8 +112,8 @@ export default async function JournalEntriesPage() {
             const balanced    = Math.abs(totalDebit - totalCredit) < 0.01
 
             return (
-              <div key={entry.id} className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-                <div className="flex items-center justify-between px-4 py-2.5 bg-[#f8fafc] border-b border-[#e2e8f0]">
+              <div key={entry.id} className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+                <div className="flex items-center justify-between px-4 py-2.5 bg-[#f8fafc] border-b border-[#e8eaef]">
                   <div className="flex items-center gap-3">
                     <span className="text-xs font-black text-[#64748b]">{fmtDate(entry.entry_date)}</span>
                     {entry.voucher_number && (
@@ -149,7 +149,7 @@ export default async function JournalEntriesPage() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs">
                     <thead>
-                      <tr className="border-b border-[#e2e8f0]">
+                      <tr className="border-b border-[#e8eaef]">
                         <th className="text-left px-4 py-1.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] w-16">Hesap</th>
                         <th className="text-left px-2 py-1.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Hesap Adı</th>
                         <th className="text-right px-4 py-1.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] w-32">Borç (DR)</th>
@@ -169,7 +169,7 @@ export default async function JournalEntriesPage() {
                           </td>
                         </tr>
                       ))}
-                      <tr className="border-t border-[#e2e8f0] bg-[#f8fafc]">
+                      <tr className="border-t border-[#e8eaef] bg-[#f8fafc]">
                         <td colSpan={2} className="px-4 py-1.5 text-xs font-black text-[#64748b] uppercase tracking-wide">Toplam</td>
                         <td className="px-4 py-1.5 text-right tabular-nums font-black text-info-text">{fmtTRY(totalDebit)}</td>
                         <td className="px-4 py-1.5 text-right tabular-nums font-black text-pos-text">{fmtTRY(totalCredit)}</td>

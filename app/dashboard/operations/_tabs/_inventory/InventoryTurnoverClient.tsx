@@ -158,9 +158,9 @@ export default function InventoryTurnoverClient({ companyId }: Props) {
     .slice(0, 5)
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
       {/* Header */}
-      <div className="px-5 py-4 border-b border-[#e2e8f0] flex items-center justify-between">
+      <div className="px-5 py-4 border-b border-[#e8eaef] flex items-center justify-between">
         <div>
           <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
             Stok Devir Analizi
@@ -173,7 +173,7 @@ export default function InventoryTurnoverClient({ companyId }: Props) {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0 divide-[#e2e8f0] border-b border-[#e2e8f0]">
+      <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0 divide-[#e8eaef] border-b border-[#e8eaef]">
         {/* Stok Devir Hızı */}
         <div className="px-4 py-3">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
@@ -234,7 +234,7 @@ export default function InventoryTurnoverClient({ companyId }: Props) {
       </div>
 
       {/* Shrinkage Section */}
-      <div className="px-5 py-4 border-b border-[#e2e8f0]">
+      <div className="px-5 py-4 border-b border-[#e8eaef]">
         <div className="flex items-center justify-between mb-3">
           <div>
             <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
@@ -273,8 +273,8 @@ export default function InventoryTurnoverClient({ companyId }: Props) {
 
       {/* Dead Stock Top 5 */}
       {topDeadItems.length > 0 && (
-        <div className="border-b border-[#e2e8f0]">
-          <div className="px-5 py-3 border-b border-[#e2e8f0]">
+        <div className="border-b border-[#e8eaef]">
+          <div className="px-5 py-3 border-b border-[#e8eaef]">
             <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
               Ölü Stok — İlk 5 Ürün
             </span>
@@ -283,7 +283,7 @@ export default function InventoryTurnoverClient({ companyId }: Props) {
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] border-b border-[#e2e8f0]">
+                <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] border-b border-[#e8eaef]">
                   <th className="text-left px-5 py-2.5">Ürün ID</th>
                   <th className="text-right px-4 py-2.5">Stok Değeri</th>
                   <th className="text-right px-5 py-2.5">Son Satış</th>
@@ -314,7 +314,7 @@ export default function InventoryTurnoverClient({ companyId }: Props) {
       {/* Reorder Alerts — critical + reorder_now only */}
       {urgentAlerts.length > 0 && (
         <div>
-          <div className="px-5 py-3 border-b border-[#e2e8f0] flex items-center justify-between">
+          <div className="px-5 py-3 border-b border-[#e8eaef] flex items-center justify-between">
             <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
               Acil Sipariş Uyarıları
             </span>
@@ -325,7 +325,7 @@ export default function InventoryTurnoverClient({ companyId }: Props) {
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] border-b border-[#e2e8f0]">
+                <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] border-b border-[#e8eaef]">
                   <th className="text-left px-5 py-2.5">Ürün</th>
                   <th className="text-right px-4 py-2.5">Mevcut</th>
                   <th className="text-right px-4 py-2.5">Yeniden Sipariş Noktası</th>

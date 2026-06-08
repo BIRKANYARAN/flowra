@@ -151,7 +151,7 @@ export function ForecastAccuracyClient({ companyId }: Props) {
   // ── Error ─────────────────────────────────────────────────────────────────
   if (isError || !report) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-6 text-center text-xs text-[#94a3b8]">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-6 text-center text-xs text-[#94a3b8]">
         <p className="mb-3">Tahmin doğruluk verisi yüklenemedi.</p>
         <button
           onClick={() => refetch()}
@@ -171,7 +171,7 @@ export function ForecastAccuracyClient({ companyId }: Props) {
   // No forecast scenario ─────────────────────────────────────────────────────
   if (variances.length === 0) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-8 text-center space-y-2">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-8 text-center space-y-2">
         <p className="text-sm font-semibold text-[#334155]">Baz Senaryo Bulunamadı</p>
         <p className="text-xs text-[#94a3b8]">
           Tahmin doğruluğu hesaplamak için Senaryolar sekmesinde bir baz senaryo işaretleyin.
@@ -211,7 +211,7 @@ export function ForecastAccuracyClient({ companyId }: Props) {
       {/* KPI strip */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {/* MAPE */}
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 space-y-1">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 space-y-1">
           <div className="text-[10px] font-bold uppercase tracking-widest text-[#94a3b8]">
             MAPE
           </div>
@@ -224,7 +224,7 @@ export function ForecastAccuracyClient({ companyId }: Props) {
         </div>
 
         {/* Hit rate */}
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 space-y-1">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 space-y-1">
           <div className="text-[10px] font-bold uppercase tracking-widest text-[#94a3b8]">
             İsabet Oranı
           </div>
@@ -235,7 +235,7 @@ export function ForecastAccuracyClient({ companyId }: Props) {
         </div>
 
         {/* Bias */}
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 space-y-1">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 space-y-1">
           <div className="text-[10px] font-bold uppercase tracking-widest text-[#94a3b8]">
             Yanlılık
           </div>
@@ -248,7 +248,7 @@ export function ForecastAccuracyClient({ companyId }: Props) {
         </div>
 
         {/* Trend */}
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 space-y-1">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 space-y-1">
           <div className="text-[10px] font-bold uppercase tracking-widest text-[#94a3b8]">
             Trend
           </div>
@@ -266,7 +266,7 @@ export function ForecastAccuracyClient({ companyId }: Props) {
       </div>
 
       {/* Monthly variance table */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
         <div className="px-4 py-3 border-b border-[#f1f5f9] bg-[#f8fafc]">
           <span className="text-xs font-bold text-[#334155]">Aylık Tahmin Sapması</span>
         </div>
@@ -343,7 +343,7 @@ export function ForecastAccuracyClient({ companyId }: Props) {
       </div>
 
       {/* Summary footer */}
-      <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded p-4 grid grid-cols-2 gap-4 sm:grid-cols-4 text-xs">
+      <div className="bg-[#f8fafc] border border-[#e8eaef] rounded p-4 grid grid-cols-2 gap-4 sm:grid-cols-4 text-xs">
         <div>
           <div className="text-[10px] uppercase tracking-widest font-bold text-[#94a3b8] mb-0.5">
             Toplam Tahmin

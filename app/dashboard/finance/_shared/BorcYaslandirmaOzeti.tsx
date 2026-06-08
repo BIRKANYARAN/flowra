@@ -28,7 +28,7 @@ export async function BorcYaslandirmaOzeti({ companyId, supabase }: Props) {
 
   if (!report || report.total_count === 0) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
         <div className="flex items-center justify-between mb-2">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
             Borç Yaşlandırma Özeti
@@ -50,7 +50,7 @@ export async function BorcYaslandirmaOzeti({ companyId, supabase }: Props) {
     : 0
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div>
@@ -72,10 +72,10 @@ export async function BorcYaslandirmaOzeti({ companyId, supabase }: Props) {
       </div>
 
       {/* Bucket summary table */}
-      <div className="border border-[#e2e8f0] rounded overflow-hidden mb-3">
+      <div className="border border-[#e8eaef] rounded overflow-hidden mb-3">
         <table className="w-full text-xs">
           <thead>
-            <tr className="bg-[#f8fafc] border-b border-[#e2e8f0]">
+            <tr className="bg-[#f8fafc] border-b border-[#e8eaef]">
               <th className="text-left px-3 py-1.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Vade</th>
               <th className="text-right px-3 py-1.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Tutar</th>
               <th className="text-right px-3 py-1.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Kayıt</th>
@@ -100,7 +100,7 @@ export async function BorcYaslandirmaOzeti({ companyId, supabase }: Props) {
                 </tr>
               )
             })}
-            <tr className="bg-[#f8fafc] border-t-2 border-[#e2e8f0]">
+            <tr className="bg-[#f8fafc] border-t-2 border-[#e8eaef]">
               <td className="px-3 py-1.5 font-black text-[#0f172a]">Toplam</td>
               <td className="px-3 py-1.5 text-right font-mono font-black tabular-nums text-[#0f172a]">
                 {fmt(report.total_outstanding_try)}

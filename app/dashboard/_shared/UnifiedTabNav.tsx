@@ -100,7 +100,7 @@ export function UnifiedTabNav({ tabs, activeTab, basePath, groups }: Props) {
           ))}
         </nav>
         {/* Level 2 — sub-tabs of the active group */}
-        <nav aria-label="Sekmeler" className="flex items-center gap-0.5 border-b border-[#e2e8f0] overflow-x-auto scrollbar-none pb-0">
+        <nav aria-label="Sekmeler" className="flex items-center gap-0.5 border-b border-[#e8eaef] overflow-x-auto scrollbar-none pb-0">
           {activeGroup.tabs.map(tab => (
             <TabLink key={tab.key} tab={tab} activeTab={activeTab} basePath={basePath} />
           ))}
@@ -111,7 +111,7 @@ export function UnifiedTabNav({ tabs, activeTab, basePath, groups }: Props) {
 
   // ── Flat mode (unchanged) ─────────────────────────────────────────────────
   return (
-    <nav aria-label="Sekmeler" className="flex items-center gap-0.5 border-b border-[#e2e8f0] overflow-x-auto scrollbar-none pb-0">
+    <nav aria-label="Sekmeler" className="flex items-center gap-0.5 border-b border-[#e8eaef] overflow-x-auto scrollbar-none pb-0">
       {tabs.map(tab => (
         <TabLink key={tab.key} tab={tab} activeTab={activeTab} basePath={basePath} />
       ))}

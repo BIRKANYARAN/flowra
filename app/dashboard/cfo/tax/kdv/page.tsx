@@ -99,7 +99,7 @@ export default async function KdvPage({
             {fetchError}
           </div>
         )}
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-8 text-center">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-8 text-center">
           <p className="text-sm text-[#94a3b8]">Aktif dönem bulunamadı</p>
           <p className="text-xs text-[#cbd5e1] mt-1">{from} — {to}</p>
         </div>
@@ -148,10 +148,10 @@ export default async function KdvPage({
       </div>
 
       {/* ── Main KDV card ──────────────────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
 
         {/* Output VAT */}
-        <div className="px-4 py-2.5 bg-[#f8fafc] border-b border-[#e2e8f0]">
+        <div className="px-4 py-2.5 bg-[#f8fafc] border-b border-[#e8eaef]">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Hesaplanan KDV (Çıkış) — 391</div>
         </div>
         <div className="px-4 py-3 space-y-1.5">
@@ -162,7 +162,7 @@ export default async function KdvPage({
         </div>
 
         {/* Input VAT */}
-        <div className="px-4 py-2.5 bg-[#f8fafc] border-y border-[#e2e8f0]">
+        <div className="px-4 py-2.5 bg-[#f8fafc] border-y border-[#e8eaef]">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">İndirilecek KDV (Giriş) — 191</div>
         </div>
         <div className="px-4 py-3 space-y-1.5">
@@ -170,7 +170,7 @@ export default async function KdvPage({
             <span className="text-xs text-[#64748b]">Gider KDV (İndirilecek)</span>
             <span className="tabular-nums text-sm font-semibold text-pos-text">−{fmt(kdv.input_vat_try)}</span>
           </div>
-          <div className="flex items-center justify-between border-t border-[#e2e8f0] pt-1.5">
+          <div className="flex items-center justify-between border-t border-[#e8eaef] pt-1.5">
             <span className="text-xs font-semibold text-[#334155]">Toplam İndirilecek KDV</span>
             <span className="tabular-nums text-sm font-black text-pos-text">
               {fmt(kdv.input_vat_try)}
@@ -196,13 +196,13 @@ export default async function KdvPage({
 
       {/* ── VAT Rate Breakdown ─────────────────────────────────────────────── */}
       {kdv.breakdown.vat_rate_summary.length > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-          <div className="px-4 py-2.5 bg-[#f8fafc] border-b border-[#e2e8f0]">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+          <div className="px-4 py-2.5 bg-[#f8fafc] border-b border-[#e8eaef]">
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">KDV Oranı Dağılımı</div>
           </div>
           <table className="w-full text-xs">
             <thead>
-              <tr className="bg-[#f8fafc] border-b border-[#e2e8f0]">
+              <tr className="bg-[#f8fafc] border-b border-[#e8eaef]">
                 <th className="text-left px-4 py-2 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Oran</th>
                 <th className="text-right px-4 py-2 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Matrah</th>
                 <th className="text-right px-4 py-2 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">KDV</th>
@@ -216,7 +216,7 @@ export default async function KdvPage({
                   <td className="px-4 py-2.5 text-right tabular-nums font-bold text-warn-text">{fmt(row.vat_try)}</td>
                 </tr>
               ))}
-              <tr className="bg-[#f8fafc] font-black border-t border-[#e2e8f0]">
+              <tr className="bg-[#f8fafc] font-black border-t border-[#e8eaef]">
                 <td className="px-4 py-2.5 text-[#334155]">Toplam</td>
                 <td className="px-4 py-2.5 text-right tabular-nums text-[#0f172a]">
                   {fmt(kdv.breakdown.vat_rate_summary.reduce((s, r) => s + r.base_try, 0))}

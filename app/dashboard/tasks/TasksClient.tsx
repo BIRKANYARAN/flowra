@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation'
 import type { Task, TaskStatus, Customer, Sale } from '@/types'
 import { fmtTRY } from '@/lib/format'
 
-const IL  = 'w-full border border-[#e2e8f0] rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand bg-white transition-colors'
+const IL  = 'w-full border border-[#e8eaef] rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand bg-white transition-colors'
 const LAB = 'block text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5'
 const SEL = `${IL} cursor-pointer`
 const BTN = 'px-4 py-2 rounded text-sm font-semibold transition-colors'
@@ -149,7 +149,7 @@ export default function TasksClient({ initialTasks, initialCustomers, initialSal
 
       {/* ── Create form ───────────────────────────────────────────────────── */}
       {showForm && (
-        <div className="bg-white rounded border border-[#e2e8f0] p-5 space-y-4">
+        <div className="bg-white rounded border border-[#e8eaef] p-5 space-y-4">
           <h2 className="text-sm font-bold text-[#334155]">Yeni Görev</h2>
           {formError && <p className="text-xs text-neg">{formError}</p>}
           <div>
@@ -263,7 +263,7 @@ export default function TasksClient({ initialTasks, initialCustomers, initialSal
 
       {/* ── Task list ─────────────────────────────────────────────────────── */}
       {filtered.length === 0 ? (
-        <div className="bg-white rounded border border-[#e2e8f0] p-8 text-center">
+        <div className="bg-white rounded border border-[#e8eaef] p-8 text-center">
           <p className="text-sm text-[#94a3b8]">
             {tab === 'open' ? 'Açık görev yok. ✓' : 'Bu durumda görev yok.'}
           </p>
@@ -276,7 +276,7 @@ export default function TasksClient({ initialTasks, initialCustomers, initialSal
               <div
                 key={task.id}
                 className={`bg-white rounded border p-4 flex items-start gap-3 ${
-                  overdue ? 'border-neg-light bg-neg-light/60' : 'border-[#e2e8f0]'
+                  overdue ? 'border-neg-light bg-neg-light/60' : 'border-[#e8eaef]'
                 }`}
               >
                 {/* Status toggle */}
@@ -286,7 +286,7 @@ export default function TasksClient({ initialTasks, initialCustomers, initialSal
                   className={`mt-0.5 w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-colors ${
                     task.status === 'done'
                       ? 'bg-pos-light border-pos text-white'
-                      : 'border-[#e2e8f0] hover:border-pos'
+                      : 'border-[#e8eaef] hover:border-pos'
                   }`}
                 >
                   {task.status === 'done' && (

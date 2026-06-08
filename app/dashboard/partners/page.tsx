@@ -372,7 +372,7 @@ export default function PartnersPage() {
         <div className="flex items-center gap-2">
           <Link
             href="/dashboard/admin/governance"
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded border border-[#e2e8f0] text-[#64748b] text-xs font-semibold hover:border-[#e2e8f0] hover:bg-[#f8fafc] transition-colors whitespace-nowrap"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded border border-[#e8eaef] text-[#64748b] text-xs font-semibold hover:border-[#e8eaef] hover:bg-[#f8fafc] transition-colors whitespace-nowrap"
             title="Aylık yönetişim raporları ve ortak onay sistemi"
           >
             Yönetişim
@@ -390,7 +390,7 @@ export default function PartnersPage() {
       <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm -mx-4">
         {/* Single flat tab row — every section in one scrollable bar (consistent
             with the other hubs: left = area, top = one row of that area's views). */}
-        <div className="px-4 pt-1 border-b border-[#e2e8f0]">
+        <div className="px-4 pt-1 border-b border-[#e8eaef]">
           <div className="flex items-center gap-0.5 overflow-x-auto scrollbar-none">
             {TAB_GROUPS.flatMap(g => g.tabs).map(t => {
               const isActive = activeTab === t.id

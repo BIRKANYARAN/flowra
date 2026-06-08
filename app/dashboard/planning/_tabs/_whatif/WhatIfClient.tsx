@@ -351,14 +351,14 @@ export function WhatIfClient({ period, baseline }: Props) {
             {(revChange !== 0 || expChange !== 0 || cogsChange !== 0 || collDelay !== 0 || debtChange !== 0 || taxRateOverride !== 25) && (
               <button
                 onClick={() => { setRevChange(0); setExpChange(0); setCogsChange(0); setCollDelay(0); setDebtChange(0); setTaxRateOverride(25) }}
-                className="text-xs font-semibold text-[#64748b] hover:text-[#334155] border border-[#e2e8f0] px-3 py-1.5 rounded hover:border-[#e2e8f0] transition-colors"
+                className="text-xs font-semibold text-[#64748b] hover:text-[#334155] border border-[#e8eaef] px-3 py-1.5 rounded hover:border-[#e8eaef] transition-colors"
               >
                 ↺ Bazı Sıfırla
               </button>
             )}
             <button
               onClick={() => setShowSaveBox(v => !v)}
-              className="text-xs font-semibold text-brand-light hover:text-brand border border-[#e2e8f0] px-3 py-1.5 rounded hover:border-[#e2e8f0] transition-colors"
+              className="text-xs font-semibold text-brand-light hover:text-brand border border-[#e8eaef] px-3 py-1.5 rounded hover:border-[#e8eaef] transition-colors"
             >
               {showSaveBox ? '✕ Kapat' : '＋ Kaydet'}
             </button>
@@ -375,7 +375,7 @@ export function WhatIfClient({ period, baseline }: Props) {
                   onChange={e => setSaveName(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') saveScenario() }}
                   placeholder="Örn: Agresif büyüme, Q3 baskı…"
-                  className="flex-1 border border-[#e2e8f0] rounded px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-brand/30 bg-white"
+                  className="flex-1 border border-[#e8eaef] rounded px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-brand/30 bg-white"
                 />
                 <button
                   onClick={saveScenario}
@@ -403,7 +403,7 @@ export function WhatIfClient({ period, baseline }: Props) {
               <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
                   Kayıtlı Senaryolar
-                  {scenariosLoading && <span className="inline-block w-3 h-3 border border-[#e2e8f0] border-t-[#64748b] rounded-full animate-spin" />}
+                  {scenariosLoading && <span className="inline-block w-3 h-3 border border-[#e8eaef] border-t-[#64748b] rounded-full animate-spin" />}
                   {!scenariosLoading && saved.length > 0 && <span className="font-normal text-[#cbd5e1]">({saved.length})</span>}
                 </div>
                 {!scenariosLoading && saved.length >= 2 && (
@@ -412,7 +412,7 @@ export function WhatIfClient({ period, baseline }: Props) {
                     className={`text-[9px] font-bold px-2 py-0.5 rounded border transition-colors ${
                       compareMode
                         ? 'bg-brand-light text-white border-brand-light'
-                        : 'border-[#e2e8f0] text-[#64748b] hover:border-[#e2e8f0] hover:text-brand-light'
+                        : 'border-[#e8eaef] text-[#64748b] hover:border-[#e8eaef] hover:text-brand-light'
                     }`}
                   >
                     {compareMode ? '✕ Kapat' : '⇄ Karşılaştır'}
@@ -436,8 +436,8 @@ export function WhatIfClient({ period, baseline }: Props) {
                     isBaseline
                       ? 'border-brand-subtle bg-brand-subtle/20'
                       : compareMode && isSelected
-                        ? 'border-[#e2e8f0] bg-brand-subtle/40'
-                        : 'border-[#e2e8f0]'
+                        ? 'border-[#e8eaef] bg-brand-subtle/40'
+                        : 'border-[#e8eaef]'
                   }`}>
                     {compareMode && (
                       <button
@@ -446,8 +446,8 @@ export function WhatIfClient({ period, baseline }: Props) {
                           isSelected
                             ? 'bg-brand-light border-brand-light text-white'
                             : canSelect
-                              ? 'border-[#e2e8f0] hover:border-brand/30'
-                              : 'border-[#e2e8f0] opacity-40 cursor-not-allowed'
+                              ? 'border-[#e8eaef] hover:border-brand/30'
+                              : 'border-[#e8eaef] opacity-40 cursor-not-allowed'
                         }`}
                       >
                         {isSelected && <svg viewBox="0 0 12 12" fill="none" className="w-4 h-4 -m-px"><path d="M2 6l3 3 5-5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
@@ -486,14 +486,14 @@ export function WhatIfClient({ period, baseline }: Props) {
                         <button
                           onClick={() => restoreScenario(s)}
                           title="Bu senaryoyu yükle"
-                          className="text-[9px] font-bold text-brand-light hover:text-brand border border-[#e2e8f0] rounded px-2 py-1 hover:bg-brand-subtle transition-colors"
+                          className="text-[9px] font-bold text-brand-light hover:text-brand border border-[#e8eaef] rounded px-2 py-1 hover:bg-brand-subtle transition-colors"
                         >
                           Yükle
                         </button>
                         <button
                           onClick={() => deleteSaved(s.id)}
                           title="Sil"
-                          className="text-[9px] text-[#94a3b8] hover:text-neg border border-[#e2e8f0] rounded px-1.5 py-1 hover:bg-neg-light transition-colors"
+                          className="text-[9px] text-[#94a3b8] hover:text-neg border border-[#e8eaef] rounded px-1.5 py-1 hover:bg-neg-light transition-colors"
                         >
                           ✕
                         </button>
@@ -540,9 +540,9 @@ export function WhatIfClient({ period, baseline }: Props) {
             const hasRunway = computed.some(r => r.runwayMonths !== null)
 
             return (
-              <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
+              <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
                 {/* Header row */}
-                <div className="px-3 py-2 bg-[#f8fafc]/60 border-b border-[#e2e8f0] grid gap-1" style={{ gridTemplateColumns: `5rem repeat(${cols.length}, 1fr)` }}>
+                <div className="px-3 py-2 bg-[#f8fafc]/60 border-b border-[#e8eaef] grid gap-1" style={{ gridTemplateColumns: `5rem repeat(${cols.length}, 1fr)` }}>
                   <div />
                   {cols.map((s, i) => (
                     <div key={s.id} className="text-center">
@@ -557,7 +557,7 @@ export function WhatIfClient({ period, baseline }: Props) {
                     const vals = computed.map(row.get)
                     const best = bestIdx(vals, row.higherIsBetter)
                     return (
-                      <div key={row.label} className={`grid gap-1 px-3 py-2 items-center ${row.divider ? 'border-t border-[#e2e8f0] bg-[#f8fafc]/30' : ''}`} style={{ gridTemplateColumns: `5rem repeat(${cols.length}, 1fr)` }}>
+                      <div key={row.label} className={`grid gap-1 px-3 py-2 items-center ${row.divider ? 'border-t border-[#e8eaef] bg-[#f8fafc]/30' : ''}`} style={{ gridTemplateColumns: `5rem repeat(${cols.length}, 1fr)` }}>
                         <div className="text-[9px] font-semibold text-[#64748b]">{row.label}</div>
                         {vals.map((v, i) => (
                           <div key={i} className={`text-center text-[10px] font-black tabular-nums rounded py-0.5 ${
@@ -585,11 +585,11 @@ export function WhatIfClient({ period, baseline }: Props) {
                   )}
                 </div>
                 {/* Load best scenario CTA */}
-                <div className="px-3 py-2 border-t border-[#e2e8f0] bg-[#f8fafc]/40 flex items-center justify-between">
+                <div className="px-3 py-2 border-t border-[#e8eaef] bg-[#f8fafc]/40 flex items-center justify-between">
                   <span className="text-[9px] text-[#94a3b8]">En iyi Net Kâr: <strong className="text-[#334155]">{cols[bestIdx(computed.map(r => r.netIncome), true)]?.name}</strong></span>
                   <button
                     onClick={() => restoreScenario(cols[bestIdx(computed.map(r => r.netIncome), true)]!)}
-                    className="text-[9px] font-bold text-brand-light border border-[#e2e8f0] px-2 py-1 rounded hover:bg-brand-subtle transition-colors"
+                    className="text-[9px] font-bold text-brand-light border border-[#e8eaef] px-2 py-1 rounded hover:bg-brand-subtle transition-colors"
                   >
                     Yükle →
                   </button>
@@ -602,8 +602,8 @@ export function WhatIfClient({ period, baseline }: Props) {
           {!(compareMode && compareSelected.size >= 2) && (
           <>
           {/* P&L Summary */}
-          <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
-            <div className="px-4 py-2.5 bg-[#f8fafc]/60 border-b border-[#e2e8f0]">
+          <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
+            <div className="px-4 py-2.5 bg-[#f8fafc]/60 border-b border-[#e8eaef]">
               <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Kar/Zarar Özeti</span>
             </div>
             <div className="divide-y divide-[#f1f5f9]">
@@ -620,13 +620,13 @@ export function WhatIfClient({ period, baseline }: Props) {
 
           {/* Key metrics row */}
           <div className="grid grid-cols-2 gap-2">
-            <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-3 py-2.5">
+            <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-3 py-2.5">
               <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Brüt Marj</div>
               <div className={`text-lg font-black tabular-nums ${result.grossMarginPct >= 0.25 ? 'text-pos-text' : result.grossMarginPct > 0 ? 'text-warn-text' : 'text-neg'}`}>
                 {pct(result.grossMarginPct)}
               </div>
             </div>
-            <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-3 py-2.5">
+            <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-3 py-2.5">
               <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">KDV Net</div>
               <div className={`text-lg font-black tabular-nums ${result.vatNet > 0 ? 'text-warn' : 'text-pos-text'}`}>
                 {result.vatNet > 0 ? '+' : ''}₺{fmt(result.vatNet)}
@@ -636,8 +636,8 @@ export function WhatIfClient({ period, baseline }: Props) {
           </div>
 
           {/* Cash + distribution */}
-          <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
-            <div className="px-4 py-2.5 bg-[#f8fafc]/60 border-b border-[#e2e8f0]">
+          <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
+            <div className="px-4 py-2.5 bg-[#f8fafc]/60 border-b border-[#e8eaef]">
               <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Dağıtım & Nakit</span>
             </div>
             <div className="px-4 py-3 space-y-2">
@@ -688,11 +688,11 @@ export function WhatIfClient({ period, baseline }: Props) {
 
           {/* Cascade story — cause → chain reaction narrative (only in normal mode) */}
           {cascadeStory && (
-            <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded overflow-hidden">
-              <div className="px-4 py-2.5 border-b border-[#e2e8f0]">
+            <div className="bg-[#f8fafc] border border-[#e8eaef] rounded overflow-hidden">
+              <div className="px-4 py-2.5 border-b border-[#e8eaef]">
                 <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Bu Senaryo Zinciri</span>
               </div>
-              <div className="divide-y divide-[#e2e8f0]">
+              <div className="divide-y divide-[#e8eaef]">
                 {cascadeStory.map(impact => (
                   <div key={impact.label} className={`px-4 py-2.5 flex items-center justify-between gap-3 ${
                     impact.severity === 'critical' ? 'bg-neg-light/40' :

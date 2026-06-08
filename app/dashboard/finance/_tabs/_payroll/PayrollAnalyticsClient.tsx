@@ -149,7 +149,7 @@ export function PayrollAnalyticsClient({ companyId }: Props) {
   // ── Loading ────────────────────────────────────────────────────────────────
   if (isLoading) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-6 shadow-sm">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-6 shadow-sm">
         <div className="animate-pulse space-y-3">
           <div className="h-4 bg-[#f1f5f9] rounded w-56" />
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -166,7 +166,7 @@ export function PayrollAnalyticsClient({ companyId }: Props) {
   // ── Error ──────────────────────────────────────────────────────────────────
   if (isError || !data?.report) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-6 shadow-sm text-center">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-6 shadow-sm text-center">
         <p className="text-sm text-[#64748b] font-medium">
           Personel maliyet verisi yüklenirken hata oluştu.
         </p>
@@ -184,7 +184,7 @@ export function PayrollAnalyticsClient({ companyId }: Props) {
   // ── Empty state ────────────────────────────────────────────────────────────
   if (cm.total_personnel_cost === 0 && report.ytd.total_personnel_cost === 0) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-8 shadow-sm text-center">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-8 shadow-sm text-center">
         <p className="text-sm text-[#64748b] font-medium">Personel gider verisi bulunamadı</p>
         <p className="text-[#94a3b8] text-xs mt-1">
           Gider kategorisi &quot;salary&quot; veya &quot;board_fee&quot; olan kayıt eklendiğinde analiz
@@ -216,7 +216,7 @@ export function PayrollAnalyticsClient({ companyId }: Props) {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
 
         {/* Personel Maliyet Oranı */}
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 shadow-sm">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
           <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">
             Personel Maliyet Oranı
           </div>
@@ -227,7 +227,7 @@ export function PayrollAnalyticsClient({ companyId }: Props) {
         </div>
 
         {/* Aylık Personel Maliyeti */}
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 shadow-sm">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
           <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">
             Aylık Personel Maliyeti
           </div>
@@ -238,7 +238,7 @@ export function PayrollAnalyticsClient({ companyId }: Props) {
         </div>
 
         {/* Trend */}
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 shadow-sm">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
           <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">
             Trend
           </div>
@@ -249,7 +249,7 @@ export function PayrollAnalyticsClient({ companyId }: Props) {
         </div>
 
         {/* Verimlilik Derecesi */}
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 shadow-sm">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
           <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">
             Verimlilik Derecesi
           </div>
@@ -262,7 +262,7 @@ export function PayrollAnalyticsClient({ companyId }: Props) {
       </div>
 
       {/* ── Cost breakdown bars ──────────────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm space-y-3">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm space-y-3">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
           Maliyet Dağılımı — Bu Ay
         </div>
@@ -297,7 +297,7 @@ export function PayrollAnalyticsClient({ companyId }: Props) {
       </div>
 
       {/* ── YTD summary ──────────────────────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
           Yıl Başından Bugüne (YTD)
         </div>
@@ -326,7 +326,7 @@ export function PayrollAnalyticsClient({ companyId }: Props) {
       </div>
 
       {/* ── Benchmark reference ──────────────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm space-y-2">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm space-y-2">
         <div className="flex items-center justify-between mb-3">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
             Türk KOBİ Kıyaslaması

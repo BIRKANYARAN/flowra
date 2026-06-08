@@ -118,10 +118,10 @@ export default function IncomeStatementPage() {
         </div>
         <div className="flex items-center gap-2">
           <input type="date" value={from} onChange={e => setFrom(e.target.value)}
-            className="border border-[#e2e8f0] rounded px-2 py-1 text-xs" />
+            className="border border-[#e8eaef] rounded px-2 py-1 text-xs" />
           <span className="text-xs text-[#94a3b8]">—</span>
           <input type="date" value={to} onChange={e => setTo(e.target.value)}
-            className="border border-[#e2e8f0] rounded px-2 py-1 text-xs" />
+            className="border border-[#e8eaef] rounded px-2 py-1 text-xs" />
           {pdfOpts && <PdfExportButton opts={pdfOpts} label="Dışa Aktar ↓" />}
           <Link href="/dashboard/finance" className="text-xs text-[#94a3b8] hover:text-brand-light font-semibold">← Finans</Link>
         </div>
@@ -155,9 +155,9 @@ export default function IncomeStatementPage() {
       )}
 
       {pnl && !loading && (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden print:border-none print:shadow-none">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden print:border-none print:shadow-none">
           {/* Revenue section */}
-          <div className="px-4 py-2 bg-[#f8fafc] border-b border-[#e2e8f0]">
+          <div className="px-4 py-2 bg-[#f8fafc] border-b border-[#e8eaef]">
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Satışlar</div>
           </div>
           <div className="px-4">
@@ -169,7 +169,7 @@ export default function IncomeStatementPage() {
           </div>
 
           {/* OpEx section */}
-          <div className="px-4 py-2 bg-[#f8fafc] border-b border-[#e2e8f0] border-t border-[#e2e8f0] mt-1">
+          <div className="px-4 py-2 bg-[#f8fafc] border-b border-[#e8eaef] border-t border-[#e8eaef] mt-1">
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Faaliyet Giderleri</div>
           </div>
           <div className="px-4">
@@ -181,7 +181,7 @@ export default function IncomeStatementPage() {
           </div>
 
           {/* Tax section */}
-          <div className="px-4 py-2 bg-[#f8fafc] border-b border-[#e2e8f0] border-t border-[#e2e8f0] mt-1">
+          <div className="px-4 py-2 bg-[#f8fafc] border-b border-[#e8eaef] border-t border-[#e8eaef] mt-1">
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Vergi</div>
           </div>
           <div className="px-4">

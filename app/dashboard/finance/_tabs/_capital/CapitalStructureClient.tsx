@@ -95,7 +95,7 @@ function SummaryCard({
   valueColor?: string
 }) {
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 shadow-sm">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
       <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{label}</div>
       <div className={`text-xl font-black tabular-nums leading-none ${valueColor}`}>{value}</div>
       {sub && <div className="text-[10px] text-[#94a3b8] mt-1 leading-tight">{sub}</div>}
@@ -233,8 +233,8 @@ export function CapitalStructureClient({ companyId }: Props) {
       </div>
 
       {/* DSCR detail card */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
-        <div className="px-4 py-3 border-b border-[#e2e8f0] bg-[#f8fafc] flex items-center justify-between">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
+        <div className="px-4 py-3 border-b border-[#e8eaef] bg-[#f8fafc] flex items-center justify-between">
           <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#64748b]">
             Borç Servisi Karşılama Oranı (DSCR)
           </span>
@@ -261,8 +261,8 @@ export function CapitalStructureClient({ companyId }: Props) {
       </div>
 
       {/* Capital structure split */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
-        <div className="px-4 py-3 border-b border-[#e2e8f0] bg-[#f8fafc]">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
+        <div className="px-4 py-3 border-b border-[#e8eaef] bg-[#f8fafc]">
           <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#64748b]">
             Sermaye Yapısı — Özsermaye / Borç Dağılımı
           </span>
@@ -316,8 +316,8 @@ export function CapitalStructureClient({ companyId }: Props) {
       </div>
 
       {/* Debt capacity bars */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
-        <div className="px-4 py-3 border-b border-[#e2e8f0] bg-[#f8fafc]">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
+        <div className="px-4 py-3 border-b border-[#e8eaef] bg-[#f8fafc]">
           <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#64748b]">
             Borç Kapasitesi — FAVÖK Çarpanı Bazlı
           </span>
@@ -345,8 +345,8 @@ export function CapitalStructureClient({ companyId }: Props) {
       </div>
 
       {/* WACD and partner loan detail */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
-        <div className="px-4 py-3 border-b border-[#e2e8f0] bg-[#f8fafc]">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
+        <div className="px-4 py-3 border-b border-[#e8eaef] bg-[#f8fafc]">
           <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#64748b]">
             Borçlanma Maliyeti
           </span>

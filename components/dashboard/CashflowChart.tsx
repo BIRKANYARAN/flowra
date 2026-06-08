@@ -44,7 +44,7 @@ export function CashflowChart({ className = '' }: Props) {
 
   if (loading) {
     return (
-      <div className={`bg-white rounded border border-[#e2e8f0] p-5 ${className}`}>
+      <div className={`bg-white rounded border border-[#e8eaef] p-5 ${className}`}>
         <div className="h-4 w-36 bg-[#f1f5f9] rounded animate-pulse mb-4" />
         <div className="flex items-end gap-1.5 h-24">
           {Array.from({ length: 12 }).map((_, i) => (
@@ -57,7 +57,7 @@ export function CashflowChart({ className = '' }: Props) {
 
   if (error || data.length === 0) {
     return (
-      <div className={`bg-white rounded border border-[#e2e8f0] p-5 ${className}`}>
+      <div className={`bg-white rounded border border-[#e8eaef] p-5 ${className}`}>
         <p className="text-sm text-[#94a3b8]">{error || 'Veri yok'}</p>
       </div>
     )
@@ -68,7 +68,7 @@ export function CashflowChart({ className = '' }: Props) {
   const maxColH = 80   // px — max bar height
 
   return (
-    <div className={`bg-white rounded border border-[#e2e8f0] p-5 ${className}`}>
+    <div className={`bg-white rounded border border-[#e8eaef] p-5 ${className}`}>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>

@@ -11,7 +11,7 @@ import type { Customer } from '@/types'
 
 export type { Customer }
 
-const IL  = 'w-full border border-[#e2e8f0] rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand bg-white transition-colors'
+const IL  = 'w-full border border-[#e8eaef] rounded px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand bg-white transition-colors'
 const LAB = 'block text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5'
 
 const EMPTY = {
@@ -106,8 +106,8 @@ export default function CustomersClient({ initialCustomers }: Props) {
 
       {/* ── Add/Edit Form ─────────────────────────────────────────────────── */}
       {showForm && (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-6 space-y-4">
-          <h3 className="font-bold text-sm border-b border-[#e2e8f0] pb-3">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-6 space-y-4">
+          <h3 className="font-bold text-sm border-b border-[#e8eaef] pb-3">
             {editId ? 'Müşteriyi Düzenle' : 'Yeni Müşteri'}
           </h3>
           <div>
@@ -143,7 +143,7 @@ export default function CustomersClient({ initialCustomers }: Props) {
             </button>
             <button
               onClick={closeForm}
-              className="border border-[#e2e8f0] px-5 py-2.5 rounded text-sm font-medium hover:bg-[#f8fafc]/60 transition-colors"
+              className="border border-[#e8eaef] px-5 py-2.5 rounded text-sm font-medium hover:bg-[#f8fafc]/60 transition-colors"
             >
               İptal
             </button>
@@ -162,7 +162,7 @@ export default function CustomersClient({ initialCustomers }: Props) {
       )}
 
       {/* ── Customer List ─────────────────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
         {filtered.length === 0 ? (
           <div className="py-12 text-center">
             <div className="text-xs font-medium text-[#334155] mb-1">
@@ -175,7 +175,7 @@ export default function CustomersClient({ initialCustomers }: Props) {
             )}
           </div>
         ) : (
-          <div className="divide-y divide-[#e2e8f0]">
+          <div className="divide-y divide-[#e8eaef]">
             {filtered.map(c => (
               <div key={c.id} className="flex items-center justify-between px-5 py-4 hover:bg-[#f8fafc]/60 transition-colors">
                 <button

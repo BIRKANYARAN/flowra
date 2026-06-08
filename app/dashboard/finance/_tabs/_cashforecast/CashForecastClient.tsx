@@ -80,8 +80,8 @@ export function CashForecastClient({ companyId }: Props) {
   // ── Loading ──────────────────────────────────────────────────────────────
   if (isLoading) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-        <div className="px-4 py-3 border-b border-[#e2e8f0]">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+        <div className="px-4 py-3 border-b border-[#e8eaef]">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
             13 Haftalık Nakit Projeksiyonu
           </div>
@@ -94,8 +94,8 @@ export function CashForecastClient({ companyId }: Props) {
   // ── Error ────────────────────────────────────────────────────────────────
   if (isError || !report) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-        <div className="px-4 py-3 border-b border-[#e2e8f0]">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+        <div className="px-4 py-3 border-b border-[#e8eaef]">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
             13 Haftalık Nakit Projeksiyonu
           </div>
@@ -143,10 +143,10 @@ export function CashForecastClient({ companyId }: Props) {
   ]
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
 
       {/* Header */}
-      <div className="px-4 py-3 border-b border-[#e2e8f0]">
+      <div className="px-4 py-3 border-b border-[#e8eaef]">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div>
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
@@ -161,7 +161,7 @@ export function CashForecastClient({ companyId }: Props) {
       </div>
 
       {/* Inputs summary strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0 divide-[#e2e8f0] border-b border-[#e2e8f0] bg-[#f8fafc]">
+      <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0 divide-[#e8eaef] border-b border-[#e8eaef] bg-[#f8fafc]">
         {[
           { label: 'Haftalık Tahsilat',  value: fmtTRY(inputs_used.avg_weekly_inflow)  },
           { label: 'Haftalık Ödeme',     value: fmtTRY(inputs_used.avg_weekly_outflow) },
@@ -176,7 +176,7 @@ export function CashForecastClient({ companyId }: Props) {
       </div>
 
       {/* 4 KPI summary cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0 divide-[#e2e8f0] border-b border-[#e2e8f0]">
+      <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0 divide-[#e8eaef] border-b border-[#e8eaef]">
         {kpis.map(kpi => (
           <div key={kpi.label} className="px-4 py-3">
             <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
@@ -191,14 +191,14 @@ export function CashForecastClient({ companyId }: Props) {
 
       {/* Crisis alert */}
       {summary.crisis_week !== null && (
-        <div className="border-b border-[#e2e8f0] px-4 py-2.5 bg-red-50 text-xs text-red-700 font-semibold">
+        <div className="border-b border-[#e8eaef] px-4 py-2.5 bg-red-50 text-xs text-red-700 font-semibold">
           Hafta {summary.crisis_week}&apos;da nakit negatife düşüyor.
           Tahsilatlar hızlandırılmalı veya giderler ertelenmeli.
         </div>
       )}
 
       {/* Minimum buffer info */}
-      <div className="border-b border-[#e2e8f0] px-4 py-2 bg-[#f8fafc] text-[10px] text-[#64748b]">
+      <div className="border-b border-[#e8eaef] px-4 py-2 bg-[#f8fafc] text-[10px] text-[#64748b]">
         Minimum nakit tamponu (4 haftalık gider): <strong className="text-[#0f172a]">{fmtTRY(minimumBuffer)}</strong>
       </div>
 
@@ -206,7 +206,7 @@ export function CashForecastClient({ companyId }: Props) {
       <div className="overflow-x-auto">
         <table className="w-full text-xs min-w-[520px]">
           <thead>
-            <tr className="bg-[#f8fafc] border-b border-[#e2e8f0]">
+            <tr className="bg-[#f8fafc] border-b border-[#e8eaef]">
               <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Hafta</th>
               <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-green-700">Gelen</th>
               <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-red-600">Giden</th>
@@ -249,7 +249,7 @@ export function CashForecastClient({ companyId }: Props) {
       </div>
 
       {/* Legend */}
-      <div className="border-t border-[#e2e8f0] px-4 py-2.5 flex flex-wrap gap-3 bg-[#f8fafc]">
+      <div className="border-t border-[#e8eaef] px-4 py-2.5 flex flex-wrap gap-3 bg-[#f8fafc]">
         <span className="text-[9px] font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded">Güçlü</span>
         <span className="text-[9px] font-bold text-[#475569] bg-slate-100 px-2 py-0.5 rounded">Yeterli</span>
         <span className="text-[9px] font-bold text-yellow-700 bg-yellow-50 px-2 py-0.5 rounded">Dar</span>
@@ -259,8 +259,8 @@ export function CashForecastClient({ companyId }: Props) {
 
       {/* Known obligations */}
       {known_obligations.length > 0 && (
-        <div className="border-t border-[#e2e8f0]">
-          <div className="px-4 py-2.5 bg-[#f8fafc] border-b border-[#e2e8f0]">
+        <div className="border-t border-[#e8eaef]">
+          <div className="px-4 py-2.5 bg-[#f8fafc] border-b border-[#e8eaef]">
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
               Planlı Taahhütler ({known_obligations.length} adet)
             </div>

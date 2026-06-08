@@ -23,7 +23,7 @@ function statusBadgeCls(status: ObligStatus): string {
     case 'overdue':  return 'bg-neg-light text-neg-text border-neg-light'
     case 'due_soon': return 'bg-warn-light text-warn-text border-warn-light'
     case 'paid':     return 'bg-pos-light text-pos-text border-pos-light'
-    default:         return 'bg-[#f1f5f9] text-[#64748b] border-[#e2e8f0]'
+    default:         return 'bg-[#f1f5f9] text-[#64748b] border-[#e8eaef]'
   }
 }
 
@@ -55,8 +55,8 @@ function kdvAmountColor(status: 'payable' | 'credit' | 'zero', obligStatus: Obli
 
 function LoadingSkeleton() {
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-      <div className="px-4 py-3 border-b border-[#e2e8f0]">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+      <div className="px-4 py-3 border-b border-[#e8eaef]">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
           Vergi Uyum Takvimi
         </div>
@@ -92,8 +92,8 @@ export function TaxComplianceClient({ companyId }: Props) {
   // below and bubble to the route error boundary as a full-page "Bir hata oluştu".
   if (isError || !data?.report?.current_month_kdv) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-        <div className="px-4 py-3 border-b border-[#e2e8f0]">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+        <div className="px-4 py-3 border-b border-[#e8eaef]">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
             Vergi Uyum Takvimi
           </div>
@@ -127,10 +127,10 @@ export function TaxComplianceClient({ companyId }: Props) {
       )}
 
       {/* ── Main card ────────────────────────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
 
         {/* Header */}
-        <div className="px-4 py-3 border-b border-[#e2e8f0]">
+        <div className="px-4 py-3 border-b border-[#e8eaef]">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
             Vergi Uyum Takvimi
           </div>
@@ -140,10 +140,10 @@ export function TaxComplianceClient({ companyId }: Props) {
         </div>
 
         {/* 2-column obligation cards */}
-        <div className="grid grid-cols-2 gap-0 border-b border-[#e2e8f0]">
+        <div className="grid grid-cols-2 gap-0 border-b border-[#e8eaef]">
 
           {/* Current month KDV card */}
-          <div className="p-4 border-r border-[#e2e8f0]">
+          <div className="p-4 border-r border-[#e8eaef]">
             <div className="flex items-center justify-between mb-2">
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
                 KDV — Bu Ay
@@ -225,7 +225,7 @@ export function TaxComplianceClient({ companyId }: Props) {
 
         {/* Next 3 obligations list */}
         <div>
-          <div className="px-4 py-2 bg-[#f8fafc] border-b border-[#e2e8f0]">
+          <div className="px-4 py-2 bg-[#f8fafc] border-b border-[#e8eaef]">
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
               Sonraki Yükümlülükler
             </div>
@@ -273,8 +273,8 @@ export function TaxComplianceClient({ companyId }: Props) {
 
         {/* Penalty preview — only when overdue */}
         {penalty && (
-          <div className="border-t border-[#e2e8f0]">
-            <div className="px-4 py-2 bg-neg-light/30 border-b border-[#e2e8f0]">
+          <div className="border-t border-[#e8eaef]">
+            <div className="px-4 py-2 bg-neg-light/30 border-b border-[#e8eaef]">
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-neg-text">
                 Gecikme Cezası Tahmini
               </div>
@@ -288,7 +288,7 @@ export function TaxComplianceClient({ companyId }: Props) {
               ].map((item, i) => (
                 <div
                   key={item.label}
-                  className={`p-3 ${i < 3 ? 'border-r border-[#e2e8f0]' : ''}`}
+                  className={`p-3 ${i < 3 ? 'border-r border-[#e8eaef]' : ''}`}
                 >
                   <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
                     {item.label}

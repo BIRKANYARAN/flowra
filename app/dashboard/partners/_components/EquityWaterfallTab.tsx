@@ -123,7 +123,7 @@ function HealthBadge({ health }: { health: HealthStatus }) {
 
 function PartnerCard({ partner }: { partner: PartnerWaterfallResult }) {
   return (
-    <div className="border border-[#e2e8f0] rounded-lg p-4 space-y-3 bg-white">
+    <div className="border border-[#e8eaef] rounded-lg p-4 space-y-3 bg-white">
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="text-sm font-semibold text-[#0f172a]">{partner.partner_name}</p>
@@ -175,7 +175,7 @@ function ProjectionTable({ partner }: { partner: PartnerWaterfallResult }) {
     <div className="overflow-x-auto">
       <table className="w-full text-xs border-collapse">
         <thead>
-          <tr className="border-b border-[#e2e8f0]">
+          <tr className="border-b border-[#e8eaef]">
             <th className="py-2 px-3 text-left font-semibold text-[#64748b]">Ay</th>
             <th className="py-2 px-3 text-right font-semibold text-[#64748b]">Kümülatif Getiri</th>
             <th className="py-2 px-3 text-right font-semibold text-[#64748b]">Kalan Sermaye</th>

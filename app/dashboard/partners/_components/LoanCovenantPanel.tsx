@@ -31,7 +31,7 @@ function dsrColor(status: DsrStatus): string {
     case 'elevated': return 'text-warn-text bg-warn-light border-warn-light'
     case 'high':     return 'text-orange-700 bg-orange-50 border-orange-200'
     case 'critical': return 'text-neg-text bg-neg-light border-neg-light'
-    default:         return 'text-[#64748b] bg-[#f8fafc] border-[#e2e8f0]'
+    default:         return 'text-[#64748b] bg-[#f8fafc] border-[#e8eaef]'
   }
 }
 
@@ -41,7 +41,7 @@ function icrColor(status: IcrStatus): string {
     case 'adequate': return 'text-info-text bg-info-light border-info-light'
     case 'thin':     return 'text-warn-text bg-warn-light border-warn-light'
     case 'breached': return 'text-neg-text bg-neg-light border-neg-light'
-    default:         return 'text-[#64748b] bg-[#f8fafc] border-[#e2e8f0]'
+    default:         return 'text-[#64748b] bg-[#f8fafc] border-[#e8eaef]'
   }
 }
 
@@ -169,7 +169,7 @@ export function LoanCovenantPanel({ companyId: _companyId }: Props) {
 
   if (!report || report.tranches.length === 0) {
     return (
-      <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-8 text-center text-xs text-[#94a3b8]">
+      <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-4 py-8 text-center text-xs text-[#94a3b8]">
         Aktif kredi dilimi bulunamadı
       </div>
     )
@@ -264,21 +264,21 @@ export function LoanCovenantPanel({ companyId: _companyId }: Props) {
 
       {/* ── Portfolio summary row ─────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-3 py-2">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-3 py-2">
           <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Toplam Borç</div>
           <div className="text-sm font-black text-[#0f172a] tabular-nums">{fmtTRY(total_outstanding_loans_try, 0)}</div>
         </div>
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-3 py-2">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-3 py-2">
           <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Yıllık Borç Servisi</div>
           <div className="text-sm font-black text-[#0f172a] tabular-nums">{fmtTRY(total_annual_debt_service_try, 0)}</div>
         </div>
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-3 py-2">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-3 py-2">
           <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">YTD Net Gelir</div>
           <div className={`text-sm font-black tabular-nums ${ytd_net_income_try >= 0 ? 'text-pos-text' : 'text-neg-text'}`}>
             {fmtTRY(ytd_net_income_try, 0)}
           </div>
         </div>
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-3 py-2">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-3 py-2">
           <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">YTD EBITDA</div>
           <div className={`text-sm font-black tabular-nums ${ytd_ebitda_try >= 0 ? 'text-pos-text' : 'text-neg-text'}`}>
             {fmtTRY(ytd_ebitda_try, 0)}
@@ -287,8 +287,8 @@ export function LoanCovenantPanel({ companyId: _companyId }: Props) {
       </div>
 
       {/* ── Per-tranche table ─────────────────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-        <div className="px-4 py-2.5 border-b border-[#e2e8f0] bg-[#f8fafc]/60">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+        <div className="px-4 py-2.5 border-b border-[#e8eaef] bg-[#f8fafc]/60">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
             Tranche Bazında Kovenan Durumu
           </div>
@@ -296,7 +296,7 @@ export function LoanCovenantPanel({ companyId: _companyId }: Props) {
         <div className="overflow-x-auto">
           <table className="w-full text-xs border-collapse">
             <thead>
-              <tr className="border-b border-[#e2e8f0]">
+              <tr className="border-b border-[#e8eaef]">
                 <th className="px-3 py-2 text-left text-[9px] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] sticky left-0 z-10 min-w-[120px]">
                   Ortak
                 </th>

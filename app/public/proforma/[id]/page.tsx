@@ -21,7 +21,7 @@ export default async function PublicProformaPage({ params }: { params: { id: str
   if (!bundle) {
     return (
       <main className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-4 sm:p-8">
-        <div className="bg-white rounded p-6 text-center max-w-sm w-full border border-[#e2e8f0]">
+        <div className="bg-white rounded p-6 text-center max-w-sm w-full border border-[#e8eaef]">
           <div className="text-4xl mb-3">&#128270;</div>
           <p className="text-[#334155] font-semibold">Proforma bulunamadı</p>
           <p className="text-sm text-[#94a3b8] mt-1">Geçersiz veya silinmiş bir bağlantı.</p>

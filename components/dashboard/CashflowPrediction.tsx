@@ -69,7 +69,7 @@ export function CashflowPrediction(_props: Props) {
 
   if (loading) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-6 text-center text-xs text-[#94a3b8] shadow-sm">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-6 text-center text-xs text-[#94a3b8] shadow-sm">
         Tahmin hesaplanıyor…
       </div>
     )
@@ -119,7 +119,7 @@ export function CashflowPrediction(_props: Props) {
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         {([
           { key: 'optimistic', label: 'İyimser', bg: 'bg-pos-light', border: 'border-pos', titleColor: 'text-pos-text' },
-          { key: 'base',       label: 'Baz',     bg: 'bg-white',     border: 'border-[#e2e8f0]', titleColor: 'text-[#0f172a]' },
+          { key: 'base',       label: 'Baz',     bg: 'bg-white',     border: 'border-[#e8eaef]', titleColor: 'text-[#0f172a]' },
           { key: 'pessimistic',label: 'Kötümser',bg: 'bg-warn-light',border: 'border-warn-light', titleColor: 'text-warn-text' },
         ] as const).map(({ key, label, bg, border, titleColor }) => {
           const scenario = scenarios[key]
@@ -139,7 +139,7 @@ export function CashflowPrediction(_props: Props) {
                   <span className="text-[#64748b]">90 gün</span>
                   <CashValue value={scenario.ending_cash_90_try} />
                 </div>
-                <div className="flex justify-between items-center text-xs pt-1 border-t border-[#e2e8f0]">
+                <div className="flex justify-between items-center text-xs pt-1 border-t border-[#e8eaef]">
                   <span className="text-[#64748b]">Runway</span>
                   <RunwayBadge months={scenario.runway_months} />
                 </div>
@@ -150,13 +150,13 @@ export function CashflowPrediction(_props: Props) {
       </div>
 
       {/* Period breakdown (base) */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-        <div className="px-4 py-3 border-b border-[#e2e8f0]">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+        <div className="px-4 py-3 border-b border-[#e8eaef]">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Dönem Bazında Nakit Akışı (Baz Senaryo)</div>
         </div>
         <table className="w-full text-xs">
           <thead>
-            <tr className="bg-[#f8fafc] border-b border-[#e2e8f0]">
+            <tr className="bg-[#f8fafc] border-b border-[#e8eaef]">
               <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Dönem</th>
               <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-pos">Gelecek Gelir</th>
               <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-neg">Çıkış</th>
@@ -188,8 +188,8 @@ export function CashflowPrediction(_props: Props) {
 
       {/* Expected receivables */}
       {receivables_expected.length > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-          <div className="px-4 py-3 border-b border-[#e2e8f0] flex items-center justify-between">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+          <div className="px-4 py-3 border-b border-[#e8eaef] flex items-center justify-between">
             <div>
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Beklenen Tahsilatlar</div>
               <p className="text-[10px] text-[#94a3b8] mt-0.5">Müşteri davranışına göre tahmin edilen ödeme tarihleri</p>
@@ -201,7 +201,7 @@ export function CashflowPrediction(_props: Props) {
           <div className="overflow-x-auto">
             <table className="w-full text-xs min-w-[520px]">
               <thead>
-                <tr className="bg-[#f8fafc] border-b border-[#e2e8f0]">
+                <tr className="bg-[#f8fafc] border-b border-[#e8eaef]">
                   <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Müşteri</th>
                   <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Tutar</th>
                   <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Tahmini Ödeme</th>
@@ -231,8 +231,8 @@ export function CashflowPrediction(_props: Props) {
 
       {/* Expected outflows */}
       {commitments_expected.length > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-          <div className="px-4 py-3 border-b border-[#e2e8f0] flex items-center justify-between">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+          <div className="px-4 py-3 border-b border-[#e8eaef] flex items-center justify-between">
             <div>
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Beklenen Çıkışlar (90 Gün)</div>
               <p className="text-[10px] text-[#94a3b8] mt-0.5">Taahhütler ve bilinen yükümlülükler</p>
@@ -244,7 +244,7 @@ export function CashflowPrediction(_props: Props) {
           <div className="overflow-x-auto">
             <table className="w-full text-xs min-w-[480px]">
               <thead>
-                <tr className="bg-[#f8fafc] border-b border-[#e2e8f0]">
+                <tr className="bg-[#f8fafc] border-b border-[#e8eaef]">
                   <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Başlık</th>
                   <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Tutar</th>
                   <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Vade</th>

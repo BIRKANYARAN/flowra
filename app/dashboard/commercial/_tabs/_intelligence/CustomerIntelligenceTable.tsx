@@ -75,7 +75,7 @@ function ProfileDetail({ p, onClose }: { p: CustomerPaymentProfile; onClose: () 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={onClose}>
       <div
-        className="bg-white rounded-xl border border-[#e2e8f0] shadow-xl w-full max-w-lg mx-4 p-6 space-y-4"
+        className="bg-white rounded-xl border border-[#e8eaef] shadow-xl w-full max-w-lg mx-4 p-6 space-y-4"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
@@ -198,7 +198,7 @@ export default function CustomerIntelligenceTable({ profiles }: Props) {
 
   return (
     <>
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
         {/* Table header */}
         <div className="px-4 py-3 border-b border-[#f1f5f9] flex items-center justify-between">
           <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">

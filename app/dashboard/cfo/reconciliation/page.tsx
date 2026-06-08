@@ -153,7 +153,7 @@ export default function ReconciliationPage() {
           <button
             onClick={runCheck}
             disabled={loading}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-[#e2e8f0] bg-white text-xs font-semibold text-[#64748b] hover:bg-[#f8fafc] hover:border-[#e2e8f0] transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-[#e8eaef] bg-white text-xs font-semibold text-[#64748b] hover:bg-[#f8fafc] hover:border-[#e8eaef] transition-colors disabled:opacity-50"
           >
             <svg className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -162,7 +162,7 @@ export default function ReconciliationPage() {
           </button>
           <button
             onClick={() => window.print()}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-[#e2e8f0] bg-white text-xs font-semibold text-[#64748b] hover:bg-[#f8fafc] hover:border-[#e2e8f0] transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-[#e8eaef] bg-white text-xs font-semibold text-[#64748b] hover:bg-[#f8fafc] hover:border-[#e8eaef] transition-colors"
           >
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
@@ -203,7 +203,7 @@ export default function ReconciliationPage() {
 
           {/* C5: Mutabakat Zeka Değerlendirmesi */}
           {reconLines.length > 0 && (
-            <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3">
+            <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
               <div className="flex items-center justify-between mb-2.5">
                 <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Mutabakat Değerlendirmesi</span>
                 <span className="text-[9px] text-[#94a3b8]">Finansal doğruluk · Dönem kapanış hazırlığı</span>
@@ -224,25 +224,25 @@ export default function ReconciliationPage() {
               <div className="text-xl font-black text-pos-text tabular-nums">{okCount}</div>
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-pos-text mt-0.5">Tamam</div>
             </div>
-            <div className={`border rounded px-4 py-3 text-center ${warnCount > 0 ? 'bg-warn-light border-warn-light' : 'bg-[#f8fafc] border-[#e2e8f0]'}`}>
+            <div className={`border rounded px-4 py-3 text-center ${warnCount > 0 ? 'bg-warn-light border-warn-light' : 'bg-[#f8fafc] border-[#e8eaef]'}`}>
               <div className={`text-xl font-black tabular-nums ${warnCount > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>{warnCount}</div>
               <div className={`text-[0.65rem] font-black uppercase tracking-widest mt-0.5 ${warnCount > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>Uyarı</div>
             </div>
-            <div className={`border rounded px-4 py-3 text-center ${criticalCount > 0 ? 'bg-neg-light border-neg-light' : 'bg-[#f8fafc] border-[#e2e8f0]'}`}>
+            <div className={`border rounded px-4 py-3 text-center ${criticalCount > 0 ? 'bg-neg-light border-neg-light' : 'bg-[#f8fafc] border-[#e8eaef]'}`}>
               <div className={`text-xl font-black tabular-nums ${criticalCount > 0 ? 'text-neg-text' : 'text-[#94a3b8]'}`}>{criticalCount}</div>
               <div className={`text-[0.65rem] font-black uppercase tracking-widest mt-0.5 ${criticalCount > 0 ? 'text-neg' : 'text-[#94a3b8]'}`}>Kritik</div>
             </div>
           </div>
 
           {/* Reconciliation items table */}
-          <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-            <div className="px-4 py-2.5 border-b border-[#e2e8f0] bg-[#f8fafc]">
+          <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+            <div className="px-4 py-2.5 border-b border-[#e8eaef] bg-[#f8fafc]">
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Hesap Karşılaştırması</div>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="border-b border-[#e2e8f0]">
+                  <tr className="border-b border-[#e8eaef]">
                     <th className="px-4 py-2.5 text-left text-[10px] font-black text-[#94a3b8] uppercase tracking-widest">Hesap / Kontrol</th>
                     <th className="px-4 py-2.5 text-right text-[10px] font-black text-[#94a3b8] uppercase tracking-widest">GL Değeri</th>
                     <th className="px-4 py-2.5 text-right text-[10px] font-black text-[#94a3b8] uppercase tracking-widest">Operasyonel</th>
@@ -283,7 +283,7 @@ export default function ReconciliationPage() {
           </div>
 
           {/* Guidance */}
-          <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-3 text-xs text-[#64748b] space-y-1" data-print-hide>
+          <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-4 py-3 text-xs text-[#64748b] space-y-1" data-print-hide>
             <div className="font-semibold text-[#334155] mb-1.5">Ne anlama geliyor?</div>
             <div className="flex gap-2"><span className="text-pos-text font-bold shrink-0">✓ Tamam</span><span>GL ve operasyonel değer arasında {`<`}1 TRY fark var. Yuvarlama sapması.</span></div>
             <div className="flex gap-2"><span className="text-warn-text font-bold shrink-0">! Uyarı</span><span>1–99 TRY arası fark. Muhtemelen zamanlama farkı (dönem sonu kesilmemiş işlem). İncelenmesi önerilir.</span></div>

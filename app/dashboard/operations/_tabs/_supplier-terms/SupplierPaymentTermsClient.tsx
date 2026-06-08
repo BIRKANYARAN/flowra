@@ -197,7 +197,7 @@ export function SupplierPaymentTermsClient({ companyId }: Props) {
 
   if (isLoading) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
           Tedarikçi Ödeme Koşulları
         </div>
@@ -223,7 +223,7 @@ export function SupplierPaymentTermsClient({ companyId }: Props) {
 
   if (!summary || summary.total_suppliers === 0) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
           Tedarikçi Ödeme Koşulları
         </div>
@@ -233,9 +233,9 @@ export function SupplierPaymentTermsClient({ companyId }: Props) {
   }
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm overflow-hidden">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm overflow-hidden">
       {/* ── Header ──────────────────────────────────────────────────────────── */}
-      <div className="px-4 py-3 border-b border-[#e2e8f0]">
+      <div className="px-4 py-3 border-b border-[#e8eaef]">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
           Tedarikçi Ödeme Koşulları
         </div>
@@ -247,7 +247,7 @@ export function SupplierPaymentTermsClient({ companyId }: Props) {
       </div>
 
       {/* ── KPI strip ───────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-3 divide-x divide-[#f1f5f9] border-b border-[#e2e8f0]">
+      <div className="grid grid-cols-3 divide-x divide-[#f1f5f9] border-b border-[#e8eaef]">
         <div className="px-4 py-3 text-center">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
             DPO (Ort. Ödeme)
@@ -275,7 +275,7 @@ export function SupplierPaymentTermsClient({ companyId }: Props) {
       </div>
 
       {/* ── Score bar ───────────────────────────────────────────────────────── */}
-      <div className="px-4 py-3 border-b border-[#e2e8f0]">
+      <div className="px-4 py-3 border-b border-[#e8eaef]">
         <div className="flex items-center justify-between mb-1.5">
           <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
             Genel Ödeme Skoru
@@ -300,7 +300,7 @@ export function SupplierPaymentTermsClient({ companyId }: Props) {
 
       {/* ── Top creditors ───────────────────────────────────────────────────── */}
       {summary.top_creditors.length > 0 && (
-        <div className="border-b border-[#e2e8f0]">
+        <div className="border-b border-[#e8eaef]">
           <div className="px-4 py-2.5">
             <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
               En Büyük Alacaklılar (Bekleyen Borç)
@@ -309,7 +309,7 @@ export function SupplierPaymentTermsClient({ companyId }: Props) {
           <div className="overflow-x-auto">
             <table className="w-full text-xs min-w-[500px]">
               <thead>
-                <tr className="bg-[#f8fafc] border-b border-[#e2e8f0]">
+                <tr className="bg-[#f8fafc] border-b border-[#e8eaef]">
                   <th className="text-left px-4 py-2 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Tedarikçi</th>
                   <th className="text-right px-3 py-2 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Toplam</th>
                   <th className="text-right px-3 py-2 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Bekleyen</th>
@@ -329,7 +329,7 @@ export function SupplierPaymentTermsClient({ companyId }: Props) {
       )}
 
       {/* ── Timing breakdown ────────────────────────────────────────────────── */}
-      <div className="px-4 py-3 border-b border-[#e2e8f0]">
+      <div className="px-4 py-3 border-b border-[#e8eaef]">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
           Ödeme Zamanlaması Dağılımı
         </div>
@@ -337,7 +337,7 @@ export function SupplierPaymentTermsClient({ companyId }: Props) {
       </div>
 
       {/* ── 6-month trend ───────────────────────────────────────────────────── */}
-      <div className="px-4 py-3 border-b border-[#e2e8f0]">
+      <div className="px-4 py-3 border-b border-[#e8eaef]">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
           Son 6 Ay Trendi
         </div>
@@ -371,7 +371,7 @@ export function SupplierPaymentTermsClient({ companyId }: Props) {
         <div className="overflow-x-auto border-t border-[#f1f5f9]">
           <table className="w-full text-xs min-w-[500px]">
             <thead>
-              <tr className="bg-[#f8fafc] border-b border-[#e2e8f0]">
+              <tr className="bg-[#f8fafc] border-b border-[#e8eaef]">
                 <th className="text-left px-4 py-2 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Tedarikçi</th>
                 <th className="text-right px-3 py-2 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Toplam</th>
                 <th className="text-right px-3 py-2 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Bekleyen</th>

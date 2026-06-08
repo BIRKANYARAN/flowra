@@ -92,8 +92,8 @@ export function FifoAuditClient({ companyId }: Props) {
   // Empty state
   if (audit.total_lots === 0) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-        <div className="px-5 py-4 border-b border-[#e2e8f0]">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+        <div className="px-5 py-4 border-b border-[#e8eaef]">
           <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
             FIFO Lot Denetimi
           </span>
@@ -113,9 +113,9 @@ export function FifoAuditClient({ companyId }: Props) {
   const cleanLots = audit.lots.filter(l => l.health === 'clean')
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
       {/* Header */}
-      <div className="px-5 py-4 border-b border-[#e2e8f0] flex items-center justify-between">
+      <div className="px-5 py-4 border-b border-[#e8eaef] flex items-center justify-between">
         <div>
           <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
             FIFO Lot Denetimi
@@ -130,7 +130,7 @@ export function FifoAuditClient({ companyId }: Props) {
       </div>
 
       {/* Integrity score + grade */}
-      <div className={`px-5 py-4 border-b border-[#e2e8f0] flex items-center gap-5 ${gradeBg(audit.grade)}`}>
+      <div className={`px-5 py-4 border-b border-[#e8eaef] flex items-center gap-5 ${gradeBg(audit.grade)}`}>
         <div className={`text-5xl font-black leading-none tabular-nums ${gradeColor(audit.grade)}`}>
           {audit.grade}
         </div>
@@ -174,7 +174,7 @@ export function FifoAuditClient({ companyId }: Props) {
 
       {/* All clean message */}
       {!hasIssues && (
-        <div className="px-5 py-4 bg-pos-light border-b border-[#e2e8f0]">
+        <div className="px-5 py-4 bg-pos-light border-b border-[#e8eaef]">
           <div className="flex items-center gap-2">
             <span className="text-pos-text text-base">✓</span>
             <span className="text-xs font-semibold text-pos-text">
@@ -186,7 +186,7 @@ export function FifoAuditClient({ companyId }: Props) {
 
       {/* Issues breakdown — only if there are problems */}
       {hasIssues && (
-        <div className="px-5 py-3 border-b border-[#e2e8f0] bg-[#fafafa] flex items-center gap-3 flex-wrap">
+        <div className="px-5 py-3 border-b border-[#e8eaef] bg-[#fafafa] flex items-center gap-3 flex-wrap">
           <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Tespit Edilen Sorunlar:</span>
           {audit.over_consumed_lots > 0 && (
             <span className="text-[10px] font-semibold bg-neg-light text-neg-text px-2 py-0.5 rounded">
@@ -211,7 +211,7 @@ export function FifoAuditClient({ companyId }: Props) {
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] border-b border-[#e2e8f0]">
+              <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] border-b border-[#e8eaef]">
                 <th className="text-left px-5 py-2.5">Ürün</th>
                 <th className="text-right px-4 py-2.5">Mevcut Miktar</th>
                 <th className="text-right px-4 py-2.5">Kullanılan</th>
@@ -233,7 +233,7 @@ export function FifoAuditClient({ companyId }: Props) {
       {/* Clean lots — collapsed section */}
       {cleanLots.length > 0 && (
         <details className="group">
-          <summary className="px-5 py-3 border-t border-[#e2e8f0] bg-[#f8fafc] cursor-pointer list-none flex items-center justify-between hover:bg-[#f1f5f9]">
+          <summary className="px-5 py-3 border-t border-[#e8eaef] bg-[#f8fafc] cursor-pointer list-none flex items-center justify-between hover:bg-[#f1f5f9]">
             <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
               Temiz Lotlar ({cleanLots.length})
             </span>
@@ -244,7 +244,7 @@ export function FifoAuditClient({ companyId }: Props) {
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] border-b border-[#e2e8f0]">
+                <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] border-b border-[#e8eaef]">
                   <th className="text-left px-5 py-2.5">Ürün</th>
                   <th className="text-right px-4 py-2.5">Mevcut Miktar</th>
                   <th className="text-right px-4 py-2.5">Kullanılan</th>
@@ -265,7 +265,7 @@ export function FifoAuditClient({ companyId }: Props) {
       )}
 
       {/* Footer */}
-      <div className="px-5 py-3 border-t border-[#e2e8f0] bg-[#f8fafc]">
+      <div className="px-5 py-3 border-t border-[#e8eaef] bg-[#f8fafc]">
         <span className="text-[10px] text-[#94a3b8]">
           Denetim tamamlandı · {audit.total_lots} lot incelendi · Skor hesabı: aşım ×20p, yetim ×10p, maliyet kayması ×5p
         </span>

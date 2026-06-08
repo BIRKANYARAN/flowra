@@ -55,7 +55,7 @@ function BridgeRow({
 }) {
   if (value === null && !isBase && !isFinal) {
     return (
-      <div className="flex items-center justify-between gap-3 py-1.5 pl-3 border-l-2 border-[#e2e8f0]">
+      <div className="flex items-center justify-between gap-3 py-1.5 pl-3 border-l-2 border-[#e8eaef]">
         <span className="text-[11px] font-medium text-[#64748b] truncate">{label}</span>
         <span className="text-xs text-[#94a3b8]">—</span>
       </div>
@@ -67,7 +67,7 @@ function BridgeRow({
   if (isBase || isFinal) {
     const borderCls = isFinal
       ? 'border-t-2 border-[#0f172a] mt-1'
-      : 'border-b border-dashed border-[#e2e8f0] pb-2 mb-2'
+      : 'border-b border-dashed border-[#e8eaef] pb-2 mb-2'
     return (
       <div className={`flex items-center justify-between gap-3 py-2 ${borderCls}`}>
         <span className="text-[11px] font-black text-[#0f172a]">{label}</span>
@@ -85,7 +85,7 @@ function BridgeRow({
   const valueColor = isPositive ? 'text-[#059669]' : 'text-[#dc2626]'
 
   return (
-    <div className="flex items-center justify-between gap-3 py-1.5 pl-3 border-l-2 border-[#e2e8f0]">
+    <div className="flex items-center justify-between gap-3 py-1.5 pl-3 border-l-2 border-[#e8eaef]">
       <div className="flex items-center gap-2 min-w-0">
         <span className={`text-[10px] font-bold shrink-0 ${valueColor}`}>{indicator}</span>
         <span className="text-[11px] font-medium text-[#64748b] truncate">{label}</span>
@@ -123,13 +123,13 @@ function PeriodTable({ report }: { report: EbitdaBridgeReport }) {
   }
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-5 shadow-sm overflow-x-auto">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-5 shadow-sm overflow-x-auto">
       <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">
         Dönem Karşılaştırması
       </div>
       <table className="w-full text-xs border-collapse">
         <thead>
-          <tr className="border-b border-[#e2e8f0]">
+          <tr className="border-b border-[#e8eaef]">
             {['Kalem', report.prior_period, report.current_period, 'Fark'].map(h => (
               <th key={h} className={`py-2 px-2 text-[10px] font-black uppercase tracking-wide text-[#94a3b8] ${h === 'Kalem' ? 'text-left' : 'text-right'}`}>
                 {h}
@@ -139,7 +139,7 @@ function PeriodTable({ report }: { report: EbitdaBridgeReport }) {
         </thead>
         <tbody>
           {rows.map(row => (
-            <tr key={row.label} className={`border-t ${row.isBold ? 'border-dashed border-[#e2e8f0] bg-[#f8fafc]' : 'border-[#f1f5f9]'}`}>
+            <tr key={row.label} className={`border-t ${row.isBold ? 'border-dashed border-[#e8eaef] bg-[#f8fafc]' : 'border-[#f1f5f9]'}`}>
               <td className={`py-1.5 px-2 ${row.isBold ? 'font-black text-[#0f172a]' : 'font-medium text-[#64748b]'} text-[11px]`}>
                 {row.label}
               </td>
@@ -203,7 +203,7 @@ export function EbitdaBridgeClient({ companyId }: Props) {
   // ── Loading ────────────────────────────────────────────────────────────────
   if (isLoading) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-6 shadow-sm">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-6 shadow-sm">
         <div className="animate-pulse space-y-3">
           <div className="h-4 bg-[#f1f5f9] rounded w-56" />
           <div className="h-64 bg-[#f1f5f9] rounded" />
@@ -216,7 +216,7 @@ export function EbitdaBridgeClient({ companyId }: Props) {
   // ── Error / empty ──────────────────────────────────────────────────────────
   if (isError || !data?.report) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-6 shadow-sm text-center">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-6 shadow-sm text-center">
         <p className="text-sm text-[#64748b] font-medium">EBITDA köprüsü hesaplanamadı</p>
         <p className="text-xs text-[#94a3b8] mt-1">Satış ve gider verileri mevcut olduğunda otomatik hesaplanır.</p>
       </div>
@@ -244,7 +244,7 @@ export function EbitdaBridgeClient({ companyId }: Props) {
       </div>
 
       {/* ── Bridge waterfall ─────────────────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-5 shadow-sm">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-5 shadow-sm">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">
           {report.prior_period} → {report.current_period} FAVÖK Değişimi
         </div>
@@ -272,7 +272,7 @@ export function EbitdaBridgeClient({ companyId }: Props) {
       </div>
 
       {/* ── Trend & driver card ───────────────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-5 shadow-sm">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-5 shadow-sm">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">
           Trend & Birincil Etken
         </div>

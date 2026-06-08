@@ -69,7 +69,7 @@ export function SupplierAnalyticsPanel() {
 
   if (loading) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
           Tedarikçi Analizi
         </div>
@@ -80,7 +80,7 @@ export function SupplierAnalyticsPanel() {
 
   if (error || !report) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
           Tedarikçi Analizi
         </div>
@@ -92,7 +92,7 @@ export function SupplierAnalyticsPanel() {
   const top5 = report.suppliers.slice(0, 5)
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 space-y-4 shadow-sm">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 space-y-4 shadow-sm">
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between">
         <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
@@ -102,7 +102,7 @@ export function SupplierAnalyticsPanel() {
       </div>
 
       {/* ── Summary row ────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 border border-[#e2e8f0] rounded overflow-hidden">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 border border-[#e8eaef] rounded overflow-hidden">
         {[
           {
             label: 'Toplam Borç',
@@ -130,7 +130,7 @@ export function SupplierAnalyticsPanel() {
         ].map((card, i) => (
           <div
             key={card.label}
-            className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e2e8f0]' : ''}`}
+            className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e8eaef]' : ''}`}
           >
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
               {card.label}
@@ -157,7 +157,7 @@ export function SupplierAnalyticsPanel() {
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-[#e2e8f0]">
+                <tr className="border-b border-[#e8eaef]">
                   <th className="text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] pb-1.5 pr-2">Dönem</th>
                   <th className="text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] pb-1.5 px-2">Kayıt</th>
                   <th className="text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] pb-1.5 pl-2">Tutar</th>
@@ -179,7 +179,7 @@ export function SupplierAnalyticsPanel() {
                 ))}
               </tbody>
               <tfoot>
-                <tr className="border-t border-[#e2e8f0]">
+                <tr className="border-t border-[#e8eaef]">
                   <td className="py-1.5 pr-2 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Toplam</td>
                   <td className="py-1.5 px-2 text-right tabular-nums text-[#64748b] text-xs font-semibold">
                     {report.aging.reduce((s, b) => s + b.count, 0)}
@@ -203,7 +203,7 @@ export function SupplierAnalyticsPanel() {
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-[#e2e8f0]">
+                <tr className="border-b border-[#e8eaef]">
                   <th className="text-left text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] pb-1.5 pr-2">Tedarikçi</th>
                   <th className="text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] pb-1.5 px-2">Toplam</th>
                   <th className="text-right text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] pb-1.5 px-2">Ödenmemiş</th>

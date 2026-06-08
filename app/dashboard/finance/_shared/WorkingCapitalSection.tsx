@@ -61,7 +61,7 @@ function MetricCard({
   highlight?: boolean
 }) {
   return (
-    <div className={`rounded border px-4 py-3 ${highlight ? 'bg-brand-subtle/10 border-brand/20' : 'bg-white border-[#e2e8f0]'}`}>
+    <div className={`rounded border px-4 py-3 ${highlight ? 'bg-brand-subtle/10 border-brand/20' : 'bg-white border-[#e8eaef]'}`}>
       <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
         {label}
       </div>
@@ -103,7 +103,7 @@ export async function WorkingCapitalSection({ companyId, userId, supabase, perio
   // ── Null / empty state ─────────────────────────────────────────────────────
   if (!metrics || (metrics.total_revenue_try === 0 && metrics.total_cogs_try === 0)) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
           Çalışma Sermayesi
         </div>
@@ -131,7 +131,7 @@ export async function WorkingCapitalSection({ companyId, userId, supabase, perio
     : undefined
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div>

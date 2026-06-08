@@ -104,7 +104,7 @@ function EarlyPaymentCard({
 }) {
   const badge = DECISION_BADGE[decision]
   return (
-    <div className="border border-[#e2e8f0] rounded p-3 flex flex-col gap-1">
+    <div className="border border-[#e8eaef] rounded p-3 flex flex-col gap-1">
       <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">{title}</div>
       <div className="flex items-center justify-between">
         <div>
@@ -183,7 +183,7 @@ export function SupplierTermsClient({ companyId }: Props) {
 
   if (isLoading) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
           Tedarikçi Ödeme Koşulları
         </div>
@@ -209,7 +209,7 @@ export function SupplierTermsClient({ companyId }: Props) {
 
   if (!report || report.company_summary.total_vendors === 0) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
           Tedarikçi Ödeme Koşulları
         </div>
@@ -222,9 +222,9 @@ export function SupplierTermsClient({ companyId }: Props) {
   const healthScore = cs.vendor_health_score
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm overflow-hidden">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm overflow-hidden">
       {/* ── Header ──────────────────────────────────────────────────────────── */}
-      <div className="px-4 py-3 border-b border-[#e2e8f0]">
+      <div className="px-4 py-3 border-b border-[#e8eaef]">
         <div className="flex items-center justify-between">
           <div>
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
@@ -243,7 +243,7 @@ export function SupplierTermsClient({ companyId }: Props) {
       </div>
 
       {/* ── KPI strip ───────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-3 divide-x divide-[#f1f5f9] border-b border-[#e2e8f0]">
+      <div className="grid grid-cols-3 divide-x divide-[#f1f5f9] border-b border-[#e8eaef]">
         {/* Health score */}
         <div className="px-4 py-3 text-center">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
@@ -290,7 +290,7 @@ export function SupplierTermsClient({ companyId }: Props) {
       </div>
 
       {/* ── Early payment analysis ───────────────────────────────────────────── */}
-      <div className="px-4 py-3 border-b border-[#e2e8f0]">
+      <div className="px-4 py-3 border-b border-[#e8eaef]">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
           Erken Ödeme İndirim Analizi
           <span className="ml-2 font-normal normal-case text-[10px]">
@@ -315,7 +315,7 @@ export function SupplierTermsClient({ companyId }: Props) {
 
       {/* ── Payment behavior distribution ───────────────────────────────────── */}
       {cs.total_vendors > 0 && (
-        <div className="px-4 py-3 border-b border-[#e2e8f0]">
+        <div className="px-4 py-3 border-b border-[#e8eaef]">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
             Ödeme Davranışı Dağılımı
           </div>
@@ -341,7 +341,7 @@ export function SupplierTermsClient({ companyId }: Props) {
       {/* ── Vendor table ────────────────────────────────────────────────────── */}
       {vendors.length > 0 && (
         <details className="group" open>
-          <summary className="px-4 py-3 cursor-pointer list-none flex items-center justify-between select-none hover:bg-[#f8fafc] transition-colors border-b border-[#e2e8f0]">
+          <summary className="px-4 py-3 cursor-pointer list-none flex items-center justify-between select-none hover:bg-[#f8fafc] transition-colors border-b border-[#e8eaef]">
             <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
               Tedarikçi Tablosu ({vendors.length})
             </span>
@@ -352,7 +352,7 @@ export function SupplierTermsClient({ companyId }: Props) {
           <div className="overflow-x-auto">
             <table className="w-full text-xs min-w-[560px]">
               <thead>
-                <tr className="bg-[#f8fafc] border-b border-[#e2e8f0]">
+                <tr className="bg-[#f8fafc] border-b border-[#e8eaef]">
                   <th className="text-left px-4 py-2 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Tedarikçi</th>
                   <th className="text-right px-3 py-2 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Harcama</th>
                   <th className="text-right px-3 py-2 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Güven</th>

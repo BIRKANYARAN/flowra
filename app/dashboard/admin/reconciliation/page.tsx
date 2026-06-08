@@ -28,10 +28,10 @@ interface SnapshotListItem {
 
 function statusBadge(status: SnapshotListItem['status']) {
   const map = {
-    draft:            { label: 'Taslak',       cls: 'bg-[#f1f5f9] text-[#64748b] border border-[#e2e8f0]' },
+    draft:            { label: 'Taslak',       cls: 'bg-[#f1f5f9] text-[#64748b] border border-[#e8eaef]' },
     pending_approval: { label: 'Onay Bekliyor', cls: 'bg-amber-50 text-amber-700 border border-amber-200'   },
     approved:         { label: 'Onaylandı',    cls: 'bg-green-50 text-green-700 border border-green-200'   },
-    archived:         { label: 'Arşiv',        cls: 'bg-[#f8fafc] text-[#94a3b8] border border-[#e2e8f0]'  },
+    archived:         { label: 'Arşiv',        cls: 'bg-[#f8fafc] text-[#94a3b8] border border-[#e8eaef]'  },
   }
   const { label, cls } = map[status] ?? map.draft
   return (
@@ -94,7 +94,7 @@ export default async function ReconciliationHubPage() {
   return (
     <div className="min-h-screen bg-[#f8fafc]">
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
-      <div className="bg-white border-b border-[#e2e8f0]">
+      <div className="bg-white border-b border-[#e8eaef]">
         <div className="max-w-6xl mx-auto px-6 py-8">
           <div className="flex items-start justify-between">
             <div>
@@ -125,7 +125,7 @@ export default async function ReconciliationHubPage() {
       <div className="max-w-6xl mx-auto px-6 py-8">
         {snapshots.length === 0 ? (
           /* Empty state */
-          <div className="bg-white border border-[#e2e8f0] rounded-lg p-12 text-center">
+          <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-12 text-center">
             <div className="w-12 h-12 rounded-full bg-[#f1f5f9] flex items-center justify-center mx-auto mb-4">
               <svg className="w-6 h-6 text-[#94a3b8]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
@@ -144,8 +144,8 @@ export default async function ReconciliationHubPage() {
           </div>
         ) : (
           /* Snapshots table */
-          <div className="bg-white border border-[#e2e8f0] rounded-lg overflow-hidden">
-            <div className="px-5 py-3 border-b border-[#e2e8f0] bg-[#f8fafc] flex items-center justify-between">
+          <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
+            <div className="px-5 py-3 border-b border-[#e8eaef] bg-[#f8fafc] flex items-center justify-between">
               <span className="text-xs font-black text-[#0f172a] uppercase tracking-widest">
                 Mutabakat Dosyaları
               </span>
@@ -154,7 +154,7 @@ export default async function ReconciliationHubPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-[#e2e8f0]">
+                  <tr className="border-b border-[#e8eaef]">
                     <th className="text-left px-5 py-3 text-[11px] font-semibold text-[#64748b] uppercase tracking-wide">
                       Başlık
                     </th>

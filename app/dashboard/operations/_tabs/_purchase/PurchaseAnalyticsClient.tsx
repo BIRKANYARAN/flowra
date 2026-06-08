@@ -97,7 +97,7 @@ function Skeleton() {
 
 function KpiCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 shadow-sm">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 shadow-sm">
       <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{label}</div>
       <div className="text-xl font-black tabular-nums text-[#1e293b]">{value}</div>
       {sub && <div className="text-[0.65rem] text-[#94a3b8] mt-0.5">{sub}</div>}
@@ -108,7 +108,7 @@ function KpiCard({ label, value, sub }: { label: string; value: string; sub?: st
 function MonthlySpendChart({ data }: { data: PurchaseAnalyticsSummary['monthly_spend'] }) {
   const maxAmt = Math.max(...data.map(d => d.amount_try), 1)
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm">
       <div className="px-4 py-3 border-b border-[#f1f5f9]">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Aylık Harcama (Son 6 Ay)</div>
       </div>
@@ -158,7 +158,7 @@ function CostVarianceAlerts({ alerts }: { alerts: ProductPurchaseAnalytics[] }) 
       </div>
 
       {/* Table */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm overflow-hidden">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm overflow-hidden">
         <div className="px-4 py-3 border-b border-[#f1f5f9]">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Fiyat Değişim Uyarıları</div>
         </div>
@@ -199,7 +199,7 @@ function CostVarianceAlerts({ alerts }: { alerts: ProductPurchaseAnalytics[] }) 
 function TopSuppliersTable({ suppliers }: { suppliers: SupplierAnalytics[] }) {
   if (suppliers.length === 0) return null
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm overflow-hidden">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm overflow-hidden">
       <div className="px-4 py-3 border-b border-[#f1f5f9]">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">En Büyük Tedarikçiler</div>
       </div>
@@ -247,7 +247,7 @@ function ProductCostTrendList({ products }: { products: ProductPurchaseAnalytics
   // Show top 15 by total_spent
   const top = products.slice(0, 15)
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm overflow-hidden">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm overflow-hidden">
       <div className="px-4 py-3 border-b border-[#f1f5f9]">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ürün Maliyet Trendi</div>
       </div>

@@ -166,10 +166,10 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
         role="dialog"
         aria-modal="true"
         aria-label="Yeni Satış"
-        className="fixed right-0 top-0 h-full w-[480px] bg-white z-50 border-l border-[#e2e8f0] flex flex-col"
+        className="fixed right-0 top-0 h-full w-[480px] bg-white z-50 border-l border-[#e8eaef] flex flex-col"
       >
         {/* Header */}
-        <div className="flex items-start justify-between px-5 py-4 border-b border-[#e2e8f0] flex-shrink-0">
+        <div className="flex items-start justify-between px-5 py-4 border-b border-[#e8eaef] flex-shrink-0">
           <div>
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] leading-none">
               Ticari
@@ -207,7 +207,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
                   value={customerName}
                   onChange={e => { setCustomerName(e.target.value); setError('') }}
                   placeholder="Müşteri veya firma adı"
-                  className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
+                  className="w-full border border-[#e8eaef] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                   required
                   autoFocus
                 />
@@ -226,7 +226,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
                     type="date"
                     value={saleDate}
                     onChange={e => { setSaleDate(e.target.value); setError('') }}
-                    className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
+                    className="w-full border border-[#e8eaef] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                     required
                   />
                 </div>
@@ -242,7 +242,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
                     type="date"
                     value={dueDate}
                     onChange={e => setDueDate(e.target.value)}
-                    className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
+                    className="w-full border border-[#e8eaef] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                   />
                 </div>
               </div>
@@ -268,7 +268,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
               {items.map((item, idx) => (
                 <div
                   key={idx}
-                  className="bg-[#f8fafc]/60 border border-[#e2e8f0] rounded p-3 space-y-2"
+                  className="bg-[#f8fafc]/60 border border-[#e8eaef] rounded p-3 space-y-2"
                 >
                   {/* Description row */}
                   <div className="flex items-start gap-2">
@@ -277,7 +277,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
                       placeholder="Açıklama (ürün/hizmet)"
                       value={item.description}
                       onChange={e => updateItem(idx, 'description', e.target.value)}
-                      className="flex-1 border border-[#e2e8f0] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 bg-white"
+                      className="flex-1 border border-[#e8eaef] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 bg-white"
                     />
                     {items.length > 1 && (
                       <button
@@ -304,7 +304,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
                         placeholder="1"
                         value={item.quantity}
                         onChange={e => updateItem(idx, 'quantity', e.target.value)}
-                        className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand/30 bg-white"
+                        className="w-full border border-[#e8eaef] rounded px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand/30 bg-white"
                       />
                     </div>
                     <div>
@@ -318,7 +318,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
                         placeholder="0.00"
                         value={item.unit_price}
                         onChange={e => updateItem(idx, 'unit_price', e.target.value)}
-                        className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand/30 bg-white"
+                        className="w-full border border-[#e8eaef] rounded px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand/30 bg-white"
                       />
                     </div>
                     <div>
@@ -328,7 +328,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
                       <select
                         value={item.kdv_rate}
                         onChange={e => updateItem(idx, 'kdv_rate', Number(e.target.value))}
-                        className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 bg-white"
+                        className="w-full border border-[#e8eaef] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 bg-white"
                       >
                         <option value={0}>%0</option>
                         <option value={10}>%10</option>
@@ -349,7 +349,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
 
             {/* Totals strip */}
             {grandTotal > 0 && (
-              <div className="mt-3 bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 space-y-1">
+              <div className="mt-3 bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 space-y-1">
                 <div className="flex justify-between text-xs text-[#94a3b8]">
                   <span>Ara Toplam</span>
                   <span className="font-mono font-semibold text-[#334155]">{fmt(subtotal)}</span>
@@ -358,7 +358,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
                   <span>KDV</span>
                   <span className="font-mono font-semibold text-[#334155]">{fmt(kdvTotal)}</span>
                 </div>
-                <div className="flex justify-between text-sm font-black text-[#0f172a] pt-1 border-t border-[#e2e8f0]">
+                <div className="flex justify-between text-sm font-black text-[#0f172a] pt-1 border-t border-[#e8eaef]">
                   <span>TOPLAM</span>
                   <span className="font-mono">{fmt(grandTotal)}</span>
                 </div>
@@ -380,7 +380,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
               onChange={e => setNotes(e.target.value)}
               rows={3}
               placeholder="İsteğe bağlı açıklama…"
-              className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 resize-none"
+              className="w-full border border-[#e8eaef] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 resize-none"
             />
           </div>
 
@@ -396,7 +396,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 border border-[#e2e8f0] text-[#64748b] py-2.5 rounded text-sm font-semibold hover:bg-[#f8fafc] transition-colors"
+              className="flex-1 border border-[#e8eaef] text-[#64748b] py-2.5 rounded text-sm font-semibold hover:bg-[#f8fafc] transition-colors"
             >
               İptal
             </button>

@@ -136,7 +136,7 @@ export function PartnerFinanceActions({ partners, onRefresh }: PartnerFinanceAct
   // ── Render ────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm">
 
       {/* Collapsed header / toggle — disabled while save is in flight */}
       <button
@@ -162,7 +162,7 @@ export function PartnerFinanceActions({ partners, onRefresh }: PartnerFinanceAct
 
       {/* Expanded form */}
       {open && (
-        <div className="border-t border-[#e2e8f0] px-5 py-5">
+        <div className="border-t border-[#e8eaef] px-5 py-5">
 
           {/* Action type selector */}
           <div className="mb-5">
@@ -178,8 +178,8 @@ export function PartnerFinanceActions({ partners, onRefresh }: PartnerFinanceAct
                   className={[
                     'px-3 py-1.5 rounded text-xs font-semibold border transition-colors',
                     txType === action.tx_type
-                      ? 'bg-brand-subtle text-brand border-[#e2e8f0]'
-                      : 'bg-white text-[#64748b] border-[#e2e8f0] hover:bg-[#f8fafc]',
+                      ? 'bg-brand-subtle text-brand border-[#e8eaef]'
+                      : 'bg-white text-[#64748b] border-[#e8eaef] hover:bg-[#f8fafc]',
                   ].join(' ')}
                   title={action.desc}
                 >
@@ -207,7 +207,7 @@ export function PartnerFinanceActions({ partners, onRefresh }: PartnerFinanceAct
                 id="pfa-partner"
                 value={form.partner_id}
                 onChange={e => field('partner_id', e.target.value)}
-                className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
+                className="w-full border border-[#e8eaef] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                 required
               >
                 <option value="">— Ortak seçin —</option>
@@ -234,7 +234,7 @@ export function PartnerFinanceActions({ partners, onRefresh }: PartnerFinanceAct
                   placeholder="0.00"
                   value={form.amount}
                   onChange={e => field('amount', e.target.value)}
-                  className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand/30"
+                  className="w-full border border-[#e8eaef] rounded px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand/30"
                   required
                 />
               </div>
@@ -250,7 +250,7 @@ export function PartnerFinanceActions({ partners, onRefresh }: PartnerFinanceAct
                   type="date"
                   value={form.tx_date}
                   onChange={e => field('tx_date', e.target.value)}
-                  className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
+                  className="w-full border border-[#e8eaef] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
                   required
                 />
               </div>
@@ -270,7 +270,7 @@ export function PartnerFinanceActions({ partners, onRefresh }: PartnerFinanceAct
                 onChange={e => field('notes', e.target.value)}
                 rows={2}
                 placeholder="İsteğe bağlı açıklama…"
-                className="w-full border border-[#e2e8f0] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 resize-none"
+                className="w-full border border-[#e8eaef] rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 resize-none"
               />
             </div>
 
@@ -287,7 +287,7 @@ export function PartnerFinanceActions({ partners, onRefresh }: PartnerFinanceAct
                 type="button"
                 onClick={() => { resetForm(); setOpen(false) }}
                 disabled={saving}
-                className="px-4 py-2 rounded border border-[#e2e8f0] text-sm font-semibold text-[#64748b] hover:bg-[#f8fafc] transition-colors disabled:opacity-50"
+                className="px-4 py-2 rounded border border-[#e8eaef] text-sm font-semibold text-[#64748b] hover:bg-[#f8fafc] transition-colors disabled:opacity-50"
               >
                 İptal
               </button>

@@ -35,7 +35,7 @@ type SortKey = 'rfm_code' | 'segment' | 'total_spend' | 'days_since_purchase' | 
 
 function Skeleton() {
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 space-y-3 animate-pulse">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3 space-y-3 animate-pulse">
       <div className="h-3 w-56 bg-[#f1f5f9] rounded" />
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         {[0, 1, 2, 3].map(i => (
@@ -294,14 +294,14 @@ function CustomerTable({ customers }: { customers: RfmCustomerRecord[] }) {
             <button
               onClick={() => setPage(p => Math.max(0, p - 1))}
               disabled={page === 0}
-              className="text-[10px] px-2 py-0.5 rounded border border-[#e2e8f0] disabled:opacity-30 text-[#64748b]"
+              className="text-[10px] px-2 py-0.5 rounded border border-[#e8eaef] disabled:opacity-30 text-[#64748b]"
             >
               ‹ Önceki
             </button>
             <button
               onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
               disabled={page >= totalPages - 1}
-              className="text-[10px] px-2 py-0.5 rounded border border-[#e2e8f0] disabled:opacity-30 text-[#64748b]"
+              className="text-[10px] px-2 py-0.5 rounded border border-[#e8eaef] disabled:opacity-30 text-[#64748b]"
             >
               Sonraki ›
             </button>
@@ -395,7 +395,7 @@ export default function RfmSegmentationClient({ companyId }: Props) {
   if (report.customers.length === 0) return null
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
       {/* Header */}
       <div className="px-4 py-3 border-b border-[#f1f5f9] flex items-center justify-between">
         <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">

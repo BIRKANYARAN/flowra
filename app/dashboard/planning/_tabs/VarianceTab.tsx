@@ -22,7 +22,7 @@ export async function VarianceTab() {
 
       {/* Forecast accuracy analysis */}
       {companyId && (
-        <div className="border-t border-[#e2e8f0] pt-6">
+        <div className="border-t border-[#e8eaef] pt-6">
           <ForecastAccuracyClient companyId={companyId} />
         </div>
       )}

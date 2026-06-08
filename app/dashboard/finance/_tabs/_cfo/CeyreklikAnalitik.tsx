@@ -21,8 +21,8 @@ export function CeyreklikAnalitik({ quarterlyReport, today }: { quarterlyReport:
         const fmtDateQ = fmtDateMed
 
         return (
-          <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-            <div className="px-4 py-3 border-b border-[#e2e8f0] flex items-center justify-between">
+          <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+            <div className="px-4 py-3 border-b border-[#e8eaef] flex items-center justify-between">
               <div>
                 <h2 className="text-xs font-black text-[#0f172a]">Çeyreklik Analitik — {currentYear}</h2>
                 <p className="text-[10px] text-[#94a3b8] mt-0.5">YTD P&L · Çeyreklik performans · Geçici vergi takvimi</p>
@@ -41,7 +41,7 @@ export function CeyreklikAnalitik({ quarterlyReport, today }: { quarterlyReport:
             <div className="overflow-x-auto">
               <table className="w-full text-xs min-w-[500px]">
                 <thead>
-                  <tr className="bg-[#f8fafc] border-b border-[#e2e8f0]">
+                  <tr className="bg-[#f8fafc] border-b border-[#e8eaef]">
                     <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Çeyrek</th>
                     <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ciro</th>
                     <th className="text-right px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-brand-light">Brüt Kâr</th>
@@ -84,7 +84,7 @@ export function CeyreklikAnalitik({ quarterlyReport, today }: { quarterlyReport:
             </div>
             {/* Gecici vergi schedule if any */}
             {qs.some((q: QuarterResult) => q.gecici_vergi > 0) && (
-              <div className="border-t border-[#e2e8f0]">
+              <div className="border-t border-[#e8eaef]">
                 <div className="px-4 py-3 flex items-center justify-between">
                   <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Geçici Vergi Takvimi {currentYear}</div>
                   <span className="text-xs font-bold text-warn-text bg-warn-light border border-warn-light px-2 py-0.5 rounded">Toplam {fmtTRY(ytd.total_gecici)}</span>

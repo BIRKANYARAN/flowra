@@ -17,11 +17,11 @@ const PAYMENT_META: Record<string, { label: string; cls: string }> = {
   paid:      { label: 'Ödendi',   cls: 'bg-pos-light text-pos-text border-pos-light' },
   partial:   { label: 'Kısmi',    cls: 'bg-info-light text-info-text border-info-light' },
   overdue:   { label: 'Gecikmiş', cls: 'bg-neg-light text-neg border-neg-light' },
-  cancelled: { label: 'İptal',    cls: 'bg-[#f8fafc] text-[#94a3b8] border-[#e2e8f0]' },
+  cancelled: { label: 'İptal',    cls: 'bg-[#f8fafc] text-[#94a3b8] border-[#e8eaef]' },
 }
 
 const SHIPMENT_META: Record<string, { label: string; cls: string }> = {
-  pending:   { label: 'Hazırlanıyor', cls: 'bg-[#f8fafc] text-[#64748b] border-[#e2e8f0]' },
+  pending:   { label: 'Hazırlanıyor', cls: 'bg-[#f8fafc] text-[#64748b] border-[#e8eaef]' },
   shipped:   { label: 'Kargoda',      cls: 'bg-info-light text-info-text border-info-light' },
   delivered: { label: 'Teslim',       cls: 'bg-pos-light text-pos-text border-pos-light' },
 }
@@ -30,7 +30,7 @@ const ACTIONABLE_STATUSES = new Set(['pending', 'partial', 'overdue'])
 
 function StatusBadge({ map, val }: { map: Record<string, { label: string; cls: string }>; val: string | null }) {
   if (!val) return null
-  const m = map[val] ?? { label: val, cls: 'bg-[#f8fafc] text-[#94a3b8] border-[#e2e8f0]' }
+  const m = map[val] ?? { label: val, cls: 'bg-[#f8fafc] text-[#94a3b8] border-[#e8eaef]' }
   return (
     <span className={`inline-flex items-center px-1.5 py-0.5 rounded border text-[10px] font-bold ${m.cls}`}>
       {m.label}
@@ -113,10 +113,10 @@ function PaymentDrawer({ sale, onClose, onSuccess }: PaymentDrawerProps) {
         role="dialog"
         aria-modal="true"
         aria-label="Ödeme Kaydet"
-        className="fixed right-0 top-0 h-full w-80 bg-white z-50 border-l border-[#e2e8f0] flex flex-col"
+        className="fixed right-0 top-0 h-full w-80 bg-white z-50 border-l border-[#e8eaef] flex flex-col"
       >
         {/* Drawer header */}
-        <div className="flex items-start justify-between px-5 py-4 border-b border-[#e2e8f0]">
+        <div className="flex items-start justify-between px-5 py-4 border-b border-[#e8eaef]">
           <div>
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] leading-none">
               Ödeme Kaydet
@@ -158,7 +158,7 @@ function PaymentDrawer({ sale, onClose, onSuccess }: PaymentDrawerProps) {
               min="0.01"
               value={amount}
               onChange={e => setAmount(e.target.value)}
-              className="w-full border border-[#e2e8f0] rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 font-mono tabular-nums"
+              className="w-full border border-[#e8eaef] rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 font-mono tabular-nums"
               required
               autoFocus
             />
@@ -187,7 +187,7 @@ function PaymentDrawer({ sale, onClose, onSuccess }: PaymentDrawerProps) {
               id="payment-method"
               value={paymentMethod}
               onChange={e => setPaymentMethod(e.target.value as PaymentMethod)}
-              className="w-full border border-[#e2e8f0] rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
+              className="w-full border border-[#e8eaef] rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
             >
               {PAYMENT_METHODS.map(m => (
                 <option key={m} value={m}>{m}</option>
@@ -208,7 +208,7 @@ function PaymentDrawer({ sale, onClose, onSuccess }: PaymentDrawerProps) {
               type="date"
               value={date}
               onChange={e => setDate(e.target.value)}
-              className="w-full border border-[#e2e8f0] rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
+              className="w-full border border-[#e8eaef] rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30"
               required
             />
           </div>
@@ -223,7 +223,7 @@ function PaymentDrawer({ sale, onClose, onSuccess }: PaymentDrawerProps) {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 border border-[#e2e8f0] text-[#64748b] py-2.5 rounded text-sm font-semibold hover:bg-[#f8fafc] transition-colors"
+              className="flex-1 border border-[#e8eaef] text-[#64748b] py-2.5 rounded text-sm font-semibold hover:bg-[#f8fafc] transition-colors"
             >
               İptal
             </button>
@@ -339,7 +339,7 @@ export function SalesTable({ rows }: Props) {
               placeholder="Müşteri ara…"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full pl-8 pr-3 py-2 text-sm border border-[#e2e8f0] rounded focus:outline-none focus:ring-2 focus:ring-brand/30 bg-white"
+              className="w-full pl-8 pr-3 py-2 text-sm border border-[#e8eaef] rounded focus:outline-none focus:ring-2 focus:ring-brand/30 bg-white"
             />
           </div>
 
@@ -362,7 +362,7 @@ export function SalesTable({ rows }: Props) {
           <select
             value={statusFilter}
             onChange={e => setStatusFilter(e.target.value)}
-            className="border border-[#e2e8f0] rounded px-3 py-2 text-xs font-medium bg-white focus:outline-none focus:ring-2 focus:ring-brand/30"
+            className="border border-[#e8eaef] rounded px-3 py-2 text-xs font-medium bg-white focus:outline-none focus:ring-2 focus:ring-brand/30"
           >
             {PAYMENT_FILTER_OPTIONS.map(o => (
               <option key={o.value} value={o.value}>{o.label}</option>
@@ -407,7 +407,7 @@ export function SalesTable({ rows }: Props) {
               color: totalPft >= 0 ? 'text-pos-text' : 'text-neg',
             },
           ].map(card => (
-            <div key={card.label} className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
+            <div key={card.label} className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
               <div className={`text-xl font-black tabular-nums ${card.color}`}>{card.value}</div>
             </div>
@@ -416,7 +416,7 @@ export function SalesTable({ rows }: Props) {
 
         {/* ── Table ──────────────────────────────────────────────────────────── */}
         {filtered.length === 0 ? (
-          <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft text-center py-12 shadow-sm">
+          <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft text-center py-12 shadow-sm">
             <p className="text-[#94a3b8] text-sm">{isFiltered ? 'Filtreyle eşleşen satış yok.' : 'Henüz satış kaydı yok.'}</p>
             {isFiltered ? (
               <button
@@ -435,9 +435,9 @@ export function SalesTable({ rows }: Props) {
             )}
           </div>
         ) : (
-          <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
+          <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
             {/* Header */}
-            <div className="grid grid-cols-12 text-[0.65rem] font-black text-[#94a3b8] px-4 py-2 border-b border-[#e2e8f0] uppercase tracking-widest">
+            <div className="grid grid-cols-12 text-[0.65rem] font-black text-[#94a3b8] px-4 py-2 border-b border-[#e8eaef] uppercase tracking-widest">
               <div className="col-span-3">Müşteri</div>
               <div className="col-span-2">Proforma</div>
               <div className="col-span-2">Tarih</div>
@@ -499,7 +499,7 @@ export function SalesTable({ rows }: Props) {
 
             {/* Footer count */}
             {isFiltered && (
-              <div className="px-5 py-2 border-t border-[#e2e8f0] bg-[#f8fafc]/60">
+              <div className="px-5 py-2 border-t border-[#e8eaef] bg-[#f8fafc]/60">
                 <span className="text-[10px] text-[#94a3b8]">
                   {filtered.length} gösteriliyor · toplam {rows.length} satış
                 </span>

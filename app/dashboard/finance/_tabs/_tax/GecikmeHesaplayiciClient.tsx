@@ -48,13 +48,13 @@ export function GecikmeHesaplayiciClient() {
   }, [borcStr, vadeStr, odemeStr])
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-      <div className="px-4 py-3 border-b border-[#e2e8f0] flex items-center justify-between">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+      <div className="px-4 py-3 border-b border-[#e8eaef] flex items-center justify-between">
         <div>
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Gecikme Faizi Hesaplayıcı</div>
           <p className="text-[10px] text-[#94a3b8] mt-0.5">Vadesi geçen vergi borçları için gecikme faizi hesaplama aracı</p>
         </div>
-        <span className="text-[9px] font-bold px-2 py-0.5 rounded border bg-[#f1f5f9] text-[#64748b] border-[#e2e8f0]">
+        <span className="text-[9px] font-bold px-2 py-0.5 rounded border bg-[#f1f5f9] text-[#64748b] border-[#e8eaef]">
           Bilgi amaçlı
         </span>
       </div>
@@ -72,7 +72,7 @@ export function GecikmeHesaplayiciClient() {
               placeholder="0,00"
               value={borcStr}
               onChange={e => setBorcStr(e.target.value)}
-              className="w-full text-xs border border-[#e2e8f0] rounded px-2.5 py-2 font-mono text-[#0f172a] placeholder:text-[#cbd5e1] focus:outline-none focus:border-warn/40 focus:ring-1 focus:ring-warn/20 transition-colors"
+              className="w-full text-xs border border-[#e8eaef] rounded px-2.5 py-2 font-mono text-[#0f172a] placeholder:text-[#cbd5e1] focus:outline-none focus:border-warn/40 focus:ring-1 focus:ring-warn/20 transition-colors"
             />
           </div>
           <div>
@@ -83,7 +83,7 @@ export function GecikmeHesaplayiciClient() {
               type="date"
               value={vadeStr}
               onChange={e => setVadeStr(e.target.value)}
-              className="w-full text-xs border border-[#e2e8f0] rounded px-2.5 py-2 text-[#0f172a] focus:outline-none focus:border-warn/40 focus:ring-1 focus:ring-warn/20 transition-colors"
+              className="w-full text-xs border border-[#e8eaef] rounded px-2.5 py-2 text-[#0f172a] focus:outline-none focus:border-warn/40 focus:ring-1 focus:ring-warn/20 transition-colors"
             />
           </div>
           <div>
@@ -94,7 +94,7 @@ export function GecikmeHesaplayiciClient() {
               type="date"
               value={odemeStr}
               onChange={e => setOdemeStr(e.target.value)}
-              className="w-full text-xs border border-[#e2e8f0] rounded px-2.5 py-2 text-[#0f172a] focus:outline-none focus:border-warn/40 focus:ring-1 focus:ring-warn/20 transition-colors"
+              className="w-full text-xs border border-[#e8eaef] rounded px-2.5 py-2 text-[#0f172a] focus:outline-none focus:border-warn/40 focus:ring-1 focus:ring-warn/20 transition-colors"
             />
           </div>
         </div>
@@ -112,7 +112,7 @@ export function GecikmeHesaplayiciClient() {
                 {result.days} gün
               </div>
             </div>
-            <div className="text-center border-x border-[#e2e8f0]">
+            <div className="text-center border-x border-[#e8eaef]">
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Gecikme Faizi</div>
               <div className={`text-xl font-black tabular-nums ${result.faiz > 0 ? 'text-neg' : 'text-pos-text'}`}>
                 {formatTRY(result.faiz)}

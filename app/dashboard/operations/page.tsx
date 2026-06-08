@@ -61,7 +61,7 @@ async function OpsCommandPanel({ companyId }: { companyId: string }) {
   const badge   = PULSE_BADGE[pulse]
 
   return (
-    <div className="border border-[#e2e8f0] rounded-lg overflow-hidden shadow-sm">
+    <div className="border border-[#e8eaef] rounded-lg overflow-hidden shadow-sm">
       {/* Header row */}
       <div className="flex items-center justify-between gap-3 px-5 py-3 bg-[#0f172a]">
         <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
@@ -79,7 +79,7 @@ async function OpsCommandPanel({ companyId }: { companyId: string }) {
       </div>
 
       {/* KPI cards row */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 divide-x divide-y sm:divide-y-0 divide-[#e2e8f0] bg-white">
+      <div className="grid grid-cols-2 sm:grid-cols-5 divide-x divide-y sm:divide-y-0 divide-[#e8eaef] bg-white">
         {/* Bugün */}
         <div className="px-4 py-4">
           <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Bugün</div>
@@ -209,7 +209,7 @@ export default async function OperationsPage({ searchParams }: PageProps) {
 
       {/* Sticky tab nav + context bar */}
       <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm -mx-4">
-        <div className="px-5 pt-1 border-b border-[#e2e8f0]">
+        <div className="px-5 pt-1 border-b border-[#e8eaef]">
           <HubTabNav tabs={TABS} activeTab={activeTab} basePath="/dashboard/operations" />
         </div>
         <OperationsContextBar companyId={companyId} />

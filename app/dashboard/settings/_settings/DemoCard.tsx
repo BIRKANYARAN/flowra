@@ -40,7 +40,7 @@ export function DemoCard({ disabled, loading, msg, onSeed, onReset }: Props) {
               onClick={onSeed}
               loading={loading === 'seed'}
               disabled={loading !== false}
-              className="border-[#e2e8f0] text-brand bg-brand-subtle hover:bg-brand-subtle"
+              className="border-[#e8eaef] text-brand bg-brand-subtle hover:bg-brand-subtle"
             >
               {loading === 'seed' ? 'Yükleniyor...' : 'Demo Veri Yükle'}
             </FlowraButton>

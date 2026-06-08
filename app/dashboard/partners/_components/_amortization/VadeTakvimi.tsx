@@ -163,7 +163,7 @@ function MaturityScheduleTable({ schedule }: { schedule: Array<{ month: string; 
     <div className="overflow-x-auto">
       <table className="w-full text-xs border-collapse">
         <thead>
-          <tr className="border-b border-[#e2e8f0]">
+          <tr className="border-b border-[#e8eaef]">
             <th className="py-1.5 px-2 text-left font-semibold text-[#64748b] whitespace-nowrap">Ay</th>
             <th className="py-1.5 px-2 text-right font-semibold text-[#64748b] whitespace-nowrap">Vade Tutarı</th>
             <th className="py-1.5 px-2 text-right font-semibold text-[#64748b] whitespace-nowrap">Tranche</th>

@@ -167,7 +167,7 @@ export default async function FinancePage({ searchParams }: PageProps) {
         )}
         {activeTab === 'tax' && (
           <Link href="/dashboard/cfo/tax/kdv"
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded border border-[#e2e8f0] text-[#334155] text-xs font-semibold hover:bg-[#f8fafc] transition-colors">
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded border border-[#e8eaef] text-[#334155] text-xs font-semibold hover:bg-[#f8fafc] transition-colors">
             KDV Beyanı →
           </Link>
         )}
@@ -175,7 +175,7 @@ export default async function FinancePage({ searchParams }: PageProps) {
 
       {/* ── Tab nav + persistent context bar (sticky together) ──────────────────── */}
       <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm -mx-4">
-        <div className="px-5 pt-1 border-b border-[#e2e8f0]">
+        <div className="px-5 pt-1 border-b border-[#e8eaef]">
           <UnifiedTabNav tabs={FINANCE_NAV_TABS} activeTab={activeTab} basePath="/dashboard/finance" />
         </div>
         <div className="px-5">

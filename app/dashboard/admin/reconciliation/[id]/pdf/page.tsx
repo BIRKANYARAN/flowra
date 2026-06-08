@@ -95,7 +95,7 @@ export default function ReconciliationPdfPage({
   return (
     <div className="min-h-screen bg-[#f8fafc]">
       {/* Header */}
-      <div className="bg-white border-b border-[#e2e8f0]">
+      <div className="bg-white border-b border-[#e8eaef]">
         <div className="max-w-2xl mx-auto px-6 py-8">
           <div className="flex items-center gap-3 mb-4">
             <Link
@@ -124,7 +124,7 @@ export default function ReconciliationPdfPage({
 
         {/* Loading state */}
         {loading && (
-          <div className="bg-white border border-[#e2e8f0] rounded-lg p-8 text-center">
+          <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-8 text-center">
             <div className="w-8 h-8 border-2 border-[#94a3b8] border-t-[#0f172a] rounded-full animate-spin mx-auto mb-4" />
             <p className="text-sm text-[#64748b]">Mutabakat yükleniyor…</p>
           </div>
@@ -141,8 +141,8 @@ export default function ReconciliationPdfPage({
         {!loading && snapshot && (
           <>
             {/* Snapshot info */}
-            <div className="bg-white border border-[#e2e8f0] rounded-lg overflow-hidden mb-4">
-              <div className="px-5 py-3 border-b border-[#e2e8f0] bg-[#f8fafc]">
+            <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden mb-4">
+              <div className="px-5 py-3 border-b border-[#e8eaef] bg-[#f8fafc]">
                 <span className="text-xs font-black text-[#0f172a] uppercase tracking-widest">
                   Dosya Bilgileri
                 </span>
@@ -209,7 +209,7 @@ export default function ReconciliationPdfPage({
             </button>
 
             {/* Info note */}
-            <div className="mt-4 bg-[#f8fafc] border border-[#e2e8f0] rounded-lg px-5 py-4">
+            <div className="mt-4 bg-[#f8fafc] border border-[#e8eaef] rounded-lg px-5 py-4">
               <p className="text-xs font-semibold text-[#334155] mb-2">PDF içeriği</p>
               <ul className="space-y-1 text-xs text-[#64748b]">
                 <li>• Kurumsal kapak + SHA-256 parmak izi şeridi</li>

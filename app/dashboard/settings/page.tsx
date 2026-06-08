@@ -434,7 +434,7 @@ export default function SettingsPage() {
 
           {/* Logo */}
           <FlowraCard>
-            <p className="font-bold text-sm border-b border-[#e2e8f0] pb-2 mb-3">Firma Logosu</p>
+            <p className="font-bold text-sm border-b border-[#e8eaef] pb-2 mb-3">Firma Logosu</p>
 
             {/* Hidden file input */}
             <input
@@ -455,7 +455,7 @@ export default function SettingsPage() {
               {/* Preview box */}
               <label
                 htmlFor="logo-file-input"
-                className="w-16 h-16 rounded border-2 border-dashed border-[#e2e8f0] flex items-center justify-center bg-[#f8fafc] overflow-hidden hover:border-brand/30 transition-colors flex-shrink-0 relative"
+                className="w-16 h-16 rounded border-2 border-dashed border-[#e8eaef] flex items-center justify-center bg-[#f8fafc] overflow-hidden hover:border-brand/30 transition-colors flex-shrink-0 relative"
                 style={{ cursor: uploading ? 'default' : 'pointer' }}
                 title="Logo yüklemek için tıklayın"
               >
@@ -486,8 +486,8 @@ export default function SettingsPage() {
                   htmlFor="logo-file-input"
                   className={`inline-flex items-center justify-center px-3 py-1.5 rounded border text-xs font-semibold transition-colors select-none ${
                     uploading
-                      ? 'opacity-50 cursor-default bg-[#f8fafc] border-[#e2e8f0] text-[#94a3b8]'
-                      : 'cursor-pointer bg-white border-[#e2e8f0] text-[#334155] hover:bg-[#f8fafc] hover:border-[#e2e8f0]'
+                      ? 'opacity-50 cursor-default bg-[#f8fafc] border-[#e8eaef] text-[#94a3b8]'
+                      : 'cursor-pointer bg-white border-[#e8eaef] text-[#334155] hover:bg-[#f8fafc] hover:border-[#e8eaef]'
                   }`}
                 >
                   {uploading ? 'Yükleniyor...' : signedPreview ? 'Değiştir' : 'Logo Seç'}
@@ -508,7 +508,7 @@ export default function SettingsPage() {
 
           {/* Company Info */}
           <FlowraCard>
-            <p className="font-bold text-sm border-b border-[#e2e8f0] pb-2 mb-3">Firma Bilgileri</p>
+            <p className="font-bold text-sm border-b border-[#e8eaef] pb-2 mb-3">Firma Bilgileri</p>
 
             <div className="space-y-3">
               <FlowraInput
@@ -590,7 +590,7 @@ export default function SettingsPage() {
 
           {/* Banks */}
           <FlowraCard>
-            <div className="flex items-center justify-between border-b border-[#e2e8f0] pb-2 mb-3">
+            <div className="flex items-center justify-between border-b border-[#e8eaef] pb-2 mb-3">
               <div>
                 <p className="font-bold text-sm">Banka Hesapları</p>
                 <p className="text-[10px] text-[#94a3b8] mt-0.5">PDF&apos;de ve proforma sayfasında gösterilir</p>
@@ -673,8 +673,8 @@ export default function SettingsPage() {
                     key={b.id}
                     className={`flex items-center justify-between rounded px-3 py-2 border transition-colors ${
                       b.is_default
-                        ? 'border-[#e2e8f0] bg-brand-subtle'
-                        : 'border-[#e2e8f0] hover:bg-[#f8fafc]'
+                        ? 'border-[#e8eaef] bg-brand-subtle'
+                        : 'border-[#e8eaef] hover:bg-[#f8fafc]'
                     }`}
                   >
                     <div className="min-w-0 flex-1">

@@ -100,7 +100,7 @@ export function PriceOptimizationClient() {
 
   if (report.per_product.length === 0) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm px-6 py-8 text-center text-sm text-[#94a3b8]">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm px-6 py-8 text-center text-sm text-[#94a3b8]">
         Son dönemde fiyat verisi bulunan ürün yok. Satış kaydedildikçe optimizasyon analizi burada görünür.
       </div>
     )
@@ -123,7 +123,7 @@ export function PriceOptimizationClient() {
     'text-neg-text'
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm">
       {/* Header strip */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">
         <div>

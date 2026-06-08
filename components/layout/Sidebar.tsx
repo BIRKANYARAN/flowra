@@ -57,7 +57,7 @@ export function Sidebar({ navBadges = {} }: SidebarProps) {
   }
 
   return (
-    <aside className="hidden md:flex w-60 bg-white border-r border-[#e2e8f0] h-screen sticky top-0 flex-col py-3 px-2 flex-shrink-0 overflow-y-auto">
+    <aside className="hidden md:flex w-60 bg-white border-r border-[#e8eaef] h-screen sticky top-0 flex-col py-3 px-2 flex-shrink-0 overflow-y-auto">
 
       {/* ── Brand ──────────────────────────────────────────────────────────── */}
       <div className="px-2.5 mb-3">
@@ -90,8 +90,8 @@ export function Sidebar({ navBadges = {} }: SidebarProps) {
 
         {/* ── Company switcher dropdown ──────────────────────────────────── */}
         {hasMultiCompany && showSwitcher && (
-          <div className="mt-2 rounded border border-[#e2e8f0] bg-white shadow-sm overflow-hidden">
-            <div className="px-3 py-1.5 bg-[#f8fafc] border-b border-[#e2e8f0]">
+          <div className="mt-2 rounded border border-[#e8eaef] bg-white shadow-sm overflow-hidden">
+            <div className="px-3 py-1.5 bg-[#f8fafc] border-b border-[#e8eaef]">
               <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
                 Şirket Seç
               </span>
@@ -127,7 +127,7 @@ export function Sidebar({ navBadges = {} }: SidebarProps) {
       {/* ── Command trigger ────────────────────────────────────────────────── */}
       <button
         onClick={() => window.dispatchEvent(new CustomEvent('flowra:cmd'))}
-        className="mx-1 mb-3 w-[calc(100%-0.5rem)] flex items-center gap-2 px-3 py-2 rounded border border-[#e2e8f0] bg-[#f8fafc]/60 hover:bg-[#f1f5f9] hover:border-[#e2e8f0] transition-colors text-left group"
+        className="mx-1 mb-3 w-[calc(100%-0.5rem)] flex items-center gap-2 px-3 py-2 rounded border border-[#e8eaef] bg-[#f8fafc]/60 hover:bg-[#f1f5f9] hover:border-[#e8eaef] transition-colors text-left group"
       >
         <svg className="w-3.5 h-3.5 text-[#94a3b8] flex-shrink-0 group-hover:text-[#64748b] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -135,7 +135,7 @@ export function Sidebar({ navBadges = {} }: SidebarProps) {
         <span className="text-[11px] text-[#94a3b8] flex-1 group-hover:text-[#64748b] transition-colors">
           Ara veya komut gir...
         </span>
-        <kbd className="text-[9px] text-[#cbd5e1] bg-white border border-[#e2e8f0] px-1.5 py-0.5 rounded font-mono leading-tight flex-shrink-0">
+        <kbd className="text-[9px] text-[#cbd5e1] bg-white border border-[#e8eaef] px-1.5 py-0.5 rounded font-mono leading-tight flex-shrink-0">
           ⌘K
         </kbd>
       </button>
@@ -156,7 +156,7 @@ export function Sidebar({ navBadges = {} }: SidebarProps) {
         {/* Ayarlar fallback — only for non-admin users */}
         {!isAdmin && (
           <>
-            <div className="my-1.5 mx-1 border-t border-[#e2e8f0]" />
+            <div className="my-1.5 mx-1 border-t border-[#e8eaef]" />
             <NavLink
               item={SETTINGS_FALLBACK}
               active={isNavItemActive(SETTINGS_FALLBACK, pathname, search)}
@@ -168,7 +168,7 @@ export function Sidebar({ navBadges = {} }: SidebarProps) {
       </nav>
 
       {/* ── User footer ────────────────────────────────────────────────────── */}
-      <div className="pt-3 border-t border-[#e2e8f0] mt-3">
+      <div className="pt-3 border-t border-[#e8eaef] mt-3">
         <div className="flex items-center gap-2.5 px-3 py-1.5 mb-0.5">
           <div className="w-7 h-7 rounded bg-brand-subtle flex items-center justify-center flex-shrink-0">
             <span className="text-brand font-bold text-xs">{userInitials}</span>
@@ -288,7 +288,7 @@ function NavLink({
 
       {/* Sub-items — always visible when parent has children */}
       {item.children && item.children.length > 0 && (
-        <div className={`ml-3 mt-0.5 pl-3 border-l space-y-0.5 transition-colors ${childActive ? 'border-brand-light/40' : 'border-[#e2e8f0]'}`}>
+        <div className={`ml-3 mt-0.5 pl-3 border-l space-y-0.5 transition-colors ${childActive ? 'border-brand-light/40' : 'border-[#e8eaef]'}`}>
           {item.children.map(child => {
             const childIsActive = isNavItemActive(child, pathname)
             return (

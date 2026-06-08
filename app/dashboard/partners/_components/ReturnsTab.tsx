@@ -17,13 +17,13 @@ export function ReturnsTab({ loading, returns }: ReturnsTabProps) {
   return (
     <div className="flex flex-col gap-4">
       {loading ? <Skeleton height="h-32" /> : returns.length === 0 ? (
-        <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded px-4 py-6 text-center text-sm text-[#94a3b8]">
+        <div className="bg-[#f8fafc] border border-[#e8eaef] rounded px-4 py-6 text-center text-sm text-[#94a3b8]">
           Getiri verisi hesaplanamadı.
         </div>
       ) : (
         <>
-          <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-            <div className="px-4 py-2.5 border-b border-[#e2e8f0] bg-[#f8fafc]">
+          <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+            <div className="px-4 py-2.5 border-b border-[#e8eaef] bg-[#f8fafc]">
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ortak Bazında Sermaye Getirisi</div>
             </div>
             <div className="divide-y divide-[#f1f5f9]">

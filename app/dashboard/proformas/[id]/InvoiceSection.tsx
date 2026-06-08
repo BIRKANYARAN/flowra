@@ -82,7 +82,7 @@ const ProformaInvoiceNoSSR = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="bg-white rounded border border-[#e2e8f0] overflow-hidden">
+      <div className="bg-white rounded border border-[#e8eaef] overflow-hidden">
         <div className="bg-[#0f172a] h-16 animate-pulse" />
         <div className="p-8 space-y-3">
           <div className="h-4 bg-[#f1f5f9] rounded animate-pulse w-3/4" />

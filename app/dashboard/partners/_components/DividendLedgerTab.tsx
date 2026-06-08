@@ -72,7 +72,7 @@ function EventTypeBadge({ type }: { type: DividendEvent['event_type'] }) {
     )
   }
   return (
-    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded border bg-[#f1f5f9] text-[#64748b] border-[#e2e8f0]">
+    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded border bg-[#f1f5f9] text-[#64748b] border-[#e8eaef]">
       Beyan
     </span>
   )
@@ -108,8 +108,8 @@ function EventRow({ event }: { event: DividendEvent }) {
 
 function PartnerSummaryCard({ summary }: { summary: PartnerDividendSummary }) {
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-      <div className="px-4 py-3 border-b border-[#e2e8f0] bg-[#f8fafc] flex items-start justify-between gap-2">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+      <div className="px-4 py-3 border-b border-[#e8eaef] bg-[#f8fafc] flex items-start justify-between gap-2">
         <div>
           <div className="text-xs font-black text-[#0f172a]">{summary.partner_name}</div>
           <div className="text-[10px] text-[#94a3b8] mt-0.5">
@@ -128,7 +128,7 @@ function PartnerSummaryCard({ summary }: { summary: PartnerDividendSummary }) {
           </div>
         )}
       </div>
-      <div className="grid grid-cols-3 divide-x divide-[#e2e8f0]">
+      <div className="grid grid-cols-3 divide-x divide-[#e8eaef]">
         <div className="px-3 py-2.5">
           <div className="text-[0.55rem] font-black uppercase tracking-widest text-[#94a3b8]">Brüt</div>
           <div className="text-xs font-black tabular-nums text-[#0f172a] mt-0.5">
@@ -149,7 +149,7 @@ function PartnerSummaryCard({ summary }: { summary: PartnerDividendSummary }) {
         </div>
       </div>
       {summary.pending_gross_try > 0 && (
-        <div className="px-4 py-2 border-t border-[#e2e8f0] bg-warn-light flex items-center justify-between">
+        <div className="px-4 py-2 border-t border-[#e8eaef] bg-warn-light flex items-center justify-between">
           <span className="text-[10px] text-warn-text font-semibold">Bekleyen Temettü</span>
           <span className="text-[10px] font-black text-warn-text tabular-nums">
             {fmtTRY(summary.pending_gross_try)}
@@ -214,7 +214,7 @@ export function DividendLedgerTab() {
                 'px-3 py-1.5 text-xs font-semibold rounded border transition-colors',
                 selectedYear === y
                   ? 'bg-[#0f172a] text-white border-[#0f172a]'
-                  : 'bg-white text-[#64748b] border-[#e2e8f0] hover:border-[#94a3b8]',
+                  : 'bg-white text-[#64748b] border-[#e8eaef] hover:border-[#94a3b8]',
               ].join(' ')}
             >
               {y ?? 'Tümü'}
@@ -224,12 +224,12 @@ export function DividendLedgerTab() {
       </div>
 
       {/* ── 1. Summary strip ─────────────────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-        <div className="px-4 py-3 border-b border-[#e2e8f0] bg-[#f8fafc]">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+        <div className="px-4 py-3 border-b border-[#e8eaef] bg-[#f8fafc]">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Temettü Özeti</div>
           <p className="text-[10px] text-[#94a3b8] mt-0.5">GVK 94 stopaj dahil · TTK 509 uyum takibi</p>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0 divide-[#e2e8f0]">
+        <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0 divide-[#e8eaef]">
           <SummaryCard
             label="Toplam Beyan (Brüt)"
             value={fmtTRY(ledger.total_declared_try)}
@@ -282,8 +282,8 @@ export function DividendLedgerTab() {
       )}
 
       {/* ── 4. Full event ledger table ───────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
-        <div className="px-4 py-3 border-b border-[#e2e8f0] bg-[#f8fafc]">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
+        <div className="px-4 py-3 border-b border-[#e8eaef] bg-[#f8fafc]">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Temettü Hareketleri</div>
           <p className="text-[10px] text-[#94a3b8] mt-0.5">
             Tüm beyan ve ödeme kayıtları · Kronolojik · GVK 94 stopaj
@@ -303,7 +303,7 @@ export function DividendLedgerTab() {
           <div className="overflow-x-auto">
             <table className="w-full text-xs min-w-[680px]">
               <thead>
-                <tr className="border-b border-[#e2e8f0] bg-[#f8fafc]">
+                <tr className="border-b border-[#e8eaef] bg-[#f8fafc]">
                   <th className="text-left px-3 py-2 text-[0.6rem] font-black uppercase text-[#94a3b8]">Tarih</th>
                   <th className="text-left px-3 py-2 text-[0.6rem] font-black uppercase text-[#94a3b8]">Ortak</th>
                   <th className="text-left px-3 py-2 text-[0.6rem] font-black uppercase text-[#94a3b8]">Tür</th>

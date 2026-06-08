@@ -103,7 +103,7 @@ function Stage({ stageKey, step, label, count, value, color, sub, selected, onCl
     <button type="button" onClick={onClick}
       className={`flex-1 min-w-0 text-left transition-all group focus:outline-none ${selected ? 'scale-[1.02]' : ''}`}>
       <div className={`border-2 rounded px-4 py-4 h-full transition-all ${color} ${
-        selected ? 'shadow-sm ring-2 ring-offset-1 ring-brand/30' : 'group-hover:shadow-sm group-hover:border-[#e2e8f0]'
+        selected ? 'shadow-sm ring-2 ring-offset-1 ring-brand/30' : 'group-hover:shadow-sm group-hover:border-[#e8eaef]'
       }`}>
         <div className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-0.5">{step}</div>
         <div className="font-black text-base leading-tight mb-2">{label}</div>
@@ -130,7 +130,7 @@ function StokPanel({ lots }: { lots: StockLot[] }) {
     <div>
       <table className="w-full text-sm">
         <thead>
-          <tr className="text-[10px] font-bold uppercase text-[#94a3b8] border-b border-[#e2e8f0]">
+          <tr className="text-[10px] font-bold uppercase text-[#94a3b8] border-b border-[#e8eaef]">
             <th className="text-left px-4 py-2">Lot / Ürün</th>
             <th className="text-right px-4 py-2">Adet</th>
             <th className="text-right px-4 py-2">Birim Maliyet</th>
@@ -152,7 +152,7 @@ function StokPanel({ lots }: { lots: StockLot[] }) {
           ))}
         </tbody>
         <tfoot>
-          <tr className="border-t-2 border-[#e2e8f0]">
+          <tr className="border-t-2 border-[#e8eaef]">
             <td className="px-4 py-2 text-xs font-bold text-[#64748b]" colSpan={3}>Toplam FIFO maliyet</td>
             <td className="px-4 py-2 text-right font-black tabular-nums text-[#0f172a]">{fmt(total)}</td>
             <td />
@@ -173,7 +173,7 @@ function TeklifPanel({ proformas }: { proformas: Proforma[] }) {
     <div>
       <table className="w-full text-sm">
         <thead>
-          <tr className="text-[10px] font-bold uppercase text-[#94a3b8] border-b border-[#e2e8f0]">
+          <tr className="text-[10px] font-bold uppercase text-[#94a3b8] border-b border-[#e8eaef]">
             <th className="text-left px-4 py-2">Müşteri</th>
             <th className="text-left px-4 py-2">Durum</th>
             <th className="text-right px-4 py-2">Tutar</th>
@@ -213,7 +213,7 @@ function SatisPanel({ proformas }: { proformas: Proforma[] }) {
     <div>
       <table className="w-full text-sm">
         <thead>
-          <tr className="text-[10px] font-bold uppercase text-[#94a3b8] border-b border-[#e2e8f0]">
+          <tr className="text-[10px] font-bold uppercase text-[#94a3b8] border-b border-[#e8eaef]">
             <th className="text-left px-4 py-2">Müşteri</th>
             <th className="text-right px-4 py-2">Tutar</th>
             <th className="text-right px-4 py-2">Para Birimi</th>
@@ -236,7 +236,7 @@ function SatisPanel({ proformas }: { proformas: Proforma[] }) {
           ))}
         </tbody>
         <tfoot>
-          <tr className="border-t-2 border-[#e2e8f0]">
+          <tr className="border-t-2 border-[#e8eaef]">
             <td className="px-4 py-2 text-xs font-bold text-[#64748b]">Toplam</td>
             <td className="px-4 py-2 text-right font-black tabular-nums text-brand">{fmt(total)}</td>
             <td colSpan={2} />
@@ -256,7 +256,7 @@ function TahsilatPanel({ sales }: { sales: Sale[] }) {
   if (sales.length === 0) return <PanelEmpty msg="Satış kaydı yok" />
   return (
     <div>
-      <div className="flex gap-3 px-4 py-3 border-b border-[#e2e8f0]">
+      <div className="flex gap-3 px-4 py-3 border-b border-[#e8eaef]">
         <div className="flex items-center gap-1.5 bg-warn-light rounded px-3 py-1.5">
           <span className="w-2 h-2 bg-warn rounded-full" />
           <span className="text-xs font-bold text-warn-text">{unpaid.length} bekliyor</span>
@@ -274,7 +274,7 @@ function TahsilatPanel({ sales }: { sales: Sale[] }) {
       </div>
       <table className="w-full text-sm">
         <thead>
-          <tr className="text-[10px] font-bold uppercase text-[#94a3b8] border-b border-[#e2e8f0]">
+          <tr className="text-[10px] font-bold uppercase text-[#94a3b8] border-b border-[#e8eaef]">
             <th className="text-left px-4 py-2">Müşteri</th>
             <th className="text-left px-4 py-2">Ödeme</th>
             <th className="text-right px-4 py-2">Tutar (TL)</th>
@@ -315,7 +315,7 @@ function KarPanel({ sales }: { sales: Sale[] }) {
   const margin       = totalRevenue > 0 ? (grossProfit / totalRevenue) * 100 : 0
   return (
     <div>
-      <div className="flex gap-3 px-4 py-3 border-b border-[#e2e8f0]">
+      <div className="flex gap-3 px-4 py-3 border-b border-[#e8eaef]">
         <div className="flex items-center gap-1.5 bg-[#f8fafc] rounded px-3 py-1.5">
           <span className="text-xs text-[#64748b]">Ciro</span>
           <span className="text-xs font-black tabular-nums text-[#1e293b]">{fmt(totalRevenue)}</span>
@@ -332,7 +332,7 @@ function KarPanel({ sales }: { sales: Sale[] }) {
       </div>
       <table className="w-full text-sm">
         <thead>
-          <tr className="text-[10px] font-bold uppercase text-[#94a3b8] border-b border-[#e2e8f0]">
+          <tr className="text-[10px] font-bold uppercase text-[#94a3b8] border-b border-[#e8eaef]">
             <th className="text-left px-4 py-2">Müşteri</th>
             <th className="text-right px-4 py-2">Ciro</th>
             <th className="text-right px-4 py-2">SMM</th>
@@ -413,8 +413,8 @@ export default function SalesFlowClient({ initialProformas, initialSales, initia
       tahsilat: 'Tahsilat Durumu', kar: 'Kâr Analizi',
     }
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
-        <div className="px-4 py-2 border-b border-[#e2e8f0] bg-[#f8fafc] flex items-center justify-between">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden">
+        <div className="px-4 py-2 border-b border-[#e8eaef] bg-[#f8fafc] flex items-center justify-between">
           <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">{titles[selected]}</span>
           <button onClick={() => setSelected(null)} className="text-[#94a3b8] hover:text-[#334155] text-lg leading-none">×</button>
         </div>
@@ -431,7 +431,7 @@ export default function SalesFlowClient({ initialProformas, initialSales, initia
       <div className="flex items-stretch gap-1">
         <Stage stageKey="stok" step="1. Stok" label="Envanter"
           count={stockLots.length} value={stockValue}
-          color="bg-[#f8fafc] border-[#e2e8f0] text-[#1e293b]" sub="FIFO maliyet"
+          color="bg-[#f8fafc] border-[#e8eaef] text-[#1e293b]" sub="FIFO maliyet"
           selected={selected === 'stok'} onClick={() => toggle('stok')} />
         <div className="flex items-center self-center text-[#cbd5e1] text-xl font-black select-none px-0.5">→</div>
         <Stage stageKey="teklif" step="2. Teklif" label="Açık Teklifler"
@@ -441,7 +441,7 @@ export default function SalesFlowClient({ initialProformas, initialSales, initia
         <div className="flex items-center self-center text-[#cbd5e1] text-xl font-black select-none px-0.5">→</div>
         <Stage stageKey="satis" step="3. Satış" label="Faturalanan"
           count={converted.length} value={sumTotal(converted)}
-          color="bg-brand-subtle border-[#e2e8f0] text-brand" sub="proforma → satış"
+          color="bg-brand-subtle border-[#e8eaef] text-brand" sub="proforma → satış"
           selected={selected === 'satis'} onClick={() => toggle('satis')} />
         <div className="flex items-center self-center text-[#cbd5e1] text-xl font-black select-none px-0.5">→</div>
         <Stage stageKey="tahsilat" step="4. Tahsilat" label="Nakit Girişi"
@@ -462,7 +462,7 @@ export default function SalesFlowClient({ initialProformas, initialSales, initia
 
       {/* ── Conversion rate strip ────────────────────────────────────────── */}
       {proformas.length > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-5 py-3">
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-5 py-3">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Dönüşüm Oranları</div>
           <div className="grid grid-cols-4 gap-4 text-center">
             {[

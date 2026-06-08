@@ -97,7 +97,7 @@ export async function SalesFlowCommandBar({ companyId }: Props) {
   // ── Empty state ─────────────────────────────────────────────────────────────
   if (total === 0) {
     return (
-      <div className="flex items-center gap-2 px-4 py-2.5 bg-[#f8fafc] border border-[#e2e8f0] rounded text-xs text-[#94a3b8]">
+      <div className="flex items-center gap-2 px-4 py-2.5 bg-[#f8fafc] border border-[#e8eaef] rounded text-xs text-[#94a3b8]">
         Henüz teklif kaydı yok — pipeline boş.
       </div>
     )
@@ -120,7 +120,7 @@ export async function SalesFlowCommandBar({ companyId }: Props) {
       <div className="flex items-center gap-2 flex-wrap">
 
         {/* Açık Pipeline */}
-        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#e2e8f0] rounded-xl shadow-soft">
+        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#e8eaef] rounded-xl shadow-soft">
           <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Açık Pipeline</span>
           {openPipelineValue > 0
             ? <span className="text-sm font-black tabular-nums text-info-text">{fmt(openPipelineValue)}</span>
@@ -130,7 +130,7 @@ export async function SalesFlowCommandBar({ companyId }: Props) {
         </div>
 
         {/* MTD Satış */}
-        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#e2e8f0] rounded-xl shadow-soft">
+        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#e8eaef] rounded-xl shadow-soft">
           <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Bu Ay</span>
           {mtdRevenue > 0
             ? <span className="text-sm font-black tabular-nums text-pos-text">{fmt(mtdRevenue)}</span>
@@ -159,7 +159,7 @@ export async function SalesFlowCommandBar({ companyId }: Props) {
 
         {/* Dönüşüm */}
         {conversionRate !== null && (
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#e2e8f0] rounded-xl shadow-soft">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#e8eaef] rounded-xl shadow-soft">
             <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Dönüşüm</span>
             <span className="text-sm font-black tabular-nums text-[#334155]">%{conversionRate.toFixed(0)}</span>
             <span className="text-[9px] text-[#94a3b8]">{funnel.converted}/{total}</span>
@@ -174,7 +174,7 @@ export async function SalesFlowCommandBar({ companyId }: Props) {
       </div>
 
       {/* ── Pipeline Funnel + Stale alert ─────────────────────────────────── */}
-      <div className="flex items-center gap-3 px-4 py-2.5 bg-[#f8fafc] border border-[#e2e8f0] rounded">
+      <div className="flex items-center gap-3 px-4 py-2.5 bg-[#f8fafc] border border-[#e8eaef] rounded">
 
         {/* Funnel mini-viz */}
         <div className="flex items-center gap-3 flex-1">

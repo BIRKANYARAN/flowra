@@ -49,10 +49,10 @@ function pressureCfg(
 ): { label: string; color: string } {
   switch (p) {
     case 'expanding':        return { label: 'Fiyat Yükseliyor',  color: 'bg-[#dcfce7] border-green-200 text-[#16a34a]' }
-    case 'stable':           return { label: 'Fiyat Stabil',      color: 'bg-[#f1f5f9] border-[#e2e8f0] text-[#64748b]' }
+    case 'stable':           return { label: 'Fiyat Stabil',      color: 'bg-[#f1f5f9] border-[#e8eaef] text-[#64748b]' }
     case 'compressing':      return { label: 'Fiyat Sıkışıyor',   color: 'bg-[#fefce8] border-yellow-200 text-yellow-700' }
     case 'under_pressure':   return { label: 'Yoğun Baskı',       color: 'bg-[#fee2e2] border-red-200 text-[#dc2626]' }
-    case 'insufficient_data': return { label: 'Veri Yok',         color: 'bg-[#f1f5f9] border-[#e2e8f0] text-[#94a3b8]' }
+    case 'insufficient_data': return { label: 'Veri Yok',         color: 'bg-[#f1f5f9] border-[#e8eaef] text-[#94a3b8]' }
   }
 }
 
@@ -89,7 +89,7 @@ function KpiCard({
   valueClass?: string
 }) {
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-3 flex flex-col gap-1">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-3 flex flex-col gap-1">
       <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">
         {label}
       </div>
@@ -128,7 +128,7 @@ export default function PricingIntelligenceClient({ companyId }: Props) {
         Fiyatlama Sağlığı
       </div>
 
-      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm overflow-hidden">
+      <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft shadow-sm overflow-hidden">
 
         {/* ── Header ──────────────────────────────────────────────────────────── */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9] bg-[#f8fafc]">

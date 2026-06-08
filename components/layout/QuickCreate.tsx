@@ -42,7 +42,7 @@ export function QuickCreate() {
           <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
           <div
             role="menu"
-            className="absolute left-1/2 -translate-x-1/2 mt-1.5 z-40 w-48 rounded-xl border border-[#e2e8f0] bg-white shadow-lg overflow-hidden py-1"
+            className="absolute left-1/2 -translate-x-1/2 mt-1.5 z-40 w-48 rounded-xl border border-[#e8eaef] bg-white shadow-lg overflow-hidden py-1"
           >
             {ACTIONS.map(a => (
               <Link

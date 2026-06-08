@@ -41,8 +41,8 @@ export function FlowraKpiCard({
 
   const inner = (
     <div className={cn(
-      'bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-3.5 py-3 flex flex-col gap-1 shadow-sm',
-      href && 'hover:border-[#e2e8f0] transition-colors',
+      'bg-white border border-[#e8eaef] rounded-xl shadow-soft px-3.5 py-3 flex flex-col gap-1 shadow-sm',
+      href && 'hover:border-[#e8eaef] transition-colors',
       className,
     )}>
       <div className="flex items-start justify-between gap-1">

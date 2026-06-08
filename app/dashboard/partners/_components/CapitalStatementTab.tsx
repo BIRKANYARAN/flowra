@@ -54,7 +54,7 @@ function SummaryCard({
     : 'text-[#0f172a]'
 
   return (
-    <div className="flex flex-col gap-0.5 p-3 rounded border border-[#e2e8f0] bg-[#f8fafc] min-w-[140px]">
+    <div className="flex flex-col gap-0.5 p-3 rounded border border-[#e8eaef] bg-[#f8fafc] min-w-[140px]">
       <span className="text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8]">{label}</span>
       <span className={`text-base font-black ${toneClass}`}>{value}</span>
       {sub && <span className="text-[0.6rem] text-[#94a3b8]">{sub}</span>}
@@ -100,7 +100,7 @@ function PartnerCard({ account }: { account: PartnerCapitalAccount }) {
   const isPositive = account.net_equity_change_ytd >= 0
 
   return (
-    <div className="rounded border border-[#e2e8f0] bg-white overflow-hidden">
+    <div className="rounded border border-[#e8eaef] bg-white overflow-hidden">
       {/* Header row */}
       <button
         onClick={() => setExpanded(v => !v)}
@@ -162,7 +162,7 @@ function PartnerCard({ account }: { account: PartnerCapitalAccount }) {
           <div className="overflow-x-auto">
             <table className="w-full min-w-[700px]">
               <thead>
-                <tr className="bg-[#f8fafc] border-b border-[#e2e8f0]">
+                <tr className="bg-[#f8fafc] border-b border-[#e8eaef]">
                   <th className="py-2 px-3 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] text-left">Dönem</th>
                   <th className="py-2 px-3 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] text-right">Açılış</th>
                   <th className="py-2 px-3 text-[0.6rem] font-bold uppercase tracking-wider text-[#94a3b8] text-right">Katkı</th>
@@ -178,7 +178,7 @@ function PartnerCard({ account }: { account: PartnerCapitalAccount }) {
                 ))}
               </tbody>
               <tfoot>
-                <tr className="bg-[#f8fafc] border-t-2 border-[#e2e8f0]">
+                <tr className="bg-[#f8fafc] border-t-2 border-[#e8eaef]">
                   <td className="py-2 px-3 text-xs font-black text-[#0f172a]">TOPLAM</td>
                   <td className="py-2 px-3 text-xs text-right text-[#475569] tabular-nums">—</td>
                   <td className="py-2 px-3 text-xs text-right font-bold text-pos-text tabular-nums">
@@ -235,7 +235,7 @@ export function CapitalStatementTab() {
           <select
             value={year}
             onChange={e => setYear(Number(e.target.value))}
-            className="text-xs border border-[#e2e8f0] rounded px-2 py-1.5 bg-white text-[#0f172a] font-semibold focus:outline-none focus:ring-1 focus:ring-brand"
+            className="text-xs border border-[#e8eaef] rounded px-2 py-1.5 bg-white text-[#0f172a] font-semibold focus:outline-none focus:ring-1 focus:ring-brand"
           >
             {yearOptions.map(y => (
               <option key={y} value={y}>{y}</option>
@@ -284,7 +284,7 @@ export function CapitalStatementTab() {
 
           {/* Per-partner cards */}
           {data.partners.length === 0 ? (
-            <div className="flex items-center justify-center py-12 text-xs text-[#94a3b8] border border-dashed border-[#e2e8f0] rounded">
+            <div className="flex items-center justify-center py-12 text-xs text-[#94a3b8] border border-dashed border-[#e8eaef] rounded">
               Bu yıl için aktif ortak bulunamadı.
             </div>
           ) : (

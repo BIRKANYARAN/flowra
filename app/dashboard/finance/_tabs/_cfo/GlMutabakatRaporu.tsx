@@ -11,8 +11,8 @@ function ReconciliationStatusChip({ status }: { status: ReconciliationItem['stat
   const map: Record<ReconciliationItem['status'], { label: string; cls: string }> = {
     balanced:    { label: 'Dengeli',      cls: 'bg-pos-light text-pos-text border-pos-light' },
     discrepancy: { label: 'Uyuşmazlık',   cls: 'bg-neg-light text-neg-text border-neg-light' },
-    no_gl_data:  { label: 'GL Verisi Yok', cls: 'bg-[#f1f5f9] text-[#94a3b8] border-[#e2e8f0]' },
-    skipped:     { label: 'Atlandı',      cls: 'bg-[#f1f5f9] text-[#94a3b8] border-[#e2e8f0]' },
+    no_gl_data:  { label: 'GL Verisi Yok', cls: 'bg-[#f1f5f9] text-[#94a3b8] border-[#e8eaef]' },
+    skipped:     { label: 'Atlandı',      cls: 'bg-[#f1f5f9] text-[#94a3b8] border-[#e8eaef]' },
   }
   const { label, cls } = map[status]
   return (
@@ -32,7 +32,7 @@ export function GlMutabakatRaporu({ report }: { report: GlReconciliationReport }
     : gl_mode === 'gl_primary' ? 'GL Primer' : gl_mode
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft p-4 shadow-sm">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div>
@@ -44,7 +44,7 @@ export function GlMutabakatRaporu({ report }: { report: GlReconciliationReport }
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-[9px] font-bold px-2 py-0.5 rounded border bg-[#f1f5f9] text-[#64748b] border-[#e2e8f0]">
+          <span className="text-[9px] font-bold px-2 py-0.5 rounded border bg-[#f1f5f9] text-[#64748b] border-[#e8eaef]">
             Mod: {modeLabel}
           </span>
           <span className={`text-[10px] font-bold px-2 py-1 rounded border ${bannerCls}`}>
@@ -86,10 +86,10 @@ export function GlMutabakatRaporu({ report }: { report: GlReconciliationReport }
           ✓ Uyuşmazlık yok — tüm hesaplar GL ile operasyonel tablolar arasında dengeli
         </div>
       ) : (
-        <div className="border border-[#e2e8f0] rounded overflow-hidden">
+        <div className="border border-[#e8eaef] rounded overflow-hidden">
           <table className="w-full text-xs">
             <thead>
-              <tr className="bg-[#f8fafc] border-b border-[#e2e8f0]">
+              <tr className="bg-[#f8fafc] border-b border-[#e8eaef]">
                 <th className="text-left px-3 py-2 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Hesap</th>
                 <th className="text-right px-3 py-2 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">GL</th>
                 <th className="text-right px-3 py-2 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Operasyonel</th>

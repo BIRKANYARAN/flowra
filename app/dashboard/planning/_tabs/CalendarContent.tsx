@@ -134,7 +134,7 @@ function MonthCard({
       className={[
         'rounded-lg border bg-white cursor-pointer transition-all',
         isExpanded ? 'shadow-md' : 'hover:shadow-sm',
-        month.is_heavy_month ? 'border-amber-300' : 'border-[#e2e8f0]',
+        month.is_heavy_month ? 'border-amber-300' : 'border-[#e8eaef]',
         hasOverdue ? 'ring-1 ring-red-200' : '',
       ].join(' ')}
       onClick={onToggle}
@@ -295,7 +295,7 @@ export function CalendarContent({ companyId }: Props) {
       {/* Summary strip */}
       {report && (
         <div className="grid grid-cols-3 gap-3">
-          <div className="bg-[#f8fafc] rounded-lg p-3 border border-[#e2e8f0]">
+          <div className="bg-[#f8fafc] rounded-lg p-3 border border-[#e8eaef]">
             <div className="text-[10px] font-bold uppercase tracking-wider text-[#94a3b8]">Toplam Etkinlik</div>
             <div className="text-2xl font-black text-[#0f172a] mt-1">{report.total_events}</div>
           </div>
@@ -303,7 +303,7 @@ export function CalendarContent({ companyId }: Props) {
             'rounded-lg p-3 border',
             report.overdue_events > 0
               ? 'bg-red-50 border-red-200'
-              : 'bg-[#f8fafc] border-[#e2e8f0]',
+              : 'bg-[#f8fafc] border-[#e8eaef]',
           ].join(' ')}>
             <div className={[
               'text-[10px] font-bold uppercase tracking-wider',
@@ -314,7 +314,7 @@ export function CalendarContent({ companyId }: Props) {
               report.overdue_events > 0 ? 'text-red-600' : 'text-[#0f172a]',
             ].join(' ')}>{report.overdue_events}</div>
           </div>
-          <div className="bg-[#f8fafc] rounded-lg p-3 border border-[#e2e8f0]">
+          <div className="bg-[#f8fafc] rounded-lg p-3 border border-[#e8eaef]">
             <div className="text-[10px] font-bold uppercase tracking-wider text-[#94a3b8]">30 Günde Yaklaşan</div>
             <div className="text-2xl font-black text-[#0f172a] mt-1">{report.upcoming_30d.length}</div>
           </div>
@@ -344,7 +344,7 @@ export function CalendarContent({ companyId }: Props) {
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
             Acil Takvim — Sonraki 30 Gün
           </div>
-          <div className="bg-white rounded-lg border border-[#e2e8f0] divide-y divide-[#f1f5f9]">
+          <div className="bg-white rounded-lg border border-[#e8eaef] divide-y divide-[#f1f5f9]">
             {report.upcoming_30d.map(event => (
               <div key={event.id} className="px-4 py-3">
                 <EventRow event={event} />

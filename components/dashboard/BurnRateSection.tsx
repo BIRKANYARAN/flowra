@@ -113,10 +113,10 @@ export function BurnRateSection() {
   } = report
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
+    <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">
 
       {/* Header */}
-      <div className="px-4 py-3 border-b border-[#e2e8f0] flex items-center justify-between flex-wrap gap-2">
+      <div className="px-4 py-3 border-b border-[#e8eaef] flex items-center justify-between flex-wrap gap-2">
         <div>
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
             Nakit Tüketim Hızı
@@ -129,7 +129,7 @@ export function BurnRateSection() {
       </div>
 
       {/* KPI strip — 3-month rolling averages */}
-      <div className="grid grid-cols-3 divide-x divide-[#e2e8f0] border-b border-[#e2e8f0]">
+      <div className="grid grid-cols-3 divide-x divide-[#e8eaef] border-b border-[#e8eaef]">
         {[
           {
             label: 'Ort. Aylık Gider (3 ay)',
@@ -162,7 +162,7 @@ export function BurnRateSection() {
       {months.length > 0 ? (
         <table className="w-full text-xs">
           <thead>
-            <tr className="bg-[#f8fafc] border-b border-[#e2e8f0]">
+            <tr className="bg-[#f8fafc] border-b border-[#e8eaef]">
               <th className="text-left px-4 py-2.5 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
                 Ay
               </th>
@@ -191,7 +191,7 @@ export function BurnRateSection() {
 
       {/* Runway estimate */}
       {runway_estimate_months !== null && (
-        <div className="border-t border-[#e2e8f0] px-4 py-3 flex items-center gap-2 bg-[#fef9ec]">
+        <div className="border-t border-[#e8eaef] px-4 py-3 flex items-center gap-2 bg-[#fef9ec]">
           <span className="text-[10px] font-black uppercase tracking-widest text-[#d97706]">
             Tahmini Runway
           </span>
@@ -213,7 +213,7 @@ export function BurnRateSection() {
 
       {/* Peak burn callout */}
       {peak_burn_month !== null && peak_burn_try !== null && peak_burn_try > 0 && (
-        <div className="border-t border-[#e2e8f0] px-4 py-3 flex items-center gap-2 bg-[#fff1f2]">
+        <div className="border-t border-[#e8eaef] px-4 py-3 flex items-center gap-2 bg-[#fff1f2]">
           <span className="text-[10px] font-black uppercase tracking-widest text-neg-text">
             En Yüksek Gider Ayı
           </span>
