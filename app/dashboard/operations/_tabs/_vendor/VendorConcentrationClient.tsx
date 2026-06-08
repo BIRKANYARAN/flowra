@@ -73,7 +73,7 @@ function hhiTextColor(level: VendorConcentrationLevel): string {
 
 function Skeleton() {
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded p-4 animate-pulse space-y-3">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 animate-pulse space-y-3">
       <div className="h-4 w-48 bg-[#f1f5f9] rounded" />
       <div className="h-16 bg-[#f1f5f9] rounded" />
       <div className="h-32 bg-[#f1f5f9] rounded" />
@@ -100,7 +100,7 @@ export function VendorConcentrationClient({ companyId }: Props) {
 
   if (isError) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded p-4 text-xs text-[#94a3b8]">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 text-xs text-[#94a3b8]">
         Tedarikçi konsantrasyon verisi yüklenemedi.
       </div>
     )
@@ -110,7 +110,7 @@ export function VendorConcentrationClient({ companyId }: Props) {
 
   if (!report || report.total_vendors === 0) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded p-4">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
           Tedarikçi Konsantrasyon Riski
         </div>
@@ -123,7 +123,7 @@ export function VendorConcentrationClient({ companyId }: Props) {
   const maxShare = report.vendors[0]?.spend_share_pct ?? 1
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded shadow-sm overflow-hidden">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm overflow-hidden">
 
       {/* ── Header ──────────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">

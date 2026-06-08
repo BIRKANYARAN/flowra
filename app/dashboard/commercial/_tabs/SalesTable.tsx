@@ -407,7 +407,7 @@ export function SalesTable({ rows }: Props) {
               color: totalPft >= 0 ? 'text-pos-text' : 'text-neg',
             },
           ].map(card => (
-            <div key={card.label} className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
+            <div key={card.label} className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>
               <div className={`text-xl font-black tabular-nums ${card.color}`}>{card.value}</div>
             </div>
@@ -416,7 +416,7 @@ export function SalesTable({ rows }: Props) {
 
         {/* ── Table ──────────────────────────────────────────────────────────── */}
         {filtered.length === 0 ? (
-          <div className="bg-white border border-[#e2e8f0] rounded text-center py-12 shadow-sm">
+          <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft text-center py-12 shadow-sm">
             <p className="text-[#94a3b8] text-sm">{isFiltered ? 'Filtreyle eşleşen satış yok.' : 'Henüz satış kaydı yok.'}</p>
             {isFiltered ? (
               <button
@@ -435,7 +435,7 @@ export function SalesTable({ rows }: Props) {
             )}
           </div>
         ) : (
-          <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+          <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
             {/* Header */}
             <div className="grid grid-cols-12 text-[0.65rem] font-black text-[#94a3b8] px-4 py-2 border-b border-[#e2e8f0] uppercase tracking-widest">
               <div className="col-span-3">Müşteri</div>

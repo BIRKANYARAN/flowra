@@ -73,7 +73,7 @@ function AccountRow({ label, value, sub, indent = false, bold = false, tone }: {
 
 function PartnerCard({ acc }: { acc: PartnerCapitalAccount }) {
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded shadow-sm overflow-hidden">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm overflow-hidden">
       {/* Card header */}
       <div className="px-4 py-3 bg-[#f8fafc] border-b border-[#e2e8f0] flex items-center justify-between">
         <div>
@@ -196,7 +196,7 @@ function ExitScenarioSection({
   const distributable    = Math.max(0, enterpriseValue - seniorClaims)
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded shadow-sm overflow-hidden">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm overflow-hidden">
       {/* Section header — visually distinct from accounting facts */}
       <div className="px-4 py-3 bg-[#fffbeb] border-b border-[#fde68a] flex items-start justify-between gap-4 flex-wrap">
         <div>
@@ -378,11 +378,11 @@ function CapitalCommitmentSection() {
 
       {/* Summary strip */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="bg-white border border-[#e2e8f0] rounded px-3 py-2.5 shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-3 py-2.5 shadow-sm">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Toplam Taahhüt</div>
           <div className="text-sm font-black text-[#0f172a] tabular-nums mt-1">{fmtTRY(data.total_committed_try)}</div>
         </div>
-        <div className="bg-white border border-[#e2e8f0] rounded px-3 py-2.5 shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-3 py-2.5 shadow-sm">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ödenen</div>
           <div className="text-sm font-black text-[#16a34a] tabular-nums mt-1">{fmtTRY(data.total_paid_try)}</div>
         </div>
@@ -401,7 +401,7 @@ function CapitalCommitmentSection() {
           Henüz sermaye taahhüdü kaydı bulunmuyor.
         </div>
       ) : (
-        <div className="bg-white border border-[#e2e8f0] rounded shadow-sm overflow-hidden">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm overflow-hidden">
           <table className="w-full text-xs">
             <thead>
               <tr className="bg-[#f8fafc] border-b border-[#e2e8f0]">
@@ -505,17 +505,17 @@ export function CapitalAccountTab() {
 
       {/* Summary KPI strip */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="bg-white border border-[#e2e8f0] rounded px-3 py-2.5 shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-3 py-2.5 shadow-sm">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Toplam Öz Sermaye</div>
           <div className="text-sm font-black text-[#0f172a] tabular-nums mt-1">{fmtTRY(total_equity_try)}</div>
           <div className="text-[0.65rem] text-[#94a3b8]">Defter değeri</div>
         </div>
-        <div className="bg-white border border-[#e2e8f0] rounded px-3 py-2.5 shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-3 py-2.5 shadow-sm">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ortak Borç Bakiyesi</div>
           <div className="text-sm font-black text-[#dc2626] tabular-nums mt-1">{fmtTRY(total_partner_debt_try)}</div>
           <div className="text-[0.65rem] text-[#94a3b8]">Aktif trancheler</div>
         </div>
-        <div className="bg-white border border-[#e2e8f0] rounded px-3 py-2.5 shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-3 py-2.5 shadow-sm">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Net Öz Sermaye</div>
           <div className={[
             'text-sm font-black tabular-nums mt-1',

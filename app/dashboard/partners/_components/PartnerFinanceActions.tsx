@@ -136,7 +136,7 @@ export function PartnerFinanceActions({ partners, onRefresh }: PartnerFinanceAct
   // ── Render ────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded shadow-sm">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm">
 
       {/* Collapsed header / toggle — disabled while save is in flight */}
       <button

@@ -178,7 +178,7 @@ export default async function CorporateTaxPage() {
       </div>
 
       {/* ── KPI Strip ──────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+      <div className="grid grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
         <KpiCard
           label="YTD Matrah"
           value={ytd.matrah > 0 ? fmt(ytd.matrah) : '—'}
@@ -222,7 +222,7 @@ export default async function CorporateTaxPage() {
       )}
 
       {/* ── Quarterly Breakdown ─────────────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
         <div className="px-4 py-2.5 bg-[#f8fafc] border-b border-[#e2e8f0]">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
             Geçici Vergi Takvimi — {currentYear}
@@ -333,7 +333,7 @@ export default async function CorporateTaxPage() {
 
       {/* ── Yıllık Projeksiyon ──────────────────────────────────────────────── */}
       {monthsElapsed < 12 && projectedMatrah > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
           <div className="px-4 py-2.5 bg-[#f8fafc] border-b border-[#e2e8f0]">
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
               Yıllık Projeksiyon (Extrapolasyon)

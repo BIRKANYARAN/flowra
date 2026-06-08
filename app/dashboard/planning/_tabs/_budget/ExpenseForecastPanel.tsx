@@ -81,7 +81,7 @@ export function ExpenseForecastPanel() {
 
   if (isError || !report) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded p-4 text-xs text-[#94a3b8]">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 text-xs text-[#94a3b8]">
         Gider tahmini yüklenemedi.
         {error instanceof Error ? ` (${error.message})` : ''}
         <button
@@ -95,7 +95,7 @@ export function ExpenseForecastPanel() {
   }
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded shadow-sm">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm">
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-4 pb-2">
         <div>

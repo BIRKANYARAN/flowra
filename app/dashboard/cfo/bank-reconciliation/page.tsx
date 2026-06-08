@@ -336,7 +336,7 @@ export default function BankReconciliationPage() {
       </div>
 
       {/* ── 1. Period Selector ────────────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Dönem Seçimi</div>
         <div className="flex items-end gap-3 flex-wrap">
           <div className="flex flex-col gap-1">
@@ -429,7 +429,7 @@ export default function BankReconciliationPage() {
 
           {/* Flowra vs Bank summary */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
+            <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3">
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">Flowra Gelirler (Satışlar)</div>
               <div className="flex items-center justify-between text-xs">
                 <span className="text-[#64748b]">Toplam</span>
@@ -440,7 +440,7 @@ export default function BankReconciliationPage() {
                 <span className="font-mono text-pos-text tabular-nums">{report.flowra_inflows_matched}/{report.flowra_inflows_total}</span>
               </div>
             </div>
-            <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
+            <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3">
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">Flowra Giderler</div>
               <div className="flex items-center justify-between text-xs">
                 <span className="text-[#64748b]">Toplam</span>
@@ -458,7 +458,7 @@ export default function BankReconciliationPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* Left: Bank lines */}
-            <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+            <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
               <div className="px-4 py-2.5 border-b border-[#e2e8f0] bg-[#f8fafc] flex items-center justify-between">
                 <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
                   Banka Satırları
@@ -546,7 +546,7 @@ export default function BankReconciliationPage() {
             </div>
 
             {/* Right: Unmatched Flowra records */}
-            <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+            <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
               <div className="px-4 py-2.5 border-b border-[#e2e8f0] bg-[#f8fafc] flex items-center justify-between">
                 <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
                   Eşleşmemiş Flowra Kayıtları

@@ -105,7 +105,7 @@ export function DistributionTab({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Dağıtım Parametreleri</div>
         <div className="grid grid-cols-2 gap-3">
           <div>
@@ -217,7 +217,7 @@ export function DistributionTab({
       {distrib && (
         <>
           {/* 4-Layer Distribution Breakdown */}
-          <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+          <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
             <div className="px-4 py-2.5 border-b border-[#e2e8f0] bg-[#f8fafc]">
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">4 Katmanlı Dağıtım Güvenlik Hesabı</div>
             </div>
@@ -299,7 +299,7 @@ export function DistributionTab({
 
           {/* Per-partner entitlements */}
           {distrib.per_partner_distribution.length > 0 && (
-            <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+            <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
               <div className="px-4 py-2.5 border-b border-[#e2e8f0] bg-[#f8fafc]">
                 <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ortak Bazında Hak Edilenler</div>
               </div>

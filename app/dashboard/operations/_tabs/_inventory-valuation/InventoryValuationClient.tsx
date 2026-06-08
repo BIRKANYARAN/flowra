@@ -74,7 +74,7 @@ export function InventoryValuationClient() {
   if (report.products.length === 0) return null
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded shadow-sm">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">
         <div>

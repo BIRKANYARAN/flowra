@@ -49,7 +49,7 @@ const CHURN_CFG: Record<ChurnRisk, { label: string; bg: string; text: string }> 
 
 function Skeleton() {
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 space-y-3 animate-pulse">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 space-y-3 animate-pulse">
       <div className="h-3 w-48 bg-[#f1f5f9] rounded" />
       <div className="flex gap-2">
         {[0, 1, 2, 3, 4].map(i => (
@@ -196,7 +196,7 @@ export default function CustomerLtvClient() {
   if (report.total_customers === 0) return null
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden space-y-0">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden space-y-0">
       {/* Header */}
       <div className="px-4 py-3 border-b border-[#f1f5f9] flex items-center justify-between">
         <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">

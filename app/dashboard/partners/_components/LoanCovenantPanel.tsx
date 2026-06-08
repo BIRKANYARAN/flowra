@@ -264,21 +264,21 @@ export function LoanCovenantPanel({ companyId: _companyId }: Props) {
 
       {/* ── Portfolio summary row ─────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        <div className="bg-white border border-[#e2e8f0] rounded px-3 py-2">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-3 py-2">
           <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Toplam Borç</div>
           <div className="text-sm font-black text-[#0f172a] tabular-nums">{fmtTRY(total_outstanding_loans_try, 0)}</div>
         </div>
-        <div className="bg-white border border-[#e2e8f0] rounded px-3 py-2">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-3 py-2">
           <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">Yıllık Borç Servisi</div>
           <div className="text-sm font-black text-[#0f172a] tabular-nums">{fmtTRY(total_annual_debt_service_try, 0)}</div>
         </div>
-        <div className="bg-white border border-[#e2e8f0] rounded px-3 py-2">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-3 py-2">
           <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">YTD Net Gelir</div>
           <div className={`text-sm font-black tabular-nums ${ytd_net_income_try >= 0 ? 'text-pos-text' : 'text-neg-text'}`}>
             {fmtTRY(ytd_net_income_try, 0)}
           </div>
         </div>
-        <div className="bg-white border border-[#e2e8f0] rounded px-3 py-2">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-3 py-2">
           <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">YTD EBITDA</div>
           <div className={`text-sm font-black tabular-nums ${ytd_ebitda_try >= 0 ? 'text-pos-text' : 'text-neg-text'}`}>
             {fmtTRY(ytd_ebitda_try, 0)}
@@ -287,7 +287,7 @@ export function LoanCovenantPanel({ companyId: _companyId }: Props) {
       </div>
 
       {/* ── Per-tranche table ─────────────────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
         <div className="px-4 py-2.5 border-b border-[#e2e8f0] bg-[#f8fafc]/60">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
             Tranche Bazında Kovenan Durumu

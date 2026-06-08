@@ -111,7 +111,7 @@ export default function StockAdjustClient({ products }: Props) {
   }
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded p-5 space-y-4">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-5 space-y-4">
       <div className="flex items-center justify-between border-b border-[#e2e8f0] pb-3">
         <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Stok Hareketi Ekle</span>
         {success && (

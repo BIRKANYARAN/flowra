@@ -174,7 +174,7 @@ export default function AdminAuditPage() {
       </div>
 
       {/* ── Chain Integrity Panel ──────────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm mb-5">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm mb-5">
         <div className="flex items-start justify-between mb-3 gap-4 flex-wrap">
           <div>
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Denetim Zinciri Bütünlüğü</div>
@@ -311,7 +311,7 @@ export default function AdminAuditPage() {
       {/* ── Audit Log Table + Filters ──────────────────────────────────────── */}
 
       {/* Filters */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm mb-5 flex flex-wrap gap-3 items-end">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm mb-5 flex flex-wrap gap-3 items-end">
         <div>
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">İşlem</div>
           <select
@@ -372,7 +372,7 @@ export default function AdminAuditPage() {
       {/* Table */}
       {!loading && (
         <>
-          <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+          <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
             {logs.length === 0 ? (
               <div className="text-center py-12">
                 <div className="text-xs font-medium text-[#334155] mb-1">Kayıt bulunamadı</div>
@@ -451,7 +451,7 @@ export default function AdminAuditPage() {
                                   <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
                                     Önceki Değer
                                   </div>
-                                  <pre className="text-[10px] bg-white border border-[#e2e8f0] rounded p-3 overflow-auto max-h-48 text-[#334155]">
+                                  <pre className="text-[10px] bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-3 overflow-auto max-h-48 text-[#334155]">
                                     {log.old_data ? JSON.stringify(log.old_data, null, 2) : '—'}
                                   </pre>
                                 </div>
@@ -459,7 +459,7 @@ export default function AdminAuditPage() {
                                   <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
                                     Yeni Değer
                                   </div>
-                                  <pre className="text-[10px] bg-white border border-[#e2e8f0] rounded p-3 overflow-auto max-h-48 text-[#334155]">
+                                  <pre className="text-[10px] bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-3 overflow-auto max-h-48 text-[#334155]">
                                     {log.new_data ? JSON.stringify(log.new_data, null, 2) : '—'}
                                   </pre>
                                 </div>

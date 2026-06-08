@@ -138,7 +138,7 @@ export async function StockContent({ companyId, userId }: Props) {
 
       {/* Yeniden Sipariş Uyarıları — reorder alert summary + action table */}
       {reorderReport && (reorderReport.out_of_stock_count > 0 || reorderReport.critical_count > 0 || reorderReport.low_count > 0) && (
-        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
           <div className="px-5 py-4 border-b border-[#e2e8f0] flex items-center justify-between">
             <div>
               <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Yeniden Sipariş Uyarıları</span>
@@ -235,7 +235,7 @@ export async function StockContent({ companyId, userId }: Props) {
 
       {/* Talep Tahmini — demand forecast: forecasted demand, reorder point, stockout risk */}
       {demandForecastReport && demandForecastReport.products.length > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
           <div className="px-5 py-4 border-b border-[#e2e8f0] flex items-center justify-between">
             <div>
               <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Talep Tahmini</span>
@@ -314,7 +314,7 @@ export async function StockContent({ companyId, userId }: Props) {
       )}
 
       {/* Portfolio summary strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
         {[
           { label: 'Toplam Stok Değeri', value: fmtTRY(portfolioValueTry),      sub: 'FIFO lot maliyeti bazlı',  color: 'text-[#0f172a]' },
           { label: 'Ürün Sayısı',        value: String(products.length),         sub: `${lots.length} açık lot`, color: 'text-[#0f172a]' },
@@ -392,7 +392,7 @@ export async function StockContent({ companyId, userId }: Props) {
 
       {/* Stok Değerleme — FIFO aging + product summary */}
       {valuationReport && valuationReport.total_lots > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
           <div className="px-5 py-4 border-b border-[#e2e8f0] flex items-center justify-between">
             <div>
               <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Stok Değerleme</span>
@@ -476,7 +476,7 @@ export async function StockContent({ companyId, userId }: Props) {
 
       {/* FIFO Lot Panel */}
       {lots.length > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
           <div className="px-5 py-4 border-b border-[#e2e8f0] flex items-center justify-between">
             <div>
               <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">FIFO Lot Paneli</span>
@@ -562,7 +562,7 @@ export async function StockContent({ companyId, userId }: Props) {
       )}
 
       {/* Current stock levels */}
-      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
         <div className="px-5 py-4 border-b border-[#e2e8f0]">
           <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Mevcut Stok</span>
         </div>
@@ -607,7 +607,7 @@ export async function StockContent({ companyId, userId }: Props) {
       <StockAdjustClient products={products.map(p => ({ id: p.id, name: p.name, unit: p.unit }))} />
 
       {/* Movement history */}
-      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
         <div className="px-5 py-4 border-b border-[#e2e8f0]">
           <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Son Hareketler</span>
           <span className="ml-2 text-[10px] text-[#94a3b8]">— son 50 kayıt</span>

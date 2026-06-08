@@ -69,7 +69,7 @@ export function CashflowPrediction(_props: Props) {
 
   if (loading) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded px-4 py-6 text-center text-xs text-[#94a3b8] shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-6 text-center text-xs text-[#94a3b8] shadow-sm">
         Tahmin hesaplanıyor…
       </div>
     )
@@ -150,7 +150,7 @@ export function CashflowPrediction(_props: Props) {
       </div>
 
       {/* Period breakdown (base) */}
-      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
         <div className="px-4 py-3 border-b border-[#e2e8f0]">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Dönem Bazında Nakit Akışı (Baz Senaryo)</div>
         </div>
@@ -188,7 +188,7 @@ export function CashflowPrediction(_props: Props) {
 
       {/* Expected receivables */}
       {receivables_expected.length > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
           <div className="px-4 py-3 border-b border-[#e2e8f0] flex items-center justify-between">
             <div>
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Beklenen Tahsilatlar</div>
@@ -231,7 +231,7 @@ export function CashflowPrediction(_props: Props) {
 
       {/* Expected outflows */}
       {commitments_expected.length > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
           <div className="px-4 py-3 border-b border-[#e2e8f0] flex items-center justify-between">
             <div>
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Beklenen Çıkışlar (90 Gün)</div>

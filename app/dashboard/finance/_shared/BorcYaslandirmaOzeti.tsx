@@ -28,7 +28,7 @@ export async function BorcYaslandirmaOzeti({ companyId, supabase }: Props) {
 
   if (!report || report.total_count === 0) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
         <div className="flex items-center justify-between mb-2">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
             Borç Yaşlandırma Özeti
@@ -50,7 +50,7 @@ export async function BorcYaslandirmaOzeti({ companyId, supabase }: Props) {
     : 0
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div>

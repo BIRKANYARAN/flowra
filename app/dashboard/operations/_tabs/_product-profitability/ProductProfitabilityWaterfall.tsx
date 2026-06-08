@@ -66,7 +66,7 @@ export function ProductProfitabilityWaterfall() {
 
   if (isLoading) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded shadow-sm p-6 animate-pulse">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm p-6 animate-pulse">
         <div className="h-4 w-48 bg-[#f1f5f9] rounded mb-4" />
         <div className="grid grid-cols-4 gap-3 mb-4">
           {[...Array(4)].map((_, i) => <div key={i} className="h-14 bg-[#f1f5f9] rounded" />)}
@@ -94,7 +94,7 @@ export function ProductProfitabilityWaterfall() {
   const tiers = tiersAll.filter(t => t.count > 0)
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded shadow-sm">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm">
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">

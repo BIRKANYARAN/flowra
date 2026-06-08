@@ -129,7 +129,7 @@ export function PartnerImpactClient({
 
   if (partnerCount === 0) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded p-10 text-center">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-10 text-center">
         <div className="text-xs font-medium text-[#334155] mb-1">Ortak bulunamadı</div>
         <div className="text-xs text-[#94a3b8] mb-4">
           Dağıtım analizi için önce ortak eklemeniz gerekiyor.
@@ -149,7 +149,7 @@ export function PartnerImpactClient({
 
       {/* ── Position summary strip ─────────────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3">
           <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Nakit Bakiye</div>
           <div className={`text-lg font-black tabular-nums ${cashBalance >= 0 ? 'text-[#0f172a]' : 'text-neg'}`}>
             {fmt(cashBalance)}
@@ -157,7 +157,7 @@ export function PartnerImpactClient({
           <div className="text-[10px] text-[#94a3b8] mt-0.5">tahsil − ödenen</div>
         </div>
 
-        <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3">
           <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Dağıtılabilir</div>
           <div className={`text-lg font-black tabular-nums ${cashDistributable > 0 ? 'text-pos-text' : 'text-[#94a3b8]'}`}>
             {cashDistributable > 0 ? fmt(cashDistributable) : '—'}
@@ -165,7 +165,7 @@ export function PartnerImpactClient({
           <div className="text-[10px] text-[#94a3b8] mt-0.5">yükümlülükler düşülmüş</div>
         </div>
 
-        <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3">
           <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Net Gelir (Tahakkuk)</div>
           <div className={`text-lg font-black tabular-nums ${netIncome >= 0 ? 'text-[#0f172a]' : 'text-neg'}`}>
             {fmt(netIncome)}
@@ -173,7 +173,7 @@ export function PartnerImpactClient({
           <div className="text-[10px] text-[#94a3b8] mt-0.5">vergi sonrası</div>
         </div>
 
-        <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3">
           <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Toplam Ortak Borcu</div>
           <div className={`text-lg font-black tabular-nums ${totalLoanBalance > 0 ? 'text-warn-text' : 'text-[#94a3b8]'}`}>
             {totalLoanBalance > 0 ? fmt(totalLoanBalance) : 'Yok'}
@@ -201,7 +201,7 @@ export function PartnerImpactClient({
       )}
 
       {/* ── Distribution simulator ─────────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
         <div className="flex items-center justify-between px-5 py-3 border-b border-[#f1f5f9]">
           <div>
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Dağıtım Simülatörü</div>
@@ -350,7 +350,7 @@ export function PartnerImpactClient({
 
       {/* ── Per-partner loan breakdown ─────────────────────────────────────── */}
       {totalLoanBalance > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
           <div className="flex items-center justify-between px-5 py-3 border-b border-[#f1f5f9]">
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ortak Borç Pozisyonları</div>
             <Link href="/dashboard/partners?tab=tranches" className="text-[10px] font-semibold text-brand-light hover:text-brand">

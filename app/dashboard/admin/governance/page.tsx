@@ -227,7 +227,7 @@ function ReportDetail({ report, onSignoff, onFinalize, signing, finalizing }: {
       {snap.partner_balances.length > 0 && (
         <section>
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Ortak Pozisyonları</div>
-          <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+          <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b border-[#e2e8f0] bg-[#f8fafc]">
@@ -462,7 +462,7 @@ export default function GovernancePage() {
 
       {/* Generate form */}
       {showGenForm && (
-        <div data-print-hide className="bg-white border border-[#e2e8f0] rounded px-4 py-4 shadow-sm">
+        <div data-print-hide className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-4 shadow-sm">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">Yeni Yönetişim Raporu Oluştur</div>
           <div className="grid grid-cols-3 gap-3 mb-4">
             <div>
@@ -525,11 +525,11 @@ export default function GovernancePage() {
 
       {/* Main layout: list + detail */}
       {loading ? (
-        <div className="bg-white border border-[#e2e8f0] rounded p-8 text-center">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-8 text-center">
           <div className="text-xs text-[#94a3b8]">Yükleniyor…</div>
         </div>
       ) : reports.length === 0 ? (
-        <div className="bg-white border border-[#e2e8f0] rounded p-10 text-center">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-10 text-center">
           <div className="text-xs font-medium text-[#334155] mb-1">Henüz yönetişim raporu yok</div>
           <div className="text-xs text-[#94a3b8] mb-5">
             İlk aylık raporu oluşturarak ortak onay sürecini başlatın.
@@ -591,7 +591,7 @@ export default function GovernancePage() {
           </div>
 
           {/* Report detail */}
-          <div className="bg-white border border-[#e2e8f0] rounded p-4">
+          <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4">
             {selectedReport ? (
               <ReportDetail
                 report={selectedReport}

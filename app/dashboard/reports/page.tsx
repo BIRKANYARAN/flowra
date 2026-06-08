@@ -147,7 +147,7 @@ export default function ReportsHubPage() {
       <div className="grid grid-cols-2 gap-4">
         {REPORTS.map(r => (
           <Link key={r.href} href={r.href}
-            className="bg-white border border-[#e2e8f0] rounded p-4 hover:border-[#e2e8f0] hover:shadow-sm transition-all group"
+            className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 hover:border-[#e2e8f0] hover:shadow-sm transition-all group"
           >
             <div className="flex items-start gap-3">
               <span className="text-2xl flex-shrink-0">{r.icon}</span>
@@ -166,7 +166,7 @@ export default function ReportsHubPage() {
       </div>
 
       {/* Accountant CSV Export */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-4">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4">
         <div className="flex items-start gap-3 mb-3">
           <span className="text-2xl flex-shrink-0">📋</span>
           <div>

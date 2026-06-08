@@ -27,7 +27,7 @@ function SermayeMaliyetiSection() {
 
   if (isLoading) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm animate-pulse">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm animate-pulse">
         <div className="h-3 bg-[#f1f5f9] rounded w-40 mb-3" />
         <div className="grid grid-cols-3 gap-2">
           {[...Array(3)].map((_, i) => <div key={i} className="h-14 bg-[#f1f5f9] rounded" />)}
@@ -43,7 +43,7 @@ function SermayeMaliyetiSection() {
   const wacdPct = data.wacd_pct * 100
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div>
@@ -255,7 +255,7 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
       {showForm && (
         <form
           onSubmit={handleSubmit}
-          className="bg-white border border-[#e2e8f0] rounded px-4 py-4 shadow-sm flex flex-col gap-4"
+          className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-4 shadow-sm flex flex-col gap-4"
         >
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
             Yeni Borç Dilimi
@@ -396,13 +396,13 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
               <div className="text-[10px] font-bold uppercase tracking-widest text-warn mb-1">Toplam Açık Borç</div>
               <div className="text-xl font-black tabular-nums text-warn-text">{fmt(waterfall.total_debt_try)}</div>
             </div>
-            <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
+            <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 shadow-sm">
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Aktif Borç Dilimi</div>
               <div className="text-xl font-black tabular-nums text-[#0f172a]">
                 {waterfall.tranches.filter(t => t.status !== 'repaid').length}
               </div>
             </div>
-            <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
+            <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 shadow-sm">
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Kapanma Tahmini</div>
               <div className={`text-xl font-black tabular-nums ${
                 (waterfall.debt_clearance_months ?? 0) > 0
@@ -423,7 +423,7 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
             const totalMonthly   = activeTranches.reduce((s, t) => s + (t.remaining_principal_try * (t.interest_rate_annual_pct / 100) / 12), 0)
             const totalAccrued   = activeTranches.reduce((s, t) => s + t.accrued_interest_try, 0)
             return (
-              <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+              <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
                 <div className="px-4 py-2 border-b border-[#f1f5f9] bg-[#f8fafc]/60">
                   <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Toplam Faiz Yükü Özeti</div>
                 </div>
@@ -468,7 +468,7 @@ export function TranchesTab({ loading, waterfall, partners, onRefresh }: Tranche
                   return fmtDateMed(d)
                 })()
                 return (
-                  <div key={t.id} className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
+                  <div key={t.id} className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 shadow-sm">
                     <div className="flex items-start justify-between gap-4 mb-3">
                       <div>
                         <div className="flex items-center gap-2">

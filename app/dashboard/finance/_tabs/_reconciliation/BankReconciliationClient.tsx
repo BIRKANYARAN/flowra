@@ -110,7 +110,7 @@ export default function BankReconciliationClient({ companyId }: Props) {
   })
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm space-y-4">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm space-y-4">
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="flex items-start justify-between gap-3 flex-wrap">

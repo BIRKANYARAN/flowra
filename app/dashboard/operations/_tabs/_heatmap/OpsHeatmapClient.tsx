@@ -75,7 +75,7 @@ function StatCard({
     neutral:  'text-[#0f172a]',
   }[tone]
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3">
       <div className="text-[0.63rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{label}</div>
       <div className={`text-lg font-black tabular-nums leading-none ${color}`}>{value}</div>
       {sub && <div className="text-[10px] text-[#94a3b8] mt-1">{sub}</div>}
@@ -89,7 +89,7 @@ function DowBarChart({ dowAvgs, bestDow }: { dowAvgs: number[]; bestDow: number 
   const maxVal = Math.max(...dowAvgs, 1)
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded p-4">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4">
       <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#64748b] mb-3">
         Haftanın Günlerine Göre Ortalama Ciro
       </div>
@@ -126,7 +126,7 @@ function HeatmapGrid({ days, weeks }: { days: DayData[]; weeks: { week_start: st
 
   // Build 13 × 7 grid: rows = weeks, cols = Mon-Sun
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded p-4 overflow-x-auto">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 overflow-x-auto">
       <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#64748b] mb-3">
         Günlük Ciro Isı Haritası (Son 90 Gün)
       </div>
@@ -202,7 +202,7 @@ function HeatmapGrid({ days, weeks }: { days: DayData[]; weeks: { week_start: st
 
 function WeekTable({ weeks }: { weeks: OpsHeatmapReport['weeks'] }) {
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
       <div className="px-4 py-3 border-b border-[#f1f5f9]">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#64748b]">
           Haftalık Özet

@@ -6,7 +6,7 @@ export function GlToolsAndReports() {
   return (
     <>
       {/* GL Tools */}
-      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
         <div className="px-4 py-2.5 border-b border-[#e2e8f0]">
           <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">GL Araçları</span>
         </div>
@@ -31,7 +31,7 @@ export function GlToolsAndReports() {
       </div>
 
       {/* Financial Reports */}
-      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
         <div className="px-4 py-2.5 border-b border-[#e2e8f0]">
           <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Finansal Raporlar</span>
         </div>

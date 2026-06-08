@@ -112,7 +112,7 @@ export async function CatalogContent({ companyId, userId }: Props) {
 
       {/* ── Catalog KPI strip ─────────────────────────────────────────────── */}
       {products.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
           {[
             {
               label: 'Aktif Ürün',
@@ -184,7 +184,7 @@ export async function CatalogContent({ companyId, userId }: Props) {
 
       {/* ── Ürün Karlılığı ────────────────────────────────────────────────────── */}
       {marginReport && marginReport.products.length > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm">
           {/* Header strip */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">
             <div>

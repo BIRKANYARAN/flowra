@@ -183,7 +183,7 @@ export function SupplierTermsClient({ companyId }: Props) {
 
   if (isLoading) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
           Tedarikçi Ödeme Koşulları
         </div>
@@ -209,7 +209,7 @@ export function SupplierTermsClient({ companyId }: Props) {
 
   if (!report || report.company_summary.total_vendors === 0) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
           Tedarikçi Ödeme Koşulları
         </div>
@@ -222,7 +222,7 @@ export function SupplierTermsClient({ companyId }: Props) {
   const healthScore = cs.vendor_health_score
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded shadow-sm overflow-hidden">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm overflow-hidden">
       {/* ── Header ──────────────────────────────────────────────────────────── */}
       <div className="px-4 py-3 border-b border-[#e2e8f0]">
         <div className="flex items-center justify-between">

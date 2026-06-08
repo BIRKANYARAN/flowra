@@ -245,7 +245,7 @@ export async function ExpensesContent({ companyId }: Props) {
       <ExpensesCharts monthly={expenseMonthly} byCategory={expenseByCategory} totalExpense={totalTRY} />
 
       {/* ── Burn Intelligence Strip ───────────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded shadow-sm overflow-hidden">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm overflow-hidden">
         {/* Row 1: This month vs last */}
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 border-b border-[#f1f5f9]">
           <div className="flex items-center gap-2">
@@ -303,7 +303,7 @@ export async function ExpensesContent({ companyId }: Props) {
       <p className="text-xs text-[#94a3b8]">Son 6 ay · {expenses.length} kayıt</p>
 
       {/* ── KPI Strip ─────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
         {[
           { label: 'Toplam Gider',    value: fmt(totalTRY),        sub: 'Son 6 ay (TRY)',                    color: 'text-neg' },
           { label: 'Tek Seferlik',    value: String(expenses.length), sub: 'kayıt',                          color: 'text-[#0f172a]' },
@@ -320,7 +320,7 @@ export async function ExpensesContent({ companyId }: Props) {
 
       {/* ── Gider Analizi (expense-intelligence) ─────────────────────────────── */}
       {expenseIntelligence && expenseIntelligence.categories.length > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 space-y-3">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
               Gider Analizi
@@ -441,7 +441,7 @@ export async function ExpensesContent({ companyId }: Props) {
 
       {/* ── Category breakdown (collapsible) — with anomaly badges ───────────── */}
       {categories.length > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
           <h3 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">Kategori Özeti — Son 6 Ay</h3>
           <div className="space-y-2.5">
             {categories.map(cat => {
@@ -490,7 +490,7 @@ export async function ExpensesContent({ companyId }: Props) {
 
       {/* ── Monthly trend ─────────────────────────────────────────────────────── */}
       {trend.length > 1 && (
-        <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
           <h3 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">Aylık Gider Trendi</h3>
           <div className="flex items-end gap-2 h-20">
             {trend.map(t => {

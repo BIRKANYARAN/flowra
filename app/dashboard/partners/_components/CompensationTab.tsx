@@ -88,7 +88,7 @@ function NewScheduleForm({ partners, onClose, onCreated }: NewScheduleFormProps)
   const labelCls = 'text-[0.65rem] font-semibold uppercase tracking-wider text-[#94a3b8] mb-1 block'
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded shadow-sm p-4 mb-4">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm p-4 mb-4">
       <div className="flex items-center justify-between mb-4">
         <div className="text-sm font-bold text-[#0f172a]">Yeni Huzur Hakkı Takvimi</div>
         <button onClick={onClose} className="text-xs text-[#94a3b8] hover:text-[#0f172a]">İptal</button>
@@ -285,12 +285,12 @@ export function CompensationTab({ partners }: CompensationTabProps) {
 
       {/* KPI strip */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="bg-white border border-[#e2e8f0] rounded px-3 py-2.5 shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-3 py-2.5 shadow-sm">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Aylık Toplam Brüt</div>
           <div className="text-sm font-black text-[#0f172a] tabular-nums mt-1">{fmtTRY(totalMonthlyGross)}</div>
           <div className="text-[0.65rem] text-[#94a3b8]">{activeSchedules.length} aktif takvim</div>
         </div>
-        <div className="bg-white border border-[#e2e8f0] rounded px-3 py-2.5 shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-3 py-2.5 shadow-sm">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Aylık Net Ödeme</div>
           <div className="text-sm font-black text-[#16a34a] tabular-nums mt-1">{fmtTRY(totalMonthlyNet)}</div>
           <div className="text-[0.65rem] text-[#94a3b8]">Stopaj sonrası</div>
@@ -345,7 +345,7 @@ export function CompensationTab({ partners }: CompensationTabProps) {
             Henüz aktif huzur hakkı takvimi bulunmuyor.
           </div>
         ) : (
-          <div className="bg-white border border-[#e2e8f0] rounded shadow-sm overflow-hidden">
+          <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm overflow-hidden">
             <table className="w-full text-xs">
               <thead>
                 <tr className="bg-[#f8fafc] border-b border-[#e2e8f0]">
@@ -394,7 +394,7 @@ export function CompensationTab({ partners }: CompensationTabProps) {
             Bekleyen ödeme bulunmuyor.
           </div>
         ) : (
-          <div className="bg-white border border-[#e2e8f0] rounded shadow-sm overflow-hidden">
+          <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm overflow-hidden">
             <table className="w-full text-xs">
               <thead>
                 <tr className="bg-[#f8fafc] border-b border-[#e2e8f0]">

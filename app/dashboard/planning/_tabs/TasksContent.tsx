@@ -91,7 +91,7 @@ export async function TasksContent({ companyId }: Props) {
 
       {/* KPI Strip */}
       {tasks.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
           {[
             { label: 'Açık Görev',       value: String(statusCounts.open ?? 0),   sub: 'bekliyor',          color: statusCounts.open > 0 ? 'text-info-text' : 'text-[#94a3b8]' },
             { label: 'Vadesi Geçmiş',    value: overdue > 0 ? String(overdue) : '—', sub: overdue > 0 ? 'hemen ele alınmalı' : 'gecikmiş yok ✓', color: overdue > 0 ? 'text-neg' : 'text-pos-text' },

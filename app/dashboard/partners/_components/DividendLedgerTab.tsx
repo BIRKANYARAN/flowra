@@ -108,7 +108,7 @@ function EventRow({ event }: { event: DividendEvent }) {
 
 function PartnerSummaryCard({ summary }: { summary: PartnerDividendSummary }) {
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
       <div className="px-4 py-3 border-b border-[#e2e8f0] bg-[#f8fafc] flex items-start justify-between gap-2">
         <div>
           <div className="text-xs font-black text-[#0f172a]">{summary.partner_name}</div>
@@ -224,7 +224,7 @@ export function DividendLedgerTab() {
       </div>
 
       {/* ── 1. Summary strip ─────────────────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
         <div className="px-4 py-3 border-b border-[#e2e8f0] bg-[#f8fafc]">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Temettü Özeti</div>
           <p className="text-[10px] text-[#94a3b8] mt-0.5">GVK 94 stopaj dahil · TTK 509 uyum takibi</p>
@@ -282,7 +282,7 @@ export function DividendLedgerTab() {
       )}
 
       {/* ── 4. Full event ledger table ───────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
         <div className="px-4 py-3 border-b border-[#e2e8f0] bg-[#f8fafc]">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Temettü Hareketleri</div>
           <p className="text-[10px] text-[#94a3b8] mt-0.5">

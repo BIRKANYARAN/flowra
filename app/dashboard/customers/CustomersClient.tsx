@@ -106,7 +106,7 @@ export default function CustomersClient({ initialCustomers }: Props) {
 
       {/* ── Add/Edit Form ─────────────────────────────────────────────────── */}
       {showForm && (
-        <div className="bg-white border border-[#e2e8f0] rounded p-6 space-y-4">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-6 space-y-4">
           <h3 className="font-bold text-sm border-b border-[#e2e8f0] pb-3">
             {editId ? 'Müşteriyi Düzenle' : 'Yeni Müşteri'}
           </h3>
@@ -162,7 +162,7 @@ export default function CustomersClient({ initialCustomers }: Props) {
       )}
 
       {/* ── Customer List ─────────────────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
         {filtered.length === 0 ? (
           <div className="py-12 text-center">
             <div className="text-xs font-medium text-[#334155] mb-1">

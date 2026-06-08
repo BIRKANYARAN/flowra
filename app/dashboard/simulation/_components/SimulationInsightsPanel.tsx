@@ -38,7 +38,7 @@ export function SimulationInsightsPanel({
     <>
       {/* ── Revenue timeline chart (CSS bars) ────────────────────────────────── */}
       {hasInputs && (
-        <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
           <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">
             Gelir Çizelgesi — 12 Ay
           </h2>
@@ -79,7 +79,7 @@ export function SimulationInsightsPanel({
       )}
 
       {/* ── Tax effect ───────────────────────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
         <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
           Vergi Etkisi — Yıllık Tahmin
         </h2>

@@ -221,7 +221,7 @@ export function TrialBalanceTab() {
       )}
 
       {isEmpty && (
-        <div className="bg-white border border-[#e2e8f0] rounded px-4 py-10 text-center shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-10 text-center shadow-sm">
           <p className="text-xs font-medium text-[#334155] mb-1">Bu dönem için journal kaydı bulunamadı.</p>
           <p className="text-[0.65rem] text-[#94a3b8]">Mizan, defteri kebir kayıtları oluştukça dolacaktır.</p>
         </div>
@@ -255,7 +255,7 @@ export function TrialBalanceTab() {
           { label: 'Gelirler',    value: summary.total_revenue      },
           { label: 'Net Gelir',   value: summary.net_income, color: summary.net_income >= 0 ? 'text-pos-text' : 'text-neg-text' },
         ].map(k => (
-          <div key={k.label} className="bg-white border border-[#e2e8f0] rounded px-3 py-2.5 shadow-sm">
+          <div key={k.label} className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-3 py-2.5 shadow-sm">
             <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{k.label}</div>
             <div className={`text-xs font-black tabular-nums ${k.color ?? 'text-[#0f172a]'}`}>
               {fmtTRY(k.value)}
@@ -274,7 +274,7 @@ export function TrialBalanceTab() {
             const grpTotal = validateTrialBalance(grpLines)
             const isOpen   = expanded.has(grp.id)
             return (
-              <div key={grp.id} className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+              <div key={grp.id} className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
                 <button
                   onClick={() => toggleGroup(grp.id)}
                   className="w-full flex items-center justify-between px-4 py-2.5 bg-[#f8fafc] hover:bg-[#f1f5f9] transition-colors border-b border-[#e2e8f0]"
@@ -338,7 +338,7 @@ export function TrialBalanceTab() {
         </div>
       ) : (
         // Flat filtered view
-        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
           <table className="w-full text-xs">
             <thead>
               <tr className="bg-[#f8fafc] border-b border-[#e2e8f0]">
@@ -382,7 +382,7 @@ export function TrialBalanceTab() {
       )}
 
       {/* ── Footer: TOPLAM + balance indicator ────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
         <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">
           <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">TOPLAM</span>
           <div className="flex items-center gap-6 tabular-nums text-xs font-black">

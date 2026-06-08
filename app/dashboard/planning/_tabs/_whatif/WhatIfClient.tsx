@@ -540,7 +540,7 @@ export function WhatIfClient({ period, baseline }: Props) {
             const hasRunway = computed.some(r => r.runwayMonths !== null)
 
             return (
-              <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+              <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
                 {/* Header row */}
                 <div className="px-3 py-2 bg-[#f8fafc]/60 border-b border-[#e2e8f0] grid gap-1" style={{ gridTemplateColumns: `5rem repeat(${cols.length}, 1fr)` }}>
                   <div />
@@ -602,7 +602,7 @@ export function WhatIfClient({ period, baseline }: Props) {
           {!(compareMode && compareSelected.size >= 2) && (
           <>
           {/* P&L Summary */}
-          <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+          <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
             <div className="px-4 py-2.5 bg-[#f8fafc]/60 border-b border-[#e2e8f0]">
               <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Kar/Zarar Özeti</span>
             </div>
@@ -620,13 +620,13 @@ export function WhatIfClient({ period, baseline }: Props) {
 
           {/* Key metrics row */}
           <div className="grid grid-cols-2 gap-2">
-            <div className="bg-white border border-[#e2e8f0] rounded px-3 py-2.5">
+            <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-3 py-2.5">
               <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Brüt Marj</div>
               <div className={`text-lg font-black tabular-nums ${result.grossMarginPct >= 0.25 ? 'text-pos-text' : result.grossMarginPct > 0 ? 'text-warn-text' : 'text-neg'}`}>
                 {pct(result.grossMarginPct)}
               </div>
             </div>
-            <div className="bg-white border border-[#e2e8f0] rounded px-3 py-2.5">
+            <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-3 py-2.5">
               <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">KDV Net</div>
               <div className={`text-lg font-black tabular-nums ${result.vatNet > 0 ? 'text-warn' : 'text-pos-text'}`}>
                 {result.vatNet > 0 ? '+' : ''}₺{fmt(result.vatNet)}
@@ -636,7 +636,7 @@ export function WhatIfClient({ period, baseline }: Props) {
           </div>
 
           {/* Cash + distribution */}
-          <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+          <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
             <div className="px-4 py-2.5 bg-[#f8fafc]/60 border-b border-[#e2e8f0]">
               <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Dağıtım & Nakit</span>
             </div>

@@ -114,7 +114,7 @@ function SummaryCard({
   valueColor?: string
 }) {
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 shadow-sm">
       <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{label}</div>
       <div className={`text-xl font-black tabular-nums leading-none ${valueColor}`}>{value}</div>
       {sub && <div className="text-[10px] text-[#94a3b8] mt-1 leading-tight">{sub}</div>}
@@ -215,7 +215,7 @@ export function FxExposureClient({ companyId }: Props) {
       </div>
 
       {/* Per-currency table */}
-      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
         <div className="px-4 py-3 border-b border-[#e2e8f0] bg-[#f8fafc]">
           <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#64748b]">
             Para Birimi Dağılımı
@@ -254,7 +254,7 @@ export function FxExposureClient({ companyId }: Props) {
       </div>
 
       {/* Scenario analysis */}
-      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
         <div className="px-4 py-3 border-b border-[#e2e8f0] bg-[#f8fafc]">
           <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#64748b]">
             Senaryo Analizi — TRY Değer Kaybı
@@ -281,7 +281,7 @@ export function FxExposureClient({ companyId }: Props) {
       </div>
 
       {/* Diversification section */}
-      <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 space-y-2">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 space-y-2">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#64748b] mb-2">
           Para Birimi Çeşitlendirmesi
         </div>

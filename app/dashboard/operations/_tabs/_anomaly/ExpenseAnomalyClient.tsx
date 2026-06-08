@@ -80,7 +80,7 @@ export function ExpenseAnomalyClient({ companyId }: Props) {
   const lowCount    = report?.anomalies.filter(a => a.severity === 'low').length ?? 0
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded shadow-sm overflow-hidden">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm overflow-hidden">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 border-b border-[#f1f5f9]">
         <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">

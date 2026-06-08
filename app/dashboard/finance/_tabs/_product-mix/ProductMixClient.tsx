@@ -137,7 +137,7 @@ export function ProductMixClient({ companyId }: Props) {
   // ── Loading ──────────────────────────────────────────────────────────────────
   if (isLoading) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-6 shadow-sm">
         <div className="animate-pulse space-y-3">
           <div className="h-4 bg-[#f1f5f9] rounded w-56" />
           <div className="h-20 bg-[#f1f5f9] rounded" />
@@ -150,7 +150,7 @@ export function ProductMixClient({ companyId }: Props) {
   // ── Error ─────────────────────────────────────────────────────────────────────
   if (isError || !data?.report) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm text-center">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-6 shadow-sm text-center">
         <p className="text-sm text-[#64748b] font-medium">
           Ürün karması verisi yüklenirken hata oluştu.
         </p>
@@ -205,7 +205,7 @@ export function ProductMixClient({ companyId }: Props) {
       <div className="grid grid-cols-3 gap-3">
 
         {/* Weighted avg margin */}
-        <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 shadow-sm">
           <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">
             Ağırlıklı Ort. Marj
           </div>
@@ -228,7 +228,7 @@ export function ProductMixClient({ companyId }: Props) {
         </div>
 
         {/* Mix shift effect */}
-        <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 shadow-sm">
           <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">
             Karışım Etkisi
           </div>
@@ -256,7 +256,7 @@ export function ProductMixClient({ companyId }: Props) {
         </div>
 
         {/* Total CM */}
-        <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 shadow-sm">
           <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">
             Toplam Katkı Payı
           </div>
@@ -301,7 +301,7 @@ export function ProductMixClient({ companyId }: Props) {
 
       {/* ── Product ranking table ────────────────────────────────────────────── */}
       {report.products.length > 0 ? (
-        <div className="bg-white border border-[#e2e8f0] rounded shadow-sm overflow-hidden">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm overflow-hidden">
           <div className="px-4 py-2.5 border-b border-[#f1f5f9] bg-[#f8fafc]">
             <span className="text-[10px] font-black uppercase tracking-widest text-[#64748b]">
               Ürün Sıralaması — Katkı Payına Göre
@@ -394,7 +394,7 @@ export function ProductMixClient({ companyId }: Props) {
           </div>
         </div>
       ) : (
-        <div className="bg-white border border-[#e2e8f0] rounded py-10 text-center shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft py-10 text-center shadow-sm">
           <p className="text-[#64748b] font-medium text-sm">Bu dönem için ürün satış verisi bulunamadı.</p>
           <p className="text-[#94a3b8] text-xs mt-1">
             Satış kaydı eklendiğinde ürün karması analizi otomatik hesaplanır.
@@ -404,7 +404,7 @@ export function ProductMixClient({ companyId }: Props) {
 
       {/* ── Concentration risk detail ─────────────────────────────────────────── */}
       {cr.top_product_share !== null && (
-        <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 shadow-sm">
           <div className="flex items-center justify-between flex-wrap gap-2">
             <div>
               <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">

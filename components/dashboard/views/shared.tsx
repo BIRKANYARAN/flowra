@@ -83,11 +83,11 @@ export function KpiTile({
   const valueColor =
     tone === 'negative' ? 'text-red-600' : tone === 'positive' ? 'text-emerald-600' : 'text-[#0f172a]'
   const inner = (
-    <div className="relative bg-white border border-[#e2e8f0] rounded-xl shadow-sm px-3.5 py-3 h-full flex flex-col justify-center overflow-hidden transition-shadow hover:shadow-md">
-      {accent && <span className="absolute left-0 top-0 h-full w-1" style={{ background: accent }} />}
-      <p className="text-[10px] font-semibold uppercase tracking-wide text-[#94a3b8] truncate">{label}</p>
-      <p className={`text-[21px] font-black tabular-nums leading-tight mt-0.5 ${valueColor}`}>{value}</p>
-      {sub && <p className="text-[11px] text-[#94a3b8] truncate mt-0.5">{sub}</p>}
+    <div className="relative fl-card px-4 py-3.5 h-full flex flex-col justify-center overflow-hidden transition-all hover:shadow-soft-lg hover:-translate-y-px">
+      {accent && <span className="absolute left-0 top-0 h-full w-1 rounded-l-2xl" style={{ background: accent }} />}
+      <p className="text-[10.5px] font-semibold uppercase tracking-[0.07em] text-[#94a3b8] truncate">{label}</p>
+      <p className={`text-[23px] font-extrabold tabular-nums leading-tight tracking-tight mt-1 ${valueColor}`}>{value}</p>
+      {sub && <p className="text-[11px] text-[#94a3b8] truncate mt-1">{sub}</p>}
     </div>
   )
   return href ? <Link href={href} className="block h-full">{inner}</Link> : inner

@@ -96,7 +96,7 @@ function MultiPeriodTable({ report }: { report: MultiPeriodPnlReport }) {
   const periods = [...report.periods].reverse()
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded p-5 shadow-sm overflow-x-auto">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-5 shadow-sm overflow-x-auto">
       <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">
         Çok Dönemli Karşılaştırma — Son 6 Ay
       </div>
@@ -254,7 +254,7 @@ export async function PnlTab({ userId, companyId, glMode = 'shadow' }: Props) {
 
   if (!s && !hasGlData) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded text-center py-16 shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft text-center py-16 shadow-sm">
         <div className="w-8 h-8 rounded-full bg-[#f1f5f9] mx-auto mb-3 flex items-center justify-center">
           <span className="text-[#94a3b8] text-sm font-bold">—</span>
         </div>
@@ -345,7 +345,7 @@ export async function PnlTab({ userId, companyId, glMode = 'shadow' }: Props) {
       <div className="col-span-7 space-y-4">
 
         {/* Main waterfall */}
-        <div className="bg-white border border-[#e2e8f0] rounded p-5 shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-5 shadow-sm">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">
             Kâr / Zarar — {fmtMonth(currentYM)}
           </div>
@@ -377,7 +377,7 @@ export async function PnlTab({ userId, companyId, glMode = 'shadow' }: Props) {
         </div>
 
         {/* KDV Özeti */}
-        <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">KDV Özeti</div>
           <div className="grid grid-cols-3 gap-3">
             {[
@@ -418,7 +418,7 @@ export async function PnlTab({ userId, companyId, glMode = 'shadow' }: Props) {
         </div>
 
         {/* 6-ay mini trend */}
-        <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">6 Aylık Net Kâr Trendi</div>
           <div className="space-y-1.5">
             {monthYMs.map((ym, i) => {

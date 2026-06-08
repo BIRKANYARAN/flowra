@@ -84,7 +84,7 @@ function AllocationBar({ waterfall, totalDebt }: { waterfall: WaterfallData; tot
   const shortfallPct = available_cash_try < totalDebt ? ((totalDebt - available_cash_try) / universe) * 100 : 0
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 shadow-sm">
       <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
         Nakit Dağılım Haritası
       </div>
@@ -203,7 +203,7 @@ export function WaterfallTab({
       ) : (
         <>
           {/* ── Instrument strip ───────────────────────────────────────────── */}
-          <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+          <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
             <div className="grid grid-cols-3 divide-x divide-[#e2e8f0]">
               <div className="px-4 py-3">
                 <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Mevcut Nakit</div>
@@ -301,7 +301,7 @@ export function WaterfallTab({
                 </div>
 
                 {/* Loan positions table */}
-                <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+                <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
                   <div className="px-4 py-2.5 border-b border-[#e2e8f0] bg-[#f8fafc]/60">
                     <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ortak Borç Pozisyonları</div>
                     <div className="text-[10px] text-[#94a3b8] mt-0.5">Mevcut borç · Beklenen pro-rata · Fazla/Eksik</div>
@@ -331,7 +331,7 @@ export function WaterfallTab({
                 </div>
 
                 {/* Phase 1 & 2 simulation driven by the real distributable cash */}
-                <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+                <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
                   <div className="px-4 py-2.5 border-b border-[#e2e8f0] bg-[#f8fafc]/60">
                     <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Ödeme Simülasyonu — {fmt(waterfall.available_cash_try)} dağıtım</div>
                     <div className="text-[10px] text-[#94a3b8] mt-0.5">Faz 1: Aşırı yük normalizasyonu · Faz 2: Pay oranına göre pro-rata</div>
@@ -398,7 +398,7 @@ export function WaterfallTab({
 
           {/* ── Allocation steps ───────────────────────────────────────────── */}
           {waterfall.steps.length > 0 && (
-            <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+            <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
               <div className="px-4 py-2.5 border-b border-[#e2e8f0] bg-[#f8fafc]/60">
                 <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Öncelik Sırası</div>
                 <div className="text-[10px] text-[#94a3b8] mt-0.5">Normalleştirilmiş iki aşamalı waterfall</div>
@@ -432,7 +432,7 @@ export function WaterfallTab({
 
           {/* ── Tranche positions table ────────────────────────────────────── */}
           {waterfall.tranches.filter(t => t.principal_try > 0).length > 0 && (
-            <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+            <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
               <div className="px-4 py-2.5 border-b border-[#e2e8f0] bg-[#f8fafc]/60 flex items-center justify-between">
                 <div>
                   <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Borç Pozisyonları</div>

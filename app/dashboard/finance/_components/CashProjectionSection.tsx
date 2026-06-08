@@ -35,7 +35,7 @@ export function CashProjectionSection() {
 
   if (isLoading) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm animate-pulse">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm animate-pulse">
         <div className="px-4 py-3 border-b border-[#e2e8f0]">
           <div className="h-3 bg-[#f1f5f9] rounded w-56" />
         </div>
@@ -50,7 +50,7 @@ export function CashProjectionSection() {
 
   if (isError || !data?.report) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
           90 Günlük Nakit Projeksiyonu
         </div>
@@ -64,7 +64,7 @@ export function CashProjectionSection() {
   const r = data.report
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
       {/* Header */}
       <div className="px-4 py-3 border-b border-[#e2e8f0]">
         <div className="flex items-center justify-between">

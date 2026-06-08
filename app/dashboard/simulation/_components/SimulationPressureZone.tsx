@@ -46,7 +46,7 @@ export function SimulationPressureZone({
   return (
     <>
       {/* ── Pressure Timeline ─────────────────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
             Finansal Baskı Zaman Çizelgesi — 12 Ay
@@ -104,7 +104,7 @@ export function SimulationPressureZone({
 
       {/* ── Runway Forecast ───────────────────────────────────────────────────── */}
       {hasInputs && (
-        <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
           <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
             Pist Tahmini — Güvenli Bölgeye Ne Zaman Ulaşılır?
           </h2>

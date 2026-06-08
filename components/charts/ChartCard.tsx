@@ -16,12 +16,12 @@ export function ChartCard({
 }) {
   return (
     <section
-      className={`flex flex-col min-h-0 bg-white border border-[#e2e8f0] rounded-xl shadow-sm overflow-hidden ${className}`}
+      className={`flex flex-col min-h-0 fl-card overflow-hidden ${className}`}
     >
       {(title || action) && (
-        <header className="flex items-start justify-between gap-3 px-4 pt-3.5 pb-2 shrink-0">
+        <header className="flex items-start justify-between gap-3 px-4 pt-4 pb-2.5 shrink-0">
           <div className="min-w-0">
-            {title && <h3 className="text-sm font-bold text-[#0f172a] truncate">{title}</h3>}
+            {title && <h3 className="text-[13px] font-bold text-[#0f172a] tracking-tight truncate">{title}</h3>}
             {subtitle && <p className="text-[11px] text-[#94a3b8] mt-0.5 truncate">{subtitle}</p>}
           </div>
           {action && <div className="shrink-0">{action}</div>}

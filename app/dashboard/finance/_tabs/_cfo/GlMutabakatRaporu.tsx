@@ -32,7 +32,7 @@ export function GlMutabakatRaporu({ report }: { report: GlReconciliationReport }
     : gl_mode === 'gl_primary' ? 'GL Primer' : gl_mode
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div>

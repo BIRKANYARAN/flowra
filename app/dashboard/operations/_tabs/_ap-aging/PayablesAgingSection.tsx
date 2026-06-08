@@ -66,7 +66,7 @@ export function PayablesAgingSection() {
 
   if (loading) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded p-4">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
           Borç Yaşlandırma
         </div>
@@ -88,7 +88,7 @@ export function PayablesAgingSection() {
 
   if (!report || report.total_count === 0) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded p-4">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
           Borç Yaşlandırma
         </div>
@@ -100,7 +100,7 @@ export function PayablesAgingSection() {
   const fmt = (n: number) => fmtTRY(n)
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded shadow-sm overflow-hidden">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm overflow-hidden">
       {/* Header */}
       <div className="px-4 py-3 border-b border-[#e2e8f0] flex items-center justify-between">
         <div>

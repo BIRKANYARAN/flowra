@@ -182,7 +182,7 @@ export default function CustomerDetailPage() {
             cls:   summary.balance_try > 0 ? 'text-neg' : 'text-pos-text',
           },
         ].map(c => (
-          <div key={c.label} className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
+          <div key={c.label} className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3">
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{c.label}</div>
             <div className={`text-lg font-black tabular-nums ${c.cls ?? ''}`}>{c.value}</div>
           </div>
@@ -190,7 +190,7 @@ export default function CustomerDetailPage() {
       </div>
 
       {/* ── Customer info ─────────────────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-5">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-5">
         <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">Müşteri Bilgileri</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2 text-sm">
           {customer.tax_number && (
@@ -221,7 +221,7 @@ export default function CustomerDetailPage() {
       </div>
 
       {/* ── Sales ─────────────────────────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
         <div className="px-5 py-4 border-b border-[#e2e8f0] flex items-center justify-between">
           <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Satışlar</h2>
           <span className="text-xs text-[#94a3b8]">{summary.sale_count} kayıt</span>
@@ -304,7 +304,7 @@ export default function CustomerDetailPage() {
       </div>
 
       {/* ── Proformas ─────────────────────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
         <div className="px-5 py-4 border-b border-[#e2e8f0] flex items-center justify-between">
           <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Proformalar</h2>
           <span className="text-xs text-[#94a3b8]">{summary.proforma_count} kayıt</span>

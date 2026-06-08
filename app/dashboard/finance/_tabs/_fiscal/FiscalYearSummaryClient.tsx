@@ -62,7 +62,7 @@ function KpiCard({
   }[tone]
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 shadow-sm">
       <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
         {label}
       </div>
@@ -87,7 +87,7 @@ function QuarterlyBars({ quarters }: { quarters: QuarterlyBreakdown[] }) {
       <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">
         Çeyreklik Net Gelir
       </div>
-      <div className="bg-white border border-[#e2e8f0] rounded px-4 py-4 shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-4 shadow-sm">
         <div className="flex items-end gap-4 h-20">
           {quarters.map(q => {
             const net      = q.net_income_try
@@ -164,7 +164,7 @@ function MonthlyTable({ rows }: { rows: MonthlyData[] }) {
       <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5">
         Aylık Döküm
       </div>
-      <div className="bg-white border border-[#e2e8f0] rounded shadow-sm overflow-hidden">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>

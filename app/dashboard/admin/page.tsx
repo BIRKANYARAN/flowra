@@ -541,7 +541,7 @@ function GlModeSection({ glMode }: { glMode: 'shadow' | 'parallel' | 'gl_primary
   const upgrade = GL_MODE_UPGRADE[glMode] ?? null
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded shadow-sm p-4">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm p-4">
       <div className="flex items-center justify-between mb-3">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">GL Modu</div>
         <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${badge.cls}`}>
@@ -626,7 +626,7 @@ export default async function AdminHubPage({
       </div>
 
       {/* Tab hub container */}
-      <div className="bg-white border border-[#e2e8f0] rounded shadow-sm overflow-hidden">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm overflow-hidden">
 
         {/* Tab pill nav */}
         <div className="bg-[#f8fafc] border-b border-[#e2e8f0] px-3 py-2 flex items-center gap-1 flex-wrap">

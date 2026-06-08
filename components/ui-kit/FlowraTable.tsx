@@ -60,7 +60,7 @@ export function FlowraTable<T>({
   }
 
   return (
-    <div className={cn('bg-white border border-[#e2e8f0] rounded overflow-hidden', className)}>
+    <div className={cn('bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden', className)}>
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-[#e2e8f0]">

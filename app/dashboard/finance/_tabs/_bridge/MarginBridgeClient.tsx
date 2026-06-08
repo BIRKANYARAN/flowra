@@ -180,7 +180,7 @@ export default function MarginBridgeClient({ companyId }: Props) {
         Brüt Kâr Köprüsü — Fiyat / Hacim / Karışım
       </div>
 
-      <div className="bg-white border border-[#e2e8f0] rounded shadow-sm overflow-hidden">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm overflow-hidden">
 
         {/* ── Header: period selectors ─────────────────────────────────────── */}
         <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-b border-[#f1f5f9] bg-[#f8fafc]">

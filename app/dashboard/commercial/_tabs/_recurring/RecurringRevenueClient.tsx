@@ -91,7 +91,7 @@ function MetricBar({
 
 function Skeleton() {
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 space-y-3 animate-pulse">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 space-y-3 animate-pulse">
       <div className="h-3 w-52 bg-[#f1f5f9] rounded" />
       <div className="grid grid-cols-4 gap-3">
         {[0, 1, 2, 3].map(i => (
@@ -133,7 +133,7 @@ export default function RecurringRevenueClient({ companyId }: Props) {
   // Empty state
   if (!report || report.total_customer_count === 0) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded px-4 py-6 text-center">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-6 text-center">
         <p className="text-sm text-[#94a3b8]">
           Tekrarlayan gelir analizi için yeterli veri yok
         </p>
@@ -180,7 +180,7 @@ export default function RecurringRevenueClient({ companyId }: Props) {
   )
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
       {/* Header */}
       <div className="px-4 py-3 border-b border-[#f1f5f9]">
         <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">

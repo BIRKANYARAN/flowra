@@ -95,7 +95,7 @@ export async function ProformasContent({ companyId }: Props) {
 
       {/* ── Dönüşüm Analizi (proforma-analytics) ──────────────────────────── */}
       {analytics && analytics.total_proformas > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 space-y-3">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
               Dönüşüm Analizi
@@ -179,7 +179,7 @@ export async function ProformasContent({ companyId }: Props) {
 
       {/* KPI strip */}
       {list.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
           {[
             { label: 'Toplam Teklif',    value: String(list.length),   sub: 'tüm zamanlar',                         color: 'text-[#0f172a]' },
             { label: 'Pipeline Değeri',  value: openCount > 0 ? formatTRY(pipelineValueTRY) : '—', sub: `${openCount} açık teklif (gönderildi/onaylandı)`, color: openCount > 0 ? 'text-info-text' : 'text-[#94a3b8]' },
@@ -236,7 +236,7 @@ export async function ProformasContent({ companyId }: Props) {
 
       {/* ── Proforma Status Funnel ────────────────────────────────────── */}
       {list.length > 2 && totalNonDraft > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 shadow-sm">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Teklif Dönüşüm Hunisi</div>
           <div className="flex items-stretch gap-1">
             {[
@@ -306,7 +306,7 @@ export async function ProformasContent({ companyId }: Props) {
           }
         />
       ) : (
-        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
           <div className="grid grid-cols-12 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] px-4 py-2.5 border-b border-[#e2e8f0]">
             <div className="col-span-3">No / Revizyon</div>
             <div className="col-span-3">Müşteri</div>

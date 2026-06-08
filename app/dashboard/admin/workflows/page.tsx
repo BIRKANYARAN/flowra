@@ -137,7 +137,7 @@ export default async function WorkflowsPage() {
 
       {/* Workflow table */}
       {workflows.length > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-[#e2e8f0] bg-[#f8fafc]">

@@ -200,7 +200,7 @@ function SectionCard({ title, children, docHref }: {
   docHref?: string
 }) {
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
       <div className="px-4 py-3 border-b border-[#e2e8f0] bg-[#f8fafc] flex items-center justify-between">
         <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#64748b]">
           {title}
@@ -370,7 +370,7 @@ export function BoardPackTab({ userId: _userId, companyId: _companyId }: Props) 
 
       {/* ── Progress indicator ──────────────────────────────────────────────── */}
       {state === 'loading' && (
-        <div className="bg-white border border-[#e2e8f0] rounded px-5 py-4 space-y-3">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-5 py-4 space-y-3">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
             Paket Hazırlanıyor
           </div>
@@ -421,7 +421,7 @@ export function BoardPackTab({ userId: _userId, companyId: _companyId }: Props) 
           </div>
 
           {/* Manifest checklist */}
-          <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+          <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
             <div className="px-4 py-3 border-b border-[#e2e8f0] bg-[#f8fafc] flex items-center justify-between">
               <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#64748b]">
                 Pakete Dahil Edilecek Raporlar
@@ -463,7 +463,7 @@ export function BoardPackTab({ userId: _userId, companyId: _companyId }: Props) 
           </div>
 
           {/* Pack download info */}
-          <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
+          <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3">
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
               Pack&apos;i İndir
             </div>

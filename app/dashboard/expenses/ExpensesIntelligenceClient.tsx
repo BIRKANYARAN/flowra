@@ -432,7 +432,7 @@ export default function ExpensesIntelligenceClient({
         <>
           {/* One-off expenses */}
           {list.length > 0 && (
-            <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+            <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
               <div className="grid grid-cols-12 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] px-5 py-3 border-b border-[#e2e8f0]">
                 <div className="col-span-4">Açıklama</div>
                 <div className="col-span-2">Kategori</div>
@@ -506,7 +506,7 @@ export default function ExpensesIntelligenceClient({
           {recurring.length > 0 && (
             <div>
               <Label className="mb-3">Tekrarlayan Giderler ({recurring.length})</Label>
-              <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+              <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
                 <div className="grid grid-cols-12 text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] px-5 py-3 border-b border-[#e2e8f0]">
                   <div className="col-span-4">Açıklama</div>
                   <div className="col-span-2">Kategori</div>

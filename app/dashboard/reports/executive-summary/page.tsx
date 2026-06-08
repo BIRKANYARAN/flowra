@@ -33,7 +33,7 @@ function KpiCard({ label, value, sub, tone = 'neutral' }: {
   label: string; value: string; sub?: string; tone?: 'positive' | 'negative' | 'neutral'
 }) {
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3">
       <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{label}</div>
       <div className={`text-lg font-black tabular-nums leading-tight ${
         tone === 'positive' ? 'text-pos-text' : tone === 'negative' ? 'text-neg' : 'text-[#0f172a]'
@@ -269,7 +269,7 @@ export default function ExecutiveSummaryPage() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">Nakit Akışı</div>
-              <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+              <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
                 {[
                   { label: 'Faaliyet Nakit Akışı',   value: cf?.operating  ?? 0 },
                   { label: 'Yatırım Nakit Akışı',    value: cf?.investing  ?? 0 },
@@ -287,7 +287,7 @@ export default function ExecutiveSummaryPage() {
             </div>
             <div>
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">Vergi Özeti</div>
-              <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+              <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
                 {[
                   { label: 'Satış KDV',     value: tax?.sales_vat    ?? 0 },
                   { label: 'Alış KDV',      value: -(tax?.purchase_vat ?? 0) },

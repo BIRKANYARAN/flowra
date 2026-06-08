@@ -131,7 +131,7 @@ export default function TrialBalancePage() {
 
       {/* Accounting checks */}
       {!loading && checks.length > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
           <div className="px-4 py-2.5 border-b border-[#e2e8f0] bg-[#f8fafc]">
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Muhasebe Doğruluk Kontrolleri</div>
           </div>
@@ -159,11 +159,11 @@ export default function TrialBalancePage() {
       {/* Summary row */}
       {!loading && tb && (
         <div className="grid grid-cols-3 gap-2">
-          <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
+          <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 shadow-sm">
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Toplam Borç</div>
             <div className="text-xl font-black tabular-nums text-[#0f172a]">{fmt(tb.total_debit_try)}</div>
           </div>
-          <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
+          <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 shadow-sm">
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Toplam Alacak</div>
             <div className="text-xl font-black tabular-nums text-[#0f172a]">{fmt(tb.total_credit_try)}</div>
           </div>
@@ -200,7 +200,7 @@ export default function TrialBalancePage() {
             const accounts = (grouped.get(cls) ?? []).filter(a => a.debit_try > 0 || a.credit_try > 0)
             if (accounts.length === 0) return null
             return (
-              <div key={cls} className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+              <div key={cls} className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
                 <div className="px-4 py-2.5 border-b border-[#e2e8f0] bg-[#f8fafc]">
                   <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#64748b]">
                     {CLASS_LABELS[cls] ?? cls}

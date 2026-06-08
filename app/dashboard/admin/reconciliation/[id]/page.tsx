@@ -248,7 +248,7 @@ export default async function ReconciliationDetailPage({
           const checks = [v.balance_sheet_check, v.treasury_check, v.inventory_check, v.partner_finance_check, v.profit_check, v.distribution_check]
           const overallColor = v.overall_status === 'PASS' ? 'text-[#16a34a]' : v.overall_status === 'WARNING' ? 'text-[#d97706]' : 'text-[#dc2626]'
           return (
-            <div className="bg-white border border-[#e2e8f0] rounded">
+            <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft">
               <div className="flex items-center justify-between px-5 py-3 border-b border-[#e2e8f0] bg-[#f8fafc]">
                 <span className="text-xs font-black text-[#0f172a] uppercase tracking-widest">Finansal Doğrulama Merkezi</span>
                 <span className={`text-xs font-black ${overallColor}`}>
@@ -661,7 +661,7 @@ export default async function ReconciliationDetailPage({
 
         {/* Confidence factors */}
         {snapshot.confidence_factors && snapshot.confidence_factors.length > 0 && (
-          <div className="bg-white border border-[#e2e8f0] rounded">
+          <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft">
             <div className="flex items-center gap-3 px-5 py-3 border-b border-[#e2e8f0] bg-[#f8fafc]">
               <span className="text-xs font-black text-[#0f172a] uppercase tracking-widest">Güven Faktörleri</span>
               <ConfidenceBadge score={snapshot.confidence_score} />
@@ -692,7 +692,7 @@ export default async function ReconciliationDetailPage({
         )}
 
         {/* ── Audit Trail ─────────────────────────────────────────────────────── */}
-        <div className="bg-white border border-[#e2e8f0] rounded">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft">
           <div className="px-5 py-3 border-b border-[#e2e8f0] bg-[#f8fafc]">
             <span className="text-xs font-black text-[#0f172a] uppercase tracking-widest">Denetim Geçmişi</span>
           </div>

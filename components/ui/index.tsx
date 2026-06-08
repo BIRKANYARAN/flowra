@@ -61,7 +61,7 @@ export const Btn = forwardRef<HTMLButtonElement, BtnProps>(
 Btn.displayName = 'Btn'
 
 /* ── Card ─────────────────────────────────────────────────────────────────── */
-const card = cva('bg-white border border-[#e2e8f0] rounded', {
+const card = cva('bg-white border border-[#e2e8f0] rounded-xl shadow-soft', {
   variants: {
     padding:     { none: 'p-0', sm: 'p-4', md: 'p-5', lg: 'p-6' },
     interactive: { true: 'hover:border-[#e2e8f0] cursor-pointer transition-colors', false: '' },
@@ -251,7 +251,7 @@ export function EmptyState({ icon, title, sub, action }: {
   icon: string; title: string; sub?: string; action?: ReactNode
 }) {
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded text-center py-16 px-6">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft text-center py-16 px-6">
       <div className="text-5xl mb-3">{icon}</div>
       <p className="font-semibold text-[#334155] mb-1">{title}</p>
       {sub && <p className="text-sm text-[#94a3b8] mb-5">{sub}</p>}

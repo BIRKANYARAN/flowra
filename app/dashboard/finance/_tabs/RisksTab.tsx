@@ -191,7 +191,7 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
 
   if (risk.totalOutstanding === 0) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded text-center py-12">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft text-center py-12">
         <div className="text-xs font-medium text-[#334155] mb-1">Açık alacak yok</div>
         <div className="text-[0.65rem] text-[#94a3b8]">Tüm faturalar tahsil edilmiş görünüyor</div>
       </div>
@@ -232,7 +232,7 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
                    risk.concentration.hhi < 2500 ? 'text-warn-text' : 'text-neg',
           },
         ].map(c => (
-          <div key={c.label} className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
+          <div key={c.label} className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 shadow-sm">
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{c.label}</div>
             <div className={`text-xl font-black tabular-nums leading-none ${c.tone}`}>{c.value}</div>
             <div className="text-[10px] text-[#94a3b8] mt-1">{c.sub}</div>
@@ -255,7 +255,7 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
       )}
 
       {/* Zone 2 — Konsantrasyon */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
         <div className="flex items-center justify-between mb-3">
           <div>
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Konsantrasyon Analizi</div>
@@ -298,7 +298,7 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
       </div>
 
       {/* Zone 3 — Aging table */}
-      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
         <div className="px-4 py-3 border-b border-[#e2e8f0]">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Müşteri Yaşlandırma Analizi</div>
           <p className="text-[10px] text-[#94a3b8] mt-0.5">Alacakların vade kırılımı</p>
@@ -357,7 +357,7 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
 
       {/* Zone 4 — Operational Deviation Signals */}
       {allAnomalies.length > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
           <div className="flex items-center justify-between mb-3">
             <div>
               <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Operasyonel Sapma Sinyalleri</div>
@@ -417,7 +417,7 @@ export async function RisksTab({ userId: _userId, companyId }: Props) {
       )}
 
       {/* Zone 5 — Pressure Assessment */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">Baskı Değerlendirmesi</div>
         <ul className="space-y-1.5">
           {guidance.map((g, i) => (

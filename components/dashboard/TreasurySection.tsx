@@ -150,7 +150,7 @@ export function TreasurySection() {
 
   if (isLoading) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm space-y-3">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm space-y-3">
         <Skeleton className="h-6 w-48" />
         <Skeleton className="h-16 w-full" />
         <Skeleton className="h-24 w-full" />
@@ -160,7 +160,7 @@ export function TreasurySection() {
 
   if (error || !data?.report) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 shadow-sm">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Hazine Yönetimi</div>
         <p className="text-xs text-neg">Hazine verileri yüklenemedi.</p>
       </div>
@@ -189,7 +189,7 @@ export function TreasurySection() {
     <div className="space-y-3">
 
       {/* Header + Total Cash chip */}
-      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
         <div className="px-4 py-3 border-b border-[#e2e8f0] flex items-center justify-between">
           <div>
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Hazine Yönetimi</div>
@@ -230,7 +230,7 @@ export function TreasurySection() {
       )}
 
       {/* Account list */}
-      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
         <div className="px-4 py-3 border-b border-[#e2e8f0] flex items-center justify-between">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
             Banka Hesapları ({r.account_count})
@@ -250,7 +250,7 @@ export function TreasurySection() {
 
       {/* Daily cash waterfall — last 30 days */}
       {r.daily_positions.length > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
           <div className="px-4 py-3 border-b border-[#e2e8f0]">
             <div className="flex items-center justify-between">
               <div>
@@ -272,7 +272,7 @@ export function TreasurySection() {
 
       {/* Recommendations */}
       {r.recommendations.length > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
           <div className="px-4 py-3 border-b border-[#e2e8f0]">
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Hazine Önerileri</div>
           </div>

@@ -21,7 +21,7 @@ export function CeyreklikAnalitik({ quarterlyReport, today }: { quarterlyReport:
         const fmtDateQ = fmtDateMed
 
         return (
-          <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+          <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
             <div className="px-4 py-3 border-b border-[#e2e8f0] flex items-center justify-between">
               <div>
                 <h2 className="text-xs font-black text-[#0f172a]">Çeyreklik Analitik — {currentYear}</h2>

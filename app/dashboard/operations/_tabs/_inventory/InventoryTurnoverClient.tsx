@@ -158,7 +158,7 @@ export default function InventoryTurnoverClient({ companyId }: Props) {
     .slice(0, 5)
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
       {/* Header */}
       <div className="px-5 py-4 border-b border-[#e2e8f0] flex items-center justify-between">
         <div>

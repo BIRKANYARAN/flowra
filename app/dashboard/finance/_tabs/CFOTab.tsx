@@ -370,7 +370,7 @@ export async function CFOTab({ userId, companyId }: Props) {
       </div>
 
       {/* Row 2: Accounting Accuracy Checks */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
         <div className="flex items-center justify-between mb-3">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
             Muhasebe Doğruluk Kontrolleri
@@ -414,7 +414,7 @@ export async function CFOTab({ userId, companyId }: Props) {
 
       {/* C4: Dönem Güvence Değerlendirmesi */}
       {governanceLines.length > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3">
           <div className="flex items-center justify-between mb-2.5">
             <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Dönem Güvence Değerlendirmesi</span>
             <span className="text-[9px] text-[#94a3b8]">Muhasebe bütünlüğü · Dönem süresi · Denetim sürekliliği</span>
@@ -430,7 +430,7 @@ export async function CFOTab({ userId, companyId }: Props) {
       )}
 
       {/* Period Close Status */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
         <div className="flex items-center justify-between mb-3">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Dönem Kapanış Durumu</div>
           {periodData ? (
@@ -556,7 +556,7 @@ export async function CFOTab({ userId, companyId }: Props) {
       )}
 
       {/* Row 3: Balance Sheet preview */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
         <div className="flex items-center justify-between mb-3">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
             Bilanço Özeti — {fmtDate(today)}
@@ -615,7 +615,7 @@ export async function CFOTab({ userId, companyId }: Props) {
       <div className="grid grid-cols-2 gap-3">
 
         {/* Tax */}
-        <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
             Vergi Yükümlülükleri ({today.slice(0, 4)})
           </div>
@@ -651,7 +651,7 @@ export async function CFOTab({ userId, companyId }: Props) {
         </div>
 
         {/* Receivable aging */}
-        <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
             Alacak Yaşlandırma — Bugün İtibarıyla
           </div>
@@ -684,7 +684,7 @@ export async function CFOTab({ userId, companyId }: Props) {
       <BorcYaslandirmaOzeti companyId={companyId} supabase={supabase} />
 
       {/* Row 5: P&L Summary */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
           Gelir Tablosu Özeti — {today.slice(0, 4)} YTD
         </div>
@@ -735,7 +735,7 @@ export async function CFOTab({ userId, companyId }: Props) {
         ]
 
         return (
-          <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
+          <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
             <div className="flex items-center justify-between mb-3">
               <div>
                 <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">

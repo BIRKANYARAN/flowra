@@ -39,7 +39,7 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
     return (
       <div className="max-w-3xl">
         <Link href="/dashboard/commercial?tab=sales" className="text-sm text-[#94a3b8] hover:text-[#0f172a] mb-4 inline-block">← Satışlar</Link>
-        <div className="bg-white border border-[#e2e8f0] rounded p-10 text-center">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-10 text-center">
           <p className="text-[#94a3b8] text-sm">Satış bulunamadı veya silinmiş.</p>
         </div>
       </div>
@@ -78,7 +78,7 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
       </div>
 
       {/* Items table */}
-      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden mb-5">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden mb-5">
         <table className="w-full">
           <thead>
             <tr className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] bg-[#f8fafc] border-b border-[#e2e8f0]">
@@ -139,7 +139,7 @@ export default async function SaleDetailPage({ params }: { params: { id: string 
       </div>
 
       {/* Profit card */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-5">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-5">
         <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">Finansal Özet</h2>
         <div className="grid grid-cols-3 gap-4 text-center">
           <div>

@@ -74,7 +74,7 @@ function PaymentBehaviorSection({ report }: { report: PaymentBehaviorReport }) {
   const hasOutstanding = report.profiles.some(p => p.outstanding_try > 0)
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded shadow-sm">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">
         <div>
@@ -274,7 +274,7 @@ export async function CollectionsContent({ companyId }: Props) {
 
       {/* ── Tahsilat Önceliklendirme ────────────────────────────────────────────── */}
       {priorityReport && priorityReport.receivables.length > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm">
           {/* KPI strip */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">
             <div>
@@ -370,7 +370,7 @@ export async function CollectionsContent({ companyId }: Props) {
 
       {/* ── Pressure Summary Strip ─────────────────────────────────────────────── */}
       {grandTotal > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm flex flex-wrap gap-x-4 gap-y-1 items-center text-xs">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 shadow-sm flex flex-wrap gap-x-4 gap-y-1 items-center text-xs">
           <span className="font-bold text-[#0f172a]">{fmt(grandTotal)} açık alacak</span>
           <span className="text-[#94a3b8]">·</span>
           <span className="text-[#334155]">{totalCount} fatura</span>
@@ -394,7 +394,7 @@ export async function CollectionsContent({ companyId }: Props) {
 
       {/* ── Alacak Yaş Haritası ───────────────────────────────────────────────── */}
       {heatmapReport && heatmapReport.total_outstanding_try > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm">
           <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">
             <div>
               <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">Alacak Yaş Haritası</div>

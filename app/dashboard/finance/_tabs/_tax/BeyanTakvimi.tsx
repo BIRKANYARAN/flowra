@@ -6,7 +6,7 @@ import { fmtTRY as fmt, fmtDateMed as fmtDate } from '@/lib/format'
 
 export function BeyanTakvimi({ taxCalendar }: { taxCalendar: TaxCalendar | null }) {
   return (
-      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
         <div className="px-4 py-3 border-b border-[#e2e8f0] flex items-center justify-between">
           <div>
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Beyan Takvimi</div>

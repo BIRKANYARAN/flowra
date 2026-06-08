@@ -18,6 +18,31 @@ input[type="number"] { -moz-appearance: textfield; }
    Flowra design system additions — appended below existing directives.
    ───────────────────────────────────────────────────────────────────────── */
 
+@layer components {
+  /* ── "Calm Capital" surface system ──────────────────────────────────────────
+     One premium card primitive: white surface, soft layered elevation, generous
+     radius, near-invisible hairline. Replaces the flat `border-[#e2e8f0] rounded`
+     pattern. Use `.fl-card` for the container; `.fl-card-pad` adds standard
+     padding. */
+  .fl-card {
+    background: #ffffff;
+    border: 1px solid #edeef2;
+    border-radius: 16px;
+    box-shadow: 0 1px 2px 0 rgba(16,24,40,0.04), 0 4px 12px -4px rgba(16,24,40,0.06);
+  }
+  .fl-card-pad { padding: 1.25rem; }
+
+  /* Quiet section eyebrow — readable, not invisible. */
+  .fl-eyebrow {
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #94a3b8;
+  }
+}
+
 @layer base {
   /* Tabular numerals on anything that looks like a number. */
   .tabular-nums, .flowra-money, .flowra-kpi {

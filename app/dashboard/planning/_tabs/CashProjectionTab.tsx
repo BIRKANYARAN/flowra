@@ -171,7 +171,7 @@ export async function CashProjectionTab({ companyId }: Props) {
       </div>
 
       {/* ── BASE SCENARIO — MONTHLY CASH BARS ─────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">
           <div>
             <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Baz Senaryo — Aylık Nakit Pozisyonu</span>
@@ -258,7 +258,7 @@ export async function CashProjectionTab({ companyId }: Props) {
 
 function Metric({ label, value, sub, color }: { label: string; value: string; sub: string; color: string }) {
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3">
       <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{label}</div>
       <div className={`text-xl font-black tabular-nums leading-none ${color}`}>{value}</div>
       <div className="text-[9px] text-[#94a3b8] mt-1">{sub}</div>

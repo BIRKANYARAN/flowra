@@ -69,12 +69,23 @@ module.exports = {
           subtle:  '#ede9fe',
         },
       },
+      fontFamily: {
+        sans: ['var(--font-inter)', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+      },
       borderRadius: {
         xl:    '12px',
         '2xl': '16px',
       },
+      colors: {
+        // App canvas + hairline used by the v3 "Calm Capital" surface system.
+        canvas: '#f6f7f9',
+        line:   '#edeef2',
+      },
       boxShadow: {
         card: '0 1px 2px 0 rgba(17,24,39,0.05), 0 1px 3px 0 rgba(17,24,39,0.06)',
+        // Soft, layered elevation for the redesigned cards (depth without hairlines).
+        soft:    '0 1px 2px 0 rgba(16,24,40,0.04), 0 4px 12px -4px rgba(16,24,40,0.06)',
+        'soft-lg': '0 1px 3px 0 rgba(16,24,40,0.05), 0 12px 28px -8px rgba(16,24,40,0.10)',
         pdf:  '0 0 0 1px rgba(17,24,39,0.04), 0 8px 24px -8px rgba(17,24,39,0.12)',
       },
       fontSize: {

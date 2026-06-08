@@ -55,7 +55,7 @@ function kdvAmountColor(status: 'payable' | 'credit' | 'zero', obligStatus: Obli
 
 function LoadingSkeleton() {
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
       <div className="px-4 py-3 border-b border-[#e2e8f0]">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
           Vergi Uyum Takvimi
@@ -92,7 +92,7 @@ export function TaxComplianceClient({ companyId }: Props) {
   // below and bubble to the route error boundary as a full-page "Bir hata oluştu".
   if (isError || !data?.report?.current_month_kdv) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
         <div className="px-4 py-3 border-b border-[#e2e8f0]">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
             Vergi Uyum Takvimi
@@ -127,7 +127,7 @@ export function TaxComplianceClient({ companyId }: Props) {
       )}
 
       {/* ── Main card ────────────────────────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
 
         {/* Header */}
         <div className="px-4 py-3 border-b border-[#e2e8f0]">

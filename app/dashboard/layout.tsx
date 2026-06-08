@@ -129,7 +129,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           userInitials={userInitials}
           companies={companies}
         >
-          <div className="flex min-h-screen bg-[#f8fafc]">
+          <div className="flex min-h-screen bg-canvas">
             <CommandBar />
             <Sidebar navBadges={navBadges} />
             <div className="flex-1 flex flex-col min-w-0">
@@ -139,7 +139,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
                 userEmail={user.email ?? ''}
                 logoUrl={logoUrl}
               />
-              <main className="flex-1 px-4 py-3 overflow-auto pb-20 md:pb-3">
+              <main className="flex-1 px-4 md:px-6 py-4 overflow-auto pb-20 md:pb-5">
                 <RouteTransition>{children}</RouteTransition>
               </main>
             </div>

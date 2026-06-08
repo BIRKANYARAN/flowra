@@ -416,7 +416,7 @@ export default function SimulationClient({
       </div>
 
       {/* ── Zone 1: Hero KPI cards ────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
         {[
           {
             label: 'Birim Kâr',
@@ -510,7 +510,7 @@ export default function SimulationClient({
       />
 
       {/* ── Zone 3: Yearly totals ─────────────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
         <h2 className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Yıllık Toplam</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {[

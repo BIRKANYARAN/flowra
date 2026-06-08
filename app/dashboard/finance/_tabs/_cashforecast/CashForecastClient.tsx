@@ -80,7 +80,7 @@ export function CashForecastClient({ companyId }: Props) {
   // ── Loading ──────────────────────────────────────────────────────────────
   if (isLoading) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
         <div className="px-4 py-3 border-b border-[#e2e8f0]">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
             13 Haftalık Nakit Projeksiyonu
@@ -94,7 +94,7 @@ export function CashForecastClient({ companyId }: Props) {
   // ── Error ────────────────────────────────────────────────────────────────
   if (isError || !report) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
         <div className="px-4 py-3 border-b border-[#e2e8f0]">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
             13 Haftalık Nakit Projeksiyonu
@@ -143,7 +143,7 @@ export function CashForecastClient({ companyId }: Props) {
   ]
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
 
       {/* Header */}
       <div className="px-4 py-3 border-b border-[#e2e8f0]">

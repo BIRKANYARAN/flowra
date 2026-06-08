@@ -349,7 +349,7 @@ export function SaleCreateDrawer({ onClose, onSuccess }: SaleCreateDrawerProps) 
 
             {/* Totals strip */}
             {grandTotal > 0 && (
-              <div className="mt-3 bg-white border border-[#e2e8f0] rounded px-4 py-3 space-y-1">
+              <div className="mt-3 bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 space-y-1">
                 <div className="flex justify-between text-xs text-[#94a3b8]">
                   <span>Ara Toplam</span>
                   <span className="font-mono font-semibold text-[#334155]">{fmt(subtotal)}</span>

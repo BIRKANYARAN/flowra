@@ -179,7 +179,7 @@ export async function StrategicScenarioSection({ companyId }: Props) {
         </div>
 
         {/* Base scenario monthly P&L table (compact) */}
-        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
           <div className="px-4 py-3 border-b border-[#f1f5f9] text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">
             Baz Senaryo — Aylık P&amp;L
           </div>

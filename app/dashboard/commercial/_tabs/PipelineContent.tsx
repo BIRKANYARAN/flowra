@@ -177,7 +177,7 @@ export async function PipelineContent({ companyId }: Props) {
     <div className="space-y-4">
 
       {/* ── TİCARİ BORU HATTI ANALİZİ ─────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
         {/* Header */}
         <div className="px-4 py-2.5 border-b border-[#e2e8f0] flex items-center justify-between">
           <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
@@ -342,7 +342,7 @@ export async function PipelineContent({ companyId }: Props) {
 
       {/* ── Satış Hunisi ─────────────────────────────────────────────────── */}
       {funnelReport && funnelStages.length > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
           {/* Header */}
           <div className="px-4 py-2.5 border-b border-[#e2e8f0] flex items-center justify-between">
             <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
@@ -459,7 +459,7 @@ export async function PipelineContent({ companyId }: Props) {
       </div>
 
       {/* KPI Strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded overflow-hidden">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
         {[
           { label: 'Stok Değeri',  value: serverFmt(stockValue),   sub: `${stockLots.length} aktif lot`,                color: 'text-[#0f172a]' },
           { label: 'Pipeline',     value: pipelineVal > 0 ? serverFmt(pipelineVal) : '—', sub: 'gönderildi · onaylandı', color: 'text-info-text' },
@@ -476,7 +476,7 @@ export async function PipelineContent({ companyId }: Props) {
 
       {/* Recent proformas */}
       {recentPf.length > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
           <div className="px-4 py-2 border-b border-[#e2e8f0]">
             <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Son Teklifler</span>
           </div>
@@ -539,7 +539,7 @@ export async function PipelineContent({ companyId }: Props) {
 
       {/* Monthly revenue trend */}
       {recentMonths.length > 1 && (
-        <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">Aylık Ciro Trendi — Son 6 Ay</div>
           <div className="flex items-end gap-2 h-20">
             {recentMonths.map(m => {

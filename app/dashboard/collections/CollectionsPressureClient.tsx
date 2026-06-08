@@ -377,7 +377,7 @@ function PressureRow({ row, onExpand, onQuickPay, patching }: RowProps) {
 
   return (
     <div
-      className={`bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm border-l-4 ${meta.border} ${meta.rowBg}`}
+      className={`bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm border-l-4 ${meta.border} ${meta.rowBg}`}
     >
       <div className="flex items-start gap-3 px-4 py-3 flex-wrap">
         {/* Severity label */}
@@ -549,7 +549,7 @@ export default function CollectionsPressureClient({ initialRows }: Props) {
   // ── Empty state ────────────────────────────────────────────────────────────
   if (rows.length === 0) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded p-12 text-center shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-12 text-center shadow-sm">
         <div className="text-xs font-medium text-[#334155] mb-1">Açık tahsilat bulunmuyor</div>
         <div className="text-[0.65rem] text-[#94a3b8]">Tüm alacaklar tahsil edildi.</div>
       </div>

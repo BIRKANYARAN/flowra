@@ -315,7 +315,7 @@ export default function IncomeStatementClient({ companyId }: Props) {
       )}
 
       {/* ── Table ─────────────────────────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded shadow-sm overflow-hidden">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm overflow-hidden">
 
         {/* Table header */}
         <div className="border-b border-[#e2e8f0] bg-[#f8fafc]">
@@ -378,7 +378,7 @@ export default function IncomeStatementClient({ companyId }: Props) {
 
       {/* ── Margin summary ────────────────────────────────────────────────── */}
       {!isLoading && !isError && statement && (
-        <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
             Kâr Marjları
           </div>

@@ -16,7 +16,7 @@ export default function DashboardLoading() {
       {/* KPI strip skeleton */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="bg-white border border-[#e2e8f0] rounded p-4 space-y-2">
+          <div key={i} className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 space-y-2">
             <div className="h-3 w-20 bg-[#f1f5f9] rounded" />
             <div className="h-6 w-28 bg-[#f1f5f9] rounded" />
             <div className="h-3 w-16 bg-[#f1f5f9] rounded" />
@@ -25,7 +25,7 @@ export default function DashboardLoading() {
       </div>
 
       {/* Main content skeleton */}
-      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
         <div className="px-5 py-3 border-b border-[#e2e8f0]">
           <div className="h-3 w-32 bg-[#f1f5f9] rounded" />
         </div>

@@ -91,7 +91,7 @@ function MetricCard({
   }[tone]
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3">
       <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{label}</div>
       <div className={`text-xl font-black tabular-nums leading-none ${valueColor}`}>{primary}</div>
       {secondary && (
@@ -111,7 +111,7 @@ function MetricCard({
 function WtdBar({ todayTry, wtdTry }: { todayTry: number; wtdTry: number }) {
   const pct = wtdTry > 0 ? Math.min(100, (todayTry / wtdTry) * 100) : 0
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3">
       <div className="flex items-center justify-between mb-2">
         <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Haftalık İlerleme (Bu Gün / Haftalık Toplam)</span>
         <span className="text-xs font-bold text-[#334155] tabular-nums">{fmtTRY(todayTry)} / {fmtTRY(wtdTry)}</span>

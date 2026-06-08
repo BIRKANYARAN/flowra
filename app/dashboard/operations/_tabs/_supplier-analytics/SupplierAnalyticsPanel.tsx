@@ -69,7 +69,7 @@ export function SupplierAnalyticsPanel() {
 
   if (loading) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
           Tedarikçi Analizi
         </div>
@@ -80,7 +80,7 @@ export function SupplierAnalyticsPanel() {
 
   if (error || !report) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
           Tedarikçi Analizi
         </div>
@@ -92,7 +92,7 @@ export function SupplierAnalyticsPanel() {
   const top5 = report.suppliers.slice(0, 5)
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 space-y-4 shadow-sm">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 space-y-4 shadow-sm">
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between">
         <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">

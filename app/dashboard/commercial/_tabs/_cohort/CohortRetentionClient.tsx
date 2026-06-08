@@ -71,7 +71,7 @@ function HealthBadge({ health }: { health: Health }) {
 
 function Skeleton() {
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 space-y-3 animate-pulse">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 space-y-3 animate-pulse">
       <div className="h-3 w-52 bg-[#f1f5f9] rounded" />
       <div className="grid grid-cols-4 gap-3">
         {[0, 1, 2, 3].map(i => (
@@ -149,7 +149,7 @@ export default function CohortRetentionClient({ companyId: _companyId }: Props) 
   // Empty state
   if (!report || report.cohorts.length < 2) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded px-4 py-6 text-center">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-6 text-center">
         <p className="text-sm text-[#94a3b8]">
           Kohort analizi için yeterli müşteri verisi yok (en az 2 ay)
         </p>
@@ -172,7 +172,7 @@ export default function CohortRetentionClient({ companyId: _companyId }: Props) 
     : null
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
       {/* Header */}
       <div className="px-4 py-3 border-b border-[#f1f5f9] flex items-center justify-between gap-3 flex-wrap">
         <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">

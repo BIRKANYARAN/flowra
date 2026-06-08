@@ -196,7 +196,7 @@ export function BudgetTrackerClient({ companyId }: Props) {
   // ── Error ─────────────────────────────────────────────────────────────────
   if (isError || !report) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded p-6 text-center text-xs text-[#94a3b8]">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-6 text-center text-xs text-[#94a3b8]">
         Bütçe takip raporu yüklenemedi.
         {error instanceof Error ? ` (${error.message})` : ''}
         <button
@@ -280,7 +280,7 @@ export function BudgetTrackerClient({ companyId }: Props) {
       </div>
 
       {/* Budget Health Score Hero */}
-      <div className="bg-white border border-[#e2e8f0] rounded shadow-sm px-6 py-5">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm px-6 py-5">
         <div className="flex items-center gap-6">
           {/* Score */}
           <div className="text-center min-w-[80px]">
@@ -337,7 +337,7 @@ export function BudgetTrackerClient({ companyId }: Props) {
 
       {/* Revenue Budget Card */}
       {report.revenue_adherence && (
-        <div className="bg-white border border-[#e2e8f0] rounded shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm">
           <div className="px-4 pt-4 pb-2 border-b border-[#f1f5f9]">
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
               Gelir Bütçesi
@@ -380,7 +380,7 @@ export function BudgetTrackerClient({ companyId }: Props) {
       )}
 
       {/* Expense Budget Table */}
-      <div className="bg-white border border-[#e2e8f0] rounded shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm">
         <div className="px-4 pt-4 pb-2 border-b border-[#f1f5f9] flex items-center justify-between">
           <div>
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
@@ -457,7 +457,7 @@ export function BudgetTrackerClient({ companyId }: Props) {
 
       {/* YTD Pacing */}
       {ytdPacingPct !== null && (
-        <div className="bg-white border border-[#e2e8f0] rounded shadow-sm px-4 py-3">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm px-4 py-3">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
             Yılbaşından Bu Yana Bütçe Yürüyüşü
           </div>

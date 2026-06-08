@@ -89,7 +89,7 @@ function KpiCard({
   valueClass?: string
 }) {
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded p-3 flex flex-col gap-1">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-3 flex flex-col gap-1">
       <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">
         {label}
       </div>
@@ -128,7 +128,7 @@ export default function PricingIntelligenceClient({ companyId }: Props) {
         Fiyatlama Sağlığı
       </div>
 
-      <div className="bg-white border border-[#e2e8f0] rounded shadow-sm overflow-hidden">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm overflow-hidden">
 
         {/* ── Header ──────────────────────────────────────────────────────────── */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9] bg-[#f8fafc]">

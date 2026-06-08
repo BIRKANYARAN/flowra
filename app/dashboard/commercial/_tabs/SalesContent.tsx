@@ -144,7 +144,7 @@ export async function SalesContent({ companyId }: Props) {
 
       {/* ── Gelir Kaynakları (90d Revenue Attribution) ───────────────────── */}
       {attribution && attribution.total_revenue_try > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded shadow-sm overflow-hidden">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm overflow-hidden">
           {/* Header + concentration summary */}
           <div className="px-4 pt-4 pb-3 border-b border-[#e2e8f0]">
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Gelir Kaynakları — Son 90 Gün</div>
@@ -265,7 +265,7 @@ export async function SalesContent({ companyId }: Props) {
 
       {/* ── KPI Strip ────────────────────────────────────────────────────── */}
       {(mtdCount > 0 || list.length > 0) && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
           {[
             {
               label: 'Bu Ay Ciro (MTD)',
@@ -307,7 +307,7 @@ export async function SalesContent({ companyId }: Props) {
 
       {/* ── Currency breakdown (only if multi-currency) ───────────────────── */}
       {topCurrencies.length > 1 && (
-        <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">Bu Ay — Para Birimi Dağılımı</div>
           <div className="flex gap-4 flex-wrap">
             {topCurrencies.map(([cur, total]) => (

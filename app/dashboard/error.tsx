@@ -15,7 +15,7 @@ export default function DashboardError({
 
   return (
     <div className="flex items-center justify-center min-h-[60vh]">
-      <div className="bg-white border border-[#e2e8f0] rounded p-10 max-w-md text-center">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-10 max-w-md text-center">
         <div className="text-4xl mb-4">⚠️</div>
         <h2 className="text-lg font-black text-[#0f172a] mb-2">Bir hata oluştu</h2>
         <p className="text-sm text-[#64748b] mb-4">

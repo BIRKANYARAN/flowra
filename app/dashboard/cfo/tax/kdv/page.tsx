@@ -99,7 +99,7 @@ export default async function KdvPage({
             {fetchError}
           </div>
         )}
-        <div className="bg-white border border-[#e2e8f0] rounded px-4 py-8 text-center">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-8 text-center">
           <p className="text-sm text-[#94a3b8]">Aktif dönem bulunamadı</p>
           <p className="text-xs text-[#cbd5e1] mt-1">{from} — {to}</p>
         </div>
@@ -148,7 +148,7 @@ export default async function KdvPage({
       </div>
 
       {/* ── Main KDV card ──────────────────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
 
         {/* Output VAT */}
         <div className="px-4 py-2.5 bg-[#f8fafc] border-b border-[#e2e8f0]">
@@ -196,7 +196,7 @@ export default async function KdvPage({
 
       {/* ── VAT Rate Breakdown ─────────────────────────────────────────────── */}
       {kdv.breakdown.vat_rate_summary.length > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
           <div className="px-4 py-2.5 bg-[#f8fafc] border-b border-[#e2e8f0]">
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">KDV Oranı Dağılımı</div>
           </div>

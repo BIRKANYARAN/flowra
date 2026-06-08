@@ -85,7 +85,7 @@ function KpiCard({
   }[tone]
 
   const inner = (
-    <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 transition-colors hover:bg-[#f8fafc]">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 transition-colors hover:bg-[#f8fafc]">
       <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{label}</div>
       <div className={`text-xl font-black tabular-nums leading-none ${valueColor}`}>{value}</div>
       {sub && <div className="text-[10px] text-[#94a3b8] mt-1">{sub}</div>}
@@ -265,7 +265,7 @@ export async function KomutaContent({ companyId }: Props) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
         {/* Overdue collections */}
-        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
           <div className="px-4 pt-4 pb-2">
             <SectionTitle
               label="Vadesi Geçmiş Tahsilatlar"
@@ -308,7 +308,7 @@ export async function KomutaContent({ companyId }: Props) {
         </div>
 
         {/* Critical stock */}
-        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
           <div className="px-4 pt-4 pb-2">
             <SectionTitle
               label="Kritik Stok Seviyeleri"
@@ -352,7 +352,7 @@ export async function KomutaContent({ companyId }: Props) {
 
       {/* Open purchase orders */}
       {(openOrders ?? []).length > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
           <div className="px-4 pt-4 pb-2">
             <SectionTitle
               label="Açık Satın Alma Emirleri"
@@ -427,7 +427,7 @@ export async function KomutaContent({ companyId }: Props) {
           { label: 'Müşteri Listesi',  href: '/dashboard/commercial?tab=customers', icon: '👥' },
         ].map(({ label, href, icon }) => (
           <Link key={href} href={href}
-            className="bg-white border border-[#e2e8f0] rounded px-4 py-3 hover:bg-[#f8fafc] transition-colors flex items-center gap-2">
+            className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 hover:bg-[#f8fafc] transition-colors flex items-center gap-2">
             <span className="text-base">{icon}</span>
             <span className="text-xs font-semibold text-[#334155]">{label}</span>
           </Link>
@@ -435,7 +435,7 @@ export async function KomutaContent({ companyId }: Props) {
       </div>
 
       {/* OPS Command Center — Daily Metrics Aggregator */}
-      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
         <div className="px-4 pt-4 pb-2 border-b border-[#e2e8f0]">
           <h2 className="text-xs font-black uppercase tracking-widest text-[#64748b]">Günlük Operasyon Komutası</h2>
           <p className="text-[10px] text-[#94a3b8] mt-0.5">Satışlar · Tahsilat · Giderler · Stok</p>

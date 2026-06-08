@@ -138,7 +138,7 @@ const DIM_LABELS: Record<keyof PartnerRiskProfile['dimensions'], string> = {
 
 function HeatmapGrid({ profiles }: { profiles: PartnerRiskProfile[] }) {
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
       <div className="px-4 py-2.5 border-b border-[#e2e8f0] bg-[#f8fafc]/60">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Risk Isı Haritası</div>
         <div className="text-[10px] text-[#94a3b8] mt-0.5">
@@ -249,7 +249,7 @@ function NewRiskCard({ p }: { p: NewProfile }) {
   const gradeColors = NEW_GRADE_COLORS[p.grade] ?? 'bg-[#f8fafc] text-[#64748b] border-[#e2e8f0]'
   const barColor    = NEW_GRADE_BAR[p.grade]    ?? 'bg-[#94a3b8]'
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#e2e8f0]">
         <div>
@@ -551,7 +551,7 @@ export function RiskTab({ loading }: RiskTabProps) {
 
       {/* ── Per-Partner Risk Profiles ────────────────────────────────────────── */}
       {rs.partner_profiles.map(p => (
-        <div key={p.partner_id} className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+        <div key={p.partner_id} className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
 
           {/* Partner header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-[#e2e8f0]">

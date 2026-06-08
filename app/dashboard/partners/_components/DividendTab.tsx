@@ -155,7 +155,7 @@ export function DividendTab() {
     <div className="space-y-5">
 
       {/* ── Section 1: Calculator ───────────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
         <div className="px-4 py-3 border-b border-[#e2e8f0] bg-[#f8fafc]">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Temettü Hesaplama</div>
           <p className="text-[10px] text-[#94a3b8] mt-0.5">TTK 509/519 uyumu · GVK 94 §4 (%10 stopaj) · Ortak bazlı dağılım</p>
@@ -344,7 +344,7 @@ export function DividendTab() {
       </div>
 
       {/* ── Section 2: Declaration History ─────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
         <div className="px-4 py-3 border-b border-[#e2e8f0] bg-[#f8fafc]">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">Temettü Beyan Geçmişi</div>
           <p className="text-[10px] text-[#94a3b8] mt-0.5">Onay akışına gönderilmiş temettü beyanları</p>

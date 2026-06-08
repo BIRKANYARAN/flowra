@@ -81,7 +81,7 @@ const BUCKET_CFG: Record<AgingBucket, BucketConfig> = {
 
 function Skeleton() {
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 space-y-3 animate-pulse">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 space-y-3 animate-pulse">
       <div className="h-3 w-48 bg-[#f1f5f9] rounded" />
       <div className="flex gap-3">
         {[1, 2, 3, 4, 5].map(i => (
@@ -97,7 +97,7 @@ function Skeleton() {
 
 function ErrorState({ message }: { message: string }) {
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3">
       <div className="text-[11px] text-neg">{message}</div>
     </div>
   )
@@ -185,7 +185,7 @@ export default function CollectionsAgingClient({ companyId }: Props) {
 
   if (total === 0) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded px-4 py-6 text-center">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-6 text-center">
         <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Alacak Yaşlandırma</div>
         <div className="text-xs text-[#64748b]">Açık alacak bulunmuyor.</div>
       </div>
@@ -195,7 +195,7 @@ export default function CollectionsAgingClient({ companyId }: Props) {
   const recoveryRate = total > 0 ? (expected_recovery / total) * 100 : 0
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded shadow-sm space-y-0">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm space-y-0">
 
       {/* ── Header ────────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#f1f5f9]">

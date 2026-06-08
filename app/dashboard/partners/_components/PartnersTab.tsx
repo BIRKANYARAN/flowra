@@ -68,7 +68,7 @@ export function PartnersTab({
             { label: 'Toplam Dağıtılan', value: fmt(totalDistributed),                 color: 'text-pos-text' },
             { label: 'Eşitleme Gereken', value: fmt(equalization.total_equalization),  color: equalization.total_equalization > 0 ? 'text-warn-text' : 'text-[#94a3b8]' },
           ].map(c => (
-            <div key={c.label} className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
+            <div key={c.label} className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 shadow-sm">
               <div className={`text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1.5 ${c.color}`}>{c.label}</div>
               <div className="text-xl font-black tabular-nums text-[#0f172a] leading-none">{c.value}</div>
             </div>
@@ -103,7 +103,7 @@ export function PartnersTab({
       {loading && <div className="flex flex-col gap-2"><Skeleton height="h-20" /><Skeleton height="h-20" /></div>}
 
       {!loading && !hasPartners && !fetchError && (
-        <div className="bg-white border border-[#e2e8f0] rounded px-6 py-12 text-center">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-6 py-12 text-center">
           <div className="text-xs text-[#94a3b8]">Henüz ortak eklenmemiş.</div>
         </div>
       )}

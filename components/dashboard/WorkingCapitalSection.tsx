@@ -176,7 +176,7 @@ export function WorkingCapitalSection() {
   const current = months[0]
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
 
       {/* Header */}
       <div className="px-4 py-3 border-b border-[#e2e8f0] flex items-center justify-between flex-wrap gap-2">

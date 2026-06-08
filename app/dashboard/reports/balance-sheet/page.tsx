@@ -167,7 +167,7 @@ export default function BalanceSheetPage() {
       {bs && !loading && (
         <div className="grid grid-cols-2 gap-4">
           {/* Left: Assets */}
-          <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden print:border-[#e2e8f0]">
+          <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden print:border-[#e2e8f0]">
             <div className="px-4 py-3 bg-info-light border-b border-info-light">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-black uppercase tracking-widest text-info-text">Varlıklar</span>
@@ -197,7 +197,7 @@ export default function BalanceSheetPage() {
           {/* Right: Liabilities + Equity */}
           <div className="flex flex-col gap-4">
             {/* Liabilities */}
-            <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden print:border-[#e2e8f0]">
+            <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden print:border-[#e2e8f0]">
               <div className="px-4 py-3 bg-warn-light border-b border-warn/10">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-black uppercase tracking-widest text-warn">Kaynaklar</span>
@@ -225,7 +225,7 @@ export default function BalanceSheetPage() {
             </div>
 
             {/* Equity */}
-            <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden print:border-[#e2e8f0]">
+            <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden print:border-[#e2e8f0]">
               <div className="px-4 py-3 bg-pos-light border-b border-pos-light">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-black uppercase tracking-widest text-pos-text">Özkaynak</span>

@@ -211,7 +211,7 @@ export function MarginTrendClient({ companyId }: Props) {
 
   if (isLoading) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-6 shadow-sm">
         <div className="animate-pulse space-y-3">
           <div className="h-4 bg-[#f1f5f9] rounded w-64" />
           <div className="grid grid-cols-3 gap-3">
@@ -226,7 +226,7 @@ export function MarginTrendClient({ companyId }: Props) {
 
   if (isError || !data?.report) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded p-6 shadow-sm text-center">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-6 shadow-sm text-center">
         <p className="text-sm text-[#64748b] font-medium">Marj verisi hesaplanamadı</p>
         <p className="text-xs text-[#94a3b8] mt-1">
           Satış ve gider verileri mevcut olduğunda otomatik hesaplanır.
@@ -298,7 +298,7 @@ export function MarginTrendClient({ companyId }: Props) {
       </div>
 
       {/* ── Bar chart ────────────────────────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-5 shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-5 shadow-sm">
         <div className="flex items-center justify-between mb-1">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
             Aylık Brüt Marj
@@ -331,7 +331,7 @@ export function MarginTrendClient({ companyId }: Props) {
       </div>
 
       {/* ── Monthly detail table ─────────────────────────────────────────────── */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-5 shadow-sm overflow-x-auto">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-5 shadow-sm overflow-x-auto">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">
           Aylık Marj Detayı
         </div>

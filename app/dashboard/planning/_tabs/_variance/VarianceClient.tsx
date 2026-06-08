@@ -236,7 +236,7 @@ function SummaryStrip({ variances }: { variances: ScenarioVariance[] }) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
       {kpis.map(k => (
-        <div key={k.label} className="bg-white border border-[#e2e8f0] rounded px-4 py-3">
+        <div key={k.label} className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3">
           <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{k.label}</div>
           <div className={cn('text-xl font-black tabular-nums leading-none', k.color)}>{k.value}</div>
           <div className="text-[10px] text-[#94a3b8] mt-0.5">{k.sub}</div>
@@ -306,7 +306,7 @@ export function VarianceClient() {
       <SummaryStrip variances={variances} />
 
       {/* Comparison table */}
-      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden">
         <div className="px-4 py-3 border-b border-[#f1f5f9] flex items-center justify-between">
           <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">
             Senaryo Karşılaştırması

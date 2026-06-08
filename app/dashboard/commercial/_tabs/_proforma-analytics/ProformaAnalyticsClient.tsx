@@ -25,7 +25,7 @@ function fmtTRY(n: number): string {
 
 function Skeleton() {
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 space-y-3 animate-pulse">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 space-y-3 animate-pulse">
       <div className="h-3 w-32 bg-[#f1f5f9] rounded" />
       <div className="grid grid-cols-4 gap-0 border border-[#e2e8f0] rounded overflow-hidden">
         {[0, 1, 2, 3].map(i => (
@@ -214,7 +214,7 @@ export function ProformaAnalyticsClient() {
   ]
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 space-y-4">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">

@@ -91,7 +91,7 @@ export function SalesVelocityClient({ companyId }: Props) {
   // Empty state
   if (report.total_products === 0) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
         <div className="px-5 py-4 border-b border-[#e2e8f0]">
           <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
             Satış Hız Analizi
@@ -106,7 +106,7 @@ export function SalesVelocityClient({ companyId }: Props) {
   }
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
       {/* Header */}
       <div className="px-5 py-4 border-b border-[#e2e8f0] flex items-center justify-between">
         <div>

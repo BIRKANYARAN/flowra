@@ -189,7 +189,7 @@ function VarianceAnalysisPanel(): JSX.Element {
 
   if (isError || !report) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded p-4 text-xs text-[#94a3b8]">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 text-xs text-[#94a3b8]">
         Varyans analizi yüklenemedi.
         {error instanceof Error ? ` (${error.message})` : ''}
         <button
@@ -203,7 +203,7 @@ function VarianceAnalysisPanel(): JSX.Element {
   }
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded shadow-sm">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm">
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-[#f1f5f9]">
         <div>
@@ -460,7 +460,7 @@ export function BudgetTab({ companyId }: BudgetTabProps = {}) {
 
   if (error || !report) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded p-6 text-center text-xs text-[#94a3b8]">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-6 text-center text-xs text-[#94a3b8]">
         {error ?? 'Bütçe raporu yüklenemedi.'}
         <button
           onClick={fetchReport}
@@ -494,7 +494,7 @@ export function BudgetTab({ companyId }: BudgetTabProps = {}) {
       {/* YTD Summary strip */}
       <div className="grid grid-cols-3 gap-3">
         {/* YTD Revenue */}
-        <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 shadow-sm">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
             YTD Gelir
           </div>
@@ -521,7 +521,7 @@ export function BudgetTab({ companyId }: BudgetTabProps = {}) {
         </div>
 
         {/* YTD Expense */}
-        <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 shadow-sm">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
             YTD Gider
           </div>
@@ -548,7 +548,7 @@ export function BudgetTab({ companyId }: BudgetTabProps = {}) {
         </div>
 
         {/* YTD Gross Profit */}
-        <div className="bg-white border border-[#e2e8f0] rounded px-4 py-3 shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft px-4 py-3 shadow-sm">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
             YTD Brüt Kâr
           </div>
@@ -597,7 +597,7 @@ export function BudgetTab({ companyId }: BudgetTabProps = {}) {
       )}
 
       {/* 12-month variance table */}
-      <div className="bg-white border border-[#e2e8f0] rounded shadow-sm overflow-x-auto">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm overflow-x-auto">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] px-4 pt-4 pb-2">
           Aylık Varyans (Son 12 Ay)
         </div>
@@ -668,7 +668,7 @@ export function BudgetTab({ companyId }: BudgetTabProps = {}) {
 
       {/* Admin budget entry form */}
       {isAdmin && (
-        <div className="bg-white border border-[#e2e8f0] rounded p-4 shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4 shadow-sm">
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-3">
             Bütçe Hedefi Gir / Güncelle
           </div>

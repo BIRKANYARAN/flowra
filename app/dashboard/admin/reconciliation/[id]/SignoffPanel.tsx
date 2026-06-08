@@ -80,7 +80,7 @@ export default function SignoffPanel({ snapshotId, signoffs: initial, isImmutabl
         return (
           <div
             key={s.partner_name}
-            className="flex items-center justify-between px-4 py-3 bg-white border border-[#e2e8f0] rounded"
+            className="flex items-center justify-between px-4 py-3 bg-white border border-[#e2e8f0] rounded-xl shadow-soft"
           >
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-[#f1f5f9] flex items-center justify-center flex-shrink-0">

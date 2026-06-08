@@ -99,7 +99,7 @@ function SummaryCards({ report }: { report: AttributionReport }) {
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
       {/* Overall margin */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-4">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4">
         <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
           Genel Brüt Marj
         </div>
@@ -111,7 +111,7 @@ function SummaryCards({ report }: { report: AttributionReport }) {
       </div>
 
       {/* Gini */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-4">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4">
         <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
           Gini Katsayısı
         </div>
@@ -124,7 +124,7 @@ function SummaryCards({ report }: { report: AttributionReport }) {
       </div>
 
       {/* Pareto */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-4">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4">
         <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
           Pareto 80% Kategorisi
         </div>
@@ -138,7 +138,7 @@ function SummaryCards({ report }: { report: AttributionReport }) {
       </div>
 
       {/* Volatility */}
-      <div className="bg-white border border-[#e2e8f0] rounded p-4">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-4">
         <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">
           Marj Volatilitesi
         </div>
@@ -405,7 +405,7 @@ export function ProfitabilityAttributionClient({ companyId }: Props) {
 
   if (isLoading) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded p-5 shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-5 shadow-sm">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-4">
           Kârlılık Kaynağı Analizi
         </div>
@@ -423,7 +423,7 @@ export function ProfitabilityAttributionClient({ companyId }: Props) {
 
   if (isError || !data?.report) {
     return (
-      <div className="bg-white border border-[#e2e8f0] rounded p-5 shadow-sm">
+      <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-5 shadow-sm">
         <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-2">
           Kârlılık Kaynağı Analizi
         </div>
@@ -437,7 +437,7 @@ export function ProfitabilityAttributionClient({ companyId }: Props) {
   const report = data.report
 
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded p-5 shadow-sm space-y-5">
+    <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-5 shadow-sm space-y-5">
       {/* Header */}
       <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
         Kârlılık Kaynağı Analizi

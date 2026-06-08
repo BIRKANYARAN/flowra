@@ -33,7 +33,7 @@ import { cn } from '@/components/ui'
 
 export const TOKENS = {
   // Card / Panel
-  panel:         'bg-white border border-[#e2e8f0] rounded shadow-sm',
+  panel:         'bg-white border border-[#e2e8f0] rounded-xl shadow-soft shadow-sm',
   panelHover:    'hover:shadow-[0_2px_6px_rgba(17,24,39,0.07)] hover:border-[#e2e8f0] transition-all',
   panelCritical: 'bg-neg-light   border border-neg-light   rounded',
   panelWarn:     'bg-warn-light border border-warn-light rounded',

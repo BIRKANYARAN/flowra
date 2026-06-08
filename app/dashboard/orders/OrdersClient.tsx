@@ -239,7 +239,7 @@ export function OrdersClient(_props: Props) {
 
       {/* ── New order form ────────────────────────────────────────────── */}
       {showForm && (
-        <div className="bg-white border border-[#e2e8f0] rounded p-5 space-y-4">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft p-5 space-y-4">
           <h3 className="text-sm font-bold text-[#334155]">Yeni Satın Alma Siparişi</h3>
           {formError && (
             <div className="text-xs text-neg bg-neg-light border border-neg-light rounded px-3 py-2">{formError}</div>
@@ -378,7 +378,7 @@ export function OrdersClient(_props: Props) {
           {activeTab === 'all' ? 'Henüz satın alma siparişi yok.' : `Bu durumda sipariş yok.`}
         </div>
       ) : (
-        <div className="bg-white border border-[#e2e8f0] rounded overflow-hidden shadow-sm">
+        <div className="bg-white border border-[#e2e8f0] rounded-xl shadow-soft overflow-hidden shadow-sm">
           <div className="divide-y divide-[#e2e8f0]">
             {filteredOrders.map(order => {
               const meta  = STATUS_META[order.status]
