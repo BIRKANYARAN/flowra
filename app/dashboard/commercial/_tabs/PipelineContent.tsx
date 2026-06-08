@@ -5,6 +5,7 @@ import { Suspense } from 'react'
 import { NarrativeFooter } from '@/components/ds'
 import { createClient } from '@/lib/supabase-server'
 import PipelineVelocityClient from './_pipeline/PipelineVelocityClient'
+import { DetailSection } from '@/components/dashboard/DetailSection'
 import SalesFlowClient, {
   type Proforma,
   type Sale,
@@ -333,8 +334,10 @@ export async function PipelineContent({ companyId }: Props) {
         )}
       </div>
 
-      {/* ── Pipeline Velocity Analysis ───────────────────────────────────── */}
-      <PipelineVelocityClient companyId={companyId} />
+      {/* ── Pipeline Velocity Analysis (secondary — folded, lazy-mounts) ──── */}
+      <DetailSection title="Proforma & Hız Analizi" subtitle="Kazanma oranı · yaşlandırma · dönüşüm hızı — son 90 gün">
+        <PipelineVelocityClient companyId={companyId} />
+      </DetailSection>
 
       <Suspense fallback={<CommandBarSkeleton />}>
         <SalesFlowCommandBar companyId={companyId} />

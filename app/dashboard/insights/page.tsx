@@ -325,7 +325,7 @@ export default async function InsightsPage() {
 
       {/* ── Breadcrumb ────────────────────────────────────────────────────── */}
       <div className="flex items-center gap-2 text-[0.65rem] text-[#94a3b8]">
-        <Link href="/dashboard" className="hover:text-[#475569]">Komuta</Link>
+        <Link href="/dashboard" className="hover:text-[#475569]">Kokpit</Link>
         <span>/</span>
         <span className="text-[#475569] font-medium">AI Analiz</span>
       </div>

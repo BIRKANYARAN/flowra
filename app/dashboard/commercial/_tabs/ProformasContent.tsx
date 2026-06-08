@@ -348,7 +348,7 @@ export async function ProformasContent({ companyId }: Props) {
       <NarrativeFooter
         narrative="Teklif → Satış → Tahsilat zinciri kapanmadan nakit etkisi olmaz — dönüşüm hızını takip edin."
         links={[
-          { label: 'Pipeline', href: '/dashboard/commercial?tab=pipeline' },
+          { label: 'Satış Hattı', href: '/dashboard/commercial?tab=pipeline' },
           { label: 'Satışlar', href: '/dashboard/commercial?tab=sales' },
           { label: 'Tahsilat', href: '/dashboard/commercial?tab=collections' },
         ]}

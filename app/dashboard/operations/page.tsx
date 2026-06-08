@@ -65,7 +65,7 @@ async function OpsCommandPanel({ companyId }: { companyId: string }) {
       {/* Header row */}
       <div className="flex items-center justify-between gap-3 px-5 py-3 bg-[#0f172a]">
         <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
-          OPS Komuta Paneli
+          Operasyon Paneli
         </span>
         <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ${badge.bg} ${badge.text}`}>
           <span className={`w-2 h-2 rounded-full ${badge.dot}`} />
@@ -181,7 +181,7 @@ export default async function OperationsPage({ searchParams }: PageProps) {
   const activeTab = VALID_TABS.includes(rawTab) ? rawTab : 'komuta'
 
   const opTitles: Record<string, string> = {
-    komuta:   'OPS Komuta',
+    komuta:   'Genel Bakış',
     expenses: 'Giderler',
     catalog:  'Katalog',
     stock:    'Stok',

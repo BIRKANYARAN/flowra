@@ -53,12 +53,12 @@ const STATIC_CMDS: Cmd[] = [
   { id: 'c-tsk',   grp: 'Oluştur',       label: 'Görev ekle',                        href: '/dashboard/planning?tab=tasks',         kind: 'create' },
 
   // ── Merkezler — navigation ────────────────────────────────────────────────
-  { id: 'n-home',  grp: 'Merkezler',     label: 'CEO Komuta',         sub: 'Ana panel · Karar sırası · Durum',    href: '/dashboard',                            kind: 'nav' },
-  { id: 'n-fin',   grp: 'Merkezler',     label: 'Finans Merkezi',     sub: 'P&L · Bilanço · CFO · Nakit',        href: '/dashboard/finance',                    kind: 'nav' },
-  { id: 'n-com',   grp: 'Merkezler',     label: 'Ticari Akış',        sub: 'Satış · Tahsilat · Pipeline',        href: '/dashboard/commercial',                 kind: 'nav' },
-  { id: 'n-ops',   grp: 'Merkezler',     label: 'Operasyon Merkezi',  sub: 'Gider · Katalog · Stok',             href: '/dashboard/operations',                 kind: 'nav' },
-  { id: 'n-par',   grp: 'Merkezler',     label: 'Ortak Finans',       sub: 'Borç · Dağıtım · Getiri',           href: '/dashboard/partners',                   kind: 'nav' },
-  { id: 'n-pln',   grp: 'Merkezler',     label: 'Planlama Merkezi',   sub: 'Senaryo · Simülasyon · Görevler',   href: '/dashboard/planning',                   kind: 'nav' },
+  { id: 'n-home',  grp: 'Merkezler',     label: 'Kokpit',     sub: 'Ana panel · Karar sırası · Durum',    href: '/dashboard',                            kind: 'nav' },
+  { id: 'n-fin',   grp: 'Merkezler',     label: 'Finans',     sub: 'P&L · Bilanço · CFO · Nakit',        href: '/dashboard/finance',                    kind: 'nav' },
+  { id: 'n-com',   grp: 'Merkezler',     label: 'Satış',      sub: 'Satış · Tahsilat · Satış hattı',     href: '/dashboard/commercial',                 kind: 'nav' },
+  { id: 'n-ops',   grp: 'Merkezler',     label: 'Operasyon',  sub: 'Gider · Katalog · Stok',             href: '/dashboard/operations',                 kind: 'nav' },
+  { id: 'n-par',   grp: 'Merkezler',     label: 'Ortaklar',   sub: 'Borç · Dağıtım · Getiri',           href: '/dashboard/partners',                   kind: 'nav' },
+  { id: 'n-pln',   grp: 'Merkezler',     label: 'Planlama',   sub: 'Senaryo · Simülasyon · Görevler',   href: '/dashboard/planning',                   kind: 'nav' },
 ]
 
 // ── Smart suggestion builder ───────────────────────────────────────────────────
