@@ -213,7 +213,7 @@ function NavGroupBlock({
     <div className={isFirst ? '' : 'mt-2'}>
       {group.label && (
         <div className="px-3 pt-1.5 pb-0.5">
-          <span className="text-[9px] font-black uppercase tracking-[0.12em] text-[#cbd5e1]">
+          <span className="text-[9px] font-black uppercase tracking-[0.12em] text-[#94a3b8]">
             {group.label}
           </span>
         </div>

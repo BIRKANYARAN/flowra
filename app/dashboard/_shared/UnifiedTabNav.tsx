@@ -46,7 +46,7 @@ function TabLink({ tab, activeTab, basePath }: { tab: UnifiedTab; activeTab: str
         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:ring-inset
         ${isActive
           ? 'text-[#0f172a] font-semibold'
-          : 'text-[#94a3b8] hover:text-[#334155] hover:bg-[#f8fafc] font-medium'
+          : 'text-[#64748b] hover:text-[#0f172a] hover:bg-[#f8fafc] font-medium'
         }
       `}
     >
@@ -92,7 +92,7 @@ export function UnifiedTabNav({ tabs, activeTab, basePath, groups }: Props) {
               className={`px-3 py-1.5 text-xs rounded-md transition-all duration-150 whitespace-nowrap flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:ring-inset ${
                 i === activeIdx
                   ? 'text-[#0f172a] font-black bg-[#f1f5f9]'
-                  : 'text-[#94a3b8] hover:text-[#334155] hover:bg-[#f8fafc] font-semibold'
+                  : 'text-[#64748b] hover:text-[#0f172a] hover:bg-[#f8fafc] font-semibold'
               }`}
             >
               {g.label}

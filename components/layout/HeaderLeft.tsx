@@ -1,37 +1,43 @@
 'use client'
-// HeaderLeft — reads pathname and returns the matching page title.
-// Lives in the Header's left slot; replaces the static company-name text.
+// HeaderLeft — reads pathname and returns the matching hub title.
+//
+// SINGLE SOURCE OF TRUTH: the title is derived from NAV_GROUPS (the same labels
+// the sidebar renders), so the top bar can never drift from the sidebar again.
+// (It used to keep its own PATH_TITLES list with different names — "Finans
+// Merkezi" vs sidebar "Finans" — which read as three names for one place.)
+// The page's own H1 still names the specific view (e.g. "Kâr / Zarar").
 
 import { usePathname } from 'next/navigation'
+import { NAV_GROUPS, SETTINGS_FALLBACK } from '@/lib/nav-config'
 
-const PATH_TITLES: Array<{ pattern: RegExp; title: string }> = [
-  { pattern: /^\/dashboard\/finance/,         title: 'Finans Merkezi'      },
-  { pattern: /^\/dashboard\/commercial/,      title: 'Ticari Akış'         },
-  { pattern: /^\/dashboard\/ops/,              title: 'OPS Komuta'          },
-  { pattern: /^\/dashboard\/operations/,      title: 'Operasyon'           },
-  { pattern: /^\/dashboard\/partners/,        title: 'Ortak Finansmanı'    },
-  { pattern: /^\/dashboard\/planning/,        title: 'Planlama'            },
-  { pattern: /^\/dashboard\/insights/,        title: 'AI Analiz'           },
-  { pattern: /^\/dashboard\/settings\/alerts/,title: 'Uyarı Kuralları'     },
-  { pattern: /^\/dashboard\/settings/,        title: 'Ayarlar'             },
-  { pattern: /^\/dashboard\/admin\/audit/,    title: 'Denetim Kütüğü'      },
-  { pattern: /^\/dashboard\/admin\/users/,    title: 'Kullanıcılar'        },
-  { pattern: /^\/dashboard\/admin\/roles/,    title: 'Roller'              },
-  { pattern: /^\/dashboard\/admin/,           title: 'Yönetim'             },
-  { pattern: /^\/dashboard\/proformas\/new/,  title: 'Yeni Proforma'       },
-  { pattern: /^\/dashboard\/proformas\//,     title: 'Proforma'            },
-  { pattern: /^\/dashboard\/sales\//,         title: 'Satış Detayı'        },
-  { pattern: /^\/dashboard\/customers\//,     title: 'Müşteri Detayı'      },
-  { pattern: /^\/dashboard\/cfo/,             title: 'CFO Merkezi'         },
-  { pattern: /^\/dashboard\/reports/,         title: 'Raporlar'            },
-  { pattern: /^\/dashboard\/simulation/,      title: 'Simülasyon'          },
-  { pattern: /^\/dashboard$/,                 title: 'CEO Komuta'          },
+// Flatten every nav item (incl. children + settings fallback) once.
+const NAV_ITEMS = [
+  ...NAV_GROUPS.flatMap(g => g.items.flatMap(i => [i, ...(i.children ?? [])])),
+  SETTINGS_FALLBACK,
 ]
+
+function titleForPath(pathname: string): string | null {
+  // Longest matching href wins (so /dashboard/admin/workflows beats /dashboard
+  // /admin, and the exact "/dashboard" home only matches itself).
+  let best: { label: string; len: number } | null = null
+  for (const item of NAV_ITEMS) {
+    // Home only matches itself; every other hub matches its whole subtree
+    // (so /dashboard/admin/users resolves to "Yönetim", /admin/workflows to
+    // the longer "İş Akışları"). The exact flag is for sidebar highlighting,
+    // not titling.
+    const isMatch = item.href === '/dashboard'
+      ? pathname === '/dashboard'
+      : pathname === item.href || pathname.startsWith(item.href + '/')
+    if (isMatch && (!best || item.href.length > best.len)) {
+      best = { label: item.label, len: item.href.length }
+    }
+  }
+  return best?.label ?? null
+}
 
 export function HeaderLeft({ companyName }: { companyName: string | null }) {
   const pathname = usePathname()
-  const match = PATH_TITLES.find(({ pattern }) => pattern.test(pathname))
-  const title = match?.title ?? null
+  const title = titleForPath(pathname)
 
   return (
     <div className="hidden md:flex items-center gap-2 min-w-0">
