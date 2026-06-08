@@ -58,7 +58,9 @@ export default function PartnersPage() {
   // Tabs co-located into a host tab (UX simplification — content preserved as
   // sections within the host). Old deep-links resolve to the host tab.
   const TAB_ALIAS: Record<string, TabId> = {
-    amortization:  'tranches',  // loan payment schedule shown with the live tranche state
+    tranches:      'ledger',    // loan tranches now a "Detaylı" panel under Krediler
+    amortization:  'ledger',    // loan payment schedule co-located under Krediler
+    'capital-statement': 'capital', // capital statement now a "Detaylı" panel under Sermaye
     contributions: 'capital',   // capital commitments shown with the capital account
     dilution:      'capital',   // dilution analysis shown with the capital account
     'risk-composite': 'risk',   // composite risk score co-located with the risk view
@@ -307,13 +309,13 @@ export default function PartnersPage() {
 
   const TAB_META: Record<TabId, { title: string; sub: string }> = {
     partners:     { title: 'Ortak Pozisyonları', sub: 'Sermaye · Pay oranı · Net bakiye · Eşitleme durumu' },
-    ledger:       { title: 'Finansal Defter',    sub: 'Sermaye · Borç · Dağıtım · Tüm hareketler' },
+    ledger:       { title: 'Krediler',           sub: 'Ortak kredileri defteri · borç dilimleri · faiz · ödeme planı' },
     waterfall:    { title: 'Geri Ödeme',         sub: 'Normalleştirilmiş iki aşamalı waterfall · Borç baskısı' },
     tranches:     { title: 'Borç Tranşeleri',    sub: 'Aktif trancheler · Faiz tahakkuku · Geri ödeme takvimi' },
     distribution: { title: 'Kâr Dağıtımı',      sub: '4 katmanlı güvenlik · Yasal yedek · TTK 509 uyumu' },
     returns:      { title: 'Getiri Analizi',     sub: 'ROI · Sermaye geri dönüşü · Ortak bazlı performans' },
     risk:         { title: 'Risk Haritası',      sub: '6 boyutlu PCLE risk skoru · Yasal uyum · Öneriler' },
-    capital:      { title: 'Sermaye Hesabı',     sub: 'Ortak bazında sermaye pozisyonu · Defter değeri · Çıkış simülasyonu' },
+    capital:      { title: 'Sermaye',            sub: 'Ortak sermaye hesabı · taahhüt takvimi · seyreltme · sermaye ekstresi' },
     dividend:     { title: 'Temettü',            sub: 'TTK 509/519 uyum hesabı · GVK 94 stopaj · Onay akışı' },
     compensation: { title: 'Huzur Hakkı',        sub: 'TTK 394 · Aylık ortak tazminatı · GVK 94 stopaj · Takvim yönetimi' },
     dilution:     { title: 'Sermaye Seyreltme',  sub: 'Yeni sermaye artışı senaryoları · Pay oranı değişimi · Ortak hisse alımı' },
@@ -329,15 +331,16 @@ export default function PartnersPage() {
   // Two-level grouped navigation: 18 flat tabs → 4 clear sections. Every tab is
   // preserved (deep links via ?tab=<id> still work); the top bar shows 4 groups,
   // the second row shows the active group's sub-tabs. Duplicate labels fixed.
+  // 7 clean, distinct tabs. Sermaye Ekstresi folds into Sermaye, Borç Dilimleri
+  // into Krediler (each as a "Detaylı" panel) — see render below. Deep links to the
+  // folded tabs resolve via TAB_ALIAS.
   const TAB_GROUPS: { label: string; tabs: { id: TabId; label: string }[] }[] = [
     { label: 'Sermaye', tabs: [
-      { id: 'partners',          label: 'Ortaklar'        },
-      { id: 'capital',           label: 'Sermaye Hesabı'  },
-      { id: 'capital-statement', label: 'Sermaye Ekstresi' },
+      { id: 'partners',     label: 'Ortaklar'    },
+      { id: 'capital',      label: 'Sermaye'     },
     ] },
     { label: 'Krediler', tabs: [
-      { id: 'ledger',       label: 'Defter'        },
-      { id: 'tranches',     label: 'Borç Dilimleri' },
+      { id: 'ledger',       label: 'Krediler'    },
     ] },
     { label: 'Dağıtım', tabs: [
       { id: 'dividend',     label: 'Temettü'     },
@@ -345,7 +348,7 @@ export default function PartnersPage() {
       { id: 'compensation', label: 'Huzur Hakkı' },
     ] },
     { label: 'Risk', tabs: [
-      { id: 'risk',           label: 'Risk'      },
+      { id: 'risk',         label: 'Risk'        },
     ] },
   ]
 
@@ -456,13 +459,25 @@ export default function PartnersPage() {
       )}
 
       {activeTab === 'ledger' && (
-        <LedgerTab
-          loading={loading}
-          ledger={ledger}
-          sortedLedgerEntries={sortedLedgerEntries}
-          ledgerSort={ledgerSort}
-          onToggleSort={toggleLedgerSort}
-        />
+        <div className="space-y-5">
+          <LedgerTab
+            loading={loading}
+            ledger={ledger}
+            sortedLedgerEntries={sortedLedgerEntries}
+            ledgerSort={ledgerSort}
+            onToggleSort={toggleLedgerSort}
+          />
+          {/* Borç Dilimleri + Amortisman folded here (was its own tab) */}
+          <DetailSection title="Borç Dilimleri & Amortisman" subtitle="Aktif tranşeler · faiz tahakkuku · ödeme planı">
+            <TranchesTab
+              loading={loading}
+              waterfall={waterfall}
+              partners={partners}
+              onRefresh={reloadAll}
+            />
+            <AmortizationTab />
+          </DetailSection>
+        </div>
       )}
 
       {activeTab === 'waterfall' && (
@@ -484,19 +499,6 @@ export default function PartnersPage() {
         </div>
       )}
 
-      {activeTab === 'tranches' && (
-        <div className="space-y-5">
-          <TranchesTab
-            loading={loading}
-            waterfall={waterfall}
-            partners={partners}
-            onRefresh={reloadAll}
-          />
-          {/* Amortisman (payment schedule) — co-located with the live tranche state */}
-          <AmortizationTab />
-        </div>
-      )}
-
       {activeTab === 'risk' && (
         <div className="space-y-5">
           <LoanCovenantPanel companyId="" />
@@ -512,6 +514,10 @@ export default function PartnersPage() {
           {/* Taahhüt Takvimi (capital commitments) + Seyreltme (dilution) — co-located with the capital account */}
           <ContributionTimelineTab companyId="" />
           <EquityDilutionTab />
+          {/* Sermaye Ekstresi folded here (was its own tab) */}
+          <DetailSection title="Sermaye Ekstresi" subtitle="Ortak bazında sermaye hesabı · katkılar · dağılım">
+            <CapitalStatementTab />
+          </DetailSection>
         </div>
       )}
 
@@ -543,10 +549,6 @@ export default function PartnersPage() {
 
       {activeTab === 'compensation' && (
         <CompensationTab partners={partners} />
-      )}
-
-      {activeTab === 'capital-statement' && (
-        <CapitalStatementTab />
       )}
 
     </div>
