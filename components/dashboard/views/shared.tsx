@@ -55,11 +55,12 @@ export function fmtTRY(n: number): string {
   return '₺' + Math.round(Number(n) || 0).toLocaleString('tr-TR')
 }
 export function fmtCompact(n: number): string {
-  const a = Math.abs(n)
-  if (a >= 1e9) return '₺' + (n / 1e9).toFixed(1).replace('.', ',') + 'Mr'
-  if (a >= 1e6) return '₺' + (n / 1e6).toFixed(1).replace('.', ',') + 'M'
-  if (a >= 1e3) return '₺' + (n / 1e3).toFixed(0) + 'B'
-  return '₺' + Math.round(n).toLocaleString('tr-TR')
+  const v = Number(n) || 0   // null/undefined/NaN → 0 (never render "₺NaN")
+  const a = Math.abs(v)
+  if (a >= 1e9) return '₺' + (v / 1e9).toFixed(1).replace('.', ',') + 'Mr'
+  if (a >= 1e6) return '₺' + (v / 1e6).toFixed(1).replace('.', ',') + 'M'
+  if (a >= 1e3) return '₺' + (v / 1e3).toFixed(0) + 'B'
+  return '₺' + Math.round(v).toLocaleString('tr-TR')
 }
 
 export const STATUS_STYLE: Record<string, { dot: string; text: string; bg: string; label: string }> = {
