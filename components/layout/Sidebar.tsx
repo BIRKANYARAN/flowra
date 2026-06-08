@@ -80,7 +80,7 @@ export function Sidebar({ navBadges = {} }: SidebarProps) {
             <div className="min-w-0 flex-1">
               <div className="font-black text-sm leading-tight truncate">{displayName}</div>
               <div className="text-[10px] text-[#94a3b8] uppercase tracking-wide">
-                {hasMultiCompany ? `${companies.length} şirket ▾` : 'FOS'}
+                {hasMultiCompany ? `${companies.length} şirket ▾` : 'Flowra ERP'}
               </div>
             </div>
           </div>
