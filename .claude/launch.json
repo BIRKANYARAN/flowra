@@ -2,10 +2,10 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "governance-demo",
-      "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "7432", "--directory", "/Users/birkanyaran/Downloads"],
-      "port": 7432
+      "name": "flowra-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--", "--port", "3000"],
+      "port": 3000
     }
   ]
 }

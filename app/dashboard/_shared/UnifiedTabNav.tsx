@@ -42,11 +42,11 @@ function TabLink({ tab, activeTab, basePath }: { tab: UnifiedTab; activeTab: str
       aria-current={isActive ? 'page' : undefined}
       className={`
         relative flex items-center gap-1.5 px-3 py-2.5 text-[13px]
-        transition-colors whitespace-nowrap flex-shrink-0 rounded-none
+        transition-colors duration-150 whitespace-nowrap flex-shrink-0 rounded-t-md
         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:ring-inset
         ${isActive
-          ? 'text-[#0f172a] font-semibold border-b-2 border-[#0f172a] -mb-px'
-          : 'text-[#94a3b8] hover:text-[#334155] font-medium'
+          ? 'text-[#0f172a] font-semibold'
+          : 'text-[#94a3b8] hover:text-[#334155] hover:bg-[#f8fafc] font-medium'
         }
       `}
     >
@@ -56,7 +56,7 @@ function TabLink({ tab, activeTab, basePath }: { tab: UnifiedTab; activeTab: str
           aria-label={`${tab.badge} bildirim`}
           className={`
           inline-flex items-center justify-center min-w-[16px] h-4 px-1
-          text-[9px] font-black rounded-full leading-none
+          text-[9px] font-black rounded-full leading-none transition-colors
           ${isActive
             ? 'bg-[#e2e8f0] text-[#334155]'
             : 'bg-[#f1f5f9] text-[#64748b]'
@@ -64,6 +64,12 @@ function TabLink({ tab, activeTab, basePath }: { tab: UnifiedTab; activeTab: str
         `}>
           {tab.badge}
         </span>
+      )}
+      {isActive && (
+        <span
+          aria-hidden
+          className="flowra-tab-underline absolute left-1.5 right-1.5 -bottom-px h-[2px] rounded-full bg-[#0f172a]"
+        />
       )}
     </Link>
   )
@@ -77,14 +83,16 @@ export function UnifiedTabNav({ tabs, activeTab, basePath, groups }: Props) {
     return (
       <div>
         {/* Level 1 — section groups */}
-        <nav aria-label="Bölümler" className="flex items-center gap-1 overflow-x-auto scrollbar-none">
+        <nav aria-label="Bölümler" className="flex items-center gap-1 overflow-x-auto scrollbar-none pt-0.5">
           {groups.map((g, i) => (
             <Link
               key={g.label}
               href={`${basePath}?tab=${g.tabs[0].key}`}
               aria-current={i === activeIdx ? 'true' : undefined}
-              className={`px-3.5 py-1.5 text-xs rounded-t transition-colors whitespace-nowrap flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:ring-inset ${
-                i === activeIdx ? 'text-[#0f172a] font-black' : 'text-[#94a3b8] hover:text-[#334155] font-semibold'
+              className={`px-3 py-1.5 text-xs rounded-md transition-all duration-150 whitespace-nowrap flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:ring-inset ${
+                i === activeIdx
+                  ? 'text-[#0f172a] font-black bg-[#f1f5f9]'
+                  : 'text-[#94a3b8] hover:text-[#334155] hover:bg-[#f8fafc] font-semibold'
               }`}
             >
               {g.label}

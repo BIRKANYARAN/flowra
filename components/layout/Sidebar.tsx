@@ -253,21 +253,28 @@ function NavLink({
         href={item.href}
         aria-current={active ? 'page' : undefined}
         className={`
-          flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[12px] transition-colors
+          group/nav relative flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[12px]
+          transition-all duration-150 ease-out
           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50 focus-visible:ring-inset
           ${active
-            ? 'bg-[#0f172a] text-white font-semibold'
+            ? 'bg-[#0f172a] text-white font-semibold shadow-sm'
             : childActive
-              ? 'text-[#1e293b] font-medium hover:bg-[#f8fafc]'
-              : 'text-[#64748b] hover:bg-[#f8fafc] hover:text-[#1e293b]'
+              ? 'text-[#1e293b] font-medium hover:bg-[#f1f5f9]'
+              : 'text-[#64748b] hover:bg-[#f1f5f9] hover:text-[#1e293b] hover:translate-x-px'
           }
         `}
       >
+        {active && (
+          <span
+            aria-hidden
+            className="flowra-nav-rail absolute left-0.5 top-1/2 -translate-y-1/2 h-4 w-[3px] rounded-full bg-brand-light"
+          />
+        )}
         <Icon
           name={item.icon}
           size={13}
           strokeWidth={active || childActive ? 2 : 1.5}
-          className={`flex-shrink-0 ${active ? 'text-white' : 'text-[#94a3b8]'}`}
+          className={`flex-shrink-0 transition-colors ${active ? 'text-white' : 'text-[#94a3b8] group-hover/nav:text-[#64748b]'}`}
         />
         <span className="truncate">{item.label}</span>
         {badge !== undefined && badge > 0 && (
@@ -281,26 +288,34 @@ function NavLink({
 
       {/* Sub-items — always visible when parent has children */}
       {item.children && item.children.length > 0 && (
-        <div className="ml-3 mt-0.5 pl-3 border-l border-[#e2e8f0] space-y-0.5">
+        <div className={`ml-3 mt-0.5 pl-3 border-l space-y-0.5 transition-colors ${childActive ? 'border-brand-light/40' : 'border-[#e2e8f0]'}`}>
           {item.children.map(child => {
             const childIsActive = isNavItemActive(child, pathname)
             return (
               <Link
                 key={child.href}
                 href={child.href}
+                aria-current={childIsActive ? 'page' : undefined}
                 className={`
-                  flex items-center gap-2 px-2 py-1.5 rounded-md text-[11px] transition-colors
+                  group/sub relative flex items-center gap-2 px-2 py-1.5 rounded-md text-[11px]
+                  transition-all duration-150 ease-out
                   ${childIsActive
-                    ? 'bg-[#0f172a] text-white font-semibold'
-                    : 'text-[#64748b] hover:bg-[#f8fafc] hover:text-[#1e293b]'
+                    ? 'bg-[#0f172a] text-white font-semibold shadow-sm'
+                    : 'text-[#64748b] hover:bg-[#f1f5f9] hover:text-[#1e293b] hover:translate-x-px'
                   }
                 `}
               >
+                {childIsActive && (
+                  <span
+                    aria-hidden
+                    className="flowra-nav-rail absolute -left-[13px] top-1/2 -translate-y-1/2 h-3.5 w-[3px] rounded-full bg-brand-light"
+                  />
+                )}
                 <Icon
                   name={child.icon}
                   size={11}
                   strokeWidth={childIsActive ? 2 : 1.5}
-                  className={`flex-shrink-0 ${childIsActive ? 'text-white' : 'text-[#94a3b8]'}`}
+                  className={`flex-shrink-0 transition-colors ${childIsActive ? 'text-white' : 'text-[#94a3b8] group-hover/sub:text-[#64748b]'}`}
                 />
                 <span className="truncate">{child.label}</span>
               </Link>

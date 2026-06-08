@@ -55,6 +55,42 @@ input[type="number"] { -moz-appearance: textfield; }
   }
 }
 
+/* ─────────────────────────────────────────────────────────────────────────
+   Motion — tab/route transitions + nav micro-interactions.
+   Subtle, fast, easing biased to a smooth "settle in" (ease-out-expo).
+   All disabled under prefers-reduced-motion.
+   ───────────────────────────────────────────────────────────────────────── */
+@keyframes flowra-rise {
+  from { opacity: 0; transform: translateY(7px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes flowra-underline {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+@keyframes flowra-rail {
+  from { opacity: 0; transform: scaleY(0.35); }
+  to   { opacity: 1; transform: scaleY(1); }
+}
+
+/* Content/tab-panel entrance — applied to routed content on every navigation.
+   `backwards` (not `both`) so NO transform lingers after the animation ends —
+   a lingering transform would make any position:fixed descendant (drawers/modals)
+   position relative to this wrapper instead of the viewport. */
+.flowra-tab-panel { animation: flowra-rise 0.26s cubic-bezier(0.16, 1, 0.3, 1) backwards; }
+
+/* Active tab underline grows in from center. */
+.flowra-tab-underline { transform-origin: center; animation: flowra-underline 0.22s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+/* Sidebar active accent rail eases in vertically. */
+.flowra-nav-rail { transform-origin: center; animation: flowra-rail 0.2s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .flowra-tab-panel,
+  .flowra-tab-underline,
+  .flowra-nav-rail { animation: none !important; }
+}
+
 @layer components {
   /* Standard card chrome */
   .fl-card {

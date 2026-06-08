@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { createClient }            from '@/lib/supabase-server'
 import { redirect }                from 'next/navigation'
 import { Sidebar }                 from '@/components/layout/Sidebar'
+import { RouteTransition }         from '@/components/layout/RouteTransition'
 import { Header }                  from '@/components/layout/Header'
 import { resolveUserRole }         from '@/lib/require-role'
 import type { UserSettings, MemberRole } from '@/types'
@@ -139,7 +140,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
                 logoUrl={logoUrl}
               />
               <main className="flex-1 px-4 py-3 overflow-auto pb-20 md:pb-3">
-                {children}
+                <RouteTransition>{children}</RouteTransition>
               </main>
             </div>
             <MobileBottomNav navBadges={navBadges} />
