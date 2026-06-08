@@ -348,7 +348,6 @@ export default function PartnersPage() {
       { id: 'risk',           label: 'Risk'      },
     ] },
   ]
-  const activeGroupIdx = Math.max(0, TAB_GROUPS.findIndex(g => g.tabs.some(t => t.id === activeTab)))
 
   // ── Render ────────────────────────────────────────────────────────────────────
 
@@ -386,29 +385,11 @@ export default function PartnersPage() {
 
       {/* Sticky tab nav + context bar */}
       <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm -mx-4">
-        {/* Level 1 — section groups */}
-        <div className="px-4 pt-1">
-          <div className="flex items-center gap-1 overflow-x-auto scrollbar-none pt-0.5">
-            {TAB_GROUPS.map((g, i) => (
-              <button
-                key={g.label}
-                onClick={() => setActiveTab(g.tabs[0].id)}
-                className={[
-                  'px-3 py-1.5 text-xs rounded-md transition-all duration-150 whitespace-nowrap flex-shrink-0 border-0 cursor-pointer',
-                  i === activeGroupIdx
-                    ? 'text-[#0f172a] font-black bg-[#f1f5f9]'
-                    : 'text-[#94a3b8] hover:text-[#334155] hover:bg-[#f8fafc] font-semibold bg-transparent',
-                ].join(' ')}
-              >
-                {g.label}
-              </button>
-            ))}
-          </div>
-        </div>
-        {/* Level 2 — sub-tabs of the active group */}
-        <div className="px-4 border-b border-[#e2e8f0]">
+        {/* Single flat tab row — every section in one scrollable bar (consistent
+            with the other hubs: left = area, top = one row of that area's views). */}
+        <div className="px-4 pt-1 border-b border-[#e2e8f0]">
           <div className="flex items-center gap-0.5 overflow-x-auto scrollbar-none">
-            {TAB_GROUPS[activeGroupIdx].tabs.map(t => {
+            {TAB_GROUPS.flatMap(g => g.tabs).map(t => {
               const isActive = activeTab === t.id
               return (
                 <button
@@ -416,7 +397,7 @@ export default function PartnersPage() {
                   onClick={() => setActiveTab(t.id)}
                   aria-current={isActive ? 'page' : undefined}
                   className={[
-                    'relative px-3 py-2 text-xs transition-colors duration-150 whitespace-nowrap flex-shrink-0 border-0 cursor-pointer rounded-t-md',
+                    'relative px-3 py-2.5 text-[13px] transition-colors duration-150 whitespace-nowrap flex-shrink-0 border-0 cursor-pointer rounded-t-md',
                     isActive
                       ? 'text-[#0f172a] font-semibold bg-transparent'
                       : 'text-[#94a3b8] hover:text-[#334155] hover:bg-[#f8fafc] font-medium bg-transparent',

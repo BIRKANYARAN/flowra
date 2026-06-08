@@ -59,25 +59,9 @@ const FINANCE_NAV_TABS = [
   { key: 'reports',  label: 'Raporlar'  },
 ]
 
-// Faz 3 merge — 10 tabs → 7. Kurumlar V. folded into Vergi; Mizan + Yön. Paketi
-// folded into Raporlar (each as a "Detaylı" panel inside the canonical tab).
-const FINANCE_GROUPS = [
-  { label: 'Tablolar', tabs: [
-    { key: 'pnl',      label: 'Kâr/Zarar' },
-    { key: 'balance',  label: 'Bilanço'   },
-    { key: 'cashflow', label: 'Nakit'     },
-  ] },
-  { label: 'Vergi', tabs: [
-    { key: 'tax', label: 'Vergi' },
-  ] },
-  { label: 'Analiz', tabs: [
-    { key: 'risks', label: 'Riskler' },
-    { key: 'cfo',   label: 'CFO'     },
-  ] },
-  { label: 'Raporlar', tabs: [
-    { key: 'reports', label: 'Raporlar' },
-  ] },
-]
+// Single flat tab row (FINANCE_NAV_TABS above) — the 2-level grouping was dropped
+// for a clearer "one row of views" model; kurumlar-vergisi/boardpack/mizan remain as
+// "Detaylı" panels inside their parent tab (Vergi / Raporlar).
 
 const TAB_META: Record<FinanceTab, { title: string; sub: string }> = {
   pnl:       { title: 'Kâr / Zarar',          sub: 'Ciro · Brüt Kâr · Faaliyet Kârı · Vergi Sonrası Net' },
@@ -197,7 +181,7 @@ export default async function FinancePage({ searchParams }: PageProps) {
       {/* ── Tab nav + persistent context bar (sticky together) ──────────────────── */}
       <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm -mx-4">
         <div className="px-5 pt-1 border-b border-[#e2e8f0]">
-          <UnifiedTabNav tabs={FINANCE_NAV_TABS} groups={FINANCE_GROUPS} activeTab={activeTab} basePath="/dashboard/finance" />
+          <UnifiedTabNav tabs={FINANCE_NAV_TABS} activeTab={activeTab} basePath="/dashboard/finance" />
         </div>
         <div className="px-5">
           <FinanceContextBar companyId={companyId} />

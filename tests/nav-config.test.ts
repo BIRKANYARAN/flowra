@@ -50,48 +50,48 @@ describe('hasMinRole', () => {
 // ── Group filtering ───────────────────────────────────────────────────────────
 
 describe('getGroupsForRole', () => {
-  it('admin sees all 6 groups (genel + gelir + operasyon + finans + gelismis + yonetim)', () => {
+  it('admin sees all 4 groups (genel + calisma + gelismis + yonetim)', () => {
     const groups = getGroupsForRole('admin')
-    expect(groups.length).toBe(6)
-    expect(groups.map(g => g.id)).toEqual(['genel', 'gelir', 'operasyon', 'finans', 'gelismis', 'yonetim'])
+    expect(groups.length).toBe(4)
+    expect(groups.map(g => g.id)).toEqual(['genel', 'calisma', 'gelismis', 'yonetim'])
   })
 
-  it('manager sees 5 groups (no yonetim)', () => {
+  it('manager sees 3 groups (no yonetim)', () => {
     const groups = getGroupsForRole('manager')
-    expect(groups.length).toBe(5)
+    expect(groups.length).toBe(3)
     expect(groups.find(g => g.id === 'yonetim')).toBeUndefined()
   })
 
-  it('viewer sees 5 groups (no yonetim)', () => {
+  it('viewer sees 3 groups (no yonetim)', () => {
     const groups = getGroupsForRole('viewer')
-    expect(groups.length).toBe(5)
+    expect(groups.length).toBe(3)
     expect(groups.find(g => g.id === 'yonetim')).toBeUndefined()
   })
 
-  it('null role sees 5 groups', () => {
+  it('null role sees 3 groups', () => {
     const groups = getGroupsForRole(null)
-    expect(groups.length).toBe(5)
+    expect(groups.length).toBe(3)
   })
 })
 
 // ── Item counts ───────────────────────────────────────────────────────────────
 
 describe('getAllItemsForRole item counts', () => {
-  // Groups: genel(1) + gelir(4) + operasyon(2) + finans(2) + gelismis(4, governance admin-only) + yonetim(3, admin)
-  it('admin sees 16 nav items (1+4+2+2+4 + 3 yonetim)', () => {
-    expect(getAllItemsForRole('admin').length).toBe(16)
+  // One entry per hub. Groups: genel(1) + calisma(4) + gelismis(4, governance admin-only) + yonetim(3, admin)
+  it('admin sees 12 nav items (1+4+4 + 3 yonetim)', () => {
+    expect(getAllItemsForRole('admin').length).toBe(12)
   })
 
-  it('manager sees 12 nav items (no yonetim, no governance)', () => {
-    expect(getAllItemsForRole('manager').length).toBe(12)
+  it('manager sees 8 nav items (no yonetim, no governance)', () => {
+    expect(getAllItemsForRole('manager').length).toBe(8)
   })
 
-  it('viewer sees 12 nav items (no yonetim, no governance)', () => {
-    expect(getAllItemsForRole('viewer').length).toBe(12)
+  it('viewer sees 8 nav items (no yonetim, no governance)', () => {
+    expect(getAllItemsForRole('viewer').length).toBe(8)
   })
 
-  it('null role sees 12 nav items', () => {
-    expect(getAllItemsForRole(null).length).toBe(12)
+  it('null role sees 8 nav items', () => {
+    expect(getAllItemsForRole(null).length).toBe(8)
   })
 
   it('getNavCount matches getAllItemsForRole length', () => {
@@ -103,17 +103,20 @@ describe('getAllItemsForRole item counts', () => {
 // ── task-first areas present ──────────────────────────────────────────────────
 
 describe('navigation area contents', () => {
-  it('contains the core areas (Satış/Tahsilat tabs, finance, operations, partners)', () => {
+  it('contains one entry per core hub (commercial, operations, finance, partners, planning, insights)', () => {
     const items = getAllItemsForRole('viewer')
     const hrefs = items.map(i => i.href)
-    expect(hrefs).toContain('/dashboard/commercial?tab=sales')
-    expect(hrefs).toContain('/dashboard/commercial?tab=collections')
-    expect(hrefs).toContain('/dashboard/finance')
+    // Each hub is a single area entry — sub-sections live in the hub's own tab row.
+    expect(hrefs).toContain('/dashboard/commercial')
     expect(hrefs).toContain('/dashboard/operations')
+    expect(hrefs).toContain('/dashboard/finance')
     expect(hrefs).toContain('/dashboard/partners')
-    expect(hrefs).toContain('/dashboard/orders')
+    expect(hrefs).toContain('/dashboard/planning')
     expect(hrefs).toContain('/dashboard/insights')
     expect(hrefs).not.toContain('/dashboard/ops')
+    // sub-sections are NOT duplicated as sidebar entries anymore
+    expect(hrefs).not.toContain('/dashboard/commercial?tab=sales')
+    expect(hrefs).not.toContain('/dashboard/orders')
   })
 
   it('kokpit uses exact matching', () => {
@@ -420,8 +423,8 @@ describe('findNavItem — known hrefs', () => {
     expect(item?.label).toBe('Finans')
   })
 
-  it('finds the Satış commercial tab entry', () => {
-    expect(findNavItem('/dashboard/commercial?tab=sales')).toBeDefined()
+  it('finds the commercial hub entry', () => {
+    expect(findNavItem('/dashboard/commercial')).toBeDefined()
   })
 
   it('finds /dashboard/operations', () => {
@@ -541,12 +544,12 @@ describe('Tab key uniqueness within each center', () => {
 // ── NAV_GROUPS structural integrity ──────────────────────────────────────────
 
 describe('NAV_GROUPS structural integrity', () => {
-  it('has exactly 6 groups', () => {
-    expect(NAV_GROUPS.length).toBe(6)
+  it('has exactly 4 groups', () => {
+    expect(NAV_GROUPS.length).toBe(4)
   })
 
-  it('group ids follow the task-first order', () => {
-    expect(NAV_GROUPS.map(g => g.id)).toEqual(['genel', 'gelir', 'operasyon', 'finans', 'gelismis', 'yonetim'])
+  it('group ids follow the area-first order', () => {
+    expect(NAV_GROUPS.map(g => g.id)).toEqual(['genel', 'calisma', 'gelismis', 'yonetim'])
   })
 
   it('first group id is genel', () => {

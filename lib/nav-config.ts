@@ -92,47 +92,30 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
 
-  // ── SATIŞ & GELİR ─────────────────────────────────────────────────────────
+  // ── ÇALIŞMA ALANLARI ──────────────────────────────────────────────────────
+  // ONE entry per hub. A hub's sub-sections live ONLY in that hub's single tab
+  // row (no sub-sections duplicated into the sidebar) so the model is always:
+  //   left = which area · top = which view of that area.
   {
-    id: 'gelir',
-    label: 'Satış & Gelir',
+    id: 'calisma',
+    label: 'Çalışma Alanları',
     items: [
-      { href: '/dashboard/commercial?tab=sales',       label: 'Satış',      icon: 'sales'       },
-      { href: '/dashboard/commercial?tab=pipeline',    label: 'Teklifler',  icon: 'proformas'   },
-      { href: '/dashboard/commercial?tab=collections', label: 'Tahsilat',   icon: 'collections' },
-      { href: '/dashboard/commercial?tab=customers',   label: 'Müşteriler', icon: 'customers'   },
+      { href: '/dashboard/commercial', label: 'Satış',     icon: 'sales'     },
+      { href: '/dashboard/operations', label: 'Operasyon', icon: 'products'  },
+      { href: '/dashboard/finance',    label: 'Finans',    icon: 'analytics' },
+      { href: '/dashboard/partners',   label: 'Ortaklar',  icon: 'partners'  },
     ],
   },
 
-  // ── OPERASYON ─────────────────────────────────────────────────────────────
-  {
-    id: 'operasyon',
-    label: 'Operasyon',
-    items: [
-      { href: '/dashboard/operations', label: 'Gider & Stok', icon: 'products' },
-      { href: '/dashboard/orders',     label: 'Siparişler',   icon: 'tasks'    },
-    ],
-  },
-
-  // ── FİNANS ────────────────────────────────────────────────────────────────
-  {
-    id: 'finans',
-    label: 'Finans',
-    items: [
-      { href: '/dashboard/finance',  label: 'Finans',   icon: 'analytics' },
-      { href: '/dashboard/partners', label: 'Ortaklar', icon: 'partners'  },
-    ],
-  },
-
-  // ── GELİŞMİŞ (deep analytics + planning + governance) ─────────────────────
+  // ── ANALİZ & PLAN ─────────────────────────────────────────────────────────
   {
     id: 'gelismis',
-    label: 'Gelişmiş',
+    label: 'Analiz & Plan',
     items: [
-      { href: '/dashboard/insights',   label: 'AI Analiz',  icon: 'analytics'   },
-      { href: '/dashboard/planning',   label: 'Planlama',   icon: 'simulation'  },
-      { href: '/dashboard/governance', label: 'Yönetişim',  icon: 'shield', minRole: 'admin' as const },
-      { href: '/dashboard/documents',  label: 'Belgeler',   icon: 'backup'      },
+      { href: '/dashboard/planning',   label: 'Planlama',  icon: 'simulation' },
+      { href: '/dashboard/insights',   label: 'AI Analiz', icon: 'analytics'  },
+      { href: '/dashboard/documents',  label: 'Belgeler',  icon: 'backup'     },
+      { href: '/dashboard/governance', label: 'Yönetişim', icon: 'shield', minRole: 'admin' as const },
     ],
   },
 
