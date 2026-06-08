@@ -13,6 +13,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Skeleton } from '@/components/ds'
 import { fmtTRY } from '@/lib/format'
 import type { TreasuryReport, BankAccountSummary, DailyCashPoint } from '@/lib/services/finance/treasury.service'
+import { InfoTip } from '@/components/ui/InfoTip'
 
 // ── API response shape ────────────────────────────────────────────────────────
 
@@ -206,7 +207,7 @@ export function TreasurySection() {
         {/* Coverage ratio chips */}
         <div className="grid grid-cols-2 divide-x divide-[#e8eaef]">
           <div className="px-4 py-3">
-            <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Nakit Runway</div>
+            <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">Nakit Ömrü <InfoTip k="Runway" /></div>
             <div className={`text-lg font-black tabular-nums leading-none ${runwayTone}`}>
               {r.cash_runway_months !== null ? `${r.cash_runway_months.toFixed(1)} ay` : '—'}
             </div>

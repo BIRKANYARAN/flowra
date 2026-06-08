@@ -4,6 +4,7 @@
 // Shows HHI gauge, risk metrics, 6-month trend sparkline, and customer tier table.
 
 import { useQuery } from '@tanstack/react-query'
+import { InfoTip } from '@/components/ui/InfoTip'
 import type {
   CustomerConcentrationReport,
   CustomerConcentrationEntry,
@@ -184,7 +185,7 @@ export default function CustomerConcentrationClient() {
         <div className="flex items-start gap-4 mb-3">
           <div>
             <div className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8] mb-0.5">
-              HHI Skoru
+              HHI Skoru <InfoTip k="HHI" />
             </div>
             <div className={`text-4xl font-black tabular-nums leading-none ${levelCfg.color}`}>
               {Math.round(report.hhi).toLocaleString('tr-TR')}
