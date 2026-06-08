@@ -257,7 +257,7 @@ function NavLink({
           transition-all duration-150 ease-out
           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50 focus-visible:ring-inset
           ${active
-            ? 'bg-[#0f172a] text-white font-semibold shadow-sm'
+            ? 'bg-brand-subtle text-brand font-semibold'
             : childActive
               ? 'text-[#1e293b] font-medium hover:bg-[#f1f5f9]'
               : 'text-[#64748b] hover:bg-[#f1f5f9] hover:text-[#1e293b] hover:translate-x-px'
@@ -274,12 +274,12 @@ function NavLink({
           name={item.icon}
           size={13}
           strokeWidth={active || childActive ? 2 : 1.5}
-          className={`flex-shrink-0 transition-colors ${active ? 'text-white' : 'text-[#94a3b8] group-hover/nav:text-[#64748b]'}`}
+          className={`flex-shrink-0 transition-colors ${active ? 'text-brand' : 'text-[#94a3b8] group-hover/nav:text-[#64748b]'}`}
         />
         <span className="truncate">{item.label}</span>
         {badge !== undefined && badge > 0 && (
           <span className={`ml-auto min-w-[18px] text-center text-[10px] font-bold px-1.5 py-0.5 rounded ${
-            active ? 'bg-white/20 text-white' : 'bg-neg-light text-white'
+            active ? 'bg-brand/15 text-brand' : 'bg-neg-light text-white'
           }`}>
             {badge > 99 ? '99+' : badge}
           </span>
@@ -300,7 +300,7 @@ function NavLink({
                   group/sub relative flex items-center gap-2 px-2 py-1.5 rounded-md text-[11px]
                   transition-all duration-150 ease-out
                   ${childIsActive
-                    ? 'bg-[#0f172a] text-white font-semibold shadow-sm'
+                    ? 'bg-brand-subtle text-brand font-semibold'
                     : 'text-[#64748b] hover:bg-[#f1f5f9] hover:text-[#1e293b] hover:translate-x-px'
                   }
                 `}
@@ -315,7 +315,7 @@ function NavLink({
                   name={child.icon}
                   size={11}
                   strokeWidth={childIsActive ? 2 : 1.5}
-                  className={`flex-shrink-0 transition-colors ${childIsActive ? 'text-white' : 'text-[#94a3b8] group-hover/sub:text-[#64748b]'}`}
+                  className={`flex-shrink-0 transition-colors ${childIsActive ? 'text-brand' : 'text-[#94a3b8] group-hover/sub:text-[#64748b]'}`}
                 />
                 <span className="truncate">{child.label}</span>
               </Link>

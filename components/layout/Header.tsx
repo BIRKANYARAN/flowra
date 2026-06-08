@@ -29,21 +29,19 @@ export function Header({ companyName }: Props) {
         <span className="font-black text-sm text-[#0f172a]">Flowra</span>
       </div>
 
-      {/* LEFT — desktop page title (pathname-aware) */}
+      {/* LEFT — desktop breadcrumb title (pathname + ?tab aware) */}
       <HeaderLeft companyName={companyName} />
 
-      {/* CENTER — global task-first quick action + Tahsilat shortcut */}
-      <div className="hidden md:flex items-center gap-1.5 flex-1 justify-center">
-        <QuickCreate />
+      {/* RIGHT — primary action + Tahsilat shortcut, then FX ticker.
+          Top-right is the conventional home for the primary action. */}
+      <div className="hidden md:flex items-center gap-1.5 flex-shrink-0 ml-auto">
         <Link
           href="/dashboard/commercial?tab=collections"
           className="inline-flex items-center gap-1 px-2.5 py-1 rounded border border-[#e2e8f0] text-[#334155] text-[11px] font-semibold hover:bg-[#f8fafc] transition-colors whitespace-nowrap">
           Tahsilat
         </Link>
-      </div>
-
-      {/* RIGHT — FX ticker (fixed far-right) */}
-      <div className="hidden md:flex items-center flex-shrink-0">
+        <QuickCreate />
+        <span aria-hidden className="w-px h-5 bg-[#e2e8f0] mx-0.5" />
         <FxTicker />
       </div>
 

@@ -28,6 +28,7 @@ import Link                  from 'next/link'
 import { createClient }      from '@/lib/supabase-server'
 import { resolveCompanyId }  from '@/lib/resolve-company'
 import { UnifiedTabNav }     from '@/app/dashboard/_shared/UnifiedTabNav'
+import { FINANCE_TABS }      from '@/lib/nav-config'
 import { getGlMode }         from '@/lib/middleware/period-guard'
 
 import { PnlTab }           from './_tabs/PnlTab'
@@ -49,17 +50,11 @@ type FinanceTab = 'pnl' | 'balance' | 'cashflow' | 'tax' | 'kurumlar-vergisi' | 
 
 const VALID_TABS: FinanceTab[] = ['pnl', 'balance', 'cashflow', 'tax', 'kurumlar-vergisi', 'risks', 'cfo', 'boardpack', 'reports', 'mizan']
 
-const FINANCE_NAV_TABS = [
-  { key: 'pnl',      label: 'Kâr/Zarar' },
-  { key: 'balance',  label: 'Bilanço'   },
-  { key: 'cashflow', label: 'Nakit'     },
-  { key: 'tax',      label: 'Vergi'     },
-  { key: 'risks',    label: 'Riskler'   },
-  { key: 'cfo',      label: 'CFO'       },
-  { key: 'reports',  label: 'Raporlar'  },
-]
+// FINANCE_TABS now lives in nav-config (single source shared with the header
+// breadcrumb); aliased here to keep the JSX below unchanged.
+const FINANCE_NAV_TABS = [...FINANCE_TABS]
 
-// Single flat tab row (FINANCE_NAV_TABS above) — the 2-level grouping was dropped
+// Single flat tab row (FINANCE_TABS) — the 2-level grouping was dropped
 // for a clearer "one row of views" model; kurumlar-vergisi/boardpack/mizan remain as
 // "Detaylı" panels inside their parent tab (Vergi / Raporlar).
 

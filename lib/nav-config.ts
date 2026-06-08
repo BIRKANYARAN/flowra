@@ -262,3 +262,37 @@ export const PLANNING_TABS = [
   { key: 'budget',          label: 'Bütçe'              },
   { key: 'tasks',           label: 'Görevler'           },
 ] as const
+
+/** Finance center — /dashboard/finance?tab=
+ *  Flat row of the 7 primary views (kurumlar-vergisi/boardpack/mizan live as
+ *  "Detaylı" panels inside Vergi/Raporlar, reachable by deep link). The finance
+ *  page imports this so the tab bar and the header breadcrumb share one source. */
+export const FINANCE_TABS = [
+  { key: 'pnl',      label: 'Kâr/Zarar' },
+  { key: 'balance',  label: 'Bilanço'   },
+  { key: 'cashflow', label: 'Nakit'     },
+  { key: 'tax',      label: 'Vergi'     },
+  { key: 'risks',    label: 'Riskler'   },
+  { key: 'cfo',      label: 'CFO'       },
+  { key: 'reports',  label: 'Raporlar'  },
+] as const
+
+/** Hub href → its ?tab= label list. Single source for the header breadcrumb
+ *  ("Hub › View"). Hubs with a bespoke tab renderer (e.g. partners) are omitted
+ *  → the breadcrumb shows the hub name alone rather than risk a parallel list. */
+export const HUB_TABS: Record<string, readonly { key: string; label: string }[]> = {
+  '/dashboard/commercial': COMMERCIAL_TABS,
+  '/dashboard/operations': OPERATIONS_TABS,
+  '/dashboard/finance':    FINANCE_TABS,
+  '/dashboard/planning':   PLANNING_TABS,
+}
+
+/** Label for a hub's active ?tab= key. With no tab, falls back to the hub's
+ *  first tab — which is every hub's default view — so the breadcrumb still
+ *  reads "Hub › View". Returns null for hubs with no centralized tab list. */
+export function hubTabLabel(hubHref: string, tabKey: string | null): string | null {
+  const tabs = HUB_TABS[hubHref]
+  if (!tabs) return null
+  if (!tabKey) return tabs[0]?.label ?? null
+  return tabs.find(t => t.key === tabKey)?.label ?? tabs[0]?.label ?? null
+}

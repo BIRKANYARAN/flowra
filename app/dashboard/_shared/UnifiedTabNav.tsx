@@ -68,7 +68,7 @@ function TabLink({ tab, activeTab, basePath }: { tab: UnifiedTab; activeTab: str
       {isActive && (
         <span
           aria-hidden
-          className="flowra-tab-underline absolute left-1.5 right-1.5 -bottom-px h-[2px] rounded-full bg-[#0f172a]"
+          className="flowra-tab-underline absolute left-1.5 right-1.5 -bottom-px h-[2px] rounded-full bg-brand"
         />
       )}
     </Link>

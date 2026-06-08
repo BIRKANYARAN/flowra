@@ -1,14 +1,14 @@
 'use client'
-// HeaderLeft — reads pathname and returns the matching hub title.
+// HeaderLeft — pathname + ?tab aware breadcrumb for the top bar.
 //
-// SINGLE SOURCE OF TRUTH: the title is derived from NAV_GROUPS (the same labels
-// the sidebar renders), so the top bar can never drift from the sidebar again.
-// (It used to keep its own PATH_TITLES list with different names — "Finans
-// Merkezi" vs sidebar "Finans" — which read as three names for one place.)
-// The page's own H1 still names the specific view (e.g. "Kâr / Zarar").
+// SINGLE SOURCE OF TRUTH: both the hub name and the active-view label come from
+// NAV_GROUPS / HUB_TABS (the same data the sidebar + tab bars render), so the
+// top bar can never drift from them. Renders "Hub › View" when the active tab
+// is known, else just the hub name. (It used to keep its own PATH_TITLES list
+// with different names — "Finans Merkezi" vs sidebar "Finans".)
 
-import { usePathname } from 'next/navigation'
-import { NAV_GROUPS, SETTINGS_FALLBACK } from '@/lib/nav-config'
+import { usePathname, useSearchParams } from 'next/navigation'
+import { NAV_GROUPS, SETTINGS_FALLBACK, hubTabLabel } from '@/lib/nav-config'
 
 // Flatten every nav item (incl. children + settings fallback) once.
 const NAV_ITEMS = [
@@ -16,36 +16,48 @@ const NAV_ITEMS = [
   SETTINGS_FALLBACK,
 ]
 
-function titleForPath(pathname: string): string | null {
-  // Longest matching href wins (so /dashboard/admin/workflows beats /dashboard
-  // /admin, and the exact "/dashboard" home only matches itself).
-  let best: { label: string; len: number } | null = null
+function hubForPath(pathname: string): { label: string; href: string } | null {
+  // Home only matches itself; every other hub matches its whole subtree, and
+  // the longest matching href wins (so /admin/workflows beats /admin).
+  let best: { label: string; href: string } | null = null
   for (const item of NAV_ITEMS) {
-    // Home only matches itself; every other hub matches its whole subtree
-    // (so /dashboard/admin/users resolves to "Yönetim", /admin/workflows to
-    // the longer "İş Akışları"). The exact flag is for sidebar highlighting,
-    // not titling.
     const isMatch = item.href === '/dashboard'
       ? pathname === '/dashboard'
       : pathname === item.href || pathname.startsWith(item.href + '/')
-    if (isMatch && (!best || item.href.length > best.len)) {
-      best = { label: item.label, len: item.href.length }
+    if (isMatch && (!best || item.href.length > best.href.length)) {
+      best = { label: item.label, href: item.href }
     }
   }
-  return best?.label ?? null
+  return best
 }
 
 export function HeaderLeft({ companyName }: { companyName: string | null }) {
   const pathname = usePathname()
-  const title = titleForPath(pathname)
+  const search   = useSearchParams()
+  const hub      = hubForPath(pathname)
+  const view     = hub ? hubTabLabel(hub.href, search.get('tab')) : null
+
+  if (!hub) {
+    return (
+      <div className="hidden md:flex items-center gap-2 min-w-0">
+        {companyName && (
+          <span className="text-[10px] font-semibold text-[#94a3b8] tracking-wide truncate">{companyName}</span>
+        )}
+      </div>
+    )
+  }
 
   return (
-    <div className="hidden md:flex items-center gap-2 min-w-0">
-      {title ? (
-        <span className="text-sm font-bold text-[#0f172a] tracking-tight truncate">{title}</span>
-      ) : companyName ? (
-        <span className="text-[10px] font-semibold text-[#94a3b8] tracking-wide truncate">{companyName}</span>
-      ) : null}
+    <div className="hidden md:flex items-center gap-1.5 min-w-0">
+      <span className={`text-sm tracking-tight truncate ${view ? 'font-semibold text-[#64748b]' : 'font-bold text-[#0f172a]'}`}>
+        {hub.label}
+      </span>
+      {view && (
+        <>
+          <span aria-hidden className="text-[#cbd5e1] text-xs">›</span>
+          <span className="text-sm font-bold text-[#0f172a] tracking-tight truncate">{view}</span>
+        </>
+      )}
     </div>
   )
 }
