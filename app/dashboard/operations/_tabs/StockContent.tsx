@@ -133,8 +133,10 @@ export async function StockContent({ companyId, userId }: Props) {
         />
       )}
 
-      {/* Stok Devir Analizi — turnover ratio, DIO, dead stock, shrinkage, reorder alerts */}
-      <InventoryTurnoverClient companyId={companyId} />
+      {/* Stok Devir Analizi — turnover ratio, DIO, dead stock, shrinkage (secondary, folded) */}
+      <DetailSection title="Stok Devir Analizi" subtitle="Devir hızı · DIO · ölü stok · fire">
+        <InventoryTurnoverClient companyId={companyId} />
+      </DetailSection>
 
       {/* Yeniden Sipariş Uyarıları — reorder alert summary + action table */}
       {reorderReport && (reorderReport.out_of_stock_count > 0 || reorderReport.critical_count > 0 || reorderReport.low_count > 0) && (

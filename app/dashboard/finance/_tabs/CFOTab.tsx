@@ -280,17 +280,14 @@ export async function CFOTab({ userId, companyId }: Props) {
   return (
     <div className="space-y-4">
 
-      {/* ── Period Close Readiness Scorecard — single-view CFO readiness check ── */}
-      <PeriodCloseReadinessClient companyId={companyId} />
-
-      {/* ── Period Close Enforcement Checklist — most important CFO workflow ───── */}
-      <PeriodCloseChecklistClient companyId={companyId} />
-
-      {/* ── Period-close intelligence signals ──────────────────────────────────── */}
-      <ObservationRail context="period-close" maxItems={3} />
-
-      {/* ── Period Close Wizard — guided step-by-step close process ──────────── */}
-      <PeriodCloseWizard periodId={periodData?.period.id} />
+      {/* ── Dönem Kapanış — readiness + checklist + wizard, folded into one
+             expandable workflow so the CFO cockpit opens on its summary KPIs ── */}
+      <DetailSection title="Dönem Kapanış" subtitle="Hazırlık skoru · kontrol listesi · adım adım sihirbaz" defaultOpen={false}>
+        <PeriodCloseReadinessClient companyId={companyId} />
+        <PeriodCloseChecklistClient companyId={companyId} />
+        <ObservationRail context="period-close" maxItems={3} />
+        <PeriodCloseWizard periodId={periodData?.period.id} />
+      </DetailSection>
 
       {/* ── Veri yükleme hatası banner — yalnızca servis çağrıları başarısız olduğunda görünür ── */}
       {loadErrors.length > 0 && (
