@@ -118,12 +118,13 @@ export class CeoIntelligenceService {
         .eq('company_id', companyId)
         .eq('status', 'active'),
 
-      // 7. Pending resolutions count
+      // 7. Pending resolutions count (real table: governance_resolutions;
+      // its status enum is draft|approved|rejected|implemented — 'draft' = not yet finalized)
       (supabase as SupabaseClient)
-        .from('resolutions')
+        .from('governance_resolutions')
         .select('id', { count: 'exact', head: true })
         .eq('company_id', companyId)
-        .in('status', ['draft', 'pending', 'voting']),
+        .in('status', ['draft']),
 
       // 8. Financial narrative for current month
       NarrativeService.generatePeriodNarrative(companyId, uid, supabase, period),

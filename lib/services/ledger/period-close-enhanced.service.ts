@@ -214,9 +214,9 @@ export class PeriodCloseEnhancedService {
         .lt('due_date', today)
         .not('due_date', 'is', null),
 
-      // 12. Bank statement document for this period
+      // 12. Bank statement document for this period (real table: company_documents)
       (supabase as SupabaseClient)
-        .from('documents')
+        .from('company_documents')
         .select('id', { count: 'exact', head: true })
         .eq('company_id', companyId)
         .eq('document_type', 'bank_statement')

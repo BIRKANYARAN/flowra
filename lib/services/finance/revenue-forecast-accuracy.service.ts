@@ -335,21 +335,23 @@ export class RevenueForecastAccuracyService {
     companyId: string,
     lookbackMonths: number = 12,
   ): Promise<ForecastAccuracyReport | null> {
-    // Fetch last N months of actual revenue
+    // Fetch actual booked revenue from sales (there is no `transactions` table;
+    // revenue = sales.total_try by sale_date).
     const { data: rows, error } = await this.supabase
-      .from('transactions')
-      .select('amount, date')
+      .from('sales')
+      .select('total_try, sale_date')
       .eq('company_id', companyId)
-      .eq('type', 'income')
-      .order('date', { ascending: true })
+      .is('deleted_at', null)
+      .order('sale_date', { ascending: true })
 
     if (error || !rows || rows.length === 0) return null
 
     // Aggregate by month
     const monthMap = new Map<string, number>()
     for (const row of rows) {
-      const month = (row.date as string).slice(0, 7) // YYYY-MM
-      monthMap.set(month, (monthMap.get(month) ?? 0) + (row.amount as number))
+      if (!row.sale_date) continue
+      const month = (row.sale_date as string).slice(0, 7) // YYYY-MM
+      monthMap.set(month, (monthMap.get(month) ?? 0) + (Number(row.total_try) || 0))
     }
 
     // Sort months and take last lookbackMonths

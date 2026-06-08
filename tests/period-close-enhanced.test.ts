@@ -126,6 +126,13 @@ function makeSupabase(
         return makeChain(jrows, Array.isArray(jrows) ? jrows.length : 0)
       }
 
+      // bank-statement check reads company_documents now; alias to the documents fixture
+      if (table === 'company_documents') {
+        const drows = (tables as Record<string, unknown[]>)['company_documents']
+          ?? (tables as Record<string, unknown[]>)['documents'] ?? []
+        return makeChain(drows, Array.isArray(drows) ? drows.length : 0)
+      }
+
       const rows = (tables as Record<string, unknown[]>)[table] ?? []
       const count = Array.isArray(rows) ? rows.length : 0
       return makeChain(rows, count)

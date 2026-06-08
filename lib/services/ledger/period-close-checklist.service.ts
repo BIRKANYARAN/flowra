@@ -350,11 +350,12 @@ export class PeriodCloseChecklistService {
         .lte('sale_date', to),
 
       // COMPLIANCE — 11. active compensation schedules with no payments this period
+      // (real table: partner_compensation_schedules; active flag is is_active, not status)
       (this.supabase as SupabaseClient)
-        .from('compensation_schedules')
+        .from('partner_compensation_schedules')
         .select('id', { count: 'exact', head: true })
         .eq('company_id', companyId)
-        .eq('status', 'active'),
+        .eq('is_active', true),
     ])
 
     const steps: ChecklistStep[] = []
