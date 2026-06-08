@@ -17,6 +17,7 @@
 
 import Link       from 'next/link'
 import { useQuery } from '@tanstack/react-query'
+import { InfoTip } from '@/components/ui/InfoTip'
 import { fmtTRY } from '@/lib/format'
 import type {
   CccScorecardReport,
@@ -248,7 +249,7 @@ export function CccScorecardClient({ companyId }: Props) {
       {/* Section header */}
       <div className="flex items-center justify-between px-1">
         <span className="text-[0.6rem] font-black uppercase tracking-widest text-[#94a3b8]">
-          Nakit Dönüşüm Verimliliği Skorkartı
+          Nakit Dönüşüm Verimliliği Skorkartı <InfoTip k="CCC" />
         </span>
         <span className={`text-[10px] font-bold ${trendCfg.cls}`}>
           Trend: {trendCfg.label}

@@ -8,6 +8,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Skeleton } from '@/components/ds'
 import { fmtTRY } from '@/lib/format'
 import type { BurnRateReport, MonthlyBurnData } from '@/lib/services/finance/burn-rate.service'
+import { InfoTip } from '@/components/ui/InfoTip'
 
 // ── API response shape ────────────────────────────────────────────────────────
 
@@ -119,7 +120,7 @@ export function BurnRateSection() {
       <div className="px-4 py-3 border-b border-[#e8eaef] flex items-center justify-between flex-wrap gap-2">
         <div>
           <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
-            Nakit Tüketim Hızı
+            Nakit Tüketim Hızı <InfoTip k="Burn" />
           </div>
           <p className="text-[10px] text-[#94a3b8] mt-0.5">
             Son 6 aylık gider ve gelir bazlı burn rate analizi

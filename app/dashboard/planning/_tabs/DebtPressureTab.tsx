@@ -3,6 +3,7 @@
 // payment schedule, renders tranche ladder and concentration analysis.
 
 import { createClient }         from '@/lib/supabase-server'
+import { InfoTip }              from '@/components/ui/InfoTip'
 import { FinanceService }       from '@/lib/services/finance.service'
 import Link                     from 'next/link'
 import { NarrativeFooter }      from '@/components/ds'
@@ -189,7 +190,7 @@ export async function DebtPressureTab({ companyId, userId }: Props) {
         </div>
 
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-4 py-3">
-          <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">DSR (Borç/Gelir)</div>
+          <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8] mb-1">DSR (Borç/Gelir) <InfoTip k="DSR" /></div>
           <div className={`text-xl font-black tabular-nums ${dsrColor}`}>
             {monthlyService > 0 ? fmtPct(dsr) : '—'}
           </div>
