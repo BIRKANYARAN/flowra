@@ -179,7 +179,7 @@ export class GovernanceClockService {
     const currentYear  = new Date(today).getFullYear()
     const currentMonth = new Date(today).getMonth() + 1
 
-    const statutoryRef: Array<{ title: string; description: string; day: number; month: number; year: number }> = []
+    const statutoryRef: Array<{ kind: string; title: string; description: string; day: number; month: number; year: number }> = []
 
     // KDV-15: always 15th of every month for current + next 3 months
     for (let i = 0; i < 3; i++) {
@@ -189,6 +189,7 @@ export class GovernanceClockService {
       const dueStr = `${y}-${String(m).padStart(2,'0')}-15`
       if (dueStr >= today && dueStr <= cutoffStr) {
         statutoryRef.push({
+          kind:        'kdv',
           title:       `KDV Beyannamesi — ${m}. Ay`,
           description: 'KDV-1 beyannamesi (Bilgi amaçlı — mali müşavirinizle doğrulayın)',
           day: 15, month: m, year: y,
@@ -201,6 +202,7 @@ export class GovernanceClockService {
       const dueStr = `${currentYear}-${String(qm).padStart(2,'0')}-15`
       if (dueStr >= today && dueStr <= cutoffStr) {
         statutoryRef.push({
+          kind:        'gecici',
           title:       `Geçici Kurumlar Vergisi — ${qm}. Ay`,
           description: 'Üç aylık kurumlar vergisi avansı (Bilgi amaçlı — mali müşavirinizle doğrulayın)',
           day: 15, month: qm, year: currentYear,
@@ -212,7 +214,7 @@ export class GovernanceClockService {
       const dueDate   = `${ref.year}-${String(ref.month).padStart(2,'0')}-${String(ref.day).padStart(2,'0')}`
       const daysUntil = daysBetween(today, dueDate)
       obligations.push({
-        id:          `statutory_${dueDate.replace(/-/g,'')}`,
+        id:          `statutory_${ref.kind}_${dueDate.replace(/-/g,'')}`,
         source:      'statutory_ref',
         title:       ref.title,
         description: ref.description,

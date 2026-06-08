@@ -464,7 +464,7 @@ export async function PipelineContent({ companyId }: Props) {
           { label: 'Stok Değeri',  value: serverFmt(stockValue),   sub: `${stockLots.length} aktif lot`,                color: 'text-[#0f172a]' },
           { label: 'Pipeline',     value: pipelineVal > 0 ? serverFmt(pipelineVal) : '—', sub: 'gönderildi · onaylandı', color: 'text-info-text' },
           { label: 'Toplam Ciro',  value: totalRevenue > 0 ? serverFmt(totalRevenue) : '—', sub: unpaidTotal > 0 ? `${serverFmt(unpaidTotal)} tahsilat bekliyor` : 'tahsilat tamamlandı', color: 'text-[#0f172a]' },
-          { label: 'Brüt Kâr',    value: totalRevenue > 0 ? serverFmt(grossProfit) : '—', sub: totalRevenue > 0 ? `%${grossMargin.toFixed(1)} marj` : 'veri yok', color: grossProfit >= 0 ? 'text-pos-text' : 'text-neg' },
+          { label: 'Brüt Kâr',    value: totalRevenue > 0 ? serverFmt(grossProfit) : '—', sub: totalRevenue <= 0 ? 'veri yok' : totalCogs > 0 ? `%${grossMargin.toFixed(1)} marj` : 'maliyet girilmedi', color: grossProfit >= 0 ? 'text-pos-text' : 'text-neg' },
         ].map((card, i) => (
           <div key={card.label} className={`p-3 ${i < 3 ? 'border-b sm:border-b-0 sm:border-r border-[#e2e8f0]' : ''}`}>
             <div className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8] mb-1">{card.label}</div>

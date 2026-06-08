@@ -395,6 +395,8 @@ export default function SalesFlowClient({ initialProformas, initialSales, initia
   const grossProfit  = totalRevenue - totalCogs
   const grossMargin  = totalRevenue > 0 ? grossProfit / totalRevenue : 0
   const unpaidTotal  = sales.filter(s => s.payment_status !== 'paid').reduce((s, r) => s + Number(r.total_try ?? 0), 0)
+  const collectedTotal = totalRevenue - unpaidTotal       // cash actually in (billed − outstanding)
+  const hasCostData  = totalCogs > 0                       // no purchase/cost basis → margin is not "100%"
 
   // ── Detail panel ──────────────────────────────────────────────────────────────
   function DetailPanel() {
@@ -443,7 +445,7 @@ export default function SalesFlowClient({ initialProformas, initialSales, initia
           selected={selected === 'satis'} onClick={() => toggle('satis')} />
         <div className="flex items-center self-center text-[#cbd5e1] text-xl font-black select-none px-0.5">→</div>
         <Stage stageKey="tahsilat" step="4. Tahsilat" label="Nakit Girişi"
-          count={sales.length} value={totalRevenue}
+          count={sales.length} value={collectedTotal}
           color={unpaidTotal > 0 ? 'bg-warn-light border-warn-light text-warn-text' : 'bg-teal-50 border-teal-200 text-teal-900'}
           sub={unpaidTotal > 0 ? `${fmt(unpaidTotal)} bekliyor` : 'Tahsilat güncel'}
           selected={selected === 'tahsilat'} onClick={() => toggle('tahsilat')} />
@@ -451,7 +453,7 @@ export default function SalesFlowClient({ initialProformas, initialSales, initia
         <Stage stageKey="kar" step="5. Kâr" label="Brüt Kâr"
           count={sales.length} value={grossProfit}
           color={grossProfit >= 0 ? 'bg-pos-light border-pos-light text-pos-text' : 'bg-neg-light border-neg-light text-neg-text'}
-          sub={`%${(grossMargin * 100).toFixed(1)} marj`}
+          sub={hasCostData ? `%${(grossMargin * 100).toFixed(1)} marj` : 'maliyet girilmedi'}
           selected={selected === 'kar'} onClick={() => toggle('kar')} />
       </div>
 

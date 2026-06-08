@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
 import { createClient }     from '@/lib/supabase-server'
+import { getAdminAuth }     from '@/lib/admin-db'
 import { resolveCompanyId } from '@/lib/resolve-company'
 import { getGlMode }        from '@/lib/middleware/period-guard'
 import { fmtDate, fmtRelative } from '@/lib/format'
@@ -19,11 +20,13 @@ import { fmtDate, fmtRelative } from '@/lib/format'
 type Tab = 'users' | 'roles' | 'workflows' | 'audit' | 'reconciliation'
 
 interface CompanyMemberRow {
-  id:          string
-  user_id:     string
-  role:        string
-  accepted_at: string | null
-  invited_at:  string | null
+  id:           string
+  user_id:      string
+  role:         string
+  accepted_at:  string | null
+  invited_at:   string | null
+  email:        string | null
+  display_name: string | null
 }
 
 interface WorkflowRow {
@@ -109,7 +112,32 @@ async function fetchMembers(supabase: ReturnType<typeof createClient>, companyId
       .is('deleted_at', null)
       .order('accepted_at', { ascending: false })
       .limit(20)
-    return (data ?? []) as CompanyMemberRow[]
+    const rows = (data ?? []) as Array<Omit<CompanyMemberRow, 'email' | 'display_name'>>
+
+    // Enrich with email + display_name from auth.users (same path as /api/admin/members).
+    // Non-fatal per user: a deleted auth row just falls back to the UUID.
+    const adminAuth = getAdminAuth()
+    const idMap: Record<string, { email: string | null; display_name: string | null }> = {}
+    await Promise.all(rows.map(async (m) => {
+      try {
+        const { data: au } = await adminAuth.getUserById(m.user_id)
+        if (au?.user) {
+          const meta  = au.user.user_metadata ?? {}
+          const first = String(meta.first_name ?? '').trim()
+          const last  = String(meta.last_name  ?? '').trim()
+          idMap[m.user_id] = {
+            email:        au.user.email ?? null,
+            display_name: [first, last].filter(Boolean).join(' ') || au.user.email?.split('@')[0] || null,
+          }
+        }
+      } catch { /* orphaned member — keep UUID fallback */ }
+    }))
+
+    return rows.map(m => ({
+      ...m,
+      email:        idMap[m.user_id]?.email        ?? null,
+      display_name: idMap[m.user_id]?.display_name ?? null,
+    }))
   } catch { return [] }
 }
 
@@ -187,16 +215,16 @@ function UsersTab({ members }: { members: CompanyMemberRow[] }) {
               <div className="flex items-center gap-2.5 min-w-0 flex-1">
                 <div className="w-7 h-7 rounded bg-brand-subtle flex items-center justify-center flex-shrink-0">
                   <span className="text-brand font-bold text-[10px]">
-                    {(ROLE_LABEL[m.role] ?? m.role).slice(0, 1).toUpperCase()}
+                    {(m.display_name || m.email || '?').slice(0, 2).toUpperCase()}
                   </span>
                 </div>
                 <div className="min-w-0">
-                  <div className="text-xs font-semibold text-[#334155] truncate font-mono">
-                    {m.user_id.slice(0, 16)}…
+                  <div className="text-xs font-semibold text-[#334155] truncate">
+                    {m.display_name || m.email || `${m.user_id.slice(0, 8)}…`}
                   </div>
-                  {m.accepted_at && (
-                    <div className="text-[10px] text-[#94a3b8]">Katıldı: {fmtDate(m.accepted_at)}</div>
-                  )}
+                  {m.display_name && m.email
+                    ? <div className="text-[10px] text-[#94a3b8] truncate">{m.email}</div>
+                    : m.accepted_at && <div className="text-[10px] text-[#94a3b8]">Katıldı: {fmtDate(m.accepted_at)}</div>}
                 </div>
               </div>
               <span className={`text-[10px] font-bold px-2 py-0.5 rounded flex-shrink-0 ${ROLE_BADGE[m.role] ?? 'bg-[#f1f5f9] text-[#64748b]'}`}>
@@ -208,11 +236,13 @@ function UsersTab({ members }: { members: CompanyMemberRow[] }) {
             <div key={m.id} className="flex items-center justify-between px-4 py-3 opacity-70">
               <div className="flex items-center gap-2.5 min-w-0 flex-1">
                 <div className="w-7 h-7 rounded bg-warn-light flex items-center justify-center flex-shrink-0">
-                  <span className="text-warn-text font-bold text-[10px]">?</span>
+                  <span className="text-warn-text font-bold text-[10px]">
+                    {(m.display_name || m.email || '?').slice(0, 2).toUpperCase()}
+                  </span>
                 </div>
                 <div className="min-w-0">
-                  <div className="text-xs font-semibold text-[#64748b] truncate font-mono">
-                    {m.user_id.slice(0, 16)}…
+                  <div className="text-xs font-semibold text-[#64748b] truncate">
+                    {m.display_name || m.email || `${m.user_id.slice(0, 8)}…`}
                   </div>
                   <div className="text-[10px] text-warn-text">Davet bekleniyor</div>
                 </div>
