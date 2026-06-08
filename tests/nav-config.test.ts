@@ -256,16 +256,18 @@ describe('Tab contracts — canonical key sets', () => {
     expect(keys).toContain('orders')
   })
 
-  it('PLANNING_TABS has 9 tabs (scenario-compare removed; breakeven co-located into unit-profit/Karlılık)', () => {
-    expect(PLANNING_TABS.length).toBe(9)
+  it('PLANNING_TABS has 6 tabs (variance→scenarios, partner-impact→debt-pressure, calendar→budget folded as Detaylı panels)', () => {
+    expect(PLANNING_TABS.length).toBe(6)
     const keys = PLANNING_TABS.map(t => t.key)
     expect(keys).toContain('unit-profit')
-    expect(keys).toContain('variance')
+    expect(keys).toContain('scenarios')
     expect(keys).toContain('debt-pressure')
     expect(keys).toContain('tasks')
     expect(keys).toContain('budget')
-    expect(keys).not.toContain('scenario-compare')
-    expect(keys).not.toContain('breakeven')
+    // folded into host tabs — no longer top-level keys
+    expect(keys).not.toContain('variance')
+    expect(keys).not.toContain('partner-impact')
+    expect(keys).not.toContain('calendar')
   })
 })
 

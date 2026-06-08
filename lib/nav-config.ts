@@ -250,15 +250,15 @@ export const OPERATIONS_TABS = [
   { key: 'orders',   label: 'Siparişler' },
 ] as const
 
-/** Planning center — /dashboard/planning?tab= */
+/** Planning center — /dashboard/planning?tab=
+ *  6 clean tabs. Gerçek vs Plan folds into Senaryolar, Ortak Etkisi into Borç
+ *  Baskısı, Takvim into Bütçe (each a "Detaylı" panel); deep links to the folded
+ *  keys resolve via the page's alias map. */
 export const PLANNING_TABS = [
   { key: 'unit-profit',     label: 'Karlılık'           },
-  { key: 'cash-projection', label: 'Nakit Projeksiyonu'  },
-  { key: 'scenarios',       label: 'Senaryolar'          },
-  { key: 'variance',        label: 'Gerçek vs Plan'      },
-  { key: 'debt-pressure',   label: 'Borç Baskısı'       },
-  { key: 'partner-impact',  label: 'Ortak Etkisi'       },
-  { key: 'tasks',           label: 'Görevler'            },
-  { key: 'budget',              label: 'Bütçe'                   },
-  { key: 'calendar',            label: 'Takvim'                  },
+  { key: 'cash-projection', label: 'Nakit Projeksiyonu' },
+  { key: 'scenarios',       label: 'Senaryolar'         },
+  { key: 'debt-pressure',   label: 'Borç & Ortak'       },
+  { key: 'budget',          label: 'Bütçe'              },
+  { key: 'tasks',           label: 'Görevler'           },
 ] as const

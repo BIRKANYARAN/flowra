@@ -9,6 +9,7 @@ import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase-server'
 import { resolveCompanyId } from '@/lib/resolve-company'
 import { HubTabNav } from '@/app/dashboard/_shared/HubTabNav'
+import { DetailSection } from '@/components/dashboard/DetailSection'
 import { PLANNING_TABS } from '@/lib/nav-config'
 import { PlanningContextBar } from './_shared/PlanningContextBar'
 import { SimulationContent }  from './_tabs/SimulationContent'
@@ -73,7 +74,14 @@ export default async function PlanningPage({ searchParams }: PageProps) {
 
   const params    = await searchParams
   const rawTab    = params.tab ?? 'unit-profit'
-  const activeTab = VALID_TABS.includes(rawTab) ? rawTab : 'unit-profit'
+  // Folded tabs resolve to their host (deep links preserved):
+  const PLAN_ALIAS: Record<string, string> = {
+    variance:         'scenarios',     // Gerçek vs Plan → Senaryolar (Detaylı)
+    'partner-impact': 'debt-pressure', // Ortak Etkisi → Borç & Ortak (Detaylı)
+    calendar:         'budget',        // Takvim → Bütçe (Detaylı)
+  }
+  const resolved  = PLAN_ALIAS[rawTab] ?? rawTab
+  const activeTab = VALID_TABS.includes(resolved) ? resolved : 'unit-profit'
 
   const planTitles: Record<string, string> = {
     'unit-profit':     'Karlılık',
@@ -129,29 +137,40 @@ export default async function PlanningPage({ searchParams }: PageProps) {
             <BreakEvenTab companyId={companyId} userId={userId} />
           </div>
         )}
-        {/* partner-impact: distribution planning + loan status */}
-        {activeTab === 'partner-impact' && (
-          <PartnerImpactTab companyId={companyId} userId={userId} />
-        )}
         {/* cash-projection: 12-month trailing-based cash forecast */}
         {activeTab === 'cash-projection' && (
           <CashProjectionTab companyId={companyId} />
         )}
-        {/* scenarios: what-if slider engine + scenario comparison matrix */}
+        {/* scenarios: what-if slider engine + scenario comparison matrix
+            (Gerçek vs Plan folded in as a "Detaylı" panel) */}
         {activeTab === 'scenarios' && (
-          <ScenariosContent companyId={companyId} userId={userId} />
+          <div className="space-y-5">
+            <ScenariosContent companyId={companyId} userId={userId} />
+            <DetailSection title="Gerçek vs Plan" subtitle="Senaryo–gerçekleşme köprüsü · sapma analizi">
+              <VarianceTab />
+            </DetailSection>
+          </div>
         )}
-        {/* variance: scenario vs actuals bridge */}
-        {activeTab === 'variance' && <VarianceTab />}
-        {/* debt-pressure: tranche ladder + DSR + concentration */}
+        {/* debt-pressure: tranche ladder + DSR + concentration
+            (Ortak Etkisi folded in as a "Detaylı" panel) */}
         {activeTab === 'debt-pressure' && (
-          <DebtPressureTab companyId={companyId} userId={userId} />
+          <div className="space-y-5">
+            <DebtPressureTab companyId={companyId} userId={userId} />
+            <DetailSection title="Ortak Etkisi" subtitle="Dağıtım planı · ortak kredi durumu">
+              <PartnerImpactTab companyId={companyId} userId={userId} />
+            </DetailSection>
+          </div>
         )}
         {activeTab === 'tasks' && <TasksContent companyId={companyId} />}
-        {/* budget: monthly budget targets vs actuals */}
-        {activeTab === 'budget' && <BudgetTab companyId={companyId} />}
-        {/* calendar: annual financial calendar */}
-        {activeTab === 'calendar' && <CalendarContent companyId={companyId} />}
+        {/* budget: monthly budget targets vs actuals (Takvim folded in as a panel) */}
+        {activeTab === 'budget' && (
+          <div className="space-y-5">
+            <BudgetTab companyId={companyId} />
+            <DetailSection title="Finansal Takvim" subtitle="Yıllık yükümlülük & ödeme takvimi">
+              <CalendarContent companyId={companyId} />
+            </DetailSection>
+          </div>
+        )}
       </Suspense>
     </div>
   )
