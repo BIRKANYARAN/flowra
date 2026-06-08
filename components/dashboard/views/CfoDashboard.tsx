@@ -24,9 +24,9 @@ export function CfoDashboard({ data }: { data: HomePayload }) {
       {/* KPI strip */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 shrink-0">
         <KpiTile label="Nakit" value={fmtTRY(k.cash_balance_try)} accent={CHART.info} href="/dashboard/finance" />
-        <KpiTile label="Nakit Ömrü" value={k.runway_months == null ? '∞' : `${k.runway_months.toFixed(1)} ay`}
+        <KpiTile label="Nakit Ömrü" value={k.cash_balance_try <= 0 ? '—' : k.runway_months == null ? '∞' : `${k.runway_months.toFixed(1)} ay`}
           tone={k.runway_months != null && k.runway_months < 3 ? 'negative' : 'neutral'}
-          sub={k.runway_months != null && k.runway_months < 3 ? 'Kısa — dikkat' : undefined}
+          sub={k.cash_balance_try <= 0 ? 'Nakit yok' : k.runway_months != null && k.runway_months < 3 ? 'Kısa — dikkat' : undefined}
           accent={CHART.warn} href="/dashboard/finance?tab=cfo" />
         <KpiTile label="Net Kâr (Bu Ay)" value={fmtTRY(k.net_income_mtd_try)}
           tone={k.net_income_mtd_try < 0 ? 'negative' : 'positive'}

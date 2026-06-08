@@ -30,8 +30,9 @@ export function CeoDashboard({ data }: { data: HomePayload }) {
           sub={k.net_income_mtd_try < 0 ? 'Zarar' : undefined}
           accent={k.net_income_mtd_try < 0 ? CHART.neg : CHART.pos} href="/dashboard/finance" />
         <KpiTile label="Nakit" value={fmtTRY(k.cash_balance_try)} accent={CHART.info} href="/dashboard/finance" />
-        <KpiTile label="Nakit Ömrü" value={k.runway_months == null ? '∞' : `${k.runway_months.toFixed(1)} ay`}
+        <KpiTile label="Nakit Ömrü" value={k.cash_balance_try <= 0 ? '—' : k.runway_months == null ? '∞' : `${k.runway_months.toFixed(1)} ay`}
           tone={k.runway_months != null && k.runway_months < 3 ? 'negative' : 'neutral'}
+          sub={k.cash_balance_try <= 0 ? 'Nakit yok' : undefined}
           accent={CHART.warn} href="/dashboard/finance?tab=cfo" />
         <KpiTile label="Alacaklar" value={fmtTRY(k.accounts_receivable_try)}
           sub={k.overdue_receivable_try > 0 ? `Vadesi geçen: ${fmtCompact(k.overdue_receivable_try)}` : 'Vadesi geçen yok'}
