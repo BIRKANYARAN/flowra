@@ -826,7 +826,8 @@ export class WorkingCapitalService {
         .select('sale_date, total_try, payment_status, amount_paid')
         .eq('company_id', companyId)
         .is('deleted_at', null)
-        .neq('payment_status', 'deleted')
+        // (removed spurious `.neq('payment_status','deleted')` — 'deleted' is not a
+        //  payment_status_enum value → it errored the whole query; soft-delete is deleted_at)
         .gte('sale_date', windowFrom)
         .lte('sale_date', windowTo),
 
