@@ -340,8 +340,16 @@ export function OrdersContent(_props: Props) {
           {[1, 2, 3].map(i => <Skeleton key={i} height="h-16" />)}
         </div>
       ) : orders.length === 0 ? (
-        <div className="text-center py-12 text-[#94a3b8] text-sm">
-          Henüz satın alma siparişi yok.
+        <div className="flex flex-col items-center justify-center py-12 gap-3 text-center">
+          <div className="text-3xl opacity-50">📦</div>
+          <div className="text-sm text-[#64748b]">Henüz satın alma siparişi yok.</div>
+          {!showForm && (
+            <button
+              onClick={() => setShowForm(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-brand text-white text-xs font-semibold hover:bg-brand-light transition-colors">
+              + İlk siparişini oluştur
+            </button>
+          )}
         </div>
       ) : (
         <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft overflow-hidden shadow-sm">

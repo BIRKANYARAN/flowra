@@ -103,8 +103,14 @@ export function PartnersTab({
       {loading && <div className="flex flex-col gap-2"><Skeleton height="h-20" /><Skeleton height="h-20" /></div>}
 
       {!loading && !hasPartners && !fetchError && (
-        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-6 py-12 text-center">
-          <div className="text-xs text-[#94a3b8]">Henüz ortak eklenmemiş.</div>
+        <div className="bg-white border border-[#e8eaef] rounded-xl shadow-soft px-6 py-12 flex flex-col items-center gap-3 text-center">
+          <div className="text-3xl opacity-50">🤝</div>
+          <div className="text-sm text-[#64748b]">Henüz ortak eklenmemiş.</div>
+          <a
+            href="/dashboard/partners/new"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-brand text-white text-xs font-semibold hover:bg-brand-light transition-colors">
+            + İlk ortağını ekle
+          </a>
         </div>
       )}
 
