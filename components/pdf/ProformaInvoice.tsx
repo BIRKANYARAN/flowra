@@ -142,18 +142,24 @@ export function ProformaInvoice({
       {/* ── Accent stripe + document type ────────────────────────────────── */}
       <div className="bg-[#0f172a] px-8 py-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          {/* Company logo in stripe */}
+          {/* Company logo — shown on a clean white chip so ANY logo (dark,
+             light, or colored) reads correctly on the dark header band.
+             (Was force-inverted to white, which turned opaque-background logos
+             into a blank white box.) */}
           {settings?.logo_url ? (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img
-              src={settings.logo_url}
-              alt={settings.company_name || 'Logo'}
-              className="h-9 w-auto object-contain max-w-[140px]"
-              style={{ filter: 'brightness(0) invert(1)' }}
-            />
+            <div className="bg-white rounded-lg p-1.5 flex items-center justify-center shadow-sm">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={settings.logo_url}
+                alt={settings.company_name || 'Logo'}
+                className="h-8 w-auto object-contain max-w-[120px]"
+              />
+            </div>
           ) : (
-            <div className="text-white font-black text-xl tracking-wide">
-              {settings?.company_name?.slice(0, 2).toUpperCase() || 'FL'}
+            <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center">
+              <span className="text-white font-black text-lg tracking-wide">
+                {settings?.company_name?.slice(0, 2).toUpperCase() || 'FL'}
+              </span>
             </div>
           )}
           {settings?.company_name && (
