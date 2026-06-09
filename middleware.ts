@@ -59,7 +59,7 @@ const DASHBOARD_REDIRECTS: Record<string, string> = {
   '/dashboard/catalog':     '/dashboard/operations?tab=catalog',
   '/dashboard/products':    '/dashboard/operations?tab=catalog',
   '/dashboard/stocks':      '/dashboard/operations?tab=stock',
-  // NOTE: /dashboard/orders is now a real page — redirect removed (Faz 14)
+  '/dashboard/orders':      '/dashboard/operations?tab=orders',  // standalone OrdersClient was an unlinked duplicate of the Operations Siparişler tab → canonical hub
   '/dashboard/simulation':  '/dashboard/planning?tab=unit-profit',
   '/dashboard/tasks':       '/dashboard/planning?tab=tasks',
   // Legacy pages retired — redirect to canonical equivalents
