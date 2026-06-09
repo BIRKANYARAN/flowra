@@ -221,16 +221,16 @@ export function CommandBar() {
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-[13vh] px-4">
 
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/20 backdrop-blur-[2px]" onClick={close} />
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" onClick={close} />
 
       {/* Panel */}
       <div
-        className="relative w-full max-w-[560px] bg-white rounded border border-[#e8eaef] shadow-[0_24px_48px_rgba(17,24,39,0.18),0_8px_16px_rgba(17,24,39,0.08)] overflow-hidden"
+        className="relative w-full max-w-[560px] bg-[#0f172a] rounded-xl border border-white/10 shadow-[0_24px_48px_rgba(17,24,39,0.18),0_8px_16px_rgba(17,24,39,0.08)] overflow-hidden"
         style={{ maxHeight: '74vh' }}
       >
         {/* ── Search row ────────────────────────────────────────────────────── */}
-        <div className="flex items-center gap-3 px-4 py-3.5 border-b border-[#e8eaef]">
-          <svg className="w-4 h-4 text-[#94a3b8] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <div className="flex items-center gap-3 px-4 py-3.5 border-b border-white/10">
+          <svg className="w-4 h-4 text-white/40 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
           <input
@@ -239,12 +239,12 @@ export function CommandBar() {
             onChange={e => { setQuery(e.target.value); setSel(0) }}
             onKeyDown={onKeyDown}
             placeholder="Operasyon ara veya komut gir..."
-            className="flex-1 text-[13px] text-[#0f172a] placeholder:text-[#94a3b8] bg-transparent outline-none"
+            className="flex-1 text-[13px] text-white placeholder:text-white/40 bg-transparent outline-none"
           />
           {smartLoading && (
             <span className="w-3 h-3 rounded-full border-2 border-brand border-t-transparent animate-spin flex-shrink-0" />
           )}
-          <kbd className="text-[9px] text-[#94a3b8] bg-[#f1f5f9] border border-[#e8eaef] px-1.5 py-0.5 rounded font-mono leading-tight flex-shrink-0">
+          <kbd className="text-[9px] text-white/40 bg-white/5 border border-white/10 px-1.5 py-0.5 rounded font-mono leading-tight flex-shrink-0">
             ESC
           </kbd>
         </div>
@@ -253,7 +253,7 @@ export function CommandBar() {
         <div className="overflow-y-auto" style={{ maxHeight: 'calc(74vh - 56px)' }}>
           {filtered.length === 0 ? (
             <div className="px-4 py-10 text-center">
-              <div className="text-sm text-[#94a3b8]">"{query}" için operasyon bulunamadı</div>
+              <div className="text-sm text-white/40">"{query}" için operasyon bulunamadı</div>
             </div>
           ) : (
             <div className="py-2">
@@ -263,11 +263,11 @@ export function CommandBar() {
                   <div className={`px-4 pt-3 pb-1 flex items-center gap-2 ${
                     grp.name === 'Akıllı Öneriler' ? 'pt-2' : ''
                   }`}>
-                    <span className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">
+                    <span className="text-[9px] font-black uppercase tracking-widest text-white/40">
                       {grp.name}
                     </span>
                     {grp.name === 'Akıllı Öneriler' && (
-                      <span className="text-[8px] font-bold bg-brand-subtle text-brand px-1.5 py-0.5 rounded">
+                      <span className="text-[8px] font-bold bg-brand/25 text-brand-light px-1.5 py-0.5 rounded">
                         CANLI
                       </span>
                     )}
@@ -278,10 +278,10 @@ export function CommandBar() {
                     const isSelected = sel === flatIdx
                     const iconEl =
                       cmd.kind === 'smart'  ? <span className="text-brand-light text-xs">⚡</span> :
-                      cmd.kind === 'op'     ? <span className="text-[#64748b] text-[10px] font-black">▶</span> :
+                      cmd.kind === 'op'     ? <span className="text-white/50 text-[10px] font-black">▶</span> :
                       cmd.kind === 'create' ? <span className="text-pos text-sm font-black leading-none">+</span> :
                       cmd.kind === 'nav'    ? <span className="text-brand text-[9px] font-black">◆</span> :
-                                             <span className="text-[#94a3b8] text-xs">→</span>
+                                             <span className="text-white/40 text-xs">→</span>
                     return (
                       <button
                         key={cmd.id}
@@ -290,14 +290,14 @@ export function CommandBar() {
                         className={[
                           'relative w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors',
                           isSelected
-                            ? cmd.kind === 'smart' ? 'bg-brand-subtle/30' : 'bg-[#f8fafc]'
+                            ? cmd.kind === 'smart' ? 'bg-brand/15' : 'bg-white/[0.06]'
                             : '',
                         ].join(' ')}
                       >
                         {/* Left accent */}
                         {isSelected && (
                           <span className={`absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full ${
-                            cmd.kind === 'smart' ? 'bg-brand' : 'bg-[#94a3b8]'
+                            cmd.kind === 'smart' ? 'bg-brand' : 'bg-white/30'
                           }`} />
                         )}
 
@@ -309,12 +309,12 @@ export function CommandBar() {
                         {/* Label + sub */}
                         <div className="flex-1 min-w-0">
                           <div className={`text-[13px] leading-tight truncate ${
-                            isSelected ? 'font-semibold text-[#0f172a]' : 'font-medium text-[#334155]'
+                            isSelected ? 'font-semibold text-white' : 'font-medium text-slate-300'
                           }`}>
                             {cmd.label}
                           </div>
                           {cmd.sub && (
-                            <div className="text-[11px] text-[#94a3b8] truncate mt-0.5">
+                            <div className="text-[11px] text-white/40 truncate mt-0.5">
                               {cmd.sub}
                             </div>
                           )}
@@ -322,7 +322,7 @@ export function CommandBar() {
 
                         {/* Enter hint */}
                         {isSelected && (
-                          <kbd className="flex-shrink-0 text-[9px] text-[#94a3b8] bg-[#f1f5f9] border border-[#e8eaef] px-1.5 py-0.5 rounded font-mono leading-tight">
+                          <kbd className="flex-shrink-0 text-[9px] text-white/40 bg-white/5 border border-white/10 px-1.5 py-0.5 rounded font-mono leading-tight">
                             ↵
                           </kbd>
                         )}
@@ -335,13 +335,13 @@ export function CommandBar() {
           )}
 
           {/* Footer */}
-          <div className="flex items-center justify-between px-4 py-2 border-t border-[#f1f5f9]">
+          <div className="flex items-center justify-between px-4 py-2 border-t border-white/10">
             <div className="flex items-center gap-3">
-              <span className="text-[9px] text-[#cbd5e1] font-mono">↑↓ seç</span>
-              <span className="text-[9px] text-[#cbd5e1] font-mono">↵ çalıştır</span>
-              <span className="text-[9px] text-[#cbd5e1] font-mono">ESC kapat</span>
+              <span className="text-[9px] text-white/30 font-mono">↑↓ seç</span>
+              <span className="text-[9px] text-white/30 font-mono">↵ çalıştır</span>
+              <span className="text-[9px] text-white/30 font-mono">ESC kapat</span>
             </div>
-            <span className="text-[9px] text-[#cbd5e1]">Flowra OS · ⌘K</span>
+            <span className="text-[9px] text-white/30">Flowra OS · ⌘K</span>
           </div>
         </div>
       </div>
