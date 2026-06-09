@@ -57,7 +57,7 @@ export function Sidebar({ navBadges = {} }: SidebarProps) {
   }
 
   return (
-    <aside className="hidden md:flex w-60 bg-white border-r border-[#e8eaef] h-screen sticky top-0 flex-col py-3 px-2 flex-shrink-0 overflow-y-auto">
+    <aside className="hidden md:flex w-60 bg-[#0f172a] text-slate-300 border-r border-white/[0.06] h-screen sticky top-0 flex-col py-3 px-2 flex-shrink-0 overflow-y-auto">
 
       {/* ── Brand ──────────────────────────────────────────────────────────── */}
       <div className="px-2.5 mb-3">
@@ -78,8 +78,8 @@ export function Sidebar({ navBadges = {} }: SidebarProps) {
               )}
             </div>
             <div className="min-w-0 flex-1">
-              <div className="font-black text-sm leading-tight truncate">{displayName}</div>
-              <div className="text-[10px] text-[#94a3b8] uppercase tracking-wide">
+              <div className="font-black text-sm leading-tight truncate text-white">{displayName}</div>
+              <div className="text-[10px] text-white/40 uppercase tracking-wide">
                 {hasMultiCompany ? `${companies.length} şirket ▾` : 'Flowra ERP'}
               </div>
             </div>
@@ -90,9 +90,9 @@ export function Sidebar({ navBadges = {} }: SidebarProps) {
 
         {/* ── Company switcher dropdown ──────────────────────────────────── */}
         {hasMultiCompany && showSwitcher && (
-          <div className="mt-2 rounded border border-[#e8eaef] bg-white shadow-sm overflow-hidden">
-            <div className="px-3 py-1.5 bg-[#f8fafc] border-b border-[#e8eaef]">
-              <span className="text-[0.65rem] font-black uppercase tracking-widest text-[#94a3b8]">
+          <div className="mt-2 rounded-lg border border-white/10 bg-[#1e293b] shadow-soft-lg overflow-hidden">
+            <div className="px-3 py-1.5 bg-white/5 border-b border-white/10">
+              <span className="text-[0.65rem] font-black uppercase tracking-widest text-white/50">
                 Şirket Seç
               </span>
             </div>
@@ -104,11 +104,11 @@ export function Sidebar({ navBadges = {} }: SidebarProps) {
                   onClick={() => { setShowSwitcher(false); if (!isActive) switchCompany(c.companyId) }}
                   className={`w-full text-left flex items-center gap-2 px-3 py-2 text-xs transition-colors ${
                     isActive
-                      ? 'bg-brand-subtle text-brand font-semibold'
-                      : 'text-[#64748b] hover:bg-[#f8fafc]'
+                      ? 'bg-brand/20 text-white font-semibold'
+                      : 'text-slate-300 hover:bg-white/5'
                   }`}
                 >
-                  <div className="w-5 h-5 rounded bg-brand-subtle flex items-center justify-center flex-shrink-0">
+                  <div className="w-5 h-5 rounded bg-brand/25 flex items-center justify-center flex-shrink-0">
                     <span className="text-[9px] font-black text-brand-light">
                       {(c.companyName ?? 'Ş').slice(0, 2).toUpperCase()}
                     </span>
@@ -127,15 +127,15 @@ export function Sidebar({ navBadges = {} }: SidebarProps) {
       {/* ── Command trigger ────────────────────────────────────────────────── */}
       <button
         onClick={() => window.dispatchEvent(new CustomEvent('flowra:cmd'))}
-        className="mx-1 mb-3 w-[calc(100%-0.5rem)] flex items-center gap-2 px-3 py-2 rounded border border-[#e8eaef] bg-[#f8fafc]/60 hover:bg-[#f1f5f9] hover:border-[#e8eaef] transition-colors text-left group"
+        className="mx-1 mb-3 w-[calc(100%-0.5rem)] flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 transition-colors text-left group"
       >
-        <svg className="w-3.5 h-3.5 text-[#94a3b8] flex-shrink-0 group-hover:text-[#64748b] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <svg className="w-3.5 h-3.5 text-white/40 flex-shrink-0 group-hover:text-white/70 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
-        <span className="text-[11px] text-[#94a3b8] flex-1 group-hover:text-[#64748b] transition-colors">
+        <span className="text-[11px] text-white/50 flex-1 group-hover:text-white/70 transition-colors">
           Ara veya komut gir...
         </span>
-        <kbd className="text-[9px] text-[#cbd5e1] bg-white border border-[#e8eaef] px-1.5 py-0.5 rounded font-mono leading-tight flex-shrink-0">
+        <kbd className="text-[9px] text-white/40 bg-white/5 border border-white/10 px-1.5 py-0.5 rounded font-mono leading-tight flex-shrink-0">
           ⌘K
         </kbd>
       </button>
@@ -156,7 +156,7 @@ export function Sidebar({ navBadges = {} }: SidebarProps) {
         {/* Ayarlar fallback — only for non-admin users */}
         {!isAdmin && (
           <>
-            <div className="my-1.5 mx-1 border-t border-[#e8eaef]" />
+            <div className="my-1.5 mx-1 border-t border-white/10" />
             <NavLink
               item={SETTINGS_FALLBACK}
               active={isNavItemActive(SETTINGS_FALLBACK, pathname, search)}
@@ -168,15 +168,15 @@ export function Sidebar({ navBadges = {} }: SidebarProps) {
       </nav>
 
       {/* ── User footer ────────────────────────────────────────────────────── */}
-      <div className="pt-3 border-t border-[#e8eaef] mt-3">
+      <div className="pt-3 border-t border-white/10 mt-3">
         <div className="flex items-center gap-2.5 px-3 py-1.5 mb-0.5">
-          <div className="w-7 h-7 rounded bg-brand-subtle flex items-center justify-center flex-shrink-0">
-            <span className="text-brand font-bold text-xs">{userInitials}</span>
+          <div className="w-7 h-7 rounded bg-brand/25 flex items-center justify-center flex-shrink-0">
+            <span className="text-brand-light font-bold text-xs">{userInitials}</span>
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-xs font-semibold text-[#1e293b] truncate">{userName}</div>
+            <div className="text-xs font-semibold text-white truncate">{userName}</div>
             <div className="flex items-center gap-1.5 mt-0.5">
-              <div className="text-[10px] text-[#94a3b8] truncate">{userEmail}</div>
+              <div className="text-[10px] text-white/40 truncate">{userEmail}</div>
               {userRole && <RoleBadge role={userRole} />}
             </div>
           </div>
@@ -184,7 +184,7 @@ export function Sidebar({ navBadges = {} }: SidebarProps) {
 
         <button
           onClick={logout}
-          className="w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-xs text-[#94a3b8] hover:bg-[#f8fafc] hover:text-[#64748b] transition-colors"
+          className="w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-xs text-white/50 hover:bg-white/5 hover:text-white transition-colors"
         >
           <Icon name="logout" size={13} className="flex-shrink-0" />
           Çıkış Yap
@@ -213,7 +213,7 @@ function NavGroupBlock({
     <div className={isFirst ? '' : 'mt-2'}>
       {group.label && (
         <div className="px-3 pt-1.5 pb-0.5">
-          <span className="text-[9px] font-black uppercase tracking-[0.12em] text-[#94a3b8]">
+          <span className="text-[9px] font-black uppercase tracking-[0.12em] text-white/35">
             {group.label}
           </span>
         </div>
@@ -257,10 +257,10 @@ function NavLink({
           transition-all duration-150 ease-out
           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50 focus-visible:ring-inset
           ${active
-            ? 'bg-brand-subtle text-brand font-semibold'
+            ? 'bg-brand/20 text-white font-semibold'
             : childActive
-              ? 'text-[#1e293b] font-medium hover:bg-[#f1f5f9]'
-              : 'text-[#64748b] hover:bg-[#f1f5f9] hover:text-[#1e293b] hover:translate-x-px'
+              ? 'text-white font-medium hover:bg-white/[0.06]'
+              : 'text-slate-300 hover:bg-white/[0.06] hover:text-white hover:translate-x-px'
           }
         `}
       >
@@ -274,12 +274,12 @@ function NavLink({
           name={item.icon}
           size={13}
           strokeWidth={active || childActive ? 2 : 1.5}
-          className={`flex-shrink-0 transition-colors ${active ? 'text-brand' : 'text-[#94a3b8] group-hover/nav:text-[#64748b]'}`}
+          className={`flex-shrink-0 transition-colors ${active ? 'text-brand-light' : 'text-slate-400 group-hover/nav:text-white'}`}
         />
         <span className="truncate">{item.label}</span>
         {badge !== undefined && badge > 0 && (
           <span className={`ml-auto min-w-[18px] text-center text-[10px] font-bold px-1.5 py-0.5 rounded ${
-            active ? 'bg-brand/15 text-brand' : 'bg-neg-light text-white'
+            active ? 'bg-brand/30 text-white' : 'bg-neg-light text-white'
           }`}>
             {badge > 99 ? '99+' : badge}
           </span>
@@ -288,7 +288,7 @@ function NavLink({
 
       {/* Sub-items — always visible when parent has children */}
       {item.children && item.children.length > 0 && (
-        <div className={`ml-3 mt-0.5 pl-3 border-l space-y-0.5 transition-colors ${childActive ? 'border-brand-light/40' : 'border-[#e8eaef]'}`}>
+        <div className={`ml-3 mt-0.5 pl-3 border-l space-y-0.5 transition-colors ${childActive ? 'border-brand-light/40' : 'border-white/10'}`}>
           {item.children.map(child => {
             const childIsActive = isNavItemActive(child, pathname)
             return (
@@ -300,8 +300,8 @@ function NavLink({
                   group/sub relative flex items-center gap-2 px-2 py-1.5 rounded-md text-[11px]
                   transition-all duration-150 ease-out
                   ${childIsActive
-                    ? 'bg-brand-subtle text-brand font-semibold'
-                    : 'text-[#64748b] hover:bg-[#f1f5f9] hover:text-[#1e293b] hover:translate-x-px'
+                    ? 'bg-brand/20 text-white font-semibold'
+                    : 'text-slate-400 hover:bg-white/[0.06] hover:text-white hover:translate-x-px'
                   }
                 `}
               >
@@ -315,7 +315,7 @@ function NavLink({
                   name={child.icon}
                   size={11}
                   strokeWidth={childIsActive ? 2 : 1.5}
-                  className={`flex-shrink-0 transition-colors ${childIsActive ? 'text-brand' : 'text-[#94a3b8] group-hover/sub:text-[#64748b]'}`}
+                  className={`flex-shrink-0 transition-colors ${childIsActive ? 'text-brand-light' : 'text-slate-500 group-hover/sub:text-white'}`}
                 />
                 <span className="truncate">{child.label}</span>
               </Link>
