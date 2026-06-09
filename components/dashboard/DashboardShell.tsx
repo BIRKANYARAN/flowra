@@ -25,7 +25,7 @@ export function DashboardShell({
   return (
     <div className="flex flex-col gap-3 lg:h-[calc(100dvh-68px)] lg:overflow-hidden">
       {/* Title band */}
-      <header className="flex items-center justify-between gap-3 shrink-0">
+      <header className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 shrink-0">
         <div className="flex items-center gap-2.5 min-w-0">
           <h1 className="text-lg font-black text-[#0f172a] truncate">{title}</h1>
           {badge}
