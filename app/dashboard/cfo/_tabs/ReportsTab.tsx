@@ -14,6 +14,7 @@
 //   - Empty state when no pack has been created yet
 
 import { useState }    from 'react'
+import Link            from 'next/link'
 import {
   REPORT_ORDER,
   computePackProgress,
@@ -159,6 +160,19 @@ export default function ReportsTab() {
           </button>
         </div>
       </div>
+
+      {/* ── Formatted statements & exports — surfaces the (previously orphaned)
+             /dashboard/reports hub from its canonical home in Finance ───────── */}
+      <Link
+        href="/dashboard/reports"
+        className="flex items-center justify-between gap-3 rounded-xl border border-[#e8eaef] bg-white shadow-soft px-4 py-3 hover:border-brand-subtle hover:bg-[#f8fafc] transition-colors group"
+      >
+        <div className="min-w-0">
+          <div className="text-sm font-bold text-[#0f172a]">Biçimli Tablolar & Dışa Aktarım</div>
+          <div className="text-[11px] text-[#64748b] mt-0.5">Gelir Tablosu · Bilanço · Nakit Akışı · Yönetici Özeti · CSV/Excel dışa aktarım</div>
+        </div>
+        <span className="text-sm font-semibold text-brand-light group-hover:text-brand shrink-0">Aç →</span>
+      </Link>
 
       {/* ── Error banner ────────────────────────────────────────────────────── */}
       {error && (
