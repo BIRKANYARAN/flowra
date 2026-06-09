@@ -32,9 +32,9 @@ import {
 const STATUS_BADGE: Record<StepStatus, { label: string; className: string }> = {
   pass:    { label: 'Geçti',    className: 'bg-green-100 text-green-800 border border-green-200' },
   fail:    { label: 'Başarısız', className: 'bg-red-100 text-red-800 border border-red-200' },
-  pending: { label: 'Bekliyor', className: 'bg-gray-100 text-gray-600 border border-gray-200' },
+  pending: { label: 'Bekliyor', className: 'bg-[#f1f5f9] text-[#475569] border border-[#e8eaef]' },
   manual:  { label: 'Manuel',   className: 'bg-yellow-100 text-yellow-800 border border-yellow-200' },
-  skipped: { label: 'Atlandı',  className: 'bg-gray-100 text-gray-400 border border-gray-200' },
+  skipped: { label: 'Atlandı',  className: 'bg-[#f1f5f9] text-[#94a3b8] border border-[#e8eaef]' },
 }
 
 const STATUS_ICON: Record<StepStatus, string> = {
@@ -58,9 +58,9 @@ function StatusBadge({ status }: { status: StepStatus }) {
 
 function ProgressBar({ pct }: { pct: number }) {
   return (
-    <div className="w-full bg-gray-200 rounded-full h-2">
+    <div className="w-full bg-[#e8eaef] rounded-full h-2">
       <div
-        className="bg-blue-600 h-2 rounded-full transition-all duration-500"
+        className="bg-info h-2 rounded-full transition-all duration-500"
         style={{ width: `${Math.min(100, pct)}%` }}
       />
     </div>
@@ -70,14 +70,14 @@ function ProgressBar({ pct }: { pct: number }) {
 // ── Period status chip ─────────────────────────────────────────────────────────
 
 const PERIOD_STATUS_CHIP: Record<string, { label: string; className: string }> = {
-  open:      { label: 'Açık',   className: 'bg-blue-100 text-blue-800' },
+  open:      { label: 'Açık',   className: 'bg-info-light text-info-text' },
   pre_close: { label: 'Ön Kapanış', className: 'bg-orange-100 text-orange-800' },
-  closed:    { label: 'Kapalı', className: 'bg-gray-200 text-gray-700' },
+  closed:    { label: 'Kapalı', className: 'bg-[#e8eaef] text-[#334155]' },
   locked:    { label: 'Kilitli', className: 'bg-red-100 text-red-800' },
 }
 
 function PeriodStatusChip({ status }: { status: string }) {
-  const { label, className } = PERIOD_STATUS_CHIP[status] ?? { label: status, className: 'bg-gray-100 text-gray-600' }
+  const { label, className } = PERIOD_STATUS_CHIP[status] ?? { label: status, className: 'bg-[#f1f5f9] text-[#475569]' }
   return (
     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium ${className}`}>
       {label}
@@ -98,31 +98,31 @@ function StepRow({ step, onAcknowledge, acknowledging }: StepRowProps) {
   const iconColor: Record<StepStatus, string> = {
     pass:    'text-green-600',
     fail:    'text-red-600',
-    pending: 'text-gray-400',
+    pending: 'text-[#94a3b8]',
     manual:  'text-yellow-600',
-    skipped: 'text-gray-300',
+    skipped: 'text-[#cbd5e1]',
   }
 
   return (
-    <div className="flex items-start gap-3 py-3 border-b border-gray-100 last:border-0">
+    <div className="flex items-start gap-3 py-3 border-b border-[#f1f5f9] last:border-0">
       <span className={`mt-0.5 text-lg font-bold w-5 text-center flex-shrink-0 ${iconColor[step.status]}`}>
         {icon}
       </span>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm font-medium text-gray-900">{step.label}</span>
+          <span className="text-sm font-medium text-[#0f172a]">{step.label}</span>
           <StatusBadge status={step.status} />
-          <span className="text-xs text-gray-400">
+          <span className="text-xs text-[#94a3b8]">
             {step.is_auto ? '[Otomatik]' : '[Manuel]'}
           </span>
         </div>
         {step.detail && (
-          <p className="mt-0.5 text-xs text-gray-500 leading-relaxed">{step.detail}</p>
+          <p className="mt-0.5 text-xs text-[#64748b] leading-relaxed">{step.detail}</p>
         )}
         {step.action_href && step.action_label && step.status === 'fail' && (
           <a
             href={step.action_href}
-            className="mt-1 inline-flex items-center text-xs text-blue-600 hover:text-blue-800 underline"
+            className="mt-1 inline-flex items-center text-xs text-info-text hover:text-info-text underline"
           >
             {step.action_label} →
           </a>
@@ -159,7 +159,7 @@ function PhaseAccordion({ phase, isLocked, onAcknowledge, acknowledging }: Phase
     ? 'bg-green-50 border-green-200'
     : phase.blocking_failures > 0
     ? 'bg-red-50 border-red-200'
-    : 'bg-white border-gray-200'
+    : 'bg-white border-[#e8eaef]'
 
   const completionLabel = `${phase.passed_steps}/${phase.total_steps} tamamlandı`
 
@@ -172,14 +172,14 @@ function PhaseAccordion({ phase, isLocked, onAcknowledge, acknowledging }: Phase
         aria-expanded={open}
       >
         <div className="flex items-center gap-2">
-          <span className="text-base font-semibold text-gray-900">
+          <span className="text-base font-semibold text-[#0f172a]">
             Faz {phase.phase}: {phase.label}
           </span>
-          <span className="text-sm text-gray-500">({completionLabel})</span>
+          <span className="text-sm text-[#64748b]">({completionLabel})</span>
           {phase.is_complete && <span className="text-green-600 font-bold">✓</span>}
-          {isLocked && <span className="text-gray-400 text-xs ml-2">— önceki fazlar tamamlanmadan açılmaz</span>}
+          {isLocked && <span className="text-[#94a3b8] text-xs ml-2">— önceki fazlar tamamlanmadan açılmaz</span>}
         </div>
-        <span className="text-gray-400 text-sm">{open ? '▲' : '▼'}</span>
+        <span className="text-[#94a3b8] text-sm">{open ? '▲' : '▼'}</span>
       </button>
       {open && !isLocked && (
         <div className="px-4 py-1 bg-white">
@@ -213,12 +213,12 @@ function ConfirmDialog({ title, body, confirmLabel, onConfirm, onCancel, loading
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
       <div className="bg-white rounded-xl shadow-xl p-6 max-w-md w-full mx-4">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
-        <p className="text-sm text-gray-600 mb-6">{body}</p>
+        <h3 className="text-lg font-semibold text-[#0f172a] mb-2">{title}</h3>
+        <p className="text-sm text-[#475569] mb-6">{body}</p>
         <div className="flex gap-3 justify-end">
           <button
             onClick={onCancel}
-            className="px-4 py-2 text-sm font-medium rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
+            className="px-4 py-2 text-sm font-medium rounded-md border border-[#e8eaef] text-[#334155] hover:bg-[#f8fafc]"
           >
             Vazgeç
           </button>
@@ -228,7 +228,7 @@ function ConfirmDialog({ title, body, confirmLabel, onConfirm, onCancel, loading
             className={`px-4 py-2 text-sm font-medium rounded-md text-white disabled:opacity-50 transition-colors ${
               danger
                 ? 'bg-red-600 hover:bg-red-700'
-                : 'bg-blue-600 hover:bg-blue-700'
+                : 'bg-info hover:bg-info'
             }`}
           >
             {loading ? 'Lütfen bekleyin…' : confirmLabel}
@@ -365,7 +365,7 @@ export function PeriodCloseTab() {
 
   if (loading && !state) {
     return (
-      <div className="flex items-center justify-center py-20 text-gray-500 text-sm">
+      <div className="flex items-center justify-center py-20 text-[#64748b] text-sm">
         Wizard yükleniyor…
       </div>
     )
@@ -377,7 +377,7 @@ export function PeriodCloseTab() {
         <p className="text-red-600 text-sm">{error}</p>
         <button
           onClick={fetchWizard}
-          className="px-4 py-2 text-sm rounded-md bg-blue-600 text-white hover:bg-blue-700"
+          className="px-4 py-2 text-sm rounded-md bg-info text-white hover:bg-info"
         >
           Tekrar Dene
         </button>
@@ -389,15 +389,15 @@ export function PeriodCloseTab() {
     <div className="space-y-6">
       {/* ── Period header ─────────────────────────────────────────────────────── */}
       {state && (
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
+        <div className="bg-white rounded-xl border border-[#e8eaef] p-5">
           <div className="flex items-center justify-between flex-wrap gap-3 mb-3">
             <div className="flex items-center gap-3">
-              <h2 className="text-xl font-bold text-gray-900">
+              <h2 className="text-xl font-bold text-[#0f172a]">
                 {state.period_label}
               </h2>
               <PeriodStatusChip status={state.period_status} />
             </div>
-            <div className="flex items-center gap-3 text-sm text-gray-500">
+            <div className="flex items-center gap-3 text-sm text-[#64748b]">
               <span>{counts.pass} geçti</span>
               <span>·</span>
               <span>{counts.fail} başarısız</span>
@@ -409,11 +409,11 @@ export function PeriodCloseTab() {
             <div className="flex-1">
               <ProgressBar pct={state.overall_pct} />
             </div>
-            <span className="text-sm font-semibold text-gray-700 whitespace-nowrap">
+            <span className="text-sm font-semibold text-[#334155] whitespace-nowrap">
               %{state.overall_pct}
             </span>
             {estMin > 0 && (
-              <span className="text-sm text-gray-500 whitespace-nowrap">
+              <span className="text-sm text-[#64748b] whitespace-nowrap">
                 · Tahmini {estMin} dk kaldı
               </span>
             )}
@@ -445,7 +445,7 @@ export function PeriodCloseTab() {
       )}
 
       {/* ── Action bar ────────────────────────────────────────────────────────── */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5">
+      <div className="bg-white rounded-xl border border-[#e8eaef] p-5">
         {actionError && (
           <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-md text-sm text-red-700">
             {actionError}
@@ -465,7 +465,7 @@ export function PeriodCloseTab() {
           <button
             onClick={fetchWizard}
             disabled={loading}
-            className="px-4 py-2 text-sm font-medium rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors"
+            className="px-4 py-2 text-sm font-medium rounded-md border border-[#e8eaef] text-[#334155] hover:bg-[#f8fafc] disabled:opacity-50 transition-colors"
           >
             {loading ? 'Yükleniyor…' : 'Kontrolleri Yenile'}
           </button>
@@ -475,7 +475,7 @@ export function PeriodCloseTab() {
               onClick={() => setShowCloseDialog(true)}
               disabled={!canClose || isLocked}
               title={blockerMsg ?? undefined}
-              className="px-4 py-2 text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="px-4 py-2 text-sm font-medium rounded-md bg-info text-white hover:bg-info disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               Dönemi Kapat ▶
             </button>
@@ -491,19 +491,19 @@ export function PeriodCloseTab() {
           )}
 
           {isLocked && (
-            <span className="text-sm text-gray-400 italic">Bu dönem kilitlidir — değişiklik yapılamaz.</span>
+            <span className="text-sm text-[#94a3b8] italic">Bu dönem kilitlidir — değişiklik yapılamaz.</span>
           )}
         </div>
 
         {/* Cross-navigation links */}
-        <div className="mt-4 pt-4 border-t border-gray-100 flex gap-4 flex-wrap text-sm">
-          <a href="/dashboard/cfo/trial-balance" className="text-blue-600 hover:underline">
+        <div className="mt-4 pt-4 border-t border-[#f1f5f9] flex gap-4 flex-wrap text-sm">
+          <a href="/dashboard/cfo/trial-balance" className="text-info-text hover:underline">
             Mizan →
           </a>
-          <a href="/dashboard/cfo/bank-reconciliation" className="text-blue-600 hover:underline">
+          <a href="/dashboard/cfo/bank-reconciliation" className="text-info-text hover:underline">
             Banka Mutabakatı →
           </a>
-          <a href="/dashboard/cfo/journal-entries" className="text-blue-600 hover:underline">
+          <a href="/dashboard/cfo/journal-entries" className="text-info-text hover:underline">
             Journal Kayıtları →
           </a>
         </div>

@@ -11,10 +11,10 @@ import {
 
 // ── Color coding ──────────────────────────────────────────────────────────────
 const RESOLUTION_STATUS_COLORS: Record<string, string> = {
-  draft:       'bg-gray-50    text-gray-700   border-gray-200',
+  draft:       'bg-[#f8fafc]    text-[#334155]   border-[#e8eaef]',
   approved:    'bg-green-50   text-green-700  border-green-200',
   rejected:    'bg-red-50     text-red-700    border-red-200',
-  implemented: 'bg-violet-50  text-violet-700 border-violet-200',
+  implemented: 'bg-brand-subtle  text-brand border-brand-subtle',
 }
 
 function fmtDate(d: string) {
@@ -31,12 +31,12 @@ function VotingBar({ outcome }: { outcome: VotingOutcome }) {
 
   return (
     <div className="space-y-1.5">
-      <div className="flex h-2 w-full overflow-hidden rounded-full bg-gray-100">
+      <div className="flex h-2 w-full overflow-hidden rounded-full bg-[#f1f5f9]">
         {inFavorPct  > 0 && <div style={{ width: `${inFavorPct}%`  }} className="bg-green-500" />}
         {againstPct  > 0 && <div style={{ width: `${againstPct}%` }} className="bg-red-400" />}
-        {abstainPct  > 0 && <div style={{ width: `${abstainPct}%` }} className="bg-gray-300" />}
+        {abstainPct  > 0 && <div style={{ width: `${abstainPct}%` }} className="bg-[#cbd5e1]" />}
       </div>
-      <div className="flex items-center gap-3 text-xs text-gray-500">
+      <div className="flex items-center gap-3 text-xs text-[#64748b]">
         <span className="flex items-center gap-1">
           <span className="inline-block h-2 w-2 rounded-full bg-green-500" />
           Kabul: {outcome.in_favor}
@@ -46,7 +46,7 @@ function VotingBar({ outcome }: { outcome: VotingOutcome }) {
           Red: {outcome.against}
         </span>
         <span className="flex items-center gap-1">
-          <span className="inline-block h-2 w-2 rounded-full bg-gray-300" />
+          <span className="inline-block h-2 w-2 rounded-full bg-[#cbd5e1]" />
           Çekimser: {outcome.abstained}
         </span>
         <span className="ml-auto font-medium">
@@ -113,7 +113,7 @@ function ApproveForm({ resolutionId, onDone, onCancel }: ApproveFormProps) {
       <div className="grid grid-cols-4 gap-2">
         {([['total', 'Toplam'], ['in_favor', 'Kabul'], ['against', 'Red'], ['abstained', 'Çekimser']] as const).map(([key, label]) => (
           <div key={key}>
-            <label className="text-xs text-gray-500 mb-0.5 block">{label}</label>
+            <label className="text-xs text-[#64748b] mb-0.5 block">{label}</label>
             <input
               type="number" min="0"
               className="w-full border rounded px-2 py-1 text-sm"
@@ -130,7 +130,7 @@ function ApproveForm({ resolutionId, onDone, onCancel }: ApproveFormProps) {
         >
           {saving ? 'Onaylanıyor…' : 'Onayla'}
         </button>
-        <button onClick={onCancel} className="text-xs text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-100">
+        <button onClick={onCancel} className="text-xs text-[#475569] px-3 py-1.5 rounded-lg hover:bg-[#f1f5f9]">
           İptal
         </button>
       </div>
@@ -171,8 +171,8 @@ function ImplementForm({ resolutionId, onDone, onCancel }: ImplementFormProps) {
   }
 
   return (
-    <div className="border border-violet-200 rounded-xl p-3 bg-violet-50 space-y-2">
-      <p className="text-xs font-medium text-violet-800">Uygulama Notları (opsiyonel)</p>
+    <div className="border border-brand-subtle rounded-xl p-3 bg-brand-subtle space-y-2">
+      <p className="text-xs font-medium text-brand">Uygulama Notları (opsiyonel)</p>
       {err && <p className="text-xs text-red-600">{err}</p>}
       <textarea
         className="w-full border rounded-lg px-3 py-1.5 text-sm" rows={2}
@@ -183,11 +183,11 @@ function ImplementForm({ resolutionId, onDone, onCancel }: ImplementFormProps) {
       <div className="flex gap-2 pt-1">
         <button
           onClick={submit} disabled={saving}
-          className="text-xs bg-violet-600 text-white px-3 py-1.5 rounded-lg hover:bg-violet-700 disabled:opacity-50"
+          className="text-xs bg-brand-light text-white px-3 py-1.5 rounded-lg hover:bg-brand disabled:opacity-50"
         >
           {saving ? 'Uygulanıyor…' : 'Uygula'}
         </button>
-        <button onClick={onCancel} className="text-xs text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-100">
+        <button onClick={onCancel} className="text-xs text-[#475569] px-3 py-1.5 rounded-lg hover:bg-[#f1f5f9]">
           İptal
         </button>
       </div>
@@ -230,17 +230,17 @@ function NewResolutionForm({ onDone, onCancel }: NewResolutionFormProps) {
   }
 
   return (
-    <div className="border border-violet-200 rounded-xl p-4 bg-violet-50 space-y-3">
-      <h3 className="text-sm font-medium text-violet-900">Yeni Karar Taslağı</h3>
+    <div className="border border-brand-subtle rounded-xl p-4 bg-brand-subtle space-y-3">
+      <h3 className="text-sm font-medium text-brand">Yeni Karar Taslağı</h3>
       <div className="grid grid-cols-2 gap-3">
         <div className="col-span-2">
-          <label className="text-xs text-gray-600 mb-1 block">Başlık *</label>
+          <label className="text-xs text-[#475569] mb-1 block">Başlık *</label>
           <input className="w-full border rounded-lg px-3 py-1.5 text-sm" value={form.title}
             onChange={e => setForm(p => ({ ...p, title: e.target.value }))}
             placeholder="Ör: 2024 Yılı Temettü Dağıtımı Kararı" />
         </div>
         <div>
-          <label className="text-xs text-gray-600 mb-1 block">Karar Türü *</label>
+          <label className="text-xs text-[#475569] mb-1 block">Karar Türü *</label>
           <select className="w-full border rounded-lg px-3 py-1.5 text-sm" value={form.resolution_type}
             onChange={e => setForm(p => ({ ...p, resolution_type: e.target.value }))}>
             <option value="board">Yönetim Kurulu Kararı</option>
@@ -249,22 +249,22 @@ function NewResolutionForm({ onDone, onCancel }: NewResolutionFormProps) {
           </select>
         </div>
         <div>
-          <label className="text-xs text-gray-600 mb-1 block">Karar Tarihi *</label>
+          <label className="text-xs text-[#475569] mb-1 block">Karar Tarihi *</label>
           <input type="date" className="w-full border rounded-lg px-3 py-1.5 text-sm" value={form.resolution_date}
             onChange={e => setForm(p => ({ ...p, resolution_date: e.target.value }))} />
         </div>
         <div className="col-span-2">
-          <label className="text-xs text-gray-600 mb-1 block">Karar Metni *</label>
+          <label className="text-xs text-[#475569] mb-1 block">Karar Metni *</label>
           <textarea className="w-full border rounded-lg px-3 py-1.5 text-sm" rows={3} value={form.description}
             onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
             placeholder="Karar metnini girin…" />
         </div>
         <div className="col-span-2">
-          <p className="text-xs text-gray-600 mb-2 font-medium">Oy Sonuçları (opsiyonel)</p>
+          <p className="text-xs text-[#475569] mb-2 font-medium">Oy Sonuçları (opsiyonel)</p>
           <div className="grid grid-cols-4 gap-2">
             {([['votes_total', 'Toplam'], ['votes_in_favor', 'Kabul'], ['votes_against', 'Red'], ['votes_abstained', 'Çekimser']] as const).map(([key, label]) => (
               <div key={key}>
-                <label className="text-xs text-gray-500 mb-1 block">{label}</label>
+                <label className="text-xs text-[#64748b] mb-1 block">{label}</label>
                 <input type="number" min="0" className="w-full border rounded-lg px-2 py-1.5 text-sm"
                   value={form[key as keyof typeof form]}
                   onChange={e => setForm(p => ({ ...p, [key]: e.target.value }))} />
@@ -275,10 +275,10 @@ function NewResolutionForm({ onDone, onCancel }: NewResolutionFormProps) {
       </div>
       <div className="flex gap-2 pt-1">
         <button onClick={submit} disabled={saving}
-          className="text-xs bg-violet-600 text-white px-4 py-1.5 rounded-lg hover:bg-violet-700 disabled:opacity-50">
+          className="text-xs bg-brand-light text-white px-4 py-1.5 rounded-lg hover:bg-brand disabled:opacity-50">
           {saving ? 'Kaydediliyor…' : 'Taslak Olarak Kaydet'}
         </button>
-        <button onClick={onCancel} className="text-xs text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-100">
+        <button onClick={onCancel} className="text-xs text-[#475569] px-3 py-1.5 rounded-lg hover:bg-[#f1f5f9]">
           İptal
         </button>
       </div>
@@ -316,27 +316,27 @@ function ResolutionCard({ res, expanded, onToggle, onRefresh }: ResolutionCardPr
   }
 
   return (
-    <div className="border border-gray-200 rounded-xl bg-white overflow-hidden">
+    <div className="border border-[#e8eaef] rounded-xl bg-white overflow-hidden">
       <div
-        className="flex items-start justify-between gap-3 p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+        className="flex items-start justify-between gap-3 p-4 cursor-pointer hover:bg-[#f8fafc] transition-colors"
         onClick={onToggle}
       >
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs font-mono text-gray-500">{res.resolution_number}</span>
-            <span className={cn('text-xs px-2 py-0.5 rounded border font-medium', RESOLUTION_STATUS_COLORS[res.status] ?? 'bg-gray-100 text-gray-600')}>
+            <span className="text-xs font-mono text-[#64748b]">{res.resolution_number}</span>
+            <span className={cn('text-xs px-2 py-0.5 rounded border font-medium', RESOLUTION_STATUS_COLORS[res.status] ?? 'bg-[#f1f5f9] text-[#475569]')}>
               {RESOLUTION_STATUS_LABELS[res.status] ?? res.status}
             </span>
-            <span className="text-xs text-gray-400">
+            <span className="text-xs text-[#94a3b8]">
               {res.resolution_type === 'board' ? 'YK Kararı' : res.resolution_type === 'general_meeting' ? 'GK Kararı' : 'Sirkülasyon'}
             </span>
           </div>
-          <p className="text-sm font-medium text-gray-900 mt-1">{res.title}</p>
+          <p className="text-sm font-medium text-[#0f172a] mt-1">{res.title}</p>
         </div>
         <div className="shrink-0 text-right">
-          <p className="text-xs text-gray-500">{fmtDate(res.resolution_date)}</p>
+          <p className="text-xs text-[#64748b]">{fmtDate(res.resolution_date)}</p>
           {res.voting_outcome && (
-            <p className="text-xs text-gray-400 mt-0.5">
+            <p className="text-xs text-[#94a3b8] mt-0.5">
               {res.voting_outcome.in_favor}/{res.voting_outcome.total} kabul
             </p>
           )}
@@ -344,8 +344,8 @@ function ResolutionCard({ res, expanded, onToggle, onRefresh }: ResolutionCardPr
       </div>
 
       {expanded && (
-        <div className="border-t border-gray-100 p-4 space-y-3">
-          <p className="text-sm text-gray-700 whitespace-pre-wrap">{res.description}</p>
+        <div className="border-t border-[#f1f5f9] p-4 space-y-3">
+          <p className="text-sm text-[#334155] whitespace-pre-wrap">{res.description}</p>
 
           {res.voting_outcome && <VotingBar outcome={res.voting_outcome} />}
 
@@ -371,7 +371,7 @@ function ResolutionCard({ res, expanded, onToggle, onRefresh }: ResolutionCardPr
           {res.status === 'approved' && panel === null && (
             <button
               onClick={() => setPanel('implement')}
-              className="text-xs bg-violet-600 text-white px-3 py-1.5 rounded-lg hover:bg-violet-700"
+              className="text-xs bg-brand-light text-white px-3 py-1.5 rounded-lg hover:bg-brand"
             >
               Uygula
             </button>
@@ -395,7 +395,7 @@ function ResolutionCard({ res, expanded, onToggle, onRefresh }: ResolutionCardPr
           )}
 
           {res.implemented_at && (
-            <p className="text-xs text-gray-400">Uygulandı: {fmtDate(res.implemented_at)}</p>
+            <p className="text-xs text-[#94a3b8]">Uygulandı: {fmtDate(res.implemented_at)}</p>
           )}
         </div>
       )}
@@ -420,18 +420,18 @@ export default function ResolutionsTab() {
 
   useEffect(() => { load() }, [load])
 
-  if (loading) return <div className="py-12 text-center text-sm text-gray-500">Yükleniyor…</div>
+  if (loading) return <div className="py-12 text-center text-sm text-[#64748b]">Yükleniyor…</div>
 
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-base font-semibold text-gray-900">Karar Defteri</h2>
-          <p className="text-xs text-gray-500 mt-0.5">Yönetim kurulu ve genel kurul kararları</p>
+          <h2 className="text-base font-semibold text-[#0f172a]">Karar Defteri</h2>
+          <p className="text-xs text-[#64748b] mt-0.5">Yönetim kurulu ve genel kurul kararları</p>
         </div>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="text-xs bg-violet-600 text-white px-3 py-1.5 rounded-lg hover:bg-violet-700 transition-colors"
+          className="text-xs bg-brand-light text-white px-3 py-1.5 rounded-lg hover:bg-brand transition-colors"
         >
           + Yeni Karar
         </button>
@@ -446,8 +446,8 @@ export default function ResolutionsTab() {
 
       {resolutions.length === 0 && !showForm && (
         <div className="py-12 text-center">
-          <p className="text-sm text-gray-400">Henüz karar kaydı yok.</p>
-          <p className="text-xs text-gray-400 mt-1">İlk kararı eklemek için &quot;+ Yeni Karar&quot; butonunu kullanın.</p>
+          <p className="text-sm text-[#94a3b8]">Henüz karar kaydı yok.</p>
+          <p className="text-xs text-[#94a3b8] mt-1">İlk kararı eklemek için &quot;+ Yeni Karar&quot; butonunu kullanın.</p>
         </div>
       )}
 

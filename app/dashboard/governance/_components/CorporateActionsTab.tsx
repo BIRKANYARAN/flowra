@@ -45,7 +45,7 @@ const IMPACT_COLORS: Record<FinancialImpactLevel, string> = {
   major:       'bg-red-50   text-red-700   border-red-200',
   significant: 'bg-orange-50 text-orange-700 border-orange-200',
   moderate:    'bg-yellow-50 text-yellow-700 border-yellow-200',
-  minor:       'bg-gray-50  text-gray-500  border-gray-200',
+  minor:       'bg-[#f8fafc]  text-[#64748b]  border-[#e8eaef]',
 }
 const IMPACT_LABELS: Record<FinancialImpactLevel, string> = {
   major:       'Büyük Etki',
@@ -66,14 +66,14 @@ function SummaryRow({ summaries }: { summaries: SummaryEntry[] }) {
     <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
       {top.map(s => (
         <div key={s.action_type}
-          className="border border-violet-100 rounded-xl bg-violet-50 px-3 py-2 text-center"
+          className="border border-brand-subtle rounded-xl bg-brand-subtle px-3 py-2 text-center"
         >
-          <p className="text-[10px] text-violet-500 font-medium leading-tight line-clamp-2">
+          <p className="text-[10px] text-brand-light font-medium leading-tight line-clamp-2">
             {CORPORATE_ACTION_TYPE_LABELS[s.action_type]}
           </p>
-          <p className="text-xl font-bold text-violet-700 mt-0.5">{s.count}</p>
+          <p className="text-xl font-bold text-brand mt-0.5">{s.count}</p>
           {s.total_amount > 0 && (
-            <p className="text-[10px] text-violet-400 mt-0.5">{fmtTRY(s.total_amount)}</p>
+            <p className="text-[10px] text-brand-light mt-0.5">{fmtTRY(s.total_amount)}</p>
           )}
         </div>
       ))}
@@ -158,19 +158,19 @@ export default function CorporateActionsTab() {
     } finally { setSaving(false) }
   }
 
-  if (loading) return <div className="py-12 text-center text-sm text-gray-500">Yükleniyor…</div>
+  if (loading) return <div className="py-12 text-center text-sm text-[#64748b]">Yükleniyor…</div>
 
   return (
     <div className="space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-base font-semibold text-gray-900">Kurumsal Aksiyonlar Kaydı</h2>
-          <p className="text-xs text-gray-500 mt-0.5">Şirketteki önemli kurumsal kararlar — değiştirilemez kayıt</p>
+          <h2 className="text-base font-semibold text-[#0f172a]">Kurumsal Aksiyonlar Kaydı</h2>
+          <p className="text-xs text-[#64748b] mt-0.5">Şirketteki önemli kurumsal kararlar — değiştirilemez kayıt</p>
         </div>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="text-xs bg-violet-600 text-white px-3 py-1.5 rounded-lg hover:bg-violet-700 transition-colors"
+          className="text-xs bg-brand-light text-white px-3 py-1.5 rounded-lg hover:bg-brand transition-colors"
         >
           + Yeni Aksiyon
         </button>
@@ -181,11 +181,11 @@ export default function CorporateActionsTab() {
 
       {/* Filter */}
       <div className="flex items-center gap-2">
-        <label className="text-xs text-gray-500 shrink-0">Tür filtresi:</label>
+        <label className="text-xs text-[#64748b] shrink-0">Tür filtresi:</label>
         <select
           value={filter}
           onChange={e => setFilter(e.target.value as CorporateActionType | '')}
-          className="border rounded-lg px-2 py-1 text-xs text-gray-700 bg-white"
+          className="border rounded-lg px-2 py-1 text-xs text-[#334155] bg-white"
         >
           <option value="">Tümü</option>
           {CORPORATE_ACTION_TYPES.map(t => (
@@ -195,7 +195,7 @@ export default function CorporateActionsTab() {
         {filter && (
           <button
             onClick={() => setFilter('')}
-            className="text-xs text-gray-400 hover:text-gray-600"
+            className="text-xs text-[#94a3b8] hover:text-[#475569]"
           >
             Temizle
           </button>
@@ -204,11 +204,11 @@ export default function CorporateActionsTab() {
 
       {/* New action form */}
       {showForm && (
-        <div className="border border-violet-200 rounded-xl p-4 bg-violet-50 space-y-3">
-          <h3 className="text-sm font-medium text-violet-900">Yeni Kurumsal Aksiyon</h3>
+        <div className="border border-brand-subtle rounded-xl p-4 bg-brand-subtle space-y-3">
+          <h3 className="text-sm font-medium text-brand">Yeni Kurumsal Aksiyon</h3>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs text-gray-600 mb-1 block">Aksiyon Türü *</label>
+              <label className="text-xs text-[#475569] mb-1 block">Aksiyon Türü *</label>
               <select
                 className="w-full border rounded-lg px-3 py-1.5 text-sm"
                 value={form.action_type}
@@ -220,7 +220,7 @@ export default function CorporateActionsTab() {
               </select>
             </div>
             <div>
-              <label className="text-xs text-gray-600 mb-1 block">Tarih *</label>
+              <label className="text-xs text-[#475569] mb-1 block">Tarih *</label>
               <input
                 type="date"
                 className="w-full border rounded-lg px-3 py-1.5 text-sm"
@@ -229,7 +229,7 @@ export default function CorporateActionsTab() {
               />
             </div>
             <div className="col-span-2">
-              <label className="text-xs text-gray-600 mb-1 block">Başlık *</label>
+              <label className="text-xs text-[#475569] mb-1 block">Başlık *</label>
               <input
                 className="w-full border rounded-lg px-3 py-1.5 text-sm"
                 value={form.title}
@@ -238,7 +238,7 @@ export default function CorporateActionsTab() {
               />
             </div>
             <div className="col-span-2">
-              <label className="text-xs text-gray-600 mb-1 block">Açıklama</label>
+              <label className="text-xs text-[#475569] mb-1 block">Açıklama</label>
               <textarea
                 className="w-full border rounded-lg px-3 py-1.5 text-sm"
                 rows={2}
@@ -248,7 +248,7 @@ export default function CorporateActionsTab() {
               />
             </div>
             <div>
-              <label className="text-xs text-gray-600 mb-1 block">Yetkili *</label>
+              <label className="text-xs text-[#475569] mb-1 block">Yetkili *</label>
               <select
                 className="w-full border rounded-lg px-3 py-1.5 text-sm"
                 value={form.authorized_by}
@@ -262,7 +262,7 @@ export default function CorporateActionsTab() {
               </select>
             </div>
             <div>
-              <label className="text-xs text-gray-600 mb-1 block">Karar Referansı</label>
+              <label className="text-xs text-[#475569] mb-1 block">Karar Referansı</label>
               <input
                 className="w-full border rounded-lg px-3 py-1.5 text-sm"
                 value={form.resolution_reference}
@@ -271,7 +271,7 @@ export default function CorporateActionsTab() {
               />
             </div>
             <div>
-              <label className="text-xs text-gray-600 mb-1 block">Tutar (opsiyonel)</label>
+              <label className="text-xs text-[#475569] mb-1 block">Tutar (opsiyonel)</label>
               <input
                 type="number"
                 min="0"
@@ -286,13 +286,13 @@ export default function CorporateActionsTab() {
             <button
               onClick={save}
               disabled={saving}
-              className="text-xs bg-violet-600 text-white px-4 py-1.5 rounded-lg hover:bg-violet-700 disabled:opacity-50"
+              className="text-xs bg-brand-light text-white px-4 py-1.5 rounded-lg hover:bg-brand disabled:opacity-50"
             >
               {saving ? 'Kaydediliyor…' : 'Kaydet'}
             </button>
             <button
               onClick={() => setShowForm(false)}
-              className="text-xs text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-100"
+              className="text-xs text-[#475569] px-3 py-1.5 rounded-lg hover:bg-[#f1f5f9]"
             >
               İptal
             </button>
@@ -302,8 +302,8 @@ export default function CorporateActionsTab() {
 
       {actions.length === 0 && !showForm && (
         <div className="py-12 text-center">
-          <p className="text-sm text-gray-400">Henüz kurumsal aksiyon kaydı yok.</p>
-          <p className="text-xs text-gray-400 mt-1">İlk aksiyonu kaydetmek için &quot;+ Yeni Aksiyon&quot; butonunu kullanın.</p>
+          <p className="text-sm text-[#94a3b8]">Henüz kurumsal aksiyon kaydı yok.</p>
+          <p className="text-xs text-[#94a3b8] mt-1">İlk aksiyonu kaydetmek için &quot;+ Yeni Aksiyon&quot; butonunu kullanın.</p>
         </div>
       )}
 
@@ -316,13 +316,13 @@ export default function CorporateActionsTab() {
           return (
             <div
               key={a.id}
-              className="border border-gray-200 rounded-xl p-4 bg-white hover:border-gray-300 transition-colors"
+              className="border border-[#e8eaef] rounded-xl p-4 bg-white hover:border-[#e8eaef] transition-colors"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     {/* Action type badge */}
-                    <span className="text-xs font-medium text-violet-700 bg-violet-50 px-2 py-0.5 rounded border border-violet-200">
+                    <span className="text-xs font-medium text-brand bg-brand-subtle px-2 py-0.5 rounded border border-brand-subtle">
                       {CORPORATE_ACTION_TYPE_LABELS[a.action_type as CorporateActionType] ?? a.action_type}
                     </span>
 
@@ -338,33 +338,33 @@ export default function CorporateActionsTab() {
 
                     {/* Resolution reference */}
                     {a.resolution_reference && (
-                      <span className="text-xs text-gray-500 font-mono">
+                      <span className="text-xs text-[#64748b] font-mono">
                         {a.resolution_reference}
                       </span>
                     )}
                   </div>
 
-                  <p className="text-sm font-medium text-gray-900 mt-1">{a.title}</p>
+                  <p className="text-sm font-medium text-[#0f172a] mt-1">{a.title}</p>
                   {a.description && (
-                    <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{a.description}</p>
+                    <p className="text-xs text-[#64748b] mt-0.5 line-clamp-2">{a.description}</p>
                   )}
 
                   {/* Resolution link */}
                   {a.resolution_reference && (
-                    <p className="text-xs text-violet-500 mt-1">
+                    <p className="text-xs text-brand-light mt-1">
                       Karar: {a.resolution_reference}
                     </p>
                   )}
                 </div>
 
                 <div className="shrink-0 text-right">
-                  <p className="text-xs text-gray-500">{fmtDate(a.action_date)}</p>
+                  <p className="text-xs text-[#64748b]">{fmtDate(a.action_date)}</p>
                   {hasAmount && (
-                    <p className="text-sm font-semibold text-gray-700 mt-0.5">
+                    <p className="text-sm font-semibold text-[#334155] mt-0.5">
                       {fmtTRY(Number(a.financial_amount))}
                     </p>
                   )}
-                  <p className="text-xs text-gray-400 mt-0.5 capitalize">
+                  <p className="text-xs text-[#94a3b8] mt-0.5 capitalize">
                     {a.authorized_by.replace(/_/g, ' ')}
                   </p>
                 </div>

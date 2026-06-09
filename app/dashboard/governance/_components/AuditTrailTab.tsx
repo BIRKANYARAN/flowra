@@ -52,9 +52,9 @@ function scoreBarColor(score: number, max: number): string {
 const WORKFLOW_STATUS_STYLES: Record<WorkflowOutcome, string> = {
   approved: 'bg-green-50 text-green-700 border-green-200',
   rejected: 'bg-red-50 text-red-700 border-red-200',
-  expired:  'bg-gray-100 text-gray-500 border-gray-200',
+  expired:  'bg-[#f1f5f9] text-[#64748b] border-[#e8eaef]',
   pending:  'bg-amber-50 text-amber-700 border-amber-200',
-  executed: 'bg-blue-50 text-blue-700 border-blue-200',
+  executed: 'bg-info-light text-info-text border-info-light',
 }
 
 const WORKFLOW_STATUS_LABELS: Record<WorkflowOutcome, string> = {
@@ -82,7 +82,7 @@ export default function AuditTrailTab() {
   })
 
   if (isLoading) {
-    return <div className="py-16 text-center text-sm text-gray-400">Yükleniyor…</div>
+    return <div className="py-16 text-center text-sm text-[#94a3b8]">Yükleniyor…</div>
   }
 
   if (isError || !data?.report) {
@@ -91,7 +91,7 @@ export default function AuditTrailTab() {
         <p className="text-sm text-red-600">Denetim verileri yüklenemedi.</p>
         <button
           onClick={() => refetch()}
-          className="text-xs text-violet-600 hover:underline"
+          className="text-xs text-brand hover:underline"
         >
           Tekrar dene
         </button>
@@ -107,8 +107,8 @@ export default function AuditTrailTab() {
       {/* ── Header ── */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-base font-semibold text-gray-900">Yönetişim &amp; Denetim</h2>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <h2 className="text-base font-semibold text-[#0f172a]">Yönetişim &amp; Denetim</h2>
+          <p className="text-xs text-[#64748b] mt-0.5">
             İş akışı kararları, yüksek değerli aksiyonlar ve uyum sağlığı
           </p>
         </div>
@@ -123,8 +123,8 @@ export default function AuditTrailTab() {
       </div>
 
       {/* ── Score Breakdown ── */}
-      <div className="border border-gray-200 rounded-xl p-4 bg-white space-y-3">
-        <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wider">
+      <div className="border border-[#e8eaef] rounded-xl p-4 bg-white space-y-3">
+        <h3 className="text-xs font-semibold text-[#475569] uppercase tracking-wider">
           Sağlık Skoru Dağılımı
         </h3>
         <ScoreBar
@@ -181,7 +181,7 @@ export default function AuditTrailTab() {
 
       {/* ── Sub-tabs ── */}
       <div>
-        <div className="flex gap-1 border-b border-gray-200 mb-4">
+        <div className="flex gap-1 border-b border-[#e8eaef] mb-4">
           <SubTabButton
             active={activeSubTab === 'workflows'}
             onClick={() => setActiveSubTab('workflows')}
@@ -205,7 +205,7 @@ export default function AuditTrailTab() {
         {activeSubTab === 'audit'     && <AuditTable rows={r.audit_log} />}
       </div>
 
-      <p className="text-[11px] text-gray-400">
+      <p className="text-[11px] text-[#94a3b8]">
         Son güncelleme: {fmtDateTime(r.computed_at)}
       </p>
     </div>
@@ -223,8 +223,8 @@ function SubTabButton({
       className={cn(
         'flex items-center px-4 py-2 text-sm font-medium transition-colors -mb-px border-b-2',
         active
-          ? 'border-violet-600 text-violet-700'
-          : 'border-transparent text-gray-500 hover:text-gray-700',
+          ? 'border-brand text-brand'
+          : 'border-transparent text-[#64748b] hover:text-[#334155]',
       )}
     >
       {children}
@@ -244,16 +244,16 @@ function ScoreBar({ label, score, max, hint }: ScoreBarProps) {
   return (
     <div className="flex items-center gap-3">
       <div className="w-36 shrink-0">
-        <p className="text-xs text-gray-700 font-medium">{label}</p>
-        {hint && <p className="text-[11px] text-gray-400">{hint}</p>}
+        <p className="text-xs text-[#334155] font-medium">{label}</p>
+        {hint && <p className="text-[11px] text-[#94a3b8]">{hint}</p>}
       </div>
-      <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+      <div className="flex-1 h-2 bg-[#f1f5f9] rounded-full overflow-hidden">
         <div
           className={cn('h-full rounded-full transition-all', scoreBarColor(score, max))}
           style={{ width: `${pct}%` }}
         />
       </div>
-      <span className="text-xs font-semibold text-gray-600 w-12 text-right shrink-0">
+      <span className="text-xs font-semibold text-[#475569] w-12 text-right shrink-0">
         {score}/{max}
       </span>
     </div>
@@ -264,13 +264,13 @@ function StatCard({
   label, value, accent,
 }: { label: string; value: string | number; accent?: 'green' | 'amber' }) {
   return (
-    <div className="border border-gray-200 rounded-xl p-3 bg-white">
-      <p className="text-[11px] text-gray-500 uppercase tracking-wide">{label}</p>
+    <div className="border border-[#e8eaef] rounded-xl p-3 bg-white">
+      <p className="text-[11px] text-[#64748b] uppercase tracking-wide">{label}</p>
       <p className={cn(
         'text-xl font-bold mt-0.5',
         accent === 'green' ? 'text-green-700' :
         accent === 'amber' ? 'text-amber-600' :
-                             'text-gray-800',
+                             'text-[#1e293b]',
       )}>
         {value}
       </p>
@@ -285,53 +285,53 @@ type WLEntry = GovernanceReport['workflow_log'][number]
 function WorkflowTable({ rows }: { rows: WLEntry[] }) {
   if (rows.length === 0) {
     return (
-      <div className="py-12 text-center text-sm text-gray-400">
+      <div className="py-12 text-center text-sm text-[#94a3b8]">
         Henüz iş akışı kaydı yok.
       </div>
     )
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-gray-200">
+    <div className="overflow-x-auto rounded-xl border border-[#e8eaef]">
       <table className="min-w-full text-sm">
         <thead>
-          <tr className="border-b border-gray-100 bg-gray-50">
-            <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Tür</th>
-            <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Durum</th>
-            <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Başlatıldı</th>
-            <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Süre</th>
-            <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Özet</th>
-            <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Not</th>
+          <tr className="border-b border-[#f1f5f9] bg-[#f8fafc]">
+            <th className="text-left px-4 py-2.5 text-xs font-semibold text-[#64748b] uppercase tracking-wide">Tür</th>
+            <th className="text-left px-4 py-2.5 text-xs font-semibold text-[#64748b] uppercase tracking-wide">Durum</th>
+            <th className="text-left px-4 py-2.5 text-xs font-semibold text-[#64748b] uppercase tracking-wide">Başlatıldı</th>
+            <th className="text-left px-4 py-2.5 text-xs font-semibold text-[#64748b] uppercase tracking-wide">Süre</th>
+            <th className="text-left px-4 py-2.5 text-xs font-semibold text-[#64748b] uppercase tracking-wide">Özet</th>
+            <th className="text-left px-4 py-2.5 text-xs font-semibold text-[#64748b] uppercase tracking-wide">Not</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100">
+        <tbody className="divide-y divide-[#f1f5f9]">
           {rows.map(row => (
-            <tr key={row.id} className="hover:bg-gray-50 transition-colors">
+            <tr key={row.id} className="hover:bg-[#f8fafc] transition-colors">
               <td className="px-4 py-3">
-                <span className="text-xs font-medium text-gray-800">{row.type_label}</span>
+                <span className="text-xs font-medium text-[#1e293b]">{row.type_label}</span>
               </td>
               <td className="px-4 py-3">
                 <span className={cn(
                   'text-xs px-2 py-0.5 rounded-full border font-medium',
-                  WORKFLOW_STATUS_STYLES[row.status] ?? 'bg-gray-100 text-gray-600',
+                  WORKFLOW_STATUS_STYLES[row.status] ?? 'bg-[#f1f5f9] text-[#475569]',
                 )}>
                   {WORKFLOW_STATUS_LABELS[row.status] ?? row.status}
                 </span>
               </td>
-              <td className="px-4 py-3 text-xs text-gray-500 whitespace-nowrap">
+              <td className="px-4 py-3 text-xs text-[#64748b] whitespace-nowrap">
                 {fmtDate(row.initiated_at)}
               </td>
-              <td className="px-4 py-3 text-xs text-gray-500 whitespace-nowrap">
+              <td className="px-4 py-3 text-xs text-[#64748b] whitespace-nowrap">
                 {row.resolution_days != null
                   ? `${row.resolution_days} gün`
                   : row.status === 'pending'
                     ? <span className="text-amber-600 font-medium">Devam ediyor</span>
                     : '—'}
               </td>
-              <td className="px-4 py-3 text-xs text-gray-600 max-w-[180px] truncate">
+              <td className="px-4 py-3 text-xs text-[#475569] max-w-[180px] truncate">
                 {row.payload_summary}
               </td>
-              <td className="px-4 py-3 text-xs text-gray-400 max-w-[140px] truncate">
+              <td className="px-4 py-3 text-xs text-[#94a3b8] max-w-[140px] truncate">
                 {row.notes ?? '—'}
               </td>
             </tr>
@@ -349,36 +349,36 @@ type ALEntry = GovernanceReport['audit_log'][number]
 function AuditTable({ rows }: { rows: ALEntry[] }) {
   if (rows.length === 0) {
     return (
-      <div className="py-12 text-center text-sm text-gray-400">
+      <div className="py-12 text-center text-sm text-[#94a3b8]">
         Eşik üzerinde denetim kaydı bulunmuyor.
       </div>
     )
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-gray-200">
+    <div className="overflow-x-auto rounded-xl border border-[#e8eaef]">
       <table className="min-w-full text-sm">
         <thead>
-          <tr className="border-b border-gray-100 bg-gray-50">
-            <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Aksiyon</th>
-            <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Kaynak Türü</th>
-            <th className="text-right px-4 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Tutar</th>
-            <th className="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Tarih</th>
+          <tr className="border-b border-[#f1f5f9] bg-[#f8fafc]">
+            <th className="text-left px-4 py-2.5 text-xs font-semibold text-[#64748b] uppercase tracking-wide">Aksiyon</th>
+            <th className="text-left px-4 py-2.5 text-xs font-semibold text-[#64748b] uppercase tracking-wide">Kaynak Türü</th>
+            <th className="text-right px-4 py-2.5 text-xs font-semibold text-[#64748b] uppercase tracking-wide">Tutar</th>
+            <th className="text-left px-4 py-2.5 text-xs font-semibold text-[#64748b] uppercase tracking-wide">Tarih</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100">
+        <tbody className="divide-y divide-[#f1f5f9]">
           {rows.map(row => (
-            <tr key={row.id} className="hover:bg-gray-50 transition-colors">
+            <tr key={row.id} className="hover:bg-[#f8fafc] transition-colors">
               <td className="px-4 py-3">
-                <span className="text-xs font-medium text-gray-800">{row.action_label}</span>
+                <span className="text-xs font-medium text-[#1e293b]">{row.action_label}</span>
               </td>
-              <td className="px-4 py-3 text-xs text-gray-500">
+              <td className="px-4 py-3 text-xs text-[#64748b]">
                 {row.resource_type}
               </td>
-              <td className="px-4 py-3 text-xs text-gray-700 text-right whitespace-nowrap font-medium">
+              <td className="px-4 py-3 text-xs text-[#334155] text-right whitespace-nowrap font-medium">
                 {row.amount_try != null ? fmtTRY(row.amount_try) : '—'}
               </td>
-              <td className="px-4 py-3 text-xs text-gray-500 whitespace-nowrap">
+              <td className="px-4 py-3 text-xs text-[#64748b] whitespace-nowrap">
                 {fmtDateTime(row.created_at)}
               </td>
             </tr>

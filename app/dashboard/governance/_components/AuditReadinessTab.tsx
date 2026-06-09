@@ -22,7 +22,7 @@ const CATEGORY_LABELS: Record<CategoryKey, string> = {
 
 const GRADE_COLORS: Record<string, string> = {
   A: 'text-green-700  bg-green-50  border-green-200',
-  B: 'text-blue-700   bg-blue-50   border-blue-200',
+  B: 'text-info-text   bg-info-light   border-info-light',
   C: 'text-amber-700  bg-amber-50  border-amber-200',
   D: 'text-orange-700 bg-orange-50 border-orange-200',
   F: 'text-red-700    bg-red-50    border-red-200',
@@ -40,16 +40,16 @@ const STATUS_COLORS: Record<string, string> = {
   pass:         'text-green-600',
   fail:         'text-red-600',
   warn:         'text-amber-600',
-  skip:         'text-gray-400',
-  needs_review: 'text-gray-500',
+  skip:         'text-[#94a3b8]',
+  needs_review: 'text-[#64748b]',
 }
 
 const STATUS_ROW_COLORS: Record<string, string> = {
-  pass:         'border-gray-100 bg-white',
+  pass:         'border-[#f1f5f9] bg-white',
   fail:         'border-red-100  bg-red-50',
   warn:         'border-amber-100 bg-amber-50',
-  skip:         'border-gray-100  bg-gray-50',
-  needs_review: 'border-gray-100  bg-white',
+  skip:         'border-[#f1f5f9]  bg-[#f8fafc]',
+  needs_review: 'border-[#f1f5f9]  bg-white',
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -86,8 +86,8 @@ function ScoreRing({ score, grade }: { score: number; grade: string }) {
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-2xl font-bold text-gray-900">{score}</span>
-        <span className="text-xs text-gray-500 -mt-0.5">/ 100</span>
+        <span className="text-2xl font-bold text-[#0f172a]">{score}</span>
+        <span className="text-xs text-[#64748b] -mt-0.5">/ 100</span>
       </div>
     </div>
   )
@@ -102,14 +102,14 @@ function CategoryCard({
   stats: { score: number; total: number; passed: number }
 }) {
   return (
-    <div className="border border-gray-200 rounded-xl p-3 bg-white">
-      <p className="text-xs font-medium text-gray-500 truncate">{CATEGORY_LABELS[categoryKey]}</p>
+    <div className="border border-[#e8eaef] rounded-xl p-3 bg-white">
+      <p className="text-xs font-medium text-[#64748b] truncate">{CATEGORY_LABELS[categoryKey]}</p>
       <div className="mt-1 flex items-baseline gap-1">
-        <span className="text-lg font-bold text-gray-900">{stats.score}</span>
-        <span className="text-xs text-gray-400">/ 100</span>
+        <span className="text-lg font-bold text-[#0f172a]">{stats.score}</span>
+        <span className="text-xs text-[#94a3b8]">/ 100</span>
       </div>
-      <p className="text-xs text-gray-400 mt-0.5">{stats.passed}/{stats.total} geçti</p>
-      <div className="mt-2 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+      <p className="text-xs text-[#94a3b8] mt-0.5">{stats.passed}/{stats.total} geçti</p>
+      <div className="mt-2 h-1.5 bg-[#f1f5f9] rounded-full overflow-hidden">
         <div
           className="h-full rounded-full transition-all"
           style={{
@@ -142,19 +142,19 @@ function CheckRow({
       {/* Content */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm font-medium text-gray-900">{item.label}</span>
+          <span className="text-sm font-medium text-[#0f172a]">{item.label}</span>
           <span className={cn(
             'text-[10px] px-1.5 py-0.5 rounded border font-medium uppercase tracking-wide shrink-0',
             item.type === 'computed'
-              ? 'bg-gray-50 text-gray-500 border-gray-200'
-              : 'bg-violet-50 text-violet-600 border-violet-200',
+              ? 'bg-[#f8fafc] text-[#64748b] border-[#e8eaef]'
+              : 'bg-brand-subtle text-brand border-brand-subtle',
           )}>
             {item.type === 'computed' ? 'Otomatik' : 'Manuel'}
           </span>
         </div>
-        <p className="text-xs text-gray-500 mt-0.5">{item.detail}</p>
+        <p className="text-xs text-[#64748b] mt-0.5">{item.detail}</p>
         {item.acknowledged_at && (
-          <p className="text-xs text-gray-400 mt-0.5">
+          <p className="text-xs text-[#94a3b8] mt-0.5">
             Onaylandı: {new Date(item.acknowledged_at).toLocaleDateString('tr-TR')}
             {item.valid_until && ` — Geçerli: ${item.valid_until}`}
           </p>
@@ -170,7 +170,7 @@ function CheckRow({
           <button
             onClick={() => onAcknowledge(item.key)}
             disabled={acknowledging === item.key}
-            className="text-xs text-violet-600 bg-violet-50 border border-violet-200 px-2 py-1 rounded-lg hover:bg-violet-100 disabled:opacity-50 transition-colors"
+            className="text-xs text-brand bg-brand-subtle border border-brand-subtle px-2 py-1 rounded-lg hover:bg-brand-subtle disabled:opacity-50 transition-colors"
           >
             {acknowledging === item.key ? 'Kaydediliyor…' : 'Onayla'}
           </button>
@@ -198,31 +198,31 @@ function DocumentStatusSection({ docSummary }: { docSummary: DocumentSummary | n
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider">
+        <h3 className="text-xs font-semibold text-[#334155] uppercase tracking-wider">
           Belge Durumu
         </h3>
         <a
           href="/dashboard/documents?audit_required=true"
-          className="text-xs text-violet-600 hover:underline"
+          className="text-xs text-brand hover:underline"
         >
           Denetim belgelerini gör →
         </a>
       </div>
 
       <div className="grid grid-cols-3 gap-3">
-        <div className="border border-gray-200 rounded-xl p-3 bg-white">
-          <p className="text-xs text-gray-500">Toplam Belge</p>
-          <p className="text-xl font-bold text-gray-900 mt-0.5">{docSummary.total_documents}</p>
+        <div className="border border-[#e8eaef] rounded-xl p-3 bg-white">
+          <p className="text-xs text-[#64748b]">Toplam Belge</p>
+          <p className="text-xl font-bold text-[#0f172a] mt-0.5">{docSummary.total_documents}</p>
         </div>
-        <div className="border border-gray-200 rounded-xl p-3 bg-white">
-          <p className="text-xs text-gray-500">Doğrulananlar</p>
-          <p className="text-xl font-bold text-gray-900 mt-0.5">
+        <div className="border border-[#e8eaef] rounded-xl p-3 bg-white">
+          <p className="text-xs text-[#64748b]">Doğrulananlar</p>
+          <p className="text-xl font-bold text-[#0f172a] mt-0.5">
             {docSummary.audit_required_verified}
-            <span className="text-xs text-gray-400 font-normal"> / {docSummary.audit_required_total}</span>
+            <span className="text-xs text-[#94a3b8] font-normal"> / {docSummary.audit_required_total}</span>
           </p>
         </div>
-        <div className="border border-gray-200 rounded-xl p-3 bg-white">
-          <p className="text-xs text-gray-500">Denetim Hazırlığı</p>
+        <div className="border border-[#e8eaef] rounded-xl p-3 bg-white">
+          <p className="text-xs text-[#64748b]">Denetim Hazırlığı</p>
           <p className={cn('text-xl font-bold mt-0.5', readinessColor)}>%{readinessPct}</p>
         </div>
       </div>
@@ -306,14 +306,14 @@ export default function AuditReadinessTab() {
   }
 
   if (loading) {
-    return <div className="py-12 text-center text-sm text-gray-500">Denetim hazırlık raporu hesaplanıyor…</div>
+    return <div className="py-12 text-center text-sm text-[#64748b]">Denetim hazırlık raporu hesaplanıyor…</div>
   }
 
   if (error || !report) {
     return (
       <div className="py-12 text-center">
         <p className="text-sm text-red-600">{error ?? 'Rapor alınamadı.'}</p>
-        <button onClick={load} className="text-xs text-violet-600 mt-2 hover:underline">Tekrar dene</button>
+        <button onClick={load} className="text-xs text-brand mt-2 hover:underline">Tekrar dene</button>
       </div>
     )
   }
@@ -327,21 +327,21 @@ export default function AuditReadinessTab() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h2 className="text-base font-semibold text-gray-900">Denetim Hazırlık Raporu</h2>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <h2 className="text-base font-semibold text-[#0f172a]">Denetim Hazırlık Raporu</h2>
+          <p className="text-xs text-[#64748b] mt-0.5">
             Son Denetim Kontrolü: {new Date(report.computed_at).toLocaleString('tr-TR')}
           </p>
         </div>
         <button
           onClick={load}
-          className="text-xs text-gray-500 hover:text-gray-700 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors"
+          className="text-xs text-[#64748b] hover:text-[#334155] border border-[#e8eaef] px-3 py-1.5 rounded-lg hover:bg-[#f8fafc] transition-colors"
         >
           Yenile
         </button>
       </div>
 
       {/* Score summary */}
-      <div className="border border-gray-200 rounded-xl p-5 bg-white">
+      <div className="border border-[#e8eaef] rounded-xl p-5 bg-white">
         <div className="flex items-center gap-6">
           <ScoreRing score={report.score} grade={report.grade} />
           <div className="flex-1">
@@ -353,10 +353,10 @@ export default function AuditReadinessTab() {
                 {report.grade}
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-900">
+                <p className="text-sm font-medium text-[#0f172a]">
                   {gradeLabel(report.grade)}
                 </p>
-                <p className="text-xs text-gray-500 mt-0.5">
+                <p className="text-xs text-[#64748b] mt-0.5">
                   {report.items.filter(i => i.status === 'pass').length} / {report.items.filter(i => i.status !== 'skip').length} kontrol geçildi
                 </p>
               </div>
@@ -377,8 +377,8 @@ export default function AuditReadinessTab() {
           className={cn(
             'text-xs px-3 py-1.5 rounded-lg border transition-colors font-medium',
             activeCategory === null
-              ? 'bg-gray-900 text-white border-gray-900'
-              : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50',
+              ? 'bg-[#0f172a] text-white border-[#0f172a]'
+              : 'bg-white text-[#475569] border-[#e8eaef] hover:bg-[#f8fafc]',
           )}
         >
           Tümü
@@ -390,8 +390,8 @@ export default function AuditReadinessTab() {
             className={cn(
               'text-xs px-3 py-1.5 rounded-lg border transition-colors font-medium',
               activeCategory === cat
-                ? 'bg-violet-600 text-white border-violet-600'
-                : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50',
+                ? 'bg-brand-light text-white border-brand'
+                : 'bg-white text-[#475569] border-[#e8eaef] hover:bg-[#f8fafc]',
             )}
           >
             {CATEGORY_LABELS[cat]}
@@ -411,7 +411,7 @@ export default function AuditReadinessTab() {
         const catItems = report.items.filter(i => i.category === cat)
         if (catItems.length === 0) {
           return (
-            <div key={cat} className="py-6 text-center text-sm text-gray-400 border border-dashed border-gray-200 rounded-xl">
+            <div key={cat} className="py-6 text-center text-sm text-[#94a3b8] border border-dashed border-[#e8eaef] rounded-xl">
               Bu kategoride kontrol bulunmuyor.
             </div>
           )
@@ -419,10 +419,10 @@ export default function AuditReadinessTab() {
         return (
           <div key={cat} className="space-y-2">
             <div className="flex items-center gap-2">
-              <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider">
+              <h3 className="text-xs font-semibold text-[#334155] uppercase tracking-wider">
                 {CATEGORY_LABELS[cat]}
               </h3>
-              <span className="text-xs text-gray-400">
+              <span className="text-xs text-[#94a3b8]">
                 {report.categories[cat].passed}/{report.categories[cat].total}
               </span>
             </div>
@@ -444,7 +444,7 @@ export default function AuditReadinessTab() {
       <DocumentStatusSection docSummary={docSummary} />
 
       {/* Footer note */}
-      <p className="text-xs text-gray-400 bg-gray-50 rounded-lg px-3 py-2">
+      <p className="text-xs text-[#94a3b8] bg-[#f8fafc] rounded-lg px-3 py-2">
         Bu denetim hazırlık raporu Flowra verilerinden otomatik hesaplanmaktadır.
         Manuel onay gerektiren kontroller 30 gün geçerliliğe sahiptir.
         Kesin denetim uyumluluğu için bağımsız denetçinizle çalışın.

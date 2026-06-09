@@ -41,8 +41,8 @@ const HEALTH_CONFIG: Record<AuditChainStatus['health'], HealthConfig> = {
   empty: {
     label:          'Denetim Kaydı Yok',
     icon:           '○',
-    badgeClass:     'bg-gray-100 text-gray-500 border-gray-300',
-    containerClass: 'border-gray-200 bg-gray-50',
+    badgeClass:     'bg-[#f1f5f9] text-[#64748b] border-[#e8eaef]',
+    containerClass: 'border-[#e8eaef] bg-[#f8fafc]',
   },
   unhashed: {
     label:          'Hash Sütunları Mevcut Değil — Pasif İzleme',
@@ -53,8 +53,8 @@ const HEALTH_CONFIG: Record<AuditChainStatus['health'], HealthConfig> = {
   no_hash_columns: {
     label:          'Hash altyapısı henüz kurulmamış',
     icon:           'i',
-    badgeClass:     'bg-blue-100 text-blue-800 border-blue-300',
-    containerClass: 'border-blue-200 bg-blue-50',
+    badgeClass:     'bg-info-light text-info-text border-info-light',
+    containerClass: 'border-info-light bg-info-light',
   },
 }
 
@@ -74,9 +74,9 @@ export default function AuditHashChainPanel({ companyId = 'default' }: AuditHash
 
   if (isLoading) {
     return (
-      <div className="border border-gray-200 rounded-xl p-4 bg-white animate-pulse">
-        <div className="h-4 w-48 bg-gray-200 rounded mb-3" />
-        <div className="h-10 w-full bg-gray-100 rounded" />
+      <div className="border border-[#e8eaef] rounded-xl p-4 bg-white animate-pulse">
+        <div className="h-4 w-48 bg-[#e8eaef] rounded mb-3" />
+        <div className="h-10 w-full bg-[#f1f5f9] rounded" />
       </div>
     )
   }
@@ -87,7 +87,7 @@ export default function AuditHashChainPanel({ companyId = 'default' }: AuditHash
         <p className="text-sm text-red-600 font-medium">Zincir durumu yüklenemedi.</p>
         <button
           onClick={() => refetch()}
-          className="text-xs text-violet-600 hover:underline mt-1"
+          className="text-xs text-brand hover:underline mt-1"
         >
           Tekrar dene
         </button>
@@ -102,14 +102,14 @@ export default function AuditHashChainPanel({ companyId = 'default' }: AuditHash
       {/* Header */}
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h3 className="text-sm font-semibold text-gray-900">Denetim Zinciri Bütünlüğü</h3>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <h3 className="text-sm font-semibold text-[#0f172a]">Denetim Zinciri Bütünlüğü</h3>
+          <p className="text-xs text-[#64748b] mt-0.5">
             SHA-256 hash zinciri ile kurcalama tespiti
           </p>
         </div>
         <button
           onClick={() => refetch()}
-          className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors shrink-0"
+          className="text-[11px] text-[#94a3b8] hover:text-[#475569] transition-colors shrink-0"
           title="Yenile"
         >
           ↻ Yenile
@@ -169,9 +169,9 @@ export default function AuditHashChainPanel({ companyId = 'default' }: AuditHash
 
       {/* Last hash */}
       {data.last_hash && (
-        <div className="border border-gray-200 rounded-lg px-3 py-2 bg-white">
-          <p className="text-[11px] text-gray-500 uppercase tracking-wide mb-0.5">Son Zincir Hash</p>
-          <p className="text-xs font-mono text-gray-700">
+        <div className="border border-[#e8eaef] rounded-lg px-3 py-2 bg-white">
+          <p className="text-[11px] text-[#64748b] uppercase tracking-wide mb-0.5">Son Zincir Hash</p>
+          <p className="text-xs font-mono text-[#334155]">
             {data.last_hash.slice(0, 16)}…
           </p>
         </div>
@@ -179,7 +179,7 @@ export default function AuditHashChainPanel({ companyId = 'default' }: AuditHash
 
       {/* Message (no_hash_columns / other) */}
       {data.message && (
-        <p className="text-xs text-gray-500 italic">{data.message}</p>
+        <p className="text-xs text-[#64748b] italic">{data.message}</p>
       )}
     </div>
   )
@@ -197,14 +197,14 @@ function StatTile({
   accent?: 'green' | 'amber' | 'red'
 }) {
   return (
-    <div className="border border-gray-200 rounded-lg p-2.5 bg-white text-center">
-      <p className="text-[10px] text-gray-500 uppercase tracking-wide">{label}</p>
+    <div className="border border-[#e8eaef] rounded-lg p-2.5 bg-white text-center">
+      <p className="text-[10px] text-[#64748b] uppercase tracking-wide">{label}</p>
       <p className={cn(
         'text-lg font-bold mt-0.5',
         accent === 'green' ? 'text-green-700' :
         accent === 'amber' ? 'text-amber-600' :
         accent === 'red'   ? 'text-red-600'   :
-                             'text-gray-800',
+                             'text-[#1e293b]',
       )}>
         {value}
       </p>

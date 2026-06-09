@@ -44,7 +44,7 @@ const RECURRENCE_LABELS: Record<string, string> = {
 function statusBadgeClass(status: ForwardObligation['status']): string {
   if (status === 'overdue')  return 'bg-red-100   text-red-700   border border-red-200'
   if (status === 'due_soon') return 'bg-amber-100 text-amber-700 border border-amber-200'
-  return 'bg-gray-100 text-gray-600 border border-gray-200'
+  return 'bg-[#f1f5f9] text-[#475569] border border-[#e8eaef]'
 }
 
 function statusLabel(status: ForwardObligation['status']): string {
@@ -101,13 +101,13 @@ function KpiCard({
     color === 'red'    ? 'text-red-700'    :
     color === 'amber'  ? 'text-amber-700'  :
     color === 'green'  ? 'text-green-700'  :
-    'text-gray-900'
+    'text-[#0f172a]'
 
   return (
-    <div className="border border-gray-200 rounded-xl p-4 bg-white">
-      <p className="text-xs text-gray-500 font-medium">{label}</p>
+    <div className="border border-[#e8eaef] rounded-xl p-4 bg-white">
+      <p className="text-xs text-[#64748b] font-medium">{label}</p>
       <p className={cn('text-xl font-bold mt-1 tabular-nums', valueColor)}>{value}</p>
-      {sub && <p className="text-xs text-gray-400 mt-0.5">{sub}</p>}
+      {sub && <p className="text-xs text-[#94a3b8] mt-0.5">{sub}</p>}
     </div>
   )
 }
@@ -123,14 +123,14 @@ function MonthlyOutlookTable({
 
   return (
     <div>
-      <h3 className="text-sm font-semibold text-gray-800 mb-3">12 Aylık Öngörü</h3>
-      <div className="border border-gray-200 rounded-xl overflow-hidden">
+      <h3 className="text-sm font-semibold text-[#1e293b] mb-3">12 Aylık Öngörü</h3>
+      <div className="border border-[#e8eaef] rounded-xl overflow-hidden">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-gray-100 bg-gray-50">
-              <th className="text-left px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Dönem</th>
-              <th className="text-right px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Yükümlülük Sayısı</th>
-              <th className="text-right px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Toplam (TRY)</th>
+            <tr className="border-b border-[#f1f5f9] bg-[#f8fafc]">
+              <th className="text-left px-4 py-2 text-xs font-semibold text-[#64748b] uppercase tracking-wider">Dönem</th>
+              <th className="text-right px-4 py-2 text-xs font-semibold text-[#64748b] uppercase tracking-wider">Yükümlülük Sayısı</th>
+              <th className="text-right px-4 py-2 text-xs font-semibold text-[#64748b] uppercase tracking-wider">Toplam (TRY)</th>
             </tr>
           </thead>
           <tbody>
@@ -141,21 +141,21 @@ function MonthlyOutlookTable({
                 <tr
                   key={m}
                   className={cn(
-                    'border-b border-gray-100 last:border-0',
-                    idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50',
+                    'border-b border-[#f1f5f9] last:border-0',
+                    idx % 2 === 0 ? 'bg-white' : 'bg-[#f8fafc]/50',
                     !isEmpty ? 'font-medium' : '',
                   )}
                 >
-                  <td className="px-4 py-2.5 text-gray-800">{fmtMonth(m)}</td>
-                  <td className="px-4 py-2.5 text-right text-gray-600">
-                    {isEmpty ? <span className="text-gray-300">—</span> : row.count}
+                  <td className="px-4 py-2.5 text-[#1e293b]">{fmtMonth(m)}</td>
+                  <td className="px-4 py-2.5 text-right text-[#475569]">
+                    {isEmpty ? <span className="text-[#cbd5e1]">—</span> : row.count}
                   </td>
-                  <td className="px-4 py-2.5 text-right text-gray-900 tabular-nums">
+                  <td className="px-4 py-2.5 text-right text-[#0f172a] tabular-nums">
                     {isEmpty
-                      ? <span className="text-gray-300">—</span>
+                      ? <span className="text-[#cbd5e1]">—</span>
                       : row.total_try > 0
                         ? `₺${fmtTRY(row.total_try)}`
-                        : <span className="text-gray-400 text-xs">Tutarsız</span>
+                        : <span className="text-[#94a3b8] text-xs">Tutarsız</span>
                     }
                   </td>
                 </tr>
@@ -194,59 +194,59 @@ function ObligationRow({
         'border rounded-xl p-4 bg-white',
         isOverdue  ? 'border-red-200   bg-red-50/30'   :
         isDueSoon  ? 'border-amber-200 bg-amber-50/20' :
-                     'border-gray-200',
+                     'border-[#e8eaef]',
       )}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           {/* Title + badges */}
           <div className="flex flex-wrap items-center gap-1.5 mb-1">
-            <span className="text-sm font-medium text-gray-900 truncate max-w-xs">{obligation.title}</span>
+            <span className="text-sm font-medium text-[#0f172a] truncate max-w-xs">{obligation.title}</span>
             <span className={cn('text-[10px] px-1.5 py-0.5 rounded font-semibold uppercase tracking-wide shrink-0', statusBadgeClass(obligation.status))}>
               {statusLabel(obligation.status)}
             </span>
             <span className={cn(
               'text-[10px] px-1.5 py-0.5 rounded font-medium shrink-0 border',
               isDeclared
-                ? 'bg-violet-50 text-violet-700 border-violet-200'
-                : 'bg-blue-50   text-blue-600   border-blue-200',
+                ? 'bg-brand-subtle text-brand border-brand-subtle'
+                : 'bg-info-light   text-info-text   border-info-light',
             )}>
               {isDeclared ? 'Beyan' : 'Otomatik'}
             </span>
           </div>
 
           {/* Source + type */}
-          <div className="flex flex-wrap gap-3 text-xs text-gray-500">
+          <div className="flex flex-wrap gap-3 text-xs text-[#64748b]">
             <span>{SOURCE_LABELS[obligation.source] ?? obligation.source}</span>
             {obligation.counterparty && (
-              <span className="text-gray-400">· {obligation.counterparty}</span>
+              <span className="text-[#94a3b8]">· {obligation.counterparty}</span>
             )}
             {obligation.commitment_type && COMMITMENT_TYPE_LABELS[obligation.commitment_type] && (
-              <span className="text-gray-400">· {COMMITMENT_TYPE_LABELS[obligation.commitment_type]}</span>
+              <span className="text-[#94a3b8]">· {COMMITMENT_TYPE_LABELS[obligation.commitment_type]}</span>
             )}
             {obligation.recurrence && RECURRENCE_LABELS[obligation.recurrence] && (
-              <span className="text-gray-400">· {RECURRENCE_LABELS[obligation.recurrence]}</span>
+              <span className="text-[#94a3b8]">· {RECURRENCE_LABELS[obligation.recurrence]}</span>
             )}
           </div>
 
           {/* Description */}
           {obligation.description && (
-            <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">{obligation.description}</p>
+            <p className="text-xs text-[#94a3b8] mt-0.5 line-clamp-1">{obligation.description}</p>
           )}
         </div>
 
         {/* Right side: amount + date + actions */}
         <div className="shrink-0 text-right space-y-1">
-          <p className="text-sm font-semibold text-gray-900 tabular-nums">
+          <p className="text-sm font-semibold text-[#0f172a] tabular-nums">
             {obligation.amount_try != null
               ? `₺${fmtTRY(obligation.amount_try)}`
-              : <span className="text-gray-400 text-xs font-normal">Tutar belirsiz</span>
+              : <span className="text-[#94a3b8] text-xs font-normal">Tutar belirsiz</span>
             }
           </p>
-          <p className="text-xs text-gray-500">{fmtDate(obligation.due_date)}</p>
+          <p className="text-xs text-[#64748b]">{fmtDate(obligation.due_date)}</p>
           <p className={cn(
             'text-[11px] font-medium',
-            isOverdue ? 'text-red-600' : isDueSoon ? 'text-amber-600' : 'text-gray-400',
+            isOverdue ? 'text-red-600' : isDueSoon ? 'text-amber-600' : 'text-[#94a3b8]',
           )}>
             {relativeDue(obligation.due_date, today)}
           </p>
@@ -262,7 +262,7 @@ function ObligationRow({
               </button>
               <button
                 onClick={() => onCancel(rawId)}
-                className="text-[11px] bg-gray-50 text-gray-500 border border-gray-200 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors"
+                className="text-[11px] bg-[#f8fafc] text-[#64748b] border border-[#e8eaef] px-2 py-1 rounded-lg hover:bg-[#f1f5f9] transition-colors"
               >
                 ✗ İptal
               </button>
@@ -335,12 +335,12 @@ function AddCommitmentForm({ onSaved, onCancel }: { onSaved: () => void; onCance
   }
 
   return (
-    <div className="border border-violet-200 rounded-xl p-4 bg-violet-50 space-y-4">
-      <h3 className="text-sm font-semibold text-violet-900">Yeni Taahhüt Ekle</h3>
+    <div className="border border-brand-subtle rounded-xl p-4 bg-brand-subtle space-y-4">
+      <h3 className="text-sm font-semibold text-brand">Yeni Taahhüt Ekle</h3>
 
       <div className="grid grid-cols-2 gap-3">
         <div className="col-span-2">
-          <label className="text-xs text-gray-600 mb-1 block">Başlık *</label>
+          <label className="text-xs text-[#475569] mb-1 block">Başlık *</label>
           <input
             className="w-full border rounded-lg px-3 py-1.5 text-sm bg-white"
             value={form.title}
@@ -350,7 +350,7 @@ function AddCommitmentForm({ onSaved, onCancel }: { onSaved: () => void; onCance
         </div>
 
         <div>
-          <label className="text-xs text-gray-600 mb-1 block">Tür *</label>
+          <label className="text-xs text-[#475569] mb-1 block">Tür *</label>
           <select
             className="w-full border rounded-lg px-3 py-1.5 text-sm bg-white"
             value={form.commitment_type}
@@ -363,7 +363,7 @@ function AddCommitmentForm({ onSaved, onCancel }: { onSaved: () => void; onCance
         </div>
 
         <div>
-          <label className="text-xs text-gray-600 mb-1 block">Son Tarih *</label>
+          <label className="text-xs text-[#475569] mb-1 block">Son Tarih *</label>
           <input
             type="date"
             className="w-full border rounded-lg px-3 py-1.5 text-sm bg-white"
@@ -373,7 +373,7 @@ function AddCommitmentForm({ onSaved, onCancel }: { onSaved: () => void; onCance
         </div>
 
         <div>
-          <label className="text-xs text-gray-600 mb-1 block">Tutar (TRY, opsiyonel)</label>
+          <label className="text-xs text-[#475569] mb-1 block">Tutar (TRY, opsiyonel)</label>
           <input
             type="number"
             min="0"
@@ -386,7 +386,7 @@ function AddCommitmentForm({ onSaved, onCancel }: { onSaved: () => void; onCance
         </div>
 
         <div>
-          <label className="text-xs text-gray-600 mb-1 block">Tekrar (opsiyonel)</label>
+          <label className="text-xs text-[#475569] mb-1 block">Tekrar (opsiyonel)</label>
           <select
             className="w-full border rounded-lg px-3 py-1.5 text-sm bg-white"
             value={form.recurrence}
@@ -400,7 +400,7 @@ function AddCommitmentForm({ onSaved, onCancel }: { onSaved: () => void; onCance
         </div>
 
         <div>
-          <label className="text-xs text-gray-600 mb-1 block">Karşı Taraf (opsiyonel)</label>
+          <label className="text-xs text-[#475569] mb-1 block">Karşı Taraf (opsiyonel)</label>
           <input
             className="w-full border rounded-lg px-3 py-1.5 text-sm bg-white"
             value={form.counterparty}
@@ -410,7 +410,7 @@ function AddCommitmentForm({ onSaved, onCancel }: { onSaved: () => void; onCance
         </div>
 
         <div>
-          <label className="text-xs text-gray-600 mb-1 block">Açıklama (opsiyonel)</label>
+          <label className="text-xs text-[#475569] mb-1 block">Açıklama (opsiyonel)</label>
           <input
             className="w-full border rounded-lg px-3 py-1.5 text-sm bg-white"
             value={form.description}
@@ -428,13 +428,13 @@ function AddCommitmentForm({ onSaved, onCancel }: { onSaved: () => void; onCance
         <button
           onClick={handleSave}
           disabled={saving}
-          className="text-xs bg-violet-600 text-white px-4 py-1.5 rounded-lg hover:bg-violet-700 disabled:opacity-50 transition-colors"
+          className="text-xs bg-brand-light text-white px-4 py-1.5 rounded-lg hover:bg-brand disabled:opacity-50 transition-colors"
         >
           {saving ? 'Kaydediliyor…' : 'Kaydet'}
         </button>
         <button
           onClick={onCancel}
-          className="text-xs text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+          className="text-xs text-[#475569] px-3 py-1.5 rounded-lg hover:bg-[#f1f5f9] transition-colors"
         >
           İptal
         </button>
@@ -496,12 +496,12 @@ export default function CommitmentsTab() {
   }
 
   if (loading) {
-    return <div className="py-12 text-center text-sm text-gray-500">Yükleniyor…</div>
+    return <div className="py-12 text-center text-sm text-[#64748b]">Yükleniyor…</div>
   }
 
   if (!ledger) {
     return (
-      <div className="py-12 text-center text-sm text-gray-400">
+      <div className="py-12 text-center text-sm text-[#94a3b8]">
         Taahhüt defteri yüklenemedi.
       </div>
     )
@@ -533,17 +533,17 @@ export default function CommitmentsTab() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-base font-semibold text-gray-900">Taahhüt ve Yükümlülük Defteri</h2>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <h2 className="text-base font-semibold text-[#0f172a]">Taahhüt ve Yükümlülük Defteri</h2>
+          <p className="text-xs text-[#64748b] mt-0.5">
             Bilinen tüm ileriye dönük finansal yükümlülükler — otomatik hesaplanan ve beyan edilen
           </p>
-          <p className="text-xs text-gray-400 mt-0.5">
-            {ledgerSummary} · <span className="font-medium text-gray-600">₺{fmtTRY(totalExposure)} toplam taahhüt</span>
+          <p className="text-xs text-[#94a3b8] mt-0.5">
+            {ledgerSummary} · <span className="font-medium text-[#475569]">₺{fmtTRY(totalExposure)} toplam taahhüt</span>
           </p>
         </div>
         <button
           onClick={() => setShowAddForm(!showAddForm)}
-          className="text-xs bg-violet-600 text-white px-3 py-1.5 rounded-lg hover:bg-violet-700 transition-colors"
+          className="text-xs bg-brand-light text-white px-3 py-1.5 rounded-lg hover:bg-brand transition-colors"
         >
           + Taahhüt Ekle
         </button>
@@ -587,13 +587,13 @@ export default function CommitmentsTab() {
       <MonthlyOutlookTable byMonth={ledger.by_month} />
 
       {/* ── 3. Summary row ───────────────────────────────────────────────────── */}
-      <div className="flex flex-wrap gap-3 p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-600">
-        <span className="font-medium text-gray-800">Özet:</span>
+      <div className="flex flex-wrap gap-3 p-3 bg-[#f8fafc] border border-[#e8eaef] rounded-xl text-xs text-[#475569]">
+        <span className="font-medium text-[#1e293b]">Özet:</span>
         <span className="text-red-600 font-semibold">{ledger.overdue_count} vadesi geçmiş</span>
-        <span className="text-gray-300">·</span>
+        <span className="text-[#cbd5e1]">·</span>
         <span className="text-amber-600 font-semibold">{ledger.due_soon_count} yakında (14 gün)</span>
-        <span className="text-gray-300">·</span>
-        <span className="text-gray-700 font-semibold">₺{fmtTRY(totalExposure)} toplam maruz kalım</span>
+        <span className="text-[#cbd5e1]">·</span>
+        <span className="text-[#334155] font-semibold">₺{fmtTRY(totalExposure)} toplam maruz kalım</span>
       </div>
 
       {/* ── 4. Obligation list ───────────────────────────────────────────────── */}
@@ -610,9 +610,9 @@ export default function CommitmentsTab() {
                   statusFilter === f
                     ? f === 'overdue'  ? 'bg-red-100 text-red-700 border-red-300 font-semibold'
                     : f === 'due_soon' ? 'bg-amber-100 text-amber-700 border-amber-300 font-semibold'
-                    : f === 'upcoming' ? 'bg-gray-200 text-gray-700 border-gray-300 font-semibold'
-                    : 'bg-violet-100 text-violet-700 border-violet-300 font-semibold'
-                    : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50',
+                    : f === 'upcoming' ? 'bg-[#e8eaef] text-[#334155] border-[#e8eaef] font-semibold'
+                    : 'bg-brand-subtle text-brand border-brand-subtle font-semibold'
+                    : 'bg-white text-[#64748b] border-[#e8eaef] hover:bg-[#f8fafc]',
                 )}
               >
                 {STATUS_FILTER_LABELS[f]}
@@ -624,21 +624,21 @@ export default function CommitmentsTab() {
             className={cn(
               'text-xs px-2.5 py-1 rounded-full border transition-colors ml-auto',
               sortUrgency
-                ? 'bg-violet-100 text-violet-700 border-violet-300 font-semibold'
-                : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50',
+                ? 'bg-brand-subtle text-brand border-brand-subtle font-semibold'
+                : 'bg-white text-[#64748b] border-[#e8eaef] hover:bg-[#f8fafc]',
             )}
           >
             {sortUrgency ? '↑ Aciliyete Göre Sıralı' : '↕ Aciliyete Göre Sırala'}
           </button>
         </div>
 
-        <h3 className="text-sm font-semibold text-gray-800 mb-3">
+        <h3 className="text-sm font-semibold text-[#1e293b] mb-3">
           Tüm Yükümlülükler
-          <span className="ml-2 text-xs font-normal text-gray-400">({displayObligations.length} adet)</span>
+          <span className="ml-2 text-xs font-normal text-[#94a3b8]">({displayObligations.length} adet)</span>
         </h3>
 
         {displayObligations.length === 0 && (
-          <div className="py-10 text-center text-sm text-gray-400">
+          <div className="py-10 text-center text-sm text-[#94a3b8]">
             {statusFilter === 'all'
               ? 'Önümüzdeki 12 ay için kayıtlı yükümlülük yok.'
               : `"${STATUS_FILTER_LABELS[statusFilter]}" filtresinde yükümlülük yok.`}
@@ -689,7 +689,7 @@ export default function CommitmentsTab() {
           {/* Upcoming group */}
           {upcoming.length > 0 && (
             <div>
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+              <p className="text-xs font-semibold text-[#64748b] uppercase tracking-wider mb-2">
                 Planlı — {upcoming.length}
               </p>
               <div className="space-y-2">
@@ -709,7 +709,7 @@ export default function CommitmentsTab() {
       </div>
 
       {/* Footer note */}
-      <p className="text-xs text-gray-400 bg-gray-50 rounded-lg px-3 py-2">
+      <p className="text-xs text-[#94a3b8] bg-[#f8fafc] rounded-lg px-3 py-2">
         Otomatik hesaplanan yükümlülükler Flowra veritabanındaki mevcut verilerden türetilmiştir. Beyan edilen taahhütler manuel olarak girilmiştir. Resmi finansal yükümlülükler için mali müşavirinizle doğrulayın.
       </p>
     </div>

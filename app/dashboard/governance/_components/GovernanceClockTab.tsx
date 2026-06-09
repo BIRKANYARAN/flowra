@@ -28,7 +28,7 @@ function fmtDate(d: string) {
 function severityBadge(s: string) {
   if (s === 'critical') return 'bg-red-100 text-red-700'
   if (s === 'warning')  return 'bg-amber-100 text-amber-700'
-  return 'bg-gray-100 text-gray-600'
+  return 'bg-[#f1f5f9] text-[#475569]'
 }
 
 const SOURCE_LABELS: Record<string, string> = {
@@ -58,18 +58,18 @@ function ObligationRow({
         'flex items-start gap-3 p-3 rounded-xl border',
         o.status === 'overdue'   ? 'border-red-200 bg-red-50'     :
         o.status === 'due_today' ? 'border-amber-200 bg-amber-50' :
-                                    'border-gray-200 bg-white',
+                                    'border-[#e8eaef] bg-white',
       )}
     >
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           {/* Source badge */}
-          <span className="text-[10px] font-medium px-1.5 py-0.5 rounded border bg-violet-50 text-violet-700 border-violet-200 shrink-0">
+          <span className="text-[10px] font-medium px-1.5 py-0.5 rounded border bg-brand-subtle text-brand border-brand-subtle shrink-0">
             {sourceLabel}
           </span>
-          <span className="text-sm font-medium text-gray-900 truncate">{o.title}</span>
+          <span className="text-sm font-medium text-[#0f172a] truncate">{o.title}</span>
           {o.is_informational && (
-            <span className="text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded font-medium shrink-0">
+            <span className="text-[10px] text-[#94a3b8] bg-[#f1f5f9] px-1.5 py-0.5 rounded font-medium shrink-0">
               BİLGİ AMAÇLI
             </span>
           )}
@@ -87,13 +87,13 @@ function ObligationRow({
           </span>
         </div>
         {o.description && (
-          <p className="text-xs text-gray-500 mt-0.5 truncate">{o.description}</p>
+          <p className="text-xs text-[#64748b] mt-0.5 truncate">{o.description}</p>
         )}
-        <p className="text-xs text-gray-400 mt-0.5">{fmtDate(o.due_date)}</p>
+        <p className="text-xs text-[#94a3b8] mt-0.5">{fmtDate(o.due_date)}</p>
       </div>
       <div className="flex gap-1 shrink-0">
         {o.action_href && (
-          <a href={o.action_href} className="text-xs text-violet-600 hover:underline px-2 py-1">
+          <a href={o.action_href} className="text-xs text-brand hover:underline px-2 py-1">
             Git →
           </a>
         )}
@@ -180,21 +180,21 @@ export default function GovernanceClockTab() {
   const dueToday = obligations.filter(o => o.status === 'due_today')
   const upcoming = obligations.filter(o => o.status === 'upcoming')
 
-  if (loading) return <div className="py-12 text-center text-sm text-gray-500">Yükleniyor…</div>
+  if (loading) return <div className="py-12 text-center text-sm text-[#64748b]">Yükleniyor…</div>
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h2 className="text-base font-semibold text-gray-900">Yönetişim Takvimi</h2>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <h2 className="text-base font-semibold text-[#0f172a]">Yönetişim Takvimi</h2>
+          <p className="text-xs text-[#64748b] mt-0.5">
             Önümüzdeki {horizon} gün içindeki yükümlülükler
           </p>
         </div>
         <div className="flex items-center gap-2">
           {/* Horizon selector */}
-          <div className="flex rounded-lg border border-gray-200 overflow-hidden text-xs">
+          <div className="flex rounded-lg border border-[#e8eaef] overflow-hidden text-xs">
             {([30, 60, 90] as HorizonDays[]).map(h => (
               <button
                 key={h}
@@ -202,8 +202,8 @@ export default function GovernanceClockTab() {
                 className={cn(
                   'px-3 py-1.5 font-medium transition-colors',
                   horizon === h
-                    ? 'bg-violet-600 text-white'
-                    : 'text-gray-600 hover:bg-gray-50',
+                    ? 'bg-brand-light text-white'
+                    : 'text-[#475569] hover:bg-[#f8fafc]',
                 )}
               >
                 {h} gün
@@ -212,7 +212,7 @@ export default function GovernanceClockTab() {
           </div>
           <button
             onClick={() => setShowAddForm(!showAddForm)}
-            className="text-xs bg-violet-600 text-white px-3 py-1.5 rounded-lg hover:bg-violet-700 transition-colors"
+            className="text-xs bg-brand-light text-white px-3 py-1.5 rounded-lg hover:bg-brand transition-colors"
           >
             + Yükümlülük Ekle
           </button>
@@ -223,35 +223,35 @@ export default function GovernanceClockTab() {
       <div className="grid grid-cols-3 gap-3">
         <div className={cn(
           'rounded-xl border p-3 text-center',
-          overdue.length > 0 ? 'border-red-200 bg-red-50' : 'border-gray-200 bg-white',
+          overdue.length > 0 ? 'border-red-200 bg-red-50' : 'border-[#e8eaef] bg-white',
         )}>
-          <p className={cn('text-2xl font-bold', overdue.length > 0 ? 'text-red-600' : 'text-gray-400')}>
+          <p className={cn('text-2xl font-bold', overdue.length > 0 ? 'text-red-600' : 'text-[#94a3b8]')}>
             {overdue.length}
           </p>
-          <p className="text-xs text-gray-500 mt-0.5">Gecikmiş</p>
+          <p className="text-xs text-[#64748b] mt-0.5">Gecikmiş</p>
         </div>
         <div className={cn(
           'rounded-xl border p-3 text-center',
-          dueToday.length > 0 ? 'border-amber-200 bg-amber-50' : 'border-gray-200 bg-white',
+          dueToday.length > 0 ? 'border-amber-200 bg-amber-50' : 'border-[#e8eaef] bg-white',
         )}>
-          <p className={cn('text-2xl font-bold', dueToday.length > 0 ? 'text-amber-600' : 'text-gray-400')}>
+          <p className={cn('text-2xl font-bold', dueToday.length > 0 ? 'text-amber-600' : 'text-[#94a3b8]')}>
             {dueToday.length}
           </p>
-          <p className="text-xs text-gray-500 mt-0.5">Bugün</p>
+          <p className="text-xs text-[#64748b] mt-0.5">Bugün</p>
         </div>
-        <div className="rounded-xl border border-gray-200 bg-white p-3 text-center">
-          <p className="text-2xl font-bold text-gray-700">{upcoming.length}</p>
-          <p className="text-xs text-gray-500 mt-0.5">Yaklaşan</p>
+        <div className="rounded-xl border border-[#e8eaef] bg-white p-3 text-center">
+          <p className="text-2xl font-bold text-[#334155]">{upcoming.length}</p>
+          <p className="text-xs text-[#64748b] mt-0.5">Yaklaşan</p>
         </div>
       </div>
 
       {/* Add form */}
       {showAddForm && (
-        <div className="border border-violet-200 rounded-xl p-4 bg-violet-50 space-y-3">
-          <h3 className="text-sm font-medium text-violet-900">Yeni Yükümlülük</h3>
+        <div className="border border-brand-subtle rounded-xl p-4 bg-brand-subtle space-y-3">
+          <h3 className="text-sm font-medium text-brand">Yeni Yükümlülük</h3>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs text-gray-600 mb-1 block">Başlık *</label>
+              <label className="text-xs text-[#475569] mb-1 block">Başlık *</label>
               <input
                 className="w-full border rounded-lg px-3 py-1.5 text-sm"
                 value={newObl.title}
@@ -260,7 +260,7 @@ export default function GovernanceClockTab() {
               />
             </div>
             <div>
-              <label className="text-xs text-gray-600 mb-1 block">Son Tarih *</label>
+              <label className="text-xs text-[#475569] mb-1 block">Son Tarih *</label>
               <input
                 type="date"
                 className="w-full border rounded-lg px-3 py-1.5 text-sm"
@@ -269,7 +269,7 @@ export default function GovernanceClockTab() {
               />
             </div>
             <div>
-              <label className="text-xs text-gray-600 mb-1 block">Tür</label>
+              <label className="text-xs text-[#475569] mb-1 block">Tür</label>
               <select
                 className="w-full border rounded-lg px-3 py-1.5 text-sm"
                 value={newObl.obligation_type}
@@ -281,7 +281,7 @@ export default function GovernanceClockTab() {
               </select>
             </div>
             <div>
-              <label className="text-xs text-gray-600 mb-1 block">Açıklama</label>
+              <label className="text-xs text-[#475569] mb-1 block">Açıklama</label>
               <input
                 className="w-full border rounded-lg px-3 py-1.5 text-sm"
                 value={newObl.description}
@@ -294,13 +294,13 @@ export default function GovernanceClockTab() {
             <button
               onClick={addObligation}
               disabled={saving}
-              className="text-xs bg-violet-600 text-white px-4 py-1.5 rounded-lg hover:bg-violet-700 disabled:opacity-50"
+              className="text-xs bg-brand-light text-white px-4 py-1.5 rounded-lg hover:bg-brand disabled:opacity-50"
             >
               {saving ? 'Kaydediliyor…' : 'Kaydet'}
             </button>
             <button
               onClick={() => setShowAddForm(false)}
-              className="text-xs text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-100"
+              className="text-xs text-[#475569] px-3 py-1.5 rounded-lg hover:bg-[#f1f5f9]"
             >
               İptal
             </button>
@@ -309,7 +309,7 @@ export default function GovernanceClockTab() {
       )}
 
       {obligations.length === 0 && (
-        <div className="py-12 text-center text-sm text-gray-400">
+        <div className="py-12 text-center text-sm text-[#94a3b8]">
           Önümüzdeki {horizon} günde bekleyen yükümlülük yok.
         </div>
       )}
@@ -345,7 +345,7 @@ export default function GovernanceClockTab() {
       {/* Upcoming */}
       {upcoming.length > 0 && (
         <div>
-          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+          <h3 className="text-xs font-semibold text-[#64748b] uppercase tracking-wider mb-2">
             Yaklaşan — {upcoming.length}
           </h3>
           <div className="space-y-2">
@@ -357,7 +357,7 @@ export default function GovernanceClockTab() {
       )}
 
       {/* Informational notice */}
-      <p className="text-xs text-gray-400 bg-gray-50 rounded-lg px-3 py-2">
+      <p className="text-xs text-[#94a3b8] bg-[#f8fafc] rounded-lg px-3 py-2">
         &quot;Bilgi Amaçlı&quot; olarak işaretlenen yasal tarihler referans niteliğindedir.
         Kesin tarihler ve yükümlülükler için mali müşavirinize danışın.
       </p>

@@ -30,7 +30,7 @@ const STATUS_CLASSES: Record<ReportItem['status'], string> = {
   ready:      'bg-green-100 text-green-800',
   generating: 'bg-yellow-100 text-yellow-800',
   error:      'bg-red-100 text-red-800',
-  pending:    'bg-gray-100 text-gray-500',
+  pending:    'bg-[#f1f5f9] text-[#64748b]',
 }
 
 const STATUS_LABELS: Record<ReportItem['status'], string> = {
@@ -121,8 +121,8 @@ export default function ReportsTab() {
       {/* ── Header ──────────────────────────────────────────────────────────── */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">CFO Raporlama Paketi</h2>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <h2 className="text-xl font-semibold text-[#0f172a]">CFO Raporlama Paketi</h2>
+          <p className="text-sm text-[#64748b] mt-0.5">
             Seçili dönem için tam CFO paketini oluşturun ve indirin.
           </p>
         </div>
@@ -132,7 +132,7 @@ export default function ReportsTab() {
           <select
             value={selectedPeriod}
             onChange={e => setSelectedPeriod(e.target.value)}
-            className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="rounded-md border border-[#e8eaef] bg-white px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-info"
           >
             {periodOptions.map(opt => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -143,7 +143,7 @@ export default function ReportsTab() {
           <button
             onClick={handleCreatePack}
             disabled={loading}
-            className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="inline-flex items-center gap-2 rounded-md bg-info px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-info disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {loading ? (
               <>
@@ -169,10 +169,10 @@ export default function ReportsTab() {
 
       {/* ── Empty state ─────────────────────────────────────────────────────── */}
       {!manifest && !loading && !error && (
-        <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 py-16 text-center">
+        <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-[#e8eaef] bg-[#f8fafc] py-16 text-center">
           <span className="text-4xl mb-4">📦</span>
-          <p className="text-gray-600 font-medium">Henüz paket oluşturulmadı</p>
-          <p className="text-sm text-gray-400 mt-1">
+          <p className="text-[#475569] font-medium">Henüz paket oluşturulmadı</p>
+          <p className="text-sm text-[#94a3b8] mt-1">
             Paket oluşturmak için "Paket Oluştur" butonuna tıklayın.
           </p>
         </div>
@@ -183,16 +183,16 @@ export default function ReportsTab() {
         <div className="space-y-4">
 
           {/* Progress bar */}
-          <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+          <div className="rounded-lg border border-[#e8eaef] bg-white p-4 shadow-sm">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-gray-700">
+              <span className="text-sm font-medium text-[#334155]">
                 {readyCount}/{totalCount} rapor hazır
               </span>
-              <span className="text-sm text-gray-500">{progress}%</span>
+              <span className="text-sm text-[#64748b]">{progress}%</span>
             </div>
-            <div className="h-2.5 w-full rounded-full bg-gray-200">
+            <div className="h-2.5 w-full rounded-full bg-[#e8eaef]">
               <div
-                className="h-2.5 rounded-full bg-blue-600 transition-all duration-300"
+                className="h-2.5 rounded-full bg-info transition-all duration-300"
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -204,7 +204,7 @@ export default function ReportsTab() {
           </div>
 
           {/* Report list */}
-          <div className="divide-y divide-gray-100 rounded-lg border border-gray-200 bg-white shadow-sm">
+          <div className="divide-y divide-[#f1f5f9] rounded-lg border border-[#e8eaef] bg-white shadow-sm">
             {manifest.items.map(item => (
               <div key={item.type} className="flex items-start gap-4 px-4 py-3">
                 {/* Icon */}
@@ -212,8 +212,8 @@ export default function ReportsTab() {
 
                 {/* Title + description */}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900">{item.title}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">{item.description}</p>
+                  <p className="text-sm font-medium text-[#0f172a]">{item.title}</p>
+                  <p className="text-xs text-[#64748b] mt-0.5">{item.description}</p>
                 </div>
 
                 {/* Status chip + size */}
@@ -221,7 +221,7 @@ export default function ReportsTab() {
                   <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_CLASSES[item.status]}`}>
                     {STATUS_LABELS[item.status]}
                   </span>
-                  <span className="text-xs text-gray-400 w-14 text-right">
+                  <span className="text-xs text-[#94a3b8] w-14 text-right">
                     {formatSize(item.size_kb)}
                   </span>
 
@@ -259,7 +259,7 @@ export default function ReportsTab() {
           )}
 
           {/* Pack metadata */}
-          <p className="text-xs text-gray-400 text-right">
+          <p className="text-xs text-[#94a3b8] text-right">
             Dönem: <strong>{manifest.period_label}</strong> · Oluşturulma:{' '}
             {new Date(manifest.created_at).toLocaleString('tr-TR')}
             {manifest.total_size_kb > 0 && (

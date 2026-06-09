@@ -23,8 +23,8 @@ function healthBadge(unpaid: number, loan: number, sharePct: number) {
 function burdenBadgeClass(score: number): string {
   if (score > 15)  return 'bg-red-50 text-red-600 border border-red-200'
   if (score > 5)   return 'bg-amber-50 text-amber-600 border border-amber-200'
-  if (score < -5)  return 'bg-blue-50 text-blue-600 border border-blue-200'
-  return 'bg-gray-50 text-gray-500 border border-gray-200'
+  if (score < -5)  return 'bg-info-light text-info-text border border-info-light'
+  return 'bg-[#f8fafc] text-[#64748b] border border-[#e8eaef]'
 }
 
 function pctFill(paid: number, committed: number): number {
@@ -36,18 +36,18 @@ function pctFill(paid: number, committed: number): number {
 
 function SummaryHeader({ summary }: { summary: StakeholderCapitalSummary }) {
   const metrics = [
-    { label: 'Toplam Taahhüt', value: fmtTRY(summary.total_committed_try), color: 'text-gray-900' },
+    { label: 'Toplam Taahhüt', value: fmtTRY(summary.total_committed_try), color: 'text-[#0f172a]' },
     { label: 'Toplam Ödenen',  value: fmtTRY(summary.total_paid_try),      color: 'text-green-700' },
     { label: 'Sermaye Açığı',  value: fmtTRY(summary.equity_gap_try),      color: summary.equity_gap_try > 0 ? 'text-red-600' : 'text-green-700' },
-    { label: 'Toplam Krediler', value: fmtTRY(summary.total_loans_try),   color: summary.total_loans_try > 0 ? 'text-amber-700' : 'text-gray-900' },
-    { label: 'Dağıtım (YTD)',  value: fmtTRY(summary.total_distributions_ytd_try), color: 'text-violet-700' },
+    { label: 'Toplam Krediler', value: fmtTRY(summary.total_loans_try),   color: summary.total_loans_try > 0 ? 'text-amber-700' : 'text-[#0f172a]' },
+    { label: 'Dağıtım (YTD)',  value: fmtTRY(summary.total_distributions_ytd_try), color: 'text-brand' },
   ]
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
       {metrics.map(m => (
-        <div key={m.label} className="bg-white border border-gray-200 rounded-xl p-3">
-          <p className="text-xs text-gray-500">{m.label}</p>
+        <div key={m.label} className="bg-white border border-[#e8eaef] rounded-xl p-3">
+          <p className="text-xs text-[#64748b]">{m.label}</p>
           <p className={cn('text-sm font-semibold mt-0.5', m.color)}>{m.value}</p>
         </div>
       ))}
@@ -63,12 +63,12 @@ function PartnerCapitalCard({ account }: { account: StakeholderCapitalAccount })
   const isPositive = account.net_position_try >= 0
 
   return (
-    <div className="border border-gray-200 rounded-xl bg-white p-4 space-y-3">
+    <div className="border border-[#e8eaef] rounded-xl bg-white p-4 space-y-3">
       {/* Header row */}
       <div className="flex items-start justify-between gap-2">
         <div>
-          <p className="text-sm font-semibold text-gray-900">{account.partner_name}</p>
-          <p className="text-xs text-gray-400 mt-0.5">%{account.share_pct.toFixed(2)} pay</p>
+          <p className="text-sm font-semibold text-[#0f172a]">{account.partner_name}</p>
+          <p className="text-xs text-[#94a3b8] mt-0.5">%{account.share_pct.toFixed(2)} pay</p>
         </div>
         <span className={cn('text-[10px] px-2 py-0.5 rounded font-semibold uppercase tracking-wide shrink-0', badge.cls)}>
           {badge.label}
@@ -77,15 +77,15 @@ function PartnerCapitalCard({ account }: { account: StakeholderCapitalAccount })
 
       {/* Committed vs Paid bar */}
       <div className="space-y-1">
-        <div className="flex items-center justify-between text-xs text-gray-500">
+        <div className="flex items-center justify-between text-xs text-[#64748b]">
           <span>Taahhüt</span>
           <span>{fmtTRY(account.committed_try)}</span>
         </div>
-        <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+        <div className="w-full bg-[#f1f5f9] rounded-full h-2 overflow-hidden">
           <div
             className={cn(
               'h-2 rounded-full transition-all duration-500',
-              fill === 100 ? 'bg-green-500' : fill > 50 ? 'bg-violet-500' : 'bg-amber-400',
+              fill === 100 ? 'bg-green-500' : fill > 50 ? 'bg-brand-light' : 'bg-amber-400',
             )}
             style={{ width: `${fill}%` }}
           />
@@ -110,7 +110,7 @@ function PartnerCapitalCard({ account }: { account: StakeholderCapitalAccount })
       {account.loan_outstanding_try > 0 && (
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs text-gray-500">Kredi Bakiyesi</p>
+            <p className="text-xs text-[#64748b]">Kredi Bakiyesi</p>
             <p className="text-sm font-medium text-amber-700">{fmtTRY(account.loan_outstanding_try)}</p>
           </div>
           <span className={cn('text-[10px] px-2 py-1 rounded font-medium', burdenBadgeClass(account.burden_score))}>
@@ -120,13 +120,13 @@ function PartnerCapitalCard({ account }: { account: StakeholderCapitalAccount })
       )}
 
       {/* Bottom row: distributions + net position */}
-      <div className="flex items-center justify-between pt-1 border-t border-gray-100">
+      <div className="flex items-center justify-between pt-1 border-t border-[#f1f5f9]">
         <div>
-          <p className="text-xs text-gray-400">Dağıtım (YTD)</p>
-          <p className="text-xs font-medium text-violet-700">{fmtTRY(account.distributions_ytd_try)}</p>
+          <p className="text-xs text-[#94a3b8]">Dağıtım (YTD)</p>
+          <p className="text-xs font-medium text-brand">{fmtTRY(account.distributions_ytd_try)}</p>
         </div>
         <div className="text-right">
-          <p className="text-xs text-gray-400">Net Pozisyon</p>
+          <p className="text-xs text-[#94a3b8]">Net Pozisyon</p>
           <p className={cn('text-sm font-bold', isPositive ? 'text-green-700' : 'text-red-600')}>
             {isPositive ? '+' : ''}{fmtTRY(account.net_position_try)}
           </p>
@@ -166,14 +166,14 @@ export default function StakeholderCapitalTab() {
   useEffect(() => { load() }, [load])
 
   if (loading) {
-    return <div className="py-16 text-center text-sm text-gray-500">Yükleniyor…</div>
+    return <div className="py-16 text-center text-sm text-[#64748b]">Yükleniyor…</div>
   }
 
   if (error) {
     return (
       <div className="py-16 text-center">
         <p className="text-sm text-red-600">{error}</p>
-        <button onClick={load} className="mt-3 text-xs text-violet-600 hover:underline">Yeniden Dene</button>
+        <button onClick={load} className="mt-3 text-xs text-brand hover:underline">Yeniden Dene</button>
       </div>
     )
   }
@@ -182,8 +182,8 @@ export default function StakeholderCapitalTab() {
     return (
       <div className="py-16 text-center">
         <p className="text-2xl mb-3">💰</p>
-        <p className="text-sm font-medium text-gray-700">Henüz ortak kaydı yok</p>
-        <p className="text-xs text-gray-400 mt-1">Ortaklar eklendikten sonra sermaye hesapları burada görünecek.</p>
+        <p className="text-sm font-medium text-[#334155]">Henüz ortak kaydı yok</p>
+        <p className="text-xs text-[#94a3b8] mt-1">Ortaklar eklendikten sonra sermaye hesapları burada görünecek.</p>
       </div>
     )
   }
@@ -197,8 +197,8 @@ export default function StakeholderCapitalTab() {
       {/* Page header */}
       <div className="flex items-start justify-between">
         <div>
-          <h2 className="text-base font-semibold text-gray-900">Sermaye Hesapları</h2>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <h2 className="text-base font-semibold text-[#0f172a]">Sermaye Hesapları</h2>
+          <p className="text-xs text-[#64748b] mt-0.5">
             Ortak başına sermaye taahhüdü, ödeme ve kredi durumu
           </p>
         </div>
@@ -207,8 +207,8 @@ export default function StakeholderCapitalTab() {
           className={cn(
             'text-xs px-3 py-1.5 rounded-lg border transition-colors',
             sortByNet
-              ? 'bg-violet-600 text-white border-violet-600'
-              : 'bg-white text-gray-600 border-gray-300 hover:border-violet-400',
+              ? 'bg-brand-light text-white border-brand'
+              : 'bg-white text-[#475569] border-[#e8eaef] hover:border-brand-subtle',
           )}
         >
           {sortByNet ? '↕ Net Pozisyon' : '↕ Pay Oranı'}
@@ -226,7 +226,7 @@ export default function StakeholderCapitalTab() {
       </div>
 
       {/* Footer */}
-      <p className="text-xs text-gray-400 bg-gray-50 rounded-lg px-3 py-2">
+      <p className="text-xs text-[#94a3b8] bg-[#f8fafc] rounded-lg px-3 py-2">
         Son güncelleme: {new Date(summary.computed_at).toLocaleString('tr-TR')}
       </p>
     </div>
