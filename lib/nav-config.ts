@@ -110,7 +110,7 @@ export const NAV_GROUPS: NavGroup[] = [
   // ── ANALİZ & PLAN ─────────────────────────────────────────────────────────
   {
     id: 'gelismis',
-    label: 'Analiz & Plan',
+    label: 'Gelişmiş',
     items: [
       { href: '/dashboard/planning',   label: 'Planlama',  icon: 'simulation' },
       { href: '/dashboard/insights',   label: 'AI Analiz', icon: 'analytics'  },
@@ -119,10 +119,10 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
 
-  // ── YÖNETİM (admin only) ──────────────────────────────────────────────────
+  // ── SİSTEM (admin only) — yardımcı/yönetim araçları ────────────────────────
   {
     id:      'yonetim',
-    label:   'Yönetim',
+    label:   'Sistem',
     minRole: 'admin',
     items: [
       { href: '/dashboard/admin',           label: 'Yönetim',     icon: 'shield', exact: true },
